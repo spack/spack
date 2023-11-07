@@ -3,6 +3,103 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+
+.. _concretizer-options:
+
+==========================================
+Concretization Settings (concretizer.yaml)
+==========================================
+
+The ``concretizer.yaml`` configuration file allows to customize aspects of the
+algorithm used to select the dependencies you install. The default configuration
+is the following:
+
+.. literalinclude:: _spack_root/etc/spack/defaults/concretizer.yaml
+   :language: yaml
+
+--------------------------------
+Reuse already installed packages
+--------------------------------
+
+The ``reuse`` attribute controls whether Spack will prefer to use installed packages (``true``), or
+whether it will do a "fresh" installation and prefer the latest settings from
+``package.py`` files and ``packages.yaml`` (``false``).
+You can use:
+
+.. code-block:: console
+
+   % spack install --reuse <spec>
+
+to enable reuse for a single installation, and you can use:
+
+.. code-block:: console
+
+   spack install --fresh <spec>
+
+to do a fresh install if ``reuse`` is enabled by default.
+``reuse: true`` is the default.
+
+------------------------------------------
+Selection of the target microarchitectures
+------------------------------------------
+
+The options under the ``targets`` attribute control which targets are considered during a solve.
+Currently the options in this section are only configurable from the ``concretizer.yaml`` file
+and there are no corresponding command line arguments to enable them for a single solve.
+
+The ``granularity`` option can take two possible values: ``microarchitectures`` and ``generic``.
+If set to:
+
+.. code-block:: yaml
+
+   concretizer:
+     targets:
+       granularity: microarchitectures
+
+Spack will consider all the microarchitectures known to ``archspec`` to label nodes for
+compatibility. If instead the option is set to:
+
+.. code-block:: yaml
+
+   concretizer:
+     targets:
+       granularity: generic
+
+Spack will consider only generic microarchitectures. For instance, when running on an
+Haswell node, Spack will consider ``haswell`` as the best target in the former case and
+``x86_64_v3`` as the best target in the latter case.
+
+The ``host_compatible`` option is a Boolean option that determines whether or not the
+microarchitectures considered during the solve are constrained to be compatible with the
+host Spack is currently running on. For instance, if this option is set to ``true``, a
+user cannot concretize for ``target=icelake`` while running on an Haswell node.
+
+---------------
+Duplicate nodes
+---------------
+
+The ``duplicates`` attribute controls whether the DAG can contain multiple configurations of
+the same package. This is mainly relevant for build dependencies, which may have their version
+pinned by some nodes, and thus be required at different versions by different nodes in the same
+DAG.
+
+The ``strategy`` option controls how the solver deals with duplicates. If the value is ``none``,
+then a single configuration per package is allowed in the DAG. This means, for instance, that only
+a single ``cmake`` or a single ``py-setuptools`` version is allowed. The result would be a slightly
+faster concretization, at the expense of making a few specs unsolvable.
+
+If the value is ``minimal`` Spack will allow packages tagged as ``build-tools`` to have duplicates.
+This allows, for instance, to concretize specs whose nodes require different, and incompatible, ranges
+of some build tool. For instance, in the figure below the latest `py-shapely` requires a newer `py-setuptools`,
+while `py-numpy` still needs an older version:
+
+.. figure::  images/shapely_duplicates.svg
+   :scale: 70 %
+   :align: center
+
+Up to Spack v0.20 ``duplicates:strategy:none`` was the default (and only) behavior. From Spack v0.21 the
+default behavior is ``duplicates:strategy:minimal``.
+
 .. _build-settings:
 
 ================================
@@ -232,76 +329,6 @@ Specific limitations include:
   then Spack will not add a new external entry (``spack config blame packages``
   can help locate all external entries).
 
-.. _concretizer-options:
-
-----------------------
-Concretizer options
-----------------------
-
-``packages.yaml`` gives the concretizer preferences for specific packages,
-but you can also use ``concretizer.yaml`` to customize aspects of the
-algorithm it uses to select the dependencies you install:
-
-.. literalinclude:: _spack_root/etc/spack/defaults/concretizer.yaml
-   :language: yaml
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Reuse already installed packages
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The ``reuse`` attribute controls whether Spack will prefer to use installed packages (``true``), or
-whether it will do a "fresh" installation and prefer the latest settings from
-``package.py`` files and ``packages.yaml`` (``false``).
-You can use:
-
-.. code-block:: console
-
-   % spack install --reuse <spec>
-
-to enable reuse for a single installation, and you can use:
-
-.. code-block:: console
-
-   spack install --fresh <spec>
-
-to do a fresh install if ``reuse`` is enabled by default.
-``reuse: true`` is the default.
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Selection of the target microarchitectures
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The options under the ``targets`` attribute control which targets are considered during a solve.
-Currently the options in this section are only configurable from the ``concretizer.yaml`` file
-and there are no corresponding command line arguments to enable them for a single solve.
-
-The ``granularity`` option can take two possible values: ``microarchitectures`` and ``generic``.
-If set to:
-
-.. code-block:: yaml
-
-   concretizer:
-     targets:
-       granularity: microarchitectures
-
-Spack will consider all the microarchitectures known to ``archspec`` to label nodes for
-compatibility. If instead the option is set to:
-
-.. code-block:: yaml
-
-   concretizer:
-     targets:
-       granularity: generic
-
-Spack will consider only generic microarchitectures. For instance, when running on an
-Haswell node, Spack will consider ``haswell`` as the best target in the former case and
-``x86_64_v3`` as the best target in the latter case.
-
-The ``host_compatible`` option is a Boolean option that determines whether or not the
-microarchitectures considered during the solve are constrained to be compatible with the
-host Spack is currently running on. For instance, if this option is set to ``true``, a
-user cannot concretize for ``target=icelake`` while running on an Haswell node.
-
 .. _package-requirements:
 
 --------------------
@@ -499,56 +526,52 @@ Package Preferences
 In some cases package requirements can be too strong, and package
 preferences are the better option. Package preferences do not impose
 constraints on packages for particular versions or variants values,
-they rather only set defaults -- the concretizer is free to change
-them if it must due to other constraints. Also note that package
-preferences are of lower priority than reuse of already installed
-packages.
+they rather only set defaults. The concretizer is free to change
+them if it must, due to other constraints, and also prefers reusing
+installed packages over building new ones that are a better match for
+preferences.
 
-Here's an example ``packages.yaml`` file that sets preferred packages:
+Most package preferences (``compilers``, ``target`` and ``providers``)
+can only be set globally under the ``all`` section of ``packages.yaml``:
+
+.. code-block:: yaml
+
+   packages:
+     all:
+       compiler: [gcc@12.2.0, clang@12:, oneapi@2023:]
+       target: [x86_64_v3]
+       providers:
+         mpi: [mvapich2, mpich, openmpi]
+
+These preferences override Spack's default and effectively reorder priorities
+when looking for the best compiler, target or virtual package provider. Each
+preference takes an ordered list of spec constraints, with earlier entries in
+the list being preferred over later entries.
+
+In the example above all packages prefer to be compiled with ``gcc@12.2.0``,
+to target the ``x86_64_v3`` microarchitecture and to use ``mvapich2`` if they
+depend on ``mpi``.
+
+The ``variants`` and ``version`` preferences can be set under
+package specific sections of the ``packages.yaml`` file:
 
 .. code-block:: yaml
 
    packages:
      opencv:
-       compiler: [gcc@4.9]
        variants: +debug
      gperftools:
        version: [2.2, 2.4, 2.3]
-     all:
-       compiler: [gcc@4.4.7, 'gcc@4.6:', intel, clang, pgi]
-       target: [sandybridge]
-       providers:
-         mpi: [mvapich2, mpich, openmpi]
 
-At a high level, this example is specifying how packages are preferably
-concretized.  The opencv package should prefer using GCC 4.9 and
-be built with debug options.  The gperftools package should prefer version
-2.2 over 2.4.  Every package on the system should prefer mvapich2 for
-its MPI and GCC 4.4.7 (except for opencv, which overrides this by preferring GCC 4.9).
-These options are used to fill in implicit defaults.  Any of them can be overwritten
-on the command line if explicitly requested.
+In this case, the preference for ``opencv`` is to build with debug options, while
+``gperftools`` prefers version 2.2 over 2.4.
 
-Package preferences accept the follow keys or components under
-the specific package (or ``all``) section: ``compiler``, ``variants``,
-``version``, ``providers``, and ``target``.  Each component has an
-ordered list of spec ``constraints``, with earlier entries in the
-list being preferred over later entries.
+Any preference can be overwritten on the command line if explicitly requested.
 
-Sometimes a package installation may have constraints that forbid
-the first concretization rule, in which case Spack will use the first
-legal concretization rule.  Going back to the example, if a user
-requests gperftools 2.3 or later, then Spack will install version 2.4
-as the 2.4 version of gperftools is preferred over 2.3.
-
-An explicit concretization rule in the preferred section will always
-take preference over unlisted concretizations.  In the above example,
-xlc isn't listed in the compiler list.  Every listed compiler from
-gcc to pgi will thus be preferred over the xlc compiler.
-
-The syntax for the ``provider`` section differs slightly from other
-concretization rules.  A provider lists a value that packages may
-``depends_on`` (e.g, MPI) and a list of rules for fulfilling that
-dependency.
+Preferences cannot overcome explicit constraints, as they only set a preferred
+ordering among homogeneous attribute values. Going back to the example, if
+``gperftools@2.3:`` was requested, then Spack will install version 2.4
+since the most preferred version 2.2 is prohibited by the version constraint.
 
 .. _package_permissions:
 

@@ -25,6 +25,7 @@ from urllib.request import HTTPHandler, Request, build_opener
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.lang import memoized
+from llnl.util.tty.color import cescape, colorize
 
 import spack
 import spack.binary_distribution as bindist
@@ -45,11 +46,30 @@ from spack.error import SpackError
 from spack.reporters import CDash, CDashConfiguration
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
 
-JOB_RETRY_CONDITIONS = ["always"]
+# See https://docs.gitlab.com/ee/ci/yaml/#retry for descriptions of conditions
+JOB_RETRY_CONDITIONS = [
+    # "always",
+    "unknown_failure",
+    "script_failure",
+    "api_failure",
+    "stuck_or_timeout_failure",
+    "runner_system_failure",
+    "runner_unsupported",
+    "stale_schedule",
+    # "job_execution_timeout",
+    "archived_failure",
+    "unmet_prerequisites",
+    "scheduler_failure",
+    "data_integrity_failure",
+]
 
 TEMP_STORAGE_MIRROR_NAME = "ci_temporary_mirror"
 SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
+# TODO: Remove this in Spack 0.23
 SHARED_PR_MIRROR_URL = "s3://spack-binaries-prs/shared_pr_mirror"
+JOB_NAME_FORMAT = (
+    "{name}{@version} {/hash:7} {%compiler.name}{@compiler.version}{arch=architecture}"
+)
 
 spack_gpg = spack.main.SpackCommand("gpg")
 spack_compiler = spack.main.SpackCommand("compiler")
@@ -69,62 +89,28 @@ class TemporaryDirectory:
         return False
 
 
-def get_job_name(spec, osarch, build_group):
-    """Given the necessary parts, format the gitlab job name
+def get_job_name(spec: spack.spec.Spec, build_group: str = ""):
+    """Given a spec and possibly a build group, return the job name. If the
+    resulting name is longer than 255 characters, it will be truncated.
 
     Arguments:
         spec (spack.spec.Spec): Spec job will build
-        osarch: Architecture TODO: (this is a spack.spec.ArchSpec,
-            but sphinx doesn't recognize the type and fails).
         build_group (str): Name of build group this job belongs to (a CDash
         notion)
 
     Returns: The job name
     """
-    item_idx = 0
-    format_str = ""
-    format_args = []
-
-    format_str += "{{{0}}}".format(item_idx)
-    format_args.append(spec.name)
-    item_idx += 1
-
-    format_str += "/{{{0}}}".format(item_idx)
-    format_args.append(spec.dag_hash(7))
-    item_idx += 1
-
-    format_str += " {{{0}}}".format(item_idx)
-    format_args.append(spec.version)
-    item_idx += 1
-
-    format_str += " {{{0}}}".format(item_idx)
-    format_args.append(spec.compiler)
-    item_idx += 1
-
-    format_str += " {{{0}}}".format(item_idx)
-    format_args.append(osarch)
-    item_idx += 1
+    job_name = spec.format(JOB_NAME_FORMAT)
 
     if build_group:
-        format_str += " {{{0}}}".format(item_idx)
-        format_args.append(build_group)
-        item_idx += 1
+        job_name = "{0} {1}".format(job_name, build_group)
 
-    return format_str.format(*format_args)
+    return job_name[:255]
 
 
 def _remove_reserved_tags(tags):
     """Convenience function to strip reserved tags from jobs"""
     return [tag for tag in tags if tag not in SPACK_RESERVED_TAGS]
-
-
-def _get_spec_string(spec):
-    format_elements = ["{name}{@version}", "{%compiler}"]
-
-    if spec.architecture:
-        format_elements.append(" {arch=architecture}")
-
-    return spec.format("".join(format_elements))
 
 
 def _spec_deps_key(s):
@@ -231,22 +217,22 @@ def _print_staging_summary(spec_labels, stages, mirrors_to_check, rebuild_decisi
 
     tty.msg("Staging summary ([x] means a job needs rebuilding):")
     for stage_index, stage in enumerate(stages):
-        tty.msg("  stage {0} ({1} jobs):".format(stage_index, len(stage)))
+        tty.msg(f"  stage {stage_index} ({len(stage)} jobs):")
 
-        for job in sorted(stage):
+        for job in sorted(stage, key=lambda j: (not rebuild_decisions[j].rebuild, j)):
             s = spec_labels[job]
-            rebuild = rebuild_decisions[job].rebuild
             reason = rebuild_decisions[job].reason
-            reason_msg = " ({0})".format(reason) if reason else ""
-            tty.msg(
-                "    [{1}] {0} -> {2}{3}".format(
-                    job, "x" if rebuild else " ", _get_spec_string(s), reason_msg
-                )
-            )
-            if rebuild_decisions[job].mirrors:
-                tty.msg("          found on the following mirrors:")
-                for murl in rebuild_decisions[job].mirrors:
-                    tty.msg("            {0}".format(murl))
+            reason_msg = f" ({reason})" if reason else ""
+            spec_fmt = "{name}{@version}{%compiler}{/hash:7}"
+            if rebuild_decisions[job].rebuild:
+                status = colorize("@*g{[x]}  ")
+                msg = f"  {status}{s.cformat(spec_fmt)}{reason_msg}"
+            else:
+                msg = f"{s.format(spec_fmt)}{reason_msg}"
+                if rebuild_decisions[job].mirrors:
+                    msg += f" [{', '.join(rebuild_decisions[job].mirrors)}]"
+                msg = colorize(f"  @K -   {cescape(msg)}@.")
+            tty.msg(msg)
 
 
 def _compute_spec_deps(spec_list):
@@ -337,7 +323,7 @@ def _spec_matches(spec, match_string):
 
 
 def _format_job_needs(
-    dep_jobs, osname, build_group, prune_dag, rebuild_decisions, enable_artifacts_buildcache
+    dep_jobs, build_group, prune_dag, rebuild_decisions, enable_artifacts_buildcache
 ):
     needs_list = []
     for dep_job in dep_jobs:
@@ -347,7 +333,7 @@ def _format_job_needs(
         if not prune_dag or rebuild:
             needs_list.append(
                 {
-                    "job": get_job_name(dep_job, dep_job.architecture, build_group),
+                    "job": get_job_name(dep_job, build_group),
                     "artifacts": enable_artifacts_buildcache,
                 }
             )
@@ -700,7 +686,7 @@ def generate_gitlab_ci_yaml(
         remote_mirror_override (str): Typically only needed when one spack.yaml
             is used to populate several mirrors with binaries, based on some
             criteria.  Spack protected pipelines populate different mirrors based
-            on branch name, facilitated by this option.
+            on branch name, facilitated by this option.  DEPRECATED
     """
     with spack.concretize.disable_compiler_existence_check():
         with env.write_transaction():
@@ -797,17 +783,39 @@ def generate_gitlab_ci_yaml(
             "instead.",
         )
 
-    if "mirrors" not in yaml_root or len(yaml_root["mirrors"].values()) < 1:
-        tty.die("spack ci generate requires an env containing a mirror")
+    pipeline_mirrors = spack.mirror.MirrorCollection(binary=True)
+    deprecated_mirror_config = False
+    buildcache_destination = None
+    if "buildcache-destination" in pipeline_mirrors:
+        if remote_mirror_override:
+            tty.die(
+                "Using the deprecated --buildcache-destination cli option and "
+                "having a mirror named 'buildcache-destination' at the same time "
+                "is not allowed"
+            )
+        buildcache_destination = pipeline_mirrors["buildcache-destination"]
+    else:
+        deprecated_mirror_config = True
+        # TODO: This will be an error in Spack 0.23
 
-    ci_mirrors = yaml_root["mirrors"]
-    mirror_urls = [url for url in ci_mirrors.values()]
-    remote_mirror_url = mirror_urls[0]
+    # TODO: Remove this block in spack 0.23
+    remote_mirror_url = None
+    if deprecated_mirror_config:
+        if "mirrors" not in yaml_root or len(yaml_root["mirrors"].values()) < 1:
+            tty.die("spack ci generate requires an env containing a mirror")
+
+        ci_mirrors = yaml_root["mirrors"]
+        mirror_urls = [url for url in ci_mirrors.values()]
+        remote_mirror_url = mirror_urls[0]
 
     spack_buildcache_copy = os.environ.get("SPACK_COPY_BUILDCACHE", None)
     if spack_buildcache_copy:
         buildcache_copies = {}
-        buildcache_copy_src_prefix = remote_mirror_override or remote_mirror_url
+        buildcache_copy_src_prefix = (
+            buildcache_destination.fetch_url
+            if buildcache_destination
+            else remote_mirror_override or remote_mirror_url
+        )
         buildcache_copy_dest_prefix = spack_buildcache_copy
 
     # Check for a list of "known broken" specs that we should not bother
@@ -819,6 +827,7 @@ def generate_gitlab_ci_yaml(
 
     enable_artifacts_buildcache = False
     if "enable-artifacts-buildcache" in ci_config:
+        tty.warn("Support for enable-artifacts-buildcache will be removed in Spack 0.23")
         enable_artifacts_buildcache = ci_config["enable-artifacts-buildcache"]
 
     rebuild_index_enabled = True
@@ -827,13 +836,15 @@ def generate_gitlab_ci_yaml(
 
     temp_storage_url_prefix = None
     if "temporary-storage-url-prefix" in ci_config:
+        tty.warn("Support for temporary-storage-url-prefix will be removed in Spack 0.23")
         temp_storage_url_prefix = ci_config["temporary-storage-url-prefix"]
 
     # If a remote mirror override (alternate buildcache destination) was
     # specified, add it here in case it has already built hashes we might
     # generate.
+    # TODO: Remove this block in Spack 0.23
     mirrors_to_check = None
-    if remote_mirror_override:
+    if deprecated_mirror_config and remote_mirror_override:
         if spack_pipeline_type == "spack_protected_branch":
             # Overriding the main mirror in this case might result
             # in skipping jobs on a release pipeline because specs are
@@ -853,8 +864,9 @@ def generate_gitlab_ci_yaml(
             cfg.default_modify_scope(),
         )
 
+    # TODO: Remove this block in Spack 0.23
     shared_pr_mirror = None
-    if spack_pipeline_type == "spack_pull_request":
+    if deprecated_mirror_config and spack_pipeline_type == "spack_pull_request":
         stack_name = os.environ.get("SPACK_CI_STACK_NAME", "")
         shared_pr_mirror = url_util.join(SHARED_PR_MIRROR_URL, stack_name)
         spack.mirror.add(
@@ -906,6 +918,7 @@ def generate_gitlab_ci_yaml(
     job_log_dir = os.path.join(pipeline_artifacts_dir, "logs")
     job_repro_dir = os.path.join(pipeline_artifacts_dir, "reproduction")
     job_test_dir = os.path.join(pipeline_artifacts_dir, "tests")
+    # TODO: Remove this line in Spack 0.23
     local_mirror_dir = os.path.join(pipeline_artifacts_dir, "mirror")
     user_artifacts_dir = os.path.join(pipeline_artifacts_dir, "user_data")
 
@@ -920,13 +933,13 @@ def generate_gitlab_ci_yaml(
     rel_job_log_dir = os.path.relpath(job_log_dir, ci_project_dir)
     rel_job_repro_dir = os.path.relpath(job_repro_dir, ci_project_dir)
     rel_job_test_dir = os.path.relpath(job_test_dir, ci_project_dir)
+    # TODO: Remove this line in Spack 0.23
     rel_local_mirror_dir = os.path.join(local_mirror_dir, ci_project_dir)
     rel_user_artifacts_dir = os.path.relpath(user_artifacts_dir, ci_project_dir)
 
     # Speed up staging by first fetching binary indices from all mirrors
-    # (including the override mirror we may have just added above).
     try:
-        bindist.binary_index.update()
+        bindist.BINARY_INDEX.update()
     except bindist.FetchCacheError as e:
         tty.warn(e)
 
@@ -1023,8 +1036,7 @@ def generate_gitlab_ci_yaml(
             if "after_script" in job_object:
                 job_object["after_script"] = _unpack_script(job_object["after_script"])
 
-            osname = str(release_spec.architecture)
-            job_name = get_job_name(release_spec, osname, build_group)
+            job_name = get_job_name(release_spec, build_group)
 
             job_vars = job_object.setdefault("variables", {})
             job_vars["SPACK_JOB_SPEC_DAG_HASH"] = release_spec_dag_hash
@@ -1051,7 +1063,6 @@ def generate_gitlab_ci_yaml(
                 job_object["needs"].extend(
                     _format_job_needs(
                         dep_jobs,
-                        osname,
                         build_group,
                         prune_dag,
                         rebuild_decisions,
@@ -1137,6 +1148,7 @@ def generate_gitlab_ci_yaml(
                 },
             )
 
+            # TODO: Remove this block in Spack 0.23
             if enable_artifacts_buildcache:
                 bc_root = os.path.join(local_mirror_dir, "build_cache")
                 job_object["artifacts"]["paths"].extend(
@@ -1166,10 +1178,12 @@ def generate_gitlab_ci_yaml(
         _print_staging_summary(spec_labels, stages, mirrors_to_check, rebuild_decisions)
 
     # Clean up remote mirror override if enabled
-    if remote_mirror_override:
-        spack.mirror.remove("ci_pr_mirror", cfg.default_modify_scope())
-    if spack_pipeline_type == "spack_pull_request":
-        spack.mirror.remove("ci_shared_pr_mirror", cfg.default_modify_scope())
+    # TODO: Remove this block in Spack 0.23
+    if deprecated_mirror_config:
+        if remote_mirror_override:
+            spack.mirror.remove("ci_pr_mirror", cfg.default_modify_scope())
+        if spack_pipeline_type == "spack_pull_request":
+            spack.mirror.remove("ci_shared_pr_mirror", cfg.default_modify_scope())
 
     tty.debug("{0} build jobs generated in {1} stages".format(job_id, stage_id))
 
@@ -1200,10 +1214,28 @@ def generate_gitlab_ci_yaml(
             sync_job["needs"] = [
                 {"job": generate_job_name, "pipeline": "{0}".format(parent_pipeline_id)}
             ]
+
+        if "variables" not in sync_job:
+            sync_job["variables"] = {}
+
+        sync_job["variables"]["SPACK_COPY_ONLY_DESTINATION"] = (
+            buildcache_destination.fetch_url
+            if buildcache_destination
+            else remote_mirror_override or remote_mirror_url
+        )
+
+        if "buildcache-source" in pipeline_mirrors:
+            buildcache_source = pipeline_mirrors["buildcache-source"].fetch_url
+        else:
+            # TODO: Remove this condition in Spack 0.23
+            buildcache_source = os.environ.get("SPACK_SOURCE_MIRROR", None)
+        sync_job["variables"]["SPACK_BUILDCACHE_SOURCE"] = buildcache_source
+
         output_object["copy"] = sync_job
         job_id += 1
 
     if job_id > 0:
+        # TODO: Remove this block in Spack 0.23
         if temp_storage_url_prefix:
             # There were some rebuild jobs scheduled, so we will need to
             # schedule a job to clean up the temporary storage location
@@ -1237,6 +1269,13 @@ def generate_gitlab_ci_yaml(
             signing_job["when"] = "always"
             signing_job["retry"] = {"max": 2, "when": ["always"]}
             signing_job["interruptible"] = True
+            if "variables" not in signing_job:
+                signing_job["variables"] = {}
+            signing_job["variables"]["SPACK_BUILDCACHE_DESTINATION"] = (
+                buildcache_destination.push_url  # need the s3 url for aws s3 sync
+                if buildcache_destination
+                else remote_mirror_override or remote_mirror_url
+            )
 
             output_object["sign-pkgs"] = signing_job
 
@@ -1245,13 +1284,13 @@ def generate_gitlab_ci_yaml(
             stage_names.append("stage-rebuild-index")
             final_job = spack_ci_ir["jobs"]["reindex"]["attributes"]
 
-            index_target_mirror = mirror_urls[0]
-            if remote_mirror_override:
-                index_target_mirror = remote_mirror_override
             final_job["stage"] = "stage-rebuild-index"
+            target_mirror = remote_mirror_override or remote_mirror_url
+            if buildcache_destination:
+                target_mirror = buildcache_destination.push_url
             final_job["script"] = _unpack_script(
                 final_job["script"],
-                op=lambda cmd: cmd.replace("{index_target_mirror}", index_target_mirror),
+                op=lambda cmd: cmd.replace("{index_target_mirror}", target_mirror),
             )
 
             final_job["when"] = "always"
@@ -1273,20 +1312,24 @@ def generate_gitlab_ci_yaml(
             "SPACK_CONCRETE_ENV_DIR": rel_concrete_env_dir,
             "SPACK_VERSION": spack_version,
             "SPACK_CHECKOUT_VERSION": version_to_clone,
+            # TODO: Remove this line in Spack 0.23
             "SPACK_REMOTE_MIRROR_URL": remote_mirror_url,
             "SPACK_JOB_LOG_DIR": rel_job_log_dir,
             "SPACK_JOB_REPRO_DIR": rel_job_repro_dir,
             "SPACK_JOB_TEST_DIR": rel_job_test_dir,
+            # TODO: Remove this line in Spack 0.23
             "SPACK_LOCAL_MIRROR_DIR": rel_local_mirror_dir,
             "SPACK_PIPELINE_TYPE": str(spack_pipeline_type),
             "SPACK_CI_STACK_NAME": os.environ.get("SPACK_CI_STACK_NAME", "None"),
+            # TODO: Remove this line in Spack 0.23
             "SPACK_CI_SHARED_PR_MIRROR_URL": shared_pr_mirror or "None",
             "SPACK_REBUILD_CHECK_UP_TO_DATE": str(prune_dag),
             "SPACK_REBUILD_EVERYTHING": str(rebuild_everything),
             "SPACK_REQUIRE_SIGNING": os.environ.get("SPACK_REQUIRE_SIGNING", "False"),
         }
 
-        if remote_mirror_override:
+        # TODO: Remove this block in Spack 0.23
+        if deprecated_mirror_config and remote_mirror_override:
             (output_object["variables"]["SPACK_REMOTE_MIRROR_OVERRIDE"]) = remote_mirror_override
 
         spack_stack_name = os.environ.get("SPACK_CI_STACK_NAME", None)
@@ -2026,43 +2069,23 @@ def process_command(name, commands, repro_dir, run=True, exit_on_failure=True):
 
 
 def create_buildcache(
-    input_spec: spack.spec.Spec,
-    *,
-    pipeline_mirror_url: Optional[str] = None,
-    buildcache_mirror_url: Optional[str] = None,
-    sign_binaries: bool = False,
+    input_spec: spack.spec.Spec, *, destination_mirror_urls: List[str], sign_binaries: bool = False
 ) -> List[PushResult]:
     """Create the buildcache at the provided mirror(s).
 
     Arguments:
         input_spec: Installed spec to package and push
-        buildcache_mirror_url: URL for the buildcache mirror
-        pipeline_mirror_url: URL for the pipeline mirror
+        destination_mirror_urls: List of urls to push to
         sign_binaries: Whether or not to sign buildcache entry
 
     Returns: A list of PushResults, indicating success or failure.
     """
     results = []
 
-    # Create buildcache in either the main remote mirror, or in the
-    # per-PR mirror, if this is a PR pipeline
-    if buildcache_mirror_url:
+    for mirror_url in destination_mirror_urls:
         results.append(
             PushResult(
-                success=push_mirror_contents(input_spec, buildcache_mirror_url, sign_binaries),
-                url=buildcache_mirror_url,
-            )
-        )
-
-    # Create another copy of that buildcache in the per-pipeline
-    # temporary storage mirror (this is only done if either
-    # artifacts buildcache is enabled or a temporary storage url
-    # prefix is set)
-    if pipeline_mirror_url:
-        results.append(
-            PushResult(
-                success=push_mirror_contents(input_spec, pipeline_mirror_url, sign_binaries),
-                url=pipeline_mirror_url,
+                success=push_mirror_contents(input_spec, mirror_url, sign_binaries), url=mirror_url
             )
         )
 
@@ -2242,13 +2265,13 @@ class CDashHandler:
                 spec.architecture,
                 self.build_group,
             )
-            tty.verbose(
+            tty.debug(
                 "Generated CDash build name ({0}) from the {1}".format(build_name, spec.name)
             )
             return build_name
 
         build_name = os.environ.get("SPACK_CDASH_BUILD_NAME")
-        tty.verbose("Using CDash build name ({0}) from the environment".format(build_name))
+        tty.debug("Using CDash build name ({0}) from the environment".format(build_name))
         return build_name
 
     @property  # type: ignore
@@ -2262,11 +2285,11 @@ class CDashHandler:
         Returns: (str) current CDash build stamp"""
         build_stamp = os.environ.get("SPACK_CDASH_BUILD_STAMP")
         if build_stamp:
-            tty.verbose("Using build stamp ({0}) from the environment".format(build_stamp))
+            tty.debug("Using build stamp ({0}) from the environment".format(build_stamp))
             return build_stamp
 
         build_stamp = cdash_build_stamp(self.build_group, time.time())
-        tty.verbose("Generated new build stamp ({0})".format(build_stamp))
+        tty.debug("Generated new build stamp ({0})".format(build_stamp))
         return build_stamp
 
     @property  # type: ignore

@@ -26,6 +26,8 @@ class Glib(MesonPackage, AutotoolsPackage):
 
     maintainers("michaelkuhn")
 
+    version("2.78.0", sha256="44eaab8b720877ce303c5540b657b126f12dc94972d9880b52959f43fb537b30")
+    version("2.76.6", sha256="1136ae6987dcbb64e0be3197a80190520f7acab81e2bfb937dc85c11c8aa9f04")
     version("2.76.4", sha256="5a5a191c96836e166a7771f7ea6ca2b0069c603c7da3cba1cd38d1694a395dda")
     version("2.76.3", sha256="c0be444e403d7c3184d1f394f89f0b644710b5e9331b54fa4e8b5037813ad32a")
     version("2.76.2", sha256="24f3847857b1d8674cdb0389a36edec0f13c666cd3ce727ecd340eb9da8aca9e")
@@ -139,7 +141,8 @@ class Glib(MesonPackage, AutotoolsPackage):
     depends_on("zlib-api")
     depends_on("gettext")
     depends_on("perl", type=("build", "run"))
-    depends_on("python", type=("build", "run"), when="@2.53.4:")
+    # Uses distutils in gio/gdbus-2.0/codegen/utils.py
+    depends_on("python@:3.11", type=("build", "run"), when="@2.53.4:")
     depends_on("pcre2", when="@2.73.2:")
     depends_on("pcre2@10.34:", when="@2.74:")
     depends_on("pcre+utf", when="@2.48:2.73.1")
@@ -169,6 +172,13 @@ class Glib(MesonPackage, AutotoolsPackage):
     patch("meson-gettext.patch", when="@2.58:2.64")
     patch("meson-gettext-2.66.patch", when="@2.66:2.68,2.72")
     patch("meson-gettext-2.70.patch", when="@2.70")
+
+    # Don't use PTRACE_O_EXITKILL if it's not defined
+    patch(
+        "https://gitlab.gnome.org/GNOME/glib/-/commit/bda87264372c006c94e21ffb8ff9c50ecb3e14bd.diff",
+        sha256="2c25d7b3bf581b3ec992d7af997fa6c769174d49b9350e0320c33f5e048cba99",
+        when="@2.78.0",
+    )
 
     def url_for_version(self, version):
         """Handle glib's version-based custom URLs."""

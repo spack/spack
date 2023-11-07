@@ -485,19 +485,66 @@ class TestConcretize:
     @pytest.mark.only_clingo(
         "Optional compiler propagation isn't deprecated for original concretizer"
     )
-    def test_concretize_propagate_disabled_variant(self):
-        """Test a package variant value was passed from its parent."""
-        spec = Spec("hypre~~shared ^openblas")
-        spec.concretize()
+    @pytest.mark.parametrize(
+        "spec_str,expected_propagation",
+        [
+            ("hypre~~shared ^openblas+shared", [("hypre", "~shared"), ("openblas", "+shared")]),
+            # Propagates past a node that doesn't have the variant
+            ("hypre~~shared ^openblas", [("hypre", "~shared"), ("openblas", "~shared")]),
+            (
+                "ascent~~shared +adios2",
+                [("ascent", "~shared"), ("adios2", "~shared"), ("bzip2", "~shared")],
+            ),
+            # Propagates below a node that uses the other value explicitly
+            (
+                "ascent~~shared +adios2 ^adios2+shared",
+                [("ascent", "~shared"), ("adios2", "+shared"), ("bzip2", "~shared")],
+            ),
+            (
+                "ascent++shared +adios2 ^adios2~shared",
+                [("ascent", "+shared"), ("adios2", "~shared"), ("bzip2", "+shared")],
+            ),
+        ],
+    )
+    def test_concretize_propagate_disabled_variant(self, spec_str, expected_propagation):
+        """Tests various patterns of boolean variant propagation"""
+        spec = Spec(spec_str).concretized()
+        for key, expected_satisfies in expected_propagation:
+            spec[key].satisfies(expected_satisfies)
 
-        assert spec.satisfies("^openblas~shared")
-
+    @pytest.mark.only_clingo(
+        "Optional compiler propagation isn't deprecated for original concretizer"
+    )
     def test_concretize_propagated_variant_is_not_passed_to_dependent(self):
         """Test a package variant value was passed from its parent."""
-        spec = Spec("hypre~~shared ^openblas+shared")
+        spec = Spec("ascent~~shared +adios2 ^adios2+shared")
         spec.concretize()
 
-        assert spec.satisfies("^openblas+shared")
+        assert spec.satisfies("^adios2+shared")
+        assert spec.satisfies("^bzip2~shared")
+
+    @pytest.mark.only_clingo(
+        "Optional compiler propagation isn't deprecated for original concretizer"
+    )
+    def test_concretize_propagate_specified_variant(self):
+        """Test that only the specified variant is propagated to the dependencies"""
+        spec = Spec("parent-foo-bar ~~foo")
+        spec.concretize()
+
+        assert spec.satisfies("~foo") and spec.satisfies("^dependency-foo-bar~foo")
+        assert spec.satisfies("+bar") and not spec.satisfies("^dependency-foo-bar+bar")
+
+    @pytest.mark.only_clingo("Original concretizer is allowed to forego variant propagation")
+    def test_concretize_propagate_multivalue_variant(self):
+        """Test that multivalue variants are propagating the specified value(s)
+        to their dependecies. The dependencies should not have the default value"""
+        spec = Spec("multivalue-variant foo==baz,fee")
+        spec.concretize()
+
+        assert spec.satisfies("^a foo=baz,fee")
+        assert spec.satisfies("^b foo=baz,fee")
+        assert not spec.satisfies("^a foo=bar")
+        assert not spec.satisfies("^b foo=bar")
 
     def test_no_matching_compiler_specs(self, mock_low_high_config):
         # only relevant when not building compilers as needed
@@ -1197,7 +1244,7 @@ class TestConcretize:
     )
     @pytest.mark.parametrize("mock_db", [True, False])
     def test_reuse_does_not_overwrite_dev_specs(
-        self, dev_first, spec, mock_db, tmpdir, monkeypatch
+        self, dev_first, spec, mock_db, tmpdir, temporary_store, monkeypatch
     ):
         """Test that reuse does not mix dev specs with non-dev specs.
 
@@ -1209,8 +1256,7 @@ class TestConcretize:
         # dev and non-dev specs that are otherwise identical
         spec = Spec(spec)
         dev_spec = spec.copy()
-        dev_constraint = "dev_path=%s" % tmpdir.strpath
-        dev_spec["dev-build-test-install"].constrain(dev_constraint)
+        dev_spec["dev-build-test-install"].constrain(f"dev_path={tmpdir.strpath}")
 
         # run the test in both orders
         first_spec = dev_spec if dev_first else spec
@@ -1223,7 +1269,7 @@ class TestConcretize:
             return [first_spec]
 
         if mock_db:
-            monkeypatch.setattr(spack.store.STORE.db, "query", mock_fn)
+            temporary_store.db.add(first_spec, None)
         else:
             monkeypatch.setattr(spack.binary_distribution, "update_cache_and_get_specs", mock_fn)
 
@@ -1866,7 +1912,8 @@ class TestConcretize:
         # If we concretize with --reuse it is not, since "mpich~debug" was already installed
         with spack.config.override("concretizer:reuse", True):
             s = Spec("mpich").concretized()
-            assert s.satisfies("~debug")
+            assert s.installed
+            assert s.satisfies("~debug"), s
 
     @pytest.mark.regression("32471")
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
@@ -2139,21 +2186,38 @@ class TestConcretize:
             # when checksums are required
             Spec("a@=3.0").concretized()
 
+    @pytest.mark.regression("39570")
+    @pytest.mark.db
+    def test_reuse_python_from_cli_and_extension_from_db(self, mutable_database):
+        """Tests that reusing python with and explicit request on the command line, when the spec
+        also reuses a python extension from the DB, doesn't fail.
+        """
+        s = Spec("py-extension1").concretized()
+        python_hash = s["python"].dag_hash()
+        s.package.do_install(fake=True, explicit=True)
+
+        with spack.config.override("concretizer:reuse", True):
+            with_reuse = Spec(f"py-extension2 ^/{python_hash}").concretized()
+
+        with spack.config.override("concretizer:reuse", False):
+            without_reuse = Spec("py-extension2").concretized()
+
+        assert with_reuse.dag_hash() == without_reuse.dag_hash()
+
 
 @pytest.fixture()
 def duplicates_test_repository():
-    builder_test_path = os.path.join(spack.paths.repos_path, "duplicates.test")
-    with spack.repo.use_repositories(builder_test_path) as mock_repo:
+    repository_path = os.path.join(spack.paths.repos_path, "duplicates.test")
+    with spack.repo.use_repositories(repository_path) as mock_repo:
         yield mock_repo
 
 
 @pytest.mark.usefixtures("mutable_config", "duplicates_test_repository")
+@pytest.mark.only_clingo("Not supported by the original concretizer")
 class TestConcretizeSeparately:
+    """Collects test on separate concretization"""
+
     @pytest.mark.parametrize("strategy", ["minimal", "full"])
-    @pytest.mark.skipif(
-        os.environ.get("SPACK_TEST_SOLVER") == "original",
-        reason="Not supported by the original concretizer",
-    )
     def test_two_gmake(self, strategy):
         """Tests that we can concretize a spec with nodes using the same build
         dependency pinned at different versions.
@@ -2178,10 +2242,6 @@ class TestConcretizeSeparately:
         assert len(pinned_gmake) == 1 and pinned_gmake[0].satisfies("@=3.0")
 
     @pytest.mark.parametrize("strategy", ["minimal", "full"])
-    @pytest.mark.skipif(
-        os.environ.get("SPACK_TEST_SOLVER") == "original",
-        reason="Not supported by the original concretizer",
-    )
     def test_two_setuptools(self, strategy):
         """Tests that we can concretize separate build dependencies, when we are dealing
         with extensions.
@@ -2218,10 +2278,6 @@ class TestConcretizeSeparately:
         gmake = s["python"].dependencies(name="gmake", deptype="build")
         assert len(gmake) == 1 and gmake[0].satisfies("@=3.0")
 
-    @pytest.mark.skipif(
-        os.environ.get("SPACK_TEST_SOLVER") == "original",
-        reason="Not supported by the original concretizer",
-    )
     def test_solution_without_cycles(self):
         """Tests that when we concretize a spec with cycles, a fallback kicks in to recompute
         a solution without cycles.
@@ -2233,6 +2289,58 @@ class TestConcretizeSeparately:
         s = Spec("cycle-b").concretized()
         assert s["cycle-a"].satisfies("~cycle")
         assert s["cycle-b"].satisfies("+cycle")
+
+    @pytest.mark.parametrize("strategy", ["minimal", "full"])
+    def test_pure_build_virtual_dependency(self, strategy):
+        """Tests that we can concretize a pure build virtual dependency, and ensures that
+        pure build virtual dependencies are accounted in the list of possible virtual
+        dependencies.
+
+        virtual-build@1.0
+        | [type=build, virtual=pkgconfig]
+        pkg-config@1.0
+        """
+        spack.config.CONFIG.set("concretizer:duplicates:strategy", strategy)
+
+        s = Spec("virtual-build").concretized()
+        assert s["pkgconfig"].name == "pkg-config"
+
+    @pytest.mark.regression("40595")
+    def test_no_multiple_solutions_with_different_edges_same_nodes(self):
+        r"""Tests that the root node, which has a dependency on py-setuptools without constraint,
+        doesn't randomly pick one of the two setuptools (@=59, @=60) needed by its dependency.
+
+        o py-floating@1.25.0/3baitsp
+        |\
+        | |\
+        | | |\
+        | o | | py-shapely@1.25.0/4hep6my
+        |/| | |
+        | |\| |
+        | | |/
+        | |/|
+        | | o py-setuptools@60/cwhbthc
+        | |/
+        |/|
+        | o py-numpy@1.25.0/5q5fx4d
+        |/|
+        | |\
+        | o | py-setuptools@59/jvsa7sd
+        |/ /
+        o | python@3.11.2/pdmjekv
+        o | gmake@3.0/jv7k2bl
+         /
+        o gmake@4.1/uo6ot3d
+        """
+        spec_str = "py-floating"
+
+        root = spack.spec.Spec(spec_str).concretized()
+        assert root["py-shapely"].satisfies("^py-setuptools@=60")
+        assert root["py-numpy"].satisfies("^py-setuptools@=59")
+
+        edges = root.edges_to_dependencies("py-setuptools")
+        assert len(edges) == 1
+        assert edges[0].spec.satisfies("@=60")
 
 
 @pytest.mark.parametrize(
@@ -2269,3 +2377,73 @@ class TestConcretizeSeparately:
 def test_drop_moving_targets(v_str, v_opts, checksummed):
     v = Version(v_str)
     assert spack.solver.asp._is_checksummed_version((v, v_opts)) == checksummed
+
+
+class TestConcreteSpecsByHash:
+    """Tests the container of concrete specs"""
+
+    @pytest.mark.parametrize("input_specs", [["a"], ["a foobar=bar", "b"], ["a foobar=baz", "b"]])
+    def test_adding_specs(self, input_specs, default_mock_concretization):
+        """Tests that concrete specs in the container are equivalent, but stored as different
+        objects in memory.
+        """
+        container = spack.solver.asp.ConcreteSpecsByHash()
+        input_specs = [Spec(s).concretized() for s in input_specs]
+        for s in input_specs:
+            container.add(s)
+
+        for root in input_specs:
+            for node in root.traverse(root=True):
+                assert node == container[node.dag_hash()]
+                assert node.dag_hash() in container
+                assert node is not container[node.dag_hash()]
+
+
+@pytest.fixture()
+def edges_test_repository():
+    repository_path = os.path.join(spack.paths.repos_path, "edges.test")
+    with spack.repo.use_repositories(repository_path) as mock_repo:
+        yield mock_repo
+
+
+@pytest.mark.usefixtures("mutable_config", "edges_test_repository")
+@pytest.mark.only_clingo("Edge properties not supported by the original concretizer")
+class TestConcretizeEdges:
+    """Collects tests on edge properties"""
+
+    @pytest.mark.parametrize(
+        "spec_str,expected_satisfies,expected_not_satisfies",
+        [
+            ("conditional-edge", ["^zlib@2.0"], ["^zlib-api"]),
+            ("conditional-edge~foo", ["^zlib@2.0"], ["^zlib-api"]),
+            (
+                "conditional-edge+foo",
+                ["^zlib@1.0", "^zlib-api", "^[virtuals=zlib-api] zlib"],
+                ["^[virtuals=mpi] zlib"],
+            ),
+        ],
+    )
+    def test_condition_triggered_by_edge_property(
+        self, spec_str, expected_satisfies, expected_not_satisfies
+    ):
+        """Tests that we can enforce constraints based on edge attributes"""
+        s = Spec(spec_str).concretized()
+
+        for expected in expected_satisfies:
+            assert s.satisfies(expected), str(expected)
+
+        for not_expected in expected_not_satisfies:
+            assert not s.satisfies(not_expected), str(not_expected)
+
+    def test_virtuals_provided_together_but_only_one_required_in_dag(self):
+        """Tests that we can use a provider that provides more than one virtual together,
+        and is providing only one, iff the others are not needed in the DAG.
+
+        o blas-only-client
+        | [virtual=blas]
+        o openblas (provides blas and lapack together)
+
+        """
+        s = Spec("blas-only-client ^openblas").concretized()
+        assert s.satisfies("^[virtuals=blas] openblas")
+        assert not s.satisfies("^[virtuals=blas,lapack] openblas")

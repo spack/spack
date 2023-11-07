@@ -148,6 +148,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant("stratimikos", default=False, description="Compile with Stratimikos")
     variant("teko", default=False, description="Compile with Teko")
     variant("tempus", default=False, description="Compile with Tempus")
+    variant("test", default=False, description="Enable testing")
     variant("thyra", default=False, description="Compile with Thyra")
     variant("tpetra", default=True, description="Compile with Tpetra")
     variant("trilinoscouplings", default=False, description="Compile with TrilinosCouplings")
@@ -343,13 +344,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("gotype=all", when="@12.15:")
 
     # CUDA without wrapper requires clang
-    for _compiler in spack.compilers.supported_compilers():
-        if _compiler != "clang":
-            conflicts(
-                "+cuda",
-                when="~wrapper %" + _compiler,
-                msg="trilinos~wrapper+cuda can only be built with the " "Clang compiler",
-            )
+    requires(
+        "%clang",
+        when="+cuda~wrapper",
+        msg="trilinos~wrapper+cuda can only be built with the Clang compiler",
+    )
     conflicts("+cuda_rdc", when="~cuda")
     conflicts("+rocm_rdc", when="~rocm")
     conflicts("+wrapper", when="~cuda")
@@ -359,6 +358,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("@:13.0.1 +cuda", when="^cuda@11:")
     # Build hangs with CUDA 11.6 (see #28439)
     conflicts("+cuda +stokhos", when="^cuda@11.6:")
+    # superlu-dist defines a macro EMPTY which conflicts with a header in cuda
+    # used when building stokhos
+    # Fix: https://github.com/xiaoyeli/superlu_dist/commit/09cb1430f7be288fd4d75b8ed461aa0b7e68fefe
+    # is not tagged yet. See discussion here https://github.com/trilinos/Trilinos/issues/11839
+    conflicts("+cuda +stokhos +superlu-dist")
     # Cuda UVM must be enabled prior to 13.2
     # See https://github.com/spack/spack/issues/28869
     conflicts("~uvm", when="@:13.1 +cuda")
@@ -615,6 +619,12 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                 ),
             ]
         )
+
+        if "+test" in spec:
+            options.append(define_trilinos_enable("TESTS", True))
+            options.append(define("BUILD_TESTING", True))
+        else:
+            options.append(define_trilinos_enable("TESTS", False))
 
         if spec.version >= Version("13"):
             options.append(define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"))

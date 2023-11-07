@@ -20,9 +20,15 @@ class PyNanobind(PythonPackage):
     url = "https://github.com/wjakob/nanobind/archive/refs/tags/v1.2.0.tar.gz"
     git = "https://github.com/wjakob/nanobind.git"
 
-    maintainers("ma595")
+    maintainers("chrisrichardson", "garth-wells", "ma595")
 
     version("master", branch="master", submodules=True)
+    version(
+        "1.7.0", tag="v1.7.0", commit="555ec7595c89c60ce7cf53e803bc226dc4899abb", submodules=True
+    )
+    version(
+        "1.6.2", tag="v1.6.2", commit="cc5ac7e61def198db2a8b65c6d630343987a9f1d", submodules=True
+    )
     version(
         "1.5.2", tag="v1.5.2", commit="b0e24d5b0ab0d518317d6b263a257ae72d4d29a2", submodules=True
     )
@@ -43,8 +49,8 @@ class PyNanobind(PythonPackage):
     depends_on("py-setuptools@42:", type="build")
     depends_on("py-scikit-build", type="build")
 
-    depends_on("py-cmake@3.17:", type="build")
-    depends_on("py-ninja", type="build")
+    depends_on("cmake@3.17:", type="build")
+    depends_on("ninja", type="build")
 
     @property
     def cmake_prefix_paths(self):

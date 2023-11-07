@@ -17,6 +17,7 @@ class PyPandas(PythonPackage):
 
     maintainers("adamjstewart")
 
+    version("2.1.2", sha256="52897edc2774d2779fbeb6880d2cfb305daa0b1a29c16b91f531a18918a6e0f3")
     version("2.1.1", sha256="fecb198dc389429be557cde50a2d46da8434a17fe37d7d41ff102e3987fd947b")
     version("2.1.0", sha256="62c24c7fc59e42b775ce0679cfa7b14a5f9bfb7643cfbe708c960699e05fb918")
     version("2.0.3", sha256="c02f372a88e0d17f36d3093a644c73cfc1788e876a7c4bcb4020a77512e2043c")
@@ -64,6 +65,8 @@ class PyPandas(PythonPackage):
     version("0.24.1", sha256="435821cb2501eabbcee7e83614bd710940dc0cf28b5afbc4bdb816c31cec71af")
     version("0.23.4", sha256="5b24ca47acf69222e82530e89111dd9d14f9b970ab2cd3a1c2c78f0c4fbba4f4")
 
+    variant("excel", when="@1.4:", default=False, description="Build with support for Excel")
+
     # Required dependencies
     # https://pandas.pydata.org/pandas-docs/stable/getting_started/install.html#python-version-support
     depends_on("python@3.9:3.12", when="@2.1.1:", type=("build", "run"))
@@ -89,6 +92,7 @@ class PyPandas(PythonPackage):
     depends_on("py-versioneer+toml", when="@2:", type="build")
 
     # https://pandas.pydata.org/pandas-docs/stable/getting_started/install.html#dependencies
+    depends_on("py-numpy@1.22.4:2", when="@2.1.2:", type=("build", "run"))
     depends_on("py-numpy@1.22.4:", when="@2.1:", type=("build", "run"))
     depends_on("py-numpy@1.20.3:", when="@1.5:", type=("build", "run"))
     depends_on("py-numpy@1.18.5:", when="@1.4:", type=("build", "run"))
@@ -129,6 +133,20 @@ class PyPandas(PythonPackage):
     # Optional dependencies
     # https://pandas.pydata.org/pandas-docs/stable/getting_started/install.html#optional-dependencies
 
+    # Excel dependencies for 1.4+ (not coded up for earlier versions)
+    depends_on("py-odfpy@1.4.1:", type=("run"), when="@2.0: +excel")
+    depends_on("py-openpyxl@3.0.10:", type=("run"), when="@2.1: +excel")
+    depends_on("py-openpyxl@3.0.7:", type=("run"), when="@1.5: +excel")
+    depends_on("py-openpyxl@3.0.3:", type=("run"), when="@1.4: +excel")
+    depends_on("py-pyxlsb@1.0.9:", type=("run"), when="@2.1: +excel")
+    depends_on("py-pyxlsb@1.0.8:", type=("run"), when="@1.5: +excel")
+    depends_on("py-pyxlsb@1.0.6:", type=("run"), when="@1.4: +excel")
+    depends_on("py-xlrd@2.0.1:", type=("run"), when="@1.4: +excel")
+    depends_on("py-xlwt@1.3.0:", type=("run"), when="@1.4:1.5 +excel")
+    depends_on("py-xlsxwriter@3.0.3:", type=("run"), when="@2.1: +excel")
+    depends_on("py-xlsxwriter@1.4.3:", type=("run"), when="@1.5: +excel")
+    depends_on("py-xlsxwriter@1.2.2:", type=("run"), when="@1.4: +excel")
+
     # Historical dependencies
     depends_on("py-setuptools@61:", when="@2.0", type="build")
     depends_on("py-setuptools@51:", when="@1.3.2:1", type="build")
@@ -136,3 +154,9 @@ class PyPandas(PythonPackage):
     depends_on("py-setuptools@24.2:", when="@:1.2", type="build")
 
     skip_modules = ["pandas.tests", "pandas.plotting._matplotlib", "pandas.core._numba.kernels"]
+
+    def flag_handler(self, name, flags):
+        if name == "cflags":
+            if self.spec.satisfies("@0.24.2 %oneapi"):
+                flags.append("-Wno-error=implicit-function-declaration")
+        return (flags, None, None)

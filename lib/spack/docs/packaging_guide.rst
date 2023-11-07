@@ -1549,7 +1549,7 @@ its value:
 
     def configure_args(self):
         ...
-        if "+shared" in self.spec:
+        if self.spec.satisfies("+shared"):
             extra_args.append("--enable-shared")
         else:
             extra_args.append("--disable-shared")
@@ -1636,7 +1636,7 @@ Within a package recipe a multi-valued variant is tested using a ``key=value`` s
 
   .. code-block:: python
 
-    if "languages=jit" in spec:
+    if spec.satisfies("languages=jit"):
         options.append("--enable-host-shared")
 
 """""""""""""""""""""""""""""""""""""""""""
@@ -2352,7 +2352,7 @@ the following at the command line of a bash shell:
 
 .. code-block:: console
 
-   $ for i in {1..12}; do nohup spack install -j 4 mpich@3.3.2 >> mpich_install.txt 2>&1 &; done
+   $ for i in {1..12}; do nohup spack install -j 4 mpich@3.3.2 >> mpich_install.txt 2>&1 & done
 
 .. note::
 
@@ -2557,9 +2557,10 @@ Conditional dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 You may have a package that only requires a dependency under certain
-conditions. For example, you may have a package that has optional MPI support,
-- MPI is only a dependency when you want to enable MPI support for the
-package. In that case, you could say something like:
+conditions. For example, you may have a package with optional MPI support.
+You would then provide a variant to reflect that the feature is optional
+and specify the MPI dependency only applies when MPI support is enabled.
+In that case, you could say something like:
 
 .. code-block:: python
 
@@ -2567,13 +2568,39 @@ package. In that case, you could say something like:
 
    depends_on("mpi", when="+mpi")
 
-``when`` can include constraints on the variant, version, compiler, etc. and
-the :mod:`syntax<spack.spec>` is the same as for Specs written on the command
-line.
 
-If a dependency/feature of a package isn't typically used, you can save time
-by making it conditional (since Spack will not build the dependency unless it
-is required for the Spec).
+Suppose the above package also has, since version 3, optional `Trilinos`
+support and you want them both to build either with or without MPI. Further
+suppose you require a version of `Trilinos` no older than 12.6. In that case,
+the `trilinos` variant and dependency directives would be:
+
+.. code-block:: python
+
+   variant("trilinos", default=False, description="Enable Trilinos support")
+
+   depends_on("trilinos@12.6:", when="@3: +trilinos")
+   depends_on("trilinos@12.6: +mpi", when="@3: +trilinos +mpi")
+
+
+Alternatively, you could use the `when` context manager to equivalently specify
+the `trilinos` variant dependencies as follows:
+
+.. code-block:: python
+
+   with when("@3: +trilinos"):
+       depends_on("trilinos@12.6:")
+       depends_on("trilinos +mpi", when="+mpi")
+
+
+The argument to ``when`` in either case can include any Spec constraints that
+are supported on the command line using the same :ref:`syntax <sec-specs>`.
+
+.. note::
+
+   If a dependency isn't typically used, you can save time by making it
+   conditional since Spack will not build the dependency unless it is
+   required for the Spec.
+
 
 .. _dependency_dependency_patching:
 
@@ -2660,60 +2687,6 @@ appear in the package file (or in this case, in the list).
    for handling_rpaths_ guarantees that each installation finds the
    right version. If two packages depend on ``binutils`` patched *the
    same* way, they can both use a single installation of ``binutils``.
-
-.. _setup-dependent-environment:
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Influence how dependents are built or run
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Spack provides a mechanism for dependencies to influence the
-environment of their dependents by overriding  the
-:meth:`setup_dependent_run_environment <spack.package_base.PackageBase.setup_dependent_run_environment>`
-or the
-:meth:`setup_dependent_build_environment <spack.builder.Builder.setup_dependent_build_environment>`
-methods.
-The Qt package, for instance, uses this call:
-
-.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/qt/package.py
-   :pyobject: Qt.setup_dependent_build_environment
-   :linenos:
-
-to set the ``QTDIR`` environment variable so that packages
-that depend on a particular Qt installation will find it.
-Another good example of how a dependency can influence
-the build environment of dependents is the Python package:
-
-.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
-   :pyobject: Python.setup_dependent_build_environment
-   :linenos:
-
-In the method above it is ensured that any package that depends on Python
-will have the ``PYTHONPATH``, ``PYTHONHOME`` and ``PATH`` environment
-variables set appropriately before starting the installation. To make things
-even simpler the ``python setup.py`` command is also inserted into the module
-scope of dependents by overriding a third method called
-:meth:`setup_dependent_package <spack.package_base.PackageBase.setup_dependent_package>`
-:
-
-.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
-   :pyobject: Python.setup_dependent_package
-   :linenos:
-
-This allows most python packages to have a very simple install procedure,
-like the following:
-
-.. code-block:: python
-
-   def install(self, spec, prefix):
-       setup_py("install", "--prefix={0}".format(prefix))
-
-Finally the Python package takes also care of the modifications to ``PYTHONPATH``
-to allow dependencies to run correctly:
-
-.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
-    :pyobject: Python.setup_dependent_run_environment
-    :linenos:
 
 
 .. _packaging_conflicts:
@@ -2859,6 +2832,70 @@ variant(s) are selected.  This may be accomplished with conditional
        extends("python", when="+python")
        ...
 
+.. _setup-environment:
+
+--------------------------------------------
+Runtime and build time environment variables
+--------------------------------------------
+
+Spack provides a few methods to help package authors set up the required environment variables for
+their package. Environment variables typically depend on how the package is used: variables that
+make sense during the build phase may not be needed at runtime, and vice versa. Further, sometimes
+it makes sense to let a dependency set the environment variables for its dependents. To allow all
+this, Spack provides four different methods that can be overridden in a package:
+
+1. :meth:`setup_build_environment <spack.builder.Builder.setup_build_environment>`
+2. :meth:`setup_run_environment <spack.package_base.PackageBase.setup_run_environment>`
+3. :meth:`setup_dependent_build_environment <spack.builder.Builder.setup_dependent_build_environment>`
+4. :meth:`setup_dependent_run_environment <spack.package_base.PackageBase.setup_dependent_run_environment>`
+
+The Qt package, for instance, uses this call:
+
+.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/qt/package.py
+   :pyobject: Qt.setup_dependent_build_environment
+   :linenos:
+
+to set the ``QTDIR`` environment variable so that packages that depend on a particular Qt
+installation will find it.
+
+The following diagram will give you an idea when each of these methods is called in a build
+context:
+
+.. image:: images/setup_env.png
+   :align: center
+
+Notice that ``setup_dependent_run_environment`` can be called multiple times, once for each
+dependent package, whereas ``setup_run_environment`` is called only once for the package itself.
+This means that the former should only be used if the environment variables depend on the dependent
+package, whereas the latter should be used if the environment variables depend only on the package
+itself.
+
+--------------------------------
+Setting package module variables
+--------------------------------
+
+Apart from modifying environment variables of the dependent package, you can also define Python
+variables to be used by the dependent. This is done by implementing
+:meth:`setup_dependent_package <spack.package_base.PackageBase.setup_dependent_package>`. An
+example of this can be found in the ``Python`` package:
+
+.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
+   :pyobject: Python.setup_dependent_package
+   :linenos:
+
+This allows Python packages to directly use these variables:
+
+.. code-block:: python
+
+   def install(self, spec, prefix):
+       ...
+       install("script.py", python_platlib)
+
+.. note::
+
+   We recommend using ``setup_dependent_package`` sparingly, as it is not always clear where
+   global variables are coming from when editing a ``package.py`` file.
+
 -----
 Views
 -----
@@ -2936,6 +2973,33 @@ say MPICH, we'll see something like this:
 The ``provides("mpi")`` call tells Spack that the ``mpich`` package
 can be used to satisfy the dependency of any package that
 ``depends_on("mpi")``.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Providing multiple virtuals simultaneously
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Packages can provide more than one virtual dependency. Sometimes, due to implementation details,
+there are subsets of those virtuals that need to be provided together by the same package.
+
+A well-known example is ``openblas``, which provides both the ``lapack`` and ``blas`` API in a single ``libopenblas``
+library. A package that needs ``lapack`` and ``blas`` must either use ``openblas`` to provide both, or not use
+``openblas`` at all. It cannot pick one or the other.
+
+To express this constraint in a package, the two virtual dependencies must be listed in the same ``provides`` directive:
+
+.. code-block:: python
+
+   provides('blas', 'lapack')
+
+This makes it impossible to select ``openblas`` as a provider for one of the two
+virtual dependencies and not for the other. If you try to, Spack will report an error:
+
+.. code-block:: console
+
+   $ spack spec netlib-scalapack  ^[virtuals=lapack] openblas ^[virtuals=blas] atlas
+   ==> Error: concretization failed for the following reasons:
+
+      1. Package 'openblas' needs to provide both 'lapack' and 'blas' together, but provides only 'lapack'
 
 ^^^^^^^^^^^^^^^^^^^^
 Versioned Interfaces
@@ -3439,6 +3503,56 @@ is equivalent to:
 Constraints from nested context managers are also combined together, but they are rarely
 needed or recommended.
 
+.. _default_args:
+
+------------------------
+Common default arguments
+------------------------
+
+Similarly, if directives have a common set of default arguments, you can
+group them together in a ``with default_args()`` block:
+
+.. code-block:: python
+
+   class PyExample(PythonPackage):
+
+       with default_args(type=("build", "run")):
+           depends_on("py-foo")
+           depends_on("py-foo@2:", when="@2:")
+           depends_on("py-bar")
+           depends_on("py-bz")
+
+The above is short for:
+
+.. code-block:: python
+
+   class PyExample(PythonPackage):
+
+       depends_on("py-foo", type=("build", "run"))
+       depends_on("py-foo@2:", when="@2:", type=("build", "run"))
+       depends_on("py-bar", type=("build", "run"))
+       depends_on("py-bz", type=("build", "run"))
+
+.. note::
+
+   The ``with when()`` context manager is composable, while ``with default_args()``
+   merely overrides the default. For example:
+
+   .. code-block:: python
+
+      with default_args(when="+feature"):
+          depends_on("foo")
+          depends_on("bar")
+          depends_on("baz", when="+baz")
+
+   is equivalent to:
+
+   .. code-block:: python
+
+      depends_on("foo", when="+feature")
+      depends_on("bar", when="+feature")
+      depends_on("baz", when="+baz")  # Note: not when="+feature+baz"
+
 .. _install-method:
 
 ------------------
@@ -3501,7 +3615,7 @@ need to override methods like ``configure_args``:
 
    def configure_args(self):
         args = ["--enable-cxx"] + self.enable_or_disable("libs")
-        if "libs=static" in self.spec:
+        if self.spec.satisfies("libs=static"):
             args.append("--with-pic")
         return args
 
@@ -3635,7 +3749,8 @@ regardless of the build system. The arguments for the phase are:
 The arguments ``spec`` and ``prefix`` are passed only for convenience, as they always
 correspond to ``self.spec`` and ``self.spec.prefix`` respectively.
 
-If the ``package.py`` encodes builders explicitly, the signature for a phase changes slightly:
+If the ``package.py`` has build instructions in a separate
+:ref:`builder class <multiple_build_systems>`, the signature for a phase changes slightly:
 
 .. code-block:: python
 
@@ -3644,56 +3759,6 @@ If the ``package.py`` encodes builders explicitly, the signature for a phase cha
            ...
 
 In this case the package is passed as the second argument, and ``self`` is the builder instance.
-
-.. _multiple_build_systems:
-
-^^^^^^^^^^^^^^^^^^^^^^
-Multiple build systems
-^^^^^^^^^^^^^^^^^^^^^^
-
-There are cases where a software actively supports two build systems, or changes build systems
-as it evolves, or needs different build systems on different platforms. Spack allows dealing with
-these cases natively, if a recipe is written using builders explicitly.
-
-For instance, software that supports two build systems unconditionally should derive from
-both ``*Package`` base classes, and declare the possible use of multiple build systems using
-a directive:
-
-.. code-block:: python
-
-   class ArpackNg(CMakePackage, AutotoolsPackage):
-
-       build_system("cmake", "autotools", default="cmake")
-
-In this case the software can be built with both ``autotools`` and ``cmake``. Since the package
-supports multiple build systems, it is necessary to declare which one is the default. The ``package.py``
-will likely contain some overriding of default builder methods:
-
-.. code-block:: python
-
-   class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
-       def cmake_args(self):
-           pass
-
-   class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
-       def configure_args(self):
-           pass
-
-In more complex cases it might happen that the build system changes according to certain conditions,
-for instance across versions. That can be expressed with conditional variant values:
-
-.. code-block:: python
-
-   class ArpackNg(CMakePackage, AutotoolsPackage):
-
-       build_system(
-           conditional("cmake", when="@0.64:"),
-           conditional("autotools", when="@:0.63"),
-           default="cmake",
-       )
-
-In the example the directive impose a change from ``Autotools`` to ``CMake`` going
-from ``v0.63`` to ``v0.64``.
 
 ^^^^^^^^^^^^^^^^^^
 Mixin base classes
@@ -3740,6 +3805,106 @@ for instance:
        """
 
 In the example above ``Cp2k`` inherits all the conflicts and variants that ``CudaPackage`` defines.
+
+.. _multiple_build_systems:
+
+----------------------
+Multiple build systems
+----------------------
+
+There are cases where a package actively supports two build systems, or changes build systems
+as it evolves, or needs different build systems on different platforms. Spack allows dealing with
+these cases by splitting the build instructions into separate builder classes.
+
+For instance, software that supports two build systems unconditionally should derive from
+both ``*Package`` base classes, and declare the possible use of multiple build systems using
+a directive:
+
+.. code-block:: python
+
+   class Example(CMakePackage, AutotoolsPackage):
+
+       variant("my_feature", default=True)
+
+       build_system("cmake", "autotools", default="cmake")
+
+In this case the software can be built with both ``autotools`` and ``cmake``. Since the package
+supports multiple build systems, it is necessary to declare which one is the default.
+
+Additional build instructions are split into separate builder classes:
+
+.. code-block:: python
+
+   class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+       def cmake_args(self):
+           return [
+               self.define_from_variant("MY_FEATURE", "my_feature")
+           ]
+
+   class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+       def configure_args(self):
+           return self.with_or_without("my-feature", variant="my_feature")
+
+In this example, ``spack install example +feature build_sytem=cmake``  will
+pick the ``CMakeBuilder`` and invoke ``cmake -DMY_FEATURE:BOOL=ON``.
+
+Similarly, ``spack install example +feature build_system=autotools`` will pick
+the  ``AutotoolsBuilder`` and invoke ``./configure --with-my-feature``.
+
+Dependencies are always specified in the package class. When some dependencies
+depend on the choice of the build system, it is possible to use when conditions as
+usual:
+
+.. code-block:: python
+
+   class Example(CMakePackage, AutotoolsPackage):
+
+       build_system("cmake", "autotools", default="cmake")
+
+       # Runtime dependencies
+       depends_on("ncurses")
+       depends_on("libxml2")
+
+       # Lowerbounds for cmake only apply when using cmake as the build system
+       with when("build_system=cmake"):
+           depends_on("cmake@3.18:", when="@2.0:", type="build")
+           depends_on("cmake@3:", type="build")
+
+       # Specify extra build dependencies used only in the configure script
+       with when("build_system=autotools"):
+           depends_on("perl", type="build")
+           depends_on("pkgconfig", type="build")
+
+Very often projects switch from one build system to another, or add support
+for a new build system from a certain version, which means that the choice
+of the build system typically depends on a version range. Those situations can
+be handled by using conditional values in the ``build_system`` directive:
+
+.. code-block:: python
+
+   class Example(CMakePackage, AutotoolsPackage):
+
+       build_system(
+           conditional("cmake", when="@0.64:"),
+           conditional("autotools", when="@:0.63"),
+           default="cmake",
+       )
+
+In the example the directive impose a change from ``Autotools`` to ``CMake`` going
+from ``v0.63`` to ``v0.64``.
+
+The ``build_system`` can be used as an ordinary variant, which also means that it can
+be used in ``depends_on`` statements. This can be useful when a package *requires* that
+its dependency has a CMake config file, meaning that the dependent can only build when the
+dependency is built with CMake, and not Autotools. In that case, you can force the choice
+of the build system in the dependent:
+
+.. code-block:: python
+
+   class Dependent(CMakePackage):
+
+       depends_on("example build_system=cmake")
+
 
 .. _install-environment:
 
@@ -4313,7 +4478,7 @@ for supported features, for instance:
 
 .. code-block:: python
 
-   if "avx512" in spec.target:
+   if spec.satisfies("target=avx512"):
        args.append("--with-avx512")
 
 The snippet above will append the ``--with-avx512`` item to a list of arguments only if the corresponding
@@ -6748,3 +6913,63 @@ To achieve backward compatibility with the single-class format Spack creates in 
 Overall the role of the adapter is to route access to attributes of methods first through the ``*Package``
 hierarchy, and then back to the base class builder. This is schematically shown in the diagram above, where
 the adapter role is to "emulate" a method resolution order like the one represented by the red arrows.
+
+------------------------------
+Specifying License Information
+------------------------------
+
+Most of the software in Spack is open source, and most open source software is released
+under one or more `common open source licenses <https://opensource.org/licenses/>`_.
+Specifying the license that a package is released under in a project's
+`package.py` is good practice. To specify a license, find the `SPDX identifier
+<https://spdx.org/licenses/>`_ for a project and then add it using the license
+directive:
+
+.. code-block:: python
+
+   license("<SPDX Identifier HERE>")
+
+For example, the SPDX ID for the Apache Software License, version 2.0 is ``Apache-2.0``,
+so you'd write:
+
+.. code-block:: python
+
+   license("Apache-2.0")
+
+Or, for a dual-licensed package like Spack, you would use an `SPDX Expression
+<https://spdx.github.io/spdx-spec/v2-draft/SPDX-license-expressions/>`_ with both of its
+licenses:
+
+.. code-block:: python
+
+   license("Apache-2.0 OR MIT")
+
+Note that specifying a license without a when clause makes it apply to all
+versions and variants of the package, which might not actually be the case.
+For example, a project might have switched licenses at some point or have
+certain build configurations that include files that are licensed differently.
+Spack itself used to be under the ``LGPL-2.1`` license, until it was relicensed
+in version ``0.12`` in 2018.
+
+You can specify when a ``license()`` directive applies using with a ``when=``
+clause, just like other directives. For example, to specify that a specific
+license identifier should only apply to versions up to ``0.11``, but another
+license should apply for later versions, you could write:
+
+.. code-block:: python
+
+   license("LGPL-2.1", when="@:0.11")
+   license("Apache-2.0 OR MIT", when="@0.12:")
+
+Note that unlike for most other directives, the ``when=`` constraints in the
+``license()`` directive can't intersect. Spack needs to be able to resolve
+exactly one license identifier expression for any given version. To specify
+*multiple* licenses, use SPDX expressions and operators as above. The operators
+you probably care most about are:
+
+* ``OR``: user chooses one license to adhere to; and
+* ``AND``: user has to adhere to all the licenses.
+
+You may also care about `license exceptions
+<https://spdx.org/licenses/exceptions-index.html>`_ that use the ``WITH`` operator,
+e.g. ``Apache-2.0 WITH LLVM-exception``.
