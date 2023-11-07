@@ -18,7 +18,6 @@ class HipExamples(Package):
 
     maintainers("srekolam", "renjithravindrankannath", "afzpatel")
 
-    version("master", branch="master")
     version("5.6.1", sha256="c1b5d30e387f869fae21170790ea3d604f7f0dba7771a9c096d9a5c2351dd001")
     version("5.6.0", sha256="b751a0cac938248f7ea0fbeaa9df35688357b54ddd13359e2842a770b7923dfe")
     version("5.5.1", sha256="c8522ef3f0804c85eef7e9efe2671f375b0d7f2100de85f55dcc2401efed6389")
@@ -28,14 +27,7 @@ class HipExamples(Package):
     patch("0001-add-inc-and-lib-paths-to-openmp-helloworld.patch")
     patch("0002-add-fpic-compile-to-add4.patch")
 
-    for ver in [
-        "master",
-        "5.6.1",
-        "5.6.0",
-        "5.5.1",
-        "5.5.0",
-        "5.4.3",
-    ]:
+    for ver in ["5.6.1", "5.6.0", "5.5.1", "5.5.0", "5.4.3"]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocm-openmp-extras@" + ver, when="@" + ver)
 
