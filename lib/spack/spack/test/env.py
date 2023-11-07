@@ -14,6 +14,7 @@ import llnl.util.filesystem as fs
 import spack.environment as ev
 import spack.spec
 from spack.environment.environment import (
+    DevelopGitPackage,
     EnvironmentManifestFile,
     SpackEnvironmentViewError,
     _error_on_nonempty_view_dir,
@@ -778,3 +779,28 @@ def test_env_with_include_def_missing(mutable_mock_env_path, mock_packages):
     with e:
         with pytest.raises(UndefinedReferenceError, match=r"which does not appear"):
             e.concretize()
+
+
+class TestDevelopGitPackage:
+    def test_detect_git_change(self, mock_git_repository):
+        repo_path = mock_git_repository.path
+        git_change_detector = DevelopGitPackage.from_src_dir(repo_path)
+        git_change_detector.update_changed()
+        git_change_detector.update_prior()
+
+        assert not git_change_detector.update_changed()
+
+        with fs.working_dir(repo_path):
+            with open("r0_file", "a") as f:
+                f.write("extra content")
+
+        assert git_change_detector.update_changed()
+
+        git_change_detector.update_prior()
+    
+        # Now that prior has updated, and no change has occurred since
+        # then, we should go back to reporting no change.
+        assert not git_change_detector.update_changed()
+
+    def test_not_a_git_repo(self):
+        pass

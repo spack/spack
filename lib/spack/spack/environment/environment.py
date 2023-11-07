@@ -443,7 +443,7 @@ class DevelopGitPackage:
         git_dir = pathlib.Path(dev_path) / ".git"
         if not git_dir.is_dir():
             return
-        return DevelopGitPackage(git_dir)
+        return DevelopGitPackage(dev_path)
 
     def git_modification_hash(self):
         """
@@ -454,7 +454,11 @@ class DevelopGitPackage:
         git_index = self.git_dir / "index"
         tmp_index = self.spack_state / "spack-package-git-index"
 
-        os.remove(tmp_index)
+        try:
+            os.remove(tmp_index)
+        except FileNotFoundError:
+            pass
+        self.spack_state.mkdir(exist_ok=True)
         shutil.copyfile(git_index, tmp_index)
 
         env = {"GIT_INDEX_FILE": str(tmp_index)}
@@ -466,7 +470,7 @@ class DevelopGitPackage:
     def update_changed(self):
         """
         Determine the current state of the Git repository (calculate
-        the hash) and return whether it matches the prior state.
+        the hash) and return whether it differs from the prior state.
 
         If there is no prior hash (e.g. the Spack-develop package hasn't
         been installed yet, or precedes this feature), then return
@@ -476,7 +480,7 @@ class DevelopGitPackage:
         prior_hash = self.prior_hash()
         if not prior_hash:
             return False
-        return self.current_hash == prior_hash
+        return self.current_hash != prior_hash
 
     def update_prior(self):
         if not self.current_hash:
@@ -487,7 +491,7 @@ class DevelopGitPackage:
             f.write(self.current_hash)
 
     def prior_hash(self):
-        if not self.cache_state.exists:
+        if not self.cache_state.exists():
             return None
         with open(self.cache_state, "r") as f:
             return f.read()
