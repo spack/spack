@@ -14,8 +14,8 @@ import llnl.util.filesystem as fs
 import spack.environment as ev
 import spack.spec
 from spack.environment.environment import (
-    GitRepoChangeDetector,
     EnvironmentManifestFile,
+    GitRepoChangeDetector,
     SpackEnvironmentViewError,
     _error_on_nonempty_view_dir,
 )

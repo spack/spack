@@ -432,6 +432,15 @@ def _timestamp_changed(spec):
 
 
 class GitRepoChangeDetector:
+    """Associates with a Git repository. Uses Git to determine when
+    tracked files in the repository have changed, regardless of whether
+    they have been committed or staged (i.e. with ``git add``).
+
+    This does not look for changes in untracked files, and maintains
+    extra files for bookkeeping in this directory, within a ``.spack``
+    subdirectory (creating it if it does not exist).
+    """
+
     def __init__(self, dev_path):
         self.base_dir = pathlib.Path(dev_path)
         self.git_dir = self.base_dir / ".git"
