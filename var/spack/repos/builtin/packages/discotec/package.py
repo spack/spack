@@ -18,6 +18,7 @@ class Discotec(CMakePackage):
 
     version("main", branch="main")
 
+    variant("compression", default=False, description="Write sparse grid files compressed")
     variant("ft", default=False, description="DisCoTec with algorithm-based fault tolerance")
     variant("gene", default=False, description="Build for GENE (as task library)")
     variant("hdf5", default=True, description="Interpolation output with HDF5")
@@ -31,6 +32,7 @@ class Discotec(CMakePackage):
     depends_on("cmake@3.24.2:", type="build")
     depends_on("glpk")
     depends_on("highfive+mpi+boost+ipo", when="+hdf5")
+    depends_on("lz4", when="+compression")
     depends_on("mpi")
     depends_on("selalib", when="+selalib")
     depends_on("vtk", when="+vtk")
@@ -38,6 +40,7 @@ class Discotec(CMakePackage):
     def cmake_args(self):
         args = [
             self.define("DISCOTEC_BUILD_MISSING_DEPS", False),
+            self.define_from_variant("DISCOTEC_WITH_COMPRESSION", "compression"),
             self.define_from_variant("DISCOTEC_ENABLEFT", "ft"),
             self.define_from_variant("DISCOTEC_GENE", "gene"),
             self.define_from_variant("DISCOTEC_OPENMP", "openmp"),
