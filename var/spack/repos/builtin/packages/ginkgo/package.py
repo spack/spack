@@ -24,7 +24,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
-    version("1.7.0", branch="develop")  # v1.7.0
+    version("1.7.0", branch="release/1.7.0")  # v1.7.0
     version("1.6.0", commit="1f1ed46e724334626f016f105213c047e16bc1ae")  # v1.6.0
     version("1.5.0", commit="234594c92b58e2384dfb43c2d08e7f43e2b58e7a")  # v1.5.0
     version("1.5.0.glu_experimental", branch="glu_experimental")
