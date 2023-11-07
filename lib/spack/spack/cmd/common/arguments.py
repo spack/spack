@@ -171,6 +171,18 @@ class CreateReporter(argparse.Action):
 
 
 @arg
+def best():
+    return Args(
+        "--best",
+        "--first",
+        action="store_true",
+        default=False,
+        dest="best",
+        help="choose 'best' of multiple matches by arch, version, etc.",
+    )
+
+
+@arg
 def log_format():
     return Args(
         "--log-format",
