@@ -713,6 +713,11 @@ class Hip(CMakePackage):
     test_src_dir = "hip-tests/samples"
 
     @run_after("install")
+    def install_samples(self):
+        if self.spec.satisfies("@5.6.0:"):
+            install_tree(self.test_src_dir, self.spec.prefix.share.samples)
+
+    @run_after("install")
     def cache_test_sources(self):
         """Copy the tests source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
