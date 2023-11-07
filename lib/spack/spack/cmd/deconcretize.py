@@ -24,7 +24,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         "--root",
         action="store_true",
-        help="Deconcretize only environment roots. Additional roots that depend on matching specs"
+        help="deconcretize only environment roots. additional roots that depend on matching specs"
         " will be ignored",
     )
     arguments.add_common_arguments(subparser, ["yes_to_all", "specs"])
@@ -33,7 +33,7 @@ def setup_parser(subparser):
         "--all",
         action="store_true",
         dest="all",
-        help="Deconcretize ALL specs that match each supplied spec",
+        help="deconcretize ALL specs that match each supplied spec",
     )
 
 
