@@ -221,6 +221,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     generator("ninja")
 
     def setup_build_environment(self, env):
+        env.append_flags("CXXFLAGS", "-fno-omit-frame-pointer")
         if self.spec.satisfies("%apple-clang"):
             env.append_flags("CPPFLAGS", self.compiler.openmp_flag)
             env.append_flags("CFLAGS", self.spec["llvm-openmp"].headers.include_flags)
