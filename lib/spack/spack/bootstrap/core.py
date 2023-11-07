@@ -214,7 +214,7 @@ class BuildcacheBootstrapper(Bootstrapper):
         with spack.config.override(self.mirror_scope):
             # This index is currently needed to get the compiler used to build some
             # specs that we know by dag hash.
-            spack.binary_distribution.binary_index.regenerate_spec_cache()
+            spack.binary_distribution.BINARY_INDEX.regenerate_spec_cache()
             index = spack.binary_distribution.update_cache_and_get_specs()
 
             if not index:
@@ -291,6 +291,10 @@ class SourceBootstrapper(Bootstrapper):
         with spack_python_interpreter():
             # Add hint to use frontend operating system on Cray
             concrete_spec = spack.spec.Spec(abstract_spec_str + " ^" + spec_for_current_python())
+            # This is needed to help the old concretizer taking the `setuptools` dependency
+            # only when bootstrapping from sources on Python 3.12
+            if spec_for_current_python() == "python@3.12":
+                concrete_spec.constrain("+force_setuptools")
 
             if module == "clingo":
                 # TODO: remove when the old concretizer is deprecated  # pylint: disable=fixme

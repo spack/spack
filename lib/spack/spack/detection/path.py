@@ -15,9 +15,12 @@ import warnings
 from typing import Dict, List, Optional, Set, Tuple
 
 import llnl.util.filesystem
+import llnl.util.lang
 import llnl.util.tty
 
+import spack.util.elf as elf_utils
 import spack.util.environment
+import spack.util.environment as environment
 import spack.util.ld_so_conf
 
 from .common import (
@@ -39,13 +42,27 @@ if sys.platform == "win32":
     DETECTION_TIMEOUT = 120
 
 
-def common_windows_package_paths() -> List[str]:
+def common_windows_package_paths(pkg_cls=None) -> List[str]:
+    """Get the paths for common package installation location on Windows
+    that are outside the PATH
+    Returns [] on unix
+    """
+    if sys.platform != "win32":
+        return []
     paths = WindowsCompilerExternalPaths.find_windows_compiler_bundled_packages()
     paths.extend(find_win32_additional_install_paths())
     paths.extend(WindowsKitExternalPaths.find_windows_kit_bin_paths())
     paths.extend(WindowsKitExternalPaths.find_windows_kit_reg_installed_roots_paths())
     paths.extend(WindowsKitExternalPaths.find_windows_kit_reg_sdk_paths())
+    if pkg_cls:
+        paths.extend(compute_windows_user_path_for_package(pkg_cls))
+        paths.extend(compute_windows_program_path_for_package(pkg_cls))
     return paths
+
+
+def file_identifier(path):
+    s = os.stat(path)
+    return (s.st_dev, s.st_ino)
 
 
 def executables_in_path(path_hints: List[str]) -> Dict[str, str]:
@@ -62,18 +79,44 @@ def executables_in_path(path_hints: List[str]) -> Dict[str, str]:
         path_hints: list of paths to be searched. If None the list will be
             constructed based on the PATH environment variable.
     """
-    if sys.platform == "win32":
-        path_hints.extend(common_windows_package_paths())
     search_paths = llnl.util.filesystem.search_paths_for_executables(*path_hints)
     return path_to_dict(search_paths)
+
+
+def get_elf_compat(path):
+    """For ELF files, get a triplet (EI_CLASS, EI_DATA, e_machine) and see if
+    it is host-compatible."""
+    # On ELF platforms supporting, we try to be a bit smarter when it comes to shared
+    # libraries, by dropping those that are not host compatible.
+    with open(path, "rb") as f:
+        elf = elf_utils.parse_elf(f, only_header=True)
+        return (elf.is_64_bit, elf.is_little_endian, elf.elf_hdr.e_machine)
+
+
+def accept_elf(path, host_compat):
+    """Accept an ELF file if the header matches the given compat triplet,
+    obtained with :py:func:`get_elf_compat`. In case it's not an ELF (e.g.
+    static library, or some arbitrary file, fall back to is_readable_file)."""
+    # Fast path: assume libraries at least have .so in their basename.
+    # Note: don't replace with splitext, because of libsmth.so.1.2.3 file names.
+    if ".so" not in os.path.basename(path):
+        return llnl.util.filesystem.is_readable_file(path)
+    try:
+        return host_compat == get_elf_compat(path)
+    except (OSError, elf_utils.ElfParsingError):
+        return llnl.util.filesystem.is_readable_file(path)
 
 
 def libraries_in_ld_and_system_library_path(
     path_hints: Optional[List[str]] = None,
 ) -> Dict[str, str]:
-    """Get the paths of all libraries available from LD_LIBRARY_PATH,
-    LIBRARY_PATH, DYLD_LIBRARY_PATH, DYLD_FALLBACK_LIBRARY_PATH, and
-    standard system library paths.
+    """Get the paths of all libraries available from ``path_hints`` or the
+    following defaults:
+
+    - Environment variables (Linux: ``LD_LIBRARY_PATH``, Darwin: ``DYLD_LIBRARY_PATH``,
+      and ``DYLD_FALLBACK_LIBRARY_PATH``)
+    - Dynamic linker default paths (glibc: ld.so.conf, musl: ld-musl-<arch>.path)
+    - Default system library paths.
 
     For convenience, this is constructed as a dictionary where the keys are
     the library paths and the values are the names of the libraries
@@ -87,31 +130,71 @@ def libraries_in_ld_and_system_library_path(
             constructed based on the set of LD_LIBRARY_PATH, LIBRARY_PATH,
             DYLD_LIBRARY_PATH, and DYLD_FALLBACK_LIBRARY_PATH environment
             variables as well as the standard system library paths.
+        path_hints (list): list of paths to be searched. If ``None``, the default
+            system paths are used.
     """
-    path_hints = (
-        path_hints
-        or spack.util.environment.get_path("LD_LIBRARY_PATH")
-        + spack.util.environment.get_path("DYLD_LIBRARY_PATH")
-        + spack.util.environment.get_path("DYLD_FALLBACK_LIBRARY_PATH")
-        + spack.util.ld_so_conf.host_dynamic_linker_search_paths()
+    if path_hints:
+        search_paths = llnl.util.filesystem.search_paths_for_libraries(*path_hints)
+    else:
+        search_paths = []
+
+        # Environment variables
+        if sys.platform == "darwin":
+            search_paths.extend(environment.get_path("DYLD_LIBRARY_PATH"))
+            search_paths.extend(environment.get_path("DYLD_FALLBACK_LIBRARY_PATH"))
+        elif sys.platform.startswith("linux"):
+            search_paths.extend(environment.get_path("LD_LIBRARY_PATH"))
+
+        # Dynamic linker paths
+        search_paths.extend(spack.util.ld_so_conf.host_dynamic_linker_search_paths())
+
+        # Drop redundant paths
+        search_paths = list(filter(os.path.isdir, search_paths))
+
+    # Make use we don't doubly list /usr/lib and /lib etc
+    search_paths = list(llnl.util.lang.dedupe(search_paths, key=file_identifier))
+
+    try:
+        host_compat = get_elf_compat(sys.executable)
+        accept = lambda path: accept_elf(path, host_compat)
+    except (OSError, elf_utils.ElfParsingError):
+        accept = llnl.util.filesystem.is_readable_file
+
+    path_to_lib = {}
+    # Reverse order of search directories so that a lib in the first
+    # search path entry overrides later entries
+    for search_path in reversed(search_paths):
+        for lib in os.listdir(search_path):
+            lib_path = os.path.join(search_path, lib)
+            if accept(lib_path):
+                path_to_lib[lib_path] = lib
+    return path_to_lib
+
+
+def libraries_in_windows_paths(path_hints: Optional[List[str]] = None) -> Dict[str, str]:
+    """Get the paths of all libraries available from the system PATH paths.
+
+    For more details, see `libraries_in_ld_and_system_library_path` regarding
+    return type and contents.
+
+    Args:
+        path_hints: list of paths to be searched. If None the list will be
+            constructed based on the set of PATH environment
+            variables as well as the standard system library paths.
+    """
+    search_hints = (
+        path_hints if path_hints is not None else spack.util.environment.get_path("PATH")
     )
-    search_paths = llnl.util.filesystem.search_paths_for_libraries(*path_hints)
-    return path_to_dict(search_paths)
-
-
-def libraries_in_windows_paths(path_hints: List[str]) -> Dict[str, str]:
-    path_hints.extend(spack.util.environment.get_path("PATH"))
-    search_paths = llnl.util.filesystem.search_paths_for_libraries(*path_hints)
+    search_paths = llnl.util.filesystem.search_paths_for_libraries(*search_hints)
     # on Windows, some libraries (.dlls) are found in the bin directory or sometimes
     # at the search root. Add both of those options to the search scheme
-    search_paths.extend(llnl.util.filesystem.search_paths_for_executables(*path_hints))
-    search_paths.extend(WindowsKitExternalPaths.find_windows_kit_lib_paths())
-    search_paths.extend(WindowsKitExternalPaths.find_windows_kit_bin_paths())
-    search_paths.extend(WindowsKitExternalPaths.find_windows_kit_reg_installed_roots_paths())
-    search_paths.extend(WindowsKitExternalPaths.find_windows_kit_reg_sdk_paths())
-    # SDK and WGL should be handled by above, however on occasion the WDK is in an atypical
-    # location, so we handle that case specifically.
-    search_paths.extend(WindowsKitExternalPaths.find_windows_driver_development_kit_paths())
+    search_paths.extend(llnl.util.filesystem.search_paths_for_executables(*search_hints))
+    if path_hints is None:
+        # if no user provided path was given, add defaults to the search
+        search_paths.extend(WindowsKitExternalPaths.find_windows_kit_lib_paths())
+        # SDK and WGL should be handled by above, however on occasion the WDK is in an atypical
+        # location, so we handle that case specifically.
+        search_paths.extend(WindowsKitExternalPaths.find_windows_driver_development_kit_paths())
     return path_to_dict(search_paths)
 
 
@@ -125,19 +208,8 @@ def _group_by_prefix(paths: Set[str]) -> Dict[str, Set[str]]:
 class Finder:
     """Inspects the file-system looking for packages. Guesses places where to look using PATH."""
 
-    def path_hints(
-        self, *, pkg: "spack.package_base.PackageBase", initial_guess: Optional[List[str]] = None
-    ) -> List[str]:
-        """Returns the list of paths to be searched.
-
-        Args:
-            pkg: package being detected
-            initial_guess: initial list of paths from caller
-        """
-        result = initial_guess or []
-        result.extend(compute_windows_user_path_for_package(pkg))
-        result.extend(compute_windows_program_path_for_package(pkg))
-        return result
+    def default_path_hints(self) -> List[str]:
+        return []
 
     def search_patterns(self, *, pkg: "spack.package_base.PackageBase") -> List[str]:
         """Returns the list of patterns used to match candidate files.
@@ -245,6 +317,8 @@ class Finder:
         Args:
             pkg_name: package being detected
             initial_guess: initial list of paths to search from the caller
+                           if None, default paths are searched. If this
+                           is an empty list, nothing will be searched.
         """
         import spack.repo
 
@@ -252,13 +326,18 @@ class Finder:
         patterns = self.search_patterns(pkg=pkg_cls)
         if not patterns:
             return []
-        path_hints = self.path_hints(pkg=pkg_cls, initial_guess=initial_guess)
-        candidates = self.candidate_files(patterns=patterns, paths=path_hints)
+        if initial_guess is None:
+            initial_guess = self.default_path_hints()
+            initial_guess.extend(common_windows_package_paths(pkg_cls))
+        candidates = self.candidate_files(patterns=patterns, paths=initial_guess)
         result = self.detect_specs(pkg=pkg_cls, paths=candidates)
         return result
 
 
 class ExecutablesFinder(Finder):
+    def default_path_hints(self) -> List[str]:
+        return spack.util.environment.get_path("PATH")
+
     def search_patterns(self, *, pkg: "spack.package_base.PackageBase") -> List[str]:
         result = []
         if hasattr(pkg, "executables") and hasattr(pkg, "platform_executables"):
@@ -298,7 +377,7 @@ class LibrariesFinder(Finder):
         libraries_by_path = (
             libraries_in_ld_and_system_library_path(path_hints=paths)
             if sys.platform != "win32"
-            else libraries_in_windows_paths(paths)
+            else libraries_in_windows_paths(path_hints=paths)
         )
         patterns = [re.compile(x) for x in patterns]
         result = []
@@ -334,21 +413,16 @@ def by_path(
     # TODO: Packages should be able to define both .libraries and .executables in the future
     # TODO: determine_spec_details should get all relevant libraries and executables in one call
     executables_finder, libraries_finder = ExecutablesFinder(), LibrariesFinder()
-
-    executables_path_guess = (
-        spack.util.environment.get_path("PATH") if path_hints is None else path_hints
-    )
-    libraries_path_guess = [] if path_hints is None else path_hints
     detected_specs_by_package: Dict[str, Tuple[concurrent.futures.Future, ...]] = {}
 
     result = collections.defaultdict(list)
     with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
         for pkg in packages_to_search:
             executable_future = executor.submit(
-                executables_finder.find, pkg_name=pkg, initial_guess=executables_path_guess
+                executables_finder.find, pkg_name=pkg, initial_guess=path_hints
             )
             library_future = executor.submit(
-                libraries_finder.find, pkg_name=pkg, initial_guess=libraries_path_guess
+                libraries_finder.find, pkg_name=pkg, initial_guess=path_hints
             )
             detected_specs_by_package[pkg] = executable_future, library_future
 
@@ -359,9 +433,13 @@ def by_path(
                     if detected:
                         _, unqualified_name = spack.repo.partition_package_name(pkg_name)
                         result[unqualified_name].extend(detected)
-                except Exception:
+                except concurrent.futures.TimeoutError:
                     llnl.util.tty.debug(
                         f"[EXTERNAL DETECTION] Skipping {pkg_name}: timeout reached"
+                    )
+                except Exception as e:
+                    llnl.util.tty.debug(
+                        f"[EXTERNAL DETECTION] Skipping {pkg_name}: exception occured {e}"
                     )
 
     return result
