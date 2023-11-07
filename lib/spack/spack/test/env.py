@@ -785,22 +785,25 @@ class TestGitRepoChangeDetector:
     def test_detect_git_change(self, mock_git_repository):
         repo_path = mock_git_repository.path
         git_change_detector = GitRepoChangeDetector.from_src_dir(repo_path)
-        git_change_detector.update_changed()
+        # If no prior recorded state exists the default should be to
+        # indicate that a rebuild is required.
+        assert git_change_detector.update_current()
+
         git_change_detector.update_prior()
 
-        assert not git_change_detector.update_changed()
+        assert not git_change_detector.update_current()
 
         with fs.working_dir(repo_path):
             with open("r0_file", "a") as f:
                 f.write("extra content")
 
-        assert git_change_detector.update_changed()
+        assert git_change_detector.update_current()
 
         git_change_detector.update_prior()
 
         # Now that prior has updated, and no change has occurred since
         # then, we should go back to reporting no change.
-        assert not git_change_detector.update_changed()
+        assert not git_change_detector.update_current()
 
     def test_not_a_git_repo(self, tmpdir):
         not_a_git_repo = tmpdir.mkdir("env_dir").strpath

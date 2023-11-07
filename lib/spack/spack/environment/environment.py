@@ -478,25 +478,25 @@ class GitRepoChangeDetector:
             hash = git("write-tree", env=env, output=str)
         return hash
 
-    def update_changed(self):
+    def update_current(self):
         """
         Determine the current state of the Git repository (calculate
         the hash) and return whether it differs from the prior state.
 
         If there is no prior hash (e.g. the Spack-develop package hasn't
         been installed yet, or precedes this feature), then return
-        ``False``.
+        ``True`` (without).
         """
         self.current_hash = self.git_modification_hash()
         prior_hash = self.prior_hash()
         if not prior_hash:
-            return False
+            return True
         return self.current_hash != prior_hash
 
     def update_prior(self):
         if not self.current_hash:
             raise Exception(
-                "Internal Spack error: update_changed was not called before update_prior"
+                "Internal Spack error: update_current was not called before update_prior"
             )
         with open(self.cache_state, "w") as f:
             f.write(self.current_hash)
@@ -1901,7 +1901,7 @@ class Environment:
             git_state = GitRepoChangeDetector.from_src_dir(dev_path_var.value)
 
             if git_state:
-                if git_state.update_changed():
+                if git_state.update_current():
                     changed_dev_specs.append(s)
 
                 # This is appended regardless of whether there was a change: we want
