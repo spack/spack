@@ -230,6 +230,8 @@ class Dealii(CMakePackage, CudaPackage):
     # do not require +rol to make concretization of xsdk possible
     depends_on("trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado", when="+trilinos")
     depends_on("trilinos~hypre", when="+trilinos+int64")
+    # TODO
+    conflicts("+cuda", when="+trilinos")
     for a in CudaPackage.cuda_arch_values:
         arch_str = "+cuda cuda_arch=" + a
         trilinos_spec = "trilinos +wrapper " + arch_str
