@@ -82,6 +82,7 @@ class LinuxPerf(Package):
     depends_on("zstd", when="+zstd")
     depends_on("xz", when="+xz")
     depends_on("openssl", when="+openssl")
+    depends_on("openssl@1.1:", when="@5.19: +openssl")
     depends_on("java", when="+jvmti")
 
     depends_on("asciidoc", type="build")
