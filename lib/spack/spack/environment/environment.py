@@ -433,8 +433,9 @@ def _timestamp_changed(spec):
 
 class DevelopGitPackage:
     def __init__(self, dev_path):
-        self.git_dir = pathlib.Path(dev_path) / ".git"
-        self.spack_state = pathlib.Path(dev_path) / ".spack"
+        self.base_dir = pathlib.Path(dev_path)
+        self.git_dir = self.base_dir / ".git"
+        self.spack_state = self.base_dir / ".spack"
         self.cache_state = self.spack_state / "spackdev-git-hash"
         self.current_hash = None
 
@@ -463,8 +464,9 @@ class DevelopGitPackage:
 
         env = {"GIT_INDEX_FILE": str(tmp_index)}
         git = spack.util.git.git(required=True)
-        git("add", "-u", env=env)
-        hash = git("write-tree", env=env, output=str)
+        with fs.working_dir(self.base_dir):
+            git("add", "-u", env=env)
+            hash = git("write-tree", env=env, output=str)
         return hash
 
     def update_changed(self):
