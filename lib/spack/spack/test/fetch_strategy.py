@@ -10,6 +10,7 @@ import pytest
 
 from spack import fetch_strategy, stage
 
+
 def test_fetchstrategy_bad_url_scheme():
     """Ensure that trying to make a fetch strategy from a URL with an
     unsupported scheme fails as expected."""
