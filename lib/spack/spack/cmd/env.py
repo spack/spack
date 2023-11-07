@@ -398,7 +398,7 @@ def env_deactivate(args):
         return 1
 
     # Error out when -e, -E, -D flags are given, cause they are ambiguous.
-    if args.env_name or args.no_env or args.env_dir:
+    if args.env or args.no_env or args.env_dir:
         tty.die("Calling spack env deactivate with --env, --env-dir and --no-env is ambiguous")
 
     if ev.active_environment() is None:
