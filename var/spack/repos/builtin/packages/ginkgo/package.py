@@ -49,6 +49,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@3.18:", type="build", when="+cuda@1.7.0:")
     depends_on("cuda@9:", when="+cuda @:1.4.0")
     depends_on("cuda@9.2:", when="+cuda @1.5.0:")
+    depends_on("cuda@10.0:", when="+cuda @1.7.0:")
     depends_on("mpi", when="+mpi")
 
     depends_on("rocthrust", when="+rocm")
