@@ -510,6 +510,18 @@ class TestConcretize:
         assert spec.satisfies("~foo") and spec.satisfies("^dependency-foo-bar~foo")
         assert spec.satisfies("+bar") and not spec.satisfies("^dependency-foo-bar+bar")
 
+    @pytest.mark.only_clingo("Original concretizer is allowed to forego variant propagation")
+    def test_concretize_propagate_multivalue_variant(self):
+        """Test that multivalue variants are propagating the specified value(s)
+        to their dependecies. The dependencies should not have the default value"""
+        spec = Spec("multivalue-variant foo==baz,fee")
+        spec.concretize()
+
+        assert spec.satisfies("^a foo=baz,fee")
+        assert spec.satisfies("^b foo=baz,fee")
+        assert not spec.satisfies("^a foo=bar")
+        assert not spec.satisfies("^b foo=bar")
+
     def test_no_matching_compiler_specs(self, mock_low_high_config):
         # only relevant when not building compilers as needed
         with spack.concretize.enable_compiler_existence_check():
@@ -1876,7 +1888,8 @@ class TestConcretize:
         # If we concretize with --reuse it is not, since "mpich~debug" was already installed
         with spack.config.override("concretizer:reuse", True):
             s = Spec("mpich").concretized()
-            assert s.satisfies("~debug")
+            assert s.installed
+            assert s.satisfies("~debug"), s
 
     @pytest.mark.regression("32471")
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
@@ -2170,14 +2183,16 @@ class TestConcretize:
 
 @pytest.fixture()
 def duplicates_test_repository():
-    builder_test_path = os.path.join(spack.paths.repos_path, "duplicates.test")
-    with spack.repo.use_repositories(builder_test_path) as mock_repo:
+    repository_path = os.path.join(spack.paths.repos_path, "duplicates.test")
+    with spack.repo.use_repositories(repository_path) as mock_repo:
         yield mock_repo
 
 
 @pytest.mark.usefixtures("mutable_config", "duplicates_test_repository")
 @pytest.mark.only_clingo("Not supported by the original concretizer")
 class TestConcretizeSeparately:
+    """Collects test on separate concretization"""
+
     @pytest.mark.parametrize("strategy", ["minimal", "full"])
     def test_two_gmake(self, strategy):
         """Tests that we can concretize a spec with nodes using the same build
@@ -2358,3 +2373,53 @@ class TestConcreteSpecsByHash:
                 assert node == container[node.dag_hash()]
                 assert node.dag_hash() in container
                 assert node is not container[node.dag_hash()]
+
+
+@pytest.fixture()
+def edges_test_repository():
+    repository_path = os.path.join(spack.paths.repos_path, "edges.test")
+    with spack.repo.use_repositories(repository_path) as mock_repo:
+        yield mock_repo
+
+
+@pytest.mark.usefixtures("mutable_config", "edges_test_repository")
+@pytest.mark.only_clingo("Edge properties not supported by the original concretizer")
+class TestConcretizeEdges:
+    """Collects tests on edge properties"""
+
+    @pytest.mark.parametrize(
+        "spec_str,expected_satisfies,expected_not_satisfies",
+        [
+            ("conditional-edge", ["^zlib@2.0"], ["^zlib-api"]),
+            ("conditional-edge~foo", ["^zlib@2.0"], ["^zlib-api"]),
+            (
+                "conditional-edge+foo",
+                ["^zlib@1.0", "^zlib-api", "^[virtuals=zlib-api] zlib"],
+                ["^[virtuals=mpi] zlib"],
+            ),
+        ],
+    )
+    def test_condition_triggered_by_edge_property(
+        self, spec_str, expected_satisfies, expected_not_satisfies
+    ):
+        """Tests that we can enforce constraints based on edge attributes"""
+        s = Spec(spec_str).concretized()
+
+        for expected in expected_satisfies:
+            assert s.satisfies(expected), str(expected)
+
+        for not_expected in expected_not_satisfies:
+            assert not s.satisfies(not_expected), str(not_expected)
+
+    def test_virtuals_provided_together_but_only_one_required_in_dag(self):
+        """Tests that we can use a provider that provides more than one virtual together,
+        and is providing only one, iff the others are not needed in the DAG.
+
+        o blas-only-client
+        | [virtual=blas]
+        o openblas (provides blas and lapack together)
+
+        """
+        s = Spec("blas-only-client ^openblas").concretized()
+        assert s.satisfies("^[virtuals=blas] openblas")
+        assert not s.satisfies("^[virtuals=blas,lapack] openblas")
