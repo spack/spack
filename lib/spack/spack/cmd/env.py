@@ -310,7 +310,9 @@ def env_activate(args):
 
     # create if user requested, and then recall recursively
     elif args.create:
+        tty.set_msg_enabled(False)
         env_create(args)
+        tty.set_msg_enabled(True)
         env_activate(args)
         return
 
