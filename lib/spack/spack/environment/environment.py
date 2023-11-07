@@ -422,20 +422,10 @@ def _eval_conditional(string):
     return eval(string, valid_variables)
 
 
-def _is_dev_spec_and_has_changed(spec):
+def _timestamp_changed(spec):
     """Check if the passed spec is a dev build and whether it has changed since the
     last installation"""
-    # First check if this is a dev build and in the process already try to get
-    # the dev_path
-    dev_path_var = spec.variants.get("dev_path", None)
-    if not dev_path_var:
-        return False
-
-    # Now we can check whether the code changed since the last installation
-    if not spec.installed:
-        # Not installed -> nothing to compare against
-        return False
-
+    dev_path_var = spec.variants.get("dev_path")
     _, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
     mtime = fs.last_modification_time_recursive(dev_path_var.value)
     return mtime > record.installation_time
@@ -446,6 +436,7 @@ class DevelopGitPackage:
         self.git_dir = pathlib.Path(dev_path) / ".git"
         self.spack_state = pathlib.Path(dev_path) / ".spack"
         self.cache_state = self.spack_state / "spackdev-git-hash"
+        self.current_hash = None
 
     @staticmethod
     def from_src_dir(dev_path):
@@ -472,17 +463,22 @@ class DevelopGitPackage:
         hash = git("write-tree", env=env, output=str)
         return hash
 
-    def update(self, hash):
+    def update_changed(self):
+        prior_hash = self.get()
+        if not prior_hash:
+            return False
+        self.current_hash = self.git_modification_hash()
+        return self.current_hash == prior_hash
+
+    def update_prior(self):
         with open(self.cache_state, "w") as f:
-            f.write(hash)
+            f.write(self.current_hash)
 
     def get(self):
+        if not self.cache_state.exists:
+            return None
         with open(self.cache_state, "r") as f:
             return f.read()
-
-    def changed(self, hash):
-        prior_hash = self.get()
-        return prior_hash != hash
 
 
 def _error_on_nonempty_view_dir(new_root):
@@ -1859,13 +1855,33 @@ class Environment:
 
     def _get_overwrite_specs(self):
         # Find all dev specs that were modified.
-        changed_dev_specs = [
-            s
-            for s in traverse.traverse_nodes(
-                self.concrete_roots(), order="breadth", key=traverse.by_dag_hash
-            )
-            if _is_dev_spec_and_has_changed(s)
-        ]
+        git_states = list()
+        changed_dev_specs = list()
+        for s in traverse.traverse_nodes(
+            self.concrete_roots(), order="breadth", key=traverse.by_dag_hash
+        ):
+            # First check if this is a dev build and in the process already try to get
+            # the dev_path
+            dev_path_var = s.variants.get("dev_path", None)
+            if not dev_path_var:
+                return False
+
+            # Now we can check whether the code changed since the last installation
+            if not s.installed:
+                # Not installed -> nothing to compare against
+                return False
+
+            git_state = DevelopGitPackage.from_src_dir(dev_path_var.value)
+
+            if git_state:
+                if git_state.update_changed():
+                    changed_dev_specs.append(s)
+
+                # This is appended either way, since we want to store the state
+                # the first time we install the package
+                git_states.append(git_state)
+            elif _timestamp_changed(s):
+                changed_dev_specs.append(s)
 
         # Collect their hashes, and the hashes of their installed parents.
         # Notice: with order=breadth all changed dev specs are at depth 0,
@@ -1881,7 +1897,7 @@ class Environment:
                 key=traverse.by_dag_hash,
             )
             if depth == 0 or spec.installed
-        ]
+        ], git_states
 
     def _install_log_links(self, spec):
         if not spec.external:
@@ -1958,7 +1974,7 @@ class Environment:
         else:
             tty.debug("Processing {0} uninstalled specs".format(len(specs_to_install)))
 
-        specs_to_overwrite = self._get_overwrite_specs()
+        specs_to_overwrite, git_states = self._get_overwrite_specs()
         tty.debug("{0} specs need to be overwritten".format(len(specs_to_overwrite)))
 
         install_args["overwrite"] = install_args.get("overwrite", []) + specs_to_overwrite
@@ -1972,6 +1988,9 @@ class Environment:
         try:
             builder = PackageInstaller(installs)
             builder.install()
+
+            for git_state in git_states:
+                git_state.update_prior()
         finally:
             # Ensure links are set appropriately
             for spec in specs_to_install:
