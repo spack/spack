@@ -47,7 +47,7 @@ class IntelXed(Package):
         git=mbuild_git,
         tag="v2022.07.28",
         commit="75cb46e6536758f1a3cdb3d6bd83a4a9fd0338bb",
-        when="@2022.07:9999"
+        when="@2022.07:9999",
     )
 
     resource(
