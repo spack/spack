@@ -64,6 +64,14 @@ jobs:
           images: |
               ghcr.io/${{ github.repository_owner }}/${{ matrix.dockerfile[0] }}
               ${{ github.repository_owner }}/${{ matrix.dockerfile[0] }}
+          tags: |
+              type=schedule,pattern=nightly
+              type=schedule,pattern=develop
+              type=semver,pattern={{version}}
+              type=semver,pattern={{major}}.{{minor}}
+              type=semver,pattern={{major}}
+              type=ref,event=branch
+              type=ref,event=pr
 
       - name: Generate the Dockerfile
         env:
