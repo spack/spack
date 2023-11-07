@@ -57,6 +57,6 @@ spack:
     - py-minis-validation
     - py-morphio
     - py-neuror
-    - py-morph-tool+neuron
+    - py-morph-tool+nrn
     - py-region-grower
     - py-cwl-registry

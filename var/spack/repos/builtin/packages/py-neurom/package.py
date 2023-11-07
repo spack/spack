@@ -13,14 +13,14 @@ class PyNeurom(PythonPackage):
     git = "https://github.com/BlueBrain/NeuroM.git"
     pypi = "neurom/neurom-2.2.1.tar.gz"
 
-    version("develop", branch="master")
+    version("master", branch="master")
     version("3.2.4", sha256="a584e0979b54deee906dd716ea90de20773e20b527d83960d0fe655b0905eb4a")
 
     variant("plotly", default=False, description="Enable plotly support")
 
-    depends_on("py-setuptools@0.42:", type=("build", "run"))
+    depends_on("py-setuptools@42:", type=("build", "run"))
     depends_on("py-setuptools-scm", type="build")
-    depends_on("py-wheel", type="build")
+    depends_on("python@3.8:", type=("build", "run"))
 
     depends_on("py-click@7.0:", type=("build", "run"))
     depends_on("py-matplotlib@3.2.1:", type=("build", "run"))

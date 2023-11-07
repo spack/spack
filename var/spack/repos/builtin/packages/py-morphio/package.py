@@ -19,13 +19,12 @@ class PyMorphio(PythonPackage):
 
     version("3.3.6", sha256="0f2e55470d92a3d89f2141ae905ee104fd16257b93dafb90682d90171de2f4e6")
 
-    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@24.2:", type="build")
     depends_on("py-setuptools-scm", type="build")
 
     depends_on("ninja", type="build")
     depends_on("cmake@3.2:", type="build")
     depends_on("py-numpy@1.14.1:", type=("build", "run"))
-    if sys.platform == "win32":
-        depends_on("py-h5py@3", type=("build", "run"))
-    else:
+    depends_on("py-h5py@3", when="platform=windows", type=("build", "run"))
+    if sys.platform != "win32":
         depends_on("hdf5")
