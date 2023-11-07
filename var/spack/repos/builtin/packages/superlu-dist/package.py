@@ -53,14 +53,16 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
         ),
     )
     variant("shared", default=True, description="Build shared libraries")
+    variant("parmetis", default=True, description="Enable ParMETIS library")
 
     depends_on("mpi")
     depends_on("blas")
     depends_on("lapack")
-    depends_on("parmetis +int64", when="+int64")
-    depends_on("metis@5: +int64", when="+int64")
-    depends_on("parmetis ~int64", when="~int64")
-    depends_on("metis@5: ~int64", when="~int64")
+    with when("+parmetis"):
+        depends_on("metis@5: +int64", when="+int64")
+        depends_on("parmetis +int64", when="+int64")
+        depends_on("metis@5: ~int64", when="~int64")
+        depends_on("parmetis ~int64", when="~int64")
     depends_on("cmake@3.18.1:", type="build", when="@7.1.0:")
     depends_on("hipblas", when="+rocm")
     depends_on("rocsolver", when="+rocm")
@@ -93,13 +95,17 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
         append_define("TPL_LAPACK_LIBRARIES", spec["lapack"].libs)
         append_define("TPL_ENABLE_LAPACKLIB", True)
         append_define("USE_XSDK_DEFAULTS", True)
-        append_define(
-            "TPL_PARMETIS_LIBRARIES", [spec["parmetis"].libs.ld_flags, spec["metis"].libs.ld_flags]
-        )
-        append_define(
-            "TPL_PARMETIS_INCLUDE_DIRS",
-            [spec["parmetis"].prefix.include, spec["metis"].prefix.include],
-        )
+
+        append_from_variant("TPL_ENABLE_PARMETISLIB", "parmetis")
+        if "+parmetis" in spec:
+            append_define(
+                "TPL_PARMETIS_LIBRARIES",
+                [spec["parmetis"].libs.ld_flags, spec["metis"].libs.ld_flags],
+            )
+            append_define(
+                "TPL_PARMETIS_INCLUDE_DIRS",
+                [spec["parmetis"].prefix.include, spec["metis"].prefix.include],
+            )
 
         append_define("XSDK_INDEX_SIZE", "64" if "+int64" in spec else "32")
 
