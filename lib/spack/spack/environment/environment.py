@@ -802,7 +802,7 @@ def _create_environment(path):
 class Environment:
     """A Spack environment, which bundles together configuration and a list of specs."""
 
-    def __init__(self, manifest_dir: Union[str, pathlib.Path], _git_checker=None) -> None:
+    def __init__(self, manifest_dir: Union[str, pathlib.Path]) -> None:
         """An environment can be constructed from a directory containing a "spack.yaml" file, and
         optionally a consistent "spack.lock" file.
 
@@ -832,11 +832,6 @@ class Environment:
         self._repo = None
         #: Previously active environment
         self._previous_active = None
-
-        # Callable that can determine whether a directory is managed
-        # as a Git repository, returning a GitRepoChangeDetector for
-        # it if so
-        self._git_checker = _git_checker or GitRepoChangeDetector.from_src_dir
 
         with lk.ReadTransaction(self.txlock):
             self.manifest = EnvironmentManifestFile(manifest_dir)
@@ -1885,10 +1880,15 @@ class Environment:
         self.concretized_order.append(h)
         self.specs_by_hash[h] = concrete
 
-    # TODO: this should only use git state when configured to do so
-    # TODO: test should set _git_checker
-    def _get_overwrite_specs(self):
+    def _get_overwrite_specs(self, _git_checker=None):
         # Find all dev specs that were modified.
+
+        # Callable that can determine whether a directory is managed
+        # as a Git repository, returning a GitRepoChangeDetector for
+        # it if so
+        _git_checker = _git_checker or GitRepoChangeDetector.from_src_dir
+        detect_changes_with_git = self.manifest.configuration["detect-changes-with-git"]
+
         git_states = list()
         changed_dev_specs = list()
         for s in traverse.traverse_nodes(
@@ -1905,16 +1905,20 @@ class Environment:
                 # Not installed -> nothing to compare against
                 return False
 
-            git_state = self._git_checker(dev_path_var.value)
+            if detect_changes_with_git:
+                git_state = _git_checker(dev_path_var.value)
+                if git_state:
+                    if git_state.update_current():
+                        changed_dev_specs.append(s)
 
-            if git_state:
-                if git_state.update_current():
-                    changed_dev_specs.append(s)
+                    # This is appended regardless of whether there was a change: we want
+                    # to store the state the first time we install the package
+                    git_states.append(git_state)
+                    continue
 
-                # This is appended regardless of whether there was a change: we want
-                # to store the state the first time we install the package
-                git_states.append(git_state)
-            elif _timestamp_changed(s):
+            # This runs if (a) we are not detecting changes with git or (b) the
+            # developed benchmark is not managed with git
+            if _timestamp_changed(s):
                 changed_dev_specs.append(s)
 
         # Collect their hashes, and the hashes of their installed parents.

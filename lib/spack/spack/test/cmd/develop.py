@@ -146,6 +146,45 @@ class TestDevelop:
             # Check modifications actually worked
             assert spack.spec.Spec("mpich@1.0").concretized().satisfies("dev_path=%s" % abspath)
 
+    def test_develop_overwrite_git(self, tmpdir_factory, mutable_config):
+        tmpdir = tmpdir_factory.mktemp("basedir")
+        devpath = str(tmpdir.ensure("devpath", dir=True))
+        spack_yaml = str(tmpdir.ensure("spack.yaml"))
+
+        with open(spack_yaml, "w") as f:
+            f.write(
+                """\
+spack:
+    detect-changes-with-git: true
+    view: false
+    specs: []
+"""
+            )
+
+        class MockGitChangeDetector:
+            def __init__(self, changed):
+                self.changed = changed
+
+            def update_changed(self):
+                return self.changed
+
+        def mock_git_checker(git_dir):
+            return MockGitChangeDetector(False)
+
+        env("create", "test", spack_yaml)
+        with ev.read("test") as e:
+            develop("-p", devpath, "mpich@1.0")
+
+            import pdb
+
+            pdb.set_trace()
+            specs_to_overwrite, git_states = e._get_overwrite_specs(_git_checker=mock_git_checker)
+
+            assert not specs_to_overwrite
+            assert git_states
+
+            assert str(git_states[0].dev_path) == devpath
+
 
 def _git_commit_list(git_repo_dir):
     git = spack.util.git.git()
