@@ -1258,31 +1258,8 @@ class SpackSolverSetup:
         matches = sorted(indexed_possible_compilers, key=lambda x: ppk(x[1].spec))
 
         for weight, (compiler_id, cspec) in enumerate(matches):
-            f = fn.default_compiler_preference(compiler_id, weight)
+            f = fn.compiler_weight(compiler_id, weight)
             self.gen.fact(f)
-
-    def package_compiler_defaults(self, pkg):
-        """Facts about packages' compiler prefs."""
-
-        packages = spack.config.get("packages")
-        pkg_prefs = packages.get(pkg.name)
-        if not pkg_prefs or "compiler" not in pkg_prefs:
-            return
-
-        compiler_list = self.possible_compilers
-        compiler_list = sorted(compiler_list, key=lambda x: (x.name, x.version), reverse=True)
-        ppk = spack.package_prefs.PackagePrefs(pkg.name, "compiler", all=False)
-        matches = sorted(compiler_list, key=lambda x: ppk(x.spec))
-
-        for i, compiler in enumerate(reversed(matches)):
-            self.gen.fact(
-                fn.pkg_fact(
-                    pkg.name,
-                    fn.node_compiler_preference(
-                        compiler.spec.name, compiler.spec.version, -i * 100
-                    ),
-                )
-            )
 
     def package_requirement_rules(self, pkg):
         rules = self.requirement_rules_from_package_py(pkg)
@@ -1374,9 +1351,6 @@ class SpackSolverSetup:
 
         # conflicts
         self.conflict_rules(pkg)
-
-        # default compilers for this package
-        self.package_compiler_defaults(pkg)
 
         # virtuals
         self.package_provider_rules(pkg)
@@ -1673,6 +1647,7 @@ class SpackSolverSetup:
             for i, provider in enumerate(providers):
                 provider_name = spack.spec.Spec(provider).name
                 func(vspec, provider_name, i)
+            self.gen.newline()
 
     def provider_defaults(self):
         self.gen.h2("Default virtual providers")
@@ -1865,8 +1840,8 @@ class SpackSolverSetup:
                     fn.variant_default_value_from_packages_yaml(pkg_name, variant.name, value)
                 )
 
-    def target_preferences(self, pkg_name):
-        key_fn = spack.package_prefs.PackagePrefs(pkg_name, "target")
+    def target_preferences(self):
+        key_fn = spack.package_prefs.PackagePrefs("all", "target")
 
         if not self.target_specs_cache:
             self.target_specs_cache = [
@@ -1876,17 +1851,25 @@ class SpackSolverSetup:
 
         package_targets = self.target_specs_cache[:]
         package_targets.sort(key=key_fn)
-
-        offset = 0
-        best_default = self.default_targets[0][1]
         for i, preferred in enumerate(package_targets):
-            if str(preferred.architecture.target) == best_default and i != 0:
-                offset = 100
-            self.gen.fact(
-                fn.pkg_fact(
-                    pkg_name, fn.target_weight(str(preferred.architecture.target), i + offset)
-                )
-            )
+            self.gen.fact(fn.target_weight(str(preferred.architecture.target), i))
+
+    def flag_defaults(self):
+        self.gen.h2("Compiler flag defaults")
+
+        # types of flags that can be on specs
+        for flag in spack.spec.FlagMap.valid_compiler_flags():
+            self.gen.fact(fn.flag_type(flag))
+        self.gen.newline()
+
+        # flags from compilers.yaml
+        compilers = all_compilers_in_config()
+        for compiler in compilers:
+            for name, flags in compiler.flags.items():
+                for flag in flags:
+                    self.gen.fact(
+                        fn.compiler_version_flag(compiler.name, compiler.version, name, flag)
+                    )
 
     def spec_clauses(self, *args, **kwargs):
         """Wrap a call to `_spec_clauses()` into a try/except block that
@@ -2340,6 +2323,8 @@ class SpackSolverSetup:
 
         self.default_targets = list(sorted(set(self.default_targets)))
 
+        self.target_preferences()
+
     def virtual_providers(self):
         self.gen.h2("Virtual providers")
         msg = (
@@ -2661,7 +2646,6 @@ class SpackSolverSetup:
             self.pkg_rules(pkg, tests=self.tests)
             self.gen.h2("Package preferences: %s" % pkg)
             self.preferred_variants(pkg)
-            self.target_preferences(pkg)
 
         self.gen.h1("Develop specs")
         # Inject dev_path from environment

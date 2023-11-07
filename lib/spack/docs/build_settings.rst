@@ -526,56 +526,52 @@ Package Preferences
 In some cases package requirements can be too strong, and package
 preferences are the better option. Package preferences do not impose
 constraints on packages for particular versions or variants values,
-they rather only set defaults -- the concretizer is free to change
-them if it must due to other constraints. Also note that package
-preferences are of lower priority than reuse of already installed
-packages.
+they rather only set defaults. The concretizer is free to change
+them if it must, due to other constraints, and also prefers reusing
+installed packages over building new ones that are a better match for
+preferences.
 
-Here's an example ``packages.yaml`` file that sets preferred packages:
+Most package preferences (``compilers``, ``target`` and ``providers``)
+can only be set globally under the ``all`` section of ``packages.yaml``:
+
+.. code-block:: yaml
+
+   packages:
+     all:
+       compiler: [gcc@12.2.0, clang@12:, oneapi@2023:]
+       target: [x86_64_v3]
+       providers:
+         mpi: [mvapich2, mpich, openmpi]
+
+These preferences override Spack's default and effectively reorder priorities
+when looking for the best compiler, target or virtual package provider. Each
+preference takes an ordered list of spec constraints, with earlier entries in
+the list being preferred over later entries.
+
+In the example above all packages prefer to be compiled with ``gcc@12.2.0``,
+to target the ``x86_64_v3`` microarchitecture and to use ``mvapich2`` if they
+depend on ``mpi``.
+
+The ``variants`` and ``version`` preferences can be set under
+package specific sections of the ``packages.yaml`` file:
 
 .. code-block:: yaml
 
    packages:
      opencv:
-       compiler: [gcc@4.9]
        variants: +debug
      gperftools:
        version: [2.2, 2.4, 2.3]
-     all:
-       compiler: [gcc@4.4.7, 'gcc@4.6:', intel, clang, pgi]
-       target: [sandybridge]
-       providers:
-         mpi: [mvapich2, mpich, openmpi]
 
-At a high level, this example is specifying how packages are preferably
-concretized.  The opencv package should prefer using GCC 4.9 and
-be built with debug options.  The gperftools package should prefer version
-2.2 over 2.4.  Every package on the system should prefer mvapich2 for
-its MPI and GCC 4.4.7 (except for opencv, which overrides this by preferring GCC 4.9).
-These options are used to fill in implicit defaults.  Any of them can be overwritten
-on the command line if explicitly requested.
+In this case, the preference for ``opencv`` is to build with debug options, while
+``gperftools`` prefers version 2.2 over 2.4.
 
-Package preferences accept the follow keys or components under
-the specific package (or ``all``) section: ``compiler``, ``variants``,
-``version``, ``providers``, and ``target``.  Each component has an
-ordered list of spec ``constraints``, with earlier entries in the
-list being preferred over later entries.
+Any preference can be overwritten on the command line if explicitly requested.
 
-Sometimes a package installation may have constraints that forbid
-the first concretization rule, in which case Spack will use the first
-legal concretization rule.  Going back to the example, if a user
-requests gperftools 2.3 or later, then Spack will install version 2.4
-as the 2.4 version of gperftools is preferred over 2.3.
-
-An explicit concretization rule in the preferred section will always
-take preference over unlisted concretizations.  In the above example,
-xlc isn't listed in the compiler list.  Every listed compiler from
-gcc to pgi will thus be preferred over the xlc compiler.
-
-The syntax for the ``provider`` section differs slightly from other
-concretization rules.  A provider lists a value that packages may
-``depends_on`` (e.g, MPI) and a list of rules for fulfilling that
-dependency.
+Preferences cannot overcome explicit constraints, as they only set a preferred
+ordering among homogeneous attribute values. Going back to the example, if
+``gperftools@2.3:`` was requested, then Spack will install version 2.4
+since the most preferred version 2.2 is prohibited by the version constraint.
 
 .. _package_permissions:
 

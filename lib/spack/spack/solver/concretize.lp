@@ -589,21 +589,15 @@ possible_provider_weight(DependencyNode, VirtualNode, 0, "external")
   :- provider(DependencyNode, VirtualNode),
      external(DependencyNode).
 
-% A provider mentioned in packages.yaml can use a weight
-% according to its priority in the list of providers
-possible_provider_weight(node(DependencyID, Dependency), node(VirtualID, Virtual), Weight, "packages_yaml")
-  :- provider(node(DependencyID, Dependency), node(VirtualID, Virtual)),
-     depends_on(node(ID, Package), node(DependencyID, Dependency)),
-     pkg_fact(Package, provider_preference(Virtual, Dependency, Weight)).
-
 % A provider mentioned in the default configuration can use a weight
 % according to its priority in the list of providers
-possible_provider_weight(node(DependencyID, Dependency), node(VirtualID, Virtual), Weight, "default")
-  :- provider(node(DependencyID, Dependency), node(VirtualID, Virtual)),
-     default_provider_preference(Virtual, Dependency, Weight).
+possible_provider_weight(node(ProviderID, Provider), node(VirtualID, Virtual), Weight, "default")
+  :- provider(node(ProviderID, Provider), node(VirtualID, Virtual)),
+     default_provider_preference(Virtual, Provider, Weight).
 
 % Any provider can use 100 as a weight, which is very high and discourage its use
-possible_provider_weight(node(DependencyID, Dependency), VirtualNode, 100, "fallback") :- provider(node(DependencyID, Dependency), VirtualNode).
+possible_provider_weight(node(ProviderID, Provider), VirtualNode, 100, "fallback")
+  :- provider(node(ProviderID, Provider), VirtualNode).
 
 % do not warn if generated program contains none of these.
 #defined virtual/1.
@@ -1059,7 +1053,7 @@ attr("node_target", PackageNode, Target)
 node_target_weight(node(ID, Package), Weight)
  :- attr("node", node(ID, Package)),
     attr("node_target", node(ID, Package), Target),
-    pkg_fact(Package, target_weight(Target, Weight)).
+    target_weight(Target, Weight).
 
 % compatibility rules for targets among nodes
 node_target_match(ParentNode, DependencyNode)
@@ -1181,23 +1175,17 @@ compiler_mismatch_required(PackageNode, DependencyNode)
 #defined allow_compiler/2.
 
 % compilers weighted by preference according to packages.yaml
-compiler_weight(node(ID, Package), Weight)
+node_compiler_weight(node(ID, Package), Weight)
  :- node_compiler(node(ID, Package), CompilerID),
     compiler_name(CompilerID, Compiler),
     compiler_version(CompilerID, V),
-    pkg_fact(Package, node_compiler_preference(Compiler, V, Weight)).
-compiler_weight(node(ID, Package), Weight)
+    compiler_weight(CompilerID, Weight).
+
+node_compiler_weight(node(ID, Package), 100)
  :- node_compiler(node(ID, Package), CompilerID),
     compiler_name(CompilerID, Compiler),
     compiler_version(CompilerID, V),
-    not pkg_fact(Package, node_compiler_preference(Compiler, V, _)),
-    default_compiler_preference(CompilerID, Weight).
-compiler_weight(node(ID, Package), 100)
- :- node_compiler(node(ID, Package), CompilerID),
-    compiler_name(CompilerID, Compiler),
-    compiler_version(CompilerID, V),
-    not pkg_fact(Package, node_compiler_preference(Compiler, V, _)),
-    not default_compiler_preference(CompilerID, _).
+    not compiler_weight(CompilerID, _).
 
 % For the time being, be strict and reuse only if the compiler match one we have on the system
 error(100, "Compiler {1}@{2} requested for {0} cannot be found. Set install_missing_compilers:true if intended.", Package, Compiler, Version)
@@ -1205,7 +1193,7 @@ error(100, "Compiler {1}@{2} requested for {0} cannot be found. Set install_miss
     not node_compiler(node(ID, Package), _).
 
 #defined node_compiler_preference/4.
-#defined default_compiler_preference/3.
+#defined compiler_weight/3.
 
 %-----------------------------------------------------------------------------
 % Compiler flags
@@ -1529,7 +1517,7 @@ opt_criterion(15, "non-preferred compilers").
 #minimize{ 0@15: #true }.
 #minimize{
     Weight@15+Priority,PackageNode
-    : compiler_weight(PackageNode, Weight),
+    : node_compiler_weight(PackageNode, Weight),
       build_priority(PackageNode, Priority)
 }.
 

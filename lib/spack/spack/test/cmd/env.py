@@ -2621,7 +2621,7 @@ spack:
   - matrix:
     - [mpileaks]
   packages:
-    mpileaks:
+    all:
       compiler: [gcc]
   view: true
 """
