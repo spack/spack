@@ -4,16 +4,13 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
-from typing import List
 
 import llnl.util.tty as tty
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.cmd.common.confirmation as confirmation
-import spack.environment as ev
 import spack.spec
-import spack.traverse as traverse
 
 description = "remove specs from the concretized lockfile of an environment"
 section = "environments"
