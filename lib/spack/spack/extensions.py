@@ -5,6 +5,7 @@
 """Service functions and classes to implement the hooks
 for Spack's command extensions.
 """
+import difflib
 import importlib
 import os
 import re
@@ -176,10 +177,19 @@ class CommandNotFoundError(spack.error.SpackError):
     """
 
     def __init__(self, cmd_name):
-        super().__init__(
+        msg = (
             "{0} is not a recognized Spack command or extension command;"
             " check with `spack commands`.".format(cmd_name)
         )
+        long_msg = None
+
+        similar = difflib.get_close_matches(cmd_name, spack.cmd.all_commands())
+
+        if 1 <= len(similar) <= 5:
+            long_msg = "\nDid you mean one of the following commands?\n  "
+            long_msg += "\n  ".join(similar)
+
+        super().__init__(msg, long_msg)
 
 
 class ExtensionNamingError(spack.error.SpackError):

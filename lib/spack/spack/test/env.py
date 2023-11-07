@@ -18,6 +18,7 @@ from spack.environment.environment import (
     SpackEnvironmentViewError,
     _error_on_nonempty_view_dir,
 )
+from spack.spec_list import UndefinedReferenceError
 
 pytestmark = pytest.mark.not_on_windows("Envs are not supported on windows")
 
@@ -690,3 +691,90 @@ def test_removing_spec_from_manifest_with_exact_duplicates(
     assert "zlib" in manifest.read_text()
     with ev.Environment(tmp_path) as env:
         assert len(env.user_specs) == 1
+
+
+@pytest.mark.regression("35298")
+@pytest.mark.only_clingo("Propagation not supported in the original concretizer")
+def test_variant_propagation_with_unify_false(tmp_path, mock_packages):
+    """Spack distributes concretizations to different processes, when unify:false is selected and
+    the number of roots is 2 or more. When that happens, the specs to be concretized need to be
+    properly reconstructed on the worker process, if variant propagation was requested.
+    """
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(
+        """
+    spack:
+      specs:
+      - parent-foo ++foo
+      - c
+      concretizer:
+        unify: false
+    """
+    )
+    with ev.Environment(tmp_path) as env:
+        env.concretize()
+
+    root = env.matching_spec("parent-foo")
+    for node in root.traverse():
+        assert node.satisfies("+foo")
+
+
+def test_env_with_include_defs(mutable_mock_env_path, mock_packages):
+    """Test environment with included definitions file."""
+    env_path = mutable_mock_env_path
+    env_path.mkdir()
+    defs_file = env_path / "definitions.yaml"
+    defs_file.write_text(
+        """definitions:
+- core_specs: [libdwarf, libelf]
+- compilers: ['%gcc']
+"""
+    )
+
+    spack_yaml = env_path / ev.manifest_name
+    spack_yaml.write_text(
+        f"""spack:
+  include:
+  - file://{defs_file}
+
+  definitions:
+  - my_packages: [zlib]
+
+  specs:
+  - matrix:
+    - [$core_specs]
+    - [$compilers]
+  - $my_packages
+"""
+    )
+
+    e = ev.Environment(env_path)
+    with e:
+        e.concretize()
+
+
+def test_env_with_include_def_missing(mutable_mock_env_path, mock_packages):
+    """Test environment with included definitions file that is missing a definition."""
+    env_path = mutable_mock_env_path
+    env_path.mkdir()
+    filename = "missing-def.yaml"
+    defs_file = env_path / filename
+    defs_file.write_text("definitions:\n- my_compilers: ['%gcc']\n")
+
+    spack_yaml = env_path / ev.manifest_name
+    spack_yaml.write_text(
+        f"""spack:
+  include:
+  - file://{defs_file}
+
+  specs:
+  - matrix:
+    - [$core_specs]
+    - [$my_compilers]
+"""
+    )
+
+    e = ev.Environment(env_path)
+    with e:
+        with pytest.raises(UndefinedReferenceError, match=r"which does not appear"):
+            e.concretize()

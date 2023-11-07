@@ -18,7 +18,7 @@ import os.path
 import sys
 import traceback
 import urllib.parse
-from typing import Optional, Union
+from typing import List, Optional, Union
 
 import llnl.url
 import llnl.util.tty as tty
@@ -27,18 +27,18 @@ from llnl.util.filesystem import mkdirp
 import spack.caches
 import spack.config
 import spack.error
-import spack.fetch_strategy as fs
+import spack.fetch_strategy
 import spack.mirror
+import spack.oci.image
 import spack.spec
 import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
-from spack.util.spack_yaml import syaml_dict
-from spack.version import VersionList
+import spack.version
 
 #: What schemes do we support
-supported_url_schemes = ("file", "http", "https", "sftp", "ftp", "s3", "gs")
+supported_url_schemes = ("file", "http", "https", "sftp", "ftp", "s3", "gs", "oci")
 
 
 def _url_or_path_to_url(url_or_path: str) -> str:
@@ -230,12 +230,12 @@ class Mirror:
         value = self._data.get(direction, {})
 
         # Return top-level entry if only a URL was set.
-        if isinstance(value, str):
-            return self._data.get(attribute, None)
+        if isinstance(value, str) or attribute not in value:
+            return self._data.get(attribute)
 
-        return self._data.get(direction, {}).get(attribute, None)
+        return value[attribute]
 
-    def get_url(self, direction: str):
+    def get_url(self, direction: str) -> str:
         if direction not in ("fetch", "push"):
             raise ValueError(f"direction must be either 'fetch' or 'push', not {direction}")
 
@@ -255,18 +255,21 @@ class Mirror:
             elif "url" in info:
                 url = info["url"]
 
-        return _url_or_path_to_url(url) if url else None
+        if not url:
+            raise ValueError(f"Mirror {self.name} has no URL configured")
 
-    def get_access_token(self, direction: str):
+        return _url_or_path_to_url(url)
+
+    def get_access_token(self, direction: str) -> Optional[str]:
         return self._get_value("access_token", direction)
 
-    def get_access_pair(self, direction: str):
+    def get_access_pair(self, direction: str) -> Optional[List]:
         return self._get_value("access_pair", direction)
 
-    def get_profile(self, direction: str):
+    def get_profile(self, direction: str) -> Optional[str]:
         return self._get_value("profile", direction)
 
-    def get_endpoint_url(self, direction: str):
+    def get_endpoint_url(self, direction: str) -> Optional[str]:
         return self._get_value("endpoint_url", direction)
 
 
@@ -330,7 +333,7 @@ class MirrorCollection(collections.abc.Mapping):
             raise sjson.SpackJSONError("error parsing JSON mirror collection:", str(e)) from e
 
     def to_dict(self, recursive=False):
-        return syaml_dict(
+        return syaml.syaml_dict(
             sorted(
                 ((k, (v.to_dict() if recursive else v)) for (k, v) in self._mirrors.items()),
                 key=operator.itemgetter(0),
@@ -372,7 +375,7 @@ class MirrorCollection(collections.abc.Mapping):
 
 
 def _determine_extension(fetcher):
-    if isinstance(fetcher, fs.URLFetchStrategy):
+    if isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy):
         if fetcher.expand_archive:
             # If we fetch with a URLFetchStrategy, use URL's archive type
             ext = llnl.url.determine_url_file_extension(fetcher.url)
@@ -437,6 +440,19 @@ class MirrorReference:
         yield self.cosmetic_path
 
 
+class OCIImageLayout:
+    """Follow the OCI Image Layout Specification to archive blobs
+
+    Paths are of the form `blobs/<algorithm>/<digest>`
+    """
+
+    def __init__(self, digest: spack.oci.image.Digest) -> None:
+        self.storage_path = os.path.join("blobs", digest.algorithm, digest.digest)
+
+    def __iter__(self):
+        yield self.storage_path
+
+
 def mirror_archive_paths(fetcher, per_package_ref, spec=None):
     """Returns a ``MirrorReference`` object which keeps track of the relative
     storage path of the resource associated with the specified ``fetcher``."""
@@ -482,7 +498,7 @@ def get_all_versions(specs):
 
         for version in pkg_cls.versions:
             version_spec = spack.spec.Spec(pkg_cls.name)
-            version_spec.versions = VersionList([version])
+            version_spec.versions = spack.version.VersionList([version])
             version_specs.append(version_spec)
 
     return version_specs
@@ -521,7 +537,7 @@ def get_matching_versions(specs, num_versions=1):
             # Generate only versions that satisfy the spec.
             if spec.concrete or v.intersects(spec.versions):
                 s = spack.spec.Spec(pkg.name)
-                s.versions = VersionList([v])
+                s.versions = spack.version.VersionList([v])
                 s.variants = spec.variants.copy()
                 # This is needed to avoid hanging references during the
                 # concretization phase
@@ -591,14 +607,14 @@ def add(mirror: Mirror, scope=None):
     """Add a named mirror in the given scope"""
     mirrors = spack.config.get("mirrors", scope=scope)
     if not mirrors:
-        mirrors = syaml_dict()
+        mirrors = syaml.syaml_dict()
 
     if mirror.name in mirrors:
         tty.die("Mirror with name {} already exists.".format(mirror.name))
 
     items = [(n, u) for n, u in mirrors.items()]
     items.insert(0, (mirror.name, mirror.to_dict()))
-    mirrors = syaml_dict(items)
+    mirrors = syaml.syaml_dict(items)
     spack.config.set("mirrors", mirrors, scope=scope)
 
 
@@ -606,7 +622,7 @@ def remove(name, scope):
     """Remove the named mirror in the given scope"""
     mirrors = spack.config.get("mirrors", scope=scope)
     if not mirrors:
-        mirrors = syaml_dict()
+        mirrors = syaml.syaml_dict()
 
     if name not in mirrors:
         tty.die("No mirror with name %s" % name)

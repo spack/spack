@@ -142,8 +142,6 @@ class Gromacs(CMakePackage, CudaPackage):
         msg="GMX_RELAXED_DOUBLE_PRECISION option removed for GROMACS 2021.",
     )
     variant("hwloc", default=True, description="Use the hwloc portable hardware locality library")
-    variant("lapack", default=False, description="Enables an external LAPACK library")
-    variant("blas", default=False, description="Enables an external BLAS library")
     variant("cycle_subcounters", default=False, description="Enables cycle subcounters")
 
     variant("cp2k", default=False, description="CP2K QM/MM interface integration")
@@ -151,16 +149,6 @@ class Gromacs(CMakePackage, CudaPackage):
         "+cp2k", when="@:2021", msg="CP2K QM/MM support have been introduced in GROMACS 2022"
     )
     conflicts("+shared", when="+cp2k", msg="Enabling CP2K requires static build")
-    conflicts(
-        "~lapack",
-        when="+cp2k",
-        msg="GROMACS and CP2K should use the same lapack, please disable bundled lapack",
-    )
-    conflicts(
-        "~blas",
-        when="+cp2k",
-        msg="GROMACS and CP2K should use the same blas, please disable bundled blas",
-    )
     conflicts("%intel", when="@2022:", msg="GROMACS %intel support was removed in version 2022")
     conflicts("%gcc@:8", when="@2023:", msg="GROMACS requires GCC 9 or later since version 2023")
     conflicts(
@@ -255,8 +243,8 @@ class Gromacs(CMakePackage, CudaPackage):
     depends_on("cmake@3.16.0:3", type="build", when="%fj")
     depends_on("cuda", when="+cuda")
     depends_on("sycl", when="+sycl")
-    depends_on("lapack", when="+lapack")
-    depends_on("blas", when="+blas")
+    depends_on("lapack")
+    depends_on("blas")
     depends_on("gcc", when="%oneapi ~intel_provided_gcc")
     depends_on("gcc", when="%intel ~intel_provided_gcc")
 
@@ -504,21 +492,13 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         if "+cuda" in self.spec:
             options.append("-DCUDA_TOOLKIT_ROOT_DIR:STRING=" + self.spec["cuda"].prefix)
 
-        if "+lapack" in self.spec:
-            options.append("-DGMX_EXTERNAL_LAPACK:BOOL=ON")
-            if self.spec["lapack"].libs:
-                options.append(
-                    "-DGMX_LAPACK_USER={0}".format(self.spec["lapack"].libs.joined(";"))
-                )
-        else:
-            options.append("-DGMX_EXTERNAL_LAPACK:BOOL=OFF")
+        options.append("-DGMX_EXTERNAL_LAPACK:BOOL=ON")
+        if self.spec["lapack"].libs:
+            options.append("-DGMX_LAPACK_USER={0}".format(self.spec["lapack"].libs.joined(";")))
 
-        if "+blas" in self.spec:
-            options.append("-DGMX_EXTERNAL_BLAS:BOOL=ON")
-            if self.spec["blas"].libs:
-                options.append("-DGMX_BLAS_USER={0}".format(self.spec["blas"].libs.joined(";")))
-        else:
-            options.append("-DGMX_EXTERNAL_BLAS:BOOL=OFF")
+        options.append("-DGMX_EXTERNAL_BLAS:BOOL=ON")
+        if self.spec["blas"].libs:
+            options.append("-DGMX_BLAS_USER={0}".format(self.spec["blas"].libs.joined(";")))
 
         if "+cp2k" in self.spec:
             options.append("-DGMX_CP2K:BOOL=ON")
@@ -618,7 +598,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             # fftw-api@3 is provided by intel-mkl or intel-parllel-studio
             # we use the mkl interface of gromacs
             options.append("-DGMX_FFT_LIBRARY=mkl")
-            if not self.spec["mkl"].satisfies("@2023:"):
+            if self.spec.satisfies("@:2022"):
                 options.append(
                     "-DMKL_INCLUDE_DIR={0}".format(self.spec["mkl"].headers.directories[0])
                 )
