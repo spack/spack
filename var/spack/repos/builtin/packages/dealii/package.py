@@ -231,7 +231,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on("trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado", when="+trilinos")
     depends_on("trilinos~hypre", when="+trilinos+int64")
     # TODO
-    conflicts("+cuda", when="+trilinos")
+    conflicts("+cuda", when="@9.5:")
     for a in CudaPackage.cuda_arch_values:
         arch_str = "+cuda cuda_arch=" + a
         trilinos_spec = "trilinos +wrapper " + arch_str
