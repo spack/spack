@@ -696,7 +696,7 @@ complete -c spack -n '__fish_spack_using_command buildcache' -s h -l help -f -a 
 complete -c spack -n '__fish_spack_using_command buildcache' -s h -l help -d 'show this help message and exit'
 
 # spack buildcache push
-set -g __fish_spack_optspecs_spack_buildcache_push h/help f/force a/allow-root u/unsigned k/key= update-index spec-file= only= fail-fast base-image= j/jobs=
+set -g __fish_spack_optspecs_spack_buildcache_push h/help f/force a/allow-root u/unsigned k/key= update-index spec-file= only= fail-fast base-image= oci-output-digests= j/jobs=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 1 buildcache push' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command buildcache push' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache push' -s h -l help -d 'show this help message and exit'
@@ -718,11 +718,13 @@ complete -c spack -n '__fish_spack_using_command buildcache push' -l fail-fast -
 complete -c spack -n '__fish_spack_using_command buildcache push' -l fail-fast -d 'stop pushing on first failure (default is best effort)'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l base-image -r -f -a base_image
 complete -c spack -n '__fish_spack_using_command buildcache push' -l base-image -r -d 'specify the base image for the buildcache. '
+complete -c spack -n '__fish_spack_using_command buildcache push' -l oci-output-digests -r -f -a oci_output_digests
+complete -c spack -n '__fish_spack_using_command buildcache push' -l oci-output-digests -r -d 'file where uploaded OCI image digests should be logged'
 complete -c spack -n '__fish_spack_using_command buildcache push' -s j -l jobs -r -f -a jobs
 complete -c spack -n '__fish_spack_using_command buildcache push' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
 
 # spack buildcache create
-set -g __fish_spack_optspecs_spack_buildcache_create h/help f/force a/allow-root u/unsigned k/key= update-index spec-file= only= fail-fast base-image= j/jobs=
+set -g __fish_spack_optspecs_spack_buildcache_create h/help f/force a/allow-root u/unsigned k/key= update-index spec-file= only= fail-fast base-image= oci-output-digests= j/jobs=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 1 buildcache create' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command buildcache create' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache create' -s h -l help -d 'show this help message and exit'
@@ -744,6 +746,8 @@ complete -c spack -n '__fish_spack_using_command buildcache create' -l fail-fast
 complete -c spack -n '__fish_spack_using_command buildcache create' -l fail-fast -d 'stop pushing on first failure (default is best effort)'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l base-image -r -f -a base_image
 complete -c spack -n '__fish_spack_using_command buildcache create' -l base-image -r -d 'specify the base image for the buildcache. '
+complete -c spack -n '__fish_spack_using_command buildcache create' -l oci-output-digests -r -f -a oci_output_digests
+complete -c spack -n '__fish_spack_using_command buildcache create' -l oci-output-digests -r -d 'file where uploaded OCI image digests should be logged'
 complete -c spack -n '__fish_spack_using_command buildcache create' -s j -l jobs -r -f -a jobs
 complete -c spack -n '__fish_spack_using_command buildcache create' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
 

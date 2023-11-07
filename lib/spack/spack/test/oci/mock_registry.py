@@ -45,6 +45,11 @@ class MockHTTPResponse(io.IOBase):
         body = io.BytesIO(json.dumps(body).encode("utf-8"))
         return cls(status, reason, headers, body)
 
+    @classmethod
+    def with_bytes(cls, status, reason, headers=None, body: bytes = b""):
+        """Create a mock HTTP response with bytes as body"""
+        return cls(status, reason, headers, io.BytesIO(body))
+
     def read(self, *args, **kwargs):
         return self._body.read(*args, **kwargs)
 
@@ -170,8 +175,8 @@ class InMemoryOCIRegistry(DummyServer):
         # Set of sha256:... digests that are known to the registry
         self.blobs: Dict[str, bytes] = {}
 
-        # Map from (name, tag) to manifest
-        self.manifests: Dict[Tuple[str, str], Dict] = {}
+        # Map from (name, tag) to raw manifest
+        self.manifests: Dict[Tuple[str, str], bytes] = {}
 
     def index(self, req: Request):
         return MockHTTPResponse.with_json(200, "OK", body={})
@@ -230,7 +235,8 @@ class InMemoryOCIRegistry(DummyServer):
             "application/vnd.oci.image.index.v1+json",
         )
 
-        index_or_manifest = json.loads(self._require_data(req))
+        index_or_manifest_raw = self._require_data(req)
+        index_or_manifest = json.loads(index_or_manifest_raw)
 
         # Verify that we have all blobs (layers for manifest, manifests for index)
         if content_type == "application/vnd.oci.image.manifest.v1+json":
@@ -244,22 +250,35 @@ class InMemoryOCIRegistry(DummyServer):
                     manifest["digest"],
                 ) in self.manifests, "Missing manifest while uploading index"
 
-        self.manifests[(name, ref)] = index_or_manifest
+        self.manifests[(name, ref)] = index_or_manifest_raw
 
         return MockHTTPResponse(
             201, "Created", headers={"Location": f"/v2/{name}/manifests/{ref}"}
         )
 
     def get_manifest(self, req: Request, name: str, ref: str):
-        if (name, ref) not in self.manifests:
+        try:
+            # First check if we're trying to get a manifest by digest
+            digest = Digest.from_string(ref)
+            manifest_or_index = next(
+                (
+                    manifest
+                    for manifest in self.manifests.values()
+                    if hashlib.sha256(manifest).hexdigest() == digest.digest
+                ),
+                None,
+            )
+        except ValueError:
+            # If not a digest it's a tag
+            manifest_or_index = self.manifests.get((name, ref))
+
+        if manifest_or_index is None:
             return MockHTTPResponse(404, "Not found")
 
-        manifest_or_index = self.manifests[(name, ref)]
-
-        return MockHTTPResponse.with_json(
+        return MockHTTPResponse.with_bytes(
             200,
             "OK",
-            headers={"Content-type": manifest_or_index["mediaType"]},
+            headers={"Content-type": json.loads(manifest_or_index)["mediaType"]},
             body=manifest_or_index,
         )
 

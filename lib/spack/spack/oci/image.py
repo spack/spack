@@ -86,7 +86,12 @@ class ImageReference:
     __slots__ = ["domain", "name", "tag", "digest"]
 
     def __init__(
-        self, *, domain: str, name: str, tag: str = "latest", digest: Optional[Digest] = None
+        self,
+        *,
+        domain: str,
+        name: str,
+        tag: Optional[str] = "latest",
+        digest: Optional[Digest] = None,
     ):
         self.domain = domain
         self.name = name
@@ -163,6 +168,9 @@ class ImageReference:
 
     def with_tag(self, tag: str) -> "ImageReference":
         return ImageReference(domain=self.domain, name=self.name, tag=tag, digest=self.digest)
+
+    def without_tag(self) -> "ImageReference":
+        return ImageReference(domain=self.domain, name=self.name, tag=None, digest=self.digest)
 
     def uploads_url(self, digest: Optional[Digest] = None) -> str:
         url = f"https://{self.domain}/v2/{self.name}/blobs/uploads/"

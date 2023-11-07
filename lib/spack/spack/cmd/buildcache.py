@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import argparse
+import contextlib
 import copy
 import glob
 import hashlib
@@ -13,7 +14,7 @@ import shutil
 import sys
 import tempfile
 import urllib.request
-from typing import Dict, List, Optional, Tuple
+from typing import IO, Dict, List, Optional, Tuple
 
 import llnl.util.tty as tty
 from llnl.string import plural
@@ -111,6 +112,12 @@ def setup_parser(subparser: argparse.ArgumentParser):
     )
     push.add_argument(
         "--base-image", default=None, help="specify the base image for the buildcache. "
+    )
+    push.add_argument(
+        "--oci-output-digests",
+        default=None,
+        metavar="FILE",
+        help="file where uploaded OCI image digests should be logged",
     )
     arguments.add_common_arguments(push, ["specs", "jobs"])
     push.set_defaults(func=push_fn)
@@ -311,6 +318,17 @@ def _make_pool():
     return multiprocessing.pool.Pool(determine_number_of_jobs(parallel=True))
 
 
+@contextlib.contextmanager
+def maybe_open_file(filename: Optional[str]):
+    """Open a file if a filename is provided, otherwise return None"""
+    if filename is None:
+        yield None
+        return
+
+    with open(filename, "w") as f:
+        yield f
+
+
 def push_fn(args):
     """create a binary package and push it to a mirror"""
     if args.spec_file:
@@ -365,8 +383,8 @@ def push_fn(args):
     if image_ref:
         with tempfile.TemporaryDirectory(
             dir=spack.stage.get_stage_root()
-        ) as tmpdir, _make_pool() as pool:
-            skipped = _push_oci(args, image_ref, specs, tmpdir, pool)
+        ) as tmpdir, _make_pool() as pool, maybe_open_file(args.oci_output_digests) as f:
+            skipped = _push_oci(args, image_ref, specs, tmpdir, pool, f)
     else:
         skipped = []
 
@@ -578,12 +596,12 @@ def _put_manifest(
     image_ref_for_spec = image_ref.with_tag(default_tag(spec))
 
     # Finally upload the manifest
-    upload_manifest_with_retry(image_ref_for_spec, oci_manifest=oci_manifest)
+    manifest_digest, _ = upload_manifest_with_retry(image_ref_for_spec, oci_manifest=oci_manifest)
 
     # delete the config file
     os.unlink(config_file)
 
-    return image_ref_for_spec
+    return image_ref_for_spec.with_digest(manifest_digest)
 
 
 def _push_oci(
@@ -592,6 +610,7 @@ def _push_oci(
     installed_specs_with_deps: List[Spec],
     tmpdir: str,
     pool: multiprocessing.pool.Pool,
+    stream_for_digests: Optional[IO[str]],
 ) -> List[str]:
     """Push specs to an OCI registry
 
@@ -678,6 +697,8 @@ def _push_oci(
     # Print the image names of the top-level specs
     for spec, ref in zip(to_be_uploaded, pushed_image_ref):
         tty.info(f"Pushed {_format_spec(spec)} to {ref}")
+        if stream_for_digests:
+            print(ref, file=stream_for_digests)
 
     return skipped
 
