@@ -14,7 +14,7 @@ jobs:
       - uses: tgymnich/fork-sync@v1.8
         with:
           owner: FEniCS
-          base: develop
+          base: latest
           head: develop
           retries: 1
           retry_after: 10
