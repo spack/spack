@@ -14,7 +14,7 @@ class PyPythonCertifiWin32(PythonPackage):
     git = "https://gitlab.com/alelec/python-certifi-win32.git"
 
     # Tarball missing version information, need to use git checkout
-    version("1.6", tag="v1.6")
+    version("1.6", tag="v1.6", commit="8ef45c73e203024ed2e1df5151a23e27faff5b60")
 
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools-scm", type="build")

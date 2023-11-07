@@ -5,6 +5,8 @@
 
 import os
 
+from llnl.util import tty
+
 from spack.package import *
 from spack.pkg.builtin.blis import BlisBase
 
@@ -21,17 +23,18 @@ class Amdblis(BlisBase):
     LICENSING INFORMATION: By downloading, installing and using this software,
     you agree to the terms and conditions of the AMD AOCL-BLIS license
     agreement.  You may obtain a copy of this license agreement from
-    https://www.amd.com/en/developer/aocl/blis/blis-4-0-eula.html
-    https://www.amd.com/en/developer/aocl/blis/blis-eula.html
+    https://www.amd.com/en/developer/aocl/dense/eula/blas-4-1-eula.html
+    https://www.amd.com/en/developer/aocl/dense/eula/blas-eula.html
     """
 
     _name = "amdblis"
     homepage = "https://www.amd.com/en/developer/aocl/blis.html"
     url = "https://github.com/amd/blis/archive/3.0.tar.gz"
-    git = "https://github.com/amd/blis.git"
+    git = "https://github.com/amd/blis"
 
     maintainers("amd-toolchain-support")
 
+    version("4.1", sha256="a05c6c7d359232580d1d599696053ad0beeedf50f3b88d5d22ee7d34375ab577")
     version("4.0", sha256="cddd31176834a932753ac0fc4c76332868feab3e9ac607fa197d8b44c1e74a41")
     version("3.2", sha256="5a400ee4fc324e224e12f73cc37b915a00f92b400443b15ce3350278ad46fff6")
     version("3.1", sha256="2891948925b9db99eec02a1917d9887a7bee9ad2afc5421c9ba58602a620f2bf")
@@ -40,14 +43,32 @@ class Amdblis(BlisBase):
     version("2.2", sha256="e1feb60ac919cf6d233c43c424f6a8a11eab2c62c2c6e3f2652c15ee9063c0c9")
 
     variant("ilp64", default=False, when="@3.0.1:", description="ILP64 support")
+    variant("aocl_gemm", default=False, when="@4.1:", description="aocl_gemm support")
     variant("suphandling", default=True, description="Small Unpacked Kernel handling")
 
     def configure_args(self):
         spec = self.spec
         args = super().configure_args()
 
+        if not (
+            spec.satisfies(r"%aocc@3.2:4.1")
+            or spec.satisfies(r"%gcc@12.2:13.1")
+            or spec.satisfies(r"%clang@15:16")
+        ):
+            tty.warn(
+                "AOCL has been tested to work with the following compilers\
+                    versions - gcc@12.2:13.1, aocc@3.2:4.1, and clang@15:16\
+                    see the following aocl userguide for details: \
+                    https://www.amd.com/content/dam/amd/en/documents/developer/version-4-1-documents/aocl/aocl-4-1-user-guide.pdf"
+            )
+
         if spec.satisfies("+ilp64"):
             args.append("--blas-int-size=64")
+
+        if spec.satisfies("+aocl_gemm"):
+            args.append("-a aocl_gemm")
+            args.append("CC={0}".format(os.path.basename(spack_cc)))
+            args.append("CXX={0}".format(os.path.basename(spack_cxx)))
 
         if spec.satisfies("+suphandling"):
             args.append("--enable-sup-handling")
@@ -56,28 +77,16 @@ class Amdblis(BlisBase):
 
         # To enable Fortran to C calling convention for
         # complex types when compiling with aocc flang
-        if self.spec.satisfies("@3.0 %aocc"):
+        if spec.satisfies("@3.0 %aocc"):
             args.append("CFLAGS={0}".format("-DAOCL_F2C"))
             args.append("CXXFLAGS={0}".format("-DAOCL_F2C"))
-        elif self.spec.satisfies("@3.0.1: %aocc"):
+        elif spec.satisfies("@3.0.1: %aocc"):
             args.append("--complex-return=intel")
 
-        if self.spec.satisfies("@3.1:"):
+        if spec.satisfies("@3.1:"):
             args.append("--disable-aocl-dynamic")
 
         return args
-
-    def config_args(self):
-        config_args = super().config_args()
-
-        # "amdzen" - A fat binary or multiarchitecture binary
-        # support for 3.1 release onwards
-        if self.spec.satisfies("@3.1:"):
-            config_args.append("amdzen")
-        else:
-            config_args.append("auto")
-
-        return config_args
 
     @run_after("install")
     def create_symlink(self):

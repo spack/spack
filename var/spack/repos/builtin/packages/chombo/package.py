@@ -20,8 +20,8 @@ class Chombo(MakefilePackage):
     tags = ["ecp", "ecp-apps"]
 
     # Use whatever path Brian V. and Terry L. agreed upon, but preserve version
-    version("3.2", commit="71d856c")
-    version("develop", tag="master")
+    version("3.2", commit="71d856c2f469e96755a606db1e5151067da0f54a")
+    version("develop", branch="master")
 
     variant("mpi", default=True, description="Enable MPI parallel support")
     variant("hdf5", default=True, description="Enable HDF5 support")

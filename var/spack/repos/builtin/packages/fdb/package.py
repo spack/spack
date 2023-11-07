@@ -18,6 +18,8 @@ class Fdb(CMakePackage):
 
     # master version of fdb is subject to frequent changes and is to be used experimentally.
     version("master", branch="master")
+    version("5.11.23", sha256="09b1d93f2b71d70c7b69472dfbd45a7da0257211f5505b5fcaf55bfc28ca6c65")
+    version("5.11.17", sha256="375c6893c7c60f6fdd666d2abaccb2558667bd450100817c0e1072708ad5591e")
     version("5.10.8", sha256="6a0db8f98e13c035098dd6ea2d7559f883664cbf9cba8143749539122ac46099")
     version("5.7.8", sha256="6adac23c0d1de54aafb3c663d077b85d0f804724596623b381ff15ea4a835f60")
 
@@ -39,6 +41,7 @@ class Fdb(CMakePackage):
 
     depends_on("cmake@3.12:", type="build")
     depends_on("ecbuild@3.4:", type="build")
+    depends_on("ecbuild@3.7:", type="build", when="@5.11.6:")
 
     depends_on("eckit@1.16:")
     depends_on("eckit+admin", when="+tools")

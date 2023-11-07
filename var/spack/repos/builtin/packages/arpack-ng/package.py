@@ -150,14 +150,14 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
         options = (
             self.enable_or_disable("mpi")
             + [
-                "--with-blas={0}".format(spec["blas"].libs.ld_flags),
-                "--with-lapack={0}".format(spec["lapack"].libs.ld_flags),
+                f"--with-blas={spec['blas'].libs.ld_flags}",
+                f"--with-lapack={spec['lapack'].libs.ld_flags}",
             ]
             + self.enable_or_disable("shared")
         )
 
         if "+mpi" in spec:
-            options.append("F77={0}".format(spec["mpi"].mpif77))
+            options.append(f"F77={spec['mpi'].mpif77}")
 
         return options
 

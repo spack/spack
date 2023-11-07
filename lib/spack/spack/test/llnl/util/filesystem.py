@@ -13,7 +13,8 @@ import sys
 import pytest
 
 import llnl.util.filesystem as fs
-from llnl.util.symlink import islink, symlink
+import llnl.util.symlink
+from llnl.util.symlink import SymlinkError, _windows_can_symlink, islink, symlink
 
 import spack.paths
 
@@ -150,7 +151,6 @@ class TestInstall:
                 fs.install("source/a/*/*", "dest/1")
 
 
-@pytest.mark.not_on_windows("Skip test on Windows")
 class TestCopyTree:
     """Tests for ``filesystem.copy_tree``"""
 
@@ -189,7 +189,7 @@ class TestCopyTree:
     def test_symlinks_true_ignore(self, stage):
         """Test copying when specifying relative paths that should be ignored"""
         with fs.working_dir(str(stage)):
-            ignore = lambda p: p in ["c/d/e", "a"]
+            ignore = lambda p: p in [os.path.join("c", "d", "e"), "a"]
             fs.copy_tree("source", "dest", symlinks=True, ignore=ignore)
             assert not os.path.exists("dest/a")
             assert os.path.exists("dest/c/d")
@@ -231,7 +231,6 @@ class TestCopyTree:
                 fs.copy_tree("source", "source/sub/directory")
 
 
-@pytest.mark.not_on_windows("Skip test on Windows")
 class TestInstallTree:
     """Tests for ``filesystem.install_tree``"""
 
@@ -274,6 +273,15 @@ class TestInstallTree:
             if sys.platform != "win32":
                 assert not os.path.islink("dest/2")
             check_added_exe_permissions("source/2", "dest/2")
+
+    @pytest.mark.skipif(sys.platform == "win32", reason="Broken symlinks not allowed on Windows")
+    def test_allow_broken_symlinks(self, stage):
+        """Test installing with a broken symlink."""
+        with fs.working_dir(str(stage)):
+            symlink("nonexistant.txt", "source/broken", allow_broken_symlinks=True)
+            fs.install_tree("source", "dest", symlinks=True, allow_broken_symlinks=True)
+            assert os.path.islink("dest/broken")
+            assert not os.path.exists(os.readlink("dest/broken"))
 
     def test_glob_src(self, stage):
         """Test using a glob as the source."""
@@ -746,6 +754,7 @@ def test_is_nonsymlink_exe_with_shebang(tmpdir):
         assert not fs.is_nonsymlink_exe_with_shebang("symlink_to_executable_script")
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Unix-only test.")
 def test_lexists_islink_isdir(tmpdir):
     root = str(tmpdir)
 
@@ -764,12 +773,12 @@ def test_lexists_islink_isdir(tmpdir):
     with open(file, "wb") as f:
         f.write(b"file")
 
-    os.symlink("dir", symlink_to_dir)
-    os.symlink("file", symlink_to_file)
-    os.symlink("does_not_exist", dangling_symlink)
-    os.symlink("dangling_symlink", symlink_to_dangling_symlink)
-    os.symlink("symlink_to_dir", symlink_to_symlink_to_dir)
-    os.symlink("symlink_to_file", symlink_to_symlink_to_file)
+    symlink("dir", symlink_to_dir)
+    symlink("file", symlink_to_file)
+    symlink("does_not_exist", dangling_symlink)
+    symlink("dangling_symlink", symlink_to_dangling_symlink)
+    symlink("symlink_to_dir", symlink_to_symlink_to_dir)
+    symlink("symlink_to_file", symlink_to_symlink_to_file)
 
     assert fs.lexists_islink_isdir(dir) == (True, False, True)
     assert fs.lexists_islink_isdir(file) == (True, False, False)
@@ -779,6 +788,57 @@ def test_lexists_islink_isdir(tmpdir):
     assert fs.lexists_islink_isdir(symlink_to_dangling_symlink) == (True, True, False)
     assert fs.lexists_islink_isdir(symlink_to_symlink_to_dir) == (True, True, True)
     assert fs.lexists_islink_isdir(symlink_to_symlink_to_file) == (True, True, False)
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="For Windows Only")
+@pytest.mark.parametrize("win_can_symlink", [True, False])
+def test_lexists_islink_isdir_windows(tmpdir, monkeypatch, win_can_symlink):
+    """Run on windows without elevated privileges to test junctions and hard links which have
+    different results from the lexists_islink_isdir method.
+    """
+    if win_can_symlink and not _windows_can_symlink():
+        pytest.skip("Cannot test dev mode behavior without dev mode enabled.")
+    with tmpdir.as_cwd():
+        monkeypatch.setattr(llnl.util.symlink, "_windows_can_symlink", lambda: win_can_symlink)
+        dir = str(tmpdir.join("dir"))
+        file = str(tmpdir.join("file"))
+        nonexistent = str(tmpdir.join("does_not_exist"))
+        symlink_to_dir = str(tmpdir.join("symlink_to_dir"))
+        symlink_to_file = str(tmpdir.join("symlink_to_file"))
+        dangling_symlink = str(tmpdir.join("dangling_symlink"))
+        symlink_to_dangling_symlink = str(tmpdir.join("symlink_to_dangling_symlink"))
+        symlink_to_symlink_to_dir = str(tmpdir.join("symlink_to_symlink_to_dir"))
+        symlink_to_symlink_to_file = str(tmpdir.join("symlink_to_symlink_to_file"))
+
+        os.mkdir(dir)
+        assert fs.lexists_islink_isdir(dir) == (True, False, True)
+
+        symlink("dir", symlink_to_dir)
+        assert fs.lexists_islink_isdir(dir) == (True, False, True)
+        assert fs.lexists_islink_isdir(symlink_to_dir) == (True, True, True)
+
+        with open(file, "wb") as f:
+            f.write(b"file")
+        assert fs.lexists_islink_isdir(file) == (True, False, False)
+
+        symlink("file", symlink_to_file)
+        if win_can_symlink:
+            assert fs.lexists_islink_isdir(file) == (True, False, False)
+        else:
+            assert fs.lexists_islink_isdir(file) == (True, True, False)
+        assert fs.lexists_islink_isdir(symlink_to_file) == (True, True, False)
+
+        with pytest.raises(SymlinkError):
+            symlink("does_not_exist", dangling_symlink)
+            symlink("dangling_symlink", symlink_to_dangling_symlink)
+
+        symlink("symlink_to_dir", symlink_to_symlink_to_dir)
+        symlink("symlink_to_file", symlink_to_symlink_to_file)
+
+        assert fs.lexists_islink_isdir(nonexistent) == (False, False, False)
+        assert fs.lexists_islink_isdir(symlink_to_dangling_symlink) == (False, False, False)
+        assert fs.lexists_islink_isdir(symlink_to_symlink_to_dir) == (True, True, True)
+        assert fs.lexists_islink_isdir(symlink_to_symlink_to_file) == (True, True, False)
 
 
 class RegisterVisitor(fs.BaseDirectoryVisitor):

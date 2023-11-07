@@ -68,12 +68,6 @@ container_schema = {
         "labels": {"type": "object"},
         # Use a custom template to render the recipe
         "template": {"type": "string", "default": None},
-        # Add a custom extra section at the bottom of a stage
-        "extra_instructions": {
-            "type": "object",
-            "additionalProperties": False,
-            "properties": {"build": {"type": "string"}, "final": {"type": "string"}},
-        },
         # Reserved for properties that are specific to each format
         "singularity": {
             "type": "object",
@@ -88,15 +82,6 @@ container_schema = {
         },
         "docker": {"type": "object", "additionalProperties": False, "default": {}},
         "depfile": {"type": "boolean", "default": False},
-    },
-    "deprecatedProperties": {
-        "properties": ["extra_instructions"],
-        "message": (
-            "container:extra_instructions has been deprecated and will be removed "
-            "in Spack v0.21. Set container:template appropriately to use custom Jinja2 "
-            "templates instead."
-        ),
-        "error": False,
     },
 }
 

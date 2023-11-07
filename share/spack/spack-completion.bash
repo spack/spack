@@ -52,6 +52,20 @@ if test -n "${ZSH_VERSION:-}" ; then
   fi
 fi
 
+# compgen -W doesn't work in some versions of zsh, so use this instead.
+# see https://www.zsh.org/mla/workers/2011/msg00582.html
+_compgen_w() {
+    if test -n "${ZSH_VERSION:-}" ; then
+        typeset -a words
+        words=( ${~=1} )
+        local find="$2"
+        results=(${(M)words[@]:#$find*})
+        echo "${results[@]}"
+    else
+        compgen -W "$1" -- "$2"
+    fi
+}
+
 # Bash programmable completion for Spack
 _bash_completion_spack() {
     # In all following examples, let the cursor be denoted by brackets, i.e. []
@@ -137,8 +151,11 @@ _bash_completion_spack() {
     if [[ "$(LC_ALL=C type $subfunction 2>&1)" =~ $rgx ]]
     then
         $subfunction
-        COMPREPLY=($(compgen -W "$SPACK_COMPREPLY" -- "$cur"))
+        COMPREPLY=($(_compgen_w "$SPACK_COMPREPLY" "$cur"))
     fi
+
+    # if every completion is an alias for the same thing, just return that thing.
+    _spack_compress_aliases
 }
 
 # Helper functions for subcommands
@@ -328,16 +345,63 @@ _spacktivate() {
   _spack_env_activate
 }
 
+# Simple function to get the spack alias for a command
+_spack_get_alias() {
+    local possible_alias="${1-}"
+    local IFS=";"
+
+    # spack aliases are a ;-separated list of :-separated pairs
+    for item in $SPACK_ALIASES; do
+        # maps a possible alias to its command
+        eval "local real_command=\"\${item#*${possible_alias}:}\""
+        if [ "$real_command" != "$item" ]; then
+            SPACK_ALIAS="$real_command"
+            return
+        fi
+    done
+
+    # no alias found -- just return $1
+    SPACK_ALIAS="$possible_alias"
+}
+
+# If all commands in COMPREPLY alias to the same thing, set COMPREPLY to
+# just the real command, not the aliases.
+_spack_compress_aliases() {
+    # If there are zero or one completions, don't do anything
+    # If this isn't the first argument, bail because aliases currently only apply
+    # to top-level commands.
+    if [ "${#COMPREPLY[@]}" -le "1" ] || [ "$COMP_CWORD_NO_FLAGS" != "1" ]; then
+        return
+    fi
+
+    # get the alias of the first thing in the list of completions
+    _spack_get_alias "${COMPREPLY[@]:0:1}"
+    local first_alias="$SPACK_ALIAS"
+
+    # if anything in the list would alias to something different, stop
+    for comp in "${COMPREPLY[@]:1}"; do
+        _spack_get_alias "$comp"
+        if [ "$SPACK_ALIAS" != "$first_alias" ]; then
+            return
+        fi
+    done
+
+    # all commands alias to first alias; just return that
+    COMPREPLY=("$first_alias")
+}
+
 # Spack commands
 #
 # Everything below here is auto-generated.
+SPACK_ALIASES="concretise:concretize;containerise:containerize;rm:remove"
+
 
 _spack() {
     if $list_options
     then
         SPACK_COMPREPLY="-h --help -H --all-help --color -c --config -C --config-scope -d --debug --timestamp --pdb -e --env -D --env-dir -E --no-env --use-env-repo -k --insecure -l --enable-locks -L --disable-locks -m --mock -b --bootstrap -p --profile --sorted-profile --lines -v --verbose --stacktrace --backtrace -V --version --print-shell-vars"
     else
-        SPACK_COMPREPLY="add arch audit blame bootstrap build-env buildcache cd change checksum ci clean clone commands compiler compilers concretize config containerize create debug dependencies dependents deprecate dev-build develop diff docs edit env extensions external fetch find gc gpg graph help info install license list load location log-parse maintainers make-installer mark mirror module patch pkg providers pydoc python reindex remove rm repo resource restage solve spec stage style tags test test-env tutorial undevelop uninstall unit-test unload url verify versions view"
+        SPACK_COMPREPLY="add arch audit blame bootstrap build-env buildcache cd change checksum ci clean clone commands compiler compilers concretize concretise config containerize containerise create debug dependencies dependents deprecate dev-build develop diff docs edit env extensions external fetch find gc gpg graph help info install license list load location log-parse maintainers make-installer mark mirror module patch pkg providers pydoc python reindex remove rm repo resource restage solve spec stage style tags test test-env tutorial undevelop uninstall unit-test unload url verify versions view"
     fi
 }
 
@@ -359,12 +423,21 @@ _spack_audit() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="configs packages-https packages list"
+        SPACK_COMPREPLY="configs externals packages-https packages list"
     fi
 }
 
 _spack_audit_configs() {
     SPACK_COMPREPLY="-h --help"
+}
+
+_spack_audit_externals() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --list"
+    else
+        SPACK_COMPREPLY=""
+    fi
 }
 
 _spack_audit_packages_https() {
@@ -498,7 +571,7 @@ _spack_buildcache() {
 _spack_buildcache_push() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -f --force --allow-root -a --unsigned -u --key -k --update-index --rebuild-index --spec-file --only"
+        SPACK_COMPREPLY="-h --help -f --force --allow-root -a --unsigned -u --key -k --update-index --rebuild-index --spec-file --only --fail-fast --base-image -j --jobs"
     else
         _mirrors
     fi
@@ -507,7 +580,7 @@ _spack_buildcache_push() {
 _spack_buildcache_create() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -f --force --allow-root -a --unsigned -u --key -k --update-index --rebuild-index --spec-file --only"
+        SPACK_COMPREPLY="-h --help -f --force --allow-root -a --unsigned -u --key -k --update-index --rebuild-index --spec-file --only --fail-fast --base-image -j --jobs"
     else
         _mirrors
     fi
@@ -608,7 +681,7 @@ _spack_change() {
 _spack_checksum() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --keep-stage -b --batch -l --latest -p --preferred -a --add-to-package --verify"
+        SPACK_COMPREPLY="-h --help --keep-stage --batch -b --latest -l --preferred -p --add-to-package -a --verify -j --jobs"
     else
         _all_packages
     fi
@@ -683,7 +756,7 @@ _spack_compiler() {
 _spack_compiler_find() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --scope"
+        SPACK_COMPREPLY="-h --help --mixed-toolchain --no-mixed-toolchain --scope"
     else
         SPACK_COMPREPLY=""
     fi
@@ -692,7 +765,7 @@ _spack_compiler_find() {
 _spack_compiler_add() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --scope"
+        SPACK_COMPREPLY="-h --help --mixed-toolchain --no-mixed-toolchain --scope"
     else
         SPACK_COMPREPLY=""
     fi
@@ -734,6 +807,10 @@ _spack_compilers() {
 }
 
 _spack_concretize() {
+    SPACK_COMPREPLY="-h --help -f --force --test -q --quiet -U --fresh --reuse --reuse-deps -j --jobs"
+}
+
+_spack_concretise() {
     SPACK_COMPREPLY="-h --help -f --force --test -q --quiet -U --fresh --reuse --reuse-deps -j --jobs"
 }
 
@@ -827,6 +904,10 @@ _spack_config_revert() {
 }
 
 _spack_containerize() {
+    SPACK_COMPREPLY="-h --help --list-os --last-stage"
+}
+
+_spack_containerise() {
     SPACK_COMPREPLY="-h --help --list-os --last-stage"
 }
 
@@ -935,14 +1016,14 @@ _spack_env() {
 _spack_env_activate() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --sh --csh --fish --bat --pwsh -v --with-view -V --without-view -p --prompt --temp -d --dir"
+        SPACK_COMPREPLY="-h --help --sh --csh --fish --bat --pwsh --with-view -v --without-view -V -p --prompt --temp -d --dir"
     else
         _environments
     fi
 }
 
 _spack_env_deactivate() {
-    SPACK_COMPREPLY="-h --help --sh --csh --fish --bat"
+    SPACK_COMPREPLY="-h --help --sh --csh --fish --bat --pwsh"
 }
 
 _spack_env_create() {
@@ -1049,7 +1130,7 @@ _spack_external() {
 _spack_external_find() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --not-buildable --exclude -p --path --scope --all -t --tag"
+        SPACK_COMPREPLY="-h --help --not-buildable --exclude -p --path --scope --all -t --tag -j --jobs"
     else
         _all_packages
     fi
@@ -1234,7 +1315,7 @@ _spack_list() {
 _spack_load() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --sh --csh --fish --bat --first --only --list"
+        SPACK_COMPREPLY="-h --help --sh --csh --fish --bat --pwsh --first --only --list"
     else
         _installed_packages
     fi
@@ -1310,7 +1391,7 @@ _spack_mirror_destroy() {
 _spack_mirror_add() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --scope --type --s3-access-key-id --s3-access-key-secret --s3-access-token --s3-profile --s3-endpoint-url"
+        SPACK_COMPREPLY="-h --help --scope --type --s3-access-key-id --s3-access-key-secret --s3-access-token --s3-profile --s3-endpoint-url --oci-username --oci-password"
     else
         _mirrors
     fi
@@ -1337,7 +1418,7 @@ _spack_mirror_rm() {
 _spack_mirror_set_url() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --push --fetch --scope --s3-access-key-id --s3-access-key-secret --s3-access-token --s3-profile --s3-endpoint-url"
+        SPACK_COMPREPLY="-h --help --push --fetch --scope --s3-access-key-id --s3-access-key-secret --s3-access-token --s3-profile --s3-endpoint-url --oci-username --oci-password"
     else
         _mirrors
     fi
@@ -1346,7 +1427,7 @@ _spack_mirror_set_url() {
 _spack_mirror_set() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --push --fetch --type --url --scope --s3-access-key-id --s3-access-key-secret --s3-access-token --s3-profile --s3-endpoint-url"
+        SPACK_COMPREPLY="-h --help --push --fetch --type --url --scope --s3-access-key-id --s3-access-key-secret --s3-access-token --s3-profile --s3-endpoint-url --oci-username --oci-password"
     else
         _mirrors
     fi
@@ -1852,7 +1933,7 @@ _spack_unit_test() {
 _spack_unload() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --sh --csh --fish --bat -a --all"
+        SPACK_COMPREPLY="-h --help --sh --csh --fish --bat --pwsh -a --all"
     else
         _installed_packages
     fi
@@ -1900,7 +1981,7 @@ _spack_verify() {
 _spack_versions() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -s --safe --safe-only -r --remote -n --new -c --concurrency"
+        SPACK_COMPREPLY="-h --help -s --safe --safe-only -r --remote -n --new -j --jobs"
     else
         _all_packages
     fi

@@ -19,8 +19,12 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
     homepage = "https://github.com/microsoft/onnxruntime"
     git = "https://github.com/microsoft/onnxruntime.git"
 
-    version("1.10.0", tag="v1.10.0", submodules=True)
-    version("1.7.2", tag="v1.7.2", submodules=True)
+    version(
+        "1.10.0", tag="v1.10.0", commit="0d9030e79888d1d5828730b254fedc53c7b640c1", submodules=True
+    )
+    version(
+        "1.7.2", tag="v1.7.2", commit="5bc92dff16b0ddd5063b717fb8522ca2ad023cb0", submodules=True
+    )
 
     variant("cuda", default=False, description="Build with CUDA support")
 

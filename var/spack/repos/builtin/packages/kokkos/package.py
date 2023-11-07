@@ -139,6 +139,17 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     cuda_arches = spack_cuda_arch_map.values()
     conflicts("+cuda", when="cuda_arch=none")
 
+    # Kokkos support only one cuda_arch at a time
+    variant(
+        "cuda_arch",
+        description="CUDA architecture",
+        values=("none",) + CudaPackage.cuda_arch_values,
+        default="none",
+        multi=False,
+        sticky=True,
+        when="+cuda",
+    )
+
     amdgpu_arch_map = {
         "gfx900": "vega900",
         "gfx906": "vega906",
@@ -282,11 +293,16 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
         spack_microarches = []
         if "+cuda" in spec:
-            # this is a list
-            for cuda_arch in spec.variants["cuda_arch"].value:
-                if not cuda_arch == "none":
-                    kokkos_arch_name = self.spack_cuda_arch_map[cuda_arch]
-                    spack_microarches.append(kokkos_arch_name)
+            if isinstance(spec.variants["cuda_arch"].value, str):
+                cuda_arch = spec.variants["cuda_arch"].value
+            else:
+                if len(spec.variants["cuda_arch"].value) > 1:
+                    msg = "Kokkos supports only one cuda_arch at a time."
+                    raise InstallError(msg)
+                cuda_arch = spec.variants["cuda_arch"].value[0]
+            if cuda_arch != "none":
+                kokkos_arch_name = self.spack_cuda_arch_map[cuda_arch]
+                spack_microarches.append(kokkos_arch_name)
 
         kokkos_microarch_name = self.get_microarch(spec.target)
         if kokkos_microarch_name:

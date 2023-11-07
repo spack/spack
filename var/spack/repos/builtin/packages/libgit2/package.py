@@ -16,7 +16,13 @@ class Libgit2(CMakePackage):
     homepage = "https://libgit2.github.com/"
     url = "https://github.com/libgit2/libgit2/archive/v0.26.0.tar.gz"
 
+    version("1.7.0", sha256="d9d0f84a86bf98b73e68997f5c1543cc5067d0ca9c7a5acaba3e8d117ecefef3")
     version("1.6.4", sha256="d25866a4ee275a64f65be2d9a663680a5cf1ed87b7ee4c534997562c828e500d")
+    version("1.6.3", sha256="a8e2a09835eabb24ace2fd597a78af182e1e199a894e99a90e4c87c849fcd9c4")
+    version("1.6.2", sha256="d557fbf35557bb5df53cbf38ae0081edb4a36494ec0d19741fa673e509245f8f")
+    version("1.6.1", sha256="25f7d3e2e7f398477a6e18271c5a68510853d0fe826a6287811cebccf92e773f")
+    version("1.5.2", sha256="57638ac0e319078f56a7e17570be754515e5b1276d3750904b4214c92e8fa196")
+    version("1.5.1", sha256="7074f1e2697992b82402501182db254fe62d64877b12f6e4c64656516f4cde88")
     version("1.5.0", sha256="8de872a0f201b33d9522b817c92e14edb4efad18dae95cf156cf240b2efff93e")
     version("1.4.4", sha256="e9923e9916a32f54c661d55d79c28fa304cb23617639e68bff9f94d3e18f2d4b")
     version("1.4.3", sha256="f48b961e463a9e4e7e7e58b21a0fb5a9b2a1d24d9ba4d15870a0c9b8ad965163")
