@@ -461,13 +461,32 @@ class TestConcretize:
     @pytest.mark.only_clingo(
         "Optional compiler propagation isn't deprecated for original concretizer"
     )
-    def test_concretize_propagate_disabled_variant(self):
-        """Test a package variant value was passed from its parent."""
-        spec = Spec("ascent~~shared +adios2")
-        spec.concretize()
-
-        for dep in spec.traverse():
-            assert dep.satisfies("~shared")
+    @pytest.mark.parametrize(
+        "spec_str,expected_propagation",
+        [
+            ("hypre~~shared ^openblas+shared", [("hypre", "~shared"), ("openblas", "+shared")]),
+            # Propagates past a node that doesn't have the variant
+            ("hypre~~shared ^openblas", [("hypre", "~shared"), ("openblas", "~shared")]),
+            (
+                "ascent~~shared +adios2",
+                [("ascent", "~shared"), ("adios2", "~shared"), ("bzip2", "~shared")],
+            ),
+            # Propagates below a node that uses the other value explicitly
+            (
+                "ascent~~shared +adios2 ^adios2+shared",
+                [("ascent", "~shared"), ("adios2", "+shared"), ("bzip2", "~shared")],
+            ),
+            (
+                "ascent++shared +adios2 ^adios2~shared",
+                [("ascent", "+shared"), ("adios2", "~shared"), ("bzip2", "+shared")],
+            ),
+        ],
+    )
+    def test_concretize_propagate_disabled_variant(self, spec_str, expected_propagation):
+        """Tests various patterns of boolean variant propagation"""
+        spec = Spec(spec_str).concretized()
+        for key, expected_satisfies in expected_propagation:
+            spec[key].satisfies(expected_satisfies)
 
     @pytest.mark.only_clingo(
         "Optional compiler propagation isn't deprecated for original concretizer"
