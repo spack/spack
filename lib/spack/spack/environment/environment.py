@@ -441,6 +441,50 @@ def _is_dev_spec_and_has_changed(spec):
     return mtime > record.installation_time
 
 
+class DevelopGitPackage:
+    def __init__(self, dev_path):
+        self.git_dir = pathlib.Path(dev_path) / ".git"
+        self.spack_state = pathlib.Path(dev_path) / ".spack"
+        self.cache_state = self.spack_state / "spackdev-git-hash"
+
+    @staticmethod
+    def from_src_dir(dev_path):
+        git_dir = pathlib.Path(dev_path) / ".git"
+        if not git_dir.is_dir():
+            return
+        return DevelopGitPackage(git_dir)
+
+    def git_modification_hash(self):
+        """
+        Given a Git repository directory, output a hash that represents the current
+        state of the directory, including all uncommitted changes to tracked files
+        in the repository.
+        """
+        git_index = self.git_dir / "index"
+        tmp_index = self.spack_state / "spack-package-git-index"
+
+        os.remove(tmp_index)
+        shutil.copyfile(git_index, tmp_index)
+
+        env = {"GIT_INDEX_FILE": str(tmp_index)}
+        git = spack.util.git.git(required=True)
+        git("add", "-u", env=env)
+        hash = git("write-tree", env=env, output=str)
+        return hash
+
+    def update(self, hash):
+        with open(self.cache_state, "w") as f:
+            f.write(hash)
+
+    def get(self):
+        with open(self.cache_state, "r") as f:
+            return f.read()
+
+    def changed(self, hash):
+        prior_hash = self.get()
+        return prior_hash != hash
+
+
 def _error_on_nonempty_view_dir(new_root):
     """Defensively error when the target view path already exists and is not an
     empty directory. This usually happens when the view symlink was removed, but
