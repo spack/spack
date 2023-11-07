@@ -7,6 +7,7 @@ import getpass
 import os
 import platform
 import shutil
+import subprocess
 from os.path import basename, dirname, isdir
 
 from llnl.util.filesystem import find_headers, find_libraries, join_path
@@ -157,6 +158,16 @@ class IntelOneApiPackage(Package):
                 link_tree.merge(dest_path)
             else:
                 os.symlink(src_path, dest_path)
+
+        # On Debian/Ubuntu, /usr/include/x86_64-linux-gnu needs
+        # to be included in $CPATH for icc
+        cmd_out = subprocess.run(['gcc', '-print-multiarch'],
+                                 capture_output=True, check=True,
+                                 text=True)
+        if cmd_out.returncode == 0 and cmd_out.stdout:
+            # System headers should be located at the end
+            env.append_path('CPATH', join_path('/usr', 'include',
+                                               cmd_out.stdout.strip()))
 
 
 class IntelOneApiLibraryPackage(IntelOneApiPackage):
