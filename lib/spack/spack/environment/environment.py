@@ -802,7 +802,7 @@ def _create_environment(path):
 class Environment:
     """A Spack environment, which bundles together configuration and a list of specs."""
 
-    def __init__(self, manifest_dir: Union[str, pathlib.Path]) -> None:
+    def __init__(self, manifest_dir: Union[str, pathlib.Path], _git_checker=None) -> None:
         """An environment can be constructed from a directory containing a "spack.yaml" file, and
         optionally a consistent "spack.lock" file.
 
@@ -832,6 +832,11 @@ class Environment:
         self._repo = None
         #: Previously active environment
         self._previous_active = None
+
+        # Callable that can determine whether a directory is managed
+        # as a Git repository, returning a GitRepoChangeDetector for
+        # it if so
+        self._git_checker = _git_checker or GitRepoChangeDetector.from_src_dir
 
         with lk.ReadTransaction(self.txlock):
             self.manifest = EnvironmentManifestFile(manifest_dir)
@@ -1881,8 +1886,7 @@ class Environment:
         self.specs_by_hash[h] = concrete
 
     # TODO: this should only use git state when configured to do so
-    # TODO: this should use a mock-able object attribute to determine
-    # when a GitChangeDetector is available
+    # TODO: test should set _git_checker
     def _get_overwrite_specs(self):
         # Find all dev specs that were modified.
         git_states = list()
@@ -1901,7 +1905,7 @@ class Environment:
                 # Not installed -> nothing to compare against
                 return False
 
-            git_state = GitRepoChangeDetector.from_src_dir(dev_path_var.value)
+            git_state = self._git_checker(dev_path_var.value)
 
             if git_state:
                 if git_state.update_current():
