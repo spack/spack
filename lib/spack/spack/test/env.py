@@ -782,8 +782,8 @@ def test_env_with_include_def_missing(mutable_mock_env_path, mock_packages):
 
 
 class TestGitRepoChangeDetector:
-    def test_detect_git_change(self, mock_git_repository):
-        repo_path = mock_git_repository.path
+    def test_detect_git_change(self, mutable_mock_git_repo):
+        repo_path, managed_file = mutable_mock_git_repo
         git_change_detector = GitRepoChangeDetector.from_src_dir(repo_path)
         # If no prior recorded state exists the default should be to
         # indicate that a rebuild is required.
@@ -794,7 +794,7 @@ class TestGitRepoChangeDetector:
         assert not git_change_detector.update_current()
 
         with fs.working_dir(repo_path):
-            with open("r0_file", "a") as f:
+            with open(managed_file, "a") as f:
                 f.write("extra content")
 
         assert git_change_detector.update_current()
