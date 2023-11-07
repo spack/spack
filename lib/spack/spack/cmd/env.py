@@ -87,7 +87,7 @@ def env_create_setup_parser(subparser):
     )
 
 
-def env_create(args, verbose=True):
+def env_create(args):
     if args.with_view:
         # Expand relative paths provided on the command line to the current working directory
         # This way we interpret `spack env create --with-view ./view --dir ./env` as
@@ -108,16 +108,13 @@ def env_create(args, verbose=True):
         dir=args.dir,
         with_view=with_view,
         keep_relative=args.keep_relative,
-        verbose=verbose,
     )
 
     # Generate views, only really useful for environments created from spack.lock files.
     env.regenerate_views()
 
 
-def _env_create(
-    name_or_path, *, init_file=None, dir=False, with_view=None, keep_relative=False, verbose=True
-):
+def _env_create(name_or_path, *, init_file=None, dir=False, with_view=None, keep_relative=False):
     """Create a new environment, with an optional yaml description.
 
     Arguments:
@@ -134,10 +131,9 @@ def _env_create(
         env = ev.create(
             name_or_path, init_file=init_file, with_view=with_view, keep_relative=keep_relative
         )
-        if verbose:
-            tty.msg("Created environment '%s' in %s" % (name_or_path, env.path))
-            tty.msg("You can activate this environment with:")
-            tty.msg("  spack env activate %s" % (name_or_path))
+        tty.msg("Created environment '%s' in %s" % (name_or_path, env.path))
+        tty.msg("You can activate this environment with:")
+        tty.msg("  spack env activate %s" % (name_or_path))
         return env
 
     env = ev.create_in_dir(
@@ -314,7 +310,7 @@ def env_activate(args):
 
     # create if user requested, and then recall recursively
     elif args.create:
-        env_create(args, verbose=False)
+        env_create(args)
         env_activate(args)
         return
 
