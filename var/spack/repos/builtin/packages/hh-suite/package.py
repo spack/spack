@@ -23,9 +23,9 @@ class HhSuite(CMakePackage):
     variant("mpi", default=True, description="Enable MPI support")
     variant(
         "simd",
-        default="auto",
+        default="AVX2",
         description="SIMD instruction set",
-        values=("auto", "SSE2", "AVX2"),
+        values=("SSE2", "AVX2"),
         multi=False,
     )
 
@@ -44,11 +44,5 @@ class HhSuite(CMakePackage):
             args.append("-DCHECK_MPI=1")
         else:
             args.append("-DCHECK_MPI=0")
-        simd = self.spec.variants["simd"].value
-        if simd == "auto":
-            if "avx2" in self.spec.target:
-                simd = "AVX2"
-            elif "sse2" in self.spec.target:
-                simd = "SSE2"
-        args.append("-DHAVE_{simd}=1")
+        args.append(f"-DHAVE_{self.spec.variants['simd'].value}=1")
         return args
