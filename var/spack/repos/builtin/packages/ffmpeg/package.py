@@ -54,6 +54,7 @@ class Ffmpeg(AutotoolsPackage):
 
     # options
     variant("bzlib", default=True, description="bzip2 support")
+    variant("doc", default=False, description="build documentation")
     variant("libaom", default=False, when="@4.0:", description="AV1 video encoding/decoding")
     variant("libmp3lame", default=False, description="MP3 encoding")
     variant("libopenjpeg", default=False, description="JPEG 2000 de/encoding")
@@ -171,6 +172,7 @@ class Ffmpeg(AutotoolsPackage):
 
         variant_opts = [
             "bzlib",
+            "doc",
             "gpl",
             "libmp3lame",
             "libopenjpeg",
