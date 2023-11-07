@@ -1435,7 +1435,7 @@ complete -c spack -n '__fish_spack_using_command env' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env' -s h -l help -d 'show this help message and exit'
 
 # spack env activate
-set -g __fish_spack_optspecs_spack_env_activate h/help sh csh fish bat pwsh v/with-view= V/without-view p/prompt temp d/dir=
+set -g __fish_spack_optspecs_spack_env_activate h/help sh csh fish bat pwsh v/with-view= V/without-view p/prompt temp create envfile= keep-relative d/dir
 complete -c spack -n '__fish_spack_using_command_pos 0 env activate' -f -a '(__fish_spack_environments)'
 complete -c spack -n '__fish_spack_using_command env activate' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env activate' -s h -l help -d 'show this help message and exit'
@@ -1457,8 +1457,14 @@ complete -c spack -n '__fish_spack_using_command env activate' -s p -l prompt -f
 complete -c spack -n '__fish_spack_using_command env activate' -s p -l prompt -d 'decorate the command line prompt when activating'
 complete -c spack -n '__fish_spack_using_command env activate' -l temp -f -a temp
 complete -c spack -n '__fish_spack_using_command env activate' -l temp -d 'create and activate an environment in a temporary directory'
-complete -c spack -n '__fish_spack_using_command env activate' -s d -l dir -r -f -a dir
-complete -c spack -n '__fish_spack_using_command env activate' -s d -l dir -r -d 'activate the environment in this directory'
+complete -c spack -n '__fish_spack_using_command env activate' -l create -f -a create
+complete -c spack -n '__fish_spack_using_command env activate' -l create -d 'if the environment doesn\'t exist, create it before activating'
+complete -c spack -n '__fish_spack_using_command env activate' -l envfile -r -f -a envfile
+complete -c spack -n '__fish_spack_using_command env activate' -l envfile -r -d 'either a lockfile (must end with \'.json\' or \'.lock\') or a manifest file'
+complete -c spack -n '__fish_spack_using_command env activate' -l keep-relative -f -a keep_relative
+complete -c spack -n '__fish_spack_using_command env activate' -l keep-relative -d 'copy relative develop paths verbatim into the new environment when initializing from envfile'
+complete -c spack -n '__fish_spack_using_command env activate' -s d -l dir -f -a dir
+complete -c spack -n '__fish_spack_using_command env activate' -s d -l dir -d 'activate environment based on the directory'
 
 # spack env deactivate
 set -g __fish_spack_optspecs_spack_env_deactivate h/help sh csh fish bat pwsh
