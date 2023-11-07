@@ -105,17 +105,13 @@ class TestConcretizePreferences:
 
     @pytest.mark.parametrize(
         "compiler_str,spec_str",
-        [("gcc@4.5.0", "mpileaks"), ("clang@12.0.0", "mpileaks"), ("gcc@4.5.0", "openmpi")],
+        [("gcc@=4.5.0", "mpileaks"), ("clang@=12.0.0", "mpileaks"), ("gcc@=4.5.0", "openmpi")],
     )
     def test_preferred_compilers(self, compiler_str, spec_str):
         """Test preferred compilers are applied correctly"""
-        spec = Spec(spec_str)
-        update_packages(spec.name, "compiler", [compiler_str])
-        spec.concretize()
-        # note: lhs has concrete compiler version, rhs still abstract.
-        # Could be made more strict by checking for equality with `gcc@=4.5.0`
-        # etc.
-        assert spec.compiler.satisfies(CompilerSpec(compiler_str))
+        update_packages("all", "compiler", [compiler_str])
+        spec = spack.spec.Spec(spec_str).concretized()
+        assert spec.compiler == CompilerSpec(compiler_str)
 
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
     def test_preferred_target(self, mutable_mock_repo):
@@ -124,7 +120,7 @@ class TestConcretizePreferences:
         default = str(spec.target)
         preferred = str(spec.target.family)
 
-        update_packages("mpich", "target", [preferred])
+        update_packages("all", "target", [preferred])
         spec = concretize("mpich")
         assert str(spec.target) == preferred
 
@@ -132,7 +128,7 @@ class TestConcretizePreferences:
         assert str(spec["mpileaks"].target) == preferred
         assert str(spec["mpich"].target) == preferred
 
-        update_packages("mpileaks", "target", [default])
+        update_packages("all", "target", [default])
         spec = concretize("mpileaks")
         assert str(spec["mpileaks"].target) == default
         assert str(spec["mpich"].target) == default
