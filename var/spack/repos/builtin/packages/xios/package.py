@@ -16,10 +16,10 @@ class Xios(Package):
 
     version("develop", svn="http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/trunk")
     version(
-        "2.5", revision=1860, svn="http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/branchs/xios-2.5"
+        "2.5", revision=2593, svn="http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/branchs/xios-2.5"
     )
     version(
-        "2.0", revision=1627, svn="http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/branchs/xios-2.0"
+        "2.0", revision=2593, svn="http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/branchs/xios-2.0"
     )
     version(
         "1.0", revision=910, svn="http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/branchs/xios-1.0"
@@ -41,6 +41,9 @@ class Xios(Package):
     # followed by a character is broken (e.g. duration '1d'):
     patch("llvm_bug_17782.patch", when="@1.1: %apple-clang")
     patch("llvm_bug_17782.patch", when="@1.1: %clang")
+
+    # This patch fixes a compilation error where 'FLT_MAX' and 'FLT_MIN' was not declared in scope.
+    patch("fix_float_error.patch", when="@develop")
 
     depends_on("netcdf-c+mpi")
     depends_on("netcdf-fortran")
@@ -121,19 +124,26 @@ OASIS_LIB=""
         param["BOOST_LIB_DIR"] = spec["boost"].prefix.lib
         param["BLITZ_INC_DIR"] = spec["blitz"].prefix.include
         param["BLITZ_LIB_DIR"] = spec["blitz"].prefix.lib
+
+        if "@develop" in spec:
+            param["CXX_STD_OPT"] = "-std=c++11"
+        else:
+            param["CXX_STD_OPT"] = ""
+
         if spec.satisfies("%apple-clang"):
             param["LIBCXX"] = "-lc++"
         else:
             param["LIBCXX"] = "-lstdc++"
 
-        if any(map(spec.satisfies, ("%gcc", "%intel", "%apple-clang", "%clang", "%fj"))):
+
+        if any(map(spec.satisfies, ("%gcc", "%intel", "%apple-clang", "%clang"))):
             text = r"""
 %CCOMPILER      {MPICXX}
 %FCOMPILER      {MPIFC}
 %LINKER         {MPIFC}
 
 %BASE_CFLAGS    -ansi -w -D_GLIBCXX_USE_CXX11_ABI=0 \
-                -I{BOOST_INC_DIR} -I{BLITZ_INC_DIR}
+                -I{BOOST_INC_DIR} -I{BLITZ_INC_DIR} {CXX_STD_OPT}
 %PROD_CFLAGS    -O3 -DBOOST_DISABLE_ASSERTS
 %DEV_CFLAGS     -g -O2
 %DEBUG_CFLAGS   -g
@@ -186,6 +196,32 @@ OASIS_LIB=""
 """.format(
                 **param
             )
+        elif spec.satisfies("%fj"):
+            text = r"""
+%CCOMPILER      {MPICXX}
+%FCOMPILER      {MPIFC}
+%LINKER         {MPICXX}
+
+%BASE_CFLAGS    -ansi -w -D_GLIBCXX_USE_CXX11_ABI=0 -D__FUJITSU \
+                -I{BOOST_INC_DIR} -I{BLITZ_INC_DIR} {CXX_STD_OPT}
+%PROD_CFLAGS    -O3 -DBOOST_DISABLE_ASSERTS
+%DEV_CFLAGS     -g -O2
+%DEBUG_CFLAGS   -g
+
+%BASE_FFLAGS    -D__NONE__
+%PROD_FFLAGS    -O3
+%DEV_FFLAGS     -g -O2
+%DEBUG_FFLAGS   -g
+
+%BASE_INC       -D__NONE__
+%BASE_LD        -L{BOOST_LIB_DIR} -L{BLITZ_LIB_DIR} -lblitz --linkfortran
+
+%CPP            {CC} -E
+%FPP            {CC} -E -P -x c
+%MAKE           make
+""".format(
+                **param
+            )
         else:
             raise InstallError("Unsupported compiler.")
 
@@ -205,6 +241,8 @@ OASIS_LIB=""
             "SPACK",
             "--netcdf_lib",
             "netcdf4_par",
+            "--use_extern_boost",
+            "--use_extern_blitz",
             "--job",
             str(make_jobs),
         ]
