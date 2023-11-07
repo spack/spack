@@ -18,7 +18,7 @@ spack:
         - hdf5+hl+mpi ^mpich
         - trilinos
         - trilinos +hdf5 ^hdf5+hl+mpi ^mpich
-        - gcc@12
+        - gcc@12.3.0
         - mpileaks
         - lmod
         - macsio@1.1+scr ^scr@2.0.0~fortran ^silo~fortran ^hdf5~fortran
