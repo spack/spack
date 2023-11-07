@@ -5,7 +5,6 @@
 
 import os
 import socket
-import sys
 
 from spack.package import *
 
@@ -243,7 +242,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     def cache_name(self):
         hostname = socket.gethostname()
         # Get a hostname that has no node identifier
-        hostname = hostname.rstrip("1234567890\-")
+        hostname = hostname.rstrip("1234567890-")
         return "LBANN_{0}_{1}-{2}-{3}@{4}.cmake".format(
             hostname,
             self.spec.version,
