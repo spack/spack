@@ -189,8 +189,10 @@ class Ffmpeg(AutotoolsPackage):
             "libsnappy",
             "sdl2",
             "libaom",
-            "libxml2",
         ]
+
+        if spec.satisfies("@4:"):
+            variant_opts.append("libxml2")
 
         for variant_opt in variant_opts:
             config_args += self.enable_or_disable(variant_opt)
