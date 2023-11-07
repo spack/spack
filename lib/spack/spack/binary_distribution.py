@@ -68,6 +68,7 @@ from spack.util.executable import which
 
 _build_cache_relative_path = "build_cache"
 _build_cache_keys_relative_path = "_pgp"
+_current_build_cache_layout_version = 1
 
 
 class BuildCacheDatabase(spack_db.Database):
@@ -598,6 +599,19 @@ class NewLayoutException(spack.error.SpackError):
 
     def __init__(self, msg):
         super().__init__(msg)
+
+
+class UnsupportedLayoutException(spack.error.SpackError):
+    """
+    Raised if binary package metadata contains a layout version
+    number which is newer than spack knows about.
+    """
+
+    def __init__(self, spec, layout_version):
+        super().__init__(
+            f"Could not install binary package for {spec.name}/{spec.dag_hash()[:7]}, "
+            f"due to encountering a layout version ({layout_version}) which is too new."
+        )
 
 
 class UnsignedPackageException(spack.error.SpackError):
@@ -1401,7 +1415,7 @@ def _build_tarball_in_stage_dir(spec: Spec, out_url: str, stage_dir: str, option
             spec_dict = sjson.load(content)
         else:
             raise ValueError("{0} not a valid spec file type".format(spec_file))
-    spec_dict["buildcache_layout_version"] = 1
+    spec_dict["buildcache_layout_version"] = _current_build_cache_layout_version
     spec_dict["binary_cache_checksum"] = {"hash_algorithm": "sha256", "hash": checksum}
 
     with open(specfile_path, "w") as outfile:
@@ -1560,6 +1574,17 @@ def _delete_staged_downloads(download_result):
     download_result["specfile_stage"].destroy()
 
 
+def _read_spec_file(specfile_path):
+    spec_dict = {}
+    with open(specfile_path, "r") as inputfile:
+        content = inputfile.read()
+        if specfile_path.endswith(".json.sig"):
+            spec_dict = Spec.extract_json_from_clearsig(content)
+        else:
+            spec_dict = sjson.load(content)
+    return spec_dict
+
+
 def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
     """
     Download binary tarball for given package into stage area, returning
@@ -1681,6 +1706,15 @@ def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
                 if local_specfile_stage:
                     local_specfile_path = local_specfile_stage.save_filename
                     signature_verified = False
+
+                    spec_dict = _read_spec_file(local_specfile_path)
+                    layout_version = int(spec_dict.get("buildcache_layout_version", 0))
+                    if layout_version > _current_build_cache_layout_version:
+                        tty.warn(
+                            f"Ignoring binary package for {spec.name}/{spec.dag_hash()[:7]} "
+                            f"from {mirror} because layout version ({layout_version}) is too new"
+                        )
+                        continue
 
                     if try_signed and not unsigned:
                         # If we found a signed specfile at the root, try to verify
@@ -2001,24 +2035,16 @@ def extract_tarball(spec, download_result, unsigned=False, force=False, timer=ti
     )
 
     specfile_path = download_result["specfile_stage"].save_filename
-
-    with open(specfile_path, "r") as inputfile:
-        content = inputfile.read()
-        if specfile_path.endswith(".json.sig"):
-            spec_dict = Spec.extract_json_from_clearsig(content)
-        else:
-            spec_dict = sjson.load(content)
-
+    spec_dict = _read_spec_file(specfile_path)
     bchecksum = spec_dict["binary_cache_checksum"]
 
     filename = download_result["tarball_stage"].save_filename
     signature_verified = download_result["signature_verified"]
     tmpdir = None
 
-    if (
-        "buildcache_layout_version" not in spec_dict
-        or int(spec_dict["buildcache_layout_version"]) < 1
-    ):
+    layout_version = int(spec_dict.get("buildcache_layout_version", 0))
+
+    if layout_version == 0:
         # Handle the older buildcache layout where the .spack file
         # contains a spec json, maybe an .asc file (signature),
         # and another tarball containing the actual install tree.
@@ -2029,7 +2055,7 @@ def extract_tarball(spec, download_result, unsigned=False, force=False, timer=ti
             _delete_staged_downloads(download_result)
             shutil.rmtree(tmpdir)
             raise e
-    else:
+    elif layout_version == 1:
         # Newer buildcache layout: the .spack file contains just
         # in the install tree, the signature, if it exists, is
         # wrapped around the spec.json at the root.  If sig verify
@@ -2053,6 +2079,8 @@ def extract_tarball(spec, download_result, unsigned=False, force=False, timer=ti
             raise NoChecksumException(
                 tarfile_path, size, contents, "sha256", expected, local_checksum
             )
+    else:
+        raise UnsupportedLayoutException(spec, layout_version)
 
     try:
         with closing(tarfile.open(tarfile_path, "r")) as tar:

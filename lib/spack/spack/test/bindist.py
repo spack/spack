@@ -589,6 +589,30 @@ def test_install_legacy_buildcache_layout(install_mockery_mutable_config):
     assert expect_line in output
 
 
+@pytest.mark.nomockstage
+def test_install_future_buildcache_layout(install_mockery_mutable_config, mock_fetch):
+    """
+    Test that we get a warning message and install from source when we
+    don't recognize the buildcache_layout_version.
+    """
+    future_layout_dir = os.path.join(test_path, "data", "mirrors", "future_layout")
+    mirror_url = "file://{0}".format(future_layout_dir)
+    filename = (
+        "test-debian6-core2-gcc-4.5.0-archive-files-2.0-"
+        "l3vdiqvbobmspwyb4q2b62fz6nitd4hk.spec.json"
+    )
+    spec_json_path = os.path.join(future_layout_dir, "build_cache", filename)
+    mirror_cmd("add", "--scope", "site", "test-future-layout", mirror_url)
+    output = install_cmd("--no-check-signature", "-f", spec_json_path, output=str)
+    mirror_cmd("rm", "--scope=site", "test-future-layout")
+    expect_lines = [
+        "Warning: Ignoring binary package for archive-files",
+        "because layout version (10) is too new",
+        "Successfully installed archive-files",
+    ]
+    assert all([expected in output for expected in expect_lines])
+
+
 def test_FetchCacheError_only_accepts_lists_of_errors():
     with pytest.raises(TypeError, match="list"):
         bindist.FetchCacheError("error")
