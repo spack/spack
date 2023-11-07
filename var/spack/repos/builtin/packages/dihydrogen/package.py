@@ -5,7 +5,6 @@
 
 import os
 
-import spack.build_environment
 from spack.package import *
 
 
@@ -238,7 +237,6 @@ class Dihydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
         return find_libraries("libH2Core", root=self.prefix, shared=shared, recursive=True)
 
     def cmake_args(self):
-        spec = self.spec
         args = []
         return args
 

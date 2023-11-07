@@ -126,7 +126,6 @@ class Aluminum(CachedCMakePackage, CudaPackage, ROCmPackage):
             depends_on("aws-ofi-rccl", when="+nccl")
 
     def cmake_args(self):
-        spec = self.spec
         args = []
         return args
 
@@ -143,7 +142,6 @@ class Aluminum(CachedCMakePackage, CudaPackage, ROCmPackage):
         return args
 
     def std_initconfig_entries(self):
-        spec = self.spec
         entries = super(Aluminum, self).std_initconfig_entries()
 
         # CMAKE_PREFIX_PATH, in CMake types, is a "STRING", not a "PATH". :/

@@ -133,7 +133,6 @@ class Hydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
         return find_libraries("libHydrogen", root=self.prefix, shared=shared, recursive=True)
 
     def cmake_args(self):
-        spec = self.spec
         args = []
         return args
 
@@ -150,7 +149,6 @@ class Hydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
         return args
 
     def std_initconfig_entries(self):
-        spec = self.spec
         entries = super(Hydrogen, self).std_initconfig_entries()
 
         # CMAKE_PREFIX_PATH, in CMake types, is a "STRING", not a "PATH". :/
