@@ -663,7 +663,7 @@ _spack_buildcache_rebuild_index() {
 _spack_cd() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -m --module-dir -r --spack-root -i --install-dir -p --package-dir -P --packages -s --stage-dir -S --stages --source-dir -b --build-dir -e --env --first"
+        SPACK_COMPREPLY="-h --help -m --module-dir -r --spack-root -i --install-dir -p --package-dir -P --packages -s --stage-dir -S --stages --source-dir -b --build-dir -e --env --best --first"
     else
         _all_packages
     fi
@@ -985,7 +985,7 @@ _spack_develop() {
 _spack_diff() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --json --first -a --attribute"
+        SPACK_COMPREPLY="-h --help --json -a --attribute --best --first"
     else
         _all_packages
     fi
@@ -1315,7 +1315,7 @@ _spack_list() {
 _spack_load() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --sh --csh --fish --bat --pwsh --first --best --only --list"
+        SPACK_COMPREPLY="-h --help --sh --csh --fish --bat --pwsh --best --first --only --list"
     else
         _installed_packages
     fi
@@ -1324,7 +1324,7 @@ _spack_load() {
 _spack_location() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -m --module-dir -r --spack-root -i --install-dir -p --package-dir -P --packages -s --stage-dir -S --stages --source-dir -b --build-dir -e --env --first"
+        SPACK_COMPREPLY="-h --help -m --module-dir -r --spack-root -i --install-dir -p --package-dir -P --packages -s --stage-dir -S --stages --source-dir -b --build-dir -e --env --best --first"
     else
         _all_packages
     fi

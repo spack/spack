@@ -867,7 +867,7 @@ complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s k 
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s k -l keys -d 'if provided, key index will be updated as well as package index'
 
 # spack cd
-set -g __fish_spack_optspecs_spack_cd h/help m/module-dir r/spack-root i/install-dir p/package-dir P/packages s/stage-dir S/stages source-dir b/build-dir e/env= first
+set -g __fish_spack_optspecs_spack_cd h/help m/module-dir r/spack-root i/install-dir p/package-dir P/packages s/stage-dir S/stages source-dir b/build-dir e/env= best
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 cd' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command cd' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command cd' -s h -l help -d 'show this help message and exit'
@@ -891,8 +891,8 @@ complete -c spack -n '__fish_spack_using_command cd' -s b -l build-dir -f -a bui
 complete -c spack -n '__fish_spack_using_command cd' -s b -l build-dir -d 'build directory for a spec (requires it to be staged first)'
 complete -c spack -n '__fish_spack_using_command cd' -s e -l env -r -f -a location_env
 complete -c spack -n '__fish_spack_using_command cd' -s e -l env -r -d 'location of the named or current environment'
-complete -c spack -n '__fish_spack_using_command cd' -l first -f -a find_first
-complete -c spack -n '__fish_spack_using_command cd' -l first -d 'use the first match if multiple packages match the spec'
+complete -c spack -n '__fish_spack_using_command cd' -l best -l first -f -a best
+complete -c spack -n '__fish_spack_using_command cd' -l best -l first -d 'choose \'best\' of multiple matches by arch, version, etc.'
 
 # spack change
 set -g __fish_spack_optspecs_spack_change h/help l/list-name= match-spec= a/all
@@ -1387,16 +1387,16 @@ complete -c spack -n '__fish_spack_using_command develop' -s f -l force -r -f -a
 complete -c spack -n '__fish_spack_using_command develop' -s f -l force -r -d 'remove any files or directories that block cloning source code'
 
 # spack diff
-set -g __fish_spack_optspecs_spack_diff h/help json first a/attribute=
+set -g __fish_spack_optspecs_spack_diff h/help json a/attribute= best
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 diff' -f -a '(__fish_spack_installed_specs)'
 complete -c spack -n '__fish_spack_using_command diff' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command diff' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command diff' -l json -f -a dump_json
 complete -c spack -n '__fish_spack_using_command diff' -l json -d 'dump json output instead of pretty printing'
-complete -c spack -n '__fish_spack_using_command diff' -l first -f -a load_first
-complete -c spack -n '__fish_spack_using_command diff' -l first -d 'load the first match if multiple packages match the spec'
 complete -c spack -n '__fish_spack_using_command diff' -s a -l attribute -r -f -a attribute
 complete -c spack -n '__fish_spack_using_command diff' -s a -l attribute -r -d 'select the attributes to show (defaults to all)'
+complete -c spack -n '__fish_spack_using_command diff' -l best -l first -f -a best
+complete -c spack -n '__fish_spack_using_command diff' -l best -l first -d 'choose \'best\' of multiple matches by arch, version, etc.'
 
 # spack docs
 set -g __fish_spack_optspecs_spack_docs h/help
@@ -2003,7 +2003,7 @@ complete -c spack -n '__fish_spack_using_command list' -l update -r -f -a update
 complete -c spack -n '__fish_spack_using_command list' -l update -r -d 'write output to the specified file, if any package is newer'
 
 # spack load
-set -g __fish_spack_optspecs_spack_load h/help sh csh fish bat pwsh first best only= list
+set -g __fish_spack_optspecs_spack_load h/help sh csh fish bat pwsh best only= list
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 load' -f -a '(__fish_spack_installed_specs)'
 complete -c spack -n '__fish_spack_using_command load' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command load' -s h -l help -d 'show this help message and exit'
@@ -2017,17 +2017,15 @@ complete -c spack -n '__fish_spack_using_command load' -l bat -f -a shell
 complete -c spack -n '__fish_spack_using_command load' -l bat -d 'print bat commands to load the package'
 complete -c spack -n '__fish_spack_using_command load' -l pwsh -f -a shell
 complete -c spack -n '__fish_spack_using_command load' -l pwsh -d 'print pwsh commands to load the package'
-complete -c spack -n '__fish_spack_using_command load' -l first -f -a load_best
-complete -c spack -n '__fish_spack_using_command load' -l first -d 'load the first match if multiple packages match the spec'
-complete -c spack -n '__fish_spack_using_command load' -l best -f -a load_best
-complete -c spack -n '__fish_spack_using_command load' -l best -d 'load the best match for the architecture if multiple packages match the spec'
+complete -c spack -n '__fish_spack_using_command load' -l best -l first -f -a best
+complete -c spack -n '__fish_spack_using_command load' -l best -l first -d 'choose \'best\' of multiple matches by arch, version, etc.'
 complete -c spack -n '__fish_spack_using_command load' -l only -r -f -a 'package dependencies'
 complete -c spack -n '__fish_spack_using_command load' -l only -r -d 'select whether to load the package and its dependencies'
 complete -c spack -n '__fish_spack_using_command load' -l list -f -a list
 complete -c spack -n '__fish_spack_using_command load' -l list -d 'show loaded packages: same as `spack find --loaded`'
 
 # spack location
-set -g __fish_spack_optspecs_spack_location h/help m/module-dir r/spack-root i/install-dir p/package-dir P/packages s/stage-dir S/stages source-dir b/build-dir e/env= first
+set -g __fish_spack_optspecs_spack_location h/help m/module-dir r/spack-root i/install-dir p/package-dir P/packages s/stage-dir S/stages source-dir b/build-dir e/env= best
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 location' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command location' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command location' -s h -l help -d 'show this help message and exit'
@@ -2051,8 +2049,8 @@ complete -c spack -n '__fish_spack_using_command location' -s b -l build-dir -f 
 complete -c spack -n '__fish_spack_using_command location' -s b -l build-dir -d 'build directory for a spec (requires it to be staged first)'
 complete -c spack -n '__fish_spack_using_command location' -s e -l env -r -f -a location_env
 complete -c spack -n '__fish_spack_using_command location' -s e -l env -r -d 'location of the named or current environment'
-complete -c spack -n '__fish_spack_using_command location' -l first -f -a find_first
-complete -c spack -n '__fish_spack_using_command location' -l first -d 'use the first match if multiple packages match the spec'
+complete -c spack -n '__fish_spack_using_command location' -l best -l first -f -a best
+complete -c spack -n '__fish_spack_using_command location' -l best -l first -d 'choose \'best\' of multiple matches by arch, version, etc.'
 
 # spack log-parse
 set -g __fish_spack_optspecs_spack_log_parse h/help show= c/context= p/profile w/width= j/jobs=
