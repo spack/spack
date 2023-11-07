@@ -25,11 +25,7 @@ class HhSuite(CMakePackage):
         "simd",
         default="auto",
         description="SIMD instruction set",
-        values=(
-            "auto",
-            "SSE2",
-            "AVX2"
-        ),
+        values=("auto", "SSE2", "AVX2"),
         multi=False,
     )
 
@@ -40,7 +36,9 @@ class HhSuite(CMakePackage):
         args = []
         if "+shared" in self.spec:
             args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
-            args.append(self.define("CMAKE_EXE_LINKER_FLAGS", "-static -static-libgcc -static-libstdc++"))
+            args.append(
+                self.define("CMAKE_EXE_LINKER_FLAGS", "-static -static-libgcc -static-libstdc++")
+            )
             args.append(self.define("CMAKE_FIND_LIBRARY_SUFFIXES", ".a"))
         if "+mpi" in self.spec:
             args.append("-DCHECK_MPI=1")
