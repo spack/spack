@@ -1877,8 +1877,8 @@ class Environment:
                 if git_state.update_changed():
                     changed_dev_specs.append(s)
 
-                # This is appended either way, since we want to store the state
-                # the first time we install the package
+                # This is appended regardless of whether there was a change: we want
+                # to store the state the first time we install the package
                 git_states.append(git_state)
             elif _timestamp_changed(s):
                 changed_dev_specs.append(s)
