@@ -1023,7 +1023,7 @@ def finish_parse_and_run(parser, cmd_name, cmd, env_format_error):
     """Finish parsing after we know the command to run."""
     # add the found command to the parser and re-run then re-parse
     command = parser.add_command(cmd_name)
-    args, unknown = parser.parse_known_args(cmd)
+    args, unknown = parser.parse_known_args()
 
     # Now that we know what command this is and what its args are, determine
     # whether we can continue with a bad environment and raise if not.
