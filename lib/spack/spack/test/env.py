@@ -802,5 +802,6 @@ class TestGitRepoChangeDetector:
         # then, we should go back to reporting no change.
         assert not git_change_detector.update_changed()
 
-    def test_not_a_git_repo(self):
-        pass
+    def test_not_a_git_repo(self, tmpdir):
+        not_a_git_repo = tmpdir.mkdir("env_dir").strpath
+        assert not GitRepoChangeDetector.from_src_dir(not_a_git_repo)
