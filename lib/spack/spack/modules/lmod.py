@@ -6,8 +6,7 @@
 import collections
 import itertools
 import os.path
-import posixpath
-from typing import Any, Dict, List
+from typing import Dict, List, Optional, Tuple
 
 import llnl.util.filesystem as fs
 import llnl.util.lang as lang
@@ -24,18 +23,19 @@ from .common import BaseConfiguration, BaseContext, BaseFileLayout, BaseModuleFi
 
 
 #: lmod specific part of the configuration
-def configuration(module_set_name):
-    config_path = "modules:%s:lmod" % module_set_name
-    config = spack.config.get(config_path, {})
-    return config
+def configuration(module_set_name: str) -> dict:
+    return spack.config.get(f"modules:{module_set_name}:lmod", {})
 
 
 # Caches the configuration {spec_hash: configuration}
-configuration_registry: Dict[str, Any] = {}
+configuration_registry: Dict[Tuple[str, str, bool], BaseConfiguration] = {}
 
 
-def make_configuration(spec, module_set_name, explicit):
+def make_configuration(
+    spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
+) -> BaseConfiguration:
     """Returns the lmod configuration for spec"""
+    explicit = bool(spec._installed_explicitly()) if explicit is None else explicit
     key = (spec.dag_hash(), module_set_name, explicit)
     try:
         return configuration_registry[key]
@@ -45,16 +45,18 @@ def make_configuration(spec, module_set_name, explicit):
         )
 
 
-def make_layout(spec, module_set_name, explicit):
+def make_layout(
+    spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
+) -> BaseFileLayout:
     """Returns the layout information for spec"""
-    conf = make_configuration(spec, module_set_name, explicit)
-    return LmodFileLayout(conf)
+    return LmodFileLayout(make_configuration(spec, module_set_name, explicit))
 
 
-def make_context(spec, module_set_name, explicit):
+def make_context(
+    spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
+) -> BaseContext:
     """Returns the context information for spec"""
-    conf = make_configuration(spec, module_set_name, explicit)
-    return LmodContext(conf)
+    return LmodContext(make_configuration(spec, module_set_name, explicit))
 
 
 def guess_core_compilers(name, store=False) -> List[spack.spec.CompilerSpec]:
@@ -97,10 +99,7 @@ def guess_core_compilers(name, store=False) -> List[spack.spec.CompilerSpec]:
 class LmodConfiguration(BaseConfiguration):
     """Configuration class for lmod module files."""
 
-    # Note: Posixpath is used here as well as below as opposed to
-    # os.path.join due to spack.spec.Spec.format
-    # requiring forward slash path seperators at this stage
-    default_projections = {"all": posixpath.join("{name}", "{version}")}
+    default_projections = {"all": "{name}/{version}"}
 
     @property
     def core_compilers(self) -> List[spack.spec.CompilerSpec]:
@@ -232,6 +231,13 @@ class LmodConfiguration(BaseConfiguration):
         """Returns the list of tokens that are not available."""
         return [x for x in self.hierarchy_tokens if x not in self.available]
 
+    @property
+    def hidden(self):
+        # Never hide a module that opens a hierarchy
+        if any(self.spec.package.provides(x) for x in self.hierarchy_tokens):
+            return False
+        return super().hidden
+
 
 class LmodFileLayout(BaseFileLayout):
     """File layout for lmod module files."""
@@ -267,12 +273,16 @@ class LmodFileLayout(BaseFileLayout):
         hierarchy_name = os.path.join(*parts)
 
         # Compute the absolute path
-        fullname = os.path.join(
+        return os.path.join(
             self.arch_dirname,  # root for lmod files on this architecture
             hierarchy_name,  # relative path
-            ".".join([self.use_name, self.extension]),  # file name
+            f"{self.use_name}.{self.extension}",  # file name
         )
-        return fullname
+
+    @property
+    def modulerc(self):
+        """Returns the modulerc file associated with current module file"""
+        return os.path.join(os.path.dirname(self.filename), f".modulerc.{self.extension}")
 
     def token_to_path(self, name, value):
         """Transforms a hierarchy token into the corresponding path part.
@@ -305,9 +315,7 @@ class LmodFileLayout(BaseFileLayout):
         # we need to append a hash to the version to distinguish
         # among flavors of the same library (e.g. openblas~openmp vs.
         # openblas+openmp)
-        path = path_part_fmt(token=value)
-        path = "-".join([path, value.dag_hash(length=7)])
-        return path
+        return f"{path_part_fmt(token=value)}-{value.dag_hash(length=7)}"
 
     @property
     def available_path_parts(self):
@@ -319,8 +327,7 @@ class LmodFileLayout(BaseFileLayout):
         # List of services that are part of the hierarchy
         hierarchy = self.conf.hierarchy_tokens
         # Tokenize each part that is both in the hierarchy and available
-        parts = [self.token_to_path(x, available[x]) for x in hierarchy if x in available]
-        return parts
+        return [self.token_to_path(x, available[x]) for x in hierarchy if x in available]
 
     @property
     @lang.memoized
@@ -438,7 +445,7 @@ class LmodContext(BaseContext):
     @lang.memoized
     def unlocked_paths(self):
         """Returns the list of paths that are unlocked unconditionally."""
-        layout = make_layout(self.spec, self.conf.name, self.conf.explicit)
+        layout = make_layout(self.spec, self.conf.name)
         return [os.path.join(*parts) for parts in layout.unlocked_paths[None]]
 
     @tengine.context_property
@@ -446,7 +453,7 @@ class LmodContext(BaseContext):
         """Returns the list of paths that are unlocked conditionally.
         Each item in the list is a tuple with the structure (condition, path).
         """
-        layout = make_layout(self.spec, self.conf.name, self.conf.explicit)
+        layout = make_layout(self.spec, self.conf.name)
         value = []
         conditional_paths = layout.unlocked_paths
         conditional_paths.pop(None)
@@ -468,7 +475,11 @@ class LmodContext(BaseContext):
 class LmodModulefileWriter(BaseModuleFileWriter):
     """Writer class for lmod module files."""
 
-    default_template = posixpath.join("modules", "modulefile.lua")
+    default_template = "modules/modulefile.lua"
+
+    modulerc_header = []
+
+    hide_cmd_format = 'hide_version("%s")'
 
 
 class CoreCompilersNotFoundError(spack.error.SpackError, KeyError):

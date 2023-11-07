@@ -6,7 +6,7 @@
 
 Here is the EBNF grammar for a spec::
 
-    spec          = [name] [node_options] { ^ node } |
+    spec          = [name] [node_options] { ^[edge_properties] node } |
                     [name] [node_options] hash |
                     filename
 
@@ -14,7 +14,8 @@ Here is the EBNF grammar for a spec::
                      [name] [node_options] hash |
                      filename
 
-    node_options  = [@(version_list|version_pair)] [%compiler] { variant }
+    node_options    = [@(version_list|version_pair)] [%compiler] { variant }
+    edge_properties = [ { bool_variant | key_value } ]
 
     hash          = / id
     filename      = (.|/|[a-zA-Z0-9-_]*/)([a-zA-Z0-9-_./]*)(.json|.yaml)
@@ -64,9 +65,9 @@ from typing import Iterator, List, Match, Optional
 
 from llnl.util.tty import color
 
+import spack.deptypes
 import spack.error
 import spack.spec
-import spack.variant
 import spack.version
 
 IS_WINDOWS = sys.platform == "win32"
@@ -97,9 +98,9 @@ else:
 VALUE = r"(?:[a-zA-Z_0-9\-+\*.,:=\~\/\\]+)"
 QUOTED_VALUE = r"[\"']+(?:[a-zA-Z_0-9\-+\*.,:=\~\/\\\s]+)[\"']+"
 
-VERSION = r"=?([a-zA-Z0-9_][a-zA-Z_0-9\-\.]*\b)"
-VERSION_RANGE = rf"({VERSION}\s*:\s*{VERSION}(?!\s*=)|:\s*{VERSION}(?!\s*=)|{VERSION}\s*:|:)"
-VERSION_LIST = rf"({VERSION_RANGE}|{VERSION})(\s*[,]\s*({VERSION_RANGE}|{VERSION}))*"
+VERSION = r"=?(?:[a-zA-Z0-9_][a-zA-Z_0-9\-\.]*\b)"
+VERSION_RANGE = rf"(?:(?:{VERSION})?:(?:{VERSION}(?!\s*=))?)"
+VERSION_LIST = rf"(?:{VERSION_RANGE}|{VERSION})(?:\s*,\s*(?:{VERSION_RANGE}|{VERSION}))*"
 
 
 class TokenBase(enum.Enum):
@@ -127,6 +128,8 @@ class TokenType(TokenBase):
     """
 
     # Dependency
+    START_EDGE_PROPERTIES = r"(?:\^\[)"
+    END_EDGE_PROPERTIES = r"(?:\])"
     DEPENDENCY = r"(?:\^)"
     # Version
     VERSION_HASH_PAIR = rf"(?:@(?:{GIT_VERSION_PATTERN})=(?:{VERSION}))"
@@ -164,7 +167,7 @@ class Token:
     __slots__ = "kind", "value", "start", "end"
 
     def __init__(
-        self, kind: TokenType, value: str, start: Optional[int] = None, end: Optional[int] = None
+        self, kind: TokenBase, value: str, start: Optional[int] = None, end: Optional[int] = None
     ):
         self.kind = kind
         self.value = value
@@ -264,8 +267,8 @@ class SpecParser:
         return list(filter(lambda x: x.kind != TokenType.WS, tokenize(self.literal_str)))
 
     def next_spec(
-        self, initial_spec: Optional[spack.spec.Spec] = None
-    ) -> Optional[spack.spec.Spec]:
+        self, initial_spec: Optional["spack.spec.Spec"] = None
+    ) -> Optional["spack.spec.Spec"]:
         """Return the next spec parsed from text.
 
         Args:
@@ -281,16 +284,15 @@ class SpecParser:
         initial_spec = initial_spec or spack.spec.Spec()
         root_spec = SpecNodeParser(self.ctx).parse(initial_spec)
         while True:
-            if self.ctx.accept(TokenType.DEPENDENCY):
-                dependency = SpecNodeParser(self.ctx).parse()
+            if self.ctx.accept(TokenType.START_EDGE_PROPERTIES):
+                edge_properties = EdgeAttributeParser(self.ctx, self.literal_str).parse()
+                edge_properties.setdefault("depflag", 0)
+                edge_properties.setdefault("virtuals", ())
+                dependency = self._parse_node(root_spec)
+                root_spec._add_dependency(dependency, **edge_properties)
 
-                if dependency is None:
-                    msg = (
-                        "this dependency sigil needs to be followed by a package name "
-                        "or a node attribute (version, variant, etc.)"
-                    )
-                    raise SpecParsingError(msg, self.ctx.current_token, self.literal_str)
-
+            elif self.ctx.accept(TokenType.DEPENDENCY):
+                dependency = self._parse_node(root_spec)
                 root_spec._add_dependency(dependency, depflag=0, virtuals=())
 
             else:
@@ -298,7 +300,19 @@ class SpecParser:
 
         return root_spec
 
-    def all_specs(self) -> List[spack.spec.Spec]:
+    def _parse_node(self, root_spec):
+        dependency = SpecNodeParser(self.ctx).parse()
+        if dependency is None:
+            msg = (
+                "the dependency sigil and any optional edge attributes must be followed by a "
+                "package name or a node attribute (version, variant, etc.)"
+            )
+            raise SpecParsingError(msg, self.ctx.current_token, self.literal_str)
+        if root_spec.concrete:
+            raise spack.spec.RedundantSpecError(root_spec, "^" + str(dependency))
+        return dependency
+
+    def all_specs(self) -> List["spack.spec.Spec"]:
         """Return all the specs that remain to be parsed"""
         return list(iter(self.next_spec, None))
 
@@ -313,7 +327,9 @@ class SpecNodeParser:
         self.has_compiler = False
         self.has_version = False
 
-    def parse(self, initial_spec: Optional[spack.spec.Spec] = None) -> Optional[spack.spec.Spec]:
+    def parse(
+        self, initial_spec: Optional["spack.spec.Spec"] = None
+    ) -> Optional["spack.spec.Spec"]:
         """Parse a single spec node from a stream of tokens
 
         Args:
@@ -414,7 +430,7 @@ class FileParser:
     def __init__(self, ctx):
         self.ctx = ctx
 
-    def parse(self, initial_spec: spack.spec.Spec) -> spack.spec.Spec:
+    def parse(self, initial_spec: "spack.spec.Spec") -> "spack.spec.Spec":
         """Parse a spec tree from a specfile.
 
         Args:
@@ -437,7 +453,42 @@ class FileParser:
         return initial_spec
 
 
-def parse(text: str) -> List[spack.spec.Spec]:
+class EdgeAttributeParser:
+    __slots__ = "ctx", "literal_str"
+
+    def __init__(self, ctx, literal_str):
+        self.ctx = ctx
+        self.literal_str = literal_str
+
+    def parse(self):
+        attributes = {}
+        while True:
+            if self.ctx.accept(TokenType.KEY_VALUE_PAIR):
+                name, value = self.ctx.current_token.value.split("=", maxsplit=1)
+                name = name.strip("'\" ")
+                value = value.strip("'\" ").split(",")
+                attributes[name] = value
+                if name not in ("deptypes", "virtuals"):
+                    msg = (
+                        "the only edge attributes that are currently accepted "
+                        'are "deptypes" and "virtuals"'
+                    )
+                    raise SpecParsingError(msg, self.ctx.current_token, self.literal_str)
+            # TODO: Add code to accept bool variants here as soon as use variants are implemented
+            elif self.ctx.accept(TokenType.END_EDGE_PROPERTIES):
+                break
+            else:
+                msg = "unexpected token in edge attributes"
+                raise SpecParsingError(msg, self.ctx.next_token, self.literal_str)
+
+        # Turn deptypes=... to depflag representation
+        if "deptypes" in attributes:
+            deptype_string = attributes.pop("deptypes")
+            attributes["depflag"] = spack.deptypes.canonicalize(deptype_string)
+        return attributes
+
+
+def parse(text: str) -> List["spack.spec.Spec"]:
     """Parse text into a list of strings
 
     Args:
@@ -450,8 +501,8 @@ def parse(text: str) -> List[spack.spec.Spec]:
 
 
 def parse_one_or_raise(
-    text: str, initial_spec: Optional[spack.spec.Spec] = None
-) -> spack.spec.Spec:
+    text: str, initial_spec: Optional["spack.spec.Spec"] = None
+) -> "spack.spec.Spec":
     """Parse exactly one spec from text and return it, or raise
 
     Args:

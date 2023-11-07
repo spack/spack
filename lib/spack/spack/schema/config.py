@@ -92,6 +92,7 @@ properties = {
             "url_fetch_method": {"type": "string", "enum": ["urllib", "curl"]},
             "additional_external_search_paths": {"type": "array", "items": {"type": "string"}},
             "binary_index_ttl": {"type": "integer", "minimum": 0},
+            "aliases": {"type": "object", "patternProperties": {r"\w[\w-]*": {"type": "string"}}},
         },
         "deprecatedProperties": {
             "properties": ["terminal_title"],

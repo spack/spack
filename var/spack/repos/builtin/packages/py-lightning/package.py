@@ -94,3 +94,6 @@ class PyLightning(PythonPackage):
         depends_on("py-websocket-client@:2", type=("build", "run"))
         depends_on("py-websockets@:12", when="@2.0.5:", type=("build", "run"))
         depends_on("py-websockets@:11", when="@:2.0.4", type=("build", "run"))
+
+    # https://github.com/Lightning-AI/lightning/issues/18858
+    conflicts("^py-torch~distributed", when="@2.1.0")

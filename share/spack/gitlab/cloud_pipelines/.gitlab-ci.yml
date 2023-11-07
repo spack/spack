@@ -141,10 +141,16 @@ default:
     - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
     - spack env activate --without-view .
     - export SPACK_CI_CONFIG_ROOT="${SPACK_ROOT}/share/spack/gitlab/cloud_pipelines/configs"
+    - spack
+      --config-scope "${SPACK_CI_CONFIG_ROOT}"
+      --config-scope "${SPACK_CI_CONFIG_ROOT}/${SPACK_TARGET_PLATFORM}"
+      --config-scope "${SPACK_CI_CONFIG_ROOT}/${SPACK_TARGET_PLATFORM}/${SPACK_TARGET_ARCH}"
+      ${CI_STACK_CONFIG_SCOPES}
+      compiler find
     - spack python -c "import os,sys; print(os.path.expandvars(sys.stdin.read()))"
       < "${SPACK_CI_CONFIG_ROOT}/${PIPELINE_MIRROR_TEMPLATE}" > "${SPACK_CI_CONFIG_ROOT}/mirrors.yaml"
     - spack config add -f "${SPACK_CI_CONFIG_ROOT}/mirrors.yaml"
-    - spack -v
+    - spack -v  --color=always
       --config-scope "${SPACK_CI_CONFIG_ROOT}"
       --config-scope "${SPACK_CI_CONFIG_ROOT}/${SPACK_TARGET_PLATFORM}"
       --config-scope "${SPACK_CI_CONFIG_ROOT}/${SPACK_TARGET_PLATFORM}/${SPACK_TARGET_ARCH}"
@@ -197,7 +203,7 @@ default:
     - spack --version
     - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
     - spack env activate --without-view .
-    - spack -v
+    - spack -v --color=always
       ci generate --check-index-only
       --buildcache-destination "${PUSH_BUILDCACHE_DEPRECATED}"
       --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
@@ -615,7 +621,7 @@ aws-isc-aarch64-build:
 
 tutorial-generate:
   extends: [ ".tutorial", ".generate-x86_64"]
-  image: ghcr.io/spack/tutorial-ubuntu-22.04:v2023-05-07
+  image: ghcr.io/spack/tutorial-ubuntu-22.04:v2023-10-30
 
 tutorial-build:
   extends: [ ".tutorial", ".build" ]
@@ -706,7 +712,7 @@ ml-linux-x86_64-rocm-build:
     SPACK_CI_STACK_NAME: ml-darwin-aarch64-mps
 
 ml-darwin-aarch64-mps-generate:
-  tags: [ "macos-ventura", "apple-clang-14", "aarch64-macos" ]
+  tags: [ "macos-ventura", "apple-clang-15", "aarch64-macos" ]
   extends: [ ".ml-darwin-aarch64-mps", ".generate-base"]
 
 ml-darwin-aarch64-mps-build:
