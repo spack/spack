@@ -21,6 +21,8 @@ class IntelXed(Package):
 
     # Current versions now have actual releases and tags.
     version("main", branch="main")
+    version("2023.10.11", tag="v2023.10.11", commit="d7d46c73fb04a1742e99c9382a4acb4ed07ae272")
+    version("2023.08.21", tag="v2023.08.21", commit="01a6da8090af84cd52f6c1070377ae6e885b078f")
     version("2023.07.09", tag="v2023.07.09", commit="539a6a349cf7538a182ed3ee1f48bb9317eb185f")
     version("2023.06.07", tag="v2023.06.07", commit="4dc77137f651def2ece4ac0416607b215c18e6e4")
     version("2023.04.16", tag="v2023.04.16", commit="a3055cd0209f5c63c88e280bbff9579b1e2942e2")
@@ -40,7 +42,12 @@ class IntelXed(Package):
 
     # Match xed more closely with the version of mbuild at the time.
     resource(
-        name="mbuild", placement=mdir, git=mbuild_git, tag="v2022.07.28", when="@2022.07:9999"
+        name="mbuild",
+        placement=mdir,
+        git=mbuild_git,
+        tag="v2022.07.28",
+        commit="75cb46e6536758f1a3cdb3d6bd83a4a9fd0338bb",
+        when="@2022.07:9999",
     )
 
     resource(
@@ -48,7 +55,7 @@ class IntelXed(Package):
         placement=mdir,
         git=mbuild_git,
         tag="v2022.04.17",
-        commit="ef19f00de14a9c2c253c1c9b1119e1617280e3f2",
+        commit="b41485956bf65d51b8c2379768de7eaaa7a4245b",
         when="@:2022.06",
     )
 
