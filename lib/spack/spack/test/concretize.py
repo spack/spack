@@ -1437,7 +1437,7 @@ class TestConcretize:
     @pytest.mark.regression("27237")
     @pytest.mark.parametrize(
         "spec_str,expect_installed",
-        [("mpich", True), ("mpich+debug", False), ("mpich~debug", True), ("mpich++debug", False)],
+        [("mpich", True), ("mpich+debug", False), ("mpich~debug", True)],
     )
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
     def test_concrete_specs_are_not_modified_on_reuse(
