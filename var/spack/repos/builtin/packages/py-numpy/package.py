@@ -106,8 +106,8 @@ class PyNumpy(PythonPackage):
     depends_on("py-tomli@1:", when="@1.26: ^python@:3.10", type="build")
     depends_on("py-setuptools@60:", when="@1.26: ^python@3.12:", type="build")
     # https://github.com/spack/spack/pull/32078
-    depends_on("py-setuptools@:63", when="@:1.25", type=("build", "run"))
-    depends_on("py-setuptools@:59", when="@:1.22.1", type=("build", "run"))
+    depends_on("py-setuptools@:63", when="@:1.25", type="build")
+    depends_on("py-setuptools@:59", when="@:1.22.1", type="build")
     depends_on("py-colorama", when="@1.26: platform=windows", type="build")
 
     # Required to use --config-settings

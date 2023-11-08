@@ -62,7 +62,7 @@ class PyProtobuf(PythonPackage):
     variant("cpp", default=False, when="@:4.21", description="Enable the cpp implementation")
 
     depends_on("python", type=("build", "link", "run"))
-    depends_on("py-setuptools", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
     # in newer pip versions --install-option does not exist
     depends_on("py-pip@:23.0", when="+cpp", type=("build", "run"))
     depends_on("py-six@1.9:", when="@3.0:3.17", type=("build", "run"))
