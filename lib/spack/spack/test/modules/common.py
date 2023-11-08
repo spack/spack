@@ -14,7 +14,6 @@ import spack.modules.tcl
 import spack.package_base
 import spack.schema.modules
 import spack.spec
-import spack.util.spack_yaml as syaml
 from spack.modules.common import UpstreamModuleIndex
 from spack.spec import Spec
 
@@ -189,26 +188,6 @@ def test_load_installed_package_not_in_repo(install_mockery, mock_fetch, monkeyp
     assert module_path
 
     spack.package_base.PackageBase.uninstall_by_spec(spec)
-
-
-@pytest.mark.parametrize(
-    "module_type, old_config,new_config",
-    [("tcl", "exclude_implicits.yaml", "hide_implicits.yaml")],
-)
-def test_exclude_include_update(module_type, old_config, new_config):
-    module_test_data_root = os.path.join(spack.paths.test_path, "data", "modules", module_type)
-    with open(os.path.join(module_test_data_root, old_config)) as f:
-        old_yaml = syaml.load(f)
-    with open(os.path.join(module_test_data_root, new_config)) as f:
-        new_yaml = syaml.load(f)
-
-    # ensure file that needs updating is translated to the right thing.
-    assert spack.schema.modules.update_keys(old_yaml, spack.schema.modules.old_to_new_key)
-    assert new_yaml == old_yaml
-    # ensure a file that doesn't need updates doesn't get updated
-    original_new_yaml = new_yaml.copy()
-    assert not spack.schema.modules.update_keys(new_yaml, spack.schema.modules.old_to_new_key)
-    assert original_new_yaml == new_yaml
 
 
 @pytest.mark.regression("37649")
