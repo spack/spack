@@ -40,6 +40,9 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
     version("main", branch="main", submodules=True)
 
+    # Latest
+    version("5.0.0", sha256="9d845ca94bc1aeb445f83d98d238cd08f6ec7ad0f73b0f79ec1668dbfdacd613")
+
     # Current
     version(
         "4.1.6", sha256="f740994485516deb63b5311af122c265179f5328a0d857a567b85db00b11e415"
@@ -499,6 +502,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     variant("internal-hwloc", default=False, description="Use internal hwloc")
     variant("internal-pmix", default=False, description="Use internal pmix")
     variant("openshmem", default=False, description="Enable building OpenSHMEM")
+    variant("rocm", default=False, description="Enable AMD GPU-aware support", when="@5:")
 
     provides("mpi")
     provides("mpi@:2.2", when="@1.6.5")
@@ -531,6 +535,8 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     # Singularity release 3 works better
     depends_on("singularity@3:", when="+singularity")
     depends_on("lustre", when="+lustre")
+    depends_on("ucx +rocm", when="+rocm")
+    depends_on("hip", when="+rocm")
 
     depends_on("opa-psm2", when="fabrics=psm2")
     depends_on("rdma-core", when="fabrics=verbs")
@@ -1014,6 +1020,11 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         config_args.extend(
             self.enable_or_disable("mpi-thread-multiple", variant="thread_multiple")
         )
+
+        # ROCm Support
+        if "+rocm" in spec:
+            config_args.append("--with-rocm=" + self.spec["hip"].prefix)
+            config_args.append("--with-ucx=" + self.spec["ucx"].prefix)
 
         # CUDA support
         # See https://www.open-mpi.org/faq/?category=buildcuda
