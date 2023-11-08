@@ -59,7 +59,7 @@ class Libevent(AutotoolsPackage):
         return LibraryList(libs)
 
     def autoreconf(self, spec, prefix):
-        which("bash")("autogen.sh")
+        Executable("./autogen.sh")()
 
     def configure_args(self):
         spec = self.spec
