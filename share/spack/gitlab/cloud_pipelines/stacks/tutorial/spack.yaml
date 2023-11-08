@@ -21,6 +21,7 @@ spack:
         - gcc@12.3.0
         - mpileaks
         - lmod@8.7.18
+        - environment-modules
         - macsio@1.1+scr ^scr@2.0.0~fortran ^silo~fortran ^hdf5~fortran
       - ['%gcc@11']
   - gcc_old_packages:
