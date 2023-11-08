@@ -21,28 +21,19 @@ class HhSuite(CMakePackage):
 
     variant("shared", default=False, description="Build shared library")
     variant("mpi", default=True, description="Enable MPI support")
-    variant(
-        "simd",
-        default="AVX2",
-        description="SIMD instruction set",
-        values=("SSE2", "AVX2"),
-        multi=False,
-    )
 
     depends_on("cmake@2.8.12:", type="build")
     depends_on("mpi", when="+mpi")
 
     def cmake_args(self):
         args = []
-        if "+shared" in self.spec:
-            args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
-            args.append(
-                self.define("CMAKE_EXE_LINKER_FLAGS", "-static -static-libgcc -static-libstdc++")
-            )
-            args.append(self.define("CMAKE_FIND_LIBRARY_SUFFIXES", ".a"))
-        if "+mpi" in self.spec:
+        args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
+        if self.spec.satisfies("+mpi"):
             args.append("-DCHECK_MPI=1")
         else:
             args.append("-DCHECK_MPI=0")
-        args.append(f"-DHAVE_{self.spec.variants['simd'].value}=1")
+        if "avx2" in self.spec.target:
+            args.append("-DHAVE_AVX2=1")
+        elif "sse2" in self.spec.target:
+            args.append("-DHAVE_SSE2=1")
         return args
