@@ -32,6 +32,12 @@ class Libffi(AutotoolsPackage):
     patch("clang-powerpc-3.2.1.patch", when="@3.2.1%clang platform=linux")
     # ref.: https://github.com/libffi/libffi/pull/561
     patch("powerpc-3.3.patch", when="@3.3")
+    # Fix for ISSUE: https://github.com/libffi/libffi/issues/760
+    patch(
+        "https://github.com/libffi/libffi/commit/ce077e5565366171aa1b4438749b0922fce887a4.patch",
+        when="@:3.4.4",
+        sha256="0845d18417f40a6a1d983288b4d518a3a7767af37e3c1e4324ffb75041ff8d95",
+    )
 
     @property
     def headers(self):
