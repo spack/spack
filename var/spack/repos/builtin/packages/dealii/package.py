@@ -23,7 +23,9 @@ class Dealii(CMakePackage, CudaPackage):
     # only add for immediate deps.
     transitive_rpaths = False
 
-    generator("ninja")
+    # FIXME nvcc_wrapper (used for +clang) doesn't handle response files
+    # correctly when ninja is used. Those are used automatically if paths get too long.
+    generator("make")
 
     version("master", branch="master")
     version("9.5.1", sha256="a818b535e6488d3aef7853311657c7b4fadc29a9abe91b7b202b131aad630f5e")
@@ -230,8 +232,6 @@ class Dealii(CMakePackage, CudaPackage):
     # do not require +rol to make concretization of xsdk possible
     depends_on("trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado", when="+trilinos")
     depends_on("trilinos~hypre", when="+trilinos+int64")
-    # TODO
-    conflicts("+cuda", when="@9.5:")
     for a in CudaPackage.cuda_arch_values:
         arch_str = "+cuda cuda_arch=" + a
         trilinos_spec = "trilinos +wrapper " + arch_str
