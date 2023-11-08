@@ -36,6 +36,11 @@ class Mapl(CMakePackage):
     version("develop", branch="develop")
     version("main", branch="main")
 
+    version("2.42.0", sha256="9b6c3434919c14ef79004db5f76cb3dd8ef375584227101c230a372bb0470fdd")
+    version("2.41.2", sha256="73e1f0961f1b70e8159c0a2ce3499eb5158f3ca6d081f4c7826af7854ebfb44d")
+    version("2.41.1", sha256="2b384bd4fbaac1bff4ef009922c436c4ab54832172a5cd4d312ea44e32c1ae7c")
+    version("2.41.0", sha256="1142f9395e161174e3ec1654fba8bda1d0bd93edc7438b1927d8f5d7b42a0a86")
+    version("2.40.4", sha256="fb843b118d6e56cd4fc4b114c4d6f91956d5c8b3d9389ada56da1dfdbc58904f")
     version("2.40.3", sha256="4b82a314c88a035fc2b91395750aa7950d6bee838786178ed16a3f39a1e45519")
     version("2.40.2", sha256="7327f6f5bce6e09e7f7b930013fba86ee7cbfe8ed4c7c087fc9ab5acbf6640fd")
     version("2.40.1", sha256="6f40f946fabea6ba73b0764092e495505d220455b191b4e454736a0a25ee058c")
@@ -119,6 +124,12 @@ class Mapl(CMakePackage):
     resource(
         name="esma_cmake",
         git="https://github.com/GEOS-ESM/ESMA_cmake.git",
+        tag="v3.36.0",
+        when="@2.42.0:",
+    )
+    resource(
+        name="esma_cmake",
+        git="https://github.com/GEOS-ESM/ESMA_cmake.git",
         tag="v3.31.0",
         when="@2.40.0:",
     )
@@ -158,6 +169,12 @@ class Mapl(CMakePackage):
 
     # Patch to add missing MPI Fortran target to top-level CMakeLists.txt
     patch("mapl-2.12.3-mpi-fortran.patch", when="@:2.12.3")
+
+    # MAPL only compiles with MPICH from version 2.42.0 and higher so we conflict
+    # with older versions. Also, it's only been tested with MPICH 4, so we don't
+    # allow older MPICH
+    conflicts("mpich@:3")
+    conflicts("mpich@4", when="@:2.41")
 
     variant("flap", default=False, description="Build with FLAP support", when="@:2.39")
     variant("pflogger", default=True, description="Build with pFlogger support")
