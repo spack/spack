@@ -1472,7 +1472,7 @@ complete -c spack -n '__fish_spack_using_command env activate' -l envfile -r -d 
 complete -c spack -n '__fish_spack_using_command env activate' -l keep-relative -f -a keep_relative
 complete -c spack -n '__fish_spack_using_command env activate' -l keep-relative -d 'copy relative develop paths verbatim into the new environment when initializing from envfile'
 complete -c spack -n '__fish_spack_using_command env activate' -s d -l dir -f -a dir
-complete -c spack -n '__fish_spack_using_command env activate' -s d -l dir -d 'activate environment based on the directory'
+complete -c spack -n '__fish_spack_using_command env activate' -s d -l dir -d 'activate environment based on the directory supplied'
 
 # spack env deactivate
 set -g __fish_spack_optspecs_spack_env_deactivate h/help sh csh fish bat pwsh
