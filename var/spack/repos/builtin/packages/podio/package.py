@@ -15,7 +15,7 @@ class Podio(CMakePackage):
     url = "https://github.com/AIDASoft/podio/archive/v00-09-02.tar.gz"
     git = "https://github.com/AIDASoft/podio.git"
 
-    maintainers("vvolkl", "drbenmorgan", "jmcarcell")
+    maintainers("vvolkl", "drbenmorgan", "jmcarcell", "tmadlener")
 
     tags = ["hep", "key4hep"]
 
