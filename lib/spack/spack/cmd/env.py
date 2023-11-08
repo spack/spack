@@ -264,13 +264,6 @@ def _tty_info(msg):
 
 
 def env_activate(args):
-    temp_conflicts = iter([args.keep_relative, args.dir, args.env_name])
-    if args.temp and any(temp_conflicts):
-        tty.die(
-            "spack env activate --temp cannot be combined with managed environments, --with-view,"
-            " --keep-relative, or --dir."
-        )
-
     if not args.shell:
         spack.cmd.common.shell_init_instructions(
             "spack env activate", "    eval `spack env activate {sh_arg} [...]`"
@@ -280,6 +273,14 @@ def env_activate(args):
     # Error out when -e, -E, -D flags are given, cause they are ambiguous.
     if args.env or args.no_env or args.env_dir:
         tty.die("Calling spack env activate with --env, --env-dir and --no-env is ambiguous")
+
+    # special parser error handeling relative to the --temp flag
+    temp_conflicts = iter([args.keep_relative, args.dir, args.env_name])
+    if args.temp and any(temp_conflicts):
+        tty.die(
+            "spack env activate --temp cannot be combined with managed environments, --with-view,"
+            " --keep-relative, or --dir."
+        )
 
     env_name_or_dir = args.env_name
 

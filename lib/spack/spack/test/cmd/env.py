@@ -2918,7 +2918,9 @@ def test_query_develop_specs():
 )
 def test_activation_and_deactiviation_ambiguities(method, env, no_env, env_dir, capsys):
     """spack [-e x | -E | -D x/]  env [activate | deactivate] y are ambiguous"""
-    args = Namespace(shell="sh", env_name="a", env=env, no_env=no_env, env_dir=env_dir)
+    args = Namespace(
+        shell="sh", env_name="a", env=env, no_env=no_env, env_dir=env_dir, keep_relative=False
+    )
     with pytest.raises(SystemExit):
         method(args)
     _, err = capsys.readouterr()
