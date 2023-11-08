@@ -209,21 +209,19 @@ def env_activate_setup_parser(subparser):
         help="decorate the command line prompt when activating",
     )
 
-    env_options = subparser.add_mutually_exclusive_group()
-    env_options.add_argument(
+    subparser.add_argument(
         "--temp",
         action="store_true",
         default=False,
         help="create and activate an environment in a temporary directory",
     )
-    persistent_options = env_options.add_argument_group()
-    persistent_options.add_argument(
+    subparser.add_argument(
         "--create",
         action="store_true",
         default=False,
         help="if the environment doesn't exist, create it before activating",
     )
-    persistent_options.add_argument(
+    subparser.add_argument(
         "--envfile",
         nargs="?",
         default=None,
@@ -235,14 +233,14 @@ def env_activate_setup_parser(subparser):
         help="copy relative develop paths verbatim into the new environment"
         " when initializing from envfile",
     )
-    persistent_options.add_argument(
+    subparser.add_argument(
         "-d",
         "--dir",
         default=False,
         action="store_true",
         help="activate environment based on the directory supplied",
     )
-    persistent_options.add_argument(
+    subparser.add_argument(
         metavar="env",
         dest="env_name",
         nargs="?",
@@ -266,6 +264,13 @@ def _tty_info(msg):
 
 
 def env_activate(args):
+    temp_conflicts = iter([args.keep_relative, args.dir, args.env_name])
+    if args.temp and any(temp_conflicts):
+        tty.die(
+            "spack env activate --temp cannot be combined with managed environments, --with-view,"
+            " --keep-relative, or --dir."
+        )
+
     if not args.shell:
         spack.cmd.common.shell_init_instructions(
             "spack env activate", "    eval `spack env activate {sh_arg} [...]`"

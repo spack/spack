@@ -2960,11 +2960,11 @@ def test_activate_temp(monkeypatch, tmpdir):
 
 
 @pytest.mark.parametrize(
-    "conflict_arg", ["--envfile=spack.yaml", "--dir", "--keep-relative", "--create"]
+    "conflict_arg", [["--dir"], ["--keep-relative"], ["--with-view", "foo"], ["env"]]
 )
-def test_activate_parser_conflicts(conflict_arg):
-    with pytest.raises(SystemExit):
-        env("activate", "--sh", "--temp", conflict_arg)
+def test_activate_parser_conflicts_with_temp(conflict_arg):
+    with pytest.raises(SpackCommandError):
+        env("activate", "--sh", "--temp", *conflict_arg)
 
 
 def test_create_and_activate_managed(tmp_path):
