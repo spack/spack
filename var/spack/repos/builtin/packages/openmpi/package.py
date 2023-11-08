@@ -535,7 +535,6 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     # Singularity release 3 works better
     depends_on("singularity@3:", when="+singularity")
     depends_on("lustre", when="+lustre")
-    depends_on("ucx +rocm", when="+rocm")
     depends_on("hip", when="+rocm")
 
     depends_on("opa-psm2", when="fabrics=psm2")
@@ -544,6 +543,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     depends_on("binutils+libiberty", when="fabrics=mxm")
     with when("fabrics=ucx"):
         depends_on("ucx")
+        depends_on("ucx +rocm", when="+rocm")
         depends_on("ucx +thread_multiple", when="+thread_multiple")
         depends_on("ucx +thread_multiple", when="@3.0.0:")
         depends_on("ucx@1.9.0:", when="@4.0.6:4.0")
@@ -1024,7 +1024,6 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         # ROCm Support
         if "+rocm" in spec:
             config_args.append("--with-rocm=" + self.spec["hip"].prefix)
-            config_args.append("--with-ucx=" + self.spec["ucx"].prefix)
 
         # CUDA support
         # See https://www.open-mpi.org/faq/?category=buildcuda
