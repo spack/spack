@@ -78,6 +78,8 @@ class Ffmpeg(AutotoolsPackage):
     variant("shared", default=True, description="build shared libraries")
     variant("libx264", default=False, description="H.264 encoding")
 
+    conflicts("@1", when="platform=darwin target=aarch64:", msg="requires gas-preprocessor")
+
     depends_on("alsa-lib", when="platform=linux")
     depends_on("iconv")
     depends_on("yasm@1.2.0:")
