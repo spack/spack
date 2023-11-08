@@ -163,6 +163,11 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         return sys_type
 
     @property
+    def libs(self):
+        shared = "+shared" in self.spec
+        return find_libraries("libRAJA", root=self.prefix, shared=shared, recursive=True)
+
+    @property
     def cache_name(self):
         hostname = socket.gethostname()
         if "SYS_TYPE" in env:
