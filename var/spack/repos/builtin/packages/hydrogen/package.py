@@ -48,7 +48,7 @@ class Hydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
     )
     variant("half", default=False, description="Support for FP16 precision data types")
 
-    # FIXME: Add netlib-lapack. For GPU-enabled builds, typical
+    # TODO: Add netlib-lapack. For GPU-enabled builds, typical
     # workflows don't touch host BLAS/LAPACK all that often, and even
     # less frequently in performance-critical regions.
     variant(
