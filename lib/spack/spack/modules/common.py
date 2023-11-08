@@ -487,42 +487,40 @@ class BaseConfiguration:
         conf = self.module.configuration(self.name)
 
         # Compute the list of include rules that match
-        include_rules = conf.get("include", [])
-        include_matches = [x for x in include_rules if spec.satisfies(x)]
+        include_matches = [x for x in conf.get("include", []) if spec.satisfies(x)]
 
         # Compute the list of exclude rules that match
-        exclude_rules = conf.get("exclude", [])
-        exclude_matches = [x for x in exclude_rules if spec.satisfies(x)]
+        exclude_matches = [x for x in conf.get("exclude", []) if spec.satisfies(x)]
+
+        # Should I exclude the module because it's implicit?
+        exclude_implicits = conf.get("exclude_implicits", None)
+        excluded_as_implicit = exclude_implicits and not self.explicit
 
         def debug_info(line_header, match_list):
             if match_list:
-                msg = "\t{0} : {1}".format(line_header, spec.cshort_spec)
-                tty.debug(msg)
+                tty.debug(f"\t{line_header} : {spec.cshort_spec}")
                 for rule in match_list:
                     tty.debug("\t\tmatches rule: {0}".format(rule))
 
         debug_info("INCLUDE", include_matches)
         debug_info("EXCLUDE", exclude_matches)
 
-        if not include_matches and exclude_matches:
-            return True
+        if excluded_as_implicit:
+            msg = "\tEXCLUDED_AS_IMPLICIT : {0}".format(spec.cshort_spec)
+            tty.debug(msg)
 
-        return False
+        return not include_matches and (exclude_matches or excluded_as_implicit)
 
     @property
     def hidden(self):
         """Returns True if the module has been hidden, False otherwise."""
 
-        # A few variables for convenience of writing the method
-        spec = self.spec
         conf = self.module.configuration(self.name)
 
-        hidden_as_implicit = not self.explicit and conf.get(
-            "hide_implicits", conf.get("exclude_implicits", False)
-        )
+        hidden_as_implicit = not self.explicit and conf.get("hide_implicits", False)
 
         if hidden_as_implicit:
-            tty.debug(f"\tHIDDEN_AS_IMPLICIT : {spec.cshort_spec}")
+            tty.debug(f"\tHIDDEN_AS_IMPLICIT : {self.spec.cshort_spec}")
 
         return hidden_as_implicit
 
