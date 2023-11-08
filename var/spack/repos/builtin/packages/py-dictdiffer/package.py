@@ -12,6 +12,7 @@ class PyDictdiffer(PythonPackage):
     homepage = "https://github.com/inveniosoftware/dictdiffer"
     pypi = "dictdiffer/dictdiffer-0.8.1.tar.gz"
 
+    version("0.9.0", sha256="17bacf5fbfe613ccf1b6d512bd766e6b21fb798822a133aa86098b8ac9997578")
     version("0.8.1", sha256="1adec0d67cdf6166bda96ae2934ddb5e54433998ceab63c984574d187cc563d2")
 
     depends_on("python@2.7:2.8,3.4:", type=("build", "run"))

@@ -32,4 +32,4 @@ class PlacementAlgorithm(PythonPackage):
     depends_on("py-mpi4py@3.0.3:", type=("build", "run"))
     depends_on("py-tqdm@4.0:", type=("build", "run"))
     depends_on("py-voxcell@2.7:3.99", type=("build", "run"))
-    depends_on("py-dask+distributed+bag@2.15:", type=("build", "run"))
+    depends_on("py-dask+distributed@2021.4.1:", type=("build", "run"))

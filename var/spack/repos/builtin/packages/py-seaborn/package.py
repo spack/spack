@@ -17,6 +17,7 @@ class PySeaborn(PythonPackage):
     homepage = "https://seaborn.pydata.org/"
     pypi = "seaborn/seaborn-0.7.1.tar.gz"
 
+    version("0.12.2", sha256="374645f36509d0dcab895cba5b47daf0586f77bfe3b36c97c607db7da5be0139")
     version("0.12.0", sha256="893f17292d8baca616c1578ddb58eb25c72d622f54fc5ee329c8207dc9b57b23")
     version("0.11.2", sha256="cf45e9286d40826864be0e3c066f98536982baf701a7caa386511792d61ff4f6")
     version("0.11.1", sha256="44e78eaed937c5a87fc7a892c329a7cc091060b67ebd1d0d306b446a74ba01ad")
