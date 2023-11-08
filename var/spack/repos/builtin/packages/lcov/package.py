@@ -21,8 +21,8 @@ class Lcov(MakefilePackage):
     version("1.15", sha256="c1cda2fa33bec9aa2c2c73c87226cfe97de0831887176b45ee523c5e30f8053a")
     version("1.14", sha256="14995699187440e0ae4da57fe3a64adc0a3c5cf14feab971f8db38fb7d8f071a")
 
-    #dependencies from
-    #https://github.com/linux-test-project/lcov/blob/02ece21d54ccd16255d74f8b00f8875b6c15653a/README#L91-L111
+    # dependencies from
+    # https://github.com/linux-test-project/lcov/blob/02ece21d54ccd16255d74f8b00f8875b6c15653a/README#L91-L111
     depends_on("perl", type=("build", "run"))
     depends_on("perl-capture-tiny", type=("run"))
     depends_on("perl-devel-cover", type=("run"))
@@ -32,6 +32,7 @@ class Lcov(MakefilePackage):
     depends_on("perl-json", type=("run"))
     depends_on("perl-memory-process", type=("run"))
     depends_on("perl-time-hires", type=("run"))
+
     def install(self, spec, prefix):
         make(
             "LCOV_PERL_PATH=%s" % self.spec["perl"].command.path,
@@ -39,4 +40,3 @@ class Lcov(MakefilePackage):
             "PREFIX=%s" % prefix,
             "install",
         )
-
