@@ -1,0 +1,21 @@
+diff --git a/runtime/CMakeLists.txt b/runtime/CMakeLists.txt
+index 4c9ffe9..77f0225 100644
+--- a/runtime/CMakeLists.txt
++++ b/runtime/CMakeLists.txt
+@@ -770,11 +770,11 @@ if(Legion_USE_CUDA)
+   )
+ endif()
+ 
+-if(Legion_USE_HIP AND Legion_GPU_REDUCTIONS)
+-  list(APPEND LEGION_HIP_SRC
+-    legion/legion_redop.cu
+-  )
+-endif()
++#if(Legion_USE_HIP AND Legion_GPU_REDUCTIONS)
++#  list(APPEND LEGION_HIP_SRC
++#    legion/legion_redop.cu
++#  )
++#endif()
+ 
+ # generate per-dimension object files for deppart stuff
+ foreach(INST_N1 RANGE 1 ${LEGION_MAX_DIM})
