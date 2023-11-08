@@ -59,7 +59,7 @@ class EnvironmentModules(Package):
 
     variant("X", default=True, description="Build with X functionality")
 
-    depends_on("less", type="build")
+    depends_on("less", type=("build", "run"), when="@4.1:")
     with when("@main"):
         depends_on("autoconf", type="build")
         depends_on("automake", type="build")
