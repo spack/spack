@@ -35,7 +35,7 @@ import inspect
 import os.path
 import re
 import string
-from typing import Optional
+from typing import List, Optional
 
 import llnl.util.filesystem
 import llnl.util.tty as tty
@@ -50,6 +50,7 @@ import spack.paths
 import spack.projections as proj
 import spack.repo
 import spack.schema.environment
+import spack.spec
 import spack.store
 import spack.tengine as tengine
 import spack.util.environment
@@ -395,16 +396,14 @@ class BaseConfiguration:
 
     default_projections = {"all": "{name}/{version}-{compiler.name}-{compiler.version}"}
 
-    def __init__(self, spec, module_set_name, explicit=None):
+    def __init__(self, spec: spack.spec.Spec, module_set_name: str, explicit: bool) -> None:
         # Module where type(self) is defined
-        self.module = inspect.getmodule(self)
+        m = inspect.getmodule(self)
+        assert m is not None  # make mypy happy
+        self.module = m
         # Spec for which we want to generate a module file
         self.spec = spec
         self.name = module_set_name
-        # Software installation has been explicitly asked (get this information from
-        # db when querying an existing module, like during a refresh or rm operations)
-        if explicit is None:
-            explicit = spec._installed_explicitly()
         self.explicit = explicit
         # Dictionary of configuration options that should be applied
         # to the spec
@@ -458,7 +457,11 @@ class BaseConfiguration:
             if constraint in self.spec:
                 suffixes.append(suffix)
         suffixes = list(dedupe(suffixes))
-        if self.hash:
+        # For hidden modules we can always add a fixed length hash as suffix, since it guards
+        # against file name clashes, and the module is not exposed to the user anyways.
+        if self.hidden:
+            suffixes.append(self.spec.dag_hash(length=7))
+        elif self.hash:
             suffixes.append(self.hash)
         return suffixes
 
@@ -551,8 +554,7 @@ class BaseConfiguration:
     def _create_list_for(self, what):
         include = []
         for item in self.conf[what]:
-            conf = type(self)(item, self.name)
-            if not conf.excluded:
+            if not self.module.make_configuration(item, self.name).excluded:
                 include.append(item)
         return include
 
@@ -731,7 +733,9 @@ class BaseContext(tengine.Context):
         # for that to work, globals have to be set on the package modules, and the
         # whole chain of setup_dependent_package has to be followed from leaf to spec.
         # So: just run it here, but don't collect env mods.
-        spack.build_environment.SetupContext(context=Context.RUN).set_all_package_py_globals()
+        spack.build_environment.SetupContext(
+            spec, context=Context.RUN
+        ).set_all_package_py_globals()
 
         # Then run setup_dependent_run_environment before setup_run_environment.
         for dep in spec.dependencies(deptype=("link", "run")):
@@ -824,8 +828,7 @@ class BaseContext(tengine.Context):
     def _create_module_list_of(self, what):
         m = self.conf.module
         name = self.conf.name
-        explicit = self.conf.explicit
-        return [m.make_layout(x, name, explicit).use_name for x in getattr(self.conf, what)]
+        return [m.make_layout(x, name).use_name for x in getattr(self.conf, what)]
 
     @tengine.context_property
     def verbose(self):
@@ -834,12 +837,19 @@ class BaseContext(tengine.Context):
 
 
 class BaseModuleFileWriter:
-    def __init__(self, spec, module_set_name, explicit=None):
+    default_template: str
+    hide_cmd_format: str
+    modulerc_header: List[str]
+
+    def __init__(
+        self, spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
+    ) -> None:
         self.spec = spec
 
         # This class is meant to be derived. Get the module of the
         # actual writer.
         self.module = inspect.getmodule(self)
+        assert self.module is not None  # make mypy happy
         m = self.module
 
         # Create the triplet of configuration/layout/context

@@ -194,10 +194,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     # depends_on("cpuinfo@2022-08-19", when="@1.13:2.0")
     # depends_on("cpuinfo@2020-12-17", when="@1.8:1.12")
     # depends_on("cpuinfo@2020-06-11", when="@1.6:1.7")
-    # https://github.com/shibatch/sleef/issues/427
-    # depends_on("sleef@3.5.1_2020-12-22", when="@1.8:")
-    # https://github.com/pytorch/pytorch/issues/60334
-    # depends_on("sleef@3.4.0_2019-07-30", when="@1.6:1.7")
+    depends_on("sleef@3.5.1_2020-12-22", when="@1.8:")
+    depends_on("sleef@3.4.0_2019-07-30", when="@1.6:1.7")
     depends_on("fp16@2020-05-14", when="@1.6:")
     depends_on("pthreadpool@2021-04-13", when="@1.9:")
     depends_on("pthreadpool@2020-10-05", when="@1.8")
@@ -246,14 +244,14 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     # depends_on("xnnpack@2021-02-22", when="@1.8:1.9+xnnpack")
     # depends_on("xnnpack@2020-03-23", when="@1.6:1.7+xnnpack")
     depends_on("mpi", when="+mpi")
-    # https://github.com/pytorch/pytorch/issues/60270
-    # depends_on("gloo@2023-05-19", when="@2.1:+gloo")
-    # depends_on("gloo@2023-01-17", when="@2.0+gloo")
-    # depends_on("gloo@2022-05-18", when="@1.13:1+gloo")
-    # depends_on("gloo@2021-05-21", when="@1.10:1.12+gloo")
-    # depends_on("gloo@2021-05-04", when="@1.9+gloo")
-    # depends_on("gloo@2020-09-18", when="@1.7:1.8+gloo")
-    # depends_on("gloo@2020-03-17", when="@1.6+gloo")
+    depends_on("gloo@2023-05-19", when="@2.1:+gloo")
+    depends_on("gloo@2023-01-17", when="@2.0+gloo")
+    depends_on("gloo@2022-05-18", when="@1.13:1+gloo")
+    depends_on("gloo@2021-05-21", when="@1.10:1.12+gloo")
+    depends_on("gloo@2021-05-04", when="@1.9+gloo")
+    depends_on("gloo@2020-09-18", when="@1.7:1.8+gloo")
+    depends_on("gloo@2020-03-17", when="@1.6+gloo")
+    depends_on("gloo+cuda", when="@1.6:+gloo+cuda")
     # https://github.com/pytorch/pytorch/issues/60331
     # depends_on("onnx@1.14.1", when="@2.1:+onnx_ml")
     # depends_on("onnx@1.13.1", when="@2.0+onnx_ml")
@@ -269,6 +267,13 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("py-hypothesis", type="test")
     depends_on("py-six", type="test")
     depends_on("py-psutil", type="test")
+
+    # https://github.com/pytorch/pytorch/issues/90448
+    patch(
+        "https://github.com/pytorch/pytorch/pull/97270.patch?full_index=1",
+        sha256="beb3fb57746cf8443f5caa6e08b2f8f4d4822c1e11e0c912134bd166c6a0ade7",
+        when="@1.10:2.0",
+    )
 
     # Fix BLAS being overridden by MKL
     # https://github.com/pytorch/pytorch/issues/60328
@@ -300,11 +305,6 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
 
     # Fixes build error when ROCm is enabled for pytorch-1.5 release
     patch("rocm.patch", when="@1.5+rocm")
-
-    # Fixes fatal error: sleef.h: No such file or directory
-    # https://github.com/pytorch/pytorch/pull/35359
-    # https://github.com/pytorch/pytorch/issues/26555
-    # patch("sleef.patch", when="@:1.5")
 
     # Fixes compilation with Clang 9.0.0 and Apple Clang 11.0.3
     # https://github.com/pytorch/pytorch/pull/37086
@@ -621,15 +621,12 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         env.set("pybind11_INCLUDE_DIR", self.spec["py-pybind11"].prefix.include)
         if self.spec.satisfies("@1.10:"):
             env.set("USE_SYSTEM_PYBIND11", "ON")
-        # https://github.com/pytorch/pytorch/issues/60334
-        # if self.spec.satisfies("@1.8:"):
-        #     env.set("USE_SYSTEM_SLEEF", "ON")
         if self.spec.satisfies("@1.6:"):
             # env.set("USE_SYSTEM_LIBS", "ON")
             # https://github.com/pytorch/pytorch/issues/60329
             # env.set("USE_SYSTEM_CPUINFO", "ON")
-            # https://github.com/pytorch/pytorch/issues/60270
-            # env.set("USE_SYSTEM_GLOO", "ON")
+            env.set("USE_SYSTEM_SLEEF", "ON")
+            env.set("USE_SYSTEM_GLOO", "ON")
             env.set("USE_SYSTEM_FP16", "ON")
             env.set("USE_SYSTEM_PTHREADPOOL", "ON")
             env.set("USE_SYSTEM_PSIMD", "ON")

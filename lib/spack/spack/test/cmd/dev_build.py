@@ -163,8 +163,15 @@ def test_dev_build_fails_multiple_specs(mock_packages):
 
 
 def test_dev_build_fails_nonexistent_package_name(mock_packages):
-    output = dev_build("no_such_package", fail_on_error=False)
-    assert "No package for 'no_such_package' was found" in output
+    output = ""
+
+    try:
+        dev_build("no_such_package")
+        assert False, "no exception was raised!"
+    except spack.repo.UnknownPackageError as e:
+        output = e.message
+
+    assert "Package 'no_such_package' not found" in output
 
 
 def test_dev_build_fails_no_version(mock_packages):
