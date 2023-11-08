@@ -495,14 +495,13 @@ class BaseConfiguration:
             if match_list:
                 tty.debug(f"\t{line_header} : {spec.cshort_spec}")
                 for rule in match_list:
-                    tty.debug("\t\tmatches rule: {0}".format(rule))
+                    tty.debug(f"\t\tmatches rule: {rule}")
 
         debug_info("INCLUDE", include_matches)
         debug_info("EXCLUDE", exclude_matches)
 
         if excluded_as_implicit:
-            msg = "\tEXCLUDED_AS_IMPLICIT : {0}".format(spec.cshort_spec)
-            tty.debug(msg)
+            tty.debug(f"\tEXCLUDED_AS_IMPLICIT : {spec.cshort_spec}")
 
         return not include_matches and (exclude_matches or excluded_as_implicit)
 
