@@ -37,6 +37,8 @@ class Tcl(AutotoolsPackage, SourceforgePackage):
 
     configure_directory = "unix"
 
+    filter_compiler_wrappers("tclConfig.sh", relative_root="lib")
+
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
             make("install")
