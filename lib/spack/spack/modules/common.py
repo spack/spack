@@ -486,15 +486,10 @@ class BaseConfiguration:
         spec = self.spec
         conf = self.module.configuration(self.name)
 
-        # Compute the list of include rules that match
+        # Compute the list of matching include / exclude rules, and whether excluded as implicit
         include_matches = [x for x in conf.get("include", []) if spec.satisfies(x)]
-
-        # Compute the list of exclude rules that match
         exclude_matches = [x for x in conf.get("exclude", []) if spec.satisfies(x)]
-
-        # Should I exclude the module because it's implicit?
-        exclude_implicits = conf.get("exclude_implicits", None)
-        excluded_as_implicit = exclude_implicits and not self.explicit
+        excluded_as_implicit = not self.explicit and conf.get("exclude_implicits", False)
 
         def debug_info(line_header, match_list):
             if match_list:
