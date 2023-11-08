@@ -83,6 +83,7 @@ class Libgit2(CMakePackage):
     depends_on("cmake@2.8:", type="build", when="@:0.28")
     depends_on("cmake@3.5:", type="build", when="@0.99:")
     depends_on("pkgconfig", type="build")
+    depends_on("python", type="test")
 
     # Runtime Dependencies
     depends_on("libssh2", when="+ssh")
@@ -123,5 +124,6 @@ class Libgit2(CMakePackage):
 
         # Control tests
         args.append(self.define("BUILD_CLAR", self.run_tests))
+        args.append(self.define("BUILD_TESTS", self.run_tests))
 
         return args
