@@ -12,13 +12,17 @@ spack:
       - neovim~no_luajit
       - py-pynvim
       - emacs@29.1+json+native+treesitter # note, pulls in gcc
+      # - tree-sitter is a dep, should also have cli but no package
       - nano # just in case
       # tags and scope search helpers
       - universal-ctags # only maintained ctags, works better with c++
+      - direnv
+      - py-python-lsp-server
       # runtimes and compilers
       - python
       - llvm+link_llvm_dylib~lld~lldb~polly+python build_type=MinSizeRel # for clangd, clang-format
       - node-js # for editor plugins etc., pyright language server
+      - npm
       - go # to build fzf, gh, hub
       - rust+analysis # fd, ripgrep, hyperfine, exa, rust-analyzer
       - binutils+ld+gold+plugins # support linking with built gcc
@@ -46,8 +50,8 @@ spack:
       - ccache
       # ensure we can use a jobserver build and do this fast
       - gmake
-      - ninja@kitware
-      - "openssl certs=system"
+      - ninja # should be @kitware, can't be because of meson requirement
+      - "openssl certs=system" # must be this, system external does not work
     - arch:
       - '%gcc target=x86_64_v3'
 

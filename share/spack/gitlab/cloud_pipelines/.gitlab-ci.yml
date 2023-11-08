@@ -470,7 +470,7 @@ build_systems-build:
     SPACK_CI_STACK_NAME: developer_tools
 
 developer_tools-generate:
-  extends: [ ".developer_tools", ".generate-x86_64"]
+  extends: [ ".developer-tools", ".generate-x86_64"]
 
 developer_tools-build:
   extends: [ ".developer_tools", ".build" ]
