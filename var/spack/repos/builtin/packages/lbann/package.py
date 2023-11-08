@@ -24,7 +24,13 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     version("develop", branch="develop")
     version("benchmarking", branch="benchmarking")
-    version("0.102", sha256="3734a76794991207e2dd2221f05f0e63a86ddafa777515d93d99d48629140f1a")
+    version("0.104", sha256="a847c7789082ab623ed5922ab1248dd95f5f89d93eed44ac3d6a474703bbc0bf")
+    version("0.103", sha256="9da1bf308f38323e30cb07f8ecf8efa05c7f50560e8683b9cd961102b1b3e25a")
+    version(
+        "0.102",
+        sha256="3734a76794991207e2dd2221f05f0e63a86ddafa777515d93d99d48629140f1a",
+        deprecated=True,
+    )
 
     variant(
         "build_type",

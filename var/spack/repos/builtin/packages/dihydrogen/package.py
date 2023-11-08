@@ -57,9 +57,7 @@ class Dihydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
     version("develop", branch="develop")
     version("master", branch="master")
 
-    version("0.2.1", sha256="11e2c0f8a94ffa22e816deff0357dde6f82cc8eac21b587c800a346afb5c49ac")
-    version("0.2.0", sha256="e1f597e80f93cf49a0cb2dbc079a1f348641178c49558b28438963bd4a0bdaa4")
-    version("0.1", sha256="171d4b8adda1e501c38177ec966e6f11f8980bf71345e5f6d87d0a988fef4c4e")
+    version("0.3.0", sha256="8dd143441a28e0c7662cd92694e9a4894b61fd48508ac1d77435f342bc226dcf")
 
     # Primary features
 
@@ -152,10 +150,7 @@ class Dihydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
         depends_on("mpi")
 
         # All this nonsense for one silly little package.
-        depends_on("aluminum@0.4.0:0.4", when="@0.1")
-        depends_on("aluminum@0.5.0:0.5", when="@0.2.0")
-        depends_on("aluminum@0.7.0:0.7", when="@0.2.1")
-        depends_on("aluminum@0.7.0:", when="@:0.0,0.2.1:")
+        depends_on("aluminum@1.4.1:")
 
         # Add Aluminum variants
         depends_on("aluminum +cuda +nccl", when="+distconv +cuda")
