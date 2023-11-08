@@ -71,6 +71,13 @@ class PyPyarrow(PythonPackage, CudaPackage):
 
     patch("for_aarch64.patch", when="@0 target=aarch64:")
 
+    # Based on: https://github.com/apache/arrow/pull/34726 
+    patch(
+        "cython3_10.patch",
+        sha256="9aa3d6a7c38a031fbbe1041a4adbc885b541e00c2e7c4867e3f06a4d4422481d",
+        when="@10 ^py-cython@3:",
+    )
+
     def setup_build_environment(self, env):
         env.set("PYARROW_WITH_PARQUET", self.spec.satisfies("+parquet"))
         env.set("PYARROW_WITH_CUDA", self.spec.satisfies("+cuda"))

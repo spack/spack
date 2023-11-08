@@ -1,0 +1,169 @@
+diff --git a/pyarrow/_flight.pyx b/pyarrow/_flight.pyx
+index 2bd24673dbaee..8f1f79fbe169f 100644
+--- a/pyarrow/_flight.pyx
++++ b/pyarrow/_flight.pyx
+@@ -40,7 +40,7 @@ import pyarrow.lib as lib
+ cdef CFlightCallOptions DEFAULT_CALL_OPTIONS
+ 
+ 
+-cdef int check_flight_status(const CStatus& status) nogil except -1:
++cdef int check_flight_status(const CStatus& status) except -1 nogil:
+     cdef shared_ptr[FlightStatusDetail] detail
+ 
+     if status.ok():
+diff --git a/pyarrow/_plasma.pyx b/pyarrow/_plasma.pyx
+index 6a86c893a4f0e..a2490fcdc445c 100644
+--- a/pyarrow/_plasma.pyx
++++ b/pyarrow/_plasma.pyx
+@@ -282,7 +282,7 @@ class PlasmaObjectExists(ArrowException):
+     pass
+ 
+ 
+-cdef int plasma_check_status(const CStatus& status) nogil except -1:
++cdef int plasma_check_status(const CStatus& status) except -1 nogil:
+     if status.ok():
+         return 0
+ 
+diff --git a/pyarrow/error.pxi b/pyarrow/error.pxi
+index 01d2b5f4eac75..46ea021ebf634 100644
+--- a/pyarrow/error.pxi
++++ b/pyarrow/error.pxi
+@@ -79,7 +79,7 @@ ArrowIOError = IOError
+ 
+ # This function could be written directly in C++ if we didn't
+ # define Arrow-specific subclasses (ArrowInvalid etc.)
+-cdef int check_status(const CStatus& status) nogil except -1:
++cdef int check_status(const CStatus& status) except -1 nogil:
+     if status.ok():
+         return 0
+ 
+@@ -140,7 +140,7 @@ cdef int check_status(const CStatus& status) nogil except -1:
+ 
+ # This is an API function for C++ PyArrow
+ cdef api int pyarrow_internal_check_status(const CStatus& status) \
+-        nogil except -1:
++        except -1 nogil:
+     return check_status(status)
+ 
+ 
+diff --git a/pyarrow/includes/libarrow.pxd b/pyarrow/includes/libarrow.pxd
+index 47180ff291637..bf1907c354eb8 100644
+--- a/pyarrow/includes/libarrow.pxd
++++ b/pyarrow/includes/libarrow.pxd
+@@ -1715,7 +1715,7 @@ cdef extern from "arrow/csv/api.h" namespace "arrow::csv" nogil:
+         function[CInvalidRowHandler] invalid_row_handler
+ 
+         CCSVParseOptions()
+-        CCSVParseOptions(CCSVParseOptions&&)
++        CCSVParseOptions(CCSVParseOptions)
+ 
+         @staticmethod
+         CCSVParseOptions Defaults()
+@@ -1740,7 +1740,7 @@ cdef extern from "arrow/csv/api.h" namespace "arrow::csv" nogil:
+         c_bool include_missing_columns
+ 
+         CCSVConvertOptions()
+-        CCSVConvertOptions(CCSVConvertOptions&&)
++        CCSVConvertOptions(CCSVConvertOptions)
+ 
+         @staticmethod
+         CCSVConvertOptions Defaults()
+@@ -1756,7 +1756,7 @@ cdef extern from "arrow/csv/api.h" namespace "arrow::csv" nogil:
+         c_bool autogenerate_column_names
+ 
+         CCSVReadOptions()
+-        CCSVReadOptions(CCSVReadOptions&&)
++        CCSVReadOptions(CCSVReadOptions)
+ 
+         @staticmethod
+         CCSVReadOptions Defaults()
+@@ -1770,7 +1770,7 @@ cdef extern from "arrow/csv/api.h" namespace "arrow::csv" nogil:
+         CIOContext io_context
+ 
+         CCSVWriteOptions()
+-        CCSVWriteOptions(CCSVWriteOptions&&)
++        CCSVWriteOptions(CCSVWriteOptions)
+ 
+         @staticmethod
+         CCSVWriteOptions Defaults()
+@@ -2115,7 +2115,7 @@ cdef extern from "arrow/compute/api.h" namespace "arrow::compute" nogil:
+     cdef cppclass CCastOptions" arrow::compute::CastOptions"(CFunctionOptions):
+         CCastOptions()
+         CCastOptions(c_bool safe)
+-        CCastOptions(CCastOptions&& options)
++        CCastOptions(CCastOptions options)
+ 
+         @staticmethod
+         CCastOptions Safe()
+diff --git a/pyarrow/includes/libarrow_fs.pxd b/pyarrow/includes/libarrow_fs.pxd
+index bf9fd8aea68a9..0b683e613d29b 100644
+--- a/pyarrow/includes/libarrow_fs.pxd
++++ b/pyarrow/includes/libarrow_fs.pxd
+@@ -31,8 +31,8 @@ cdef extern from "arrow/filesystem/api.h" namespace "arrow::fs" nogil:
+ 
+     cdef cppclass CFileInfo "arrow::fs::FileInfo":
+         CFileInfo()
+-        CFileInfo(CFileInfo&&)
+-        CFileInfo& operator=(CFileInfo&&)
++        CFileInfo(CFileInfo)
++        CFileInfo& operator=(CFileInfo)
+         CFileInfo(const CFileInfo&)
+         CFileInfo& operator=(const CFileInfo&)
+ 
+diff --git a/pyarrow/lib.pxd b/pyarrow/lib.pxd
+index 6a3726e96488a..d984475171f08 100644
+--- a/pyarrow/lib.pxd
++++ b/pyarrow/lib.pxd
+@@ -64,7 +64,7 @@ cdef extern from "Python.h":
+     int PySlice_Check(object)
+ 
+ 
+-cdef int check_status(const CStatus& status) nogil except -1
++cdef int check_status(const CStatus& status) except -1 nogil
+ 
+ 
+ cdef class _Weakrefable:
+diff --git a/pyarrow/tensor.pxi b/pyarrow/tensor.pxi
+index 4f68d2f6cd5ed..ba732879aadca 100644
+--- a/pyarrow/tensor.pxi
++++ b/pyarrow/tensor.pxi
+@@ -553,7 +553,8 @@ shape: {0.shape}""".format(self)
+ 
+     @property
+     def dim_names(self):
+-        return tuple(frombytes(x) for x in tuple(self.stp.dim_names()))
++        names_tuple = tuple(self.stp.dim_names())
++        return tuple(frombytes(x) for x in names_tuple)
+ 
+     @property
+     def non_zero_length(self):
+@@ -784,7 +785,8 @@ shape: {0.shape}""".format(self)
+ 
+     @property
+     def dim_names(self):
+-        return tuple(frombytes(x) for x in tuple(self.stp.dim_names()))
++        names_tuple = tuple(self.stp.dim_names())
++        return tuple(frombytes(x) for x in names_tuple)
+ 
+     @property
+     def non_zero_length(self):
+@@ -999,7 +1001,8 @@ shape: {0.shape}""".format(self)
+ 
+     @property
+     def dim_names(self):
+-        return tuple(frombytes(x) for x in tuple(self.stp.dim_names()))
++        names_tuple = tuple(self.stp.dim_names())
++        return tuple(frombytes(x) for x in names_tuple)
+ 
+     @property
+     def non_zero_length(self):
+@@ -1191,7 +1194,8 @@ shape: {0.shape}""".format(self)
+ 
+     @property
+     def dim_names(self):
+-        return tuple(frombytes(x) for x in tuple(self.stp.dim_names()))
++        names_tuple = tuple(self.stp.dim_names())
++        return tuple(frombytes(x) for x in names_tuple)
+ 
+     @property
+     def non_zero_length(self):av
