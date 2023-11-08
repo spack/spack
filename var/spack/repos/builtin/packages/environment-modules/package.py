@@ -137,6 +137,9 @@ class EnvironmentModules(Package):
                 ]
             )
 
+        if self.spec.satisfies("@4.1:"):
+            config_args.append(f"--with-pager={str(self.spec['less'].prefix.bin.less)}")
+
         configure(*config_args)
         make()
         make("install")
