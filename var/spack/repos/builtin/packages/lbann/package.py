@@ -139,6 +139,9 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("dihydrogen +distconv", when="+distconv")
     depends_on("dihydrogen@develop", when="@develop")
 
+    # Add Aluminum variants
+    depends_on("aluminum@master", when="@develop")
+
     depends_on("hdf5+mpi", when="+distconv")
 
     for arch in CudaPackage.cuda_arch_values:
