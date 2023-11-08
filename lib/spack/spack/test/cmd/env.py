@@ -2959,6 +2959,14 @@ def test_activate_temp(monkeypatch, tmpdir):
     assert ev.is_env_dir(str(tmpdir))
 
 
+@pytest.mark.parametrize(
+    "conflict_arg", ["--envfile=spack.yaml", "--dir", "--keep-relative", "--create"]
+)
+def test_activate_parser_conflicts(conflict_arg):
+    with pytest.raises(SystemExit):
+        env("activate", "--sh", "--temp", conflict_arg)
+
+
 def test_create_and_activate_managed(tmp_path):
     with fs.working_dir(str(tmp_path)):
         shell = env("activate", "--without-view", "--create", "--sh", "foo")

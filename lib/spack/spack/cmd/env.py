@@ -240,7 +240,7 @@ def env_activate_setup_parser(subparser):
         "--dir",
         default=False,
         action="store_true",
-        help="activate environment based on the directory",
+        help="activate environment based on the directory supplied",
     )
     persistent_options.add_argument(
         metavar="env",
