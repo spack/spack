@@ -164,7 +164,8 @@ class Julia(MakefilePackage):
     )
 
     # patchelf 0.13 is required because the rpath patch uses --add-rpath
-    depends_on("patchelf@0.13:", type="build")
+    # patchelf 0.18 breaks (at least) libjulia-internal.so
+    depends_on("patchelf@0.13:0.17", type="build")
     depends_on("perl", type="build")
     depends_on("libwhich", type="build")
     depends_on("python", type="build")
