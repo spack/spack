@@ -8,19 +8,7 @@ import stat as st
 
 import llnl.util.filesystem as fs
 
-import spack.package_prefs as pp
 from spack.util.error import UtilityError
-
-
-def set_permissions_by_spec(path, spec):
-    # Get permissions for spec
-    if os.path.isdir(path):
-        perms = pp.get_package_dir_permissions(spec)
-    else:
-        perms = pp.get_package_permissions(spec)
-    group = pp.get_package_group(spec)
-
-    set_permissions(path, perms, group)
 
 
 def set_permissions(path, perms, group=None):

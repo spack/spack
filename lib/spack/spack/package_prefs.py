@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import stat
 import warnings
+import os
 
 import spack.error
 import spack.repo
@@ -11,6 +12,7 @@ import spack.paths
 from spack.config import ConfigError
 from spack.util.path import canonicalize_path
 from spack.version import Version
+import spack.util.file_permissions as fp
 
 _lesser_spec_types = {"compiler": spack.spec.CompilerSpec, "version": Version}
 
@@ -294,6 +296,17 @@ def get_package_group(spec):
         except AttributeError:
             group = ""
     return group
+
+
+def set_permissions_by_spec(path, spec):
+    # Get permissions for spec
+    if os.path.isdir(path):
+        perms = get_package_dir_permissions(spec)
+    else:
+        perms = get_package_permissions(spec)
+    group = get_package_group(spec)
+
+    fp.set_permissions(path, perms, group)
 
 
 class VirtualInPackagesYAMLError(spack.error.SpackError):
