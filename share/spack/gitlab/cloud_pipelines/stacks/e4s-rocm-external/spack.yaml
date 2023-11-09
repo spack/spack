@@ -269,7 +269,7 @@ spack:
   - superlu-dist +rocm amdgpu_target=gfx908
   - tasmanian ~openmp +rocm amdgpu_target=gfx908
   - trilinos +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack ~ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu ~stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long +rocm amdgpu_target=gfx908
-  - umpire +rocm amdgpu_target=gfx908
+  - umpire +rocm ~mpi amdgpu_target=gfx908
   - upcxx +rocm amdgpu_target=gfx908
   # INCLUDED IN ECP DAV ROCM
   # - hdf5
@@ -310,7 +310,7 @@ spack:
   - superlu-dist +rocm amdgpu_target=gfx90a
   - tasmanian ~openmp +rocm amdgpu_target=gfx90a
   - trilinos +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack ~ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu ~stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long +rocm amdgpu_target=gfx90a
-  - umpire +rocm amdgpu_target=gfx90a
+  - umpire +rocm ~mpi amdgpu_target=gfx90a
   - upcxx +rocm amdgpu_target=gfx90a
   # INCLUDED IN ECP DAV ROCM
   # - hdf5

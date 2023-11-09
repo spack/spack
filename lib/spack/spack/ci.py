@@ -1561,7 +1561,7 @@ def copy_stage_logs_to_artifacts(job_spec: spack.spec.Spec, job_log_dir: str) ->
         job_pkg.env_mods_path,
         *job_pkg.builder.archive_files,
         cmake_cache,
-        ]
+    ]
     for file in file_list:
         copy_files_to_artifacts(file, job_log_dir)
 
