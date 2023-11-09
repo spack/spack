@@ -967,6 +967,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             if "^rocthrust" in spec and not spec["hip"].external:
                 # petsc+rocm needs the rocthrust header path
                 hip_headers += spec["rocthrust"].headers
+            if "^hipblas" in spec and not spec["hip"].external:
+                # superlu-dist+rocm needs the hipblas header path
+                hip_headers += spec["hipblas"].headers
             if "%cce" in spec:
                 # We assume the proper Cray CCE module (cce) is loaded:
                 craylibs_path = env["CRAYLIBS_" + machine().upper()]
