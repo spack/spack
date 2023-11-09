@@ -1235,6 +1235,26 @@ def merge_yaml(dest, source, prepend=False, append=False):
     return copy.copy(source)
 
 
+class ConfigPath:
+    @staticmethod
+    def validate(path):
+        """Example valid config paths:
+
+        x:y:z
+        x:"y":z
+        x:y+:z
+        x:y::z
+        x:y+::z
+        """
+        quoted_string = "(?:\"[^\"]+\")|(?:'[^']+')"
+        unquoted_string = "[^'\"]+"
+        element = rf"(?:(?:{quoted_string})|(?:{unquoted_string}))"
+        config_path_pattern = rf"{element}[+-]?(?:\:\:?{element}[+-]?)*"
+        if not re.match(config_path_pattern, path):
+            import pdb; pdb.set_trace()
+            raise ValueError(f"Invalid path string: {path}")
+
+
 def process_config_path(path):
     """Process a path argument to config.set() that may contain overrides ('::' or
     trailing ':')
@@ -1262,6 +1282,8 @@ def process_config_path(path):
     to ``syaml_str`` (if treating the final element as a value, the caller
     should not parse it in this case).
     """
+    ConfigPath.validate(path)
+
     result = []
     if path.startswith(":"):
         raise syaml.SpackYAMLError("Illegal leading `:' in path `{0}'".format(path), "")
