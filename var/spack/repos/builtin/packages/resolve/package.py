@@ -11,7 +11,6 @@ class Resolve(CMakePackage, CudaPackage, ROCmPackage):
     solvers designed to run on NVIDIA and AMD GPUs, as well as CPU devices."""
 
     homepage = "https://github.com/ORNL/ReSolve"
-    url = "https://github.com/ORNL/ReSolve.git"
     git = "https://github.com/ORNL/ReSolve.git"
 
     maintainers("cameronrutherford", "pelesh", "ryandanehy", "kswirydo")
