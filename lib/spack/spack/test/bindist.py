@@ -4,7 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import filecmp
 import glob
+import gzip
 import io
+import json
 import os
 import platform
 import sys
@@ -1112,3 +1114,77 @@ def test_tarfile_of_spec_prefix(tmpdir):
         assert tar.getmember(f"{expected_prefix}/b_directory/file").isreg()
         assert tar.getmember(f"{expected_prefix}/c_directory").isdir()
         assert tar.getmember(f"{expected_prefix}/c_directory/file").isreg()
+
+
+@pytest.mark.parametrize("layout,expect_success", [(None, True), (1, True), (2, False)])
+def test_get_valid_spec_file(tmp_path, layout, expect_success):
+    # Test reading a spec.json file that does not specify a layout version.
+    spec_dict = Spec("example").to_dict()
+    path = tmp_path / "spec.json"
+    effective_layout = layout or 0  # If not specified it should be 0
+
+    # Add a layout version
+    if layout is not None:
+        spec_dict["buildcache_layout_version"] = layout
+
+    # Save to file
+    with open(path, "w") as f:
+        json.dump(spec_dict, f)
+
+    try:
+        spec_dict_disk, layout_disk = bindist._get_valid_spec_file(
+            str(path), max_supported_layout=1
+        )
+        assert expect_success
+        assert spec_dict_disk == spec_dict
+        assert layout_disk == effective_layout
+    except bindist.InvalidMetadataFile:
+        assert not expect_success
+
+
+def test_get_valid_spec_file_doesnt_exist(tmp_path):
+    with pytest.raises(bindist.InvalidMetadataFile, match="No such file"):
+        bindist._get_valid_spec_file(str(tmp_path / "no-such-file"), max_supported_layout=1)
+
+
+def test_get_valid_spec_file_gzipped(tmp_path):
+    # Create a gzipped file, contents don't matter
+    path = tmp_path / "spec.json.gz"
+    with gzip.open(path, "wb") as f:
+        f.write(b"hello")
+    with pytest.raises(
+        bindist.InvalidMetadataFile, match="Compressed spec files are not supported"
+    ):
+        bindist._get_valid_spec_file(str(path), max_supported_layout=1)
+
+
+@pytest.mark.parametrize("filename", ["spec.json", "spec.json.sig"])
+def test_get_valid_spec_file_no_json(tmp_path, filename):
+    tmp_path.joinpath(filename).write_text("not json")
+    with pytest.raises(bindist.InvalidMetadataFile):
+        bindist._get_valid_spec_file(str(tmp_path / filename), max_supported_layout=1)
+
+
+def test_download_tarball_with_unsupported_layout_fails(tmp_path, mutable_config, capsys):
+    layout_version = bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION + 1
+    spec = Spec("gmake@4.4.1%gcc@13.1.0 arch=linux-ubuntu23.04-zen2")
+    spec._mark_concrete()
+    spec_dict = spec.to_dict()
+    spec_dict["buildcache_layout_version"] = layout_version
+
+    # Setup a basic local build cache structure
+    path = (
+        tmp_path / bindist.build_cache_relative_path() / bindist.tarball_name(spec, ".spec.json")
+    )
+    path.parent.mkdir(parents=True)
+    with open(path, "w") as f:
+        json.dump(spec_dict, f)
+
+    # Configure as a mirror.
+    mirror_cmd("add", "test-mirror", str(tmp_path))
+
+    # Shouldn't be able "download" this.
+    assert bindist.download_tarball(spec, unsigned=True) is None
+
+    # And there should be a warning about an unsupported layout version.
+    assert f"Layout version {layout_version} is too new" in capsys.readouterr().err
