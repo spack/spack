@@ -642,3 +642,28 @@ def test_effective_deptype_run_environment(default_mock_concretization):
     for spec, effective_type in spack.build_environment.effective_deptypes(s, context=Context.RUN):
         assert effective_type & expected_flags.pop(spec.name) == effective_type
     assert not expected_flags, f"Missing {expected_flags.keys()} from effective_deptypes"
+
+
+def test_monkey_patching_works_across_virtual(default_mock_concretization):
+    """Assert that a monkeypatched attribute is found regardless we access through the
+    real name or the virtual name.
+    """
+    s = default_mock_concretization("mpileaks ^mpich")
+    s["mpich"].foo = "foo"
+    assert s["mpich"].foo == "foo"
+    assert s["mpi"].foo == "foo"
+
+
+def test_clear_compiler_related_runtime_variables_of_build_deps(default_mock_concretization):
+    """Verify that Spack drops CC, CXX, FC and F77 from the dependencies related build environment
+    variable changes if they are set in setup_run_environment. Spack manages those variables
+    elsewhere."""
+    s = default_mock_concretization("build-env-compiler-var-a")
+    ctx = spack.build_environment.SetupContext(s, context=Context.BUILD)
+    result = {}
+    ctx.get_env_modifications().apply_modifications(result)
+    assert "CC" not in result
+    assert "CXX" not in result
+    assert "FC" not in result
+    assert "F77" not in result
+    assert result["ANOTHER_VAR"] == "this-should-be-present"

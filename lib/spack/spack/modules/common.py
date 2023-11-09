@@ -35,7 +35,7 @@ import inspect
 import os.path
 import re
 import string
-from typing import Optional
+from typing import List, Optional
 
 import llnl.util.filesystem
 import llnl.util.tty as tty
@@ -50,6 +50,7 @@ import spack.paths
 import spack.projections as proj
 import spack.repo
 import spack.schema.environment
+import spack.spec
 import spack.store
 import spack.tengine as tengine
 import spack.util.environment
@@ -395,16 +396,14 @@ class BaseConfiguration:
 
     default_projections = {"all": "{name}/{version}-{compiler.name}-{compiler.version}"}
 
-    def __init__(self, spec, module_set_name, explicit=None):
+    def __init__(self, spec: spack.spec.Spec, module_set_name: str, explicit: bool) -> None:
         # Module where type(self) is defined
-        self.module = inspect.getmodule(self)
+        m = inspect.getmodule(self)
+        assert m is not None  # make mypy happy
+        self.module = m
         # Spec for which we want to generate a module file
         self.spec = spec
         self.name = module_set_name
-        # Software installation has been explicitly asked (get this information from
-        # db when querying an existing module, like during a refresh or rm operations)
-        if explicit is None:
-            explicit = spec._installed_explicitly()
         self.explicit = explicit
         # Dictionary of configuration options that should be applied
         # to the spec
@@ -458,7 +457,11 @@ class BaseConfiguration:
             if constraint in self.spec:
                 suffixes.append(suffix)
         suffixes = list(dedupe(suffixes))
-        if self.hash:
+        # For hidden modules we can always add a fixed length hash as suffix, since it guards
+        # against file name clashes, and the module is not exposed to the user anyways.
+        if self.hidden:
+            suffixes.append(self.spec.dag_hash(length=7))
+        elif self.hash:
             suffixes.append(self.hash)
         return suffixes
 
@@ -483,37 +486,37 @@ class BaseConfiguration:
         spec = self.spec
         conf = self.module.configuration(self.name)
 
-        # Compute the list of include rules that match
-        include_rules = conf.get("include", [])
-        include_matches = [x for x in include_rules if spec.satisfies(x)]
-
-        # Compute the list of exclude rules that match
-        exclude_rules = conf.get("exclude", [])
-        exclude_matches = [x for x in exclude_rules if spec.satisfies(x)]
-
-        # Should I exclude the module because it's implicit?
-        exclude_implicits = conf.get("exclude_implicits", None)
-        excluded_as_implicit = exclude_implicits and not self.explicit
+        # Compute the list of matching include / exclude rules, and whether excluded as implicit
+        include_matches = [x for x in conf.get("include", []) if spec.satisfies(x)]
+        exclude_matches = [x for x in conf.get("exclude", []) if spec.satisfies(x)]
+        excluded_as_implicit = not self.explicit and conf.get("exclude_implicits", False)
 
         def debug_info(line_header, match_list):
             if match_list:
-                msg = "\t{0} : {1}".format(line_header, spec.cshort_spec)
-                tty.debug(msg)
+                tty.debug(f"\t{line_header} : {spec.cshort_spec}")
                 for rule in match_list:
-                    tty.debug("\t\tmatches rule: {0}".format(rule))
+                    tty.debug(f"\t\tmatches rule: {rule}")
 
         debug_info("INCLUDE", include_matches)
         debug_info("EXCLUDE", exclude_matches)
 
         if excluded_as_implicit:
-            msg = "\tEXCLUDED_AS_IMPLICIT : {0}".format(spec.cshort_spec)
-            tty.debug(msg)
+            tty.debug(f"\tEXCLUDED_AS_IMPLICIT : {spec.cshort_spec}")
 
-        is_excluded = exclude_matches or excluded_as_implicit
-        if not include_matches and is_excluded:
-            return True
+        return not include_matches and (exclude_matches or excluded_as_implicit)
 
-        return False
+    @property
+    def hidden(self):
+        """Returns True if the module has been hidden, False otherwise."""
+
+        conf = self.module.configuration(self.name)
+
+        hidden_as_implicit = not self.explicit and conf.get("hide_implicits", False)
+
+        if hidden_as_implicit:
+            tty.debug(f"\tHIDDEN_AS_IMPLICIT : {self.spec.cshort_spec}")
+
+        return hidden_as_implicit
 
     @property
     def context(self):
@@ -543,8 +546,7 @@ class BaseConfiguration:
     def _create_list_for(self, what):
         include = []
         for item in self.conf[what]:
-            conf = type(self)(item, self.name)
-            if not conf.excluded:
+            if not self.module.make_configuration(item, self.name).excluded:
                 include.append(item)
         return include
 
@@ -723,7 +725,9 @@ class BaseContext(tengine.Context):
         # for that to work, globals have to be set on the package modules, and the
         # whole chain of setup_dependent_package has to be followed from leaf to spec.
         # So: just run it here, but don't collect env mods.
-        spack.build_environment.SetupContext(context=Context.RUN).set_all_package_py_globals()
+        spack.build_environment.SetupContext(
+            spec, context=Context.RUN
+        ).set_all_package_py_globals()
 
         # Then run setup_dependent_run_environment before setup_run_environment.
         for dep in spec.dependencies(deptype=("link", "run")):
@@ -816,8 +820,7 @@ class BaseContext(tengine.Context):
     def _create_module_list_of(self, what):
         m = self.conf.module
         name = self.conf.name
-        explicit = self.conf.explicit
-        return [m.make_layout(x, name, explicit).use_name for x in getattr(self.conf, what)]
+        return [m.make_layout(x, name).use_name for x in getattr(self.conf, what)]
 
     @tengine.context_property
     def verbose(self):
@@ -826,12 +829,19 @@ class BaseContext(tengine.Context):
 
 
 class BaseModuleFileWriter:
-    def __init__(self, spec, module_set_name, explicit=None):
+    default_template: str
+    hide_cmd_format: str
+    modulerc_header: List[str]
+
+    def __init__(
+        self, spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
+    ) -> None:
         self.spec = spec
 
         # This class is meant to be derived. Get the module of the
         # actual writer.
         self.module = inspect.getmodule(self)
+        assert self.module is not None  # make mypy happy
         m = self.module
 
         # Create the triplet of configuration/layout/context
@@ -848,6 +858,26 @@ class BaseModuleFileWriter:
             msg += "Did you forget to define it in the class?"
             name = type(self).__name__
             raise DefaultTemplateNotDefined(msg.format(name))
+
+        # Check if format for module hide command has been defined,
+        # throw if not found
+        try:
+            self.hide_cmd_format
+        except AttributeError:
+            msg = "'{0}' object has no attribute 'hide_cmd_format'\n"
+            msg += "Did you forget to define it in the class?"
+            name = type(self).__name__
+            raise HideCmdFormatNotDefined(msg.format(name))
+
+        # Check if modulerc header content has been defined,
+        # throw if not found
+        try:
+            self.modulerc_header
+        except AttributeError:
+            msg = "'{0}' object has no attribute 'modulerc_header'\n"
+            msg += "Did you forget to define it in the class?"
+            name = type(self).__name__
+            raise ModulercHeaderNotDefined(msg.format(name))
 
     def _get_template(self):
         """Gets the template that will be rendered for this spec."""
@@ -943,6 +973,9 @@ class BaseModuleFileWriter:
         # Symlink defaults if needed
         self.update_module_defaults()
 
+        # record module hiddenness if implicit
+        self.update_module_hiddenness()
+
     def update_module_defaults(self):
         if any(self.spec.satisfies(default) for default in self.conf.defaults):
             # This spec matches a default, it needs to be symlinked to default
@@ -953,6 +986,60 @@ class BaseModuleFileWriter:
             os.symlink(self.layout.filename, default_tmp)
             os.rename(default_tmp, default_path)
 
+    def update_module_hiddenness(self, remove=False):
+        """Update modulerc file corresponding to module to add or remove
+        command that hides module depending on its hidden state.
+
+        Args:
+            remove (bool): if True, hiddenness information for module is
+                removed from modulerc.
+        """
+        modulerc_path = self.layout.modulerc
+        hide_module_cmd = self.hide_cmd_format % self.layout.use_name
+        hidden = self.conf.hidden and not remove
+        modulerc_exists = os.path.exists(modulerc_path)
+        updated = False
+
+        if modulerc_exists:
+            # retrieve modulerc content
+            with open(modulerc_path, "r") as f:
+                content = f.readlines()
+                content = "".join(content).split("\n")
+                # remove last empty item if any
+                if len(content[-1]) == 0:
+                    del content[-1]
+            already_hidden = hide_module_cmd in content
+
+            # remove hide command if module not hidden
+            if already_hidden and not hidden:
+                content.remove(hide_module_cmd)
+                updated = True
+
+            # add hide command if module is hidden
+            elif not already_hidden and hidden:
+                if len(content) == 0:
+                    content = self.modulerc_header.copy()
+                content.append(hide_module_cmd)
+                updated = True
+        else:
+            content = self.modulerc_header.copy()
+            if hidden:
+                content.append(hide_module_cmd)
+                updated = True
+
+        # no modulerc file change if no content update
+        if updated:
+            is_empty = content == self.modulerc_header or len(content) == 0
+            # remove existing modulerc if empty
+            if modulerc_exists and is_empty:
+                os.remove(modulerc_path)
+            # create or update modulerc
+            elif content != self.modulerc_header:
+                # ensure file ends with a newline character
+                content.append("")
+                with open(modulerc_path, "w") as f:
+                    f.write("\n".join(content))
+
     def remove(self):
         """Deletes the module file."""
         mod_file = self.layout.filename
@@ -960,6 +1047,7 @@ class BaseModuleFileWriter:
             try:
                 os.remove(mod_file)  # Remove the module file
                 self.remove_module_defaults()  # Remove default targeting module file
+                self.update_module_hiddenness(remove=True)  # Remove hide cmd in modulerc
                 os.removedirs(
                     os.path.dirname(mod_file)
                 )  # Remove all the empty directories from the leaf up
@@ -999,6 +1087,18 @@ class ModuleNotFoundError(ModulesError):
 
 class DefaultTemplateNotDefined(AttributeError, ModulesError):
     """Raised if the attribute 'default_template' has not been specified
+    in the derived classes.
+    """
+
+
+class HideCmdFormatNotDefined(AttributeError, ModulesError):
+    """Raised if the attribute 'hide_cmd_format' has not been specified
+    in the derived classes.
+    """
+
+
+class ModulercHeaderNotDefined(AttributeError, ModulesError):
+    """Raised if the attribute 'modulerc_header' has not been specified
     in the derived classes.
     """
 

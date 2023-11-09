@@ -30,8 +30,10 @@ class Xdmf3(CMakePackage):
     # See https://github.com/spack/spack/pull/22303 for reference
     depends_on(Boost.with_default_variants)
     depends_on("mpi", when="+mpi")
-    depends_on("hdf5+mpi", when="+mpi")
-    depends_on("hdf5~mpi", when="~mpi")
+    depends_on("hdf5@1.10:+mpi", when="+mpi")
+    depends_on("hdf5@1.10:~mpi", when="~mpi")
+    # motivated by discussion in https://gitlab.kitware.com/xdmf/xdmf/-/issues/28
+    patch("fix_hdf5_hid_t.diff")
 
     def cmake_args(self):
         """Populate cmake arguments for XDMF."""
@@ -42,7 +44,7 @@ class Xdmf3(CMakePackage):
             "-DXDMF_BUILD_UTILS=ON",
             "-DXDMF_WRAP_JAVA=OFF",
             "-DXDMF_WRAP_PYTHON=OFF",
-            "-DXDMF_BUILD_TESTING=ON",
+            "-DXDMF_BUILD_TESTING=OFF",
         ]
 
         return cmake_args

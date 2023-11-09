@@ -35,12 +35,12 @@ class Aspa(MakefilePackage):
         targets = [
             "--directory=exec",
             "--file=Makefile",
-            "LIBS={0} {1} {2}".format(
+            "LIBS={} {} {}".format(
                 self.spec["lapack"].libs.ld_flags,
                 self.spec["blas"].libs.ld_flags,
                 self.spec["hdf5"].libs.ld_flags,
             ),
-            "CXX={0}".format(self.spec["mpi"].mpicxx),
+            f"CXX={self.spec['mpi'].mpicxx}",
         ]
         return targets
 

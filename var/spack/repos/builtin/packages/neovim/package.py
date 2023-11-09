@@ -16,7 +16,7 @@ class Neovim(CMakePackage):
     maintainers("albestro", "trws")
 
     version("master", branch="master")
-    version("stable", tag="stable", commit="7d4bba7aa7a4a3444919ea7a3804094c290395ef")
+    version("stable", tag="stable", commit="d772f697a281ce9c58bf933997b87c7f27428a60")
     version("0.9.4", sha256="148356027ee8d586adebb6513a94d76accc79da9597109ace5c445b09d383093")
     version("0.9.2", sha256="06b8518bad4237a28a67a4fbc16ec32581f35f216b27f4c98347acee7f5fb369")
     version("0.9.1", sha256="8db17c2a1f4776dcda00e59489ea0d98ba82f7d1a8ea03281d640e58d8a3a00e")
@@ -139,9 +139,6 @@ class Neovim(CMakePackage):
     # term: Add support for libvterm >= 0.2 (https://github.com/neovim/neovim/releases/tag/v0.8.0)
     # https://github.com/neovim/neovim/issues/16217#issuecomment-958590493
     conflicts("libvterm@0.2:", when="@:0.7")
-
-    # https://github.com/neovim/neovim/issues/25770
-    conflicts("libluv@1.44:", when="platform=darwin")
 
     @when("^lua")
     def cmake_args(self):
