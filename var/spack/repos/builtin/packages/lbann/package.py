@@ -100,6 +100,8 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     # Don't expose this a dependency until Spack can find the external properly
     # depends_on('binutils+gold', type='build', when='+gold')
 
+    patch("lbann_v0.104_build_cleanup.patch", when="@0.104:")
+
     # Variant Conflicts
     conflicts("~cuda", when="+nvprof")
     conflicts("~cuda", when="+nvshmem")
