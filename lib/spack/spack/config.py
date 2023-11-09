@@ -1266,35 +1266,40 @@ def process_config_path(path):
         remainder, sep, path = path.partition(":")
         front += remainder
 
+        # Keys are always strings, if a user enclosed a key in quotes, they
+        # should be removed.
+        # Values should retain quotes, since we want to distinguish between
+        # {} (a dict) and "{}" (a string that includes characters normally
+        # regarded as special in YAML)
+        remove_quotes_from_key = lambda x: x.strip("'\"")
+
         if (sep and not path) or path.startswith(":"):
             if seen_override_in_path:
                 raise syaml.SpackYAMLError(
                     "Meaningless second override" " indicator `::' in path `{0}'".format(path), ""
                 )
             path = path.lstrip(":")
-            front = syaml.syaml_str(front)
+            front = syaml.syaml_str(remove_quotes_from_key(front))
             front.override = True
             seen_override_in_path = True
 
         elif front.endswith("+"):
-            front = front.rstrip("+")
+            front = remove_quotes_from_key(front.rstrip("+"))
             front = syaml.syaml_str(front)
             front.prepend = True
 
         elif front.endswith("-"):
-            front = front.rstrip("-")
+            front = remove_quotes_from_key(front.rstrip("-"))
             front = syaml.syaml_str(front)
             front.append = True
 
+        elif path:
+            # If there is more path to process, the current 'front' is a key.
+            front = remove_quotes_from_key(front)
+
         result.append(front)
 
-    # Keys are always strings, if a user enclosed a key in quotes, they
-    # should be removed
-    # Value should retain quotes, since we want to distinguish between
-    # {} (a dict) and "{}" (a string that includes characters normally
-    # regarded as special in YAML)
-    key_parts = [x.strip("'\"") for x in result[:-1]]
-    return key_parts + [result[-1]]
+    return result
 
 
 #
