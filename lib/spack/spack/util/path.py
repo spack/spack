@@ -284,15 +284,12 @@ def padding_filter(string):
 
 
 @contextlib.contextmanager
-def filter_padding():
+def filter_padding(padding=None):
     """Context manager to safely disable path padding in all Spack output.
 
     This is needed because Spack's debug output gets extremely long when we use a
     long padded installation path.
     """
-    import spack.config
-
-    padding = spack.config.get("config:install_tree:padded_length", None)
     if padding:
         # filter out all padding from the intsall command output
         with tty.output_filter(padding_filter):

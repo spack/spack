@@ -25,13 +25,25 @@ import llnl.url
 from llnl.util import lang, tty
 from llnl.util.filesystem import mkdirp, rename, working_dir
 
-import spack.config
-import spack.error
 import spack.util.url as url_util
+import spack.util.error
 
 from .executable import CommandNotFoundError, which
 from .gcs import GCSBlob, GCSBucket, GCSHandler
 from .s3 import UrllibS3Handler, get_s3_session
+
+
+def build_web_keywords(config_object):
+    key_map = {
+        'verify_ssl': {'path': 'config:verify_ssl', 'default': True},
+        'timeout': {'path': 'config:connect_timeout', 'default': 10},
+    }
+    keywords = {}
+
+    for key, conf in key_map.items():
+        keywords.update({key: config_object.get(conf['path'], conf['default'])})
+
+    return keywords
 
 
 class DetailedHTTPError(HTTPError):
@@ -75,9 +87,8 @@ def _urlopen():
     )
 
     # And dynamically dispatch based on the config:verify_ssl.
-    def dispatch_open(fullurl, data=None, timeout=None):
-        opener = with_ssl if spack.config.get("config:verify_ssl", True) else without_ssl
-        timeout = timeout or spack.config.get("config:connect_timeout", 10)
+    def dispatch_open(fullurl, data=None, timeout=10, verify_ssl=True):
+        opener = with_ssl if verify_ssl else without_ssl
         return opener.open(fullurl, data, timeout)
 
     return dispatch_open
@@ -134,7 +145,7 @@ class ExtractMetadataParser(HTMLParser):
                     self.base_url = val
 
 
-def read_from_url(url, accept_content_type=None):
+def read_from_url(url, accept_content_type=None, verify_ssl=True, timeout=10, **kwargs):
     if isinstance(url, str):
         url = urllib.parse.urlparse(url)
 
@@ -142,9 +153,9 @@ def read_from_url(url, accept_content_type=None):
     request = Request(url.geturl(), headers={"User-Agent": SPACK_USER_AGENT})
 
     try:
-        response = urlopen(request)
+        response = urlopen(request, **kwargs)
     except URLError as err:
-        raise SpackWebError("Download failed: {}".format(str(err)))
+        raise WebError("Download failed: {}".format(str(err)))
 
     if accept_content_type:
         try:
@@ -211,23 +222,23 @@ def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=Non
         )
 
 
-def base_curl_fetch_args(url, timeout=0):
+def base_curl_fetch_args(url, verify_ssl=True, timeout=0):
     """Return the basic fetch arguments typically used in calls to curl.
 
     The arguments include those for ensuring behaviors such as failing on
     errors for codes over 400, printing HTML headers, resolving 3xx redirects,
     status or failure handling, and connection timeouts.
 
-    It also uses the following configuration option to set an additional
+    It also uses the following input arguments to set an additional
     argument as needed:
 
-        * config:connect_timeout (int): connection timeout
-        * config:verify_ssl (str): Perform SSL verification
+        * timeout (int): connection timeout
+        * verify_ssl (bool): Perform SSL verification
 
     Arguments:
         url (str): URL whose contents will be fetched
-        timeout (int): Connection timeout, which is only used if higher than
-            config:connect_timeout
+        timeout (int): Connection timeout
+        verify_ssl (bool): Performing SSL verification
 
     Returns (list): list of argument strings
     """
@@ -238,7 +249,7 @@ def base_curl_fetch_args(url, timeout=0):
         "-L",  # resolve 3xx redirects
         url,
     ]
-    if not spack.config.get("config:verify_ssl"):
+    if not verify_ssl:
         curl_args.append("-k")
 
     if sys.stdout.isatty() and tty.msg_enabled():
@@ -246,11 +257,8 @@ def base_curl_fetch_args(url, timeout=0):
     else:
         curl_args.append("-sS")  # show errors if fail
 
-    connect_timeout = spack.config.get("config:connect_timeout", 10)
-    if timeout:
-        connect_timeout = max(int(connect_timeout), int(timeout))
-    if connect_timeout > 0:
-        curl_args.extend(["--connect-timeout", str(connect_timeout)])
+    if timeout > 0:
+        curl_args.extend(["--connect-timeout", str(timeout)])
 
     return curl_args
 
@@ -266,11 +274,11 @@ def check_curl_code(returncode):
     if returncode != 0:
         if returncode == 22:
             # This is a 404. Curl will print the error.
-            raise spack.error.FetchError("URL was not found!")
+            raise WebError("URL was not found!")
 
         if returncode == 60:
             # This is a certificate error.  Suggest spack -k
-            raise spack.error.FetchError(
+            raise WebError(
                 "Curl was unable to fetch due to invalid certificate. "
                 "This is either an attack, or your cluster's SSL "
                 "configuration is bad.  If you believe your SSL "
@@ -279,7 +287,7 @@ def check_curl_code(returncode):
                 "Use this at your own risk."
             )
 
-        raise spack.error.FetchError("Curl failed with error {0}".format(returncode))
+        raise WebError("Curl failed with error {0}".format(returncode))
 
 
 def _curl(curl=None):
@@ -288,11 +296,11 @@ def _curl(curl=None):
             curl = which("curl", required=True)
         except CommandNotFoundError as exc:
             tty.error(str(exc))
-            raise spack.error.FetchError("Missing required curl fetch method")
+            raise WebError("Missing required curl fetch method")
     return curl
 
 
-def fetch_url_text(url, curl=None, dest_dir="."):
+def fetch_url_text(url, curl=None, dest_dir=".", fetch_method=None):
     """Retrieves text-only URL content using the configured fetch method.
     It determines the fetch method from:
 
@@ -316,19 +324,18 @@ def fetch_url_text(url, curl=None, dest_dir="."):
     Raises FetchError if the curl returncode indicates failure
     """
     if not url:
-        raise spack.error.FetchError("A URL is required to fetch its text")
+        raise WebError("A URL is required to fetch its text")
 
     tty.debug("Fetching text at {0}".format(url))
 
     filename = os.path.basename(url)
     path = os.path.join(dest_dir, filename)
 
-    fetch_method = spack.config.get("config:url_fetch_method")
     tty.debug("Using '{0}' to fetch {1} into {2}".format(fetch_method, url, path))
     if fetch_method == "curl":
         curl_exe = _curl(curl)
         if not curl_exe:
-            raise spack.error.FetchError("Missing required fetch method (curl)")
+            raise WebError("Missing required fetch method (curl)")
 
         curl_args = ["-O"]
         curl_args.extend(base_curl_fetch_args(url))
@@ -346,7 +353,7 @@ def fetch_url_text(url, curl=None, dest_dir="."):
 
             returncode = response.getcode()
             if returncode and returncode != 200:
-                raise spack.error.FetchError(
+                raise WebError(
                     "Urllib failed with error code {0}".format(returncode)
                 )
 
@@ -358,13 +365,13 @@ def fetch_url_text(url, curl=None, dest_dir="."):
 
                 return path
 
-        except SpackWebError as err:
-            raise spack.error.FetchError("Urllib fetch failed to verify url: {0}".format(str(err)))
+        except WebError as err:
+            raise WebError("Urllib fetch failed to verify url: {0}".format(str(err)))
 
     return None
 
 
-def url_exists(url, curl=None):
+def url_exists(url, curl=None, fetch_method=None, verify_ssl=True, timeout=10):
     """Determines whether url exists.
 
     A scheme-specific process is used for Google Storage (`gs`) and Amazon
@@ -382,9 +389,7 @@ def url_exists(url, curl=None):
     url_result = urllib.parse.urlparse(url)
 
     # Use curl if configured to do so
-    use_curl = spack.config.get(
-        "config:url_fetch_method", "urllib"
-    ) == "curl" and url_result.scheme not in ("gs", "s3")
+    use_curl = fetch_method == "curl" and url_result.scheme not in ("gs", "s3")
     if use_curl:
         curl_exe = _curl(curl)
         if not curl_exe:
@@ -393,7 +398,7 @@ def url_exists(url, curl=None):
         # Telling curl to fetch the first byte (-r 0-0) is supposed to be
         # portable.
         curl_args = ["--stderr", "-", "-s", "-f", "-r", "0-0", url]
-        if not spack.config.get("config:verify_ssl"):
+        if not verify_ssl:
             curl_args.append("-k")
         _ = curl_exe(*curl_args, fail_on_error=False, output=os.devnull)
         return curl_exe.returncode == 0
@@ -402,7 +407,7 @@ def url_exists(url, curl=None):
     try:
         urlopen(
             Request(url, method="HEAD", headers={"User-Agent": SPACK_USER_AGENT}),
-            timeout=spack.config.get("config:connect_timeout", 10),
+            timeout=timeout,
         )
         return True
     except URLError as e:
@@ -771,11 +776,11 @@ def parse_etag(header_value):
     return valid.group(1) if valid else None
 
 
-class SpackWebError(spack.error.SpackError):
+class WebError(spack.util.error.UtilityError):
     """Superclass for Spack web spidering errors."""
 
 
-class NoNetworkConnectionError(SpackWebError):
+class NoNetworkConnectionError(WebError):
     """Raised when an operation can't get an internet connection."""
 
     def __init__(self, message, url):

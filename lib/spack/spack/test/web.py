@@ -332,10 +332,20 @@ def test_s3_url_exists(monkeypatch, capfd):
     monkeypatch.setattr(spack.util.s3, "get_s3_session", get_s3_session)
 
     fake_s3_url_exists = "s3://my-bucket/subdirectory/my-file"
-    assert spack.util.web.url_exists(fake_s3_url_exists)
+    assert spack.util.web.url_exists(
+            fake_s3_url_exists,
+            fetch_method=spack.config.get('config:url_fetch_method', 'urllib'),
+            verify_ssl=spack.config.get('config:verify_ssl'),
+            timeout=spack.config.get('config:connect_timeout', 10)
+            )
 
     fake_s3_url_does_not_exist = "s3://my-bucket/subdirectory/my-notfound-file"
-    assert not spack.util.web.url_exists(fake_s3_url_does_not_exist)
+    assert not spack.util.web.url_exists(
+            fake_s3_url_does_not_exist,
+            fetch_method=spack.config.get('config:url_fetch_method', 'urllib'),
+            verify_ssl=spack.config.get('config:verify_ssl'),
+            timeout=spack.config.get('config:connect_timeout', 10)
+            )
 
 
 def test_s3_url_parsing():

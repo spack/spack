@@ -986,7 +986,12 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         urls = self.all_urls_for_version(version)
 
         for u in urls:
-            if spack.util.web.url_exists(u):
+            if spack.util.web.url_exists(
+                    u,
+                    fetch_method=spack.config.get('config:url_fetch_method', 'urllib'),
+                    verify_ssl=spack.config.get('config:verify_ssl'),
+                    timeout=spack.config.get('config:connect_timeout', 10)
+                    ):
                 return u
 
         return None

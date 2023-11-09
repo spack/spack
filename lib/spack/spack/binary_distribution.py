@@ -487,7 +487,10 @@ class BinaryCacheIndex:
         scheme = urllib.parse.urlparse(mirror_url).scheme
 
         if scheme != "oci" and not web_util.url_exists(
-            url_util.join(mirror_url, BUILD_CACHE_RELATIVE_PATH, "index.json")
+            url_util.join(mirror_url, BUILD_CACHE_RELATIVE_PATH, "index.json"),
+            fetch_method=spack.config.get('config:url_fetch_method', 'urllib'),
+            verify_ssl=spack.config.get('config:verify_ssl'),
+            timeout=spack.config.get('config:connect_timeout', 10)
         ):
             return False
 
@@ -978,9 +981,13 @@ def _specs_from_cache_fallback(cache_prefix):
     def url_read_method(url):
         contents = None
         try:
-            _, _, spec_file = web_util.read_from_url(url)
+            _, _, spec_file = web_util.read_from_url(
+                url,
+                verify_ssl=spack.config.get("config:verify_ssl", True),
+                timeout=spack.config.get("config:connect_timeout", 10)
+            )
             contents = codecs.getreader("utf-8")(spec_file).read()
-        except (URLError, web_util.SpackWebError) as url_err:
+        except (URLError, web_util.WebError) as url_err:
             tty.error("Error reading specfile: {0}".format(url))
             tty.error(url_err)
         return contents
@@ -1366,8 +1373,18 @@ def _build_tarball_in_stage_dir(spec: Spec, out_url: str, stage_dir: str, option
     spackfile_path = os.path.join(cache_prefix, tarball_path_name(spec, ".spack"))
     remote_spackfile_path = url_util.join(out_url, os.path.relpath(spackfile_path, stage_dir))
 
+    fetch_method=spack.config.get('config:url_fetch_method', 'urllib'),
+    verify_ssl=spack.config.get('config:verify_ssl'),
+    timeout=spack.config.get('config:connect_timeout', 10)
+
+    url_args = {
+        'fetch_method': fetch_method,
+        'verify_ssl': verify_ssl,
+        'timeout': timeout
+    }
+
     mkdirp(tarfile_dir)
-    if web_util.url_exists(remote_spackfile_path):
+    if web_util.url_exists(remote_spackfile_path, **url_args):
         if options.force:
             web_util.remove_url(remote_spackfile_path)
         else:
@@ -1389,12 +1406,12 @@ def _build_tarball_in_stage_dir(spec: Spec, out_url: str, stage_dir: str, option
 
     # If force and exists, overwrite. Otherwise raise exception on collision.
     if options.force:
-        if web_util.url_exists(remote_specfile_path):
+        if web_util.url_exists(remote_specfile_path, **url_args):
             web_util.remove_url(remote_specfile_path)
-        if web_util.url_exists(remote_signed_specfile_path):
+        if web_util.url_exists(remote_signed_specfile_path, **url_args):
             web_util.remove_url(remote_signed_specfile_path)
-    elif web_util.url_exists(remote_specfile_path) or web_util.url_exists(
-        remote_signed_specfile_path
+    elif web_util.url_exists(remote_specfile_path, **url_args) or web_util.url_exists(
+        remote_signed_specfile_path, **url_args
     ):
         raise NoOverwriteException(url_util.format(remote_specfile_path))
 
@@ -2213,7 +2230,8 @@ def install_root_node(spec, unsigned=False, force=False, sha256=None):
         tty.debug("Verified SHA256 checksum of the build cache")
 
     # don't print long padded paths while extracting/relocating binaries
-    with spack.util.path.filter_padding():
+    padding = spack.config.get('config:install_tree:padded_length', None)
+    with spack.util.path.filter_padding(padding=padding):
         tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
         extract_tarball(spec, download_result, unsigned, force)
         spack.hooks.post_install(spec, False)
@@ -2252,12 +2270,20 @@ def try_direct_fetch(spec, mirrors=None):
             mirror.fetch_url, BUILD_CACHE_RELATIVE_PATH, signed_specfile_name
         )
         try:
-            _, _, fs = web_util.read_from_url(buildcache_fetch_url_signed_json)
+            _, _, fs = web_util.read_from_url(
+                buildcache_fetch_url_signed_json,
+                verify_ssl=spack.config.get("config:verify_ssl", True),
+                timeout=spack.config.get("config:connect_timeout", 10)
+            )
             specfile_is_signed = True
-        except (URLError, web_util.SpackWebError, HTTPError) as url_err:
+        except (URLError, web_util.WebError, HTTPError) as url_err:
             try:
-                _, _, fs = web_util.read_from_url(buildcache_fetch_url_json)
-            except (URLError, web_util.SpackWebError, HTTPError) as url_err_x:
+                _, _, fs = web_util.read_from_url(
+                    buildcache_fetch_url_json,
+                    verify_ssl=spack.config.get("config:verify_ssl", True),
+                    timeout=spack.config.get("config:connect_timeout", 10)
+                )
+            except (URLError, web_util.WebError, HTTPError) as url_err_x:
                 tty.debug(
                     "Did not find {0} on {1}".format(
                         specfile_name, buildcache_fetch_url_signed_json
@@ -2361,10 +2387,19 @@ def get_keys(install=False, trust=False, force=False, mirrors=None):
         tty.debug("Finding public keys in {0}".format(url_util.format(fetch_url)))
 
         try:
-            _, _, json_file = web_util.read_from_url(keys_index)
+            _, _, json_file = web_util.read_from_url(
+                keys_index,
+                verify_ssl=spack.config.get('config:verify_ssl', True),
+                timeout=spack.config.get('config:connect_timeout', 10)
+            )
             json_index = sjson.load(codecs.getreader("utf-8")(json_file))
-        except (URLError, web_util.SpackWebError) as url_err:
-            if web_util.url_exists(keys_index):
+        except (URLError, web_util.WebError) as url_err:
+            if web_util.url_exists(
+                    keys_index,
+                    fetch_method=spack.config.get('config:url_fetch_method', 'urllib'),
+                    verify_ssl=spack.config.get('config:verify_ssl'),
+                    timeout=spack.config.get('config:connect_timeout', 10)
+                    ):
                 err_msg = [
                     "Unable to find public keys in {0},",
                     " caught exception attempting to read from {1}.",
@@ -2488,7 +2523,12 @@ def needs_rebuild(spec, mirror_url):
     # Only check for the presence of the json version of the spec.  If the
     # mirror only has the json version, or doesn't have the spec at all, we
     # need to rebuild.
-    return not web_util.url_exists(specfile_path)
+    return not web_util.url_exists(
+        specfile_path,
+        fetch_method=spack.config.get('config:url_fetch_method', 'urllib'),
+        verify_ssl=spack.config.get('config:verify_ssl'),
+        timeout=spack.config.get('config:connect_timeout', 10)
+    )
 
 
 def check_specs_against_mirrors(mirrors, specs, output_file=None):
@@ -2654,7 +2694,9 @@ class DefaultIndexFetcher:
         # Failure to fetch index.json.hash is not fatal
         url_index_hash = url_util.join(self.url, BUILD_CACHE_RELATIVE_PATH, "index.json.hash")
         try:
-            response = self.urlopen(urllib.request.Request(url_index_hash, headers=self.headers))
+            response = self.urlopen(urllib.request.Request(url_index_hash, headers=self.headers),
+                                    verify_ssl=spack.config.get("config:verify_ssl", True),
+                                    timeout=spack.config.get("config:connect_timeout", 10))
         except urllib.error.URLError:
             return None
 
@@ -2676,7 +2718,9 @@ class DefaultIndexFetcher:
         url_index = url_util.join(self.url, BUILD_CACHE_RELATIVE_PATH, "index.json")
 
         try:
-            response = self.urlopen(urllib.request.Request(url_index, headers=self.headers))
+            response = self.urlopen(urllib.request.Request(url_index, headers=self.headers),
+                                    verify_ssl=spack.config.get("config:verify_ssl", True),
+                                    timeout=spack.config.get("config:connect_timeout", 10))
         except urllib.error.URLError as e:
             raise FetchIndexError("Could not fetch index from {}".format(url_index), e) from e
 
@@ -2724,7 +2768,9 @@ class EtagIndexFetcher:
         }
 
         try:
-            response = self.urlopen(urllib.request.Request(url, headers=headers))
+            response = self.urlopen(urllib.request.Request(url, headers=headers),
+                                    verify_ssl=spack.config.get("config:verify_ssl", True),
+                                    timeout=spack.config.get("config:connect_timeout", 10))
         except urllib.error.HTTPError as e:
             if e.getcode() == 304:
                 # Not modified; that means fresh.

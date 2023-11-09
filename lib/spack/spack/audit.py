@@ -646,7 +646,9 @@ def _linting_package_file(pkgs, error_cls):
         if pkg_cls.homepage.startswith("http://"):
             https = re.sub("http", "https", pkg_cls.homepage, 1)
             try:
-                response = urlopen(https)
+                response = urlopen(https,
+                                   verify_ssl=spack.config.get("config:verify_ssl", True),
+                                   timeout=spack.config.get("config:connect_timeout", 10))
             except Exception as e:
                 msg = 'Error with attempting https for "{0}": '
                 errors.append(error_cls(msg.format(pkg_cls.name), [str(e)]))

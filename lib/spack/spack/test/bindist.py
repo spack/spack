@@ -672,7 +672,7 @@ def test_etag_fetching_304():
     # Test conditional fetch with etags. If the remote hasn't modified the file
     # it returns 304, which is an HTTPError in urllib-land. That should be
     # handled as success, since it means the local cache is up-to-date.
-    def response_304(request: urllib.request.Request):
+    def response_304(request: urllib.request.Request, verify_ssl=True, timeout=10):
         url = request.get_full_url()
         if url == "https://www.example.com/build_cache/index.json":
             assert request.get_header("If-none-match") == '"112a8bbc1b3f7f185621c1ee335f0502"'
@@ -694,7 +694,7 @@ def test_etag_fetching_304():
 
 def test_etag_fetching_200():
     # Test conditional fetch with etags. The remote has modified the file.
-    def response_200(request: urllib.request.Request):
+    def response_200(request: urllib.request.Request, verify_ssl=True, timeout=10):
         url = request.get_full_url()
         if url == "https://www.example.com/build_cache/index.json":
             assert request.get_header("If-none-match") == '"112a8bbc1b3f7f185621c1ee335f0502"'
@@ -722,7 +722,7 @@ def test_etag_fetching_200():
 
 def test_etag_fetching_404():
     # Test conditional fetch with etags. The remote has modified the file.
-    def response_404(request: urllib.request.Request):
+    def response_404(request: urllib.request.Request, verify_ssl=True, timeout=10):
         raise urllib.error.HTTPError(
             request.get_full_url(),
             404,
@@ -745,7 +745,7 @@ def test_default_index_fetch_200():
     index_json = '{"Hello": "World"}'
     index_json_hash = bindist.compute_hash(index_json)
 
-    def urlopen(request: urllib.request.Request):
+    def urlopen(request: urllib.request.Request, **kwargs):
         url = request.get_full_url()
         if url.endswith("index.json.hash"):
             return urllib.response.addinfourl(  # type: ignore[arg-type]
@@ -784,7 +784,7 @@ def test_default_index_dont_fetch_index_json_hash_if_no_local_hash():
     index_json = '{"Hello": "World"}'
     index_json_hash = bindist.compute_hash(index_json)
 
-    def urlopen(request: urllib.request.Request):
+    def urlopen(request: urllib.request.Request, **kwargs):
         url = request.get_full_url()
         if url.endswith("index.json"):
             return urllib.response.addinfourl(
@@ -813,7 +813,7 @@ def test_default_index_not_modified():
     index_json = '{"Hello": "World"}'
     index_json_hash = bindist.compute_hash(index_json)
 
-    def urlopen(request: urllib.request.Request):
+    def urlopen(request: urllib.request.Request, **kwargs):
         url = request.get_full_url()
         if url.endswith("index.json.hash"):
             return urllib.response.addinfourl(
@@ -838,7 +838,7 @@ def test_default_index_invalid_hash_file(index_json):
     # Test invalid unicode / invalid hash type
     index_json_hash = bindist.compute_hash(index_json)
 
-    def urlopen(request: urllib.request.Request):
+    def urlopen(request: urllib.request.Request, **kwargs):
         return urllib.response.addinfourl(
             io.BytesIO(),
             headers={},  # type: ignore[arg-type]
@@ -858,7 +858,7 @@ def test_default_index_json_404():
     index_json = '{"Hello": "World"}'
     index_json_hash = bindist.compute_hash(index_json)
 
-    def urlopen(request: urllib.request.Request):
+    def urlopen(request: urllib.request.Request, **kwargs):
         url = request.get_full_url()
         if url.endswith("index.json.hash"):
             return urllib.response.addinfourl(

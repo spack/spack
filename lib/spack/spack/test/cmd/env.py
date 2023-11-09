@@ -904,7 +904,8 @@ def test_env_with_included_config_var_path(tmpdir, packages_file):
     spack_yaml = env_path / ev.manifest_name
     spack_yaml.write_text(mpileaks_env_config(config_var_path))
 
-    config_real_path = substitute_path_variables(config_var_path)
+    config_real_path = substitute_path_variables(config_var_path,
+                                                 replacements=spack.paths.path_replacements())
     shutil.move(included_file, config_real_path)
     assert os.path.exists(config_real_path)
 

@@ -1756,7 +1756,11 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime):
 
     gpg_path = None
     if gpg_url:
-        gpg_path = web_util.fetch_url_text(gpg_url, dest_dir=os.path.join(work_dir, "_pgp"))
+        gpg_path = web_util.fetch_url_text(
+            gpg_url,
+            dest_dir=os.path.join(work_dir, "_pgp"),
+            fetch_method=spack.config.get('config:url_fetch_method')
+        )
         rel_gpg_path = gpg_path.replace(work_dir, "").lstrip(os.path.sep)
 
     lock_file = fs.find(work_dir, "spack.lock")[0]
@@ -2130,8 +2134,12 @@ def read_broken_spec(broken_spec_url):
     object.
     """
     try:
-        _, _, fs = web_util.read_from_url(broken_spec_url)
-    except (URLError, web_util.SpackWebError, HTTPError):
+        _, _, fs = web_util.read_from_url(
+            broken_spec_url,
+            verify_ssl=cfg.get('config:verify_ssl', True),
+            timeout=cfg.get('config:connect_timeout', 10)
+        )
+    except (URLError, web_util.WebError, HTTPError):
         tty.warn("Unable to read broken spec from {0}".format(broken_spec_url))
         return None
 
