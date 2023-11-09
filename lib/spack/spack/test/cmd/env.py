@@ -2412,14 +2412,10 @@ spack:
 
 @pytest.mark.parametrize("include", [True, False, "split"])
 def test_stack_view_multiple_views(
-    tmpdir, mock_fetch, mock_packages, mock_archive, install_mockery, include
+    tmp_path, mock_fetch, mock_packages, mock_archive, install_mockery, include
 ):
-    def write_file(filename, content):
-        with open(filename, "w") as f:
-            f.write(content)
-
     # Write the view configuration and or manifest file
-    view_filename = tmpdir.join("view.yaml")
+    view_filename = tmp_path / "view.yaml"
     base_content = """\
   definitions:
     - packages: [mpileaks, cmake]
@@ -2433,7 +2429,7 @@ def test_stack_view_multiple_views(
     include_content = f"  include:\n    - {view_filename}\n"
     view_line = "  view:\n"
 
-    comb_dir = str(tmpdir.join("combinatorial-view"))
+    comb_dir = tmp_path / "combinatorial-view"
     comb_view = """\
 {0}combinatorial:
 {0}  root: {1}
@@ -2442,7 +2438,7 @@ def test_stack_view_multiple_views(
 """
     projection = "    'all': '{name}/{version}-{compiler.name}'"
 
-    default_dir = str(tmpdir.join("default-view"))
+    default_dir = tmp_path / "default-view"
     default_view = """\
 {0}default:
 {0}  root: {1}
@@ -2453,38 +2449,35 @@ def test_stack_view_multiple_views(
     indent = "  "
     if include is True:
         view = "view:\n" + default_view.format(indent, default_dir)
-        view += comb_view.format(indent, comb_dir) + indent + projection
-        write_file(view_filename, view)
+        view += comb_view.format(indent, str(comb_dir)) + indent + projection
+        view_filename.write_text(view)
         content += include_content + base_content
     elif include == "split":
-        view = "view:\n" + default_view.format(indent, default_dir)
-        write_file(view_filename, view)
+        view = "view:\n" + default_view.format(indent, str(default_dir))
+        view_filename.write_text(view)
         content += include_content + base_content + view_line
         indent += "  "
         content += comb_view.format(indent, comb_dir) + indent + projection
     else:
         indent += "  "
         content += base_content + view_line
-        content += default_view.format(indent, default_dir)
-        content += comb_view.format(indent, comb_dir) + indent + projection
+        content += default_view.format(indent, str(default_dir))
+        content += comb_view.format(indent, str(comb_dir)) + indent + projection
 
-    filename = tmpdir.join(ev.manifest_name)
-    write_file(filename, content)
+    filename = tmp_path / ev.manifest_name
+    filename.write_text(content)
 
-    with tmpdir.as_cwd():
-        env("create", "test", "./spack.yaml")
-        with ev.read("test"):
-            install()
+    env("create", "test", str(filename))
+    with ev.read("test"):
+        install()
 
-        shell = env("activate", "--sh", "test")
-        assert "PATH" in shell
-        assert os.path.join(default_dir, "bin") in shell
+    shell = env("activate", "--sh", "test")
+    assert "PATH" in shell
+    assert str(default_dir / "bin") in shell
 
-        test = ev.read("test")
-        for spec in test._get_environment_specs():
-            spec_dir = os.path.join(
-                comb_dir, spec.name, "%s-%s" % (spec.version, spec.compiler.name)
-            )
+    with ev.read("test") as e:
+        for spec in e._get_environment_specs():
+            spec_dir = os.path.join(comb_dir, spec.name, f"{spec.version}-{spec.compiler.name}")
             if not spec.satisfies("callpath%gcc"):
                 assert os.path.exists(spec_dir)
             else:
@@ -3591,11 +3584,11 @@ def test_env_include_bool_view(tmp_path, mutable_mock_env_path, include, enable)
     """Check processing when include a view configuration with bool value and
     when the view is explicitly disabled (since doesn't appear to be tested
     elsewhere)."""
+    env_name = "bool_view"
     view = f"view: {str(enable).lower()}"
     if include:
         view_yaml = tmp_path / "view.yaml"
-        with open(view_yaml, "w") as f:
-            f.write(view)
+        view_yaml.write_text(view)
         add_include = f"  include:\n  - {view_yaml}"
         add_view = ""
     else:
@@ -3603,28 +3596,21 @@ def test_env_include_bool_view(tmp_path, mutable_mock_env_path, include, enable)
         add_view = f"  {view}"
 
     spack_yaml = tmp_path / ev.manifest_name
-    contents = """\
+    spack_yaml.write_text(
+        f"""\
 spack:
-%s
+{add_include}
   specs:
   - mpileaks
   packages:
     mpileaks:
       compiler: [gcc]
-%s
-""" % (
-        add_include,
-        add_view,
+{add_view}
+"""
     )
-
-    # create environment with some structure
-    with open(spack_yaml, "w") as f:
-        f.write(contents)
-    env("create", "test", str(spack_yaml))
-
-    # concretize
-    with ev.read("test") as e:
-        concretize()
+    env("create", env_name, str(spack_yaml))
+    with ev.read(env_name) as e:
+        e.concretize()
 
     expected = 1 if enable else 0
     assert len(e.views) == expected
@@ -3641,11 +3627,11 @@ def test_env_include_path_view(tmp_path, mutable_mock_env_path):
     elsewhere)."""
     view_path = tmp_path / "custom-view"
     view_yaml = tmp_path / "view.yaml"
-    with open(view_yaml, "w") as f:
-        f.write(f"view: {view_path}")
+    view_yaml.write_text(f"view: {view_path}\n")
 
     spack_yaml = tmp_path / ev.manifest_name
-    contents = f"""\
+    spack_yaml.write_text(
+        f"""\
 spack:
   include:
   - {view_yaml}
@@ -3655,15 +3641,56 @@ spack:
     mpileaks:
       compiler: [gcc]
 """
+    )
 
-    # create environment with some structure
-    with open(spack_yaml, "w") as f:
-        f.write(contents)
     env("create", "test", str(spack_yaml))
-
-    # concretize
     with ev.read("test") as e:
         concretize()
 
-    assert not os.path.exists(e.view_path_default), "Default view path should not exist"
+    assert len(e.views) == 1
     assert os.path.exists(view_path)
+
+
+def test_env_include_mixed_views(tmp_path, mutable_mock_env_path):
+    """Check processing with mixed boolean and path views to ensure included
+    set to ``false`` do NOT preclude other included views."""
+    false_yaml = tmp_path / "false-view.yaml"
+    false_yaml.write_text("view: false\n")
+
+    true_yaml = tmp_path / "true-view.yaml"
+    true_yaml.write_text("view: true\n")
+
+    custom_name = "my-test-view"
+    custom_view = tmp_path / custom_name
+    custom_yaml = tmp_path / "custom-view.yaml"
+    custom_yaml.write_text(
+        f"""
+view:
+  {custom_name}:
+    root: {custom_view}
+"""
+    )
+
+    #  - {false_yaml}
+    spack_yaml = tmp_path / ev.manifest_name
+    spack_yaml.write_text(
+        f"""\
+spack:
+  include:
+  - {custom_yaml}
+  - {true_yaml}
+  specs:
+  - mpileaks
+  packages:
+    mpileaks:
+      compiler: [gcc]
+"""
+    )
+
+    env("create", "test", str(spack_yaml))
+    with ev.read("test") as e:
+        concretize()
+
+    assert len(e.views) == 2
+    assert os.path.exists(e.manifest_path)
+    assert os.path.exists(e.view_path_default)
