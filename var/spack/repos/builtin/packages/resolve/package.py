@@ -16,7 +16,7 @@ class Resolve(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("cameronrutherford", "pelesh", "ryandanehy", "kswirydo")
 
-    # version("1.0.0", submodules=False, branch=develop)
+    # version("1.0.0", submodules=False, branch="develop")
     version("develop", submodules=False, branch="develop")
 
     variant("klu", default=True, description="Use KLU, AMD and COLAMD Libraries from SuiteSparse")
