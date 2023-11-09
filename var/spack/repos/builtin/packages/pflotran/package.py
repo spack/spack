@@ -61,7 +61,5 @@ class Pflotran(AutotoolsPackage):
     @when("@5.0.0")
     def patch(self):
         filter_file(
-            "use iso_[cC]_binding",
-            "use, intrinsic :: iso_c_binding",
-            "src/pflotran/hdf5_aux.F90"
+            "use iso_[cC]_binding", "use, intrinsic :: iso_c_binding", "src/pflotran/hdf5_aux.F90"
         )
