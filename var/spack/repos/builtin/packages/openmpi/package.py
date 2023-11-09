@@ -478,7 +478,8 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         description="Build deprecated support for the Singularity container",
     )
     variant("lustre", default=False, description="Lustre filesystem library support")
-    variant("romio", default=True, description="Enable ROMIO support")
+    variant("romio", default=True, when="@:5", description="Enable ROMIO support")
+    variant("romio", default=False, when="@5:", description="Enable ROMIO support")
     variant("rsh", default=True, description="Enable rsh (openssh) process lifecycle management")
     variant(
         "orterunprefix",
@@ -1102,6 +1103,14 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
         if spec.satisfies("@5.0.0:"):
             config_args.append("CFLAGS=-DYY_BUF_SIZE=1048576")
+
+        #
+        # disable romio for 5.0.0 or newer if using Intel OneAPI owing to a problem
+        # building ZE related components of the romio packaged with this release
+        #
+
+        #       if spec.satisfies("@5.0.0:") and spec.satisfies("%oneapi"):
+        #           config_args.append("--disable-io-romio")
 
         return config_args
 
