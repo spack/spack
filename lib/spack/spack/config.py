@@ -1247,13 +1247,17 @@ class ConfigPath:
         x:y+::z
         """
         quoted_string = "(?:\"[^\"]+\")|(?:'[^']+')"
-        unquoted_string = "[^'\"]+"
+        unquoted_string = "[^:'\"]+"
         element = rf"(?:(?:{quoted_string})|(?:{unquoted_string}))"
-        config_path_pattern = rf"^({element}[+-]?)(\:\:?{element}[+-]?)*$"
-        match = re.match(config_path_pattern, path)
-        if not match:
+        config_path_pattern = rf"^({element}[+-]?)(\:\:?{element}[+-]?)*\:?\:?$"
+        if not re.match(config_path_pattern, path):
             raise ValueError(f"Invalid path string: {path}")
-        return list(match.groups())
+        # For validation, fenceposting encourages assigning "::" to the next
+        # element, but for ease of processing, it should in fact be assigned
+        # to the previous element
+        extraction_pattern = rf"^({element}[+-]?\:?\:?)({element}[+-]?\:?\:?)*$"
+        match = re.match(extraction_pattern, path)
+        return list(x for x in match.groups() if x)
 
 
 def process_config_path(path):
@@ -1293,19 +1297,14 @@ def process_config_path(path):
         append = False
         prepend = False
         quoted = False
-        try:
-            element.startswith("::")
-        except:
-            import pdb; pdb.set_trace()
-            raise
-        if element.startswith("::"):
+        if element.endswith("::"):
             if seen_override_in_path:
                 raise syaml.SpackYAMLError(
                     "Meaningless second override indicator `::' in path `{0}'".format(path), ""
                 )
             seen_override_in_path = True
             override = True
-        element = element.lstrip(":")
+        element = element.rstrip(":")
 
         if element.endswith("+"):
             prepend = True

@@ -1444,18 +1444,18 @@ def test_config_file_read_invalid_yaml(tmpdir, mutable_empty_config):
 
 
 @pytest.mark.parametrize(
-    "path,it_should_work",
+    "path,success_result",
     [
-        ("x:y:z", True),
-        ("x+::y:z", True),
-        ('x:y:"{z}"', True),
-        ('x:"y"+:z', True),
-        ('x:"y"trail:z', False),
+        ("x:y:z", ["x:", "y:", "z"]),
+        ("x+::y:z", ["x+::", "y:", "z"]),
+        ('x:y:"{z}"', ["x:", "y:", '"{z}"']),
+        ('x:"y"+:z', ["x:", '"y"+:', "z"]),
+        ('x:"y"trail:z', None),
     ],
 )
-def test_config_path_dsl(path, it_should_work):
-    if it_should_work:
-        spack.config.ConfigPath.validate(path)
+def test_config_path_dsl(path, success_result):
+    if success_result:
+        assert spack.config.ConfigPath.validate(path) == success_result
     else:
         with pytest.raises(ValueError):
             spack.config.ConfigPath.validate(path)
