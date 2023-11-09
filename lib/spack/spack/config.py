@@ -1235,7 +1235,7 @@ def merge_yaml(dest, source, prepend=False, append=False):
     return copy.copy(source)
 
 
-def process_config_path(path) -> Union[str, syaml.syaml_str]:
+def process_config_path(path):
     """Process a path argument to config.set() that may contain overrides ('::' or
     trailing ':')
 
@@ -1280,10 +1280,6 @@ def process_config_path(path) -> Union[str, syaml.syaml_str]:
         remainder, sep, path = path.partition(":")
         front += remainder
 
-        # Keys are always strings, 
-        # Values should retain quotes, since we want to distinguish between
-        # {} (a dict) and "{}" (a string that includes characters normally
-        # regarded as special in YAML)
         def remove_quotes(input):
             return input.strip("'\"")
 
