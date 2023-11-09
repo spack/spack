@@ -284,7 +284,7 @@ def test_add_config_path(mutable_config):
     set_value = spack.config.get("config")["install_tree"]["projections"]["cmake"]
     assert set_value == "{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}"
 
-    path = "modules:default:tcl:all:environment:set:\"{{name}}_ROOT\":\"{{prefix}}\""
+    path = "modules:default:tcl:all:environment:set:\"{name}_ROOT\":\"{prefix}\""
     spack.config.add(path)
     set_value = spack.config.get("modules")["default"]["tcl"]["all"]["environment"]["set"]
     assert r"{name}_ROOT" in set_value

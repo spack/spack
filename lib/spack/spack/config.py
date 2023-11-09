@@ -1249,7 +1249,25 @@ def process_config_path(path):
         raise syaml.SpackYAMLError("Illegal leading `:' in path `{0}'".format(path), "")
     seen_override_in_path = False
     while path:
-        front, sep, path = path.partition(":")
+        front = ""
+
+        # Check for quotes before partitioning on ":" (colon inside
+        # of a quotation counts as part of the element).
+        quote = "['\"]"
+        not_quote = "[^'\"]"
+        if re.match(f"^{quote}", path):
+            m = re.match(rf"^({quote}{not_quote}+{quote})", path)
+            if m:
+                match_str = m.group(1)
+                path = path[len(match_str):]
+                #front = match_str.strip("'\"")
+                front = match_str
+            else:
+                raise ValueError(f"Opening quote with no closing quote: {path}")
+
+        remainder, sep, path = path.partition(":")
+        front += remainder
+
         if (sep and not path) or path.startswith(":"):
             if seen_override_in_path:
                 raise syaml.SpackYAMLError(
@@ -1272,18 +1290,9 @@ def process_config_path(path):
 
         result.append(front)
 
-        quote = "['\"]"
-        not_quote = "[^'\"]"
-
-        if re.match(f"^{quote}", path):
-            #import pdb; pdb.set_trace()
-            m = re.match(rf"^({quote}{not_quote}+{quote})$", path)
-            if not m:
-                raise ValueError("Quotes indicate value, but there are additional path entries")
-            result.append(m.group(1))
-            break
-
-    return result
+    # Keys are always strings
+    key_parts = [x.strip("'\"") for x in result[:-1]]
+    return key_parts + [result[-1]]
 
 
 #
