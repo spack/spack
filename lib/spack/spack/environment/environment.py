@@ -422,11 +422,12 @@ def _eval_conditional(string):
     return eval(string, valid_variables)
 
 
-def _timestamp_changed(spec):
+def _timestamp_changed(spec, _database=None):
     """Check if the passed spec is a dev build and whether it has changed since the
     last installation"""
+    db = _database or spack.store.STORE.db
     dev_path_var = spec.variants.get("dev_path")
-    _, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
+    _, record = db.query_by_spec_hash(spec.dag_hash())
     mtime = fs.last_modification_time_recursive(dev_path_var.value)
     return mtime > record.installation_time
 
@@ -1880,8 +1881,10 @@ class Environment:
         self.concretized_order.append(h)
         self.specs_by_hash[h] = concrete
 
-    def _get_overwrite_specs(self, _git_checker=None):
+    def _get_overwrite_specs(self, _database=None, _git_checker=None):
         # Find all dev specs that were modified.
+
+        db = _database or spack.store.STORE.db
 
         # Callable that can determine whether a directory is managed
         # as a Git repository, returning a GitRepoChangeDetector for
@@ -1901,7 +1904,8 @@ class Environment:
                 return False
 
             # Now we can check whether the code changed since the last installation
-            if not s.installed:
+            _, record = db.query_by_spec_hash(spec.dag_hash())
+            if not record.installed:
                 # Not installed -> nothing to compare against
                 return False
 
@@ -1918,7 +1922,7 @@ class Environment:
 
             # This runs if (a) we are not detecting changes with git or (b) the
             # developed benchmark is not managed with git
-            if _timestamp_changed(s):
+            if _timestamp_changed(s, _database=db):
                 changed_dev_specs.append(s)
 
         # Collect their hashes, and the hashes of their installed parents.
