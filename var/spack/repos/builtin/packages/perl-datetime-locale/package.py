@@ -14,4 +14,4 @@ class PerlDatetimeLocale(PerlPackage):
 
     version("1.40", sha256="7490b4194b5d23a4e144976dedb3bdbcc6d3364b5d139cc922a86d41fdb87afb")
 
-    depends_on("perl-file-sharedir-install", type=("build","run"))
+    depends_on("perl-file-sharedir-install", type=("build", "run"))
