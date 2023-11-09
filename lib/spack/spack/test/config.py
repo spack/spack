@@ -289,6 +289,7 @@ def test_add_config_path(mutable_config):
     set_value = spack.config.get("modules")["default"]["tcl"]["all"]["environment"]["set"]
     assert r"{name}_ROOT" in set_value
     assert set_value[r"{name}_ROOT"] == r"{prefix}"
+    assert spack.config.get('modules:default:tcl:all:environment:set:"{name}_ROOT"') == r"{prefix}"
 
     # NOTE:
     # The config path: "config:install_tree:root:<path>" is unique in that it can accept multiple
