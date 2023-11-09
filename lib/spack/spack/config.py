@@ -1276,6 +1276,7 @@ def process_config_path(path):
         not_quote = "[^'\"]"
 
         if re.match(f"^{quote}", path):
+            #import pdb; pdb.set_trace()
             m = re.match(rf"^({quote}{not_quote}+{quote})$", path)
             if not m:
                 raise ValueError("Quotes indicate value, but there are additional path entries")

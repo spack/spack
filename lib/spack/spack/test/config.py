@@ -284,6 +284,12 @@ def test_add_config_path(mutable_config):
     set_value = spack.config.get("config")["install_tree"]["projections"]["cmake"]
     assert set_value == "{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}"
 
+    path = "modules:default:tcl:all:environment:set:\"{{name}}_ROOT\":\"{{prefix}}\""
+    spack.config.add(path)
+    set_value = spack.config.get("modules")["default"]["tcl"]["all"]["environment"]["set"]
+    assert r"{name}_ROOT" in set_value
+    assert set_value[r"{name}_ROOT"] == r"{prefix}"
+
     # NOTE:
     # The config path: "config:install_tree:root:<path>" is unique in that it can accept multiple
     # schemas (such as a dropped "root" component) which is atypical and may lead to passing tests
