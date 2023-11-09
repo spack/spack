@@ -601,17 +601,8 @@ class NewLayoutException(spack.error.SpackError):
         super().__init__(msg)
 
 
-class UnsupportedLayoutException(spack.error.SpackError):
-    """
-    Raised if binary package metadata contains a layout version
-    number which is newer than spack knows about.
-    """
-
-    def __init__(self, spec, layout_version):
-        super().__init__(
-            f"Could not install binary package for {spec.name}/{spec.dag_hash()[:7]}, "
-            f"due to encountering a layout version ({layout_version}) which is too new."
-        )
+class InvalidMetadataFile(spack.error.SpackError):
+    pass
 
 
 class UnsignedPackageException(spack.error.SpackError):
@@ -1574,15 +1565,40 @@ def _delete_staged_downloads(download_result):
     download_result["specfile_stage"].destroy()
 
 
-def _read_spec_file(specfile_path):
-    spec_dict = {}
-    with open(specfile_path, "r") as inputfile:
-        content = inputfile.read()
-        if specfile_path.endswith(".json.sig"):
-            spec_dict = Spec.extract_json_from_clearsig(content)
+def _get_valid_spec_file(path: str, max_supported_layout: int) -> Tuple[Dict, int]:
+    """Read and validate a spec file, returning the spec dict with its layout version, or raising
+    InvalidMetadataFile if invalid."""
+    try:
+        with open(path, "rb") as f:
+            binary_content = f.read()
+    except OSError:
+        raise InvalidMetadataFile(f"Could not read file {path}")
+
+    # In the future we may support transparently decompressing compressed spec files.
+    if binary_content[:2] == b"\x1f\x8b":
+        raise InvalidMetadataFile("Compressed spec files are not yet supported")
+
+    try:
+        as_string = binary_content.decode("utf-8")
+        if path.endswith(".json.sig"):
+            spec_dict = Spec.extract_json_from_clearsig(as_string)
         else:
-            spec_dict = sjson.load(content)
-    return spec_dict
+            spec_dict = json.loads(as_string)
+    except Exception as e:
+        raise InvalidMetadataFile(f"Could not parse {path} due to: {e}") from e
+
+    # Ensure this version is not too new.
+    try:
+        layout_version = int(spec_dict.get("buildcache_layout_version", 0))
+    except ValueError as e:
+        raise InvalidMetadataFile("Could not parse layout version") from e
+
+    if layout_version > max_supported_layout:
+        raise InvalidMetadataFile(
+            f"Layout version {layout_version} is too new for this version of Spack"
+        )
+
+    return spec_dict, layout_version
 
 
 def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
@@ -1677,6 +1693,17 @@ def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
                     try:
                         local_specfile_stage.fetch()
                         local_specfile_stage.check()
+                        try:
+                            _get_valid_spec_file(
+                                local_specfile_stage.save_filename,
+                                _current_build_cache_layout_version,
+                            )
+                        except InvalidMetadataFile as e:
+                            tty.warn(
+                                f"Ignoring binary package for {spec.name}/{spec.dag_hash()[:7]} "
+                                f"from {mirror} due to invalid metadata file: {e}"
+                            )
+                            continue
                     except Exception:
                         continue
                     local_specfile_stage.cache_local()
@@ -1707,12 +1734,14 @@ def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
                     local_specfile_path = local_specfile_stage.save_filename
                     signature_verified = False
 
-                    spec_dict = _read_spec_file(local_specfile_path)
-                    layout_version = int(spec_dict.get("buildcache_layout_version", 0))
-                    if layout_version > _current_build_cache_layout_version:
+                    try:
+                        _get_valid_spec_file(
+                            local_specfile_path, _current_build_cache_layout_version
+                        )
+                    except InvalidMetadataFile as e:
                         tty.warn(
                             f"Ignoring binary package for {spec.name}/{spec.dag_hash()[:7]} "
-                            f"from {mirror} because layout version ({layout_version}) is too new"
+                            f"from {mirror} due to invalid metadata file: {e}"
                         )
                         continue
 
@@ -2035,14 +2064,14 @@ def extract_tarball(spec, download_result, unsigned=False, force=False, timer=ti
     )
 
     specfile_path = download_result["specfile_stage"].save_filename
-    spec_dict = _read_spec_file(specfile_path)
+    spec_dict, layout_version = _get_valid_spec_file(
+        specfile_path, _current_build_cache_layout_version
+    )
     bchecksum = spec_dict["binary_cache_checksum"]
 
     filename = download_result["tarball_stage"].save_filename
     signature_verified = download_result["signature_verified"]
     tmpdir = None
-
-    layout_version = int(spec_dict.get("buildcache_layout_version", 0))
 
     if layout_version == 0:
         # Handle the older buildcache layout where the .spack file
@@ -2079,9 +2108,6 @@ def extract_tarball(spec, download_result, unsigned=False, force=False, timer=ti
             raise NoChecksumException(
                 tarfile_path, size, contents, "sha256", expected, local_checksum
             )
-    else:
-        raise UnsupportedLayoutException(spec, layout_version)
-
     try:
         with closing(tarfile.open(tarfile_path, "r")) as tar:
             # Remove install prefix from tarfil to extract directly into spec.prefix
