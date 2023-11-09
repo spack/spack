@@ -51,8 +51,8 @@ class Lemon(CMakePackage):
                 "-DLEMON_ENABLE_COIN={0}".format("YES" if "+coin" in spec else "NO"),
                 "-DLEMON_ENABLE_ILOG={0}".format("YES" if "+ilog" in spec else "NO"),
                 "-DLEMON_ENABLE_GLPK={0}".format("YES" if "+glpk" in spec else "NO"),
-                "-DLEMON_DEFAULT_LP={0}".format(spec.variants["lp_backend"].value.upper),
-                "-DLEMON_DEFAULT_MIP={0}".format(spec.variants["mip_backend"].value.upper),
+                "-DLEMON_DEFAULT_LP={0}".format(spec.variants["lp_backend"].value.upper()),
+                "-DLEMON_DEFAULT_MIP={0}".format(spec.variants["mip_backend"].value.upper()),
             ]
         )
         return args
