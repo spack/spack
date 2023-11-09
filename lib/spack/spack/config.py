@@ -1290,7 +1290,8 @@ def process_config_path(path):
 
         result.append(front)
 
-    # Keys are always strings
+    # Keys are always strings, if a user enclosed a key in quotes, they
+    # should be removed
     key_parts = [x.strip("'\"") for x in result[:-1]]
     return key_parts + [result[-1]]
 
