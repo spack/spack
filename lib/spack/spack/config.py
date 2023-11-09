@@ -863,7 +863,9 @@ def add(fullpath, scope=None):
     has_existing_value = True
     path = ""
     override = False
-    value = syaml.load_config(components[-1])
+    value = components[-1]
+    if not isinstance(value, syaml.syaml_str):
+        value = syaml.load_config(value)
     for idx, name in enumerate(components[:-1]):
         # First handle double colons in constructing path
         colon = "::" if override else ":" if path else ""
@@ -1233,16 +1235,28 @@ def merge_yaml(dest, source, prepend=False, append=False):
     return copy.copy(source)
 
 
-def process_config_path(path):
+def process_config_path(path) -> Union[str, syaml.syaml_str]:
     """Process a path argument to config.set() that may contain overrides ('::' or
     trailing ':')
 
-    Note: quoted value path components will be processed as a single value (escaping colons)
-        quoted path components outside of the value will be considered ill formed and will
-        raise.
-        e.g. `this:is:a:path:'value:with:colon'` will yield:
+    Colons will be treated as static strings if inside of quotes,
+    e.g. `this:is:a:path:'value:with:colon'` will yield:
 
-            [this, is, a, path, value:with:colon]
+        [this, is, a, path, value:with:colon]
+
+    The path may consist only of keys (e.g. for a `get`) or may end in a value.
+    Keys are always strings: if a user encloses a key in quotes, the quotes
+    should be removed.
+
+    Values with quotes should be treated as strings, but without quotes, may
+    be parsed as a different yaml object (e.g. '{}' is a dict, but '"{}"'
+    is a string).
+
+    This function does not know whether the final element of the path is a value
+    or not, so cannot strip quotes on elements without converting them
+    to ``syaml_str``. If the caller of the function expects that the final
+    component is a value, then it should only parse it if it is not already
+    a ``syaml_str``.
     """
     result = []
     if path.startswith(":"):
@@ -1266,36 +1280,35 @@ def process_config_path(path):
         remainder, sep, path = path.partition(":")
         front += remainder
 
-        # Keys are always strings, if a user enclosed a key in quotes, they
-        # should be removed.
+        # Keys are always strings, 
         # Values should retain quotes, since we want to distinguish between
         # {} (a dict) and "{}" (a string that includes characters normally
         # regarded as special in YAML)
-        remove_quotes_from_key = lambda x: x.strip("'\"")
+        def remove_quotes(input):
+            return input.strip("'\"")
 
         if (sep and not path) or path.startswith(":"):
             if seen_override_in_path:
                 raise syaml.SpackYAMLError(
-                    "Meaningless second override" " indicator `::' in path `{0}'".format(path), ""
+                    "Meaningless second override indicator `::' in path `{0}'".format(path), ""
                 )
             path = path.lstrip(":")
-            front = syaml.syaml_str(remove_quotes_from_key(front))
+            front = syaml.syaml_str(remove_quotes(front))
             front.override = True
             seen_override_in_path = True
 
         elif front.endswith("+"):
-            front = remove_quotes_from_key(front.rstrip("+"))
+            front = remove_quotes(front.rstrip("+"))
             front = syaml.syaml_str(front)
             front.prepend = True
 
         elif front.endswith("-"):
-            front = remove_quotes_from_key(front.rstrip("-"))
+            front = remove_quotes(front.rstrip("-"))
             front = syaml.syaml_str(front)
             front.append = True
 
-        elif path:
-            # If there is more path to process, the current 'front' is a key.
-            front = remove_quotes_from_key(front)
+        if re.match(f"^{quote}", front):
+            front = syaml.syaml_str(remove_quotes(front))
 
         result.append(front)
 
