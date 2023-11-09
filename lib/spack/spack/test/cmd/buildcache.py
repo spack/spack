@@ -13,7 +13,9 @@ import spack.binary_distribution
 import spack.cmd.buildcache
 import spack.environment as ev
 import spack.main
+import spack.oci.image
 import spack.spec
+import spack.util.spack_json as sjson
 import spack.util.url
 from spack.spec import Spec
 
@@ -45,6 +47,13 @@ def mock_get_specs_multiarch(database, monkeypatch):
             break
 
     monkeypatch.setattr(spack.binary_distribution, "update_cache_and_get_specs", lambda: specs)
+
+
+def _get_digest_from_specfile(specfile_path):
+    with open(specfile_path) as f:
+        spec_info = sjson.load(f.read())
+
+    return spack.oci.image.Digest.from_string(spec_info["digest"])
 
 
 def test_buildcache_preview_just_runs():
@@ -83,10 +92,15 @@ def tests_buildcache_create(install_mockery, mock_fetch, monkeypatch, tmpdir):
     buildcache("push", "--unsigned", str(tmpdir), pkg)
 
     spec = Spec(pkg).concretized()
-    tarball_path = spack.binary_distribution.tarball_path_name(spec, ".spack")
-    tarball = spack.binary_distribution.tarball_name(spec, ".spec.json")
+    specfile = spack.binary_distribution.specfile_name(spec, ".spec.json")
+    specfile_path = os.path.join(str(tmpdir), "build_cache", specfile)
+    assert os.path.exists(os.path.join(str(tmpdir), "build_cache", specfile_path))
+
+    digest = _get_digest_from_specfile(specfile_path)
+    tarball_path = os.path.join(
+        spack.binary_distribution.relative_tarball_directory(spec), digest.digest
+    )
     assert os.path.exists(os.path.join(str(tmpdir), "build_cache", tarball_path))
-    assert os.path.exists(os.path.join(str(tmpdir), "build_cache", tarball))
 
 
 def tests_buildcache_create_env(
@@ -103,10 +117,16 @@ def tests_buildcache_create_env(
         buildcache("push", "--unsigned", str(tmpdir))
 
     spec = Spec(pkg).concretized()
-    tarball_path = spack.binary_distribution.tarball_path_name(spec, ".spack")
-    tarball = spack.binary_distribution.tarball_name(spec, ".spec.json")
+
+    specfile = spack.binary_distribution.specfile_name(spec, ".spec.json")
+    specfile_path = os.path.join(str(tmpdir), "build_cache", specfile)
+    assert os.path.exists(specfile_path)
+
+    digest = _get_digest_from_specfile(specfile_path)
+    tarball_path = os.path.join(
+        spack.binary_distribution.relative_tarball_directory(spec), digest.digest
+    )
     assert os.path.exists(os.path.join(str(tmpdir), "build_cache", tarball_path))
-    assert os.path.exists(os.path.join(str(tmpdir), "build_cache", tarball))
 
 
 def test_buildcache_create_fails_on_noargs(tmpdir):
@@ -256,10 +276,16 @@ def test_buildcache_create_install(
     buildcache("push", "--unsigned", str(tmpdir), pkg)
 
     spec = Spec(pkg).concretized()
-    tarball_path = spack.binary_distribution.tarball_path_name(spec, ".spack")
-    tarball = spack.binary_distribution.tarball_name(spec, ".spec.json")
+
+    specfile = spack.binary_distribution.specfile_name(spec, ".spec.json")
+    specfile_path = os.path.join(str(tmpdir), "build_cache", specfile)
+    assert os.path.exists(specfile_path)
+
+    digest = _get_digest_from_specfile(specfile_path)
+    tarball_path = os.path.join(
+        spack.binary_distribution.relative_tarball_directory(spec), digest.digest
+    )
     assert os.path.exists(os.path.join(str(tmpdir), "build_cache", tarball_path))
-    assert os.path.exists(os.path.join(str(tmpdir), "build_cache", tarball))
 
 
 @pytest.mark.parametrize(
