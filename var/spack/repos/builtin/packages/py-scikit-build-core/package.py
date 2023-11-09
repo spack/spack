@@ -17,6 +17,7 @@ class PyScikitBuildCore(PythonPackage):
 
     maintainers("wdconinc")
 
+    version("0.6.1", sha256="392254a4ca7235c27a4be98cc24cd708f563171961ce37cff66120ebfda20b7a")
     version("0.6.0", sha256="1bea5ed83610b367f3446badd996f2356690548188d6d38e5b93152df311a7ae")
     version("0.2.0", sha256="d2a76d9447a412038dc5e25dd259b03c25278661a0c7c3da766bb971c1a9acd2")
 
