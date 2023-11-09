@@ -491,9 +491,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
 
         enable_or_disable("cuda")
         if "+cuda" in self.spec:
-            # cmake/public/cuda.cmake
-            # cmake/Modules_CUDA_fix/upstream/FindCUDA.cmake
-            env.unset("CUDA_ROOT")
+            env.set("CUDA_HOME", self.spec["cuda"].prefix)  # Linux/macOS
+            env.set("CUDA_PATH", self.spec["cuda"].prefix)  # Windows
             torch_cuda_arch = ";".join(
                 "{0:.1f}".format(float(i) / 10.0) for i in self.spec.variants["cuda_arch"].value
             )
