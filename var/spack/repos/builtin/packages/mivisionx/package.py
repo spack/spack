@@ -395,7 +395,7 @@ class Mivisionx(CMakePackage):
             args.append(self.define("HIP_PATH", spec["hip"].prefix))
         if self.spec.satisfies("~hip~opencl"):
             args.append(self.define("BACKEND", "CPU"))
-        if "@5.5:" in self.spec:
+        if self.spec.satisfies("@5.5:"):
             args.append(
                 self.define("AMDRPP_LIBRARIES", "{0}/lib/librpp.so".format(spec["rpp"].prefix))
             )
