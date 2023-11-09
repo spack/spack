@@ -1247,9 +1247,9 @@ class ConfigPath:
         x:y+::z
         """
         quoted_string = "(?:\"[^\"]+\")|(?:'[^']+')"
-        unquoted_string = "[^'\"]+"
+        unquoted_string = "[^:'\"]+"
         element = rf"(?:(?:{quoted_string})|(?:{unquoted_string}))"
-        config_path_pattern = rf"^{element}[+-]?(?:\:\:?{element}[+-]?)*$"
+        config_path_pattern = rf"^{element}[+-]?(?:\:\:?{element}[+-]?)*\:?\:?$"
         if not re.match(config_path_pattern, path):
             raise ValueError(f"Invalid path string: {path}")
 

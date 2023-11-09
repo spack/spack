@@ -1167,7 +1167,7 @@ def test_set_dict_override(mock_low_high_config, write_config_file):
 
 
 def test_set_bad_path(config):
-    with pytest.raises(syaml.SpackYAMLError, match="Illegal leading"):
+    with pytest.raises(ValueError):
         with spack.config.override(":bad:path", ""):
             pass
 
