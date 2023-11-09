@@ -157,8 +157,8 @@ or the shortcut alias
 If the environment was activated with its view, deactivating the
 environment will remove the view from the user environment.
 
-The ``activate`` command can also be used to create a new environment if it is 
-not already defined by adding the ``--create`` flag. Managed and unmanaged 
+The ``activate`` command can also be used to create a new environment, if it is 
+not already defined, by adding the ``--create`` flag. Managed and unmanaged 
 environments can both be created and if an environment already exists then spack will
 simply activate it.
 
