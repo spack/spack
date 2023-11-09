@@ -28,12 +28,13 @@ class HhSuite(CMakePackage):
     def cmake_args(self):
         args = []
         args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
+        args.append(self.define("NATIVE_ARCH", False))
         if self.spec.satisfies("+mpi"):
             args.append("-DCHECK_MPI=1")
         else:
             args.append("-DCHECK_MPI=0")
         if "avx2" in self.spec.target:
             args.append("-DHAVE_AVX2=1")
-        elif "sse2" in self.spec.target:
-            args.append("-DHAVE_SSE2=1")
+        else:
+            args.append("-DHAVE_SSE2=1")  # required by hh-suite
         return args
