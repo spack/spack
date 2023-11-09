@@ -66,9 +66,9 @@ from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.executable import which
 
-_build_cache_relative_path = "build_cache"
-_build_cache_keys_relative_path = "_pgp"
-_current_build_cache_layout_version = 1
+BUILD_CACHE_RELATIVE_PATH = "build_cache"
+BUILD_CACHE_KEYS_RELATIVE_PATH = "_pgp"
+CURRENT_BUILD_CACHE_LAYOUT_VERSION = 1
 
 
 class BuildCacheDatabase(spack_db.Database):
@@ -482,7 +482,7 @@ class BinaryCacheIndex:
         scheme = urllib.parse.urlparse(mirror_url).scheme
 
         if scheme != "oci" and not web_util.url_exists(
-            url_util.join(mirror_url, _build_cache_relative_path, "index.json")
+            url_util.join(mirror_url, BUILD_CACHE_RELATIVE_PATH, "index.json")
         ):
             return False
 
@@ -619,11 +619,11 @@ def compute_hash(data):
 
 
 def build_cache_relative_path():
-    return _build_cache_relative_path
+    return BUILD_CACHE_RELATIVE_PATH
 
 
 def build_cache_keys_relative_path():
-    return _build_cache_keys_relative_path
+    return BUILD_CACHE_KEYS_RELATIVE_PATH
 
 
 def build_cache_prefix(prefix):
@@ -1406,7 +1406,7 @@ def _build_tarball_in_stage_dir(spec: Spec, out_url: str, stage_dir: str, option
             spec_dict = sjson.load(content)
         else:
             raise ValueError("{0} not a valid spec file type".format(spec_file))
-    spec_dict["buildcache_layout_version"] = _current_build_cache_layout_version
+    spec_dict["buildcache_layout_version"] = CURRENT_BUILD_CACHE_LAYOUT_VERSION
     spec_dict["binary_cache_checksum"] = {"hash_algorithm": "sha256", "hash": checksum}
 
     with open(specfile_path, "w") as outfile:
@@ -1696,7 +1696,7 @@ def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
                         try:
                             _get_valid_spec_file(
                                 local_specfile_stage.save_filename,
-                                _current_build_cache_layout_version,
+                                CURRENT_BUILD_CACHE_LAYOUT_VERSION,
                             )
                         except InvalidMetadataFile as e:
                             tty.warn(
@@ -1727,9 +1727,9 @@ def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
 
             else:
                 ext = "json.sig" if try_signed else "json"
-                specfile_path = url_util.join(mirror, _build_cache_relative_path, specfile_prefix)
+                specfile_path = url_util.join(mirror, BUILD_CACHE_RELATIVE_PATH, specfile_prefix)
                 specfile_url = f"{specfile_path}.{ext}"
-                spackfile_url = url_util.join(mirror, _build_cache_relative_path, tarball)
+                spackfile_url = url_util.join(mirror, BUILD_CACHE_RELATIVE_PATH, tarball)
                 local_specfile_stage = try_fetch(specfile_url)
                 if local_specfile_stage:
                     local_specfile_path = local_specfile_stage.save_filename
@@ -1737,7 +1737,7 @@ def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
 
                     try:
                         _get_valid_spec_file(
-                            local_specfile_path, _current_build_cache_layout_version
+                            local_specfile_path, CURRENT_BUILD_CACHE_LAYOUT_VERSION
                         )
                     except InvalidMetadataFile as e:
                         tty.warn(
@@ -2067,7 +2067,7 @@ def extract_tarball(spec, download_result, unsigned=False, force=False, timer=ti
 
     specfile_path = download_result["specfile_stage"].save_filename
     spec_dict, layout_version = _get_valid_spec_file(
-        specfile_path, _current_build_cache_layout_version
+        specfile_path, CURRENT_BUILD_CACHE_LAYOUT_VERSION
     )
     bchecksum = spec_dict["binary_cache_checksum"]
 
@@ -2240,10 +2240,10 @@ def try_direct_fetch(spec, mirrors=None):
 
     for mirror in binary_mirrors:
         buildcache_fetch_url_json = url_util.join(
-            mirror.fetch_url, _build_cache_relative_path, specfile_name
+            mirror.fetch_url, BUILD_CACHE_RELATIVE_PATH, specfile_name
         )
         buildcache_fetch_url_signed_json = url_util.join(
-            mirror.fetch_url, _build_cache_relative_path, signed_specfile_name
+            mirror.fetch_url, BUILD_CACHE_RELATIVE_PATH, signed_specfile_name
         )
         try:
             _, _, fs = web_util.read_from_url(buildcache_fetch_url_signed_json)
@@ -2348,7 +2348,7 @@ def get_keys(install=False, trust=False, force=False, mirrors=None):
     for mirror in mirror_collection.values():
         fetch_url = mirror.fetch_url
         keys_url = url_util.join(
-            fetch_url, _build_cache_relative_path, _build_cache_keys_relative_path
+            fetch_url, BUILD_CACHE_RELATIVE_PATH, BUILD_CACHE_KEYS_RELATIVE_PATH
         )
         keys_index = url_util.join(keys_url, "index.json")
 
@@ -2413,7 +2413,7 @@ def push_keys(*mirrors, **kwargs):
         for mirror in mirrors:
             push_url = getattr(mirror, "push_url", mirror)
             keys_url = url_util.join(
-                push_url, _build_cache_relative_path, _build_cache_keys_relative_path
+                push_url, BUILD_CACHE_RELATIVE_PATH, BUILD_CACHE_KEYS_RELATIVE_PATH
             )
             keys_local = url_util.local_file_path(keys_url)
 
@@ -2551,11 +2551,11 @@ def download_buildcache_entry(file_descriptions, mirror_url=None):
         )
 
     if mirror_url:
-        mirror_root = os.path.join(mirror_url, _build_cache_relative_path)
+        mirror_root = os.path.join(mirror_url, BUILD_CACHE_RELATIVE_PATH)
         return _download_buildcache_entry(mirror_root, file_descriptions)
 
     for mirror in spack.mirror.MirrorCollection(binary=True).values():
-        mirror_root = os.path.join(mirror.fetch_url, _build_cache_relative_path)
+        mirror_root = os.path.join(mirror.fetch_url, BUILD_CACHE_RELATIVE_PATH)
 
         if _download_buildcache_entry(mirror_root, file_descriptions):
             return True
@@ -2646,7 +2646,7 @@ class DefaultIndexFetcher:
 
     def get_remote_hash(self):
         # Failure to fetch index.json.hash is not fatal
-        url_index_hash = url_util.join(self.url, _build_cache_relative_path, "index.json.hash")
+        url_index_hash = url_util.join(self.url, BUILD_CACHE_RELATIVE_PATH, "index.json.hash")
         try:
             response = self.urlopen(urllib.request.Request(url_index_hash, headers=self.headers))
         except urllib.error.URLError:
@@ -2667,7 +2667,7 @@ class DefaultIndexFetcher:
             return FetchIndexResult(etag=None, hash=None, data=None, fresh=True)
 
         # Otherwise, download index.json
-        url_index = url_util.join(self.url, _build_cache_relative_path, "index.json")
+        url_index = url_util.join(self.url, BUILD_CACHE_RELATIVE_PATH, "index.json")
 
         try:
             response = self.urlopen(urllib.request.Request(url_index, headers=self.headers))
@@ -2711,7 +2711,7 @@ class EtagIndexFetcher:
 
     def conditional_fetch(self) -> FetchIndexResult:
         # Just do a conditional fetch immediately
-        url = url_util.join(self.url, _build_cache_relative_path, "index.json")
+        url = url_util.join(self.url, BUILD_CACHE_RELATIVE_PATH, "index.json")
         headers = {
             "User-Agent": web_util.SPACK_USER_AGENT,
             "If-None-Match": '"{}"'.format(self.etag),

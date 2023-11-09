@@ -1166,7 +1166,7 @@ def test_get_valid_spec_file_no_json(tmp_path, filename):
 
 
 def test_download_tarball_with_unsupported_layout_fails(tmp_path, mutable_config, capsys):
-    layout_version = bindist._current_build_cache_layout_version + 1
+    layout_version = bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION + 1
     spec = Spec("gmake@4.4.1%gcc@13.1.0 arch=linux-ubuntu23.04-zen2")
     spec._mark_concrete()
     spec_dict = spec.to_dict()
