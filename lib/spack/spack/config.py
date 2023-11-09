@@ -1249,9 +1249,8 @@ class ConfigPath:
         quoted_string = "(?:\"[^\"]+\")|(?:'[^']+')"
         unquoted_string = "[^'\"]+"
         element = rf"(?:(?:{quoted_string})|(?:{unquoted_string}))"
-        config_path_pattern = rf"{element}[+-]?(?:\:\:?{element}[+-]?)*"
+        config_path_pattern = rf"^{element}[+-]?(?:\:\:?{element}[+-]?)*$"
         if not re.match(config_path_pattern, path):
-            import pdb; pdb.set_trace()
             raise ValueError(f"Invalid path string: {path}")
 
 
