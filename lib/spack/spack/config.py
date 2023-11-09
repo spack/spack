@@ -1246,17 +1246,19 @@ def process_config_path(path):
 
     The path may consist only of keys (e.g. for a `get`) or may end in a value.
     Keys are always strings: if a user encloses a key in quotes, the quotes
-    should be removed.
+    should be removed. Values with quotes should be treated as strings,
+    but without quotes, may be parsed as a different yaml object (e.g.
+    '{}' is a dict, but '"{}"' is a string).
 
-    Values with quotes should be treated as strings, but without quotes, may
-    be parsed as a different yaml object (e.g. '{}' is a dict, but '"{}"'
-    is a string).
+    This function does not know whether the final element of the path is a
+    key or value, so:
 
-    This function does not know whether the final element of the path is a value
-    or not, so cannot strip quotes on elements without converting them
-    to ``syaml_str``. If the caller of the function expects that the final
-    component is a value, then it should only parse it if it is not already
-    a ``syaml_str``.
+    * It must strip the quotes in case it is a key (so we look for "key" and
+      not '"key"'))
+    * It must indicate somehow that the quotes were stripped if it is a value
+      (so that we don't process '"{}"' as a YAML dict)
+
+    Therefore, all elements with quotes are converted to syaml_str
     """
     result = []
     if path.startswith(":"):
