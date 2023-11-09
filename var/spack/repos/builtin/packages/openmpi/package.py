@@ -1094,6 +1094,15 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         if wrapper_ldflags:
             config_args.append("--with-wrapper-ldflags={0}".format(" ".join(wrapper_ldflags)))
 
+        #
+        # the Spack path padding feature causes issues with Open MPI's lex based parsing system
+        # used by the compiler wrappers.  Crank up lex buffer to 1MB to handle this.
+        # see https://spack.readthedocs.io/en/latest/binary_caches.html#relocation
+        #
+
+        if spec.satisfies("@5.0.0:"):
+            config_args.append("CFLAGS=-DYY_BUF_SIZE=1048576")
+
         return config_args
 
     @run_after("install", when="+wrapper-rpath")
