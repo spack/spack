@@ -19,7 +19,7 @@ class PyBluecellulab(PythonPackage):
     depends_on("neuron+python@8", type=("build", "run"))
     depends_on("py-numpy@1.8:", type=("build", "run"))
     depends_on("py-matplotlib@3.0.0:", type=("build", "run"))
-    depends_on("py-bluepysnap@1.0.7", type=("build", "run"))
+    depends_on("py-bluepysnap@1.0.7:1", type=("build", "run"))
     depends_on("py-pandas@1.0.0:", type=("build", "run"))
     depends_on("py-pydantic", type=("build", "run"))
     depends_on("py-typing-extensions@4.8.0", type="run")

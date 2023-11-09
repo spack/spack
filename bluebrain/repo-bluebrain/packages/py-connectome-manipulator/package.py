@@ -21,7 +21,7 @@ class PyConnectomeManipulator(PythonPackage):
 
     depends_on("parquet-converters@0.8.0:", type="run")
 
-    depends_on("py-bluepysnap@1.0.5:", type=("build", "run"))
+    depends_on("py-bluepysnap@1.0.5:1", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-pandas", type=("build", "run"))
     depends_on("py-progressbar", type=("build", "run"))
