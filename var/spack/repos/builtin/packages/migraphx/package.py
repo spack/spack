@@ -121,6 +121,7 @@ class Migraphx(CMakePackage):
     patch("0003-restrict-python-2.7-usage.patch", when="@5.2.0:5.4")
     patch("0004-restrict-python2.7-usage-for-5.5.0.patch", when="@5.5.0")
     patch("0005-Adding-half-include-directory-path-migraphx.patch", when="@5.6.0:")
+    patch("0006-add-option-to-turn-off-ck.patch", when="@5.7")
 
     depends_on("cmake@3.5:", type="build")
     depends_on("protobuf", type="link")
@@ -204,6 +205,8 @@ class Migraphx(CMakePackage):
             args += self.cmake_python_hints
         if "@5.5.0:" in self.spec:
             args.append(self.define("CMAKE_CXX_FLAGS", "-I{0}".format(abspath)))
+        if "@5.7" in self.spec:
+            args.append(self.define("MIGRAPHX_USE_COMPOSABLEKERNEL", "OFF"))
         return args
 
     def test(self):
