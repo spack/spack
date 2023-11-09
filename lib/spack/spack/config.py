@@ -1253,12 +1253,14 @@ def process_config_path(path):
     This function does not know whether the final element of the path is a
     key or value, so:
 
-    * It must strip the quotes in case it is a key (so we look for "key" and
+    * It must strip the quotes, in case it is a key (so we look for "key" and
       not '"key"'))
-    * It must indicate somehow that the quotes were stripped if it is a value
-      (so that we don't process '"{}"' as a YAML dict)
+    * It must indicate somehow that the quotes were stripped, in case it is a
+      value (so that we don't process '"{}"' as a YAML dict)
 
-    Therefore, all elements with quotes are converted to syaml_str
+    Therefore, all elements with quotes are stripped, and then also converted
+    to ``syaml_str`` (if treating the final element as a value, the caller
+    should not parse it in this case).
     """
     result = []
     if path.startswith(":"):
