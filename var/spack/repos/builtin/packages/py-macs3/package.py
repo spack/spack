@@ -24,3 +24,5 @@ class PyMacs3(PythonPackage):
     depends_on("py-numpy@1.19:", type=("build", "run"))
     depends_on("py-cykhash@2", type=("build", "run"))
     depends_on("py-hmmlearn@0.3:", type=("build", "run"))
+
+    depends_on("zlib-api")
