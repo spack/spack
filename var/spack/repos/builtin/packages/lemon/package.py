@@ -25,14 +25,14 @@ class Lemon(CMakePackage):
         default="glpk",
         description="Set default LP solver backend",
         values=("glpk", "cplex", "clp"),
-        multi=False
+        multi=False,
     )
     variant(
         "mip_backend",
         default="glpk",
         description="Set default LP solver backend",
         values=("glpk", "cplex", "clp"),
-        multi=False
+        multi=False,
     )
 
     depends_on("glpk", when="+glpk")
