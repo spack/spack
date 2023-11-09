@@ -36,6 +36,7 @@ class Openvkl(CMakePackage):
     depends_on("rkcommon@1.8.0:", when="@1.1:")
     depends_on("rkcommon@:1.10.0", when="@:1.3.1")
     depends_on("rkcommon@1.11.0:", when="@1.3.2:")
+    depends_on("rkcommon@:1.11.0", when="@:1.3.2")
     depends_on("tbb")
 
     def cmake_args(self):
