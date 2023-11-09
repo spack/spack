@@ -9,7 +9,6 @@ import os
 from spack.package import *
 from spack.pkg.builtin.boost import Boost
 
-
 class Vtk(CMakePackage):
     """The Visualization Toolkit (VTK) is an open-source, freely
     available software system for 3D computer graphics, image
@@ -20,6 +19,9 @@ class Vtk(CMakePackage):
     list_url = "https://www.vtk.org/download/"
 
     maintainers("chuckatkins", "danlipsa")
+
+    version("master_external_vtk", git="https://gitlab.kitware.com/danlipsa/vtk.git",
+            branch="external_vtk", submodules=True)
 
     version("9.2.6", sha256="06fc8d49c4e56f498c40fcb38a563ed8d4ec31358d0101e8988f0bb4d539dd12")
     version("9.2.2", sha256="1c5b0a2be71fac96ff4831af69e350f7a0ea3168981f790c000709dcf9121075")
@@ -54,6 +56,9 @@ class Vtk(CMakePackage):
     variant("xdmf", default=False, description="Build XDMF file support")
     variant("ffmpeg", default=False, description="Build with FFMPEG support")
     variant("mpi", default=True, description="Enable MPI support")
+
+    variant("paraview_deps", default=False,
+            description="Enable all modules required for ParaView")
 
     patch("gcc.patch", when="@6.1.0")
     # patch to fix some missing stl includes
@@ -164,7 +169,7 @@ class Vtk(CMakePackage):
     depends_on("gl2ps", when="@8.1:")
     depends_on("gl2ps@1.4.1:", when="@9:")
     depends_on("proj@4", when="@8.2.0")
-    depends_on("proj@4:7", when="@9:")
+    depends_on("proj@5:", when="@9:")
     depends_on("cgns@4.1.1:+mpi", when="@9.1: +mpi")
     depends_on("cgns@4.1.1:~mpi", when="@9.1: ~mpi")
     with when("@9.1:"):
@@ -277,6 +282,10 @@ class Vtk(CMakePackage):
                 )
             if spec.satisfies("@9.2:"):
                 cmake_args.append("-DVTK_MODULE_USE_EXTERNAL_VTK_verdict:BOOL=OFF")
+            if spec.satisfies("@9.3:"):
+                cmake_args.append("-DVTK_MODULE_USE_EXTERNAL_VTK_token:BOOL=OFF")
+                cmake_args.append("-DVTK_MODULE_USE_EXTERNAL_VTK_fast_float:BOOL=OFF")
+                cmake_args.append("-DVTK_MODULE_USE_EXTERNAL_VTK_cli11:BOOL=OFF")
 
         # Some variable names have changed
         if spec.satisfies("@8.2.0"):
@@ -288,6 +297,48 @@ class Vtk(CMakePackage):
                     "-DNETCDF_CXX_ROOT={0}".format(spec["netcdf-cxx"].prefix),
                 ]
             )
+
+        if "+paraview_deps" in spec:
+            if "+mpi" in spec:
+                cmake_args.extend([
+                    "-DVTK_MODULE_ENABLE_VTK_FiltersParallelDIY2=WANT",
+                    "-DVTK_MODULE_ENABLE_VTK_IOParallelExodus=WANT",
+                    "-DVTK_MODULE_ENABLE_VTK_RenderingParallelLIC=WANT",
+                    "-DVTK_MODULE_ENABLE_VTK_FiltersParallelVerdict=WANT",
+                    "-DVTK_MODULE_ENABLE_VTK_IOParallelLSDyna=WANT",
+                    "-DVTK_MODULE_ENABLE_VTK_ParallelMPI4Py=WANT",
+                    "-DVTK_MODULE_ENABLE_VTK_FiltersParallelFlowPaths=WANT",
+                    "-DVTK_MODULE_ENABLE_VTK_FiltersParallelGeometry=WANT",
+                    "-DVTK_MODULE_ENABLE_VTK_FiltersParallelMPI=WANT",
+                    "-DVTK_MODULE_ENABLE_VTK_IOMPIImage=WANT",
+                    "-DVTK_MODULE_ENABLE_VTK_IOParallelNetCDF=WANT",
+                    "-DVTK_MODULE_ENABLE_VTK_FiltersParallelStatistics=WANT",
+                    "-DVTK_MODULE_ENABLE_VTK_RenderingParallel=WANT",
+                ])
+            if "+python" in spec:
+                cmake_args.extend([
+                    "-DVTK_MODULE_ENABLE_VTK_RenderingMatplotlib=WANT",
+                    "-DVTK_MODULE_ENABLE_VTK_WebPython=WANT",
+                ])
+            if "+qt" in spec:
+                cmake_args.extend([
+                    "-DVTK_MODULE_ENABLE_VTK_GUISupportQt=WANT",
+            ])
+            cmake_args.extend([
+                "-DVTK_MODULE_ENABLE_VTK_AcceleratorsVTKmFilters=WANT",
+                "-DVTK_MODULE_ENABLE_VTK_WebCore=WANT",
+                "-DVTK_MODULE_ENABLE_VTK_WebGLExporter=WANT",
+                "-DVTK_MODULE_ENABLE_VTK_IOXdmf2=WANT",
+                "-DVTK_MODULE_ENABLE_VTK_FiltersOpenTURNS=WANT",
+                "-DVTK_MODULE_ENABLE_VTK_IOVPIC=WANT",
+                "-DVTK_MODULE_ENABLE_VTK_IOH5part=WANT",
+                "-DVTK_MODULE_ENABLE_VTK_IOH5Rage=WANT",
+                "-DVTK_MODULE_ENABLE_VTK_IOOMF=WANT",
+                "-DVTK_MODULE_ENABLE_VTK_IOPIO=WANT",
+                "-DVTK_MODULE_ENABLE_VTK_IOTRUCHAS=WANT",
+                "-DVTK_MODULE_ENABLE_VTK_cli11=WANT",
+                "-DVTK_MODULE_ENABLE_VTK_RenderingVolumeAMR=WANT"
+            ])
 
         if "+mpi" in spec:
             if spec.satisfies("@:8.2.0"):
