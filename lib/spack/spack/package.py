@@ -32,6 +32,7 @@ from spack.build_systems.autotools import AutotoolsPackage
 from spack.build_systems.bundle import BundlePackage
 from spack.build_systems.cached_cmake import (
     CachedCMakePackage,
+    cmake_cache_filepath,
     cmake_cache_option,
     cmake_cache_path,
     cmake_cache_string,
