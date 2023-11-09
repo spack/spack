@@ -149,21 +149,6 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         else:
             return IntelOneApiStaticLibraryList(libs, system_libs)
 
-    def setup_run_environment(self, env):
-        super().setup_run_environment(env)
-
-        # Support RPATH injection to the library directories when the '-mkl' or '-qmkl'
-        # flag of the Intel compilers are used outside the Spack build environment. We
-        # should not try to take care of other compilers because the users have to
-        # provide the linker flags anyway and are expected to take care of the RPATHs
-        # flags too. We prefer the __INTEL_POST_CFLAGS/__INTEL_POST_FFLAGS flags over
-        # the PRE ones so that any other RPATHs provided by the users on the command
-        # line come before and take precedence over the ones we inject here.
-        for d in self._find_mkl_libs(self.spec.satisfies("+shared")).directories:
-            flag = "-Wl,-rpath,{0}".format(d)
-            env.append_path("__INTEL_POST_CFLAGS", flag, separator=" ")
-            env.append_path("__INTEL_POST_FFLAGS", flag, separator=" ")
-
     def setup_dependent_build_environment(self, env, dependent_spec):
         # Only if environment modifications are desired (default is +envmods)
         if self.spec.satisfies("+envmods"):
