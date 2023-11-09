@@ -1249,9 +1249,11 @@ class ConfigPath:
         quoted_string = "(?:\"[^\"]+\")|(?:'[^']+')"
         unquoted_string = "[^'\"]+"
         element = rf"(?:(?:{quoted_string})|(?:{unquoted_string}))"
-        config_path_pattern = rf"^{element}[+-]?(?:\:\:?{element}[+-]?)*$"
-        if not re.match(config_path_pattern, path):
+        config_path_pattern = rf"^({element}[+-]?)(\:\:?{element}[+-]?)*$"
+        match = re.match(config_path_pattern, path)
+        if not match:
             raise ValueError(f"Invalid path string: {path}")
+        return list(match.groups())
 
 
 def process_config_path(path):
@@ -1281,57 +1283,45 @@ def process_config_path(path):
     to ``syaml_str`` (if treating the final element as a value, the caller
     should not parse it in this case).
     """
-    ConfigPath.validate(path)
-
+    path_elements = ConfigPath.validate(path)
     result = []
-    if path.startswith(":"):
-        raise syaml.SpackYAMLError("Illegal leading `:' in path `{0}'".format(path), "")
     seen_override_in_path = False
-    while path:
-        front = ""
+    quote = "['\"]"
 
-        # Check for quotes before partitioning on ":" (colon inside
-        # of a quotation counts as part of the element).
-        quote = "['\"]"
-        not_quote = "[^'\"]"
-        if re.match(f"^{quote}", path):
-            m = re.match(rf"^({quote}{not_quote}+{quote})", path)
-            if m:
-                front = m.group(1)
-                path = path[len(front) :]
-            else:
-                raise ValueError(f"Opening quote with no closing quote: {path}")
-
-        remainder, sep, path = path.partition(":")
-        front += remainder
-
-        def remove_quotes(input):
-            return input.strip("'\"")
-
-        if (sep and not path) or path.startswith(":"):
+    for element in path_elements:
+        override = False
+        append = False
+        prepend = False
+        quoted = False
+        if element.startswith("::"):
             if seen_override_in_path:
                 raise syaml.SpackYAMLError(
                     "Meaningless second override indicator `::' in path `{0}'".format(path), ""
                 )
-            path = path.lstrip(":")
-            front = syaml.syaml_str(remove_quotes(front))
-            front.override = True
             seen_override_in_path = True
+            override = True
+        element = element.lstrip(":")
 
-        elif front.endswith("+"):
-            front = remove_quotes(front.rstrip("+"))
-            front = syaml.syaml_str(front)
-            front.prepend = True
+        if element.endswith("+"):
+            prepend = True
+        elif element.endswith("-"):
+            append = True
+        element = element.rstrip("+-")
 
-        elif front.endswith("-"):
-            front = remove_quotes(front.rstrip("-"))
-            front = syaml.syaml_str(front)
-            front.append = True
+        if re.match(f"^{quote}", element):
+            quoted = True
+        element = element.strip("'\"")
 
-        if re.match(f"^{quote}", front):
-            front = syaml.syaml_str(remove_quotes(front))
-
-        result.append(front)
+        if any([append, prepend, override, quoted]):
+            element = syaml.syaml_str(element)
+            if append:
+                element.append = True
+            if prepend:
+                element.prepend = True
+            if override:
+                element.override = True
+    
+        result.append(element)
 
     return result
 
