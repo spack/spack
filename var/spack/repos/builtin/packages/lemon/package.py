@@ -30,7 +30,7 @@ class Lemon(CMakePackage):
     variant(
         "mip_backend",
         default="glpk",
-        description="Set default LP solver backend",
+        description="Set default MIP solver backend",
         values=("glpk", "cplex", "clp"),
         multi=False,
     )
