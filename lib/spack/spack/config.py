@@ -1293,11 +1293,6 @@ def process_config_path(path):
         append = False
         prepend = False
         quoted = False
-        try:
-            element.startswith("::")
-        except:
-            import pdb; pdb.set_trace()
-            raise
         if element.startswith("::"):
             if seen_override_in_path:
                 raise syaml.SpackYAMLError(
