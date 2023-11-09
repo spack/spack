@@ -1258,10 +1258,8 @@ def process_config_path(path):
         if re.match(f"^{quote}", path):
             m = re.match(rf"^({quote}{not_quote}+{quote})", path)
             if m:
-                match_str = m.group(1)
-                path = path[len(match_str):]
-                #front = match_str.strip("'\"")
-                front = match_str
+                front = m.group(1)
+                path = path[len(front) :]
             else:
                 raise ValueError(f"Opening quote with no closing quote: {path}")
 
@@ -1292,6 +1290,9 @@ def process_config_path(path):
 
     # Keys are always strings, if a user enclosed a key in quotes, they
     # should be removed
+    # Value should retain quotes, since we want to distinguish between
+    # {} (a dict) and "{}" (a string that includes characters normally
+    # regarded as special in YAML)
     key_parts = [x.strip("'\"") for x in result[:-1]]
     return key_parts + [result[-1]]
 
