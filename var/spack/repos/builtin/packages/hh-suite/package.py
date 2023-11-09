@@ -19,7 +19,6 @@ class HhSuite(CMakePackage):
 
     version("3.3.0", sha256="dd67f7f3bf601e48c9c0bc4cf1fbe3b946f787a808bde765e9436a48d27b0964")
 
-    variant("shared", default=False, description="Build shared library")
     variant("mpi", default=True, description="Enable MPI support")
 
     depends_on("cmake@2.8.12:", type="build")
@@ -27,7 +26,7 @@ class HhSuite(CMakePackage):
 
     def cmake_args(self):
         args = []
-        args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
+        args.append(self.define("BUILD_SHARED_LIBS", False))
         args.append(self.define("NATIVE_ARCH", False))
         if self.spec.satisfies("+mpi"):
             args.append("-DCHECK_MPI=1")
