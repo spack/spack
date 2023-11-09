@@ -1572,11 +1572,11 @@ def _get_valid_spec_file(path: str, max_supported_layout: int) -> Tuple[Dict, in
         with open(path, "rb") as f:
             binary_content = f.read()
     except OSError:
-        raise InvalidMetadataFile(f"Could not read file {path}")
+        raise InvalidMetadataFile(f"No such file: {path}")
 
     # In the future we may support transparently decompressing compressed spec files.
     if binary_content[:2] == b"\x1f\x8b":
-        raise InvalidMetadataFile("Compressed spec files are not yet supported")
+        raise InvalidMetadataFile("Compressed spec files are not supported")
 
     try:
         as_string = binary_content.decode("utf-8")
