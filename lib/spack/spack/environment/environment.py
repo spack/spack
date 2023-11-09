@@ -16,7 +16,7 @@ import time
 import urllib.parse
 import urllib.request
 import warnings
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -28,6 +28,7 @@ from llnl.util.symlink import symlink
 import spack.compilers
 import spack.concretize
 import spack.config
+import spack.deptypes as dt
 import spack.error
 import spack.fetch_strategy
 import spack.hash_types as ht
@@ -63,6 +64,8 @@ from spack.variant import UnknownVariantError
 #: environment variable used to indicate the active environment
 spack_env_var = "SPACK_ENV"
 
+#: environment variable used to indicate the active environment view
+spack_env_view_var = "SPACK_ENV_VIEW"
 
 #: currently activated environment
 _active_environment: Optional["Environment"] = None
@@ -203,7 +206,7 @@ def activate(env, use_env_repo=False):
         env.store_token = spack.store.reinitialize()
 
     if use_env_repo:
-        spack.repo.path.put_first(env.repo)
+        spack.repo.PATH.put_first(env.repo)
 
     tty.debug("Using environment '%s'" % env.name)
 
@@ -227,7 +230,7 @@ def deactivate():
 
     # use _repo so we only remove if a repo was actually constructed
     if _active_environment._repo:
-        spack.repo.path.remove(_active_environment._repo)
+        spack.repo.PATH.remove(_active_environment._repo)
 
     tty.debug("Deactivated environment '%s'" % _active_environment.name)
 
@@ -327,16 +330,21 @@ def create_in_dir(
     if with_view is None and keep_relative:
         return Environment(manifest_dir)
 
-    manifest = EnvironmentManifestFile(manifest_dir)
+    try:
+        manifest = EnvironmentManifestFile(manifest_dir)
 
-    if with_view is not None:
-        manifest.set_default_view(with_view)
+        if with_view is not None:
+            manifest.set_default_view(with_view)
 
-    if not keep_relative and init_file is not None and str(init_file).endswith(manifest_name):
-        init_file = pathlib.Path(init_file)
-        manifest.absolutify_dev_paths(init_file.parent)
+        if not keep_relative and init_file is not None and str(init_file).endswith(manifest_name):
+            init_file = pathlib.Path(init_file)
+            manifest.absolutify_dev_paths(init_file.parent)
 
-    manifest.flush()
+        manifest.flush()
+
+    except (spack.config.ConfigFormatError, SpackEnvironmentConfigError) as e:
+        shutil.rmtree(manifest_dir)
+        raise e
 
     return Environment(manifest_dir)
 
@@ -388,7 +396,13 @@ def all_environments():
 
 def _read_yaml(str_or_file):
     """Read YAML from a file for round-trip parsing."""
-    data = syaml.load_config(str_or_file)
+    try:
+        data = syaml.load_config(str_or_file)
+    except syaml.SpackYAMLError as e:
+        raise SpackEnvironmentConfigError(
+            f"Invalid environment configuration detected: {e.message}"
+        )
+
     filename = getattr(str_or_file, "name", None)
     default_data = spack.config.validate(data, spack.schema.env.schema, filename)
     return data, default_data
@@ -403,7 +417,7 @@ def _write_yaml(data, str_or_file):
 
 def _eval_conditional(string):
     """Evaluate conditional definitions using restricted variable scope."""
-    valid_variables = spack.util.environment.get_host_environment()
+    valid_variables = spack.spec.get_host_environment()
     valid_variables.update({"re": re, "env": os.environ})
     return eval(string, valid_variables)
 
@@ -773,10 +787,18 @@ class Environment:
         """Reinitialize the environment object."""
         self.clear(re_read=True)
         self.manifest = EnvironmentManifestFile(self.path)
-        self._read()
+        self._read(re_read=True)
 
-    def _read(self):
-        self._construct_state_from_manifest()
+    def _read(self, re_read=False):
+        # If the manifest has included files, then some of the information
+        # (e.g., definitions) MAY be in those files. So we need to ensure
+        # the config is populated with any associated spec lists in order
+        # to fully construct the manifest state.
+        includes = self.manifest[TOP_LEVEL_KEY].get("include", [])
+        if includes and not re_read:
+            prepare_config_scope(self)
+
+        self._construct_state_from_manifest(re_read)
 
         if os.path.exists(self.lock_path):
             with open(self.lock_path) as f:
@@ -790,21 +812,30 @@ class Environment:
         """Get a write lock context manager for use in a `with` block."""
         return lk.WriteTransaction(self.txlock, acquire=self._re_read)
 
-    def _construct_state_from_manifest(self):
+    def _process_definition(self, item):
+        """Process a single spec definition item."""
+        entry = copy.deepcopy(item)
+        when = _eval_conditional(entry.pop("when", "True"))
+        assert len(entry) == 1
+        if when:
+            name, spec_list = next(iter(entry.items()))
+            user_specs = SpecList(name, spec_list, self.spec_lists.copy())
+            if name in self.spec_lists:
+                self.spec_lists[name].extend(user_specs)
+            else:
+                self.spec_lists[name] = user_specs
+
+    def _construct_state_from_manifest(self, re_read=False):
         """Read manifest file and set up user specs."""
         self.spec_lists = collections.OrderedDict()
+
+        if not re_read:
+            for item in spack.config.get("definitions", []):
+                self._process_definition(item)
+
         env_configuration = self.manifest[TOP_LEVEL_KEY]
         for item in env_configuration.get("definitions", []):
-            entry = copy.deepcopy(item)
-            when = _eval_conditional(entry.pop("when", "True"))
-            assert len(entry) == 1
-            if when:
-                name, spec_list = next(iter(entry.items()))
-                user_specs = SpecList(name, spec_list, self.spec_lists.copy())
-                if name in self.spec_lists:
-                    self.spec_lists[name].extend(user_specs)
-                else:
-                    self.spec_lists[name] = user_specs
+            self._process_definition(item)
 
         spec_list = env_configuration.get(user_speclist_name, [])
         user_specs = SpecList(
@@ -849,7 +880,9 @@ class Environment:
                 yaml, and need to be maintained when re-reading an existing
                 environment.
         """
-        self.spec_lists = {user_speclist_name: SpecList()}  # specs from yaml
+        self.spec_lists = collections.OrderedDict()
+        self.spec_lists[user_speclist_name] = SpecList()
+
         self.dev_specs = {}  # dev-build specs from yaml
         self.concretized_user_specs = []  # user specs from last concretize
         self.concretized_order = []  # roots of last concretize, in order
@@ -998,7 +1031,8 @@ class Environment:
 
             elif include_url.scheme:
                 raise ValueError(
-                    "Unsupported URL scheme for environment include: {}".format(config_path)
+                    f"Unsupported URL scheme ({include_url.scheme}) for "
+                    f"environment include: {config_path}"
                 )
 
             # treat relative paths as relative to the environment
@@ -1060,8 +1094,10 @@ class Environment:
             from_list = next(iter(self.spec_lists.keys()))
         index = list(self.spec_lists.keys()).index(from_list)
 
-        # spec_lists is an OrderedDict, all list entries after the modified
-        # list may refer to the modified list. Update stale references
+        # spec_lists is an OrderedDict to ensure lists read from the manifest
+        # are maintainted in order, hence, all list entries after the modified
+        # list may refer to the modified list requiring stale references to be
+        # updated.
         for i, (name, speclist) in enumerate(
             list(self.spec_lists.items())[index + 1 :], index + 1
         ):
@@ -1084,8 +1120,8 @@ class Environment:
         if list_name == user_speclist_name:
             if spec.anonymous:
                 raise SpackEnvironmentError("cannot add anonymous specs to an environment")
-            elif not spack.repo.path.exists(spec.name) and not spec.abstract_hash:
-                virtuals = spack.repo.path.provider_index.providers.keys()
+            elif not spack.repo.PATH.exists(spec.name) and not spec.abstract_hash:
+                virtuals = spack.repo.PATH.provider_index.providers.keys()
                 if spec.name not in virtuals:
                     msg = "no such package: %s" % spec.name
                     raise SpackEnvironmentError(msg)
@@ -1159,7 +1195,7 @@ class Environment:
     def remove(self, query_spec, list_name=user_speclist_name, force=False):
         """Remove specs from an environment that match a query_spec"""
         err_msg_header = (
-            f"cannot remove {query_spec} from '{list_name}' definition "
+            f"Cannot remove '{query_spec}' from '{list_name}' definition "
             f"in {self.manifest.manifest_file}"
         )
         query_spec = Spec(query_spec)
@@ -1190,11 +1226,10 @@ class Environment:
                 list_to_change.remove(spec)
                 self.update_stale_references(list_name)
                 new_specs = set(self.user_specs)
-            except spack.spec_list.SpecListError:
+            except spack.spec_list.SpecListError as e:
                 # define new specs list
                 new_specs = set(self.user_specs)
-                msg = f"Spec '{spec}' is part of a spec matrix and "
-                msg += f"cannot be removed from list '{list_to_change}'."
+                msg = str(e)
                 if force:
                     msg += " It will be removed from the concrete specs."
                     # Mock new specs, so we can remove this spec from concrete spec lists
@@ -1262,7 +1297,7 @@ class Environment:
             # better if we can create the `source_path` directly into its final
             # destination.
             abspath = spack.util.path.canonicalize_path(path, default_wd=self.path)
-            pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+            pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
             # We construct a package class ourselves, rather than asking for
             # Spec.package, since Spec only allows this when it is concrete
             package = pkg_cls(spec)
@@ -1395,7 +1430,10 @@ class Environment:
 
         result_by_user_spec = {}
         solver = spack.solver.asp.Solver()
-        for result in solver.solve_in_rounds(specs_to_concretize, tests=tests):
+        allow_deprecated = spack.config.get("config:deprecated", False)
+        for result in solver.solve_in_rounds(
+            specs_to_concretize, tests=tests, allow_deprecated=allow_deprecated
+        ):
             result_by_user_spec.update(result.specs_by_input)
 
         result = []
@@ -1474,11 +1512,12 @@ class Environment:
                 self._add_concrete_spec(s, concrete, new=False)
 
         # Concretize any new user specs that we haven't concretized yet
-        arguments, root_specs = [], []
+        args, root_specs, i = [], [], 0
         for uspec, uspec_constraints in zip(self.user_specs, self.user_specs.specs_as_constraints):
             if uspec not in old_concretized_user_specs:
                 root_specs.append(uspec)
-                arguments.append((uspec_constraints, tests))
+                args.append((i, [str(x) for x in uspec_constraints], tests))
+                i += 1
 
         # Ensure we don't try to bootstrap clingo in parallel
         if spack.config.get("config:concretizer", "clingo") == "clingo":
@@ -1490,41 +1529,53 @@ class Environment:
         # for a write lock. We do this indirectly by retrieving the
         # provider index, which should in turn trigger the update of
         # all the indexes if there's any need for that.
-        _ = spack.repo.path.provider_index
+        _ = spack.repo.PATH.provider_index
 
         # Ensure we have compilers in compilers.yaml to avoid that
         # processes try to write the config file in parallel
         _ = spack.compilers.get_compiler_config()
 
         # Early return if there is nothing to do
-        if len(arguments) == 0:
+        if len(args) == 0:
             return []
 
         # Solve the environment in parallel on Linux
         start = time.time()
-        max_processes = min(
-            len(arguments),  # Number of specs
-            spack.config.get("config:build_jobs"),  # Cap on build jobs
-        )
+        num_procs = min(len(args), spack.util.cpus.determine_number_of_jobs(parallel=True))
 
-        # TODO: revisit this print as soon as darwin is parallel too
+        # TODO: support parallel concretization on macOS and Windows
         msg = "Starting concretization"
-        if sys.platform != "darwin":
-            pool_size = spack.util.parallel.num_processes(max_processes=max_processes)
-            if pool_size > 1:
-                msg = msg + " pool with {0} processes".format(pool_size)
+        if sys.platform not in ("darwin", "win32") and num_procs > 1:
+            msg += f" pool with {num_procs} processes"
         tty.msg(msg)
 
-        concretized_root_specs = spack.util.parallel.parallel_map(
-            _concretize_task, arguments, max_processes=max_processes, debug=tty.is_debug()
-        )
+        batch = []
+        for j, (i, concrete, duration) in enumerate(
+            spack.util.parallel.imap_unordered(
+                _concretize_task,
+                args,
+                processes=num_procs,
+                debug=tty.is_debug(),
+                maxtaskperchild=1,
+            )
+        ):
+            batch.append((i, concrete))
+            percentage = (j + 1) / len(args) * 100
+            tty.verbose(
+                f"{duration:6.1f}s [{percentage:3.0f}%] {concrete.cformat('{hash:7}')} "
+                f"{root_specs[i].colored_str}"
+            )
+            sys.stdout.flush()
+
+        # Add specs in original order
+        batch.sort(key=lambda x: x[0])
+        by_hash = {}  # for attaching information on test dependencies
+        for root, (_, concrete) in zip(root_specs, batch):
+            self._add_concrete_spec(root, concrete)
+            by_hash[concrete.dag_hash()] = concrete
 
         finish = time.time()
-        tty.msg("Environment concretized in %.2f seconds." % (finish - start))
-        by_hash = {}
-        for abstract, concrete in zip(root_specs, concretized_root_specs):
-            self._add_concrete_spec(abstract, concrete)
-            by_hash[concrete.dag_hash()] = concrete
+        tty.msg(f"Environment concretized in {finish - start:.2f} seconds")
 
         # Unify the specs objects, so we get correct references to all parents
         self._read_lockfile_dict(self._to_lockfile_dict())
@@ -1536,13 +1587,13 @@ class Environment:
             for h in self.specs_by_hash:
                 current_spec, computed_spec = self.specs_by_hash[h], by_hash[h]
                 for node in computed_spec.traverse():
-                    test_edges = node.edges_to_dependencies(deptype="test")
+                    test_edges = node.edges_to_dependencies(depflag=dt.TEST)
                     for current_edge in test_edges:
                         test_dependency = current_edge.spec
                         if test_dependency in current_spec[node.name]:
                             continue
                         current_spec[node.name].add_dependency_edge(
-                            test_dependency.copy(), deptypes="test", virtuals=current_edge.virtuals
+                            test_dependency.copy(), depflag=dt.TEST, virtuals=current_edge.virtuals
                         )
 
         results = [
@@ -1591,15 +1642,13 @@ class Environment:
 
     @property
     def default_view(self):
-        if not self.views:
-            raise SpackEnvironmentError("{0} does not have a view enabled".format(self.name))
-
-        if default_view_name not in self.views:
-            raise SpackEnvironmentError(
-                "{0} does not have a default view enabled".format(self.name)
-            )
+        if not self.has_view(default_view_name):
+            raise SpackEnvironmentError(f"{self.name} does not have a default view enabled")
 
         return self.views[default_view_name]
+
+    def has_view(self, view_name: str) -> bool:
+        return view_name in self.views
 
     def update_default_view(self, path_or_bool: Union[str, bool]) -> None:
         """Updates the path of the default view.
@@ -1686,62 +1735,34 @@ class Environment:
                 "Loading the environment view will require reconcretization." % self.name
             )
 
-    def _env_modifications_for_default_view(self, reverse=False):
-        all_mods = spack.util.environment.EnvironmentModifications()
+    def _env_modifications_for_view(
+        self, view: ViewDescriptor, reverse: bool = False
+    ) -> spack.util.environment.EnvironmentModifications:
+        try:
+            mods = uenv.environment_modifications_for_specs(*self.concrete_roots(), view=view)
+        except Exception as e:
+            # Failing to setup spec-specific changes shouldn't be a hard error.
+            tty.warn(
+                "couldn't load runtime environment due to {}: {}".format(e.__class__.__name__, e)
+            )
+            return spack.util.environment.EnvironmentModifications()
+        return mods.reversed() if reverse else mods
 
-        visited = set()
-
-        errors = []
-        for root_spec in self.concrete_roots():
-            if root_spec in self.default_view and root_spec.installed and root_spec.package:
-                for spec in root_spec.traverse(deptype="run", root=True):
-                    if spec.name in visited:
-                        # It is expected that only one instance of the package
-                        # can be added to the environment - do not attempt to
-                        # add multiple.
-                        tty.debug(
-                            "Not adding {0} to shell modifications: "
-                            "this package has already been added".format(
-                                spec.format("{name}/{hash:7}")
-                            )
-                        )
-                        continue
-                    else:
-                        visited.add(spec.name)
-
-                    try:
-                        mods = uenv.environment_modifications_for_spec(spec, self.default_view)
-                    except Exception as e:
-                        msg = "couldn't get environment settings for %s" % spec.format(
-                            "{name}@{version} /{hash:7}"
-                        )
-                        errors.append((msg, str(e)))
-                        continue
-
-                    all_mods.extend(mods.reversed() if reverse else mods)
-
-        return all_mods, errors
-
-    def add_default_view_to_env(self, env_mod):
-        """
-        Collect the environment modifications to activate an environment using the
-        default view. Removes duplicate paths.
+    def add_view_to_env(
+        self, env_mod: spack.util.environment.EnvironmentModifications, view: str
+    ) -> spack.util.environment.EnvironmentModifications:
+        """Collect the environment modifications to activate an environment using the provided
+        view. Removes duplicate paths.
 
         Args:
-            env_mod (spack.util.environment.EnvironmentModifications): the environment
-                modifications object that is modified.
-        """
-        if default_view_name not in self.views:
-            # No default view to add to shell
+            env_mod: the environment modifications object that is modified.
+            view: the name of the view to activate."""
+        descriptor = self.views.get(view)
+        if not descriptor:
             return env_mod
 
-        env_mod.extend(uenv.unconditional_environment_modifications(self.default_view))
-
-        mods, errors = self._env_modifications_for_default_view()
-        env_mod.extend(mods)
-        if errors:
-            for err in errors:
-                tty.warn(*err)
+        env_mod.extend(uenv.unconditional_environment_modifications(descriptor))
+        env_mod.extend(self._env_modifications_for_view(descriptor))
 
         # deduplicate paths from specs mapped to the same location
         for env_var in env_mod.group_by_name():
@@ -1749,23 +1770,21 @@ class Environment:
 
         return env_mod
 
-    def rm_default_view_from_env(self, env_mod):
-        """
-        Collect the environment modifications to deactivate an environment using the
-        default view. Reverses the action of ``add_default_view_to_env``.
+    def rm_view_from_env(
+        self, env_mod: spack.util.environment.EnvironmentModifications, view: str
+    ) -> spack.util.environment.EnvironmentModifications:
+        """Collect the environment modifications to deactivate an environment using the provided
+        view. Reverses the action of ``add_view_to_env``.
 
         Args:
-            env_mod (spack.util.environment.EnvironmentModifications): the environment
-                modifications object that is modified.
-        """
-        if default_view_name not in self.views:
-            # No default view to add to shell
+            env_mod: the environment modifications object that is modified.
+            view: the name of the view to deactivate."""
+        descriptor = self.views.get(view)
+        if not descriptor:
             return env_mod
 
-        env_mod.extend(uenv.unconditional_environment_modifications(self.default_view).reversed())
-
-        mods, _ = self._env_modifications_for_default_view(reverse=True)
-        env_mod.extend(mods)
+        env_mod.extend(uenv.unconditional_environment_modifications(descriptor).reversed())
+        env_mod.extend(self._env_modifications_for_view(descriptor, reverse=True))
 
         return env_mod
 
@@ -1921,16 +1940,17 @@ class Environment:
                             "Could not install log links for {0}: {1}".format(spec.name, str(e))
                         )
 
-    def all_specs(self):
-        """Return all specs, even those a user spec would shadow."""
-        roots = [self.specs_by_hash[h] for h in self.concretized_order]
-        specs = [s for s in traverse.traverse_nodes(roots, key=traverse.by_dag_hash)]
-        specs.sort()
-        return specs
+    def all_specs_generator(self) -> Iterable[Spec]:
+        """Returns a generator for all concrete specs"""
+        return traverse.traverse_nodes(self.concrete_roots(), key=traverse.by_dag_hash)
+
+    def all_specs(self) -> List[Spec]:
+        """Returns a list of all concrete specs"""
+        return list(self.all_specs_generator())
 
     def all_hashes(self):
         """Return hashes of all specs."""
-        return [s.dag_hash() for s in self.all_specs()]
+        return [s.dag_hash() for s in self.all_specs_generator()]
 
     def roots(self):
         """Specs explicitly requested by the user *in this environment*.
@@ -1993,14 +2013,10 @@ class Environment:
 
     def all_matching_specs(self, *specs: spack.spec.Spec) -> List[Spec]:
         """Returns all concretized specs in the environment satisfying any of the input specs"""
-        # Look up abstract hashes ahead of time, to avoid O(n^2) traversal.
-        specs = [s.lookup_hash() for s in specs]
-
-        # Avoid double lookup by directly calling _satisfies.
         return [
             s
             for s in traverse.traverse_nodes(self.concrete_roots(), key=traverse.by_dag_hash)
-            if any(s._satisfies(t) for t in specs)
+            if any(s.satisfies(t) for t in specs)
         ]
 
     @spack.repo.autospec
@@ -2061,7 +2077,7 @@ class Environment:
         # If multiple root specs match, it is assumed that the abstract
         # spec will most-succinctly summarize the difference between them
         # (and the user can enter one of these to disambiguate)
-        fmt_str = "{hash:7}  " + spack.spec.default_format
+        fmt_str = "{hash:7}  " + spack.spec.DEFAULT_FORMAT
         color = clr.get_color_when()
         match_strings = [
             f"Root spec {abstract.format(color=color)}\n  {concrete.format(fmt_str, color=color)}"
@@ -2078,7 +2094,7 @@ class Environment:
 
     def removed_specs(self):
         """Tuples of (user spec, concrete spec) for all specs that will be
-        removed on nexg concretize."""
+        removed on next concretize."""
         needed = set()
         for s, c in self.concretized_specs():
             if s in self.user_specs:
@@ -2193,7 +2209,7 @@ class Environment:
             name, data = reader.name_and_data(node_dict)
             for _, dep_hash, deptypes, _, virtuals in reader.dependencies_from_node_dict(data):
                 specs_by_hash[lockfile_key]._add_dependency(
-                    specs_by_hash[dep_hash], deptypes=deptypes, virtuals=virtuals
+                    specs_by_hash[dep_hash], depflag=dt.canonicalize(deptypes), virtuals=virtuals
                 )
 
         # Traverse the root specs one at a time in the order they appear.
@@ -2279,7 +2295,7 @@ class Environment:
         repository = spack.repo.create_or_construct(repository_dir, spec_node.namespace)
         pkg_dir = repository.dirname_for_package_name(spec_node.name)
         fs.mkdirp(pkg_dir)
-        spack.repo.path.dump_provenance(spec_node, pkg_dir)
+        spack.repo.PATH.dump_provenance(spec_node, pkg_dir)
 
     def manifest_uptodate_or_warn(self):
         """Emits a warning if the manifest file is not up-to-date."""
@@ -2369,7 +2385,7 @@ def display_specs(concretized_specs):
     def _tree_to_display(spec):
         return spec.tree(
             recurse_dependencies=True,
-            format=spack.spec.display_format,
+            format=spack.spec.DISPLAY_FORMAT,
             status_fn=spack.spec.Spec.install_status,
             hashlen=7,
             hashes=True,
@@ -2421,10 +2437,13 @@ def _concretize_from_constraints(spec_constraints, tests=False):
             invalid_constraints.extend(inv_variant_constraints)
 
 
-def _concretize_task(packed_arguments):
-    spec_constraints, tests = packed_arguments
+def _concretize_task(packed_arguments) -> Tuple[int, Spec, float]:
+    index, spec_constraints, tests = packed_arguments
+    spec_constraints = [Spec(x) for x in spec_constraints]
     with tty.SuppressOutput(msg_enabled=False):
-        return _concretize_from_constraints(spec_constraints, tests)
+        start = time.time()
+        spec = _concretize_from_constraints(spec_constraints, tests)
+        return index, spec, time.time() - start
 
 
 def make_repo_path(root):
@@ -2447,13 +2466,13 @@ def make_repo_path(root):
 def prepare_config_scope(env):
     """Add env's scope to the global configuration search path."""
     for scope in env.config_scopes():
-        spack.config.config.push_scope(scope)
+        spack.config.CONFIG.push_scope(scope)
 
 
 def deactivate_config_scope(env):
     """Remove any scopes from env from the global config path."""
     for scope in env.config_scopes():
-        spack.config.config.remove_scope(scope.name)
+        spack.config.CONFIG.remove_scope(scope.name)
 
 
 def manifest_file(env_name_or_dir):
@@ -2667,6 +2686,26 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         self.yaml_content = with_defaults_added
         self.changed = False
 
+    def _all_matches(self, user_spec: str) -> List[str]:
+        """Maps the input string to the first equivalent user spec in the manifest,
+        and returns it.
+
+        Args:
+            user_spec: user spec to be found
+
+        Raises:
+            ValueError: if no equivalent match is found
+        """
+        result = []
+        for yaml_spec_str in self.pristine_configuration["specs"]:
+            if Spec(yaml_spec_str) == Spec(user_spec):
+                result.append(yaml_spec_str)
+
+        if not result:
+            raise ValueError(f"cannot find a spec equivalent to {user_spec}")
+
+        return result
+
     def add_user_spec(self, user_spec: str) -> None:
         """Appends the user spec passed as input to the list of root specs.
 
@@ -2687,8 +2726,9 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             SpackEnvironmentError: when the user spec is not in the list
         """
         try:
-            self.pristine_configuration["specs"].remove(user_spec)
-            self.configuration["specs"].remove(user_spec)
+            for key in self._all_matches(user_spec):
+                self.pristine_configuration["specs"].remove(key)
+                self.configuration["specs"].remove(key)
         except ValueError as e:
             msg = f"cannot remove {user_spec} from {self}, no such spec exists"
             raise SpackEnvironmentError(msg) from e
@@ -2713,7 +2753,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         self.changed = True
 
     def add_definition(self, user_spec: str, list_name: str) -> None:
-        """Appends a user spec to the first active definition mathing the name passed as argument.
+        """Appends a user spec to the first active definition matching the name passed as argument.
 
         Args:
             user_spec: user spec to be appended
@@ -2926,3 +2966,7 @@ class SpackEnvironmentError(spack.error.SpackError):
 
 class SpackEnvironmentViewError(SpackEnvironmentError):
     """Class for errors regarding view generation."""
+
+
+class SpackEnvironmentConfigError(SpackEnvironmentError):
+    """Class for Spack environment-specific configuration errors."""

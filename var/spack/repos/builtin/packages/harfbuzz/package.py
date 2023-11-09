@@ -80,7 +80,7 @@ class Harfbuzz(MesonPackage, AutotoolsPackage):
     depends_on("icu4c")
     depends_on("freetype")
     depends_on("cairo+pdf+ft")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("graphite2", when="+graphite2")
 
     conflicts(

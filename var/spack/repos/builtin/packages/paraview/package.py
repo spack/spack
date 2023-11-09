@@ -29,10 +29,11 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master", submodules=True)
     version(
-        "5.11.1",
-        sha256="5cc2209f7fa37cd3155d199ff6c3590620c12ca4da732ef7698dec37fa8dbb34",
+        "5.11.2",
+        sha256="5c5d2f922f30d91feefc43b4a729015dbb1459f54c938896c123d2ac289c7a1e",
         preferred=True,
     )
+    version("5.11.1", sha256="5cc2209f7fa37cd3155d199ff6c3590620c12ca4da732ef7698dec37fa8dbb34")
     version("5.11.0", sha256="9a0b8fe8b1a2cdfd0ace9a87fa87e0ec21ee0f6f0bcb1fdde050f4f585a25165")
     version("5.10.1", sha256="520e3cdfba4f8592be477314c2f6c37ec73fb1d5b25ac30bdbd1c5214758b9c2")
     version("5.10.0", sha256="86d85fcbec395cdbc8e1301208d7c76d8f48b15dc6b967ffbbaeee31242343a5")
@@ -71,6 +72,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     variant("kits", default=True, description="Use module kits")
     variant("pagosa", default=False, description="Build the pagosa adaptor")
     variant("eyedomelighting", default=False, description="Enable Eye Dome Lighting feature")
+    variant("nvindex", default=False, description="Enable the pvNVIDIAIndeX plugin")
     variant("tbb", default=False, description="Enable multi-threaded parallelism with TBB")
     variant("adios2", default=False, description="Enable ADIOS2 support", when="@5.8:")
     variant("visitbridge", default=False, description="Enable VisItBridge support")
@@ -138,9 +140,6 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         when="%xl_r",
         msg="Use paraview@5.9.0 with %xl_r. Earlier versions are not able to build with xl.",
     )
-
-    # Newer abseil-cpp requires C++14, but paraview uses C++11 by default
-    conflicts("^abseil-cpp@2023:")
 
     # We only support one single Architecture
     for _arch, _other_arch in itertools.permutations(CudaPackage.cuda_arch_values, 2):
@@ -226,10 +225,15 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("protobuf@3.4:3.18", when="@:5.10%intel@2021:")
     depends_on("protobuf@3.4:3.18", when="@:5.10%xl")
     depends_on("protobuf@3.4:3.18", when="@:5.10%xl_r")
+    # protobuf requires newer abseil-cpp, which in turn requires C++14,
+    # but paraview uses C++11 by default. Use for 5.11+ until ParaView updates
+    # its C++ standard level.
+    depends_on("protobuf@3.4:3.21", when="@5.11:")
+    depends_on("protobuf@3.4:3.21", when="@master")
     depends_on("libxml2")
     depends_on("lz4")
     depends_on("xz")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libcatalyst@2:", when="+libcatalyst")
     depends_on("hip@5.2:", when="+rocm")
     for target in ROCmPackage.amdgpu_targets:
@@ -252,6 +256,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("nlohmann-json", when="@5.11:")
 
     # ParaView depends on proj@8.1.0 due to changes in MR
+    # v8.1.0 is required for VTK::GeoVis
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8474
     depends_on("proj@8.1.0", when="@5.11:")
 
@@ -277,7 +282,9 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     # Fix IOADIOS2 module to work with kits
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8653
-    patch("vtk-adios2-module-no-kit.patch", when="@5.8:")
+    patch("vtk-adios2-module-no-kit.patch", when="@5.8:5.11")
+    # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8653
+    patch("vtk-adios2-module-no-kit-5.12.patch", when="@5.12:")
 
     # Patch for paraview 5.9.0%xl_r
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/7591
@@ -422,6 +429,10 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("PARAVIEW_ENABLE_VISITBRIDGE", "visitbridge"),
             self.define_from_variant("VISIT_BUILD_READER_Silo", "visitbridge"),
         ]
+
+        if spec.satisfies("@5.12:"):
+            cmake_args.append("-DVTK_MODULE_USE_EXTERNAL_VTK_fast_float:BOOL=OFF")
+            cmake_args.append("-DVTK_MODULE_USE_EXTERNAL_VTK_token:BOOL=OFF")
 
         if spec.satisfies("@5.11:"):
             cmake_args.append("-DVTK_MODULE_USE_EXTERNAL_VTK_verdict:BOOL=OFF")
@@ -606,6 +617,9 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
         if "+tbb" in spec:
             cmake_args.append("-DVTK_SMP_IMPLEMENTATION_TYPE=TBB")
+
+        if "+nvindex" in spec:
+            cmake_args.append("-DPARAVIEW_PLUGIN_ENABLE_pvNVIDIAIndeX:BOOL=ON")
 
         # Hide git from Paraview so it will not use `git describe`
         # to find its own version number

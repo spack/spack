@@ -94,15 +94,15 @@ class TestState:
 
     def __init__(self):
         if _SERIALIZE:
-            self.config = spack.config.config
+            self.config = spack.config.CONFIG
             self.platform = spack.platforms.host
             self.test_patches = store_patches()
             self.store = spack.store.STORE
 
     def restore(self):
         if _SERIALIZE:
-            spack.config.config = self.config
-            spack.repo.path = spack.repo.create(self.config)
+            spack.config.CONFIG = self.config
+            spack.repo.PATH = spack.repo.create(self.config)
             spack.platforms.host = self.platform
             spack.store.STORE = self.store
             self.test_patches.restore()

@@ -5,7 +5,6 @@
 import itertools
 import os
 import subprocess
-import sys
 
 import pytest
 
@@ -35,7 +34,7 @@ def test_urlencode_string():
     assert ci._url_encode_string("Spack Test Project") == "Spack+Test+Project"
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 def test_import_signing_key(mock_gnupghome):
     signing_key_dir = spack_paths.mock_gpg_keys_path
     signing_key_path = os.path.join(signing_key_dir, "package-signing-key")
@@ -427,18 +426,14 @@ def test_affected_specs_on_first_concretization(mutable_mock_env_path, mock_pack
     assert len(mpileaks_specs) == 2, e.all_specs()
 
 
-@pytest.mark.skipif(
-    sys.platform == "win32", reason="Reliance on bash script not supported on Windows"
-)
+@pytest.mark.not_on_windows("Reliance on bash script not supported on Windows")
 def test_ci_process_command(repro_dir):
     result = ci.process_command("help", commands=[], repro_dir=str(repro_dir))
     help_sh = repro_dir / "help.sh"
     assert help_sh.exists() and not result
 
 
-@pytest.mark.skipif(
-    sys.platform == "win32", reason="Reliance on bash script not supported on Windows"
-)
+@pytest.mark.not_on_windows("Reliance on bash script not supported on Windows")
 def test_ci_process_command_fail(repro_dir, monkeypatch):
     msg = "subprocess wait exception"
 
@@ -456,10 +451,7 @@ def test_ci_create_buildcache(tmpdir, working_env, config, mock_packages, monkey
     monkeypatch.setattr(spack.ci, "push_mirror_contents", lambda a, b, c: True)
 
     results = ci.create_buildcache(
-        None,
-        pr_pipeline=True,
-        buildcache_mirror_url="file:///fake-url-one",
-        pipeline_mirror_url="file:///fake-url-two",
+        None, destination_mirror_urls=["file:///fake-url-one", "file:///fake-url-two"]
     )
 
     assert len(results) == 2
@@ -469,9 +461,7 @@ def test_ci_create_buildcache(tmpdir, working_env, config, mock_packages, monkey
     assert result2.success
     assert result2.url == "file:///fake-url-two"
 
-    results = ci.create_buildcache(
-        None, pr_pipeline=True, buildcache_mirror_url="file:///fake-url-one"
-    )
+    results = ci.create_buildcache(None, destination_mirror_urls=["file:///fake-url-one"])
 
     assert len(results) == 1
     assert results[0].success
@@ -492,9 +482,7 @@ def test_ci_run_standalone_tests_missing_requirements(
     assert "Reproduction directory is required" in err
 
 
-@pytest.mark.skipif(
-    sys.platform == "win32", reason="Reliance on bash script not supported on Windows"
-)
+@pytest.mark.not_on_windows("Reliance on bash script not supported on Windows")
 def test_ci_run_standalone_tests_not_installed_junit(
     tmp_path, repro_dir, working_env, default_mock_concretization, mock_test_stage, capfd
 ):
@@ -512,9 +500,7 @@ def test_ci_run_standalone_tests_not_installed_junit(
     assert os.path.getsize(log_file) > 0
 
 
-@pytest.mark.skipif(
-    sys.platform == "win32", reason="Reliance on bash script not supported on Windows"
-)
+@pytest.mark.not_on_windows("Reliance on bash script not supported on Windows")
 def test_ci_run_standalone_tests_not_installed_cdash(
     tmp_path, repro_dir, working_env, default_mock_concretization, mock_test_stage, capfd
 ):

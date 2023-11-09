@@ -32,6 +32,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     url = "http://www.cpan.org/src/5.0/perl-5.34.0.tar.gz"
     tags = ["windows"]
 
+    maintainers("LydDeb")
+
     executables = [r"^perl(-?\d+.*)?$"]
 
     # see https://www.cpan.org/src/README.html for
@@ -124,15 +126,21 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         depends_on("gdbm@:1.14.1", when="@:5.28.0")
         depends_on("berkeley-db")
         depends_on("bzip2")
-        depends_on("zlib")
+        depends_on("zlib-api")
         # :5.24.1 needs zlib@:1.2.8: https://rt.cpan.org/Public/Bug/Display.html?id=120134
-        depends_on("zlib@:1.2.8", when="@5.20.3:5.24.1")
+        conflicts("^zlib@1.2.9:", when="@5.20.3:5.24.1")
 
     conflicts("@5.34.1:", when="%msvc@:19.29.30136")
     # there has been a long fixed issue with 5.22.0 with regard to the ccflags
     # definition.  It is well documented here:
     # https://rt.perl.org/Public/Bug/Display.html?id=126468
     patch("protect-quotes-in-ccflags.patch", when="@5.22.0")
+
+    # Support zlib-ng 2.1.2 and above for recent Perl
+    # Restrict zlib-ng to older versions for older Perl
+    # See https://github.com/pmqs/Compress-Raw-Zlib/issues/24
+    patch("zlib-ng.patch", when="@5.38 ^zlib-ng@2.1.2:")
+    conflicts("^zlib-ng@2.1.2:", when="@:5.37")
 
     # Fix the Time-Local testase http://blogs.perl.org/users/tom_wyant/2020/01/my-y2020-bug.html
     patch(
@@ -252,13 +260,23 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # aren't writeable so make pp.c user writeable
     # before patching. This should probably walk the
     # source and make everything writeable in the future.
+    # The patch "zlib-ng.patch" also fail. So, apply chmod
+    # to Makefile.PL and Zlib.xs too.
     def do_stage(self, mirror_only=False):
         # Do Spack's regular stage
         super().do_stage(mirror_only)
-        # Add write permissions on file to be patched
-        filename = join_path(self.stage.source_path, "pp.c")
-        perm = os.stat(filename).st_mode
-        os.chmod(filename, perm | 0o200)
+        # Add write permissions on files to be patched
+        files_to_chmod = [
+            join_path(self.stage.source_path, "pp.c"),
+            join_path(self.stage.source_path, "cpan/Compress-Raw-Zlib/Makefile.PL"),
+            join_path(self.stage.source_path, "cpan/Compress-Raw-Zlib/Zlib.xs"),
+        ]
+        for filename in files_to_chmod:
+            try:
+                perm = os.stat(filename).st_mode
+                os.chmod(filename, perm | 0o200)
+            except IOError:
+                continue
 
     def nmake_arguments(self):
         args = []
@@ -395,14 +413,13 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
                 maker()
                 maker("install")
 
-    def _setup_dependent_env(self, env, dependent_spec, deptype):
+    def _setup_dependent_env(self, env, dependent_spec):
         """Set PATH and PERL5LIB to include the extension and
         any other perl extensions it depends on,
         assuming they were installed with INSTALL_BASE defined."""
         perl_lib_dirs = []
-        for d in dependent_spec.traverse(deptype=deptype):
-            if d.package.extends(self.spec):
-                perl_lib_dirs.append(d.prefix.lib.perl5)
+        if dependent_spec.package.extends(self.spec):
+            perl_lib_dirs.append(dependent_spec.prefix.lib.perl5)
         if perl_lib_dirs:
             perl_lib_path = ":".join(perl_lib_dirs)
             env.prepend_path("PERL5LIB", perl_lib_path)
@@ -410,10 +427,10 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             env.append_path("PATH", self.prefix.bin)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        self._setup_dependent_env(env, dependent_spec, deptype=("build", "run", "test"))
+        self._setup_dependent_env(env, dependent_spec)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
-        self._setup_dependent_env(env, dependent_spec, deptype=("run",))
+        self._setup_dependent_env(env, dependent_spec)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before perl modules' install() methods.
@@ -453,8 +470,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         env.set("BZIP2_INCLUDE", spec["bzip2"].prefix.include)
         env.set("BZIP2_LIB", spec["bzip2"].libs.directories[0])
         env.set("BUILD_ZLIB", 0)
-        env.set("ZLIB_INCLUDE", spec["zlib"].prefix.include)
-        env.set("ZLIB_LIB", spec["zlib"].libs.directories[0])
+        env.set("ZLIB_INCLUDE", spec["zlib-api"].prefix.include)
+        env.set("ZLIB_LIB", spec["zlib-api"].libs.directories[0])
 
     @run_after("install")
     def filter_config_dot_pm(self):

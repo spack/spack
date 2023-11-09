@@ -90,7 +90,6 @@ def setup_parser(subparser):
 
     # used to construct scope arguments below
     scopes = spack.config.scopes()
-    scopes_metavar = spack.config.scopes_metavar
 
     # Add
     add_parser = sp.add_parser("add", help=mirror_add.__doc__)
@@ -99,7 +98,7 @@ def setup_parser(subparser):
     add_parser.add_argument(
         "--scope",
         choices=scopes,
-        metavar=scopes_metavar,
+        metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_modify_scope(),
         help="configuration scope to modify",
     )
@@ -112,14 +111,14 @@ def setup_parser(subparser):
             "and source use `--type binary --type source` (default)"
         ),
     )
-    arguments.add_s3_connection_args(add_parser, False)
+    arguments.add_connection_args(add_parser, False)
     # Remove
     remove_parser = sp.add_parser("remove", aliases=["rm"], help=mirror_remove.__doc__)
     remove_parser.add_argument("name", help="mnemonic name for mirror", metavar="mirror")
     remove_parser.add_argument(
         "--scope",
         choices=scopes,
-        metavar=scopes_metavar,
+        metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_modify_scope(),
         help="configuration scope to modify",
     )
@@ -138,11 +137,11 @@ def setup_parser(subparser):
     set_url_parser.add_argument(
         "--scope",
         choices=scopes,
-        metavar=scopes_metavar,
+        metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_modify_scope(),
         help="configuration scope to modify",
     )
-    arguments.add_s3_connection_args(set_url_parser, False)
+    arguments.add_connection_args(set_url_parser, False)
 
     # Set
     set_parser = sp.add_parser("set", help=mirror_set.__doc__)
@@ -167,18 +166,18 @@ def setup_parser(subparser):
     set_parser.add_argument(
         "--scope",
         choices=scopes,
-        metavar=scopes_metavar,
+        metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_modify_scope(),
         help="configuration scope to modify",
     )
-    arguments.add_s3_connection_args(set_parser, False)
+    arguments.add_connection_args(set_parser, False)
 
     # List
     list_parser = sp.add_parser("list", help=mirror_list.__doc__)
     list_parser.add_argument(
         "--scope",
         choices=scopes,
-        metavar=scopes_metavar,
+        metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_list_scope(),
         help="configuration scope to read from",
     )
@@ -193,6 +192,8 @@ def mirror_add(args):
         or args.s3_profile
         or args.s3_endpoint_url
         or args.type
+        or args.oci_username
+        or args.oci_password
     ):
         connection = {"url": args.url}
         if args.s3_access_key_id and args.s3_access_key_secret:
@@ -203,6 +204,8 @@ def mirror_add(args):
             connection["profile"] = args.s3_profile
         if args.s3_endpoint_url:
             connection["endpoint_url"] = args.s3_endpoint_url
+        if args.oci_username and args.oci_password:
+            connection["access_pair"] = [args.oci_username, args.oci_password]
         if args.type:
             connection["binary"] = "binary" in args.type
             connection["source"] = "source" in args.type
@@ -236,6 +239,8 @@ def _configure_mirror(args):
         changes["profile"] = args.s3_profile
     if args.s3_endpoint_url:
         changes["endpoint_url"] = args.s3_endpoint_url
+    if args.oci_username and args.oci_password:
+        changes["access_pair"] = [args.oci_username, args.oci_password]
 
     # argparse cannot distinguish between --binary and --no-binary when same dest :(
     # notice that set-url does not have these args, so getattr
@@ -253,12 +258,12 @@ def _configure_mirror(args):
 
 
 def mirror_set(args):
-    """Configure the connection details of a mirror"""
+    """configure the connection details of a mirror"""
     _configure_mirror(args)
 
 
 def mirror_set_url(args):
-    """Change the URL of a mirror."""
+    """change the URL of a mirror"""
     _configure_mirror(args)
 
 
@@ -474,7 +479,7 @@ def create_mirror_for_all_specs(path, skip_unstable_versions, selection_fn):
         path, skip_unstable_versions=skip_unstable_versions
     )
     for candidate in mirror_specs:
-        pkg_cls = spack.repo.path.get_pkg_class(candidate.name)
+        pkg_cls = spack.repo.PATH.get_pkg_class(candidate.name)
         pkg_obj = pkg_cls(spack.spec.Spec(candidate))
         mirror_stats.next_spec(pkg_obj.spec)
         spack.mirror.create_mirror_from_package_object(pkg_obj, mirror_cache, mirror_stats)

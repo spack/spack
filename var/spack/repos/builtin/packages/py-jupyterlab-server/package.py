@@ -24,9 +24,8 @@ class PyJupyterlabServer(PythonPackage):
 
     with when("@:2.14"):
         depends_on("py-setuptools", type="build")
-        # TODO: replace this after concretizer learns how to concretize separate build deps
-        depends_on("py-jupyter-packaging11", type="build")
-        # depends_on('py-jupyter-packaging@0.9:0', type='build')
+        depends_on("py-jupyter-packaging@0.10:1", when="@2.10.3", type="build")
+        depends_on("py-jupyter-packaging@0.9:0", when="@:2.6", type="build")
 
     depends_on("py-babel@2.10:", when="@2.16.4:", type=("build", "run"))
     depends_on("py-babel", when="@2.5.1:", type=("build", "run"))

@@ -7,10 +7,12 @@ import hashlib
 import inspect
 import os
 import os.path
+import pathlib
 import sys
 
 import llnl.util.filesystem
 import llnl.util.lang
+from llnl.url import allowed_archive
 
 import spack
 import spack.error
@@ -19,7 +21,6 @@ import spack.mirror
 import spack.repo
 import spack.stage
 import spack.util.spack_json as sjson
-from spack.util.compression import allowed_archive
 from spack.util.crypto import Checker, checksum
 from spack.util.executable import which, which_string
 
@@ -36,10 +37,12 @@ def apply_patch(stage, patch_path, level=1, working_dir="."):
     """
     git_utils_path = os.environ.get("PATH", "")
     if sys.platform == "win32":
-        git = which_string("git", required=True)
-        git_root = git.split("\\")[:-2]
-        git_root.extend(["usr", "bin"])
-        git_utils_path = os.sep.join(git_root)
+        git = which_string("git")
+        if git:
+            git = pathlib.Path(git)
+            git_root = git.parent.parent
+            git_root = git_root / "usr" / "bin"
+            git_utils_path = os.pathsep.join([str(git_root), git_utils_path])
 
     # TODO: Decouple Spack's patch support on Windows from Git
     # for Windows, and instead have Spack directly fetch, install, and
@@ -76,7 +79,7 @@ class Patch:
         self.level = level
         self.working_dir = working_dir
 
-    def apply(self, stage: spack.stage.Stage):
+    def apply(self, stage: "spack.stage.Stage"):
         """Apply a patch to source in a stage.
 
         Arguments:
@@ -190,7 +193,7 @@ class UrlPatch(Patch):
         if not self.sha256:
             raise PatchDirectiveError("URL patches require a sha256 checksum")
 
-    def apply(self, stage: spack.stage.Stage):
+    def apply(self, stage: "spack.stage.Stage"):
         assert self.stage.expanded, "Stage must be expanded before applying patches"
 
         # Get the patch file.
@@ -238,7 +241,7 @@ class UrlPatch(Patch):
 
 def from_dict(dictionary, repository=None):
     """Create a patch from json dictionary."""
-    repository = repository or spack.repo.path
+    repository = repository or spack.repo.PATH
     owner = dictionary.get("owner")
     if "owner" not in dictionary:
         raise ValueError("Invalid patch dictionary: %s" % dictionary)
@@ -312,21 +315,19 @@ class PatchCache:
     def to_json(self, stream):
         sjson.dump({"patches": self.index}, stream)
 
-    def patch_for_package(self, sha256, pkg):
+    def patch_for_package(self, sha256: str, pkg):
         """Look up a patch in the index and build a patch object for it.
 
         Arguments:
-            sha256 (str): sha256 hash to look up
+            sha256: sha256 hash to look up
             pkg (spack.package_base.PackageBase): Package object to get patch for.
 
         We build patch objects lazily because building them requires that
-        we have information about the package's location in its repo.
-
-        """
+        we have information about the package's location in its repo."""
         sha_index = self.index.get(sha256)
         if not sha_index:
-            raise NoSuchPatchError(
-                "Couldn't find patch for package %s with sha256: %s" % (pkg.fullname, sha256)
+            raise PatchLookupError(
+                f"Couldn't find patch for package {pkg.fullname} with sha256: {sha256}"
             )
 
         # Find patches for this class or any class it inherits from
@@ -335,8 +336,8 @@ class PatchCache:
             if patch_dict:
                 break
         else:
-            raise NoSuchPatchError(
-                "Couldn't find patch for package %s with sha256: %s" % (pkg.fullname, sha256)
+            raise PatchLookupError(
+                f"Couldn't find patch for package {pkg.fullname} with sha256: {sha256}"
             )
 
         # add the sha256 back (we take it out on write to save space,
@@ -403,6 +404,10 @@ class PatchCache:
 
 class NoSuchPatchError(spack.error.SpackError):
     """Raised when a patch file doesn't exist."""
+
+
+class PatchLookupError(NoSuchPatchError):
+    """Raised when a patch file cannot be located from sha256."""
 
 
 class PatchDirectiveError(spack.error.SpackError):

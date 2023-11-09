@@ -31,7 +31,7 @@ class Zziplib(AutotoolsPackage, CMakePackage):
 
     depends_on("python@3.5:", type="build", when="@0.13.72:")
     depends_on("python", type="build")
-    depends_on("zlib")
+    depends_on("zlib-api")
     # see zzip/CMakeLists.txt
     depends_on("coreutils", type="build", when="@0.13.72:")
     depends_on("pkgconfig", type="build", when="@0.13.72:")

@@ -26,6 +26,7 @@ class Yaksa(AutotoolsPackage, CudaPackage, ROCmPackage):
     url = "https://github.com/pmodels/yaksa/archive/refs/tags/v0.2.tar.gz"
     maintainers("raffenet", "yfguo", "hzhou")
 
+    version("0.3", sha256="c9e5291211bee8852831bb464f430ad5ba1541e31db5718a6fa2f2d3329fc2d9")
     version("0.2", sha256="9401cb6153dc8c34ddb9781bbabd418fd26b0a27b5da3294ecc21af7be9c86f2")
 
     depends_on("autoconf", type="build")
@@ -47,6 +48,8 @@ class Yaksa(AutotoolsPackage, CudaPackage, ROCmPackage):
             cuda_archs = spec.variants["cuda_arch"].value
             if "none" not in cuda_archs:
                 config_args.append("--with-cuda-sm={0}".format(",".join(cuda_archs)))
+            if "^cuda+allow-unsupported-compilers" in self.spec:
+                config_args.append("NVCC_FLAGS=-allow-unsupported-compiler")
 
         if "+rocm" in spec:
             config_args.append("--with-hip={0}".format(spec["hip"].prefix))

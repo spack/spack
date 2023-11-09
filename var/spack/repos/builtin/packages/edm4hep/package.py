@@ -14,11 +14,12 @@ class Edm4hep(CMakePackage):
     url = "https://github.com/key4hep/EDM4hep/archive/v00-01.tar.gz"
     git = "https://github.com/key4hep/EDM4hep.git"
 
-    maintainers("vvolkl", "jmcarcell")
+    maintainers("vvolkl", "jmcarcell", "tmadlener")
 
     tags = ["hep", "key4hep"]
 
     version("master", branch="master")
+    version("0.10.1", sha256="28a3bd4df899309b14ec0d441f8b6ed0065206a08a0018113bb490e9d008caed")
     version("0.10", sha256="a95c917c19793cfad6b0959854a653c5ce698c965598cabd649d544da07712c0")
     version(
         "0.9",
@@ -123,6 +124,10 @@ class Edm4hep(CMakePackage):
         args.append(self.define("CMAKE_CXX_STANDARD", self.spec.variants["cxxstd"].value))
         args.append(self.define("BUILD_TESTING", self.run_tests))
         return args
+
+    def setup_run_environment(self, env):
+        env.prepend_path("LD_LIBRARY_PATH", self.spec["edm4hep"].libs.directories[0])
+        env.prepend_path("PYTHONPATH", self.prefix.python)
 
     def url_for_version(self, version):
         """Translate version numbers to ilcsoft conventions.

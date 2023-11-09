@@ -128,3 +128,7 @@ class UnsatisfiableSpecError(SpecError):
         self.provided = provided
         self.required = required
         self.constraint_type = constraint_type
+
+
+class FetchError(SpackError):
+    """Superclass for fetch-related errors."""

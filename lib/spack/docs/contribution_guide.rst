@@ -310,53 +310,11 @@ Once all of the dependencies are installed, you can try building the documentati
    $ make clean
    $ make
 
-If you see any warning or error messages, you will have to correct those before
-your PR is accepted.
-
-If you are editing the documentation, you should obviously be running the
-documentation tests. But even if you are simply adding a new package, your
-changes could cause the documentation tests to fail:
-
-.. code-block:: console
-
-   package_list.rst:8745: WARNING: Block quote ends without a blank line; unexpected unindent.
-
-At first, this error message will mean nothing to you, since you didn't edit
-that file. Until you look at line 8745 of the file in question:
-
-.. code-block:: rst
-
-   Description:
-      NetCDF is a set of software libraries and self-describing, machine-
-     independent data formats that support the creation, access, and sharing
-     of array-oriented scientific data.
-
-Our documentation includes :ref:`a list of all Spack packages <package-list>`.
-If you add a new package, its docstring is added to this page. The problem in
-this case was that the docstring looked like:
-
-.. code-block:: python
-
-   class Netcdf(Package):
-       """
-       NetCDF is a set of software libraries and self-describing,
-       machine-independent data formats that support the creation,
-       access, and sharing of array-oriented scientific data.
-       """
-
-Docstrings cannot start with a newline character, or else Sphinx will complain.
-Instead, they should look like:
-
-.. code-block:: python
-
-   class Netcdf(Package):
-       """NetCDF is a set of software libraries and self-describing,
-       machine-independent data formats that support the creation,
-       access, and sharing of array-oriented scientific data."""
-
-Documentation changes can result in much more obfuscated warning messages.
-If you don't understand what they mean, feel free to ask when you submit
-your PR.
+If you see any warning or error messages, you will have to correct those before your PR
+is accepted. If you are editing the documentation, you should be running the
+documentation tests to make sure there are no errors. Documentation changes can result
+in some obfuscated warning messages. If you don't understand what they mean, feel free
+to ask when you submit your PR.
 
 --------
 Coverage

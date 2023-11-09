@@ -33,6 +33,8 @@ class QtPackage(CMakePackage):
 
     maintainers("wdconinc", "sethrj")
 
+    provides("qmake")
+
     # Default dependencies for all qt-* components
     generator("ninja")
     depends_on("cmake@3.16:", type="build")
@@ -89,6 +91,9 @@ class QtBase(QtPackage):
     url = QtPackage.get_url(__qualname__)
     list_url = QtPackage.get_list_url(__qualname__)
 
+    version("6.6.0", sha256="882f39ea3a40a0894cd64e515ce51711a4fab79b8c47bc0fe0279e99493a62cf")
+    version("6.5.3", sha256="174021c4a630df2e7e912c2e523844ad3cb5f90967614628fd8aa15ddbab8bc5")
+    version("6.5.2", sha256="221cafd400c0a992a42746b43ea879d23869232e56d9afe72cb191363267c674")
     version("6.5.1", sha256="fdde60cdc5c899ab7165f1c3f7b93bc727c2484c348f367d155604f5d901bfb6")
     version("6.5.0", sha256="7b0de20e177335927c55c58a3e1a7e269e32b044936e97e9a82564f0f3e69f99")
     version("6.4.3", sha256="e156692029a5503bad5f681bda856dd9df9dec17baa0ca7ee36b10178503ed40")
@@ -126,7 +131,7 @@ class QtBase(QtPackage):
     depends_on("icu4c")
     depends_on("libxml2")
     depends_on("pcre2+multibyte")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("zstd")
     with when("platform=linux"):
         depends_on("libdrm")
@@ -153,6 +158,9 @@ class QtBase(QtPackage):
 
     # Qt6 requires newer compilers: see https://github.com/spack/spack/issues/34418
     conflicts("%gcc@:7")
+    # The oldest compiler for Qt 6.5 is GCC 9: https://doc.qt.io/qt-6.5/supported-platforms.html
+    with when("@6.5:"):
+        conflicts("%gcc@:8")
 
     # ensure that Qt links against GSS framework on macOS: https://bugreports.qt.io/browse/QTBUG-114537
     with when("@6.3.2:6.5.1"):
@@ -160,6 +168,7 @@ class QtBase(QtPackage):
             "https://github.com/qt/qtbase/commit/c3d3e7312499189dde2ff9c0cb14bd608d6fd1cd.patch?full_index=1",
             sha256="85c16db15406b0094831bb57016dab7e0c0fd0978b082a1dc103c87334db7915",
         )
+    with when("@6.3.2:6.5.2"):
         patch(
             "https://github.com/qt/qtbase/commit/1bf144ba78ff10d712b4de55d2797b9256948a1d.patch?full_index=1",
             sha256="e4d9f1aee0566558e77eef5609b63c1fde3f3986bea1b9d5d7930b297f916a5e",
@@ -227,6 +236,9 @@ class QtBase(QtPackage):
                 features.append("libproxy")
         for k in features:
             define("FEATURE_" + k, True)
+
+        if "~opengl" in spec:
+            args.append(self.define("INPUT_opengl", "no"))
 
         # INPUT_* arguments: undefined/no/qt/system
         sys_inputs = ["doubleconversion"]

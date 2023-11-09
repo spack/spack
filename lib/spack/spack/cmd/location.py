@@ -109,7 +109,7 @@ def location(parser, args):
         return
 
     if args.packages:
-        print(spack.repo.path.first_repo().root)
+        print(spack.repo.PATH.first_repo().root)
         return
 
     if args.stages:
@@ -135,7 +135,7 @@ def location(parser, args):
 
     # Package dir just needs the spec name
     if args.package_dir:
-        print(spack.repo.path.dirname_for_package_name(spec.name))
+        print(spack.repo.PATH.dirname_for_package_name(spec.name))
         return
 
     # Either concretize or filter from already concretized environment

@@ -17,7 +17,7 @@ import spack.schema.projections
 #: THIS NEEDS TO BE UPDATED FOR EVERY NEW KEYWORD THAT
 #: IS ADDED IMMEDIATELY BELOW THE MODULE TYPE ATTRIBUTE
 spec_regex = (
-    r"(?!hierarchy|core_specs|verbose|hash_length|defaults|filter_hierarchy_specs|"
+    r"(?!hierarchy|core_specs|verbose|hash_length|defaults|filter_hierarchy_specs|hide|"
     r"whitelist|blacklist|"  # DEPRECATED: remove in 0.20.
     r"include|exclude|"  # use these more inclusive/consistent options
     r"projections|naming_scheme|core_compilers|all)(^\w[\w-]*)"
@@ -89,6 +89,7 @@ module_type_configuration = {
                 "exclude": array_of_strings,
                 "exclude_implicits": {"type": "boolean", "default": False},
                 "defaults": array_of_strings,
+                "hide_implicits": {"type": "boolean", "default": False},
                 "naming_scheme": {"type": "string"},  # Can we be more specific here?
                 "projections": projections_scheme,
                 "all": module_file_configuration,

@@ -98,11 +98,8 @@ def dev_build(self, args):
         tty.die("spack dev-build only takes one spec.")
 
     spec = specs[0]
-    if not spack.repo.path.exists(spec.name):
-        tty.die(
-            "No package for '{0}' was found.".format(spec.name),
-            "  Use `spack create` to create a new package",
-        )
+    if not spack.repo.PATH.exists(spec.name):
+        raise spack.repo.UnknownPackageError(spec.name)
 
     if not spec.versions.concrete_range_as_version:
         tty.die(

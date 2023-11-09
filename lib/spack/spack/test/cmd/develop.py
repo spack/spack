@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import shutil
-import sys
 
 import pytest
 
@@ -17,7 +16,7 @@ from spack.main import SpackCommand
 develop = SpackCommand("develop")
 env = SpackCommand("env")
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 @pytest.mark.usefixtures("mutable_mock_env_path", "mock_packages", "mock_fetch", "config")

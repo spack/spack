@@ -3,11 +3,21 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.compilers
 from spack.build_environment import dso_suffix
 from spack.package import *
 
 versions = [
+    {
+        "version": "2023.2.1",
+        "cpp": {
+            "url": "https://registrationcenter-download.intel.com/akdlm//IRC_NAS/ebf5d9aa-17a7-46a4-b5df-ace004227c0e/l_dpcpp-cpp-compiler_p_2023.2.1.8_offline.sh",
+            "sha256": "f5656b2f5bb5d904639e6ef1f90a2d2e760d2906e82ebc0dd387709738ca714b",
+        },
+        "ftn": {
+            "url": "https://registrationcenter-download.intel.com/akdlm//IRC_NAS/0d65c8d4-f245-4756-80c4-6712b43cf835/l_fortran-compiler_p_2023.2.1.8_offline.sh",
+            "sha256": "d4e36abc014c184698fec318a127f15a696b5333b3b0282aba1968b351207185",
+        },
+    },
     {
         "version": "2023.2.0",
         "cpp": {
@@ -154,16 +164,13 @@ class IntelOneapiCompilers(IntelOneApiPackage):
 
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi.html"
 
-    depends_on("patchelf", type="build")
+    # See https://github.com/spack/spack/issues/39252
+    depends_on("patchelf@:0.17", type="build")
 
     # TODO: effectively gcc is a direct dependency of intel-oneapi-compilers, but we
     # cannot express that properly. For now, add conflicts for non-gcc compilers
     # instead.
-    for __compiler in spack.compilers.supported_compilers():
-        if __compiler != "gcc":
-            conflicts(
-                "%{0}".format(__compiler), msg="intel-oneapi-compilers must be installed with %gcc"
-            )
+    requires("%gcc", msg="intel-oneapi-compilers must be installed with %gcc")
 
     for v in versions:
         version(v["version"], expand=False, **v["cpp"])
@@ -219,8 +226,7 @@ class IntelOneapiCompilers(IntelOneApiPackage):
     def inject_rpaths(self):
         # Sets rpath so the compilers can work without setting LD_LIBRARY_PATH.
         patchelf = which("patchelf")
-        patchelf.add_default_arg("--set-rpath")
-        patchelf.add_default_arg(":".join(self._ld_library_path()))
+        patchelf.add_default_arg("--set-rpath", ":".join(self._ld_library_path()))
         for pd in ["bin", "lib", join_path("compiler", "lib", "intel64_lin")]:
             for file in find(self.component_prefix.linux.join(pd), "*", recursive=False):
                 # Try to patch all files, patchelf will do nothing and fail if file
@@ -264,7 +270,10 @@ class IntelOneapiCompilers(IntelOneApiPackage):
             llvm_flags.append("-Wno-unused-command-line-argument")
 
         self.write_config_file(
-            common_flags + llvm_flags, self.component_prefix.linux.bin, ["icx", "icpx", "ifx"]
+            common_flags + llvm_flags, self.component_prefix.linux.bin, ["icx", "icpx"]
+        )
+        self.write_config_file(
+            common_flags + classic_flags, self.component_prefix.linux.bin, ["ifx"]
         )
         self.write_config_file(
             common_flags + classic_flags,

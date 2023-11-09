@@ -20,6 +20,9 @@ class FluxCore(AutotoolsPackage):
     maintainers("grondo")
 
     version("master", branch="master")
+    version("0.55.0", sha256="2925b8a084e9d1069a96de7689b515ad6f2051ecfb9fbbe4d2643507de7ccd30")
+    version("0.54.0", sha256="721fc3fff64b3b167ae55d0e29379ff3211729248ef97e3b9855816219063b42")
+    version("0.53.0", sha256="2f14d032a2d54f34e066c8a15c79917089e9f7f8558baa03dbfe63dbf56918b7")
     version("0.52.0", sha256="dca434238405e4cae4686c8143f2cc79919bfd9e26b09c980e1e5f69ffd0c448")
     version("0.51.0", sha256="e57b71b708482f20d2a2195a000c0c3b9176faa6aaadfad4d2117f8671ca67ce")
     version("0.50.0", sha256="77414299a7ca081199aa0f57bcaea3e05860e2095df73c0f6b7672b88fadf683")
@@ -123,7 +126,7 @@ class FluxCore(AutotoolsPackage):
     conflicts("platform=darwin", msg="flux-core does not support MacOS based platforms.")
     conflicts("platform=windows", msg="flux-core does not support Windows based platforms.")
 
-    depends_on("libarchive", when="@0.38.0:")
+    depends_on("libarchive+iconv", when="@0.38.0:")
     depends_on("ncurses@6.2:", when="@0.32.0:")
     depends_on("libzmq@4.0.4:")
     depends_on("czmq@3.0.1:")
@@ -139,6 +142,8 @@ class FluxCore(AutotoolsPackage):
     # `link` dependency on python due to Flux's `pymod` module
     depends_on("python@3.6:", when="@0.17:", type=("build", "link", "run"))
     depends_on("python@2.7:", type=("build", "link", "run"))
+    # Use of distutils in configure script dropped in v0.55
+    depends_on("python@:3.11", when="@:0.54", type=("build", "link", "run"))
     depends_on("py-cffi@1.1:", type=("build", "run"))
     depends_on("py-six@1.9:", when="@:0.24", type=("build", "run"))
     depends_on("py-pyyaml@3.10:", type=("build", "run"))

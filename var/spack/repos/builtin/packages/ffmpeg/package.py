@@ -77,7 +77,7 @@ class Ffmpeg(AutotoolsPackage):
     depends_on("alsa-lib", when="platform=linux")
     depends_on("iconv")
     depends_on("yasm@1.2.0:")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     depends_on("aom", when="+libaom")
     depends_on("bzip2", when="+bzlib")
@@ -111,6 +111,13 @@ class Ffmpeg(AutotoolsPackage):
         when="@5.1.2",
     )
 
+    # Patch fixing a build failure with binutils 2.41.0
+    patch(
+        "https://git.ffmpeg.org/gitweb/ffmpeg.git/commitdiff_plain/effadce6c756247ea8bae32dc13bb3e6f464f0eb",
+        sha256="d1ea47c29968507fee772234bc734d29958b62ab92400801ef28559b538a9168",
+        when="@6.0",
+    )
+
     @property
     def libs(self):
         return find_libraries("*", self.prefix, recursive=True)
@@ -120,6 +127,10 @@ class Ffmpeg(AutotoolsPackage):
         headers = find_all_headers(self.prefix.include)
         headers.directories = [self.prefix.include]
         return headers
+
+    @when("@:6.0 %apple-clang@15:")
+    def setup_build_environment(self, env):
+        env.append_flags("LDFLAGS", "-Wl,-ld_classic")
 
     def enable_or_disable_meta(self, variant, options):
         switch = "enable" if "+{0}".format(variant) in self.spec else "disable"

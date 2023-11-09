@@ -18,17 +18,17 @@ from spack.version import VersionChecksumError
 
 def pkg_factory(name):
     """Return a package object tied to an abstract spec"""
-    pkg_cls = spack.repo.path.get_pkg_class(name)
+    pkg_cls = spack.repo.PATH.get_pkg_class(name)
     return pkg_cls(Spec(name))
 
 
 @pytest.mark.usefixtures("config", "mock_packages")
 class TestPackage:
     def test_load_package(self):
-        spack.repo.path.get_pkg_class("mpich")
+        spack.repo.PATH.get_pkg_class("mpich")
 
     def test_package_name(self):
-        pkg_cls = spack.repo.path.get_pkg_class("mpich")
+        pkg_cls = spack.repo.PATH.get_pkg_class("mpich")
         assert pkg_cls.name == "mpich"
 
     def test_package_filename(self):
@@ -62,7 +62,7 @@ class TestPackage:
         from spack.pkg.builtin import mock  # noqa: F401
 
     def test_inheritance_of_diretives(self):
-        pkg_cls = spack.repo.path.get_pkg_class("simple-inheritance")
+        pkg_cls = spack.repo.PATH.get_pkg_class("simple-inheritance")
 
         # Check dictionaries that should have been filled by directives
         assert len(pkg_cls.dependencies) == 3
@@ -125,7 +125,7 @@ def test_urls_for_versions(mock_packages, config):
 
 def test_url_for_version_with_no_urls(mock_packages, config):
     spec = Spec("git-test")
-    pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
     with pytest.raises(spack.package_base.NoURLError):
         pkg_cls(spec).url_for_version("1.0")
 
@@ -314,7 +314,7 @@ def test_fetch_options(version_str, digest_end, extra_options):
 
 def test_package_deprecated_version(mock_packages, mock_fetch, mock_stage):
     spec = Spec("deprecated-versions")
-    pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
 
     assert spack.package_base.deprecated_version(pkg_cls, "1.1.0")
     assert not spack.package_base.deprecated_version(pkg_cls, "1.0.0")

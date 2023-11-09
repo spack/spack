@@ -134,7 +134,7 @@ class TestLibraryList:
         assert a == "/dir1/liblapack.%s" % plat_static_ext
 
         b = library_list[:]
-        assert type(b) == type(library_list)
+        assert type(b) is type(library_list)
         assert library_list == b
         assert library_list is not b
 
@@ -152,8 +152,8 @@ class TestLibraryList:
         assert both == both + both
 
         # Always produce an instance of LibraryList
-        assert type(library_list + pylist) == type(library_list)
-        assert type(pylist + library_list) == type(library_list)
+        assert type(library_list + pylist) is type(library_list)
+        assert type(pylist + library_list) is type(library_list)
 
 
 class TestHeaderList:
@@ -219,7 +219,7 @@ class TestHeaderList:
         assert a == "/dir1/Python.h"
 
         b = header_list[:]
-        assert type(b) == type(header_list)
+        assert type(b) is type(header_list)
         assert header_list == b
         assert header_list is not b
 
@@ -237,8 +237,8 @@ class TestHeaderList:
         assert h == h + h
 
         # Always produce an instance of HeaderList
-        assert type(header_list + pylist) == type(header_list)
-        assert type(pylist + header_list) == type(header_list)
+        assert type(header_list + pylist) is type(header_list)
+        assert type(pylist + header_list) is type(header_list)
 
 
 #: Directory where the data for the test below is stored

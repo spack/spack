@@ -51,6 +51,13 @@ def setup_parser(subparser):
         const="bat",
         help="print bat commands to load the package",
     )
+    shells.add_argument(
+        "--pwsh",
+        action="store_const",
+        dest="shell",
+        const="pwsh",
+        help="print pwsh commands to load the package",
+    )
 
     subparser.add_argument(
         "-a", "--all", action="store_true", help="unload all loaded Spack packages"
@@ -81,9 +88,8 @@ def unload(parser, args):
         )
         return 1
 
-    env_mod = spack.util.environment.EnvironmentModifications()
+    env_mod = uenv.environment_modifications_for_specs(*specs).reversed()
     for spec in specs:
-        env_mod.extend(uenv.environment_modifications_for_spec(spec).reversed())
         env_mod.remove_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
     cmds = env_mod.shell_modifications(args.shell)
 
