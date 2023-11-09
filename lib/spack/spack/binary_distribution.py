@@ -1703,6 +1703,7 @@ def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
                                 f"Ignoring binary package for {spec.name}/{spec.dag_hash()[:7]} "
                                 f"from {mirror} due to invalid metadata file: {e}"
                             )
+                            local_specfile_stage.destroy()
                             continue
                     except Exception:
                         continue
@@ -1743,6 +1744,7 @@ def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
                             f"Ignoring binary package for {spec.name}/{spec.dag_hash()[:7]} "
                             f"from {mirror} due to invalid metadata file: {e}"
                         )
+                        local_specfile_stage.destroy()
                         continue
 
                     if try_signed and not unsigned:

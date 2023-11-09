@@ -591,30 +591,6 @@ def test_install_legacy_buildcache_layout(install_mockery_mutable_config):
     assert expect_line in output
 
 
-@pytest.mark.nomockstage
-def test_install_future_buildcache_layout(install_mockery_mutable_config, mock_fetch):
-    """
-    Test that we get a warning message and install from source when we
-    don't recognize the buildcache_layout_version.
-    """
-    future_layout_dir = os.path.join(test_path, "data", "mirrors", "future_layout")
-    mirror_url = "file://{0}".format(future_layout_dir)
-    filename = (
-        "test-debian6-core2-gcc-4.5.0-archive-files-2.0-"
-        "l3vdiqvbobmspwyb4q2b62fz6nitd4hk.spec.json"
-    )
-    spec_json_path = os.path.join(future_layout_dir, "build_cache", filename)
-    mirror_cmd("add", "--scope", "site", "test-future-layout", mirror_url)
-    output = install_cmd("--no-check-signature", "-f", spec_json_path, output=str)
-    mirror_cmd("rm", "--scope=site", "test-future-layout")
-    expect_lines = [
-        "Warning: Ignoring binary package for archive-files",
-        "because layout version (10) is too new",
-        "Successfully installed archive-files",
-    ]
-    assert all([expected in output for expected in expect_lines])
-
-
 def test_FetchCacheError_only_accepts_lists_of_errors():
     with pytest.raises(TypeError, match="list"):
         bindist.FetchCacheError("error")
@@ -1187,3 +1163,28 @@ def test_get_valid_spec_file_no_json(tmp_path, filename):
     tmp_path.joinpath(filename).write_text("not json")
     with pytest.raises(bindist.InvalidMetadataFile):
         bindist._get_valid_spec_file(str(tmp_path / filename), max_supported_layout=1)
+
+
+def test_download_tarball_with_unsupported_layout_fails(tmp_path, mutable_config, capsys):
+    layout_version = bindist._current_build_cache_layout_version + 1
+    spec = Spec("gmake@4.4.1%gcc@13.1.0 arch=linux-ubuntu23.04-zen2")
+    spec._mark_concrete()
+    spec_dict = spec.to_dict()
+    spec_dict["buildcache_layout_version"] = layout_version
+
+    # Setup a basic local build cache structure
+    path = (
+        tmp_path / bindist.build_cache_relative_path() / bindist.tarball_name(spec, ".spec.json")
+    )
+    path.parent.mkdir(parents=True)
+    with open(path, "w") as f:
+        json.dump(spec_dict, f)
+
+    # Configure as a mirror.
+    mirror_cmd("add", "test-mirror", str(tmp_path))
+
+    # Shouldn't be able "download" this.
+    assert bindist.download_tarball(spec, unsigned=True) is None
+
+    # And there should be a warning about an unsupported layout version.
+    assert f"Layout version {layout_version} is too new" in capsys.readouterr().err
