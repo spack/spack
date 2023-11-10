@@ -11,6 +11,7 @@ from llnl.util.lang import nullcontext
 
 import spack.build_environment
 import spack.config
+import spack.error
 import spack.spec
 import spack.util.environment as environment
 import spack.util.prefix as prefix
