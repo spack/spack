@@ -73,6 +73,7 @@ class OpenfoamOrg(Package):
     version("8", sha256="94ba11cbaaa12fbb5b356e01758df403ac8832d69da309a5d79f76f42eb008fc")
     version("7", sha256="12389cf092dc032372617785822a597aee434a50a62db2a520ab35ba5a7548b5")
     version("6", sha256="32a6af4120e691ca2df29c5b9bd7bc7a3e11208947f9bccf6087cfff5492f025")
+    version("5.x", git="https://github.com/OpenFOAM/OpenFOAM-5.x", branch="master")
     version("5.0", sha256="9057d6a8bb9fa18802881feba215215699065e0b3c5cdd0c0e84cb29c9916c89")
     version("4.1", sha256="2de18de64e7abdb1b649ad8e9d2d58b77a2b188fb5bcb6f7c2a038282081fd31")
     version("2.4.0", sha256="9529aa7441b64210c400c019dcb2e0410fcfd62a6f62d23b6c5994c4753c4465")
