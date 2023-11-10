@@ -40,7 +40,7 @@ class Ctffind(AutotoolsPackage):
     def configure_args(self):
         config_args = []
 
-        if "^mkl" in self.spec:
+        if self.spec["fftw-api"].name in INTEL_MATH_LIBRARIES:
             config_args.extend(
                 [
                     "--enable-mkl",

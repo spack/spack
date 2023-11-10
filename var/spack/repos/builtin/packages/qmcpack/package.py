@@ -376,7 +376,7 @@ class Qmcpack(CMakePackage, CudaPackage):
         # Next two environment variables were introduced in QMCPACK 3.5.0
         # Prior to v3.5.0, these lines should be benign but CMake
         # may issue a warning.
-        if "^mkl" in spec:
+        if spec["lapack"].name in INTEL_MATH_LIBRARIES:
             args.append("-DENABLE_MKL=1")
             args.append("-DMKL_ROOT=%s" % env["MKLROOT"])
         else:

@@ -79,7 +79,7 @@ class Arrayfire(CMakePackage, CudaPackage):
             ]
             args.append(self.define("CUDA_architecture_build_targets", arch_list))
 
-        if "^mkl" in self.spec:
+        if self.spec["blas"].name in INTEL_MATH_LIBRARIES:
             if self.version >= Version("3.8.0"):
                 args.append(self.define("AF_COMPUTE_LIBRARY", "Intel-MKL"))
             else:

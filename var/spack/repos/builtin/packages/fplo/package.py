@@ -83,7 +83,7 @@ class Fplo(MakefilePackage):
         filter_file(r"^\s*F90\s*=.*", "F90=" + spack_fc, *files)
 
         # patch for 64 bit integers
-        if "^mkl+ilp64" in spec:
+        if spec["mkl"].satisfies("+ilp64"):
             setuphelper = FileFilter(join_path(self.build_directory, "PYTHON", "setuphelper.py"))
             setuphelper.filter("mkl 64bit integer 32bit", "mkl 64bit integer 64bit")
 

@@ -48,7 +48,7 @@ class Bart(MakefilePackage, CudaPackage):
         if spec["blas"].name == "openblas":
             env["OPENBLAS"] = "1"
 
-        if "^mkl" in spec:
+        elif spec["blas"].name in INTEL_MATH_LIBRARIES:
             env["MKL"] = "1"
             env["MKL_BASE"] = spec["mkl"].prefix.mkl
         else:
