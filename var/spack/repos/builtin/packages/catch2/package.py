@@ -113,7 +113,7 @@ class Catch2(CMakePackage):
     variant(
         "cxxstd", default="14", values=("14", "17"), multi=False, description="Define C++ standard"
     )
-    
+
     def cmake_args(self):
         spec = self.spec
         args = [self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd")]
