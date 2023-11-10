@@ -16,7 +16,6 @@ class Fdb(CMakePackage):
 
     maintainers("skosukhin")
 
-    # master version of fdb is subject to frequent changes and is to be used experimentally.
     version("master", branch="master")
     version("5.11.23", sha256="09b1d93f2b71d70c7b69472dfbd45a7da0257211f5505b5fcaf55bfc28ca6c65")
     version("5.11.17", sha256="375c6893c7c60f6fdd666d2abaccb2558667bd450100817c0e1072708ad5591e")
@@ -44,6 +43,7 @@ class Fdb(CMakePackage):
     depends_on("ecbuild@3.7:", type="build", when="@5.11.6:")
 
     depends_on("eckit@1.16:")
+    depends_on("eckit@1.24.4:", when="@5.11.22:")
     depends_on("eckit+admin", when="+tools")
 
     depends_on("eccodes@2.10:")
