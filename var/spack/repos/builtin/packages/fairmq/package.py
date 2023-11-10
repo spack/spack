@@ -57,6 +57,7 @@ class Fairmq(CMakePackage):
     def cmake_args(self):
         args = [
             self.define("DISABLE_COLOR", True),
+            self.define("BUILD_TESTING", self.run_tests),
             self.define_from_variant("BUILD_EXAMPLES", "examples"),
             self.define_from_variant("FAIRMQ_CHANNEL_DEFAULT_AUTOBIND", "autobind"),
         ]
