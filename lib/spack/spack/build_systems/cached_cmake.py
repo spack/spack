@@ -41,6 +41,11 @@ def cmake_cache_option(name, boolean_value, comment="", force=False):
     return 'set({0} {1} CACHE BOOL "{2}"{3})\n'.format(name, value, comment, force_str)
 
 
+def cmake_cache_filepath(name, value, comment=""):
+    """Generate a string for a cmake cache variable of type FILEPATH"""
+    return 'set({0} "{1}" CACHE FILEPATH "{2}")\n'.format(name, value, comment)
+
+
 class CachedCMakeBuilder(CMakeBuilder):
     #: Phases of a Cached CMake package
     #: Note: the initconfig phase is used for developer builds as a final phase to stop on
@@ -276,6 +281,20 @@ class CachedCMakeBuilder(CMakeBuilder):
             rocm_root = hip_root + "/.."
             entries.append(cmake_cache_path("HIP_ROOT_DIR", hip_root))
             entries.append(cmake_cache_path("ROCM_ROOT_DIR", rocm_root))
+            # The old way ...
+            #entries.append(
+            #    cmake_cache_path("HIP_CXX_COMPILER", "{0}".format(self.spec["hip"].hipcc))
+            #)
+
+            llvm_bin = spec["llvm-amdgpu"].prefix.bin
+            llvm_prefix = spec["llvm-amdgpu"].prefix
+            # Some ROCm systems seem to point to /<path>/rocm-<ver>/ and
+            # others point to /<path>/rocm-<ver>/llvm
+            if os.path.basename(os.path.normpath(llvm_prefix)) != "llvm":
+                llvm_bin = os.path.join(llvm_prefix, "llvm/bin/")
+            entries.append(
+                cmake_cache_filepath("CMAKE_HIP_COMPILER", os.path.join(llvm_bin, "clang++"))
+            )
 
             # Setting the amdgpu_target through CMAKE_HIP_ARCHITECTURE should be enough.
             archs = self.spec.variants["amdgpu_target"].value
@@ -297,10 +316,9 @@ class CachedCMakeBuilder(CMakeBuilder):
                     # dependencies on compilers yet, so we enforce the compiler
                     # here. The drawback being that this is not visible even in
                     # the full spec, only implied by the +rocm variant.
-                    llvm_amdgpu_clang = "{0}/clang".format(spec["llvm-amdgpu"].prefix.bin)
-                    llvm_amdgpu_clangpp = "{0}/clang++".format(spec["llvm-amdgpu"].prefix.bin)
+                    llvm_amdgpu_clang = os.path.join(llvm_bin, "clang++")
                     entries.append(cmake_cache_path("CMAKE_C_COMPILER", llvm_amdgpu_clang))
-                    entries.append(cmake_cache_path("CMAKE_CXX_COMPILER", llvm_amdgpu_clangpp))
+                    entries.append(cmake_cache_path("CMAKE_CXX_COMPILER", llvm_amdgpu_clang))
                 else:
                     gcc_prefix = spec_uses_toolchain(spec)[0]
                 entries.append(

@@ -46,7 +46,22 @@ from spack.error import SpackError
 from spack.reporters import CDash, CDashConfiguration
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
 
-JOB_RETRY_CONDITIONS = ["always"]
+# See https://docs.gitlab.com/ee/ci/yaml/#retry for descriptions of conditions
+JOB_RETRY_CONDITIONS = [
+    # "always",
+    "unknown_failure",
+    "script_failure",
+    "api_failure",
+    "stuck_or_timeout_failure",
+    "runner_system_failure",
+    "runner_unsupported",
+    "stale_schedule",
+    # "job_execution_timeout",
+    "archived_failure",
+    "unmet_prerequisites",
+    "scheduler_failure",
+    "data_integrity_failure",
+]
 
 TEMP_STORAGE_MIRROR_NAME = "ci_temporary_mirror"
 SPACK_RESERVED_TAGS = ["public", "protected", "notary"]

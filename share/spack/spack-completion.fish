@@ -1045,18 +1045,26 @@ complete -c spack -n '__fish_spack_using_command compiler' -s h -l help -f -a he
 complete -c spack -n '__fish_spack_using_command compiler' -s h -l help -d 'show this help message and exit'
 
 # spack compiler find
-set -g __fish_spack_optspecs_spack_compiler_find h/help scope=
+set -g __fish_spack_optspecs_spack_compiler_find h/help mixed-toolchain no-mixed-toolchain scope=
 
 complete -c spack -n '__fish_spack_using_command compiler find' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command compiler find' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command compiler find' -l mixed-toolchain -f -a mixed_toolchain
+complete -c spack -n '__fish_spack_using_command compiler find' -l mixed-toolchain -d 'Allow mixed toolchains (for example: clang, clang++, gfortran)'
+complete -c spack -n '__fish_spack_using_command compiler find' -l no-mixed-toolchain -f -a mixed_toolchain
+complete -c spack -n '__fish_spack_using_command compiler find' -l no-mixed-toolchain -d 'Do not allow mixed toolchains (for example: clang, clang++, gfortran)'
 complete -c spack -n '__fish_spack_using_command compiler find' -l scope -r -f -a '_builtin defaults system site user command_line'
 complete -c spack -n '__fish_spack_using_command compiler find' -l scope -r -d 'configuration scope to modify'
 
 # spack compiler add
-set -g __fish_spack_optspecs_spack_compiler_add h/help scope=
+set -g __fish_spack_optspecs_spack_compiler_add h/help mixed-toolchain no-mixed-toolchain scope=
 
 complete -c spack -n '__fish_spack_using_command compiler add' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command compiler add' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command compiler add' -l mixed-toolchain -f -a mixed_toolchain
+complete -c spack -n '__fish_spack_using_command compiler add' -l mixed-toolchain -d 'Allow mixed toolchains (for example: clang, clang++, gfortran)'
+complete -c spack -n '__fish_spack_using_command compiler add' -l no-mixed-toolchain -f -a mixed_toolchain
+complete -c spack -n '__fish_spack_using_command compiler add' -l no-mixed-toolchain -d 'Do not allow mixed toolchains (for example: clang, clang++, gfortran)'
 complete -c spack -n '__fish_spack_using_command compiler add' -l scope -r -f -a '_builtin defaults system site user command_line'
 complete -c spack -n '__fish_spack_using_command compiler add' -l scope -r -d 'configuration scope to modify'
 
@@ -1159,19 +1167,19 @@ complete -c spack -n '__fish_spack_using_command config' -l scope -r -d 'configu
 
 # spack config get
 set -g __fish_spack_optspecs_spack_config_get h/help
-complete -c spack -n '__fish_spack_using_command_pos 0 config get' -f -a 'bootstrap cdash ci compilers concretizer config mirrors modules packages repos upstreams'
+complete -c spack -n '__fish_spack_using_command_pos 0 config get' -f -a 'bootstrap cdash ci compilers concretizer config definitions mirrors modules packages repos upstreams'
 complete -c spack -n '__fish_spack_using_command config get' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command config get' -s h -l help -d 'show this help message and exit'
 
 # spack config blame
 set -g __fish_spack_optspecs_spack_config_blame h/help
-complete -c spack -n '__fish_spack_using_command_pos 0 config blame' -f -a 'bootstrap cdash ci compilers concretizer config mirrors modules packages repos upstreams'
+complete -c spack -n '__fish_spack_using_command_pos 0 config blame' -f -a 'bootstrap cdash ci compilers concretizer config definitions mirrors modules packages repos upstreams'
 complete -c spack -n '__fish_spack_using_command config blame' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command config blame' -s h -l help -d 'show this help message and exit'
 
 # spack config edit
 set -g __fish_spack_optspecs_spack_config_edit h/help print-file
-complete -c spack -n '__fish_spack_using_command_pos 0 config edit' -f -a 'bootstrap cdash ci compilers concretizer config mirrors modules packages repos upstreams'
+complete -c spack -n '__fish_spack_using_command_pos 0 config edit' -f -a 'bootstrap cdash ci compilers concretizer config definitions mirrors modules packages repos upstreams'
 complete -c spack -n '__fish_spack_using_command config edit' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command config edit' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command config edit' -l print-file -f -a print_file
@@ -1847,7 +1855,7 @@ complete -c spack -n '__fish_spack_using_command help' -l spec -f -a guide
 complete -c spack -n '__fish_spack_using_command help' -l spec -d 'help on the package specification syntax'
 
 # spack info
-set -g __fish_spack_optspecs_spack_info h/help a/all detectable maintainers no-dependencies no-variants no-versions phases tags tests virtuals
+set -g __fish_spack_optspecs_spack_info h/help a/all detectable maintainers no-dependencies no-variants no-versions phases tags tests virtuals variants-by-name
 complete -c spack -n '__fish_spack_using_command_pos 0 info' -f -a '(__fish_spack_packages)'
 complete -c spack -n '__fish_spack_using_command info' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command info' -s h -l help -d 'show this help message and exit'
@@ -1871,6 +1879,8 @@ complete -c spack -n '__fish_spack_using_command info' -l tests -f -a tests
 complete -c spack -n '__fish_spack_using_command info' -l tests -d 'output relevant build-time and stand-alone tests'
 complete -c spack -n '__fish_spack_using_command info' -l virtuals -f -a virtuals
 complete -c spack -n '__fish_spack_using_command info' -l virtuals -d 'output virtual packages'
+complete -c spack -n '__fish_spack_using_command info' -l variants-by-name -f -a variants_by_name
+complete -c spack -n '__fish_spack_using_command info' -l variants-by-name -d 'list variants in strict name order; don\'t group by condition'
 
 # spack install
 set -g __fish_spack_optspecs_spack_install h/help only= u/until= j/jobs= overwrite fail-fast keep-prefix keep-stage dont-restage use-cache no-cache cache-only use-buildcache= include-build-deps no-check-signature show-log-on-error source n/no-checksum deprecated v/verbose fake only-concrete add no-add f/file= clean dirty test= log-format= log-file= help-cdash cdash-upload-url= cdash-build= cdash-site= cdash-track= cdash-buildstamp= y/yes-to-all U/fresh reuse reuse-deps

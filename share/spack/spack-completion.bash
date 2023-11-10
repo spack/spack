@@ -370,7 +370,7 @@ _spack_compress_aliases() {
     # If there are zero or one completions, don't do anything
     # If this isn't the first argument, bail because aliases currently only apply
     # to top-level commands.
-    if [ "${#COMPREPLY[@]}" -le "1" ] || [ "$COMP_CWORD" != "1" ]; then
+    if [ "${#COMPREPLY[@]}" -le "1" ] || [ "$COMP_CWORD_NO_FLAGS" != "1" ]; then
         return
     fi
 
@@ -756,7 +756,7 @@ _spack_compiler() {
 _spack_compiler_find() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --scope"
+        SPACK_COMPREPLY="-h --help --mixed-toolchain --no-mixed-toolchain --scope"
     else
         SPACK_COMPREPLY=""
     fi
@@ -765,7 +765,7 @@ _spack_compiler_find() {
 _spack_compiler_add() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --scope"
+        SPACK_COMPREPLY="-h --help --mixed-toolchain --no-mixed-toolchain --scope"
     else
         SPACK_COMPREPLY=""
     fi
@@ -1267,7 +1267,7 @@ _spack_help() {
 _spack_info() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -a --all --detectable --maintainers --no-dependencies --no-variants --no-versions --phases --tags --tests --virtuals"
+        SPACK_COMPREPLY="-h --help -a --all --detectable --maintainers --no-dependencies --no-variants --no-versions --phases --tags --tests --virtuals --variants-by-name"
     else
         _all_packages
     fi

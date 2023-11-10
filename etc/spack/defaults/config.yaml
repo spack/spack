@@ -229,3 +229,11 @@ config:
   flags:
     # Whether to keep -Werror flags active in package builds.
     keep_werror: 'none'
+
+  # A mapping of aliases that can be used to define new commands. For instance,
+  # `sp: spec -I` will define a new command `sp` that will execute `spec` with
+  # the `-I` argument. Aliases cannot override existing commands.
+  aliases:
+    concretise: concretize
+    containerise: containerize
+    rm: remove

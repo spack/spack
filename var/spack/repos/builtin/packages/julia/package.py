@@ -26,6 +26,7 @@ class Julia(MakefilePackage):
     maintainers("vchuravy", "haampie", "giordano")
 
     version("master", branch="master")
+    version("1.9.3", sha256="8d7dbd8c90e71179e53838cdbe24ff40779a90d7360e29766609ed90d982081d")
     version("1.9.2", sha256="015438875d591372b80b09d01ba899657a6517b7c72ed41222298fef9d4ad86b")
     version("1.9.0", sha256="48f4c8a7d5f33d0bc6ce24226df20ab49e385c2d0c3767ec8dfdb449602095b2")
     version("1.8.5", sha256="d31026cc6b275d14abce26fd9fd5b4552ac9d2ce8bde4291e494468af5743031")
@@ -163,9 +164,11 @@ class Julia(MakefilePackage):
     )
 
     # patchelf 0.13 is required because the rpath patch uses --add-rpath
-    depends_on("patchelf@0.13:", type="build")
+    # patchelf 0.18 breaks (at least) libjulia-internal.so
+    depends_on("patchelf@0.13:0.17", type="build")
     depends_on("perl", type="build")
     depends_on("libwhich", type="build")
+    depends_on("python", type="build")
 
     depends_on("blas")  # note: for now openblas is fixed...
     depends_on("curl tls=mbedtls +nghttp2 +libssh2")
