@@ -18,4 +18,4 @@ class CubeScorepion(AutotoolsPackage):
     depends_on("cube@4.8:+gui")
     depends_on("cubelib@4.8:")
     depends_on("qt@5.9.1:")
-    depends_on("scorep@7.0:")
+    depends_on("scorep@7:")

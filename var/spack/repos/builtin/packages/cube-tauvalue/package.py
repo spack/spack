@@ -14,6 +14,7 @@ class CubeTauvalue(AutotoolsPackage):
     maintainers("swat-jsc")
 
     version("0.3", sha256="95c6562867497c0982adcb63c03f514df7b251ac101f06e0d827b2d252d85aeb")
+
     depends_on("cube@4.8:+gui")
     depends_on("cubelib@4.8:")
     depends_on("qt@5.9.1:")
