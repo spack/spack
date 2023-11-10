@@ -48,61 +48,18 @@ class Libzmq(AutotoolsPackage):
     #   @:4.0   legacy release 2016 (http://wiki.zeromq.org/intro:get-the-software),
     #           http://download.zeromq.org/zeromq-4.0.7.tar.gz -> 503 Service Unavailable
 
-    version(
-        "4.3.2",
-        sha256="ebd7b5c830d6428956b67a0454a7f8cbed1de74b3b01e5c33c5378e22740f763",
-        deprecated=True,
-    )
-    version(
-        "4.3.1",
-        sha256="bcbabe1e2c7d0eec4ed612e10b94b112dd5f06fcefa994a0c79a45d835cd21eb",
-        deprecated=True,
-    )
-    version(
-        "4.3.0",
-        sha256="8e9c3af6dc5a8540b356697081303be392ade3f014615028b3c896d0148397fd",
-        deprecated=True,
-    )
-    version(
-        "4.2.5",
-        sha256="cc9090ba35713d59bb2f7d7965f877036c49c5558ea0c290b0dcc6f2a17e489f",
-        deprecated=True,
-    )
-    version(
-        "4.2.2",
-        sha256="5b23f4ca9ef545d5bd3af55d305765e3ee06b986263b31967435d285a3e6df6b",
-        deprecated=True,
-    )
-    version(
-        "4.1.4",
-        sha256="e99f44fde25c2e4cb84ce440f87ca7d3fe3271c2b8cfbc67d55e4de25e6fe378",
-        deprecated=True,
-    )
-    version(
-        "4.1.2",
-        sha256="f9162ead6d68521e5154d871bac304f88857308bb02366b81bb588497a345927",
-        deprecated=True,
-    )
-    version(
-        "4.1.1",
-        sha256="43d61e5706b43946aad4a661400627bcde9c63cc25816d4749c67b64c3dab8db",
-        deprecated=True,
-    )
-    version(
-        "4.0.7",
-        sha256="e00b2967e074990d0538361cc79084a0a92892df2c6e7585da34e4c61ee47b03",
-        deprecated=True,
-    )
-    version(
-        "4.0.6",
-        sha256="28a2a9c9b77014c39087a498942449df18bb9885cdb63334833525a1d19f2894",
-        deprecated=True,
-    )
-    version(
-        "4.0.5",
-        sha256="3bc93c5f67370341428364ce007d448f4bb58a0eaabd0a60697d8086bc43342b",
-        deprecated=True,
-    )
+    with default_args(deprecated=True):
+        version("4.3.2", sha256="ebd7b5c830d6428956b67a0454a7f8cbed1de74b3b01e5c33c5378e22740f763")
+        version("4.3.1", sha256="bcbabe1e2c7d0eec4ed612e10b94b112dd5f06fcefa994a0c79a45d835cd21eb")
+        version("4.3.0", sha256="8e9c3af6dc5a8540b356697081303be392ade3f014615028b3c896d0148397fd")
+        version("4.2.5", sha256="cc9090ba35713d59bb2f7d7965f877036c49c5558ea0c290b0dcc6f2a17e489f")
+        version("4.2.2", sha256="5b23f4ca9ef545d5bd3af55d305765e3ee06b986263b31967435d285a3e6df6b")
+        version("4.1.4", sha256="e99f44fde25c2e4cb84ce440f87ca7d3fe3271c2b8cfbc67d55e4de25e6fe378")
+        version("4.1.2", sha256="f9162ead6d68521e5154d871bac304f88857308bb02366b81bb588497a345927")
+        version("4.1.1", sha256="43d61e5706b43946aad4a661400627bcde9c63cc25816d4749c67b64c3dab8db")
+        version("4.0.7", sha256="e00b2967e074990d0538361cc79084a0a92892df2c6e7585da34e4c61ee47b03")
+        version("4.0.6", sha256="28a2a9c9b77014c39087a498942449df18bb9885cdb63334833525a1d19f2894")
+        version("4.0.5", sha256="3bc93c5f67370341428364ce007d448f4bb58a0eaabd0a60697d8086bc43342b")
 
     variant("docs", default=False, description="Build documentation")
     variant("drafts", default=False, description="Build and install draft classes and methods")
@@ -122,12 +79,13 @@ class Libzmq(AutotoolsPackage):
     conflicts("%gcc@8:", when="@:4.2.2")
     conflicts("%gcc@11:", when="@:4.3.2")
 
-    with when("@master"):
-        depends_on("autoconf", type="build")
-        depends_on("automake", type="build")
-        depends_on("libtool", type="build")
-        depends_on("ruby-asciidoctor", type="build", when="+docs")
-    depends_on("pkgconfig", type="build")
+    with default_args(type="build"):
+        depends_on("pkgconfig")
+        with when("@master"):
+            depends_on("autoconf")
+            depends_on("automake")
+            depends_on("libtool")
+            depends_on("ruby-asciidoctor")
 
     depends_on("libbsd", when="+libbsd")
     depends_on("libsodium", when="+libsodium")
