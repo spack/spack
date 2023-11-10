@@ -1890,7 +1890,7 @@ class Environment:
         # as a Git repository, returning a GitRepoChangeDetector for
         # it if so
         _git_checker = _git_checker or GitRepoChangeDetector.from_src_dir
-        detect_changes_with_git = self.manifest.configuration["detect-changes-with-git"]
+        detect_changes_with_git = self.manifest.configuration.get("detect-changes-with-git", False)
 
         git_states = list()
         changed_dev_specs = list()
