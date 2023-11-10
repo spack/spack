@@ -1739,11 +1739,14 @@ class Environment:
         self, view: ViewDescriptor, reverse: bool = False
     ) -> spack.util.environment.EnvironmentModifications:
         try:
-            mods = uenv.environment_modifications_for_specs(*self.concrete_roots(), view=view)
+            with spack.store.STORE.db.read_transaction():
+                installed_roots = [s for s in self.concrete_roots() if s.installed]
+            mods = uenv.environment_modifications_for_specs(*installed_roots, view=view)
         except Exception as e:
             # Failing to setup spec-specific changes shouldn't be a hard error.
             tty.warn(
-                "couldn't load runtime environment due to {}: {}".format(e.__class__.__name__, e)
+                f"could not {'unload' if reverse else 'load'} runtime environment due "
+                f"to {e.__class__.__name__}: {e}"
             )
             return spack.util.environment.EnvironmentModifications()
         return mods.reversed() if reverse else mods
