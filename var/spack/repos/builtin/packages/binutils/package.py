@@ -143,10 +143,10 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     depends_on("m4", type="build", when="@:2.29 +gold")
     depends_on("bison", type="build", when="@:2.29 +gold")
 
-    # 2.34:2.40 needs makeinfo due to a bug, see:
+    # 2.34:2.41 needs makeinfo due to a bug, see:
     # https://sourceware.org/bugzilla/show_bug.cgi?id=25491
     # https://sourceware.org/bugzilla/show_bug.cgi?id=28909
-    depends_on("texinfo", type="build", when="@2.34:2.40")
+    depends_on("texinfo", type="build", when="@2.34:2.41")
 
     # gprofng requires bison
     depends_on("bison@3.0.4:", type="build", when="+gprofng")
