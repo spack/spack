@@ -1553,7 +1553,7 @@ def copy_stage_logs_to_artifacts(job_spec: spack.spec.Spec, job_log_dir: str) ->
         tty.error(msg.format(job_spec))
         return
 
-    stage_dir = job_pkg.stage.path
+    stage_dir = job_pkg.stage.source_path
     cmake_cache = os.path.join(stage_dir, "*.cmake")
     tty.debug("stage dir: {0}".format(stage_dir))
     file_list = [
