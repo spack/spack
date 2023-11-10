@@ -23,8 +23,9 @@ class Alps(CMakePackage):
     version("20220304_r7871", sha256="74bcb9156701f81439af3c60ecf26afeb6458c48012729aea2e9f7aa34e87426")
     # version 2.3.0 is removed since it requires python@:3.6 that's not supported by Spack
 
+    # build fails as of boost@1.83
     depends_on(
-        "boost"
+        "boost@:1.82.0"
         "+chrono +date_time +filesystem +iostreams +mpi +numpy +program_options"
         "+python +regex +serialization +system +test +thread +timer"
     )
