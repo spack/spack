@@ -44,6 +44,9 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("mpi")
     depends_on("blaspp@2022.05.00:")
     depends_on("lapackpp@2022.05.00:")
+
+    depends_on("blas")
+    depends_on("lapack")
     depends_on("scalapack", when="+scalapack")
 
     depends_on("umpire~examples")
@@ -107,7 +110,7 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
         args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
 
         # BLAS/LAPACK
-        if "^mkl" in spec:
+        if self.spec["lapack"].name in INTEL_MATH_LIBRARIES:
             vmap = {
                 "none": "seq",
                 "openmp": "omp",
