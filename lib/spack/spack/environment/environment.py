@@ -1341,24 +1341,24 @@ class Environment:
         msg = "concretization strategy not implemented [{0}]"
         raise SpackEnvironmentError(msg.format(self.unify))
 
-    def deconcretize(self, spec, concrete=True):
-        # If concrete, find all instances of concrete spec
-        # Else, find single instance of user spec
-        # the distinction is only relevant if multiple roots concretize
-        # to the same spec
+    def deconcretize(self, spec: spack.spec.Spec, concrete: bool = True):
+        """
+        Remove specified spec from environment concretization
 
+        Arguments:
+            spec: Spec to deconcretize. This must be a root of the environment
+            concrete: If True, find all instances of spec as concrete in the environemnt.
+                If False, find a single instance of the abstract spec as root of the environment.
+        """
         # spec has to be a root of the environment
         if concrete:
             dag_hash = spec.dag_hash()
-            indices = [
-                i
-                for i in range(len(self.concretized_order))
-                if self.concretized_order[i] == dag_hash
-            ]
 
-            for index in indices:
-                del self.concretized_order[index]
-                del self.concretized_user_specs[index]
+            pairs = zip(self.concretized_user_specs, self.concretized_order)
+            filtered = [(spec, h) for spec, h in pairs if h != dag_hash]
+            # Cannot use zip and unpack two values; it fails if filtered is empty
+            self.concretized_user_specs = [s for s, _ in filtered]
+            self.concretized_order = [h for _, h in filtered]
         else:
             index = self.concretized_user_specs.index(spec)
             dag_hash = self.concretized_order.pop(index)

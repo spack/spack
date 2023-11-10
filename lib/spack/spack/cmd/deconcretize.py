@@ -3,13 +3,16 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import sys
+from typing import List
 
 import llnl.util.tty as tty
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.cmd.common.confirmation as confirmation
+import spack.environment as ev
 import spack.spec
 
 description = "remove specs from the concretized lockfile of an environment"
@@ -22,10 +25,7 @@ display_args = {"long": True, "show_flags": False, "variants": False, "indent": 
 
 def setup_parser(subparser):
     subparser.add_argument(
-        "--root",
-        action="store_true",
-        help="deconcretize only environment roots. additional roots that depend on matching specs"
-        " will be ignored",
+        "--root", action="store_true", help="deconcretize only specific environment roots"
     )
     arguments.add_common_arguments(subparser, ["yes_to_all", "specs"])
     subparser.add_argument(
@@ -37,15 +37,22 @@ def setup_parser(subparser):
     )
 
 
-def get_deconcretize_list(args, specs, env):
+def get_deconcretize_list(
+    args: argparse.Namespace, specs: List[spack.spec.Spec], env: ev.Environment
+) -> List[spack.spec.Spec]:
+    """
+    Get list of environment roots to deconcretize
+    """
     env_specs = [s for _, s in env.concretized_specs()]
     to_deconcretize = []
     errors = []
 
     for s in specs:
         if args.root:
+            # find all roots matching given spec
             to_deconc = [e for e in env_specs if e.satisfies(s)]
         else:
+            # find all roots matching or depending on a matching spec
             to_deconc = [e for e in env_specs if any(d.satisfies(s) for d in e.traverse())]
 
         if len(to_deconc) < 1:
