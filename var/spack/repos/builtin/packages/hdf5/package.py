@@ -711,6 +711,17 @@ class Hdf5(CMakePackage):
                     if not os.path.exists(tgt_filename):
                         symlink(src_filename, tgt_filename)
 
+    @run_after("install")
+    def link_debug_libs(self):
+        # When build_type is Debug, the hdf5 build appends _debug to all library names.
+        # Dependents of hdf5 (netcdf-c etc.) can't handle those, thus make symlinks.
+        if "build_type=Debug" in self.spec:
+            libs = find(self.prefix.lib, "libhdf5*_debug.*", recursive=False)
+            with working_dir(self.prefix.lib):
+                for lib in libs:
+                    libname = os.path.split(lib)[1]
+                    os.symlink(libname, libname.replace("_debug", ""))
+
     @property
     @llnl.util.lang.memoized
     def _output_version(self):
