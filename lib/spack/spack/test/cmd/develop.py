@@ -178,6 +178,7 @@ spack:
             e.concretize()
 
             import pdb
+
             pdb.set_trace()
             specs_to_overwrite, git_states = e._get_overwrite_specs(_git_checker=mock_git_checker)
 

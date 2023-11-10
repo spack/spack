@@ -8,8 +8,6 @@ import sys
 
 import pytest
 
-import llnl.util.filesystem as fs
-
 import spack.environment as ev
 import spack.spec
 from spack.main import SpackCommand
@@ -21,15 +19,13 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-def test_dev_use_git(
-    tmpdir, mock_packages, mutable_database, mutable_mock_env_path, monkeypatch
-):
+def test_dev_use_git(tmpdir, mock_packages, mutable_database, mutable_mock_env_path, monkeypatch):
     existing_dev_path = tmpdir.ensure("dev-path", dir=True)
     spack_yaml = str(tmpdir.ensure("spack.yaml"))
 
     with open(spack_yaml, "w") as f:
         f.write(
-                """\
+            """\
 spack:
     detect-changes-with-git: true
     view: false
@@ -61,5 +57,7 @@ spack:
         def mock_git_checker(git_dir):
             return MockGitChangeDetector(True)
 
-        needs_reinstall, git_states = e._get_overwrite_specs(_database=db, _git_checker=mock_git_checker)
+        needs_reinstall, git_states = e._get_overwrite_specs(
+            _database=db, _git_checker=mock_git_checker
+        )
         assert set(needs_reinstall) == set([dependent.dag_hash(), child.dag_hash()])
