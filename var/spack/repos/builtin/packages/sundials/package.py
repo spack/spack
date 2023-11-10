@@ -292,6 +292,12 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     # fix issues with exported PETSc target(s) in SUNDIALSConfig.cmake
     patch("sundials-v5.8.0.patch", when="@5.8.0")
 
+    def flag_handler(self, name, flags):
+        if name == "cxxflags":
+            if self.spec.satisfies("+sycl"):
+                flags.append("-fsycl")
+        return (flags, None, None)
+
     # ==========================================================================
     # SUNDIALS Settings
     # ==========================================================================

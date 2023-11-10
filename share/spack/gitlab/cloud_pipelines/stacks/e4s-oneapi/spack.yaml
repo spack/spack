@@ -153,7 +153,7 @@ spack:
   - superlu-dist
   - sz3
   - tasmanian
-  - tau +mpi +python
+  - tau +mpi +python +syscall
   - trilinos +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
   - turbine
   - umap
@@ -200,11 +200,11 @@ spack:
   - kokkos +sycl +openmp cxxstd=17 +tests +examples
   - kokkos-kernels build_type=Release %oneapi ^kokkos +sycl +openmp cxxstd=17 +tests +examples
   - slate +sycl
-  - tau +mpi +opencl +level_zero ~pdt   # tau: requires libdrm.so to be installed
+  - sundials +sycl cxxstd=17 +examples-install
+  - tau +mpi +opencl +level_zero ~pdt +syscall   # tau: requires libdrm.so to be installed
   # --
   # - ginkgo +oneapi                    # InstallError: Ginkgo's oneAPI backend requires theDPC++ compiler as main CXX compiler.
   # - hpctoolkit +level_zero            # dyninst@12.3.0%gcc: /usr/bin/ld: libiberty/./d-demangle.c:142: undefined reference to `_intel_fast_memcpy'; can't mix intel-tbb@%oneapi with dyninst%gcc
-  # - sundials +sycl cxxstd=17          # sundials: include/sunmemory/sunmemory_sycl.h:20:10: fatal error: 'CL/sycl.hpp' file not found
 
   - py-scipy
 

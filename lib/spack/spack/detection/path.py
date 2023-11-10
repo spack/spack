@@ -15,9 +15,12 @@ import warnings
 from typing import Dict, List, Optional, Set, Tuple
 
 import llnl.util.filesystem
+import llnl.util.lang
 import llnl.util.tty
 
+import spack.util.elf as elf_utils
 import spack.util.environment
+import spack.util.environment as environment
 import spack.util.ld_so_conf
 
 from .common import (
@@ -57,6 +60,11 @@ def common_windows_package_paths(pkg_cls=None) -> List[str]:
     return paths
 
 
+def file_identifier(path):
+    s = os.stat(path)
+    return (s.st_dev, s.st_ino)
+
+
 def executables_in_path(path_hints: List[str]) -> Dict[str, str]:
     """Get the paths of all executables available from the current PATH.
 
@@ -75,12 +83,40 @@ def executables_in_path(path_hints: List[str]) -> Dict[str, str]:
     return path_to_dict(search_paths)
 
 
+def get_elf_compat(path):
+    """For ELF files, get a triplet (EI_CLASS, EI_DATA, e_machine) and see if
+    it is host-compatible."""
+    # On ELF platforms supporting, we try to be a bit smarter when it comes to shared
+    # libraries, by dropping those that are not host compatible.
+    with open(path, "rb") as f:
+        elf = elf_utils.parse_elf(f, only_header=True)
+        return (elf.is_64_bit, elf.is_little_endian, elf.elf_hdr.e_machine)
+
+
+def accept_elf(path, host_compat):
+    """Accept an ELF file if the header matches the given compat triplet,
+    obtained with :py:func:`get_elf_compat`. In case it's not an ELF (e.g.
+    static library, or some arbitrary file, fall back to is_readable_file)."""
+    # Fast path: assume libraries at least have .so in their basename.
+    # Note: don't replace with splitext, because of libsmth.so.1.2.3 file names.
+    if ".so" not in os.path.basename(path):
+        return llnl.util.filesystem.is_readable_file(path)
+    try:
+        return host_compat == get_elf_compat(path)
+    except (OSError, elf_utils.ElfParsingError):
+        return llnl.util.filesystem.is_readable_file(path)
+
+
 def libraries_in_ld_and_system_library_path(
     path_hints: Optional[List[str]] = None,
 ) -> Dict[str, str]:
-    """Get the paths of all libraries available from LD_LIBRARY_PATH,
-    LIBRARY_PATH, DYLD_LIBRARY_PATH, DYLD_FALLBACK_LIBRARY_PATH, and
-    standard system library paths.
+    """Get the paths of all libraries available from ``path_hints`` or the
+    following defaults:
+
+    - Environment variables (Linux: ``LD_LIBRARY_PATH``, Darwin: ``DYLD_LIBRARY_PATH``,
+      and ``DYLD_FALLBACK_LIBRARY_PATH``)
+    - Dynamic linker default paths (glibc: ld.so.conf, musl: ld-musl-<arch>.path)
+    - Default system library paths.
 
     For convenience, this is constructed as a dictionary where the keys are
     the library paths and the values are the names of the libraries
@@ -94,17 +130,45 @@ def libraries_in_ld_and_system_library_path(
             constructed based on the set of LD_LIBRARY_PATH, LIBRARY_PATH,
             DYLD_LIBRARY_PATH, and DYLD_FALLBACK_LIBRARY_PATH environment
             variables as well as the standard system library paths.
+        path_hints (list): list of paths to be searched. If ``None``, the default
+            system paths are used.
     """
-    default_lib_search_paths = (
-        spack.util.environment.get_path("LD_LIBRARY_PATH")
-        + spack.util.environment.get_path("DYLD_LIBRARY_PATH")
-        + spack.util.environment.get_path("DYLD_FALLBACK_LIBRARY_PATH")
-        + spack.util.ld_so_conf.host_dynamic_linker_search_paths()
-    )
-    path_hints = path_hints if path_hints is not None else default_lib_search_paths
+    if path_hints:
+        search_paths = llnl.util.filesystem.search_paths_for_libraries(*path_hints)
+    else:
+        search_paths = []
 
-    search_paths = llnl.util.filesystem.search_paths_for_libraries(*path_hints)
-    return path_to_dict(search_paths)
+        # Environment variables
+        if sys.platform == "darwin":
+            search_paths.extend(environment.get_path("DYLD_LIBRARY_PATH"))
+            search_paths.extend(environment.get_path("DYLD_FALLBACK_LIBRARY_PATH"))
+        elif sys.platform.startswith("linux"):
+            search_paths.extend(environment.get_path("LD_LIBRARY_PATH"))
+
+        # Dynamic linker paths
+        search_paths.extend(spack.util.ld_so_conf.host_dynamic_linker_search_paths())
+
+        # Drop redundant paths
+        search_paths = list(filter(os.path.isdir, search_paths))
+
+    # Make use we don't doubly list /usr/lib and /lib etc
+    search_paths = list(llnl.util.lang.dedupe(search_paths, key=file_identifier))
+
+    try:
+        host_compat = get_elf_compat(sys.executable)
+        accept = lambda path: accept_elf(path, host_compat)
+    except (OSError, elf_utils.ElfParsingError):
+        accept = llnl.util.filesystem.is_readable_file
+
+    path_to_lib = {}
+    # Reverse order of search directories so that a lib in the first
+    # search path entry overrides later entries
+    for search_path in reversed(search_paths):
+        for lib in os.listdir(search_path):
+            lib_path = os.path.join(search_path, lib)
+            if accept(lib_path):
+                path_to_lib[lib_path] = lib
+    return path_to_lib
 
 
 def libraries_in_windows_paths(path_hints: Optional[List[str]] = None) -> Dict[str, str]:

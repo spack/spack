@@ -330,16 +330,21 @@ def create_in_dir(
     if with_view is None and keep_relative:
         return Environment(manifest_dir)
 
-    manifest = EnvironmentManifestFile(manifest_dir)
+    try:
+        manifest = EnvironmentManifestFile(manifest_dir)
 
-    if with_view is not None:
-        manifest.set_default_view(with_view)
+        if with_view is not None:
+            manifest.set_default_view(with_view)
 
-    if not keep_relative and init_file is not None and str(init_file).endswith(manifest_name):
-        init_file = pathlib.Path(init_file)
-        manifest.absolutify_dev_paths(init_file.parent)
+        if not keep_relative and init_file is not None and str(init_file).endswith(manifest_name):
+            init_file = pathlib.Path(init_file)
+            manifest.absolutify_dev_paths(init_file.parent)
 
-    manifest.flush()
+        manifest.flush()
+
+    except spack.config.ConfigFormatError as e:
+        shutil.rmtree(manifest_dir)
+        raise e
 
     return Environment(manifest_dir)
 
@@ -1484,7 +1489,7 @@ class Environment:
         for uspec, uspec_constraints in zip(self.user_specs, self.user_specs.specs_as_constraints):
             if uspec not in old_concretized_user_specs:
                 root_specs.append(uspec)
-                args.append((i, uspec_constraints, tests))
+                args.append((i, [str(x) for x in uspec_constraints], tests))
                 i += 1
 
         # Ensure we don't try to bootstrap clingo in parallel
@@ -1520,12 +1525,19 @@ class Environment:
         batch = []
         for j, (i, concrete, duration) in enumerate(
             spack.util.parallel.imap_unordered(
-                _concretize_task, args, processes=num_procs, debug=tty.is_debug()
+                _concretize_task,
+                args,
+                processes=num_procs,
+                debug=tty.is_debug(),
+                maxtaskperchild=1,
             )
         ):
             batch.append((i, concrete))
             percentage = (j + 1) / len(args) * 100
-            tty.verbose(f"{duration:6.1f}s [{percentage:3.0f}%] {root_specs[i]}")
+            tty.verbose(
+                f"{duration:6.1f}s [{percentage:3.0f}%] {concrete.cformat('{hash:7}')} "
+                f"{root_specs[i].colored_str}"
+            )
             sys.stdout.flush()
 
         # Add specs in original order
@@ -2400,6 +2412,7 @@ def _concretize_from_constraints(spec_constraints, tests=False):
 
 def _concretize_task(packed_arguments) -> Tuple[int, Spec, float]:
     index, spec_constraints, tests = packed_arguments
+    spec_constraints = [Spec(x) for x in spec_constraints]
     with tty.SuppressOutput(msg_enabled=False):
         start = time.time()
         spec = _concretize_from_constraints(spec_constraints, tests)
