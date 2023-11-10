@@ -1277,7 +1277,7 @@ class ConfigPath:
             append = False
             prepend = False
             quoted = False
-            if element.endswith("::"):
+            if element.endswith("::") or (element.endswith(":") and not path):
                 if seen_override_in_path:
                     raise syaml.SpackYAMLError(
                         "Meaningless second override indicator `::' in path `{0}'".format(path), ""
