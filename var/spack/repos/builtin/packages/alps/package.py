@@ -41,14 +41,12 @@ class Alps(CMakePackage):
 
     extends("python")
 
-
     def url_for_version(self, version):
         if str(version) == "2.3.0":
             url = "https://alps.comp-phys.org/static/software/releases/alps-2.3.0-src.tar.gz"
         elif str(version) == "20220304_r7871":
             url = "http://exa.phys.s.u-tokyo.ac.jp/archive/MateriApps/src/alps_20220304~r7871.orig.tar.gz"
         return url
-
 
     def cmake_args(self):
         args = []
