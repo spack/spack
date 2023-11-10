@@ -19,7 +19,7 @@ class Mspc(Package):
     version(
         "6.0.1",
         sha256="787c813f3c30d176ed467334a514a6d980d91d6e0d6a4a6ca8420e5153e3d05a",
-        expand=False
+        expand=False,
     )
 
     depends_on("dotnet-core-sdk", type="run")
