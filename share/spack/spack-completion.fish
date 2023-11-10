@@ -371,6 +371,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a containerize -d '
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a containerise -d 'creates recipes to build images for different container runtimes'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a create -d 'create a new package file'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a debug -d 'debugging commands for troubleshooting Spack'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a deconcretize -d 'remove specs from the concretized lockfile of an environment'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a dependencies -d 'show dependencies of a package'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a dependents -d 'show packages that depend on another'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a deprecate -d 'replace one package with another via symlinks'
@@ -1289,6 +1290,18 @@ complete -c spack -n '__fish_spack_using_command debug create-db-tarball' -s h -
 set -g __fish_spack_optspecs_spack_debug_report h/help
 complete -c spack -n '__fish_spack_using_command debug report' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command debug report' -s h -l help -d 'show this help message and exit'
+
+# spack deconcretize
+set -g __fish_spack_optspecs_spack_deconcretize h/help root y/yes-to-all a/all
+complete -c spack -n '__fish_spack_using_command_pos_remainder 0 deconcretize' -f -k -a '(__fish_spack_specs)'
+complete -c spack -n '__fish_spack_using_command deconcretize' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command deconcretize' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command deconcretize' -l root -f -a root
+complete -c spack -n '__fish_spack_using_command deconcretize' -l root -d 'deconcretize only specific environment roots'
+complete -c spack -n '__fish_spack_using_command deconcretize' -s y -l yes-to-all -f -a yes_to_all
+complete -c spack -n '__fish_spack_using_command deconcretize' -s y -l yes-to-all -d 'assume "yes" is the answer to every confirmation request'
+complete -c spack -n '__fish_spack_using_command deconcretize' -s a -l all -f -a all
+complete -c spack -n '__fish_spack_using_command deconcretize' -s a -l all -d 'deconcretize ALL specs that match each supplied spec'
 
 # spack dependencies
 set -g __fish_spack_optspecs_spack_dependencies h/help i/installed t/transitive deptype= V/no-expand-virtuals
