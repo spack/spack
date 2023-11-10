@@ -87,6 +87,11 @@ class Abinit(AutotoolsPackage):
     # libxml2
     depends_on("libxml2", when="@9:+libxml2")
 
+    # If the Intel suite is used for Lapack, it must be used for fftw and vice-versa
+    for _intel_pkg in INTEL_MATH_LIBRARIES:
+        requires(f"^[virtuals=fftw-api] {_intel_pkg}", when=f"^[virtuals=lapack]   {_intel_pkg}")
+        requires(f"^[virtuals=lapack]   {_intel_pkg}", when=f"^[virtuals=fftw-api] {_intel_pkg}")
+
     # Cannot ask for +scalapack if it does not depend on MPI
     conflicts("+scalapack", when="~mpi")
 
@@ -199,7 +204,8 @@ class Abinit(AutotoolsPackage):
 
         # BLAS/LAPACK/SCALAPACK-ELPA
         linalg = spec["lapack"].libs + spec["blas"].libs
-        if "^mkl" in spec:
+        is_using_intel_libraries = spec["lapack"].name in INTEL_MATH_LIBRARIES
+        if is_using_intel_libraries:
             linalg_flavor = "mkl"
         elif "@9:" in spec and "^openblas" in spec:
             linalg_flavor = "openblas"
@@ -220,7 +226,7 @@ class Abinit(AutotoolsPackage):
 
         oapp(f"--with-linalg-flavor={linalg_flavor}")
 
-        if "^mkl" in spec:
+        if is_using_intel_libraries:
             fftflavor = "dfti"
         else:
             if "+openmp" in spec:
@@ -231,7 +237,7 @@ class Abinit(AutotoolsPackage):
         oapp(f"--with-fft-flavor={fftflavor}")
 
         if "@:8" in spec:
-            if "^mkl" in spec:
+            if is_using_intel_libraries:
                 oapp(f"--with-fft-incs={spec['fftw-api'].headers.cpp_flags}")
                 oapp(f"--with-fft-libs={spec['fftw-api'].libs.ld_flags}")
             else:
@@ -242,7 +248,7 @@ class Abinit(AutotoolsPackage):
                     ]
                 )
         else:
-            if "^mkl" in spec:
+            if is_using_intel_libraries:
                 options.extend(
                     [
                         f"FFT_CPPFLAGS={spec['fftw-api'].headers.cpp_flags}",
