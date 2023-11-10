@@ -1358,7 +1358,7 @@ class Environment:
 
         # Remove concrete specs that no longer correlate to a user spec
         for spec in set(self.concretized_user_specs) - set(self.user_specs):
-            self.deconcretize(spec)
+            self.deconcretize(spec, concrete=False)
 
         # Pick the right concretization strategy
         if self.unify == "when_possible":
@@ -1373,15 +1373,36 @@ class Environment:
         msg = "concretization strategy not implemented [{0}]"
         raise SpackEnvironmentError(msg.format(self.unify))
 
-    def deconcretize(self, spec):
+    def deconcretize(self, spec: spack.spec.Spec, concrete: bool = True):
+        """
+        Remove specified spec from environment concretization
+
+        Arguments:
+            spec: Spec to deconcretize. This must be a root of the environment
+            concrete: If True, find all instances of spec as concrete in the environemnt.
+                If False, find a single instance of the abstract spec as root of the environment.
+        """
         # spec has to be a root of the environment
-        index = self.concretized_user_specs.index(spec)
-        dag_hash = self.concretized_order.pop(index)
-        del self.concretized_user_specs[index]
+        if concrete:
+            dag_hash = spec.dag_hash()
+
+            pairs = zip(self.concretized_user_specs, self.concretized_order)
+            filtered = [(spec, h) for spec, h in pairs if h != dag_hash]
+            # Cannot use zip and unpack two values; it fails if filtered is empty
+            self.concretized_user_specs = [s for s, _ in filtered]
+            self.concretized_order = [h for _, h in filtered]
+        else:
+            index = self.concretized_user_specs.index(spec)
+            dag_hash = self.concretized_order.pop(index)
+
+            del self.concretized_user_specs[index]
 
         # If this was the only user spec that concretized to this concrete spec, remove it
         if dag_hash not in self.concretized_order:
-            del self.specs_by_hash[dag_hash]
+            # if we deconcretized a dependency that doesn't correspond to a root, it
+            # won't be here.
+            if dag_hash in self.specs_by_hash:
+                del self.specs_by_hash[dag_hash]
 
     def _get_specs_to_concretize(
         self,
