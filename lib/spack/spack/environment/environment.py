@@ -1901,13 +1901,12 @@ class Environment:
             # the dev_path
             dev_path_var = s.variants.get("dev_path", None)
             if not dev_path_var:
-                return False
+                continue
 
             # Now we can check whether the code changed since the last installation
-            _, record = db.query_by_spec_hash(spec.dag_hash())
-            if not record.installed:
+            if not db.installed(s):
                 # Not installed -> nothing to compare against
-                return False
+                continue
 
             if detect_changes_with_git:
                 git_state = _git_checker(dev_path_var.value)
@@ -1938,7 +1937,7 @@ class Environment:
                 direction="parents",
                 key=traverse.by_dag_hash,
             )
-            if depth == 0 or spec.installed
+            if depth == 0 or db.installed(spec)
         ], git_states
 
     def _install_log_links(self, spec):

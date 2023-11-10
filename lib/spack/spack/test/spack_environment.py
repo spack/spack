@@ -51,5 +51,15 @@ spack:
         db = spack.database.Database(tmpdir.join("db"), lock_cfg=spack.database.NO_LOCK)
         db._add(root)
 
-        needs_reinstall = e._get_overwrite_specs(_database=db)
-        # assert needs_reinstall == [dependent.dag_hash()]
+        class MockGitChangeDetector:
+            def __init__(self, changed):
+                self.changed = changed
+
+            def update_current(self):
+                return self.changed
+
+        def mock_git_checker(git_dir):
+            return MockGitChangeDetector(True)
+
+        needs_reinstall, git_states = e._get_overwrite_specs(_database=db, _git_checker=mock_git_checker)
+        assert set(needs_reinstall) == set([dependent.dag_hash(), child.dag_hash()])
