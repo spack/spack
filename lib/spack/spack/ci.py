@@ -1554,8 +1554,15 @@ def copy_stage_logs_to_artifacts(job_spec: spack.spec.Spec, job_log_dir: str) ->
         return
 
     stage_dir = job_pkg.stage.path
+    cmake_cache = os.path.join(stage_dir, "*.cmake")
     tty.debug("stage dir: {0}".format(stage_dir))
-    for file in [job_pkg.log_path, job_pkg.env_mods_path, *job_pkg.builder.archive_files]:
+    file_list = [
+        job_pkg.log_path,
+        job_pkg.env_mods_path,
+        *job_pkg.builder.archive_files,
+        cmake_cache,
+    ]
+    for file in file_list:
         copy_files_to_artifacts(file, job_log_dir)
 
 
