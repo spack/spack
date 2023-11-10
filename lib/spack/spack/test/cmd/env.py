@@ -2410,10 +2410,18 @@ spack:
         assert viewdir not in shell
 
 
-@pytest.mark.parametrize("include", [True, False, "split"])
+@pytest.mark.parametrize("include_views", [True, False, "split"])
 def test_stack_view_multiple_views(
-    tmp_path, mock_fetch, mock_packages, mock_archive, install_mockery, include
+    tmp_path,
+    mock_fetch,
+    mock_packages,
+    mock_archive,
+    install_mockery,
+    mutable_config,
+    include_views,
 ):
+    """Test multiple views as both included views (True), as both environment
+    views (False), or as one included and the other in the environment."""
     # Write the view configuration and or manifest file
     view_filename = tmp_path / "view.yaml"
     base_content = """\
@@ -2436,6 +2444,7 @@ def test_stack_view_multiple_views(
 {0}  exclude: [callpath%gcc]
 {0}  projections:
 """
+
     projection = "    'all': '{name}/{version}-{compiler.name}'"
 
     default_dir = tmp_path / "default-view"
@@ -2447,18 +2456,21 @@ def test_stack_view_multiple_views(
 
     content = "spack:\n"
     indent = "  "
-    if include is True:
-        view = "view:\n" + default_view.format(indent, default_dir)
+    if include_views is True:
+        # Include both the gcc and combinatorial views
+        view = "view:\n" + default_view.format(indent, str(default_dir))
         view += comb_view.format(indent, str(comb_dir)) + indent + projection
         view_filename.write_text(view)
         content += include_content + base_content
-    elif include == "split":
+    elif include_views == "split":
+        # Include the gcc view and inline the combinatorial view
         view = "view:\n" + default_view.format(indent, str(default_dir))
         view_filename.write_text(view)
         content += include_content + base_content + view_line
         indent += "  "
-        content += comb_view.format(indent, comb_dir) + indent + projection
+        content += comb_view.format(indent, str(comb_dir)) + indent + projection
     else:
+        # Inline both the gcc and combinatorial views in the environment.
         indent += "  "
         content += base_content + view_line
         content += default_view.format(indent, str(default_dir))
@@ -2477,11 +2489,12 @@ def test_stack_view_multiple_views(
 
     with ev.read("test") as e:
         for spec in e._get_environment_specs():
-            spec_dir = os.path.join(comb_dir, spec.name, f"{spec.version}-{spec.compiler.name}")
+            spec_subdir = f"{spec.version}-{spec.compiler.name}"
+            comb_spec_dir = str(comb_dir / spec.name / spec_subdir)
             if not spec.satisfies("callpath%gcc"):
-                assert os.path.exists(spec_dir)
+                assert os.path.exists(comb_spec_dir)
             else:
-                assert not os.path.exists(spec_dir)
+                assert not os.path.exists(comb_spec_dir)
 
 
 def test_env_activate_sh_prints_shell_output(tmpdir, mock_stage, mock_fetch, install_mockery):
@@ -3579,81 +3592,30 @@ def test_environment_created_from_lockfile_has_view(mock_packages, tmpdir):
         assert os.path.isdir(e.view_path_default)
 
 
-@pytest.mark.parametrize("include,enable", [(True, True), (True, False), (False, False)])
-def test_env_include_bool_view(tmp_path, mutable_mock_env_path, include, enable):
-    """Check processing when include a view configuration with bool value and
-    when the view is explicitly disabled (since doesn't appear to be tested
-    elsewhere)."""
-    env_name = "bool_view"
-    view = f"view: {str(enable).lower()}"
-    if include:
-        view_yaml = tmp_path / "view.yaml"
-        view_yaml.write_text(view)
-        add_include = f"  include:\n  - {view_yaml}"
-        add_view = ""
-    else:
-        add_include = ""
-        add_view = f"  {view}"
-
+def test_env_view_disabled(tmp_path, mutable_mock_env_path):
+    """Ensure an inlined view being disabled means not even the default view
+    is created (since the case doesn't appear to be covered in this module)."""
     spack_yaml = tmp_path / ev.manifest_name
     spack_yaml.write_text(
-        f"""\
+        """\
 spack:
-{add_include}
   specs:
   - mpileaks
-  packages:
-    mpileaks:
-      compiler: [gcc]
-{add_view}
+  view: false
 """
     )
-    env("create", env_name, str(spack_yaml))
-    with ev.read(env_name) as e:
+    env("create", "disabled", str(spack_yaml))
+    with ev.read("disabled") as e:
         e.concretize()
 
-    expected = 1 if enable else 0
-    assert len(e.views) == expected
-
-    if enable:
-        assert os.path.exists(e.view_path_default)
-    else:
-        assert not os.path.exists(e.view_path_default)
+    assert len(e.views) == 0
+    assert not os.path.exists(e.view_path_default)
 
 
-def test_env_include_path_view(tmp_path, mutable_mock_env_path):
-    """Check processing when include a view configuration with bool value and
-    when the view is explicitly disabled (since doesn't appear to be tested
-    elsewhere)."""
-    view_path = tmp_path / "custom-view"
-    view_yaml = tmp_path / "view.yaml"
-    view_yaml.write_text(f"view: {view_path}\n")
-
-    spack_yaml = tmp_path / ev.manifest_name
-    spack_yaml.write_text(
-        f"""\
-spack:
-  include:
-  - {view_yaml}
-  specs:
-  - mpileaks
-  packages:
-    mpileaks:
-      compiler: [gcc]
-"""
-    )
-
-    env("create", "test", str(spack_yaml))
-    with ev.read("test") as e:
-        concretize()
-
-    assert len(e.views) == 1
-    assert os.path.exists(view_path)
-
-
-def test_env_include_mixed_views(tmp_path, mutable_mock_env_path):
-    """Check processing with mixed boolean and path views to ensure included
-    set to ``false`` do NOT preclude other included views."""
+@pytest.mark.parametrize("first", ["false", "true", "custom"])
+def test_env_include_mixed_views(tmp_path, mutable_mock_env_path, mutable_config, first):
+    """Ensure including path and boolean views in different combinations result
+    in the creation of only the first view if it is not disabled."""
     false_yaml = tmp_path / "false-view.yaml"
     false_yaml.write_text("view: false\n")
 
@@ -3671,14 +3633,20 @@ view:
 """
     )
 
-    #  - {false_yaml}
+    if first == "false":
+        order = [false_yaml, true_yaml, custom_yaml]
+    elif first == "true":
+        order = [true_yaml, custom_yaml, false_yaml]
+    else:
+        order = [custom_yaml, false_yaml, true_yaml]
+    includes = [f"  - {yaml}\n" for yaml in order]
+
     spack_yaml = tmp_path / ev.manifest_name
     spack_yaml.write_text(
         f"""\
 spack:
   include:
-  - {custom_yaml}
-  - {true_yaml}
+{''.join(includes)}
   specs:
   - mpileaks
   packages:
@@ -3691,6 +3659,14 @@ spack:
     with ev.read("test") as e:
         concretize()
 
-    assert len(e.views) == 2
-    assert os.path.exists(e.manifest_path)
-    assert os.path.exists(e.view_path_default)
+    # Only the first included view should be created if view not disabled by it
+    assert len(e.views) == 0 if first == "false" else 1
+    if first == "true":
+        assert os.path.exists(e.view_path_default)
+    else:
+        assert not os.path.exists(e.view_path_default)
+
+    if first == "custom":
+        assert os.path.exists(custom_view)
+    else:
+        assert not os.path.exists(custom_view)
