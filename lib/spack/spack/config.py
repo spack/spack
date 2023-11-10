@@ -1236,6 +1236,12 @@ def merge_yaml(dest, source, prepend=False, append=False):
 
 
 class ConfigPath:
+    quoted_string = "(?:\"[^\"]+\")|(?:'[^']+')"
+    unquoted_string = "[^:'\"]+"
+    element = rf"(?:(?:{quoted_string})|(?:{unquoted_string}))"
+    validation_pattern = rf"^{element}[+-]?(?:\:\:?{element}[+-]?)*\:?\:?$"
+    token_pattern = rf"(^{element}[+-]?\:?\:?)"
+
     @staticmethod
     def validate(path):
         """Example valid config paths:
@@ -1246,13 +1252,55 @@ class ConfigPath:
         x:y::z
         x:y+::z
         """
-        quoted_string = "(?:\"[^\"]+\")|(?:'[^']+')"
-        unquoted_string = "[^:'\"]+"
-        element = rf"(?:(?:{quoted_string})|(?:{unquoted_string}))"
-        config_path_pattern = rf"^{element}[+-]?(?:\:\:?{element}[+-]?)*\:?\:?$"
-        if not re.match(config_path_pattern, path):
+        if not re.match(ConfigPath.validation_pattern, path):
             raise ValueError(f"Invalid path string: {path}")
 
+    @staticmethod
+    def next_token(path_str):
+        """Return the token along with the remainder of the path string
+
+        in fact, just handle the processing into syaml_str here
+        """
+        m = re.match(ConfigPath.token_pattern, path_str)
+        token = m.group(1)
+        return token, path_str[len(token):]
+
+    @staticmethod
+    def process(path):
+        result = []
+        quote = "'\""
+        while path:
+            element, path = ConfigPath.next_token(path)
+            override = False
+            append = False
+            prepend = False
+            quoted = False
+            if element.startswith("::"):
+                override = True
+            element = element.rstrip(":")
+
+            if element.endswith("+"):
+                prepend = True
+            elif element.endswith("-"):
+                append = True
+            element = element.rstrip("+-")
+
+            if re.match(f"^{quote}", element):
+                quoted = True
+            element = element.strip("'\"")
+
+            if any([append, prepend, override, quoted]):
+                element = syaml.syaml_str(element)
+                if append:
+                    element.append = True
+                if prepend:
+                    element.prepend = True
+                if override:
+                    element.override = True
+        
+            result.append(element)
+
+        return result
 
 def process_config_path(path):
     """Process a path argument to config.set() that may contain overrides ('::' or
@@ -1283,57 +1331,7 @@ def process_config_path(path):
     """
     ConfigPath.validate(path)
 
-    result = []
-    if path.startswith(":"):
-        raise syaml.SpackYAMLError("Illegal leading `:' in path `{0}'".format(path), "")
-    seen_override_in_path = False
-    while path:
-        front = ""
-
-        # Check for quotes before partitioning on ":" (colon inside
-        # of a quotation counts as part of the element).
-        quote = "['\"]"
-        not_quote = "[^'\"]"
-        if re.match(f"^{quote}", path):
-            m = re.match(rf"^({quote}{not_quote}+{quote})", path)
-            if m:
-                front = m.group(1)
-                path = path[len(front) :]
-            else:
-                raise ValueError(f"Opening quote with no closing quote: {path}")
-
-        remainder, sep, path = path.partition(":")
-        front += remainder
-
-        def remove_quotes(input):
-            return input.strip("'\"")
-
-        if (sep and not path) or path.startswith(":"):
-            if seen_override_in_path:
-                raise syaml.SpackYAMLError(
-                    "Meaningless second override indicator `::' in path `{0}'".format(path), ""
-                )
-            path = path.lstrip(":")
-            front = syaml.syaml_str(remove_quotes(front))
-            front.override = True
-            seen_override_in_path = True
-
-        elif front.endswith("+"):
-            front = remove_quotes(front.rstrip("+"))
-            front = syaml.syaml_str(front)
-            front.prepend = True
-
-        elif front.endswith("-"):
-            front = remove_quotes(front.rstrip("-"))
-            front = syaml.syaml_str(front)
-            front.append = True
-
-        if re.match(f"^{quote}", front):
-            front = syaml.syaml_str(remove_quotes(front))
-
-        result.append(front)
-
-    return result
+    return ConfigPath.process(path)
 
 
 #
