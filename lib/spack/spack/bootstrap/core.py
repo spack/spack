@@ -33,7 +33,7 @@ import uuid
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from llnl.util import tty
-from llnl.util.filesystem import working_dir
+from llnl.util.filesystem import copy, working_dir
 from llnl.util.lang import GroupedExceptionHandler
 
 import spack.binary_distribution
@@ -508,14 +508,14 @@ def ensure_msvc_compiler_wrappers_or_raise(pkg=None) -> None:
             executables=["cl.exe"], abstract_spec=msvc_compiler_wrapper_root_spec()
         )
         # Spec is built, now copy it to the compiler wrapper directory
-        copy(spack.spec.Spec(msvc_compiler_wrapper_root_spec().prefix.bin + "cl.exe"), str(msvc_comp_wrapper))
+        copy(spack.spec.Spec(msvc_compiler_wrapper_root_spec().prefix.bin + "\\cl.exe"), str(msvc_comp_wrapper))
 
 
 def ensure_win_compiler_wrappers_or_raise(pkg=None) -> None:
     if pkg and type(pkg.compiler) == spack.compilers.msvc.Msvc:
         ensure_msvc_compiler_wrappers_or_raise(pkg)
     elif not pkg:
-        ensure_msvc_compiler_wrappers_or_raise(pkg)
+        ensure_msvc_compiler_wrappers_or_raise()
 
 
 def patchelf_root_spec() -> str:

@@ -180,16 +180,23 @@ class TermStatusLine:
         sys.stdout.flush()
 
 
-def _bootstrap_win_compiler_wrapper(pkg):
+def _bootstrap_win_compiler_wrapper():
     """
     Ensures that the Windows compiler wrappers will be available at
     build time
 
     Runs the bootstrapping process to ensure all core deps are met
     """
+    currently_bootstrapping = getattr(_bootstrap_win_compiler_wrapper, "_bootstrapping", False)
+    if currently_bootstrapping:
+        return
     import spack.bootstrap
+    _bootstrap_win_compiler_wrapper._bootstrapping = True
     with spack.bootstrap.ensure_bootstrap_configuration():
-        spack.bootstrap.ensure_win_compiler_wrappers_or_raise(pkg)
+        try:
+            spack.bootstrap.ensure_win_compiler_wrappers_or_raise()
+        finally:
+            _bootstrap_win_compiler_wrapper._bootstrapping = False
 
 
 def _check_last_phase(pkg: "spack.package_base.PackageBase") -> None:
@@ -1988,6 +1995,9 @@ class PackageInstaller:
 
     def install(self) -> None:
         """Install the requested package(s) and or associated dependencies."""
+        # Ensure all build dependencies are met
+        if sys.platform == "win32":
+            _bootstrap_win_compiler_wrapper()
 
         self._init_queue()
         fail_fast_err = "Terminating after first install failure"
@@ -2011,9 +2021,6 @@ class PackageInstaller:
             keep_prefix = install_args.get("keep_prefix")
 
             pkg, pkg_id, spec = task.pkg, task.pkg_id, task.pkg.spec
-            # TODO (johnwparent): Do we need this if clingo is handling the creation of the compiler wrappers?
-            if sys.platform == "win32":
-                _bootstrap_win_compiler_wrapper(pkg)
             install_status.next_pkg(pkg)
             install_status.set_term_title(f"Processing {pkg.name}")
             tty.debug(f"Processing {pkg_id}: task={task}")
