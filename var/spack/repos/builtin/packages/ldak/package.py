@@ -33,8 +33,7 @@ class Ldak(Package):
 
     requires("target=x86_64:", when="~glpk", msg="bundled qsopt is only for x86_64")
     requires(
-        "^mkl",
-        "^openblas",
+        *[f"^{_pkg_name}" for _pkg_name in INTEL_MATH_LIBRARIES + ("openblas",)],
         policy="one_of",
         msg="Only mkl or openblas are supported for blas/lapack with ldak",
     )
