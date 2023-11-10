@@ -115,7 +115,7 @@ where ``/opt/cuda/cuda-11.0.2/lib/`` contains ``libcudart.so``.
 
 
 -----------------------------------
-Using an External OpenGL Implementation
+Using an External OpenGL API
 -----------------------------------
 Depending on whether we have a graphics card or not, we may choose to use OSMesa or GLX to implement the OpenGL API.
 
