@@ -1269,6 +1269,7 @@ class ConfigPath:
     def process(path):
         result = []
         quote = "['\"]"
+        seen_override_in_path = False
         while path:
             element, path = ConfigPath.next_token(path)
 
@@ -1277,7 +1278,12 @@ class ConfigPath:
             prepend = False
             quoted = False
             if element.endswith("::"):
+                if seen_override_in_path:
+                    raise syaml.SpackYAMLError(
+                        "Meaningless second override indicator `::' in path `{0}'".format(path), ""
+                    )
                 override = True
+                seen_override_in_path = True
             element = element.rstrip(":")
 
             if element.endswith("+"):
