@@ -25,7 +25,7 @@ def parser():
 def print_buffer(monkeypatch):
     buffer = []
 
-    def _print(*args):
+    def _print(*args, **kwargs):
         buffer.extend(args)
 
     monkeypatch.setattr(spack.cmd.info.color, "cprint", _print, raising=False)
