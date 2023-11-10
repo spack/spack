@@ -57,3 +57,9 @@ class Pflotran(AutotoolsPackage):
         if "%gcc@10:" in self.spec and name == "fflags":
             flags.append("-fallow-argument-mismatch")
         return flags, None, None
+
+    @when("@5.0.0")
+    def patch(self):
+        filter_file(
+            "use iso_[cC]_binding", "use, intrinsic :: iso_c_binding", "src/pflotran/hdf5_aux.F90"
+        )
