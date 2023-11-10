@@ -20,7 +20,9 @@ class Alps(CMakePackage):
     homepage = "https://alps.comp-phys.org"
     url = "https://alps.comp-phys.org/static/software/releases/alps-2.3.0-src.tar.gz"
 
-    version("20220304_r7871", sha256="74bcb9156701f81439af3c60ecf26afeb6458c48012729aea2e9f7aa34e87426")
+    version(
+        "20220304_r7871", sha256="74bcb9156701f81439af3c60ecf26afeb6458c48012729aea2e9f7aa34e87426"
+    )
     # version 2.3.0 is removed since it requires python@:3.6 that's not supported by Spack
 
     # build fails as of boost@1.83
@@ -41,9 +43,9 @@ class Alps(CMakePackage):
 
 
     def url_for_version(self, version):
-        if str(version) == '2.3.0':
+        if str(version) == "2.3.0":
             url = "https://alps.comp-phys.org/static/software/releases/alps-2.3.0-src.tar.gz"
-        elif str(version) == '20220304_r7871':
+        elif str(version) == "20220304_r7871":
             url = "http://exa.phys.s.u-tokyo.ac.jp/archive/MateriApps/src/alps_20220304~r7871.orig.tar.gz"
         return url
 
