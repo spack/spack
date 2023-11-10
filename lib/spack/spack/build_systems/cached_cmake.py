@@ -282,9 +282,9 @@ class CachedCMakeBuilder(CMakeBuilder):
             entries.append(cmake_cache_path("HIP_ROOT_DIR", hip_root))
             entries.append(cmake_cache_path("ROCM_ROOT_DIR", rocm_root))
             # The old way ...
-            #entries.append(
-            #    cmake_cache_path("HIP_CXX_COMPILER", "{0}".format(self.spec["hip"].hipcc))
-            #)
+            # entries.append(
+            #     cmake_cache_path("HIP_CXX_COMPILER", "{0}".format(self.spec["hip"].hipcc))
+            # )
 
             llvm_bin = spec["llvm-amdgpu"].prefix.bin
             llvm_prefix = spec["llvm-amdgpu"].prefix
