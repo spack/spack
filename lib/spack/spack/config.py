@@ -1263,7 +1263,7 @@ class ConfigPath:
         """
         m = re.match(ConfigPath.token_pattern, path_str)
         token = m.group(1)
-        return token, path_str[len(token):]
+        return token, path_str[len(token) :]
 
     @staticmethod
     def process(path):
@@ -1304,10 +1304,11 @@ class ConfigPath:
                     element.prepend = True
                 if override:
                     element.override = True
-        
+
             result.append(element)
 
         return result
+
 
 def process_config_path(path):
     """Process a path argument to config.set() that may contain overrides ('::' or
