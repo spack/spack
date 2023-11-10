@@ -111,17 +111,26 @@ class Likwid(Package):
                 env.append_path("LD_LIBRARY_PATH", lib)
         if "+rocm" in self.spec:
             libs = find_libraries(
-                "librocprofiler64.so.1", root=self.spec["rocprofiler-dev"].prefix, shared=True, recursive=True
+                "librocprofiler64.so.1",
+                 root=self.spec["rocprofiler-dev"].prefix,
+                 shared=True,
+                 recursive=True,
             )
             for lib in libs.directories:
                 env.append_path("LD_LIBRARY_PATH", lib)
             libs = find_libraries(
-                "libhsa-runtime64.so", root=self.spec["rocm-core"].prefix, shared=True, recursive=True
+                "libhsa-runtime64.so",
+                root=self.spec["rocm-core"].prefix,
+                shared=True,
+                recursive=True,
             )
             for lib in libs.directories:
                 env.append_path("LD_LIBRARY_PATH", lib)
             libs = find_libraries(
-                "librocm_smi64.so", root=self.spec["rocm-smi-lib"].prefix, shared=True, recursive=True
+                "librocm_smi64.so",
+                root=self.spec["rocm-smi-lib"].prefix,
+                shared=True,
+                recursive=True,
             )
             for lib in libs.directories:
                 env.append_path("LD_LIBRARY_PATH", lib)
