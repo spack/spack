@@ -17,36 +17,20 @@ class Lemon(CMakePackage):
 
     version("1.3.1", sha256="71b7c725f4c0b4a8ccb92eb87b208701586cf7a96156ebd821ca3ed855bad3c8")
 
+    # coin variant currently fails due to a missing dependency library
     variant("coin", default=False, description="Enable Coin solver backend")
     variant("ilog", default=False, description="Enable ILOG (CPLEX) solver backend")
     variant("glpk", default=True, description="Enable GLPK solver backend")
     # soplex not mentioned in docs but shown in cmakecache
     variant("soplex", default=False, description="Enable SOPLEX solver backend")
 
-    variant(
-        "lp_backend",
-        default="glpk",
-        description="Set default LP solver backend",
-        values=("glpk", "cplex", "clp", "soplex"),
-        multi=False,
-    )
-    variant(
-        "mip_backend",
-        default="glpk",
-        description="Set default MIP solver backend",
-        values=("glpk", "cplex", "cbc"),
-        multi=False,
-    )
 
     depends_on("glpk", when="+glpk")
-    # LP solver
-    depends_on("glpk", when="lp_backend=glpk")
-    depends_on("cplex", when="lp_backend=cplex")
-    depends_on("clp", when="lp_backend=clp")
-    # MIP solver
-    depends_on("glpk", when="mip_backend=glpk")
-    depends_on("cplex", when="mip_backend=cplex")
-    depends_on("cbc", when="mip_backend=cbc")
+    depends_on("cplex", when="+ilog")
+    depends_on("coinutils", when="+coin") # just a guess
+    depends_on("cbc", when="+coin")
+    depends_on("clp", when="+coin")
+    depends_on("soplex", when="+soplex") # no such package in Spack yet.
 
     def cmake_args(self):
         spec = self.spec
@@ -57,8 +41,6 @@ class Lemon(CMakePackage):
                 "-DLEMON_ENABLE_ILOG={0}".format("YES" if "+ilog" in spec else "NO"),
                 "-DLEMON_ENABLE_GLPK={0}".format("YES" if "+glpk" in spec else "NO"),
                 "-DLEMON_ENABLE_SOPLEX={0}".format("YES" if "+soplex" in spec else "NO"),
-                "-DLEMON_DEFAULT_LP={0}".format(spec.variants["lp_backend"].value.upper()),
-                "-DLEMON_DEFAULT_MIP={0}".format(spec.variants["mip_backend"].value.upper()),
             ]
         )
         return args
