@@ -1281,11 +1281,11 @@ complete -c spack -n '__fish_spack_using_command_pos_remainder 0 deconcretize' -
 complete -c spack -n '__fish_spack_using_command deconcretize' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command deconcretize' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command deconcretize' -l root -f -a root
-complete -c spack -n '__fish_spack_using_command deconcretize' -l root -d 'Deconcretize only environment roots. Additional roots that depend on matching specs will be ignored'
+complete -c spack -n '__fish_spack_using_command deconcretize' -l root -d 'deconcretize only specific environment roots'
 complete -c spack -n '__fish_spack_using_command deconcretize' -s y -l yes-to-all -f -a yes_to_all
 complete -c spack -n '__fish_spack_using_command deconcretize' -s y -l yes-to-all -d 'assume "yes" is the answer to every confirmation request'
 complete -c spack -n '__fish_spack_using_command deconcretize' -s a -l all -f -a all
-complete -c spack -n '__fish_spack_using_command deconcretize' -s a -l all -d 'Deconcretize ALL specs that match each supplied spec'
+complete -c spack -n '__fish_spack_using_command deconcretize' -s a -l all -d 'deconcretize ALL specs that match each supplied spec'
 
 # spack dependencies
 set -g __fish_spack_optspecs_spack_dependencies h/help i/installed t/transitive deptype= V/no-expand-virtuals
