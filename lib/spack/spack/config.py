@@ -1268,14 +1268,15 @@ class ConfigPath:
     @staticmethod
     def process(path):
         result = []
-        quote = "'\""
+        quote = "['\"]"
         while path:
             element, path = ConfigPath.next_token(path)
+
             override = False
             append = False
             prepend = False
             quoted = False
-            if element.startswith("::"):
+            if element.endswith("::"):
                 override = True
             element = element.rstrip(":")
 
