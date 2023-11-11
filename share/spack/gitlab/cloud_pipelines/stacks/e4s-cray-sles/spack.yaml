@@ -10,7 +10,6 @@ spack:
 
   packages:
     all:
-      require: '%gcc'
       providers:
         blas: [cray-libsci]
         lapack: [cray-libsci]
@@ -19,7 +18,6 @@ spack:
         scalapack: [netlib-scalapack]
       target: [zen4]
       variants: +mpi
-
     tbb:
       require: "intel-tbb"
     binutils:
@@ -61,88 +59,96 @@ spack:
     unzip:
       require: "%gcc"
 
+  definitions:
+  - specs:
+    - adios
+    - aml
+    - arborx
+    - argobots
+    - bolt
+    - boost +python +filesystem +iostreams +system
+    - butterflypack
+    - cabana
+    - chai ~benchmarks ~tests
+    - charliecloud                # python: Could not find platform dependent libraries <exec_prefix>
+    - conduit
+    - datatransferkit
+    - flecsi
+    - flit                        # python: Could not find platform dependent libraries <exec_prefix>
+    - flux-core                   # python: Could not find platform dependent libraries <exec_prefix>
+    - fortrilinos
+    - ginkgo
+    - globalarrays
+    - gmp
+    - gotcha
+    - h5bench
+    - hdf5-vol-async
+    - hdf5-vol-cache
+    - hdf5-vol-log
+    - heffte +fftw
+    - hpx max_cpu_count=512 networking=mpi # python: Could not find platform dependent libraries <exec_prefix>
+    - hypre
+    - kokkos +openmp
+    - kokkos-kernels +openmp
+    - lammps
+    - legion
+    - libnrm
+    - libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp +json +remote +netcdf +mgard # python: Could not find platform dependent libraries <exec_prefix>
+    - libquo
+    - libunwind
+    - mercury
+    - metall
+    - mfem
+    - mgard +serial +openmp +timing +unstructured ~cuda
+    - mpark-variant
+    - mpifileutils ~xattr
+    - nccmp
+    - nco
+    - netlib-scalapack
+    - omega-h
+    - openmpi
+    - openpmd-api
+    - papi
+    - papyrus
+    - pdt
+    - petsc                       # petsc: SyntaxError: (unicode error) \N escapes not supported (can't load unicodedata module)
+    - plumed                      # python: Could not find platform dependent libraries <exec_prefix>
+    - precice                     # petsc: SyntaxError: (unicode error) \N escapes not supported (can't load unicodedata module)
+    - pumi
+    - py-h5py +mpi                # python: Could not find platform dependent libraries <exec_prefix>
+    - py-h5py ~mpi                # python: Could not find platform dependent libraries <exec_prefix>
+    - py-libensemble +mpi +nlopt  # python: Could not find platform dependent libraries <exec_prefix>
+    - py-petsc4py                 # python: Could not find platform dependent libraries <exec_prefix>
+    - qthreads scheduler=distrib
+    - raja
+    - slate ~cuda
+    - stc
+    - sundials
+    - superlu
+    - superlu-dist
+    - swig
+    - swig@4.0.2-fortran
+    - sz3
+    - tasmanian
+    - tau +mpi +python            # tau: ERROR: Cannot find python library (libpython*.[so|dylib]
+    - trilinos +belos +ifpack2 +stokhos
+    - turbine
+    - umap
+    - umpire
+    - veloc
+    - wannier90
+
   specs:
-  # CPU
-  - adios
-  - aml
-  - arborx
-  - argobots
-  - bolt
-  - butterflypack
-  - boost +python +filesystem +iostreams +system
-  - cabana
-  - chai ~benchmarks ~tests
-  - conduit
-  - datatransferkit
-  - flecsi
-  - fortrilinos
-  - ginkgo
-  - globalarrays
-  - gmp
-  - gotcha
-  - h5bench
-  - hdf5-vol-async
-  - hdf5-vol-cache
-  - hdf5-vol-log
-  - heffte +fftw
-  - hypre
-  - kokkos +openmp
-  - kokkos-kernels +openmp
-  - lammps
-  - legion
-  - libnrm
-  - libquo
-  - libunwind
-  - mercury
-  - metall
-  - mfem
-  - mgard +serial +openmp +timing +unstructured ~cuda
-  - mpark-variant
-  - mpifileutils ~xattr
-  - nccmp
-  - nco
-  - netlib-scalapack
-  - omega-h
-  - openmpi
-  - openpmd-api
-  - papi
-  - papyrus
-  - pdt
-  - pumi
-  - qthreads scheduler=distrib
-  - raja
-  - slate ~cuda
-  - stc
-  - sundials
-  - superlu
-  - superlu-dist
-  - swig
-  - swig@4.0.2-fortran
-  - sz3
-  - tasmanian
-  - trilinos +belos +ifpack2 +stokhos
-  - turbine
-  - umap
-  - umpire
-  - veloc
-  - wannier90
+  - matrix:
+    - [$specs]
+    - ["%cce"]
+  - matrix:
+    - [$specs]
+    - ["%gcc"]
 
   # ERRORS
   # - caliper                     # caliper: ModuleNotFoundError: No module named 'math'; src/mpi/services/mpiwrap/CMakeFiles/caliper-mpiwrap.dir/build.make:77: src/mpi/services/mpiwrap/Wrapper.cpp] Error 1
-  # - charliecloud                # python: Could not find platform dependent libraries <exec_prefix>
-  # - flit                        # python: Could not find platform dependent libraries <exec_prefix>
-  # - flux-core                   # python: Could not find platform dependent libraries <exec_prefix>
-  # - hpx max_cpu_count=512 networking=mpi # python: Could not find platform dependent libraries <exec_prefix>
-  # - libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp +json +remote +netcdf +mgard # python: Could not find platform dependent libraries <exec_prefix>
-  # - petsc                       # petsc: SyntaxError: (unicode error) \N escapes not supported (can't load unicodedata module)
-  # - plumed                      # python: Could not find platform dependent libraries <exec_prefix>
-  # - precice                     # petsc: SyntaxError: (unicode error) \N escapes not supported (can't load unicodedata module)
-  # - py-h5py +mpi                # python: Could not find platform dependent libraries <exec_prefix>
-  # - py-h5py ~mpi                # python: Could not find platform dependent libraries <exec_prefix>
-  # - py-libensemble +mpi +nlopt  # python: Could not find platform dependent libraries <exec_prefix>
-  # - py-petsc4py                 # python: Could not find platform dependent libraries <exec_prefix>
   # - slepc                       # petsc: SyntaxError: (unicode error) \N escapes not supported (can't load unicodedata module)
-  # - tau +mpi +python            # tau: ERROR: Cannot find python library (libpython*.[so|dylib]
 
   # HOLDING THESE BACK UNTIL CRAY SLES CAPACITY IS EXPANDED AT UO
   # - alquimia
