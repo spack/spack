@@ -24,7 +24,8 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
-    version("1.6.0", commit="1f1ed46e724334626f016f105213c047e16bc1ae", preferred=True)  # v1.6.0
+    version("1.7.0", commit="49242ff89af1e695d7794f6d50ed9933024b66fe")  # v1.7.0
+    version("1.6.0", commit="1f1ed46e724334626f016f105213c047e16bc1ae")  # v1.6.0
     version("1.5.0", commit="234594c92b58e2384dfb43c2d08e7f43e2b58e7a")  # v1.5.0
     version("1.5.0.glu_experimental", branch="glu_experimental")
     version("1.4.0", commit="f811917c1def4d0fcd8db3fe5c948ce13409e28e")  # v1.4.0
@@ -37,13 +38,18 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     variant("shared", default=True, description="Build shared libraries")
     variant("full_optimizations", default=False, description="Compile with all optimizations")
     variant("openmp", default=sys.platform != "darwin", description="Build with OpenMP")
-    variant("oneapi", default=False, description="Build with oneAPI support")
+    variant("sycl", default=False, description="Enable SYCL backend")
     variant("develtools", default=False, description="Compile with develtools enabled")
     variant("hwloc", default=False, description="Enable HWLOC support")
     variant("mpi", default=False, description="Enable MPI support")
 
-    depends_on("cmake@3.9:", type="build")
-    depends_on("cuda@9:", when="+cuda")
+    depends_on("cmake@3.9:", type="build", when="@:1.3.0")
+    depends_on("cmake@3.13:", type="build", when="@1.4.0:1.6.0")
+    depends_on("cmake@3.16:", type="build", when="@1.7.0:")
+    depends_on("cmake@3.18:", type="build", when="+cuda@1.7.0:")
+    depends_on("cuda@9:", when="+cuda @:1.4.0")
+    depends_on("cuda@9.2:", when="+cuda @1.5.0:")
+    depends_on("cuda@10.1:", when="+cuda @1.7.0:")
     depends_on("mpi", when="+mpi")
 
     depends_on("rocthrust", when="+rocm")
@@ -60,14 +66,13 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("googletest", type="test")
     depends_on("numactl", type="test", when="+hwloc")
 
-    depends_on("intel-oneapi-mkl", when="+oneapi")
-    depends_on("intel-oneapi-dpl", when="+oneapi")
+    depends_on("intel-oneapi-mkl", when="+sycl")
+    depends_on("intel-oneapi-dpl", when="+sycl")
+    depends_on("intel-oneapi-tbb", when="+sycl")
 
     conflicts("%gcc@:5.2.9")
     conflicts("+rocm", when="@:1.1.1")
     conflicts("+mpi", when="@:1.4.0")
-    conflicts("+cuda", when="+rocm")
-    conflicts("+openmp", when="+oneapi")
 
     # ROCm 4.1.0 breaks platform settings which breaks Ginkgo's HIP support.
     conflicts("^hip@4.1.0:", when="@:1.3.0")
@@ -76,22 +81,35 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("^rocthrust@4.1.0:", when="@:1.3.0")
     conflicts("^rocprim@4.1.0:", when="@:1.3.0")
 
+    # Ginkgo 1.6.0 start relying on ROCm 4.5.0
+    conflicts("^hip@:4.3.1", when="@1.6.0:")
+    conflicts("^hipblas@:4.3.1", when="@1.6.0:")
+    conflicts("^hipsparse@:4.3.1", when="@1.6.0:")
+    conflicts("^rocthrust@:4.3.1", when="@1.6.0:")
+    conflicts("^rocprim@:4.3.1", when="@1.6.0:")
+
+    conflicts(
+        "+sycl", when="@:1.4.0", msg="For SYCL support, please use Ginkgo version 1.4.0 and newer."
+    )
+
     # Skip smoke tests if compatible hardware isn't found
     patch("1.4.0_skip_invalid_smoke_tests.patch", when="@1.4.0")
-
-    # Newer DPC++ compilers use the updated SYCL 2020 standard which change
-    # kernel attribute propagation rules. This doesn't work well with the
-    # initial Ginkgo oneAPI support.
-    patch("1.4.0_dpcpp_use_old_standard.patch", when="+oneapi @1.4.0")
 
     # Add missing include statement
     patch("thrust-count-header.patch", when="+rocm @1.5.0")
 
     def setup_build_environment(self, env):
         spec = self.spec
-        if "+oneapi" in spec:
+        if "+sycl" in spec:
             env.set("MKLROOT", join_path(spec["intel-oneapi-mkl"].prefix, "mkl", "latest"))
             env.set("DPL_ROOT", join_path(spec["intel-oneapi-dpl"].prefix, "dpl", "latest"))
+            # The `IntelSYCLConfig.cmake` is broken with spack. By default, it
+            # relies on the CMAKE_CXX_COMPILER being the real ipcx/dpcpp
+            # compiler. If not, the variable SYCL_COMPILER of that script is
+            # broken, and all the SYCL detection mechanism is wrong. We fix it
+            # by giving hint environment variables.
+            env.set("SYCL_LIBRARY_DIR_HINT", os.path.dirname(os.path.dirname(self.compiler.cxx)))
+            env.set("SYCL_INCLUDE_DIR_HINT", os.path.dirname(os.path.dirname(self.compiler.cxx)))
 
     def cmake_args(self):
         # Check that the have the correct C++ standard is available
@@ -106,18 +124,19 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
             except UnsupportedCompilerFlag:
                 raise InstallError("Ginkgo requires a C++14-compliant C++ compiler")
 
-        cxx_is_dpcpp = os.path.basename(self.compiler.cxx) == "dpcpp"
-        if self.spec.satisfies("+oneapi") and not cxx_is_dpcpp:
-            raise InstallError(
-                "Ginkgo's oneAPI backend requires the" + "DPC++ compiler as main CXX compiler."
-            )
+        if self.spec.satisfies("@1.4.0:1.6.0 +sycl") and not self.spec.satisfies(
+            "%oneapi@2021.3.0:"
+        ):
+            raise InstallError("ginkgo +sycl requires %oneapi@2021.3.0:")
+        elif self.spec.satisfies("@1.7.0: +sycl") and not self.spec.satisfies("%oneapi@2022.1.0:"):
+            raise InstallError("ginkgo +sycl requires %oneapi@2022.1.0:")
 
         spec = self.spec
         from_variant = self.define_from_variant
         args = [
             from_variant("GINKGO_BUILD_CUDA", "cuda"),
             from_variant("GINKGO_BUILD_HIP", "rocm"),
-            from_variant("GINKGO_BUILD_DPCPP", "oneapi"),
+            from_variant("GINKGO_BUILD_SYCL", "sycl"),
             from_variant("GINKGO_BUILD_OMP", "openmp"),
             from_variant("GINKGO_BUILD_MPI", "mpi"),
             from_variant("BUILD_SHARED_LIBS", "shared"),
@@ -161,6 +180,11 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
                 args.append(
                     self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.lib.cmake.hip)
                 )
+
+        if "+sycl" in self.spec:
+            sycl_compatible_compilers = ["dpcpp", "icpx"]
+            if not (os.path.basename(self.compiler.cxx) in sycl_compatible_compilers):
+                raise InstallError("ginkgo +sycl requires DPC++ (dpcpp) or icpx compiler.")
         return args
 
     @property
