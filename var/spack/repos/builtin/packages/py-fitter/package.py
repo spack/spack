@@ -16,6 +16,8 @@ class PyFitter(PythonPackage):
 
     maintainers("carsonwoods")
 
+    version("1.6.0", sha256="908223d75b35d3846984bfb2fed1d2a926da5a30b95b704aa95b2a894227c0af")
+    version("1.5.2", sha256="afb33a8b1e24cdbc9318f55be72534e07028f25240ab76a4b081d27d1ed677d9")
     version("1.5.1", sha256="893b35ad0a84c3b96b63ec203a6a79effdba98777aed966ae61709f5e1e8cf99")
 
     depends_on("py-setuptools", type="build")
