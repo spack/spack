@@ -52,7 +52,7 @@ class PyScikitBuildCore(PythonPackage):
     depends_on("py-pytest@7:", type="test")
     depends_on("py-pytest-subprocess@1.5:", type="test")
     depends_on("py-setuptools", type="test")
-    depends_on("py-virtualenv", type="test")
+    depends_on("py-virtualenv", when="@0.6:", type="test")
     depends_on("py-wheel", type="test")
 
     @run_after("install")
