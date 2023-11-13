@@ -8,7 +8,6 @@ import sys
 
 from spack.operating_systems.mac_os import macos_version
 from spack.package import *
-from spack.util.environment import is_system_path
 
 
 class Root(CMakePackage):

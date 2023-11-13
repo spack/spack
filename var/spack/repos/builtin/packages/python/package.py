@@ -18,9 +18,9 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import is_nonsymlink_exe_with_shebang, path_contains_subdirectory
 from llnl.util.lang import dedupe
 
+import spack.paths
 from spack.build_environment import dso_suffix, stat_suffix
 from spack.package import *
-from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
 
 

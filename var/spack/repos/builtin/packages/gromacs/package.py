@@ -7,6 +7,7 @@ import os
 
 import llnl.util.filesystem as fs
 
+from spack.build_systems import cmake
 from spack.package import *
 
 
@@ -397,7 +398,7 @@ class Gromacs(CMakePackage, CudaPackage):
                 )
 
 
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+class CMakeBuilder(cmake.CMakeBuilder):
     @run_after("build")
     def build_test_binaries(self):
         """Build the test binaries.

@@ -6,7 +6,6 @@
 from platform import machine
 
 from spack.package import *
-from spack.util.environment import set_env
 
 
 class Strumpack(CMakePackage, CudaPackage, ROCmPackage):

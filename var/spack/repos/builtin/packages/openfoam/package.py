@@ -48,7 +48,6 @@ import llnl.util.tty as tty
 
 from spack.package import *
 from spack.pkg.builtin.boost import Boost
-from spack.util.environment import EnvironmentModifications
 
 # Not the nice way of doing things, but is a start for refactoring
 __all__ = [
@@ -483,7 +482,7 @@ class Openfoam(Package):
         if os.path.isfile(bashrc):
             # post-install: source the installed bashrc
             try:
-                mods = EnvironmentModifications.from_sourcing_file(
+                mods = from_sourcing_file(
                     bashrc,
                     clean=True,  # Remove duplicate entries
                     blacklist=[  # Blacklist these

@@ -8,8 +8,6 @@ import os.path
 import sys
 
 import spack.platforms
-import spack.util.environment
-import spack.util.executable
 from spack.build_environment import dso_suffix
 from spack.build_systems import cmake, makefile
 from spack.package import *
@@ -800,7 +798,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
 
         # Apparently the Makefile bases its paths on PWD
         # so we need to set PWD = self.build_directory
-        with spack.util.environment.set_env(PWD=self.build_directory):
+        with set_env(PWD=self.build_directory):
             super().build(pkg, spec, prefix)
 
             with working_dir(self.build_directory):

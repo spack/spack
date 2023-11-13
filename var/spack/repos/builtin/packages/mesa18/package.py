@@ -44,9 +44,7 @@ class Mesa18(AutotoolsPackage):
     variant("llvm", default=True, description="Enable LLVM.")
     variant(
         "swr",
-        values=spack.variant.DisjointSetsOfValues(
-            ("none",), ("auto",), ("avx", "avx2", "knl", "skx")
-        )
+        values=DisjointSetsOfValues(("none",), ("auto",), ("avx", "avx2", "knl", "skx"))
         .with_non_feature_values("auto")
         .with_non_feature_values("none")
         .with_default("auto"),

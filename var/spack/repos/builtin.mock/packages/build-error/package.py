@@ -2,8 +2,11 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import pathlib
 import sys
+import tempfile
+
+import llnl.util.filesystem as fs
 
 from spack.package import *
 
@@ -17,10 +20,12 @@ class BuildError(Package):
     version("1.0", md5="0123456789abcdef0123456789abcdef")
 
     def install(self, spec, prefix):
+        working_dir = tempfile.mkdtemp()
+
         if sys.platform == "win32":
-            with open("configure.bat", "w") as f:
-                f.write(
-                    """
+            configure = pathlib.Path(working_dir) / "configure.bat"
+            configure.write_text(
+                """
     @ECHO off
     ECHO checking build system type... x86_64-apple-darwin16.6.0
     ECHO checking host system type... x86_64-apple-darwin16.6.0
@@ -32,14 +37,12 @@ class BuildError(Package):
     ECHO configure: error: cannot run C compiled programs.
     EXIT /B 1
                   """
-                )
+            )
 
-            Executable("configure.bat")("--prefix=%s" % self.prefix)
-            configure()
         else:
-            with open("configure", "w") as f:
-                f.write(
-                    """#!/bin/sh\n
+            configure = pathlib.Path(working_dir) / "configure"
+            configure.write_text(
+                """#!/bin/sh\n
     echo 'checking build system type... x86_64-apple-darwin16.6.0'
     echo 'checking host system type... x86_64-apple-darwin16.6.0'
     echo 'checking for gcc... /Users/gamblin2/src/spack/lib/spack/env/clang/clang'
@@ -50,5 +53,6 @@ class BuildError(Package):
     echo 'configure: error: cannot run C compiled programs.'
     exit 1
     """
-                )
-            configure()
+            )
+        fs.set_executable(str(configure))
+        Executable(str(configure))(f"--prefix={str(self.prefix)}")

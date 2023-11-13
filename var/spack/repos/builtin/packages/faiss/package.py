@@ -5,6 +5,7 @@
 
 import os
 
+from spack.build_systems import autotools, cmake
 from spack.package import *
 
 
@@ -86,7 +87,7 @@ class Faiss(AutotoolsPackage, CMakePackage, CudaPackage):
                 env.append_path("LD_LIBRARY_PATH", os.path.join(python_platlib, "faiss"))
 
 
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+class CMakeBuilder(cmake.CMakeBuilder):
     def cmake_args(self):
         spec = self.spec
         args = [
@@ -121,7 +122,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             customPip.install(pkg, spec, prefix)
 
 
-class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+class AutotoolsBuilder(autotools.AutotoolsBuilder):
     def configure_args(self):
         args = []
         args.extend(self.with_or_without("cuda", activation_value="prefix"))

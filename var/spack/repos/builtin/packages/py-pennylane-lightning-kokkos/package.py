@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.build_systems import cmake
 from spack.package import *
 
 
@@ -90,7 +91,7 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
     depends_on("py-flaky", type="test")
 
 
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+class CMakeBuilder(cmake.CMakeBuilder):
     build_directory = "build"
 
     def cmake_args(self):

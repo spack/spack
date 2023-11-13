@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.build_systems import autotools, cmake
 from spack.package import *
 
 
@@ -53,7 +54,7 @@ class Libssh2(AutotoolsPackage, CMakePackage):
     patch("pr-1114.patch", when="@1.7:")
 
 
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+class CMakeBuilder(cmake.CMakeBuilder):
     def cmake_args(self):
         args = [
             self.define("BUILD_TESTING", False),
@@ -72,7 +73,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         return args
 
 
-class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+class AutotoolsBuilder(autotools.AutotoolsBuilder):
     def configure_args(self):
         args = ["--disable-tests", "--disable-docker-tests", "--disable-examples-build"]
         args += self.enable_or_disable("shared")
