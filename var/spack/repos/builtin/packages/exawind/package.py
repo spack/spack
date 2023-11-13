@@ -12,7 +12,7 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://github.com/Exawind/exawind-driver"
     git = "https://github.com/Exawind/exawind-driver.git"
 
-    maintainers = ["jrood-nrel"]
+    maintainers("jrood-nrel")
 
     tags = ["ecp", "ecp-apps"]
 
