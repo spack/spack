@@ -232,7 +232,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on("trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado", when="+trilinos")
     depends_on("trilinos~hypre", when="+trilinos+int64")
     for _arch in CudaPackage.cuda_arch_values:
-        arch_str = "+cuda cuda_arch={_arch}"
+        arch_str = f"+cuda cuda_arch={_arch}"
         trilinos_spec = f"trilinos +wrapper {arch_str}"
         depends_on(trilinos_spec, when=f"@9.5:+trilinos {arch_str}")
     depends_on("vtk", when="@9.6:+vtk")
