@@ -6,6 +6,7 @@
 import collections
 import datetime
 import errno
+import functools
 import inspect
 import itertools
 import json
@@ -1969,12 +1970,12 @@ def disable_parallel_buildcache_push(monkeypatch):
     monkeypatch.setattr(spack.cmd.buildcache, "_make_pool", MockPool)
 
 
-@pytest.fixture()
-def enable_tcl_on_install(install_mockery, mock_fetch):
-    """Enables TCL module writing as a post-install hook"""
-    with spack.config.override(
-        spack.config.InternalConfigScope(
-            "enable_modules", data={"modules:": {"default": {"enable": ["tcl"]}}}
-        )
-    ):
-        yield
+def _root_path(x, y, *, path):
+    return path
+
+
+@pytest.fixture
+def mock_modules_root(tmp_path, monkeypatch):
+    """Sets the modules root to a temporary directory, to avoid polluting configuration scopes."""
+    fn = functools.partial(_root_path, path=str(tmp_path))
+    monkeypatch.setattr(spack.modules.common, "root_path", fn)

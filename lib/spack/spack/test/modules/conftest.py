@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import functools
 import pathlib
 
 import pytest
@@ -50,14 +49,3 @@ def mock_module_filename(monkeypatch, tmp_path):
     monkeypatch.setattr(spack.modules.lmod.LmodFileLayout, "filename", str(filename))
     monkeypatch.setattr(spack.modules.tcl.TclFileLayout, "filename", str(filename))
     yield str(filename)
-
-
-def _root_path(x, y, *, path):
-    return path
-
-
-@pytest.fixture(autouse=True)
-def mock_modules_root(tmp_path, monkeypatch):
-    """Sets the modules root to a temporary directory, to avoid polluting configuration scopes."""
-    fn = functools.partial(_root_path, path=str(tmp_path))
-    monkeypatch.setattr(spack.modules.common, "root_path", fn)
