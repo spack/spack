@@ -1967,3 +1967,14 @@ def disable_parallel_buildcache_push(monkeypatch):
             pass
 
     monkeypatch.setattr(spack.cmd.buildcache, "_make_pool", MockPool)
+
+
+@pytest.fixture()
+def enable_tcl_on_install(install_mockery, mock_fetch):
+    """Enables TCL module writing as a post-install hook"""
+    with spack.config.override(
+        spack.config.InternalConfigScope(
+            "enable_modules", data={"modules:": {"default": {"enable": ["tcl"]}}}
+        )
+    ):
+        yield

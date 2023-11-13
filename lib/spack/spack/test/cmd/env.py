@@ -1105,7 +1105,7 @@ def test_multi_env_remove(mutable_mock_env_path, monkeypatch, answer):
         assert all(e in env("list") for e in environments)
 
 
-def test_env_loads(install_mockery, mock_fetch):
+def test_env_loads(enable_tcl_on_install):
     env("create", "test")
 
     with ev.read("test"):

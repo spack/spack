@@ -31,7 +31,7 @@ def modulefile_content(request):
 
 
 @pytest.fixture()
-def factory(request):
+def factory(request, mock_modules_root):
     """Given a spec string, returns an instance of the writer and the corresponding spec."""
     writer_cls = getattr(request.module, "writer_cls")
 
@@ -49,3 +49,9 @@ def mock_module_filename(monkeypatch, tmp_path):
     monkeypatch.setattr(spack.modules.lmod.LmodFileLayout, "filename", str(filename))
     monkeypatch.setattr(spack.modules.tcl.TclFileLayout, "filename", str(filename))
     yield str(filename)
+
+
+@pytest.fixture(autouse=True)
+def mock_modules_root(tmp_path, monkeypatch):
+    """Sets the modules root to a temporary directory, to avoid polluting configuration scopes."""
+    monkeypatch.setattr(spack.modules.common, "root_path", lambda x, y: str(tmp_path))

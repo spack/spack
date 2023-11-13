@@ -62,7 +62,7 @@ from spack.context import Context
 
 #: config section for this file
 def configuration(module_set_name):
-    config_path = "modules:%s" % module_set_name
+    config_path = f"modules:{module_set_name}"
     return spack.config.get(config_path, {})
 
 
@@ -219,7 +219,7 @@ def root_path(name, module_set_name):
     """
     defaults = {"lmod": "$spack/share/spack/lmod", "tcl": "$spack/share/spack/modules"}
     # Root folders where the various module files should be written
-    roots = spack.config.get("modules:%s:roots" % module_set_name, {})
+    roots = spack.config.get(f"modules:{module_set_name}:roots", {})
 
     # Merge config values into the defaults so we prefer configured values
     roots = spack.config.merge_yaml(defaults, roots)

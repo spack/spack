@@ -170,7 +170,7 @@ module_index:
 
 
 @pytest.mark.regression("14347")
-def test_load_installed_package_not_in_repo(install_mockery, mock_fetch, monkeypatch):
+def test_load_installed_package_not_in_repo(enable_tcl_on_install, monkeypatch):
     """Test that installed packages that have been removed are still loadable"""
     spec = Spec("trivial-install-test-package").concretized()
     spec.package.do_install()
