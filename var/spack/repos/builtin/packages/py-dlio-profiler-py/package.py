@@ -15,7 +15,7 @@ class PyDlioProfilerPy(PythonPackage):
 
     version("develop", branch="dev")
     version("master", branch="master")
-    version("0.0.1", tag="v0.0.1")
+    version("0.0.1", tag="v0.0.1", commit="28affe716211315dd6936ddc8e25ce6c43cdf491")
     depends_on("cpp-logger@0.0.1")
     depends_on("brahma@0.0.1")
     depends_on("gotcha@develop")

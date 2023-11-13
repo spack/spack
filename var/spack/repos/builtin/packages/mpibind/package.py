@@ -24,9 +24,9 @@ class Mpibind(AutotoolsPackage):
     # AC_INIT would be missing the version argument,
     # which is derived with git.
     version("master", branch="master", get_full_repo=True)
-    version("0.8.0", commit="ff38b9d", no_cache=True)
-    version("0.7.0", commit="3c437a9", no_cache=True)
-    version("0.5.0", commit="8698f07", no_cache=True)
+    version("0.8.0", commit="ff38b9dcd150ca1e8a8796835d8e1e1847b3ba68", no_cache=True)
+    version("0.7.0", commit="3c437a97cd841b9c13abfbe1062a0285e1a29d3e", no_cache=True)
+    version("0.5.0", commit="8698f07412232e4dd4de4802b508374dc0de48c9", no_cache=True)
 
     variant("cuda", default=False, description="Build w/support for NVIDIA GPUs.")
     variant("rocm", default=False, description="Build w/support for AMD GPUs.")

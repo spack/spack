@@ -17,6 +17,8 @@ class Gaudi(CMakePackage):
     tags = ["hep"]
 
     version("master", branch="master")
+    version("37.1", sha256="1d7038fd5dfb5f2517ce57623cf8090549ffe2ea8f0171d534e5c1ca20bd009a")
+    version("37.0", sha256="823f3821a4f498ddd2dd123fbb8a3787b361ddfd818f4ab13572076fc9afdfe4")
     version("36.14", sha256="b11e0afcb797d61a305856dfe8079d48d74c6b6867ceccc0a83aab5978c9ba5f")
     version("36.13", sha256="41e711c83428663996c825044b268ce515bef85dad74b4a9453f2207b4b1be7b")
     version("36.12", sha256="dfce9156cedfa0a7234f880a3c395e592a5f3dc79070d5d196fdb94b83ae203e")
@@ -72,7 +74,8 @@ class Gaudi(CMakePackage):
     depends_on("cppgsl")
     depends_on("fmt", when="@33.2:")
     depends_on("fmt@:8", when="@:36.9")
-    depends_on("intel-tbb@:2020.3")
+    depends_on("intel-tbb@:2020.3", when="@:37.0")
+    depends_on("tbb", when="@37.1:")
     depends_on("uuid")
     depends_on("nlohmann-json", when="@35.0:")
     depends_on("python", type=("build", "run"))

@@ -215,10 +215,10 @@ def test_config_add_override_leaf(mutable_empty_config):
 
 
 def test_config_add_update_dict(mutable_empty_config):
-    config("add", "packages:all:version:[1.0.0]")
+    config("add", "packages:hdf5:version:[1.0.0]")
     output = config("get", "packages")
 
-    expected = "packages:\n  all:\n    version: [1.0.0]\n"
+    expected = "packages:\n  hdf5:\n    version: [1.0.0]\n"
     assert output == expected
 
 
@@ -352,8 +352,7 @@ def test_config_add_update_dict_from_file(mutable_empty_config, tmpdir):
     contents = """spack:
   packages:
     all:
-      version:
-      - 1.0.0
+      target: [x86_64]
 """
 
     # create temp file and add it to config
@@ -368,8 +367,7 @@ def test_config_add_update_dict_from_file(mutable_empty_config, tmpdir):
     # added config comes before prior config
     expected = """packages:
   all:
-    version:
-    - 1.0.0
+    target: [x86_64]
     compiler: [gcc]
 """
 
@@ -381,7 +379,7 @@ def test_config_add_invalid_file_fails(tmpdir):
     # invalid because version requires a list
     contents = """spack:
   packages:
-    all:
+    hdf5:
       version: 1.0.0
 """
 
@@ -631,14 +629,11 @@ def test_config_prefer_upstream(
     packages = syaml.load(open(cfg_file))["packages"]
 
     # Make sure only the non-default variants are set.
-    assert packages["boost"] == {
-        "compiler": ["gcc@=10.2.1"],
-        "variants": "+debug +graph",
-        "version": ["1.63.0"],
-    }
-    assert packages["dependency-install"] == {"compiler": ["gcc@=10.2.1"], "version": ["2.0"]}
+    assert packages["all"] == {"compiler": ["gcc@=10.2.1"]}
+    assert packages["boost"] == {"variants": "+debug +graph", "version": ["1.63.0"]}
+    assert packages["dependency-install"] == {"version": ["2.0"]}
     # Ensure that neither variant gets listed for hdf5, since they conflict
-    assert packages["hdf5"] == {"compiler": ["gcc@=10.2.1"], "version": ["2.3"]}
+    assert packages["hdf5"] == {"version": ["2.3"]}
 
     # Make sure a message about the conflicting hdf5's was given.
     assert "- hdf5" in output

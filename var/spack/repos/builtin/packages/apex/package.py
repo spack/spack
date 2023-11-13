@@ -18,6 +18,7 @@ class Apex(CMakePackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("2.6.3", sha256="7fef12937d3bd1271a01abe44cb931b1d63823fb5c74287a332f3012ed7297d5")
     version("2.6.2", sha256="0c3ec26631db7925f50cf4e8920a778b57d11913f239a0eb964081f925129725")
     version("2.6.1", sha256="511dbab0af541489052a3d6379c48f9577e51654491d3b2c8545020e9d29fb29")
     version("2.6.0", sha256="25b4f6afd1083475dc6680b5da87759c62d31fcf368996185573694fc40d5317")
@@ -114,6 +115,9 @@ class Apex(CMakePackage):
     # Conflicts
     conflicts("+jemalloc", when="+gperftools")
     conflicts("+plugins", when="~activeharmony")
+
+    # https://github.com/UO-OACISS/apex/pull/177#issuecomment-1726322959
+    conflicts("+openmp", when="%gcc")
 
     # Patches
 

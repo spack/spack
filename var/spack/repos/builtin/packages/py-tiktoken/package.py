@@ -16,6 +16,7 @@ class PyTiktoken(PythonPackage):
     maintainers("meyersbs")
 
     version("0.4.0", sha256="59b20a819969735b48161ced9b92f05dc4519c17be4015cfb73b65270a243620")
+    version("0.3.1", sha256="8295912429374f5f3c6c6bf053a091ce1de8c1792a62e3b30d4ad36f47fa8b52")
 
     # From pyproject.toml
     depends_on("py-setuptools@62.4:", type="build")

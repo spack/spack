@@ -17,7 +17,7 @@ class Op2Dsl(MakefilePackage, CudaPackage):
     maintainers("gihanmudalige", "reguly", "bozbez")
 
     version("master", branch="master")
-    version("1.1.0", tag="v1.1.0")
+    version("1.1.0", tag="v1.1.0", commit="22c13b425976e32a6c904f3a5a95ffb761680eb3")
 
     build_directory = "op2"
 

@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
 import pathlib
 
 import pytest
@@ -299,9 +300,14 @@ packages:
     assert s1.satisfies("@2.2")
 
 
+@pytest.mark.parametrize("require_checksum", (True, False))
 def test_requirement_adds_git_hash_version(
-    concretize_scope, test_repo, mock_git_version_info, monkeypatch
+    require_checksum, concretize_scope, test_repo, mock_git_version_info, monkeypatch, working_env
 ):
+    # A full commit sha is a checksummed version, so this test should pass in both cases
+    if require_checksum:
+        os.environ["SPACK_CONCRETIZER_REQUIRE_CHECKSUM"] = "yes"
+
     repo_path, filename, commits = mock_git_version_info
     monkeypatch.setattr(
         spack.package_base.PackageBase, "git", path_to_file_url(repo_path), raising=False
@@ -463,16 +469,22 @@ packages:
 
 
 @pytest.mark.regression("34241")
-def test_require_cflags(concretize_scope, test_repo):
+def test_require_cflags(concretize_scope, mock_packages):
     """Ensures that flags can be required from configuration."""
     conf_str = """\
 packages:
-  y:
+  mpich2:
     require: cflags="-g"
+  mpi:
+    require: mpich cflags="-O1"
 """
     update_packages_config(conf_str)
-    spec = Spec("y").concretized()
-    assert spec.satisfies("cflags=-g")
+
+    spec_mpich2 = Spec("mpich2").concretized()
+    assert spec_mpich2.satisfies("cflags=-g")
+
+    spec_mpi = Spec("mpi").concretized()
+    assert spec_mpi.satisfies("mpich cflags=-O1")
 
 
 def test_requirements_for_package_that_is_not_needed(concretize_scope, test_repo):
@@ -537,21 +549,37 @@ packages:
             assert not s2.satisfies("@2.5 %gcc")
 
 
-def test_requirements_are_higher_priority_than_deprecation(concretize_scope, test_repo):
-    """Test that users can override a deprecated version with a requirement."""
-    # @2.3 is a deprecated versions. Ensure that any_of picks both constraints,
+@pytest.mark.parametrize(
+    "allow_deprecated,expected,not_expected",
+    [(True, ["@=2.3", "%gcc"], []), (False, ["%gcc"], ["@=2.3"])],
+)
+def test_requirements_and_deprecated_versions(
+    allow_deprecated, expected, not_expected, concretize_scope, test_repo
+):
+    """Tests the expected behavior of requirements and deprecated versions.
+
+    If deprecated versions are not allowed, concretization should just pick
+    the other requirement.
+
+    If deprecated versions are allowed, both requirements are honored.
+    """
+    # 2.3 is a deprecated versions. Ensure that any_of picks both constraints,
     # since they are possible
     conf_str = """\
 packages:
   y:
     require:
-    - any_of: ["@2.3", "%gcc"]
+    - any_of: ["@=2.3", "%gcc"]
 """
     update_packages_config(conf_str)
 
-    s1 = Spec("y").concretized()
-    assert s1.satisfies("@2.3")
-    assert s1.satisfies("%gcc")
+    with spack.config.override("config:deprecated", allow_deprecated):
+        s1 = Spec("y").concretized()
+        for constrain in expected:
+            assert s1.satisfies(constrain)
+
+        for constrain in not_expected:
+            assert not s1.satisfies(constrain)
 
 
 @pytest.mark.parametrize("spec_str,requirement_str", [("x", "%gcc"), ("x", "%clang")])

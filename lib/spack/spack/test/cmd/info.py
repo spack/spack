@@ -25,7 +25,7 @@ def parser():
 def print_buffer(monkeypatch):
     buffer = []
 
-    def _print(*args):
+    def _print(*args, **kwargs):
         buffer.extend(args)
 
     monkeypatch.setattr(spack.cmd.info.color, "cprint", _print, raising=False)
@@ -88,6 +88,7 @@ def test_info_fields(pkg_query, parser, print_buffer):
         "Installation Phases:",
         "Virtual Packages:",
         "Tags:",
+        "Licenses:",
     )
 
     args = parser.parse_args(["--all", pkg_query])

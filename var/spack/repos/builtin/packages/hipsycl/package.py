@@ -39,6 +39,9 @@ class Hipsycl(CMakePackage):
     depends_on("python@3:")
     depends_on("llvm@8: +clang", when="~cuda")
     depends_on("llvm@9: +clang", when="+cuda")
+    # hipSYCL 0.8.0 supported only LLVM 8-10:
+    # (https://github.com/AdaptiveCpp/AdaptiveCpp/blob/v0.8.0/CMakeLists.txt#L29-L37)
+    depends_on("llvm@8:10", when="@0.8.0")
     # https://github.com/OpenSYCL/OpenSYCL/pull/918 was introduced after 0.9.4
     conflicts("^llvm@16:", when="@:0.9.4")
     # LLVM PTX backend requires cuda7:10.1 (https://tinyurl.com/v82k5qq)

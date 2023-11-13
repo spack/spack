@@ -126,8 +126,7 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     provides("fftw-api@3")
     provides("scalapack", when="+cluster")
     provides("mkl")
-    provides("lapack")
-    provides("blas")
+    provides("lapack", "blas")
 
     @property
     def component_dir(self):
@@ -148,21 +147,6 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
             return libs + system_libs
         else:
             return IntelOneApiStaticLibraryList(libs, system_libs)
-
-    def setup_run_environment(self, env):
-        super().setup_run_environment(env)
-
-        # Support RPATH injection to the library directories when the '-mkl' or '-qmkl'
-        # flag of the Intel compilers are used outside the Spack build environment. We
-        # should not try to take care of other compilers because the users have to
-        # provide the linker flags anyway and are expected to take care of the RPATHs
-        # flags too. We prefer the __INTEL_POST_CFLAGS/__INTEL_POST_FFLAGS flags over
-        # the PRE ones so that any other RPATHs provided by the users on the command
-        # line come before and take precedence over the ones we inject here.
-        for d in self._find_mkl_libs(self.spec.satisfies("+shared")).directories:
-            flag = "-Wl,-rpath,{0}".format(d)
-            env.append_path("__INTEL_POST_CFLAGS", flag, separator=" ")
-            env.append_path("__INTEL_POST_FFLAGS", flag, separator=" ")
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         # Only if environment modifications are desired (default is +envmods)
@@ -201,14 +185,16 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
                 ]
             ):
                 libs.append(self._xlp64_lib("libmkl_blacs_intelmpi"))
-            elif any(self.spec.satisfies(m) for m in ["^openmpi", "mpi_family=openmpi"]):
+            elif any(
+                self.spec.satisfies(m) for m in ["^openmpi", "^hpcx-mpi", "mpi_family=openmpi"]
+            ):
                 libs.append(self._xlp64_lib("libmkl_blacs_openmpi"))
             else:
                 raise RuntimeError(
                     (
-                        "intel-oneapi-mpi +cluster requires one of ^intel-oneapi-mpi, "
+                        "intel-oneapi-mkl +cluster requires one of ^intel-oneapi-mpi, "
                         "^intel-mpi, ^mpich, ^cray-mpich, mpi_family=mpich, ^openmpi, "
-                        "or mpi_family=openmpi"
+                        "^hpcx-mpi, or mpi_family=openmpi"
                     )
                 )
 
@@ -218,9 +204,14 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         resolved_libs = find_libraries(libs, lib_path, shared=shared)
         # Add MPI libraries for cluster support. If MPI is not in the
         # spec, then MKL is externally installed and application must
-        # link with MPI libaries
-        if self.spec.satisfies("+cluster ^mpi"):
-            resolved_libs = resolved_libs + self.spec["mpi"].libs
+        # link with MPI libaries. If MPI is in spec, but there are no
+        # libraries, then the package (e.g. hpcx-mpi) relies on the
+        # compiler wrapper to add the libraries.
+        try:
+            if self.spec.satisfies("+cluster ^mpi"):
+                resolved_libs = resolved_libs + self.spec["mpi"].libs
+        except spack.error.NoLibrariesError:
+            pass
         return resolved_libs
 
     def _xlp64_lib(self, lib):
