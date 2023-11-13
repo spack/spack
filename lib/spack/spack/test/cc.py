@@ -11,11 +11,12 @@ import os
 
 import pytest
 
+from llnl.syscmd import SYSTEM_DIRS, set_env
+
 import spack.build_environment
 import spack.config
 import spack.spec
 from spack.paths import build_env_path
-from spack.util.environment import SYSTEM_DIRS, set_env
 from spack.util.executable import Executable, ProcessError
 
 #

@@ -526,7 +526,7 @@ class Builder(collections.abc.Sequence, metaclass=BuilderMeta):
         Spack's store.
 
         Args:
-            env (spack.util.environment.EnvironmentModifications): environment
+            env (llnl.syscmd.EnvironmentModifications): environment
                 modifications to be applied when the package is built. Package authors
                 can call methods on it to alter the build environment.
         """
@@ -554,7 +554,7 @@ class Builder(collections.abc.Sequence, metaclass=BuilderMeta):
             variable.
 
         Args:
-            env (spack.util.environment.EnvironmentModifications): environment
+            env (llnl.syscmd.EnvironmentModifications): environment
                 modifications to be applied when the dependent package is built.
                 Package authors can call methods on it to alter the build environment.
 

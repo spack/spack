@@ -14,6 +14,7 @@ from typing import Optional
 import llnl.string as string
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+from llnl.syscmd import EnvironmentModifications
 from llnl.util.tty.colify import colify
 from llnl.util.tty.color import colorize
 
@@ -31,7 +32,6 @@ import spack.schema.env
 import spack.spec
 import spack.tengine
 from spack.cmd.common import arguments
-from spack.util.environment import EnvironmentModifications
 
 description = "manage virtual environments"
 section = "environments"

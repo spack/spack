@@ -6,10 +6,11 @@
 import os
 import sys
 
+import llnl.syscmd
+
 import spack.cmd
 import spack.error
 import spack.user_environment as uenv
-import spack.util.environment
 from spack.cmd.common import arguments
 
 description = "remove package from the user environment"

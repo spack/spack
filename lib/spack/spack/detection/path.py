@@ -14,13 +14,12 @@ import sys
 import warnings
 from typing import Dict, List, Optional, Set, Tuple
 
+import llnl.syscmd
 import llnl.util.filesystem
 import llnl.util.lang
 import llnl.util.tty
 
 import spack.util.elf as elf_utils
-import spack.util.environment
-import spack.util.environment as environment
 import spack.util.ld_so_conf
 
 from .common import (
@@ -140,10 +139,10 @@ def libraries_in_ld_and_system_library_path(
 
         # Environment variables
         if sys.platform == "darwin":
-            search_paths.extend(environment.get_path("DYLD_LIBRARY_PATH"))
-            search_paths.extend(environment.get_path("DYLD_FALLBACK_LIBRARY_PATH"))
+            search_paths.extend(llnl.syscmd.get_path("DYLD_LIBRARY_PATH"))
+            search_paths.extend(llnl.syscmd.get_path("DYLD_FALLBACK_LIBRARY_PATH"))
         elif sys.platform.startswith("linux"):
-            search_paths.extend(environment.get_path("LD_LIBRARY_PATH"))
+            search_paths.extend(llnl.syscmd.get_path("LD_LIBRARY_PATH"))
 
         # Dynamic linker paths
         search_paths.extend(spack.util.ld_so_conf.host_dynamic_linker_search_paths())
@@ -183,7 +182,7 @@ def libraries_in_windows_paths(path_hints: Optional[List[str]] = None) -> Dict[s
             variables as well as the standard system library paths.
     """
     search_hints = (
-        path_hints if path_hints is not None else spack.util.environment.get_path("PATH")
+        path_hints if path_hints is not None else llnl.syscmd.get_path("PATH")
     )
     search_paths = llnl.util.filesystem.search_paths_for_libraries(*search_hints)
     # on Windows, some libraries (.dlls) are found in the bin directory or sometimes

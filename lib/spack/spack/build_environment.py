@@ -47,6 +47,16 @@ from typing import List, Tuple
 
 import llnl.util.tty as tty
 from llnl.string import plural
+from llnl.syscmd import (
+    SYSTEM_DIRS,
+    EnvironmentModifications,
+    env_flag,
+    filter_system_paths,
+    get_path,
+    inspect_path,
+    is_system_path,
+    validate,
+)
 from llnl.util.filesystem import join_path
 from llnl.util.lang import dedupe, stable_partition
 from llnl.util.symlink import symlink
@@ -77,15 +87,6 @@ from spack.error import NoHeadersError, NoLibrariesError
 from spack.install_test import spack_install_test_log
 from spack.installer import InstallError
 from spack.util.cpus import determine_number_of_jobs
-from spack.util.environment import (
-    SYSTEM_DIRS,
-    EnvironmentModifications,
-    env_flag,
-    filter_system_paths,
-    get_path,
-    is_system_path,
-    validate,
-)
 from spack.util.executable import Executable
 from spack.util.log_parse import make_log_context, parse_log_events
 from spack.util.module_cmd import load_module, module, path_from_modules

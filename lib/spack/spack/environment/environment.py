@@ -18,6 +18,7 @@ import urllib.request
 import warnings
 from typing import Dict, Iterable, List, Optional, Set, Tuple, Union
 
+import llnl.syscmd
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 import llnl.util.tty.color as clr
@@ -42,7 +43,6 @@ import spack.store
 import spack.subprocess_context
 import spack.user_environment as uenv
 import spack.util.cpus
-import spack.util.environment
 import spack.util.hash
 import spack.util.lock as lk
 import spack.util.parallel

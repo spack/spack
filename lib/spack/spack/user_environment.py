@@ -6,11 +6,12 @@ import os
 import re
 import sys
 
+import llnl.syscmd as environment
+
 import spack.build_environment
 import spack.config
 import spack.error
 import spack.spec
-import spack.util.environment as environment
 from spack import traverse
 from spack.context import Context
 

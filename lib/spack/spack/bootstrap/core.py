@@ -31,6 +31,7 @@ import sys
 import uuid
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
+import llnl.syscmd
 from llnl.util import tty
 from llnl.util.lang import GroupedExceptionHandler
 
@@ -46,7 +47,6 @@ import spack.repo
 import spack.spec
 import spack.store
 import spack.user_environment
-import spack.util.environment
 import spack.util.executable
 import spack.util.path
 import spack.util.spack_yaml

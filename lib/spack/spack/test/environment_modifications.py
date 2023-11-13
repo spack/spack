@@ -7,9 +7,8 @@ import os
 
 import pytest
 
-import spack.util.environment as environment
-from spack.paths import spack_root
-from spack.util.environment import (
+import llnl.syscmd as environment
+from llnl.syscmd import (
     AppendPath,
     EnvironmentModifications,
     PrependPath,
@@ -19,6 +18,8 @@ from spack.util.environment import (
     filter_system_paths,
     is_system_path,
 )
+
+from spack.paths import spack_root
 from spack.util.sourcing import environment_after_sourcing_files, from_sourcing_file
 
 datadir = os.path.join(spack_root, "lib", "spack", "spack", "test", "data")

@@ -3,7 +3,8 @@ import os.path
 import sys
 from typing import Any, Dict, Tuple, Union
 
-from .environment import EnvironmentModifications, sanitize
+from llnl.syscmd import EnvironmentModifications, sanitize
+
 from .executable import Executable, which
 
 Path = str

@@ -51,7 +51,6 @@ import spack.repo
 import spack.spec
 import spack.store
 import spack.url
-import spack.util.environment
 import spack.util.path
 import spack.util.web
 from spack.filesystem_view import YamlFilesystemView
@@ -2098,7 +2097,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """Sets up the run environment for a package.
 
         Args:
-            env (spack.util.environment.EnvironmentModifications): environment
+            env (llnl.syscmd.EnvironmentModifications): environment
                 modifications to be applied when the package is run. Package authors
                 can call methods on it to alter the run environment.
         """
@@ -2115,7 +2114,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         for dependencies.
 
         Args:
-            env (spack.util.environment.EnvironmentModifications): environment
+            env (llnl.syscmd.EnvironmentModifications): environment
                 modifications to be applied when the dependent package is run.
                 Package authors can call methods on it to alter the build environment.
 

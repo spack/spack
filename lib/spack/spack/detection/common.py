@@ -21,6 +21,7 @@ import re
 import sys
 from typing import Dict, List, NamedTuple, Optional, Set, Tuple, Union
 
+import llnl.syscmd
 import llnl.util.tty
 
 import spack.config
@@ -404,7 +405,7 @@ def find_win32_additional_install_paths() -> List[str]:
     windows_search_ext.extend(
         spack.config.get("config:additional_external_search_paths", default=[])
     )
-    windows_search_ext.extend(spack.util.environment.get_path("PATH"))
+    windows_search_ext.extend(llnl.syscmd.get_path("PATH"))
     return windows_search_ext
 
 

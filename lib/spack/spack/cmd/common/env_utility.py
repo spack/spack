@@ -6,6 +6,7 @@ import argparse
 import os
 
 import llnl.util.tty as tty
+from llnl.syscmd import dump_environment, pickle_environment
 
 import spack.cmd
 import spack.deptypes as dt
@@ -16,7 +17,6 @@ import spack.store
 from spack import build_environment, traverse
 from spack.cmd.common import arguments
 from spack.context import Context
-from spack.util.environment import dump_environment, pickle_environment
 
 
 def setup_parser(subparser):

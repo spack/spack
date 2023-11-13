@@ -12,6 +12,7 @@ from argparse import Namespace
 
 import pytest
 
+import llnl.syscmd
 import llnl.util.filesystem as fs
 import llnl.util.link_tree
 import llnl.util.tty as tty
@@ -655,7 +656,7 @@ packages:
         e.install_all()
         e.write()
 
-        env_mod = spack.util.environment.EnvironmentModifications()
+        env_mod = llnl.syscmd.EnvironmentModifications()
         e.add_view_to_env(env_mod, "default")
         env_variables = {}
         env_mod.apply_modifications(env_variables)

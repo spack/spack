@@ -37,6 +37,7 @@ import re
 import string
 from typing import List, Optional
 
+import llnl.syscmd
 import llnl.util.filesystem
 import llnl.util.tty as tty
 from llnl.util.lang import dedupe, memoized
@@ -55,7 +56,6 @@ import spack.spec
 import spack.store
 import spack.tengine as tengine
 import spack.user_environment
-import spack.util.environment
 import spack.util.file_permissions as fp
 import spack.util.path
 import spack.util.spack_yaml as syaml
@@ -682,9 +682,7 @@ class BaseContext(tengine.Context):
 
     def modification_needs_formatting(self, modification):
         """Returns True if environment modification entry needs to be formatted."""
-        return (
-            not isinstance(modification, (spack.util.environment.SetEnv)) or not modification.raw
-        )
+        return not isinstance(modification, (llnl.syscmd.SetEnv)) or not modification.raw
 
     @tengine.context_property
     @memoized
@@ -722,8 +720,8 @@ class BaseContext(tengine.Context):
         else:
             view = None
 
-        env = spack.util.environment.inspect_path(
-            self.spec.prefix, prefix_inspections, exclude=spack.util.environment.is_system_path
+        env = llnl.syscmd.inspect_path(
+            self.spec.prefix, prefix_inspections, exclude=llnl.syscmd.is_system_path
         )
 
         # Let the extendee/dependency modify their extensions/dependencies
@@ -782,9 +780,7 @@ class BaseContext(tengine.Context):
     def has_manpath_modifications(self):
         """True if MANPATH environment variable is modified."""
         for modification_type, cmd in self.environment_modifications:
-            if not isinstance(
-                cmd, (spack.util.environment.PrependPath, spack.util.environment.AppendPath)
-            ):
+            if not isinstance(cmd, (llnl.syscmd.PrependPath, llnl.syscmd.AppendPath)):
                 continue
             if cmd.name == "MANPATH":
                 return True

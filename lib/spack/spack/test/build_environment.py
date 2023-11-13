@@ -10,6 +10,7 @@ import posixpath
 import pytest
 
 from llnl.path import Path, convert_to_platform_path
+from llnl.syscmd import EnvironmentModifications
 from llnl.util.filesystem import HeaderList, LibraryList
 
 import spack.build_environment
@@ -21,7 +22,6 @@ from spack.build_environment import UseMode, _static_to_shared_library, dso_suff
 from spack.context import Context
 from spack.paths import build_env_path
 from spack.util.cpus import determine_number_of_jobs
-from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
 
 

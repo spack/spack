@@ -10,8 +10,7 @@ import sys
 from pathlib import Path, PurePath
 
 import llnl.util.tty as tty
-
-from spack.util.environment import EnvironmentModifications
+from llnl.syscmd import EnvironmentModifications
 
 __all__ = ["Executable", "which", "ProcessError"]
 

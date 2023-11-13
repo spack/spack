@@ -17,6 +17,7 @@ import archspec.cpu
 import llnl.util.filesystem as fs
 import llnl.util.lang
 import llnl.util.tty as tty
+from llnl.syscmd import get_path
 
 import spack.compiler
 import spack.config
@@ -26,7 +27,6 @@ import spack.paths
 import spack.platforms
 import spack.spec
 import spack.version
-from spack.util.environment import get_path
 from spack.util.naming import mod_to_class
 
 _path_instance_vars = ["cc", "cxx", "f77", "fc"]
