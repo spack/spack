@@ -108,7 +108,8 @@ class Ffmpeg(AutotoolsPackage):
     depends_on("speex", when="+libspeex")
     depends_on("xz", when="+lzma")
     depends_on("x264", when="+libx264")
-    depends_on("texinfo@:7.0", when="+doc")
+    depends_on("texinfo", when="+doc")
+    depends_on("texinfo@:6", when="+doc @:4")
 
     conflicts("%nvhpc")
 
@@ -124,6 +125,13 @@ class Ffmpeg(AutotoolsPackage):
         "https://git.ffmpeg.org/gitweb/ffmpeg.git/commitdiff_plain/effadce6c756247ea8bae32dc13bb3e6f464f0eb",
         sha256="d1ea47c29968507fee772234bc734d29958b62ab92400801ef28559b538a9168",
         when="@:6.0",
+    )
+
+    # fix incompatibility with texinfo@7, especially @7.1:
+    patch(
+        "https://git.ffmpeg.org/gitweb/ffmpeg.git/commitdiff_plain/f01fdedb69e4accb1d1555106d8f682ff1f1ddc7",
+        sha256="416751f41cfbf086c28b4bbf01ace4c08e5651e59911dca6240292bb1b5c6b53",
+        when="@5:6.0",
     )
 
     @property
