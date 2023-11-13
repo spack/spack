@@ -54,7 +54,6 @@ from llnl.syscmd import (
     env_flag,
     filter_system_paths,
     get_path,
-    inspect_path,
     is_system_path,
     validate,
 )

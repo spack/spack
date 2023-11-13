@@ -1620,7 +1620,7 @@ class Environment:
 
     def _env_modifications_for_view(
         self, view: ViewDescriptor, reverse: bool = False
-    ) -> spack.util.environment.EnvironmentModifications:
+    ) -> llnl.syscmd.EnvironmentModifications:
         try:
             with spack.store.STORE.db.read_transaction():
                 installed_roots = [s for s in self.concrete_roots() if s.installed]
@@ -1631,12 +1631,12 @@ class Environment:
                 f"could not {'unload' if reverse else 'load'} runtime environment due "
                 f"to {e.__class__.__name__}: {e}"
             )
-            return spack.util.environment.EnvironmentModifications()
+            return llnl.syscmd.EnvironmentModifications()
         return mods.reversed() if reverse else mods
 
     def add_view_to_env(
-        self, env_mod: spack.util.environment.EnvironmentModifications, view: str
-    ) -> spack.util.environment.EnvironmentModifications:
+        self, env_mod: llnl.syscmd.EnvironmentModifications, view: str
+    ) -> llnl.syscmd.EnvironmentModifications:
         """Collect the environment modifications to activate an environment using the provided
         view. Removes duplicate paths.
 
@@ -1657,8 +1657,8 @@ class Environment:
         return env_mod
 
     def rm_view_from_env(
-        self, env_mod: spack.util.environment.EnvironmentModifications, view: str
-    ) -> spack.util.environment.EnvironmentModifications:
+        self, env_mod: llnl.syscmd.EnvironmentModifications, view: str
+    ) -> llnl.syscmd.EnvironmentModifications:
         """Collect the environment modifications to deactivate an environment using the provided
         view. Reverses the action of ``add_view_to_env``.
 

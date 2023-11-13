@@ -13,7 +13,6 @@ from typing import List
 
 import archspec.cpu
 
-import llnl.syscmd
 from llnl.util import tty
 
 import spack.environment

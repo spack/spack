@@ -6,8 +6,6 @@
 import os
 import sys
 
-import llnl.syscmd
-
 import spack.cmd
 import spack.error
 import spack.user_environment as uenv

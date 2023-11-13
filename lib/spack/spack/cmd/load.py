@@ -5,8 +5,6 @@
 
 import sys
 
-import llnl.syscmd
-
 import llnl.util.tty as tty
 
 import spack.cmd

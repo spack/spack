@@ -181,9 +181,7 @@ def libraries_in_windows_paths(path_hints: Optional[List[str]] = None) -> Dict[s
             constructed based on the set of PATH environment
             variables as well as the standard system library paths.
     """
-    search_hints = (
-        path_hints if path_hints is not None else llnl.syscmd.get_path("PATH")
-    )
+    search_hints = path_hints if path_hints is not None else llnl.syscmd.get_path("PATH")
     search_paths = llnl.util.filesystem.search_paths_for_libraries(*search_hints)
     # on Windows, some libraries (.dlls) are found in the bin directory or sometimes
     # at the search root. Add both of those options to the search scheme
@@ -335,7 +333,7 @@ class Finder:
 
 class ExecutablesFinder(Finder):
     def default_path_hints(self) -> List[str]:
-        return spack.util.environment.get_path("PATH")
+        return llnl.syscmd.get_path("PATH")
 
     def search_patterns(self, *, pkg: "spack.package_base.PackageBase") -> List[str]:
         result = []

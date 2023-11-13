@@ -6,7 +6,7 @@ import os
 import re
 import sys
 
-import llnl.syscmd as environment
+from llnl.syscmd import environment
 
 import spack.build_environment
 import spack.config
