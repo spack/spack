@@ -69,7 +69,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     # setup for rocthrust, this needs to also be added here.
     depends_on("rocprim", when="+rocm")
     depends_on("hwloc@2.1:", when="+hwloc")
-    # TODO: replace with the next PAPI version when available
+    # TODO: replace with the next PAPI version when available (>7.0.1.0)
     depends_on("papi@master+sde", when="+sde")
 
     depends_on("googletest", type="test")
@@ -84,7 +84,6 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+mpi", when="@:1.4.0")
 
     conflicts("+sde", when="@:1.6.0")
-    conflicts("+sde", when="@master")
 
     # ROCm 4.1.0 breaks platform settings which breaks Ginkgo's HIP support.
     conflicts("^hip@4.1.0:", when="@:1.3.0")
