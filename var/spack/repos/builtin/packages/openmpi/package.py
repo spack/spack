@@ -411,6 +411,9 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     # To fix an error in Open MPI configury related to findng dl lib.
     # This is specific to the 5.0.0 release.
     patch("fix-for-dlopen-missing-symbol-problem.patch", when="@5.0.0")
+    # Patch to accelerator CUDA component to link in libcuda
+    # when in non-standard location
+    patch("accelerator-cuda-fix-bug-in-makefile.patch", when="@5.0.0")
 
     variant(
         "fabrics",
