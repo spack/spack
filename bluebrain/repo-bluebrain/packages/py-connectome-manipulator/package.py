@@ -19,7 +19,13 @@ class PyConnectomeManipulator(PythonPackage):
     version("0.0.6", tag="connectome-manipulator-v0.0.6")
     version("0.0.4", tag="connectome-manipulator-v0.0.4")
 
-    depends_on("parquet-converters@0.8.0:", type="run")
+    variant(
+        "convert",
+        default=False,
+        description="Enable runtime support of converting output to SONATA",
+    )
+
+    depends_on("parquet-converters@0.8.0:", type="run", when="+convert")
 
     depends_on("py-bluepysnap@1.0.5:1", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))

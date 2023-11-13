@@ -67,8 +67,7 @@ spack:
     - py-bluepymm
     - py-bluepyopt
     - py-bluepyparallel
-    - py-connectome-manipulator
-    - py-connectome-manipulator@0.0.4  # FIXME purge after archive of July 2023 has been deployed
+    - py-connectome-manipulator+convert
     - py-data-integrity-check
     - py-efel
     - py-nexusforge
