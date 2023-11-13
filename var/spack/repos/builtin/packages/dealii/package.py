@@ -74,8 +74,7 @@ class Dealii(CMakePackage, CudaPackage):
         values=("default", "11", "14", "17"),
     )
     variant("doc", default=False, description="Compile with documentation")
-    variant("examples", default=True, description="Install tutorial programs")
-    variant("examples_compile", default=True, description="Compile tutorial programs")
+    variant("examples", default=True, description="Compile and install tutorial programs")
     variant("int64", default=False, description="Compile with 64 bit indices support")
     variant("mpi", default=True, description="Compile with MPI")
     variant("optflags", default=False, description="Compile using additional optimization flags")
@@ -457,7 +456,7 @@ class Dealii(CMakePackage, CudaPackage):
 
         # Examples / tutorial programs
         options.append(self.define_from_variant("DEAL_II_COMPONENT_EXAMPLES", "examples"))
-        options.append(self.define_from_variant("DEAL_II_COMPILE_EXAMPLES", "examples_compile"))
+        options.append(self.define_from_variant("DEAL_II_COMPILE_EXAMPLES", "examples"))
 
         # Enforce the specified C++ standard
         if spec.variants["cxxstd"].value != "default":
