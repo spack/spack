@@ -20,7 +20,7 @@ class Cmake(Package):
     url = "https://github.com/Kitware/CMake/releases/download/v3.19.0/cmake-3.19.0.tar.gz"
     git = "https://gitlab.kitware.com/cmake/cmake.git"
 
-    maintainers("alalazo")
+    maintainers("alalazo", "johnwparent")
 
     tags = ["build-tools", "windows"]
 
@@ -234,13 +234,15 @@ class Cmake(Package):
     with when("~ownlibs"):
         depends_on("expat")
         # expat/zlib are used in CMake/CTest, so why not require them in libarchive.
-        depends_on("libarchive@3.1.0: xar=expat compression=zlib")
-        depends_on("libarchive@3.3.3:", when="@3.15.0:")
-        depends_on("libuv@1.0.0:1.10", when="@3.7.0:3.10.3")
-        depends_on("libuv@1.10.0:1.10", when="@3.11.0:3.11")
-        depends_on("libuv@1.10.0:", when="@3.12.0:")
-        depends_on("rhash", when="@3.8.0:")
-        depends_on("jsoncpp build_system=meson", when="@3.2:")
+        for plat in ["darwin", "cray", "linux"]:
+            with when("platform=%s" % plat):
+                depends_on("libarchive@3.1.0: xar=expat compression=zlib")
+                depends_on("libarchive@3.3.3:", when="@3.15.0:")
+                depends_on("libuv@1.0.0:1.10", when="@3.7.0:3.10.3")
+                depends_on("libuv@1.10.0:1.10", when="@3.11.0:3.11")
+                depends_on("libuv@1.10.0:", when="@3.12.0:")
+                depends_on("rhash", when="@3.8.0:")
+                depends_on("jsoncpp build_system=meson", when="@3.2:")
 
     depends_on("ncurses", when="+ncurses")
 
@@ -248,9 +250,6 @@ class Cmake(Package):
         depends_on("python@2.7.11:", type="build")
         depends_on("py-sphinx", type="build")
 
-    # TODO: update curl package to build with Windows SSL implementation
-    # at which point we can build with +ownlibs on Windows
-    conflicts("~ownlibs", when="platform=windows")
     # Cannot build with Intel, should be fixed in 3.6.2
     # https://gitlab.kitware.com/cmake/cmake/issues/16226
     patch("intel-c-gnu11.patch", when="@3.6.0:3.6.1")
