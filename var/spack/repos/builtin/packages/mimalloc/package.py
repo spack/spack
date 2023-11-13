@@ -14,6 +14,8 @@ class Mimalloc(CMakePackage):
     git = "https://github.com/microsoft/mimalloc.git"
     maintainers("msimberg")
 
+    license("MIT")
+
     version("dev-slice", branch="dev-slice")
     version("dev", branch="dev")
     version("master", branch="master")

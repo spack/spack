@@ -18,6 +18,8 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/STEllAR-GROUP/hpx.git"
     maintainers("msimberg", "albestro", "teonnik", "hkaiser")
 
+    license("BSL-1.0")
+
     tags = ["e4s"]
 
     version("master", branch="master")

@@ -16,6 +16,8 @@ class Asio(AutotoolsPackage):
     git = "https://github.com/chriskohlhoff/asio.git"
     maintainers("msimberg", "pauleonix")
 
+    license("BSL-1.0")
+
     # As uneven minor versions of asio are not considered stable, they wont be added anymore
     version("1.28.0", sha256="226438b0798099ad2a202563a83571ce06dd13b570d8fded4840dbc1f97fa328")
     version("1.26.0", sha256="935583f86825b7b212479277d03543e0f419a55677fa8cb73a79a927b858a72d")

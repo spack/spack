@@ -14,6 +14,8 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/eth-cscs/DLA-Future.git"
     maintainers = ["rasolca", "albestro", "msimberg", "aurianer"]
 
+    license("BSD-3-Clause")
+
     version("0.2.1", sha256="4c2669d58f041304bd618a9d69d9879a42e6366612c2fc932df3894d0326b7fe")
     version("0.2.0", sha256="da73cbd1b88287c86d84b1045a05406b742be924e65c52588bbff200abd81a10")
     version("0.1.0", sha256="f7ffcde22edabb3dc24a624e2888f98829ee526da384cd752b2b271c731ca9b1")
