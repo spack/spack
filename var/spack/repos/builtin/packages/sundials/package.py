@@ -22,6 +22,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     maintainers("balos1", "cswoodward", "gardner48")
+    license("BSD-3-Clause")
 
     # ==========================================================================
     # Versions
