@@ -372,11 +372,22 @@ class Dealii(CMakePackage, CudaPackage):
     # 64-bit BLAS:
     for _package in ["openblas", "intel-mkl", "intel-parallel-studio+mkl"]:
         conflicts(
-            "^{0}+ilp64".format(_package), when="@:8.5.1", msg="64bit BLAS is only supported from 9.0.0"
+            "^{0}+ilp64".format(_package),
+            when="@:8.5.1",
+            msg="64bit BLAS is only supported from 9.0.0",
         )
 
     # MPI requirements:
-    for _package in ["arpack", "hdf5", "netcdf", "p4est", "petsc", "scalapack", "slepc", "trilinos"]:
+    for _package in [
+        "arpack",
+        "hdf5",
+        "netcdf",
+        "p4est",
+        "petsc",
+        "scalapack",
+        "slepc",
+        "trilinos",
+    ]:
         conflicts(
             "+{0}".format(_package),
             when="~mpi",
