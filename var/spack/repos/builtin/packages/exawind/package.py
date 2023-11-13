@@ -43,9 +43,6 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("tioga~nodegid")
     depends_on("yaml-cpp@0.6:")
     depends_on("nalu-wind+openfast", when="+openfast")
-    depends_on("openfast+cxx@2.6.0:", when="+openfast")
-    depends_on("openfast+cxx@2.6.0:", when="^nalu-wind+openfast")
-    depends_on("openfast+cxx@2.6.0:", when="^amr-wind+openfast")
     depends_on("amr-wind+hypre", when="+hypre~sycl")
     depends_on("amr-wind~hypre", when="~hypre")
     depends_on("nalu-wind+hypre", when="+hypre")
@@ -60,9 +57,7 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         spec = self.spec
 
-        args = super(Exawind, self).cmake_args()
-
-        args.append(self.define("MPI_HOME", spec["mpi"].prefix))
+        args = [self.define("MPI_HOME", spec["mpi"].prefix)]
 
         if "+umpire" in self.spec:
             args.append(self.define_from_variant("EXAWIND_ENABLE_UMPIRE", "umpire"))
