@@ -117,7 +117,7 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
     )
     variant("tests", default=True, description="Activate regression tests")
     variant("unit-tests", default=True, description="Activate unit tests")
-    for std in cxxstd:
+    for std in supported_cxxstd:
         depends_on("trilinos cxxstd=%s" % std, when="cxxstd=%s" % std)
 
     def setup_build_environment(self, env):
