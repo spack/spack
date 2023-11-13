@@ -19,6 +19,7 @@ from spack.util.environment import (
     filter_system_paths,
     is_system_path,
 )
+from spack.util.sourcing import environment_after_sourcing_files, from_sourcing_file
 
 datadir = os.path.join(spack_root, "lib", "spack", "spack", "test", "data")
 
@@ -252,9 +253,9 @@ def test_source_files(files_to_be_sourced):
     env = EnvironmentModifications()
     for filename in files_to_be_sourced:
         if filename.endswith("sourceme_parameters.sh"):
-            env.extend(EnvironmentModifications.from_sourcing_file(filename, "intel64"))
+            env.extend(from_sourcing_file(filename, "intel64"))
         else:
-            env.extend(EnvironmentModifications.from_sourcing_file(filename))
+            env.extend(from_sourcing_file(filename))
 
     modifications = env.group_by_name()
 
@@ -351,7 +352,7 @@ def test_preserve_environment(prepare_environment_for_tests):
 )
 @pytest.mark.usefixtures("prepare_environment_for_tests")
 def test_environment_from_sourcing_files(files, expected, deleted):
-    env = environment.environment_after_sourcing_files(*files)
+    env = environment_after_sourcing_files(*files)
 
     # Test that variables that have been modified are still there and contain
     # the expected output
@@ -490,7 +491,7 @@ def test_from_environment_diff(before, after, search_list):
 def test_exclude_lmod_variables():
     # Construct the list of environment modifications
     file = os.path.join(datadir, "sourceme_lmod.sh")
-    env = EnvironmentModifications.from_sourcing_file(file)
+    env = from_sourcing_file(file)
 
     # Check that variables related to lmod are not in there
     modifications = env.group_by_name()
@@ -502,7 +503,7 @@ def test_exclude_lmod_variables():
 def test_exclude_modules_variables():
     # Construct the list of environment modifications
     file = os.path.join(datadir, "sourceme_modules.sh")
-    env = EnvironmentModifications.from_sourcing_file(file)
+    env = from_sourcing_file(file)
 
     # Check that variables related to modules are not in there
     modifications = env.group_by_name()

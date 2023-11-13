@@ -25,9 +25,9 @@ from llnl.util.filesystem import (
 import spack.error
 from spack.build_environment import dso_suffix
 from spack.package_base import InstallError
-from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
 from spack.util.prefix import Prefix
+from spack.util.sourcing import from_sourcing_file
 from spack.version import Version, ver
 
 from .generic import Package
@@ -1054,7 +1054,7 @@ class IntelPackage(Package):
         # if sys.platform == 'darwin':
         #     args = ()
 
-        env.extend(EnvironmentModifications.from_sourcing_file(f, *args))
+        env.extend(from_sourcing_file(f, *args))
 
         if self.spec.name in ("intel", "intel-parallel-studio"):
             # this package provides compilers
