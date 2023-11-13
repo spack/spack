@@ -55,7 +55,6 @@ class Clang(Compiler):
             "-gdwarf-5",
             "-gline-tables-only",
             "-gmodules",
-            "-gz",
             "-g",
         ]
 
