@@ -28,6 +28,7 @@ from .environment import (
     validate,
 )
 from .executable import CommandNotFoundError, Executable, ProcessError, which, which_string
+from .sourcing import environment_after_sourcing_files, from_sourcing_file
 
 __all__ = [
     "EnvironmentModifications",
@@ -55,4 +56,6 @@ __all__ = [
     "Executable",
     "which_string",
     "CommandNotFoundError",
+    "from_sourcing_file",
+    "environment_after_sourcing_files",
 ]

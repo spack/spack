@@ -102,6 +102,7 @@ from spack.package_base import (
 from spack.spec import InvalidSpecDetected, Spec
 from spack.util.cpus import determine_number_of_jobs
 from spack.variant import (
+    DisjointSetsOfValues,
     any_combination_of,
     auto_or_any_combination_of,
     conditional,

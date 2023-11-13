@@ -1,9 +1,14 @@
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import json
 import os.path
 import sys
 from typing import Any, Dict, Tuple, Union
 
-from llnl.syscmd import EnvironmentModifications, Executable, sanitize, which
+from .environment import EnvironmentModifications, sanitize
+from .executable import Executable, which
 
 Path = str
 

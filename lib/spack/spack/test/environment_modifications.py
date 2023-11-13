@@ -15,12 +15,13 @@ from llnl.syscmd import (
     RemovePath,
     SetEnv,
     UnsetEnv,
+    environment_after_sourcing_files,
     filter_system_paths,
+    from_sourcing_file,
     is_system_path,
 )
 
 from spack.paths import spack_root
-from spack.util.sourcing import environment_after_sourcing_files, from_sourcing_file
 
 datadir = os.path.join(spack_root, "lib", "spack", "spack", "test", "data")
 

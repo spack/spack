@@ -10,7 +10,7 @@ import shutil
 from os.path import basename, isdir
 
 from llnl.util import tty
-from llnl.syscmd import Executable
+from llnl.syscmd import Executable, from_sourcing_file
 from llnl.util.filesystem import HeaderList, find_libraries, join_path, mkdirp
 from llnl.util.link_tree import LinkTree
 
