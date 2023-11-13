@@ -811,7 +811,7 @@ class FlagMap(lang.HashableMap):
         self.spec = spec
 
     def satisfies(self, other):
-        return all(f in self and self[f] == other[f] for f in other)
+        return all(f in self and set(self[f]) >= set(other[f]) for f in other)
 
     def intersects(self, other):
         common_types = set(self) & set(other)

@@ -558,6 +558,9 @@ class Result:
                 self._concrete_specs.append(answer[node])
                 self._concrete_specs_by_input[input_spec] = answer[node]
             else:
+                # TODO: this should probably raise an error. As is, unsatisfied
+                # specs just lead "spack concretize" to output nothing in some
+                # cases
                 self._unsolved_specs.append(input_spec)
 
 

@@ -1399,7 +1399,10 @@ def test_abstract_contains_semantic(lhs, rhs, expected, mock_packages):
         # Flags (flags are a map, so for convenience we initialize a full Spec)
         # Note: the semantic is that of sv variants, not mv variants
         (Spec, "cppflags=-foo", "cppflags=-bar", (False, False, False)),
-        (Spec, "cppflags='-bar -foo'", "cppflags=-bar", (False, False, False)),
+        # TODO: someone went out of their way to say that "-bar -foo" does
+        # not satisfy "-bar" which (a) is not intuitive and (b) conflicts
+        # with what the Solver and SpecBuilder think is OK
+        (Spec, "cppflags='-bar -foo'", "cppflags=-bar", (False, True, False)),
         (Spec, "cppflags=-foo", "cppflags=-foo", (True, True, True)),
         (Spec, "cppflags=-foo", "cflags=-foo", (True, False, False)),
         # Versions
