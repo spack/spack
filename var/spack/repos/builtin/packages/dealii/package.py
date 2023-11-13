@@ -311,53 +311,53 @@ class Dealii(CMakePackage, CudaPackage):
     )
 
     # Interfaces added in 8.5.0:
-    for p in ["gsl", "python"]:
+    for _package in ["gsl", "python"]:
         conflicts(
-            "+{0}".format(p),
+            "+{0}".format(_package),
             when="@:8.4.2",
             msg="The interface to {0} is supported from version 8.5.0 "
             "onwards. Please explicitly disable this variant "
-            "via ~{0}".format(p),
+            "via ~{0}".format(_package),
         )
 
     # Interfaces added in 9.0.0:
-    for p in ["assimp", "gmsh", "nanoflann", "scalapack", "sundials", "adol-c"]:
+    for _package in ["assimp", "gmsh", "nanoflann", "scalapack", "sundials", "adol-c"]:
         conflicts(
-            "+{0}".format(p),
+            "+{0}".format(_package),
             when="@:8.5.1",
             msg="The interface to {0} is supported from version 9.0.0 "
             "onwards. Please explicitly disable this variant "
-            "via ~{0}".format(p),
+            "via ~{0}".format(_package),
         )
 
     # interfaces added in 9.1.0:
-    for p in ["ginkgo", "symengine"]:
+    for _package in ["ginkgo", "symengine"]:
         conflicts(
-            "+{0}".format(p),
+            "+{0}".format(_package),
             when="@:9.0",
             msg="The interface to {0} is supported from version 9.1.0 "
             "onwards. Please explicitly disable this variant "
-            "via ~{0}".format(p),
+            "via ~{0}".format(_package),
         )
 
     # interfaces added in 9.3.0:
-    for p in ["simplex", "arborx"]:
+    for _package in ["simplex", "arborx"]:
         conflicts(
-            "+{0}".format(p),
+            "+{0}".format(_package),
             when="@:9.2",
             msg="The interface to {0} is supported from version 9.3.0 "
             "onwards. Please explicitly disable this variant "
-            "via ~{0}".format(p),
+            "via ~{0}".format(_package),
         )
 
     # interfaces added after 9.5.0:
-    for p in ["vtk", "taskflow"]:
+    for _package in ["vtk", "taskflow"]:
         conflicts(
-            "+{0}".format(p),
+            "+{0}".format(_package),
             when="@:9.5",
             msg="The interface to {0} is supported from version 9.6.0 "
             "onwards. Please explicitly disable this variant "
-            "via ~{0}".format(p),
+            "via ~{0}".format(_package),
         )
 
     # Interfaces removed in 9.3.0:
@@ -370,18 +370,18 @@ class Dealii(CMakePackage, CudaPackage):
 
     # Check that the combination of variants makes sense
     # 64-bit BLAS:
-    for p in ["openblas", "intel-mkl", "intel-parallel-studio+mkl"]:
+    for _package in ["openblas", "intel-mkl", "intel-parallel-studio+mkl"]:
         conflicts(
-            "^{0}+ilp64".format(p), when="@:8.5.1", msg="64bit BLAS is only supported from 9.0.0"
+            "^{0}+ilp64".format(_package), when="@:8.5.1", msg="64bit BLAS is only supported from 9.0.0"
         )
 
     # MPI requirements:
-    for p in ["arpack", "hdf5", "netcdf", "p4est", "petsc", "scalapack", "slepc", "trilinos"]:
+    for _package in ["arpack", "hdf5", "netcdf", "p4est", "petsc", "scalapack", "slepc", "trilinos"]:
         conflicts(
-            "+{0}".format(p),
+            "+{0}".format(_package),
             when="~mpi",
             msg="To enable {0} it is necessary to build deal.II with "
-            "MPI support enabled.".format(p),
+            "MPI support enabled.".format(_package),
         )
 
     # Optional dependencies:
