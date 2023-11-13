@@ -108,6 +108,7 @@ class Ffmpeg(AutotoolsPackage):
     depends_on("speex", when="+libspeex")
     depends_on("xz", when="+lzma")
     depends_on("x264", when="+libx264")
+    depends_on("texinfo@:7.0", when="+doc")
 
     conflicts("%nvhpc")
 
