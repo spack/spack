@@ -103,10 +103,7 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
             cmake_options.append(self.define("AMR_WIND_ENABLE_HDF5_ZFP", True))
             # Help AMReX understand if HDF5 is parallel or not.
             # Building HDF5 with CMake as Spack does, causes this inspection to break.
-            if "+mpi" in spec:
-                cmake_options.append(self.define("HDF5_IS_PARALLEL", True))
-            else:
-                cmake_options.append(self.define("HDF5_IS_PARALLEL", False))
+            cmake_options.append(self.define("HDF5_IS_PARALLEL", spec.satisfies("+mpi")))
 
         if "+cuda" in self.spec:
             amrex_arch = [
