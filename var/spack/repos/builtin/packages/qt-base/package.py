@@ -96,6 +96,7 @@ class QtPackage(CMakePackage):
 class QtBase(QtPackage):
     """Qt Base (Core, Gui, Widgets, Network, ...)"""
 
+    homepage = QtPackage.get_homepage("QtCore")
     url = QtPackage.get_url(__qualname__)
     list_url = QtPackage.get_list_url(__qualname__)
 
