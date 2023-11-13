@@ -28,8 +28,12 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     tags = ["e4s"]
 
     version("master", branch="master", submodules=True)
-    version("master_external_vtk", git="https://gitlab.kitware.com/danlipsa/paraview.git",
-            branch="external_vtk", submodules=True)
+    version(
+        "master_external_vtk",
+        git="https://gitlab.kitware.com/danlipsa/paraview.git",
+        branch="external_vtk",
+        submodules=True,
+    )
     version(
         "5.11.2",
         sha256="5c5d2f922f30d91feefc43b4a729015dbb1459f54c938896c123d2ac289c7a1e",
@@ -115,7 +119,12 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         ' "default" lets the build_edition make the decision.'
         ' "on" or "off" will always override the build_edition.',
     )
-    variant("external_vtk", default=False, description="Build paraview using an external VTK", when="@5.12:")
+    variant(
+        "external_vtk",
+        default=False,
+        description="Build paraview using an external VTK",
+        when="@5.12:",
+    )
 
     conflicts("~hdf5", when="+visitbridge")
     conflicts("+adios2", when="@:5.10 ~mpi")
