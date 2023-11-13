@@ -112,6 +112,11 @@ def setup_parser(subparser: argparse.ArgumentParser):
     push.add_argument(
         "--base-image", default=None, help="specify the base image for the buildcache. "
     )
+    push.add_argument(
+        "--require-installed",
+        action="store_true",
+        help="require that all selected packages are installed before pushing",
+    )
     arguments.add_common_arguments(push, ["specs", "jobs"])
     push.set_defaults(func=push_fn)
 
@@ -322,7 +327,7 @@ def push_fn(args):
     if args.specs or args.spec_file:
         specs = _matching_specs(spack.cmd.parse_specs(args.specs or args.spec_file))
     else:
-        specs = spack.cmd.require_active_env("buildcache push").all_specs()
+        specs = spack.cmd.require_active_env("buildcache push").concrete_roots()
 
     if args.allow_root:
         tty.warn(
@@ -336,20 +341,18 @@ def push_fn(args):
         image_ref = None
 
     # For OCI images, we require dependencies to be pushed for now.
-    if image_ref:
-        if "dependencies" not in args.things_to_install:
-            tty.die("Dependencies must be pushed for OCI images.")
-        if not args.unsigned:
-            tty.warn(
-                "Code signing is currently not supported for OCI images. "
-                "Use --unsigned to silence this warning."
-            )
+    if image_ref and not args.unsigned:
+        tty.warn(
+            "Code signing is currently not supported for OCI images. "
+            "Use --unsigned to silence this warning."
+        )
 
     # This is a list of installed, non-external specs.
     specs = bindist.specs_to_be_packaged(
         specs,
         root="package" in args.things_to_install,
         dependencies="dependencies" in args.things_to_install,
+        require_installed=args.require_installed,
     )
 
     url = args.mirror.push_url
@@ -508,7 +511,7 @@ def _put_manifest(
             list(
                 s
                 for s in spec.traverse(order="topo", deptype=("link", "run"), root=True)
-                if not s.external
+                if s.dag_hash() in checksums
             )
         )
     )
@@ -516,7 +519,13 @@ def _put_manifest(
     base_manifest, base_config = base_images[architecture]
     env = _retrieve_env_dict_from_config(base_config)
 
-    spack.user_environment.environment_modifications_for_specs(spec).apply_modifications(env)
+    try:
+        spack.user_environment.environment_modifications_for_specs(spec).apply_modifications(env)
+    except Exception:
+        # Computing the environment modifications may fail on partial installs, or issues in
+        # setup_run_environment etc. It's more important to upload tarballs in that case, than
+        # getting a runnable container image.
+        pass
 
     # Create an oci.image.config file
     config = copy.deepcopy(base_config)

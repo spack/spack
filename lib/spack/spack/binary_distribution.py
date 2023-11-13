@@ -1453,7 +1453,7 @@ class NotInstalledError(spack.error.SpackError):
 
 
 def specs_to_be_packaged(
-    specs: List[Spec], root: bool = True, dependencies: bool = True
+    specs: List[Spec], root: bool = True, dependencies: bool = True, require_installed: bool = True
 ) -> List[Spec]:
     """Return the list of nodes to be packaged, given a list of specs.
     Raises NotInstalledError if a spec is not installed but picked to be packaged.
@@ -1468,29 +1468,25 @@ def specs_to_be_packaged(
     if not root and not dependencies:
         return []
 
+    roots: List[Spec] = []
+    deps: List[Spec] = []
+
     # Filter packageable roots
     with spack.store.STORE.db.read_transaction():
         if root:
-            # Error on uninstalled roots, when roots are requested
-            uninstalled_roots = list(s for s in specs if not s.installed)
-            if uninstalled_roots:
-                raise NotInstalledError(uninstalled_roots)
-            roots = specs
-        else:
-            roots = []
+            roots, not_installed = llnl.util.lang.stable_partition(specs, lambda s: s.installed)
+            if require_installed and not_installed:
+                raise NotInstalledError(not_installed)
 
         if dependencies:
-            # Error on uninstalled deps, when deps are requested
-            deps = list(
+            deps, not_installed = llnl.util.lang.stable_partition(
                 traverse.traverse_nodes(
                     specs, deptype="all", order="breadth", root=False, key=traverse.by_dag_hash
-                )
+                ),
+                lambda s: s.installed,
             )
-            uninstalled_deps = list(s for s in deps if not s.installed)
-            if uninstalled_deps:
-                raise NotInstalledError(uninstalled_deps)
-        else:
-            deps = []
+            if require_installed and not_installed:
+                raise NotInstalledError(not_installed)
 
     return [s for s in itertools.chain(roots, deps) if not s.external]
 
