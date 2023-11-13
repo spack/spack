@@ -7,6 +7,7 @@ import os
 
 import pytest
 
+from llnl.syscmd import which
 from llnl.util.filesystem import mkdirp, touch, working_dir
 
 import spack.config
@@ -14,7 +15,6 @@ import spack.repo
 from spack.fetch_strategy import HgFetchStrategy
 from spack.spec import Spec
 from spack.stage import Stage
-from spack.util.executable import which
 from spack.version import Version
 
 # Test functionality covered is supported on Windows, but currently failing

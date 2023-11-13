@@ -8,13 +8,13 @@ import re
 from pathlib import Path
 from typing import Dict, Optional, Tuple
 
+import llnl.syscmd
 from llnl.util.filesystem import mkdirp, working_dir
 
 import spack.caches
 import spack.fetch_strategy
 import spack.paths
 import spack.repo
-import spack.util.executable
 import spack.util.hash
 import spack.util.spack_json as sjson
 import spack.version
@@ -154,7 +154,7 @@ class GitRefLookup(AbstractRefLookup):
                 self.fetcher.git(
                     "cat-file", "-e", "%s^{commit}" % ref, output=os.devnull, error=os.devnull
                 )
-            except spack.util.executable.ProcessError:
+            except llnl.syscmd.ProcessError:
                 raise VersionLookupError("%s is not a valid git ref for %s" % (ref, self.pkg_name))
 
             # List tags (refs) by date, so last reference of a tag is newest

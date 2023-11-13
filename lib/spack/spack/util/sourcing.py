@@ -3,9 +3,7 @@ import os.path
 import sys
 from typing import Any, Dict, Tuple, Union
 
-from llnl.syscmd import EnvironmentModifications, sanitize
-
-from .executable import Executable, which
+from llnl.syscmd import EnvironmentModifications, Executable, sanitize, which
 
 Path = str
 

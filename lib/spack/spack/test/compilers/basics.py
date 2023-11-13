@@ -8,13 +8,13 @@ from copy import copy
 
 import pytest
 
+import llnl.syscmd
 import llnl.util.filesystem as fs
 
 import spack.compiler
 import spack.compilers
 import spack.spec
 from spack.compiler import Compiler
-from spack.util.executable import ProcessError
 
 
 @pytest.fixture()
@@ -213,7 +213,7 @@ def call_compiler(exe, *args, **kwargs):
 def test_get_compiler_link_paths(monkeypatch, exe, flagname):
     # create fake compiler that emits mock verbose output
     compiler = MockCompiler()
-    monkeypatch.setattr(spack.util.executable.Executable, "__call__", call_compiler)
+    monkeypatch.setattr(llnl.syscmd.Executable, "__call__", call_compiler)
 
     # Grab executable path to test
     paths = [getattr(compiler, exe)]
@@ -821,9 +821,9 @@ fi
 
     # Make compiler fail when getting implicit rpaths
     def _call(*args, **kwargs):
-        raise ProcessError("Failed intentionally")
+        raise llnl.syscmd.ProcessError("Failed intentionally")
 
-    monkeypatch.setattr(spack.util.executable.Executable, "__call__", _call)
+    monkeypatch.setattr(llnl.syscmd.Executable, "__call__", _call)
 
     # Run and no change to environment
     compilers = spack.compilers.get_compilers([compiler_dict])
@@ -832,7 +832,7 @@ fi
     try:
         _ = compiler.get_real_version()
         assert False
-    except ProcessError:
+    except llnl.syscmd.ProcessError:
         # Confirm environment does not change after failed call
         assert "SPACK_TEST_CMP_ON" not in os.environ
 

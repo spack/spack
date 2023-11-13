@@ -5,9 +5,10 @@
 
 import pytest
 
+import llnl.syscmd
+
 import spack.cmd.create
 import spack.stage
-import spack.util.executable
 import spack.util.url as url_util
 
 
@@ -42,7 +43,7 @@ def url_and_build_system(request, tmpdir):
     the appropriate file name and returns their url along with
     the correct build-system guess
     """
-    tar = spack.util.executable.which("tar")
+    tar = llnl.syscmd.which("tar")
     orig_dir = tmpdir.chdir()
     filename, system = request.param
     tmpdir.ensure("archive", filename)

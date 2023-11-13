@@ -7,9 +7,8 @@
 import sys
 from typing import Optional
 
+import llnl.syscmd as exe
 import llnl.util.lang
-
-import spack.util.executable as exe
 
 
 @llnl.util.lang.memoized

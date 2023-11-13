@@ -38,6 +38,7 @@ import llnl.util
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.string import comma_and, quote
+from llnl.syscmd import CommandNotFoundError, which
 from llnl.util.filesystem import get_single_file, mkdirp, temp_cwd, working_dir
 from llnl.util.symlink import symlink
 
@@ -53,7 +54,6 @@ import spack.util.web as web_util
 import spack.version
 import spack.version.git_ref_lookup
 from spack.util.compression import decompressor_for
-from spack.util.executable import CommandNotFoundError, which
 
 #: List of all fetch strategies, created by FetchStrategy metaclass.
 all_strategies = []

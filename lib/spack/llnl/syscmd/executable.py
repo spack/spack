@@ -9,8 +9,8 @@ import subprocess
 import sys
 from pathlib import Path, PurePath
 
-import llnl.util.tty as tty
-from llnl.syscmd import EnvironmentModifications
+from ..util import tty
+from .environment import EnvironmentModifications
 
 __all__ = ["Executable", "which", "ProcessError"]
 

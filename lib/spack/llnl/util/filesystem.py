@@ -23,11 +23,10 @@ from itertools import accumulate
 from typing import Callable, Iterable, List, Match, Optional, Tuple, Union
 
 import llnl.util.symlink
+from llnl.syscmd import Executable, which
 from llnl.util import tty
 from llnl.util.lang import dedupe, memoized
 from llnl.util.symlink import islink, readlink, resolve_link_target_relative_to_the_link, symlink
-
-from spack.util.executable import Executable, which
 
 from ..path import path_to_os_path, system_path_filter
 

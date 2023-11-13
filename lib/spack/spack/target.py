@@ -6,6 +6,7 @@ import functools
 
 import archspec.cpu
 
+import llnl.syscmd
 import llnl.util.tty as tty
 
 import spack.compiler
@@ -148,7 +149,7 @@ class Target:
                 compiler = spack.compilers.compilers_for_spec(compiler).pop()
             try:
                 compiler_version = compiler.real_version
-            except spack.util.executable.ProcessError as e:
+            except llnl.syscmd.ProcessError as e:
                 # log this and just return compiler.version instead
                 tty.debug(str(e))
 

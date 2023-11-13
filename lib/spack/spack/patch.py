@@ -12,6 +12,7 @@ import sys
 
 import llnl.util.filesystem
 import llnl.util.lang
+from llnl.syscmd import which, which_string
 from llnl.url import allowed_archive
 
 import spack
@@ -22,7 +23,6 @@ import spack.repo
 import spack.stage
 import spack.util.spack_json as sjson
 from spack.util.crypto import Checker, checksum
-from spack.util.executable import which, which_string
 
 
 def apply_patch(stage, patch_path, level=1, working_dir="."):

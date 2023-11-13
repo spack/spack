@@ -38,7 +38,7 @@ def set_up_license(pkg):
             # Create a new license file
             write_license_file(pkg, license_path)
 
-            # use spack.util.executable so the editor does not hang on return here
+            # use llnl.syscmd so the editor does not hang on return here
             ed.editor(license_path, exec_fn=ed.executable)
         else:
             # Use already existing license file

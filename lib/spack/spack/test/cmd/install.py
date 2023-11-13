@@ -25,7 +25,6 @@ import spack.environment as ev
 import spack.hash_types as ht
 import spack.package_base
 import spack.store
-import spack.util.executable
 from spack.error import SpackError
 from spack.main import SpackCommand
 from spack.parser import SpecSyntaxError
@@ -667,23 +666,21 @@ def test_cdash_install_from_spec_json(
 
 
 @pytest.mark.disable_clean_stage_check
-def test_build_error_output(tmpdir, mock_fetch, install_mockery, capfd):
+def test_build_error_output(mock_fetch, install_mockery, capfd):
     with capfd.disabled():
-        msg = ""
         try:
             install("build-error")
             assert False, "no exception was raised!"
         except spack.build_environment.ChildError as e:
             msg = e.long_message
 
-        assert "configure: error: in /path/to/some/file:" in msg
-        assert "configure: error: cannot run C compiled programs." in msg
+    assert "configure: error: in /path/to/some/file:" in msg
+    assert "configure: error: cannot run C compiled programs." in msg
 
 
 @pytest.mark.disable_clean_stage_check
-def test_build_warning_output(tmpdir, mock_fetch, install_mockery, capfd):
+def test_build_warning_output(mock_fetch, install_mockery, capfd):
     with capfd.disabled():
-        msg = ""
         try:
             install("build-warnings")
             assert False, "no exception was raised!"

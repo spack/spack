@@ -15,6 +15,7 @@ import sys
 from collections import Counter, OrderedDict
 from typing import Callable, List, Optional, Tuple, Type, TypeVar, Union
 
+import llnl.syscmd
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.string import plural
@@ -526,7 +527,7 @@ def test_part(pkg: Pb, test_name: str, purpose: str, work_dir: str = ".", verbos
             for line in out:
                 print(line.rstrip("\n"))
 
-            if exc_type is spack.util.executable.ProcessError or exc_type is TypeError:
+            if exc_type is llnl.syscmd.ProcessError or exc_type is TypeError:
                 iostr = io.StringIO()
                 spack.build_environment.write_log_summary(
                     iostr, "test", tester.test_log_file, last=1

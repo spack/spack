@@ -12,10 +12,10 @@ import sys
 from typing import BinaryIO, Callable, Dict, List, Optional
 
 import llnl.url
+from llnl.syscmd import CommandNotFoundError, which
 from llnl.util import tty
 
 from spack.error import SpackError
-from spack.util.executable import CommandNotFoundError, which
 
 try:
     import bz2  # noqa

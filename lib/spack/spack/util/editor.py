@@ -16,10 +16,10 @@ import os
 import shlex
 from typing import Callable, List
 
+import llnl.syscmd
 import llnl.util.tty as tty
 
 import spack.config
-import spack.util.executable
 
 #: editors to try if VISUAL and EDITOR are not set
 _default_editors = ["vim", "vi", "emacs", "nano", "notepad"]
@@ -46,17 +46,17 @@ def _find_exe_from_env_var(var: str):
     if not args:
         return None, []
 
-    exe = spack.util.executable.which_string(args[0])
+    exe = llnl.syscmd.which_string(args[0])
     args = [exe] + args[1:]
     return exe, args
 
 
 def executable(exe: str, args: List[str]) -> int:
-    """Wrapper that makes ``spack.util.executable.Executable`` look like ``os.execv()``.
+    """Wrapper that makes ``llnl.syscmd.Executable`` look like ``os.execv()``.
 
     Use this with ``editor()`` if you want it to return instead of running ``execv``.
     """
-    cmd = spack.util.executable.Executable(exe)
+    cmd = llnl.syscmd.Executable(exe)
     cmd(*args[1:], fail_on_error=False)
     return cmd.returncode
 
@@ -99,7 +99,7 @@ def editor(*args: str, exec_fn: Callable[[str, List[str]], int] = os.execv) -> b
         try:
             return exec_fn(exe, args) == 0
 
-        except (OSError, spack.util.executable.ProcessError) as e:
+        except (OSError, llnl.syscmd.ProcessError) as e:
             if spack.config.get("config:debug"):
                 raise
 
@@ -137,7 +137,7 @@ def editor(*args: str, exec_fn: Callable[[str, List[str]], int] = os.execv) -> b
     # nothing worked -- try the first default we can find don't bother
     # trying them all -- if we get here and one fails, something is
     # probably much more deeply wrong with the environment.
-    exe = spack.util.executable.which_string(*_default_editors)
+    exe = llnl.syscmd.which_string(*_default_editors)
     if exe and try_exec(exe, [exe] + list(args)):
         return True
 

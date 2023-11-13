@@ -42,7 +42,7 @@ from typing import Dict, Iterator, List, Optional, Set, Tuple
 import llnl.util.filesystem as fs
 import llnl.util.lock as lk
 import llnl.util.tty as tty
-from llnl.syscmd import EnvironmentModifications, dump_environment
+from llnl.syscmd import EnvironmentModifications, dump_environment, which
 from llnl.util.lang import pretty_seconds
 from llnl.util.tty.color import colorize
 from llnl.util.tty.log import log_output
@@ -61,10 +61,8 @@ import spack.package_prefs as prefs
 import spack.repo
 import spack.spec
 import spack.store
-import spack.util.executable
 import spack.util.path
 import spack.util.timer as timer
-from spack.util.executable import which
 
 #: Counter to support unique spec sequencing that is used to ensure packages
 #: with the same priority are (initially) processed in the order in which they

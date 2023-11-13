@@ -27,6 +27,7 @@ from .environment import (
     set_env,
     validate,
 )
+from .executable import CommandNotFoundError, Executable, ProcessError, which, which_string
 
 __all__ = [
     "EnvironmentModifications",
@@ -49,4 +50,9 @@ __all__ = [
     "set_env",
     "SYSTEM_DIRS",
     "TRACING_ENABLED",
+    "which",
+    "ProcessError",
+    "Executable",
+    "which_string",
+    "CommandNotFoundError",
 ]

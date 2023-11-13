@@ -6,10 +6,10 @@ import os
 import posixpath
 import sys
 
+import llnl.syscmd
 from llnl.path import convert_to_posix_path
 
 import spack.paths
-import spack.util.executable
 from spack.spec import Spec
 
 description = "generate Windows installer"
@@ -100,7 +100,7 @@ def make_installer(parser, args):
         spack_logo = posixpath.join(posix_root, "share/spack/logo/favicon.ico")
 
         try:
-            spack.util.executable.Executable(cmake_path)(
+            llnl.syscmd.Executable(cmake_path)(
                 "-S",
                 source_dir,
                 "-B",
@@ -111,30 +111,30 @@ def make_installer(parser, args):
                 "-DSPACK_LOGO=%s" % spack_logo,
                 "-DSPACK_GIT_VERBOSITY=%s" % git_verbosity,
             )
-        except spack.util.executable.ProcessError:
+        except llnl.syscmd.ProcessError:
             print("Failed to generate installer")
-            return spack.util.executable.ProcessError.returncode
+            return llnl.syscmd.ProcessError.returncode
 
         try:
-            spack.util.executable.Executable(cpack_path)(
+            llnl.syscmd.Executable(cpack_path)(
                 "--config", "%s/CPackConfig.cmake" % output_dir, "-B", "%s/" % output_dir
             )
-        except spack.util.executable.ProcessError:
+        except llnl.syscmd.ProcessError:
             print("Failed to generate installer")
-            return spack.util.executable.ProcessError.returncode
+            return llnl.syscmd.ProcessError.returncode
         try:
-            spack.util.executable.Executable(os.environ.get("WIX") + "/bin/candle.exe")(
+            llnl.syscmd.Executable(os.environ.get("WIX") + "/bin/candle.exe")(
                 "-ext",
                 "WixBalExtension",
                 "%s/bundle.wxs" % output_dir,
                 "-out",
                 "%s/bundle.wixobj" % output_dir,
             )
-        except spack.util.executable.ProcessError:
+        except llnl.syscmd.ProcessError:
             print("Failed to generate installer chain")
-            return spack.util.executable.ProcessError.returncode
+            return llnl.syscmd.ProcessError.returncode
         try:
-            spack.util.executable.Executable(os.environ.get("WIX") + "/bin/light.exe")(
+            llnl.syscmd.Executable(os.environ.get("WIX") + "/bin/light.exe")(
                 "-sw1134",
                 "-ext",
                 "WixBalExtension",
@@ -142,9 +142,9 @@ def make_installer(parser, args):
                 "-out",
                 "%s/Spack.exe" % output_dir,
             )
-        except spack.util.executable.ProcessError:
+        except llnl.syscmd.ProcessError:
             print("Failed to generate installer chain")
-            return spack.util.executable.ProcessError.returncode
+            return llnl.syscmd.ProcessError.returncode
         print("Successfully generated Spack.exe in %s" % (output_dir))
     else:
         print("The make-installer command is currently only supported on Windows.")

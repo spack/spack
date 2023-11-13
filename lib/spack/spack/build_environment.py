@@ -50,6 +50,7 @@ from llnl.string import plural
 from llnl.syscmd import (
     SYSTEM_DIRS,
     EnvironmentModifications,
+    Executable,
     env_flag,
     filter_system_paths,
     get_path,
@@ -87,7 +88,6 @@ from spack.error import NoHeadersError, NoLibrariesError
 from spack.install_test import spack_install_test_log
 from spack.installer import InstallError
 from spack.util.cpus import determine_number_of_jobs
-from spack.util.executable import Executable
 from spack.util.log_parse import make_log_context, parse_log_events
 from spack.util.module_cmd import load_module, module, path_from_modules
 
@@ -1379,7 +1379,7 @@ def get_package_context(traceback, context=3):
 
 class ChildError(InstallError):
     """Special exception class for wrapping exceptions from child processes
-       in Spack's build environment.
+    in Spack's build environment.
 
     The main features of a ChildError are:
 
@@ -1413,7 +1413,7 @@ class ChildError(InstallError):
 
     # List of errors considered "build errors", for which we'll show log
     # context instead of Python context.
-    build_errors = [("spack.util.executable", "ProcessError")]
+    build_errors = [("llnl.syscmd.executable", "ProcessError")]
 
     def __init__(self, msg, module, classname, traceback_string, log_name, log_type, context):
         super().__init__(msg)

@@ -7,6 +7,7 @@ import os
 import re
 
 import llnl.util.tty as tty
+from llnl.syscmd import Executable
 from llnl.util.filesystem import find, working_dir
 
 import spack.builder
@@ -14,7 +15,6 @@ import spack.install_test
 import spack.package_base
 from spack.directives import build_system, depends_on, extends
 from spack.multimethod import when
-from spack.util.executable import Executable
 
 from ._checks import BaseBuilder, execute_install_time_tests
 

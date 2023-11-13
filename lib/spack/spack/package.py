@@ -20,10 +20,9 @@ pwd = getcwd
 from typing import Dict, List, Optional
 
 import llnl.util.filesystem
+from llnl.syscmd import *
 from llnl.util.filesystem import *
 from llnl.util.symlink import symlink
-
-import spack.util.executable
 
 # These props will be overridden when the build env is set up.
 from spack.build_environment import MakeExecutable
@@ -102,7 +101,6 @@ from spack.package_base import (
 )
 from spack.spec import InvalidSpecDetected, Spec
 from spack.util.cpus import determine_number_of_jobs
-from spack.util.executable import *
 from spack.variant import (
     any_combination_of,
     auto_or_any_combination_of,

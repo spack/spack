@@ -22,8 +22,7 @@ import time
 import traceback
 
 import llnl.util.tty.log as log
-
-from spack.util.executable import which
+from llnl.syscmd import which
 
 termios = None
 try:
