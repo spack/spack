@@ -20,6 +20,8 @@ class Lz4(CMakePackage, MakefilePackage):
     homepage = "https://lz4.github.io/lz4/"
     url = "https://github.com/lz4/lz4/archive/v1.9.2.tar.gz"
 
+    maintainers("AlexanderRichert-NOAA")
+
     version("1.9.4", sha256="0b0e3aa07c8c063ddf40b082bdf7e37a1562bda40a0ff5272957f3e987e0e54b")
     version("1.9.3", sha256="030644df4611007ff7dc962d981f390361e6c97a34e5cbc393ddfbe019ffe2c1")
     version("1.9.2", sha256="658ba6191fa44c92280d4aa2c271b0f4fbc0e34d249578dd05e50e76d0e5efcc")
@@ -40,6 +42,7 @@ class Lz4(CMakePackage, MakefilePackage):
         multi=True,
         description="Build shared libs, static libs or both",
     )
+    variant("pic", default=True, description="Enable position-independent code (PIC)")
 
     def url_for_version(self, version):
         url = "https://github.com/lz4/lz4/archive"
@@ -73,10 +76,15 @@ class CMakeBuilder(CMakeBuilder):
         args.append(
             self.define("BUILD_STATIC_LIBS", True if "libs=static" in self.spec else False)
         )
+        args.append(self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"))
         return args
 
 
 class MakefileBuilder(MakefileBuilder):
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("+pic"):
+            env.set("CFLAGS", self.pkg.compiler.cc_pic_flag)
+
     def build(self, pkg, spec, prefix):
         par = True
         if spec.compiler.name == "nvhpc":

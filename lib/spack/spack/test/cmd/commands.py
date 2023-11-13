@@ -7,7 +7,6 @@ import filecmp
 import os
 import shutil
 import subprocess
-import sys
 
 import pytest
 
@@ -57,6 +56,24 @@ def test_subcommands():
     assert "spack view symlink" in out2
     assert "spack rm" in out2
     assert "spack compiler add" in out2
+
+
+@pytest.mark.not_on_windows("subprocess not supported on Windows")
+def test_override_alias():
+    """Test that spack commands cannot be overriden by aliases."""
+
+    install = spack.main.SpackCommand("install", subprocess=True)
+    instal = spack.main.SpackCommand("instal", subprocess=True)
+
+    out = install(fail_on_error=False, global_args=["-c", "config:aliases:install:find"])
+    assert "install requires a package argument or active environment" in out
+    assert "Alias 'install' (mapping to 'find') attempts to override built-in command" in out
+
+    out = install(fail_on_error=False, global_args=["-c", "config:aliases:foo bar:find"])
+    assert "Alias 'foo bar' (mapping to 'find') contains a space, which is not supported" in out
+
+    out = instal(fail_on_error=False, global_args=["-c", "config:aliases:instal:find"])
+    assert "install requires a package argument or active environment" not in out
 
 
 def test_rst():
@@ -254,9 +271,7 @@ def test_update_completion_arg(shell, tmpdir, monkeypatch):
 
 
 # Note: this test is never expected to be supported on Windows
-@pytest.mark.skipif(
-    sys.platform == "win32", reason="shell completion script generator fails on windows"
-)
+@pytest.mark.not_on_windows("Shell completion script generator fails on windows")
 @pytest.mark.parametrize("shell", ["bash", "fish"])
 def test_updated_completion_scripts(shell, tmpdir):
     """Make sure our shell tab completion scripts remain up-to-date."""

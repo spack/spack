@@ -32,8 +32,6 @@ spack:
     paraview:
       # Don't build GUI support or GLX rendering for HPC/container deployments
       require: "@5.11 ~qt+osmesa"
-    python:
-      version: [3.8.13]
     trilinos:
       require: +amesos +amesos2 +anasazi +aztec +boost +epetra +epetraext
         +ifpack +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
@@ -51,12 +49,10 @@ spack:
   # FAILURES
   # - kokkos +wrapper +cuda cuda_arch=80 ^cuda@12.0.0     # https://github.com/spack/spack/issues/35378
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/gpu-tests" }
-
   ci:
     pipeline-gen:
     - build-job:
-        image: ecpe4s/ubuntu20.04-runner-x86_64:2023-01-01
+        image: ghcr.io/spack/ubuntu20.04-runner-x86_64:2023-01-01
     - match_behavior: first
       submapping:
       - match:

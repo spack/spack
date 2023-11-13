@@ -37,6 +37,10 @@ class Pmix(AutotoolsPackage):
 
     # Branches 4.2 & 5.0 will also need submodules
     version("master", branch="master", submodules=True)
+    version("5.0.1", sha256="d4371792d4ba4c791e1010100b4bf9a65500ababaf5ff25d681f938527a67d4a")
+    version("5.0.0", sha256="92a85c4946346816c297ac244fbaf4f723bba87fb7e4424a057c2dabd569928d")
+    version("4.2.6", sha256="10b0d5a7fca70272e9427c677557578ac452cea02aeb00e30dec2116d20c3cd0")
+    version("4.2.5", sha256="a89c2c5dc69715a4df1e76fdc4318299386c184623a1d0d5eb1fb062e14b0d2b")
     version("4.2.4", sha256="c4699543f2278d3a78bdac72b4b2da9cd92d11d18478d66522b8991764b021c8")
     version("4.2.3", sha256="c3d9d6885ae39c15627a86dc4718e050baf604acda71b8b9e2ee3b12ad5c2d2a")
     version("4.2.2", sha256="935b2f492e4bc409017f1425a83366aa72a7039605ea187c9fac7bb1371cd73c")

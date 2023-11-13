@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 import sys
 
 from spack.build_environment import dso_suffix
@@ -147,6 +148,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant("stratimikos", default=False, description="Compile with Stratimikos")
     variant("teko", default=False, description="Compile with Teko")
     variant("tempus", default=False, description="Compile with Tempus")
+    variant("test", default=False, description="Enable testing")
     variant("thyra", default=False, description="Compile with Thyra")
     variant("tpetra", default=True, description="Compile with Tpetra")
     variant("trilinoscouplings", default=False, description="Compile with TrilinosCouplings")
@@ -342,13 +344,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("gotype=all", when="@12.15:")
 
     # CUDA without wrapper requires clang
-    for _compiler in spack.compilers.supported_compilers():
-        if _compiler != "clang":
-            conflicts(
-                "+cuda",
-                when="~wrapper %" + _compiler,
-                msg="trilinos~wrapper+cuda can only be built with the " "Clang compiler",
-            )
+    requires(
+        "%clang",
+        when="+cuda~wrapper",
+        msg="trilinos~wrapper+cuda can only be built with the Clang compiler",
+    )
     conflicts("+cuda_rdc", when="~cuda")
     conflicts("+rocm_rdc", when="~rocm")
     conflicts("+wrapper", when="~cuda")
@@ -358,6 +358,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("@:13.0.1 +cuda", when="^cuda@11:")
     # Build hangs with CUDA 11.6 (see #28439)
     conflicts("+cuda +stokhos", when="^cuda@11.6:")
+    # superlu-dist defines a macro EMPTY which conflicts with a header in cuda
+    # used when building stokhos
+    # Fix: https://github.com/xiaoyeli/superlu_dist/commit/09cb1430f7be288fd4d75b8ed461aa0b7e68fefe
+    # is not tagged yet. See discussion here https://github.com/trilinos/Trilinos/issues/11839
+    conflicts("+cuda +stokhos +superlu-dist")
     # Cuda UVM must be enabled prior to 13.2
     # See https://github.com/spack/spack/issues/28869
     conflicts("~uvm", when="@:13.1 +cuda")
@@ -366,7 +371,34 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+stokhos", when="%xl")
     conflicts("+stokhos", when="%xl_r")
 
+    # Current Windows support, only have serial static builds
+    conflicts(
+        "+shared",
+        when="platform=windows",
+        msg="Only static builds are supported on Windows currently.",
+    )
+    conflicts(
+        "+mpi",
+        when="platform=windows",
+        msg="Only serial builds are supported on Windows currently.",
+    )
+
     # ###################### Dependencies ##########################
+
+    # External Kokkos
+    depends_on("kokkos@4.1.00", when="@14.4.0: +kokkos")
+    depends_on("kokkos +wrapper", when="trilinos@14.4.0: +kokkos +wrapper")
+    depends_on("kokkos ~wrapper", when="trilinos@14.4.0: +kokkos ~wrapper")
+
+    for a in CudaPackage.cuda_arch_values:
+        arch_str = "+cuda cuda_arch=" + a
+        kokkos_spec = "kokkos@4.1.00 " + arch_str
+        depends_on(kokkos_spec, when="@14.4.0 +kokkos " + arch_str)
+
+    for a in ROCmPackage.amdgpu_targets:
+        arch_str = "+rocm amdgpu_target={0}".format(a)
+        kokkos_spec = "kokkos@4.1.00 {0}".format(arch_str)
+        depends_on(kokkos_spec, when="@14.4.0 +kokkos {0}".format(arch_str))
 
     depends_on("adios2", when="+adios2")
     depends_on("blas")
@@ -378,7 +410,9 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cgns", when="+exodus")
     depends_on("cmake@3.23:", type="build", when="@14.0.0:")
     depends_on("hdf5+hl", when="+hdf5")
-    depends_on("hypre~internal-superlu~int64", when="+hypre")
+    for plat in ["cray", "darwin", "linux"]:
+        depends_on("hypre~internal-superlu~int64", when="+hypre platform=%s" % plat)
+    depends_on("hypre-cmake~int64", when="+hypre platform=windows")
     depends_on("kokkos-nvcc-wrapper", when="+wrapper")
     depends_on("lapack")
     # depends_on('perl', type=('build',)) # TriBITS finds but doesn't use...
@@ -431,6 +465,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("superlu-dist@develop", when="@master: +superlu-dist")
 
     # ###################### Patches ##########################
+
+    patch("shylu-node-optional.patch", when="@13:14.4.0 +shylu")
 
     patch("umfpack_from_suitesparse.patch", when="@11.14.1:12.8.1")
     for _compiler in ["xl", "xl_r", "clang"]:
@@ -583,6 +619,12 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                 ),
             ]
         )
+
+        if "+test" in spec:
+            options.append(define_trilinos_enable("TESTS", True))
+            options.append(define("BUILD_TESTING", True))
+        else:
+            options.append(define_trilinos_enable("TESTS", False))
 
         if spec.version >= Version("13"):
             options.append(define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"))
@@ -778,6 +820,10 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         for tpl_name, dep_name in tpl_dep_map:
             define_tpl(tpl_name, dep_name, dep_name in spec)
 
+        # External Kokkos
+        if spec.satisfies("@14.4.0 +kokkos"):
+            options.append(define_tpl_enable("Kokkos"))
+
         # MPI settings
         options.append(define_tpl_enable("MPI"))
         if "+mpi" in spec:
@@ -790,7 +836,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                     define("CMAKE_C_COMPILER", spec["mpi"].mpicc),
                     define("CMAKE_CXX_COMPILER", spec["mpi"].mpicxx),
                     define("CMAKE_Fortran_COMPILER", spec["mpi"].mpifc),
-                    define("MPI_BASE_DIR", spec["mpi"].prefix),
+                    define("MPI_BASE_DIR", str(pathlib.PurePosixPath(spec["mpi"].prefix))),
                 ]
             )
 

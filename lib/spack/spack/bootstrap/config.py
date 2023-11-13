@@ -124,9 +124,9 @@ def _read_and_sanitize_configuration() -> Dict[str, Any]:
 def _bootstrap_config_scopes() -> Sequence["spack.config.ConfigScope"]:
     tty.debug("[BOOTSTRAP CONFIG SCOPE] name=_builtin")
     config_scopes: MutableSequence["spack.config.ConfigScope"] = [
-        spack.config.InternalConfigScope("_builtin", spack.config.config_defaults)
+        spack.config.InternalConfigScope("_builtin", spack.config.CONFIG_DEFAULTS)
     ]
-    configuration_paths = (spack.config.configuration_defaults_path, ("bootstrap", _config_path()))
+    configuration_paths = (spack.config.CONFIGURATION_DEFAULTS_PATH, ("bootstrap", _config_path()))
     for name, path in configuration_paths:
         platform = spack.platforms.host().name
         platform_scope = spack.config.ConfigScope(
@@ -143,7 +143,9 @@ def _bootstrap_config_scopes() -> Sequence["spack.config.ConfigScope"]:
 def _add_compilers_if_missing() -> None:
     arch = spack.spec.ArchSpec.frontend_arch()
     if not spack.compilers.compilers_for_arch(arch):
-        new_compilers = spack.compilers.find_new_compilers()
+        new_compilers = spack.compilers.find_new_compilers(
+            mixed_toolchain=sys.platform == "darwin"
+        )
         if new_compilers:
             spack.compilers.add_compilers_to_config(new_compilers, init_config=False)
 

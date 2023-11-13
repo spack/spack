@@ -6,7 +6,6 @@
 import errno
 import os
 import shutil
-import sys
 
 import pytest
 
@@ -26,7 +25,7 @@ gpg = spack.main.SpackCommand("gpg")
 mirror = spack.main.SpackCommand("mirror")
 uninstall = spack.main.SpackCommand("uninstall")
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 @pytest.fixture()
@@ -327,4 +326,8 @@ def test_correct_specs_are_pushed(
 
     buildcache(*buildcache_create_args)
 
-    assert packages_to_push == expected
+    # Order is not guaranteed, so we can't just compare lists
+    assert set(packages_to_push) == set(expected)
+
+    # Ensure no duplicates
+    assert len(set(packages_to_push)) == len(packages_to_push)

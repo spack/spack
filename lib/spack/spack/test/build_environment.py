@@ -6,10 +6,10 @@ import inspect
 import os
 import platform
 import posixpath
-import sys
 
 import pytest
 
+from llnl.path import Path, convert_to_platform_path
 from llnl.util.filesystem import HeaderList, LibraryList
 
 import spack.build_environment
@@ -17,11 +17,12 @@ import spack.config
 import spack.package_base
 import spack.spec
 import spack.util.spack_yaml as syaml
-from spack.build_environment import _static_to_shared_library, determine_number_of_jobs, dso_suffix
+from spack.build_environment import UseMode, _static_to_shared_library, dso_suffix
+from spack.context import Context
 from spack.paths import build_env_path
+from spack.util.cpus import determine_number_of_jobs
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
-from spack.util.path import Path, convert_to_platform_path
 
 
 def os_pathsep_join(path, *pths):
@@ -119,7 +120,7 @@ def mock_module_cmd(monkeypatch):
     return mock_module_cmd
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Static to Shared not supported on Win (yet)")
+@pytest.mark.not_on_windows("Static to Shared not supported on Win (yet)")
 def test_static_to_shared_library(build_environment):
     os.environ["SPACK_TEST_COMMAND"] = "dump-args"
 
@@ -438,12 +439,12 @@ def test_parallel_false_is_not_propagating(default_mock_concretization):
     # b (parallel =True)
     s = default_mock_concretization("a foobar=bar")
 
-    spack.build_environment.set_module_variables_for_package(s.package)
+    spack.build_environment.set_package_py_globals(s.package)
     assert s["a"].package.module.make_jobs == 1
 
-    spack.build_environment.set_module_variables_for_package(s["b"].package)
+    spack.build_environment.set_package_py_globals(s["b"].package)
     assert s["b"].package.module.make_jobs == spack.build_environment.determine_number_of_jobs(
-        s["b"].package.parallel
+        parallel=s["b"].package.parallel
     )
 
 
@@ -475,28 +476,62 @@ def test_setting_dtags_based_on_config(config_setting, expected_flag, config, mo
 
 def test_build_jobs_sequential_is_sequential():
     assert (
-        determine_number_of_jobs(parallel=False, command_line=8, config_default=8, max_cpus=8) == 1
+        determine_number_of_jobs(
+            parallel=False,
+            max_cpus=8,
+            config=spack.config.Configuration(
+                spack.config.InternalConfigScope("command_line", {"config": {"build_jobs": 8}}),
+                spack.config.InternalConfigScope("defaults", {"config": {"build_jobs": 8}}),
+            ),
+        )
+        == 1
     )
 
 
 def test_build_jobs_command_line_overrides():
     assert (
-        determine_number_of_jobs(parallel=True, command_line=10, config_default=1, max_cpus=1)
+        determine_number_of_jobs(
+            parallel=True,
+            max_cpus=1,
+            config=spack.config.Configuration(
+                spack.config.InternalConfigScope("command_line", {"config": {"build_jobs": 10}}),
+                spack.config.InternalConfigScope("defaults", {"config": {"build_jobs": 1}}),
+            ),
+        )
         == 10
     )
     assert (
-        determine_number_of_jobs(parallel=True, command_line=10, config_default=100, max_cpus=100)
+        determine_number_of_jobs(
+            parallel=True,
+            max_cpus=100,
+            config=spack.config.Configuration(
+                spack.config.InternalConfigScope("command_line", {"config": {"build_jobs": 10}}),
+                spack.config.InternalConfigScope("defaults", {"config": {"build_jobs": 100}}),
+            ),
+        )
         == 10
     )
 
 
 def test_build_jobs_defaults():
     assert (
-        determine_number_of_jobs(parallel=True, command_line=None, config_default=1, max_cpus=10)
+        determine_number_of_jobs(
+            parallel=True,
+            max_cpus=10,
+            config=spack.config.Configuration(
+                spack.config.InternalConfigScope("defaults", {"config": {"build_jobs": 1}})
+            ),
+        )
         == 1
     )
     assert (
-        determine_number_of_jobs(parallel=True, command_line=None, config_default=100, max_cpus=10)
+        determine_number_of_jobs(
+            parallel=True,
+            max_cpus=10,
+            config=spack.config.Configuration(
+                spack.config.InternalConfigScope("defaults", {"config": {"build_jobs": 100}})
+            ),
+        )
         == 10
     )
 
@@ -541,3 +576,94 @@ class TestModuleMonkeyPatcher:
             if current_module == spack.package_base:
                 break
             assert current_module.SOME_ATTRIBUTE == 1
+
+
+def test_effective_deptype_build_environment(default_mock_concretization):
+    s = default_mock_concretization("dttop")
+
+    #  [    ]  dttop@1.0                    #
+    #  [b   ]      ^dtbuild1@1.0            # <- direct build dep
+    #  [b   ]          ^dtbuild2@1.0        # <- indirect build-only dep is dropped
+    #  [bl  ]          ^dtlink2@1.0         # <- linkable, and runtime dep of build dep
+    #  [  r ]          ^dtrun2@1.0          # <- non-linkable, exectuable runtime dep of build dep
+    #  [bl  ]      ^dtlink1@1.0             # <- direct build dep
+    #  [bl  ]          ^dtlink3@1.0         # <- linkable, and runtime dep of build dep
+    #  [b   ]              ^dtbuild2@1.0    # <- indirect build-only dep is dropped
+    #  [bl  ]              ^dtlink4@1.0     # <- linkable, and runtime dep of build dep
+    #  [  r ]      ^dtrun1@1.0              # <- run-only dep is pruned (should it be in PATH?)
+    #  [bl  ]          ^dtlink5@1.0         # <- children too
+    #  [  r ]          ^dtrun3@1.0          # <- children too
+    #  [b   ]              ^dtbuild3@1.0    # <- children too
+
+    expected_flags = {
+        "dttop": UseMode.ROOT,
+        "dtbuild1": UseMode.BUILDTIME_DIRECT,
+        "dtlink1": UseMode.BUILDTIME_DIRECT | UseMode.BUILDTIME,
+        "dtlink3": UseMode.BUILDTIME | UseMode.RUNTIME,
+        "dtlink4": UseMode.BUILDTIME | UseMode.RUNTIME,
+        "dtrun2": UseMode.RUNTIME | UseMode.RUNTIME_EXECUTABLE,
+        "dtlink2": UseMode.RUNTIME,
+    }
+
+    for spec, effective_type in spack.build_environment.effective_deptypes(
+        s, context=Context.BUILD
+    ):
+        assert effective_type & expected_flags.pop(spec.name) == effective_type
+    assert not expected_flags, f"Missing {expected_flags.keys()} from effective_deptypes"
+
+
+def test_effective_deptype_run_environment(default_mock_concretization):
+    s = default_mock_concretization("dttop")
+
+    #  [    ]  dttop@1.0                    #
+    #  [b   ]      ^dtbuild1@1.0            # <- direct build-only dep is pruned
+    #  [b   ]          ^dtbuild2@1.0        # <- children too
+    #  [bl  ]          ^dtlink2@1.0         # <- children too
+    #  [  r ]          ^dtrun2@1.0          # <- children too
+    #  [bl  ]      ^dtlink1@1.0             # <- runtime, not executable
+    #  [bl  ]          ^dtlink3@1.0         # <- runtime, not executable
+    #  [b   ]              ^dtbuild2@1.0    # <- indirect build only dep is pruned
+    #  [bl  ]              ^dtlink4@1.0     # <- runtime, not executable
+    #  [  r ]      ^dtrun1@1.0              # <- runtime and executable
+    #  [bl  ]          ^dtlink5@1.0         # <- runtime, not executable
+    #  [  r ]          ^dtrun3@1.0          # <- runtime and executable
+    #  [b   ]              ^dtbuild3@1.0    # <- indirect build-only dep is pruned
+
+    expected_flags = {
+        "dttop": UseMode.ROOT,
+        "dtlink1": UseMode.RUNTIME,
+        "dtlink3": UseMode.BUILDTIME | UseMode.RUNTIME,
+        "dtlink4": UseMode.BUILDTIME | UseMode.RUNTIME,
+        "dtrun1": UseMode.RUNTIME | UseMode.RUNTIME_EXECUTABLE,
+        "dtlink5": UseMode.RUNTIME,
+        "dtrun3": UseMode.RUNTIME | UseMode.RUNTIME_EXECUTABLE,
+    }
+
+    for spec, effective_type in spack.build_environment.effective_deptypes(s, context=Context.RUN):
+        assert effective_type & expected_flags.pop(spec.name) == effective_type
+    assert not expected_flags, f"Missing {expected_flags.keys()} from effective_deptypes"
+
+
+def test_monkey_patching_works_across_virtual(default_mock_concretization):
+    """Assert that a monkeypatched attribute is found regardless we access through the
+    real name or the virtual name.
+    """
+    s = default_mock_concretization("mpileaks ^mpich")
+    s["mpich"].foo = "foo"
+    assert s["mpich"].foo == "foo"
+    assert s["mpi"].foo == "foo"
+
+
+def test_clear_compiler_related_runtime_variables_of_build_deps(default_mock_concretization):
+    """Verify that Spack drops CC, CXX, FC and F77 from the dependencies related build environment
+    variable changes if they are set in setup_run_environment. Spack manages those variables
+    elsewhere."""
+    s = default_mock_concretization("build-env-compiler-var-a")
+    ctx = spack.build_environment.SetupContext(s, context=Context.BUILD)
+    result = {}
+    ctx.get_env_modifications().apply_modifications(result)
+    assert "CC" not in result
+    assert "CXX" not in result
+    assert "FC" not in result
+    assert "F77" not in result
+    assert result["ANOTHER_VAR"] == "this-should-be-present"

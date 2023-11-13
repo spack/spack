@@ -70,9 +70,9 @@ class R(AutotoolsPackage):
     depends_on("blas", when="+external-lapack")
     depends_on("lapack", when="+external-lapack")
     depends_on("bzip2")
-    # R didn't anticipate the celebratory
-    # non-breaking major version bump of curl 8.
-    depends_on("curl+libidn2@:7")
+    depends_on("curl+libidn2")
+    # R didn't anticipate the celebratory non-breaking major version bump of curl 8.
+    depends_on("curl@:7", when="@:4.2")
     depends_on("icu4c")
     depends_on("java")
     depends_on("ncurses")
@@ -137,7 +137,7 @@ class R(AutotoolsPackage):
         ]
 
         if "+external-lapack" in spec:
-            if "^mkl" in spec and "gfortran" in self.compiler.fc:
+            if spec["lapack"].name in INTEL_MATH_LIBRARIES and "gfortran" in self.compiler.fc:
                 mkl_re = re.compile(r"(mkl_)intel(_i?lp64\b)")
                 config_args.extend(
                     [

@@ -53,14 +53,16 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
         ),
     )
     variant("shared", default=True, description="Build shared libraries")
+    variant("parmetis", default=True, description="Enable ParMETIS library")
 
     depends_on("mpi")
     depends_on("blas")
     depends_on("lapack")
-    depends_on("parmetis +int64", when="+int64")
-    depends_on("metis@5: +int64", when="+int64")
-    depends_on("parmetis ~int64", when="~int64")
-    depends_on("metis@5: ~int64", when="~int64")
+    with when("+parmetis"):
+        depends_on("metis@5: +int64", when="+int64")
+        depends_on("parmetis +int64", when="+int64")
+        depends_on("metis@5: ~int64", when="~int64")
+        depends_on("parmetis ~int64", when="~int64")
     depends_on("cmake@3.18.1:", type="build", when="@7.1.0:")
     depends_on("hipblas", when="+rocm")
     depends_on("rocsolver", when="+rocm")
@@ -93,13 +95,17 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
         append_define("TPL_LAPACK_LIBRARIES", spec["lapack"].libs)
         append_define("TPL_ENABLE_LAPACKLIB", True)
         append_define("USE_XSDK_DEFAULTS", True)
-        append_define(
-            "TPL_PARMETIS_LIBRARIES", [spec["parmetis"].libs.ld_flags, spec["metis"].libs.ld_flags]
-        )
-        append_define(
-            "TPL_PARMETIS_INCLUDE_DIRS",
-            [spec["parmetis"].prefix.include, spec["metis"].prefix.include],
-        )
+
+        append_from_variant("TPL_ENABLE_PARMETISLIB", "parmetis")
+        if "+parmetis" in spec:
+            append_define(
+                "TPL_PARMETIS_LIBRARIES",
+                [spec["parmetis"].libs.ld_flags, spec["metis"].libs.ld_flags],
+            )
+            append_define(
+                "TPL_PARMETIS_INCLUDE_DIRS",
+                [spec["parmetis"].prefix.include, spec["metis"].prefix.include],
+            )
 
         append_define("XSDK_INDEX_SIZE", "64" if "+int64" in spec else "32")
 
@@ -134,8 +140,6 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
         flags = list(flags)
         if name == "cxxflags":
             flags.append(self.compiler.cxx11_flag)
-        if name == "cflags" and "%pgi" not in self.spec:
-            flags.append("-std=c99")
         if (
             name == "cflags"
             and (self.spec.satisfies("%xl") or self.spec.satisfies("%xl_r"))
@@ -160,3 +164,18 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
         """Copy the example matrices after the package is installed to an
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources([self.examples_src_dir])
+
+    def test_pddrive(self):
+        """run cached pddrive"""
+        if not self.spec.satisfies("@7.2.0:"):
+            raise SkipTest("Test is only available for v7.2.0 on")
+
+        test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
+        superludriver = join_path(self.prefix.lib, "EXAMPLE", "pddrive")
+
+        with working_dir(test_dir):
+            # Smoke test input parameters: -r 2 -c 2 g20.rua
+            test_args = ["-n", "4", superludriver, "-r", "2", "-c", "2", "g20.rua"]
+            # Find the correct mpirun command
+            mpiexe_f = which("srun", "mpirun", "mpiexec")
+            mpiexe_f(*test_args)

@@ -23,6 +23,10 @@ class EpicsBase(MakefilePackage):
     depends_on("readline")
     depends_on("perl", type=("build", "run"))
 
+    def patch(self):
+        filter_file(r"^\s*CC\s*=.*", "CC = " + spack_cc, "configure/CONFIG.gnuCommon")
+        filter_file(r"^\s*CCC\s*=.*", "CCC = " + spack_cxx, "configure/CONFIG.gnuCommon")
+
     @property
     def install_targets(self):
         return ["INSTALL_LOCATION={0}".format(self.prefix), "install"]

@@ -7,8 +7,8 @@ import builtins
 import filecmp
 import itertools
 import os
+import pathlib
 import re
-import sys
 import time
 
 import pytest
@@ -37,8 +37,6 @@ mirror = SpackCommand("mirror")
 uninstall = SpackCommand("uninstall")
 buildcache = SpackCommand("buildcache")
 find = SpackCommand("find")
-
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 
 
 @pytest.fixture()
@@ -204,7 +202,7 @@ def test_show_log_on_error(
     assert isinstance(install.error, spack.build_environment.ChildError)
     assert install.error.pkg.name == "build-error"
 
-    assert "==> Installing build-error" in out
+    assert "Installing build-error" in out
     assert "See build log for details:" in out
 
 
@@ -263,9 +261,9 @@ def test_install_commit(mock_git_version_info, install_mockery, mock_packages, m
 
     """
     repo_path, filename, commits = mock_git_version_info
-    monkeypatch.setattr(
-        spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
-    )
+    file_url = pathlib.Path(repo_path).as_uri()
+
+    monkeypatch.setattr(spack.package_base.PackageBase, "git", file_url, raising=False)
 
     # Use the earliest commit in the respository
     spec = Spec(f"git-test-commit@{commits[-1]}").concretized()
@@ -548,6 +546,7 @@ def test_cdash_report_concretization_error(
             assert any(x in content for x in expected_messages)
 
 
+@pytest.mark.not_on_windows("Windows log_output logs phase header out of order")
 @pytest.mark.disable_clean_stage_check
 def test_cdash_upload_build_error(tmpdir, mock_fetch, install_mockery, capfd):
     # capfd interferes with Spack's capturing
@@ -747,6 +746,7 @@ def test_install_deps_then_package(tmpdir, mock_fetch, install_mockery):
     assert os.path.exists(root.prefix)
 
 
+@pytest.mark.not_on_windows("Environment views not supported on windows. Revisit after #34701")
 @pytest.mark.regression("12002")
 def test_install_only_dependencies_in_env(
     tmpdir, mock_fetch, install_mockery, mutable_mock_env_path
@@ -896,7 +896,7 @@ def test_install_help_does_not_show_cdash_options(capsys):
         assert "CDash URL" not in captured.out
 
 
-def test_install_help_cdash(capsys):
+def test_install_help_cdash():
     """Make sure `spack install --help-cdash` describes CDash arguments"""
     install_cmd = SpackCommand("install")
     out = install_cmd("--help-cdash")
@@ -913,6 +913,7 @@ def test_cdash_auth_token(tmpdir, mock_fetch, install_mockery, capfd):
             assert "Using CDash auth token from environment" in out
 
 
+@pytest.mark.not_on_windows("Windows log_output logs phase header out of order")
 @pytest.mark.disable_clean_stage_check
 def test_cdash_configure_warning(tmpdir, mock_fetch, install_mockery, capfd):
     # capfd interferes with Spack's capturing of e.g., Build.xml output
@@ -938,6 +939,7 @@ def test_cdash_configure_warning(tmpdir, mock_fetch, install_mockery, capfd):
             assert "foo: No such file or directory" in content
 
 
+@pytest.mark.not_on_windows("ArchSpec gives test platform debian rather than windows")
 def test_compiler_bootstrap(
     install_mockery_mutable_config,
     mock_packages,
@@ -954,6 +956,7 @@ def test_compiler_bootstrap(
     install("a%gcc@=12.0")
 
 
+@pytest.mark.not_on_windows("Binary mirrors not supported on windows")
 def test_compiler_bootstrap_from_binary_mirror(
     install_mockery_mutable_config,
     mock_packages,
@@ -994,6 +997,7 @@ def test_compiler_bootstrap_from_binary_mirror(
     install("--no-cache", "--only", "package", "b%gcc@10.2.0")
 
 
+@pytest.mark.not_on_windows("ArchSpec gives test platform debian rather than windows")
 @pytest.mark.regression("16221")
 def test_compiler_bootstrap_already_installed(
     install_mockery_mutable_config,
@@ -1037,6 +1041,7 @@ def test_install_fails_no_args_suggests_env_activation(tmpdir):
     assert "using the `spack.yaml` in this directory" in output
 
 
+@pytest.mark.not_on_windows("Environment views not supported on windows. Revisit after #34701")
 def test_install_env_with_tests_all(
     tmpdir, mock_packages, mock_fetch, install_mockery, mutable_mock_env_path
 ):
@@ -1048,6 +1053,7 @@ def test_install_env_with_tests_all(
         assert os.path.exists(test_dep.prefix)
 
 
+@pytest.mark.not_on_windows("Environment views not supported on windows. Revisit after #34701")
 def test_install_env_with_tests_root(
     tmpdir, mock_packages, mock_fetch, install_mockery, mutable_mock_env_path
 ):
@@ -1059,6 +1065,7 @@ def test_install_env_with_tests_root(
         assert not os.path.exists(test_dep.prefix)
 
 
+@pytest.mark.not_on_windows("Environment views not supported on windows. Revisit after #34701")
 def test_install_empty_env(
     tmpdir, mock_packages, mock_fetch, install_mockery, mutable_mock_env_path
 ):
@@ -1072,6 +1079,7 @@ def test_install_empty_env(
     assert "no specs to install" in out
 
 
+@pytest.mark.not_on_windows("Windows logger I/O operation on closed file when install fails")
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.parametrize(
     "name,method",
@@ -1095,6 +1103,7 @@ def test_installation_fail_tests(install_mockery, mock_fetch, name, method):
     assert "See test log for details" in output
 
 
+@pytest.mark.not_on_windows("Buildcache not supported on windows")
 def test_install_use_buildcache(
     capsys,
     mock_packages,
@@ -1172,6 +1181,7 @@ def test_install_use_buildcache(
             install_use_buildcache(opt)
 
 
+@pytest.mark.not_on_windows("Windows logger I/O operation on closed file when install fails")
 @pytest.mark.regression("34006")
 @pytest.mark.disable_clean_stage_check
 def test_padded_install_runtests_root(install_mockery_mutable_config, mock_fetch):
