@@ -13,7 +13,7 @@ class SysSage(CMakePackage):
     url = "https://github.com/caps-tum/sys-sage/archive/refs/tags/v0.4.3.tar.gz"
     git = "https://github.com/caps-tum/sys-sage.git"
 
-    maintainers = ["stepanvanecek"]
+    maintainers("stepanvanecek")
 
     version("0.4.3", sha256="e24313c4274576c1511a62e1b27c86a78cea7e4c123b8a53303cfc70de978faa")
     version("master", branch="master")
@@ -64,17 +64,16 @@ class SysSage(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         args = []
-        if "+nvidia_mig" in spec:
-            args.append("-DNVIDIA_MIG=ON")
+        args.append(self.define_from_variant("NVIDIA_MIG", "nvidia_mig"))
         if "+cpuinfo" in spec and spec.target == "x86_64" and spec.platform == "linux":
-            args.append("-DCPUINFO=ON")
+            args.append(self.define("CPUINFO", True))
         else:
-            args.append("-DCPUINFO=OFF")
+            args.append(self.define("CPUINFO", False))
         if "+ds_hwloc" in spec or "+build_data_sources" in spec:
-            args.append("-DDS_HWLOC=ON")
+            args.append(self.define("DS_HWLOC", True))
         if "+ds_numa" in spec or "+build_data_sources" in spec:
             if spec.platform == "linux":
-                args.append("-DDS_NUMA=ON")
+                args.append(self.define("DS_NUMA", True))
             else:
                 msg = "ds_numa option is only available on Linux systems."
                 raise InvalidSpecDetected(msg)
