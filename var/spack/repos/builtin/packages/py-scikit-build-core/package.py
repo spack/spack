@@ -43,13 +43,6 @@ class PyScikitBuildCore(PythonPackage):
     version("0.1.3", sha256="aa4563edf4b6f8907c9a927bf3cbd3c388e10ff4c6b5900cb428819668db14cf")
     version("0.1.2", sha256="c1c714a49eea7820389a8c7b8abb67b53f3f6b9fdbdab899acd1ce9d9210eed9")
     version("0.1.1", sha256="6291bdfe27d1f3bc529c11b02478d8f28a7a0906004a95ab31392d4b18c62d87")
-    version("0.1.0rc2", sha256="943dc241830be963e39f1fa495d216a7899f77fbdad630bc03e3a615edf3afc7")
-    version("0.1.0rc1", sha256="900bddc4c735f489f74da58480e2419eedbb6b3a2956d17077d472f256b3175e")
-    version("0.1.0b2", sha256="3d6bcc8ec84972a928962dd8894b82e24390f461a26fede87b4678dd1e98a8d6")
-    version("0.1.0b1", sha256="d6fb6f71447e512cf0e2b998d644669997c820ddd09ed10d70ab9482a5d34b5d")
-    version("0.1.0b0", sha256="4d3217223a8cbcb372721e67d917af6a95f78e2f07924ca64739e01ee6c2d0f2")
-    version("0.1.0a1", sha256="cb9cd06334bb557cadabf26de38c8659b9443583e232f70f4fb26a8c48a7bea8")
-    version("0.1.0a0", sha256="4be16d9d00405a88ae421a4cf51e58d8dcbf2d0dbedae5951c9873b4d845e321")
     version("0.1.0", sha256="3b51c88fb99d2cca488cc262fa659ad3d403e2a038f8ad1d87e5f36ff6cc8deb")
 
 
@@ -84,6 +77,8 @@ class PyScikitBuildCore(PythonPackage):
     depends_on("py-pytest-subprocess@1.5:", type="test")
     depends_on("py-setuptools", type="test")
     depends_on("py-wheel", type="test")
+
+    depends_on("py-importlib_metadata", type=("build", "run"))
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
