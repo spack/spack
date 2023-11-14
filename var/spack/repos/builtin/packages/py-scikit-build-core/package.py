@@ -52,7 +52,6 @@ class PyScikitBuildCore(PythonPackage):
     version("0.1.0a0", sha256="4be16d9d00405a88ae421a4cf51e58d8dcbf2d0dbedae5951c9873b4d845e321")
     version("0.1.0", sha256="3b51c88fb99d2cca488cc262fa659ad3d403e2a038f8ad1d87e5f36ff6cc8deb")
 
-
     variant("pyproject", default=False, description="Enable pyproject.toml support")
 
     depends_on("python@3.7:", type=("build", "run"))
