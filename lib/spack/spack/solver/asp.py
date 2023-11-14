@@ -713,7 +713,7 @@ class ErrorHandler:
         (condition_id, set_id) in which the latter idea means that the condition represented by
         the former held in the condition set represented by the latter.
         """
-        seen = set(seen) | set(cause)
+        seen.add(cause)
         parents = [c for e, c in condition_causes if e == cause and c not in seen]
         local = "required because %s " % conditions[cause[0]]
 
