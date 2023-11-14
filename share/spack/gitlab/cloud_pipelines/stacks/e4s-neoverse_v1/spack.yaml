@@ -120,7 +120,7 @@ spack:
   - openmpi
   - openpmd-api
   - papi
-  # - papyrus
+  - papyrus
   - parsec ~cuda
   - pdt
   - petsc
