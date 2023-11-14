@@ -261,7 +261,7 @@ spack:
   - magma ~cuda +rocm amdgpu_target=gfx908
   - mfem +rocm amdgpu_target=gfx908
   - petsc +rocm amdgpu_target=gfx908
-  - raja ~openmp ~mpi +rocm amdgpu_target=gfx908
+  - raja ~openmp +rocm amdgpu_target=gfx908
   - slate +rocm amdgpu_target=gfx908
   - slepc +rocm amdgpu_target=gfx908 ^petsc +rocm amdgpu_target=gfx908
   - strumpack ~slate +rocm amdgpu_target=gfx908
@@ -302,7 +302,7 @@ spack:
   - magma ~cuda +rocm amdgpu_target=gfx90a
   - mfem +rocm amdgpu_target=gfx90a
   - petsc +rocm amdgpu_target=gfx90a
-  - raja ~openmp ~mpi +rocm amdgpu_target=gfx90a
+  - raja ~openmp +rocm amdgpu_target=gfx90a
   - slate +rocm amdgpu_target=gfx90a
   - slepc +rocm amdgpu_target=gfx90a ^petsc +rocm amdgpu_target=gfx90a
   - strumpack ~slate +rocm amdgpu_target=gfx90a
