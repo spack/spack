@@ -161,6 +161,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     # Due to overhauls of Legion and Gasnet spackages
     #   flecsi@:1.4 can no longer be built with a usable legion
     conflicts("backend=legion", when="@:1.4")
+    conflicts("+hdf5", when="@2: backend=hpx", msg="HPX backend doesn't support HDF5")
 
     def cmake_args(self):
         spec = self.spec
