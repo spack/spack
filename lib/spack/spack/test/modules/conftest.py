@@ -2,6 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import pathlib
+
 import pytest
 
 import spack.config
@@ -13,26 +15,15 @@ import spack.util.path
 
 @pytest.fixture()
 def modulefile_content(request):
-    """Returns a function that generates the content of a module file
-    as a list of lines.
-    """
-
+    """Returns a function that generates the content of a module file as a list of lines."""
     writer_cls = getattr(request.module, "writer_cls")
 
     def _impl(spec_str, module_set_name="default", explicit=True):
-        # Write the module file
-        spec = spack.spec.Spec(spec_str)
-        spec.concretize()
+        spec = spack.spec.Spec(spec_str).concretized()
         generator = writer_cls(spec, module_set_name, explicit)
         generator.write(overwrite=True)
-
-        # Get its filename
-        filename = generator.layout.filename
-
-        # Retrieve the content
-        with open(filename) as f:
-            content = f.readlines()
-            content = "".join(content).split("\n")
+        written_module = pathlib.Path(generator.layout.filename)
+        content = written_module.read_text().splitlines()
         generator.remove()
         return content
 
@@ -40,27 +31,21 @@ def modulefile_content(request):
 
 
 @pytest.fixture()
-def factory(request):
-    """Function that, given a spec string, returns an instance of the writer
-    and the corresponding spec.
-    """
-
-    # Class of the module file writer
+def factory(request, mock_modules_root):
+    """Given a spec string, returns an instance of the writer and the corresponding spec."""
     writer_cls = getattr(request.module, "writer_cls")
 
     def _mock(spec_string, module_set_name="default", explicit=True):
-        spec = spack.spec.Spec(spec_string)
-        spec.concretize()
+        spec = spack.spec.Spec(spec_string).concretized()
         return writer_cls(spec, module_set_name, explicit), spec
 
     return _mock
 
 
 @pytest.fixture()
-def mock_module_filename(monkeypatch, tmpdir):
-    filename = str(tmpdir.join("module"))
+def mock_module_filename(monkeypatch, tmp_path):
+    filename = tmp_path / "module"
     # Set for both module types so we can test both
-    monkeypatch.setattr(spack.modules.lmod.LmodFileLayout, "filename", filename)
-    monkeypatch.setattr(spack.modules.tcl.TclFileLayout, "filename", filename)
-
-    yield filename
+    monkeypatch.setattr(spack.modules.lmod.LmodFileLayout, "filename", str(filename))
+    monkeypatch.setattr(spack.modules.tcl.TclFileLayout, "filename", str(filename))
+    yield str(filename)
