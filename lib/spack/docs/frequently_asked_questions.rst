@@ -26,9 +26,8 @@ The following set of criteria (from lowest to highest precedence) explain
 common cases where concretization output may seem surprising at first.
 
 1. :ref:`Package preferences <package-preferences>` configured in ``packages.yaml``
-   override variant defaults from ``package.py`` files, and override the
-   default version order (latest is best). Preferences are specified as
-   follows:
+   override variant defaults from ``package.py`` files, and influence the optimal
+   ordering of versions. Preferences are specified as follows:
 
    .. code-block:: yaml
 
