@@ -20,6 +20,8 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
 
     license("Apache-2.0")
 
+    version("2.15.0", sha256="9cec5acb0ecf2d47b16891f8bc5bc6fbfdffe1700bdadc0d9ebe27ea34f0c220")
+    version("2.14.1", sha256="6b31ed347ed7a03c45b906aa41628ac91c3db7c84cb816971400d470e58ba494")
     version("2.14.0", sha256="ce357fd0728f0d1b0831d1653f475591662ec5bca736a94ff789e6b1944df19f")
     version("2.13.1", sha256="89c07aebd4f41fbe0d08cc88aef00305542134f2f16d3b62918dc3c1182f33e2")
     version("2.13.0", sha256="e58c939079588623e6fa1d054aec2f90f95018266e0a970fd353a5244f5173dc")
@@ -165,7 +167,8 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     depends_on("hdf5~mpi", type="build", when="@2.1.3:~mpi")
     depends_on("py-libclang@13:", type=("build", "run"), when="@2.9:")
     depends_on("py-libclang@9.0.1:", type=("build", "run"), when="@2.7:2.8")
-    depends_on("py-ml-dtypes@0.2.0", type=("build", "run"), when="@2.14:")
+    depends_on("py-ml-dtypes@0.2", type=("build", "run"), when="@2.15:")
+    depends_on("py-ml-dtypes@0.2.0", type=("build", "run"), when="@2.14")
     depends_on("py-numpy@1.23.5:", type=("build", "run"), when="@2.14:")
     depends_on("py-numpy@1.22:1.24.3", type=("build", "run"), when="@2.13:")
     depends_on("py-numpy@1.22:1.23", type=("build", "run"), when="@2.12")
