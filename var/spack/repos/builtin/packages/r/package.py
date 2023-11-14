@@ -151,6 +151,7 @@ class R(AutotoolsPackage):
             "ac_cv_path_PDFLATEX=",
             "ac_cv_path_PDFTEX=",
             "ac_cv_path_TEX=",
+            "ac_cv_path_TEXI2DVI=",
         ]
 
         if "+X" in spec:
