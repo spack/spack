@@ -496,6 +496,10 @@ class GitRepoChangeDetector:
         self.current_hash = self.git_modification_hash()
         prior_hash = self.prior_hash()
         if not prior_hash:
+            # Note: originally I thought about returning NOT_CHANGED
+            # if the git state is "clean", but technically a user
+            # could have initially installed with a dirty state, and
+            # then reverted their changes.
             return GitRepoChangeDetector.NO_PRIOR
         if self.current_hash == prior_hash:
             return GitRepoChangeDetector.NOT_CHANGED
@@ -1934,7 +1938,8 @@ class Environment:
                         pass
 
             # This runs if (a) we are not detecting changes with git or (b) the
-            # developed benchmark is not managed with git
+            # developed benchmark is not managed with git or (c) if we have not
+            # yet computed a prior git hash
             if _timestamp_changed(s, _database=db):
                 changed_dev_specs.append(s)
 
