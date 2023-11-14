@@ -10,10 +10,8 @@ import pytest
 
 import spack.environment as ev
 import spack.spec
+from spack.environment.environment import GitRepoChangeDetector
 from spack.main import SpackCommand
-from spack.environment.environment import (
-    GitRepoChangeDetector,
-)
 
 env = SpackCommand("env")
 
