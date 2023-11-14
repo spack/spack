@@ -442,6 +442,10 @@ class GitRepoChangeDetector:
     subdirectory (creating it if it does not exist).
     """
 
+    CHANGED = 0
+    NO_PRIOR = 1
+    NOT_CHANGED = 2
+
     def __init__(self, dev_path):
         self.base_dir = pathlib.Path(dev_path)
         self.git_dir = self.base_dir / ".git"
@@ -484,15 +488,19 @@ class GitRepoChangeDetector:
         Determine the current state of the Git repository (calculate
         the hash) and return whether it differs from the prior state.
 
-        If there is no prior hash (e.g. the Spack-develop package hasn't
-        been installed yet, or precedes this feature), then return
-        ``True`` (without).
+        Returns:
+            (int): NO_PRIOR if there is no prior state available to
+                check; CHANGED if the new Git hash differs, and
+                NOT_CHANGED otherwise.
         """
         self.current_hash = self.git_modification_hash()
         prior_hash = self.prior_hash()
         if not prior_hash:
-            return True
-        return self.current_hash != prior_hash
+            return GitRepoChangeDetector.NO_PRIOR
+        if self.current_hash == prior_hash:
+            return GitRepoChangeDetector.NOT_CHANGED
+        else:
+            return GitRepoChangeDetector.CHANGED
 
     def update_prior(self):
         if not self.current_hash:
@@ -1911,13 +1919,19 @@ class Environment:
             if detect_changes_with_git:
                 git_state = _git_checker(dev_path_var.value)
                 if git_state:
-                    if git_state.update_current():
-                        changed_dev_specs.append(s)
-
                     # This is appended regardless of whether there was a change: we want
                     # to store the state the first time we install the package
                     git_states.append(git_state)
-                    continue
+
+                    change_status = git_state.update_current()
+                    if change_status == GitRepoChangeDetector.CHANGED:
+                        changed_dev_specs.append(s)
+                        continue
+                    elif change_status == GitRepoChangeDetector.NOT_CHANGED:
+                        continue
+                    elif change_status == GitRepoChangeDetector.NO_PRIOR:
+                        # Fall back on timestamp checking
+                        pass
 
             # This runs if (a) we are not detecting changes with git or (b) the
             # developed benchmark is not managed with git

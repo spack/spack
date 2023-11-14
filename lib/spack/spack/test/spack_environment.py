@@ -11,6 +11,9 @@ import pytest
 import spack.environment as ev
 import spack.spec
 from spack.main import SpackCommand
+from spack.environment.environment import (
+    GitRepoChangeDetector,
+)
 
 env = SpackCommand("env")
 
@@ -48,14 +51,14 @@ spack:
         db._add(root)
 
         class MockGitChangeDetector:
-            def __init__(self, changed):
-                self.changed = changed
+            def __init__(self, git_status):
+                self.git_status = git_status
 
             def update_current(self):
-                return self.changed
+                return self.git_status
 
         def mock_git_checker(git_dir):
-            return MockGitChangeDetector(True)
+            return MockGitChangeDetector(GitRepoChangeDetector.CHANGED)
 
         needs_reinstall, git_states = e._get_overwrite_specs(
             _database=db, _git_checker=mock_git_checker
