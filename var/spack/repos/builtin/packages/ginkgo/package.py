@@ -47,8 +47,8 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     variant("sycl", default=False, description="Enable SYCL backend")
     variant("develtools", default=False, description="Compile with develtools enabled")
     variant("hwloc", default=False, description="Enable HWLOC support")
-    variant("sde", default=False, description="Enable PAPI SDE support")
-    variant("mpi", default=False, description="Enable MPI support")
+    variant("sde", default=False, description="Enable PAPI SDE support", when="@1.7.0:")
+    variant("mpi", default=False, description="Enable MPI support", when="@1.4.0:")
 
     depends_on("cmake@3.9:", type="build", when="@:1.3.0")
     depends_on("cmake@3.13:", type="build", when="@1.4.0:1.6.0")
@@ -81,9 +81,6 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
 
     conflicts("%gcc@:5.2.9")
     conflicts("+rocm", when="@:1.1.1")
-    conflicts("+mpi", when="@:1.4.0")
-
-    conflicts("+sde", when="@:1.6.0")
 
     # ROCm 4.1.0 breaks platform settings which breaks Ginkgo's HIP support.
     conflicts("^hip@4.1.0:", when="@:1.3.0")
