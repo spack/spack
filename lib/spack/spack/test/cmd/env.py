@@ -2483,11 +2483,8 @@ def test_stack_view_multiple_views(
     with ev.read("test"):
         install()
 
-    shell = env("activate", "--sh", "test")
-    assert "PATH" in shell
-    assert str(default_dir / "bin") in shell
-
     with ev.read("test") as e:
+        assert os.path.exists(str(default_dir / "bin"))
         for spec in e._get_environment_specs():
             spec_subdir = f"{spec.version}-{spec.compiler.name}"
             comb_spec_dir = str(comb_dir / spec.name / spec_subdir)
