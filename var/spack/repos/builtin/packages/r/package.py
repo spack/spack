@@ -147,6 +147,9 @@ class R(AutotoolsPackage):
             f"LDFLAGS=-Wl,-rpath,{extra_rpath}",
             f"--with-blas={blas_flags}",
             f"--with-lapack={lapack_flags}",
+            # cannot disable docs with a normal configure option
+            "ac_cv_path_PDFLATEX=",
+            "ac_cv_path_PDFTEX=",
         ]
 
         if "+X" in spec:
