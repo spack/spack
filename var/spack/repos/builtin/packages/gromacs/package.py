@@ -90,23 +90,26 @@ class Gromacs(CMakePackage, CudaPackage):
         default=False,
         description="Produces a double precision version of the executables",
     )
-    variant("cufftmp",
-            default=False,
-            when="@2022: +cuda+mpi",
-            description="Enable multi-GPU FFT support with cuFFTMp")
-    variant("heffte",
-            default=False,
-            when="@2021: +sycl+mpi",
-            description="Enable multi-GPU FFT support with HeFFTe")
+    variant(
+        "cufftmp",
+        default=False,
+        when="@2022: +cuda+mpi",
+        description="Enable multi-GPU FFT support with cuFFTMp",
+    )
+    variant(
+        "heffte",
+        default=False,
+        when="@2021: +sycl+mpi",
+        description="Enable multi-GPU FFT support with HeFFTe",
+    )
     variant("opencl", default=False, description="Enable OpenCL support")
-    variant("sycl",
-            default=False,
-            when="@2021:",
-            description="Enable SYCL support")
-    variant("intel-data-center-gpu-max",
-            default=False,
-            when="@2022:",
-            description="Enable support for Intel Data Center GPU Max")
+    variant("sycl", default=False, when="@2021:", description="Enable SYCL support")
+    variant(
+        "intel-data-center-gpu-max",
+        default=False,
+        when="@2022:",
+        description="Enable support for Intel Data Center GPU Max",
+    )
     variant("nosuffix", default=False, description="Disable default suffixes")
     variant(
         "build_type",
@@ -127,13 +130,13 @@ class Gromacs(CMakePackage, CudaPackage):
         default=True,
         when="@2021:",
         description="Build and install the NB-LIB C++ API for GROMACS",
-        )
+    )
     variant(
         "gmxapi",
         default=True,
         when="@2019:",
         description="Build and install the gmxlib python API for GROMACS",
-        )
+    )
     variant(
         "mdrun_only",
         default=False,
@@ -552,9 +555,9 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             options.append("-DGMX_GPU_NB_CLUSTER_PER_CELL_X=1")
 
         if "~nblib" in self.spec:
-            options.append('-DGMX_INSTALL_NBLIB_API=OFF')
+            options.append("-DGMX_INSTALL_NBLIB_API=OFF")
         if "~gmxapi" in self.spec:
-            options.append('-DGMXAPI=OFF')
+            options.append("-DGMXAPI=OFF")
 
         # Activate SIMD based on properties of the target
         target = self.spec.target
