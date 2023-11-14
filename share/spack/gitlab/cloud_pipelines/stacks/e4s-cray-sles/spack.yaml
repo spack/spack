@@ -71,7 +71,7 @@ spack:
   - butterflypack
   - boost +python +filesystem +iostreams +system
   - cabana
-  - chai ~benchmarks ~tests
+  - chai
   - conduit
   - datatransferkit
   - flecsi
