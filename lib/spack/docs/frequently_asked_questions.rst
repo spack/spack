@@ -7,24 +7,23 @@
 Frequently Asked Questions
 ==========================
 
--------------------------------------------------------
-What determines what versions and variants Spack picks?
--------------------------------------------------------
+--------------------------------------------------------
+What determines which versions and variants Spack picks?
+--------------------------------------------------------
 
 This question comes up in a variety of forms:
 
- 1. Why does Spack ignore the preferences for versions / variants
+ 1. Why does Spack ignore the preferences for versions and variants
     that I set in my ``packages.yaml`` file?
  2. Why does Spack not use the default variant value from the
     ``package.py`` file?
 
-The short answer is that Spack picks the optimal versions, variant
-values, and dependencies, and the optimal choice does not always
-coincide with user preferences, default values or latest package
-versions.
+The short answer is that Spack always picks an optimal configuration
+based on a complex set of criteria. These criteria are more nuanced
+than always choosing the latest versions or default variants.
 
-The exact optimality criteria are complex, but in practice it is
-enough to remember the following order of precedence:
+The following set of criteria (from lowest to highest precedence) explain
+common cases where concretization output may seem surprising at first.
 
 1. :ref:`Package preferences <package-preferences>` set in ``packages.yaml``
    override variant defaults set in ``package.py`` files, and override the
@@ -59,4 +58,7 @@ enough to remember the following order of precedence:
           require:
           - "@1.2: +mpi"
 
-In summary: requirements + constraints > reuse > preferences > defaults.
+Requirements and constraints restrict the set of possible solutions, while reuse
+behavior and preferences influence what an optimal solution looks like.
+
+As a rule of thumb: requirements + constraints > reuse > preferences > defaults.
