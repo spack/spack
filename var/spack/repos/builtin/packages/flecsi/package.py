@@ -31,27 +31,6 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     version(
         "1.4.1", tag="v1.4.1", commit="ab974c3164056e6c406917c8ca771ffd43c5a031", submodules=True
     )
-    version(
-        "1.4.develop",
-        git="https://github.com/laristra/flecsi.git",
-        branch="1.4",
-        submodules=True,
-        deprecated=True,
-    )
-    version(
-        "1.4.2",
-        git="https://github.com/laristra/flecsi.git",
-        tag="v1.4.2",
-        submodules=True,
-        deprecated=True,
-    )
-    version(
-        "flecsph",
-        git="https://github.com/laristra/flecsi.git",
-        branch="stable/flecsph",
-        submodules=True,
-        deprecated=True,
-    )
 
     variant(
         "backend",
