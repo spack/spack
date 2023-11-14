@@ -150,6 +150,7 @@ class R(AutotoolsPackage):
             # cannot disable docs with a normal configure option
             "ac_cv_path_PDFLATEX=",
             "ac_cv_path_PDFTEX=",
+            "ac_cv_path_TEX=",
         ]
 
         if "+X" in spec:
