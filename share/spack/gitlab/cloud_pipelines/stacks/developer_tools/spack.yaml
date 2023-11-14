@@ -4,7 +4,7 @@ spack:
     all:
       require: target=x86_64_v3
   concretizer:
-    reuse: true
+    reuse: false
     unify: true
   definitions:
     - default_specs:
