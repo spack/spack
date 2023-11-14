@@ -25,9 +25,10 @@ than always choosing the latest versions or default variants.
 The following set of criteria (from lowest to highest precedence) explain
 common cases where concretization output may seem surprising at first.
 
-1. :ref:`Package preferences <package-preferences>` set in ``packages.yaml``
-   override variant defaults set in ``package.py`` files, and override the
-   default version order (latest is best). Preferences are set as follows:
+1. :ref:`Package preferences <package-preferences>` configured in ``packages.yaml``
+   override variant defaults from ``package.py`` files, and override the
+   default version order (latest is best). Preferences are specified as
+   follows:
 
    .. code-block:: yaml
 
@@ -36,10 +37,10 @@ common cases where concretization output may seem surprising at first.
           version: [1.0, 1.1]
           variants: ~mpi
 
-2. :ref:`Reuse concretization <concretizer-options>` set in ``concretizer.yaml``
+2. :ref:`Reuse concretization <concretizer-options>` configured in ``concretizer.yaml``
    overrides preferences. The idea is that avoiding source builds is more important
    than building a preferred version from sources. When build caches are configured,
-   specs may be reused from a remote location too. Reuse concretization is set
+   specs may be reused from a remote location too. Reuse concretization is configured
    as follows:
 
    .. code-block:: yaml
@@ -47,9 +48,9 @@ common cases where concretization output may seem surprising at first.
       concretizer:
         reuse: dependencies / true / false
 
-3. :ref:`Package requirements <package-requirements>` set in ``packages.yaml`` and
-   constraints from the command line as well as ``package.py`` files override all
-   of the above. Requirements look like this:
+3. :ref:`Package requirements <package-requirements>` configured in ``packages.yaml``,
+   and constraints from the command line as well as ``package.py`` files override all
+   of the above. Requirements are specified as follows:
 
    .. code-block:: yaml
 
