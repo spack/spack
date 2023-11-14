@@ -111,13 +111,26 @@ class Libzmq(AutotoolsPackage):
         when="@4.3.3:4.3.4",
     )
 
+    INCLUDEDIR = "include"
+    LIBDIR = "lib"
+    DATAROOTDIR = "share"
+    MANDIR = "man"
+    PKGCONFIGDIR = "pkgconfig"
+
     @when("@master")
     def autoreconf(self, spec, prefix):
         bash = which("bash")
         bash("./autogen.sh")
 
     def configure_args(self):
-        args = self.with_or_without("docs")
+        args = [
+            f"--includedir={join_path(self.prefix, self.INCLUDEDIR)}",
+            f"--libdir={join_path(self.prefix, self.LIBDIR)}",
+            f"--datarootdir={join_path(self.prefix, self.DATAROOTDIR)}",
+            f"--mandir={join_path(self.prefix, self.DATAROOTDIR, self.MANDIR)}",
+            f"--with-pkgconfigdir={join_path(self.prefix, self.LIBDIR, self.PKGCONFIGDIR)}",
+        ]
+        args += self.with_or_without("docs")
         args += self.enable_or_disable("drafts")
         args += self.enable_or_disable("libbsd")
         args += self.with_or_without("libsodium")
@@ -154,9 +167,9 @@ class Libzmq(AutotoolsPackage):
                 raise RuntimeError(f"Expected '{macro}' in config.log")
 
     sanity_check_is_file = [
-        join_path("include", "zmq.h"),
-        join_path("lib", "libzmq.so"),
-        join_path("lib", "pkgconfig", "libzmq.pc"),
+        join_path(INCLUDEDIR, "zmq.h"),
+        join_path(LIBDIR, "libzmq.so"),
+        join_path(LIBDIR, PKGCONFIGDIR, "libzmq.pc"),
     ]
 
     @run_after("install")
@@ -164,7 +177,9 @@ class Libzmq(AutotoolsPackage):
     def check_presence_of_files(self):
         """check presence of important (conditional) files"""
         if self.spec.satisfies("+docs"):
-            assert os.path.exists(join_path(self.prefix.share.man.man7, "zmq.7"))
+            assert os.path.exists(
+                join_path(self.prefix, self.DATAROOTDIR, self.MANDIR, "man7", "zmq.7")
+            )
 
     def _compiled_executable(self, source_code):
         """compile the given C source code as executable"""
@@ -172,7 +187,12 @@ class Libzmq(AutotoolsPackage):
         source_file = f"{exe}.c"
         open(source_file, "w").write(source_code)
         Executable(self.compiler.cc)(
-            f"-L{self.prefix.lib}", "-lzmq", f"-I{self.prefix.include}", source_file, "-o", exe
+            f"-L{join_path(self.prefix, self.LIBDIR)}",
+            "-lzmq",
+            f"-I{join_path(self.prefix, self.INCLUDEDIR)}",
+            source_file,
+            "-o",
+            exe,
         )
         return which(exe)
 
