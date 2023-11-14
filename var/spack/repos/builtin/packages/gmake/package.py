@@ -67,6 +67,8 @@ class Gmake(Package, GNUMirrorPackage):
         return [
             "--with-guile" if self.spec.satisfies("+guile") else "--without-guile",
             "--disable-nls",
+            # configure needs make to enable dependency tracking, disable explicitly
+            "--disable-dependency-tracking",
         ]
 
     def install(self, spec, prefix):

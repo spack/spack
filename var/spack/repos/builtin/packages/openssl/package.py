@@ -381,6 +381,10 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
     depends_on("ca-certificates-mozilla", type="build", when="certs=mozilla")
     depends_on("nasm", when="platform=windows")
 
+    depends_on("gmake", type="build", when="platform=linux")
+    depends_on("gmake", type="build", when="platform=cray")
+    depends_on("gmake", type="build", when="platform=darwin")
+
     patch(
         "https://github.com/openssl/openssl/commit/f9e578e720bb35228948564192adbe3bc503d5fb.patch?full_index=1",
         sha256="3fdcf2d1e47c34f3a012f23306322c5a35cad55b180c9b6fb34537b55884645c",
