@@ -4,7 +4,7 @@
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-.. _build-settings:
+.. _packages-config:
 
 ================================
 Package Settings (packages.yaml)
