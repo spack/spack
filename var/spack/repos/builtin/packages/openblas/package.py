@@ -369,13 +369,15 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             # case can go away.
             args.append("TARGET=" + "RISCV64_GENERIC")
 
-        elif (
-            microarch.name == "a64fx"
-            and self.spec.satisfies("@0.3.19:")
-            and (self.spec.satisfies("%gcc@11:") or self.spec.satisfies("%clang"))
-        ):
+        elif self.spec.satisfies("@0.3.19: target=a64fx"):
             # Special case for Fujitsu's A64FX
-            args.append("TARGET=A64FX")
+            if self.spec.satisfies("%gcc@11:"):
+                args.append("TARGET=A64FX")
+            elif self.spec.satisfies("%clang") or self.spec.satisfies("%fj"):  
+                args.append("TARGET=A64FX")
+            else:
+                # fallback to armv8-a+sve without -mtune=a64fx flag
+                args.append("TARGET=ARMV8SVE")
 
         else:
             args.append("TARGET=" + microarch.name.upper())
