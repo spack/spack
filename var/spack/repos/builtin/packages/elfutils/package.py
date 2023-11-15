@@ -48,6 +48,7 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
 
     # Native language support from libintl.
     variant("nls", default=True, description="Enable Native Language Support.")
+    variant("exeprefix", default=True, description="Add a prefix to generated executables.")
 
     # libdebuginfod support
     # NB: For 0.181 and newer, this enables _both_ the client and server
@@ -84,10 +85,10 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
 
     provides("elf@1")
 
-    # libarchive with iconv doesn't configure.
+    # libarchive with iconv doesn't configure (still broken as of libarchive@3.7.1)
     # see https://github.com/spack/spack/issues/36710
     # and https://github.com/libarchive/libarchive/issues/1819
-    conflicts("^libarchive@3.6.2 +iconv", when="+debuginfod")
+    conflicts("^libarchive +iconv", when="+debuginfod")
 
     # https://sourceware.org/bugzilla/show_bug.cgi?id=24964
     conflicts("%apple-clang")
@@ -114,6 +115,11 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
             "--with-lzma=%s" % spec["xz"].prefix,
             "--with-zlib=%s" % spec["zlib-api"].prefix,
         ]
+
+        if spec.satisfies("+exeprefix"):
+            args.append("--program-prefix='eu-'")
+        else:
+            args.append("--program-prefix=''")
 
         if "@0.182:" in spec:
             args.append("--with-zstd=%s" % spec["zstd"].prefix)

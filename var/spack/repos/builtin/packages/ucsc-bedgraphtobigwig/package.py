@@ -11,6 +11,7 @@ class UcscBedgraphtobigwig(Package):
 
     homepage = "http://hgdownload.cse.ucsc.edu/admin/exe/"
     url = "https://hgdownload.cse.ucsc.edu/admin/exe/userApps.archive/userApps.v445.src.tgz"
+    maintainers("pabloaledo")
 
     version("449", sha256="b5a86863d6cfe2120f6c796a13b1572ad05b22622f6534b95c9d26ccbede09b7")
     version("445", sha256="c7abb5db6a5e16a79aefcee849d2b59dbc71ee112ca1e41fea0afb25229cf56c")

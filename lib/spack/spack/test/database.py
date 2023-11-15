@@ -18,7 +18,6 @@ try:
     _use_uuid = True
 except ImportError:
     _use_uuid = False
-    pass
 
 import jsonschema
 
@@ -802,6 +801,14 @@ def test_query_spec_with_non_conditional_virtual_dependency(database):
     # dependency that are not conditional on variants
     results = spack.store.STORE.db.query_local("mpileaks ^mpich")
     assert len(results) == 1
+
+
+def test_query_virtual_spec(database):
+    """Make sure we can query for virtuals in the DB"""
+    results = spack.store.STORE.db.query_local("mpi")
+    assert len(results) == 3
+    names = [s.name for s in results]
+    assert all(name in names for name in ["mpich", "mpich2", "zmpi"])
 
 
 def test_failed_spec_path_error(database):

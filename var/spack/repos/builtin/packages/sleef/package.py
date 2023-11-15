@@ -14,9 +14,7 @@ class Sleef(CMakePackage):
     git = "https://github.com/shibatch/sleef.git"
 
     version("master", branch="master")
-    version(
-        "3.5.1_2020-12-22", commit="e0a003ee838b75d11763aa9c3ef17bf71a725bff"
-    )  # py-torch@1.8:1.9
+    version("3.5.1_2020-12-22", commit="e0a003ee838b75d11763aa9c3ef17bf71a725bff")  # py-torch@1.8:
     version(
         "3.5.1",
         sha256="415ee9b1bcc5816989d3d4d92afd0cd3f9ee89cbd5a33eb008e69751e40438ab",
@@ -40,17 +38,24 @@ class Sleef(CMakePackage):
     )  # py-torch@0.4.1:1.0
     version("3.2", sha256="3130c5966e204e6d6a3ace81e543d12b5b21f60897f1c185bfa587c1bd77bee2")
 
-    # Some versions have ICE when building RelWithDebInfo with GCC 7
-    # See https://github.com/shibatch/sleef/issues/234
-    # See https://github.com/pytorch/pytorch/issues/26892
-    # See https://github.com/pytorch/pytorch/pull/26993
+    # https://github.com/shibatch/sleef/issues/474
+    conflicts("%apple-clang@15:")
 
     generator("ninja")
     depends_on("cmake@3.4.3:", type="build")
 
+    # # https://github.com/shibatch/sleef/issues/475
+    # depends_on("fftw-api")
+    # depends_on("mpfr")
+    # depends_on("openssl")
+
+    # # https://github.com/shibatch/sleef/issues/458
+    # conflicts("^mpfr@4.2:")
+
     def cmake_args(self):
+        # https://salsa.debian.org/science-team/sleef/-/blob/master/debian/rules
         return [
-            self.define("DISABLE_FFTW", True),
-            self.define("DISABLE_MPFR", True),
-            self.define("DISABLE_SSL", True),
+            self.define("BUILD_DFT", False),
+            self.define("SLEEF_TEST_ALL_IUT", True),
+            self.define("BUILD_TESTS", False),
         ]

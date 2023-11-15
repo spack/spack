@@ -9,11 +9,10 @@ import platform
 import shutil
 from os.path import basename, dirname, isdir
 
-from llnl.util.filesystem import find_headers, find_libraries, join_path
+from llnl.util.filesystem import find_headers, find_libraries, join_path, mkdirp
 from llnl.util.link_tree import LinkTree
 
 from spack.directives import conflicts, variant
-from spack.package import mkdirp
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
 
@@ -60,6 +59,11 @@ class IntelOneApiPackage(Package):
     def component_prefix(self):
         """Path to component <prefix>/<component>/<version>."""
         return self.prefix.join(join_path(self.component_dir, self.spec.version))
+
+    @property
+    def env_script_args(self):
+        """Additional arguments to pass to vars.sh script."""
+        return ()
 
     def install(self, spec, prefix):
         self.install_component(basename(self.url_for_version(spec.version)))
@@ -124,7 +128,7 @@ class IntelOneApiPackage(Package):
         if "~envmods" not in self.spec:
             env.extend(
                 EnvironmentModifications.from_sourcing_file(
-                    join_path(self.component_prefix, "env", "vars.sh")
+                    join_path(self.component_prefix, "env", "vars.sh"), *self.env_script_args
                 )
             )
 
@@ -207,3 +211,7 @@ class IntelOneApiStaticLibraryList:
     @property
     def ld_flags(self):
         return "{0} {1}".format(self.search_flags, self.link_flags)
+
+
+#: Tuple of Intel math libraries, exported to packages
+INTEL_MATH_LIBRARIES = ("intel-mkl", "intel-oneapi-mkl", "intel-parallel-studio")

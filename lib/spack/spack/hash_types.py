@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Definitions that control how Spack creates Spec hashes."""
 
-import spack.dependency as dp
+import spack.deptypes as dt
 import spack.repo
 
 hashes = []
@@ -20,8 +20,8 @@ class SpecHashDescriptor:
 
     We currently use different hashes for different use cases."""
 
-    def __init__(self, deptype, package_hash, name, override=None):
-        self.deptype = dp.canonical_deptype(deptype)
+    def __init__(self, depflag: dt.DepFlag, package_hash, name, override=None):
+        self.depflag = depflag
         self.package_hash = package_hash
         self.name = name
         hashes.append(self)
@@ -39,12 +39,12 @@ class SpecHashDescriptor:
 
 
 #: Spack's deployment hash. Includes all inputs that can affect how a package is built.
-dag_hash = SpecHashDescriptor(deptype=("build", "link", "run"), package_hash=True, name="hash")
+dag_hash = SpecHashDescriptor(depflag=dt.BUILD | dt.LINK | dt.RUN, package_hash=True, name="hash")
 
 
 #: Hash descriptor used only to transfer a DAG, as is, across processes
 process_hash = SpecHashDescriptor(
-    deptype=("build", "link", "run", "test"), package_hash=True, name="process_hash"
+    depflag=dt.BUILD | dt.LINK | dt.RUN | dt.TEST, package_hash=True, name="process_hash"
 )
 
 
@@ -56,7 +56,7 @@ def _content_hash_override(spec):
 
 #: Package hash used as part of dag hash
 package_hash = SpecHashDescriptor(
-    deptype=(), package_hash=True, name="package_hash", override=_content_hash_override
+    depflag=0, package_hash=True, name="package_hash", override=_content_hash_override
 )
 
 
@@ -64,10 +64,10 @@ package_hash = SpecHashDescriptor(
 # spec formats
 
 full_hash = SpecHashDescriptor(
-    deptype=("build", "link", "run"), package_hash=True, name="full_hash"
+    depflag=dt.BUILD | dt.LINK | dt.RUN, package_hash=True, name="full_hash"
 )
 
 
 build_hash = SpecHashDescriptor(
-    deptype=("build", "link", "run"), package_hash=False, name="build_hash"
+    depflag=dt.BUILD | dt.LINK | dt.RUN, package_hash=False, name="build_hash"
 )

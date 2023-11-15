@@ -13,7 +13,7 @@ class Plink2(MakefilePackage):
     homepage = "https://www.cog-genomics.org/plink/2.0/"
     git = "https://github.com/chrchang/plink-ng.git"
 
-    version("2.00a4.3", tag="v2.00a4.3")
+    version("2.00a4.3", tag="v2.00a4.3", commit="59fca48f6f8135886ff68962fbe31ae0c6413228")
 
     depends_on("zlib-api")
     depends_on("zlib@1.2.12:", when="^zlib")

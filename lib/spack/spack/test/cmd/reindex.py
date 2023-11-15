@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
-import sys
 
 import pytest
 
@@ -14,7 +13,7 @@ install = SpackCommand("install")
 deprecate = SpackCommand("deprecate")
 reindex = SpackCommand("reindex")
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 def test_reindex_basic(mock_packages, mock_archive, mock_fetch, install_mockery):

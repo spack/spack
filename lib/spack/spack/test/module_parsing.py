@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import sys
 
 import pytest
 
@@ -17,7 +16,7 @@ from spack.util.module_cmd import (
     path_from_modules,
 )
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Tests fail on Windows")
+pytestmark = pytest.mark.not_on_windows("Tests fail on Windows")
 
 test_module_lines = [
     "prepend-path LD_LIBRARY_PATH /path/to/lib",

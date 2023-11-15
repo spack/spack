@@ -5,7 +5,6 @@
 
 import re
 import shutil
-import sys
 
 import pytest
 
@@ -133,7 +132,7 @@ def test_pkg_add(git, mock_pkg_git_repo):
         pkg("add", "does-not-exist")
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="stdout format conflict")
+@pytest.mark.not_on_windows("stdout format conflict")
 def test_pkg_list(mock_pkg_git_repo, mock_pkg_names):
     out = split(pkg("list", "HEAD^^"))
     assert sorted(mock_pkg_names) == sorted(out)
@@ -149,7 +148,7 @@ def test_pkg_list(mock_pkg_git_repo, mock_pkg_names):
     assert sorted(mock_pkg_names) == sorted(out)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="stdout format conflict")
+@pytest.mark.not_on_windows("stdout format conflict")
 def test_pkg_diff(mock_pkg_git_repo, mock_pkg_names):
     out = split(pkg("diff", "HEAD^^", "HEAD^"))
     assert out == ["HEAD^:", "pkg-a", "pkg-b", "pkg-c"]
@@ -161,7 +160,7 @@ def test_pkg_diff(mock_pkg_git_repo, mock_pkg_names):
     assert out == ["HEAD^:", "pkg-c", "HEAD:", "pkg-d"]
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="stdout format conflict")
+@pytest.mark.not_on_windows("stdout format conflict")
 def test_pkg_added(mock_pkg_git_repo):
     out = split(pkg("added", "HEAD^^", "HEAD^"))
     assert ["pkg-a", "pkg-b", "pkg-c"] == out
@@ -176,7 +175,7 @@ def test_pkg_added(mock_pkg_git_repo):
     assert out == []
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="stdout format conflict")
+@pytest.mark.not_on_windows("stdout format conflict")
 def test_pkg_removed(mock_pkg_git_repo):
     out = split(pkg("removed", "HEAD^^", "HEAD^"))
     assert out == []
@@ -188,7 +187,7 @@ def test_pkg_removed(mock_pkg_git_repo):
     assert out == ["pkg-c"]
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="stdout format conflict")
+@pytest.mark.not_on_windows("stdout format conflict")
 def test_pkg_changed(mock_pkg_git_repo):
     out = split(pkg("changed", "HEAD^^", "HEAD^"))
     assert out == []

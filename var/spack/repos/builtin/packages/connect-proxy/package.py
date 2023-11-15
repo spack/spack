@@ -17,6 +17,9 @@ class ConnectProxy(MakefilePackage):
 
     version("1.105", sha256="07366026b1f81044ecd8da9b5b5b51321327ecdf6ba23576271a311bbd69d403")
 
+    def build(self, spec, prefix):
+        make("CC={0}".format(spack_cc))
+
     def install(self, spec, prefix):
         mkdir(prefix.bin)
         install("connect", prefix.bin)

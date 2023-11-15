@@ -9,7 +9,6 @@ where it makes sense.
 """
 import os
 import pathlib
-import sys
 
 import pytest
 
@@ -18,6 +17,7 @@ from llnl.util.filesystem import working_dir
 import spack.package_base
 import spack.spec
 from spack.version import (
+    EmptyRangeError,
     GitVersion,
     StandardVersion,
     Version,
@@ -675,6 +675,25 @@ def test_git_ref_comparisons(mock_git_version_info, install_mockery, mock_packag
     assert str(spec_branch.version) == "git.1.x=1.2"
 
 
+def test_git_branch_with_slash():
+    class MockLookup(object):
+        def get(self, ref):
+            assert ref == "feature/bar"
+            return "1.2", 0
+
+    v = spack.version.from_string("git.feature/bar")
+    assert isinstance(v, GitVersion)
+    v.attach_lookup(MockLookup())
+
+    # Create a version range
+    test_number_version = spack.version.from_string("1.2")
+    v.satisfies(test_number_version)
+
+    serialized = VersionList([v]).to_dict()
+    v_deserialized = VersionList.from_dict(serialized)
+    assert v_deserialized[0].ref == "feature/bar"
+
+
 @pytest.mark.parametrize(
     "string,git",
     [
@@ -696,9 +715,9 @@ def test_version_range_nonempty():
 
 
 def test_empty_version_range_raises():
-    with pytest.raises(ValueError):
+    with pytest.raises(EmptyRangeError, match="2:1.0 is an empty range"):
         assert VersionRange("2", "1.0")
-    with pytest.raises(ValueError):
+    with pytest.raises(EmptyRangeError, match="2:1.0 is an empty range"):
         assert ver("2:1.0")
 
 
@@ -931,7 +950,7 @@ def test_inclusion_upperbound():
     assert is_specific.intersects(upperbound) and is_range.intersects(upperbound)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 def test_git_version_repo_attached_after_serialization(
     mock_git_version_info, mock_packages, config, monkeypatch
 ):
@@ -951,7 +970,7 @@ def test_git_version_repo_attached_after_serialization(
     assert spack.spec.Spec.from_dict(spec.to_dict()).satisfies("@1.0")
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 def test_resolved_git_version_is_shown_in_str(
     mock_git_version_info, mock_packages, config, monkeypatch
 ):
