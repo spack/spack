@@ -17,7 +17,7 @@ case you want to skip directly to specific docs:
 * :ref:`config.yaml <config-yaml>`
 * :ref:`mirrors.yaml <mirrors>`
 * :ref:`modules.yaml <modules>`
-* :ref:`packages.yaml <build-settings>`
+* :ref:`packages.yaml <packages-config>`
 * :ref:`repos.yaml <repositories>`
 
 You can also add any of these as inline configuration in the YAML
