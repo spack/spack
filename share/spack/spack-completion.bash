@@ -911,10 +911,14 @@ _spack_config_revert() {
 _spack_containerize() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --list-os --last-stage"
+        SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="oci"
+        SPACK_COMPREPLY="recipe oci"
     fi
+}
+
+_spack_containerize_recipe() {
+    SPACK_COMPREPLY="-h --help --list-os --last-stage"
 }
 
 _spack_containerize_oci() {
@@ -929,10 +933,14 @@ _spack_containerize_oci() {
 _spack_containerise() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --list-os --last-stage"
+        SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="oci"
+        SPACK_COMPREPLY="recipe oci"
     fi
+}
+
+_spack_containerize_recipe() {
+    SPACK_COMPREPLY="-h --help --list-os --last-stage"
 }
 
 _spack_containerize_oci() {

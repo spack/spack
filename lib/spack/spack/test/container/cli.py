@@ -16,12 +16,12 @@ containerize = spack.main.SpackCommand("containerize")
 def test_command(default_config, container_config_dir, capsys):
     with capsys.disabled():
         with fs.working_dir(container_config_dir):
-            output = containerize()
+            output = containerize("recipe")
     assert "FROM spack/ubuntu-bionic" in output
 
 
 def test_listing_possible_os():
-    output = containerize("--list-os")
+    output = containerize("recipe", "--list-os")
 
     for expected_os in spack.container.images.all_bootstrap_os():
         assert expected_os in output
@@ -39,7 +39,7 @@ def test_bootstrap_phase(minimal_configuration, config_dumper, capsys):
 
     with capsys.disabled():
         with fs.working_dir(spack_yaml_dir):
-            output = containerize()
+            output = containerize("recipe")
 
     # Check for the presence of the Git commands
     assert "git init" in output

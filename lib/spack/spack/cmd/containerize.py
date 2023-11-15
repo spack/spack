@@ -32,33 +32,33 @@ level = "long"
 
 
 def setup_parser(subparser):
-    subparser.add_argument(
+    sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="subcommand")
+    recipe_parser = sp.add_parser("recipe", help="Create a recipe to build a container image")
+    recipe_parser.add_argument(
         "--list-os",
         action="store_true",
         default=False,
         help="list all the OS that can be used in the bootstrap phase and exit",
     )
-    subparser.add_argument(
+    recipe_parser.add_argument(
         "--last-stage",
         choices=("bootstrap", "build", "final"),
         default="final",
         help="last stage in the container recipe",
     )
 
-    sub = subparser.add_subparsers(required=False, dest="containerize_command")
-    oci_parser = sub.add_parser(
-        "oci", help="Push the locally installed environment to an OCI registry"
+    oci_parser = sp.add_parser(
+        "oci", help="Create a container image out of a locally installed Spack environment"
     )
     oci_parser.add_argument("--base-image")
     oci_parser.add_argument("--force", default=False, action="store_true")
     oci_parser.add_argument("--tag", "-t", required=True)
     oci_parser.add_argument("mirror", type=arguments.mirror_name_or_url)
 
-
 def containerize(parser, args):
-    if args.containerize_command == "oci":
+    if args.subcommand == "oci":
         containerize_oci(parser, args)
-    else:
+    elif args.subcommand == "recipe":
         containerize_recipe(parser, args)
 
 
