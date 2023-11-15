@@ -38,7 +38,12 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
 
     variant("shared", default=True, description="Builds with shared libraries")
     variant("fftw", default=False, description="Builds with support for FFTW backend")
-    variant("sycl", default=False, description="Builds with support for oneAPI SYCL+oneMKL backend")
+    variant(
+        "sycl",
+        default=False,
+        when="%oneapi",
+        description="Builds with support for oneAPI SYCL+oneMKL backend",
+    )
     variant("mkl", default=False, description="Builds with support for MKL backend")
     variant("magma", default=False, description="Use helper methods from the UTK MAGMA library")
     variant("python", default=False, description="Install the Python bindings")
