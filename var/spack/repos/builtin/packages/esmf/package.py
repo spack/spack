@@ -28,7 +28,8 @@ class Esmf(MakefilePackage):
 
     # Develop is a special name for spack and is always considered the newest version
     version("develop", branch="develop")
-    # generate chksum with spack checksum esmf@x.y.z
+    # generate chksum with 'spack checksum esmf@x.y.z'
+    version("8.6.0", sha256="ed057eaddb158a3cce2afc0712b49353b7038b45b29aee86180f381457c0ebe7")
     version("8.5.0", sha256="acd0b2641587007cc3ca318427f47b9cae5bfd2da8d2a16ea778f637107c29c4")
     version("8.4.2", sha256="969304efa518c7859567fa6e65efd960df2b4f6d72dbf2c3f29e39e4ab5ae594")
     version("8.4.1", sha256="1b54cee91aacaa9df400bd284614cbb0257e175f6f3ec9977a2d991ed8aa1af6")
