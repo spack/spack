@@ -30,6 +30,7 @@ class Lemon(CMakePackage):
     depends_on("coinutils", when="+coin") # just a guess
     #depends_on("cbc", when="+coin")
     #depends_on("clp", when="+coin")
+    #depends_on("bzip2", when="+coin")
     #depends_on("soplex", when="+soplex") # no such package in Spack yet. TODO
 
     def cmake_args(self):
