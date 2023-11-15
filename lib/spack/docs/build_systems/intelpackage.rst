@@ -392,7 +392,7 @@ See section
 :ref:`Configuration Scopes <configuration-scopes>`
 for an explanation about the different files
 and section
-:ref:`Build customization <build-settings>`
+:ref:`Build customization <packages-config>`
 for specifics and examples for ``packages.yaml`` files.
 
 .. If your system administrator did not provide modules for pre-installed Intel

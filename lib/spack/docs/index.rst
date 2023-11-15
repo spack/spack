@@ -70,7 +70,7 @@ or refer to the full manual below.
 
    configuration
    config_yaml
-   bootstrapping
+   packages_yaml
    build_settings
    environments
    containers
@@ -78,6 +78,7 @@ or refer to the full manual below.
    module_file_support
    repositories
    binary_caches
+   bootstrapping
    command_index
    chain
    extensions
