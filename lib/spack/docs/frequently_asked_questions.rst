@@ -7,20 +7,31 @@
 Frequently Asked Questions
 ==========================
 
---------------------------------------------------------
-What determines which versions and variants Spack picks?
---------------------------------------------------------
+This page contains answers to frequently asked questions about Spack.
+If you have questions that are not answered here, feel free to ask on
+`Slack <https://slack.spack.io>`_ or `GitHub Discussions
+<https://github.com/spack/spack/discussions>`_. If you've learned the
+answer to a question that you think should be here, please consider
+contributing to this page.
+
+.. _faq-concretizer-precedence:
+
+-----------------------------------------------------
+Why does Spack pick particular versions and variants?
+-----------------------------------------------------
 
 This question comes up in a variety of forms:
 
- 1. Why does Spack ignore the preferences for versions and variants
-    that I set in my ``packages.yaml`` file?
- 2. Why does Spack not use the default variant value from the
-    ``package.py`` file?
+ 1. Why does Spack seem to ignore my package preferences from ``packages.yaml`` config?
+ 2. Why does Spack toggle a variant instead of using the default from the ``package.py`` file?
 
 The short answer is that Spack always picks an optimal configuration
 based on a complex set of criteria. These criteria are more nuanced
 than always choosing the latest versions or default variants.
+
+.. note::
+
+    As a rule of thumb: requirements + constraints > reuse > preferences > defaults.
 
 The following set of criteria (from lowest to highest precedence) explain
 common cases where concretization output may seem surprising at first.
@@ -60,7 +71,3 @@ common cases where concretization output may seem surprising at first.
 
 Requirements and constraints restrict the set of possible solutions, while reuse
 behavior and preferences influence what an optimal solution looks like.
-
-.. note::
-
-    As a rule of thumb: requirements + constraints > reuse > preferences > defaults.
