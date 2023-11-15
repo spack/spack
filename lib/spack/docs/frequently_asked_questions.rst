@@ -26,7 +26,7 @@ This question comes up in a variety of forms:
  2. Why does Spack toggle a variant instead of using the default from the ``package.py`` file?
 
 The short answer is that Spack always picks an optimal configuration
-based on a complex set of criteria. These criteria are more nuanced
+based on a complex set of criteria\ [#f1]_. These criteria are more nuanced
 than always choosing the latest versions or default variants.
 
 .. note::
@@ -71,3 +71,8 @@ common cases where concretization output may seem surprising at first.
 
 Requirements and constraints restrict the set of possible solutions, while reuse
 behavior and preferences influence what an optimal solution looks like.
+
+
+.. rubric:: Footnotes
+
+.. [#f1] The exact list of criteria can be retrieved with the ``spack solve`` command
