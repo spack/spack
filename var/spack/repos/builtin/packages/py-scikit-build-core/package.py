@@ -61,7 +61,7 @@ class PyScikitBuildCore(PythonPackage):
     depends_on("py-tomli@1.1:", when="^python@:3.10", type=("build", "run"))
     depends_on("py-typing-extensions@3.10:", when="^python@:3.7", type=("build", "run"))
     depends_on("cmake@3.15:", type=("build", "run"))
-    
+
     # Optional dependencies
     depends_on("py-pathspec@0.10.1:", when="+pyproject", type=("build", "run"))
     depends_on("py-pyproject-metadata@0.5:", when="+pyproject", type=("build", "run"))
