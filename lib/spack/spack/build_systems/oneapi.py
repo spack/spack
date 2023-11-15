@@ -191,7 +191,7 @@ class IntelOneApiLibraryPackageWithSdk(IntelOneApiPackage):
 
     @property
     def include(self):
-        return join_path(self.component_prefix, "include")
+        return join_path(self.component_prefix, "sdk", "include")
 
     @property
     def headers(self):
@@ -199,31 +199,13 @@ class IntelOneApiLibraryPackageWithSdk(IntelOneApiPackage):
 
     @property
     def lib(self):
-        lib_path = join_path(self.component_prefix, "lib64")
+        lib_path = join_path(self.component_prefix, "sdk", "lib64")
         lib_path = lib_path if isdir(lib_path) else dirname(lib_path)
         return lib_path
 
     @property
     def libs(self):
         return find_libraries("*", root=self.lib, shared=True, recursive=True)
-
-    @property
-    def sdk_include(self):
-        return join_path(self.component_prefix, "sdk", "include")
-
-    @property
-    def sdk_headers(self):
-        return find_headers("*", self.sdk_include, recursive=True)
-
-    @property
-    def sdk_lib(self):
-        lib_path = join_path(self.component_prefix, "lib64")
-        lib_path = lib_path if isdir(lib_path) else dirname(lib_path)
-        return lib_path
-
-    @property
-    def sdk_libs(self):
-        return find_libraries("*", root=self.sdk_lib, shared=True, recursive=True)
 
 
 class IntelOneApiStaticLibraryList:
