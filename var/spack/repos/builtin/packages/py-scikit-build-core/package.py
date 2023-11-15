@@ -68,7 +68,7 @@ class PyScikitBuildCore(PythonPackage):
     # Test dependencies
     depends_on("py-build +virtualenv", type="test")
     depends_on("py-cattrs@22.2:", type="test")
-    depends_on("py-importlib-metadata", when="^python@:3.7", type="test")
+    depends_on("py-importlib-metadata", type=("build", "run"), when="@0.3: ^python@:3.7")
     depends_on("py-pathspec@0.10.1:", type="test")
     depends_on("py-pybind11", type="test")
     depends_on("py-pyproject-metadata@0.5:", type="test")
