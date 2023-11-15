@@ -29,6 +29,12 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master", submodules=True)
     version(
+        "master_external_vtk",
+        git="https://gitlab.kitware.com/danlipsa/paraview.git",
+        branch="external_vtk",
+        submodules=True,
+    )
+    version(
         "5.11.2",
         sha256="5c5d2f922f30d91feefc43b4a729015dbb1459f54c938896c123d2ac289c7a1e",
         preferred=True,
@@ -112,6 +118,12 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         description="Build VTK-m with ParaView by setting PARAVIEW_USE_VTKM=ON,OFF."
         ' "default" lets the build_edition make the decision.'
         ' "on" or "off" will always override the build_edition.',
+    )
+    variant(
+        "external_vtk",
+        default=False,
+        description="Build paraview using an external VTK",
+        when="@5.12:",
     )
 
     conflicts("~hdf5", when="+visitbridge")
@@ -258,7 +270,13 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     # ParaView depends on proj@8.1.0 due to changes in MR
     # v8.1.0 is required for VTK::GeoVis
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8474
-    depends_on("proj@8.1.0", when="@5.11:")
+    depends_on("proj@5:", when="@5.11:")
+
+    depends_on("vtk@master_external_vtk+paraview_deps", when="@5.12:+external_vtk")
+    depends_on("vtk@master_external_vtk+paraview_deps+mpi", when="@5.12:+external_vtk+mpi")
+    depends_on("vtk@master_external_vtk+paraview_deps+python", when="@5.12:+external_vtk+python")
+    depends_on("vtk@master_external_vtk+paraview_deps+qt", when="@5.12:+external_vtk+qt")
+    depends_on("vtk@master_external_vtk+paraview_deps+osmesa", when="@5.12:+external_vtk+osmesa")
 
     patch("stl-reader-pv440.patch", when="@4.4.0")
 
@@ -284,7 +302,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8653
     patch("vtk-adios2-module-no-kit.patch", when="@5.8:5.11")
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8653
-    patch("vtk-adios2-module-no-kit-5.12.patch", when="@5.12:")
+    patch("vtk-adios2-module-no-kit-5.12.patch", when="@5.12")
 
     # Patch for paraview 5.9.0%xl_r
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/7591
@@ -658,6 +676,9 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         if "+libcatalyst" in spec:
             cmake_args.append("-DVTK_MODULE_ENABLE_ParaView_InSitu=YES")
             cmake_args.append("-DPARAVIEW_ENABLE_CATALYST=YES")
+
+        if "+external_vtk" in spec:
+            cmake_args.append("-DPARAVIEW_USE_EXTERNAL_VTK=ON")
 
         cmake_args.append(self.define_from_variant("PARAVIEW_ENABLE_RAYTRACING", "raytracing"))
         # Currently only support OSPRay ray tracing
