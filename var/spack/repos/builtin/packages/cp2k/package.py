@@ -297,6 +297,10 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         depends_on("dbcsr+cuda", when="+cuda")
         depends_on("dbcsr+rocm", when="+rocm")
 
+    with when("@2022: +rocm"):
+        depends_on("hipblas")
+        depends_on("hipfft")
+
     # CP2K needs compiler specific compilation flags, e.g. optflags
     conflicts("%apple-clang")
     conflicts("%clang")
