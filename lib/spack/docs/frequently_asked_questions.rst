@@ -61,4 +61,6 @@ common cases where concretization output may seem surprising at first.
 Requirements and constraints restrict the set of possible solutions, while reuse
 behavior and preferences influence what an optimal solution looks like.
 
-As a rule of thumb: requirements + constraints > reuse > preferences > defaults.
+.. note::
+
+    As a rule of thumb: requirements + constraints > reuse > preferences > defaults.
