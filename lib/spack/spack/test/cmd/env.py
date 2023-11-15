@@ -7,7 +7,6 @@ import glob
 import io
 import os
 import pathlib
-import re
 import shutil
 from argparse import Namespace
 
@@ -854,7 +853,7 @@ def test_env_with_included_config_file(mutable_mock_env_path, packages_file):
         f"""\
 spack:
   include:
-  - {os.path.join(".", config_name)}
+  - {os.path.join(".", include_filename)}
   specs:
   - mpileaks
 """,
