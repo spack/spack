@@ -1130,9 +1130,21 @@ class ConcreteSpecsByHash(collections.abc.Mapping):
         return True
 
     def query(self, spec: spack.spec.Spec) -> List[spack.spec.Spec]:
+        """Returns a list of specs in the container matching the input query."""
         return [s for s in self.data.values() if s.satisfies(spec)]
 
     def delete(self, spec: spack.spec.Spec, transitive: bool = False) -> bool:
+        """Deletes a concrete spec from the container. Returns True if the spec was deleted,
+        False otherwise
+
+        Args:
+            spec: spec to be deleted
+            transitive: if True deletes all the dependents, if False deletes
+                only the spec iff it has no dependents
+        Raises:
+             ValueError: if the input spec is not concrete, or if the spec to be removed has
+                dependents and 'transitive' is False.
+        """
         if not spec.concrete:
             msg = f"cannot delete the non-concrete spec '{spec}'"
             raise ValueError(msg)
