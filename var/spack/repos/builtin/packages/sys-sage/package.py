@@ -74,9 +74,5 @@ class SysSage(CMakePackage):
         if "+ds_hwloc" in spec or "+build_data_sources" in spec:
             args.append(self.define("DS_HWLOC", True))
         if "+ds_numa" in spec or "+build_data_sources" in spec:
-            if spec.platform == "linux":
-                args.append(self.define("DS_NUMA", True))
-            else:
-                msg = "ds_numa option is only available on Linux systems."
-                raise InvalidSpecDetected(msg)
+            args.append(self.define("DS_NUMA", True))
         return args
