@@ -43,7 +43,8 @@ spack:
       - py-yq
       - hub
       - ncdu
-      - exa
+      - eza
+      - lsd
       - hyperfine
       - htop
       - tmux
