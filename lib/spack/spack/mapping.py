@@ -115,6 +115,27 @@ class ConcreteSpecsByHash(collections.abc.Mapping):
         del self.data[dag_hash]
         return True
 
+    def garbage_collect(self, *, keep: List[spack.spec.Spec]) -> bool:
+        """Keeps only the list of specs passed as input, with their dependencies, deletes all
+        the others.
+
+        Returns True if the container has been modified, False otherwise.
+
+        Args:
+            keep: list of concrete specs to keep
+        """
+        hashes_to_keep = set(
+            x.dag_hash()
+            for x in spack.traverse.traverse_nodes(keep, key=spack.traverse.by_dag_hash)
+        )
+        hashes_to_be_deleted = set(self.data) - hashes_to_keep
+        modified = False
+        for h in hashes_to_be_deleted:
+            maybe_spec = self.data.get(h)
+            if maybe_spec:
+                modified |= self.delete(spec=maybe_spec, transitive=True)
+        return modified
+
     def __len__(self) -> int:
         return len(self.data)
 

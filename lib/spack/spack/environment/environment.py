@@ -16,7 +16,7 @@ import time
 import urllib.parse
 import urllib.request
 import warnings
-from typing import Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import Dict, List, Optional, Set, Tuple, Union
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -1148,9 +1148,18 @@ class Environment:
                 else:
                     self.manifest.remove_definition(str(spec), list_name=list_name)
 
+        if not force:
+            return
+
         # If force, update stale concretized specs
+        user_specs_to_remove = old_specs - new_specs
+        user_specs_to_keep = old_specs - user_specs_to_remove
+        concrete_specs_to_keep = [
+            c for abstract, c in self.concretized_specs() if abstract in user_specs_to_keep
+        ]
+        self.all_specs_by_hash.garbage_collect(keep=concrete_specs_to_keep)
         for spec in old_specs - new_specs:
-            if force and spec in self.concretized_user_specs:
+            if spec in self.concretized_user_specs:
                 i = self.concretized_user_specs.index(spec)
                 del self.concretized_user_specs[i]
 
@@ -1681,10 +1690,6 @@ class Environment:
         installs = [(spec.package, {**install_args, "explicit": spec in roots}) for spec in specs]
 
         PackageInstaller(installs).install()
-
-    def all_specs_generator(self) -> Iterable[Spec]:
-        """Returns a generator for all concrete specs"""
-        return traverse.traverse_nodes(self.concrete_roots(), key=traverse.by_dag_hash)
 
     def all_specs(self) -> List[Spec]:
         """Returns a list of all concrete specs"""

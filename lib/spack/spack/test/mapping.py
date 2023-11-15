@@ -66,3 +66,59 @@ class TestConcreteSpecsByHash:
             assert not spec.satisfies(query_spec)
             for parent_spec in spec.dependents():
                 assert not parent_spec.satisfies(query_spec)
+
+    @pytest.mark.parametrize(
+        "input_specs,keep_queries,not_expected,expected",
+        [
+            # o a
+            # | \
+            # o | gmake
+            #  /
+            # o b
+            (["a"], ["a"], [], ["a", "b", "gmake"]),
+            (["a"], ["gmake"], ["a", "b"], ["gmake"]),
+            (["a"], ["b"], ["gmake", "a"], ["b"]),
+            # o mpileaks
+            # |\
+            # | o callpath
+            # |/|
+            # o | mpich
+            #  /
+            # o dyninst
+            # |\
+            # | o libdwarf
+            # |/
+            # o libelf
+            (
+                ["mpileaks"],
+                ["dyninst"],
+                ["mpileaks", "callpath", "mpich"],
+                ["dyninst", "libdwarf", "libelf"],
+            ),
+            (
+                ["mpileaks"],
+                ["mpich"],
+                ["mpileaks", "callpath", "dyninst", "libdwarf", "libelf"],
+                ["mpich"],
+            ),
+        ],
+    )
+    def test_garbage_collect(
+        self, input_specs, keep_queries, not_expected, expected, default_mock_concretization
+    ):
+        container = ConcreteSpecsByHash()
+        input_specs = [Spec(s).concretized() for s in input_specs]
+        for s in input_specs:
+            container.add(s)
+
+        specs = []
+        for query in keep_queries:
+            specs.extend(container.query(spec=query))
+
+        container.garbage_collect(keep=specs)
+
+        for s in not_expected:
+            assert not container.query(s), f"{s} was not expected, but is in the container"
+
+        for s in expected:
+            assert container.query(s), f"{s} was expected, but is not in the container"
