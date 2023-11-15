@@ -18,7 +18,7 @@ class Lemon(CMakePackage):
     version("1.3.1", sha256="71b7c725f4c0b4a8ccb92eb87b208701586cf7a96156ebd821ca3ed855bad3c8")
 
     # coin variant currently fails due to a missing dependency library
-    variant("coin", default=False, description="Enable Coin solver backend")
+    #variant("coin", default=False, description="Enable Coin solver backend") #TODO currently not building
     variant("ilog", default=False, description="Enable ILOG (CPLEX) solver backend")
     variant("glpk", default=True, description="Enable GLPK solver backend")
     # soplex not mentioned in docs but shown in cmakecache
@@ -28,8 +28,8 @@ class Lemon(CMakePackage):
     depends_on("glpk", when="+glpk")
     depends_on("cplex", when="+ilog")
     depends_on("coinutils", when="+coin") # just a guess
-    depends_on("cbc", when="+coin")
-    depends_on("clp", when="+coin")
+    #depends_on("cbc", when="+coin")
+    #depends_on("clp", when="+coin")
     #depends_on("soplex", when="+soplex") # no such package in Spack yet. TODO
 
     def cmake_args(self):
@@ -37,7 +37,7 @@ class Lemon(CMakePackage):
         args = []
         args.extend(
             [
-                f"-DLEMON_ENABLE_COIN={spec.variants['coin'].value}",
+                #f"-DLEMON_ENABLE_COIN={spec.variants['coin'].value}", #TODO
                 f"-DLEMON_ENABLE_ILOG={spec.variants['ilog'].value}",
                 f"-DLEMON_ENABLE_GLPK={spec.variants['glpk'].value}",
                 #f"-DLEMON_ENABLE_SOPLEX={spec.variants['soplex'].value}", #TODO
