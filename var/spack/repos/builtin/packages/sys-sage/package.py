@@ -36,6 +36,7 @@ class SysSage(CMakePackage):
     variant(
         "build_data_sources",
         default=False,
+        when="platform=linux",
         description="Build all data sources (programs to collect data about the machine sys-sage "
         "runs on).",
     )
