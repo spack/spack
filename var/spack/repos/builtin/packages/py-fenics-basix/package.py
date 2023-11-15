@@ -27,11 +27,10 @@ class PyFenicsBasix(PythonPackage):
     depends_on("fenics-basix@0.4.2", type=("build", "run"), when="@0.4.2")
 
     # See python/CMakeLists.txt
-    depends_on("cmake@3.16:", type="build")
+    depends_on("cmake@3.19:", type="build")
 
     # See python/pyproject.toml
     depends_on("python@3.8:", when="@0.7.0:", type=("build", "run"))
-    depends_on("py-setuptools@42:", type="build")
     depends_on("py-numpy@1.21:", type=("build", "run"))
     depends_on("py-pybind11@2.9.1:", when="@:0.7", type="build")
     depends_on("py-nanobind@1.5.1:", when="@0.8:", type="build")
