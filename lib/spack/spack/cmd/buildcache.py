@@ -37,6 +37,7 @@ import spack.user_environment
 import spack.util.crypto
 import spack.util.url as url_util
 import spack.util.web as web_util
+from spack import traverse
 from spack.build_environment import determine_number_of_jobs
 from spack.cmd import display_specs
 from spack.cmd.common import arguments
@@ -385,7 +386,7 @@ def push_fn(args):
         with tempfile.TemporaryDirectory(
             dir=spack.stage.get_stage_root()
         ) as tmpdir, _make_pool() as pool:
-            skipped = _push_oci(args, image_ref, specs, tmpdir, pool)
+            skipped, _, _ = _push_oci(args, image_ref, specs, tmpdir, pool)
     else:
         skipped = []
 
@@ -516,17 +517,21 @@ def _archspec_to_gooarch(spec: spack.spec.Spec) -> str:
 def _put_manifest(
     base_images: Dict[str, Tuple[dict, dict]],
     checksums: Dict[str, spack.oci.oci.Blob],
-    spec: spack.spec.Spec,
     image_ref: ImageReference,
     tmpdir: str,
+    extra_config: Optional[dict],
+    annotations: Optional[dict],
+    *specs: spack.spec.Spec,
 ):
-    architecture = _archspec_to_gooarch(spec)
+    architecture = _archspec_to_gooarch(specs[0])
 
     dependencies = list(
         reversed(
             list(
                 s
-                for s in spec.traverse(order="topo", deptype=("link", "run"), root=True)
+                for s in traverse.traverse_nodes(
+                    specs, order="topo", deptype=("link", "run"), root=True
+                )
                 if not s.external
             )
         )
@@ -535,7 +540,7 @@ def _put_manifest(
     base_manifest, base_config = base_images[architecture]
     env = _retrieve_env_dict_from_config(base_config)
 
-    spack.user_environment.environment_modifications_for_specs(spec).apply_modifications(env)
+    spack.user_environment.environment_modifications_for_specs(*specs).apply_modifications(env)
 
     # Create an oci.image.config file
     config = copy.deepcopy(base_config)
@@ -547,20 +552,14 @@ def _put_manifest(
     # Set the environment variables
     config["config"]["Env"] = [f"{k}={v}" for k, v in env.items()]
 
-    # From the OCI v1.0 spec:
-    # > Any extra fields in the Image JSON struct are considered implementation
-    # > specific and MUST be ignored by any implementations which are unable to
-    # > interpret them.
-    # We use this to store the Spack spec, so we can use it to create an index.
-    spec_dict = spec.to_dict(hash=ht.dag_hash)
-    spec_dict["buildcache_layout_version"] = 1
-    spec_dict["binary_cache_checksum"] = {
-        "hash_algorithm": "sha256",
-        "hash": checksums[spec.dag_hash()].compressed_digest.digest,
-    }
-    config.update(spec_dict)
+    if extra_config:
+        # From the OCI v1.0 spec:
+        # > Any extra fields in the Image JSON struct are considered implementation
+        # > specific and MUST be ignored by any implementations which are unable to
+        # > interpret them.
+        config.update(extra_config)
 
-    config_file = os.path.join(tmpdir, f"{spec.dag_hash()}.config.json")
+    config_file = os.path.join(tmpdir, f"{specs[0].dag_hash()}.config.json")
 
     with open(config_file, "w") as f:
         json.dump(config, f, separators=(",", ":"))
@@ -591,18 +590,16 @@ def _put_manifest(
                 for s in dependencies
             ),
         ],
-        "annotations": {"org.opencontainers.image.description": spec.format()},
     }
 
-    image_ref_for_spec = image_ref.with_tag(default_tag(spec))
+    if annotations:
+        oci_manifest["annotations"] = annotations
 
     # Finally upload the manifest
-    upload_manifest_with_retry(image_ref_for_spec, oci_manifest=oci_manifest)
+    upload_manifest_with_retry(image_ref, oci_manifest=oci_manifest)
 
     # delete the config file
     os.unlink(config_file)
-
-    return image_ref_for_spec
 
 
 def _push_oci(
@@ -611,7 +608,7 @@ def _push_oci(
     installed_specs_with_deps: List[Spec],
     tmpdir: str,
     pool: multiprocessing.pool.Pool,
-) -> List[str]:
+) -> Tuple[List[str], Dict[str, Tuple[dict, dict]], Dict[str, spack.oci.oci.Blob]]:
     """Push specs to an OCI registry
 
     Args:
@@ -621,7 +618,9 @@ def _push_oci(
             including deps, ordered from roots to leaves.
 
     Returns:
-        List[str]: The list of skipped specs (already in the buildcache).
+        A tuple consisting of the list of skipped specs already in the build cache,
+        a dictionary mapping architectures to base image manifests and configs,
+        and a dictionary mapping spec dag hashes to blobs.
     """
 
     # Reverse the order
@@ -659,7 +658,7 @@ def _push_oci(
         to_be_uploaded = installed_specs_with_deps
 
     if not to_be_uploaded:
-        return skipped
+        return skipped, base_images, checksums
 
     tty.info(
         f"{len(to_be_uploaded)} specs need to be pushed to {image_ref.domain}/{image_ref.name}"
@@ -687,18 +686,38 @@ def _push_oci(
                 base_image_ref, image_ref, architecture
             )
 
+    def extra_config(spec: Spec):
+        spec_dict = spec.to_dict(hash=ht.dag_hash)
+        spec_dict["buildcache_layout_version"] = 1
+        spec_dict["binary_cache_checksum"] = {
+            "hash_algorithm": "sha256",
+            "hash": checksums[spec.dag_hash()].compressed_digest.digest,
+        }
+        return spec_dict
+
     # Upload manifests
     tty.info("Uploading manifests")
-    pushed_image_ref = pool.starmap(
+    pool.starmap(
         _put_manifest,
-        ((base_images, checksums, spec, image_ref, tmpdir) for spec in to_be_uploaded),
+        (
+            (
+                base_images,
+                checksums,
+                image_ref.with_tag(default_tag(spec)),
+                tmpdir,
+                extra_config(spec),
+                {"org.opencontainers.image.description": spec.format()},
+                spec,
+            )
+            for spec in to_be_uploaded
+        ),
     )
 
     # Print the image names of the top-level specs
-    for spec, ref in zip(to_be_uploaded, pushed_image_ref):
-        tty.info(f"Pushed {_format_spec(spec)} to {ref}")
+    for spec in to_be_uploaded:
+        tty.info(f"Pushed {_format_spec(spec)} to {image_ref.with_tag(default_tag(spec))}")
 
-    return skipped
+    return skipped, base_images, checksums
 
 
 def _config_from_tag(image_ref: ImageReference, tag: str) -> Optional[dict]:

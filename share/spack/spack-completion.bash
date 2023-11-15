@@ -909,11 +909,39 @@ _spack_config_revert() {
 }
 
 _spack_containerize() {
-    SPACK_COMPREPLY="-h --help --list-os --last-stage"
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --list-os --last-stage"
+    else
+        SPACK_COMPREPLY="oci"
+    fi
+}
+
+_spack_containerize_oci() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --base-image --force --tag -t"
+    else
+        _mirrors
+    fi
 }
 
 _spack_containerise() {
-    SPACK_COMPREPLY="-h --help --list-os --last-stage"
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --list-os --last-stage"
+    else
+        SPACK_COMPREPLY="oci"
+    fi
+}
+
+_spack_containerize_oci() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --base-image --force --tag -t"
+    else
+        _mirrors
+    fi
 }
 
 _spack_create() {
