@@ -59,7 +59,7 @@ class Libevent(AutotoolsPackage):
         return LibraryList(libs)
 
     def autoreconf(self, spec, prefix):
-        Executable("./autogen.sh")()
+        autoreconf("--force", "--install", "--symlink")
 
     def configure_args(self):
         spec = self.spec
