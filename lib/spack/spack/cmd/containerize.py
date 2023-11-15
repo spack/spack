@@ -55,6 +55,7 @@ def setup_parser(subparser):
     oci_parser.add_argument("--tag", "-t", required=True)
     oci_parser.add_argument("mirror", type=arguments.mirror_name_or_url)
 
+
 def containerize(parser, args):
     if args.subcommand == "oci":
         containerize_oci(parser, args)
