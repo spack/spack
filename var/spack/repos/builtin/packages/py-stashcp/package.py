@@ -18,3 +18,5 @@ class PyStashcp(PythonPackage):
     version("6.1.0", sha256="40484b40aeb853eb6a5f5472daf533a176d61fa6ab839cd265ea0baa3fe63068")
 
     depends_on("py-setuptools", type="build")
+
+    depends_on("py-urllib3", type=("build", "run"))
