@@ -25,7 +25,7 @@ class Lemon(CMakePackage):
 
     depends_on("glpk", when="+glpk")
     depends_on("cplex", when="+ilog")
-    depends_on("coinutils", when="+coin")  # just a guess
+    # depends_on("coinutils", when="+coin")  # just a guess
     # depends_on("cbc", when="+coin")
     # depends_on("clp", when="+coin")
     # depends_on("bzip2", when="+coin")
