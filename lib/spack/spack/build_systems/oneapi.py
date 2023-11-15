@@ -172,6 +172,12 @@ class IntelOneApiLibraryPackage(IntelOneApiPackage):
         include_path = join_path(self.component_prefix, "include")
         return find_headers("*", include_path, recursive=True)
 
+    @property
+    def libs(self):
+        lib_path = join_path(self.component_prefix, "lib", "intel64")
+        lib_path = lib_path if isdir(lib_path) else dirname(lib_path)
+        return find_libraries("*", root=lib_path, shared=True, recursive=True)
+
 class IntelOneApiLibraryPackageWithSdk(IntelOneApiPackage):
     """Base class for Intel oneAPI library packages with SDK components.
 
