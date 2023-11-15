@@ -48,6 +48,7 @@ class SysSage(CMakePackage):
     variant(
         "ds_numa",
         default=False,
+        when="platform=linux",
         description="builds the caps-numa-benchmark. If turned on, includes Linux-specific "
         "libraries.",
     )
