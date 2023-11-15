@@ -54,6 +54,7 @@ import spack.version
 from spack import traverse
 from spack.filesystem_view import SimpleFilesystemView, inverse_view_func_parser, view_func_parser
 from spack.installer import PackageInstaller
+from spack.mapping import ConcreteSpecsByHash
 from spack.schema.env import TOP_LEVEL_KEY
 from spack.spec import Spec
 from spack.spec_list import InvalidSpecConstraintError, SpecList
@@ -808,7 +809,7 @@ class Environment:
         #: Roots associated with the last concretization, in order
         self.concretized_order: List[str] = []
         #: All the specs in the environment, including transitive, by hash
-        self.all_specs_by_hash = spack.solver.asp.ConcreteSpecsByHash()
+        self.all_specs_by_hash = ConcreteSpecsByHash()
         #: Concretized root specs by hash
         self.root_specs_by_hash: Dict[str, Spec] = {}
         #: Repository for this environment (memoized)
@@ -1116,8 +1117,7 @@ class Environment:
             matches = [s for s in list_to_change if s.satisfies(query_spec)]
 
         else:
-            # concrete specs match against concrete specs in the env
-            # by dag hash.
+            # concrete specs match against concrete specs in the env by dag hash.
             specs_hashes = zip(self.concretized_user_specs, self.concretized_order)
             matches = [s for s, h in specs_hashes if query_spec.dag_hash() == h]
 
@@ -1205,7 +1205,7 @@ class Environment:
         """Clears the internal state associated with managing user specs"""
         self.concretized_user_specs = []
         self.concretized_order = []
-        self.all_specs_by_hash = spack.solver.asp.ConcreteSpecsByHash()
+        self.all_specs_by_hash = ConcreteSpecsByHash()
         self.root_specs_by_hash = {}
 
     def deconcretize(self, spec: spack.spec.Spec, concrete: bool = True):
