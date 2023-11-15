@@ -22,7 +22,7 @@ class Lemon(CMakePackage):
     variant("ilog", default=False, description="Enable ILOG (CPLEX) solver backend")
     variant("glpk", default=True, description="Enable GLPK solver backend")
     # soplex not mentioned in docs but shown in cmakecache
-    variant("soplex", default=False, description="Enable SOPLEX solver backend")
+    #variant("soplex", default=False, description="Enable SOPLEX solver backend") #TODO
 
 
     depends_on("glpk", when="+glpk")
@@ -30,17 +30,17 @@ class Lemon(CMakePackage):
     depends_on("coinutils", when="+coin") # just a guess
     depends_on("cbc", when="+coin")
     depends_on("clp", when="+coin")
-    depends_on("soplex", when="+soplex") # no such package in Spack yet.
+    #depends_on("soplex", when="+soplex") # no such package in Spack yet. TODO
 
     def cmake_args(self):
         spec = self.spec
         args = []
         args.extend(
             [
-                "-DLEMON_ENABLE_COIN={0}".format("YES" if "+coin" in spec else "NO"),
-                "-DLEMON_ENABLE_ILOG={0}".format("YES" if "+ilog" in spec else "NO"),
-                "-DLEMON_ENABLE_GLPK={0}".format("YES" if "+glpk" in spec else "NO"),
-                "-DLEMON_ENABLE_SOPLEX={0}".format("YES" if "+soplex" in spec else "NO"),
+                f"-DLEMON_ENABLE_COIN={spec.variants['coin'].value}",
+                f"-DLEMON_ENABLE_ILOG={spec.variants['ilog'].value}",
+                f"-DLEMON_ENABLE_GLPK={spec.variants['glpk'].value}",
+                #f"-DLEMON_ENABLE_SOPLEX={spec.variants['soplex'].value}", #TODO
             ]
         )
         return args
