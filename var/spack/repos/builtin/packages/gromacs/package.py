@@ -551,8 +551,8 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             options.append(f'-DHeffte_ROOT={self.spec["heffte"].prefix}')
 
         if "+intel-data-center-gpu-max" in self.spec:
-            options.append("-DGMX_GPU_CLUSTER_SIZE=8")
-            options.append("-DGMX_GPU_NB_CLUSTER_PER_CELL_X=1")
+            options.append("-DGMX_GPU_NB_CLUSTER_SIZE=8")
+            options.append("-DGMX_GPU_NB_NUM_CLUSTER_PER_CELL_X=1")
 
         if "~nblib" in self.spec:
             options.append("-DGMX_INSTALL_NBLIB_API=OFF")
