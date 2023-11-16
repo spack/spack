@@ -615,19 +615,6 @@ class Hip(CMakePackage):
                 "clr/hipamd/hip-config-amd.cmake",
                 string=True,
             )
-            filter_file(
-                '"${ROCM_PATH}/llvm"',
-                self.spec["llvm-amdgpu"].prefix,
-                "clr/hipamd/src/CMakeLists.txt",
-                string=True,
-            )
-            filter_file(
-                '"${ROCM_PATH}/llvm"',
-                self.spec["llvm-amdgpu"].prefix,
-                "clr/hipamd/src/hiprtc/CMakeLists.txt",
-                string=True,
-            )
-
         perl = self.spec["perl"].command
         kwargs = {"ignore_absent": False, "backup": False, "string": False}
 
