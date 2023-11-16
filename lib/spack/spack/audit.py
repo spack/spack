@@ -776,7 +776,7 @@ def _version_constraints_are_satisfiable_by_some_version_in_repo(pkgs, error_cls
                 )
             except Exception:
                 summary = (
-                    "{0}: dependency on {1} cannot be satisfied " "by known versions of {1.name}"
+                    "{0}: dependency on {1} cannot be satisfied by known versions of {1.name}"
                 ).format(pkg_name, s)
                 details = ["happening in " + filename]
                 if dependency_pkg_cls is not None:
@@ -816,6 +816,53 @@ def _analyze_variants_in_directive(pkg, constraint, directive, error_cls):
             errors.append(err)
 
     return errors
+
+
+@package_directives
+def _named_specs_in_when_arguments(pkgs, error_cls):
+    """Reports named specs in the 'when=' attribute of a directive.
+
+    Note that 'conflicts' is the only directive allowing that.
+    """
+    errors = []
+    for pkg_name in pkgs:
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+
+        def _extracts_errors(triggers, summary):
+            _errors = []
+            for trigger in list(triggers):
+                when_spec = spack.spec.Spec(trigger)
+                if when_spec.name is not None and when_spec.name != pkg_name:
+                    details = [f"using '{trigger}', should be '^{trigger}'"]
+                    _errors.append(error_cls(summary=summary, details=details))
+            return _errors
+
+        for dname, triggers in pkg_cls.dependencies.items():
+            summary = f"{pkg_name}: wrong 'when=' condition for the '{dname}' dependency"
+            errors.extend(_extracts_errors(triggers, summary))
+
+        for vname, (variant, triggers) in pkg_cls.variants.items():
+            summary = f"{pkg_name}: wrong 'when=' condition for the '{vname}' variant"
+            errors.extend(_extracts_errors(triggers, summary))
+
+        for provided, triggers in pkg_cls.provided.items():
+            summary = f"{pkg_name}: wrong 'when=' condition for the '{provided}' virtual"
+            errors.extend(_extracts_errors(triggers, summary))
+
+        for _, triggers in pkg_cls.requirements.items():
+            triggers = [when_spec for when_spec, _, _ in triggers]
+            summary = f"{pkg_name}: wrong 'when=' condition in 'requires' directive"
+            errors.extend(_extracts_errors(triggers, summary))
+
+        triggers = list(pkg_cls.patches)
+        summary = f"{pkg_name}: wrong 'when=' condition in 'patch' directives"
+        errors.extend(_extracts_errors(triggers, summary))
+
+        triggers = list(pkg_cls.resources)
+        summary = f"{pkg_name}: wrong 'when=' condition in 'resource' directives"
+        errors.extend(_extracts_errors(triggers, summary))
+
+    return llnl.util.lang.dedupe(errors)
 
 
 #: Sanity checks on package directives
