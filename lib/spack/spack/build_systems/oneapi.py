@@ -173,6 +173,14 @@ class IntelOneApiLibraryPackage(IntelOneApiPackage):
         return find_headers("*", include_path, recursive=True)
 
     @property
+    def sdk_include(self):
+        return join_path(self.component_prefix, "sdk", "include")
+
+    @property
+    def sdk_headers(self):
+        return find_headers("*", self.sdk_include, recursive=True)
+
+    @property
     def libs(self):
         lib_path = join_path(self.component_prefix, "lib", "intel64")
         lib_path = lib_path if isdir(lib_path) else dirname(lib_path)
