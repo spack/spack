@@ -17,6 +17,13 @@ class Dpcpp(CMakePackage):
     git = "https://github.com/intel/llvm.git"
 
     version("develop", branch="sycl")
+
+    version(
+        "2023-10",
+        sha256="5b68d973cd7ad95f3840767117aac60dea30add29f27d882f353eb3675530eef",
+        url="https://github.com/intel/llvm/tarball/f4e0d3177338",
+    )
+    
     version(
         "2023-03",
         sha256="ca85303d712c58316a91a7c97f7c78fa563a29f1669d8b2368d0c8bd92a63068",
