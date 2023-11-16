@@ -40,6 +40,7 @@ import collections
 import collections.abc
 import glob
 import inspect
+import io
 import itertools
 import pathlib
 import pickle
@@ -54,6 +55,7 @@ import spack.patch
 import spack.repo
 import spack.spec
 import spack.util.crypto
+import spack.util.spack_yaml as syaml
 import spack.variant
 
 #: Map an audit tag to a list of callables implementing checks
@@ -246,6 +248,40 @@ def _search_duplicate_specs_in_externals(error_cls):
             details = []
 
         errors.append(error_cls(summary=error_msg, details=details))
+
+    return errors
+
+
+@config_packages
+def _deprecated_preferences(error_cls):
+    """Search package preferences deprecated in v0.21 (and slated for removal in v0.22)"""
+    # TODO (v0.22): remove this audit as the attributes will not be allowed in config
+    errors = []
+    packages_yaml = spack.config.CONFIG.get_config("packages")
+
+    def make_error(attribute_name, config_data, summary):
+        s = io.StringIO()
+        s.write("Occurring in the following file:\n")
+        dict_view = syaml.syaml_dict((k, v) for k, v in config_data.items() if k == attribute_name)
+        syaml.dump_config(dict_view, stream=s, blame=True)
+        return error_cls(summary=summary, details=[s.getvalue()])
+
+    if "all" in packages_yaml and "version" in packages_yaml["all"]:
+        summary = "Using the deprecated 'version' attribute under 'packages:all'"
+        errors.append(make_error("version", packages_yaml["all"], summary))
+
+    for package_name in packages_yaml:
+        if package_name == "all":
+            continue
+
+        package_conf = packages_yaml[package_name]
+        for attribute in ("compiler", "providers", "target"):
+            if attribute not in package_conf:
+                continue
+            summary = (
+                f"Using the deprecated '{attribute}' attribute " f"under 'packages:{package_name}'"
+            )
+            errors.append(make_error(attribute, package_conf, summary))
 
     return errors
 
