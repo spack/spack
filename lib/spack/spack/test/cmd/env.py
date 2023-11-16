@@ -737,9 +737,14 @@ spack:
 
 
 def test_with_config_bad_include_activate(environment_from_manifest, tmpdir):
-    tmpdir.ensure("include1.yaml")
+    env_root = pathlib.Path(tmpdir.ensure('env-root', dir=True))
+    include1 = env_root / "include1.yaml"
+    include1.touch()
+
     abs_include_path = os.path.abspath(tmpdir.join("subdir").ensure("include2.yaml"))
-    e2 = environment_from_manifest(
+
+    spack_yaml = env_root / ev.manifest_name
+    spack_yaml.write_text(
         f"""
 spack:
   include:
@@ -748,17 +753,18 @@ spack:
 """
     )
 
-    with e2:
-        e2.concretize()
+    e = ev.Environment(env_root)
+    with e:
+        e.concretize()
 
     # we've created an environment with some included config files (which do
     # in fact exist): now we remove them and check that we get a sensible
     # error message
 
     os.remove(abs_include_path)
-    os.remove(os.path.join(e2.path, "include1.yaml"))
+    os.remove(include1)
     with pytest.raises(spack.config.ConfigFileError) as exc:
-        ev.activate(e2)
+        ev.activate(e)
 
     err = exc.value.message
     assert "missing include" in err
@@ -856,8 +862,7 @@ spack:
   - {os.path.join(".", include_filename)}
   specs:
   - mpileaks
-""",
-        cfg_paths=[packages_file.strpath],
+"""
     )
 
     e = ev.Environment(env_root)
