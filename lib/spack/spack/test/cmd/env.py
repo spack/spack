@@ -103,6 +103,29 @@ def test_change_match_spec():
     assert any(x.intersects("mpileaks@2.3") for x in e.user_specs)
 
 
+def test_change_requires(environment_from_manifest, mock_packages):
+    e = environment_from_manifest(
+        """
+spack:
+  specs:
+  - mpileaks
+  - hypre
+  - libelf
+  packages:
+    mpileaks:
+      require: "%clang"
+    hypre:
+      require:
+      - one_of: ["@2.29.0", "@2.28.0"]
+
+"""
+    )
+
+    with e:
+        change("--requirements", "mpileaks%gcc")
+        change("--requirements", "--match-spec", "hypre@2.29.0", "@2.28.0")
+
+
 def test_change_multiple_matches():
     env("create", "test")
 
