@@ -161,7 +161,9 @@ class Root(CMakePackage):
     )
     variant("mysql", default=False, description="Enable support for MySQL databases")
     variant("opengl", default=True, description="Enable OpenGL support")
-    variant("oracle", when="@:6.30", default=False, description="Enable support for Oracle databases")
+    variant(
+        "oracle", when="@:6.30", default=False, description="Enable support for Oracle databases"
+    )
     variant("postgres", default=False, description="Enable postgres support")
     variant("pythia6", when="@:6.30", default=False, description="Enable pythia6 support")
     variant("pythia8", default=False, description="Enable pythia8 support")
