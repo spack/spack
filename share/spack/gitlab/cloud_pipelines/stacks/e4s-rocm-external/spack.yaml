@@ -56,6 +56,14 @@ spack:
     paraview:
       # Don't build GUI support or GLX rendering for HPC/container deployments
       require: "@5.11 ~qt+osmesa"
+    umpire:
+      require:
+        - spec: "~mpi"
+          when: "+rocm"
+    caliper:
+      require:
+        - spec: "~mpi"
+          when: "+rocm"
 
     # ROCm 5.4.3
     comgr:
@@ -247,7 +255,7 @@ spack:
   - amrex +rocm amdgpu_target=gfx908
   - arborx +rocm amdgpu_target=gfx908
   - cabana +rocm amdgpu_target=gfx908
-  - caliper ~mpi +rocm amdgpu_target=gfx908
+  - caliper +rocm amdgpu_target=gfx908
   - chai +rocm amdgpu_target=gfx908
   - ecp-data-vis-sdk +paraview +vtkm +rocm amdgpu_target=gfx908
   - exago +mpi +python +raja +hiop +rocm amdgpu_target=gfx908 ~ipopt cxxflags="-Wno-error=non-pod-varargs" ^hiop@1.0.0 ~sparse +mpi +raja +rocm amdgpu_target=gfx908
@@ -269,7 +277,7 @@ spack:
   - superlu-dist +rocm amdgpu_target=gfx908
   - tasmanian ~openmp +rocm amdgpu_target=gfx908
   - trilinos +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack ~ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu ~stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long +rocm amdgpu_target=gfx908
-  - umpire ~mpi +rocm amdgpu_target=gfx908
+  - umpire +rocm amdgpu_target=gfx908
   - upcxx +rocm amdgpu_target=gfx908
   # INCLUDED IN ECP DAV ROCM
   # - hdf5
@@ -288,7 +296,7 @@ spack:
   - amrex +rocm amdgpu_target=gfx90a
   - arborx +rocm amdgpu_target=gfx90a
   - cabana +rocm amdgpu_target=gfx90a
-  - caliper ~mpi +rocm amdgpu_target=gfx90a
+  - caliper +rocm amdgpu_target=gfx90a
   - chai +rocm amdgpu_target=gfx90a
   - ecp-data-vis-sdk +paraview +vtkm +rocm amdgpu_target=gfx90a
   - exago +mpi +python +raja +hiop +rocm amdgpu_target=gfx90a ~ipopt cxxflags="-Wno-error=non-pod-varargs" ^hiop@1.0.0 ~sparse +mpi +raja +rocm amdgpu_target=gfx90a  
@@ -310,7 +318,7 @@ spack:
   - superlu-dist +rocm amdgpu_target=gfx90a
   - tasmanian ~openmp +rocm amdgpu_target=gfx90a
   - trilinos +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack ~ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu ~stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long +rocm amdgpu_target=gfx90a
-  - umpire ~mpi +rocm amdgpu_target=gfx90a
+  - umpire +rocm amdgpu_target=gfx90a
   - upcxx +rocm amdgpu_target=gfx90a
   # INCLUDED IN ECP DAV ROCM
   # - hdf5
