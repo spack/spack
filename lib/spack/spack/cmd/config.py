@@ -266,13 +266,18 @@ def _config_change_requires_scope(spec, scope):
         init_spec = spack.spec.Spec(spec_str)
         # Overridden spec cannot be anonymous
         init_spec.name = spec.name
-        return str(spack.spec.Spec.override(init_spec, spec))
+        if not init_spec.intersects(spec):
+            return str(spack.spec.Spec.override(init_spec, spec))
+        else:
+            # Don't override things if they intersect, otherwise we'd
+            # be e.g. attaching +debug to every single version spec
+            return spec_str
 
     if isinstance(require, str):
         new_require = override_cfg_spec(require)
     else:
         new_require = []
-        for item in new_require:
+        for item in require:
             if "one_of" in item:
                 item["one_of"] = [override_cfg_spec(x) for x in item["one_of"]]
             elif "any_of" in item:

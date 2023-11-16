@@ -48,6 +48,7 @@ env = SpackCommand("env")
 install = SpackCommand("install")
 add = SpackCommand("add")
 change = SpackCommand("change")
+spec_cmd = SpackCommand("spec")
 config = SpackCommand("config")
 remove = SpackCommand("remove")
 concretize = SpackCommand("concretize")
@@ -102,28 +103,6 @@ def test_change_match_spec():
 
     assert not any(x.intersects("mpileaks@2.2") for x in e.user_specs)
     assert any(x.intersects("mpileaks@2.3") for x in e.user_specs)
-
-
-def test_change_requires(environment_from_manifest, mock_packages):
-    e = environment_from_manifest(
-        """
-spack:
-  specs:
-  - mpileaks
-  - hypre
-  - libelf
-  packages:
-    mpileaks:
-      require: "%clang"
-    hypre:
-      require:
-      - one_of: ["@2.29.0", "@2.28.0"]
-"""
-    )
-
-    with e:
-        change("--requirements", "mpileaks%gcc")
-        change("--requirements", "--match-spec", "hypre@2.29.0", "@2.28.0")
 
 
 def test_change_multiple_matches():
@@ -858,7 +837,7 @@ spack:
     assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
 
 
-def test_config_change(mutable_mock_env_path, tmp_path, mock_packages):
+def test_config_change(mutable_mock_env_path, tmp_path, mock_packages, mutable_config):
     """Test included scope and manifest precedence when including a package
     configuration file."""
 
@@ -893,6 +872,12 @@ spack:
     e = ev.Environment(tmp_path)
     with e:
         config("change-requires", "mpich~debug")
+        test_spec = spack.spec.Spec("mpich").concretized()
+        assert test_spec.satisfies("@3.0.2~debug")
+
+        config("change-requires", "mpich@3.0.3")
+        test_spec = spack.spec.Spec("mpich").concretized()
+        assert test_spec.satisfies("@3.0.3")
 
 
 def test_env_with_included_config_file_url(tmpdir, mutable_empty_config, packages_file):
