@@ -286,7 +286,7 @@ def _config_change_requires_scope(spec, scope):
 
 
 def config_change_requires(spec):
-    for scope in spack.config.all_writable_scopes():
+    for scope in spack.config.writable_scopes():
         _config_change_requires_scope(spec, scope)
 
 
@@ -517,5 +517,6 @@ def config(parser, args):
         "update": config_update,
         "revert": config_revert,
         "prefer-upstream": config_prefer_upstream,
+        "change-requires": config_change_requires,
     }
     action[args.config_command](args)
