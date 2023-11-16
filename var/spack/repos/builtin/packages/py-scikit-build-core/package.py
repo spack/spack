@@ -77,7 +77,6 @@ class PyScikitBuildCore(PythonPackage):
     depends_on("py-setuptools", type="test")
     depends_on("py-wheel", type="test")
 
-
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def install_test(self):
