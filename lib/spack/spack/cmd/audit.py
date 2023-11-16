@@ -2,6 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import warnings
+
 import llnl.util.tty as tty
 import llnl.util.tty.colify
 import llnl.util.tty.color as cl
@@ -52,8 +54,10 @@ def setup_parser(subparser):
 
 
 def configs(parser, args):
-    reports = spack.audit.run_group(args.subcommand)
-    _process_reports(reports)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        reports = spack.audit.run_group(args.subcommand)
+        _process_reports(reports)
 
 
 def packages(parser, args):
