@@ -48,15 +48,14 @@ common cases where concretization output may seem surprising at first.
           variants: ~mpi
 
 2. :ref:`Reuse concretization <concretizer-options>` configured in ``concretizer.yaml``
-   overrides preferences. The idea is that avoiding source builds is more important
-   than building a preferred version from sources. When build caches are configured,
-   specs may be reused from a remote location too. Reuse concretization is configured
-   as follows:
+   overrides preferences, since it's typically faster to reuse an existing spec than to
+   build a preferred one from sources. When build caches are enabled, specs may be reused
+   from a remote location too. Reuse concretization is configured as follows:
 
    .. code-block:: yaml
 
       concretizer:
-        reuse: dependencies / true / false
+        reuse: dependencies  # other options are 'true' and 'false'
 
 3. :ref:`Package requirements <package-requirements>` configured in ``packages.yaml``,
    and constraints from the command line as well as ``package.py`` files override all
