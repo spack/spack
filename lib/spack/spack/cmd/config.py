@@ -285,7 +285,8 @@ def _config_change_requires_scope(spec, scope):
     spack.config.CONFIG.set("packages:require", new_require, scope=scope)
 
 
-def config_change_requires(spec):
+def config_change_requires(args):
+    spec = spack.spec.Spec(args.spec)
     for scope in spack.config.writable_scopes():
         _config_change_requires_scope(spec, scope)
 
