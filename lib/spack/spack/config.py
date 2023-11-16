@@ -926,6 +926,9 @@ def scopes():
     """Convenience function to get list of configuration scopes."""
     return CONFIG.scopes
 
+def writable_scopes():
+    return [x for x in CONFIG.scopes if not isinstance(
+        x, (InternalConfigScope, ImmutableConfigScope))]
 
 def _validate_section_name(section):
     """Exit if the section is not a valid section."""

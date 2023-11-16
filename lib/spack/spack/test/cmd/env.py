@@ -117,7 +117,6 @@ spack:
     hypre:
       require:
       - one_of: ["@2.29.0", "@2.28.0"]
-
 """
     )
 

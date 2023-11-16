@@ -79,6 +79,12 @@ def setup_parser(subparser):
     )
     add_parser.add_argument("-f", "--file", help="file from which to set all config values")
 
+    change_requires_parser = sp.add_parser("change-requires", help="swap variants etc. in config")
+    change_requires_parser.add_argument(
+        "spec",
+        help="override spec"
+    )
+
     prefer_upstream_parser = sp.add_parser(
         "prefer-upstream", help="set package preferences from upstream"
     )
@@ -246,6 +252,42 @@ def _can_update_config_file(scope: spack.config.ConfigScope, cfg_file):
     if isinstance(scope, spack.config.SingleFileScope):
         return fs.can_access(cfg_file)
     return fs.can_write_to_dir(scope.path) and fs.can_access(cfg_file)
+
+
+def _config_change_requires_scope(spec, scope):
+    packages = spack.config.CONFIG.get_config("packages", scope=scope)
+
+    require = packages.get(spec.name, {}).get("require", [])
+
+    if not require:
+        return
+
+    def override_cfg_spec(spec_str):
+        init_spec = spack.spec.Spec(spec_str)
+        # Overridden spec cannot be anonymous
+        init_spec.name = spec.name
+        return str(spack.spec.Spec.override(init_spec, spec))
+
+    if isinstance(require, str):
+        require_spec = spack.spec.Spec(require)
+        new_require = str(spack.spec.Spec.override(require_spec, spec))
+    else:
+        new_require = []
+        for item in new_require:
+            if "one_of" in item:
+                item["one_of"] = [override_cfg_spec(x) for x in item["one_of"]]
+            elif "any_of" in item:
+                item["any_of"] = [override_cfg_spec(x) for x in item["any_of"]]
+            elif "spec" in item:
+                item["spec"] = override_cfg_spec(item["spec"])
+            new_require.append(item)
+ 
+    spack.config.CONFIG.set("packages:require", new_require, scope=scope)
+
+
+def config_change_requires(spec):
+    for scope in spack.config.all_writable_scopes():
+        _config_change_requires_scope(spec, scope)
 
 
 def config_update(args):
