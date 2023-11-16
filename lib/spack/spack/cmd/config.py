@@ -84,6 +84,10 @@ def setup_parser(subparser):
         "spec",
         help="override spec"
     )
+    change_requires_parser.add_argument(
+        "--match-spec",
+        help="only change constraints that match this"
+    )
 
     prefer_upstream_parser = sp.add_parser(
         "prefer-upstream", help="set package preferences from upstream"
@@ -254,7 +258,7 @@ def _can_update_config_file(scope: spack.config.ConfigScope, cfg_file):
     return fs.can_write_to_dir(scope.path) and fs.can_access(cfg_file)
 
 
-def _config_change_requires_scope(spec, scope):
+def _config_change_requires_scope(spec, scope, match_spec=None):
     # TODO: an optional match_spec here would allow us to take
     # something like "one_of: [1.0, 1.1]" and replace it with
     # "one_of: [1.0, 1.2]"
@@ -269,7 +273,11 @@ def _config_change_requires_scope(spec, scope):
         init_spec = spack.spec.Spec(spec_str)
         # Overridden spec cannot be anonymous
         init_spec.name = spec.name
-        if not init_spec.intersects(spec):
+        if match_spec and not init_spec.satisfies(match_spec):
+            # If there is a match_spec, don't change constraints that
+            # don't match it
+            return spec_str
+        elif not init_spec.intersects(spec):
             return str(spack.spec.Spec.override(init_spec, spec))
         else:
             # Don't override things if they intersect, otherwise we'd
@@ -294,8 +302,11 @@ def _config_change_requires_scope(spec, scope):
 
 def config_change_requires(args):
     spec = spack.spec.Spec(args.spec)
+    match_spec = None
+    if args.match_spec:
+        match_spec = spack.spec.Spec(args.match_spec)
     for scope in spack.config.writable_scopes():
-        _config_change_requires_scope(spec, scope)
+        _config_change_requires_scope(spec, scope, match_spec=match_spec)
 
 
 def config_update(args):
