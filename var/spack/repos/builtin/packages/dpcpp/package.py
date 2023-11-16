@@ -23,6 +23,8 @@ class Dpcpp(CMakePackage):
         url="https://github.com/intel/llvm/tarball/cb91c232",
     )
 
+    generator("ninja")
+
     version("2021.09", commit="bd68232bb96386bf7649345c0557ba520e73c02d", deprecated=True)
     version("2021.12", commit="27f59d8906fcc8aece7ff6aa570ccdee52168c2d", deprecated=True)
 
