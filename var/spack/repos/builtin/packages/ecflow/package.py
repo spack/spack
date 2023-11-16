@@ -24,6 +24,8 @@ class Ecflow(CMakePackage):
     maintainers("climbfuji", "AlexanderRichert-NOAA")
 
     # https://confluence.ecmwf.int/download/attachments/8650755/ecFlow-5.8.3-Source.tar.gz?api=v2
+    version("5.11.4", sha256="4836a876277c9a65a47a3dc87cae116c3009699f8a25bab4e3afabf160bcf212")
+    version("5.8.4", sha256="bc628556f8458c269a309e4c3b8d5a807fae7dfd415e27416fe9a3f544f88951")
     version("5.8.3", sha256="1d890008414017da578dbd5a95cb1b4d599f01d5a3bb3e0297fe94a87fbd81a6")
     version("4.13.0", sha256="c743896e0ec1d705edd2abf2ee5a47f4b6f7b1818d8c159b521bdff50a403e39")
     version("4.12.0", sha256="566b797e8d78e3eb93946b923ef540ac61f50d4a17c9203d263c4fd5c39ab1d1")
@@ -35,6 +37,14 @@ class Ecflow(CMakePackage):
     )
     variant("ui", default=False, description="Enable ecflow_ui")
     variant("pic", default=False, description="Enable position-independent code (PIC)")
+
+    variant(
+        "cxxstd",
+        default="default",
+        values=("default", "98", "11", "14", "17", "20"),
+        multi=False,
+        description="Use the specified C++ standard when building.",
+    )
 
     extends("python")
 
@@ -98,6 +108,11 @@ class Ecflow(CMakePackage):
         if spec.satisfies("+ssl ^openssl ~shared"):
             ssllibs = ";".join(spec["openssl"].libs + spec["zlib"].libs)
             args.append(self.define("OPENSSL_CRYPTO_LIBRARY", ssllibs))
+
+        if "cxxstd" in spec.variants:
+            cxxstd = spec.variants["cxxstd"].value
+            if ((cxxstd == "17") or (cxxstd == "20")):
+                args.append("-DCMAKE_CXX_FLAGS=-DBOOST_NO_CXX98_FUNCTION_BASE")
 
         return args
 
