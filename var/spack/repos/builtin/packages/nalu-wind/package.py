@@ -184,13 +184,13 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
             )
 
         if "+umpire" in spec:
-            cmake_options.append(self.define("UMPIRE_DIR", spec["umpire"].prefix))
+            args.append(self.define("UMPIRE_DIR", spec["umpire"].prefix))
 
         if "+rocm" in spec:
-            cmake_options.append(self.define("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
-            cmake_options.append(self.define("ENABLE_ROCM", True))
+            args.append(self.define("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
+            args.append(self.define("ENABLE_ROCM", True))
             targets = spec.variants["amdgpu_target"].value
-            cmake_options.append(self.define("GPU_TARGETS", ";".join(str(x) for x in targets)))
+            args.append(self.define("GPU_TARGETS", ";".join(str(x) for x in targets)))
 
         if "darwin" in spec.architecture:
             args.append(self.define("CMAKE_MACOSX_RPATH", "ON"))
