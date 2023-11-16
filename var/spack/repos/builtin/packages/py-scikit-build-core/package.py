@@ -78,7 +78,6 @@ class PyScikitBuildCore(PythonPackage):
     depends_on("py-setuptools", type="test")
     depends_on("py-wheel", type="test")
 
-    depends_on("py-importlib-metadata", type=("build", "run"), when="^python@:3.7")
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
