@@ -10,23 +10,28 @@ from spack.package import *
 class Xmlf90(AutotoolsPackage):
     """xmlf90 is a suite of libraries to handle XML in Fortran."""
 
-    homepage = "https://launchpad.net/xmlf90"
-    url = "https://launchpad.net/xmlf90/trunk/1.5/+download/xmlf90-1.5.4.tar.gz"
+    homepage = "https://xmlf90.readthedocs.io/en/latest/"
+    git = "https://gitlab.com/siesta-project/libraries/xmlf90"
 
     license("BSD-2-Clause")
 
-    version("1.5.4", sha256="a0b1324ff224d5b5ad1127a6ad4f90979f6b127f1a517f98253eea377237bbe4")
-    version("1.5.3", sha256="a5378a5d9df4b617f51382092999eb0f20fa1a90ab49afbccfd80aa51650d27c")
-    version("1.5.2", sha256="666694db793828d1d1e9aea665f75c75ee21772693465a88b43e6370862abfa6")
+    version("1.6.3", tag="1.6.3")
+    version("1.6.2", tag="1.6.2")
+    version("1.6.1", tag="1.6.1")
+    version("1.6.0", tag="1.6.0")
+    version("1.5.6", tag="1.5.6")
+    version("1.5.5", tag="1.5.5")
+    version("1.5.4", tag="xmlf90-1.5.4")
+    version("1.5.3", tag="xmlf90-1.5.3")
+    version("1.5.2", tag="xmlf90-1.5.2")
 
     depends_on("autoconf@2.69:", type="build")
     depends_on("automake@1.14:", type="build")
     depends_on("libtool@2.4.2:", type="build")
     depends_on("m4", type="build")
-
-    def url_for_version(self, version):
-        url = "https://launchpad.net/xmlf90/trunk/{0}/+download/xmlf90-{1}.tar.gz"
-        return url.format(version.up_to(2), version)
+    
+    build_directory = "spack-build"
+    patch("fj_modmakefile.patch", when="%fj")
 
     @when("@1.5.2")
     def autoreconf(self, spec, prefix):
