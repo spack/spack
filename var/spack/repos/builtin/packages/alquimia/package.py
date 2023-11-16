@@ -34,7 +34,7 @@ class Alquimia(CMakePackage):
     depends_on("pflotran@develop", when="@develop")
     depends_on("petsc@3.10:", when="@develop")
 
-    @when("@1.0.10")
+    @when("@1.0.10:1.1.0")
     def patch(self):
         filter_file(
             "use iso_[cC]_binding",

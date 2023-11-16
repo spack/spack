@@ -71,7 +71,7 @@ class Itk(CMakePackage):
     )
 
     def cmake_args(self):
-        use_mkl = "^mkl" in self.spec
+        use_mkl = self.spec["fftw-api"].name in INTEL_MATH_LIBRARIES
         args = [
             self.define("BUILD_SHARED_LIBS", True),
             self.define("ITK_USE_SYSTEM_LIBRARIES", True),
