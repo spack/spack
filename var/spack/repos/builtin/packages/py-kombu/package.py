@@ -32,7 +32,7 @@ class PyKombu(PythonPackage):
     depends_on("py-amqp@5.0.0:5", when="@5.0.0:5.0.2", type=("build", "run"))
     depends_on("py-amqp@5.0.9:5.0", when="@5.2.3", type=("build", "run"))
     depends_on("py-vine", when="@5.1.0:", type=("build", "run"))
-    depends_on("py-importlib-metadata@0.18:", type=("build", "run"), when="python@:3.7")
-    depends_on("py-cached-property", type=("build", "run"), when="python@:3.7")
+    depends_on("py-importlib-metadata@0.18:", type=("build", "run"), when="^python@:3.7")
+    depends_on("py-cached-property", type=("build", "run"), when="^python@:3.7")
 
     depends_on("py-redis@3.4.1:3,4.0.2:", when="+redis", type=("build", "run"))
