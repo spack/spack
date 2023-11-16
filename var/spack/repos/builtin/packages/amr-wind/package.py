@@ -98,7 +98,7 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
         if "+mpi" in self.spec:
             args.append(define("MPI_HOME", self.spec["mpi"].prefix))
 
-        if "+hdf5" in spec:
+        if "+hdf5" in self.spec:
             cmake_options.append(self.define("AMR_WIND_ENABLE_HDF5", True))
             cmake_options.append(self.define("AMR_WIND_ENABLE_HDF5_ZFP", True))
             # Help AMReX understand if HDF5 is parallel or not.
