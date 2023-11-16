@@ -269,8 +269,7 @@ def _config_change_requires_scope(spec, scope):
         return str(spack.spec.Spec.override(init_spec, spec))
 
     if isinstance(require, str):
-        require_spec = spack.spec.Spec(require)
-        new_require = str(spack.spec.Spec.override(require_spec, spec))
+        new_require = override_cfg_spec(require)
     else:
         new_require = []
         for item in new_require:
@@ -282,7 +281,7 @@ def _config_change_requires_scope(spec, scope):
                 item["spec"] = override_cfg_spec(item["spec"])
             new_require.append(item)
  
-    spack.config.CONFIG.set("packages:require", new_require, scope=scope)
+    spack.config.CONFIG.set(f"packages:{spec.name}:require", new_require, scope=scope)
 
 
 def config_change_requires(args):
