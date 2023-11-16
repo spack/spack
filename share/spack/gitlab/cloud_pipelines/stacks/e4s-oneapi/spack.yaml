@@ -17,6 +17,8 @@ spack:
       variants: +mpi
     elfutils:
       variants: +bzip2 ~nls +xz
+    gcc-runtime:
+      require: "%gcc"
     hdf5:
       require: "%gcc"
       variants: +fortran +hl +shared

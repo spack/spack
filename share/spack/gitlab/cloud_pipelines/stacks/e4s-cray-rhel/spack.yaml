@@ -33,6 +33,8 @@ spack:
     elfutils:
       variants: +bzip2 ~nls +xz
       require: "%gcc"
+    gcc-runtime:
+      require: "%gcc"
     hdf5:
       variants: +fortran +hl +shared
     libfabric:
