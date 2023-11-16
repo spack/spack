@@ -45,21 +45,21 @@ class Interproscan(Package):
     )
 
     resource(
-        when="5.56-89.0 +databases",
+        when="@5.56-89.0 +databases",
         name="databases",
         url="https://ftp.ebi.ac.uk/pub/databases/interpro/iprscan/5/5.56-89.0/alt/interproscan-data-5.56-89.0.tar.gz",
         sha256="49cd0c69711f9469f3b68857f4581b23ff12765ca2b12893d18e5a9a5cd8032d",
     )
 
     resource(
-        when="5.38-76.0 +databases",
+        when="@5.38-76.0 +databases",
         name="databases",
         url="https://ftp.ebi.ac.uk/pub/databases/interpro/iprscan/5/5.38-76.0/alt/interproscan-data-5.38-76.0.tar.gz",
         sha256="e05e15d701037504f92ecf849c20317e70df28e78ff1945826b3c1e16d9b9cce",
     )
 
     resource(
-        when="5.36-75.0 +databases",
+        when="@5.36-75.0 +databases",
         name="databases",
         url="https://ftp.ebi.ac.uk/pub/databases/interpro/iprscan/5/5.36-75.0/alt/interproscan-data-5.36-75.0.tar.gz",
         sha256="e9b1e6f2d1c20d06661a31a08c973bc8ddf039a4cf1e45ec4443200375e5d6a4",

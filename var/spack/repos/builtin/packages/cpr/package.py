@@ -18,7 +18,7 @@ class Cpr(CMakePackage):
     version("1.9.2", sha256="3bfbffb22c51f322780d10d3ca8f79424190d7ac4b5ad6ad896de08dbd06bf31")
 
     depends_on("curl")
-    depends_on("git", when="build")
+    depends_on("git", type="build")
 
     def cmake_args(self):
         _force = "_FORCE" if self.spec.satisfies("@:1.9") else ""

@@ -209,7 +209,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("py-protobuf+cpp@3.10.0:4.21.12", type=("build", "run"), when="+pfe")
 
     depends_on("protobuf+shared@3.10.0:3.21.12")
-    depends_on("zlib-api", when="protobuf@3.11.0:")
+    depends_on("zlib-api", when="^protobuf@3.11.0:")
 
     # using cereal@1.3.1 and above requires changing the
     # find_package call to lowercase, so stick with :1.3.0
