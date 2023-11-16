@@ -48,6 +48,7 @@ env = SpackCommand("env")
 install = SpackCommand("install")
 add = SpackCommand("add")
 change = SpackCommand("change")
+config = SpackCommand("config")
 remove = SpackCommand("remove")
 concretize = SpackCommand("concretize")
 stage = SpackCommand("stage")
@@ -855,6 +856,43 @@ spack:
         e.concretize()
 
     assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
+
+
+def test_config_change(mutable_mock_env_path, tmp_path, mock_packages):
+    """Test included scope and manifest precedence when including a package
+    configuration file."""
+
+    included_file = "included-packages.yaml"
+    included_path = tmp_path / included_file
+    with open(included_path, "w") as f:
+        f.write(
+            """\
+packages:
+  mpich:
+    require:
+    - spec: "@3.0.2"
+  libelf:
+    require: "@0.8.10"
+"""
+        )
+
+    spack_yaml = tmp_path / ev.manifest_name
+    spack_yaml.write_text(
+        f"""\
+spack:
+  packages:
+    mpich:
+      require:
+      - spec: "+debug"
+  include:
+  - {os.path.join(".", included_file)}
+  specs: []
+"""
+    )
+
+    e = ev.Environment(tmp_path)
+    with e:
+        config("change-requires", "mpich~debug")
 
 
 def test_env_with_included_config_file_url(tmpdir, mutable_empty_config, packages_file):
