@@ -57,6 +57,11 @@ from spack.fetch_strategy import URLFetchStrategy
 from spack.util.pattern import Bunch
 
 
+@pytest.fixture(scope="session", autouse=True)
+def drop_gcc_runtime():
+    spack.package_base.WITH_GCC_RUNTIME = False
+
+
 def ensure_configuration_fixture_run_before(request):
     """Ensure that fixture mutating the configuration run before the one where
     the function is called.
