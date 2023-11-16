@@ -111,7 +111,7 @@ class Ecflow(CMakePackage):
 
         if "cxxstd" in spec.variants:
             cxxstd = spec.variants["cxxstd"].value
-            if ((cxxstd == "17") or (cxxstd == "20")):
+            if (cxxstd == "17") or (cxxstd == "20"):
                 args.append("-DCMAKE_CXX_FLAGS=-DBOOST_NO_CXX98_FUNCTION_BASE")
 
         return args
