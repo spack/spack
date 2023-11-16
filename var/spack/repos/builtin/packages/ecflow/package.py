@@ -37,14 +37,6 @@ class Ecflow(CMakePackage):
     variant("ui", default=False, description="Enable ecflow_ui")
     variant("pic", default=False, description="Enable position-independent code (PIC)")
 
-    variant(
-        "cxxstd",
-        default="default",
-        values=("default", "98", "11", "14", "17", "20"),
-        multi=False,
-        description="Use the specified C++ standard when building.",
-    )
-
     extends("python")
 
     depends_on("python@3:", type=("build", "run"))
@@ -108,10 +100,8 @@ class Ecflow(CMakePackage):
             ssllibs = ";".join(spec["openssl"].libs + spec["zlib"].libs)
             args.append(self.define("OPENSSL_CRYPTO_LIBRARY", ssllibs))
 
-        if "cxxstd" in spec.variants:
-            cxxstd = spec.variants["cxxstd"].value
-            if (cxxstd == "17") or (cxxstd == "20"):
-                args.append("-DCMAKE_CXX_FLAGS=-DBOOST_NO_CXX98_FUNCTION_BASE")
+        if self.spec.satisfies("@5.8.3:"):
+            args.append("-DCMAKE_CXX_FLAGS=-DBOOST_NO_CXX98_FUNCTION_BASE")
 
         return args
 
