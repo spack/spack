@@ -24,6 +24,7 @@ class Openblas(CMakePackage, MakefilePackage):
     libraries = ["libopenblas", "openblas"]
 
     version("develop", branch="develop")
+    version("0.3.25", sha256="4c25cb30c4bb23eddca05d7d0a85997b8db6144f5464ba7f8c09ce91e2f35543")
     version("0.3.24", sha256="ceadc5065da97bd92404cac7254da66cc6eb192679cf1002098688978d4d5132")
     version("0.3.23", sha256="5d9491d07168a5d00116cdc068a40022c3455bf9293c7cb86a65b1054d7e5114")
     version("0.3.22", sha256="7fa9685926ba4f27cfe513adbf9af64d6b6b63f9dcabb37baefad6a65ff347a7")
