@@ -271,7 +271,11 @@ class Gromacs(CMakePackage, CudaPackage):
     depends_on("cmake@3.18.4:3", type="build", when="@main")
     depends_on("cmake@3.16.0:3", type="build", when="%fj")
     depends_on("cuda", when="+cuda")
-    depends_on("sycl", when="+sycl")
+    requires("%oneapi",
+             "sycl",
+             policy="one_of",
+             when="+sycl",
+             msg="GROMACS SYCL support comes either from oneAPI compiler or a package that provides the virtual package `sycl`, such as AdaptiveCPP")
     depends_on("lapack")
     depends_on("blas")
     depends_on("gcc", when="%oneapi ~intel_provided_gcc")
