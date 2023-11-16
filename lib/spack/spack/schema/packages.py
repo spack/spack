@@ -165,7 +165,7 @@ properties = {
                 "deprecatedProperties": {
                     "properties": ["target", "compiler", "providers"],
                     "message": "setting 'compiler:', 'target:' or 'provider:' preferences in "
-                    "a package specific section of packages.yaml is deprecated, and will be "
+                    "a package-specific section of packages.yaml is deprecated, and will be "
                     "removed in v0.22.\n\n\tThese preferences will be ignored by Spack, and "
                     "can be set only in the 'all' section of the same file. "
                     "You can run:\n\n\t\t$ spack audit configs\n\n\tto get better diagnostics, "
