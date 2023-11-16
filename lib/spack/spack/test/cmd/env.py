@@ -737,7 +737,7 @@ spack:
 
 
 def test_with_config_bad_include_activate(environment_from_manifest, tmpdir):
-    env_root = pathlib.Path(tmpdir.ensure('env-root', dir=True))
+    env_root = pathlib.Path(tmpdir.ensure("env-root", dir=True))
     include1 = env_root / "include1.yaml"
     include1.touch()
 
