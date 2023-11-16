@@ -1,0 +1,47 @@
+spack:
+  view: false
+  modules:
+    default:
+      tcl:
+        include:
+          - py-bba-datafetch
+          - py-bba-data-push
+          - py-bba-webexporter
+          - py-bluepyemodel
+          - py-bluepyemodelnexus
+          - py-data-integrity-check
+          - py-nexusforge
+          - py-nexus-sdk
+          - py-token-fetch
+  packages:
+    hdf5:
+      variants: ~mpi+hl
+    highfive:
+      variants: ~mpi
+    libsonata:
+      variants: ~mpi
+    mvdtool:
+      variants: ~mpi
+    netcdf-c:
+      variants: ~mpi
+    proj:
+      variants: ~curl
+    py-h5py:
+      variants: ~mpi
+    vtk:
+      variants: ~mpi~ffmpeg~opengl2
+      # 9.2 release tarball seems broken in the 2023 deployment
+      require: '@:9.0'
+    py-ipyparallel:
+      # otherwise, 6.3 is picked (cheaper setuptools penalty), and things break
+      require: "@8:"
+  specs:
+    - py-bba-datafetch
+    - py-bba-data-push
+    - py-bba-webexporter
+    - py-bluepyemodel
+    - py-bluepyemodelnexus
+    - py-data-integrity-check
+    - py-nexusforge
+    - py-nexus-sdk
+    - py-token-fetch

@@ -281,6 +281,9 @@ nse:
 science:
   extends: .spack_stage_applications
 
+nexus:
+  extends: .spack_stage_applications
+
 viz:
   extends: .spack_stage_applications
 
