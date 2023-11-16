@@ -153,7 +153,7 @@ class Geant4(CMakePackage):
     patch("geant4-10.4.3-cxx17-removed-features.patch", level=1, when="@10.4.3 cxxstd=17")
 
     # See https://bugzilla-geant4.kek.jp/show_bug.cgi?id=2556
-    patch("package-cache.patch", level=1, when="@10.7.0:11.2.0^cmake@3.17:")
+    patch("package-cache.patch", level=1, when="@10.7.0:11.1.2^cmake@3.17:")
 
     # NVHPC: "thread-local declaration follows non-thread-local declaration"
     conflicts("%nvhpc", when="+threads")
