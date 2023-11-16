@@ -17,6 +17,7 @@ class PyTorchvision(PythonPackage):
     maintainers("adamjstewart")
 
     version("main", branch="main")
+    version("0.16.1", sha256="d31fe52e4540750c8d372b0f38f1bfa81d8261193f2c2c06577332831d203c50")
     version("0.16.0", sha256="79b30b082237e3ead21e74587cedf4a4d832f977cf7dfeccfb65f67988b12ceb")
     version("0.15.2", sha256="1efcb80e0a6e42c54f07ee16167839b4d302aeeecc12839cc47c74b06a2c20d4")
     version("0.15.1", sha256="689d23d4ebb0c7e54e8651c89b17155b64341c14ae4444a04ca7dc6f2b6a0a43")
@@ -62,6 +63,7 @@ class PyTorchvision(PythonPackage):
 
     # https://github.com/pytorch/vision#installation
     depends_on("py-torch@main", when="@main", type=("build", "link", "run"))
+    depends_on("py-torch@2.1.1", when="@0.16.1", type=("build", "link", "run"))
     depends_on("py-torch@2.1.0", when="@0.16.0", type=("build", "link", "run"))
     depends_on("py-torch@2.0.1", when="@0.15.2", type=("build", "link", "run"))
     depends_on("py-torch@2.0.0", when="@0.15.1", type=("build", "link", "run"))

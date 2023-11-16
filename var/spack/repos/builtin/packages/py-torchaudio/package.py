@@ -15,6 +15,7 @@ class PyTorchaudio(PythonPackage):
     submodules = True
 
     version("main", branch="main")
+    version("2.1.1", tag="v2.1.1", commit="db624844f5c95bb7618fe5a5f532bf9b68efeb45")
     version("2.1.0", tag="v2.1.0", commit="6ea1133706801ec6e81bb29142da2e21a8583a0a")
     version("2.0.2", tag="v2.0.2", commit="31de77dad5c89274451b3f5c4bcb630be12787c4")
     version("2.0.1", tag="v2.0.1", commit="3b40834aca41957002dfe074175e900cf8906237")
@@ -56,6 +57,7 @@ class PyTorchaudio(PythonPackage):
     depends_on("sox")
 
     depends_on("py-torch@main", when="@main", type=("build", "link", "run"))
+    depends_on("py-torch@2.1.1", when="@2.1.1", type=("build", "link", "run"))
     depends_on("py-torch@2.1.0", when="@2.1.0", type=("build", "link", "run"))
     depends_on("py-torch@2.0.1", when="@2.0.2", type=("build", "link", "run"))
     depends_on("py-torch@2.0.0", when="@2.0.1", type=("build", "link", "run"))

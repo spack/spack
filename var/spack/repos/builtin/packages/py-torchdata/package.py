@@ -16,6 +16,7 @@ class PyTorchdata(PythonPackage):
     maintainers("adamjstewart")
 
     version("main", branch="main")
+    version("0.7.1", sha256="1b6589336776ccba19fd3bf435588416105d372f6b85d58a9f2b008286f483bf")
     version("0.7.0", sha256="0b444719c3abc67201ed0fea92ea9c4100e7f36551ba0d19a09446cc11154eb3")
     version("0.6.1", sha256="c596db251c5e6550db3f00e4308ee7112585cca4d6a1c82a433478fd86693257")
     version("0.6.0", sha256="048dea12ee96c0ea1525097959fee811d7b38c2ed05f44a90f35f8961895fb5b")
@@ -38,6 +39,7 @@ class PyTorchdata(PythonPackage):
 
     # https://github.com/pytorch/data#version-compatibility
     depends_on("py-torch@main", when="@main", type=("build", "run"))
+    depends_on("py-torch@2.1.1", when="@0.7.1", type=("build", "run"))
     depends_on("py-torch@2.1.0", when="@0.7.0", type=("build", "run"))
     depends_on("py-torch@2.0.1", when="@0.6.1", type=("build", "run"))
     depends_on("py-torch@2.0.0", when="@0.6.0", type=("build", "run"))
