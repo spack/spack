@@ -55,7 +55,6 @@ class PyScikitBuildCore(PythonPackage):
 
     # Dependencies
     depends_on("py-exceptiongroup", when="^python@:3.10", type=("build", "run"))
-    depends_on("py-importlib-metadata", type=("build", "run"), when="@0.3: ^python@:3.7")
     depends_on("py-importlib-resources@1.3:", when="^python@:3.8", type=("build", "run"))
     depends_on("py-packaging@20.9:", type=("build", "run"))
     depends_on("py-tomli@1.1:", when="^python@:3.10", type=("build", "run"))
