@@ -119,7 +119,7 @@ properties = {
                     "properties": ["version"],
                     "message": "setting version preferences in the 'all' section of packages.yaml "
                     "is deprecated and will be removed in v0.22\n\n\tThese preferences "
-                    "will be ignored by Spack. You can set them only in package specific sections "
+                    "will be ignored by Spack. You can set them only in package-specific sections "
                     "of the same file.\n",
                     "error": False,
                 },
@@ -167,7 +167,9 @@ properties = {
                     "message": "setting 'compiler:', 'target:' or 'provider:' preferences in "
                     "a package specific section of packages.yaml is deprecated, and will be "
                     "removed in v0.22.\n\n\tThese preferences will be ignored by Spack, and "
-                    "can be set only in the 'all' section of the same file.\n"
+                    "can be set only in the 'all' section of the same file. "
+                    "You can run:\n\n\t\t$ spack audit configs\n\n\tto get better diagnostics, "
+                    "including files:lines where the deprecated attributes are used.\n\n"
                     "\tUse requirements to enforce conditions on specific packages: "
                     f"{REQUIREMENT_URL}\n",
                     "error": False,
