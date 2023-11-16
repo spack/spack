@@ -255,6 +255,9 @@ def _can_update_config_file(scope: spack.config.ConfigScope, cfg_file):
 
 
 def _config_change_requires_scope(spec, scope):
+    # TODO: an optional match_spec here would allow us to take
+    # something like "one_of: [1.0, 1.1]" and replace it with
+    # "one_of: [1.0, 1.2]"
     packages = spack.config.CONFIG.get_config("packages", scope=scope)
 
     require = packages.get(spec.name, {}).get("require", [])
