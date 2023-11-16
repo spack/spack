@@ -64,7 +64,11 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
     # https://github.com/microsoft/onnxruntime/commit/de4089f8cbe0baffe56a363cc3a41595cc8f0809.patch
     patch("gcc11.patch", level=1, when="@1.7.2")
     # https://github.com/microsoft/onnxruntime/pull/16257
-    patch("stringpiece_1_10.patch", when="@1.10.0")
+    patch(
+        "https://github.com/microsoft/onnxruntime/commit/a3a443c80431c390cbf8855e9c7b2a95d413cd54.patch",
+        sha256="459d52008ffcca408baa9193d63eb228927a9aa9aaa08597c813cd8cdacba00e",
+        when="@1.10.0:1.16.0",
+    )
 
     dynamic_cpu_arch_values = ("NOAVX", "AVX", "AVX2", "AVX512")
 
