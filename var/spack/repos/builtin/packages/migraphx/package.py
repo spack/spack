@@ -131,6 +131,7 @@ class Migraphx(CMakePackage):
     depends_on("py-pybind11", type="build", when="@:4.0.0")
     depends_on("py-pybind11@2.6:", type="build", when="@4.1.0:")
     depends_on("pkgconfig", type="build", when="@5.3.0:")
+    depends_on("abseil-cpp")
 
     for ver in [
         "3.5.0",
