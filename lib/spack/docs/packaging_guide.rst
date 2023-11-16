@@ -2337,7 +2337,7 @@ window while a batch job is running ``spack install`` on the same or
 overlapping dependencies without any process trying to re-do the work of
 another.
 
-For example, if you are using SLURM, you could launch an installation
+For example, if you are using Slurm, you could launch an installation
 of ``mpich`` using the following command:
 
 .. code-block:: console
