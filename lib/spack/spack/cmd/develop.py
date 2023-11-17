@@ -51,12 +51,12 @@ def setup_parser(subparser):
     arguments.add_common_arguments(subparser, ["spec"])
 
 
-def _update_config(spec, path, abspath, modify_scope):
+def _update_config(spec, path, modify_scope):
     dev_specs = spack.config.get("develop", scope=modify_scope)
     if spec.name in dev_specs:
         tty.msg(
             "Updating develop spec {0}:\n\told: {1}\n\tnew: {2}".format(
-                str(spec), dev_specs[spec.name], abspath
+                str(spec), dev_specs[spec.name], path
             )
         )
     else:
@@ -162,7 +162,7 @@ def develop(parser, args):
         env = spack.cmd.require_active_env(cmd_name="develop")
         modify_scope = "env:{0}".format(env.name)
     else:
-        # TODO: if we do not specify an absolute path, and do specify a scope
+        # TODO: if we do not specify an absolute path, and specify a scope
         # associated with a different environment (e.g. as an absolute path),
         # then we would be telling another env to develop a spec with a path
         # in *this* env, which is not likely to be something anyone would want
@@ -173,6 +173,6 @@ def develop(parser, args):
     if env:
         tty.debug("Updating develop config for {0} transactionally".format(env.name))
         with env.write_transaction():
-            _update_config(spec, path, abspath, modify_scope)
+            _update_config(spec, path, modify_scope)
     else:
-        _update_config(spec, path, abspath, modify_scope)
+        _update_config(spec, path, modify_scope)
