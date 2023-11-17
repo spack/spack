@@ -407,7 +407,7 @@ def _relocate_included_configs(root, init_file, init_file_dir):
                 # Relative paths that are inside the init env's directory
                 # are copied into the new env directory. This would only
                 # ever be false if `resolved_path` contains ".."
-                assert fs.path_contains_subdirectory(cfg_abspath, env.path)
+                assert fs.path_contains_subdirectory(cfg_abspath, root)
                 fs.mkdirp(os.path.dirname(cfg_abspath))
                 if init_cfg_abspath != cfg_abspath:
                     shutil.copy(init_cfg_abspath, cfg_abspath)
