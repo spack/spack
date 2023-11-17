@@ -307,7 +307,7 @@ def create(
 
 
 def create_in_dir(
-    manifest_dir: Union[str, pathlib.Path],
+    root: Union[str, pathlib.Path],
     init_file: Optional[Union[str, pathlib.Path]] = None,
     with_view: Optional[Union[str, pathlib.Path, bool]] = None,
     keep_relative: bool = False,
@@ -318,20 +318,20 @@ def create_in_dir(
     are considered manifest files.
 
     Args:
-        manifest_dir: directory where to create the environment.
+        root: directory where to create the environment.
         init_file: either a lockfile, a manifest file, or None
         with_view: whether a view should be maintained for the environment. If the value is a
             string, it specifies the path to the view
         keep_relative: if True, develop paths are copied verbatim into the new environment file,
             otherwise they are made absolute
     """
-    initialize_environment_dir(manifest_dir, envfile=init_file)
+    initialize_environment_dir(root, envfile=init_file)
 
     if with_view is None and keep_relative:
-        return Environment(manifest_dir)
+        return Environment(root)
 
     try:
-        manifest = EnvironmentManifestFile(manifest_dir)
+        manifest = EnvironmentManifestFile(root)
 
         if with_view is not None:
             manifest.set_default_view(with_view)
@@ -339,10 +339,10 @@ def create_in_dir(
         manifest.flush()
 
     except (spack.config.ConfigFormatError, SpackEnvironmentConfigError) as e:
-        shutil.rmtree(manifest_dir)
+        shutil.rmtree(root)
         raise e
 
-    env = Environment(manifest_dir)
+    env = Environment(root)
 
     if not keep_relative and init_file:
         init_file_dir = os.path.abspath(os.path.dirname(init_file))
@@ -350,9 +350,10 @@ def create_in_dir(
         try:
             # Note: the raw yaml is read instead of constructing an env
             # because the Environment/EnvironmentManifestFile objects require
-            # the manifest file in its associated directory be named
-            # "spack.yaml". We want to analyze the "include" property so
-            # we just grab it directly
+            # the manifest file be named "spack.yaml" (and we might be
+            # initializing from a template file with a different name):
+            # We want to analyze the "include" property so we just grab it
+            # directly
             with open(init_file) as f:
                 raw, _ = _read_yaml(f)
                 included_config_files = raw["spack"].get("include", [])
@@ -389,7 +390,7 @@ def create_in_dir(
             # spack.yaml file in another directory, and moreover we want
             # dev paths in this environment to refer to their original
             # locations.
-            with env, fs.working_dir(manifest_dir):
+            with env, fs.working_dir(root):
                 _rewrite_relative_dev_paths_on_relocation(init_file_dir)
 
     return env
