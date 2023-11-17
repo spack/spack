@@ -846,13 +846,10 @@ class PyclingoDriver:
         if not setup.concretize_everything:
             self.control.load(os.path.join(parent_dir, "when_possible.lp"))
 
-        tty.debug(f"Pyclingodriver attrs: {self.__dir__()}")
-        has_propagation = False
         for spec in specs:
-            for dep in spec.traverse(root=True):
-                has_propagation |= self._compiler_flags_has_propagation(dep.compiler_flags)
-        if has_propagation:
-            self.control.load(os.path.join(parent_dir, "propagation.lp"))
+            if self._compiler_flags_has_propagation(spec.compiler_flags):
+                self.control.load(os.path.join(parent_dir, "propagation.lp"))
+                break
 
 
         # Binary compatibility is based on libc on Linux, and on the os tag elsewhere
@@ -943,11 +940,10 @@ class PyclingoDriver:
 
         return result, timer, self.control.statistics
 
-    def _compiler_flag_has_propagation(self, flags):
-        for flag in flags:
-            for flag_type, flag_vals in flag.items():
-                if any(val.propagate for val in flag_vals):
-                    return True
+    def _compiler_flags_has_propagation(self, flags):
+        for _, flag_vals in flags.items():
+            if any(val.propagate for val in flag_vals):
+                return True
         return False
 
 
@@ -1013,12 +1009,6 @@ class ConcreteSpecsByHash(collections.abc.Mapping):
 
     def __iter__(self):
         return iter(self.data)
-
-    def _compiler_flags_has_propagation(self, flags):
-        for _, flag_vals in flags.items():
-            if any(val.propagate for val in flag_vals):
-                return True
-        return False
 
 
 # types for condition caching in solver setup
@@ -1921,7 +1911,7 @@ class SpackSolverSetup:
                 clauses.append(f.node_flag_source(spec.name, flag_type, spec.name))
                 if not spec.concrete and flag.propagate is True:
                     clauses.append(
-                        f.node_flag_possible_prop(spec.name, flag_type, flag, spec.name)
+                        f.node_flag_propagation_candidate(spec.name, flag_type, flag, spec.name)
                     )
 
         # dependencies

@@ -9,12 +9,12 @@
 
 % propagate flags when compiler match
 attr("node_flag_propagate", PackageNode, FlagType, Flag, Source) :- % source is a node() attribute
-  attr("node_flag_possible_prop", PackageNode, FlagType, Flag, Source),
+  attr("node_flag_propagation_candidate", PackageNode, FlagType, Flag, Source),
   not attr("node_flag_set", PackageNode, FlagType, _).
 
-attr("node_flag_possible_prop", PackageNode, FlagType, Flag, Source) :- % source is a node() attribute
+attr("node_flag_propagation_candidate", PackageNode, FlagType, Flag, Source) :- % source is a node() attribute
   same_compiler(ParentNode, PackageNode),
-  attr("node_flag_possible_prop", ParentNode, FlagType, _, Source),
+  attr("node_flag_propagation_candidate", ParentNode, FlagType, _, Source),
   attr("node_flag", Source, FlagType, Flag),
   flag_type(FlagType).
 
