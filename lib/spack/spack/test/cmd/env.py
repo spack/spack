@@ -63,13 +63,9 @@ sep = os.sep
 def environment_from_manifest(tmp_path):
     """Returns a new environment named 'test' from the content of a manifest file."""
 
-    def _create(content, cfg_paths=None):
+    def _create(content):
         spack_yaml = tmp_path / ev.manifest_name
         spack_yaml.write_text(content)
-        cfg_paths = cfg_paths or []
-        for cfg_path in cfg_paths:
-            dst_cfg_path = os.path.join(tmp_path, os.path.basename(cfg_path))
-            shutil.copy(cfg_path, dst_cfg_path)
         return _env_create("test", init_file=str(spack_yaml))
 
     return _create
