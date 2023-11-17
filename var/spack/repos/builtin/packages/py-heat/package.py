@@ -11,7 +11,7 @@ class PyHeat(PythonPackage):
     and machine learning. It provides highly optimized algorithms and data structures for tensor
     computations using CPUs, GPUs and distributed cluster systems on top of MPI."""
 
-    pypi="heat/heat-1.3.0.tar.gz"
+    pypi = "heat/heat-1.3.0.tar.gz"
 
     maintainers("mrfh92", "ClaudiaComito", "JuanPedroGHM")
 
