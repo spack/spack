@@ -372,7 +372,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
         elif self.spec.satisfies("@0.3.19: target=a64fx"):
             # Special case for Fujitsu's A64FX
-            if any(self.spec.satisfies(i) for i in ["%gcc@11:", "%clang", "%fj]):
+            if any(self.spec.satisfies(i) for i in ["%gcc@11:", "%clang", "%fj"]):
                 args.append("TARGET=A64FX")
             else:
                 # fallback to armv8-a+sve without -mtune=a64fx flag
