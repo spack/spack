@@ -903,6 +903,8 @@ def test_env_with_included_config_scope(mutable_mock_env_path, packages_file):
     """Test inclusion of a package file from the environment's configuration
     stage directory. This test is intended to represent a case where a remote
     file has already been staged."""
+    # Side note (not directly related to this PR): I think this test
+    # would need to use a URL as the include to test what it intends
     env_root = mutable_mock_env_path
     config_scope_path = env_root / "config"
 
