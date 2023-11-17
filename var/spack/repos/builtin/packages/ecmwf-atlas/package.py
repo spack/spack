@@ -76,8 +76,8 @@ class EcmwfAtlas(CMakePackage):
 
     @when("+fismahigh")
     def patch(self):
-        filter_file("http://www\.ecmwf\.int", "", "cmake/atlas-import.cmake.in")  # noqa: W605
-        filter_file("int\.ecmwf", "", "cmake/atlas-import.cmake.in")  # noqa: W605
+        filter_file("http://www.ecmwf.int", "", "cmake/atlas-import.cmake.in", string=True)
+        filter_file("int.ecmwf", "", "cmake/atlas-import.cmake.in", string=True)
         filter_file('http[^"]+', "", "cmake/atlas_export.cmake")
         patterns = [".travis.yml", "tools/install*.sh", "tools/github-sha.sh"]
         for pattern in patterns:
