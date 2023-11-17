@@ -344,20 +344,18 @@ def create_in_dir(
 
     env = Environment(root)
 
-    if not init_file:
-        return env
+    if init_file:
+        init_file_dir = os.path.abspath(os.path.dirname(init_file))
 
-    init_file_dir = os.path.abspath(os.path.dirname(init_file))
+        if not keep_relative:
+            if env.path != init_file_dir:
+                # If we are here, we are creating an environment based on an
+                # spack.yaml file in another directory, and moreover we want
+                # dev paths in this environment to refer to their original
+                # locations.
+                _rewrite_relative_dev_paths_on_relocation(env, init_file_dir)
 
-    if not keep_relative and init_file:
-        if env.path != init_file_dir:
-            # If we are here, we are creating an environment based on an
-            # spack.yaml file in another directory, and moreover we want
-            # dev paths in this environment to refer to their original
-            # locations.
-            _rewrite_relative_dev_paths_on_relocation(env, init_file_dir)
-
-    _relocate_included_configs(root, init_file, init_file_dir)
+        _relocate_included_configs(root, init_file, init_file_dir)
 
     return env
 
@@ -442,6 +440,9 @@ def _rewrite_relative_dev_paths_on_relocation(env, init_file_dir):
         spack.config.set("develop", dev_specs, scope=env.env_file_config_scope_name())
 
         env._dev_specs = None
+        # If we changed the environment's spack.yaml scope, that will not be reflected
+        # in the manifest that we read
+        env._re_read()
 
 
 def environment_dir_from_name(name: str, exists_ok: bool = True) -> str:
