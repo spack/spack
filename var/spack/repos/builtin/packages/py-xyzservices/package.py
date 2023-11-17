@@ -10,7 +10,7 @@ class PyXyzservices(PythonPackage):
     """xyzservices is a lightweight library providing a repository of
     available XYZ services offering raster basemap tiles."""
 
-    homepage = "https://xyzservices.readthedocs.io/"
+    homepage = "https://github.com/geopandas/xyzservices"
     pypi = "xyzservices/xyzservices-2023.10.1.tar.gz"
 
     license("BSD-3-Clause")
