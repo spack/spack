@@ -19,4 +19,5 @@ class PyStashcp(PythonPackage):
 
     depends_on("py-setuptools", type="build")
 
+    # import in stashcp.__init.py__ not listed in setup.py
     depends_on("py-urllib3", type=("build", "run"))
