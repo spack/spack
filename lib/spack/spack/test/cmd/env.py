@@ -899,6 +899,35 @@ def test_env_with_included_config_missing_file(tmpdir, mutable_empty_config):
         ev.Environment(tmpdir.strpath)
 
 
+def test_env_with_included_config_scope(mutable_mock_env_path, packages_file):
+    """Test inclusion of a package file from the environment's configuration
+    stage directory. This test is intended to represent a case where a remote
+    file has already been staged."""
+    env_root = mutable_mock_env_path
+    config_scope_path = env_root / "config"
+
+    # Copy the packages.yaml file to the environment configuration
+    # directory, so it is picked up during concretization. (Using
+    # copy instead of rename in case the fixture scope changes.)
+    fs.mkdirp(config_scope_path)
+    include_filename = os.path.basename(packages_file.strpath)
+    included_path = config_scope_path / include_filename
+    fs.copy(packages_file.strpath, included_path)
+
+    # Configure the environment to include file(s) from the environment's
+    # remote configuration stage directory.
+    spack_yaml = env_root / ev.manifest_name
+    spack_yaml.write_text(mpileaks_env_config(config_scope_path))
+
+    # Ensure the concretized environment reflects contents of the
+    # packages.yaml file.
+    e = ev.Environment(env_root)
+    with e:
+        e.concretize()
+
+    assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
+
+
 def test_env_with_included_config_var_path(tmpdir, packages_file):
     """Test inclusion of a package configuration file with path variables
     "staged" in the environment's configuration stage directory."""
