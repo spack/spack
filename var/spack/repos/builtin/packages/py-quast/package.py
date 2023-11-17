@@ -17,9 +17,9 @@ class PyQuast(PythonPackage):
     version("5.0.2", sha256="cdb8f83e20cc38f218ff7172b454280fcb1c7e2dff74e1f8618cacc53d46b48e")
     version("5.0.1", sha256="b1e4443b6598b01faaefddfc0f06fb270414ed4bdaffd0ad9aa420bc0d07d8ad")
     version("5.0.0", sha256="46bba247c7f92c2ccaca8c0abeab2a8d40a257a0cbe2fa0a4ffa981ca0267526")
-    version("4.6.3", sha256="d7f5e670563d17d683f6df057086f7b816b6a088266c6270f7114a1406aaab63")
-    version("4.6.1", sha256="a8071188545710e5c0806eac612daaabde9f730819df2c44be3ffa9317b76a58")
-    version("4.6.0", sha256="6bee86654b457a981718a19acacffca6a3e74f30997ad06162a70fd2a181ca2e")
+    version("4.6.3", sha256="f9267e5deadf20cfe67731a42e775e7ef1d0850927a2a76c4b3d49bc77b1fab5")
+    version("4.6.1", sha256="7ace5bebebe9d2a70ad45e5339f998bd651c1c6b9025f7a3b51f44c87ea5bae0")
+    version("4.6.0", sha256="3a7ee7a2abfeb0541b299b67f263ba95f9743f8809ddf5dfaca9c3c8f9b6a215")
 
     depends_on("boost@1.56.0")
 
