@@ -355,8 +355,7 @@ def create_in_dir(
             # spack.yaml file in another directory, and moreover we want
             # dev paths in this environment to refer to their original
             # locations.
-            with env:
-                _rewrite_relative_dev_paths_on_relocation(init_file_dir)
+            _rewrite_relative_dev_paths_on_relocation(env, init_file_dir)
 
     _relocate_included_configs(root, init_file, init_file_dir)
 
@@ -420,26 +419,29 @@ def _relocate_included_configs(root, init_file, init_file_dir):
         # are assumed valid: no rewriting of the path is attempted.
 
 
-def _rewrite_relative_dev_paths_on_relocation(init_file_dir):
+def _rewrite_relative_dev_paths_on_relocation(env, init_file_dir):
     """When initializing the environment from a manifest file and we plan
     to store the environment in a different directory, we have to rewrite
     relative paths to absolute ones."""
-    dev_specs = spack.config.get("develop", {})
-    if not dev_specs:
-        return
-    for name, entry in dev_specs.items():
-        dev_path = entry["path"]
-        expanded_path = os.path.normpath(os.path.join(init_file_dir, entry["path"]))
+    with env:
+        dev_specs = spack.config.get("develop", default={}, scope=env.env_file_config_scope_name())
+        if not dev_specs:
+            return
+        for name, entry in dev_specs.items():
+            dev_path = entry["path"]
+            expanded_path = os.path.normpath(os.path.join(init_file_dir, entry["path"]))
 
-        # Skip if the expanded path is the same (e.g. when absolute)
-        if dev_path == expanded_path:
-            continue
+            # Skip if the expanded path is the same (e.g. when absolute)
+            if dev_path == expanded_path:
+                continue
 
-        tty.debug("Expanding develop path for {0} to {1}".format(name, expanded_path))
+            tty.debug("Expanding develop path for {0} to {1}".format(name, expanded_path))
 
-        dev_specs[name]["path"] = expanded_path
+            dev_specs[name]["path"] = expanded_path
 
-    spack.config.set("develop", dev_specs)
+        spack.config.set("develop", dev_specs, scope=env.env_file_config_scope_name())
+
+        env._dev_specs = None
 
 
 def environment_dir_from_name(name: str, exists_ok: bool = True) -> str:
