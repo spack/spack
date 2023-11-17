@@ -370,14 +370,14 @@ def _env_create(name_or_path, *, init_file=None, dir=False, with_view=None, keep
         tty.msg("Created environment '%s' in %s" % (name_or_path, env.path))
         tty.msg("You can activate this environment with:")
         tty.msg("  spack env activate %s" % (name_or_path))
-    else:
-        env = ev.create_in_dir(
-            name_or_path, init_file=init_file, with_view=with_view, keep_relative=keep_relative
-        )
-        tty.msg("Created environment in %s" % env.path)
-        tty.msg("You can activate this environment with:")
-        tty.msg("  spack env activate %s" % env.path)
+        return env
 
+    env = ev.create_in_dir(
+        name_or_path, init_file=init_file, with_view=with_view, keep_relative=keep_relative
+    )
+    tty.msg("Created environment in %s" % env.path)
+    tty.msg("You can activate this environment with:")
+    tty.msg("  spack env activate %s" % env.path)
     return env
 
 
