@@ -80,13 +80,9 @@ def setup_parser(subparser):
     add_parser.add_argument("-f", "--file", help="file from which to set all config values")
 
     change_requires_parser = sp.add_parser("change-requires", help="swap variants etc. in config")
+    change_requires_parser.add_argument("spec", help="override spec")
     change_requires_parser.add_argument(
-        "spec",
-        help="override spec"
-    )
-    change_requires_parser.add_argument(
-        "--match-spec",
-        help="only change constraints that match this"
+        "--match-spec", help="only change constraints that match this"
     )
 
     prefer_upstream_parser = sp.add_parser(
@@ -259,9 +255,6 @@ def _can_update_config_file(scope: spack.config.ConfigScope, cfg_file):
 
 
 def _config_change_requires_scope(spec, scope, match_spec=None):
-    # TODO: an optional match_spec here would allow us to take
-    # something like "one_of: [1.0, 1.1]" and replace it with
-    # "one_of: [1.0, 1.2]"
     packages = spack.config.CONFIG.get_config("packages", scope=scope)
 
     require = packages.get(spec.name, {}).get("require", [])
@@ -296,7 +289,7 @@ def _config_change_requires_scope(spec, scope, match_spec=None):
             elif "spec" in item:
                 item["spec"] = override_cfg_spec(item["spec"])
             new_require.append(item)
- 
+
     spack.config.CONFIG.set(f"packages:{spec.name}:require", new_require, scope=scope)
 
 
