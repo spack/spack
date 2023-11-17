@@ -390,7 +390,7 @@ def create_in_dir(
             # spack.yaml file in another directory, and moreover we want
             # dev paths in this environment to refer to their original
             # locations.
-            with env, fs.working_dir(root):
+            with env:
                 _rewrite_relative_dev_paths_on_relocation(init_file_dir)
 
     return env
