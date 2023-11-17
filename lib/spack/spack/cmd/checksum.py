@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import argparse
 import re
 import sys
 
@@ -67,11 +66,18 @@ def setup_parser(subparser):
     modes_parser.add_argument(
         "--verify", action="store_true", default=False, help="verify known package checksums"
     )
-    subparser.add_argument("package", help="package or spec. for example cmake or cmake@3.18")
+    subparser.add_argument("package", help="name or spec (e.g. `cmake` or `cmake@3.18`)")
     subparser.add_argument(
-        "versions", nargs=argparse.REMAINDER, help="versions to generate checksums for"
+        "versions",
+        nargs="*",
+        help="checksum these specific versions (if omitted, Spack searches for remote versions)",
     )
     arguments.add_common_arguments(subparser, ["jobs"])
+    subparser.epilog = (
+        "examples:\n"
+        "  `spack checksum zlib@1.2` autodetects versions 1.2.0 to 1.2.13 from the remote\n"
+        "  `spack checksum zlib 1.2.13` checksums exact version 1.2.13 directly without search\n"
+    )
 
 
 def checksum(parser, args):

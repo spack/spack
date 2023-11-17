@@ -91,6 +91,8 @@ class QtBase(QtPackage):
     url = QtPackage.get_url(__qualname__)
     list_url = QtPackage.get_list_url(__qualname__)
 
+    version("6.6.0", sha256="882f39ea3a40a0894cd64e515ce51711a4fab79b8c47bc0fe0279e99493a62cf")
+    version("6.5.3", sha256="174021c4a630df2e7e912c2e523844ad3cb5f90967614628fd8aa15ddbab8bc5")
     version("6.5.2", sha256="221cafd400c0a992a42746b43ea879d23869232e56d9afe72cb191363267c674")
     version("6.5.1", sha256="fdde60cdc5c899ab7165f1c3f7b93bc727c2484c348f367d155604f5d901bfb6")
     version("6.5.0", sha256="7b0de20e177335927c55c58a3e1a7e269e32b044936e97e9a82564f0f3e69f99")

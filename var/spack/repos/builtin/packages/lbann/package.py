@@ -5,7 +5,6 @@
 
 import os
 import socket
-import sys
 
 from spack.package import *
 
@@ -24,74 +23,15 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     maintainers("bvanessen")
 
     version("develop", branch="develop")
-    version("0.102", sha256="3734a76794991207e2dd2221f05f0e63a86ddafa777515d93d99d48629140f1a")
+    version("benchmarking", branch="benchmarking")
+    version("0.104", sha256="a847c7789082ab623ed5922ab1248dd95f5f89d93eed44ac3d6a474703bbc0bf")
+    version("0.103", sha256="9da1bf308f38323e30cb07f8ecf8efa05c7f50560e8683b9cd961102b1b3e25a")
     version(
-        "0.101",
-        sha256="69d3fe000a88a448dc4f7e263bcb342c34a177bd9744153654528cd86335a1f7",
-        deprecated=True,
-    )
-    version(
-        "0.100",
-        sha256="d1bab4fb6f1b80ae83a7286cc536a32830890f6e5b0c3107a17c2600d0796912",
-        deprecated=True,
-    )
-    version(
-        "0.99",
-        sha256="3358d44f1bc894321ce07d733afdf6cb7de39c33e3852d73c9f31f530175b7cd",
-        deprecated=True,
-    )
-    version(
-        "0.98.1",
-        sha256="9a2da8f41cd8bf17d1845edf9de6d60f781204ebd37bffba96d8872036c10c66",
-        deprecated=True,
-    )
-    version(
-        "0.98",
-        sha256="8d64b9ac0f1d60db553efa4e657f5ea87e790afe65336117267e9c7ae6f68239",
-        deprecated=True,
-    )
-    version(
-        "0.97.1",
-        sha256="2f2756126ac8bb993202cf532d72c4d4044e877f4d52de9fdf70d0babd500ce4",
-        deprecated=True,
-    )
-    version(
-        "0.97",
-        sha256="9794a706fc7ac151926231efdf74564c39fbaa99edca4acb745ee7d20c32dae7",
-        deprecated=True,
-    )
-    version(
-        "0.96",
-        sha256="97af78e9d3c405e963361d0db96ee5425ee0766fa52b43c75b8a5670d48e4b4a",
-        deprecated=True,
-    )
-    version(
-        "0.95",
-        sha256="d310b986948b5ee2bedec36383a7fe79403721c8dc2663a280676b4e431f83c2",
-        deprecated=True,
-    )
-    version(
-        "0.94",
-        sha256="567e99b488ebe6294933c98a212281bffd5220fc13a0a5cd8441f9a3761ceccf",
-        deprecated=True,
-    )
-    version(
-        "0.93",
-        sha256="77bfd7fe52ee7495050f49bcdd0e353ba1730e3ad15042c678faa5eeed55fb8c",
-        deprecated=True,
-    )
-    version(
-        "0.92",
-        sha256="9187c5bcbc562c2828fe619d53884ab80afb1bcd627a817edb935b80affe7b84",
-        deprecated=True,
-    )
-    version(
-        "0.91",
-        sha256="b69f470829f434f266119a33695592f74802cff4b76b37022db00ab32de322f5",
+        "0.102",
+        sha256="3734a76794991207e2dd2221f05f0e63a86ddafa777515d93d99d48629140f1a",
         deprecated=True,
     )
 
-    variant("al", default=True, description="Builds with support for Aluminum Library")
     variant(
         "build_type",
         default="Release",
@@ -99,34 +39,26 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
         values=("Debug", "Release"),
     )
     variant(
-        "conduit",
-        default=True,
-        description="Builds with support for Conduit Library "
-        "(note that for v0.99 conduit is required)",
-    )
-    variant(
         "deterministic",
         default=False,
         description="Builds with support for deterministic execution",
     )
     variant(
-        "dihydrogen", default=True, description="Builds with support for DiHydrogen Tensor Library"
-    )
-    variant(
         "distconv",
         default=False,
+        sticky=True,
         description="Builds with support for spatial, filter, or channel "
         "distributed convolutions",
     )
     variant(
         "dtype",
         default="float",
+        sticky=True,
         description="Type for floating point representation of weights",
         values=("float", "double"),
     )
     variant("fft", default=False, description="Support for FFT operations")
     variant("half", default=False, description="Builds with support for FP16 precision data types")
-    variant("hwloc", default=True, description="Add support for topology aware algorithms")
     variant("nvprof", default=False, description="Build with region annotations for NVPROF")
     variant(
         "numpy", default=False, description="Builds with support for processing NumPy data files"
@@ -139,7 +71,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant("vtune", default=False, description="Builds with support for Intel VTune")
     variant("onednn", default=False, description="Support for OneDNN")
     variant("onnx", default=False, description="Support for exporting models into ONNX format")
-    variant("nvshmem", default=False, description="Support for NVSHMEM")
+    variant("nvshmem", default=False, description="Support for NVSHMEM", when="+distconv")
     variant(
         "python",
         default=True,
@@ -156,6 +88,9 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant("asan", default=False, description="Build with support for address-sanitizer")
     variant("unit_tests", default=False, description="Support for unit testing")
     variant("caliper", default=False, description="Support for instrumentation with caliper")
+    variant(
+        "shared", default=True, sticky=True, description="Enables the build of shared libraries"
+    )
 
     # LBANN benefits from high performance linkers, but passing these in as command
     # line options forces the linker flags to unnecessarily propagate to all
@@ -165,19 +100,12 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     # Don't expose this a dependency until Spack can find the external properly
     # depends_on('binutils+gold', type='build', when='+gold')
 
+    patch("lbann_v0.104_build_cleanup.patch", when="@0.104:")
+
     # Variant Conflicts
-    conflicts("@:0.90,0.99:", when="~conduit")
-    conflicts("@0.90:0.101", when="+fft")
-    conflicts("@:0.90,0.102:", when="~dihydrogen")
     conflicts("~cuda", when="+nvprof")
-    conflicts("~hwloc", when="+al")
     conflicts("~cuda", when="+nvshmem")
     conflicts("+cuda", when="+rocm", msg="CUDA and ROCm support are mutually exclusive")
-
-    conflicts("~vision", when="@0.91:0.101")
-    conflicts("~numpy", when="@0.91:0.101")
-    conflicts("~python", when="@0.91:0.101")
-    conflicts("~pfe", when="@0.91:0.101")
 
     requires("%clang", when="+lld")
 
@@ -188,82 +116,56 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@3.17.0:", type="build")
     depends_on("cmake@3.21.0:", type="build", when="@0.103:")
 
-    # Specify the correct versions of Hydrogen
-    depends_on("hydrogen@:1.3.4", when="@0.95:0.100")
-    depends_on("hydrogen@1.4.0:1.4", when="@0.101:0.101.99")
-    depends_on("hydrogen@1.5.0:", when="@:0.90,0.102:")
+    # Specify the core libraries: Hydrogen, DiHydrogen, Aluminum
+    depends_on("hydrogen@1.5.3:")
+    depends_on("aluminum@1.4.1:")
+    depends_on("dihydrogen@0.2.0:")
+
+    # Align the following variants across Hydrogen and DiHydrogen
+    forwarded_variants = ["cuda", "rocm", "half", "nvshmem"]
+    for v in forwarded_variants:
+        if v != "nvshmem":
+            depends_on("hydrogen +{0}".format(v), when="+{0}".format(v))
+            depends_on("hydrogen ~{0}".format(v), when="~{0}".format(v))
+        if v != "al" and v != "half":
+            depends_on("dihydrogen +{0}".format(v), when="+{0}".format(v))
+            depends_on("dihydrogen ~{0}".format(v), when="~{0}".format(v))
+        if v == "cuda" or v == "rocm":
+            depends_on("aluminum +{0} +nccl".format(v), when="+{0}".format(v))
 
     # Add Hydrogen variants
     depends_on("hydrogen +openmp +shared +int64")
-    depends_on("hydrogen +openmp_blas", when=sys.platform != "darwin")
-    depends_on("hydrogen ~al", when="~al")
-    depends_on("hydrogen +al", when="+al")
-    depends_on("hydrogen ~cuda", when="~cuda")
-    depends_on("hydrogen +cuda", when="+cuda")
-    depends_on("hydrogen ~half", when="~half")
-    depends_on("hydrogen +half", when="+half")
-    depends_on("hydrogen ~rocm", when="~rocm")
-    depends_on("hydrogen +rocm", when="+rocm")
     depends_on("hydrogen build_type=Debug", when="build_type=Debug")
 
-    # Older versions depended on Elemental not Hydrogen
-    depends_on("elemental +openmp_blas +shared +int64", when="@0.91:0.94")
-    depends_on(
-        "elemental +openmp_blas +shared +int64 build_type=Debug",
-        when="build_type=Debug @0.91:0.94",
-    )
-
-    # Specify the correct version of Aluminum
-    depends_on("aluminum@:0.3", when="@0.95:0.100 +al")
-    depends_on("aluminum@0.4.0:0.4", when="@0.101:0.101.99 +al")
-    depends_on("aluminum@0.5.0:", when="@:0.90,0.102: +al")
+    # Add DiHydrogen variants
+    depends_on("dihydrogen +distconv", when="+distconv")
+    depends_on("dihydrogen@develop", when="@develop")
 
     # Add Aluminum variants
-    depends_on("aluminum +cuda +nccl", when="+al +cuda")
-    depends_on("aluminum +rocm +rccl", when="+al +rocm")
+    depends_on("aluminum@master", when="@develop")
 
-    depends_on("dihydrogen@0.2.0:", when="@:0.90,0.102:")
-    depends_on("dihydrogen +openmp", when="+dihydrogen")
-    depends_on("dihydrogen +openmp_blas", when=sys.platform != "darwin")
-    depends_on("dihydrogen ~cuda", when="+dihydrogen ~cuda")
-    depends_on("dihydrogen +cuda", when="+dihydrogen +cuda")
-    depends_on("dihydrogen ~al", when="+dihydrogen ~al")
-    depends_on("dihydrogen +al", when="+dihydrogen +al")
-    depends_on("dihydrogen +distconv +cuda", when="+distconv +cuda")
-    depends_on("dihydrogen +distconv +rocm", when="+distconv +rocm")
-    depends_on("dihydrogen ~half", when="+dihydrogen ~half")
-    depends_on("dihydrogen +half", when="+dihydrogen +half")
-    depends_on("dihydrogen ~nvshmem", when="+dihydrogen ~nvshmem")
-    depends_on("dihydrogen +nvshmem", when="+dihydrogen +nvshmem")
-    depends_on("dihydrogen ~rocm", when="+dihydrogen ~rocm")
-    depends_on("dihydrogen +rocm", when="+dihydrogen +rocm")
-    depends_on("dihydrogen@0.1", when="@0.101:0.101.99 +dihydrogen")
-    depends_on("dihydrogen@:0.0,0.2:", when="@:0.90,0.102: +dihydrogen")
-    conflicts("~dihydrogen", when="+distconv")
+    depends_on("hdf5+mpi", when="+distconv")
 
     for arch in CudaPackage.cuda_arch_values:
         depends_on("hydrogen cuda_arch=%s" % arch, when="+cuda cuda_arch=%s" % arch)
-        depends_on("aluminum cuda_arch=%s" % arch, when="+al +cuda cuda_arch=%s" % arch)
-        depends_on("dihydrogen cuda_arch=%s" % arch, when="+dihydrogen +cuda cuda_arch=%s" % arch)
+        depends_on("aluminum cuda_arch=%s" % arch, when="+cuda cuda_arch=%s" % arch)
+        depends_on("dihydrogen cuda_arch=%s" % arch, when="+cuda cuda_arch=%s" % arch)
         depends_on("nccl cuda_arch=%s" % arch, when="+cuda cuda_arch=%s" % arch)
 
     # variants +rocm and amdgpu_targets are not automatically passed to
     # dependencies, so do it manually.
     for val in ROCmPackage.amdgpu_targets:
         depends_on("hydrogen amdgpu_target=%s" % val, when="amdgpu_target=%s" % val)
-        depends_on("aluminum amdgpu_target=%s" % val, when="+al amdgpu_target=%s" % val)
-        depends_on("dihydrogen amdgpu_target=%s" % val, when="+dihydrogen amdgpu_target=%s" % val)
+        depends_on("aluminum amdgpu_target=%s" % val, when="amdgpu_target=%s" % val)
+        depends_on("dihydrogen amdgpu_target=%s" % val, when="amdgpu_target=%s" % val)
 
     depends_on("roctracer-dev", when="+rocm +distconv")
 
-    depends_on("cudnn", when="@0.90:0.100 +cuda")
-    depends_on("cudnn@8.0.2:", when="@:0.90,0.101: +cuda")
-    depends_on("cub", when="@0.94:0.98.2 +cuda ^cuda@:10")
-    depends_on("cutensor", when="@:0.90,0.102: +cuda")
+    depends_on("cudnn@8.0.2:", when="+cuda")
+    depends_on("cutensor", when="+cuda")
     depends_on("hipcub", when="+rocm")
     depends_on("mpi")
-    depends_on("hwloc@1.11:", when="@:0.90,0.102: +hwloc")
-    depends_on("hwloc@1.11.0:1.11", when="@0.95:0.101 +hwloc")
+    depends_on("hwloc@1.11:")
     depends_on("hwloc +cuda +nvml", when="+cuda")
     depends_on("hwloc@2.3.0:", when="+rocm")
     depends_on("hiptt", when="+rocm")
@@ -291,9 +193,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     # Note that conduit defaults to +fortran +parmetis +python, none of which are
     # necessary by LBANN: you may want to disable those options in your
     # packages.yaml
-    depends_on("conduit@0.4.0: +hdf5", when="@0.94:0 +conduit")
-    depends_on("conduit@0.5.0:0.6 +hdf5", when="@0.100:0.101 +conduit")
-    depends_on("conduit@0.6.0: +hdf5", when="@:0.90,0.99:")
+    depends_on("conduit@0.6.0: +hdf5")
 
     # LBANN can use Python in two modes 1) as part of an extensible framework
     # and 2) to drive the front end model creation and launch
@@ -303,13 +203,13 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     extends("python", when="+python")
 
     # Python front end and possible extra packages
-    depends_on("python@3: +shared", type=("build", "run"), when="@:0.90,0.99: +pfe")
+    depends_on("python@3: +shared", type=("build", "run"), when="+pfe")
     extends("python", when="+pfe")
     depends_on("py-setuptools", type="build", when="+pfe")
-    depends_on("py-protobuf+cpp@3.10.0:", type=("build", "run"), when="@:0.90,0.99: +pfe")
+    depends_on("py-protobuf+cpp@3.10.0:4.21.12", type=("build", "run"), when="+pfe")
 
-    depends_on("protobuf+shared@3.10.0:", when="@:0.90,0.99:")
-    depends_on("zlib-api", when="protobuf@3.11.0:")
+    depends_on("protobuf+shared@3.10.0:3.21.12")
+    depends_on("zlib-api", when="^protobuf@3.11.0:")
 
     # using cereal@1.3.1 and above requires changing the
     # find_package call to lowercase, so stick with :1.3.0
@@ -323,7 +223,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("onnx", when="+onnx")
     depends_on("nvshmem", when="+nvshmem")
 
-    depends_on("spdlog", when="@:0.90,0.102:")
+    depends_on("spdlog@1.11.0")
     depends_on("zstr")
 
     depends_on("caliper+adiak+mpi", when="+caliper")
@@ -331,6 +231,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     generator("ninja")
 
     def setup_build_environment(self, env):
+        env.append_flags("CXXFLAGS", "-fno-omit-frame-pointer")
         if self.spec.satisfies("%apple-clang"):
             env.append_flags("CPPFLAGS", self.compiler.openmp_flag)
             env.append_flags("CFLAGS", self.spec["llvm-openmp"].headers.include_flags)
@@ -344,10 +245,15 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
         return sys_type
 
     @property
+    def libs(self):
+        shared = True if "+shared" in self.spec else False
+        return find_libraries("liblbann", root=self.prefix, shared=shared, recursive=True)
+
+    @property
     def cache_name(self):
         hostname = socket.gethostname()
         # Get a hostname that has no node identifier
-        hostname = hostname.rstrip("1234567890")
+        hostname = hostname.rstrip("1234567890-")
         return "LBANN_{0}_{1}-{2}-{3}@{4}.cmake".format(
             hostname,
             self.spec.version,
@@ -360,6 +266,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         entries = super().initconfig_compiler_entries()
         entries.append(cmake_cache_string("CMAKE_CXX_STANDARD", "17"))
+        entries.append(cmake_cache_option("BUILD_SHARED_LIBS", "+shared" in spec))
         if not spec.satisfies("^cmake@3.23.0"):
             # There is a bug with using Ninja generator in this version
             # of CMake
@@ -429,12 +336,9 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
         cmake_variant_fields = [
             ("LBANN_WITH_CNPY", "numpy"),
             ("LBANN_DETERMINISTIC", "deterministic"),
-            ("LBANN_WITH_HWLOC", "hwloc"),
-            ("LBANN_WITH_ALUMINUM", "al"),
             ("LBANN_WITH_ADDRESS_SANITIZER", "asan"),
             ("LBANN_WITH_BOOST", "boost"),
             ("LBANN_WITH_CALIPER", "caliper"),
-            ("LBANN_WITH_CONDUIT", "conduit"),
             ("LBANN_WITH_NVSHMEM", "nvshmem"),
             ("LBANN_WITH_FFT", "fft"),
             ("LBANN_WITH_ONEDNN", "onednn"),
@@ -449,6 +353,9 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
         for opt, val in cmake_variant_fields:
             entries.append(self.define_cmake_cache_from_variant(opt, val))
 
+        entries.append(cmake_cache_option("LBANN_WITH_ALUMINUM", True))
+        entries.append(cmake_cache_option("LBANN_WITH_CONDUIT", True))
+        entries.append(cmake_cache_option("LBANN_WITH_HWLOC", True))
         entries.append(cmake_cache_option("LBANN_WITH_ROCTRACER", "+rocm +distconv" in spec))
         entries.append(cmake_cache_option("LBANN_WITH_TBINF", False))
         entries.append(
@@ -481,7 +388,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
                 )
             )
 
-        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_DIHYDROGEN", "dihydrogen"))
+        entries.append(cmake_cache_option("LBANN_WITH_DIHYDROGEN", True))
         entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_DISTCONV", "distconv"))
 
         # IF IBM ESSL is used it needs help finding the proper LAPACK libraries

@@ -621,7 +621,7 @@ aws-isc-aarch64-build:
 
 tutorial-generate:
   extends: [ ".tutorial", ".generate-x86_64"]
-  image: ghcr.io/spack/tutorial-ubuntu-22.04:v2023-05-07
+  image: ghcr.io/spack/tutorial-ubuntu-22.04:v2023-10-30
 
 tutorial-build:
   extends: [ ".tutorial", ".build" ]
@@ -894,16 +894,16 @@ e4s-cray-rhel-build:
   variables:
     SPACK_CI_STACK_NAME: e4s-cray-sles
 
-# e4s-cray-sles-generate:
-#   extends: [ ".generate-cray-sles", ".e4s-cray-sles" ]
+e4s-cray-sles-generate:
+  extends: [ ".generate-cray-sles", ".e4s-cray-sles" ]
 
-# e4s-cray-sles-build:
-#   extends: [ ".build", ".e4s-cray-sles" ]
-#   trigger:
-#     include:
-#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-#         job: e4s-cray-sles-generate
-#     strategy: depend
-#   needs:
-#     - artifacts: True
-#       job: e4s-cray-sles-generate
+e4s-cray-sles-build:
+  extends: [ ".build", ".e4s-cray-sles" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-cray-sles-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-cray-sles-generate
