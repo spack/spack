@@ -4,14 +4,14 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import inspect
 import os
-
 from typing import Optional, Tuple
 
 import llnl.util.filesystem as fs
 
-from spack.directives import build_system, depends_on
 import spack.package_base
 import spack.util.url
+from spack.directives import build_system, depends_on
+
 from ._checks import BaseBuilder
 
 
@@ -76,10 +76,7 @@ class GoBuilder(BaseBuilder):
         """Computes the standard Go arguments for a generic package"""
         buildmode = "default"
 
-        args = [
-            "build",
-            "-buildmode", buildmode,
-        ]
+        args = ["build", "-buildmode", buildmode]
 
         return args
 
@@ -93,10 +90,7 @@ class GoBuilder(BaseBuilder):
 
     def build(self, pkg, spec, prefix):
         """Runs ``go build`` in the source directory"""
-        options = [
-            "-C",
-            os.path.abspath(self.root_main_go_dir),
-        ]
+        options = ["-C", os.path.abspath(self.root_main_go_dir)]
         options += self.std_go_args
         options += self.go_args()
         with fs.working_dir(self.build_directory, create=True):
