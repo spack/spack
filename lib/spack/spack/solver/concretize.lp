@@ -110,7 +110,6 @@ unification_set(SetID, VirtualNode)
 
 % Node attributes that have multiple node arguments (usually, only the first argument is a node)
 multiple_nodes_attribute("node_flag_source").
-multiple_nodes_attribute("node_flag_possible_prop").
 multiple_nodes_attribute("depends_on").
 multiple_nodes_attribute("virtual_on_edge").
 multiple_nodes_attribute("provider_set").
@@ -1243,6 +1242,30 @@ attr("node_flag_compiler_default", PackageNode)
 
 % if a flag is set to something or inherited, it's included
 attr("node_flag", PackageNode, FlagType, Flag) :- attr("node_flag_set", PackageNode, FlagType, Flag).
+
+attr("node_flag_propagate", PackageNode, FlagType, Flag, Source) :-
+  attr("node_flag_propagation_candidate", PackageNode, FlagType, Flag, Source),
+  not attr("node_flag_set", PackageNode, FlagType, _).
+
+% source is a node() attribute
+attr("node_flag_propagation_candidate", PackageNode, FlagType, Flag, Source) :-
+  same_compiler(ParentNode, PackageNode),
+  attr("node_flag_propagation_candidate", ParentNode, FlagType, _, Source),
+  attr("node_flag", Source, FlagType, Flag),
+  flag_type(FlagType).
+
+error(100, "{0} and {1} cannot both propagate compiler flags '{2}' to {3}", Source1, Source2, PackageNode, FlagType) :-
+  same_compiler(Source1, PackageNode),
+  same_compiler(Source2, PackageNode),
+  attr("node_flag_propagate", _, FlagType, _, Source1),
+  attr("node_flag_propagate", _, FlagType, _, Source2),
+  Source1 < Source2.
+
+attr("node_flag_source", PackageNode, FlagType, Q)
+  :- attr("node_flag_propagate", PackageNode, FlagType, _, Q).
+
+attr("node_flag", PackageNode, FlagType, Flag) :- attr("node_flag_propagate", PackageNode, FlagType, Flag, _).
+
 
 % if no node flags are set for a type, there are no flags.
 attr("no_flags", PackageNode, FlagType)
