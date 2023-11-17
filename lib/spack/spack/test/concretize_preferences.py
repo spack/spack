@@ -504,3 +504,12 @@ mpich:
         with spack.config.override("packages:sticky-variant", {"variants": "+allow-gcc"}):
             s = Spec("sticky-variant %gcc").concretized()
             assert s.satisfies("%gcc") and s.satisfies("+allow-gcc")
+
+    @pytest.mark.regression("41134")
+    def test_default_preference_variant_different_type_does_not_error(self):
+        """Tests that a different type for an existing variant in the 'all:' section of
+        packages.yaml doesn't fail with an error.
+        """
+        with spack.config.override("packages:all", {"variants": "+foo"}):
+            s = Spec("a").concretized()
+            assert s.satisfies("foo=bar")
