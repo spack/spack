@@ -34,7 +34,7 @@ def undevelop(parser, args):
     # TODO: until it's possible to specify a full .yaml path as a scope, it
     # only makes sense to undevelop specs that are mentioned in the config
     # that is stored in spack.yaml
-    env = spack.cmd.require_active_env(cmd_name="develop")
+    env = spack.cmd.require_active_env(cmd_name="undevelop")
 
     # TODO: if a user undevelops something in their active environment, but
     # lower scope also specifies that the spec is being developed, the only
