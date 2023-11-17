@@ -39,7 +39,7 @@ class Hydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
         values=("Debug", "Release"),
     )
     variant("int64", default=False, description="Use 64-bit integers")
-    variant("al", default=False, description="Use Aluminum communication library")
+    variant("al", default=True, sticky=True, description="Use Aluminum communication library")
     variant(
         "cub", default=True, when="+cuda", description="Use CUB/hipCUB for GPU memory management"
     )
@@ -90,6 +90,7 @@ class Hydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
     # Note that this forces us to use OpenBLAS until #1712 is fixed
     depends_on("openblas", when="blas=openblas")
     depends_on("openblas +ilp64", when="blas=openblas +int64_blas")
+    depends_on("openblas@0.3.21:0.3.23", when="blas=openblas arch=ppc64le:")
 
     depends_on("intel-mkl", when="blas=mkl")
     depends_on("intel-mkl +ilp64", when="blas=mkl +int64_blas")
