@@ -53,19 +53,24 @@ class FoamExtend(Package):
     and owner of the OPENFOAM trademark.
     """
 
+    maintainers("hoehnp")
     homepage = "http://www.extend-project.de/"
 
+    version("5.0", git="http://git.code.sf.net/p/foam-extend/foam-extend-5.0.git")
     version("4.1", git="http://git.code.sf.net/p/foam-extend/foam-extend-4.1.git")
     version("4.0", git="http://git.code.sf.net/p/foam-extend/foam-extend-4.0.git")
     version("3.2", git="http://git.code.sf.net/p/foam-extend/foam-extend-3.2.git")
-    version("3.1", git="http://git.code.sf.net/p/foam-extend/foam-extend-3.1.git")
-    version("3.0", git="http://git.code.sf.net/p/foam-extend/foam-extend-3.0.git")
+
+    conflicts("%gcc@12:", when="@5.0")
+    conflicts("%gcc@8:", when="@4.1")
+    conflicts("%gcc@5.0:", when="@4.0")
+    conflicts("%gcc@4.9:", when="@3.2")
 
     # variant('int64', default=False,
     #         description='Compile with 64-bit label')
     variant("float32", default=False, description="Compile with 32-bit scalar (single-precision)")
     variant("paraview", default=False, description="Build paraview plugins (eg, paraFoam)")
-    variant("scotch", default=True, description="With scotch for decomposition")
+    variant("scotch", default=False, description="With scotch for decomposition")
     variant("ptscotch", default=True, description="With ptscotch for decomposition")
     variant("metis", default=True, description="With metis for decomposition")
     variant("parmetis", default=True, description="With parmetis for decomposition")
@@ -76,12 +81,16 @@ class FoamExtend(Package):
 
     depends_on("mpi")
     depends_on("python")
-    depends_on("zlib-api")
+    depends_on("zlib")
     depends_on("flex", type="build")
     depends_on("cmake", type="build")
 
-    depends_on("scotch~metis", when="~ptscotch+scotch")
-    depends_on("scotch~metis+mpi", when="+ptscotch")
+    depends_on("scotch@6.0.0~metis", when="@3.0:3.2~ptscotch+scotch")
+    depends_on("scotch@6.0.0~metis+mpi", when="@3.0:3.2+ptscotch")
+    depends_on("scotch@6.0.4~metis", when="@4.0:4.1~ptscotch+scotch")
+    depends_on("scotch@6.0.4~metis+mpi", when="@4.0:4.1+ptscotch")
+    depends_on("scotch~metis", when="@5.0~ptscotch+scotch")
+    depends_on("scotch~metis+mpi", when="@5.0+ptscotch")
     depends_on("metis@5:", when="+metis")
     depends_on("parmetis", when="+parmetis")
     # mgridgen is statically linked
@@ -201,9 +210,28 @@ class FoamExtend(Package):
         """Relative location of architecture-specific libraries"""
         return join_path("lib", self.foam_arch)
 
+    def rename_source(self):
+        """This is fairly horrible.
+        The github tarfiles have weird names that do not correspond to the
+        canonical name. We need to rename these, but leave a symlink for
+        spack to work with.
+        """
+        # Note that this particular OpenFOAM requires absolute directories
+        # to build correctly!
+        parent = os.path.dirname(self.stage.source_path)
+        original = os.path.basename(self.stage.source_path)
+        target = "foam-extend-{0}".format(self.version)
+        # Could also grep through etc/bashrc for WM_PROJECT_VERSION
+        with working_dir(parent):
+            if original != target and not os.path.lexists(target):
+                os.rename(original, target)
+                os.symlink(target, original)
+                tty.info("renamed {0} -> {1}".format(original, target))
+
     def patch(self):
         """Adjust OpenFOAM build for spack.
         Where needed, apply filter as an alternative to normal patching."""
+        self.rename_source()
         add_extra_files(self, self.common, self.assets)
 
         # Adjust ParMGridGen - this is still a mess
@@ -261,7 +289,7 @@ class FoamExtend(Package):
             },
             "flex": {"FLEX_SYSTEM": 1, "FLEX_DIR": spec["flex"].prefix},
             "bison": {"BISON_SYSTEM": 1, "BISON_DIR": spec["flex"].prefix},
-            "zlib": {"ZLIB_SYSTEM": 1, "ZLIB_DIR": spec["zlib-api"].prefix},
+            "zlib": {"ZLIB_SYSTEM": 1, "ZLIB_DIR": spec["zlib"].prefix},
         }
         # Adjust configuration via prefs - sort second
         self.etc_prefs["001"].update(self.foam_arch.foam_dict())
