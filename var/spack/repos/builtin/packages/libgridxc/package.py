@@ -8,7 +8,7 @@ import os
 from spack.package import *
 
 
-class Libgridxc(MakefilePackage):
+class Libgridxc(AutotoolsPackage):
     """A library to compute the exchange and correlation energy and potential
     in spherical (i.e. an atom) or periodic systems.
     """
@@ -17,6 +17,12 @@ class Libgridxc(MakefilePackage):
     git = "https://gitlab.com/siesta-project/libraries/libgridxc.git"
     url = "https://gitlab.com/siesta-project/libraries/libgridxc/-/archive/libgridxc-0.9.6/libgridxc-libgridxc-0.9.6.tar.gz"
 
+    variant("mpi", default=False, description="Build with MPI support")
+    
+    version("master", branch="master")
+    version("2.0.0", tag="2.0.0")
+    version("1.1.2", tag="1.1.2")
+    version("1.1.0", tag="1.1.0")
     version("0.9.6", sha256="3b89ccc02d65729ea2d7cb291ae1d9b53acd65c1fd144e8846362cffb71b114a")
     version("0.9.5", sha256="98aa34dbaffe360ff332606eebb7c842994244a3114015d89c5a3850298c40aa")
     version("0.9.1", sha256="346735e30dd3a4099532a985b7a491f6d2b882954a527bdac655d87232be5341")
@@ -26,6 +32,7 @@ class Libgridxc(MakefilePackage):
     version("0.8.0", sha256="ff89b3302f850d1d9f651951e4ade20dfa4c71c809a2d86382c6797392064c9c")
     version("0.7.6", sha256="058b80f40c85997eea0eae3f15b7cc8105f817e59564106308b22f57a03b216b")
 
+    depends_on("mpi", when="+mpi")
     depends_on("autoconf@2.69:", type="build")
     depends_on("automake@1.14:", type="build")
     depends_on("libtool@2.4.2:", type="build")
@@ -42,13 +49,21 @@ class Libgridxc(MakefilePackage):
             sh("../src/config.sh")
             copy("../extra/fortran.mk", "fortran.mk")
 
-    @property
-    def build_targets(self):
-        args = ["PREFIX={0}".format(self.prefix), "FC=fc"]
+    def configure_args(self):
+        args = ["--prefix={0}".format(self.prefix)]
         if self.spec.satisfies("@0.8.0:"):
             args += ["WITH_LIBXC=1", "LIBXC_ROOT={0}".format(self.spec["libxc"].prefix)]
+        if self.spec.satisfies("+mpi"):
+            args += ["--enable-multiconfig","--with-mpi"]
+            args += ["CC={0}".format(self.spec["mpi"].mpicc)]
+            args += ["FC={0}".format(self.spec["mpi"].mpifc)]
+        else:
+            args.append("FC=fc")
+        if self.spec.satisfies("%fj"):
+            args += ["--enable-nec-compat"]
         return args
 
+    @when("@:0.9.6")
     def install(self, spec, prefix):
         mkdirp(join_path(self.prefix, "share", "org.siesta-project"))
         install(
