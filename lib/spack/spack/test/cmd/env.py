@@ -837,8 +837,9 @@ spack:
 
 
 def test_config_change(mutable_mock_env_path, tmp_path, mock_packages, mutable_config):
-    """Test included scope and manifest precedence when including a package
-    configuration file."""
+    """Test ``config change`` with config in the ``spack.yaml`` as well as an
+    included file scope.
+    """
 
     included_file = "included-packages.yaml"
     included_path = tmp_path / included_file
