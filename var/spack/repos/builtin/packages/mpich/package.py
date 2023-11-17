@@ -55,7 +55,7 @@ class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant("hydra", default=True, description="Build the hydra process manager")
     variant("romio", default=True, description="Enable ROMIO MPI I/O implementation")
     variant("verbs", default=False, description="Build support for OpenFabrics verbs.")
-    variant("slurm", default=False, description="Enable SLURM support")
+    variant("slurm", default=False, description="Enable Slurm support")
     variant("wrapperrpath", default=True, description="Enable wrapper rpath")
     variant(
         "pmi",
