@@ -344,6 +344,9 @@ def create_in_dir(
 
     env = Environment(root)
 
+    if not init_file:
+        return env
+
     init_file_dir = os.path.abspath(os.path.dirname(init_file))
 
     if not keep_relative and init_file:
@@ -354,6 +357,28 @@ def create_in_dir(
             # locations.
             with env:
                 _rewrite_relative_dev_paths_on_relocation(init_file_dir)
+
+    _relocate_included_configs(root, init_file, init_file_dir)
+
+    return env
+
+
+def _relocate_included_configs(root, init_file, init_file_dir):
+    """If ``init_file`` is in a different directory from ``root`` (the
+    root of the env we are creating), then copy any included config files
+    to our current environment.
+
+    Only do this for relative config files that are stored in (or under)
+    the same directory as ``init_file``.
+
+    Note that included config files may use config variables like $spack,
+    and if``init_file`` is associated with a different spack instance,
+    then these config variables may not expand correctly.
+    """
+    if fs.path_contains_subdirectory(os.path.abspath(root), init_file_dir):
+        # The manifest file we are initializing with lives in the
+        # root of the env: no relocation is required.
+        return
 
     try:
         # Note: the raw yaml is read instead of constructing an env
@@ -368,7 +393,7 @@ def create_in_dir(
     except spack.config.ConfigFormatError:
         # We were not able to parse this as a spack.yaml file (this would
         # happen if for example we were initializing from a lockfile)
-        return env
+        return
 
     for path in included_config_files:
         resolved_path = substitute_path_variables(path)
@@ -377,7 +402,7 @@ def create_in_dir(
             if not os.path.exists(init_cfg_abspath):
                 msg = f"Cannot locate {init_cfg_abspath} in {init_file_dir}"
                 raise spack.config.ConfigFileError(msg)
-            cfg_abspath = os.path.join(env.path, resolved_path)
+            cfg_abspath = os.path.join(root, resolved_path)
             if fs.path_contains_subdirectory(init_cfg_abspath, init_file_dir):
                 # Relative paths that are inside the init env's directory
                 # are copied into the new env directory. This would only
@@ -386,14 +411,13 @@ def create_in_dir(
                 fs.mkdirp(os.path.dirname(cfg_abspath))
                 if init_cfg_abspath != cfg_abspath:
                     shutil.copy(init_cfg_abspath, cfg_abspath)
-                # If the init file comes from the environment's directory
-                # then there is nothing to copy
+            # Else: the init file is referring to a config file that is
+            # managed outside its associated env
+
         # Else: is assumed that absolute paths will be accessible (this
         # includes paths with Spack config variables like "$spack").
         # Likewise, relative paths that point outside of the env directory
         # are assumed valid: no rewriting of the path is attempted.
-
-    return env
 
 
 def _rewrite_relative_dev_paths_on_relocation(init_file_dir):
