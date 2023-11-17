@@ -52,6 +52,7 @@ from spack.build_systems.octave import OctavePackage
 from spack.build_systems.oneapi import (
     INTEL_MATH_LIBRARIES,
     IntelOneApiLibraryPackage,
+    IntelOneApiLibraryPackageWithSdk,
     IntelOneApiPackage,
     IntelOneApiStaticLibraryList,
 )
