@@ -2927,57 +2927,6 @@ class EnvironmentManifestFile(collections.abc.Mapping):
 
         self.set_default_view(view=False)
 
-    def add_develop_spec(self, pkg_name: str, entry: Dict[str, str]) -> None:
-        """Adds a develop spec to the manifest file
-
-        Args:
-            pkg_name: name of the package to be developed
-            entry: spec and path of the developed package
-        """
-        # The environment sets the path to pkg_name is that is implicit
-        if entry["path"] == pkg_name:
-            entry.pop("path")
-
-        self.pristine_configuration.setdefault("develop", {}).setdefault(pkg_name, {}).update(
-            entry
-        )
-        self.configuration.setdefault("develop", {}).setdefault(pkg_name, {}).update(entry)
-        self.changed = True
-
-    def remove_develop_spec(self, pkg_name: str) -> None:
-        """Removes a develop spec from the manifest file
-
-        Args:
-            pkg_name: package to be removed from development
-
-        Raises:
-            SpackEnvironmentError: if there is nothing to remove
-        """
-        try:
-            del self.pristine_configuration["develop"][pkg_name]
-        except KeyError as e:
-            msg = f"cannot remove '{pkg_name}' from develop specs in {self}, entry does not exist"
-            raise SpackEnvironmentError(msg) from e
-        del self.configuration["develop"][pkg_name]
-        self.changed = True
-
-    def absolutify_dev_paths(self, init_file_dir: Union[str, pathlib.Path]) -> None:
-        """Normalizes the dev paths in the environment with respect to the directory where the
-        initialization file resides.
-
-        Args:
-            init_file_dir: directory with the "spack.yaml" used to initialize the environment.
-        """
-        init_file_dir = pathlib.Path(init_file_dir).absolute()
-        for _, entry in self.pristine_configuration.get("develop", {}).items():
-            expanded_path = os.path.normpath(str(init_file_dir / entry["path"]))
-            entry["path"] = str(expanded_path)
-
-        for _, entry in self.configuration.get("develop", {}).items():
-            expanded_path = os.path.normpath(str(init_file_dir / entry["path"]))
-            entry["path"] = str(expanded_path)
-        self.changed = True
-
     def flush(self) -> None:
         """Synchronizes the object with the manifest file on disk."""
         if not self.changed:
