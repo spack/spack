@@ -32,7 +32,7 @@ class PyIsort(PythonPackage):
     depends_on("python@3.8:", when="@5.12:", type=("build", "run"))
     # This needs to be @3.6 since for bootstrapping the current Spack interpreter is
     # identified by major.minor (and the new versioning identifies it as @=3.6)
-    depends_on("python@3.6", when="@5:5.10", type=("build", "run"))
+    depends_on("python@3.6:", when="@5:", type=("build", "run"))
     depends_on("py-setuptools", when="@:4", type=("build", "run"))
     depends_on("py-poetry-core@1:", when="@5:", type="build")
     depends_on("py-colorama@0.4.3:", when="+colors @5.12:", type=("build", "run"))
