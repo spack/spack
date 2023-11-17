@@ -109,6 +109,11 @@ class Hpctoolkit(AutotoolsPackage):
         "python", default=False, description="Support unwinding Python source.", when="@2023.03:"
     )
 
+    with when("@develop build_system=autotools"):
+        depends_on("autoconf", type="build")
+        depends_on("automake", type="build")
+        depends_on("libtool", type="build")
+
     boost_libs = (
         "+atomic +chrono +date_time +filesystem +system +thread +timer"
         " +graph +regex +shared +multithreaded visibility=global"

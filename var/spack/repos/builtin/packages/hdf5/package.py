@@ -207,6 +207,7 @@ class Hdf5(CMakePackage):
     variant("hl", default=False, description="Enable the high-level library")
     variant("cxx", default=False, description="Enable C++ support")
     variant("map", when="@1.14:", default=False, description="Enable MAP API support")
+    variant("subfiling", when="@1.14:", default=False, description="Enable Subfiling VFD support")
     variant("fortran", default=False, description="Enable Fortran support")
     variant("java", when="@1.10:", default=False, description="Enable Java support")
     variant("threadsafe", default=False, description="Enable thread-safe capabilities")
@@ -329,7 +330,7 @@ class Hdf5(CMakePackage):
 
     patch("fortran-kinds.patch", when="@1.10.7")
 
-    # This patch may only be needed with GCC11.2 on macOS, but it's valid for
+    # This patch may only be needed with GCC 11.2 on macOS, but it's valid for
     # any of the head HDF5 versions as of 12/2021. Since it's impossible to
     # tell what Fortran version is part of a mixed apple-clang toolchain on
     # macOS (which is the norm), and this might be an issue for other compilers
@@ -607,6 +608,7 @@ class Hdf5(CMakePackage):
                 # are enabled but the tests are disabled.
                 spec.satisfies("@1.8.22+shared+tools"),
             ),
+            self.define_from_variant("HDF5_ENABLE_SUBFILING_VFD", "subfiling"),
             self.define_from_variant("HDF5_ENABLE_MAP_API", "map"),
             self.define("HDF5_ENABLE_Z_LIB_SUPPORT", True),
             self.define_from_variant("HDF5_ENABLE_SZIP_SUPPORT", "szip"),
