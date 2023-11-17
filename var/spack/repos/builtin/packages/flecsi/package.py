@@ -42,7 +42,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     variant("shared", default=True, description="Build shared libraries")
     variant("flog", default=False, description="Enable logging support")
     variant("graphviz", default=False, description="Enable GraphViz Support")
-    variant("doc", default=False, description="Enable documentation")
+    variant("doc", default=False, description="Enable documentation", when="@2.2:")
     variant("hdf5", default=True, description="Enable HDF5 Support")
     variant(
         "caliper_detail",
@@ -124,11 +124,11 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("openmpi@4.1.0:", when="@2.0: ^openmpi")
 
     # FleCSI 2.2+ documentation dependencies
-    depends_on("py-sphinx", when="@2.2: +doc")
-    depends_on("py-sphinx-rtd-theme", when="@2.2: +doc")
-    depends_on("py-recommonmark", when="@2.2: +doc")
-    depends_on("doxygen", when="@2.2: +doc")
-    depends_on("graphviz", when="@2.2: +doc")
+    depends_on("py-sphinx", when="+doc")
+    depends_on("py-sphinx-rtd-theme", when="+doc")
+    depends_on("py-recommonmark", when="+doc")
+    depends_on("doxygen", when="+doc")
+    depends_on("graphviz", when="+doc")
 
     # Propagate cuda_arch requirement to dependencies
     for _flag in CudaPackage.cuda_arch_values:
@@ -199,7 +199,6 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
                 self.define_from_variant("ENABLE_KOKKOS", "kokkos"),
                 self.define_from_variant("ENABLE_OPENMP", "openmp"),
                 self.define_from_variant("ENABLE_DOXYGEN", "doxygen"),
-                self.define_from_variant("ENABLE_DOCUMENTATION", "doc"),
                 self.define_from_variant("ENABLE_COVERAGE_BUILD", "coverage"),
                 self.define_from_variant("ENABLE_FLOG", "flog"),
                 self.define_from_variant("ENABLE_FLECSIT", "tutorial"),
