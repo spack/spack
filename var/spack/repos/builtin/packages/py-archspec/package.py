@@ -20,4 +20,4 @@ class PyArchspec(PythonPackage):
     version("0.2.0", sha256="6aaba5ebdb5c3633c400d8c221a6a18716da0c64b367a8509f4217b22e91a5f5")
 
     depends_on("py-poetry-core@1.0.0:", type="build")
-    depends_on("py-click@8", type=("build", "run"))
+    depends_on("py-click@8", type=("build", "run"), when="@:0.2.0")
