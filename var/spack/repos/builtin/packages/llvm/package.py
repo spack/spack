@@ -428,6 +428,12 @@ class Llvm(CMakePackage, CudaPackage):
         when="@14:15",
     )
 
+    # missing <cstdint> include
+    patch(
+        "https://github.com/llvm/llvm-project/commit/ff1681ddb303223973653f7f5f3f3435b48a1983.patch?full_index=1",
+        sha256="c6ca6b925f150e8644ce756023797b7f94c9619c62507231f979edab1c09af78",
+        when="@6:13",
+    )
     # fix building of older versions of llvm with newer versions of glibc
     for compiler_rt_as in ["project", "runtime"]:
         with when("compiler-rt={0}".format(compiler_rt_as)):
