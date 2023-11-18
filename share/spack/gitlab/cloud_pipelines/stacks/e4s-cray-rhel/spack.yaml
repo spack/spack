@@ -157,6 +157,9 @@ spack:
   - matrix:
     - [$specs]
     - ["%gcc"]
+    exclude:
+    - slepc               # slepc: ERROR: Unable to link with PETSc
+    - py-petsc4py         # py-petsc4py: gcc: error: unrecognized command-line option '-Qunused-arguments'
 
   # - alquimia            # pflotran: petsc-3.19.4-c6pmpdtpzarytxo434zf76jqdkhdyn37/lib/petsc/conf/rules:169: material_aux.o] Error 1: fortran errors
   # - amrex               # disabled temporarily pending resolution of unreproducible CI failure
