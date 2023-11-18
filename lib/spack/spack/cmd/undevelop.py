@@ -7,7 +7,6 @@ import llnl.util.tty as tty
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
-import spack.environment as ev
 
 description = "remove specs from an environment"
 section = "environments"
@@ -56,10 +55,9 @@ def undevelop(parser, args):
     else:
         remove_specs = spack.cmd.parse_specs(args.specs)
 
-    env = ev.active_environment()
-    if env:
-        with env.write_transaction():
-            _update_config(remove_specs, remove_all)
+    env = spack.cmd.require_active_env(cmd_name="undevelop")
+    with env.write_transaction():
+        _update_config(remove_specs, remove_all)
 
     updated_all_dev_specs = set(spack.config.get("develop"))
     remove_spec_names = set(x.name for x in remove_specs)
