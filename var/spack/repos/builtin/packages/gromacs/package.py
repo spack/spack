@@ -90,9 +90,26 @@ class Gromacs(CMakePackage, CudaPackage):
         default=False,
         description="Produces a double precision version of the executables",
     )
-    variant("cufftmp", default=False, when="+cuda+mpi", description="Enable Multi GPU FFT support")
+    variant(
+        "cufftmp",
+        default=False,
+        when="@2022: +cuda+mpi",
+        description="Enable multi-GPU FFT support with cuFFTMp",
+    )
+    variant(
+        "heffte",
+        default=False,
+        when="@2021: +sycl+mpi",
+        description="Enable multi-GPU FFT support with HeFFTe",
+    )
     variant("opencl", default=False, description="Enable OpenCL support")
-    variant("sycl", default=False, description="Enable SYCL support")
+    variant("sycl", default=False, when="@2021:", description="Enable SYCL support")
+    variant(
+        "intel-data-center-gpu-max",
+        default=False,
+        when="@2022:",
+        description="Enable support for Intel Data Center GPU Max",
+    )
     variant("nosuffix", default=False, description="Disable default suffixes")
     variant(
         "build_type",
@@ -107,6 +124,18 @@ class Gromacs(CMakePackage, CudaPackage):
             "RelWithAssert",
             "Profile",
         ),
+    )
+    variant(
+        "nblib",
+        default=True,
+        when="@2021:",
+        description="Build and install the NB-LIB C++ API for GROMACS",
+    )
+    variant(
+        "gmxapi",
+        default=True,
+        when="@2019:",
+        description="Build and install the gmxlib python API for GROMACS",
     )
     variant(
         "mdrun_only",
@@ -254,6 +283,7 @@ class Gromacs(CMakePackage, CudaPackage):
     depends_on("cp2k@8.1:", when="+cp2k")
 
     depends_on("nvhpc", when="+cufftmp")
+    depends_on("heffte", when="+heffte")
 
     requires(
         "%intel",
@@ -515,6 +545,19 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                 f'-DcuFFTMp_ROOT={self.spec["nvhpc"].prefix}/Linux_{self.spec.target.family}'
                 + f'/{self.spec["nvhpc"].version}/math_libs'
             )
+
+        if "+heffte" in self.spec:
+            options.append("-DGMX_USE_HEFFTE=on")
+            options.append(f'-DHeffte_ROOT={self.spec["heffte"].prefix}')
+
+        if "+intel-data-center-gpu-max" in self.spec:
+            options.append("-DGMX_GPU_NB_CLUSTER_SIZE=8")
+            options.append("-DGMX_GPU_NB_NUM_CLUSTER_PER_CELL_X=1")
+
+        if "~nblib" in self.spec:
+            options.append("-DGMX_INSTALL_NBLIB_API=OFF")
+        if "~gmxapi" in self.spec:
+            options.append("-DGMXAPI=OFF")
 
         # Activate SIMD based on properties of the target
         target = self.spec.target
