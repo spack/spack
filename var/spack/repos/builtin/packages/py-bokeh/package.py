@@ -30,6 +30,7 @@ class PyBokeh(PythonPackage):
     depends_on("python@3.6:", type=("build", "run"), when="@2.3.3:")
     depends_on("python@3.7:", type=("build", "run"), when="@2.4.0:")
     depends_on("python@3.8:", type=("build", "run"), when="@3.0.0:")
+    depends_on("python@3.9:", type=("build", "run"), when="@3.2.0:")
 
     depends_on("py-requests@1.2.3:", type=("build", "run"), when="@0.12.2")
     depends_on("py-six@1.5.2:", type=("build", "run"), when="@:1.3.4")
@@ -38,7 +39,7 @@ class PyBokeh(PythonPackage):
     depends_on("py-jinja2@2.7:", type=("build", "run"))
     depends_on("py-jinja2@2.9:", type=("build", "run"), when="@2.3.3:")
 
-    depends_on("py-contourpy@1", type=("build", "run"), when="@3:")
+    depends_on("py-contourpy@1:", type=("build", "run"), when="@3:")
 
     depends_on("py-numpy@1.7.1:", type=("build", "run"))
     depends_on("py-numpy@1.11.3:", type=("build", "run"), when="@2.3.3:")
@@ -56,7 +57,7 @@ class PyBokeh(PythonPackage):
     depends_on("py-tornado@4.3:", type=("build", "run"))
     depends_on("py-tornado@5.1:", type=("build", "run"), when="@2.3.3:")
 
-    depends_on("py-typing-extensions@3.7.4:", type=("build", "run"), when="@2.3.3:")
-    depends_on("py-typing-extensions@3.10.0:", type=("build", "run"), when="@2.4.0:")
+    depends_on("py-typing-extensions@3.7.4:", type=("build", "run"), when="@2.3.3:3.0.0")
+    depends_on("py-typing-extensions@3.10.0:", type=("build", "run"), when="@2.4.0:3.0.0")
 
     depends_on("py-xyzservices@2021.09.1:", type=("build", "run"), when="@3:")
