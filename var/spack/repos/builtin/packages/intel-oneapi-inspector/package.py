@@ -7,7 +7,7 @@ from spack.package import *
 
 
 @IntelOneApiPackage.update_description
-class IntelOneapiInspector(IntelOneApiPackage):
+class IntelOneapiInspector(IntelOneApiLibraryPackageWithSdk):
     """Intel Inspector is a dynamic memory and threading error debugger
     for C, C++, and Fortran applications that run on Windows and Linux
     operating systems.  Save money: locate the root cause of memory,

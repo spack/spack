@@ -713,7 +713,7 @@ class ErrorHandler:
         (condition_id, set_id) in which the latter idea means that the condition represented by
         the former held in the condition set represented by the latter.
         """
-        seen = set(seen) | set(cause)
+        seen.add(cause)
         parents = [c for e, c in condition_causes if e == cause and c not in seen]
         local = "required because %s " % conditions[cause[0]]
 
@@ -812,7 +812,14 @@ class ErrorHandler:
         errors = sorted(
             [(int(priority), msg, args) for priority, msg, *args in error_args], reverse=True
         )
-        msg = self.message(errors)
+        try:
+            msg = self.message(errors)
+        except Exception as e:
+            msg = (
+                f"unexpected error during concretization [{str(e)}]. "
+                f"Please report a bug at https://github.com/spack/spack/issues"
+            )
+            raise spack.error.SpackError(msg)
         raise UnsatisfiableSpecError(msg)
 
 
@@ -1922,7 +1929,7 @@ class SpackSolverSetup:
             node_flag = fn.attr("node_flag_set")
             node_flag_source = fn.attr("node_flag_source")
             node_flag_propagate = fn.attr("node_flag_propagate")
-            variant_propagate = fn.attr("variant_propagate")
+            variant_propagation_candidate = fn.attr("variant_propagation_candidate")
 
         class Body:
             node = fn.attr("node")
@@ -1936,7 +1943,7 @@ class SpackSolverSetup:
             node_flag = fn.attr("node_flag")
             node_flag_source = fn.attr("node_flag_source")
             node_flag_propagate = fn.attr("node_flag_propagate")
-            variant_propagate = fn.attr("variant_propagate")
+            variant_propagation_candidate = fn.attr("variant_propagation_candidate")
 
         f = Body if body else Head
 
@@ -1985,7 +1992,9 @@ class SpackSolverSetup:
                 clauses.append(f.variant_value(spec.name, vname, value))
 
                 if variant.propagate:
-                    clauses.append(f.variant_propagate(spec.name, vname, value, spec.name))
+                    clauses.append(
+                        f.variant_propagation_candidate(spec.name, vname, value, spec.name)
+                    )
 
                 # Tell the concretizer that this is a possible value for the
                 # variant, to account for things like int/str values where we

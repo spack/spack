@@ -31,7 +31,9 @@ class Qwt(QMakePackage):
     depends_on("qt+tools", when="+designer")
     depends_on("qt+opengl", when="+opengl")
 
-    depends_on("qt")
+    # Qwt does not support Qt6; this picks the right qmake provider
+    conflicts("^qt-base", msg="Qwt requires Qt5")
+
     # the qt@5.14.2 limitation was lifted in qwt@6.1.5
     # https://sourceforge.net/p/qwt/code/HEAD/tree/tags/qwt-6.1.6/CHANGES-6.1
     depends_on("qt@:5.14.2", when="@:6.1.4")
