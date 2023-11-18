@@ -20,6 +20,7 @@ class PyPygithub(PythonPackage):
     depends_on("python@3.7:", type=("build", "run"), when="@1.57:")
 
     depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools-scm", type="build", when="@1.58.1:")
     depends_on("py-pynacl@1.4.0:", type=("build", "run"))
     depends_on("py-python-dateutil", type=("build", "run"), when="@2.1.0:")
     depends_on("py-requests@2.14.0:", type=("build", "run"))
