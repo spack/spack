@@ -12,6 +12,8 @@ class PyGitpython(PythonPackage):
     homepage = "https://gitpython.readthedocs.org"
     pypi = "GitPython/GitPython-3.1.12.tar.gz"
 
+    version("3.1.40", sha256="22b126e9ffb671fdd0c129796343a02bf67bf2994b35449ffc9321aa755e18a4")
+    version("3.1.34", sha256="85f7d365d1f6bf677ae51039c1ef67ca59091c7ebd5a3509aa399d4eda02d6dd")
     version("3.1.27", sha256="1c885ce809e8ba2d88a29befeb385fcea06338d3640712b59ca623c220bb5704")
     version("3.1.24", sha256="df83fdf5e684fef7c6ee2c02fc68a5ceb7e7e759d08b694088d0cacb4eba59e5")
     version("3.1.23", sha256="aaae7a3bfdf0a6db30dc1f3aeae47b71cd326d86b936fe2e158aa925fdf1471c")
