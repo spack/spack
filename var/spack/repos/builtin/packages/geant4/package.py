@@ -22,6 +22,7 @@ class Geant4(CMakePackage):
 
     maintainers("drbenmorgan")
 
+    version("11.1.3", sha256="5d9a05d4ccf8b975649eab1d615fc1b8dce5937e01ab9e795bffd04149240db6")
     version("11.1.2", sha256="e9df8ad18c445d9213f028fd9537e174d6badb59d94bab4eeae32f665beb89af")
     version("11.1.1", sha256="c5878634da9ba6765ce35a469b2893044f4a6598aa948733da8436cdbfeef7d2")
     version("11.1.0", sha256="c4a23f2f502efeab56de43a4412b21f65c7ca1b0877b9bc1d7e845ee12edf70a")
@@ -152,7 +153,7 @@ class Geant4(CMakePackage):
     patch("geant4-10.4.3-cxx17-removed-features.patch", level=1, when="@10.4.3 cxxstd=17")
 
     # See https://bugzilla-geant4.kek.jp/show_bug.cgi?id=2556
-    patch("package-cache.patch", level=1, when="@10.7.0:11.2.0^cmake@3.17:")
+    patch("package-cache.patch", level=1, when="@10.7.0:11.1.2^cmake@3.17:")
 
     # NVHPC: "thread-local declaration follows non-thread-local declaration"
     conflicts("%nvhpc", when="+threads")
