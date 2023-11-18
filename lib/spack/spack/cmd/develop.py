@@ -51,23 +51,50 @@ def setup_parser(subparser):
     arguments.add_common_arguments(subparser, ["spec"])
 
 
-def _update_config(spec, path, modify_scope):
-    dev_specs = spack.config.get("develop", scope=modify_scope)
-    if spec.name in dev_specs:
-        tty.msg(
-            "Updating develop spec {0}:\n\told: {1}\n\tnew: {2}".format(
-                str(spec), dev_specs[spec.name], path
-            )
-        )
-    else:
-        tty.msg("New development spec: {0}".format(str(spec)))
+def _update_config(spec, path):
+    dev_configs = spack.config.matched_config("develop")
 
     entry = {"spec": str(spec)}
     if path != spec.name:
         entry["path"] = path
-    dev_specs[spec.name] = entry
 
-    spack.config.set("develop", dev_specs, modify_scope)
+    found = False
+    for scope, dev_config in dev_configs:
+        if spec.name in dev_config:
+            tty.msg(
+                "Updating develop spec {0}:\n\told: {1}\n\tnew: {2}".format(
+                    str(spec), dev_config[spec.name], path
+                )
+            )
+            dev_config[spec.name] = entry
+            found = True
+            break
+
+    # If the dev spec exists in a particular scope already, modify
+    # that scope specifically
+    if found:
+        spack.config.set("develop", dev_config, scope=scope)
+        return
+
+    tty.msg("New development spec: {0}".format(str(spec)))
+
+    for scope, dev_config in dev_configs:
+        if dev_config:
+            dev_config[spec.name] = entry
+            found = True
+            break
+
+    # If the dev spec exists nowhere, then write this new dev spec
+    # into the highest priority scope where dev specs are defined
+    if found:
+        spack.config.set("develop", dev_config, scope=scope)
+        return
+
+    # If no dev specs are defined anywhere, then write this into the
+    # highest-priority scope
+    scope = dev_configs[0][0]
+    dev_config = {spec.name: entry}
+    spack.config.set("develop", dev_config, scope=scope)
 
 
 def _retrieve_develop_source(spec, abspath):
@@ -126,10 +153,6 @@ def develop(parser, args):
         raise SpackError("Packages to develop must have a concrete version")
     spec.versions = spack.version.VersionList([version])
 
-    # If "spack develop" specifies an absolute path, a scope, and a spec, then
-    # an active environment is not required.
-    env = None
-
     # If user does not specify --path, we choose to create a directory in the
     # active environment's directory, named after the spec
     path = args.path or spec.name
@@ -158,21 +181,11 @@ def develop(parser, args):
 
         _retrieve_develop_source(spec, abspath)
 
-    if not args.scope:
-        env = spack.cmd.require_active_env(cmd_name="develop")
-        modify_scope = "env:{0}".format(env.name)
-    else:
-        # TODO: if we do not specify an absolute path, and specify a scope
-        # associated with a different environment (e.g. as an absolute path),
-        # then we would be telling another env to develop a spec with a path
-        # in *this* env, which is not likely to be something anyone would want
-        modify_scope = args.scope
-
-    # Note: if we modify a config file used by another environment, the other
-    # environment may not be consistent
-    if env:
-        tty.debug("Updating develop config for {0} transactionally".format(env.name))
-        with env.write_transaction():
-            _update_config(spec, path, modify_scope)
-    else:
-        _update_config(spec, path, modify_scope)
+    # Note: we could put develop specs in any scope, but I assume
+    # users would only ever want to do this for either (a) an active
+    # env or (b) a specified config file (e.g. that is included by
+    # an environment)
+    env = spack.cmd.require_active_env(cmd_name="develop")
+    tty.debug("Updating develop config for {0} transactionally".format(env.name))
+    with env.write_transaction():
+        _update_config(spec, path)

@@ -5,6 +5,7 @@
 
 import llnl.util.tty as tty
 
+import spack.environment as ev
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 
@@ -30,45 +31,45 @@ def setup_parser(subparser):
     arguments.add_common_arguments(subparser, ["specs"])
 
 
+def _update_config(specs_to_remove, remove_all=False):
+    dev_configs = spack.config.matched_config("develop")
+
+    for scope, dev_config in dev_configs:
+        modified = False
+        for spec in specs_to_remove:
+            if spec.name in dev_config:
+                tty.msg("Undevelop: removing {0}".format(spec.name))
+                del dev_config[spec.name]
+                modified = True
+        if remove_all and dev_config:
+            dev_config = {}
+            modified = True
+        if modified:
+            spack.config.set("develop", dev_config, scope=scope)
+
+
 def undevelop(parser, args):
-    # TODO: until it's possible to specify a full .yaml path as a scope, it
-    # only makes sense to undevelop specs that are mentioned in the config
-    # that is stored in spack.yaml
-    env = spack.cmd.require_active_env(cmd_name="undevelop")
-
-    # TODO: if a user undevelops something in their active environment, but
-    # lower scope also specifies that the spec is being developed, the only
-    # way to ensure that we don't consider it is to completely override the
-    # lower scopes with "::". For now we simply tell the user that they must
-    # edit this manually
-    all_dev_specs = spack.config.get("develop")
-    local_dev_specs = spack.config.get("develop", scope="env:" + env.name)
-
+    remove_specs = None
+    remove_all = False
     if args.all:
-        remove_specs = local_dev_specs.keys()
+        remove_all = True
     else:
         remove_specs = spack.cmd.parse_specs(args.specs)
 
-    for spec in remove_specs:
-        if spec.name in local_dev_specs:
-            tty.msg("Undevelop: removing {0}".format(spec.name))
-            del local_dev_specs[spec.name]
-        elif spec.name not in all_dev_specs:
-            tty.msg("Undevelop: spec is not present: {0}".format(spec.name))
+    env = ev.active_environment()
+    if env:
+        with env.write_transaction():
+            _update_config(remove_specs, remove_all)
 
-    spack.config.set("develop", local_dev_specs, scope="env:" + env.name)
+    updated_all_dev_specs = set(spack.config.get("develop"))
+    remove_spec_names = set(x.name for x in remove_specs)
 
-    updated_all_dev_specs = spack.config.get("develop")
-    remaining_dev_specs = set(x.name for x in remove_specs) & set(updated_all_dev_specs.keys())
-    for spec in remove_specs:
-        if spec in remaining_dev_specs:
-            tty.msg(
-                "Undevelop: {0} is marked as develop outside the environment "
-                " configuration; it must be updated manually".format(spec.name)
-            )
-        else:
-            tty.msg("Undevelop: removed {0}".format(spec.name))
+    if remove_all:
+        not_fully_removed = updated_all_dev_specs
+    else:
+        not_fully_removed = updated_all_dev_specs & remove_spec_names
 
-    # We need to force a re-read of the env
-    with env.write_transaction():
-        pass
+    if not_fully_removed:
+        tty.msg("The following specs could not be removed as develop specs"
+            " - see `spack config blame develop` to locate files requiring"
+            f" manual edits: {', '.join(not_fully_removed)}")

@@ -928,6 +928,16 @@ def scopes():
     return CONFIG.scopes
 
 
+def writable_scopes():
+    return [
+        x for x in CONFIG.scopes if not isinstance(x, (InternalConfigScope, ImmutableConfigScope))
+    ]
+
+
+def matched_config(cfg_path):
+    return [(scope, get(cfg_path, scope=scope)) for scope in writable_scopes()]
+
+
 def _validate_section_name(section):
     """Exit if the section is not a valid section."""
     if section not in SECTION_SCHEMAS:
