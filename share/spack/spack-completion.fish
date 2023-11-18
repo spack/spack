@@ -1156,6 +1156,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 config' -f -a blame -d 'p
 complete -c spack -n '__fish_spack_using_command_pos 0 config' -f -a edit -d 'edit configuration file'
 complete -c spack -n '__fish_spack_using_command_pos 0 config' -f -a list -d 'list configuration sections'
 complete -c spack -n '__fish_spack_using_command_pos 0 config' -f -a add -d 'add configuration parameters'
+complete -c spack -n '__fish_spack_using_command_pos 0 config' -f -a change-requires -d 'swap variants etc. in config'
 complete -c spack -n '__fish_spack_using_command_pos 0 config' -f -a prefer-upstream -d 'set package preferences from upstream'
 complete -c spack -n '__fish_spack_using_command_pos 0 config' -f -a remove -d 'remove configuration parameters'
 complete -c spack -n '__fish_spack_using_command_pos 0 config' -f -a rm -d 'remove configuration parameters'
@@ -1198,6 +1199,14 @@ complete -c spack -n '__fish_spack_using_command config add' -s h -l help -f -a 
 complete -c spack -n '__fish_spack_using_command config add' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command config add' -s f -l file -r -f -a file
 complete -c spack -n '__fish_spack_using_command config add' -s f -l file -r -d 'file from which to set all config values'
+
+# spack config change-requires
+set -g __fish_spack_optspecs_spack_config_change_requires h/help match-spec=
+complete -c spack -n '__fish_spack_using_command_pos 0 config change-requires' -f -k -a '(__fish_spack_specs)'
+complete -c spack -n '__fish_spack_using_command config change-requires' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command config change-requires' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command config change-requires' -l match-spec -r -f -a match_spec
+complete -c spack -n '__fish_spack_using_command config change-requires' -l match-spec -r -d 'only change constraints that match this'
 
 # spack config prefer-upstream
 set -g __fish_spack_optspecs_spack_config_prefer_upstream h/help local

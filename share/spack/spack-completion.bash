@@ -819,7 +819,7 @@ _spack_config() {
     then
         SPACK_COMPREPLY="-h --help --scope"
     else
-        SPACK_COMPREPLY="get blame edit list add prefer-upstream remove rm update revert"
+        SPACK_COMPREPLY="get blame edit list add change-requires prefer-upstream remove rm update revert"
     fi
 }
 
@@ -860,6 +860,15 @@ _spack_config_add() {
         SPACK_COMPREPLY="-h --help -f --file"
     else
         SPACK_COMPREPLY=""
+    fi
+}
+
+_spack_config_change_requires() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --match-spec"
+    else
+        _all_packages
     fi
 }
 
