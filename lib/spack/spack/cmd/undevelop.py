@@ -5,9 +5,9 @@
 
 import llnl.util.tty as tty
 
-import spack.environment as ev
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.environment as ev
 
 description = "remove specs from an environment"
 section = "environments"
@@ -70,6 +70,8 @@ def undevelop(parser, args):
         not_fully_removed = updated_all_dev_specs & remove_spec_names
 
     if not_fully_removed:
-        tty.msg("The following specs could not be removed as develop specs"
+        tty.msg(
+            "The following specs could not be removed as develop specs"
             " - see `spack config blame develop` to locate files requiring"
-            f" manual edits: {', '.join(not_fully_removed)}")
+            f" manual edits: {', '.join(not_fully_removed)}"
+        )
