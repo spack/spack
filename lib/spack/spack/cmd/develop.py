@@ -185,6 +185,8 @@ def develop(parser, args):
     # users would only ever want to do this for either (a) an active
     # env or (b) a specified config file (e.g. that is included by
     # an environment)
+    # TODO: when https://github.com/spack/spack/pull/35307 is merged,
+    # an active env is not required if a scope is specified
     env = spack.cmd.require_active_env(cmd_name="develop")
     tty.debug("Updating develop config for {0} transactionally".format(env.name))
     with env.write_transaction():
