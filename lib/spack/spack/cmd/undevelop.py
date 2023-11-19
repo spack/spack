@@ -18,15 +18,6 @@ def setup_parser(subparser):
         "-a", "--all", action="store_true", help="remove all specs from (clear) the environment"
     )
 
-    # Note: by default we want to modify the environment scope, but
-    # config.default_modify_scope may not refer to the environment at
-    # the time this parser is instantiated
-    scopes = spack.config.scopes()
-    scopes_metavar = spack.config.SCOPES_METAVAR
-    subparser.add_argument(
-        "--scope", choices=scopes, metavar=scopes_metavar, help="configuration scope to modify"
-    )
-
     arguments.add_common_arguments(subparser, ["specs"])
 
 
@@ -55,6 +46,8 @@ def undevelop(parser, args):
     else:
         remove_specs = spack.cmd.parse_specs(args.specs)
 
+    # TODO: when https://github.com/spack/spack/pull/35307 is merged,
+    # an active env is not required if a scope is specified
     env = spack.cmd.require_active_env(cmd_name="undevelop")
     with env.write_transaction():
         _update_config(remove_specs, remove_all)

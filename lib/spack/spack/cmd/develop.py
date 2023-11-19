@@ -38,12 +38,6 @@ def setup_parser(subparser):
         help="clone the package even if the path already exists",
     )
 
-    scopes = spack.config.scopes()
-    scopes_metavar = spack.config.SCOPES_METAVAR
-    subparser.add_argument(
-        "--scope", choices=scopes, metavar=scopes_metavar, help="configuration scope to modify"
-    )
-
     subparser.add_argument(
         "-f", "--force", help="remove any files or directories that block cloning source code"
     )
