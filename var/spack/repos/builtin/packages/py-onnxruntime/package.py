@@ -65,8 +65,8 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
     patch("gcc11.patch", level=1, when="@1.7.2")
     # https://github.com/microsoft/onnxruntime/pull/16257
     patch(
-        "https://github.com/microsoft/onnxruntime/commit/a3a443c80431c390cbf8855e9c7b2a95d413cd54.patch",
-        sha256="459d52008ffcca408baa9193d63eb228927a9aa9aaa08597c813cd8cdacba00e",
+        "https://github.com/microsoft/onnxruntime/commit/a3a443c80431c390cbf8855e9c7b2a95d413cd54.patch?full_index=1",
+        sha256="537c43b061d31bf97d2778d723a41fbd390160f9ebc304f06726e3bfd8dc4583",
         when="@1.10.0:1.16.0",
     )
 
