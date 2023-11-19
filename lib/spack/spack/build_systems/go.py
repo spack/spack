@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import inspect
-from typing import List
 
 import llnl.util.filesystem as fs
 

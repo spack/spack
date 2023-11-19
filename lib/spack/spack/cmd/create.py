@@ -202,7 +202,6 @@ class GoPackageTemplate(PackageTemplate):
     body_def = ""
 
 
-
 class LuaPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for LuaRocks-based packages"""
 
