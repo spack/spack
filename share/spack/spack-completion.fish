@@ -1386,7 +1386,7 @@ complete -c spack -n '__fish_spack_using_command dev-build' -l reuse-deps -f -a 
 complete -c spack -n '__fish_spack_using_command dev-build' -l reuse-deps -d 'reuse installed dependencies only'
 
 # spack develop
-set -g __fish_spack_optspecs_spack_develop h/help p/path= no-clone clone scope= f/force=
+set -g __fish_spack_optspecs_spack_develop h/help p/path= no-clone clone f/force=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 develop' -f -k -a '(__fish_spack_specs_or_id)'
 complete -c spack -n '__fish_spack_using_command develop' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command develop' -s h -l help -d 'show this help message and exit'
@@ -1396,8 +1396,6 @@ complete -c spack -n '__fish_spack_using_command develop' -l no-clone -f -a clon
 complete -c spack -n '__fish_spack_using_command develop' -l no-clone -d 'do not clone, the package already exists at the source path'
 complete -c spack -n '__fish_spack_using_command develop' -l clone -f -a clone
 complete -c spack -n '__fish_spack_using_command develop' -l clone -d 'clone the package even if the path already exists'
-complete -c spack -n '__fish_spack_using_command develop' -l scope -r -f -a '_builtin defaults system site user command_line'
-complete -c spack -n '__fish_spack_using_command develop' -l scope -r -d 'configuration scope to modify'
 complete -c spack -n '__fish_spack_using_command develop' -s f -l force -r -f -a force
 complete -c spack -n '__fish_spack_using_command develop' -s f -l force -r -d 'remove any files or directories that block cloning source code'
 
@@ -2859,14 +2857,12 @@ complete -c spack -n '__fish_spack_using_command tutorial' -s y -l yes-to-all -f
 complete -c spack -n '__fish_spack_using_command tutorial' -s y -l yes-to-all -d 'assume "yes" is the answer to every confirmation request'
 
 # spack undevelop
-set -g __fish_spack_optspecs_spack_undevelop h/help a/all scope=
+set -g __fish_spack_optspecs_spack_undevelop h/help a/all
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 undevelop' -f -k -a '(__fish_spack_specs_or_id)'
 complete -c spack -n '__fish_spack_using_command undevelop' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command undevelop' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command undevelop' -s a -l all -f -a all
 complete -c spack -n '__fish_spack_using_command undevelop' -s a -l all -d 'remove all specs from (clear) the environment'
-complete -c spack -n '__fish_spack_using_command undevelop' -l scope -r -f -a '_builtin defaults system site user command_line'
-complete -c spack -n '__fish_spack_using_command undevelop' -l scope -r -d 'configuration scope to modify'
 
 # spack uninstall
 set -g __fish_spack_optspecs_spack_uninstall h/help f/force remove R/dependents y/yes-to-all a/all origin=
