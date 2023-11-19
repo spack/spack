@@ -412,6 +412,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a rm -d 'remove spe
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a repo -d 'manage package source repositories'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a resource -d 'list downloadable resources (tarballs, repos, patches, etc.)'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a restage -d 'revert checked out package source code'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a scout -d 'discover and test new versions of a package'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a solve -d 'concretize a specs using an ASP solver'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a spec -d 'show what would be installed, given a spec'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a stage -d 'expand downloaded archive in preparation for install'
@@ -2655,6 +2656,16 @@ set -g __fish_spack_optspecs_spack_restage h/help
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 restage' -f -k -a '(__fish_spack_specs_or_id)'
 complete -c spack -n '__fish_spack_using_command restage' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command restage' -s h -l help -d 'show this help message and exit'
+
+# spack scout
+set -g __fish_spack_optspecs_spack_scout h/help mark= t/test=
+
+complete -c spack -n '__fish_spack_using_command scout' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command scout' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command scout' -l mark -r -f -a 'implicit explicit'
+complete -c spack -n '__fish_spack_using_command scout' -l mark -r -d 'mark pkgs after installation to keep/cleanup'
+complete -c spack -n '__fish_spack_using_command scout' -l test -s t -r -f -a 'root all'
+complete -c spack -n '__fish_spack_using_command scout' -l test -s t -r -d 'build pkgs with tests to validate'
 
 # spack solve
 set -g __fish_spack_optspecs_spack_solve h/help show= l/long L/very-long N/namespaces I/install-status no-install-status y/yaml j/json c/cover= t/types timers stats U/fresh reuse reuse-deps
