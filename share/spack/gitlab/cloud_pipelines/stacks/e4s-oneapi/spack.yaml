@@ -197,14 +197,18 @@ spack:
   - amrex +sycl
   - arborx +sycl ^kokkos +sycl +openmp cxxstd=17 +tests +examples
   - cabana +sycl ^kokkos +sycl +openmp cxxstd=17 +tests +examples
+  - ginkgo +sycl
+  - heffte +sycl
   - kokkos +sycl +openmp cxxstd=17 +tests +examples
   - kokkos-kernels build_type=Release %oneapi ^kokkos +sycl +openmp cxxstd=17 +tests +examples
+  - petsc +sycl
   - slate +sycl
   - sundials +sycl cxxstd=17 +examples-install
   - tau +mpi +opencl +level_zero ~pdt +syscall   # tau: requires libdrm.so to be installed
+  - upcxx +level_zero
   # --
-  # - ginkgo +oneapi                    # InstallError: Ginkgo's oneAPI backend requires theDPC++ compiler as main CXX compiler.
   # - hpctoolkit +level_zero            # dyninst@12.3.0%gcc: /usr/bin/ld: libiberty/./d-demangle.c:142: undefined reference to `_intel_fast_memcpy'; can't mix intel-tbb@%oneapi with dyninst%gcc
+  # - warpx compute=sycl                # warpx: spack-build-wzp6vvo/_deps/fetchedamrex-src/Src/Base/AMReX_RandomEngine.H:18:10: fatal error: 'oneapi/mkl/rng/device.hpp' file not found
 
   - py-scipy
 
