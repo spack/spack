@@ -194,6 +194,15 @@ class CMakePackageTemplate(PackageTemplate):
         return args"""
 
 
+class GoPackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for Go-module-based packages"""
+
+    base_class_name = "GoPackage"
+
+    body_def = ""
+
+
+
 class LuaPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for LuaRocks-based packages"""
 
@@ -590,6 +599,7 @@ templates = {
     "cargo": CargoPackageTemplate,
     "cmake": CMakePackageTemplate,
     "generic": PackageTemplate,
+    "go": GoPackageTemplate,
     "intel": IntelPackageTemplate,
     "lua": LuaPackageTemplate,
     "makefile": MakefilePackageTemplate,
