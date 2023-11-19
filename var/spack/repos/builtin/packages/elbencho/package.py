@@ -17,7 +17,7 @@ class Elbencho(MakefilePackage):
     homepage = "https://github.com/breuner/elbencho"
     url = "https://github.com/breuner/elbencho/archive/refs/tags/v3.0-1.tar.gz"
     git = "https://github.com/breuner/elbencho.git"
-    
+
     maintainers("ethanjjjjjjj")
 
     version("master", branch="master")
