@@ -206,9 +206,9 @@ spack:
   - sundials +sycl cxxstd=17 +examples-install
   - tau +mpi +opencl +level_zero ~pdt +syscall   # tau: requires libdrm.so to be installed
   - upcxx +level_zero
-  - warpx compute=sycl
   # --
   # - hpctoolkit +level_zero            # dyninst@12.3.0%gcc: /usr/bin/ld: libiberty/./d-demangle.c:142: undefined reference to `_intel_fast_memcpy'; can't mix intel-tbb@%oneapi with dyninst%gcc
+  # - warpx compute=sycl                # warpx: spack-build-wzp6vvo/_deps/fetchedamrex-src/Src/Base/AMReX_RandomEngine.H:18:10: fatal error: 'oneapi/mkl/rng/device.hpp' file not found
 
   - py-scipy
 
