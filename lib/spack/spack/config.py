@@ -927,10 +927,28 @@ def scopes():
     return CONFIG.scopes
 
 
-def writable_scopes():
-    return [
-        x for x in CONFIG.scopes if not isinstance(x, (InternalConfigScope, ImmutableConfigScope))
-    ]
+def writable_scopes() -> List[ConfigScope]:
+    """
+    Return list of writable scopes. Higher-priority scopes come first in the
+    list.
+    """
+    return list(
+        reversed(
+            list(
+                x
+                for x in CONFIG.scopes.values()
+                if not isinstance(x, (InternalConfigScope, ImmutableConfigScope))
+            )
+        )
+    )
+
+
+def writable_scope_names() -> List[str]:
+    return list(x.name for x in writable_scopes())
+
+
+def matched_config(cfg_path):
+    return [(scope, get(cfg_path, scope=scope)) for scope in writable_scope_names()]
 
 
 def _validate_section_name(section):

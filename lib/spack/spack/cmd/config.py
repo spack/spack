@@ -255,7 +255,7 @@ def _can_update_config_file(scope: spack.config.ConfigScope, cfg_file):
 
 
 def _config_change_requires_scope(spec, scope, match_spec=None):
-    packages = spack.config.CONFIG.get_config("packages", scope=scope)
+    packages = spack.config.get("packages", scope=scope)
 
     require = packages.get(spec.name, {}).get("require", [])
 
@@ -290,7 +290,7 @@ def _config_change_requires_scope(spec, scope, match_spec=None):
                 item["spec"] = override_cfg_spec(item["spec"])
             new_require.append(item)
 
-    spack.config.CONFIG.set(f"packages:{spec.name}:require", new_require, scope=scope)
+    spack.config.set(f"packages:{spec.name}:require", new_require, scope=scope)
 
 
 def config_change_requires(args):
@@ -298,7 +298,7 @@ def config_change_requires(args):
     match_spec = None
     if args.match_spec:
         match_spec = spack.spec.Spec(args.match_spec)
-    for scope in spack.config.writable_scopes():
+    for scope in spack.config.writable_scope_names():
         _config_change_requires_scope(spec, scope, match_spec=match_spec)
 
 
