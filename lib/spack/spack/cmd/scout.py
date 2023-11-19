@@ -72,7 +72,7 @@ def scout(parser, args):
         url_dict = {highest_fetched_version: fetched_versions[highest_fetched_version]}
 
         # checksum the newer remote version
-        version_hashes = spack.stage.get_checksums_for_versions(url_dict, pkg.name, batch=True)
+        version_hashes = spack.stage.get_checksums_for_versions(url_dict, pkg.name)
 
         # take a backup of a package's class file
         filename = spack.repo.PATH.filename_for_package_name(pkg.name)
