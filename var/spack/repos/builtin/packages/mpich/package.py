@@ -70,16 +70,14 @@ class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
         description="""Abstract Device Interface (ADI)
 implementation. The ch4 device is in experimental state for versions
 before 3.4.""",
-        values=("ch3", "ch4"),
+        values=("ch3", "ch4", "ch3:sock"),
         multi=False,
     )
     variant(
         "netmod",
         default="ofi",
         description="""Network module. Only single netmod builds are
-supported. For ch3 device configurations, this presumes the
-ch3:nemesis communication channel. ch3:sock is not supported by this
-spack package at this time.""",
+supported, and netmod is ignored if device is ch3:sock.""",
         values=("tcp", "mxm", "ofi", "ucx"),
         multi=False,
     )
@@ -121,6 +119,7 @@ spack package at this time.""",
     depends_on("yaksa+cuda", when="+cuda ^yaksa")
     depends_on("yaksa+rocm", when="+rocm ^yaksa")
     conflicts("datatype-engine=yaksa", when="device=ch3")
+    conflicts("datatype-engine=yaksa", when="device=ch3:sock")
 
     variant(
         "hcoll",
@@ -135,8 +134,10 @@ spack package at this time.""",
     # overriding the variant from CudaPackage.
     conflicts("+cuda", when="@:3.3")
     conflicts("+cuda", when="device=ch3")
+    conflicts("+cuda", when="device=ch3:sock")
     conflicts("+rocm", when="@:4.0")
     conflicts("+rocm", when="device=ch3")
+    conflicts("+rocm", when="device=ch3:sock")
     conflicts("+cuda", when="+rocm", msg="CUDA must be disabled to support ROCm")
 
     provides("mpi@:4.0")
@@ -271,6 +272,7 @@ spack package at this time.""",
     conflicts("netmod=tcp", when="device=ch4")
     conflicts("pmi=pmi2", when="device=ch3 netmod=ofi")
     conflicts("pmi=pmix", when="device=ch3")
+    conflicts("pmi=pmix", when="device=ch3:sock")
     conflicts("pmi=pmix", when="+hydra")
     conflicts("pmi=cray", when="+hydra")
 
@@ -556,7 +558,10 @@ spack package at this time.""",
         elif "device=ch3" in spec:
             device_config = "--with-device=ch3:nemesis:"
 
-        if "netmod=ucx" in spec:
+        # Do not apply any netmod if device is ch3:sock
+        if "device=ch3:sock" in spec:
+            device_config = "--with-device=ch3:sock"
+        elif "netmod=ucx" in spec:
             device_config += "ucx"
         elif "netmod=ofi" in spec:
             device_config += "ofi"
