@@ -131,16 +131,16 @@ class Pythia8(AutotoolsPackage):
                 args.append("--with-boost=" + self.spec["boost"].prefix)
 
         if "+madgraph5amc" in self.spec:
-            args += "--with-mg5mes=" + self.spec["madgraph5amc"].prefix
+            args.append("--with-mg5mes=" + self.spec["madgraph5amc"].prefix)
         else:
-            args += "--without-mg5mes"
+            args.append("--without-mg5mes")
 
         args += self.with_or_without("hepmc3", activation_value="prefix")
 
         if "+fastjet" in self.spec:
-            args += "--with-fastjet3=" + self.spec["fastjet"].prefix
+            args.append("--with-fastjet3=" + self.spec["fastjet"].prefix)
         else:
-            args += "--without-fastjet3"
+            args.append("--without-fastjet3")
 
         args += self.with_or_without("evtgen", activation_value="prefix")
         args += self.with_or_without("root", activation_value="prefix")

@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import re
 
 from spack.package import *
 
@@ -60,21 +59,20 @@ class R(AutotoolsPackage):
     version("3.1.3", sha256="07e98323935baa38079204bfb9414a029704bb9c0ca5ab317020ae521a377312")
     version("3.1.2", sha256="bcd150afcae0e02f6efb5f35a6ab72432be82e849ec52ce0bb89d8c342a8fa7a")
 
-    variant(
-        "external-lapack", default=False, description="Links to externally installed BLAS/LAPACK"
-    )
     variant("X", default=False, description="Enable X11 support (TCLTK, PNG, JPEG, TIFF, CAIRO)")
     variant("memory_profiling", default=False, description="Enable memory profiling")
     variant("rmath", default=False, description="Build standalone Rmath library")
 
-    depends_on("blas", when="+external-lapack")
-    depends_on("lapack", when="+external-lapack")
+    depends_on("blas")
+    depends_on("lapack")
+
     depends_on("bzip2")
     depends_on("curl+libidn2")
     # R didn't anticipate the celebratory non-breaking major version bump of curl 8.
     depends_on("curl@:7", when="@:4.2")
     depends_on("icu4c")
     depends_on("java")
+    depends_on("libtirpc")
     depends_on("ncurses")
     depends_on("pcre", when="@:3.6.3")
     depends_on("pcre2", when="@4:")
@@ -84,16 +82,18 @@ class R(AutotoolsPackage):
     depends_on("zlib-api")
     depends_on("zlib@1.2.5:", when="^zlib")
     depends_on("texinfo", type="build")
-    depends_on("cairo+X+gobject+pdf", when="+X")
-    depends_on("pango+X", when="+X")
-    depends_on("harfbuzz+graphite2", when="+X")
-    depends_on("jpeg", when="+X")
-    depends_on("libpng", when="+X")
-    depends_on("libtiff", when="+X")
-    depends_on("libx11", when="+X")
-    depends_on("libxmu", when="+X")
-    depends_on("libxt", when="+X")
-    depends_on("tk", when="+X")
+
+    with when("+X"):
+        depends_on("cairo+X+gobject+pdf")
+        depends_on("pango+X")
+        depends_on("harfbuzz+graphite2")
+        depends_on("jpeg")
+        depends_on("libpng")
+        depends_on("libtiff")
+        depends_on("libx11")
+        depends_on("libxmu")
+        depends_on("libxt")
+        depends_on("tk")
 
     patch("zlib.patch", when="@:3.3.2")
 
@@ -126,31 +126,33 @@ class R(AutotoolsPackage):
         spec = self.spec
         prefix = self.prefix
 
+        extra_rpath = join_path(prefix, "rlib", "R", "lib")
+
+        blas_flags: str = spec["blas"].libs.ld_flags
+        lapack_flags: str = spec["lapack"].libs.ld_flags
+
+        # R uses LAPACK in Fortran, which requires libmkl_gf_* when gfortran is used.
+        # TODO: cleaning this up seem to require both compilers as dependencies and use variants.
+        if spec["lapack"].name in INTEL_MATH_LIBRARIES and "gfortran" in self.compiler.fc:
+            xlp64 = "ilp64" if spec["lapack"].satisfies("+ilp64") else "lp64"
+            blas_flags = blas_flags.replace(f"mkl_intel_{xlp64}", f"mkl_gf_{xlp64}")
+            lapack_flags = lapack_flags.replace(f"mkl_intel_{xlp64}", f"mkl_gf_{xlp64}")
+
         config_args = [
             "--with-internal-tzcode",
             "--libdir={0}".format(join_path(prefix, "rlib")),
             "--enable-R-shlib",
-            "--enable-BLAS-shlib",
             "--enable-R-framework=no",
             "--without-recommended-packages",
-            "LDFLAGS=-L{0} -Wl,-rpath,{0}".format(join_path(prefix, "rlib", "R", "lib")),
+            f"LDFLAGS=-Wl,-rpath,{extra_rpath}",
+            f"--with-blas={blas_flags}",
+            f"--with-lapack={lapack_flags}",
+            # cannot disable docs with a normal configure option
+            "ac_cv_path_PDFLATEX=",
+            "ac_cv_path_PDFTEX=",
+            "ac_cv_path_TEX=",
+            "ac_cv_path_TEXI2DVI=",
         ]
-
-        if "+external-lapack" in spec:
-            if "^mkl" in spec and "gfortran" in self.compiler.fc:
-                mkl_re = re.compile(r"(mkl_)intel(_i?lp64\b)")
-                config_args.extend(
-                    [
-                        mkl_re.sub(
-                            r"\g<1>gf\g<2>", "--with-blas={0}".format(spec["blas"].libs.ld_flags)
-                        ),
-                        "--with-lapack",
-                    ]
-                )
-            else:
-                config_args.extend(
-                    ["--with-blas={0}".format(spec["blas"].libs.ld_flags), "--with-lapack"]
-                )
 
         if "+X" in spec:
             config_args.append("--with-cairo")

@@ -309,15 +309,19 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on("gslib@1.0.7:", when="@4.3.0:+gslib")
     depends_on("suite-sparse", when="+suite-sparse")
     depends_on("superlu-dist", when="+superlu-dist")
+    # Propagate 'cuda_arch' to 'superlu-dist' without propagating the '+cuda'
+    # variant so we can build 'mfem+cuda+superlu-dist ^superlu-dist~cuda':
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on(
             "superlu-dist+cuda cuda_arch={0}".format(sm_),
-            when="+superlu-dist+cuda cuda_arch={0}".format(sm_),
+            when="+superlu-dist+cuda cuda_arch={0} ^superlu-dist+cuda".format(sm_),
         )
+    # Propagate 'amdgpu_target' to 'superlu-dist' without propagating the '+rocm'
+    # variant so we can build 'mfem+rocm+superlu-dist ^superlu-dist~rocm':
     for gfx in ROCmPackage.amdgpu_targets:
         depends_on(
             "superlu-dist+rocm amdgpu_target={0}".format(gfx),
-            when="+superlu-dist+rocm amdgpu_target={0}".format(gfx),
+            when="+superlu-dist+rocm amdgpu_target={0} ^superlu-dist+rocm".format(gfx),
         )
     depends_on("strumpack@3.0.0:", when="+strumpack~shared")
     depends_on("strumpack@3.0.0:+shared", when="+strumpack+shared")
@@ -963,6 +967,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             if "^rocthrust" in spec and not spec["hip"].external:
                 # petsc+rocm needs the rocthrust header path
                 hip_headers += spec["rocthrust"].headers
+            if "^hipblas" in spec and not spec["hip"].external:
+                # superlu-dist+rocm needs the hipblas header path
+                hip_headers += spec["hipblas"].headers
             if "%cce" in spec:
                 # We assume the proper Cray CCE module (cce) is loaded:
                 craylibs_path = env["CRAYLIBS_" + machine().upper()]

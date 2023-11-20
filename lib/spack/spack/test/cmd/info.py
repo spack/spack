@@ -25,7 +25,7 @@ def parser():
 def print_buffer(monkeypatch):
     buffer = []
 
-    def _print(*args):
+    def _print(*args, **kwargs):
         buffer.extend(args)
 
     monkeypatch.setattr(spack.cmd.info.color, "cprint", _print, raising=False)
@@ -33,10 +33,11 @@ def print_buffer(monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "pkg", ["openmpi", "trilinos", "boost", "python", "dealii", "xsdk"]  # a BundlePackage
+    "pkg", ["openmpi", "trilinos", "boost", "python", "dealii", "xsdk", "gasnet", "warpx"]
 )
-def test_it_just_runs(pkg):
-    info(pkg)
+@pytest.mark.parametrize("extra_args", [[], ["--variants-by-name"]])
+def test_it_just_runs(pkg, extra_args):
+    info(pkg, *extra_args)
 
 
 def test_info_noversion(mock_packages, print_buffer):
@@ -78,7 +79,8 @@ def test_is_externally_detectable(pkg_query, expected, parser, print_buffer):
         "gcc",  # This should ensure --test's c_names processing loop covered
     ],
 )
-def test_info_fields(pkg_query, parser, print_buffer):
+@pytest.mark.parametrize("extra_args", [[], ["--variants-by-name"]])
+def test_info_fields(pkg_query, extra_args, parser, print_buffer):
     expected_fields = (
         "Description:",
         "Homepage:",
@@ -91,7 +93,7 @@ def test_info_fields(pkg_query, parser, print_buffer):
         "Licenses:",
     )
 
-    args = parser.parse_args(["--all", pkg_query])
+    args = parser.parse_args(["--all", pkg_query] + extra_args)
     spack.cmd.info.info(parser, args)
 
     for text in expected_fields:

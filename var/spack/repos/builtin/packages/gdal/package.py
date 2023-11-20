@@ -30,6 +30,8 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
 
     maintainers("adamjstewart")
 
+    version("3.8.0", sha256="ec0f78d9dc32352aeac6edc9c3b27a991b91f9dc6f92c452207d84431c58757d")
+    version("3.7.3", sha256="e0a6f0c453ea7eb7c09967f50ac49426808fcd8f259dbc9888140eb69d7ffee6")
     version("3.7.2", sha256="40c0068591d2c711c699bbb734319398485ab169116ac28005d8302f80b923ad")
     version("3.7.1", sha256="9297948f0a8ba9e6369cd50e87c7e2442eda95336b94d2b92ef1829d260b9a06")
     version("3.7.0", sha256="af4b26a6b6b3509ae9ccf1fcc5104f7fe015ef2110f5ba13220816398365adce")
@@ -89,6 +91,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     version("2.0.0", sha256="91704fafeea2349c5e268dc1e2d03921b3aae64b05ee01d59fdfc1a6b0ffc061")
 
     # Optional dependencies
+    variant("archive", default=False, when="@3.7:", description="Optional for vsi7z VFS driver")
     variant(
         "armadillo",
         default=False,
@@ -136,9 +139,11 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     variant("kdu", default=False, description="Required for JP2KAK and JPIPKAK drivers")
     variant("kea", default=False, description="Required for KEA driver")
     variant("lerc", default=False, when="@2.4:", description="Required for LERC compression")
+    variant("libaec", default=False, when="@3.8:", description="Optional for GRIB driver")
     variant("libcsf", default=False, description="Required for PCRaster driver")
     variant("libkml", default=False, description="Required for LIBKML driver")
     variant("liblzma", default=False, description="Required for Zarr driver")
+    variant("libqb3", default=False, when="@3.6:", description="Required for MRF driver")
     variant(
         "libxml2", default=False, description="Required for XML validation in many OGR drivers"
     )
@@ -189,7 +194,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     )
     variant("pcidsk", default=False, description="Required for PCIDSK driver")
     variant(
-        "pcre", default=False, description="Required for REGEXP operator in drivers using SQLite3"
+        "pcre2", default=False, description="Required for REGEXP operator in drivers using SQLite3"
     )
     variant("pdfium", default=False, when="@2.1:", description="Possible backend for PDF driver")
     variant("png", default=True, description="Required for PNG driver")
@@ -200,7 +205,6 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
         default=False,
         description="Required for PostgreSQL and PostGISRaster drivers",
     )
-    variant("qb3", default=False, when="@3.6:", description="Required for MRF driver")
     variant(
         "qhull",
         default=False,
@@ -261,6 +265,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     depends_on("json-c@0.12.1", when="@:2.2")
 
     # Optional dependencies
+    depends_on("libarchive", when="+archive")
     depends_on("armadillo", when="+armadillo")
     depends_on("blas", when="+armadillo")
     depends_on("lapack", when="+armadillo")
@@ -302,6 +307,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     # depends_on('kakadu', when='+kdu')
     depends_on("kealib", when="+kea")
     depends_on("lerc", when="+lerc")
+    depends_on("libaec", when="+libaec")
     # depends_on('libcsf', when='+libcsf')
     depends_on("libkml@1.3:", when="+libkml")
     depends_on("xz", when="+liblzma")
@@ -329,8 +335,8 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     depends_on("oracle-instant-client", when="+oracle")
     depends_on("parquet-cpp", when="+parquet")
     # depends_on('pcidsk', when='+pcidsk')
-    depends_on("pcre2", when="@3.5:+pcre")
-    depends_on("pcre", when="@:3.4+pcre")
+    depends_on("pcre2", when="@3.5:+pcre2")
+    depends_on("pcre", when="@:3.4+pcre2")
     # depends_on('pdfium', when='+pdfium')
     depends_on("libpng", when="+png")
     # depends_on('podofo', when='+podofo')
@@ -340,7 +346,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     depends_on("poppler@:0.71", when="@:2.4 +poppler")
     depends_on("poppler@:21", when="@:3.4.1 +poppler")
     depends_on("postgresql", when="+postgresql")
-    depends_on("qb3", when="+qb3")
+    depends_on("qb3", when="+libqb3")
     depends_on("qhull", when="+qhull")
     depends_on("qhull@2015:", when="@3.5:+qhull")
     depends_on("qhull@:2020.1", when="@:3.3+qhull")
@@ -489,6 +495,7 @@ class CMakeBuilder(CMakeBuilder):
             # be necessary.
             self.define("ENABLE_DEFLATE64", "zlib-ng" not in self.spec),
             # Optional dependencies
+            self.define_from_variant("GDAL_USE_ARCHIVE", "archive"),
             self.define_from_variant("GDAL_USE_ARMADILLO", "armadillo"),
             self.define_from_variant("GDAL_USE_ARROW", "arrow"),
             self.define_from_variant("GDAL_USE_BASISU", "basisu"),
@@ -518,9 +525,11 @@ class CMakeBuilder(CMakeBuilder):
             self.define_from_variant("GDAL_USE_KDU", "kdu"),
             self.define_from_variant("GDAL_USE_KEA", "kea"),
             self.define_from_variant("GDAL_USE_LERC", "lerc"),
+            self.define_from_variant("GDAL_USE_LIBAEC", "libaec"),
             self.define_from_variant("GDAL_USE_LIBCSF", "libcsf"),
             self.define_from_variant("GDAL_USE_LIBKML", "libkml"),
             self.define_from_variant("GDAL_USE_LIBLZMA", "liblzma"),
+            self.define_from_variant("GDAL_USE_LIBQB3", "libqb3"),
             self.define_from_variant("GDAL_USE_LIBXML2", "libxml2"),
             self.define_from_variant("GDAL_USE_LURATECH", "luratech"),
             self.define_from_variant("GDAL_USE_LZ4", "lz4"),
@@ -540,13 +549,12 @@ class CMakeBuilder(CMakeBuilder):
             self.define_from_variant("GDAL_USE_OPENSSL", "openssl"),
             self.define_from_variant("GDAL_USE_ORACLE", "oracle"),
             self.define_from_variant("GDAL_USE_PARQUET", "parquet"),
-            self.define_from_variant("GDAL_USE_PCRE2", "pcre"),
+            self.define_from_variant("GDAL_USE_PCRE2", "pcre2"),
             self.define_from_variant("GDAL_USE_PDFIUM", "pdfium"),
             self.define_from_variant("GDAL_USE_PNG", "png"),
             self.define_from_variant("GDAL_USE_PODOFO", "podofo"),
             self.define_from_variant("GDAL_USE_POPPLER", "poppler"),
             self.define_from_variant("GDAL_USE_POSTGRESQL", "postgresql"),
-            self.define_from_variant("GDAL_USE_LIBQB3", "qb3"),
             self.define_from_variant("GDAL_USE_QHULL", "qhull"),
             self.define_from_variant("GDAL_USE_RASDAMAN", "rasdaman"),
             self.define_from_variant("GDAL_USE_RASTERLITE2", "rasterlite2"),
@@ -668,7 +676,7 @@ class AutotoolsBuilder(AutotoolsBuilder):
             self.with_or_without("crypto", variant="openssl", package="openssl"),
             self.with_or_without("oci", variant="oracle", package="oracle-instant-client"),
             self.with_or_without("pcidsk", package="pcidsk"),
-            self.with_or_without("pcre"),
+            self.with_or_without("pcre", variant="pcre2"),
             self.with_or_without("pdfium", package="pdfium"),
             self.with_or_without("png", package="libpng"),
             self.with_or_without("podofo", package="podofo"),

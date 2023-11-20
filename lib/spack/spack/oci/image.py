@@ -9,8 +9,10 @@ from typing import Optional, Union
 
 import spack.spec
 
-# all the building blocks
-alphanumeric = r"[a-z0-9]+"
+# notice: Docker is more strict (no uppercase allowed). We parse image names *with* uppercase
+# and normalize, so: example.com/Organization/Name -> example.com/organization/name. Tags are
+# case sensitive though.
+alphanumeric_with_uppercase = r"[a-zA-Z0-9]+"
 separator = r"(?:[._]|__|[-]+)"
 localhost = r"localhost"
 domainNameComponent = r"(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])"
@@ -25,7 +27,7 @@ host = rf"(?:{domainName}|{ipv6address})"
 domainAndPort = rf"{host}{optionalPort}"
 
 # image name
-pathComponent = rf"{alphanumeric}(?:{separator}{alphanumeric})*"
+pathComponent = rf"{alphanumeric_with_uppercase}(?:{separator}{alphanumeric_with_uppercase})*"
 remoteName = rf"{pathComponent}(?:\/{pathComponent})*"
 namePat = rf"(?:{domainAndPort}\/)?{remoteName}"
 
@@ -129,6 +131,11 @@ class ImageReference:
         ):
             name = f"{domain}/{name}"
             domain = "index.docker.io"
+
+        # Lowercase the image name. This is enforced by Docker, although the OCI spec isn't clear?
+        # We do this anyways, cause for example in Github Actions the <organization>/<repository>
+        # part can have uppercase, and may be interpolated when specifying the relevant OCI image.
+        name = name.lower()
 
         if not tag:
             tag = "latest"
