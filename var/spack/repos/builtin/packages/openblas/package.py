@@ -192,6 +192,13 @@ class Openblas(CMakePackage, MakefilePackage):
         when="@0.3.21 %gcc@:9",
     )
 
+    # Fix build on A64FX for OpenBLAS v0.3.24
+    patch(
+        "https://github.com/OpenMathLib/OpenBLAS/commit/90231bfc4e4afc51f67c248328fbef0cecdbd2c2.patch?full_index=1",
+        sha256="139e314f3408dc5c080d28887471f382e829d1bd06c8655eb72593e4e7b921cc",
+        when="@0.3.24 target=a64fx",
+    )
+
     # See https://github.com/spack/spack/issues/19932#issuecomment-733452619
     # Notice: fixed on Amazon Linux GCC 7.3.1 (which is an unofficial version
     # as GCC only has major.minor releases. But the bound :7.3.0 doesn't hurt)
@@ -369,6 +376,14 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             # DYNAMIC_ARCH or TARGET=GENERIC. Once it does, this special
             # case can go away.
             args.append("TARGET=" + "RISCV64_GENERIC")
+
+        elif self.spec.satisfies("@0.3.19: target=a64fx"):
+            # Special case for Fujitsu's A64FX
+            if any(self.spec.satisfies(i) for i in ["%gcc@11:", "%clang", "%fj"]):
+                args.append("TARGET=A64FX")
+            else:
+                # fallback to armv8-a+sve without -mtune=a64fx flag
+                args.append("TARGET=ARMV8SVE")
 
         else:
             args.append("TARGET=" + microarch.name.upper())
