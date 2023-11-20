@@ -276,7 +276,8 @@ class Gromacs(CMakePackage, CudaPackage):
         "sycl",
         policy="one_of",
         when="+sycl",
-        msg="GROMACS SYCL support comes either from oneAPI compiler or a package that provides the virtual package `sycl`, such as AdaptiveCPP",
+        msg="GROMACS SYCL support comes either from oneAPI compiler or a "
+        + "package that provides the virtual package `sycl`, such as AdaptiveCPP",
     )
     depends_on("lapack")
     depends_on("blas")
