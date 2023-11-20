@@ -49,6 +49,10 @@ def _flatten_dict(dictionary):
 class PythonExtension(spack.package_base.PackageBase):
     maintainers("adamjstewart")
 
+    ##: Callback names for install-time test
+    # TBD: This could override the derived list of tests if desired feature
+    #install_time_test_callbacks = ["test_imports"]
+
     @property
     def import_modules(self):
         """Names of modules that the Python package provides.
@@ -300,7 +304,8 @@ class PythonPackage(PythonExtension):
     legacy_buildsystem = "python_pip"
 
     #: Callback names for install-time test
-    install_time_test_callbacks = ["test"]
+    # TBD: This could override the derived list of tests if desired feature
+    #install_time_test_callbacks = ["test_imports"]
 
     build_system("python_pip")
 
@@ -371,17 +376,19 @@ class PythonPackage(PythonExtension):
 class PythonPipBuilder(BaseBuilder):
     phases = ("install",)
 
-    #: Names associated with package methods in the old build-system format
-    legacy_methods = ("test",)
+    ##: Callback names for install-time test
+    # TBD: This could override the derived list of tests if desired feature
+    #install_time_test_callbacks = ["test_imports"]
+
+    ##: Names associated with package methods in the old build-system format
+    # TBD: This could override the derived list of tests if desired feature
+    #legacy_methods = ("test_imports",)
 
     #: Same as legacy_methods, but the signature is different
     legacy_long_methods = ("install_options", "global_options", "config_settings")
 
     #: Names associated with package attributes in the old build-system format
     legacy_attributes = ("archive_files", "build_directory", "install_time_test_callbacks")
-
-    #: Callback names for install-time test
-    install_time_test_callbacks = ["test"]
 
     @staticmethod
     def std_args(cls):

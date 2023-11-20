@@ -97,10 +97,17 @@ def _create(pkg):
     package_module = inspect.getmodule(pkg)
     package_buildsystem = buildsystem_name(pkg)
     default_builder_cls = BUILDER_CLS[package_buildsystem]
+    test_methods = [fn.__name__ for _, fn in spack.install_test.test_functions(pkg, add_virtuals=True)]
     builder_cls_name = default_builder_cls.__name__
     builder_cls = getattr(package_module, builder_cls_name, None)
+    test_methods = [fn.__name__ for _, fn in spack.install_test.test_functions(pkg)]
     if builder_cls:
-        return builder_cls(pkg)
+        #return builder_cls(pkg)
+        # TODO/TBD: Do the test methods, etc. need to be added here too?
+        builder = builder_cls(pkg)
+        legacy_methods = builder.legacy_methods + tuple(test_methods)
+        #assert False, f"{package_buildsystem} {test_methods} {type(builder)}"
+        return builder
 
     # Specialized version of a given buildsystem can subclass some
     # base classes and specialize certain phases or methods or attributes.
@@ -156,6 +163,13 @@ def _create(pkg):
     # Add fallback methods for the Package object to refer to the builder. If a method
     # with the same name is defined in the Package, it will override this definition
     # (when _ForwardToBaseBuilder is initialized)
+    # TODO: Support overriding test_methods but make sure consistency
+    # TODO:   between legacy_methods and install_time_test_callbacks
+    legacy_methods = getattr(base_cls, "legacy_methods", tuple())
+    legacy_methods = set(sorted(test_methods + list(legacy_methods)))
+    base_cls.legacy_methods = tuple(legacy_methods)
+    base_cls.install_time_test_callbacks = sorted(test_methods)
+
     for method_name in (
         base_cls.phases
         + base_cls.legacy_methods
@@ -163,6 +177,8 @@ def _create(pkg):
         + ("setup_build_environment", "setup_dependent_build_environment")
     ):
         setattr(_ForwardToBaseBuilder, method_name, forward_method_to_getattr(method_name))
+
+    #assert False, f"{package_buildsystem} {test_methods} {base_cls.legacy_methods} {base_cls.install_time_test_callbacks}"
 
     def forward_property_to_getattr(property_name):
         def __forward(self):
