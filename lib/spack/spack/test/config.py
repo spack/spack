@@ -78,7 +78,7 @@ spack:
         verify_ssl: False
         dirty: False
     packages:
-        libelf:
+        all:
             compiler: [ 'gcc@4.5.3' ]
     repos:
         - /x/y/z
@@ -276,6 +276,25 @@ def test_add_config_path(mutable_config):
     spack.config.add(path)
     compilers = spack.config.get("packages")["all"]["compiler"]
     assert "gcc" in compilers
+
+    # Try quotes to escape brackets
+    path = "config:install_tree:projections:cmake:\
+'{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
+    spack.config.add(path)
+    set_value = spack.config.get("config")["install_tree"]["projections"]["cmake"]
+    assert set_value == "{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}"
+
+    # NOTE:
+    # The config path: "config:install_tree:root:<path>" is unique in that it can accept multiple
+    # schemas (such as a dropped "root" component) which is atypical and may lead to passing tests
+    # when the behavior is in reality incorrect.
+    # the config path below is such that no subkey accepts a string as a valid entry in our schema
+
+    # try quotes to escape colons
+    path = "config:build_stage:'C:\\path\\to\\config.yaml'"
+    spack.config.add(path)
+    set_value = spack.config.get("config")["build_stage"]
+    assert "C:\\path\\to\\config.yaml" in set_value
 
 
 @pytest.mark.regression("17543,23259")
@@ -923,7 +942,7 @@ def test_single_file_scope(config, env_yaml):
         # from the single-file config
         assert spack.config.get("config:verify_ssl") is False
         assert spack.config.get("config:dirty") is False
-        assert spack.config.get("packages:libelf:compiler") == ["gcc@4.5.3"]
+        assert spack.config.get("packages:all:compiler") == ["gcc@4.5.3"]
 
         # from the lower config scopes
         assert spack.config.get("config:checksum") is True
@@ -946,7 +965,7 @@ spack:
     config:
         verify_ssl: False
     packages::
-        libelf:
+        all:
             compiler: [ 'gcc@4.5.3' ]
     repos:
         - /x/y/z
@@ -958,7 +977,7 @@ spack:
     with spack.config.override(scope):
         # from the single-file config
         assert spack.config.get("config:verify_ssl") is False
-        assert spack.config.get("packages:libelf:compiler") == ["gcc@4.5.3"]
+        assert spack.config.get("packages:all:compiler") == ["gcc@4.5.3"]
 
         # from the lower config scopes
         assert spack.config.get("config:checksum") is True

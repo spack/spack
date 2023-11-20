@@ -40,6 +40,18 @@ class Acts(CMakePackage, CudaPackage):
     # Supported Acts versions
     version("main", branch="main")
     version("master", branch="main", deprecated=True)  # For compatibility
+    version("30.3.2", commit="76826f208f5929d8326798c87263f2563d0ae7e9", submodules=True)
+    version("30.3.1", commit="bbee459dd93855417d5717d53cbbb2bace7de2bb", submodules=True)
+    version("30.3.0", commit="311acb9ab41c2d79a4b90b193e5b25297182d670", submodules=True)
+    version("30.2.0", commit="264b0a3214cbf8ca013623fc196e2d90d647c58f", submodules=True)
+    version("30.1.1", commit="3d43492b2775e62051e9ad31f06b91d6e2357ab9", submodules=True)
+    version("30.1.0", commit="60d9eec916f6c81373858c8d99d821861d7efeb8", submodules=True)
+    version("30.0.0", commit="00fa3fabac86a1e65198d4b94dd263b1c731a84c", submodules=True)
+    version("29.2.0", commit="b2d65308399d8f653fa8bdd73a2a203c58608358", submodules=True)
+    version("29.1.0", commit="4681c3b142db469b00ca03e92e6b237f7c89d141", submodules=True)
+    version("29.0.0", commit="9c6e4597af39f826e17d46850fdb407a48817ba6", submodules=True)
+    version("28.2.0", commit="c612e7c625f961330e383fb7856cc7398dd82881", submodules=True)
+    version("28.1.0", commit="08e51b5f93c0d09f2d1e7e4f062e715072ec3e9b", submodules=True)
     version("28.0.0", commit="0d8aa418c00e8f79bab2cf88234f3433670b447c", submodules=True)
     version("27.1.0", commit="219480220738318fbedb943cac85415687d75b66", submodules=True)
     version("27.0.0", commit="4d7029bd4e9285fcda2770aef6d78a7f833cb14f", submodules=True)
@@ -214,6 +226,7 @@ class Acts(CMakePackage, CudaPackage):
     variant("mlpack", default=False, description="Build MLpack plugin", when="@25:")
     variant("onnx", default=False, description="Build ONNX plugin")
     variant("odd", default=False, description="Build the Open Data Detector", when="@19.1:")
+    variant("podio", default=False, description="Build Podio plugin", when="@30.3:")
     variant(
         "profilecpu",
         default=False,
@@ -230,6 +243,9 @@ class Acts(CMakePackage, CudaPackage):
     variant("tgeo", default=False, description="Build the TGeo plugin", when="+identification")
 
     # Variants that only affect Acts examples for now
+    variant(
+        "binaries", default=False, description="Build the examples binaries", when="@23: +examples"
+    )
     variant(
         "edm4hep",
         default=False,
@@ -300,6 +316,8 @@ class Acts(CMakePackage, CudaPackage):
     depends_on("mlpack@3.1.1:", when="+mlpack")
     depends_on("nlohmann-json @3.9.1:", when="@0.14: +json")
     depends_on("podio @0.6:", when="@25: +edm4hep")
+    depends_on("podio @0.16:", when="@30.3: +edm4hep")
+    depends_on("podio @0.16:", when="+podio")
     depends_on("pythia8", when="+pythia8")
     depends_on("python", when="+python")
     depends_on("python@3.8:", when="+python @19.11:19")
@@ -320,8 +338,12 @@ class Acts(CMakePackage, CudaPackage):
     for _cxxstd in _cxxstd_values:
         if isinstance(_cxxstd, _ConditionalVariantValues):
             for _v in _cxxstd:
+                depends_on(
+                    f"geant4 cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} ^geant4"
+                )
                 depends_on(f"root cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} ^root")
         else:
+            depends_on(f"geant4 cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} ^geant4")
             depends_on(f"root cxxstd={_cxxstd}", when=f"cxxstd={_cxxstd} ^root")
 
     # ACTS has been using C++17 for a while, which precludes use of old GCC
@@ -332,15 +354,15 @@ class Acts(CMakePackage, CudaPackage):
 
         def cmake_variant(cmake_label, spack_variant):
             enabled = spec.satisfies("+" + spack_variant)
-            return "-DACTS_BUILD_{0}={1}".format(cmake_label, enabled)
+            return f"-DACTS_BUILD_{cmake_label}={enabled}"
 
         def enable_cmake_variant(cmake_label, spack_variant):
             enabled = spec.satisfies(spack_variant)
-            return "-DACTS_ENABLE_{0}={1}".format(cmake_label, enabled)
+            return f"-DACTS_ENABLE_{cmake_label}={enabled}"
 
         def example_cmake_variant(cmake_label, spack_variant, type="BUILD"):
             enabled = spec.satisfies("+examples +" + spack_variant)
-            return "-DACTS_{0}_EXAMPLES_{1}={2}".format(type, cmake_label, enabled)
+            return f"-DACTS_{type}_EXAMPLES_{cmake_label}={enabled}"
 
         def plugin_label(plugin_name):
             if spec.satisfies("@0.33:"):
@@ -365,6 +387,7 @@ class Acts(CMakePackage, CudaPackage):
             cmake_variant("ANALYSIS_APPS", "analysis"),
             plugin_cmake_variant("AUTODIFF", "autodiff"),
             cmake_variant("BENCHMARKS", "benchmarks"),
+            example_cmake_variant("BINARIES", "binaries"),
             plugin_cmake_variant("CUDA", "cuda"),
             plugin_cmake_variant("DD4HEP", "dd4hep"),
             example_cmake_variant("DD4HEP", "dd4hep"),
@@ -386,6 +409,7 @@ class Acts(CMakePackage, CudaPackage):
             plugin_cmake_variant("ONNX", "onnx"),
             enable_cmake_variant("CPU_PROFILING", "profilecpu"),
             enable_cmake_variant("MEMORY_PROFILING", "profilemem"),
+            plugin_cmake_variant("PODIO", "podio"),
             example_cmake_variant("PYTHIA8", "pythia8"),
             example_cmake_variant("PYTHON_BINDINGS", "python"),
             plugin_cmake_variant("ACTSVG", "svg"),
@@ -396,7 +420,7 @@ class Acts(CMakePackage, CudaPackage):
         ]
 
         log_failure_threshold = spec.variants["log_failure_threshold"].value
-        args.append("-DACTS_LOG_FAILURE_THRESHOLD={0}".format(log_failure_threshold))
+        args.append(f"-DACTS_LOG_FAILURE_THRESHOLD={log_failure_threshold}")
         if spec.satisfies("@19.4.0:"):
             args.append("-DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON")
 
@@ -427,11 +451,11 @@ class Acts(CMakePackage, CudaPackage):
         if "+cuda" in spec:
             cuda_arch = spec.variants["cuda_arch"].value
             if cuda_arch != "none":
-                args.append("-DCUDA_FLAGS=-arch=sm_{0}".format(cuda_arch[0]))
+                args.append(f"-DCUDA_FLAGS=-arch=sm_{cuda_arch[0]}")
 
         if "+python" in spec:
             python = spec["python"].command.path
-            args.append("-DPython_EXECUTABLE={0}".format(python))
+            args.append(f"-DPython_EXECUTABLE={python}")
 
         args.append(self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"))
 

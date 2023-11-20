@@ -6,11 +6,13 @@
 import os
 
 import spack.util.executable
+from spack.build_systems.autotools import AutotoolsBuilder
+from spack.build_systems.cmake import CMakeBuilder
 from spack.package import *
 
 
-class FluxSched(AutotoolsPackage):
-    """A scheduler for flux-core (pre-alpha)"""
+class FluxSched(CMakePackage, AutotoolsPackage):
+    """A scheduler for flux-core"""
 
     homepage = "https://github.com/flux-framework/flux-sched"
     url = "https://github.com/flux-framework/flux-sched/releases/download/v0.5.0/flux-sched-0.5.0.tar.gz"
@@ -20,6 +22,8 @@ class FluxSched(AutotoolsPackage):
     maintainers("grondo")
 
     version("master", branch="master")
+    version("0.30.0", sha256="1ccb2e53f4caede0233f19b2707e868f0cee9d2c957a06f97c22936ba9a43552")
+    version("0.29.0", sha256="b93b18788e677535aa8ef945cdbeeced6d1408a4d16cb4a816ead53f31dd78d2")
     version("0.28.0", sha256="9431c671bed5d76fd95b4a4a7f36224d4bf76f416a2a1a5c4908f3ca790d434d")
     version("0.27.0", sha256="1e131924440c904fa0c925b7aa14c47b97f4e67b43af7efd2ebc0ef7ce90eb7c")
     version("0.26.0", sha256="184faec800cf45952ef79bda113f710bf91a05be584034d36a3234627d4a54c7")
@@ -81,6 +85,18 @@ class FluxSched(AutotoolsPackage):
     depends_on("automake", type="build", when="@master")
     depends_on("libtool", type="build", when="@master")
 
+    # Set default to cmake so master (and branches) use it
+    build_system(
+        conditional("cmake", when="@0.29.0:"),
+        conditional("autotools", when="@:0.28.0"),
+        default="cmake",
+    )
+
+    # Required dependencies
+    with when("build_system=cmake"):
+        generator("ninja")
+        depends_on("cmake@3.18:", type="build")
+
     # Disable t5000-valgrind.t by default due to false positives not yet
     # in the suppressions file. (This patch will be in v0.21.0)
     patch("no-valgrind.patch", when="@:0.20.0")
@@ -136,19 +152,6 @@ class FluxSched(AutotoolsPackage):
         filter_file("NULL", "nullptr", "resource/schema/sched_data.hpp")
         filter_file("size_t", "std::size_t", "resource/planner/planner.h")
 
-    def configure_args(self):
-        args = []
-        if self.spec.satisfies("@0.9.0:"):
-            args.append("CXXFLAGS=-Wno-uninitialized")
-        if self.spec.satisfies("%clang@12:"):
-            args.append("CXXFLAGS=-Wno-defaulted-function-deleted")
-        if self.spec.satisfies("%oneapi"):
-            args.append("CXXFLAGS=-Wno-tautological-constant-compare")
-        # flux-sched's ax_boost is sometimes weird about non-system locations
-        # explicitly setting the path guarantees success
-        args.append("--with-boost={0}".format(self.spec["boost"].prefix))
-        return args
-
     @property
     def lua_version(self):
         return self.spec["lua"].version.up_to(2)
@@ -173,3 +176,23 @@ class FluxSched(AutotoolsPackage):
         env.prepend_path("FLUX_MODULE_PATH", self.prefix.lib.flux.modules.sched)
         env.prepend_path("FLUX_EXEC_PATH", self.prefix.libexec.flux.cmd)
         env.prepend_path("FLUX_RC_EXTRA", self.prefix.etc.flux)
+
+
+class CMakeBuilder(CMakeBuilder):
+    def cmake_args(self):
+        return []
+
+
+class AutotoolsBuilder(AutotoolsBuilder):
+    def configure_args(self):
+        args = []
+        if self.spec.satisfies("@0.9.0:"):
+            args.append("CXXFLAGS=-Wno-uninitialized")
+        if self.spec.satisfies("%clang@12:"):
+            args.append("CXXFLAGS=-Wno-defaulted-function-deleted")
+        if self.spec.satisfies("%oneapi"):
+            args.append("CXXFLAGS=-Wno-tautological-constant-compare")
+        # flux-sched's ax_boost is sometimes weird about non-system locations
+        # explicitly setting the path guarantees success
+        args.append("--with-boost={0}".format(self.spec["boost"].prefix))
+        return args

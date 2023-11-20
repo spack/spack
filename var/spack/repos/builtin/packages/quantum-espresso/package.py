@@ -242,6 +242,11 @@ class QuantumEspresso(CMakePackage, Package):
     depends_on("git@2.13:", type="build")
     depends_on("m4", type="build")
 
+    # If the Intel suite is used for Lapack, it must be used for fftw and vice-versa
+    for _intel_pkg in INTEL_MATH_LIBRARIES:
+        requires(f"^[virtuals=fftw-api] {_intel_pkg}", when=f"^[virtuals=lapack]   {_intel_pkg}")
+        requires(f"^[virtuals=lapack]   {_intel_pkg}", when=f"^[virtuals=fftw-api] {_intel_pkg}")
+
     # CONFLICTS SECTION
     # Omitted for now due to concretizer bug
     # MKL with 64-bit integers not supported.
@@ -489,7 +494,8 @@ class GenericBuilder(spack.build_systems.generic.GenericBuilder):
         # you need to pass it in the FFTW_INCLUDE and FFT_LIBS directory.
         # QE supports an internal FFTW2, but only an external FFTW3 interface.
 
-        if "^mkl" in spec:
+        is_using_intel_libraries = spec["lapack"].name in INTEL_MATH_LIBRARIES
+        if is_using_intel_libraries:
             # A seperate FFT library is not needed when linking against MKL
             options.append("FFTW_INCLUDE={0}".format(join_path(env["MKLROOT"], "include/fftw")))
         if "^fftw@3:" in spec:
@@ -531,11 +537,11 @@ class GenericBuilder(spack.build_systems.generic.GenericBuilder):
         if spec.satisfies("@:6.4"):  # set even if MKL is selected
             options.append("BLAS_LIBS={0}".format(lapack_blas.ld_flags))
         else:  # behavior changed at 6.5 and later
-            if not spec.satisfies("^mkl"):
+            if not is_using_intel_libraries:
                 options.append("BLAS_LIBS={0}".format(lapack_blas.ld_flags))
 
         if "+scalapack" in spec:
-            if "^mkl" in spec:
+            if is_using_intel_libraries:
                 if "^openmpi" in spec:
                     scalapack_option = "yes"
                 else:  # mpich, intel-mpi

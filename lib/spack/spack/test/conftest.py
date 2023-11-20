@@ -6,6 +6,7 @@
 import collections
 import datetime
 import errno
+import functools
 import inspect
 import itertools
 import json
@@ -27,15 +28,17 @@ import archspec.cpu.schema
 import llnl.util.lang
 import llnl.util.lock
 import llnl.util.tty as tty
-from llnl.util.filesystem import copy_tree, mkdirp, remove_linked_tree, working_dir
+from llnl.util.filesystem import copy_tree, mkdirp, remove_linked_tree, touchp, working_dir
 
 import spack.binary_distribution
 import spack.caches
+import spack.cmd.buildcache
 import spack.compilers
 import spack.config
 import spack.database
 import spack.directory_layout
 import spack.environment as ev
+import spack.error
 import spack.package_base
 import spack.package_prefs
 import spack.paths
@@ -52,7 +55,6 @@ import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 from spack.fetch_strategy import URLFetchStrategy
 from spack.util.pattern import Bunch
-from spack.util.web import FetchError
 
 
 def ensure_configuration_fixture_run_before(request):
@@ -472,7 +474,7 @@ class MockCache:
 
 class MockCacheFetcher:
     def fetch(self):
-        raise FetchError("Mock cache always fails for tests")
+        raise spack.error.FetchError("Mock cache always fails for tests")
 
     def __str__(self):
         return "[mock fetch cache]"
@@ -494,7 +496,7 @@ def mock_binary_index(monkeypatch, tmpdir_factory):
     tmpdir = tmpdir_factory.mktemp("mock_binary_index")
     index_path = tmpdir.join("binary_index").strpath
     mock_index = spack.binary_distribution.BinaryCacheIndex(index_path)
-    monkeypatch.setattr(spack.binary_distribution, "binary_index", mock_index)
+    monkeypatch.setattr(spack.binary_distribution, "BINARY_INDEX", mock_index)
     yield
 
 
@@ -565,6 +567,8 @@ def mock_repo_path():
 def _pkg_install_fn(pkg, spec, prefix):
     # sanity_check_prefix requires something in the install directory
     mkdirp(prefix.bin)
+    if not os.path.exists(spec.package.build_log_path):
+        touchp(spec.package.build_log_path)
 
 
 @pytest.fixture
@@ -1707,20 +1711,9 @@ def inode_cache():
 @pytest.fixture(autouse=True)
 def brand_new_binary_cache():
     yield
-    spack.binary_distribution.binary_index = llnl.util.lang.Singleton(
-        spack.binary_distribution._binary_index
+    spack.binary_distribution.BINARY_INDEX = llnl.util.lang.Singleton(
+        spack.binary_distribution.BinaryCacheIndex
     )
-
-
-@pytest.fixture
-def directory_with_manifest(tmpdir):
-    """Create a manifest file in a directory. Used by 'spack external'."""
-    with tmpdir.as_cwd():
-        test_db_fname = "external-db.json"
-        with open(test_db_fname, "w") as db_file:
-            json.dump(spack.test.cray_manifest.create_manifest_content(), db_file)
-
-    yield str(tmpdir)
 
 
 @pytest.fixture()
@@ -1957,3 +1950,32 @@ def pytest_runtest_setup(item):
     not_on_windows_marker = item.get_closest_marker(name="not_on_windows")
     if not_on_windows_marker and sys.platform == "win32":
         pytest.skip(*not_on_windows_marker.args)
+
+
+@pytest.fixture(scope="function")
+def disable_parallel_buildcache_push(monkeypatch):
+    class MockPool:
+        def map(self, func, args):
+            return [func(a) for a in args]
+
+        def starmap(self, func, args):
+            return [func(*a) for a in args]
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+    monkeypatch.setattr(spack.cmd.buildcache, "_make_pool", MockPool)
+
+
+def _root_path(x, y, *, path):
+    return path
+
+
+@pytest.fixture
+def mock_modules_root(tmp_path, monkeypatch):
+    """Sets the modules root to a temporary directory, to avoid polluting configuration scopes."""
+    fn = functools.partial(_root_path, path=str(tmp_path))
+    monkeypatch.setattr(spack.modules.common, "root_path", fn)

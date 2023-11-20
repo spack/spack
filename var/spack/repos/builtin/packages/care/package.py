@@ -17,8 +17,12 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
 
     version("develop", branch="develop", submodules="True")
     version("master", branch="main", submodules="True")
-    version("0.3.0", tag="v0.3.0", submodules="True")
-    version("0.2.0", tag="v0.2.0", submodules="True")
+    version(
+        "0.3.0", tag="v0.3.0", commit="5e2b69b2836c9f2215207ca9a36a690cb77eea33", submodules="True"
+    )
+    version(
+        "0.2.0", tag="v0.2.0", commit="30135e03b14b1dc753634e9147dafede0663906f", submodules="True"
+    )
 
     variant("openmp", default=False, description="Build Shared Libs")
     variant(

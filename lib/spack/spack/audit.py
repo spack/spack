@@ -38,10 +38,14 @@ as input.
 import ast
 import collections
 import collections.abc
+import glob
 import inspect
+import io
 import itertools
+import pathlib
 import pickle
 import re
+import warnings
 from urllib.request import urlopen
 
 import llnl.util.lang
@@ -51,6 +55,7 @@ import spack.patch
 import spack.repo
 import spack.spec
 import spack.util.crypto
+import spack.util.spack_yaml as syaml
 import spack.variant
 
 #: Map an audit tag to a list of callables implementing checks
@@ -247,6 +252,40 @@ def _search_duplicate_specs_in_externals(error_cls):
     return errors
 
 
+@config_packages
+def _deprecated_preferences(error_cls):
+    """Search package preferences deprecated in v0.21 (and slated for removal in v0.22)"""
+    # TODO (v0.22): remove this audit as the attributes will not be allowed in config
+    errors = []
+    packages_yaml = spack.config.CONFIG.get_config("packages")
+
+    def make_error(attribute_name, config_data, summary):
+        s = io.StringIO()
+        s.write("Occurring in the following file:\n")
+        dict_view = syaml.syaml_dict((k, v) for k, v in config_data.items() if k == attribute_name)
+        syaml.dump_config(dict_view, stream=s, blame=True)
+        return error_cls(summary=summary, details=[s.getvalue()])
+
+    if "all" in packages_yaml and "version" in packages_yaml["all"]:
+        summary = "Using the deprecated 'version' attribute under 'packages:all'"
+        errors.append(make_error("version", packages_yaml["all"], summary))
+
+    for package_name in packages_yaml:
+        if package_name == "all":
+            continue
+
+        package_conf = packages_yaml[package_name]
+        for attribute in ("compiler", "providers", "target"):
+            if attribute not in package_conf:
+                continue
+            summary = (
+                f"Using the deprecated '{attribute}' attribute " f"under 'packages:{package_name}'"
+            )
+            errors.append(make_error(attribute, package_conf, summary))
+
+    return errors
+
+
 #: Sanity checks on package directives
 package_directives = AuditClass(
     group="packages",
@@ -304,10 +343,17 @@ def _check_build_test_callbacks(pkgs, error_cls):
 
 @package_directives
 def _check_patch_urls(pkgs, error_cls):
-    """Ensure that patches fetched from GitHub have stable sha256 hashes."""
+    """Ensure that patches fetched from GitHub and GitLab have stable sha256
+    hashes."""
     github_patch_url_re = (
         r"^https?://(?:patch-diff\.)?github(?:usercontent)?\.com/"
-        ".+/.+/(?:commit|pull)/[a-fA-F0-9]*.(?:patch|diff)"
+        r".+/.+/(?:commit|pull)/[a-fA-F0-9]+\.(?:patch|diff)"
+    )
+    # Only .diff URLs have stable/full hashes:
+    # https://forum.gitlab.com/t/patches-with-full-index/29313
+    gitlab_patch_url_re = (
+        r"^https?://(?:.+)?gitlab(?:.+)/"
+        r".+/.+/-/(?:commit|merge_requests)/[a-fA-F0-9]+\.(?:patch|diff)"
     )
 
     errors = []
@@ -318,19 +364,27 @@ def _check_patch_urls(pkgs, error_cls):
                 if not isinstance(patch, spack.patch.UrlPatch):
                     continue
 
-                if not re.match(github_patch_url_re, patch.url):
-                    continue
-
-                full_index_arg = "?full_index=1"
-                if not patch.url.endswith(full_index_arg):
-                    errors.append(
-                        error_cls(
-                            "patch URL in package {0} must end with {1}".format(
-                                pkg_cls.name, full_index_arg
-                            ),
-                            [patch.url],
+                if re.match(github_patch_url_re, patch.url):
+                    full_index_arg = "?full_index=1"
+                    if not patch.url.endswith(full_index_arg):
+                        errors.append(
+                            error_cls(
+                                "patch URL in package {0} must end with {1}".format(
+                                    pkg_cls.name, full_index_arg
+                                ),
+                                [patch.url],
+                            )
                         )
-                    )
+                elif re.match(gitlab_patch_url_re, patch.url):
+                    if not patch.url.endswith(".diff"):
+                        errors.append(
+                            error_cls(
+                                "patch URL in package {0} must end with .diff".format(
+                                    pkg_cls.name
+                                ),
+                                [patch.url],
+                            )
+                        )
 
     return errors
 
@@ -758,7 +812,7 @@ def _version_constraints_are_satisfiable_by_some_version_in_repo(pkgs, error_cls
                 )
             except Exception:
                 summary = (
-                    "{0}: dependency on {1} cannot be satisfied " "by known versions of {1.name}"
+                    "{0}: dependency on {1} cannot be satisfied by known versions of {1.name}"
                 ).format(pkg_name, s)
                 details = ["happening in " + filename]
                 if dependency_pkg_cls is not None:
@@ -796,5 +850,125 @@ def _analyze_variants_in_directive(pkg, constraint, directive, error_cls):
             err = error_cls(summary=summary, details=[error_msg, "in " + filename])
 
             errors.append(err)
+
+    return errors
+
+
+@package_directives
+def _named_specs_in_when_arguments(pkgs, error_cls):
+    """Reports named specs in the 'when=' attribute of a directive.
+
+    Note that 'conflicts' is the only directive allowing that.
+    """
+    errors = []
+    for pkg_name in pkgs:
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+
+        def _extracts_errors(triggers, summary):
+            _errors = []
+            for trigger in list(triggers):
+                when_spec = spack.spec.Spec(trigger)
+                if when_spec.name is not None and when_spec.name != pkg_name:
+                    details = [f"using '{trigger}', should be '^{trigger}'"]
+                    _errors.append(error_cls(summary=summary, details=details))
+            return _errors
+
+        for dname, triggers in pkg_cls.dependencies.items():
+            summary = f"{pkg_name}: wrong 'when=' condition for the '{dname}' dependency"
+            errors.extend(_extracts_errors(triggers, summary))
+
+        for vname, (variant, triggers) in pkg_cls.variants.items():
+            summary = f"{pkg_name}: wrong 'when=' condition for the '{vname}' variant"
+            errors.extend(_extracts_errors(triggers, summary))
+
+        for provided, triggers in pkg_cls.provided.items():
+            summary = f"{pkg_name}: wrong 'when=' condition for the '{provided}' virtual"
+            errors.extend(_extracts_errors(triggers, summary))
+
+        for _, triggers in pkg_cls.requirements.items():
+            triggers = [when_spec for when_spec, _, _ in triggers]
+            summary = f"{pkg_name}: wrong 'when=' condition in 'requires' directive"
+            errors.extend(_extracts_errors(triggers, summary))
+
+        triggers = list(pkg_cls.patches)
+        summary = f"{pkg_name}: wrong 'when=' condition in 'patch' directives"
+        errors.extend(_extracts_errors(triggers, summary))
+
+        triggers = list(pkg_cls.resources)
+        summary = f"{pkg_name}: wrong 'when=' condition in 'resource' directives"
+        errors.extend(_extracts_errors(triggers, summary))
+
+    return llnl.util.lang.dedupe(errors)
+
+
+#: Sanity checks on package directives
+external_detection = AuditClass(
+    group="externals",
+    tag="PKG-EXTERNALS",
+    description="Sanity checks for external software detection",
+    kwargs=("pkgs",),
+)
+
+
+def packages_with_detection_tests():
+    """Return the list of packages with a corresponding detection_test.yaml file."""
+    import spack.config
+    import spack.util.path
+
+    to_be_tested = []
+    for current_repo in spack.repo.PATH.repos:
+        namespace = current_repo.namespace
+        packages_dir = pathlib.PurePath(current_repo.packages_path)
+        pattern = packages_dir / "**" / "detection_test.yaml"
+        pkgs_with_tests = [
+            f"{namespace}.{str(pathlib.PurePath(x).parent.name)}" for x in glob.glob(str(pattern))
+        ]
+        to_be_tested.extend(pkgs_with_tests)
+
+    return to_be_tested
+
+
+@external_detection
+def _test_detection_by_executable(pkgs, error_cls):
+    """Test drive external detection for packages"""
+    import spack.detection
+
+    errors = []
+
+    # Filter the packages and retain only the ones with detection tests
+    pkgs_with_tests = packages_with_detection_tests()
+    selected_pkgs = []
+    for current_package in pkgs_with_tests:
+        _, unqualified_name = spack.repo.partition_package_name(current_package)
+        # Check for both unqualified name and qualified name
+        if unqualified_name in pkgs or current_package in pkgs:
+            selected_pkgs.append(current_package)
+    selected_pkgs.sort()
+
+    if not selected_pkgs:
+        summary = "No detection test to run"
+        details = [f'  "{p}" has no detection test' for p in pkgs]
+        warnings.warn("\n".join([summary] + details))
+        return errors
+
+    for pkg_name in selected_pkgs:
+        for idx, test_runner in enumerate(
+            spack.detection.detection_tests(pkg_name, spack.repo.PATH)
+        ):
+            specs = test_runner.execute()
+            expected_specs = test_runner.expected_specs
+
+            not_detected = set(expected_specs) - set(specs)
+            if not_detected:
+                summary = pkg_name + ": cannot detect some specs"
+                details = [f'"{s}" was not detected [test_id={idx}]' for s in sorted(not_detected)]
+                errors.append(error_cls(summary=summary, details=details))
+
+            not_expected = set(specs) - set(expected_specs)
+            if not_expected:
+                summary = pkg_name + ": detected unexpected specs"
+                msg = '"{0}" was detected, but was not expected [test_id={1}]'
+                details = [msg.format(s, idx) for s in sorted(not_expected)]
+                errors.append(error_cls(summary=summary, details=details))
 
     return errors

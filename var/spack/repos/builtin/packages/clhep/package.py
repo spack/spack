@@ -19,6 +19,8 @@ class Clhep(CMakePackage):
 
     maintainers("drbenmorgan")
 
+    version("2.4.7.1", sha256="1c8304a7772ac6b99195f1300378c6e3ddf4ad07c85d64a04505652abb8a55f9")
+    version("2.4.7.0", sha256="7fa460030bc1a804ea7da8cce7611b93261493bbb66c3cfd3ceec935d7e1b8d3")
     version("2.4.6.4", sha256="49c89330f1903ef707d3c5d79c16a7c5a6f2c90fc290e2034ee3834809489e57")
     version("2.4.6.3", sha256="fcd007f11b10ba4af28d027222b63148d0eb44ff7a082eee353bdf921f9c684a")
     version("2.4.6.2", sha256="aded73e49bac85a5b4e86f64a0ee3d6f3cfe5551b0f7731c78b6d8f9dac6e8dc")
@@ -53,12 +55,15 @@ class Clhep(CMakePackage):
     variant(
         "cxxstd",
         default="11",
-        values=("11", "14", "17"),
+        values=(
+            "11",
+            "14",
+            conditional("17", when="@2.3.4.3:"),
+            conditional("20", when="@2.4.6.4:"),
+        ),
         multi=False,
         description="Use the specified C++ standard when building.",
     )
-
-    conflicts("cxxstd=17", when="@:2.3.4.2")
 
     depends_on("cmake@2.8.12.2:", when="@2.2.0.4:2.3.0.0", type="build")
     depends_on("cmake@3.2:", when="@2.3.0.1:", type="build")
