@@ -27,6 +27,12 @@ try:
 except ImportError:
     clingo = None  # type: ignore
     clingo_cffi = False
+except AttributeError:
+    raise RuntimeError(
+        "Clingo installation may be broken or incomplete, "
+        "please verify clingo has been installed correctly"
+        "\n\nClingo does not provide symbol clingo.Symbol"
+    )
 
 import llnl.util.lang
 import llnl.util.tty as tty
