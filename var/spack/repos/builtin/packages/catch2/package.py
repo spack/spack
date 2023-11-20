@@ -110,9 +110,13 @@ class Catch2(CMakePackage):
     )
     variant("shared", when="@3:", default=False, description="Build shared library")
 
+    variant(
+        "cxxstd", default="14", values=("14", "17"), multi=False, description="Define C++ standard"
+    )
+
     def cmake_args(self):
         spec = self.spec
-        args = []
+        args = [self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd")]
         # 1.7.0-1.9.3: no control over test builds
         if spec.satisfies("@1.9.4:2.1.0"):
             args.append("-DNO_SELFTEST={0}".format("OFF" if self.run_tests else "ON"))
