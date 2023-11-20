@@ -23,12 +23,11 @@ class Seissol(CMakePackage, CudaPackage):
     maintainers("Thomas-Ulrich", "ravil-mobile", "davschnellerkrenzland")
 
     variant("asagi", default=True, description="installs asagi for material input")
-    orders = (str(v) for v in range(2, 9))
     variant(
         "convergence_order",
         default="4",
         description="polynomial degree plus one",
-        values=orders,
+        values=(str(v) for v in range(2, 9)),
         multi=False,
     )
     variant(
@@ -55,17 +54,18 @@ class Seissol(CMakePackage, CudaPackage):
     variant(
         "number_of_mechanisms", default="3", description="number of mechanisms for viscoelasticity"
     )
-    backends = ("none", "cuda", "hip", "hipsycl", "oneapi")
     variant(
         "device_backend",
         default="none",
         description="type of gpu backend",
-        values=backends,
+        values=("none", "cuda", "hip", "hipsycl", "oneapi"),
         multi=False,
     )
 
     variant("mpi", default=True, description="installs an MPI implementation")
     variant("libxsmm", default=True, description="installs libxsmm-generator")
+
+    """
     variant(
         "extra_blas",
         default="none",
@@ -74,6 +74,7 @@ class Seissol(CMakePackage, CudaPackage):
         multi=True,
     )
     variant("memkind", default=True, description="installs memkind")
+    """
 
     conflicts(
         "cuda_arch=none",
@@ -106,22 +107,27 @@ class Seissol(CMakePackage, CudaPackage):
     depends_on("easi@1.2 ~asagi", when="~asagi")
     depends_on("easi@1.2 +asagi", when="+asagi")
 
+    """
     depends_on("intel-mkl threads=none", when="extra_blas=mkl")
     depends_on("openblas threads=none", when="extra_blas=openblas")
     depends_on("blis threads=none", when="extra_blas=blis")
-
     depends_on("memkind", when="+memkind target=x86_64:")
+    """
+
     depends_on("py-pspamm")
     depends_on("yaml-cpp@0.6.2")
     depends_on("cxxtest")
     depends_on("eigen@3.4.0")
 
+    """
     depends_on("py-numpy", when="+python")
     depends_on("py-scipy", when="+python")
     depends_on("py-matplotlib", when="+python")
     depends_on("py-pip", when="+python")
     depends_on("py-pyopenssl", when="+python")
-    depends_on("python@3", when="+python")
+    """
+
+    depends_on("python@3")
 
     def cmake_args(self):
         args = [
