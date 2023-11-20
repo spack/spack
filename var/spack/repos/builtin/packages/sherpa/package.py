@@ -217,7 +217,7 @@ class Sherpa(AutotoolsPackage):
         args.extend(self.enable_or_disable("pythia"))
         hepmc_root = lambda x: self.spec["hepmc"].prefix
         args.extend(self.enable_or_disable("hepmc2", activation_value=hepmc_root))
-        if self.spec.satisfies("@2.2.13:"):
+        if self.spec.satisfies("@3:"):
             args.extend(self.enable_or_disable("hepmc3", activation_value="prefix"))
             args.extend(self.enable_or_disable("rivet", activation_value="prefix"))
             args.extend(self.enable_or_disable("lhapdf", activation_value="prefix"))
