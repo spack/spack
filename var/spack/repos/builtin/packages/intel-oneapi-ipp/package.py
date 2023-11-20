@@ -111,5 +111,9 @@ class IntelOneapiIpp(IntelOneApiLibraryPackage):
     provides("ipp")
 
     @property
+    def v2_layout_versions(self):
+        return "@2021.10:"
+
+    @property
     def component_dir(self):
         return "ipp"

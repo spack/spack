@@ -80,5 +80,9 @@ class IntelOneapiAdvisor(IntelOneApiLibraryPackageWithSdk):
     )
 
     @property
+    def v2_layout_versions(self):
+        return "@2024:"
+
+    @property
     def component_dir(self):
         return "advisor"

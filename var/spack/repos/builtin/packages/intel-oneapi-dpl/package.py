@@ -84,15 +84,15 @@ class IntelOneapiDpl(IntelOneApiLibraryPackage):
     )
 
     @property
+    def v2_layout_versions(self):
+        return "@2022.3:"
+
+    @property
     def component_dir(self):
         return "dpl"
 
     @property
     def headers(self):
-        include_path = join_path(self.component_prefix, "linux", "include")
-        headers = find_headers("*", include_path, recursive=True)
-        # Force this directory to be added to include path, even
-        # though no files are here because all includes are relative
-        # to this path
-        headers.directories = [include_path]
-        return headers
+        return self.header_directories(
+            [self.component_prefix.include, self.component_prefix.linux.include]
+        )

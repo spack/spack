@@ -114,6 +114,10 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
     provides("mpi@:3.1")
 
     @property
+    def v2_layout_versions(self):
+        return "@2021.11:"
+
+    @property
     def component_dir(self):
         return "mpi"
 
@@ -161,10 +165,9 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
 
     @property
     def headers(self):
-        headers = find_headers("*", self.component_prefix.include)
-        if "+ilp64" in self.spec:
-            headers += find_headers("*", self.component_prefix.include.ilp64)
-        return headers
+        return self.header_directories(
+            [self.component_prefix.include, self.component_prefix.include.ilp64]
+        )
 
     @property
     def libs(self):
@@ -198,6 +201,13 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
 
     @run_after("install")
     def fixup_prefix(self):
+        # The motivation was to provide a more standard layout so impi
+        # would be more likely to work as a virtual dependence.  It
+        # does not work for v2_layout because of a library conflict. I
+        # am not sure if this mechanism is useful so disabling for
+        # v2_layout rather than try to make it work.
+        if self.v2_layout:
+            return
         self.symlink_dir(self.component_prefix.include, self.prefix.include)
         self.symlink_dir(self.component_prefix.lib, self.prefix.lib)
         self.symlink_dir(self.component_prefix.lib.release, self.prefix.lib)

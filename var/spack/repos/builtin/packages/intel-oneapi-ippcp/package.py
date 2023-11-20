@@ -108,5 +108,9 @@ class IntelOneapiIppcp(IntelOneApiLibraryPackage):
     )
 
     @property
+    def v2_layout_versions(self):
+        return "@2021.9:"
+
+    @property
     def component_dir(self):
         return "ippcp"

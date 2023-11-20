@@ -107,7 +107,17 @@ class IntelOneapiTbb(IntelOneApiLibraryPackage):
     def component_dir(self):
         return "tbb"
 
+    @property
+    def v2_layout_versions(self):
+        return "@2021.11:"
+
     @run_after("install")
     def fixup_prefix(self):
+        # The motivation was to provide a more standard layout so tbb
+        # would be more likely to work as a virtual dependence. I am
+        # not sure if this mechanism is useful and it became a problem
+        # for mpi so disabling for v2_layout.
+        if self.v2_layout:
+            return
         self.symlink_dir(self.component_prefix.include, self.prefix.include)
         self.symlink_dir(self.component_prefix.lib, self.prefix.lib)

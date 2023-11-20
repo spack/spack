@@ -135,12 +135,12 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     provides("lapack", "blas")
 
     @property
-    def component_dir(self):
-        return "mkl"
+    def v2_layout_versions(self):
+        return "@2024:"
 
     @property
-    def headers(self):
-        return find_headers("*", self.component_prefix.include)
+    def component_dir(self):
+        return "mkl"
 
     @property
     def libs(self):
@@ -204,7 +204,9 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
                     )
                 )
 
-        lib_path = self.component_prefix.lib.intel64
+        lib_path = (
+            self.component_prefix.lib if self.v2_layout else self.component_prefix.lib.intel64
+        )
         lib_path = lib_path if isdir(lib_path) else dirname(lib_path)
 
         resolved_libs = find_libraries(libs, lib_path, shared=shared)
@@ -225,5 +227,11 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
 
     @run_after("install")
     def fixup_prefix(self):
+        # The motivation was to provide a more standard layout so mkl
+        # would be more likely to work as a virtual dependence. I am
+        # not sure if this mechanism is useful and it became a problem
+        # for mpi so disabling for v2_layout.
+        if self.v2_layout:
+            return
         self.symlink_dir(self.component_prefix.include, self.prefix.include)
         self.symlink_dir(self.component_prefix.lib, self.prefix.lib)

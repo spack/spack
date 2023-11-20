@@ -108,15 +108,24 @@ class IntelOneapiDnn(IntelOneApiLibraryPackage):
     depends_on("tbb")
 
     @property
+    def v2_layout_versions(self):
+        return "@2024:"
+
+    @property
     def component_dir(self):
         return "dnnl"
 
+    def __target(self):
+        if self.v2_layout:
+            return self.component_prefix
+        else:
+            return self.component_prefix.cpu_dpcpp_gpu_dpcpp
+
     @property
     def headers(self):
-        include_path = join_path(self.component_prefix, "cpu_dpcpp_gpu_dpcpp", "include")
-        return find_headers("dnnl", include_path)
+        return find_headers("dnnl", self.__target().include)
 
     @property
     def libs(self):
-        lib_path = join_path(self.component_prefix, "cpu_dpcpp_gpu_dpcpp", "lib")
-        return find_libraries(["libdnnl", "libmkldnn"], root=lib_path, shared=True)
+        # libmkldnn was removed before 2024, but not sure when
+        return find_libraries(["libdnnl", "libmkldnn"], self.__target().lib)
