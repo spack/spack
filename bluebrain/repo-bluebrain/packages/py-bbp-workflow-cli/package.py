@@ -16,9 +16,9 @@ class PyBbpWorkflowCli(PythonPackage):
 
     depends_on("py-setuptools", type=("build"))
 
-    depends_on("py-requests", type="run")
-    depends_on("py-click", type="run")
-    depends_on("py-sh@:1", type="run")
-    depends_on("py-python-keycloak", type="run")
-    depends_on("py-kubernetes", type="run")
-    depends_on("py-pyjwt", type="run")
+    depends_on("py-requests", type=("build", "run"))
+    depends_on("py-click", type=("build", "run"))
+    depends_on("py-sh@:1", type=("build", "run"))
+    depends_on("py-python-keycloak", type=("build", "run"))
+    depends_on("py-kubernetes", type=("build", "run"))
+    depends_on("py-pyjwt", type=("build", "run"))

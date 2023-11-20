@@ -12,7 +12,7 @@ class PyEntityManagement(PythonPackage):
     homepage = "https://bbpgitlab.epfl.ch/nse/entity-management"
     git = "ssh://git@bbpgitlab.epfl.ch/nse/entity-management.git"
 
-    version("1.2.28", tag="entity-management-v1.2.28")
+    version("1.2.34", tag="entity-management-v1.2.34")
     version("1.2.27", tag="entity-management-v1.2.27")
     version("1.2.26", tag="entity-management-v1.2.26")
     version("1.2.25", tag="entity-management-v1.2.25")
@@ -28,3 +28,4 @@ class PyEntityManagement(PythonPackage):
     depends_on("py-pyjwt", type=("build", "run"))
     depends_on("py-python-keycloak", type=("build", "run"))
     depends_on("py-devtools+pygments", type=("build", "run"))
+    depends_on("py-click", type=("build", "run"))
