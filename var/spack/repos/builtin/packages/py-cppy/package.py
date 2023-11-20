@@ -12,8 +12,6 @@ class PyCppy(PythonPackage):
     homepage = "https://github.com/nucleic/cppy"
     pypi = "cppy/cppy-1.1.0.tar.gz"
 
-    maintainers("iarspider")
-
     version("1.2.1", sha256="83b43bf17b1085ac15c5debdb42154f138b928234b21447358981f69d0d6fe1b")
     version("1.1.0", sha256="4eda6f1952054a270f32dc11df7c5e24b259a09fddf7bfaa5f33df9fb4a29642")
 
