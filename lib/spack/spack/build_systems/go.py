@@ -16,7 +16,7 @@ from ._checks import BaseBuilder, execute_install_time_tests
 
 
 class GoPackage(spack.package_base.PackageBase):
-    """Specialized class for packages built using a Makefiles."""
+    """Specialized class for packages built using the Go toolchain."""
 
     #: This attribute is used in UI queries that need to know the build
     #: system base class
