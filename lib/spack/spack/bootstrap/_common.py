@@ -214,7 +214,7 @@ def _root_spec(spec_str: str) -> str:
         spec_str += " %apple-clang"
     elif str(spack.platforms.host()) == "windows":
         # TODO (johnwparent): Remove version constraint when clingo patch is up
-        spec_str += " %msvc@19.37"
+        spec_str += " %msvc@:19.37"
     else:
         spec_str += " %gcc"
 
