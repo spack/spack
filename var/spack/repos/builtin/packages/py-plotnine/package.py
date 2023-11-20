@@ -15,6 +15,7 @@ class PyPlotnine(PythonPackage):
     homepage = "https://plotnine.readthedocs.io/en/stable"
     pypi = "plotnine/plotnine-0.8.0.tar.gz"
 
+    version("0.10.1", sha256="d912a04b638dcf822c51a6788b85664232348d515f151db3a64c0001966f6841")
     version("0.9.0", sha256="0e89a93015f3c71d6844ac7aa9fb0da09b908f5f7dfa7dd5d68a5ca32b2ebcea")
     version("0.8.0", sha256="39de59edcc28106761b65238647d0b1f6212ea7f3a78f8be0b846616db969276")
     version("0.7.1", sha256="02f2b0435dae2e917198c5367fd97b010445d64d9888c6b7e755d3cdfe7ad057")
@@ -31,9 +32,12 @@ class PyPlotnine(PythonPackage):
 
     depends_on("py-descartes@1.1.0:", type=("build", "run"), when="@:0.8.0")
 
-    depends_on("py-matplotlib@3.5.0:", type=("build", "run"), when="@0.9.0:")
-    depends_on("py-matplotlib@3.1.1:", type=("build", "run"), when="@0.6.0:")
+    depends_on("py-matplotlib@3.5.0:", type=("build", "run"), when="@0.10.1:")
+    # https://github.com/has2k1/plotnine/issues/619
+    depends_on("py-matplotlib@3.5.0:3.5", type=("build", "run"), when="@0.9.0:0.9")
+    depends_on("py-matplotlib@3.1.1:3.5", type=("build", "run"), when="@0.6.0:0.9")
 
+    depends_on("py-mizani@0.8.1:", type=("build", "run"), when="@0.10.1:")
     depends_on("py-mizani@0.7.3:", type=("build", "run"), when="@0.8.0:")
     depends_on("py-mizani@0.6.0:", type=("build", "run"), when="@0.6.0:")
 
