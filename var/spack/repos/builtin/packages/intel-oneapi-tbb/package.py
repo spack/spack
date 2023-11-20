@@ -97,6 +97,8 @@ class IntelOneapiTbb(IntelOneApiLibraryPackage):
 
     provides("tbb")
 
+    conflicts("binutils@:2.31.0", when="@2021.4.0:", msg="Requires binutils >= 2.31.1")
+
     @property
     def component_dir(self):
         return "tbb"
