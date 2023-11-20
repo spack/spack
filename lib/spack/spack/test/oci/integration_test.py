@@ -16,6 +16,7 @@ from spack.binary_distribution import gzip_compressed_tarfile
 from spack.main import SpackCommand
 from spack.oci.image import Digest, ImageReference, default_config, default_manifest
 from spack.oci.oci import blob_exists, get_manifest_and_config, upload_blob, upload_manifest
+from spack.spec import Spec
 from spack.test.oci.mock_registry import DummyServer, InMemoryOCIRegistry, create_opener
 
 buildcache = SpackCommand("buildcache")
@@ -51,6 +52,38 @@ def test_buildcache_push_command(mutable_database, disable_parallel_buildcache_p
 
         # And let's check that the bin/mpileaks executable is there
         assert os.path.exists(os.path.join(spec.prefix, "bin", "mpileaks"))
+
+
+def test_buildcache_push_log_digests(mutable_database, disable_parallel_buildcache_push, tmp_path):
+    digests_file = tmp_path / "digests.txt"
+    with oci_servers(InMemoryOCIRegistry("example.com")):
+        mirror("add", "oci-test", "oci://example.com/image")
+
+        # Push the package(s) to the OCI registry
+        buildcache(
+            "push",
+            "--oci-output-digests",
+            str(digests_file),
+            "--update-index",
+            "oci-test",
+            "mpileaks^mpich",
+        )
+
+        # Expected specs
+        expected_specs = set(mutable_database.query_local("mpileaks^mpich")[0].traverse())
+
+        for entry in digests_file.read_text().splitlines():
+            # Test that the ref parses
+            ref = ImageReference.from_string(entry)
+
+            # Check that it can be fetched by digest
+            _, config = get_manifest_and_config(ref.without_tag())
+
+            # Verify that the fetched spec is in the expected specs
+            expected_specs.remove(Spec.from_dict(config))
+
+        # Ensure it is exhaustive
+        assert not expected_specs
 
 
 def test_buildcache_push_with_base_image_command(
