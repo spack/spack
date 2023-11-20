@@ -235,12 +235,11 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         depends_on("rocblas")
         depends_on("miopen-hip")
         depends_on("rocminfo")
-    # https://github.com/pytorch/pytorch/issues/60332
-    # depends_on("xnnpack@2022-12-21", when="@2:+xnnpack")
-    # depends_on("xnnpack@2022-02-16", when="@1.12:1+xnnpack")
-    # depends_on("xnnpack@2021-06-21", when="@1.10:1.11+xnnpack")
-    # depends_on("xnnpack@2021-02-22", when="@1.8:1.9+xnnpack")
-    # depends_on("xnnpack@2020-03-23", when="@1.6:1.7+xnnpack")
+    depends_on("xnnpack@2022-12-22", when="@2:+xnnpack")
+    depends_on("xnnpack@2022-02-16", when="@1.12:1+xnnpack")
+    depends_on("xnnpack@2021-06-21", when="@1.10:1.11+xnnpack")
+    depends_on("xnnpack@2021-02-22", when="@1.8:1.9+xnnpack")
+    depends_on("xnnpack@2020-03-23", when="@1.6:1.7+xnnpack")
     depends_on("mpi", when="+mpi")
     depends_on("gloo@2023-05-19", when="@2.1:+gloo")
     depends_on("gloo@2023-01-17", when="@2.0+gloo")
@@ -631,8 +630,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             env.set("USE_SYSTEM_BENCHMARK", "ON")
             # https://github.com/pytorch/pytorch/issues/60331
             # env.set("USE_SYSTEM_ONNX", "ON")
-            # https://github.com/pytorch/pytorch/issues/60332
-            # env.set("USE_SYSTEM_XNNPACK", "ON")
+            env.set("USE_SYSTEM_XNNPACK", "ON")
 
         # https://github.com/pytorch/pytorch/issues/111086
         if self.spec.satisfies("%apple-clang@15:"):
