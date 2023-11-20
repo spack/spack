@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import re
 
 from spack.package import *
@@ -16,6 +17,27 @@ class Rust(Package):
     git = "https://github.com/rust-lang/rust.git"
 
     maintainers("alecbcs")
+
+    # When adding a version of Rust you may need to add an additional version
+    # to rust-bootstrap as the minimum bootstrapping requirements increase.
+    # As a general rule of thumb Rust can be built with either the previous major
+    # version or the current version of the compiler as shown above.
+
+    # Pre-release versions.
+    # Note: If you plan to use these versions remember to install with
+    # `-n` to prevent Spack from failing due to failed checksums.
+    #
+    #     $ spack install -n rust@pre-release-version
+    #
+    version("beta")
+    version("master", branch="master", submodules=True)
+    version("nightly")
+
+    # Stable versions.
+    version("1.73.0", sha256="96d62e6d1f2d21df7ac8acb3b9882411f9e7c7036173f7f2ede9e1f1f6b1bb3a")
+    version("1.70.0", sha256="b2bfae000b7a5040e4ec4bbc50a09f21548190cb7570b0ed77358368413bd27c")
+    version("1.65.0", sha256="5828bb67f677eabf8c384020582b0ce7af884e1c84389484f7f8d00dd82c0038")
+    version("1.60.0", sha256="20ca826d1cf674daf8e22c4f8c4b9743af07973211c839b85839742314c838b7")
 
     # Core dependencies
     depends_on("cmake@3.13.4:", type="build")
@@ -40,26 +62,7 @@ class Rust(Package):
     depends_on("rust-bootstrap@1.59:1.60", type="build", when="@1.60")
     depends_on("rust-bootstrap@1.64:1.65", type="build", when="@1.65")
     depends_on("rust-bootstrap@1.69:1.70", type="build", when="@1.70")
-
-    # When adding a version of Rust you may need to add an additional version
-    # to rust-bootstrap as the minimum bootstrapping requirements increase.
-    # As a general rule of thumb Rust can be built with either the previous major
-    # version or the current version of the compiler as shown above.
-
-    # Pre-release versions.
-    # Note: If you plan to use these versions remember to install with
-    # `-n` to prevent Spack from failing due to failed checksums.
-    #
-    #     $ spack install -n rust@pre-release-version
-    #
-    version("beta")
-    version("master", branch="master", submodules=True)
-    version("nightly")
-
-    # Stable versions.
-    version("1.70.0", sha256="b2bfae000b7a5040e4ec4bbc50a09f21548190cb7570b0ed77358368413bd27c")
-    version("1.65.0", sha256="5828bb67f677eabf8c384020582b0ce7af884e1c84389484f7f8d00dd82c0038")
-    version("1.60.0", sha256="20ca826d1cf674daf8e22c4f8c4b9743af07973211c839b85839742314c838b7")
+    depends_on("rust-bootstrap@1.72:1.73", type="build", when="@1.73")
 
     variant(
         "analysis",
@@ -91,9 +94,33 @@ class Rust(Package):
         ar = which("ar", required=True)
         env.set("AR", ar.path)
 
-        # Manually inject the path of openssl's certs for build.
-        certs = join_path(self.spec["openssl"].prefix, "etc/openssl/cert.pem")
-        env.set("CARGO_HTTP_CAINFO", certs)
+        # Manually inject the path of openssl's certs for build
+        # if certs are present on system via Spack or via external
+        # openssl.
+        def get_test_path(p):
+            certs = join_path(p, "cert.pem")
+            if os.path.exists(certs):
+                return certs
+            return None
+
+        # find certs, don't set if no file is found in case
+        # ca-certificates isn't installed
+        certs = None
+        openssl = self.spec["openssl"]
+        if openssl.external:
+            try:
+                output = which("openssl", required=True)("version", "-d", output=str, error=str)
+                openssl_dir = re.match('OPENSSLDIR: "([^"]+)"', output)
+                if openssl_dir:
+                    certs = get_test_path(openssl_dir.group(1))
+            except ProcessError:
+                pass
+
+        if certs is None:
+            certs = get_test_path(join_path(openssl.prefix, "etc/openssl"))
+
+        if certs is not None:
+            env.set("CARGO_HTTP_CAINFO", certs)
 
     def configure(self, spec, prefix):
         opts = []
