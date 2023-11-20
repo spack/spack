@@ -6,7 +6,6 @@
 import os
 
 from spack.package import *
-from spack.version import ver
 
 
 class Hub(Package):
@@ -43,11 +42,11 @@ class Hub(Package):
 
     def install(self, spec, prefix):
         env = os.environ
-        if spec.version < ver("2.14"):
+        if spec.version < Version("2.14"):
             env["GOPATH"] = self.stage.source_path + ":" + env["GOPATH"]
             env["GO111MODULE"] = "off"
             bash = which("bash")
-            bash(os.path.join("script", "build"), "-o", os.path.join(prefix, "bin", "hub"))
+            bash(os.path.join("script", "build"), "-o", prefix.bin.hub)
             return
         env["GO111MODULE"] = "on"
-        go("build", "-o", os.path.join(prefix, "bin", "hub"))
+        go("build", "-o", prefix.bin.hub)
