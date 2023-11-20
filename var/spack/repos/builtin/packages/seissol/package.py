@@ -1,15 +1,15 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class Seissol(CMakePackage, CudaPackage):
-    """Seissol - A scientific software for the numerical simulation of seismic wave phenomena and earthquake dynamics.
-    This package only provides all necessary libs for seissol installation.
+    """Seissol - A scientific software for the numerical simulation
+    of seismic wave phenomena and earthquake dynamics.
     """
 
     homepage = "http://www.seissol.org"
@@ -17,13 +17,10 @@ class Seissol(CMakePackage, CudaPackage):
     version("master", branch="master", submodules=True)
     # we cannot use the tar.gz file because it does not contains submodules
     version(
-        "1.1.2",
-        tag="v1.1.2",
-        commit="71002c1c1498ebd6f50a954731da68fa4f9d436b",
-        submodules=True,
+        "1.1.2", tag="v1.1.2", commit="71002c1c1498ebd6f50a954731da68fa4f9d436b", submodules=True
     )
 
-    maintainers("Thomas-Ulrich", "ravil-mobile", "davschneller" "krenzland")
+    maintainers("Thomas-Ulrich", "ravil-mobile", "davschnellerkrenzland")
 
     variant("asagi", default=True, description="installs asagi for material input")
     orders = (str(v) for v in range(2, 9))
@@ -56,9 +53,7 @@ class Seissol(CMakePackage, CudaPackage):
         multi=False,
     )
     variant(
-        "number_of_mechanisms",
-        default="3",
-        description="number of mechanisms for viscoelasticity",
+        "number_of_mechanisms", default="3", description="number of mechanisms for viscoelasticity"
     )
     backends = ("none", "cuda", "hip", "hipsycl", "oneapi")
     variant(
@@ -86,19 +81,13 @@ class Seissol(CMakePackage, CudaPackage):
         msg="A value for cuda_arch must be specified. Add cuda_arch=XX",
     )
 
-    variant(
-        "python", default=False, description="installs python, pip, numpy and scipy"
-    )
+    variant("python", default=False, description="installs python, pip, numpy and scipy")
 
     depends_on("mpi", when="+mpi")
     # with cuda 12 and llvm 14:15, we have the issue: "error: no template named 'texture"
     # https://github.com/llvm/llvm-project/issues/61340
     conflicts("cuda@12", when="+cuda ^llvm@14:15")
-    # this issue is fixed with llvm 16. SeisSol compiles but does not run on heisenbug:
-    # [hipSYCL Warning] from (...)/cuda_hardware_manager.cpp:55 @ cuda_hardware_manager(): cuda_hardware_manager: Could not obtain number of devices (error code = CUDA:35)
-    # [hipSYCL Error] from (...)/cuda_hardware_manager.cpp:74 @ get_device(): cuda_hardware_manager: Attempt to access invalid device detected.
-    # Therefore the cuda version is set to 11 now, but this constrain could be released in the future
-    depends_on("cuda@11:", when="+cuda")
+
     depends_on("hipsycl@develop +cuda", when="+cuda")
 
     depends_on("parmetis +int64 +shared", when="+mpi")
@@ -143,11 +132,9 @@ class Seissol(CMakePackage, CudaPackage):
             self.define_from_variant("EQUATIONS", "equations"),
         ]
         if self.spec.variants["equations"].value != "viscoelastic2":
-            args.append(f"-NUMBER_OF_MECHANISMS=0")
+            args.append("-NUMBER_OF_MECHANISMS=0")
         else:
-            args.append(
-                self.define_from_variant("NUMBER_OF_MECHANISMS", "number_of_mechanisms")
-            )
+            args.append(self.define_from_variant("NUMBER_OF_MECHANISMS", "number_of_mechanisms"))
 
         if "+cuda" in self.spec:
             cuda_arch = self.spec.variants["cuda_arch"].value[0]
