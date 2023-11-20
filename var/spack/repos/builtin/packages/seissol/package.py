@@ -61,6 +61,28 @@ class Seissol(CMakePackage, CudaPackage):
         values=("none", "cuda", "hip", "hipsycl", "oneapi"),
         multi=False,
     )
+    # minus are used because coma would be interpreted as multiple values
+    variant(
+        "gemm_tools",
+        default="auto",
+        description="gemm tool(s) for the code generator",
+        values=(
+            "auto",
+            "LIBXSMM-PSpaMM",
+            "LIBXSMM",
+            "MKL",
+            "OpenBLAS",
+            "BLIS",
+            "PSpaMM",
+            "Eigen",
+            "LIBXSMM-PSpaMM-GemmForge",
+            "Eigen-GemmForge",
+            "LIBXSMM_JIT-PSpaMM",
+            "LIBXSMM_JIT",
+            "LIBXSMM_JIT-PSpaMM-GemmForge",
+        ),
+        multi=False,
+    )
 
     variant("mpi", default=True, description="installs an MPI implementation")
     variant("libxsmm", default=True, description="installs libxsmm-generator")
@@ -137,6 +159,9 @@ class Seissol(CMakePackage, CudaPackage):
             self.define_from_variant("ORDER", "convergence_order"),
             self.define_from_variant("EQUATIONS", "equations"),
         ]
+        gemm_tools = self.spec.variants["gemm_tools"].value.replace("-", ",")
+        args.append(f"-DGEMM_TOOLS={gemm_tools}")
+
         if self.spec.variants["equations"].value != "viscoelastic2":
             args.append("-NUMBER_OF_MECHANISMS=0")
         else:
