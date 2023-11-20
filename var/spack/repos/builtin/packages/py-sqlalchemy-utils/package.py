@@ -19,4 +19,4 @@ class PySqlalchemyUtils(PythonPackage):
     depends_on("py-six", type=("build", "run"), when="@0.36.8")
     depends_on("py-sqlalchemy@1.0:", type=("build", "run"), when="@0.36.8")
     depends_on("py-sqlalchemy@1.3:", type=("build", "run"), when="@0.41.1")
-    depends_on("py-importlib-metadata", type=("build", "run"), when="@0.41.1 ^python@3.8:")
+    depends_on("py-importlib-metadata", type=("build", "run"), when="@0.41.1 ^python@:3.7")
