@@ -256,6 +256,11 @@ on the command line, because it can specify constraints on packages
 is not possible to specify constraints on dependencies while also keeping
 those dependencies optional.
 
+.. seealso::
+
+   FAQ: :ref:`Why does Spack pick particular versions and variants? <faq-concretizer-precedence>`
+
+
 ^^^^^^^^^^^^^^^^^^^
 Requirements syntax
 ^^^^^^^^^^^^^^^^^^^
@@ -434,6 +439,11 @@ they rather only set defaults. The concretizer is free to change
 them if it must, due to other constraints, and also prefers reusing
 installed packages over building new ones that are a better match for
 preferences.
+
+.. seealso::
+
+   FAQ: :ref:`Why does Spack pick particular versions and variants? <faq-concretizer-precedence>`
+
 
 Most package preferences (``compilers``, ``target`` and ``providers``)
 can only be set globally under the ``all`` section of ``packages.yaml``:
