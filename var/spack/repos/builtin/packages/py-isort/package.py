@@ -32,11 +32,11 @@ class PyIsort(PythonPackage):
 
     with default_args(type=("build", "run")):
         depends_on("python@3.8:", when="@5.12:")
-        depends_on("python@3.7:3.11", when="@5.11")
+        depends_on("python@3.7:", when="@5.11")
         # This needs to be @3.6 since for bootstrapping the current Spack interpreter is
         # identified by major.minor (and the new versioning identifies it as @=3.6)
-        depends_on("python@3.6:3.10", when="@5.10")
-        depends_on("python@3.6:3.9", when="@5.9")
+        depends_on("python@3.6:3", when="@5.10")
+        depends_on("python@3.6:3", when="@5.9")
 
     conflicts("python@3.6.0", when="@5:")
 
