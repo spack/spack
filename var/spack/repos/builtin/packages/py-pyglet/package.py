@@ -14,8 +14,8 @@ class PyPyglet(PythonPackage):
     homepage = "https://github.com/pyglet/pyglet"
     pypi = "pyglet/pyglet-2.0.9.zip"
 
-    version("2.0.10", sha256="242beb1b3bd67c5bebdfe5ba11ec56b696ad86b50c6e7f2a317f8d783256b9c9")
-    version("2.0.9", sha256="a0922e42f2d258505678e2f4a355c5476c1a6352c3f3a37754042ddb7e7cf72f")
+    version("2.0.10", sha256="457cc703bf0a29530cb5e6289bab58402565dda5e3a1845a8c9ba266f052eb75")
+    version("2.0.9", sha256="74ac223a0d67294541dc5314e3a14b982dc056664989a1e21eca98985329ef56")
     version("1.4.2", sha256="fda25ae5e99057f05bd339ea7972196d2f44e6fe8fb210951ab01f6609cdbdb7")
     version("1.2.1", sha256="d1afb253d6de230e73698377566da333ef42e1c82190216aa7a0c1b729d6ff4d")
 
@@ -32,4 +32,11 @@ class PyPyglet(PythonPackage):
         if version <= Version("1.4.2"):
             return (
                 f"https://files.pythonhosted.org/packages/source/p/pyglet/pyglet-{version}.tar.gz"
+            )
+        # 2.0.9 and 2.0.10 had an issue with their PyPI zipfile
+        # Should be solved for the next version.
+        # See https://github.com/pyglet/pyglet/issues/999
+        elif version in [Version("2.0.9"), Version("2.0.10")]:
+            return (
+                f"https://github.com/pyglet/pyglet/archive/refs/tags/v{version.dotted}.zip"
             )
