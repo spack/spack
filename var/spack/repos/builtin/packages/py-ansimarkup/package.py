@@ -19,4 +19,4 @@ class PyAnsimarkup(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools@61:", type="build", when="@2.1.0")
-    depends_on("py-colorama", type=("build", "run"))
+    depends_on("py-colorama", type="run")
