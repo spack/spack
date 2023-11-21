@@ -193,7 +193,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("libxt", when="~osmesa platform={}".format(p))
     conflicts("+qt", when="+osmesa")
 
-    depends_on("ospray@2.1:", when="+raytracing")
+    depends_on("ospray@2.1:2", when="+raytracing")
     depends_on("openimagedenoise", when="+raytracing")
     depends_on("ospray +mpi", when="+raytracing +mpi")
 

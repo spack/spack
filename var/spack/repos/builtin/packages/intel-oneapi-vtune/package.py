@@ -7,7 +7,7 @@ from spack.package import *
 
 
 @IntelOneApiPackage.update_description
-class IntelOneapiVtune(IntelOneApiPackage):
+class IntelOneapiVtune(IntelOneApiLibraryPackageWithSdk):
     """Intel VTune Profiler is a profiler to optimize application
     performance, system performance, and system configuration for HPC,
     cloud, IoT, media, storage, and more.  CPU, GPU, and FPGA: Tune
