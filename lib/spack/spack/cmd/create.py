@@ -698,6 +698,7 @@ class BuildSystemGuesser:
             (r"/CMakeLists\.txt$", "cmake"),
             (r"/NAMESPACE$", "r"),
             (r"/Cargo\.toml$", "cargo"),
+            (r"/go\.mod$", "go"),
             (r"/configure$", "autotools"),
             (r"/configure\.(in|ac)$", "autoreconf"),
             (r"/Makefile\.am$", "autoreconf"),

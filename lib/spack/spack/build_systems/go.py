@@ -49,7 +49,7 @@ class GoBuilder(BaseBuilder):
         | :py:meth:`~.GoBuilder.build_args`             | Specify arguments  |
         |                                               | to ``go build``    |
         +-----------------------------------------------+--------------------+
-        | :py:meth:`~.GoBuilder.test_args`              | Specify arguments  |
+        | :py:meth:`~.GoBuilder.check_args`             | Specify arguments  |
         |                                               | to ``go test``     |
         +-----------------------------------------------+--------------------+
     """
@@ -75,7 +75,7 @@ class GoBuilder(BaseBuilder):
         return ["-ldflags", "-s -w", "-o", f"{self.pkg.name}"]
 
     @property
-    def test_args(self):
+    def check_args(self):
         """Argument for ``go test`` during check phase"""
         return []
 
@@ -95,4 +95,4 @@ class GoBuilder(BaseBuilder):
     def check(self):
         """Run ``go test .`` in the source directory"""
         with fs.working_dir(self.build_directory):
-            inspect.getmodule(self.pkg).go("test", *self.test_args)
+            inspect.getmodule(self.pkg).go("test", *self.check_args)
