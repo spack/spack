@@ -22,7 +22,7 @@ class PyCylcFlow(PythonPackage):
     depends_on("py-aiofiles@0.7", type=("build", "run"), when="@:8.1")
     depends_on("py-ansimarkup@1.0.0:", type=("build", "run"))
     depends_on("py-async-timeout@3.0.0:", type=("build", "run"))
-    depends_on("py-colorama@0.4:0", type=("build", "run"))
+    depends_on("py-colorama@0.4:1", type=("build", "run"))
     depends_on("py-graphene@2.1:2", type=("build", "run"))
     depends_on("py-jinja2@3.0", type=("build", "run"))
     depends_on("py-metomi-isodatetime@3.0", type=("build", "run"))
