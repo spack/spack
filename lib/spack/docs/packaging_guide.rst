@@ -2352,7 +2352,7 @@ the following at the command line of a bash shell:
 
 .. code-block:: console
 
-   $ for i in {1..12}; do nohup spack install -j 4 mpich@3.3.2 >> mpich_install.txt 2>&1 &; done
+   $ for i in {1..12}; do nohup spack install -j 4 mpich@3.3.2 >> mpich_install.txt 2>&1 & done
 
 .. note::
 
@@ -3502,6 +3502,56 @@ is equivalent to:
 
 Constraints from nested context managers are also combined together, but they are rarely
 needed or recommended.
+
+.. _default_args:
+
+------------------------
+Common default arguments
+------------------------
+
+Similarly, if directives have a common set of default arguments, you can
+group them together in a ``with default_args()`` block:
+
+.. code-block:: python
+
+   class PyExample(PythonPackage):
+
+       with default_args(type=("build", "run")):
+           depends_on("py-foo")
+           depends_on("py-foo@2:", when="@2:")
+           depends_on("py-bar")
+           depends_on("py-bz")
+
+The above is short for:
+
+.. code-block:: python
+
+   class PyExample(PythonPackage):
+
+       depends_on("py-foo", type=("build", "run"))
+       depends_on("py-foo@2:", when="@2:", type=("build", "run"))
+       depends_on("py-bar", type=("build", "run"))
+       depends_on("py-bz", type=("build", "run"))
+
+.. note::
+
+   The ``with when()`` context manager is composable, while ``with default_args()``
+   merely overrides the default. For example:
+
+   .. code-block:: python
+
+      with default_args(when="+feature"):
+          depends_on("foo")
+          depends_on("bar")
+          depends_on("baz", when="+baz")
+
+   is equivalent to:
+
+   .. code-block:: python
+
+      depends_on("foo", when="+feature")
+      depends_on("bar", when="+feature")
+      depends_on("baz", when="+baz")  # Note: not when="+feature+baz"
 
 .. _install-method:
 

@@ -652,3 +652,18 @@ def test_monkey_patching_works_across_virtual(default_mock_concretization):
     s["mpich"].foo = "foo"
     assert s["mpich"].foo == "foo"
     assert s["mpi"].foo == "foo"
+
+
+def test_clear_compiler_related_runtime_variables_of_build_deps(default_mock_concretization):
+    """Verify that Spack drops CC, CXX, FC and F77 from the dependencies related build environment
+    variable changes if they are set in setup_run_environment. Spack manages those variables
+    elsewhere."""
+    s = default_mock_concretization("build-env-compiler-var-a")
+    ctx = spack.build_environment.SetupContext(s, context=Context.BUILD)
+    result = {}
+    ctx.get_env_modifications().apply_modifications(result)
+    assert "CC" not in result
+    assert "CXX" not in result
+    assert "FC" not in result
+    assert "F77" not in result
+    assert result["ANOTHER_VAR"] == "this-should-be-present"
