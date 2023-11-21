@@ -61,16 +61,8 @@ class RdmaCore(CMakePackage):
         default=True,
         description="Produce static libraries along with usual shared libraries.",
     )
-    variant(
-        "pyverbs",
-        default=True,
-        description="Build with support for pyverbs",
-    )
-    variant(
-        "man_pages",
-        default=True,
-        description="Build with support for man pages",
-    )
+    variant("pyverbs", default=True, description="Build with support for pyverbs")
+    variant("man_pages", default=True, description="Build with support for man pages")
 
     depends_on("pkgconfig", type="build")
     depends_on("py-docutils", when="+man_pages", type="build")
