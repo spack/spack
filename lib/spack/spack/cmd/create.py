@@ -5,6 +5,7 @@
 
 import os
 import re
+import sys
 import urllib.parse
 
 import llnl.util.tty as tty
@@ -61,6 +62,10 @@ class {class_name}({base_class_name}):
     # FIXME: Add a list of GitHub accounts to
     # notify when the package is updated.
     # maintainers("github_user1", "github_user2")
+
+    # FIXME: Add the SPDX identifier of the project's license below.
+    # See https://spdx.org/licenses/ for a list.
+    license("UNKNOWN")
 
 {versions}
 
@@ -823,6 +828,11 @@ def get_versions(args, name):
         # Find available versions
         try:
             url_dict = spack.url.find_versions_of_archive(args.url)
+            if len(url_dict) > 1 and not args.batch and sys.stdin.isatty():
+                url_dict_filtered = spack.stage.interactive_version_filter(url_dict)
+                if url_dict_filtered is None:
+                    exit(0)
+                url_dict = url_dict_filtered
         except UndetectableVersionError:
             # Use fake versions
             tty.warn("Couldn't detect version in: {0}".format(args.url))
@@ -834,11 +844,7 @@ def get_versions(args, name):
             url_dict = {version: args.url}
 
         version_hashes = spack.stage.get_checksums_for_versions(
-            url_dict,
-            name,
-            first_stage_function=guesser,
-            keep_stage=args.keep_stage,
-            batch=(args.batch or len(url_dict) == 1),
+            url_dict, name, first_stage_function=guesser, keep_stage=args.keep_stage
         )
 
         versions = get_version_lines(version_hashes, url_dict)

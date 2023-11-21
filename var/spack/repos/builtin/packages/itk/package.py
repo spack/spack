@@ -58,15 +58,20 @@ class Itk(CMakePackage):
     depends_on("expat")
     depends_on("fftw-api")
     depends_on("googletest")
-    depends_on("hdf5+cxx")
+    depends_on("hdf5+cxx+hl")
     depends_on("jpeg")
     depends_on("libpng")
     depends_on("libtiff")
-    depends_on("mpi")
     depends_on("zlib-api")
 
+    patch(
+        "https://github.com/InsightSoftwareConsortium/ITK/commit/9a719a0d2f5f489eeb9351b0ef913c3693147a4f.patch?full_index=1",
+        sha256="ec1f7fa71f2b7f05d9632c6b0321e7d436fff86fca92c60c12839b13ea79bd70",
+        when="@5.2.0:5.3.0",
+    )
+
     def cmake_args(self):
-        use_mkl = "^mkl" in self.spec
+        use_mkl = self.spec["fftw-api"].name in INTEL_MATH_LIBRARIES
         args = [
             self.define("BUILD_SHARED_LIBS", True),
             self.define("ITK_USE_SYSTEM_LIBRARIES", True),
