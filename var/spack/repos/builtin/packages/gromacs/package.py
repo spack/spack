@@ -107,7 +107,7 @@ class Gromacs(CMakePackage, CudaPackage):
     variant(
         "intel-data-center-gpu-max",
         default=False,
-        when="@2022:",
+        when="@2022: +sycl",
         description="Enable support for Intel Data Center GPU Max",
     )
     variant("nosuffix", default=False, description="Disable default suffixes")
