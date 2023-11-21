@@ -16,6 +16,7 @@ class PyFenicsDolfinx(PythonPackage):
     maintainers("chrisrichardson", "garth-wells", "nate-sime", "jhale")
 
     version("main", branch="main")
+    version("0.7.2", sha256="7d9ce1338ce66580593b376327f23ac464a4ce89ef63c105efc1a38e5eae5c0b")
     version("0.7.1", sha256="ed701830506aa5a0b32e13cb055156505f1f2fe2f90b82486115248300c4a82a")
     version("0.7.0", sha256="9245e457a03c37983337456c0835263b7be083c5bf2978738b4e462ee5e83cde")
     version("0.6.0", sha256="eb8ac2bb2f032b0d393977993e1ab6b4101a84d54023a67206e3eac1a8d79b80")
@@ -57,13 +58,15 @@ class PyFenicsDolfinx(PythonPackage):
     depends_on("py-fenics-ufl@2022.2.0", type=("build", "run"), when="@0.5.0:0.5")
     depends_on("py-fenics-ufl@2022.1.0", type=("build", "run"), when="@0.4.1")
 
+    # See python/pyproject.toml
     depends_on("py-numpy@1.21:", type=("build", "run"))
     depends_on("py-mpi4py", type=("build", "run"))
     depends_on("py-petsc4py", type=("build", "run"))
-    depends_on("py-pybind11@2.7.0:", type=("build", "run"))
+    depends_on("py-pybind11@2.7.0:", when="@:0.7", type=("build", "run"))
+    depends_on("py-setuptools@42:", when="@:0.7", type="build")
+    depends_on("py-nanobind@1.5.1:", when="@0.8:", type="build")
+    depends_on("py-scikit-build-core+pyproject@0.5.0:", when="@0.8:", type="build")
     depends_on("xtensor@0.23.10:", type="build", when="@:0.5")
-
-    depends_on("py-setuptools@42:", type="build")
 
     depends_on("py-cffi", type=("build", "run"))
 
