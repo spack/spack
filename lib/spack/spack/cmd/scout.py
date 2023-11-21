@@ -102,7 +102,7 @@ def scout(parser, args):
             builder.install()
 
             # mark packages as implicit by default to cleanup with "spack gc"
-            spack.store.STORE.db.update_explicit(spec, args.mark == "explicit")
+            spack.store.STORE.db.update_explicit(spec, explicit=(args.mark == "explicit"))
 
         # overwrite modified file with backup on failed build
         except InstallError:
