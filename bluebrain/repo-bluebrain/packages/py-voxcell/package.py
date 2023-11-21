@@ -14,7 +14,7 @@ class PyVoxcell(PythonPackage):
     pypi = "voxcell/voxcell-3.1.2.tar.gz"
 
     version("develop", branch="main")
-    version("3.1.5", sha256="024dc8e4e126cf194f68b0084f46254cb0989868a21143e8664d0b0ab12d69f3")
+    version("3.1.6", sha256="bf5f125a7c952f9db65aa3453df62fd726a6a44baa1d9bb0c29b753acbd9f842")
     version("2.7.4", tag="voxcell-v2.7.4")
 
     depends_on("py-setuptools", type="build")
