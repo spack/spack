@@ -161,7 +161,7 @@ class BootstrapEnvironment(spack.environment.Environment):
 
 def isort_root_spec() -> str:
     """Return the root spec used to bootstrap isort"""
-    return _root_spec("py-isort@4.3.5:")
+    return _root_spec("py-isort@5")
 
 
 def mypy_root_spec() -> str:
