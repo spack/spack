@@ -30,12 +30,11 @@ class PyCylcFlow(PythonPackage):
     depends_on("py-psutil@5.6.0:", type=("build", "run"))
     depends_on("py-pyzmq@22:", type=("build", "run"), when="@8.2:")
     depends_on("py-pyzmq@22", type=("build", "run"), when="@:8.1")
-
-    depends_on("py-tomli@2:", type=("build", "run"), when="^python@:3.10")
     depends_on("py-importlib-metadata", type=("build", "run"), when="^python@:3.7")
-    depends_on("py-urwid@2", type=("build", "run"), when="@8.2.3:")
-    depends_on("py-rx", type=("build", "run"), when="@8.2.3:")
-    depends_on("py-promise", type=("build", "run"), when="@8.2.3:")
+    depends_on("py-urwid@2", type=("build", "run"))
+    depends_on("py-rx", type=("build", "run"))
+    depends_on("py-promise", type=("build", "run"))
+    depends_on("py-tomli@2:", type=("build", "run"), when="^python@:3.10")
 
     # Non-Python dependencies
     depends_on("graphviz", type="run")
