@@ -37,6 +37,4 @@ class PyPyglet(PythonPackage):
         # Should be solved for the next version.
         # See https://github.com/pyglet/pyglet/issues/999
         elif version in [Version("2.0.9"), Version("2.0.10")]:
-            return (
-                f"https://github.com/pyglet/pyglet/archive/refs/tags/v{version.dotted}.zip"
-            )
+            return f"https://github.com/pyglet/pyglet/archive/refs/tags/v{version.dotted}.zip"
