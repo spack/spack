@@ -791,7 +791,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
             # FFTW libraries are available and enable them by default.
             if "^fftw" in spec or "^cray-fftw" in spec or "^amdfftw" in spec:
                 args.append(self.define("FFT", "FFTW3"))
-            elif "^mkl" in spec:
+            elif spec["fftw-api"].name in INTEL_MATH_LIBRARIES:
                 args.append(self.define("FFT", "MKL"))
             elif "^armpl-gcc" in spec or "^acfl" in spec:
                 args.append(self.define("FFT", "FFTW3"))

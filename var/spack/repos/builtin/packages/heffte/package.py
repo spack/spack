@@ -38,6 +38,12 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
 
     variant("shared", default=True, description="Builds with shared libraries")
     variant("fftw", default=False, description="Builds with support for FFTW backend")
+    variant(
+        "sycl",
+        default=False,
+        when="%oneapi",
+        description="Builds with support for oneAPI SYCL+oneMKL backend",
+    )
     variant("mkl", default=False, description="Builds with support for MKL backend")
     variant("magma", default=False, description="Use helper methods from the UTK MAGMA library")
     variant("python", default=False, description="Install the Python bindings")
@@ -68,6 +74,8 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("rocsparse@3.8:", when="+magma+rocm", type=("build", "run"))
     depends_on("hipblas@3.8:", when="+magma+rocm", type=("build", "run"))
     depends_on("hipsparse@3.8:", when="+magma+rocm", type=("build", "run"))
+    depends_on("intel-oneapi-mkl@2023.2.0:", when="+sycl", type=("build", "run"))
+    depends_on("intel-oneapi-mpi@2021.10.0:", when="+sycl", type=("build", "run"))
 
     examples_src_dir = "examples"
 
@@ -78,6 +86,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("Heffte_ENABLE_CUDA", "cuda"),
             self.define_from_variant("Heffte_ENABLE_ROCM", "rocm"),
+            self.define_from_variant("Heffte_ENABLE_ONEAPI", "sycl"),
             self.define_from_variant("Heffte_ENABLE_FFTW", "fftw"),
             self.define_from_variant("Heffte_ENABLE_MKL", "mkl"),
             self.define_from_variant("Heffte_ENABLE_MAGMA", "magma"),

@@ -713,7 +713,7 @@ class ErrorHandler:
         (condition_id, set_id) in which the latter idea means that the condition represented by
         the former held in the condition set represented by the latter.
         """
-        seen = set(seen) | set(cause)
+        seen.add(cause)
         parents = [c for e, c in condition_causes if e == cause and c not in seen]
         local = "required because %s " % conditions[cause[0]]
 
@@ -812,7 +812,14 @@ class ErrorHandler:
         errors = sorted(
             [(int(priority), msg, args) for priority, msg, *args in error_args], reverse=True
         )
-        msg = self.message(errors)
+        try:
+            msg = self.message(errors)
+        except Exception as e:
+            msg = (
+                f"unexpected error during concretization [{str(e)}]. "
+                f"Please report a bug at https://github.com/spack/spack/issues"
+            )
+            raise spack.error.SpackError(msg)
         raise UnsatisfiableSpecError(msg)
 
 

@@ -34,6 +34,11 @@ def cmake_cache_option(name, boolean_value, comment="", force=False):
     return 'set({0} {1} CACHE BOOL "{2}"{3})\n'.format(name, value, comment, force_str)
 
 
+def cmake_cache_filepath(name, value, comment=""):
+    """Generate a string for a cmake cache variable of type FILEPATH"""
+    return 'set({0} "{1}" CACHE FILEPATH "{2}")\n'.format(name, value, comment)
+
+
 class CachedCMakeBuilder(CMakeBuilder):
     #: Phases of a Cached CMake package
     #: Note: the initconfig phase is used for developer builds as a final phase to stop on
@@ -257,6 +262,15 @@ class CachedCMakeBuilder(CMakeBuilder):
             entries.append(
                 cmake_cache_path("HIP_CXX_COMPILER", "{0}".format(self.spec["hip"].hipcc))
             )
+            llvm_bin = spec["llvm-amdgpu"].prefix.bin
+            llvm_prefix = spec["llvm-amdgpu"].prefix
+            # Some ROCm systems seem to point to /<path>/rocm-<ver>/ and
+            # others point to /<path>/rocm-<ver>/llvm
+            if os.path.basename(os.path.normpath(llvm_prefix)) != "llvm":
+                llvm_bin = os.path.join(llvm_prefix, "llvm/bin/")
+            entries.append(
+                cmake_cache_filepath("CMAKE_HIP_COMPILER", os.path.join(llvm_bin, "clang++"))
+            )
             archs = self.spec.variants["amdgpu_target"].value
             if archs[0] != "none":
                 arch_str = ";".join(archs)
@@ -277,7 +291,7 @@ class CachedCMakeBuilder(CMakeBuilder):
             "#------------------{0}".format("-" * 60),
             "# CMake executable path: {0}".format(self.pkg.spec["cmake"].command.path),
             "#------------------{0}\n".format("-" * 60),
-            cmake_cache_path("CMAKE_PREFIX_PATH", cmake_prefix_path),
+            cmake_cache_string("CMAKE_PREFIX_PATH", cmake_prefix_path),
             self.define_cmake_cache_from_variant("CMAKE_BUILD_TYPE", "build_type"),
         ]
 
