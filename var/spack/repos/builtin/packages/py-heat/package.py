@@ -11,6 +11,7 @@ class PyHeat(PythonPackage):
     and machine learning. It provides highly optimized algorithms and data structures for tensor
     computations using CPUs, GPUs and distributed cluster systems on top of MPI."""
 
+    homepage = "https://github.com/helmholtz-analytics/heat/"
     pypi = "heat/heat-1.3.0.tar.gz"
 
     maintainers("mrfh92", "ClaudiaComito", "JuanPedroGHM")
@@ -29,7 +30,7 @@ class PyHeat(PythonPackage):
         description="Use py-scikit-learn and py-matplotlib for the example tests",
     )
 
-    depends_on("python@3.8:")
+    depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-numpy@1.20:", type=("build", "run"))
     depends_on("py-torch@1.8:2.0.1", type=("build", "run"))
     depends_on("py-scipy@0.14:", type=("build", "run"))
@@ -43,19 +44,3 @@ class PyHeat(PythonPackage):
     depends_on("py-pre-commit@1.18.3:", when="+dev", type=("build", "link", "run"))
     depends_on("py-scikit-learn@0.24.0:", when="+examples", type=("build", "link", "run"))
     depends_on("py-matplotlib@3.1.0:", when="+examples", type=("build", "link", "run"))
-
-    def install_options(self, spec, prefix):
-        options = []
-
-        if "+docutils" in spec:
-            options.append("docutils")
-        if "+hdf5" in spec:
-            options.append("hdf5")
-        if "+netcdf" in spec:
-            options.append("netcdf")
-        if "+dev" in spec:
-            options.append("dev")
-        if "+examples" in spec:
-            options.append("examples")
-
-        return options
