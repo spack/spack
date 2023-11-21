@@ -28,11 +28,7 @@ class Gdrcopy(MakefilePackage, CudaPackage):
     depends_on("check")
     requires("+cuda")
 
-    variant(
-        "exes",
-        default=True,
-        description="Build and install executables",
-    )
+    variant("exes", default=True, description="Build and install executables")
 
     def build(self, spec, prefix):
         make("lib")
