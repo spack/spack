@@ -15,9 +15,10 @@ class PyPyomo(PythonPackage):
     pypi = "Pyomo/Pyomo-5.6.6.tar.gz"
     git = "https://github.com/Pyomo/pyomo.git"
 
-    # Maintainer accurate as of 06/06/2023
+    # Maintainer accurate as of 11/21/2023
     maintainers("mrmundt")
 
+    version("6.6.2", sha256="c8ad55213ff8b1a2c4e469110db8079722d5a6f364c6c46a42e2f750fc9e4d26")
     version("6.6.1", sha256="3fb0aba7b0f4120e6ce0f242502c0e61478d61e326bc90b7dc392bbefd114b34")
     version("6.6.0", sha256="8766c08041b8d91fbc5166d220c9e723fed6057d18be1178bae3b6583376c65e")
     version("6.5.0", sha256="5a23e775bba9fdbad22698fa1a841e662482edc979f2dea41cc6c54b1bb4b968")
@@ -50,7 +51,8 @@ class PyPyomo(PythonPackage):
     variant("optional", default=False, description="Install optional dependencies. (Version 6.1+)")
 
     # python_requires
-    depends_on("python@3.7:3.11", when="@6.4:", type=("build", "run"))
+    depends_on("python@3.8:3.11", when="@6.7:", type=("build", "run"))
+    depends_on("python@3.7:3.11", when="@6.4:6.6", type=("build", "run"))
     depends_on("python@3.6:3.10", when="@6.3", type=("build", "run"))
     depends_on("python@3.6:3.9", when="@6.0:6.2", type=("build", "run"))
     depends_on("python@2.7:2.8,3.4:3.9", when="@5.7", type=("build", "run"))
@@ -70,39 +72,39 @@ class PyPyomo(PythonPackage):
     depends_on("py-cython", when="+cython", type="build")
 
     # when tests is requested
-    depends_on("py-coverage", when="@6.1:+tests", type=("build", "run"))
-    depends_on("py-nose", when="@6.1:6.2+tests", type=("build", "run"))
-    depends_on("py-pytest", when="@6.3:+tests", type=("build", "run"))
-    depends_on("py-pytest-parallel", when="@6.3:+tests", type=("build", "run"))
-    depends_on("py-parameterized", when="@6.1:+tests", type=("build", "run"))
-    depends_on("py-pybind11", when="@6.1:+tests", type=("build", "run"))
+    depends_on("py-coverage", when="@6.1:+tests", type=("run"))
+    depends_on("py-nose", when="@6.1:6.2+tests", type=("run"))
+    depends_on("py-pytest", when="@6.3:+tests", type=("run"))
+    depends_on("py-pytest-parallel", when="@6.3:+tests", type=("run"))
+    depends_on("py-parameterized", when="@6.1:+tests", type=("run"))
+    depends_on("py-pybind11", when="@6.1:+tests", type=("run"))
 
     # when docs is requested
-    depends_on("py-sphinx@2:", when="@6.1:+docs", type=("build", "run"))
-    depends_on("py-sphinx-copybutton", when="@6.1:+docs", type=("build", "run"))
-    depends_on("py-sphinx-rtd-theme@0.5:", when="@6.1:+docs", type=("build", "run"))
-    depends_on("py-sphinxcontrib-jsmath", when="@6.1:+docs", type=("build", "run"))
-    depends_on("py-sphinxcontrib-napoleon", when="@6.1:+docs", type=("build", "run"))
-    depends_on("py-numpy", when="@6.1:+docs", type=("build", "run"))
-    depends_on("py-scipy", when="@6.4.2:+docs", type=("build", "run"))
+    depends_on("py-sphinx@2:", when="@6.1:+docs", type=("run"))
+    depends_on("py-sphinx-copybutton", when="@6.1:+docs", type=("run"))
+    depends_on("py-sphinx-rtd-theme@0.5:", when="@6.1:+docs", type=("run"))
+    depends_on("py-sphinxcontrib-jsmath", when="@6.1:+docs", type=("run"))
+    depends_on("py-sphinxcontrib-napoleon", when="@6.1:+docs", type=("run"))
+    depends_on("py-numpy", when="@6.1:+docs", type=("run"))
+    depends_on("py-scipy", when="@6.4.2:+docs", type=("run"))
 
     # when optional is requested
-    depends_on("py-dill", when="@6.1:+optional", type=("build", "run"))
-    depends_on("py-ipython", when="@6.1:+optional", type=("build", "run"))
-    depends_on("py-matplotlib@3.6.2:", when="@6.1:+optional", type=("build", "run"))
-    depends_on("py-networkx", when="@6.1:+optional", type=("build", "run"))
-    depends_on("py-numpy", when="@6.1:+optional", type=("build", "run"))
-    depends_on("py-openpyxl", when="@6.1:+optional", type=("build", "run"))
-    depends_on("py-pint", when="@6.1:+optional", type=("build", "run"))
-    depends_on("py-python-louvain", when="@6.1:+optional", type=("build", "run"))
-    depends_on("py-pyyaml", when="@6.1:+optional", type=("build", "run"))
-    depends_on("py-scipy", when="@6.1:+optional", type=("build", "run"))
-    depends_on("py-sympy", when="@6.1:+optional", type=("build", "run"))
-    depends_on("py-xlrd", when="@6.1:+optional", type=("build", "run"))
-    depends_on("py-pandas", when="@6.1:+optional", type=("build", "run"))
-    depends_on("py-seaborn", when="@6.1:+optional", type=("build", "run"))
-    depends_on("py-numdifftools", when="@6.1:+optional", type=("build", "run"))
-    depends_on("py-plotly", when="@6.6:+optional", type=("build", "run"))
+    depends_on("py-dill", when="@6.1:+optional", type=("run"))
+    depends_on("py-ipython", when="@6.1:+optional", type=("run"))
+    depends_on("py-matplotlib@3.6.2:", when="@6.1:+optional", type=("run"))
+    depends_on("py-networkx", when="@6.1:+optional", type=("run"))
+    depends_on("py-numpy", when="@6.1:+optional", type=("run"))
+    depends_on("py-openpyxl", when="@6.1:+optional", type=("run"))
+    depends_on("py-pint", when="@6.1:+optional", type=("run"))
+    depends_on("py-python-louvain", when="@6.1:+optional", type=("run"))
+    depends_on("py-pyyaml", when="@6.1:+optional", type=("run"))
+    depends_on("py-scipy", when="@6.1:+optional", type=("run"))
+    depends_on("py-sympy", when="@6.1:+optional", type=("run"))
+    depends_on("py-xlrd", when="@6.1:+optional", type=("run"))
+    depends_on("py-pandas", when="@6.1:+optional", type=("run"))
+    depends_on("py-seaborn", when="@6.1:+optional", type=("run"))
+    depends_on("py-numdifftools", when="@6.1:+optional", type=("run"))
+    depends_on("py-plotly", when="@6.6:+optional", type=("run"))
 
     def global_options(self, spec, prefix):
         options = []
