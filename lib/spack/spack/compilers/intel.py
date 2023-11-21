@@ -89,7 +89,7 @@ class Intel(Compiler):
     def cxx17_flag(self):
         # https://www.intel.com/content/www/us/en/developer/articles/news/c17-features-supported-by-c-compiler.html
         if self.real_version < Version("19"):
-            raise UnsupportedCompilerFlag(self, "the C++17 standard", "cxx17_flag", "< 17")
+            raise UnsupportedCompilerFlag(self, "the C++17 standard", "cxx17_flag", "< 19")
         else:
             return "-std=c++17"
 
