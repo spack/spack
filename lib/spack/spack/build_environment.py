@@ -743,14 +743,14 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
         set_compiler_environment_variables(pkg, env_mods)
         set_wrapper_variables(pkg, env_mods)
 
-    tty.debug("setup_package: grabbing modifications from dependencies")
-    env_mods.extend(setup_context.get_env_modifications())
-    tty.debug("setup_package: collected all modifications from dependencies")
-
     # architecture specific setup
     platform = spack.platforms.by_name(pkg.spec.architecture.platform)
     target = platform.target(pkg.spec.architecture.target)
     platform.setup_platform_environment(pkg, env_mods)
+
+    tty.debug("setup_package: grabbing modifications from dependencies")
+    env_mods.extend(setup_context.get_env_modifications())
+    tty.debug("setup_package: collected all modifications from dependencies")
 
     if context == Context.TEST:
         env_mods.prepend_path("PATH", ".")
