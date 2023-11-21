@@ -11,7 +11,7 @@ class PyAtlasCommons(PythonPackage):
     pypi = "atlas-commons/atlas-commons-0.1.4.tar.gz"
 
     version("develop", branch="main")
-    version("0.1.4", sha256="ceff16f6dbad374dfde40b11f3ce59200e484710aa0e17d05d1f45c2167cf2cb")
+    version("0.1.5", sha256="52c4ac8a86122b7a0d3783ffe971b0cc91ed98b7e79faee1ab3b6287f58a9183")
 
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-setuptools-scm", type="build")
