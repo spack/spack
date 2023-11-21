@@ -83,7 +83,7 @@ class Libxsmm(MakefilePackage):
     depends_on("binutils+ld+gas@2.33:", type="build", when="@:1.17")
 
     # Intel Architecture or compatible CPU required
-    requires("target=x86_64:")
+    requires("target=x86_64:", when="@:1")
 
     @property
     def libs(self):
