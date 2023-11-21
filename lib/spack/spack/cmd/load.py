@@ -5,6 +5,8 @@
 
 import sys
 
+import llnl.util.tty as tty
+
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.cmd.find
@@ -52,6 +54,13 @@ def setup_parser(subparser):
         const="bat",
         help="print bat commands to load the package",
     )
+    shells.add_argument(
+        "--pwsh",
+        action="store_const",
+        dest="shell",
+        const="pwsh",
+        help="print pwsh commands to load the package",
+    )
 
     subparser.add_argument(
         "--first",
@@ -66,10 +75,9 @@ def setup_parser(subparser):
         default="package,dependencies",
         dest="things_to_load",
         choices=["package", "dependencies"],
-        help="""select whether to load the package and its dependencies
-the default is to load the package and all dependencies
-alternatively one can decide to load only the package or only
-the dependencies""",
+        help="select whether to load the package and its dependencies\n\n"
+        "the default is to load the package and all dependencies. alternatively, "
+        "one can decide to load only the package or only the dependencies",
     )
 
     subparser.add_argument(
@@ -102,16 +110,14 @@ def load(parser, args):
         )
         return 1
 
-    with spack.store.db.read_transaction():
-        if "dependencies" in args.things_to_load:
-            include_roots = "package" in args.things_to_load
-            specs = [
-                dep for spec in specs for dep in spec.traverse(root=include_roots, order="post")
-            ]
+    if args.things_to_load != "package,dependencies":
+        tty.warn(
+            "The `--only` flag in spack load is deprecated and will be removed in Spack v0.22"
+        )
 
-        env_mod = spack.util.environment.EnvironmentModifications()
+    with spack.store.STORE.db.read_transaction():
+        env_mod = uenv.environment_modifications_for_specs(*specs)
         for spec in specs:
-            env_mod.extend(uenv.environment_modifications_for_spec(spec))
             env_mod.prepend_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
         cmds = env_mod.shell_modifications(args.shell)
 

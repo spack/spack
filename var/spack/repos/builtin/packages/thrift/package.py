@@ -53,7 +53,7 @@ class Thrift(Package):
     depends_on("openssl")
 
     # Variant dependencies
-    depends_on("zlib", when="+c")
+    depends_on("zlib-api", when="+c")
     depends_on("libevent", when="+c")
 
     depends_on("java@7:", when="+java")

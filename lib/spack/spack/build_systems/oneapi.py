@@ -9,11 +9,10 @@ import platform
 import shutil
 from os.path import basename, dirname, isdir
 
-from llnl.util.filesystem import find_headers, find_libraries, join_path
+from llnl.util.filesystem import find_headers, find_libraries, join_path, mkdirp
 from llnl.util.link_tree import LinkTree
 
 from spack.directives import conflicts, variant
-from spack.package import mkdirp
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
 
@@ -60,6 +59,11 @@ class IntelOneApiPackage(Package):
     def component_prefix(self):
         """Path to component <prefix>/<component>/<version>."""
         return self.prefix.join(join_path(self.component_dir, self.spec.version))
+
+    @property
+    def env_script_args(self):
+        """Additional arguments to pass to vars.sh script."""
+        return ()
 
     def install(self, spec, prefix):
         self.install_component(basename(self.url_for_version(spec.version)))
@@ -121,10 +125,10 @@ class IntelOneApiPackage(Package):
            $ source {prefix}/{component}/{version}/env/vars.sh
         """
         # Only if environment modifications are desired (default is +envmods)
-        if "+envmods" in self.spec:
+        if "~envmods" not in self.spec:
             env.extend(
                 EnvironmentModifications.from_sourcing_file(
-                    join_path(self.component_prefix, "env", "vars.sh")
+                    join_path(self.component_prefix, "env", "vars.sh"), *self.env_script_args
                 )
             )
 
@@ -175,7 +179,36 @@ class IntelOneApiLibraryPackage(IntelOneApiPackage):
         return find_libraries("*", root=lib_path, shared=True, recursive=True)
 
 
-class IntelOneApiStaticLibraryList(object):
+class IntelOneApiLibraryPackageWithSdk(IntelOneApiPackage):
+    """Base class for Intel oneAPI library packages with SDK components.
+
+    Contains some convenient default implementations for libraries
+    that expose functionality in sdk subdirectories.
+    Implement the method directly in the package if something
+    different is needed.
+
+    """
+
+    @property
+    def include(self):
+        return join_path(self.component_prefix, "sdk", "include")
+
+    @property
+    def headers(self):
+        return find_headers("*", self.include, recursive=True)
+
+    @property
+    def lib(self):
+        lib_path = join_path(self.component_prefix, "sdk", "lib64")
+        lib_path = lib_path if isdir(lib_path) else dirname(lib_path)
+        return lib_path
+
+    @property
+    def libs(self):
+        return find_libraries("*", root=self.lib, shared=True, recursive=True)
+
+
+class IntelOneApiStaticLibraryList:
     """Provides ld_flags when static linking is needed
 
     Oneapi puts static and dynamic libraries in the same directory, so
@@ -207,3 +240,7 @@ class IntelOneApiStaticLibraryList(object):
     @property
     def ld_flags(self):
         return "{0} {1}".format(self.search_flags, self.link_flags)
+
+
+#: Tuple of Intel math libraries, exported to packages
+INTEL_MATH_LIBRARIES = ("intel-mkl", "intel-oneapi-mkl", "intel-parallel-studio")

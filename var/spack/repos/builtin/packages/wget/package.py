@@ -38,7 +38,7 @@ class Wget(AutotoolsPackage, GNUMirrorPackage):
     depends_on("gettext", type="build")
     depends_on("python@3:", type="build", when="+python")
 
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
     depends_on("libpsl", when="+libpsl")
     depends_on("pcre", when="+pcre")
 

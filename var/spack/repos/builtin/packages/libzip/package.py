@@ -16,7 +16,7 @@ class Libzip(AutotoolsPackage):
     version("1.3.2", sha256="ab4c34eb6c3a08b678cd0f2450a6c57a13e9618b1ba34ee45d00eb5327316457")
     version("1.2.0", sha256="6cf9840e427db96ebf3936665430bab204c9ebbd0120c326459077ed9c907d9f")
 
-    depends_on("zlib@1.1.2:")
+    depends_on("zlib-api")
 
     @property
     def headers(self):

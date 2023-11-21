@@ -46,6 +46,10 @@ if ($null -eq $Env:EDITOR)
     $Env:EDITOR = "notepad"
 }
 
+# Set spack shell so we can detect powershell context
+$Env:SPACK_SHELL="pwsh"
+
+doskey /exename=powershell.exe spack=$Env:SPACK_ROOT\bin\spack.ps1 $args
 
 Write-Output "*****************************************************************"
 Write-Output "**************** Spack Package Manager **************************"

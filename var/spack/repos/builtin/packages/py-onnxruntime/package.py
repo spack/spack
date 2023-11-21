@@ -19,8 +19,12 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
     homepage = "https://github.com/microsoft/onnxruntime"
     git = "https://github.com/microsoft/onnxruntime.git"
 
-    version("1.10.0", tag="v1.10.0", submodules=True)
-    version("1.7.2", tag="v1.7.2", submodules=True)
+    version(
+        "1.10.0", tag="v1.10.0", commit="0d9030e79888d1d5828730b254fedc53c7b640c1", submodules=True
+    )
+    version(
+        "1.7.2", tag="v1.7.2", commit="5bc92dff16b0ddd5063b717fb8522ca2ad023cb0", submodules=True
+    )
 
     variant("cuda", default=False, description="Build with CUDA support")
 
@@ -39,7 +43,7 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
     depends_on("py-wheel", type="build")
     depends_on("py-onnx", type=("build", "run"))
     depends_on("py-flatbuffers", type=("build", "run"))
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libpng")
     depends_on("py-pybind11", type="build")
     depends_on("cuda", when="+cuda")

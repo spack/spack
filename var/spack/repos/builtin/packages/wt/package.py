@@ -59,7 +59,7 @@ class Wt(CMakePackage):
     depends_on("mariadb", when="+mariadb")
     depends_on("postgresql", when="+postgresql")
     depends_on("pango", when="+pango")
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
 
     def cmake_args(self):
         cmake_args = [

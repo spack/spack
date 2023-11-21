@@ -19,7 +19,7 @@ class Libssh(CMakePackage):
     variant("gssapi", default=True, description="Build with gssapi support")
     depends_on("openssl@:1.0", when="@:0.7")
     depends_on("openssl")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("krb5", when="+gssapi")
 
     def url_for_version(self, version):

@@ -17,13 +17,14 @@ class AmdAocl(BundlePackage):
     you agree to the terms and conditions of the AMD AOCL license agreement.
     You may obtain a copy of this license agreement from
     https://www.amd.com/en/developer/aocl/aocl-eula.html
-    https://www.amd.com/en/developer/aocl/aocl-4-0-eula.html
+    https://www.amd.com/en/developer/aocl/eula/aocl-4-1-eula.html
     """
 
     homepage = "https://developer.amd.com/amd-aocl/"
 
     maintainers("amd-toolchain-support")
 
+    version("4.1")
     version("4.0")
     version("3.2")
     version("3.1")
@@ -31,8 +32,7 @@ class AmdAocl(BundlePackage):
     version("2.2")
 
     variant("openmp", default=False, description="Enable OpenMP support.")
-
-    for vers in ["2.2", "3.0", "3.1", "3.2", "4.0"]:
+    for vers in ["2.2", "3.0", "3.1", "3.2", "4.0", "4.1"]:
         depends_on("amdblis@{0} threads=openmp".format(vers), when="@{0} +openmp".format(vers))
         depends_on("amdblis@{0} threads=none".format(vers), when="@{0} ~openmp".format(vers))
         depends_on("amdfftw@{0} +openmp".format(vers), when="@{0} +openmp".format(vers))
@@ -40,11 +40,13 @@ class AmdAocl(BundlePackage):
         depends_on("amdlibflame@{0}".format(vers), when="@{0}".format(vers))
         depends_on("amdlibm@{0}".format(vers), when="@{0}".format(vers))
         depends_on(
-            "amdscalapack@{0} ^amdblis@{0} threads=none".format(vers),
+            "amdscalapack@{0} ^amdblis@{0} ^amdlibflame@{0} threads=none".format(vers),
             when="@{0} ~openmp".format(vers),
         )
         depends_on(
-            "amdscalapack@{0} ^amdblis@{0} threads=openmp".format(vers),
+            "amdscalapack@{0} ^amdblis@{0} ^amdlibflame@{0} threads=openmp".format(vers),
             when="@{0} +openmp".format(vers),
         )
-        depends_on("aocl-sparse@{0}".format(vers), when="@{0}".format(vers))
+        depends_on(
+            "aocl-sparse@{0} ^amdblis@{0} ^amdlibflame@{0}".format(vers), when="@{0}".format(vers)
+        )

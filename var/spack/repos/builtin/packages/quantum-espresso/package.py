@@ -18,11 +18,12 @@ class QuantumEspresso(CMakePackage, Package):
     url = "https://gitlab.com/QEF/q-e/-/archive/qe-6.6/q-e-qe-6.6.tar.gz"
     git = "https://gitlab.com/QEF/q-e.git"
 
-    maintainers("ye-luo", "danielecesarini", "bellenlau")
+    maintainers("ye-luo", "bellenlau", "tgorni")
 
     build_system(conditional("cmake", when="@6.8:"), "generic", default="cmake")
 
     version("develop", branch="develop")
+    version("7.2", sha256="b348a4a7348b66a73545d9ca317a2645755c98d343c1cfe8def475ad030808c0")
     version("7.1", sha256="d56dea096635808843bd5a9be2dee3d1f60407c01dbeeda03f8256a3bcfc4eb6")
     version("7.0", sha256="85beceb1aaa1678a49e774c085866d4612d9d64108e0ac49b23152c8622880ee")
     version("6.8", sha256="654855c69864de7ece5ef2f2c0dea2d32698fe51192a8646b1555b0c57e033b2")
@@ -240,6 +241,11 @@ class QuantumEspresso(CMakePackage, Package):
     depends_on("fftw-api@3")
     depends_on("git@2.13:", type="build")
     depends_on("m4", type="build")
+
+    # If the Intel suite is used for Lapack, it must be used for fftw and vice-versa
+    for _intel_pkg in INTEL_MATH_LIBRARIES:
+        requires(f"^[virtuals=fftw-api] {_intel_pkg}", when=f"^[virtuals=lapack]   {_intel_pkg}")
+        requires(f"^[virtuals=lapack]   {_intel_pkg}", when=f"^[virtuals=fftw-api] {_intel_pkg}")
 
     # CONFLICTS SECTION
     # Omitted for now due to concretizer bug
@@ -488,7 +494,8 @@ class GenericBuilder(spack.build_systems.generic.GenericBuilder):
         # you need to pass it in the FFTW_INCLUDE and FFT_LIBS directory.
         # QE supports an internal FFTW2, but only an external FFTW3 interface.
 
-        if "^mkl" in spec:
+        is_using_intel_libraries = spec["lapack"].name in INTEL_MATH_LIBRARIES
+        if is_using_intel_libraries:
             # A seperate FFT library is not needed when linking against MKL
             options.append("FFTW_INCLUDE={0}".format(join_path(env["MKLROOT"], "include/fftw")))
         if "^fftw@3:" in spec:
@@ -530,11 +537,11 @@ class GenericBuilder(spack.build_systems.generic.GenericBuilder):
         if spec.satisfies("@:6.4"):  # set even if MKL is selected
             options.append("BLAS_LIBS={0}".format(lapack_blas.ld_flags))
         else:  # behavior changed at 6.5 and later
-            if not spec.satisfies("^mkl"):
+            if not is_using_intel_libraries:
                 options.append("BLAS_LIBS={0}".format(lapack_blas.ld_flags))
 
         if "+scalapack" in spec:
-            if "^mkl" in spec:
+            if is_using_intel_libraries:
                 if "^openmpi" in spec:
                     scalapack_option = "yes"
                 else:  # mpich, intel-mpi
@@ -601,8 +608,8 @@ class GenericBuilder(spack.build_systems.generic.GenericBuilder):
         if spec.variants["hdf5"].value != "none":
             if spec.satisfies("@6.1.0:6.4.0") or (spec.satisfies("@6.4.1") and "+qmcpack" in spec):
                 make_inc = join_path(self.pkg.stage.source_path, "make.inc")
-                zlib_libs = spec["zlib"].prefix.lib + " -lz"
-                filter_file(zlib_libs, format(spec["zlib"].libs.ld_flags), make_inc)
+                zlib_libs = spec["zlib-api"].prefix.lib + " -lz"
+                filter_file(zlib_libs, format(spec["zlib-api"].libs.ld_flags), make_inc)
 
         # QE 6.8 and later has parallel builds fixed
         if spec.satisfies("@:6.7"):

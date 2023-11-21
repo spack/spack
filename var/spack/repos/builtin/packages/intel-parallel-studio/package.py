@@ -536,8 +536,7 @@ class IntelParallelStudio(IntelPackage):
     provides("ipp", when="+ipp")
 
     provides("mkl", when="+mkl")
-    provides("blas", when="+mkl")
-    provides("lapack", when="+mkl")
+    provides("blas", "lapack", when="+mkl")
     provides("scalapack", when="+mkl")
 
     provides("fftw-api@3", when="+mkl@professional.2017:")
@@ -596,7 +595,7 @@ class IntelParallelStudio(IntelPackage):
         )
 
     def setup_run_environment(self, env):
-        super(IntelParallelStudio, self).setup_run_environment(env)
+        super().setup_run_environment(env)
 
         for name, value in self.mpi_compiler_wrappers.items():
             env.set(name, value)

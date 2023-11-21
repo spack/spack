@@ -27,7 +27,7 @@ class Ethminer(CMakePackage):
     depends_on(Boost.with_default_variants)
     depends_on("json-c")
     depends_on("curl")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("cuda", when="+cuda")
     depends_on("mesa", when="+opencl")
 

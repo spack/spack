@@ -6,6 +6,7 @@
 import llnl.util.tty as tty
 
 import spack.cmd.common.arguments
+import spack.cmd.common.confirmation
 import spack.cmd.uninstall
 import spack.environment as ev
 import spack.store
@@ -20,7 +21,7 @@ def setup_parser(subparser):
 
 
 def gc(parser, args):
-    specs = spack.store.db.unused_specs
+    specs = spack.store.STORE.db.unused_specs
 
     # Restrict garbage collection to the active environment
     # speculating over roots that are yet to be installed
@@ -41,6 +42,6 @@ def gc(parser, args):
         return
 
     if not args.yes_to_all:
-        spack.cmd.uninstall.confirm_removal(specs)
+        spack.cmd.common.confirmation.confirm_action(specs, "uninstalled", "uninstallation")
 
     spack.cmd.uninstall.do_uninstall(specs, force=False)

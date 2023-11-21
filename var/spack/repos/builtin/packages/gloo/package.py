@@ -13,7 +13,10 @@ class Gloo(CMakePackage, CudaPackage):
     git = "https://github.com/facebookincubator/gloo.git"
 
     version("master", branch="master")
-    version("2021-05-21", commit="c22a5cfba94edf8ea4f53a174d38aa0c629d070f")  # py-torch@1.10:
+    version("2023-05-19", commit="597accfd79f5b0f9d57b228dec088ca996686475")  # py-torch@2.1:
+    version("2023-01-17", commit="10909297fedab0a680799211a299203e53515032")  # py-torch@2.0
+    version("2022-05-18", commit="5b143513263133af2b95547e97c07cebeb72bf72")  # py-torch@1.13
+    version("2021-05-21", commit="c22a5cfba94edf8ea4f53a174d38aa0c629d070f")  # py-torch@1.10:1.12
     version("2021-05-04", commit="6f7095f6e9860ce4fd682a7894042e6eba0996f1")  # py-torch@1.9
     version("2020-09-18", commit="3dc0328fe6a9d47bd47c0c6ca145a0d8a21845c6")  # py-torch@1.7:1.8
     version("2020-03-17", commit="113bde13035594cafdca247be953610b53026553")  # py-torch@1.5:1.6

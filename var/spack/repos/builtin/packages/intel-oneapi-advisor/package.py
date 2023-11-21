@@ -7,7 +7,7 @@ from spack.package import *
 
 
 @IntelOneApiPackage.update_description
-class IntelOneapiAdvisor(IntelOneApiPackage):
+class IntelOneapiAdvisor(IntelOneApiLibraryPackageWithSdk):
     """Intel Advisor is a design and analysis tool for developing
     performant code. The tool supports C, C++, Fortran, SYCL, OpenMP,
     OpenCL code, and Python. It helps with the following: Performant
@@ -24,6 +24,12 @@ class IntelOneapiAdvisor(IntelOneApiPackage):
         "https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/advisor.html"
     )
 
+    version(
+        "2023.2.0",
+        url="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/0b0e8bf2-30e4-4a26-b1ef-e369b0181b35/l_oneapi_advisor_p_2023.2.0.49489_offline.sh",
+        sha256="48ab7fa2b828a273d467c8f07efd64d6cf2fcdcfe0ff567bd1d1be7a5d5d8539",
+        expand=False,
+    )
     version(
         "2023.1.0",
         url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/a1ef7661-8921-4f19-ba40-2901231439f4/l_oneapi_advisor_p_2023.1.0.43480_offline.sh",

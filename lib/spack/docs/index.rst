@@ -54,8 +54,16 @@ or refer to the full manual below.
    features
    getting_started
    basic_usage
-   Tutorial: Spack 101 <https://spack-tutorial.readthedocs.io>
    replace_conda_homebrew
+   frequently_asked_questions
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Links
+
+   Tutorial (spack-tutorial.rtfd.io) <https://spack-tutorial.readthedocs.io>
+   Packages (packages.spack.io) <https://packages.spack.io>
+   Binaries (binaries.spack.io) <https://cache.spack.io>
 
 .. toctree::
    :maxdepth: 2
@@ -63,7 +71,7 @@ or refer to the full manual below.
 
    configuration
    config_yaml
-   bootstrapping
+   packages_yaml
    build_settings
    environments
    containers
@@ -71,11 +79,13 @@ or refer to the full manual below.
    module_file_support
    repositories
    binary_caches
+   bootstrapping
    command_index
-   package_list
    chain
    extensions
    pipelines
+   signing
+   gpu_configuration
 
 .. toctree::
    :maxdepth: 2

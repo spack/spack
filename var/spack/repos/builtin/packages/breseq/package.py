@@ -23,7 +23,7 @@ class Breseq(AutotoolsPackage):
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
 
     depends_on("bedtools2", type="run")
     depends_on("r", type="run")
@@ -32,5 +32,5 @@ class Breseq(AutotoolsPackage):
     conflicts("%clang@:3.3")
 
     def setup_build_environment(self, env):
-        env.set("LDFLAGS", "-L{0}".format(self.spec["zlib"].prefix.lib))
-        env.set("CFLAGS", "-I{0}".format(self.spec["zlib"].prefix.include))
+        env.set("LDFLAGS", "-L{0}".format(self.spec["zlib-api"].prefix.lib))
+        env.set("CFLAGS", "-I{0}".format(self.spec["zlib-api"].prefix.include))

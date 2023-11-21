@@ -26,6 +26,8 @@ class Tau(Package):
     tags = ["e4s"]
 
     version("master", branch="master")
+    version("2.33", sha256="04d9d67adb495bc1ea56561f33c5ce5ba44f51cc7f64996f65bd446fac5483d9")
+    version("2.32.1", sha256="0eec3de46b0873846dfc639270c5e30a226b463dd6cb41aa12e975b7563f0eeb")
     version("2.32", sha256="ee774a06e30ce0ef0f053635a52229152c39aba4f4933bed92da55e5e13466f3")
     version("2.31.1", sha256="bf445b9d4fe40a5672a7b175044d2133791c4dfb36a214c1a55a931aebc06b9d")
     version("2.31", sha256="27e73c395dd2a42b91591ce4a76b88b1f67663ef13aa19ef4297c68f45d946c2")
@@ -84,6 +86,7 @@ class Tau(Package):
     variant("io", default=True, description="Activates POSIX I/O support")
     variant("adios2", default=False, description="Activates ADIOS2 output support")
     variant("sqlite", default=False, description="Activates SQLite3 output support")
+    variant("syscall", default=False, description="Activates syscall wrapper")
     variant(
         "profileparam",
         default=False,
@@ -98,9 +101,10 @@ class Tau(Package):
     variant(
         "x86_64", default=False, description="Force build for x86 Linux instead of auto-detect"
     )
+    variant("dyninst", default=False, description="Activates dyninst support")
 
     depends_on("cmake@3.14:", type="build", when="%clang")
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
     depends_on("pdt", when="+pdt")  # Required for TAU instrumentation
     depends_on("scorep", when="+scorep")
     depends_on("otf2@2.1:2.3", when="+otf2")
@@ -124,8 +128,10 @@ class Tau(Package):
     depends_on("rocprofiler-dev", when="+rocprofiler")
     depends_on("roctracer-dev", when="+roctracer")
     depends_on("hsa-rocr-dev", when="+rocm")
+    depends_on("rocm-smi-lib", when="@2.32.1: +rocm")
     depends_on("java", type="run")  # for paraprof
     depends_on("oneapi-level-zero", when="+level_zero")
+    depends_on("dyninst@12.3.0:", when="+dyninst")
 
     # Elf only required from 2.28.1 on
     conflicts("+elf", when="@:2.28.0")
@@ -134,6 +140,7 @@ class Tau(Package):
     # ADIOS2, SQLite only available from 2.29.1 on
     conflicts("+adios2", when="@:2.29.1")
     conflicts("+sqlite", when="@:2.29.1")
+    conflicts("+dyninst", when="@:2.32.1")
 
     patch("unwind.patch", when="@2.29.0")
 
@@ -186,7 +193,7 @@ class Tau(Package):
         return compiler_options
 
     def setup_build_environment(self, env):
-        env.prepend_path("LIBRARY_PATH", self.spec["zlib"].prefix.lib)
+        env.prepend_path("LIBRARY_PATH", self.spec["zlib-api"].prefix.lib)
         env.prepend_path("LIBRARY_PATH", self.spec["hwloc"].prefix.lib)
 
     def install(self, spec, prefix):
@@ -241,6 +248,9 @@ class Tau(Package):
         if "+io" in spec:
             options.append("-iowrapper")
 
+        if "+syscall" in spec:
+            options.append("-syscall")
+
         if "+binutils" in spec:
             options.append("-bfd=%s" % spec["binutils"].prefix)
 
@@ -259,8 +269,9 @@ class Tau(Package):
         if "+mpi" in spec:
             env["CC"] = spec["mpi"].mpicc
             env["CXX"] = spec["mpi"].mpicxx
-            env["F77"] = spec["mpi"].mpif77
-            env["FC"] = spec["mpi"].mpifc
+            if "+fortran" in spec:
+                env["F77"] = spec["mpi"].mpif77
+                env["FC"] = spec["mpi"].mpifc
             options.append("-mpiinc=%s" % spec["mpi"].prefix.include)
             options.append("-mpilib=%s" % spec["mpi"].prefix.lib)
 
@@ -288,6 +299,8 @@ class Tau(Package):
 
         if "+rocm" in spec:
             options.append("-rocm=%s" % spec["hsa-rocr-dev"].prefix)
+            if spec.satisfies("@2.32.1"):
+                options.append("-rocmsmi=%s" % spec["rocm-smi-lib"].prefix)
 
         if "+rocprofiler" in spec:
             options.append("-rocprofiler=%s" % spec["rocprofiler-dev"].prefix)
@@ -331,6 +344,15 @@ class Tau(Package):
                 if found:
                     break
             options.append("-pythonlib=%s" % lib_path)
+
+        if "+dyninst" in spec:
+            options.append("-dyninst=%s" % spec["dyninst"].prefix)
+            if "+tbb" not in spec:
+                options.append("-tbb=%s" % spec["intel-tbb"].prefix)
+            if "+boost" not in spec:
+                options.append("-boost=%s" % spec["boost"].prefix)
+            if "+elf" not in spec:
+                options.append("-elf=%s" % spec["elfutils"].prefix)
 
         compiler_specific_options = self.set_compiler_options(spec)
         options.extend(compiler_specific_options)

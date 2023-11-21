@@ -31,9 +31,9 @@ def edit_package(name, repo_path, namespace):
     if repo_path:
         repo = spack.repo.Repo(repo_path)
     elif namespace:
-        repo = spack.repo.path.get_repo(namespace)
+        repo = spack.repo.PATH.get_repo(namespace)
     else:
-        repo = spack.repo.path
+        repo = spack.repo.PATH
     path = repo.filename_for_package_name(name)
 
     spec = Spec(name)
@@ -43,10 +43,7 @@ def edit_package(name, repo_path, namespace):
         if not os.access(path, os.R_OK):
             tty.die("Insufficient permissions on '%s'!" % path)
     else:
-        tty.die(
-            "No package for '{0}' was found.".format(spec.name),
-            "  Use `spack create` to create a new package",
-        )
+        raise spack.repo.UnknownPackageError(spec.name)
 
     editor(path)
 
@@ -62,7 +59,7 @@ def setup_parser(subparser):
         dest="path",
         action="store_const",
         const=spack.paths.build_systems_path,
-        help="Edit the build system with the supplied name.",
+        help="edit the build system with the supplied name",
     )
     excl_args.add_argument(
         "-c",

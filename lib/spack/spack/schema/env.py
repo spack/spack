@@ -12,33 +12,10 @@ from llnl.util.lang import union_dicts
 
 import spack.schema.gitlab_ci  # DEPRECATED
 import spack.schema.merged
-import spack.schema.packages
 import spack.schema.projections
 
-#: legal first keys in the schema
-keys = ("spack", "env")
-
-spec_list_schema = {
-    "type": "array",
-    "default": [],
-    "items": {
-        "anyOf": [
-            {
-                "type": "object",
-                "additionalProperties": False,
-                "properties": {
-                    "matrix": {
-                        "type": "array",
-                        "items": {"type": "array", "items": {"type": "string"}},
-                    },
-                    "exclude": {"type": "array", "items": {"type": "string"}},
-                },
-            },
-            {"type": "string"},
-            {"type": "null"},
-        ]
-    },
-}
+#: Top level key in a manifest file
+TOP_LEVEL_KEY = "spack"
 
 projections_scheme = spack.schema.projections.properties["projections"]
 
@@ -47,8 +24,8 @@ schema = {
     "title": "Spack environment file schema",
     "type": "object",
     "additionalProperties": False,
-    "patternProperties": {
-        "^env|spack$": {
+    "properties": {
+        "spack": {
             "type": "object",
             "default": {},
             "additionalProperties": False,
@@ -75,16 +52,7 @@ schema = {
                             }
                         },
                     },
-                    "definitions": {
-                        "type": "array",
-                        "default": [],
-                        "items": {
-                            "type": "object",
-                            "properties": {"when": {"type": "string"}},
-                            "patternProperties": {r"^(?!when$)\w*": spec_list_schema},
-                        },
-                    },
-                    "specs": spec_list_schema,
+                    "specs": spack.schema.spec_list_schema,
                     "view": {
                         "anyOf": [
                             {"type": "boolean"},

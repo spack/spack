@@ -7,7 +7,7 @@ from spack.package import *
 
 
 @IntelOneApiPackage.update_description
-class IntelOneapiVtune(IntelOneApiPackage):
+class IntelOneapiVtune(IntelOneApiLibraryPackageWithSdk):
     """Intel VTune Profiler is a profiler to optimize application
     performance, system performance, and system configuration for HPC,
     cloud, IoT, media, storage, and more.  CPU, GPU, and FPGA: Tune
@@ -25,6 +25,12 @@ class IntelOneapiVtune(IntelOneApiPackage):
 
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/vtune-profiler.html"
 
+    version(
+        "2023.2.0",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/dfae6f23-6c90-4b9f-80e2-fa2a5037fe36/l_oneapi_vtune_p_2023.2.0.49485_offline.sh",
+        sha256="482a727afe0ac6f81eff51503857c28fcb79ffdba76260399900f3397fd0adbd",
+        expand=False,
+    )
     version(
         "2023.1.0",
         url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/4466ed1b-5d4a-4b30-9146-1eabc336c647/l_oneapi_vtune_p_2023.1.0.44286_offline.sh",

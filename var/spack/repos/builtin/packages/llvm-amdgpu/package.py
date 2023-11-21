@@ -16,7 +16,7 @@ class LlvmAmdgpu(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/llvm-project"
     git = "https://github.com/RadeonOpenCompute/llvm-project.git"
-    url = "https://github.com/RadeonOpenCompute/llvm-project/archive/rocm-5.4.3.tar.gz"
+    url = "https://github.com/RadeonOpenCompute/llvm-project/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
     executables = [r"amdclang", r"amdclang\+\+", r"amdflang", r"clang.*", r"flang.*", "llvm-.*"]
     generator("ninja")
@@ -24,6 +24,10 @@ class LlvmAmdgpu(CMakePackage):
     maintainers("srekolam", "renjithravindrankannath", "haampie")
 
     version("master", branch="amd-stg-open")
+    version("5.6.1", sha256="045e43c0c4a3f4f2f1db9fb603a4f1ea3d56e128147e19ba17909eb57d7f08e5")
+    version("5.6.0", sha256="e922bd492b54d99e56ed88c81e2009ed6472059a180b10cc56ce1f9bd2d7b6ed")
+    version("5.5.1", sha256="7d7181f20f89cb0715191aa32914186c67a34258c13457055570d47e15296553")
+    version("5.5.0", sha256="5dc6c99f612b69ff73145bee17524e3712990100e16445b71634106acf7927cf")
     version("5.4.3", sha256="a844d3cc01613f6284a75d44db67c495ac1e9b600eacbb1eb13d2649f5d5404d")
     version("5.4.0", sha256="ff54f45a17723892cd775c1eaff9e5860527fcfd33d98759223c70e3362335bf")
     version("5.3.3", sha256="5296d5e474811c7d1e456cb6d5011db248b79b8d0512155e8a6c2aa5b5f12d38")
@@ -105,12 +109,6 @@ class LlvmAmdgpu(CMakePackage):
     )
 
     variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
-    variant(
         "rocm-device-libs",
         default=True,
         description=(
@@ -135,13 +133,14 @@ class LlvmAmdgpu(CMakePackage):
     provides("libllvm@12", when="@3.9:4.2")
     provides("libllvm@13", when="@4.3:4.9")
     provides("libllvm@14", when="@5:5.2")
-    provides("libllvm@15", when="@5.3:")
+    provides("libllvm@15", when="@5.3:5.4")
+    provides("libllvm@16", when="@5.5:")
 
     depends_on("cmake@3.4.3:", type="build", when="@:3.8")
     depends_on("cmake@3.13.4:", type="build", when="@3.9.0:")
     depends_on("python", type="build")
     depends_on("z3", type="link")
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
     depends_on("ncurses+termlib", type="link")
     depends_on("pkgconfig", type="build")
 
@@ -162,7 +161,18 @@ class LlvmAmdgpu(CMakePackage):
     # OpenMP clang toolchain looks for bitcode files in llvm/bin/../lib
     # as per 5.2.0 llvm code. It used to be llvm/bin/../lib/libdevice.
     # Below patch is to look in the old path.
-    patch("adjust-openmp-bitcode-directory-for-llvm-link.patch", when="@5.2.0:")
+    patch("adjust-openmp-bitcode-directory-for-llvm-link.patch", when="@5.2.0:5.6")
+
+    # Below patch is to set the flag -mcode-object-version=none until
+    # the below fix is available in device-libs release code.
+    # https://github.com/RadeonOpenCompute/ROCm-Device-Libs/commit/f0356159dbdc93ea9e545f9b61a7842f9c881fdf
+    patch("patch-llvm-5.5.0.patch", when="@5.5: +rocm-device-libs")
+
+    # i1 muls can sometimes happen after SCEV.
+    # They resulted in ISel failures because we were missing the patterns for them.
+    # This fix is targeting 6.1 rocm release.
+    # Need patch until https://github.com/llvm/llvm-project/pull/67291 is merged.
+    patch("001-Add-i1-mul-patterns.patch", when="@5.6")
 
     conflicts("^cmake@3.19.0")
 
@@ -171,6 +181,10 @@ class LlvmAmdgpu(CMakePackage):
 
     # Add device libs sources so they can be an external LLVM project
     for d_version, d_shasum in [
+        ("5.6.1", "f0dfab272ff936225bfa1e9dabeb3c5d12ce08b812bf53ffbddd2ddfac49761c"),
+        ("5.6.0", "efb5dcdca9b3a9fbe408d494fb4a23e0b78417eb5fa8eebd4a5d226088f28921"),
+        ("5.5.1", "3b5f6dd85f0e3371f6078da7b59bf77d5b210e30f1cc66ef1e2de6bbcb775833"),
+        ("5.5.0", "5ab95aeb9c8bed0514f96f7847e21e165ed901ed826cdc9382c14d199cbadbd3"),
         ("5.4.3", "f4f7281f2cea6d268fcc3662b37410957d4f0bc23e0df9f60b12eb0fcdf9e26e"),
         ("5.4.0", "d68813ded47179c39914c8d1b76af3dad8c714b10229d1e2246af67609473951"),
         ("5.3.3", "963c9a0561111788b55a8c3b492e2a5737047914752376226c97a28122a4d768"),
@@ -213,6 +227,44 @@ class LlvmAmdgpu(CMakePackage):
         when="@master +rocm-device-libs",
     )
 
+    for d_version, d_shasum in [
+        ("5.6.1", "4de9a57c2092edf9398d671c8a2c60626eb7daf358caf710da70d9c105490221"),
+        ("5.6.0", "30875d440df9d8481ffb24d87755eae20a0efc1114849a72619ea954f1e9206c"),
+    ]:
+        resource(
+            name="hsa-runtime",
+            placement="hsa-runtime",
+            url=f"https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/rocm-{d_version}.tar.gz",
+            sha256=d_shasum,
+            when="@{0}".format(d_version),
+        )
+    resource(
+        name="hsa-runtime",
+        placement="hsa-runtime",
+        git="https://github.com/RadeonOpenCompute/ROCR-Runtime.git",
+        branch="master",
+        when="@master",
+    )
+
+    for d_version, d_shasum in [
+        ("5.6.1", "0a85d84619f98be26ca7a32c71f94ed3c4e9866133789eabb451be64ce739300"),
+        ("5.6.0", "9396a7238b547ee68146c669b10b9d5de8f1d76527c649133c75d8076a185a72"),
+    ]:
+        resource(
+            name="comgr",
+            placement="comgr",
+            url=f"https://github.com/RadeonOpenCompute/ROCm-CompilerSupport/archive/rocm-{d_version}.tar.gz",
+            sha256=d_shasum,
+            when="@{0}".format(d_version),
+        )
+    resource(
+        name="comgr",
+        placement="comgr",
+        git="https://github.com/RadeonOpenCompute/ROCm-CompilerSupport.git",
+        branch="amd-stg-open",
+        when="@master",
+    )
+
     def cmake_args(self):
         llvm_projects = ["clang", "lld", "clang-tools-extra", "compiler-rt"]
         llvm_runtimes = []
@@ -230,6 +282,7 @@ class LlvmAmdgpu(CMakePackage):
                 self.define("LIBCXXABI_ENABLE_STATIC", "ON"),
                 self.define("LIBCXXABI_INSTALL_STATIC_LIBRARY", "OFF"),
             ]
+        args.append(self.define("LLVM_ENABLE_RTTI", "ON"))
         if self.spec.satisfies("@4.3.0:4.5.2"):
             llvm_projects.append("libcxx")
             llvm_projects.append("libcxxabi")
@@ -272,7 +325,17 @@ class LlvmAmdgpu(CMakePackage):
         # Get the GCC prefix for LLVM.
         if self.compiler.name == "gcc":
             args.append(self.define("GCC_INSTALL_PREFIX", self.compiler.prefix))
-
+        if self.spec.satisfies("@5.4.3:"):
+            args.append("-DCMAKE_INSTALL_LIBDIR=lib")
+        if self.spec.satisfies("@5.5.0:"):
+            args.append("-DCLANG_DEFAULT_RTLIB=compiler-rt")
+            args.append("-DCLANG_DEFAULT_UNWINDLIB=libgcc")
+        if self.spec.satisfies("@5.6.0:"):
+            hsainc_path = os.path.join(self.stage.source_path, "hsa-runtime/src/inc")
+            comgrinc_path = os.path.join(self.stage.source_path, "comgr/lib/comgr/include")
+            args.append("-DSANITIZER_HSA_INCLUDE_PATH={0}".format(hsainc_path))
+            args.append("-DSANITIZER_COMGR_INCLUDE_PATH={0}".format(comgrinc_path))
+            args.append("-DSANITIZER_AMDGPU:Bool=ON")
         return args
 
     @run_after("install")
@@ -306,3 +369,13 @@ class LlvmAmdgpu(CMakePackage):
                     int(match.group(1)), int(match.group(2)), int(match.group(3))
                 )
         return detected_version
+
+    # Make sure that the compiler paths are in the LD_LIBRARY_PATH
+    def setup_run_environment(self, env):
+        llvm_amdgpu_home = self.spec["llvm-amdgpu"].prefix
+        env.prepend_path("LD_LIBRARY_PATH", llvm_amdgpu_home + "/llvm/lib")
+
+    # Make sure that the compiler paths are in the LD_LIBRARY_PATH
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        llvm_amdgpu_home = self.spec["llvm-amdgpu"].prefix
+        env.prepend_path("LD_LIBRARY_PATH", llvm_amdgpu_home + "/llvm/lib")

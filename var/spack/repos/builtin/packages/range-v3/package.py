@@ -7,7 +7,6 @@ import os
 import shutil
 
 from spack.package import *
-from spack.pkg.builtin.boost import Boost
 
 
 class RangeV3(CMakePackage):
@@ -66,13 +65,16 @@ class RangeV3(CMakePackage):
 
     depends_on("cmake@3.6:", type="build")
     depends_on("doxygen+graphviz", type="build", when="+doc")
-    depends_on("boost@1.59.0: cxxstd=14", type="build", when="+examples cxxstd=14")
-    depends_on("boost@1.59.0: cxxstd=17", type="build", when="+examples cxxstd=17")
-
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants, type="build")
+    depends_on(
+        "boost+date_time+program_options@1.59.0: cxxstd=14",
+        type="build",
+        when="+examples cxxstd=14",
+    )
+    depends_on(
+        "boost+date_time+program_options@1.59.0: cxxstd=17",
+        type="build",
+        when="+examples cxxstd=17",
+    )
 
     # Fix reported upstream issue
     # https://github.com/ericniebler/range-v3/issues/1196 per PR

@@ -25,6 +25,7 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
 
     maintainers("mwkrentel")
 
+    version("0.190", sha256="8e00a3a9b5f04bc1dc273ae86281d2d26ed412020b391ffcc23198f10231d692")
     version("0.189", sha256="39bd8f1a338e2b7cd4abc3ff11a0eddc6e690f69578a57478d8179b4148708c8")
     version("0.188", sha256="fb8b0e8d0802005b9a309c60c1d8de32dd2951b56f0c3a3cb56d21ce01595dff")
     version("0.187", sha256="e70b0dfbe610f90c4d1fe0d71af142a4e25c3c4ef9ebab8d2d72b65159d454c8")
@@ -48,6 +49,7 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
 
     # Native language support from libintl.
     variant("nls", default=True, description="Enable Native Language Support.")
+    variant("exeprefix", default=True, description="Add a prefix to generated executables.")
 
     # libdebuginfod support
     # NB: For 0.181 and newer, this enables _both_ the client and server
@@ -65,7 +67,7 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
 
     depends_on("bzip2", type="link")
     depends_on("xz", type="link")
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
     depends_on("zstd", type="link", when="@0.182:")
 
     depends_on("gettext", when="+nls")
@@ -84,17 +86,14 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
 
     provides("elf@1")
 
-    # libarchive with iconv doesn't configure.
+    # libarchive with iconv doesn't configure (still broken as of libarchive@3.7.1)
     # see https://github.com/spack/spack/issues/36710
     # and https://github.com/libarchive/libarchive/issues/1819
-    conflicts("^libarchive@3.6.2 +iconv", when="+debuginfod")
+    conflicts("^libarchive +iconv", when="+debuginfod")
 
-    # Elfutils uses nested functions in C code, which is implemented
-    # in gcc, but not in clang. C code compiled with gcc is
-    # binary-compatible with clang, so it should be possible to build
-    # elfutils with gcc, and then link it to clang-built libraries.
+    # https://sourceware.org/bugzilla/show_bug.cgi?id=24964
     conflicts("%apple-clang")
-    conflicts("%clang")
+    conflicts("%clang", when="@:0.185")
     conflicts("%cce")
 
     # Elfutils uses -Wall and we don't want to fail the build over a
@@ -115,8 +114,13 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
         args = [
             "--with-bzlib=%s" % spec["bzip2"].prefix,
             "--with-lzma=%s" % spec["xz"].prefix,
-            "--with-zlib=%s" % spec["zlib"].prefix,
+            "--with-zlib=%s" % spec["zlib-api"].prefix,
         ]
+
+        if spec.satisfies("+exeprefix"):
+            args.append("--program-prefix='eu-'")
+        else:
+            args.append("--program-prefix=''")
 
         if "@0.182:" in spec:
             args.append("--with-zstd=%s" % spec["zstd"].prefix)

@@ -29,7 +29,7 @@ def setup_parser(subparser):
         action="store_true",
         default=False,
         dest="dump_json",
-        help="Dump json output instead of pretty printing.",
+        help="dump json output instead of pretty printing",
     )
     subparser.add_argument(
         "--first",
@@ -200,6 +200,8 @@ def diff(parser, args):
 
     specs = []
     for spec in spack.cmd.parse_specs(args.specs):
+        # If the spec has a hash, check it before disambiguating
+        spec.replace_hash()
         if spec.concrete:
             specs.append(spec)
         else:

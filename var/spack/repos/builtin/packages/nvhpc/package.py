@@ -21,6 +21,34 @@ from spack.util.prefix import Prefix
 #  - package key must be in the form '{os}-{arch}' where 'os' is in the
 #    format returned by platform.system() and 'arch' by platform.machine()
 _versions = {
+    "23.9": {
+        "Linux-aarch64": (
+            "dd32ae4233438adb71b2b4f8891f04802fdf90f67036ecf18bfde1b6043a03c3",
+            "https://developer.download.nvidia.com/hpc-sdk/23.9/nvhpc_2023_239_Linux_aarch64_cuda_multi.tar.gz",
+        ),
+        "Linux-ppc64le": (
+            "984d61695499db098fd32be8345c1f7d7c637ea3bdb29cef17aad656f16b000f",
+            "https://developer.download.nvidia.com/hpc-sdk/23.9/nvhpc_2023_239_Linux_ppc64le_cuda_multi.tar.gz",
+        ),
+        "Linux-x86_64": (
+            "ecf343ecad2398e21c8d7f24a580b2932348017dfd8ea38c1ef31b37114b2d4b",
+            "https://developer.download.nvidia.com/hpc-sdk/23.9/nvhpc_2023_239_Linux_x86_64_cuda_multi.tar.gz",
+        ),
+    },
+    "23.7": {
+        "Linux-aarch64": (
+            "d3b9b674045e6e17156b298941be4e1e1e7dea6a3c1938f14ad653b180860ff2",
+            "https://developer.download.nvidia.com/hpc-sdk/23.7/nvhpc_2023_237_Linux_aarch64_cuda_multi.tar.gz",
+        ),
+        "Linux-ppc64le": (
+            "67b137cf67e2c8556ef3952d1ee35f4966c9d1968626825924fb8e4b198a532b",
+            "https://developer.download.nvidia.com/hpc-sdk/23.7/nvhpc_2023_237_Linux_ppc64le_cuda_multi.tar.gz",
+        ),
+        "Linux-x86_64": (
+            "fea91d95ff18bca1ce7afde50371caa02001ade8bed6ddfc5ff70862ccbebece",
+            "https://developer.download.nvidia.com/hpc-sdk/23.7/nvhpc_2023_237_Linux_x86_64_cuda_multi.tar.gz",
+        ),
+    },
     "23.5": {
         "Linux-aarch64": (
             "3af202ad36bbf205b2af56aabe63b971c01b5ec0e82a02effb3c4928f63bc657",
@@ -322,6 +350,8 @@ class Nvhpc(Package):
     maintainers("samcmill")
     tags = ["e4s"]
 
+    skip_version_audit = ["platform=darwin"]
+
     for ver, packages in _versions.items():
         key = "{0}-{1}".format(platform.system(), platform.machine())
         pkg = packages.get(key)
@@ -339,16 +369,15 @@ class Nvhpc(Package):
     )
     variant("lapack", default=True, description="Enable LAPACK")
     variant("mpi", default=False, description="Enable MPI")
+    variant(
+        "default_cuda", default="default", description="Default CUDA version, for example 11.8"
+    )
 
     provides("blas", when="+blas")
     provides("lapack", when="+lapack")
     provides("mpi", when="+mpi")
 
-    # TODO: effectively gcc is a direct dependency of nvhpc, but we cannot express that
-    #  properly. For now, add conflicts for non-gcc compilers instead.
-    for __compiler in spack.compilers.supported_compilers():
-        if __compiler != "gcc":
-            conflicts("%{0}".format(__compiler), msg="nvhpc must be installed with %gcc")
+    requires("%gcc", msg="nvhpc must be installed with %gcc")
 
     def _version_prefix(self):
         return join_path(self.prefix, "Linux_%s" % self.spec.target.family, self.version)
@@ -357,6 +386,8 @@ class Nvhpc(Package):
         env.set("NVHPC_SILENT", "true")
         env.set("NVHPC_ACCEPT_EULA", "accept")
         env.set("NVHPC_INSTALL_DIR", self.prefix)
+        if self.spec.variants["default_cuda"].value != "default":
+            env.set("NVHPC_DEFAULT_CUDA", self.spec.variants["default_cuda"].value)
 
         if self.spec.variants["install_type"].value == "network":
             local_dir = join_path(self._version_prefix(), "share_objects")

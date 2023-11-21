@@ -472,33 +472,46 @@ def specfile_for(default_mock_concretization):
             [Token(TokenType.PROPAGATED_KEY_VALUE_PAIR, value='cflags=="-O3 -g"')],
             'cflags=="-O3 -g"',
         ),
-        # Way too many spaces
+        # Whitespace is allowed in version lists
+        ("@1.2:1.4 , 1.6 ", [Token(TokenType.VERSION, value="@1.2:1.4 , 1.6")], "@1.2:1.4,1.6"),
+        # But not in ranges. `a@1:` and `b` are separate specs, not a single `a@1:b`.
         (
-            "@1.2 : 1.4 , 1.6 ",
-            [Token(TokenType.VERSION, value="@1.2 : 1.4 , 1.6")],
-            "@1.2:1.4,1.6",
-        ),
-        ("@1.2 :   develop", [Token(TokenType.VERSION, value="@1.2 :   develop")], "@1.2:develop"),
-        (
-            "@1.2 :   develop   = foo",
+            "a@1: b",
             [
-                Token(TokenType.VERSION, value="@1.2 :"),
+                Token(TokenType.UNQUALIFIED_PACKAGE_NAME, value="a"),
+                Token(TokenType.VERSION, value="@1:"),
+                Token(TokenType.UNQUALIFIED_PACKAGE_NAME, value="b"),
+            ],
+            "a@1:",
+        ),
+        (
+            "@1.2:   develop   = foo",
+            [
+                Token(TokenType.VERSION, value="@1.2:"),
                 Token(TokenType.KEY_VALUE_PAIR, value="develop   = foo"),
             ],
             "@1.2: develop=foo",
         ),
         (
-            "% intel @ 12.1 : 12.6 + debug",
+            "@1.2:develop   = foo",
             [
-                Token(TokenType.COMPILER_AND_VERSION, value="% intel @ 12.1 : 12.6"),
+                Token(TokenType.VERSION, value="@1.2:"),
+                Token(TokenType.KEY_VALUE_PAIR, value="develop   = foo"),
+            ],
+            "@1.2: develop=foo",
+        ),
+        (
+            "% intel @ 12.1:12.6 + debug",
+            [
+                Token(TokenType.COMPILER_AND_VERSION, value="% intel @ 12.1:12.6"),
                 Token(TokenType.BOOL_VARIANT, value="+ debug"),
             ],
             "%intel@12.1:12.6+debug",
         ),
         (
-            "@ 12.1 : 12.6 + debug - qt_4",
+            "@ 12.1:12.6 + debug - qt_4",
             [
-                Token(TokenType.VERSION, value="@ 12.1 : 12.6"),
+                Token(TokenType.VERSION, value="@ 12.1:12.6"),
                 Token(TokenType.BOOL_VARIANT, value="+ debug"),
                 Token(TokenType.BOOL_VARIANT, value="- qt_4"),
             ],
@@ -516,6 +529,59 @@ def specfile_for(default_mock_concretization):
             "@:0.4 % nvhpc",
             [Token(TokenType.VERSION, value="@:0.4"), Token(TokenType.COMPILER, value="% nvhpc")],
             "@:0.4%nvhpc",
+        ),
+        (
+            "^[virtuals=mpi] openmpi",
+            [
+                Token(TokenType.START_EDGE_PROPERTIES, value="^["),
+                Token(TokenType.KEY_VALUE_PAIR, value="virtuals=mpi"),
+                Token(TokenType.END_EDGE_PROPERTIES, value="]"),
+                Token(TokenType.UNQUALIFIED_PACKAGE_NAME, value="openmpi"),
+            ],
+            "^[virtuals=mpi] openmpi",
+        ),
+        (
+            "^[deptypes=link,build] zlib",
+            [
+                Token(TokenType.START_EDGE_PROPERTIES, value="^["),
+                Token(TokenType.KEY_VALUE_PAIR, value="deptypes=link,build"),
+                Token(TokenType.END_EDGE_PROPERTIES, value="]"),
+                Token(TokenType.UNQUALIFIED_PACKAGE_NAME, value="zlib"),
+            ],
+            "^[deptypes=build,link] zlib",
+        ),
+        (
+            "zlib@git.foo/bar",
+            [
+                Token(TokenType.UNQUALIFIED_PACKAGE_NAME, "zlib"),
+                Token(TokenType.GIT_VERSION, "@git.foo/bar"),
+            ],
+            "zlib@git.foo/bar",
+        ),
+        # Variant propagation
+        (
+            "zlib ++foo",
+            [
+                Token(TokenType.UNQUALIFIED_PACKAGE_NAME, "zlib"),
+                Token(TokenType.PROPAGATED_BOOL_VARIANT, "++foo"),
+            ],
+            "zlib++foo",
+        ),
+        (
+            "zlib ~~foo",
+            [
+                Token(TokenType.UNQUALIFIED_PACKAGE_NAME, "zlib"),
+                Token(TokenType.PROPAGATED_BOOL_VARIANT, "~~foo"),
+            ],
+            "zlib~~foo",
+        ),
+        (
+            "zlib foo==bar",
+            [
+                Token(TokenType.UNQUALIFIED_PACKAGE_NAME, "zlib"),
+                Token(TokenType.PROPAGATED_KEY_VALUE_PAIR, "foo==bar"),
+            ],
+            "zlib foo==bar",
         ),
     ],
 )
@@ -726,22 +792,31 @@ def test_multiple_specs_with_hash(database, config):
 
 @pytest.mark.db
 def test_ambiguous_hash(mutable_database, default_mock_concretization, config):
+    """Test that abstract hash ambiguity is delayed until concretization.
+    In the past this ambiguity error would happen during parse time."""
+
+    # This is a very sketchy as manually setting hashes easily breaks invariants
     x1 = default_mock_concretization("a")
     x2 = x1.copy()
     x1._hash = "xyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+    x1._process_hash = "xyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
     x2._hash = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-    mutable_database.add(x1, spack.store.layout)
-    mutable_database.add(x2, spack.store.layout)
+    x2._process_hash = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+    assert x1 != x2  # doesn't hold when only the dag hash is modified.
+
+    mutable_database.add(x1, directory_layout=None)
+    mutable_database.add(x2, directory_layout=None)
 
     # ambiguity in first hash character
+    s1 = SpecParser("/x").next_spec()
     with pytest.raises(spack.spec.AmbiguousHashError):
-        parsed_spec = SpecParser("/x").next_spec()
-        parsed_spec.replace_hash()
+        s1.lookup_hash()
 
     # ambiguity in first hash character AND spec name
+    s2 = SpecParser("a/x").next_spec()
     with pytest.raises(spack.spec.AmbiguousHashError):
-        parsed_spec = SpecParser("a/x").next_spec()
-        parsed_spec.replace_hash()
+        s2.lookup_hash()
 
 
 @pytest.mark.db
@@ -868,6 +943,9 @@ def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monk
         ("x platform=test platform=test", spack.spec.DuplicateArchitectureError),
         ("x os=fe platform=test target=fe os=fe", spack.spec.DuplicateArchitectureError),
         ("x target=be platform=test os=be os=fe", spack.spec.DuplicateArchitectureError),
+        ("^[@foo] zlib", spack.parser.SpecParsingError),
+        # TODO: Remove this as soon as use variants are added and we can parse custom attributes
+        ("^[foo=bar] zlib", spack.parser.SpecParsingError),
     ],
 )
 def test_error_conditions(text, exc_cls):

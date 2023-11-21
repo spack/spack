@@ -34,6 +34,9 @@ class PyPyyaml(PythonPackage):
     # Includes "longintrepr.h" instead of Python.h
     conflicts("^python@3.11:", when="@:5.3")
 
+    # https://github.com/yaml/pyyaml/issues/601
+    conflicts("^py-cython@3:")
+
     @property
     def import_modules(self):
         modules = ["yaml"]

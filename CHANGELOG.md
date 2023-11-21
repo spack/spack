@@ -1,3 +1,51 @@
+# v0.20.3 (2023-10-31)
+
+## Bugfixes
+
+- Fix a bug where `spack mirror set-url` would drop configured connection info (reverts #34210)
+- Fix a minor issue with package hash computation for Python 3.12 (#40328)
+
+
+# v0.20.2 (2023-10-03)
+
+## Features in this release
+
+Spack now supports Python 3.12 (#40155)
+
+## Bugfixes
+
+- Improve escaping in Tcl module files (#38375)
+- Make repo cache work on repositories with zero mtime (#39214)
+- Ignore errors for newer, incompatible buildcache version (#40279)
+- Print an error when git is required, but missing (#40254)
+- Ensure missing build dependencies get installed when using `spack install --overwrite` (#40252)
+- Fix an issue where Spack freezes when the build process unexpectedly exits (#39015)
+- Fix a bug where installation failures cause an unrelated `NameError` to be thrown (#39017)
+- Fix an issue where Spack package versions would be incorrectly derived from git tags (#39414)
+- Fix a bug triggered when file locking fails internally (#39188)
+- Prevent "spack external find" to error out when a directory cannot be accessed (#38755)
+- Fix multiple performance regressions in environments (#38771)
+- Add more ignored modules to `pyproject.toml` for `mypy` (#38769)
+
+
+# v0.20.1 (2023-07-10)
+
+## Spack Bugfixes
+
+- Spec removed from an environment where not actually removed if `--force` was not given (#37877)
+- Speed-up module file generation (#37739)
+- Hotfix for a few recipes that treat CMake as a link dependency (#35816)
+- Fix re-running stand-alone test a second time, which was getting a trailing spurious failure (#37840)
+- Fixed reading JSON manifest on Cray, reporting non-concrete specs (#37909)
+- Fixed a few bugs when generating Dockerfiles from Spack (#37766,#37769)
+- Fixed a few long-standing bugs when generating module files (#36678,#38347,#38465,#38455)
+- Fixed issues with building Python extensions using an external Python (#38186)
+- Fixed compiler removal from command line (#38057)
+- Show external status as [e] (#33792)
+- Backported `archspec` fixes (#37793)
+- Improved a few error messages (#37791)
+
+
 # v0.20.0 (2023-05-21)
 
 `v0.20.0` is a major feature release.

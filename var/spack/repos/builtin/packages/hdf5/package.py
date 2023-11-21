@@ -20,7 +20,7 @@ class Hdf5(CMakePackage):
     """
 
     homepage = "https://portal.hdfgroup.org"
-    url = "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.8/src/hdf5-1.10.8.tar.gz"
+    url = "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.14/hdf5-1.14.3/src/hdf5-1.14.3.tar.gz"
     list_url = "https://support.hdfgroup.org/ftp/HDF5/releases"
     list_depth = 3
     git = "https://github.com/HDFGroup/hdf5.git"
@@ -40,12 +40,17 @@ class Hdf5(CMakePackage):
     version("develop-1.8", branch="hdf5_1_8")
 
     # Odd versions are considered experimental releases
-    # Note: These are still required to build some VOL adapters, but even releases should be
-    #       preferred.
-    version("1.13.3", sha256="83c7c06671f975cee6944b0b217f95005faa55f79ea5532cf4ac268989866af4")
-    version("1.13.2", sha256="01643fa5b37dba7be7c4db6bbf3c5d07adf5c1fa17dbfaaa632a279b1b2f06da")
-
     # Even versions are maintenance versions
+    version(
+        "1.14.3",
+        sha256="09cdb287aa7a89148c1638dd20891fdbae08102cf433ef128fd345338aa237c7",
+        preferred=True,
+    )
+    version(
+        "1.14.2",
+        sha256="1c342e634008284a8c2794c8e7608e2eaf26d01d445fb3dfd7f33cb2fb51ac53",
+        preferred=True,
+    )
     version(
         "1.14.1-2",
         sha256="cbe93f275d5231df28ced9549253793e40cd2b555e3d288df09d7b89a9967b07",
@@ -69,6 +74,16 @@ class Hdf5(CMakePackage):
     version(
         "1.12.0",
         sha256="a62dcb276658cb78e6795dd29bf926ed7a9bc4edf6e77025cd2c689a8f97c17a",
+        preferred=True,
+    )
+    version(
+        "1.10.11",
+        sha256="341684c5c0976b8c7e6951735a400275a90693604464cac73e9f323c696fc79c",
+        preferred=True,
+    )
+    version(
+        "1.10.10",
+        sha256="a6877ab7bd5d769d2d68618fdb54beb50263dcc2a8c157fe7e2186925cdb02db",
         preferred=True,
     )
     version(
@@ -124,6 +139,11 @@ class Hdf5(CMakePackage):
     version(
         "1.10.0",
         sha256="81f6201aba5c30dced5dcd62f5d5477a2790fd5850e02ac514ca8bf3e2bb375a",
+        preferred=True,
+    )
+    version(
+        "1.8.23",
+        sha256="37fa4eb6cd0e181eb49a10d54611cb00700e9537f805d03e6853503afe5abc27",
         preferred=True,
     )
     version(
@@ -187,6 +207,7 @@ class Hdf5(CMakePackage):
     variant("hl", default=False, description="Enable the high-level library")
     variant("cxx", default=False, description="Enable C++ support")
     variant("map", when="@1.14:", default=False, description="Enable MAP API support")
+    variant("subfiling", when="@1.14:", default=False, description="Enable Subfiling VFD support")
     variant("fortran", default=False, description="Enable Fortran support")
     variant("java", when="@1.10:", default=False, description="Enable Java support")
     variant("threadsafe", default=False, description="Enable thread-safe capabilities")
@@ -208,7 +229,7 @@ class Hdf5(CMakePackage):
     depends_on("mpi", when="+mpi")
     depends_on("java", type=("build", "run"), when="+java")
     depends_on("szip", when="+szip")
-    depends_on("zlib@1.1.2:")
+    depends_on("zlib-api")
 
     # The compiler wrappers (h5cc, h5fc, etc.) run 'pkg-config'.
     # Skip this on Windows since pkgconfig is autotools
@@ -309,7 +330,7 @@ class Hdf5(CMakePackage):
 
     patch("fortran-kinds.patch", when="@1.10.7")
 
-    # This patch may only be needed with GCC11.2 on macOS, but it's valid for
+    # This patch may only be needed with GCC 11.2 on macOS, but it's valid for
     # any of the head HDF5 versions as of 12/2021. Since it's impossible to
     # tell what Fortran version is part of a mixed apple-clang toolchain on
     # macOS (which is the norm), and this might be an issue for other compilers
@@ -489,9 +510,7 @@ class Hdf5(CMakePackage):
     @classmethod
     def determine_variants(cls, exes, version):
         def is_enabled(text):
-            if text in set(["t", "true", "enabled", "yes", "1"]):
-                return True
-            return False
+            return text.lower() in ["t", "true", "enabled", "yes", "1", "on"]
 
         results = []
         for exe in exes:
@@ -589,6 +608,7 @@ class Hdf5(CMakePackage):
                 # are enabled but the tests are disabled.
                 spec.satisfies("@1.8.22+shared+tools"),
             ),
+            self.define_from_variant("HDF5_ENABLE_SUBFILING_VFD", "subfiling"),
             self.define_from_variant("HDF5_ENABLE_MAP_API", "map"),
             self.define("HDF5_ENABLE_Z_LIB_SUPPORT", True),
             self.define_from_variant("HDF5_ENABLE_SZIP_SUPPORT", "szip"),
@@ -649,7 +669,7 @@ class Hdf5(CMakePackage):
         # 1.10.6 and 1.12.0. The current develop versions do not produce 'h5pfc'
         # at all. Here, we make sure that 'h5pfc' is available when Fortran and
         # MPI support are enabled (only for versions that generate 'h5fc').
-        if self.spec.satisfies("@1.8.22:1.8," "1.10.6:1.10," "1.12.0:1.12" "+fortran+mpi"):
+        if self.spec.satisfies("@1.8.22:1.8," "1.10.6:1.10.9," "1.12.0:1.12" "+fortran+mpi"):
             with working_dir(self.prefix.bin):
                 # No try/except here, fix the condition above instead:
                 symlink("h5fc", "h5pfc")
@@ -692,6 +712,17 @@ class Hdf5(CMakePackage):
                     tgt_filename = src_filename[:version_sep_idx] + ".pc"
                     if not os.path.exists(tgt_filename):
                         symlink(src_filename, tgt_filename)
+
+    @run_after("install")
+    def link_debug_libs(self):
+        # When build_type is Debug, the hdf5 build appends _debug to all library names.
+        # Dependents of hdf5 (netcdf-c etc.) can't handle those, thus make symlinks.
+        if "build_type=Debug" in self.spec:
+            libs = find(self.prefix.lib, "libhdf5*_debug.*", recursive=False)
+            with working_dir(self.prefix.lib):
+                for lib in libs:
+                    libname = os.path.split(lib)[1]
+                    os.symlink(libname, libname.replace("_debug", ""))
 
     @property
     @llnl.util.lang.memoized

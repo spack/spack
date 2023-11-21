@@ -52,17 +52,37 @@ class Ascent(CMakePackage, CudaPackage):
 
     version("develop", branch="develop", submodules=True)
 
-    version("0.9.1", tag="v0.9.1", submodules=True, preferred=True)
+    version(
+        "0.9.2",
+        tag="v0.9.2",
+        commit="b842516d12640e4a0d9433a18c7249440ef6fc3d",
+        submodules=True,
+        preferred=True,
+    )
 
-    version("0.9.0", tag="v0.9.0", submodules=True)
+    version(
+        "0.9.1", tag="v0.9.1", commit="027a2fe184f65a4923817a8cdfed0b0c61c2c75a", submodules=True
+    )
 
-    version("0.8.0", tag="v0.8.0", submodules=True)
+    version(
+        "0.9.0", tag="v0.9.0", commit="a31c88c579c8d0026e0025de8bace0cf22f6305b", submodules=True
+    )
 
-    version("0.7.1", tag="v0.7.1", submodules=True)
+    version(
+        "0.8.0", tag="v0.8.0", commit="08504374908518e013d7fe8d8882cfb1c2378e3b", submodules=True
+    )
 
-    version("0.7.0", tag="v0.7.0", submodules=True)
+    version(
+        "0.7.1", tag="v0.7.1", commit="79d35b2f48e92eb151313f0217e9bd7c15779582", submodules=True
+    )
 
-    version("0.6.0", tag="v0.6.0", submodules=True)
+    version(
+        "0.7.0", tag="v0.7.0", commit="cfed1b0a469e4dcc970fd7e0bcd78b522d97ea53", submodules=True
+    )
+
+    version(
+        "0.6.0", tag="v0.6.0", commit="9ade37b0a9ea495e45adb25cda7498c0bf9465c5", submodules=True
+    )
 
     ###########################################################################
     # package variants
@@ -90,6 +110,7 @@ class Ascent(CMakePackage, CudaPackage):
     variant("dray", default=False, description="Build with Devil Ray support")
     variant("adios2", default=False, description="Build Adios2 filter support")
     variant("fides", default=False, description="Build Fides filter support")
+    variant("occa", default=False, description="Build with OCCA support")
 
     # caliper
     variant("caliper", default=False, description="Build Caliper support")
@@ -173,7 +194,7 @@ class Ascent(CMakePackage, CudaPackage):
     #######################
     # VTK-m
     #######################
-
+    depends_on("vtk-m@2.0:", when="@0.9.2: +vtkh")
     depends_on("vtk-m@1.9:1.9", when="@0.9.0: +vtkh")
 
     depends_on("vtk-m~tbb", when="@0.9.0: +vtkh")
@@ -184,7 +205,7 @@ class Ascent(CMakePackage, CudaPackage):
     depends_on("vtk-m+fpic", when="@0.8.0: +vtkh")
     depends_on("vtk-m~shared+fpic", when="@0.8.0: +vtkh~shared")
     # Ascent defaults to C++11
-    depends_on("kokkos std=11", when="+vtkh ^vtk-m +kokkos")
+    depends_on("kokkos cxxstd=11", when="+vtkh ^vtk-m +kokkos")
 
     #######################
     # VTK-h
@@ -212,6 +233,9 @@ class Ascent(CMakePackage, CudaPackage):
     depends_on("mfem~mpi", when="+mfem~mpi")
     depends_on("mfem+shared", when="+mfem+shared")
     depends_on("mfem~shared", when="+mfem~shared")
+
+    # occa
+    depends_on("occa", when="+occa")
 
     # fides
     depends_on("fides", when="+fides")
@@ -614,6 +638,15 @@ class Ascent(CMakePackage, CudaPackage):
             cfg.write(cmake_cache_entry("MFEM_DIR", spec["mfem"].prefix))
         else:
             cfg.write("# mfem not built by spack \n")
+
+        #######################
+        # OCCA
+        #######################
+        if "+occa" in spec:
+            cfg.write("# occa from spack \n")
+            cfg.write(cmake_cache_entry("OCCA_DIR", spec["occa"].prefix))
+        else:
+            cfg.write("# occa not built by spack \n")
 
         #######################
         # Devil Ray
