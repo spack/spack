@@ -190,6 +190,8 @@ class Dd4hep(CMakePackage):
     )
     conflicts("~ddrec+dddetectors", msg="Need to enable +ddrec to build +dddetectors.")
 
+    conflicts("geant4 cxxstd=11", when="@1.27.1: +ddg4")
+
     @property
     def libs(self):
         # We need to override libs here, because we don't build a libdd4hep so
