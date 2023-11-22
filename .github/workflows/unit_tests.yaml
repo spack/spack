@@ -200,7 +200,7 @@ jobs:
     - name: Install Python packages
       run: |
           pip install --upgrade pip setuptools
-          pip install --upgrade pytest coverage[toml] pytest-xdist pytest-cov
+          pip install --upgrade pytest coverage[toml] pytest-xdist==3.4.0 pytest-cov
     - name: Setup Homebrew packages
       run: |
         brew install dash fish gcc gnupg2 kcov
