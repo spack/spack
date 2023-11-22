@@ -52,10 +52,8 @@ class SstMacro(AutotoolsPackage):
     depends_on("otf2", when="+otf2")
     depends_on("llvm+clang@5:9", when="+skeletonizer")
     depends_on("mpi", when="+pdes_mpi")
-    depends_on("sst-core@develop", when="@develop+core")
-    depends_on("sst-core@master", when="@master+core")
-    depends_on("sst-core@10.1.0", when="@10.1.0+core")
-    depends_on("sst-core@10.0.0", when="@10.0.0+core")
+    # Allow mismatch between core dependency version and current macro version.
+    depends_on("sst-core", when="+core")
     depends_on("gettext")
 
     variant("pdes_threads", default=True, description="Enable thread-parallel PDES simulation")
