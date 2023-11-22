@@ -42,7 +42,6 @@ class SstElements(AutotoolsPackage):
     # Contact SST developers (https://github.com/sstsimulator)
     # if your use case requires support for:
     #   - balar
-    #   - OTF2
     #   - stake (riscv simulator)
 
     variant("pin", default=False, description="Enable the Ariel CPU model")
@@ -87,7 +86,6 @@ class SstElements(AutotoolsPackage):
 
     conflicts("+dumpi", msg="Dumpi not currently supported, contact SST Developers for help")
     conflicts("+otf", msg="OTF not currently supported, contact SST Developers for help")
-    conflicts("+otf2", msg="OTF2 not currently supported, contact SST Developers for help")
     conflicts(
         "~dramsim2",
         when="+hybridsim",
