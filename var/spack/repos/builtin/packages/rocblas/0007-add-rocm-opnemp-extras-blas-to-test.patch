@@ -1,0 +1,33 @@
+diff git a/clients/CMakeLists.txt b/clients/CMakeLists.txt
+index 61bb06f..22ea765 100755
+--- a/clients/CMakeLists.txt
++++ b/clients/CMakeLists.txt
+@@ -117,7 +117,7 @@ if( BUILD_CLIENTS_BENCHMARKS OR BUILD_CLIENTS_TESTS)
+       set( BLIS_CPP ../common/blis_interface.cpp )
+       set( BLAS_LIBRARY ${BUILD_DIR}/deps/blis/lib/libblis.a )
+     else()
+-      set( BLAS_LIBRARY "blas" )
++      set( BLAS_LIBRARY ${NETLIB_DIR}/lib64/libblas.so )
+     endif()
+   else() # WIN32
+     set( BLAS_INCLUDE_DIR ${OPENBLAS_DIR}/include CACHE PATH "OpenBLAS library include path" )
+diff --git a/clients/gtest/CMakeLists.txt b/clients/gtest/CMakeLists.txt
+index c9e7adf..44dcff9 100644
+--- a/clients/gtest/CMakeLists.txt
++++ b/clients/gtest/CMakeLists.txt
+@@ -143,12 +143,14 @@ target_include_directories( rocblas-test
+     $<BUILD_INTERFACE:${BLAS_INCLUDE_DIR}>
+     $<BUILD_INTERFACE:${BLIS_INCLUDE_DIR}> # may be blank if not used
+     $<BUILD_INTERFACE:${GTEST_INCLUDE_DIRS}>
++    $<BUILD_INTERFACE:${ROCM_OPENMP_EXTRAS_DIR}/include>
++    $<BUILD_INTERFACE:${NETLIB_DIR}/include>
+ )
+
+ if( BUILD_FORTRAN_CLIENTS )
+   target_link_libraries( rocblas-test PRIVATE rocblas_fortran_client )
+ endif( )
+-target_link_libraries( rocblas-test PRIVATE ${BLAS_LIBRARY} ${GTEST_BOTH_LIBRARIES} roc::rocblas )
++target_link_libraries( rocblas-test PRIVATE ${NETLIB_DIR}/lib64/libcblas.so ${BLAS_LIBRARY} ${GTEST_BOTH_LIBRARIES} roc::rocblas )
+
+ if( CUDA_FOUND )
+   target_include_directories( rocblas-test
