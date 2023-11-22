@@ -62,7 +62,7 @@ class SstCore(AutotoolsPackage):
     variant("preview", default=False, description="Preview build with deprecated features removed")
     variant("profile", default=False, description="Enable performance profiling of core features")
 
-    depends_on("python", type=("build", "run", "link"))
+    depends_on("python@:3.12", type=("build", "run", "link"))
     depends_on("mpi", when="+pdes_mpi")
     depends_on("zoltan", when="+zoltan")
     depends_on("hdf5", when="+hdf5")
