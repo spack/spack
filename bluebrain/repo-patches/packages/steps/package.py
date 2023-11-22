@@ -19,6 +19,7 @@ class Steps(CMakePackage):
     submodules = True
 
     version("develop", branch="master")
+    version("5.0.0b", commit="cf40da19")
     version("5.0.0a", commit="6ed2067")
     version("4.1.0", tag="4.1.0", preferred=True)
 
