@@ -478,7 +478,6 @@ class Hip(CMakePackage):
 
             if self.spec.satisfies("@5.4:"):
                 paths["hipify-clang"] = self.spec["hipify-clang"].prefix
-
         if "@:3.8.0" in self.spec:
             paths["bitcode"] = paths["rocm-device-libs"].lib
         else:
@@ -615,6 +614,12 @@ class Hip(CMakePackage):
                 "clr/hipamd/hip-config-amd.cmake",
                 string=True,
             )
+            filter_file(
+                '"${ROCM_PATH}/llvm"',
+                self.spec["llvm-amdgpu"].prefix,
+                "clr/hipamd/src/hiprtc/CMakeLists.txt",
+                string=True,
+            )
         perl = self.spec["perl"].command
         kwargs = {"ignore_absent": False, "backup": False, "string": False}
 
@@ -723,6 +728,7 @@ class Hip(CMakePackage):
             args.append(self.define("HIPCC_BIN_DIR", self.stage.source_path + "/hipcc/bin")),
             args.append(self.define("CLR_BUILD_HIP", True)),
             args.append(self.define("CLR_BUILD_OCL", False)),
+            args.append(self.define("HIP_LLVM_ROOT", self.spec["llvm-amdgpu"].prefix))
         return args
 
     @run_after("install")

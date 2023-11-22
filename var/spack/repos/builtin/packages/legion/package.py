@@ -74,7 +74,6 @@ class Legion(CMakePackage, ROCmPackage):
 
     # https://github.com/spack/spack/issues/37232#issuecomment-1553376552
     patch("hip-offload-arch.patch", when="@23.03.0 +rocm")
-    patch("001-legion-23.06.0-workaround-for-rocm-5.7.0.patch", when="@23.06.0+rocm ^hip@5.7")
 
     # HIP specific
     variant(

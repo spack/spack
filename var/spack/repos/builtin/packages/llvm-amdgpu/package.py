@@ -165,6 +165,7 @@ class LlvmAmdgpu(CMakePackage):
     # as per 5.2.0 llvm code. It used to be llvm/bin/../lib/libdevice.
     # Below patch is to look in the old path.
     patch("adjust-openmp-bitcode-directory-for-llvm-link.patch", when="@5.2.0:5.6")
+    patch("llvm-hip-path-detection-5.7.0.patch", when="@5.7.0:5.7")
 
     # Below patch is to set the flag -mcode-object-version=none until
     # the below fix is available in device-libs release code.
