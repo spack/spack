@@ -89,8 +89,8 @@ def test_which_with_slash_ignores_path(tmpdir, working_env):
         assert exe.path == path
 
 
-def test_which(tmpdir):
-    os.environ["PATH"] = str(tmpdir)
+def test_which(tmpdir, monkeypatch):
+    monkeypatch.setenv("PATH", str(tmpdir))
     assert ex.which("spack-test-exe") is None
 
     with pytest.raises(ex.CommandNotFoundError):
