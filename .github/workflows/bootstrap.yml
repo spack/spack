@@ -4,9 +4,6 @@ on:
   # This Workflow can be triggered manually
   workflow_dispatch:
   workflow_call:
-  schedule:
-    # nightly at 2:16 AM
-    - cron: '16 2 * * *'
 
 concurrency:
   group: bootstrap-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}

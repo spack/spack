@@ -1,9 +1,5 @@
 name: Windows Paraview Nightly
 
-on:
-  schedule:
-    - cron: '0 2 * * *' # Run at 2 am
-
 defaults:
   run:
     shell:
