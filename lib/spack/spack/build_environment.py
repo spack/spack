@@ -329,7 +329,6 @@ def set_compiler_environment_variables(pkg, env):
     # wrapper which will emit an error if it is used.
     if compiler.cc:
         env.set("SPACK_CC", compiler.cc)
-        cc_val = os.path.join(link_dir, compiler.link_paths["cc"])
         env.set("CC", os.path.join(link_dir, compiler.link_paths["cc"]))
     else:
         env.set("CC", os.path.join(link_dir, "env", "cc"))
