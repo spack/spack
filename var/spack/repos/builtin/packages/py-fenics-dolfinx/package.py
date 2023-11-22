@@ -33,6 +33,7 @@ class PyFenicsDolfinx(PythonPackage):
     depends_on("python@3.7:3.10", when="@0.4", type=("build", "run"))
 
     depends_on("fenics-dolfinx@main", when="@main")
+    depends_on("fenics-dolfinx@0.7.2", when="@0.7.2")
     depends_on("fenics-dolfinx@0.7.1", when="@0.7.1")
     depends_on("fenics-dolfinx@0.7.0", when="@0.7.0")
     depends_on("fenics-dolfinx@0.6.0", when="@0.6.0")
