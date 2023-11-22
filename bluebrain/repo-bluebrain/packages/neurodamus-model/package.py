@@ -243,7 +243,14 @@ if [ ! -d "$1" ]; then
     exit -1
 fi
 
-if [ -n "{nrnivmodlcore_call}" ]; then
+COMPILE_ONLY_NEURON=0
+
+if [[ "$2" == "--only-neuron" ]]; then
+    echo "Compiling mechanisms only for NEURON"
+    COMPILE_ONLY_NEURON=1
+fi
+
+if [ -n "{nrnivmodlcore_call}" ] && [ "$COMPILE_ONLY_NEURON" -eq "0" ]; then
     rm -rf _core_mods
     mkdir _core_mods
     touch $1/neuron_only_mods.txt  # ensure exists
