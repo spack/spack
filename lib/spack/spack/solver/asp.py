@@ -1013,14 +1013,6 @@ class PyclingoDriver:
             # record the possible dependencies in the solve
             result.possible_dependencies = setup.pkgs
 
-            # print any unknown functions in the model
-            for sym in best_model:
-                if sym.name not in ("attr", "error", "opt_criterion"):
-                    tty.debug(
-                        "UNKNOWN SYMBOL: %s(%s)"
-                        % (sym.name, ", ".join([str(s) for s in intermediate_repr(sym.arguments)]))
-                    )
-
         elif cores:
             result.control = self.control
             result.cores.extend(cores)
@@ -2799,9 +2791,11 @@ class SpecBuilder:
                 r"^.*_propagate$",
                 r"^.*_satisfies$",
                 r"^.*_set$",
+                r"^dependency_holds$",
                 r"^node_compiler$",
                 r"^package_hash$",
                 r"^root$",
+                r"^track_dependencies$",
                 r"^variant_default_value_from_cli$",
                 r"^virtual_node$",
                 r"^virtual_root$",
