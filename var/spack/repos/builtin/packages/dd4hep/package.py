@@ -190,7 +190,11 @@ class Dd4hep(CMakePackage):
     )
     conflicts("~ddrec+dddetectors", msg="Need to enable +ddrec to build +dddetectors.")
 
-    conflicts("geant4 cxxstd=11", when="@1.27.1: +ddg4")
+    # Geant4 needs to be (at least) the same version as DD4hep, but we don't
+    # have a very good handle on that at this stage, because we make that
+    # dependent on roots cxxstd. However, cxxstd=11 will never work
+    # See https://github.com/AIDASoft/DD4hep/pull/1191
+    conflicts("geant4 cxxstd=11", when="+ddg4")
 
     @property
     def libs(self):
