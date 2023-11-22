@@ -18,7 +18,7 @@ class ComposableKernel(CMakePackage):
 
     version("master", branch="develop")
     version("5.6.1", commit="f5ec04f091fa5c48c67d7bacec36a414d0be06a5")
-    version("5.6.0", commit="f0fd02634c2f8f8c70f5a0ab2a8c84db5e36eeca")
+    version("5.6.0", commit="f5ec04f091fa5c48c67d7bacec36a414d0be06a5")
     version("5.5.1", commit="ac9e01e2cc3721be24619807adc444e1f59a9d25")
     version("5.5.0", commit="8b76b832420a3d69708401de6607a033163edcce")
     version("5.4.3", commit="bb3d9546f186e39cefedc3e7f01d88924ba20168")
@@ -64,14 +64,14 @@ class ComposableKernel(CMakePackage):
         ]
         if "auto" not in self.spec.variants["amdgpu_target"]:
             args.append(self.define_from_variant("AMDGPU_TARGETS", "amdgpu_target"))
-        if self.spec.satisfies("@5.6.1:"):
+        if self.spec.satisfies("@5.6.0:"):
             args.append(self.define("INSTANCES_ONLY", "ON"))
         return args
 
     def build(self, spec, prefix):
         with working_dir(self.build_directory):
             # only instances is necessary to build and install
-            if self.spec.satisfies("@5.6.1:"):
+            if self.spec.satisfies("@5.6.0:"):
                 make()
             else:
                 make("instances")
