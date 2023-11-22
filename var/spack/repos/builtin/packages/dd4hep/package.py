@@ -24,6 +24,7 @@ class Dd4hep(CMakePackage):
     tags = ["hep"]
 
     version("master", branch="master")
+    version("1.27.1", sha256="e66ae726c0a9a55e5603024a7f8a48ffbc5613ea36e5f892e9a90d87833f92e0")
     version("1.27", sha256="51fbd0f91f2511261d9b01e4b3528c658bea1ea1b5d67b25b6812615e782a902")
     version("1.26", sha256="de2cc8d8e99217e23fdf0a55b879d3fd3a864690d6660e7808f1ff99eb47f384")
     version("1.25.1", sha256="6267e76c74fbb346aa881bc44de84434ebe788573f2997a189996252fc5b271b")
@@ -188,6 +189,12 @@ class Dd4hep(CMakePackage):
         msg="cmake version with buggy FindPython breaks dd4hep cmake config",
     )
     conflicts("~ddrec+dddetectors", msg="Need to enable +ddrec to build +dddetectors.")
+
+    # Geant4 needs to be (at least) the same version as DD4hep, but we don't
+    # have a very good handle on that at this stage, because we make that
+    # dependent on roots cxxstd. However, cxxstd=11 will never work
+    # See https://github.com/AIDASoft/DD4hep/pull/1191
+    conflicts("^geant4 cxxstd=11", when="+ddg4")
 
     @property
     def libs(self):
