@@ -237,6 +237,7 @@ class Python(Package):
     variant("crypt", default=True, description="Build crypt module", when="@:3.12 platform=cray")
 
     if sys.platform != "win32":
+        depends_on("gmake", type="build")
         depends_on("pkgconfig@0.9.0:", type="build")
         depends_on("gettext +libxml2", when="+libxml2")
         depends_on("gettext ~libxml2", when="~libxml2")
