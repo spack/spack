@@ -743,7 +743,8 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
         set_compiler_environment_variables(pkg, env_mods)
         set_wrapper_variables(pkg, env_mods)
 
-    # architecture specific setup
+    # Platform specific setup goes before package specific setup. This is for setting
+    # defaults like MACOSX_DEPLOYMENT_TARGET on macOS.
     platform = spack.platforms.by_name(pkg.spec.architecture.platform)
     target = platform.target(pkg.spec.architecture.target)
     platform.setup_platform_environment(pkg, env_mods)
