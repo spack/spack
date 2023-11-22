@@ -37,6 +37,7 @@ class PyHeat(PythonPackage):
     depends_on("pil@6:", type=("build", "run"))
     depends_on("py-torchvision@0.8:", type=("build", "run"))
     depends_on("py-mpi4py@3:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
 
     depends_on("py-docutils@0.16:", when="+docutils", type=("build", "link", "run"))
     depends_on("py-h5py@2.8.0:", when="+hdf5", type=("build", "link", "run"))
