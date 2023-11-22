@@ -402,9 +402,6 @@ class QuantumEspresso(CMakePackage, Package):
     # extlibs_makefile updated to work with fujitsu compilers
     patch("fj-fox.patch", when="+patch %fj")
 
-    # gipaw.x will only be installed with cmake if the qe-gipaw version is >= 5c4a4ce.
-    patch("gipaw-eccee44.patch", when="+gipaw build_system=cmake")
-
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
         spec = self.spec
