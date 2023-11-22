@@ -232,7 +232,6 @@ class QuantumEspresso(CMakePackage, Package):
         description="Builds Gauge-Including Projector Augmented-Waves executable",
     )
 
-
     # Dependencies not affected by variants
     depends_on("blas")
     depends_on("lapack")
