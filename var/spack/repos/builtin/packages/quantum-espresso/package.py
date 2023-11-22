@@ -427,11 +427,13 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define_from_variant("QE_ENABLE_MPI_GPU_AWARE", "mpigpu"),
         ]
 
+        plugins = []
+
         if "+fox" in spec:
             cmake_args.append(self.define("QE_ENABLE_FOX", True))
 
         if "+gipaw" in spec:
-            cmake_args.append(self.define("QE_ENABLE_PLUGINS", "gipaw"))
+            plugins.append("gipaw")
 
         if "+cuda" in self.spec:
             cmake_args.append(self.define("QE_ENABLE_OPENACC", True))
@@ -445,7 +447,10 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             cmake_args.append(self.define("QE_ENABLE_HDF5", True))
 
         if "+qmcpack" in spec:
-            cmake_args.append(self.define("QE_ENABLE_PW2QMCPACK", True))
+            if spec.satisfies("@:7.0"):
+                cmake_args.append(self.define("QE_ENABLE_PW2QMCPACK", True))
+            else:
+                plugins.append("pw2qmcpack")
 
         if "^armpl-gcc" in spec or "^acfl" in spec:
             cmake_args.append(self.define("BLAS_LIBRARIES", spec["blas"].libs.joined(";")))
@@ -454,6 +459,8 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             if spec.satisfies("@:7.1"):
                 cmake_args.append(self.define("BLA_VENDOR", "All"))
 
+        if plugins:
+            cmake_args.append(self.define("QE_ENABLE_PLUGINS", plugins))
         return cmake_args
 
 
