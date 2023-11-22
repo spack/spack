@@ -138,12 +138,7 @@ class Rocblas(CMakePackage):
     depends_on("googletest@1.10.0:", type="test")
     depends_on("netlib-lapack@3.7.1:", type="test")
 
-    for ver in [
-        "5.5.0",
-        "5.5.1",
-        "5.6.0",
-        "5.6.1",
-    ]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
         depends_on("rocm-openmp-extras@" + ver, type="test", when="@" + ver)
 
     depends_on("hip@4.1.0:", when="@4.1.0:")
