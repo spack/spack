@@ -132,6 +132,8 @@ class QuantumEspresso(CMakePackage, Package):
         # folder QE expects as a link, we issue a conflict here.
         conflicts("@:5.4.0", msg="+elpa requires QE >= 6.0")
 
+    variant("fox", default=False, description="Enables FoX library")
+
     # Support for HDF5 has been added starting in version 6.1.0 and is
     # still experimental, therefore we default to False for the variant
     variant(
@@ -230,6 +232,7 @@ class QuantumEspresso(CMakePackage, Package):
         description="Builds Gauge-Including Projector Augmented-Waves executable",
     )
 
+
     # Dependencies not affected by variants
     depends_on("blas")
     depends_on("lapack")
@@ -261,6 +264,7 @@ class QuantumEspresso(CMakePackage, Package):
         when="+gipaw",
         msg="gipaw standard support available for QE 6.3 or grater version only",
     )
+    conflicts("~fox", when="+gipaw", msg="gipaw plugin requires FoX")
 
     conflicts("+gipaw build_system=cmake", when="@:7.1")
 
@@ -423,9 +427,11 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define_from_variant("QE_ENABLE_MPI_GPU_AWARE", "mpigpu"),
         ]
 
+        if "+fox" in spec:
+            cmake_args.append(self.define("QE_ENABLE_FOX", True))
+
         if "+gipaw" in spec:
             cmake_args.append(self.define("QE_ENABLE_PLUGINS", "gipaw"))
-            cmake_args.append(self.define("QE_ENABLE_FOX", True))
 
         if "+cuda" in self.spec:
             cmake_args.append(self.define("QE_ENABLE_OPENACC", True))
@@ -599,6 +605,9 @@ class GenericBuilder(spack.build_systems.generic.GenericBuilder):
                 )
             else:
                 options.extend(["--with-elpa-lib={0}".format(elpa.libs[0])])
+
+        if "+fox" in spec:
+            options.append("--with-fox=yes")
 
         if spec.variants["hdf5"].value != "none":
             options.append("--with-hdf5={0}".format(spec["hdf5"].prefix))
