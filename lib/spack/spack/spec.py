@@ -133,7 +133,7 @@ VERSION_COLOR = "@c"  #: color for highlighting versions
 ARCHITECTURE_COLOR = "@m"  #: color for highlighting architectures
 VARIANT_COLOR = "@B"  #: color for highlighting variants
 HASH_COLOR = "@K"  #: color for highlighting package hashes
-NONDEFAULT_COLOR = "@*R"  #: color for highlighting non-defaults in spec output
+NONDEFAULT_COLOR = "@_R"  #: color for highlighting non-defaults in spec output
 
 #: Default format for Spec.format(). This format can be round-tripped, so that:
 #:     Spec(Spec("string").format()) == Spec("string)"
