@@ -121,8 +121,7 @@ class RocmValidationSuite(CMakePackage):
         when="@5.6",
     )
     patch(
-        "008-correcting-library-and-include-path-WITHOUT-RVS-BUILD-TESTS.patch",
-        when="@5.7.0:5.7",
+        "008-correcting-library-and-include-path-WITHOUT-RVS-BUILD-TESTS.patch", when="@5.7.0:5.7"
     )
     depends_on("cmake@3.5:", type="build")
     depends_on("zlib-api", type="link")
