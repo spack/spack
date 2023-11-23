@@ -23,9 +23,9 @@ class PyPyglet(PythonPackage):
     depends_on("py-future", type=("build", "run"))
     depends_on("python@2.7:2.8,3.4:", type=("build", "run"), when="@:1")
     depends_on("python@3.8:", type=("build", "run"), when="@2.0:")
-    depends_on("opengl", type=("build", "run"), when="@2.0: platform=linux")
+    depends_on("gl", type=("build", "run"), when="@2.0: platform=linux")
     depends_on("glx", type=("build", "run"), when="@2.0: platform=linux")
-    depends_on("py-pillow", type=("build", "run"), when="@2.0: platform=linux")
+    depends_on("pil", type=("build", "run"), when="@2.0: platform=linux")
     depends_on("pulseaudio", type=("build", "run"), when="@2.0: platform=linux")
 
     def url_for_version(self, version):
