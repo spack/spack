@@ -689,7 +689,7 @@ class GoFetchStrategy(VCSFetchStrategy):
             self.go("get", "-v", "-d", self.url, env=env)
 
     def archive(self, destination):
-        super(GoFetchStrategy, self).archive(destination, exclude=self.vcs_info_dir)
+        super().archive(destination, exclude=self.vcs_info_dir)
 
     @_needs_stage
     def expand(self):
@@ -960,7 +960,7 @@ class GitFetchStrategy(VCSFetchStrategy):
                 git(*args)
 
     def archive(self, destination):
-        super(GitFetchStrategy, self).archive(destination, exclude=self.vcs_info_dir)
+        super().archive(destination, exclude=self.vcs_info_dir)
 
     @_needs_stage
     def reset(self):
@@ -1090,7 +1090,7 @@ class CvsFetchStrategy(VCSFetchStrategy):
                         os.unlink(path)
 
     def archive(self, destination):
-        super(CvsFetchStrategy, self).archive(destination, exclude=self.vcs_info_dir)
+        super().archive(destination, exclude=self.vcs_info_dir)
 
     @_needs_stage
     def reset(self):
@@ -1186,7 +1186,7 @@ class SvnFetchStrategy(VCSFetchStrategy):
                     shutil.rmtree(path, ignore_errors=True)
 
     def archive(self, destination):
-        super(SvnFetchStrategy, self).archive(destination, exclude=self.vcs_info_dir)
+        super().archive(destination, exclude=self.vcs_info_dir)
 
     @_needs_stage
     def reset(self):
@@ -1292,7 +1292,7 @@ class HgFetchStrategy(VCSFetchStrategy):
             shutil.move(repo_name, self.stage.source_path)
 
     def archive(self, destination):
-        super(HgFetchStrategy, self).archive(destination, exclude=self.vcs_info_dir)
+        super().archive(destination, exclude=self.vcs_info_dir)
 
     @_needs_stage
     def reset(self):
