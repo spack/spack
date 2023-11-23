@@ -20,7 +20,7 @@ class PyPyglet(PythonPackage):
     version("1.2.1", sha256="d1afb253d6de230e73698377566da333ef42e1c82190216aa7a0c1b729d6ff4d")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-future", type=("build", "run"))
+    depends_on("py-future", type=("build", "run"), when="@:1")
     depends_on("python@2.7:2.8,3.4:", type=("build", "run"), when="@:1")
     depends_on("python@3.8:", type=("build", "run"), when="@2.0:")
     depends_on("gl", type=("build", "run"), when="@2.0: platform=linux")
