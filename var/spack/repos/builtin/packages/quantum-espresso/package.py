@@ -255,7 +255,7 @@ class QuantumEspresso(CMakePackage, Package):
     # NOTE: *SOME* third-party patches will require deactivation of
     # upstream patches using `~patch` variant
 
-    #gipaw
+    # gipaw
     conflicts(
         "@:6.3",
         when="+gipaw",
@@ -300,6 +300,7 @@ class QuantumEspresso(CMakePackage, Package):
     patch_url = "https://raw.githubusercontent.com/QMCPACK/qmcpack/v3.13.0/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-7.0.diff"
     patch_checksum = "ef60641d8b953b4ba21d9c662b172611305bb63786996ad6e81e7609891677ff"
     patch(patch_url, sha256=patch_checksum, when="@7.0+qmcpack")
+    
 
     # 6.8
     patch_url = "https://raw.githubusercontent.com/QMCPACK/qmcpack/v3.13.0/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.8.diff"
