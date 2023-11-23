@@ -12,7 +12,7 @@ class Icarus(AutotoolsPackage):
     homepage = "http://www.iverilog.icarus.com"
     url = "https://github.com/steveicarus/iverilog/archive/refs/tags/v12_0.tar.gz"
     git = "https://github.com/steveicarus/iverilog.git"
-    
+
     maintainers("davekeeshan")
 
     version("master", branch="master")
