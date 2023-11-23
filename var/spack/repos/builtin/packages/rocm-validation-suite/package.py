@@ -120,7 +120,10 @@ class RocmValidationSuite(CMakePackage):
         "007-cleanup-path-reference-donot-download-googletest-yaml-library-path_5.6.patch",
         when="@5.6",
     )
-
+    patch(
+        "008-correcting-library-and-include-path-WITHOUT-RVS-BUILD-TESTS.patch",
+        when="@5.7.0:5.7",
+    )
     depends_on("cmake@3.5:", type="build")
     depends_on("zlib-api", type="link")
     depends_on("yaml-cpp~shared")
@@ -197,12 +200,13 @@ class RocmValidationSuite(CMakePackage):
 
     def cmake_args(self):
         args = [
+            self.define("RVS_BUILD_TESTS", False),
             self.define("HIP_PATH", self.spec["hip"].prefix),
             self.define("HSA_PATH", self.spec["hsa-rocr-dev"].prefix),
             self.define("ROCM_SMI_DIR", self.spec["rocm-smi-lib"].prefix),
             self.define("ROCBLAS_DIR", self.spec["rocblas"].prefix),
             self.define("YAML_INC_DIR", self.spec["yaml-cpp"].prefix.include),
-            self.define("YAML_LIB_DIR", self.spec["yaml-cpp"].libs.directories[0]),
+            self.define("YAML_LIB_DIR", self.spec["yaml-cpp"].prefix.lib64),
         ]
         if self.spec.satisfies("@4.5.0:"):
             args.append(self.define("UT_INC", self.spec["googletest"].prefix.include))
