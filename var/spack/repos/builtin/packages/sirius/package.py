@@ -84,7 +84,7 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     variant("python", default=False, description="Build Python bindings")
     variant("memory_pool", default=True, description="Build with memory pool")
     variant("elpa", default=False, description="Use ELPA")
-    variant("dlaf", default=False, when="@develop", description="Use DLA-Future")
+    variant("dlaf", default=False, when="@7.5.0:", description="Use DLA-Future")
     variant("vdwxc", default=False, description="Enable libvdwxc support")
     variant("scalapack", default=False, description="Enable scalapack support")
     variant("magma", default=False, description="Enable MAGMA support")
