@@ -33,8 +33,6 @@ class QtPackage(CMakePackage):
 
     maintainers("wdconinc", "sethrj")
 
-    provides("qmake")
-
     # Default dependencies for all qt-* components
     generator("ninja")
     depends_on("cmake@3.16:", type="build")
@@ -90,6 +88,8 @@ class QtBase(QtPackage):
 
     url = QtPackage.get_url(__qualname__)
     list_url = QtPackage.get_list_url(__qualname__)
+
+    provides("qmake")
 
     version("6.6.0", sha256="882f39ea3a40a0894cd64e515ce51711a4fab79b8c47bc0fe0279e99493a62cf")
     version("6.5.3", sha256="174021c4a630df2e7e912c2e523844ad3cb5f90967614628fd8aa15ddbab8bc5")

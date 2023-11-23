@@ -61,9 +61,11 @@ class RdmaCore(CMakePackage):
         default=True,
         description="Produce static libraries along with usual shared libraries.",
     )
+    variant("pyverbs", default=True, description="Build with support for pyverbs")
+    variant("man_pages", default=True, description="Build with support for man pages")
 
     depends_on("pkgconfig", type="build")
-    depends_on("py-docutils", type="build")
+    depends_on("py-docutils", when="+man_pages", type="build")
     depends_on("libnl")
     conflicts("platform=darwin", msg="rdma-core requires FreeBSD or Linux")
     conflicts("%intel", msg="rdma-core cannot be built with intel (use gcc instead)")
@@ -89,6 +91,11 @@ class RdmaCore(CMakePackage):
         ]
 
         cmake_args.append(self.define_from_variant("ENABLE_STATIC", "static"))
+
+        if self.spec.satisfies("~pyverbs"):
+            cmake_args.append("-DNO_PYVERBS=1")
+        if self.spec.satisfies("~man_pages"):
+            cmake_args.append("-DNO_MAN_PAGES=1")
 
         if self.spec.satisfies("@:39.0"):
             cmake_args.extend(
