@@ -1296,6 +1296,8 @@ class SpackSolverSetup:
         with a uniform structure (name, policy, requirements).
         """
         if isinstance(requirements, str):
+            if self.reject_requirement_constraint(pkg_name, constraint=requirements, kind=kind):
+                return []
             return [self._rule_from_str(pkg_name, requirements, kind)]
 
         rules = []
@@ -1303,6 +1305,8 @@ class SpackSolverSetup:
             if isinstance(requirement, str):
                 # A string represents a spec that must be satisfied. It is
                 # equivalent to a one_of group with a single element
+                if self.reject_requirement_constraint(pkg_name, constraint=requirement, kind=kind):
+                    continue
                 rules.append(self._rule_from_str(pkg_name, requirement, kind))
             else:
                 for policy in ("spec", "one_of", "any_of"):
@@ -1313,6 +1317,16 @@ class SpackSolverSetup:
                         if policy == "spec":
                             constraints = [constraints]
                             policy = "one_of"
+
+                        constraints = [
+                            x
+                            for x in constraints
+                            if not self.reject_requirement_constraint(
+                                pkg_name, constraint=x, kind=kind
+                            )
+                        ]
+                        if not constraints:
+                            continue
 
                         rules.append(
                             RequirementRule(
@@ -1337,6 +1351,26 @@ class SpackSolverSetup:
             condition=None,
             message=None,
         )
+
+    def reject_requirement_constraint(
+        self, pkg_name: str, *, constraint: str, kind: RequirementKind
+    ) -> bool:
+        """Returns True if a requirement constraint should be rejected"""
+        if kind == RequirementKind.DEFAULT:
+            # Requirements under all: are applied only if they are satisfiable considering only
+            # package rules, so e.g. variants must exist etc. Otherwise, they are rejected.
+            try:
+                s = spack.spec.Spec(pkg_name)
+                s.constrain(constraint)
+                s.validate_or_raise()
+            except spack.error.SpackError as e:
+                tty.debug(
+                    f"[SETUP] Rejecting the default '{constraint}' requirement "
+                    f"on '{pkg_name}': {str(e)}",
+                    level=2,
+                )
+                return True
+        return False
 
     def pkg_rules(self, pkg, tests):
         pkg = packagize(pkg)
