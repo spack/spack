@@ -1831,7 +1831,13 @@ class SpackSolverSetup:
 
             # perform validation of the variant and values
             spec = spack.spec.Spec(pkg_name)
-            spec.update_variant_validate(variant_name, values)
+            try:
+                spec.update_variant_validate(variant_name, values)
+            except (spack.variant.InvalidVariantValueError, KeyError, ValueError) as e:
+                tty.debug(
+                    f"[SETUP]: rejected {str(variant)} as a preference for {pkg_name}: {str(e)}"
+                )
+                continue
 
             for value in values:
                 self.variant_values_from_specs.add((pkg_name, variant.name, value))
