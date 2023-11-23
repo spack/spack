@@ -580,6 +580,8 @@ class VCSFetchStrategy(FetchStrategy):
 
     """
 
+    vcs_info_dir = ""
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -587,6 +589,8 @@ class VCSFetchStrategy(FetchStrategy):
         self.url = kwargs.get(self.url_attr, None)
         if not self.url:
             raise ValueError("%s requires %s argument." % (self.__class__, self.url_attr))
+
+        self.archive_vcs_info = kwargs.get("archive_vcs_info", False)
 
         for attr in self.optional_attrs:
             setattr(self, attr, kwargs.get(attr, None))
@@ -611,6 +615,8 @@ class VCSFetchStrategy(FetchStrategy):
             if isinstance(patterns, str):
                 patterns = [patterns]
             for p in patterns:
+                if p == self.vcs_info_dir and self.archive_vcs_info:
+                    continue
                 tar.add_default_arg("--exclude=%s" % p)
 
         with working_dir(self.stage.path):
@@ -647,6 +653,7 @@ class GoFetchStrategy(VCSFetchStrategy):
     """
 
     url_attr = "go"
+    vcs_info_dir = ".git"
 
     def __init__(self, **kwargs):
         # Discards the keywords in kwargs that may conflict with the next
@@ -682,7 +689,7 @@ class GoFetchStrategy(VCSFetchStrategy):
             self.go("get", "-v", "-d", self.url, env=env)
 
     def archive(self, destination):
-        super().archive(destination, exclude=".git")
+        super(GoFetchStrategy, self).archive(destination, exclude=self.vcs_info_dir)
 
     @_needs_stage
     def expand(self):
@@ -725,6 +732,7 @@ class GitFetchStrategy(VCSFetchStrategy):
     """
 
     url_attr = "git"
+    vcs_info_dir = ".git"
     optional_attrs = [
         "tag",
         "branch",
@@ -952,7 +960,7 @@ class GitFetchStrategy(VCSFetchStrategy):
                 git(*args)
 
     def archive(self, destination):
-        super().archive(destination, exclude=".git")
+        super(GitFetchStrategy, self).archive(destination, exclude=self.vcs_info_dir)
 
     @_needs_stage
     def reset(self):
@@ -994,6 +1002,7 @@ class CvsFetchStrategy(VCSFetchStrategy):
     """
 
     url_attr = "cvs"
+    vcs_info_dir = "CVS"
     optional_attrs = ["branch", "date"]
 
     def __init__(self, **kwargs):
@@ -1081,7 +1090,7 @@ class CvsFetchStrategy(VCSFetchStrategy):
                         os.unlink(path)
 
     def archive(self, destination):
-        super().archive(destination, exclude="CVS")
+        super(CvsFetchStrategy, self).archive(destination, exclude=self.vcs_info_dir)
 
     @_needs_stage
     def reset(self):
@@ -1110,6 +1119,7 @@ class SvnFetchStrategy(VCSFetchStrategy):
     """
 
     url_attr = "svn"
+    vcs_info_dir = ".svn"
     optional_attrs = ["revision"]
 
     def __init__(self, **kwargs):
@@ -1176,7 +1186,7 @@ class SvnFetchStrategy(VCSFetchStrategy):
                     shutil.rmtree(path, ignore_errors=True)
 
     def archive(self, destination):
-        super().archive(destination, exclude=".svn")
+        super(SvnFetchStrategy, self).archive(destination, exclude=self.vcs_info_dir)
 
     @_needs_stage
     def reset(self):
@@ -1213,6 +1223,7 @@ class HgFetchStrategy(VCSFetchStrategy):
     """
 
     url_attr = "hg"
+    vcs_info_dir = ".hg"
     optional_attrs = ["revision"]
 
     def __init__(self, **kwargs):
@@ -1281,7 +1292,7 @@ class HgFetchStrategy(VCSFetchStrategy):
             shutil.move(repo_name, self.stage.source_path)
 
     def archive(self, destination):
-        super().archive(destination, exclude=".hg")
+        super(HgFetchStrategy, self).archive(destination, exclude=self.vcs_info_dir)
 
     @_needs_stage
     def reset(self):
