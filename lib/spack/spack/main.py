@@ -552,6 +552,11 @@ def make_argument_parser(**kwargs):
         help="always show backtraces for exceptions",
     )
     parser.add_argument(
+        "--exclusive",
+        action="store_true",
+        help="do not allow other spack instances to write to the database",
+    )
+    parser.add_argument(
         "-V", "--version", action="store_true", help="show version number and exit"
     )
     parser.add_argument(
@@ -640,12 +645,18 @@ def allows_unknown_args(command):
 
 def _invoke_command(command, parser, args, unknown_args):
     """Run a spack command *without* setting spack global options."""
-    if allows_unknown_args(command):
-        return_val = command(parser, args, unknown_args)
+    if args.exclusive:
+        maybe_exclusive = spack.store.STORE.db.write_transaction
     else:
-        if unknown_args:
-            tty.die("unrecognized arguments: %s" % " ".join(unknown_args))
-        return_val = command(parser, args)
+        maybe_exclusive = llnl.util.lang.nullcontext
+
+    with maybe_exclusive():
+        if allows_unknown_args(command):
+            return_val = command(parser, args, unknown_args)
+        else:
+            if unknown_args:
+                tty.die("unrecognized arguments: %s" % " ".join(unknown_args))
+            return_val = command(parser, args)
 
     # Allow commands to return and error code if they want
     return 0 if return_val is None else return_val
