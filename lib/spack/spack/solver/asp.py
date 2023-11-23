@@ -1296,34 +1296,34 @@ class SpackSolverSetup:
         with a uniform structure (name, policy, requirements).
         """
         if isinstance(requirements, str):
-            rules = [self._rule_from_str(pkg_name, requirements, kind)]
-        else:
-            rules = []
-            for requirement in requirements:
-                if isinstance(requirement, str):
-                    # A string represents a spec that must be satisfied. It is
-                    # equivalent to a one_of group with a single element
-                    rules.append(self._rule_from_str(pkg_name, requirement, kind))
-                else:
-                    for policy in ("spec", "one_of", "any_of"):
-                        if policy in requirement:
-                            constraints = requirement[policy]
+            return [self._rule_from_str(pkg_name, requirements, kind)]
 
-                            # "spec" is for specifying a single spec
-                            if policy == "spec":
-                                constraints = [constraints]
-                                policy = "one_of"
+        rules = []
+        for requirement in requirements:
+            if isinstance(requirement, str):
+                # A string represents a spec that must be satisfied. It is
+                # equivalent to a one_of group with a single element
+                rules.append(self._rule_from_str(pkg_name, requirement, kind))
+            else:
+                for policy in ("spec", "one_of", "any_of"):
+                    if policy in requirement:
+                        constraints = requirement[policy]
 
-                            rules.append(
-                                RequirementRule(
-                                    pkg_name=pkg_name,
-                                    policy=policy,
-                                    requirements=constraints,
-                                    kind=kind,
-                                    message=requirement.get("message"),
-                                    condition=requirement.get("when"),
-                                )
+                        # "spec" is for specifying a single spec
+                        if policy == "spec":
+                            constraints = [constraints]
+                            policy = "one_of"
+
+                        rules.append(
+                            RequirementRule(
+                                pkg_name=pkg_name,
+                                policy=policy,
+                                requirements=constraints,
+                                kind=kind,
+                                message=requirement.get("message"),
+                                condition=requirement.get("when"),
                             )
+                        )
         return rules
 
     def _rule_from_str(
