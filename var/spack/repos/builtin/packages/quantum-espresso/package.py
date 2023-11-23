@@ -259,7 +259,7 @@ class QuantumEspresso(CMakePackage, Package):
     conflicts(
         "@:6.3",
         when="+gipaw",
-        msg="gipaw standard support available for QE 6.3 or grater version only"
+        msg="gipaw standard support available for QE 6.3 or grater version only",
     )
 
     # Only CMake will work for @6.8: %aocc
@@ -300,7 +300,6 @@ class QuantumEspresso(CMakePackage, Package):
     patch_url = "https://raw.githubusercontent.com/QMCPACK/qmcpack/v3.13.0/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-7.0.diff"
     patch_checksum = "ef60641d8b953b4ba21d9c662b172611305bb63786996ad6e81e7609891677ff"
     patch(patch_url, sha256=patch_checksum, when="@7.0+qmcpack")
-    
 
     # 6.8
     patch_url = "https://raw.githubusercontent.com/QMCPACK/qmcpack/v3.13.0/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.8.diff"
@@ -402,6 +401,7 @@ class QuantumEspresso(CMakePackage, Package):
 
     # extlibs_makefile updated to work with fujitsu compilers
     patch("fj-fox.patch", when="+patch %fj")
+
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
