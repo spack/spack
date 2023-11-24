@@ -80,6 +80,14 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
 
     variant("shared", default=True, description="Build shared libraries")
     variant("openmp", default=True, description="Build with OpenMP support")
+    variant(
+        "boost_filesystem",
+        default=False,
+        when="@:7.4.3",
+        description="Use Boost filesystem for self-consistent field method "
+        "mini-app. Only required when the compiler does not "
+        "support std::experimental::filesystem nor std::filesystem",
+    )
     variant("fortran", default=False, description="Build Fortran bindings")
     variant("python", default=False, description="Build Python bindings")
     variant("memory_pool", default=True, description="Build with memory pool")
