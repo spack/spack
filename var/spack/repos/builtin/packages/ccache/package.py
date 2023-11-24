@@ -72,7 +72,7 @@ class Ccache(CMakePackage):
     conflicts("%clang@:7", when="@4.7:")
     conflicts("%clang@:4", when="@4.4:")
 
-    patch("fix-gcc-12.patch", when="%gcc@:12")
+    patch("fix-gcc-12.patch", when="%gcc@12")
 
     def cmake_args(self):
         return [
