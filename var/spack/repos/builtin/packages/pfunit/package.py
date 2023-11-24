@@ -19,6 +19,7 @@ class Pfunit(CMakePackage):
 
     maintainers("mathomp4", "tclune")
 
+    version("4.7.4", sha256="ac850e33ea99c283f503f75293bf238b4b601885d7adba333066e6185dad5c04")
     version("4.7.3", sha256="247239298b55e847417b7830183d7fc62cca93dc92c8ec7c0067784b7ce34544")
     version("4.7.2", sha256="3142a1e56b7d127fdc9589cf6deff8505174129834a6a268d0ce7e296f51ab02")
     version("4.7.1", sha256="64de3eb9f364b57ef6df81ba33400dfd4dcebca6eb5d0e9b7955ed8156e29165")
