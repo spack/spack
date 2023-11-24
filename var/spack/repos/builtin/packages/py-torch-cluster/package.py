@@ -15,6 +15,7 @@ class PyTorchCluster(PythonPackage):
     url = "https://github.com/rusty1s/pytorch_cluster/archive/1.5.7.tar.gz"
 
     version("1.6.3", sha256="0e2b08095e03cf87ce9b23b7a7352236a25d3ed92d92351dc020fd927ea8dbfe")
+    version("1.5.9", sha256="19b4671a519e91d3345a59b1012af004737be3e7c2145a7dc1ccae529f9ae753")
     version("1.5.8", sha256="95c6e81e9c4a6235e1b2152ab917021d2060ad995199f6bd7fb39986d37310f0")
     version("1.5.7", sha256="71701d2f7f3e458ebe5904c982951349fdb60e6f1654e19c7e102a226e2de72e")
 

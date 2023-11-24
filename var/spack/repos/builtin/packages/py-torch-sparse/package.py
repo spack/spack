@@ -14,6 +14,7 @@ class PyTorchSparse(PythonPackage):
     url = "https://github.com/rusty1s/pytorch_sparse/archive/0.6.7.tar.gz"
 
     version("0.6.17", sha256="c964a70ed978bff65009250eb12fae96317c60c9a04d7d1b07f0beee8b4b9c22")
+    version("0.6.10", sha256="cb9a5718dab08da9f1818c9a7283ca73ad7b3e6705609258416e892d5ecc63f6")
     version("0.6.8", sha256="98f7ff1f0f9cd5031bc81c70c11970c3864545ae33677025a6efd2466a97e6f9")
     version("0.6.7", sha256="0d038a1502548692972a085cd0496460b5d2050bb7328427add990f081d6c44d")
 
