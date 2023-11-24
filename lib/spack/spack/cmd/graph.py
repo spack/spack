@@ -61,7 +61,7 @@ def graph(parser, args):
         args.dot = True
         env = ev.active_environment()
         if env:
-            specs = env.all_specs()
+            specs = env.concrete_roots()
         else:
             specs = spack.store.STORE.db.query()
 
