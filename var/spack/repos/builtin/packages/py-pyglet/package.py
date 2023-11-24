@@ -24,7 +24,6 @@ class PyPyglet(PythonPackage):
     depends_on("python@2.7:2.8,3.4:", type=("build", "run"), when="@:1")
     depends_on("python@3.8:", type=("build", "run"), when="@2.0:")
     depends_on("gl", type=("build", "run"), when="@2.0: platform=linux")
-    depends_on("glx", type=("build", "run"), when="@2.0: platform=linux")
     depends_on("pil", type=("build", "run"), when="@2.0: platform=linux")
     depends_on("pulseaudio", type=("build", "run"), when="@2.0: platform=linux")
 
