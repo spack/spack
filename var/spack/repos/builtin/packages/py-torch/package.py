@@ -178,14 +178,14 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("py-pybind11@2.6.2", when="@1.8:1.12", type=("build", "link", "run"))
     depends_on("py-pybind11@2.3.0", when="@1.1:1.7", type=("build", "link", "run"))
     depends_on("py-pybind11@2.2.4", when="@:1.0", type=("build", "link", "run"))
-    depends_on("py-protobuf@3.12.2:", when="@1.10:", type=("build", "run"))
-    depends_on("py-protobuf@:3.14", when="@:1.9", type=("build", "run"))
-    depends_on("protobuf@3.12.2:", when="@1.10:")
-    depends_on("protobuf@:3.14", when="@:1.9")
-    # https://github.com/protocolbuffers/protobuf/issues/10051
-    # https://github.com/pytorch/pytorch/issues/78362
-    depends_on("py-protobuf@:3", type=("build", "run"))
-    depends_on("protobuf@:3", type=("build", "run"))
+    depends_on("protobuf@3.13.0.1", when="@1.10:")
+    depends_on("protobuf@3.11.4", when="@1.6:1.9")
+    depends_on("protobuf@3.6.1", when="@1.1:1.5")
+    depends_on("protobuf@3.5.0", when="@1.0")
+    depends_on("py-protobuf@3.13", when="@1.10:", type=("build", "run"))
+    depends_on("py-protobuf@3.11", when="@1.6:1.9", type=("build", "run"))
+    depends_on("py-protobuf@3.6", when="@1.1:1.5", type=("build", "run"))
+    depends_on("py-protobuf@3.5", when="@1.0", type=("build", "run"))
     depends_on("eigen")
     # https://github.com/pytorch/pytorch/issues/60329
     # depends_on("cpuinfo@2023-01-13", when="@2.1:")
@@ -250,15 +250,14 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("gloo@2020-09-18", when="@1.7:1.8+gloo")
     depends_on("gloo@2020-03-17", when="@1.6+gloo")
     depends_on("gloo+cuda", when="@1.6:+gloo+cuda")
-    # https://github.com/pytorch/pytorch/issues/60331
-    # depends_on("onnx@1.14.1", when="@2.1:+onnx_ml")
-    # depends_on("onnx@1.13.1", when="@2.0+onnx_ml")
-    # depends_on("onnx@1.12.0", when="@1.13:1+onnx_ml")
-    # depends_on("onnx@1.11.0", when="@1.12+onnx_ml")
-    # depends_on("onnx@1.10.1_2021-10-08", when="@1.11+onnx_ml")
-    # depends_on("onnx@1.10.1", when="@1.10+onnx_ml")
-    # depends_on("onnx@1.8.0_2020-11-03", when="@1.8:1.9+onnx_ml")
-    # depends_on("onnx@1.7.0_2020-05-31", when="@1.6:1.7+onnx_ml")
+    depends_on("onnx@1.14.1", when="@2.1:+onnx_ml")
+    depends_on("onnx@1.13.1", when="@2.0+onnx_ml")
+    depends_on("onnx@1.12.0", when="@1.13:1+onnx_ml")
+    depends_on("onnx@1.11.0", when="@1.12+onnx_ml")
+    depends_on("onnx@1.10.1_2021-10-08", when="@1.11+onnx_ml")
+    depends_on("onnx@1.10.1", when="@1.10+onnx_ml")
+    depends_on("onnx@1.8.0_2020-11-03", when="@1.8:1.9+onnx_ml")
+    depends_on("onnx@1.7.0_2020-05-31", when="@1.6:1.7+onnx_ml")
     depends_on("mkl", when="+mkldnn")
 
     # Test dependencies
@@ -629,8 +628,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             env.set("USE_SYSTEM_PSIMD", "ON")
             env.set("USE_SYSTEM_FXDIV", "ON")
             env.set("USE_SYSTEM_BENCHMARK", "ON")
-            # https://github.com/pytorch/pytorch/issues/60331
-            # env.set("USE_SYSTEM_ONNX", "ON")
+            env.set("USE_SYSTEM_ONNX", "ON")
             # https://github.com/pytorch/pytorch/issues/60332
             # env.set("USE_SYSTEM_XNNPACK", "ON")
 
