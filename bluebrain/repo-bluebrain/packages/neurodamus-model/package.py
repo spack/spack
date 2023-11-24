@@ -238,29 +238,31 @@ fi
 # run with nrnivmodl in path
 set -xe
 
-if [ ! -d "$1" ]; then
+MODDIR=$1
+shift
+
+if [ ! -d "$MODDIR" ]; then
     echo "Please provide a valid directory with mod files"
     exit -1
 fi
 
 COMPILE_ONLY_NEURON=0
 
-if [[ "$2" == "--only-neuron" ]]; then
+if [[ "$1" == "--only-neuron" ]]; then
     echo "Compiling mechanisms only for NEURON"
     COMPILE_ONLY_NEURON=1
-    NRNIVMODL_EXTRA_INCLUDE_FLAGS="$3"
-    NRNIVMODL_EXTRA_LOAD_FLAGS="$4"
-elif [[ ! -z "$2" ]]; then
-    NRNIVMODL_EXTRA_INCLUDE_FLAGS="$2"
-    NRNIVMODL_EXTRA_LOAD_FLAGS="$3"
+    shift
 fi
+NRNIVMODL_EXTRA_INCLUDE_FLAGS="$1"
+shift
+NRNIVMODL_EXTRA_LOAD_FLAGS="$1"
 
 if [ -n "{nrnivmodlcore_call}" ] && [ "$COMPILE_ONLY_NEURON" -eq "0" ]; then
     rm -rf _core_mods
     mkdir _core_mods
-    touch $1/neuron_only_mods.txt  # ensure exists
-    for f in $1/*.mod; do
-        if ! grep $(basename $f) $1/neuron_only_mods.txt; then
+    touch "$MODDIR/neuron_only_mods.txt"  # ensure exists
+    for f in "$MODDIR"/*.mod; do
+        if ! grep $(basename $f) "$MODDIR/neuron_only_mods.txt"; then
             cp $f _core_mods/
         fi
     done
@@ -276,8 +278,8 @@ if [ -n "{nrnivmodlcore_call}" ] && [ "$COMPILE_ONLY_NEURON" -eq "0" ]; then
             export LD_LIBRARY_PATH=$libpath:\\$LD_LIBRARY_PATH"
 fi
 
-'{nrnivmodl}' -incflags '{incflags} '"${NRNIVMODL_EXTRA_INCLUDE_FLAGS}" -loadflags \
-    '{loadflags} '"$extra_loadflags ${NRNIVMODL_EXTRA_LOAD_FLAGS}" "$1"
+'{nrnivmodl}' -incflags '{incflags} '"$NRNIVMODL_EXTRA_INCLUDE_FLAGS" -loadflags \
+    '{loadflags} '"$extra_loadflags $NRNIVMODL_EXTRA_LOAD_FLAGS" "$MODDIR"
 
 # Final Cleanup
 if [ -d _core_mods ]; then
