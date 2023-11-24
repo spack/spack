@@ -1,0 +1,17 @@
+diff --git i/src/H5Smpio.c w/src/H5Smpio.c
+index c1465d0090..6dde10fc75 100644
+--- i/src/H5Smpio.c
++++ w/src/H5Smpio.c
+@@ -1100,9 +1100,9 @@ H5S__release_datatype(H5S_mpio_mpitype_list_t *type_list)
+         H5S_mpio_mpitype_node_t *next;     /* Pointer to next node in list */
+         int                      mpi_code; /* MPI return status code */
+ 
+-        /* Release the MPI data type for this span tree */
+-        if (MPI_SUCCESS != (mpi_code = MPI_Type_free(&curr->type)))
+-            HMPI_GOTO_ERROR(FAIL, "MPI_Type_free failed", mpi_code)
++        // /* Release the MPI data type for this span tree */
++        // if (MPI_SUCCESS != (mpi_code = MPI_Type_free(&curr->type)))
++        //     HMPI_GOTO_ERROR(FAIL, "MPI_Type_free failed", mpi_code)
+ 
+         /* Get pointer to next node in list */
+         next = curr->next;
