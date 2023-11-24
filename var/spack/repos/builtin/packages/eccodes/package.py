@@ -72,16 +72,7 @@ class Eccodes(CMakePackage):
     )
     variant("png", default=False, description="Enable PNG support for decoding/encoding")
     variant(
-        "aec",
-        default=False,
-        when="@:2.24",
-        description="Enable Adaptive Entropy Coding for decoding/encoding",
-    )
-    variant(
-        "aec",
-        default=True,
-        when="@2.25:",
-        description="Enable Adaptive Entropy Coding for decoding/encoding",
+        "aec", default=True, description="Enable Adaptive Entropy Coding for decoding/encoding"
     )
     variant("pthreads", default=False, description="Enable POSIX threads")
     variant("openmp", default=False, description="Enable OpenMP threads")
