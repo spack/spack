@@ -23,6 +23,8 @@ import spack.paths
 import spack.report
 import spack.spec
 import spack.store
+import spack.tengine
+from spack.environment import depfile
 from spack.error import SpackError
 from spack.installer import PackageInstaller
 
@@ -113,6 +115,7 @@ def setup_parser(subparser):
         action="store_true",
         help="if a partial install is detected, don't delete prior state",
     )
+    subparser.add_argument("--make", action="store_true", help="use a make jobserver")
 
     cache_group = subparser.add_mutually_exclusive_group()
     cache_group.add_argument(
@@ -315,9 +318,39 @@ def _die_require_env():
     tty.die(msg)
 
 
+def do_make_install(parser, args):
+    spack.cmd.require_active_env(cmd_name="install --make")
+
+    env = ev.active_environment()
+    template = spack.tengine.make_environment().get_template(os.path.join("depfile", "Makefile"))
+    model = depfile.MakefileModel.from_env(env, make_prefix="x")
+    makefile = template.render(model.to_dict())
+
+    with open(os.path.join(env.env_subdir_path, "Makefile"), "w") as f:
+        f.write(makefile)
+
+    jobs = spack.build_environment.determine_number_of_jobs(parallel=True)
+    os.execlp(
+        "make",
+        "make",
+        "-C",
+        env.env_subdir_path,
+        "-f",
+        "Makefile",
+        "-j",
+        str(jobs),
+        "-k",
+        f"SPACK={spack.paths.spack_script}",
+    )
+
+
 def install(parser, args):
     # TODO: unify args.verbose?
     tty.set_verbose(args.verbose or args.install_verbose)
+
+    if args.make:
+        do_make_install(parser, args)
+        return  # should be unreachable
 
     if args.help_cdash:
         arguments.print_cdash_help()
