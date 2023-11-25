@@ -14,6 +14,7 @@ class PySqlalchemy(PythonPackage):
     git = "https://github.com/sqlalchemy/sqlalchemy.git"
 
     version("2.0.19", sha256="77a14fa20264af73ddcdb1e2b9c5a829b8cc6b8304d0f093271980e36c200a3f")
+    version("1.4.49", sha256="06ff25cbae30c396c4b7737464f2a7fc37a67b7da409993b182b024cec80aed9")
     version("1.4.45", sha256="fd69850860093a3f69fefe0ab56d041edfdfe18510b53d9a2eaecba2f15fa795")
     version("1.4.44", sha256="2dda5f96719ae89b3ec0f1b79698d86eb9aecb1d54e990abb3fdd92c04b46a90")
     version("1.4.25", sha256="1adf3d25e2e33afbcd48cfad8076f9378793be43e7fec3e4334306cac6bec138")
