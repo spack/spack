@@ -45,7 +45,7 @@ class Wxwidgets(AutotoolsPackage):
         spec = self.spec
         options = ["--enable-unicode", "--disable-precomp-headers"]
 
-        if "+opengl" in self.spec:
+        if self.spec.satisfies("+opengl"):
             options.append("--with-opengl")
 
         # see https://trac.wxwidgets.org/ticket/17639
