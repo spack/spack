@@ -218,3 +218,9 @@ def test_spec_version_assigned_git_ref_as_version(name, version, error):
     else:
         output = spec(name + "@" + version)
         assert version in output
+
+
+def test_spec_license():
+    output = spec("zlib")
+
+    assert "license=Zlib" in output

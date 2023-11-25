@@ -52,3 +52,5 @@ class Zlib(Package):
         if self.run_tests:
             make("check")
         make("install")
+
+    license("Zlib")
