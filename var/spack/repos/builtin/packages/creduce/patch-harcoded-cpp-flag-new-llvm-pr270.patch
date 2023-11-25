@@ -1,0 +1,55 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 52426b9..d1e2560 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -35,6 +35,18 @@ endif()
+ find_package(Clang REQUIRED CONFIG NO_CMAKE_BUILDS_PATH)
+ message(STATUS "Using ClangConfig.cmake in ${Clang_DIR}")
+ 
++# Enable appropriate C++ standard based on LLVM version
++if(LLVM_VERSION_MAJOR LESS 10)
++  set(CMAKE_CXX_STANDARD 11)
++elseif(LLVM_VERSION_MAJOR LESS 16)
++  set(CMAKE_CXX_STANDARD 14)
++else()
++  set(CMAKE_CXX_STANDARD 17)
++endif()
++# Make sure compiler appropriate C++ flags are added
++set(CMAKE_CXX_STANDARD_REQUIRED True)
++set(CMAKE_CXX_EXTENSIONS OFF)
++
+ # Locate Perl and check its version.
+ #
+ include(FindPerl)
+@@ -116,13 +128,14 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU"
+     OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+   # XXX figure out how to get "-std=c++11 -fno-rtti" from LLVM.  That's how we
+   # get those options in the Automake path...
+-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-rtti -fno-strict-aliasing -Wall -Wextra -Wno-long-long -Wno-unused-parameter -Wno-missing-field-initializers")
++  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -fno-strict-aliasing -Wall -Wextra -Wno-long-long -Wno-unused-parameter -Wno-missing-field-initializers")
+   if(SUPPORTS_FVISIBILITY_INLINES_HIDDEN_FLAG)
+     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility-inlines-hidden")
+   endif()
+   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
+ endif()
+ 
++
+ ###############################################################################
+ 
+ add_subdirectory(clang_delta)
+diff --git a/clang_delta/RemoveUnusedStructField.cpp b/clang_delta/RemoveUnusedStructField.cpp
+index 44b596f..9ee2796 100644
+--- a/clang_delta/RemoveUnusedStructField.cpp
++++ b/clang_delta/RemoveUnusedStructField.cpp
+@@ -247,7 +247,11 @@ const Expr *RemoveUnusedStructField::getInitExprFromDesignatedInitExpr(
+       }
+       else {
+         const DesignatedInitExpr::Designator *DS = DIE->getDesignator(0);
++#if LLVM_VERSION_MAJOR >= 17
++        const FieldDecl *CurrFD = DS->getFieldDecl();
++#else
+         const FieldDecl *CurrFD = DS->getField();
++#endif
+         if ((CurrFD && FD == CurrFD) ||
+             (CurrFD == NULL && DS->getFieldName() == FD->getIdentifier())) {
+           IsFirstField = (I == 0);

@@ -22,6 +22,7 @@ class Creduce(CMakePackage):
 
     depends_on("flex")
     depends_on("libxml2")
+    depends_on("llvm")
     depends_on("llvm@8.0.0", when="@:2.10")
     depends_on("perl")
     depends_on("perl-exporter-lite")
@@ -30,3 +31,6 @@ class Creduce(CMakePackage):
     depends_on("perl-regexp-common")
     depends_on("perl-termreadkey")
     depends_on("zlib-api")
+
+    # until csmith-project/creduce/pull/270 is merged
+    patch("patch-harcoded-cpp-flag-new-llvm-pr270.patch", when="@develop")
