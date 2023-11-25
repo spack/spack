@@ -33,14 +33,19 @@ class Vapor(CMakePackage):
     variant("ospray", default=False, description="Enable OSPRay raytracing")
 
     depends_on("cmake@3.17:", type="build")
+    depends_on("python+ssl", type="build")
+    depends_on("py-numpy@1.21", type="build")
+    depends_on("py-scipy", type="build")
+    depends_on("py-matplotlib", type="build")
+
+    depends_on("zlib-api")
+    depends_on("gl")
+
     depends_on("xz")
-    depends_on("zlib")
     depends_on("openssl")
     depends_on("expat")
     depends_on("curl")
-    depends_on("which")
     depends_on("mesa-glu")
-    depends_on("gl")
     depends_on("libxtst")
     depends_on("libxcb")
     depends_on("xcb-util")
@@ -52,13 +57,10 @@ class Vapor(CMakePackage):
     depends_on("freetype")
     depends_on("proj@:7")
     depends_on("libgeotiff")
-    depends_on("python+ssl", type="build")
-    depends_on("py-numpy@1.21", type="build")
-    depends_on("py-scipy", type="build")
-    depends_on("py-matplotlib", type="build")
-    depends_on("ospray~mpi", when="+ospray")
     depends_on("glm")
     depends_on("qt+opengl+dbus@5")
+
+    depends_on("ospray~mpi", when="+ospray")
     depends_on("doxygen", when="+doc")
 
     # These images are required but not provided by the source
