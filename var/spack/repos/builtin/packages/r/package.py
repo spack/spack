@@ -123,7 +123,7 @@ class R(AutotoolsPackage):
     @run_after("install")
     def install_rmath(self):
         if "+rmath" in self.spec:
-            with working_dir("src/nmath/standalone"):
+            with working_dir(join_path(self.build_directory, "src", "nmath", "standalone")):
                 make()
                 make("install", parallel=False)
 
