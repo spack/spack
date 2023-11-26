@@ -15,4 +15,4 @@ class PyVlConvertPython(PythonPackage):
         "1.1.0", sha256="cc2bf58e019a5b4796b2903af8eb952555a7701603e0752e9f9fe66627af5c2e")
 
     depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-maturin", type=("build"))
+    depends_on("py-maturin@1.1:1", type="build")
