@@ -31,7 +31,7 @@ class Fpart(AutotoolsPackage):
         default="rsync",
         values=("rsync", "tar", "cpio"),
         multi=True,
-        description="Tool used by fpsync to copy files"
+        description="Tool used by fpsync to copy files",
     )
 
     depends_on("autoconf", type="build")
