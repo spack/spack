@@ -25,14 +25,18 @@ class Fpart(AutotoolsPackage):
     variant("embfts", default=False, description="Build with embedded fts functions")
     variant("static", default=False, description="Build static binary")
     variant("debug", default=False, description="Build with debugging support")
+    # fpsync has the following run dependencies, at least one is required
+    variant(
+            "fpsynctool", default="rsync", values=("rsync", "tar", "cpio"),
+            multi=True, description="Tool used by fpsync to copy files"
+    )
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
-    # fpsync has the following run dependencies
-    depends_on("rsync", type="run")
-    depends_on("tar", type="run")
-    depends_on("cpio", type="run")
+    depends_on("rsync", when="fpsynctool=rsync", type="run")
+    depends_on("tar", when="fpsynctool=tar", type="run")
+    depends_on("cpio", when="fpsynctool=cpio", type="run")
 
     def configure_args(self):
         config_args = []
