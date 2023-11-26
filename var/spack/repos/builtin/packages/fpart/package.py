@@ -27,8 +27,11 @@ class Fpart(AutotoolsPackage):
     variant("debug", default=False, description="Build with debugging support")
     # fpsync has the following run dependencies, at least one is required
     variant(
-            "fpsynctool", default="rsync", values=("rsync", "tar", "cpio"),
-            multi=True, description="Tool used by fpsync to copy files"
+            "fpsynctool",
+            default="rsync",
+            values=("rsync", "tar", "cpio"),
+            multi=True,
+            description="Tool used by fpsync to copy files"
     )
 
     depends_on("autoconf", type="build")
