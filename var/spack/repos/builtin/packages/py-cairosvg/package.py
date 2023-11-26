@@ -19,6 +19,6 @@ class PyCairosvg(PythonPackage):
     depends_on("py-cairocffi", type=("build", "run"))
     depends_on("py-cssselect2", type=("build", "run"))
     depends_on("py-defusedxml", type=("build", "run"))
-    depends_on("py-pillow", type=("build", "run"))
+    depends_on("pil", type=("build", "run"))
     depends_on("py-tinycss2", type=("build", "run"))
     
