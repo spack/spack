@@ -30,7 +30,7 @@ to generate recipes for container images starting from a ``spack.yaml``.
   It means that your environment is built from scratch inside the container
   runtime.
 
-  Spack can also create container images from existing package installations
+  Since v0.21, Spack can also create container images from existing package installations
   on your host system. See :ref:`binary_caches_oci` for more information on
   that topic.
 
