@@ -1291,14 +1291,14 @@ class SpackSolverSetup:
             kind = RequirementKind.DEFAULT
         return self._rules_from_requirements(pkg_name, requirements, kind=kind)
 
-    def _rules_from_requirements(self, pkg_name: str, requirements, *, kind: RequirementKind):
+    def _rules_from_requirements(
+        self, pkg_name: str, requirements, *, kind: RequirementKind
+    ) -> List[RequirementRule]:
         """Manipulate requirements from packages.yaml, and return a list of tuples
         with a uniform structure (name, policy, requirements).
         """
         if isinstance(requirements, str):
-            if self.reject_requirement_constraint(pkg_name, constraint=requirements, kind=kind):
-                return []
-            return [self._rule_from_str(pkg_name, requirements, kind)]
+            requirements = [requirements]
 
         rules = []
         for requirement in requirements:
