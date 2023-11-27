@@ -54,12 +54,6 @@ class Libtree(MakefilePackage, CMakePackage):
     with when("build_system=cmake"):
         variant("chrpath", default=False, description="Use chrpath for deployment")
         variant("strip", default=False, description="Use binutils strip for deployment")
-        variant(
-            "build_type",
-            default="RelWithDebInfo",
-            description="CMake build type",
-            values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-        )
         depends_on("googletest", type="test")
         depends_on("cmake@3:", type="build")
         depends_on("chrpath", when="+chrpath", type="run")
