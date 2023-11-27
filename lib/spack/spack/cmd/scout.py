@@ -24,8 +24,8 @@ level = "long"
 def setup_parser(subparser):
     subparser.add_argument(
         "--mark",
-        default="implicit",
-        choices=["implicit", "explicit"],
+        default="explicit",
+        choices=["i", "implicit", "e", "explicit"],
         help="mark pkgs after installation to keep/cleanup",
     )
     subparser.add_argument(
@@ -96,13 +96,14 @@ def scout(parser, args):
         try:
             install_kwargs = {}
             if args.test is not None:
-                install_kwargs["test"] = [pkg_name]
+                install_kwargs["test"] = [pkg_name] if args.test == "root" else True
 
             builder = PackageInstaller([(spec.package, install_kwargs)])
             builder.install()
 
-            # mark packages as implicit by default to cleanup with "spack gc"
-            spack.store.STORE.db.update_explicit(spec, explicit=(args.mark == "explicit"))
+            # mark packages as implicit if requested to cleanup with "spack gc"
+            if args.mark in ("implicit", "i"):
+                spack.store.STORE.db.update_explicit(spec, explicit=False)
 
         # overwrite modified file with backup on failed build
         except InstallError:
