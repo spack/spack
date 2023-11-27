@@ -22,9 +22,7 @@ def setup_parser(subparser):
 
 
 def _update_config(specs_to_remove, remove_all=False):
-    dev_configs = spack.config.matched_config("develop")
-
-    for scope, dev_config in dev_configs:
+    def change_fn(dev_config):
         modified = False
         for spec in specs_to_remove:
             if spec.name in dev_config:
@@ -32,10 +30,11 @@ def _update_config(specs_to_remove, remove_all=False):
                 del dev_config[spec.name]
                 modified = True
         if remove_all and dev_config:
-            dev_config = {}
+            dev_config.clear()
             modified = True
-        if modified:
-            spack.config.set("develop", dev_config, scope=scope)
+        return modified
+
+    spack.config.update_all("develop", change_fn)
 
 
 def undevelop(parser, args):

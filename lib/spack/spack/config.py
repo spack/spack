@@ -952,7 +952,10 @@ def matched_config(cfg_path):
 
 
 def find_and_update_config(section_name, find_fn, update_fn):
-    """Search through configs starting with the highest priority:
+    """Change or add a subsection of config, with additional logic to
+    select a reasonable scope where the change is applied.
+
+    Search through configs starting with the highest priority:
     the first matching a criteria is updated; if no such config exists
     find the first config scope that defines any config for the named
     section; if no scopes define any related config, then update the
@@ -987,6 +990,18 @@ def find_and_update_config(section_name, find_fn, update_fn):
     scope, section = configs_by_section[0]
     update_fn(section)
     spack.config.set(section_name, section, scope=scope)
+
+
+def update_all(section_name, change_fn):
+    """Change a config subsection, which may have details duplicated
+    across multiple scopes.
+    """
+    configs_by_section = matched_config("develop")
+
+    for scope, section in configs_by_section:
+        modified = change_fn(section)
+        if modified:
+            spack.config.set(section_name, section, scope=scope)
 
 
 def _validate_section_name(section):
