@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-import os
 from spack.package import *
 
 
@@ -17,7 +16,7 @@ class PyRosettafold(PythonPackage, CudaPackage):
     variant("cuda", default=True, description="Accelerate with GPU")
 
     version("1.1.0", sha256="55706a815a137a7f4f51370e20456a96620d0bd168a889560fd06ad890ce3ea3")
-    
+
     depends_on("py-setuptools@52.0.0", type="build")
     depends_on("python@3.8", type=("build", "run"))
     depends_on("hh-suite@3.3.0", type="run")
@@ -44,9 +43,9 @@ class PyRosettafold(PythonPackage, CudaPackage):
 
     resource(
         name="weights",
-        url=f"file://{os.getcwd()}/weights.tar.gz", # url="https://files.ipd.uw.edu/pub/RoseTTAFold/weights.tar.gz"
+        url="https://files.ipd.uw.edu/pub/RoseTTAFold/weights.tar.gz",
         sha256="4c883ffbfc98623750a1ced177fa35796b7d55cf3945f3d74ce040d65c804b28",
-        placement="weights"
+        placement="weights",
     )
 
     def install(self, spec, prefix):

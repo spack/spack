@@ -22,11 +22,14 @@ class Psipred(MakefilePackage):
     build_directory = "src"
 
     def setup_run_environment(self, env):
-        env.prepend_path('PATH', self.prefix)
+        env.prepend_path("PATH", self.prefix)
 
     def install(self, spec, prefix):
-
-        filter_file("set ncbidir = \/usr\/local\/bin", f"set ncbidir = {spec['blast-legacy'].prefix.bin}", "runpsipred")
+        filter_file(
+            "set ncbidir = \/usr\/local\/bin",
+            f"set ncbidir = {spec['blast-legacy'].prefix.bin}",
+            "runpsipred",
+        )
         filter_file("#!\/bin\/tcsh", f"#!{spec['tcsh'].prefix.bin.tcsh}", "runpsipred")
         filter_file("#!\/bin\/tcsh", f"#!{spec['tcsh'].prefix.bin.tcsh}", "runpsipred_single")
 
