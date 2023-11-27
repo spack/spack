@@ -904,13 +904,12 @@ def test_install_help_cdash():
 
 
 @pytest.mark.disable_clean_stage_check
-def test_cdash_auth_token(tmpdir, mock_fetch, install_mockery, capfd):
+def test_cdash_auth_token(tmpdir, mock_fetch, install_mockery, monkeypatch, capfd):
     # capfd interferes with Spack's capturing
-    with tmpdir.as_cwd():
-        with capfd.disabled():
-            os.environ["SPACK_CDASH_AUTH_TOKEN"] = "asdf"
-            out = install("-v", "--log-file=cdash_reports", "--log-format=cdash", "a")
-            assert "Using CDash auth token from environment" in out
+    with tmpdir.as_cwd(), capfd.disabled():
+        monkeypatch.setenv("SPACK_CDASH_AUTH_TOKEN", "asdf")
+        out = install("-v", "--log-file=cdash_reports", "--log-format=cdash", "a")
+        assert "Using CDash auth token from environment" in out
 
 
 @pytest.mark.not_on_windows("Windows log_output logs phase header out of order")
