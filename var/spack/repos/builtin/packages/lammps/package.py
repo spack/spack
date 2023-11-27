@@ -29,6 +29,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
     #   marked deprecated=True
     # * patch releases older than a stable release should be marked deprecated=True
     version("develop", branch="develop")
+    version("20231121", sha256="704d8a990874a425bcdfe0245faf13d712231ba23f014a3ebc27bc14398856f1")
     version(
         "20230802.1",
         sha256="0e5568485e5ee080412dba44a1b7a93f864f1b5c75121f11d528854269953ed0",
@@ -444,7 +445,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
         "mofff": {"when": "@20210702:"},
         "molecule": {"default": True},
         "molfile": {"when": "@20210702:"},
-        "mpiio": {},
+        "mpiio": {"when": "@:20230802.1"},
         "netcdf": {"when": "@20210702:"},
         "openmp-package": {},
         "opt": {},
@@ -537,7 +538,12 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
     variant("ffmpeg", default=False, description="Build with ffmpeg support")
     variant("openmp", default=True, description="Build with OpenMP")
     variant("opencl", default=False, description="Build with OpenCL")
-    variant("exceptions", default=False, description="Build with lammps exceptions")
+    variant(
+        "exceptions",
+        default=False,
+        description="Build with lammps exceptions",
+        when="@:20230802.1",
+    )
     variant(
         "cuda_mps",
         default=False,
@@ -570,6 +576,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
         multi=False,
     )
 
+    depends_on("cmake@3.16:", when="@20231121:")
     depends_on("mpi", when="+mpi")
     depends_on("mpi", when="+mpiio")
     depends_on("fftw-api@3", when="+kspace")
@@ -696,8 +703,8 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
     # Older LAMMPS does not compile with Kokkos 4.x
     conflicts(
         "^kokkos@4:",
-        when="@:20230802",
-        msg="LAMMPS is incompatible with Kokkos 4.x until @20230802",
+        when="@:20230802.1",
+        msg="LAMMPS is incompatible with Kokkos 4.x until @20230802.1",
     )
 
     patch("lib.patch", when="@20170901")
