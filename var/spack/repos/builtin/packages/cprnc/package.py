@@ -20,9 +20,3 @@ class Cprnc(CMakePackage):
     depends_on("netcdf-fortran")
     depends_on("cmake@3:", type="build")
 
-    def install(self, spec, prefix):
-        with working_dir("spack-build", create=True):
-            which("cmake")("..", *std_cmake_args)
-            make()
-            make("test")
-            make("install")
