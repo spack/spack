@@ -1302,42 +1302,42 @@ class SpackSolverSetup:
 
         rules = []
         for requirement in requirements:
+            # A string represents a spec that must be satisfied. It is
+            # equivalent to a one_of group with a single element
             if isinstance(requirement, str):
-                # A string represents a spec that must be satisfied. It is
-                # equivalent to a one_of group with a single element
                 if self.reject_requirement_constraint(pkg_name, constraint=requirement, kind=kind):
                     continue
                 rules.append(self._rule_from_str(pkg_name, requirement, kind))
-            else:
-                for policy in ("spec", "one_of", "any_of"):
-                    if policy in requirement:
-                        constraints = requirement[policy]
+                continue
 
-                        # "spec" is for specifying a single spec
-                        if policy == "spec":
-                            constraints = [constraints]
-                            policy = "one_of"
+            for policy in ("spec", "one_of", "any_of"):
+                if policy not in requirement:
+                    continue
 
-                        constraints = [
-                            x
-                            for x in constraints
-                            if not self.reject_requirement_constraint(
-                                pkg_name, constraint=x, kind=kind
-                            )
-                        ]
-                        if not constraints:
-                            continue
+                constraints = requirement[policy]
+                # "spec" is for specifying a single spec
+                if policy == "spec":
+                    constraints = [constraints]
+                    policy = "one_of"
 
-                        rules.append(
-                            RequirementRule(
-                                pkg_name=pkg_name,
-                                policy=policy,
-                                requirements=constraints,
-                                kind=kind,
-                                message=requirement.get("message"),
-                                condition=requirement.get("when"),
-                            )
-                        )
+                constraints = [
+                    x
+                    for x in constraints
+                    if not self.reject_requirement_constraint(pkg_name, constraint=x, kind=kind)
+                ]
+                if not constraints:
+                    continue
+
+                rules.append(
+                    RequirementRule(
+                        pkg_name=pkg_name,
+                        policy=policy,
+                        requirements=constraints,
+                        kind=kind,
+                        message=requirement.get("message"),
+                        condition=requirement.get("when"),
+                    )
+                )
         return rules
 
     def _rule_from_str(
