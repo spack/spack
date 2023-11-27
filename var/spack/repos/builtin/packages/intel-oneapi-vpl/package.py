@@ -74,6 +74,12 @@ class IntelOneapiVpl(IntelOneApiLibraryPackage):
         expand=False,
     )
 
+    # VPL no longer releases as part of oneapi, so there will never be
+    # a 2024 release
+    @property
+    def v2_layout_versions(self):
+        return "@2024:"
+
     @property
     def component_dir(self):
         return "vpl"

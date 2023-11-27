@@ -28,6 +28,12 @@ class IntelOneapiCcl(IntelOneApiLibraryPackage):
     depends_on("intel-oneapi-mpi")
 
     version(
+        "2021.11.0",
+        url="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/9e63eba5-2b3d-4032-ad22-21f02e35b518/l_oneapi_ccl_p_2021.11.0.49161_offline.sh",
+        sha256="35fde9862d620c211064addfd3c15c4fc33bcaac6fe050163eb59a006fb9d476",
+        expand=False,
+    )
+    version(
         "2021.10.0",
         url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/3230823d-f799-4d1f-8ef3-a17f086a7719/l_oneapi_ccl_p_2021.10.0.49084_offline.sh",
         sha256="482b9a083c997df496309a40ef1293807fc0ce1c7c43ebe6be2acf568087544b",
@@ -99,6 +105,10 @@ class IntelOneapiCcl(IntelOneApiLibraryPackage):
         sha256="de732df57a03763a286106c8b885fd60e83d17906936a8897a384b874e773f49",
         expand=False,
     )
+
+    @property
+    def v2_layout_versions(self):
+        return "@2021.11:"
 
     @property
     def component_dir(self):

@@ -64,6 +64,9 @@ spack:
       require: "%gcc"
     bison:
       require: '%gcc'
+    # sycl abi change means you need 2024 compiler to use 2024 mkl
+    intel-oneapi-mkl:
+      require: "@2023"
 
   specs:
   # CPU
