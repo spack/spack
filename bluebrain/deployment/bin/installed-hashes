@@ -29,7 +29,7 @@ def run():
         env = ev.activate(args.env)
     else:
         env = ev.active_environment()
-    with spack.store.db.read_transaction():
+    with spack.store.STORE.db.read_transaction():
         for requested, spec in env.concretized_specs():
             stringified = "/{0} {1}".format(spec.dag_hash(7), requested)
             if spec.installed:
