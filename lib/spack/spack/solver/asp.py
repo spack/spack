@@ -1302,13 +1302,9 @@ class SpackSolverSetup:
 
         rules = []
         for requirement in requirements:
-            # A string represents a spec that must be satisfied. It is
-            # equivalent to a one_of group with a single element
+            # A string is equivalent to a one_of group with a single element
             if isinstance(requirement, str):
-                if self.reject_requirement_constraint(pkg_name, constraint=requirement, kind=kind):
-                    continue
-                rules.append(self._rule_from_str(pkg_name, requirement, kind))
-                continue
+                requirement = {"one_of": [requirement]}
 
             for policy in ("spec", "one_of", "any_of"):
                 if policy not in requirement:
@@ -1339,18 +1335,6 @@ class SpackSolverSetup:
                     )
                 )
         return rules
-
-    def _rule_from_str(
-        self, pkg_name: str, requirements: str, kind: RequirementKind
-    ) -> RequirementRule:
-        return RequirementRule(
-            pkg_name=pkg_name,
-            policy="one_of",
-            requirements=[requirements],
-            kind=kind,
-            condition=None,
-            message=None,
-        )
 
     def reject_requirement_constraint(
         self, pkg_name: str, *, constraint: str, kind: RequirementKind
