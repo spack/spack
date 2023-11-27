@@ -19,4 +19,3 @@ class Cprnc(CMakePackage):
 
     depends_on("netcdf-fortran")
     depends_on("cmake@3:", type="build")
-
