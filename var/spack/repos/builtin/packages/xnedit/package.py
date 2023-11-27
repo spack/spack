@@ -42,11 +42,11 @@ class Xnedit(MakefilePackage):
     version("1.0.0", sha256="f58dcbd268f226192584f56dd1a897290a66176d91a90d715a40d63578a84b72")
 
     depends_on("automake", type="build")
-    depends_on("libx11", type="build")
-    depends_on("libxt", type="build")
-    depends_on("libxpm", type="build")
-    depends_on("motif", type="build")
-    depends_on("pcre", type="build")
+    depends_on("libx11")
+    depends_on("libxt")
+    depends_on("libxpm")
+    depends_on("motif")
+    depends_on("pcre")
 
     def setup_build_environment(self, env):
         env.prepend_path("LDFLAGS", "-Wl,--copy-dt-needed-entries")
