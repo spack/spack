@@ -38,6 +38,8 @@ import sys
 from contextlib import contextmanager
 from typing import Dict, List, Optional, Union
 
+import ruamel.yaml as yaml
+
 import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, rename
@@ -112,6 +114,39 @@ SCOPES_METAVAR = "{defaults,system,site,user}[/PLATFORM] or env:ENVIRONMENT"
 
 #: Base name for the (internal) overrides scope.
 _OVERRIDES_BASE_NAME = "overrides-"
+
+
+def scope_from_path(fpath):
+    """Given a path to a file, create a scope object. This can be used to
+    directly edit scopes that are not otherwise tracked in the current
+    configuration.
+    """
+    if not fpath:
+        return None
+
+    if os.path.isdir(fpath):
+        return ConfigScope("<adhoc>", fpath)
+    elif os.path.isfile(fpath):
+        schema = None
+        config_key = None
+        for test_schema in [spack.schema.env.schema, spack.schema.merged.schema]:
+            try:
+                data = spack.config.read_config_file(fpath, schema=test_schema)
+                for test_key in ["env", "spack"]:
+                    if test_key in data:
+                        config_key = [test_key]
+                        break
+                schema = test_schema
+                break
+            except (spack.config.ConfigError, yaml.YAMLError):
+                pass
+
+        if not schema:
+            raise spack.config.ConfigFileError(
+                "{0} does not follow a known single-file schema".format(fpath)
+            )
+
+        return SingleFileScope("<adhoc>", fpath, schema, yaml_path=config_key)
 
 
 class ConfigScope:
@@ -475,6 +510,9 @@ class Configuration:
         if scope is None:
             # default to the scope with highest precedence.
             return self.highest_precedence_scope()
+
+        elif isinstance(scope, ConfigScope):
+            return scope
 
         elif scope in self.scopes:
             return self.scopes[scope]

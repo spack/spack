@@ -26,15 +26,8 @@ level = "long"
 
 
 def setup_parser(subparser):
-    scopes = spack.config.scopes()
-
     # User can only choose one
-    subparser.add_argument(
-        "--scope",
-        choices=scopes,
-        metavar=spack.config.SCOPES_METAVAR,
-        help="configuration scope to read/modify",
-    )
+    subparser.add_argument("--scope", help="configuration scope to read/modify")
 
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="config_command")
 
@@ -117,23 +110,49 @@ def _get_scope_and_section(args):
     section = getattr(args, "section", None)
     path = getattr(args, "path", None)
 
+    if scope:
+        if scope in spack.config.CONFIG.scopes:
+            scope = spack.config.CONFIG.scopes[scope]
+        else:
+            # Infer that the scope is a path. Since we only do this when the scope
+            # is not a valid scope name, a relative path like "user/linux" would
+            # be ignored; one can disambiguate with e.g. "./user/linux"
+            scope = spack.config.scope_from_path(scope)
+
     # w/no args and an active environment, point to env manifest
     if not section and not scope:
         env = ev.active_environment()
         if env:
-            scope = env.env_file_config_scope_name()
-
-    # set scope defaults
-    elif not scope:
-        scope = spack.config.default_modify_scope(section)
+            scope = env.env_file_config_scope()
 
     # special handling for commands that take value instead of section
     if path:
         section = path[: path.find(":")] if ":" in path else path
-        if not scope:
-            scope = spack.config.default_modify_scope(section)
+
+    if not scope:
+        # Note that `section` might be none here: if no path is provided
+        # and the command invocation omits a section.
+        scope_name = spack.config.default_modify_scope(section)
+        scope = spack.config.CONFIG.scopes[scope_name]
 
     return scope, section
+
+
+def _get_config_file(args):
+    scope, section = _get_scope_and_section(args)
+
+    if not section and not isinstance(scope, spack.config.SingleFileScope):
+        tty.die(
+            "Must specify --section, or have an active environment, or specify a"
+            " file path as a --scope"
+        )
+
+    if section:
+        config_file = scope.get_section_filename(section)
+    else:
+        config_file = scope.path
+
+    return config_file
 
 
 def config_get(args):
@@ -142,21 +161,17 @@ def config_get(args):
     With no arguments and an active environment, print the contents of
     the environment's manifest file (spack.yaml).
     """
-    scope, section = _get_scope_and_section(args)
+    if args.section and not args.scope:
+        spack.config.CONFIG.print_section(args.section)
+        return
 
-    if section is not None:
-        spack.config.CONFIG.print_section(section)
+    config_file = _get_config_file(args)
 
-    elif scope and scope.startswith("env:"):
-        config_file = spack.config.CONFIG.get_config_filename(scope, section)
-        if os.path.exists(config_file):
-            with open(config_file) as f:
-                print(f.read())
-        else:
-            tty.die("environment has no %s file" % ev.manifest_name)
-
-    else:
-        tty.die("`spack config get` requires a section argument or an active environment.")
+    if os.path.exists(config_file):
+        with open(config_file) as f:
+            print(f.read())
+    # The config file might not exist if there is no config associated with
+    # the specified section at the specified scope; in that case, print nothing.
 
 
 def config_blame(args):
@@ -170,17 +185,7 @@ def config_edit(args):
     With no arguments and an active environment, edit the spack.yaml for
     the active environment.
     """
-    spack_env = os.environ.get(ev.spack_env_var)
-    if spack_env and not args.scope:
-        # Don't use the scope object for envs, as `config edit` can be called
-        # for a malformed environment. Use SPACK_ENV to find spack.yaml.
-        config_file = ev.manifest_file(spack_env)
-    else:
-        # If we aren't editing a spack.yaml file, get config path from scope.
-        scope, section = _get_scope_and_section(args)
-        if not scope and not section:
-            tty.die("`spack config edit` requires a section argument or an active environment.")
-        config_file = spack.config.CONFIG.get_config_filename(scope, section)
+    config_file = _get_config_file(args)
 
     if args.print_file:
         print(config_file)
