@@ -951,6 +951,44 @@ def matched_config(cfg_path):
     return [(scope, get(cfg_path, scope=scope)) for scope in writable_scope_names()]
 
 
+def find_and_update_config(section_name, find_fn, update_fn):
+    """Search through configs starting with the highest priority:
+    the first matching a criteria is updated; if no such config exists
+    find the first config scope that defines any config for the named
+    section; if no scopes define any related config, then update the
+    highest-priority config scope.
+    """
+    configs_by_section = matched_config(section_name)
+
+    found = False
+    for scope, section in configs_by_section:
+        found = find_fn(section)
+        if found:
+            break
+
+    if found:
+        update_fn(section)
+        spack.config.set(section_name, section, scope=scope)
+        return
+
+    # If no scope meets the criteria specified by ``find_fn``,
+    # then look for a scope that has any content (for the specified
+    # section name)
+    for scope, section in configs_by_section:
+        if section:
+            update_fn(section)
+            found = True
+            break
+
+    if found:
+        spack.config.set(section_name, section, scope=scope)
+        return
+
+    scope, section = configs_by_section[0]
+    update_fn(section)
+    spack.config.set(section_name, section, scope=scope)
+
+
 def _validate_section_name(section):
     """Exit if the section is not a valid section."""
     if section not in SECTION_SCHEMAS:

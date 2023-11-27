@@ -46,49 +46,16 @@ def setup_parser(subparser):
 
 
 def _update_config(spec, path):
-    dev_configs = spack.config.matched_config("develop")
+    find_fn = lambda section: spec.name in section
 
     entry = {"spec": str(spec)}
     if path != spec.name:
         entry["path"] = path
 
-    found = False
-    for scope, dev_config in dev_configs:
-        if spec.name in dev_config:
-            tty.msg(
-                "Updating develop spec {0}:\n\told: {1}\n\tnew: {2}".format(
-                    str(spec), dev_config[spec.name], path
-                )
-            )
-            dev_config[spec.name] = entry
-            found = True
-            break
+    def change_fn(section):
+        section[spec.name] = entry
 
-    # If the dev spec exists in a particular scope already, modify
-    # that scope specifically
-    if found:
-        spack.config.set("develop", dev_config, scope=scope)
-        return
-
-    tty.msg("New development spec: {0}".format(str(spec)))
-
-    for scope, dev_config in dev_configs:
-        if dev_config:
-            dev_config[spec.name] = entry
-            found = True
-            break
-
-    # If the dev spec exists nowhere, then write this new dev spec
-    # into the highest priority scope where dev specs are defined
-    if found:
-        spack.config.set("develop", dev_config, scope=scope)
-        return
-
-    # If no dev specs are defined anywhere, then write this into the
-    # highest-priority scope
-    scope = dev_configs[0][0]
-    dev_config = {spec.name: entry}
-    spack.config.set("develop", dev_config, scope=scope)
+    spack.config.find_and_update_config("develop", find_fn, change_fn)
 
 
 def _retrieve_develop_source(spec, abspath):
