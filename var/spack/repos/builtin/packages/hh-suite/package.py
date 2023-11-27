@@ -24,10 +24,16 @@ class HhSuite(CMakePackage):
     depends_on("cmake@2.8.12:", type="build")
     depends_on("mpi", when="+mpi")
 
-    def build_args(self, spec, prefix):
+    def cmake_args(self):
         args = []
-        if "+mpi" in self.spec:
+        args.append(self.define("BUILD_SHARED_LIBS", False))
+        args.append(self.define("NATIVE_ARCH", False))
+        if self.spec.satisfies("+mpi"):
             args.append("-DCHECK_MPI=1")
         else:
             args.append("-DCHECK_MPI=0")
+        if "avx2" in self.spec.target:
+            args.append("-DHAVE_AVX2=1")
+        else:
+            args.append("-DHAVE_SSE2=1")  # required by hh-suite
         return args
