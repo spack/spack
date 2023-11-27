@@ -15,11 +15,6 @@ and then activating it:
 
     $ spack env activate -d spamhameggs
 
-After the first activation, finish the configuration by explicitly stating that all
-software should be considered together:
-
-    $ spack config add concretizer:unify:true
-
 This will make sure that every package is only built once, in the specified
 version.
 
