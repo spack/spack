@@ -54,7 +54,7 @@ class PyFenicsDolfinx(PythonPackage):
     depends_on("py-fenics-ffcx@0.4.2", type=("build", "run"), when="@0.4.1")
 
     depends_on("py-fenics-ufl@main", type=("build", "run"), when="@main")
-    depends_on("py-fenics-ufl@2023.2.0", type=("build", "run"), when="@0.7")
+    depends_on("py-fenics-ufl@2023.2", type=("build", "run"), when="@0.7")
     depends_on("py-fenics-ufl@2023.1", type=("build", "run"), when="@0.6")
     depends_on("py-fenics-ufl@2022.2.0", type=("build", "run"), when="@0.5.0:0.5")
     depends_on("py-fenics-ufl@2022.1.0", type=("build", "run"), when="@0.4.1")
