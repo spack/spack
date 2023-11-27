@@ -229,6 +229,10 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         conflicts("~mpi", msg="elpa requires MPI")
         depends_on("elpa+openmp", when="+openmp")
         depends_on("elpa~openmp", when="~openmp")
+        depends_on("elpa+cuda", when="+cuda")
+        depends_on("elpa~cuda", when="~cuda")
+        depends_on("elpa+rocm", when="+rocm")
+        depends_on("elpa~rocm", when="~rocm")
         depends_on("elpa@2021.05:", when="@8.3:")
         depends_on("elpa@2021.11.001:", when="@9.1:")
         depends_on("elpa@2023.05.001:", when="@2023.2:")
@@ -238,7 +242,8 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
             "~mpi", msg="DLA-Future requires MPI. Only the distributed eigensolver is available."
         )
         depends_on("dla-future@0.2.1: +scalapack")
-        depends_on("dla-future ~cuda~rocm", when="~cuda~rocm")
+        depends_on("dla-future ~cuda", when="~cuda")
+        depends_on("dla-future ~rocm", when="~rocm")
         depends_on("dla-future +cuda", when="+cuda")
         depends_on("dla-future +rocm", when="+rocm")
 
