@@ -155,13 +155,13 @@ def add_compilers_to_config(compilers, scope=None, init_config=True):
     compiler_config = get_compiler_config(scope, init_config)
     for compiler in compilers:
         if not compiler.cc:
-            tty.warn(f"{compiler.spec} does not have a C compiler")
+            tty.debug(f"{compiler.spec} does not have a C compiler")
         if not compiler.cxx:
-            tty.warn(f"{compiler.spec} does not have a C++ compiler")
+            tty.debug(f"{compiler.spec} does not have a C++ compiler")
         if not compiler.f77:
-            tty.warn(f"{compiler.spec} does not have a Fortran77 compiler")
+            tty.debug(f"{compiler.spec} does not have a Fortran77 compiler")
         if not compiler.fc:
-            tty.warn(f"{compiler.spec} does not have a Fortran compiler")
+            tty.debug(f"{compiler.spec} does not have a Fortran compiler")
         compiler_config.append(_to_dict(compiler))
     spack.config.set("compilers", compiler_config, scope=scope)
 
