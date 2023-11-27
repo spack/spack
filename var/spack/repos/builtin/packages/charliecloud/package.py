@@ -128,8 +128,8 @@ class Charliecloud(AutotoolsPackage):
     # See https://github.com/spack/spack/pull/16049.
     conflicts("platform=darwin", msg="This package does not build on macOS")
 
-    # Squashfuse support
-    depends_on("squashfuse@0.1.105:", when="+squashfuse")
+    # Squashfuse support - only a narrow range at least through v0.35
+    depends_on("squashfuse@0.1.105:0.2.0", when="+squashfuse")
     depends_on("squashfs", type="run", when="+squashfuse")
 
     def autoreconf(self, spec, prefix):
