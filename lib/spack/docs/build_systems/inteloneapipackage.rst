@@ -25,8 +25,8 @@ use Spack to build packages with the tools.
 The Spack Python class ``IntelOneapiPackage`` is a base class that is
 used by ``IntelOneapiCompilers``, ``IntelOneapiMkl``,
 ``IntelOneapiTbb`` and other classes to implement the oneAPI
-packages. See the :ref:`package-list` for the full list of available
-oneAPI packages or use::
+packages. Search for ``oneAPI`` at `<packages.spack.io>`_ for the full
+list of available oneAPI packages, or use::
 
   spack list -d oneAPI
 

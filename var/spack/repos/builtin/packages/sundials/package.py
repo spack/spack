@@ -22,12 +22,14 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     maintainers("balos1", "cswoodward", "gardner48")
+    license("BSD-3-Clause")
 
     # ==========================================================================
     # Versions
     # ==========================================================================
     version("develop", branch="develop")
-    version("6.6.1", sha256="5162b0e6d19d7b14078a21441e0795cf38d1d883973be35901e018f9bb30c543")
+    version("6.6.2", sha256="08f8223a5561327e44c072e46faa7f665c0c0bc8cd7e45d23f486c3d24c65009")
+    version("6.6.1", sha256="21f71e4aef95b18f954c8bbdc90b62877443950533d595c68051ab768b76984b")
     version("6.6.0", sha256="f90029b8da846c8faff5530fd1fa4847079188d040554f55c1d5d1e04743d29d")
     version("6.5.1", sha256="4252303805171e4dbdd19a01e52c1dcfe0dafc599c3cfedb0a5c2ffb045a8a75")
     version("6.5.0", sha256="4e0b998dff292a2617e179609b539b511eb80836f5faacf800e688a886288502")
@@ -291,6 +293,12 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     patch("remove-links-to-OpenMP-vector.patch", when="@5.5.0:5.7.0")
     # fix issues with exported PETSc target(s) in SUNDIALSConfig.cmake
     patch("sundials-v5.8.0.patch", when="@5.8.0")
+
+    def flag_handler(self, name, flags):
+        if name == "cxxflags":
+            if self.spec.satisfies("+sycl"):
+                flags.append("-fsycl")
+        return (flags, None, None)
 
     # ==========================================================================
     # SUNDIALS Settings

@@ -693,7 +693,12 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
     patch("lib.patch", when="@20170901")
     patch("660.patch", when="@20170922")
     patch("gtest_fix.patch", when="@:20210310 %aocc@3.2.0")
-    patch("intel-aocc.patch", when="@20220324:20221103 +intel %aocc")
+
+    # This patch merged to LAMMPS trunk at 20221222 and backported to
+    # stable version 20220623.4. We still patch all other affected
+    # versions here
+    patch("intel-aocc.patch", when="@20220324:20220623.3,20220803:20221103 +intel %aocc")
+
     patch(
         "https://github.com/lammps/lammps/commit/562300996285fdec4ef74542383276898555af06.patch?full_index=1",
         sha256="e6f1b62bbfdc79d632f4cea98019202d0dd25aa4ae61a70df1164cb4f290df79",
@@ -786,7 +791,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
             # FFTW libraries are available and enable them by default.
             if "^fftw" in spec or "^cray-fftw" in spec or "^amdfftw" in spec:
                 args.append(self.define("FFT", "FFTW3"))
-            elif "^mkl" in spec:
+            elif spec["fftw-api"].name in INTEL_MATH_LIBRARIES:
                 args.append(self.define("FFT", "MKL"))
             elif "^armpl-gcc" in spec or "^acfl" in spec:
                 args.append(self.define("FFT", "FFTW3"))

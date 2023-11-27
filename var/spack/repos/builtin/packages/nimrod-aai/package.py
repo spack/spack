@@ -14,13 +14,14 @@ class NimrodAai(CMakePackage):
 
     homepage = "https://gitlab.com/NIMRODteam/nimrod-abstract"
     url = (
-        "https://gitlab.com/NIMRODteam/nimrod-abstract/-/archive/23.6/nimrod-abstract-23.6.tar.gz"
+        "https://gitlab.com/NIMRODteam/nimrod-abstract/-/archive/23.9/nimrod-abstract-23.9.tar.gz"
     )
     git = "https://gitlab.com/NIMRODteam/nimrod-abstract.git"
 
     maintainers("jacobrking")
 
     version("main", branch="main")
+    version("23.9", sha256="212d591c5a5e7a394b56a5cf2f92cc69feafc49dd5f042fa95eeb6441649390b")
     version("23.6", sha256="1794b89a5a64ff2b3c548818b90d17eef85d819ba4f63a76c41a682d5b76c14f")
 
     variant("debug", default=False, description="Whether to enable debug code")
@@ -41,8 +42,9 @@ class NimrodAai(CMakePackage):
     )
 
     depends_on("cmake", type="build")
-    depends_on("hdf5+fortran", type="build")
     depends_on("mpi", when="+mpi")
+    depends_on("hdf5+fortran~mpi", type="build", when="~mpi")
+    depends_on("hdf5+fortran+mpi", type="build", when="+mpi")
 
     def cmake_args(self):
         args = [
@@ -62,3 +64,9 @@ class NimrodAai(CMakePackage):
             ]
             args.append(addl_args)
         return args
+
+    @run_after("build")
+    @on_package_attributes(run_tests=True)
+    def check(self):
+        with working_dir(self.builder.build_directory):
+            ctest("--output-on-failure")

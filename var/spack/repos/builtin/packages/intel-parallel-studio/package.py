@@ -536,8 +536,7 @@ class IntelParallelStudio(IntelPackage):
     provides("ipp", when="+ipp")
 
     provides("mkl", when="+mkl")
-    provides("blas", when="+mkl")
-    provides("lapack", when="+mkl")
+    provides("blas", "lapack", when="+mkl")
     provides("scalapack", when="+mkl")
 
     provides("fftw-api@3", when="+mkl@professional.2017:")

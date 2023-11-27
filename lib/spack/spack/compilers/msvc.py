@@ -7,7 +7,6 @@ import os
 import re
 import subprocess
 import sys
-from distutils.version import StrictVersion
 from typing import Dict, List, Set
 
 import spack.compiler
@@ -115,11 +114,11 @@ class VCVarsInvocation(VarsInvocation):
 
 def get_valid_fortran_pth(comp_ver):
     cl_ver = str(comp_ver)
-    sort_fn = lambda fc_ver: StrictVersion(fc_ver)
+    sort_fn = lambda fc_ver: Version(fc_ver)
     sort_fc_ver = sorted(list(avail_fc_version), key=sort_fn)
     for ver in sort_fc_ver:
         if ver in fortran_mapping:
-            if StrictVersion(cl_ver) <= StrictVersion(fortran_mapping[ver]):
+            if Version(cl_ver) <= Version(fortran_mapping[ver]):
                 return fc_path[ver]
     return None
 
@@ -154,9 +153,12 @@ class Msvc(Compiler):
 
     #: Regex used to extract version from compiler's output
     version_regex = r"([1-9][0-9]*\.[0-9]*\.[0-9]*)"
+    # The MSVC compiler class overrides this to prevent instances
+    # of erroneous matching on executable names that cannot be msvc
+    # compilers
+    suffixes = []
 
-    # Initialize, deferring to base class but then adding the vcvarsallfile
-    # file based on compiler executable path.
+    is_supported_on_platform = lambda x: isinstance(x, spack.platforms.Windows)
 
     def __init__(self, *args, **kwargs):
         # This positional argument "paths" is later parsed and process by the base class
@@ -167,6 +169,8 @@ class Msvc(Compiler):
         cspec = args[0]
         new_pth = [pth if pth else get_valid_fortran_pth(cspec.version) for pth in paths]
         paths[:] = new_pth
+        # Initialize, deferring to base class but then adding the vcvarsallfile
+        # file based on compiler executable path.
         super().__init__(*args, **kwargs)
         # To use the MSVC compilers, VCVARS must be invoked
         # VCVARS is located at a fixed location, referencable
