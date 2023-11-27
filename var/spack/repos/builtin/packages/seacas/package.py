@@ -32,7 +32,7 @@ class Seacas(CMakePackage):
     # ###################### Versions ##########################
     version("master", branch="master")
     version(
-        "2023-10-24", sha256="f93bf0327329c302ed3feb6adf2e3968f01ec325084a457b2c2dbbf6c4f751a2"
+        "2023-11-27", sha256="fea1c0a6959d46af7478c9c16aac64e76c6dc358da38e2fe8793c15c1cffa8fc"
     )
     version(
         "2023-05-30", sha256="3dd982841854466820a3902163ad1cf1b3fbab65ed7542456d328f2d1a5373c1"
@@ -135,7 +135,7 @@ class Seacas(CMakePackage):
     variant("x11", default=True, description="Compile with X11")
 
     # ###################### Dependencies ##########################
-    depends_on("cmake@3.22:", when="@2023-10-24:", type="build")
+    depends_on("cmake@3.22:", when="@2023-11-23:", type="build")
     depends_on("cmake@3.17:", when="@:2023-05-30", type="build")
     depends_on("mpi", when="+mpi")
 
@@ -144,7 +144,7 @@ class Seacas(CMakePackage):
     depends_on("netcdf-c@4.8.0:~mpi", when="~mpi")
     depends_on("hdf5+hl~mpi", when="~mpi")
 
-    depends_on("fmt@10.1.0", when="@2023-10-24:")
+    depends_on("fmt@10.1.0", when="@2023-11-23:")
     depends_on("fmt@9.1.0", when="@2022-10-14:2023-05-30")
     depends_on("fmt@8.1.0:9", when="@2022-03-04:2022-05-16")
 
