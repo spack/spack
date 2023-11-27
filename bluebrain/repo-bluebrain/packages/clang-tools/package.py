@@ -18,10 +18,9 @@ class ClangTools(Package):
     homepage = LLVM.homepage
 
     # Add a clang-format version for every LLVM version
-    for llvm_ver in LLVM.versions:
-        clang_tools_ver = Version(str(llvm_ver))
+    for clang_tools_ver in [str(v) for v in LLVM.versions if str(v) != "main"]:
         version(clang_tools_ver)
-        depends_on("llvm@{}".format(llvm_ver), when="@{}".format(clang_tools_ver), type="build")
+        depends_on("llvm@{}".format(clang_tools_ver), when="@{}".format(clang_tools_ver), type="build")
 
     def install(self, spec, prefix):
         for utility in (

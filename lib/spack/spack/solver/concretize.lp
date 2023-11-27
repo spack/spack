@@ -585,10 +585,10 @@ do_not_impose(EffectID, node(X, Package))
  :- provider(DependencyNode, VirtualNode), internal_error("Package provider weights must be unique").
 
 % A provider that is an external can use a weight of 0
-possible_provider_weight(DependencyNode, VirtualNode, Weight, "external")
-  :- provider(DependencyNode, VirtualNode),
-     external(DependencyNode),
-     pkg_provider_preference(Package, VirtualNode, DependencyNode, Weight).
+possible_provider_weight(node(DependencyID, Dependency), node(VirtualID, Virtual), Weight, "external")
+  :- provider(node(DependencyID, Dependency), node(VirtualID, Virtual)),
+     external(node(DependencyID, Dependency)),
+     default_provider_preference(Virtual, Dependency, Weight).
 
 % A provider mentioned in the default configuration can use a weight
 % according to its priority in the list of providers
