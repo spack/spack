@@ -18,13 +18,12 @@ class PyIntelOpenmp(PythonPackage):
 
     homepage = "https://pypi.org/project/intel-openmp/"
 
-
     if sys.platform.startswith("linux"):
         version(
             "2021.2.0",
             url="https://files.pythonhosted.org/packages/21/96/b566bbf10c4a24126eeff677258e58dc9beb78f8fc6fd6bb6ac30b41a7d9/intel_openmp-2021.2.0-py2.py3-none-manylinux1_x86_64.whl",
             sha256="2c40b766bbcf346d298c54b92733c75a70b5f4f3b63461fa92753e49f14e4ac0",
-            expand=False
+            expand=False,
         )
         version(
             "2021.1.2",
