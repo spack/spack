@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import pathlib
+
 import pytest
 
 import spack.directives
@@ -292,13 +294,10 @@ class TestSpecSemantics:
             ("foo@4.0%pgi@4.5", "@1:3%pgi@4.4:4.6"),
             ("builtin.mock.mpich", "builtin.mpich"),
             ("mpileaks ^builtin.mock.mpich", "^builtin.mpich"),
-            ("mpileaks^mpich", "^zmpi"),
-            ("mpileaks^zmpi", "^mpich"),
             ("mpileaks^mpich@1.2", "^mpich@2.0"),
             ("mpileaks^mpich@4.0^callpath@1.5", "^mpich@1:3^callpath@1.4:1.6"),
             ("mpileaks^mpich@2.0^callpath@1.7", "^mpich@1:3^callpath@1.4:1.6"),
             ("mpileaks^mpich@4.0^callpath@1.7", "^mpich@1:3^callpath@1.4:1.6"),
-            ("mpileaks^mpich", "^zmpi"),
             ("mpileaks^mpi@3", "^mpi@1.2:1.6"),
             ("mpileaks^mpi@3:", "^mpich2@1.4"),
             ("mpileaks^mpi@3:", "^mpich2"),
@@ -336,30 +335,30 @@ class TestSpecSemantics:
             rhs.constrain(lhs)
 
     @pytest.mark.parametrize(
-        "lhs,rhs,intersection_expected",
+        "lhs,rhs",
         [
-            ("mpich", "mpich +foo", True),
-            ("mpich", "mpich~foo", True),
-            ("mpich", "mpich foo=1", True),
-            ("mpich", "mpich++foo", True),
-            ("mpich", "mpich~~foo", True),
-            ("mpich", "mpich foo==1", True),
+            ("mpich", "mpich +foo"),
+            ("mpich", "mpich~foo"),
+            ("mpich", "mpich foo=1"),
+            ("mpich", "mpich++foo"),
+            ("mpich", "mpich~~foo"),
+            ("mpich", "mpich foo==1"),
             # Flags semantics is currently different from other variant
-            ("mpich", 'mpich cflags="-O3"', True),
-            ("mpich cflags=-O3", 'mpich cflags="-O3 -Ofast"', False),
-            ("mpich cflags=-O2", 'mpich cflags="-O3"', False),
-            ("multivalue-variant foo=bar", "multivalue-variant +foo", False),
-            ("multivalue-variant foo=bar", "multivalue-variant ~foo", False),
-            ("multivalue-variant fee=bar", "multivalue-variant fee=baz", False),
+            ("mpich", 'mpich cflags="-O3"'),
+            ("mpich cflags=-O3", 'mpich cflags="-O3 -Ofast"'),
+            ("mpich cflags=-O2", 'mpich cflags="-O3"'),
+            ("multivalue-variant foo=bar", "multivalue-variant +foo"),
+            ("multivalue-variant foo=bar", "multivalue-variant ~foo"),
+            ("multivalue-variant fee=bar", "multivalue-variant fee=baz"),
         ],
     )
     def test_concrete_specs_which_do_not_satisfy_abstract(
-        self, lhs, rhs, intersection_expected, default_mock_concretization
+        self, lhs, rhs, default_mock_concretization
     ):
         lhs, rhs = default_mock_concretization(lhs), Spec(rhs)
 
-        assert lhs.intersects(rhs) is intersection_expected
-        assert rhs.intersects(lhs) is intersection_expected
+        assert lhs.intersects(rhs) is False
+        assert rhs.intersects(lhs) is False
         assert not lhs.satisfies(rhs)
         assert not rhs.satisfies(lhs)
 
@@ -481,10 +480,14 @@ class TestSpecSemantics:
         assert Spec("mpich2").intersects(Spec("mpi"))
         assert Spec("zmpi").intersects(Spec("mpi"))
 
-    def test_intersects_virtual_dep_with_virtual_constraint(self):
+    def test_intersects_virtual_providers(self):
+        """Tests that we can always intersect virtual providers from abstract specs.
+        Concretization will give meaning to virtuals, and eventually forbid certain
+        configurations.
+        """
         assert Spec("netlib-lapack ^openblas").intersects("netlib-lapack ^openblas")
-        assert not Spec("netlib-lapack ^netlib-blas").intersects("netlib-lapack ^openblas")
-        assert not Spec("netlib-lapack ^openblas").intersects("netlib-lapack ^netlib-blas")
+        assert Spec("netlib-lapack ^netlib-blas").intersects("netlib-lapack ^openblas")
+        assert Spec("netlib-lapack ^openblas").intersects("netlib-lapack ^netlib-blas")
         assert Spec("netlib-lapack ^netlib-blas").intersects("netlib-lapack ^netlib-blas")
 
     def test_intersectable_concrete_specs_must_have_the_same_hash(self):
@@ -1003,6 +1006,181 @@ class TestSpecSemantics:
         assert "foobar=baz" in new_spec
         assert new_spec.compiler_flags["cflags"] == ["-O2"]
         assert new_spec.compiler_flags["cxxflags"] == ["-O1"]
+
+    @pytest.mark.parametrize(
+        "spec_str,specs_in_dag",
+        [
+            ("hdf5 ^[virtuals=mpi] mpich", [("mpich", "mpich"), ("mpi", "mpich")]),
+            # Try different combinations with packages that provides a
+            # disjoint set of virtual dependencies
+            (
+                "netlib-scalapack ^mpich ^openblas-with-lapack",
+                [
+                    ("mpi", "mpich"),
+                    ("lapack", "openblas-with-lapack"),
+                    ("blas", "openblas-with-lapack"),
+                ],
+            ),
+            (
+                "netlib-scalapack ^[virtuals=mpi] mpich ^openblas-with-lapack",
+                [
+                    ("mpi", "mpich"),
+                    ("lapack", "openblas-with-lapack"),
+                    ("blas", "openblas-with-lapack"),
+                ],
+            ),
+            (
+                "netlib-scalapack ^mpich ^[virtuals=lapack] openblas-with-lapack",
+                [
+                    ("mpi", "mpich"),
+                    ("lapack", "openblas-with-lapack"),
+                    ("blas", "openblas-with-lapack"),
+                ],
+            ),
+            (
+                "netlib-scalapack ^[virtuals=mpi] mpich ^[virtuals=lapack] openblas-with-lapack",
+                [
+                    ("mpi", "mpich"),
+                    ("lapack", "openblas-with-lapack"),
+                    ("blas", "openblas-with-lapack"),
+                ],
+            ),
+            # Test that we can mix dependencies that provide an overlapping
+            # sets of virtual dependencies
+            (
+                "netlib-scalapack ^[virtuals=mpi] intel-parallel-studio "
+                "^[virtuals=lapack] openblas-with-lapack",
+                [
+                    ("mpi", "intel-parallel-studio"),
+                    ("lapack", "openblas-with-lapack"),
+                    ("blas", "openblas-with-lapack"),
+                ],
+            ),
+            (
+                "netlib-scalapack ^[virtuals=mpi] intel-parallel-studio ^openblas-with-lapack",
+                [
+                    ("mpi", "intel-parallel-studio"),
+                    ("lapack", "openblas-with-lapack"),
+                    ("blas", "openblas-with-lapack"),
+                ],
+            ),
+            (
+                "netlib-scalapack ^intel-parallel-studio ^[virtuals=lapack] openblas-with-lapack",
+                [
+                    ("mpi", "intel-parallel-studio"),
+                    ("lapack", "openblas-with-lapack"),
+                    ("blas", "openblas-with-lapack"),
+                ],
+            ),
+            # Test that we can bind more than one virtual to the same provider
+            (
+                "netlib-scalapack ^[virtuals=lapack,blas] openblas-with-lapack",
+                [("lapack", "openblas-with-lapack"), ("blas", "openblas-with-lapack")],
+            ),
+        ],
+    )
+    def test_virtual_deps_bindings(self, default_mock_concretization, spec_str, specs_in_dag):
+        if spack.config.get("config:concretizer") == "original":
+            pytest.skip("Use case not supported by the original concretizer")
+
+        s = default_mock_concretization(spec_str)
+        for label, expected in specs_in_dag:
+            assert label in s
+            assert s[label].satisfies(expected), label
+
+    @pytest.mark.parametrize(
+        "spec_str",
+        [
+            # openblas-with-lapack needs to provide blas and lapack together
+            "netlib-scalapack ^[virtuals=blas] intel-parallel-studio ^openblas-with-lapack",
+            # intel-* provides blas and lapack together, openblas can provide blas only
+            "netlib-scalapack ^[virtuals=lapack] intel-parallel-studio ^openblas",
+        ],
+    )
+    def test_unsatisfiable_virtual_deps_bindings(self, spec_str):
+        if spack.config.get("config:concretizer") == "original":
+            pytest.skip("Use case not supported by the original concretizer")
+
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            Spec(spec_str).concretized()
+
+
+@pytest.mark.parametrize(
+    "spec_str,format_str,expected",
+    [
+        ("zlib@git.foo/bar", "{name}-{version}", str(pathlib.Path("zlib-git.foo_bar"))),
+        ("zlib@git.foo/bar", "{name}-{version}-{/hash}", None),
+        ("zlib@git.foo/bar", "{name}/{version}", str(pathlib.Path("zlib", "git.foo_bar"))),
+        (
+            "zlib@{0}=1.0%gcc".format("a" * 40),
+            "{name}/{version}/{compiler}",
+            str(pathlib.Path("zlib", "{0}_1.0".format("a" * 40), "gcc")),
+        ),
+        (
+            "zlib@git.foo/bar=1.0%gcc",
+            "{name}/{version}/{compiler}",
+            str(pathlib.Path("zlib", "git.foo_bar_1.0", "gcc")),
+        ),
+    ],
+)
+def test_spec_format_path(spec_str, format_str, expected):
+    _check_spec_format_path(spec_str, format_str, expected)
+
+
+def _check_spec_format_path(spec_str, format_str, expected, path_ctor=None):
+    spec = Spec(spec_str)
+    if not expected:
+        with pytest.raises((spack.spec.SpecFormatPathError, spack.spec.SpecFormatStringError)):
+            spec.format_path(format_str, _path_ctor=path_ctor)
+    else:
+        formatted = spec.format_path(format_str, _path_ctor=path_ctor)
+        assert formatted == expected
+
+
+@pytest.mark.parametrize(
+    "spec_str,format_str,expected",
+    [
+        (
+            "zlib@git.foo/bar",
+            r"C:\\installroot\{name}\{version}",
+            r"C:\installroot\zlib\git.foo_bar",
+        ),
+        (
+            "zlib@git.foo/bar",
+            r"\\hostname\sharename\{name}\{version}",
+            r"\\hostname\sharename\zlib\git.foo_bar",
+        ),
+        # Windows doesn't attribute any significance to a leading
+        # "/" so it is discarded
+        ("zlib@git.foo/bar", r"/installroot/{name}/{version}", r"installroot\zlib\git.foo_bar"),
+    ],
+)
+def test_spec_format_path_windows(spec_str, format_str, expected):
+    _check_spec_format_path(spec_str, format_str, expected, path_ctor=pathlib.PureWindowsPath)
+
+
+@pytest.mark.parametrize(
+    "spec_str,format_str,expected",
+    [
+        ("zlib@git.foo/bar", r"/installroot/{name}/{version}", "/installroot/zlib/git.foo_bar"),
+        ("zlib@git.foo/bar", r"//installroot/{name}/{version}", "//installroot/zlib/git.foo_bar"),
+        # This is likely unintentional on Linux: Firstly, "\" is not a
+        # path separator for POSIX, so this is treated as a single path
+        # component (containing literal "\" characters); secondly,
+        # Spec.format treats "\" as an escape character, so is
+        # discarded (unless directly following another "\")
+        (
+            "zlib@git.foo/bar",
+            r"C:\\installroot\package-{name}-{version}",
+            r"C__installrootpackage-zlib-git.foo_bar",
+        ),
+        # "\" is not a POSIX separator, and Spec.format treats "\{" as a literal
+        # "{", which means that the resulting format string is invalid
+        ("zlib@git.foo/bar", r"package\{name}\{version}", None),
+    ],
+)
+def test_spec_format_path_posix(spec_str, format_str, expected):
+    _check_spec_format_path(spec_str, format_str, expected, path_ctor=pathlib.PurePosixPath)
 
 
 @pytest.mark.regression("3887")

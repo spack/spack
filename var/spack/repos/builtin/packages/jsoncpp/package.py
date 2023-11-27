@@ -47,7 +47,7 @@ class Jsoncpp(CMakePackage, MesonPackage):
 
     with when("build_system=cmake"):
         depends_on("cmake@3.1:", type="build")
-        depends_on("cmake@1.9:", when="@1.9:", type="build")
+        depends_on("cmake@3.9:", when="@1.9:", type="build")
 
     with when("build_system=meson"):
         depends_on("meson@0.49.0:", type="build")

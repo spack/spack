@@ -23,7 +23,7 @@ class Batchedblas(MakefilePackage):
     def edit(self, spec, prefix):
         CCFLAGS = [self.compiler.openmp_flag, "-I./", "-O3"]
         BLAS = ["-lm", spec["blas"].libs.ld_flags]
-        if not spec.satisfies("^mkl"):
+        if spec["blas"].name not in INTEL_MATH_LIBRARIES:
             CCFLAGS.append("-D_CBLAS_")
         if spec.satisfies("%intel"):
             CCFLAGS.extend(["-Os"])

@@ -7,13 +7,12 @@ import getpass
 import os
 import platform
 import shutil
-from os.path import basename, dirname, isdir
+from os.path import basename, isdir
 
-from llnl.util.filesystem import find_headers, find_libraries, join_path
+from llnl.util.filesystem import HeaderList, find_libraries, join_path, mkdirp
 from llnl.util.link_tree import LinkTree
 
 from spack.directives import conflicts, variant
-from spack.package import mkdirp
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
 
@@ -57,9 +56,20 @@ class IntelOneApiPackage(Package):
         raise NotImplementedError
 
     @property
+    def v2_layout_versions(self):
+        """Version that implements the v2 directory layout."""
+        raise NotImplementedError
+
+    @property
+    def v2_layout(self):
+        """Returns true if this version implements the v2 directory layout."""
+        return self.spec.satisfies(self.v2_layout_versions)
+
+    @property
     def component_prefix(self):
         """Path to component <prefix>/<component>/<version>."""
-        return self.prefix.join(join_path(self.component_dir, self.spec.version))
+        v = self.spec.version.up_to(2) if self.v2_layout else self.spec.version
+        return self.prefix.join(self.component_dir).join(str(v))
 
     @property
     def env_script_args(self):
@@ -113,8 +123,9 @@ class IntelOneApiPackage(Package):
                 shutil.rmtree("/var/intel/installercache", ignore_errors=True)
 
         # Some installers have a bug and do not return an error code when failing
-        if not isdir(join_path(self.prefix, self.component_dir)):
-            raise RuntimeError("install failed")
+        install_dir = self.component_prefix
+        if not isdir(install_dir):
+            raise RuntimeError("install failed to directory: {0}".format(install_dir))
 
     def setup_run_environment(self, env):
         """Adds environment variables to the generated module file.
@@ -129,7 +140,7 @@ class IntelOneApiPackage(Package):
         if "~envmods" not in self.spec:
             env.extend(
                 EnvironmentModifications.from_sourcing_file(
-                    join_path(self.component_prefix, "env", "vars.sh"), *self.env_script_args
+                    self.component_prefix.env.join("vars.sh"), *self.env_script_args
                 )
             )
 
@@ -168,16 +179,40 @@ class IntelOneApiLibraryPackage(IntelOneApiPackage):
 
     """
 
+    def header_directories(self, dirs):
+        h = HeaderList([])
+        h.directories = dirs
+        return h
+
     @property
     def headers(self):
-        include_path = join_path(self.component_prefix, "include")
-        return find_headers("*", include_path, recursive=True)
+        return self.header_directories(
+            [self.component_prefix.include, self.component_prefix.include.join(self.component_dir)]
+        )
 
     @property
     def libs(self):
-        lib_path = join_path(self.component_prefix, "lib", "intel64")
-        lib_path = lib_path if isdir(lib_path) else dirname(lib_path)
-        return find_libraries("*", root=lib_path, shared=True, recursive=True)
+        # for v2_layout all libraries are in the top level, v1 sometimes put them in intel64
+        return find_libraries("*", root=self.component_prefix.lib, recursive=not self.v2_layout)
+
+
+class IntelOneApiLibraryPackageWithSdk(IntelOneApiPackage):
+    """Base class for Intel oneAPI library packages with SDK components.
+
+    Contains some convenient default implementations for libraries
+    that expose functionality in sdk subdirectories.
+    Implement the method directly in the package if something
+    different is needed.
+
+    """
+
+    @property
+    def headers(self):
+        return self.header_directories([self.component_prefix.sdk.include])
+
+    @property
+    def libs(self):
+        return find_libraries("*", self.component_prefix.sdk.lib64)
 
 
 class IntelOneApiStaticLibraryList:
@@ -212,3 +247,7 @@ class IntelOneApiStaticLibraryList:
     @property
     def ld_flags(self):
         return "{0} {1}".format(self.search_flags, self.link_flags)
+
+
+#: Tuple of Intel math libraries, exported to packages
+INTEL_MATH_LIBRARIES = ("intel-mkl", "intel-oneapi-mkl", "intel-parallel-studio")

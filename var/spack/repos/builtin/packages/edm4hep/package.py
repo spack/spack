@@ -14,11 +14,13 @@ class Edm4hep(CMakePackage):
     url = "https://github.com/key4hep/EDM4hep/archive/v00-01.tar.gz"
     git = "https://github.com/key4hep/EDM4hep.git"
 
-    maintainers("vvolkl", "jmcarcell")
+    maintainers("vvolkl", "jmcarcell", "tmadlener")
 
     tags = ["hep", "key4hep"]
 
     version("master", branch="master")
+    version("0.10.2", sha256="c22c5c2f0fd1d09da9b734c1fa7ee546675fd2b047406db6ab8266e7657486d2")
+    version("0.10.1", sha256="28a3bd4df899309b14ec0d441f8b6ed0065206a08a0018113bb490e9d008caed")
     version("0.10", sha256="a95c917c19793cfad6b0959854a653c5ce698c965598cabd649d544da07712c0")
     version(
         "0.9",

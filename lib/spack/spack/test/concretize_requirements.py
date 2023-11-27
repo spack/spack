@@ -469,16 +469,22 @@ packages:
 
 
 @pytest.mark.regression("34241")
-def test_require_cflags(concretize_scope, test_repo):
+def test_require_cflags(concretize_scope, mock_packages):
     """Ensures that flags can be required from configuration."""
     conf_str = """\
 packages:
-  y:
+  mpich2:
     require: cflags="-g"
+  mpi:
+    require: mpich cflags="-O1"
 """
     update_packages_config(conf_str)
-    spec = Spec("y").concretized()
-    assert spec.satisfies("cflags=-g")
+
+    spec_mpich2 = Spec("mpich2").concretized()
+    assert spec_mpich2.satisfies("cflags=-g")
+
+    spec_mpi = Spec("mpi").concretized()
+    assert spec_mpi.satisfies("mpich cflags=-O1")
 
 
 def test_requirements_for_package_that_is_not_needed(concretize_scope, test_repo):
@@ -890,3 +896,134 @@ compilers::
     # This package can only be compiled with clang
     with pytest.raises(spack.error.SpackError, match="can only be compiled with Clang"):
         Spec("requires_clang").concretized()
+
+
+@pytest.mark.parametrize(
+    "packages_yaml",
+    [
+        # Simple string
+        """
+        packages:
+          all:
+            require: "+shared"
+    """,
+        # List of strings
+        """
+        packages:
+          all:
+            require:
+            - "+shared"
+    """,
+        # Objects with attributes
+        """
+        packages:
+          all:
+            require:
+            - spec: "+shared"
+    """,
+        """
+        packages:
+          all:
+            require:
+            - one_of: ["+shared"]
+    """,
+    ],
+)
+def test_default_requirements_semantic(packages_yaml, concretize_scope, mock_packages):
+    """Tests that requirements under 'all:' are by default applied only if the variant/property
+    required exists, but are strict otherwise.
+
+    For example:
+
+      packages:
+        all:
+          require: "+shared"
+
+    should enforce the value of "+shared" when a Boolean variant named "shared" exists. This is
+    not overridable from the command line, so with the configuration above:
+
+    > spack spec zlib~shared
+
+    is unsatisfiable.
+    """
+    update_packages_config(packages_yaml)
+
+    # Regular zlib concretize to +shared
+    s = Spec("zlib").concretized()
+    assert s.satisfies("+shared")
+
+    # If we specify the variant we can concretize only the one matching the constraint
+    s = Spec("zlib +shared").concretized()
+    assert s.satisfies("+shared")
+    with pytest.raises(UnsatisfiableSpecError):
+        Spec("zlib ~shared").concretized()
+
+    # A spec without the shared variant still concretize
+    s = Spec("a").concretized()
+    assert not s.satisfies("a +shared")
+    assert not s.satisfies("a ~shared")
+
+
+@pytest.mark.parametrize(
+    "packages_yaml,spec_str,expected,not_expected",
+    [
+        # The package has a 'libs' mv variant defaulting to 'libs=shared'
+        (
+            """
+        packages:
+          all:
+            require: "+libs"
+    """,
+            "multivalue-variant",
+            ["libs=shared"],
+            ["libs=static", "+libs"],
+        ),
+        (
+            """
+        packages:
+          all:
+            require: "libs=foo"
+    """,
+            "multivalue-variant",
+            ["libs=shared"],
+            ["libs=static", "libs=foo"],
+        ),
+        (
+            # (TODO): revisit this case when we'll have exact value semantic for mv variants
+            """
+        packages:
+          all:
+            require: "libs=static"
+    """,
+            "multivalue-variant",
+            ["libs=static", "libs=shared"],
+            [],
+        ),
+        (
+            # Constraint apply as a whole, so having a non-existing variant
+            # invalidate the entire constraint
+            """
+        packages:
+          all:
+            require: "libs=static +feefoo"
+    """,
+            "multivalue-variant",
+            ["libs=shared"],
+            ["libs=static"],
+        ),
+    ],
+)
+def test_default_requirements_semantic_with_mv_variants(
+    packages_yaml, spec_str, expected, not_expected, concretize_scope, mock_packages
+):
+    """Tests that requirements under 'all:' are behaving correctly under cases that could stem
+    from MV variants.
+    """
+    update_packages_config(packages_yaml)
+    s = Spec(spec_str).concretized()
+
+    for constraint in expected:
+        assert s.satisfies(constraint), constraint
+
+    for constraint in not_expected:
+        assert not s.satisfies(constraint), constraint

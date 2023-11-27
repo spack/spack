@@ -16,6 +16,8 @@ class Mumps(Package):
     homepage = "https://graal.ens-lyon.fr/MUMPS/index.php"
     url = "https://graal.ens-lyon.fr/MUMPS/MUMPS_5.5.1.tar.gz"
 
+    maintainers("jcortial-safran")
+
     version("5.5.1", sha256="1abff294fa47ee4cfd50dfd5c595942b72ebfcedce08142a75a99ab35014fa15")
     version("5.5.0", sha256="e54d17c5e42a36c40607a03279e0704d239d71d38503aab68ef3bfe0a9a79c13")
     version("5.4.1", sha256="93034a1a9fe0876307136dcde7e98e9086e199de76f1c47da822e7d4de987fa8")
@@ -223,7 +225,7 @@ class Mumps(Package):
         # As of version 5.2.0, MUMPS is able to take advantage
         # of the GEMMT BLAS extension. MKL and amdblis are the only
         # known BLAS implementation supported.
-        if "@5.2.0: ^mkl" in self.spec:
+        if self.spec["blas"].name in INTEL_MATH_LIBRARIES and self.spec.satisfies("@5.2.0:"):
             optf.append("-DGEMMT_AVAILABLE")
 
         if "@5.2.0: ^amdblis@3.0:" in self.spec:

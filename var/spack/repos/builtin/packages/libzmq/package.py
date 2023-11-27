@@ -12,12 +12,13 @@ class Libzmq(AutotoolsPackage):
     """The ZMQ networking/concurrency library and core API"""
 
     homepage = "https://zguide.zeromq.org/"
-    url = "https://github.com/zeromq/libzmq/releases/download/v4.3.2/zeromq-4.3.2.tar.gz"
+    url = "https://github.com/zeromq/libzmq/releases/download/v4.3.5/zeromq-4.3.5.tar.gz"
     git = "https://github.com/zeromq/libzmq.git"
 
     maintainers("dennisklein")
 
     version("master", branch="master")
+    version("4.3.5", sha256="6653ef5910f17954861fe72332e68b03ca6e4d9c7160eb3a8de5a5a913bfab43")
     version("4.3.4", sha256="c593001a89f5a85dd2ddf564805deb860e02471171b3f204944857336295c3e5")
     version("4.3.3", sha256="9d9285db37ae942ed0780c016da87060497877af45094ff9e1a1ca736e3875a2")
     version("4.3.2", sha256="ebd7b5c830d6428956b67a0454a7f8cbed1de74b3b01e5c33c5378e22740f763")
@@ -104,19 +105,16 @@ class Libzmq(AutotoolsPackage):
     def configure_args(self):
         config_args = []
 
+        config_args.extend(self.with_or_without("docs"))
         config_args.extend(self.enable_or_disable("drafts"))
         config_args.extend(self.enable_or_disable("libbsd"))
+        config_args.extend(self.with_or_without("libsodium"))
         config_args.extend(self.enable_or_disable("libunwind"))
         # the package won't compile with newer compilers because warnings
         # are converted to errors. Hence, disable such conversion.
         # this option was only added in version 4.2.3.
         if self.spec.version >= Version("4.2.3"):
             config_args.append("--disable-Werror")
-
-        if "+libsodium" in self.spec:
-            config_args.append("--with-libsodium=" + self.spec["libsodium"].prefix)
-        if "~docs" in self.spec:
-            config_args.append("--without-docs")
         if "clang" in self.compiler.cc:
             config_args.append("CFLAGS=-Wno-gnu")
             config_args.append("CXXFLAGS=-Wno-gnu")

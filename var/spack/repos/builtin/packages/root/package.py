@@ -34,6 +34,7 @@ class Root(CMakePackage):
     # Development version (when more recent than production).
 
     # Production version
+    version("6.30.00", sha256="0592c066954cfed42312957c9cb251654456064fe2d8dabdcb8826f1c0099d71")
     version("6.28.06", sha256="af3b673b9aca393a5c9ae1bf86eab2672aaf1841b658c5c6e7a30ab93c586533")
     version("6.28.04", sha256="70f7f86a0cd5e3f2a0befdc59942dd50140d990ab264e8e56c7f17f6bfe9c965")
     version("6.28.02", sha256="6643c07710e68972b00227c68b20b1016fec16f3fba5f44a571fa1ce5bb42faa")
@@ -160,9 +161,11 @@ class Root(CMakePackage):
     )
     variant("mysql", default=False, description="Enable support for MySQL databases")
     variant("opengl", default=True, description="Enable OpenGL support")
-    variant("oracle", default=False, description="Enable support for Oracle databases")
+    variant(
+        "oracle", when="@:6.30", default=False, description="Enable support for Oracle databases"
+    )
     variant("postgres", default=False, description="Enable postgres support")
-    variant("pythia6", default=False, description="Enable pythia6 support")
+    variant("pythia6", when="@:6.30", default=False, description="Enable pythia6 support")
     variant("pythia8", default=False, description="Enable pythia8 support")
     variant("python", default=True, description="Enable Python ROOT bindings")
     variant("qt4", when="@:6.17", default=False, description="Enable Qt graphics backend")
@@ -290,6 +293,7 @@ class Root(CMakePackage):
     depends_on("unuran", when="+unuran")
     depends_on("vc@1.0:", when="@6.07.04: +vc")
     depends_on("vc@1.3.0:", when="@6.09.02: +vc")
+    depends_on("vc@1.4.4:", when="@6.29.02: +vc")
     depends_on("vdt", when="+vdt")
     depends_on("veccore", when="+veccore")
     depends_on("libxml2", when="+xml")
@@ -320,6 +324,7 @@ class Root(CMakePackage):
     conflicts("+tmva", when="~mlp", msg="root+tmva requires MLP")
     conflicts("cxxstd=11", when="+root7", msg="root7 requires at least C++14")
     conflicts("cxxstd=11", when="@6.25.02:", msg="This version of root requires at least C++14")
+    conflicts("cxxstd=14", when="@6.30.00:", msg="This version of root requires at least C++17")
     conflicts(
         "cxxstd=20", when="@:6.28.02", msg="C++20 support requires root version at least 6.28.04"
     )
