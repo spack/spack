@@ -26,22 +26,22 @@ class Psipred(MakefilePackage):
 
     def install(self, spec, prefix):
         filter_file(
-            "set ncbidir = \/usr\/local\/bin",
+            r"set ncbidir = \/usr\/local\/bin",
             f"set ncbidir = {spec['blast-legacy'].prefix.bin}",
             "runpsipred",
         )
-        filter_file("#!\/bin\/tcsh", f"#!{spec['tcsh'].prefix.bin.tcsh}", "runpsipred")
-        filter_file("#!\/bin\/tcsh", f"#!{spec['tcsh'].prefix.bin.tcsh}", "runpsipred_single")
+        filter_file(r"#!\/bin\/tcsh", f"#!{spec['tcsh'].prefix.bin.tcsh}", "runpsipred")
+        filter_file(r"#!\/bin\/tcsh", f"#!{spec['tcsh'].prefix.bin.tcsh}", "runpsipred_single")
 
         set_executable("runpsipred")
         set_executable("runpsipred_single")
 
         mkdirp(prefix.bin)
-        install_tree("bin", prefix.bin)
-        install("runpsipred*", prefix)
-        mkdirp(prefix.join("BLAST+"))
-        install_tree("BLAST+/", prefix.join("BLAST+"))
         mkdirp(prefix.data)
-        install_tree("data/", prefix.data)
         mkdirp(prefix.example)
+        mkdirp(prefix.join("BLAST+"))
+        install("runpsipred*", prefix)
+        install_tree("bin", prefix.bin)
+        install_tree("data/", prefix.data)
         install_tree("example/", prefix.example)
+        install_tree("BLAST+/", prefix.join("BLAST+"))
