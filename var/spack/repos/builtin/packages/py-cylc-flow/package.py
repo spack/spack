@@ -12,7 +12,7 @@ class PyCylcFlow(PythonPackage):
     homepage = "https://cylc.org"
     pypi = "cylc-flow/cylc-flow-8.1.4.tar.gz"
 
-    maintainers("LydDeb")
+    maintainers("LydDeb", "climbfuji")
 
     version("8.2.3", sha256="dd5bea9e4b8dad00edd9c3459a38fb778e5a073da58ad2725bc9b84ad718e073")
     version("8.2.0", sha256="cbe35e0d72d1ca36f28a4cebe9b9040a3445a74253bc94051a3c906cf179ded0")
