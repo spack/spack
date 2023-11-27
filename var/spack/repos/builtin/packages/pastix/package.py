@@ -17,6 +17,7 @@ class Pastix(CMakePackage, CudaPackage):
     maintainers("fpruvost", "mfaverge", "ramet")
 
     version("master", branch="master", submodules=True)
+    version("6.3.1", sha256="290464d73b7d43356e4735a29932bf6f23a88e94ec7139ba7744c21e42c52681")
     version("6.3.0", sha256="a6bfec32a3279d7b24c5fc05885c6632d177e467f1584707c6fd7c42a8703c3e")
     version("6.2.2", sha256="cce9a1fe4678b5733c9f1a5a52f77b040eadc3e254418c6fb03d8ab37dede508")
     version("6.2.1", sha256="b680cbfc265df8cba18d3a7093fcc02e260198c4a2d6a86d1e684bb291e309dd")
