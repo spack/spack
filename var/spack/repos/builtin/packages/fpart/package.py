@@ -17,13 +17,33 @@ class Fpart(AutotoolsPackage):
 
     maintainers("drkrynstrng")
 
+    license("BSD-2-Clause")
+
     version("master", branch="master")
     version("1.5.1", sha256="c353a28f48e4c08f597304cb4ebb88b382f66b7fabfc8d0328ccbb0ceae9220c")
+
+    variant("embfts", default=False, description="Build with embedded fts functions")
+    variant("static", default=False, description="Build static binary")
+    variant("debug", default=False, description="Build with debugging support")
+    # fpsync has the following run dependencies, at least one is required
+    variant(
+        "fpsynctools",
+        default="rsync",
+        values=("rsync", "tar", "cpio"),
+        multi=True,
+        description="Tools used by fpsync to copy files",
+    )
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
-    # fpsync has the following run dependencies
-    depends_on("rsync", type="run")
-    depends_on("tar", type="run")
-    depends_on("cpio", type="run")
+    depends_on("rsync", when="fpsynctools=rsync", type="run")
+    depends_on("tar", when="fpsynctools=tar", type="run")
+    depends_on("cpio", when="fpsynctools=cpio", type="run")
+
+    def configure_args(self):
+        config_args = []
+        config_args.extend(self.enable_or_disable("embfts"))
+        config_args.extend(self.enable_or_disable("static"))
+        config_args.extend(self.enable_or_disable("debug"))
+        return config_args
