@@ -80,14 +80,6 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
 
     variant("shared", default=True, description="Build shared libraries")
     variant("openmp", default=True, description="Build with OpenMP support")
-    variant(
-        "boost_filesystem",
-        default=False,
-        when="@:7.4.3",
-        description="Use Boost filesystem for self-consistent field method "
-        "mini-app. Only required when the compiler does not "
-        "support std::experimental::filesystem nor std::filesystem",
-    )
     variant("fortran", default=False, description="Build Fortran bindings")
     variant("python", default=False, description="Build Python bindings")
     variant("memory_pool", default=True, description="Build with memory pool")
@@ -137,7 +129,6 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     extends("python", when="+python")
 
     depends_on("magma", when="+magma")
-    depends_on("boost cxxstd=14 +filesystem", when="@:7.4.3 +boost_filesystem")
 
     depends_on("spfft@0.9.13:", when="@7.0.1:")
     depends_on("spfft+single_precision", when="+single_precision ^spfft")
@@ -170,7 +161,6 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     # FindHIP cmake script only works for < 4.1
     depends_on("hip@:4.0", when="@:7.2.0 +rocm")
 
-    conflicts("+boost_filesystem", when="@:7.4.3 ~apps")
     conflicts("^libxc@5.0.0")  # known to produce incorrect results
     conflicts("+single_precision", when="@:7.2.4")
     conflicts("+scalapack", when="^cray-libsci")
