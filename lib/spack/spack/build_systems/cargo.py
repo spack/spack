@@ -86,4 +86,4 @@ class CargoBuilder(BaseBuilder):
     def check(self):
         """Run "cargo test"."""
         with fs.working_dir(self.build_directory):
-            inspect.getmodule(self.pkg).cargo("test", *self.test_args)
+            inspect.getmodule(self.pkg).cargo("test", *self.check_args)
