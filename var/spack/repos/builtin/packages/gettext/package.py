@@ -19,6 +19,7 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
 
     executables = [r"^gettext$"]
 
+    version("0.22.4", sha256="29217f1816ee2e777fa9a01f9956a14139c0c23cc1b20368f06b2888e8a34116")
     version("0.22.3", sha256="b838228b3f8823a6c1eddf07297197c4db13f7e1b173b9ef93f3f945a63080b6")
     version("0.21.1", sha256="50dbc8f39797950aa2c98e939947c527e5ac9ebd2c1b99dd7b06ba33a6767ae6")
     version("0.21", sha256="d20fcbb537e02dcf1383197ba05bd0734ef7bf5db06bdb241eb69b7d16b73192")

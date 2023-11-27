@@ -53,6 +53,7 @@ concretize = SpackCommand("concretize")
 stage = SpackCommand("stage")
 uninstall = SpackCommand("uninstall")
 find = SpackCommand("find")
+module = SpackCommand("module")
 
 sep = os.sep
 
@@ -1105,13 +1106,14 @@ def test_multi_env_remove(mutable_mock_env_path, monkeypatch, answer):
         assert all(e in env("list") for e in environments)
 
 
-def test_env_loads(install_mockery, mock_fetch):
+def test_env_loads(install_mockery, mock_fetch, mock_modules_root):
     env("create", "test")
 
     with ev.read("test"):
         add("mpileaks")
         concretize()
         install("--fake")
+        module("tcl", "refresh", "-y")
 
     with ev.read("test"):
         env("loads")

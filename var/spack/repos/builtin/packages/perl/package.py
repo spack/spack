@@ -119,6 +119,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     extendable = True
 
     if sys.platform != "win32":
+        depends_on("gmake", type="build")
         depends_on("gdbm@:1.23")
         # Bind us below gdbm-1.20 due to API change: https://github.com/Perl/perl5/issues/18915
         depends_on("gdbm@:1.19", when="@:5.35")

@@ -713,7 +713,7 @@ class ErrorHandler:
         (condition_id, set_id) in which the latter idea means that the condition represented by
         the former held in the condition set represented by the latter.
         """
-        seen = set(seen) | set(cause)
+        seen.add(cause)
         parents = [c for e, c in condition_causes if e == cause and c not in seen]
         local = "required because %s " % conditions[cause[0]]
 
@@ -812,7 +812,14 @@ class ErrorHandler:
         errors = sorted(
             [(int(priority), msg, args) for priority, msg, *args in error_args], reverse=True
         )
-        msg = self.message(errors)
+        try:
+            msg = self.message(errors)
+        except Exception as e:
+            msg = (
+                f"unexpected error during concretization [{str(e)}]. "
+                f"Please report a bug at https://github.com/spack/spack/issues"
+            )
+            raise spack.error.SpackError(msg)
         raise UnsatisfiableSpecError(msg)
 
 
@@ -1005,14 +1012,6 @@ class PyclingoDriver:
 
             # record the possible dependencies in the solve
             result.possible_dependencies = setup.pkgs
-
-            # print any unknown functions in the model
-            for sym in best_model:
-                if sym.name not in ("attr", "error", "opt_criterion"):
-                    tty.debug(
-                        "UNKNOWN SYMBOL: %s(%s)"
-                        % (sym.name, ", ".join([str(s) for s in intermediate_repr(sym.arguments)]))
-                    )
 
         elif cores:
             result.control = self.control
@@ -1832,7 +1831,13 @@ class SpackSolverSetup:
 
             # perform validation of the variant and values
             spec = spack.spec.Spec(pkg_name)
-            spec.update_variant_validate(variant_name, values)
+            try:
+                spec.update_variant_validate(variant_name, values)
+            except (spack.variant.InvalidVariantValueError, KeyError, ValueError) as e:
+                tty.debug(
+                    f"[SETUP]: rejected {str(variant)} as a preference for {pkg_name}: {str(e)}"
+                )
+                continue
 
             for value in values:
                 self.variant_values_from_specs.add((pkg_name, variant.name, value))
@@ -2792,9 +2797,11 @@ class SpecBuilder:
                 r"^.*_propagate$",
                 r"^.*_satisfies$",
                 r"^.*_set$",
+                r"^dependency_holds$",
                 r"^node_compiler$",
                 r"^package_hash$",
                 r"^root$",
+                r"^track_dependencies$",
                 r"^variant_default_value_from_cli$",
                 r"^virtual_node$",
                 r"^virtual_root$",

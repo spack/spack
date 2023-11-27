@@ -131,6 +131,7 @@ class Migraphx(CMakePackage):
     depends_on("py-pybind11", type="build", when="@:4.0.0")
     depends_on("py-pybind11@2.6:", type="build", when="@4.1.0:")
     depends_on("pkgconfig", type="build", when="@5.3.0:")
+    depends_on("abseil-cpp")
 
     for ver in [
         "3.5.0",
@@ -198,6 +199,7 @@ class Migraphx(CMakePackage):
             args += self.cmake_python_hints
         if "@5.5.0:" in self.spec:
             args.append(self.define("CMAKE_CXX_FLAGS", "-I{0}".format(abspath)))
+            args.append(self.define("MIGRAPHX_ENABLE_PYTHON", "OFF"))
         return args
 
     def test(self):

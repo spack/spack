@@ -24,6 +24,7 @@ class Likwid(Package):
     git = "https://github.com/RRZE-HPC/likwid.git"
     maintainers("TomTheBear")
 
+    version("5.3.0", sha256="c290e554c4253124ac2ab8b056e14ee4d23966b8c9fbfa10ba81f75ae543ce4e")
     version("5.2.2", sha256="7dda6af722e04a6c40536fc9f89766ce10f595a8569b29e80563767a6a8f940e")
     version("5.2.1", sha256="1b8e668da117f24302a344596336eca2c69d2bc2f49fa228ca41ea0688f6cbc2")
     version("5.2.0", sha256="aa6dccacfca59e52d8f3be187ffcf292b2a2fa1f51a81bf8912b9d48e5a257e0")
@@ -65,6 +66,7 @@ class Likwid(Package):
     )
     variant("fortran", default=True, description="with fortran interface")
     variant("cuda", default=False, description="with Nvidia GPU profiling support")
+    variant("rocm", default=False, description="with AMD GPU profiling support")
 
     variant(
         "accessmode",
@@ -83,6 +85,10 @@ class Likwid(Package):
     depends_on("lua", when="@5.0.2:")
     depends_on("cuda", when="@5: +cuda")
     depends_on("hwloc", when="@5.2.0:")
+    depends_on("rocprofiler-dev", when="@5.3: +rocm")
+    depends_on("rocm-core", when="@5.3: +rocm")
+    depends_on("rocm-smi", when="@5.3: +rocm")
+    depends_on("rocm-smi-lib", when="@5.3: +rocm")
 
     # TODO: check
     # depends_on('gnuplot', type='run')
@@ -100,6 +106,31 @@ class Likwid(Package):
         if "+cuda" in self.spec:
             libs = find_libraries(
                 "libcupti", root=self.spec["cuda"].prefix, shared=True, recursive=True
+            )
+            for lib in libs.directories:
+                env.append_path("LD_LIBRARY_PATH", lib)
+        if "+rocm" in self.spec:
+            libs = find_libraries(
+                "librocprofiler64.so.1",
+                root=self.spec["rocprofiler-dev"].prefix,
+                shared=True,
+                recursive=True,
+            )
+            for lib in libs.directories:
+                env.append_path("LD_LIBRARY_PATH", lib)
+            libs = find_libraries(
+                "libhsa-runtime64.so",
+                root=self.spec["rocm-core"].prefix,
+                shared=True,
+                recursive=True,
+            )
+            for lib in libs.directories:
+                env.append_path("LD_LIBRARY_PATH", lib)
+            libs = find_libraries(
+                "librocm_smi64.so",
+                root=self.spec["rocm-smi-lib"].prefix,
+                shared=True,
+                recursive=True,
             )
             for lib in libs.directories:
                 env.append_path("LD_LIBRARY_PATH", lib)
@@ -169,6 +200,13 @@ class Likwid(Package):
             )
         else:
             filter_file("^NVIDIA_INTERFACE.*", "NVIDIA_INTERFACE = false", "config.mk")
+
+        if "+rocm" in self.spec:
+            env["ROCM_HOME"] = spec["rocm-core"].prefix
+            filter_file("^ROCM_INTERFACE.*", "ROCM_INTERFACE = true", "config.mk")
+            filter_file("^BUILDAPPDAEMON.*", "BUILDAPPDAEMON = true", "config.mk")
+        else:
+            filter_file("^ROCM_INTERFACE.*", "ROCM_INTERFACE = false", "config.mk")
 
         if spec.satisfies("^lua"):
             filter_file(
