@@ -383,7 +383,33 @@ like this:
 
 which means every spec will be required to use ``clang`` as a compiler.
 
-Note that in this case ``all`` represents a *default set of requirements* -
+Requirements on variants for all packages are possible too, but note that they
+are only enforced for those packages that define these variants, otherwise they
+are disregarded. For example:
+
+.. code-block:: yaml
+
+   packages:
+     all:
+       require:
+       - "+shared"
+       - "+cuda"
+
+will just enforce ``+shared`` on ``zlib``, which has a boolean ``shared`` variant but
+no ``cuda`` variant.
+
+Constraints in a single spec literal are always considered as a whole, so in a case like:
+
+.. code-block:: yaml
+
+   packages:
+     all:
+       require: "+shared +cuda"
+
+the default requirement will be enforced only if a package has both a ``cuda`` and
+a ``shared`` variant, and will never be partially enforced.
+
+Finally, ``all`` represents a *default set of requirements* -
 if there are specific package requirements, then the default requirements
 under ``all`` are disregarded. For example, with a configuration like this:
 
@@ -391,12 +417,18 @@ under ``all`` are disregarded. For example, with a configuration like this:
 
    packages:
      all:
-       require: '%clang'
+       require:
+       - 'build_type=Debug'
+       - '%clang'
      cmake:
-       require: '%gcc'
+       require:
+       - 'build_type=Debug'
+       - '%gcc'
 
 Spack requires ``cmake`` to use ``gcc`` and all other nodes (including ``cmake``
-dependencies) to use ``clang``.
+dependencies) to use ``clang``. If enforcing ``build_type=Debug`` is needed also
+on ``cmake``, it must be repeated in the specific ``cmake`` requirements.
+
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Setting requirements on virtual specs
