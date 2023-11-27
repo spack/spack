@@ -858,8 +858,8 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
         env.set("LAMMPS_POTENTIALS", self.prefix.share.lammps.potentials)
         if "+python" in self.spec:
             if self.spec.platform == "darwin":
-                env.prepend_path("DYLD_LIBRARY_PATH", self.prefix.lib)
-                env.prepend_path("DYLD_LIBRARY_PATH", self.prefix.lib64)
+                env.prepend_path("DYLD_FALLBACK_LIBRARY_PATH", self.prefix.lib)
+                env.prepend_path("DYLD_FALLBACK_LIBRARY_PATH", self.prefix.lib64)
             else:
                 env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
                 env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib64)
