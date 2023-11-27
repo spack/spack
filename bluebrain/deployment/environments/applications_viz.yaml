@@ -14,6 +14,7 @@ spack:
     - brayns
     - brayns@3.4.0
     - py-bcsb
+    - py-bcsb@2.1.1
     - py-brayns
     - py-brayns@3.4.0
     - brion +python
