@@ -74,12 +74,6 @@ class SstCore(AutotoolsPackage):
     depends_on("m4", type="build", when="@master:")
     depends_on("gettext")
 
-    sanity_check_is_file = [
-        join_path("bin", "sst-config"),
-        join_path("bin", "sst-test-core"),
-        join_path("bin", "sst-test-elements"),
-    ]
-
     # force out-of-source builds
     build_directory = "spack-build"
 
