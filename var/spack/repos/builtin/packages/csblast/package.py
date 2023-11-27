@@ -27,7 +27,7 @@ class Csblast(MakefilePackage):
     def build(self, spec, prefix):
         with working_dir(join_path(self.stage.source_path, "src")):
             filter_file(
-                "INC = -I\$\$HOME\/include",
+                r"INC = -I\$\$HOME\/include",
                 f"INC = -I{self.spec['sparsehash'].prefix.include}",
                 "Makefile",
             )
