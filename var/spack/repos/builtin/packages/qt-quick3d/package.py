@@ -1,4 +1,3 @@
-    version("6.6.1", sha256="57abc6e178d2b28cfac544c71cb20f362409267be5422ca3fbaa46a1bbfd5515")
 # Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
