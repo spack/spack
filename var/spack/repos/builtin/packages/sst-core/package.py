@@ -14,10 +14,11 @@ class SstCore(AutotoolsPackage):
 
     homepage = "https://github.com/sstsimulator"
     git = "https://github.com/sstsimulator/sst-core.git"
-    url = "https://github.com/sstsimulator/sst-core/releases/download/v13.0.0_Final/sstcore-13.0.0.tar.gz"
+    url = "https://github.com/sstsimulator/sst-core/releases/download/v13.1.0_Final/sstcore-13.1.0.tar.gz"
 
     maintainers("berquist", "naromero77")
 
+    version("13.1.0", sha256="0a44c62ee0b18a20a3cb089f4e0d43e293dc5adc6c3fa7639d40986cf5b9854c")
     version("13.0.0", sha256="c9d868dcdd75d59bef7c73146709a3b2a52a78f0df5ec2c3dc9f21434c51d935")
     version("12.1.0", sha256="f7530226643439678e2f4183ec4dbadf7750411bdaa44d9443887f81feb97574")
     version("12.0.1", sha256="8662a778354e587e55b909725943dd5bb01d55121b1abc1a384a4eea161e9f5a")
@@ -61,7 +62,7 @@ class SstCore(AutotoolsPackage):
     variant("preview", default=False, description="Preview build with deprecated features removed")
     variant("profile", default=False, description="Enable performance profiling of core features")
 
-    depends_on("python", type=("build", "run", "link"))
+    depends_on("python@:3.11", type=("build", "run", "link"))
     depends_on("mpi", when="+pdes_mpi")
     depends_on("zoltan", when="+zoltan")
     depends_on("hdf5", when="+hdf5")
