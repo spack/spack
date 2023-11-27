@@ -172,6 +172,14 @@ class AutoreconfPackageTemplate(PackageTemplate):
         return args"""
 
 
+class CargoPackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for cargo-based packages"""
+
+    base_class_name = "CargoPackage"
+
+    body_def = ""
+
+
 class CMakePackageTemplate(PackageTemplate):
     """Provides appropriate overrides for CMake-based packages"""
 
@@ -575,28 +583,29 @@ class SIPPackageTemplate(PackageTemplate):
 
 
 templates = {
-    "autotools": AutotoolsPackageTemplate,
     "autoreconf": AutoreconfPackageTemplate,
-    "cmake": CMakePackageTemplate,
-    "bundle": BundlePackageTemplate,
-    "qmake": QMakePackageTemplate,
-    "maven": MavenPackageTemplate,
-    "scons": SconsPackageTemplate,
-    "waf": WafPackageTemplate,
+    "autotools": AutotoolsPackageTemplate,
     "bazel": BazelPackageTemplate,
+    "bundle": BundlePackageTemplate,
+    "cargo": CargoPackageTemplate,
+    "cmake": CMakePackageTemplate,
+    "generic": PackageTemplate,
+    "intel": IntelPackageTemplate,
+    "lua": LuaPackageTemplate,
+    "makefile": MakefilePackageTemplate,
+    "maven": MavenPackageTemplate,
+    "meson": MesonPackageTemplate,
+    "octave": OctavePackageTemplate,
+    "perlbuild": PerlbuildPackageTemplate,
+    "perlmake": PerlmakePackageTemplate,
     "python": PythonPackageTemplate,
+    "qmake": QMakePackageTemplate,
     "r": RPackageTemplate,
     "racket": RacketPackageTemplate,
-    "perlmake": PerlmakePackageTemplate,
-    "perlbuild": PerlbuildPackageTemplate,
-    "octave": OctavePackageTemplate,
     "ruby": RubyPackageTemplate,
-    "makefile": MakefilePackageTemplate,
-    "intel": IntelPackageTemplate,
-    "meson": MesonPackageTemplate,
-    "lua": LuaPackageTemplate,
+    "scons": SconsPackageTemplate,
     "sip": SIPPackageTemplate,
-    "generic": PackageTemplate,
+    "waf": WafPackageTemplate,
 }
 
 
@@ -679,6 +688,7 @@ class BuildSystemGuesser:
         clues = [
             (r"/CMakeLists\.txt$", "cmake"),
             (r"/NAMESPACE$", "r"),
+            (r"/Cargo\.toml$", "cargo"),
             (r"/configure$", "autotools"),
             (r"/configure\.(in|ac)$", "autoreconf"),
             (r"/Makefile\.am$", "autoreconf"),

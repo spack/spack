@@ -89,6 +89,9 @@ class Rust(Package):
         match = re.match(r"rustc (\S+)", output)
         return match.group(1) if match else None
 
+    def setup_dependent_package(self, module, dependent_spec):
+        module.cargo = Executable(os.path.join(self.spec.prefix.bin, "cargo"))
+
     def setup_build_environment(self, env):
         # Manually inject the path of ar for build.
         ar = which("ar", required=True)
