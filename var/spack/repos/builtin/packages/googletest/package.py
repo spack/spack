@@ -16,8 +16,8 @@ class Googletest(CMakePackage):
     maintainers("sethrj")
 
     version("main", branch="main")
-    version("1.14.0", tag="v1.14.0")
-    version("1.13.0", tag="v1.13.0")
+    version("1.14.0", sha256="8ad598c73ad796e0d8280b082cebd82a630d73e73cd3c70057938a6501bba5d7")
+    version("1.13.0", sha256="ad7fdba11ea011c1d925b3289cf4af2c66a352e18d4c7264392fead75e919363")
     version("1.12.1", sha256="81964fe578e9bd7c94dfdb09c8e4d6e6759e19967e397dbea48d1c10e45d0df2")
     version("1.12.0", sha256="2a4f11dce6188b256f3650061525d0fe352069e5c162452818efbbf8d0b5fe1c")
     version("1.11.0", sha256="07b0896360f8e14414a8419e35515da0be085c5b4547c914ab8f4684ef0a3a8e")
@@ -76,3 +76,20 @@ class Googletest(CMakePackage):
         # The shared library is not installed correctly on Darwin; fix this
         if self.spec.satisfies("platform=darwin"):
             fix_darwin_install_name(self.prefix.lib)
+
+    def url_for_version(self, version):
+        """googletest has changed how they publish releases on github. Up until,
+        including version 1.12.1 they were tagged as `release-<version>`.
+        Afterwards things switched to the format `v<version>`. Additionally,
+        newer versions are available from `archive/refs/tags/<tagname>.tar.gz`,
+        while versions up to, and including, 1.8.0 are available only from
+        `archive/release-<version>.tar.gz`
+        """
+        if version.satisfies("@:1.8.0"):
+            return f"{self.git}/archive/release-{version}.tar.gz"
+
+        tagname = f"release-{version}"
+        if version.satisfies("@1.13:"):
+            tagname = f"v{version}"
+
+        return f"{self.git}/archive/refs/tags/{tagname}.tar.gz"
