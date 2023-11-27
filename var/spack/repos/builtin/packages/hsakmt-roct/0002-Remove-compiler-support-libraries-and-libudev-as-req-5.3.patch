@@ -1,0 +1,28 @@
+From 9763a6410f21fa2e2a09eb00c23fc18009d084fb Mon Sep 17 00:00:00 2001
+From: Renjith Ravindran <Renjith.RavindranKannath@amd.com>
+Date: Tue, 4 Oct 2022 17:55:57 -0700
+Subject: [PATCH] Remove compiler support libraries as required in 5.3
+
+---
+ CMakeLists.txt | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index d00248e..14addb7 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -187,11 +187,6 @@ target_link_libraries ( ${HSAKMT_TARGET}
+ )
+ 
+ target_compile_options(${HSAKMT_TARGET} PRIVATE ${DRM_CFLAGS} ${HSAKMT_C_FLAGS})
+-if(NOT DISTRO_ID MATCHES "ubuntu")
+-  find_library(LIBGCC NAMES libgcc_s.so.1 REQUIRED)
+-  message(STATUS "LIBGCC:" ${LIBGCC})
+-  target_link_libraries( ${HSAKMT_TARGET} PRIVATE ${LIBGCC} )
+-endif()
+ 
+ ## Define default paths and packages.
+ if( CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT )
+-- 
+2.25.1
+

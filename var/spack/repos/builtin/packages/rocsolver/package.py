@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,15 +15,20 @@ class Rocsolver(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocSOLVER"
     git = "https://github.com/ROCmSoftwarePlatform/rocSOLVER.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocSOLVER/archive/rocm-5.2.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rocSOLVER/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["cgmb", "srekolam", "renjithravindrankannath", "haampie"]
+    maintainers("cgmb", "srekolam", "renjithravindrankannath", "haampie")
     libraries = ["librocsolver"]
 
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
-    variant("amdgpu_target", values=auto_or_any_combination_of(*amdgpu_targets))
+    variant(
+        "amdgpu_target",
+        description="AMD GPU architecture",
+        values=auto_or_any_combination_of(*amdgpu_targets),
+        sticky=True,
+    )
     variant(
         "optimal",
         default=True,
@@ -34,16 +39,39 @@ class Rocsolver(CMakePackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
-
+    version("5.6.1", sha256="6a8f366218aee599a0e56755030f94ee690b34f30e6d602748632226c5dc21bb")
+    version("5.6.0", sha256="54baa7f35f3c53da9005054e6f7aeecece5526dafcb277af32cbcb3996b0cbbc")
+    version("5.5.1", sha256="8bf843e42d2e89203ea5fdb6e6082cea90da8d02920ab4c09bcc2b6f69909760")
+    version("5.5.0", sha256="6775aa5b96731208c12c5b450cf218d4c262a80b7ea20c2c3034c448bb2ca4d2")
+    version("5.4.3", sha256="5308b68ea72f465239a4bb2ed1a0507f0df7c98d3df3fd1f392e6d9ed7975232")
+    version("5.4.0", sha256="69690839cb649dee43353b739d3e6b2312f3d965dfe66705c0ea910e57c6a8cb")
+    version("5.3.3", sha256="d2248b5e2e0b20e08dd1ee5408e38deb02ecd28096dc7c7f2539351df6cb6ad5")
+    version("5.3.0", sha256="4569f860d240d50e94e77d498050f5cafe5ad11daddaead3e7e9eaa1957878a7")
     version("5.2.3", sha256="b278a1640f31fb1905f18dc5127d57e2b1d36fd2b4f39ae811b5537fa6ce87d4")
     version("5.2.1", sha256="74c127efaefec70a14dff6fa0e92276f38a6c313bf1271d68d03a4222d1fc3b6")
     version("5.2.0", sha256="94d46ebe1266eaa05df50c1789dc27d3f2dbf3cb5af156e757777a82ed6ef356")
     version("5.1.3", sha256="5a8f3b95ac9a131c31538196e954ea53b863009c092cce0c0ef869a0cd5dd554")
     version("5.1.0", sha256="88de515a6e75eaa3c50c9c8ae1e7ae8e3b46e712e388f44f79b63fefa9fc0831")
-    version("5.0.2", sha256="298e0903f1ba8074055ab072690f967062d6e06a9371574de23e4e38d2997688")
-    version("5.0.0", sha256="d444ad5348eb8a2c04646ceae6923467a0e775441f2c73150892e228e585b2e1")
-    version("4.5.2", sha256="4639322bd1e77fedfdeb9032633bde6211a0b1cc16a612db7754f873f18a492f")
-    version("4.5.0", sha256="0295862da941f31f4d43b19195b79331bd17f5968032f75c89d2791a6f8c1e8c")
+    version(
+        "5.0.2",
+        sha256="298e0903f1ba8074055ab072690f967062d6e06a9371574de23e4e38d2997688",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="d444ad5348eb8a2c04646ceae6923467a0e775441f2c73150892e228e585b2e1",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="4639322bd1e77fedfdeb9032633bde6211a0b1cc16a612db7754f873f18a492f",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="0295862da941f31f4d43b19195b79331bd17f5968032f75c89d2791a6f8c1e8c",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="c6e7468d7041718ce6e1c7f50ec80a552439ac9cfed2dc3f753ae417dda5724f",
@@ -95,21 +123,18 @@ class Rocsolver(CMakePackage):
         deprecated=True,
     )
 
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
-
     depends_on("cmake@3.8:", type="build", when="@4.1.0:")
     depends_on("cmake@3.5:", type="build")
-    depends_on("fmt@7:8.0.1", type="build", when="@4.5.0:")
+    depends_on("fmt@7:", type="build", when="@4.5.0:")
 
     depends_on("googletest@1.10.0:", type="test")
     depends_on("netlib-lapack@3.7.1:", type="test")
 
     patch("link-clients-blas.patch", when="@4.3.0:4.3.2")
+    # Backport https://github.com/ROCmSoftwarePlatform/rocSOLVER/commit/2bbfb8976f6e4d667499c77e41a6433850063e88
+    patch("fmt-8.1-compatibility.patch", when="@4.5.0:5.1.3")
+    # Maximize compatibility with other libraries that are using fmt.
+    patch("fmt-9-compatibility.patch", when="@5.2.0:5.5")
 
     def check(self):
         exe = join_path(self.build_directory, "clients", "staging", "rocsolver-test")
@@ -144,9 +169,19 @@ class Rocsolver(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
+        "5.3.3",
+        "5.4.0",
+        "5.4.3",
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocblas@" + ver, when="@" + ver)
+    for ver in ["5.6.0", "5.6.1"]:
+        depends_on("rocsparse@5.2:", when="@5.6:")
 
     for tgt in itertools.chain(["auto"], amdgpu_targets):
         depends_on("rocblas amdgpu_target={0}".format(tgt), when="amdgpu_target={0}".format(tgt))
@@ -194,6 +229,8 @@ class Rocsolver(CMakePackage):
 
         if self.spec.satisfies("@5.2.0:"):
             args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
+        if self.spec.satisfies("@5.3.0:"):
+            args.append("-DCMAKE_INSTALL_LIBDIR=lib")
 
         return args
 

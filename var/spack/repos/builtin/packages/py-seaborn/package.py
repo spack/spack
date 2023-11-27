@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,6 +31,7 @@ class PySeaborn(PythonPackage):
     depends_on("py-setuptools", when="@:0.11.2", type="build")
     depends_on("py-flit-core@3.2:3", when="@0.12.0:", type="build")
 
+    depends_on("py-numpy@1.17:1.23,1.24.1:", when="@0.12.2:", type=("build", "run"))
     depends_on("py-numpy@1.17:", when="@0.12:", type=("build", "run"))
     depends_on("py-numpy@1.15:", when="@0.11:", type=("build", "run"))
     depends_on("py-numpy@1.9.3:", when="@0.9:", type=("build", "run"))
@@ -40,12 +41,14 @@ class PySeaborn(PythonPackage):
     depends_on("py-pandas@0.22:", when="@0.10:", type=("build", "run"))
     depends_on("py-pandas@0.15.2:", when="@0.9:", type=("build", "run"))
     depends_on("py-pandas", type=("build", "run"))
+    depends_on("py-matplotlib@3.1:3.6.0,3.6.2:", when="@0.12.2:", type=("build", "run"))
     depends_on("py-matplotlib@3.1:", when="@0.12:", type=("build", "run"))
     depends_on("py-matplotlib@2.2:", when="@0.11:", type=("build", "run"))
     depends_on("py-matplotlib@2.1.2:", when="@0.10:", type=("build", "run"))
     depends_on("py-matplotlib@1.4.3:", when="@0.9:", type=("build", "run"))
     depends_on("py-matplotlib", type=("build", "run"))
 
+    depends_on("py-scipy@1.3:", when="@0.12.2: +stats", type=("build", "run"))
     depends_on("py-scipy@1:", when="@0.12: +stats", type=("build", "run"))
     depends_on("py-scipy@1:", when="@0.11", type=("build", "run"))
     depends_on("py-scipy@1.0.1:", when="@0.10:0.11", type=("build", "run"))

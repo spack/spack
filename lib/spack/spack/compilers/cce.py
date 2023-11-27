@@ -1,18 +1,18 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
 from spack.compiler import Compiler, UnsupportedCompilerFlag
-from spack.version import ver
+from spack.version import Version
 
 
 class Cce(Compiler):
     """Cray compiler environment compiler."""
 
     def __init__(self, *args, **kwargs):
-        super(Cce, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         # For old cray compilers on module based systems we replace
         # ``version_argument`` with the old value. Cannot be a property
         # as the new value is used in classmethods for path-based detection
@@ -39,7 +39,7 @@ class Cce(Compiler):
 
     @property
     def link_paths(self):
-        if self.PrgEnv in self.modules:
+        if any(self.PrgEnv in m for m in self.modules):
             # Old module-based interface to cray compilers
             return {
                 "cc": os.path.join("cce", "cc"),
@@ -58,10 +58,10 @@ class Cce(Compiler):
     @property
     def is_clang_based(self):
         version = self._real_version or self.version
-        return version >= ver("9.0") and "classic" not in str(version)
+        return version >= Version("9.0") and "classic" not in str(version)
 
     version_argument = "--version"
-    version_regex = r"[Vv]ersion.*?(\d+(\.\d+)+)"
+    version_regex = r"[Cc]ray (?:clang|C :|C\+\+ :|Fortran :) [Vv]ersion.*?(\d+(\.\d+)+)"
 
     @property
     def verbose_flag(self):
@@ -90,12 +90,17 @@ class Cce(Compiler):
         return "-h std=c++14"
 
     @property
+    def cxx17_flag(self):
+        if self.is_clang_based:
+            return "-std=c++17"
+
+    @property
     def c99_flag(self):
         if self.is_clang_based:
             return "-std=c99"
-        elif self.real_version >= ver("8.4"):
+        elif self.real_version >= Version("8.4"):
             return "-h std=c99,noconform,gnu"
-        elif self.real_version >= ver("8.1"):
+        elif self.real_version >= Version("8.1"):
             return "-h c99,noconform,gnu"
         raise UnsupportedCompilerFlag(self, "the C99 standard", "c99_flag", "< 8.1")
 
@@ -103,7 +108,7 @@ class Cce(Compiler):
     def c11_flag(self):
         if self.is_clang_based:
             return "-std=c11"
-        elif self.real_version >= ver("8.5"):
+        elif self.real_version >= Version("8.5"):
             return "-h std=c11,noconform,gnu"
         raise UnsupportedCompilerFlag(self, "the C11 standard", "c11_flag", "< 8.5")
 

@@ -1,0 +1,12 @@
+diff --git a/hip/distributed/partition_kernels.hip.cpp b/hip/distributed/partition_kernels.hip.cpp
+index 94d167a00..9422b70d8 100644
+--- a/hip/distributed/partition_kernels.hip.cpp
++++ b/hip/distributed/partition_kernels.hip.cpp
+@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ #include "core/distributed/partition_kernels.hpp"
+ 
+ 
++#include <thrust/count.h>
+ #include <thrust/device_ptr.h>
+ #include <thrust/execution_policy.h>
+ #include <thrust/iterator/zip_iterator.h>

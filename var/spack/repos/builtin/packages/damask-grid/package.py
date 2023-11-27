@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class DamaskGrid(CMakePackage):
     homepage = "https://damask.mpie.de"
     url = "https://damask.mpie.de/download/damask-3.0.0.tar.xz"
 
-    maintainers = ["MarDiehl"]
+    maintainers("MarDiehl")
 
     version(
         "3.0.0-alpha7", sha256="442b06b824441293e72ff91b211a555c5d497aedf62be1c4332c426558b848a4"
@@ -40,6 +40,9 @@ class DamaskGrid(CMakePackage):
     depends_on("fftw+mpi")
     depends_on("libfyaml", when="@3.0.0-alpha7:")
 
+    # proper initialization of temperature to avoid segmentation fault. created by @MarDiehl
+    patch("T-init.patch", when="@3.0.0-alpha7")
+    # relax Fortran sourc limit to 132 char to enable PETSc macro expansion. created by @MarDiehl
     patch("long-lines.patch", when="@3.0.0-alpha7")
     patch("CMakeDebugRelease.patch", when="@3.0.0-alpha4")
 

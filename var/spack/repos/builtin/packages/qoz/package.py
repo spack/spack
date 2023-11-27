@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,16 +13,15 @@ class Qoz(CMakePackage):
     homepage = git
 
     version("2022.04.26", commit="d28a7a8c9f703075441b700202b8a1ee185ded00")
+    version("2023.03.09", commit="537f6a52a39396f9c05e16a12ab160d8dc8b9d56")
 
-    maintainers = ["disheng222"]
+    maintainers("disheng222")
 
     depends_on("zstd")
     depends_on("gsl")
     depends_on("pkgconfig")
+    depends_on("py-pybind11", when="@2023.03.09:")
 
     def cmake_args(self):
-        args = [
-            "-DQoZ_USE_BUNDLED_ZSTD=OFF",
-            "-DQoZ_DEBUG_TIMINGS=OFF",
-        ]
+        args = ["-DQoZ_USE_BUNDLED_ZSTD=OFF", "-DQoZ_DEBUG_TIMINGS=OFF"]
         return args

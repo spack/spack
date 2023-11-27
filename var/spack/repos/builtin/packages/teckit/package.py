@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Teckit(AutotoolsPackage):
     TECkit compiler creates these tables from plain-text, human-readable
     descriptions."""
 
-    maintainers = ["rountree"]
+    maintainers("rountree")
     homepage = "https://scripts.sil.org/cms/scripts/page.php?cat_id=TECkit"
     git = "https://github.com/silnrsi/teckit.git"
 
@@ -28,7 +28,7 @@ class Teckit(AutotoolsPackage):
     version("2.5.6", commit="41c20be2793e1afcbb8de6339af89d1eeab84fe8")
     version("2.5.5", commit="2733fd9895819e3697257550cc39b8e419c1ee7e")
 
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")

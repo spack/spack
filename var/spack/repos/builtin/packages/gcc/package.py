@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,18 +29,25 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     git = "git://gcc.gnu.org/git/gcc.git"
     list_url = "https://ftp.gnu.org/gnu/gcc/"
     list_depth = 1
+    keep_werror = "all"
 
-    maintainers = ["michaelkuhn", "alalazo"]
+    maintainers("michaelkuhn", "alalazo")
 
     version("master", branch="master")
 
+    version("13.2.0", sha256="e275e76442a6067341a27f04c5c6b83d8613144004c0413528863dc6b5c743da")
+    version("13.1.0", sha256="61d684f0aa5e76ac6585ad8898a2427aade8979ed5e7f85492286c4dfc13ee86")
+
+    version("12.3.0", sha256="949a5d4f99e786421a93b532b22ffab5578de7321369975b91aec97adfda8c3b")
     version("12.2.0", sha256="e549cf9cf3594a00e27b6589d4322d70e0720cdd213f39beb4181e06926230ff")
     version("12.1.0", sha256="62fd634889f31c02b64af2c468f064b47ad1ca78411c45abe6ac4b5f8dd19c7b")
 
+    version("11.4.0", sha256="3f2db222b007e8a4a23cd5ba56726ef08e8b1f1eb2055ee72c1402cea73a8dd9")
     version("11.3.0", sha256="b47cf2818691f5b1e21df2bb38c795fac2cfbd640ede2d0a5e1c89e338a3ac39")
     version("11.2.0", sha256="d08edc536b54c372a1010ff6619dd274c0f1603aa49212ba20f7aa2cda36fa8b")
     version("11.1.0", sha256="4c4a6fb8a8396059241c2e674b85b351c26a5d678274007f076957afa1cc9ddf")
 
+    version("10.5.0", sha256="25109543fdf46f397c347b5d8b7a2c7e5694a5a51cce4b9c6e1ea8a71ca307c1")
     version("10.4.0", sha256="c9297d5bcd7cb43f3dfc2fed5389e948c9312fd962ef6a4ce455cff963ebe4f1")
     version("10.3.0", sha256="64f404c1a650f27fc33da242e1f2df54952e3963a49e06e73f6940f3223ac344")
     version("10.2.0", sha256="b8dd4368bb9c7f0b98188317ee0254dd8cc99d1e3a18d0ff146c855fe16c1d8c")
@@ -156,6 +163,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on("automake@1.15.1:", when="@master", type="build")
     depends_on("autoconf@2.69:", when="@master", type="build")
 
+    depends_on("gmake@3.80:", type="build")
+    depends_on("perl@5", type="build")
+
     # GCC 7.3 does not compile with newer releases on some platforms, see
     #   https://github.com/spack/spack/issues/6902#issuecomment-433030376
     depends_on("mpfr@2.4.2:3.1.6", when="@:9.9")
@@ -172,7 +182,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         depends_on("isl@0.15:0.20", when="@9:9.9")
         depends_on("isl@0.15:", when="@10:")
 
-    depends_on("zlib", when="@6:")
+    depends_on("zlib-api", when="@6:")
     depends_on("zstd", when="@10:")
     depends_on("diffutils", type="build")
     depends_on("iconv", when="platform=darwin")
@@ -196,36 +206,33 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on("autogen@5.5.4:", type="test")
     depends_on("guile@1.4.1:", type="test")
 
-    # See https://golang.org/doc/install/gccgo#Releases
+    # See https://go.dev/doc/install/gccgo#Releases
     with when("languages=go"):
-        provides("golang", when="@4.6:")
-        provides("golang@:1", when="@4.7.1:")
-        provides("golang@:1.1", when="@4.8:")
-        provides("golang@:1.1.2", when="@4.8.2:")
+        provides("go-or-gccgo-bootstrap@:1.0", when="@4.7.1:")
+        provides("go-or-gccgo-bootstrap@:1.2", when="@4.9:")
+        provides("go-or-gccgo-bootstrap@:1.4", when="@5:")
+        provides("go-or-gccgo-bootstrap@:1.6.1", when="@6:")
+        provides("go-or-gccgo-bootstrap@:1.8.1", when="@7:")
+        provides("go-or-gccgo-bootstrap@:1.10.1", when="@8:")
+        provides("go-or-gccgo-bootstrap@:1.12.2", when="@9:")
+        provides("go-or-gccgo-bootstrap@:1.14.6", when="@10:")
+        provides("go-or-gccgo-bootstrap@1.16.3:1.16.5", when="@11:")
+
+        provides("golang@:1.0", when="@4.7.1:")
         provides("golang@:1.2", when="@4.9:")
         provides("golang@:1.4", when="@5:")
         provides("golang@:1.6.1", when="@6:")
-        provides("golang@:1.8", when="@7:")
-        provides("golang@:1.10", when="@8:")
-        provides("golang@:1.12", when="@9:")
-        provides("golang@:1.14", when="@10:")
-        provides("golang@:1.16", when="@11:")
-        provides("golang@:1.18", when="@11:")
-        # GCC 4.6 added support for the Go programming language.
-        # See https://gcc.gnu.org/gcc-4.6/changes.html
-        conflicts("@:4.5", msg="support for Go has been added in GCC 4.6")
-        # aarch64 machines (including Macs with Apple silicon) can't use
-        # go-bootstrap because it pre-dates aarch64 support in Go. When not
-        # using an external go bootstrap go, These machines have to rely on
-        # Go support in gcc (which may require compiling a version of gcc
-        # with Go support just to satisfy this requirement).  However,
-        # there's also a bug in some versions of GCC's Go front-end that prevents
-        # these versions from properly bootstrapping Go.  (See issue #47771
-        # https://github.com/golang/go/issues/47771 )  On the 10.x branch, we need
-        # at least 10.4.  On the 11.x branch, we need at least 11.3:
-        provides("go-external-or-gccgo-bootstrap", when="gcc@10.4.0:10,11.3.0:target=aarch64:")
+        provides("golang@:1.8.1", when="@7:")
+        provides("golang@:1.10.1", when="@8:")
+        provides("golang@:1.12.2", when="@9:")
+        provides("golang@:1.14.6", when="@10:")
+        provides("golang@1.16.3:1.16.5", when="@11:")
+
+        # GCC 4.7.1 added full support for the Go 1.x programming language.
+        conflicts("@:4.7.0")
+
         # Go is not supported on macOS
-        conflicts("platform=darwin", msg="Go not supported on MacOS")
+        conflicts("platform=darwin", msg="GCC cannot build Go support on MacOS")
 
     # For a list of valid languages for a specific release,
     # run the following command in the GCC source directory:
@@ -270,9 +277,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         # See https://gcc.gnu.org/install/prerequisites.html#GDC-prerequisite
         with when("@12:"):
             # All versions starting 12 have to be built GCC:
-            for c in spack.compilers.supported_compilers():
-                if c != "gcc":
-                    conflicts("%{0}".format(c))
+            requires("%gcc")
 
             # And it has to be GCC older than the version we build:
             vv = ["11", "12.1.0", "12.2.0"]
@@ -332,22 +337,30 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     #   on XCode 12.5
     conflicts("+bootstrap", when="@:11.1 %apple-clang@12.0.5")
 
-    # aarch64/M1 is supported in GCC 11.3-12.2
-    conflicts(
-        "@:11.2,12.3:",
+    # aarch64/M1 is supported in GCC 11.3-12.2 and 13
+    requires(
+        "@11.3,12.2,13.1:",
         when="target=aarch64: platform=darwin",
-        msg="Only GCC 11.3-12.2 support macOS M1 (aarch64)",
+        msg="Only GCC 11.3-12.2, 13.1+ support macOS M1 (aarch64)",
     )
 
     # Newer binutils than RHEL's is required to run `as` on some instructions
     # generated by new GCC (see https://github.com/spack/spack/issues/12235)
     conflicts("~binutils", when="@7: os=rhel6", msg="New GCC cannot use system assembler on RHEL6")
+    # Ditto for RHEL7/8: OpenBLAS uses flags which the RHEL system-binutils don't have:
+    # https://github.com/xianyi/OpenBLAS/issues/3805#issuecomment-1319878852
+    conflicts(
+        "~binutils", when="@10: os=rhel7", msg="gcc: Add +binutils - preinstalled as might be old"
+    )
+    conflicts(
+        "~binutils", when="@10: os=rhel8", msg="gcc: Add +binutils - preinstalled as might be old"
+    )
 
     # GCC 11 requires GCC 4.8 or later (https://gcc.gnu.org/gcc-11/changes.html)
     conflicts("%gcc@:4.7", when="@11:")
 
     # https://github.com/iains/gcc-12-branch/issues/6
-    conflicts("%apple-clang@14.0")
+    conflicts("@:12", when="%apple-clang@14:14.0")
 
     if sys.platform == "darwin":
         # Fix parallel build on APFS filesystem
@@ -400,7 +413,17 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             sha256="a7843b5c6bf1401e40c20c72af69c8f6fc9754ae980bb4a5f0540220b3dcb62d",
             when="@12.2.0 target=aarch64:",
         )
-        conflicts("+bootstrap", when="@11.3.0 target=aarch64:")
+        patch(
+            "https://raw.githubusercontent.com/Homebrew/formula-patches/5c206c47/gcc/gcc-13.1.0.diff",
+            sha256="cb4e8a89387f748a744da0273025d0dc2e3c76780cc390b18ada704676afea11",
+            when="@13.1.0 target=aarch64:",
+        )
+        patch(
+            "https://raw.githubusercontent.com/Homebrew/formula-patches/3c5cbc8e9cf444a1967786af48e430588e1eb481/gcc/gcc-13.2.0.diff",
+            sha256="2df7ef067871a30b2531a2013b3db661ec9e61037341977bfc451e30bf2c1035",
+            when="@13.2.0 target=aarch64:",
+        )
+        conflicts("+bootstrap", when="@11.3.0,13.1: target=aarch64:")
 
         # Use -headerpad_max_install_names in the build,
         # otherwise updated load commands won't fit in the Mach-O header.
@@ -429,6 +452,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     )
     patch("patch-745dae5923aba02982563481d75a21595df22ff8.patch", when="@10.1.0:10.3.0,11.1.0")
 
+    # Backport libsanitizer patch for glibc >= 2.36
+    # https://reviews.llvm.org/D129471
+    patch("glibc-2.36-libsanitizer-gcc-5-9.patch", when="@5.1:5.5,6.1:6.5,7.1:7.5,8.1:8.5,9.1:9.5")
+    patch("glibc-2.36-libsanitizer-gcc-10-12.patch", when="@10.1:10.4,11.1:11.3,12.1.0")
+
     # Older versions do not compile with newer versions of glibc
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81712
     patch("ucontext_t.patch", when="@4.9,5.1:5.4,6.1:6.4,7.1")
@@ -452,6 +480,13 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=100102
     patch("patch-fc930b3010bd0de899a3da3209eab20664ddb703.patch", when="@10.1:10.3")
     patch("patch-f1feb74046e0feb0596b93bbb822fae02940a90e.patch", when="@11.1")
+
+    # libstdc++: Fix inconsistent noexcept-specific for valarray begin/end
+    patch(
+        "https://github.com/gcc-mirror/gcc/commit/423cd47cfc9640ba3d6811b780e8a0b94b704dcb.patch?full_index=1",
+        sha256="0d136226eb07bc43f1b15284f48bd252e3748a0426b5d7ac9084ebc406e15490",
+        when="@9.5.0:10.4.0,11.1.0:11.2.0",
+    )
 
     build_directory = "spack-build"
 
@@ -559,7 +594,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             "languages=d": "d",
             "languages=fortran": "fortran",
         }.items():
-            if spec.satisfies(constraint, strict=True):
+            if spec.satisfies(constraint):
                 msg = "{0} not in {1}"
                 assert key in compilers, msg.format(key, spec)
 
@@ -605,7 +640,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             "7.1.0"
         ):
             self.gnu_mirror_path = self.gnu_mirror_path.replace("xz", "bz2")
-        return super(Gcc, self).url_for_version(version)
+        return super().url_for_version(version)
 
     def patch(self):
         spec = self.spec
@@ -627,9 +662,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         # Use installed libz
         if self.version >= Version("6"):
-            filter_file("@zlibdir@", "-L{0}".format(spec["zlib"].prefix.lib), "gcc/Makefile.in")
             filter_file(
-                "@zlibinc@", "-I{0}".format(spec["zlib"].prefix.include), "gcc/Makefile.in"
+                "@zlibdir@", "-L{0}".format(spec["zlib-api"].prefix.lib), "gcc/Makefile.in"
+            )
+            filter_file(
+                "@zlibinc@", "-I{0}".format(spec["zlib-api"].prefix.include), "gcc/Makefile.in"
             )
 
         if spec.satisfies("+nvptx"):
@@ -746,20 +783,17 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                     "--with-as=" + binutils.join("as"),
                 ]
             )
+        elif spec.satisfies("%apple-clang@15:"):
+            # https://github.com/iains/gcc-darwin-arm64/issues/117
+            # https://github.com/iains/gcc-12-branch/issues/22
+            # https://github.com/iains/gcc-13-branch/issues/8
+            options.append("--with-ld=/Library/Developer/CommandLineTools/usr/bin/ld-classic")
 
         # enable_bootstrap
         if spec.satisfies("+bootstrap"):
-            options.extend(
-                [
-                    "--enable-bootstrap",
-                ]
-            )
+            options.extend(["--enable-bootstrap"])
         else:
-            options.extend(
-                [
-                    "--disable-bootstrap",
-                ]
-            )
+            options.extend(["--disable-bootstrap"])
 
         # Configure include and lib directories explicitly for these
         # dependencies since the short GCC option assumes that libraries
@@ -860,7 +894,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         # self.build_directory = 'spack-build-nvptx'
         with working_dir("spack-build-nvptx", create=True):
-
             options = [
                 "--prefix={0}".format(prefix),
                 "--enable-languages={0}".format(",".join(spec.variants["languages"].value)),
@@ -959,12 +992,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
             # Add easily-overridable rpath string at the end
             out.write("*link_libgcc_rpath:\n")
-            if "platform=darwin" in self.spec:
-                # macOS linker requires separate rpath commands
-                out.write(" ".join("-rpath " + lib for lib in rpath_libdirs))
-            else:
-                # linux linker uses colon-separated rpath
-                out.write("-rpath " + ":".join(rpath_libdirs))
+            out.write(" ".join("-rpath " + lib for lib in rpath_libdirs))
             out.write("\n")
         set_install_permissions(specs_file)
         tty.info("Wrote new spec file to {0}".format(specs_file))
@@ -1007,11 +1035,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         """
         # Detect GCC package in the directory of the GCC compiler
         # or in the $PATH if self.compiler.cc is not an absolute path:
-        from spack.detection import by_executable
+        from spack.detection import by_path
 
         compiler_dir = os.path.dirname(self.compiler.cc)
-        detected_packages = by_executable(
-            [self.__class__], path_hints=([compiler_dir] if os.path.isdir(compiler_dir) else None)
+        detected_packages = by_path(
+            [self.name], path_hints=([compiler_dir] if os.path.isdir(compiler_dir) else None)
         )
 
         # We consider only packages that satisfy the following constraint:

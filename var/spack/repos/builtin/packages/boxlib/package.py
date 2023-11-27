@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,6 +32,7 @@ class Boxlib(CMakePackage):
         options.extend(
             [
                 "-DBL_SPACEDIM=%d" % int(spec.variants["dims"].value),
+                "-DBL_USE_PARTICLES=1",
                 "-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON",
                 "-DENABLE_FBASELIB=ON",
                 "-DCMAKE_C_COMPILER=%s" % spec["mpi"].mpicc,

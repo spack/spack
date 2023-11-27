@@ -1,9 +1,7 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from __future__ import print_function
 
 import os
 import re
@@ -13,14 +11,10 @@ import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
 import spack.paths
-from spack.util.executable import which
 
 description = "list and check license headers on files in spack"
 section = "developer"
 level = "long"
-
-#: need the git command to check new files
-git = which("git")
 
 #: SPDX license id must appear in the first <license_lines> lines of a file
 license_lines = 7
@@ -62,10 +56,7 @@ licensed_files = [
 
 #: licensed files that can have LGPL language in them
 #: so far, just this command -- so it can find LGPL things elsewhere
-lgpl_exceptions = [
-    r"lib/spack/spack/cmd/license.py",
-    r"lib/spack/spack/test/cmd/license.py",
-]
+lgpl_exceptions = [r"lib/spack/spack/cmd/license.py", r"lib/spack/spack/test/cmd/license.py"]
 
 
 def _all_spack_files(root=spack.paths.prefix):
@@ -108,7 +99,7 @@ license_line_regexes = [
 ]
 
 
-class LicenseError(object):
+class LicenseError:
     def __init__(self):
         self.error_counts = defaultdict(int)
 
@@ -132,7 +123,6 @@ class LicenseError(object):
 
 
 def _check_license(lines, path):
-
     found = []
 
     for line in lines:
@@ -237,9 +227,6 @@ def setup_parser(subparser):
 
 
 def license(parser, args):
-    if not git:
-        tty.die("spack license requires git in your environment")
-
     licensed_files[:] = [re.compile(regex) for regex in licensed_files]
 
     commands = {

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Bohrium(CMakePackage, CudaPackage):
     url = "https://github.com/bh107/bohrium/archive/v0.9.0.tar.gz"
     git = "https://github.com/bh107/bohrium.git"
 
-    maintainers = ["mfherbst"]
+    maintainers("mfherbst")
 
     #
     # Versions
@@ -95,7 +95,7 @@ class Bohrium(CMakePackage, CudaPackage):
     depends_on("py-pip", type="build", when="+python")
     depends_on("py-wheel", type="build", when="+python")
 
-    depends_on("zlib", when="+proxy")
+    depends_on("zlib-api", when="+proxy")
 
     depends_on("libsigsegv")
 
@@ -143,10 +143,7 @@ class Bohrium(CMakePackage, CudaPackage):
         #
         # Vector engines
         #
-        args += [
-            "-DVE_OPENCL=" + str("+opencl" in spec),
-            "-DVE_CUDA=" + str("+cuda" in spec),
-        ]
+        args += ["-DVE_OPENCL=" + str("+opencl" in spec), "-DVE_CUDA=" + str("+cuda" in spec)]
 
         if "+openmp" in spec:
             args += [

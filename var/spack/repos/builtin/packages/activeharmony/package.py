@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,7 +29,7 @@ class Activeharmony(MakefilePackage):
 
     @when("@:4.5")
     def install(self, spec, prefix):
-        make("install", "PREFIX=%s" % prefix)
+        make("install", f"PREFIX={prefix}")
 
     @when("@4.6.0:")
     def install(self, spec, prefix):

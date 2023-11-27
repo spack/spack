@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,21 +15,27 @@ class Vtk(CMakePackage):
     available software system for 3D computer graphics, image
     processing and visualization."""
 
-    homepage = "http://www.vtk.org"
+    homepage = "https://www.vtk.org"
     url = "https://www.vtk.org/files/release/9.0/VTK-9.0.0.tar.gz"
-    list_url = "http://www.vtk.org/download/"
+    list_url = "https://www.vtk.org/download/"
 
-    maintainers = ["chuckatkins", "danlipsa"]
+    maintainers("chuckatkins", "danlipsa")
 
+    version("9.2.6", sha256="06fc8d49c4e56f498c40fcb38a563ed8d4ec31358d0101e8988f0bb4d539dd12")
     version("9.2.2", sha256="1c5b0a2be71fac96ff4831af69e350f7a0ea3168981f790c000709dcf9121075")
     version("9.1.0", sha256="8fed42f4f8f1eb8083107b68eaa9ad71da07110161a3116ad807f43e5ca5ce96")
-    version(
-        "9.0.3",
-        sha256="bc3eb9625b2b8dbfecb6052a2ab091fc91405de4333b0ec68f3323815154ed8a",
-        preferred=True,
-    )
+    version("9.0.3", sha256="bc3eb9625b2b8dbfecb6052a2ab091fc91405de4333b0ec68f3323815154ed8a")
     version("9.0.1", sha256="1b39a5e191c282861e7af4101eaa8585969a2de05f5646c9199a161213a622c7")
     version("9.0.0", sha256="15def4e6f84d72f82386617fe595ec124dda3cbd13ea19a0dcd91583197d8715")
+    # v8.2.1a is a compatability version of VTK to allow VisIt to build in CI and contains
+    # patches that were not tested by VTK CI or for a VTK release
+    # - Python 3.8 compatability
+    # - VisIt 3.3.3 compatability
+    version(
+        "8.2.1a",
+        url="https://www.vtk.org/files/release/8.2/VTK-8.2.0.tar.gz",
+        sha256="34c3dc775261be5e45a8049155f7228b6bd668106c72a3c435d95730d17d57bb",
+    )
     version("8.2.0", sha256="34c3dc775261be5e45a8049155f7228b6bd668106c72a3c435d95730d17d57bb")
     version("8.1.2", sha256="0995fb36857dd76ccfb8bb07350c214d9f9099e80b1e66b4a8909311f24ff0db")
     version("8.1.1", sha256="71a09b4340f0a9c58559fe946dc745ab68a866cf20636a41d97b6046cb736324")
@@ -43,7 +49,7 @@ class Vtk(CMakePackage):
     # VTK7 defaults to OpenGL2 rendering backend
     variant("opengl2", default=True, description="Enable OpenGL2 backend")
     variant("osmesa", default=False, description="Enable OSMesa support")
-    variant("python", default=False, description="Enable Python support")
+    variant("python", default=False, description="Enable Python support", when="@8:")
     variant("qt", default=False, description="Build with support for Qt")
     variant("xdmf", default=False, description="Build XDMF file support")
     variant("ffmpeg", default=False, description="Build with FFMPEG support")
@@ -59,16 +65,21 @@ class Vtk(CMakePackage):
         sha256="0546696bd02f3a99fccb9b7c49533377bf8179df16d901cefe5abf251173716d",
     )
 
+    # Patch for paraview 5.10: +hdf5 ^hdf5@1.13.2:
+    # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/9690
+    patch("xdmf2-hdf51.13.2.patch", when="@9:9.2 +xdmf")
+
     # We cannot build with both osmesa and qt in spack
     conflicts("+osmesa", when="+qt")
+
+    conflicts("%gcc@13", when="@9.2")
 
     with when("+python"):
         # Depend on any Python, add bounds below.
         extends("python@2.7:", type=("build", "run"))
-        # Python 3 support from vtk 8
-        depends_on("python@:2", when="@:7", type=("build", "run"))
-        # Python 3.8 support from vtk 9
-        depends_on("python@:3.7", when="@:8", type=("build", "run"))
+        depends_on("python@:3.7", when="@:8.2.0", type=("build", "run"))
+        # Python 3.8 support from vtk 9 and patched 8.2
+        depends_on("python@:3.8", when="@:8.2.1a", type=("build", "run"))
         # Python 3.10 support from vtk 9.2
         depends_on("python@:3.9", when="@:9.1", type=("build", "run"))
 
@@ -87,7 +98,15 @@ class Vtk(CMakePackage):
 
     # Fix IOADIOS2 module to work with kits
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8653
-    patch("vtk-adios2-module-no-kit.patch", when="@8.2.0:9.0.3")
+    patch("vtk-adios2-module-no-kit.patch", when="@9:9.0.3")
+
+    # Python 3.8 compatibility for VTK 8.2
+    # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/6269
+    # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/6275
+    patch("vtk82_python38.patch", when="@8.2.1a")
+
+    # Fix link error in exodusII
+    patch("vtk-8.2-exodusII-gcc11.patch", when="@8.2.1a")
 
     # The use of the OpenGL2 backend requires at least OpenGL Core Profile
     # version 3.2 or higher.
@@ -134,22 +153,35 @@ class Vtk(CMakePackage):
     depends_on("netcdf-cxx")
     depends_on("libpng")
     depends_on("libtiff")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("eigen", when="@8.2.0:")
     depends_on("double-conversion", when="@8.2.0:")
     depends_on("sqlite", when="@8.2.0:")
-    depends_on("pugixml", when="@9:")
+    depends_on("pugixml", when="@8.2.0:")
     depends_on("libogg")
     depends_on("libtheora")
     depends_on("utf8cpp", when="@9:")
     depends_on("gl2ps", when="@8.1:")
     depends_on("gl2ps@1.4.1:", when="@9:")
-    depends_on("proj@4", when="@8.2")
+    depends_on("proj@4", when="@8.2.0")
     depends_on("proj@4:7", when="@9:")
     depends_on("cgns@4.1.1:+mpi", when="@9.1: +mpi")
     depends_on("cgns@4.1.1:~mpi", when="@9.1: ~mpi")
-    depends_on("seacas@2021-05-12:+mpi", when="@9.1: +mpi")
-    depends_on("seacas@2021-05-12:~mpi", when="@9.1: ~mpi")
+    with when("@9.1:"):
+        depends_on("seacas+mpi", when="+mpi")
+        depends_on("seacas~mpi", when="~mpi")
+        depends_on("seacas@2021-05-12:")
+
+    # seacas@2023-05-30 does not provide needed SEACASIoss_INCLUDE_DIRS:
+    # CMake Error at CMake/vtkModule.cmake:5552 (message):
+    # The variable `SEACASIoss_INCLUDE_DIRS` was expected to have been available,
+    # but was not defined:
+    conflicts("seacas@2023-05-30", when="@:9.2")
+
+    # vtk@9.2: need Ioss::Utils::get_debug_stream() which only 2022-10-14 provides,
+    # and to be safe against other issues, make them build with this version only:
+    depends_on("seacas@2022-10-14", when="@9.2:")
+    depends_on("nlohmann-json", when="@9.2:")
 
     # For finding Fujitsu-MPI wrapper commands
     patch("find_fujitsu_mpi.patch", when="@:8.2.0%fj")
@@ -161,6 +193,19 @@ class Vtk(CMakePackage):
         sha256="eefda851f844e8a1dfb4ebd8a9ff92d2b78efc57f205774052c5f4c049cc886a",
         when="@:9.0.1 ^freetype@2.10.3:",
     )
+
+    patch(
+        "https://gitlab.kitware.com/vtk/vtk/-/commit/5a1c96e12e9b4a660d326be3bed115a2ceadb573.diff",
+        sha256="c446a90459b108082db5b28d9aeda99d030e636325e01929beba062cafb16b76",
+        when="@9.1",
+    )
+
+    @when("@9.2:")
+    def patch(self):
+        # provide definition for Ioss::Init::Initializer::Initializer(),
+        # required on macOS, as "-undefined error" is the default,
+        # but not on Linux, as undefined symbols are tolerated
+        filter_file("TARGETS Ioss", "TARGETS Ioss Ionit", "ThirdParty/ioss/CMakeLists.txt")
 
     def url_for_version(self, version):
         url = "http://www.vtk.org/files/release/{0}/VTK-{1}.tar.gz"
@@ -195,6 +240,11 @@ class Vtk(CMakePackage):
             "-DVTK_ALL_NEW_OBJECT_FACTORY:BOOL=ON",
         ]
 
+        # Version 8.2.1a using internal libproj/pugixml for compatability
+        if spec.satisfies("@8.2.1a"):
+            cmake_args.append("-DVTK_USE_SYSTEM_LIBPROJ:BOOL=OFF")
+            cmake_args.append("-DVTK_USE_SYSTEM_PUGIXML:BOOL=OFF")
+
         # Disable wrappers for other languages.
         cmake_args.append("-DVTK_WRAP_JAVA=OFF")
         if spec.satisfies("@:8.1"):
@@ -204,10 +254,7 @@ class Vtk(CMakePackage):
         # spack-built versions whenever possible but there are exceptions.
         if spec.satisfies("@:8"):
             cmake_args.extend(
-                [
-                    "-DVTK_USE_SYSTEM_LIBRARIES:BOOL=ON",
-                    "-DVTK_USE_SYSTEM_LIBHARU=OFF",
-                ]
+                ["-DVTK_USE_SYSTEM_LIBRARIES:BOOL=ON", "-DVTK_USE_SYSTEM_LIBHARU=OFF"]
             )
             if spec.satisfies("@:8.0"):
                 cmake_args.append("-DVTK_USE_SYSTEM_GL2PS=OFF")
@@ -228,6 +275,8 @@ class Vtk(CMakePackage):
                         "-DVTK_MODULE_USE_EXTERNAL_VTK_fmt:BOOL=OFF",
                     ]
                 )
+            if spec.satisfies("@9.2:"):
+                cmake_args.append("-DVTK_MODULE_USE_EXTERNAL_VTK_verdict:BOOL=OFF")
 
         # Some variable names have changed
         if spec.satisfies("@8.2.0"):

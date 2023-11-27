@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Glfmultiples(MakefilePackage):
         "2010-06-16", sha256="f7abef6f6b043e9052fb408bb2aae6d0d97d907aedc1b3e02dd0db08eb81b979"
     )
 
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     def edit(self, spec, prefix):
         makefile = FileFilter("Makefile")

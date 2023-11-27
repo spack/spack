@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Psmc(MakefilePackage):
 
     version("2016-1-21", commit="e5f7df5d00bb75ec603ae0beff62c0d7e37640b9")
 
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
 
     def setup_run_environment(self, env):
         env.prepend_path("PATH", self.prefix.bin.utils)

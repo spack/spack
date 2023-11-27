@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,24 +14,29 @@ class Henson(CMakePackage):
 
     version("master", branch="master")
 
+    maintainers("mrzv")
+
     depends_on("mpi")
 
     variant("python", default=False, description="Build Python bindings")
     extends("python", when="+python")
+    depends_on("py-mpi4py", when="+python", type=("build", "run"))
     variant("mpi-wrappers", default=False, description="Build MPI wrappers (PMPI)")
+
+    variant("boost", default=False, description="Use Boost for coroutine support")
+    depends_on("boost+context", when="+boost", type=("build", "run"))
+    conflicts("~boost", when="target=aarch64:")
 
     conflicts("^openmpi", when="+mpi-wrappers")
 
     def cmake_args(self):
-        args = []
-        if "+python" in self.spec:
-            args += ["-Dpython=on"]
-        else:
-            args += ["-Dpython=off"]
+        args = [
+            self.define_from_variant("python", "python"),
+            self.define_from_variant("mpi-wrappers", "mpi-wrappers"),
+            self.define_from_variant("use_boost", "boost"),
+        ]
 
-        if "+mpi-wrappers" in self.spec:
-            args += ["-Dmpi-wrappers=on"]
-        else:
-            args += ["-Dmpi-wrappers=off"]
+        if self.spec.satisfies("+python"):
+            args += [self.define("PYTHON_EXECUTABLE", self.spec["python"].command.path)]
 
         return args

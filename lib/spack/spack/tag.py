@@ -1,16 +1,11 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Classes and functions to manage package tags"""
 import collections
 import copy
-import sys
-
-if sys.version_info >= (3, 5):
-    from collections.abc import Mapping  # novm
-else:
-    from collections import Mapping
+from collections.abc import Mapping
 
 import spack.error
 import spack.util.spack_json as sjson
@@ -37,10 +32,10 @@ def packages_with_tags(tags, installed, skip_empty):
     """
     tag_pkgs = collections.defaultdict(lambda: list)
     spec_names = _get_installed_package_names() if installed else []
-    keys = spack.repo.path.tag_index if tags is None else tags
+    keys = spack.repo.PATH.tag_index if tags is None else tags
     for tag in keys:
         packages = [
-            name for name in spack.repo.path.tag_index[tag] if not installed or name in spec_names
+            name for name in spack.repo.PATH.tag_index[tag] if not installed or name in spec_names
         ]
         if packages or not skip_empty:
             tag_pkgs[tag] = packages

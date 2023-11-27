@@ -1,14 +1,12 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """Schema for config.yaml configuration file.
 
 .. literalinclude:: _spack_root/lib/spack/spack/schema/config.py
    :lines: 13-
 """
-import six
 
 from llnl.util.lang import union_dicts
 
@@ -20,6 +18,12 @@ properties = {
         "type": "object",
         "default": {},
         "properties": {
+            "flags": {
+                "type": "object",
+                "properties": {
+                    "keep_werror": {"type": "string", "enum": ["all", "specific", "none"]}
+                },
+            },
             "shared_linking": {
                 "anyOf": [
                     {"type": "string", "enum": ["rpath", "runpath"]},
@@ -50,13 +54,14 @@ properties = {
                         ),
                     },
                     {"type": "string"},  # deprecated
-                ],
+                ]
             },
             "install_hash_length": {"type": "integer", "minimum": 1},
             "install_path_scheme": {"type": "string"},  # deprecated
             "build_stage": {
-                "oneOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}],
+                "oneOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}]
             },
+            "stage_name": {"type": "string"},
             "test_stage": {"type": "string"},
             "extensions": {"type": "array", "items": {"type": "string"}},
             "template_dirs": {"type": "array", "items": {"type": "string"}},
@@ -79,21 +84,23 @@ properties = {
             "concretizer": {"type": "string", "enum": ["original", "clingo"]},
             "db_lock_timeout": {"type": "integer", "minimum": 1},
             "package_lock_timeout": {
-                "anyOf": [{"type": "integer", "minimum": 1}, {"type": "null"}],
+                "anyOf": [{"type": "integer", "minimum": 1}, {"type": "null"}]
             },
             "allow_sgid": {"type": "boolean"},
+            "install_status": {"type": "boolean"},
             "binary_index_root": {"type": "string"},
             "url_fetch_method": {"type": "string", "enum": ["urllib", "curl"]},
             "additional_external_search_paths": {"type": "array", "items": {"type": "string"}},
             "binary_index_ttl": {"type": "integer", "minimum": 0},
+            "aliases": {"type": "object", "patternProperties": {r"\w[\w-]*": {"type": "string"}}},
         },
         "deprecatedProperties": {
-            "properties": ["module_roots"],
-            "message": "config:module_roots has been replaced by "
-            "modules:[module set]:roots and is ignored",
+            "properties": ["terminal_title"],
+            "message": "config:terminal_title has been replaced by "
+            "install_status and is ignored",
             "error": False,
         },
-    },
+    }
 }
 
 
@@ -125,7 +132,7 @@ def update(data):
     changed = False
 
     install_tree = data.get("install_tree", None)
-    if isinstance(install_tree, six.string_types):
+    if isinstance(install_tree, str):
         # deprecated short-form install tree
         # add value as `root` in updated install_tree
         data["install_tree"] = {"root": install_tree}
@@ -149,7 +156,7 @@ def update(data):
         changed = True
 
     shared_linking = data.get("shared_linking", None)
-    if isinstance(shared_linking, six.string_types):
+    if isinstance(shared_linking, str):
         # deprecated short-form shared_linking: rpath/runpath
         # add value as `type` in updated shared_linking
         data["shared_linking"] = {"type": shared_linking, "bind": False}

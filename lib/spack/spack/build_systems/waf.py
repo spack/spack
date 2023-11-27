@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -73,8 +73,8 @@ class WafBuilder(BaseBuilder):
     #: Names associated with package attributes in the old build-system format
     legacy_attributes = (
         "build_time_test_callbacks",
-        "build_time_test_callbacks",
         "build_directory",
+        "install_time_test_callbacks",
     )
 
     # Callback names for build-time test

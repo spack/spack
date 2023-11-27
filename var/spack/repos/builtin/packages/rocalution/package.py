@@ -1,9 +1,10 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import itertools
+import re
 
 from spack.package import *
 
@@ -18,21 +19,44 @@ class Rocalution(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocALUTION"
     git = "https://github.com/ROCmSoftwarePlatform/rocALUTION.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocALUTION/archive/rocm-5.2.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rocALUTION/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["cgmb", "srekolam", "renjithravindrankannath"]
+    maintainers("cgmb", "srekolam", "renjithravindrankannath")
     libraries = ["librocalution_hip"]
-
+    version("5.6.1", sha256="7197b3617a0c91e90adaa32003c04d247a5f585d216e77493d20984ba215addb")
+    version("5.6.0", sha256="7397a2039e9615c0cf6776c33c4083c00b185b5d5c4149c89fea25a8976a3097")
+    version("5.5.1", sha256="4612e30a0290b1732c8862eea655122abc2d22ce4345b8498fe4127697e880b4")
+    version("5.5.0", sha256="626e966b67b83a1ef79f9bf27aba998c49cf65c4208092516aa1e32a6cbd8c36")
+    version("5.4.3", sha256="39d00951a9b3cbdc4205a7e3ce75c026d9428c71c784815288c445f84a7f8a0e")
+    version("5.4.0", sha256="dccf004434e0fee6d0c7bedd46827f5a2af0392bc4807a08403b130e461f55eb")
+    version("5.3.3", sha256="3af022250bc25bebdee12bfb8fdbab4b60513b537b9fe15dfa82ded8850c5066")
+    version("5.3.0", sha256="f623449789a5c9c9137ae51d4dbbee5c6940d8813826629cb4b7e84f07fab494")
     version("5.2.3", sha256="8e0d77099bf7dc0d00505e1c936b072a59719102c75398dc1416cbef31902253")
     version("5.2.1", sha256="f246bd5b5d1b5821c29b566610a1c1d5c5cc361e0e5c373b8b04168b05e9b26f")
     version("5.2.0", sha256="a5aac471bbec87d019ad7c6db779c73327ad40ecdea09dc5ab2106e62cd6b7eb")
     version("5.1.3", sha256="7febe8179f120cbe58ea255bc233ad5d1b4c106f3934eb8e670135a8b7bd09c7")
     version("5.1.0", sha256="d9122189103ebafe7ec5aeb50e60f3e02af5c2747021f9071aab91e7f875c29e")
-    version("5.0.2", sha256="b01adaf858b9c3683523b087a55fafb655864f5db8e2a1acdbf588f53d6972e2")
-    version("5.0.0", sha256="df9e7eacb8cc1bd5c7c4071b20356a885ee8ae13e6ab5afdabf88a272ab32c7e")
-    version("4.5.2", sha256="8be38922320cd9d4fc465a30f0322843849f62c0c7dad2bdbe52290a1b69d2a0")
-    version("4.5.0", sha256="191629fef002fd1a0793a6b4fe5a6b8c43ac49d3cd173ba64a91359f54659e5b")
+    version(
+        "5.0.2",
+        sha256="b01adaf858b9c3683523b087a55fafb655864f5db8e2a1acdbf588f53d6972e2",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="df9e7eacb8cc1bd5c7c4071b20356a885ee8ae13e6ab5afdabf88a272ab32c7e",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="8be38922320cd9d4fc465a30f0322843849f62c0c7dad2bdbe52290a1b69d2a0",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="191629fef002fd1a0793a6b4fe5a6b8c43ac49d3cd173ba64a91359f54659e5b",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="d3a7b9290f99bdc7382d1d5259c3f5e0e66a43aef4d05b7c2cd78b0e4a5c59bc",
@@ -86,36 +110,15 @@ class Rocalution(CMakePackage):
 
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
-    variant("amdgpu_target", values=auto_or_any_combination_of(*amdgpu_targets))
     variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
+        "amdgpu_target",
+        description="AMD GPU architecture",
+        values=auto_or_any_combination_of(*amdgpu_targets),
+        sticky=True,
     )
 
     depends_on("cmake@3.5:", type="build")
-    for ver in [
-        "3.5.0",
-        "3.7.0",
-        "3.8.0",
-        "3.9.0",
-        "3.10.0",
-        "4.0.0",
-        "4.1.0",
-        "4.2.0",
-        "4.3.0",
-        "4.3.1",
-        "4.5.0",
-        "4.5.2",
-        "5.0.0",
-        "5.0.2",
-        "5.1.0",
-        "5.1.3",
-        "5.2.0",
-        "5.2.1",
-        "5.2.3",
-    ]:
+    for ver in ["3.5.0", "3.7.0", "3.8.0"]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocprim@" + ver, when="@" + ver)
         for tgt in itertools.chain(["auto"], amdgpu_targets):
@@ -147,19 +150,39 @@ class Rocalution(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
+        "5.3.3",
+        "5.4.0",
+        "5.4.3",
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
     ]:
+        depends_on("hip@" + ver, when="@" + ver)
+        depends_on("rocprim@" + ver, when="@" + ver)
         for tgt in itertools.chain(["auto"], amdgpu_targets):
+            rocblas_tgt = tgt if tgt != "gfx900:xnack-" else "gfx900"
+            depends_on(
+                "rocblas@{0} amdgpu_target={1}".format(ver, rocblas_tgt),
+                when="@{0} amdgpu_target={1}".format(ver, tgt),
+            )
+            depends_on(
+                "rocsparse@{0} amdgpu_target={1}".format(ver, tgt),
+                when="@{0} amdgpu_target={1}".format(ver, tgt),
+            )
             depends_on(
                 "rocrand@{0} amdgpu_target={1}".format(ver, tgt),
                 when="@{0} amdgpu_target={1}".format(ver, tgt),
             )
+        depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
 
     depends_on("googletest@1.10.0:", type="test")
     # This fix is added to address the compilation failure and it is
     # already taken in 5.2.3 rocm release.
-    patch("0003-fix-compilation-for-rocalution-5.2.0.patch", when="@5.2.0:")
+    patch("0003-fix-compilation-for-rocalution-5.2.0.patch", when="@5.2")
     # Fix build for most Radeon 5000 and Radeon 6000 series GPUs.
-    patch("0004-fix-navi-1x.patch", when="@5.2.0:")
+    patch("0004-fix-navi-1x.patch", when="@5.2.0:5.3")
 
     def check(self):
         exe = join_path(self.build_directory, "clients", "staging", "rocalution-test")
@@ -208,5 +231,8 @@ class Rocalution(CMakePackage):
 
         if self.spec.satisfies("@5.2.0:"):
             args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
+
+        if self.spec.satisfies("@5.3.0:"):
+            args.append("-DCMAKE_INSTALL_LIBDIR=lib")
 
         return args

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,12 +11,13 @@ class Chameleon(CMakePackage, CudaPackage):
     """Dense Linear Algebra for Scalable Multi-core Architectures and GPGPUs"""
 
     homepage = "https://gitlab.inria.fr/solverstack/chameleon"
-    url = "https://gitlab.inria.fr/solverstack/chameleon/uploads/b299d6037d7636c6be16108c89bc2aab/chameleon-1.1.0.tar.gz"
+    url = "https://gitlab.inria.fr/api/v4/projects/616/packages/generic/source/v1.2.0/chameleon-1.2.0.tar.gz"
     git = "https://gitlab.inria.fr/solverstack/chameleon.git"
-    maintainers = ["fpruvost"]
+    maintainers("fpruvost")
 
     version("master", branch="master", submodules=True)
-    version("1.1.0", "e64d0438dfaf5effb3740e53f3ab017d12744b85a138b2ef702a81df559126df")
+    version("1.2.0", sha256="b8988ecbff19c603ae9f61441653c21bba18d040bee9bb83f7fc9077043e50b4")
+    version("1.1.0", sha256="e64d0438dfaf5effb3740e53f3ab017d12744b85a138b2ef702a81df559126df")
 
     # cmake's specific
     variant("shared", default=True, description="Build chameleon as a shared library")
@@ -48,6 +49,7 @@ class Chameleon(CMakePackage, CudaPackage):
     depends_on("pkgconfig", type="build")
 
     with when("runtime=starpu"):
+        depends_on("starpu@1.3", when="@1.1.0")
         depends_on("starpu")
         depends_on("starpu~mpi", when="~mpi")
         depends_on("starpu+mpi", when="+mpi")
@@ -71,7 +73,6 @@ class Chameleon(CMakePackage, CudaPackage):
         depends_on("lapack")
 
     def cmake_args(self):
-
         spec = self.spec
         args = [
             "-Wno-dev",

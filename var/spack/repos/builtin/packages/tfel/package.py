@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,7 +30,7 @@ class Tfel(CMakePackage):
     homepage = "http://tfel.sourceforge.net"
     url = "https://github.com/thelfer/tfel/archive/TFEL-4.0.tar.gz"
     git = "https://github.com/thelfer/tfel.git"
-    maintainers = ["thelfer"]
+    maintainers("thelfer")
 
     # development branches
     version("master", branch="master")
@@ -133,7 +133,6 @@ class Tfel(CMakePackage):
     conflicts("%gcc@:7", when="@4:")
 
     def cmake_args(self):
-
         args = []
 
         args.append("-DUSE_EXTERNAL_COMPILER_FLAGS=ON")

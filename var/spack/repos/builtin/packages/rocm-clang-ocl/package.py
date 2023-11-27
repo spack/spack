@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,21 +11,44 @@ class RocmClangOcl(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/clang-ocl"
     git = "https://github.com/RadeonOpenCompute/clang-ocl.git"
-    url = "https://github.com/RadeonOpenCompute/clang-ocl/archive/rocm-5.2.3.tar.gz"
+    url = "https://github.com/RadeonOpenCompute/clang-ocl/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "renjithravindrankannath"]
+    maintainers("srekolam", "renjithravindrankannath")
     version("master", branch="master")
-
+    version("5.6.1", sha256="c41deb1b564d939fc897b2bbdb13570b2234fa4c052a39783f5ad2dd1052f901")
+    version("5.6.0", sha256="1afc47dee02d73c10de422f254067f4ef3ff921c4a1204d54ecc40e61fc63497")
+    version("5.5.1", sha256="bfa62ad14830e2bd5afbc346685216c69f8cbef0eb449954f793178e10b19a38")
+    version("5.5.0", sha256="43a5459165693301ba2ebcc41b2b0705df9a3a47571d43bdc2cc49cfdd0833a7")
+    version("5.4.3", sha256="689e0354ea685bd488116de8eb902b902492e9ace184c3109b97b9a43f8b2d59")
+    version("5.4.0", sha256="602f8fb1f36587543cc0ee95fd1938f8eeb03de79119101e128150332cc8d89c")
+    version("5.3.3", sha256="549d5bf37507f67c5277abdeed4ec40b5d0edbfbb72907c685444c26b9ce6f8a")
+    version("5.3.0", sha256="66b80ba050848ad921496bd894e740e66afad0ba1923b385f01f2eeae97999ad")
     version("5.2.3", sha256="9cdb387168975207314c08ba63ae7cd11f70542117a5390eddbec77ebb84bed0")
     version("5.2.1", sha256="693a9a360cb2f7e6910a6714df236df6a9d984f94b01712103a520d8e506c03f")
     version("5.2.0", sha256="a2059f6aeccc119abbd444cb37128e00e4854e22a88a47f120f8f8b947d862c5")
     version("5.1.3", sha256="e19ee15f26fc03309398ac73cc738508c0e1617deccfd667d369a3948b5d3552")
     version("5.1.0", sha256="38d9e2e98cff1a262fdd45c3239fd76a9f6ad5eff38a31aa19c3bb0faea53375")
-    version("5.0.2", sha256="5e8f39200227388817024ee7ce46a996e43e433ed308f8d5e8e4c03629d8a5e7")
-    version("5.0.0", sha256="0dff230754b790a417eb3d6be6f50c3727f944e0157686100354eba1e47d30f3")
-    version("4.5.2", sha256="8cc7b8658e81ef378c16bbb00fc6b29140c850da70adc4e520ecec9b4517beb8")
-    version("4.5.0", sha256="b9ab42629c8697f8ffdae99ffd25f939161fa8a7a1c49a9ce19d8b207bedbbae")
+    version(
+        "5.0.2",
+        sha256="5e8f39200227388817024ee7ce46a996e43e433ed308f8d5e8e4c03629d8a5e7",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="0dff230754b790a417eb3d6be6f50c3727f944e0157686100354eba1e47d30f3",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="8cc7b8658e81ef378c16bbb00fc6b29140c850da70adc4e520ecec9b4517beb8",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="b9ab42629c8697f8ffdae99ffd25f939161fa8a7a1c49a9ce19d8b207bedbbae",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="12461d4fd4f3f40710d2c041cfee37da83ccda9d2761d7708335349e7ec5ad87",
@@ -77,13 +100,6 @@ class RocmClangOcl(CMakePackage):
         deprecated=True,
     )
 
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
-
     depends_on("cmake@3.5:", type="build")
 
     for ver in [
@@ -106,6 +122,14 @@ class RocmClangOcl(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
+        "5.3.3",
+        "5.4.0",
+        "5.4.3",
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
         "master",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
@@ -115,3 +139,28 @@ class RocmClangOcl(CMakePackage):
         depends_on(
             "rocm-device-libs@" + ver, when="@{0} ^llvm-amdgpu ~rocm-device-libs".format(ver)
         )
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
+        depends_on("rocm-core@" + ver, when="@" + ver)
+
+    test_src_dir = "test"
+
+    @run_after("install")
+    def cache_test_sources(self):
+        """Copy the tests source files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        if self.spec.satisfies("@:5.1.0"):
+            return
+        self.cache_extra_test_sources([self.test_src_dir])
+
+    def test(self):
+        if self.spec.satisfies("@:5.1.0"):
+            print("Skipping: stand-alone tests")
+            return
+        test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
+        with working_dir(test_dir, create=True):
+            cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
+            prefixes = ";".join([self.spec["rocm-clang-ocl"].prefix])
+            cc_options = ["-DCMAKE_PREFIX_PATH=" + prefixes, "."]
+            self.run_test(cmake_bin, cc_options)
+            make()
+            make("clean")

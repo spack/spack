@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,10 @@ class Gloo(CMakePackage, CudaPackage):
     git = "https://github.com/facebookincubator/gloo.git"
 
     version("master", branch="master")
-    version("2021-05-21", commit="c22a5cfba94edf8ea4f53a174d38aa0c629d070f")  # py-torch@1.10:
+    version("2023-05-19", commit="597accfd79f5b0f9d57b228dec088ca996686475")  # py-torch@2.1:
+    version("2023-01-17", commit="10909297fedab0a680799211a299203e53515032")  # py-torch@2.0
+    version("2022-05-18", commit="5b143513263133af2b95547e97c07cebeb72bf72")  # py-torch@1.13
+    version("2021-05-21", commit="c22a5cfba94edf8ea4f53a174d38aa0c629d070f")  # py-torch@1.10:1.12
     version("2021-05-04", commit="6f7095f6e9860ce4fd682a7894042e6eba0996f1")  # py-torch@1.9
     version("2020-09-18", commit="3dc0328fe6a9d47bd47c0c6ca145a0d8a21845c6")  # py-torch@1.7:1.8
     version("2020-03-17", commit="113bde13035594cafdca247be953610b53026553")  # py-torch@1.5:1.6
@@ -25,10 +28,15 @@ class Gloo(CMakePackage, CudaPackage):
     version("2018-05-29", commit="69eef748cc1dfbe0fefed69b34e6545495f67ac5")  # py-torch@0.4.1
     version("2018-04-06", commit="aad0002fb40612e991390d8e807f247ed23f13c5")  # py-torch@:0.4.0
 
+    # Gloo does not build on Linux >=6.0.3 (fixed in master)
+    # See: https://github.com/facebookincubator/gloo/issues/345
+    patch(
+        "https://github.com/facebookincubator/gloo/commit/10909297fedab0a680799211a299203e53515032.patch?full_index=1",
+        sha256="8e6e9a44e0533ba4303a95a651b1934e5d73632cab08cc7d5a9435e1e64aa424",
+        when="@:2023-01-16",
+    )
+    generator("ninja")
     depends_on("cmake@2.8.12:", type="build")
-    depends_on("ninja", type="build")
-
-    generator = "Ninja"
 
     def cmake_args(self):
         return [self.define_from_variant("USE_CUDA", "cuda")]

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,6 @@ parsing environment modules.
 import os
 import re
 import subprocess
-import sys
 
 import llnl.util.tty as tty
 
@@ -63,10 +62,7 @@ def module(*args, **kwargs):
 
         # Update os.environ with new dict
         os.environ.clear()
-        if sys.version_info >= (3, 2):
-            os.environb.update(environ)  # novermin
-        else:
-            os.environ.update(environ)
+        os.environb.update(environ)  # novermin
 
     else:
         # See note above
@@ -121,7 +117,7 @@ def get_path_args_from_module_line(line):
         words_and_symbols = line.split(lua_quote)
         path_arg = words_and_symbols[-2]
     else:
-        # The path arg is the 3rd "word" of the line in a TCL module
+        # The path arg is the 3rd "word" of the line in a Tcl module
         # OPERATION VAR_NAME PATH_ARG
         words = line.split()
         if len(words) > 2:
@@ -134,7 +130,7 @@ def get_path_args_from_module_line(line):
 
 
 def path_from_modules(modules):
-    """Inspect a list of TCL modules for entries that indicate the absolute
+    """Inspect a list of Tcl modules for entries that indicate the absolute
     path at which the library supported by said module can be found.
 
     Args:

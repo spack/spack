@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,8 +12,19 @@ class PyTorchmetrics(PythonPackage):
     homepage = "https://github.com/PyTorchLightning/metrics"
     pypi = "torchmetrics/torchmetrics-0.3.1.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
+    version("1.2.0", sha256="7eb28340bde45e13187a9ad54a4a7010a50417815d8181a5df6131f116ffe1b7")
+    version("1.1.1", sha256="65ea34205c0506eecfd06b98f63f4d2a2c5c0e17367cf324e1747adc854c80a5")
+    version("1.1.0", sha256="94b51aeb3d5ff55503fa47086bbc2af9e26efabb840e2d3c2381db9623dda5fd")
+    version("1.0.3", sha256="1c20ea2f0db434334e88da6c015ddf936d43379bfb403e9dc2a7272b0eab453c")
+    version("1.0.2", sha256="537989d02337814e621a45232eeb1eacfd4700a66c2b5161d19ca2158246e075")
+    version("0.11.4", sha256="1fe45a14b44dd65d90199017dd5a4b5a128d56a8a311da7916c402c18c671494")
+    version("0.11.3", sha256="6a2bcc17361f0e4c1668c92595b12ef30ccf9ef1d03263bee7c6136a882afe30")
+    version("0.11.2", sha256="5a1f5fff9b1fb695bbcab6442d768e2e9b9535d00f4b4dea9ce03d40c866be07")
+    version("0.11.1", sha256="de2e9feb3316f798ab08b318302ff04e764f47e691f0847f780044279fa176ca")
+    version("0.11.0", sha256="c838e0491d80775daadd0802e27ae3af112a52086c9ba8cbcd1e2807243c89ac")
+    version("0.10.3", sha256="9e6ab66175f2dc13e246c37485b2c27c77931dfe47fc2b81c76217b8efdc1e57")
     version("0.10.2", sha256="daa29d96bff5cff04d80eec5b9f5076993d6ac9c2d2163e88b6b31f8d38f7c25")
     version("0.10.1", sha256="e892ecd413e6bf63950329d1317c70f697d81d0f7e386152238062e322c8f1f3")
     version("0.10.0", sha256="990bafc7f76d7442894533771d0ba7492dbca2bbf2989fb32de7e9c68eb3d133")
@@ -26,12 +37,20 @@ class PyTorchmetrics(PythonPackage):
     version("0.3.1", sha256="78f4057db53f7c219fdf9ec9eed151adad18dd43488a44e5c780806d218e3f1d")
     version("0.2.0", sha256="481a28759acd2d77cc088acba6bc7dc4a356c7cb767da2e1495e91e612e2d548")
 
-    depends_on("python@3.7:", when="@0.9:", type=("build", "run"))
-    depends_on("python@3.6:", type=("build", "run"))
+    # setup.py
+    depends_on("python@3.8:", when="@1:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
+
+    # requirements.txt (upper bound is removed during processing)
+    depends_on("py-numpy@1.20.1:", when="@1:", type=("build", "run"))
     depends_on("py-numpy@1.17.2:", when="@0.4:", type=("build", "run"))
     depends_on("py-numpy", when="@0.3:", type=("build", "run"))
+    depends_on("py-torch@1.8.1:", when="@0.11:", type=("build", "run"))
     depends_on("py-torch@1.3.1:", type=("build", "run"))
-    depends_on("py-pydeprecate@0.3", when="@0.7:0.8", type=("build", "run"))
-    depends_on("py-packaging", when="@0.3:", type=("build", "run"))
     depends_on("py-typing-extensions", when="@0.9: ^python@:3.8", type=("build", "run"))
+    depends_on("py-lightning-utilities@0.8:", when="@1.1:", type=("build", "run"))
+    depends_on("py-lightning-utilities@0.7:", when="@1:", type=("build", "run"))
+
+    # Historical dependencies
+    depends_on("py-packaging", when="@0.3:1.1", type=("build", "run"))
+    depends_on("py-pydeprecate@0.3", when="@0.7:0.8", type=("build", "run"))

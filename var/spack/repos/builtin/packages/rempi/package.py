@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,18 +17,19 @@ class Rempi(AutotoolsPackage):
     version("1.0.0", sha256="1cb21f457cf8a04632150156a2ba699dd0c3f81d47e8881a9b943b9bf575fa01")
 
     depends_on("mpi")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
     depends_on("libpciaccess", type="link")
 
+    patch("include-string.patch", when="@1.1.0")
+
     def flag_handler(self, name, flags):
-        iflags = []
         if name == "cflags":
             if self.spec.satisfies("%oneapi@2022.2.0:"):
-                iflags.append("-Wno-error=implicit-function-declaration")
-        return (iflags, None, None)
+                flags.append("-Wno-error=implicit-function-declaration")
+        return (flags, None, None)
 
     def setup_build_environment(self, env):
         if self.spec.satisfies("%cce"):

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,12 +29,12 @@ class RSeuratobject(RPackage):
     depends_on("r-future", type=("build", "run"), when="@4.1.0:")
     depends_on("r-future-apply", type=("build", "run"), when="@4.1.0:")
     depends_on("r-matrix@1.3-3:", type=("build", "run"))
-    depends_on("r-matrix@1.5.0:", type=("build", "run"), when="@4.1.2:")
+    depends_on("r-matrix@1.5-0:", type=("build", "run"), when="@4.1.2:")
     depends_on("r-progressr", type=("build", "run"), when="@4.1.0:")
     depends_on("r-rcpp@1.0.5:", type=("build", "run"))
     depends_on("r-sp", type=("build", "run"), when="@4.1.0:")
-    depends_on("r-sp@1.5.0:", type=("build", "run"), when="@4.1.2:")
+    depends_on("r-sp@1.5-0:", type=("build", "run"), when="@4.1.2:")
     depends_on("r-rlang@0.4.7:", type=("build", "run"))
     depends_on("r-rcppeigen", type=("build", "run"))
-    depends_on("r-rgeos", type=("build", "run"), when="@4.1.0:")
-    depends_on("r-rgeos", when="@:4.1.2")
+
+    depends_on("r-rgeos", type=("build", "run"), when="@4.1.0:4.1.2")

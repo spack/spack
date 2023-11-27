@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,9 +24,12 @@ class PyPybind11(CMakePackage, PythonExtension):
     url = "https://github.com/pybind/pybind11/archive/refs/tags/v2.10.1.tar.gz"
     git = "https://github.com/pybind/pybind11.git"
 
-    maintainers = ["ax3l"]
+    maintainers("ax3l")
 
     version("master", branch="master")
+    version("2.11.1", sha256="d475978da0cdc2d43b73f30910786759d593a9d8ee05b1b6846d1eb16c6d2e0c")
+    version("2.11.0", sha256="7af30a84c6810e721829c4646e31927af9d8861e085aa5dd37c3c8b8169fcda1")
+    version("2.10.4", sha256="832e2f309c57da9c1e6d4542dedd34b24e4192ecb4d62f6f4866a737454c9970")
     version("2.10.1", sha256="111014b516b625083bef701df7880f78c2243835abdb263065b6b59b960b6bad")
     version("2.10.0", sha256="eacf582fa8f696227988d08cfc46121770823839fe9e301a20fbce67e7cd70ec")
     version("2.9.2", sha256="6bd528c4dbe2276635dc787b6b1f2e5316cf6b49ee3e150264e455a0d68d19c1")
@@ -51,22 +54,21 @@ class PyPybind11(CMakePackage, PythonExtension):
 
     depends_on("py-setuptools@42:", type="build")
     depends_on("py-pytest", type="test")
-    depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
-    depends_on("python@3.6:", when="@2.10.0:", type=("build", "run"))
-
     depends_on("py-pip", type="build")
     depends_on("py-wheel", type="build")
     extends("python")
 
     with when("build_system=cmake"):
-        depends_on("ninja", type="build")
+        generator("ninja")
         depends_on("cmake@3.13:", type="build")
         depends_on("cmake@3.18:", type="build", when="@2.6.0:")
 
-    # compiler support
-    conflicts("%gcc@:4.7")
+    # https://github.com/pybind/pybind11/#supported-compilers
     conflicts("%clang@:3.2")
-    conflicts("%intel@:16")
+    conflicts("%apple-clang@:4")
+    conflicts("%gcc@:4.7")
+    conflicts("%msvc@:16")
+    conflicts("%intel@:17")
 
     # https://github.com/pybind/pybind11/pull/1995
     @when("@:2.4")
@@ -88,7 +90,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         ]
 
     def install(self, pkg, spec, prefix):
-        super(CMakeBuilder, self).install(pkg, spec, prefix)
+        super().install(pkg, spec, prefix)
         python_builder = spack.build_systems.python.PythonPipBuilder(pkg)
         python_builder.install(pkg, spec, prefix)
 
@@ -104,10 +106,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             # test include helper points to right location
             python = self.spec["python"].command
             py_inc = python(
-                "-c",
-                "import pybind11 as py; "
-                + self.spec["python"].package.print_string("py.get_include()"),
-                output=str,
+                "-c", "import pybind11 as py; print(py.get_include())", output=str
             ).strip()
             for inc in [py_inc, self.prefix.include]:
                 inc_file = join_path(inc, "pybind11", "pybind11.h")

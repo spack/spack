@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class PyFenicsFfc(PythonPackage):
     homepage = "https://fenicsproject.org/"
     git = "https://bitbucket.org/fenics-project/ffc.git"
     url = "https://bitbucket.org/fenics-project/ffc/downloads/ffc-2019.1.0.post0.tar.gz"
-    maintainers = ["emai-imcs"]
+    maintainers("emai-imcs")
 
     version(
         "2019.1.0.post0", sha256="306e1179630200a34202975a5369194939b3482eebfc34bc44ad74dab1f109e8"

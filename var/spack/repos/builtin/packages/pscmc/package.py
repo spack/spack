@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Pscmc(MakefilePackage):
     is designed for multi-platform
     parallel programming."""
 
-    maintainers = ["Bitllion"]
+    maintainers("Bitllion")
 
     homepage = "https://github.com/JianyuanXiao/PSCMC"
     git = "https://github.com/JianyuanXiao/PSCMC.git"

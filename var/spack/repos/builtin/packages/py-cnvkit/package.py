@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,6 @@ class PyCnvkit(PythonPackage):
     version("0.9.6", sha256="be889c98a5cf0a994330b8c31c0a65151fb0095fe4e75a1e04118da2516248c2")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-futures@3.0:", type=("build", "run"), when="^python@:2.7")
     depends_on("py-biopython@1.62:", type=("build", "run"))
     depends_on("py-future@0.15.2:", type=("build", "run"))
     depends_on("py-pomegranate@0.9.0:", type=("build", "run"))

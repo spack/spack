@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,17 +26,7 @@ class Madgraph5amc(MakefilePackage):
         sha256="acda34414beba201e529b8c03f87f4893fb3f99ed2956a131d60a387e76c5b8c",
         url="https://launchpad.net/mg5amcnlo/2.0/2.8.x/+download/MG5_aMC_v2.8.1.tar.gz",
     )
-    version(
-        "2.8.0",
-        sha256="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-        url="https://launchpad.net/mg5amcnlo/2.0/2.8.x/+download/MG5_aMC_v2.8.0.tar.gz",
-    )
     version("2.7.3.py3", sha256="400c26f9b15b07baaad9bd62091ceea785c2d3a59618fdc27cad213816bc7225")
-    version(
-        "2.7.3.py2",
-        sha256="0b665356f4d9359e6e382e0f408dc11db594734567c6b2f0ec0e0697f2dbe099",
-        url="https://launchpad.net/mg5amcnlo/2.0/2.7.x/+download/MG5_aMC_v2.7.3.tar.gz",
-    )
 
     variant(
         "atlas",
@@ -55,7 +45,6 @@ class Madgraph5amc(MakefilePackage):
     depends_on("fastjet")
     depends_on("py-six", when="@2.7.3.py3,2.8.0:", type=("build", "run"))
 
-    depends_on("python@2.7.0:2.8.0", when="@2.7.3.py2", type=("build", "run"))
     depends_on("python@3.7:", when="@2.7.3.py3", type=("build", "run"))
     depends_on("python@2.7.0:2.8.0,3.7:", when="@2.8.0:", type=("build", "run"))
     depends_on("libtirpc")

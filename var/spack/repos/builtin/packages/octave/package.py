@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,10 +24,12 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org/software/octave/"
     gnu_mirror_path = "octave/octave-4.0.0.tar.gz"
-    maintainers = ["mtmiller", "siko1056"]
+    maintainers("mtmiller")
 
     extendable = True
 
+    version("8.2.0", sha256="57d17f918a940d38ca3348211e110b34d735a322a87db71c177c4692a49a9c84")
+    version("8.1.0", sha256="8052074d17b0ef643d037de8ab389672c752bb201ee9cea4dfa69858fb6a213f")
     version("7.3.0", sha256="6e14a4649d70af45ab660f8cbbf645aaf1ec33f25f88bfda4697cb17e440c4f5")
     version("7.2.0", sha256="b12cb652587d31c5c382b39ed73463c22a5259ecb2fa6b323a27da409222dacc")
     version("7.1.0", sha256="d4a9d81f3f67b4a6e07cb7a80dcb10ad5e9176fcc30762c70a81580a64b8b0b6")
@@ -50,28 +52,28 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
     patch("patch_4.2.1_inline.diff", when="@4.2.1")
 
     # Variants
-    variant("readline", default=True)
-    variant("bz2", default=True)
-    variant("arpack", default=False)
-    variant("curl", default=False)
-    variant("fftw", default=False)
-    variant("fltk", default=False)
-    variant("fontconfig", default=False)
-    variant("freetype", default=False)
-    variant("glpk", default=False)
-    variant("gl2ps", default=False)
-    variant("gnuplot", default=False)
-    variant("magick", default=False)
-    variant("hdf5", default=False)
-    variant("jdk", default=False)
-    variant("llvm", default=False)
-    variant("opengl", default=False)
-    variant("qhull", default=False)
-    variant("qrupdate", default=False)
-    variant("qscintilla", default=False)
-    variant("qt", default=False)
-    variant("suitesparse", default=False)
-    variant("zlib", default=False)
+    variant("readline", default=True, description="Use readline")
+    variant("bz2", default=True, description="Use bzip2")
+    variant("arpack", default=False, description="Use arpack")
+    variant("curl", default=False, description="Use curl")
+    variant("fftw", default=False, description="Use FFTW3")
+    variant("fltk", default=False, description="Use FLTK")
+    variant("fontconfig", default=False, description="Use fontconfig")
+    variant("freetype", default=False, description="Use freetype")
+    variant("glpk", default=False, description="Use GLPK")
+    variant("gl2ps", default=False, description="Use GL2PS")
+    variant("gnuplot", default=False, description="Use gnuplot")
+    variant("magick", default=False, description="Use magick")
+    variant("hdf5", default=False, description="Use HDF5")
+    variant("jdk", default=False, description="Use JDK")
+    variant("llvm", default=False, description="Use LLVM")
+    variant("opengl", default=False, description="Use OpenGL")
+    variant("qhull", default=False, description="Use qhull")
+    variant("qrupdate", default=False, description="Use qrupdate")
+    variant("qscintilla", default=False, description="Use QScintill")
+    variant("qt", default=False, description="Use Qt")
+    variant("suitesparse", default=False, description="Use SuiteSparse")
+    variant("zlib", default=False, description="Use zlib")
 
     # Required dependencies
     depends_on("blas")
@@ -89,7 +91,7 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
     # Optional dependencies
     depends_on("arpack-ng", when="+arpack")
     depends_on("curl", when="+curl")
-    depends_on("fftw", when="+fftw")
+    depends_on("fftw-api@3", when="+fftw")
     depends_on("fltk", when="+fltk")
     depends_on("fontconfig", when="+fontconfig")
     depends_on("freetype", when="+freetype")
@@ -107,7 +109,7 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
     depends_on("qscintilla", when="+qscintilla")
     depends_on("qt+opengl", when="+qt")
     depends_on("suite-sparse", when="+suitesparse")
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
 
     def patch(self):
         # Filter mkoctfile.in.cc to use underlying compilers and not
@@ -165,7 +167,7 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
         config_args = []
 
         # Required dependencies
-        if "^mkl" in spec and "gfortran" in self.compiler.fc:
+        if spec["lapack"].name in INTEL_MATH_LIBRARIES and "gfortran" in self.compiler.fc:
             mkl_re = re.compile(r"(mkl_)intel(_i?lp64\b)")
             config_args.extend(
                 [
@@ -222,14 +224,43 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
             config_args.append("--without-curl")
 
         if "+fftw" in spec:
-            config_args.extend(
-                [
-                    "--with-fftw3-includedir=%s" % spec["fftw"].prefix.include,
-                    "--with-fftw3-libdir=%s" % spec["fftw"].prefix.lib,
-                    "--with-fftw3f-includedir=%s" % spec["fftw"].prefix.include,
-                    "--with-fftw3f-libdir=%s" % spec["fftw"].prefix.lib,
-                ]
-            )
+            fftw_string = "fftw-api"
+            if ("^intel-mkl" in spec) or ("^intel-oneapi-mkl" in spec):
+                config_args.extend(
+                    [
+                        "--with-fftw3={0}".format(spec[fftw_string].libs.ld_flags),
+                        "--with-fftw3f={0}".format(spec[fftw_string].libs.ld_flags),
+                    ]
+                )
+            elif "^amdfftw" in spec:
+                specAmdfftw = spec[fftw_string].token[0]
+                AMD_FFTW3_LIBS = "-lfftw3"
+                AMD_FFTW3F_LIBS = "-lfftw3f"
+                if "+openmp" in specAmdfftw:
+                    AMD_FFTW3_LIBS += " -lfftw3_omp"
+                    AMD_FFTW3F_LIBS += " -lfftw3f_omp"
+                if "+threads" in specAmdfftw:
+                    AMD_FFTW3_LIBS += " -lfftw3_threads"
+                    AMD_FFTW3F_LIBS += " -lfftw3f_threads"
+                config_args.extend(
+                    [
+                        "--with-fftw3=-L{0} {1}".format(
+                            spec[fftw_string].libs.directories[0], AMD_FFTW3_LIBS
+                        ),
+                        "--with-fftw3f=-L{0} {1}".format(
+                            spec[fftw_string].libs.directories[0], AMD_FFTW3F_LIBS
+                        ),
+                    ]
+                )
+            else:
+                config_args.extend(
+                    [
+                        "--with-fftw3-includedir=%s" % spec[fftw_string].prefix.include,
+                        "--with-fftw3-libdir=%s" % spec[fftw_string].prefix.lib,
+                        "--with-fftw3f-includedir=%s" % spec[fftw_string].prefix.include,
+                        "--with-fftw3f-libdir=%s" % spec[fftw_string].prefix.lib,
+                    ]
+                )
         else:
             config_args.extend(["--without-fftw3", "--without-fftw3f"])
 
@@ -308,8 +339,8 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
         if "+zlib" in spec:
             config_args.extend(
                 [
-                    "--with-z-includedir=%s" % spec["zlib"].prefix.include,
-                    "--with-z-libdir=%s" % spec["zlib"].prefix.lib,
+                    "--with-z-includedir=%s" % spec["zlib-api"].prefix.include,
+                    "--with-z-libdir=%s" % spec["zlib-api"].prefix.lib,
                 ]
             )
         else:

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,7 @@ class Postgresql(AutotoolsPackage):
     list_url = "http://ftp.postgresql.org/pub/source"
     list_depth = 1
 
+    version("15.2", sha256="99a2171fc3d6b5b5f56b757a7a3cb85d509a38e4273805def23941ed2b8468c7")
     version("14.0", sha256="ee2ad79126a7375e9102c4db77c4acae6ae6ffe3e082403b88826d96d927a122")
     version("12.2", sha256="ad1dcc4c4fc500786b745635a9e1eba950195ce20b8913f50345bb7d5369b5de")
     version("11.2", sha256="2676b9ce09c21978032070b6794696e0aa5a476e3d21d60afc036dc0a9c09405")
@@ -56,13 +57,13 @@ class Postgresql(AutotoolsPackage):
     depends_on("libedit", when="lineedit=libedit")
     depends_on("openssl")
     depends_on("tcl", when="+tcl")
-    depends_on("perl", when="+perl")
+    depends_on("perl+opcode", when="+perl")
     depends_on("python", when="+python")
     depends_on("libxml2", when="+xml")
 
     @property
     def command(self):
-        return Exectuable(self.prefix.bin.pg_config)
+        return Executable(self.prefix.bin.pg_config)
 
     def configure_args(self):
         config_args = ["--with-openssl"]
@@ -100,7 +101,7 @@ class Postgresql(AutotoolsPackage):
                 with working_dir(os.path.join("src", subdir)):
                     make("install")
         else:
-            super(Postgresql, self).install(spec, prefix)
+            super().install(spec, prefix)
 
     def setup_run_environment(self, env):
         spec = self.spec

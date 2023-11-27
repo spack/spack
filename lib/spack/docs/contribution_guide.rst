@@ -1,4 +1,4 @@
-.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -118,7 +118,7 @@ make another change, test that change, etc.  We use `pytest
 <http://pytest.org/>`_ as our tests framework, and these types of
 arguments are just passed to the ``pytest`` command underneath. See `the
 pytest docs
-<http://doc.pytest.org/en/latest/usage.html#specifying-tests-selecting-tests>`_
+<https://doc.pytest.org/en/latest/how-to/usage.html#specifying-which-tests-to-run>`_
 for more details on test selection syntax.
 
 ``spack unit-test`` has a few special options that can help you
@@ -147,7 +147,7 @@ you want to know about.  For example, to see just the tests in
 
 You can also combine any of these options with a ``pytest`` keyword
 search.  See the `pytest usage docs
-<https://docs.pytest.org/en/stable/usage.html#specifying-tests-selecting-tests>`_:
+<https://doc.pytest.org/en/latest/how-to/usage.html#specifying-which-tests-to-run>`_
 for more details on test selection syntax. For example, to see the names of all tests that have "spec"
 or "concretize" somewhere in their names:
 
@@ -310,53 +310,11 @@ Once all of the dependencies are installed, you can try building the documentati
    $ make clean
    $ make
 
-If you see any warning or error messages, you will have to correct those before
-your PR is accepted.
-
-If you are editing the documentation, you should obviously be running the
-documentation tests. But even if you are simply adding a new package, your
-changes could cause the documentation tests to fail:
-
-.. code-block:: console
-
-   package_list.rst:8745: WARNING: Block quote ends without a blank line; unexpected unindent.
-
-At first, this error message will mean nothing to you, since you didn't edit
-that file. Until you look at line 8745 of the file in question:
-
-.. code-block:: rst
-
-   Description:
-      NetCDF is a set of software libraries and self-describing, machine-
-     independent data formats that support the creation, access, and sharing
-     of array-oriented scientific data.
-
-Our documentation includes :ref:`a list of all Spack packages <package-list>`.
-If you add a new package, its docstring is added to this page. The problem in
-this case was that the docstring looked like:
-
-.. code-block:: python
-
-   class Netcdf(Package):
-       """
-       NetCDF is a set of software libraries and self-describing,
-       machine-independent data formats that support the creation,
-       access, and sharing of array-oriented scientific data.
-       """
-
-Docstrings cannot start with a newline character, or else Sphinx will complain.
-Instead, they should look like:
-
-.. code-block:: python
-
-   class Netcdf(Package):
-       """NetCDF is a set of software libraries and self-describing,
-       machine-independent data formats that support the creation,
-       access, and sharing of array-oriented scientific data."""
-
-Documentation changes can result in much more obfuscated warning messages.
-If you don't understand what they mean, feel free to ask when you submit
-your PR.
+If you see any warning or error messages, you will have to correct those before your PR
+is accepted. If you are editing the documentation, you should be running the
+documentation tests to make sure there are no errors. Documentation changes can result
+in some obfuscated warning messages. If you don't understand what they mean, feel free
+to ask when you submit your PR.
 
 --------
 Coverage

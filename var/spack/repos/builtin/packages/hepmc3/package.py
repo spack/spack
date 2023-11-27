@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,8 +16,9 @@ class Hepmc3(CMakePackage):
 
     tags = ["hep"]
 
-    maintainers = ["vvolkl"]
+    maintainers("vvolkl")
 
+    version("3.2.6", sha256="248f3b5b36dd773844cbe73d51f60891458334b986b259754c59dbf4bbf1d525")
     version("3.2.5", sha256="cd0f75c80f75549c59cc2a829ece7601c77de97cb2a5ab75790cac8e1d585032")
     version("3.2.4", sha256="e088fccfd1a6c2f8e1089f457101bee1e5c7a9777e9d51c6419c8a288a49e1bb")
     version("3.2.3", sha256="8caadacc2c969883cd1f994b622795fc885fb4b15dad8c8ae64bcbdbf0cbd47d")
@@ -30,6 +31,7 @@ class Hepmc3(CMakePackage):
     # note that version 3.0.0 is not supported
     # conflicts with cmake configuration
 
+    variant("protobuf", default=False, description="Enable Protobuf I/O")
     variant("python", default=False, description="Enable Python bindings")
     variant("rootio", default=False, description="Enable ROOT I/O")
     variant(
@@ -40,6 +42,7 @@ class Hepmc3(CMakePackage):
 
     depends_on("cmake@2.8.9:", type="build")
     depends_on("root", when="+rootio")
+    depends_on("protobuf", when="+protobuf")
     depends_on("python", when="+python")
 
     conflicts("%gcc@9.3.0", when="@:3.1.1")
@@ -47,22 +50,25 @@ class Hepmc3(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
+        from_variant = self.define_from_variant
         args = [
-            "-DHEPMC3_ENABLE_PYTHON={0}".format(spec.satisfies("+python")),
-            "-DHEPMC3_ENABLE_ROOTIO={0}".format(spec.satisfies("+rootio")),
-            "-DHEPMC3_INSTALL_INTERFACES={0}".format(spec.satisfies("+interfaces")),
+            from_variant("HEPMC3_ENABLE_PROTOBUF", "protobuf"),
+            from_variant("HEPMC3_ENABLE_PYTHON", "python"),
+            from_variant("HEPMC3_ENABLE_ROOTIO", "rootio"),
+            from_variant("HEPMC3_INSTALL_INTERFACES", "interfaces"),
+            self.define("HEPMC3_ENABLE_TEST", self.run_tests),
         ]
 
-        if self.spec.satisfies("+python"):
+        if "+python" in spec:
             py_ver = spec["python"].version.up_to(2)
             args.extend(
                 [
-                    "-DHEPMC3_PYTHON_VERSIONS={0}".format(py_ver),
-                    "-DHEPMC3_Python_SITEARCH{0}={1}".format(py_ver.joined, python_platlib),
+                    from_variant("HEPMC3_PYTHON_VERSIONS", str(py_ver)),
+                    from_variant("HEPMC3_Python_SITEARCH" + py_ver.joined, python_platlib),
                 ]
             )
 
-        if self.spec.satisfies("+rootio"):
-            args.append("-DROOT_DIR={0}".format(self.spec["root"].prefix))
-        args.append("-DHEPMC3_ENABLE_TEST={0}".format(self.run_tests))
+        if "+rootio" in spec:
+            args.append(self.define("ROOT_DIR", spec["root"].prefix))
+
         return args

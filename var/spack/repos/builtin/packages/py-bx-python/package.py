@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,17 +13,17 @@ class PyBxPython(PythonPackage):
     homepage = "https://github.com/bxlab/bx-python"
     pypi = "bx-python/bx-python-0.8.8.tar.gz"
 
+    version("0.9.0", sha256="fe545c44d2ea74b239d41e9090618aaf6a859d1a1f64b4a21b133cb602dfdb49")
     version("0.8.8", sha256="ad0808ab19c007e8beebadc31827e0d7560ac0e935f1100fb8cc93607400bb47")
-    version(
-        "0.7.4",
-        sha256="1066d1e56d062d0661f23c19942eb757bd7ab7cb8bc7d89a72fdc3931c995cb4",
-        url="https://github.com/bxlab/bx-python/archive/v0.7.4.tar.gz",
-    )
 
-    depends_on("python@2.4:2.7", type=("build", "run"), when="@:0.7")
-    depends_on("python@2.7:2.8,3.5:", type=("build", "run"), when="@0.8:")
+    # See https://pypi.org/project/bx-python/(version)/#files for which Python versions
+    # work with which releases.
+    depends_on("python@3.7:3.11", when="@=0.9.0", type=("build", "run"))
+    depends_on("python@3.5:3.8", when="@=0.8.8", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-python-lzo", type=("build", "run"), when="@:0.7")
-    depends_on("py-cython", type="build", when="@0.8:")
+    depends_on("py-cython", type="build")
     depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-six", type=("build", "run"), when="@0.8:")
+    depends_on("py-six", when="@:0.8.9", type=("build", "run"))
+    # py-python-lzo is listed as a dependency in `tox.ini` rather than in `setup.cfg`
+    depends_on("py-python-lzo@1.14:", type=("build", "run"))
+    depends_on("zlib", type="link")

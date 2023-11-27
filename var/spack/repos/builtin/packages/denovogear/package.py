@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,7 +26,7 @@ class Denovogear(CMakePackage):
     )
     depends_on("htslib@1.2:", type=("build"))
     depends_on("eigen", type=("build"))
-    depends_on("zlib", type=("link"))
+    depends_on("zlib-api", type=("link"))
 
     patch("stream-open.patch", when="@:1.1.1")
     # fix: ordered comparison between pointer and zero.

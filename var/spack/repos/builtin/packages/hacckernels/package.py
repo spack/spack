@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,8 +13,8 @@ class Hacckernels(CMakePackage):
     on diverse computing architectures and to scale to millions of
     cores and beyond."""
 
-    homepage = "https://xgitlab.cels.anl.gov/hacc/HACCKernels"
-    git = "https://xgitlab.cels.anl.gov/hacc/HACCKernels.git"
+    homepage = "https://git.cels.anl.gov/hacc/HACCKernels"
+    git = "https://git.cels.anl.gov/hacc/HACCKernels.git"
 
     tags = ["proxy-app"]
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,24 +22,19 @@ class Xyce(CMakePackage):
     homepage = "https://xyce.sandia.gov"
     git = "https://github.com/Xyce/Xyce.git"
     url = "https://github.com/Xyce/Xyce/archive/Release-7.2.0.tar.gz"
-    maintainers = ["kuberry"]
+    maintainers("kuberry", "tbird2001")
 
     version("master", branch="master")
-    version("7.5.0", "854d7d5e19e0ee2138d1f20f10f8f27f2bebb94ec81c157040955cff7250dacd")
-    version("7.4.0", "2d6bc1b7377834b2e0bf50131e96728c5be83dbb3548e765bb48911067c87c91")
-    version("7.3.0", "43869a70967f573ff6f00451db3f4642684834bdad1fd3926380e3789016b446")
-    version("7.2.0", "cf49705278ecda46373784bb24925cb97f9017b6adff49e4416de146bdd6a4b5")
+    version("7.7.0", sha256="1b95450e1905c3af3c16b42c41d5ef1f8ab0e640f48086d0cb4d52961a90a175")
+    version("7.6.0", sha256="fc25557e2edc82adbe0436a15fca2929a2f9ab08ddf91f1a47aab5e8b27ec88c")
+    version("7.5.0", sha256="854d7d5e19e0ee2138d1f20f10f8f27f2bebb94ec81c157040955cff7250dacd")
+    version("7.4.0", sha256="2d6bc1b7377834b2e0bf50131e96728c5be83dbb3548e765bb48911067c87c91")
+    version("7.3.0", sha256="43869a70967f573ff6f00451db3f4642684834bdad1fd3926380e3789016b446")
+    version("7.2.0", sha256="cf49705278ecda46373784bb24925cb97f9017b6adff49e4416de146bdd6a4b5")
 
     depends_on("cmake@3.13:", type="build")
     depends_on("flex")
     depends_on("bison")
-
-    variant(
-        "build_type",
-        default="Release",
-        description="CMake build type",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-    )
 
     variant("mpi", default=True, description="Enable MPI support")
     depends_on("mpi", when="+mpi")
@@ -58,7 +53,7 @@ class Xyce(CMakePackage):
     # this defaults to 11, consistent with what will be used,
     # and produces an error if any other value is attempted
     cxxstd_choices = ["11"]
-    variant("cxxstd", default="11", values=cxxstd_choices, multi=False)
+    variant("cxxstd", default="11", description="C++ standard", values=cxxstd_choices, multi=False)
 
     variant("pymi", default=False, description="Enable Python Model Interpreter for Xyce")
     # Downstream dynamic library symbols from pip installed numpy and other
@@ -104,8 +99,8 @@ class Xyce(CMakePackage):
 
     # Issue #1712 forces explicitly enumerating blas packages to propagate variants
     with when("+pymi_static_tpls"):
-
         # BLAS
+        depends_on("blas")
         depends_on("openblas~shared", when="^openblas")
         depends_on("netlib-lapack~shared", when="^netlib-lapack~external-blas")
 
@@ -127,6 +122,34 @@ class Xyce(CMakePackage):
         # HDF5
         depends_on("hdf5~shared", when="^hdf5")
 
+    # fix MPI issue
+    patch(
+        "https://github.com/xyce/xyce/commit/2f95783637a5171a7f65f5d18c24d9a580a7f39e.patch?full_index=1",
+        sha256="1aeaac78830fbc9ae089a50ef61c6cbd89d29ead54ce7fdca258e194fa05b1a3",
+        when="@:7.6",
+    )
+
+    # fix RPATH issue on mac
+    patch(
+        "https://github.com/xyce/xyce/commit/40dbc0e0341a5cf9a7fa82a87313869dc284fdd9.patch?full_index=1",
+        sha256="3c32faeeea0bb29be44ec20e414670c9fd375f9ed921a7f6e9fd3de02c28859d",
+        when="@7.3:7.5 +shared",
+    )
+
+    # fix parameter merging in pymi
+    patch(
+        "https://github.com/xyce/xyce/commit/fdf457fce1b1511b8a29d134d38e515fb7149246.patch?full_index=1",
+        sha256="077f91d2ff0649b3f7e83c224f71a030521c6fb5a84b29acd772d5657cdb6c23",
+        when="@7.4:7.6 +pymi",
+    )
+
+    # fix oneapi issue
+    patch(
+        "454-oneapi-xyce.patch",
+        sha256="76a3ff987e43d1657f24d55cfd864b487876a72a9a7c8a37c3151a9b586a21c1",
+        when="%oneapi",
+    )
+
     def cmake_args(self):
         spec = self.spec
 
@@ -135,7 +158,7 @@ class Xyce(CMakePackage):
         if "+mpi" in spec:
             options.append(self.define("CMAKE_CXX_COMPILER", spec["mpi"].mpicxx))
         else:
-            options.append(self.define("CMAKE_CXX_COMPILER", self.compiler.cxx))
+            options.append(self.define("CMAKE_CXX_COMPILER", spack_cxx))
 
         options.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
         options.append(self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"))

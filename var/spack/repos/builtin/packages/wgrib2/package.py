@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,12 +15,7 @@ class Wgrib2(MakefilePackage):
     homepage = "https://www.cpc.ncep.noaa.gov/products/wesley/wgrib2"
     url = "https://www.ftp.cpc.ncep.noaa.gov/wd51we/wgrib2/wgrib2.tgz.v2.0.8"
 
-    maintainers = [
-        "t-brown",
-        "AlexanderRichert-NOAA",
-        "Hang-Lei-NOAA",
-        "edwardhartnett",
-    ]
+    maintainers("t-brown", "AlexanderRichert-NOAA", "Hang-Lei-NOAA", "edwardhartnett")
 
     version(
         "3.1.1",
@@ -155,7 +150,6 @@ class Wgrib2(MakefilePackage):
             makefile.filter(r"^%s=.*" % makefile_option, "{}={}".format(makefile_option, value))
 
     def setup_build_environment(self, env):
-
         if self.spec.compiler.name in "intel":
             comp_sys = "intel_linux"
         elif self.spec.compiler.name in ["gcc", "clang", "apple-clang"]:
@@ -164,7 +158,6 @@ class Wgrib2(MakefilePackage):
         env.set("COMP_SYS", comp_sys)
 
     def build(self, spec, prefix):
-
         # Get source files for netCDF4 builds
         if self.spec.satisfies("+netcdf4"):
             with working_dir(self.build_directory):

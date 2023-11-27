@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,9 +29,31 @@ class Libelf(AutotoolsPackage):
 
     provides("elf@0")
 
+    # configure: error: neither int nor long is 32-bit
+    depends_on("automake", when="platform=darwin", type="build")
+    depends_on("autoconf", when="platform=darwin", type="build")
+    depends_on("libtool", when="platform=darwin", type="build")
+    depends_on("m4", when="platform=darwin", type="build")
+
+    @property
+    def force_autoreconf(self):
+        return self.spec.satisfies("platform=darwin")
+
     def configure_args(self):
-        args = ["--enable-shared", "--disable-dependency-tracking", "--disable-debug"]
+        args = ["--enable-shared", "--disable-debug"]
+
+        # config.sub: invalid option -apple-darwin21.6.0
+        if self.spec.satisfies("platform=darwin target=aarch64:"):
+            args.append("--build=aarch64-apple-darwin")
+
         return args
 
     def install(self, spec, prefix):
         make("install", parallel=False)
+
+    def flag_handler(self, name, flags):
+        if name == "cflags":
+            if self.spec.satisfies("%clang@16:"):
+                flags.append("-Wno-error=implicit-int")
+                flags.append("-Wno-error=implicit-function-declaration")
+        return (flags, None, None)

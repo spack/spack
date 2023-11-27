@@ -23,7 +23,7 @@ config:
   install_tree:
     root: $spack/opt/spack
     projections:
-      all: "${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}"
+      all: "{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}"
     # install_tree can include an optional padded length (int or boolean)
     # default is False (do not pad)
     # if padded_length is True, Spack will pad as close to the system max path
@@ -57,6 +57,11 @@ config:
   # temporary space.  Problems with specifying a path inside a Spack instance
   # are that it precludes its use as a system package and its ability to be
   # pip installable.
+  #
+  # In Spack environment files, chaining onto existing system Spack
+  # installations, the $env variable can be used to download, cache and build
+  # into user-writable paths that are relative to the currently active
+  # environment.
   #
   # In any case, if the username is not already in the path, Spack will append
   # the value of `$user` in an attempt to avoid potential conflicts between
@@ -184,7 +189,7 @@ config:
   # when Spack needs to manage its own package metadata and all operations are
   # expected to complete within the default time limit. The timeout should
   # therefore generally be left untouched.
-  db_lock_timeout: 600
+  db_lock_timeout: 60
 
 
   # How long to wait when attempting to modify a package (e.g. to install it).
@@ -215,11 +220,24 @@ config:
   # manipulation by unprivileged user (e.g. AFS)
   allow_sgid: true
 
-  # Whether to set the terminal title to display status information during
-  # building and installing packages. This gives information about Spack's
-  # current progress as well as the current and total number of packages.
-  terminal_title: false
+  # Whether to show status information during building and installing packages.
+  # This gives information about Spack's current progress as well as the current
+  # and total number of packages. Information is shown both in the terminal
+  # title and inline.
+  install_status: true
 
   # Number of seconds a buildcache's index.json is cached locally before probing
   # for updates, within a single Spack invocation. Defaults to 10 minutes.
   binary_index_ttl: 600
+
+  flags:
+    # Whether to keep -Werror flags active in package builds.
+    keep_werror: 'none'
+
+  # A mapping of aliases that can be used to define new commands. For instance,
+  # `sp: spec -I` will define a new command `sp` that will execute `spec` with
+  # the `-I` argument. Aliases cannot override existing commands.
+  aliases:
+    concretise: concretize
+    containerise: containerize
+    rm: remove

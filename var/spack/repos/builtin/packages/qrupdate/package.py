@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,7 +40,6 @@ class Qrupdate(MakefilePackage, SourceforgePackage):
 
     # The Makefile does not take the simple "make" rule
     def build(self, spec, prefix):
-
         lapack_blas = spec["lapack"].libs + spec["blas"].libs
 
         make_args = [

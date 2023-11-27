@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,7 +34,7 @@ class Apcomp(Package):
         "https://github.com/Alpine-DAV/ap_compositor/releases/download/v0.0.1/apcomp-v0.0.1.tar.gz"
     )
 
-    maintainers = ["cyrush"]
+    maintainers("cyrush")
 
     version("master", branch="master", submodules="True")
     version("0.0.4", sha256="061876dd55e443de91a40d10662496f6bb58b0a3835aec78f5710f5a737d0494")

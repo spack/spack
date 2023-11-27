@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -43,6 +43,10 @@ class Conduit(CMakePackage):
     # is to bridge any spack dependencies that are still using the name master
     version("master", branch="develop", submodules=True)
     # note: 2021-05-05 latest tagged release is now preferred instead of develop
+    version("0.8.8", sha256="99811e9c464b6f841f52fcd47e982ae47cbb01cba334cff43eabe13eea58c0df")
+    version("0.8.7", sha256="f3bf44d860783f4e0d61517c5e280c88144af37414569f4cf86e2d29b3ba5293")
+    version("0.8.6", sha256="8ca5d37033143ed7181c7286dd25a3f6126ba0358889066f13a2b32f68fc647e")
+    version("0.8.5", sha256="b4a6f269a81570a4597e2565927fd0ed2ac45da0a2500ce5a71c26f7c92c5483")
     version("0.8.4", sha256="55c37ddc668dbc45d43b60c440192f76e688a530d64f9fe1a9c7fdad8cd525fd")
     version("0.8.3", sha256="a9e60945366f3b8c37ee6a19f62d79a8d5888be7e230eabc31af2f837283ed1a")
     version("0.8.2", sha256="928eb8496bc50f6d8404f5bfa70220250876645d68d4f35ce0b99ecb85546284")
@@ -61,7 +65,7 @@ class Conduit(CMakePackage):
     version("0.2.1", sha256="796576b9c69717c52f0035542c260eb7567aa351ee892d3fbe3521c38f1520c4")
     version("0.2.0", sha256="31eff8dbc654a4b235cfcbc326a319e1752728684296721535c7ca1c9b463061")
 
-    maintainers = ["cyrush"]
+    maintainers("cyrush")
 
     ###########################################################################
     # package variants
@@ -101,6 +105,8 @@ class Conduit(CMakePackage):
     # doxygen support is wip, since doxygen has several dependencies
     # we want folks to explicitly opt in to building doxygen
     variant("doxygen", default=False, description="Build Conduit's Doxygen documentation")
+    # caliper
+    variant("caliper", default=False, description="Build Conduit Caliper support")
 
     ###########################################################################
     # package dependencies
@@ -167,11 +173,18 @@ class Conduit(CMakePackage):
     depends_on("mpi", when="+mpi")
 
     #######################
+    # Caliper
+    #######################
+    depends_on("caliper", when="+caliper")
+
+    #######################
     # Documentation related
     #######################
     depends_on("py-sphinx", when="+python+doc", type="build")
     depends_on("py-sphinx-rtd-theme", when="+python+doc", type="build")
     depends_on("doxygen", when="+doc+doxygen")
+
+    conflicts("+parmetis", when="~mpi", msg="Parmetis support requires MPI")
 
     # Tentative patch for fj compiler
     # Cmake will support fj compiler and this patch will be removed
@@ -399,31 +412,19 @@ class Conduit(CMakePackage):
             cfg.write(cmake_cache_entry("ENABLE_TESTS", "OFF"))
 
         # extra fun for blueos
-        if on_blueos:
-            # All of BlueOS compilers report clang due to nvcc,
-            # override to proper compiler family
-            if "xlc" in c_compiler:
-                cfg.write(cmake_cache_entry("CMAKE_C_COMPILER_ID", "XL"))
-            if "xlC" in cpp_compiler:
-                cfg.write(cmake_cache_entry("CMAKE_CXX_COMPILER_ID", "XL"))
+        if on_blueos and "+fortran" in spec and (f_compiler is not None) and ("xlf" in f_compiler):
+            # Fix missing std linker flag in xlc compiler
+            flags = "-WF,-C! -qxlf2003=polymorphic"
+            cfg.write(cmake_cache_entry("BLT_FORTRAN_FLAGS", flags))
+            # Grab lib directory for the current fortran compiler
+            libdir = os.path.join(os.path.dirname(os.path.dirname(f_compiler)), "lib")
+            rpaths = "-Wl,-rpath,{0} -Wl,-rpath,{0}64".format(libdir)
 
-            if "+fortran" in spec:
-                if "xlf" in f_compiler:
-                    cfg.write(cmake_cache_entry("CMAKE_Fortran_COMPILER_ID", "XL"))
-
-                if (f_compiler is not None) and ("xlf" in f_compiler):
-                    # Fix missing std linker flag in xlc compiler
-                    flags = "-WF,-C! -qxlf2003=polymorphic"
-                    cfg.write(cmake_cache_entry("BLT_FORTRAN_FLAGS", flags))
-                    # Grab lib directory for the current fortran compiler
-                    libdir = os.path.join(os.path.dirname(os.path.dirname(f_compiler)), "lib")
-                    rpaths = "-Wl,-rpath,{0} -Wl,-rpath,{0}64".format(libdir)
-
-                    flags = "${BLT_EXE_LINKER_FLAGS} -lstdc++ " + rpaths
-                    cfg.write(cmake_cache_entry("BLT_EXE_LINKER_FLAGS", flags))
-                    if "+shared" in spec:
-                        flags = "${CMAKE_SHARED_LINKER_FLAGS} " + rpaths
-                        cfg.write(cmake_cache_entry("CMAKE_SHARED_LINKER_FLAGS", flags))
+            flags = "${BLT_EXE_LINKER_FLAGS} -lstdc++ " + rpaths
+            cfg.write(cmake_cache_entry("BLT_EXE_LINKER_FLAGS", flags))
+            if "+shared" in spec:
+                flags = "${CMAKE_SHARED_LINKER_FLAGS} " + rpaths
+                cfg.write(cmake_cache_entry("CMAKE_SHARED_LINKER_FLAGS", flags))
 
         #######################
         # Python
@@ -507,6 +508,16 @@ class Conduit(CMakePackage):
         else:
             cfg.write("# zfp not built by spack \n")
 
+        #######################
+        # Caliper
+        #######################
+        cfg.write("# caliper from spack \n")
+        if "+caliper" in spec:
+            cfg.write(cmake_cache_entry("CALIPER_DIR", spec["caliper"].prefix))
+            cfg.write(cmake_cache_entry("ADIAK_DIR", spec["adiak"].prefix))
+        else:
+            cfg.write("# caliper not built by spack \n")
+
         #######################################################################
         # I/O Packages
         #######################################################################
@@ -521,9 +532,9 @@ class Conduit(CMakePackage):
 
         if "+hdf5" in spec:
             cfg.write(cmake_cache_entry("HDF5_DIR", spec["hdf5"].prefix))
-            if "zlib" in spec:
+            if "zlib-api" in spec:
                 # HDF5 depends on zlib
-                cfg.write(cmake_cache_entry("ZLIB_DIR", spec["zlib"].prefix))
+                cfg.write(cmake_cache_entry("ZLIB_DIR", spec["zlib-api"].prefix))
         else:
             cfg.write("# hdf5 not built by spack \n")
 

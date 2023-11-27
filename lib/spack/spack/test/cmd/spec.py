@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,10 +10,10 @@ import pytest
 
 import spack.environment as ev
 import spack.error
+import spack.parser
 import spack.spec
 import spack.store
 from spack.main import SpackCommand, SpackCommandError
-from spack.util.web import FetchError
 
 pytestmark = pytest.mark.usefixtures("config", "mutable_mock_repo")
 
@@ -31,6 +31,7 @@ def test_spec():
     assert "mpich@3.0.4" in output
 
 
+@pytest.mark.only_clingo("Known failure of the original concretizer")
 def test_spec_concretizer_args(mutable_config, mutable_database):
     """End-to-end test of CLI concretizer prefs.
 
@@ -38,9 +39,6 @@ def test_spec_concretizer_args(mutable_config, mutable_database):
     options to `solver.py`, and that config options are not
     lost along the way.
     """
-    if spack.config.get("config:concretizer") == "original":
-        pytest.xfail("Known failure of the original concretizer")
-
     # remove two non-preferred mpileaks installations
     # so that reuse will pick up the zmpi one
     uninstall = SpackCommand("uninstall")
@@ -48,7 +46,7 @@ def test_spec_concretizer_args(mutable_config, mutable_database):
     uninstall("-y", "mpileaks^mpich2")
 
     # get the hash of mpileaks^zmpi
-    mpileaks_zmpi = spack.store.db.query_one("mpileaks^zmpi")
+    mpileaks_zmpi = spack.store.STORE.db.query_one("mpileaks^zmpi")
     h = mpileaks_zmpi.dag_hash()[:7]
 
     output = spec("--fresh", "-l", "mpileaks")
@@ -85,10 +83,9 @@ def test_spec_parse_unquoted_flags_report():
         # cflags, we just explain how to fix it for the immediate next arg.
         spec("gcc cflags=-Os -pipe -other-arg-that-gets-ignored cflags=-I /usr/include")
     # Verify that the generated error message is nicely formatted.
-    assert str(cm.value) == dedent(
-        '''\
-    No installed spec matches the hash: 'usr'
 
+    expected_message = dedent(
+        '''\
     Some compiler or linker flags were provided without quoting their arguments,
     which now causes spack to try to parse the *next* argument as a spec component
     such as a variant instead of an additional compiler or linker flag. If the
@@ -98,6 +95,8 @@ def test_spec_parse_unquoted_flags_report():
     (1) cflags=-Os -pipe => cflags="-Os -pipe"
     (2) cflags=-I /usr/include => cflags="-I /usr/include"'''
     )
+
+    assert expected_message in str(cm.value)
 
     # Verify that the same unquoted cflags report is generated in the error message even
     # if it fails during concretization, not just during parsing.
@@ -155,7 +154,7 @@ def _parse_types(string):
 
 
 def test_spec_deptypes_nodes():
-    output = spec("--types", "--cover", "nodes", "dt-diamond")
+    output = spec("--types", "--cover", "nodes", "--no-install-status", "dt-diamond")
     types = _parse_types(output)
 
     assert types["dt-diamond"] == ["    "]
@@ -165,7 +164,7 @@ def test_spec_deptypes_nodes():
 
 
 def test_spec_deptypes_edges():
-    output = spec("--types", "--cover", "edges", "dt-diamond")
+    output = spec("--types", "--cover", "edges", "--no-install-status", "dt-diamond")
     types = _parse_types(output)
 
     assert types["dt-diamond"] == ["    "]
@@ -181,13 +180,11 @@ def test_spec_returncode():
 
 
 def test_spec_parse_error():
-    with pytest.raises(spack.error.SpackError) as e:
+    with pytest.raises(spack.parser.SpecSyntaxError) as e:
         spec("1.15:")
 
     # make sure the error is formatted properly
-    error_msg = """\
-    1.15:
-        ^"""
+    error_msg = "unexpected tokens in the spec string\n1.15:\n    ^"
     assert error_msg in str(e.value)
 
 
@@ -210,7 +207,7 @@ def test_env_aware_spec(mutable_mock_env_path):
     [
         ("develop-branch-version", "f3c7206350ac8ee364af687deaae5c574dcfca2c=develop", None),
         ("develop-branch-version", "git." + "a" * 40 + "=develop", None),
-        ("callpath", "f3c7206350ac8ee364af687deaae5c574dcfca2c=1.0", FetchError),
+        ("callpath", "f3c7206350ac8ee364af687deaae5c574dcfca2c=1.0", spack.error.FetchError),
         ("develop-branch-version", "git.foo=0.2.15", None),
     ],
 )

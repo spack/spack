@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,9 @@ class PyScs(PythonPackage, CudaPackage):
     homepage = "https://github.com/cvxgrp/scs"
     pypi = "scs/scs-2.1.1-2.tar.gz"
 
+    maintainers("meyersbs")
+
+    version("3.2.2", sha256="7206a2ad27ca031d693d65cbcbcfc661498f3983838079a66579bcc784b25293")
     version("2.1.1-2", sha256="f816cfe3d4b4cff3ac2b8b96588c5960ddd2a3dc946bda6b09db04e7bc6577f2")
 
     variant(
@@ -27,6 +30,10 @@ class PyScs(PythonPackage, CudaPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy@1.7:", type=("build", "run"))
     depends_on("py-scipy@0.13.2:", type=("build", "run"))
+
+    # in newer pip versions --install-option does not exist
+    # technically only the variants need this restriction
+    depends_on("py-pip@:23.0", type="build")
 
     def install_options(self, spec, prefix):
         args = []

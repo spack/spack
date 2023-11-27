@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -44,9 +44,19 @@ class Hpcviewer(Package):
     """
 
     homepage = "http://hpctoolkit.org"
-    maintainers = ["mwkrentel"]
+    maintainers("mwkrentel")
 
     darwin_sha = {
+        ("2023.07", "aarch64"): "6e3146fc3c6d778a256938a3589818ad3ac6496415f9fe27a012b6c1e7fbe766",
+        ("2023.07", "x86_64"): "0711a71d44e0323ec4a274983e63f07d13d09a41ead08427d273808326565cc9",
+        ("2023.05", "aarch64"): "b34e1ebc021e91c7260cc91a888e966a81913691de04c5e972da613d0dc34294",
+        ("2023.05", "x86_64"): "689c2c18f70d53a8e1f27527f65d30c61b6f70db98f63378a97f236926ef1ac5",
+        ("2023.04", "aarch64"): "85fc1c8823e2ef442666d60e98674a55315771e57205a0d2cef739d39fea699f",
+        ("2023.04", "x86_64"): "6a2497d52414ca131089a4819006e5bfe1d4b35e28bf66874105bfe051d658d4",
+        ("2023.02", "aarch64"): "05356fcd0a84f70b07f556b55a02954aae05419d9fa12f0f64f8e2399566e622",
+        ("2023.02", "x86_64"): "90fc0ac7dfbe4c29b1a3516d125b18ea368421789f16ba6cd34cf9ad1b5b7d0b",
+        ("2023.01", "aarch64"): "97af564945799652cf3efc46146297ebc0f7ebe44258876a6995cbdb5b469990",
+        ("2023.01", "x86_64"): "8efbb7234f86bfc8eedfd8c3b73f148eab298d63d988f95a87b75f91d35bba8b",
         ("2022.10", "aarch64"): "4c5b4d94d5d2d82c4e583cf2229ccfde7c74741416fdb31c94cfd13c8e940b12",
         ("2022.10", "x86_64"): "5e7c419ee5cf5527c24f075aae1eeb246a2e54f253b140c816dccae02fc0b871",
         ("2022.06", "aarch64"): "7536abac5159a5bdb3c662d90be94f813c91ee0ecd6646e2c52b49d37b9ac637",
@@ -59,6 +69,21 @@ class Hpcviewer(Package):
     }
 
     viewer_sha = {
+        ("2023.07", "aarch64"): "641c151ed0bc5d85db40187eb39ba4bcb7a4fdeeb07d5b4d00ed6a6d457f59b4",
+        ("2023.07", "ppc64le"): "e76558377b5e64d8a07f6232468c8098d5aba32c2a6210c58bef26acd3ce8c9b",
+        ("2023.07", "x86_64"): "06db75b1aab80f1142058716ca295bb43956a2b315bd7f385ec4c3a74ade0cbb",
+        ("2023.05", "aarch64"): "901b58b73890180b1cb7572d91c1b6cc205a5d3d50927c50d05d2b05554918c6",
+        ("2023.05", "ppc64le"): "d948e4777aea3a0c06300aedd4ce04e28f97b3ac306f78d672a5f692152bbdef",
+        ("2023.05", "x86_64"): "8c51df8b958ec600c9b7547461d7e9abb0e07a048d4031f58efd47df7ec79091",
+        ("2023.04", "aarch64"): "826c6a83c88eda980f9106843863853804a74f117ef53bfdd0973429c121949a",
+        ("2023.04", "ppc64le"): "4804ea59101d0301e9a2284b77757919ffc114330becc071bb69d3fc5f5df261",
+        ("2023.04", "x86_64"): "24aad913a156996cd372439a4b2ae8a6d90aab0e2f5281f1fa81b5be9c9b9278",
+        ("2023.02", "aarch64"): "f0fbf4bf1fce05cd19ddbeed0a4e8f44a83958c796e28709591926daa28cc6ba",
+        ("2023.02", "ppc64le"): "a77c1e1de5b2f71cdf2bf2daaa8298278422121d9c7fbc7008a259010d552c7d",
+        ("2023.02", "x86_64"): "dbd2bcdd20a616fe9f796ad36385809078539d84336e6d955b094e6755bc969f",
+        ("2023.01", "aarch64"): "686ca752c3b1c362108ead984862170f4a48c70afd437210f367f2c1a35ad5e5",
+        ("2023.01", "ppc64le"): "95980b48a783cd8c9a2b961525bad6d0ab576f70e035cf17a2c6b9cd553955d8",
+        ("2023.01", "x86_64"): "3c4686d64c2e27c05a8e4012e4f24f86602e353263aab5bf5930a85d53919841",
         ("2022.10", "aarch64"): "b6ab0d16168e67ba5de3fb0b989cba7b8a683aa5210d4ed69b5c8581ab990ea8",
         ("2022.10", "ppc64le"): "72abc3ee923a4aae6fe75a5269210b2e92ada2c392eab70480f9950e5be18bd0",
         ("2022.10", "x86_64"): "444e101da54b0cc79769b91ef5119d38864e15e0166575af28f3bb75d7f905ea",
@@ -158,6 +183,8 @@ class Hpcviewer(Package):
 
     system = platform.system().lower()
     machine = platform.machine().lower()
+    if machine == "arm64":
+        machine = "aarch64"
 
     # Versions for MacOSX / Darwin
     if system == "darwin":
@@ -173,7 +200,7 @@ class Hpcviewer(Package):
                     key[0],
                     url=viewer_url(*key),
                     sha256=viewer_sha[key],
-                    deprecated=(key[0] <= "2020.01"),
+                    deprecated=(key[0] <= "2020.99"),
                 )
 
                 # Current versions include the viewer and trace viewer in

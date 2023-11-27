@@ -1,24 +1,22 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import collections.abc
 import inspect
 import os
+import pathlib
 import platform
 import re
 import sys
-from typing import List, Tuple
-
-import six
+from typing import List, Optional, Tuple
 
 import llnl.util.filesystem as fs
-from llnl.util.compat import Sequence
 
 import spack.build_environment
 import spack.builder
 import spack.package_base
-import spack.util.path
-from spack.directives import build_system, depends_on, variant
+from spack.directives import build_system, conflicts, depends_on, variant
 from spack.multimethod import when
 
 from ._checks import BaseBuilder, execute_build_time_tests
@@ -35,6 +33,43 @@ def _extract_primary_generator(generator):
     """
     primary_generator = _primary_generator_extractor.match(generator).group(1)
     return primary_generator
+
+
+def generator(*names: str, default: Optional[str] = None):
+    """The build system generator to use.
+
+    See ``cmake --help`` for a list of valid generators.
+    Currently, "Unix Makefiles" and "Ninja" are the only generators
+    that Spack supports. Defaults to "Unix Makefiles".
+
+    See https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html
+    for more information.
+
+    Args:
+        names: allowed generators for this package
+        default: default generator
+    """
+    allowed_values = ("make", "ninja")
+    if any(x not in allowed_values for x in names):
+        msg = "only 'make' and 'ninja' are allowed for CMake's 'generator' directive"
+        raise ValueError(msg)
+
+    default = default or names[0]
+    not_used = [x for x in allowed_values if x not in names]
+
+    def _values(x):
+        return x in allowed_values
+
+    _values.__doc__ = f"{','.join(names)}"
+
+    variant(
+        "generator",
+        default=default,
+        values=_values,
+        description="the build system generator to use",
+    )
+    for x in not_used:
+        conflicts(f"generator={x}")
 
 
 class CMakePackage(spack.package_base.PackageBase):
@@ -55,9 +90,13 @@ class CMakePackage(spack.package_base.PackageBase):
 
     with when("build_system=cmake"):
         # https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html
+        # See https://github.com/spack/spack/pull/36679 and related issues for a
+        # discussion of the trade-offs between Release and RelWithDebInfo for default
+        # builds. Release is chosen to maximize performance and reduce disk-space burden,
+        # at the cost of more difficulty in debugging.
         variant(
             "build_type",
-            default="RelWithDebInfo",
+            default="Release",
             description="CMake build type",
             values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
         )
@@ -69,8 +108,15 @@ class CMakePackage(spack.package_base.PackageBase):
             when="^cmake@3.9:",
             description="CMake interprocedural optimization",
         )
+
+        if sys.platform == "win32":
+            generator("ninja")
+        else:
+            generator("ninja", "make", default="make")
+
         depends_on("cmake", type="build")
-        depends_on("ninja", type="build", when="platform=windows")
+        depends_on("gmake", type="build", when="generator=make")
+        depends_on("ninja", type="build", when="generator=ninja")
 
     def flags_to_build_system_args(self, flags):
         """Return a list of all command line arguments to pass the specified
@@ -96,10 +142,10 @@ class CMakePackage(spack.package_base.PackageBase):
         # We specify for each of them.
         if flags["ldflags"]:
             ldflags = " ".join(flags["ldflags"])
-            ld_string = "-DCMAKE_{0}_LINKER_FLAGS={1}"
             # cmake has separate linker arguments for types of builds.
-            for type in ["EXE", "MODULE", "SHARED", "STATIC"]:
-                self.cmake_flag_args.append(ld_string.format(type, ldflags))
+            self.cmake_flag_args.append(f"-DCMAKE_EXE_LINKER_FLAGS={ldflags}")
+            self.cmake_flag_args.append(f"-DCMAKE_MODULE_LINKER_FLAGS={ldflags}")
+            self.cmake_flag_args.append(f"-DCMAKE_SHARED_LINKER_FLAGS={ldflags}")
 
         # CMake has libs options separated by language. Apply ours to each.
         if flags["ldlibs"]:
@@ -140,29 +186,16 @@ class CMakeBuilder(BaseBuilder):
         | :py:meth:`~.CMakeBuilder.build_directory`     | Directory where to |
         |                                               | build the package  |
         +-----------------------------------------------+--------------------+
-
-    The generator used by CMake can be specified by providing the ``generator``
-    attribute. Per
-    https://cmake.org/cmake/help/git-master/manual/cmake-generators.7.html,
-    the format is: [<secondary-generator> - ]<primary_generator>.
-
-    The full list of primary and secondary generators supported by CMake may be found
-    in the documentation for the version of CMake used; however, at this time Spack
-    supports only the primary generators "Unix Makefiles" and "Ninja." Spack's CMake
-    support is agnostic with respect to primary generators. Spack will generate a
-    runtime error if the generator string does not follow the prescribed format, or if
-    the primary generator is not supported.
     """
 
     #: Phases of a CMake package
-    phases = ("cmake", "build", "install")  # type: Tuple[str, ...]
+    phases: Tuple[str, ...] = ("cmake", "build", "install")
 
     #: Names associated with package methods in the old build-system format
-    legacy_methods = ("cmake_args", "check")  # type: Tuple[str, ...]
+    legacy_methods: Tuple[str, ...] = ("cmake_args", "check")
 
     #: Names associated with package attributes in the old build-system format
-    legacy_attributes = (
-        "generator",
+    legacy_attributes: Tuple[str, ...] = (
         "build_targets",
         "install_targets",
         "build_time_test_callbacks",
@@ -171,20 +204,10 @@ class CMakeBuilder(BaseBuilder):
         "std_cmake_args",
         "build_dirname",
         "build_directory",
-    )  # type: Tuple[str, ...]
-
-    #: The build system generator to use.
-    #:
-    #: See ``cmake --help`` for a list of valid generators.
-    #: Currently, "Unix Makefiles" and "Ninja" are the only generators
-    #: that Spack supports. Defaults to "Unix Makefiles".
-    #:
-    #: See https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html
-    #: for more information.
-    generator = "Ninja" if sys.platform == "win32" else "Unix Makefiles"
+    )
 
     #: Targets to be used during the build phase
-    build_targets = []  # type: List[str]
+    build_targets: List[str] = []
     #: Targets to be used during the install phase
     install_targets = ["install"]
     #: Callback names for build-time test
@@ -205,11 +228,19 @@ class CMakeBuilder(BaseBuilder):
         return self.pkg.stage.source_path
 
     @property
+    def generator(self):
+        if self.spec.satisfies("generator=make"):
+            return "Unix Makefiles"
+        if self.spec.satisfies("generator=ninja"):
+            return "Ninja"
+        msg = f'{self.spec.format()} has an unsupported value for the "generator" variant'
+        raise ValueError(msg)
+
+    @property
     def std_cmake_args(self):
         """Standard cmake arguments provided as a property for
         convenience of package writers
         """
-        # standard CMake arguments
         std_cmake_args = CMakeBuilder.std_args(self.pkg, generator=self.generator)
         std_cmake_args += getattr(self.pkg, "cmake_flag_args", [])
         return std_cmake_args
@@ -217,7 +248,8 @@ class CMakeBuilder(BaseBuilder):
     @staticmethod
     def std_args(pkg, generator=None):
         """Computes the standard cmake arguments for a generic package"""
-        generator = generator or "Unix Makefiles"
+        default_generator = "Ninja" if sys.platform == "win32" else "Unix Makefiles"
+        generator = generator or default_generator
         valid_primary_generators = ["Unix Makefiles", "Ninja"]
         primary_generator = _extract_primary_generator(generator)
         if primary_generator not in valid_primary_generators:
@@ -240,9 +272,8 @@ class CMakeBuilder(BaseBuilder):
         args = [
             "-G",
             generator,
-            define("CMAKE_INSTALL_PREFIX", pkg.prefix),
+            define("CMAKE_INSTALL_PREFIX", pathlib.Path(pkg.prefix).as_posix()),
             define("CMAKE_BUILD_TYPE", build_type),
-            define("BUILD_TESTING", pkg.run_tests),
         ]
 
         # CMAKE_INTERPROCEDURAL_OPTIMIZATION only exists for CMake >= 3.9
@@ -254,10 +285,7 @@ class CMakeBuilder(BaseBuilder):
 
         if platform.mac_ver()[0]:
             args.extend(
-                [
-                    define("CMAKE_FIND_FRAMEWORK", "LAST"),
-                    define("CMAKE_FIND_APPBUNDLE", "LAST"),
-                ]
+                [define("CMAKE_FIND_FRAMEWORK", "LAST"), define("CMAKE_FIND_APPBUNDLE", "LAST")]
             )
 
         # Set up CMake rpath
@@ -268,7 +296,45 @@ class CMakeBuilder(BaseBuilder):
                 define("CMAKE_PREFIX_PATH", spack.build_environment.get_cmake_prefix_path(pkg)),
             ]
         )
+
         return args
+
+    @staticmethod
+    def define_cuda_architectures(pkg):
+        """Returns the str ``-DCMAKE_CUDA_ARCHITECTURES:STRING=(expanded cuda_arch)``.
+
+        ``cuda_arch`` is variant composed of a list of target CUDA architectures and
+        it is declared in the cuda package.
+
+        This method is no-op for cmake<3.18 and when ``cuda_arch`` variant is not set.
+
+        """
+        cmake_flag = str()
+        if "cuda_arch" in pkg.spec.variants and pkg.spec.satisfies("^cmake@3.18:"):
+            cmake_flag = CMakeBuilder.define(
+                "CMAKE_CUDA_ARCHITECTURES", pkg.spec.variants["cuda_arch"].value
+            )
+
+        return cmake_flag
+
+    @staticmethod
+    def define_hip_architectures(pkg):
+        """Returns the str ``-DCMAKE_HIP_ARCHITECTURES:STRING=(expanded amdgpu_target)``.
+
+        ``amdgpu_target`` is variant composed of a list of the target HIP
+        architectures and it is declared in the rocm package.
+
+        This method is no-op for cmake<3.18 and when ``amdgpu_target`` variant is
+        not set.
+
+        """
+        cmake_flag = str()
+        if "amdgpu_target" in pkg.spec.variants and pkg.spec.satisfies("^cmake@3.21:"):
+            cmake_flag = CMakeBuilder.define(
+                "CMAKE_HIP_ARCHITECTURES", pkg.spec.variants["amdgpu_target"].value
+            )
+
+        return cmake_flag
 
     @staticmethod
     def define(cmake_var, value):
@@ -302,7 +368,7 @@ class CMakeBuilder(BaseBuilder):
             value = "ON" if value else "OFF"
         else:
             kind = "STRING"
-            if isinstance(value, Sequence) and not isinstance(value, six.string_types):
+            if isinstance(value, collections.abc.Sequence) and not isinstance(value, str):
                 value = ";".join(str(v) for v in value)
             else:
                 value = str(value)
@@ -384,7 +450,6 @@ class CMakeBuilder(BaseBuilder):
 
             * CMAKE_INSTALL_PREFIX
             * CMAKE_BUILD_TYPE
-            * BUILD_TESTING
 
         which will be set automatically.
         """

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,10 +11,7 @@ import pytest
 import llnl.util.filesystem as fs
 
 import spack.platforms
-from spack.hooks.absolutify_elf_sonames import (
-    SharedLibrariesVisitor,
-    find_and_patch_sonames,
-)
+from spack.hooks.absolutify_elf_sonames import SharedLibrariesVisitor, find_and_patch_sonames
 from spack.util.executable import Executable
 
 

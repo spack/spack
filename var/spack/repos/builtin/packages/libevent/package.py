@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -41,6 +41,10 @@ class Libevent(AutotoolsPackage):
     depends_on("openssl@:1.0", when="@:2.0+openssl")
     depends_on("openssl", when="+openssl")
 
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
+
     def url_for_version(self, version):
         if version >= Version("2.0.22"):
             url = "https://github.com/libevent/libevent/releases/download/release-{0}-stable/libevent-{0}-stable.tar.gz"
@@ -48,6 +52,14 @@ class Libevent(AutotoolsPackage):
             url = "https://github.com/downloads/libevent/libevent/libevent-{0}-stable.tar.gz"
 
         return url.format(version)
+
+    @property
+    def libs(self):
+        libs = find_libraries("libevent", root=self.prefix, shared=True, recursive=True)
+        return LibraryList(libs)
+
+    def autoreconf(self, spec, prefix):
+        Executable("./autogen.sh")()
 
     def configure_args(self):
         spec = self.spec

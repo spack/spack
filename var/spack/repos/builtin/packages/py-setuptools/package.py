@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class PySetuptools(Package):
+class PySetuptools(Package, PythonExtension):
     """A Python utility that aids in the process of downloading, building,
     upgrading, installing, and uninstalling Python packages."""
 
@@ -14,8 +14,18 @@ class PySetuptools(Package):
     url = "https://files.pythonhosted.org/packages/py3/s/setuptools/setuptools-62.3.2-py3-none-any.whl"
     list_url = "https://pypi.org/simple/setuptools/"
 
-    maintainers = ["adamjstewart"]
+    tags = ["build-tools"]
 
+    version(
+        "68.0.0",
+        sha256="11e52c67415a381d10d6b462ced9cfb97066179f0e871399e006c4ab101fc85f",
+        expand=False,
+    )
+    version(
+        "67.6.0",
+        sha256="b78aaa36f6b90a074c1fa651168723acbf45d14cb1196b6f02c0fd07f17623b2",
+        expand=False,
+    )
     version(
         "65.5.0",
         sha256="f62ea9da9ed6289bfe868cd6845968a2c854d1427f8548d52cae02a42b4f0356",
@@ -29,6 +39,11 @@ class PySetuptools(Package):
     version(
         "64.0.0",
         sha256="63f463b90ff5e0a1422010100268fd688e15c44ae0798659013c8412963e15e4",
+        expand=False,
+    )
+    version(
+        "63.4.3",
+        sha256="7f61f7e82647f77d4118eeaf43d64cbcd4d87e38af9611694d4866eb070cd10d",
         expand=False,
     )
     version(
@@ -178,11 +193,22 @@ class PySetuptools(Package):
     )
 
     extends("python")
+
     depends_on("python@3.7:", when="@59.7:", type=("build", "run"))
     depends_on("python@3.6:", when="@51:", type=("build", "run"))
     depends_on("python@3.5:", when="@45:50", type=("build", "run"))
     depends_on("python@2.7:2.8,3.5:", when="@44", type=("build", "run"))
     depends_on("python@2.7:2.8,3.4:", when="@:43", type=("build", "run"))
+
+    # Uses HTMLParser.unescape
+    depends_on("python@:3.8", when="@:41.0", type=("build", "run"))
+
+    # Uses collections.MutableMapping
+    depends_on("python@:3.9", when="@:40.4.2", type=("build", "run"))
+
+    # https://github.com/pypa/setuptools/issues/3661
+    depends_on("python@:3.11", when="@:67", type=("build", "run"))
+
     depends_on("py-pip", type="build")
 
     def url_for_version(self, version):

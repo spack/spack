@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,4 +27,4 @@ class AtSpi2Atk(MesonPackage):
     def url_for_version(self, version):
         """Handle gnome's version-based custom URLs."""
         url = "http://ftp.gnome.org/pub/gnome/sources/at-spi2-atk"
-        return url + "/%s/at-spi2-atk-%s.tar.xz" % (version.up_to(2), version)
+        return url + f"/{version.up_to(2)}/at-spi2-atk-{version}.tar.xz"

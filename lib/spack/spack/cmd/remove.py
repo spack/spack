@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,6 +38,6 @@ def remove(parser, args):
             env.clear()
         else:
             for spec in spack.cmd.parse_specs(args.specs):
-                tty.msg("Removing %s from environment %s" % (spec, env.name))
                 env.remove(spec, args.list_name, force=args.force)
+                tty.msg(f"{spec} has been removed from {env.manifest}")
         env.write()

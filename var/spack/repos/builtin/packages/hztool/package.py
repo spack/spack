@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Hztool(AutotoolsPackage):
     url = "https://hztool.hepforge.org/downloads/?f=hztool-4.3.2.tar.gz"
     list_url = "https://hztool.hepforge.org/downloads/"
 
-    maintainers = ["wdconinc"]
+    maintainers("wdconinc")
 
     tags = ["hep"]
 

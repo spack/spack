@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class Photos(AutotoolsPackage):
     variant("hepmc", default=True, description="Build with HepMC2 support")
     variant("hepmc3", default=False, description="Build with HepMC3 support")
 
-    maintainers = ["vvolkl"]
+    maintainers("vvolkl")
 
     depends_on("hepmc", when="+hepmc")
     depends_on("hepmc3", when="+hepmc3")

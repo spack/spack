@@ -53,7 +53,7 @@ class SingularityBase(MakefilePackage):
     # Unpack the tarball as usual, then move the src dir into
     # its home within GOPATH.
     def do_stage(self, mirror_only=False):
-        super(SingularityBase, self).do_stage(mirror_only)
+        super().do_stage(mirror_only)
         if not os.path.exists(self.singularity_gopath_dir):
             # Move the expanded source to its destination
             tty.debug(
@@ -79,14 +79,14 @@ class SingularityBase(MakefilePackage):
     # Hijack the edit stage to run mconfig.
     def edit(self, spec, prefix):
         with working_dir(self.build_directory):
-            confstring = "./mconfig --prefix=%s" % prefix
-            confstring += " " + " ".join(self.config_options)
+            _config_options = ["--prefix=%s" % prefix]
+            _config_options += self.config_options
             if "~suid" in spec:
-                confstring += " --without-suid"
+                _config_options += ["--without-suid"]
             if "~network" in spec:
-                confstring += " --without-network"
-            configure = Executable(confstring)
-            configure()
+                _config_options += ["--without-network"]
+            configure = Executable("./mconfig")
+            configure(*_config_options)
 
     # Set these for use by MakefilePackage's default build/install methods.
     build_targets = ["-C", "builddir", "parallel=False"]
@@ -125,8 +125,6 @@ class SingularityBase(MakefilePackage):
         return join_path(self.spec.prefix.bin, self.perm_script())
 
     def _build_script(self, filename, variable_data):
-        with open(join_path(self.package_dir, self.perm_script_tmpl()), "w") as f_tmpl:
-            f_tmpl.write(SINGULARITY_SETUID_TEMPLATE)
         with open(filename, "w") as f:
             env = spack.tengine.make_environment(dirs=self.package_dir)
             t = env.get_template(self.perm_script_tmpl())
@@ -192,7 +190,7 @@ class Singularityce(SingularityBase):
     See package definition or `spack-build-out.txt` build log for details,
     e.g.
 
-    tail -15 $(spack location -i singularity)/.spack/spack-build-out.txt
+    tail -15 $(spack location -i singularityce)/.spack/spack-build-out.txt
     """
 
     homepage = "https://sylabs.io/singularity/"
@@ -210,17 +208,3 @@ class Singularityce(SingularityBase):
     version("3.9.9", sha256="1381433d64138c08e93ffacdfb4844e82c2288f1e39a9d2c631a1c4021381f2a")
     version("3.9.1", sha256="1ba3bb1719a420f48e9b0a6afdb5011f6c786d0f107ef272528c632fff9fd153")
     version("3.8.0", sha256="5fa2c0e7ef2b814d8aa170826b833f91e5031a85d85cd1292a234e6c55da1be1")
-
-
-SINGULARITY_SETUID_TEMPLATE = """#!/bin/sh -eu
-
-{% for cf in chown_files %}
-chown root {{ prefix }}/{{ cf }}
-{% endfor %}
-
-{% for sf in setuid_files %}
-chmod 4555 {{ prefix }}/{{ sf }}
-{% endfor %}
-
-# end
-"""

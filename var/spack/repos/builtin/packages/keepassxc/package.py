@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Keepassxc(CMakePackage):
     url = "https://github.com/keepassxreboot/keepassxc/releases/download/2.6.4/keepassxc-2.6.4-src.tar.xz"
     git = "https://github.com/keepassxreboot/keepassxc.git"
 
-    maintainers = ["cessenat"]
+    maintainers("cessenat")
 
     version("master", branch="master")
     version("2.7.1", sha256="6001ba626c35c316dbda6de35736f012a2264f95139fcb4a094b8eb49b15d3e7")
@@ -21,13 +21,6 @@ class Keepassxc(CMakePackage):
     version("2.6.6", sha256="3603b11ac39b289c47fac77fa150e05fd64b393d8cfdf5732dc3ef106650a4e2")
     version("2.6.4", sha256="e536e2a71c90fcf264eb831fb1a8b518ee1b03829828f862eeea748d3310f82b")
 
-    variant(
-        "build_type",
-        default="Release",
-        description="The build type for the installation (only Debug or"
-        " ( Documentation indicates Release).",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-    )
     variant("autotype", default=False, description="enable auto-type")
     variant("docs", default=True, description="Build documentation")
 
@@ -42,7 +35,7 @@ class Keepassxc(CMakePackage):
     # The following libraries are required:
     depends_on("qt+dbus~framework@5.2:")
     depends_on("libgcrypt@1.6:", type="link")
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
     depends_on("minizip", when="+autotype")
     depends_on("libmicrohttpd", type="link")
     depends_on("libsodium@1.0.12:", type="link")

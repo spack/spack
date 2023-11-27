@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,7 @@
 import re
 
 from spack.package import *
+from spack.util.environment import is_system_path
 
 
 class Groff(AutotoolsPackage, GNUMirrorPackage):
@@ -77,10 +78,19 @@ class Groff(AutotoolsPackage, GNUMirrorPackage):
         args.extend(self.with_or_without("x"))
         if "@1.22.4:" in self.spec:
             args.extend(self.with_or_without("uchardet"))
-        args.append("--with-libiconv-prefix={0}".format(self.spec["iconv"].prefix))
+        if self.spec["iconv"].name == "libc":
+            args.append("--without-libiconv-prefix")
+        elif not is_system_path(self.spec["iconv"].prefix):
+            args.append("--with-libiconv-prefix={0}".format(self.spec["iconv"].prefix))
         return args
 
     def setup_run_environment(self, env):
         if self.spec.satisfies("+x"):
             dir = join_path(self.prefix.lib, "X11", "app-defaults")
             env.set_path("XFILESEARCHPATH", dir)
+
+    def flag_handler(self, name, flags):
+        if name == "cxxflags":
+            if self.spec.satisfies("%clang@16:"):
+                flags.append("-Wno-register")
+        return (flags, None, None)

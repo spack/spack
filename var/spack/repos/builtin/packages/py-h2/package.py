@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,4 +22,3 @@ class PyH2(PythonPackage):
     depends_on("py-hyperframe@6.0:6", type=("build", "run"), when="@4.0.0:")
     depends_on("py-hpack@3.0:3", type=("build", "run"), when="@3.2.0")
     depends_on("py-hpack@4.0:4", type=("build", "run"), when="@4.0.0:")
-    depends_on("py-enum34@1.1.6:1", type=("build", "run"), when="@3.2.0^python@2.7.0:2.7")

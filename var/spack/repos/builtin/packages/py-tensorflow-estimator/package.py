@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class PyTensorflowEstimator(Package):
     homepage = "https://github.com/tensorflow/estimator"
     url = "https://github.com/tensorflow/estimator/archive/v2.2.0.tar.gz"
 
-    maintainers = ["aweits"]
+    maintainers("aweits")
 
     version("2.10", sha256="60df309377cf4e584ca20198f9639beb685d50616395f50770fc0999092d6d85")
     version("2.9.0", sha256="62d7b5a574d9c995542f6cb485ff1c18ad115afd9ec6d63437b2aab227c35ef6")
@@ -56,7 +56,6 @@ class PyTensorflowEstimator(Package):
     depends_on("bazel@0.19.0:", type="build")
     depends_on("py-pip", type="build")
     depends_on("py-wheel", type="build")
-    depends_on("py-funcsigs@1.0.2:", type=("build", "run"), when="^python@:3.2")
 
     def install(self, spec, prefix):
         self.tmp_path = tempfile.mkdtemp(prefix="spack")
@@ -75,14 +74,7 @@ class PyTensorflowEstimator(Package):
             "--jobs={0}".format(make_jobs),
             # Enable verbose output for failures
             "--verbose_failures",
-            # Show (formatted) subcommands being executed
-            "--subcommands=pretty_print",
             "--spawn_strategy=local",
-            # Ask bazel to explain what it's up to
-            # Needs a filename as argument
-            "--explain=explainlogfile.txt",
-            # Increase verbosity of explanation,
-            "--verbose_explanations",
             # bazel uses system PYTHONPATH instead of spack paths
             "--action_env",
             "PYTHONPATH={0}".format(env["PYTHONPATH"]),

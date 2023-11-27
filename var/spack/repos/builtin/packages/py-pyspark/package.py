@@ -29,7 +29,7 @@ class PyPyspark(PythonPackage):
     depends_on("python@2.7:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-py4j@0.10.9.7", when="@3.4.0:", type=("build", "run"))
-    depends_on("py-py4j@0.10.9.5", when="@3.3", type=("build", "run"))
+    depends_on("py-py4j@0.10.9.5", when="@3.3.0:", type=("build", "run"))
     depends_on("py-py4j@0.10.9.3", when="@3.2.1", type=("build", "run"))
     depends_on("py-py4j@0.10.9", when="@3.0.1:3.1.3", type=("build", "run"))
     depends_on("py-py4j@0.10.7", when="@2.3.2:2.4.4", type=("build", "run"))

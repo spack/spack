@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,9 +15,9 @@ class AwsOfiNccl(AutotoolsPackage):
     git = "https://github.com/aws/aws-ofi-nccl.git"
     url = "https://github.com/aws/aws-ofi-nccl.git"
 
-    maintainers = ["bvanessen"]
+    maintainers("bvanessen")
 
-    version("master", branch="master", default=True)
+    version("master", branch="master")
 
     variant("trace", default=False, description="Enable printing trace messages")
     variant("tests", default=False, description="Build tests")
