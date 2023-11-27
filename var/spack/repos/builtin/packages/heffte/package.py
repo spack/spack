@@ -105,7 +105,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
                 archs = ";".join(cuda_arch)
                 args.append("-DCMAKE_CUDA_ARCHITECTURES=%s" % archs)
 
-        if "+rocm" in self.spec and self.spec.satisfies("@:2.3.0"):
+        if "+rocm" in self.spec:
             args.append("-DCMAKE_CXX_COMPILER={0}".format(self.spec["hip"].hipcc))
 
             rocm_arch = self.spec.variants["amdgpu_target"].value

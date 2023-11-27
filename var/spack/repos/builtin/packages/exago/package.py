@@ -178,6 +178,8 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("umpire {0}".format(rocm_dep), when="+raja {0}".format(rocm_dep))
         depends_on("camp {0}".format(rocm_dep), when="+raja {0}".format(rocm_dep))
 
+    patch("exago-1.6.0.patch", when="@1.6.0")
+
     flag_handler = build_system_flags
 
     def cmake_args(self):
