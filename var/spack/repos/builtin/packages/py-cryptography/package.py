@@ -27,6 +27,7 @@ class PyCryptography(PythonPackage):
     version("1.8.1", sha256="323524312bb467565ebca7e50c8ae5e9674e544951d28a2904a50012a8828190")
 
     variant("idna", default=False, when="@2.5:3.0", description="Deprecated U-label support")
+    variant("rust_bootstrap", default=False, when="@3.4.3:", description="Use pre-compiled Rust")
 
     depends_on("py-setuptools@40.6:60.8,60.9.1:", when="@37:", type="build")
     depends_on("py-setuptools@40.6:", when="@2.7:36", type="build")
@@ -34,9 +35,11 @@ class PyCryptography(PythonPackage):
     depends_on("py-setuptools@11.3:", when="@:2.1", type="build")
     depends_on("py-setuptools-rust@0.11.4:", when="@3.4.2:", type="build")
     depends_on("py-setuptools-rust@0.11.4:", when="@3.4:3.4.1", type=("build", "run"))
-    depends_on("rust@1.48:", when="@38:", type="build")
-    depends_on("rust@1.41:", when="@3.4.5:", type="build")
-    depends_on("rust@1.45:", when="@3.4.3:3.4.4", type="build")
+    with when("~rust_bootstrap"):
+        depends_on("rust@1.48:", when="@38:", type="build")
+        depends_on("rust@1.41:", when="@3.4.5:", type="build")
+        depends_on("rust@1.45:", when="@3.4.3:3.4.4", type="build")
+    depends_on("rust-bootstrap", when="+rust_bootstrap", type="build")
     depends_on("pkgconfig", when="@40:", type="build")
 
     depends_on("py-cffi@1.12:", when="@3.3:", type=("build", "run"))
