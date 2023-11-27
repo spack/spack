@@ -33,11 +33,14 @@ class Verilator(AutotoolsPackage):
     designs with thousands of modules."""
 
     homepage = "https://www.veripool.org/projects/verilator"
-    url = "https://github.com/verilator/verilator/archive/refs/tags/v5.016.tar.gz"
+    url = "https://github.com/verilator/verilator/archive/refs/tags/v5.018.tar.gz"
     git = "https://github.com/verilator/verilator.git"
 
     maintainers("davekeeshan")
 
+    version("master", branch="master")
+
+    version("5.018", sha256="8b544273eedee379e3c1a3bb849e14c754c9b5035d61ad03acdf3963092ba6c0")
     version("5.016", sha256="66fc36f65033e5ec904481dd3d0df56500e90c0bfca23b2ae21b4a8d39e05ef1")
     version("5.014", sha256="36e16c8a7c4b376f88d87411cea6ee68710e6d1382a13faf21f35d65b54df4a7")
     version("5.012", sha256="db19a7d7615b37d9108654e757427e4c3f44e6e973ed40dd5e0e80cc6beb8467")
@@ -68,6 +71,7 @@ class Verilator(AutotoolsPackage):
     depends_on("help2man", type="build")
     depends_on("bison", type="build")
     depends_on("flex", type="build")
+    depends_on("ccache", type=("build", "run"), when="@5.018:")
     depends_on("perl", type=("build", "run"))
     depends_on("bash", type="build")
 
