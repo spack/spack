@@ -65,7 +65,7 @@ class PyFenicsDolfinx(PythonPackage):
     depends_on("py-petsc4py", type=("build", "run"))
     depends_on("py-pybind11@2.7.0:", when="@:0.7", type=("build", "run"))
     depends_on("py-setuptools@42:", when="@:0.7", type="build")
-    depends_on("py-nanobind@1.5.1:", when="@0.8:", type="build")
+    depends_on("py-nanobind@1.8:", when="@0.8:", type="build")
     depends_on("py-scikit-build-core+pyproject@0.5.0:", when="@0.8:", type="build")
     depends_on("xtensor@0.23.10:", type="build", when="@:0.5")
 
