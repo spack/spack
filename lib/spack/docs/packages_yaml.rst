@@ -383,9 +383,9 @@ like this:
 
 which means every spec will be required to use ``clang`` as a compiler.
 
-Any constraint that appears in default requirements under ``all``, and that
-would clearly lead to unsolvable cases, is disregarded. For instance a configuration
-like the following:
+Requirements on variants for all packages are possible too, but note that they
+are only enforced for those packages that define these variants, otherwise they
+are disregarded. For example:
 
 .. code-block:: yaml
 
