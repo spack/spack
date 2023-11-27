@@ -630,6 +630,7 @@ def bootstrap_clingo():
         import spack.bootstrap
 
         with spack.bootstrap.ensure_bootstrap_configuration():
+            # TODO (johnwparent): Is it ok to rely on Clingo to establish the compiler wrapper?
             spack.bootstrap.ensure_core_dependencies()
             import clingo
 

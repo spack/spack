@@ -125,6 +125,11 @@ else:
 
 stat_suffix = "lib" if sys.platform == "win32" else "a"
 
+if sys.platform == "win32":
+    list_sep_char = "|"
+else:
+    list_sep_char = ":"
+
 
 def jobserver_enabled():
     """Returns true if a posix jobserver (make) is detected."""
@@ -403,7 +408,7 @@ def set_compiler_environment_variables(pkg, env):
 
     env.set("SPACK_COMPILER_SPEC", str(spec.compiler))
 
-    env.set("SPACK_SYSTEM_DIRS", ":".join(SYSTEM_DIRS))
+    env.set("SPACK_SYSTEM_DIRS", list_sep_char.join(SYSTEM_DIRS))
 
     compiler.setup_custom_environment(pkg, env)
 
@@ -424,7 +429,7 @@ def set_wrapper_variables(pkg, env):
     env.extend(spack.schema.environment.parse(compiler.environment))
 
     if compiler.extra_rpaths:
-        extra_rpaths = ":".join(compiler.extra_rpaths)
+        extra_rpaths = list_sep_char.join(compiler.extra_rpaths)
         env.set("SPACK_COMPILER_EXTRA_RPATHS", extra_rpaths)
 
     # Add spack build environment path with compiler wrappers first in
@@ -531,9 +536,9 @@ def set_wrapper_variables(pkg, env):
     include_dirs = list(dedupe(filter_system_paths(include_dirs)))
     rpath_dirs = list(dedupe(filter_system_paths(rpath_dirs)))
 
-    env.set(SPACK_LINK_DIRS, ":".join(link_dirs))
-    env.set(SPACK_INCLUDE_DIRS, ":".join(include_dirs))
-    env.set(SPACK_RPATH_DIRS, ":".join(rpath_dirs))
+    env.set(SPACK_LINK_DIRS, list_sep_char.join(link_dirs))
+    env.set(SPACK_INCLUDE_DIRS, list_sep_char.join(include_dirs))
+    env.set(SPACK_RPATH_DIRS, list_sep_char.join(rpath_dirs))
 
 
 def set_package_py_globals(pkg, context: Context = Context.BUILD):
@@ -786,7 +791,7 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
 
     implicit_rpaths = pkg.compiler.implicit_rpaths()
     if implicit_rpaths:
-        env_mods.set("SPACK_COMPILER_IMPLICIT_RPATHS", ":".join(implicit_rpaths))
+        env_mods.set("SPACK_COMPILER_IMPLICIT_RPATHS", list_sep_char.join(implicit_rpaths))
 
     # Make sure nothing's strange about the Spack environment.
     validate(env_mods, tty.warn)
