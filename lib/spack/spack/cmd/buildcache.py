@@ -275,10 +275,11 @@ def setup_parser(subparser: argparse.ArgumentParser):
 
     # Sync buildcache entries from one mirror to another
     sync = subparsers.add_parser("sync", help=sync_fn.__doc__)
-    sync.add_argument(
-        "--manifest-glob", help="a quoted glob pattern identifying copy manifest files"
+    sync_source = sync.add_mutually_exclusive_group(required=True)
+    sync_source.add_argument(
+        "--manifest-glob", help="a quoted glob pattern identifying CI rebuild manifest files"
     )
-    sync.add_argument(
+    sync_source.add_argument(
         "src_mirror",
         metavar="source mirror",
         type=arguments.mirror_name_or_url,
@@ -1070,7 +1071,7 @@ def sync_fn(args):
     requires an active environment in order to know which specs to sync
     """
     if args.manifest_glob:
-        manifest_copy(glob.glob(args.manifest_glob))
+        manifest_copy(glob.glob(args.manifest_glob), args.dest_mirror)
         return 0
 
     if args.src_mirror is None or args.dest_mirror is None:
@@ -1121,7 +1122,7 @@ def sync_fn(args):
         shutil.rmtree(tmpdir)
 
 
-def manifest_copy(manifest_file_list):
+def manifest_copy(manifest_file_list, dest_mirror=None):
     """Read manifest files containing information about specific specs to copy
     from source to destination, remove duplicates since any binary packge for
     a given hash should be the same as any other, and copy all files specified
@@ -1135,10 +1136,17 @@ def manifest_copy(manifest_file_list):
                 # Last duplicate hash wins
                 deduped_manifest[spec_hash] = copy_list
 
+    build_cache_dir = bindist.build_cache_relative_path()
     for spec_hash, copy_list in deduped_manifest.items():
         for copy_file in copy_list:
-            tty.debug("copying {0} to {1}".format(copy_file["src"], copy_file["dest"]))
-            copy_buildcache_file(copy_file["src"], copy_file["dest"])
+            dest = copy_file["dest"]
+            if dest_mirror:
+                src_relative_path = os.path.join(
+                    build_cache_dir, copy_file["src"].rsplit(build_cache_dir, 1)[1].lstrip("/")
+                )
+                dest = url_util.join(dest_mirror.push_url, src_relative_path)
+            tty.debug("copying {0} to {1}".format(copy_file["src"], dest))
+            copy_buildcache_file(copy_file["src"], dest)
 
 
 def update_index(mirror: spack.mirror.Mirror, update_keys=False):
