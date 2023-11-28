@@ -236,6 +236,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     # Patches
     patch("hpx_profiling_fences.patch", when="@3.5.00 +hpx")
+    patch("sycl_bhalft_test.patch", when="@4.2.00 +sycl")
 
     variant("shared", default=True, description="Build shared libraries")
 
