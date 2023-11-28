@@ -1117,11 +1117,8 @@ class SpackSolverSetup:
 
         self.reusable_and_possible = ConcreteSpecsByHash()
 
-        # id for dummy variables
-        self._condition_id_counter = itertools.count()
-        self._trigger_id_counter = self._condition_id_counter
+        self._id_counter = itertools.count()
         self._trigger_cache = collections.defaultdict(dict)
-        self._effect_id_counter = self._condition_id_counter
         self._effect_cache = collections.defaultdict(dict)
 
         # Caches to optimize the setup phase of the solver
@@ -1535,7 +1532,7 @@ class SpackSolverSetup:
         # In this way, if a condition can't be emitted but the exception is handled in the caller,
         # we won't emit partial facts.
 
-        condition_id = next(self._condition_id_counter)
+        condition_id = next(self._id_counter)
         self.gen.fact(fn.pkg_fact(named_cond.name, fn.condition(condition_id)))
         self.gen.fact(fn.condition_reason(condition_id, msg))
 
@@ -1543,7 +1540,7 @@ class SpackSolverSetup:
 
         named_cond_key = (str(named_cond), transform_required)
         if named_cond_key not in cache:
-            trigger_id = next(self._trigger_id_counter)
+            trigger_id = next(self._id_counter)
             requirements = self.spec_clauses(named_cond, body=True, required_from=name)
 
             if transform_required:
@@ -1559,7 +1556,7 @@ class SpackSolverSetup:
         cache = self._effect_cache[named_cond.name]
         imposed_spec_key = (str(imposed_spec), transform_imposed)
         if imposed_spec_key not in cache:
-            effect_id = next(self._effect_id_counter)
+            effect_id = next(self._id_counter)
             requirements = self.spec_clauses(imposed_spec, body=False, required_from=name)
 
             if transform_imposed:
@@ -2694,8 +2691,8 @@ class SpackSolverSetup:
     def literal_specs(self, specs):
         for spec in specs:
             self.gen.h2("Spec: %s" % str(spec))
-            condition_id = next(self._condition_id_counter)
-            trigger_id = next(self._trigger_id_counter)
+            condition_id = next(self._id_counter)
+            trigger_id = next(self._id_counter)
 
             # Special condition triggered by "literal_solved"
             self.gen.fact(fn.literal(trigger_id))
@@ -2709,7 +2706,7 @@ class SpackSolverSetup:
                 "literal specs have different requirements. clear cache before computing literals"
             )
             assert imposed_spec_key not in cache, msg
-            effect_id = next(self._effect_id_counter)
+            effect_id = next(self._id_counter)
             requirements = self.spec_clauses(spec)
             root_name = spec.name
             for clause in requirements:
