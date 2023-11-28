@@ -36,7 +36,7 @@ class Root(CMakePackage):
     # Production version
     version("6.30.02", sha256="51a09c86ffa94089abac76daa3adc20812efc6c93b427697b843b12d73e145de")
     version("6.30.00", sha256="0592c066954cfed42312957c9cb251654456064fe2d8dabdcb8826f1c0099d71")
-    version("6.28.10", sha256="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+    version("6.28.10", sha256="fc6a2d6c7cba853b0cfd6bd9514c90e9df50e1743899bc1db0472ee6f4e65a0a")
     version("6.28.06", sha256="af3b673b9aca393a5c9ae1bf86eab2672aaf1841b658c5c6e7a30ab93c586533")
     version("6.28.04", sha256="70f7f86a0cd5e3f2a0befdc59942dd50140d990ab264e8e56c7f17f6bfe9c965")
     version("6.28.02", sha256="6643c07710e68972b00227c68b20b1016fec16f3fba5f44a571fa1ce5bb42faa")
