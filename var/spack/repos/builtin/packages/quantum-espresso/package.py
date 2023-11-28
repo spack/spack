@@ -261,7 +261,7 @@ class QuantumEspresso(CMakePackage, Package):
     conflicts(
         "@:6.2",
         when="+gipaw",
-        msg="gipaw standard support available for QE 6.3 or grater version only",
+        msg="gipaw standard support available for QE 6.3 or greater version only",
     )
     conflicts("~fox", when="+gipaw", msg="gipaw plugin requires FoX")
 
