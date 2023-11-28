@@ -75,12 +75,11 @@ spack:
     pgi:
       variants: +network+nvidia+mpi
   specs:
-    - llvm@14.0.6 ~lldb  # thanks, py-libclang (+lldb fails to link ncurses)
-    - llvm@15.0.4
+    - llvm@17.0.4
     # keep the x.y.z versions in sync with the llvm versions that we install
     # and the pN version in sync with the clang-tools recipe
-    - clang-tools@15.0.4
-    - nvhpc@23.1
+    - clang-tools@17.0.4
+    - nvhpc@23.9
     - arm-forge+accept-eula
     - apptainer
     - bison
@@ -110,23 +109,21 @@ spack:
     - glew
     - gmake  # Used to parallelize Spack deployment builds
     - graphviz
-    - hdf5~mpi@1.10.7
+    - hdf5~mpi
     - help2man
     - hpe-mpi@2.25.hmpt
-    - intel-mkl
-    # Leads to issues down the line, where it is preferred over hpe-mpi
-    # #providers
-    # - intel-mpi
     - intel-oneapi-mkl@2021.4.0
     - intel-oneapi-tbb@2021.4.0
     # Ospray's preference
     - ispc@1.18.0^llvm@14
     # If julia's curl does not match what they normally ship, downloading behind a proxy
     # will break.
-    - julia@1.6^curl@7.73  # As requested by Polina S.
+    # - julia@1.6^curl@7.73  # As requested by Polina S.
+    # TODO test download on compute node
+    - julia@1.6
     - libxslt
     - likwid
-    - mvapich2@2.3.7
+    - mvapich2
     - ncurses
     - ninja
     - node-js
