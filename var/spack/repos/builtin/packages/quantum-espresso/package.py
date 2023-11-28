@@ -261,7 +261,7 @@ class QuantumEspresso(CMakePackage, Package):
         when="+gipaw",
         msg="gipaw standard support available for QE 6.3 or grater version only",
     )
-    
+
     conflicts("+gipaw build_system=cmake", when="@:7.1")
 
     # Only CMake will work for @6.8: %aocc
