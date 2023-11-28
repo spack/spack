@@ -9,7 +9,7 @@ import tempfile
 from spack.package import *
 
 
-class Adios2(CMakePackage, CudaPackage):
+class Adios2(CMakePackage, CudaPackage, ROCmPackage):
     """The Adaptable Input Output System version 2,
     developed in the Exascale Computing Program"""
 
@@ -24,10 +24,11 @@ class Adios2(CMakePackage, CudaPackage):
 
     version("master", branch="master")
     version(
-        "2.9.1",
-        sha256="ddfa32c14494250ee8a48ef1c97a1bf6442c15484bbbd4669228a0f90242f4f9",
+        "2.9.2",
+        sha256="78309297c82a95ee38ed3224c98b93d330128c753a43893f63bbe969320e4979",
         preferred=True,
     )
+    version("2.9.1", sha256="ddfa32c14494250ee8a48ef1c97a1bf6442c15484bbbd4669228a0f90242f4f9")
     version("2.9.0", sha256="69f98ef58c818bb5410133e1891ac192653b0ec96eb9468590140f2552b6e5d1")
     version("2.8.3", sha256="4906ab1899721c41dd918dddb039ba2848a1fb0cf84f3a563a1179b9d6ee0d9f")
     version("2.8.2", sha256="9909f6409dc44b2c28c1fda0042dab4b711f25ec3277ef0cb6ffc40f5483910d")
@@ -62,7 +63,8 @@ class Adios2(CMakePackage, CudaPackage):
     variant(
         "libpressio", default=False, when="@2.8:", description="Enable LibPressio for compression"
     )
-    variant("blosc", default=True, when="@2.4:", description="Enable Blosc compression")
+    variant("blosc", default=True, when="@2.4:2.8", description="Enable Blosc compression")
+    variant("blosc2", default=True, when="@2.9:", description="Enable Blosc2 compression")
     variant("bzip2", default=True, when="@2.4:", description="Enable BZip2 compression")
     variant("zfp", default=True, description="Enable ZFP compression")
     variant("png", default=True, when="@2.4:", description="Enable PNG compression")
@@ -78,7 +80,7 @@ class Adios2(CMakePackage, CudaPackage):
         description="Enable the DataMan engine for WAN transports",
     )
     variant("dataspaces", default=False, when="@2.5:", description="Enable support for DATASPACES")
-    variant("ssc", default=True, description="Enable the SSC staging engine")
+    variant("ssc", default=True, when="@:2.7", description="Enable the SSC staging engine")
     variant("hdf5", default=False, description="Enable the HDF5 engine")
     variant(
         "aws",
@@ -94,7 +96,8 @@ class Adios2(CMakePackage, CudaPackage):
     )
 
     # Optional language bindings, C++11 and C always provided
-    variant("cuda", default=False, when="@2.8:", description="Enable CUDA support")
+    variant("kokkos", default=False, when="@2.9:", description="Enable Kokkos support")
+    variant("sycl", default=False, when="@2.10:", description="Enable SYCL support")
     variant("python", default=False, description="Enable the Python bindings")
     variant("fortran", default=True, description="Enable the Fortran bindings")
 
@@ -107,6 +110,37 @@ class Adios2(CMakePackage, CudaPackage):
     conflicts("%oneapi@:2022.1.0", when="+fortran")
 
     depends_on("cmake@3.12.0:", type="build")
+
+    # Standalone CUDA support
+    depends_on("cuda", when="+cuda ~kokkos")
+
+    # Kokkos support
+    depends_on("kokkos@3.7: +cuda +wrapper", when="+kokkos +cuda")
+    depends_on("kokkos@3.7: +rocm", when="+kokkos +rocm")
+    depends_on("kokkos@3.7: +sycl", when="+kokkos +sycl")
+
+    # Propagate CUDA target to kokkos for +cuda
+    for cuda_arch in CudaPackage.cuda_arch_values:
+        depends_on(
+            "kokkos cuda_arch=%s" % cuda_arch, when="+kokkos +cuda cuda_arch=%s" % cuda_arch
+        )
+
+    # Propagate AMD GPU target to kokkos for +rocm
+    for amdgpu_value in ROCmPackage.amdgpu_targets:
+        depends_on(
+            "kokkos amdgpu_target=%s" % amdgpu_value,
+            when="+kokkos +rocm amdgpu_target=%s" % amdgpu_value,
+        )
+
+    conflicts("+cuda", when="@:2.7")
+    conflicts("+rocm", when="@:2.8")
+
+    conflicts("+cuda", when="+sycl")
+    conflicts("+rocm", when="+cuda")
+    conflicts("+rocm", when="+sycl")
+
+    conflicts("+rocm", when="~kokkos", msg="ADIOS2 does not support HIP without Kokkos")
+    conflicts("+sycl", when="~kokkos", msg="ADIOS2 does not support SYCL without Kokkos")
 
     for _platform in ["linux", "darwin", "cray"]:
         depends_on("pkgconfig", type="build", when=f"platform={_platform}")
@@ -135,8 +169,8 @@ class Adios2(CMakePackage, CudaPackage):
     depends_on("hdf5+mpi", when="+hdf5+mpi")
 
     depends_on("libpressio", when="+libpressio")
-    depends_on("c-blosc", when="@:2.8 +blosc")
-    depends_on("c-blosc2", when="@2.9: +blosc")
+    depends_on("c-blosc", when="+blosc")
+    depends_on("c-blosc2", when="+blosc2")
     depends_on("bzip2", when="+bzip2")
     depends_on("libpng@1.6:", when="+png")
     depends_on("zfp@0.5.1:0.5", when="+zfp")
@@ -178,6 +212,10 @@ class Adios2(CMakePackage, CudaPackage):
         sha256="8221073d1b2f8944395a88a5d60a15c7370646b62f5fc6309867bbb6a8c2096c",
     )
 
+    # cmake: find threads package first
+    # https://github.com/ornladios/ADIOS2/pull/3893
+    patch("2.9.2-cmake-find-threads-package-first.patch", when="@2.9.2:")
+
     @when("%fj")
     def patch(self):
         """add fujitsu mpi commands #16864"""
@@ -202,6 +240,7 @@ class Adios2(CMakePackage, CudaPackage):
             from_variant("BUILD_SHARED_LIBS", "shared"),
             from_variant("ADIOS2_USE_AWSSDK", "aws"),
             from_variant("ADIOS2_USE_Blosc", "blosc"),
+            from_variant("ADIOS2_USE_Blosc2", "blosc2"),
             from_variant("ADIOS2_USE_BZip2", "bzip2"),
             from_variant("ADIOS2_USE_DataMan", "dataman"),
             from_variant("ADIOS2_USE_DataSpaces", "dataspaces"),
@@ -214,9 +253,13 @@ class Adios2(CMakePackage, CudaPackage):
             from_variant("ADIOS2_USE_SST", "sst"),
             from_variant("ADIOS2_USE_SZ", "sz"),
             from_variant("ADIOS2_USE_ZFP", "zfp"),
-            from_variant("ADIOS2_USE_CUDA", "cuda"),
             from_variant("ADIOS2_USE_Catalyst", "libcatalyst"),
             from_variant("ADIOS2_USE_LIBPRESSIO", "libpressio"),
+            self.define("ADIOS2_USE_CUDA", self.spec.satisfies("+cuda ~kokkos")),
+            self.define("ADIOS2_USE_Kokkos", self.spec.satisfies("+kokkos")),
+            self.define("Kokkos_ENABLE_CUDA", self.spec.satisfies("+cuda +kokkos")),
+            self.define("Kokkos_ENABLE_HIP", self.spec.satisfies("+rocm")),
+            self.define("Kokkos_ENABLE_SYCL", self.spec.satisfies("+sycl")),
             self.define("BUILD_TESTING", self.run_tests),
             self.define("ADIOS2_BUILD_EXAMPLES", False),
             self.define("ADIOS2_USE_Endian_Reverse", True),
@@ -243,6 +286,14 @@ class Adios2(CMakePackage, CudaPackage):
         if "+python" in spec or self.run_tests:
             args.append(f"-DPYTHON_EXECUTABLE:FILEPATH={spec['python'].command.path}")
             args.append(f"-DPython_EXECUTABLE:FILEPATH={spec['python'].command.path}")
+
+        # hip support
+        if "+cuda" in spec:
+            args.append(self.builder.define_cuda_architectures(self))
+
+        # hip support
+        if "+rocm" in spec:
+            args.append(self.builder.define_hip_architectures(self))
 
         return args
 

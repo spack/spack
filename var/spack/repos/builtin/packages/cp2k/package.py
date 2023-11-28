@@ -84,6 +84,13 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         when="@6.1:",
     )
     variant(
+        "dlaf",
+        default=False,
+        description="Enable DLA-Future eigensolver and Cholesky decomposition",
+        # TODO: Pin version when integrated in a release
+        when="@master build_system=cmake",
+    )
+    variant(
         "sirius",
         default=False,
         description="Enable planewave electronic structure calculations via SIRIUS",
@@ -222,9 +229,23 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         conflicts("~mpi", msg="elpa requires MPI")
         depends_on("elpa+openmp", when="+openmp")
         depends_on("elpa~openmp", when="~openmp")
+        depends_on("elpa+cuda", when="+cuda")
+        depends_on("elpa~cuda", when="~cuda")
+        depends_on("elpa+rocm", when="+rocm")
+        depends_on("elpa~rocm", when="~rocm")
         depends_on("elpa@2021.05:", when="@8.3:")
         depends_on("elpa@2021.11.001:", when="@9.1:")
         depends_on("elpa@2023.05.001:", when="@2023.2:")
+
+    with when("+dlaf"):
+        conflicts(
+            "~mpi", msg="DLA-Future requires MPI. Only the distributed eigensolver is available."
+        )
+        depends_on("dla-future@0.2.1: +scalapack")
+        depends_on("dla-future ~cuda", when="~cuda")
+        depends_on("dla-future ~rocm", when="~rocm")
+        depends_on("dla-future +cuda", when="+cuda")
+        depends_on("dla-future +rocm", when="+rocm")
 
     with when("+plumed"):
         depends_on("plumed+shared")
@@ -280,6 +301,10 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         depends_on("dbcsr+openmp", when="+openmp")
         depends_on("dbcsr+cuda", when="+cuda")
         depends_on("dbcsr+rocm", when="+rocm")
+
+    with when("@2022: +rocm"):
+        depends_on("hipblas")
+        depends_on("hipfft")
 
     # CP2K needs compiler specific compilation flags, e.g. optflags
     conflicts("%apple-clang")
@@ -945,6 +970,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         args += [
             self.define_from_variant("CP2K_ENABLE_REGTESTS", "enable_regtests"),
             self.define_from_variant("CP2K_USE_ELPA", "elpa"),
+            self.define_from_variant("CP2K_USE_DLAF", "dlaf"),
             self.define_from_variant("CP2K_USE_LIBINT2", "libint"),
             self.define_from_variant("CP2K_USE_SIRIUS", "sirius"),
             self.define_from_variant("CP2K_USE_SPLA", "spla"),

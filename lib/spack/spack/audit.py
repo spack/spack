@@ -40,6 +40,7 @@ import collections
 import collections.abc
 import glob
 import inspect
+import io
 import itertools
 import pathlib
 import pickle
@@ -54,6 +55,7 @@ import spack.patch
 import spack.repo
 import spack.spec
 import spack.util.crypto
+import spack.util.spack_yaml as syaml
 import spack.variant
 
 #: Map an audit tag to a list of callables implementing checks
@@ -250,6 +252,88 @@ def _search_duplicate_specs_in_externals(error_cls):
     return errors
 
 
+@config_packages
+def _deprecated_preferences(error_cls):
+    """Search package preferences deprecated in v0.21 (and slated for removal in v0.22)"""
+    # TODO (v0.22): remove this audit as the attributes will not be allowed in config
+    errors = []
+    packages_yaml = spack.config.CONFIG.get_config("packages")
+
+    def make_error(attribute_name, config_data, summary):
+        s = io.StringIO()
+        s.write("Occurring in the following file:\n")
+        dict_view = syaml.syaml_dict((k, v) for k, v in config_data.items() if k == attribute_name)
+        syaml.dump_config(dict_view, stream=s, blame=True)
+        return error_cls(summary=summary, details=[s.getvalue()])
+
+    if "all" in packages_yaml and "version" in packages_yaml["all"]:
+        summary = "Using the deprecated 'version' attribute under 'packages:all'"
+        errors.append(make_error("version", packages_yaml["all"], summary))
+
+    for package_name in packages_yaml:
+        if package_name == "all":
+            continue
+
+        package_conf = packages_yaml[package_name]
+        for attribute in ("compiler", "providers", "target"):
+            if attribute not in package_conf:
+                continue
+            summary = (
+                f"Using the deprecated '{attribute}' attribute " f"under 'packages:{package_name}'"
+            )
+            errors.append(make_error(attribute, package_conf, summary))
+
+    return errors
+
+
+@config_packages
+def _avoid_mismatched_variants(error_cls):
+    """Warns if variant preferences have mismatched types or names."""
+    errors = []
+    packages_yaml = spack.config.CONFIG.get_config("packages")
+
+    def make_error(config_data, summary):
+        s = io.StringIO()
+        s.write("Occurring in the following file:\n")
+        syaml.dump_config(config_data, stream=s, blame=True)
+        return error_cls(summary=summary, details=[s.getvalue()])
+
+    for pkg_name in packages_yaml:
+        # 'all:' must be more forgiving, since it is setting defaults for everything
+        if pkg_name == "all" or "variants" not in packages_yaml[pkg_name]:
+            continue
+
+        preferences = packages_yaml[pkg_name]["variants"]
+        if not isinstance(preferences, list):
+            preferences = [preferences]
+
+        for variants in preferences:
+            current_spec = spack.spec.Spec(variants)
+            pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+            for variant in current_spec.variants.values():
+                # Variant does not exist at all
+                if variant.name not in pkg_cls.variants:
+                    summary = (
+                        f"Setting a preference for the '{pkg_name}' package to the "
+                        f"non-existing variant '{variant.name}'"
+                    )
+                    errors.append(make_error(preferences, summary))
+                    continue
+
+                # Variant cannot accept this value
+                s = spack.spec.Spec(pkg_name)
+                try:
+                    s.update_variant_validate(variant.name, variant.value)
+                except Exception:
+                    summary = (
+                        f"Setting the variant '{variant.name}' of the '{pkg_name}' package "
+                        f"to the invalid value '{str(variant)}'"
+                    )
+                    errors.append(make_error(preferences, summary))
+
+    return errors
+
+
 #: Sanity checks on package directives
 package_directives = AuditClass(
     group="packages",
@@ -307,10 +391,17 @@ def _check_build_test_callbacks(pkgs, error_cls):
 
 @package_directives
 def _check_patch_urls(pkgs, error_cls):
-    """Ensure that patches fetched from GitHub have stable sha256 hashes."""
+    """Ensure that patches fetched from GitHub and GitLab have stable sha256
+    hashes."""
     github_patch_url_re = (
         r"^https?://(?:patch-diff\.)?github(?:usercontent)?\.com/"
-        ".+/.+/(?:commit|pull)/[a-fA-F0-9]*.(?:patch|diff)"
+        r".+/.+/(?:commit|pull)/[a-fA-F0-9]+\.(?:patch|diff)"
+    )
+    # Only .diff URLs have stable/full hashes:
+    # https://forum.gitlab.com/t/patches-with-full-index/29313
+    gitlab_patch_url_re = (
+        r"^https?://(?:.+)?gitlab(?:.+)/"
+        r".+/.+/-/(?:commit|merge_requests)/[a-fA-F0-9]+\.(?:patch|diff)"
     )
 
     errors = []
@@ -321,19 +412,27 @@ def _check_patch_urls(pkgs, error_cls):
                 if not isinstance(patch, spack.patch.UrlPatch):
                     continue
 
-                if not re.match(github_patch_url_re, patch.url):
-                    continue
-
-                full_index_arg = "?full_index=1"
-                if not patch.url.endswith(full_index_arg):
-                    errors.append(
-                        error_cls(
-                            "patch URL in package {0} must end with {1}".format(
-                                pkg_cls.name, full_index_arg
-                            ),
-                            [patch.url],
+                if re.match(github_patch_url_re, patch.url):
+                    full_index_arg = "?full_index=1"
+                    if not patch.url.endswith(full_index_arg):
+                        errors.append(
+                            error_cls(
+                                "patch URL in package {0} must end with {1}".format(
+                                    pkg_cls.name, full_index_arg
+                                ),
+                                [patch.url],
+                            )
                         )
-                    )
+                elif re.match(gitlab_patch_url_re, patch.url):
+                    if not patch.url.endswith(".diff"):
+                        errors.append(
+                            error_cls(
+                                "patch URL in package {0} must end with .diff".format(
+                                    pkg_cls.name
+                                ),
+                                [patch.url],
+                            )
+                        )
 
     return errors
 
@@ -761,7 +860,7 @@ def _version_constraints_are_satisfiable_by_some_version_in_repo(pkgs, error_cls
                 )
             except Exception:
                 summary = (
-                    "{0}: dependency on {1} cannot be satisfied " "by known versions of {1.name}"
+                    "{0}: dependency on {1} cannot be satisfied by known versions of {1.name}"
                 ).format(pkg_name, s)
                 details = ["happening in " + filename]
                 if dependency_pkg_cls is not None:
@@ -801,6 +900,53 @@ def _analyze_variants_in_directive(pkg, constraint, directive, error_cls):
             errors.append(err)
 
     return errors
+
+
+@package_directives
+def _named_specs_in_when_arguments(pkgs, error_cls):
+    """Reports named specs in the 'when=' attribute of a directive.
+
+    Note that 'conflicts' is the only directive allowing that.
+    """
+    errors = []
+    for pkg_name in pkgs:
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+
+        def _extracts_errors(triggers, summary):
+            _errors = []
+            for trigger in list(triggers):
+                when_spec = spack.spec.Spec(trigger)
+                if when_spec.name is not None and when_spec.name != pkg_name:
+                    details = [f"using '{trigger}', should be '^{trigger}'"]
+                    _errors.append(error_cls(summary=summary, details=details))
+            return _errors
+
+        for dname, triggers in pkg_cls.dependencies.items():
+            summary = f"{pkg_name}: wrong 'when=' condition for the '{dname}' dependency"
+            errors.extend(_extracts_errors(triggers, summary))
+
+        for vname, (variant, triggers) in pkg_cls.variants.items():
+            summary = f"{pkg_name}: wrong 'when=' condition for the '{vname}' variant"
+            errors.extend(_extracts_errors(triggers, summary))
+
+        for provided, triggers in pkg_cls.provided.items():
+            summary = f"{pkg_name}: wrong 'when=' condition for the '{provided}' virtual"
+            errors.extend(_extracts_errors(triggers, summary))
+
+        for _, triggers in pkg_cls.requirements.items():
+            triggers = [when_spec for when_spec, _, _ in triggers]
+            summary = f"{pkg_name}: wrong 'when=' condition in 'requires' directive"
+            errors.extend(_extracts_errors(triggers, summary))
+
+        triggers = list(pkg_cls.patches)
+        summary = f"{pkg_name}: wrong 'when=' condition in 'patch' directives"
+        errors.extend(_extracts_errors(triggers, summary))
+
+        triggers = list(pkg_cls.resources)
+        summary = f"{pkg_name}: wrong 'when=' condition in 'resource' directives"
+        errors.extend(_extracts_errors(triggers, summary))
+
+    return llnl.util.lang.dedupe(errors)
 
 
 #: Sanity checks on package directives

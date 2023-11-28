@@ -5,34 +5,6 @@ spack:
     reuse: false
     unify: false
 
-  compilers:
-  - compiler:
-      spec: oneapi@2023.2.1
-      paths:
-        cc: /opt/intel/oneapi/compiler/2023.2.1/linux/bin/icx
-        cxx: /opt/intel/oneapi/compiler/2023.2.1/linux/bin/icpx
-        f77: /opt/intel/oneapi/compiler/2023.2.1/linux/bin/ifx
-        fc: /opt/intel/oneapi/compiler/2023.2.1/linux/bin/ifx
-      flags: {}
-      operating_system: ubuntu20.04
-      target: x86_64
-      modules: []
-      environment: {}
-      extra_rpaths: []
-  - compiler:
-      spec: gcc@=11.4.0
-      paths:
-        cc: /usr/bin/gcc
-        cxx: /usr/bin/g++
-        f77: /usr/bin/gfortran
-        fc: /usr/bin/gfortran
-      flags: {}
-      operating_system: ubuntu20.04
-      target: x86_64
-      modules: []
-      environment: {}
-      extra_rpaths: []
-
   packages:
     all:
       require: '%oneapi target=x86_64_v3'
@@ -92,6 +64,9 @@ spack:
       require: "%gcc"
     bison:
       require: '%gcc'
+    # sycl abi change means you need 2024 compiler to use 2024 mkl
+    intel-oneapi-mkl:
+      require: "@2023"
 
   specs:
   # CPU
@@ -181,7 +156,7 @@ spack:
   - superlu-dist
   - sz3
   - tasmanian
-  - tau +mpi +python
+  - tau +mpi +python +syscall
   - trilinos +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
   - turbine
   - umap
@@ -225,14 +200,18 @@ spack:
   - amrex +sycl
   - arborx +sycl ^kokkos +sycl +openmp cxxstd=17 +tests +examples
   - cabana +sycl ^kokkos +sycl +openmp cxxstd=17 +tests +examples
+  - ginkgo +sycl
+  - heffte +sycl
   - kokkos +sycl +openmp cxxstd=17 +tests +examples
   - kokkos-kernels build_type=Release %oneapi ^kokkos +sycl +openmp cxxstd=17 +tests +examples
-  - tau +mpi +opencl +level_zero ~pdt   # tau: requires libdrm.so to be installed
+  - petsc +sycl
   - slate +sycl
+  - sundials +sycl cxxstd=17 +examples-install
+  - tau +mpi +opencl +level_zero ~pdt +syscall   # tau: requires libdrm.so to be installed
+  - upcxx +level_zero
   # --
-  # - ginkgo +oneapi                    # InstallError: Ginkgo's oneAPI backend requires theDPC++ compiler as main CXX compiler.
   # - hpctoolkit +level_zero            # dyninst@12.3.0%gcc: /usr/bin/ld: libiberty/./d-demangle.c:142: undefined reference to `_intel_fast_memcpy'; can't mix intel-tbb@%oneapi with dyninst%gcc
-  # - sundials +sycl cxxstd=17          # sundials: include/sunmemory/sunmemory_sycl.h:20:10: fatal error: 'CL/sycl.hpp' file not found
+  # - warpx compute=sycl                # warpx: spack-build-wzp6vvo/_deps/fetchedamrex-src/Src/Base/AMReX_RandomEngine.H:18:10: fatal error: 'oneapi/mkl/rng/device.hpp' file not found
 
   - py-scipy
 

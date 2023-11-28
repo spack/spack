@@ -5,21 +5,6 @@ spack:
     reuse: false
     unify: false
 
-  compilers:
-  - compiler:
-      spec: gcc@=11.4.0
-      paths:
-        cc: /usr/bin/gcc
-        cxx: /usr/bin/g++
-        f77: /usr/bin/gfortran
-        fc: /usr/bin/gfortran
-      flags: {}
-      operating_system: ubuntu20.04
-      target: x86_64
-      modules: []
-      environment: {}
-      extra_rpaths: []
-
   packages:
     all:
       require: '%gcc target=x86_64_v3'
@@ -255,15 +240,17 @@ spack:
   specs:
   # ROCM NOARCH
   - hpctoolkit +rocm
-  - tau +mpi +rocm   # tau: has issue with `spack env depfile` build
+  - tau +mpi +rocm +syscall  # tau: has issue with `spack env depfile` build
 
   # ROCM 908
+  - adios2 +kokkos +rocm amdgpu_target=gfx908
   - amrex +rocm amdgpu_target=gfx908
   - arborx +rocm amdgpu_target=gfx908
   - cabana +rocm amdgpu_target=gfx908
   - caliper +rocm amdgpu_target=gfx908
   - chai ~benchmarks +rocm amdgpu_target=gfx908
   - ecp-data-vis-sdk +paraview +vtkm +rocm amdgpu_target=gfx908
+  - exago +mpi +python +raja +hiop +rocm amdgpu_target=gfx908 ~ipopt cxxflags="-Wno-error=non-pod-varargs" ^hiop@1.0.0 ~sparse +mpi +raja +rocm amdgpu_target=gfx908
   - gasnet +rocm amdgpu_target=gfx908
   - ginkgo +rocm amdgpu_target=gfx908
   - heffte +rocm amdgpu_target=gfx908
@@ -297,12 +284,14 @@ spack:
   # - papi +rocm amdgpu_target=gfx908           # papi: https://github.com/spack/spack/issues/27898
 
   # ROCM 90a
+  - adios2 +kokkos +rocm amdgpu_target=gfx90a
   - amrex +rocm amdgpu_target=gfx90a
   - arborx +rocm amdgpu_target=gfx90a
   - cabana +rocm amdgpu_target=gfx90a
   - caliper +rocm amdgpu_target=gfx90a
   - chai ~benchmarks +rocm amdgpu_target=gfx90a
   - ecp-data-vis-sdk +paraview +vtkm +rocm amdgpu_target=gfx90a
+  - exago +mpi +python +raja +hiop +rocm amdgpu_target=gfx90a ~ipopt cxxflags="-Wno-error=non-pod-varargs" ^hiop@1.0.0 ~sparse +mpi +raja +rocm amdgpu_target=gfx90a  
   - gasnet +rocm amdgpu_target=gfx90a
   - ginkgo +rocm amdgpu_target=gfx90a
   - heffte +rocm amdgpu_target=gfx90a

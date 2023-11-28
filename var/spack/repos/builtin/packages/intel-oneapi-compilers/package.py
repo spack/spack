@@ -8,6 +8,17 @@ from spack.package import *
 
 versions = [
     {
+        "version": "2024.0.0",
+        "cpp": {
+            "url": "https://registrationcenter-download.intel.com/akdlm//IRC_NAS/5c8e686a-16a7-4866-b585-9cf09e97ef36/l_dpcpp-cpp-compiler_p_2024.0.0.49524_offline.sh",
+            "sha256": "d10bad2009c98c631fbb834aae62012548daeefc806265ea567316cd9180a684",
+        },
+        "ftn": {
+            "url": "https://registrationcenter-download.intel.com/akdlm//IRC_NAS/89b0fcf9-5c00-448a-93a1-5ee4078e008e/l_fortran-compiler_p_2024.0.0.49493_offline.sh",
+            "sha256": "57faf854b8388547ee4ef2db387a9f6f3b4d0cebd67b765cf5e844a0a970d1f9",
+        },
+    },
+    {
         "version": "2023.2.1",
         "cpp": {
             "url": "https://registrationcenter-download.intel.com/akdlm//IRC_NAS/ebf5d9aa-17a7-46a4-b5df-ace004227c0e/l_dpcpp-cpp-compiler_p_2023.2.1.8_offline.sh",
@@ -183,12 +194,28 @@ class IntelOneapiCompilers(IntelOneApiPackage):
         )
 
     @property
+    def v2_layout_versions(self):
+        return "@2024:"
+
+    @property
     def component_dir(self):
         return "compiler"
 
     @property
+    def _llvm_bin(self):
+        return self.component_prefix.bin if self.v2_layout else self.component_prefix.linux.bin
+
+    @property
+    def _classic_bin(self):
+        return (
+            self.component_prefix.bin
+            if self.v2_layout
+            else self.component_prefix.linux.bin.intel64
+        )
+
+    @property
     def compiler_search_prefix(self):
-        return self.prefix.compiler.join(str(self.version)).linux.bin
+        return self._llvm_bin
 
     def setup_run_environment(self, env):
         """Adds environment variables to the generated module file.
@@ -203,14 +230,15 @@ class IntelOneapiCompilers(IntelOneApiPackage):
         """
         super().setup_run_environment(env)
 
-        env.set("CC", self.component_prefix.linux.bin.icx)
-        env.set("CXX", self.component_prefix.linux.bin.icpx)
-        env.set("F77", self.component_prefix.linux.bin.ifx)
-        env.set("FC", self.component_prefix.linux.bin.ifx)
+        env.set("CC", self._llvm_bin.icx)
+        env.set("CXX", self._llvm_bin.icpx)
+        env.set("F77", self._llvm_bin.ifx)
+        env.set("FC", self._llvm_bin.ifx)
 
     def install(self, spec, prefix):
         # Copy instead of install to speed up debugging
         # install_tree("/opt/intel/oneapi/compiler", self.prefix)
+        # return
 
         # install cpp
         super().install(spec, prefix)
@@ -219,15 +247,29 @@ class IntelOneapiCompilers(IntelOneApiPackage):
         self.install_component(find("fortran-installer", "*")[0])
 
         # Some installers have a bug and do not return an error code when failing
-        if not is_exe(self.component_prefix.linux.bin.intel64.ifort):
-            raise RuntimeError("install failed")
+        if not is_exe(self._llvm_bin.ifx):
+            raise RuntimeError("Fortran install failed")
 
     @run_after("install")
     def inject_rpaths(self):
-        # Sets rpath so the compilers can work without setting LD_LIBRARY_PATH.
+        # The oneapi compilers cannot find their own internal shared
+        # libraries. If you are using an externally installed oneapi,
+        # then you need to source setvars.sh, which will set
+        # LD_LIBRARY_PATH. If you are using spack to install the
+        # compilers, then we patch the binaries that have this
+        # problem. Over time, intel has corrected most of the
+        # issues. I am using the 2024 release as a milestone to stop
+        # patching everything and just patching the binaries that have
+        # a problem.
         patchelf = which("patchelf")
-        patchelf.add_default_arg("--set-rpath")
-        patchelf.add_default_arg(":".join(self._ld_library_path()))
+        if self.spec.satisfies("@2024:"):
+            patchelf.add_default_arg("--set-rpath", self.component_prefix.lib)
+            patchelf(self.component_prefix.bin.join("sycl-post-link"))
+            patchelf(self.component_prefix.bin.compiler.join("llvm-spirv"))
+            return
+
+        # Sets rpath so the compilers can work without setting LD_LIBRARY_PATH.
+        patchelf.add_default_arg("--set-rpath", ":".join(self._ld_library_path()))
         for pd in ["bin", "lib", join_path("compiler", "lib", "intel64_lin")]:
             for file in find(self.component_prefix.linux.join(pd), "*", recursive=False):
                 # Try to patch all files, patchelf will do nothing and fail if file
@@ -255,7 +297,10 @@ class IntelOneapiCompilers(IntelOneApiPackage):
         # TODO: it is unclear whether we should really use all elements of
         #  _ld_library_path because it looks like the only rpath that needs to be
         #  injected is self.component_prefix.linux.compiler.lib.intel64_lin.
-        common_flags = ["-Wl,-rpath,{}".format(d) for d in self._ld_library_path()]
+        if self.v2_layout:
+            common_flags = ["-Wl,-rpath,{}".format(self.component_prefix.lib)]
+        else:
+            common_flags = ["-Wl,-rpath,{}".format(d) for d in self._ld_library_path()]
 
         # Make sure that underlying clang gets the right GCC toolchain by default
         llvm_flags = ["--gcc-toolchain={}".format(self.compiler.prefix)]
@@ -267,20 +312,17 @@ class IntelOneapiCompilers(IntelOneApiPackage):
         # The cfg flags are treated as command line flags apparently. Newer versions
         # do not trigger these warnings. In some build systems these warnings can
         # cause feature detection to fail, so we silence them with -Wno-unused-...
-        if self.spec.version < Version("2022.1.0"):
+        if self.spec.satisfies("@:2022.0"):
             llvm_flags.append("-Wno-unused-command-line-argument")
 
-        self.write_config_file(
-            common_flags + llvm_flags, self.component_prefix.linux.bin, ["icx", "icpx"]
-        )
-        self.write_config_file(
-            common_flags + classic_flags, self.component_prefix.linux.bin, ["ifx"]
-        )
-        self.write_config_file(
-            common_flags + classic_flags,
-            self.component_prefix.linux.bin.intel64,
-            ["icc", "icpc", "ifort"],
-        )
+        self.write_config_file(common_flags + llvm_flags, self._llvm_bin, ["icx", "icpx"])
+        self.write_config_file(common_flags + classic_flags, self._llvm_bin, ["ifx"])
+        self.write_config_file(common_flags + classic_flags, self._classic_bin, ["ifort"])
+        # 2023 is the last release that includes icc
+        if self.spec.satisfies("@:2023"):
+            self.write_config_file(
+                common_flags + classic_flags, self._classic_bin, ["icc", "icpc"]
+            )
 
     def _ld_library_path(self):
         # Returns an iterable of directories that might contain shared runtime libraries

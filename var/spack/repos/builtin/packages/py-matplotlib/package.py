@@ -24,7 +24,10 @@ class PyMatplotlib(PythonPackage):
         "mpl_toolkits.mplot3d.tests",
     ]
 
+    version("3.8.2", sha256="01a978b871b881ee76017152f1f1a0cbf6bd5f7b8ff8c96df0df1bd57d8755a1")
+    version("3.8.1", sha256="044df81c1f6f3a8e52d70c4cfcb44e77ea9632a10929932870dfaa90de94365d")
     version("3.8.0", sha256="df8505e1c19d5c2c26aff3497a7cbd3ccfc2e97043d1e4db3e76afa399164b69")
+    version("3.7.4", sha256="7cd4fef8187d1dd0d9dcfdbaa06ac326d396fb8c71c647129f0bf56835d77026")
     version("3.7.3", sha256="f09b3dd6bdeb588de91f853bbb2d6f0ff8ab693485b0c49035eaa510cb4f142e")
     version("3.7.2", sha256="a8cdb91dddb04436bd2f098b8fdf4b81352e68cf4d2c6756fcc414791076569b")
     version("3.7.1", sha256="7b73305f25eab4541bd7ee0b96d87e53ae9c9f1823be5659b806cd85786fe882")
@@ -136,7 +139,8 @@ class PyMatplotlib(PythonPackage):
     depends_on("py-contourpy@1.0.1:", when="@3.6:", type=("build", "run"))
     depends_on("py-cycler@0.10:", type=("build", "run"))
     depends_on("py-fonttools@4.22:", when="@3.5:", type=("build", "run"))
-    depends_on("py-kiwisolver@1.0.1:", type=("build", "run"), when="@2.2.0:")
+    depends_on("py-kiwisolver@1.3.1:", when="@3.8.1:", type=("build", "run"))
+    depends_on("py-kiwisolver@1.0.1:", when="@2.2:", type=("build", "run"))
     depends_on("py-numpy@1.21:1", when="@3.8:", type=("build", "link", "run"))
     depends_on("py-numpy@1.20:", when="@3.7:", type=("build", "link", "run"))
     depends_on("py-numpy@1.19:", when="@3.6:", type=("build", "link", "run"))
@@ -146,8 +150,9 @@ class PyMatplotlib(PythonPackage):
     depends_on("py-numpy@1.11:", type=("build", "run"))
     depends_on("py-packaging@20:", when="@3.6:", type=("build", "run"))
     depends_on("py-packaging", when="@3.5:", type=("build", "run"))
+    depends_on("pil@8:", when="@3.8.1:", type=("build", "run"))
     depends_on("pil@6.2:", when="@3.3:", type=("build", "run"))
-    depends_on("py-pyparsing@2.3.1:3.0", when="@3.7.2:", type=("build", "run"))
+    depends_on("py-pyparsing@2.3.1:3.0", when="@3.7.2", type=("build", "run"))
     depends_on("py-pyparsing@2.3.1:", when="@3.7:", type=("build", "run"))
     depends_on("py-pyparsing@2.2.1:", when="@3.4:", type=("build", "run"))
     depends_on("py-pyparsing@2.0.3,2.0.5:2.1.1,2.1.3:2.1.5,2.1.7:", type=("build", "run"))
@@ -221,7 +226,9 @@ class PyMatplotlib(PythonPackage):
     # Dependencies for building matplotlib
     # Setup dependencies
     depends_on("py-certifi@2020.6.20:", when="@3.3.1:", type="build")
+    depends_on("py-numpy@1.25:", when="@3.8:", type="build")
     depends_on("py-pybind11@2.6:", when="@3.7:", type="build")
+    depends_on("py-setuptools@64:", when="@3.8.1:", type="build")
     depends_on("py-setuptools@42:", when="@3.8:", type="build")
     depends_on("py-setuptools@42:", when="@3.7.2:3.7", type=("build", "run"))
     depends_on("py-setuptools", when="@:3.7.1", type=("build", "run"))
