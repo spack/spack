@@ -150,7 +150,7 @@ class Vtk(CMakePackage):
     depends_on("lz4")
     depends_on("netcdf-c~mpi", when="~mpi")
     depends_on("netcdf-c+mpi", when="+mpi")
-    depends_on("netcdf-cxx")
+    depends_on("netcdf-cxx4")
     depends_on("libpng")
     depends_on("libtiff")
     depends_on("zlib-api")
