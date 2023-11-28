@@ -65,7 +65,7 @@ class Adios(AutotoolsPackage):
 
     depends_on("mpi", when="+mpi")
     # optional transformations
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
     depends_on("bzip2", when="+bzip2")
     depends_on("szip", when="+szip")
     depends_on("sz@:1.4.10", when="@:1.12.0 +sz")
@@ -119,7 +119,7 @@ class Adios(AutotoolsPackage):
 
     def with_or_without_hdf5(self, activated):
         if activated:
-            return "--with-phdf5={0}".format(self.spec["hdf5"].prefix)
+            return f"--with-phdf5={self.spec['hdf5'].prefix}"
 
         return "--without-phdf5"
 
@@ -134,7 +134,7 @@ class Adios(AutotoolsPackage):
 
         extra_args = [
             # required, otherwise building its python bindings will fail
-            "CFLAGS={0}".format(self.compiler.cc_pic_flag)
+            f"CFLAGS={self.compiler.cc_pic_flag}"
         ]
 
         extra_args += self.enable_or_disable("shared")
@@ -147,8 +147,13 @@ class Adios(AutotoolsPackage):
         extra_args += self.with_or_without("mpi", activation_value="prefix")
         extra_args += self.with_or_without("infiniband")
 
+        if "+zlib" in spec:
+            extra_args.append(f"--with-zlib={spec['zlib-api'].prefix}")
+        else:
+            extra_args.append("--without-zlib")
+
         # Transforms
-        variants = ["zlib", "bzip2", "szip"]
+        variants = ["bzip2", "szip"]
         if spec.satisfies("@1.11.0:"):
             variants += ["zfp"]
         if spec.satisfies("@1.12.0:"):

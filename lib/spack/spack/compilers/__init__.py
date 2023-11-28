@@ -10,7 +10,7 @@ import collections
 import itertools
 import multiprocessing.pool
 import os
-from typing import Dict
+from typing import Dict, List, Optional, Tuple
 
 import archspec.cpu
 
@@ -21,6 +21,7 @@ import llnl.util.tty as tty
 import spack.compiler
 import spack.config
 import spack.error
+import spack.operating_systems
 import spack.paths
 import spack.platforms
 import spack.spec
@@ -135,7 +136,7 @@ def _init_compiler_config(*, scope):
 
 def compiler_config_files():
     config_files = list()
-    config = spack.config.config
+    config = spack.config.CONFIG
     for scope in config.file_scopes:
         name = scope.name
         compiler_config = config.get("compilers", scope=name)
@@ -153,6 +154,14 @@ def add_compilers_to_config(compilers, scope=None, init_config=True):
     """
     compiler_config = get_compiler_config(scope, init_config)
     for compiler in compilers:
+        if not compiler.cc:
+            tty.debug(f"{compiler.spec} does not have a C compiler")
+        if not compiler.cxx:
+            tty.debug(f"{compiler.spec} does not have a C++ compiler")
+        if not compiler.f77:
+            tty.debug(f"{compiler.spec} does not have a Fortran77 compiler")
+        if not compiler.fc:
+            tty.debug(f"{compiler.spec} does not have a Fortran compiler")
         compiler_config.append(_to_dict(compiler))
     spack.config.set("compilers", compiler_config, scope=scope)
 
@@ -169,7 +178,7 @@ def remove_compiler_from_config(compiler_spec, scope=None):
     """
     candidate_scopes = [scope]
     if scope is None:
-        candidate_scopes = spack.config.config.scopes.keys()
+        candidate_scopes = spack.config.CONFIG.scopes.keys()
 
     removal_happened = False
     for current_scope in candidate_scopes:
@@ -223,13 +232,16 @@ def all_compiler_specs(scope=None, init_config=True):
     ]
 
 
-def find_compilers(path_hints=None):
+def find_compilers(
+    path_hints: Optional[List[str]] = None, *, mixed_toolchain=False
+) -> List["spack.compiler.Compiler"]:
     """Return the list of compilers found in the paths given as arguments.
 
     Args:
-        path_hints (list or None): list of path hints where to look for.
-            A sensible default based on the ``PATH`` environment variable
-            will be used if the value is None
+        path_hints: list of path hints where to look for. A sensible default based on the ``PATH``
+            environment variable will be used if the value is None
+        mixed_toolchain: allow mixing compilers from different toolchains if otherwise missing for
+            a certain language
     """
     if path_hints is None:
         path_hints = get_path("PATH")
@@ -250,7 +262,7 @@ def find_compilers(path_hints=None):
     finally:
         tp.close()
 
-    def valid_version(item):
+    def valid_version(item: Tuple[Optional[DetectVersionArgs], Optional[str]]) -> bool:
         value, error = item
         if error is None:
             return True
@@ -262,25 +274,37 @@ def find_compilers(path_hints=None):
             pass
         return False
 
-    def remove_errors(item):
+    def remove_errors(
+        item: Tuple[Optional[DetectVersionArgs], Optional[str]]
+    ) -> DetectVersionArgs:
         value, _ = item
+        assert value is not None
         return value
 
-    return make_compiler_list(map(remove_errors, filter(valid_version, detected_versions)))
+    return make_compiler_list(
+        [remove_errors(detected) for detected in detected_versions if valid_version(detected)],
+        mixed_toolchain=mixed_toolchain,
+    )
 
 
-def find_new_compilers(path_hints=None, scope=None):
+def find_new_compilers(
+    path_hints: Optional[List[str]] = None,
+    scope: Optional[str] = None,
+    *,
+    mixed_toolchain: bool = False,
+):
     """Same as ``find_compilers`` but return only the compilers that are not
     already in compilers.yaml.
 
     Args:
-        path_hints (list or None): list of path hints where to look for.
-            A sensible default based on the ``PATH`` environment variable
-            will be used if the value is None
-        scope (str): scope to look for a compiler. If None consider the
-            merged configuration.
+        path_hints: list of path hints where to look for. A sensible default based on the ``PATH``
+            environment variable will be used if the value is None
+        scope: scope to look for a compiler. If None consider the merged configuration.
+        mixed_toolchain: allow mixing compilers from different toolchains if otherwise missing for
+            a certain language
     """
-    compilers = find_compilers(path_hints)
+    compilers = find_compilers(path_hints, mixed_toolchain=mixed_toolchain)
+
     return select_new_compilers(compilers, scope)
 
 
@@ -298,7 +322,7 @@ def select_new_compilers(compilers, scope=None):
     return compilers_not_in_config
 
 
-def supported_compilers():
+def supported_compilers() -> List[str]:
     """Return a set of names of compilers supported by Spack.
 
     See available_compilers() to get a list of all the available
@@ -306,10 +330,41 @@ def supported_compilers():
     """
     # Hack to be able to call the compiler `apple-clang` while still
     # using a valid python name for the module
-    return sorted(
-        name if name != "apple_clang" else "apple-clang"
-        for name in llnl.util.lang.list_modules(spack.paths.compilers_path)
-    )
+    return sorted(all_compiler_names())
+
+
+def supported_compilers_for_host_platform() -> List[str]:
+    """Return a set of compiler class objects supported by Spack
+    that are also supported by the current host platform
+    """
+    host_plat = spack.platforms.real_host()
+    return supported_compilers_for_platform(host_plat)
+
+
+def supported_compilers_for_platform(platform: spack.platforms.Platform) -> List[str]:
+    """Return a set of compiler class objects supported by Spack
+    that are also supported by the provided platform
+
+    Args:
+        platform (str): string representation of platform
+            for which compiler compatability should be determined
+    """
+    return [
+        name
+        for name in supported_compilers()
+        if class_for_compiler_name(name).is_supported_on_platform(platform)
+    ]
+
+
+def all_compiler_names() -> List[str]:
+    def replace_apple_clang(name):
+        return name if name != "apple_clang" else "apple-clang"
+
+    return [replace_apple_clang(name) for name in all_compiler_module_names()]
+
+
+def all_compiler_module_names() -> List[str]:
+    return [name for name in llnl.util.lang.list_modules(spack.paths.compilers_path)]
 
 
 @_auto_compiler_spec
@@ -515,7 +570,7 @@ def compiler_for_spec(compiler_spec, arch_spec):
     if len(compilers) < 1:
         raise NoCompilerForSpecError(compiler_spec, arch_spec.os)
     if len(compilers) > 1:
-        msg = "Multiple definitions of compiler %s" % compiler_spec
+        msg = "Multiple definitions of compiler %s " % compiler_spec
         msg += "for architecture %s:\n %s" % (arch_spec, compilers)
         tty.debug(msg)
     return compilers[0]
@@ -523,7 +578,7 @@ def compiler_for_spec(compiler_spec, arch_spec):
 
 @_auto_compiler_spec
 def get_compiler_duplicates(compiler_spec, arch_spec):
-    config = spack.config.config
+    config = spack.config.CONFIG
 
     scope_to_compilers = {}
     for scope in config.scopes:
@@ -607,7 +662,9 @@ DetectVersionArgs = collections.namedtuple(
 )
 
 
-def arguments_to_detect_version_fn(operating_system, paths):
+def arguments_to_detect_version_fn(
+    operating_system: spack.operating_systems.OperatingSystem, paths: List[str]
+) -> List[DetectVersionArgs]:
     """Returns a list of DetectVersionArgs tuples to be used in a
     corresponding function to detect compiler versions.
 
@@ -615,8 +672,7 @@ def arguments_to_detect_version_fn(operating_system, paths):
     function by providing a method called with the same name.
 
     Args:
-        operating_system (spack.operating_systems.OperatingSystem): the operating system
-            on which we are looking for compilers
+        operating_system: the operating system on which we are looking for compilers
         paths: paths to search for compilers
 
     Returns:
@@ -625,10 +681,10 @@ def arguments_to_detect_version_fn(operating_system, paths):
         compilers in this OS.
     """
 
-    def _default(search_paths):
-        command_arguments = []
+    def _default(search_paths: List[str]) -> List[DetectVersionArgs]:
+        command_arguments: List[DetectVersionArgs] = []
         files_to_be_tested = fs.files_in(*search_paths)
-        for compiler_name in spack.compilers.supported_compilers():
+        for compiler_name in supported_compilers_for_host_platform():
             compiler_cls = class_for_compiler_name(compiler_name)
 
             for language in ("cc", "cxx", "f77", "fc"):
@@ -653,7 +709,9 @@ def arguments_to_detect_version_fn(operating_system, paths):
     return fn(paths)
 
 
-def detect_version(detect_version_args):
+def detect_version(
+    detect_version_args: DetectVersionArgs,
+) -> Tuple[Optional[DetectVersionArgs], Optional[str]]:
     """Computes the version of a compiler and adds it to the information
     passed as input.
 
@@ -662,8 +720,7 @@ def detect_version(detect_version_args):
     needs to be checked by the code dispatching the calls.
 
     Args:
-        detect_version_args (DetectVersionArgs): information on the
-            compiler for which we should detect the version.
+        detect_version_args: information on the compiler for which we should detect the version.
 
     Returns:
         A ``(DetectVersionArgs, error)`` tuple. If ``error`` is ``None`` the
@@ -679,7 +736,7 @@ def detect_version(detect_version_args):
         path = fn_args.path
 
         # Get compiler names and the callback to detect their versions
-        callback = getattr(compiler_cls, "{0}_version".format(language))
+        callback = getattr(compiler_cls, f"{language}_version")
 
         try:
             version = callback(path)
@@ -687,9 +744,11 @@ def detect_version(detect_version_args):
                 value = fn_args._replace(id=compiler_id._replace(version=version))
                 return value, None
 
-            error = "Couldn't get version for compiler {0}".format(path)
+            error = f"Couldn't get version for compiler {path}".format(path)
         except spack.util.executable.ProcessError as e:
-            error = "Couldn't get version for compiler {0}\n".format(path) + str(e)
+            error = f"Couldn't get version for compiler {path}\n" + str(e)
+        except spack.util.executable.ProcessTimeoutError as e:
+            error = f"Couldn't get version for compiler {path}\n" + str(e)
         except Exception as e:
             # Catching "Exception" here is fine because it just
             # means something went wrong running a candidate executable.
@@ -703,13 +762,15 @@ def detect_version(detect_version_args):
     return fn(detect_version_args)
 
 
-def make_compiler_list(detected_versions):
+def make_compiler_list(
+    detected_versions: List[DetectVersionArgs], mixed_toolchain: bool = False
+) -> List["spack.compiler.Compiler"]:
     """Process a list of detected versions and turn them into a list of
     compiler specs.
 
     Args:
-        detected_versions (list): list of DetectVersionArgs containing a
-            valid version
+        detected_versions: list of DetectVersionArgs containing a valid version
+        mixed_toolchain: allow mixing compilers from different toolchains if langauge is missing
 
     Returns:
         list: list of Compiler objects
@@ -718,7 +779,7 @@ def make_compiler_list(detected_versions):
     sorted_compilers = sorted(detected_versions, key=group_fn)
 
     # Gather items in a dictionary by the id, name variation and language
-    compilers_d = {}
+    compilers_d: Dict[CompilerID, Dict[NameVariation, dict]] = {}
     for sort_key, group in itertools.groupby(sorted_compilers, key=group_fn):
         compiler_id, name_variation, language = sort_key
         by_compiler_id = compilers_d.setdefault(compiler_id, {})
@@ -727,7 +788,7 @@ def make_compiler_list(detected_versions):
 
     def _default_make_compilers(cmp_id, paths):
         operating_system, compiler_name, version = cmp_id
-        compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
+        compiler_cls = class_for_compiler_name(compiler_name)
         spec = spack.spec.CompilerSpec(compiler_cls.name, f"={version}")
         paths = [paths.get(x, None) for x in ("cc", "cxx", "f77", "fc")]
         # TODO: johnwparent - revist the following line as per discussion at:
@@ -749,13 +810,14 @@ def make_compiler_list(detected_versions):
         getattr(variation, "suffix", None),
     )
 
-    compilers = []
+    # Flatten to a list of compiler id, primary variation and compiler dictionary
+    flat_compilers: List[Tuple[CompilerID, NameVariation, dict]] = []
     for compiler_id, by_compiler_id in compilers_d.items():
         ordered = sorted(by_compiler_id, key=sort_fn)
         selected_variation = ordered[0]
         selected = by_compiler_id[selected_variation]
 
-        # fill any missing parts from subsequent entries
+        # Fill any missing parts from subsequent entries (without mixing toolchains)
         for lang in ["cxx", "f77", "fc"]:
             if lang not in selected:
                 next_lang = next(
@@ -764,12 +826,61 @@ def make_compiler_list(detected_versions):
                 if next_lang:
                     selected[lang] = next_lang
 
-        operating_system, _, _ = compiler_id
-        make_compilers = getattr(operating_system, "make_compilers", _default_make_compilers)
+        flat_compilers.append((compiler_id, selected_variation, selected))
 
-        compilers.extend(make_compilers(compiler_id, selected))
+    # Next, fill out the blanks of missing compilers by creating a mixed toolchain (if requested)
+    if mixed_toolchain:
+        make_mixed_toolchain(flat_compilers)
+
+    # Finally, create the compiler list
+    compilers = []
+    for compiler_id, _, compiler in flat_compilers:
+        make_compilers = getattr(compiler_id.os, "make_compilers", _default_make_compilers)
+        compilers.extend(make_compilers(compiler_id, compiler))
 
     return compilers
+
+
+def make_mixed_toolchain(compilers: List[Tuple[CompilerID, NameVariation, dict]]) -> None:
+    """Add missing compilers across toolchains when they are missing for a particular language.
+    This currently only adds the most sensible gfortran to (apple)-clang if it doesn't have a
+    fortran compiler (no flang)."""
+
+    # First collect the clangs that are missing a fortran compiler
+    clangs_without_flang = [
+        (id, variation, compiler)
+        for id, variation, compiler in compilers
+        if id.compiler_name in ("clang", "apple-clang")
+        and "f77" not in compiler
+        and "fc" not in compiler
+    ]
+    if not clangs_without_flang:
+        return
+
+    # Filter on GCCs with fortran compiler
+    gccs_with_fortran = [
+        (id, variation, compiler)
+        for id, variation, compiler in compilers
+        if id.compiler_name == "gcc" and "f77" in compiler and "fc" in compiler
+    ]
+
+    # Sort these GCCs by "best variation" (no prefix / suffix first)
+    gccs_with_fortran.sort(
+        key=lambda x: (getattr(x[1], "prefix", None), getattr(x[1], "suffix", None))
+    )
+
+    # Attach the optimal GCC fortran compiler to the clangs that don't have one
+    for clang_id, _, clang_compiler in clangs_without_flang:
+        gcc_compiler = next(
+            (gcc[2] for gcc in gccs_with_fortran if gcc[0].os == clang_id.os), None
+        )
+
+        if not gcc_compiler:
+            continue
+
+        # Update the fc / f77 entries
+        clang_compiler["f77"] = gcc_compiler["f77"]
+        clang_compiler["fc"] = gcc_compiler["fc"]
 
 
 def is_mixed_toolchain(compiler):

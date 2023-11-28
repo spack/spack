@@ -12,22 +12,22 @@ class SpiralPackageFftx(Package):
     Transform as well as higher-level operations composed of linear operations
     combined with DFT transforms."""
 
-    homepage = "https://spiral.net"
-    url = "https://github.com/spiral-software/spiral-package-fftx/archive/refs/tags/1.0.0.tar.gz"
+    homepage = "https://spiralgen.com"
+    url = "https://github.com/spiral-software/spiral-package-fftx/archive/refs/tags/1.2.2.tar.gz"
     git = "https://github.com/spiral-software/spiral-package-fftx.git"
 
     maintainers("spiralgen")
-    extends("spiral-software")
+    # Although this package 'extends("spiral-software")' don't declare it as
+    # such.  If this package is required spiral-software should be installed
+    # with the +fftx variant active
 
     version("develop", branch="develop")
     version("main", branch="main")
+    version("1.2.2", sha256="18dacc3f974c4bd58295be2ea61f8ae0aada9a239f27b93d7806df564612cf22")
+    version("1.2.1", sha256="3f15aa5949c1b09eb59257cf1c5f6fcddc6e46f77ae9d5fce8acd8b9f99ce941")
     version("1.1.1", sha256="99ec7fab9274d378524b4933917fae23f9590255518c7a124cb46bd5e8d9af37")
-    version("1.1.0", sha256="979d7e59fc39e7e5423bce64628cea467079667d75ce885febee7c42fa7164aa")
-    version("1.0.0", sha256="9ed352049fcaab31a1a898149d16438c95a1656a2d24df6dee14e3b61efacb5c")
 
-    # FFTX package is an extension for Spiral (spec: spiral-software).  Spiral finds
-    # extensions in the "namespaces/packages" folder.  Install the tree in a similarly
-    # named folder so that when activated it'll get symlinked to the correct place.
+    # FFTX package is an extension for Spiral (spec: spiral-software).
 
     def install(self, spec, prefix):
         spiral_pkgs = join_path(prefix, "namespaces", "packages", "fftx")

@@ -24,7 +24,7 @@ def test_static_graph_mpileaks(config, mock_packages):
     assert '  "libelf" [label="libelf"]\n' in dot
     assert '  "libdwarf" [label="libdwarf"]\n' in dot
 
-    mpi_providers = spack.repo.path.providers_for("mpi")
+    mpi_providers = spack.repo.PATH.providers_for("mpi")
     for spec in mpi_providers:
         assert ('"mpileaks" -> "%s"' % spec.name) in dot
         assert ('"callpath" -> "%s"' % spec.name) in dot

@@ -16,21 +16,38 @@ import llnl.util.tty as tty
 
 import spack.builder
 import spack.config
+import spack.deptypes as dt
 import spack.detection
 import spack.multimethod
 import spack.package_base
 import spack.spec
 import spack.store
 from spack.directives import build_system, depends_on, extends, maintainers
-from spack.error import NoHeadersError, NoLibrariesError, SpecError
+from spack.error import NoHeadersError, NoLibrariesError
 from spack.install_test import test_part
-from spack.version import Version
 
 from ._checks import BaseBuilder, execute_install_time_tests
 
 
+def _flatten_dict(dictionary):
+    """Iterable that yields KEY=VALUE paths through a dictionary.
+    Args:
+        dictionary: Possibly nested dictionary of arbitrary keys and values.
+    Yields:
+        A single path through the dictionary.
+    """
+    for key, item in dictionary.items():
+        if isinstance(item, dict):
+            # Recursive case
+            for value in _flatten_dict(item):
+                yield f"{key}={value}"
+        else:
+            # Base case
+            yield f"{key}={item}"
+
+
 class PythonExtension(spack.package_base.PackageBase):
-    maintainers("adamjstewart", "pradyunsg")
+    maintainers("adamjstewart")
 
     @property
     def import_modules(self):
@@ -173,7 +190,7 @@ class PythonExtension(spack.package_base.PackageBase):
 
         # Make sure we are importing the installed modules,
         # not the ones in the source directory
-        python = inspect.getmodule(self).python.path
+        python = inspect.getmodule(self).python
         for module in self.import_modules:
             with test_part(
                 self,
@@ -201,7 +218,7 @@ class PythonExtension(spack.package_base.PackageBase):
             else:
                 python = self.get_external_python_for_prefix()
                 if not python.concrete:
-                    repo = spack.repo.path.repo_for_pkg(python)
+                    repo = spack.repo.PATH.repo_for_pkg(python)
                     python.namespace = repo.namespace
 
                     # Ensure architecture information is present
@@ -226,7 +243,48 @@ class PythonExtension(spack.package_base.PackageBase):
 
                     python.external_path = self.spec.external_path
                     python._mark_concrete()
-            self.spec.add_dependency_edge(python, deptypes=("build", "link", "run"), virtuals=())
+            self.spec.add_dependency_edge(python, depflag=dt.BUILD | dt.LINK | dt.RUN, virtuals=())
+
+    def get_external_python_for_prefix(self):
+        """
+        For an external package that extends python, find the most likely spec for the python
+        it depends on.
+
+        First search: an "installed" external that shares a prefix with this package
+        Second search: a configured external that shares a prefix with this package
+        Third search: search this prefix for a python package
+
+        Returns:
+          spack.spec.Spec: The external Spec for python most likely to be compatible with self.spec
+        """
+        python_externals_installed = [
+            s for s in spack.store.STORE.db.query("python") if s.prefix == self.spec.external_path
+        ]
+        if python_externals_installed:
+            return python_externals_installed[0]
+
+        python_external_config = spack.config.get("packages:python:externals", [])
+        python_externals_configured = [
+            spack.spec.parse_with_version_concrete(item["spec"])
+            for item in python_external_config
+            if item["prefix"] == self.spec.external_path
+        ]
+        if python_externals_configured:
+            return python_externals_configured[0]
+
+        python_externals_detection = spack.detection.by_path(
+            ["python"], path_hints=[self.spec.external_path]
+        )
+
+        python_externals_detected = [
+            d.spec
+            for d in python_externals_detection.get("python", [])
+            if d.prefix == self.spec.external_path
+        ]
+        if python_externals_detected:
+            return python_externals_detected[0]
+
+        raise StopIteration("No external python could be detected for %s to depend on" % self.spec)
 
 
 class PythonPackage(PythonExtension):
@@ -273,54 +331,16 @@ class PythonPackage(PythonExtension):
             name = cls.pypi.split("/")[0]
             return "https://pypi.org/simple/" + name + "/"
 
-    def get_external_python_for_prefix(self):
-        """
-        For an external package that extends python, find the most likely spec for the python
-        it depends on.
-
-        First search: an "installed" external that shares a prefix with this package
-        Second search: a configured external that shares a prefix with this package
-        Third search: search this prefix for a python package
-
-        Returns:
-          spack.spec.Spec: The external Spec for python most likely to be compatible with self.spec
-        """
-        python_externals_installed = [
-            s for s in spack.store.db.query("python") if s.prefix == self.spec.external_path
-        ]
-        if python_externals_installed:
-            return python_externals_installed[0]
-
-        python_external_config = spack.config.get("packages:python:externals", [])
-        python_externals_configured = [
-            spack.spec.parse_with_version_concrete(item["spec"])
-            for item in python_external_config
-            if item["prefix"] == self.spec.external_path
-        ]
-        if python_externals_configured:
-            return python_externals_configured[0]
-
-        python_externals_detection = spack.detection.by_executable(
-            [spack.repo.path.get_pkg_class("python")], path_hints=[self.spec.external_path]
-        )
-
-        python_externals_detected = [
-            d.spec
-            for d in python_externals_detection.get("python", [])
-            if d.prefix == self.spec.external_path
-        ]
-        if python_externals_detected:
-            return python_externals_detected[0]
-
-        raise StopIteration("No external python could be detected for %s to depend on" % self.spec)
-
     @property
     def headers(self):
         """Discover header files in platlib."""
 
+        # Remove py- prefix in package name
+        name = self.spec.name[3:]
+
         # Headers may be in either location
-        include = self.prefix.join(self.spec["python"].package.include)
-        platlib = self.prefix.join(self.spec["python"].package.platlib)
+        include = self.prefix.join(self.spec["python"].package.include).join(name)
+        platlib = self.prefix.join(self.spec["python"].package.platlib).join(name)
         headers = fs.find_all_headers(include) + fs.find_all_headers(platlib)
 
         if headers:
@@ -334,13 +354,14 @@ class PythonPackage(PythonExtension):
         """Discover libraries in platlib."""
 
         # Remove py- prefix in package name
-        library = "lib" + self.spec.name[3:].replace("-", "?")
-        root = self.prefix.join(self.spec["python"].package.platlib)
+        name = self.spec.name[3:]
 
-        for shared in [True, False]:
-            libs = fs.find_libraries(library, root, shared=shared, recursive=True)
-            if libs:
-                return libs
+        root = self.prefix.join(self.spec["python"].package.platlib).join(name)
+
+        libs = fs.find_all_libraries(root, recursive=True)
+
+        if libs:
+            return libs
 
         msg = "Unable to recursively locate {} libraries in {}"
         raise NoLibrariesError(msg.format(self.spec.name, root))
@@ -357,7 +378,7 @@ class PythonPipBuilder(BaseBuilder):
     legacy_long_methods = ("install_options", "global_options", "config_settings")
 
     #: Names associated with package attributes in the old build-system format
-    legacy_attributes = ("build_directory", "install_time_test_callbacks")
+    legacy_attributes = ("archive_files", "build_directory", "install_time_test_callbacks")
 
     #: Callback names for install-time test
     install_time_test_callbacks = ["test"]
@@ -401,19 +422,23 @@ class PythonPipBuilder(BaseBuilder):
 
     def config_settings(self, spec, prefix):
         """Configuration settings to be passed to the PEP 517 build backend.
-        Requires pip 22.1+, which requires Python 3.7+.
+
+        Requires pip 22.1 or newer for keys that appear only a single time,
+        or pip 23.1 or newer if the same key appears multiple times.
 
         Args:
             spec (spack.spec.Spec): build spec
             prefix (spack.util.prefix.Prefix): installation prefix
 
         Returns:
-            dict: dictionary of KEY, VALUE settings
+            dict: Possibly nested dictionary of KEY, VALUE settings
         """
         return {}
 
     def install_options(self, spec, prefix):
         """Extra arguments to be supplied to the setup.py install command.
+
+        Requires pip 23.0 or older.
 
         Args:
             spec (spack.spec.Spec): build spec
@@ -428,6 +453,8 @@ class PythonPipBuilder(BaseBuilder):
         """Extra global options to be supplied to the setup.py call before the install
         or bdist_wheel command.
 
+        Deprecated in pip 23.1.
+
         Args:
             spec (spack.spec.Spec): build spec
             prefix (spack.util.prefix.Prefix): installation prefix
@@ -440,29 +467,28 @@ class PythonPipBuilder(BaseBuilder):
     def install(self, pkg, spec, prefix):
         """Install everything from build directory."""
 
-        args = PythonPipBuilder.std_args(pkg) + ["--prefix=" + prefix]
+        args = PythonPipBuilder.std_args(pkg) + [f"--prefix={prefix}"]
 
-        for key, value in self.config_settings(spec, prefix).items():
-            if spec["py-pip"].version < Version("22.1"):
-                raise SpecError(
-                    "'{}' package uses 'config_settings' which is only supported by "
-                    "pip 22.1+. Add the following line to the package to fix this:\n\n"
-                    '    depends_on("py-pip@22.1:", type="build")'.format(spec.name)
-                )
-
-            args.append("--config-settings={}={}".format(key, value))
-
+        for setting in _flatten_dict(self.config_settings(spec, prefix)):
+            args.append(f"--config-settings={setting}")
         for option in self.install_options(spec, prefix):
-            args.append("--install-option=" + option)
+            args.append(f"--install-option={option}")
         for option in self.global_options(spec, prefix):
-            args.append("--global-option=" + option)
+            args.append(f"--global-option={option}")
 
         if pkg.stage.archive_file and pkg.stage.archive_file.endswith(".whl"):
             args.append(pkg.stage.archive_file)
         else:
             args.append(".")
 
-        pip = inspect.getmodule(pkg).pip
+        pip = spec["python"].command
+        # Hide user packages, since we don't have build isolation. This is
+        # necessary because pip / setuptools may run hooks from arbitrary
+        # packages during the build. There is no equivalent variable to hide
+        # system packages, so this is not reliable for external Python.
+        pip.add_default_env("PYTHONNOUSERSITE", "1")
+        pip.add_default_arg("-m")
+        pip.add_default_arg("pip")
         with fs.working_dir(self.build_directory):
             pip(*args)
 

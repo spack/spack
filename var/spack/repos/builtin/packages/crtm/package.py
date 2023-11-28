@@ -28,13 +28,6 @@ class Crtm(CMakePackage):
     variant(
         "fix", default=False, description='Download CRTM coeffecient or "fix" files (several GBs).'
     )
-    variant(
-        "build_type",
-        default="RelWithDebInfo",
-        description="CMake build type",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-    )
-
     depends_on("cmake@3.15:")
     depends_on("git-lfs")
     depends_on("netcdf-fortran", when="@2.4.0:")
@@ -54,12 +47,12 @@ class Crtm(CMakePackage):
     # depends_on("ecbuild", when="@2.4.0:", type=("build"))
 
     # REL-2.4.0_emc (v2.4.0 ecbuild does not work)
-    version("2.4.0", commit="5ddd0d6")
+    version("2.4.0", commit="5ddd0d6b0138284764065feda73b5adf599082a2")
     # Uses the tip of REL-2.3.0_emc branch
-    version("2.3.0", commit="99760e6")
+    version("2.3.0", commit="99760e693ce3b90a3b3b0e97d80972b4dfb61196")
     # JEDI applications so far use these versions
     # Branch release/crtm_jedi
-    version("v2.3-jedi.4", commit="bfede42")
+    version("v2.3-jedi.4", commit="bfede42adc6149213f28f58bf4e02fa8f7cb0198")
     # Branch release/crtm_jedi_v2.4.0
-    version("v2.4-jedi.1", commit="8222341")
-    version("v2.4-jedi.2", commit="62831cb")
+    version("v2.4-jedi.1", commit="82223419fdb479d76c2f2109c2b704e1d9618f22")
+    version("v2.4-jedi.2", commit="62831cbb6c1ffcbb219eeec60e1b1c422526f597")

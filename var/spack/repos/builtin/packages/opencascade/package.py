@@ -136,7 +136,7 @@ class Opencascade(CMakePackage):
     depends_on("tk", when="+tk")
     depends_on("gl")
 
-    conflicts("vtk@9.2", when="@:7.7.0 +vtk")
+    conflicts("^vtk@9.2", when="@:7.7.0 +vtk")
 
     def url_for_version(self, version):
         url = (

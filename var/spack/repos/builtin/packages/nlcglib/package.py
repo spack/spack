@@ -21,8 +21,8 @@ class Nlcglib(CMakePackage, CudaPackage, ROCmPackage):
     version("1.0b", sha256="086c46f06a117f267cbdf1df4ad42a8512689a9610885763f463469fb15e82dc")
     version("0.9", sha256="8d5bc6b85ee714fb3d6480f767e7f43e5e7d569116cf60e48f533a7f50a37a08")
 
-    variant("openmp", default=True)
-    variant("tests", default=False)
+    variant("openmp", default=True, description="Use OpenMP")
+    variant("tests", default=False, description="Build tests")
     variant(
         "build_type",
         default="Release",
@@ -49,9 +49,12 @@ class Nlcglib(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("rocblas")
         depends_on("rocsolver")
 
-    with when("+cuda"):
-        depends_on("kokkos+cuda+cuda_lambda+wrapper", when="%gcc")
-        depends_on("kokkos+cuda")
+    for arch in CudaPackage.cuda_arch_values:
+        depends_on(
+            f"kokkos+cuda+cuda_lambda+wrapper cuda_arch={arch}",
+            when=f"%gcc +cuda cuda_arch={arch}",
+        )
+        depends_on(f"kokkos+cuda cuda_arch={arch}", when=f"+cuda cuda_arch={arch}")
 
     def cmake_args(self):
         options = [

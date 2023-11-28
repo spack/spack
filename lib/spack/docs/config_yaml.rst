@@ -292,14 +292,29 @@ It is also worth noting that:
          non_bindable_shared_objects = ["libinterface.so"]
 
 ----------------------
-``terminal_title``
+``install_status``
 ----------------------
 
-By setting this option to ``true``, Spack will update the terminal's title to
-provide information about its current progress as well as the current and
-total package numbers.
+When set to ``true``, Spack will show information about its current progress
+as well as the current and total package numbers. Progress is shown both
+in the terminal title and inline. Setting it to ``false`` will not show any
+progress information.
 
 To work properly, this requires your terminal to reset its title after
 Spack has finished its work, otherwise Spack's status information will
 remain in the terminal's title indefinitely. Most terminals should already
 be set up this way and clear Spack's status information.
+
+-----------
+``aliases``
+-----------
+
+Aliases can be used to define new Spack commands. They can be either shortcuts
+for longer commands or include specific arguments for convenience. For instance,
+if users want to use ``spack install``'s ``-v`` argument all the time, they can
+create a new alias called ``inst`` that will always call ``install -v``:
+
+.. code-block:: yaml
+
+   aliases:
+     inst: install -v

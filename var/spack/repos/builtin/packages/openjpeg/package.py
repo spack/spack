@@ -34,7 +34,7 @@ class Openjpeg(CMakePackage):
 
     variant("codec", default=False, description="Build the CODEC executables")
 
-    depends_on("zlib", when="+codec")
+    depends_on("zlib-api", when="+codec")
     depends_on("libpng", when="+codec")
     depends_on("libtiff", when="+codec")
     depends_on("lcms", when="+codec")

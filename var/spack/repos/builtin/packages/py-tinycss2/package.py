@@ -13,9 +13,10 @@ class PyTinycss2(PythonPackage):
 
     homepage = "https://www.courtbouillon.org/tinycss2"
     pypi = "tinycss2/tinycss2-1.1.1.tar.gz"
+    git = "https://github.com/Kozea/tinycss2.git"
 
+    version("1.2.1", sha256="8cff3a8f066c2ec677c06dbc7b45619804a6938478d9d73c284b29d14ecb0627")
     version("1.1.1", sha256="b2e44dd8883c360c35dd0d1b5aad0b610e5156c2cb3b33434634e539ead9d8bf")
 
-    depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-flit-core@3.2:3", type="build")
     depends_on("py-webencodings@0.4:", type=("build", "run"))

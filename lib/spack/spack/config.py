@@ -47,6 +47,8 @@ import spack.paths
 import spack.platforms
 import spack.schema
 import spack.schema.bootstrap
+import spack.schema.cdash
+import spack.schema.ci
 import spack.schema.compilers
 import spack.schema.concretizer
 import spack.schema.config
@@ -64,9 +66,10 @@ from spack.error import SpackError
 from spack.util.cpus import cpus_available
 
 #: Dict from section names -> schema for that section
-section_schemas = {
+SECTION_SCHEMAS = {
     "compilers": spack.schema.compilers.schema,
     "concretizer": spack.schema.concretizer.schema,
+    "definitions": spack.schema.definitions.schema,
     "mirrors": spack.schema.mirrors.schema,
     "repos": spack.schema.repos.schema,
     "packages": spack.schema.packages.schema,
@@ -80,16 +83,16 @@ section_schemas = {
 
 # Same as above, but including keys for environments
 # this allows us to unify config reading between configs and environments
-all_schemas = copy.deepcopy(section_schemas)
-all_schemas.update({spack.schema.env.TOP_LEVEL_KEY: spack.schema.env.schema})
+_ALL_SCHEMAS = copy.deepcopy(SECTION_SCHEMAS)
+_ALL_SCHEMAS.update({spack.schema.env.TOP_LEVEL_KEY: spack.schema.env.schema})
 
 #: Path to the default configuration
-configuration_defaults_path = ("defaults", os.path.join(spack.paths.etc_path, "defaults"))
+CONFIGURATION_DEFAULTS_PATH = ("defaults", os.path.join(spack.paths.etc_path, "defaults"))
 
 #: Hard-coded default values for some key configuration options.
 #: This ensures that Spack will still work even if config.yaml in
 #: the defaults scope is removed.
-config_defaults = {
+CONFIG_DEFAULTS = {
     "config": {
         "debug": False,
         "connect_timeout": 10,
@@ -105,10 +108,10 @@ config_defaults = {
 
 #: metavar to use for commands that accept scopes
 #: this is shorter and more readable than listing all choices
-scopes_metavar = "{defaults,system,site,user}[/PLATFORM] or env:ENVIRONMENT"
+SCOPES_METAVAR = "{defaults,system,site,user}[/PLATFORM] or env:ENVIRONMENT"
 
 #: Base name for the (internal) overrides scope.
-overrides_base_name = "overrides-"
+_OVERRIDES_BASE_NAME = "overrides-"
 
 
 class ConfigScope:
@@ -134,7 +137,7 @@ class ConfigScope:
     def get_section(self, section):
         if section not in self.sections:
             path = self.get_section_filename(section)
-            schema = section_schemas[section]
+            schema = SECTION_SCHEMAS[section]
             data = read_config_file(path, schema)
             self.sections[section] = data
         return self.sections[section]
@@ -145,7 +148,7 @@ class ConfigScope:
 
         # We copy data here to avoid adding defaults at write time
         validate_data = copy.deepcopy(data)
-        validate(validate_data, section_schemas[section])
+        validate(validate_data, SECTION_SCHEMAS[section])
 
         try:
             mkdirp(self.path)
@@ -317,7 +320,7 @@ class InternalConfigScope(ConfigScope):
             data = InternalConfigScope._process_dict_keyname_overrides(data)
             for section in data:
                 dsec = data[section]
-                validate({section: dsec}, section_schemas[section])
+                validate({section: dsec}, SECTION_SCHEMAS[section])
                 self.sections[section] = _mark_internal(syaml.syaml_dict({section: dsec}), name)
 
     def get_section_filename(self, section):
@@ -333,7 +336,7 @@ class InternalConfigScope(ConfigScope):
         """This only validates, as the data is already in memory."""
         data = self.get_section(section)
         if data is not None:
-            validate(data, section_schemas[section])
+            validate(data, SECTION_SCHEMAS[section])
         self.sections[section] = _mark_internal(data, self.name)
 
     def __repr__(self):
@@ -430,7 +433,7 @@ class Configuration:
         return [
             s
             for s in self.scopes.values()
-            if (type(s) == ConfigScope or type(s) == SingleFileScope)
+            if (type(s) is ConfigScope or type(s) is SingleFileScope)
         ]
 
     def highest_precedence_scope(self) -> ConfigScope:
@@ -711,11 +714,11 @@ def override(path_or_scope, value=None):
     """
     if isinstance(path_or_scope, ConfigScope):
         overrides = path_or_scope
-        config.push_scope(path_or_scope)
+        CONFIG.push_scope(path_or_scope)
     else:
-        base_name = overrides_base_name
+        base_name = _OVERRIDES_BASE_NAME
         # Ensure the new override gets a unique scope name
-        current_overrides = [s.name for s in config.matching_scopes(r"^{0}".format(base_name))]
+        current_overrides = [s.name for s in CONFIG.matching_scopes(r"^{0}".format(base_name))]
         num_overrides = len(current_overrides)
         while True:
             scope_name = "{0}{1}".format(base_name, num_overrides)
@@ -725,19 +728,19 @@ def override(path_or_scope, value=None):
                 break
 
         overrides = InternalConfigScope(scope_name)
-        config.push_scope(overrides)
-        config.set(path_or_scope, value, scope=scope_name)
+        CONFIG.push_scope(overrides)
+        CONFIG.set(path_or_scope, value, scope=scope_name)
 
     try:
-        yield config
+        yield CONFIG
     finally:
-        scope = config.remove_scope(overrides.name)
+        scope = CONFIG.remove_scope(overrides.name)
         assert scope is overrides
 
 
 #: configuration scopes added on the command line
 #: set by ``spack.main.main()``.
-command_line_scopes: List[str] = []
+COMMAND_LINE_SCOPES: List[str] = []
 
 
 def _add_platform_scope(cfg, scope_type, name, path):
@@ -767,7 +770,7 @@ def _add_command_line_scopes(cfg, command_line_scopes):
         _add_platform_scope(cfg, ImmutableConfigScope, name, path)
 
 
-def _config():
+def create():
     """Singleton Configuration instance.
 
     This constructs one instance associated with this module and returns
@@ -781,14 +784,14 @@ def _config():
     cfg = Configuration()
 
     # first do the builtin, hardcoded defaults
-    builtin = InternalConfigScope("_builtin", config_defaults)
+    builtin = InternalConfigScope("_builtin", CONFIG_DEFAULTS)
     cfg.push_scope(builtin)
 
     # Builtin paths to configuration files in Spack
     configuration_paths = [
         # Default configuration scope is the lowest-level scope. These are
         # versioned with Spack and can be overridden by systems, sites or users
-        configuration_defaults_path
+        CONFIGURATION_DEFAULTS_PATH
     ]
 
     disable_local_config = "SPACK_DISABLE_LOCAL_CONFIG" in os.environ
@@ -815,7 +818,7 @@ def _config():
         _add_platform_scope(cfg, ConfigScope, name, path)
 
     # add command-line scopes
-    _add_command_line_scopes(cfg, command_line_scopes)
+    _add_command_line_scopes(cfg, COMMAND_LINE_SCOPES)
 
     # we make a special scope for spack commands so that they can
     # override configuration options.
@@ -825,7 +828,7 @@ def _config():
 
 
 #: This is the singleton configuration instance for Spack.
-config: Union[Configuration, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(_config)
+CONFIG: Union[Configuration, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(create)
 
 
 def add_from_file(filename, scope=None):
@@ -838,7 +841,7 @@ def add_from_file(filename, scope=None):
     # update all sections from config dict
     # We have to iterate on keys to keep overrides from the file
     for section in data.keys():
-        if section in section_schemas.keys():
+        if section in SECTION_SCHEMAS.keys():
             # Special handling for compiler scope difference
             # Has to be handled after we choose a section
             if scope is None:
@@ -849,18 +852,18 @@ def add_from_file(filename, scope=None):
             new = merge_yaml(existing, value)
 
             # We cannot call config.set directly (set is a type)
-            config.set(section, new, scope)
+            CONFIG.set(section, new, scope)
 
 
 def add(fullpath, scope=None):
     """Add the given configuration to the specified config scope.
     Add accepts a path. If you want to add from a filename, use add_from_file"""
-
     components = process_config_path(fullpath)
 
     has_existing_value = True
     path = ""
     override = False
+    value = syaml.load_config(components[-1])
     for idx, name in enumerate(components[:-1]):
         # First handle double colons in constructing path
         colon = "::" if override else ":" if path else ""
@@ -881,14 +884,14 @@ def add(fullpath, scope=None):
             existing = get_valid_type(path)
 
             # construct value from this point down
-            value = syaml.load_config(components[-1])
             for component in reversed(components[idx + 1 : -1]):
                 value = {component: value}
             break
 
+    if override:
+        path += "::"
+
     if has_existing_value:
-        path, _, value = fullpath.rpartition(":")
-        value = syaml.load_config(value)
         existing = get(path, scope=scope)
 
     # append values to lists
@@ -897,12 +900,12 @@ def add(fullpath, scope=None):
 
     # merge value into existing
     new = merge_yaml(existing, value)
-    config.set(path, new, scope)
+    CONFIG.set(path, new, scope)
 
 
 def get(path, default=None, scope=None):
     """Module-level wrapper for ``Configuration.get()``."""
-    return config.get(path, default, scope)
+    return CONFIG.get(path, default, scope)
 
 
 def set(path, value, scope=None):
@@ -910,26 +913,26 @@ def set(path, value, scope=None):
 
     Accepts the path syntax described in ``get()``.
     """
-    return config.set(path, value, scope)
+    return CONFIG.set(path, value, scope)
 
 
 def add_default_platform_scope(platform):
     plat_name = os.path.join("defaults", platform)
-    plat_path = os.path.join(configuration_defaults_path[1], platform)
-    config.push_scope(ConfigScope(plat_name, plat_path))
+    plat_path = os.path.join(CONFIGURATION_DEFAULTS_PATH[1], platform)
+    CONFIG.push_scope(ConfigScope(plat_name, plat_path))
 
 
 def scopes():
     """Convenience function to get list of configuration scopes."""
-    return config.scopes
+    return CONFIG.scopes
 
 
 def _validate_section_name(section):
     """Exit if the section is not a valid section."""
-    if section not in section_schemas:
+    if section not in SECTION_SCHEMAS:
         raise ConfigSectionError(
             "Invalid config section: '%s'. Options are: %s"
-            % (section, " ".join(section_schemas.keys()))
+            % (section, " ".join(SECTION_SCHEMAS.keys()))
         )
 
 
@@ -990,8 +993,9 @@ def read_config_file(filename, schema=None):
         if data:
             if not schema:
                 key = next(iter(data))
-                schema = all_schemas[key]
+                schema = _ALL_SCHEMAS[key]
             validate(data, schema)
+
         return data
 
     except StopIteration:
@@ -1089,7 +1093,7 @@ def get_valid_type(path):
         test_data = {component: test_data}
 
     try:
-        validate(test_data, section_schemas[section])
+        validate(test_data, SECTION_SCHEMAS[section])
     except (ConfigFormatError, AttributeError) as e:
         jsonschema_error = e.validation_error
         if jsonschema_error.validator == "type":
@@ -1229,11 +1233,17 @@ def merge_yaml(dest, source, prepend=False, append=False):
     return copy.copy(source)
 
 
-#
-# Process a path argument to config.set() that may contain overrides ('::' or
-# trailing ':')
-#
 def process_config_path(path):
+    """Process a path argument to config.set() that may contain overrides ('::' or
+    trailing ':')
+
+    Note: quoted value path components will be processed as a single value (escaping colons)
+        quoted path components outside of the value will be considered ill formed and will
+        raise.
+        e.g. `this:is:a:path:'value:with:colon'` will yield:
+
+            [this, is, a, path, value:with:colon]
+    """
     result = []
     if path.startswith(":"):
         raise syaml.SpackYAMLError("Illegal leading `:' in path `{0}'".format(path), "")
@@ -1261,6 +1271,17 @@ def process_config_path(path):
             front.append = True
 
         result.append(front)
+
+        quote = "['\"]"
+        not_quote = "[^'\"]"
+
+        if re.match(f"^{quote}", path):
+            m = re.match(rf"^({quote}{not_quote}+{quote})$", path)
+            if not m:
+                raise ValueError("Quotes indicate value, but there are additional path entries")
+            result.append(m.group(1))
+            break
+
     return result
 
 
@@ -1278,9 +1299,9 @@ def default_modify_scope(section="config"):
             If this is not 'compilers', a general (non-platform) scope is used.
     """
     if section == "compilers":
-        return spack.config.config.highest_precedence_scope().name
+        return CONFIG.highest_precedence_scope().name
     else:
-        return spack.config.config.highest_precedence_non_platform_scope().name
+        return CONFIG.highest_precedence_non_platform_scope().name
 
 
 def default_list_scope():
@@ -1337,18 +1358,18 @@ def use_configuration(*scopes_or_paths):
     Returns:
         Configuration object associated with the scopes passed as arguments
     """
-    global config
+    global CONFIG
 
     # Normalize input and construct a Configuration object
     configuration = _config_from(scopes_or_paths)
-    config.clear_caches(), configuration.clear_caches()
+    CONFIG.clear_caches(), configuration.clear_caches()
 
-    saved_config, config = config, configuration
+    saved_config, CONFIG = CONFIG, configuration
 
     try:
         yield configuration
     finally:
-        config = saved_config
+        CONFIG = saved_config
 
 
 @llnl.util.lang.memoized

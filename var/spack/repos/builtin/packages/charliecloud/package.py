@@ -17,10 +17,32 @@ class Charliecloud(AutotoolsPackage):
     tags = ["e4s"]
 
     version("master", branch="master")
-    version("0.33", sha256="ed2bd3589d1e5f7b33a1542c887d69856f6d7d57a6ec8ef5b8e9335eda48a045")
-    version("0.32", sha256="47826b14966c400b250c35ff28a903f8e5b5e12d9e2a2b473e0f00f4e8393c47")
-    version("0.31", sha256="7305c3d9010386c1b96fb95297feccb5c9d7ff82a3377d1d98eb8faef76bced9")
-    version("0.30", sha256="97d45b25c9f813d8bae79b16de49503a165bc94c05dd2166975154d9b6ac78e9")
+    version("0.35", sha256="042f5be5ed8eda95f45230b4647510780142a50adb4e748be57e8dd8926b310e")
+    version(
+        "0.34",
+        deprecated=True,
+        sha256="034080c162949f4344ae1011cda026d4bb3ecd5cdb53135ac06d236f87e3b27d",
+    )
+    version(
+        "0.33",
+        deprecated=True,
+        sha256="ed2bd3589d1e5f7b33a1542c887d69856f6d7d57a6ec8ef5b8e9335eda48a045",
+    )
+    version(
+        "0.32",
+        deprecated=True,
+        sha256="47826b14966c400b250c35ff28a903f8e5b5e12d9e2a2b473e0f00f4e8393c47",
+    )
+    version(
+        "0.31",
+        deprecated=True,
+        sha256="7305c3d9010386c1b96fb95297feccb5c9d7ff82a3377d1d98eb8faef76bced9",
+    )
+    version(
+        "0.30",
+        deprecated=True,
+        sha256="97d45b25c9f813d8bae79b16de49503a165bc94c05dd2166975154d9b6ac78e9",
+    )
     version(
         "0.29",
         deprecated=True,

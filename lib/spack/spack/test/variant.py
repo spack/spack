@@ -525,13 +525,13 @@ class TestBoolValuedVariant:
 
 def test_from_node_dict():
     a = MultiValuedVariant.from_node_dict("foo", ["bar"])
-    assert type(a) == MultiValuedVariant
+    assert type(a) is MultiValuedVariant
 
     a = MultiValuedVariant.from_node_dict("foo", "bar")
-    assert type(a) == SingleValuedVariant
+    assert type(a) is SingleValuedVariant
 
     a = MultiValuedVariant.from_node_dict("foo", "true")
-    assert type(a) == BoolValuedVariant
+    assert type(a) is BoolValuedVariant
 
 
 class TestVariant:

@@ -88,3 +88,9 @@ class Groff(AutotoolsPackage, GNUMirrorPackage):
         if self.spec.satisfies("+x"):
             dir = join_path(self.prefix.lib, "X11", "app-defaults")
             env.set_path("XFILESEARCHPATH", dir)
+
+    def flag_handler(self, name, flags):
+        if name == "cxxflags":
+            if self.spec.satisfies("%clang@16:"):
+                flags.append("-Wno-register")
+        return (flags, None, None)

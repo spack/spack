@@ -18,6 +18,8 @@ import spack.config as cfg
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.mirror
+import spack.util.gpg as gpg_util
+import spack.util.timer as timer
 import spack.util.url as url_util
 import spack.util.web as web_util
 
@@ -47,40 +49,36 @@ def setup_parser(subparser):
     generate.add_argument(
         "--output-file",
         default=None,
-        help="""pathname for the generated gitlab ci yaml file
-  Path to the file where generated jobs file should
-be written. Default is .gitlab-ci.yml in the root of
-the repository.""",
+        help="pathname for the generated gitlab ci yaml file\n\n"
+        "path to the file where generated jobs file should be written. "
+        "default is .gitlab-ci.yml in the root of the repository",
     )
     generate.add_argument(
         "--copy-to",
         default=None,
-        help="""path to additional directory for job files
-  This option provides an absolute path to a directory
-where the generated jobs yaml file should be copied.
-Default is not to copy.""",
+        help="path to additional directory for job files\n\n"
+        "this option provides an absolute path to a directory where the generated "
+        "jobs yaml file should be copied. default is not to copy",
     )
     generate.add_argument(
         "--optimize",
         action="store_true",
         default=False,
-        help="""(Experimental) optimize the gitlab yaml file for size
-  Run the generated document through a series of
-optimization passes designed to reduce the size
-of the generated file.""",
+        help="(experimental) optimize the gitlab yaml file for size\n\n"
+        "run the generated document through a series of optimization passes "
+        "designed to reduce the size of the generated file",
     )
     generate.add_argument(
         "--dependencies",
         action="store_true",
         default=False,
-        help="(Experimental) disable DAG scheduling; use " ' "plain" dependencies.',
+        help="(experimental) disable DAG scheduling (use 'plain' dependencies)",
     )
     generate.add_argument(
         "--buildcache-destination",
         default=None,
-        help="Override the mirror configured in the environment (spack.yaml) "
-        + "in order to push binaries from the generated pipeline to a "
-        + "different location.",
+        help="override the mirror configured in the environment\n\n"
+        "allows for pushing binaries from the generated pipeline to a different location",
     )
     prune_group = generate.add_mutually_exclusive_group()
     prune_group.add_argument(
@@ -88,45 +86,37 @@ of the generated file.""",
         action="store_true",
         dest="prune_dag",
         default=True,
-        help="""skip up-to-date specs
-  Do not generate jobs for specs that are up-to-date
-on the mirror.""",
+        help="skip up-to-date specs\n\n"
+        "do not generate jobs for specs that are up-to-date on the mirror",
     )
     prune_group.add_argument(
         "--no-prune-dag",
         action="store_false",
         dest="prune_dag",
         default=True,
-        help="""process up-to-date specs
-  Generate jobs for specs even when they are up-to-date
-on the mirror.""",
+        help="process up-to-date specs\n\n"
+        "generate jobs for specs even when they are up-to-date on the mirror",
     )
     generate.add_argument(
         "--check-index-only",
         action="store_true",
         dest="index_only",
         default=False,
-        help="""only check spec state from buildcache indices
-  Spack always checks specs against configured binary
-mirrors, regardless of the DAG pruning option.
-  If enabled, Spack will assume all remote buildcache
-indices are up-to-date when assessing whether the spec
-on the mirror, if present, is up-to-date. This has the
-benefit of reducing pipeline generation time but at the
-potential cost of needlessly rebuilding specs when the
-indices are outdated.
-  If not enabled, Spack will fetch remote spec files
-directly to assess whether the spec on the mirror is
-up-to-date.""",
+        help="only check spec state from buildcache indices\n\n"
+        "Spack always checks specs against configured binary mirrors, regardless of the DAG "
+        "pruning option. if enabled, Spack will assume all remote buildcache indices are "
+        "up-to-date when assessing whether the spec on the mirror, if present, is up-to-date. "
+        "this has the benefit of reducing pipeline generation time but at the potential cost of "
+        "needlessly rebuilding specs when the indices are outdated. if not enabled, Spack will "
+        "fetch remote spec files directly to assess whether the spec on the mirror is up-to-date",
     )
     generate.add_argument(
         "--artifacts-root",
         default=None,
-        help="""path to the root of the artifacts directory
-  If provided, concrete environment files (spack.yaml,
-spack.lock) will be generated under this directory.
-Their location will be passed to generated child jobs
-through the SPACK_CONCRETE_ENVIRONMENT_PATH variable.""",
+        help="path to the root of the artifacts directory\n\n"
+        "if provided, concrete environment files (spack.yaml, spack.lock) will be generated under "
+        "this directory. their location will be passed to generated child jobs through the "
+        "SPACK_CONCRETE_ENVIRONMENT_PATH variable",
     )
     generate.set_defaults(func=ci_generate)
 
@@ -150,13 +140,13 @@ through the SPACK_CONCRETE_ENVIRONMENT_PATH variable.""",
         "--tests",
         action="store_true",
         default=False,
-        help="""run stand-alone tests after the build""",
+        help="run stand-alone tests after the build",
     )
     rebuild.add_argument(
         "--fail-fast",
         action="store_true",
         default=False,
-        help="""stop stand-alone tests after the first failure""",
+        help="stop stand-alone tests after the first failure",
     )
     rebuild.set_defaults(func=ci_rebuild)
 
@@ -166,24 +156,48 @@ through the SPACK_CONCRETE_ENVIRONMENT_PATH variable.""",
         description=deindent(ci_reproduce.__doc__),
         help=spack.cmd.first_line(ci_reproduce.__doc__),
     )
-    reproduce.add_argument("job_url", help="Url of job artifacts bundle")
+    reproduce.add_argument("job_url", help="URL of job artifacts bundle")
+    reproduce.add_argument(
+        "--runtime",
+        help="Container runtime to use.",
+        default="docker",
+        choices=["docker", "podman"],
+    )
     reproduce.add_argument(
         "--working-dir",
-        help="Where to unpack artifacts",
+        help="where to unpack artifacts",
         default=os.path.join(os.getcwd(), "ci_reproduction"),
+    )
+    reproduce.add_argument(
+        "-s", "--autostart", help="Run docker reproducer automatically", action="store_true"
+    )
+    gpg_group = reproduce.add_mutually_exclusive_group(required=False)
+    gpg_group.add_argument(
+        "--gpg-file", help="Path to public GPG key for validating binary cache installs"
+    )
+    gpg_group.add_argument(
+        "--gpg-url", help="URL to public GPG key for validating binary cache installs"
     )
 
     reproduce.set_defaults(func=ci_reproduce)
 
 
 def ci_generate(args):
-    """Generate jobs file from a CI-aware spack file.
+    """generate jobs file from a CI-aware spack file
 
-    If you want to report the results on CDash, you will need to set
-    the SPACK_CDASH_AUTH_TOKEN before invoking this command. The
-    value must be the CDash authorization token needed to create a
-    build group and register all generated jobs under it."""
+    if you want to report the results on CDash, you will need to set the SPACK_CDASH_AUTH_TOKEN
+    before invoking this command. the value must be the CDash authorization token needed to create
+    a build group and register all generated jobs under it
+    """
     env = spack.cmd.require_active_env(cmd_name="ci generate")
+
+    if args.copy_to:
+        tty.warn("The flag --copy-to is deprecated and will be removed in Spack 0.23")
+
+    if args.buildcache_destination:
+        tty.warn(
+            "The flag --buildcache-destination is deprecated and will be removed in Spack 0.23"
+        )
 
     output_file = args.output_file
     copy_yaml_to = args.copy_to
@@ -223,10 +237,11 @@ def ci_generate(args):
 
 
 def ci_reindex(args):
-    """Rebuild the buildcache index for the remote mirror.
+    """rebuild the buildcache index for the remote mirror
 
-    Use the active, gitlab-enabled environment to rebuild the buildcache
-    index for the associated mirror."""
+    use the active, gitlab-enabled environment to rebuild the buildcache index for the associated
+    mirror
+    """
     env = spack.cmd.require_active_env(cmd_name="ci rebuild-index")
     yaml_root = env.manifest[ev.TOP_LEVEL_KEY]
 
@@ -242,10 +257,13 @@ def ci_reindex(args):
 
 
 def ci_rebuild(args):
-    """Rebuild a spec if it is not on the remote mirror.
+    """rebuild a spec if it is not on the remote mirror
 
-    Check a single spec against the remote mirror, and rebuild it from
-    source if the mirror does not contain the hash."""
+    check a single spec against the remote mirror, and rebuild it from source if the mirror does
+    not contain the hash
+    """
+    rebuild_timer = timer.Timer()
+
     env = spack.cmd.require_active_env(cmd_name="ci rebuild")
 
     # Make sure the environment is "gitlab-enabled", or else there's nothing
@@ -254,12 +272,6 @@ def ci_rebuild(args):
     if not ci_config:
         tty.die("spack ci rebuild requires an env containing ci cfg")
 
-    tty.msg(
-        "SPACK_BUILDCACHE_DESTINATION={0}".format(
-            os.environ.get("SPACK_BUILDCACHE_DESTINATION", None)
-        )
-    )
-
     # Grab the environment variables we need.  These either come from the
     # pipeline generation step ("spack ci generate"), where they were written
     # out as variables, or else provided by GitLab itself.
@@ -267,6 +279,7 @@ def ci_rebuild(args):
     job_log_dir = os.environ.get("SPACK_JOB_LOG_DIR")
     job_test_dir = os.environ.get("SPACK_JOB_TEST_DIR")
     repro_dir = os.environ.get("SPACK_JOB_REPRO_DIR")
+    # TODO: Remove this in Spack 0.23
     local_mirror_dir = os.environ.get("SPACK_LOCAL_MIRROR_DIR")
     concrete_env_dir = os.environ.get("SPACK_CONCRETE_ENV_DIR")
     ci_pipeline_id = os.environ.get("CI_PIPELINE_ID")
@@ -275,11 +288,25 @@ def ci_rebuild(args):
     job_spec_pkg_name = os.environ.get("SPACK_JOB_SPEC_PKG_NAME")
     job_spec_dag_hash = os.environ.get("SPACK_JOB_SPEC_DAG_HASH")
     spack_pipeline_type = os.environ.get("SPACK_PIPELINE_TYPE")
+    # TODO: Remove this in Spack 0.23
     remote_mirror_override = os.environ.get("SPACK_REMOTE_MIRROR_OVERRIDE")
+    # TODO: Remove this in Spack 0.23
     remote_mirror_url = os.environ.get("SPACK_REMOTE_MIRROR_URL")
     spack_ci_stack_name = os.environ.get("SPACK_CI_STACK_NAME")
+    # TODO: Remove this in Spack 0.23
     shared_pr_mirror_url = os.environ.get("SPACK_CI_SHARED_PR_MIRROR_URL")
     rebuild_everything = os.environ.get("SPACK_REBUILD_EVERYTHING")
+    require_signing = os.environ.get("SPACK_REQUIRE_SIGNING")
+
+    # If signing key was provided via "SPACK_SIGNING_KEY", then try to import it.
+    if signing_key:
+        spack_ci.import_signing_key(signing_key)
+
+    # Fail early if signing is required but we don't have a signing key
+    sign_binaries = require_signing is not None and require_signing.lower() == "true"
+    if sign_binaries and not spack_ci.can_sign_binaries():
+        gpg_util.list(False, True)
+        tty.die("SPACK_REQUIRE_SIGNING=True => spack must have exactly one signing key")
 
     # Construct absolute paths relative to current $CI_PROJECT_DIR
     ci_project_dir = os.environ.get("CI_PROJECT_DIR")
@@ -323,21 +350,36 @@ def ci_rebuild(args):
 
     full_rebuild = True if rebuild_everything and rebuild_everything.lower() == "true" else False
 
+    pipeline_mirrors = spack.mirror.MirrorCollection(binary=True)
+    deprecated_mirror_config = False
+    buildcache_destination = None
+    if "buildcache-destination" in pipeline_mirrors:
+        buildcache_destination = pipeline_mirrors["buildcache-destination"]
+    else:
+        deprecated_mirror_config = True
+        # TODO: This will be an error in Spack 0.23
+
     # If no override url exists, then just push binary package to the
     # normal remote mirror url.
+    # TODO: Remove in Spack 0.23
     buildcache_mirror_url = remote_mirror_override or remote_mirror_url
+    if buildcache_destination:
+        buildcache_mirror_url = buildcache_destination.push_url
 
     # Figure out what is our temporary storage mirror: Is it artifacts
     # buildcache?  Or temporary-storage-url-prefix?  In some cases we need to
     # force something or pipelines might not have a way to propagate build
     # artifacts from upstream to downstream jobs.
+    # TODO: Remove this in Spack 0.23
     pipeline_mirror_url = None
 
+    # TODO: Remove this in Spack 0.23
     temp_storage_url_prefix = None
     if "temporary-storage-url-prefix" in ci_config:
         temp_storage_url_prefix = ci_config["temporary-storage-url-prefix"]
         pipeline_mirror_url = url_util.join(temp_storage_url_prefix, ci_pipeline_id)
 
+    # TODO: Remove this in Spack 0.23
     enable_artifacts_mirror = False
     if "enable-artifacts-buildcache" in ci_config:
         enable_artifacts_mirror = ci_config["enable-artifacts-buildcache"]
@@ -404,11 +446,6 @@ def ci_rebuild(args):
                 dst_file = os.path.join(repro_dir, file_name)
                 shutil.copyfile(src_file, dst_file)
 
-    # If signing key was provided via "SPACK_SIGNING_KEY", then try to
-    # import it.
-    if signing_key:
-        spack_ci.import_signing_key(signing_key)
-
     # Write this job's spec json into the reproduction directory, and it will
     # also be used in the generated "spack install" command to install the spec
     tty.debug("job concrete spec path: {0}".format(job_spec_json_path))
@@ -438,12 +475,14 @@ def ci_rebuild(args):
     # If we decided there should be a temporary storage mechanism, add that
     # mirror now so it's used when we check for a hash match already
     # built for this spec.
+    # TODO: Remove this block in Spack 0.23
     if pipeline_mirror_url:
         mirror = spack.mirror.Mirror(pipeline_mirror_url, name=spack_ci.TEMP_STORAGE_MIRROR_NAME)
         spack.mirror.add(mirror, cfg.default_modify_scope())
         pipeline_mirrors.append(pipeline_mirror_url)
 
     # Check configured mirrors for a built spec with a matching hash
+    # TODO: Remove this block in Spack 0.23
     mirrors_to_check = None
     if remote_mirror_override:
         if spack_pipeline_type == "spack_protected_branch":
@@ -461,7 +500,8 @@ def ci_rebuild(args):
             )
         pipeline_mirrors.append(remote_mirror_override)
 
-    if spack_pipeline_type == "spack_pull_request":
+    # TODO: Remove this in Spack 0.23
+    if deprecated_mirror_config and spack_pipeline_type == "spack_pull_request":
         if shared_pr_mirror_url != "None":
             pipeline_mirrors.append(shared_pr_mirror_url)
 
@@ -483,6 +523,7 @@ def ci_rebuild(args):
         tty.msg("No need to rebuild {0}, found hash match at: ".format(job_spec_pkg_name))
         for match in matches:
             tty.msg("    {0}".format(match["mirror_url"]))
+        # TODO: Remove this block in Spack 0.23
         if enable_artifacts_mirror:
             matching_mirror = matches[0]["mirror_url"]
             build_cache_dir = os.path.join(local_mirror_dir, "build_cache")
@@ -497,7 +538,8 @@ def ci_rebuild(args):
     # only want to keep the mirror being used by the current pipeline as it's binary
     # package destination.  This ensures that the when we rebuild everything, we only
     # consume binary dependencies built in this pipeline.
-    if full_rebuild:
+    # TODO: Remove this in Spack 0.23
+    if deprecated_mirror_config and full_rebuild:
         spack_ci.remove_other_mirrors(pipeline_mirrors, cfg.default_modify_scope())
 
     # No hash match anywhere means we need to rebuild spec
@@ -563,7 +605,9 @@ def ci_rebuild(args):
             "SPACK_COLOR=always",
             "SPACK_INSTALL_FLAGS={}".format(args_to_string(deps_install_args)),
             "-j$(nproc)",
-            "install-deps/{}".format(job_spec.format("{name}-{version}-{hash}")),
+            "install-deps/{}".format(
+                ev.depfile.MakefileSpec(job_spec).safe_format("{name}-{version}-{hash}")
+            ),
         ],
         spack_cmd + ["install"] + root_install_args,
     ]
@@ -606,7 +650,7 @@ def ci_rebuild(args):
     )
     reports_dir = fs.join_path(os.getcwd(), "cdash_report")
     if args.tests and broken_tests:
-        tty.warn("Unable to run stand-alone tests since listed in " "ci's 'broken-tests-packages'")
+        tty.warn("Unable to run stand-alone tests since listed in ci's 'broken-tests-packages'")
         if cdash_handler:
             msg = "Package is listed in ci's broken-tests-packages"
             cdash_handler.report_skipped(job_spec, reports_dir, reason=msg)
@@ -649,7 +693,7 @@ def ci_rebuild(args):
                     tty.warn("No recognized test results reporting option")
 
         else:
-            tty.warn("Unable to run stand-alone tests due to unsuccessful " "installation")
+            tty.warn("Unable to run stand-alone tests due to unsuccessful installation")
             if cdash_handler:
                 msg = "Failed to install the package"
                 cdash_handler.report_skipped(job_spec, reports_dir, reason=msg)
@@ -660,21 +704,25 @@ def ci_rebuild(args):
     # print out some instructions on how to reproduce this build failure
     # outside of the pipeline environment.
     if install_exit_code == 0:
-        if buildcache_mirror_url or pipeline_mirror_url:
-            for result in spack_ci.create_buildcache(
-                input_spec=job_spec,
-                buildcache_mirror_url=buildcache_mirror_url,
-                pipeline_mirror_url=pipeline_mirror_url,
-                pr_pipeline=spack_is_pr_pipeline,
-            ):
-                msg = tty.msg if result.success else tty.warn
-                msg(
-                    "{} {} to {}".format(
-                        "Pushed" if result.success else "Failed to push",
-                        job_spec.format("{name}{@version}{/hash:7}", color=clr.get_color_when()),
-                        result.url,
-                    )
+        mirror_urls = [buildcache_mirror_url]
+
+        # TODO: Remove this block in Spack 0.23
+        if pipeline_mirror_url:
+            mirror_urls.append(pipeline_mirror_url)
+
+        for result in spack_ci.create_buildcache(
+            input_spec=job_spec,
+            destination_mirror_urls=mirror_urls,
+            sign_binaries=spack_ci.can_sign_binaries(),
+        ):
+            msg = tty.msg if result.success else tty.warn
+            msg(
+                "{} {} to {}".format(
+                    "Pushed" if result.success else "Failed to push",
+                    job_spec.format("{name}{@version}{/hash:7}", color=clr.get_color_when()),
+                    result.url,
                 )
+            )
 
         # If this is a develop pipeline, check if the spec that we just built is
         # on the broken-specs list. If so, remove it.
@@ -709,7 +757,7 @@ def ci_rebuild(args):
 
 \033[34mTo reproduce this build locally, run:
 
-    spack ci reproduce-build {0} [--working-dir <dir>]
+    spack ci reproduce-build {0} [--working-dir <dir>] [--autostart]
 
 If this project does not have public pipelines, you will need to first:
 
@@ -723,19 +771,38 @@ If this project does not have public pipelines, you will need to first:
 
         print(reproduce_msg)
 
+    rebuild_timer.stop()
+    try:
+        with open("install_timers.json", "w") as timelog:
+            extra_attributes = {"name": ".ci-rebuild"}
+            rebuild_timer.write_json(timelog, extra_attributes=extra_attributes)
+    except Exception as e:
+        tty.debug(str(e))
+
     # Tie job success/failure to the success/failure of building the spec
     return install_exit_code
 
 
 def ci_reproduce(args):
-    """Generate instructions for reproducing the spec rebuild job.
+    """generate instructions for reproducing the spec rebuild job
 
-    Artifacts of the provided gitlab pipeline rebuild job's URL will be
-    used to derive instructions for reproducing the build locally."""
+    artifacts of the provided gitlab pipeline rebuild job's URL will be used to derive
+    instructions for reproducing the build locally
+    """
     job_url = args.job_url
     work_dir = args.working_dir
+    autostart = args.autostart
+    runtime = args.runtime
 
-    return spack_ci.reproduce_ci_job(job_url, work_dir)
+    # Allow passing GPG key for reprocuding protected CI jobs
+    if args.gpg_file:
+        gpg_key_url = url_util.path_to_file_url(args.gpg_file)
+    elif args.gpg_url:
+        gpg_key_url = args.gpg_url
+    else:
+        gpg_key_url = None
+
+    return spack_ci.reproduce_ci_job(job_url, work_dir, autostart, gpg_key_url, runtime)
 
 
 def ci(parser, args):

@@ -10,21 +10,16 @@ import json
 import os
 import os.path
 import pickle
-import platform
 import re
-import socket
 import sys
 from functools import wraps
 from typing import Any, Callable, Dict, List, MutableMapping, Optional, Tuple, Union
 
+from llnl.path import path_to_os_path, system_path_filter
 from llnl.util import tty
 from llnl.util.lang import dedupe
 
-import spack.platforms
-import spack.spec
-
 from .executable import Executable, which
-from .path import path_to_os_path, system_path_filter
 
 if sys.platform == "win32":
     SYSTEM_PATHS = [
@@ -47,7 +42,7 @@ _SHELL_SET_STRINGS = {
     "csh": "setenv {0} {1};\n",
     "fish": "set -gx {0} {1};\n",
     "bat": 'set "{0}={1}"\n',
-    "pwsh": "$Env:{0}={1}\n",
+    "pwsh": "$Env:{0}='{1}'\n",
 }
 
 
@@ -56,7 +51,7 @@ _SHELL_UNSET_STRINGS = {
     "csh": "unsetenv {0};\n",
     "fish": "set -e {0};\n",
     "bat": 'set "{0}="\n',
-    "pwsh": "Remove-Item Env:{0}\n",
+    "pwsh": "Set-Item -Path Env:{0}\n",
 }
 
 
@@ -222,43 +217,6 @@ def pickle_environment(path: Path, environment: Optional[Dict[str, str]] = None)
     """Pickle an environment dictionary to a file."""
     with open(path, "wb") as pickle_file:
         pickle.dump(dict(environment if environment else os.environ), pickle_file, protocol=2)
-
-
-def get_host_environment_metadata() -> Dict[str, str]:
-    """Get the host environment, reduce to a subset that we can store in
-    the install directory, and add the spack version.
-    """
-    import spack.main
-
-    environ = get_host_environment()
-    return {
-        "host_os": environ["os"],
-        "platform": environ["platform"],
-        "host_target": environ["target"],
-        "hostname": environ["hostname"],
-        "spack_version": spack.main.get_version(),
-        "kernel_version": platform.version(),
-    }
-
-
-def get_host_environment() -> Dict[str, Any]:
-    """Return a dictionary (lookup) with host information (not including the
-    os.environ).
-    """
-    host_platform = spack.platforms.host()
-    host_target = host_platform.target("default_target")
-    host_os = host_platform.operating_system("default_os")
-    arch_fmt = "platform={0} os={1} target={2}"
-    arch_spec = spack.spec.Spec(arch_fmt.format(host_platform, host_os, host_target))
-    return {
-        "target": str(host_target),
-        "os": str(host_os),
-        "platform": str(host_platform),
-        "arch": arch_spec,
-        "architecture": arch_spec,
-        "arch_str": str(arch_spec),
-        "hostname": socket.gethostname(),
-    }
 
 
 @contextlib.contextmanager
@@ -429,7 +387,7 @@ class RemovePath(NameValueModifier):
     def execute(self, env: MutableMapping[str, str]):
         tty.debug(f"RemovePath: {self.name}-{str(self.value)}", level=3)
         environment_value = env.get(self.name, "")
-        directories = environment_value.split(self.separator) if environment_value else []
+        directories = environment_value.split(self.separator)
         directories = [
             path_to_os_path(os.path.normpath(x)).pop()
             for x in directories
@@ -638,6 +596,14 @@ class EnvironmentModifications:
             modifications[item.name].append(item)
         return modifications
 
+    def drop(self, *name) -> bool:
+        """Drop all modifications to the variable with the given name."""
+        old_mods = self.env_modifications
+        new_mods = [x for x in self.env_modifications if x.name not in name]
+        self.env_modifications = new_mods
+
+        return len(old_mods) != len(new_mods)
+
     def is_unset(self, variable_name: str) -> bool:
         """Returns True if the last modification to a variable is to unset it, False otherwise."""
         modifications = self.group_by_name()
@@ -724,11 +690,10 @@ class EnvironmentModifications:
                     cmds += _SHELL_UNSET_STRINGS[shell].format(name)
                 else:
                     if sys.platform != "win32":
-                        cmd = _SHELL_SET_STRINGS[shell].format(
-                            name, double_quote_escape(new_env[name])
-                        )
+                        new_env_name = double_quote_escape(new_env[name])
                     else:
-                        cmd = _SHELL_SET_STRINGS[shell].format(name, new_env[name])
+                        new_env_name = new_env[name]
+                    cmd = _SHELL_SET_STRINGS[shell].format(name, new_env_name)
                     cmds += cmd
         return cmds
 
@@ -1066,8 +1031,8 @@ def environment_after_sourcing_files(
 
     Keyword Args:
         env (dict): the initial environment (default: current environment)
-        shell (str): the shell to use (default: ``/bin/bash``)
-        shell_options (str): options passed to the shell (default: ``-c``)
+        shell (str): the shell to use (default: ``/bin/bash`` or ``cmd.exe`` (Windows))
+        shell_options (str): options passed to the shell (default: ``-c`` or ``/C`` (Windows))
         source_command (str): the command to run (default: ``source``)
         suppress_output (str): redirect used to suppress output of command
             (default: ``&> /dev/null``)
@@ -1075,15 +1040,23 @@ def environment_after_sourcing_files(
             only when the previous command succeeds (default: ``&&``)
     """
     # Set the shell executable that will be used to source files
-    shell_cmd = kwargs.get("shell", "/bin/bash")
-    shell_options = kwargs.get("shell_options", "-c")
-    source_command = kwargs.get("source_command", "source")
-    suppress_output = kwargs.get("suppress_output", "&> /dev/null")
+    if sys.platform == "win32":
+        shell_cmd = kwargs.get("shell", "cmd.exe")
+        shell_options = kwargs.get("shell_options", "/C")
+        suppress_output = kwargs.get("suppress_output", "")
+        source_command = kwargs.get("source_command", "")
+    else:
+        shell_cmd = kwargs.get("shell", "/bin/bash")
+        shell_options = kwargs.get("shell_options", "-c")
+        suppress_output = kwargs.get("suppress_output", "&> /dev/null")
+        source_command = kwargs.get("source_command", "source")
     concatenate_on_success = kwargs.get("concatenate_on_success", "&&")
 
-    shell = Executable(" ".join([shell_cmd, shell_options]))
+    shell = Executable(shell_cmd)
 
     def _source_single_file(file_and_args, environment):
+        shell_options_list = shell_options.split()
+
         source_file = [source_command]
         source_file.extend(x for x in file_and_args)
         source_file = " ".join(source_file)
@@ -1101,7 +1074,14 @@ def environment_after_sourcing_files(
         source_file_arguments = " ".join(
             [source_file, suppress_output, concatenate_on_success, dump_environment_cmd]
         )
-        output = shell(source_file_arguments, output=str, env=environment, ignore_quotes=True)
+        output = shell(
+            *shell_options_list,
+            source_file_arguments,
+            output=str,
+            env=environment,
+            ignore_quotes=True,
+        )
+
         return json.loads(output)
 
     current_environment = kwargs.get("env", dict(os.environ))

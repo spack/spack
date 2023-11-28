@@ -5,6 +5,7 @@
 
 
 from spack.package import *
+from spack.variant import _ConditionalVariantValues
 
 
 class Vecgeom(CMakePackage, CudaPackage):
@@ -20,7 +21,17 @@ class Vecgeom(CMakePackage, CudaPackage):
     maintainers("drbenmorgan", "sethrj")
 
     version("master", branch="master")
-    version("1.2.3", sha256="703e52d78b5b78e9f595bc76771659ab0cb09898ea32c50cfbde07d6d09ef1e1")
+    version("1.2.5", sha256="af76f0aac34ec3748120969b0fca0f899d91b25cb5727f2c022a6e8304e91327")
+    version(
+        "1.2.4",
+        sha256="4f5d43a9cd34a5e0200c41547a438cbb1ed4439f5bb757857c5a225d708590ce",
+        deprecated=True,
+    )
+    version(
+        "1.2.3",
+        sha256="703e52d78b5b78e9f595bc76771659ab0cb09898ea32c50cfbde07d6d09ef1e1",
+        deprecated=True,
+    )
     version(
         "1.2.2",
         sha256="887134d40fc9731138189299f0bd5e73485fbb95a96eb4124ce0854e4672291f",
@@ -128,7 +139,7 @@ class Vecgeom(CMakePackage, CudaPackage):
         deprecated=True,
     )
 
-    _cxxstd_values = ("11", "14", "17")
+    _cxxstd_values = (conditional("11", "14", when="@:1.1"), "17", conditional("20", when="@1.2:"))
     variant(
         "cxxstd",
         default="17",
@@ -148,8 +159,6 @@ class Vecgeom(CMakePackage, CudaPackage):
     depends_on("veccore@0.4.2", when="@:1.0")
 
     conflicts("+cuda", when="@:1.1.5")
-    conflicts("cxxstd=14", when="@1.2:")
-    conflicts("cxxstd=11", when="@1.2:")
 
     # Fix missing CMAKE_CUDA_STANDARD
     patch(
@@ -164,10 +173,18 @@ class Vecgeom(CMakePackage, CudaPackage):
         when="@1.1.18 +cuda ^cuda@:11.4",
     )
 
-    for std in _cxxstd_values:
-        depends_on("geant4 cxxstd=" + std, when="+geant4 cxxstd=" + std)
-        depends_on("root cxxstd=" + std, when="+root cxxstd=" + std)
-        depends_on("xerces-c cxxstd=" + std, when="+gdml cxxstd=" + std)
+    def std_when(values):
+        for v in values:
+            if isinstance(v, _ConditionalVariantValues):
+                for c in v:
+                    yield (c.value, c.when)
+            else:
+                yield (v, "")
+
+    for _std, _when in std_when(_cxxstd_values):
+        depends_on(f"geant4 cxxstd={_std}", when=f"{_when} +geant4 cxxstd={_std}")
+        depends_on(f"root cxxstd={_std}", when=f"{_when} +root cxxstd={_std}")
+        depends_on(f"xerces-c cxxstd={_std}", when=f"{_when} +gdml cxxstd={_std}")
 
     def cmake_args(self):
         spec = self.spec

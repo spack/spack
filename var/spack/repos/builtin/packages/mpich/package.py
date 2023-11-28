@@ -25,7 +25,10 @@ class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
     tags = ["e4s"]
     executables = ["^mpichversion$"]
 
+    keep_werror = "specific"
+
     version("develop", submodules=True)
+    version("4.1.2", sha256="3492e98adab62b597ef0d292fb2459b6123bc80070a8aa0a30be6962075a12f0")
     version("4.1.1", sha256="ee30471b35ef87f4c88f871a5e2ad3811cd9c4df32fd4f138443072ff4284ca2")
     version("4.1", sha256="8b1ec63bc44c7caa2afbb457bc5b3cd4a70dbe46baba700123d67c48dc5ab6a0")
     version("4.0.3", sha256="17406ea90a6ed4ecd5be39c9ddcbfac9343e6ab4f77ac4e8c5ebe4a3e3b6c501")
@@ -52,7 +55,7 @@ class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant("hydra", default=True, description="Build the hydra process manager")
     variant("romio", default=True, description="Enable ROMIO MPI I/O implementation")
     variant("verbs", default=False, description="Build support for OpenFabrics verbs.")
-    variant("slurm", default=False, description="Enable SLURM support")
+    variant("slurm", default=False, description="Enable Slurm support")
     variant("wrapperrpath", default=True, description="Enable wrapper rpath")
     variant(
         "pmi",
@@ -67,16 +70,14 @@ class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
         description="""Abstract Device Interface (ADI)
 implementation. The ch4 device is in experimental state for versions
 before 3.4.""",
-        values=("ch3", "ch4"),
+        values=("ch3", "ch4", "ch3:sock"),
         multi=False,
     )
     variant(
         "netmod",
         default="ofi",
         description="""Network module. Only single netmod builds are
-supported. For ch3 device configurations, this presumes the
-ch3:nemesis communication channel. ch3:sock is not supported by this
-spack package at this time.""",
+supported, and netmod is ignored if device is ch3:sock.""",
         values=("tcp", "mxm", "ofi", "ucx"),
         multi=False,
     )
@@ -93,15 +94,6 @@ spack package at this time.""",
     )
     variant("argobots", default=False, description="Enable Argobots support")
     variant("fortran", default=True, description="Enable Fortran support")
-
-    variant(
-        "two_level_namespace",
-        default=False,
-        description="""Build shared libraries and programs
-built with the mpicc/mpifort/etc. compiler wrappers
-with '-Wl,-commons,use_dylibs' and without
-'-Wl,-flat_namespace'.""",
-    )
 
     variant(
         "vci",
@@ -127,6 +119,7 @@ with '-Wl,-commons,use_dylibs' and without
     depends_on("yaksa+cuda", when="+cuda ^yaksa")
     depends_on("yaksa+rocm", when="+rocm ^yaksa")
     conflicts("datatype-engine=yaksa", when="device=ch3")
+    conflicts("datatype-engine=yaksa", when="device=ch3:sock")
 
     variant(
         "hcoll",
@@ -141,8 +134,10 @@ with '-Wl,-commons,use_dylibs' and without
     # overriding the variant from CudaPackage.
     conflicts("+cuda", when="@:3.3")
     conflicts("+cuda", when="device=ch3")
+    conflicts("+cuda", when="device=ch3:sock")
     conflicts("+rocm", when="@:4.0")
     conflicts("+rocm", when="device=ch3")
+    conflicts("+rocm", when="device=ch3:sock")
     conflicts("+cuda", when="+rocm", msg="CUDA must be disabled to support ROCm")
 
     provides("mpi@:4.0")
@@ -170,7 +165,7 @@ with '-Wl,-commons,use_dylibs' and without
     patch(
         "https://github.com/pmodels/mpich/commit/8a851b317ee57366cd15f4f28842063d8eff4483.patch?full_index=1",
         sha256="d2dafc020941d2d8cab82bc1047e4a6a6d97736b62b06e2831d536de1ac01fd0",
-        when="@3.3:3.3.99 +hwloc",
+        when="@3.3 +hwloc",
     )
 
     # fix MPI_Barrier segmentation fault
@@ -208,6 +203,18 @@ with '-Wl,-commons,use_dylibs' and without
         patch("mpich34_yaksa_hindexed.patch", when="datatype-engine=yaksa")
         patch("mpich34_yaksa_hindexed.patch", when="datatype-engine=auto device=ch4")
 
+    # Fix false positive result of the configure time check for CFI support
+    # https://github.com/pmodels/mpich/pull/6537
+    # https://github.com/pmodels/mpich/issues/6505
+    with when("@3.2.2:4.1.1"):
+        # Apply the patch from the upstream repo in case we have to run the autoreconf stage:
+        patch(
+            "https://github.com/pmodels/mpich/commit/d901a0b731035297dd6598888c49322e2a05a4e0.patch?full_index=1",
+            sha256="de0de41ec42ac5f259ea02f195eea56fba84d72b0b649a44c947eab6632995ab",
+        )
+        # Apply the changes to the configure script to skip the autoreconf stage if possible:
+        patch("mpich32_411_CFI_configure.patch")
+
     depends_on("findutils", type="build")
     depends_on("pkgconfig", type="build")
 
@@ -243,14 +250,14 @@ with '-Wl,-commons,use_dylibs' and without
     # building from git requires regenerating autotools files
     depends_on("automake@1.15:", when="@develop", type="build")
     depends_on("libtool@2.4.4:", when="@develop", type="build")
-    depends_on("m4", when="@develop", type="build"),
+    depends_on("m4", when="@develop", type="build")
     depends_on("autoconf@2.67:", when="@develop", type="build")
 
     # building with "+hwloc' also requires regenerating autotools files
-    depends_on("automake@1.15:", when="@3.3:3.3.99 +hwloc", type="build")
-    depends_on("libtool@2.4.4:", when="@3.3:3.3.99 +hwloc", type="build")
-    depends_on("m4", when="@3.3:3.3.99 +hwloc", type="build"),
-    depends_on("autoconf@2.67:", when="@3.3:3.3.99 +hwloc", type="build")
+    depends_on("automake@1.15:", when="@3.3 +hwloc", type="build")
+    depends_on("libtool@2.4.4:", when="@3.3 +hwloc", type="build")
+    depends_on("m4", when="@3.3 +hwloc", type="build")
+    depends_on("autoconf@2.67:", when="@3.3 +hwloc", type="build")
 
     # MPICH's Yaksa submodule requires python to configure
     depends_on("python@3.0:", when="@develop", type="build")
@@ -265,6 +272,7 @@ with '-Wl,-commons,use_dylibs' and without
     conflicts("netmod=tcp", when="device=ch4")
     conflicts("pmi=pmi2", when="device=ch3 netmod=ofi")
     conflicts("pmi=pmix", when="device=ch3")
+    conflicts("pmi=pmix", when="device=ch3:sock")
     conflicts("pmi=pmix", when="+hydra")
     conflicts("pmi=cray", when="+hydra")
 
@@ -456,7 +464,7 @@ with '-Wl,-commons,use_dylibs' and without
     def autoreconf(self, spec, prefix):
         """Not needed usually, configure should be already there"""
         # If configure exists nothing needs to be done
-        if os.path.exists(self.configure_abs_path) and not spec.satisfies("@3.3:3.3.99 +hwloc"):
+        if os.path.exists(self.configure_abs_path) and not spec.satisfies("@3.3 +hwloc"):
             return
         # Else bootstrap with autotools
         bash = which("bash")
@@ -484,6 +492,7 @@ with '-Wl,-commons,use_dylibs' and without
     def configure_args(self):
         spec = self.spec
         config_args = [
+            "--disable-maintainer-mode",
             "--disable-silent-rules",
             "--enable-shared",
             "--with-pm={0}".format("hydra" if "+hydra" in spec else "no"),
@@ -492,6 +501,10 @@ with '-Wl,-commons,use_dylibs' and without
             "--enable-wrapper-rpath={0}".format("no" if "~wrapperrpath" in spec else "yes"),
             "--with-yaksa={0}".format(spec["yaksa"].prefix if "^yaksa" in spec else "embedded"),
         ]
+
+        # see https://github.com/pmodels/mpich/issues/5530
+        if spec.platform == "darwin":
+            config_args.append("--enable-two-level-namespace")
 
         # hwloc configure option changed in 4.0
         if spec.satisfies("@4.0:"):
@@ -545,7 +558,10 @@ with '-Wl,-commons,use_dylibs' and without
         elif "device=ch3" in spec:
             device_config = "--with-device=ch3:nemesis:"
 
-        if "netmod=ucx" in spec:
+        # Do not apply any netmod if device is ch3:sock
+        if "device=ch3:sock" in spec:
+            device_config = "--with-device=ch3:sock"
+        elif "netmod=ucx" in spec:
             device_config += "ucx"
         elif "netmod=ofi" in spec:
             device_config += "ofi"
@@ -574,9 +590,6 @@ with '-Wl,-commons,use_dylibs' and without
         if "+argobots" in spec:
             config_args.append("--with-thread-package=argobots")
             config_args.append("--with-argobots=" + spec["argobots"].prefix)
-
-        if "+two_level_namespace" in spec:
-            config_args.append("--enable-two-level-namespace")
 
         if "+vci" in spec:
             config_args.append("--enable-thread-cs=per-vci")

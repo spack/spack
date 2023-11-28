@@ -32,7 +32,7 @@ class Fox(AutotoolsPackage):
     depends_on("jpeg")
     depends_on("libpng")
     depends_on("libtiff")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libx11")
     depends_on("libsm")
     depends_on("libxft")

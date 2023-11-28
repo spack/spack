@@ -49,6 +49,7 @@ packages:
       pbs: [openpbs, torque]
       pil: [py-pillow]
       pkgconfig: [pkgconf, pkg-config]
+      qmake: [qt-base, qt]
       rpc: [libtirpc]
       scalapack: [netlib-scalapack, amdscalapack]
       sycl: [hipsycl]
@@ -59,6 +60,7 @@ packages:
       xxd: [xxd-standalone, vim]
       yacc: [bison, byacc]
       ziglang: [zig]
+      zlib-api: [zlib-ng+compat, zlib]
     permissions:
       read: world
       write: user

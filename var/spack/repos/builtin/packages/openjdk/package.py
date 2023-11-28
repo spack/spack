@@ -18,6 +18,24 @@ from spack.util.prefix import Prefix
 #    format returned by platform.system() and 'arch' by platform.machine()
 
 _versions = {
+    "17.0.8.1_1": {
+        "Linux-x86_64": (
+            "c25dfbc334068a48c19c44ce39ad4b8427e309ae1cfa83f23c102e78b8a6dcc0",
+            "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.8.1%2B1/OpenJDK17U-jdk_x64_linux_hotspot_17.0.8.1_1.tar.gz",
+        ),
+        "Linux-aarch64": (
+            "eefd3cf3b3dd47ff269fa5b5c10b5e096b163f4e9c1810023abdbc00dc6cc304",
+            "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.8.1%2B1/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.8.1_1.tar.gz",
+        ),
+        "Darwin-x86_64": (
+            "18be56732c1692ef131625d814dcb02ee091a43fdd6f214a33d87cc14842fc3f",
+            "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.8.1%2B1/OpenJDK17U-jdk_x64_mac_hotspot_17.0.8.1_1.tar.gz",
+        ),
+        "Darwin-aarch64": (
+            "2e95eed48650f00650e963c8213b6c6ecda54458edf8d254ebc99d6a6966ffad",
+            "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.8.1%2B1/OpenJDK17U-jdk_aarch64_mac_hotspot_17.0.8.1_1.tar.gz",
+        ),
+    },
     "17.0.5_8": {
         "Linux-x86_64": (
             "482180725ceca472e12a8e6d1a4af23d608d78287a77d963335e2a0156a020af",
@@ -124,6 +142,24 @@ _versions = {
         "Linux-aarch64": (
             "1ffb9c7748334945d9056b3324de3f797d906fce4dad86beea955153aa1e28fe",
             "https://download.java.net/java/GA/jdk16.0.2/d4a915d82b4c4fbb9bde534da945d746/7/GPL/openjdk-16.0.2_linux-aarch64_bin.tar.gz",
+        ),
+    },
+    "11.0.20.1_1": {
+        "Linux-x86_64": (
+            "398a64bff002f0e3b0c01ecd24a1a32c83cb72a5255344219e9757d4ddd9f857",
+            "https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.20.1%2B1/OpenJDK11U-jdk_x64_linux_hotspot_11.0.20.1_1.tar.gz",
+        ),
+        "Linux-aarch64": (
+            "69d39682c4a2fac294a9eaacbf62c26d3c8a2f9123f1b5d287498a5472c6b672",
+            "https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.20.1%2B1/OpenJDK11U-jdk_aarch64_linux_hotspot_11.0.20.1_1.tar.gz",
+        ),
+        "Darwin-x86_64": (
+            "42fd1373ee3f7c24f13551be20c8a5ae7ade778f83c45476ea333b2e3e025267",
+            "https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.20.1%2B1/OpenJDK11U-jdk_x64_mac_hotspot_11.0.20.1_1.tar.gz",
+        ),
+        "Darwin-aarch64": (
+            "d36abd2f8a8cd2c73a7893306d65a5ae03eaa73565c1fc197a69d1d6fb02405e",
+            "https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.20.1%2B1/OpenJDK11U-jdk_aarch64_mac_hotspot_11.0.20.1_1.tar.gz",
         ),
     },
     "11.0.17_8": {

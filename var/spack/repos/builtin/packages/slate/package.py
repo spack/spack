@@ -25,6 +25,9 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
     version(
+        "2023.08.25", sha256="0894d8669ed88358cc7c4cb7b77d8467336613245a7b843f3504e9224632ce0e"
+    )
+    version(
         "2022.07.00", sha256="176db81aef44b1d498a37c67b30aff88d4025770c9200e19ceebd416e4101327"
     )
     version(
@@ -48,17 +51,23 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     )
     variant("openmp", default=True, description="Build with OpenMP support.")
     variant("shared", default=True, description="Build shared library")
+    variant("sycl", default=False, description="Build with SYCL backend")
 
     # The runtime dependency on cmake is needed by the stand-alone tests (spack test).
     depends_on("cmake", type="run")
 
     depends_on("mpi", when="+mpi")
+    depends_on("intel-oneapi-mkl threads=openmp", when="+sycl")
     depends_on("blas")
     depends_on("blaspp ~cuda", when="~cuda")
     depends_on("blaspp +cuda", when="+cuda")
+    depends_on("blaspp ~sycl", when="~sycl")
+    depends_on("blaspp +sycl", when="+sycl")
     depends_on("blaspp ~rocm", when="~rocm")
     depends_on("lapackpp ~cuda", when="~cuda")
     depends_on("lapackpp +cuda", when="+cuda")
+    depends_on("lapackpp ~sycl", when="~sycl")
+    depends_on("lapackpp +sycl", when="+sycl")
     depends_on("lapackpp ~rocm", when="~rocm")
     for val in CudaPackage.cuda_arch_values:
         depends_on("blaspp +cuda cuda_arch=%s" % val, when="cuda_arch=%s" % val)
@@ -66,6 +75,7 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     for val in ROCmPackage.amdgpu_targets:
         depends_on("blaspp +rocm amdgpu_target=%s" % val, when="amdgpu_target=%s" % val)
         depends_on("lapackpp +rocm amdgpu_target=%s" % val, when="amdgpu_target=%s" % val)
+    depends_on("lapackpp@2023.08.25:", when="@2023.08.25:")
     depends_on("lapackpp@2022.07.00:", when="@2022.07.00:")
     depends_on("lapackpp@2022.05.00:", when="@2022.05.00:")
     depends_on("lapackpp@2021.04.00:", when="@2021.05.01:")
@@ -73,6 +83,8 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("lapackpp@master", when="@master")
     depends_on("scalapack", type="test")
     depends_on("hipify-clang", when="@:2021.05.02 +rocm ^hip@5:")
+
+    requires("%oneapi", when="+sycl", msg="slate+sycl must be compiled with %oneapi")
 
     cpp_17_msg = "Requires C++17 compiler support"
     conflicts("%gcc@:5", msg=cpp_17_msg)
@@ -82,7 +94,11 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     conflicts(
         "+rocm", when="@:2020.10.00", msg="ROCm support requires SLATE 2021.05.01 or greater"
     )
-    conflicts("+rocm", when="+cuda", msg="SLATE only supports one GPU backend at a time")
+    backend_msg = "SLATE supports only one GPU backend at a time"
+    conflicts("+rocm", when="+cuda", msg=backend_msg)
+    conflicts("+rocm", when="+sycl", msg=backend_msg)
+    conflicts("+cuda", when="+sycl", msg=backend_msg)
+    conflicts("+sycl", when="@:2022.07.00", msg="SYCL support requires SLATE version 2023.08.25")
 
     def cmake_args(self):
         spec = self.spec
@@ -93,6 +109,8 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
                 backend = "cuda"
             if "+rocm" in spec:
                 backend = "hip"
+            if "+sycl" in spec:
+                backend = "sycl"
             backend_config = "-Dgpu_backend=%s" % backend
 
         config = [

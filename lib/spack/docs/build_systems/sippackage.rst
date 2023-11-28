@@ -32,7 +32,7 @@ By default, these phases run:
 
 .. code-block:: console
 
-   $ python configure.py --bindir ... --destdir ...
+   $ sip-build --verbose --target-dir ...
    $ make
    $ make install
 
@@ -41,30 +41,30 @@ By default, these phases run:
 Important files
 ^^^^^^^^^^^^^^^
 
-Each SIP package comes with a custom ``configure.py`` build script,
-written in Python. This script contains instructions to build the project.
+Each SIP package comes with a custom configuration file written in Python.
+For newer packages, this is called ``project.py``, while in older packages,
+it may be called ``configure.py``. This script contains instructions to build
+the project.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Build system dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-``SIPPackage`` requires several dependencies. Python is needed to run
-the ``configure.py`` build script, and to run the resulting Python
-libraries. Qt is needed to provide the ``qmake`` command. SIP is also
-needed to build the package. All of these dependencies are automatically
-added via the base class
+``SIPPackage`` requires several dependencies. Python and SIP are needed at build-time
+to run the aforementioned configure script. Python is also needed at run-time to
+actually use the installed Python library. And as we are building Python bindings
+for C/C++ libraries, Python is also needed as a link dependency. All of these
+dependencies are automatically added via the base class.
 
 .. code-block:: python
 
-   extends('python')
+   extends("python", type=("build", "link", "run"))
+   depends_on("py-sip", type="build")
 
-   depends_on('qt', type='build')
 
-   depends_on('py-sip', type='build')
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Passing arguments to ``configure.py``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Passing arguments to ``sip-build``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Each phase comes with a ``<phase_args>`` function that can be used to pass
 arguments to that particular phase. For example, if you need to pass
@@ -73,10 +73,10 @@ arguments to the configure phase, you can use:
 .. code-block:: python
 
    def configure_args(self):
-       return ['--no-python-dbus']
+       return ["--no-python-dbus"]
 
 
-A list of valid options can be found by running ``python configure.py --help``.
+A list of valid options can be found by running ``sip-build --help``.
 
 ^^^^^^^
 Testing

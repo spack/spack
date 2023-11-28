@@ -6,10 +6,11 @@ import os
 import posixpath
 import sys
 
+from llnl.path import convert_to_posix_path
+
 import spack.paths
 import spack.util.executable
 from spack.spec import Spec
-from spack.util.path import convert_to_posix_path
 
 description = "generate Windows installer"
 section = "admin"
@@ -39,7 +40,7 @@ def txt_to_rtf(file_path):
 def setup_parser(subparser):
     spack_source_group = subparser.add_mutually_exclusive_group(required=True)
     spack_source_group.add_argument(
-        "-v", "--spack-version", default="", help="download given spack version e.g. 0.16.0"
+        "-v", "--spack-version", default="", help="download given spack version"
     )
     spack_source_group.add_argument(
         "-s", "--spack-source", default="", help="full path to spack source"
@@ -50,7 +51,7 @@ def setup_parser(subparser):
         "--git-installer-verbosity",
         default="",
         choices=["SILENT", "VERYSILENT"],
-        help="Level of verbosity provided by bundled Git Installer. Default is fully verbose",
+        help="level of verbosity provided by bundled git installer (default is fully verbose)",
         required=False,
         action="store",
         dest="git_verbosity",

@@ -29,6 +29,18 @@ class IntelOneapiIppcp(IntelOneApiLibraryPackage):
     )
 
     version(
+        "2021.9.0",
+        url="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/6792a758-2d69-4ff3-ad24-233fb3bf56e4/l_ippcp_oneapi_p_2021.9.0.533_offline.sh",
+        sha256="5eca6fd18d9117f8cb7c599cee418b9cc3d7d5d5404f1350d47289095b6a1254",
+        expand=False,
+    )
+    version(
+        "2021.8.0",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/f488397a-bd8f-449f-9127-04de8426aa35/l_ippcp_oneapi_p_2021.8.0.49493_offline.sh",
+        sha256="ac380d98dc9a12007f11537a1a57a848d4ccb251c4773608b088cf677e72c6d8",
+        expand=False,
+    )
+    version(
         "2021.7.0",
         url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/3697d9d0-907f-40d4-a2a7-7d83c45b72cb/l_ippcp_oneapi_p_2021.7.0.43492_offline.sh",
         sha256="2efc961a2beab091ce8f9b1b06792d85ea00778e36c773b0d8efcffb3dec7b49",
@@ -94,6 +106,10 @@ class IntelOneapiIppcp(IntelOneApiLibraryPackage):
         sha256="c0967afae22c7a223ec42542bcc702121064cd3d8f680eff36169c94f964a936",
         expand=False,
     )
+
+    @property
+    def v2_layout_versions(self):
+        return "@2021.9:"
 
     @property
     def component_dir(self):

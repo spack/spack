@@ -42,7 +42,8 @@ class PyImagecodecs(PythonPackage):
     depends_on("libwebp@1.2.2:")
     depends_on("openjpeg@2.4.0:")
     depends_on("snappy@1.1.9:")
-    depends_on("zlib@1.2.11:")
+    depends_on("zlib-api")
+    depends_on("zlib@1.2.11:", when="^zlib")
     depends_on("zopfli@1.0.3: +shared")
     depends_on("zstd@1.5.2:")
 
@@ -65,11 +66,12 @@ class PyImagecodecs(PythonPackage):
         )
         # 239
         filter_file(
-            "append\('/usr/include/jxrlib'\)",  # noqa: W605
+            "append('/usr/include/jxrlib')",
             "extend(('{0}/libjxr/image', '{0}/libjxr/common', '{0}/libjxr/glue'))".format(  # noqa: E501
                 spec["jxrlib-debian"].prefix.include
             ),
             "setup.py",
+            string=True,
         )
 
         # 367

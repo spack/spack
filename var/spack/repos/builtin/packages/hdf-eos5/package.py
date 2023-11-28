@@ -99,7 +99,7 @@ class HdfEos5(AutotoolsPackage):
         extra_args.append("--with-hdf5={0}".format(self.spec["hdf5"].prefix))
         if "szip" in self.spec:
             extra_args.append("--with-szlib={0}".format(self.spec["szip"].prefix))
-        if "zlib" in self.spec:
-            extra_args.append("--with-zlib={0}".format(self.spec["zlib"].prefix))
+        if "zlib-api" in self.spec:
+            extra_args.append("--with-zlib={0}".format(self.spec["zlib-api"].prefix))
 
         return extra_args

@@ -14,7 +14,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     """
 
     homepage = "https://petsc.org"
-    url = "https://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.15.0.tar.gz"
+    url = "https://web.cels.anl.gov/projects/petsc/download/release-snapshots/petsc-3.20.0.tar.gz"
     git = "https://gitlab.com/petsc/petsc.git"
     maintainers("balay", "barrysmith", "jedbrown")
 
@@ -22,6 +22,13 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
     version("main", branch="main")
 
+    version("3.20.1", sha256="3d54f13000c9c8ceb13ca4f24f93d838319019d29e6de5244551a3ec22704f32")
+    version("3.20.0", sha256="c152ccb12cb2353369d27a65470d4044a0c67e0b69814368249976f5bb232bd4")
+    version("3.19.6", sha256="6045e379464e91bb2ef776f22a08a1bc1ff5796ffd6825f15270159cbb2464ae")
+    version("3.19.5", sha256="511aa78cad36db2dfd298acf35e9f7afd2ecc1f089da5b0b5682507a31a5d6b2")
+    version("3.19.4", sha256="7c941b71be52c3b764214e492df60109d12f97f7d854c97a44df0c4d958b3906")
+    version("3.19.3", sha256="008239c016b869693ec8e81368a0b7638462e667d07f7d50ed5f9b75ccc58d17")
+    version("3.19.2", sha256="114f363f779bb16839b25c0e70f8b0ae0d947d50e72f7c6cddcb11b001079b16")
     version("3.19.1", sha256="74db60c53c80b48d5c39e07bc39a883ecced88b9f24a5de17cf6f485a903e120")
     version("3.19.0", sha256="8ced753e4d2fb6565662b2b1fbba75a426cbf8438203f82717ce270f0591322c")
     version("3.18.6", sha256="8b53c8b6652459ba0bbe6361b5baf8c4d17c1d04b6654a76e3b6a9ab4a576680")
@@ -81,6 +88,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     variant("double", default=True, description="Switches between single and double precision")
     variant("complex", default=False, description="Build with complex numbers")
     variant("debug", default=False, description="Compile in debug mode")
+    variant("sycl", default=False, description="Enable sycl build")
 
     variant("metis", default=True, description="Activates support for metis and parmetis")
     variant(
@@ -136,6 +144,13 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     )
     variant("cgns", default=False, description="Activates support for CGNS (only parallel)")
     variant("memkind", default=False, description="Activates support for Memkind")
+    variant(
+        "memalign",
+        default="none",
+        description="Specify alignment of allocated arrays",
+        values=("4", "8", "16", "32", "64", "none"),
+        multi=False,
+    )
     variant("p4est", default=False, description="Activates support for P4Est (only parallel)")
     variant("saws", default=False, description="Activates support for Saws")
     variant("libyaml", default=False, description="Activates support for YAML")
@@ -146,6 +161,10 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
     # https://github.com/spack/spack/issues/37416
     conflicts("^rocprim@5.3.0:5.3.2", when="+rocm")
+    # petsc 3.20 has workaround for breaking change in hipsparseSpSV_solve api,
+    # but it seems to misdetect hipsparse@5.6.1 as 5.6.0, so the workaround
+    # only makes things worse
+    conflicts("^hipsparse@5.6", when="+rocm @3.20.0")
 
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
     conflicts("^intel-mkl", when="@3.8.0")
@@ -190,6 +209,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     patch("revert-3.18.0-ver-format-for-dealii.patch", when="@3.18.0")
 
     depends_on("diffutils", type="build")
+    # not listed as a "build" dependency - so that slepc build gets the same dependency
+    depends_on("gmake")
 
     # Virtual dependencies
     # Git repository needs sowing to build Fortran interface
@@ -235,9 +256,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on("hdf5+mpi", when="@3.13:+hdf5+mpi")
     depends_on("hdf5+mpi", when="+exodusii+mpi")
     depends_on("hdf5+mpi", when="+cgns+mpi")
-    depends_on("zlib", when="+hdf5")
-    depends_on("zlib", when="+libpng")
-    depends_on("zlib", when="+p4est")
+    depends_on("zlib-api", when="+hdf5")
+    depends_on("zlib-api", when="+libpng")
+    depends_on("zlib-api", when="+p4est")
     depends_on("parmetis+int64", when="+metis+mpi+int64")
     depends_on("parmetis~int64", when="+metis+mpi~int64")
     depends_on("valgrind", when="+valgrind")
@@ -245,22 +266,19 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on("mmg", when="+parmmg")
     depends_on("parmmg", when="+parmmg")
     depends_on("tetgen+pic", when="+tetgen")
-    # hypre+/~fortran based on wheter fortran is enabled/disabled
+
     depends_on("hypre+fortran", when="+hypre+fortran")
     depends_on("hypre~fortran", when="+hypre~fortran")
-    # Hypre does not support complex numbers.
-    # Also PETSc prefer to build it without internal superlu, likely due to
-    # conflict in headers see
-    # https://bitbucket.org/petsc/petsc/src/90564b43f6b05485163c147b464b5d6d28cde3ef/config/BuildSystem/config/packages/hypre.py
-    depends_on("hypre@2.14:2.18.2~internal-superlu", when="@3.11:3.13+hypre")
-    depends_on("hypre@2.14:2.22.0~internal-superlu", when="@3.14:3.15+hypre")
-    depends_on("hypre@2.14:~internal-superlu", when="@3.16:+hypre")
-    depends_on("hypre@develop~internal-superlu", when="@main+hypre")
     depends_on("hypre+complex", when="+hypre+complex")
     depends_on("hypre~complex", when="+hypre~complex")
     depends_on("hypre+int64", when="+hypre+int64")
     depends_on("hypre~int64", when="+hypre~int64")
-    depends_on("hypre+mpi", when="+hypre+mpi")
+    depends_on("hypre+mpi~internal-superlu", when="+hypre")
+    depends_on("hypre@2.14:2.18.2", when="@3.11:3.13+hypre")
+    depends_on("hypre@2.14:2.22.0", when="@3.14:3.15+hypre")
+    depends_on("hypre@2.14:2.28.0", when="@3.16:3.19+hypre")
+    depends_on("hypre@2.14:", when="@3.20+hypre")
+    depends_on("hypre@develop", when="@main+hypre")
 
     depends_on("superlu-dist@:4.3~int64", when="@3.4.4:3.6.4+superlu-dist+mpi~int64")
     depends_on("superlu-dist@:4.3+int64", when="@3.4.4:3.6.4+superlu-dist+mpi+int64")
@@ -324,6 +342,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             when="+kokkos +rocm amdgpu_target=%s" % rocm_arch,
         )
 
+    conflicts("~kokkos", when="+sycl", msg="+sycl requires +kokkos")
+    depends_on("kokkos+sycl", when="+sycl +kokkos")
+
     phases = ["configure", "build", "install"]
 
     # Using the following tarballs
@@ -332,13 +353,11 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     # * petsc-3.15 and newer (without docs)
     def url_for_version(self, version):
         if self.spec.satisfies("@3.13.0:3.14.6"):
-            return (
-                "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-lite-{0}.tar.gz".format(
-                    version
-                )
+            return "http://web.cels.anl.gov/projects/petsc/download/release-snapshots/petsc-lite-{0}.tar.gz".format(
+                version
             )
         else:
-            return "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-{0}.tar.gz".format(
+            return "http://web.cels.anl.gov/projects/petsc/download/release-snapshots/petsc-{0}.tar.gz".format(
                 version
             )
 
@@ -413,10 +432,24 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         if "+knl" in spec:
             options.append("--with-avx-512-kernels")
             options.append("--with-memalign=64")
+        elif self.spec.variants["memalign"].value != "none":
+            alignement = self.spec.variants["memalign"].value
+            options.append(f"--with-memalign={alignement}")
+
         if "+X" in spec:
             options.append("--with-x=1")
         else:
             options.append("--with-x=0")
+
+        if "+sycl" in spec:
+            sycl_compatible_compilers = ["icpx"]
+            if not (os.path.basename(self.compiler.cxx) in sycl_compatible_compilers):
+                raise InstallError("PETSc's SYCL GPU Backend requires oneAPI CXX (icpx) compiler.")
+            options.append("--with-sycl=1")
+            options.append("--with-syclc=" + self.compiler.cxx)
+            options.append("SYCLPPFLAGS=-Wno-tautological-constant-compare")
+        else:
+            options.append("--with-sycl=0")
 
         if "trilinos" in spec:
             if spec.satisfies("^trilinos+boost"):
