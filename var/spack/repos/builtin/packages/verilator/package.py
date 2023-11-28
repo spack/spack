@@ -75,6 +75,10 @@ class Verilator(AutotoolsPackage):
     depends_on("perl", type=("build", "run"))
     depends_on("bash", type="build")
 
+    # we need to fix the CXX and LINK paths, as they point to the spack
+    # wrapper scripts which aren't usable without spack
+    filter_compiler_wrappers("verilated.mk", relative_root="include")
+
     def setup_run_environment(self, env):
         env.prepend_path("VERILATOR_ROOT", self.prefix)
 
@@ -87,18 +91,3 @@ class Verilator(AutotoolsPackage):
     def install_include(self):
         install_tree("include", prefix.include)
         install_tree("bin", prefix.bin)
-
-    # we need to fix the CXX and LINK paths, as they point to the spack
-    # wrapper scripts which aren't usable without spack
-    @run_after("install")
-    def patch_cxx(self):
-        filter_file(
-            r"^CXX\s*=.*",
-            f"CXX={self.compiler.cxx}",
-            join_path(self.prefix.include, "verilated.mk"),
-        )
-        filter_file(
-            r"^LINK\s*=.*",
-            f"LINK={self.compiler.cxx}",
-            join_path(self.prefix.include, "verilated.mk"),
-        )
