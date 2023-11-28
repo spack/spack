@@ -18,9 +18,6 @@ class PyBluepymm(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-bluepyopt", type="run")
     depends_on("py-matplotlib", type="run")
-    # The below dependency should disappear once
-    # the matplotlib package is fixed
-    depends_on("py-backports-functools-lru-cache", type="run", when="^python@:3.3.99")
     depends_on("py-pandas", type="run")
     depends_on("py-numpy", type="run")
     depends_on("py-ipyparallel", type="run")

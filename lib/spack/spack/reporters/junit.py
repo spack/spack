@@ -9,8 +9,7 @@ import spack.tengine
 
 from .base import Reporter
 
-
-ANTI_ANSI = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
+ANTI_ANSI = re.compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
 
 
 class JUnit(Reporter):

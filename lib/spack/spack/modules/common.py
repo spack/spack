@@ -740,19 +740,17 @@ class BaseContext(tengine.Context):
             if d.external:
                 if d.external_modules:
                     return False
-                if (
-                    d.external_path and
-                    spack.util.environment.is_system_path(d.external_path)
-                ):
+                if d.external_path and spack.util.environment.is_system_path(d.external_path):
                     return False
             return True
-        for dep in set(spec.traverse(root=False, deptype='run')):
+
+        for dep in set(spec.traverse(root=False, deptype="run")):
             dep.package.setup_dependent_package(spec.package.module, spec)
-        for dep in set(spec.traverse(root=False, deptype='run')):
+        for dep in set(spec.traverse(root=False, deptype="run")):
             if qualifies_for_modifications(dep):
                 dep.package.setup_run_environment(env)
                 if os.path.isdir(dep.prefix.bin):
-                    env.prepend_path('PATH', dep.prefix.bin)
+                    env.prepend_path("PATH", dep.prefix.bin)
 
         # Let the extendee/dependency modify their extensions/dependencies
 

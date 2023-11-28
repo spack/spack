@@ -851,8 +851,7 @@ class IntelPackage(Package):
             or "^intel-parallel-studio" in spec_root
         ):
             blacs_lib = "libmkl_blacs_intelmpi"
-        elif ("^mpt" in spec_root or
-              "^hpe-mpi" in spec_root):
+        elif "^mpt" in spec_root or "^hpe-mpi" in spec_root:
             blacs_lib = "libmkl_blacs_sgimpt"
         else:
             raise_lib_error("Cannot find a BLACS library for the given MPI.")
@@ -1055,9 +1054,7 @@ class IntelPackage(Package):
         # if sys.platform == 'darwin':
         #     args = ()
 
-        env.extend(
-            EnvironmentModifications.from_sourcing_file(f, *args, clean=True)
-        )
+        env.extend(EnvironmentModifications.from_sourcing_file(f, *args, clean=True))
 
         if self.spec.name in ("intel", "intel-parallel-studio"):
             # this package provides compilers

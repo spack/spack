@@ -122,7 +122,6 @@ class InfoCollector:
                 except spack.build_environment.InstallError as exc:
                     # An InstallError is considered a failure (the recipe
                     # didn't work correctly)
-                    error = e
                     package["result"] = "failure"
                     package["message"] = exc.message or "Installation failure"
                     package["stdout"] = self.fetch_log(pkg)
@@ -133,7 +132,6 @@ class InfoCollector:
                 except (Exception, BaseException) as exc:
                     # Everything else is an error (the installation
                     # failed outside of the child process)
-                    error = e
                     package["result"] = "error"
                     package["message"] = str(exc) or "Unknown error"
                     package["stdout"] = self.fetch_log(pkg)
