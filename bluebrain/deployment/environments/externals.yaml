@@ -119,8 +119,6 @@ spack:
     # If julia's curl does not match what they normally ship, downloading behind a proxy
     # will break.
     # - julia@1.6^curl@7.73  # As requested by Polina S.
-    # TODO test download on compute node
-    - julia@1.6
     - libxslt
     - likwid
     - mvapich2
