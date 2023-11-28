@@ -37,7 +37,6 @@ spack:
           - node-js
           - nvhpc
           - openjdk
-          - pgi
           - python
           - singularityce
           - snakemake
@@ -110,7 +109,6 @@ spack:
     - gmake  # Used to parallelize Spack deployment builds
     - graphviz
     - hdf5~mpi
-    - help2man
     - hpe-mpi@2.25.hmpt
     - intel-oneapi-mkl@2021.4.0
     - intel-oneapi-tbb@2021.4.0
@@ -125,25 +123,23 @@ spack:
     - ncurses
     - ninja
     - node-js
-    - openscenegraph  # doesn't like to be built in a spec with LLVM
     # Leads to issues down the line, where it is preferred over intel-mkl
     # #providers
     - openblas
     - openjdk@17  # HELP-17046
     - poppler
-    - python
+    - python@3.8
+    - python@3.9
+    - python@3.10
+    - python@3.11
     - qhull
     - readline
     - singularityce
     - snakemake
-    - sqlite
    # BlueBrain TODO: re-enable and fix
    #- stat
     - totalview
     - valgrind~mpi
-    - virtualgl
     - zlib
-    # Viz stuff that complicates specs
-    - optix
     - ilmbase
     - openexr
