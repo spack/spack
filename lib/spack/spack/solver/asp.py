@@ -2715,7 +2715,7 @@ class Solver:
 
         # These properties are settable via spack configuration, and overridable
         # by setting them directly as properties.
-        self.reuse = spack.config.get("concretizer:reuse", False)
+        self.reuse = spack.config.get("concretizer:reuse", True)
 
     @staticmethod
     def _check_input_and_extract_concrete_specs(specs):
