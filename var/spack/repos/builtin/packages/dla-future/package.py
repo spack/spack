@@ -79,6 +79,10 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("rocsolver", when="+rocm")
     depends_on("rocthrust", when="+rocm")
 
+    # Pedantic warnings, triggered by GCC 9 and 10, are always errors until 0.3.1:
+    # https://github.com/eth-cscs/DLA-Future/pull/1043
+    conflicts("%gcc@9:10", when="@:0.3.0")
+
     depends_on("hdf5 +cxx+mpi+threadsafe+shared", when="+hdf5")
 
     conflicts("+cuda", when="+rocm")
