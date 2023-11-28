@@ -23,7 +23,7 @@ class PyCachecontrol(PythonPackage):
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-requests", type=("build", "run"))
-    depends_on("py-requests@2.16.0:", when="0.13", type=("build", "run"))
+    depends_on("py-requests@2.16.0:", when="@0.13", type=("build", "run"))
     depends_on("py-msgpack@0.5.2:", type=("build", "run"))
     depends_on("py-lockfile@0.9:", when="@0.12+filecache", type="run")
     depends_on("py-filelock@3.8.0:", when="@0.13+filecache", type="run")
