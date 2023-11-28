@@ -194,6 +194,14 @@ class CMakePackageTemplate(PackageTemplate):
         return args"""
 
 
+class GoPackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for Go-module-based packages"""
+
+    base_class_name = "GoPackage"
+
+    body_def = ""
+
+
 class LuaPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for LuaRocks-based packages"""
 
@@ -590,6 +598,7 @@ templates = {
     "cargo": CargoPackageTemplate,
     "cmake": CMakePackageTemplate,
     "generic": PackageTemplate,
+    "go": GoPackageTemplate,
     "intel": IntelPackageTemplate,
     "lua": LuaPackageTemplate,
     "makefile": MakefilePackageTemplate,
@@ -689,6 +698,7 @@ class BuildSystemGuesser:
             (r"/CMakeLists\.txt$", "cmake"),
             (r"/NAMESPACE$", "r"),
             (r"/Cargo\.toml$", "cargo"),
+            (r"/go\.mod$", "go"),
             (r"/configure$", "autotools"),
             (r"/configure\.(in|ac)$", "autoreconf"),
             (r"/Makefile\.am$", "autoreconf"),
