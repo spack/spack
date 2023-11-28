@@ -10,7 +10,7 @@ clone this repository in addition.
 The following commands are a good way to get started:
 
     $ module load spack unstable git
-    $ git clone -c feature.manyFiles=true https://github.com/BlueBrain/spack.git
+    $ git clone -c feature.manyFiles=true git@github.com:BlueBrain/spack.git
     $ . spack/share/spack/setup-env.sh
 
 To be fully independent of the module, export the system configuration
