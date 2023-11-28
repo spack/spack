@@ -17,7 +17,6 @@ spack:
       # tags and scope search helpers
       - universal-ctags # only maintained ctags, works better with c++
       - direnv
-      - py-python-lsp-server
       # runtimes and compilers
       - python
       - llvm+link_llvm_dylib~lld~lldb~polly+python build_type=MinSizeRel # for clangd, clang-format
@@ -32,12 +31,13 @@ spack:
       - uncrustify
       - py-fprettify
       - py-fortran-language-server
+      - py-python-lsp-server
       # cli dev tools
       - ripgrep
       - gh
       - fd
       - bfs
-      - 'fzf^go@1.20:'
+      - fzf
       - tree
       - jq
       - py-yq
