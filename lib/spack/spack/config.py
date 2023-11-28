@@ -951,15 +951,15 @@ def matched_config(cfg_path):
     return [(scope, get(cfg_path, scope=scope)) for scope in writable_scope_names()]
 
 
-def find_and_update_config(section_name, find_fn, update_fn):
+def change_or_add(section_name, find_fn, update_fn):
     """Change or add a subsection of config, with additional logic to
     select a reasonable scope where the change is applied.
 
-    Search through configs starting with the highest priority:
-    the first matching a criteria is updated; if no such config exists
-    find the first config scope that defines any config for the named
-    section; if no scopes define any related config, then update the
-    highest-priority config scope.
+    Search through config scopes starting with the highest priority:
+    the first matching a criteria (determined by ``find_fn``) is updated;
+    if no such config exists, find the first config scope that defines
+    any config for the named section; if no scopes define any related
+    config, then update the highest-priority config scope.
     """
     configs_by_section = matched_config(section_name)
 
@@ -987,13 +987,15 @@ def find_and_update_config(section_name, find_fn, update_fn):
         spack.config.set(section_name, section, scope=scope)
         return
 
+    # If no scopes define any config for the named section, then
+    # modify the highest-priority scope.
     scope, section = configs_by_section[0]
     update_fn(section)
     spack.config.set(section_name, section, scope=scope)
 
 
 def update_all(section_name, change_fn):
-    """Change a config subsection, which may have details duplicated
+    """Change a config section, which may have details duplicated
     across multiple scopes.
     """
     configs_by_section = matched_config("develop")

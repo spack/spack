@@ -55,7 +55,7 @@ def _update_config(spec, path):
     def change_fn(section):
         section[spec.name] = entry
 
-    spack.config.find_and_update_config("develop", find_fn, change_fn)
+    spack.config.change_or_add("develop", find_fn, change_fn)
 
 
 def _retrieve_develop_source(spec, abspath):
