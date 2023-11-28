@@ -502,6 +502,34 @@ def test_parse_install_tree(config_settings, expected, mutable_config):
     assert projections == expected_proj
 
 
+def test_change_or_add(mutable_config, mock_packages):
+    spack.config.add("packages:a:version:['1.0']", scope="user")
+
+    spack.config.add("packages:b:version:['1.1']", scope="system")
+
+    class ChangeTest:
+        def __init__(self, pkg_name, new_version):
+            self.pkg_name = pkg_name
+            self.new_version = new_version
+
+        def find_fn(self, section):
+            return self.pkg_name in section
+
+        def change_fn(self, section):
+            pkg_section = section.get(self.pkg_name, {})
+            pkg_section["version"] = self.new_version
+            section[self.pkg_name] = pkg_section
+
+    change1 = ChangeTest("b", ["1.2"])
+    spack.config.change_or_add("packages", change1.find_fn, change1.change_fn)
+    assert "b" not in mutable_config.get("packages", scope="user")
+    assert mutable_config.get("packages")["b"]["version"] == ["1.2"]
+
+    change2 = ChangeTest("c", ["1.0"])
+    spack.config.change_or_add("packages", change2.find_fn, change2.change_fn)
+    assert "c" in mutable_config.get("packages", scope="user")
+
+
 @pytest.mark.not_on_windows("Padding unsupported on Windows")
 @pytest.mark.parametrize(
     "config_settings,expected",
