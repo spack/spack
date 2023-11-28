@@ -15,6 +15,7 @@ class Hadoop(Package):
     homepage = "https://hadoop.apache.org/"
     url = "https://archive.apache.org/dist/hadoop/common/hadoop-3.3.2/hadoop-3.3.2.tar.gz"
 
+    version("3.3.3", sha256="fa71c61bbaa427129aef09fec028b34dd542c65ad90fdccec5e7ef93d83b8764")
     version("3.3.2", sha256="b341587495b12eec0b244b517f21df88eb46ef634dc7dc3e5969455b80ce2ce5")
     version("3.3.0", sha256="ea1a0f0afcdfb9b6b9d261cdce5a99023d7e8f72d26409e87f69bda65c663688")
     version("3.2.2", sha256="97e73b46c3972cd3c40c2295bd9488843c24e8503c36e7c57f6e6ecc4e12b8c3")
@@ -28,6 +29,8 @@ class Hadoop(Package):
     version("2.7.5", sha256="0bfc4d9b04be919be2fdf36f67fa3b4526cdbd406c512a7a1f5f1b715661f831")
 
     depends_on("java", type="run")
+
+    patch("hadoop-shell-quoting.patch", when="@2")
 
     def install(self, spec, prefix):
         def install_dir(dirname):
