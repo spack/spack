@@ -2573,14 +2573,8 @@ class SpackSolverSetup:
             reuse: list of concrete specs that can be reused
             allow_deprecated: if True adds deprecated versions into the solve
         """
-        self._condition_id_counter = itertools.count()
-        self._trigger_id_counter = self._condition_id_counter
-        self._effect_id_counter = self._condition_id_counter
-
-        # preliminary checks
         check_packages_exist(specs)
 
-        # get list of all possible dependencies
         self.possible_virtuals = set(x.name for x in specs if x.virtual)
 
         node_counter = _create_counter(specs, tests=self.tests)
