@@ -895,6 +895,7 @@ aws-pcluster-build-neoverse_n1:
     SPACK_CI_STACK_NAME: aws-pcluster-neoverse_v1
 
 aws-pcluster-generate-neoverse_v1:
+  # TODO: Use updated runner tags: https://github.com/spack/spack-infrastructure/pull/694/files
   extends: [ ".linux_neoverse_v1", ".aws-pcluster-neoverse_v1", ".generate-aarch64", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
 
 aws-pcluster-build-neoverse_v1:
