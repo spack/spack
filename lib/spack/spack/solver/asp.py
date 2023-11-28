@@ -1119,9 +1119,9 @@ class SpackSolverSetup:
 
         # id for dummy variables
         self._condition_id_counter = itertools.count()
-        self._trigger_id_counter = itertools.count()
+        self._trigger_id_counter = self._condition_id_counter
         self._trigger_cache = collections.defaultdict(dict)
-        self._effect_id_counter = itertools.count()
+        self._effect_id_counter = self._condition_id_counter
         self._effect_cache = collections.defaultdict(dict)
 
         # Caches to optimize the setup phase of the solver
@@ -2574,6 +2574,8 @@ class SpackSolverSetup:
             allow_deprecated: if True adds deprecated versions into the solve
         """
         self._condition_id_counter = itertools.count()
+        self._trigger_id_counter = self._condition_id_counter
+        self._effect_id_counter = self._condition_id_counter
 
         # preliminary checks
         check_packages_exist(specs)
