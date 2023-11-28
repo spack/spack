@@ -184,10 +184,6 @@ class Rocalution(CMakePackage):
     # Fix build for most Radeon 5000 and Radeon 6000 series GPUs.
     patch("0004-fix-navi-1x.patch", when="@5.2.0:5.3")
 
-    def check(self):
-        exe = join_path(self.build_directory, "clients", "staging", "rocalution-test")
-        self.run_test(exe)
-
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
 
@@ -236,3 +232,9 @@ class Rocalution(CMakePackage):
             args.append("-DCMAKE_INSTALL_LIBDIR=lib")
 
         return args
+
+    @run_after("build")
+    @on_package_attributes(run_tests=True)
+    def check_build(self):
+        exe = Executable(join_path(self.build_directory, "clients", "staging", "rocalution-test"))
+        exe()
