@@ -15,6 +15,7 @@ class PyDulwich(PythonPackage):
     homepage = "https://www.dulwich.io"
     pypi = "dulwich/dulwich-0.20.15.tar.gz"
 
+    version("0.21.6", sha256="30fbe87e8b51f3813c131e2841c86d007434d160bd16db586b40d47f31dd05b0")
     version("0.20.46", sha256="4f0e88ffff5db1523d93d92f1525fe5fa161318ffbaad502c1b9b3be7a067172")
     version("0.20.44", sha256="10e8d73763dd30c86a99a15ade8bfcf3ab8fe96532cdf497e8cb1d11832352b8")
     version("0.20.21", sha256="ac764c9a9b80fa61afe3404d5270c5060aa57f7f087b11a95395d3b76f3b71fd")
@@ -24,6 +25,7 @@ class PyDulwich(PythonPackage):
     depends_on("python@3.5.0:", type=("build", "run"))
     depends_on("python@3.6.0:", when="@0.20.44:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@61.2:", when="@0.21.6", type="build")
     depends_on("py-certifi", when="@:0.20.44", type=("build", "run"))
     depends_on("py-urllib3@1.24.1:", type=("build", "run"))
     depends_on("py-urllib3@1.25:", when="@0.20.46:", type=("build", "run"))
