@@ -20,8 +20,16 @@ class SingularityEos(CMakePackage, CudaPackage):
 
     version("main", branch="main")
     version("1.7.0", sha256="ce0825db2e9d079503e98cecf1c565352be696109042b3a0941762b35f36dc49")
-    version("1.6.2", sha256="9c85fca679139a40cc9c72fcaeeca78a407cc1ca184734785236042de364b942")
-    version("1.6.1", sha256="c6d92dfecf9689ffe2df615791c039f7e527e9f47799a862e26fa4e3420fe5d7")
+    version(
+        "1.6.2",
+        sha256="9c85fca679139a40cc9c72fcaeeca78a407cc1ca184734785236042de364b942",
+        deprecated=True,
+    )
+    version(
+        "1.6.1",
+        sha256="c6d92dfecf9689ffe2df615791c039f7e527e9f47799a862e26fa4e3420fe5d7",
+        deprecated=True,
+    )
 
     # build with kokkos, kokkos-kernels for offloading support
     variant("kokkos", default=False, description="Enable kokkos")
@@ -151,34 +159,7 @@ class SingularityEos(CMakePackage, CudaPackage):
 
         return args
 
-    # specify the name of the auto-generated cmake cache config
-    @property
-    def cmake_config_fname(self):
-        return "singularity-eos_spackconfig.cmake"
-
-    # generate the pre-configured cmake cache file that reflects the spec options
-    # NOTE: this file isn't replaced if the same spec is already installed -
-    # you may need to uninstall the old spec first
-    @run_after("cmake")
-    def generate_cmake_configuration(self):
-        config_fname = self.cmake_config_fname
-        cmake_config = self.cmake_args()
-
-        with working_dir("cmake-gen", create=True):
-            with open(config_fname, "w") as cmc:
-                for arg in cmake_config:
-                    kt, v = arg.replace("-D", "").split("=")
-                    k, t = kt.split(":")
-                    cmc.write('set({} "{}" CACHE {} "" FORCE)\n'.format(k, v, t))
-            install(config_fname, join_path(prefix, config_fname))
-
-    # run when loaded
-    # NOTE: to use:
-    #   cmake -C $SINGULARITY_SPACK_CMAKE_CONFIG ...
     def setup_run_environment(self, env):
-        env.set(
-            "SINGULARITY_SPACK_CMAKE_CONFIG", os.path.join(self.prefix, self.cmake_config_fname)
-        )
         if os.path.isdir(self.prefix.lib64):
             lib_dir = self.prefix.lib64
         else:
