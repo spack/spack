@@ -182,6 +182,7 @@ section of the configuration:
        padded_length: 128
 
 
+.. _binary_caches_oci:
 
 -----------------------------------------
 OCI / Docker V2 registries as build cache
