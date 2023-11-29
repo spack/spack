@@ -1400,12 +1400,7 @@ def _build_tarball_in_stage_dir(spec: Spec, out_url: str, stage_dir: str, option
     checksum, _ = _do_create_tarball(tarfile_path, binaries_dir, buildinfo)
 
     # add sha256 checksum to spec.json
-    with open(spec_file, "r") as inputfile:
-        content = inputfile.read()
-        if spec_file.endswith(".json"):
-            spec_dict = sjson.load(content)
-        else:
-            raise ValueError("{0} not a valid spec file type".format(spec_file))
+    spec_dict = Spec.from_specfile(spec_file).to_dict()
     spec_dict["buildcache_layout_version"] = CURRENT_BUILD_CACHE_LAYOUT_VERSION
     spec_dict["binary_cache_checksum"] = {"hash_algorithm": "sha256", "hash": checksum}
 
