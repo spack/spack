@@ -714,9 +714,6 @@ def configuration_dir(tmpdir_factory, linux_os):
     t.write(content)
     yield tmpdir
 
-    # Once done, cleanup the directory
-    shutil.rmtree(str(tmpdir))
-
 
 def _create_mock_configuration_scopes(configuration_dir):
     """Create the configuration scopes used in `config` and `mutable_config`."""
