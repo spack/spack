@@ -2699,15 +2699,13 @@ class SpackSolverSetup:
             self.gen.fact(fn.pkg_fact(spec.name, fn.condition_trigger(condition_id, trigger_id)))
             self.gen.fact(fn.condition_reason(condition_id, f"{spec} requested from CLI"))
 
-            # Effect imposes the spec
             imposed_spec_key = str(spec), None
             cache = self._effect_cache[spec.name]
-            msg = (
-                "literal specs have different requirements. clear cache before computing literals"
-            )
-            assert imposed_spec_key not in cache, msg
-            effect_id = next(self._id_counter)
-            requirements = self.spec_clauses(spec)
+            if imposed_spec_key in cache:
+                effect_id, requirements = cache[imposed_spec_key]
+            else:
+                effect_id = next(self._id_counter)
+                requirements = self.spec_clauses(spec)
             root_name = spec.name
             for clause in requirements:
                 clause_name = clause.args[0]
