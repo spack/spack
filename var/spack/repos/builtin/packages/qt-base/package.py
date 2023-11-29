@@ -91,6 +91,7 @@ class QtBase(QtPackage):
 
     provides("qmake")
 
+    version("6.6.1", sha256="eb091c56e8c572d35d3da36f94f9e228892d43aecb559fa4728a19f0e44914c4")
     version("6.6.0", sha256="882f39ea3a40a0894cd64e515ce51711a4fab79b8c47bc0fe0279e99493a62cf")
     version("6.5.3", sha256="174021c4a630df2e7e912c2e523844ad3cb5f90967614628fd8aa15ddbab8bc5")
     version("6.5.2", sha256="221cafd400c0a992a42746b43ea879d23869232e56d9afe72cb191363267c674")
