@@ -145,7 +145,6 @@ class Seissol(CMakePackage, CudaPackage):
     depends_on("py-numpy", when="+python")
     depends_on("py-scipy", when="+python")
     depends_on("py-matplotlib", when="+python")
-    depends_on("py-pip", when="+python")
     depends_on("py-pyopenssl", when="+python")
     """
 
@@ -204,11 +203,6 @@ class Seissol(CMakePackage, CudaPackage):
             args.append("-DARCH=noarch")
 
         return args
-
-    def install(self, spec, prefix):
-        self.cmake(spec, prefix)
-        self.build(spec, prefix)
-        install_tree(self.build_directory, prefix)
 
     def setup_run_environment(self, env):
         env.prepend_path("PATH", self.prefix)
