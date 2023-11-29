@@ -8,6 +8,7 @@ import sys
 
 import llnl.util.tty as tty
 
+import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.repo
 import spack.util.path
@@ -19,7 +20,6 @@ level = "long"
 
 def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="repo_command")
-    scopes = spack.config.scopes()
 
     # Create
     create_parser = sp.add_parser("create", help=repo_create.__doc__)
@@ -43,7 +43,7 @@ def setup_parser(subparser):
     list_parser = sp.add_parser("list", help=repo_list.__doc__)
     list_parser.add_argument(
         "--scope",
-        choices=scopes,
+        choices=arguments.ConfigScopeChoices(),
         metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_list_scope(),
         help="configuration scope to read from",
@@ -54,7 +54,7 @@ def setup_parser(subparser):
     add_parser.add_argument("path", help="path to a Spack package repository directory")
     add_parser.add_argument(
         "--scope",
-        choices=scopes,
+        choices=arguments.ConfigScopeChoices(),
         metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_modify_scope(),
         help="configuration scope to modify",
@@ -67,7 +67,7 @@ def setup_parser(subparser):
     )
     remove_parser.add_argument(
         "--scope",
-        choices=scopes,
+        choices=arguments.ConfigScopeChoices(),
         metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_modify_scope(),
         help="configuration scope to modify",
