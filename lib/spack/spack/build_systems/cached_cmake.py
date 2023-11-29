@@ -285,7 +285,7 @@ class CachedCMakeBuilder(CMakeBuilder):
             entries.append(cmake_cache_path("ROCM_ROOT_DIR", rocm_root))
 
             # The old way ...
-            if spec["hip"].version < Version(5.5.0)
+            if spec["hip"].version < Version(5.5.0):
                 entries.append(
                     cmake_cache_path("HIP_CXX_COMPILER", "{0}".format(self.spec["hip"].hipcc))
                 )
