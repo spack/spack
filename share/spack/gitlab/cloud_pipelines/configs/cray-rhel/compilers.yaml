@@ -18,10 +18,10 @@ compilers:
 - compiler:
     spec: gcc@11.2.0
     paths:
-      cc: gcc
-      cxx: g++
-      f77: gfortran
-      fc: gfortran
+      cc: /opt/cray/pe/gcc/11.2.0/bin/gcc
+      cxx: /opt/cray/pe/gcc/11.2.0/bin/g++
+      f77: /opt/cray/pe/gcc/11.2.0/bin/gfortran
+      fc: /opt/cray/pe/gcc/11.2.0/bin/gfortran
     flags: {}
     operating_system: rhel8
     target: any
