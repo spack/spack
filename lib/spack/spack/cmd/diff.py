@@ -200,6 +200,8 @@ def diff(parser, args):
 
     specs = []
     for spec in spack.cmd.parse_specs(args.specs):
+        # If the spec has a hash, check it before disambiguating
+        spec.replace_hash()
         if spec.concrete:
             specs.append(spec)
         else:

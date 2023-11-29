@@ -6,6 +6,7 @@ import multiprocessing
 import os
 import sys
 import traceback
+from typing import Optional
 
 
 class ErrorFromWorker:
@@ -53,7 +54,9 @@ class Task:
         return value
 
 
-def imap_unordered(f, list_of_args, *, processes: int, debug=False):
+def imap_unordered(
+    f, list_of_args, *, processes: int, maxtaskperchild: Optional[int] = None, debug=False
+):
     """Wrapper around multiprocessing.Pool.imap_unordered.
 
     Args:
@@ -62,6 +65,8 @@ def imap_unordered(f, list_of_args, *, processes: int, debug=False):
         processes: maximum number of processes allowed
         debug: if False, raise an exception containing just the error messages
             from workers, if True an exception with complete stacktraces
+        maxtaskperchild: number of tasks to be executed by a child before being
+            killed and substituted
 
     Raises:
         RuntimeError: if any error occurred in the worker processes
@@ -70,7 +75,7 @@ def imap_unordered(f, list_of_args, *, processes: int, debug=False):
         yield from map(f, list_of_args)
         return
 
-    with multiprocessing.Pool(processes) as p:
+    with multiprocessing.Pool(processes, maxtasksperchild=maxtaskperchild) as p:
         for result in p.imap_unordered(Task(f), list_of_args):
             if isinstance(result, ErrorFromWorker):
                 raise RuntimeError(result.stacktrace if debug else str(result))

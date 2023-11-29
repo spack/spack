@@ -14,6 +14,10 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/eth-cscs/DLA-Future.git"
     maintainers = ["rasolca", "albestro", "msimberg", "aurianer"]
 
+    license("BSD-3-Clause")
+
+    version("0.3.1", sha256="350a7fd216790182aa52639a3d574990a9d57843e02b92d87b854912f4812bfe")
+    version("0.3.0", sha256="9887ac0b466ca03d704a8738bc89e68550ed33509578c576390e98e76b64911b")
     version("0.2.1", sha256="4c2669d58f041304bd618a9d69d9879a42e6366612c2fc932df3894d0326b7fe")
     version("0.2.0", sha256="da73cbd1b88287c86d84b1045a05406b742be924e65c52588bbff200abd81a10")
     version("0.1.0", sha256="f7ffcde22edabb3dc24a624e2888f98829ee526da384cd752b2b271c731ca9b1")
@@ -42,9 +46,12 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@3.22:", type="build")
     depends_on("doxygen", type="build", when="+doc")
     depends_on("mpi")
+
+    depends_on("blas")
+    depends_on("lapack")
+    depends_on("scalapack", when="+scalapack")
     depends_on("blaspp@2022.05.00:")
     depends_on("lapackpp@2022.05.00:")
-    depends_on("scalapack", when="+scalapack")
 
     depends_on("umpire~examples")
     depends_on("umpire~cuda", when="~cuda")
@@ -55,8 +62,9 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("pika@0.15.1:", when="@0.1")
     depends_on("pika@0.16:", when="@0.2.0")
-    depends_on("pika@0.17:", when="@0.2.1:")
-    depends_on("pika-algorithms@0.1:")
+    depends_on("pika@0.17:", when="@0.2.1")
+    depends_on("pika@0.18:", when="@0.3.0:")
+    depends_on("pika-algorithms@0.1:", when="@:0.2")
     depends_on("pika +mpi")
     depends_on("pika +cuda", when="+cuda")
     depends_on("pika +rocm", when="+rocm")
@@ -107,7 +115,7 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
         args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
 
         # BLAS/LAPACK
-        if "^mkl" in spec:
+        if self.spec["lapack"].name in INTEL_MATH_LIBRARIES:
             vmap = {
                 "none": "seq",
                 "openmp": "omp",

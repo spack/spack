@@ -51,6 +51,8 @@ spack:
       require: "@3.4.4"
     vtk-m:
       require: "+examples"
+    visit:
+      require: "~gui"
     cuda:
       version: [11.8.0]
     paraview:
@@ -157,7 +159,7 @@ spack:
   - swig@4.0.2-fortran
   - sz3
   - tasmanian
-  - tau +mpi +python
+  - tau +mpi +python +syscall
   - trilinos +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
   - turbine
   - umap
@@ -192,7 +194,7 @@ spack:
   - flux-core +cuda
   - hpctoolkit +cuda
   - papi +cuda
-  - tau +mpi +cuda
+  - tau +mpi +cuda +syscall
   # --
   # - legion +cuda                    # legion: needs NVIDIA driver
 
@@ -289,7 +291,7 @@ spack:
 
   # ROCM NOARCH
   - hpctoolkit +rocm
-  - tau +mpi +rocm   # tau: has issue with `spack env depfile` build
+  - tau +mpi +rocm +syscall  # tau: has issue with `spack env depfile` build
 
   # ROCM 908
   - adios2 +kokkos +rocm amdgpu_target=gfx908

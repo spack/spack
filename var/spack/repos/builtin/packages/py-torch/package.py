@@ -25,6 +25,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
 
     version("main", branch="main")
     version("master", branch="main", deprecated=True)
+    version("2.1.1", tag="v2.1.1", commit="4c55dc50355d5e923642c59ad2a23d6ad54711e7")
     version("2.1.0", tag="v2.1.0", commit="7bcf7da3a268b435777fe87c7794c382f444e86d")
     version("2.0.1", tag="v2.0.1", commit="e9ebda29d87ce0916ab08c06ab26fd3766a870e5")
     version("2.0.0", tag="v2.0.0", commit="c263bd43e8e8502d4726643bc6fd046f0130ac0e")
@@ -113,9 +114,6 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
 
     # https://github.com/pytorch/pytorch/issues/77811
     conflicts("+qnnpack", when="platform=darwin target=aarch64:")
-
-    # https://github.com/pytorch/pytorch/issues/80805
-    conflicts("+openmp", when="platform=darwin target=aarch64:")
 
     # https://github.com/pytorch/pytorch/issues/97397
     conflicts(
@@ -491,9 +489,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
 
         enable_or_disable("cuda")
         if "+cuda" in self.spec:
-            # cmake/public/cuda.cmake
-            # cmake/Modules_CUDA_fix/upstream/FindCUDA.cmake
-            env.unset("CUDA_ROOT")
+            env.set("CUDA_HOME", self.spec["cuda"].prefix)  # Linux/macOS
+            env.set("CUDA_PATH", self.spec["cuda"].prefix)  # Windows
             torch_cuda_arch = ";".join(
                 "{0:.1f}".format(float(i) / 10.0) for i in self.spec.variants["cuda_arch"].value
             )

@@ -26,7 +26,7 @@ class Tau(Package):
     tags = ["e4s"]
 
     version("master", branch="master")
-    version("2.33", sha256="ed5d434924216b22ca4b7791abc15c6bba8f727fdcd74dcc2ba2c4733792e807")
+    version("2.33", sha256="04d9d67adb495bc1ea56561f33c5ce5ba44f51cc7f64996f65bd446fac5483d9")
     version("2.32.1", sha256="0eec3de46b0873846dfc639270c5e30a226b463dd6cb41aa12e975b7563f0eeb")
     version("2.32", sha256="ee774a06e30ce0ef0f053635a52229152c39aba4f4933bed92da55e5e13466f3")
     version("2.31.1", sha256="bf445b9d4fe40a5672a7b175044d2133791c4dfb36a214c1a55a931aebc06b9d")
@@ -86,6 +86,7 @@ class Tau(Package):
     variant("io", default=True, description="Activates POSIX I/O support")
     variant("adios2", default=False, description="Activates ADIOS2 output support")
     variant("sqlite", default=False, description="Activates SQLite3 output support")
+    variant("syscall", default=False, description="Activates syscall wrapper")
     variant(
         "profileparam",
         default=False,
@@ -246,6 +247,9 @@ class Tau(Package):
 
         if "+io" in spec:
             options.append("-iowrapper")
+
+        if "+syscall" in spec:
+            options.append("-syscall")
 
         if "+binutils" in spec:
             options.append("-bfd=%s" % spec["binutils"].prefix)
