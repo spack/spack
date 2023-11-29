@@ -66,11 +66,12 @@ class PyImagecodecs(PythonPackage):
         )
         # 239
         filter_file(
-            "append\('/usr/include/jxrlib'\)",  # noqa: W605
+            "append('/usr/include/jxrlib')",
             "extend(('{0}/libjxr/image', '{0}/libjxr/common', '{0}/libjxr/glue'))".format(  # noqa: E501
                 spec["jxrlib-debian"].prefix.include
             ),
             "setup.py",
+            string=True,
         )
 
         # 367

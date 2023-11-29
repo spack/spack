@@ -595,7 +595,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     conflicts(
         "schedulers=slurm ~pmi",
         when="@1.5.4",
-        msg="+pmi is required for openmpi to work with SLURM.",
+        msg="+pmi is required for openmpi to work with Slurm.",
     )
     conflicts(
         "schedulers=loadleveler",

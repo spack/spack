@@ -93,7 +93,7 @@ class QESirius(CMakePackage):
         # Work around spack issue #19970 where spack sets
         # rpaths for MKL just during make, but cmake removes
         # them during make install.
-        if "^mkl" in self.spec:
+        if self.spec["lapack"].name in INTEL_MATH_LIBRARIES:
             args.append("-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=ON")
         spec = self.spec
         args.append(self.define("BLAS_LIBRARIES", spec["blas"].libs.joined(";")))

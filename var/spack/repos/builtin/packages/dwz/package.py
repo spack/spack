@@ -13,8 +13,6 @@ class Dwz(MakefilePackage, SourcewarePackage):
     sourceware_mirror_path = "dwz/releases/dwz-0.14.tar.gz"
     git = "git://sourceware.org/git/dwz.git"
 
-    maintainers("iarspider")
-
     depends_on("elf")
 
     version("0.14-patches", branch="dwz-0.14-branch")
