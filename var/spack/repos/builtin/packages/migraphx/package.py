@@ -199,6 +199,7 @@ class Migraphx(CMakePackage):
             args += self.cmake_python_hints
         if "@5.5.0:" in self.spec:
             args.append(self.define("CMAKE_CXX_FLAGS", "-I{0}".format(abspath)))
+            args.append(self.define("MIGRAPHX_ENABLE_PYTHON", "OFF"))
         return args
 
     def test(self):

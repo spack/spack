@@ -34,11 +34,14 @@ class Root(CMakePackage):
     # Development version (when more recent than production).
 
     # Production version
+    version("6.30.02", sha256="51a09c86ffa94089abac76daa3adc20812efc6c93b427697b843b12d73e145de")
     version("6.30.00", sha256="0592c066954cfed42312957c9cb251654456064fe2d8dabdcb8826f1c0099d71")
+    version("6.28.10", sha256="fc6a2d6c7cba853b0cfd6bd9514c90e9df50e1743899bc1db0472ee6f4e65a0a")
     version("6.28.06", sha256="af3b673b9aca393a5c9ae1bf86eab2672aaf1841b658c5c6e7a30ab93c586533")
     version("6.28.04", sha256="70f7f86a0cd5e3f2a0befdc59942dd50140d990ab264e8e56c7f17f6bfe9c965")
     version("6.28.02", sha256="6643c07710e68972b00227c68b20b1016fec16f3fba5f44a571fa1ce5bb42faa")
     version("6.28.00", sha256="afa1c5c06d0915411cb9492e474ea9ab12b09961a358e7e559013ed63b5d8084")
+    version("6.26.12", sha256="229daa0749e3e31b6e0dedc58b6838dbfc1180b4aba4741883b617b0b4fbc966")
     version("6.26.10", sha256="8e56bec397104017aa54f9eb554de7a1a134474fe0b3bb0f43a70fc4fabd625f")
     version("6.26.08", sha256="4dda043e7918b40743ad0299ddd8d526b7078f0a3822fd06066df948af47940e")
     version("6.26.06", sha256="b1f73c976a580a5c56c8c8a0152582a1dfc560b4dd80e1b7545237b65e6c89cb")
@@ -105,6 +108,8 @@ class Root(CMakePackage):
         sha256="397f2de7db95a445afdb311fc91c40725fcfad485d58b4d72e6c3cdd0d0c5de7",
         when="@6.26:6.26.06 +root7 ^nlohmann-json@3.11:",
     )
+
+    patch("webgui.patch", level=0, when="@6.26.00:6.26.10,6.28.00:6.28.08,6.30.00 +webgui")
 
     if sys.platform == "darwin":
         # Resolve non-standard use of uint, _cf_

@@ -264,7 +264,6 @@ class QuantumEspresso(CMakePackage, Package):
         msg="gipaw standard support available for QE 6.3 or greater version only",
     )
     conflicts("~fox", when="+gipaw", msg="gipaw plugin requires FoX")
-
     conflicts("+gipaw build_system=cmake", when="@:7.1")
 
     # Only CMake will work for @6.8: %aocc

@@ -37,7 +37,11 @@ to enable reuse for a single installation, and you can use:
    spack install --fresh <spec>
 
 to do a fresh install if ``reuse`` is enabled by default.
-``reuse: true`` is the default.
+``reuse: dependencies`` is the default.
+
+.. seealso::
+
+   FAQ: :ref:`Why does Spack pick particular versions and variants? <faq-concretizer-precedence>`
 
 ------------------------------------------
 Selection of the target microarchitectures

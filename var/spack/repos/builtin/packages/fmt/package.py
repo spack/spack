@@ -13,6 +13,7 @@ class Fmt(CMakePackage):
 
     homepage = "https://fmt.dev/"
     url = "https://github.com/fmtlib/fmt/releases/download/7.1.3/fmt-7.1.3.zip"
+    git = "https://github.com/fmtlib/fmt.git"
     maintainers("msimberg")
 
     license("MIT")
