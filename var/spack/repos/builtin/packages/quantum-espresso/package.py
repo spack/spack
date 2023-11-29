@@ -133,6 +133,8 @@ class QuantumEspresso(CMakePackage, Package):
         conflicts("@:5.4.0", msg="+elpa requires QE >= 6.0")
 
     variant("fox", default=False, description="Enables FoX library")
+    with when("+fox"):
+        conflicts("@:7.1", msg="+fox variant requires QE >= 7.2")
 
     # Support for HDF5 has been added starting in version 6.1.0 and is
     # still experimental, therefore we default to False for the variant
@@ -263,7 +265,7 @@ class QuantumEspresso(CMakePackage, Package):
         when="+gipaw",
         msg="gipaw standard support available for QE 6.3 or greater version only",
     )
-    conflicts("~fox", when="+gipaw", msg="gipaw plugin requires FoX")
+    conflicts("~fox", when="@7.2: +gipaw", msg="gipaw plugin requires FoX")
     conflicts("+gipaw build_system=cmake", when="@:7.1")
 
     # Only CMake will work for @6.8: %aocc
