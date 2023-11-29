@@ -91,3 +91,13 @@ class Aocc(Package):
     def install(self, spec, prefix):
         print("Installing AOCC Compiler ... ")
         install_tree(".", prefix)
+
+    @run_after("install")
+    def cfg_files(self):
+        # Add path to gcc/g++ such that clang/clang++ can always find a full gcc installation
+        # including libstdc++.so and header files.
+        if self.spec.satisfies("%gcc") and self.compiler.cxx is not None:
+            compiler_options = "--gcc-toolchain={}".format(self.compiler.prefix)
+            for compiler in ["clang", "clang++"]:
+                with open(join_path(self.prefix.bin, "{}.cfg".format(compiler)), "w") as f:
+                    f.write(compiler_options)
