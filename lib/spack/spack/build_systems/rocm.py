@@ -108,8 +108,6 @@ class ROCmPackage(PackageBase):
         "gfx90a:xnack+",
         "gfx90c",
         "gfx940",
-        "gfx941",
-        "gfx942",
         "gfx1010",
         "gfx1011",
         "gfx1012",
@@ -169,7 +167,7 @@ class ROCmPackage(PackageBase):
     depends_on("llvm-amdgpu@4.3.0:", when="amdgpu_target=gfx90a")
     depends_on("llvm-amdgpu@4.3.0:", when="amdgpu_target=gfx90a:xnack-")
     depends_on("llvm-amdgpu@4.3.0:", when="amdgpu_target=gfx90a:xnack+")
-    depends_on("llvm-amdgpu@5.7.0:", when="amdgpu_target=gfx940")
+    depends_on("llvm-amdgpu@5.2.0:", when="amdgpu_target=gfx940")
     depends_on("llvm-amdgpu@4.5.0:", when="amdgpu_target=gfx1013")
     depends_on("llvm-amdgpu@3.8.0:", when="amdgpu_target=gfx1030")
     depends_on("llvm-amdgpu@3.9.0:", when="amdgpu_target=gfx1031")
@@ -182,8 +180,6 @@ class ROCmPackage(PackageBase):
     depends_on("llvm-amdgpu@5.3.0:", when="amdgpu_target=gfx1101")
     depends_on("llvm-amdgpu@5.3.0:", when="amdgpu_target=gfx1102")
     depends_on("llvm-amdgpu@5.3.0:", when="amdgpu_target=gfx1103")
-    depends_on("llvm-amdgpu@5.7.0:", when="amdgpu_target=gfx941")
-    depends_on("llvm-amdgpu@5.7.0:", when="amdgpu_target=gfx942")
 
     # Compiler conflicts
 
