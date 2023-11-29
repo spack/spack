@@ -280,11 +280,15 @@ class CachedCMakeBuilder(CMakeBuilder):
             hip_root = spec["hip"].prefix
             rocm_root = hip_root + "/.."
             entries.append(cmake_cache_path("HIP_ROOT_DIR", hip_root))
+            #TODO: test if this helps
+            #entries.append(cmake_cache_string("HIP_CLANG_PATH", rocm_root + "/llvm/bin"))
             entries.append(cmake_cache_path("ROCM_ROOT_DIR", rocm_root))
+
             # The old way ...
-            # entries.append(
-            #     cmake_cache_path("HIP_CXX_COMPILER", "{0}".format(self.spec["hip"].hipcc))
-            # )
+            if spec["hip"].version < Version(5.5.0)
+                entries.append(
+                    cmake_cache_path("HIP_CXX_COMPILER", "{0}".format(self.spec["hip"].hipcc))
+                )
 
             llvm_bin = spec["llvm-amdgpu"].prefix.bin
             llvm_prefix = spec["llvm-amdgpu"].prefix
@@ -296,6 +300,9 @@ class CachedCMakeBuilder(CMakeBuilder):
                 cmake_cache_filepath("CMAKE_HIP_COMPILER", os.path.join(llvm_bin, "clang++"))
             )
 
+            #TODO: from Axom
+            #HIP_CLANG_INCLUDE_PATH= $ROCM_INSTALL_DIR/llvm/include
+
             # Setting the amdgpu_target through CMAKE_HIP_ARCHITECTURE should be enough.
             archs = self.spec.variants["amdgpu_target"].value
             if archs[0] != "none":
@@ -304,6 +311,7 @@ class CachedCMakeBuilder(CMakeBuilder):
                     cmake_cache_string("CMAKE_HIP_ARCHITECTURES", "{0}".format(arch_str))
                 )
 
+
             # Arbitrate between gnu and llvm toolchains.
             hip_link_flags = ""
             if "%gcc" in spec or spec_uses_toolchain(spec):
@@ -311,14 +319,16 @@ class CachedCMakeBuilder(CMakeBuilder):
                     gcc_bin = os.path.dirname(self.pkg.compiler.cxx)
                     gcc_prefix = os.path.join(gcc_bin, "..")
 
-                    # With > 5.5 rocm versions (or so) the use of amdclang
-                    # compiler becomes mandatory. Spack does not allow
-                    # dependencies on compilers yet, so we enforce the compiler
-                    # here. The drawback being that this is not visible even in
-                    # the full spec, only implied by the +rocm variant.
-                    llvm_amdgpu_clang = os.path.join(llvm_bin, "clang++")
-                    entries.append(cmake_cache_path("CMAKE_C_COMPILER", llvm_amdgpu_clang))
-                    entries.append(cmake_cache_path("CMAKE_CXX_COMPILER", llvm_amdgpu_clang))
+                    #TODO: really necessary ?
+                    #if spec["hip"].version >= Version(5.5.0)
+                    #    # With > 5.5 rocm versions (or so) the use of amdclang
+                    #    # compiler becomes mandatory. Spack does not allow
+                    #    # dependencies on compilers yet, so we enforce the compiler
+                    #    # here. The drawback being that this is not visible even in
+                    #    # the full spec, only implied by the +rocm variant.
+                    #    llvm_amdgpu_clang = os.path.join(llvm_bin, "clang++")
+                    #    entries.append(cmake_cache_path("CMAKE_C_COMPILER", llvm_amdgpu_clang))
+                    #    entries.append(cmake_cache_path("CMAKE_CXX_COMPILER", llvm_amdgpu_clang))
                 else:
                     gcc_prefix = spec_uses_toolchain(spec)[0]
                 entries.append(
