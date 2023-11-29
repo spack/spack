@@ -778,3 +778,32 @@ def test_env_with_include_def_missing(mutable_mock_env_path, mock_packages):
     with e:
         with pytest.raises(UndefinedReferenceError, match=r"which does not appear"):
             e.concretize()
+
+
+@pytest.mark.regression("41292")
+def test_deconcretize_then_concretize_does_not_error(mutable_mock_env_path, mock_packages):
+    """Tests that, after having deconcretized a spec, we can reconcretize an environment which
+    has 2 or more user specs mapping to the same concrete spec.
+    """
+    mutable_mock_env_path.mkdir()
+    spack_yaml = mutable_mock_env_path / ev.manifest_name
+    spack_yaml.write_text(
+        """spack:
+      specs:
+      # These two specs concretize to the same hash
+      - c
+      - c@1.0
+      # Spec used to trigger the bug
+      - a
+      concretizer:
+        unify: true
+    """
+    )
+    e = ev.Environment(mutable_mock_env_path)
+    with e:
+        e.concretize()
+        e.deconcretize(spack.spec.Spec("a"), concrete=False)
+        e.concretize()
+    assert len(e.concrete_roots()) == 3
+    all_root_hashes = set(x.dag_hash() for x in e.concrete_roots())
+    assert len(all_root_hashes) == 2
