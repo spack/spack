@@ -17,10 +17,11 @@ class PyGidgethub(PythonPackage):
 
     license("Apache-2.0")
 
+    version("main", branch="main")
     version("5.3.0", sha256="9ece7d37fbceb819b80560e7ed58f936e48a65d37ec5f56db79145156b426a25")
 
-    depends_on("py-flit", type="build")
-    depends_on("py-flit-core", type="build")
+    depends_on("py-flit", type="build", when="@:5.3.0")
+    depends_on("py-flit-core", type="build", when="@5.3.1:")
 
     depends_on("py-uritemplate@3.0.1:", type=("build", "run"))
     depends_on("py-pyjwt@2.4.0:", type=("build", "run"))
