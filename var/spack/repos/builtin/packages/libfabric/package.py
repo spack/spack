@@ -125,6 +125,7 @@ class Libfabric(AutotoolsPackage):
 
     conflicts("@1.9.0", when="platform=darwin", msg="This distribution is missing critical files")
     conflicts("fabrics=opx", when="@:1.14.99")
+    conflicts("fabrics=opx", when="@1.20.0")
 
     flag_handler = build_system_flags
 
