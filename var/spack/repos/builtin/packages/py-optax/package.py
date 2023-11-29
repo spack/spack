@@ -17,7 +17,7 @@ class PyOptax(PythonPackage):
     version("0.1.7", sha256="6a5a848bc5e55e619b187c749fdddc4a5443ea14be85cc769f995779865c110d")
 
     depends_on("python@3.8:", type=("build", "run"))
-    depends_on("py-flit-core@3.2:4", type="build")
+    depends_on("py-flit-core@3.2:3", type="build")
     depends_on("py-absl-py@0.7.1:", type=("build", "run"))
     depends_on("py-chex@0.1.5:", type=("build", "run"))
     depends_on("py-jax@0.1.55:", type=("build", "run"))
