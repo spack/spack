@@ -720,13 +720,13 @@ def configuration_dir(tmpdir_factory, linux_os):
 
 def _create_mock_configuration_scopes(configuration_dir):
     """Create the configuration scopes used in `config` and `mutable_config`."""
-    scopes = [spack.config.InternalConfigScope("_builtin", spack.config.CONFIG_DEFAULTS)]
-    scopes += [
-        spack.config.ConfigScope(name, str(configuration_dir.join(name)))
-        for name in ["site", "system", "user"]
+    return [
+        spack.config.InternalConfigScope("_builtin", spack.config.CONFIG_DEFAULTS),
+        spack.config.ConfigScope("site", str(configuration_dir.join("site"))),
+        spack.config.ConfigScope("system", str(configuration_dir.join("system"))),
+        spack.config.ConfigScope("user", str(configuration_dir.join("user"))),
+        spack.config.InternalConfigScope("command_line"),
     ]
-    scopes += [spack.config.InternalConfigScope("command_line")]
-    return scopes
 
 
 @pytest.fixture(scope="session")

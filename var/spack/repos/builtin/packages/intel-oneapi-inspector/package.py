@@ -25,6 +25,12 @@ class IntelOneapiInspector(IntelOneApiLibraryPackageWithSdk):
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/inspector.html"
 
     version(
+        "2024.0.0",
+        url="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/44ae6846-719c-49bd-b196-b16ce5835a1e/l_inspector_oneapi_p_2024.0.0.49433_offline.sh",
+        sha256="2b281c3a704a242aa3372284960ea8ed5ed1ba293cc2f70c2f873db3300c80a3",
+        expand=False,
+    )
+    version(
         "2023.2.0",
         url="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/2a99eafd-5109-41a1-9762-aee0c7ecbeb7/l_inspector_oneapi_p_2023.2.0.49304_offline.sh",
         sha256="36b2ca94e5a69b68cbf9cbfde0a8e1aa58d02fb03f4d81db69769c96c20d4130",
@@ -78,6 +84,10 @@ class IntelOneapiInspector(IntelOneApiLibraryPackageWithSdk):
         sha256="1371ca74be2a6d4b069cdb3f8f2d6109abbc3261a81f437f0fe5412a7b659b43",
         expand=False,
     )
+
+    @property
+    def v2_layout_versions(self):
+        return "@2024:"
 
     @property
     def component_dir(self):
