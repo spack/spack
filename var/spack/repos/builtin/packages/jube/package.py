@@ -15,6 +15,11 @@ class Jube(PythonPackage):
     url = "https://apps.fz-juelich.de/jsc/jube/jube2/download.php?version=2.2.2"
 
     version(
+        "2.6.1",
+        sha256="32846616b01450e7ab678a1b3a7b34bcbb2311591a095d2b27e6d3a39110c07c",
+        extension="tar.gz",
+    )
+    version(
         "2.6.0",
         sha256="cc1bfa30c4a1de010c0a203c9d22ec810c5de8b76108d5a8174b395573e2ebcc",
         extension="tar.gz",
