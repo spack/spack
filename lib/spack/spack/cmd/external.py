@@ -14,12 +14,12 @@ import llnl.util.tty.colify as colify
 
 import spack
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.cray_manifest as cray_manifest
 import spack.detection
 import spack.error
 import spack.util.environment
+from spack.cmd.common import arguments
 
 description = "manage external packages in Spack configuration"
 section = "config"

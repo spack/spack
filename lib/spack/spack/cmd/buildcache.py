@@ -21,7 +21,6 @@ from llnl.util.lang import elide_list
 
 import spack.binary_distribution as bindist
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.environment as ev
 import spack.error
@@ -40,6 +39,7 @@ import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.build_environment import determine_number_of_jobs
 from spack.cmd import display_specs
+from spack.cmd.common import arguments
 from spack.oci.image import (
     Digest,
     ImageReference,

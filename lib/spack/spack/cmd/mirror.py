@@ -11,7 +11,6 @@ import llnl.util.tty.colify as colify
 
 import spack.caches
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.concretize
 import spack.config
 import spack.environment as ev
@@ -20,6 +19,7 @@ import spack.repo
 import spack.spec
 import spack.util.path
 import spack.util.web as web_util
+from spack.cmd.common import arguments
 from spack.error import SpackError
 
 description = "manage mirrors (source and binary)"

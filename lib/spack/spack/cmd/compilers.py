@@ -3,8 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.cmd.common.arguments as arguments
 import spack.config
+from spack.cmd.common import arguments
 from spack.cmd.compiler import compiler_list
 
 description = "list available compilers"

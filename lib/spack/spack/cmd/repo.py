@@ -8,10 +8,10 @@ import sys
 
 import llnl.util.tty as tty
 
-import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.repo
 import spack.util.path
+from spack.cmd.common import arguments
 
 description = "manage package source repositories"
 section = "config"

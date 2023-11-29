@@ -11,10 +11,10 @@ from llnl.util.lang import index_by
 from llnl.util.tty.colify import colify
 from llnl.util.tty.color import colorize
 
-import spack.cmd.common.arguments as arguments
 import spack.compilers
 import spack.config
 import spack.spec
+from spack.cmd.common import arguments
 
 description = "manage compilers"
 section = "system"
