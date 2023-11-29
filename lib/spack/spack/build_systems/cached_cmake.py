@@ -232,6 +232,7 @@ class CachedCMakeBuilder(CMakeBuilder):
 
     def initconfig_hardware_entries(self):
         spec = self.pkg.spec
+        Version = self.pkg.Version
 
         entries = [
             "#------------------{0}".format("-" * 60),
@@ -319,7 +320,7 @@ class CachedCMakeBuilder(CMakeBuilder):
                     gcc_prefix = os.path.join(gcc_bin, "..")
 
                     # # TODO: really necessary ?
-                    # if spec["hip"].version >= Version(5.5.0)
+                    # if spec["hip"].version >= Version("5.5.0")
                     #     # With > 5.5 rocm versions (or so) the use of amdclang
                     #     # compiler becomes mandatory. Spack does not allow
                     #     # dependencies on compilers yet, so we enforce the compiler
