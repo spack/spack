@@ -709,6 +709,14 @@ class Hip(CMakePackage):
             args.append(self.define("CLR_BUILD_OCL", False)),
         return args
 
+    test_src_dir_old = "samples"
+    test_src_dir = "hip-tests/samples"
+
+    @run_after("install")
+    def install_samples(self):
+        if self.spec.satisfies("@5.6.0:"):
+            install_tree(self.test_src_dir, self.spec.prefix.share.samples)
+
     @run_after("install")
     def cache_test_sources(self):
         """Copy the tests source files after the package is installed to an
@@ -716,16 +724,18 @@ class Hip(CMakePackage):
         if self.spec.satisfies("@:5.1.0"):
             return
         elif self.spec.satisfies("@5.1:5.5"):
-            self.test_src_dir = "samples"
+            self.cache_extra_test_sources([self.test_src_dir_old])
         elif self.spec.satisfies("@5.6:"):
-            self.test_src_dir = "hip-tests/samples"
-        self.cache_extra_test_sources([self.test_src_dir])
+            self.cache_extra_test_sources([self.test_src_dir])
 
     def test_samples(self):
         # configure, build and run all hip samples
         if self.spec.satisfies("@:5.1.0"):
             raise SkipTest("Test is only available for specs after version 5.1.0")
-        test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
+        elif self.spec.satisfies("@5.1:5.5"):
+            test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir_old)
+        elif self.spec.satisfies("@5.6:"):
+            test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
         prefixes = ";".join(
             [
                 self.spec["hip"].prefix,
