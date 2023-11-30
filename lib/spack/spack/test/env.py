@@ -695,7 +695,7 @@ def test_removing_spec_from_manifest_with_exact_duplicates(
 
 @pytest.mark.regression("35298")
 @pytest.mark.only_clingo("Propagation not supported in the original concretizer")
-def test_variant_propagation_with_unify_false(tmp_path, mock_packages):
+def test_variant_propagation_with_unify_false(tmp_path, mock_packages, config):
     """Spack distributes concretizations to different processes, when unify:false is selected and
     the number of roots is 2 or more. When that happens, the specs to be concretized need to be
     properly reconstructed on the worker process, if variant propagation was requested.
