@@ -350,12 +350,15 @@ class CachedCMakeBuilder(CMakeBuilder):
         return entries
 
     def std_initconfig_entries(self):
+        cmake_prefix_path_env = os.environ["CMAKE_PREFIX_PATH"]
+        cmake_prefix_path = cmake_prefix_path_env.replace(os.pathsep, ";")
         return [
             "#------------------{0}".format("-" * 60),
             "# !!!! This is a generated file, edit at own risk !!!!",
             "#------------------{0}".format("-" * 60),
             "# CMake executable path: {0}".format(self.pkg.spec["cmake"].command.path),
             "#------------------{0}\n".format("-" * 60),
+            cmake_cache_string("CMAKE_PREFIX_PATH", cmake_prefix_path),
             self.define_cmake_cache_from_variant("CMAKE_BUILD_TYPE", "build_type"),
         ]
 
