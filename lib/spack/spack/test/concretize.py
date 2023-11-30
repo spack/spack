@@ -203,7 +203,9 @@ class Changing(Package):
                 # TODO: in case tests using this fixture start failing.
                 if sys.modules.get("spack.pkg.changing.changing"):
                     del sys.modules["spack.pkg.changing.changing"]
+                if sys.modules.get("spack.pkg.changing.root"):
                     del sys.modules["spack.pkg.changing.root"]
+                if sys.modules.get("spack.pkg.changing"):
                     del sys.modules["spack.pkg.changing"]
 
                 # Change the recipe
