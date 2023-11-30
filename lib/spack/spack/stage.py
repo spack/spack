@@ -811,6 +811,7 @@ class DIYStage:
     it does not expect or require that the source path adhere to the standard
     directory naming convention.
     """
+
     needs_fetching = False
     requires_patch_success = False
 
