@@ -123,6 +123,8 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
         )
 
     depends_on("hip@3.7:", when="+rocm")
+    depends_on("rocthrust", when="+kokkos+rocm")
+    depends_on("thrust", when="+kokkos+cuda")
 
     # The rocm variant is only valid options for >= 1.7. It would be better if
     # this could be expressed as a when clause to disable the rocm variant,
