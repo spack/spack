@@ -98,7 +98,7 @@ class PyKeras(PythonPackage):
         )
 
     def url_for_version(self, version):
-        if Version("2.6") <= version <= Version("2"):
+        if Version("2.6") <= version < Version("3"):
             return f"https://github.com/keras-team/keras/archive/refs/tags/v{version}.tar.gz"
         else:
             return super().url_for_version(version)
