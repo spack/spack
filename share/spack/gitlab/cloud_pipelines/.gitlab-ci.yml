@@ -469,10 +469,10 @@ build_systems-build:
   variables:
     SPACK_CI_STACK_NAME: developer-tools
 
-developer_tools-generate:
+developer-tools-generate:
   extends: [ ".developer-tools", ".generate-x86_64"]
 
-developer_tools-build:
+developer-tools-build:
   extends: [ ".developer-tools", ".build" ]
   trigger:
     include:
