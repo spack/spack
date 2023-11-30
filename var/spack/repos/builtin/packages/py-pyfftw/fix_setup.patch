@@ -1,0 +1,12 @@
+--- ./setup.py.orig     2023-11-12 22:24:09.000000000 -0800
++++ ./setup.py  2023-11-12 22:26:23.000000000 -0800
+@@ -785,7 +785,8 @@
+             'Topic :: Scientific/Engineering',
+             'Topic :: Scientific/Engineering :: Mathematics',
+             'Topic :: Multimedia :: Sound/Audio :: Analysis'],
+-        'cmdclass': cmdclass
++        'cmdclass': cmdclass,
++        'packages': ['pyfftw']
+     }
+
+     if using_setuptools:
