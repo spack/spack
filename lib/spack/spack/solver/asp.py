@@ -3134,6 +3134,25 @@ def _develop_specs_from_env(spec, env):
     spec.constrain(dev_info["spec"])
 
 
+def _is_reusable_external(packages, spec: spack.spec.Spec) -> bool:
+    """Returns true iff spec is an external that can be reused.
+
+    Arguments:
+        packages: the packages configuration
+        spec: the spec to check
+    """
+    for name in {spec.name, *(p.name for p in spec.package.provided)}:
+        for entry in packages.get(name, {}).get("externals", []):
+            if (
+                spec.satisfies(entry["spec"])
+                and spec.external_path == entry.get("prefix")
+                and spec.external_modules == entry.get("modules")
+            ):
+                return True
+
+    return False
+
+
 class Solver:
     """This is the main external interface class for solving.
 
@@ -3181,8 +3200,18 @@ class Solver:
 
             # Specs from buildcaches
             try:
-                index = spack.binary_distribution.update_cache_and_get_specs()
-                reusable_specs.extend(index)
+                # Specs in a build cache that depend on externals are reusable as long as local
+                # config has matching externals. This should guard against picking up binaries
+                # linked against externals not available locally, while still supporting the use
+                # case of distributing binaries across machines with similar externals.
+                packages = spack.config.get("packages")
+                reusable_specs.extend(
+                    [
+                        s
+                        for s in spack.binary_distribution.update_cache_and_get_specs()
+                        if not s.external or _is_reusable_external(packages, s)
+                    ]
+                )
             except (spack.binary_distribution.FetchCacheError, IndexError):
                 # this is raised when no mirrors had indices.
                 # TODO: update mirror configuration so it can indicate that the
