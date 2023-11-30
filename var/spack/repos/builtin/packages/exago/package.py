@@ -161,7 +161,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("petsc@3.13:3.14", when="@:1.2")
     depends_on("petsc@3.16", when="@1.3:1.4")
     depends_on("petsc@3.18:3.19", when="@1.5")
-    depends_on("petsc@3.20:", when="@1.6:")
+    depends_on("petsc@3.19:", when="@1.6:")
 
     depends_on("petsc~mpi", when="~mpi")
 
