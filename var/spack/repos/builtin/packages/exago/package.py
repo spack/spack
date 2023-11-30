@@ -36,6 +36,9 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
         "1.3.0", tag="v1.3.0", commit="58b039d746a6eac8e84b0afc01354cd58caec485", submodules=True
     )
     version(
+        "1.2.0", tag="v1.2.0", commit="255a214ec747b7bdde7a6d8151c083067b4d0907", submodules=True
+    )
+    version(
         "1.1.2", tag="v1.1.2", commit="db3bb16e19c09e01402071623258dae4d13e5133", submodules=True
     )
     version(
