@@ -124,6 +124,16 @@ class DeptypeAction(argparse.Action):
         setattr(namespace, self.dest, deptype)
 
 
+class ConfigScopeChoices:
+    """A lazy list of config scope values (values may change at runtime in tests)."""
+
+    def __contains__(self, item):
+        return item in spack.config.scopes()
+
+    def __iter__(self):
+        return iter(spack.config.scopes().keys())
+
+
 def _cdash_reporter(namespace):
     """Helper function to create a CDash reporter. This function gets an early reference to the
     argparse namespace under construction, so it can later use it to create the object.

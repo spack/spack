@@ -8,10 +8,10 @@ import shutil
 import llnl.util.tty as tty
 
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.spec
 import spack.util.path
 import spack.version
+from spack.cmd.common import arguments
 from spack.error import SpackError
 
 description = "add a spec to an environment's dev-build information"
