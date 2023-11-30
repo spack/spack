@@ -34,7 +34,7 @@ class PyMpi4py(PythonPackage):
     depends_on("mpi")
 
     def setup_build_environment(self, env):
-        env.set("MPICC", self.spec['mpi'].mpicc)
+        env.set("MPICC", self.spec["mpi"].mpicc)
 
     @run_before("install")
     def cythonize(self):
