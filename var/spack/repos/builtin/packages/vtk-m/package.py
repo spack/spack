@@ -123,8 +123,8 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
         )
 
     depends_on("hip@3.7:", when="+rocm")
-    depends_on("rocthrust", when="+kokkos+rocm")
-    depends_on("thrust", when="+kokkos+cuda")
+    # CUDA thrust is already include in the CUDA pkg
+    depends_on("rocthrust", when="@2.1: +kokkos+rocm")
 
     # The rocm variant is only valid options for >= 1.7. It would be better if
     # this could be expressed as a when clause to disable the rocm variant,
@@ -148,6 +148,10 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     # VTK-M PR#2972
     # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/2972
     patch("vtkm-cuda-swap-conflict-pr2972.patch", when="@1.9 +cuda ^cuda@12:")
+
+    # VTK-M PR#3160
+    # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/3160
+    patch("mr3160-rocthrust-fix.patch", when="@2.1:")
 
     def cmake_args(self):
         spec = self.spec
