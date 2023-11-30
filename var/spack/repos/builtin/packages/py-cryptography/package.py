@@ -13,6 +13,7 @@ class PyCryptography(PythonPackage):
     homepage = "https://github.com/pyca/cryptography"
     pypi = "cryptography/cryptography-1.8.1.tar.gz"
 
+    version("41.0.4", sha256="7febc3094125fc126a7f6fb1f420d0da639f3f32cb15c8ff0dc3997c4549f51a")
     version("41.0.3", sha256="6d192741113ef5e30d89dcb5b956ef4e1578f304708701b8b73d38e3e1461f34")
     version("40.0.2", sha256="c33c0d32b8594fa647d2e01dbccc303478e16fdd7cf98652d5b3ed11aa5e5c99")
     version("38.0.1", sha256="1db3d807a14931fa317f96435695d9ec386be7b84b618cc61cfa5d08b0ae33d7")
