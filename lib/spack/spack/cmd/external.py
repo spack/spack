@@ -14,12 +14,12 @@ import llnl.util.tty.colify as colify
 
 import spack
 import spack.cmd
-import spack.cmd.common.arguments
 import spack.config
 import spack.cray_manifest as cray_manifest
 import spack.detection
 import spack.error
 import spack.util.environment
+from spack.cmd.common import arguments
 
 description = "manage external packages in Spack configuration"
 section = "config"
@@ -28,8 +28,6 @@ level = "short"
 
 def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="external_command")
-
-    scopes = spack.config.scopes()
 
     find_parser = sp.add_parser("find", help="add external packages to packages.yaml")
     find_parser.add_argument(
@@ -48,7 +46,7 @@ def setup_parser(subparser):
     )
     find_parser.add_argument(
         "--scope",
-        choices=scopes,
+        choices=arguments.ConfigScopeChoices(),
         metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_modify_scope("packages"),
         help="configuration scope to modify",
@@ -56,7 +54,7 @@ def setup_parser(subparser):
     find_parser.add_argument(
         "--all", action="store_true", help="search for all packages that Spack knows about"
     )
-    spack.cmd.common.arguments.add_common_arguments(find_parser, ["tags", "jobs"])
+    arguments.add_common_arguments(find_parser, ["tags", "jobs"])
     find_parser.add_argument("packages", nargs=argparse.REMAINDER)
     find_parser.epilog = (
         'The search is by default on packages tagged with the "build-tools" or '
