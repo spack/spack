@@ -66,6 +66,9 @@ spack:
       require:
         - spec: "~mpi"
           when: "+rocm"
+    ascent:
+      require:
+        - spec: "^umpire@2022.03.1"
 
   specs:
   # CPU
@@ -90,7 +93,7 @@ spack:
   - drishti
   - dxt-explorer
   - dyninst
-  - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc +visit +vtkm +zfp ^umpire@2022.03.1                                                                                       # adios2~cuda, ascent~cuda, darshan-runtime, darshan-util, faodel, hdf5, libcatalyst, parallel-netcdf, paraview~cuda, py-cinemasci, sz, unifyfs, veloc, visit, vtk-m, zfp
+  - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc +visit +vtkm +zfp # adios2~cuda, ascent~cuda, darshan-runtime, darshan-util, faodel, hdf5, libcatalyst, parallel-netcdf, paraview~cuda, py-cinemasci, sz, unifyfs, veloc, visit, vtk-m, zfp
   - exaworks
   - flecsi
   - flit
@@ -178,7 +181,7 @@ spack:
   - xyce +mpi +shared +pymi +pymi_static_tpls
   # INCLUDED IN ECP DAV CPU
   - adios2
-  - ascent ^umpire@2022.03.1
+  - ascent
   - darshan-runtime
   - darshan-util
   - faodel
@@ -214,7 +217,7 @@ spack:
   - chai +cuda cuda_arch=80 ^umpire ~shared
   - cusz +cuda cuda_arch=80
   - dealii +cuda cuda_arch=80
-  - ecp-data-vis-sdk ~rocm +adios2 ~ascent +hdf5 +vtkm +zfp +paraview +cuda cuda_arch=80 ^umpire@2022.03.1 # +ascent fails because fides fetch error
+  - ecp-data-vis-sdk ~rocm +adios2 ~ascent +hdf5 +vtkm +zfp +paraview +cuda cuda_arch=80 # +ascent fails because fides fetch error
   - exago +mpi +python +raja +hiop ~rocm +cuda cuda_arch=80 ~ipopt ^hiop@1.0.0 ~sparse +mpi +raja ~rocm +cuda cuda_arch=80 #^raja@0.14.0
   - flecsi +cuda cuda_arch=80
   - ginkgo +cuda cuda_arch=80
@@ -242,7 +245,7 @@ spack:
   - umpire ~shared +cuda cuda_arch=80
   # INCLUDED IN ECP DAV CUDA
   # - adios2 +cuda cuda_arch=80
-  # - ascent +cuda cuda_arch=80 ^umpire@2022.03.1       # ascent: https://github.com/spack/spack/issues/38045
+  # - ascent +cuda cuda_arch=80  # ascent: https://github.com/spack/spack/issues/38045
   # - paraview +cuda cuda_arch=80
   # - vtk-m +cuda cuda_arch=80
   # - zfp +cuda cuda_arch=80
@@ -282,14 +285,14 @@ spack:
   - umpire ~shared +cuda cuda_arch=90
   # INCLUDED IN ECP DAV CUDA
   - adios2 +cuda cuda_arch=90
-  # - ascent +cuda cuda_arch=90 ^umpire@2022.03.1       # ascent: https://github.com/spack/spack/issues/38045
+  # - ascent +cuda cuda_arch=90  # ascent: https://github.com/spack/spack/issues/38045
   # - paraview +cuda cuda_arch=90     # paraview: InstallError: Incompatible cuda_arch=90
   - vtk-m +cuda cuda_arch=90
   - zfp +cuda cuda_arch=90
   # --
   # - axom +cuda cuda_arch=90         # axom: https://github.com/spack/spack/issues/29520
   # - dealii +cuda cuda_arch=90       # dealii: https://github.com/spack/spack/issues/39532
-  # - ecp-data-vis-sdk ~rocm +adios2 +ascent +hdf5 +vtkm +zfp +paraview +cuda cuda_arch=90 ^umpire@2022.03.1 # paraview: incompatible cuda_arch; vtk-m: CMake Error at CMake/VTKmWrappers.cmake:413 (message): vtkm_cont needs to be built STATIC as CUDA doesn't support virtual methods across dynamic library boundaries.  You need to set the CMake opt ion BUILD_SHARED_LIBS to `OFF` or (better) turn VTKm_NO_DEPRECATED_VIRTUAL to `ON`.
+  # - ecp-data-vis-sdk ~rocm +adios2 +ascent +hdf5 +vtkm +zfp +paraview +cuda cuda_arch=90  # paraview: incompatible cuda_arch; vtk-m: CMake Error at CMake/VTKmWrappers.cmake:413 (message): vtkm_cont needs to be built STATIC as CUDA doesn't support virtual methods across dynamic library boundaries.  You need to set the CMake opt ion BUILD_SHARED_LIBS to `OFF` or (better) turn VTKm_NO_DEPRECATED_VIRTUAL to `ON`.
   # - hypre +cuda cuda_arch=90        # concretizer: hypre +cuda requires cuda@:11, but cuda_arch=90 requires cuda@12:
   # - lammps +cuda cuda_arch=90       # lammps: needs NVIDIA driver
   # - lbann +cuda cuda_arch=90        # concretizer: Cannot select a single "version" for package "lbann"

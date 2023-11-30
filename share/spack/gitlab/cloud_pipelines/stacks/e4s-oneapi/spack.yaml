@@ -67,6 +67,9 @@ spack:
     # sycl abi change means you need 2024 compiler to use 2024 mkl
     intel-oneapi-mkl:
       require: "@2023"
+    ascent:
+      require:
+        - spec: "^umpire@2022.03.1"
 
   specs:
   # CPU
@@ -166,7 +169,7 @@ spack:
   - xyce +mpi +shared +pymi +pymi_static_tpls
   # INCLUDED IN ECP DAV CPU
   - adios2                # mgard:  mgard.tpp:63:48: error: non-constant-expression cannot be narrowed from type 'int' to 'unsigned long' in initializer list [-Wc++11-narrowing]
-  - ascent ^umpire@2022.03.1
+  - ascent
   - darshan-runtime
   - darshan-util
   - faodel

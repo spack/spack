@@ -53,6 +53,9 @@ spack:
       require: "+examples"
     cuda:
       version: [11.8.0]
+    ascent:
+      require:
+        - spec: "^umpire@2022.03.1"
 
   specs:
   # CPU
@@ -62,7 +65,7 @@ spack:
   - amrex
   - arborx
   - argobots
-  - ascent ^umpire@2022.03.1 # ecp dav
+  - ascent # ecp dav
   - axom
   - bolt
   - boost
@@ -74,7 +77,7 @@ spack:
   - conduit
   - datatransferkit
   - dyninst
-  - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc ~visit +vtkm +zfp ^umpire@2022.03.1  # +visit: ?
+  - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc ~visit +vtkm +zfp # +visit: ?
   - exaworks
   - flecsi
   - flit
@@ -224,7 +227,7 @@ spack:
   - vtk-m +cuda cuda_arch=75
   - zfp +cuda cuda_arch=75
   # --
-  # - ascent +cuda cuda_arch=75 ^umpire@2022.03.1     # ascent: https://github.com/spack/spack/issues/38045
+  # - ascent +cuda cuda_arch=75     # ascent: https://github.com/spack/spack/issues/38045
   # - axom +cuda cuda_arch=75       # axom: https://github.com/spack/spack/issues/29520
   # - cusz +cuda cuda_arch=75       # cusz: https://github.com/spack/spack/issues/38787
   # - dealii +cuda cuda_arch=75     # slepc: make[1]: *** internal error: invalid --jobserver-auth string 'fifo:/tmp/GMfifo1313'.
@@ -269,7 +272,7 @@ spack:
   - vtk-m +cuda cuda_arch=80
   - zfp +cuda cuda_arch=80
   # --
-  # - ascent +cuda cuda_arch=80 ^umpire@2022.03.1     # ascent: https://github.com/spack/spack/issues/38045
+  # - ascent +cuda cuda_arch=80     # ascent: https://github.com/spack/spack/issues/38045
   # - axom +cuda cuda_arch=80       # axom: https://github.com/spack/spack/issues/29520
   # - cusz +cuda cuda_arch=80       # cusz: https://github.com/spack/spack/issues/38787
   # - dealii +cuda cuda_arch=80     # slepc: make[1]: *** internal error: invalid --jobserver-auth string 'fifo:/tmp/GMfifo1313'.
@@ -311,7 +314,7 @@ spack:
   - vtk-m +cuda cuda_arch=90
   - zfp +cuda cuda_arch=90
   # --
-  # - ascent +cuda cuda_arch=90 ^umpire@2022.03.1     # ascent: https://github.com/spack/spack/issues/38045
+  # - ascent +cuda cuda_arch=90     # ascent: https://github.com/spack/spack/issues/38045
   # - axom +cuda cuda_arch=90       # axom: https://github.com/spack/spack/issues/29520
   # - cusz +cuda cuda_arch=90       # cusz: https://github.com/spack/spack/issues/38787
   # - dealii +cuda cuda_arch=90     # dealii: https://github.com/spack/spack/issues/39532
