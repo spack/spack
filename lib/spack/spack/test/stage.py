@@ -22,7 +22,7 @@ import spack.stage
 import spack.util.executable
 import spack.util.url as url_util
 from spack.resource import Resource
-from spack.stage import DIYStage, ResourceStage, Stage, StageComposite, DevelopStage
+from spack.stage import DevelopStage, DIYStage, ResourceStage, Stage, StageComposite
 from spack.util.path import canonicalize_path
 
 # The following values are used for common fetch and stage mocking fixtures:
@@ -891,12 +891,7 @@ def _create_tree_from_dir_recursive(path):
 
 @pytest.fixture
 def develop_path(tmpdir):
-    dir_structure = {
-        "a1": {
-            "b1": None
-        },
-        "a2": None
-    }
+    dir_structure = {"a1": {"b1": None}, "a2": None}
     srcdir = str(tmpdir.join("test-src"))
     os.mkdir(srcdir)
     _create_files_from_tree(srcdir, dir_structure)
@@ -909,7 +904,6 @@ class TestDevelopStage:
         stage = DevelopStage("test-stage", srcdir)
         stage.create()
         assert _create_tree_from_dir_recursive(stage.path) == tree
-
 
 
 def test_stage_create_replace_path(tmp_build_stage_dir):
