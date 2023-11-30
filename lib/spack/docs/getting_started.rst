@@ -120,7 +120,7 @@ Spack has to install it on initial use, which is called bootstrapping.
 
 Spack provides two ways of bootstrapping ``clingo``: from pre-built binaries
 (default), or from sources. The fastest way to get started is to bootstrap from
-pre-built binaries.
+pre-built binaries. (on Centos7, users have to make sure that ``patchelf`` package is installed.)
 
 The first time you concretize a spec, Spack will bootstrap automatically:
 
