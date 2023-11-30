@@ -25,6 +25,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
     version("develop", branch="develop")
+    version("4.2.00", sha256="ac08765848a0a6ac584a0a46cd12803f66dd2a2c2db99bb17c06ffc589bf5be8")
     version("4.1.00", sha256="cf725ea34ba766fdaf29c884cfe2daacfdc6dc2d6af84042d1c78d0f16866275")
     version("4.0.01", sha256="bb942de8afdd519fd6d5d3974706bfc22b6585a62dd565c12e53bdb82cd154f0")
     version("4.0.00", sha256="1829a423883d4b44223c7c3a53d3c51671145aad57d7d23e6a1a4bebf710dcf6")
@@ -157,6 +158,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         "gfx90a": "vega90A",
         "gfx1030": "navi1030",
         "gfx1100": "navi1100",
+        "gfx942": "amd_gfx942",
     }
     amd_support_conflict_msg = (
         "{0} is not supported; "
