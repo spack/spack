@@ -98,10 +98,13 @@ class PyKeras(PythonPackage):
         )
 
     def url_for_version(self, version):
-        if Version("2.6") <= version < Version("3"):
-            return f"https://github.com/keras-team/keras/archive/refs/tags/v{version}.tar.gz"
+        if version >= Version("3"):
+            url = "https://files.pythonhosted.org/packages/source/k/keras/keras-{}.tar.gz"
+        elif version >= Version("2.6"):
+            url = "https://github.com/keras-team/keras/archive/refs/tags/v{}.tar.gz"
         else:
-            return super().url_for_version(version)
+            url = "https://files.pythonhosted.org/packages/source/k/keras/Keras-{}.tar.gz"
+        return url.format(version)
 
     def setup_run_environment(self, env):
         if self.spec.satisfies("@3:"):
