@@ -877,10 +877,6 @@ class DevelopStage(Stage):
     def archive_file(self):
         return None
 
-    @property
-    def source_path(self):
-        return self.path
-
     def fetch(self, *args, **kwargs):
         tty.debug("No fetching needed for develop stage.")
 
@@ -901,11 +897,7 @@ class DevelopStage(Stage):
 
         super().create()
 
-        for name in os.listdir(self.dev_path):
-            src = os.path.join(self.dev_path, name)
-            dst = os.path.join(self.path, name)
-            os.symlink(src, dst)
-
+        os.symlink(self.dev_path, self.source_path)
         self.created = True
         tty.debug(f"Develop stage in {self.path} using {self.dev_path}")
 

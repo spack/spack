@@ -903,7 +903,7 @@ class TestDevelopStage:
         tree, srcdir = develop_path
         stage = DevelopStage("test-stage", srcdir)
         stage.create()
-        assert _create_tree_from_dir_recursive(stage.path) == tree
+        assert _create_tree_from_dir_recursive(stage.source_path) == tree
 
         stage.destroy()
         # Make sure destroying the stage doesn't change anything
