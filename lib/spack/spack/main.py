@@ -36,7 +36,6 @@ import spack.cmd
 import spack.config
 import spack.environment as ev
 import spack.modules
-import spack.package_base
 import spack.paths
 import spack.platforms
 import spack.repo
@@ -608,7 +607,6 @@ def setup_main_options(args):
             [(key, [spack.paths.mock_packages_path])]
         )
         spack.repo.PATH = spack.repo.create(spack.config.CONFIG)
-        spack.package_base.WITH_GCC_RUNTIME = False
 
     # If the user asked for it, don't check ssl certs.
     if args.insecure:
