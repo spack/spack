@@ -863,11 +863,13 @@ class DevelopStage(Stage):
     managed_by_spack = False
 
     def __init__(self, name, dev_path):
+        self.name = name
         self.dev_path = dev_path
         self.path = os.path.join(get_stage_root(), name)
 
         self._lock = None
         self._use_locks = True
+        self.keep = False
 
         self.created = False
 
@@ -894,6 +896,9 @@ class DevelopStage(Stage):
         return True
 
     def create(self):
+        if self.created:
+            return
+
         super().create()
 
         for name in os.listdir(self.dev_path):
@@ -901,11 +906,13 @@ class DevelopStage(Stage):
             dst = os.path.join(self.path, name)
             os.symlink(src, dst)
 
+        self.created = True
         tty.debug(f"Develop stage in {self.path} using {self.dev_path}")
 
     def destroy(self):
         # Destroy all files, but do not follow symlinks
         shutil.rmtree(self.path)
+        self.created = False
 
     def restage(self):
         self.destroy()
