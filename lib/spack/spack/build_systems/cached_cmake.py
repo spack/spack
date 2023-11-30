@@ -11,7 +11,7 @@ import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
 import spack.builder
-from spack.version import Version, ver
+from spack.version import Version
 
 from .cmake import CMakeBuilder, CMakePackage
 
