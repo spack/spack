@@ -20,7 +20,7 @@ class PySynthesisWorkflow(PythonPackage):
     depends_on("python@3.8:", type=("build", "run"))
 
     depends_on("brainbuilder@0.18.3:", type=("build", "run"))
-    depends_on("placement-algorithm@2.3.1", type=("build", "run"))
+    depends_on("placement-algorithm@2.3.1:", type=("build", "run"))
     depends_on("py-bluepy@2.5:", type=("build", "run"))
     depends_on("py-bluepy-configfile@0.1.19:", type=("build", "run"))
     depends_on("py-bluepymm@0.8.5:", type=("build", "run"))
