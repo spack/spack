@@ -51,12 +51,6 @@ class Mgis(CMakePackage):
     variant("fortran", default=True, description="Enables fortran bindings")
     variant("python", default=True, description="Enables python bindings")
     variant("static", default=False, description="Enables static libraries")
-    variant(
-        "build_type",
-        default="Release",
-        description="The build type to build",
-        values=("Debug", "Release"),
-    )
 
     # dependencies
     depends_on("tfel@4.2.0", when="@2.2")
