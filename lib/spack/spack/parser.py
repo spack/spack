@@ -79,7 +79,7 @@ DOTTED_IDENTIFIER = rf"(?:{IDENTIFIER}(?:\.{IDENTIFIER})+)"
 GIT_HASH = r"(?:[A-Fa-f0-9]{40})"
 #: Git refs include branch names, and can contain "." and "/"
 GIT_REF = r"(?:[a-zA-Z_0-9][a-zA-Z_0-9./\-]*)"
-GIT_VERSION_PATTERN = rf"(?:(?:git\.(?:{GIT_REF}))|(?:{GIT_HASH}))"
+GIT_VERSION_PATTERN = rf"(?:git\.{GIT_REF}|{GIT_HASH})"
 
 NAME = r"[a-zA-Z_0-9][a-zA-Z_0-9\-.]*"
 
@@ -88,15 +88,15 @@ HASH = r"[a-zA-Z_0-9]+"
 #: A filename starts either with a "." or a "/" or a "{name}/,
 # or on Windows, a drive letter followed by a colon and "\"
 # or "." or {name}\
-WINDOWS_FILENAME = r"(?:\.|[a-zA-Z0-9-_]*\\|[a-zA-Z]:\\)(?:[a-zA-Z0-9-_\.\\]*)(?:\.json|\.yaml)"
-UNIX_FILENAME = r"(?:\.|\/|[a-zA-Z0-9-_]*\/)(?:[a-zA-Z0-9-_\.\/]*)(?:\.json|\.yaml)"
+WINDOWS_FILENAME = r"(?:\.|[a-zA-Z0-9-_]*\\|[a-zA-Z]:\\)[a-zA-Z0-9-_\.\\]*(?:\.json|\.yaml)"
+UNIX_FILENAME = r"(?:\.|\/|[a-zA-Z0-9-_]*\/)[a-zA-Z0-9-_\.\/]*(?:\.json|\.yaml)"
 if not IS_WINDOWS:
     FILENAME = UNIX_FILENAME
 else:
     FILENAME = WINDOWS_FILENAME
 
 VALUE = r"(?:[a-zA-Z_0-9\-+\*.,:=\~\/\\]+)"
-QUOTED_VALUE = r"[\"']+(?:[a-zA-Z_0-9\-+\*.,:=\~\/\\\s]+)[\"']+"
+QUOTED_VALUE = r"[\"']+[a-zA-Z_0-9\-+\*.,:=\~\/\\\s]+[\"']+"
 
 VERSION = r"=?(?:[a-zA-Z0-9_][a-zA-Z_0-9\-\.]*\b)"
 VERSION_RANGE = rf"(?:(?:{VERSION})?:(?:{VERSION}(?!\s*=))?)"
@@ -132,24 +132,24 @@ class TokenType(TokenBase):
     END_EDGE_PROPERTIES = r"(?:\])"
     DEPENDENCY = r"(?:\^)"
     # Version
-    VERSION_HASH_PAIR = rf"(?:@(?:{GIT_VERSION_PATTERN})=(?:{VERSION}))"
-    GIT_VERSION = rf"@(?:{GIT_VERSION_PATTERN})"
-    VERSION = rf"(?:@\s*(?:{VERSION_LIST}))"
+    VERSION_HASH_PAIR = rf"(?:@{GIT_VERSION_PATTERN}={VERSION})"
+    GIT_VERSION = rf"@{GIT_VERSION_PATTERN}"
+    VERSION = rf"(?:@\s*{VERSION_LIST})"
     # Variants
     PROPAGATED_BOOL_VARIANT = rf"(?:(?:\+\+|~~|--)\s*{NAME})"
     BOOL_VARIANT = rf"(?:[~+-]\s*{NAME})"
     PROPAGATED_KEY_VALUE_PAIR = rf"(?:{NAME}\s*==\s*(?:{VALUE}|{QUOTED_VALUE}))"
     KEY_VALUE_PAIR = rf"(?:{NAME}\s*=\s*(?:{VALUE}|{QUOTED_VALUE}))"
     # Compilers
-    COMPILER_AND_VERSION = rf"(?:%\s*(?:{NAME})(?:[\s]*)@\s*(?:{VERSION_LIST}))"
-    COMPILER = rf"(?:%\s*(?:{NAME}))"
+    COMPILER_AND_VERSION = rf"(?:%\s*{NAME}\s*@\s*{VERSION_LIST})"
+    COMPILER = rf"(?:%\s*{NAME})"
     # FILENAME
     FILENAME = rf"(?:{FILENAME})"
     # Package name
-    FULLY_QUALIFIED_PACKAGE_NAME = rf"(?:{DOTTED_IDENTIFIER})"
-    UNQUALIFIED_PACKAGE_NAME = rf"(?:{IDENTIFIER})"
+    FULLY_QUALIFIED_PACKAGE_NAME = DOTTED_IDENTIFIER
+    UNQUALIFIED_PACKAGE_NAME = IDENTIFIER
     # DAG hash
-    DAG_HASH = rf"(?:/(?:{HASH}))"
+    DAG_HASH = rf"(?:/{HASH})"
     # White spaces
     WS = r"(?:\s+)"
 
@@ -158,7 +158,7 @@ class ErrorTokenType(TokenBase):
     """Enum with regexes for error analysis"""
 
     # Unexpected character
-    UNEXPECTED = r"(?:.[\s]*)"
+    UNEXPECTED = r"(?:.\s*)"
 
 
 class Token:
