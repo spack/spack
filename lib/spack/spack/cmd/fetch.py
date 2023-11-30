@@ -57,7 +57,6 @@ def fetch(parser, args):
                 specs = env.uninstalled_specs()
             else:
                 specs = env.all_specs()
-            specs = [s for s in specs if s.package.has_code]
             if specs == []:
                 tty.die("No uninstalled specs in environment. Did you run `spack concretize` yet?")
         else:
@@ -67,6 +66,8 @@ def fetch(parser, args):
         to_be_fetched = spack.traverse.traverse_nodes(specs, key=spack.traverse.by_dag_hash)
     else:
         to_be_fetched = specs
+
+    to_be_fetched = [s for s in to_be_fetched if s.package.has_code and not s.external]
 
     for spec in to_be_fetched:
         if args.missing and spec.installed:
