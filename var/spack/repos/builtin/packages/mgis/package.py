@@ -32,8 +32,11 @@ class Mgis(CMakePackage):
     version("rliv-1.0", branch="rliv-1.0")
 
     # released version
-    version("2.2", sha256="b3776d7b3a534ca626525a42b97665f7660ae2b28ea57b3f53fd7e8538da1ceb",
-            preferred=True)
+    version(
+        "2.2",
+        sha256="b3776d7b3a534ca626525a42b97665f7660ae2b28ea57b3f53fd7e8538da1ceb",
+        preferred=True,
+    )
     version("2.1", sha256="f5b556aab130da0c423f395fe4c35d6bf509dd8fc958242f2e37ea788464aea9")
     version("2.0", sha256="cb427d77f2c79423e969815b948a8b44da33a4370d1760e8c1e22a569f3585e2")
     version("1.2.2", sha256="dc24e85cc90ec656ed707eef3d511317ad800915014d9e4e9cf8818b406586d5")

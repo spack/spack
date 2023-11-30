@@ -46,8 +46,11 @@ class Tfel(CMakePackage):
     version("rliv-1.2", branch="rliv-1.2")
 
     # released version
-    version("4.2.0", sha256="495bc6ca9704ae33f41819d2e7f83ddbf28d817627838546138f92df6ecb72e9",
-            preferred=True)
+    version(
+        "4.2.0",
+        sha256="495bc6ca9704ae33f41819d2e7f83ddbf28d817627838546138f92df6ecb72e9",
+        preferred=True,
+    )
     version("4.1.1", sha256="e0f229094e88a2d6c6a78ae60fa77d2f4b8294e9d810c21fd7df61004bf29a33")
     version("4.1.0", sha256="7505c41da9df5fb3c281651ff29b58a18fd4d91b92f839322f0267269c5f1375")
     version("4.0.2", sha256="f5c8a285e00f334fd3e1a95f9a393fed393990ee827dae3766da1decfaa1074e")
@@ -102,6 +105,12 @@ class Tfel(CMakePackage):
     version("3.0.0", sha256="b2cfaa3d7900b4f32f327565448bf9cb8e4242763f651bff8f231f378a278f9e")
     version("2.0.4", sha256="cac078435aad73d9a795516f161b320d204d2099d6a286e786359f484355a43a")
 
+    variant(
+        "build_type",
+        default="Release",
+        description="The build type to build",
+        values=("Debug", "Release"),
+    )
     # solvers interfaces
     variant("castem", default=True, description="Enables Cast3M interface")
     variant("aster", default=True, description="Enables Code_Aster interface")
@@ -121,22 +130,13 @@ class Tfel(CMakePackage):
     variant("java", default=False, description="Enables java interface")
 
     # only since TFEL-3.3, no effect on version below
-    variant('comsol', default=True,
-            description='Enables comsol interface')
-    variant('diana-fea', default=True,
-            description='Enables DIANA-FEA interface')
+    variant("comsol", default=True, description="Enables comsol interface")
+    variant("diana-fea", default=True, description="Enables DIANA-FEA interface")
 
-    variant('build_type', default='Release',
-            description='The build type to build',
-            values=('Debug', 'Release'))
-
-    depends_on('java', when='+java')
-    depends_on('python', when='+python',
-               type=('build', 'link', 'run'))
-    depends_on('python', when='+python_bindings',
-               type=('build', 'link', 'run'))
-    depends_on('py-numpy', when='+python_bindings',
-               type=('build', 'link', 'run'))
+    depends_on("java", when="+java")
+    depends_on("python", when="+python", type=("build", "link", "run"))
+    depends_on("python", when="+python_bindings", type=("build", "link", "run"))
+    depends_on("py-numpy", when="+python_bindings", type=("build", "link", "run"))
 
     # As boost+py has py runtime dependency, boost+py needs types link and run as well:
     depends_on(
