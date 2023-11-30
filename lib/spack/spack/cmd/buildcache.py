@@ -184,9 +184,8 @@ def setup_parser(subparser: argparse.ArgumentParser):
     # used to construct scope arguments below
     check.add_argument(
         "--scope",
-        choices=arguments.ConfigScopeChoices(),
-        metavar=spack.config.SCOPES_METAVAR,
-        default=spack.config.default_modify_scope(),
+        action=arguments.ConfigScope,
+        default=lambda: spack.config.default_modify_scope(),
         help="configuration scope containing mirrors to check",
     )
     check_spec_or_specfile = check.add_mutually_exclusive_group(required=True)

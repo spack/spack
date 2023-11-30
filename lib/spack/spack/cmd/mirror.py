@@ -94,9 +94,8 @@ def setup_parser(subparser):
     add_parser.add_argument("url", help="url of mirror directory from 'spack mirror create'")
     add_parser.add_argument(
         "--scope",
-        choices=arguments.ConfigScopeChoices(),
-        metavar=spack.config.SCOPES_METAVAR,
-        default=spack.config.default_modify_scope(),
+        action=arguments.ConfigScope,
+        default=lambda: spack.config.default_modify_scope(),
         help="configuration scope to modify",
     )
     add_parser.add_argument(
@@ -114,9 +113,8 @@ def setup_parser(subparser):
     remove_parser.add_argument("name", help="mnemonic name for mirror", metavar="mirror")
     remove_parser.add_argument(
         "--scope",
-        choices=arguments.ConfigScopeChoices(),
-        metavar=spack.config.SCOPES_METAVAR,
-        default=spack.config.default_modify_scope(),
+        action=arguments.ConfigScope,
+        default=lambda: spack.config.default_modify_scope(),
         help="configuration scope to modify",
     )
 
@@ -133,9 +131,8 @@ def setup_parser(subparser):
     )
     set_url_parser.add_argument(
         "--scope",
-        choices=arguments.ConfigScopeChoices(),
-        metavar=spack.config.SCOPES_METAVAR,
-        default=spack.config.default_modify_scope(),
+        action=arguments.ConfigScope,
+        default=lambda: spack.config.default_modify_scope(),
         help="configuration scope to modify",
     )
     arguments.add_connection_args(set_url_parser, False)
@@ -162,9 +159,8 @@ def setup_parser(subparser):
     set_parser.add_argument("--url", help="url of mirror directory from 'spack mirror create'")
     set_parser.add_argument(
         "--scope",
-        choices=arguments.ConfigScopeChoices(),
-        metavar=spack.config.SCOPES_METAVAR,
-        default=spack.config.default_modify_scope(),
+        action=arguments.ConfigScope,
+        default=lambda: spack.config.default_modify_scope(),
         help="configuration scope to modify",
     )
     arguments.add_connection_args(set_parser, False)
@@ -173,9 +169,8 @@ def setup_parser(subparser):
     list_parser = sp.add_parser("list", help=mirror_list.__doc__)
     list_parser.add_argument(
         "--scope",
-        choices=arguments.ConfigScopeChoices(),
-        metavar=spack.config.SCOPES_METAVAR,
-        default=spack.config.default_list_scope(),
+        action=arguments.ConfigScope,
+        default=lambda: spack.config.default_list_scope(),
         help="configuration scope to read from",
     )
 
