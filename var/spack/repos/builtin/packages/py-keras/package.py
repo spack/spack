@@ -66,7 +66,7 @@ class PyKeras(PythonPackage):
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-pandas", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"), when="@3:")
-    depends_on("py-protobuf", type=("build", "run"), when="@2.5:")
+    depends_on("py-protobuf", type=("build", "run"), when="@3:")
 
     # requirements-tensorflow-cuda.txt
     conflicts("backend=tensorflow", msg="Requires TensorFlow 2.16, not yet released")
@@ -84,6 +84,7 @@ class PyKeras(PythonPackage):
     depends_on("py-pyyaml", type=("build", "run"), when="@:2")
     depends_on("py-six", type=("build", "run"), when="@:2")
     depends_on("bazel", type="build", when="@2.5:2")
+    depends_on("protobuf", type="build", when="@2.5:2")
     for minor_ver in range(6, 15):
         depends_on(
             "py-tensorflow@2.{}".format(minor_ver),
