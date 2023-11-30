@@ -3540,7 +3540,7 @@ def test_environment_created_in_users_location(mutable_mock_env_path, tmp_path):
     assert os.path.isdir(os.path.join(env_dir, dir_name))
 
 
-def test_environment_created_from_lockfile_has_view(mock_packages, tmpdir):
+def test_environment_created_from_lockfile_has_view(mock_packages, temporary_store, tmpdir):
     """When an env is created from a lockfile, a view should be generated for it"""
     env_a = str(tmpdir.join("a"))
     env_b = str(tmpdir.join("b"))
