@@ -905,6 +905,12 @@ class TestDevelopStage:
         stage.create()
         assert _create_tree_from_dir_recursive(stage.path) == tree
 
+        stage.destroy()
+        # Make sure destroying the stage doesn't change anything
+        # about the path
+        assert not os.path.exists(stage.path)
+        assert _create_tree_from_dir_recursive(srcdir) == tree
+
 
 def test_stage_create_replace_path(tmp_build_stage_dir):
     """Ensure stage creation replaces a non-directory path."""
