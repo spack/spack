@@ -136,9 +136,9 @@ spack:
     - readline
     - singularityce
     - snakemake
-   # BlueBrain TODO: re-enable and fix
-   #- stat
-    - totalview
+    # BlueBrain TODO: re-enable and fix
+    # - stat
+    # - totalview
     - valgrind~mpi
     - zlib
     - ilmbase
