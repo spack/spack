@@ -88,7 +88,7 @@ override the ``luarocks_args`` method like so:
 .. code-block:: python
 
     def luarocks_args(self):
-        return ['flag1', 'flag2']
+        return ["flag1", "flag2"]
 
 One common use of this is to override warnings or flags for newer compilers, as in:
 
