@@ -1367,8 +1367,7 @@ class PackageInstaller:
                 else:
                     tty.debug(f"{task.pkg_id} is partially installed")
 
-            # Destroy the stage for a locally installed, non-DIYStage, package
-            if restage and task.pkg.stage.managed_by_spack:
+            if restage:
                 task.pkg.stage.destroy()
 
         if (

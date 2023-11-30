@@ -145,7 +145,7 @@ def check_destroy(stage, stage_name):
     assert not os.path.exists(stage_path)
 
     # tmp stage needs to remove tmp dir too.
-    if not stage.managed_by_spack:
+    if not isinstance(stage, DIYStage):
         target = os.path.realpath(stage_path)
         assert not os.path.exists(target)
 

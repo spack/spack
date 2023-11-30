@@ -249,7 +249,8 @@ class Stage:
     """
 
     #: Most staging is managed by Spack. DIYStage is one exception.
-    managed_by_spack = True
+    needs_fetching = True
+    requires_patch_success = True
 
     def __init__(
         self,
@@ -754,7 +755,8 @@ class StageComposite(pattern.Composite):
                 "cache_mirror",
                 "steal_source",
                 "disable_mirrors",
-                "managed_by_spack",
+                "needs_fetching",
+                "requires_patch_success",
             ]
         )
 
@@ -809,9 +811,8 @@ class DIYStage:
     it does not expect or require that the source path adhere to the standard
     directory naming convention.
     """
-
-    """DIY staging is, by definition, not managed by Spack."""
-    managed_by_spack = False
+    needs_fetching = False
+    requires_patch_success = False
 
     def __init__(self, path):
         if path is None:
@@ -860,7 +861,8 @@ class DIYStage:
 
 
 class DevelopStage(Stage):
-    managed_by_spack = False
+    needs_fetching = False
+    requires_patch_success = False
 
     def __init__(self, name, dev_path):
         self.name = name
