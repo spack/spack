@@ -12,6 +12,8 @@ import llnl.util.tty as tty
 
 import spack.builder
 
+from spack.version import Version, ver
+
 from .cmake import CMakeBuilder, CMakePackage
 
 
@@ -232,7 +234,6 @@ class CachedCMakeBuilder(CMakeBuilder):
 
     def initconfig_hardware_entries(self):
         spec = self.pkg.spec
-        Version = self.pkg.Version
 
         entries = [
             "#------------------{0}".format("-" * 60),
