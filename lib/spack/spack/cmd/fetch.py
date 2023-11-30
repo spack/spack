@@ -57,6 +57,7 @@ def fetch(parser, args):
                 specs = env.uninstalled_specs()
             else:
                 specs = env.all_specs()
+            specs = [s for s in specs if s.package.has_code]
             if specs == []:
                 tty.die("No uninstalled specs in environment. Did you run `spack concretize` yet?")
         else:
