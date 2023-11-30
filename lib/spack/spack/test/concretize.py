@@ -1620,7 +1620,7 @@ class TestConcretize:
 
     @pytest.mark.regression("28259")
     def test_reuse_with_unknown_package_dont_raise(self, tmpdir, temporary_store, monkeypatch):
-        builder = spack.repo.MockRepositoryBuilder(tmpdir, namespace="myrepo")
+        builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"), namespace="myrepo")
         builder.add_package("c")
         with spack.repo.use_repositories(builder.root, override=False):
             s = Spec("c").concretized()
