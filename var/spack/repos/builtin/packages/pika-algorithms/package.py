@@ -15,6 +15,8 @@ class PikaAlgorithms(CMakePackage):
     git = "https://github.com/pika-org/pika-algorithms.git"
     maintainers("msimberg", "albestro", "teonnik", "aurianer")
 
+    license("BSL-1.0")
+
     version("0.1.4", sha256="67ea5e8545b234f82dcc75612a774f2e3df8425a283f2034c2d1e2e5ac74f945")
     version("0.1.3", sha256="53b79fcc0e5decc0a4d70abf0897a4f66141b85eea6d65013f51eec02ad123b7")
     version("0.1.2", sha256="286cf5c4db06717fa66c681cec8c99207154dd07e72d72f2b5b4a3cb9ff698bf")

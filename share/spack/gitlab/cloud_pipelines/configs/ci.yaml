@@ -4,6 +4,7 @@ ci:
   broken-tests-packages:
     - gptune
     - superlu-dist    # srun -n 4 hangs
+    - papyrus
 
   broken-specs-url: "https://dummy.io" # s3://spack-binaries/broken-specs"
 

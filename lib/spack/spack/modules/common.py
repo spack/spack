@@ -62,7 +62,7 @@ from spack.context import Context
 
 #: config section for this file
 def configuration(module_set_name):
-    config_path = "modules:%s" % module_set_name
+    config_path = f"modules:{module_set_name}"
     return spack.config.get(config_path, {})
 
 
@@ -96,10 +96,10 @@ def _check_tokens_are_valid(format_string, message):
     named_tokens = re.findall(r"{(\w*)}", format_string)
     invalid_tokens = [x for x in named_tokens if x.lower() not in _valid_tokens]
     if invalid_tokens:
-        msg = message
-        msg += " [{0}]. ".format(", ".join(invalid_tokens))
-        msg += 'Did you check your "modules.yaml" configuration?'
-        raise RuntimeError(msg)
+        raise RuntimeError(
+            f"{message} [{', '.join(invalid_tokens)}]. "
+            f"Did you check your 'modules.yaml' configuration?"
+        )
 
 
 def update_dictionary_extending_lists(target, update):
@@ -219,7 +219,7 @@ def root_path(name, module_set_name):
     """
     defaults = {"lmod": "$spack/share/spack/lmod", "tcl": "$spack/share/spack/modules"}
     # Root folders where the various module files should be written
-    roots = spack.config.get("modules:%s:roots" % module_set_name, {})
+    roots = spack.config.get(f"modules:{module_set_name}:roots", {})
 
     # Merge config values into the defaults so we prefer configured values
     roots = spack.config.merge_yaml(defaults, roots)
@@ -262,7 +262,7 @@ def read_module_index(root):
     index_path = os.path.join(root, "module-index.yaml")
     if not os.path.exists(index_path):
         return {}
-    with open(index_path, "r") as index_file:
+    with open(index_path) as index_file:
         return _read_module_index(index_file)
 
 
@@ -310,21 +310,21 @@ class UpstreamModuleIndex:
         if db_for_spec in self.upstream_dbs:
             db_index = self.upstream_dbs.index(db_for_spec)
         elif db_for_spec:
-            raise spack.error.SpackError("Unexpected: {0} is installed locally".format(spec))
+            raise spack.error.SpackError(f"Unexpected: {spec} is installed locally")
         else:
-            raise spack.error.SpackError("Unexpected: no install DB found for {0}".format(spec))
+            raise spack.error.SpackError(f"Unexpected: no install DB found for {spec}")
         module_index = self.module_indices[db_index]
         module_type_index = module_index.get(module_type, {})
         if not module_type_index:
             tty.debug(
-                "No {0} modules associated with the Spack instance where"
-                " {1} is installed".format(module_type, spec)
+                f"No {module_type} modules associated with the Spack instance "
+                f"where {spec} is installed"
             )
             return None
         if spec.dag_hash() in module_type_index:
             return module_type_index[spec.dag_hash()]
         else:
-            tty.debug("No module is available for upstream package {0}".format(spec))
+            tty.debug(f"No module is available for upstream package {spec}")
             return None
 
 
@@ -603,7 +603,7 @@ class BaseFileLayout:
         # Just the name of the file
         filename = self.use_name
         if self.extension:
-            filename = "{0}.{1}".format(self.use_name, self.extension)
+            filename = f"{self.use_name}.{self.extension}"
         # Architecture sub-folder
         arch_folder_conf = spack.config.get("modules:%s:arch_folder" % self.conf.name, True)
         if arch_folder_conf:
@@ -671,7 +671,7 @@ class BaseContext(tengine.Context):
             return msg
 
         if os.path.exists(pkg.install_configure_args_path):
-            with open(pkg.install_configure_args_path, "r") as args_file:
+            with open(pkg.install_configure_args_path) as args_file:
                 return spack.util.path.padding_filter(args_file.read())
 
         # Returning a false-like value makes the default templates skip
@@ -886,7 +886,7 @@ class BaseModuleFileWriter:
         # 2. template specified in a package directly
         # 3. default template (must be defined, check in __init__)
         module_system_name = str(self.module.__name__).split(".")[-1]
-        package_attribute = "{0}_template".format(module_system_name)
+        package_attribute = f"{module_system_name}_template"
         choices = [
             self.conf.template,
             getattr(self.spec.package, package_attribute, None),
@@ -952,7 +952,7 @@ class BaseModuleFileWriter:
 
         # Attribute from package
         module_name = str(self.module.__name__).split(".")[-1]
-        attr_name = "{0}_context".format(module_name)
+        attr_name = f"{module_name}_context"
         pkg_update = getattr(self.spec.package, attr_name, {})
         context.update(pkg_update)
 
@@ -1002,7 +1002,7 @@ class BaseModuleFileWriter:
 
         if modulerc_exists:
             # retrieve modulerc content
-            with open(modulerc_path, "r") as f:
+            with open(modulerc_path) as f:
                 content = f.readlines()
                 content = "".join(content).split("\n")
                 # remove last empty item if any

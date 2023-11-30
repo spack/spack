@@ -10,7 +10,7 @@ class SlurmDrmaa(AutotoolsPackage):
     """
     DRMAA for Slurm is an implementation of Open Grid Forum DRMAA 1.0 (Distributed
     Resource Management Application API) specification for submission and control of
-    jobs to SLURM.  Using DRMAA, grid applications builders, portal developers and
+    jobs to Slurm.  Using DRMAA, grid applications builders, portal developers and
     ISVs can use the same high-level API to link their software with different
     cluster/resource management systems.
     """
