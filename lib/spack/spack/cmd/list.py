@@ -15,9 +15,9 @@ from html import escape
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
-import spack.cmd.common.arguments as arguments
 import spack.deptypes as dt
 import spack.repo
+from spack.cmd.common import arguments
 from spack.version import VersionList
 
 description = "list and search available packages"

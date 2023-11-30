@@ -15,13 +15,13 @@ import spack
 import spack.bootstrap
 import spack.bootstrap.config
 import spack.bootstrap.core
-import spack.cmd.common.arguments
 import spack.config
 import spack.main
 import spack.mirror
 import spack.spec
 import spack.stage
 import spack.util.path
+from spack.cmd.common import arguments
 
 description = "manage bootstrap configuration"
 section = "system"
@@ -68,10 +68,9 @@ SOURCE_METADATA = {
 
 
 def _add_scope_option(parser):
-    scopes = spack.config.scopes()
     parser.add_argument(
         "--scope",
-        choices=scopes,
+        choices=arguments.ConfigScopeChoices(),
         metavar=spack.config.SCOPES_METAVAR,
         help="configuration scope to read/modify",
     )
@@ -106,7 +105,7 @@ def setup_parser(subparser):
     disable.add_argument("name", help="name of the source to be disabled", nargs="?", default=None)
 
     reset = sp.add_parser("reset", help="reset bootstrapping configuration to Spack defaults")
-    spack.cmd.common.arguments.add_common_arguments(reset, ["yes_to_all"])
+    arguments.add_common_arguments(reset, ["yes_to_all"])
 
     root = sp.add_parser("root", help="get/set the root bootstrap directory")
     _add_scope_option(root)

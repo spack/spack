@@ -8,13 +8,13 @@ import os
 import llnl.util.tty as tty
 
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.deptypes as dt
 import spack.error
 import spack.paths
 import spack.spec
 import spack.store
 from spack import build_environment, traverse
+from spack.cmd.common import arguments
 from spack.context import Context
 from spack.util.environment import dump_environment, pickle_environment
 

@@ -9,11 +9,11 @@ import llnl.util.tty as tty
 
 import spack.builder
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 import spack.paths
 import spack.repo
 import spack.stage
+from spack.cmd.common import arguments
 
 description = "print out locations of packages and spack directories"
 section = "basic"

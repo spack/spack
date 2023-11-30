@@ -10,11 +10,11 @@ import llnl.util.tty as tty
 from llnl.util.tty.color import cprint, get_color_when
 
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 import spack.solver.asp as asp
 import spack.util.environment
 import spack.util.spack_json as sjson
+from spack.cmd.common import arguments
 
 description = "compare two specs"
 section = "basic"

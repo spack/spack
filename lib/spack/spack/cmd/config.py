@@ -10,7 +10,6 @@ from typing import List
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
-import spack.cmd.common.arguments
 import spack.config
 import spack.environment as ev
 import spack.repo
@@ -18,6 +17,7 @@ import spack.schema.env
 import spack.schema.packages
 import spack.store
 import spack.util.spack_yaml as syaml
+from spack.cmd.common import arguments
 from spack.util.editor import editor
 
 description = "get and set configuration options"
@@ -26,12 +26,10 @@ level = "long"
 
 
 def setup_parser(subparser):
-    scopes = spack.config.scopes()
-
     # User can only choose one
     subparser.add_argument(
         "--scope",
-        choices=scopes,
+        choices=arguments.ConfigScopeChoices(),
         metavar=spack.config.SCOPES_METAVAR,
         help="configuration scope to read/modify",
     )
@@ -101,13 +99,13 @@ def setup_parser(subparser):
     setup_parser.add_parser = add_parser
 
     update = sp.add_parser("update", help="update configuration files to the latest format")
-    spack.cmd.common.arguments.add_common_arguments(update, ["yes_to_all"])
+    arguments.add_common_arguments(update, ["yes_to_all"])
     update.add_argument("section", help="section to update")
 
     revert = sp.add_parser(
         "revert", help="revert configuration files to their state before update"
     )
-    spack.cmd.common.arguments.add_common_arguments(revert, ["yes_to_all"])
+    arguments.add_common_arguments(revert, ["yes_to_all"])
     revert.add_argument("section", help="section to update")
 
 

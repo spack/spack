@@ -11,13 +11,13 @@ import llnl.util.tty as tty
 import llnl.util.tty.color as color
 from llnl.util.tty.colify import colify
 
-import spack.cmd.common.arguments as arguments
 import spack.deptypes as dt
 import spack.fetch_strategy as fs
 import spack.install_test
 import spack.repo
 import spack.spec
 import spack.version
+from spack.cmd.common import arguments
 from spack.package_base import preferred_version
 
 description = "get detailed information on a particular package"

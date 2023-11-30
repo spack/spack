@@ -11,7 +11,6 @@ import llnl.util.tty.colify as colify
 
 import spack.caches
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.concretize
 import spack.config
 import spack.environment as ev
@@ -20,6 +19,7 @@ import spack.repo
 import spack.spec
 import spack.util.path
 import spack.util.web as web_util
+from spack.cmd.common import arguments
 from spack.error import SpackError
 
 description = "manage mirrors (source and binary)"
@@ -88,16 +88,13 @@ def setup_parser(subparser):
         "--mirror-url", metavar="mirror_url", type=str, help="find mirror to destroy by url"
     )
 
-    # used to construct scope arguments below
-    scopes = spack.config.scopes()
-
     # Add
     add_parser = sp.add_parser("add", help=mirror_add.__doc__)
     add_parser.add_argument("name", help="mnemonic name for mirror", metavar="mirror")
     add_parser.add_argument("url", help="url of mirror directory from 'spack mirror create'")
     add_parser.add_argument(
         "--scope",
-        choices=scopes,
+        choices=arguments.ConfigScopeChoices(),
         metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_modify_scope(),
         help="configuration scope to modify",
@@ -117,7 +114,7 @@ def setup_parser(subparser):
     remove_parser.add_argument("name", help="mnemonic name for mirror", metavar="mirror")
     remove_parser.add_argument(
         "--scope",
-        choices=scopes,
+        choices=arguments.ConfigScopeChoices(),
         metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_modify_scope(),
         help="configuration scope to modify",
@@ -136,7 +133,7 @@ def setup_parser(subparser):
     )
     set_url_parser.add_argument(
         "--scope",
-        choices=scopes,
+        choices=arguments.ConfigScopeChoices(),
         metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_modify_scope(),
         help="configuration scope to modify",
@@ -165,7 +162,7 @@ def setup_parser(subparser):
     set_parser.add_argument("--url", help="url of mirror directory from 'spack mirror create'")
     set_parser.add_argument(
         "--scope",
-        choices=scopes,
+        choices=arguments.ConfigScopeChoices(),
         metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_modify_scope(),
         help="configuration scope to modify",
@@ -176,7 +173,7 @@ def setup_parser(subparser):
     list_parser = sp.add_parser("list", help=mirror_list.__doc__)
     list_parser.add_argument(
         "--scope",
-        choices=scopes,
+        choices=arguments.ConfigScopeChoices(),
         metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_list_scope(),
         help="configuration scope to read from",

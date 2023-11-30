@@ -6,8 +6,8 @@
 import llnl.util.tty as tty
 
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.repo
+from spack.cmd.common import arguments
 
 description = "revert checked out package source code"
 section = "build"
