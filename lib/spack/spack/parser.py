@@ -61,7 +61,7 @@ import enum
 import pathlib
 import re
 import sys
-from typing import Iterator, List, Match, Optional
+from typing import Iterator, List, Optional
 
 from llnl.util.tty import color
 
@@ -153,12 +153,7 @@ class TokenType(TokenBase):
     # White spaces
     WS = r"(?:\s+)"
 
-
-class ErrorTokenType(TokenBase):
-    """Enum with regexes for error analysis"""
-
-    # Unexpected character
-    UNEXPECTED = r"(?:.[\s]*)"
+    ERROR = r"(?:.)"
 
 
 class Token:
@@ -186,41 +181,21 @@ class Token:
 
 #: List of all the regexes used to match spec parts, in order of precedence
 TOKEN_REGEXES = [rf"(?P<{token}>{token.regex})" for token in TokenType]
-#: List of all valid regexes followed by error analysis regexes
-ERROR_HANDLING_REGEXES = TOKEN_REGEXES + [
-    rf"(?P<{token}>{token.regex})" for token in ErrorTokenType
-]
 #: Regex to scan a valid text
 ALL_TOKENS = re.compile("|".join(TOKEN_REGEXES))
-#: Regex to analyze an invalid text
-ANALYSIS_REGEX = re.compile("|".join(ERROR_HANDLING_REGEXES))
 
 
 def tokenize(text: str) -> Iterator[Token]:
     """Return a token generator from the text passed as input.
 
     Raises:
-        SpecTokenizationError: if we can't tokenize anymore, but didn't reach the
-            end of the input text.
+        SpecTokenizationError: if we find an unexpected token
     """
-    scanner = ALL_TOKENS.scanner(text)  # type: ignore[attr-defined]
-    match: Optional[Match] = None
-    for match in iter(scanner.match, None):
-        yield Token(
-            TokenType.__members__[match.lastgroup],  # type: ignore[attr-defined]
-            match.group(),  # type: ignore[attr-defined]
-            match.start(),  # type: ignore[attr-defined]
-            match.end(),  # type: ignore[attr-defined]
-        )
-
-    if match is None and not text:
-        # We just got an empty string
-        return
-
-    if match is None or match.end() != len(text):
-        scanner = ANALYSIS_REGEX.scanner(text)  # type: ignore[attr-defined]
-        matches = [m for m in iter(scanner.match, None)]  # type: ignore[var-annotated]
-        raise SpecTokenizationError(matches, text)
+    for match in re.finditer(ALL_TOKENS, text):
+        group = match.lastgroup or TokenType.ERROR.name
+        if group == TokenType.ERROR.name:
+            raise SpecTokenizationError(match.start(), text)
+        yield Token(TokenType.__members__[group], match.group(), match.start(), match.end())
 
 
 class TokenContext:
@@ -537,17 +512,9 @@ class SpecSyntaxError(Exception):
 class SpecTokenizationError(SpecSyntaxError):
     """Syntax error in a spec string"""
 
-    def __init__(self, matches, text):
-        message = "unexpected tokens in the spec string\n"
-        message += f"{text}"
-
-        underline = "\n"
-        for match in matches:
-            if match.lastgroup == str(ErrorTokenType.UNEXPECTED):
-                underline += f"{'^' * (match.end() - match.start())}"
-                continue
-            underline += f"{' ' * (match.end() - match.start())}"
-
+    def __init__(self, offset: int, text: str):
+        message = f"unexpected tokens in the spec string\n{text}\n"
+        underline = " " * offset + "^"
         message += color.colorize(f"@*r{{{underline}}}")
         super().__init__(message)
 
