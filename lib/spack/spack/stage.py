@@ -333,17 +333,21 @@ class Stage:
         # stage locks. See spack.database.Database.prefix_locker.lock for
         # details on this approach.
         self._lock = None
-        if lock:
+        self._use_locks = lock
+
+        # When stages are reused, we need to know whether to re-create
+        # it.  This marks whether it has been created/destroyed.
+        self.created = False
+
+    def _get_lock(self):
+        if not self._lock:
             sha1 = hashlib.sha1(self.name.encode("utf-8")).digest()
             lock_id = prefix_bits(sha1, bit_length(sys.maxsize))
             stage_lock_path = os.path.join(get_stage_root(), ".lock")
             self._lock = spack.util.lock.Lock(
                 stage_lock_path, start=lock_id, length=1, desc=self.name
             )
-
-        # When stages are reused, we need to know whether to re-create
-        # it.  This marks whether it has been created/destroyed.
-        self.created = False
+        return self._lock
 
     def __enter__(self):
         """
@@ -352,8 +356,8 @@ class Stage:
         Returns:
             self
         """
-        if self._lock is not None:
-            self._lock.acquire_write(timeout=60)
+        if self._use_locks:
+            self._get_lock().acquire_write(timeout=60)
         self.create()
         return self
 
@@ -375,8 +379,8 @@ class Stage:
         if exc_type is None and not self.keep:
             self.destroy()
 
-        if self._lock is not None:
-            self._lock.release_write()
+        if self._use_locks:
+            self._get_lock().release_write()
 
     @property
     def expected_archive_files(self):
@@ -850,6 +854,62 @@ class DIYStage:
     def destroy(self):
         # No need to destroy DIY stage.
         pass
+
+    def cache_local(self):
+        tty.debug("Sources for DIY stages are not cached")
+
+
+class DevelopStage(Stage):
+    managed_by_spack = False
+
+    def __init__(self, name, dev_path):
+        self.dev_path = dev_path
+        self.path = os.path.join(get_stage_root(), name)
+
+        self._lock = None
+        self._use_locks = True
+
+        self.created = False
+
+    @property
+    def archive_file(self):
+        return None
+
+    @property
+    def source_path(self):
+        return self.path
+
+    def fetch(self, *args, **kwargs):
+        tty.debug("No fetching needed for develop stage.")
+
+    def check(self):
+        tty.debug("No checksum needed for develop stage.")
+
+    def expand_archive(self):
+        tty.debug("No expansion needed for develop stage.")
+
+    @property
+    def expanded(self):
+        """Returns True since the source_path must exist."""
+        return True
+
+    def create(self):
+        super().create()
+
+        for name in os.listdir(self.dev_path):
+            src = os.path.join(self.dev_path, name)
+            dst = os.path.join(self.path, name)
+            os.symlink(src, dst)
+
+        tty.debug(f"Develop stage in {self.path} using {self.dev_path}")
+
+    def destroy(self):
+        # Destroy all files, but do not follow symlinks
+        shutil.rmtree(self.path)
+
+    def restage(self):
+        self.destroy()
+        self.create()
 
     def cache_local(self):
         tty.debug("Sources for DIY stages are not cached")

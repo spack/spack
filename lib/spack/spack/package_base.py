@@ -1030,7 +1030,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # If it's a dev package (not transitively), use a DIY stage object
         dev_path_var = self.spec.variants.get("dev_path", None)
         if dev_path_var:
-            return DIYStage(dev_path_var.value)
+            return DevelopStage(compute_stage_name(self.spec), dev_path_var.value)
 
         # To fetch the current version
         source_stage = self._make_root_stage(self.fetcher)
