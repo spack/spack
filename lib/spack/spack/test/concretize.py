@@ -1604,7 +1604,9 @@ class TestConcretize:
         assert not new_root["changing"].satisfies("@1.0")
 
     @pytest.mark.regression("28259")
-    def test_reuse_with_unknown_namespace_dont_raise(self, mock_custom_repository):
+    def test_reuse_with_unknown_namespace_dont_raise(
+        self, mutable_database, mock_custom_repository
+    ):
         with spack.repo.use_repositories(mock_custom_repository, override=False):
             s = Spec("c").concretized()
             assert s.namespace != "builtin.mock"
@@ -1615,7 +1617,7 @@ class TestConcretize:
         assert s.namespace == "builtin.mock"
 
     @pytest.mark.regression("28259")
-    def test_reuse_with_unknown_package_dont_raise(self, tmpdir, monkeypatch):
+    def test_reuse_with_unknown_package_dont_raise(self, tmpdir, mutable_database, monkeypatch):
         builder = spack.repo.MockRepositoryBuilder(tmpdir, namespace="myrepo")
         builder.add_package("c")
         with spack.repo.use_repositories(builder.root, override=False):
