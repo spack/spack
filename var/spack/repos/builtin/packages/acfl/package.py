@@ -184,12 +184,13 @@ def get_os(ver):
 
 def get_armpl_version_to_3(spec):
     """Return version string with 3 numbers"""
-    version_len = len(spec.version)
+    version = spec.version.up_to(3)
+    version_len = len(version)
     assert version_len == 2 or version_len == 3
     if version_len == 2:
-        return spec.version.string + ".0"
+        return version.string + ".0"
     elif version_len == 3:
-        return spec.version.string
+        return version.string
 
 
 def get_armpl_prefix(spec):
