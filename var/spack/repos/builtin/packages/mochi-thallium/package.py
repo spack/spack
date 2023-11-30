@@ -16,7 +16,6 @@ class MochiThallium(CMakePackage):
     maintainers("mdorier")
 
     version("main", branch="main")
-    version("0.12.0", sha256="2857c431bbaad4f6d774afb0060f985e746f9f1e9ad567818a9fb59113efc9e4")
     version("0.11.3", sha256="d1ffd7ee1ccbcfb00f246cb29c5bc2560e59f8808609cbc19b7098aa8fc903c4")
     version("0.11.2", sha256="4f1e57ca843b7592525c179dec73bfb603a27fbda4feaf028d636e05c1b38e36")
     version("0.11.1", sha256="be99bec2309ce1945a777fba720175f409972cbf27b73388728a740d6406a040")
