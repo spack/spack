@@ -1111,3 +1111,32 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                         ),
                     ),
                 )
+
+    @classmethod
+    def runtime_constraints(cls, *, compiler, pkg):
+        """Callback function to inject runtime-related rules into the solver.
+
+        Rule-injection is obtained through method calls of the ``pkg`` argument.
+
+        Documentation for this function is temporary. When the API will be in its final state,
+        we'll document the behavior at https://spack.readthedocs.io/en/latest/
+
+        Args:
+            compiler: compiler object (node attribute) currently considered
+            pkg: object used to forward information to the solver
+        """
+        pkg("*").depends_on(
+            "gcc-runtime",
+            when="%gcc",
+            type="link",
+            description="If any package uses %gcc, it depends on gcc-runtime",
+        )
+        pkg("*").depends_on(
+            f"gcc-runtime@{str(compiler.version)}:",
+            when=f"%{str(compiler.spec)}",
+            type="link",
+            description=f"If any package uses %{str(compiler.spec)}, "
+            f"it depends on gcc-runtime@{str(compiler.version)}:",
+        )
+        # The version of gcc-runtime is the same as the %gcc used to "compile" it
+        pkg("gcc-runtime").requires(f"@={str(compiler.version)}", when=f"%{str(compiler.spec)}")

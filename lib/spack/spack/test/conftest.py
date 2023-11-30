@@ -44,6 +44,7 @@ import spack.package_prefs
 import spack.paths
 import spack.platforms
 import spack.repo
+import spack.solver.asp
 import spack.stage
 import spack.store
 import spack.subprocess_context
@@ -55,11 +56,6 @@ import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 from spack.fetch_strategy import URLFetchStrategy
 from spack.util.pattern import Bunch
-
-
-@pytest.fixture(scope="session", autouse=True)
-def drop_gcc_runtime():
-    spack.package_base.WITH_GCC_RUNTIME = False
 
 
 def ensure_configuration_fixture_run_before(request):

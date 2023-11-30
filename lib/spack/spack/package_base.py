@@ -53,7 +53,6 @@ import spack.url
 import spack.util.environment
 import spack.util.path
 import spack.util.web
-from spack.directives import _depends_on
 from spack.filesystem_view import YamlFilesystemView
 from spack.install_test import (
     PackageTest,
@@ -77,7 +76,6 @@ FLAG_HANDLER_TYPE = Callable[[str, Iterable[str]], FLAG_HANDLER_RETURN_TYPE]
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
 
-WITH_GCC_RUNTIME = True
 
 #: Filename for the Spack build/install log.
 _spack_build_logfile = "spack-build-out.txt"
@@ -373,20 +371,6 @@ def on_package_attributes(**attr_dict):
     return _execute_under_condition
 
 
-class BinaryPackage:
-    """This adds a universal dependency on gcc-runtime."""
-
-    def maybe_depend_on_gcc_runtime(self):
-        # Do not depend on itself, and allow tests to disable this universal dep
-        if self.name == "gcc-runtime" or not WITH_GCC_RUNTIME:
-            return
-        for v in ["13", "12", "11", "10", "9", "8", "7", "6", "5", "4"]:
-            _depends_on(self, f"gcc-runtime@{v}:", type="link", when=f"%gcc@{v} platform=linux")
-            _depends_on(self, f"gcc-runtime@{v}:", type="link", when=f"%gcc@{v} platform=cray")
-
-    _directives_to_be_executed = [maybe_depend_on_gcc_runtime]
-
-
 class PackageViewMixin:
     """This collects all functionality related to adding installed Spack
     package to views. Packages can customize how they are added to views by
@@ -449,7 +433,7 @@ class PackageViewMixin:
 Pb = TypeVar("Pb", bound="PackageBase")
 
 
-class PackageBase(WindowsRPath, PackageViewMixin, BinaryPackage, metaclass=PackageMeta):
+class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     """This is the superclass for all spack packages.
 
     ***The Package class***
