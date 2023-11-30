@@ -891,7 +891,7 @@ def _create_tree_from_dir_recursive(path):
 
 @pytest.fixture
 def develop_path(tmpdir):
-    dir_structure = {"a1": {"b1": None}, "a2": None}
+    dir_structure = {"a1": {"b1": None, "b2": "b1content"}, "a2": None}
     srcdir = str(tmpdir.join("test-src"))
     os.mkdir(srcdir)
     _create_files_from_tree(srcdir, dir_structure)
@@ -899,6 +899,13 @@ def develop_path(tmpdir):
 
 
 class TestDevelopStage:
+    def test_sanity_check_develop_path(self, develop_path):
+        _, srcdir = develop_path
+        with open(os.path.join(srcdir, "a1", "b2")) as f:
+            assert f.read() == "b1content"
+
+        assert os.path.exists(os.path.join(srcdir, "a2"))
+
     def test_develop_stage(self, develop_path, tmp_build_stage_dir):
         tree, srcdir = develop_path
         stage = DevelopStage("test-stage", srcdir)
