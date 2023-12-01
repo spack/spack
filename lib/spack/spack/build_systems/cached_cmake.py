@@ -277,13 +277,14 @@ class CachedCMakeBuilder(CMakeBuilder):
             entries.append("# ROCm")
             entries.append("#------------------{0}\n".format("-" * 30))
 
-            # Explicitly setting HIP_ROOT_DIR may be a patch that is no longer necessary
             hip_root = spec["hip"].prefix
             rocm_root = hip_root + "/.."
+
+            # Explicitly setting HIP_ROOT_DIR may be a patch that is no longer necessary
             entries.append(cmake_cache_path("HIP_ROOT_DIR", hip_root))
-            # TODO: test if this helps
-            # entries.append(cmake_cache_string("HIP_CLANG_PATH", rocm_root + "/llvm/bin"))
             entries.append(cmake_cache_path("ROCM_ROOT_DIR", rocm_root))
+            # TODO: test if this helps
+            entries.append(cmake_cache_string("HIP_CLANG_PATH", rocm_root + "/llvm/bin"))
 
             # The old way ...
             if spec["hip"].version < Version("5.5.0"):
