@@ -325,7 +325,7 @@ class RocmOpenmpExtras(Package):
             placement="llvm-project",
             when="@" + ver,
         )
-    patch("001-hsakmt-roct-library-path.patch", when="@5.7")
+    patch("0001-Linking-hsakmt-libdrm-and-numactl-libraries.patch", when="@5.7")
 
     def setup_run_environment(self, env):
         devlibs_prefix = self.spec["llvm-amdgpu"].prefix
