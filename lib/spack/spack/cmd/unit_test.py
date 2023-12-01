@@ -230,6 +230,9 @@ def unit_test(parser, args, unknown_args):
         target = args.extension
         extensions = spack.extensions.get_extension_paths()
         pytest_root = spack.extensions.path_for_extension(target, *extensions)
+        # make sure modules for the extension are properly loaded before running
+        # pytest
+        spack.extensions.get_module(target)
 
     # pytest.ini lives in the root of the spack repository.
     with llnl.util.filesystem.working_dir(pytest_root):
