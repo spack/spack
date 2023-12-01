@@ -307,6 +307,7 @@ class Mivisionx(CMakePackage):
     depends_on("py-future", when="+add_tests")
     depends_on("py-numpy", when="+add_tests")
     depends_on("py-pytz", when="+add_tests")
+    depends_on("rapidjson", when="@5.7:")
 
     conflicts("^cmake@3.22:", when="@:5.0.0")
     # need to choose atleast one backend and both cannot be set
