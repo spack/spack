@@ -215,7 +215,12 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     conflicts("+numa", when="@:0.3.2")
     conflicts("~c", when="+fortran", msg="Fortran API requires C API")
+
+    # device allocator must be used with more current umpire versions, rocm 5.4.0 and greater,
+    # and with either rocm or cuda enabled
     conflicts("+device_alloc", when="@:2022.03.0")
+    conflicts("+device_alloc", when="^hip@:5.3.99")
+    conflicts("+device_alloc", when="~rocm~cuda")
 
     # device allocator exports device code, which requires static libs
     # currently only available for cuda.
