@@ -80,11 +80,13 @@ class PyKeras(PythonPackage):
     depends_on("py-torchvision@0.16.0", type=("build", "run"), when="@3.0.0 backend=torch")
 
     # Historical dependencies
-    depends_on("py-portpicker", type=("build", "run"), when="@2.10:2")
-    depends_on("py-pyyaml", type=("build", "run"), when="@:2")
-    depends_on("py-six", type=("build", "run"), when="@:2")
     depends_on("bazel", type="build", when="@2.5:2")
     depends_on("protobuf", type="build", when="@2.5:2")
+    depends_on("pil", type=("build", "run"), when="@:2")
+    depends_on("py-portpicker", type=("build", "run"), when="@2.10:2")
+    depends_on("py-pydot", type=("build", "run"), when="@:2")
+    depends_on("py-pyyaml", type=("build", "run"), when="@:2")
+    depends_on("py-six", type=("build", "run"), when="@:2")
     for minor_ver in range(6, 15):
         depends_on(
             "py-tensorflow@2.{}".format(minor_ver),
