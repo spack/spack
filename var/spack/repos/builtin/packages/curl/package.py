@@ -386,6 +386,10 @@ class AutotoolsBuilder(AutotoolsBuilder):
         args += self.with_or_without("libssh", activation_value="prefix")
         args += self.enable_or_disable("ldap")
 
+        # https://github.com/spack/spack/issues/27709
+        if self.spec.compiler.name in ["intel", "oneapi"]:
+            args.append("CFLAGS=-we147")
+
         return args
 
     def with_or_without_gnutls(self, activated):
