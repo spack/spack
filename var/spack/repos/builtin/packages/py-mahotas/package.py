@@ -17,4 +17,4 @@ class PyMahotas(PythonPackage):
     version("1.4.13", sha256="a78dfe15045a20a0d9e01538b80f874580cd3525ae3eaa2c83ced51eb455879c")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-numpy@:1.22", type=("build", "run"))
+    depends_on("py-numpy", type=("build", "run"))
