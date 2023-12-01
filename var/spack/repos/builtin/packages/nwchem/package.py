@@ -32,7 +32,9 @@ class Nwchem(Package):
     variant("mpipr", default=False, description="Enables ARMCI with progress rank")
     variant("fftw3", default=False, description="Link against the FFTW library")
     variant("libxc", default=False, description="Support additional functionals via libxc")
-    variant("elpa", default=False, description="Enable optimised diagonalisation routines from ELPA")
+    variant(
+        "elpa", default=False, description="Enable optimised diagonalisation routines from ELPA"
+    )
     variant("xtb", default=False, description="xtb supporting")
 
     # This patch is for the modification of the build system (e.g. compiler flags) and
@@ -127,11 +129,13 @@ class Nwchem(Package):
             args.extend(["FFTW3_INCLUDE={0}".format(spec["fftw-api"].prefix.include)])
 
         if "+libxc" in spec:
-            args.extend(["LIBXC_LIB=%s"%spec["libxc"].libs.ld_flags])
-            args.extend(["LIBXC_INCLUDE=%s"%spec["libxc"].prefix.include])
+            args.extend(["LIBXC_LIB=%s" % spec["libxc"].libs.ld_flags])
+            args.extend(["LIBXC_INCLUDE=%s" % spec["libxc"].prefix.include])
 
         if "+elpa" in spec:
-            args.extend(["ELPA=%s"%spec["elpa"].libs.ld_flags+" -I"+spec["elpa"].prefix.include])
+            args.extend(
+                ["ELPA=%s" % spec["elpa"].libs.ld_flags + " -I" + spec["elpa"].prefix.include]
+            )
             if use_32_bit_lin_alg:
                 args.extend(["ELPA_SIZE=4"])
             else:
