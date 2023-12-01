@@ -31,6 +31,9 @@ class Nwchem(Package):
     variant("openmp", default=False, description="Enables OpenMP support")
     variant("mpipr", default=False, description="Enables ARMCI with progress rank")
     variant("fftw3", default=False, description="Link against the FFTW library")
+    variant("libxc", default=False, description="Support additional functionals via libxc")
+    variant("elpa", default=False, description="Enable optimised diagonalisation routines from ELPA")
+    variant("xtb", default=False, description="xtb supporting")
 
     # This patch is for the modification of the build system (e.g. compiler flags) and
     # Fortran syntax to enable the compilation with Fujitsu compilers. The modification
@@ -53,6 +56,8 @@ class Nwchem(Package):
     depends_on("mpi")
     depends_on("scalapack")
     depends_on("fftw-api")
+    depends_on("libxc", when="+libxc")
+    depends_on("elpa", when="+elpa")
     depends_on("python@3:3.9", type=("build", "link", "run"), when="@:7.0.2")
     depends_on("python@3", type=("build", "link", "run"), when="@7.2.0:")
 
@@ -71,6 +76,7 @@ class Nwchem(Package):
                 "CC=%s" % os.path.basename(spack_cc),
                 "FC=%s" % os.path.basename(spack_fc),
                 "USE_MPI=y",
+                "USE_MPIF=y",
                 "PYTHONVERSION=%s" % spec["python"].version.up_to(2),
                 "BLASOPT=%s" % ((lapack + blas).ld_flags),
                 "LAPACK_LIB=%s" % lapack.ld_flags,
@@ -79,6 +85,7 @@ class Nwchem(Package):
                 "MRCC_METHODS=y",  # TCE extra module
                 "IPCCSD=y",  # TCE extra module
                 "EACCSD=y",  # TCE extra module
+                "CCSDTQ=TRUE",
                 "V=1",  # verbose build
             ]
         )
@@ -93,10 +100,10 @@ class Nwchem(Package):
         # TODO: query if blas/lapack/scalapack uses 64bit Ints
         # A flag to distinguish between 32bit and 64bit integers in linear
         # algebra (Blas, Lapack, Scalapack)
-        use_32_bit_lin_alg = True
+        use_32_bit_lin_alg = True if "~ilp64" in self.spec["blas"] else False
 
         if use_32_bit_lin_alg:
-            args.extend(["USE_64TO32=y", "BLAS_SIZE=4", "SCALAPACK_SIZE=4"])
+            args.extend(["USE_64TO32=y", "BLAS_SIZE=4", "SCALAPACK_SIZE=4", "USE_MPIF4=y"])
         else:
             args.extend(["BLAS_SIZE=8", "SCALAPACK_SIZE=8"])
 
@@ -118,6 +125,17 @@ class Nwchem(Package):
             args.extend(["USE_FFTW3=y"])
             args.extend(["LIBFFTW3=%s" % fftw.ld_flags])
             args.extend(["FFTW3_INCLUDE={0}".format(spec["fftw-api"].prefix.include)])
+
+        if "+libxc" in spec:
+            args.extend(["LIBXC_LIB=%s"%spec["libxc"].libs.ld_flags])
+            args.extend(["LIBXC_INCLUDE=%s"%spec["libxc"].prefix.include])
+
+        if "+elpa" in spec:
+            args.extend(["ELPA=%s"%spec["elpa"].libs.ld_flags+" -I"+spec["elpa"].prefix.include])
+            if use_32_bit_lin_alg:
+                args.extend(["ELPA_SIZE=4"])
+            else:
+                args.extend(["ELPA_SIZE=8"])
 
         with working_dir("src"):
             make("nwchem_config", *args)
