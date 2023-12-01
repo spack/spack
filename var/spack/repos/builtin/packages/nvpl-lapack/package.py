@@ -26,7 +26,42 @@ class NvplLapack(Package):
 
     provides("lapack")
 
-    # TODO add compiler requirements
+    variant("ilp64", default=False, description="Force 64-bit Fortran native integers")
+    variant(
+        "threads",
+        default="none",
+        description="Multithreading support",
+        values=("openmp", "none"),
+        multi=False,
+    )
+
+    conflicts("%gcc@:7")
+    conflicts("%clang@:13")
+
+    conflicts("threads=openmp", when="%clang")
+
+    @property
+    def lapack_headers(self):
+        return find_all_headers(self.spec.prefix.include)
+
+    @property
+    def lapack_libs(self):
+        spec = self.spec
+
+        if "+ilp64" in spec:
+          int_type = "ilp64"
+        else:
+          int_type = "lp64"
+
+        if spec.satisfies("threads=openmp"):
+          threading_type="gomp"
+        else:
+          # threads=none
+          threading_type = "seq"
+
+        name = ["libnvpl_lapack_core", f"libnvpl_lapack_{int_type}_{threading_type}"]
+
+        return find_libraries(name, spec.prefix.lib, shared=True, recursive=True)
 
     def install(self, spec, prefix):
         install_tree(".", prefix)
