@@ -25,6 +25,12 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     version("develop", branch="develop", submodules=False)
     version("main", branch="main", submodules=False)
     version(
+        "2023.06.0",
+        tag="v2023.06.0",
+        commit="1e5ef604de88e81bb3b6fc4a5d914be833529da5",
+        submodules=False,
+    )
+    version(
         "2022.10.0",
         tag="v2022.10.0",
         commit="93b1441aaa258c1dcd211a552b75cff6461a2a8a",
@@ -166,10 +172,15 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     )
     variant("device_alloc", default=True, description="Build Umpire Device Allocator")
 
-    depends_on("cmake@3.8:", type="build")
-    depends_on("cmake@3.9:", when="+cuda", type="build")
+    depends_on("cmake@3.20:", when="@2022.03.0: +rocm", type="build")
     depends_on("cmake@3.14:", when="@2022.03.0:", type="build")
+    depends_on("cmake@3.23:", when="@2022.10.0: +rocm", type="build")
+    depends_on("cmake@3.20:", when="@2022.10.0:", type="build")
+    depends_on("cmake@3.9:", when="+cuda", type="build")
+    depends_on("cmake@3.8:", type="build")
 
+    depends_on("blt@develop", type="build", when="@develop")
+    depends_on("blt@0.5.3:", type="build", when="@2023.06.0:")
     depends_on("blt@0.5.2:", type="build", when="@2022.10.0:")
     depends_on("blt@0.5.0:", type="build", when="@2022.03.0:")
     depends_on("blt@0.4.1", type="build", when="@6.0.0")
@@ -177,12 +188,14 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("blt@0.3.6:", type="build", when="@:4.1.2")
     conflicts("^blt@:0.3.6", when="+rocm")
 
-    depends_on("camp", when="@5.0.0:")
+    depends_on("camp@main", when="@develop")
+    depends_on("camp@main", when="@main")
+    depends_on("camp@2023.06.0:", when="@2023.06.0:")
+    depends_on("camp@2022.10.0:", when="@2022.10.0:")
+    depends_on("camp@2022.03.2:", when="@2022.03.0:")
     depends_on("camp@0.2.2:0.2.3", when="@6.0.0")
     depends_on("camp@0.1.0", when="@5.0.0:5.0.1")
-    depends_on("camp@2022.03.2:", when="@2022.03.0:")
-    depends_on("camp@main", when="@main")
-    depends_on("camp@main", when="@develop")
+    depends_on("camp", when="@5.0.0:")
     depends_on("camp+openmp", when="+openmp")
     depends_on("camp~cuda", when="~cuda")
 
@@ -219,11 +232,12 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         hostname = socket.gethostname()
         if "SYS_TYPE" in env:
             hostname = hostname.rstrip("1234567890")
-        return "{0}-{1}-{2}@{3}.cmake".format(
+        return "{0}-{1}-{2}@{3}-{4}.cmake".format(
             hostname,
             self._get_sys_type(self.spec),
             self.spec.compiler.name,
             self.spec.compiler.version,
+            self.spec.dag_hash(8),
         )
 
     def initconfig_compiler_entries(self):
@@ -302,6 +316,15 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append(cmake_cache_path("BLT_SOURCE_DIR", spec["blt"].prefix))
         if spec.satisfies("@5.0.0:"):
             entries.append(cmake_cache_path("camp_DIR", spec["camp"].prefix))
+
+        # Build options
+        entries.append("#------------------{0}".format("-" * 60))
+        entries.append("# Build Options")
+        entries.append("#------------------{0}\n".format("-" * 60))
+
+        entries.append(cmake_cache_string("CMAKE_BUILD_TYPE", spec.variants["build_type"].value))
+        entries.append(cmake_cache_option("BUILD_SHARED_LIBS", "+shared" in spec))
+
         entries.append(cmake_cache_option("{}ENABLE_NUMA".format(option_prefix), "+numa" in spec))
         entries.append(
             cmake_cache_option("{}ENABLE_OPENMP".format(option_prefix), "+openmp" in spec)
@@ -314,14 +337,12 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append(
             cmake_cache_option("UMPIRE_ENABLE_DEVICE_ALLOCATOR", "+device_alloc" in spec)
         )
-        entries.append(cmake_cache_option("BUILD_SHARED_LIBS", "+shared" in spec))
         entries.append(cmake_cache_option("ENABLE_TESTS", "tests=none" not in spec))
 
         return entries
 
     def cmake_args(self):
-        options = []
-        return options
+        return []
 
     def test(self):
         """Perform stand-alone checks on the installed package."""

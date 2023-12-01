@@ -38,8 +38,10 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("trws")
 
-    version("main", branch="main", submodules="True")
+    version("main", branch="main", submodules="False")
+    version("2023.06.0", tag="v2023.06.0", submodules=False)
     version("2022.10.1", sha256="2d12f1a46f5a6d01880fc075cfbd332e2cf296816a7c1aa12d4ee5644d386f02")
+    version("2022.10.0", sha256="3561c3ef00bbcb61fe3183c53d49b110e54910f47e7fc689ad9ccce57e55d6b8")
     version("2022.03.2", sha256="bc4aaeacfe8f2912e28f7a36fc731ab9e481bee15f2c6daf0cb208eed3f201eb")
     version("2022.03.0", sha256="e9090d5ee191ea3a8e36b47a8fe78f3ac95d51804f1d986d931e85b8f8dad721")
     version("0.3.0", sha256="129431a049ca5825443038ad5a37a86ba6d09b2618d5fe65d35f83136575afdb")
@@ -49,7 +51,7 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
 
     # TODO: figure out gtest dependency and then set this default True.
     variant("tests", default=False, description="Build tests")
-    variant("openmp", default=False, description="Build OpenMP support")
+    variant("openmp", default=False, description="Build with OpenMP support")
 
     depends_on("cub", when="+cuda")
 
@@ -64,11 +66,9 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
 
         options.append("-DBLT_SOURCE_DIR={0}".format(spec["blt"].prefix))
 
-        options.append("-DENABLE_OPENMP=" + ("On" if "+openmp" in spec else "Off"))
+        options.append(self.define_from_variant("ENABLE_CUDA", "cuda"))
         if "+cuda" in spec:
-            options.extend(
-                ["-DENABLE_CUDA=ON", "-DCUDA_TOOLKIT_ROOT_DIR=%s" % (spec["cuda"].prefix)]
-            )
+            options.append("-DCUDA_TOOLKIT_ROOT_DIR={0}".format(spec["cuda"].prefix))
 
             if not spec.satisfies("cuda_arch=none"):
                 cuda_arch = spec.variants["cuda_arch"].value
@@ -79,8 +79,9 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
         else:
             options.append("-DENABLE_CUDA=OFF")
 
+        options.append(self.define_from_variant("ENABLE_HIP", "rocm"))
         if "+rocm" in spec:
-            options.extend(["-DENABLE_HIP=ON", "-DHIP_ROOT_DIR={0}".format(spec["hip"].prefix)])
+            options.append("-DHIP_ROOT_DIR={0}".format(spec["hip"].prefix))
 
             hip_repair_options(options, spec)
 
@@ -88,9 +89,8 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
             if archs != "none":
                 arch_str = ",".join(archs)
                 options.append("-DHIP_HIPCC_FLAGS=--amdgpu-target={0}".format(arch_str))
-        else:
-            options.append("-DENABLE_HIP=OFF")
 
+        options.append(self.define_from_variant("ENABLE_OPENMP", "openmp"))
         options.append(self.define_from_variant("ENABLE_TESTS", "tests"))
 
         return options
