@@ -1,6 +1,7 @@
 stages: [ "generate", "build", "publish" ]
 
 variables:
+  SPACK_CI_ENABLE_STACKS: "/^(data-vis-sdk|build_systems)$/"
   SPACK_DISABLE_LOCAL_CONFIG: "1"
   SPACK_USER_CACHE_PATH: "${CI_PROJECT_DIR}/tmp/_user_cache/"
   # PR_MIRROR_FETCH_DOMAIN: "https://binaries-prs.spack.io"
@@ -111,9 +112,28 @@ default:
         AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
         AWS_SECRET_ACCESS_KEY: ${PROTECTED_MIRRORS_AWS_SECRET_ACCESS_KEY}
         OIDC_TOKEN_AUDIENCE: "protected_binary_mirror"
-    - if: $CI_COMMIT_REF_NAME =~ /^pr[\d]+_.*$/
+    - if: $CI_COMMIT_REF_NAME =~ /^pr[\d]+_.*$/ && "$SPACK_CI_ENABLE_STACKS" == "" || $SPACK_CI_STACK_NAME =~ $SPACK_CI_ENABLE_STACKS
       # Pipelines on PR branches rebuild only what's missing, and do extra pruning
       when: always
+      variables:
+        SPACK_PIPELINE_TYPE: "spack_pull_request"
+        # TODO: We can remove this when we drop the "deprecated" stack
+        PUSH_BUILDCACHE_DEPRECATED: "${PR_MIRROR_PUSH_DOMAIN}/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
+        SPACK_PRUNE_UNTOUCHED: "True"
+        SPACK_PRUNE_UNTOUCHED_DEPENDENT_DEPTH: "1"
+        # TODO: Change sync script to include target in branch name.  Then we could
+        # TODO: have multiple types of "PR" pipeline here.  It would be better if we could
+        # TODO: keep just this one and use a regex to capture the target branch, but so
+        # TODO: far gitlab doesn't support that.
+        PR_TARGET_REF_NAME: "develop"
+        PIPELINE_MIRROR_TEMPLATE: "multi-src-mirrors.yaml.in"
+        AWS_ACCESS_KEY_ID: ${PR_MIRRORS_AWS_ACCESS_KEY_ID}
+        AWS_SECRET_ACCESS_KEY: ${PR_MIRRORS_AWS_SECRET_ACCESS_KEY}
+        OIDC_TOKEN_AUDIENCE: "pr_binary_mirror"
+
+    - if: $CI_COMMIT_REF_NAME =~ /^pr[\d]+_.*$/
+      # Pipelines on PR branches rebuild only what's missing, and do extra pruning
+      when: manual
       variables:
         SPACK_PIPELINE_TYPE: "spack_pull_request"
         # TODO: We can remove this when we drop the "deprecated" stack
