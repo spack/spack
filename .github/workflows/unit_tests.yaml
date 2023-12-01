@@ -215,7 +215,7 @@ jobs:
         $(which spack) bootstrap disable spack-install
         $(which spack) solve zlib
         common_args=(--dist loadfile --tx '4*popen//python=./bin/spack-tmpconfig python -u ./bin/spack python' -x)
-        $(which spack) unit-test --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml "${common_args[@]}"
+        $(which spack) unit-test --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml "${common_args[@]}"
     - uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d
       with:
         flags: unittests,macos

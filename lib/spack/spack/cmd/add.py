@@ -6,7 +6,7 @@
 import llnl.util.tty as tty
 
 import spack.cmd
-import spack.cmd.common.arguments as arguments
+from spack.cmd.common import arguments
 
 description = "add a spec to an environment"
 section = "environments"

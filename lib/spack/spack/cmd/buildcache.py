@@ -21,7 +21,6 @@ from llnl.util.lang import elide_list
 
 import spack.binary_distribution as bindist
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.environment as ev
 import spack.error
@@ -40,6 +39,7 @@ import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.build_environment import determine_number_of_jobs
 from spack.cmd import display_specs
+from spack.cmd.common import arguments
 from spack.oci.image import (
     Digest,
     ImageReference,
@@ -182,13 +182,10 @@ def setup_parser(subparser: argparse.ArgumentParser):
     )
 
     # used to construct scope arguments below
-    scopes = spack.config.scopes()
-
     check.add_argument(
         "--scope",
-        choices=scopes,
-        metavar=spack.config.SCOPES_METAVAR,
-        default=spack.config.default_modify_scope(),
+        action=arguments.ConfigScope,
+        default=lambda: spack.config.default_modify_scope(),
         help="configuration scope containing mirrors to check",
     )
     check_spec_or_specfile = check.add_mutually_exclusive_group(required=True)

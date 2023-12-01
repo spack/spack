@@ -156,6 +156,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         "gfx906": "vega906",
         "gfx908": "vega908",
         "gfx90a": "vega90A",
+        "gfx942": "amd_gfx942",
         "gfx1030": "navi1030",
         "gfx1100": "navi1100",
         "gfx942": "amd_gfx942",
@@ -236,6 +237,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     # Patches
     patch("hpx_profiling_fences.patch", when="@3.5.00 +hpx")
+    patch("sycl_bhalft_test.patch", when="@4.2.00 +sycl")
 
     variant("shared", default=True, description="Build shared libraries")
 

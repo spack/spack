@@ -5,10 +5,10 @@
 from llnl.util import tty
 
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.environment as ev
 import spack.store
+from spack.cmd.common import arguments
 from spack.graph import DAGWithDependencyTypes, SimpleDAG, graph_ascii, graph_dot, static_graph_dot
 
 description = "generate graphs of package dependency relationships"
@@ -61,7 +61,7 @@ def graph(parser, args):
         args.dot = True
         env = ev.active_environment()
         if env:
-            specs = env.all_specs()
+            specs = env.concrete_roots()
         else:
             specs = spack.store.STORE.db.query()
 
