@@ -106,7 +106,7 @@ class Met(AutotoolsPackage):
             ldflags.append(nc_config("--libs", "--static", output=str).strip())
             libs.append(nc_config("--libs", "--static", output=str).strip())
 
-        zlib = spec["zlib"]
+        zlib = spec["zlib-api"]
         cppflags.append("-D__64BIT__")
         ldflags.append("-L" + zlib.prefix.lib)
         libs.append("-lz")
