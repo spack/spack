@@ -618,7 +618,12 @@ _spack_buildcache_preview() {
 }
 
 _spack_buildcache_check() {
-    SPACK_COMPREPLY="-h --help -m --mirror-url -o --output-file --scope -s --spec --spec-file"
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -m --mirror-url -o --output-file --scope -s --spec --spec-file"
+    else
+        _all_packages
+    fi
 }
 
 _spack_buildcache_download() {
