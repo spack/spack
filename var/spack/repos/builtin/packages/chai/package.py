@@ -22,6 +22,18 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
     version("develop", branch="develop", submodules=False)
     version("main", branch="main", submodules=False)
     version(
+        "2023.06.0",
+        tag="v2023.06.0",
+        commit="6fe3470ad020303530af2f3dbbfe18826bd3319b",
+        submodules=False,
+    )
+    version(
+        "2022.10.0",
+        tag="v2022.10.0",
+        commit="9510efd33b06e4443b15447eebb7dad761822654",
+        submodules=False,
+    )
+    version(
         "2022.03.0",
         tag="v2022.03.0",
         commit="f0b809de1ac194376866b3ac0f5933d4146ec09e",
@@ -71,8 +83,10 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("cmake@3.8:", type="build")
     depends_on("cmake@3.9:", type="build", when="+cuda")
-    depends_on("cmake@3.14:", when="@2022.03.0:")
+    depends_on("cmake@3.14:", type="build", when="@2022.03.0:")
 
+    depends_on("blt@0.5.3:", type="build", when="@2023.06.0:")
+    depends_on("blt@0.5.2:", type="build", when="@2022.10.0:")
     depends_on("blt@0.5.0:", type="build", when="@2022.03.0:")
     depends_on("blt@0.4.1:", type="build", when="@2.4.0:")
     depends_on("blt@0.4.0:", type="build", when="@2.3.0")
@@ -80,10 +94,12 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
     conflicts("^blt@:0.3.6", when="+rocm")
 
     depends_on("umpire")
+    depends_on("umpire@main", when="@main")
+    depends_on("umpire@2023.06.0:", when="@2023.06.0:")
+    depends_on("umpire@2022.10.0:", when="@2022.10.0:")
     depends_on("umpire@2022.03.0:", when="@2022.03.0:")
     depends_on("umpire@6.0.0", when="@2.4.0")
     depends_on("umpire@4.1.2", when="@2.2.0:2.3.0")
-    depends_on("umpire@main", when="@main")
 
     with when("+cuda"):
         depends_on("umpire+cuda")
@@ -98,13 +114,16 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
             )
 
     with when("+raja"):
-        depends_on("raja~openmp", when="~openmp")
-        depends_on("raja+openmp", when="+openmp")
+        depends_on("raja@main", when="@main")
+        depends_on("raja@2023.06.0:", when="@2023.06.0:")
+        depends_on("raja@2022.10.0:", when="@2022.10.0:")
+        depends_on("raja@2022.03.0:", when="@2022.03.0:")
         depends_on("raja@0.14.0", when="@2.4.0")
         depends_on("raja@0.13.0", when="@2.3.0")
         depends_on("raja@0.12.0", when="@2.2.0:2.2.2")
-        depends_on("raja@2022.03.0:", when="@2022.03.0:")
-        depends_on("raja@main", when="@main")
+
+        depends_on("raja~openmp", when="~openmp")
+        depends_on("raja+openmp", when="+openmp")
 
         with when("+cuda"):
             depends_on("raja+cuda")
@@ -131,11 +150,12 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
         hostname = socket.gethostname()
         if "SYS_TYPE" in env:
             hostname = hostname.rstrip("1234567890")
-        return "{0}-{1}-{2}@{3}.cmake".format(
+        return "{0}-{1}-{2}@{3}-{4}.cmake".format(
             hostname,
             self._get_sys_type(self.spec),
             self.spec.compiler.name,
             self.spec.compiler.version,
+            self.spec.dag_hash(8),
         )
 
     def initconfig_compiler_entries(self):
@@ -148,6 +168,10 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
     def initconfig_hardware_entries(self):
         spec = self.spec
         entries = super().initconfig_hardware_entries()
+
+        entries.append("#------------------{0}".format("-" * 30))
+        entries.append("# Package custom hardware settings")
+        entries.append("#------------------{0}\n".format("-" * 30))
 
         entries.append(cmake_cache_option("ENABLE_OPENMP", "+openmp" in spec))
 
