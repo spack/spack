@@ -53,6 +53,7 @@ concretize = SpackCommand("concretize")
 stage = SpackCommand("stage")
 uninstall = SpackCommand("uninstall")
 find = SpackCommand("find")
+module = SpackCommand("module")
 
 sep = os.sep
 
@@ -284,7 +285,7 @@ def test_env_modifications_error_on_activate(install_mockery, mock_fetch, monkey
 
     _, err = capfd.readouterr()
     assert "cmake-client had issues!" in err
-    assert "Warning: couldn't load runtime environment" in err
+    assert "Warning: could not load runtime environment" in err
 
 
 def test_activate_adds_transitive_run_deps_to_path(install_mockery, mock_fetch, monkeypatch):
@@ -502,12 +503,12 @@ def test_env_activate_broken_view(
     # test that Spack detects the missing package and fails gracefully
     with spack.repo.use_repositories(mock_custom_repository):
         wrong_repo = env("activate", "--sh", "test")
-        assert "Warning: couldn't load runtime environment" in wrong_repo
+        assert "Warning: could not load runtime environment" in wrong_repo
         assert "Unknown namespace: builtin.mock" in wrong_repo
 
     # test replacing repo fixes it
     normal_repo = env("activate", "--sh", "test")
-    assert "Warning: couldn't load runtime environment" not in normal_repo
+    assert "Warning: could not load runtime environment" not in normal_repo
     assert "Unknown namespace: builtin.mock" not in normal_repo
 
 
@@ -1105,13 +1106,14 @@ def test_multi_env_remove(mutable_mock_env_path, monkeypatch, answer):
         assert all(e in env("list") for e in environments)
 
 
-def test_env_loads(install_mockery, mock_fetch):
+def test_env_loads(install_mockery, mock_fetch, mock_modules_root):
     env("create", "test")
 
     with ev.read("test"):
         add("mpileaks")
         concretize()
         install("--fake")
+        module("tcl", "refresh", "-y")
 
     with ev.read("test"):
         env("loads")
@@ -2621,7 +2623,7 @@ spack:
   - matrix:
     - [mpileaks]
   packages:
-    mpileaks:
+    all:
       compiler: [gcc]
   view: true
 """
@@ -3538,7 +3540,7 @@ def test_environment_created_in_users_location(mutable_mock_env_path, tmp_path):
     assert os.path.isdir(os.path.join(env_dir, dir_name))
 
 
-def test_environment_created_from_lockfile_has_view(mock_packages, tmpdir):
+def test_environment_created_from_lockfile_has_view(mock_packages, temporary_store, tmpdir):
     """When an env is created from a lockfile, a view should be generated for it"""
     env_a = str(tmpdir.join("a"))
     env_b = str(tmpdir.join("b"))

@@ -14,6 +14,7 @@ from llnl.util.tty.color import colorize
 import spack.compilers
 import spack.config
 import spack.spec
+from spack.cmd.common import arguments
 
 description = "manage compilers"
 section = "system"
@@ -22,8 +23,6 @@ level = "long"
 
 def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="compiler_command")
-
-    scopes = spack.config.scopes()
 
     # Find
     find_parser = sp.add_parser(
@@ -47,9 +46,8 @@ def setup_parser(subparser):
     find_parser.add_argument("add_paths", nargs=argparse.REMAINDER)
     find_parser.add_argument(
         "--scope",
-        choices=scopes,
-        metavar=spack.config.SCOPES_METAVAR,
-        default=spack.config.default_modify_scope("compilers"),
+        action=arguments.ConfigScope,
+        default=lambda: spack.config.default_modify_scope("compilers"),
         help="configuration scope to modify",
     )
 
@@ -60,20 +58,15 @@ def setup_parser(subparser):
     )
     remove_parser.add_argument("compiler_spec")
     remove_parser.add_argument(
-        "--scope",
-        choices=scopes,
-        metavar=spack.config.SCOPES_METAVAR,
-        default=None,
-        help="configuration scope to modify",
+        "--scope", action=arguments.ConfigScope, default=None, help="configuration scope to modify"
     )
 
     # List
     list_parser = sp.add_parser("list", help="list available compilers")
     list_parser.add_argument(
         "--scope",
-        choices=scopes,
-        metavar=spack.config.SCOPES_METAVAR,
-        default=spack.config.default_list_scope(),
+        action=arguments.ConfigScope,
+        default=lambda: spack.config.default_list_scope(),
         help="configuration scope to read from",
     )
 
@@ -82,9 +75,8 @@ def setup_parser(subparser):
     info_parser.add_argument("compiler_spec")
     info_parser.add_argument(
         "--scope",
-        choices=scopes,
-        metavar=spack.config.SCOPES_METAVAR,
-        default=spack.config.default_list_scope(),
+        action=arguments.ConfigScope,
+        default=lambda: spack.config.default_list_scope(),
         help="configuration scope to read from",
     )
 

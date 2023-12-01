@@ -78,7 +78,7 @@ spack:
         verify_ssl: False
         dirty: False
     packages:
-        libelf:
+        all:
             compiler: [ 'gcc@4.5.3' ]
     repos:
         - /x/y/z
@@ -942,7 +942,7 @@ def test_single_file_scope(config, env_yaml):
         # from the single-file config
         assert spack.config.get("config:verify_ssl") is False
         assert spack.config.get("config:dirty") is False
-        assert spack.config.get("packages:libelf:compiler") == ["gcc@4.5.3"]
+        assert spack.config.get("packages:all:compiler") == ["gcc@4.5.3"]
 
         # from the lower config scopes
         assert spack.config.get("config:checksum") is True
@@ -965,7 +965,7 @@ spack:
     config:
         verify_ssl: False
     packages::
-        libelf:
+        all:
             compiler: [ 'gcc@4.5.3' ]
     repos:
         - /x/y/z
@@ -977,7 +977,7 @@ spack:
     with spack.config.override(scope):
         # from the single-file config
         assert spack.config.get("config:verify_ssl") is False
-        assert spack.config.get("packages:libelf:compiler") == ["gcc@4.5.3"]
+        assert spack.config.get("packages:all:compiler") == ["gcc@4.5.3"]
 
         # from the lower config scopes
         assert spack.config.get("config:checksum") is True
@@ -1239,11 +1239,11 @@ def test_user_config_path_is_default_when_env_var_is_empty(working_env):
     assert os.path.expanduser("~%s.spack" % os.sep) == spack.paths._get_user_config_path()
 
 
-def test_default_install_tree(monkeypatch):
+def test_default_install_tree(monkeypatch, default_config):
     s = spack.spec.Spec("nonexistent@x.y.z %none@a.b.c arch=foo-bar-baz")
     monkeypatch.setattr(s, "dag_hash", lambda: "abc123")
-    projection = spack.config.get("config:install_tree:projections:all", scope="defaults")
-    assert s.format(projection) == "foo-bar-baz/none-a.b.c/nonexistent-x.y.z-abc123"
+    _, _, projections = spack.store.parse_install_tree(spack.config.get("config"))
+    assert s.format(projections["all"]) == "foo-bar-baz/none-a.b.c/nonexistent-x.y.z-abc123"
 
 
 def test_local_config_can_be_disabled(working_env):

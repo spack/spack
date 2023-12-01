@@ -46,12 +46,10 @@ modules:
     tcl:
       all:
         autoload: direct
-      hide_implicits: true
 
     # Default configurations if lmod is enabled
     lmod:
       all:
         autoload: direct
-      hide_implicits: true
       hierarchy:
         - mpi

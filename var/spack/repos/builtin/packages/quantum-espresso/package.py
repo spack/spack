@@ -227,13 +227,8 @@ class QuantumEspresso(CMakePackage, Package):
     variant(
         "gipaw",
         default=False,
-        when="build_system=generic",
         description="Builds Gauge-Including Projector Augmented-Waves executable",
     )
-    with when("+gipaw"):
-        conflicts(
-            "@:6.3", msg="gipaw standard support available for QE 6.3 or grater version only"
-        )
 
     # Dependencies not affected by variants
     depends_on("blas")
@@ -241,6 +236,11 @@ class QuantumEspresso(CMakePackage, Package):
     depends_on("fftw-api@3")
     depends_on("git@2.13:", type="build")
     depends_on("m4", type="build")
+
+    # If the Intel suite is used for Lapack, it must be used for fftw and vice-versa
+    for _intel_pkg in INTEL_MATH_LIBRARIES:
+        requires(f"^[virtuals=fftw-api] {_intel_pkg}", when=f"^[virtuals=lapack]   {_intel_pkg}")
+        requires(f"^[virtuals=lapack]   {_intel_pkg}", when=f"^[virtuals=fftw-api] {_intel_pkg}")
 
     # CONFLICTS SECTION
     # Omitted for now due to concretizer bug
@@ -254,6 +254,15 @@ class QuantumEspresso(CMakePackage, Package):
     # THIRD-PARTY PATCHES
     # NOTE: *SOME* third-party patches will require deactivation of
     # upstream patches using `~patch` variant
+
+    # gipaw
+    conflicts(
+        "@:6.2",
+        when="+gipaw",
+        msg="gipaw standard support available for QE 6.3 or grater version only",
+    )
+
+    conflicts("+gipaw build_system=cmake", when="@:7.1")
 
     # Only CMake will work for @6.8: %aocc
     conflicts(
@@ -395,6 +404,9 @@ class QuantumEspresso(CMakePackage, Package):
     # extlibs_makefile updated to work with fujitsu compilers
     patch("fj-fox.patch", when="+patch %fj")
 
+    # gipaw.x will only be installed with cmake if the qe-gipaw version is >= 5c4a4ce.
+    patch("gipaw-eccee44.patch", when="@7.2+gipaw build_system=cmake")
+
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
@@ -410,6 +422,10 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define_from_variant("QE_ENABLE_PROFILE_NVTX", "nvtx"),
             self.define_from_variant("QE_ENABLE_MPI_GPU_AWARE", "mpigpu"),
         ]
+
+        if "+gipaw" in spec:
+            cmake_args.append(self.define("QE_ENABLE_PLUGINS", "gipaw"))
+            cmake_args.append(self.define("QE_ENABLE_FOX", True))
 
         if "+cuda" in self.spec:
             cmake_args.append(self.define("QE_ENABLE_OPENACC", True))
@@ -489,7 +505,8 @@ class GenericBuilder(spack.build_systems.generic.GenericBuilder):
         # you need to pass it in the FFTW_INCLUDE and FFT_LIBS directory.
         # QE supports an internal FFTW2, but only an external FFTW3 interface.
 
-        if "^mkl" in spec:
+        is_using_intel_libraries = spec["lapack"].name in INTEL_MATH_LIBRARIES
+        if is_using_intel_libraries:
             # A seperate FFT library is not needed when linking against MKL
             options.append("FFTW_INCLUDE={0}".format(join_path(env["MKLROOT"], "include/fftw")))
         if "^fftw@3:" in spec:
@@ -531,11 +548,11 @@ class GenericBuilder(spack.build_systems.generic.GenericBuilder):
         if spec.satisfies("@:6.4"):  # set even if MKL is selected
             options.append("BLAS_LIBS={0}".format(lapack_blas.ld_flags))
         else:  # behavior changed at 6.5 and later
-            if not spec.satisfies("^mkl"):
+            if not is_using_intel_libraries:
                 options.append("BLAS_LIBS={0}".format(lapack_blas.ld_flags))
 
         if "+scalapack" in spec:
-            if "^mkl" in spec:
+            if is_using_intel_libraries:
                 if "^openmpi" in spec:
                     scalapack_option = "yes"
                 else:  # mpich, intel-mpi

@@ -124,6 +124,33 @@ class DeptypeAction(argparse.Action):
         setattr(namespace, self.dest, deptype)
 
 
+class ConfigScope(argparse.Action):
+    """Pick the currently configured config scopes."""
+
+    def __init__(self, *args, **kwargs) -> None:
+        kwargs.setdefault("metavar", spack.config.SCOPES_METAVAR)
+        super().__init__(*args, **kwargs)
+
+    @property
+    def default(self):
+        return self._default() if callable(self._default) else self._default
+
+    @default.setter
+    def default(self, value):
+        self._default = value
+
+    @property
+    def choices(self):
+        return spack.config.scopes().keys()
+
+    @choices.setter
+    def choices(self, value):
+        pass
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, values)
+
+
 def _cdash_reporter(namespace):
     """Helper function to create a CDash reporter. This function gets an early reference to the
     argparse namespace under construction, so it can later use it to create the object.

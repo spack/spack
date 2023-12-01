@@ -371,6 +371,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a containerize -d '
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a containerise -d 'creates recipes to build images for different container runtimes'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a create -d 'create a new package file'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a debug -d 'debugging commands for troubleshooting Spack'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a deconcretize -d 'remove specs from the concretized lockfile of an environment'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a dependencies -d 'show dependencies of a package'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a dependents -d 'show packages that depend on another'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a deprecate -d 'replace one package with another via symlinks'
@@ -1260,7 +1261,7 @@ complete -c spack -n '__fish_spack_using_command create' -l keep-stage -f -a kee
 complete -c spack -n '__fish_spack_using_command create' -l keep-stage -d 'don\'t clean up staging area when command completes'
 complete -c spack -n '__fish_spack_using_command create' -s n -l name -r -f -a name
 complete -c spack -n '__fish_spack_using_command create' -s n -l name -r -d 'name of the package to create'
-complete -c spack -n '__fish_spack_using_command create' -s t -l template -r -f -a 'autoreconf autotools bazel bundle cmake generic intel lua makefile maven meson octave perlbuild perlmake python qmake r racket ruby scons sip waf'
+complete -c spack -n '__fish_spack_using_command create' -s t -l template -r -f -a 'autoreconf autotools bazel bundle cargo cmake generic go intel lua makefile maven meson octave perlbuild perlmake python qmake r racket ruby scons sip waf'
 complete -c spack -n '__fish_spack_using_command create' -s t -l template -r -d 'build system template to use'
 complete -c spack -n '__fish_spack_using_command create' -s r -l repo -r -f -a repo
 complete -c spack -n '__fish_spack_using_command create' -s r -l repo -r -d 'path to a repository where the package should be created'
@@ -1289,6 +1290,18 @@ complete -c spack -n '__fish_spack_using_command debug create-db-tarball' -s h -
 set -g __fish_spack_optspecs_spack_debug_report h/help
 complete -c spack -n '__fish_spack_using_command debug report' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command debug report' -s h -l help -d 'show this help message and exit'
+
+# spack deconcretize
+set -g __fish_spack_optspecs_spack_deconcretize h/help root y/yes-to-all a/all
+complete -c spack -n '__fish_spack_using_command_pos_remainder 0 deconcretize' -f -k -a '(__fish_spack_specs)'
+complete -c spack -n '__fish_spack_using_command deconcretize' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command deconcretize' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command deconcretize' -l root -f -a root
+complete -c spack -n '__fish_spack_using_command deconcretize' -l root -d 'deconcretize only specific environment roots'
+complete -c spack -n '__fish_spack_using_command deconcretize' -s y -l yes-to-all -f -a yes_to_all
+complete -c spack -n '__fish_spack_using_command deconcretize' -s y -l yes-to-all -d 'assume "yes" is the answer to every confirmation request'
+complete -c spack -n '__fish_spack_using_command deconcretize' -s a -l all -f -a all
+complete -c spack -n '__fish_spack_using_command deconcretize' -s a -l all -d 'deconcretize ALL specs that match each supplied spec'
 
 # spack dependencies
 set -g __fish_spack_optspecs_spack_dependencies h/help i/installed t/transitive deptype= V/no-expand-virtuals
@@ -1855,7 +1868,7 @@ complete -c spack -n '__fish_spack_using_command help' -l spec -f -a guide
 complete -c spack -n '__fish_spack_using_command help' -l spec -d 'help on the package specification syntax'
 
 # spack info
-set -g __fish_spack_optspecs_spack_info h/help a/all detectable maintainers no-dependencies no-variants no-versions phases tags tests virtuals
+set -g __fish_spack_optspecs_spack_info h/help a/all detectable maintainers no-dependencies no-variants no-versions phases tags tests virtuals variants-by-name
 complete -c spack -n '__fish_spack_using_command_pos 0 info' -f -a '(__fish_spack_packages)'
 complete -c spack -n '__fish_spack_using_command info' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command info' -s h -l help -d 'show this help message and exit'
@@ -1879,6 +1892,8 @@ complete -c spack -n '__fish_spack_using_command info' -l tests -f -a tests
 complete -c spack -n '__fish_spack_using_command info' -l tests -d 'output relevant build-time and stand-alone tests'
 complete -c spack -n '__fish_spack_using_command info' -l virtuals -f -a virtuals
 complete -c spack -n '__fish_spack_using_command info' -l virtuals -d 'output virtual packages'
+complete -c spack -n '__fish_spack_using_command info' -l variants-by-name -f -a variants_by_name
+complete -c spack -n '__fish_spack_using_command info' -l variants-by-name -d 'list variants in strict name order; don\'t group by condition'
 
 # spack install
 set -g __fish_spack_optspecs_spack_install h/help only= u/until= j/jobs= overwrite fail-fast keep-prefix keep-stage dont-restage use-cache no-cache cache-only use-buildcache= include-build-deps no-check-signature show-log-on-error source n/no-checksum deprecated v/verbose fake only-concrete add no-add f/file= clean dirty test= log-format= log-file= help-cdash cdash-upload-url= cdash-build= cdash-site= cdash-track= cdash-buildstamp= y/yes-to-all U/fresh reuse reuse-deps

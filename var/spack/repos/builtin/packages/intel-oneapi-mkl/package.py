@@ -26,6 +26,12 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     )
 
     version(
+        "2024.0.0",
+        url="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/86d6a4c1-c998-4c6b-9fff-ca004e9f7455/l_onemkl_p_2024.0.0.49673_offline.sh",
+        sha256="2a3be7d01d75ba8cc3059f9a32ae72e5bfc93e68e72e94e79d7fa6ea2f7814de",
+        expand=False,
+    )
+    version(
         "2023.2.0",
         url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/adb8a02c-4ee7-4882-97d6-a524150da358/l_onemkl_p_2023.2.0.49497_offline.sh",
         sha256="4a0d93da85a94d92e0ad35dc0fc3b3ab7f040bd55ad374c4d5ec81a57a2b872b",
@@ -126,16 +132,15 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     provides("fftw-api@3")
     provides("scalapack", when="+cluster")
     provides("mkl")
-    provides("lapack")
-    provides("blas")
+    provides("lapack", "blas")
+
+    @property
+    def v2_layout_versions(self):
+        return "@2024:"
 
     @property
     def component_dir(self):
         return "mkl"
-
-    @property
-    def headers(self):
-        return find_headers("*", self.component_prefix.include)
 
     @property
     def libs(self):
@@ -148,21 +153,6 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
             return libs + system_libs
         else:
             return IntelOneApiStaticLibraryList(libs, system_libs)
-
-    def setup_run_environment(self, env):
-        super().setup_run_environment(env)
-
-        # Support RPATH injection to the library directories when the '-mkl' or '-qmkl'
-        # flag of the Intel compilers are used outside the Spack build environment. We
-        # should not try to take care of other compilers because the users have to
-        # provide the linker flags anyway and are expected to take care of the RPATHs
-        # flags too. We prefer the __INTEL_POST_CFLAGS/__INTEL_POST_FFLAGS flags over
-        # the PRE ones so that any other RPATHs provided by the users on the command
-        # line come before and take precedence over the ones we inject here.
-        for d in self._find_mkl_libs(self.spec.satisfies("+shared")).directories:
-            flag = "-Wl,-rpath,{0}".format(d)
-            env.append_path("__INTEL_POST_CFLAGS", flag, separator=" ")
-            env.append_path("__INTEL_POST_FFLAGS", flag, separator=" ")
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         # Only if environment modifications are desired (default is +envmods)
@@ -214,7 +204,9 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
                     )
                 )
 
-        lib_path = self.component_prefix.lib.intel64
+        lib_path = (
+            self.component_prefix.lib if self.v2_layout else self.component_prefix.lib.intel64
+        )
         lib_path = lib_path if isdir(lib_path) else dirname(lib_path)
 
         resolved_libs = find_libraries(libs, lib_path, shared=shared)
@@ -235,5 +227,11 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
 
     @run_after("install")
     def fixup_prefix(self):
+        # The motivation was to provide a more standard layout so mkl
+        # would be more likely to work as a virtual dependence. I am
+        # not sure if this mechanism is useful and it became a problem
+        # for mpi so disabling for v2_layout.
+        if self.v2_layout:
+            return
         self.symlink_dir(self.component_prefix.include, self.prefix.include)
         self.symlink_dir(self.component_prefix.lib, self.prefix.lib)
