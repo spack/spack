@@ -19,5 +19,5 @@ class PySphinxcontribModerncmakedomain(PythonPackage):
     version("3.25.0", sha256="4138e4d3f60e5c4b3982caa10033693bfc1009cdd851766754d5990d9d1e992a")
 
     depends_on("py-hatchling", type="build")
-    depends_on("py-sphinx", type=("build", "run"))
     depends_on("py-sphinx@2:", when="@3.27:", type=("build", "run"))
+    depends_on("py-sphinx", type=("build", "run"))
