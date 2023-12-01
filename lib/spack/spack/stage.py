@@ -906,7 +906,10 @@ class DevelopStage(Stage):
 
     def destroy(self):
         # Destroy all files, but do not follow symlinks
-        shutil.rmtree(self.path)
+        try:
+            shutil.rmtree(self.path)
+        except FileNotFoundError:
+            pass
         self.created = False
 
     def restage(self):
