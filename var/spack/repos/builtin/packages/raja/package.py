@@ -12,7 +12,7 @@ from spack.pkg.builtin.camp import hip_repair_cache
 class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     """RAJA Parallel Framework."""
 
-    homepage = "https://software.llnl.gov/RAJA/"
+    homepage = "https://github.com/LLNL/RAJA"
     git = "https://github.com/LLNL/RAJA.git"
     tags = ["radiuss", "e4s"]
 
@@ -20,6 +20,24 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     version("develop", branch="develop", submodules=False)
     version("main", branch="main", submodules=False)
+    version(
+        "2023.06.1",
+        tag="v2023.06.1",
+        commit="9b5f61edf3aa1e6fdbc9a4b30828c81504639963",
+        submodules=False,
+    )
+    version(
+        "2023.06.0",
+        tag="v2023.06.0",
+        commit="e330b2560747d5417cd7bd265fab3fb91d32ecbd",
+        submodules=False,
+    )
+    version(
+        "2022.10.5",
+        tag="v2022.10.5",
+        commit="3774f51339459bbbdb77055aa23f82919b6335b6",
+        submodules=False,
+    )
     version(
         "2022.10.4",
         tag="v2022.10.4",
@@ -122,22 +140,26 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant("tests", default=False, description="Build tests")
 
     depends_on("blt", type="build")
+    depends_on("blt@0.5.3:", type="build", when="@2023.06.0:")
+    depends_on("blt@0.5.2:", type="build", when="@2022.10.0:")
     depends_on("blt@0.5.0:", type="build", when="@0.14.1:")
     depends_on("blt@0.4.1", type="build", when="@0.14.0")
     depends_on("blt@0.4.0:", type="build", when="@0.13.0")
     depends_on("blt@0.3.6:", type="build", when="@:0.12.0")
     conflicts("^blt@:0.3.6", when="+rocm")
 
-    depends_on("camp@0.2.2:0.2.3", when="@0.14.0")
-    depends_on("camp@0.1.0", when="@0.10.0:0.13.0")
-    depends_on("camp@2022.03.2:2022.03", when="@2022.03.0:2022.03")
-    depends_on("camp@2022.10:", when="@2022.10:")
-    depends_on("camp@main", when="@main")
-    depends_on("camp@main", when="@develop")
-    depends_on("camp+openmp", when="+openmp")
+    depends_on("camp@main", type="build", when="@main")
+    depends_on("camp@main", type="build", when="@develop")
+    depends_on("camp@2023.06.0:", type="build", when="@2023.06.0:")
+    depends_on("camp@2022.10.1:", type="build", when="@2022.10.3:")
+    depends_on("camp@2022.10.0:", type="build", when="@2022.10.0:")
+    depends_on("camp@2022.03.2:2022.03", type="build", when="@2022.03.0:2022.03")
+    depends_on("camp@0.2.2:0.2.3", type="build", when="@0.14.0")
+    depends_on("camp@0.1.0", type="build", when="@0.10.0:0.13.0")
+    depends_on("camp+openmp", type="build", when="+openmp")
 
-    depends_on("cmake@:3.20", when="@:2022.03+rocm", type="build")
     depends_on("cmake@3.23:", when="@2022.10:+rocm", type="build")
+    depends_on("cmake@:3.20", when="@:2022.03+rocm", type="build")
     depends_on("cmake@3.14:", when="@2022.03.0:", type="build")
 
     depends_on("llvm-openmp", when="+openmp %apple-clang")
@@ -172,11 +194,12 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         hostname = socket.gethostname()
         if "SYS_TYPE" in env:
             hostname = hostname.rstrip("1234567890")
-        return "{0}-{1}-{2}@{3}.cmake".format(
+        return "{0}-{1}-{2}@{3}-{4}.cmake".format(
             hostname,
             self._get_sys_type(self.spec),
             self.spec.compiler.name,
             self.spec.compiler.version,
+            self.spec.dag_hash(8),
         )
 
     def initconfig_compiler_entries(self):
