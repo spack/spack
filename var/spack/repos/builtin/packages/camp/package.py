@@ -39,7 +39,12 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
     maintainers("trws")
 
     version("main", branch="main", submodules="False")
-    version("2023.06.0", tag="v2023.06.0", submodules=False)
+    version(
+        "2023.06.0",
+        tag="v2023.06.0",
+        commit="ac34c25b722a06b138bc045d38bfa5e8fa3ec9c5",
+        submodules=False,
+    )
     version("2022.10.1", sha256="2d12f1a46f5a6d01880fc075cfbd332e2cf296816a7c1aa12d4ee5644d386f02")
     version("2022.10.0", sha256="3561c3ef00bbcb61fe3183c53d49b110e54910f47e7fc689ad9ccce57e55d6b8")
     version("2022.03.2", sha256="bc4aaeacfe8f2912e28f7a36fc731ab9e481bee15f2c6daf0cb208eed3f201eb")
