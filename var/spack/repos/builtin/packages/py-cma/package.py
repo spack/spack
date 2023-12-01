@@ -6,24 +6,23 @@
 from spack.package import *
 
 
-class PyPycma(PythonPackage):
+class PyCma(PythonPackage):
     """
     Python implementation of CMA-ES Covariance Matrix Adaptation Evolution Str
     ategy for non-linear numerical optimization in Python
     """
 
     homepage = "https://github.com/CMA-ES/pycma"
-
-    url = "https://github.com/CMA-ES/pycma/archive/refs/tags/r3.3.0.tar.gz"
+    pypi = "cma/cma-3.3.0.tar.gz"
 
     maintainers("LydDeb")
 
-    version("3.3.0", sha256="2a061296bfca4eb979ed471e0c5acf40fc69345c13d4522ac6ed62a50d864bcf")
+    version("3.3.0", sha256="b748b8e03f4e7ae816157d7b9bb2fc6b1fb2fee1d5fd3399329b646bb75861ec")
 
-    variant("plotting", default=True, description="Build with matplotlib support.")
+    variant("plotting", default=False, description="Build with matplotlib support.")
     variant(
         "constrained_solution_tracking",
-        default=True,
+        default=False,
         description="Build with moarchiving support.",
     )
 
