@@ -67,7 +67,6 @@ class PyPyomo(PythonPackage):
     depends_on("py-pyutilib@6.0.0", when="@5", type=("build", "run"))
     depends_on("py-six@1.4:", when="@5", type=("build", "run"))
     depends_on("py-appdirs", when="@5.6:5.7.0", type=("build", "run"))
-    depends_on("py-enum34", when="@5.7", type=("build", "run"))
 
     # when cython is requested
     depends_on("py-cython", when="+cython", type="build")
