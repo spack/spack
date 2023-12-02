@@ -700,6 +700,17 @@ any_run_parent(node(ID, Child)) :-
   Type == "run",
   attr("node", node(ID, Child)).
 
+%When first writing this, I wanted to deactivate requirements
+%based on whether the package was part of a unification set
+%but this seems (a) too broad and (b) unnecessary (regardless
+%of what unification set it resides in, I just want to apply
+%it to build-only dependencies)
+
+%Note there may be only one unification set.
+
+%Problem: what if we have a link dependency of a build-only
+%dependency? We'd have to propagate that notion to dependencies
+
 %deactivate_requirements(node(ID, Package), X) :-
 %  requirement_group(Package, X),
 %  root_only(Package, X),
