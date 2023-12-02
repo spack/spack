@@ -132,10 +132,8 @@ class Nwchem(Package):
             args.extend([f"LIBXC_INCLUDE={0}".format(spec["libxc"].prefix.include)])
 
         if spec.satisfies("+elpa"):
-            elpa=spec["elpa"]
-            args.extend(
-                [f"ELPA={elpa.libs.ld_flags} -I{elpa.prefix.include}"]
-            )
+            elpa = spec["elpa"]
+            args.extend([f"ELPA={elpa.libs.ld_flags} -I{elpa.prefix.include}"])
             if use_32_bit_lin_alg:
                 args.extend(["ELPA_SIZE=4"])
             else:
