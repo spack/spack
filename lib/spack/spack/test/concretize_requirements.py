@@ -185,6 +185,8 @@ def fake_installs(monkeypatch, tmpdir):
         spack.build_systems.generic.Package, "_make_stage", MakeStage(universal_unused_stage)
     )
 
+from spack.main import SpackCommand
+solve = SpackCommand("solve")
 
 def test_selective_requirements(concretize_scope, test_repo):
     conf_str = """\
@@ -196,7 +198,11 @@ packages:
       applies_for_externals: false
 """
     update_packages_config(conf_str)
-    result = Spec("tree1-top").concretized()
+
+    #asp = solve("--show=asp", "tree1-top")
+    #if "not_externals" not in asp or "root_only" not in asp:
+    #    import pdb; pdb.set_trace()
+    result = Spec("tree1-top ^tree1-right@1.1").concretized()
 
     assert result["tree1-right"].satisfies("@1.1")
     assert result["tree1-left"].satisfies("@1.0")

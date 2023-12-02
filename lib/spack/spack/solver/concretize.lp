@@ -668,13 +668,82 @@ package_in_dag(Node) :-  attr("virtual_node", Node).
 activate_requirement(node(ID, Package), X) :-
   package_in_dag(node(ID, Package)),
   requirement_group(Package, X),
-  not requirement_conditional(Package, X, _).
+  not requirement_conditional(Package, X, _),
+  not deactivate_requirements(node(ID, Package), X).
 
 activate_requirement(node(ID, Package), X) :-
   package_in_dag(node(ID, Package)),
   requirement_group(Package, X),
   condition_holds(Y, node(ID, Package)),
-  requirement_conditional(Package, X, Y).
+  requirement_conditional(Package, X, Y),
+  not deactivate_requirements(node(ID, Package), X).
+
+deactivate_requirements(node(ID, Package), X) :-
+  requirement_group(Package, X),
+  not_externals(X),
+  external(node(ID, Package)).
+
+%fails: somehow it is activated
+%:- activate_requirement(node(ID, "tree1-right"), X).
+
+%fails: how is the requirement activated if all these are true?
+%:- package_in_dag(node(ID, Package)),
+%  requirement_group(Package, X),
+%  not requirement_conditional(Package, X, _),
+%  deactivate_requirements(node(ID, Package), X).
+
+%fails
+%:- package_in_dag(node(ID, Package)),
+%  requirement_group(Package, X),
+%  deactivate_requirements(node(ID, Package), X).
+
+%fails
+%:- deactivate_requirements(node(ID, "tree1-right"), X).
+
+deactivate_requirements(node(ID, "tree1-right"), X) :-
+  %node(ID, "tree1-right"),
+  attr("node", node(ID, "tree1-right")),
+  requirement_group("tree1-right", X).
+
+%fails
+%:- attr("node", node(ID, "tree1-right")),
+%   requirement_group("tree1-right", X).
+%fails
+%:- attr("node", node(ID, "tree1-right")).
+%fails
+%:- requirement_group("tree1-right", X).
+
+deactivate_requirements(node(ID, Package), X) :-
+  requirement_group(Package, X),
+  root_only(X),
+  not any_link_parent(node(ID, Package)),
+  not any_run_parent(node(ID, Package)),
+  node(ID, Package).
+
+any_link_parent(node(ID, Child)) :- 
+  attr("depends_on", ParentNode, node(X, Child), Type),
+  Type == "link",
+  node(ID, Child).
+
+any_run_parent(node(ID, Child)) :- 
+  attr("depends_on", ParentNode, node(X, Child), Type),
+  Type == "run",
+  node(ID, Child).
+
+deactivate_requirements(node(ID, Package), X) :-
+  requirement_group(Package, X),
+  root_only(X),
+  unification_set("generic_build", node(ID, Package)),
+  node(ID, Package).
+
+deactivate_requirements(node(ID, Package), X) :-
+  requirement_group(Package, X),
+  root_only(X),
+  unification_set("build", node(ID, Package)),
+  node(ID, Package).
+
+#defined root_only/1.
+#defined not_externals/1.
 
 requirement_group_satisfied(node(ID, Package), X) :-
   1 { condition_holds(Y, node(ID, Package)) : requirement_group_member(Y, Package, X) } 1,

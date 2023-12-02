@@ -825,7 +825,8 @@ class ErrorHandler:
 
 #: Data class to collect information on a requirement
 RequirementRule = collections.namedtuple(
-    "RequirementRule", ["pkg_name", "policy", "requirements", "condition", "kind", "message"]
+    "RequirementRule", ["pkg_name", "policy", "requirements", "condition", "kind", "message",
+                        "not_externals", "root_only"]
 )
 
 
@@ -1274,6 +1275,8 @@ class SpackSolverSetup:
                         kind=RequirementKind.PACKAGE,
                         condition=when_spec,
                         message=message,
+                        root_only=False,
+                        not_externals=False,
                     )
                 )
         return rules
@@ -1321,12 +1324,17 @@ class SpackSolverSetup:
                 if not constraints:
                     continue
 
+                not_externals = not requirement.get("applies_for_externals", True)
+                root_only = requirement.get("root_only", False)
+
                 rules.append(
                     RequirementRule(
                         pkg_name=pkg_name,
                         policy=policy,
                         requirements=constraints,
                         kind=kind,
+                        not_externals=not_externals,
+                        root_only=root_only,
                         message=requirement.get("message"),
                         condition=requirement.get("when"),
                     )
@@ -1730,6 +1738,13 @@ class SpackSolverSetup:
             if rule.message:
                 self.gen.fact(fn.requirement_message(pkg_name, requirement_grp_id, rule.message))
             self.gen.newline()
+
+            #if pkg_name == "tree1-right":
+            #    import pdb; pdb.set_trace()
+            if rule.not_externals:
+                self.gen.fact(fn.not_externals(pkg_name, requirement_grp_id))
+            if rule.root_only:
+                self.gen.fact(fn.root_only(pkg_name, requirement_grp_id))
 
             for spec_str in requirement_grp:
                 spec = spack.spec.Spec(spec_str)
