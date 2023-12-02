@@ -78,7 +78,7 @@ class Nwchem(Package):
                 f"FC={os.path.basename(spack_fc)}",
                 "USE_MPI=y",
                 "USE_MPIF=y",
-                f"PYTHONVERSION={spec["python"].version.up_to(2)}",
+                "PYTHONVERSION={}".format(spec["python"].version.up_to(2)),
                 f"BLASOPT={(lapack + blas).ld_flags}",
                 f"LAPACK_LIB={lapack.ld_flags}",
                 f"SCALAPACK_LIB={scalapack.ld_flags}",
