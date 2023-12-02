@@ -35,7 +35,6 @@ class Nwchem(Package):
     variant(
         "elpa", default=False, description="Enable optimised diagonalisation routines from ELPA"
     )
-    variant("xtb", default=False, description="xtb supporting")
 
     # This patch is for the modification of the build system (e.g. compiler flags) and
     # Fortran syntax to enable the compilation with Fujitsu compilers. The modification
@@ -57,7 +56,7 @@ class Nwchem(Package):
     depends_on("lapack")
     depends_on("mpi")
     depends_on("scalapack")
-    depends_on("fftw-api")
+    depends_on("fftw-api", when="+fftw3")
     depends_on("libxc", when="+libxc")
     depends_on("elpa", when="+elpa")
     depends_on("python@3:3.9", type=("build", "link", "run"), when="@:7.0.2")
@@ -72,22 +71,22 @@ class Nwchem(Package):
         args = []
         args.extend(
             [
-                "NWCHEM_TOP=%s" % self.stage.source_path,
+                f"NWCHEM_TOP={self.stage.source_path}",
                 # NWCHEM is picky about FC and CC. They should NOT be full path.
                 # see https://nwchemgit.github.io/Special_AWCforum/sp/id7524
-                "CC=%s" % os.path.basename(spack_cc),
-                "FC=%s" % os.path.basename(spack_fc),
+                f"CC={os.path.basename(spack_cc)}",
+                f"FC={os.path.basename(spack_fc)}",
                 "USE_MPI=y",
                 "USE_MPIF=y",
-                "PYTHONVERSION=%s" % spec["python"].version.up_to(2),
-                "BLASOPT=%s" % ((lapack + blas).ld_flags),
-                "LAPACK_LIB=%s" % lapack.ld_flags,
-                "SCALAPACK_LIB=%s" % scalapack.ld_flags,
+                f"PYTHONVERSION={spec["python"].version.up_to(2)}",
+                f"BLASOPT={(lapack + blas).ld_flags}",
+                f"LAPACK_LIB={lapack.ld_flags}",
+                f"SCALAPACK_LIB={scalapack.ld_flags}",
                 "USE_NOIO=Y",  # skip I/O algorithms
                 "MRCC_METHODS=y",  # TCE extra module
                 "IPCCSD=y",  # TCE extra module
                 "EACCSD=y",  # TCE extra module
-                "CCSDTQ=TRUE",
+                "CCSDTQ=y",  # TCE extra module
                 "V=1",  # verbose build
             ]
         )
@@ -115,26 +114,26 @@ class Nwchem(Package):
         else:
             target = "LINUX64"
 
-        args.extend(["NWCHEM_TARGET=%s" % target])
+        args.extend([f"NWCHEM_TARGET={target}"])
 
-        if "+openmp" in spec:
+        if spec.satisfies("+openmp"):
             args.extend(["USE_OPENMP=y"])
 
-        if "+mpipr" in spec:
+        if spec.satisfies("+mpipr"):
             args.extend(["ARMCI_NETWORK=MPI-PR"])
 
-        if "+fftw3" in spec:
+        if spec.satisfies("+fftw3"):
             args.extend(["USE_FFTW3=y"])
-            args.extend(["LIBFFTW3=%s" % fftw.ld_flags])
-            args.extend(["FFTW3_INCLUDE={0}".format(spec["fftw-api"].prefix.include)])
+            args.extend([f"LIBFFTW3={fftw.ld_flags}"])
+            args.extend([f"FFTW3_INCLUDE={spec["fftw-api"].prefix.include}"])
 
-        if "+libxc" in spec:
-            args.extend(["LIBXC_LIB=%s" % spec["libxc"].libs.ld_flags])
-            args.extend(["LIBXC_INCLUDE=%s" % spec["libxc"].prefix.include])
+        if spec.satisfies("+libxc"):
+            args.extend([f"LIBXC_LIB={spec["libxc"].libs.ld_flags}"])
+            args.extend([f"LIBXC_INCLUDE={spec["libxc"].prefix.include}"])
 
-        if "+elpa" in spec:
+        if spec.satisfies("+elpa"):
             args.extend(
-                ["ELPA=%s" % spec["elpa"].libs.ld_flags + " -I" + spec["elpa"].prefix.include]
+                [f"ELPA={spec["elpa"].libs.ld_flags} -I{spec["elpa"].prefix.include}"]
             )
             if use_32_bit_lin_alg:
                 args.extend(["ELPA_SIZE=4"])
