@@ -125,15 +125,16 @@ class Nwchem(Package):
         if spec.satisfies("+fftw3"):
             args.extend(["USE_FFTW3=y"])
             args.extend([f"LIBFFTW3={fftw.ld_flags}"])
-            args.extend([f"FFTW3_INCLUDE={spec["fftw-api"].prefix.include}"])
+            args.extend(["FFTW3_INCLUDE={0}".format(spec["fftw-api"].prefix.include)])
 
         if spec.satisfies("+libxc"):
-            args.extend([f"LIBXC_LIB={spec["libxc"].libs.ld_flags}"])
-            args.extend([f"LIBXC_INCLUDE={spec["libxc"].prefix.include}"])
+            args.extend([f"LIBXC_LIB={0}".format(spec["libxc"].libs.ld_flags)])
+            args.extend([f"LIBXC_INCLUDE={0}".format(spec["libxc"].prefix.include)])
 
         if spec.satisfies("+elpa"):
+            elpa=spec["elpa"]
             args.extend(
-                [f"ELPA={spec["elpa"].libs.ld_flags} -I{spec["elpa"].prefix.include}"]
+                [f"ELPA={elpa.libs.ld_flags} -I{elpa.prefix.include}"]
             )
             if use_32_bit_lin_alg:
                 args.extend(["ELPA_SIZE=4"])
