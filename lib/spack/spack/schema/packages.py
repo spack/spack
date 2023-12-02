@@ -41,6 +41,8 @@ requirements = {
                             "spec": {"type": "string"},
                             "message": {"type": "string"},
                             "when": {"type": "string"},
+                            "root_only": {"type": "boolean"},
+                            "applies_for_externals": {"type": "boolean"},
                         },
                     },
                     {"type": "string"},

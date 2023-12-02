@@ -91,6 +91,56 @@ class U(Package):
 )
 
 
+_tree1_top = (
+    "tree1-top",
+    """\
+class Tree1Top(Package):
+    version('1.1')
+    version('1.0')
+
+    depends_on("tree1-left")
+    depends_on("tree1-right", type="build")
+""",
+)
+
+
+_tree1_left = (
+    "tree1-left",
+    """\
+class Tree1Left(Package):
+    version('1.1')
+    version('1.0')
+
+    depends_on("tree1-bottom")
+""",
+)
+
+
+_tree1_right = (
+    "tree1-right",
+    """\
+class Tree1Right(Package):
+    version('1.1')
+    version('1.0')
+
+    depends_on("tree1-bottom")
+""",
+)
+
+
+_tree1_bottom = (
+    "tree1-bottom",
+    """\
+class Tree1Bottom(Package):
+    version('1.1')
+    version('1.0')
+""",
+)
+
+
+_tree1_packages = [_tree1_top, _tree1_left, _tree1_right, _tree1_bottom]
+
+
 @pytest.fixture
 def create_test_repo(tmpdir, mutable_config):
     repo_path = str(tmpdir)
@@ -104,7 +154,7 @@ repo:
         )
 
     packages_dir = tmpdir.join("packages")
-    for pkg_name, pkg_str in [_pkgx, _pkgy, _pkgv, _pkgt, _pkgu]:
+    for pkg_name, pkg_str in [_pkgx, _pkgy, _pkgv, _pkgt, _pkgu] + _tree1_packages:
         pkg_dir = packages_dir.ensure(pkg_name, dir=True)
         pkg_file = pkg_dir.join("package.py")
         with open(str(pkg_file), "w") as f:
@@ -134,6 +184,23 @@ def fake_installs(monkeypatch, tmpdir):
     monkeypatch.setattr(
         spack.build_systems.generic.Package, "_make_stage", MakeStage(universal_unused_stage)
     )
+
+
+def test_selective_requirements(concretize_scope, test_repo):
+    conf_str = """\
+packages:
+  all:
+    require:
+    - spec: "@1.0"
+      root_only: true
+      applies_for_externals: false
+"""
+    update_packages_config(conf_str)
+    result = Spec("tree1-top").concretized()
+
+    assert result["tree1-right"].satisfies("@1.1")
+    assert result["tree1-left"].satisfies("@1.0")
+    assert result["tree1-left"]["tree1-bottom"].satisfies("@1.0")
 
 
 def test_one_package_multiple_reqs(concretize_scope, test_repo):
