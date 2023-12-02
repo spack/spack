@@ -825,8 +825,17 @@ class ErrorHandler:
 
 #: Data class to collect information on a requirement
 RequirementRule = collections.namedtuple(
-    "RequirementRule", ["pkg_name", "policy", "requirements", "condition", "kind", "message",
-                        "not_externals", "root_only"]
+    "RequirementRule",
+    [
+        "pkg_name",
+        "policy",
+        "requirements",
+        "condition",
+        "kind",
+        "message",
+        "not_externals",
+        "root_only",
+    ],
 )
 
 
@@ -1739,8 +1748,6 @@ class SpackSolverSetup:
                 self.gen.fact(fn.requirement_message(pkg_name, requirement_grp_id, rule.message))
             self.gen.newline()
 
-            #if pkg_name == "tree1-right":
-            #    import pdb; pdb.set_trace()
             if rule.not_externals:
                 self.gen.fact(fn.not_externals(pkg_name, requirement_grp_id))
             if rule.root_only:
