@@ -19,9 +19,11 @@ class PerlNetSsleay(PerlPackage):
 
     depends_on("openssl")
 
-    def configure(self, spec, prefix):
+
+class PerlBuilder(spack.build_systems.perl.PerlBuilder):
+    def configure(self, pkg, spec, prefix):
         self.build_method = "Makefile.PL"
-        self.build_executable = inspect.getmodule(self).make
+        self.build_executable = inspect.getmodule(self.pkg).make
         # Do you want to run external tests?
         config_answers = ["\n"]
         config_answers_filename = "spack-config.in"
@@ -31,4 +33,6 @@ class PerlNetSsleay(PerlPackage):
 
         with open(config_answers_filename, "r") as f:
             env["OPENSSL_PREFIX"] = self.spec["openssl"].prefix
-            inspect.getmodule(self).perl("Makefile.PL", "INSTALL_BASE={0}".format(prefix), input=f)
+            inspect.getmodule(self.pkg).perl(
+                "Makefile.PL", "INSTALL_BASE={0}".format(prefix), input=f
+            )
