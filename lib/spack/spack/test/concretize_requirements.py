@@ -190,7 +190,7 @@ def fake_installs(monkeypatch, tmpdir):
 solve = SpackCommand("solve")
 
 
-def test_selective_requirements(concretize_scope, test_repo):
+def test_selective_requirements_linkrunonly(concretize_scope, test_repo):
     conf_str = """\
 packages:
   all:
@@ -209,6 +209,25 @@ packages:
     assert result["tree1-right"].satisfies("@1.1")
     assert result["tree1-left"].satisfies("@1.0")
     assert result["tree1-left"]["tree1-bottom"].satisfies("@1.0")
+
+
+def test_selective_requirements_notexternals(concretize_scope, test_repo):
+    conf_str = """\
+packages:
+  all:
+    require:
+    - spec: "@1.0"
+      root_only: false
+      applies_for_externals: false
+  tree1-bottom:
+    buildable: false
+    externals:
+    - spec: tree1-bottom@1.1
+"""
+    update_packages_config(conf_str)
+
+    result = Spec("tree1-top").concretized()
+    assert result["tree1-bottom"].satisfies("@1.1")
 
 
 def test_one_package_multiple_reqs(concretize_scope, test_repo):
