@@ -221,9 +221,6 @@ packages:
 """
     update_packages_config(conf_str)
 
-    # asp = solve("--show=asp", "tree1-top")
-    # if "not_externals" not in asp or "root_only" not in asp:
-    #    import pdb; pdb.set_trace()
     result = Spec("tree1-top ^tree1-right@1.1").concretized()
 
     assert result["tree1-right"].satisfies("@1.1")
