@@ -474,9 +474,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     patch("mfem-4.5.patch", when="@4.5.0")
     patch("mfem-4.6.patch", when="@4.6.0")
     patch(
-        "https://github.com/mfem/mfem/pull/4005.patch",
+        "https://github.com/mfem/mfem/pull/4005.patch?full_index=1",
         when="@4.6.0 +gslib+shared+miniapps",
-        sha256="7f0511eb70103f71a5b7fe6e8624f1d7e98b25dde243652e0ea6ae67739f6994",
+        sha256="2a31682d876626529e2778a216d403648b83b90997873659a505d982d0e65beb",
     )
 
     phases = ["configure", "build", "install"]
