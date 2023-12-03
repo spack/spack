@@ -105,6 +105,8 @@ class Root(CMakePackage):
         when="@6.26:6.26.06 +root7 ^nlohmann-json@3.11:",
     )
 
+    patch("webgui.patch", level=0, when="@6.26.00:6.26.10,6.28.00:6.28.08 +webgui")
+
     if sys.platform == "darwin":
         # Resolve non-standard use of uint, _cf_
         # https://sft.its.cern.ch/jira/browse/ROOT-7886.
