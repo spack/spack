@@ -129,7 +129,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     patch("cmake_version_check.patch", when="@4.1")
     patch("missing_header_for_numeric_limits.patch", when="@4.1:5.0.1")
     patch("camp_resource.patch", when="@2022.10.0 %gcc@13 ^camp@2022.10.1")
-      
+
     # export targets when building pre-6.0.0 release with BLT 0.4.0+
     patch(
         "https://github.com/LLNL/Umpire/commit/5773ce9af88952c8d23f9bcdcb2e503ceda40763.patch?full_index=1",
