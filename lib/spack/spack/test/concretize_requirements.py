@@ -125,6 +125,7 @@ class Tree1Right(Package):
     version('1.0')
 
     depends_on("tree1-bottom")
+    depends_on("tree1-right-right")
 """,
 )
 
@@ -139,7 +140,26 @@ class Tree1Bottom(Package):
 )
 
 
-_tree1_packages = [_tree1_top, _tree1_left, _tree1_right, _tree1_bottom]
+_tree1_rightright = (
+    "tree1-right-right",
+    """\
+class Tree1RightRight(Package):
+    version('1.1')
+    version('1.0')
+""",
+)
+
+
+"""
+A DAG where a dependency ("right") is build-only
+
+top____
+|      |
+left   right
+|     _/   \
+bottom      right-right
+"""
+_tree1_packages = [_tree1_top, _tree1_left, _tree1_right, _tree1_bottom, _tree1_rightright]
 
 
 @pytest.fixture
@@ -207,6 +227,7 @@ packages:
     result = Spec("tree1-top ^tree1-right@1.1").concretized()
 
     assert result["tree1-right"].satisfies("@1.1")
+    assert result["tree1-right-right"].satisfies("@1.1")
     assert result["tree1-left"].satisfies("@1.0")
     assert result["tree1-left"]["tree1-bottom"].satisfies("@1.0")
 
