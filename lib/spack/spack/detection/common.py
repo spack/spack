@@ -309,10 +309,14 @@ class WindowsKitExternalPaths:
         return glob.glob(kit_base)
 
     @staticmethod
-    def find_windows_kit_bin_paths(kit_base: Optional[str] = None) -> List[str]:
+    def find_windows_kit_bin_paths(
+        kit_base: Union[Optional[str], Optional[list]] = None
+    ) -> List[str]:
         """Returns Windows kit bin directory per version"""
         kit_base = WindowsKitExternalPaths.find_windows_kit_roots() if not kit_base else kit_base
         assert kit_base, "Unexpectedly empty value for Windows kit base path"
+        if isinstance(kit_base, str):
+            kit_base = kit_base.split(";")
         kit_paths = []
         for kit in kit_base:
             kit_bin = os.path.join(kit, "bin")
@@ -320,10 +324,14 @@ class WindowsKitExternalPaths:
         return kit_paths
 
     @staticmethod
-    def find_windows_kit_lib_paths(kit_base: Optional[str] = None) -> List[str]:
+    def find_windows_kit_lib_paths(
+        kit_base: Union[Optional[str], Optional[list]] = None
+    ) -> List[str]:
         """Returns Windows kit lib directory per version"""
         kit_base = WindowsKitExternalPaths.find_windows_kit_roots() if not kit_base else kit_base
         assert kit_base, "Unexpectedly empty value for Windows kit base path"
+        if isinstance(kit_base, str):
+            kit_base = kit_base.split(";")
         kit_paths = []
         for kit in kit_base:
             kit_lib = os.path.join(kit, "Lib")
