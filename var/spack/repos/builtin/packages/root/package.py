@@ -34,7 +34,7 @@ class Root(CMakePackage):
     # Development version (when more recent than production).
 
     # Production version
-    version("6.30.02", sha256="51a09c86ffa94089abac76daa3adc20812efc6c93b427697b843b12d73e145de")
+    version("6.30.02", sha256="7965a456d1ad1ee0d5fe4769bf5a8fec291af684ed93db0f3080a9c362435183")
     version("6.30.00", sha256="0592c066954cfed42312957c9cb251654456064fe2d8dabdcb8826f1c0099d71")
     version("6.28.10", sha256="fc6a2d6c7cba853b0cfd6bd9514c90e9df50e1743899bc1db0472ee6f4e65a0a")
     version("6.28.06", sha256="af3b673b9aca393a5c9ae1bf86eab2672aaf1841b658c5c6e7a30ab93c586533")
