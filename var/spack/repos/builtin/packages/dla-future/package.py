@@ -124,6 +124,8 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
             depends_on("pika cuda_arch={0}".format(val), when="cuda_arch={0}".format(val))
             depends_on("umpire cuda_arch={0}".format(val), when="cuda_arch={0}".format(val))
 
+    patch("stdint.patch", when="@0.3.1 %gcc@13")
+
     def cmake_args(self):
         spec = self.spec
         args = []
