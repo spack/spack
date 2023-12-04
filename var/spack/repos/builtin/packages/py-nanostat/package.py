@@ -11,6 +11,8 @@ class PyNanostat(PythonPackage):
     homepage = "https://github.com/wdecoster/nanostat"
     pypi = "NanoStat/NanoStat-1.6.0.tar.gz"
 
+    maintainers("Pandapip1")
+
     version("1.6.0", sha256="e45fa8d1ab49bdaed17596c26c0af148b44e4af46238391a8bb7a1b4cc940079")
 
     depends_on("python@3")

@@ -11,6 +11,8 @@ class PyNanoget(PythonPackage):
     homepage = "https://github.com/wdecoster/nanoget"
     pypi = "nanoget/nanoget-1.19.3.tar.gz"
 
+    maintainers("Pandapip1")
+
     version("1.19.3", sha256="da981810edb1cbe42cbbfbe5fcf753f29bf5555204cd51256b28a284a036a71b")
 
     depends_on("python@3")

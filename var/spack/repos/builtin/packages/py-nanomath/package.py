@@ -11,6 +11,8 @@ class PyNanomath(PythonPackage):
     homepage = "https://github.com/wdecoster/nanomath"
     pypi = "nanomath/nanomath-1.3.0.tar.gz"
 
+    maintainers("Pandapip1")
+
     version("1.3.0", sha256="c35a024b10b34dd8f539cefed1fd69e0a46d18037ca48bed63c7941c67ae028e")
 
     depends_on("python@3")

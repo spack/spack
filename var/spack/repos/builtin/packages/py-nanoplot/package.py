@@ -11,6 +11,8 @@ class PyNanoplot(PythonPackage):
     homepage = "https://github.com/wdecoster/NanoPlot"
     pypi = "NanoPlot/NanoPlot-1.42.0.tar.gz"
 
+    maintainers("Pandapip1")
+
     version("1.42.0", sha256="0f8fd2cffd33a346b3306716058c6cb4091c931e8ab502f10b17a28749e8b6d9")
 
     depends_on("python@3")
