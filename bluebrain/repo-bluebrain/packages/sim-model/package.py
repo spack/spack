@@ -74,21 +74,17 @@ class SimModel(Package):
         else:
             return which("nrnivmodl-core", path=self.spec["neuron"].prefix.bin, required=True)
 
-    def _build_mods(
-        self, mods_location, link_flag="", include_flag="", corenrn_mods=None, dependencies=None
-    ):
+    def _build_mods(self, mods_location, link_flag="", include_flag="", corenrn_mods=None):
         """Build shared lib & special from mods in a given path"""
         # pass include and link flags for all dependency libraries
         # Compiler wrappers are not used to have a more reproducible building
-        if dependencies is None:
-            dependencies = self.spec._dependencies_dict("link").keys()
-        for dep in set(dependencies):
-            libs = self.spec[dep].libs
+        for dep_spec in self.spec.dependencies(deptype="link"):
+            dep = self.spec[dep_spec.name]
             link_flag += " {0} {1}".format(
-                self.spec[dep].libs.ld_flags,
-                " ".join(["-Wl,-rpath," + x for x in libs.directories]),
+                dep.libs.ld_flags,
+                " ".join(["-Wl,-rpath," + x for x in dep.libs.directories]),
             )
-            include_flag += " -I " + str(self.spec[dep].prefix.include)
+            include_flag += " -I " + str(dep.prefix.include)
 
         output_dir = os.path.basename(self.spec["neuron"].package.archdir)
         include_flag_raw = include_flag
@@ -101,9 +97,8 @@ class SimModel(Package):
             # Relevant flags to build neuron's nrnmech lib
             # 'ENABLE_CORENEURON' only now, otherwise mods assume neuron
             # Only link with coreneuron when dependencies are passed
-            if dependencies:
-                include_flag += self._coreneuron_include_flag()
-                link_flag += " " + libnrncoremech.ld_flags
+            include_flag += self._coreneuron_include_flag()
+            link_flag += " " + libnrncoremech.ld_flags
 
         # Neuron mechlib and special
         with profiling_wrapper_on():
