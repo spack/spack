@@ -12,11 +12,13 @@ class PyGidgetlab(PythonPackage):
 
     homepage = "https://gitlab.com/beenje/gidgetlab"
     pypi = "gidgetlab/gidgetlab-1.1.0.tar.gz"
+    git = "https://gitlab.com/beenje/gidgetlab.git"
 
     maintainers("alecbcs")
 
     license("Apache-2.0")
 
+    version("main", branch="main")
     version("1.1.0", sha256="314ec2cddc898317ec45d99068665dbf33c0fee1f52df6671f28ad35bb51f902")
 
     depends_on("py-setuptools@45:", type=("build", "run"))
