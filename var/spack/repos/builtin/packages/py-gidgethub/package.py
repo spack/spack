@@ -12,6 +12,7 @@ class PyGidgethub(PythonPackage):
 
     homepage = "https://github.com/gidgethub/gidgethub"
     pypi = "gidgethub/gidgethub-5.3.0.tar.gz"
+    git = "https://github.com/gidgethub/gidgethub.git"
 
     maintainers("alecbcs")
 
