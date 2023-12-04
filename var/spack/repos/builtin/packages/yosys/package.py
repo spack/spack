@@ -23,6 +23,8 @@ class Yosys(MakefilePackage):
     url = "https://github.com/YosysHQ/yosys/archive/refs/tags/yosys-0.35.tar.gz"
     git = "https://github.com/YosysHQ/yosys.git"
 
+    maintainers("davekeeshan")
+
     version("master", branch="master")
 
     version("0.35", sha256="a00643cf4cf83701bfa2b358066eb9d360393d30e8f5a8e65f619ab1fd10474a")
