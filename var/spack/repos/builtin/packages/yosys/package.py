@@ -39,9 +39,8 @@ class Yosys(MakefilePackage):
 
     def setup_build_environment(self, env):
         env.set("PREFIX", self.prefix)
-        env.set("CXXFLAGS", "-I{0}".format(self.spec["readline"].prefix.include))
+        env.set("CXXFLAGS", f'-I{self.spec["readline"].prefix.include}')
         env.set(
-            "LDFLAGS",
-            "-L{0} -L{1}".format(self.spec["readline"].prefix.lib, self.spec["zlib"].prefix.lib),
+            "LDFLAGS", f'-L{self.spec["readline"].prefix.lib} -L{self.spec["zlib"].prefix.lib}'
         )
-        env.set("ABC_READLINE_INCLUDES", "-I{0}".format(self.spec["readline"].prefix.include))
+        env.set("ABC_READLINE_INCLUDES", f'-I{self.spec["readline"].prefix.include}')
