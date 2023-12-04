@@ -25,3 +25,13 @@ class PyGidgethub(PythonPackage):
 
     depends_on("py-uritemplate@3.0.1:", type=("build", "run"))
     depends_on("py-pyjwt+crypto@2.4.0:", type=("build", "run"))
+
+    depends_on("py-aiohttp", type=("build", "run"), when="+aiohttp")
+    depends_on("py-tornado", type=("build", "run"), when="+tornado")
+
+    variant(
+        "aiohttp", default=False, description="Enable aiohttp functionality through dependency."
+    )
+    variant(
+        "tornado", default=False, description="Enable tornado functionality through dependency."
+    )
