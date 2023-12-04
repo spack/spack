@@ -24,4 +24,4 @@ class PyGidgethub(PythonPackage):
     depends_on("py-flit-core", type="build", when="@5.3.1:")
 
     depends_on("py-uritemplate@3.0.1:", type=("build", "run"))
-    depends_on("py-pyjwt@2.4.0:", type=("build", "run"))
+    depends_on("py-pyjwt+crypto@2.4.0:", type=("build", "run"))
