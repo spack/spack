@@ -3,27 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import glob
-
 from spack.package import *
-
-
-def hip_repair_options(options, spec):
-    # there is only one dir like this, but the version component is unknown
-    options.append(
-        "-DHIP_CLANG_INCLUDE_PATH="
-        + glob.glob("{}/lib/clang/*/include".format(spec["llvm-amdgpu"].prefix))[0]
-    )
-
-
-def hip_repair_cache(options, spec):
-    # there is only one dir like this, but the version component is unknown
-    options.append(
-        cmake_cache_path(
-            "HIP_CLANG_INCLUDE_PATH",
-            glob.glob("{}/lib/clang/*/include".format(spec["llvm-amdgpu"].prefix))[0],
-        )
-    )
 
 
 class Camp(CMakePackage, CudaPackage, ROCmPackage):
@@ -87,8 +67,6 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
         options.append(self.define_from_variant("ENABLE_HIP", "rocm"))
         if "+rocm" in spec:
             options.append("-DHIP_ROOT_DIR={0}".format(spec["hip"].prefix))
-
-            hip_repair_options(options, spec)
 
             archs = self.spec.variants["amdgpu_target"].value
             if archs != "none":

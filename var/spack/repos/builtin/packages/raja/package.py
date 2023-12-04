@@ -6,7 +6,8 @@
 import socket
 
 from spack.package import *
-from spack.pkg.builtin.camp import hip_repair_cache
+
+from .blt import llnl_link_helpers
 
 
 class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
@@ -204,9 +205,15 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     def initconfig_compiler_entries(self):
         spec = self.spec
+        compiler = self.compiler
+        # Default entries are already defined in CachedCMakePackage, inherit them:
         entries = super().initconfig_compiler_entries()
+
+        llnl_link_helpers(entries, spec, compiler)
+
         if "+rocm" in spec:
             entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
+
         return entries
 
     def initconfig_hardware_entries(self):

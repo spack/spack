@@ -9,8 +9,8 @@ import socket
 import llnl.util.tty as tty
 
 from spack.package import *
-from spack.pkg.builtin.camp import hip_repair_cache
 
+from .blt import llnl_link_helpers
 
 class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     """An application-focused API for memory management on NUMA & GPU
@@ -247,6 +247,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     def initconfig_compiler_entries(self):
         spec = self.spec
+        compiler = self.compiler
         entries = super().initconfig_compiler_entries()
 
         if "+rocm" in spec:
@@ -260,6 +261,8 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append(cmake_cache_option("ENABLE_FORTRAN", False))
 
         entries.append(cmake_cache_option("{}ENABLE_C".format(option_prefix), "+c" in spec))
+
+        llnl_link_helpers(entries, spec, compiler)
 
         return entries
 
