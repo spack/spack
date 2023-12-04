@@ -208,6 +208,22 @@ def _group_by_prefix(paths: Set[str]) -> Dict[str, Set[str]]:
 class Finder:
     """Inspects the file-system looking for packages. Guesses places where to look using PATH."""
 
+    def __init__(self, debug_find: Optional[bool] = False):
+        self._report_search = debug_find
+        super(Finder, self).__init__()
+
+
+    def _log_status(self, pkg_name, candidates, results):
+        pkg_name = pkg_name.split(".")[1]
+        llnl.util.tty.info(f"Spack considered the following paths for external package {pkg_name}:")
+        [llnl.util.tty.info(f"\t{x}") for x in candidates]
+        llnl.util.tty.info("\n")
+        if results:
+            llnl.util.info(f"Spack found package at location(s):")
+            [llnl.util.tty.info("\t{x}" for x in results)]
+            llnl.util.tty.info("\n")
+
+
     def default_path_hints(self) -> List[str]:
         return []
 
@@ -331,6 +347,7 @@ class Finder:
             initial_guess.extend(common_windows_package_paths(pkg_cls))
         candidates = self.candidate_files(patterns=patterns, paths=initial_guess)
         result = self.detect_specs(pkg=pkg_cls, paths=candidates)
+        if self._report_search: self._log_status(pkg_name, candidates, result)
         return result
 
 
@@ -400,6 +417,7 @@ def by_path(
     *,
     path_hints: Optional[List[str]] = None,
     max_workers: Optional[int] = None,
+    debug_find: Optional[bool] = False,
 ) -> Dict[str, List[DetectedPackage]]:
     """Return the list of packages that have been detected on the system, keyed by
     unqualified package name.
@@ -412,8 +430,15 @@ def by_path(
     """
     # TODO: Packages should be able to define both .libraries and .executables in the future
     # TODO: determine_spec_details should get all relevant libraries and executables in one call
-    executables_finder, libraries_finder = ExecutablesFinder(), LibrariesFinder()
+    executables_finder, libraries_finder = ExecutablesFinder(debug_find), LibrariesFinder(debug_find)
     detected_specs_by_package: Dict[str, Tuple[concurrent.futures.Future, ...]] = {}
+    if debug_find:
+        llnl.util.tty.info("Spack performed external detection with the following configuration:")
+        llnl.util.tty.info(f"\tMax Workers: {max_workers}")
+        llnl.util.tty.info("\tSupplied path hints:")
+        if path_hints:
+            [llnl.util.tty.info(f"\t\t{x}") for x in path_hints]
+        llnl.util.tty.info("\n")
 
     result = collections.defaultdict(list)
     with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
