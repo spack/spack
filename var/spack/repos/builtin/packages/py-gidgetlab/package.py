@@ -22,5 +22,14 @@ class PyGidgetlab(PythonPackage):
     depends_on("py-setuptools@45:", type=("build", "run"))
     depends_on("py-setuptools-scm@6.2:", type="build")
 
-    depends_on("py-aiohttp", type=("build", "run"))
+    depends_on("py-aiohttp", type=("build", "run"), when="+aiohttp")
     depends_on("py-cachetools", type=("build", "run"))
+
+    variant(
+        "aiohttp", default=False, description="Enable aiohttp functionality through dependency."
+    )
+    variant(
+        "cachetools",
+        default=False,
+        description="Enable cachetools functionality through dependency.",
+    )
