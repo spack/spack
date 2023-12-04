@@ -287,16 +287,16 @@ class CachedCMakeBuilder(CMakeBuilder):
         cmake_prefix_path_env = os.environ["CMAKE_PREFIX_PATH"]
         cmake_prefix_path = cmake_prefix_path_env.replace(os.pathsep, ";")
         cmake_rpaths_env = spack.build_environment.get_rpaths(self.pkg)
-        cmake_rpaths_path = ';'.join(cmake_rpaths_env)
+        cmake_rpaths_path = ";".join(cmake_rpaths_env)
         complete_rpath_list = cmake_rpaths_path
         if "SPACK_COMPILER_EXTRA_RPATHS" in os.environ:
             spack_extra_rpaths_env = os.environ["SPACK_COMPILER_EXTRA_RPATHS"]
-            spack_extra_rpaths_path= spack_extra_rpaths_env.replace(os.pathsep, ";")
+            spack_extra_rpaths_path = spack_extra_rpaths_env.replace(os.pathsep, ";")
             complete_rpath_list = "{0};{1}".format(complete_rpath_list, spack_extra_rpaths_path)
 
         if "SPACK_COMPILER_IMPLICIT_RPATHS" in os.environ:
             spack_implicit_rpaths_env = os.environ["SPACK_COMPILER_IMPLICIT_RPATHS"]
-            spack_implicit_rpaths_path= spack_implicit_rpaths_env.replace(os.pathsep, ";")
+            spack_implicit_rpaths_path = spack_implicit_rpaths_env.replace(os.pathsep, ";")
             complete_rpath_list = "{0};{1}".format(complete_rpath_list, spack_implicit_rpaths_path)
 
         return [
