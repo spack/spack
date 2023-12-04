@@ -345,6 +345,12 @@ class Curl(NMakePackage, AutotoolsPackage):
     def command(self):
         return Executable(self.prefix.bin.join("curl-config"))
 
+    def flag_handler(self, name, flags):
+        build_system_flags = []
+        if name == "cflags" and self.spec.compiler.name in ["intel", "oneapi"]:
+            build_system_flags = ["-we147"]
+        return flags, None, build_system_flags
+
 
 class AutotoolsBuilder(AutotoolsBuilder):
     def configure_args(self):
