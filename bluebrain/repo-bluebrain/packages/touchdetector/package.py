@@ -17,6 +17,7 @@ class Touchdetector(CMakePackage):
     submodules = True
 
     version("develop", branch="main")
+    version("6.0.3", tag="6.0.3")
     version("6.0.2", tag="6.0.2")
     version("6.0.1", tag="6.0.1")
     version("6.0.0", tag="6.0.0")
@@ -55,8 +56,9 @@ class Touchdetector(CMakePackage):
     depends_on("random123", when="@5.3.3:")
     depends_on("range-v3@:0.4", when="@5.0.2:5.3.2")
     depends_on("range-v3@:0.10", when="@5.3.3:")
-    depends_on("libsonata@0.1.9:", when="@5.6.0:")
-    depends_on("libsonata@0.1.9: cxxstd=20", when="@5.7.5:")
+    depends_on("libsonata@0.1.9:0.1.25", when="@5.6.0:")
+    depends_on("libsonata@0.1.9:0.1.25 cxxstd=20", when="@5.7.5:")
+    depends_on("libsonata@0.1.9: cxxstd=20", when="@6.0.3:")
     depends_on("nlohmann-json", when="@5.3.3:")
     depends_on("intel-oneapi-tbb", when="@5.7.0:")
     depends_on("caliper@2.8.0:+mpi", when="+caliper@5.7.0:")
