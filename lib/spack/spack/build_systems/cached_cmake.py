@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections.abc
+import glob
 import os
 import re
 from typing import Tuple
@@ -285,6 +286,13 @@ class CachedCMakeBuilder(CMakeBuilder):
             entries.append(cmake_cache_path("ROCM_ROOT_DIR", rocm_root))
             # TODO: test if this helps
             entries.append(cmake_cache_string("HIP_CLANG_PATH", rocm_root + "/llvm/bin"))
+
+            entries.append(
+                cmake_cache_path(
+                    "HIP_CLANG_INCLUDE_PATH",
+                    glob.glob("{}/lib/clang/*/include".format(spec["llvm-amdgpu"].prefix))[0],
+                )
+            )
 
             # The old way ...
             if spec["hip"].version < Version("5.5.0"):
