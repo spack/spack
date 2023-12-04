@@ -85,6 +85,9 @@ class Proj(CMakePackage, AutotoolsPackage):
         when="@7:7.2.1",
     )
 
+    patch("proj.cmakelists.5.0.patch", when="@5.0")
+    patch("proj.cmakelists.5.1.patch", when="@5.1:5.2")
+
     # https://proj.org/install.html#build-requirements
     with when("build_system=cmake"):
         depends_on("cmake@3.9:", when="@6:", type="build")
