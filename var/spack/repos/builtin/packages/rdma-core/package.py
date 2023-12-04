@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,8 @@ class RdmaCore(CMakePackage):
 
     homepage = "https://github.com/linux-rdma/rdma-core"
     url = "https://github.com/linux-rdma/rdma-core/releases/download/v17.1/rdma-core-17.1.tar.gz"
-    executables = ["librdmacm.so"]
+    libraries = ["librdmacm.so"]
+    keep_werror = "all"
 
     version("41.0", sha256="e0b7deb8a71f229796a0cfe0fa25192c530cd3d86b755b6b28d1a5986a77507b")
     version("40.0", sha256="8844edb71311e3212e55e28fa4bdc6e06dd6c7b839ed56ee4b606e4220d94ee8")
@@ -55,15 +56,28 @@ class RdmaCore(CMakePackage):
     version("17.1", sha256="b47444b7c05d3906deb8771eec3e634984dd83f5e620d5e37d3a83f74f0cc1ba")
     version("13", sha256="e5230fd7cda610753ad1252b40a28b1e9cf836423a10d8c2525b081527760d97")
 
+    variant(
+        "static",
+        default=True,
+        description="Produce static libraries along with usual shared libraries.",
+    )
+    variant("pyverbs", default=True, description="Build with support for pyverbs")
+    variant("man_pages", default=True, description="Build with support for man pages")
+
     depends_on("pkgconfig", type="build")
-    depends_on("py-docutils", type="build")
+    depends_on("py-docutils", when="+man_pages", type="build")
     depends_on("libnl")
     conflicts("platform=darwin", msg="rdma-core requires FreeBSD or Linux")
     conflicts("%intel", msg="rdma-core cannot be built with intel (use gcc instead)")
 
     @classmethod
     def determine_version(cls, lib):
-        match = re.search(r"lib\S*\.so\.\d+\.\d+\.(\d+\.\d+)", lib)
+        match = re.search(r"lib\S*\.so\.\d+\.\d+\.(\d+(?:\.\d+)?)", lib)
+        if match and match.group(1) == "0":
+            # On some systems there is a truncated shared library name that does not
+            # sufficient version information, return a clear indicator of that
+            return "unknown_ver"
+
         return match.group(1) if match else None
 
     # NOTE: specify CMAKE_INSTALL_RUNDIR explicitly to prevent rdma-core from
@@ -75,6 +89,13 @@ class RdmaCore(CMakePackage):
             "-DCMAKE_INSTALL_SYSCONFDIR={0}".format(self.spec.prefix.etc),
             "-DCMAKE_INSTALL_RUNDIR=/var/run",
         ]
+
+        cmake_args.append(self.define_from_variant("ENABLE_STATIC", "static"))
+
+        if self.spec.satisfies("~pyverbs"):
+            cmake_args.append("-DNO_PYVERBS=1")
+        if self.spec.satisfies("~man_pages"):
+            cmake_args.append("-DNO_MAN_PAGES=1")
 
         if self.spec.satisfies("@:39.0"):
             cmake_args.extend(

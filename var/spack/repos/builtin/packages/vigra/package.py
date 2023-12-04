@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -67,7 +67,7 @@ class Vigra(CMakePackage):
                     "-DWITH_HDF5=ON",
                     "-DHDF5_CORE_LIBRARY={0}".format(spec["hdf5"].libs.libraries[0]),
                     "-DHDF5_INCLUDE_DIR={0}".format(spec["hdf5"].prefix.include),
-                    "-DHDF5_Z_LIBRARY={0}".format(spec["zlib"].libs.libraries[0]),
+                    "-DHDF5_Z_LIBRARY={0}".format(spec["zlib-api"].libs.libraries[0]),
                 ]
             )
         else:

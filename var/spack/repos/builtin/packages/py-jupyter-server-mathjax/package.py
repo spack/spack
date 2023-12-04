@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,6 @@ class PyJupyterServerMathjax(PythonPackage):
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-jupyter-packaging", type="build")
-    depends_on("py-jupyter-packaging11@:1", when="@0.2.6:", type="build")
+    depends_on("py-jupyter-packaging@0.10:1", when="@0.2.6:", type="build")
     depends_on("py-jupyter-server@1.1:1", when="@0.2.3", type=("build", "run"))
     depends_on("py-jupyter-server@1.1:", when="@0.2.6:", type=("build", "run"))

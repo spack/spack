@@ -1,16 +1,15 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 import re
-import sys
 
 import llnl.util.lang
 
 from spack.compiler import Compiler, UnsupportedCompilerFlag
-from spack.version import ver
+from spack.version import Version
 
 #: compiler symlink mappings for mixed f77 compilers
 f77_mapping = [
@@ -39,10 +38,10 @@ class Clang(Compiler):
     cxx_names = ["clang++"]
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ["flang", "gfortran", "xlf_r"]
+    f77_names = ["flang"]
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ["flang", "gfortran", "xlf90_r"]
+    fc_names = ["flang"]
 
     version_argument = "--version"
 
@@ -56,7 +55,6 @@ class Clang(Compiler):
             "-gdwarf-5",
             "-gline-tables-only",
             "-gmodules",
-            "-gz",
             "-g",
         ]
 
@@ -100,24 +98,24 @@ class Clang(Compiler):
 
     @property
     def cxx11_flag(self):
-        if self.real_version < ver("3.3"):
+        if self.real_version < Version("3.3"):
             raise UnsupportedCompilerFlag(self, "the C++11 standard", "cxx11_flag", "< 3.3")
         return "-std=c++11"
 
     @property
     def cxx14_flag(self):
-        if self.real_version < ver("3.4"):
+        if self.real_version < Version("3.4"):
             raise UnsupportedCompilerFlag(self, "the C++14 standard", "cxx14_flag", "< 3.5")
-        elif self.real_version < ver("3.5"):
+        elif self.real_version < Version("3.5"):
             return "-std=c++1y"
 
         return "-std=c++14"
 
     @property
     def cxx17_flag(self):
-        if self.real_version < ver("3.5"):
+        if self.real_version < Version("3.5"):
             raise UnsupportedCompilerFlag(self, "the C++17 standard", "cxx17_flag", "< 3.5")
-        elif self.real_version < ver("5.0"):
+        elif self.real_version < Version("5.0"):
             return "-std=c++1z"
 
         return "-std=c++17"
@@ -128,10 +126,23 @@ class Clang(Compiler):
 
     @property
     def c11_flag(self):
-        if self.real_version < ver("6.1.0"):
-            raise UnsupportedCompilerFlag(self, "the C11 standard", "c11_flag", "< 6.1.0")
-        else:
-            return "-std=c11"
+        if self.real_version < Version("3.0"):
+            raise UnsupportedCompilerFlag(self, "the C11 standard", "c11_flag", "< 3.0")
+        if self.real_version < Version("3.1"):
+            return "-std=c1x"
+        return "-std=c11"
+
+    @property
+    def c17_flag(self):
+        if self.real_version < Version("6.0"):
+            raise UnsupportedCompilerFlag(self, "the C17 standard", "c17_flag", "< 6.0")
+        return "-std=c17"
+
+    @property
+    def c23_flag(self):
+        if self.real_version < Version("9.0"):
+            raise UnsupportedCompilerFlag(self, "the C23 standard", "c23_flag", "< 9.0")
+        return "-std=c2x"
 
     @property
     def cc_pic_flag(self):
@@ -169,16 +180,3 @@ class Clang(Compiler):
         if match:
             ver = match.group(match.lastindex)
         return ver
-
-    @classmethod
-    def fc_version(cls, fc):
-        # We could map from gcc/gfortran version to clang version, but on macOS
-        # we normally mix any version of gfortran with any version of clang.
-        if sys.platform == "darwin":
-            return cls.default_version("clang")
-        else:
-            return cls.default_version(fc)
-
-    @classmethod
-    def f77_version(cls, f77):
-        return cls.fc_version(f77)

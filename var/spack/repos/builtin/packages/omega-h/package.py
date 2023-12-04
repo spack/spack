@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,9 +16,19 @@ class OmegaH(CMakePackage, CudaPackage):
     url = "https://github.com/sandialabs/omega_h/archive/v9.34.1.tar.gz"
     git = "https://github.com/sandialabs/omega_h.git"
 
-    maintainers = ["cwsmith"]
+    maintainers("cwsmith")
     tags = ["e4s"]
     version("main", branch="main")
+    version(
+        "scorec.10.7.0",
+        commit="0e5de8618c3370f702e08c1b1af476dbbc118892",
+        git="https://github.com/SCOREC/omega_h.git",
+    )
+    version(
+        "scorec.10.6.0",
+        commit="f376fad4741b55a4b2482218eb3437d719b7c72e",
+        git="https://github.com/SCOREC/omega_h.git",
+    )
     version(
         "scorec.10.1.0",
         commit="e88912368e101d940f006019585701a704295ab0",
@@ -46,28 +56,38 @@ class OmegaH(CMakePackage, CudaPackage):
     variant("optimize", default=True, description="Compile C++ with optimization")
     variant("symbols", default=True, description="Compile C++ with debug symbols")
     variant("warnings", default=False, description="Compile C++ with warnings")
+    variant("gmsh", default=False, description="Use Gmsh C++ API")
+    variant("kokkos", default=False, description="Use Kokkos")
 
-    depends_on("gmsh", when="+examples", type="build")
+    depends_on("gmsh", when="+examples")
+    depends_on("gmsh@4.4.1:", when="+gmsh")
     depends_on("mpi", when="+mpi")
     depends_on("trilinos +kokkos", when="+trilinos")
-    depends_on("zlib", when="+zlib")
+    depends_on("kokkos", when="+kokkos")
+    depends_on("zlib-api", when="+zlib")
     # Note: '+cuda' and 'cuda_arch' variants are added by the CudaPackage
     depends_on("cuda", when="+cuda")
     conflicts(
-        "cuda@11.2",
+        "^cuda@11.2",
         when="@scorec.10.1.0:",
         msg="Thrust is broken in CUDA = 11.2.* see https://github.com/sandialabs/omega_h/issues/366",
     )
     # the sandia repo has a fix for cuda > 11.2 support
     #  see github.com/sandialabs/omega_h/pull/373
     conflicts(
-        "cuda@11.2",
+        "^cuda@11.2",
         when="@:9.34.4",
         msg="Thrust is broken in CUDA = 11.2.* see https://github.com/sandialabs/omega_h/issues/366",
     )
 
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86610
     conflicts("%gcc@8:8.2", when="@:9.22.1")
+
+    def patch(self):
+        if "@:9.34.8" in self.spec:
+            filter_file(
+                r"OUTPUT_QUIET", "OUTPUT_VARIABLE Gmsh_VERSION_STRING", "cmake/FindGmsh.cmake"
+            )
 
     def _bob_options(self):
         cmake_var_prefix = "Omega_h_CXX_"
@@ -97,14 +117,21 @@ class OmegaH(CMakePackage, CudaPackage):
             cuda_arch_list = self.spec.variants["cuda_arch"].value
             cuda_arch = cuda_arch_list[0]
             if cuda_arch != "none":
-                args.append("-DOmega_h_CUDA_ARCH={0}".format(cuda_arch))
+                if "scorec" in str(self.spec.version):
+                    args.append("-DOmega_h_CUDA_ARCH={0}".format(cuda_arch))
+                else:
+                    args.append("-DCMAKE_CUDA_FLAGS=-arch=sm_{0}".format(cuda_arch))
         else:
             args.append("-DOmega_h_USE_CUDA:BOOL=OFF")
         if "+trilinos" in self.spec:
             args.append("-DOmega_h_USE_Trilinos:BOOL=ON")
+        if "+gmsh" in self.spec:
+            args.append("-DOmega_h_USE_Gmsh:BOOL=ON")
+        if "+kokkos" in self.spec:
+            args.append("-DOmega_h_USE_Kokkos:BOOL=ON")
         if "+zlib" in self.spec:
             args.append("-DOmega_h_USE_ZLIB:BOOL=ON")
-            args.append("-DZLIB_ROOT:PATH={0}".format(self.spec["zlib"].prefix))
+            args.append("-DZLIB_ROOT:PATH={0}".format(self.spec["zlib-api"].prefix))
         else:
             args.append("-DOmega_h_USE_ZLIB:BOOL=OFF")
         if "+examples" in self.spec:
@@ -115,9 +142,10 @@ class OmegaH(CMakePackage, CudaPackage):
             args.append("-DOmega_h_THROW:BOOL=ON")
         else:
             args.append("-DOmega_h_THROW:BOOL=OFF")
-        # omega-h requires empty CMAKE_BUILD_TYPE
-        args.append("-DCMAKE_BUILD_TYPE:STRING=")
-        args += list(self._bob_options())
+        if "@:9.29.99" in self.spec:
+            # omega-h requires empty CMAKE_BUILD_TYPE
+            args.append("-DCMAKE_BUILD_TYPE:STRING=")
+            args += list(self._bob_options())
         return args
 
     def flag_handler(self, name, flags):

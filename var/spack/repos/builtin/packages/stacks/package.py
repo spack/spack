@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class Stacks(AutotoolsPackage):
 
     depends_on("perl", type=("build", "run"))
     depends_on("sparsehash", when="+sparsehash")
-    depends_on("zlib", when="@2.3b:")
+    depends_on("zlib-api", when="@2.3b:")
     conflicts("%gcc@:4.9.0", when="@2.3b:")
 
     def configure_args(self):

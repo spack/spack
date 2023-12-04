@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,27 +16,24 @@ class PyMatplotlib(PythonPackage):
     homepage = "https://matplotlib.org/"
     pypi = "matplotlib/matplotlib-3.3.2.tar.gz"
 
-    maintainers = ["adamjstewart"]
-    import_modules = [
-        "mpl_toolkits.axes_grid1",
-        "mpl_toolkits.axes_grid",
-        "mpl_toolkits.mplot3d",
-        "mpl_toolkits.axisartist",
-        "matplotlib",
-        "matplotlib.compat",
-        "matplotlib.tri",
-        "matplotlib.axes",
-        "matplotlib.sphinxext",
-        "matplotlib.cbook",
-        "matplotlib.backends",
-        "matplotlib.backends.qt_editor",
-        "matplotlib.style",
-        "matplotlib.projections",
-        "matplotlib.testing",
-        "matplotlib.testing.jpl_units",
-        "pylab",
+    maintainers("adamjstewart")
+    skip_modules = [
+        "matplotlib.tests",
+        "mpl_toolkits.axes_grid1.tests",
+        "mpl_toolkits.axisartist.tests",
+        "mpl_toolkits.mplot3d.tests",
     ]
 
+    version("3.8.2", sha256="01a978b871b881ee76017152f1f1a0cbf6bd5f7b8ff8c96df0df1bd57d8755a1")
+    version("3.8.1", sha256="044df81c1f6f3a8e52d70c4cfcb44e77ea9632a10929932870dfaa90de94365d")
+    version("3.8.0", sha256="df8505e1c19d5c2c26aff3497a7cbd3ccfc2e97043d1e4db3e76afa399164b69")
+    version("3.7.4", sha256="7cd4fef8187d1dd0d9dcfdbaa06ac326d396fb8c71c647129f0bf56835d77026")
+    version("3.7.3", sha256="f09b3dd6bdeb588de91f853bbb2d6f0ff8ab693485b0c49035eaa510cb4f142e")
+    version("3.7.2", sha256="a8cdb91dddb04436bd2f098b8fdf4b81352e68cf4d2c6756fcc414791076569b")
+    version("3.7.1", sha256="7b73305f25eab4541bd7ee0b96d87e53ae9c9f1823be5659b806cd85786fe882")
+    version("3.7.0", sha256="8f6efd313430d7ef70a38a3276281cb2e8646b3a22b3b21eb227da20e15e6813")
+    version("3.6.3", sha256="1f4d69707b1677560cd952544ee4962f68ff07952fb9069ff8c12b56353cb8c9")
+    version("3.6.2", sha256="b03fd10a1709d0101c054883b550f7c4c5e974f751e2680318759af005964990")
     version("3.6.1", sha256="e2d1b7225666f7e1bcc94c0bc9c587a82e3e8691da4757e357e5c2515222ee37")
     version("3.6.0", sha256="c5108ebe67da60a9204497d8d403316228deb52b550388190c53a57394d41531")
     version("3.5.3", sha256="339cac48b80ddbc8bfd05daae0a3a73414651a8596904c2a881cfd1edb65f26c")
@@ -136,39 +133,37 @@ class PyMatplotlib(PythonPackage):
     # https://matplotlib.org/stable/devel/dependencies.html
     # Runtime dependencies
     # Mandatory dependencies
-    extends("python", ignore=r"bin/nosetests.*$|bin/pbr$")
+    depends_on("python@3.9:", when="@3.8:", type=("build", "link", "run"))
     depends_on("python@3.8:", when="@3.6:", type=("build", "link", "run"))
-    depends_on("python@3.7:", when="@3.4:", type=("build", "link", "run"))
-    depends_on("python@3.6:", when="@3.1:", type=("build", "link", "run"))
-    depends_on("python@3.5:", when="@3:", type=("build", "link", "run"))
-    depends_on("python@2.7:2.8,3.4:", when="@:2", type=("build", "link", "run"))
+    depends_on("python", type=("build", "link", "run"))
     depends_on("py-contourpy@1.0.1:", when="@3.6:", type=("build", "run"))
     depends_on("py-cycler@0.10:", type=("build", "run"))
     depends_on("py-fonttools@4.22:", when="@3.5:", type=("build", "run"))
-    depends_on("py-kiwisolver@1.0.1:", type=("build", "run"), when="@2.2.0:")
-    depends_on("py-numpy@1.19:", when="@3.6:", type=("build", "run"))
-    depends_on("py-numpy@1.17:", when="@3.5:", type=("build", "run"))
-    depends_on("py-numpy@1.16:", when="@3.4:", type=("build", "run"))
-    depends_on("py-numpy@1.15:", when="@3.3:", type=("build", "run"))
+    depends_on("py-kiwisolver@1.3.1:", when="@3.8.1:", type=("build", "run"))
+    depends_on("py-kiwisolver@1.0.1:", when="@2.2:", type=("build", "run"))
+    depends_on("py-numpy@1.21:1", when="@3.8:", type=("build", "link", "run"))
+    depends_on("py-numpy@1.20:", when="@3.7:", type=("build", "link", "run"))
+    depends_on("py-numpy@1.19:", when="@3.6:", type=("build", "link", "run"))
+    depends_on("py-numpy@1.17:", when="@3.5:", type=("build", "link", "run"))
+    depends_on("py-numpy@1.16:", when="@3.4:", type=("build", "link", "run"))
+    depends_on("py-numpy@1.15:", when="@3.3:", type=("build", "link", "run"))
     depends_on("py-numpy@1.11:", type=("build", "run"))
     depends_on("py-packaging@20:", when="@3.6:", type=("build", "run"))
     depends_on("py-packaging", when="@3.5:", type=("build", "run"))
+    depends_on("pil@8:", when="@3.8.1:", type=("build", "run"))
     depends_on("pil@6.2:", when="@3.3:", type=("build", "run"))
+    depends_on("py-pyparsing@2.3.1:3.0", when="@3.7.2", type=("build", "run"))
+    depends_on("py-pyparsing@2.3.1:", when="@3.7:", type=("build", "run"))
     depends_on("py-pyparsing@2.2.1:", when="@3.4:", type=("build", "run"))
     depends_on("py-pyparsing@2.0.3,2.0.5:2.1.1,2.1.3:2.1.5,2.1.7:", type=("build", "run"))
     depends_on("py-python-dateutil@2.7:", when="@3.4:", type=("build", "run"))
     depends_on("py-python-dateutil@2.1:", type=("build", "run"))
-    depends_on("py-setuptools", type=("build", "run"))
+    depends_on("py-importlib-resources@3.2:", when="@3.7: ^python@:3.9", type=("build", "run"))
 
     # Historical dependencies
-    depends_on(
-        "py-backports-functools-lru-cache", type=("build", "run"), when="@2.1.0:2 ^python@:2"
-    )
-    depends_on("py-functools32", type=("build", "run"), when="@:2.0 ^python@:2.7")
     depends_on("py-pytz", type=("build", "run"), when="@:2")
     depends_on("py-six@1.10.0:", type=("build", "run"), when="@2")
     depends_on("py-six@1.9.0:", type=("build", "run"), when="@:1")
-    depends_on("py-subprocess32", type=("build", "run"), when="^python@:2.7")
 
     # Optional dependencies
     # Backends
@@ -177,13 +172,16 @@ class PyMatplotlib(PythonPackage):
         depends_on("tk@8.4:8.5,8.6.2:", when="backend=" + backend, type="run")
         depends_on("python+tkinter", when="backend=" + backend, type="run")
     # Qt
+    # matplotlib/backends/qt_compat.py
     for backend in ["qt4agg", "qt4cairo"]:
         depends_on("py-pyqt4@4.6:", when="backend=" + backend, type="run")
+        depends_on("qt+gui", when="backend=" + backend, type="run")
     for backend in ["qt5agg", "qt5cairo"]:
         depends_on("py-pyqt5", when="backend=" + backend, type="run")
-    # https://github.com/spack/spack/pull/32696
-    # for backend in ["qtagg", "qtcairo"]:
-    #     depends_on("py-pyqt6@6.1:", when="backend=" + backend, type="run")
+        depends_on("qt+gui", when="backend=" + backend, type="run")
+    for backend in ["qtagg", "qtcairo"]:
+        depends_on("py-pyqt6@6.1:", when="backend=" + backend, type="run")
+        depends_on("qt-base+gui+widgets", when="backend=" + backend, type="run")
     # GTK
     for backend in ["gtk", "gtkagg", "gtkcairo", "gtk3agg", "gtk3cairo", "gtk4agg", "gtk4cairo"]:
         depends_on("py-pygobject", when="backend=" + backend, type="run")
@@ -228,6 +226,12 @@ class PyMatplotlib(PythonPackage):
     # Dependencies for building matplotlib
     # Setup dependencies
     depends_on("py-certifi@2020.6.20:", when="@3.3.1:", type="build")
+    depends_on("py-numpy@1.25:", when="@3.8:", type="build")
+    depends_on("py-pybind11@2.6:", when="@3.7:", type="build")
+    depends_on("py-setuptools@64:", when="@3.8.1:", type="build")
+    depends_on("py-setuptools@42:", when="@3.8:", type="build")
+    depends_on("py-setuptools@42:", when="@3.7.2:3.7", type=("build", "run"))
+    depends_on("py-setuptools", when="@:3.7.1", type=("build", "run"))
     depends_on("py-setuptools-scm@7:", when="@3.6:", type="build")
     depends_on("py-setuptools-scm@4:6", when="@3.5", type="build")
     depends_on("py-setuptools-scm-git-archive", when="@3.5", type="build")
@@ -256,6 +260,12 @@ class PyMatplotlib(PythonPackage):
     @property
     def archive_files(self):
         return [os.path.join(self.build_directory, self.config_file)]
+
+    def flag_handler(self, name, flags):
+        if name == "cxxflags":
+            if self.spec.satisfies("%oneapi"):
+                flags.append("-Wno-error=register")
+        return (flags, None, None)
 
     def setup_build_environment(self, env):
         include = []

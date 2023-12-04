@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -65,7 +65,7 @@ class Tkrzw(AutotoolsPackage):
         description="List of supported compression backends",
     )
 
-    depends_on("zlib", when="compression=zlib")
+    depends_on("zlib-api", when="compression=zlib")
     depends_on("lz4", when="compression=lz4")
     depends_on("xz", when="compression=lzma")  # lzma.h is in the xz package, not in lzma
     depends_on("zstd", when="compression=zstd")

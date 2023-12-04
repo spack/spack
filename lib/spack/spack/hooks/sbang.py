@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,8 +30,7 @@ else:
 
 #: Groupdb does not exist on Windows, prevent imports
 #: on supported systems
-is_windows = sys.platform == "win32"
-if not is_windows:
+if sys.platform != "win32":
     import grp
 
 #: Spack itself also limits the shebang line to at most 4KB, which should be plenty.
@@ -42,7 +41,7 @@ interpreter_regex = re.compile(b"#![ \t]*?([^ \t\0\n]+)")
 
 def sbang_install_path():
     """Location sbang should be installed within Spack's ``install_tree``."""
-    sbang_root = str(spack.store.unpadded_root)
+    sbang_root = str(spack.store.STORE.unpadded_root)
     install_path = os.path.join(sbang_root, "bin", "sbang")
     path_length = len(install_path)
     if path_length > system_shebang_limit:
@@ -205,13 +204,14 @@ def install_sbang():
         fs.set_install_permissions(sbang_bin_dir)
 
     # set group on sbang_bin_dir if not already set (only if set in configuration)
-    if group_name and grp.getgrgid(os.stat(sbang_bin_dir).st_gid).gr_name != group_name:
+    # TODO: after we drop python2 support, use shutil.chown to avoid gid lookups that
+    # can fail for remote groups
+    if group_name and os.stat(sbang_bin_dir).st_gid != grp.getgrnam(group_name).gr_gid:
         os.chown(sbang_bin_dir, os.stat(sbang_bin_dir).st_uid, grp.getgrnam(group_name).gr_gid)
 
     # copy over the fresh copy of `sbang`
     sbang_tmp_path = os.path.join(
-        os.path.dirname(sbang_path),
-        ".%s.tmp" % os.path.basename(sbang_path),
+        os.path.dirname(sbang_path), ".%s.tmp" % os.path.basename(sbang_path)
     )
     shutil.copy(spack.paths.sbang_script, sbang_tmp_path)
 
@@ -224,7 +224,7 @@ def install_sbang():
     os.rename(sbang_tmp_path, sbang_path)
 
 
-def post_install(spec):
+def post_install(spec, explicit=None):
     """This hook edits scripts so that they call /bin/bash
     $spack_prefix/bin/sbang instead of something longer than the
     shebang limit.

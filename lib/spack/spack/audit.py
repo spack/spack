@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,21 +37,25 @@ as input.
 """
 import ast
 import collections
+import collections.abc
+import glob
 import inspect
+import io
 import itertools
+import pathlib
 import pickle
 import re
-
-from six.moves.urllib.request import urlopen
+import warnings
+from urllib.request import urlopen
 
 import llnl.util.lang
-from llnl.util.compat import Sequence
 
 import spack.config
 import spack.patch
 import spack.repo
 import spack.spec
 import spack.util.crypto
+import spack.util.spack_yaml as syaml
 import spack.variant
 
 #: Map an audit tag to a list of callables implementing checks
@@ -61,7 +65,7 @@ CALLBACKS = {}
 GROUPS = collections.defaultdict(list)
 
 
-class Error(object):
+class Error:
     """Information on an error reported in a test."""
 
     def __init__(self, summary, details):
@@ -81,7 +85,7 @@ class Error(object):
         return hash(value)
 
 
-class AuditClass(Sequence):
+class AuditClass(collections.abc.Sequence):
     def __init__(self, group, tag, description, kwargs):
         """Return an object that acts as a decorator to register functions
         associated with a specific class of sanity checks.
@@ -248,6 +252,88 @@ def _search_duplicate_specs_in_externals(error_cls):
     return errors
 
 
+@config_packages
+def _deprecated_preferences(error_cls):
+    """Search package preferences deprecated in v0.21 (and slated for removal in v0.22)"""
+    # TODO (v0.22): remove this audit as the attributes will not be allowed in config
+    errors = []
+    packages_yaml = spack.config.CONFIG.get_config("packages")
+
+    def make_error(attribute_name, config_data, summary):
+        s = io.StringIO()
+        s.write("Occurring in the following file:\n")
+        dict_view = syaml.syaml_dict((k, v) for k, v in config_data.items() if k == attribute_name)
+        syaml.dump_config(dict_view, stream=s, blame=True)
+        return error_cls(summary=summary, details=[s.getvalue()])
+
+    if "all" in packages_yaml and "version" in packages_yaml["all"]:
+        summary = "Using the deprecated 'version' attribute under 'packages:all'"
+        errors.append(make_error("version", packages_yaml["all"], summary))
+
+    for package_name in packages_yaml:
+        if package_name == "all":
+            continue
+
+        package_conf = packages_yaml[package_name]
+        for attribute in ("compiler", "providers", "target"):
+            if attribute not in package_conf:
+                continue
+            summary = (
+                f"Using the deprecated '{attribute}' attribute " f"under 'packages:{package_name}'"
+            )
+            errors.append(make_error(attribute, package_conf, summary))
+
+    return errors
+
+
+@config_packages
+def _avoid_mismatched_variants(error_cls):
+    """Warns if variant preferences have mismatched types or names."""
+    errors = []
+    packages_yaml = spack.config.CONFIG.get_config("packages")
+
+    def make_error(config_data, summary):
+        s = io.StringIO()
+        s.write("Occurring in the following file:\n")
+        syaml.dump_config(config_data, stream=s, blame=True)
+        return error_cls(summary=summary, details=[s.getvalue()])
+
+    for pkg_name in packages_yaml:
+        # 'all:' must be more forgiving, since it is setting defaults for everything
+        if pkg_name == "all" or "variants" not in packages_yaml[pkg_name]:
+            continue
+
+        preferences = packages_yaml[pkg_name]["variants"]
+        if not isinstance(preferences, list):
+            preferences = [preferences]
+
+        for variants in preferences:
+            current_spec = spack.spec.Spec(variants)
+            pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+            for variant in current_spec.variants.values():
+                # Variant does not exist at all
+                if variant.name not in pkg_cls.variants:
+                    summary = (
+                        f"Setting a preference for the '{pkg_name}' package to the "
+                        f"non-existing variant '{variant.name}'"
+                    )
+                    errors.append(make_error(preferences, summary))
+                    continue
+
+                # Variant cannot accept this value
+                s = spack.spec.Spec(pkg_name)
+                try:
+                    s.update_variant_validate(variant.name, variant.value)
+                except Exception:
+                    summary = (
+                        f"Setting the variant '{variant.name}' of the '{pkg_name}' package "
+                        f"to the invalid value '{str(variant)}'"
+                    )
+                    errors.append(make_error(preferences, summary))
+
+    return errors
+
+
 #: Sanity checks on package directives
 package_directives = AuditClass(
     group="packages",
@@ -287,12 +373,17 @@ def _check_build_test_callbacks(pkgs, error_cls):
     """Ensure stand-alone test method is not included in build-time callbacks"""
     errors = []
     for pkg_name in pkgs:
-        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
-        test_callbacks = pkg_cls.build_time_test_callbacks
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+        test_callbacks = getattr(pkg_cls, "build_time_test_callbacks", None)
 
-        if test_callbacks and "test" in test_callbacks:
-            msg = '{0} package contains "test" method in ' "build_time_test_callbacks"
-            instr = 'Remove "test" from: [{0}]'.format(", ".join(test_callbacks))
+        # TODO (post-34236): "test*"->"test_*" once remove deprecated methods
+        # TODO (post-34236): "test"->"test_" once remove deprecated methods
+        has_test_method = test_callbacks and any([m.startswith("test") for m in test_callbacks])
+        if has_test_method:
+            msg = '{0} package contains "test*" method(s) in ' "build_time_test_callbacks"
+            instr = 'Remove all methods whose names start with "test" from: [{0}]'.format(
+                ", ".join(test_callbacks)
+            )
             errors.append(error_cls(msg.format(pkg_name), [instr]))
 
     return errors
@@ -300,34 +391,48 @@ def _check_build_test_callbacks(pkgs, error_cls):
 
 @package_directives
 def _check_patch_urls(pkgs, error_cls):
-    """Ensure that patches fetched from GitHub have stable sha256 hashes."""
+    """Ensure that patches fetched from GitHub and GitLab have stable sha256
+    hashes."""
     github_patch_url_re = (
         r"^https?://(?:patch-diff\.)?github(?:usercontent)?\.com/"
-        ".+/.+/(?:commit|pull)/[a-fA-F0-9]*.(?:patch|diff)"
+        r".+/.+/(?:commit|pull)/[a-fA-F0-9]+\.(?:patch|diff)"
+    )
+    # Only .diff URLs have stable/full hashes:
+    # https://forum.gitlab.com/t/patches-with-full-index/29313
+    gitlab_patch_url_re = (
+        r"^https?://(?:.+)?gitlab(?:.+)/"
+        r".+/.+/-/(?:commit|merge_requests)/[a-fA-F0-9]+\.(?:patch|diff)"
     )
 
     errors = []
     for pkg_name in pkgs:
-        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
         for condition, patches in pkg_cls.patches.items():
             for patch in patches:
                 if not isinstance(patch, spack.patch.UrlPatch):
                     continue
 
-                if not re.match(github_patch_url_re, patch.url):
-                    continue
-
-                full_index_arg = "?full_index=1"
-                if not patch.url.endswith(full_index_arg):
-                    errors.append(
-                        error_cls(
-                            "patch URL in package {0} must end with {1}".format(
-                                pkg_cls.name,
-                                full_index_arg,
-                            ),
-                            [patch.url],
+                if re.match(github_patch_url_re, patch.url):
+                    full_index_arg = "?full_index=1"
+                    if not patch.url.endswith(full_index_arg):
+                        errors.append(
+                            error_cls(
+                                "patch URL in package {0} must end with {1}".format(
+                                    pkg_cls.name, full_index_arg
+                                ),
+                                [patch.url],
+                            )
                         )
-                    )
+                elif re.match(gitlab_patch_url_re, patch.url):
+                    if not patch.url.endswith(".diff"):
+                        errors.append(
+                            error_cls(
+                                "patch URL in package {0} must end with .diff".format(
+                                    pkg_cls.name
+                                ),
+                                [patch.url],
+                            )
+                        )
 
     return errors
 
@@ -339,7 +444,7 @@ def _search_for_reserved_attributes_names_in_packages(pkgs, error_cls):
     errors = []
     for pkg_name in pkgs:
         name_definitions = collections.defaultdict(list)
-        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
 
         for cls_item in inspect.getmro(pkg_cls):
             for name in RESERVED_NAMES:
@@ -380,7 +485,7 @@ def _ensure_packages_are_pickeleable(pkgs, error_cls):
     """Ensure that package objects are pickleable"""
     errors = []
     for pkg_name in pkgs:
-        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
         pkg = pkg_cls(spack.spec.Spec(pkg_name))
         try:
             pickle.dumps(pkg)
@@ -421,7 +526,7 @@ def _ensure_all_versions_can_produce_a_fetcher(pkgs, error_cls):
     """Ensure all versions in a package can produce a fetcher"""
     errors = []
     for pkg_name in pkgs:
-        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
         pkg = pkg_cls(spack.spec.Spec(pkg_name))
         try:
             spack.fetch_strategy.check_pkg_attributes(pkg)
@@ -446,7 +551,7 @@ def _ensure_docstring_and_no_fixme(pkgs, error_cls):
     ]
     for pkg_name in pkgs:
         details = []
-        filename = spack.repo.path.filename_for_package_name(pkg_name)
+        filename = spack.repo.PATH.filename_for_package_name(pkg_name)
         with open(filename, "r") as package_file:
             for i, line in enumerate(package_file):
                 pattern = next((r for r in fixme_regexes if r.search(line)), None)
@@ -458,7 +563,7 @@ def _ensure_docstring_and_no_fixme(pkgs, error_cls):
             error_msg = "Package '{}' contains boilerplate that need to be removed"
             errors.append(error_cls(error_msg.format(pkg_name), details))
 
-        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
         if not pkg_cls.__doc__:
             error_msg = "Package '{}' miss a docstring"
             errors.append(error_cls(error_msg.format(pkg_name), []))
@@ -471,7 +576,7 @@ def _ensure_all_packages_use_sha256_checksums(pkgs, error_cls):
     """Ensure no packages use md5 checksums"""
     errors = []
     for pkg_name in pkgs:
-        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
         if pkg_cls.manual_download:
             continue
 
@@ -508,7 +613,7 @@ def _ensure_env_methods_are_ported_to_builders(pkgs, error_cls):
     """Ensure that methods modifying the build environment are ported to builder classes."""
     errors = []
     for pkg_name in pkgs:
-        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
         buildsystem_variant, _ = pkg_cls.variants["build_system"]
         buildsystem_names = [getattr(x, "value", x) for x in buildsystem_variant.values]
         builder_cls_names = [spack.builder.BUILDER_CLS[x].__name__ for x in buildsystem_names]
@@ -535,7 +640,7 @@ def _linting_package_file(pkgs, error_cls):
     """Check for correctness of links"""
     errors = []
     for pkg_name in pkgs:
-        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
 
         # Does the homepage have http, and if so, does https work?
         if pkg_cls.homepage.startswith("http://"):
@@ -559,7 +664,7 @@ def _unknown_variants_in_directives(pkgs, error_cls):
     """Report unknown or wrong variants in directives for this package"""
     errors = []
     for pkg_name in pkgs:
-        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
 
         # Check "conflicts" directive
         for conflict, triggers in pkg_cls.conflicts.items():
@@ -625,15 +730,15 @@ def _unknown_variants_in_dependencies(pkgs, error_cls):
     """Report unknown dependencies and wrong variants for dependencies"""
     errors = []
     for pkg_name in pkgs:
-        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
-        filename = spack.repo.path.filename_for_package_name(pkg_name)
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+        filename = spack.repo.PATH.filename_for_package_name(pkg_name)
         for dependency_name, dependency_data in pkg_cls.dependencies.items():
             # No need to analyze virtual packages
-            if spack.repo.path.is_virtual(dependency_name):
+            if spack.repo.PATH.is_virtual(dependency_name):
                 continue
 
             try:
-                dependency_pkg_cls = spack.repo.path.get_pkg_class(dependency_name)
+                dependency_pkg_cls = spack.repo.PATH.get_pkg_class(dependency_name)
             except spack.repo.UnknownPackageError:
                 # This dependency is completely missing, so report
                 # and continue the analysis
@@ -672,7 +777,7 @@ def _ensure_variant_defaults_are_parsable(pkgs, error_cls):
     """Ensures that variant defaults are present and parsable from cli"""
     errors = []
     for pkg_name in pkgs:
-        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
         for variant_name, entry in pkg_cls.variants.items():
             variant, _ = entry
             default_is_parsable = (
@@ -697,7 +802,25 @@ def _ensure_variant_defaults_are_parsable(pkgs, error_cls):
             try:
                 variant.validate_or_raise(vspec, pkg_cls=pkg_cls)
             except spack.variant.InvalidVariantValueError:
-                error_msg = "The variant '{}' default value in package '{}' cannot be validated"
+                error_msg = (
+                    "The default value of the variant '{}' in package '{}' failed validation"
+                )
+                question = "Is it among the allowed values?"
+                errors.append(error_cls(error_msg.format(variant_name, pkg_name), [question]))
+
+    return errors
+
+
+@package_directives
+def _ensure_variants_have_descriptions(pkgs, error_cls):
+    """Ensures that all variants have a description."""
+    errors = []
+    for pkg_name in pkgs:
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+        for variant_name, entry in pkg_cls.variants.items():
+            variant, _ = entry
+            if not variant.description:
+                error_msg = "Variant '{}' in package '{}' is missing a description"
                 errors.append(error_cls(error_msg.format(variant_name, pkg_name), []))
 
     return errors
@@ -708,25 +831,36 @@ def _version_constraints_are_satisfiable_by_some_version_in_repo(pkgs, error_cls
     """Report if version constraints used in directives are not satisfiable"""
     errors = []
     for pkg_name in pkgs:
-        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
-        filename = spack.repo.path.filename_for_package_name(pkg_name)
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+        filename = spack.repo.PATH.filename_for_package_name(pkg_name)
         dependencies_to_check = []
         for dependency_name, dependency_data in pkg_cls.dependencies.items():
             # Skip virtual dependencies for the time being, check on
             # their versions can be added later
-            if spack.repo.path.is_virtual(dependency_name):
+            if spack.repo.PATH.is_virtual(dependency_name):
                 continue
 
             dependencies_to_check.extend([edge.spec for edge in dependency_data.values()])
 
+        host_architecture = spack.spec.ArchSpec.default_arch()
         for s in dependencies_to_check:
             dependency_pkg_cls = None
             try:
-                dependency_pkg_cls = spack.repo.path.get_pkg_class(s.name)
-                assert any(v.satisfies(s.versions) for v in list(dependency_pkg_cls.versions))
+                dependency_pkg_cls = spack.repo.PATH.get_pkg_class(s.name)
+                # Some packages have hacks that might cause failures on some platform
+                # Allow to explicitly set conditions to skip version checks in that case
+                skip_conditions = getattr(dependency_pkg_cls, "skip_version_audit", [])
+                skip_version_check = False
+                for condition in skip_conditions:
+                    if host_architecture.satisfies(spack.spec.Spec(condition).architecture):
+                        skip_version_check = True
+                        break
+                assert skip_version_check or any(
+                    v.intersects(s.versions) for v in list(dependency_pkg_cls.versions)
+                )
             except Exception:
                 summary = (
-                    "{0}: dependency on {1} cannot be satisfied " "by known versions of {1.name}"
+                    "{0}: dependency on {1} cannot be satisfied by known versions of {1.name}"
                 ).format(pkg_name, s)
                 details = ["happening in " + filename]
                 if dependency_pkg_cls is not None:
@@ -755,7 +889,7 @@ def _analyze_variants_in_directive(pkg, constraint, directive, error_cls):
         except variant_exceptions as e:
             summary = pkg.name + ': wrong variant in "{0}" directive'
             summary = summary.format(directive)
-            filename = spack.repo.path.filename_for_package_name(pkg.name)
+            filename = spack.repo.PATH.filename_for_package_name(pkg.name)
 
             error_msg = str(e).strip()
             if isinstance(e, KeyError):
@@ -764,5 +898,125 @@ def _analyze_variants_in_directive(pkg, constraint, directive, error_cls):
             err = error_cls(summary=summary, details=[error_msg, "in " + filename])
 
             errors.append(err)
+
+    return errors
+
+
+@package_directives
+def _named_specs_in_when_arguments(pkgs, error_cls):
+    """Reports named specs in the 'when=' attribute of a directive.
+
+    Note that 'conflicts' is the only directive allowing that.
+    """
+    errors = []
+    for pkg_name in pkgs:
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+
+        def _extracts_errors(triggers, summary):
+            _errors = []
+            for trigger in list(triggers):
+                when_spec = spack.spec.Spec(trigger)
+                if when_spec.name is not None and when_spec.name != pkg_name:
+                    details = [f"using '{trigger}', should be '^{trigger}'"]
+                    _errors.append(error_cls(summary=summary, details=details))
+            return _errors
+
+        for dname, triggers in pkg_cls.dependencies.items():
+            summary = f"{pkg_name}: wrong 'when=' condition for the '{dname}' dependency"
+            errors.extend(_extracts_errors(triggers, summary))
+
+        for vname, (variant, triggers) in pkg_cls.variants.items():
+            summary = f"{pkg_name}: wrong 'when=' condition for the '{vname}' variant"
+            errors.extend(_extracts_errors(triggers, summary))
+
+        for provided, triggers in pkg_cls.provided.items():
+            summary = f"{pkg_name}: wrong 'when=' condition for the '{provided}' virtual"
+            errors.extend(_extracts_errors(triggers, summary))
+
+        for _, triggers in pkg_cls.requirements.items():
+            triggers = [when_spec for when_spec, _, _ in triggers]
+            summary = f"{pkg_name}: wrong 'when=' condition in 'requires' directive"
+            errors.extend(_extracts_errors(triggers, summary))
+
+        triggers = list(pkg_cls.patches)
+        summary = f"{pkg_name}: wrong 'when=' condition in 'patch' directives"
+        errors.extend(_extracts_errors(triggers, summary))
+
+        triggers = list(pkg_cls.resources)
+        summary = f"{pkg_name}: wrong 'when=' condition in 'resource' directives"
+        errors.extend(_extracts_errors(triggers, summary))
+
+    return llnl.util.lang.dedupe(errors)
+
+
+#: Sanity checks on package directives
+external_detection = AuditClass(
+    group="externals",
+    tag="PKG-EXTERNALS",
+    description="Sanity checks for external software detection",
+    kwargs=("pkgs",),
+)
+
+
+def packages_with_detection_tests():
+    """Return the list of packages with a corresponding detection_test.yaml file."""
+    import spack.config
+    import spack.util.path
+
+    to_be_tested = []
+    for current_repo in spack.repo.PATH.repos:
+        namespace = current_repo.namespace
+        packages_dir = pathlib.PurePath(current_repo.packages_path)
+        pattern = packages_dir / "**" / "detection_test.yaml"
+        pkgs_with_tests = [
+            f"{namespace}.{str(pathlib.PurePath(x).parent.name)}" for x in glob.glob(str(pattern))
+        ]
+        to_be_tested.extend(pkgs_with_tests)
+
+    return to_be_tested
+
+
+@external_detection
+def _test_detection_by_executable(pkgs, error_cls):
+    """Test drive external detection for packages"""
+    import spack.detection
+
+    errors = []
+
+    # Filter the packages and retain only the ones with detection tests
+    pkgs_with_tests = packages_with_detection_tests()
+    selected_pkgs = []
+    for current_package in pkgs_with_tests:
+        _, unqualified_name = spack.repo.partition_package_name(current_package)
+        # Check for both unqualified name and qualified name
+        if unqualified_name in pkgs or current_package in pkgs:
+            selected_pkgs.append(current_package)
+    selected_pkgs.sort()
+
+    if not selected_pkgs:
+        summary = "No detection test to run"
+        details = [f'  "{p}" has no detection test' for p in pkgs]
+        warnings.warn("\n".join([summary] + details))
+        return errors
+
+    for pkg_name in selected_pkgs:
+        for idx, test_runner in enumerate(
+            spack.detection.detection_tests(pkg_name, spack.repo.PATH)
+        ):
+            specs = test_runner.execute()
+            expected_specs = test_runner.expected_specs
+
+            not_detected = set(expected_specs) - set(specs)
+            if not_detected:
+                summary = pkg_name + ": cannot detect some specs"
+                details = [f'"{s}" was not detected [test_id={idx}]' for s in sorted(not_detected)]
+                errors.append(error_cls(summary=summary, details=details))
+
+            not_expected = set(specs) - set(expected_specs)
+            if not_expected:
+                summary = pkg_name + ": detected unexpected specs"
+                msg = '"{0}" was detected, but was not expected [test_id={1}]'
+                details = [msg.format(s, idx) for s in sorted(not_expected)]
+                errors.append(error_cls(summary=summary, details=details))
 
     return errors

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -45,9 +45,11 @@ class Eccodes(CMakePackage):
     git = "https://github.com/ecmwf/eccodes.git"
     list_url = "https://confluence.ecmwf.int/display/ECC/Releases"
 
-    maintainers = ["skosukhin"]
+    maintainers("skosukhin")
 
     version("develop", branch="develop")
+    version("2.32.0", sha256="b57e8eeb0eba0c05d66fda5527c4ffa84b5ab35c46bcbc9a2227142973ccb8e6")
+    version("2.31.0", sha256="808ecd2c11fbf2c3f9fc7a36f8c2965b343f3151011b58a1d6e7cc2e6b3cac5d")
     version("2.25.0", sha256="8975131aac54d406e5457706fd4e6ba46a8cc9c7dd817a41f2aa64ce1193c04e")
     version("2.24.2", sha256="c60ad0fd89e11918ace0d84c01489f21222b11d6cad3ff7495856a0add610403")
     version("2.23.0", sha256="cbdc8532537e9682f1a93ddb03440416b66906a4cc25dec3cbd73940d194bf0c")
@@ -70,33 +72,20 @@ class Eccodes(CMakePackage):
     )
     variant("png", default=False, description="Enable PNG support for decoding/encoding")
     variant(
-        "aec", default=False, description="Enable Adaptive Entropy Coding for decoding/encoding"
+        "aec", default=True, description="Enable Adaptive Entropy Coding for decoding/encoding"
     )
     variant("pthreads", default=False, description="Enable POSIX threads")
     variant("openmp", default=False, description="Enable OpenMP threads")
     variant(
         "memfs", default=False, description="Enable memory based access to definitions/samples"
     )
-    variant("python", default=False, description="Enable the Python 2 interface")
     variant("fortran", default=False, description="Enable the Fortran support")
     variant("shared", default=True, description="Build shared versions of the libraries")
 
     variant(
-        "definitions",
-        values=disjoint_sets(
-            ("auto",),
-            ("default",) + tuple(_definitions.keys()),
-        ).with_default("auto"),
-        description="List of definitions to install",
-    )
-
-    variant(
-        "samples",
-        values=disjoint_sets(
-            ("auto",),
-            ("default",),
-        ).with_default("auto"),
-        description="List of samples to install",
+        "extra_definitions",
+        values=any_combination_of(*_definitions.keys()),
+        description="List of extra definitions to install",
     )
 
     depends_on("netcdf-c", when="+netcdf")
@@ -114,17 +103,12 @@ class Eccodes(CMakePackage):
     depends_on("libaec", when="+aec")
     # Can be built with Python 2 or Python 3.
     depends_on("python", when="+memfs", type="build")
-    # The interface is available only for Python 2.
-    # Python 3 interface is available as a separate packages:
-    # https://confluence.ecmwf.int/display/ECC/Python+3+interface+for+ecCodes
-    depends_on("python@2.6:2", when="+python", type=("build", "link", "run"))
-    depends_on("py-numpy", when="+python", type=("build", "run"))
-    extends("python", when="+python")
 
     depends_on("cmake@3.6:", type="build")
     depends_on("cmake@3.12:", when="@2.19:", type="build")
 
     depends_on("ecbuild", type="build", when="@develop")
+    depends_on("ecbuild@3.7:", type="build", when="@2.25:")
 
     conflicts("+openmp", when="+pthreads", msg="Cannot enable both POSIX threads and OMP")
 
@@ -143,13 +127,13 @@ class Eccodes(CMakePackage):
     for center, definitions in _definitions.items():
         kwargs = definitions.get("conflicts", None)
         if kwargs:
-            conflicts("definitions={0}".format(center), **kwargs)
+            conflicts("extra_definitions={0}".format(center), **kwargs)
         for kwargs in definitions.get("resources", []):
             resource(
                 name=center,
                 destination="spack-definitions",
                 placement="definitions.{0}".format(center),
-                **kwargs
+                **kwargs,
             )
 
     # Enforce linking against the specified JPEG2000 backend, see also
@@ -236,13 +220,13 @@ class Eccodes(CMakePackage):
             r"(^\s*kind_of_double\s*=\s*)(\d{1,2})(\s*$)",
             "\\1kind(real\\2)\\3",
             "fortran/grib_types.f90",
-            **kwargs
+            **kwargs,
         )
         filter_file(
             r"(^\s*kind_of_\w+\s*=\s*)(\d{1,2})(\s*$)",
             "\\1kind(x\\2)\\3",
             "fortran/grib_types.f90",
-            **kwargs
+            **kwargs,
         )
 
         # Replace integer kinds:
@@ -251,7 +235,7 @@ class Eccodes(CMakePackage):
                 r"(^\s*integer\((?:kind=)?){0}(\).*)".format(size),
                 "\\1selected_int_kind({0})\\2".format(r),
                 *patch_kind_files,
-                **kwargs
+                **kwargs,
             )
 
         # Replace real kinds:
@@ -260,7 +244,7 @@ class Eccodes(CMakePackage):
                 r"(^\s*real\((?:kind=)?){0}(\).*)".format(size),
                 "\\1selected_real_kind({0}, {1})\\2".format(p, r),
                 *patch_kind_files,
-                **kwargs
+                **kwargs,
             )
 
         # Enable getarg and exit subroutines:
@@ -268,7 +252,7 @@ class Eccodes(CMakePackage):
             r"(^\s*program\s+\w+)(\s*$)",
             "\\1; use f90_unix_env; use f90_unix_proc\\2",
             *patch_unix_ext_files,
-            **kwargs
+            **kwargs,
         )
 
     @property
@@ -332,8 +316,8 @@ class Eccodes(CMakePackage):
             self.define_from_variant("ENABLE_ECCODES_THREADS", "pthreads"),
             self.define_from_variant("ENABLE_ECCODES_OMP_THREADS", "openmp"),
             self.define_from_variant("ENABLE_MEMFS", "memfs"),
-            self.define_from_variant(
-                "ENABLE_PYTHON{0}".format("2" if self.spec.satisfies("@2.20.0:") else ""), "python"
+            self.define(
+                "ENABLE_PYTHON{0}".format("2" if self.spec.satisfies("@2.20.0:") else ""), False
             ),
             self.define_from_variant("ENABLE_FORTRAN", "fortran"),
             self.define("BUILD_SHARED_LIBS", "BOTH" if "+shared" in self.spec else "OFF"),
@@ -346,48 +330,34 @@ class Eccodes(CMakePackage):
         ]
 
         if "+netcdf" in self.spec:
-            args.extend(
-                [
-                    # Prevent possible overriding by environment variables
-                    # NETCDF_ROOT, NETCDF_DIR, and NETCDF_PATH:
-                    self.define("NETCDF_PATH", self.spec["netcdf-c"].prefix),
-                    # Prevent overriding by environment variable HDF5_ROOT:
-                    self.define("HDF5_ROOT", self.spec["hdf5"].prefix),
-                ]
-            )
+            # Prevent possible overriding by environment variables NETCDF_ROOT, NETCDF_DIR, and
+            # NETCDF_PATH:
+            args.append(self.define("NETCDF_PATH", self.spec["netcdf-c"].prefix))
+            # Prevent overriding by environment variable HDF5_ROOT (starting version 2.14.0,
+            # ecCodes is shipped with ecBuild 3.1.0+, which does not seem to rely on the HDF5_ROOT
+            # variable):
+            if self.spec.satisfies("@:2.13"):
+                args.append(self.define("HDF5_ROOT", self.spec["hdf5"].prefix))
 
         if jp2k == "openjpeg":
             args.append(self.define("OPENJPEG_PATH", self.spec["openjpeg"].prefix))
 
         if "+png" in self.spec:
-            args.append(self.define("ZLIB_ROOT", self.spec["zlib"].prefix))
+            args.append(self.define("ZLIB_ROOT", self.spec["zlib-api"].prefix))
 
         if "+aec" in self.spec:
             # Prevent overriding by environment variables AEC_DIR and AEC_PATH:
             args.append(self.define("AEC_DIR", self.spec["libaec"].prefix))
 
-        if "^python" in self.spec:
+        if "+memfs" in self.spec:
             args.append(self.define("PYTHON_EXECUTABLE", python.path))
-
-        definitions = self.spec.variants["definitions"].value
-
-        if "auto" not in definitions:
-            args.append(
-                self.define("ENABLE_INSTALL_ECCODES_DEFINITIONS", "default" in definitions)
-            )
-
-        samples = self.spec.variants["samples"].value
-
-        if "auto" not in samples:
-            args.append(self.define("ENABLE_INSTALL_ECCODES_SAMPLES", "default" in samples))
 
         return args
 
     @run_after("install")
     def install_extra_definitions(self):
-        noop = set(["auto", "none", "default"])
-        for center in self.spec.variants["definitions"].value:
-            if center not in noop:
+        for center in self.spec.variants["extra_definitions"].value:
+            if center != "none":
                 center_dir = "definitions.{0}".format(center)
                 install_tree(
                     join_path(self.stage.source_path, "spack-definitions", center_dir),

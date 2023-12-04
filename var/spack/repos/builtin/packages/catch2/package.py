@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,14 +11,22 @@ class Catch2(CMakePackage):
     supports Objective-C (and maybe C)."""
 
     homepage = "https://github.com/catchorg/Catch2"
-    url = "https://github.com/catchorg/Catch2/archive/v2.9.1.tar.gz"
+    url = "https://github.com/catchorg/Catch2/archive/v2.13.10.tar.gz"
     git = "https://github.com/catchorg/Catch2.git"
-    maintainers = ["ax3l", "AndrewGaspar"]
+    maintainers("ax3l")
 
     # In-Development
     version("develop", branch="devel")
 
     # Releases
+    version("3.4.0", sha256="122928b814b75717316c71af69bd2b43387643ba076a6ec16e7882bfb2dfacbb")
+    version("3.3.2", sha256="8361907f4d9bff3ae7c1edb027f813659f793053c99b67837a0c0375f065bae2")
+    version("3.3.1", sha256="d90351cdc55421f640c553cfc0875a8c834428679444e8062e9187d05b18aace")
+    version("3.3.0", sha256="fe2f29a54ca775c2dd04bb97ffb79d398e6210e3caa174348b5cd3b7e4ca887d")
+    version("3.2.1", sha256="4613d3e8142b672159fcae252a4860d72c8cf8e2df5043b1ae3541db9ef5d73c")
+    version("3.2.0", sha256="feee04647e28ac3cbeff46cb42abc8ee2d8d5f646d36e3fb3ba274b8c69a58ea")
+    version("3.1.1", sha256="2106bccfec18c8ce673623d56780220e38527dd8f283ccba26aa4b8758737d0e")
+    version("3.1.0", sha256="c252b2d9537e18046d8b82535069d2567f77043f8e644acf9a9fffc22ea6e6f7")
     version("3.0.1", sha256="8c4173c68ae7da1b5b505194a0c2d6f1b2aef4ec1e3e7463bde451f26bbaf4e7")
     version(
         "3.0.0-preview4", sha256="2458d47d923b65ab611656cb7669d1810bcc4faa62e4c054a7405b1914cd4aee"
@@ -26,6 +34,8 @@ class Catch2(CMakePackage):
     version(
         "3.0.0-preview3", sha256="06a4f903858f21c553e988f8b76c9c6915d1f95f95512d6a58c421e02a2c4975"
     )
+    version("2.13.10", sha256="d54a712b7b1d7708bc7a819a8e6e47b2fde9536f487b89ccbca295072a7d9943")
+    version("2.13.9", sha256="06dbc7620e3b96c2b69d57bf337028bf245a211b3cddb843835bfe258f427a52")
     version("2.13.8", sha256="b9b592bd743c09f13ee4bf35fc30eeee2748963184f6bea836b146e6cc2a585a")
     version("2.13.7", sha256="3cdb4138a072e4c0290034fe22d9f0a80d3bcfb8d7a8a5c49ad75d3a5da24fae")
     version("2.13.6", sha256="48dfbb77b9193653e4e72df9633d2e0383b9b625a47060759668480fdf24fbd4")
@@ -95,14 +105,27 @@ class Catch2(CMakePackage):
     version("1.3.5", sha256="f15730d81b4173fb860ce3561768de7d41bbefb67dc031d7d1f5ae2c07f0a472")
     version("1.3.0", sha256="245f6ee73e2fea66311afa1da59e5087ddab8b37ce64994ad88506e8af28c6ac")
 
+    variant(
+        "pic", when="@3: ~shared", default=True, description="Build with position-independent code"
+    )
+    variant("shared", when="@3:", default=False, description="Build shared library")
+
+    variant(
+        "cxxstd", default="14", values=("14", "17"), multi=False, description="Define C++ standard"
+    )
+
     def cmake_args(self):
         spec = self.spec
-        args = []
+        args = [self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd")]
         # 1.7.0-1.9.3: no control over test builds
         if spec.satisfies("@1.9.4:2.1.0"):
             args.append("-DNO_SELFTEST={0}".format("OFF" if self.run_tests else "ON"))
         elif spec.satisfies("@2.1.1:"):
             args.append(self.define("BUILD_TESTING", self.run_tests))
+        if spec.satisfies("@3:"):
+            args.append(self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"))
+            args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
+
         return args
 
     @when("@:1.6")

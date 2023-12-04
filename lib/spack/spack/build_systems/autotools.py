@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ import os
 import os.path
 import stat
 import subprocess
-from typing import List  # novm
+from typing import List
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -46,6 +46,7 @@ class AutotoolsPackage(spack.package_base.PackageBase):
         depends_on("gnuconfig", type="build", when="target=ppc64le:")
         depends_on("gnuconfig", type="build", when="target=aarch64:")
         depends_on("gnuconfig", type="build", when="target=riscv64:")
+        depends_on("gmake", type="build")
         conflicts("platform=windows")
 
     def flags_to_build_system_args(self, flags):
@@ -55,7 +56,8 @@ class AutotoolsPackage(spack.package_base.PackageBase):
         setattr(self, "configure_flag_args", [])
         for flag, values in flags.items():
             if values:
-                values_str = "{0}={1}".format(flag.upper(), " ".join(values))
+                var_name = "LIBS" if flag == "ldlibs" else flag.upper()
+                values_str = "{0}={1}".format(var_name, " ".join(values))
                 self.configure_flag_args.append(values_str)
         # Spack's fflags are meant for both F77 and FC, therefore we
         # additionaly set FCFLAGS if required.
@@ -110,11 +112,7 @@ class AutotoolsBuilder(BaseBuilder):
     phases = ("autoreconf", "configure", "build", "install")
 
     #: Names associated with package methods in the old build-system format
-    legacy_methods = (
-        "configure_args",
-        "check",
-        "installcheck",
-    )
+    legacy_methods = ("configure_args", "check", "installcheck")
 
     #: Names associated with package attributes in the old build-system format
     legacy_attributes = (
@@ -138,7 +136,7 @@ class AutotoolsBuilder(BaseBuilder):
     patch_libtool = True
 
     #: Targets for ``make`` during the :py:meth:`~.AutotoolsBuilder.build` phase
-    build_targets = []  # type: List[str]
+    build_targets: List[str] = []
     #: Targets for ``make`` during the :py:meth:`~.AutotoolsBuilder.install` phase
     install_targets = ["install"]
 
@@ -152,7 +150,7 @@ class AutotoolsBuilder(BaseBuilder):
     force_autoreconf = False
 
     #: Options to be passed to autoreconf when using the default implementation
-    autoreconf_extra_args = []  # type: List[str]
+    autoreconf_extra_args: List[str] = []
 
     #: If False deletes all the .la files in the prefix folder after the installation.
     #: If True instead it installs them.
@@ -427,15 +425,15 @@ To resolve this problem, please try the following:
             x.filter(regex="-nostdlib", repl="", string=True)
             rehead = r"/\S*/"
             for o in [
-                "fjhpctag.o",
-                "fjcrt0.o",
-                "fjlang08.o",
-                "fjomp.o",
-                "crti.o",
-                "crtbeginS.o",
-                "crtendS.o",
+                r"fjhpctag\.o",
+                r"fjcrt0\.o",
+                r"fjlang08\.o",
+                r"fjomp\.o",
+                r"crti\.o",
+                r"crtbeginS\.o",
+                r"crtendS\.o",
             ]:
-                x.filter(regex=(rehead + o), repl="", string=True)
+                x.filter(regex=(rehead + o), repl="")
         elif self.pkg.compiler.name == "dpcpp":
             # Hack to filter out spurious predep_objects when building with Intel dpcpp
             # (see https://github.com/spack/spack/issues/32863):

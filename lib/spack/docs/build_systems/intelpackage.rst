@@ -1,13 +1,13 @@
-.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _intelpackage:
 
-------------
-IntelPackage
-------------
+-----
+Intel
+-----
 
 .. contents::
 
@@ -392,12 +392,12 @@ See section
 :ref:`Configuration Scopes <configuration-scopes>`
 for an explanation about the different files
 and section
-:ref:`Build customization <build-settings>`
+:ref:`Build customization <packages-config>`
 for specifics and examples for ``packages.yaml`` files.
 
 .. If your system administrator did not provide modules for pre-installed Intel
    tools, you could do well to ask for them, because installing multiple copies
-   of the Intel tools, as is wont to happen once Spack is in the picture, is
+   of the Intel tools, as is won't to happen once Spack is in the picture, is
    bound to stretch disk space and patience thin. If you *are* the system
    administrator and are still new to modules, then perhaps it's best to follow
    the `next section <Installing Intel tools within Spack_>`_ and install the tools
@@ -653,7 +653,7 @@ follow `the next section <intel-install-libs_>`_ instead.
    * If you specified a custom variant (for example ``+vtune``) you may want to add this as your
      preferred variant in the packages configuration for the ``intel-parallel-studio`` package
      as described in :ref:`package-preferences`. Otherwise you will have to specify
-     the variant everytime ``intel-parallel-studio`` is being used as ``mkl``, ``fftw`` or ``mpi``
+     the variant every time ``intel-parallel-studio`` is being used as ``mkl``, ``fftw`` or ``mpi``
      implementation to avoid pulling in a different variant.
 
    * To set the Intel compilers for default use in Spack, instead of the usual ``%gcc``,
@@ -934,9 +934,9 @@ a *virtual* ``mkl`` package is declared in Spack.
   .. code-block:: python
 
      # Examples for absolute and conditional dependencies:
-     depends_on('mkl')
-     depends_on('mkl', when='+mkl')
-     depends_on('mkl', when='fftw=mkl')
+     depends_on("mkl")
+     depends_on("mkl", when="+mkl")
+     depends_on("mkl", when="fftw=mkl")
 
   The ``MKLROOT`` environment variable (part of the documented API) will be set
   during all stages of client package installation, and is available to both
@@ -972,8 +972,8 @@ a *virtual* ``mkl`` package is declared in Spack.
       def configure_args(self):
           args = []
           ...
-          args.append('--with-blas=%s' % self.spec['blas'].libs.ld_flags)
-          args.append('--with-lapack=%s' % self.spec['lapack'].libs.ld_flags)
+          args.append("--with-blas=%s" % self.spec["blas"].libs.ld_flags)
+          args.append("--with-lapack=%s" % self.spec["lapack"].libs.ld_flags)
           ...
 
   .. tip::
@@ -989,13 +989,13 @@ a *virtual* ``mkl`` package is declared in Spack.
 
   .. code-block:: python
 
-    self.spec['blas'].headers.include_flags
+    self.spec["blas"].headers.include_flags
 
   and to generate linker options (``-L<dir> -llibname ...``), use the same as above,
 
   .. code-block:: python
 
-    self.spec['blas'].libs.ld_flags
+    self.spec["blas"].libs.ld_flags
 
   See
   :ref:`MakefilePackage <makefilepackage>`

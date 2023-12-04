@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,10 @@ class Sqlite(AutotoolsPackage):
 
     homepage = "https://www.sqlite.org"
 
+    version("3.43.2", sha256="6d422b6f62c4de2ca80d61860e3a3fb693554d2f75bb1aaca743ccc4d6f609f0")
+    version("3.42.0", sha256="7abcfd161c6e2742ca5c6c0895d1f853c940f203304a0b49da4e1eca5d088ca6")
+    version("3.40.1", sha256="2c5dea207fa508d765af1ef620b637dcb06572afa6f01f0815bd5bbf864b33d9")
+    version("3.40.0", sha256="0333552076d2700c75352256e91c78bf5cd62491589ba0c69aed0a81868980e7")
     version("3.39.4", sha256="f31d445b48e67e284cf206717cc170ab63cbe4fd7f79a82793b772285e78fdbb")
     version("3.39.2", sha256="852be8a6183a17ba47cee0bbff7400b7aa5affd283bf3beefc34fcd088a239de")
     version("3.38.5", sha256="5af07de982ba658fd91a03170c945f99c971f6955bc79df3266544373e39869c")
@@ -56,7 +60,7 @@ class Sqlite(AutotoolsPackage):
     variant("rtree", default=True, description="Build with Rtree module")
 
     depends_on("readline")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     # See https://blade.tencent.com/magellan/index_en.html
     conflicts("+fts", when="@:3.25")
@@ -150,7 +154,9 @@ class Sqlite(AutotoolsPackage):
         version_string = str(full_version[0]) + "".join(["%02d" % v for v in full_version[1:]])
         # See https://www.sqlite.org/chronology.html for version -> year
         # correspondence.
-        if version >= Version("3.37.2"):
+        if version >= Version("3.41.0"):
+            year = "2023"
+        elif version >= Version("3.37.2"):
             year = "2022"
         elif version >= Version("3.34.1"):
             year = "2021"
@@ -218,53 +224,28 @@ class Sqlite(AutotoolsPackage):
             )
             install(libraryname, self.prefix.lib)
 
-    def _test_example(self):
-        """Ensure a sequence of commands on example db are successful."""
+    def test_example(self):
+        """check example table dump"""
 
         test_data_dir = self.test_suite.current_test_data_dir
         db_filename = test_data_dir.join("packages.db")
-        exe = "sqlite3"
 
         # Ensure the database only contains one table
-        expected = "packages"
-        reason = 'test: ensuring only table is "{0}"'.format(expected)
-        self.run_test(
-            exe,
-            [db_filename, ".tables"],
-            expected,
-            installed=True,
-            purpose=reason,
-            skip_missing=False,
-        )
+        sqlite3 = which(self.prefix.bin.sqlite3)
+        out = sqlite3(db_filename, ".tables", output=str.split, error=str.split)
+        assert "packages" in out
 
         # Ensure the database dump matches expectations, where special
         # characters are replaced with spaces in the expected and actual
         # output to avoid pattern errors.
-        reason = "test: checking dump output"
         expected = get_escaped_text_output(test_data_dir.join("dump.out"))
-        self.run_test(
-            exe,
-            [db_filename, ".dump"],
-            expected,
-            installed=True,
-            purpose=reason,
-            skip_missing=False,
-        )
+        out = sqlite3(db_filename, ".dump", output=str.split, error=str.split)
+        check_outputs(expected, out)
 
-    def _test_version(self):
-        """Perform version check on the installed package."""
-        exe = "sqlite3"
+    def test_version(self):
+        """ensure version is expected"""
         vers_str = str(self.spec.version)
 
-        reason = "test: ensuring version of {0} is {1}".format(exe, vers_str)
-        self.run_test(
-            exe, "-version", vers_str, installed=True, purpose=reason, skip_missing=False
-        )
-
-    def test(self):
-        """Perform smoke tests on the installed package."""
-        # Perform a simple version check
-        self._test_version()
-
-        # Run a sequence of operations
-        self._test_example()
+        sqlite3 = which(self.prefix.bin.sqlite3)
+        out = sqlite3("-version", output=str.split, error=str.split)
+        assert vers_str in out

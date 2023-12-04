@@ -1,9 +1,7 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from __future__ import division, print_function
 
 import argparse
 import fnmatch
@@ -12,19 +10,15 @@ import math
 import os
 import re
 import sys
+from html import escape
 
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
-import spack.cmd.common.arguments as arguments
-import spack.dependency
+import spack.deptypes as dt
 import spack.repo
+from spack.cmd.common import arguments
 from spack.version import VersionList
-
-if sys.version_info > (3, 1):
-    from html import escape  # novm
-else:
-    from cgi import escape
 
 description = "list and search available packages"
 section = "basic"
@@ -60,13 +54,6 @@ def setup_parser(subparser):
         help="format to be used to print the output [default: name_only]",
     )
     subparser.add_argument(
-        "--update",
-        metavar="FILE",
-        default=None,
-        action="store",
-        help="write output to the specified file, if any package is newer",
-    )
-    subparser.add_argument(
         "-v",
         "--virtuals",
         action="store_true",
@@ -74,6 +61,22 @@ def setup_parser(subparser):
         help="include virtual packages in list",
     )
     arguments.add_common_arguments(subparser, ["tags"])
+
+    # Doesn't really make sense to update in count mode.
+    count_or_update = subparser.add_mutually_exclusive_group()
+    count_or_update.add_argument(
+        "--count",
+        action="store_true",
+        default=False,
+        help="display the number of packages that would be listed",
+    )
+    count_or_update.add_argument(
+        "--update",
+        metavar="FILE",
+        default=None,
+        action="store",
+        help="write output to the specified file, if any package is newer",
+    )
 
 
 def filter_by_name(pkgs, args):
@@ -104,7 +107,7 @@ def filter_by_name(pkgs, args):
                 if f.match(p):
                     return True
 
-                pkg_cls = spack.repo.path.get_pkg_class(p)
+                pkg_cls = spack.repo.PATH.get_pkg_class(p)
                 if pkg_cls.__doc__:
                     return f.match(pkg_cls.__doc__)
                 return False
@@ -146,8 +149,8 @@ def rows_for_ncols(elts, ncols):
 
 def get_dependencies(pkg):
     all_deps = {}
-    for deptype in spack.dependency.all_deptypes:
-        deps = pkg.dependencies_of_type(deptype)
+    for deptype in dt.ALL_TYPES:
+        deps = pkg.dependencies_of_type(dt.flag_from_string(deptype))
         all_deps[deptype] = [d for d in deps]
 
     return all_deps
@@ -156,7 +159,7 @@ def get_dependencies(pkg):
 @formatter
 def version_json(pkg_names, out):
     """Print all packages with their latest versions."""
-    pkg_classes = [spack.repo.path.get_pkg_class(name) for name in pkg_names]
+    pkg_classes = [spack.repo.PATH.get_pkg_class(name) for name in pkg_names]
 
     out.write("[\n")
 
@@ -198,7 +201,7 @@ def html(pkg_names, out):
     """
 
     # Read in all packages
-    pkg_classes = [spack.repo.path.get_pkg_class(name) for name in pkg_names]
+    pkg_classes = [spack.repo.PATH.get_pkg_class(name) for name in pkg_names]
 
     # Start at 2 because the title of the page from Sphinx is id1.
     span_id = 2
@@ -272,8 +275,8 @@ def html(pkg_names, out):
             out.write("\n")
             out.write("</dd>\n")
 
-        for deptype in spack.dependency.all_deptypes:
-            deps = pkg_cls.dependencies_of_type(deptype)
+        for deptype in dt.ALL_TYPES:
+            deps = pkg_cls.dependencies_of_type(dt.flag_from_string(deptype))
             if deps:
                 out.write("<dt>%s Dependencies:</dt>\n" % deptype.capitalize())
                 out.write("<dd>\n")
@@ -310,13 +313,13 @@ def list(parser, args):
 
     # If tags have been specified on the command line, filter by tags
     if args.tags:
-        packages_with_tags = spack.repo.path.packages_with_tags(*args.tags)
+        packages_with_tags = spack.repo.PATH.packages_with_tags(*args.tags)
         sorted_packages = [p for p in sorted_packages if p in packages_with_tags]
 
     if args.update:
         # change output stream if user asked for update
         if os.path.exists(args.update):
-            if os.path.getmtime(args.update) > spack.repo.path.last_mtime():
+            if os.path.getmtime(args.update) > spack.repo.PATH.last_mtime():
                 tty.msg("File is up to date: %s" % args.update)
                 return
 
@@ -324,6 +327,9 @@ def list(parser, args):
         with open(args.update, "w") as f:
             formatter(sorted_packages, f)
 
+    elif args.count:
+        # just print the number of packages in the result
+        print(len(sorted_packages))
     else:
-        # Print to stdout
+        # print formatted package list
         formatter(sorted_packages, sys.stdout)

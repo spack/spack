@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,8 +18,23 @@ class Cdo(AutotoolsPackage):
     url = "https://code.mpimet.mpg.de/attachments/download/12760/cdo-1.7.2.tar.gz"
     list_url = "https://code.mpimet.mpg.de/projects/cdo/files"
 
-    maintainers = ["skosukhin", "Try2Code"]
+    maintainers("skosukhin", "Try2Code")
 
+    version(
+        "2.2.2",
+        sha256="419c77315244019af41a296c05066f474cccbf94debfaae9e2106da51bc7c937",
+        url="https://code.mpimet.mpg.de/attachments/download/28882/cdo-2.2.2.tar.gz",
+    )
+    version(
+        "2.2.0",
+        sha256="679c8d105706caffcba0960ec5ddc4a1332c1b40c52f82c3937356999d8fadf2",
+        url="https://code.mpimet.mpg.de/attachments/download/28013/cdo-2.2.0.tar.gz",
+    )
+    version(
+        "2.1.1",
+        sha256="c29d084ccbda931d71198409fb2d14f99930db6e7a3654b3c0243ceb304755d9",
+        url="https://code.mpimet.mpg.de/attachments/download/27654/cdo-2.1.1.tar.gz",
+    )
     version(
         "2.1.0",
         sha256="b871346c944b05566ab21893827c74616575deaad0b20eacb472b80b1fa528cc",
@@ -157,12 +172,13 @@ class Cdo(AutotoolsPackage):
     # We also need the backend of netcdf to be thread safe.
     depends_on("hdf5+threadsafe", when="+netcdf")
 
+    # Same in case hdf5 is used in the frontend
+    depends_on("hdf5+threadsafe", when="+hdf5")
+
     depends_on("grib-api", when="grib2=grib-api")
     depends_on("eccodes", when="grib2=eccodes")
 
     depends_on("szip", when="+szip")
-
-    depends_on("hdf5+threadsafe", when="+hdf5")
 
     depends_on("udunits", when="+udunits2")
     depends_on("libxml2", when="+libxml2")

@@ -1,9 +1,10 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+from spack.util.environment import is_system_path
 
 
 class Gnupg(AutotoolsPackage):
@@ -12,8 +13,12 @@ class Gnupg(AutotoolsPackage):
     homepage = "https://gnupg.org/index.html"
     url = "https://gnupg.org/ftp/gcrypt/gnupg/gnupg-2.3.4.tar.bz2"
 
-    maintainers = ["alalazo"]
+    maintainers("alalazo")
 
+    version("2.4.3", sha256="a271ae6d732f6f4d80c258ad9ee88dd9c94c8fdc33c3e45328c4d7c126bd219d")
+    version("2.4.2", sha256="97eb47df8ae5a3ff744f868005a090da5ab45cb48ee9836dbf5ee739a4e5cf49")
+    version("2.4.1", sha256="76b71e5aeb443bfd910ce9cbc8281b617c8341687afb67bae455877972b59de8")
+    version("2.4.0", sha256="1d79158dd01d992431dd2e3facb89fdac97127f89784ea2cb610c600fb0c1483")
     version("2.3.8", sha256="540b7a40e57da261fb10ef521a282e0021532a80fd023e75fb71757e8a4969ed")
     version("2.3.7", sha256="ee163a5fb9ec99ffc1b18e65faef8d086800c5713d15a672ab57d3799da83669")
     version("2.2.40", sha256="1164b29a75e8ab93ea15033300149e1872a7ef6bdda3d7c78229a735f8204c28")
@@ -119,7 +124,7 @@ class Gnupg(AutotoolsPackage):
     depends_on("libassuan@2.5:", when="@2.2.15:")
     depends_on("pinentry", type="run", when="@2:")
     depends_on("iconv", when="@2:")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     depends_on("gawk", type="build", when="@:1")
     # note: perl and curl are gnupg1 dependencies when keyserver support is
@@ -139,9 +144,8 @@ class Gnupg(AutotoolsPackage):
             "--disable-bzip2",
             "--disable-ldap",
             "--disable-regex",
-            "--with-zlib=" + self.spec["zlib"].prefix,
+            "--with-zlib=" + self.spec["zlib-api"].prefix,
             "--without-tar",
-            "--without-libiconv-prefix",
             "--without-readline",
         ]
 
@@ -157,9 +161,12 @@ class Gnupg(AutotoolsPackage):
                     "--with-libassuan-prefix=" + self.spec["libassuan"].prefix,
                     "--with-ksba-prefix=" + self.spec["libksba"].prefix,
                     "--with-npth-prefix=" + self.spec["npth"].prefix,
-                    "--with-libiconv-prefix=" + self.spec["iconv"].prefix,
                 ]
             )
+            if self.spec["iconv"].name == "libc":
+                args.append("--without-libiconv-prefix")
+            elif not is_system_path(self.spec["iconv"].prefix):
+                args.append("--with-libiconv-prefix=" + self.spec["iconv"].prefix)
 
         if self.spec.satisfies("@:1"):
             args.extend(

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class EpicsSnmp(MakefilePackage):
     homepage = "https://groups.nscl.msu.edu/controls/files/devSnmp.html"
     url = "https://groups.nscl.msu.edu/controls/files/epics-snmp-1.1.0.3.zip"
 
-    maintainers = ["glenn-horton-smith"]
+    maintainers("glenn-horton-smith")
 
     version("1.1.0.3", sha256="fe8b2cb25412555a639e3513f48a4da4c4cc3cc43425176349338be27b1e26d3")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Rose(AutotoolsPackage):
     url = "https://github.com/rose-compiler/rose/archive/v0.9.13.0.zip"
     git = "https://github.com/rose-compiler/rose.git"
 
-    maintainers = ["pinnown"]
+    maintainers("pinnown")
 
     # --------------------------------------------------------------------------
     # ROSE Versions
@@ -94,11 +94,7 @@ class Rose(AutotoolsPackage):
 
     variant("tools", default=False, description="Build a selection of ROSE based tools")
 
-    variant(
-        "mvapich2_backend",
-        default=False,
-        description="Enable mvapich2 backend compiler",
-    )
+    variant("mvapich2_backend", default=False, description="Enable mvapich2 backend compiler")
     depends_on("mvapich2", when="+mvapich2_backend")
 
     variant("binanalysis", default=False, description="Enable binary analysis tooling")
@@ -117,11 +113,7 @@ class Rose(AutotoolsPackage):
     variant("z3", default=False, description="Enable z3 theorem prover")
     depends_on("z3", when="+z3")
 
-    variant(
-        "edg_source",
-        default=False,
-        description="Use the EDG C/C++ frontend source code",
-    )
+    variant("edg_source", default=False, description="Use the EDG C/C++ frontend source code")
     depends_on("git", when="+edg_source")
 
     # ------------------------------------------------------------------------
@@ -224,7 +216,6 @@ class Rose(AutotoolsPackage):
         #   $ srun -n1 spack install rose
         #
         with working_dir(self.build_directory):
-
             # Compile librose
             make("core")
 
@@ -254,7 +245,6 @@ class Rose(AutotoolsPackage):
 
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
-
             # Compile and Install librose
             make("install-core")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,7 +31,7 @@ class Astral(Package):
         make()
         mkdirp(prefix.bin)
         install_tree("lib", prefix.tools.lib)
-        jar_file = "astral.{v}.jar".format(v=self.version)
+        jar_file = f"astral.{self.version}.jar"
         install(jar_file, prefix.tools)
 
         script_sh = join_path(os.path.dirname(__file__), "astral.sh")

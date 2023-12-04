@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyOsServiceTypes(PythonPackage):
     homepage = "https://docs.openstack.org/os-service-types/"
     pypi = "os-service-types/os-service-types-1.7.0.tar.gz"
 
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     version("1.7.0", sha256="31800299a82239363995b91f1ebf9106ac7758542a1e4ef6dc737a5932878c6c")
 

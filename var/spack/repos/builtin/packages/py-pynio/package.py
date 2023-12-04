@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@ class PyPynio(PythonPackage):
     # The setup.py claims it requires these abolutely.
     depends_on("libpng")
     depends_on("jpeg")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     # Spack does not currently have netcdf below 4.x, and 3.x is a
     # fundamentally different format. So, currently this is only providing

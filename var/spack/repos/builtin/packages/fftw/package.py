@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -41,7 +41,6 @@ class FftwBase(AutotoolsPackage):
 
     @property
     def libs(self):
-
         # Reduce repetitions of entries
         query_parameters = list(llnl.util.lang.dedupe(self.spec.last_query.extra_parameters))
 
@@ -63,6 +62,13 @@ class FftwBase(AutotoolsPackage):
             libraries.append("libfftw3" + sfx)
 
         return find_libraries(libraries, root=self.prefix, recursive=True)
+
+    def flag_handler(self, name, flags):
+        if name == "cflags":
+            if self.spec.satisfies("%clang@15:"):
+                flags.append("-Wno-error=int-conversion")
+
+        return flags, None, None
 
     def patch(self):
         # If fftw/config.h exists in the source tree, it will take precedence

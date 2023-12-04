@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,11 +32,11 @@ class Autogen(AutotoolsPackage, GNUMirrorPackage):
         args = [
             # `make check` fails without this
             # Adding a gettext dependency does not help
-            "--disable-nls",
+            "--disable-nls"
         ]
 
         if "+xml" in spec:
-            args.append("--with-libxml2={0}".format(spec["libxml2"].prefix))
+            args.append(f"--with-libxml2={spec['libxml2'].prefix}")
         else:
             args.append("--without-libxml2")
 

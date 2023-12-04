@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -46,21 +46,27 @@ def test_negative_integers_not_allowed_for_parallel_jobs(job_parser):
 
 
 @pytest.mark.parametrize(
-    "specs,cflags,negated_variants",
+    "specs,cflags,propagation,negated_variants",
     [
-        (['coreutils cflags="-O3 -g"'], ["-O3", "-g"], []),
-        (["coreutils", "cflags=-O3 -g"], ["-O3"], ["g"]),
-        (["coreutils", "cflags=-O3", "-g"], ["-O3"], ["g"]),
+        (['coreutils cflags="-O3 -g"'], ["-O3", "-g"], [False, False], []),
+        (['coreutils cflags=="-O3 -g"'], ["-O3", "-g"], [True, True], []),
+        (["coreutils", "cflags=-O3 -g"], ["-O3"], [False], ["g"]),
+        (["coreutils", "cflags==-O3 -g"], ["-O3"], [True], ["g"]),
+        (["coreutils", "cflags=-O3", "-g"], ["-O3"], [False], ["g"]),
     ],
 )
 @pytest.mark.regression("12951")
-def test_parse_spec_flags_with_spaces(specs, cflags, negated_variants):
+def test_parse_spec_flags_with_spaces(specs, cflags, propagation, negated_variants):
     spec_list = spack.cmd.parse_specs(specs)
     assert len(spec_list) == 1
 
     s = spec_list.pop()
 
-    assert s.compiler_flags["cflags"] == cflags
+    compiler_flags = [flag for flag in s.compiler_flags["cflags"]]
+    flag_propagation = [flag.propagate for flag in s.compiler_flags["cflags"]]
+
+    assert compiler_flags == cflags
+    assert flag_propagation == propagation
     assert list(s.variants.keys()) == negated_variants
     for v in negated_variants:
         assert "~{0}".format(v) in s
@@ -116,19 +122,18 @@ def test_root_and_dep_match_returns_root(mock_packages, mutable_mock_env_path):
         assert env_spec2
 
 
-def test_concretizer_arguments(mutable_config, mock_packages):
+@pytest.mark.parametrize(
+    "arg,config", [("--reuse", True), ("--fresh", False), ("--reuse-deps", "dependencies")]
+)
+def test_concretizer_arguments(mutable_config, mock_packages, arg, config):
     """Ensure that ConfigSetAction is doing the right thing."""
     spec = spack.main.SpackCommand("spec")
 
     assert spack.config.get("concretizer:reuse", None) is None
 
-    spec("--reuse", "zlib")
+    spec(arg, "zlib")
 
-    assert spack.config.get("concretizer:reuse", None) is True
-
-    spec("--fresh", "zlib")
-
-    assert spack.config.get("concretizer:reuse", None) is False
+    assert spack.config.get("concretizer:reuse", None) == config
 
 
 def test_use_buildcache_type():

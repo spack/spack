@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -69,7 +69,7 @@ class Icedtea(AutotoolsPackage):
     depends_on("libpng")
     depends_on("jpeg")
     depends_on("lcms")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("alsa-lib", when="platform=linux")
 
     provides("java@8", when="@3.4.0:3")

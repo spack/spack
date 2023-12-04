@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,8 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, working_dir
 
 import spack.paths
-from spack.util.executable import ProcessError, which
+import spack.util.git
+from spack.util.executable import ProcessError
 
 _SPACK_UPSTREAM = "https://github.com/spack/spack"
 
@@ -32,7 +33,7 @@ def setup_parser(subparser):
 
 def get_origin_info(remote):
     git_dir = os.path.join(spack.paths.prefix, ".git")
-    git = which("git", required=True)
+    git = spack.util.git.git(required=True)
     try:
         branch = git("symbolic-ref", "--short", "HEAD", output=str)
     except ProcessError:
@@ -47,7 +48,7 @@ def get_origin_info(remote):
         )
     except ProcessError:
         origin_url = _SPACK_UPSTREAM
-        tty.warn("No git repository found; " "using default upstream URL: %s" % origin_url)
+        tty.warn("No git repository found; using default upstream URL: %s" % origin_url)
     return (origin_url.strip(), branch.strip())
 
 
@@ -68,14 +69,14 @@ def clone(parser, args):
     files_in_the_way = os.listdir(prefix)
     if files_in_the_way:
         tty.die(
-            "There are already files there! " "Delete these files before boostrapping spack.",
-            *files_in_the_way
+            "There are already files there! Delete these files before boostrapping spack.",
+            *files_in_the_way,
         )
 
     tty.msg("Installing:", "%s/bin/spack" % prefix, "%s/lib/spack/..." % prefix)
 
     with working_dir(prefix):
-        git = which("git", required=True)
+        git = spack.util.git.git(required=True)
         git("init", "--shared", "-q")
         git("remote", "add", "origin", origin_url)
         git("fetch", "origin", "%s:refs/remotes/origin/%s" % (branch, branch), "-n", "-q")

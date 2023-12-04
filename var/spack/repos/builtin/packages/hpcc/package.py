@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -118,7 +118,10 @@ class Hpcc(MakefilePackage):
                 lin_alg_libs.append(join_path(spec["fftw-api"].prefix.lib, "libsfftw_mpi.so"))
                 lin_alg_libs.append(join_path(spec["fftw-api"].prefix.lib, "libsfftw.so"))
 
-            elif self.spec.variants["fft"].value == "mkl" and "^mkl" in spec:
+            elif (
+                self.spec.variants["fft"].value == "mkl"
+                and spec["fftw-api"].name in INTEL_MATH_LIBRARIES
+            ):
                 mklroot = env["MKLROOT"]
                 self.config["@LAINC@"] += " -I{0}".format(join_path(mklroot, "include/fftw"))
                 libfftw2x_cdft = join_path(

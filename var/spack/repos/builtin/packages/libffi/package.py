@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Libffi(AutotoolsPackage):
     homepage = "https://sourceware.org/libffi/"
     url = "https://github.com/libffi/libffi/releases/download/v3.4.2/libffi-3.4.2.tar.gz"
 
+    version("3.4.4", sha256="d66c56ad259a82cf2a9dfc408b32bf5da52371500b84745f7fb8b645712df676")
+    version("3.4.3", sha256="4416dd92b6ae8fcb5b10421e711c4d3cb31203d77521a77d85d0102311e6c3b8")
     version("3.4.2", sha256="540fb721619a6aba3bdeef7d940d8e9e0e6d2c193595bc243241b77ff9e93620")
     version(
         "3.3",
@@ -30,11 +32,26 @@ class Libffi(AutotoolsPackage):
     patch("clang-powerpc-3.2.1.patch", when="@3.2.1%clang platform=linux")
     # ref.: https://github.com/libffi/libffi/pull/561
     patch("powerpc-3.3.patch", when="@3.3")
+    patch(
+        "https://github.com/libffi/libffi/commit/ce077e5565366171aa1b4438749b0922fce887a4.patch?full_index=1",
+        sha256="070b1f3aa87f2b56f83aff38afc42157e1692bfaa580276ecdbad2048b818ed7",
+        when="@3.4.3:3.4.4",
+    )
 
     @property
     def headers(self):
         # The headers are probably in self.prefix.lib but we search everywhere
         return find_headers("ffi", self.prefix, recursive=True)
+
+    def flag_handler(self, name, flags):
+        if name == "cflags":
+            if (
+                self.spec.satisfies("%oneapi@2023:")
+                or self.spec.satisfies("%arm@23.04:")
+                or self.spec.satisfies("%clang@16:")
+            ):
+                flags.append("-Wno-error=implicit-function-declaration")
+        return (flags, None, None)
 
     def configure_args(self):
         args = []

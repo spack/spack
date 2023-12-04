@@ -1,15 +1,16 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import inspect
-from typing import List  # novm
+from typing import List
 
 import llnl.util.filesystem as fs
 
 import spack.builder
 import spack.package_base
-from spack.directives import build_system, conflicts
+from spack.directives import build_system, conflicts, depends_on
+from spack.multimethod import when
 
 from ._checks import (
     BaseBuilder,
@@ -29,7 +30,10 @@ class MakefilePackage(spack.package_base.PackageBase):
     legacy_buildsystem = "makefile"
 
     build_system("makefile")
-    conflicts("platform=windows", when="build_system=makefile")
+
+    with when("build_system=makefile"):
+        conflicts("platform=windows")
+        depends_on("gmake", type="build")
 
 
 @spack.builder.builder("makefile")
@@ -77,7 +81,7 @@ class MakefileBuilder(BaseBuilder):
     )
 
     #: Targets for ``make`` during the :py:meth:`~.MakefileBuilder.build` phase
-    build_targets = []  # type: List[str]
+    build_targets: List[str] = []
     #: Targets for ``make`` during the :py:meth:`~.MakefileBuilder.install` phase
     install_targets = ["install"]
 

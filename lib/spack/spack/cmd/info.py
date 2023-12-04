@@ -1,24 +1,24 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-
-import inspect
+import sys
 import textwrap
-
-from six.moves import zip_longest
+from itertools import zip_longest
 
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
 from llnl.util.tty.colify import colify
 
-import spack.cmd.common.arguments as arguments
+import spack.deptypes as dt
 import spack.fetch_strategy as fs
+import spack.install_test
 import spack.repo
 import spack.spec
-from spack.package_base import has_test_method, preferred_version
+import spack.version
+from spack.cmd.common import arguments
+from spack.package_base import preferred_version
 
 description = "get detailed information on a particular package"
 section = "basic"
@@ -55,6 +55,7 @@ def setup_parser(subparser):
         ("--tags", print_tags.__doc__),
         ("--tests", print_tests.__doc__),
         ("--virtuals", print_virtuals.__doc__),
+        ("--variants-by-name", "list variants in strict name order; don't group by condition"),
     ]
     for opt, help_comment in options:
         subparser.add_argument(opt, action="store_true", help=help_comment)
@@ -67,42 +68,21 @@ def section_title(s):
 
 
 def version(s):
-    return spack.spec.version_color + s + plain_format
+    return spack.spec.VERSION_COLOR + s + plain_format
 
 
 def variant(s):
-    return spack.spec.enabled_variant_color + s + plain_format
+    return spack.spec.ENABLED_VARIANT_COLOR + s + plain_format
 
 
-class VariantFormatter(object):
-    def __init__(self, variants):
-        self.variants = variants
+def license(s):
+    return spack.spec.VERSION_COLOR + s + plain_format
+
+
+class VariantFormatter:
+    def __init__(self, pkg):
+        self.variants = pkg.variants
         self.headers = ("Name [Default]", "When", "Allowed values", "Description")
-
-        # Formats
-        fmt_name = "{0} [{1}]"
-
-        # Initialize column widths with the length of the
-        # corresponding headers, as they cannot be shorter
-        # than that
-        self.column_widths = [len(x) for x in self.headers]
-
-        # Expand columns based on max line lengths
-        for k, e in variants.items():
-            v, w = e
-            candidate_max_widths = (
-                len(fmt_name.format(k, self.default(v))),  # Name [Default]
-                len(str(w)),
-                len(v.allowed_values),  # Allowed values
-                len(v.description),  # Description
-            )
-
-            self.column_widths = (
-                max(self.column_widths[0], candidate_max_widths[0]),
-                max(self.column_widths[1], candidate_max_widths[1]),
-                max(self.column_widths[2], candidate_max_widths[2]),
-                max(self.column_widths[3], candidate_max_widths[3]),
-            )
 
         # Don't let name or possible values be less than max widths
         _, cols = tty.terminal_size()
@@ -135,6 +115,8 @@ class VariantFormatter(object):
     def lines(self):
         if not self.variants:
             yield "    None"
+            return
+
         else:
             yield "    " + self.fmt % self.headers
             underline = tuple([w * "=" for w in self.column_widths])
@@ -157,20 +139,20 @@ class VariantFormatter(object):
                     yield "    " + self.fmt % t
 
 
-def print_dependencies(pkg):
+def print_dependencies(pkg, args):
     """output build, link, and run package dependencies"""
 
     for deptype in ("build", "link", "run"):
         color.cprint("")
         color.cprint(section_title("%s Dependencies:" % deptype.capitalize()))
-        deps = sorted(pkg.dependencies_of_type(deptype))
+        deps = sorted(pkg.dependencies_of_type(dt.flag_from_string(deptype)))
         if deps:
             colify(deps, indent=4)
         else:
             color.cprint("    None")
 
 
-def print_detectable(pkg):
+def print_detectable(pkg, args):
     """output information on external detection"""
 
     color.cprint("")
@@ -198,7 +180,7 @@ def print_detectable(pkg):
         color.cprint("    False")
 
 
-def print_maintainers(pkg):
+def print_maintainers(pkg, args):
     """output package maintainers"""
 
     if len(pkg.maintainers) > 0:
@@ -207,7 +189,7 @@ def print_maintainers(pkg):
         color.cprint(section_title("Maintainers: ") + mnt)
 
 
-def print_phases(pkg):
+def print_phases(pkg, args):
     """output installation phases"""
 
     if hasattr(pkg.builder, "phases") and pkg.builder.phases:
@@ -219,7 +201,7 @@ def print_phases(pkg):
         color.cprint(phase_str)
 
 
-def print_tags(pkg):
+def print_tags(pkg, args):
     """output package tags"""
 
     color.cprint("")
@@ -231,7 +213,7 @@ def print_tags(pkg):
         color.cprint("    None")
 
 
-def print_tests(pkg):
+def print_tests(pkg, args):
     """output relevant build-time and stand-alone tests"""
 
     # Some built-in base packages (e.g., Autotools) define callback (e.g.,
@@ -242,8 +224,8 @@ def print_tests(pkg):
     # So the presence of a callback in Spack does not necessarily correspond
     # to the actual presence of built-time tests for a package.
     for callbacks, phase in [
-        (pkg.build_time_test_callbacks, "Build"),
-        (pkg.install_time_test_callbacks, "Install"),
+        (getattr(pkg, "build_time_test_callbacks", None), "Build"),
+        (getattr(pkg, "install_time_test_callbacks", None), "Install"),
     ]:
         color.cprint("")
         color.cprint(section_title("Available {0} Phase Test Methods:".format(phase)))
@@ -262,59 +244,178 @@ def print_tests(pkg):
     # if it has been overridden and, therefore, assumed to be implemented.
     color.cprint("")
     color.cprint(section_title("Stand-Alone/Smoke Test Methods:"))
-    names = []
-    pkg_cls = pkg if inspect.isclass(pkg) else pkg.__class__
-    if has_test_method(pkg_cls):
-        pkg_base = spack.package_base.PackageBase
-        test_pkgs = [
-            str(cls.test)
-            for cls in inspect.getmro(pkg_cls)
-            if issubclass(cls, pkg_base) and cls.test != pkg_base.test
-        ]
-        test_pkgs = list(set(test_pkgs))
-        names.extend([(test.split()[1]).lower() for test in test_pkgs])
-
-    # TODO Refactor START
-    # Use code from package_base.py's test_process IF this functionality is
-    # accepted.
-    v_names = list(set([vspec.name for vspec in pkg.virtuals_provided]))
-
-    # hack for compilers that are not dependencies (yet)
-    # TODO: this all eventually goes away
-    c_names = ("gcc", "intel", "intel-parallel-studio", "pgi")
-    if pkg.name in c_names:
-        v_names.extend(["c", "cxx", "fortran"])
-    if pkg.spec.satisfies("llvm+clang"):
-        v_names.extend(["c", "cxx"])
-    # TODO Refactor END
-
-    v_specs = [spack.spec.Spec(v_name) for v_name in v_names]
-    for v_spec in v_specs:
-        try:
-            pkg_cls = spack.repo.path.get_pkg_class(v_spec.name)
-            if has_test_method(pkg_cls):
-                names.append("{0}.test".format(pkg_cls.name.lower()))
-        except spack.repo.UnknownPackageError:
-            pass
-
+    names = spack.install_test.test_function_names(pkg, add_virtuals=True)
     if names:
         colify(sorted(names), indent=4)
     else:
         color.cprint("    None")
 
 
-def print_variants(pkg):
+def _fmt_value(v):
+    if v is None or isinstance(v, bool):
+        return str(v).lower()
+    else:
+        return str(v)
+
+
+def _fmt_name_and_default(variant):
+    """Print colorized name [default] for a variant."""
+    return color.colorize(f"@c{{{variant.name}}} @C{{[{_fmt_value(variant.default)}]}}")
+
+
+def _fmt_when(when, indent):
+    return color.colorize(f"{indent * ' '}@B{{when}} {color.cescape(when)}")
+
+
+def _fmt_variant_description(variant, width, indent):
+    """Format a variant's description, preserving explicit line breaks."""
+    return "\n".join(
+        textwrap.fill(
+            line, width=width, initial_indent=indent * " ", subsequent_indent=indent * " "
+        )
+        for line in variant.description.split("\n")
+    )
+
+
+def _fmt_variant(variant, max_name_default_len, indent, when=None, out=None):
+    out = out or sys.stdout
+
+    _, cols = tty.terminal_size()
+
+    name_and_default = _fmt_name_and_default(variant)
+    name_default_len = color.clen(name_and_default)
+
+    values = variant.values
+    if not isinstance(variant.values, (tuple, list, spack.variant.DisjointSetsOfValues)):
+        values = [variant.values]
+
+    # put 'none' first, sort the rest by value
+    sorted_values = sorted(values, key=lambda v: (v != "none", v))
+
+    pad = 4  # min padding between 'name [default]' and values
+    value_indent = (indent + max_name_default_len + pad) * " "  # left edge of values
+
+    # This preserves any formatting (i.e., newlines) from how the description was
+    # written in package.py, but still wraps long lines for small terminals.
+    # This allows some packages to provide detailed help on their variants (see, e.g., gasnet).
+    formatted_values = "\n".join(
+        textwrap.wrap(
+            f"{', '.join(_fmt_value(v) for v in sorted_values)}",
+            width=cols - 2,
+            initial_indent=value_indent,
+            subsequent_indent=value_indent,
+        )
+    )
+    formatted_values = formatted_values[indent + name_default_len + pad :]
+
+    # name [default]   value1, value2, value3, ...
+    padding = pad * " "
+    color.cprint(f"{indent * ' '}{name_and_default}{padding}@c{{{formatted_values}}}", stream=out)
+
+    # when <spec>
+    description_indent = indent + 4
+    if when is not None and when != spack.spec.Spec():
+        out.write(_fmt_when(when, description_indent - 2))
+        out.write("\n")
+
+    # description, preserving explicit line breaks from the way it's written in the package file
+    out.write(_fmt_variant_description(variant, cols - 2, description_indent))
+    out.write("\n")
+
+
+def _variants_by_name_when(pkg):
+    """Adaptor to get variants keyed by { name: { when: { [Variant...] } }."""
+    # TODO: replace with pkg.variants_by_name(when=True) when unified directive dicts are merged.
+    variants = {}
+    for name, (variant, whens) in pkg.variants.items():
+        for when in whens:
+            variants.setdefault(name, {}).setdefault(when, []).append(variant)
+    return variants
+
+
+def _variants_by_when_name(pkg):
+    """Adaptor to get variants keyed by { when: { name: Variant } }"""
+    # TODO: replace with pkg.variants when unified directive dicts are merged.
+    variants = {}
+    for name, (variant, whens) in pkg.variants.items():
+        for when in whens:
+            variants.setdefault(when, {})[name] = variant
+    return variants
+
+
+def _print_variants_header(pkg):
     """output variants"""
+
+    if not pkg.variants:
+        print("    None")
+        return
 
     color.cprint("")
     color.cprint(section_title("Variants:"))
 
-    formatter = VariantFormatter(pkg.variants)
-    for line in formatter.lines:
-        color.cprint(color.cescape(line))
+    variants_by_name = _variants_by_name_when(pkg)
+
+    # Calculate the max length of the "name [default]" part of the variant display
+    # This lets us know where to print variant values.
+    max_name_default_len = max(
+        color.clen(_fmt_name_and_default(variant))
+        for name, when_variants in variants_by_name.items()
+        for variants in when_variants.values()
+        for variant in variants
+    )
+
+    return max_name_default_len, variants_by_name
 
 
-def print_versions(pkg):
+def _unconstrained_ver_first(item):
+    """sort key that puts specs with open version ranges first"""
+    spec, _ = item
+    return (spack.version.any_version not in spec.versions, spec)
+
+
+def print_variants_grouped_by_when(pkg):
+    max_name_default_len, _ = _print_variants_header(pkg)
+
+    indent = 4
+    variants = _variants_by_when_name(pkg)
+    for when, variants_by_name in sorted(variants.items(), key=_unconstrained_ver_first):
+        padded_values = max_name_default_len + 4
+        start_indent = indent
+
+        if when != spack.spec.Spec():
+            sys.stdout.write("\n")
+            sys.stdout.write(_fmt_when(when, indent))
+            sys.stdout.write("\n")
+
+            # indent names slightly inside 'when', but line up values
+            padded_values -= 2
+            start_indent += 2
+
+        for name, variant in sorted(variants_by_name.items()):
+            _fmt_variant(variant, padded_values, start_indent, None, out=sys.stdout)
+
+
+def print_variants_by_name(pkg):
+    max_name_default_len, variants_by_name = _print_variants_header(pkg)
+    max_name_default_len += 4
+
+    indent = 4
+    for name, when_variants in variants_by_name.items():
+        for when, variants in sorted(when_variants.items(), key=_unconstrained_ver_first):
+            for variant in variants:
+                _fmt_variant(variant, max_name_default_len, indent, when, out=sys.stdout)
+                sys.stdout.write("\n")
+
+
+def print_variants(pkg, args):
+    """output variants"""
+    if args.variants_by_name:
+        print_variants_by_name(pkg)
+    else:
+        print_variants_grouped_by_when(pkg)
+
+
+def print_versions(pkg, args):
     """output versions"""
 
     color.cprint("")
@@ -332,18 +433,24 @@ def print_versions(pkg):
         pad = padder(pkg.versions, 4)
 
         preferred = preferred_version(pkg)
-        url = ""
-        if pkg.has_code:
-            url = fs.for_package_version(pkg, preferred)
 
+        def get_url(version):
+            try:
+                return fs.for_package_version(pkg, version)
+            except spack.fetch_strategy.InvalidArgsError:
+                return "No URL"
+
+        url = get_url(preferred) if pkg.has_code else ""
         line = version("    {0}".format(pad(preferred))) + color.cescape(url)
-        color.cprint(line)
+        color.cwrite(line)
+
+        print()
 
         safe = []
         deprecated = []
         for v in reversed(sorted(pkg.versions)):
             if pkg.has_code:
-                url = fs.for_package_version(pkg, v)
+                url = get_url(v)
             if pkg.versions[v].get("deprecated", False):
                 deprecated.append((v, url))
             else:
@@ -361,7 +468,7 @@ def print_versions(pkg):
                 color.cprint(line)
 
 
-def print_virtuals(pkg):
+def print_virtuals(pkg, args):
     """output virtual packages"""
 
     color.cprint("")
@@ -384,9 +491,25 @@ def print_virtuals(pkg):
         color.cprint("    None")
 
 
+def print_licenses(pkg, args):
+    """Output the licenses of the project."""
+
+    color.cprint("")
+    color.cprint(section_title("Licenses: "))
+
+    if len(pkg.licenses) == 0:
+        color.cprint("    None")
+    else:
+        pad = padder(pkg.licenses, 4)
+        for when_spec in pkg.licenses:
+            license_identifier = pkg.licenses[when_spec]
+            line = license("    {0}".format(pad(license_identifier))) + color.cescape(when_spec)
+            color.cprint(line)
+
+
 def info(parser, args):
     spec = spack.spec.Spec(args.package)
-    pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
     pkg = pkg_cls(spec)
 
     # Output core package information
@@ -400,7 +523,8 @@ def info(parser, args):
     else:
         color.cprint("    None")
 
-    color.cprint(section_title("Homepage: ") + pkg.homepage)
+    if getattr(pkg, "homepage"):
+        color.cprint(section_title("Homepage: ") + pkg.homepage)
 
     # Now output optional information in expected order
     sections = [
@@ -413,9 +537,10 @@ def info(parser, args):
         (args.all or not args.no_dependencies, print_dependencies),
         (args.all or args.virtuals, print_virtuals),
         (args.all or args.tests, print_tests),
+        (args.all or True, print_licenses),
     ]
     for print_it, func in sections:
         if print_it:
-            func(pkg)
+            func(pkg, args)
 
     color.cprint("")

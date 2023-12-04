@@ -1,4 +1,4 @@
-.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,11 +17,12 @@ case you want to skip directly to specific docs:
 * :ref:`config.yaml <config-yaml>`
 * :ref:`mirrors.yaml <mirrors>`
 * :ref:`modules.yaml <modules>`
-* :ref:`packages.yaml <build-settings>`
+* :ref:`packages.yaml <packages-config>`
 * :ref:`repos.yaml <repositories>`
 
-You can also add any of these as inline configuration in ``spack.yaml``
-in an :ref:`environment <environment-configuration>`.
+You can also add any of these as inline configuration in the YAML
+manifest file (``spack.yaml``) describing an :ref:`environment
+<environment-configuration>`.
 
 -----------
 YAML Format
@@ -227,6 +228,9 @@ You can get the name to use for ``<platform>`` by running ``spack arch
 --platform``. The system config scope has a ``<platform>`` section for
 sites at which ``/etc`` is mounted on multiple heterogeneous machines.
 
+
+.. _config-scope-precedence:
+
 ----------------
 Scope Precedence
 ----------------
@@ -238,6 +242,13 @@ list-valued settings, Spack *prepends* higher-precedence settings to
 lower-precedence settings. Completely ignoring higher-level configuration
 options is supported with the ``::`` notation for keys (see
 :ref:`config-overrides` below).
+
+There are also special notations for string concatenation and precendense override:
+
+* ``+:`` will force *prepending* strings or lists. For lists, this is the default behavior.
+* ``-:`` works similarly, but for *appending* values.
+
+:ref:`config-prepend-append`
 
 ^^^^^^^^^^^
 Simple keys
@@ -277,6 +288,47 @@ command:
      build_stage:
        - $tempdir/$user/spack-stage
        - ~/.spack/stage
+
+
+.. _config-prepend-append:
+
+^^^^^^^^^^^^^^^^^^^^
+String Concatenation
+^^^^^^^^^^^^^^^^^^^^
+
+Above, the user ``config.yaml`` *completely* overrides specific settings in the
+default ``config.yaml``. Sometimes, it is useful to add a suffix/prefix
+to a path or name. To do this, you can use the ``-:`` notation for *append*
+string concatenation at the end of a key in a configuration file. For example:
+
+.. code-block:: yaml
+   :emphasize-lines: 1
+   :caption: ~/.spack/config.yaml
+
+   config:
+     install_tree-: /my/custom/suffix/
+
+Spack will then append to the lower-precedence configuration under the
+``install_tree-:`` section:
+
+.. code-block:: console
+
+   $ spack config get config
+   config:
+     install_tree: /some/other/directory/my/custom/suffix
+     build_stage:
+       - $tempdir/$user/spack-stage
+       - ~/.spack/stage
+
+
+Similarly, ``+:`` can be used to *prepend* to a path or name:
+
+.. code-block:: yaml
+   :emphasize-lines: 1
+   :caption: ~/.spack/config.yaml
+
+   config:
+     install_tree+: /my/custom/suffix/
 
 
 .. _config-overrides:
@@ -394,7 +446,7 @@ are indicated at the start of the path with ``~`` or ``~user``.
 Spack-specific variables
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Spack understands several special variables. These are:
+Spack understands over a dozen special variables. These are:
 
 * ``$env``: name of the currently active :ref:`environment <environments>`
 * ``$spack``: path to the prefix of this Spack installation
@@ -405,6 +457,19 @@ Spack understands several special variables. These are:
 * ``$user``: name of the current user
 * ``$user_cache_path``: user cache directory (``~/.spack`` unless
   :ref:`overridden <local-config-overrides>`)
+* ``$architecture``: the architecture triple of the current host, as
+  detected by Spack.
+* ``$arch``: alias for ``$architecture``.
+* ``$platform``: the platform of the current host, as detected by Spack.
+* ``$operating_system``: the operating system of the current host, as
+  detected by the ``distro`` python module.
+* ``$os``: alias for ``$operating_system``.
+* ``$target``: the ISA target for the current host, as detected by
+  ArchSpec. E.g. ``skylake`` or ``neoverse-n1``.
+* ``$target_family``. The target family for the current host, as
+  detected by ArchSpec. E.g. ``x86_64`` or ``aarch64``.
+* ``$date``: the current date in the format YYYY-MM-DD
+
 
 Note that, as with shell variables, you can write these as ``$varname``
 or with braces to distinguish the variable from surrounding characters:
@@ -549,7 +614,7 @@ down the problem:
 
 You can see above that the ``build_jobs`` and ``debug`` settings are
 built in and are not overridden by a configuration file. The
-``verify_ssl`` setting comes from the ``--insceure`` option on the
+``verify_ssl`` setting comes from the ``--insecure`` option on the
 command line. ``dirty`` and ``install_tree`` come from the custom
 scopes ``./my-scope`` and ``./my-scope-2``, and all other configuration
 options come from the default configuration files that ship with Spack.

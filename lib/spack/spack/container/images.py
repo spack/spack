@@ -1,16 +1,17 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Manages the details on the images used in the various stages."""
 import json
 import os.path
+import shlex
 import sys
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
-import spack.util.executable as executable
+import spack.util.git
 
 #: Global variable used to cache in memory the content of images.json
 _data = None
@@ -97,7 +98,7 @@ def _verify_ref(url, ref, enforce_sha):
     # Do a checkout in a temporary directory
     msg = 'Cloning "{0}" to verify ref "{1}"'.format(url, ref)
     tty.info(msg, stream=sys.stderr)
-    git = executable.which("git", required=True)
+    git = spack.util.git.git(required=True)
     with fs.temporary_dir():
         git("clone", "-q", url, ".")
         sha = git(
@@ -130,8 +131,11 @@ def checkout_command(url, ref, enforce_sha, verify):
     if enforce_sha or verify:
         ref = _verify_ref(url, ref, enforce_sha)
 
-    command = (
-        "git clone {0} . && git fetch origin {1}:container_branch &&"
-        " git checkout container_branch "
-    ).format(url, ref)
-    return command
+    return " && ".join(
+        [
+            "git init --quiet",
+            f"git remote add origin {shlex.quote(url)}",
+            f"git fetch --depth=1 origin {shlex.quote(ref)}",
+            "git checkout --detach FETCH_HEAD",
+        ]
+    )

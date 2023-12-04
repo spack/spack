@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Srilm(MakefilePackage):
     url = "file://{0}/srilm-1.7.3.tar.gz".format(os.getcwd())
     manual_download = True
 
-    maintainers = ["RemiLacroix-IDRIS"]
+    maintainers("RemiLacroix-IDRIS")
 
     version("1.7.3", sha256="01eaf12d0f35b96d2b28ad0d41c9f915dd22b534a7abde3fbb9e35fb6c19200e")
 
@@ -71,7 +71,7 @@ class Srilm(MakefilePackage):
         makefile_machine.filter(r"PIC_FLAG\s*=.*", "")
 
         with open(makefile_machine_fn, "a") as makefile_machine:
-            # TCL is only needed for tests so disable it
+            # Tcl is only needed for tests so disable it
             makefile_machine.write("\nNO_TCL = 1\n")
             if "+pic" in spec:
                 makefile_machine.write("MAKE_PIC = 1\n")

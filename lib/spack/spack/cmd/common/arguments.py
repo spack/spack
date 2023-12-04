@@ -1,18 +1,22 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
 import argparse
+import os.path
+import textwrap
 
 from llnl.util.lang import stable_partition
 
 import spack.cmd
 import spack.config
-import spack.dependency as dep
+import spack.deptypes as dt
 import spack.environment as ev
+import spack.mirror
 import spack.modules
+import spack.reporters
 import spack.spec
 import spack.store
 from spack.util.pattern import Args
@@ -78,12 +82,12 @@ class ConstraintAction(argparse.Action):
 
         # return everything for an empty query.
         if not qspecs:
-            return spack.store.db.query(**kwargs)
+            return spack.store.STORE.db.query(**kwargs)
 
         # Return only matching stuff otherwise.
         specs = {}
         for spec in qspecs:
-            for s in spack.store.db.query(spec, **kwargs):
+            for s in spack.store.STORE.db.query(spec, **kwargs):
                 # This is fast for already-concrete specs
                 specs[s.dag_hash()] = s
 
@@ -110,17 +114,98 @@ class SetParallelJobs(argparse.Action):
 
 
 class DeptypeAction(argparse.Action):
-    """Creates a tuple of valid dependency types from a deptype argument."""
+    """Creates a flag of valid dependency types from a deptype argument."""
 
     def __call__(self, parser, namespace, values, option_string=None):
-        deptype = dep.all_deptypes
-        if values:
-            deptype = tuple(x.strip() for x in values.split(","))
-            if deptype == ("all",):
-                deptype = "all"
-            deptype = dep.canonical_deptype(deptype)
-
+        if not values or values == "all":
+            deptype = dt.ALL
+        else:
+            deptype = dt.canonicalize(values.split(","))
         setattr(namespace, self.dest, deptype)
+
+
+class ConfigScope(argparse.Action):
+    """Pick the currently configured config scopes."""
+
+    def __init__(self, *args, **kwargs) -> None:
+        kwargs.setdefault("metavar", spack.config.SCOPES_METAVAR)
+        super().__init__(*args, **kwargs)
+
+    @property
+    def default(self):
+        return self._default() if callable(self._default) else self._default
+
+    @default.setter
+    def default(self, value):
+        self._default = value
+
+    @property
+    def choices(self):
+        return spack.config.scopes().keys()
+
+    @choices.setter
+    def choices(self, value):
+        pass
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, values)
+
+
+def _cdash_reporter(namespace):
+    """Helper function to create a CDash reporter. This function gets an early reference to the
+    argparse namespace under construction, so it can later use it to create the object.
+    """
+
+    def _factory():
+        def installed_specs(args):
+            if getattr(args, "spec", ""):
+                packages = args.spec
+            elif getattr(args, "specs", ""):
+                packages = args.specs
+            elif getattr(args, "package", ""):
+                # Ensure CI 'spack test run' can output CDash results
+                packages = args.package
+            else:
+                packages = []
+                for file in args.specfiles:
+                    with open(file, "r") as f:
+                        s = spack.spec.Spec.from_yaml(f)
+                        packages.append(s.format())
+            return packages
+
+        configuration = spack.reporters.CDashConfiguration(
+            upload_url=namespace.cdash_upload_url,
+            packages=installed_specs(namespace),
+            build=namespace.cdash_build,
+            site=namespace.cdash_site,
+            buildstamp=namespace.cdash_buildstamp,
+            track=namespace.cdash_track,
+        )
+        return spack.reporters.CDash(configuration=configuration)
+
+    return _factory
+
+
+class CreateReporter(argparse.Action):
+    """Create the correct object to generate reports for installation and testing."""
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, values)
+        if values == "junit":
+            setattr(namespace, "reporter", spack.reporters.JUnit)
+        elif values == "cdash":
+            setattr(namespace, "reporter", _cdash_reporter(namespace))
+
+
+@arg
+def log_format():
+    return Args(
+        "--log-format",
+        default=None,
+        action=CreateReporter,
+        choices=("junit", "cdash"),
+        help="format to be used for log files",
+    )
 
 
 # TODO: merge constraint and installed_specs
@@ -204,7 +289,7 @@ def recurse_dependents():
         "--dependents",
         action="store_true",
         dest="dependents",
-        help="also uninstall any packages that depend on the ones given " "via command line",
+        help="also uninstall any packages that depend on the ones given via command line",
     )
 
 
@@ -224,9 +309,8 @@ def deptype():
     return Args(
         "--deptype",
         action=DeptypeAction,
-        default=dep.all_deptypes,
-        help="comma-separated list of deptypes to traverse\ndefault=%s"
-        % ",".join(dep.all_deptypes),
+        default=dt.ALL,
+        help="comma-separated list of deptypes to traverse (default=%s)" % ",".join(dt.ALL_TYPES),
     )
 
 
@@ -271,6 +355,17 @@ def tags():
 
 
 @arg
+def namespaces():
+    return Args(
+        "-N",
+        "--namespaces",
+        action="store_true",
+        default=False,
+        help="show fully qualified package names",
+    )
+
+
+@arg
 def jobs():
     return Args(
         "-j",
@@ -288,11 +383,22 @@ def install_status():
         "-I",
         "--install-status",
         action="store_true",
-        default=False,
-        help="show install status of packages. packages can be: "
+        default=True,
+        help="show install status of packages\n\npackages can be: "
         "installed [+], missing and needed by an installed package [-], "
-        "installed in and upstream instance [^], "
+        "installed in an upstream instance [^], "
         "or not installed (no annotation)",
+    )
+
+
+@arg
+def no_install_status():
+    return Args(
+        "--no-install-status",
+        dest="install_status",
+        action="store_false",
+        default=True,
+        help="do not show install status annotations",
     )
 
 
@@ -321,24 +427,23 @@ def add_cdash_args(subparser, add_help):
     cdash_help = {}
     if add_help:
         cdash_help["upload-url"] = "CDash URL where reports will be uploaded"
-        cdash_help[
-            "build"
-        ] = """The name of the build that will be reported to CDash.
-Defaults to spec of the package to operate on."""
-        cdash_help[
-            "site"
-        ] = """The site name that will be reported to CDash.
-Defaults to current system hostname."""
-        cdash_help[
-            "track"
-        ] = """Results will be reported to this group on CDash.
-Defaults to Experimental."""
-        cdash_help[
-            "buildstamp"
-        ] = """Instead of letting the CDash reporter prepare the
-buildstamp which, when combined with build name, site and project,
-uniquely identifies the build, provide this argument to identify
-the build yourself.  Format: %%Y%%m%%d-%%H%%M-[cdash-track]"""
+        cdash_help["build"] = (
+            "name of the build that will be reported to CDash\n\n"
+            "defaults to spec of the package to operate on"
+        )
+        cdash_help["site"] = (
+            "site name that will be reported to CDash\n\n" "defaults to current system hostname"
+        )
+        cdash_help["track"] = (
+            "results will be reported to this group on CDash\n\n" "defaults to Experimental"
+        )
+        cdash_help["buildstamp"] = (
+            "use custom buildstamp\n\n"
+            "instead of letting the CDash reporter prepare the "
+            "buildstamp which, when combined with build name, site and project, "
+            "uniquely identifies the build, provide this argument to identify "
+            "the build yourself. format: %%Y%%m%%d-%%H%%M-[cdash-track]"
+        )
     else:
         cdash_help["upload-url"] = argparse.SUPPRESS
         cdash_help["build"] = argparse.SUPPRESS
@@ -353,6 +458,40 @@ the build yourself.  Format: %%Y%%m%%d-%%H%%M-[cdash-track]"""
     cdash_subgroup = subparser.add_mutually_exclusive_group()
     cdash_subgroup.add_argument("--cdash-track", default="Experimental", help=cdash_help["track"])
     cdash_subgroup.add_argument("--cdash-buildstamp", default=None, help=cdash_help["buildstamp"])
+
+
+def print_cdash_help():
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=textwrap.dedent(
+            """\
+environment variables:
+SPACK_CDASH_AUTH_TOKEN
+                    authentication token to present to CDash
+                    """
+        ),
+    )
+    add_cdash_args(parser, True)
+    parser.print_help()
+
+
+def sanitize_reporter_options(namespace: argparse.Namespace):
+    """Sanitize options that affect generation and configuration of reports, like
+    CDash or JUnit.
+
+    Args:
+        namespace: options parsed from cli
+    """
+    has_any_cdash_option = (
+        namespace.cdash_upload_url or namespace.cdash_build or namespace.cdash_site
+    )
+    if namespace.log_format == "junit" and has_any_cdash_option:
+        raise argparse.ArgumentTypeError("cannot pass any cdash option when --log-format=junit")
+
+    # If any CDash option is passed, assume --log-format=cdash is implied
+    if namespace.log_format is None and has_any_cdash_option:
+        namespace.log_format = "cdash"
+        namespace.reporter = _cdash_reporter(namespace)
 
 
 class ConfigSetAction(argparse.Action):
@@ -373,7 +512,7 @@ class ConfigSetAction(argparse.Action):
         # substituting '_' for ':'.
         dest = dest.replace(":", "_")
 
-        super(ConfigSetAction, self).__init__(
+        super().__init__(
             option_strings=option_strings,
             dest=dest,
             nargs=0,
@@ -419,26 +558,36 @@ def add_concretizer_args(subparser):
         dest="concretizer:reuse",
         const=True,
         default=None,
-        help="reuse installed dependencies/buildcaches when possible",
+        help="reuse installed packages/buildcaches when possible",
+    )
+    subgroup.add_argument(
+        "--reuse-deps",
+        action=ConfigSetAction,
+        dest="concretizer:reuse",
+        const="dependencies",
+        default=None,
+        help="reuse installed dependencies only",
     )
 
 
-def add_s3_connection_args(subparser, add_help):
+def add_connection_args(subparser, add_help):
     subparser.add_argument(
         "--s3-access-key-id", help="ID string to use to connect to this S3 mirror"
     )
     subparser.add_argument(
-        "--s3-access-key-secret", help="Secret string to use to connect to this S3 mirror"
+        "--s3-access-key-secret", help="secret string to use to connect to this S3 mirror"
     )
     subparser.add_argument(
-        "--s3-access-token", help="Access Token to use to connect to this S3 mirror"
+        "--s3-access-token", help="access token to use to connect to this S3 mirror"
     )
     subparser.add_argument(
         "--s3-profile", help="S3 profile name to use to connect to this S3 mirror", default=None
     )
     subparser.add_argument(
-        "--s3-endpoint-url", help="Endpoint URL to use to connect to this S3 mirror"
+        "--s3-endpoint-url", help="endpoint URL to use to connect to this S3 mirror"
     )
+    subparser.add_argument("--oci-username", help="username to use to connect to this OCI mirror")
+    subparser.add_argument("--oci-password", help="password to use to connect to this OCI mirror")
 
 
 def use_buildcache(cli_arg_value):
@@ -493,3 +642,42 @@ def use_buildcache(cli_arg_value):
             dependencies = val
 
     return package, dependencies
+
+
+def mirror_name_or_url(m):
+    # Look up mirror by name or use anonymous mirror with path/url.
+    # We want to guard against typos in mirror names, to avoid pushing
+    # accidentally to a dir in the current working directory.
+
+    # If there's a \ or / in the name, it's interpreted as a path or url.
+    if "/" in m or "\\" in m:
+        return spack.mirror.Mirror(m)
+
+    # Otherwise, the named mirror is required to exist.
+    try:
+        return spack.mirror.require_mirror_name(m)
+    except ValueError as e:
+        raise argparse.ArgumentTypeError(
+            str(e) + ". Did you mean {}?".format(os.path.join(".", m))
+        )
+
+
+def mirror_url(url):
+    try:
+        return spack.mirror.Mirror.from_url(url)
+    except ValueError as e:
+        raise argparse.ArgumentTypeError(str(e))
+
+
+def mirror_directory(path):
+    try:
+        return spack.mirror.Mirror.from_local_path(path)
+    except ValueError as e:
+        raise argparse.ArgumentTypeError(str(e))
+
+
+def mirror_name(name):
+    try:
+        return spack.mirror.require_mirror_name(name)
+    except ValueError as e:
+        raise argparse.ArgumentTypeError(str(e))

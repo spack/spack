@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,8 +30,8 @@ class Nek5000(Package):
     ]
 
     version("develop", branch="master")
-    version("17.0", "4d8d4793ce3c926c54e09a5a5968fa959fe0ba46bd2e6b8043e099528ee35a60")
-    version("19.0", "db129877a10ff568d49edc77cf65f9e732eecb1fce10edbd91ffc5ac10c41ad6")
+    version("17.0", sha256="4d8d4793ce3c926c54e09a5a5968fa959fe0ba46bd2e6b8043e099528ee35a60")
+    version("19.0", sha256="db129877a10ff568d49edc77cf65f9e732eecb1fce10edbd91ffc5ac10c41ad6")
 
     # MPI, Profiling and Visit variants
     variant("mpi", default=True, description="Build with MPI.")
@@ -53,7 +53,7 @@ class Nek5000(Package):
             raise RuntimeError(msg)
 
     @run_after("install")
-    def test_install(self):
+    def check_install(self):
         with working_dir("short_tests/eddy"):
             f_size = join_path(os.getcwd(), "SIZE")
             f_size_legacy = join_path(os.getcwd(), "SIZE.legacy")

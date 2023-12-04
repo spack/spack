@@ -1,15 +1,78 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import platform
-
-import spack.compilers
 from spack.build_environment import dso_suffix
 from spack.package import *
 
-linux_versions = [
+versions = [
+    {
+        "version": "2024.0.0",
+        "cpp": {
+            "url": "https://registrationcenter-download.intel.com/akdlm//IRC_NAS/5c8e686a-16a7-4866-b585-9cf09e97ef36/l_dpcpp-cpp-compiler_p_2024.0.0.49524_offline.sh",
+            "sha256": "d10bad2009c98c631fbb834aae62012548daeefc806265ea567316cd9180a684",
+        },
+        "ftn": {
+            "url": "https://registrationcenter-download.intel.com/akdlm//IRC_NAS/89b0fcf9-5c00-448a-93a1-5ee4078e008e/l_fortran-compiler_p_2024.0.0.49493_offline.sh",
+            "sha256": "57faf854b8388547ee4ef2db387a9f6f3b4d0cebd67b765cf5e844a0a970d1f9",
+        },
+    },
+    {
+        "version": "2023.2.1",
+        "cpp": {
+            "url": "https://registrationcenter-download.intel.com/akdlm//IRC_NAS/ebf5d9aa-17a7-46a4-b5df-ace004227c0e/l_dpcpp-cpp-compiler_p_2023.2.1.8_offline.sh",
+            "sha256": "f5656b2f5bb5d904639e6ef1f90a2d2e760d2906e82ebc0dd387709738ca714b",
+        },
+        "ftn": {
+            "url": "https://registrationcenter-download.intel.com/akdlm//IRC_NAS/0d65c8d4-f245-4756-80c4-6712b43cf835/l_fortran-compiler_p_2023.2.1.8_offline.sh",
+            "sha256": "d4e36abc014c184698fec318a127f15a696b5333b3b0282aba1968b351207185",
+        },
+    },
+    {
+        "version": "2023.2.0",
+        "cpp": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/748687b0-5a22-467c-86c6-c312fa0206b2/l_dpcpp-cpp-compiler_p_2023.2.0.49256_offline.sh",
+            "sha256": "21497b2dd2bc874794c2321561af313082725f61e3101e05a050f98b7351e08f",
+        },
+        "ftn": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/237236c4-434b-4576-96ac-020ceeb22619/l_fortran-compiler_p_2023.2.0.49254_offline.sh",
+            "sha256": "37c0ad6f0013512d98e385f8708ca29b23c45fddc9ec76069f1d93663668d511",
+        },
+    },
+    {
+        "version": "2023.1.0",
+        "cpp": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/89283df8-c667-47b0-b7e1-c4573e37bd3e/l_dpcpp-cpp-compiler_p_2023.1.0.46347_offline.sh",
+            "sha256": "3ac1c1179501a2646cbb052b05426554194573b4f8e2344d7699eed03fbcfa1d",
+        },
+        "ftn": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/150e0430-63df-48a0-8469-ecebff0a1858/l_fortran-compiler_p_2023.1.0.46348_offline.sh",
+            "sha256": "7639af4b6c928e9e3ba92297a054f78a55f4f4d0db9db0d144cc6653004e4f24",
+        },
+    },
+    {
+        "version": "2023.0.0",
+        "cpp": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/irc_nas/19123/l_dpcpp-cpp-compiler_p_2023.0.0.25393_offline.sh",
+            "sha256": "473eb019282c2735d65c6058f6890e60b79a5698ae18d2c1e4489fed8dd18a02",
+        },
+        "ftn": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/irc_nas/19105/l_fortran-compiler_p_2023.0.0.25394_offline.sh",
+            "sha256": "fd7525bf90646c8e43721e138f29c9c6f99e96dfe5648c13633f30ec64ac8b1b",
+        },
+    },
+    {
+        "version": "2022.2.1",
+        "cpp": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/irc_nas/19049/l_dpcpp-cpp-compiler_p_2022.2.1.16991_offline.sh",
+            "sha256": "3f0f02f9812a0cdf01922d2df9348910c6a4cb4f9dfe50fc7477a59bbb1f7173",
+        },
+        "ftn": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/irc_nas/18998/l_fortran-compiler_p_2022.2.1.16992_offline.sh",
+            "sha256": "64f1d1efbcdc3ac2182bec18313ca23f800d94f69758db83a1394490d9d4b042",
+        },
+    },
     {
         "version": "2022.2.0",
         "cpp": {
@@ -108,35 +171,51 @@ class IntelOneapiCompilers(IntelOneApiPackage):
 
     """
 
-    maintainers = ["rscohn2"]
+    maintainers("rscohn2")
 
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi.html"
 
-    depends_on("patchelf", type="build")
+    # See https://github.com/spack/spack/issues/39252
+    depends_on("patchelf@:0.17", type="build")
 
     # TODO: effectively gcc is a direct dependency of intel-oneapi-compilers, but we
     # cannot express that properly. For now, add conflicts for non-gcc compilers
     # instead.
-    for __compiler in spack.compilers.supported_compilers():
-        if __compiler != "gcc":
-            conflicts(
-                "%{0}".format(__compiler), msg="intel-oneapi-compilers must be installed with %gcc"
-            )
+    requires("%gcc", msg="intel-oneapi-compilers must be installed with %gcc")
 
-    if platform.system() == "Linux":
-        for v in linux_versions:
-            version(v["version"], expand=False, **v["cpp"])
-            resource(
-                name="fortran-installer",
-                placement="fortran-installer",
-                when="@{0}".format(v["version"]),
-                expand=False,
-                **v["ftn"]
-            )
+    for v in versions:
+        version(v["version"], expand=False, **v["cpp"])
+        resource(
+            name="fortran-installer",
+            placement="fortran-installer",
+            when="@{0}".format(v["version"]),
+            expand=False,
+            **v["ftn"],
+        )
+
+    @property
+    def v2_layout_versions(self):
+        return "@2024:"
 
     @property
     def component_dir(self):
         return "compiler"
+
+    @property
+    def _llvm_bin(self):
+        return self.component_prefix.bin if self.v2_layout else self.component_prefix.linux.bin
+
+    @property
+    def _classic_bin(self):
+        return (
+            self.component_prefix.bin
+            if self.v2_layout
+            else self.component_prefix.linux.bin.intel64
+        )
+
+    @property
+    def compiler_search_prefix(self):
+        return self._llvm_bin
 
     def setup_run_environment(self, env):
         """Adds environment variables to the generated module file.
@@ -149,33 +228,48 @@ class IntelOneapiCompilers(IntelOneApiPackage):
 
         and from setting CC/CXX/F77/FC
         """
-        super(IntelOneapiCompilers, self).setup_run_environment(env)
+        super().setup_run_environment(env)
 
-        env.set("CC", self.component_prefix.linux.bin.icx)
-        env.set("CXX", self.component_prefix.linux.bin.icpx)
-        env.set("F77", self.component_prefix.linux.bin.ifx)
-        env.set("FC", self.component_prefix.linux.bin.ifx)
+        env.set("CC", self._llvm_bin.icx)
+        env.set("CXX", self._llvm_bin.icpx)
+        env.set("F77", self._llvm_bin.ifx)
+        env.set("FC", self._llvm_bin.ifx)
 
     def install(self, spec, prefix):
         # Copy instead of install to speed up debugging
-        # install_tree('/opt/intel/oneapi/compiler', self.prefix)
+        # install_tree("/opt/intel/oneapi/compiler", self.prefix)
+        # return
 
         # install cpp
-        super(IntelOneapiCompilers, self).install(spec, prefix)
+        super().install(spec, prefix)
 
         # install fortran
         self.install_component(find("fortran-installer", "*")[0])
 
         # Some installers have a bug and do not return an error code when failing
-        if not is_exe(self.component_prefix.linux.bin.intel64.ifort):
-            raise RuntimeError("install failed")
+        if not is_exe(self._llvm_bin.ifx):
+            raise RuntimeError("Fortran install failed")
 
     @run_after("install")
     def inject_rpaths(self):
-        # Sets rpath so the compilers can work without setting LD_LIBRARY_PATH.
+        # The oneapi compilers cannot find their own internal shared
+        # libraries. If you are using an externally installed oneapi,
+        # then you need to source setvars.sh, which will set
+        # LD_LIBRARY_PATH. If you are using spack to install the
+        # compilers, then we patch the binaries that have this
+        # problem. Over time, intel has corrected most of the
+        # issues. I am using the 2024 release as a milestone to stop
+        # patching everything and just patching the binaries that have
+        # a problem.
         patchelf = which("patchelf")
-        patchelf.add_default_arg("--set-rpath")
-        patchelf.add_default_arg(":".join(self._ld_library_path()))
+        if self.spec.satisfies("@2024:"):
+            patchelf.add_default_arg("--set-rpath", self.component_prefix.lib)
+            patchelf(self.component_prefix.bin.join("sycl-post-link"))
+            patchelf(self.component_prefix.bin.compiler.join("llvm-spirv"))
+            return
+
+        # Sets rpath so the compilers can work without setting LD_LIBRARY_PATH.
+        patchelf.add_default_arg("--set-rpath", ":".join(self._ld_library_path()))
         for pd in ["bin", "lib", join_path("compiler", "lib", "intel64_lin")]:
             for file in find(self.component_prefix.linux.join(pd), "*", recursive=False):
                 # Try to patch all files, patchelf will do nothing and fail if file
@@ -203,7 +297,10 @@ class IntelOneapiCompilers(IntelOneApiPackage):
         # TODO: it is unclear whether we should really use all elements of
         #  _ld_library_path because it looks like the only rpath that needs to be
         #  injected is self.component_prefix.linux.compiler.lib.intel64_lin.
-        common_flags = ["-Wl,-rpath,{}".format(d) for d in self._ld_library_path()]
+        if self.v2_layout:
+            common_flags = ["-Wl,-rpath,{}".format(self.component_prefix.lib)]
+        else:
+            common_flags = ["-Wl,-rpath,{}".format(d) for d in self._ld_library_path()]
 
         # Make sure that underlying clang gets the right GCC toolchain by default
         llvm_flags = ["--gcc-toolchain={}".format(self.compiler.prefix)]
@@ -215,17 +312,17 @@ class IntelOneapiCompilers(IntelOneApiPackage):
         # The cfg flags are treated as command line flags apparently. Newer versions
         # do not trigger these warnings. In some build systems these warnings can
         # cause feature detection to fail, so we silence them with -Wno-unused-...
-        if self.spec.version < Version("2022.1.0"):
+        if self.spec.satisfies("@:2022.0"):
             llvm_flags.append("-Wno-unused-command-line-argument")
 
-        self.write_config_file(
-            common_flags + llvm_flags, self.component_prefix.linux.bin, ["icx", "icpx", "ifx"]
-        )
-        self.write_config_file(
-            common_flags + classic_flags,
-            self.component_prefix.linux.bin.intel64,
-            ["icc", "icpc", "ifort"],
-        )
+        self.write_config_file(common_flags + llvm_flags, self._llvm_bin, ["icx", "icpx"])
+        self.write_config_file(common_flags + classic_flags, self._llvm_bin, ["ifx"])
+        self.write_config_file(common_flags + classic_flags, self._classic_bin, ["ifort"])
+        # 2023 is the last release that includes icc
+        if self.spec.satisfies("@:2023"):
+            self.write_config_file(
+                common_flags + classic_flags, self._classic_bin, ["icc", "icpc"]
+            )
 
     def _ld_library_path(self):
         # Returns an iterable of directories that might contain shared runtime libraries

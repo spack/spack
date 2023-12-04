@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,8 +17,10 @@ class Simgrid(CMakePackage):
     url = "https://github.com/simgrid/simgrid/releases/download/v3.27/simgrid-3.27.tar.gz"
     git = "https://framagit.org/simgrid/simgrid.git"
 
-    maintainers = ["viniciusvgp"]
+    maintainers("viniciusvgp")
 
+    version("3.35", sha256="b4570d3de18d319cbd2e16c5a669f90760307673c0cc9940d4d11cfc537e69a8")
+    version("3.34", sha256="161f1c6c0ebb588c587aea6388114307bb31b3c6d5332fa3dc678151f1d0564d")
     version("3.32", sha256="837764eb81562f04e49dd20fbd8518d9eb1f94df00a4e4555e7ec7fa8aa341f0")
     version("3.31", sha256="4b44f77ad40c01cf4e3013957c9cbe39f33dec9304ff0c9c3d9056372ed4c61d")
     version("3.30", sha256="0cad48088c106e72efb42fb423e65d77fc9053cc03d6f3a5ff7ba4c712bb4eb8")
@@ -133,7 +135,6 @@ class Simgrid(CMakePackage):
     )
 
     def setup_dependent_package(self, module, dep_spec):
-
         if self.spec.satisfies("+smpi"):
             self.spec.smpicc = join_path(self.prefix.bin, "smpicc")
             self.spec.smpicxx = join_path(self.prefix.bin, "smpicxx")
@@ -141,7 +142,6 @@ class Simgrid(CMakePackage):
             self.spec.smpif77 = join_path(self.prefix.bin, "smpiff")
 
     def cmake_args(self):
-
         spec = self.spec
         args = []
 

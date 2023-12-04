@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,6 @@ class Genesis(AutotoolsPackage, CudaPackage):
     git = "https://github.com/genesis-release-r-ccs/genesis.git"
     maintainers = ["chig"]
 
-    version("master", branch="master")
     version(
         "2.0.0",
         tag="v2.0.0",
@@ -97,6 +96,7 @@ class Genesis(AutotoolsPackage, CudaPackage):
 
     depends_on("mpi", type=("build", "run"))
     depends_on("lapack")
+
     depends_on("python@2.6.9:2.8.0", type=("build", "run"), when="@:1.7.1")
     depends_on("python@3.0.0:", type=("build", "run"), when="@2.0.0:")
 
@@ -157,4 +157,5 @@ class Genesis(AutotoolsPackage, CudaPackage):
                 self.spec["mpi"].prefix.bin.mpirun + " -np 8 " + bin_name,
             ]
             env["OMP_NUM_THREADS"] = "1"
-            self.run_test(exe_name, options=opts, expected="Passed  53 / 53")
+            self.run_test(exe_name, options=opts, expected="Passed  63 / 63")
+

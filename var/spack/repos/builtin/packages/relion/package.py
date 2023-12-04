@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,16 +14,15 @@ class Relion(CMakePackage, CudaPackage):
 
     homepage = "http://www2.mrc-lmb.cam.ac.uk/relion"
     git = "https://github.com/3dem/relion.git"
-    url = "https://github.com/3dem/relion/archive/3.1.3.zip"
+    url = "https://github.com/3dem/relion/archive/4.0.0.zip"
+    maintainers("dacolombo")
 
-    # New 4.0-beta
-    version("4.0-beta", commit="e3537c82cf7a816df805f4e54c0bc12475803524")
+    version("4.0.1", sha256="7e0d56fd4068c99f943dc309ae533131d33870392b53a7c7aae7f65774f667be")
+    version("4.0.0", sha256="0987e684e9d2dfd630f1ad26a6847493fe9fcd829ec251d8bc471d11701d51dd")
 
-    version(
-        "3.1.3",
-        sha256="e67277200b54d1814045cfe02c678a58d88eb8f988091573453c8568bfde90fc",
-        preferred=True,
-    )
+    # 3.1.4 latest release in 3.1 branch
+    version("3.1.4", sha256="3bf3449bd2d71dc85d2cdbd342e772f5faf793d8fb3cda6414547cf34c98f34c")
+    version("3.1.3", sha256="e67277200b54d1814045cfe02c678a58d88eb8f988091573453c8568bfde90fc")
     version("3.1.2", sha256="dcdf6f214f79a03d29f0fed2de58054efa35a9d8401543bdc52bfb177987931f")
     version("3.1.1", sha256="63e9b77e1ba9ec239375020ad6ff631424d1a5803cba5c608c09fd44d20b1618")
     version("3.1.0", sha256="8a7e751fa6ebcdf9f36046499b3d88e170c4da86d5ff9ad1914b5f3d178867a8")
@@ -77,6 +76,7 @@ class Relion(CMakePackage, CudaPackage):
 
     depends_on("mpi")
     depends_on("cmake@3:", type="build")
+    depends_on("binutils@2.32:", type="build")
     depends_on("fftw precision=float,double", when="~mklfft")
 
     # use the +xft variant so the interface is not so horrible looking
@@ -97,6 +97,11 @@ class Relion(CMakePackage, CudaPackage):
     # - Gctf
     # - ResMap
     patch("0002-Simple-patch-to-fix-intel-mkl-linking.patch", when="@:3.1.1 os=ubuntu18.04")
+    patch(
+        "https://github.com/3dem/relion/commit/2daa7447c1c871be062cce99109b6041955ec5e9.patch?full_index=1",
+        sha256="4995b0d4bc24a1ec99042a4b73e9db84918eb6f622dacb308b718146bfb6a5ea",
+        when="@4.0.0",
+    )
 
     def cmake_args(self):
         args = [
@@ -117,11 +122,7 @@ class Relion(CMakePackage, CudaPackage):
             if carch == "none":
                 raise ValueError("Must select a value for cuda_arch")
             else:
-                args += [
-                    "-DCUDA=ON",
-                    "-DCudaTexture=ON",
-                    "-DCUDA_ARCH=%s" % (carch),
-                ]
+                args += ["-DCUDA=ON", "-DCudaTexture=ON", "-DCUDA_ARCH=%s" % (carch)]
 
         return args
 

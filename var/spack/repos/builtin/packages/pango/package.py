@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ class Pango(MesonPackage):
     list_url = "http://ftp.gnome.org/pub/gnome/sources/pango/"
     list_depth = 1
 
+    version("1.50.13", sha256="5cdcf6d761d26a3eb9412b6cb069b32bd1d9b07abf116321167d94c2189299fd")
     version("1.50.7", sha256="0477f369a3d4c695df7299a6989dc004756a7f4de27eecac405c6790b7e3ad33")
     version("1.49.4", sha256="1fda6c03161bd1eacfdc349244d26828c586d25bfc600b9cfe2494902fdf56cf")
     version("1.48.11", sha256="084fd0a74fad05b1b299d194a7366b6593063d370b40272a5d3a1888ceb9ac40")

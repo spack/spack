@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Sratoolkit(Package):
     homepage = "https://trace.ncbi.nlm.nih.gov/Traces/sra"
     url = "https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/3.0.0/sratoolkit.3.0.0-centos_linux64.tar.gz"
 
-    maintainers = ["robqiao"]
+    maintainers("robqiao")
 
     version("3.0.0", sha256="89d11fc284e32d38b6639c551df6d658075cd268913f8ba2af65026e4a161dfe")
     version("2.10.9", sha256="2c849b4b9865737ff17732e3befa70718616ce31cac98e8a61b1c5ed5a6514c5")

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,7 +32,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
     """Axom provides a robust, flexible software infrastructure for the development
     of multi-physics applications and computational tools."""
 
-    maintainers = ["white238"]
+    maintainers("white238")
 
     homepage = "https://github.com/LLNL/axom"
     git = "https://github.com/LLNL/axom.git"
@@ -40,16 +40,18 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     version("main", branch="main")
     version("develop", branch="develop")
-    version("0.7.0", tag="v0.7.0")
-    version("0.6.1", tag="v0.6.1")
-    version("0.6.0", tag="v0.6.0")
-    version("0.5.0", tag="v0.5.0")
-    version("0.4.0", tag="v0.4.0")
-    version("0.3.3", tag="v0.3.3")
-    version("0.3.2", tag="v0.3.2")
-    version("0.3.1", tag="v0.3.1")
-    version("0.3.0", tag="v0.3.0")
-    version("0.2.9", tag="v0.2.9")
+    version("0.8.1", tag="v0.8.1", commit="0da8a5b1be596887158ac2fcd321524ba5259e15")
+    version("0.8.0", tag="v0.8.0", commit="71fab3262eb7e1aa44a04c21d072b77f06362f7b")
+    version("0.7.0", tag="v0.7.0", commit="ea5158191181c137117ae37959879bdc8b107f35")
+    version("0.6.1", tag="v0.6.1", commit="ee240d3963d7879ae0e9c392902195bd7b04e37d")
+    version("0.6.0", tag="v0.6.0", commit="65287dc00bc7c271a08cb86c632f5909c30e3506")
+    version("0.5.0", tag="v0.5.0", commit="db137349b3e28617c3e0570dbd18e4a91654da98")
+    version("0.4.0", tag="v0.4.0", commit="38c0d7495ece35a30fca5f5b578b8f9d54346bd2")
+    version("0.3.3", tag="v0.3.3", commit="f0539ef0525469ffda054d86144f310c15b4f9e0")
+    version("0.3.2", tag="v0.3.2", commit="c446b496e20e6118b8cba7e80f1f84c76a49e463")
+    version("0.3.1", tag="v0.3.1", commit="cbefc0457a229d8acfb70622360d0667e90e50a2")
+    version("0.3.0", tag="v0.3.0", commit="20068ccab4b4f70055918b4f17960ec3ed6dbce8")
+    version("0.2.9", tag="v0.2.9", commit="9e9a54ede3326817c05f35922738516e43b5ec3d")
 
     # https://github.com/spack/spack/issues/31829
     patch("examples-oneapi.patch", when="@0.6.1 +examples %oneapi")
@@ -117,7 +119,6 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
         depends_on("umpire@6.0.0", when="@0.6.0")
         depends_on("umpire@5:5.0.1", when="@:0.5.0")
         depends_on("umpire +openmp", when="+openmp")
-        depends_on("umpire +cuda", when="+cuda")
 
     with when("+raja"):
         depends_on("raja@2022.03.0:", when="@0.7.0:")
@@ -125,15 +126,18 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
         depends_on("raja@:0.13.0", when="@:0.5.0")
         depends_on("raja~openmp", when="~openmp")
         depends_on("raja+openmp", when="+openmp")
-        depends_on("raja+cuda", when="+cuda")
 
     for val in CudaPackage.cuda_arch_values:
-        depends_on("raja cuda_arch={0}".format(val), when="+raja cuda_arch={0}".format(val))
-        depends_on("umpire cuda_arch={0}".format(val), when="+umpire cuda_arch={0}".format(val))
+        raja_cuda = "raja +cuda cuda_arch={0}".format(val)
+        umpire_cuda = "umpire +cuda cuda_arch={0}".format(val)
+        depends_on(raja_cuda, when="+{0}".format(raja_cuda))
+        depends_on(umpire_cuda, when="+{0}".format(umpire_cuda))
 
     for val in ROCmPackage.amdgpu_targets:
-        depends_on("raja amdgpu_target={0}".format(val), when="amdgpu_target={0}".format(val))
-        depends_on("umpire amdgpu_target={0}".format(val), when="amdgpu_target={0}".format(val))
+        raja_rocm = "raja +rocm amdgpu_target={0}".format(val)
+        umpire_rocm = "umpire +rocm amdgpu_target={0}".format(val)
+        depends_on(raja_rocm, when="+{0}".format(raja_rocm))
+        depends_on(umpire_rocm, when="+{0}".format(umpire_rocm))
 
     depends_on("mfem", when="+mfem")
     depends_on("mfem~mpi", when="+mfem~mpi")
@@ -160,6 +164,8 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     conflicts("+openmp", when="+rocm")
     conflicts("+cuda", when="+rocm")
+
+    conflicts("^blt@:0.3.6", when="+rocm")
 
     def flag_handler(self, name, flags):
         if self.spec.satisfies("%cce") and name == "fflags":
@@ -204,7 +210,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     def initconfig_compiler_entries(self):
         spec = self.spec
-        entries = super(Axom, self).initconfig_compiler_entries()
+        entries = super().initconfig_compiler_entries()
 
         if "+fortran" in spec:
             entries.append(cmake_cache_option("ENABLE_FORTRAN", True))
@@ -227,7 +233,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     def initconfig_hardware_entries(self):
         spec = self.spec
-        entries = super(Axom, self).initconfig_hardware_entries()
+        entries = super().initconfig_hardware_entries()
 
         if "+cuda" in spec:
             entries.append(cmake_cache_option("ENABLE_CUDA", True))
@@ -342,8 +348,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
             if _existing_paths:
                 entries.append(
                     cmake_cache_string(
-                        "BLT_CMAKE_IMPLICIT_LINK_DIRECTORIES_EXCLUDE",
-                        ";".join(_existing_paths),
+                        "BLT_CMAKE_IMPLICIT_LINK_DIRECTORIES_EXCLUDE", ";".join(_existing_paths)
                     )
                 )
 
@@ -351,7 +356,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     def initconfig_mpi_entries(self):
         spec = self.spec
-        entries = super(Axom, self).initconfig_mpi_entries()
+        entries = super().initconfig_mpi_entries()
 
         if "+mpi" in spec:
             entries.append(cmake_cache_option("ENABLE_MPI", True))

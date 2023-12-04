@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,8 +21,6 @@ class SConsPackage(spack.package_base.PackageBase):
     #: build-system class we are using
     build_system_class = "SConsPackage"
 
-    #: Callback names for build-time test
-    build_time_test_callbacks = ["build_test"]
     #: Legacy buildsystem attribute used to deserialize and install old specs
     legacy_buildsystem = "scons"
 
@@ -48,27 +46,33 @@ class SConsBuilder(BaseBuilder):
     phases = ("build", "install")
 
     #: Names associated with package methods in the old build-system format
-    legacy_methods = ("build_args", "install_args", "build_test")
+    legacy_methods = ("build_test",)
+
+    #: Same as legacy_methods, but the signature is different
+    legacy_long_methods = ("build_args", "install_args")
 
     #: Names associated with package attributes in the old build-system format
-    legacy_attributes = ()
+    legacy_attributes = ("build_time_test_callbacks",)
 
-    def build_args(self):
+    #: Callback names for build-time test
+    build_time_test_callbacks = ["build_test"]
+
+    def build_args(self, spec, prefix):
         """Arguments to pass to build."""
         return []
 
     def build(self, pkg, spec, prefix):
         """Build the package."""
-        args = self.build_args()
+        args = self.build_args(spec, prefix)
         inspect.getmodule(self.pkg).scons(*args)
 
-    def install_args(self):
+    def install_args(self, spec, prefix):
         """Arguments to pass to install."""
         return []
 
     def install(self, pkg, spec, prefix):
         """Install the package."""
-        args = self.install_args()
+        args = self.install_args(spec, prefix)
 
         inspect.getmodule(self.pkg).scons("install", *args)
 

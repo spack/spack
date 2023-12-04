@@ -1,17 +1,14 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-import six
-
 from spack.package import *
 
 
 def is_string(x):
     """validate a string"""
     try:
-        return isinstance(x, six.string_types)
+        return isinstance(x, str)
     except ValueError:
         return False
 

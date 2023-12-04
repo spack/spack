@@ -1,13 +1,13 @@
-.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _rpackage:
 
---------
-RPackage
---------
+--
+R
+--
 
 Like Python, R has its own built-in build system.
 
@@ -163,28 +163,28 @@ attributes that can be used to set ``homepage``, ``url``, ``list_url``, and
 
 .. code-block:: python
 
-   cran = 'caret'
+   cran = "caret"
 
 is equivalent to:
 
 .. code-block:: python
 
-   homepage = 'https://cloud.r-project.org/package=caret'
-   url      = 'https://cloud.r-project.org/src/contrib/caret_6.0-86.tar.gz'
-   list_url = 'https://cloud.r-project.org/src/contrib/Archive/caret'
+   homepage = "https://cloud.r-project.org/package=caret"
+   url      = "https://cloud.r-project.org/src/contrib/caret_6.0-86.tar.gz"
+   list_url = "https://cloud.r-project.org/src/contrib/Archive/caret"
 
 Likewise, the following ``bioc`` attribute:
 
 .. code-block:: python
 
-   bioc = 'BiocVersion'
+   bioc = "BiocVersion"
 
 is equivalent to:
 
 .. code-block:: python
 
-   homepage = 'https://bioconductor.org/packages/BiocVersion/'
-   git      = 'https://git.bioconductor.org/packages/BiocVersion'
+   homepage = "https://bioconductor.org/packages/BiocVersion/"
+   git      = "https://git.bioconductor.org/packages/BiocVersion"
 
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -193,14 +193,14 @@ Build system dependencies
 
 As an extension of the R ecosystem, your package will obviously depend
 on R to build and run. Normally, we would use ``depends_on`` to express
-this, but for R packages, we use ``extends``. ``extends`` is similar to
-``depends_on``, but adds an additional feature: the ability to "activate"
-the package by symlinking it to the R installation directory. Since
-every R package needs this, the ``RPackage`` base class contains:
+this, but for R packages, we use ``extends``. This implies a special
+dependency on R, which is used to set environment variables such as
+``R_LIBS`` uniformly. Since every R package needs this, the ``RPackage``
+base class contains:
 
 .. code-block:: python
 
-   extends('r')
+   extends("r")
 
 
 Take a close look at the homepage for ``caret``. If you look at the
@@ -209,7 +209,7 @@ You should add this to your package like so:
 
 .. code-block:: python
 
-   depends_on('r@3.2.0:', type=('build', 'run'))
+   depends_on("r@3.2.0:", type=("build", "run"))
 
 
 ^^^^^^^^^^^^^^
@@ -227,7 +227,7 @@ and list all of their dependencies in the following sections:
 * LinkingTo
 
 As far as Spack is concerned, all 3 of these dependency types
-correspond to ``type=('build', 'run')``, so you don't have to worry
+correspond to ``type=("build", "run")``, so you don't have to worry
 about the details. If you are curious what they mean,
 https://github.com/spack/spack/issues/2951 has a pretty good summary:
 
@@ -330,7 +330,7 @@ the dependency:
 
 .. code-block:: python
 
-   depends_on('r-lattice@0.20:', type=('build', 'run'))
+   depends_on("r-lattice@0.20:", type=("build", "run"))
 
 
 ^^^^^^^^^^^^^^^^^^
@@ -361,20 +361,20 @@ like so:
 .. code-block:: python
 
    def configure_args(self):
-       mpi_name = self.spec['mpi'].name
+       mpi_name = self.spec["mpi"].name
 
        # The type of MPI. Supported values are:
        # OPENMPI, LAM, MPICH, MPICH2, or CRAY
-       if mpi_name == 'openmpi':
-           Rmpi_type = 'OPENMPI'
-       elif mpi_name == 'mpich':
-           Rmpi_type = 'MPICH2'
+       if mpi_name == "openmpi":
+           Rmpi_type = "OPENMPI"
+       elif mpi_name == "mpich":
+           Rmpi_type = "MPICH2"
        else:
-           raise InstallError('Unsupported MPI type')
+           raise InstallError("Unsupported MPI type")
 
        return [
-           '--with-Rmpi-type={0}'.format(Rmpi_type),
-           '--with-mpi={0}'.format(spec['mpi'].prefix),
+           "--with-Rmpi-type={0}".format(Rmpi_type),
+           "--with-mpi={0}".format(spec["mpi"].prefix),
        ]
 
 

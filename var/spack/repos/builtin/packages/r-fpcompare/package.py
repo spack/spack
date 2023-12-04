@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class RFpcompare(RPackage):
 
     cran = "fpCompare"
 
-    maintainers = ["dorton21"]
+    maintainers("dorton21")
 
     version("0.2.4", sha256="7189842a123e67b2d5d4b1dd72901959b821ec086d61cabc1dad9eae23f52570")
     version("0.2.3", sha256="f89be3568544a3a44e4f01b5050ed03705805308ec1aa4add9a5e1b5b328dbdf")

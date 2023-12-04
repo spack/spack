@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,9 @@ class Infernal(AutotoolsPackage):
     variant("mpi", default=False, description="Enable MPI parallel support")
 
     depends_on("mpi", when="+mpi")
+
+    # https://github.com/EddyRivasLab/infernal/issues/30
+    conflicts("target=aarch64:", msg="infernal is only available for x86_64 and PowerPC")
 
     def configure_args(self):
         args = []

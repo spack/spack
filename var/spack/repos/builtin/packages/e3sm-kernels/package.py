@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class E3smKernels(MakefilePackage):
     url = "https://github.com/E3SM-Project/codesign-kernels/archive/refs/tags/v1.0.tar.gz"
     git = "https://github.com/E3SM-Project/codesign-kernels.git"
 
-    maintainers = ["sarats", "philipwjones"]
+    maintainers("sarats", "philipwjones")
 
     version("master", branch="master")
     version("1.0", sha256="358249785ba9f95616feecbb6f37f7694646568499c11b2094c9233999c6cc95")
@@ -26,10 +26,7 @@ class E3smKernels(MakefilePackage):
     variant(
         "kernel",
         default="atmosphere",
-        values=(
-            "atmosphere",
-            "mmf-mpdata-tracer",
-        ),
+        values=("atmosphere", "mmf-mpdata-tracer"),
         description="Specify E3SM Kernel to Build",
         multi=False,
     )

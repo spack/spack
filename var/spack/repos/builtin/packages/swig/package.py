@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class Swig(AutotoolsPackage, SourceforgePackage):
 
     homepage = "http://www.swig.org"
     sourceforge_mirror_path = "swig/swig-3.0.12.tar.gz"
-    maintainers = ["sethrj"]
+    maintainers("sethrj")
 
     tags = ["e4s", "build-tools"]
 
@@ -29,10 +29,12 @@ class Swig(AutotoolsPackage, SourceforgePackage):
 
     version("master", git="https://github.com/swig/swig.git")
     version(
-        "4.0.2",
-        sha256="d53be9730d8d58a16bf0cbd1f8ac0c0c3e1090573168bfa151b01eb47fa906fc",
+        "4.1.1",
+        sha256="2af08aced8fcd65cdb5cc62426768914bedc735b1c250325203716f78e39ac9b",
         preferred=True,
     )
+    version("4.1.0", sha256="d6a9a8094e78f7cfb6f80a73cc271e1fe388c8638ed22668622c2c646df5bb3d")
+    version("4.0.2", sha256="d53be9730d8d58a16bf0cbd1f8ac0c0c3e1090573168bfa151b01eb47fa906fc")
     version("4.0.1", sha256="7a00b4d0d53ad97a14316135e2d702091cd5f193bb58bcfcd8bc59d41e7887a9")
     version("4.0.0", sha256="e8a39cd6437e342cdcbd5af27a9bf11b62dc9efec9248065debcb8276fcbb925")
     version("3.0.12", sha256="7cf9f447ae7ed1c51722efc45e7f14418d15d7a1e143ac9f09a668999f4fc94d")
@@ -45,6 +47,16 @@ class Swig(AutotoolsPackage, SourceforgePackage):
     version("1.3.40", sha256="1945b3693bcda6777bd05fef1015a0ad1a4604cde4a4a0a368b61ccfd143ac09")
     version("fortran", branch="master", git="https://github.com/swig-fortran/swig.git")
     version(
+        "4.1.1-fortran",
+        sha256="417ea6adde3e6bf7825b2f670d2eac36257cc50db0e2f84c5bd4d67a16a7e88f",
+        url="https://github.com/swig-fortran/swig/archive/refs/tags/v4.1.1+fortran.tar.gz",
+    )
+    version(
+        "4.1.0-fortran",
+        sha256="f15521b10e7ef3b2a41dd0d81de0b1355a94495e481d201db4247e073a6f2d9b",
+        url="https://github.com/swig-fortran/swig/archive/refs/tags/v4.1.0+fortran.tar.gz",
+    )
+    version(
         "4.1.dev1-fortran",
         sha256="d9020319771879b41f9545e95f9d252a3ffc379832dded14c385e5cd823e526d",
         url="https://github.com/swig-fortran/swig/archive/refs/tags/v4.1.0-dev1+fortran.tar.gz",
@@ -55,16 +67,27 @@ class Swig(AutotoolsPackage, SourceforgePackage):
         url="https://github.com/swig-fortran/swig/archive/v4.0.2+fortran.tar.gz",
     )
 
-    depends_on("pcre")
+    depends_on("pcre", when="@:4.0")
+    depends_on("pcre2", when="@4.1:")
+    depends_on("zlib-api")
 
-    AUTOCONF_VERSIONS = ["@master", "@fortran", "@4.0.2-fortran", "@4.1.dev1-fortran"]
+    AUTOCONF_VERSIONS = "@" + ",".join(
+        [
+            "master",
+            "fortran",
+            "4.0.2-fortran",
+            "4.1.dev1-fortran",
+            "4.1.0-fortran",
+            "4.1.1-fortran",
+        ]
+    )
 
     # Git releases do *not* include configure script
-    for _version in AUTOCONF_VERSIONS:
-        depends_on("autoconf", type="build", when=_version)
-        depends_on("automake", type="build", when=_version)
-        depends_on("libtool", type="build", when=_version)
-        depends_on("yacc", type="build", when=_version)
+    depends_on("autoconf", type="build", when=AUTOCONF_VERSIONS)
+    depends_on("automake", type="build", when=AUTOCONF_VERSIONS)
+    depends_on("libtool", type="build", when=AUTOCONF_VERSIONS)
+    depends_on("yacc", type="build", when=AUTOCONF_VERSIONS)
+
     # Need newer 'automake' to support newer platforms
     for _target in ["ppc64le", "aarch64"]:
         depends_on("automake@1.15:", type="build", when="target={0}:".format(_target))
@@ -79,47 +102,41 @@ class Swig(AutotoolsPackage, SourceforgePackage):
         return match.group(1) if match else None
 
     @property
-    def _installed_exe(self):
-        return join_path(self.prefix, "bin", "swig")
+    def _swig(self):
+        return Executable(join_path(self.prefix, "bin", "swig"))
 
-    def _test_version(self):
+    @property
+    def _swiglib(self):
+        return self._swig("-swiglib", output=str).strip()
+
+    def test_version(self):
+        """check swig version"""
         version = str(self.version)
         if version.endswith("-fortran"):
-            version = version.replace("-", r"\+")
+            version = version.replace("-", r"+")
         elif version in ("fortran", "master"):
-            version = r".*"
+            version = ""
 
-        self.run_test(
-            self._installed_exe,
-            "-version",
-            expected=[r"SWIG Version {0}".format(version)],
-            purpose="test: version",
-        )
+        out = self._swig("-version", output=str.split, error=str.split)
+        expected = f"SWIG Version {version}"
+        assert expected in out, f"Expected '{expected}' in output"
 
-    def _test_swiglib(self):
-        # Get SWIG's alleged path to library files
-        swig = Executable(self._installed_exe)
-        swiglib = swig("-swiglib", output=str).strip()
+    def test_swiglib(self):
+        """check that the lib dir exists"""
+        assert os.path.isdir(self._swiglib), f"SWIG library does not exist at '{swiglib}'"
 
-        # Check that the lib dir exists
-        if not os.path.isdir(swiglib):
-            msg = "SWIG library does not exist at '{0}'".format(swiglib)
-            self.test_failures.append([None, msg])
+    def test_swig_swg(self):
+        """check that swig.swg exists"""
+        swigfile = join_path(self._swiglib, "swig.swg")
+        assert os.path.exists(swigfile), f"SWIG runtime does not exist at '{swigfile}'"
 
-        # Check for existence of other critical SWIG library files
-        swigfile = join_path(swiglib, "swig.swg")
-        if not os.path.exists(swigfile):
-            msg = "SWIG runtime does not exist at '{0}'".format(swigfile)
-            self.test_failures.append([None, msg])
-        if "fortran" in str(self.version):
-            swigfile = join_path(swiglib, "fortran", "fortran.swg")
-            if not os.path.exists(swigfile):
-                msg = "SWIG+Fortran runtime does not exist at '{0}'".format(swigfile)
-                self.test_failures.append([None, msg])
+    def test_fortran_swg(self):
+        """check that fortran.swg exists"""
+        if "fortran" not in str(self.version):
+            raise SkipTest(f"Test does not work with version {self.version}")
 
-    def test(self):
-        self._test_version()
-        self._test_swiglib()
+        swigfile = join_path(self._swiglib, "fortran", "fortran.swg")
+        assert os.path.exists(swigfile), f"SWIG+Fortran runtime does not exist at '{swigfile}'"
 
 
 class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
@@ -131,8 +148,6 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
         with working_dir(self.prefix.bin):
             os.symlink("swig", "swig{0}".format(self.spec.version.up_to(2)))
 
-    for _version in Swig.AUTOCONF_VERSIONS:
-
-        @when(_version)
-        def autoreconf(self, pkg, spec, prefix):
-            which("sh")("./autogen.sh")
+    @when(Swig.AUTOCONF_VERSIONS)
+    def autoreconf(self, pkg, spec, prefix):
+        which("sh")("./autogen.sh")

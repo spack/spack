@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,29 +14,66 @@ import re
 import subprocess
 import sys
 import tempfile
-
-from six.moves.urllib.parse import urlparse
+from datetime import date
 
 import llnl.util.tty as tty
 from llnl.util.lang import memoized
 
 import spack.util.spack_yaml as syaml
 
-is_windows = sys.platform == "win32"
-
 __all__ = ["substitute_config_variables", "substitute_path_variables", "canonicalize_path"]
+
+
+def architecture():
+    # break circular import
+    import spack.platforms
+    import spack.spec
+
+    host_platform = spack.platforms.host()
+    host_os = host_platform.operating_system("default_os")
+    host_target = host_platform.target("default_target")
+
+    return spack.spec.ArchSpec((str(host_platform), str(host_os), str(host_target)))
+
+
+def get_user():
+    # User pwd where available because it accounts for effective uids when using ksu and similar
+    try:
+        # user pwd for unix systems
+        import pwd
+
+        return pwd.getpwuid(os.geteuid()).pw_name
+    except ImportError:
+        # fallback on getpass
+        return getpass.getuser()
+
+
+# return value for replacements with no match
+NOMATCH = object()
 
 
 # Substitutions to perform
 def replacements():
-    # break circular import from spack.util.executable
+    # break circular imports
+    import spack.environment as ev
     import spack.paths
 
+    arch = architecture()
+
     return {
-        "spack": spack.paths.prefix,
-        "user": getpass.getuser(),
-        "tempdir": tempfile.gettempdir(),
-        "user_cache_path": spack.paths.user_cache_path,
+        "spack": lambda: spack.paths.prefix,
+        "user": lambda: get_user(),
+        "tempdir": lambda: tempfile.gettempdir(),
+        "user_cache_path": lambda: spack.paths.user_cache_path,
+        "architecture": lambda: arch,
+        "arch": lambda: arch,
+        "platform": lambda: arch.platform,
+        "operating_system": lambda: arch.os,
+        "os": lambda: arch.os,
+        "target": lambda: arch.target,
+        "target_family": lambda: arch.target.microarchitecture.family,
+        "date": lambda: date.today().strftime("%Y-%m-%d"),
+        "env": lambda: ev.active_environment().path if ev.active_environment() else NOMATCH,
     }
 
 
@@ -60,117 +97,37 @@ SPACK_MAX_INSTALL_PATH_LENGTH = 300
 SPACK_PATH_PADDING_CHARS = "__spack_path_placeholder__"
 
 
-def is_path_url(path):
-    if "\\" in path:
-        return False
-    url_tuple = urlparse(path)
-    return bool(url_tuple.scheme) and len(url_tuple.scheme) > 1
-
-
 def win_exe_ext():
-    return ".exe"
+    return r"(?:\.bat|\.exe)"
 
 
-def find_sourceforge_suffix(path):
-    """find and match sourceforge filepath components
-    Return match object"""
-    match = re.search(r"(.*(?:sourceforge\.net|sf\.net)/.*)(/download)$", path)
-    if match:
-        return match.groups()
-    return path, ""
-
-
-def path_to_os_path(*pths):
+def sanitize_filename(filename: str) -> str:
     """
-    Takes an arbitrary number of positional parameters
-    converts each arguemnt of type string to use a normalized
-    filepath separator, and returns a list of all values
-    """
-    ret_pths = []
-    for pth in pths:
-        if type(pth) is str and not is_path_url(pth):
-            pth = convert_to_platform_path(pth)
-        ret_pths.append(pth)
-    return ret_pths
-
-
-def sanitize_file_path(pth):
-    """
-    Formats strings to contain only characters that can
-    be used to generate legal file paths.
+    Replaces unsupported characters (for the host) in a filename with underscores.
 
     Criteria for legal files based on
     https://en.wikipedia.org/wiki/Filename#Comparison_of_filename_limitations
 
     Args:
-        pth: string containing path to be created
-            on the host filesystem
+        filename: string containing filename to be created on the host filesystem
 
     Return:
-        sanitized string that can legally be made into a path
+        filename that can be created on the host filesystem
     """
-    # on unix, splitting path by seperators will remove
-    # instances of illegal characters on join
-    pth_cmpnts = pth.split(os.path.sep)
+    if sys.platform != "win32":
+        # Only disallow null bytes and directory separators.
+        return re.sub("[\0/]", "_", filename)
 
-    if is_windows:
-        drive_match = r"[a-zA-Z]:"
-        is_abs = bool(re.match(drive_match, pth_cmpnts[0]))
-        drive = pth_cmpnts[0] + os.path.sep if is_abs else ""
-        pth_cmpnts = pth_cmpnts[1:] if drive else pth_cmpnts
-        illegal_chars = r'[<>?:"|*\\]'
-    else:
-        drive = "/" if not pth_cmpnts[0] else ""
-        illegal_chars = r"[/]"
-
-    pth = []
-    for cmp in pth_cmpnts:
-        san_cmp = re.sub(illegal_chars, "", cmp)
-        pth.append(san_cmp)
-    return drive + os.path.join(*pth)
-
-
-def system_path_filter(_func=None, arg_slice=None):
-    """
-    Filters function arguments to account for platform path separators.
-    Optional slicing range can be specified to select specific arguments
-
-    This decorator takes all (or a slice) of a method's positional arguments
-    and normalizes usage of filepath separators on a per platform basis.
-
-    Note: **kwargs, urls, and any type that is not a string are ignored
-    so in such cases where path normalization is required, that should be
-    handled by calling path_to_os_path directly as needed.
-
-    Parameters:
-        arg_slice (slice): a slice object specifying the slice of arguments
-            in the decorated method over which filepath separators are
-            normalized
-    """
-    from functools import wraps
-
-    def holder_func(func):
-        @wraps(func)
-        def path_filter_caller(*args, **kwargs):
-            args = list(args)
-            if arg_slice:
-                args[arg_slice] = path_to_os_path(*args[arg_slice])
-            else:
-                args = path_to_os_path(*args)
-            return func(*args, **kwargs)
-
-        return path_filter_caller
-
-    if _func:
-        return holder_func(_func)
-    return holder_func
+    # On Windows, things are more involved.
+    # NOTE: this is incomplete, missing reserved names
+    return re.sub(r'[\x00-\x1F\x7F"*/:<>?\\|]', "_", filename)
 
 
 @memoized
 def get_system_path_max():
     # Choose a conservative default
     sys_max_path_length = 256
-    if is_windows:
+    if sys.platform == "win32":
         sys_max_path_length = 260
     else:
         try:
@@ -187,54 +144,6 @@ def get_system_path_max():
     return sys_max_path_length
 
 
-class Path:
-    """
-    Describes the filepath separator types
-    in an enum style
-    with a helper attribute
-    exposing the path type of
-    the current platform.
-    """
-
-    unix = 0
-    windows = 1
-    platform_path = windows if is_windows else unix
-
-
-def format_os_path(path, mode=Path.unix):
-    """
-    Format path to use consistent, platform specific
-    separators. Absolute paths are converted between
-    drive letters and a prepended '/' as per platform
-    requirement.
-
-    Parameters:
-        path (str): the path to be normalized, must be a string
-            or expose the replace method.
-        mode (Path): the path filesperator style to normalize the
-            passed path to. Default is unix style, i.e. '/'
-    """
-    if not path:
-        return path
-    if mode == Path.windows:
-        path = path.replace("/", "\\")
-    else:
-        path = path.replace("\\", "/")
-    return path
-
-
-def convert_to_posix_path(path):
-    return format_os_path(path, mode=Path.unix)
-
-
-def convert_to_windows_path(path):
-    return format_os_path(path, mode=Path.windows)
-
-
-def convert_to_platform_path(path):
-    return format_os_path(path, mode=Path.platform_path)
-
-
 def substitute_config_variables(path):
     """Substitute placeholders into paths.
 
@@ -245,26 +154,28 @@ def substitute_config_variables(path):
     - $tempdir           Default temporary directory returned by tempfile.gettempdir()
     - $user              The current user's username
     - $user_cache_path   The user cache directory (~/.spack, unless overridden)
+    - $architecture      The spack architecture triple for the current system
+    - $arch              The spack architecture triple for the current system
+    - $platform          The spack platform for the current system
+    - $os                The OS of the current system
+    - $operating_system  The OS of the current system
+    - $target            The ISA target detected for the system
+    - $target_family     The family of the target detected for the system
+    - $date              The current date (YYYY-MM-DD)
 
     These are substituted case-insensitively into the path, and users can
     use either ``$var`` or ``${var}`` syntax for the variables. $env is only
     replaced if there is an active environment, and should only be used in
     environment yaml files.
     """
-    import spack.environment as ev  # break circular
-
     _replacements = replacements()
-    env = ev.active_environment()
-    if env:
-        _replacements.update({"env": env.path})
-    else:
-        # If a previous invocation added env, remove it
-        _replacements.pop("env", None)
 
     # Look up replacements
     def repl(match):
-        m = match.group(0).strip("${}")
-        return _replacements.get(m.lower(), match.group(0))
+        m = match.group(0)
+        key = m.strip("${}").lower()
+        repl = _replacements.get(key, lambda: m)()
+        return m if repl is NOMATCH else str(repl)
 
     # Replace $var or ${var}.
     return re.sub(r"(\$\w+\b|\$\{\w+\})", repl, path)
@@ -404,7 +315,7 @@ def padding_filter(string):
             r"(/{pad})+"  # the padding string repeated one or more times
             r"(/{longest_prefix})?(?=/)"  # trailing prefix of padding as path component
         )
-        regex = regex.replace("/", os.sep)
+        regex = regex.replace("/", re.escape(os.sep))
         regex = regex.format(pad=pad, longest_prefix=longest_prefix)
         _filter_re = re.compile(regex)
 
@@ -445,7 +356,7 @@ def debug_padded_filter(string, level=1):
     Returns (str): filtered string if current debug level does not exceed
         level and not windows; otherwise, unfiltered string
     """
-    if is_windows:
+    if sys.platform == "win32":
         return string
 
     return padding_filter(string) if tty.debug_level() <= level else string

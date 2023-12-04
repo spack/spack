@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,8 +15,10 @@ class Libgeotiff(AutotoolsPackage):
     homepage = "https://trac.osgeo.org/geotiff/"
     url = "https://download.osgeo.org/geotiff/libgeotiff/libgeotiff-1.6.0.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
+    version("1.7.1", sha256="05ab1347aaa471fc97347d8d4269ff0c00f30fa666d956baba37948ec87e55d6")
+    version("1.7.0", sha256="fc304d8839ca5947cfbeb63adb9d1aa47acef38fc6d6689e622926e672a99a7e")
     version("1.6.0", sha256="9311017e5284cffb86f2c7b7a9df1fb5ebcdc61c30468fb2e6bca36e4272ebca")
     version("1.5.1", sha256="f9e99733c170d11052f562bcd2c7cb4de53ed405f7acdde4f16195cd3ead612c")
     version("1.5.0", sha256="1c0bef329c60f770ed128e8b273945100f1a4b5abd161ac61e93bc947b0624dd")
@@ -27,7 +29,7 @@ class Libgeotiff(AutotoolsPackage):
     variant("jpeg", default=True, description="Include jpeg support")
     variant("proj", default=True, description="Use PROJ.x library")
 
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
     depends_on("jpeg", when="+jpeg")
     depends_on("libtiff")
     depends_on("proj", when="+proj")
@@ -55,12 +57,10 @@ class Libgeotiff(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
 
-        args = [
-            "--with-libtiff={0}".format(spec["libtiff"].prefix),
-        ]
+        args = ["--with-libtiff={0}".format(spec["libtiff"].prefix)]
 
         if "+zlib" in spec:
-            args.append("--with-zlib={0}".format(spec["zlib"].prefix))
+            args.append("--with-zlib={0}".format(spec["zlib-api"].prefix))
         else:
             args.append("--with-zlib=no")
 

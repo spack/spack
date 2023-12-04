@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -54,7 +54,10 @@ container_schema = {
         "os_packages": {
             "type": "object",
             "properties": {
-                "command": {"type": "string", "enum": ["apt", "yum"]},
+                "command": {
+                    "type": "string",
+                    "enum": ["apt", "yum", "zypper", "apk", "yum_amazon"],
+                },
                 "update": {"type": "boolean"},
                 "build": _list_of_packages,
                 "final": _list_of_packages,
@@ -62,15 +65,9 @@ container_schema = {
             "additionalProperties": False,
         },
         # Add labels to the image
-        "labels": {
-            "type": "object",
-        },
-        # Add a custom extra section at the bottom of a stage
-        "extra_instructions": {
-            "type": "object",
-            "additionalProperties": False,
-            "properties": {"build": {"type": "string"}, "final": {"type": "string"}},
-        },
+        "labels": {"type": "object"},
+        # Use a custom template to render the recipe
+        "template": {"type": "string", "default": None},
         # Reserved for properties that are specific to each format
         "singularity": {
             "type": "object",
@@ -83,11 +80,8 @@ container_schema = {
                 "help": {"type": "string"},
             },
         },
-        "docker": {
-            "type": "object",
-            "additionalProperties": False,
-            "default": {},
-        },
+        "docker": {"type": "object", "additionalProperties": False, "default": {}},
+        "depfile": {"type": "boolean", "default": False},
     },
 }
 

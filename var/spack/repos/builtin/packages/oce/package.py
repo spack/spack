@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,7 +36,7 @@ class Oce(Package):
     with when("+tbb"):
         depends_on("tbb")
         depends_on("intel-tbb@:2020 build_system=makefile", when="^intel-tbb")
-        conflicts("intel-oneapi-tbb@2021.1:")
+        conflicts("^intel-oneapi-tbb@2021.1:")
 
     # There is a bug in OCE which appears with Clang (version?) or GCC 6.0
     # and has to do with compiler optimization, see
@@ -78,11 +78,7 @@ class Oce(Package):
         )
 
         if platform.system() == "Darwin":
-            options.extend(
-                [
-                    "-DOCE_OSX_USE_COCOA:BOOL=ON",
-                ]
-            )
+            options.extend(["-DOCE_OSX_USE_COCOA:BOOL=ON"])
 
         if platform.system() == "Darwin" and (macos_version() >= Version("10.12")):
             # use @rpath on Sierra due to limit of dynamic loader

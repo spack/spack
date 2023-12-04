@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,8 +30,8 @@ class AlsaLib(AutotoolsPackage):
         spec = self.spec
         args = []
         if spec.satisfies("+python"):
-            args.append("--with-pythonlibs={0}".format(spec["python"].libs.ld_flags))
-            args.append("--with-pythonincludes={0}".format(spec["python"].headers.include_flags))
+            args.append(f"--with-pythonlibs={spec['python'].libs.ld_flags}")
+            args.append(f"--with-pythonincludes={spec['python'].headers.include_flags}")
         else:
             args.append("--disable-python")
         return args

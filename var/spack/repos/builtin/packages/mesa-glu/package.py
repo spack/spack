@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,16 +25,20 @@ class MesaGlu(AutotoolsPackage):
         multi=False,
         description="The OpenGL provider to use",
     )
-    conflicts("osmesa", when="gl=glx")
-    conflicts("osmesa", when="gl=other")
-    conflicts("glx", when="gl=osmesa")
-    conflicts("glx", when="gl=other")
+    conflicts("^osmesa", when="gl=glx")
+    conflicts("^osmesa", when="gl=other")
+    conflicts("^glx", when="gl=osmesa")
+    conflicts("^glx", when="gl=other")
 
     depends_on("gl@3:")
     depends_on("osmesa", when="gl=osmesa")
     depends_on("glx", when="gl=glx")
 
     provides("glu@1.3")
+
+    # When using -std=c++17, using register long will throw an error. This
+    # patch switches all instances of register long to long to fix this.
+    patch("register-long.patch")
 
     def configure_args(self):
         args = ["--disable-libglvnd"]
