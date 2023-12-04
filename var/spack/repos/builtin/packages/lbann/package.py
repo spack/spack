@@ -72,10 +72,8 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant("onednn", default=False, description="Support for OneDNN")
     variant("onnx", default=False, description="Support for exporting models into ONNX format")
     variant(
-        "nvshmem",
-        default=False,
-        sticky=True,
-        description="Support for NVSHMEM", when="+distconv")
+        "nvshmem", default=False, sticky=True, description="Support for NVSHMEM", when="+distconv"
+    )
     variant(
         "python",
         default=True,
@@ -296,13 +294,29 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         # Use lld high performance linker
         if "+lld" in spec:
-            entries.append(cmake_cache_string("CMAKE_EXE_LINKER_FLAGS", "{0} -fuse-ld=lld".format(linker_flags)))
-            entries.append(cmake_cache_string("CMAKE_SHARED_LINKER_FLAGS", "{0} -fuse-ld=lld".format(linker_flags)))
+            entries.append(
+                cmake_cache_string(
+                    "CMAKE_EXE_LINKER_FLAGS", "{0} -fuse-ld=lld".format(linker_flags)
+                )
+            )
+            entries.append(
+                cmake_cache_string(
+                    "CMAKE_SHARED_LINKER_FLAGS", "{0} -fuse-ld=lld".format(linker_flags)
+                )
+            )
 
         # Use gold high performance linker
         if "+gold" in spec:
-            entries.append(cmake_cache_string("CMAKE_EXE_LINKER_FLAGS", "{0} -fuse-ld=gold".format(linker_flags)))
-            entries.append(cmake_cache_string("CMAKE_SHARED_LINKER_FLAGS", "{0} -fuse-ld=gold".format(linker_flags)))
+            entries.append(
+                cmake_cache_string(
+                    "CMAKE_EXE_LINKER_FLAGS", "{0} -fuse-ld=gold".format(linker_flags)
+                )
+            )
+            entries.append(
+                cmake_cache_string(
+                    "CMAKE_SHARED_LINKER_FLAGS", "{0} -fuse-ld=gold".format(linker_flags)
+                )
+            )
 
         # Set the generator in the cached config
         if self.spec.satisfies("generator=make"):
