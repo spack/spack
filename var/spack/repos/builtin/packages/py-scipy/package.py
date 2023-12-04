@@ -152,8 +152,8 @@ class PyScipy(PythonPackage):
     patch("scipy-clang.patch", when="@1.5.0:1.6.3 %clang")
 
     def patch(self):
-        if self.spec.satisfies("@1.9:%arm"):
-            filter_file("fortran_std=legacy", "fortran_std=none" "meson.build")
+        if self.spec.satisfies("%arm"):
+            filter_file("fortran_std=legacy", "fortran_std=none", "meson.build")
 
     @property
     def archive_files(self):
