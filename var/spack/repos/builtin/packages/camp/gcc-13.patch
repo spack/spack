@@ -1,7 +1,7 @@
-diff --git a/home/su_group/soft/spack/opt/spack/linux-rocky9-zen4/gcc-13.2.0/camp-2022.10.1-f564zpor5w4ib3mabdc5ziyat3tagpij/include/camp/resource.hpp1 b/home/su_group/soft/spack/opt/spack/linux-rocky9-zen4/gcc-13.2.0/camp-2022.10.1-f564zpor5w4ib3mabdc5ziyat3tagpij/include/camp/resource.hpp
+diff --git a/include/camp/resource.hpp b/include/camp/resource.hpp
 index 58df206..763aa20 100644
---- a/home/su_group/soft/spack/opt/spack/linux-rocky9-zen4/gcc-13.2.0/camp-2022.10.1-f564zpor5w4ib3mabdc5ziyat3tagpij/include/camp/resource.hpp1
-+++ b/home/su_group/soft/spack/opt/spack/linux-rocky9-zen4/gcc-13.2.0/camp-2022.10.1-f564zpor5w4ib3mabdc5ziyat3tagpij/include/camp/resource.hpp
+--- a/include/camp/resource.hpp
++++ b/include/camp/resource.hpp
 @@ -12,6 +12,7 @@ http://github.com/llnl/camp
  #define __CAMP_RESOURCE_HPP
  
@@ -10,10 +10,10 @@ index 58df206..763aa20 100644
  #include <memory>
  #include <mutex>
  #include <type_traits>
-diff --git a/home/su_group/soft/spack/opt/spack/linux-rocky9-zen4/gcc-13.2.0/camp-2022.10.1-f564zpor5w4ib3mabdc5ziyat3tagpij/include/camp/resource/host.hpp1 b/home/su_group/soft/spack/opt/spack/linux-rocky9-zen4/gcc-13.2.0/camp-2022.10.1-f564zpor5w4ib3mabdc5ziyat3tagpij/include/camp/resource/host.hpp
+diff --git a/include/camp/resource/host.hpp b/include/camp/resource/host.hpp
 index c765175..4428c57 100644
---- a/home/su_group/soft/spack/opt/spack/linux-rocky9-zen4/gcc-13.2.0/camp-2022.10.1-f564zpor5w4ib3mabdc5ziyat3tagpij/include/camp/resource/host.hpp1
-+++ b/home/su_group/soft/spack/opt/spack/linux-rocky9-zen4/gcc-13.2.0/camp-2022.10.1-f564zpor5w4ib3mabdc5ziyat3tagpij/include/camp/resource/host.hpp
+--- a/include/camp/resource/host.hpp
++++ b/include/camp/resource/host.hpp
 @@ -13,6 +13,7 @@ http://github.com/llnl/camp
  
  #include "camp/resource/event.hpp"
