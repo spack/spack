@@ -13,12 +13,11 @@ class PyAstrovascpy(PythonPackage):
     """
 
     homepage = "https://github.com/BlueBrain/AstroVascPy"
-
-    url = "https://github.com/BlueBrain/AstroVascPy/releases/tag/0.1"
+    git = "https://github.com/BlueBrain/AstroVascPy.git"
 
     maintainers("tristan0x")
 
-    version("0.1", sha256="1e9b2036e9c1ce4cb0650612c0be2e7e7b142754e1550dfbfb0b757cee4f8bdd")
+    version("0.1.2", tag="0.1.2")
 
     variant("vtk", default=False, description="add VTK support (mainly for visualization)")
 
