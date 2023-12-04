@@ -32,7 +32,7 @@ from spack.util.prefix import Prefix
 from ._checks import BaseBuilder, execute_install_time_tests
 
 
-def _flatten_dict(dictionary: Mapping[object, object]) -> Iterable[str]:
+def _flatten_dict(dictionary: Mapping[str, object]) -> Iterable[str]:
     """Iterable that yields KEY=VALUE paths through a dictionary.
 
     Args:
@@ -55,7 +55,7 @@ class PythonExtension(spack.package_base.PackageBase):
     maintainers("adamjstewart")
 
     @property
-    def import_modules(self) -> Iterable[object]:
+    def import_modules(self) -> Iterable[str]:
         """Names of modules that the Python package provides.
 
         These are used to test whether or not the installation succeeded.
@@ -107,7 +107,7 @@ class PythonExtension(spack.package_base.PackageBase):
         return modules
 
     @property
-    def skip_modules(self) -> Iterable[object]:
+    def skip_modules(self) -> Iterable[str]:
         """Names of modules that should be skipped when running tests.
 
         These are a subset of import_modules. If a module has submodules,
@@ -428,7 +428,7 @@ class PythonPipBuilder(BaseBuilder):
         """
         return self.pkg.stage.source_path
 
-    def config_settings(self, spec: Spec, prefix: Prefix) -> Mapping[object, object]:
+    def config_settings(self, spec: Spec, prefix: Prefix) -> Mapping[str, object]:
         """Configuration settings to be passed to the PEP 517 build backend.
 
         Requires pip 22.1 or newer for keys that appear only a single time,
@@ -443,7 +443,7 @@ class PythonPipBuilder(BaseBuilder):
         """
         return {}
 
-    def install_options(self, spec: Spec, prefix: Prefix) -> Iterable[object]:
+    def install_options(self, spec: Spec, prefix: Prefix) -> Iterable[str]:
         """Extra arguments to be supplied to the setup.py install command.
 
         Requires pip 23.0 or older.
@@ -457,7 +457,7 @@ class PythonPipBuilder(BaseBuilder):
         """
         return []
 
-    def global_options(self, spec: Spec, prefix: Prefix) -> Iterable[object]:
+    def global_options(self, spec: Spec, prefix: Prefix) -> Iterable[str]:
         """Extra global options to be supplied to the setup.py call before the install
         or bdist_wheel command.
 
