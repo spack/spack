@@ -22,6 +22,9 @@ spack:
       variants: ~lldb~lld~libomptarget~polly~gold libunwind=none compiler-rt=none
     all:
       require: target=x86_64_v3
+    ascent:
+      require:
+        - spec: "^umpire@2022.03.1"
 
   definitions:
   - paraview_specs:
