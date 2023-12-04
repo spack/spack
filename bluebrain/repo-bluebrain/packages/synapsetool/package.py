@@ -18,6 +18,7 @@ class Synapsetool(CMakePackage):
     submodules = True
 
     version("develop", branch="main")
+    version("0.6.8", tag="v0.6.8")
     version("0.6.6", tag="v0.6.6")
     version("0.6.4", tag="v0.6.4")
     version("0.6.3", tag="v0.6.3")
@@ -50,8 +51,10 @@ class Synapsetool(CMakePackage):
     depends_on("hdf5~mpi", when="~mpi")
     depends_on("highfive+mpi", when="+mpi")
     depends_on("highfive~mpi", when="~mpi")
-    depends_on("libsonata+mpi", when="+mpi")
-    depends_on("libsonata~mpi", when="~mpi")
+    depends_on("libsonata+mpi", when="@0.6.7:+mpi")
+    depends_on("libsonata~mpi", when="@0.6.7:~mpi")
+    depends_on("libsonata@0.1.24+mpi", when="@:0.6.6+mpi")
+    depends_on("libsonata@0.1.24~mpi", when="@:0.6.6~mpi")
 
     patch("tests-unit-cmake.patch", when="@:0.5.6")
     patch("tests-unit-cmake-057.patch", when="@0.5.7:0.5.8")

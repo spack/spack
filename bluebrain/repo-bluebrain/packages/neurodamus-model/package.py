@@ -254,8 +254,7 @@ if [[ "$1" == "--only-neuron" ]]; then
     shift
 fi
 NRNIVMODL_EXTRA_INCLUDE_FLAGS="$1"
-shift
-NRNIVMODL_EXTRA_LOAD_FLAGS="$1"
+NRNIVMODL_EXTRA_LOAD_FLAGS="$2"
 
 if [ -n "{nrnivmodlcore_call}" ] && [ "$COMPILE_ONLY_NEURON" -eq "0" ]; then
     rm -rf _core_mods
