@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections.abc
+import glob
 import os
 from typing import Tuple
 
@@ -256,6 +257,13 @@ class CachedCMakeBuilder(CMakeBuilder):
             entries.append("#------------------{0}".format("-" * 30))
             entries.append("# ROCm")
             entries.append("#------------------{0}\n".format("-" * 30))
+
+            entries.append(
+                cmake_cache_path(
+                    "HIP_CLANG_INCLUDE_PATH",
+                    glob.glob("{}/lib/clang/*/include".format(spec["llvm-amdgpu"].prefix))[0],
+                )
+            )
 
             # Explicitly setting HIP_ROOT_DIR may be a patch that is no longer necessary
             entries.append(cmake_cache_path("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)))
