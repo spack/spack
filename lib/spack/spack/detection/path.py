@@ -212,17 +212,15 @@ class Finder:
         self._report_search = debug_find
         super(Finder, self).__init__()
 
-
     def _log_status(self, pkg_name, candidates, results):
-        pkg_name = pkg_name.split(".")[1]
-        llnl.util.tty.info(f"Spack considered the following paths for external package {pkg_name}:")
+        name = pkg_name.split(".")[1]
+        llnl.util.tty.info(f"Spack considered the following paths for external package {name}:")
         [llnl.util.tty.info(f"\t{x}") for x in candidates]
         llnl.util.tty.info("\n")
         if results:
-            llnl.util.info(f"Spack found package at location(s):")
-            [llnl.util.tty.info("\t{x}" for x in results)]
+            llnl.util.tty.info(f"Spack found package {name} at location(s):")
+            [llnl.util.tty.info(f"{'spec: ':>8}{str(x.spec):34}{'prefix: '}{x.prefix}") for x in results]
             llnl.util.tty.info("\n")
-
 
     def default_path_hints(self) -> List[str]:
         return []
@@ -438,7 +436,6 @@ def by_path(
         llnl.util.tty.info("\tSupplied path hints:")
         if path_hints:
             [llnl.util.tty.info(f"\t\t{x}") for x in path_hints]
-        llnl.util.tty.info("\n")
 
     result = collections.defaultdict(list)
     with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
