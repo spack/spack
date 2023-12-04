@@ -24,7 +24,7 @@ class PyTldextract(PythonPackage):
 
     depends_on("py-setuptools@61.2:", when="@5.1.1", type="build")
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm@6.2+toml", when="@5.1.1", type="build")
+    depends_on("py-setuptools-scm@6.2:+toml", when="@5.1.1", type="build")
     depends_on("py-setuptools-scm", type="build")
     depends_on("py-idna", type=("build", "run"))
     depends_on("py-requests@2.1.0:", type=("build", "run"))
