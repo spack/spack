@@ -1117,11 +1117,8 @@ class SpackSolverSetup:
 
         self.reusable_and_possible = ConcreteSpecsByHash()
 
-        # id for dummy variables
-        self._condition_id_counter = itertools.count()
-        self._trigger_id_counter = itertools.count()
+        self._id_counter = itertools.count()
         self._trigger_cache = collections.defaultdict(dict)
-        self._effect_id_counter = itertools.count()
         self._effect_cache = collections.defaultdict(dict)
 
         # Caches to optimize the setup phase of the solver
@@ -1535,7 +1532,7 @@ class SpackSolverSetup:
         # In this way, if a condition can't be emitted but the exception is handled in the caller,
         # we won't emit partial facts.
 
-        condition_id = next(self._condition_id_counter)
+        condition_id = next(self._id_counter)
         self.gen.fact(fn.pkg_fact(named_cond.name, fn.condition(condition_id)))
         self.gen.fact(fn.condition_reason(condition_id, msg))
 
@@ -1543,7 +1540,7 @@ class SpackSolverSetup:
 
         named_cond_key = (str(named_cond), transform_required)
         if named_cond_key not in cache:
-            trigger_id = next(self._trigger_id_counter)
+            trigger_id = next(self._id_counter)
             requirements = self.spec_clauses(named_cond, body=True, required_from=name)
 
             if transform_required:
@@ -1559,7 +1556,7 @@ class SpackSolverSetup:
         cache = self._effect_cache[named_cond.name]
         imposed_spec_key = (str(imposed_spec), transform_imposed)
         if imposed_spec_key not in cache:
-            effect_id = next(self._effect_id_counter)
+            effect_id = next(self._id_counter)
             requirements = self.spec_clauses(imposed_spec, body=False, required_from=name)
 
             if transform_imposed:
@@ -2573,12 +2570,8 @@ class SpackSolverSetup:
             reuse: list of concrete specs that can be reused
             allow_deprecated: if True adds deprecated versions into the solve
         """
-        self._condition_id_counter = itertools.count()
-
-        # preliminary checks
         check_packages_exist(specs)
 
-        # get list of all possible dependencies
         self.possible_virtuals = set(x.name for x in specs if x.virtual)
 
         node_counter = _create_counter(specs, tests=self.tests)
@@ -2698,23 +2691,21 @@ class SpackSolverSetup:
     def literal_specs(self, specs):
         for spec in specs:
             self.gen.h2("Spec: %s" % str(spec))
-            condition_id = next(self._condition_id_counter)
-            trigger_id = next(self._trigger_id_counter)
+            condition_id = next(self._id_counter)
+            trigger_id = next(self._id_counter)
 
             # Special condition triggered by "literal_solved"
             self.gen.fact(fn.literal(trigger_id))
             self.gen.fact(fn.pkg_fact(spec.name, fn.condition_trigger(condition_id, trigger_id)))
             self.gen.fact(fn.condition_reason(condition_id, f"{spec} requested from CLI"))
 
-            # Effect imposes the spec
             imposed_spec_key = str(spec), None
             cache = self._effect_cache[spec.name]
-            msg = (
-                "literal specs have different requirements. clear cache before computing literals"
-            )
-            assert imposed_spec_key not in cache, msg
-            effect_id = next(self._effect_id_counter)
-            requirements = self.spec_clauses(spec)
+            if imposed_spec_key in cache:
+                effect_id, requirements = cache[imposed_spec_key]
+            else:
+                effect_id = next(self._id_counter)
+                requirements = self.spec_clauses(spec)
             root_name = spec.name
             for clause in requirements:
                 clause_name = clause.args[0]
@@ -3143,6 +3134,25 @@ def _develop_specs_from_env(spec, env):
     spec.constrain(dev_info["spec"])
 
 
+def _is_reusable_external(packages, spec: spack.spec.Spec) -> bool:
+    """Returns true iff spec is an external that can be reused.
+
+    Arguments:
+        packages: the packages configuration
+        spec: the spec to check
+    """
+    for name in {spec.name, *(p.name for p in spec.package.provided)}:
+        for entry in packages.get(name, {}).get("externals", []):
+            if (
+                spec.satisfies(entry["spec"])
+                and spec.external_path == entry.get("prefix")
+                and spec.external_modules == entry.get("modules")
+            ):
+                return True
+
+    return False
+
+
 class Solver:
     """This is the main external interface class for solving.
 
@@ -3190,8 +3200,18 @@ class Solver:
 
             # Specs from buildcaches
             try:
-                index = spack.binary_distribution.update_cache_and_get_specs()
-                reusable_specs.extend(index)
+                # Specs in a build cache that depend on externals are reusable as long as local
+                # config has matching externals. This should guard against picking up binaries
+                # linked against externals not available locally, while still supporting the use
+                # case of distributing binaries across machines with similar externals.
+                packages = spack.config.get("packages")
+                reusable_specs.extend(
+                    [
+                        s
+                        for s in spack.binary_distribution.update_cache_and_get_specs()
+                        if not s.external or _is_reusable_external(packages, s)
+                    ]
+                )
             except (spack.binary_distribution.FetchCacheError, IndexError):
                 # this is raised when no mirrors had indices.
                 # TODO: update mirror configuration so it can indicate that the

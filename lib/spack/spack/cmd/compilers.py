@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.config
+from spack.cmd.common import arguments
 from spack.cmd.compiler import compiler_list
 
 description = "list available compilers"
@@ -12,13 +12,8 @@ level = "short"
 
 
 def setup_parser(subparser):
-    scopes = spack.config.scopes()
-
     subparser.add_argument(
-        "--scope",
-        choices=scopes,
-        metavar=spack.config.SCOPES_METAVAR,
-        help="configuration scope to read/modify",
+        "--scope", action=arguments.ConfigScope, help="configuration scope to read/modify"
     )
 
 
