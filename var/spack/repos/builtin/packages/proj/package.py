@@ -137,14 +137,13 @@ class CMakeBuilder(BaseBuilder, cmake.CMakeBuilder):
         ]
         if self.spec.satisfies("@6:") and self.pkg.run_tests:
             args.append(self.define("USE_EXTERNAL_GTEST", True))
-        if not self.pkg.run_tests:
-            if self.spec.satisfies("@7:"):
-                test_flag = "BUILD_TESTING"
-            elif self.spec.satisfies("@5.1:"):
-                test_flag = "PROJ_TESTS"
-            else:
-                test_flag = "PROJ4_TESTS"
-            args.append(self.define(test_flag, False))
+        if self.spec.satisfies("@7:"):
+            test_flag = "BUILD_TESTING"
+        elif self.spec.satisfies("@5.1:"):
+            test_flag = "PROJ_TESTS"
+        else:
+            test_flag = "PROJ4_TESTS"
+        args.append(self.define(test_flag, self.pkg.run_tests))
         return args
 
 
