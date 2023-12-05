@@ -23,9 +23,7 @@ setup_environment:
     #
     # Global default, as long as we have a 9.x.x, environment-modules picks
     # the wrong one as default :(
-    DEFAULT_GCC_VERSION: "12.2.0"
-    # Used by the Intel compilers
-    LEGACY_GCC_VERSION: "11.3.0"
+    DEFAULT_GCC_VERSION: "12.3.0"
     # Used for cloning Spack
     DEPLOYMENT_BRANCH: "$DEPLOYMENT_DEFAULT_BRANCH"
     # Proprietary sources
@@ -66,7 +64,6 @@ setup_environment:
     # The `rules` keyword seems to not inherit variables specified via a
     # dotenv ⇒ do things manually once more
     - echo "DEFAULT_GCC_VERSION=$DEFAULT_GCC_VERSION" > deployment.env
-    - echo "LEGACY_GCC_VERSION=$LEGACY_GCC_VERSION" >> deployment.env
     - echo "DEPLOYMENT_ARTIFACTS=$DEPLOYMENT_ARTIFACTS" >> deployment.env
     - echo "DEPLOYMENT_BASE=$DEPLOYMENT_BASE" >> deployment.env
     - echo "DEPLOYMENT_BRANCH=$DEPLOYMENT_BRANCH" >> deployment.env

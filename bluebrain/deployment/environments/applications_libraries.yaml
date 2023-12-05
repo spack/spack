@@ -25,12 +25,12 @@ spack:
           - py-slepc4py
           - py-pip
           - py-poisson-recon-pybind
-          - py-pytest
           - py-rtree
           - py-scikit-learn
           - py-scipy
           - py-virtualenv
           - python-dev
+          - snakemake
         projections:
           all: '{name}/{version}'
   packages:
@@ -62,8 +62,8 @@ spack:
     - py-rtree
     - py-scikit-learn
     - py-scipy
-    - py-pytest  # requested by Pramod
     - py-virtualenv
     - python-dev
+    - snakemake
     - sundials+int64
     - superlu-dist@5.4.0

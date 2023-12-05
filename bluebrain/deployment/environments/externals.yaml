@@ -5,10 +5,10 @@ spack:
       tcl:
         include:
           - arm-forge
-          - apptainer
+          # - apptainer
           - bison
           - blender
-          - ccache
+          # - ccache
           - clang-tools
           - cli-tools
           - cmake
@@ -23,7 +23,6 @@ spack:
           - gdb
           - git
           - git-lfs
-          - gmake
           - graphviz
           - hpe-mpi
           - intel-oneapi-mkl
@@ -39,7 +38,6 @@ spack:
           - openjdk
           - python
           - singularityce
-          - snakemake
           - stat
           - totalview
           - valgrind
@@ -68,7 +66,7 @@ spack:
       variants: +pangocairo+expat
     llvm:
       # The general cuda should be set via the generic packages.yaml
-      variants: +cuda cuda_arch=70 +omp_tsan +python +link_dylib
+      variants: +cuda cuda_arch=70 +omp_tsan +link_dylib
     mvapich2:
       variants: fabrics=mrail process_managers=slurm file_systems=gpfs
     pgi:
@@ -80,18 +78,13 @@ spack:
     - clang-tools@17.0.4
     - nvhpc@23.9
     - arm-forge+accept-eula
-    - apptainer
+    # - apptainer
     - bison
     - blender
     - boost~mpi
-    - bzip2
-    - ccache
-    - cgal
+    # - ccache
     - cli-tools
     - cmake
-    # NVHPC 22.11 and 23.1 ship CUDA 11.8.0 (version.json)
-    # CUDA 11.x do not support GCC 12
-    - cuda@11.8.0%gcc@11.3.0
     # NVHPC 23.1 ships CUDA 12.0.0 (version.json)
     - cuda@12.0.0
     - cudnn@8.0.3.33-11.0
@@ -105,22 +98,16 @@ spack:
     - gdb~python
     - git
     - git-lfs
-    - glew
-    - gmake  # Used to parallelize Spack deployment builds
     - graphviz
     - hdf5~mpi
     - hpe-mpi@2.25.hmpt
-    - intel-oneapi-mkl@2021.4.0
-    - intel-oneapi-tbb@2021.4.0
-    # Ospray's preference
-    - ispc@1.18.0^llvm@14
-    # If julia's curl does not match what they normally ship, downloading behind a proxy
-    # will break.
-    # - julia@1.6^curl@7.73  # As requested by Polina S.
-    - libxslt
+    - intel-oneapi-mkl@2023.2.0
+    - intel-oneapi-tbb@2021.10.0
+    # For Ospray`
+    - ispc
+    - julia@1.9
     - likwid
     - mvapich2
-    - ncurses
     - ninja
     - node-js
     # Leads to issues down the line, where it is preferred over intel-mkl
@@ -132,14 +119,10 @@ spack:
     - python@3.9
     - python@3.10
     - python@3.11
-    - qhull
-    - readline
     - singularityce
-    - snakemake
     # BlueBrain TODO: re-enable and fix
     # - stat
     # - totalview
     - valgrind~mpi
-    - zlib
     - ilmbase
     - openexr

@@ -20,6 +20,9 @@ description = "create a package.yaml from installed packages"
 section = "administration"
 level = "long"
 
+# Spack v0.21 started to not pick up externals when ipo was present in packages.yaml
+VARIANTS_TO_SKIP = set(["ipo", "patches"])
+
 
 class PackagesDumper(syaml.OrderedLineDumper):
     """Customization to match common packages.yaml style"""
@@ -91,13 +94,13 @@ def _to_key(spec, fmt, variants):
     bflags = []
     for k, v in spec.variants.items():
         default = None
+        if k in VARIANTS_TO_SKIP:
+            continue
         if k in spec.package.variants:
             default = spec.package.variants[k][0].default
         if v.value != default or variants == "all":
             if v.value in (True, False):
                 bflags.append(v)
-            elif v.name != "patches":
-                sflags.append(v)
 
     sflags = " ".join(str(f) for f in sorted(sflags))
     bflags = "".join(str(f) for f in sorted(bflags))

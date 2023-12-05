@@ -24,8 +24,6 @@ spack:
       variants: ~mpi
     netcdf-c:
       variants: ~mpi
-    proj:
-      variants: ~curl
     py-h5py:
       variants: ~mpi
     vtk:

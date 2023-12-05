@@ -11,6 +11,7 @@ spack:
         include:
           - binutils
           - gcc
+          - gmake
           - intel-oneapi-compilers
   packages:
     all:
@@ -19,6 +20,6 @@ spack:
       variants: +advisor+daal+gdb+inspector+ipp~mkl~mpi+rpath+shared~tbb+vtune
   specs:
     - binutils
-    - gcc@11.3.0
-    - gcc@12.2.0
-    - intel-oneapi-compilers@2022.2.1
+    - gcc@12.3.0
+    - gmake  # Used to parallelize Spack deployment builds
+    - intel-oneapi-compilers@2023.2.1

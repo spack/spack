@@ -2,13 +2,8 @@ packages:
   arrow:
     # for interoperability with Spark
     require: "+snappy"
-  autoconf:
-    version: [2.69]
-    externals:
-    - spec: autoconf@2.69
-      prefix: /usr
   binutils:
-    version: [2.37]
+    version: [2.41]
     # Merged GCC / LLVM requirements
     variants: +gas+gold+ld+plugins~libiberty
   boost:
@@ -18,18 +13,14 @@ packages:
     # rolling back to NEURON 8.2.2 with external CoreNEURON is a net win
     require:
       - one_of: ["%oneapi", "%nvhpc", "%intel"]
-  cuda:
+  cuda: {}
+    # For future reference if CUDA requires an older compiler:
+    #
     # Pin GCC 11 because CUDA 11.8.0 is incompatible with GCC 12
     # CUDA 12.0.0 should be compatible with GCC 12
-    require:
-      - one_of:
-        - "@11.8.0%gcc@11.3.0 target=skylake"
-        - "@12.0.0%gcc@12.2.0 target=skylake"
-  curl:
-    version: [7.29.0]
-    externals:
-    - spec: curl@7.29.0
-      prefix: /usr
+    # require:
+    #   - one_of:
+    #     - "@12.0.0%gcc@12.3.0 target=skylake"
   darshan-runtime:
     variants: +slurm
   eigen:
@@ -37,6 +28,9 @@ packages:
   gcc:
     # +strip added to force rebuild of GCC with -fno-canonical-system-headers
     variants: +binutils+strip
+  gzip:
+    # 1.12 fails on BB5 with gcc@12.3
+    version: [1.11]
   gmsh:
     variants: ~mmg~fltk
   hdf5:
@@ -44,35 +38,20 @@ packages:
   icu4c:
     version: [64.1]
     # Drags in heavy PEARL dependencies
-  intltool:
-    version: [0.50.2]
-    externals:
-    - spec: intltool@0.50.2
-      prefix: /usr
   julia:
     variants: +external_llvm
   kokkos:
     variants: +openmp
-  libtool:
-    buildable: false  # Different versions interact badly with autohell
-    version: [2.4.2]
-    externals:
-    - spec: libtool@2.4.2
-      prefix: /usr
   llvm:
     # Allow GCC != 12 for things that depend on CUDA
     require: "%gcc target=skylake"
-  m4:
-    version: [1.4.16]
-    externals:
-    - spec: m4@1.4.16
-      prefix: /usr
+  mesa:
+    # Leads to all kinds of trouble for 2024
+    variants: ~llvm
   model-neocortex:
     variants: ~gpu
     require:
       - one_of: ["%oneapi", "%intel"]
-  mxnet:
-    version: [1.8.0]  # Don't build @1.master because nobody likes moving targets
   neurodamus-hippocampus:
     variants: ~~gpu
     require:
@@ -113,35 +92,29 @@ packages:
     externals:
     - spec: openssh@9.1p1
       prefix: /usr
-  openssl:
-    version: [1.0.2k]
-    externals:
-    - spec: openssl@1.0.2k
-      prefix: /usr
   opengl:
     buildable: false
     version: [4.5]
     externals:
     - spec: opengl@4.5
       prefix: /usr
-  perl:
-    version: [5.16.3]
-    externals:
-    - spec: perl@5.16.3
-      prefix: /usr
   petsc:
     variants: ~fortran
+    # proven versions, 3.20 insists on using failing due to CUDA, *even when explicitly
+    # told not to use it*
+    require: "@3.18"
   python:
     variants: +tk
-    version: [3.10.8]
-  py-numpy:
-    version: [1.22.4]  # bluepye{model,fe}: <1.24, neurondamus: <1.23
+    version: [3.11.6]
+  py-frozendict:
+    # older versions fail to work with Python 3.11
+    require: "@2.3.10"
   py-numpy-quaternion:
     require: ~numba~scipy  # pulls in LLVM, spatial-index does not need that
-  py-setuptools:
-    version: [63.0.0]  # required by py-numpy
+  py-tables:
+    # older versions fail to compile without lzo
+    require: "@3.9:"
   qt:
-    version: [5.14.2]
     variants: ~ssl~sql~tools
   range-v3:
     variants: ~doc
@@ -157,15 +130,13 @@ packages:
     variants: +lapack+petsc+mpi
   superlu-dist:
     variants: +int64
-  tar:
-    version: [1.28]
-    externals:
-    - spec: tar@1.28
-      prefix: /usr
   timemory:
     variants: +mpi~cuda+cupti+caliper~gperftools~python@3.0.0a
+  util-linux:
+    # 2.39 and later fails with macros that our ancient linux headers don't define! 🙀
+    require: "@:2.38"
   all:
-    require: "%gcc@12.2.0 target=skylake"
+    require: "%gcc@12.3.0 target=skylake"
     providers:
       mpi:: [hpe-mpi]
       scalapack:: [intel-oneapi-mkl]
