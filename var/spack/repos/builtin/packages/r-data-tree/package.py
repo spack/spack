@@ -15,7 +15,7 @@ class RDataTree(RPackage):
 
     cran = "data.tree"
 
-    maintainers = ("viniciusvgp")
+    maintainers = "viniciusvgp"
 
     version("1.0.0", sha256="40674c90a5bd00f5185db9adbd221c6f1114043e69095249f5fa8b3044af3f5e")
 
