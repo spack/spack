@@ -14,7 +14,7 @@ class Fdb(CMakePackage):
     url = "https://github.com/ecmwf/fdb/archive/refs/tags/5.7.8.tar.gz"
     git = "https://github.com/ecmwf/fdb.git"
 
-    maintainers("skosukhin")
+    maintainers("skosukhin", "victoria-cherkas", "dominichofer")
 
     version("master", branch="master")
     version("5.11.23", sha256="09b1d93f2b71d70c7b69472dfbd45a7da0257211f5505b5fcaf55bfc28ca6c65")
