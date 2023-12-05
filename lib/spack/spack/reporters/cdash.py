@@ -153,6 +153,12 @@ class CDash(Reporter):
             elif cdash_phase:
                 report_data[cdash_phase]["loglines"].append(xml.sax.saxutils.escape(line))
 
+        # something went wrong in staging b/c we have an exception and only "update" was encounterd
+        # dump the report in the configure line so teams can see what the issue is
+        if len(phases_encountered) == 1 and package["exception"]:
+            phases_encountered.append("configure")
+            report_data["configure"]["loglines"].append(xml.sax.saxutils.escape(package["exception"]))
+
         # Move the build phase to the front of the list if it occurred.
         # This supports older versions of CDash that expect this phase
         # to be reported before all others.
