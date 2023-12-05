@@ -188,14 +188,16 @@ def setup_parser(subparser: argparse.ArgumentParser):
         default=lambda: spack.config.default_modify_scope(),
         help="configuration scope containing mirrors to check",
     )
-    check_spec_or_specfile = check.add_mutually_exclusive_group(required=True)
-    check_spec_or_specfile.add_argument(
+    # Unfortunately there are 3 ways to do the same thing here:
+    check_specs = check.add_mutually_exclusive_group()
+    check_specs.add_argument(
         "-s", "--spec", help="check single spec instead of release specs file"
     )
-    check_spec_or_specfile.add_argument(
+    check_specs.add_argument(
         "--spec-file",
         help="check single spec from json or yaml file instead of release specs file",
     )
+    arguments.add_common_arguments(check, ["specs"])
 
     check.set_defaults(func=check_fn)
 
@@ -813,15 +815,24 @@ def check_fn(args: argparse.Namespace):
     exit code is non-zero, then at least one of the indicated specs needs to be rebuilt
     """
     if args.spec_file:
+        specs_arg = (
+            args.spec_file if os.path.sep in args.spec_file else os.path.join(".", args.spec_file)
+        )
         tty.warn(
             "The flag `--spec-file` is deprecated and will be removed in Spack 0.22. "
-            "Use --spec instead."
+            f"Use `spack buildcache check {specs_arg}` instead."
         )
+    elif args.spec:
+        specs_arg = args.spec
+        tty.warn(
+            "The flag `--spec` is deprecated and will be removed in Spack 0.23. "
+            f"Use `spack buildcache check {specs_arg}` instead."
+        )
+    else:
+        specs_arg = args.specs
 
-    specs = spack.cmd.parse_specs(args.spec or args.spec_file)
-
-    if specs:
-        specs = _matching_specs(specs)
+    if specs_arg:
+        specs = _matching_specs(spack.cmd.parse_specs(specs_arg))
     else:
         specs = spack.cmd.require_active_env("buildcache check").all_specs()
 
