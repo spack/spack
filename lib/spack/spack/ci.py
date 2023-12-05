@@ -530,6 +530,9 @@ class SpackCI:
             jname = "{0}-job".format(name)
 
         return jname
+    def __dynamic_mapping(spec, script):
+       spec_str = spec.fullname
+
 
     def __apply_submapping(self, dest, spec, section):
         """Apply submapping setion to the IR dict"""
@@ -596,6 +599,7 @@ class SpackCI:
         for section in reversed(pipeline_gen):
             name = self.__is_named(section)
             has_submapping = "submapping" in section
+            has_dynmapping = "dynamic-mapping" in section
             section = cfg.InternalConfigScope._process_dict_keyname_overrides(section)
 
             if name:
@@ -638,6 +642,11 @@ class SpackCI:
                         job["attributes"] = self.__apply_submapping(
                             job["attributes"], job["spec"], section
                         )
+            elif has_dynmapping:
+                script = section["dynamic-mapping"].get("script")
+                for job in jobs.values():
+                    if job["spec"]:
+                        job["attributes"].update(self.__dynamic_mapping(job["spec"], script))
 
         for _, job in jobs.items():
             if job["spec"]:
