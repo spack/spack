@@ -1230,6 +1230,7 @@ def generate_gitlab_ci_yaml(
             # TODO: Remove this condition in Spack 0.23
             buildcache_source = os.environ.get("SPACK_SOURCE_MIRROR", None)
         sync_job["variables"]["SPACK_BUILDCACHE_SOURCE"] = buildcache_source
+        sync_job["dependencies"] = []
 
         output_object["copy"] = sync_job
         job_id += 1
@@ -1253,6 +1254,7 @@ def generate_gitlab_ci_yaml(
                 op=lambda cmd: cmd.replace("mirror_prefix", temp_storage_url_prefix),
             )
 
+            cleanup_job["dependencies"] = []
             output_object["cleanup"] = cleanup_job
 
         if (
@@ -1276,6 +1278,7 @@ def generate_gitlab_ci_yaml(
                 if buildcache_destination
                 else remote_mirror_override or remote_mirror_url
             )
+            signing_job["dependencies"] = []
 
             output_object["sign-pkgs"] = signing_job
 
@@ -1296,6 +1299,7 @@ def generate_gitlab_ci_yaml(
             final_job["when"] = "always"
             final_job["retry"] = service_job_retries
             final_job["interruptible"] = True
+            final_job["dependencies"] = []
 
             output_object["rebuild-index"] = final_job
 
