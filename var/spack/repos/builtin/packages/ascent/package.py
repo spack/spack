@@ -103,6 +103,8 @@ class Ascent(CMakePackage, CudaPackage):
     # variants for runtime features
     variant("vtkh", default=True, description="Build VTK-h filter and rendering support")
 
+    # Missing OpenMP extensions in ROCm package
+    # https://github.com/spack/spack/issues/32197
     variant("openmp", default=(sys.platform != "darwin"), description="build openmp support")
     variant("raja", default=True, description="Build with RAJA support")
     variant("umpire", default=True, description="Build with Umpire support")

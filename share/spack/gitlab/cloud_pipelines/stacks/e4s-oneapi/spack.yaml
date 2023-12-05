@@ -13,10 +13,12 @@ spack:
         mpi: [mpich]
         tbb: [intel-tbb]
       variants: +mpi
+    adios2:
+      require:
+      - "@2.9 ~blosc"
     elfutils:
       variants: +bzip2 ~nls +xz
     hdf5:
-      require: "%gcc"
       variants: +fortran +hl +shared
     libfabric:
       variants: fabrics=sockets,tcp,udp,rxm
@@ -39,6 +41,8 @@ spack:
       require: 'mpich@4:'
     mpich:
       require: '~wrapperrpath ~hwloc'
+    paraview:
+      require: "@5.11: ~qt+osmesa"
     py-cryptography:
       require: '@38.0.1'
     unzip:
@@ -58,15 +62,17 @@ spack:
       require: '%gcc'
     openssh:
       require: '%gcc'
+    bison:
+      require: '%gcc'
     libffi:
       require: "@3.4.4"
     dyninst:
       require: "%gcc"
-    bison:
-      require: '%gcc'
     # sycl abi change means you need 2024 compiler to use 2024 mkl
     intel-oneapi-mkl:
       require: "@2023"
+    visit:
+      require: "~gui+osmesa"
 
   specs:
   # CPU
@@ -87,6 +93,10 @@ spack:
   - conduit
   - datatransferkit
   - drishti
+  - ecp-data-vis-sdk +ascent+adios2+cinema+darshan+faodel+hdf5+paraview+pnetcdf+sz+unifyfs+veloc~visit+vtkm+zfp
+    ^vtk-m ~kokkos
+    ^hdf5@1.14
+    ^hdf5-vol-daos
   - exaworks
   - flecsi
   - flit
@@ -99,9 +109,6 @@ spack:
   - gotcha
   - gptune ~mpispawn
   - h5bench
-  - hdf5-vol-async
-  - hdf5-vol-cache
-  - hdf5-vol-log
   - heffte +fftw
   - hpx networking=mpi
   - hypre
@@ -165,28 +172,28 @@ spack:
   - wannier90
   - xyce +mpi +shared +pymi +pymi_static_tpls
   # INCLUDED IN ECP DAV CPU
-  - adios2                # mgard:  mgard.tpp:63:48: error: non-constant-expression cannot be narrowed from type 'int' to 'unsigned long' in initializer list [-Wc++11-narrowing]
-  - ascent
-  - darshan-runtime
-  - darshan-util
-  - faodel
-  - hdf5
-  - libcatalyst
-  - parallel-netcdf
-  # - paraview            # paraview: VTK/ThirdParty/cgns/vtkcgns/src/adfh/ADFH.c:2002:23: error: incompatible function pointer types passing 'herr_t (hid_t, const char *, const H5L_info1_t *, void *)' (aka 'int (long, const char *, const H5L_info1_t *, void *)') to parameter of type 'H5L_iterate2_t' (aka 'int (*)(long, const char *,const H5L_info2_t *, void *)') [-Wincompatible-function-pointer-types]
-  - py-cinemasci
-  - sz
-  - unifyfs
-  - veloc
-  # - visit               # silo: https://github.com/spack/spack/issues/39538
-  - vtk-m ~openmp         # https://github.com/spack/spack/issues/31830
-  - zfp
+  # - adios2
+  # - ascent
+  # - darshan-runtime
+  # - darshan-util
+  # - faodel
+  # - hdf5
+  # - hdf5-vol-*
+  # - libcatalyst
+  # - parallel-netcdf
+  # - paraview
+  # - py-cinemasci
+  # - sz
+  # - unifyfs
+  # - veloc
+  # - visit
+  # - vtk-m ~openmp # https://github.com/spack/spack/issues/31830
+  # - zfp
   # --
   # - alquimia            # pflotran: https://github.com/spack/spack/issues/39474
   # - archer              # subsumed under llvm +libomp_tsan
   # - dealii              # dealii: https://github.com/spack/spack/issues/39482
   # - dxt-explorer        # r: https://github.com/spack/spack/issues/40257
-  # - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc +visit +vtkm +zfp # embree: CMake Error at CMakeLists.txt:215 (MESSAGE): Unsupported compiler: IntelLLVM; qt: qtbase/src/corelib/global/qendian.h:333:54: error: incomplete type 'std::numeric_limits' used in nested name specifier
   # - geopm               # geopm issue: https://github.com/spack/spack/issues/38795
   # - hpctoolkit          # dyninst@12.3.0%gcc: /usr/bin/ld: libiberty/./d-demangle.c:142: undefined reference to `_intel_fast_memcpy'; can't mix intel-tbb@%oneapi with dyninst%gcc
   # - mgard +serial +openmp +timing +unstructured ~cuda # mgard: mgard.tpp:63:48: error: non-constant-expression cannot be narrowed from type 'int' to 'unsigned long' in initializer list [-Wc++11-narrowing]

@@ -106,6 +106,10 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
         when="+adios2",
         propagate=["cuda", "hdf5", "sz", "zfp", "fortran"] + cuda_arch_variants,
     )
+    # c-blosc2 (required for adios2@2.9:) is not compatible with OneAPI
+    # conditionally enable blosc based on blosc implementation
+    # depends_on("adios2~blosc", when="%oneapi +adios2 ^adios2@2.9:")
+    # depends_on("adios2+blosc", when="+adios2")
 
     dav_sdk_depends_on("darshan-runtime+mpi", when="+darshan")
     dav_sdk_depends_on("darshan-util", when="+darshan")
@@ -131,6 +135,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
         )
     conflicts("~cuda", when="^hdf5-vfd-gds@1.0.2:")
     conflicts("~hdf5", when="^hdf5-vfd-gds@1.0.2:")
+    conflicts("~hdf5", when="^hdf5-vol-daos")
     conflicts("~hdf5", when="^hdf5-vol-async")
     conflicts("~hdf5", when="^hdf5-vol-cache")
     conflicts("~hdf5", when="^hdf5-vol-log")
@@ -156,8 +161,6 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
         when="+ascent",
         propagate=["adios2", "cuda"] + cuda_arch_variants,
     )
-    depends_on("ascent+openmp", when="~rocm+ascent")
-    depends_on("ascent~openmp", when="+rocm+ascent")
 
     # Need to explicitly turn off conduit hdf5_compat in order to build
     # hdf5@1.12 which is required for SDK
@@ -171,12 +174,13 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     # ParaView needs @5.11: in order to use CUDA/ROCM, therefore it is the minimum
     # required version since GPU capability is desired for ECP
     dav_sdk_depends_on(
-        "paraview@5.11:+mpi+openpmd+python+kits+shared+catalyst+libcatalyst" " use_vtkm=on",
+        "paraview@5.11:+mpi+openpmd+python+kits+shared+catalyst+libcatalyst"  # +raytracing
+        " use_vtkm=on",
         when="+paraview",
         propagate=["adios2", "cuda", "hdf5", "rocm"] + amdgpu_target_variants + cuda_arch_variants,
     )
     dav_sdk_depends_on("libcatalyst@2:+mpi", when="+paraview")
-    conflicts("^paraview@master", when="+paraview")
+    # conflicts("^paraview@master", when="+paraview")
 
     dav_sdk_depends_on("visit+mpi+python+silo", when="+visit", propagate=["hdf5", "adios2"])
 
@@ -188,11 +192,15 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     # TODO: When Ascent is updated to use VTK-m >= 1.8 move examples to
     # the main spec.
     depends_on("vtk-m+examples", when="+vtkm ^vtk-m@1.8:")
-    depends_on("vtk-m+openmp", when="~rocm+vtkm")
-    depends_on("vtk-m~openmp", when="+rocm+vtkm")
 
     # +python is currently broken in sz
     # dav_sdk_depends_on('sz+shared+python+random_access',
-    dav_sdk_depends_on("sz+shared+random_access", when="+sz", propagate=["hdf5", "fortran"])
+    dav_sdk_depends_on("sz+shared+random_access", when="+sz", propagate=["fortran"])
+    # sz +hdf5 is currently broken when using OneAPI
+    depends_on("sz~hdf5", when="~hdf5")
+    depends_on("sz+hdf5", when="%cce +hdf5")
+    depends_on("sz+hdf5", when="%clang +hdf5")
+    depends_on("sz+hdf5", when="%gcc +hdf5")
+    depends_on("sz~hdf5", when="%oneapi +hdf5")
 
     dav_sdk_depends_on("zfp", when="+zfp", propagate=["cuda"] + cuda_arch_variants)
