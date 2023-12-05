@@ -59,7 +59,8 @@ class FoamExtend(Package):
     version("4.1", git="http://git.code.sf.net/p/foam-extend/foam-extend-4.1.git")
     version("4.0", git="http://git.code.sf.net/p/foam-extend/foam-extend-4.0.git")
     version("3.2", git="http://git.code.sf.net/p/foam-extend/foam-extend-3.2.git")
-    version("3.0", git="http://git.code.sf.net/p/foam-extend/foam-extend-3.0.git")
+    version("3.1", git="http://git.code.sf.net/p/foam-extend/foam-extend-3.1.git", deprecated=True)
+    version("3.0", git="http://git.code.sf.net/p/foam-extend/foam-extend-3.0.git", deprecated=True)
 
     # variant('int64', default=False,
     #         description='Compile with 64-bit label')
