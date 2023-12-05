@@ -21,6 +21,13 @@ class PyGidgethub(PythonPackage):
     version("main", branch="main")
     version("5.3.0", sha256="9ece7d37fbceb819b80560e7ed58f936e48a65d37ec5f56db79145156b426a25")
 
+    variant(
+        "aiohttp", default=False, description="Enable aiohttp functionality through dependency."
+    )
+    variant(
+        "tornado", default=False, description="Enable tornado functionality through dependency."
+    )
+
     depends_on("py-flit", type="build", when="@:5.3.0")
     depends_on("py-flit-core", type="build", when="@5.3.1:")
 
@@ -29,10 +36,3 @@ class PyGidgethub(PythonPackage):
 
     depends_on("py-aiohttp", type=("build", "run"), when="+aiohttp")
     depends_on("py-tornado", type=("build", "run"), when="+tornado")
-
-    variant(
-        "aiohttp", default=False, description="Enable aiohttp functionality through dependency."
-    )
-    variant(
-        "tornado", default=False, description="Enable tornado functionality through dependency."
-    )
