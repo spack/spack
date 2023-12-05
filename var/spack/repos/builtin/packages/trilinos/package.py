@@ -291,9 +291,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         conflicts("~ifpack")
         conflicts("~aztec")
 
-    # Don't disable python when building pytrilinos2
-    conflicts("~python", when="+pytrilinos2")
-
     # Known requirements from tribits dependencies
     conflicts("~thyra", when="+stratimikos")
     conflicts("+adelus", when="~kokkos")
@@ -437,6 +434,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("py-numpy", when="+pytrilinos2", type=("build", "run"))
     depends_on("py-pybind11", when="+pytrilinos2", type=("build", "link"))
     depends_on("python", when="+python")
+    # note that +python is a variant but pytrilinos2 still requires python itself
+    depends_on("python", when="+pytrilinos2")
     depends_on("python", when="@13.2: +ifpack +hypre", type="build")
     depends_on("python", when="@13.2: +ifpack2 +hypre", type="build")
     depends_on("scalapack", when="+mumps")
