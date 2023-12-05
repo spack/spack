@@ -75,32 +75,28 @@ class Su2(MesonPackage):
     patch("meson_version.patch", when="@7.4.0:7.5.1")
 
     def patch(self):
-        if "+autodiff" in self.spec or "+directdiff" in self.spec:
+        if self.spec.satisfiles("+autodiff") or self.spec.satisfiles("+directdiff"):
             filter_file(
                 "externals/codi/include",
                 join_path(self.spec["codipack"].prefix, "include"),
                 "meson.build",
             )
 
-        if ("+autodiff" in self.spec or "+directdiff" in self.spec) and "+mpi" in self.spec:
+        if (
+            self.spec.satisfiles("+autodiff") or self.spec.satisfiles("+directdiff")
+        ) and self.spec.satisfiles("+mpi"):
             filter_file(
-                "externals/medi/include",
-                join_path(self.spec["medipack"].prefix, "include"),
-                "meson.build",
+                "externals/medi/include", self.spec["medipack"].prefix.include, "meson.build"
             )
-            filter_file(
-                "externals/medi/src", join_path(self.spec["medipack"].prefix, "src"), "meson.build"
-            )
+            filter_file("externals/medi/src", self.spec["medipack"].prefix.src, "meson.build")
 
         if ("+autodiff" in self.spec or "+directdiff" in self.spec) and "+openmp" in self.spec:
             filter_file(
-                "externals/opdi/include",
-                join_path(self.spec["opdilib"].prefix, "include"),
-                "meson.build",
+                "externals/opdi/include", self.spec["opdilib"].prefix.include, "meson.build"
             )
             filter_file(
                 "externals/opdi/syntax/check.py",
-                join_path(self.spec["opdilib"].prefix, "syntax", "check.py"),
+                join_path(self.spec["opdilib"].prefix.syntax, "check.py"),
                 "meson.build",
             )
 
