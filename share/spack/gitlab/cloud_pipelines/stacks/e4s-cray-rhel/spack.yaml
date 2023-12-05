@@ -19,7 +19,6 @@ spack:
         mpi: [cray-mpich]
         tbb: [intel-tbb]
         scalapack: [netlib-scalapack]
-      target: [zen4]
       variants: +mpi
 
     tbb:
