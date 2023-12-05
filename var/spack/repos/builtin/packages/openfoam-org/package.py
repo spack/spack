@@ -120,7 +120,7 @@ class OpenfoamOrg(Package):
         sha256="05d17e17f94e6fe8188a9c0b91ed34c9b62259414589d908c152a4c40fe6b7e2",
         when="@7",
     )
-    patch("50-etc.patch", when="@5.0:5.9")
+    patch("50-etc.patch", when="@5.0")
     patch("41-etc.patch", when="@4.1")
     patch("41-site.patch", when="@4.1:")
     patch("240-etc.patch", when="@:2.4.0")
