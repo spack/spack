@@ -797,6 +797,7 @@ complete -c spack -n '__fish_spack_using_command buildcache preview' -s h -l hel
 
 # spack buildcache check
 set -g __fish_spack_optspecs_spack_buildcache_check h/help m/mirror-url= o/output-file= scope= s/spec= spec-file=
+complete -c spack -n '__fish_spack_using_command_pos_remainder 0 buildcache check' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command buildcache check' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache check' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command buildcache check' -s m -l mirror-url -r -f -a mirror_url
@@ -1261,7 +1262,7 @@ complete -c spack -n '__fish_spack_using_command create' -l keep-stage -f -a kee
 complete -c spack -n '__fish_spack_using_command create' -l keep-stage -d 'don\'t clean up staging area when command completes'
 complete -c spack -n '__fish_spack_using_command create' -s n -l name -r -f -a name
 complete -c spack -n '__fish_spack_using_command create' -s n -l name -r -d 'name of the package to create'
-complete -c spack -n '__fish_spack_using_command create' -s t -l template -r -f -a 'autoreconf autotools bazel bundle cmake generic intel lua makefile maven meson octave perlbuild perlmake python qmake r racket ruby scons sip waf'
+complete -c spack -n '__fish_spack_using_command create' -s t -l template -r -f -a 'autoreconf autotools bazel bundle cargo cmake generic go intel lua makefile maven meson octave perlbuild perlmake python qmake r racket ruby scons sip waf'
 complete -c spack -n '__fish_spack_using_command create' -s t -l template -r -d 'build system template to use'
 complete -c spack -n '__fish_spack_using_command create' -s r -l repo -r -f -a repo
 complete -c spack -n '__fish_spack_using_command create' -s r -l repo -r -d 'path to a repository where the package should be created'
