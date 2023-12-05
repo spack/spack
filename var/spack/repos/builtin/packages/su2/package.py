@@ -90,7 +90,6 @@ class Su2(MesonPackage):
             )
             filter_file("externals/medi/src", self.spec["medipack"].prefix.src, "meson.build")
 
-
         if (
             self.spec.satisfies("+autodiff") or self.spec.satisfies("+directdiff")
         ) and self.spec.satisfies("+openmp"):
