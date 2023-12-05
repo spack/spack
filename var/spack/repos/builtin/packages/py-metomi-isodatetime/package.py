@@ -20,5 +20,4 @@ class PyMetomiIsodatetime(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     def url_for_version(self, version):
-        url = "https://files.pythonhosted.org/packages/source/m/metomi-isodatetime/metomi-isodatetime-1!{}.tar.gz"
-        return url.format(version)
+        return f"https://files.pythonhosted.org/packages/source/m/metomi-isodatetime/metomi-isodatetime-1!{version}.tar.gz"
