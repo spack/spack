@@ -71,7 +71,9 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant("vtune", default=False, description="Builds with support for Intel VTune")
     variant("onednn", default=False, description="Support for OneDNN")
     variant("onnx", default=False, description="Support for exporting models into ONNX format")
-    variant("nvshmem", default=False, description="Support for NVSHMEM", when="+distconv")
+    variant(
+        "nvshmem", default=False, sticky=True, description="Support for NVSHMEM", when="+distconv"
+    )
     variant(
         "python",
         default=True,
@@ -144,6 +146,17 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     # Add Aluminum variants
     depends_on("aluminum@master", when="@develop")
 
+    # Note that while Aluminum typically includes the dependency for the AWS OFI
+    # plugins, if Aluminum is pre-built, LBANN needs to make sure that the module
+    # is loaded
+    with when("+cuda"):
+        if spack.platforms.cray.slingshot_network():
+            depends_on("aws-ofi-nccl")  # Note: NOT a CudaPackage
+
+    with when("+rocm"):
+        if spack.platforms.cray.slingshot_network():
+            depends_on("aws-ofi-rccl")
+
     depends_on("hdf5+mpi", when="+distconv")
 
     for arch in CudaPackage.cuda_arch_values:
@@ -151,13 +164,15 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
         depends_on("aluminum cuda_arch=%s" % arch, when="+cuda cuda_arch=%s" % arch)
         depends_on("dihydrogen cuda_arch=%s" % arch, when="+cuda cuda_arch=%s" % arch)
         depends_on("nccl cuda_arch=%s" % arch, when="+cuda cuda_arch=%s" % arch)
+        depends_on("hwloc cuda_arch=%s" % arch, when="+cuda cuda_arch=%s" % arch)
 
     # variants +rocm and amdgpu_targets are not automatically passed to
     # dependencies, so do it manually.
     for val in ROCmPackage.amdgpu_targets:
-        depends_on("hydrogen amdgpu_target=%s" % val, when="amdgpu_target=%s" % val)
-        depends_on("aluminum amdgpu_target=%s" % val, when="amdgpu_target=%s" % val)
-        depends_on("dihydrogen amdgpu_target=%s" % val, when="amdgpu_target=%s" % val)
+        depends_on("hydrogen amdgpu_target=%s" % val, when="+rocm amdgpu_target=%s" % val)
+        depends_on("aluminum amdgpu_target=%s" % val, when="+rocm amdgpu_target=%s" % val)
+        depends_on("dihydrogen amdgpu_target=%s" % val, when="+rocm amdgpu_target=%s" % val)
+        depends_on(f"hwloc amdgpu_target={val}", when=f"+rocm amdgpu_target={val}")
 
     depends_on("roctracer-dev", when="+rocm +distconv")
 
@@ -166,8 +181,8 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("hipcub", when="+rocm")
     depends_on("mpi")
     depends_on("hwloc@1.11:")
-    depends_on("hwloc +cuda +nvml", when="+cuda")
-    depends_on("hwloc@2.3.0:", when="+rocm")
+    depends_on("hwloc +cuda +nvml ~rocm", when="+cuda")
+    depends_on("hwloc@2.3.0: +rocm ~cuda", when="+rocm")
     depends_on("hiptt", when="+rocm")
 
     depends_on("half", when="+half")
@@ -223,7 +238,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("onnx", when="+onnx")
     depends_on("nvshmem", when="+nvshmem")
 
-    depends_on("spdlog@1.11.0")
+    depends_on("spdlog@1.11.0:1.12.0")
     depends_on("zstr")
 
     depends_on("caliper+adiak+mpi", when="+caliper")
@@ -272,15 +287,36 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
             # of CMake
             entries.append(cmake_cache_option("CMAKE_EXPORT_COMPILE_COMMANDS", True))
 
+        entries.append(cmake_cache_string("CMAKE_INSTALL_RPATH_USE_LINK_PATH", "ON"))
+        linker_flags = "-Wl,--disable-new-dtags"
+        entries.append(cmake_cache_string("CMAKE_EXE_LINKER_FLAGS", linker_flags))
+        entries.append(cmake_cache_string("CMAKE_SHARED_LINKER_FLAGS", linker_flags))
+
         # Use lld high performance linker
         if "+lld" in spec:
-            entries.append(cmake_cache_string("CMAKE_EXE_LINKER_FLAGS", "-fuse-ld=lld"))
-            entries.append(cmake_cache_string("CMAKE_SHARED_LINKER_FLAGS", "-fuse-ld=lld"))
+            entries.append(
+                cmake_cache_string(
+                    "CMAKE_EXE_LINKER_FLAGS", "{0} -fuse-ld=lld".format(linker_flags)
+                )
+            )
+            entries.append(
+                cmake_cache_string(
+                    "CMAKE_SHARED_LINKER_FLAGS", "{0} -fuse-ld=lld".format(linker_flags)
+                )
+            )
 
         # Use gold high performance linker
         if "+gold" in spec:
-            entries.append(cmake_cache_string("CMAKE_EXE_LINKER_FLAGS", "-fuse-ld=gold"))
-            entries.append(cmake_cache_string("CMAKE_SHARED_LINKER_FLAGS", "-fuse-ld=gold"))
+            entries.append(
+                cmake_cache_string(
+                    "CMAKE_EXE_LINKER_FLAGS", "{0} -fuse-ld=gold".format(linker_flags)
+                )
+            )
+            entries.append(
+                cmake_cache_string(
+                    "CMAKE_SHARED_LINKER_FLAGS", "{0} -fuse-ld=gold".format(linker_flags)
+                )
+            )
 
         # Set the generator in the cached config
         if self.spec.satisfies("generator=make"):
