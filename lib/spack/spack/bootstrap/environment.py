@@ -135,12 +135,13 @@ class BootstrapEnvironment(spack.environment.Environment):
         if not tty.is_debug():
             kwargs = {"output": os.devnull, "error": os.devnull}
         # Make sure spack is in PATH for Makefile
-        kwargs["extra_env"] = {"PATH": spack.paths.bin_path + ":" + os.environ["PATH"]}
+        extra_env = {"PATH": spack.paths.bin_path + ":" + os.environ["PATH"]}
         make(
             "-C",
             str(self.environment_root()),
             "-j",
             str(spack.util.cpus.determine_number_of_jobs(parallel=True)),
+            extra_env=extra_env,
             **kwargs,
         )
 
