@@ -11,9 +11,10 @@ class Catch2(CMakePackage):
     supports Objective-C (and maybe C)."""
 
     homepage = "https://github.com/catchorg/Catch2"
-    url = "https://github.com/catchorg/Catch2/archive/v2.13.10.tar.gz"
+    url = "https://github.com/catchorg/Catch2/archive/refs/tags/v3.3.1.tar.gz"
+    list_url = "https://github.com/catchorg/Catch2/releases/"
     git = "https://github.com/catchorg/Catch2.git"
-    maintainers("ax3l")
+    maintainers("ax3l", "greenc-FNAL")
 
     # In-Development
     version("develop", branch="devel")
@@ -106,23 +107,57 @@ class Catch2(CMakePackage):
     version("1.3.0", sha256="245f6ee73e2fea66311afa1da59e5087ddab8b37ce64994ad88506e8af28c6ac")
 
     variant(
+        "cxxstd",
+        when="@3:",
+        default="17",
+        values=("17", "20", "23"),
+        multi=False,
+        sticky=True,
+        description="C++ standard",
+    )
+    variant(
         "pic", when="@3: ~shared", default=True, description="Build with position-independent code"
     )
     variant("shared", when="@3:", default=False, description="Build shared library")
 
-    variant(
-        "cxxstd", default="14", values=("14", "17"), multi=False, description="Define C++ standard"
-    )
+    def patch(self):
+        filter_file(
+            r"#include \<catch2",
+            "#include <cstdint>\n#include <catch2",
+            "src/catch2/internal/catch_string_manip.hpp",
+        )
+        filter_file(
+            r"#include <string>",
+            "#include <string>\n#include <cstdint>",
+            "src/catch2/catch_test_case_info.hpp",
+        )
+        filter_file(
+            r"#include <iomanip>",
+            "#include <iomanip>\n#include <cstdint>",
+            "src/catch2/internal/catch_xmlwriter.cpp",
+        )
 
     def cmake_args(self):
         spec = self.spec
-        args = [self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd")]
+        args = []
         # 1.7.0-1.9.3: no control over test builds
         if spec.satisfies("@1.9.4:2.1.0"):
             args.append("-DNO_SELFTEST={0}".format("OFF" if self.run_tests else "ON"))
         elif spec.satisfies("@2.1.1:"):
             args.append(self.define("BUILD_TESTING", self.run_tests))
         if spec.satisfies("@3:"):
+            args.extend(
+                [
+                    self.define("BUILD_TESTING", self.run_tests),
+                    self.define("CATCH_BUILD_EXAMPLES", True),
+                    self.define("CATCH_BUILD_EXTRA_TESTS", self.run_tests),
+                    self.define("CATCH_BUILD_TESTING", self.run_tests),
+                    self.define("CATCH_ENABLE_WERROR", True),
+                    self.define("CATCH_INSTALL_EXTRAS", True),
+                    self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"),
+                    self.define("CMAKE_CXX_STANDARD_REQUIRED", True),
+                ]
+            )
             args.append(self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"))
             args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
 
