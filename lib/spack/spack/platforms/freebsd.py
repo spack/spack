@@ -7,7 +7,7 @@ import platform
 import archspec.cpu
 
 import spack.target
-from spack.operating_systems.freebsd import FreeBSD_os
+from spack.operating_systems.freebsd import FreeBSDOs
 
 from ._platform import Platform
 
@@ -26,7 +26,7 @@ class FreeBSD(Platform):
         self.front_end = self.default
         self.back_end = self.default
 
-        os = FreeBSD_os()
+        os = FreeBSDOs()
         self.default_os = str(os)
         self.front_os = self.default_os
         self.back_os = self.default_os

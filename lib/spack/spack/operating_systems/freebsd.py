@@ -9,7 +9,7 @@ from spack.version import Version
 from ._operating_system import OperatingSystem
 
 
-class FreeBSD_os(OperatingSystem):
+class FreeBSDOs(OperatingSystem):
     def __init__(self):
         release = py_platform.release().split("-", 1)[0]
         super().__init__("freebsd", Version(release))
