@@ -35,4 +35,4 @@ class PySphinxToolbox(PythonPackage):
     depends_on("py-sphinx-tabs@1.2.1:3.4", type=("build", "run"))
     depends_on("py-tabulate@0.8.7:", type=("build", "run"))
     depends_on("py-typing-extensions@3.7.4.3:3.10.0.0,3.10.0.2:", type=("build", "run"))
-    depends_on("py-typing-inspect@0.6.0:", type=("build", "run"), when="python@:3.7")
+    depends_on("py-typing-inspect@0.6.0:", when="^python@:3.7", type=("build", "run"))
