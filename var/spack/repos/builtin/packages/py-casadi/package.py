@@ -22,7 +22,7 @@
 from spack.package import *
 
 
-class Casadi(PythonPackage):
+class PyCasadi(PythonPackage):
     """CasADi -- framework for algorithmic differentiation and numeric optimization"""
 
     homepage = "casadi.org"
