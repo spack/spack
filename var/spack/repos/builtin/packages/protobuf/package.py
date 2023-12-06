@@ -165,8 +165,12 @@ class Protobuf(CMakePackage):
         ]
 
         if self.spec.satisfies("@3.22:"):
-            self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"),
-            args.append(self.define("protobuf_ABSL_PROVIDER", "package"))
+            args.extend(
+                [
+                    self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"),
+                    self.define("protobuf_ABSL_PROVIDER", "package"),
+                ]
+            )
         else:
             args.append(f"-DCMAKE_CXX_FLAGS=-std=c++{cxxstd}")
 
