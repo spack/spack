@@ -726,8 +726,12 @@ def _unknown_variants_in_directives(pkgs, error_cls):
 
 
 @package_directives
-def _unknown_variants_in_dependencies(pkgs, error_cls):
-    """Report unknown dependencies and wrong variants for dependencies"""
+def _issues_in_depends_on_directive(pkgs, error_cls):
+    """Reports issues with 'depends_on' directives.
+
+    Issues might be unknown dependencies, unknown variants or variant values, or declaration
+    of nested dependencies.
+    """
     errors = []
     for pkg_name in pkgs:
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
