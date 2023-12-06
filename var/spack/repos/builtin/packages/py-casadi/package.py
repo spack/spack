@@ -19,11 +19,10 @@
 #
 # See the Spack documentation for more information on packaging.
 # ----------------------------------------------------------------------------
-
 from spack.package import *
 
 
-class Casadi(CMakePackage):
+class Casadi(PythonPackage):
     """CasADi -- framework for algorithmic differentiation and numeric optimization"""
 
     homepage = "casadi.org"
