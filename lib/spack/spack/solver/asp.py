@@ -1969,8 +1969,9 @@ class SpackSolverSetup:
         # TODO: use better semantics.
         arch = spec.architecture
         if arch:
-            if arch.platform:
-                clauses.append(f.node_platform(spec.name, arch.platform))
+            if arch._platforms:
+                for platform in arch._platforms:
+                    clauses.append(f.node_platform(spec.name, platform))
             if arch.os:
                 clauses.append(f.node_os(spec.name, arch.os))
             if arch.target:

@@ -217,6 +217,8 @@ def colorize_spec(spec):
 class ArchSpec:
     """Aggregate the target platform, the operating system and the target microarchitecture."""
 
+    _platforms: Tuple[str, ...]
+
     @staticmethod
     def _return_arch(os_tag, target_tag):
         platform = spack.platforms.host()
@@ -235,7 +237,7 @@ class ArchSpec:
         """Return the frontend architecture"""
         return ArchSpec._return_arch("frontend", "frontend")
 
-    __slots__ = "_platform", "_os", "_target"
+    __slots__ = "_platforms", "_os", "_target"
 
     def __init__(self, spec_or_platform_tuple=(None, None, None)):
         """Architecture specification a package should be built with.
@@ -260,7 +262,7 @@ class ArchSpec:
         # If another instance of ArchSpec was passed, duplicate it
         if isinstance(spec_or_platform_tuple, ArchSpec):
             other = spec_or_platform_tuple
-            platform_tuple = other.platform, other.os, other.target
+            platform_tuple = other._platforms, other.os, other.target
 
         elif isinstance(spec_or_platform_tuple, (str, tuple)):
             spec_fields = spec_or_platform_tuple
@@ -299,22 +301,29 @@ class ArchSpec:
         return ArchSpec(spec_like)
 
     def _cmp_iter(self):
-        yield self.platform
+        yield self._platforms
         yield self.os
         yield self.target
 
     @property
     def platform(self):
         """The platform of the architecture."""
-        return self._platform
+        if len(self._platforms) == 1:
+            return self._platforms[0]
+        if len(self._platforms) == 0:
+            return None
+        raise ValueError(f"Platform not concrete: {self._platforms}")
 
     @platform.setter
-    def platform(self, value):
-        # The platform of the architecture spec will be verified as a
-        # supported Spack platform before it's set to ensure all specs
-        # refer to valid platforms.
-        value = str(value) if value is not None else None
-        self._platform = value
+    def platform(self, value: Union[spack.platforms.Platform, List[str], Optional[str]]):
+        if value is None:
+            self._platforms = ()
+        elif isinstance(value, str):
+            self._platforms = tuple(sorted(set(value.split(",")))) if "," in value else (value,)
+        elif isinstance(value, spack.platforms.Platform):
+            self._platforms = (str(value),)
+        else:
+            self._platforms = tuple(sorted(set(value)))
 
     @property
     def os(self):
@@ -392,12 +401,14 @@ class ArchSpec:
         """
         other = self._autospec(other)
 
-        # Check platform and os
-        for attribute in ("platform", "os"):
-            other_attribute = getattr(other, attribute)
-            self_attribute = getattr(self, attribute)
-            if other_attribute and self_attribute != other_attribute:
-                return False
+        if other.os and self.os != other.os:
+            return False
+
+        # If the rhs is constrained, the lhs must be too and have a subset of the platforms of rhs
+        if other._platforms and not (
+            self._platforms and all(x in other._platforms for x in self._platforms)
+        ):
+            return False
 
         return self._target_satisfies(other, strict=True)
 
@@ -413,12 +424,15 @@ class ArchSpec:
         """
         other = self._autospec(other)
 
-        # Check platform and os
-        for attribute in ("platform", "os"):
-            other_attribute = getattr(other, attribute)
-            self_attribute = getattr(self, attribute)
-            if other_attribute and self_attribute and self_attribute != other_attribute:
-                return False
+        if self.os and other.os and self.os != other.os:
+            return False
+
+        if (
+            self._platforms
+            and other._platforms
+            and not set(self._platforms).intersection(other._platforms)
+        ):
+            return False
 
         return self._target_satisfies(other, strict=False)
 
@@ -521,11 +535,19 @@ class ArchSpec:
             raise UnsatisfiableArchitectureSpecError(other, self)
 
         constrained = False
-        for attr in ("platform", "os"):
-            svalue, ovalue = getattr(self, attr), getattr(other, attr)
-            if svalue is None and ovalue is not None:
-                setattr(self, attr, ovalue)
+        if self.os is None and other.os is not None:
+            self.os = other.os
+            constrained = True
+
+        if other._platforms:
+            if not self._platforms:
+                self._platforms = other._platforms
                 constrained = True
+            else:
+                platform_intersection = set(self._platforms).intersection(other._platforms)
+                if len(self._platforms) > len(platform_intersection):
+                    self._platforms = tuple(sorted(platform_intersection))
+                    constrained = True
 
         constrained |= self._target_constrain(other)
 
@@ -538,7 +560,7 @@ class ArchSpec:
     @property
     def concrete(self):
         """True if the spec is concrete, False otherwise"""
-        return self.platform and self.os and self.target and self.target_concrete
+        return len(self._platforms) == 1 and self.os and self.target and self.target_concrete
 
     @property
     def target_concrete(self):
@@ -550,7 +572,7 @@ class ArchSpec:
     def to_dict(self):
         d = syaml.syaml_dict(
             [
-                ("platform", self.platform),
+                ("platform", self.platform_str),
                 ("platform_os", self.os),
                 ("target", self.target.to_dict_or_value()),
             ]
@@ -564,12 +586,20 @@ class ArchSpec:
         target = spack.target.Target.from_dict_or_value(arch["target"])
         return ArchSpec((arch["platform"], arch["platform_os"], target))
 
-    def __str__(self):
-        return "%s-%s-%s" % (self.platform, self.os, self.target)
+    @property
+    def platform_str(self) -> str:
+        n = len(self._platforms)
+        if n == 0:
+            return str(None)
+        elif n == 1:
+            return self._platforms[0]
+        return ",".join(self._platforms)
 
-    def __repr__(self):
-        fmt = "ArchSpec(({0.platform!r}, {0.os!r}, {1!r}))"
-        return fmt.format(self, str(self.target))
+    def __str__(self) -> str:
+        return f"{self.platform_str}-{self.os}-{self.target}"
+
+    def __repr__(self) -> str:
+        return f"ArchSpec(({self.platform_str!r}, {self.os!r}, {self.target!r}))"
 
     def __contains__(self, string):
         return string in str(self) or string in self.target
@@ -3562,19 +3592,6 @@ class Spec:
             if not self.variants[v].compatible(other.variants[v]):
                 raise vt.UnsatisfiableVariantSpecError(self.variants[v], other.variants[v])
 
-        # TODO: Check out the logic here
-        sarch, oarch = self.architecture, other.architecture
-        if sarch is not None and oarch is not None:
-            if sarch.platform is not None and oarch.platform is not None:
-                if sarch.platform != oarch.platform:
-                    raise UnsatisfiableArchitectureSpecError(sarch, oarch)
-            if sarch.os is not None and oarch.os is not None:
-                if sarch.os != oarch.os:
-                    raise UnsatisfiableArchitectureSpecError(sarch, oarch)
-            if sarch.target is not None and oarch.target is not None:
-                if sarch.target != oarch.target:
-                    raise UnsatisfiableArchitectureSpecError(sarch, oarch)
-
         changed = False
 
         if not self.name and other.name:
@@ -3596,18 +3613,12 @@ class Spec:
 
         changed |= self.compiler_flags.constrain(other.compiler_flags)
 
-        old = str(self.architecture)
         sarch, oarch = self.architecture, other.architecture
-        if sarch is None or other.architecture is None:
-            self.architecture = sarch or oarch
-        else:
-            if sarch.platform is None or oarch.platform is None:
-                self.architecture.platform = sarch.platform or oarch.platform
-            if sarch.os is None or oarch.os is None:
-                sarch.os = sarch.os or oarch.os
-            if sarch.target is None or oarch.target is None:
-                sarch.target = sarch.target or oarch.target
-        changed |= str(self.architecture) != old
+        if sarch is None and other.architecture is not None:
+            self.architecture = oarch
+            changed = True
+        elif sarch and oarch:
+            changed |= sarch.constrain(oarch)
 
         if deps:
             changed |= self._constrain_dependencies(other)

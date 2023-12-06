@@ -1391,6 +1391,8 @@ def test_abstract_contains_semantic(lhs, rhs, expected, mock_packages):
         (ArchSpec, "darwin-None-None", "linux-None-None", (False, False, False)),
         (ArchSpec, "None-ubuntu20.04-None", "None-ubuntu20.04-None", (True, True, True)),
         (ArchSpec, "None-ubuntu20.04-None", "None-ubuntu22.04-None", (False, False, False)),
+        (ArchSpec, "linux-None-None", "linux,cray-None-None", (True, True, False)),
+        (ArchSpec, "cray,linux-None-None", "linux,cray-None-None", (True, True, True)),
         # Compiler
         (CompilerSpec, "gcc", "clang", (False, False, False)),
         (CompilerSpec, "gcc", "gcc@5", (True, False, True)),
@@ -1450,6 +1452,8 @@ def test_intersects_and_satisfies(factory, lhs_str, rhs_str, results):
             False,
             "None-ubuntu20.04-nocona,haswell",
         ),
+        (ArchSpec, "linux-None-haswell", "linux,cray-None-haswell", False, "linux-None-haswell"),
+        (ArchSpec, "linux,cray-None-haswell", "linux-None-haswell", True, "linux-None-haswell"),
         # Compiler
         (CompilerSpec, "gcc@5", "gcc@5-tag", True, "gcc@5-tag"),
         (CompilerSpec, "gcc@5", "gcc@5", False, "gcc@5"),
@@ -1517,3 +1521,14 @@ def test_edge_equality_does_not_depend_on_virtual_order():
     assert edge1 == edge2
     assert tuple(sorted(edge1.virtuals)) == edge1.virtuals
     assert tuple(sorted(edge2.virtuals)) == edge1.virtuals
+
+
+def test_spec_multi_platform_equality():
+    """Tests support for non-concrete platforms."""
+    # Order independent equality
+    assert Spec("platform=cray,linux").architecture == Spec("platform=linux,cray").architecture
+    assert (
+        str(Spec("platform=cray,linux"))
+        == str(Spec("platform=linux,cray"))
+        == "arch=cray,linux-None-None"
+    )
