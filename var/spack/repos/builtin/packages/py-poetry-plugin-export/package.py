@@ -15,10 +15,11 @@ class PyPoetryPluginExport(PythonPackage):
     version("1.6.0", sha256="091939434984267a91abf2f916a26b00cff4eee8da63ec2a24ba4b17cf969a59")
     version("1.0.7", sha256="f6ac707ae227b06b2481249ed2678ff6b810b3487cac0fbb66eb0dc2bfd6ecf1")
 
+    depends_on("python@3.8:3", when="@1.6:", type=("build", "run"))
     depends_on("python@3.7:3", type=("build", "run"))
-    depends_on("python@3.8:3", when="@1.6", type=("build", "run"))
-    depends_on("py-poetry-core@1.1:1", when="@1.0", type=("build", "run"))
     depends_on("py-poetry-core@1.7:1", when="@1.6", type=("build", "run"))
+    depends_on("py-poetry-core@1.1:1", when="@1.0", type=("build", "run"))
+    depends_on("py-poetry@1.6:1", when="@1.6", type=("build", "run"))
 
     def url_for_version(self, version):
         url = (
