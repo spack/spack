@@ -399,6 +399,8 @@ class Hip(CMakePackage):
     patch("0014-remove-compiler-rt-linkage-for-host.5.6.0.patch", when="@5.6.0:5.6")
     patch("0014-Remove-compiler-rt-linkage-for-host-for-5.7.0.patch", when="@5.7.0:5.7")
     patch("0015-reverting-operator-mixup-fix-for-slate.patch", when="@5.6:")
+    patch("0017-Set-PARAMETERS_MIN_ALIGNMENT-to-the-native-alignment.patch", when="@5.7")
+
     # See https://github.com/ROCm-Developer-Tools/HIP/pull/3206
     patch(
         "https://github.com/ROCm-Developer-Tools/HIP/commit/50ee82f6bc4aad10908ce09198c9f7ebfb2a3561.patch?full_index=1",
