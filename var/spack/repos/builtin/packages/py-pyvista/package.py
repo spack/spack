@@ -25,6 +25,7 @@ class PyPyvista(PythonPackage):
     depends_on("py-pooch", when="@0.37:", type=("build", "run"))
     depends_on("py-scooby@0.5.1:", type=("build", "run"))
     depends_on("vtk+python", type=("build", "run"))
+    depends_on("py-typing-extensions", when="^python@:3.7", type=("build", "run"))
 
     # Historical dependencies
     depends_on("py-appdirs", when="@:0.36", type=("build", "run"))
