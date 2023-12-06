@@ -16,6 +16,9 @@ class PyDamask(PythonPackage):
     maintainers("MarDiehl")
 
     version(
+        "3.0.0-alpha8", sha256="f62c38123213d1c1fe2eb8910b0ffbdc1cac56273c2520f3b64a553363190b9d"
+    )
+    version(
         "3.0.0-alpha7", sha256="442b06b824441293e72ff91b211a555c5d497aedf62be1c4332c426558b848a4"
     )
     version(
