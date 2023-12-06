@@ -148,3 +148,6 @@ class SpectrumMpi(BundlePackage):
             env.set("MPICXX", os.path.join(self.prefix.bin, "mpic++"))
             env.set("MPIF77", os.path.join(self.prefix.bin, "mpif77"))
             env.set("MPIF90", os.path.join(self.prefix.bin, "mpif90"))
+
+        env.set("OPAL_PREFIX",self.prefix)
+        env.set("MPI_ROOT",self.prefix)
