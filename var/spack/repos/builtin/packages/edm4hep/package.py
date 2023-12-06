@@ -100,6 +100,7 @@ class Edm4hep(CMakePackage):
     )
 
     depends_on("cmake@3.3:", type="build")
+    depends_on("cmake@3.23:", type="build", when="@0.10.3:")
     depends_on("python", type="build")
 
     depends_on("root@6.08:")
