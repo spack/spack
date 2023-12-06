@@ -42,7 +42,7 @@ class ClingoBootstrap(Clingo):
     # Enable LTO
     conflicts("~ipo", when="+optimized")
 
-    with when("+optimized platform=linux"):
+    with when("+optimized platform=linux,cray,freebsd"):
         # Statically linked. Don't use ~override so we don't duplicate malloc/free, they
         # get resolved to Python's libc's malloc in our case anyway.
         depends_on("mimalloc +ipo libs=static ~override", type="build")
