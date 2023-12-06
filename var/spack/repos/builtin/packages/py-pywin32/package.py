@@ -28,7 +28,7 @@ class PyPywin32(PythonPackage):
     homepage = "https://github.com/mhammond/pywin32"
     url = "https://github.com/mhammond/pywin32/archive/refs/tags/b306.tar.gz"
 
-    license("UNKNOWN")
+    license("PSF-2.0")
 
     version("306", sha256="16e5ad3efbbf997080f67c3010bd4eb0067d499bbade9be1b240b7e85325c167")
 
