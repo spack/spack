@@ -26,8 +26,8 @@ class Kakoune(MakefilePackage):
     depends_on("ncurses")
 
     conflicts("%gcc@:8", when="@2021.11.08", msg="GCC version must be at least 9.0!")
-    conflicts("%gcc@:10.3", when="@2023.08.05", msg="GCC version must be at least 10.3!")
-    conflicts("%llvm@:11", when="@2023.08.05", msg="Clang version must be at least 11!")
+    conflicts("%gcc@:10.2", when="@2023.08.05", msg="GCC version must be at least 10.3!")
+    conflicts("%llvm@:10", when="@2023.08.05", msg="Clang version must be at least 11!")
 
     build_targets = ["all", "man"]
 
