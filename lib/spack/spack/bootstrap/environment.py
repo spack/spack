@@ -16,6 +16,7 @@ import archspec.cpu
 from llnl.util import tty
 
 import spack.environment
+import spack.paths
 import spack.tengine
 import spack.util.cpus
 import spack.util.executable
@@ -133,6 +134,8 @@ class BootstrapEnvironment(spack.environment.Environment):
         kwargs = {}
         if not tty.is_debug():
             kwargs = {"output": os.devnull, "error": os.devnull}
+        # Make sure spack is in PATH for Makefile
+        kwargs["extra_env"] = {"PATH": spack.paths.bin_path + ":" + os.environ["PATH"]}
         make(
             "-C",
             str(self.environment_root()),
