@@ -45,11 +45,11 @@ class PyPyomo(PythonPackage):
     version("5.6.6", sha256="813e14a604b9d3ac63bdd0880c07f5f4e1b8f0a8a10345f1b42bee762219c001")
 
     variant("cython", default=False, description="Enable cythonization of Pyomo.")
-    variant("tests", default=False, description="Install testing dependencies. (Version 6.1+)")
+    variant("tests", default=False, description="Install testing dependencies.", when="@6.1:")
     variant(
-        "docs", default=False, description="Install docs generation dependencies. (Version 6.1+)"
+        "docs", default=False, description="Install docs generation dependencies.", when="@6.1:"
     )
-    variant("optional", default=False, description="Install optional dependencies. (Version 6.1+)")
+    variant("optional", default=False, description="Install optional dependencies.", when="@6.1:")
 
     # python_requires
     depends_on("python@3.8:3.12", when="@6.7:", type=("build", "run"))
@@ -60,7 +60,7 @@ class PyPyomo(PythonPackage):
     depends_on("python@2.7:2.8,3.4:3.8", when="@5.6", type=("build", "run"))
 
     # universally required
-    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@39.2:", type="build")
     depends_on("py-ply", type=("build", "run"))
 
     # required for pre-6 series
@@ -80,7 +80,7 @@ class PyPyomo(PythonPackage):
     depends_on("py-pybind11", when="@6.1:+tests", type=("run"))
 
     # when docs is requested
-    depends_on("py-sphinx@2:", when="@6.1:+docs", type=("run"))
+    depends_on("py-sphinx@4:", when="@6.1:+docs", type=("run"))
     depends_on("py-sphinx-copybutton", when="@6.1:+docs", type=("run"))
     depends_on("py-sphinx-rtd-theme@0.5:", when="@6.1:+docs", type=("run"))
     depends_on("py-sphinxcontrib-jsmath", when="@6.1:+docs", type=("run"))
@@ -96,15 +96,18 @@ class PyPyomo(PythonPackage):
     depends_on("py-numpy", when="@6.1:+optional", type=("run"))
     depends_on("py-openpyxl", when="@6.1:+optional", type=("run"))
     depends_on("py-pint", when="@6.1:+optional", type=("run"))
+    depends_on("py-plotly", when="@6.6:+optional", type=("run"))
     depends_on("py-python-louvain", when="@6.1:+optional", type=("run"))
     depends_on("py-pyyaml", when="@6.1:+optional", type=("run"))
     depends_on("py-scipy", when="@6.1:+optional", type=("run"))
     depends_on("py-sympy", when="@6.1:+optional", type=("run"))
     depends_on("py-xlrd", when="@6.1:+optional", type=("run"))
+    depends_on("py-z3-solver", when="@6.1:+optional", type=("run"))
+    depends_on("py-pywin32", when="@6.1:+optional platform=windows", type=("run"))
+    depends_on("py-casadi", when="@6.1:+optional", type=("run"))
+    depends_on("py-numdifftools", when="@6.1:+optional", type=("run"))
     depends_on("py-pandas", when="@6.1:+optional", type=("run"))
     depends_on("py-seaborn", when="@6.1:+optional", type=("run"))
-    depends_on("py-numdifftools", when="@6.1:+optional", type=("run"))
-    depends_on("py-plotly", when="@6.6:+optional", type=("run"))
 
     def global_options(self, spec, prefix):
         options = []
