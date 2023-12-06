@@ -88,22 +88,13 @@ class Protobuf(CMakePackage):
     variant(
         "cxxstd",
         default="default",
-        values=("11", "14", "17", "20", "23"),
+        values=("default", "11", "14", "17", "20", "23"),
         multi=False,
         sticky=True,
-        when="@:3.21",
         description="C++ standard",
     )
 
-    variant(
-        "cxxstd",
-        default="default",
-        values=("default", "14", "17", "20", "23"),
-        multi=False,
-        sticky=True,
-        when="@3.22:",
-        description="C++ standard",
-    )
+    conflicts("cxxstd=11", when="@3.22:")  # Requires C++14
 
     depends_on("abseil-cpp@20230125.3:", when="@3.22.5:")
     # https://github.com/protocolbuffers/protobuf/issues/11828#issuecomment-1433557509
@@ -167,7 +158,7 @@ class Protobuf(CMakePackage):
         if self.spec.satisfies("@3.22:"):
             args.extend(
                 [
-                    self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"),
+                    self.define("CMAKE_CXX_STANDARD", cxxstd),
                     self.define("protobuf_ABSL_PROVIDER", "package"),
                 ]
             )
