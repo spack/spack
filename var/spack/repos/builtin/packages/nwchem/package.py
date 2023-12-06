@@ -56,7 +56,7 @@ class Nwchem(Package):
     depends_on("lapack")
     depends_on("mpi")
     depends_on("scalapack")
-    depends_on("fftw-api", when="+fftw3")
+    depends_on("fftw-api@3", when="+fftw3")
     depends_on("libxc", when="+libxc")
     depends_on("elpa", when="+elpa")
     depends_on("python@3:3.9", type=("build", "link", "run"), when="@:7.0.2")
