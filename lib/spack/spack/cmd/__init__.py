@@ -11,6 +11,8 @@ import sys
 from textwrap import dedent
 from typing import List, Match, Tuple
 
+import archspec.cpu
+
 import llnl.string
 import llnl.util.tty as tty
 from llnl.util.filesystem import join_path
@@ -22,6 +24,7 @@ import spack.config
 import spack.environment as ev
 import spack.error
 import spack.extensions
+import spack.package_prefs
 import spack.parser
 import spack.paths
 import spack.spec
@@ -245,7 +248,7 @@ def matching_spec_from_env(spec):
         return spec.concretized()
 
 
-def disambiguate_spec(spec, env, local=False, installed=True, first=False):
+def disambiguate_spec(spec, env, local=False, installed=True, best=False):
     """Given a spec, figure out which installed package it refers to.
 
     Arguments:
@@ -256,12 +259,13 @@ def disambiguate_spec(spec, env, local=False, installed=True, first=False):
         installed (bool or spack.database.InstallStatus or typing.Iterable):
             install status argument passed to database query.
             See ``spack.database.Database._query`` for details.
+        best (bool): choose the best matching spec based on arch and package prefs
     """
     hashes = env.all_hashes() if env else None
-    return disambiguate_spec_from_hashes(spec, hashes, local, installed, first)
+    return disambiguate_spec_from_hashes(spec, hashes, local, installed, best)
 
 
-def disambiguate_spec_from_hashes(spec, hashes, local=False, installed=True, first=False):
+def disambiguate_spec_from_hashes(spec, hashes, local=False, installed=True, best=False):
     """Given a spec and a list of hashes, get concrete spec the spec refers to.
 
     Arguments:
@@ -271,6 +275,7 @@ def disambiguate_spec_from_hashes(spec, hashes, local=False, installed=True, fir
         installed (bool or spack.database.InstallStatus or typing.Iterable):
             install status argument passed to database query.
             See ``spack.database.Database._query`` for details.
+        best (bool): choose the best matching spec based on arch and package prefs
     """
     if local:
         matching_specs = spack.store.STORE.db.query_local(spec, hashes=hashes, installed=installed)
@@ -279,7 +284,26 @@ def disambiguate_spec_from_hashes(spec, hashes, local=False, installed=True, fir
     if not matching_specs:
         tty.die("Spec '%s' matches no installed packages." % spec)
 
-    elif first:
+    elif best:
+        host_arch = archspec.cpu.host()
+
+        # filter out specs that won't run on this machine
+        matching_specs = [spec for spec in matching_specs if host_arch >= spec.target]
+
+        # comparators for picking best spec according to current prefs
+        ver = spack.package_prefs.PackagePrefs(spec.name, "version")
+        target = spack.package_prefs.PackagePrefs(spec.name, "target")
+        compiler = spack.package_prefs.PackagePrefs(spec.name, "compiler")
+
+        # these are harder but can be done w/package prefs:
+        # TODO: pick version with most preferred variants
+        # TODO: pick version with most preferred virtual provider (e.g. MPI)
+
+        # sort key that orders specs by prefs above
+        def sort_key(spec):
+            return (ver(spec.version), target(spec.target), compiler(spec.compiler), spec)
+
+        matching_specs.sort(key=sort_key)
         return matching_specs[0]
 
     ensure_single_spec_or_die(spec, matching_specs)

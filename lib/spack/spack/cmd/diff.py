@@ -32,18 +32,12 @@ def setup_parser(subparser):
         help="dump json output instead of pretty printing",
     )
     subparser.add_argument(
-        "--first",
-        action="store_true",
-        default=False,
-        dest="load_first",
-        help="load the first match if multiple packages match the spec",
-    )
-    subparser.add_argument(
         "-a",
         "--attribute",
         action="append",
         help="select the attributes to show (defaults to all)",
     )
+    arguments.add_common_arguments(subparser, ["best"])
 
 
 def shift(asp_function):
@@ -205,7 +199,7 @@ def diff(parser, args):
         if spec.concrete:
             specs.append(spec)
         else:
-            specs.append(spack.cmd.disambiguate_spec(spec, env, first=args.load_first))
+            specs.append(spack.cmd.disambiguate_spec(spec, env, best=args.best))
 
     # Calculate the comparison (c)
     color = False if args.dump_json else get_color_when()

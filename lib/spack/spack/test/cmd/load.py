@@ -114,6 +114,20 @@ def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
     load("--sh", "--first", "libelf")
 
 
+def test_load_best(install_mockery, mock_fetch, mock_archive, mock_packages):
+    """Test with and without the --best option"""
+    install("libelf@0.8.12 arch=x86_64")
+    install("libelf@0.8.12")
+
+    # Now there are 2 versions of libelf installed for different archs, which should cause an error
+    out = load("--sh", "libelf", fail_on_error=False)
+    assert "matches multiple packages" in out
+    assert "Use a more specific spec" in out
+
+    # Using --best-arch should avoid the error condition
+    load("--sh", "--best", "libelf")
+
+
 def test_load_fails_no_shell(install_mockery, mock_fetch, mock_archive, mock_packages):
     """Test that spack load prints an error message without a shell."""
     install("mpileaks")
