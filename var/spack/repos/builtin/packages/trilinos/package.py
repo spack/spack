@@ -402,7 +402,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         depends_on(kokkos_spec, when="@14.4.0 +kokkos {0}".format(arch_str))
 
     depends_on("adios2", when="+adios2")
-    depends_on("binder@1.3:", when="+python", type="build")
+    depends_on("binder@1.3:", when="@15: +python", type="build")
     depends_on("blas")
     depends_on("boost+graph+math+exception+stacktrace", when="+boost")
     # Need to revisit the requirement of STK
@@ -422,15 +422,14 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("matio", when="+exodus")
     depends_on("metis", when="+zoltan")
     depends_on("mpi", when="+mpi")
-    depends_on("mpi", when="+python")
+    depends_on("mpi", when="@15: +python")
     depends_on("netcdf-c", when="+exodus")
     depends_on("parallel-netcdf", when="+exodus+mpi")
     depends_on("parmetis", when="+mpi +zoltan")
     depends_on("parmetis", when="+scorec")
-    depends_on("py-mpi4py", when="+mpi+python", type=("build", "run"))
     depends_on("py-mpi4py", when="+python", type=("build", "run"))
     depends_on("py-numpy", when="+python", type=("build", "run"))
-    depends_on("py-pybind11", when="+python", type=("build", "link"))
+    depends_on("py-pybind11", when="@15: +python", type=("build", "link"))
     depends_on("python", when="+python")
     depends_on("python", when="@13.2: +ifpack +hypre", type="build")
     depends_on("python", when="@13.2: +ifpack2 +hypre", type="build")
@@ -440,7 +439,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("suite-sparse", when="+suite-sparse")
     depends_on("superlu-dist", when="+superlu-dist")
     depends_on("superlu@4.3 +pic", when="+superlu")
-    depends_on("swig", when="+python")
+    depends_on("swig", when="@:14 +python")
     depends_on("zlib-api", when="+zoltan")
 
     # Trilinos' Tribits config system is limited which makes it very tricky to
@@ -752,7 +751,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                 ]
             )
 
-        if "+python" in spec:
+        if "@15: +python" in spec:
             binder = spec["binder"].prefix.bin.binder
             clang_include_dirs = spec["binder"].clang_include_dirs
             libclang_include_dir = spec["binder"].libclang_include_dir
