@@ -45,7 +45,7 @@ class Eccodes(CMakePackage):
     git = "https://github.com/ecmwf/eccodes.git"
     list_url = "https://confluence.ecmwf.int/display/ECC/Releases"
 
-    maintainers("skosukhin")
+    maintainers("skosukhin", "victoria-cherkas", "dominichofer", "climbfuji")
 
     version("develop", branch="develop")
     version("2.32.0", sha256="b57e8eeb0eba0c05d66fda5527c4ffa84b5ab35c46bcbc9a2227142973ccb8e6")
