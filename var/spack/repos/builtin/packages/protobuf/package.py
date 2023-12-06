@@ -97,8 +97,8 @@ class Protobuf(CMakePackage):
 
     variant(
         "cxxstd",
-        default=self.spec["abseil-cpp"].variants["cxxstd"].value,
-        values=("14", "17", "20", "23"),
+        default="default",
+        values=("default", "14", "17", "20", "23"),
         multi=False,
         sticky=True,
         when="@3.22:",
@@ -150,6 +150,8 @@ class Protobuf(CMakePackage):
 
     def cmake_args(self):
         cxxstd = self.spec.variants["cxxstd"].value
+        if cxxstd == "default":
+            cxxstd = self.spec["abseil-cpp"].variants["cxxstd"].value
 
         args = [
             self.define_from_variant("protobuf_BUILD_SHARED_LIBS", "shared"),
