@@ -104,6 +104,13 @@ class Seissol(CMakePackage, CudaPackage):
         msg="A value for cuda_arch must be specified. Add cuda_arch=XX",
     )
 
+    conflicts(
+        "device_backend=none",
+        when="+cuda",
+        msg="A value for device_backend must be specified. Add device_backend=XX",
+    )
+
+
     variant("python", default=False, description="installs python, pip, numpy and scipy")
 
     depends_on("mpi", when="+mpi")
@@ -162,7 +169,7 @@ class Seissol(CMakePackage, CudaPackage):
         args.append(f"-DGEMM_TOOLS={gemm_tools}")
 
         if self.spec.variants["equations"].value != "viscoelastic2":
-            args.append("-NUMBER_OF_MECHANISMS=0")
+            args.append("-DNUMBER_OF_MECHANISMS=0")
         else:
             args.append(self.define_from_variant("NUMBER_OF_MECHANISMS", "number_of_mechanisms"))
 
