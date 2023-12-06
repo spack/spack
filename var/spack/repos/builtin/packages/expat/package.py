@@ -105,7 +105,7 @@ class Expat(AutotoolsPackage, CMakePackage):
     # `~libbsd`.
     variant(
         "libbsd",
-        default=sys.platform != "darwin" and sys.platform != "win32",
+        default=sys.platform == "linux",
         description="Use libbsd (for high quality randomness)",
     )
 
