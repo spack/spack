@@ -17,6 +17,10 @@ class PyTensorflowEstimator(Package):
 
     maintainers("aweits")
 
+    version("2.14.0", sha256="622797bf5311f239c2b123364fa360868ae97d16b678413e5e0633241f7d7d5c")
+    version("2.13.0", sha256="4175e9276a1eb8b5e4e876d228e4605871832e7bd8517965d6a47f1481af2c3e")
+    version("2.12.0", sha256="86c75e830c6ba762d0e3cf04c160096930fb12a992e69b3f24674b9f58902063")
+    version("2.11.0", sha256="922f9187de79e8e7f7d7a5b2d6d3aabc81bbbd6ba5f12a4f52967dd302214a43")
     version("2.10", sha256="60df309377cf4e584ca20198f9639beb685d50616395f50770fc0999092d6d85")
     version("2.9.0", sha256="62d7b5a574d9c995542f6cb485ff1c18ad115afd9ec6d63437b2aab227c35ef6")
     version("2.8.0", sha256="58a2c3562ca6491c257e9a4d9bd8825667883257edcdb452181efa691c586b17")
@@ -32,12 +36,17 @@ class PyTensorflowEstimator(Package):
 
     extends("python")
 
+    # tensorflow_estimator/tools/pip_package/setup.py
     depends_on("python@3.7:", when="@2.9:", type=("build", "run"))
 
-    for ver in ["2.10", "2.9", "2.8", "2.7", "2.6"]:
+    for ver in ["2.14", "2.13", "2.12", "2.11", "2.10", "2.9", "2.8", "2.7", "2.6"]:
         depends_on("py-keras@" + ver, when="@" + ver, type=("build", "run"))
 
     for ver in [
+        "2.14",
+        "2.13",
+        "2.12",
+        "2.11",
         "2.10",
         "2.9",
         "2.8",

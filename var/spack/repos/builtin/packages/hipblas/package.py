@@ -132,10 +132,7 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
     patch("link-clients-blas.patch", when="@4.3.0:4.3.2")
     patch("link-clients-blas-4.5.0.patch", when="@4.5.0:4.5.2")
     patch("hipblas-link-clients-blas-5.0.0.patch", when="@5.0.0:5.0.2")
-
-    def check(self):
-        exe = join_path(self.build_directory, "clients", "staging", "hipblas-test")
-        self.run_test(exe, options=["--gtest_filter=-*known_bug*"])
+    patch("remove-hipblas-clients-file-installation.patch", when="@5.5:")
 
     depends_on("rocm-cmake@5.2.0:", type="build", when="@5.2.0:")
     depends_on("rocm-cmake@4.5.0:", type="build", when="@4.5.0:")
@@ -222,3 +219,9 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
             args.append("-DCMAKE_INSTALL_LIBDIR=lib")
 
         return args
+
+    @run_after("build")
+    @on_package_attributes(run_tests=True)
+    def check_build(self):
+        exe = Executable(join_path(self.build_directory, "clients", "staging", "hipblas-test"))
+        exe("--gtest_filter=-*known_bug*")

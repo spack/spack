@@ -10,11 +10,11 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
 
 import spack
-import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.paths
 import spack.util.git
 import spack.util.gpg
+from spack.cmd.common import arguments
 from spack.util.spack_yaml import syaml_dict
 
 description = "set up spack for our tutorial (WARNING: modifies config!)"

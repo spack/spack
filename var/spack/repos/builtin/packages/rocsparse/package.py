@@ -311,10 +311,13 @@ class Rocsparse(CMakePackage):
             destination="mtx",
         )
 
-    def check(self):
+    @run_after("build")
+    def check_build(self):
         if self.spec.satisfies("+test"):
-            exe = join_path(self.build_directory, "clients", "staging", "rocsparse-test")
-            self.run_test(exe, options=["--gtest_filter=*quick*:*pre_checkin*-*known_bug*"])
+            exe = Executable(
+                join_path(self.build_directory, "clients", "staging", "rocsparse-test")
+            )
+            exe("--gtest_filter=*quick*:*pre_checkin*-*known_bug*")
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)

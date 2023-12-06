@@ -9,10 +9,10 @@ import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 import spack.repo
 import spack.store
+from spack.cmd.common import arguments
 
 description = "show packages that depend on another"
 section = "basic"

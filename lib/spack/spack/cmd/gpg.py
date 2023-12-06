@@ -7,11 +7,11 @@ import argparse
 import os
 
 import spack.binary_distribution
-import spack.cmd.common.arguments as arguments
 import spack.mirror
 import spack.paths
 import spack.util.gpg
 import spack.util.url
+from spack.cmd.common import arguments
 
 description = "handle GPG actions for spack"
 section = "packaging"

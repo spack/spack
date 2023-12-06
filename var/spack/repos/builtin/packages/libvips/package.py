@@ -32,6 +32,7 @@ class Libvips(AutotoolsPackage):
 
     # TODO: Add more variants!
 
+    depends_on("pkgconfig", type="build")
     depends_on("glib")
     depends_on("expat")
 

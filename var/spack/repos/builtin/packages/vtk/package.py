@@ -67,7 +67,8 @@ class Vtk(CMakePackage):
 
     # Patch for paraview 5.10: +hdf5 ^hdf5@1.13.2:
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/9690
-    patch("xdmf2-hdf51.13.2.patch", when="@9:9.2 +xdmf")
+    # patch seems to effectively been added to vtk@9.2.3 (e81a2fe)
+    patch("xdmf2-hdf51.13.2.patch", when="@9:9.2.2 +xdmf")
 
     # We cannot build with both osmesa and qt in spack
     conflicts("+osmesa", when="+qt")

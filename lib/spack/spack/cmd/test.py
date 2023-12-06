@@ -15,12 +15,12 @@ from llnl.util import lang, tty
 from llnl.util.tty import colify
 
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 import spack.install_test
 import spack.package_base
 import spack.repo
 import spack.report
+from spack.cmd.common import arguments
 
 description = "run spack's tests for an install"
 section = "admin"

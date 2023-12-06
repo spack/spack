@@ -20,6 +20,12 @@ class IntelOneapiDpct(IntelOneApiPackage):
     homepage = "https://www.intel.com/content/www/us/en/developer/tools/oneapi/dpc-compatibility-tool.html#gs.2p8km6"
 
     version(
+        "2024.0.0",
+        url="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/6633bc4b-5356-471a-9aae-d5e63e7acd95/l_dpcpp-ct_p_2024.0.0.49394_offline.sh",
+        sha256="5fdba92edf24084187d98f083f9a6e17ee6b33ad8a736d6c9cdd3dbd4e0eab8a",
+        expand=False,
+    )
+    version(
         "2023.2.0",
         url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/764119eb-2959-4b51-bb3c-3cf581c16186/l_dpcpp-ct_p_2023.2.0.49333_offline.sh",
         sha256="3b4ca40c23a5114d4c5591694e4b43960bb55329455e86d8d876c3d5a366159b",
@@ -55,6 +61,10 @@ class IntelOneapiDpct(IntelOneApiPackage):
         sha256="ec42f4df3f9daf1af587b14b8b6644c773a0b270e03dd22ac9e2f49131e3e40c",
         expand=False,
     )
+
+    @property
+    def v2_layout_versions(self):
+        return "@2024:"
 
     @property
     def component_dir(self):

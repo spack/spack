@@ -193,7 +193,6 @@ ci:
       - blt
       - bzip2
       - camp
-      - cmake
       - curl
       - czmq
       - darshan-util

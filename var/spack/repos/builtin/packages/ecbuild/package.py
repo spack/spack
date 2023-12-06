@@ -13,7 +13,7 @@ class Ecbuild(CMakePackage):
     homepage = "https://github.com/ecmwf/ecbuild"
     url = "https://github.com/ecmwf/ecbuild/archive/refs/tags/3.6.1.tar.gz"
 
-    maintainers("skosukhin", "climbfuji")
+    maintainers("skosukhin", "climbfuji", "victoria-cherkas", "dominichofer")
 
     version("3.7.2", sha256="7a2d192cef1e53dc5431a688b2e316251b017d25808190faed485903594a3fb9")
     version("3.6.5", sha256="98bff3d3c269f973f4bfbe29b4de834cd1d43f15b1c8d1941ee2bfe15e3d4f7f")

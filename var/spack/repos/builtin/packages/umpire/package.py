@@ -208,11 +208,6 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     # currently only available for cuda.
     conflicts("+shared", when="+cuda")
 
-    # https://github.com/LLNL/Umpire/issues/653
-    # This range looks weird, but it ensures the concretizer looks at it as a
-    # range, not as a concrete version, so that it also matches 10.3.* versions.
-    conflicts("%gcc@10.3.0:10.3", when="+cuda")
-
     def _get_sys_type(self, spec):
         sys_type = spec.architecture
         if "SYS_TYPE" in env:

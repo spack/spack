@@ -26,6 +26,12 @@ class IntelOneapiVtune(IntelOneApiLibraryPackageWithSdk):
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/vtune-profiler.html"
 
     version(
+        "2024.0.0",
+        url="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/1722cc83-ceb2-4304-b4dc-2813780222a3/l_oneapi_vtune_p_2024.0.0.49503_offline.sh",
+        sha256="09537329bdf6e105b0e164f75dc8ae122adc99a64441f6a52225509bcff3b848",
+        expand=False,
+    )
+    version(
         "2023.2.0",
         url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/dfae6f23-6c90-4b9f-80e2-fa2a5037fe36/l_oneapi_vtune_p_2023.2.0.49485_offline.sh",
         sha256="482a727afe0ac6f81eff51503857c28fcb79ffdba76260399900f3397fd0adbd",
@@ -79,6 +85,10 @@ class IntelOneapiVtune(IntelOneApiLibraryPackageWithSdk):
         sha256="6b1df7da713337aa665bcc6ff23e4a006695b5bfaf71dffd305cbadca2e5560c",
         expand=False,
     )
+
+    @property
+    def v2_layout_versions(self):
+        return "@2024:"
 
     @property
     def component_dir(self):

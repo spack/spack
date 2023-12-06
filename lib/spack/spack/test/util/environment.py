@@ -147,7 +147,8 @@ def test_reverse_environment_modifications(working_env):
 
     reversal = to_reverse.reversed()
 
-    os.environ = start_env.copy()
+    os.environ.clear()
+    os.environ.update(start_env)
 
     print(os.environ)
     to_reverse.apply_modifications()

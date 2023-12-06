@@ -916,7 +916,7 @@ class UnknownVariantError(error.SpecError):
         variant_str = "variant" if len(variants) == 1 else "variants"
         msg = (
             'trying to set {0} "{1}" in package "{2}", but the package'
-            " has no such {0} [happened during concretization of {3}]"
+            " has no such {0} [happened when validating '{3}']"
         )
         msg = msg.format(variant_str, comma_or(variants), spec.name, spec.root)
         super().__init__(msg)

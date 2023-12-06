@@ -36,8 +36,10 @@ class IntelOneapiCompilersClassic(Package):
         "2021.8.0": "2023.0.0",
         "2021.9.0": "2023.1.0",
         "2021.10.0": "2023.2.0",
+        "2021.11.0": "2024.0.0",
     }.items():
-        version(ver)
+        # prefer 2021.10.0 because it is the last one that has a C compiler
+        version(ver, preferred=(ver == "2021.10.0"))
         depends_on("intel-oneapi-compilers@" + oneapi_ver, when="@" + ver, type="run")
 
     # icc@2021.6.0 does not support gcc@12 headers

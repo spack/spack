@@ -13,6 +13,9 @@ class PyLlvmlite(PythonPackage):
     pypi = "llvmlite/llvmlite-0.23.0.tar.gz"
     git = "https://github.com/numba/llvmlite.git"
 
+    version("0.41.1", sha256="f19f767a018e6ec89608e1f6b13348fa2fcde657151137cb64e56d48598a92db")
+    version("0.41.0", sha256="7d41db345d76d2dfa31871178ce0d8e9fd8aa015aa1b7d4dab84b5cb393901e0")
+    version("0.40.1", sha256="5cdb0d45df602099d833d50bd9e81353a5e036242d3c003c5b294fc61d1986b4")
     version("0.40.0", sha256="c910b8fbfd67b8e9d0b10ebc012b23cd67cbecef1b96f00d391ddd298d71671c")
     version("0.39.1", sha256="b43abd7c82e805261c425d50335be9a6c4f84264e34d6d6e475207300005d572")
     version("0.39.0", sha256="01098be54f1aa25e391cebba8ea71cd1533f8cd1f50e34c7dd7540c2560a93af")

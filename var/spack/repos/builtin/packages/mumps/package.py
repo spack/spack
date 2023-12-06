@@ -18,6 +18,9 @@ class Mumps(Package):
 
     maintainers("jcortial-safran")
 
+    version("5.6.2", sha256="13a2c1aff2bd1aa92fe84b7b35d88f43434019963ca09ef7e8c90821a8f1d59a")
+    version("5.6.1", sha256="1920426d543e34d377604070fde93b8d102aa38ebdf53300cbce9e15f92e2896")
+    version("5.6.0", sha256="3e08c1bdea7aaaba303d3cf03059f3b4336fa49bef93f4260f478f067f518289")
     version("5.5.1", sha256="1abff294fa47ee4cfd50dfd5c595942b72ebfcedce08142a75a99ab35014fa15")
     version("5.5.0", sha256="e54d17c5e42a36c40607a03279e0704d239d71d38503aab68ef3bfe0a9a79c13")
     version("5.4.1", sha256="93034a1a9fe0876307136dcde7e98e9086e199de76f1c47da822e7d4de987fa8")

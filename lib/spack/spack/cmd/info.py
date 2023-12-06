@@ -11,13 +11,13 @@ import llnl.util.tty as tty
 import llnl.util.tty.color as color
 from llnl.util.tty.colify import colify
 
-import spack.cmd.common.arguments as arguments
 import spack.deptypes as dt
 import spack.fetch_strategy as fs
 import spack.install_test
 import spack.repo
 import spack.spec
 import spack.version
+from spack.cmd.common import arguments
 from spack.package_base import preferred_version
 
 description = "get detailed information on a particular package"
@@ -327,7 +327,7 @@ def _variants_by_name_when(pkg):
     """Adaptor to get variants keyed by { name: { when: { [Variant...] } }."""
     # TODO: replace with pkg.variants_by_name(when=True) when unified directive dicts are merged.
     variants = {}
-    for name, (variant, whens) in pkg.variants.items():
+    for name, (variant, whens) in sorted(pkg.variants.items()):
         for when in whens:
             variants.setdefault(name, {}).setdefault(when, []).append(variant)
     return variants

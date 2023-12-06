@@ -20,7 +20,12 @@ class Libxsmm(MakefilePackage):
 
     maintainers("hfp")
 
+    # 2.0 release is planned for Jan / Feb 2024. This commit from main is added
+    # as a stable version that supports other targets than x86. Remove this
+    # after 2.0 release.
+    version("main-2023-11", commit="0d9be905527ba575c14ca5d3b4c9673916c868b2")
     version("main", branch="main")
+
     version("1.17", sha256="8b642127880e92e8a75400125307724635ecdf4020ca4481e5efe7640451bb92")
     version("1.16.3", sha256="e491ccadebc5cdcd1fc08b5b4509a0aba4e2c096f53d7880062a66b82a0baf84")
     version("1.16.2", sha256="bdc7554b56b9e0a380fc9c7b4f4394b41be863344858bc633bc9c25835c4c64e")
@@ -82,8 +87,9 @@ class Libxsmm(MakefilePackage):
     # (<https://github.com/spack/spack/pull/21671#issuecomment-779882282>).
     depends_on("binutils+ld+gas@2.33:", type="build", when="@:1.17")
 
-    # Intel Architecture or compatible CPU required
-    requires("target=x86_64:")
+    # Version 2.0 supports both x86_64 and aarch64
+    requires("target=x86_64:", "target=aarch64:")
+    requires("target=x86_64:", when="@:1")
 
     @property
     def libs(self):

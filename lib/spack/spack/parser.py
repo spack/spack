@@ -206,11 +206,15 @@ def tokenize(text: str) -> Iterator[Token]:
     scanner = ALL_TOKENS.scanner(text)  # type: ignore[attr-defined]
     match: Optional[Match] = None
     for match in iter(scanner.match, None):
+        # The following two assertions are to help mypy
+        msg = (
+            "unexpected value encountered during parsing. Please submit a bug report "
+            "at https://github.com/spack/spack/issues/new/choose"
+        )
+        assert match is not None, msg
+        assert match.lastgroup is not None, msg
         yield Token(
-            TokenType.__members__[match.lastgroup],  # type: ignore[attr-defined]
-            match.group(),  # type: ignore[attr-defined]
-            match.start(),  # type: ignore[attr-defined]
-            match.end(),  # type: ignore[attr-defined]
+            TokenType.__members__[match.lastgroup], match.group(), match.start(), match.end()
         )
 
     if match is None and not text:

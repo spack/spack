@@ -21,5 +21,8 @@ class PyGrapheneTornado(PythonPackage):
     depends_on("py-graphene@2.1:2", type=("build", "run"))
     depends_on("py-jinja2@2.10.1:", type=("build", "run"))
     depends_on("py-tornado@5.1.0:", type=("build", "run"))
-    depends_on("py-werkzeug@0.12.2", type=("build", "run"))
+    # py-werkzeug version requirements differ between setup.py (0.12.2)
+    # and requirements.txt (0.15.3); the latter seems to be correct,
+    # see also https://github.com/spack/spack/pull/41426
+    depends_on("py-werkzeug@0.15.3", type=("build", "run"))
     depends_on("py-pytest", type=("build"))

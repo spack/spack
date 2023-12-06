@@ -14,11 +14,11 @@ from llnl.util import filesystem, tty
 from llnl.util.tty import color
 
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.modules
 import spack.modules.common
 import spack.repo
+from spack.cmd.common import arguments
 
 description = "manipulate module files"
 section = "environment"

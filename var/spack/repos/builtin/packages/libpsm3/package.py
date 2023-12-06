@@ -16,10 +16,11 @@ class Libpsm3(AutotoolsPackage):
     git = "https://github.com/intel/eth-psm3-fi.git"
 
     version(
-        "11.4.1.0",
-        sha256="272adb9ec10edf709bfcfccc6b6e9296d25d892c36b845ad577caeb82b70c9ac",
+        "11.5.1.1",
+        sha256="59fe731f4dd2cfcd90c8274df1c6ca9014a45cdebfdf1f1a830fcb8fcb65bb79",
         preferred=True,
     )
+    version("11.4.1.0", sha256="272adb9ec10edf709bfcfccc6b6e9296d25d892c36b845ad577caeb82b70c9ac")
 
     variant("atomics", default=True, description="Enable atomics")
     variant("debug", default=False, description="Enable debugging")
