@@ -21,8 +21,8 @@ class PyCachecontrol(PythonPackage):
     variant("filecache", default=False, description="Add lockfile dependency")
     variant("redis", default=False, description="Add redis dependency")
 
-    depends_on("py-flit-core@3.2:3", when="0.13.1", type="build")
-    depends_on("py-setuptools", when=":0.13.0", type="build")
+    depends_on("py-flit-core@3.2:3", when="@0.13.1", type="build")
+    depends_on("py-setuptools", when="@:0.13.0", type="build")
     depends_on("py-requests@2.16.0:", when="@0.13", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"))
     depends_on("py-msgpack@0.5.2:", type=("build", "run"))
