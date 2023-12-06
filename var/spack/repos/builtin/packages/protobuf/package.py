@@ -166,12 +166,12 @@ class Protobuf(CMakePackage):
 
         if self.spec.satisfies("@3.22:"):
             self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"),
-            args.extend([self.define("protobuf_ABSL_PROVIDER", "package")])
+            args.append(self.define("protobuf_ABSL_PROVIDER", "package"))
         else:
-            args.append([f"-DCMAKE_CXX_FLAGS=-std=c++{cxxstd}"])
+            args.append(f"-DCMAKE_CXX_FLAGS=-std=c++{cxxstd}")
 
         if cxxstd not in (11, 14) and self.compiler.name == "clang":
-            args.extend(["-D_LIBCPP_ENABLE_CXX17_REMOVED_FEATURES=1"])
+            args.append("-D_LIBCPP_ENABLE_CXX17_REMOVED_FEATURES=1")
 
         if self.spec.satisfies("platform=darwin"):
             args.append(self.define("CMAKE_MACOSX_RPATH", True))
