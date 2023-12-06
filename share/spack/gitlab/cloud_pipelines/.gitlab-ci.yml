@@ -885,7 +885,7 @@ deprecated-ci-build:
     - module list
 
 .generate-cray-rhel:
-  tags: [ "cray-rhel", "public", "staging" ]
+  tags: [ "cray-rhel", "cray_x86_64_v3", "public", "staging" ]
   extends: [ ".generate-cray" ]
 
 .generate-cray-sles:

@@ -1,4 +1,4 @@
 ci:
   pipeline-gen:
   - build-job:
-      tags: ["cray-rhel", "x86_64_v3", "staging"]
+      tags: ["cray-rhel", "cray_x86_64_v3", "staging"]
