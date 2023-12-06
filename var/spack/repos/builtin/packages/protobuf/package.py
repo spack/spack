@@ -151,11 +151,11 @@ class Protobuf(CMakePackage):
     def cmake_args(self):
         cxxstd = self.spec.variants["cxxstd"].value
         if cxxstd == "default":
-            with when("@3.22:"):
+            if self.spec.satisfies("@3.22:"):
                 cxxstd = self.spec["abseil-cpp"].variants["cxxstd"].value
-            with when("@3.6:3.21"):
+            elif self.spec.satisfies("@3.6:3.21"):
                 cxxstd = 11
-            with when("@:3.5"):
+            else:
                 cxxstd = 98
 
         args = [
