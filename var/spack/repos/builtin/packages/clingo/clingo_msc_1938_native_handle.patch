@@ -1,16 +1,18 @@
 Submodule clasp contains modified content
 diff --git a/clasp/clasp/mt/mutex.h b/clasp/clasp/mt/mutex.h
-index 2439888..1a998d8 100644
+index 2439888..ade899c 100644
 --- a/clasp/clasp/mt/mutex.h
 +++ b/clasp/clasp/mt/mutex.h
-@@ -39,8 +39,9 @@ struct condition_variable : private std::condition_variable {
+@@ -39,7 +39,11 @@ struct condition_variable : private std::condition_variable {
  	using base_type::notify_one;
  	using base_type::notify_all;
  	using base_type::wait;
-+#if _MSC_VER < 1938
- 	using base_type::native_handle;
--
-+#endif
+-	using base_type::native_handle;
++
++	template <typename X = std::condition_variable>
++	inline auto native_handle() -> typename X::native_handle_type {
++		return X::native_handle();
++	}
+ 
  	inline bool wait_for(unique_lock<mutex>& lock, double timeInSecs) {
  		return base_type::wait_for(lock, std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::duration<double>(timeInSecs)))
- 			== std::cv_status::no_timeout;
