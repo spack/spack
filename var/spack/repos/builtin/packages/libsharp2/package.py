@@ -15,6 +15,7 @@ class Libsharp2(AutotoolsPackage):
     variant("openmp", default=True, description="Build with openmp support")
     variant("mpi", default=True, description="Build with MPI support")
     variant("pic", default=True, description="Generate position-independent code (PIC)")
+    variant("fast_math", default=True, description="Enable recommended fast-math optimisations")
 
     homepage = "https://gitlab.mpcdf.mpg.de/mtr/libsharp"
     git = "https://gitlab.mpcdf.mpg.de/mtr/libsharp.git"
@@ -40,4 +41,9 @@ class Libsharp2(AutotoolsPackage):
             args.append("--disable-mpi")
         if "+pic" in self.spec:
             args.append("--enable-pic")
+        if "+fast_math" in self.spec:
+            # As per author recommendation, fast-math should only be used in the *compile* step,
+            # and *not* during the linking step. The simplest way of doing this is to
+            # (unconventionally) pass this as a pre-processor flag.
+            args.append("CPPFLAGS=-ffast-math")
         return args
