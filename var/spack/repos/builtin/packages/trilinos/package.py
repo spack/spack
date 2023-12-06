@@ -95,7 +95,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         description="global ordinal type for Tpetra",
     )
     variant("openmp", default=False, description="Enable OpenMP")
-    variant("python", default=False, description="Build PyTrilinos wrappers")
+    variant("python", default=False, when="@15:", description="Build PyTrilinos2 wrappers")
+    variant("python", default=False, when="@:14", description="Build PyTrilinos wrappers")
     variant("shared", default=True, description="Enables the build of shared libraries")
     variant("uvm", default=False, when="@13.2: +cuda", description="Turn on UVM for CUDA build")
     variant("wrapper", default=False, description="Use nvcc-wrapper for CUDA build")
@@ -403,6 +404,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         depends_on(kokkos_spec, when="@14.4.0 +kokkos {0}".format(arch_str))
 
     depends_on("adios2", when="+adios2")
+    depends_on("binder@1.3:", when="@15: +python", type="build")
     depends_on("binder@1.3:", when="+pytrilinos2", type="build")
     depends_on("blas")
     depends_on("boost+graph+math+exception+stacktrace", when="+boost")
@@ -423,6 +425,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("matio", when="+exodus")
     depends_on("metis", when="+zoltan")
     depends_on("mpi", when="+mpi")
+    depends_on("mpi", when="@15: +python")
     depends_on("mpi", when="+pytrilinos2")
     depends_on("netcdf-c", when="+exodus")
     depends_on("parallel-netcdf", when="+exodus+mpi")
@@ -432,6 +435,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("py-mpi4py", when="+pytrilinos2", type=("build", "run"))
     depends_on("py-numpy", when="+python", type=("build", "run"))
     depends_on("py-numpy", when="+pytrilinos2", type=("build", "run"))
+    depends_on("py-pybind11", when="@15: +python", type=("build", "link"))
     depends_on("py-pybind11", when="+pytrilinos2", type=("build", "link"))
     depends_on("python", when="+python")
     # note that +python is a variant but pytrilinos2 still requires python itself
@@ -444,7 +448,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("suite-sparse", when="+suite-sparse")
     depends_on("superlu-dist", when="+superlu-dist")
     depends_on("superlu@4.3 +pic", when="+superlu")
-    depends_on("swig", when="+python")
+    depends_on("swig", when="@:14 +python")
     depends_on("zlib-api", when="+zoltan")
 
     # Trilinos' Tribits config system is limited which makes it very tricky to
@@ -753,7 +757,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                 ]
             )
 
-        if "+pytrilinos2" in spec:
+        if "+pytrilinos2" in spec or "@15: +python" in spec:
             binder = spec["binder"].prefix.bin.binder
             clang_include_dirs = spec["binder"].clang_include_dirs
             libclang_include_dir = spec["binder"].libclang_include_dir
