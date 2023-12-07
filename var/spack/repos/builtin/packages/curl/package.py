@@ -305,6 +305,7 @@ class Curl(NMakePackage, AutotoolsPackage):
     depends_on("libssh2", when="+libssh2")
     depends_on("libssh", when="+libssh")
     depends_on("krb5", when="+gssapi")
+    depends_on("rtmpdump", when="+librtmp")
 
     # https://github.com/curl/curl/pull/9054
     patch("easy-lock-sched-header.patch", when="@7.84.0")
@@ -343,6 +344,12 @@ class Curl(NMakePackage, AutotoolsPackage):
     @property
     def command(self):
         return Executable(self.prefix.bin.join("curl-config"))
+
+    def flag_handler(self, name, flags):
+        build_system_flags = []
+        if name == "cflags" and self.spec.compiler.name in ["intel", "oneapi"]:
+            build_system_flags = ["-we147"]
+        return flags, None, build_system_flags
 
 
 class AutotoolsBuilder(AutotoolsBuilder):

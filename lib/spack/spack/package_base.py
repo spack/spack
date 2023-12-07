@@ -991,13 +991,14 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         return None
 
     def _make_resource_stage(self, root_stage, resource):
+        pretty_resource_name = fsys.polite_filename(f"{resource.name}-{self.version}")
         return ResourceStage(
             resource.fetcher,
             root=root_stage,
             resource=resource,
             name=self._resource_stage(resource),
             mirror_paths=spack.mirror.mirror_archive_paths(
-                resource.fetcher, os.path.join(self.name, f"{resource.name}-{self.version}")
+                resource.fetcher, os.path.join(self.name, pretty_resource_name)
             ),
             path=self.path,
         )
@@ -1008,8 +1009,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     def _make_root_stage(self, fetcher):
         # Construct a mirror path (TODO: get this out of package.py)
+        format_string = "{name}-{version}"
+        pretty_name = self.spec.format_path(format_string)
         mirror_paths = spack.mirror.mirror_archive_paths(
-            fetcher, os.path.join(self.name, f"{self.name}-{self.version}"), self.spec
+            fetcher, os.path.join(self.name, pretty_name), self.spec
         )
         # Construct a path where the stage should build..
         s = self.spec
@@ -1154,7 +1157,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """Return the install test root directory."""
         tty.warn(
             "The 'pkg.install_test_root' property is deprecated with removal "
-            "expected v0.21. Use 'install_test_root(pkg)' instead."
+            "expected v0.22. Use 'install_test_root(pkg)' instead."
         )
         return install_test_root(self)
 
@@ -1805,14 +1808,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             verbose (bool): Display verbose build output (by default,
                 suppresses it)
         """
-        # Non-transitive dev specs need to keep the dev stage and be built from
-        # source every time. Transitive ones just need to be built from source.
-        dev_path_var = self.spec.variants.get("dev_path", None)
-        if dev_path_var:
-            kwargs["keep_stage"] = True
-
-        builder = PackageInstaller([(self, kwargs)])
-        builder.install()
+        PackageInstaller([(self, kwargs)]).install()
 
     # TODO (post-34236): Update tests and all packages that use this as a
     # TODO (post-34236): package method to the routine made available to
@@ -1833,7 +1829,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """
         msg = (
             "'pkg.cache_extra_test_sources(srcs) is deprecated with removal "
-            "expected in v0.21. Use 'cache_extra_test_sources(pkg, srcs)' "
+            "expected in v0.22. Use 'cache_extra_test_sources(pkg, srcs)' "
             "instead."
         )
         warnings.warn(msg)

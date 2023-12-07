@@ -309,15 +309,19 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on("gslib@1.0.7:", when="@4.3.0:+gslib")
     depends_on("suite-sparse", when="+suite-sparse")
     depends_on("superlu-dist", when="+superlu-dist")
+    # Propagate 'cuda_arch' to 'superlu-dist' without propagating the '+cuda'
+    # variant so we can build 'mfem+cuda+superlu-dist ^superlu-dist~cuda':
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on(
             "superlu-dist+cuda cuda_arch={0}".format(sm_),
-            when="+superlu-dist+cuda cuda_arch={0}".format(sm_),
+            when="+superlu-dist+cuda cuda_arch={0} ^superlu-dist+cuda".format(sm_),
         )
+    # Propagate 'amdgpu_target' to 'superlu-dist' without propagating the '+rocm'
+    # variant so we can build 'mfem+rocm+superlu-dist ^superlu-dist~rocm':
     for gfx in ROCmPackage.amdgpu_targets:
         depends_on(
             "superlu-dist+rocm amdgpu_target={0}".format(gfx),
-            when="+superlu-dist+rocm amdgpu_target={0}".format(gfx),
+            when="+superlu-dist+rocm amdgpu_target={0} ^superlu-dist+rocm".format(gfx),
         )
     depends_on("strumpack@3.0.0:", when="+strumpack~shared")
     depends_on("strumpack@3.0.0:+shared", when="+strumpack+shared")
@@ -469,6 +473,11 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     patch("mfem-4.0.0-makefile-syntax-fix.patch", when="@4.0.0")
     patch("mfem-4.5.patch", when="@4.5.0")
     patch("mfem-4.6.patch", when="@4.6.0")
+    patch(
+        "https://github.com/mfem/mfem/pull/4005.patch?full_index=1",
+        when="@4.6.0 +gslib+shared+miniapps",
+        sha256="2a31682d876626529e2778a216d403648b83b90997873659a505d982d0e65beb",
+    )
 
     phases = ["configure", "build", "install"]
 
@@ -747,12 +756,14 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                     )
                     gfortran_lib = LibraryList(libfile)
                     sp_lib += [ld_flags_from_library_list(gfortran_lib)]
-                if ("^mpich" in strumpack) or ("^mvapich2" in strumpack):
-                    sp_lib += ["-lmpifort"]
-                elif "^openmpi" in strumpack:
-                    sp_lib += ["-lmpi_mpifh"]
-                elif "^spectrum-mpi" in strumpack:
-                    sp_lib += ["-lmpi_ibm_mpifh"]
+                if "+mpi" in strumpack:
+                    mpi = strumpack["mpi"]
+                    if ("^mpich" in strumpack) or ("^mvapich2" in strumpack):
+                        sp_lib += [ld_flags_from_dirs([mpi.prefix.lib], ["mpifort"])]
+                    elif "^openmpi" in strumpack:
+                        sp_lib += [ld_flags_from_dirs([mpi.prefix.lib], ["mpi_mpifh"])]
+                    elif "^spectrum-mpi" in strumpack:
+                        sp_lib += [ld_flags_from_dirs([mpi.prefix.lib], ["mpi_ibm_mpifh"])]
             if "+openmp" in strumpack:
                 # The '+openmp' in the spec means strumpack will TRY to find
                 # OpenMP; if not found, we should not add any flags -- how do
@@ -919,10 +930,27 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                 "CUDA_CXX=%s" % join_path(spec["cuda"].prefix, "bin", "nvcc"),
                 "CUDA_ARCH=sm_%s" % cuda_arch,
             ]
+            # Check if we are using a CUDA installation where the math libs are
+            # in a separate directory:
+            culibs = ["libcusparse"]
+            cuda_libs = find_optional_library(culibs, spec["cuda"].prefix)
+            if not cuda_libs:
+                p0 = os.path.realpath(join_path(spec["cuda"].prefix, "bin", "nvcc"))
+                p0 = os.path.dirname(p0)
+                p1 = os.path.dirname(p0)
+                while p1 != p0:
+                    cuda_libs = find_optional_library(culibs, join_path(p1, "math_libs"))
+                    if cuda_libs:
+                        break
+                    p0, p1 = p1, os.path.dirname(p1)
+                if not cuda_libs:
+                    raise InstallError("Required CUDA libraries not found: %s" % culibs)
+                options += ["CUDA_LIB=%s" % ld_flags_from_library_list(cuda_libs)]
 
         if "+rocm" in spec:
             amdgpu_target = ",".join(spec.variants["amdgpu_target"].value)
             options += ["HIP_CXX=%s" % spec["hip"].hipcc, "HIP_ARCH=%s" % amdgpu_target]
+            hip_headers = HeaderList([])
             hip_libs = LibraryList([])
             # To use a C++ compiler that supports -xhip flag one can use
             # something like this:
@@ -933,7 +961,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             #   hip_libs += find_libraries("libamdhip64", spec["hip"].prefix.lib)
             if "^hipsparse" in spec:  # hipsparse is needed @4.4.0:+rocm
                 hipsparse = spec["hipsparse"]
-                options += ["HIP_OPT=%s" % hipsparse.headers.cpp_flags]
+                hip_headers += hipsparse.headers
                 hip_libs += hipsparse.libs
                 # Note: MFEM's defaults.mk wants to find librocsparse.* in
                 # $(HIP_DIR)/lib, so we set HIP_DIR to be $ROCM_PATH when using
@@ -943,11 +971,19 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                     options += ["HIP_DIR=%s" % env["ROCM_PATH"]]
                 else:
                     options += ["HIP_DIR=%s" % hipsparse["rocsparse"].prefix]
+            if "^rocthrust" in spec and not spec["hip"].external:
+                # petsc+rocm needs the rocthrust header path
+                hip_headers += spec["rocthrust"].headers
+            if "^hipblas" in spec and not spec["hip"].external:
+                # superlu-dist+rocm needs the hipblas header path
+                hip_headers += spec["hipblas"].headers
             if "%cce" in spec:
                 # We assume the proper Cray CCE module (cce) is loaded:
                 craylibs_path = env["CRAYLIBS_" + machine().upper()]
                 craylibs = ["libmodules", "libfi", "libcraymath", "libf", "libu", "libcsup"]
                 hip_libs += find_libraries(craylibs, craylibs_path)
+            if hip_headers:
+                options += ["HIP_OPT=%s" % hip_headers.cpp_flags]
             if hip_libs:
                 options += ["HIP_LIB=%s" % ld_flags_from_library_list(hip_libs)]
 
@@ -1198,6 +1234,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                 sun_comps += ",nvecparhyp,nvecparallel"
         if "+cuda" in spec and "+cuda" in spec["sundials"]:
             sun_comps += ",nveccuda"
+        if "+rocm" in spec and "+rocm" in spec["sundials"]:
+            sun_comps += ",nvechip"
         return sun_comps
 
     @property

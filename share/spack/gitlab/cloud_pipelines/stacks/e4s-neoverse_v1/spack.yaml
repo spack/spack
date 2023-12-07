@@ -54,21 +54,6 @@ spack:
     cuda:
       version: [11.8.0]
 
-  compilers:
-  - compiler:
-      spec: gcc@11.4.0
-      paths:
-        cc: /usr/bin/gcc
-        cxx: /usr/bin/g++
-        f77: /usr/bin/gfortran
-        fc: /usr/bin/gfortran
-      flags: {}
-      operating_system: ubuntu20.04
-      target: aarch64
-      modules: []
-      environment: {}
-      extra_rpaths: []
-
   specs:
   # CPU
   - adios
@@ -101,6 +86,7 @@ spack:
   - gmp
   - gotcha
   - gptune ~mpispawn
+  - gromacs +cp2k ^cp2k build_system=cmake
   - h5bench
   - hdf5-vol-async
   - hdf5-vol-cache
@@ -164,7 +150,7 @@ spack:
   - swig@4.0.2-fortran
   - sz3
   - tasmanian
-  - tau +mpi +python
+  - tau +mpi +python +syscall
   - trilinos +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
   - turbine
   - umap
@@ -200,7 +186,7 @@ spack:
   - flux-core +cuda
   - hpctoolkit +cuda
   - papi +cuda
-  - tau +mpi +cuda
+  - tau +mpi +cuda +syscall
   # --
   # - bricks +cuda                  # not respecting target=aarch64?
   # - legion +cuda                  # legion: needs NVIDIA driver
@@ -339,8 +325,6 @@ spack:
   # - slepc +cuda cuda_arch=90      # slepc: make[1]: *** internal error: invalid --jobserver-auth string 'fifo:/tmp/GMfifo1313'.
   # - tasmanian +cuda cuda_arch=90  # tasmanian: conflicts with cuda@12
   # - upcxx +cuda cuda_arch=90      # upcxx: needs NVIDIA driver
-
-  mirrors: { "mirror": "s3://spack-binaries/develop/e4s-arm-neoverse_v1" }
 
   ci:
     pipeline-gen:

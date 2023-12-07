@@ -24,6 +24,8 @@ class Dd4hep(CMakePackage):
     tags = ["hep"]
 
     version("master", branch="master")
+    version("1.27.1", sha256="e66ae726c0a9a55e5603024a7f8a48ffbc5613ea36e5f892e9a90d87833f92e0")
+    version("1.27", sha256="51fbd0f91f2511261d9b01e4b3528c658bea1ea1b5d67b25b6812615e782a902")
     version("1.26", sha256="de2cc8d8e99217e23fdf0a55b879d3fd3a864690d6660e7808f1ff99eb47f384")
     version("1.25.1", sha256="6267e76c74fbb346aa881bc44de84434ebe788573f2997a189996252fc5b271b")
     version("1.25", sha256="102a049166a95c2f24fc1c03395a819fc4501c175bf7915d69ccc660468d094d")
@@ -188,6 +190,12 @@ class Dd4hep(CMakePackage):
     )
     conflicts("~ddrec+dddetectors", msg="Need to enable +ddrec to build +dddetectors.")
 
+    # Geant4 needs to be (at least) the same version as DD4hep, but we don't
+    # have a very good handle on that at this stage, because we make that
+    # dependent on roots cxxstd. However, cxxstd=11 will never work
+    # See https://github.com/AIDASoft/DD4hep/pull/1191
+    conflicts("^geant4 cxxstd=11", when="+ddg4")
+
     @property
     def libs(self):
         # We need to override libs here, because we don't build a libdd4hep so
@@ -253,7 +261,8 @@ class Dd4hep(CMakePackage):
         env.set("DD4HEP", self.prefix.examples)
         env.set("DD4hep_DIR", self.prefix)
         env.set("DD4hep_ROOT", self.prefix)
-        env.prepend_path("LD_LIBRARY_PATH", self.libs.directories[0])
+        if len(self.libs.directories) > 0:
+            env.prepend_path("LD_LIBRARY_PATH", self.libs.directories[0])
 
     def url_for_version(self, version):
         # dd4hep releases are dashes and padded with a leading zero

@@ -50,6 +50,7 @@ class Clingo(CMakePackage):
         depends_on("re2c@0.13:", type="build")
         depends_on("bison@2.5:", type="build", when="platform=linux")
         depends_on("bison@2.5:", type="build", when="platform=darwin")
+        depends_on("bison@2.5:", type="build", when="platform=freebsd")
         depends_on("bison@2.5:", type="build", when="platform=cray")
 
     with when("platform=windows"):
@@ -61,8 +62,9 @@ class Clingo(CMakePackage):
         depends_on("python", type=("build", "link", "run"))
         # Clingo 5.5.0 supports Python 3.6 or later and needs CFFI
         depends_on("python@3.6.0:", type=("build", "link", "run"), when="@5.5.0:")
-        depends_on("py-cffi", type=("build", "run"), when="@5.5.0: platform=darwin")
         depends_on("py-cffi", type=("build", "run"), when="@5.5.0: platform=linux")
+        depends_on("py-cffi", type=("build", "run"), when="@5.5.0: platform=darwin")
+        depends_on("py-cffi", type=("build", "run"), when="@5.5.0: platform=freebsd")
         depends_on("py-cffi", type=("build", "run"), when="@5.5.0: platform=cray")
 
     patch("python38.patch", when="@5.3:5.4.0")
@@ -72,7 +74,7 @@ class Clingo(CMakePackage):
     # TODO: Simplify this after Spack 0.21 release. The old concretizer has problems with
     # py-setuptools ^python@3.6, so we only apply the distutils -> setuptools patch for Python 3.12
     with when("@:5.6.1 ^python@3.12:"):
-        patch("setuptools.patch")
+        patch("setuptools-2.patch")
         depends_on("py-setuptools", type="build")
 
     def patch(self):

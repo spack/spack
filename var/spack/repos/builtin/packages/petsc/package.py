@@ -22,6 +22,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
     version("main", branch="main")
 
+    version("3.20.2", sha256="2a2d08b5f0e3d0198dae2c42ce1fd036f25c153ef2bb4a2d320ca141ac7cd30b")
+    version("3.20.1", sha256="3d54f13000c9c8ceb13ca4f24f93d838319019d29e6de5244551a3ec22704f32")
     version("3.20.0", sha256="c152ccb12cb2353369d27a65470d4044a0c67e0b69814368249976f5bb232bd4")
     version("3.19.6", sha256="6045e379464e91bb2ef776f22a08a1bc1ff5796ffd6825f15270159cbb2464ae")
     version("3.19.5", sha256="511aa78cad36db2dfd298acf35e9f7afd2ecc1f089da5b0b5682507a31a5d6b2")
@@ -87,6 +89,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     variant("double", default=True, description="Switches between single and double precision")
     variant("complex", default=False, description="Build with complex numbers")
     variant("debug", default=False, description="Compile in debug mode")
+    variant("sycl", default=False, description="Enable sycl build")
 
     variant("metis", default=True, description="Activates support for metis and parmetis")
     variant(
@@ -207,6 +210,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     patch("revert-3.18.0-ver-format-for-dealii.patch", when="@3.18.0")
 
     depends_on("diffutils", type="build")
+    # not listed as a "build" dependency - so that slepc build gets the same dependency
+    depends_on("gmake")
 
     # Virtual dependencies
     # Git repository needs sowing to build Fortran interface
@@ -338,6 +343,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             when="+kokkos +rocm amdgpu_target=%s" % rocm_arch,
         )
 
+    conflicts("~kokkos", when="+sycl", msg="+sycl requires +kokkos")
+    depends_on("kokkos+sycl", when="+sycl +kokkos")
+
     phases = ["configure", "build", "install"]
 
     # Using the following tarballs
@@ -433,6 +441,16 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             options.append("--with-x=1")
         else:
             options.append("--with-x=0")
+
+        if "+sycl" in spec:
+            sycl_compatible_compilers = ["icpx"]
+            if not (os.path.basename(self.compiler.cxx) in sycl_compatible_compilers):
+                raise InstallError("PETSc's SYCL GPU Backend requires oneAPI CXX (icpx) compiler.")
+            options.append("--with-sycl=1")
+            options.append("--with-syclc=" + self.compiler.cxx)
+            options.append("SYCLPPFLAGS=-Wno-tautological-constant-compare")
+        else:
+            options.append("--with-sycl=0")
 
         if "trilinos" in spec:
             if spec.satisfies("^trilinos+boost"):

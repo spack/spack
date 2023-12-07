@@ -237,6 +237,7 @@ class Python(Package):
     variant("crypt", default=True, description="Build crypt module", when="@:3.12 platform=cray")
 
     if sys.platform != "win32":
+        depends_on("gmake", type="build")
         depends_on("pkgconfig@0.9.0:", type="build")
         depends_on("gettext +libxml2", when="+libxml2")
         depends_on("gettext ~libxml2", when="~libxml2")
@@ -326,7 +327,7 @@ class Python(Package):
     # An in-source build with --enable-optimizations fails for python@3.X
     build_directory = "spack-build"
 
-    executables = [r"^python[\d.]*[mw]?$"]
+    executables = [r"^python\d?$"]
 
     @classmethod
     def determine_version(cls, exe):
@@ -1244,12 +1245,11 @@ print(json.dumps(config))
         """Set PYTHONPATH to include the site-packages directory for the
         extension and any other python extensions it depends on.
         """
-        for d in dependent_spec.traverse(deptype=("run"), root=True):
-            if d.package.extends(self.spec):
-                # Packages may be installed in platform-specific or platform-independent
-                # site-packages directories
-                for directory in {self.platlib, self.purelib}:
-                    env.prepend_path("PYTHONPATH", os.path.join(d.prefix, directory))
+        if dependent_spec.package.extends(self.spec):
+            # Packages may be installed in platform-specific or platform-independent
+            # site-packages directories
+            for directory in {self.platlib, self.purelib}:
+                env.prepend_path("PYTHONPATH", os.path.join(dependent_spec.prefix, directory))
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before python modules' install() methods."""

@@ -137,6 +137,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant("nox", default=False, description="Compile with NOX")
     variant("panzer", default=False, description="Compile with Panzer")
     variant("piro", default=False, description="Compile with Piro")
+    variant("pytrilinos2", default=False, when="@develop", description="Compile with PyTrilinos2")
+    extends("python", when="+pytrilinos2")
     variant("phalanx", default=False, description="Compile with Phalanx")
     variant("rol", default=False, description="Compile with ROL")
     variant("rythmos", default=False, description="Compile with Rythmos")
@@ -289,6 +291,9 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         conflicts("~ifpack")
         conflicts("~aztec")
 
+    # Don't disable python when building pytrilinos2
+    conflicts("~python", when="+pytrilinos2")
+
     # Known requirements from tribits dependencies
     conflicts("~thyra", when="+stratimikos")
     conflicts("+adelus", when="~kokkos")
@@ -344,13 +349,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("gotype=all", when="@12.15:")
 
     # CUDA without wrapper requires clang
-    for _compiler in spack.compilers.supported_compilers():
-        if _compiler != "clang":
-            conflicts(
-                "+cuda",
-                when="~wrapper %" + _compiler,
-                msg="trilinos~wrapper+cuda can only be built with the " "Clang compiler",
-            )
+    requires(
+        "%clang",
+        when="+cuda~wrapper",
+        msg="trilinos~wrapper+cuda can only be built with the Clang compiler",
+    )
     conflicts("+cuda_rdc", when="~cuda")
     conflicts("+rocm_rdc", when="~rocm")
     conflicts("+wrapper", when="~cuda")
@@ -360,6 +363,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("@:13.0.1 +cuda", when="^cuda@11:")
     # Build hangs with CUDA 11.6 (see #28439)
     conflicts("+cuda +stokhos", when="^cuda@11.6:")
+    # superlu-dist defines a macro EMPTY which conflicts with a header in cuda
+    # used when building stokhos
+    # Fix: https://github.com/xiaoyeli/superlu_dist/commit/09cb1430f7be288fd4d75b8ed461aa0b7e68fefe
+    # is not tagged yet. See discussion here https://github.com/trilinos/Trilinos/issues/11839
+    conflicts("+cuda +stokhos +superlu-dist")
     # Cuda UVM must be enabled prior to 13.2
     # See https://github.com/spack/spack/issues/28869
     conflicts("~uvm", when="@:13.1 +cuda")
@@ -398,6 +406,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         depends_on(kokkos_spec, when="@14.4.0 +kokkos {0}".format(arch_str))
 
     depends_on("adios2", when="+adios2")
+    depends_on("binder@1.3:", when="+pytrilinos2", type="build")
     depends_on("blas")
     depends_on("boost+graph+math+exception+stacktrace", when="+boost")
     # Need to revisit the requirement of STK
@@ -417,12 +426,16 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("matio", when="+exodus")
     depends_on("metis", when="+zoltan")
     depends_on("mpi", when="+mpi")
+    depends_on("mpi", when="+pytrilinos2")
     depends_on("netcdf-c", when="+exodus")
     depends_on("parallel-netcdf", when="+exodus+mpi")
     depends_on("parmetis", when="+mpi +zoltan")
     depends_on("parmetis", when="+scorec")
     depends_on("py-mpi4py", when="+mpi+python", type=("build", "run"))
+    depends_on("py-mpi4py", when="+pytrilinos2", type=("build", "run"))
     depends_on("py-numpy", when="+python", type=("build", "run"))
+    depends_on("py-numpy", when="+pytrilinos2", type=("build", "run"))
+    depends_on("py-pybind11", when="+pytrilinos2", type=("build", "link"))
     depends_on("python", when="+python")
     depends_on("python", when="@13.2: +ifpack +hypre", type="build")
     depends_on("python", when="@13.2: +ifpack2 +hypre", type="build")
@@ -668,6 +681,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                 define_trilinos_enable("Piro"),
                 define_trilinos_enable("Phalanx"),
                 define_trilinos_enable("PyTrilinos", "python"),
+                define_trilinos_enable("PyTrilinos2"),
                 define_trilinos_enable("ROL"),
                 define_trilinos_enable("Rythmos"),
                 define_trilinos_enable("Sacado"),
@@ -739,6 +753,15 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                     define_trilinos_enable("SEACASNemslice", False),
                 ]
             )
+
+        if "+pytrilinos2" in spec:
+            binder = spec["binder"].prefix.bin.binder
+            clang_include_dirs = spec["binder"].clang_include_dirs
+            libclang_include_dir = spec["binder"].libclang_include_dir
+            options.append(define("PyTrilinos2_BINDER_EXECUTABLE", binder))
+            options.append(define("PyTrilinos2_BINDER_clang_include_dirs", clang_include_dirs))
+            options.append(define("PyTrilinos2_BINDER_LibClang_include_dir", libclang_include_dir))
+            options.append(define_from_variant("PyTrilinos2_ENABLE_TESTS", "test"))
 
         if "+stratimikos" in spec:
             # Explicitly enable Thyra (ThyraCore is required). If you don't do

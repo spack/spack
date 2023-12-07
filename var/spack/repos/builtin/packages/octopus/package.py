@@ -93,13 +93,14 @@ class Octopus(AutotoolsPackage, CudaPackage):
     depends_on("libxc@2:4", when="@8:9")
     depends_on("libxc@5.1.0:", when="@10:")
     depends_on("libxc@5.1.0:", when="@develop")
+    depends_on("netcdf-fortran", when="+netcdf")  # NetCDF fortran lib without mpi variant
     with when("+mpi"):  # list all the parallel dependencies
         depends_on("fftw@3:+mpi+openmp", when="@8:9")  # FFT library
         depends_on("fftw-api@3:+mpi+openmp", when="@10:")
         depends_on("libvdwxc+mpi", when="+libvdwxc")
         depends_on("arpack-ng+mpi", when="+arpack")
         depends_on("elpa+mpi", when="+elpa")
-        depends_on("netcdf-fortran ^netcdf-c+mpi", when="+netcdf")
+        depends_on("netcdf-c+mpi", when="+netcdf")  # Link dependency of NetCDF fortran lib
         depends_on("berkeleygw@2.1+mpi", when="+berkeleygw")
 
     with when("~mpi"):  # list all the serial dependencies
@@ -108,7 +109,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
         depends_on("libvdwxc~mpi", when="+libvdwxc")
         depends_on("arpack-ng~mpi", when="+arpack")
         depends_on("elpa~mpi", when="+elpa")
-        depends_on("netcdf-fortran ^netcdf-c~~mpi", when="+netcdf")
+        depends_on("netcdf-c~~mpi", when="+netcdf")  # Link dependency of NetCDF fortran lib
         depends_on("berkeleygw@2.1~mpi", when="+berkeleygw")
 
     depends_on("etsf-io", when="+etsf-io")
@@ -158,7 +159,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
 
         if "^fftw" in spec:
             args.append("--with-fftw-prefix=%s" % spec["fftw"].prefix)
-        elif "^mkl" in spec:
+        elif spec["fftw-api"].name in INTEL_MATH_LIBRARIES:
             # As of version 10.0, Octopus depends on fftw-api instead
             # of FFTW. If FFTW is not in the dependency tree, then
             # it ought to be MKL as it is currently the only providers

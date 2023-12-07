@@ -14,7 +14,6 @@ from llnl.util import lang, tty
 
 import spack.build_environment
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.environment as ev
 import spack.fetch_strategy
@@ -23,6 +22,7 @@ import spack.paths
 import spack.report
 import spack.spec
 import spack.store
+from spack.cmd.common import arguments
 from spack.error import SpackError
 from spack.installer import PackageInstaller
 
@@ -240,8 +240,7 @@ def default_log_file(spec):
     """Computes the default filename for the log file and creates
     the corresponding directory if not present
     """
-    fmt = "test-{x.name}-{x.version}-{hash}.xml"
-    basename = fmt.format(x=spec, hash=spec.dag_hash())
+    basename = spec.format_path("test-{name}-{version}-{hash}.xml")
     dirname = fs.os.path.join(spack.paths.reports_path, "junit")
     fs.mkdirp(dirname)
     return fs.os.path.join(dirname, basename)

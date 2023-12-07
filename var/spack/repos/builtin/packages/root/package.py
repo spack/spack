@@ -34,10 +34,14 @@ class Root(CMakePackage):
     # Development version (when more recent than production).
 
     # Production version
+    version("6.30.02", sha256="7965a456d1ad1ee0d5fe4769bf5a8fec291af684ed93db0f3080a9c362435183")
+    version("6.30.00", sha256="0592c066954cfed42312957c9cb251654456064fe2d8dabdcb8826f1c0099d71")
+    version("6.28.10", sha256="69d6fdeb607e6b20bd02c757fa6217024c0b6132c1e9b1dff4d85d9a2bb7e51e")
     version("6.28.06", sha256="af3b673b9aca393a5c9ae1bf86eab2672aaf1841b658c5c6e7a30ab93c586533")
     version("6.28.04", sha256="70f7f86a0cd5e3f2a0befdc59942dd50140d990ab264e8e56c7f17f6bfe9c965")
     version("6.28.02", sha256="6643c07710e68972b00227c68b20b1016fec16f3fba5f44a571fa1ce5bb42faa")
     version("6.28.00", sha256="afa1c5c06d0915411cb9492e474ea9ab12b09961a358e7e559013ed63b5d8084")
+    version("6.26.14", sha256="81045a35a1958906c3eadecd9b01127a6087dadc19385af8e92ae5c84f06ce35")
     version("6.26.10", sha256="8e56bec397104017aa54f9eb554de7a1a134474fe0b3bb0f43a70fc4fabd625f")
     version("6.26.08", sha256="4dda043e7918b40743ad0299ddd8d526b7078f0a3822fd06066df948af47940e")
     version("6.26.06", sha256="b1f73c976a580a5c56c8c8a0152582a1dfc560b4dd80e1b7545237b65e6c89cb")
@@ -105,6 +109,8 @@ class Root(CMakePackage):
         when="@6.26:6.26.06 +root7 ^nlohmann-json@3.11:",
     )
 
+    patch("webgui.patch", level=0, when="@6.26.00:6.26.10,6.28.00:6.28.08,6.30.00 +webgui")
+
     if sys.platform == "darwin":
         # Resolve non-standard use of uint, _cf_
         # https://sft.its.cern.ch/jira/browse/ROOT-7886.
@@ -160,9 +166,11 @@ class Root(CMakePackage):
     )
     variant("mysql", default=False, description="Enable support for MySQL databases")
     variant("opengl", default=True, description="Enable OpenGL support")
-    variant("oracle", default=False, description="Enable support for Oracle databases")
+    variant(
+        "oracle", when="@:6.30", default=False, description="Enable support for Oracle databases"
+    )
     variant("postgres", default=False, description="Enable postgres support")
-    variant("pythia6", default=False, description="Enable pythia6 support")
+    variant("pythia6", when="@:6.30", default=False, description="Enable pythia6 support")
     variant("pythia8", default=False, description="Enable pythia8 support")
     variant("python", default=True, description="Enable Python ROOT bindings")
     variant("qt4", when="@:6.17", default=False, description="Enable Qt graphics backend")
@@ -290,6 +298,7 @@ class Root(CMakePackage):
     depends_on("unuran", when="+unuran")
     depends_on("vc@1.0:", when="@6.07.04: +vc")
     depends_on("vc@1.3.0:", when="@6.09.02: +vc")
+    depends_on("vc@1.4.4:", when="@6.29.02: +vc")
     depends_on("vdt", when="+vdt")
     depends_on("veccore", when="+veccore")
     depends_on("libxml2", when="+xml")
@@ -320,6 +329,7 @@ class Root(CMakePackage):
     conflicts("+tmva", when="~mlp", msg="root+tmva requires MLP")
     conflicts("cxxstd=11", when="+root7", msg="root7 requires at least C++14")
     conflicts("cxxstd=11", when="@6.25.02:", msg="This version of root requires at least C++14")
+    conflicts("cxxstd=14", when="@6.30.00:", msg="This version of root requires at least C++17")
     conflicts(
         "cxxstd=20", when="@:6.28.02", msg="C++20 support requires root version at least 6.28.04"
     )
