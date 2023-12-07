@@ -173,7 +173,7 @@ class Neuron(CMakePackage):
     depends_on("py-pytest", when="+python+tests")
     # Numpy is required for Vector.as_numpy()
     depends_on("py-numpy", when="+python", type=("build", "run"))
-    depends_on("py-cython", when="+rx3d", type="build")
+    depends_on("py-cython@0", when="+rx3d", type="build")
     depends_on("py-pytest-cov", when="+tests@8:")
     # TODO: newer spack doesn't propogate python package as dependency
     # (as PYTHONPATH) during build time
@@ -444,39 +444,33 @@ class Neuron(CMakePackage):
             cc_compiler = self.spec["mpi"].mpicc
             cxx_compiler = self.spec["mpi"].mpicxx
 
-        nrnmech_makefile = join_path(self.prefix, "bin/nrnmech_makefile")
+        files = [join_path(self.prefix, "bin/nrnmech_makefile")]
+        if self.spec.satisfies("@8.99:+coreneuron"):
+            files.append(join_path(self.prefix, "share/coreneuron/nrnivmodl_core_makefile"))
 
         kwargs = {"backup": False, "string": True}
 
-        # The assign_operator should follow any changes done in
-        # "bin/nrnivmodl_makefile_cmake.in" and "bin/nrnmech_makefile.in"
-        # when assigning CC and CXX variables
-        if self.spec.satisfies("@:7.99"):
-            assign_operator = "?="
-        else:
-            assign_operator = "="
+        for filename in files:
+            # The assign_operator should follow any changes done in
+            # "bin/nrnivmodl_makefile_cmake.in" and "bin/nrnmech_makefile.in"
+            # when assigning CC and CXX variables
+            if self.spec.satisfies("@:7.99"):
+                assign_operator = "?="
+            else:
+                assign_operator = "="
 
-        filter_file(
-            "CC {0} {1}".format(assign_operator, env["CC"]),
-            "CC = {0}".format(cc_compiler),
-            nrnmech_makefile,
-            **kwargs,
-        )
-        filter_file(
-            "CXX {0} {1}".format(assign_operator, env["CXX"]),
-            "CXX = {0}".format(cxx_compiler),
-            nrnmech_makefile,
-            **kwargs,
-        )
-
-        # for coreneuron
-        if self.spec.satisfies("@8.99:+coreneuron"):
-            nrnmakefile = join_path(self.prefix, "share/coreneuron/nrnivmodl_core_makefile")
-
-            kwargs = {"backup": False, "string": True}
-
-            filter_file(env["CC"], self.compiler.cc, nrnmakefile, **kwargs)
-            filter_file(env["CXX"], self.compiler.cxx, nrnmakefile, **kwargs)
+            filter_file(
+                "CC {0} .*".format(assign_operator),
+                "CC = {0}".format(cc_compiler),
+                filename,
+                **kwargs,
+            )
+            filter_file(
+                "CXX {0} .*".format(assign_operator),
+                "CXX = {0}".format(cxx_compiler),
+                filename,
+                **kwargs,
+            )
 
     def setup_run_environment(self, env):
         env.prepend_path("PATH", join_path(self.prefix, "bin"))
