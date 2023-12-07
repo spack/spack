@@ -165,6 +165,7 @@ class RocmTensile(CMakePackage):
         depends_on("rocm-cmake@" + ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("comgr@" + ver, when="@" + ver)
+        depends_on("llvm-amdgpu@" + ver, when="@" + ver)
         depends_on("rocminfo@" + ver, type="build", when="@" + ver)
     for ver in [
         "5.1.0",
@@ -211,6 +212,7 @@ class RocmTensile(CMakePackage):
         "5.6.1",
     ]:
         depends_on("rocm-smi-lib@" + ver, type="build", when="@" + ver)
+        depends_on("rocm-openmp-extras@" + ver, when="@" + ver + "+openmp")
 
     root_cmakelists_dir = "Tensile/Source"
     # Status: https://github.com/ROCmSoftwarePlatform/Tensile/commit/a488f7dadba34f84b9658ba92ce9ec5a0615a087
