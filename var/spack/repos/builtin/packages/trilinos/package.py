@@ -137,6 +137,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant("nox", default=False, description="Compile with NOX")
     variant("panzer", default=False, description="Compile with Panzer")
     variant("piro", default=False, description="Compile with Piro")
+    variant("pytrilinos2", default=False, when="@develop", description="Compile with PyTrilinos2")
+    extends("python", when="+pytrilinos2")
     variant("phalanx", default=False, description="Compile with Phalanx")
     variant("rol", default=False, description="Compile with ROL")
     variant("rythmos", default=False, description="Compile with Rythmos")
@@ -289,6 +291,9 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         conflicts("~ifpack")
         conflicts("~aztec")
 
+    # Don't disable python when building pytrilinos2
+    conflicts("~python", when="+pytrilinos2")
+
     # Known requirements from tribits dependencies
     conflicts("~thyra", when="+stratimikos")
     conflicts("+adelus", when="~kokkos")
@@ -401,6 +406,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         depends_on(kokkos_spec, when="@14.4.0 +kokkos {0}".format(arch_str))
 
     depends_on("adios2", when="+adios2")
+    depends_on("binder@1.3:", when="+pytrilinos2", type="build")
     depends_on("blas")
     depends_on("boost+graph+math+exception+stacktrace", when="+boost")
     # Need to revisit the requirement of STK
@@ -420,12 +426,16 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("matio", when="+exodus")
     depends_on("metis", when="+zoltan")
     depends_on("mpi", when="+mpi")
+    depends_on("mpi", when="+pytrilinos2")
     depends_on("netcdf-c", when="+exodus")
     depends_on("parallel-netcdf", when="+exodus+mpi")
     depends_on("parmetis", when="+mpi +zoltan")
     depends_on("parmetis", when="+scorec")
     depends_on("py-mpi4py", when="+mpi+python", type=("build", "run"))
+    depends_on("py-mpi4py", when="+pytrilinos2", type=("build", "run"))
     depends_on("py-numpy", when="+python", type=("build", "run"))
+    depends_on("py-numpy", when="+pytrilinos2", type=("build", "run"))
+    depends_on("py-pybind11", when="+pytrilinos2", type=("build", "link"))
     depends_on("python", when="+python")
     depends_on("python", when="@13.2: +ifpack +hypre", type="build")
     depends_on("python", when="@13.2: +ifpack2 +hypre", type="build")
@@ -671,6 +681,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                 define_trilinos_enable("Piro"),
                 define_trilinos_enable("Phalanx"),
                 define_trilinos_enable("PyTrilinos", "python"),
+                define_trilinos_enable("PyTrilinos2"),
                 define_trilinos_enable("ROL"),
                 define_trilinos_enable("Rythmos"),
                 define_trilinos_enable("Sacado"),
@@ -742,6 +753,15 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                     define_trilinos_enable("SEACASNemslice", False),
                 ]
             )
+
+        if "+pytrilinos2" in spec:
+            binder = spec["binder"].prefix.bin.binder
+            clang_include_dirs = spec["binder"].clang_include_dirs
+            libclang_include_dir = spec["binder"].libclang_include_dir
+            options.append(define("PyTrilinos2_BINDER_EXECUTABLE", binder))
+            options.append(define("PyTrilinos2_BINDER_clang_include_dirs", clang_include_dirs))
+            options.append(define("PyTrilinos2_BINDER_LibClang_include_dir", libclang_include_dir))
+            options.append(define_from_variant("PyTrilinos2_ENABLE_TESTS", "test"))
 
         if "+stratimikos" in spec:
             # Explicitly enable Thyra (ThyraCore is required). If you don't do

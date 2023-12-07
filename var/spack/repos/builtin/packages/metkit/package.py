@@ -13,7 +13,7 @@ class Metkit(CMakePackage):
     homepage = "https://github.com/ecmwf/metkit"
     url = "https://github.com/ecmwf/metkit/archive/refs/tags/1.7.0.tar.gz"
 
-    maintainers("skosukhin")
+    maintainers("skosukhin", "victoria-cherkas", "dominichofer")
 
     version("1.10.17", sha256="1c525891d77ed28cd4c87b065ba4d1aea24d0905452c18d885ccbd567bbfc9b1")
     version("1.10.2", sha256="a038050962aecffda27b755c40b0a6ed0db04a2c22cad3d8c93e6109c8ab4b34")
