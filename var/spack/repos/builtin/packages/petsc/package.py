@@ -101,6 +101,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     variant("mmg", default=False, description="Activates support for MMG")
     variant("parmmg", default=False, description="Activates support for ParMMG (only parallel)")
     variant("tetgen", default=False, description="Activates support for Tetgen")
+    variant("zoltan", default=False, description="Activates support for Zoltan")
     # Mumps is disabled by default, because it depends on Scalapack
     # which is not portable to all HPC systems
     variant("mumps", default=False, description="Activates support for MUMPS (only parallel)")
@@ -267,6 +268,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on("mmg", when="+parmmg")
     depends_on("parmmg", when="+parmmg")
     depends_on("tetgen+pic", when="+tetgen")
+    depends_on("zoltan", when="+zoltan")
 
     depends_on("hypre+fortran", when="+hypre+fortran")
     depends_on("hypre~fortran", when="+hypre~fortran")
@@ -519,6 +521,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             "mmg",
             "parmmg",
             ("tetgen", "tetgen", False, False),
+            "zoltan",
         ):
             # Cannot check `library in spec` because of transitive deps
             # Cannot check variants because parmetis keys on +metis
