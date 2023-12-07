@@ -93,6 +93,7 @@ class CDash(Reporter):
         self.osrelease = platform.release()
         self.target = spack.platforms.host().target("default_target")
         self.starttime = int(time.time())
+        self.endtime = self.starttime
         self.buildstamp = (
             configuration.buildstamp
             if configuration.buildstamp
