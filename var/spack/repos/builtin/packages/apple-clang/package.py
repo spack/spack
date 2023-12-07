@@ -56,15 +56,12 @@ class AppleClang(BundlePackage):
 
     @classmethod
     def validate_detected_spec(cls, spec, extra_attributes):
-        # For GCC 'compilers' is a mandatory attribute
-        msg = 'the extra attribute "compilers" must be set for ' 'the detected spec "{0}"'.format(
-            spec
-        )
+        msg = f'the extra attribute "compilers" must be set for the detected spec "{spec}"'
         assert "compilers" in extra_attributes, msg
         compilers = extra_attributes["compilers"]
         for key in ("c", "cxx"):
-            msg = "{0} compiler not found for {1}"
-            assert key in compilers, msg.format(key, spec)
+            msg = f"{key} compiler not found for {spec}"
+            assert key in compilers, msg
 
     @property
     def cc(self):
