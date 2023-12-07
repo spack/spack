@@ -111,7 +111,8 @@ class Seissol(CMakePackage, CudaPackage):
     # cuda_hardware_manager: Could not obtain number of devices (error code = CUDA:35)
     # [hipSYCL Error] from (...)/cuda_hardware_manager.cpp:74 @ get_device():
     # cuda_hardware_manager: Attempt to access invalid device detected.
-    # Therefore the cuda version is set to 11 now, but this constrain could be released in the future
+    # Therefore the cuda version is set to 11 now, but this constrain could be released
+    # in the future
     depends_on("cuda@11", when="+cuda")
 
     depends_on("hipsycl@develop +cuda", when="+cuda")
