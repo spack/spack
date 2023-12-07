@@ -1457,6 +1457,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a view -d 'manag
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a update -d 'update environments to the latest format'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a revert -d 'restore environments to their state before update'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a depfile -d 'generate a depfile from the concrete environment specs'
+complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a freeze -d 'freeze and flatten the current configuration'
 complete -c spack -n '__fish_spack_using_command env' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env' -s h -l help -d 'show this help message and exit'
 
@@ -1605,6 +1606,15 @@ complete -c spack -n '__fish_spack_using_command env depfile' -s o -l output -r 
 complete -c spack -n '__fish_spack_using_command env depfile' -s o -l output -r -d 'write the depfile to FILE rather than to stdout'
 complete -c spack -n '__fish_spack_using_command env depfile' -s G -l generator -r -f -a make
 complete -c spack -n '__fish_spack_using_command env depfile' -s G -l generator -r -d 'specify the depfile type'
+
+# spack env freeze
+set -g __fish_spack_optspecs_spack_env_freeze h/help o/output= blame
+complete -c spack -n '__fish_spack_using_command env freeze' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command env freeze' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command env freeze' -s o -l output -r -f -a output
+complete -c spack -n '__fish_spack_using_command env freeze' -s o -l output -r -d 'write to FILE rather than to stdout'
+complete -c spack -n '__fish_spack_using_command env freeze' -l blame -f -a blame
+complete -c spack -n '__fish_spack_using_command env freeze' -l blame -d 'add provenance information to config entries'
 
 # spack extensions
 set -g __fish_spack_optspecs_spack_extensions h/help l/long L/very-long d/deps p/paths s/show=
