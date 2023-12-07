@@ -87,7 +87,8 @@ class BootstrapEnvironment(spack.environment.Environment):
 
     def update_installations(self) -> None:
         """Update the installations of this environment."""
-        with tty.SuppressOutput(msg_enabled=False, warn_enabled=False):
+        log_enabled = tty.is_debug() or tty.is_verbose()
+        with tty.SuppressOutput(msg_enabled=log_enabled, warn_enabled=log_enabled):
             specs = self.concretize()
         if specs:
             colorized_specs = [
@@ -96,8 +97,9 @@ class BootstrapEnvironment(spack.environment.Environment):
             ]
             tty.msg(f"[BOOTSTRAPPING] Installing dependencies ({', '.join(colorized_specs)})")
             self.write(regenerate=False)
-            self.install_all()
-            self.write(regenerate=True)
+            with tty.SuppressOutput(msg_enabled=log_enabled, warn_enabled=log_enabled):
+                self.install_all()
+                self.write(regenerate=True)
 
     def update_syspath_and_environ(self) -> None:
         """Update ``sys.path`` and the PATH, PYTHONPATH environment variables to point to
