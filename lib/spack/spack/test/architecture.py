@@ -30,6 +30,8 @@ def current_host_platform():
         current_platform = spack.platforms.Darwin()
     elif "Windows" in platform.system():
         current_platform = spack.platforms.Windows()
+    elif "FreeBSD" in platform.system():
+        current_platform = spack.platforms.FreeBSD()
     return current_platform
 
 
