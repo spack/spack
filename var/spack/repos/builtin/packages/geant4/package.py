@@ -44,6 +44,7 @@ class Geant4(CMakePackage):
     version("10.4.3", sha256="67f3bb6405a2c77e573936c2b933f5a4a33915aa379626a2eb3012009b91e1da")
     version("10.4.0", sha256="e919b9b0a88476e00c0b18ab65d40e6a714b55ee4778f66bac32a5396c22aa74")
     version("10.3.3", sha256="bcd36a453da44de9368d1d61b0144031a58e4b43a6d2d875e19085f2700a89d8")
+    version("10.0.4", sha256="97f3744366b00143d1eed52f8786823034bbe523f45998106f798af61d83f863")
 
     _cxxstd_values = (
         conditional("11", "14", when="@:10"),
@@ -58,6 +59,7 @@ class Geant4(CMakePackage):
         description="Use the specified C++ standard when building.",
     )
 
+    variant("builtin_clhep", default=False, description="Use builtin CLHEP")
     variant("threads", default=True, description="Build with multithreading")
     variant("vecgeom", default=False, description="Enable vecgeom support")
     variant("opengl", default=False, description="Optional OpenGL support")
@@ -73,6 +75,7 @@ class Geant4(CMakePackage):
     depends_on("cmake@3.5:", type="build")
 
     for _vers in [
+        "10.0.4",
         "10.3.3",
         "10.4.0",
         "10.4.3",
@@ -102,10 +105,11 @@ class Geant4(CMakePackage):
     extends("python", when="+python")
 
     # CLHEP version requirements to be reviewed
-    depends_on("clhep@2.4.6.0:", when="@11.1:")
-    depends_on("clhep@2.4.5.1:", when="@11.0.0:")
-    depends_on("clhep@2.4.4.0:", when="@10.7.0:")
-    depends_on("clhep@2.3.3.0:", when="@10.3.3:10.6")
+    depends_on("clhep@2.4.6.0:", when="@11.1: ~builtin_clhep")
+    depends_on("clhep@2.4.5.1:", when="@11.0.0: ~builtin_clhep")
+    depends_on("clhep@2.4.4.0:", when="@10.7.0: ~builtin_clhep")
+    depends_on("clhep@2.3.3.0:", when="@10.3:10.6 ~builtin_clhep")
+    depends_on("clhep@2.1.2.3", when="@:10.2 ~builtin_clhep")
 
     # Vecgeom specific versions for each Geant4 version
     with when("+vecgeom"):
@@ -126,7 +130,7 @@ class Geant4(CMakePackage):
                 yield (v, "")
 
     for _std, _when in std_when(_cxxstd_values):
-        depends_on(f"clhep cxxstd={_std}", when=f"{_when} cxxstd={_std}")
+        depends_on(f"clhep cxxstd={_std}", when=f"{_when} ~builtin_clhep cxxstd={_std}")
         depends_on(f"vecgeom cxxstd={_std}", when=f"{_when} +vecgeom cxxstd={_std}")
 
         # Spack only supports Xerces-c 3 and above, so no version req
@@ -144,11 +148,14 @@ class Geant4(CMakePackage):
     depends_on("motif", when="+motif")
     depends_on("qt@5: +opengl", when="+qt")
 
+    # As released, 10.0.4 has inconsistently capitalised filenames
+    # in the cmake files; this patch also enables cxxstd 14
+    patch("geant4-10.0.4.patch", when="@10.0.4")
     # As released, 10.03.03 has issues with respect to using external
     # CLHEP.
-    patch("CLHEP-10.03.03.patch", level=1, when="@10.3.3")
+    patch("CLHEP-10.03.03.patch", level=1, when="@10.3 ~builtin_clhep")
     # These patches can be applied independent of the cxxstd value?
-    patch("cxx17.patch", when="@:10.3 cxxstd=17")
+    patch("cxx17.patch", when="@10.3 cxxstd=17")
     patch("cxx17_geant4_10_0.patch", level=1, when="@10.4.0 cxxstd=17")
     patch("geant4-10.4.3-cxx17-removed-features.patch", level=1, when="@10.4.3 cxxstd=17")
 
@@ -220,7 +227,6 @@ class Geant4(CMakePackage):
 
         # Core options
         options = [
-            self.define("GEANT4_USE_SYSTEM_CLHEP", True),
             self.define("GEANT4_USE_SYSTEM_EXPAT", True),
             self.define("GEANT4_USE_SYSTEM_ZLIB", True),
             self.define("GEANT4_USE_G3TOG4", True),
@@ -228,11 +234,19 @@ class Geant4(CMakePackage):
             self.define("XERCESC_ROOT_DIR", spec["xerces-c"].prefix),
         ]
 
+        if "+builtin_clhep" in spec:
+            options.append(self.define("GEANT4_USE_BUILTIN_CLHEP", True))
+        else:
+            options.append(self.define("GEANT4_USE_SYSTEM_CLHEP", True))
+
         # Use the correct C++ standard option for the requested version
         if spec.version >= Version("11.0"):
             options.append(self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"))
-        else:
+        elif spec.version >= Version("10.3"):
             options.append(self.define_from_variant("GEANT4_BUILD_CXXSTD", "cxxstd"))
+        else:
+            cxxstd = spec.variants["cxxstd"].value
+            options.append(self.define("GEANT4_BUILD_CXXSTD", f"c++{cxxstd}"))
 
         if spec.version >= Version("10.6"):
             # When building a downstream library/app outside of Spack, make
