@@ -92,11 +92,11 @@ class CDash(Reporter):
         self.osname = platform.system()
         self.osrelease = platform.release()
         self.target = spack.platforms.host().target("default_target")
-        self.endtime = int(time.time())
+        self.starttime = int(time.time())
         self.buildstamp = (
             configuration.buildstamp
             if configuration.buildstamp
-            else build_stamp(configuration.track, self.endtime)
+            else build_stamp(configuration.track, self.starttime)
         )
         self.buildIds: Dict[str, str] = {}
         self.revision = ""
@@ -125,7 +125,7 @@ class CDash(Reporter):
             report_data[phase] = {}
             report_data[phase]["loglines"] = []
             report_data[phase]["status"] = 0
-            report_data[phase]["endtime"] = self.endtime
+            report_data[phase]["starttime"] = self.starttime
 
         # Track the phases we perform so we know what reports to create.
         # We always report the update step because this is how we tell CDash
@@ -179,9 +179,9 @@ class CDash(Reporter):
             build_pos = phases_encountered.index("build")
             phases_encountered.insert(0, phases_encountered.pop(build_pos))
 
-        self.starttime = self.endtime - duration
+        self.endtime = self.starttime + duration
         for phase in phases_encountered:
-            report_data[phase]["starttime"] = self.starttime
+            report_data[phase]["endtime"] = self.endtime
             report_data[phase]["log"] = "\n".join(report_data[phase]["loglines"])
             errors, warnings = parse_log_events(report_data[phase]["loglines"])
 
@@ -328,7 +328,7 @@ class CDash(Reporter):
             self.buildname = "{0}-{1}".format(self.current_package_name, package["id"])
         else:
             self.buildname = self.report_build_name(self.current_package_name)
-        self.starttime = self.endtime - duration
+        self.endtime = self.starttime + duration
 
         report_data = self.initialize_report(report_dir)
         report_data["hostname"] = socket.gethostname()
@@ -373,7 +373,7 @@ class CDash(Reporter):
         self.buildname = self.base_buildname
         report_data = self.initialize_report(report_dir)
         report_data["update"] = {}
-        report_data["update"]["starttime"] = self.endtime
+        report_data["update"]["starttime"] = self.starttime
         report_data["update"]["endtime"] = self.endtime
         report_data["update"]["revision"] = self.revision
         report_data["update"]["log"] = msg
