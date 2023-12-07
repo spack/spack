@@ -13,6 +13,8 @@ class AppleClang(BundlePackage):
     homepage = "https://developer.apple.com/videos/developer-tools/compiler-and-llvm"
     has_code = False
 
+    maintainers("alalazo")
+
     executables = ["^clang$", r"^clang\+\+$", "^ld.lld$", "^lldb$"]
 
     @classmethod
