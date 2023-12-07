@@ -74,8 +74,8 @@ class GobjectIntrospection(MesonPackage, AutotoolsPackage):
     # https://gitlab.gnome.org/GNOME/gobject-introspection/-/issues/325
     patch(
         "https://gitlab.gnome.org/GNOME/gobject-introspection/-/commit/"
-        "1f9284228092b2a7200e8a78bc0ea6702231c6db.patch",
-        sha256="7700828b638c85255c87fcc317ea7e9572ff443f65c86648796528885e5b4cea",
+        "1f9284228092b2a7200e8a78bc0ea6702231c6db.diff",
+        sha256="dcb9e7c956dff49c3a73535829382e8662fa6bd13bdfb416e8eac47b2604fa0a",
         when="@:1.63.1",
     )
 

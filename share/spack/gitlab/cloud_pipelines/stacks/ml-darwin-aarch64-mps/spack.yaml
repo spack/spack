@@ -24,7 +24,9 @@ spack:
 
   # Keras
   # Bazel codesign issues
-  # - py-keras
+  # - py-keras backend=tensorflow
+  # - py-keras backend=jax
+  - py-keras backend=torch
   - py-keras-applications
   - py-keras-preprocessing
   - py-keras2onnx
@@ -89,7 +91,7 @@ spack:
     - build-job:
         variables:
           CI_GPG_KEY_ROOT: /etc/protected-runner
-        tags: [ "macos-ventura", "apple-clang-14", "aarch64-macos" ]
+        tags: [ "macos-ventura", "apple-clang-15", "aarch64-macos" ]
 
   cdash:
     build-group: Machine Learning MPS

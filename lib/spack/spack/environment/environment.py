@@ -330,16 +330,21 @@ def create_in_dir(
     if with_view is None and keep_relative:
         return Environment(manifest_dir)
 
-    manifest = EnvironmentManifestFile(manifest_dir)
+    try:
+        manifest = EnvironmentManifestFile(manifest_dir)
 
-    if with_view is not None:
-        manifest.set_default_view(with_view)
+        if with_view is not None:
+            manifest.set_default_view(with_view)
 
-    if not keep_relative and init_file is not None and str(init_file).endswith(manifest_name):
-        init_file = pathlib.Path(init_file)
-        manifest.absolutify_dev_paths(init_file.parent)
+        if not keep_relative and init_file is not None and str(init_file).endswith(manifest_name):
+            init_file = pathlib.Path(init_file)
+            manifest.absolutify_dev_paths(init_file.parent)
 
-    manifest.flush()
+        manifest.flush()
+
+    except (spack.config.ConfigFormatError, SpackEnvironmentConfigError) as e:
+        shutil.rmtree(manifest_dir)
+        raise e
 
     return Environment(manifest_dir)
 
@@ -391,7 +396,13 @@ def all_environments():
 
 def _read_yaml(str_or_file):
     """Read YAML from a file for round-trip parsing."""
-    data = syaml.load_config(str_or_file)
+    try:
+        data = syaml.load_config(str_or_file)
+    except syaml.SpackYAMLError as e:
+        raise SpackEnvironmentConfigError(
+            f"Invalid environment configuration detected: {e.message}"
+        )
+
     filename = getattr(str_or_file, "name", None)
     default_data = spack.config.validate(data, spack.schema.env.schema, filename)
     return data, default_data
@@ -776,10 +787,18 @@ class Environment:
         """Reinitialize the environment object."""
         self.clear(re_read=True)
         self.manifest = EnvironmentManifestFile(self.path)
-        self._read()
+        self._read(re_read=True)
 
-    def _read(self):
-        self._construct_state_from_manifest()
+    def _read(self, re_read=False):
+        # If the manifest has included files, then some of the information
+        # (e.g., definitions) MAY be in those files. So we need to ensure
+        # the config is populated with any associated spec lists in order
+        # to fully construct the manifest state.
+        includes = self.manifest[TOP_LEVEL_KEY].get("include", [])
+        if includes and not re_read:
+            prepare_config_scope(self)
+
+        self._construct_state_from_manifest(re_read)
 
         if os.path.exists(self.lock_path):
             with open(self.lock_path) as f:
@@ -793,21 +812,30 @@ class Environment:
         """Get a write lock context manager for use in a `with` block."""
         return lk.WriteTransaction(self.txlock, acquire=self._re_read)
 
-    def _construct_state_from_manifest(self):
+    def _process_definition(self, item):
+        """Process a single spec definition item."""
+        entry = copy.deepcopy(item)
+        when = _eval_conditional(entry.pop("when", "True"))
+        assert len(entry) == 1
+        if when:
+            name, spec_list = next(iter(entry.items()))
+            user_specs = SpecList(name, spec_list, self.spec_lists.copy())
+            if name in self.spec_lists:
+                self.spec_lists[name].extend(user_specs)
+            else:
+                self.spec_lists[name] = user_specs
+
+    def _construct_state_from_manifest(self, re_read=False):
         """Read manifest file and set up user specs."""
         self.spec_lists = collections.OrderedDict()
+
+        if not re_read:
+            for item in spack.config.get("definitions", []):
+                self._process_definition(item)
+
         env_configuration = self.manifest[TOP_LEVEL_KEY]
         for item in env_configuration.get("definitions", []):
-            entry = copy.deepcopy(item)
-            when = _eval_conditional(entry.pop("when", "True"))
-            assert len(entry) == 1
-            if when:
-                name, spec_list = next(iter(entry.items()))
-                user_specs = SpecList(name, spec_list, self.spec_lists.copy())
-                if name in self.spec_lists:
-                    self.spec_lists[name].extend(user_specs)
-                else:
-                    self.spec_lists[name] = user_specs
+            self._process_definition(item)
 
         spec_list = env_configuration.get(user_speclist_name, [])
         user_specs = SpecList(
@@ -852,7 +880,9 @@ class Environment:
                 yaml, and need to be maintained when re-reading an existing
                 environment.
         """
-        self.spec_lists = {user_speclist_name: SpecList()}  # specs from yaml
+        self.spec_lists = collections.OrderedDict()
+        self.spec_lists[user_speclist_name] = SpecList()
+
         self.dev_specs = {}  # dev-build specs from yaml
         self.concretized_user_specs = []  # user specs from last concretize
         self.concretized_order = []  # roots of last concretize, in order
@@ -1001,7 +1031,8 @@ class Environment:
 
             elif include_url.scheme:
                 raise ValueError(
-                    "Unsupported URL scheme for environment include: {}".format(config_path)
+                    f"Unsupported URL scheme ({include_url.scheme}) for "
+                    f"environment include: {config_path}"
                 )
 
             # treat relative paths as relative to the environment
@@ -1063,8 +1094,10 @@ class Environment:
             from_list = next(iter(self.spec_lists.keys()))
         index = list(self.spec_lists.keys()).index(from_list)
 
-        # spec_lists is an OrderedDict, all list entries after the modified
-        # list may refer to the modified list. Update stale references
+        # spec_lists is an OrderedDict to ensure lists read from the manifest
+        # are maintainted in order, hence, all list entries after the modified
+        # list may refer to the modified list requiring stale references to be
+        # updated.
         for i, (name, speclist) in enumerate(
             list(self.spec_lists.items())[index + 1 :], index + 1
         ):
@@ -1162,7 +1195,7 @@ class Environment:
     def remove(self, query_spec, list_name=user_speclist_name, force=False):
         """Remove specs from an environment that match a query_spec"""
         err_msg_header = (
-            f"cannot remove {query_spec} from '{list_name}' definition "
+            f"Cannot remove '{query_spec}' from '{list_name}' definition "
             f"in {self.manifest.manifest_file}"
         )
         query_spec = Spec(query_spec)
@@ -1193,11 +1226,10 @@ class Environment:
                 list_to_change.remove(spec)
                 self.update_stale_references(list_name)
                 new_specs = set(self.user_specs)
-            except spack.spec_list.SpecListError:
+            except spack.spec_list.SpecListError as e:
                 # define new specs list
                 new_specs = set(self.user_specs)
-                msg = f"Spec '{spec}' is part of a spec matrix and "
-                msg += f"cannot be removed from list '{list_to_change}'."
+                msg = str(e)
                 if force:
                     msg += " It will be removed from the concrete specs."
                     # Mock new specs, so we can remove this spec from concrete spec lists
@@ -1326,7 +1358,7 @@ class Environment:
 
         # Remove concrete specs that no longer correlate to a user spec
         for spec in set(self.concretized_user_specs) - set(self.user_specs):
-            self.deconcretize(spec)
+            self.deconcretize(spec, concrete=False)
 
         # Pick the right concretization strategy
         if self.unify == "when_possible":
@@ -1341,15 +1373,36 @@ class Environment:
         msg = "concretization strategy not implemented [{0}]"
         raise SpackEnvironmentError(msg.format(self.unify))
 
-    def deconcretize(self, spec):
+    def deconcretize(self, spec: spack.spec.Spec, concrete: bool = True):
+        """
+        Remove specified spec from environment concretization
+
+        Arguments:
+            spec: Spec to deconcretize. This must be a root of the environment
+            concrete: If True, find all instances of spec as concrete in the environemnt.
+                If False, find a single instance of the abstract spec as root of the environment.
+        """
         # spec has to be a root of the environment
-        index = self.concretized_user_specs.index(spec)
-        dag_hash = self.concretized_order.pop(index)
-        del self.concretized_user_specs[index]
+        if concrete:
+            dag_hash = spec.dag_hash()
+
+            pairs = zip(self.concretized_user_specs, self.concretized_order)
+            filtered = [(spec, h) for spec, h in pairs if h != dag_hash]
+            # Cannot use zip and unpack two values; it fails if filtered is empty
+            self.concretized_user_specs = [s for s, _ in filtered]
+            self.concretized_order = [h for _, h in filtered]
+        else:
+            index = self.concretized_user_specs.index(spec)
+            dag_hash = self.concretized_order.pop(index)
+
+            del self.concretized_user_specs[index]
 
         # If this was the only user spec that concretized to this concrete spec, remove it
         if dag_hash not in self.concretized_order:
-            del self.specs_by_hash[dag_hash]
+            # if we deconcretized a dependency that doesn't correspond to a root, it
+            # won't be here.
+            if dag_hash in self.specs_by_hash:
+                del self.specs_by_hash[dag_hash]
 
     def _get_specs_to_concretize(
         self,
@@ -1484,7 +1537,7 @@ class Environment:
         for uspec, uspec_constraints in zip(self.user_specs, self.user_specs.specs_as_constraints):
             if uspec not in old_concretized_user_specs:
                 root_specs.append(uspec)
-                args.append((i, uspec_constraints, tests))
+                args.append((i, [str(x) for x in uspec_constraints], tests))
                 i += 1
 
         # Ensure we don't try to bootstrap clingo in parallel
@@ -1518,11 +1571,21 @@ class Environment:
         tty.msg(msg)
 
         batch = []
-        for i, concrete, duration in spack.util.parallel.imap_unordered(
-            _concretize_task, args, processes=num_procs, debug=tty.is_debug()
+        for j, (i, concrete, duration) in enumerate(
+            spack.util.parallel.imap_unordered(
+                _concretize_task,
+                args,
+                processes=num_procs,
+                debug=tty.is_debug(),
+                maxtaskperchild=1,
+            )
         ):
             batch.append((i, concrete))
-            tty.verbose(f"[{duration:7.2f}s] {root_specs[i]}")
+            percentage = (j + 1) / len(args) * 100
+            tty.verbose(
+                f"{duration:6.1f}s [{percentage:3.0f}%] {concrete.cformat('{hash:7}')} "
+                f"{root_specs[i].colored_str}"
+            )
             sys.stdout.flush()
 
         # Add specs in original order
@@ -1697,11 +1760,14 @@ class Environment:
         self, view: ViewDescriptor, reverse: bool = False
     ) -> spack.util.environment.EnvironmentModifications:
         try:
-            mods = uenv.environment_modifications_for_specs(*self.concrete_roots(), view=view)
+            with spack.store.STORE.db.read_transaction():
+                installed_roots = [s for s in self.concrete_roots() if s.installed]
+            mods = uenv.environment_modifications_for_specs(*installed_roots, view=view)
         except Exception as e:
             # Failing to setup spec-specific changes shouldn't be a hard error.
             tty.warn(
-                "couldn't load runtime environment due to {}: {}".format(e.__class__.__name__, e)
+                f"could not {'unload' if reverse else 'load'} runtime environment due "
+                f"to {e.__class__.__name__}: {e}"
             )
             return spack.util.environment.EnvironmentModifications()
         return mods.reversed() if reverse else mods
@@ -2052,7 +2118,7 @@ class Environment:
 
     def removed_specs(self):
         """Tuples of (user spec, concrete spec) for all specs that will be
-        removed on nexg concretize."""
+        removed on next concretize."""
         needed = set()
         for s, c in self.concretized_specs():
             if s in self.user_specs:
@@ -2397,6 +2463,7 @@ def _concretize_from_constraints(spec_constraints, tests=False):
 
 def _concretize_task(packed_arguments) -> Tuple[int, Spec, float]:
     index, spec_constraints, tests = packed_arguments
+    spec_constraints = [Spec(x) for x in spec_constraints]
     with tty.SuppressOutput(msg_enabled=False):
         start = time.time()
         spec = _concretize_from_constraints(spec_constraints, tests)
@@ -2710,7 +2777,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         self.changed = True
 
     def add_definition(self, user_spec: str, list_name: str) -> None:
-        """Appends a user spec to the first active definition mathing the name passed as argument.
+        """Appends a user spec to the first active definition matching the name passed as argument.
 
         Args:
             user_spec: user spec to be appended
@@ -2923,3 +2990,7 @@ class SpackEnvironmentError(spack.error.SpackError):
 
 class SpackEnvironmentViewError(SpackEnvironmentError):
     """Class for errors regarding view generation."""
+
+
+class SpackEnvironmentConfigError(SpackEnvironmentError):
+    """Class for Spack environment-specific configuration errors."""

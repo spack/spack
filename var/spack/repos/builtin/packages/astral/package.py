@@ -31,7 +31,7 @@ class Astral(Package):
         make()
         mkdirp(prefix.bin)
         install_tree("lib", prefix.tools.lib)
-        jar_file = "astral.{v}.jar".format(v=self.version)
+        jar_file = f"astral.{self.version}.jar"
         install(jar_file, prefix.tools)
 
         script_sh = join_path(os.path.dirname(__file__), "astral.sh")

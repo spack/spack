@@ -4,6 +4,7 @@ ci:
   broken-tests-packages:
     - gptune
     - superlu-dist    # srun -n 4 hangs
+    - papyrus
 
   broken-specs-url: "https://dummy.io" # s3://spack-binaries/broken-specs"
 
@@ -12,7 +13,7 @@ ci:
       before_script-:
       - - spack list --count  # ensure that spack's cache is populated
       - - spack env activate --without-view ${SPACK_CONCRETE_ENV_DIR}
-        - spack compiler find
+        - spack compiler list
         - if [ -n "$SPACK_BUILD_JOBS" ]; then spack config add "config:build_jobs:$SPACK_BUILD_JOBS"; fi
       - - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
         # AWS runners mount E4S public key (verification), UO runners mount public/private (signing/verification)

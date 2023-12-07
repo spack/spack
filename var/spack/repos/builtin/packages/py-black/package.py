@@ -17,6 +17,9 @@ class PyBlack(PythonPackage):
 
     maintainers("adamjstewart")
 
+    version("23.11.0", sha256="4c68855825ff432d197229846f971bc4d6666ce90492e5b02013bcaca4d9ab05")
+    version("23.10.1", sha256="1f8ce316753428ff68749c65a5f7844631aa18c8679dfd3ca9dc1a289979c258")
+    version("23.10.0", sha256="31b9f87b277a68d0e99d2905edae08807c007973eaa609da5f0c62def6b7c0bd")
     version("23.9.1", sha256="24b6b3ff5c6d9ea08a8888f6977eae858e1f340d7260cf56d70a49823236b62d")
     version("23.9.0", sha256="3511c8a7e22ce653f89ae90dfddaf94f3bb7e2587a245246572d3b9c92adf066")
     version("23.7.0", sha256="022a582720b0d9480ed82576c920a8c1dde97cc38ff11d8d8859b3bd6ca9eedb")
@@ -37,23 +40,25 @@ class PyBlack(PythonPackage):
     depends_on("py-hatchling@1.8:", when="@22.10:", type="build")
     depends_on("py-hatch-vcs", when="@22.10:", type="build")
     depends_on("py-hatch-fancy-pypi-readme", when="@22.10:", type="build")
-    depends_on("python@3.8:", when="@23.7:", type=("build", "run"))
-    # Needed to ensure that Spack can bootstrap black with Python 3.6
-    depends_on("python@3.7:", when="@22.10:", type=("build", "run"))
-    depends_on("py-click@8:", type=("build", "run"))
-    depends_on("py-mypy-extensions@0.4.3:", type=("build", "run"))
-    depends_on("py-packaging@22:", when="@23.1:", type=("build", "run"))
-    depends_on("py-pathspec@0.9:", type=("build", "run"))
-    depends_on("py-platformdirs@2:", type=("build", "run"))
-    depends_on("py-tomli@1.1:", when="@22.8: ^python@:3.10", type=("build", "run"))
-    depends_on("py-tomli@1.1:", when="@21.7:22.6", type=("build", "run"))
-    depends_on("py-typing-extensions@3.10:", when="^python@:3.9", type=("build", "run"))
 
-    depends_on("py-colorama@0.4.3:", when="+colorama", type=("build", "run"))
-    depends_on("py-uvloop@0.15.2:", when="+uvloop", type=("build", "run"))
-    depends_on("py-aiohttp@3.7.4:", when="+d", type=("build", "run"))
-    depends_on("py-ipython@7.8:", when="+jupyter", type=("build", "run"))
-    depends_on("py-tokenize-rt@3.2:", when="+jupyter", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@3.8:", when="@23.7:")
+        depends_on("python@3.7:", when="@22.10:")
+        depends_on("py-click@8:")
+        depends_on("py-mypy-extensions@0.4.3:")
+        depends_on("py-packaging@22:", when="@23.1:")
+        depends_on("py-pathspec@0.9:")
+        depends_on("py-platformdirs@2:")
+        depends_on("py-tomli@1.1:", when="@22.8: ^python@:3.10")
+        depends_on("py-tomli@1.1:", when="@21.7:22.6")
+        depends_on("py-typing-extensions@4.0.1:", when="@23.9: ^python@:3.10")
+        depends_on("py-typing-extensions@3.10:", when="@:23.7 ^python@:3.9")
+
+        depends_on("py-colorama@0.4.3:", when="+colorama")
+        depends_on("py-uvloop@0.15.2:", when="+uvloop")
+        depends_on("py-aiohttp@3.7.4:", when="+d")
+        depends_on("py-ipython@7.8:", when="+jupyter")
+        depends_on("py-tokenize-rt@3.2:", when="+jupyter")
 
     # Historical dependencies
     depends_on("py-setuptools@45:", when="@:22.8", type=("build", "run"))

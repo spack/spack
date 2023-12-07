@@ -20,4 +20,4 @@ class Authd(MakefilePackage):
         env.prepend_path("PATH", self.prefix.sbin)
 
     def install(self, spec, prefix):
-        make("prefix={0}".format(prefix), "install")
+        make(f"prefix={prefix}", "install")

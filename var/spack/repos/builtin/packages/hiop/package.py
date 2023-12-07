@@ -22,33 +22,43 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     maintainers("ryandanehy", "cameronrutherford", "pelesh")
 
     # Most recent tagged snapshot is the preferred version when profiling.
-    version("1.0.1", commit="c5e156c6f27d046f590dc35114980e3f9c573ca6", submodules=True)
-    version("1.0.0", commit="10b7d3ee0a15cb4949ccee8c905d447b9528794f", submodules=True)
-    version("0.7.2", commit="d0f57c880d4202a72c62dd1f5c92e3bc8acb9788", submodules=True)
-    version("0.7.1", commit="8064ef6b2249ad2feca92a9d1e90060bad3eebc7", submodules=True)
-    version("0.7.0", commit="5f42ab34b419b7cf64d0fffb29d443b009dbfd75", submodules=True)
-    version("0.6.2", commit="55652fbe923ab9107d002d0d070865bd22375b28")
-    version("0.6.1", commit="a9e2697b00aa13ecf0ae4783dd8a41dee11dc50e")
-    version("0.6.0", commit="21af7eb0d6427be73546cf303abc84e834a5a55d")
-    version("0.5.4", commit="a37a7a677884e95d1c0ad37936aef3778fc91c3e")
-    version("0.5.3", commit="698e8d0fdc0ff9975d8714339ff8c782b70d85f9")
-    version("0.5.2", commit="662ad76dee1f501f648a8bec9a490cb5881789e9")
-    version("0.5.1", commit="6789bbb55824e68e428c2df1009d647af81f9cf1")
-    version("0.5.0", commit="a39da8025037c7c8ae2eb31234eb80cc73bec2af")
-    version("0.4.6", commit="b72d163d52c9225c3196ceb2baebdc7cf09a69de")
-    version("0.4.5", commit="c353580456c4776c50811b97cf8ff802dc27b90c")
-    version("0.4.4", commit="e858eefa6b914f5c87c3717bbce811931ea69386")
-    version("0.4.3", commit="c0394af4d84ebb84b7d2b95283ad65ffd84e0d45")
-    version("0.4.2", commit="3fcb788d223eec24c0241680070c4a9a5ec71ef3")
-    version("0.4.1", commit="3f269560f76d5a89bcbd1d3c4f9f0e5acaa6fd64")
-    version("0.4", commit="91d21085a1149eacdb27cd738d4a74a7e412fcff")
-    version("0.3.99.3", commit="bed1dbef260e53a9d139ccfb77d2e83a98aab216")
-    version("0.3.99.2", commit="9eb026768bc5e0a2c1293d0487cc39913001ae19")
-    version("0.3.99.1", commit="220e32c0f318665d6d394ca3cd0735b9d26a65eb")
-    version("0.3.99.0", commit="589b9c76781447108fa55788d5fa1b83ff71a3d1")
-    version("0.3", commit="7e8adae9db757aed48e5c2bc448316307598258f")
-    version("0.2", commit="c52a6f6b9baaaa2d7f233a749aa98f901349723f")
-    version("0.1", commit="5f60e11b79d532115fb41694378b54c9c707aad9")
+    version(
+        "1.0.1", tag="v1.0.1", commit="c5e156c6f27d046f590dc35114980e3f9c573ca6", submodules=True
+    )
+    version(
+        "1.0.0", tag="v1.0.0", commit="10b7d3ee0a15cb4949ccee8c905d447b9528794f", submodules=True
+    )
+    version(
+        "0.7.2", tag="v0.7.2", commit="d0f57c880d4202a72c62dd1f5c92e3bc8acb9788", submodules=True
+    )
+    version(
+        "0.7.1", tag="v0.7.1", commit="8064ef6b2249ad2feca92a9d1e90060bad3eebc7", submodules=True
+    )
+    version(
+        "0.7.0", tag="v0.7.0", commit="5f42ab34b419b7cf64d0fffb29d443b009dbfd75", submodules=True
+    )
+    version("0.6.2", tag="v0.6.2", commit="55652fbe923ab9107d002d0d070865bd22375b28")
+    version("0.6.1", tag="v0.6.1", commit="a9e2697b00aa13ecf0ae4783dd8a41dee11dc50e")
+    version("0.6.0", tag="v0.6.0", commit="21af7eb0d6427be73546cf303abc84e834a5a55d")
+    version("0.5.4", tag="v0.5.4", commit="a37a7a677884e95d1c0ad37936aef3778fc91c3e")
+    version("0.5.3", tag="v0.5.3", commit="698e8d0fdc0ff9975d8714339ff8c782b70d85f9")
+    version("0.5.2", tag="v0.5.2", commit="662ad76dee1f501f648a8bec9a490cb5881789e9")
+    version("0.5.1", tag="v0.5.1", commit="6789bbb55824e68e428c2df1009d647af81f9cf1")
+    version("0.5.0", tag="v0.5.0", commit="a39da8025037c7c8ae2eb31234eb80cc73bec2af")
+    version("0.4.6", tag="v0.4.6", commit="b72d163d52c9225c3196ceb2baebdc7cf09a69de")
+    version("0.4.5", tag="v0.4.5", commit="c353580456c4776c50811b97cf8ff802dc27b90c")
+    version("0.4.4", tag="v0.4.4", commit="e858eefa6b914f5c87c3717bbce811931ea69386")
+    version("0.4.3", tag="v0.4.3", commit="c0394af4d84ebb84b7d2b95283ad65ffd84e0d45")
+    version("0.4.2", tag="v0.4.2", commit="3fcb788d223eec24c0241680070c4a9a5ec71ef3")
+    version("0.4.1", tag="v0.4.1", commit="3f269560f76d5a89bcbd1d3c4f9f0e5acaa6fd64")
+    version("0.4", tag="v0.4", commit="91d21085a1149eacdb27cd738d4a74a7e412fcff")
+    version("0.3.99.3", tag="v0.3.99.3", commit="bed1dbef260e53a9d139ccfb77d2e83a98aab216")
+    version("0.3.99.2", tag="v0.3.99.2", commit="9eb026768bc5e0a2c1293d0487cc39913001ae19")
+    version("0.3.99.1", tag="v0.3.99.1", commit="220e32c0f318665d6d394ca3cd0735b9d26a65eb")
+    version("0.3.99.0", tag="v0.3.99.0", commit="589b9c76781447108fa55788d5fa1b83ff71a3d1")
+    version("0.3", tag="v0.3", commit="7e8adae9db757aed48e5c2bc448316307598258f")
+    version("0.2", tag="v0.2", commit="c52a6f6b9baaaa2d7f233a749aa98f901349723f")
+    version("0.1", tag="v0.1", commit="5f60e11b79d532115fb41694378b54c9c707aad9")
 
     # Development branches
     version("master", branch="master")
@@ -103,7 +113,13 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("magma@{0}:".format(magma_v), when="@{0}:+cuda".format(hiop_v))
         depends_on("magma@{0}:".format(magma_v), when="@{0}:+rocm".format(hiop_v))
 
+    # 1.0.2 fixes bug with cuda 12 compatibility
+    # hiop@0.6.0 requires cusolver API in cuda@11
+    depends_on("cuda@11:11.9", when="@0.6.0:1.0.1+cuda")
     depends_on("cuda@11:", when="@develop:+cuda")
+    # Before hiop@0.6.0 only cuda requirement was magma
+    depends_on("cuda", when="@:0.5.4+cuda")
+
     depends_on("raja", when="+raja")
     depends_on("umpire", when="+raja")
     depends_on("raja+openmp", when="+raja~cuda~rocm")
