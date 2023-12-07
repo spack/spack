@@ -74,7 +74,7 @@ class PyPoetry(PythonPackage):
     depends_on("py-dulwich@0.21.2:0.21", when="@1.6.1", type=("build", "run"))
     depends_on("py-dulwich@0.20.46:0.20", when="@1.2.1")
     depends_on("py-dulwich@0.20.44:0.20", when="@1.2.0")
-    depends_on("py-build@0.10.0:0", when="@1.6.1", type=("build", "run"))
+    depends_on("py-build@0.10", when="@1.6.1", type=("build", "run"))
     depends_on("py-installer@0.7.0:0.7", when="@1.6.1", type=("build", "run"))
     depends_on("py-pyproject-hooks@1", when="@1.6.1", type=("build", "run"))
     depends_on("py-tomli@2.0.1:2", when="@1.6.1^python@:3.10", type=("build", "run"))

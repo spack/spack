@@ -19,7 +19,8 @@ class PyPoetryPluginExport(PythonPackage):
     depends_on("python@3.7:3", type=("build", "run"))
     depends_on("py-poetry-core@1.7:1", when="@1.6", type=("build", "run"))
     depends_on("py-poetry-core@1.1:1", when="@1.0", type=("build", "run"))
-    depends_on("py-poetry@1.6:1", when="@1.6", type=("build", "run"))
+    # depends_on("py-poetry@1.6:1", when="@1.6", type=("build", "run")) # circular dependency
+    # depends_on("py-poetry@1.2:1", type="run") # circular dependency
 
     def url_for_version(self, version):
         url = (
