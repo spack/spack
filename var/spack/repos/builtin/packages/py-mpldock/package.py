@@ -16,7 +16,6 @@ class PyMpldock(PythonPackage):
 
     version("0.1", sha256="8fee2e9cb25e122c9e11c15ea3ad22c9d03e78a08a0bc2b7f453230d58a31a55")
 
-    depends_on("python@3.6:3.10", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-pyqt5", type=("build", "run"))
     depends_on("py-matplotlib", type=("build", "run"))
