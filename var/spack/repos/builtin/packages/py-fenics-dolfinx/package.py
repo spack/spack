@@ -37,7 +37,7 @@ class PyFenicsDolfinx(PythonPackage):
     depends_on("fenics-dolfinx@0.5.0", when="@0.5.0")
     depends_on("fenics-dolfinx@0.4.1", when="@0.4.1")
 
-    depends_on("py-fenics-basix@main", type=("build", "link"), when="@main")
+    depends_on("py-fenics-basix@main", type=("build", "run"), when="@main")
     depends_on("fenics-basix@main", type=("build", "link"), when="@main")
     depends_on("fenics-basix@0.7", type=("build", "link"), when="@0.7")
     depends_on("fenics-basix@0.6.0:0.6", type=("build", "link"), when="@0.6.0:0.6")
