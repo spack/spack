@@ -20,7 +20,6 @@ import spack.paths
 import spack.tengine
 import spack.util.cpus
 import spack.util.executable
-from spack.environment import depfile
 
 from ._common import _root_spec
 from .config import root_path, spec_for_current_python, store_path
@@ -87,11 +86,7 @@ class BootstrapEnvironment(spack.environment.Environment):
         super().__init__(self.environment_root())
 
     def update_installations(self) -> None:
-        """Update the installations of this environment.
-
-        The update is done using a depfile on Linux and macOS, and using the ``install_all``
-        method of environments on Windows.
-        """
+        """Update the installations of this environment."""
         with tty.SuppressOutput(msg_enabled=False, warn_enabled=False):
             specs = self.concretize()
         if specs:
@@ -101,10 +96,7 @@ class BootstrapEnvironment(spack.environment.Environment):
             ]
             tty.msg(f"[BOOTSTRAPPING] Installing dependencies ({', '.join(colorized_specs)})")
             self.write(regenerate=False)
-            if sys.platform == "win32":
-                self.install_all()
-            else:
-                self._install_with_depfile()
+            self.install_all()
             self.write(regenerate=True)
 
     def update_syspath_and_environ(self) -> None:
@@ -121,28 +113,6 @@ class BootstrapEnvironment(spack.environment.Environment):
         os.environ["PYTHONPATH"] = os.pathsep.join(
             os.environ.get("PYTHONPATH", "").split(os.pathsep)
             + [str(x) for x in self.pythonpaths()]
-        )
-
-    def _install_with_depfile(self) -> None:
-        model = depfile.MakefileModel.from_env(self)
-        template = spack.tengine.make_environment().get_template(
-            os.path.join("depfile", "Makefile")
-        )
-        makefile = self.environment_root() / "Makefile"
-        makefile.write_text(template.render(model.to_dict()))
-        make = spack.util.executable.which("make")
-        kwargs = {}
-        if not tty.is_debug():
-            kwargs = {"output": os.devnull, "error": os.devnull}
-        # Make sure spack is in PATH for Makefile
-        extra_env = {"PATH": spack.paths.bin_path + ":" + os.environ["PATH"]}
-        make(
-            "-C",
-            str(self.environment_root()),
-            "-j",
-            str(spack.util.cpus.determine_number_of_jobs(parallel=True)),
-            extra_env=extra_env,
-            **kwargs,
         )
 
     def _write_spack_yaml_file(self) -> None:
