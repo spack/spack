@@ -1200,3 +1200,24 @@ def test_report_filename_for_cdash(install_mockery_mutable_config, mock_fetch):
     specs = spack.cmd.install.concrete_specs_from_cli(args, {})
     filename = spack.cmd.install.report_filename(args, specs)
     assert filename != "https://blahblah/submit.php?project=debugging"
+
+
+@pytest.mark.not_on_windows("Windows log_output logs phase header out of order")
+@pytest.mark.not_on_windows("Environment views not supported on windows. Revisit after #34701")
+@pytest.mark.disable_clean_stage_check
+def test_cdash_buildname_for_env(
+    tmpdir, mock_fetch, install_mockery, capfd, mutable_mock_env_path
+):
+    env("create", "myenv")
+    with ev.read("myenv"):
+        # capfd interferes with Spack's capturing
+        with capfd.disabled():
+            with tmpdir.as_cwd():
+                add("depb")
+                install("--log-format=cdash", "--log-file=cdash_reports")
+                report_dir = tmpdir.join("cdash_reports")
+                assert report_dir in tmpdir.listdir()
+                report_file = report_dir.join("depb_Build.xml")
+                assert report_file in report_dir.listdir()
+                content = report_file.open().read()
+                assert 'BuildName="myenv - depb"' in content

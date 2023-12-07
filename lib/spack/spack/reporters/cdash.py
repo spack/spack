@@ -20,6 +20,7 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
 
 import spack.build_environment
+import spack.environment as ev
 import spack.fetch_strategy
 import spack.package_base
 import spack.platforms
@@ -87,7 +88,12 @@ class CDash(Reporter):
             self.authtoken = os.environ.get("SPACK_CDASH_AUTH_TOKEN")
 
         self.install_command = " ".join(configuration.packages)
-        self.base_buildname = configuration.build or self.install_command
+
+        env = ev.active_environment()
+        if env:
+            self.base_buildname = env.name
+        else:
+            self.base_buildname = configuration.build or self.install_command
         self.site = configuration.site or socket.gethostname()
         self.osname = platform.system()
         self.osrelease = platform.release()
