@@ -94,8 +94,11 @@ class SpectrumMpi(BundlePackage):
             else:
                 variant = ""
             opal_prefix = get_opal_prefix(exe)
-            extra_attributes = {"opal_prefix": opal_prefix}
-            results.append((variant, extra_attributes))
+            if opal_prefix:
+                extra_attributes = {"opal_prefix": opal_prefix}
+                results.append((variant, extra_attributes))
+            else:
+                results.append(variant)
         return results
 
     def setup_dependent_package(self, module, dependent_spec):
