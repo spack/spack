@@ -93,7 +93,7 @@ def filter_compiler_wrappers(*files, **kwargs):
         replacements = []
 
         for idx, (env_var, compiler_path) in enumerate(compiler_vars):
-            if env_var in os.environ:
+            if env_var in os.environ and not compiler_path is None:
                 # filter spack wrapper and links to spack wrapper in case
                 # build system runs realpath
                 wrapper = os.environ[env_var]
