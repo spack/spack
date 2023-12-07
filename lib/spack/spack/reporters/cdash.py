@@ -355,7 +355,7 @@ class CDash(Reporter):
         report_data = self.initialize_report(report_dir)
         report_data["update"] = {}
         report_data["update"]["starttime"] = self.starttime
-        report_data["update"]["endtime"] = self.starttime
+        report_data["update"]["endtime"] = self.endtime
         report_data["update"]["revision"] = self.revision
         report_data["update"]["log"] = msg
 
