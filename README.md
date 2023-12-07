@@ -66,10 +66,11 @@ Resources:
 * **Matrix space**: [#spack-space:matrix.org](https://matrix.to/#/#spack-space:matrix.org):
   [bridged](https://github.com/matrix-org/matrix-appservice-slack#matrix-appservice-slack) to Slack.
 * [**Github Discussions**](https://github.com/spack/spack/discussions):
-  not just for discussions, but also Q&A.
-* **Mailing list**: [groups.google.com/d/forum/spack](https://groups.google.com/d/forum/spack)
+  for Q&A and discussions. Note the pinned discussions for announcements.
 * **Twitter**: [@spackpm](https://twitter.com/spackpm). Be sure to
   `@mention` us!
+* **Mailing list**: [groups.google.com/d/forum/spack](https://groups.google.com/d/forum/spack):
+  only for announcements. Please use other venues for discussions.
 
 Contributing
 ------------------------
