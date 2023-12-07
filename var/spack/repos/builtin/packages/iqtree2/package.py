@@ -17,6 +17,12 @@ class Iqtree2(CMakePackage):
     version("2.2.2", sha256="2e9ce79427b140bca5f48b31fb098f394a21a7c5116bbbada1e3eabdd6efe982")
     version("2.1.2", sha256="3aaf5ac7f60d852ac8b733fb82832c049ca48b7203a6a865e99c5af359fcca5a")
 
+    variant("lsd2", default=False, description="Build with LSD2 support")
+
+    depends_on("boost", type="link")
+    depends_on("eigen", type="link")
+    depends_on("zlib-api", type="link")
+
     resource(
         name="lsd2-rsrc",
         url="https://github.com/tothuhien/lsd2/archive/refs/tags/v.2.4.1.tar.gz",
@@ -24,12 +30,6 @@ class Iqtree2(CMakePackage):
         destination="lsd2-rsrc",
         when="+lsd2",
     )
-
-    depends_on("boost", type="link")
-    depends_on("eigen", type="link")
-    depends_on("zlib-api", type="link")
-
-    variant("lsd2", default=False, description="Build with LSD2 support")
 
     @run_before("cmake")
     def expand_resource(self):
