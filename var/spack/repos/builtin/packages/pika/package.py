@@ -126,27 +126,17 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     with when("+rocm"):
         for val in ROCmPackage.amdgpu_targets:
-            depends_on(
-                "whip@0.1: amdgpu_target={0}".format(val),
-                when="@0.9: amdgpu_target={0}".format(val),
-            )
-            depends_on(
-                "rocsolver amdgpu_target={0}".format(val),
-                when="@0.5: amdgpu_target={0}".format(val),
-            )
-            depends_on(
-                "rocblas amdgpu_target={0}".format(val), when="amdgpu_target={0}".format(val)
-            )
+            depends_on(f"whip@0.1: amdgpu_target={val}", when=f"@0.9: amdgpu_target={val}")
+            depends_on(f"rocsolver amdgpu_target={val}", when=f"@0.5: amdgpu_target={val}")
+            depends_on(f"rocblas amdgpu_target={val}", when=f"amdgpu_target={val}")
 
     with when("+cuda"):
         for val in CudaPackage.cuda_arch_values:
-            depends_on(
-                "whip@0.1: cuda_arch={0}".format(val), when="@0.9: cuda_arch={0}".format(val)
-            )
+            depends_on(f"whip@0.1: cuda_arch={val}", when=f"@0.9: cuda_arch={val}")
 
     for cxxstd in cxxstds:
-        depends_on("boost cxxstd={0}".format(cxxstd), when="cxxstd={0}".format(cxxstd))
-        depends_on("fmt cxxstd={0}".format(cxxstd), when="@0.11: cxxstd={0}".format(cxxstd))
+        depends_on(f"boost cxxstd={cxxstd}", when=f"cxxstd={cxxstd}")
+        depends_on(f"fmt cxxstd={cxxstd}", when=f"@0.11: cxxstd={cxxstd}")
 
     # COROUTINES
     # ~generic_coroutines conflict is not fully implemented
