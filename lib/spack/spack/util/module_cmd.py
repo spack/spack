@@ -50,9 +50,10 @@ def module(
     else:
         # Otherwise assume the `module` shell function is defined in the shell we start
         script = f"module {quoted_args}"
-        shell_path = SHELL.decode() if SHELL and os.access(SHELL, os.X_OK) else "/bin/bash"
+        if SHELL and os.access(SHELL, os.X_OK):
+            shell_path = SHELL.decode()
 
-    # When this module command modifies environment variables, we retrieve those environment as
+    # When this module command modifies environment variables, we retrieve those variables as a
     # \0 separated list of key=value pairs from stdout using a
     if args[0] in module_change_commands:
         # stdout should have environment from awk output; stderr should have error message
@@ -76,7 +77,7 @@ def module(
         environb.update(new_environb)
 
     else:
-        # Simply execute commands that don't change state and return output (which is on stderr)
+        # Simply execute commands that don't change state and return output
         cmd = [shell_path, "-c", f"{script} >&2"]
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         _, stderr = proc.communicate()
@@ -248,5 +249,5 @@ class ModuleCommandError(spack.error.SpackError):
     def from_failure(cls, command: str, returncode: int, stderr: bytes):
         return cls(
             f"`module {command}` failed with exit "
-            f"code {returncode}: {stderr.decode(errors='ignore')}"
+            f"code {returncode}: {stderr.decode(errors='ignore').strip()}"
         )
