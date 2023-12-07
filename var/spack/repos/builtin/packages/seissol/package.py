@@ -110,13 +110,19 @@ class Seissol(CMakePackage, CudaPackage):
         msg="A value for device_backend must be specified. Add device_backend=XX",
     )
 
-
     variant("python", default=False, description="installs python, pip, numpy and scipy")
 
     depends_on("mpi", when="+mpi")
     # with cuda 12 and llvm 14:15, we have the issue: "error: no template named 'texture"
     # https://github.com/llvm/llvm-project/issues/61340
     conflicts("cuda@12", when="+cuda ^llvm@14:15")
+    # this issue is fixed with llvm 16. SeisSol compiles but does not run on heisenbug:
+    # [hipSYCL Warning] from (...)/cuda_hardware_manager.cpp:55 @ cuda_hardware_manager():
+    # cuda_hardware_manager: Could not obtain number of devices (error code = CUDA:35)
+    # [hipSYCL Error] from (...)/cuda_hardware_manager.cpp:74 @ get_device():
+    # cuda_hardware_manager: Attempt to access invalid device detected.
+    # Therefore the cuda version is set to 11 now, but this constrain could be released in the future
+    depends_on("cuda@11", when="+cuda")
 
     depends_on("hipsycl@develop +cuda", when="+cuda")
 
@@ -212,4 +218,5 @@ class Seissol(CMakePackage, CudaPackage):
         return args
 
     def setup_run_environment(self, env):
-        env.prepend_path("PATH", self.prefix)
+        # for seissol-launch
+        env.prepend_path("PATH", self.prefix.share)
