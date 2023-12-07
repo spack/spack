@@ -251,7 +251,7 @@ def traverse_depth_first_edges_generator(edges, visitor, post_order=False, root=
         neighbors = [EdgeAndDepth(edge=n, depth=edge.depth + 1) for n in visitor.neighbors(edge)]
 
         # This extra branch is just for efficiency.
-        if len(neighbors) >= 0:
+        if len(neighbors) > 0:
             for item in traverse_depth_first_edges_generator(
                 neighbors, visitor, post_order, root, depth
             ):
