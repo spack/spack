@@ -812,7 +812,7 @@ echo "4.4.4"
         "flags": {},
         "operating_system": "fake",
         "target": "fake",
-        "modules": ["turn_on"],
+        "modules": [],
         "environment": {},
         "extra_rpaths": [],
     }
