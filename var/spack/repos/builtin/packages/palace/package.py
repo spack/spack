@@ -81,7 +81,8 @@ class Palace(CMakePackage):
         depends_on("mumps~openmp", when="~openmp")
 
     with when("+slepc"):
-        depends_on("slepc ^petsc+mpi+double+complex")
+        depends_on("slepc")
+        depends_on("petsc+mpi+double+complex")
         depends_on("petsc+shared", when="+shared")
         depends_on("petsc~shared", when="~shared")
         depends_on("petsc+int64", when="+int64")
