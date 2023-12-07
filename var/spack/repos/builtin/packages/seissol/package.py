@@ -86,17 +86,7 @@ class Seissol(CMakePackage, CudaPackage):
 
     variant("mpi", default=True, description="installs an MPI implementation")
     variant("libxsmm", default=True, description="installs libxsmm-generator")
-
-    """
-    variant(
-        "extra_blas",
-        default="none",
-        description="installs an extra blas implementation",
-        values=("mkl", "openblas", "blis", "none"),
-        multi=True,
-    )
-    variant("memkind", default=True, description="installs memkind")
-    """
+    variant("memkind", default=True, description="Use memkind library for hbw memory support")
 
     conflicts(
         "cuda_arch=none",
@@ -142,12 +132,10 @@ class Seissol(CMakePackage, CudaPackage):
     depends_on("easi@1.2 ~asagi jit=impalajit,lua", when="~asagi")
     depends_on("easi@1.2 +asagi jit=impalajit,lua", when="+asagi")
 
-    """
-    depends_on("intel-mkl threads=none", when="extra_blas=mkl")
-    depends_on("openblas threads=none", when="extra_blas=openblas")
-    depends_on("blis threads=none", when="extra_blas=blis")
+    depends_on("intel-mkl threads=none", when="gemm_tools=MKL")
+    depends_on("blis threads=none", when="gemm_tools=BLIS")
+    depends_on("openblas threads=none", when="gemm_tools=OpenBLAS")
     depends_on("memkind", when="+memkind target=x86_64:")
-    """
 
     depends_on("py-pspamm")
     depends_on("yaml-cpp@0.6.2")
