@@ -19,6 +19,7 @@ class PyKeras(PythonPackage):
     git = "https://github.com/keras-team/keras.git"
     pypi = "keras/keras-3.0.0.tar.gz"
 
+    version("3.0.1", sha256="d993721510fa654582132192193f69b1b3165418a6e00a73c3edce615b3cc672")
     version("3.0.0", sha256="82a9fa4b32a049b38151d11188ed15d74f21f853f163e78da0950dce1f244ccc")
     version("2.14.0", sha256="a845d446b6ae626f61dde5ab2fa952530b6c17b4f9ed03e9362bd20172d00cca")
     version("2.13.1", sha256="b3591493cce75a69adef7b192cec6be222e76e2386d132cd4e34aa190b0ecbd5")
@@ -70,13 +71,15 @@ class PyKeras(PythonPackage):
 
     # requirements-tensorflow-cuda.txt
     conflicts("backend=tensorflow", msg="Requires TensorFlow 2.16, not yet released")
-    # depends_on("py-tensorflow@2.16.0", type=("build", "run"), when="@3.0.0 backend=tensorflow")
+    # depends_on("py-tensorflow@2.16.0", type=("build", "run"), when="@3.0 backend=tensorflow")
 
     # requirements-jax-cuda.txt
-    depends_on("py-jax", type=("build", "run"), when="@3.0.0: backend=jax")
+    depends_on("py-jax", type=("build", "run"), when="@3: backend=jax")
 
     # requirements-torch-cuda.txt
+    depends_on("py-torch@2.1.1", type=("build", "run"), when="@3.0.1 backend=torch")
     depends_on("py-torch@2.1.0", type=("build", "run"), when="@3.0.0 backend=torch")
+    depends_on("py-torchvision@0.16.1", type=("build", "run"), when="@3.0.1 backend=torch")
     depends_on("py-torchvision@0.16.0", type=("build", "run"), when="@3.0.0 backend=torch")
 
     # Historical dependencies
