@@ -147,7 +147,11 @@ def path_from_modules(modules):
     best_choice = None
     for module_name in modules:
         # Read the current module and return a candidate path
-        text = module("show", module_name).split("\n")
+        try:
+            text = module("show", module_name).split("\n")
+        except ModuleCommandError as e:
+            tty.warn(f"Unable extract prefix from module {module_name}: {e}")
+            continue
         candidate_path = get_path_from_module_contents(text, module_name)
 
         if candidate_path and not os.path.exists(candidate_path):
