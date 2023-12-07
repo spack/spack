@@ -109,7 +109,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         " are enabled",
     )
     variant("pytorch", default=False, description="Enable libtorch support")
-    variant("quip", default=False, description="Enable quip support")
+    # variant("quip", default=False, description="Enable quip support")
     variant("mpi_f08", default=False, description="Use MPI F08 module")
 
     variant(
@@ -236,6 +236,11 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         depends_on("elpa@2021.05:", when="@8.3:")
         depends_on("elpa@2021.11.001:", when="@9.1:")
         depends_on("elpa@2023.05.001:", when="@2023.2:")
+
+    with when("+pytorch"):
+        depends_on("py-torch")
+        depends_on("py-torch+cuda", when="+cuda")
+        depends_on("py-torch+rocm", when="+rocm")
 
     with when("+dlaf"):
         conflicts(
@@ -971,6 +976,8 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                     self.define("CP2K_WITH_GPU", gpu_ver),
                 ]
 
+        # we need to add the quip package to spack.
+
         args += [
             self.define_from_variant("CP2K_ENABLE_REGTESTS", "enable_regtests"),
             self.define_from_variant("CP2K_USE_ELPA", "elpa"),
@@ -987,7 +994,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define_from_variant("CP2K_USE_SPGLIB", "spglib"),
             self.define_from_variant("CP2K_USE_VORI", "libvori"),
             self.define_from_variant("CP2K_USE_SPLA", "spla"),
-            self.define_from_variant("CP2K_USE_QUIP", "quip"),
+            # self.define_from_variant("CP2K_USE_QUIP", "quip"),
             self.define_from_variant("CP2K_USE_MPI_F08", "mpi_f08"),
         ]
 
