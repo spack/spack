@@ -124,14 +124,15 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
             when="+{0} build_type=RelWithDebInfo".format(pkg[1]),
         )
 
-    depends_on(
-        "{0} build_type=Release".format("hiop+ginkgo ^ginkgo"),
-        when="+{0} build_type=Release".format("hiop ^hiop+ginkgo"),
-    )
-    depends_on(
-        "{0} build_type=Debug".format("hiop+ginkgo ^ginkgo"),
-        when="+{0} build_type=RelWithDebInfo".format("hiop ^hiop+ginkgo"),
-    )
+    with when("+hiop"):
+        depends_on("hiop")
+        with when("build_type=Release"):
+            depends_on("hiop build_type=Release")
+            depends_on("ginkgo build_type=Release", when="^hiop+ginkgo")
+        with when("build_type=Debug"):
+            depends_on("hiop build_type=RelWithDebInfo")
+            depends_on("ginkgo build_type=Debug", when="^hiop+ginkgo")
+
     # depends_on("hpctoolkit", when="with_profiling=hpctoolkit")
     # depends_on("tau", when="with_profiling=tau")
     # ^ need to depend when both hpctoolkit and tau
