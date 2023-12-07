@@ -16,7 +16,6 @@ import archspec.cpu
 from llnl.util import tty
 
 import spack.environment
-import spack.paths
 import spack.tengine
 import spack.util.cpus
 import spack.util.executable
