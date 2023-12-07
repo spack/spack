@@ -16,6 +16,14 @@ class RdmaCore(CMakePackage):
     libraries = ["librdmacm.so"]
     keep_werror = "all"
 
+    version("49.0", sha256="953546ad2b179f9ce68dc21eb1eb26003098ea1bf0f87a4baed45bcea134b2b4")
+    version("47.1", sha256="5d92058473b90be231c17220ce456837cb6da9975de498bd63b9660baa25afd6")
+    version("46.2", sha256="c59c3c79fbae6038d7c6d16b37132e433e19f4a86d41341c6b7974b830b0d4fa")
+    version("45.3", sha256="6cb2bf25927dfbaf5acba9ae755f11beabc2983720d2eb2c4547a490bbf2ba81")
+    version("44.4", sha256="7de3f50d3e11a519494efc88250ca6aef992c072d772113eb81b64e69d03e46b")
+    version("43.4", sha256="2a3155774947ef602f50a3d41d642d09348e4c55411633743985bf8c83d0b9bf")
+    version("42.5", sha256="d6f8976d4cc295ad6eba09a3dcad8cdb26f36556dbee81f41965f3761f3ac093")
+    version("41.5", sha256="70e2a5f1d552398c09c02e660fa63c476c05c47c8b47b3fd2f8661503f35aed8")
     version("41.0", sha256="e0b7deb8a71f229796a0cfe0fa25192c530cd3d86b755b6b28d1a5986a77507b")
     version("40.0", sha256="8844edb71311e3212e55e28fa4bdc6e06dd6c7b839ed56ee4b606e4220d94ee8")
     version("39.1", sha256="32ccd5c990d34605b6e996de991528ef01d278ad06bcf62ccf8a32edb118c335")
