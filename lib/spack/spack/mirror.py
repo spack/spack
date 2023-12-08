@@ -134,6 +134,10 @@ class Mirror:
         return isinstance(self._data, str) or self._data.get("source", True)
 
     @property
+    def signed(self) -> bool:
+        return isinstance(self._data, str) or self._data.get("signed", True)
+
+    @property
     def fetch_url(self):
         """Get the valid, canonicalized fetch URL"""
         return self.get_url("fetch")

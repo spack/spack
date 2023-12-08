@@ -571,7 +571,7 @@ _spack_buildcache() {
 _spack_buildcache_push() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -f --force --allow-root -a --unsigned -u --key -k --update-index --rebuild-index --spec-file --only --fail-fast --base-image -j --jobs"
+        SPACK_COMPREPLY="-h --help -f --force --allow-root -a --unsigned -u --signed --key -k --update-index --rebuild-index --spec-file --only --fail-fast --base-image -j --jobs"
     else
         _mirrors
     fi
@@ -580,7 +580,7 @@ _spack_buildcache_push() {
 _spack_buildcache_create() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -f --force --allow-root -a --unsigned -u --key -k --update-index --rebuild-index --spec-file --only --fail-fast --base-image -j --jobs"
+        SPACK_COMPREPLY="-h --help -f --force --allow-root -a --unsigned -u --signed --key -k --update-index --rebuild-index --spec-file --only --fail-fast --base-image -j --jobs"
     else
         _mirrors
     fi

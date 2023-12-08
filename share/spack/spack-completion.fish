@@ -697,7 +697,7 @@ complete -c spack -n '__fish_spack_using_command buildcache' -s h -l help -f -a 
 complete -c spack -n '__fish_spack_using_command buildcache' -s h -l help -d 'show this help message and exit'
 
 # spack buildcache push
-set -g __fish_spack_optspecs_spack_buildcache_push h/help f/force a/allow-root u/unsigned k/key= update-index spec-file= only= fail-fast base-image= j/jobs=
+set -g __fish_spack_optspecs_spack_buildcache_push h/help f/force a/allow-root u/unsigned signed k/key= update-index spec-file= only= fail-fast base-image= j/jobs=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 1 buildcache push' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command buildcache push' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache push' -s h -l help -d 'show this help message and exit'
@@ -705,8 +705,10 @@ complete -c spack -n '__fish_spack_using_command buildcache push' -s f -l force 
 complete -c spack -n '__fish_spack_using_command buildcache push' -s f -l force -d 'overwrite tarball if it exists'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l allow-root -s a -f -a allow_root
 complete -c spack -n '__fish_spack_using_command buildcache push' -l allow-root -s a -d 'allow install root string in binary files after RPATH substitution'
-complete -c spack -n '__fish_spack_using_command buildcache push' -l unsigned -s u -f -a unsigned
+complete -c spack -n '__fish_spack_using_command buildcache push' -l unsigned -s u -f -a signed
 complete -c spack -n '__fish_spack_using_command buildcache push' -l unsigned -s u -d 'push unsigned buildcache tarballs'
+complete -c spack -n '__fish_spack_using_command buildcache push' -l signed -f -a signed
+complete -c spack -n '__fish_spack_using_command buildcache push' -l signed -d 'push signed buildcache tarballs'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l key -s k -r -f -a key
 complete -c spack -n '__fish_spack_using_command buildcache push' -l key -s k -r -d 'key for signing'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l update-index -l rebuild-index -f -a update_index
@@ -723,7 +725,7 @@ complete -c spack -n '__fish_spack_using_command buildcache push' -s j -l jobs -
 complete -c spack -n '__fish_spack_using_command buildcache push' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
 
 # spack buildcache create
-set -g __fish_spack_optspecs_spack_buildcache_create h/help f/force a/allow-root u/unsigned k/key= update-index spec-file= only= fail-fast base-image= j/jobs=
+set -g __fish_spack_optspecs_spack_buildcache_create h/help f/force a/allow-root u/unsigned signed k/key= update-index spec-file= only= fail-fast base-image= j/jobs=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 1 buildcache create' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command buildcache create' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache create' -s h -l help -d 'show this help message and exit'
@@ -731,8 +733,10 @@ complete -c spack -n '__fish_spack_using_command buildcache create' -s f -l forc
 complete -c spack -n '__fish_spack_using_command buildcache create' -s f -l force -d 'overwrite tarball if it exists'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l allow-root -s a -f -a allow_root
 complete -c spack -n '__fish_spack_using_command buildcache create' -l allow-root -s a -d 'allow install root string in binary files after RPATH substitution'
-complete -c spack -n '__fish_spack_using_command buildcache create' -l unsigned -s u -f -a unsigned
+complete -c spack -n '__fish_spack_using_command buildcache create' -l unsigned -s u -f -a signed
 complete -c spack -n '__fish_spack_using_command buildcache create' -l unsigned -s u -d 'push unsigned buildcache tarballs'
+complete -c spack -n '__fish_spack_using_command buildcache create' -l signed -f -a signed
+complete -c spack -n '__fish_spack_using_command buildcache create' -l signed -d 'push signed buildcache tarballs'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l key -s k -r -f -a key
 complete -c spack -n '__fish_spack_using_command buildcache create' -l key -s k -r -d 'key for signing'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l update-index -l rebuild-index -f -a update_index
@@ -1928,7 +1932,7 @@ complete -c spack -n '__fish_spack_using_command install' -l use-buildcache -r -
 complete -c spack -n '__fish_spack_using_command install' -l include-build-deps -f -a include_build_deps
 complete -c spack -n '__fish_spack_using_command install' -l include-build-deps -d 'include build deps when installing from cache, useful for CI pipeline troubleshooting'
 complete -c spack -n '__fish_spack_using_command install' -l no-check-signature -f -a unsigned
-complete -c spack -n '__fish_spack_using_command install' -l no-check-signature -d 'do not check signatures of binary packages'
+complete -c spack -n '__fish_spack_using_command install' -l no-check-signature -d 'do not check signatures of binary packages (override mirror config)'
 complete -c spack -n '__fish_spack_using_command install' -l show-log-on-error -f -a show_log_on_error
 complete -c spack -n '__fish_spack_using_command install' -l show-log-on-error -d 'print full build log to stderr if build fails'
 complete -c spack -n '__fish_spack_using_command install' -l source -f -a install_source

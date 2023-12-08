@@ -270,7 +270,7 @@ def _configure_mirror(args):
         changes["endpoint_url"] = args.s3_endpoint_url
     if args.oci_username and args.oci_password:
         changes["access_pair"] = [args.oci_username, args.oci_password]
-    if args.signed is not None:
+    if getattr(args, "signed", None) is not None:
         changes["signed"] = args.signed
 
     # argparse cannot distinguish between --binary and --no-binary when same dest :(
