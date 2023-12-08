@@ -139,12 +139,6 @@ class Whizard(AutotoolsPackage):
 
         if "+openloops" in spec:
             args.append("--with-openloops=%s" % spec["openloops"].prefix)
-        if "+lcio" in spec:
-            args.append("--with-lcio=%s" % spec["lcio"].prefix)
-        if "hepmc=3" in spec:
-            args.append("--with-hepmc=%s" % spec["hepmc3"].prefix)
-        if "hepmc=2" in spec:
-            args.append("--with-hepmc=%s" % spec["hepmc"].prefix)
         if "+openmp" not in spec:
             args.append("--disable-openmp")
         return args
