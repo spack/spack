@@ -5,6 +5,7 @@
 import codecs
 import collections
 import hashlib
+import json
 import os.path
 import platform
 import posixpath
@@ -289,6 +290,32 @@ class CDash(Reporter):
                 self.build_report_for_package(report_dir, package, duration)
         self.finalize_report()
 
+        # Record metadata about this submission so Spack can append to it later.
+        cdash_metadata = {
+            "base_buildname": self.base_buildname,
+            "buildstamp": self.buildstamp,
+            "multiple_packages": self.multiple_packages,
+            "site": self.site,
+        }
+        cdash_metadata_file = os.path.join(report_dir, "cdash_metadata.json")
+        with open(cdash_metadata_file, "w") as fd:
+            json.dump(cdash_metadata, fd)
+
+    def load_metadata(self, report_dir):
+        cdash_metadata_file = os.path.join(report_dir, "cdash_metadata.json")
+        if not os.path.exists(cdash_metadata_file):
+            return
+        with open(cdash_metadata_file, "r") as fd:
+            _cdash_metadata = json.load(fd)
+            if "base_buildname" in _cdash_metadata:
+                self.base_buildname = _cdash_metadata["base_buildname"]
+            if "buildstamp" in _cdash_metadata:
+                self.buildstamp = _cdash_metadata["buildstamp"]
+            if "multiple_packages" in _cdash_metadata:
+                self.multiple_packages = _cdash_metadata["multiple_packages"]
+            if "site" in _cdash_metadata:
+                self.site = _cdash_metadata["site"]
+
     def extract_standalone_test_data(self, package, phases, report_data):
         """Extract stand-alone test outputs for the package."""
 
@@ -330,11 +357,7 @@ class CDash(Reporter):
             return
 
         self.current_package_name = package["name"]
-        if self.base_buildname == self.install_command:
-            # The package list is NOT all that helpful in this case
-            self.buildname = "{0}-{1}".format(self.current_package_name, package["id"])
-        else:
-            self.buildname = self.report_build_name(self.current_package_name)
+        self.buildname = self.report_build_name(self.current_package_name)
         self.endtime = self.starttime + duration
 
         report_data = self.initialize_report(report_dir)
@@ -347,6 +370,11 @@ class CDash(Reporter):
     def test_report(self, report_dir, specs):
         """Generate reports for each package in each spec."""
         tty.debug("Processing test report")
+
+        # Attempt to load metadata file so we can append to previously submitted
+        # build results on CDash.
+        self.load_metadata(report_dir)
+
         for spec in specs:
             duration = 0
             if "time" in spec:
