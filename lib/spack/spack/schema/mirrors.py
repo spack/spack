@@ -42,6 +42,7 @@ mirror_entry = {
     "properties": {
         "source": {"type": "boolean"},
         "binary": {"type": "boolean"},
+        "signed": {"type": "boolean"},
         "fetch": fetch_and_push,
         "push": fetch_and_push,
         **connection,  # type: ignore
