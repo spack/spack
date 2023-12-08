@@ -99,12 +99,19 @@ class Whizard(AutotoolsPackage):
     )
 
     def setup_build_environment(self, env):
+        # whizard uses some environment variables to detect dependencies at
+        # configure time if they are not installed to standard system prefixes
+        if self.spec.satisfies("+lcio"):
+            env.set("LCIO", self.spec["lcio"].prefix)
+        if self.spec.satisfies("hepmc=2"):
+            env.set("HEPMC_DIR", self.spec["hepmc"].prefix)
+        if self.spec.satisfies("hepmc=3"):
+            env.set("HEPMC_DIR", self.spec["hepmc3"].prefix)
+
         # whizard uses the compiler during runtime,
         # and seems incompatible with
         # filter_compiler_wrappers, thus the
         # actual compilers need to be used to build
-        if self.spec.satisfies("+lcio"):
-            env.set("LCIO", self.spec["lcio"].prefix)
         env.set("CC", self.compiler.cc)
         env.set("CXX", self.compiler.cxx)
         env.set("FC", self.compiler.fc)
