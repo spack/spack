@@ -146,6 +146,9 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     # gprofng requires bison
     depends_on("bison@3.0.4:", type="build", when="+gprofng")
 
+    # libiberty needs elfutils
+    depends_on("elfutils+debuginfod", when="+libiberty")
+
     with when("platform=darwin"):
         conflicts("+gold", msg="Binutils cannot build linkers on macOS")
         conflicts(
