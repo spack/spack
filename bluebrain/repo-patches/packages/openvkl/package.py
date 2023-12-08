@@ -23,7 +23,7 @@ class Openvkl(CMakePackage):
     depends_on("cmake@3.1:", type="build")
     depends_on("ispc", type="build")
     depends_on("ninja", type="build")
-    depends_on("embree")
+    depends_on("embree@3.13.1")
     depends_on("rkcommon")
 
     def cmake_args(self):
