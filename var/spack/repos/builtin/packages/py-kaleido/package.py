@@ -15,4 +15,4 @@ class PyKaleido(PythonPackage):
 
     version("0.2.1", sha256="d313940896c24447fc12c74f60d46ea826195fc991f58569a6e73864d53e5c20")
 
-    depends_on("python@:3.4")
+    depends_on("python")
