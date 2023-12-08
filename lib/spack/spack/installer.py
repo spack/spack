@@ -357,7 +357,8 @@ def _print_installed_pkg(message: str) -> None:
     Args:
         message (str): message to be output
     """
-    print(colorize("@*g{[+]} ") + spack.util.path.debug_padded_filter(message))
+    if tty.msg_enabled():
+        print(colorize("@*g{[+]} ") + spack.util.path.debug_padded_filter(message))
 
 
 def print_install_test_log(pkg: "spack.package_base.PackageBase") -> None:
@@ -2007,7 +2008,9 @@ class PackageInstaller:
 
         # Only enable the terminal status line when we're in a tty without debug info
         # enabled, so that the output does not get cluttered.
-        term_status = TermStatusLine(enabled=sys.stdout.isatty() and not tty.is_debug())
+        term_status = TermStatusLine(
+            enabled=sys.stdout.isatty() and tty.msg_enabled() and not tty.is_debug()
+        )
 
         while self.build_pq:
             task = self._pop_task()

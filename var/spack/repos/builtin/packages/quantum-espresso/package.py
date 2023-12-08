@@ -132,6 +132,10 @@ class QuantumEspresso(CMakePackage, Package):
         # folder QE expects as a link, we issue a conflict here.
         conflicts("@:5.4.0", msg="+elpa requires QE >= 6.0")
 
+    variant("fox", default=False, description="Enables FoX library")
+    with when("+fox"):
+        conflicts("@:7.1", msg="+fox variant requires QE >= 7.2")
+
     # Support for HDF5 has been added starting in version 6.1.0 and is
     # still experimental, therefore we default to False for the variant
     variant(
@@ -259,9 +263,9 @@ class QuantumEspresso(CMakePackage, Package):
     conflicts(
         "@:6.2",
         when="+gipaw",
-        msg="gipaw standard support available for QE 6.3 or grater version only",
+        msg="gipaw standard support available for QE 6.3 or greater version only",
     )
-
+    conflicts("~fox", when="@7.2: +gipaw", msg="gipaw plugin requires FoX")
     conflicts("+gipaw build_system=cmake", when="@:7.1")
 
     # Only CMake will work for @6.8: %aocc
@@ -289,13 +293,13 @@ class QuantumEspresso(CMakePackage, Package):
     # see: https://gitlab.com/QEF/q-e/-/merge_requests/2005
     patch_url = "https://gitlab.com/QEF/q-e/-/commit/4ca3afd4c6f27afcf3f42415a85a353a7be1bd37.diff"
     patch_checksum = "e54d33e36a2667bd1d7e358db9fa9d4d83085264cdd47e39ce88754452ae7700"
-    patch(patch_url, sha256=patch_checksum, when="@:7.1 build_system=cmake")
+    patch(patch_url, sha256=patch_checksum, when="@7.1 build_system=cmake")
 
     # QE 7.1 fix post-processing install part 2/2
     # see: https://gitlab.com/QEF/q-e/-/merge_requests/2007
     patch_url = "https://gitlab.com/QEF/q-e/-/commit/481a001293de2f9eec8481e02d64f679ffd83ede.diff"
     patch_checksum = "5075f2df61ef5ff70f2ec3b52a113f5636fb07f5d3d4c0115931f9b95ed61c3e"
-    patch(patch_url, sha256=patch_checksum, when="@:7.1 build_system=cmake")
+    patch(patch_url, sha256=patch_checksum, when="@7.1 build_system=cmake")
 
     # No patch needed for QMCPACK converter beyond 7.0
     # 7.0
@@ -423,9 +427,13 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define_from_variant("QE_ENABLE_MPI_GPU_AWARE", "mpigpu"),
         ]
 
-        if "+gipaw" in spec:
-            cmake_args.append(self.define("QE_ENABLE_PLUGINS", "gipaw"))
+        plugins = []
+
+        if "+fox" in spec:
             cmake_args.append(self.define("QE_ENABLE_FOX", True))
+
+        if "+gipaw" in spec:
+            plugins.append("gipaw")
 
         if "+cuda" in self.spec:
             cmake_args.append(self.define("QE_ENABLE_OPENACC", True))
@@ -439,7 +447,10 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             cmake_args.append(self.define("QE_ENABLE_HDF5", True))
 
         if "+qmcpack" in spec:
-            cmake_args.append(self.define("QE_ENABLE_PW2QMCPACK", True))
+            if spec.satisfies("@:7.0"):
+                cmake_args.append(self.define("QE_ENABLE_PW2QMCPACK", True))
+            else:
+                plugins.append("pw2qmcpack")
 
         if "^armpl-gcc" in spec or "^acfl" in spec:
             cmake_args.append(self.define("BLAS_LIBRARIES", spec["blas"].libs.joined(";")))
@@ -448,6 +459,8 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             if spec.satisfies("@:7.1"):
                 cmake_args.append(self.define("BLA_VENDOR", "All"))
 
+        if plugins:
+            cmake_args.append(self.define("QE_ENABLE_PLUGINS", plugins))
         return cmake_args
 
 
@@ -599,6 +612,9 @@ class GenericBuilder(spack.build_systems.generic.GenericBuilder):
                 )
             else:
                 options.extend(["--with-elpa-lib={0}".format(elpa.libs[0])])
+
+        if "+fox" in spec:
+            options.append("--with-fox=yes")
 
         if spec.variants["hdf5"].value != "none":
             options.append("--with-hdf5={0}".format(spec["hdf5"].prefix))

@@ -327,7 +327,7 @@ def _variants_by_name_when(pkg):
     """Adaptor to get variants keyed by { name: { when: { [Variant...] } }."""
     # TODO: replace with pkg.variants_by_name(when=True) when unified directive dicts are merged.
     variants = {}
-    for name, (variant, whens) in pkg.variants.items():
+    for name, (variant, whens) in sorted(pkg.variants.items()):
         for when in whens:
             variants.setdefault(name, {}).setdefault(when, []).append(variant)
     return variants
