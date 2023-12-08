@@ -70,10 +70,11 @@ class Leveldb(CMakePackage):
         else:
             args.append("-DBUILD_SHARED_LIBS=OFF")
 
-        # The tarball is missing the benchmark and test submodules
-        if self.spec.satisfies("@1.23:"):
-            args.append("-DLEVELDB_BUILD_BENCHMARKS=OFF")
-            args.append("-DLEVELDB_BUILD_TESTS=OFF")
+        # 0.23 tarball is missing the benchmark and test submodules
+        # and for older versions, some compilers fail to compile the
+        # benchmarks
+        args.append("-DLEVELDB_BUILD_BENCHMARKS=OFF")
+        args.append("-DLEVELDB_BUILD_TESTS=OFF")
 
         return args
 
