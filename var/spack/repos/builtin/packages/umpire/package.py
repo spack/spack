@@ -150,6 +150,13 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         when="@2022.10.0",
     )
 
+    # https://github.com/LLNL/Umpire/pull/853
+    patch(
+        "https://github.com/LLNL/Umpire/commit/4bd9b2ded81d3216b3f62e2aad62d0e34fe2c256.patch?full_index=1",
+        sha256="c9ddae1f4212cef72e1050b6ac482ce5b795dad4977d2462cff2e884b8d7aff5",
+        when="@2022.10:2023.06",
+    )
+
     variant("fortran", default=False, description="Build C/Fortran API")
     variant("c", default=True, description="Build C API")
     variant("numa", default=False, description="Enable NUMA support")
