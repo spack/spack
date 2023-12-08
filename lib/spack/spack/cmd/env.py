@@ -219,7 +219,7 @@ def env_activate_setup_parser(subparser):
         "--create",
         action="store_true",
         default=False,
-        help="if the environment doesn't exist, create it before activating",
+        help="create and activate the environment if it doesn't exist", 
     )
     subparser.add_argument(
         "--envfile",
@@ -274,7 +274,7 @@ def env_activate(args):
     if args.env or args.no_env or args.env_dir:
         tty.die("Calling spack env activate with --env, --env-dir and --no-env is ambiguous")
 
-    # special parser error handeling relative to the --temp flag
+    # special parser error handling relative to the --temp flag
     temp_conflicts = iter([args.keep_relative, args.dir, args.env_name])
     if args.temp and any(temp_conflicts):
         tty.die(
