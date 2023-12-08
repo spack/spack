@@ -107,6 +107,8 @@ class Whizard(AutotoolsPackage):
             env.set("HEPMC_DIR", self.spec["hepmc"].prefix)
         if self.spec.satisfies("hepmc=3"):
             env.set("HEPMC_DIR", self.spec["hepmc3"].prefix)
+        if self.spec.satisfies("+openloops"):
+            env.set("OPENLOOPS_DIR", self.spec["openloops"].prefix)
 
         # whizard uses the compiler during runtime,
         # and seems incompatible with
