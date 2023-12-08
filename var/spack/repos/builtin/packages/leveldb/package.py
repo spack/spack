@@ -70,7 +70,7 @@ class Leveldb(CMakePackage):
         else:
             args.append("-DBUILD_SHARED_LIBS=OFF")
 
-        # 0.23 tarball is missing the benchmark and test submodules
+        # 1.23 tarball is missing the benchmark and test submodules
         # and for older versions, some compilers fail to compile the
         # benchmarks
         args.append("-DLEVELDB_BUILD_BENCHMARKS=OFF")
