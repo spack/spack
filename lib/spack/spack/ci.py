@@ -438,7 +438,7 @@ def _build_jobs(spec_labels, stages):
         for spec_label in stage_jobs:
             release_spec = spec_labels[spec_label]
             release_spec_dag_hash = release_spec.dag_hash()
-            yield release_spec, release_spec_dag_hash
+            yield release_spec
 
 
 def _noop(x):
@@ -493,17 +493,123 @@ class SpackCI:
         }
         jobs = self.ir["jobs"]
 
-        for spec, dag_hash in _build_jobs(spec_labels, stages):
-            jobs[dag_hash] = self.__init_job(spec)
+        self.stages = stages
+
+        for stage_jobs in stages:
+            for spec_label in stage_jobs:
+                release_spec = spec_labels[spec_label]
+                jobs[_spec_deps_key(release_spec)] = self.__init_job(release_spec)
 
         for name in self.named_jobs:
             # Skip the special named jobs
             if name not in ["any", "build"]:
                 jobs[name] = self.__init_job("")
 
+
+    # Helper function to get jobs that are labeld to rebuild
+    def iterate_build_stages(self):
+
+    def iterate_build_jobs(self, skip_pruned=True):
+        for job in self.ir.get("jobs", []):
+            if job["spec"]:
+                if "record" not in job:
+                    job["record"] = RebuildDecision()
+
+                if not skip_pruned or job["record"].rebuild:
+                    yield job
+
+    def prune_unaffected(self, affected_specs = []):
+        for job in self.iterate_build_jobs():
+            if job["spec"] not in afftected_specs:
+                record = job["record"]
+                record.rebuild = False
+                record.reason = "Pruned, untouched by change."
+
+    def prune_found(self, mirrors_to_check, index_only):
+        for job in self.iterate_build_jobs():
+            up_to_date_mirrors = bindist.get_mirrors_for_spec(
+                spec=job["spec"], mirrors_to_check=mirrors_to_check, index_only=index_only
+            )
+            if up_to_date_mirrors:
+                record = job["record"]
+                record.rebuild= False
+                record.mirrors = [m["mirror_url"] for m in up_to_date_mirrors]
+            else:
+                record.reason = "Scheduled, not found anywhere"
+
+    def prune_dag(self, prune_dag):
+        for job in self.iterate_build_jobs(skip_pruned=False):
+            record = job["record"]
+            if not record.rebuild and prune_dag
+                record.reason = "Pruned, up-to-date"
+            else
+                # DAG pruning is disabled, force the spec to rebuild. The
+                # record still contains any mirrors on which the spec
+                # may have been found, so we can print them in the staging
+                # summary.
+                record.rebuild = True
+                record.reason = "Scheduled, DAG pruning disabled"
+
+    def write_manifest(self, source_mirror_url: str, destination_mirror_url: str = ""):
+        buildcache_copies = {}
+
+        for job in self.iterate_build_jobs():
+            release_spec = job["spec"]
+            release_spec_dag_hash = release_spec.dag_hash()
+            buildcache_copies[release_spec_dag_hash] = [
+                {
+                    "src": url_util.join(
+                        source_mirror_url,
+                        bindist.build_cache_relative_path(),
+                        bindist.tarball_name(release_spec, ".spec.json.sig"),
+                    ),
+                },
+                {
+                    "src": url_util.join(
+                        source_mirror_url,
+                        bindist.build_cache_relative_path(),
+                        bindist.tarball_path_name(release_spec, ".spack"),
+                    ),
+                },
+            ]
+            if destination_mirror:
+                buildcache_copies[dag_hash][0].update({
+                        "dest": url_util.join(
+                            destination_mirror_url,
+                            bindist.build_cache_relative_path(),
+                            bindist.tarball_name(release_spec, ".spec.json.sig"),
+                        ),
+                })
+                buildcache_copies[dag_hash][1].update({
+                        "dest": url_util.join(
+                            destination_mirror_url,
+                            bindist.build_cache_relative_path(),
+                            bindist.tarball_path_name(release_spec, ".spack"),
+                        ),
+                })
+
+        if not buildcache_copies:
+            return
+
+        with open(copy_specs_file, "w") as fd:
+            fd.write(json.dumps(buildcache_copies))
+
     def __init_job(self, spec):
         """Initialize job object"""
-        return {"spec": spec, "attributes": {}}
+        job_data = {"spec": spec, "attributes": {}}
+        if spec:
+            job_data["attributes"]["variables"] = {
+                "SPACK_JOB_SPEC_DAG_HASH": spec.dag_hash(),
+                "SPACK_JOB_SPEC_PKG_NAME": spec.name,
+                "SPACK_JOB_SPEC_PKG_VERSION": spec.format("{version}"),
+                "SPACK_JOB_SPEC_COMPILER_NAME": spec.format("{compiler.name}"),
+                "SPACK_JOB_SPEC_COMPILER_VERSION": spec.format("{compiler.version}"),
+                "SPACK_JOB_SPEC_ARCH": spec.format("{architecture}"),
+                "SPACK_JOB_SPEC_VARIANTS": spec.format("{variants}"),
+            }
+            job_data["record"] = RebuildDecision()
+
+        return job_data
 
     def __is_named(self, section):
         """Check if a pipeline-gen configuration section is for a named job,
@@ -644,6 +750,37 @@ class SpackCI:
                 job["spec"] = job["spec"].name
 
         return self.ir
+
+    def print_staging_summary(self.mirrors_to_check):
+        if not self.stages:
+            return
+
+        mirrors = spack.mirror.MirrorCollection(mirrors=mirrors_to_check, binary=True)
+        tty.msg("Checked the following mirrors for binaries:")
+        for m in mirrors.values():
+            tty.msg("  {0}".format(m.fetch_url))
+
+        jobs = self.ir["jobs"]
+        tty.msg("Staging summary ([x] means a job needs rebuilding):")
+        for stage_index, stage in enumerate(self.stages):
+            tty.msg(f"  stage {stage_index} ({len(stage)} jobs):")
+
+            for job in sorted(stage, key=lambda j: (not jobs[j]["record"].rebuild, j)):
+                j = jobs[job]
+                s = j["spec"]
+                record = j["record"]
+                reason = record.reason
+                reason_msg = f" ({reason})" if reason else ""
+                spec_fmt = "{name}{@version}{%compiler}{/hash:7}"
+                if record.rebuild:
+                    status = colorize("@*g{[x]}  ")
+                    msg = f"  {status}{s.cformat(spec_fmt)}{reason_msg}"
+                else:
+                    msg = f"{s.format(spec_fmt)}{reason_msg}"
+                    if record.mirrors:
+                        msg += f" [{', '.join(record.mirrors)}]"
+                    msg = colorize(f"  @K -   {cescape(msg)}@.")
+                tty.msg(msg)
 
 
 def generate_gitlab_ci_yaml(
@@ -975,15 +1112,25 @@ def generate_gitlab_ci_yaml(
     spack_ci = SpackCI(ci_config, spec_labels, stages)
     spack_ci_ir = spack_ci.generate_ir()
 
+    if prune_untouched_packages:
+        spack_ci.prune_unaffected(affected_specs)
+
+    if not copy_only_pipeline:
+        spack_ci.prune_found(mirrors_to_check, index_only)
+        spack_ci.prune_dag(prune_dag)
+
     rebuild_decisions = {}
 
-    for stage_jobs in stages:
-        stage_name = "stage-{0}".format(stage_id)
-        stage_names.append(stage_name)
-        stage_id += 1
+    # for stage_jobs in stages:
+    #     stage_name = "stage-{0}".format(stage_id)
+    #     stage_names.append(stage_name)
+    #     stage_id += 1
 
-        for spec_label in stage_jobs:
-            release_spec = spec_labels[spec_label]
+    #     for spec_label in stage_jobs:
+    for job_object in  spack_ci.iterate_build_jobs():
+            stage_name = "stage-{0}".format(job_object["stage_id"])
+
+            release_spec = job_object["spec"]
             release_spec_dag_hash = release_spec.dag_hash()
 
             spec_record = RebuildDecision()
@@ -1005,6 +1152,20 @@ def generate_gitlab_ci_yaml(
                 spec_record.mirrors = [m["mirror_url"] for m in up_to_date_mirrors]
             else:
                 spec_record.reason = "Scheduled, not found anywhere"
+
+            rebuild_spec = spec_record.rebuild
+
+            if not rebuild_spec and not copy_only_pipeline:
+                if prune_dag:
+                    spec_record.reason = "Pruned, up-to-date"
+                    continue
+                else:
+                    # DAG pruning is disabled, force the spec to rebuild. The
+                    # record still contains any mirrors on which the spec
+                    # may have been found, so we can print them in the staging
+                    # summary.
+                    spec_record.rebuild = True
+                    spec_record.reason = "Scheduled, DAG pruning disabled"
 
             job_object = spack_ci_ir["jobs"][release_spec_dag_hash]["attributes"]
 
@@ -1037,15 +1198,6 @@ def generate_gitlab_ci_yaml(
                 job_object["after_script"] = _unpack_script(job_object["after_script"])
 
             job_name = get_job_name(release_spec, build_group)
-
-            job_vars = job_object.setdefault("variables", {})
-            job_vars["SPACK_JOB_SPEC_DAG_HASH"] = release_spec_dag_hash
-            job_vars["SPACK_JOB_SPEC_PKG_NAME"] = release_spec.name
-            job_vars["SPACK_JOB_SPEC_PKG_VERSION"] = release_spec.format("{version}")
-            job_vars["SPACK_JOB_SPEC_COMPILER_NAME"] = release_spec.format("{compiler.name}")
-            job_vars["SPACK_JOB_SPEC_COMPILER_VERSION"] = release_spec.format("{compiler.version}")
-            job_vars["SPACK_JOB_SPEC_ARCH"] = release_spec.format("{architecture}")
-            job_vars["SPACK_JOB_SPEC_VARIANTS"] = release_spec.format("{variants}")
 
             job_object["needs"] = []
             if spec_label in dependencies:
@@ -1086,36 +1238,6 @@ def generate_gitlab_ci_yaml(
 
             if broken_spec_urls is not None and release_spec_dag_hash in broken_spec_urls:
                 known_broken_specs_encountered.append(release_spec_dag_hash)
-
-            # Only keep track of these if we are copying rebuilt cache entries
-            if spack_buildcache_copy:
-                # TODO: This assumes signed version of the spec
-                buildcache_copies[release_spec_dag_hash] = [
-                    {
-                        "src": url_util.join(
-                            buildcache_copy_src_prefix,
-                            bindist.build_cache_relative_path(),
-                            bindist.tarball_name(release_spec, ".spec.json.sig"),
-                        ),
-                        "dest": url_util.join(
-                            buildcache_copy_dest_prefix,
-                            bindist.build_cache_relative_path(),
-                            bindist.tarball_name(release_spec, ".spec.json.sig"),
-                        ),
-                    },
-                    {
-                        "src": url_util.join(
-                            buildcache_copy_src_prefix,
-                            bindist.build_cache_relative_path(),
-                            bindist.tarball_path_name(release_spec, ".spack"),
-                        ),
-                        "dest": url_util.join(
-                            buildcache_copy_dest_prefix,
-                            bindist.build_cache_relative_path(),
-                            bindist.tarball_path_name(release_spec, ".spack"),
-                        ),
-                    },
-                ]
 
             if artifacts_root:
                 job_object["needs"].append(
@@ -1175,7 +1297,7 @@ def generate_gitlab_ci_yaml(
                 job_id += 1
 
     if print_summary:
-        _print_staging_summary(spec_labels, stages, mirrors_to_check, rebuild_decisions)
+        spack_ci.print_staging_summary(spec_labels, stages, mirrors_to_check, rebuild_decisions)
 
     # Clean up remote mirror override if enabled
     # TODO: Remove this block in Spack 0.23
@@ -1348,8 +1470,7 @@ def generate_gitlab_ci_yaml(
                 "copy_{}_specs.json".format(spack_stack_name if spack_stack_name else "rebuilt"),
             )
 
-            with open(copy_specs_file, "w") as fd:
-                fd.write(json.dumps(buildcache_copies))
+            spack_ci.write_manifest(copy_specs_file, destination_mirror = buildcache_copy_dest_prefix)
 
         # TODO(opadron): remove this or refactor
         if run_optimizer:
