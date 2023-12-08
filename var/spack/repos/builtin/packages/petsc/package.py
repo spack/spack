@@ -161,9 +161,13 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         # https://github.com/spack/spack/issues/37416
         conflicts("^rocprim@5.3.0:5.3.2")
         # hipsparse@5.6.0 broke hipsparseSpSV_solve() API, reverted in 5.6.1.
-        conflicts("^hipsparse@5.6.0", when="@:3.19")
-        # broken workaround in petsc to deal with breaking change in hipsparse@5.6.0
-        conflicts("^hipsparse@5.6.1", when="@3.20.0")
+        patch(
+            "https://gitlab.com/petsc/petsc/-/commit/ef7140cce45367033b48bbd2624dfd2b6aa4b997.diff",
+            when="@3.20.0",
+            sha256="ba327f8b2a0fa45209dfb7a4278f3e9a323965b5a668be204c1c77c17a963a7f",
+        )
+        patch("hip-5.6.0-for-3.18.diff", when="@3.18:3.19 ^hipsparse@5.6.0")
+        patch("hip-5.7-plus-for-3.18.diff", when="@3.18:3.19 ^hipsparse@5.7:")
 
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
     conflicts("^intel-mkl", when="@3.8.0")
@@ -224,7 +228,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     with when("+rocm"):
         depends_on("hipblas")
         depends_on("hipsparse")
-        depends_on("hipsparse@:5.6", when="@:3.19")
         depends_on("hipsolver")
         depends_on("rocsparse")
         depends_on("rocsolver")
