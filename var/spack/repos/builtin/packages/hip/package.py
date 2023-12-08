@@ -467,6 +467,9 @@ class Hip(CMakePackage):
 
             if self.spec.satisfies("@5.4:"):
                 paths["hipify-clang"] = rocm_prefix
+
+            if self.spec.satisfies("@5.7:"):
+                paths["hip-path"] = rocm_prefix
         else:
             paths = {
                 "hip-path": self.spec.prefix,
