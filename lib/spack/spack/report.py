@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Tools to produce reports of spec installations"""
+import argparse
 import collections
 import contextlib
 import functools
@@ -11,6 +12,7 @@ import time
 import traceback
 from typing import Any, Callable, Dict, List, Type
 
+import llnl.util.filesystem as fs
 import llnl.util.lang
 
 import spack.build_environment
@@ -232,6 +234,12 @@ class TestInfoCollector(InfoCollector):
         return instance
 
 
+def get_filename(args: argparse.Namespace, specs: List[spack.spec.Spec]) -> str:
+    """Return the filename to be used for reporting to JUnit or CDash format."""
+    result = args.log_file or spack.report.default_log_file(specs[0])
+    return result
+
+
 @contextlib.contextmanager
 def build_context_manager(
     reporter: spack.reporters.Reporter, filename: str, specs: List[spack.spec.Spec]
@@ -272,3 +280,13 @@ def test_context_manager(
             yield
     finally:
         reporter.test_report(filename, specs=collector.specs)
+
+
+def default_log_file(spec):
+    """Computes the default filename for the log file and creates
+    the corresponding directory if not present
+    """
+    basename = spec.format_path("test-{name}-{version}-{hash}.xml")
+    dirname = fs.os.path.join(spack.paths.reports_path, "junit")
+    fs.mkdirp(dirname)
+    return fs.os.path.join(dirname, basename)

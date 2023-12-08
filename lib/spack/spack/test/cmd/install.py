@@ -1198,7 +1198,7 @@ def test_report_filename_for_cdash(install_mockery_mutable_config, mock_fetch):
         ["--cdash-upload-url", "https://blahblah/submit.php?project=debugging", "a"]
     )
     specs = spack.cmd.install.concrete_specs_from_cli(args, {})
-    filename = spack.cmd.install.report_filename(args, specs)
+    filename = spack.report.get_filename(args, specs)
     assert filename != "https://blahblah/submit.php?project=debugging"
 
 
