@@ -8,6 +8,8 @@ import os
 import subprocess
 import sys
 
+import llnl.util.tty as tty
+
 from spack.package import *
 
 
@@ -675,9 +677,8 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     def build_test(self):
         spec = self.spec
         if "+python" not in spec:
-            raise RuntimeError(
-                "Python needed for smoke test missing", "reinstall with `+python` variant"
-            )
+            tty.info("pvpython required to execute test is not built without python in spec")
+            return
 
         spackdir = os.path.dirname(os.path.realpath(__file__))
         pkgdir = join_path(spackdir, "test")
