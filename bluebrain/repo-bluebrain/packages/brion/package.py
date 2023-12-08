@@ -13,7 +13,6 @@ class Brion(CMakePackage):
 
     homepage = "https://github.com/BlueBrain/Brion"
     git = "https://github.com/BlueBrain/Brion.git"
-    generator = "Ninja"
 
     submodules = True
 
@@ -49,6 +48,8 @@ class Brion(CMakePackage):
     depends_on("highfive +boost")
     depends_on("mvdtool")
     depends_on("glm@:0.9.9.5")
+
+    generator("ninja")
 
     extends("python", when="+python")
 

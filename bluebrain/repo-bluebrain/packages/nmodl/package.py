@@ -27,7 +27,7 @@ class Nmodl(CMakePackage):
     variant("llvm_cuda", default=False, description="Enable llvm codegen with CUDA backend")
 
     # Build with `ninja` instead of `make`
-    generator = "Ninja"
+    generator("ninja")
     depends_on("ninja", type="build")
     depends_on("llvm", when="+llvm")
     depends_on("cuda", when="+llvm_cuda")

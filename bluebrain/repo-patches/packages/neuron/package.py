@@ -150,7 +150,7 @@ class Neuron(CMakePackage):
     )
 
     # Build with `ninja` instead of `make`
-    generator = "Ninja"
+    generator("ninja")
     depends_on("ninja", type="build")
 
     depends_on("bison", type="build")

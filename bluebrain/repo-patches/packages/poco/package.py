@@ -14,7 +14,7 @@ class Poco(CMakePackage):
 
     homepage = "https://pocoproject.org/"
     git = "https://github.com/pocoproject/poco.git"
-    generator = "Ninja"
+    generator("ninja")
 
     version("1.12.4", tag="poco-1.12.4-release")
     version("1.11.1", tag="poco-1.11.1-release")

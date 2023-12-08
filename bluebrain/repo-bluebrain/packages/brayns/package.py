@@ -11,7 +11,7 @@ class Brayns(CMakePackage):
 
     homepage = "https://github.com/BlueBrain/Brayns"
     git = "https://github.com/BlueBrain/Brayns.git"
-    generator = "Ninja"
+    generator("ninja")
     submodules = False
 
     version("develop", branch="develop")

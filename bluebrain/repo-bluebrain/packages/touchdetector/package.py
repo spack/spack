@@ -13,7 +13,7 @@ class Touchdetector(CMakePackage):
     url = "ssh://git@bbpgitlab.epfl.ch/hpc/touchdetector.git"
     git = "ssh://git@bbpgitlab.epfl.ch/hpc/touchdetector.git"
 
-    generator = "Ninja"
+    generator("ninja")
     submodules = True
 
     version("develop", branch="main")

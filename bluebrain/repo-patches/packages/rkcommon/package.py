@@ -15,7 +15,7 @@ class Rkcommon(CMakePackage):
 
     homepage = "https://github.com/ospray/rkcommon"
     git = "https://github.com/ospray/rkcommon.git"
-    generator = "Ninja"
+    generator("ninja")
 
     version("1.9.0", tag="v1.9.0")
     version("1.10.0", tag="v1.10.0")

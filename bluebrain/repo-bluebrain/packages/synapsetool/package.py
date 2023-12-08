@@ -13,7 +13,7 @@ class Synapsetool(CMakePackage):
 
     homepage = "https://bbpgitlab.epfl.ch/hpc/synapse-tool"
     git = "ssh://git@bbpgitlab.epfl.ch/hpc/synapse-tool.git"
-    generator = "Ninja"
+    generator("ninja")
 
     submodules = True
 

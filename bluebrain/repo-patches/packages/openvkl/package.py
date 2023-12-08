@@ -15,7 +15,7 @@ class Openvkl(CMakePackage):
 
     homepage = "https://www.openvkl.org"
     git = "https://github.com/openvkl/openvkl.git"
-    generator = "Ninja"
+    generator("ninja")
 
     version("1.2.0", tag="v1.2.0")
     version("1.3.0", tag="v1.3.0")
