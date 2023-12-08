@@ -60,7 +60,7 @@ class Geant4(CMakePackage):
     )
 
     variant("threads", default=True, description="Build with multithreading")
-    variant("vecgeom", default=False, description="Enable vecgeom support")
+    variant("vecgeom", default=False, description="Enable vecgeom support", when="@10.3:")
     variant("opengl", default=False, description="Optional OpenGL support")
     variant("x11", default=False, description="Optional X11 support")
     variant("motif", default=False, description="Optional motif support")
