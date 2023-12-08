@@ -1,0 +1,2326 @@
+diff -uprN nemo-4.2.0.orig/src/OCE/ZDF/zdfosm.F90 nemo-4.2.0/src/OCE/ZDF/zdfosm.F90
+--- nemo-4.2.0.orig/src/OCE/ZDF/zdfosm.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/ZDF/zdfosm.F90	2023-10-12 10:08:53.000000000 +0900
+@@ -272,14 +272,24 @@ CONTAINS
+       ALLOCATE( n_ddh(A2D(nn_hls-1)), STAT=ierr )
+       zdf_osm_alloc = zdf_osm_alloc + ierr
+       !
+-      ALLOCATE( l_conv(A2D(nn_hls-1)), l_shear(A2D(nn_hls-1)), l_coup(A2D(nn_hls-1)), l_pyc(A2D(nn_hls-1)),   &
++      ALLOCATE( l_conv(A2D(nn_hls-1)),   &
++         &      l_shear(A2D(nn_hls-1)),   &
++         &      l_coup(A2D(nn_hls-1)), l_pyc(A2D(nn_hls-1)),   &
+          &      l_flux(A2D(nn_hls-1)), l_mle(A2D(nn_hls-1)),   STAT=ierr )
+       zdf_osm_alloc = zdf_osm_alloc + ierr
+       !
+-      ALLOCATE( swth0(A2D(nn_hls-1)),  sws0(A2D(nn_hls-1)),      swb0(A2D(nn_hls-1)),      suw0(A2D(nn_hls-1)),      &
+-         &      sustar(A2D(nn_hls-1)), scos_wind(A2D(nn_hls-1)), ssin_wind(A2D(nn_hls-1)), swthav(A2D(nn_hls-1)),    &
+-         &      swsav(A2D(nn_hls-1)),  swbav(A2D(nn_hls-1)),     sustke(A2D(nn_hls-1)),    dstokes(A2D(nn_hls-1)),   &
+-         &      swstrl(A2D(nn_hls-1)), swstrc(A2D(nn_hls-1)),    sla(A2D(nn_hls-1)),       svstr(A2D(nn_hls-1)),     &
++      ALLOCATE( swth0(A2D(nn_hls-1)),   &
++         &      sws0(A2D(nn_hls-1)),   &
++         &      swb0(A2D(nn_hls-1)),      suw0(A2D(nn_hls-1)),   &
++         &      sustar(A2D(nn_hls-1)),   &
++         &      scos_wind(A2D(nn_hls-1)),   &
++         &      ssin_wind(A2D(nn_hls-1)), swthav(A2D(nn_hls-1)),   &
++         &      swsav(A2D(nn_hls-1)),   &
++         &      swbav(A2D(nn_hls-1)),   &
++         &      sustke(A2D(nn_hls-1)),    dstokes(A2D(nn_hls-1)),   &
++         &      swstrl(A2D(nn_hls-1)),   &
++         &      swstrc(A2D(nn_hls-1)),   &
++         &      sla(A2D(nn_hls-1)),       svstr(A2D(nn_hls-1)),   &
+          &      shol(A2D(nn_hls-1)),   STAT=ierr )
+       zdf_osm_alloc = zdf_osm_alloc + ierr
+       !
+@@ -2303,10 +2313,18 @@ CONTAINS
+       ! (X0.3) and pressure (X0.5)]
+       ! ----------------------------------------------------------------------
+       WHERE ( l_conv(A2D(nn_hls-1)) )
+-         zsc_wth_1(:,:) = swbav(A2D(nn_hls-1)) * swth0(A2D(nn_hls-1)) * ( 1.0_wp + EXP( 0.2_wp * shol(A2D(nn_hls-1)) ) ) *   &
+-            &             phml(A2D(nn_hls-1)) / ( svstr(A2D(nn_hls-1))**3 + 0.5_wp * swstrc(A2D(nn_hls-1))**3 + epsln )
+-         zsc_ws_1(:,:)  = swbav(A2D(nn_hls-1)) * sws0(A2D(nn_hls-1))  * ( 1.0_wp + EXP( 0.2_wp * shol(A2D(nn_hls-1)) ) ) *   &
+-            &             phml(A2D(nn_hls-1)) / ( svstr(A2D(nn_hls-1))**3 + 0.5_wp * swstrc(A2D(nn_hls-1))**3 + epsln )
++         zsc_wth_1(:,:) = swbav(A2D(nn_hls-1)) * &
++            &             swth0(A2D(nn_hls-1)) &
++            &             * ( 1.0_wp + EXP( 0.2_wp * shol(A2D(nn_hls-1)) ) ) * &
++            &             phml(A2D(nn_hls-1)) / &
++            &             ( svstr(A2D(nn_hls-1))**3 &
++            &             + 0.5_wp * swstrc(A2D(nn_hls-1))**3 + epsln )
++         zsc_ws_1(:,:)  = swbav(A2D(nn_hls-1)) * &
++            &             sws0(A2D(nn_hls-1))  &
++            &             * ( 1.0_wp + EXP( 0.2_wp * shol(A2D(nn_hls-1)) ) ) *   &
++            &             phml(A2D(nn_hls-1)) / &
++            &             ( svstr(A2D(nn_hls-1))**3 + &
++            &             0.5_wp * swstrc(A2D(nn_hls-1))**3 + epsln )
+       ELSEWHERE
+          zsc_wth_1(:,:) = 0.0_wp
+          zsc_ws_1(:,:)  = 0.0_wp
+@@ -2379,9 +2397,11 @@ CONTAINS
+       !
+       zsc_vw_1(:,:) = 0.0_wp
+       WHERE ( l_conv(A2D(nn_hls-1)) )
+-         zsc_uw_1(:,:) = -1.0_wp * swb0(A2D(nn_hls-1)) * sustar(A2D(nn_hls-1))**2 * phml(A2D(nn_hls-1)) /   &
++         zsc_uw_1(:,:) = -1.0_wp * swb0(A2D(nn_hls-1)) * &
++            &            sustar(A2D(nn_hls-1))**2 * phml(A2D(nn_hls-1)) /   &
+             &            ( svstr(A2D(nn_hls-1))**3 + 0.5_wp * swstrc(A2D(nn_hls-1))**3 + epsln )
+-         zsc_uw_2(:,:) =           swb0(A2D(nn_hls-1)) * sustke(A2D(nn_hls-1))    * phml(A2D(nn_hls-1)) /   &
++         zsc_uw_2(:,:) =           swb0(A2D(nn_hls-1)) * &
++            &            sustke(A2D(nn_hls-1))    * phml(A2D(nn_hls-1)) /   &
+             &            ( svstr(A2D(nn_hls-1))**3 + 0.5_wp * swstrc(A2D(nn_hls-1))**3 + epsln )**( 2.0_wp / 3.0_wp )
+       ELSEWHERE
+          zsc_uw_1(:,:) = 0.0_wp
+@@ -2446,9 +2466,11 @@ CONTAINS
+          zsc_wth_1(:,:) = swth0(A2D(nn_hls-1)) / ( 1.0_wp - 0.56_wp * EXP( shol(A2D(nn_hls-1)) ) )
+          zsc_ws_1(:,:)  = sws0(A2D(nn_hls-1))  / ( 1.0_wp - 0.56_wp * EXP( shol(A2D(nn_hls-1)) ) )
+          WHERE ( l_pyc(A2D(nn_hls-1)) )   ! Pycnocline scales
+-            zsc_wth_pyc(:,:) = -0.003_wp * swstrc(A2D(nn_hls-1)) * ( 1.0_wp - pdh(A2D(nn_hls-1)) / phbl(A2D(nn_hls-1)) ) *   &
++            zsc_wth_pyc(:,:) = -0.003_wp * swstrc(A2D(nn_hls-1)) * &
++               &               ( 1.0_wp - pdh(A2D(nn_hls-1)) / phbl(A2D(nn_hls-1)) ) *   &
+                &               av_dt_ml(A2D(nn_hls-1))
+-            zsc_ws_pyc(:,:)  = -0.003_wp * swstrc(A2D(nn_hls-1)) * ( 1.0_wp - pdh(A2D(nn_hls-1)) / phbl(A2D(nn_hls-1)) ) *   &
++            zsc_ws_pyc(:,:)  = -0.003_wp * swstrc(A2D(nn_hls-1)) * &
++               &               ( 1.0_wp - pdh(A2D(nn_hls-1)) / phbl(A2D(nn_hls-1)) ) *   &
+                &               av_ds_ml(A2D(nn_hls-1))
+          END WHERE
+       ELSEWHERE
+diff -uprN nemo-4.2.0.orig/src/OCE/stpctl.F90 nemo-4.2.0/src/OCE/stpctl.F90
+--- nemo-4.2.0.orig/src/OCE/stpctl.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/stpctl.F90	2023-10-12 10:08:53.000000000 +0900
+@@ -27,6 +27,7 @@ MODULE stpctl
+    USE eosbn2, ONLY: ln_SEOS, rn_b0
+    !
+    USE netcdf          ! NetCDF library
++   USE ieee_arithmetic
+    IMPLICIT NONE
+    PRIVATE
+ 
+@@ -196,7 +197,7 @@ CONTAINS
+          & zmax(3) <= zminsal .OR.   &                        ! negative or zero sea surface salinity
+          & zmax(4) >= zmaxsal .OR.   &                        ! too large sea surface salinity ( > 100 )
+          & zmax(4) <  zminsal .OR.   &                        ! too large sea surface salinity (keep this line for sea-ice)
+-         & ISNAN( SUM(zmax(1:jptst)) ) .OR.   &               ! NaN encounter in the tests
++         & IEEE_IS_NAN( SUM(zmax(1:jptst)) ) .OR.   &               ! NaN encounter in the tests
+          & ABS(   SUM(zmax(1:jptst)) ) > HUGE(1._wp) ) THEN   ! Infinity encounter in the tests
+          !
+          iloc(:,:) = 0
+diff -uprN nemo-4.2.0.orig/tests/WAD/MY_SRC/usrdef_istate.F90 nemo-4.2.0/tests/WAD/MY_SRC/usrdef_istate.F90
+--- nemo-4.2.0.orig/tests/WAD/MY_SRC/usrdef_istate.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/tests/WAD/MY_SRC/usrdef_istate.F90	2023-10-12 10:08:53.000000000 +0900
+@@ -44,7 +44,7 @@ CONTAINS
+       !! ** Purpose :   Initialization of the dynamics and tracers
+       !!                Here WAD_TEST_CASES configuration 
+       !!
+-q      !! ** Method  : - set temprature field
++      !! ** Method  : - set temprature field
+       !!              - set salinity   field
+       !!----------------------------------------------------------------------
+       REAL(wp), DIMENSION(jpi,jpj,jpk)     , INTENT(in   ) ::   pdept   ! depth of t-point               [m]
+diff -uprN nemo-4.2.0.orig/cfgs/C1D_PAPA/MY_SRC/usrdef_nam.F90 nemo-4.2.0/cfgs/C1D_PAPA/MY_SRC/usrdef_nam.F90
+--- nemo-4.2.0.orig/cfgs/C1D_PAPA/MY_SRC/usrdef_nam.F90	2023-10-12 10:07:16.000000000 +0900
++++ nemo-4.2.0/cfgs/C1D_PAPA/MY_SRC/usrdef_nam.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -62,7 +62,7 @@ CONTAINS
+       NAMELIST/namusr_def/ rn_bathy
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_cfg, namusr_def, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namusr_def'), namusr_def, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namusr_def in configuration namelist' )
+       !
+       IF(lwm)   WRITE( numond, namusr_def )
+diff -uprN nemo-4.2.0.orig/src/ABL/sbcabl.F90 nemo-4.2.0/src/ABL/sbcabl.F90
+--- nemo-4.2.0.orig/src/ABL/sbcabl.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/src/ABL/sbcabl.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -75,11 +75,11 @@ CONTAINS
+       !!---------------------------------------------------------------------
+ 
+                                         ! Namelist namsbc_abl in reference namelist : ABL parameters
+-      READ  ( numnam_ref, namsbc_abl, IOSTAT = ios, ERR = 901 )
++      READ  ( splitif( numnam_ref,'namsbc_abl'), namsbc_abl, IOSTAT = ios, ERR = 901 )
+ 901   IF( ios /= 0 ) CALL ctl_nam ( ios , 'namsbc_abl in reference namelist' )
+       !
+                                         ! Namelist namsbc_abl in configuration namelist : ABL parameters
+-      READ  ( numnam_cfg, namsbc_abl, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namsbc_abl'), namsbc_abl, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios /= 0 ) CALL ctl_nam ( ios , 'namsbc_abl in configuration namelist' )
+       !
+       IF(lwm) WRITE( numond, namsbc_abl )
+diff -uprN nemo-4.2.0.orig/src/ICE/icealb.F90 nemo-4.2.0/src/ICE/icealb.F90
+--- nemo-4.2.0.orig/src/ICE/icealb.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/src/ICE/icealb.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -194,9 +194,9 @@ CONTAINS
+       NAMELIST/namalb/ rn_alb_sdry, rn_alb_smlt, rn_alb_idry, rn_alb_imlt, rn_alb_dpnd, rn_alb_hpiv
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_ice_ref, namalb, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ice_ref,'namalb'), namalb, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namalb in reference namelist' )
+-      READ  ( numnam_ice_cfg, namalb, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_ice_cfg,'namalb'), namalb, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namalb in configuration namelist' )
+       IF(lwm) WRITE( numoni, namalb )
+       !
+diff -uprN nemo-4.2.0.orig/src/ICE/icedia.F90 nemo-4.2.0/src/ICE/icedia.F90
+--- nemo-4.2.0.orig/src/ICE/icedia.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/src/ICE/icedia.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -193,9 +193,9 @@ CONTAINS
+       NAMELIST/namdia/ ln_icediachk, rn_icechk_cel, rn_icechk_glo, ln_icediahsb, ln_icectl, iiceprt, jiceprt
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_ice_ref, namdia, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ice_ref,'namdia'), namdia, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namdia in reference namelist' )
+-      READ  ( numnam_ice_cfg, namdia, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_ice_cfg,'namdia'), namdia, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namdia in configuration namelist' )
+       IF(lwm) WRITE ( numoni, namdia )
+       !
+diff -uprN nemo-4.2.0.orig/src/ICE/icedyn.F90 nemo-4.2.0/src/ICE/icedyn.F90
+--- nemo-4.2.0.orig/src/ICE/icedyn.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/ICE/icedyn.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -233,9 +233,9 @@ CONTAINS
+          &             sn_icbmsk, cn_dir
+       !!-------------------------------------------------------------------
+       !
+-      READ  ( numnam_ice_ref, namdyn, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ice_ref,'namdyn'), namdyn, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namdyn in reference namelist' )
+-      READ  ( numnam_ice_cfg, namdyn, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_ice_cfg,'namdyn'), namdyn, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namdyn in configuration namelist' )
+       IF(lwm) WRITE( numoni, namdyn )
+       !
+diff -uprN nemo-4.2.0.orig/src/ICE/icedyn_adv.F90 nemo-4.2.0/src/ICE/icedyn_adv.F90
+--- nemo-4.2.0.orig/src/ICE/icedyn_adv.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/src/ICE/icedyn_adv.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -128,9 +128,9 @@ CONTAINS
+       NAMELIST/namdyn_adv/ ln_adv_Pra, ln_adv_UMx, nn_UMx
+       !!-------------------------------------------------------------------
+       !
+-      READ  ( numnam_ice_ref, namdyn_adv, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ice_ref,'namdyn_adv'), namdyn_adv, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namdyn_adv in reference namelist' )
+-      READ  ( numnam_ice_cfg, namdyn_adv, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_ice_cfg,'namdyn_adv'), namdyn_adv, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namdyn_adv in configuration namelist' )
+       IF(lwm) WRITE( numoni, namdyn_adv )
+       !
+diff -uprN nemo-4.2.0.orig/src/ICE/icedyn_rdgrft.F90 nemo-4.2.0/src/ICE/icedyn_rdgrft.F90
+--- nemo-4.2.0.orig/src/ICE/icedyn_rdgrft.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/src/ICE/icedyn_rdgrft.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -989,9 +989,9 @@ CONTAINS
+          &                    ln_rafting, rn_hraft, rn_craft  , rn_fsnwrft, rn_fpndrft
+       !!-------------------------------------------------------------------
+       !
+-      READ  ( numnam_ice_ref, namdyn_rdgrft, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ice_ref,'namdyn_rdgrft'), namdyn_rdgrft, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namdyn_rdgrft in reference namelist' )
+-      READ  ( numnam_ice_cfg, namdyn_rdgrft, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_ice_cfg,'namdyn_rdgrft'), namdyn_rdgrft, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namdyn_rdgrft in configuration namelist' )
+       IF(lwm) WRITE ( numoni, namdyn_rdgrft )
+       !
+diff -uprN nemo-4.2.0.orig/src/ICE/icedyn_rhg.F90 nemo-4.2.0/src/ICE/icedyn_rhg.F90
+--- nemo-4.2.0.orig/src/ICE/icedyn_rhg.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/src/ICE/icedyn_rhg.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -123,9 +123,9 @@ CONTAINS
+          &                  ln_rhg_VP, nn_vp_nout, nn_vp_ninn, nn_vp_chkcvg                                            !-- vp
+       !!-------------------------------------------------------------------
+       !
+-      READ  ( numnam_ice_ref, namdyn_rhg, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ice_ref,'namdyn_rhg'), namdyn_rhg, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 ) CALL ctl_nam ( ios , 'namdyn_rhg in reference namelist' )
+-      READ  ( numnam_ice_cfg, namdyn_rhg, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_ice_cfg,'namdyn_rhg'), namdyn_rhg, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 ) CALL ctl_nam ( ios , 'namdyn_rhg in configuration namelist' )
+       IF(lwm) WRITE ( numoni, namdyn_rhg )
+       !
+diff -uprN nemo-4.2.0.orig/src/ICE/iceistate.F90 nemo-4.2.0/src/ICE/iceistate.F90
+--- nemo-4.2.0.orig/src/ICE/iceistate.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/src/ICE/iceistate.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -508,9 +508,9 @@ CONTAINS
+          &             sn_hti, sn_hts, sn_ati, sn_tsu, sn_tmi, sn_smi, sn_tms, sn_apd, sn_hpd, sn_hld, cn_dir
+       !!-----------------------------------------------------------------------------
+       !
+-      READ  ( numnam_ice_ref, namini, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ice_ref,'namini'), namini, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namini in reference namelist' )
+-      READ  ( numnam_ice_cfg, namini, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_ice_cfg,'namini'), namini, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namini in configuration namelist' )
+       IF(lwm) WRITE ( numoni, namini )
+       !
+diff -uprN nemo-4.2.0.orig/src/ICE/iceitd.F90 nemo-4.2.0/src/ICE/iceitd.F90
+--- nemo-4.2.0.orig/src/ICE/iceitd.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/src/ICE/iceitd.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -711,9 +711,9 @@ CONTAINS
+       !
+       rn_catbnd(:) =  0._wp ! Circumvent possible initialization by compiler
+                             ! to prevent from errors when writing output
+-      READ  ( numnam_ice_ref, namitd, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ice_ref,'namitd'), namitd, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namitd in reference namelist' )
+-      READ  ( numnam_ice_cfg, namitd, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_ice_cfg,'namitd'), namitd, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namitd in configuration namelist' )
+       IF(lwm) WRITE( numoni, namitd )
+       !
+diff -uprN nemo-4.2.0.orig/src/ICE/icesbc.F90 nemo-4.2.0/src/ICE/icesbc.F90
+--- nemo-4.2.0.orig/src/ICE/icesbc.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/src/ICE/icesbc.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -382,9 +382,9 @@ CONTAINS
+       NAMELIST/namsbc/ rn_cio, nn_snwfra, rn_snwblow, nn_flxdist, ln_cndflx, ln_cndemulate, nn_qtrice
+       !!-------------------------------------------------------------------
+       !
+-      READ  ( numnam_ice_ref, namsbc, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ice_ref,'namsbc'), namsbc, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namsbc in reference namelist' )
+-      READ  ( numnam_ice_cfg, namsbc, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_ice_cfg,'namsbc'), namsbc, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namsbc in configuration namelist' )
+       IF(lwm) WRITE( numoni, namsbc )
+       !
+diff -uprN nemo-4.2.0.orig/src/ICE/icestp.F90 nemo-4.2.0/src/ICE/icestp.F90
+--- nemo-4.2.0.orig/src/ICE/icestp.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/src/ICE/icestp.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -315,9 +315,9 @@ CONTAINS
+          &             cn_icerst_in, cn_icerst_indir, cn_icerst_out, cn_icerst_outdir
+       !!-------------------------------------------------------------------
+       !
+-      READ  ( numnam_ice_ref, nampar, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ice_ref,'nampar'), nampar, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'nampar in reference namelist' )
+-      READ  ( numnam_ice_cfg, nampar, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_ice_cfg,'nampar'), nampar, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios > 0 )   CALL ctl_nam ( ios , 'nampar in configuration namelist' )
+       IF(lwm) WRITE( numoni, nampar )
+       !
+diff -uprN nemo-4.2.0.orig/src/ICE/icethd.F90 nemo-4.2.0/src/ICE/icethd.F90
+--- nemo-4.2.0.orig/src/ICE/icethd.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/src/ICE/icethd.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -464,9 +464,9 @@ CONTAINS
+       NAMELIST/namthd/ ln_icedH, ln_icedA, ln_icedO, ln_icedS, ln_leadhfx
+       !!-------------------------------------------------------------------
+       !
+-      READ  ( numnam_ice_ref, namthd, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ice_ref,'namthd'), namthd, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namthd in reference namelist' )
+-      READ  ( numnam_ice_cfg, namthd, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_ice_cfg,'namthd'), namthd, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namthd in configuration namelist' )
+       IF(lwm) WRITE( numoni, namthd )
+       !
+diff -uprN nemo-4.2.0.orig/src/ICE/icethd_da.F90 nemo-4.2.0/src/ICE/icethd_da.F90
+--- nemo-4.2.0.orig/src/ICE/icethd_da.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/src/ICE/icethd_da.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -174,9 +174,9 @@ CONTAINS
+       NAMELIST/namthd_da/ rn_beta, rn_dmin
+       !!-------------------------------------------------------------------
+       !
+-      READ  ( numnam_ice_ref, namthd_da, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ice_ref,'namthd_da'), namthd_da, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namthd_da in reference namelist' )
+-      READ  ( numnam_ice_cfg, namthd_da, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_ice_cfg,'namthd_da'), namthd_da, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namthd_da in configuration namelist' )
+       IF(lwm) WRITE( numoni, namthd_da )
+       !
+diff -uprN nemo-4.2.0.orig/src/ICE/icethd_do.F90 nemo-4.2.0/src/ICE/icethd_do.F90
+--- nemo-4.2.0.orig/src/ICE/icethd_do.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/src/ICE/icethd_do.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -438,9 +438,9 @@ CONTAINS
+       NAMELIST/namthd_do/ rn_hinew, ln_frazil, rn_maxfraz, rn_vfraz, rn_Cfraz
+       !!-------------------------------------------------------------------
+       !
+-      READ  ( numnam_ice_ref, namthd_do, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ice_ref,'namthd_do'), namthd_do, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namthd_do in reference namelist' )
+-      READ  ( numnam_ice_cfg, namthd_do, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_ice_cfg,'namthd_do'), namthd_do, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namthd_do in configuration namelist' )
+       IF(lwm) WRITE( numoni, namthd_do )
+       !
+diff -uprN nemo-4.2.0.orig/src/ICE/icethd_pnd.F90 nemo-4.2.0/src/ICE/icethd_pnd.F90
+--- nemo-4.2.0.orig/src/ICE/icethd_pnd.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/src/ICE/icethd_pnd.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -1357,9 +1357,9 @@ CONTAINS
+          &                          ln_pnd_lids, ln_pnd_alb
+       !!-------------------------------------------------------------------
+       !
+-      READ  ( numnam_ice_ref, namthd_pnd, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ice_ref,'namthd_pnd'), namthd_pnd, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namthd_pnd  in reference namelist' )
+-      READ  ( numnam_ice_cfg, namthd_pnd, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_ice_cfg,'namthd_pnd'), namthd_pnd, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namthd_pnd in configuration namelist' )
+       IF(lwm) WRITE ( numoni, namthd_pnd )
+       !
+diff -uprN nemo-4.2.0.orig/src/ICE/icethd_sal.F90 nemo-4.2.0/src/ICE/icethd_sal.F90
+--- nemo-4.2.0.orig/src/ICE/icethd_sal.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/src/ICE/icethd_sal.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -137,9 +137,9 @@ CONTAINS
+          &                 rn_sal_fl, rn_time_fl, rn_simax , rn_simin 
+       !!-------------------------------------------------------------------
+       !
+-      READ  ( numnam_ice_ref, namthd_sal, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ice_ref,'namthd_sal'), namthd_sal, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namthd_sal in reference namelist' )
+-      READ  ( numnam_ice_cfg, namthd_sal, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_ice_cfg,'namthd_sal'), namthd_sal, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namthd_sal in configuration namelist' )
+       IF(lwm) WRITE ( numoni, namthd_sal )
+       !
+diff -uprN nemo-4.2.0.orig/src/ICE/icethd_zdf.F90 nemo-4.2.0/src/ICE/icethd_zdf.F90
+--- nemo-4.2.0.orig/src/ICE/icethd_zdf.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/src/ICE/icethd_zdf.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -88,9 +88,9 @@ CONTAINS
+          &                 rn_kappa_i, rn_kappa_s, rn_kappa_smlt, rn_kappa_sdry, ln_zdf_chkcvg
+       !!-------------------------------------------------------------------
+       !
+-      READ  ( numnam_ice_ref, namthd_zdf, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ice_ref,'namthd_zdf'), namthd_zdf, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namthd_zdf in reference namelist' )
+-      READ  ( numnam_ice_cfg, namthd_zdf, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_ice_cfg,'namthd_zdf'), namthd_zdf, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namthd_zdf in configuration namelist' )
+       IF(lwm) WRITE( numoni, namthd_zdf )
+       !
+diff -uprN nemo-4.2.0.orig/src/NST/agrif_user.F90 nemo-4.2.0/src/NST/agrif_user.F90
+--- nemo-4.2.0.orig/src/NST/agrif_user.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/src/NST/agrif_user.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -935,9 +935,9 @@
+       !
+       IF ( .NOT.Agrif_Root() ) THEN
+          !
+-         READ  ( numnam_ref, namagrif, IOSTAT = ios, ERR = 901)
++         READ  ( splitif( numnam_ref,'namagrif'), namagrif, IOSTAT = ios, ERR = 901)
+ 901 IF( ios /= 0 )   CALL ctl_nam ( ios , 'namagrif in reference namelist' )
+-         READ  ( numnam_cfg, namagrif, IOSTAT = ios, ERR = 902 )
++         READ  ( splitif( numnam_cfg,'namagrif'), namagrif, IOSTAT = ios, ERR = 902 )
+ 902 IF( ios >  0 )   CALL ctl_nam ( ios , 'namagrif in configuration namelist' )
+          IF(lwm) WRITE ( numond, namagrif )
+          !
+diff -uprN nemo-4.2.0.orig/src/OCE/ASM/asminc.F90 nemo-4.2.0/src/OCE/ASM/asminc.F90
+--- nemo-4.2.0.orig/src/OCE/ASM/asminc.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/ASM/asminc.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -147,9 +147,9 @@ CONTAINS
+       ln_seaiceinc   = .FALSE.
+       ln_temnofreeze = .FALSE.
+ 
+-      READ  ( numnam_ref, nam_asminc, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'nam_asminc'), nam_asminc, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'nam_asminc in reference namelist' )
+-      READ  ( numnam_cfg, nam_asminc, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'nam_asminc'), nam_asminc, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'nam_asminc in configuration namelist' )
+       IF(lwm) WRITE ( numond, nam_asminc )
+ 
+diff -uprN nemo-4.2.0.orig/src/OCE/BDY/bdydta.F90 nemo-4.2.0/src/OCE/BDY/bdydta.F90
+--- nemo-4.2.0.orig/src/OCE/BDY/bdydta.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/BDY/bdydta.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -426,7 +426,7 @@ CONTAINS
+          WRITE(ctmp2, '(a,i2)') 'block nambdy_dta number ', jbdy
+ 
+          ! There is only one nambdy_dta block in namelist_ref -> use it for each bdy so we read from the beginning
+-         READ  ( numnam_ref, nambdy_dta, IOSTAT = ios, ERR = 901)
++         READ  ( splitif( numnam_ref,'nambdy_dta'), nambdy_dta, IOSTAT = ios, ERR = 901)
+ 901      IF( ios /= 0 )   CALL ctl_nam ( ios , 'nambdy_dta in reference namelist' )
+ 
+          !   by-pass nambdy_dta reading if no input data used in this bdy   
+@@ -448,7 +448,7 @@ CONTAINS
+                ios = -1
+                CALL ctl_nam ( ios , cerrmsg )
+             ENDIF
+-            READ  ( numnam_cfg( MAX( 1, nbdy_rdstart - 2 ): ), nambdy_dta, IOSTAT = ios, ERR = 902)
++            READ  ( splitif( numnam_cfg( MAX( 1, nbdy_rdstart - 2 ): ),'nambdy_dta'), nambdy_dta, IOSTAT = ios, ERR = 902)
+ 902         IF( ios >  0 )   CALL ctl_nam ( ios , 'nambdy_dta in configuration namelist' )
+             IF(lwm) WRITE( numond, nambdy_dta )           
+          ENDIF
+diff -uprN nemo-4.2.0.orig/src/OCE/BDY/bdyini.F90 nemo-4.2.0/src/OCE/BDY/bdyini.F90
+--- nemo-4.2.0.orig/src/OCE/BDY/bdyini.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/BDY/bdyini.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -78,7 +78,7 @@ CONTAINS
+       ! ------------------------
+       ! Read namelist parameters
+       ! ------------------------
+-      READ  ( numnam_ref, nambdy, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'nambdy'), nambdy, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'nambdy in reference namelist' )
+       ! make sur that all elements of the namelist variables have a default definition from namelist_ref
+       ln_coords_file (2:jp_bdy) = ln_coords_file (1)
+@@ -95,7 +95,7 @@ CONTAINS
+       rn_time_dmp_out(2:jp_bdy) = rn_time_dmp_out(1)
+       cn_ice         (2:jp_bdy) = cn_ice         (1)
+       nn_ice_dta     (2:jp_bdy) = nn_ice_dta     (1)
+-      READ  ( numnam_cfg, nambdy, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'nambdy'), nambdy, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'nambdy in configuration namelist' )
+       IF(lwm) WRITE ( numond, nambdy )
+ 
+@@ -1320,7 +1320,7 @@ CONTAINS
+        ENDIF
+       END DO
+       nbdy_rdstart = MAX( 1, nbdy_rdstart - 2 )
+-      READ  ( numnam_cfg( nbdy_rdstart: ), nambdy_index, IOSTAT = ios, ERR = 904)
++      READ  ( splitif( numnam_cfg( nbdy_rdstart: ),'nambdy_index'), nambdy_index, IOSTAT = ios, ERR = 904)
+ 904   IF( ios /= 0 )   CALL ctl_nam ( ios , 'nambdy_index in configuration namelist' )
+       IF(lwm) WRITE ( numond, nambdy_index )
+       
+diff -uprN nemo-4.2.0.orig/src/OCE/BDY/bdytides.F90 nemo-4.2.0/src/OCE/BDY/bdytides.F90
+--- nemo-4.2.0.orig/src/OCE/BDY/bdytides.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/BDY/bdytides.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -99,7 +99,7 @@ CONTAINS
+             ! Namelist nambdy_tide : tidal harmonic forcing at open boundaries
+             filtide(:) = ''
+ 
+-            READ  ( numnam_ref, nambdy_tide, IOSTAT = ios, ERR = 901)
++            READ  ( splitif( numnam_ref,'nambdy_tide'), nambdy_tide, IOSTAT = ios, ERR = 901)
+ 901         IF( ios /= 0 )   CALL ctl_nam ( ios , 'nambdy_tide in reference namelist' )
+             !
+             ! Need to support possibility of reading more than one
+@@ -115,7 +115,7 @@ CONTAINS
+                ios = -1
+                CALL ctl_nam ( ios , cerrmsg )
+             ENDIF
+-            READ  ( numnam_cfg( MAX( 1, nbdy_rdstart - 2 ): ), nambdy_tide, IOSTAT = ios, ERR = 902)
++            READ  ( splitif( numnam_cfg( MAX( 1, nbdy_rdstart - 2 ): ),'nambdy_tide'), nambdy_tide, IOSTAT = ios, ERR = 902)
+ 902         IF( ios >  0 )   CALL ctl_nam ( ios , 'nambdy_tide in configuration namelist' )
+             IF(lwm) WRITE ( numond, nambdy_tide )
+             !                                               ! Parameter control and print
+diff -uprN nemo-4.2.0.orig/src/OCE/C1D/c1d.F90 nemo-4.2.0/src/OCE/C1D/c1d.F90
+--- nemo-4.2.0.orig/src/OCE/C1D/c1d.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/C1D/c1d.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -44,10 +44,10 @@ CONTAINS
+       NAMELIST/namc1d/ rn_lat1d, rn_lon1d
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_ref, namc1d, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namc1d'), namc1d, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namc1d in reference namelist' )
+       !
+-      READ  ( numnam_cfg, namc1d, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namc1d'), namc1d, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namc1d in configuration namelist' )
+       IF(lwm) WRITE ( numond, namc1d )
+       !
+diff -uprN nemo-4.2.0.orig/src/OCE/C1D/dtauvd.F90 nemo-4.2.0/src/OCE/C1D/dtauvd.F90
+--- nemo-4.2.0.orig/src/OCE/C1D/dtauvd.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/C1D/dtauvd.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -62,10 +62,10 @@ CONTAINS
+       !
+       ierr0 = 0   ;   ierr1 = 0   ;   ierr2 = 0  ;   ierr3 = 0
+ 
+-      READ  ( numnam_ref, namc1d_uvd, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namc1d_uvd'), namc1d_uvd, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namc1d_uvd in reference namelist' )
+       !
+-      READ  ( numnam_cfg, namc1d_uvd, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namc1d_uvd'), namc1d_uvd, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namc1d_uvd in configuration namelist' )
+       IF(lwm) WRITE ( numond, namc1d_uvd )
+ 
+diff -uprN nemo-4.2.0.orig/src/OCE/C1D/dyndmp.F90 nemo-4.2.0/src/OCE/C1D/dyndmp.F90
+--- nemo-4.2.0.orig/src/OCE/C1D/dyndmp.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/C1D/dyndmp.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -79,9 +79,9 @@ CONTAINS
+       NAMELIST/namc1d_dyndmp/ ln_dyndmp
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_ref, namc1d_dyndmp, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namc1d_dyndmp'), namc1d_dyndmp, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namc1d_dyndmp in reference namelist' )
+-      READ  ( numnam_cfg, namc1d_dyndmp, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namc1d_dyndmp'), namc1d_dyndmp, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namc1d_dyndmp in configuration namelist' )
+       IF(lwm) WRITE ( numond, namc1d_dyndmp )
+       !
+diff -uprN nemo-4.2.0.orig/src/OCE/CRS/crsini.F90 nemo-4.2.0/src/OCE/CRS/crsini.F90
+--- nemo-4.2.0.orig/src/OCE/CRS/crsini.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/CRS/crsini.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -83,9 +83,9 @@ CONTAINS
+      ! 1. Read Namelist file
+      !---------------------------------------------------------
+      !
+-      READ  ( numnam_ref, namcrs, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namcrs'), namcrs, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namcrs in reference namelist' )
+-      READ  ( numnam_cfg, namcrs, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namcrs'), namcrs, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namcrs in configuration namelist' )
+       IF(lwm) WRITE ( numond, namcrs )
+ 
+diff -uprN nemo-4.2.0.orig/src/OCE/DIA/dia25h.F90 nemo-4.2.0/src/OCE/DIA/dia25h.F90
+--- nemo-4.2.0.orig/src/OCE/DIA/dia25h.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/DIA/dia25h.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -57,9 +57,9 @@ CONTAINS
+       NAMELIST/nam_dia25h/ ln_dia25h
+       !!----------------------------------------------------------------------
+       !
+-      READ   ( numnam_ref, nam_dia25h, IOSTAT=ios, ERR= 901 )
++      READ   ( splitif( numnam_ref,'nam_dia25h'), nam_dia25h, IOSTAT=ios, ERR= 901 )
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'nam_dia25h in reference namelist' )
+-      READ  ( numnam_cfg, nam_dia25h, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'nam_dia25h'), nam_dia25h, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'nam_dia25h in configuration namelist' )
+       IF(lwm) WRITE ( numond, nam_dia25h )
+ 
+diff -uprN nemo-4.2.0.orig/src/OCE/DIA/diadct.F90 nemo-4.2.0/src/OCE/DIA/diadct.F90
+--- nemo-4.2.0.orig/src/OCE/DIA/diadct.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/DIA/diadct.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -125,10 +125,10 @@ CONTAINS
+       NAMELIST/nam_diadct/ln_diadct, nn_dct, nn_dctwri, nn_secdebug
+       !!---------------------------------------------------------------------
+ 
+-     READ  ( numnam_ref, nam_diadct, IOSTAT = ios, ERR = 901)
++     READ  ( splitif( numnam_ref,'nam_diadct'), nam_diadct, IOSTAT = ios, ERR = 901)
+ 901  IF( ios /= 0 ) CALL ctl_nam ( ios , 'nam_diadct in reference namelist' )
+ 
+-     READ  ( numnam_cfg, nam_diadct, IOSTAT = ios, ERR = 902 )
++     READ  ( splitif( numnam_cfg,'nam_diadct'), nam_diadct, IOSTAT = ios, ERR = 902 )
+ 902  IF( ios >  0 ) CALL ctl_nam ( ios , 'nam_diadct in configuration namelist' )
+      IF(lwm) WRITE ( numond, nam_diadct )
+ 
+diff -uprN nemo-4.2.0.orig/src/OCE/DIA/diahsb.F90 nemo-4.2.0/src/OCE/DIA/diahsb.F90
+--- nemo-4.2.0.orig/src/OCE/DIA/diahsb.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/DIA/diahsb.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -397,9 +397,9 @@ CONTAINS
+          WRITE(numout,*) 'dia_hsb_init : heat and salt budgets diagnostics'
+          WRITE(numout,*) '~~~~~~~~~~~~ '
+       ENDIF
+-      READ  ( numnam_ref, namhsb, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namhsb'), namhsb, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namhsb in reference namelist' )
+-      READ  ( numnam_cfg, namhsb, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namhsb'), namhsb, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namhsb in configuration namelist' )
+       IF(lwm) WRITE( numond, namhsb )
+ 
+diff -uprN nemo-4.2.0.orig/src/OCE/DIU/diu_bulk.F90 nemo-4.2.0/src/OCE/DIU/diu_bulk.F90
+--- nemo-4.2.0.orig/src/OCE/DIU/diu_bulk.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/DIU/diu_bulk.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -53,9 +53,9 @@ CONTAINS
+       !!----------------------------------------------------------------------      
+ 
+       ! Read the namelist
+-      READ  ( numnam_ref, namdiu, IOSTAT = ios, ERR = 901 )
++      READ  ( splitif( numnam_ref,'namdiu'), namdiu, IOSTAT = ios, ERR = 901 )
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namdiu in reference namelist' )
+-      READ  ( numnam_cfg, namdiu, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namdiu'), namdiu, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namdiu in configuration namelist' )      
+       !
+       IF( ln_diurnal_only .AND. ( .NOT. ln_diurnal ) ) THEN
+diff -uprN nemo-4.2.0.orig/src/OCE/DOM/closea.F90 nemo-4.2.0/src/OCE/DOM/closea.F90
+--- nemo-4.2.0.orig/src/OCE/DOM/closea.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/DOM/closea.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -76,9 +76,9 @@ CONTAINS
+       NAMELIST/namclo/ ln_maskcs, ln_mask_csundef, ln_clo_rnf
+       !!---------------------------------------------------------------------
+       !!
+-      READ  ( numnam_ref, namclo, IOSTAT = ios, ERR = 901 )
++      READ  ( splitif( numnam_ref,'namclo'), namclo, IOSTAT = ios, ERR = 901 )
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namclo in reference namelist' )
+-      READ  ( numnam_cfg, namclo, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namclo'), namclo, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namclo in configuration namelist' )
+       IF(lwm) WRITE ( numond, namclo )
+       !!
+diff -uprN nemo-4.2.0.orig/src/OCE/DOM/domain.F90 nemo-4.2.0/src/OCE/DOM/domain.F90
+--- nemo-4.2.0.orig/src/OCE/DOM/domain.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/DOM/domain.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -282,9 +282,9 @@ CONTAINS
+       !                       !==  namelist namdom  ==!
+       !                       !=======================!
+       !
+-      READ  ( numnam_ref, namdom, IOSTAT = ios, ERR = 903)
++      READ  ( splitif( numnam_ref,'namdom'), namdom, IOSTAT = ios, ERR = 903)
+ 903   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namdom in reference namelist' )
+-      READ  ( numnam_cfg, namdom, IOSTAT = ios, ERR = 904 )
++      READ  ( splitif( numnam_cfg,'namdom'), namdom, IOSTAT = ios, ERR = 904 )
+ 904   IF( ios >  0 )   CALL ctl_nam ( ios , 'namdom in configuration namelist' )
+       IF(lwm) WRITE( numond, namdom )
+       !
+@@ -326,9 +326,9 @@ CONTAINS
+       !                       !==  namelist namrun  ==!
+       !                       !=======================!
+       !
+-      READ  ( numnam_ref, namrun, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namrun'), namrun, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namrun in reference namelist' )
+-      READ  ( numnam_cfg, namrun, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namrun'), namrun, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namrun in configuration namelist' )
+       IF(lwm) WRITE ( numond, namrun )
+ 
+@@ -466,9 +466,9 @@ CONTAINS
+       !                       !==  namelist namtile  ==!
+       !                       !========================!
+       !
+-      READ  ( numnam_ref, namtile, IOSTAT = ios, ERR = 905 )
++      READ  ( splitif( numnam_ref,'namtile'), namtile, IOSTAT = ios, ERR = 905 )
+ 905   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namtile in reference namelist' )
+-      READ  ( numnam_cfg, namtile, IOSTAT = ios, ERR = 906 )
++      READ  ( splitif( numnam_cfg,'namtile'), namtile, IOSTAT = ios, ERR = 906 )
+ 906   IF( ios >  0 )   CALL ctl_nam ( ios , 'namtile in configuration namelist' )
+       IF(lwm) WRITE( numond, namtile )
+ 
+@@ -491,9 +491,9 @@ CONTAINS
+       !                       !==  namelist namnc4  ==!   NetCDF 4 case   ("key_netcdf4" defined)
+       !                       !=======================!
+       !
+-      READ  ( numnam_ref, namnc4, IOSTAT = ios, ERR = 907)
++      READ  ( splitif( numnam_ref,'namnc4'), namnc4, IOSTAT = ios, ERR = 907)
+ 907   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namnc4 in reference namelist' )
+-      READ  ( numnam_cfg, namnc4, IOSTAT = ios, ERR = 908 )
++      READ  ( splitif( numnam_cfg,'namnc4'), namnc4, IOSTAT = ios, ERR = 908 )
+ 908   IF( ios >  0 )   CALL ctl_nam ( ios , 'namnc4 in configuration namelist' )
+       IF(lwm) WRITE( numond, namnc4 )
+ 
+diff -uprN nemo-4.2.0.orig/src/OCE/DOM/dommsk.F90 nemo-4.2.0/src/OCE/DOM/dommsk.F90
+--- nemo-4.2.0.orig/src/OCE/DOM/dommsk.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/DOM/dommsk.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -94,9 +94,9 @@ CONTAINS
+          &             ln_vol, nn_volctl, nn_rimwidth
+       !!---------------------------------------------------------------------
+       !
+-      READ  ( numnam_ref, namlbc, IOSTAT = ios, ERR = 901 )
++      READ  ( splitif( numnam_ref,'namlbc'), namlbc, IOSTAT = ios, ERR = 901 )
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namlbc in reference namelist' )
+-      READ  ( numnam_cfg, namlbc, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namlbc'), namlbc, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namlbc in configuration namelist' )
+       IF(lwm) WRITE ( numond, namlbc )
+       
+@@ -131,9 +131,9 @@ CONTAINS
+       END_2D
+       !
+       ! Mask corrections for bdy (read in mppini2)
+-      READ  ( numnam_ref, nambdy, IOSTAT = ios, ERR = 903)
++      READ  ( splitif( numnam_ref,'nambdy'), nambdy, IOSTAT = ios, ERR = 903)
+ 903   IF( ios /= 0 )   CALL ctl_nam ( ios , 'nambdy in reference namelist' )
+-      READ  ( numnam_cfg, nambdy, IOSTAT = ios, ERR = 904 )
++      READ  ( splitif( numnam_cfg,'nambdy'), nambdy, IOSTAT = ios, ERR = 904 )
+ 904   IF( ios >  0 )   CALL ctl_nam ( ios , 'nambdy in configuration namelist' )
+       ! ------------------------
+       IF ( ln_bdy .AND. ln_mask_file ) THEN
+diff -uprN nemo-4.2.0.orig/src/OCE/DOM/domqco.F90 nemo-4.2.0/src/OCE/DOM/domqco.F90
+--- nemo-4.2.0.orig/src/OCE/DOM/domqco.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/DOM/domqco.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -235,9 +235,9 @@ CONTAINS
+          &              nn_vvl_interp
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_ref, nam_vvl, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'nam_vvl'), nam_vvl, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'nam_vvl in reference namelist' )
+-      READ  ( numnam_cfg, nam_vvl, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'nam_vvl'), nam_vvl, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 ) CALL ctl_nam ( ios , 'nam_vvl in configuration namelist' )
+       IF(lwm) WRITE ( numond, nam_vvl )
+       !
+diff -uprN nemo-4.2.0.orig/src/OCE/DOM/domvvl.F90 nemo-4.2.0/src/OCE/DOM/domvvl.F90
+--- nemo-4.2.0.orig/src/OCE/DOM/domvvl.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/DOM/domvvl.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -1041,9 +1041,9 @@ CONTAINS
+          &              nn_vvl_interp
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_ref, nam_vvl, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'nam_vvl'), nam_vvl, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'nam_vvl in reference namelist' )
+-      READ  ( numnam_cfg, nam_vvl, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'nam_vvl'), nam_vvl, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 ) CALL ctl_nam ( ios , 'nam_vvl in configuration namelist' )
+       IF(lwm) WRITE ( numond, nam_vvl )
+       !
+diff -uprN nemo-4.2.0.orig/src/OCE/DOM/dtatsd.F90 nemo-4.2.0/src/OCE/DOM/dtatsd.F90
+--- nemo-4.2.0.orig/src/OCE/DOM/dtatsd.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/DOM/dtatsd.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -67,9 +67,9 @@ CONTAINS
+       !  Initialisation
+       ierr0 = 0  ;  ierr1 = 0  ;  ierr2 = 0  ;  ierr3 = 0
+       !
+-      READ  ( numnam_ref, namtsd, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namtsd'), namtsd, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namtsd in reference namelist' )
+-      READ  ( numnam_cfg, namtsd, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namtsd'), namtsd, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namtsd in configuration namelist' )
+       IF(lwm) WRITE ( numond, namtsd )
+ 
+diff -uprN nemo-4.2.0.orig/src/OCE/DYN/dynadv.F90 nemo-4.2.0/src/OCE/DYN/dynadv.F90
+--- nemo-4.2.0.orig/src/OCE/DYN/dynadv.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/DYN/dynadv.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -103,9 +103,9 @@ CONTAINS
+          WRITE(numout,*) '~~~~~~~~~~~~'
+       ENDIF
+       !
+-      READ  ( numnam_ref, namdyn_adv, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namdyn_adv'), namdyn_adv, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namdyn_adv in reference namelist' )
+-      READ  ( numnam_cfg, namdyn_adv, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namdyn_adv'), namdyn_adv, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namdyn_adv in configuration namelist' )
+       IF(lwm) WRITE ( numond, namdyn_adv )
+ 
+diff -uprN nemo-4.2.0.orig/src/OCE/DYN/dynhpg.F90 nemo-4.2.0/src/OCE/DYN/dynhpg.F90
+--- nemo-4.2.0.orig/src/OCE/DYN/dynhpg.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/DYN/dynhpg.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -162,10 +162,10 @@ CONTAINS
+          &                 ln_hpg_djc_vnh, ln_hpg_djc_vnv
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_ref, namdyn_hpg, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namdyn_hpg'), namdyn_hpg, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namdyn_hpg in reference namelist' )
+       !
+-      READ  ( numnam_cfg, namdyn_hpg, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namdyn_hpg'), namdyn_hpg, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namdyn_hpg in configuration namelist' )
+       IF(lwm) WRITE ( numond, namdyn_hpg )
+       !
+diff -uprN nemo-4.2.0.orig/src/OCE/DYN/dynspg.F90 nemo-4.2.0/src/OCE/DYN/dynspg.F90
+--- nemo-4.2.0.orig/src/OCE/DYN/dynspg.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/DYN/dynspg.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -204,10 +204,10 @@ CONTAINS
+          WRITE(numout,*) '~~~~~~~~~~~~'
+       ENDIF
+       !
+-      READ  ( numnam_ref, namdyn_spg, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namdyn_spg'), namdyn_spg, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namdyn_spg in reference namelist' )
+       !
+-      READ  ( numnam_cfg, namdyn_spg, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namdyn_spg'), namdyn_spg, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namdyn_spg in configuration namelist' )
+       IF(lwm) WRITE ( numond, namdyn_spg )
+       !
+diff -uprN nemo-4.2.0.orig/src/OCE/DYN/dynvor.F90 nemo-4.2.0/src/OCE/DYN/dynvor.F90
+--- nemo-4.2.0.orig/src/OCE/DYN/dynvor.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/DYN/dynvor.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -946,9 +946,9 @@ CONTAINS
+          WRITE(numout,*) '~~~~~~~~~~~~'
+       ENDIF
+       !
+-      READ  ( numnam_ref, namdyn_vor, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namdyn_vor'), namdyn_vor, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namdyn_vor in reference namelist' )
+-      READ  ( numnam_cfg, namdyn_vor, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namdyn_vor'), namdyn_vor, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namdyn_vor in configuration namelist' )
+       IF(lwm) WRITE ( numond, namdyn_vor )
+       !
+diff -uprN nemo-4.2.0.orig/src/OCE/DYN/wet_dry.F90 nemo-4.2.0/src/OCE/DYN/wet_dry.F90
+--- nemo-4.2.0.orig/src/OCE/DYN/wet_dry.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/DYN/wet_dry.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -80,9 +80,9 @@ CONTAINS
+          &             nn_wdit , ln_wd_dl_bc, ln_wd_dl_rmp, rn_wd_sbcdep,rn_wd_sbcfra
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_ref, namwad, IOSTAT = ios, ERR = 905)
++      READ  ( splitif( numnam_ref,'namwad'), namwad, IOSTAT = ios, ERR = 905)
+ 905   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namwad in reference namelist' ) 
+-      READ  ( numnam_cfg, namwad, IOSTAT = ios, ERR = 906)
++      READ  ( splitif( numnam_cfg,'namwad'), namwad, IOSTAT = ios, ERR = 906)
+ 906   IF( ios >  0 )   CALL ctl_nam ( ios , 'namwad in configuration namelist' )
+       IF(lwm) WRITE ( numond, namwad )
+       !
+diff -uprN nemo-4.2.0.orig/src/OCE/FLO/floats.F90 nemo-4.2.0/src/OCE/FLO/floats.F90
+--- nemo-4.2.0.orig/src/OCE/FLO/floats.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/FLO/floats.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -88,10 +88,10 @@ CONTAINS
+       IF(lwp) WRITE(numout,*) 'flo_stp : call floats routine '
+       IF(lwp) WRITE(numout,*) '~~~~~~~'
+ 
+-      READ  ( numnam_ref, namflo, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namflo'), namflo, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namflo in reference namelist' )
+ 
+-      READ  ( numnam_cfg, namflo, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namflo'), namflo, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namflo in configuration namelist' )
+       IF(lwm) WRITE ( numond, namflo )
+       !
+diff -uprN nemo-4.2.0.orig/src/OCE/ICB/icbini.F90 nemo-4.2.0/src/OCE/ICB/icbini.F90
+--- nemo-4.2.0.orig/src/OCE/ICB/icbini.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/ICB/icbini.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -431,9 +431,9 @@ CONTAINS
+       ENDIF
+ #endif   
+       !                             !==  read namelist  ==!
+-      READ  ( numnam_ref, namberg, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namberg'), namberg, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 ) CALL ctl_nam ( ios , 'namberg in reference namelist' )
+-      READ  ( numnam_cfg, namberg, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namberg'), namberg, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 ) CALL ctl_nam ( ios , 'namberg in configuration namelist' )
+       IF(lwm) WRITE ( numond, namberg )
+       !
+diff -uprN nemo-4.2.0.orig/src/OCE/IOM/in_out_manager.F90 nemo-4.2.0/src/OCE/IOM/in_out_manager.F90
+--- nemo-4.2.0.orig/src/OCE/IOM/in_out_manager.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/IOM/in_out_manager.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -191,4 +191,18 @@ MODULE in_out_manager
+    !! $Id: in_out_manager.F90 14553 2021-02-26 17:01:43Z gsamson $
+    !! Software governed by the CeCILL license (see ./LICENSE)
+    !!=====================================================================
++
++   CONTAINS
++
++   function splitif(intfile,delimiter)
++      character(len=len(intfile))   :: splitif
++      character(len=*)              :: intfile
++      character(len=*)              :: delimiter
++   
++      integer :: is, ie
++   
++      is = index(intfile,'&'//trim(delimiter))
++      ie = index(intfile(is:),'/')+is
++      splitif = trim(intfile(is:ie))
++   end function splitif
+ END MODULE in_out_manager
+diff -uprN nemo-4.2.0.orig/src/OCE/ISF/isfstp.F90 nemo-4.2.0/src/OCE/ISF/isfstp.F90
+--- nemo-4.2.0.orig/src/OCE/ISF/isfstp.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/ISF/isfstp.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -301,10 +301,10 @@ CONTAINS
+          &             rn_isfpar_bg03_gt0
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_ref, namisf, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namisf'), namisf, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namisf in reference namelist' )
+       !
+-      READ  ( numnam_cfg, namisf, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namisf'), namisf, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namisf in configuration namelist' )
+       IF(lwm) WRITE ( numond, namisf )
+ 
+diff -uprN nemo-4.2.0.orig/src/OCE/LBC/mppini.F90 nemo-4.2.0/src/OCE/LBC/mppini.F90
+--- nemo-4.2.0.orig/src/OCE/LBC/mppini.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/LBC/mppini.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -159,9 +159,9 @@ CONTAINS
+       !  0. read namelists parameters
+       ! -----------------------------------
+       !
+-      READ  ( numnam_ref, nammpp, IOSTAT = ios, ERR = 901 )
++      READ  ( splitif( numnam_ref,'nammpp'), nammpp, IOSTAT = ios, ERR = 901 )
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'nammpp in reference namelist' )
+-      READ  ( numnam_cfg, nammpp, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'nammpp'), nammpp, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'nammpp in configuration namelist' )
+       !
+       nn_hls = MAX(1, nn_hls)   ! nn_hls must be > 0
+@@ -183,9 +183,9 @@ CONTAINS
+       jpjglo = Nj0glo + 2 * nn_hls
+       !
+       ! do we need to take into account bdy_msk?
+-      READ  ( numnam_ref, nambdy, IOSTAT = ios, ERR = 903)
++      READ  ( splitif( numnam_ref,'nambdy'), nambdy, IOSTAT = ios, ERR = 903)
+ 903   IF( ios /= 0 )   CALL ctl_nam ( ios , 'nambdy in reference namelist (mppini)' )
+-      READ  ( numnam_cfg, nambdy, IOSTAT = ios, ERR = 904 )
++      READ  ( splitif( numnam_cfg,'nambdy'), nambdy, IOSTAT = ios, ERR = 904 )
+ 904   IF( ios >  0 )   CALL ctl_nam ( ios , 'nambdy in configuration namelist (mppini)' )
+       !
+       IF(               ln_read_cfg ) CALL iom_open( cn_domcfg,    numbot )
+diff -uprN nemo-4.2.0.orig/src/OCE/LDF/ldfdyn.F90 nemo-4.2.0/src/OCE/LDF/ldfdyn.F90
+--- nemo-4.2.0.orig/src/OCE/LDF/ldfdyn.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/LDF/ldfdyn.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -119,10 +119,10 @@ CONTAINS
+          &                 rn_csmc      , rn_minfac    , rn_maxfac                           ! Smagorinsky settings
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_ref, namdyn_ldf, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namdyn_ldf'), namdyn_ldf, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namdyn_ldf in reference namelist' )
+ 
+-      READ  ( numnam_cfg, namdyn_ldf, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namdyn_ldf'), namdyn_ldf, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namdyn_ldf in configuration namelist' )
+       IF(lwm) WRITE ( numond, namdyn_ldf )
+ 
+diff -uprN nemo-4.2.0.orig/src/OCE/LDF/ldftra.F90 nemo-4.2.0/src/OCE/LDF/ldftra.F90
+--- nemo-4.2.0.orig/src/OCE/LDF/ldftra.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/LDF/ldftra.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -152,9 +152,9 @@ CONTAINS
+       !  Choice of lateral tracer physics
+       ! =================================
+       !
+-      READ  ( numnam_ref, namtra_ldf, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namtra_ldf'), namtra_ldf, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namtra_ldf in reference namelist' )
+-      READ  ( numnam_cfg, namtra_ldf, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namtra_ldf'), namtra_ldf, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namtra_ldf in configuration namelist' )
+       IF(lwm) WRITE( numond, namtra_ldf )
+       !
+@@ -504,10 +504,10 @@ CONTAINS
+          WRITE(numout,*) '~~~~~~~~~~~~ '
+       ENDIF
+       !
+-      READ  ( numnam_ref, namtra_eiv, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namtra_eiv'), namtra_eiv, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namtra_eiv in reference namelist' )
+       !
+-      READ  ( numnam_cfg, namtra_eiv, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namtra_eiv'), namtra_eiv, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namtra_eiv in configuration namelist' )
+       IF(lwm)  WRITE ( numond, namtra_eiv )
+ 
+diff -uprN nemo-4.2.0.orig/src/OCE/OBS/diaobs.F90 nemo-4.2.0/src/OCE/OBS/diaobs.F90
+--- nemo-4.2.0.orig/src/OCE/OBS/diaobs.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/OBS/diaobs.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -212,9 +212,9 @@ CONTAINS
+       CALL fin_date( rn_dobsend )
+ 
+       ! Read namelist namobs : control observation diagnostics
+-      READ  ( numnam_ref, namobs, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namobs'), namobs, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namobs in reference namelist' )
+-      READ  ( numnam_cfg, namobs, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namobs'), namobs, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namobs in configuration namelist' )
+       IF(lwm) WRITE ( numond, namobs )
+ 
+diff -uprN nemo-4.2.0.orig/src/OCE/SBC/sbcapr.F90 nemo-4.2.0/src/OCE/SBC/sbcapr.F90
+--- nemo-4.2.0.orig/src/OCE/SBC/sbcapr.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/SBC/sbcapr.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -67,10 +67,10 @@ CONTAINS
+       !!
+       NAMELIST/namsbc_apr/ cn_dir, sn_apr, ln_ref_apr, rn_pref, ln_apr_obc
+       !!----------------------------------------------------------------------
+-      READ  ( numnam_ref, namsbc_apr, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namsbc_apr'), namsbc_apr, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namsbc_apr in reference namelist' )
+ 
+-      READ  ( numnam_cfg, namsbc_apr, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namsbc_apr'), namsbc_apr, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namsbc_apr in configuration namelist' )
+       IF(lwm) WRITE ( numond, namsbc_apr )
+       !
+diff -uprN nemo-4.2.0.orig/src/OCE/SBC/sbcblk.F90 nemo-4.2.0/src/OCE/SBC/sbcblk.F90
+--- nemo-4.2.0.orig/src/OCE/SBC/sbcblk.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/SBC/sbcblk.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -240,10 +240,10 @@ CONTAINS
+ #endif
+       !
+       !                             !** read bulk namelist
+-      READ  ( numnam_ref, namsbc_blk, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namsbc_blk'), namsbc_blk, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namsbc_blk in reference namelist' )
+       !
+-      READ  ( numnam_cfg, namsbc_blk, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namsbc_blk'), namsbc_blk, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namsbc_blk in configuration namelist' )
+       !
+       IF(lwm) WRITE( numond, namsbc_blk )
+diff -uprN nemo-4.2.0.orig/src/OCE/SBC/sbccpl.F90 nemo-4.2.0/src/OCE/SBC/sbccpl.F90
+--- nemo-4.2.0.orig/src/OCE/SBC/sbccpl.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/SBC/sbccpl.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -290,10 +290,10 @@ CONTAINS
+       !      Namelist informations       !
+       ! ================================ !
+       !
+-      READ  ( numnam_ref, namsbc_cpl, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namsbc_cpl'), namsbc_cpl, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namsbc_cpl in reference namelist' )
+       !
+-      READ  ( numnam_cfg, namsbc_cpl, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namsbc_cpl'), namsbc_cpl, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namsbc_cpl in configuration namelist' )
+       IF(lwm) WRITE ( numond, namsbc_cpl )
+       !
+diff -uprN nemo-4.2.0.orig/src/OCE/SBC/sbcflx.F90 nemo-4.2.0/src/OCE/SBC/sbcflx.F90
+--- nemo-4.2.0.orig/src/OCE/SBC/sbcflx.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/SBC/sbcflx.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -93,10 +93,10 @@ CONTAINS
+       !
+       IF( kt == nit000 ) THEN                ! First call kt=nit000
+          ! set file information
+-         READ  ( numnam_ref, namsbc_flx, IOSTAT = ios, ERR = 901)
++         READ  ( splitif( numnam_ref,'namsbc_flx'), namsbc_flx, IOSTAT = ios, ERR = 901)
+ 901      IF( ios /= 0 )   CALL ctl_nam ( ios , 'namsbc_flx in reference namelist' )
+ 
+-         READ  ( numnam_cfg, namsbc_flx, IOSTAT = ios, ERR = 902 )
++         READ  ( splitif( numnam_cfg,'namsbc_flx'), namsbc_flx, IOSTAT = ios, ERR = 902 )
+ 902      IF( ios >  0 )   CALL ctl_nam ( ios , 'namsbc_flx in configuration namelist' )
+          IF(lwm) WRITE ( numond, namsbc_flx )
+          !
+diff -uprN nemo-4.2.0.orig/src/OCE/SBC/sbcfwb.F90 nemo-4.2.0/src/OCE/SBC/sbcfwb.F90
+--- nemo-4.2.0.orig/src/OCE/SBC/sbcfwb.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/SBC/sbcfwb.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -78,9 +78,9 @@ CONTAINS
+       !!----------------------------------------------------------------------
+       !
+       IF( kt == nit000 ) THEN
+-         READ( numnam_ref, namsbc_fwb, IOSTAT = ios, ERR = 901 )
++         READ( splitif( numnam_ref,'namsbc_fwb'), namsbc_fwb, IOSTAT = ios, ERR = 901 )
+ 901      IF( ios /= 0 ) CALL ctl_nam( ios, 'namsbc_fwb in reference namelist'     )
+-         READ( numnam_cfg, namsbc_fwb, IOSTAT = ios, ERR = 902 )
++         READ( splitif( numnam_cfg,'namsbc_fwb'), namsbc_fwb, IOSTAT = ios, ERR = 902 )
+ 902      IF( ios >  0 ) CALL ctl_nam( ios, 'namsbc_fwb in configuration namelist' )
+          IF(lwm) WRITE( numond, namsbc_fwb )
+          IF(lwp) THEN
+diff -uprN nemo-4.2.0.orig/src/OCE/SBC/sbcice_cice.F90 nemo-4.2.0/src/OCE/SBC/sbcice_cice.F90
+--- nemo-4.2.0.orig/src/OCE/SBC/sbcice_cice.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/SBC/sbcice_cice.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -748,10 +748,10 @@ taum(:,:)=(1.0-fr_i(:,:))*taum(:,:)+fr_i
+          sn_bot4 = FLD_N( 'botmeltn4_1m' ,    -1.    ,  'botmeltn4' ,  .true.    , .true.  ,  ' yearly'  , ''       , ''         ,  ''    )
+          sn_bot5 = FLD_N( 'botmeltn5_1m' ,    -1.    ,  'botmeltn5' ,  .true.    , .true.  ,  ' yearly'  , ''       , ''         ,  ''    )
+ 
+-         READ  ( numnam_ref, namsbc_cice, IOSTAT = ios, ERR = 901)
++         READ  ( splitif( numnam_ref,'namsbc_cice'), namsbc_cice, IOSTAT = ios, ERR = 901)
+ 901      IF( ios /= 0 )   CALL ctl_nam ( ios , 'namsbc_cice in reference namelist' )
+ 
+-         READ  ( numnam_cfg, namsbc_cice, IOSTAT = ios, ERR = 902 )
++         READ  ( splitif( numnam_cfg,'namsbc_cice'), namsbc_cice, IOSTAT = ios, ERR = 902 )
+ 902      IF( ios >  0 )   CALL ctl_nam ( ios , 'namsbc_cice in configuration namelist' )
+          IF(lwm) WRITE ( numond, namsbc_cice )
+ 
+diff -uprN nemo-4.2.0.orig/src/OCE/SBC/sbcice_if.F90 nemo-4.2.0/src/OCE/SBC/sbcice_if.F90
+--- nemo-4.2.0.orig/src/OCE/SBC/sbcice_if.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/SBC/sbcice_if.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -76,10 +76,10 @@ CONTAINS
+       IF( kt == nit000 ) THEN                   !  First call kt=nit000  !
+          !                                      ! ====================== !
+          ! set file information
+-         READ  ( numnam_ref, namsbc_iif, IOSTAT = ios, ERR = 901)
++         READ  ( splitif( numnam_ref,'namsbc_iif'), namsbc_iif, IOSTAT = ios, ERR = 901)
+ 901      IF( ios /= 0 )   CALL ctl_nam ( ios , 'namsbc_iif in reference namelist' )
+ 
+-         READ  ( numnam_cfg, namsbc_iif, IOSTAT = ios, ERR = 902 )
++         READ  ( splitif( numnam_cfg,'namsbc_iif'), namsbc_iif, IOSTAT = ios, ERR = 902 )
+ 902      IF( ios >  0 )   CALL ctl_nam ( ios , 'namsbc_iif in configuration namelist' )
+          IF(lwm) WRITE ( numond, namsbc_iif )
+ 
+diff -uprN nemo-4.2.0.orig/src/OCE/SBC/sbcmod.F90 nemo-4.2.0/src/OCE/SBC/sbcmod.F90
+--- nemo-4.2.0.orig/src/OCE/SBC/sbcmod.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/SBC/sbcmod.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -113,9 +113,9 @@ CONTAINS
+       ENDIF
+       !
+       !                       !**  read Surface Module namelist
+-      READ  ( numnam_ref, namsbc, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namsbc'), namsbc, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namsbc in reference namelist' )
+-      READ  ( numnam_cfg, namsbc, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namsbc'), namsbc, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namsbc in configuration namelist' )
+       IF(lwm) WRITE( numond, namsbc )
+       !
+diff -uprN nemo-4.2.0.orig/src/OCE/SBC/sbcrnf.F90 nemo-4.2.0/src/OCE/SBC/sbcrnf.F90
+--- nemo-4.2.0.orig/src/OCE/SBC/sbcrnf.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/SBC/sbcrnf.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -282,10 +282,10 @@ CONTAINS
+       !                                   !   Namelist
+       !                                   ! ============
+       !
+-      READ  ( numnam_ref, namsbc_rnf, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namsbc_rnf'), namsbc_rnf, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namsbc_rnf in reference namelist' )
+ 
+-      READ  ( numnam_cfg, namsbc_rnf, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namsbc_rnf'), namsbc_rnf, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namsbc_rnf in configuration namelist' )
+       IF(lwm) WRITE ( numond, namsbc_rnf )
+       !
+diff -uprN nemo-4.2.0.orig/src/OCE/SBC/sbcssr.F90 nemo-4.2.0/src/OCE/SBC/sbcssr.F90
+--- nemo-4.2.0.orig/src/OCE/SBC/sbcssr.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/SBC/sbcssr.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -181,10 +181,10 @@ CONTAINS
+          WRITE(numout,*) '~~~~~~~ '
+       ENDIF
+       ! 
+-      READ  ( numnam_ref, namsbc_ssr, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namsbc_ssr'), namsbc_ssr, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namsbc_ssr in reference namelist' )
+ 
+-      READ  ( numnam_cfg, namsbc_ssr, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namsbc_ssr'), namsbc_ssr, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namsbc_ssr in configuration namelist' )
+       IF(lwm) WRITE ( numond, namsbc_ssr )
+ 
+diff -uprN nemo-4.2.0.orig/src/OCE/SBC/sbcwave.F90 nemo-4.2.0/src/OCE/SBC/sbcwave.F90
+--- nemo-4.2.0.orig/src/OCE/SBC/sbcwave.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/SBC/sbcwave.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -357,10 +357,10 @@ CONTAINS
+          WRITE(numout,*) '~~~~~~~~~~~~~ '
+       ENDIF
+       !
+-      READ  ( numnam_ref, namsbc_wave, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namsbc_wave'), namsbc_wave, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namsbc_wave in reference namelist')
+ 
+-      READ  ( numnam_cfg, namsbc_wave, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namsbc_wave'), namsbc_wave, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namsbc_wave in configuration namelist' )
+       IF(lwm) WRITE ( numond, namsbc_wave )
+       !
+diff -uprN nemo-4.2.0.orig/src/OCE/STO/stopar.F90 nemo-4.2.0/src/OCE/STO/stopar.F90
+--- nemo-4.2.0.orig/src/OCE/STO/stopar.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/STO/stopar.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -262,10 +262,10 @@ CONTAINS
+       INTEGER  ::   ios                 ! Local integer output status for namelist read
+ 
+       ! Read namsto namelist : stochastic parameterization
+-      READ  ( numnam_ref, namsto, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namsto'), namsto, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 ) CALL ctl_nam ( ios , 'namsto in reference namelist' )
+ 
+-      READ  ( numnam_cfg, namsto, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namsto'), namsto, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 ) CALL ctl_nam ( ios , 'namsto in configuration namelist' )
+       IF(lwm) WRITE ( numond, namsto )
+ 
+diff -uprN nemo-4.2.0.orig/src/OCE/TDE/tide_mod.F90 nemo-4.2.0/src/OCE/TDE/tide_mod.F90
+--- nemo-4.2.0.orig/src/OCE/TDE/tide_mod.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/TDE/tide_mod.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -131,10 +131,10 @@ CONTAINS
+       ! typically do not appear in namelist_ref or namelist_cfg
+       sn_tide_cnames(:) = ''
+       ! Read Namelist nam_tide
+-      READ  ( numnam_ref, nam_tide, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'nam_tide'), nam_tide, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'nam_tide in reference namelist' )
+       !
+-      READ  ( numnam_cfg, nam_tide, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'nam_tide'), nam_tide, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'nam_tide in configuration namelist' )
+       IF(lwm) WRITE ( numond, nam_tide )
+       !
+diff -uprN nemo-4.2.0.orig/src/OCE/TRA/eosbn2.F90 nemo-4.2.0/src/OCE/TRA/eosbn2.F90
+--- nemo-4.2.0.orig/src/OCE/TRA/eosbn2.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/TRA/eosbn2.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -1346,10 +1346,10 @@ CONTAINS
+          &                                             rn_lambda2, rn_mu2, rn_nu
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_ref, nameos, IOSTAT = ios, ERR = 901 )
++      READ  ( splitif( numnam_ref,'nameos'), nameos, IOSTAT = ios, ERR = 901 )
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'nameos in reference namelist' )
+       !
+-      READ  ( numnam_cfg, nameos, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'nameos'), nameos, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'nameos in configuration namelist' )
+       IF(lwm) WRITE( numond, nameos )
+       !
+diff -uprN nemo-4.2.0.orig/src/OCE/TRA/traadv.F90 nemo-4.2.0/src/OCE/TRA/traadv.F90
+--- nemo-4.2.0.orig/src/OCE/TRA/traadv.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/TRA/traadv.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -231,10 +231,10 @@ CONTAINS
+       !!----------------------------------------------------------------------
+       !
+       !                                !==  Namelist  ==!
+-      READ  ( numnam_ref, namtra_adv, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namtra_adv'), namtra_adv, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namtra_adv in reference namelist' )
+       !
+-      READ  ( numnam_cfg, namtra_adv, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namtra_adv'), namtra_adv, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namtra_adv in configuration namelist' )
+       IF(lwm) WRITE( numond, namtra_adv )
+       !
+diff -uprN nemo-4.2.0.orig/src/OCE/TRA/trabbc.F90 nemo-4.2.0/src/OCE/TRA/trabbc.F90
+--- nemo-4.2.0.orig/src/OCE/TRA/trabbc.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/TRA/trabbc.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -136,10 +136,10 @@ CONTAINS
+       NAMELIST/nambbc/ln_trabbc, nn_geoflx, rn_geoflx_cst, sn_qgh, cn_dir
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_ref, nambbc, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'nambbc'), nambbc, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'nambbc in reference namelist' )
+       !
+-      READ  ( numnam_cfg, nambbc, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'nambbc'), nambbc, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'nambbc in configuration namelist' )
+       IF(lwm) WRITE ( numond, nambbc )
+       !
+diff -uprN nemo-4.2.0.orig/src/OCE/TRA/trabbl.F90 nemo-4.2.0/src/OCE/TRA/trabbl.F90
+--- nemo-4.2.0.orig/src/OCE/TRA/trabbl.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/TRA/trabbl.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -472,10 +472,10 @@ CONTAINS
+       NAMELIST/nambbl/ ln_trabbl, nn_bbl_ldf, nn_bbl_adv, rn_ahtbbl, rn_gambbl
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_ref, nambbl, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'nambbl'), nambbl, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'nambbl in reference namelist' )
+       !
+-      READ  ( numnam_cfg, nambbl, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'nambbl'), nambbl, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'nambbl in configuration namelist' )
+       IF(lwm) WRITE ( numond, nambbl )
+       !
+diff -uprN nemo-4.2.0.orig/src/OCE/TRA/tradmp.F90 nemo-4.2.0/src/OCE/TRA/tradmp.F90
+--- nemo-4.2.0.orig/src/OCE/TRA/tradmp.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/TRA/tradmp.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -193,10 +193,10 @@ CONTAINS
+       NAMELIST/namtra_dmp/ ln_tradmp, nn_zdmp, cn_resto
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_ref, namtra_dmp, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namtra_dmp'), namtra_dmp, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namtra_dmp in reference namelist' )
+       !
+-      READ  ( numnam_cfg, namtra_dmp, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namtra_dmp'), namtra_dmp, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namtra_dmp in configuration namelist' )
+       IF(lwm) WRITE ( numond, namtra_dmp )
+       !
+diff -uprN nemo-4.2.0.orig/src/OCE/TRA/tramle.F90 nemo-4.2.0/src/OCE/TRA/tramle.F90
+--- nemo-4.2.0.orig/src/OCE/TRA/tramle.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/TRA/tramle.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -300,10 +300,10 @@ CONTAINS
+       NAMELIST/namtra_mle/ ln_mle , nn_mle, rn_ce, rn_lf, rn_time, rn_lat, nn_mld_uv, nn_conv, rn_rho_c_mle
+       !!----------------------------------------------------------------------
+ 
+-      READ  ( numnam_ref, namtra_mle, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namtra_mle'), namtra_mle, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namtra_mle in reference namelist' )
+ 
+-      READ  ( numnam_cfg, namtra_mle, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namtra_mle'), namtra_mle, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namtra_mle in configuration namelist' )
+       IF(lwm) WRITE ( numond, namtra_mle )
+ 
+diff -uprN nemo-4.2.0.orig/src/OCE/TRA/traqsr.F90 nemo-4.2.0/src/OCE/TRA/traqsr.F90
+--- nemo-4.2.0.orig/src/OCE/TRA/traqsr.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/TRA/traqsr.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -351,10 +351,10 @@ CONTAINS
+          &                  nn_chldta, rn_abs, rn_si0, rn_si1
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_ref, namtra_qsr, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namtra_qsr'), namtra_qsr, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namtra_qsr in reference namelist' )
+       !
+-      READ  ( numnam_cfg, namtra_qsr, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namtra_qsr'), namtra_qsr, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namtra_qsr in configuration namelist' )
+       IF(lwm) WRITE ( numond, namtra_qsr )
+       !
+diff -uprN nemo-4.2.0.orig/src/OCE/TRD/trdini.F90 nemo-4.2.0/src/OCE/TRD/trdini.F90
+--- nemo-4.2.0.orig/src/OCE/TRD/trdini.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/TRD/trdini.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -45,10 +45,10 @@ CONTAINS
+          &             ln_tra_trd, ln_PE_trd, ln_glo_trd, ln_tra_mxl, nn_trd
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_ref, namtrd, IOSTAT = ios, ERR = 901 )
++      READ  ( splitif( numnam_ref,'namtrd'), namtrd, IOSTAT = ios, ERR = 901 )
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namtrd in reference namelist' )
+       !
+-      READ  ( numnam_cfg, namtrd, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namtrd'), namtrd, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namtrd in configuration namelist' )
+       IF(lwm) WRITE( numond, namtrd )
+       !
+diff -uprN nemo-4.2.0.orig/src/OCE/TRD/trdmxl.F90 nemo-4.2.0/src/OCE/TRD/trdmxl.F90
+--- nemo-4.2.0.orig/src/OCE/TRD/trdmxl.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/TRD/trdmxl.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -733,10 +733,10 @@ CONTAINS
+          &                 nn_ctls, cn_trdrst_out, ln_trdmxl_instant, rn_ucf, rn_rho_c
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_ref, namtrd_mxl, IOSTAT = ios, ERR = 901 )
++      READ  ( splitif( numnam_ref,'namtrd_mxl'), namtrd_mxl, IOSTAT = ios, ERR = 901 )
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namtrd_mxl in reference namelist' )
+ 
+-      READ  ( numnam_cfg, namtrd_mxl, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namtrd_mxl'), namtrd_mxl, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namtrd_mxl in configuration namelist' )
+       IF(lwm) WRITE( numond, namtrd_mxl )
+       !
+diff -uprN nemo-4.2.0.orig/src/OCE/USR/usrdef_nam.F90 nemo-4.2.0/src/OCE/USR/usrdef_nam.F90
+--- nemo-4.2.0.orig/src/OCE/USR/usrdef_nam.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/USR/usrdef_nam.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -60,7 +60,7 @@ CONTAINS
+       NAMELIST/namusr_def/ nn_GYRE, ln_bench, jpkglo
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_cfg, namusr_def, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namusr_def'), namusr_def, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namusr_def in configuration namelist' )
+       !
+       IF(lwm)   WRITE( numond, namusr_def )
+diff -uprN nemo-4.2.0.orig/src/OCE/ZDF/zdfdrg.F90 nemo-4.2.0/src/OCE/ZDF/zdfdrg.F90
+--- nemo-4.2.0.orig/src/OCE/ZDF/zdfdrg.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/ZDF/zdfdrg.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -231,9 +231,9 @@ CONTAINS
+       !
+       !                     !==  drag nature  ==!
+       !
+-      READ  ( numnam_ref, namdrg, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namdrg'), namdrg, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam( ios , 'namdrg in reference namelist' )
+-      READ  ( numnam_cfg, namdrg, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namdrg'), namdrg, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam( ios , 'namdrg in configuration namelist' )
+       IF(lwm) WRITE ( numond, namdrg )
+       !
+@@ -336,11 +336,11 @@ CONTAINS
+       !
+       !                          !==  read namlist  ==!
+       !
+-      IF(ll_top)   READ  ( numnam_ref, namdrg_top, IOSTAT = ios, ERR = 901)
+-      IF(ll_bot)   READ  ( numnam_ref, namdrg_bot, IOSTAT = ios, ERR = 901)
++      IF(ll_top)   READ  ( splitif( numnam_ref,'namdrg_top'), namdrg_top, IOSTAT = ios, ERR = 901)
++      IF(ll_bot)   READ  ( splitif( numnam_ref,'namdrg_bot'), namdrg_bot, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam( ios , TRIM(cl_namref) )
+-      IF(ll_top)   READ  ( numnam_cfg, namdrg_top, IOSTAT = ios, ERR = 902 )
+-      IF(ll_bot)   READ  ( numnam_cfg, namdrg_bot, IOSTAT = ios, ERR = 902 )
++      IF(ll_top)   READ  ( splitif( numnam_cfg,'namdrg_top'), namdrg_top, IOSTAT = ios, ERR = 902 )
++      IF(ll_bot)   READ  ( splitif( numnam_cfg,'namdrg_bot'), namdrg_bot, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam( ios , TRIM(cl_namcfg) )
+       IF(lwm .AND. ll_top)   WRITE ( numond, namdrg_top )
+       IF(lwm .AND. ll_bot)   WRITE ( numond, namdrg_bot )
+diff -uprN nemo-4.2.0.orig/src/OCE/ZDF/zdfgls.F90 nemo-4.2.0/src/OCE/ZDF/zdfgls.F90
+--- nemo-4.2.0.orig/src/OCE/ZDF/zdfgls.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/ZDF/zdfgls.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -923,10 +923,10 @@ CONTAINS
+          &            nn_stab_func, nn_clos
+       !!----------------------------------------------------------
+       !
+-      READ  ( numnam_ref, namzdf_gls, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namzdf_gls'), namzdf_gls, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namzdf_gls in reference namelist' )
+ 
+-      READ  ( numnam_cfg, namzdf_gls, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namzdf_gls'), namzdf_gls, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namzdf_gls in configuration namelist' )
+       IF(lwm) WRITE ( numond, namzdf_gls )
+ 
+diff -uprN nemo-4.2.0.orig/src/OCE/ZDF/zdfiwm.F90 nemo-4.2.0/src/OCE/ZDF/zdfiwm.F90
+--- nemo-4.2.0.orig/src/OCE/ZDF/zdfiwm.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/ZDF/zdfiwm.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -354,10 +354,10 @@ CONTAINS
+           &                cn_dir, sn_mpb, sn_mpc, sn_mpn, sn_mps, sn_dsb, sn_dsc
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_ref, namzdf_iwm, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namzdf_iwm'), namzdf_iwm, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namzdf_iwm in reference namelist' )
+       !
+-      READ  ( numnam_cfg, namzdf_iwm, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namzdf_iwm'), namzdf_iwm, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namzdf_iwm in configuration namelist' )
+       IF(lwm) WRITE ( numond, namzdf_iwm )
+       !
+diff -uprN nemo-4.2.0.orig/src/OCE/ZDF/zdfmfc.F90 nemo-4.2.0/src/OCE/ZDF/zdfmfc.F90
+--- nemo-4.2.0.orig/src/OCE/ZDF/zdfmfc.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/ZDF/zdfmfc.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -449,11 +449,11 @@ CONTAINS
+       !
+       !
+ !      REWIND( numnam_ref )              ! Namelist namzdf_mfc in reference namelist : Vertical eddy diffivity mass flux
+-      READ  ( numnam_ref, namzdf_mfc, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namzdf_mfc'), namzdf_mfc, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 ) CALL ctl_nam ( ios , 'namzdf_edmf in reference namelist' )
+ 
+ !      REWIND( numnam_cfg )              ! Namelist namzdf_mfc in configuration namelist : Vertical eddy diffivity mass flux
+-      READ  ( numnam_cfg, namzdf_mfc, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namzdf_mfc'), namzdf_mfc, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios /= 0 ) CALL ctl_nam ( ios , 'namzdf_edmf in configuration namelist' )
+       IF(lwm) WRITE ( numond, namzdf_mfc )
+ 
+diff -uprN nemo-4.2.0.orig/src/OCE/ZDF/zdfosm.F90 nemo-4.2.0/src/OCE/ZDF/zdfosm.F90
+--- nemo-4.2.0.orig/src/OCE/ZDF/zdfosm.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/ZDF/zdfosm.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -3013,10 +3013,10 @@ CONTAINS
+          &                 rn_osm_mle_rho_c, rn_osm_mle_thresh, rn_osm_mle_tau, ln_osm_hmle_limit, rn_osm_hmle_limit
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_ref, namzdf_osm, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namzdf_osm'), namzdf_osm, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 ) CALL ctl_nam ( ios , 'namzdf_osm in reference namelist' )
+ 
+-      READ  ( numnam_cfg, namzdf_osm, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namzdf_osm'), namzdf_osm, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 ) CALL ctl_nam ( ios , 'namzdf_osm in configuration namelist' )
+       IF(lwm) WRITE ( numond, namzdf_osm )
+ 
+@@ -3078,9 +3078,9 @@ CONTAINS
+       IF( zdf_osm_alloc() /= 0 ) CALL ctl_stop( 'STOP', 'zdf_osm_init : unable to allocate arrays' )
+       !
+       IF( ln_osm_mle ) THEN   ! Initialise Fox-Kemper parametrization
+-         READ  ( numnam_ref, namosm_mle, IOSTAT = ios, ERR = 903)
++         READ  ( splitif( numnam_ref,'namosm_mle'), namosm_mle, IOSTAT = ios, ERR = 903)
+ 903      IF( ios /= 0 ) CALL ctl_nam( ios, 'namosm_mle in reference namelist' )
+-         READ  ( numnam_cfg, namosm_mle, IOSTAT = ios, ERR = 904 )
++         READ  ( splitif( numnam_cfg,'namosm_mle'), namosm_mle, IOSTAT = ios, ERR = 904 )
+ 904      IF( ios >  0 ) CALL ctl_nam( ios, 'namosm_mle in configuration namelist' )
+          IF(lwm) WRITE ( numond, namosm_mle )
+          !
+diff -uprN nemo-4.2.0.orig/src/OCE/ZDF/zdfphy.F90 nemo-4.2.0/src/OCE/ZDF/zdfphy.F90
+--- nemo-4.2.0.orig/src/OCE/ZDF/zdfphy.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/ZDF/zdfphy.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -101,10 +101,10 @@ CONTAINS
+       ENDIF
+       !
+       !                           !==  Namelist  ==!
+-      READ  ( numnam_ref, namzdf, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namzdf'), namzdf, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namzdf in reference namelist' )
+       !
+-      READ  ( numnam_cfg, namzdf, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namzdf'), namzdf, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namzdf in configuration namelist' )
+       IF(lwm)   WRITE ( numond, namzdf )
+       !
+diff -uprN nemo-4.2.0.orig/src/OCE/ZDF/zdfric.F90 nemo-4.2.0/src/OCE/ZDF/zdfric.F90
+--- nemo-4.2.0.orig/src/OCE/ZDF/zdfric.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/ZDF/zdfric.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -78,10 +78,10 @@ CONTAINS
+          &                rn_mldmin, rn_mldmax, rn_wtmix, rn_wvmix, ln_mldw
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_ref, namzdf_ric, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namzdf_ric'), namzdf_ric, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 ) CALL ctl_nam ( ios , 'namzdf_ric in reference namelist' )
+ 
+-      READ  ( numnam_cfg, namzdf_ric, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namzdf_ric'), namzdf_ric, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 ) CALL ctl_nam ( ios , 'namzdf_ric in configuration namelist' )
+       IF(lwm) WRITE ( numond, namzdf_ric )
+       !
+diff -uprN nemo-4.2.0.orig/src/OCE/ZDF/zdftke.F90 nemo-4.2.0/src/OCE/ZDF/zdftke.F90
+--- nemo-4.2.0.orig/src/OCE/ZDF/zdftke.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/ZDF/zdftke.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -726,10 +726,10 @@ CONTAINS
+          &                 nn_bc_surf, nn_bc_bot, ln_mxhsw
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_ref, namzdf_tke, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namzdf_tke'), namzdf_tke, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 ) CALL ctl_nam ( ios , 'namzdf_tke in reference namelist' )
+ 
+-      READ  ( numnam_cfg, namzdf_tke, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namzdf_tke'), namzdf_tke, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 ) CALL ctl_nam ( ios , 'namzdf_tke in configuration namelist' )
+       IF(lwm) WRITE ( numond, namzdf_tke )
+       !
+diff -uprN nemo-4.2.0.orig/src/OCE/module_example.F90 nemo-4.2.0/src/OCE/module_example.F90
+--- nemo-4.2.0.orig/src/OCE/module_example.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/module_example.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -150,11 +150,11 @@ CONTAINS
+       !!----------------------------------------------------------------------
+       !
+       REWIND( numnam_ref )              ! Namelist namexa in reference namelist : Example
+-      READ  ( numnam_ref, namexa, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namexa'), namexa, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 ) CALL ctl_nam ( ios , 'namexa in reference namelist' )
+       !
+       REWIND( numnam_cfg )              ! Namelist namexa in configuration namelist : Example
+-      READ  ( numnam_cfg, namexa, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namexa'), namexa, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 ) CALL ctl_nam ( ios , 'namexa in configuration namelist' )
+    ! Output namelist for control
+       WRITE ( numond, namexa )
+diff -uprN nemo-4.2.0.orig/src/OCE/nemogcm.F90 nemo-4.2.0/src/OCE/nemogcm.F90
+--- nemo-4.2.0.orig/src/OCE/nemogcm.F90	2023-10-12 10:07:19.000000000 +0900
++++ nemo-4.2.0/src/OCE/nemogcm.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -305,9 +305,9 @@ CONTAINS
+       !                             ! Open listing units !  -> need sn_cfctl from namctl to define lwp
+       !                             !--------------------!
+       !
+-      READ  ( numnam_ref, namctl, IOSTAT = ios, ERR = 901 )
++      READ  ( splitif( numnam_ref,'namctl'), namctl, IOSTAT = ios, ERR = 901 )
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namctl in reference namelist' )
+-      READ  ( numnam_cfg, namctl, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namctl'), namctl, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namctl in configuration namelist' )
+       !
+       ! finalize the definition of namctl variables
+@@ -360,9 +360,9 @@ CONTAINS
+       !                             !  Set global domain size parameters !
+       !                             !------------------------------------!
+       !
+-      READ  ( numnam_ref, namcfg, IOSTAT = ios, ERR = 903 )
++      READ  ( splitif( numnam_ref,'namcfg'), namcfg, IOSTAT = ios, ERR = 903 )
+ 903   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namcfg in reference namelist' )
+-      READ  ( numnam_cfg, namcfg, IOSTAT = ios, ERR = 904 )
++      READ  ( splitif( numnam_cfg,'namcfg'), namcfg, IOSTAT = ios, ERR = 904 )
+ 904   IF( ios >  0 )   CALL ctl_nam ( ios , 'namcfg in configuration namelist' )
+       !
+       IF( ln_read_cfg ) THEN            ! Read sizes in domain configuration file
+diff -uprN nemo-4.2.0.orig/src/OFF/dtadyn.F90 nemo-4.2.0/src/OFF/dtadyn.F90
+--- nemo-4.2.0.orig/src/OFF/dtadyn.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/src/OFF/dtadyn.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -242,9 +242,9 @@ CONTAINS
+          &                sn_empb, sn_div 
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_ref, namdta_dyn, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namdta_dyn'), namdta_dyn, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namdta_dyn in reference namelist' )
+-      READ  ( numnam_cfg, namdta_dyn, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namdta_dyn'), namdta_dyn, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namdta_dyn in configuration namelist' )
+       IF(lwm) WRITE ( numond, namdta_dyn )
+       !                                         ! store namelist information in an array
+@@ -762,9 +762,9 @@ CONTAINS
+          &                sn_tem, sn_sal
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_ref, namdta_dyn, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namdta_dyn'), namdta_dyn, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namdta_dyn in reference namelist' )
+-      READ  ( numnam_cfg, namdta_dyn, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namdta_dyn'), namdta_dyn, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namdta_dyn in configuration namelist' )
+       IF(lwm) WRITE ( numond, namdta_dyn )
+       !                                         ! store namelist information in an array
+diff -uprN nemo-4.2.0.orig/src/OFF/nemogcm.F90 nemo-4.2.0/src/OFF/nemogcm.F90
+--- nemo-4.2.0.orig/src/OFF/nemogcm.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/src/OFF/nemogcm.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -256,9 +256,9 @@ CONTAINS
+       !                             ! Open listing units !  -> need sn_cfctl from namctl to define lwp
+       !                             !--------------------!
+       !
+-      READ  ( numnam_ref, namctl, IOSTAT = ios, ERR = 901 )
++      READ  ( splitif( numnam_ref,'namctl'), namctl, IOSTAT = ios, ERR = 901 )
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namctl in reference namelist' )
+-      READ  ( numnam_cfg, namctl, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namctl'), namctl, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namctl in configuration namelist' )
+       !
+       ! finalize the definition of namctl variables
+@@ -303,9 +303,9 @@ CONTAINS
+       !                             !  Set global domain size parameters !
+       !                             !------------------------------------!
+       !     
+-      READ  ( numnam_ref, namcfg, IOSTAT = ios, ERR = 903 )
++      READ  ( splitif( numnam_ref,'namcfg'), namcfg, IOSTAT = ios, ERR = 903 )
+ 903   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namcfg in reference namelist' )
+-      READ  ( numnam_cfg, namcfg, IOSTAT = ios, ERR = 904 )
++      READ  ( splitif( numnam_cfg,'namcfg'), namcfg, IOSTAT = ios, ERR = 904 )
+ 904   IF( ios >  0 )   CALL ctl_nam ( ios , 'namcfg in configuration namelist' )   
+       !
+       IF( ln_read_cfg ) THEN              ! Read sizes in domain configuration file
+diff -uprN nemo-4.2.0.orig/src/SAO/nemogcm.F90 nemo-4.2.0/src/SAO/nemogcm.F90
+--- nemo-4.2.0.orig/src/SAO/nemogcm.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/src/SAO/nemogcm.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -152,9 +152,9 @@ CONTAINS
+       !                             ! Open listing units !  -> need sn_cfctl from namctl to define lwp
+       !                             !--------------------!
+       !
+-      READ  ( numnam_ref, namctl, IOSTAT = ios, ERR = 901 )
++      READ  ( splitif( numnam_ref,'namctl'), namctl, IOSTAT = ios, ERR = 901 )
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namctl in reference namelist' )
+-      READ  ( numnam_cfg, namctl, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namctl'), namctl, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namctl in configuration namelist' )
+       !
+       ! finalize the definition of namctl variables
+@@ -199,9 +199,9 @@ CONTAINS
+       !                             !  Set global domain size parameters !
+       !                             !------------------------------------!
+       !
+-      READ  ( numnam_ref, namcfg, IOSTAT = ios, ERR = 903 )
++      READ  ( splitif( numnam_ref,'namcfg'), namcfg, IOSTAT = ios, ERR = 903 )
+ 903   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namcfg in reference namelist' )
+-      READ  ( numnam_cfg, namcfg, IOSTAT = ios, ERR = 904 )
++      READ  ( splitif( numnam_cfg,'namcfg'), namcfg, IOSTAT = ios, ERR = 904 )
+ 904   IF( ios >  0 )   CALL ctl_nam ( ios , 'namcfg in configuration namelist' )   
+       !
+       IF( ln_read_cfg ) THEN            ! Read sizes in domain configuration file
+diff -uprN nemo-4.2.0.orig/src/SAO/sao_data.F90 nemo-4.2.0/src/SAO/sao_data.F90
+--- nemo-4.2.0.orig/src/SAO/sao_data.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/src/SAO/sao_data.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -51,9 +51,9 @@ CONTAINS
+       nn_sao_freq   = -1         ! input frequency in time steps
+ 
+       ! Standard offline obs_oper settings
+-      READ  ( numnam_ref, namsao, IOSTAT = ios, ERR = 901 )
++      READ  ( splitif( numnam_ref,'namsao'), namsao, IOSTAT = ios, ERR = 901 )
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namsao in reference namelist' )
+-      READ  ( numnam_cfg, namsao, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namsao'), namsao, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namsao in configuration namelist' )
+      
+       lmask(:) = .FALSE.               ! count input files
+diff -uprN nemo-4.2.0.orig/src/SAS/nemogcm.F90 nemo-4.2.0/src/SAS/nemogcm.F90
+--- nemo-4.2.0.orig/src/SAS/nemogcm.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/src/SAS/nemogcm.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -281,9 +281,9 @@ CONTAINS
+       !                             ! Open listing units !  -> need sn_cfctl from namctl to define lwp
+       !                             !--------------------!
+       !
+-      READ  ( numnam_ref, namctl, IOSTAT = ios, ERR = 901 )
++      READ  ( splitif( numnam_ref,'namctl'), namctl, IOSTAT = ios, ERR = 901 )
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namctl in reference namelist' )
+-      READ  ( numnam_cfg, namctl, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namctl'), namctl, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namctl in configuration namelist' )
+       !
+       ! finalize the definition of namctl variables
+@@ -332,9 +332,9 @@ CONTAINS
+       !                             !  Set global domain size parameters !
+       !                             !------------------------------------!
+       !
+-      READ  ( numnam_ref, namcfg, IOSTAT = ios, ERR = 903 )
++      READ  ( splitif( numnam_ref,'namcfg'), namcfg, IOSTAT = ios, ERR = 903 )
+ 903   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namcfg in reference namelist' )
+-      READ  ( numnam_cfg, namcfg, IOSTAT = ios, ERR = 904 )
++      READ  ( splitif( numnam_cfg,'namcfg'), namcfg, IOSTAT = ios, ERR = 904 )
+ 904   IF( ios >  0 )   CALL ctl_nam ( ios , 'namcfg in configuration namelist' )   
+       !
+       IF( ln_read_cfg ) THEN            ! Read sizes in domain configuration file
+diff -uprN nemo-4.2.0.orig/src/SAS/sbcssm.F90 nemo-4.2.0/src/SAS/sbcssm.F90
+--- nemo-4.2.0.orig/src/SAS/sbcssm.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/src/SAS/sbcssm.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -203,9 +203,9 @@ CONTAINS
+          WRITE(numout,*) '~~~~~~~~~~~~ '
+       ENDIF
+       !
+-      READ  ( numnam_ref, namsbc_sas, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namsbc_sas'), namsbc_sas, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namsbc_sas in reference namelist' )
+-      READ  ( numnam_cfg, namsbc_sas, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namsbc_sas'), namsbc_sas, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namsbc_sas in configuration namelist' )
+       IF(lwm) WRITE ( numond, namsbc_sas )
+       !
+diff -uprN nemo-4.2.0.orig/src/SWE/nemogcm.F90 nemo-4.2.0/src/SWE/nemogcm.F90
+--- nemo-4.2.0.orig/src/SWE/nemogcm.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/src/SWE/nemogcm.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -198,9 +198,9 @@ CONTAINS
+       !                             ! Open listing units !  -> need sn_cfctl from namctl to define lwp
+       !                             !--------------------!
+       !
+-      READ  ( numnam_ref, namctl, IOSTAT = ios, ERR = 901 )
++      READ  ( splitif( numnam_ref,'namctl'), namctl, IOSTAT = ios, ERR = 901 )
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namctl in reference namelist' )
+-      READ  ( numnam_cfg, namctl, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namctl'), namctl, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namctl in configuration namelist' )
+       !
+       ! finalize the definition of namctl variables
+@@ -256,9 +256,9 @@ CONTAINS
+       !                             !  Set global domain size parameters !
+       !                             !------------------------------------!
+       !
+-      READ  ( numnam_ref, namcfg, IOSTAT = ios, ERR = 903 )
++      READ  ( splitif( numnam_ref,'namcfg'), namcfg, IOSTAT = ios, ERR = 903 )
+ 903   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namcfg in reference namelist' )
+-      READ  ( numnam_cfg, namcfg, IOSTAT = ios, ERR = 904 )
++      READ  ( splitif( numnam_cfg,'namcfg'), namcfg, IOSTAT = ios, ERR = 904 )
+ 904   IF( ios >  0 )   CALL ctl_nam ( ios , 'namcfg in configuration namelist' )   
+       !
+       IF( ln_read_cfg ) THEN            ! Read sizes in domain configuration file
+diff -uprN nemo-4.2.0.orig/tests/ADIAB_WAVE/MY_SRC/sbcwave.F90 nemo-4.2.0/tests/ADIAB_WAVE/MY_SRC/sbcwave.F90
+--- nemo-4.2.0.orig/tests/ADIAB_WAVE/MY_SRC/sbcwave.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/tests/ADIAB_WAVE/MY_SRC/sbcwave.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -383,10 +383,10 @@ CONTAINS
+          WRITE(numout,*) '~~~~~~~~~~~~~ '
+       ENDIF
+       !
+-      READ  ( numnam_ref, namsbc_wave, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namsbc_wave'), namsbc_wave, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namsbc_wave in reference namelist')
+ 
+-      READ  ( numnam_cfg, namsbc_wave, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namsbc_wave'), namsbc_wave, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namsbc_wave in configuration namelist' )
+       IF(lwm) WRITE ( numond, namsbc_wave )
+       !
+diff -uprN nemo-4.2.0.orig/tests/ADIAB_WAVE/MY_SRC/usrdef_nam.F90 nemo-4.2.0/tests/ADIAB_WAVE/MY_SRC/usrdef_nam.F90
+--- nemo-4.2.0.orig/tests/ADIAB_WAVE/MY_SRC/usrdef_nam.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/tests/ADIAB_WAVE/MY_SRC/usrdef_nam.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -61,7 +61,7 @@ CONTAINS
+       NAMELIST/namusr_def/ ln_zco, ln_zps, ln_sco, rn_dx, rn_dy, rn_dz, ln_STOKES_ADIAB
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_cfg, namusr_def, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namusr_def'), namusr_def, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namusr_def in configuration namelist' )
+       !
+       IF(lwm)   WRITE( numond, namusr_def )
+diff -uprN nemo-4.2.0.orig/tests/BENCH/MY_SRC/usrdef_nam.F90 nemo-4.2.0/tests/BENCH/MY_SRC/usrdef_nam.F90
+--- nemo-4.2.0.orig/tests/BENCH/MY_SRC/usrdef_nam.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/tests/BENCH/MY_SRC/usrdef_nam.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -63,7 +63,7 @@ CONTAINS
+       NAMELIST/nammpp/ jpni, jpnj, nn_hls, ln_nnogather, ln_listonly, nn_comm
+       !!----------------------------------------------------------------------     
+       !
+-      READ  ( numnam_cfg, namusr_def, IOSTAT = ios, ERR = 903 )
++      READ  ( splitif( numnam_cfg,'namusr_def'), namusr_def, IOSTAT = ios, ERR = 903 )
+ 903   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namusr_def in configuration namelist' )
+       !
+       IF(lwm)   WRITE( numond, namusr_def )      
+@@ -73,10 +73,10 @@ CONTAINS
+       !
+       IF( nn_isize < 0 .AND. nn_jsize < 0 ) THEN
+       !
+-         READ  ( numnam_ref, nammpp, IOSTAT = ios, ERR = 901)
++         READ  ( splitif( numnam_ref,'nammpp'), nammpp, IOSTAT = ios, ERR = 901)
+ 901      IF( ios /= 0 )   CALL ctl_nam ( ios , 'nammpp in reference namelist' )
+          !
+-         READ  ( numnam_cfg, nammpp, IOSTAT = ios, ERR = 902 )
++         READ  ( splitif( numnam_cfg,'nammpp'), nammpp, IOSTAT = ios, ERR = 902 )
+ 902      IF( ios >  0 )   CALL ctl_nam ( ios , 'nammpp in configuration namelist' )
+ 
+          kpi = -nn_isize * jpni
+diff -uprN nemo-4.2.0.orig/tests/C1D_ASICS/MY_SRC/usrdef_nam.F90 nemo-4.2.0/tests/C1D_ASICS/MY_SRC/usrdef_nam.F90
+--- nemo-4.2.0.orig/tests/C1D_ASICS/MY_SRC/usrdef_nam.F90	2023-10-12 10:07:21.000000000 +0900
++++ nemo-4.2.0/tests/C1D_ASICS/MY_SRC/usrdef_nam.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -62,7 +62,7 @@ CONTAINS
+       NAMELIST/namusr_def/ rn_bathy
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_cfg, namusr_def, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namusr_def'), namusr_def, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namusr_def in configuration namelist' )
+       !
+       IF(lwm)   WRITE( numond, namusr_def )
+diff -uprN nemo-4.2.0.orig/tests/CANAL/MY_SRC/usrdef_nam.F90 nemo-4.2.0/tests/CANAL/MY_SRC/usrdef_nam.F90
+--- nemo-4.2.0.orig/tests/CANAL/MY_SRC/usrdef_nam.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/tests/CANAL/MY_SRC/usrdef_nam.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -86,7 +86,7 @@ CONTAINS
+          &                 , nn_botcase, nn_initcase, ln_sshnoise, rn_lambda, ln_Iperio, ln_Jperio
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_cfg, namusr_def, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namusr_def'), namusr_def, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namusr_def in configuration namelist' )
+       !
+       IF(lwm)   WRITE( numond, namusr_def )
+diff -uprN nemo-4.2.0.orig/tests/DIA_GPU/MY_SRC/diahsb.F90 nemo-4.2.0/tests/DIA_GPU/MY_SRC/diahsb.F90
+--- nemo-4.2.0.orig/tests/DIA_GPU/MY_SRC/diahsb.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/tests/DIA_GPU/MY_SRC/diahsb.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -372,9 +372,9 @@ CONTAINS
+          WRITE(numout,*) 'dia_hsb_init : heat and salt budgets diagnostics'
+          WRITE(numout,*) '~~~~~~~~~~~~ '
+       ENDIF
+-      READ  ( numnam_ref, namhsb, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namhsb'), namhsb, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namhsb in reference namelist' )
+-      READ  ( numnam_cfg, namhsb, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namhsb'), namhsb, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namhsb in configuration namelist' )
+       IF(lwm) WRITE( numond, namhsb )
+ 
+diff -uprN nemo-4.2.0.orig/tests/DIA_GPU/MY_SRC/diahsb_gpu.h90 nemo-4.2.0/tests/DIA_GPU/MY_SRC/diahsb_gpu.h90
+--- nemo-4.2.0.orig/tests/DIA_GPU/MY_SRC/diahsb_gpu.h90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/tests/DIA_GPU/MY_SRC/diahsb_gpu.h90	2023-10-12 10:11:01.000000000 +0900
+@@ -575,9 +575,9 @@ CONTAINS
+          WRITE(numout,*) 'dia_hsb_init : heat and salt budgets diagnostics'
+          WRITE(numout,*) '~~~~~~~~~~~~ '
+       ENDIF
+-      READ  ( numnam_ref, namhsb, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namhsb'), namhsb, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namhsb in reference namelist' )
+-      READ  ( numnam_cfg, namhsb, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namhsb'), namhsb, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namhsb in configuration namelist' )
+       IF(lwm) WRITE( numond, namhsb )
+ 
+diff -uprN nemo-4.2.0.orig/tests/DOME/MY_SRC/usrdef_nam.F90 nemo-4.2.0/tests/DOME/MY_SRC/usrdef_nam.F90
+--- nemo-4.2.0.orig/tests/DOME/MY_SRC/usrdef_nam.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/tests/DOME/MY_SRC/usrdef_nam.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -65,7 +65,7 @@ CONTAINS
+       NAMELIST/namusr_def/  ln_zco, ln_zps, ln_sco, rn_dx, rn_dz, rn_f0
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_cfg, namusr_def, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namusr_def'), namusr_def, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namusr_def in configuration namelist' )
+       !
+       rn_dy = rn_dx
+diff -uprN nemo-4.2.0.orig/tests/ICB/MY_SRC/usrdef_nam.F90 nemo-4.2.0/tests/ICB/MY_SRC/usrdef_nam.F90
+--- nemo-4.2.0.orig/tests/ICB/MY_SRC/usrdef_nam.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/tests/ICB/MY_SRC/usrdef_nam.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -65,7 +65,7 @@ CONTAINS
+       NAMELIST/namusr_def/ ln_zco, ln_zps, ln_sco, rn_dx, rn_dy, rn_e3
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_cfg, namusr_def, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namusr_def'), namusr_def, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namusr_def in configuration namelist' )
+       !
+       IF(lwm)   WRITE( numond, namusr_def )
+diff -uprN nemo-4.2.0.orig/tests/ICE_ADV1D/MY_SRC/usrdef_nam.F90 nemo-4.2.0/tests/ICE_ADV1D/MY_SRC/usrdef_nam.F90
+--- nemo-4.2.0.orig/tests/ICE_ADV1D/MY_SRC/usrdef_nam.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/tests/ICE_ADV1D/MY_SRC/usrdef_nam.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -63,7 +63,7 @@ CONTAINS
+       NAMELIST/namusr_def/ rn_dx, rn_dy, ln_corio, rn_ppgphi0
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_cfg, namusr_def, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namusr_def'), namusr_def, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namusr_def in configuration namelist' )
+       !
+       IF(lwm)   WRITE( numond, namusr_def )
+diff -uprN nemo-4.2.0.orig/tests/ICE_ADV2D/MY_SRC/usrdef_nam.F90 nemo-4.2.0/tests/ICE_ADV2D/MY_SRC/usrdef_nam.F90
+--- nemo-4.2.0.orig/tests/ICE_ADV2D/MY_SRC/usrdef_nam.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/tests/ICE_ADV2D/MY_SRC/usrdef_nam.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -64,7 +64,7 @@ CONTAINS
+       NAMELIST/namusr_def/ rn_dx, rn_dy, ln_corio, rn_ppgphi0
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_cfg, namusr_def, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namusr_def'), namusr_def, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namusr_def in configuration namelist' )
+       !
+       IF(lwm)   WRITE( numond, namusr_def )
+diff -uprN nemo-4.2.0.orig/tests/ICE_AGRIF/MY_SRC/usrdef_nam.F90 nemo-4.2.0/tests/ICE_AGRIF/MY_SRC/usrdef_nam.F90
+--- nemo-4.2.0.orig/tests/ICE_AGRIF/MY_SRC/usrdef_nam.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/tests/ICE_AGRIF/MY_SRC/usrdef_nam.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -64,7 +64,7 @@ CONTAINS
+       NAMELIST/namusr_def/ rn_dx, rn_dy, ln_corio, rn_ppgphi0
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_cfg, namusr_def, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namusr_def'), namusr_def, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namusr_def in configuration namelist' )
+       !
+       IF(lwm)   WRITE( numond, namusr_def )
+diff -uprN nemo-4.2.0.orig/tests/ICE_RHEO/MY_SRC/usrdef_nam.F90 nemo-4.2.0/tests/ICE_RHEO/MY_SRC/usrdef_nam.F90
+--- nemo-4.2.0.orig/tests/ICE_RHEO/MY_SRC/usrdef_nam.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/tests/ICE_RHEO/MY_SRC/usrdef_nam.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -64,7 +64,7 @@ CONTAINS
+       NAMELIST/namusr_def/ rn_dx, rn_dy, ln_corio, rn_ppgphi0
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_cfg, namusr_def, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namusr_def'), namusr_def, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namusr_def in configuration namelist' )
+       !
+       IF(lwm)   WRITE( numond, namusr_def )
+diff -uprN nemo-4.2.0.orig/tests/ISOMIP/MY_SRC/usrdef_nam.F90 nemo-4.2.0/tests/ISOMIP/MY_SRC/usrdef_nam.F90
+--- nemo-4.2.0.orig/tests/ISOMIP/MY_SRC/usrdef_nam.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/tests/ISOMIP/MY_SRC/usrdef_nam.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -64,7 +64,7 @@ CONTAINS
+       NAMELIST/namusr_def/ ln_zco, ln_zps, ln_sco, rn_e1deg, rn_e2deg, rn_e3
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_cfg, namusr_def, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namusr_def'), namusr_def, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namusr_def in configuration namelist' )
+       !
+       IF(lwm)   WRITE( numond, namusr_def )
+diff -uprN nemo-4.2.0.orig/tests/ISOMIP+/MY_SRC/dtatsd.F90 nemo-4.2.0/tests/ISOMIP+/MY_SRC/dtatsd.F90
+--- nemo-4.2.0.orig/tests/ISOMIP+/MY_SRC/dtatsd.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/tests/ISOMIP+/MY_SRC/dtatsd.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -69,9 +69,9 @@ CONTAINS
+       !  Initialisation
+       ierr0 = 0  ;  ierr1 = 0  ;  ierr2 = 0  ;  ierr3 = 0
+       !
+-      READ  ( numnam_ref, namtsd, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namtsd'), namtsd, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namtsd in reference namelist' )
+-      READ  ( numnam_cfg, namtsd, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namtsd'), namtsd, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namtsd in configuration namelist' )
+       IF(lwm) WRITE ( numond, namtsd )
+ 
+diff -uprN nemo-4.2.0.orig/tests/ISOMIP+/MY_SRC/eosbn2.F90 nemo-4.2.0/tests/ISOMIP+/MY_SRC/eosbn2.F90
+--- nemo-4.2.0.orig/tests/ISOMIP+/MY_SRC/eosbn2.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/tests/ISOMIP+/MY_SRC/eosbn2.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -1470,10 +1470,10 @@ CONTAINS
+          &             rn_lambda1, rn_mu1, rn_lambda2, rn_mu2, rn_nu
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_ref, nameos, IOSTAT = ios, ERR = 901 )
++      READ  ( splitif( numnam_ref,'nameos'), nameos, IOSTAT = ios, ERR = 901 )
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'nameos in reference namelist' )
+       !
+-      READ  ( numnam_cfg, nameos, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'nameos'), nameos, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'nameos in configuration namelist' )
+       IF(lwm) WRITE( numond, nameos )
+       !
+diff -uprN nemo-4.2.0.orig/tests/ISOMIP+/MY_SRC/isfstp.F90 nemo-4.2.0/tests/ISOMIP+/MY_SRC/isfstp.F90
+--- nemo-4.2.0.orig/tests/ISOMIP+/MY_SRC/isfstp.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/tests/ISOMIP+/MY_SRC/isfstp.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -304,10 +304,10 @@ CONTAINS
+          &             rn_isfpar_bg03_gt0
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_ref, namisf, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namisf'), namisf, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namisf in reference namelist' )
+       !
+-      READ  ( numnam_cfg, namisf, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namisf'), namisf, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namisf in configuration namelist' )
+       IF(lwm) WRITE ( numond, namisf )
+ 
+diff -uprN nemo-4.2.0.orig/tests/ISOMIP+/MY_SRC/sbcfwb.F90 nemo-4.2.0/tests/ISOMIP+/MY_SRC/sbcfwb.F90
+--- nemo-4.2.0.orig/tests/ISOMIP+/MY_SRC/sbcfwb.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/tests/ISOMIP+/MY_SRC/sbcfwb.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -77,9 +77,9 @@ CONTAINS
+       !!----------------------------------------------------------------------
+       !
+       IF( kt == nit000 ) THEN
+-         READ( numnam_ref, namsbc_fwb, IOSTAT = ios, ERR = 901 )
++         READ( splitif( numnam_ref,'namsbc_fwb'), namsbc_fwb, IOSTAT = ios, ERR = 901 )
+ 901      IF( ios /= 0 ) CALL ctl_nam( ios, 'namsbc_fwb in reference namelist'     )
+-         READ( numnam_cfg, namsbc_fwb, IOSTAT = ios, ERR = 902 )
++         READ( splitif( numnam_cfg,'namsbc_fwb'), namsbc_fwb, IOSTAT = ios, ERR = 902 )
+ 902      IF( ios >  0 ) CALL ctl_nam( ios, 'namsbc_fwb in configuration namelist' )
+          IF(lwm) WRITE( numond, namsbc_fwb )
+          IF(lwp) THEN
+diff -uprN nemo-4.2.0.orig/tests/ISOMIP+/MY_SRC/tradmp.F90 nemo-4.2.0/tests/ISOMIP+/MY_SRC/tradmp.F90
+--- nemo-4.2.0.orig/tests/ISOMIP+/MY_SRC/tradmp.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/tests/ISOMIP+/MY_SRC/tradmp.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -181,10 +181,10 @@ CONTAINS
+       NAMELIST/namtra_dmp/ ln_tradmp, nn_zdmp, cn_resto
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_ref, namtra_dmp, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namtra_dmp'), namtra_dmp, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namtra_dmp in reference namelist' )
+       !
+-      READ  ( numnam_cfg, namtra_dmp, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namtra_dmp'), namtra_dmp, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namtra_dmp in configuration namelist' )
+       IF(lwm) WRITE ( numond, namtra_dmp )
+       !
+diff -uprN nemo-4.2.0.orig/tests/LOCK_EXCHANGE/MY_SRC/usrdef_nam.F90 nemo-4.2.0/tests/LOCK_EXCHANGE/MY_SRC/usrdef_nam.F90
+--- nemo-4.2.0.orig/tests/LOCK_EXCHANGE/MY_SRC/usrdef_nam.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/tests/LOCK_EXCHANGE/MY_SRC/usrdef_nam.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -60,7 +60,7 @@ CONTAINS
+       NAMELIST/namusr_def/ rn_dx, rn_dz
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_cfg, namusr_def, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namusr_def'), namusr_def, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namusr_def in configuration namelist' )
+       !
+       IF(lwm)   WRITE( numond, namusr_def )
+diff -uprN nemo-4.2.0.orig/tests/OVERFLOW/MY_SRC/usrdef_nam.F90 nemo-4.2.0/tests/OVERFLOW/MY_SRC/usrdef_nam.F90
+--- nemo-4.2.0.orig/tests/OVERFLOW/MY_SRC/usrdef_nam.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/tests/OVERFLOW/MY_SRC/usrdef_nam.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -61,7 +61,7 @@ CONTAINS
+       NAMELIST/namusr_def/ ln_zco, ln_zps, ln_sco, rn_dx, rn_dz
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_cfg, namusr_def, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namusr_def'), namusr_def, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namusr_def in configuration namelist' )
+       !
+       IF(lwm)   WRITE( numond, namusr_def )
+diff -uprN nemo-4.2.0.orig/tests/STATION_ASF/MY_SRC/icesbc.F90 nemo-4.2.0/tests/STATION_ASF/MY_SRC/icesbc.F90
+--- nemo-4.2.0.orig/tests/STATION_ASF/MY_SRC/icesbc.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/tests/STATION_ASF/MY_SRC/icesbc.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -293,9 +293,9 @@ CONTAINS
+       NAMELIST/namsbc/ rn_cio, nn_snwfra, rn_snwblow, nn_flxdist, ln_cndflx, ln_cndemulate, nn_qtrice
+       !!-------------------------------------------------------------------
+       !
+-      READ  ( numnam_ice_ref, namsbc, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ice_ref,'namsbc'), namsbc, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namsbc in reference namelist' )
+-      READ  ( numnam_ice_cfg, namsbc, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_ice_cfg,'namsbc'), namsbc, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namsbc in configuration namelist' )
+       IF(lwm) WRITE( numoni, namsbc )
+       !
+diff -uprN nemo-4.2.0.orig/tests/STATION_ASF/MY_SRC/icestp.F90 nemo-4.2.0/tests/STATION_ASF/MY_SRC/icestp.F90
+--- nemo-4.2.0.orig/tests/STATION_ASF/MY_SRC/icestp.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/tests/STATION_ASF/MY_SRC/icestp.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -256,9 +256,9 @@ CONTAINS
+          &             cn_icerst_in, cn_icerst_indir, cn_icerst_out, cn_icerst_outdir
+       !!-------------------------------------------------------------------
+       !
+-      READ  ( numnam_ice_ref, nampar, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ice_ref,'nampar'), nampar, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'nampar in reference namelist' )
+-      READ  ( numnam_ice_cfg, nampar, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_ice_cfg,'nampar'), nampar, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios > 0 )   CALL ctl_nam ( ios , 'nampar in configuration namelist' )
+       IF(lwm) WRITE( numoni, nampar )
+       !
+diff -uprN nemo-4.2.0.orig/tests/STATION_ASF/MY_SRC/nemogcm.F90 nemo-4.2.0/tests/STATION_ASF/MY_SRC/nemogcm.F90
+--- nemo-4.2.0.orig/tests/STATION_ASF/MY_SRC/nemogcm.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/tests/STATION_ASF/MY_SRC/nemogcm.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -181,9 +181,9 @@ CONTAINS
+       !                             ! Open listing units !  -> need sn_cfctl from namctl to define lwp
+       !                             !--------------------!
+       !
+-      READ  ( numnam_ref, namctl, IOSTAT = ios, ERR = 901 )
++      READ  ( splitif( numnam_ref,'namctl'), namctl, IOSTAT = ios, ERR = 901 )
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namctl in reference namelist' )
+-      READ  ( numnam_cfg, namctl, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namctl'), namctl, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namctl in configuration namelist' )
+       !
+       ! finalize the definition of namctl variables
+@@ -236,9 +236,9 @@ CONTAINS
+       !                             !  Set global domain size parameters !
+       !                             !------------------------------------!
+       !
+-      READ  ( numnam_ref, namcfg, IOSTAT = ios, ERR = 903 )
++      READ  ( splitif( numnam_ref,'namcfg'), namcfg, IOSTAT = ios, ERR = 903 )
+ 903   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namcfg in reference namelist' )
+-      READ  ( numnam_cfg, namcfg, IOSTAT = ios, ERR = 904 )
++      READ  ( splitif( numnam_cfg,'namcfg'), namcfg, IOSTAT = ios, ERR = 904 )
+ 904   IF( ios >  0 )   CALL ctl_nam ( ios , 'namcfg in configuration namelist' )
+       !
+       IF( ln_read_cfg ) THEN            ! Read sizes in domain configuration file
+diff -uprN nemo-4.2.0.orig/tests/STATION_ASF/MY_SRC/sbcssm.F90 nemo-4.2.0/tests/STATION_ASF/MY_SRC/sbcssm.F90
+--- nemo-4.2.0.orig/tests/STATION_ASF/MY_SRC/sbcssm.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/tests/STATION_ASF/MY_SRC/sbcssm.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -193,9 +193,9 @@ CONTAINS
+          WRITE(numout,*) '~~~~~~~~~~~~ '
+       ENDIF
+       !
+-      READ  ( numnam_ref, namsbc_sas, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namsbc_sas'), namsbc_sas, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namsbc_sas in reference namelist' )
+-      READ  ( numnam_cfg, namsbc_sas, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namsbc_sas'), namsbc_sas, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namsbc_sas in configuration namelist' )
+       IF(lwm) WRITE ( numond, namsbc_sas )
+       !
+diff -uprN nemo-4.2.0.orig/tests/STATION_ASF/MY_SRC/usrdef_nam.F90 nemo-4.2.0/tests/STATION_ASF/MY_SRC/usrdef_nam.F90
+--- nemo-4.2.0.orig/tests/STATION_ASF/MY_SRC/usrdef_nam.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/tests/STATION_ASF/MY_SRC/usrdef_nam.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -60,7 +60,7 @@ CONTAINS
+       NAMELIST/namusr_def/ rn_dept1
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_cfg, namusr_def, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namusr_def'), namusr_def, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namusr_def in configuration namelist' )
+       !
+       IF(lwm)   WRITE( numond, namusr_def )
+diff -uprN nemo-4.2.0.orig/tests/SWG/MY_SRC/usrdef_nam.F90 nemo-4.2.0/tests/SWG/MY_SRC/usrdef_nam.F90
+--- nemo-4.2.0.orig/tests/SWG/MY_SRC/usrdef_nam.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/tests/SWG/MY_SRC/usrdef_nam.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -86,7 +86,7 @@ CONTAINS
+          &                 rn_abp, nn_cnp, rn_fsp                   ! penalisation parameters
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_cfg, namusr_def, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namusr_def'), namusr_def, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namusr_def in configuration namelist' )
+       !
+       IF(lwm)   WRITE( numond, namusr_def )
+diff -uprN nemo-4.2.0.orig/tests/TSUNAMI/MY_SRC/usrdef_nam.F90 nemo-4.2.0/tests/TSUNAMI/MY_SRC/usrdef_nam.F90
+--- nemo-4.2.0.orig/tests/TSUNAMI/MY_SRC/usrdef_nam.F90	2023-10-12 10:07:21.000000000 +0900
++++ nemo-4.2.0/tests/TSUNAMI/MY_SRC/usrdef_nam.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -70,7 +70,7 @@ CONTAINS
+          &                 , nn_fcase, rn_ppgphi0, ln_Iperio, ln_Jperio
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_cfg, namusr_def, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namusr_def'), namusr_def, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namusr_def in configuration namelist' )
+       !
+       IF(lwm)   WRITE( numond, namusr_def )
+diff -uprN nemo-4.2.0.orig/tests/VORTEX/MY_SRC/usrdef_nam.F90 nemo-4.2.0/tests/VORTEX/MY_SRC/usrdef_nam.F90
+--- nemo-4.2.0.orig/tests/VORTEX/MY_SRC/usrdef_nam.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/tests/VORTEX/MY_SRC/usrdef_nam.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -65,7 +65,7 @@ CONTAINS
+       NAMELIST/namusr_def/  rn_dx, rn_dy, rn_dz, rn_ppgphi0
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_cfg, namusr_def, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namusr_def'), namusr_def, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namusr_def in configuration namelist' )
+       !
+ #if defined key_agrif 
+diff -uprN nemo-4.2.0.orig/tests/WAD/MY_SRC/usrdef_nam.F90 nemo-4.2.0/tests/WAD/MY_SRC/usrdef_nam.F90
+--- nemo-4.2.0.orig/tests/WAD/MY_SRC/usrdef_nam.F90	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/tests/WAD/MY_SRC/usrdef_nam.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -61,7 +61,7 @@ CONTAINS
+       NAMELIST/namusr_def/ rn_dx, rn_dz, nn_wad_test
+       !!----------------------------------------------------------------------
+       !
+-      READ  ( numnam_cfg, namusr_def, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namusr_def'), namusr_def, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namusr_def in configuration namelist' )
+       !
+       IF(lwm)   WRITE( numond, namusr_def )
+diff -uprN nemo-4.2.0.orig/tools/DOMAINcfg/src/agrif_user.F90 nemo-4.2.0/tools/DOMAINcfg/src/agrif_user.F90
+--- nemo-4.2.0.orig/tools/DOMAINcfg/src/agrif_user.F90	2023-10-12 10:07:21.000000000 +0900
++++ nemo-4.2.0/tools/DOMAINcfg/src/agrif_user.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -1182,11 +1182,11 @@
+       NAMELIST/namagrif/ ln_vert_remap, ln_remove_closedseas, npt_connect, npt_copy 
+ 
+   !    REWIND( numnam_ref )              ! Namelist namagrif in reference namelist : nesting parameters
+-      READ  ( numnam_ref, namagrif, IOSTAT = ios, ERR = 901 )
++      READ  ( splitif( numnam_ref,'namagrif'), namagrif, IOSTAT = ios, ERR = 901 )
+ 901   IF( ios /= 0 ) CALL ctl_nam ( ios , 'namagrif in reference namelist')
+ 
+   !    REWIND( numnam_cfg )              ! Namelist namzgr in configuration namelist : nesting parameters
+-      READ  ( numnam_cfg, namagrif, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namagrif'), namagrif, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios /= 0 ) CALL ctl_nam ( ios , 'namagrif in configuration namelist')
+       IF(lwm) WRITE ( numond, namagrif )
+ 
+diff -uprN nemo-4.2.0.orig/tools/DOMAINcfg/src/domain.F90 nemo-4.2.0/tools/DOMAINcfg/src/domain.F90
+--- nemo-4.2.0.orig/tools/DOMAINcfg/src/domain.F90	2023-10-12 10:07:21.000000000 +0900
++++ nemo-4.2.0/tools/DOMAINcfg/src/domain.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -174,7 +174,7 @@ CONTAINS
+       !!----------------------------------------------------------------------
+ 
+    
+-      READ  ( numnam_ref, namrun, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namrun'), namrun, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namrun in reference namelist')
+ 
+       READ  ( numnam_cfg, namrun, IOSTAT = ios, IOMSG = c_iomsg, ERR = 902 )
+@@ -208,12 +208,12 @@ CONTAINS
+       rn_scale = 1.
+ 
+       !REWIND( numnam_ref )              ! Namelist namdom in reference namelist : space & time domain (bathymetry, mesh, timestep)
+-      READ  ( numnam_ref, namdom, IOSTAT = ios, ERR = 903)
++      READ  ( splitif( numnam_ref,'namdom'), namdom, IOSTAT = ios, ERR = 903)
+ 903   IF( ios /= 0 ) CALL ctl_nam ( ios , 'namdom in reference namelist' )
+   
+       !
+       !REWIND( numnam_cfg )              ! Namelist namdom in configuration namelist : space & time domain (bathymetry, mesh, timestep)
+-      READ  ( numnam_cfg, namdom, IOSTAT = ios, ERR = 904 )
++      READ  ( splitif( numnam_cfg,'namdom'), namdom, IOSTAT = ios, ERR = 904 )
+ 904   IF( ios /= 0 ) CALL ctl_nam ( ios , 'namdom in configuration namelist' )
+       IF(lwm) WRITE ( numond, namdom )
+       !
+diff -uprN nemo-4.2.0.orig/tools/DOMAINcfg/src/domclo.F90 nemo-4.2.0/tools/DOMAINcfg/src/domclo.F90
+--- nemo-4.2.0.orig/tools/DOMAINcfg/src/domclo.F90	2023-10-12 10:07:21.000000000 +0900
++++ nemo-4.2.0/tools/DOMAINcfg/src/domclo.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -93,10 +93,10 @@ CONTAINS
+       !!---------------------------------------------------------------------
+       
+    !   REWIND( numnam_ref )              ! Namelist namlbc in reference namelist : Lateral momentum boundary condition
+-      READ  ( numnam_ref, namclo, IOSTAT = ios, ERR = 901 )
++      READ  ( splitif( numnam_ref,'namclo'), namclo, IOSTAT = ios, ERR = 901 )
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namclo in reference namelist')
+    !   REWIND( numnam_cfg )              ! Namelist namlbc in configuration namelist : Lateral momentum boundary condition
+-      READ  ( numnam_cfg, namclo, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namclo'), namclo, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namclo in configuration namelist')
+       IF(lwm) WRITE ( numond, namclo )
+ 
+diff -uprN nemo-4.2.0.orig/tools/DOMAINcfg/src/domisf.F90 nemo-4.2.0/tools/DOMAINcfg/src/domisf.F90
+--- nemo-4.2.0.orig/tools/DOMAINcfg/src/domisf.F90	2023-10-12 10:07:21.000000000 +0900
++++ nemo-4.2.0/tools/DOMAINcfg/src/domisf.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -59,11 +59,11 @@ CONTAINS
+       !
+       ! 0.0 read namelist
+  !     REWIND( numnam_ref )              ! Namelist namzgr_isf in reference namelist : ice shelf geometry definition
+-      READ  ( numnam_ref, namzgr_isf, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namzgr_isf'), namzgr_isf, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 ) CALL ctl_nam ( ios , 'namzgr_isf in reference namelist')
+ 
+  !     REWIND( numnam_cfg )              ! Namelist namzgr_sco in configuration namelist : ice shelf geometry definition
+-      READ  ( numnam_cfg, namzgr_isf, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namzgr_isf'), namzgr_isf, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios /= 0 ) CALL ctl_nam ( ios , 'namzgr_isf in configuration namelist')
+       IF(lwm) WRITE ( numond, namzgr_isf )
+       !
+diff -uprN nemo-4.2.0.orig/tools/DOMAINcfg/src/dommsk.F90 nemo-4.2.0/tools/DOMAINcfg/src/dommsk.F90
+--- nemo-4.2.0.orig/tools/DOMAINcfg/src/dommsk.F90	2023-10-12 10:07:21.000000000 +0900
++++ nemo-4.2.0/tools/DOMAINcfg/src/dommsk.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -98,10 +98,10 @@ CONTAINS
+       !!---------------------------------------------------------------------
+       !
+     !  REWIND( numnam_ref )              ! Namelist namlbc in reference namelist : Lateral momentum boundary condition
+-      READ  ( numnam_ref, namlbc, IOSTAT = ios, ERR = 901 )
++      READ  ( splitif( numnam_ref,'namlbc'), namlbc, IOSTAT = ios, ERR = 901 )
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namlbc in reference namelist')
+     !  REWIND( numnam_cfg )              ! Namelist namlbc in configuration namelist : Lateral momentum boundary condition
+-      READ  ( numnam_cfg, namlbc, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namlbc'), namlbc, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namlbc in configuration namelist')
+       IF(lwm) WRITE ( numond, namlbc )
+       
+diff -uprN nemo-4.2.0.orig/tools/DOMAINcfg/src/domzgr.F90 nemo-4.2.0/tools/DOMAINcfg/src/domzgr.F90
+--- nemo-4.2.0.orig/tools/DOMAINcfg/src/domzgr.F90	2023-10-12 10:07:21.000000000 +0900
++++ nemo-4.2.0/tools/DOMAINcfg/src/domzgr.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -117,11 +117,11 @@ CONTAINS
+       !
+       !
+      ! REWIND( numnam_ref )              ! Namelist namzgr in reference namelist : Vertical coordinate
+-      READ  ( numnam_ref, namzgr, IOSTAT = ios, ERR = 901 )
++      READ  ( splitif( numnam_ref,'namzgr'), namzgr, IOSTAT = ios, ERR = 901 )
+ 901   IF( ios /= 0 ) CALL ctl_nam ( ios , 'namzgr in reference namelist')
+ 
+      ! REWIND( numnam_cfg )              ! Namelist namzgr in configuration namelist : Vertical coordinate
+-      READ  ( numnam_cfg, namzgr, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namzgr'), namzgr, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios /= 0 ) CALL ctl_nam ( ios , 'namzgr in configuration namelist')
+       IF(lwm) WRITE ( numond, namzgr )
+ 
+@@ -1355,11 +1355,11 @@ CONTAINS
+       ALLOCATE( zenv(jpi,jpj), ztmp(jpi,jpj), zmsk(jpi,jpj), zri(jpi,jpj), zrj(jpi,jpj), zhbat(jpi,jpj) , ztmpi1(jpi,jpj), ztmpi2(jpi,jpj), ztmpj1(jpi,jpj), ztmpj2(jpi,jpj) )
+       !
+       !REWIND( numnam_ref )              ! Namelist namzgr_sco in reference namelist : Sigma-stretching parameters
+-      READ  ( numnam_ref, namzgr_sco, IOSTAT = ios, ERR = 901)
++      READ  ( splitif( numnam_ref,'namzgr_sco'), namzgr_sco, IOSTAT = ios, ERR = 901)
+ 901   IF( ios /= 0 ) CALL ctl_nam ( ios , 'namzgr_sco in reference namelist')
+ 
+       !REWIND( numnam_cfg )              ! Namelist namzgr_sco in configuration namelist : Sigma-stretching parameters
+-      READ  ( numnam_cfg, namzgr_sco, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namzgr_sco'), namzgr_sco, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios /= 0 ) CALL ctl_nam ( ios , 'namzgr_sco in configuration namelist')
+       IF(lwm) WRITE ( numond, namzgr_sco )
+ 
+diff -uprN nemo-4.2.0.orig/tools/DOMAINcfg/src/mppini.F90 nemo-4.2.0/tools/DOMAINcfg/src/mppini.F90
+--- nemo-4.2.0.orig/tools/DOMAINcfg/src/mppini.F90	2023-10-12 10:07:21.000000000 +0900
++++ nemo-4.2.0/tools/DOMAINcfg/src/mppini.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -198,9 +198,9 @@ CONTAINS
+       !  0. read namelists parameters
+       ! -----------------------------------
+       !
+-      READ  ( numnam_ref, nammpp, IOSTAT = ios, ERR = 901 )
++      READ  ( splitif( numnam_ref,'nammpp'), nammpp, IOSTAT = ios, ERR = 901 )
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'nammpp in reference namelist' )
+-      READ  ( numnam_cfg, nammpp, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'nammpp'), nammpp, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'nammpp in configuration namelist' )   
+       !
+       nn_hls = MAX(1, nn_hls)   ! nn_hls must be > 0
+@@ -225,9 +225,9 @@ CONTAINS
+       jpjglo = Nj0glo + 2 * nn_hls
+       !
+       ! do we need to take into account bdy_msk?
+-!      READ  ( numnam_ref, nambdy, IOSTAT = ios, ERR = 903)
++!      READ  ( splitif( numnam_ref,'nambdy'), nambdy, IOSTAT = ios, ERR = 903)
+ !903   IF( ios /= 0 )   CALL ctl_nam ( ios , 'nambdy in reference namelist (mppini)' )
+-!      READ  ( numnam_cfg, nambdy, IOSTAT = ios, ERR = 904 )
++!      READ  ( splitif( numnam_cfg,'nambdy'), nambdy, IOSTAT = ios, ERR = 904 )
+ !904   IF( ios >  0 )   CALL ctl_nam ( ios , 'nambdy in configuration namelist (mppini)' )
+       !
+       IF(               ln_read_cfg ) CALL iom_open( cn_domcfg,    numbot )
+diff -uprN nemo-4.2.0.orig/tools/DOMAINcfg/src/nemogcm.F90 nemo-4.2.0/tools/DOMAINcfg/src/nemogcm.F90
+--- nemo-4.2.0.orig/tools/DOMAINcfg/src/nemogcm.F90	2023-10-12 10:07:21.000000000 +0900
++++ nemo-4.2.0/tools/DOMAINcfg/src/nemogcm.F90	2023-10-12 10:11:01.000000000 +0900
+@@ -213,9 +213,9 @@ CONTAINS
+ #endif
+       ENDIF
+ 
+-      READ  ( numnam_ref, namcfg, IOSTAT = ios, ERR = 903 )
++      READ  ( splitif( numnam_ref,'namcfg'), namcfg, IOSTAT = ios, ERR = 903 )
+ 903   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namcfg in reference namelist')
+-      READ  ( numnam_cfg, namcfg, IOSTAT = ios, ERR = 904 )
++      READ  ( splitif( numnam_cfg,'namcfg'), namcfg, IOSTAT = ios, ERR = 904 )
+ 904   IF( ios >  0 )   CALL ctl_nam ( ios , 'namcfg in configuration namelist') 
+ 
+       lwp = (narea == 1)                                    ! control of all listing output print
+@@ -231,9 +231,9 @@ CONTAINS
+       !                             ! Open listing units !  -> need sn_cfctl from namctl to define lwp
+       !                             !--------------------!
+       !
+-      READ  ( numnam_ref, namctl, IOSTAT = ios, ERR = 901 )
++      READ  ( splitif( numnam_ref,'namctl'), namctl, IOSTAT = ios, ERR = 901 )
+ 901   IF( ios /= 0 )   CALL ctl_nam ( ios , 'namctl in reference namelist' )
+-      READ  ( numnam_cfg, namctl, IOSTAT = ios, ERR = 902 )
++      READ  ( splitif( numnam_cfg,'namctl'), namctl, IOSTAT = ios, ERR = 902 )
+ 902   IF( ios >  0 )   CALL ctl_nam ( ios , 'namctl in configuration namelist' )
+       !
+       ! finalize the definition of namctl variables
+diff -uprN nemo-4.2.0.orig/tests/WAD/EXPREF/namelist_cfg nemo-4.2.0/tests/WAD/EXPREF/namelist_cfg
+--- nemo-4.2.0.orig/tests/WAD/EXPREF/namelist_cfg	2023-10-12 10:07:20.000000000 +0900
++++ nemo-4.2.0/tests/WAD/EXPREF/namelist_cfg	2023-10-12 10:12:46.000000000 +0900
+@@ -156,9 +156,9 @@
+     cn_ice        =  'none'               !
+     nn_ice_dta    =  0                    !  = 0, bdy data are equal to the initial state
+                                           !  = 1, bdy data are read in 'bdydata   .nc' files
+-    rn_ice_tem    = 270.                  !  si3 only: arbitrary temperature of incoming sea ice
+-    rn_ice_sal    = 10.                   !  si3 only:      --   salinity           --
+-    rn_ice_age    = 30.                   !  si3 only:      --   age                --
++    ! rn_ice_tem    = 270.                  !  si3 only: arbitrary temperature of incoming sea ice
++    ! rn_ice_sal    = 10.                   !  si3 only:      --   salinity           --
++    ! rn_ice_age    = 30.                   !  si3 only:      --   age                --
+ 
+     ln_tra_dmp    =.false.                !  open boudaries conditions for tracers
+     ln_dyn3d_dmp  =.false.                !  open boundary condition for baroclinic velocities
