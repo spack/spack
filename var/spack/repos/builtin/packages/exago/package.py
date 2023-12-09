@@ -182,19 +182,10 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("camp {0}".format(rocm_dep), when="+raja {0}".format(rocm_dep))
 
     # CMake patches to support ~python and ~testing
-    for ver in [
-        "1.6.0",
-        "1.5.1",
-        "1.5.0",
-        "1.4.1",
-        "1.4.0",
-        "1.3.0",
-        "1.2.0",
-        "1.1.2",
-        "1.1.1",
-        "1.1.0",
-    ]:
-        patch("exago-{0}.patch".format(ver), when="@{0}".format(ver))
+    patch("exago-1.6.0.patch", when="@1.6.0")
+    patch("exago-1.5.0.patch", when="@1.5.0:1.5.1")
+    patch("exago-1.3.0.patch", when="@1.3.0:1.4.1")
+    patch("exago-1.1.0.patch", when="@1.1.0:1.2.0")
 
     flag_handler = build_system_flags
 
