@@ -2521,22 +2521,22 @@ complete -c spack -n '__fish_spack_using_command pydoc' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command pydoc' -s h -l help -d 'show this help message and exit'
 
 # spack python
-set -g __fish_spack_optspecs_spack_python h/help V/version c/= u/ i/= m/= path
+set -g __fish_spack_optspecs_spack_python h/help V/version path c/= m/= i/= I/
 
 complete -c spack -n '__fish_spack_using_command python' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command python' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command python' -s V -l version -f -a python_version
 complete -c spack -n '__fish_spack_using_command python' -s V -l version -d 'print the Python version number and exit'
-complete -c spack -n '__fish_spack_using_command python' -s c -r -f -a python_command
-complete -c spack -n '__fish_spack_using_command python' -s c -r -d 'command to execute'
-complete -c spack -n '__fish_spack_using_command python' -s u -f -a unbuffered
-complete -c spack -n '__fish_spack_using_command python' -s u -d 'for compatibility with xdist, do not use without adding -u to the interpreter'
-complete -c spack -n '__fish_spack_using_command python' -s i -r -f -a 'python ipython'
-complete -c spack -n '__fish_spack_using_command python' -s i -r -d 'python interpreter'
-complete -c spack -n '__fish_spack_using_command python' -s m -r -f -a module
-complete -c spack -n '__fish_spack_using_command python' -s m -r -d 'run library module as a script'
 complete -c spack -n '__fish_spack_using_command python' -l path -f -a show_path
 complete -c spack -n '__fish_spack_using_command python' -l path -d 'show path to python interpreter that spack uses'
+complete -c spack -n '__fish_spack_using_command python' -s c -r -f -a python_command
+complete -c spack -n '__fish_spack_using_command python' -s c -r -d 'command to execute'
+complete -c spack -n '__fish_spack_using_command python' -s m -r -f -a module
+complete -c spack -n '__fish_spack_using_command python' -s m -r -d 'run library module as a script'
+complete -c spack -n '__fish_spack_using_command python' -s i -r -f -a 'python ipython'
+complete -c spack -n '__fish_spack_using_command python' -s i -r -d 'python interpreter'
+complete -c spack -n '__fish_spack_using_command python' -s I -f -a ipython
+complete -c spack -n '__fish_spack_using_command python' -s I -d 'run with IPython instead of python'
 
 # spack reindex
 set -g __fish_spack_optspecs_spack_reindex h/help
