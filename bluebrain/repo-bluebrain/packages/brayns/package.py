@@ -31,7 +31,7 @@ class Brayns(CMakePackage):
     depends_on("rkcommon@1.10.0")
     depends_on("ospray@2.10.6")
 
-    depends_on("spdlog@1.9.2")
+    depends_on("spdlog@1.9.2:")
     depends_on("poco@1.12.4")
     depends_on("glm")
     depends_on("zlib")
