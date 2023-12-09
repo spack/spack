@@ -384,10 +384,11 @@ def install_status():
         "--install-status",
         action="store_true",
         default=True,
-        help="show install status of packages\n\npackages can be: "
-        "installed [+], missing and needed by an installed package [-], "
-        "installed in an upstream instance [^], "
-        "or not installed (no annotation)",
+        help=(
+            "show install status of packages\n"
+            "[+] installed       [^] installed in an upstream\n"
+            " -  not installed   [-] missing dep of installed package\n"
+        ),
     )
 
 
