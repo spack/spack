@@ -92,7 +92,7 @@ there are any other variables you need to set, you can do this in the
 
 .. code-block:: python
 
-   def edit(self, spec, prefix):
+   def edit(self, pkg, spec, prefix):
        env["PREFIX"] = prefix
        env["BLASLIB"] = spec["blas"].libs.ld_flags
 
@@ -144,7 +144,7 @@ and a ``filter_file`` method to help with this. For example:
 
 .. code-block:: python
 
-   def edit(self, spec, prefix):
+   def edit(self, pkg, spec, prefix):
        makefile = FileFilter("Makefile")
 
        makefile.filter(r"^\s*CC\s*=.*",  f"CC = {spack_cc}")
@@ -179,7 +179,7 @@ well for storing variables:
 
 .. code-block:: python
 
-   def edit(self, spec, prefix):
+   def edit(self, pkg, spec, prefix):
        config = {
            "CC": "cc",
            "MAKE": "make",
@@ -202,7 +202,7 @@ them in a list:
 
 .. code-block:: python
 
-   def edit(self, spec, prefix):
+   def edit(self, pkg, spec, prefix):
        config = [
            f"INSTALL_DIR = {prefix}",
            "INCLUDE_DIR = $(INSTALL_DIR)/include",
@@ -297,7 +297,7 @@ install the package:
 
 .. code-block:: python
 
-   def install(self, spec, prefix):
+   def install(self, pkg, spec, prefix):
        mkdir(prefix.bin)
        install("foo", prefix.bin)
        install_tree("lib", prefix.lib)
