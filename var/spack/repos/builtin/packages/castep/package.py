@@ -19,8 +19,8 @@ class Castep(MakefilePackage):
     electronic response properties etc.
     """
 
-    homepage = "https://castep.org"
-    url = "file://{0}/CASTEP-21.11.tar.gz".format(os.getcwd())
+    homepage = "http://castep.org"
+    url = f"file://{os.getcwd()}/CASTEP-21.11.tar.gz"
     manual_download = True
 
     version("21.11", sha256="d909936a51dd3dff7a0847c2597175b05c8d0018d5afe416737499408914728f")
