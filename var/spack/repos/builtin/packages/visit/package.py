@@ -96,7 +96,7 @@ class Visit(CMakePackage):
     patch("cmake-findjpeg.patch", when="@3.1.0:3.2.2")
     patch("cmake-findjpeg-3.3.patch", when="@3.3.0")
     patch("0001-fix-missing-header-includes-for-QSurfaceFormat.patch", when="+gui")
-    
+
     # Fix pthread and librt link errors
     patch("visit32-missing-link-libs.patch", when="@3.2")
 
