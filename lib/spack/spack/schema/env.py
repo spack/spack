@@ -53,7 +53,6 @@ schema = {
                         },
                     },
                     "specs": spack.schema.spec_list_schema,
-                    "view": spack.schema.view.schema,
                 },
             ),
         }
