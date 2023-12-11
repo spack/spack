@@ -32,13 +32,26 @@ from .base import Reporter
 from .extract import extract_test_parts
 
 # Mapping Spack phases to the corresponding CTest/CDash phase.
+# TODO: Some of the phases being lumped into configure in the CDash tables
+# TODO:   really belong in a separate column, such as "Setup".
+# TODO: Would also be nice to have `stage` as a separate phase that could
+# TODO:   be lumped into that new column instead of configure, for example.
 MAP_PHASES_TO_CDASH = {
-    "autoreconf": "configure",
-    "cmake": "configure",
-    "configure": "configure",
-    "edit": "configure",
+    "autoreconf": "configure",  # AutotoolsBuilder
+    "bootstrap": "configure",  # CMakeBuilder
     "build": "build",
+    "build_processes": "build",  # Openloops
+    "cmake": "configure",  # CMakeBuilder
+    "configure": "configure",
+    "edit": "configure",  # MakefileBuilder
+    "generate_luarocks_config": "configure",  # LuaBuilder
+    "hostconfig": "configure",  # Lvarray
+    "initconfig": "configure",  # CachedCMakeBuilder
     "install": "build",
+    "meson": "configure",  # MesonBuilder
+    "preprocess": "configure",  # LuaBuilder
+    "qmake": "configure",  # QMakeBuilder
+    "unpack": "configure",  # LuaBuilder
 }
 
 # Initialize data structures common to each phase's report.
