@@ -16,7 +16,7 @@ RUN {% if os_package_update %}{{ os_packages_build.update }} \
 
 # What we want to install and how we want to install it
 # is specified in a manifest file (spack.yaml)
-RUN mkdir {{ paths.environment }} \
+RUN mkdir -p {{ paths.environment }} \
 {{ manifest }} > {{ paths.environment }}/spack.yaml
 
 # Install the software, remove unnecessary deps
