@@ -290,12 +290,12 @@ class CachedCMakeBuilder(CMakeBuilder):
             entries.append(cmake_cache_string("HIP_CLANG_PATH", rocm_bin))
             entries.append(cmake_cache_string("HIP_CLANG_INCLUDE_PATH", rocm_include))
 
-#            entries.append(
-#                cmake_cache_path(
-#                    "HIP_CLANG_INCLUDE_PATH",
-#                    glob.glob("{}/lib/clang/*/include".format(spec["llvm-amdgpu"].prefix))[0],
-#                )
-#            )
+            # entries.append(
+            #     cmake_cache_path(
+            #         "HIP_CLANG_INCLUDE_PATH",
+            #         glob.glob("{}/lib/clang/*/include".format(spec["llvm-amdgpu"].prefix))[0],
+            #     )
+            # )
 
             # The old way ...
             if spec["hip"].version < Version("5.5.0"):
