@@ -162,8 +162,8 @@ def setup_parser(subparser):
         "--no-check-signature",
         action="store_true",
         dest="unsigned",
-        default=False,
-        help="do not check signatures of binary packages",
+        default=None,
+        help="do not check signatures of binary packages (override mirror config)",
     )
     subparser.add_argument(
         "--show-log-on-error",
