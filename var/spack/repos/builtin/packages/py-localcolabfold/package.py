@@ -1,3 +1,6 @@
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
@@ -21,8 +24,8 @@ class PyLocalcolabfold(PythonPackage, CudaPackage):
     depends_on("cuda@11.6.0", type=("build", "run"))
     depends_on("cudnn@8.2.1.32", type=("build", "run"))
     depends_on("openmm@7.7.0", type=("build", "run"))
-    depends_on("py-pdbfixer", type=("build", "run"))
-    depends_on("py-colabfold@1.5.3", type=("build", "run"))
+    depends_on("py-pdbfixer@1.7", type=("build", "run"))
+    depends_on("py-colabfold@1.5.3 ~jax", type=("build", "run"))
     depends_on("kalign2@2.0.3", type=("build", "run"))
     depends_on("hh-suite@3.3.0", type=("build", "run"))
     depends_on("mmseqs2@14.7e284", type=("build", "run"))
