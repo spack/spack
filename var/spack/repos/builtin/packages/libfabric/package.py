@@ -99,6 +99,10 @@ class Libfabric(AutotoolsPackage):
 
     variant("debug", default=False, description="Enable debugging")
 
+    variant(
+        "uring", default=False, when="@1.17.0: fabrics=tcp", description="Enable uring support"
+    )
+
     # For version 1.9.0:
     # headers: fix forward-declaration of enum fi_collective_op with C++
     patch(
@@ -119,6 +123,7 @@ class Libfabric(AutotoolsPackage):
     depends_on("ucx", when="@1.18.0: fabrics=ucx")
     depends_on("uuid", when="fabrics=opx")
     depends_on("numactl", when="fabrics=opx")
+    depends_on("liburing@2.1:", when="+uring")
 
     depends_on("m4", when="@main", type="build")
     depends_on("autoconf", when="@main", type="build")
@@ -190,6 +195,9 @@ class Libfabric(AutotoolsPackage):
             args.append("--with-kdreg=yes")
         else:
             args.append("--with-kdreg=no")
+
+        if "+uring" in self.spec:
+            args.append("--with-uring=yes")
 
         for fabric in [f if isinstance(f, str) else f[0].value for f in self.fabrics]:
             if "fabrics=" + fabric in self.spec:
