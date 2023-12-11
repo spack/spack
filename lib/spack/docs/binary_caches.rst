@@ -251,87 +251,13 @@ To significantly speed up Spack in GitHub Actions, binaries can be cached in
 GitHub Packages. This service is an OCI registry that can be linked to a GitHub
 repository.
 
-A typical workflow is to include a ``spack.yaml`` environment in your repository
-that specifies the packages to install, the target architecture, and the build
-cache to use under ``mirrors``:
-
-.. code-block:: yaml
-
-    spack:
-      specs:
-      - python@3.11
-      config:
-        install_tree:
-          root: /opt/spack
-          padded_length: 128
-      packages:
-        all:
-          require: target=x86_64_v2
-      mirrors:
-        local-buildcache: oci://ghcr.io/<organization>/<repository>
-
-A GitHub action can then be used to install the packages and push them to the
-build cache:
-
-.. code-block:: yaml
-
-    name: Install Spack packages
-
-    on: push
-
-    env:
-      SPACK_COLOR: always
-
-    jobs:
-      example:
-        runs-on: ubuntu-22.04
-        permissions:
-          packages: write
-        steps:
-        - name: Checkout
-          uses: actions/checkout@v3
-
-        - name: Checkout Spack
-          uses: actions/checkout@v3
-          with:
-            repository: spack/spack
-            path: spack
-
-        - name: Setup Spack
-          run: echo "$PWD/spack/bin" >> "$GITHUB_PATH"
-
-        - name: Concretize
-          run: spack -e . concretize
-
-        - name: Install
-          run: spack -e . install --no-check-signature
-
-        - name: Run tests
-            run: ./my_view/bin/python3 -c 'print("hello world")'
-
-        - name: Push to buildcache
-          run: |
-            spack -e . mirror set --oci-username ${{ github.actor }} --oci-password "${{ secrets.GITHUB_TOKEN }}" local-buildcache
-            spack -e . buildcache push --base-image ubuntu:22.04 --unsigned --update-index local-buildcache
-          if: ${{ !cancelled() }}
-
-The first time this action runs, it will build the packages from source and
-push them to the build cache. Subsequent runs will pull the binaries from the
-build cache. The concretizer will ensure that prebuilt binaries are favored
-over source builds.
-
-The build cache entries appear in the GitHub Packages section of your repository,
-and contain instructions for pulling and running them with ``docker`` or ``podman``.
-
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Using Spack's public build cache for GitHub Actions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
 Spack offers a public build cache for GitHub Actions with a set of common packages,
 which lets you get started quickly. See the following resources for more information:
 
-* `spack/github-actions-buildcache <https://github.com/spack/github-actions-buildcache>`_
+* `spack/setup-spack <https://github.com/spack/setup-spack>`_ for setting up Spack in GitHub
+  Actions
+* `spack/github-actions-buildcache <https://github.com/spack/github-actions-buildcache>`_ for
+  more details on the public build cache
 
 .. _cmd-spack-buildcache:
 
