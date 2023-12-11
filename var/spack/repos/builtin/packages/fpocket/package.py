@@ -18,12 +18,17 @@ class Fpocket(MakefilePackage):
 
     depends_on("netcdf-c")
     depends_on("netcdf-cxx")
+    depends_on("qhull")
 
+
+class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
     def setup_build_environment(self, env):
-        if self.compiler.name == "gcc":
+        if self.pkg.compiler.name == "gcc":
             env.set("CXX", "g++")
 
-    def edit(self, spec, prefix):
+    def edit(self, pkg, spec, prefix):
+        mkdirp(prefix.lib)
         makefile = FileFilter("makefile")
         makefile.filter("BINDIR .*", f"BINDIR = {prefix}/bin")
         makefile.filter("MANDIR .*", f"MANDIR = {prefix}/man/man8")
+        makefile.filter("LIBDIR .*", f"LIBDIR = {prefix}/lib")
