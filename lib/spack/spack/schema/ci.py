@@ -77,6 +77,21 @@ submapping_schema = {
     },
 }
 
+scriptable_generator_schema = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["dynamic-mapping"],
+    "properties": {
+        "dynamic-mapping": {
+            "required": ["script"],
+            "properties": {
+                "mode": {"type": "string", "default": "batch", "enum": ["batch", "serial"]},
+                "url": {"type": "string", "patternProperties": r"http://[\w\d\-_\.]+"},
+            },
+        }
+    },
+}
+
 named_attributes_schema = {
     "oneOf": [
         {

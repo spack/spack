@@ -9,6 +9,9 @@ ci:
   broken-specs-url: "https://dummy.io" # s3://spack-binaries/broken-specs"
 
   pipeline-gen:
+  - dynamic-mapping:
+      mode: batch
+      url: https://path.my_cool_app.io
   - build-job:
       before_script-:
       - - cat /proc/loadavg || true

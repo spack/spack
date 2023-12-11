@@ -603,6 +603,91 @@ the attributes will be merged starting from the bottom match going up to the top
 
 In the case that no match is found in a submapping section, no additional attributes will be applied.
 
+
+^^^^^^^^^^^^^^^^^^^
+Dynamic Mapping Sections
+^^^^^^^^^^^^^^^^^^^
+
+For large scale CI where cost optimation is required, dynamic mapping allows for the use of real-time
+mapping schemes served by a web service. This type of mapping does not support the ``-remove`` type
+behavior, but it does follow the rest of the merge rules for configurations.
+
+example request.
+
+.. code-block::
+
+header: <optional>
+body: b"[
+  {
+    "hash": "5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03",
+    "arch": "x86_64_v3",
+    "package": {
+        "name": "a",
+        "version": "1.0.0",
+        "variants": "+c~b",
+    },
+    "compiler": {
+        "name": "gcc",
+        "version": "4.5.0",
+    },
+  },
+  {
+    "hash": "be30f2ef8a94cb1ca38ef3ee0a1d050f1aa26f658fb1e772c0b94f4d2bff2189",
+    "arch": "x86_64_v3",
+    "package": {
+        "name": "b",
+        "version": "1.0.0",
+        "variants": "+a~c",
+    },
+    "compiler": {
+        "name": "gcc",
+        "version": "4.5.0",
+    },
+  },
+  {
+    "hash": "d3eb539a556352f3f47881d71fb0e5777b2f3e9a4251d283c18c67ce996774b7",
+    "arch": "x86_64_v3",
+    "package": {
+        "name": "c",
+        "version": "1.0.0",
+        "variants": "+a~b",
+    },
+    "compiler": {
+        "name": "gcc",
+        "version": "4.5.0",
+    },
+  },
+]"
+
+example response.
+
+body: b"{
+  "5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03":
+  {
+    "variables":
+    {
+      "KUBERNETES_CPU_REQUEST": "4000m",
+      "KUBERNETES_MEMORY_REQUEST": "16G",
+    }
+  },
+  "be30f2ef8a94cb1ca38ef3ee0a1d050f1aa26f658fb1e772c0b94f4d2bff2189":
+  {
+    "variables":
+    {
+      "KUBERNETES_CPU_REQUEST": "40m",
+      "KUBERNETES_MEMORY_REQUEST": "1G",
+    }
+  },
+  "d3eb539a556352f3f47881d71fb0e5777b2f3e9a4251d283c18c67ce996774b7":
+  {
+    "variables":
+    {
+      "KUBERNETES_CPU_REQUEST": "2000m",
+      "KUBERNETES_MEMORY_REQUEST": "8G",
+    }
+  },
+}"
+
 ^^^^^^^^^^^^^
 Bootstrapping
 ^^^^^^^^^^^^^
