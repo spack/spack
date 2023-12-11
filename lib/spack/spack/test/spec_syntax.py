@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import inspect
 import itertools
 import os
 import re
@@ -693,9 +694,16 @@ def test_parse_multiple_specs(text, tokens, expected_specs):
         (["zlib ldflags='' +pic"], "zlib+pic"),
         # Ensure that $ORIGIN is handled correctly
         (["zlib", "ldflags=-Wl,-rpath=$ORIGIN/_libs"], "zlib ldflags='-Wl,-rpath=$ORIGIN/_libs'"),
+        # Ensure that passing escaped quotes on the CLI raises a tokenization error
+        (["zlib", '"-g', '-O2"'], SpecTokenizationError),
     ],
 )
 def test_cli_spec_roundtrip(args, expected):
+    if inspect.isclass(expected) and issubclass(expected, BaseException):
+        with pytest.raises(expected):
+            spack.cmd.parse_specs(args)
+        return
+
     specs = spack.cmd.parse_specs(args)
     output_string = " ".join(str(spec) for spec in specs)
     assert expected == output_string
