@@ -673,6 +673,24 @@ def test_parse_multiple_specs(text, tokens, expected_specs):
         (["zlib", "cflags='-O3 -g' +bar baz"], '''zlib cflags="'-O3 -g' +bar baz"'''),
         # Use single quotes and escape single quotes with internal single and double quotes
         (["zlib", "cflags='-O3 -g' \"+bar baz\""], "zlib cflags='\\'-O3 -g\\' \"+bar baz\"'"),
+        # Ensure that empty strings are handled correctly on CLI
+        (["zlib", "ldflags=", "+pic"], "zlib+pic"),
+        # These will gobble up +pic as a flag, but there's nothing we can do about it if we want
+        # to handle the case above on the CLI. This only occurs in abstract and weirdly quoted
+        # specs, so we prioritize the case above and accept these.
+        (["zlib", "ldflags= +pic"], "zlib ldflags='+pic'"),
+        (["ldflags= +pic"], "ldflags='+pic'"),
+        # Ensure same results with variants (not flag names)
+        (["zlib", "foo= +pic"], "zlib foo='+pic'"),
+        (["foo= +pic"], "foo='+pic'"),
+        # You can ensure no quotes are added parse_specs() by starting your string with space,
+        # but you still need to quote empty strings properly.
+        ([" ldflags= +pic"], "ldflags='+pic'"),
+        ([" ldflags=", "+pic"], "ldflags='+pic'"),
+        ([" ldflags='' +pic"], "+pic"),
+        ([" ldflags=''", "+pic"], "+pic"),
+        # Ensure that empty strings are handled properly in quoted strings
+        (["zlib ldflags='' +pic"], "zlib+pic"),
         # Ensure that $ORIGIN is handled correctly
         (["zlib", "ldflags=-Wl,-rpath=$ORIGIN/_libs"], "zlib ldflags='-Wl,-rpath=$ORIGIN/_libs'"),
     ],

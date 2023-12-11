@@ -99,7 +99,7 @@ else:
 VALUE = r"(?:[a-zA-Z_0-9\-+\*.,:=\~\/\\]+)"
 
 #: Anything that matches this *will* be conservatively quoted in Spack output
-NO_QUOTES_NEEDED = r"^[a-zA-Z0-9,/_.-]*$"
+NO_QUOTES_NEEDED = r"^[a-zA-Z0-9,/_.-]+$"
 
 #: quoted values can be *anything* in between quotes, including escaped quotes.
 QUOTED_VALUE = r"(?:'(?:[^']|(?<=\\)')*'|\"(?:[^\"]|(?<=\\)\")*\")"
