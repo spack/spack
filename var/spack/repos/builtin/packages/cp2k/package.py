@@ -298,6 +298,9 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     depends_on("wannier90", when="@3.0+mpi")
 
     with when("build_system=cmake"):
+        depends_on("cmake@3.22:", type="build")
+
+        # DBCSR as external dependency
         depends_on("dbcsr@2.6:")
         depends_on("dbcsr+openmp", when="+openmp")
         depends_on("dbcsr+cuda", when="+cuda")
