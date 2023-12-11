@@ -20,16 +20,16 @@ class Cce(Compiler):
             self.version_argument = "-V"
 
     # Subclasses use possible names of C compiler
-    cc_names = ["craycc", "cc"]
+    cc_names = ["craycc"]
 
     # Subclasses use possible names of C++ compiler
-    cxx_names = ["crayCC", "CC"]
+    cxx_names = ["crayCC"]
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ["crayftn", "ftn"]
+    f77_names = ["crayftn"]
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ["crayftn", "ftn"]
+    fc_names = ["crayftn"]
 
     # MacPorts builds gcc versions with prefixes and -mp-X.Y suffixes.
     suffixes = [r"-mp-\d\.\d"]
