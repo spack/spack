@@ -23,7 +23,9 @@ class BigdftPsolver(AutotoolsPackage, CudaPackage):
     variant("mpi", default=True, description="Enable MPI support")
     variant("openmp", default=True, description="Enable OpenMP support")
     variant("scalapack", default=True, description="Enable SCALAPACK support")
-    variant("shared", default=True, description="Build shared libraries")  # Not default in bigdft, but is typically the default expectation
+    variant(
+        "shared", default=True, description="Build shared libraries"
+    )  # Not default in bigdft, but is typically the default expectation
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")

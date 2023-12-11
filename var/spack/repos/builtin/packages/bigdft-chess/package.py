@@ -23,7 +23,9 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
     variant("openmp", default=True, description="Enable OpenMP support")
     variant("scalapack", default=True, description="Enable SCALAPACK support")
     variant("ntpoly", default=False, description="Option to use NTPoly")
-    variant("shared", default=True, description="Build shared libraries")  # Not default in bigdft, but is typically the default expectation
+    variant(
+        "shared", default=True, description="Build shared libraries"
+    )  # Not default in bigdft, but is typically the default expectation
     # variant('minpack', default=False,  description='Give the link-line for MINPACK')
 
     depends_on("autoconf", type="build")

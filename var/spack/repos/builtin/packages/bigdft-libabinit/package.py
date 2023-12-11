@@ -26,7 +26,9 @@ class BigdftLibabinit(AutotoolsPackage):
     depends_on("libtool", type="build")
 
     variant("mpi", default=True, description="Enable MPI support")
-    variant("shared", default=True, description="Build shared libraries")  # Not default in bigdft, but is typically the default expectation
+    variant(
+        "shared", default=True, description="Build shared libraries"
+    )  # Not default in bigdft, but is typically the default expectation
 
     depends_on("python@3.0:", type=("build", "run"))
 
