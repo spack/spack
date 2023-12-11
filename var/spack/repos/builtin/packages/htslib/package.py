@@ -9,6 +9,8 @@ from spack.package import *
 class Htslib(AutotoolsPackage):
     """C library for high-throughput sequencing data formats."""
 
+    maintainers("jbeal-work")
+
     homepage = "https://github.com/samtools/htslib"
     url = "https://github.com/samtools/htslib/releases/download/1.13/htslib-1.13.tar.bz2"
 
