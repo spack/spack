@@ -85,8 +85,13 @@ class PyProtobuf(PythonPackage):
 
     @when("+cpp")
     def setup_build_environment(self, env):
-        protobuf_dir = self.spec["protobuf"].libs.directories[0]
-        env.prepend_path("LIBRARY_PATH", protobuf_dir)
+        if len(self.spec["protobuf"].libs.directories) > 0:
+            protobuf_dir = self.spec["protobuf"].libs.directories[0]
+            env.prepend_path("LIBRARY_PATH", protobuf_dir)
+        else:
+            protobuf_prefix = self.spec["protobuf"].prefix
+            env.prepend_path("LIBRARY_PATH", protobuf_prefix.lib)
+            env.prepend_path("LIBRARY_PATH", protobuf_prefix.lib64)
 
     @when("+cpp")
     def install_options(self, spec, prefix):
