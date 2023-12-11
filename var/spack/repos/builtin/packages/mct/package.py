@@ -11,7 +11,6 @@ class Mct(AutotoolsPackage):
     of highly portable and extensible high-performance couplers for
     distributed memory parallel coupled models."""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://github.com/MCSclimate/MCT"
     url = "https://github.com/MCSclimate/MCT/archive/refs/tags/MCT_2.11.0.tar.gz"
 
