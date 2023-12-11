@@ -329,20 +329,21 @@ class CachedCMakeBuilder(CMakeBuilder):
             #         gcc_bin = os.path.dirname(self.pkg.compiler.cxx)
             #         gcc_prefix = os.path.join(gcc_bin, "..")
 
-            #         # # TODO: really necessary ?
-            #         # if spec["hip"].version >= Version("5.5.0")
-            #         #     # With > 5.5 rocm versions (or so) the use of amdclang
-            #         #     # compiler becomes mandatory. Spack does not allow
-            #         #     # dependencies on compilers yet, so we enforce the compiler
-            #         #     # here. The drawback being that this is not visible even in
-            #         #     # the full spec, only implied by the +rocm variant.
-            #         #     llvm_amdgpu_clang = os.path.join(llvm_bin, "clang++")
-            #         #     entries.append(cmake_cache_path("CMAKE_C_COMPILER", llvm_amdgpu_clang))
-            #         #     entries.append(cmake_cache_path("CMAKE_CXX_COMPILER", llvm_amdgpu_clang))
+            #         # TODO: really necessary ?
+            #         if spec["hip"].version >= Version("5.5.0")
+            #             # With > 5.5 rocm versions (or so) the use of amdclang
+            #             # compiler becomes mandatory. Spack does not allow
+            #             # dependencies on compilers yet, so we enforce the compiler
+            #             # here. The drawback being that this is not visible even in
+            #             # the full spec, only implied by the +rocm variant.
+            #             llvm_amdgpu_clang = os.path.join(llvm_bin, "clang++")
+            #             entries.append(cmake_cache_path("CMAKE_C_COMPILER", llvm_amdgpu_clang))
+            #             entries.append(cmake_cache_path("CMAKE_CXX_COMPILER", llvm_amdgpu_clang))
             #     else:
             #         gcc_prefix = spec_uses_toolchain(spec)[0]
+            #     toolchain_flag = "--gcc-toolchain={0}".format(gcc_prefix)
             #     entries.append(
-            #         cmake_cache_string("HIP_CLANG_FLAGS", "--gcc-toolchain={0}".format(gcc_prefix))
+            #         cmake_cache_string("HIP_CLANG_FLAGS", toolchain_flag)
             #     )
             #     entries.append(
             #         cmake_cache_string(
