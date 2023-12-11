@@ -171,25 +171,13 @@ class Wrf(Package):
     patch("patches/4.2/add_aarch64.patch", when="@4.2:4.3.1 %gcc target=aarch64:")
     patch("patches/4.2/add_aarch64_acfl.patch", when="@4.2:4.3.1 %arm target=aarch64:")
     patch("patches/4.2/configure_aocc_2.3.patch", when="@4.2 %aocc@:2.4.0")
-    patch("patches/4.2/configure_aocc_3.0.patch", when="@4.2: %aocc@3.0.0:3.2.0")
+    patch("patches/4.2/configure_aocc_3.0.patch", when="@4.2 %aocc@3.0.0:3.2.0")
     patch("patches/4.2/hdf5_fix.patch", when="@4.2: %aocc")
-    patch("patches/4.2/derf_fix.patch", when="@4.2 %aocc")
+    patch("patches/4.2/derf_fix.patch", when="@=4.2 %aocc")
     patch(
         "patches/4.2/add_tools_flags_acfl2304.patch",
         when="@4.2:4.4.2 %arm@23.04.1: target=aarch64:",
     )
-
-    patch("patches/4.3/add_aarch64.patch", when="@4.3.2:4.4.2 %gcc target=aarch64:")
-    patch("patches/4.3/add_aarch64_acfl.patch", when="@4.3.2:4.4.2 %arm target=aarch64:")
-
-    patch("patches/4.4/arch.postamble.patch", when="@4.4:")
-    patch("patches/4.4/configure.patch", when="@4.4:4.4.2")
-    patch("patches/4.4/ifx.patch", when="@4.4: %oneapi")
-
-    patch("patches/4.5/configure.patch", when="@4.5:")
-    # Fix WRF to remove deprecated ADIOS2 functions
-    # https://github.com/wrf-model/WRF/pull/1860
-    patch("patches/4.5/adios2-remove-deprecated-functions.patch", when="@4.5: ^adios2@2.9:")
 
     # Various syntax fixes found by FPT tool
     patch(
@@ -213,6 +201,17 @@ class Wrf(Package):
         sha256="27c7268f6c84b884d21e4afad0bab8554b06961cf4d6bfd7d0f5a457dcfdffb1",
         when="@4.3.1",
     )
+
+    patch("patches/4.3/add_aarch64.patch", when="@4.3.2:4.4.2 %gcc target=aarch64:")
+    patch("patches/4.3/add_aarch64_acfl.patch", when="@4.3.2:4.4.2 %arm target=aarch64:")
+    patch("patches/4.4/arch.postamble.patch", when="@4.4:")
+    patch("patches/4.4/configure.patch", when="@4.4:4.4.2")
+    patch("patches/4.4/ifx.patch", when="@4.4: %oneapi")
+    patch("patches/4.5/configure.patch", when="@4.5:")
+    # Fix WRF to remove deprecated ADIOS2 functions
+    # https://github.com/wrf-model/WRF/pull/1860
+    patch("patches/4.5/adios2-remove-deprecated-functions.patch", when="@4.5: ^adios2@2.9:")
+
     # Add ARM compiler support
     patch(
         "https://github.com/wrf-model/WRF/pull/1888/commits/4a084e03575da65f254917ef5d8eb39074abd3fc.patch",
@@ -292,6 +291,90 @@ class Wrf(Package):
 
         filter_file("^#!/bin/csh -f", "#!/usr/bin/env csh", *files)
         filter_file("^#!/bin/csh", "#!/usr/bin/env csh", *files)
+
+    @run_before("configure", when="%aocc@4:")
+    def create_aocc_config(self):
+        param = dict()
+
+        param["MPICC"] = self.spec["mpi"].mpicc
+        param["MPIFC"] = self.spec["mpi"].mpifc
+
+        if self.spec.satisfies("@:4.2.2"):
+            param["CTSM_SUBST"] = "-DWRF_USE_CLM"
+        else:
+            param["CTSM_SUBST"] = "CONFIGURE_D_CTSM"
+
+        if self.spec.satisfies("@4.4.0:"):
+            param["NETCDFPAR_BUILD"] = "CONFIGURE_NETCDFPAR_BUILD"
+        else:
+            param["NETCDFPAR_BUILD"] = ""
+
+        zen_conf = r"""
+###########################################################
+#ARCH    AMD Linux x86_64 #serial smpar dmpar dm+sm
+# For optimized AMDFCFLAGS and AMDLDFLAGS, please reach out to toolchainsupport@amd.com
+#
+
+DESCRIPTION     =       AMD ($SFC/$SCC) :  AMD ZEN Architectures
+DMPARALLEL      =       # 1
+OMPCPP          =       # -D_OPENMP
+OMP             =       # -fopenmp
+OMPCC           =       # -fopenmp
+SFC             =       flang
+SCC             =       clang
+CCOMP           =       clang
+DM_FC           =       {MPIFC}
+DM_CC           =       {MPICC}
+FC              =       CONFIGURE_FC
+CC              =       CONFIGURE_CC
+LD              =       $(FC)
+RWORDSIZE       =       CONFIGURE_RWORDSIZE
+
+AMDMATHLIB      =       -fveclib=AMDLIBM
+AMDLDFLAGS      =
+AMDFCFLAGS      =       -mllvm -disable-loop-idiom-memset -mllvm -inline-threshold=3000 \
+                        -mllvm -inlinehint-threshold=10000 -mllvm -enable-loop-distribute-adv \
+                        -mllvm -vectorize-non-contiguous-memory-aggressively \
+                        -mllvm -vectorizer-maximize-bandwidth=true \
+                        -mllvm -enable-gather -mllvm -legalize-vector-library-calls  \
+                        -finline-aggressive -finline-hint-functions
+
+PROMOTION       =       #-fdefault-real-8
+ARCH_LOCAL      =       -DNONSTANDARD_SYSTEM_SUBR {CTSM_SUBST}
+CFLAGS_LOCAL    =       -w -c -m64 -Ofast
+LDFLAGS_LOCAL   =       -m64 -Ofast -Mstack_arrays $(AMDLDFLAGS) $(AMDMATHLIB) -lamdlibm -lm
+CPLUSPLUSLIB    =
+ESMF_LDFLAG     =       $(CPLUSPLUSLIB)
+FCOPTIM         =       -Ofast -Mstack_arrays -ftree-vectorize -funroll-loops -finline-aggressive \
+                        -finline-hint-functions $(AMDMATHLIB) $(AMDFCFLAGS)
+FCREDUCEDOPT    =       -O2 -Mstack_arrays -DFCREDUCEDOPT
+FCNOOPT         =       -O0
+FCDEBUG         =       # -g $(FCNOOPT)
+FORMAT_FIXED    =       -ffixed-form
+FORMAT_FREE     =       -ffree-form
+FCSUFFIX        =
+BYTESWAPIO      =       -Mbyteswapio
+FCBASEOPTS_NO_G =       -w $(FORMAT_FREE) $(BYTESWAPIO)
+FCBASEOPTS      =       $(FCBASEOPTS_NO_G) $(FCDEBUG)
+MODULE_SRCH_FLAG=
+TRADFLAG        =       CONFIGURE_TRADFLAG
+CPP             =       /lib/cpp CONFIGURE_CPPFLAGS
+AR              =       llvm-ar
+ARFLAGS         =       ru
+M4              =       m4
+RANLIB          =       llvm-ranlib
+RLFLAGS         =
+CC_TOOLS        =       $(SCC)
+NETCDFPAR_BUILD =       {NETCDFPAR_BUILD}
+
+#insert new stanza here
+""".format(
+            **param
+        )
+        if self.spec.satisfies("@4.0:"):
+            filter_file("#insert new stanza here", zen_conf, "arch/configure.defaults")
+        else:
+            filter_file("#insert new stanza here", zen_conf, "arch/configure_new.defaults")
 
     def answer_configure_question(self, outputbuf):
         # Platform options question:
