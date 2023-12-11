@@ -688,4 +688,5 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
         with working_dir(pkgdir, create=False):
             res = subprocess.run([pvpy, "--force-offscreen-rendering", pkgtest])
+            print(res)
             assert res.returncode == 0 and os.path.exists(output)
