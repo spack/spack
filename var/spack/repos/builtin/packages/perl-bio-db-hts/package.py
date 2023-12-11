@@ -17,4 +17,3 @@ class PerlBioDbHts(PerlPackage):
     depends_on("perl-module-build", type="build")
     depends_on("perl-bioperl")
     depends_on("htslib")
-
