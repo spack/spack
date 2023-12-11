@@ -23,6 +23,7 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
     variant("openmp", default=True, description="Enable OpenMP support")
     variant("scalapack", default=True, description="Enable SCALAPACK support")
     variant("ntpoly", default=False, description="Option to use NTPoly")
+    variant("shared", default=True, description="Build shared libraries")  # Not default in bigdft, but is typically the default expectation
     # variant('minpack', default=False,  description='Give the link-line for MINPACK')
 
     depends_on("autoconf", type="build")
@@ -73,6 +74,8 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
             "--prefix=%s" % prefix,
             "--without-etsf-io",
         ]
+        if "+shared" in spec:
+            args.append("--enable-dynamic-libraries")
 
         if "+mpi" in spec:
             args.append("CC=%s" % spec["mpi"].mpicc)
