@@ -1003,11 +1003,12 @@ class Environment:
                 )
                 remote_path = urllib.request.url2pathname(include_url.path)
                 basename = os.path.basename(remote_path)
-                if basename in staged_configs:
+                refresh = hasattr(self, "refresh_includes") and self.refresh_includes
+                if basename in staged_configs and not refresh:
                     # Do NOT re-stage configuration files over existing
                     # ones with the same name since there is a risk of
                     # losing changes (e.g., from 'spack config update').
-                    tty.warn(
+                    tty.debug(
                         "Will not re-stage configuration from {0} to avoid "
                         "losing changes to the already staged file of the "
                         "same name.".format(remote_path)
@@ -1021,7 +1022,7 @@ class Environment:
                         config_path = os.path.join(config_path, basename)
                 else:
                     staged_path = spack.config.fetch_remote_configs(
-                        config_path, self.config_stage_dir, skip_existing=True
+                        config_path, self.config_stage_dir, skip_existing=not refresh
                     )
                     if not staged_path:
                         raise SpackEnvironmentError(
@@ -1342,7 +1343,8 @@ class Environment:
 
         Arguments:
             force (bool): re-concretize ALL specs, even those that were
-               already concretized
+               already concretized, and refresh any remotely included
+               configuration files
             tests (bool or list or set): False to run no tests, True to test
                 all packages, or a list of package names to run tests for some
 
@@ -1355,6 +1357,7 @@ class Environment:
             self.concretized_user_specs = []
             self.concretized_order = []
             self.specs_by_hash = {}
+            self.refresh_includes = True
 
         # Remove concrete specs that no longer correlate to a user spec
         for spec in set(self.concretized_user_specs) - set(self.user_specs):
