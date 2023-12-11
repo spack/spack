@@ -554,12 +554,13 @@ def depends_on(spec, when=None, type=dt.DEFAULT_TYPES, patches=None, version_tra
         type (str or tuple): str or tuple of legal Spack deptypes
         patches (typing.Callable or list): single result of ``patch()`` directive, a
             ``str`` to be passed to ``patch``, or a list of these
-        version_translator (function): function to generate a version-ish for spec
-            from a parent version. If provided, a distinct conditional dependency
-            requiring ``@ver`` in addition to ```when`` will be added for each valid
-            result ``ver`` obtained by calling ``version_translator()`` on each
-            parent version. If there are no valid results, the behavior is as if
-            ``version_translator`` had not been defined.
+        version_translator (typing.Callable): function to generate a version-ish for
+            spec from a parent version. If provided, a distinct
+            conditional dependency requiring ``@ver`` in addition to
+            ```when`` will be added for each valid result ``ver``
+            obtained by calling ``version_translator()`` on each parent
+            version. If there are no valid results, the behavior is as
+            if ``version_translator`` had not been defined.
 
             Examples of suitable functions:
               - ``spack.version.Version``
