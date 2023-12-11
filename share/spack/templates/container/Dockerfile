@@ -54,13 +54,13 @@ RUN cd {{ paths.environment }} && \
 # Bare OS image to run the installed executables
 FROM {{ run.image }}
 
-{% block copy_into_file %}
+{% block copy_into_final %}
 COPY --from=builder {{ paths.environment }} {{ paths.environment }}
 COPY --from=builder {{ paths.store }} {{ paths.store }}
 
 # paths.view is a symlink, so copy the parent to avoid dereferencing and duplicating it
 COPY --from=builder {{ paths.view_parent }} {{ paths.view_parent }}
-{% endblock copy_into_file %}
+{% endblock copy_into_final %}
 
 {% block make_entrypoint %}
 RUN { \
