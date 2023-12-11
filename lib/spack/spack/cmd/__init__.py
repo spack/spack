@@ -7,6 +7,7 @@ import argparse
 import os
 import re
 import sys
+from typing import List, Union
 
 import llnl.string
 import llnl.util.tty as tty
@@ -161,22 +162,19 @@ def quote_kvp(string: str) -> str:
     return f"{key}{delim}{spack.parser.quote_if_needed(value)}"
 
 
-def parse_specs(args, **kwargs):
+def parse_specs(
+    args: Union[str, List[str]], concretize: bool = False, tests: bool = False
+) -> List[spack.spec.Spec]:
     """Convenience function for parsing arguments from specs.  Handles common
     exceptions and dies if there are errors.
     """
-    concretize = kwargs.get("concretize", False)
-    normalize = kwargs.get("normalize", False)
-    tests = kwargs.get("tests", False)
-
+    args = [args] if isinstance(args, str) else args
     arg_string = " ".join([quote_kvp(arg) for arg in args])
 
     specs = spack.parser.parse(arg_string)
     for spec in specs:
         if concretize:
-            spec.concretize(tests=tests)  # implies normalize
-        elif normalize:
-            spec.normalize(tests=tests)
+            spec.concretize(tests=tests)
     return specs
 
 
