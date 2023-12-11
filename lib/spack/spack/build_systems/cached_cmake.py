@@ -280,12 +280,15 @@ class CachedCMakeBuilder(CMakeBuilder):
 
             hip_root = spec["hip"].prefix
             rocm_root = hip_root + "/.."
+            rocm_bin = rocm_root + "/llvm/bin"
+            rocm_include = rocm_root + "/llvm/include"
 
             # Explicitly setting HIP_ROOT_DIR may be a patch that is no longer necessary
             entries.append(cmake_cache_path("HIP_ROOT_DIR", hip_root))
             entries.append(cmake_cache_path("ROCM_ROOT_DIR", rocm_root))
             # TODO: test if this helps
-            entries.append(cmake_cache_string("HIP_CLANG_PATH", rocm_root + "/llvm/bin"))
+            entries.append(cmake_cache_string("HIP_CLANG_PATH", rocm_bin))
+            entries.append(cmake_cache_string("HIP_CLANG_INCLUDE_PATH", rocm_include))
 
             entries.append(
                 cmake_cache_path(
@@ -309,9 +312,6 @@ class CachedCMakeBuilder(CMakeBuilder):
             entries.append(
                 cmake_cache_filepath("CMAKE_HIP_COMPILER", os.path.join(llvm_bin, "clang++"))
             )
-
-            # TODO: from Axom
-            # HIP_CLANG_INCLUDE_PATH= $ROCM_INSTALL_DIR/llvm/include
 
             # Setting the amdgpu_target through CMAKE_HIP_ARCHITECTURE should be enough.
             archs = self.spec.variants["amdgpu_target"].value
