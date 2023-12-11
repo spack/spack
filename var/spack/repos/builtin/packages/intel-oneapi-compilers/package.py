@@ -8,7 +8,7 @@ from spack.package import *
 
 versions = [
     {
-        "version": "2024.0.0",
+        "version": "2024.0.1",
         "cpp": {
             "url": "https://registrationcenter-download.intel.com/akdlm//IRC_NAS/c68c8f0a-47f5-4f26-8e8e-fa2627271279/l_dpcpp-cpp-compiler_p_2024.0.1.29_offline.sh",
             "sha256": "22497c46bfb916c82677489775c113141510423799b7eca35f35dffeb2a14104",
