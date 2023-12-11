@@ -45,20 +45,20 @@ class PyAlphafoldColabfold(PythonPackage, CudaPackage):
     depends_on("py-pdbfixer@1.7", type=("build", "run"))
     depends_on("py-tensorflow@2.5:", type=("build", "run"), when="@2.1.1")
     depends_on("py-tensorflow@2.9:", type=("build", "run"), when="@2.2.4:")
-    depends_on(
-        "openmm@7.5.1+cuda",
-        type="run",
-        patches=[
-            patch(
-                "https://raw.githubusercontent.com/deepmind/alphafold/main/docker/openmm.patch",
-                sha256="a5a0ced820f3ecc56ae634c3111f80614863559b0587954a2658c8d4b2a07ae3",
-                working_dir="wrappers/python",
-                level=0,
-            )
-        ],
-    )
+#    depends_on(
+#        "openmm@7.5.1+cuda",
+#        type="run",
+#        patches=[
+#            patch(
+#                "https://raw.githubusercontent.com/deepmind/alphafold/main/docker/openmm.patch",
+#                sha256="a5a0ced820f3ecc56ae634c3111f80614863559b0587954a2658c8d4b2a07ae3",
+#                working_dir="wrappers/python",
+#                level=0,
+#            )
+#        ],
+#    )
     depends_on("hmmer", type="run")
-    depends_on("kalign", type="run")
+    depends_on("kalign2", type="run")
     depends_on("hh-suite", type="run")
     depends_on("aria2", type="run")
 
@@ -71,11 +71,11 @@ class PyAlphafoldColabfold(PythonPackage, CudaPackage):
         placement="chemprops",
     )
 
-    patch(
-        url_or_filename="https://github.com/sokrypton/alphafold/commit/1f04253c620703d6768b20987b3b5e075314095f.patch",
-        sha256="b29d56b236e65ae609b7e4edf7e72c2b9a3a7ff048c9939950cab12192ca0e43",
-        when="@2.3.5 ^jax@0.3.26:"
-    )
+    #patch(
+    #    url_or_filename="https://github.com/sokrypton/alphafold/commit/1f04253c620703d6768b20987b3b5e075314095f.patch",
+    #    sha256="b29d56b236e65ae609b7e4edf7e72c2b9a3a7ff048c9939950cab12192ca0e43",
+    #    when="@2.3.5 ^jax@0.3.26:"
+    #)
 
     @run_after("install")
     def install_scripts(self):
