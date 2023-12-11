@@ -555,11 +555,17 @@ def depends_on(spec, when=None, type=dt.DEFAULT_TYPES, patches=None, version_tra
         patches (typing.Callable or list): single result of ``patch()`` directive, a
             ``str`` to be passed to ``patch``, or a list of these
         version_translator (function): function to generate a version-ish for spec
-            from a parent version. If provided, this function will be called for
-            each version defined for pkg, and any non-vacuous result will be used to
-            add a dependency with that version as an extra constraint on spec.
-            Examples of suitable functions: ``spack.version.Version`` (NOP) or
-            ``lambda v: v.up_to(2)`` (minor version match)
+            from a parent version. If provided, a distinct conditional dependency
+            requiring ``@ver`` in addition to ```when`` will be added for each valid
+            result ``ver`` obtained by calling ``version_translator()`` on each
+            parent version. If there are no valid results, the behavior is as if
+            ``version_translator`` had not been defined.
+
+            Examples of suitable functions:
+              - ``spack.version.Version``
+                Dependency must match parent's version.
+              - ``lambda v: v.up_to(2)``
+                Dependency must match parent's major and minor versions.
 
     This directive is to be used inside a Package definition to declare
     that the package requires other packages to be built first.
