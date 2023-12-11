@@ -984,6 +984,9 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             "gfx90a": "Mi250",
             "gfx90a:xnack-": "Mi250",
             "gfx90a:xnack+": "Mi250",
+            "gfx1103:xnack+": "Mi300",
+            "gfx1103:xnack-": "Mi300",
+            "gfx1103": "Mi300",
         }
 
         if "+cuda" in spec:
