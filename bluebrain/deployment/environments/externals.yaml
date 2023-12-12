@@ -105,7 +105,7 @@ spack:
     - intel-oneapi-tbb@2021.10.0
     # For Ospray`
     - ispc
-    - julia@1.9
+    - julia@1.9^[virtuals=blas,lapack] openblas
     - likwid
     - mvapich2
     - ninja

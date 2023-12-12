@@ -246,6 +246,7 @@ class Llvm(CMakePackage, CudaPackage):
         description="Enable zstd support for static analyzer / lld",
     )
 
+    provides("libllvm@17", when="@17.0.0:17")
     provides("libllvm@16", when="@16.0.0:16")
     provides("libllvm@15", when="@15.0.0:15")
     provides("libllvm@14", when="@14.0.0:14")
@@ -308,14 +309,14 @@ class Llvm(CMakePackage, CudaPackage):
         depends_on("swig", when="+python")
         depends_on("xz")
 
-    # Use ^swig cause it's triggered by both python & lua scripting in lldb
-    with when("^swig"):
-        depends_on("swig@2:", when="@10:")
-        depends_on("swig@3:", when="@12:")
-        depends_on("swig@4:", when="@17:")
-        # Commits f0a25fe0b746f56295d5c02116ba28d2f965c175 and
-        # 81fc5f7909a4ef5a8d4b5da2a10f77f7cb01ba63 fixed swig 4.1 support
-        depends_on("swig@:4.0", when="@:15")
+    for _when_spec in ("+lldb+python", "+lldb+lua"):
+        with when(_when_spec):
+            depends_on("swig@2:", when="@10:")
+            depends_on("swig@3:", when="@12:")
+            depends_on("swig@4:", when="@17:")
+            # Commits f0a25fe0b746f56295d5c02116ba28d2f965c175 and
+            # 81fc5f7909a4ef5a8d4b5da2a10f77f7cb01ba63 fixed swig 4.1 support
+            depends_on("swig@:4.0", when="@:15")
 
     # gold support, required for some features
     depends_on("binutils+gold+ld+plugins+headers", when="+gold")
@@ -428,6 +429,12 @@ class Llvm(CMakePackage, CudaPackage):
         when="@14:15",
     )
 
+    # missing <cstdint> include
+    patch(
+        "https://github.com/llvm/llvm-project/commit/ff1681ddb303223973653f7f5f3f3435b48a1983.patch?full_index=1",
+        sha256="c6ca6b925f150e8644ce756023797b7f94c9619c62507231f979edab1c09af78",
+        when="@6:13",
+    )
     # fix building of older versions of llvm with newer versions of glibc
     for compiler_rt_as in ["project", "runtime"]:
         with when("compiler-rt={0}".format(compiler_rt_as)):
@@ -977,7 +984,10 @@ class Llvm(CMakePackage, CudaPackage):
                 ninja()
                 ninja("install")
         if "+python" in self.spec:
-            install_tree("llvm/bindings/python", python_platlib)
+            if spec.version < Version("17.0.0"):
+                # llvm bindings were removed in v17:
+                # https://releases.llvm.org/17.0.1/docs/ReleaseNotes.html#changes-to-the-python-bindings
+                install_tree("llvm/bindings/python", python_platlib)
 
             if "+clang" in self.spec:
                 install_tree("clang/bindings/python", python_platlib)

@@ -44,6 +44,6 @@ spack:
     - py-bluepyparallel
     - py-connectome-manipulator+convert
     - py-efel
-    # - py-multiscale-run
+    - py-multiscale-run
     - py-synthesis-workflow
     - py-visual-cortex-analysis

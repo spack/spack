@@ -38,8 +38,6 @@ packages:
   icu4c:
     version: [64.1]
     # Drags in heavy PEARL dependencies
-  julia:
-    variants: +external_llvm
   kokkos:
     variants: +openmp
   llvm:
