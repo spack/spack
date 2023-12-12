@@ -100,7 +100,7 @@ class Libfabric(AutotoolsPackage):
     variant("debug", default=False, description="Enable debugging")
 
     variant(
-        "uring", default=False, when="@1.17.0: fabrics=tcp", description="Enable uring support"
+        "uring", default=False, when="@1.17.0:", description="Enable uring support"
     )
 
     # For version 1.9.0:
