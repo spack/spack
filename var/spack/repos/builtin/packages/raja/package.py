@@ -132,13 +132,28 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     )
 
     variant("openmp", default=True, description="Build OpenMP backend")
-    variant("shared", default=True, description="Build Shared Libs")
+    variant("shared", default=True, description="Build shared libs")
+    variant("desul", default=False, description="Build desul atomics backend")
     variant("plugins", default=False, description="Enable runtime plugins")
+    variant("vectorization", default=True, description="Build SIMD/SIMT intrinsics support")
+    variant(
+        "omptask", default=False, description="Build OpenMP task variants of internal algorithms"
+    )
+
     variant("examples", default=True, description="Build examples.")
     variant("exercises", default=True, description="Build exercises.")
     # TODO: figure out gtest dependency and then set this default True
     # and remove the +tests conflict below.
     variant("tests", default=False, description="Build tests")
+
+    # we don’t use variants to express the failing test, we only add a variant to
+    # define whether we want to run all the tests (including those known to fail)
+    # or only the passing ones.
+    variant(
+        "run-all-tests",
+        default=False,
+        description="Run all the tests, including those known to fail.",
+    )
 
     depends_on("blt", type="build")
     depends_on("blt@0.5.3:", type="build", when="@2023.06.0:")
@@ -159,9 +174,10 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("camp@0.1.0", type="build", when="@0.10.0:0.13.0")
     depends_on("camp+openmp", type="build", when="+openmp")
 
-    depends_on("cmake@3.23:", when="@2022.10:+rocm", type="build")
-    depends_on("cmake@:3.20", when="@:2022.03+rocm", type="build")
+    depends_on("cmake@3.23:", when="@2022.10.0:+rocm", type="build")
+    depends_on("cmake@3.20:", when="@2022.10.0:", type="build")
     depends_on("cmake@3.14:", when="@2022.03.0:", type="build")
+    depends_on("cmake@:3.20", when="@:2022.03+rocm", type="build")
 
     depends_on("llvm-openmp", when="+openmp %apple-clang")
 
@@ -172,7 +188,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
             depends_on(
                 "camp+rocm amdgpu_target={0}".format(arch), when="amdgpu_target={0}".format(arch)
             )
-        conflicts("+openmp")
+        conflicts("+openmp", when="@:2022.03")
 
     with when("+cuda @0.12.0:"):
         depends_on("camp+cuda")
@@ -256,11 +272,37 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         option_prefix = "RAJA_" if spec.satisfies("@0.14.0:") else ""
 
+        # TPL locations
+        entries.append("#------------------{0}".format("-" * 60))
+        entries.append("# TPLs")
+        entries.append("#------------------{0}\n".format("-" * 60))
+
         entries.append(cmake_cache_path("BLT_SOURCE_DIR", spec["blt"].prefix))
         if "camp" in self.spec:
             entries.append(cmake_cache_path("camp_DIR", spec["camp"].prefix))
+
+        # Build options
+        entries.append("#------------------{0}".format("-" * 60))
+        entries.append("# Build Options")
+        entries.append("#------------------{0}\n".format("-" * 60))
+
+        entries.append(cmake_cache_string("CMAKE_BUILD_TYPE", spec.variants["build_type"].value))
         entries.append(cmake_cache_option("BUILD_SHARED_LIBS", "+shared" in spec))
+
         entries.append(cmake_cache_option("RAJA_ENABLE_RUNTIME_PLUGINS", "+plugins" in spec))
+
+        entries.append(cmake_cache_option("RAJA_ENABLE_DESUL_ATOMICS", "+desul" in spec))
+
+        entries.append(cmake_cache_option("RAJA_ENABLE_VECTORIZATION", "+vectorization" in spec))
+
+        entries.append(cmake_cache_option("RAJA_ENABLE_OPENMP_TASK", "+omptask" in spec))
+
+        entries.append(cmake_cache_string("BLT_CXX_STD", "c++14"))
+
+        if "+desul" in spec:
+            if "+cuda" in spec:
+                entries.append(cmake_cache_string("CMAKE_CUDA_STANDARD", "14"))
+
         entries.append(
             cmake_cache_option("{}ENABLE_EXAMPLES".format(option_prefix), "+examples" in spec)
         )
