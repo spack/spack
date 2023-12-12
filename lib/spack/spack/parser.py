@@ -368,7 +368,7 @@ class SpecNodeParser:
                     )
 
                 compiler_name = self.ctx.current_token.value[1:]
-                initial_spec.compiler = spack.spec.CompilerSpec(compiler_name.strip(), ":")
+                initial_spec.compiler = spack.spec.CompilerSpec(compiler_name, ":")
                 self.has_compiler = True
             elif self.ctx.accept(TokenType.COMPILER_AND_VERSION):
                 if self.has_compiler:
@@ -377,9 +377,7 @@ class SpecNodeParser:
                     )
 
                 compiler_name, compiler_version = self.ctx.current_token.value[1:].split("@")
-                initial_spec.compiler = spack.spec.CompilerSpec(
-                    compiler_name.strip(), compiler_version
-                )
+                initial_spec.compiler = spack.spec.CompilerSpec(compiler_name, compiler_version)
                 self.has_compiler = True
             elif (
                 self.ctx.accept(TokenType.VERSION_HASH_PAIR)
@@ -398,12 +396,12 @@ class SpecNodeParser:
             elif self.ctx.accept(TokenType.BOOL_VARIANT):
                 variant_value = self.ctx.current_token.value[0] == "+"
                 initial_spec._add_flag(
-                    self.ctx.current_token.value[1:].strip(), variant_value, propagate=False
+                    self.ctx.current_token.value[1:], variant_value, propagate=False
                 )
             elif self.ctx.accept(TokenType.PROPAGATED_BOOL_VARIANT):
                 variant_value = self.ctx.current_token.value[0:2] == "++"
                 initial_spec._add_flag(
-                    self.ctx.current_token.value[2:].strip(), variant_value, propagate=True
+                    self.ctx.current_token.value[2:], variant_value, propagate=True
                 )
             elif self.ctx.accept(TokenType.KEY_VALUE_PAIR):
                 name, value = self.ctx.current_token.value.split("=", maxsplit=1)
