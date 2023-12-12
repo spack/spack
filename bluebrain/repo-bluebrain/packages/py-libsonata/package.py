@@ -38,3 +38,6 @@ class PyLibsonata(PythonPackage):
     depends_on("py-numpy@1.17:", type=("build", "run"))
     depends_on("py-setuptools", type="build", when="@0.1:")
     depends_on("py-setuptools-scm", type="build", when="@0.1:")
+
+    def patch(self):
+        filter_file("EXTLIB_FROM_SUBMODULES", "FALSE", "python/CMakeLists.txt")
