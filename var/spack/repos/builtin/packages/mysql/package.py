@@ -191,5 +191,5 @@ class Mysql(CMakePackage):
             if int(cxxstd) > 14:
                 env.append_flags("CXXFLAGS", "-Wno-error=register")
 
-        if "python" in self.spec.flat_dependencies() and self.spec.satisfies("@:7"):
+        if "python" in self.spec and self.spec.satisfies("@:7"):
             self._fix_dtrace_shebang(env)
