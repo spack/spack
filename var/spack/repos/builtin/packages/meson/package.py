@@ -18,6 +18,7 @@ class Meson(PythonPackage):
 
     maintainers("eli-schwartz", "michaelkuhn")
 
+    version("1.3.0", sha256="6c4b4f35b51a260b362535fd32fee6d244871be38a2880f4de3ea9c6e69a0808")
     version("1.2.2", sha256="1caa0ef6082e311bdca9836e7907f548b8c3f041a42ed41f0ff916b83ac7dddd")
     version("1.2.1", sha256="e1f3b32b636cc86496261bd89e63f00f206754697c7069788b62beed5e042713")
     version("1.2.0", sha256="603489f0aaa6305f806c6cc4a4455a965f22290fc74f65871f589b002110c790")
@@ -59,6 +60,14 @@ class Meson(PythonPackage):
 
     # Python 3.12 detection support
     patch("python-3.12-support.patch", when="@1.1:1.2.2")
+
+    # Broken config.h generation
+    # https://github.com/mesonbuild/meson/pull/12532
+    patch(
+          "https://github.com/mesonbuild/meson/commit/9016e6958bb83feb9a724f20d8badb116bf7c5f2.patch?full_index=1",
+          sha256="344a59f5606c233699b9aabbf10ef9c456edf82994d0d902329aa915f9f6ba6d",
+          when="@1.3.0",
+    )
 
     executables = ["^meson$"]
 
