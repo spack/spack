@@ -682,11 +682,22 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
         spackdir = os.path.dirname(os.path.realpath(__file__))
         pkgdir = join_path(spackdir, "test")
-        pkgtest = join_path(pkgdir, "test-pvpython.py")
+        datatest = join_path(pkgdir, "test-pvpython-data.py")
+        rndrtest = join_path(pkgdir, "test-pvpython-render.py")
         pvpy = join_path(str(self.spec.prefix), "bin/pvpython")
         output = join_path(pkgdir, "test-pvpython.png")
 
+        # Run data test first
         with working_dir(pkgdir, create=False):
-            res = subprocess.run([pvpy, "--force-offscreen-rendering", pkgtest])
-            print(res)
-            assert res.returncode == 0 and os.path.exists(output)
+            res = subprocess.run([pvpy, "--force-offscreen-rendering", datatest])
+            assert res.returncode == 0
+
+        with working_dir(pkgdir, create=False):
+            res = subprocess.run([pvpy, "--force-offscreen-rendering", rndrtest])
+            if res.returncode == 0 and os.path.exists(output):
+                tty.info("ParaView rendering smoke test successful")
+            else:
+                tty.error(
+                    "ParaView smoke test did not complete successfully \
+                         This could happen when ParaView is built without rendering."
+                )
