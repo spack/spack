@@ -121,24 +121,25 @@ class Whizard(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
+        enable_hepmc = "no" if "hepmc=off" in spec else "yes"
         args = [
-            "TIRPC_CFLAGS=-I%s" % spec["libtirpc"].prefix.include.tirpc,
-            f"TIRPC_LIBS= -L{spec['libtirpc'].prefix.lib} -ltirpc",
-            "--enable-hepmc=%s" % ("no" if "hepmc=off" in spec else "yes"),
-            "--enable-fastjet=%s" % ("yes" if "+fastjet" in spec else "no"),
-            "--enable-pythia8=%s" % ("yes" if "+pythia8" in spec else "no"),
-            "--enable-lcio=%s" % ("yes" if "+lcio" in spec else "no"),
-            "--enable-lhapdf=%s" % ("yes" if "+lhapdf" in spec else "no"),
-            "--enable-openloops=%s" % ("yes" if "+openloops" in spec else "no"),
+            f"TIRPC_CFLAGS=-I{spec['libtirpc'].prefix.include.tirpc}",
+            f"TIRPC_LIBS=-L{spec['libtirpc'].prefix.lib} -ltirpc",
+            f"--enable-hepmc={enable_hepmc}",
             # todo: hoppet
             # todo: recola
             # todo: looptools
             # todo: gosam
             # todo: pythia6
         ]
+        args.extend(self.enable_or_disable("fastjet"))
+        args.extend(self.enable_or_disable("pythia8"))
+        args.extend(self.enable_or_disable("lcio"))
+        args.extend(self.enable_or_disable("lhapdf"))
+        args.extend(self.enable_or_disable("openloops"))
 
         if "+openloops" in spec:
-            args.append("--with-openloops=%s" % spec["openloops"].prefix)
+            args.append(f"--with-openloops={spec['openloops'].prefix}")
         if "+openmp" not in spec:
             args.append("--disable-openmp")
         return args
