@@ -76,7 +76,19 @@ def setup_parser(subparser: argparse.ArgumentParser):
     )
     push_sign = push.add_mutually_exclusive_group(required=False)
     push_sign.add_argument(
-        "--unsigned", "-u", action="store_true", help="push unsigned buildcache tarballs"
+        "--unsigned",
+        "-u",
+        action="store_false",
+        dest="signed",
+        default=None,
+        help="push unsigned buildcache tarballs",
+    )
+    push_sign.add_argument(
+        "--signed",
+        action="store_true",
+        dest="signed",
+        default=None,
+        help="push signed buildcache tarballs",
     )
     push_sign.add_argument(
         "--key", "-k", metavar="key", type=str, default=None, help="key for signing"
@@ -188,14 +200,16 @@ def setup_parser(subparser: argparse.ArgumentParser):
         default=lambda: spack.config.default_modify_scope(),
         help="configuration scope containing mirrors to check",
     )
-    check_spec_or_specfile = check.add_mutually_exclusive_group(required=True)
-    check_spec_or_specfile.add_argument(
+    # Unfortunately there are 3 ways to do the same thing here:
+    check_specs = check.add_mutually_exclusive_group()
+    check_specs.add_argument(
         "-s", "--spec", help="check single spec instead of release specs file"
     )
-    check_spec_or_specfile.add_argument(
+    check_specs.add_argument(
         "--spec-file",
         help="check single spec from json or yaml file instead of release specs file",
     )
+    arguments.add_common_arguments(check, ["specs"])
 
     check.set_defaults(func=check_fn)
 
@@ -326,17 +340,27 @@ def push_fn(args):
             "The flag `--allow-root` is the default in Spack 0.21, will be removed in Spack 0.22"
         )
 
+    mirror: spack.mirror.Mirror = args.mirror
+
     # Check if this is an OCI image.
     try:
-        image_ref = spack.oci.oci.image_from_mirror(args.mirror)
+        image_ref = spack.oci.oci.image_from_mirror(mirror)
     except ValueError:
         image_ref = None
+
+    push_url = mirror.push_url
+
+    # When neither --signed, --unsigned nor --key are specified, use the mirror's default.
+    if args.signed is None and not args.key:
+        unsigned = not mirror.signed
+    else:
+        unsigned = not (args.key or args.signed)
 
     # For OCI images, we require dependencies to be pushed for now.
     if image_ref:
         if "dependencies" not in args.things_to_install:
             tty.die("Dependencies must be pushed for OCI images.")
-        if not args.unsigned:
+        if not unsigned:
             tty.warn(
                 "Code signing is currently not supported for OCI images. "
                 "Use --unsigned to silence this warning."
@@ -349,12 +373,10 @@ def push_fn(args):
         dependencies="dependencies" in args.things_to_install,
     )
 
-    url = args.mirror.push_url
-
     # When pushing multiple specs, print the url once ahead of time, as well as how
     # many specs are being pushed.
     if len(specs) > 1:
-        tty.info(f"Selected {len(specs)} specs to push to {url}")
+        tty.info(f"Selected {len(specs)} specs to push to {push_url}")
 
     failed = []
 
@@ -371,10 +393,10 @@ def push_fn(args):
             try:
                 bindist.push_or_raise(
                     spec,
-                    url,
+                    push_url,
                     bindist.PushOptions(
                         force=args.force,
-                        unsigned=args.unsigned,
+                        unsigned=unsigned,
                         key=args.key,
                         regenerate_index=args.update_index,
                     ),
@@ -382,7 +404,7 @@ def push_fn(args):
 
                 msg = f"{_progress(i, len(specs))}Pushed {_format_spec(spec)}"
                 if len(specs) == 1:
-                    msg += f" to {url}"
+                    msg += f" to {push_url}"
                 tty.info(msg)
 
             except bindist.NoOverwriteException:
@@ -813,15 +835,24 @@ def check_fn(args: argparse.Namespace):
     exit code is non-zero, then at least one of the indicated specs needs to be rebuilt
     """
     if args.spec_file:
+        specs_arg = (
+            args.spec_file if os.path.sep in args.spec_file else os.path.join(".", args.spec_file)
+        )
         tty.warn(
             "The flag `--spec-file` is deprecated and will be removed in Spack 0.22. "
-            "Use --spec instead."
+            f"Use `spack buildcache check {specs_arg}` instead."
         )
+    elif args.spec:
+        specs_arg = args.spec
+        tty.warn(
+            "The flag `--spec` is deprecated and will be removed in Spack 0.23. "
+            f"Use `spack buildcache check {specs_arg}` instead."
+        )
+    else:
+        specs_arg = args.specs
 
-    specs = spack.cmd.parse_specs(args.spec or args.spec_file)
-
-    if specs:
-        specs = _matching_specs(specs)
+    if specs_arg:
+        specs = _matching_specs(spack.cmd.parse_specs(specs_arg))
     else:
         specs = spack.cmd.require_active_env("buildcache check").all_specs()
 

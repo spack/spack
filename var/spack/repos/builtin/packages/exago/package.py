@@ -124,14 +124,15 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
             when="+{0} build_type=RelWithDebInfo".format(pkg[1]),
         )
 
-    depends_on(
-        "{0} build_type=Release".format("hiop+ginkgo ^ginkgo"),
-        when="+{0} build_type=Release".format("hiop ^hiop+ginkgo"),
-    )
-    depends_on(
-        "{0} build_type=Debug".format("hiop+ginkgo ^ginkgo"),
-        when="+{0} build_type=RelWithDebInfo".format("hiop ^hiop+ginkgo"),
-    )
+    with when("+hiop"):
+        depends_on("hiop")
+        with when("build_type=Release"):
+            depends_on("hiop build_type=Release")
+            depends_on("ginkgo build_type=Release", when="^hiop+ginkgo")
+        with when("build_type=Debug"):
+            depends_on("hiop build_type=RelWithDebInfo")
+            depends_on("ginkgo build_type=Debug", when="^hiop+ginkgo")
+
     # depends_on("hpctoolkit", when="with_profiling=hpctoolkit")
     # depends_on("tau", when="with_profiling=tau")
     # ^ need to depend when both hpctoolkit and tau
@@ -140,7 +141,8 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hiop@0.3.99:", when="@0.99:+hiop")
     depends_on("hiop@0.5.1:", when="@1.1.0:+hiop")
     depends_on("hiop@0.5.3:", when="@1.3.0:+hiop")
-    depends_on("hiop@0.7.0:1.0.0", when="@1.5.0:+hiop")
+    depends_on("hiop@0.7.0:1.0.0", when="@1.5.0:1.6.0+hiop")
+    depends_on("hiop@1.0.1:", when="@develop:+hiop")
 
     depends_on("hiop~mpi", when="+hiop~mpi")
     depends_on("hiop+mpi", when="+hiop+mpi")
@@ -160,7 +162,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("petsc@3.13:3.14", when="@:1.2")
     depends_on("petsc@3.16", when="@1.3:1.4")
     depends_on("petsc@3.18:3.19", when="@1.5")
-    depends_on("petsc@3.20:", when="@1.6:")
+    depends_on("petsc@3.19:", when="@1.6:")
 
     depends_on("petsc~mpi", when="~mpi")
 

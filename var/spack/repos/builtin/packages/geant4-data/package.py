@@ -33,6 +33,7 @@ class Geant4Data(BundlePackage):
     version("10.4.3")
     version("10.4.0")
     version("10.3.3")
+    version("10.0.4")
 
     # Add install phase so we can create the data "view"
     phases = ["install"]
@@ -132,6 +133,18 @@ class Geant4Data(BundlePackage):
         ],
         "10.3.1:10.3": ["g4photonevaporation@4.3.2", "g4radioactivedecay@5.1.1"],
         "10.3.0": ["g4photonevaporation@4.3", "g4radioactivedecay@5.1"],
+        "10.0.4": [
+            "g4ndl@4.4",
+            "g4emlow@6.35",
+            "g4photonevaporation@3.0",
+            "g4radioactivedecay@4.0",
+            "g4neutronxs@1.4",
+            "g4pii@1.3",
+            "g4realsurface@1.0",
+            "g4saiddata@1.1",
+            "g4abla@3.0",
+            "g4ensdfstate@1.0",
+        ],
     }
 
     for _vers, _dsets in _datasets.items():
