@@ -433,7 +433,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         # This option was renamed later than the others
         if spec.satisfies("@2022.10.0:"):
             entries.append(
-                cmake_cache_optiont("UMPIRE_ENABLE_IPC_SHARED_MEMORY", "+ipc_shmem" in spec)
+                cmake_cache_option("UMPIRE_ENABLE_IPC_SHARED_MEMORY", "+ipc_shmem" in spec)
             )
         else:
             entries.append(cmake_cache_option("ENABLE_IPC_SHARED_MEMORY", "+ipc_shmem" in spec))
