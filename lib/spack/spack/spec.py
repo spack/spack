@@ -3128,9 +3128,7 @@ class Spec:
 
         except spack.error.UnsatisfiableSpecError as e:
             # Here, the DAG contains two instances of the same package
-            # with inconsistent constraints.  Users cannot produce
-            # inconsistent specs like this on the command line: the
-            # parser doesn't allow it. Spack must be broken!
+            # with inconsistent constraints.
             raise InconsistentSpecError("Invalid Spec DAG: %s" % e.message) from e
 
     def index(self, deptype="all"):
