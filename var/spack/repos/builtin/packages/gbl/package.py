@@ -12,7 +12,6 @@ class Gbl(CMakePackage):
     homepage = "https://www.desy.de/~kleinwrt/GBL/doc/cpp/html/"
     git = "https://gitlab.desy.de/claus.kleinwort/general-broken-lines.git"
 
-    maintainers("iarspider")
     tags = ["hep"]
 
     version("V02-04-01", commit="1061b643c6656fbf7ceba579997eb43f0a9e9d3c")

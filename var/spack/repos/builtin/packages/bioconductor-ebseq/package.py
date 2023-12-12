@@ -23,7 +23,11 @@ class BioconductorEbseq(RPackage):
 
     bioc = "ebseq"
 
-    version("1.40.0", sha256="a5d3a88743d61062c6d68a426b19c53a4afd2fa216abc884d42c187780994378")
+    version(
+        "1.40.0",
+        sha256="a5d3a88743d61062c6d68a426b19c53a4afd2fa216abc884d42c187780994378",
+        deprecated=True,
+    )
 
     depends_on("r-blockmodeling")
     depends_on("r-gplots")

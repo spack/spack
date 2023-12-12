@@ -25,6 +25,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
 
     version("main", branch="main")
     version("master", branch="main", deprecated=True)
+    version("2.1.1", tag="v2.1.1", commit="4c55dc50355d5e923642c59ad2a23d6ad54711e7")
     version("2.1.0", tag="v2.1.0", commit="7bcf7da3a268b435777fe87c7794c382f444e86d")
     version("2.0.1", tag="v2.0.1", commit="e9ebda29d87ce0916ab08c06ab26fd3766a870e5")
     version("2.0.0", tag="v2.0.0", commit="c263bd43e8e8502d4726643bc6fd046f0130ac0e")
@@ -114,9 +115,6 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     # https://github.com/pytorch/pytorch/issues/77811
     conflicts("+qnnpack", when="platform=darwin target=aarch64:")
 
-    # https://github.com/pytorch/pytorch/issues/80805
-    conflicts("+openmp", when="platform=darwin target=aarch64:")
-
     # https://github.com/pytorch/pytorch/issues/97397
     conflicts(
         "~tensorpipe",
@@ -194,8 +192,9 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     # depends_on("cpuinfo@2022-08-19", when="@1.13:2.0")
     # depends_on("cpuinfo@2020-12-17", when="@1.8:1.12")
     # depends_on("cpuinfo@2020-06-11", when="@1.6:1.7")
-    depends_on("sleef@3.5.1_2020-12-22", when="@1.8:")
-    depends_on("sleef@3.4.0_2019-07-30", when="@1.6:1.7")
+    # https://github.com/shibatch/sleef/issues/474
+    # depends_on("sleef@3.5.1_2020-12-22", when="@1.8:")
+    # depends_on("sleef@3.4.0_2019-07-30", when="@1.6:1.7")
     depends_on("fp16@2020-05-14", when="@1.6:")
     depends_on("pthreadpool@2021-04-13", when="@1.9:")
     depends_on("pthreadpool@2020-10-05", when="@1.8")
@@ -491,9 +490,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
 
         enable_or_disable("cuda")
         if "+cuda" in self.spec:
-            # cmake/public/cuda.cmake
-            # cmake/Modules_CUDA_fix/upstream/FindCUDA.cmake
-            env.unset("CUDA_ROOT")
+            env.set("CUDA_HOME", self.spec["cuda"].prefix)  # Linux/macOS
+            env.set("CUDA_PATH", self.spec["cuda"].prefix)  # Windows
             torch_cuda_arch = ";".join(
                 "{0:.1f}".format(float(i) / 10.0) for i in self.spec.variants["cuda_arch"].value
             )
@@ -625,7 +623,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             # env.set("USE_SYSTEM_LIBS", "ON")
             # https://github.com/pytorch/pytorch/issues/60329
             # env.set("USE_SYSTEM_CPUINFO", "ON")
-            env.set("USE_SYSTEM_SLEEF", "ON")
+            # https://github.com/shibatch/sleef/issues/474
+            # env.set("USE_SYSTEM_SLEEF", "ON")
             env.set("USE_SYSTEM_GLOO", "ON")
             env.set("USE_SYSTEM_FP16", "ON")
             env.set("USE_SYSTEM_PTHREADPOOL", "ON")

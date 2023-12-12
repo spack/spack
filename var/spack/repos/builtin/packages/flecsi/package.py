@@ -31,27 +31,6 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     version(
         "1.4.1", tag="v1.4.1", commit="ab974c3164056e6c406917c8ca771ffd43c5a031", submodules=True
     )
-    version(
-        "1.4.develop",
-        git="https://github.com/laristra/flecsi.git",
-        branch="1.4",
-        submodules=True,
-        deprecated=True,
-    )
-    version(
-        "1.4.2",
-        git="https://github.com/laristra/flecsi.git",
-        tag="v1.4.2",
-        submodules=True,
-        deprecated=True,
-    )
-    version(
-        "flecsph",
-        git="https://github.com/laristra/flecsi.git",
-        branch="stable/flecsph",
-        submodules=True,
-        deprecated=True,
-    )
 
     variant(
         "backend",
@@ -63,7 +42,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     variant("shared", default=True, description="Build shared libraries")
     variant("flog", default=False, description="Enable logging support")
     variant("graphviz", default=False, description="Enable GraphViz Support")
-    variant("doc", default=False, description="Enable documentation")
+    variant("doc", default=False, description="Enable documentation", when="@2.2:")
     variant("hdf5", default=True, description="Enable HDF5 Support")
     variant(
         "caliper_detail",
@@ -99,7 +78,6 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("metis@5.1.0:")
     depends_on("parmetis@4.0.3:")
     depends_on("boost@1.70.0: cxxstd=17 +program_options +stacktrace")
-    depends_on("legion network=gasnet", when="backend=legion")
 
     # FleCSI@1.x
     depends_on("cmake@3.12:", when="@:1")
@@ -130,10 +108,12 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("kokkos@3.2.00:", when="+kokkos @2.0:")
     depends_on("kokkos +cuda +cuda_constexpr +cuda_lambda", when="+kokkos +cuda @2.0:")
     depends_on("kokkos +rocm", when="+kokkos +rocm @2.0:")
+    depends_on("kokkos +openmp", when="+kokkos +openmp @2.0:")
     depends_on("legion@cr", when="backend=legion @2.0:")
     depends_on("legion+shared", when="backend=legion +shared @2.0:")
     depends_on("legion+hdf5", when="backend=legion +hdf5 @2.0:")
     depends_on("legion+kokkos", when="backend=legion +kokkos @2.0:")
+    depends_on("legion+openmp", when="backend=legion +openmp @2.0:")
     depends_on("legion+cuda", when="backend=legion +cuda @2.0:")
     depends_on("legion+rocm", when="backend=legion +rocm @2.0:")
     depends_on("hdf5@1.10.7:", when="backend=legion +hdf5 @2.0:")
@@ -143,11 +123,11 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("openmpi@4.1.0:", when="@2.0: ^openmpi")
 
     # FleCSI 2.2+ documentation dependencies
-    depends_on("py-sphinx", when="@2.2: +doc")
-    depends_on("py-sphinx-rtd-theme", when="@2.2: +doc")
-    depends_on("py-recommonmark", when="@2.2: +doc")
-    depends_on("doxygen", when="@2.2: +doc")
-    depends_on("graphviz", when="@2.2: +doc")
+    depends_on("py-sphinx", when="+doc")
+    depends_on("py-sphinx-rtd-theme", when="+doc")
+    depends_on("py-recommonmark", when="+doc")
+    depends_on("doxygen", when="+doc")
+    depends_on("graphviz", when="+doc")
 
     # Propagate cuda_arch requirement to dependencies
     for _flag in CudaPackage.cuda_arch_values:
@@ -182,6 +162,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     # Due to overhauls of Legion and Gasnet spackages
     #   flecsi@:1.4 can no longer be built with a usable legion
     conflicts("backend=legion", when="@:1.4")
+    conflicts("+hdf5", when="@2: backend=hpx", msg="HPX backend doesn't support HDF5")
 
     def cmake_args(self):
         spec = self.spec
@@ -217,7 +198,6 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
                 self.define_from_variant("ENABLE_KOKKOS", "kokkos"),
                 self.define_from_variant("ENABLE_OPENMP", "openmp"),
                 self.define_from_variant("ENABLE_DOXYGEN", "doxygen"),
-                self.define_from_variant("ENABLE_DOCUMENTATION", "doc"),
                 self.define_from_variant("ENABLE_COVERAGE_BUILD", "coverage"),
                 self.define_from_variant("ENABLE_FLOG", "flog"),
                 self.define_from_variant("ENABLE_FLECSIT", "tutorial"),
