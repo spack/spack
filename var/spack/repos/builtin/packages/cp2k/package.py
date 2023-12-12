@@ -216,7 +216,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         conflicts("~mpi_f08", when="^mpich@4.1:")
 
     with when("+cosma"):
-        depends_on("cosma+scalapack")
+        depends_on("cosma+scalapack+shared")
         depends_on("cosma@2.5.1:", when="@9:")
         depends_on("cosma@2.6.3:", when="@2023.2:")
         depends_on("cosma+cuda", when="+cuda")
@@ -313,8 +313,8 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         depends_on("dbcsr+rocm", when="+rocm")
 
     with when("@2022: +rocm"):
-        depends_on("hipblas")
-        depends_on("hipfft")
+        depends_on("hipblas+rocm~cuda")
+        depends_on("hipfft+rocm~cuda")
 
     # CP2K needs compiler specific compilation flags, e.g. optflags
     conflicts("%apple-clang")
@@ -370,11 +370,27 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         for arch in CudaPackage.cuda_arch_values:
             if arch not in supported_cuda_arch_list:
                 conflicts("+cuda", when="cuda_arch={0}".format(arch), msg=cuda_msg)
+            depends_on("dla-future cuda_arch={0}".format(arch), when="cuda_arch={0}".format(arch))
+            depends_on("sirius cuda_arch={0}".format(arch), when="cuda_arch={0}".format(arch))
+            depends_on("dbcsr cuda_arch={0}".format(arch), when="cuda_arch={0}".format(arch))
+            depends_on("py-torch cuda_arch={0}".format(arch), when="cuda_arch={0}".format(arch))
 
     with when("+rocm"):
         for arch in ROCmPackage.amdgpu_targets:
             if arch not in supported_rocm_arch_list:
                 conflicts("+rocm", when="amdgpu_target={0}".format(arch), msg=rocm_msg)
+            depends_on(
+                "dla-future amdgpu_target={0}".format(arch), when="amdgpu_target={0}".format(arch)
+            )
+            depends_on(
+                "sirius amdgpu_target={0}".format(arch), when="amdgpu_target={0}".format(arch)
+            )
+            depends_on(
+                "dbcsr amdgpu_target={0}".format(arch), when="amdgpu_target={0}".format(arch)
+            )
+            depends_on(
+                "py-torch amdgpu_target={0}".format(arch), when="amdgpu_target={0}".format(arch)
+            )
 
     # Fix 2- and 3-center integral calls to libint
     patch(
