@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import textwrap
 from typing import Optional
 
 import llnl.util.tty as tty
@@ -62,24 +63,27 @@ def activate_header(env, shell, prompt=None, view: Optional[str] = None):
             cmds += "export SPACK_ENV_VIEW=%s;\n" % view
         cmds += "alias despacktivate='spack env deactivate';\n"
         if prompt:
-            cmds += "if [ -z ${SPACK_OLD_PS1+x} ]; then\n"
-            cmds += "    if [ -z ${PS1+x} ]; then\n"
-            cmds += "        PS1='$$$$';\n"
-            cmds += "    fi;\n"
-            cmds += '    export SPACK_OLD_PS1="${PS1}";\n'
-            cmds += "fi;\n"
-            cmds += 'if [ -n "${TERM:-}" ] && [ "${TERM#*color}" != "${TERM}" ] && \\'
-            cmds += '   [ -n "${BASH:-}" ];\n'
-            cmds += "then\n"
-            cmds += f'    export PS1="{bash_color_prompt} ${{PS1}}";\n'
-            cmds += 'elif [ -n "${TERM:-}" ] && [ "${TERM#*color}" != "${TERM}" ] && \\'
-            cmds += '     [ -n "${ZSH_NAME:-}" ];\n'
-            cmds += "then\n"
-            cmds += f'    export PS1="{zsh_color_prompt} ${{PS1}}";\n'
-            cmds += "else\n"
-            cmds += f'    export PS1="{prompt} ${{PS1}}";\n'
-            cmds += "fi\n"
-
+            cmds += textwrap.dedent(
+                rf"""
+                if [ -z ${{SPACK_OLD_PS1+x}} ]; then
+                    if [ -z ${{PS1+x}} ]; then
+                        PS1='$$$$';
+                    fi;
+                    export SPACK_OLD_PS1="${{PS1}}";
+                fi;
+                if [ -n "${{TERM:-}}" ] && [ "${{TERM#*color}}" != "${{TERM}}" ] && \
+                   [ -n "${{BASH:-}}" ];
+                then
+                    export PS1="{bash_color_prompt} ${{PS1}}";
+                elif [ -n "${{TERM:-}}" ] && [ "${{TERM#*color}}" != "${{TERM}}" ] && \
+                     [ -n "${{ZSH_NAME:-}}" ];
+                then
+                    export PS1="{zsh_color_prompt} ${{PS1}}";
+                else
+                    export PS1="{prompt} ${{PS1}}";
+                fi
+                """
+            ).lstrip("\n")
     return cmds
 
 
