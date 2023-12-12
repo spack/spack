@@ -10,7 +10,6 @@ from typing import List
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
-import spack.cmd.common.arguments
 import spack.config
 import spack.environment as ev
 import spack.repo
@@ -18,6 +17,7 @@ import spack.schema.env
 import spack.schema.packages
 import spack.store
 import spack.util.spack_yaml as syaml
+from spack.cmd.common import arguments
 from spack.util.editor import editor
 
 description = "get and set configuration options"
@@ -26,14 +26,9 @@ level = "long"
 
 
 def setup_parser(subparser):
-    scopes = spack.config.scopes()
-
     # User can only choose one
     subparser.add_argument(
-        "--scope",
-        choices=scopes,
-        metavar=spack.config.SCOPES_METAVAR,
-        help="configuration scope to read/modify",
+        "--scope", action=arguments.ConfigScope, help="configuration scope to read/modify"
     )
 
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="config_command")
@@ -101,13 +96,13 @@ def setup_parser(subparser):
     setup_parser.add_parser = add_parser
 
     update = sp.add_parser("update", help="update configuration files to the latest format")
-    spack.cmd.common.arguments.add_common_arguments(update, ["yes_to_all"])
+    arguments.add_common_arguments(update, ["yes_to_all"])
     update.add_argument("section", help="section to update")
 
     revert = sp.add_parser(
         "revert", help="revert configuration files to their state before update"
     )
-    spack.cmd.common.arguments.add_common_arguments(revert, ["yes_to_all"])
+    arguments.add_common_arguments(revert, ["yes_to_all"])
     revert.add_argument("section", help="section to update")
 
 
@@ -407,7 +402,9 @@ def config_prefer_upstream(args):
     pkgs = {}
     for spec in pref_specs:
         # Collect all the upstream compilers and versions for this package.
-        pkg = pkgs.get(spec.name, {"version": [], "compiler": []})
+        pkg = pkgs.get(spec.name, {"version": []})
+        all = pkgs.get("all", {"compiler": []})
+        pkgs["all"] = all
         pkgs[spec.name] = pkg
 
         # We have no existing variant if this is our first added version.
@@ -418,8 +415,8 @@ def config_prefer_upstream(args):
             pkg["version"].append(version)
 
         compiler = str(spec.compiler)
-        if compiler not in pkg["compiler"]:
-            pkg["compiler"].append(compiler)
+        if compiler not in all["compiler"]:
+            all["compiler"].append(compiler)
 
         # Get and list all the variants that differ from the default.
         variants = []

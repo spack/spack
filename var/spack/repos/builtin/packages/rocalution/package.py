@@ -24,6 +24,8 @@ class Rocalution(CMakePackage):
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath")
     libraries = ["librocalution_hip"]
+    version("5.7.1", sha256="b95afa1285759843c5fea1ad6e1c1edf283922e0d448db03a3e1f42b6942bc24")
+    version("5.7.0", sha256="48232a0d1250debce89e39a233bd0b5d52324a2454c078b99c9d44965cbbc0e9")
     version("5.6.1", sha256="7197b3617a0c91e90adaa32003c04d247a5f585d216e77493d20984ba215addb")
     version("5.6.0", sha256="7397a2039e9615c0cf6776c33c4083c00b185b5d5c4149c89fea25a8976a3097")
     version("5.5.1", sha256="4612e30a0290b1732c8862eea655122abc2d22ce4345b8498fe4127697e880b4")
@@ -158,6 +160,8 @@ class Rocalution(CMakePackage):
         "5.5.1",
         "5.6.0",
         "5.6.1",
+        "5.7.0",
+        "5.7.1",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocprim@" + ver, when="@" + ver)
@@ -183,10 +187,6 @@ class Rocalution(CMakePackage):
     patch("0003-fix-compilation-for-rocalution-5.2.0.patch", when="@5.2")
     # Fix build for most Radeon 5000 and Radeon 6000 series GPUs.
     patch("0004-fix-navi-1x.patch", when="@5.2.0:5.3")
-
-    def check(self):
-        exe = join_path(self.build_directory, "clients", "staging", "rocalution-test")
-        self.run_test(exe)
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
@@ -236,3 +236,9 @@ class Rocalution(CMakePackage):
             args.append("-DCMAKE_INSTALL_LIBDIR=lib")
 
         return args
+
+    @run_after("build")
+    @on_package_attributes(run_tests=True)
+    def check_build(self):
+        exe = Executable(join_path(self.build_directory, "clients", "staging", "rocalution-test"))
+        exe()

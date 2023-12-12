@@ -109,6 +109,11 @@ class Hpctoolkit(AutotoolsPackage):
         "python", default=False, description="Support unwinding Python source.", when="@2023.03:"
     )
 
+    with when("@develop build_system=autotools"):
+        depends_on("autoconf", type="build")
+        depends_on("automake", type="build")
+        depends_on("libtool", type="build")
+
     boost_libs = (
         "+atomic +chrono +date_time +filesystem +system +thread +timer"
         " +graph +regex +shared +multithreaded visibility=global"
@@ -167,6 +172,7 @@ class Hpctoolkit(AutotoolsPackage):
 
     conflicts("^binutils@2.35:2.35.1", msg="avoid binutils 2.35 and 2.35.1 (spews errors)")
     conflicts("^xz@5.2.7:5.2.8", msg="avoid xz 5.2.7:5.2.8 (broken symbol versions)")
+    conflicts("^intel-xed@2023.08:", when="@:2023.09")
 
     conflicts("+cray", when="@2022.10.01", msg="hpcprof-mpi is not available in 2022.10.01")
     conflicts("+mpi", when="@2022.10.01", msg="hpcprof-mpi is not available in 2022.10.01")

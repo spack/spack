@@ -150,7 +150,7 @@ default:
     - spack python -c "import os,sys; print(os.path.expandvars(sys.stdin.read()))"
       < "${SPACK_CI_CONFIG_ROOT}/${PIPELINE_MIRROR_TEMPLATE}" > "${SPACK_CI_CONFIG_ROOT}/mirrors.yaml"
     - spack config add -f "${SPACK_CI_CONFIG_ROOT}/mirrors.yaml"
-    - spack -v
+    - spack -v  --color=always
       --config-scope "${SPACK_CI_CONFIG_ROOT}"
       --config-scope "${SPACK_CI_CONFIG_ROOT}/${SPACK_TARGET_PLATFORM}"
       --config-scope "${SPACK_CI_CONFIG_ROOT}/${SPACK_TARGET_PLATFORM}/${SPACK_TARGET_ARCH}"
@@ -203,7 +203,7 @@ default:
     - spack --version
     - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
     - spack env activate --without-view .
-    - spack -v
+    - spack -v --color=always
       ci generate --check-index-only
       --buildcache-destination "${PUSH_BUILDCACHE_DEPRECATED}"
       --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
@@ -370,25 +370,25 @@ e4s-rocm-external-build:
 ########################################
 # GPU Testing Pipeline
 ########################################
-.gpu-tests:
-  extends: [ ".linux_x86_64_v3" ]
-  variables:
-    SPACK_CI_STACK_NAME: gpu-tests
+# .gpu-tests:
+#   extends: [ ".linux_x86_64_v3" ]
+#   variables:
+#     SPACK_CI_STACK_NAME: gpu-tests
 
-gpu-tests-generate:
-  extends: [ ".gpu-tests", ".generate-x86_64"]
-  image: ghcr.io/spack/ubuntu20.04-runner-x86_64:2023-01-01
+# gpu-tests-generate:
+#   extends: [ ".gpu-tests", ".generate-x86_64"]
+#   image: ghcr.io/spack/ubuntu20.04-runner-x86_64:2023-01-01
 
-gpu-tests-build:
-  extends: [ ".gpu-tests", ".build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: gpu-tests-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: gpu-tests-generate
+# gpu-tests-build:
+#   extends: [ ".gpu-tests", ".build" ]
+#   trigger:
+#     include:
+#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+#         job: gpu-tests-generate
+#     strategy: depend
+#   needs:
+#     - artifacts: True
+#       job: gpu-tests-generate
 
 ########################################
 # E4S OneAPI Pipeline
@@ -460,6 +460,28 @@ build_systems-build:
   needs:
     - artifacts: True
       job: build_systems-generate
+
+###########################################
+# Build tests for different developer tools
+###########################################
+.developer-tools:
+  extends: [ ".linux_x86_64_v3" ]
+  variables:
+    SPACK_CI_STACK_NAME: developer-tools
+
+developer-tools-generate:
+  extends: [ ".developer-tools", ".generate-x86_64"]
+
+developer-tools-build:
+  extends: [ ".developer-tools", ".build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: developer-tools-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: developer-tools-generate
 
 #########################################
 # RADIUSS
@@ -621,7 +643,7 @@ aws-isc-aarch64-build:
 
 tutorial-generate:
   extends: [ ".tutorial", ".generate-x86_64"]
-  image: ghcr.io/spack/tutorial-ubuntu-22.04:v2023-05-07
+  image: ghcr.io/spack/tutorial-ubuntu-22.04:v2023-10-30
 
 tutorial-build:
   extends: [ ".tutorial", ".build" ]
@@ -894,16 +916,16 @@ e4s-cray-rhel-build:
   variables:
     SPACK_CI_STACK_NAME: e4s-cray-sles
 
-# e4s-cray-sles-generate:
-#   extends: [ ".generate-cray-sles", ".e4s-cray-sles" ]
+e4s-cray-sles-generate:
+  extends: [ ".generate-cray-sles", ".e4s-cray-sles" ]
 
-# e4s-cray-sles-build:
-#   extends: [ ".build", ".e4s-cray-sles" ]
-#   trigger:
-#     include:
-#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-#         job: e4s-cray-sles-generate
-#     strategy: depend
-#   needs:
-#     - artifacts: True
-#       job: e4s-cray-sles-generate
+e4s-cray-sles-build:
+  extends: [ ".build", ".e4s-cray-sles" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-cray-sles-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-cray-sles-generate

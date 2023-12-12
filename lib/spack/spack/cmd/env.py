@@ -5,6 +5,7 @@
 
 import argparse
 import os
+import shlex
 import shutil
 import sys
 import tempfile
@@ -19,7 +20,6 @@ from llnl.util.tty.color import colorize
 import spack.cmd
 import spack.cmd.common
 import spack.cmd.common.arguments
-import spack.cmd.common.arguments as arguments
 import spack.cmd.install
 import spack.cmd.modules
 import spack.cmd.uninstall
@@ -30,6 +30,7 @@ import spack.environment.shell
 import spack.schema.env
 import spack.spec
 import spack.tengine
+from spack.cmd.common import arguments
 from spack.util.environment import EnvironmentModifications
 
 description = "manage virtual environments"
@@ -144,10 +145,13 @@ def create_temp_env_directory():
     return tempfile.mkdtemp(prefix="spack-")
 
 
-def env_activate(args):
-    if not args.activate_env and not args.dir and not args.temp:
-        tty.die("spack env activate requires an environment name, directory, or --temp")
+def _tty_info(msg):
+    """tty.info like function that prints the equivalent printf statement for eval."""
+    decorated = f'{colorize("@*b{==>}")} {msg}\n'
+    print(f"printf {shlex.quote(decorated)};")
 
+
+def env_activate(args):
     if not args.shell:
         spack.cmd.common.shell_init_instructions(
             "spack env activate", "    eval `spack env activate {sh_arg} [...]`"
@@ -160,12 +164,25 @@ def env_activate(args):
 
     env_name_or_dir = args.activate_env or args.dir
 
+    # When executing `spack env activate` without further arguments, activate
+    # the default environment. It's created when it doesn't exist yet.
+    if not env_name_or_dir and not args.temp:
+        short_name = "default"
+        if not ev.exists(short_name):
+            ev.create(short_name)
+            action = "Created and activated"
+        else:
+            action = "Activated"
+        env_path = ev.root(short_name)
+        _tty_info(f"{action} default environment in {env_path}")
+
     # Temporary environment
-    if args.temp:
+    elif args.temp:
         env = create_temp_env_directory()
         env_path = os.path.abspath(env)
         short_name = os.path.basename(env_path)
         ev.create_in_dir(env).write(regenerate=False)
+        _tty_info(f"Created and activated temporary environment in {env_path}")
 
     # Managed environment
     elif ev.exists(env_name_or_dir) and not args.dir:
@@ -380,28 +397,33 @@ def env_remove(args):
     and manifests embedded in repositories should be removed manually.
     """
     read_envs = []
+    bad_envs = []
     for env_name in args.rm_env:
-        env = ev.read(env_name)
-        read_envs.append(env)
+        try:
+            env = ev.read(env_name)
+            read_envs.append(env)
+        except (spack.config.ConfigFormatError, ev.SpackEnvironmentConfigError):
+            bad_envs.append(env_name)
 
     if not args.yes_to_all:
-        answer = tty.get_yes_or_no(
-            "Really remove %s %s?"
-            % (
-                string.plural(len(args.rm_env), "environment", show_n=False),
-                string.comma_and(args.rm_env),
-            ),
-            default=False,
-        )
+        environments = string.plural(len(args.rm_env), "environment", show_n=False)
+        envs = string.comma_and(args.rm_env)
+        answer = tty.get_yes_or_no(f"Really remove {environments} {envs}?", default=False)
         if not answer:
             tty.die("Will not remove any environments")
 
     for env in read_envs:
+        name = env.name
         if env.active:
-            tty.die("Environment %s can't be removed while activated." % env.name)
-
+            tty.die(f"Environment {name} can't be removed while activated.")
         env.destroy()
-        tty.msg("Successfully removed environment '%s'" % env.name)
+        tty.msg(f"Successfully removed environment '{name}'")
+
+    for bad_env_name in bad_envs:
+        shutil.rmtree(
+            spack.environment.environment.environment_dir_from_name(bad_env_name, exists_ok=True)
+        )
+        tty.msg(f"Successfully removed environment '{bad_env_name}'")
 
 
 #
@@ -548,8 +570,8 @@ def env_update_setup_parser(subparser):
 def env_update(args):
     manifest_file = ev.manifest_file(args.update_env)
     backup_file = manifest_file + ".bkp"
-    needs_update = not ev.is_latest_format(manifest_file)
 
+    needs_update = not ev.is_latest_format(manifest_file)
     if not needs_update:
         tty.msg('No update needed for the environment "{0}"'.format(args.update_env))
         return
@@ -667,18 +689,31 @@ def env_depfile(args):
     # Currently only make is supported.
     spack.cmd.require_active_env(cmd_name="env depfile")
 
+    env = ev.active_environment()
+
     # What things do we build when running make? By default, we build the
     # root specs. If specific specs are provided as input, we build those.
     filter_specs = spack.cmd.parse_specs(args.specs) if args.specs else None
     template = spack.tengine.make_environment().get_template(os.path.join("depfile", "Makefile"))
     model = depfile.MakefileModel.from_env(
-        ev.active_environment(),
+        env,
         filter_specs=filter_specs,
         pkg_buildcache=depfile.UseBuildCache.from_string(args.use_buildcache[0]),
         dep_buildcache=depfile.UseBuildCache.from_string(args.use_buildcache[1]),
         make_prefix=args.make_prefix,
         jobserver=args.jobserver,
     )
+
+    # Warn in case we're generating a depfile for an empty environment. We don't automatically
+    # concretize; the user should do that explicitly. Could be changed in the future if requested.
+    if model.empty:
+        if not env.user_specs:
+            tty.warn("no specs in the environment")
+        elif filter_specs is not None:
+            tty.warn("no concrete matching specs found in environment")
+        else:
+            tty.warn("environment is not concretized. Run `spack concretize` first")
+
     makefile = template.render(model.to_dict())
 
     # Finally write to stdout/file.

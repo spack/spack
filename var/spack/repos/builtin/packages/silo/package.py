@@ -111,7 +111,6 @@ class Silo(AutotoolsPackage):
             if "+hdf5" in spec:
                 if spec["hdf5"].satisfies("~shared"):
                     flags.append("-ldl")
-            flags.append(spec["readline"].libs.search_flags)
 
         if "+pic" in spec:
             if name == "cflags":

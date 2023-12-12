@@ -203,7 +203,9 @@ class Changing(Package):
                 # TODO: in case tests using this fixture start failing.
                 if sys.modules.get("spack.pkg.changing.changing"):
                     del sys.modules["spack.pkg.changing.changing"]
+                if sys.modules.get("spack.pkg.changing.root"):
                     del sys.modules["spack.pkg.changing.root"]
+                if sys.modules.get("spack.pkg.changing"):
                     del sys.modules["spack.pkg.changing"]
 
                 # Change the recipe
@@ -349,6 +351,9 @@ class TestConcretize:
             spec.concretize()
             assert spec.satisfies("cflags=-O2")
 
+    @pytest.mark.only_clingo(
+        "Optional compiler propagation isn't deprecated for original concretizer"
+    )
     def test_concretize_compiler_flag_propagate(self):
         spec = Spec("hypre cflags=='-g' ^openblas")
         spec.concretize()
@@ -458,19 +463,66 @@ class TestConcretize:
     @pytest.mark.only_clingo(
         "Optional compiler propagation isn't deprecated for original concretizer"
     )
-    def test_concretize_propagate_disabled_variant(self):
-        """Test a package variant value was passed from its parent."""
-        spec = Spec("hypre~~shared ^openblas")
-        spec.concretize()
+    @pytest.mark.parametrize(
+        "spec_str,expected_propagation",
+        [
+            ("hypre~~shared ^openblas+shared", [("hypre", "~shared"), ("openblas", "+shared")]),
+            # Propagates past a node that doesn't have the variant
+            ("hypre~~shared ^openblas", [("hypre", "~shared"), ("openblas", "~shared")]),
+            (
+                "ascent~~shared +adios2",
+                [("ascent", "~shared"), ("adios2", "~shared"), ("bzip2", "~shared")],
+            ),
+            # Propagates below a node that uses the other value explicitly
+            (
+                "ascent~~shared +adios2 ^adios2+shared",
+                [("ascent", "~shared"), ("adios2", "+shared"), ("bzip2", "~shared")],
+            ),
+            (
+                "ascent++shared +adios2 ^adios2~shared",
+                [("ascent", "+shared"), ("adios2", "~shared"), ("bzip2", "+shared")],
+            ),
+        ],
+    )
+    def test_concretize_propagate_disabled_variant(self, spec_str, expected_propagation):
+        """Tests various patterns of boolean variant propagation"""
+        spec = Spec(spec_str).concretized()
+        for key, expected_satisfies in expected_propagation:
+            spec[key].satisfies(expected_satisfies)
 
-        assert spec.satisfies("^openblas~shared")
-
+    @pytest.mark.only_clingo(
+        "Optional compiler propagation isn't deprecated for original concretizer"
+    )
     def test_concretize_propagated_variant_is_not_passed_to_dependent(self):
         """Test a package variant value was passed from its parent."""
-        spec = Spec("hypre~~shared ^openblas+shared")
+        spec = Spec("ascent~~shared +adios2 ^adios2+shared")
         spec.concretize()
 
-        assert spec.satisfies("^openblas+shared")
+        assert spec.satisfies("^adios2+shared")
+        assert spec.satisfies("^bzip2~shared")
+
+    @pytest.mark.only_clingo(
+        "Optional compiler propagation isn't deprecated for original concretizer"
+    )
+    def test_concretize_propagate_specified_variant(self):
+        """Test that only the specified variant is propagated to the dependencies"""
+        spec = Spec("parent-foo-bar ~~foo")
+        spec.concretize()
+
+        assert spec.satisfies("~foo") and spec.satisfies("^dependency-foo-bar~foo")
+        assert spec.satisfies("+bar") and not spec.satisfies("^dependency-foo-bar+bar")
+
+    @pytest.mark.only_clingo("Original concretizer is allowed to forego variant propagation")
+    def test_concretize_propagate_multivalue_variant(self):
+        """Test that multivalue variants are propagating the specified value(s)
+        to their dependecies. The dependencies should not have the default value"""
+        spec = Spec("multivalue-variant foo==baz,fee")
+        spec.concretize()
+
+        assert spec.satisfies("^a foo=baz,fee")
+        assert spec.satisfies("^b foo=baz,fee")
+        assert not spec.satisfies("^a foo=bar")
+        assert not spec.satisfies("^b foo=bar")
 
     def test_no_matching_compiler_specs(self, mock_low_high_config):
         # only relevant when not building compilers as needed
@@ -1554,7 +1606,9 @@ class TestConcretize:
         assert not new_root["changing"].satisfies("@1.0")
 
     @pytest.mark.regression("28259")
-    def test_reuse_with_unknown_namespace_dont_raise(self, mock_custom_repository):
+    def test_reuse_with_unknown_namespace_dont_raise(
+        self, temporary_store, mock_custom_repository
+    ):
         with spack.repo.use_repositories(mock_custom_repository, override=False):
             s = Spec("c").concretized()
             assert s.namespace != "builtin.mock"
@@ -1565,8 +1619,8 @@ class TestConcretize:
         assert s.namespace == "builtin.mock"
 
     @pytest.mark.regression("28259")
-    def test_reuse_with_unknown_package_dont_raise(self, tmpdir, monkeypatch):
-        builder = spack.repo.MockRepositoryBuilder(tmpdir, namespace="myrepo")
+    def test_reuse_with_unknown_package_dont_raise(self, tmpdir, temporary_store, monkeypatch):
+        builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"), namespace="myrepo")
         builder.add_package("c")
         with spack.repo.use_repositories(builder.root, override=False):
             s = Spec("c").concretized()
@@ -1838,7 +1892,8 @@ class TestConcretize:
         # If we concretize with --reuse it is not, since "mpich~debug" was already installed
         with spack.config.override("concretizer:reuse", True):
             s = Spec("mpich").concretized()
-            assert s.satisfies("~debug")
+            assert s.installed
+            assert s.satisfies("~debug"), s
 
     @pytest.mark.regression("32471")
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
@@ -2132,14 +2187,16 @@ class TestConcretize:
 
 @pytest.fixture()
 def duplicates_test_repository():
-    builder_test_path = os.path.join(spack.paths.repos_path, "duplicates.test")
-    with spack.repo.use_repositories(builder_test_path) as mock_repo:
+    repository_path = os.path.join(spack.paths.repos_path, "duplicates.test")
+    with spack.repo.use_repositories(repository_path) as mock_repo:
         yield mock_repo
 
 
 @pytest.mark.usefixtures("mutable_config", "duplicates_test_repository")
 @pytest.mark.only_clingo("Not supported by the original concretizer")
 class TestConcretizeSeparately:
+    """Collects test on separate concretization"""
+
     @pytest.mark.parametrize("strategy", ["minimal", "full"])
     def test_two_gmake(self, strategy):
         """Tests that we can concretize a spec with nodes using the same build
@@ -2320,3 +2377,131 @@ class TestConcreteSpecsByHash:
                 assert node == container[node.dag_hash()]
                 assert node.dag_hash() in container
                 assert node is not container[node.dag_hash()]
+
+
+@pytest.fixture()
+def edges_test_repository():
+    repository_path = os.path.join(spack.paths.repos_path, "edges.test")
+    with spack.repo.use_repositories(repository_path) as mock_repo:
+        yield mock_repo
+
+
+@pytest.mark.usefixtures("mutable_config", "edges_test_repository")
+@pytest.mark.only_clingo("Edge properties not supported by the original concretizer")
+class TestConcretizeEdges:
+    """Collects tests on edge properties"""
+
+    @pytest.mark.parametrize(
+        "spec_str,expected_satisfies,expected_not_satisfies",
+        [
+            ("conditional-edge", ["^zlib@2.0"], ["^zlib-api"]),
+            ("conditional-edge~foo", ["^zlib@2.0"], ["^zlib-api"]),
+            (
+                "conditional-edge+foo",
+                ["^zlib@1.0", "^zlib-api", "^[virtuals=zlib-api] zlib"],
+                ["^[virtuals=mpi] zlib"],
+            ),
+        ],
+    )
+    def test_condition_triggered_by_edge_property(
+        self, spec_str, expected_satisfies, expected_not_satisfies
+    ):
+        """Tests that we can enforce constraints based on edge attributes"""
+        s = Spec(spec_str).concretized()
+
+        for expected in expected_satisfies:
+            assert s.satisfies(expected), str(expected)
+
+        for not_expected in expected_not_satisfies:
+            assert not s.satisfies(not_expected), str(not_expected)
+
+    def test_virtuals_provided_together_but_only_one_required_in_dag(self):
+        """Tests that we can use a provider that provides more than one virtual together,
+        and is providing only one, iff the others are not needed in the DAG.
+
+        o blas-only-client
+        | [virtual=blas]
+        o openblas (provides blas and lapack together)
+
+        """
+        s = Spec("blas-only-client ^openblas").concretized()
+        assert s.satisfies("^[virtuals=blas] openblas")
+        assert not s.satisfies("^[virtuals=blas,lapack] openblas")
+
+
+def test_reusable_externals_match(mock_packages, tmpdir):
+    spec = Spec("mpich@4.1%gcc@13.1.0~debug build_system=generic arch=linux-ubuntu23.04-zen2")
+    spec.external_path = tmpdir.strpath
+    spec.external_modules = ["mpich/4.1"]
+    spec._mark_concrete()
+    assert spack.solver.asp._is_reusable_external(
+        {
+            "mpich": {
+                "externals": [
+                    {"spec": "mpich@4.1", "prefix": tmpdir.strpath, "modules": ["mpich/4.1"]}
+                ]
+            }
+        },
+        spec,
+    )
+
+
+def test_reusable_externals_match_virtual(mock_packages, tmpdir):
+    spec = Spec("mpich@4.1%gcc@13.1.0~debug build_system=generic arch=linux-ubuntu23.04-zen2")
+    spec.external_path = tmpdir.strpath
+    spec.external_modules = ["mpich/4.1"]
+    spec._mark_concrete()
+    assert spack.solver.asp._is_reusable_external(
+        {
+            "mpi": {
+                "externals": [
+                    {"spec": "mpich@4.1", "prefix": tmpdir.strpath, "modules": ["mpich/4.1"]}
+                ]
+            }
+        },
+        spec,
+    )
+
+
+def test_reusable_externals_different_prefix(mock_packages, tmpdir):
+    spec = Spec("mpich@4.1%gcc@13.1.0~debug build_system=generic arch=linux-ubuntu23.04-zen2")
+    spec.external_path = "/other/path"
+    spec.external_modules = ["mpich/4.1"]
+    spec._mark_concrete()
+    assert not spack.solver.asp._is_reusable_external(
+        {
+            "mpich": {
+                "externals": [
+                    {"spec": "mpich@4.1", "prefix": tmpdir.strpath, "modules": ["mpich/4.1"]}
+                ]
+            }
+        },
+        spec,
+    )
+
+
+@pytest.mark.parametrize("modules", [None, ["mpich/4.1", "libfabric/1.19"]])
+def test_reusable_externals_different_modules(mock_packages, tmpdir, modules):
+    spec = Spec("mpich@4.1%gcc@13.1.0~debug build_system=generic arch=linux-ubuntu23.04-zen2")
+    spec.external_path = tmpdir.strpath
+    spec.external_modules = modules
+    spec._mark_concrete()
+    assert not spack.solver.asp._is_reusable_external(
+        {
+            "mpich": {
+                "externals": [
+                    {"spec": "mpich@4.1", "prefix": tmpdir.strpath, "modules": ["mpich/4.1"]}
+                ]
+            }
+        },
+        spec,
+    )
+
+
+def test_reusable_externals_different_spec(mock_packages, tmpdir):
+    spec = Spec("mpich@4.1%gcc@13.1.0~debug build_system=generic arch=linux-ubuntu23.04-zen2")
+    spec.external_path = tmpdir.strpath
+    spec._mark_concrete()
+    assert not spack.solver.asp._is_reusable_external(
+        {"mpich": {"externals": [{"spec": "mpich@4.1 +debug", "prefix": tmpdir.strpath}]}}, spec
+    )
