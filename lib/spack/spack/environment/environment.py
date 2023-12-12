@@ -825,22 +825,26 @@ class Environment:
             else:
                 self.spec_lists[name] = user_specs
 
-    def _process_views(self, env_view):
+    def _process_view(
+        self, env_view: Optional[Union[bool, str, Dict]], add_default: bool = True
+    ) -> bool:
         """Process view option(s), which can be boolean, string, or None.
 
         A boolean environment view option takes precedence over any that may
         be included. So ``view: True`` results in the default view only. And
         ``view: False`` means the environment will have no view.
 
-        Any other value means the FIRST include view option will be combined
-        with that of the environment (if any) to establish the view(s). If
-        there is still no ``view`` then the default view will be used.
-
         Args:
-            env_view: view option provided in the manifest or ``None``.
+            env_view: view option provided in the manifest or configuration
+            add_default: add the default view if ``True`` and there is no view
+              provided; otherwise, do not add the default view
+
+        Returns:  ``True`` if view processing is done, ``False`` otherwise
         """
 
         def add_view(name, values):
+            """Add the view with the name and the string or dict values IF
+            there is not already a view with that name."""
             if name not in self.views:
                 if isinstance(values, str):
                     self.views[name] = ViewDescriptor(self.path, values)
@@ -851,56 +855,39 @@ class Environment:
             else:
                 tty.debug(f"Already have '{name}' view ({self.views[name]}), skipping {values}")
 
-        self.views = {}
-
-        # If the environment specifies 'view: False' then the environment is
-        # to have NO views regardless of whether included views are specified.
+        # If the configuration specifies 'view: False' then we are done
+        # processing views. If this is called with the environment's view
+        # view (versus an included view), then there are to be NO views.
         if env_view is False:
-            return
+            return True
 
-        # If the environment specifies 'view: True' then only the default
-        # view will be created for the environment.
+        # If the configuration specifies 'view: True' then only the default
+        # view will be created for the environment and we are done processing
+        # views.
         if env_view is True:
             add_view(default_view_name, self.view_path_default)
-            return
+            return True
 
-        # Otherwise, we have a subdirectory or dictionary
+        # Otherwise, the configuration has a subdirectory or dictionary.
         if isinstance(env_view, str):
             add_view(default_view_name, env_view)
         elif env_view:
             for name, values in env_view.items():
                 add_view(name, values)
 
-        # TBD: If we have a named view in the environment, SHOULD we also
-        # TBD: be considering the first included view (that does not have
-        # TBD: a name conflict)?
-        #
-        # Now consider the first included view, if any, since its scope
-        # has priority.
-        config_view = spack.config.get("view")
-        if config_view is False:
-            return
-
-        if config_view is True:
-            add_view(default_view_name, self.view_path_default)
-            return
-
-        if isinstance(config_view, str):
-            add_view(default_view_name, config_view)
-            return
-
-        if config_view:
-            for name, values in config_view.items():
-                add_view(name, values)
-
         # If we reach this point without an explicit view setting then we
         # provide the default view.
-        if self.views == dict():
-            add_view(default_view_name, self.view_path_default)
+        if add_default and self.views == dict():
+            self.views[default_view_name] = ViewDescriptor(self.path, self.view_path_default)
+
+        # More views can still be added at this point so view processing is not
+        # done.
+        return False
 
     def _construct_state_from_manifest(self, re_read=False):
         """Read manifest file and set up user specs."""
         self.spec_lists = collections.OrderedDict()
+        self.views = {}
 
         if not re_read:
             for item in spack.config.get("definitions", []):
@@ -916,7 +903,11 @@ class Environment:
         )
         self.spec_lists[user_speclist_name] = user_specs
 
-        self._process_views(env_configuration.get("view"))
+        # Process views, starting with the one in the environment since it
+        # takes precedence.
+        done = self._process_view(env_configuration.get("view"), add_default=False)
+        if not done:
+            self._process_view(spack.config.get("view"), add_default=True)
 
         # Retrieve dev-build packages:
         self.dev_specs = copy.deepcopy(env_configuration.get("develop", {}))
