@@ -654,11 +654,24 @@ class SpackCI:
             elif has_dynmapping:
                 # Unpack in indent script
                 mode = section["dynamic-mapping"].get("mode", "batch")
-                url = section["dynamic-mapping"]["url"]
-                header = section["dynmaic-mapping"].get("header", {})
+                url = section["dynamic-mapping"].get("url", "http://localhost")
+                port = section["dynamic-mapping"].get("port")
+                headers = section["dynamic-mapping"].get("headers", {})
+
+                if url.startswith("env::"):
+                    url = os.environ.get(url.lstrip("env::"))
+
+                if port.startswith("env::"):
+                    port = os.environ.get(port.lstrip("env::"))
+
+                if port:
+                    url += f":{port}"
+
+                url += "/v1/kube-requests"
+                print("Dynamic Mapping URL: ", url)
 
                 def job_payload(job):
-                    job_vars = job["attributes"]["variables"]
+                    job_vars = job["attributes"].get("variables")
                     return {
                         "hash": job_vars.get("SPACK_JOB_SPEC_DAG_HASH", ""),
                         "arch": job_vars.get("SPACK_JOB_SPEC_ARCH", ""),
@@ -674,7 +687,6 @@ class SpackCI:
                     }
 
                 opener = build_opener(HTTPHandler)
-
                 # TODO: timeout, retry policy, etc. need to be implemented here
                 if mode == "batch":
                     data = []
@@ -684,12 +696,16 @@ class SpackCI:
 
                     # TODO: allow setting message size limits
                     data = json.dumps(data).encode("utf-8")
-                    request = Request(url, data=data, header=header, method="POST")
+                    request = Request(url, data=data, headers=headers, method="POST")
 
                     response = opener.open(request)
                     mappings = json.loads(response.read().decode("utf-8"))
                     for sha, job in jobs.items():
-                        spack.config.merge_yaml(job["attributes"], mappings.get(sha))
+                        if not job["spec"]:
+                            continue
+                        job["attributes"] = spack.config.merge_yaml(
+                            job.get("attributes", {}), mappings.get(sha, {})
+                        )
                 else:
                     # TODO: Parallel request option
                     for job in jobs.values():
@@ -699,8 +715,10 @@ class SpackCI:
                         sha = job["spec"].dag_hash()
                         data = [job_payload(job)]
                         data = json.dumps(data).encode("utf-8")
-                        mapping = request = Request(url, data=data, header=header, method="POST")
-                        spack.config.merge_yaml(job["attributes"], mapping.get(sha))
+                        mapping = request = Request(url, data=data, headers=headers, method="POST")
+                        job["attributes"] = spack.config.merge_yaml(
+                            job.get("attributes", {}), mapping.get(sha, {})
+                        )
 
         for _, job in jobs.items():
             if job["spec"]:
@@ -1178,7 +1196,7 @@ def generate_gitlab_ci_yaml(
 
             # Let downstream jobs know whether the spec needed rebuilding, regardless
             # whether DAG pruning was enabled or not.
-            job_vars = job_object["attributes"]["variables"]
+            job_vars = job_object["variables"]
             job_vars["SPACK_SPEC_NEEDS_REBUILD"] = str(rebuild_spec)
 
             if cdash_handler:

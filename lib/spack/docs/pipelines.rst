@@ -612,6 +612,9 @@ For large scale CI where cost optimation is required, dynamic mapping allows for
 mapping schemes served by a web service. This type of mapping does not support the ``-remove`` type
 behavior, but it does follow the rest of the merge rules for configurations.
 
+The dynamic mapping service needs to implement a single REST API interface for getting kubernetes
+requests <URL>[:PORT]/v1/kube-requests.
+
 example request.
 
 .. code-block::

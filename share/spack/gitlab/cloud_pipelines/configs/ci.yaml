@@ -11,7 +11,8 @@ ci:
   pipeline-gen:
   - dynamic-mapping:
       mode: batch
-      url: https://path.my_cool_app.io
+      url: "env::SPACK_MAPPING_SERVER_URL"
+      port: "env::SPACK_MAPPING_SERVER_PORT"
   - build-job:
       before_script-:
       - - cat /proc/loadavg || true
