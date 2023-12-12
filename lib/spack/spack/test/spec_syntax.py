@@ -484,22 +484,6 @@ def specfile_for(default_mock_concretization):
             "a@1:",
         ),
         (
-            "@1.2:   develop   = foo",
-            [
-                Token(TokenType.VERSION, value="@1.2:"),
-                Token(TokenType.KEY_VALUE_PAIR, value="develop   = foo"),
-            ],
-            "@1.2: develop=foo",
-        ),
-        (
-            "@1.2:develop   = foo",
-            [
-                Token(TokenType.VERSION, value="@1.2:"),
-                Token(TokenType.KEY_VALUE_PAIR, value="develop   = foo"),
-            ],
-            "@1.2: develop=foo",
-        ),
-        (
             "% intel @ 12.1:12.6 + debug",
             [
                 Token(TokenType.COMPILER_AND_VERSION, value="% intel @ 12.1:12.6"),
@@ -676,18 +660,18 @@ def test_parse_multiple_specs(text, tokens, expected_specs):
         (["zlib", "cflags='-O3 -g' \"+bar baz\""], 'zlib cflags="\'-O3 -g\' \\"+bar baz\\""'),
         # Ensure that empty strings are handled correctly on CLI
         (["zlib", "ldflags=", "+pic"], "zlib+pic"),
-        # These will gobble up +pic as a flag, but there's nothing we can do about it if we want
-        # to handle the case above on the CLI. This only occurs in abstract and weirdly quoted
-        # specs, so we prioritize the case above and accept these.
+        # These flags are assumed to be quoted by the shell, but the space doesn't matter because
+        # flags are space-separated.
         (["zlib", "ldflags= +pic"], "zlib ldflags='+pic'"),
         (["ldflags= +pic"], "ldflags='+pic'"),
-        # Ensure same results with variants (not flag names)
-        (["zlib", "foo= +pic"], "zlib foo='+pic'"),
-        (["foo= +pic"], "foo='+pic'"),
+        # If the name is not a flag name, the space is preserved verbatim, because variant values
+        # are comma-separated.
+        (["zlib", "foo= +pic"], "zlib foo=' +pic'"),
+        (["foo= +pic"], "foo=' +pic'"),
         # You can ensure no quotes are added parse_specs() by starting your string with space,
         # but you still need to quote empty strings properly.
-        ([" ldflags= +pic"], "ldflags='+pic'"),
-        ([" ldflags=", "+pic"], "ldflags='+pic'"),
+        ([" ldflags= +pic"], SpecTokenizationError),
+        ([" ldflags=", "+pic"], SpecTokenizationError),
         ([" ldflags='' +pic"], "+pic"),
         ([" ldflags=''", "+pic"], "+pic"),
         # Ensure that empty strings are handled properly in quoted strings
@@ -717,6 +701,8 @@ def test_cli_spec_roundtrip(args, expected):
         ("x@1.2::", r"x@1.2::\n      ^"),
         ("x::", r"x::\n ^^"),
         ("cflags=''-Wl,a,b,c''", r"cflags=''-Wl,a,b,c''\n            ^ ^ ^ ^^"),
+        ("@1.2:   develop   = foo", r"@1.2:   develop   = foo\n                  ^^"),
+        ("@1.2:develop   = foo", r"@1.2:develop   = foo\n               ^^"),
     ],
 )
 def test_error_reporting(text, expected_in_error):

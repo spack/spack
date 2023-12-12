@@ -110,7 +110,7 @@ VERSION_RANGE = rf"(?:(?:{VERSION})?:(?:{VERSION}(?!\s*=))?)"
 VERSION_LIST = rf"(?:{VERSION_RANGE}|{VERSION})(?:\s*,\s*(?:{VERSION_RANGE}|{VERSION}))*"
 
 #: Regex with groups to use for splitting (optionally propagated) key-value pairs
-SPLIT_KVP = rf"^({NAME})\s*(==?)\s*(.*)$"
+SPLIT_KVP = rf"^({NAME})(==?)(.*)$"
 
 #: Regex to strip quotes. Group 2 will be the unquoted string.
 STRIP_QUOTES = r"^(['\"])(.*)\1$"
@@ -181,8 +181,8 @@ class TokenType(TokenBase):
     # Variants
     PROPAGATED_BOOL_VARIANT = rf"(?:(?:\+\+|~~|--)\s*{NAME})"
     BOOL_VARIANT = rf"(?:[~+-]\s*{NAME})"
-    PROPAGATED_KEY_VALUE_PAIR = rf"(?:{NAME}\s*==\s*(?:{VALUE}|{QUOTED_VALUE}))"
-    KEY_VALUE_PAIR = rf"(?:{NAME}\s*=\s*(?:{VALUE}|{QUOTED_VALUE}))"
+    PROPAGATED_KEY_VALUE_PAIR = rf"(?:{NAME}==(?:{VALUE}|{QUOTED_VALUE}))"
+    KEY_VALUE_PAIR = rf"(?:{NAME}=(?:{VALUE}|{QUOTED_VALUE}))"
     # Compilers
     COMPILER_AND_VERSION = rf"(?:%\s*(?:{NAME})(?:[\s]*)@\s*(?:{VERSION_LIST}))"
     COMPILER = rf"(?:%\s*(?:{NAME}))"
