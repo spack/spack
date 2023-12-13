@@ -58,6 +58,7 @@ specs to avoid ambiguity.  Both are provided because ~ can cause shell
 expansion when it is the first character in an id typed on the command line.
 """
 import enum
+import json
 import pathlib
 import re
 import sys
@@ -133,22 +134,16 @@ def quote_if_needed(value: str) -> str:
 
     This adds:
     * single quotes by default
-    * double quotes around a value with single quotes
+    * double quotes around any value that contains single quotes
 
-    If the value contains both double and single quotes, This adds single quotes and escapes
-    any internal single quotes.
+    If double quotes are used, we json-escpae the string. That is, we escape ``\\``,
+    ``"``, and control codes.
 
     """
     if re.match(spack.parser.NO_QUOTES_NEEDED, value):
         return value
 
-    q = "'"
-    if '"' in value and "'" in value:
-        value = re.sub("'", r"\'", value)
-    elif "'" in value:
-        q = '"'
-
-    return f"{q}{value}{q}"
+    return json.dumps(value) if "'" in value else f"'{value}'"
 
 
 class TokenBase(enum.Enum):

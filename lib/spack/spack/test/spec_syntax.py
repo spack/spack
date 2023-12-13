@@ -673,7 +673,7 @@ def test_parse_multiple_specs(text, tokens, expected_specs):
         # Use double quotes if internal single quotes are present
         (["zlib", "cflags='-O3 -g' +bar baz"], '''zlib cflags="'-O3 -g' +bar baz"'''),
         # Use single quotes and escape single quotes with internal single and double quotes
-        (["zlib", "cflags='-O3 -g' \"+bar baz\""], "zlib cflags='\\'-O3 -g\\' \"+bar baz\"'"),
+        (["zlib", "cflags='-O3 -g' \"+bar baz\""], 'zlib cflags="\'-O3 -g\' \\"+bar baz\\""'),
         # Ensure that empty strings are handled correctly on CLI
         (["zlib", "ldflags=", "+pic"], "zlib+pic"),
         # These will gobble up +pic as a flag, but there's nothing we can do about it if we want
