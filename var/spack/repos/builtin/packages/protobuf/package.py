@@ -12,10 +12,8 @@ class Protobuf(CMakePackage):
 
     homepage = "https://developers.google.com/protocol-buffers"
     url = "https://github.com/protocolbuffers/protobuf/archive/v3.18.0.tar.gz"
-    maintainers("greenc-FNAL", "gartung", "hyoklee", "marcmengel", "vitodb")
+    maintainers("hyoklee")
 
-    version("3.25.1", sha256="1a2affa2fbad568b9895b72e3c7cb1f72a14bf2501fba056c724dc68c249cd0f")
-    version("3.25.0", sha256="540200ef1bb101cf3f86f257f7947035313e4e485eea1f7eed9bc99dd0e2cb68")
     version("3.24.3", sha256="2c23dee0bdbc36bd43ee457083f8f5560265d0815cc1c56033de3932843262fe")
     version("3.23.3", sha256="5e4b555f72a7e3f143a7aff7262292500bb02c49b174351684bb70fc7f2a6d33")
     version("3.22.2", sha256="2118051b4fb3814d59d258533a4e35452934b1ddb41230261c9543384cbb4dfc")
@@ -39,7 +37,6 @@ class Protobuf(CMakePackage):
     version("3.17.3", sha256="c6003e1d2e7fefa78a3039f19f383b4f3a61e81be8c19356f85b6461998ad3db")
     version("3.17.0", sha256="eaba1dd133ac5167e8b08bc3268b2d33c6e9f2dcb14ec0f97f3d3eed9b395863")
     version("3.16.0", sha256="7892a35d979304a404400a101c46ce90e85ec9e2a766a86041bb361f626247f5")
-    version("3.15.8", sha256="0cbdc9adda01f6d2facc65a22a2be5cecefbefe5a09e5382ee8879b522c04441")
     version("3.15.7", sha256="efdd6b932a2c0a88a90c4c80f88e4b2e1bf031e7514dbb5a5db5d0bf4f295504")
     version("3.15.5", sha256="bc3dbf1f09dba1b2eb3f2f70352ee97b9049066c9040ce0c9b67fb3294e91e4b")
     version("3.15.4", sha256="07f8a02afc14a657f727ed89a8ec5627b9ecc47116d60acaabaa1da233bd2e8f")
@@ -85,17 +82,6 @@ class Protobuf(CMakePackage):
         values=("Debug", "Release", "RelWithDebInfo"),
     )
 
-    variant(
-        "cxxstd",
-        default="default",
-        values=("default", "11", "14", "17", "20", "23"),
-        multi=False,
-        sticky=True,
-        description="C++ standard",
-    )
-
-    conflicts("cxxstd=11", when="@3.22:")  # Requires C++14
-
     depends_on("abseil-cpp@20230125.3:", when="@3.22.5:")
     # https://github.com/protocolbuffers/protobuf/issues/11828#issuecomment-1433557509
     depends_on("abseil-cpp@20230125:", when="@3.22:")
@@ -140,33 +126,20 @@ class Protobuf(CMakePackage):
         )
 
     def cmake_args(self):
-        cxxstd = self.spec.variants["cxxstd"].value
-        if cxxstd == "default":
-            if self.spec.satisfies("@3.22:"):
-                cxxstd = self.spec["abseil-cpp"].variants["cxxstd"].value
-            elif self.spec.satisfies("@3.6:3.21"):
-                cxxstd = 11
-            else:
-                cxxstd = 98
-
         args = [
-            self.define_from_variant("protobuf_BUILD_SHARED_LIBS", "shared"),
-            self.define("protobuf_BUILD_TESTS", self.run_tests),
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define("protobuf_BUILD_TESTS", False),
             self.define("CMAKE_POSITION_INDEPENDENT_CODE", True),
         ]
 
         if self.spec.satisfies("@3.22:"):
+            cxxstd = self.spec["abseil-cpp"].variants["cxxstd"].value
             args.extend(
                 [
-                    self.define("CMAKE_CXX_STANDARD", cxxstd),
                     self.define("protobuf_ABSL_PROVIDER", "package"),
+                    self.define("CMAKE_CXX_STANDARD", cxxstd),
                 ]
             )
-        else:
-            args.append(f"-DCMAKE_CXX_FLAGS=-std=c++{cxxstd}")
-
-        if cxxstd not in (11, 14) and self.compiler.name == "clang":
-            args.append("-D_LIBCPP_ENABLE_CXX17_REMOVED_FEATURES=1")
 
         if self.spec.satisfies("platform=darwin"):
             args.append(self.define("CMAKE_MACOSX_RPATH", True))
