@@ -68,15 +68,15 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
         args = []
 
-        self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
-        self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
+        args.extend(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
+        args.extend(self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"))
 
-        args.define_from_variant("PCRE_SUPPORT_JIT", "jit")
+        args.extend(self.define_from_variant("PCRE_SUPPORT_JIT", "jit"))
 
-        args.define_from_variant("PCRE_BUILD_PCRE16", "multibyte")
-        args.define_from_variant("PCRE_BUILD_PCRE32", "multibyte")
+        args.extend(self.define_from_variant("PCRE_BUILD_PCRE16", "multibyte"))
+        args.extend(self.define_from_variant("PCRE_BUILD_PCRE32", "multibyte"))
 
-        args.define_from_variant("PCRE_SUPPORT_UTF", "utf")
-        args.define_from_variant("PCRE_SUPPORT_UNICODE_PROPERTIES", "utf")
+        args.extend(self.define_from_variant("PCRE_SUPPORT_UTF", "utf"))
+        args.extend(self.define_from_variant("PCRE_SUPPORT_UNICODE_PROPERTIES", "utf"))
 
         return args
