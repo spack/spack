@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 from spack.package import *
 
 
@@ -12,13 +11,10 @@ class Kalign2(AutotoolsPackage):
 
     homepage = "https://msa.sbc.su.se"
     version(
-        "2.0.3",
+        "2.04",
         sha256="8cf20ac4e1807dc642e7ffba8f42a117313beccaee4f87c5555d53a2eeac4cbb",
-        url="file://{0}/kalign_2.0.3.tar.gz".format(
-            os.getcwd()
-        ),
+        url="http://msa.sbc.su.se/downloads/kalign/current.tar.gz",
     )
-    manual_download = True
 
     def patch(self):
         """Change hard-coded prefix path"""
