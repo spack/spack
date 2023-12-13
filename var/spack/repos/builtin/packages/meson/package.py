@@ -64,9 +64,9 @@ class Meson(PythonPackage):
     # Broken config.h generation
     # https://github.com/mesonbuild/meson/pull/12532
     patch(
-          "https://github.com/mesonbuild/meson/commit/9016e6958bb83feb9a724f20d8badb116bf7c5f2.patch?full_index=1",
-          sha256="344a59f5606c233699b9aabbf10ef9c456edf82994d0d902329aa915f9f6ba6d",
-          when="@1.3.0",
+        "https://github.com/mesonbuild/meson/commit/9016e6958bb83feb9a724f20d8badb116bf7c5f2.patch?full_index=1",
+        sha256="344a59f5606c233699b9aabbf10ef9c456edf82994d0d902329aa915f9f6ba6d",
+        when="@1.3.0",
     )
 
     executables = ["^meson$"]
