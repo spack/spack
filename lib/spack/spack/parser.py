@@ -99,10 +99,10 @@ else:
 #: These are legal values that *can* be parsed bare, without quotes on the command line.
 VALUE = r"(?:[a-zA-Z_0-9\-+\*.,:=\~\/\\]+)"
 
-#: Anything that matches this *will* be conservatively quoted in Spack output
+#: Variant/flag values that match this can be left unquoted in Spack output
 NO_QUOTES_NEEDED = r"^[a-zA-Z0-9,/_.-]+$"
 
-#: quoted values can be *anything* in between quotes, including escaped quotes.
+#: Quoted values can be *anything* in between quotes, including escaped quotes.
 QUOTED_VALUE = r"(?:'(?:[^']|(?<=\\)')*'|\"(?:[^\"]|(?<=\\)\")*\")"
 
 VERSION = r"=?(?:[a-zA-Z0-9_][a-zA-Z_0-9\-\.]*\b)"
