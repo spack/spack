@@ -132,11 +132,14 @@ jobs:
     runs-on: ubuntu-latest
     container: registry.access.redhat.com/ubi8/ubi
     steps:
-    - name: Install dependencies
+    - name: Install System packages
       run: |
           dnf install -y \
               bzip2 curl file gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
               make patch tcl unzip which xz
+    - name: Install Python packages
+      run: |
+          pip install --upgrade pytest
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # @v2
     - name: Setup repo and non-root user
       run: |
