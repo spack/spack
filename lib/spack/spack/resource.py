@@ -22,17 +22,3 @@ class Resource:
         self.fetcher = fetcher
         self.destination = destination
         self.placement = placement
-
-
-class BootstrapResource:
-    """Represents a resource required by Spack to run, fetched as part
-    of the bootstrapping operation
-
-    More or less identical to package based resources but exposes additional logic related
-    to bootstrapping/ resource visibility.
-
-    Composes a name and a fetch strategy
-    """
-    def __init__(self, name, fetcher):
-        self._name = name
-        self._fetcher = fetcher

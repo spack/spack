@@ -53,6 +53,10 @@ import spack.util.spack_yaml
 import spack.util.url
 import spack.version
 
+import spack.util.web as sw
+import shutil
+import llnl.util.filesystem as fs
+
 from ._common import _executables_in_store, _python_import, _root_spec, _try_import_from_store
 from .config import spack_python_interpreter, spec_for_current_python
 
@@ -491,6 +495,42 @@ def _add_externals_if_missing() -> None:
     spack.detection.update_configuration(
         non_buildable_externals, scope="bootstrap", buildable=False
     )
+
+
+class BootstrapResource:
+    """Represents a resource required by Spack to run, fetched as part
+    of the bootstrapping operation
+
+    More or less identical to package based resources but exposes additional logic related
+    to bootstrapping/ resource visibility.
+
+    Composes a name and a fetch strategy
+    """
+    def __init__(self, name, endpoint, hash):
+        """
+
+        Args:
+            name (str): Name of resource to be fetched
+            endpoint (str):
+        """
+        self._name = name
+
+    def fetch_resource(self):
+        tty.info(f"Fetching resource: {self.name} from: {self.url} to resource stage: {self.stage}")
+        try:
+            url, _, response = sw.read_from_url(url)
+        except sw.SpackWebError as e:
+            fs.remove_directory_contents(str(self._stage))
+            msg = f"urllib failed to fetch: {url} with error {e}"
+            raise RuntimeError(msg)
+
+        with open(self._stage / self._resource_filename, "wb") as _open_file:
+            shutil.copyfileobj(response, _open_file)
+
+    def check():
+        """Validate """
+
+
 
 
 def clingo_root_spec() -> str:
