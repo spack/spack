@@ -49,7 +49,7 @@ class Pcre(AutotoolsPackage, CMakePackage):
 class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
     def configure_args(self):
         args = []
-        
+
         args.extend(self.enable_or_disable("shared"))
         args.extend(self.with_or_without("pic"))
 
