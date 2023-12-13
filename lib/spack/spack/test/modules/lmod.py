@@ -21,7 +21,10 @@ install = spack.main.SpackCommand("install")
 #: Class of the writer tested in this module
 writer_cls = spack.modules.lmod.LmodModulefileWriter
 
-pytestmark = pytest.mark.not_on_windows("does not run on windows")
+pytestmark = [
+    pytest.mark.not_on_windows("does not run on windows"),
+    pytest.mark.usefixtures("mock_modules_root"),
+]
 
 
 @pytest.fixture(params=["clang@=12.0.0", "gcc@=10.2.1"])

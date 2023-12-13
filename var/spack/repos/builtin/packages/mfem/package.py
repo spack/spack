@@ -473,6 +473,11 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     patch("mfem-4.0.0-makefile-syntax-fix.patch", when="@4.0.0")
     patch("mfem-4.5.patch", when="@4.5.0")
     patch("mfem-4.6.patch", when="@4.6.0")
+    patch(
+        "https://github.com/mfem/mfem/pull/4005.patch?full_index=1",
+        when="@4.6.0 +gslib+shared+miniapps",
+        sha256="2a31682d876626529e2778a216d403648b83b90997873659a505d982d0e65beb",
+    )
 
     phases = ["configure", "build", "install"]
 
@@ -751,12 +756,14 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                     )
                     gfortran_lib = LibraryList(libfile)
                     sp_lib += [ld_flags_from_library_list(gfortran_lib)]
-                if ("^mpich" in strumpack) or ("^mvapich2" in strumpack):
-                    sp_lib += ["-lmpifort"]
-                elif "^openmpi" in strumpack:
-                    sp_lib += ["-lmpi_mpifh"]
-                elif "^spectrum-mpi" in strumpack:
-                    sp_lib += ["-lmpi_ibm_mpifh"]
+                if "+mpi" in strumpack:
+                    mpi = strumpack["mpi"]
+                    if ("^mpich" in strumpack) or ("^mvapich2" in strumpack):
+                        sp_lib += [ld_flags_from_dirs([mpi.prefix.lib], ["mpifort"])]
+                    elif "^openmpi" in strumpack:
+                        sp_lib += [ld_flags_from_dirs([mpi.prefix.lib], ["mpi_mpifh"])]
+                    elif "^spectrum-mpi" in strumpack:
+                        sp_lib += [ld_flags_from_dirs([mpi.prefix.lib], ["mpi_ibm_mpifh"])]
             if "+openmp" in strumpack:
                 # The '+openmp' in the spec means strumpack will TRY to find
                 # OpenMP; if not found, we should not add any flags -- how do
@@ -967,6 +974,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             if "^rocthrust" in spec and not spec["hip"].external:
                 # petsc+rocm needs the rocthrust header path
                 hip_headers += spec["rocthrust"].headers
+            if "^hipblas" in spec and not spec["hip"].external:
+                # superlu-dist+rocm needs the hipblas header path
+                hip_headers += spec["hipblas"].headers
             if "%cce" in spec:
                 # We assume the proper Cray CCE module (cce) is loaded:
                 craylibs_path = env["CRAYLIBS_" + machine().upper()]
