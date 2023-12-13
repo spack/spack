@@ -43,7 +43,11 @@ class Pcre(AutotoolsPackage, CMakePackage):
     variant("shared", default=True, description="Build shared libraries")
     variant("static", default=True, description="Build static libraries")
     conflicts("-shared -static", msg="Must build one of shared and static")
-    conflicts("+shared +static", when="build_system=cmake", msg="CMake can only build either shared or static")
+    conflicts(
+        "+shared +static",
+        when="build_system=cmake",
+        msg="CMake can only build either shared or static",
+    )
 
     variant("pic", default=True, description="Enable position-independent code (PIC)")
     requires("+pic", when="+shared build_system=autotools")
