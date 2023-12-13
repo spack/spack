@@ -40,21 +40,26 @@ class Pcre(AutotoolsPackage, CMakePackage):
         description="Enable support for UTF-8/16/32, " "incompatible with EBCDIC.",
     )
 
+    variant("shared", default=True, description="Build shared libraries")
+    variant("pic", default=True, description="Enable position-independent code (PIC)")
+
+    requires("+pic", when="+shared build_system=autotools")
+
 
 class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
     def configure_args(self):
         args = []
+        
+        args.extend(self.enable_or_disable("shared"))
+        args.extend(self.with_or_without("pic"))
 
-        if "+jit" in self.spec:
-            args.append("--enable-jit")
+        args.extend(self.enable_or_disable("jit"))
 
-        if "+multibyte" in self.spec:
-            args.append("--enable-pcre16")
-            args.append("--enable-pcre32")
+        args.extend(self.enable_or_disable("pcre16", variant="multibyte"))
+        args.extend(self.enable_or_disable("pcre32", variant="multibyte"))
 
-        if "+utf" in self.spec:
-            args.append("--enable-utf")
-            args.append("--enable-unicode-properties")
+        args.extend(self.enable_or_disable("utf"))
+        args.extend(self.enable_or_disable("unicode-properties", variant="utf"))
 
         return args
 
@@ -63,15 +68,15 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
         args = []
 
-        if "+jit" in self.spec:
-            args.append("-DPCRE_SUPPORT_JIT:BOOL=ON")
+        self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+        self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
 
-        if "+multibyte" in self.spec:
-            args.append("-DPCRE_BUILD_PCRE16:BOOL=ON")
-            args.append("-DPCRE_BUILD_PCRE32:BOOL=ON")
+        args.define_from_variant("PCRE_SUPPORT_JIT", "jit")
 
-        if "+utf" in self.spec:
-            args.append("-DPCRE_SUPPORT_UTF:BOOL=ON")
-            args.append("-DPCRE_SUPPORT_UNICODE_PROPERTIES:BOOL=ON")
+        args.define_from_variant("PCRE_BUILD_PCRE16", "multibyte")
+        args.define_from_variant("PCRE_BUILD_PCRE32", "multibyte")
+
+        args.define_from_variant("PCRE_SUPPORT_UTF", "utf")
+        args.define_from_variant("PCRE_SUPPORT_UNICODE_PROPERTIES", "utf")
 
         return args
