@@ -186,10 +186,10 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             "--with-blas-lib-dirs=%s" % " ".join(blas.directories),
         ]
 
-        if spec.satisfies("^mpi"):
+        if spec.satisfies("+mpi"):
             os.environ["CC"] = spec["mpi"].mpicc
             os.environ["CXX"] = spec["mpi"].mpicxx
-            if spec.satisfies("^fortran"):
+            if spec.satisfies("+fortran"):
                 os.environ["F77"] = spec["mpi"].mpif77
                 os.environ["FC"] = spec["mpi"].mpifc
             configure_args.append("--with-MPI")
@@ -200,7 +200,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         configure_args.extend(self.with_or_without("openmp"))
 
-        if spec.satisfies("^int64"):
+        if spec.satisfies("+int64"):
             configure_args.append("--enable-bigint")
         else:
             configure_args.append("--disable-bigint")
@@ -209,7 +209,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         configure_args.extend(self.enable_or_disable("complex"))
 
-        if spec.satisfies("^shared"):
+        if spec.satisfies("+shared"):
             configure_args.append("--enable-shared")
 
         if spec.satisfies("~internal-superlu"):
@@ -218,14 +218,14 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             configure_args.append("--without-mli")
             configure_args.append("--without-fei")
 
-        if spec.satisfies("^superlu-dist"):
+        if spec.satisfies("+superlu-dist"):
             configure_args.append(
                 "--with-dsuperlu-include=%s" % spec["superlu-dist"].prefix.include
             )
             configure_args.append("--with-dsuperlu-lib=%s" % spec["superlu-dist"].libs)
             configure_args.append("--with-dsuperlu")
 
-        if spec.satisfies("^umpire"):
+        if spec.satisfies("+umpire"):
             configure_args.append("--with-umpire-include=%s" % spec["umpire"].prefix.include)
             configure_args.append("--with-umpire-lib=%s" % spec["umpire"].libs)
             if spec.satisfies("~cuda~rocm"):
@@ -233,14 +233,14 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             else:
                 configure_args.append("--with-umpire")
 
-        if spec.satisfies("^caliper"):
+        if spec.satisfies("+caliper"):
             configure_args.append("--with-caliper")
             configure_args.append("--with-caliper-include=%s" % spec["caliper"].prefix.include)
             configure_args.append("--with-caliper-lib=%s" % spec["caliper"].libs)
 
         configure_args.extend(self.enable_or_disable("debug"))
 
-        if spec.satisfies("^cuda"):
+        if spec.satisfies("+cuda"):
             configure_args.extend(["--with-cuda", "--enable-curand", "--enable-cusparse"])
             cuda_arch_vals = spec.variants["cuda_arch"].value
             if cuda_arch_vals:
@@ -258,9 +258,9 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             if spec.satisfies("@:2.20.99"):
                 configure_args.append("--disable-cub")
 
-        if spec.satisfies("^rocm"):
+        if spec.satisfies("+rocm"):
             rocm_pkgs = ["rocsparse", "rocthrust", "rocprim", "rocrand"]
-            if spec.satisfies("^superlu-dist"):
+            if spec.satisfies("+superlu-dist"):
                 rocm_pkgs.append("hipblas")
             rocm_inc = ""
             for pkg in rocm_pkgs:
@@ -281,7 +281,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
         else:
             configure_args.extend(["--without-hip", "--disable-rocrand", "--disable-rocsparse"])
 
-        if spec.satisfies("^sycl"):
+        if spec.satisfies("+sycl"):
             configure_args.append("--with-sycl")
             sycl_compatible_compilers = ["dpcpp", "icpx"]
             if not (os.path.basename(self.compiler.cxx) in sycl_compatible_compilers):
@@ -290,10 +290,10 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
                     + " or the oneAPI CXX (icpx) compiler."
                 )
 
-        if spec.satisfies("^unified-memory"):
+        if spec.satisfies("+unified-memory"):
             configure_args.append("--enable-unified-memory")
 
-        if spec.satisfies("^magma"):
+        if spec.satisfies("+magma"):
             configure_args.append("--with-magma-include=%s" % spec["magma"].prefix.include)
             configure_args.append("--with-magma-lib=%s" % spec["magma"].libs)
             configure_args.append("--with-magma")
@@ -304,19 +304,19 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     def setup_build_environment(self, env):
         spec = self.spec
-        if spec.satisfies("^mpi"):
+        if spec.satisfies("+mpi"):
             env.set("CC", spec["mpi"].mpicc)
             env.set("CXX", spec["mpi"].mpicxx)
-            if spec.satisfies("^fortan"):
+            if spec.satisfies("+fortan"):
                 env.set("F77", spec["mpi"].mpif77)
 
-        if spec.satisfies("^cuda"):
+        if spec.satisfies("+cuda"):
             env.set("CUDA_HOME", spec["cuda"].prefix)
             env.set("CUDA_PATH", spec["cuda"].prefix)
             # In CUDA builds hypre currently doesn't handle flags correctly
             env.append_flags("CXXFLAGS", "-O2" if "~debug" in spec else "-g")
 
-        if spec.satisfies("^rocm"):
+        if spec.satisfies("+rocm"):
             # As of 2022/04/05, the following are set by 'llvm-amdgpu' and
             # override hypre's default flags, so we unset them.
             env.unset("CFLAGS")
@@ -338,7 +338,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
                 sstruct()
                 sstruct("-in", "test/sstruct.in.default", "-solver", "40", "-rhsone")
             make("install")
-            if spec.satisfies("^gptune"):
+            if spec.satisfies("+gptune"):
                 make("test")
                 self.run_test("mkdir", options=["-p", self.prefix.bin])
                 self.run_test("cp", options=["test/ij", self.prefix.bin + "/."])
