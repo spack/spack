@@ -62,7 +62,7 @@ class BigdftFutile(AutotoolsPackage, CudaPackage):
             "--with-pyyaml-path=%s" % pyyaml,
             "--prefix=%s" % prefix,
         ]
-        if "+shared" in spec:
+        if spec.satisfies("+shared"):
             args.append("--enable-dynamic-libraries")
 
         if "+openmp" in spec:

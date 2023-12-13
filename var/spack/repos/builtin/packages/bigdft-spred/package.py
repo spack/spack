@@ -75,7 +75,7 @@ class BigdftSpred(AutotoolsPackage):
             "--with-moduledir=%s" % prefix.include,
             "--prefix=%s" % prefix,
         ]
-        if "+shared" in spec:
+        if spec.satisfies("+shared"):
             args.append("--enable-dynamic-libraries")
 
         if "+mpi" in spec:

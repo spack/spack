@@ -48,7 +48,7 @@ class BigdftAtlab(AutotoolsPackage):
         if "+openmp" in spec:
             fcflags.append(self.compiler.openmp_flag)
 
-        if "+shared" in spec:
+        if spec.satisfies("+shared"):
             fcflags.append("-fPIC")
             cflags.append("-fPIC")
             cxxflags.append("-fPIC")
@@ -65,7 +65,7 @@ class BigdftAtlab(AutotoolsPackage):
             "--prefix=%s" % prefix,
             "--without-etsf-io",
         ]
-        if "+shared" in spec:
+        if spec.satisfies("+shared"):
             args.append("--enable-dynamic-libraries")
 
         if "+mpi" in spec:

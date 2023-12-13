@@ -72,7 +72,7 @@ class BigdftPsolver(AutotoolsPackage, CudaPackage):
             "--prefix=%s" % prefix,
             "--without-etsf-io",
         ]
-        if "+shared" in spec:
+        if spec.satisfies("+shared"):
             args.append("--enable-dynamic-libraries")
 
         if "+mpi" in spec:
