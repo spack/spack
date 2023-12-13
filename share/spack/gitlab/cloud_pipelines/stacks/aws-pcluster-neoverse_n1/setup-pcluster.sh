@@ -14,13 +14,10 @@ spack_intel_compiler_commit="v0.20.1"
 set_pcluster_defaults() {
     # Set versions of pre-installed software in packages.yaml
     [ -z "${SLURM_VERSION}" ] && SLURM_VERSION=$(strings /opt/slurm/lib/libslurm.so | grep  -e '^VERSION'  | awk '{print $2}'  | sed -e 's?"??g')
-    [ -z "${LIBFABRIC_MODULE_VERSION}" ] && LIBFABRIC_MODULE_VERSION=$(grep 'Version:' "$(find /opt/amazon/efa/ -name libfabric.pc | head -n1)" | awk '{print $2}' | sed -e 's?~??g')
-    [ -z "${LIBFABRIC_MODULE}" ] && LIBFABRIC_MODULE="libfabric-aws/${LIBFABRIC_MODULE_VERSION}"
-    [ -z "${LIBFABRIC_VERSION}" ] && LIBFABRIC_VERSION=${LIBFABRIC_MODULE_VERSION//amzn*}
-    [ -z "${GCC_VERSION}" ] && GCC_VERSION=$(gcc -v 2>&1 |tail -n 1| awk '{print $3}' )
+    [ -z "${LIBFABRIC_VERSION}" ] && LIBFABRIC_VERSION=$(awk '/Version:/{print $2}' "$(find /opt/amazon/efa/ -name libfabric.pc | head -n1)" | sed -e 's?~??g' -e 's?amzn.*??g')
+    export SLURM_VERSION LIBFABRIC_VERSION
 
-    cp "${SPACK_ROOT}"/share/spack/gitlab/cloud_pipelines/stacks/aws-pcluster-"${SPACK_TARGET_ARCH}"/packages.yaml /tmp/packages.yaml
-    eval "echo \"$(cat /tmp/packages.yaml)\"" > "${SPACK_ROOT}"/etc/spack/packages.yaml
+    envsubst < "${SPACK_ROOT}"/share/spack/gitlab/cloud_pipelines/stacks/aws-pcluster-"${SPACK_TARGET_ARCH}"/packages.yaml > "${SPACK_ROOT}"/etc/spack/packages.yaml
 }
 
 setup_spack() {
