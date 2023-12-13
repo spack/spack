@@ -50,7 +50,7 @@ class Nwchem(Package):
     # https://github.com/nwchemgit/nwchem/commit/376f86f96eb982e83f10514e9dcd994564f973b4
     # https://github.com/nwchemgit/nwchem/commit/c89fc9d1eca6689bce12564a63fdea95d962a123
     # Prior versions of NWChem, including 7.0.2, were not able to link with FFTW
-    patch("fftw_splans.patch", when="@7.2.0")
+    patch("fftw_splans.patch", when="@7.2.0 +fftw3")
 
     depends_on("blas")
     depends_on("lapack")
@@ -66,7 +66,7 @@ class Nwchem(Package):
         scalapack = spec["scalapack"].libs
         lapack = spec["lapack"].libs
         blas = spec["blas"].libs
-        fftw = spec["fftw-api:double,float"].libs
+        fftw = spec["fftw-api:double,float"].libs if self.spec.satisfies("+fftw3") else ""
         # see https://nwchemgit.github.io/Compiling-NWChem.html
         args = []
         args.extend(
