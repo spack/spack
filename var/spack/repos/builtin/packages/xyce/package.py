@@ -143,11 +143,10 @@ class Xyce(CMakePackage):
         when="@7.4:7.6 +pymi",
     )
 
-    # fix oneapi issue
+    # fix cmake not passing tests issue
     patch(
-        "454-oneapi-xyce.patch",
-        sha256="76a3ff987e43d1657f24d55cfd864b487876a72a9a7c8a37c3151a9b586a21c1",
-        when="%oneapi",
+        "xyceCmake.patch",
+        sha256="4d47cd1f10607205e64910ac124c6dd329f1ecbf861416e9da24a1736f2149ff"
     )
 
     def cmake_args(self):
