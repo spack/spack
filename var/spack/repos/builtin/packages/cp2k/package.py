@@ -370,26 +370,26 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         for arch in CudaPackage.cuda_arch_values:
             if arch not in supported_cuda_arch_list:
                 conflicts("+cuda", when="cuda_arch={0}".format(arch), msg=cuda_msg)
-            depends_on("dla-future cuda_arch={0}".format(arch), when="cuda_arch={0}".format(arch))
-            depends_on("sirius cuda_arch={0}".format(arch), when="cuda_arch={0}".format(arch))
+            depends_on("dla-future cuda_arch={0}".format(arch), when="+dlaf cuda_arch={0}".format(arch))
+            depends_on("sirius cuda_arch={0}".format(arch), when="+sirius cuda_arch={0}".format(arch))
             depends_on("dbcsr cuda_arch={0}".format(arch), when="cuda_arch={0}".format(arch))
-            depends_on("py-torch cuda_arch={0}".format(arch), when="cuda_arch={0}".format(arch))
+            depends_on("py-torch cuda_arch={0}".format(arch), when="+pytorch cuda_arch={0}".format(arch))
 
     with when("+rocm"):
         for arch in ROCmPackage.amdgpu_targets:
             if arch not in supported_rocm_arch_list:
                 conflicts("+rocm", when="amdgpu_target={0}".format(arch), msg=rocm_msg)
             depends_on(
-                "dla-future amdgpu_target={0}".format(arch), when="amdgpu_target={0}".format(arch)
+                "dla-future amdgpu_target={0}".format(arch), when="+dlaf amdgpu_target={0}".format(arch)
             )
             depends_on(
-                "sirius amdgpu_target={0}".format(arch), when="amdgpu_target={0}".format(arch)
+                "sirius amdgpu_target={0}".format(arch), when="+sirius amdgpu_target={0}".format(arch)
             )
             depends_on(
                 "dbcsr amdgpu_target={0}".format(arch), when="amdgpu_target={0}".format(arch)
             )
             depends_on(
-                "py-torch amdgpu_target={0}".format(arch), when="amdgpu_target={0}".format(arch)
+                "py-torch amdgpu_target={0}".format(arch), when="+pytorch amdgpu_target={0}".format(arch)
             )
 
     # Fix 2- and 3-center integral calls to libint
