@@ -856,6 +856,8 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         filter_file("build:opt --host_copt=-march=native", "", ".tf_configure.bazelrc")
 
     def build(self, spec, prefix):
+        # Bazel needs the directory to exist on install
+        mkdirp(python_platlib)
         tmp_path = env["TEST_TMPDIR"]
 
         # https://docs.bazel.build/versions/master/command-line-reference.html
