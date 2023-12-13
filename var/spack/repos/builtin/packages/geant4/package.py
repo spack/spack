@@ -148,7 +148,9 @@ class Geant4(CMakePackage):
     depends_on("libx11", when="+x11")
     depends_on("libxmu", when="+x11")
     depends_on("motif", when="+motif")
-    depends_on("qt@5: +opengl", when="+qt")
+    with when("+qt"):
+        depends_on("qt@5: +opengl")
+        depends_on("qt@5.9:", when="@11.2:")
 
     # As released, 10.0.4 has inconsistently capitalised filenames
     # in the cmake files; this patch also enables cxxstd 14
