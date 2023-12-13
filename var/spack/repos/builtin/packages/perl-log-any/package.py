@@ -1,0 +1,26 @@
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright 2023 EMBL-European Bioinformatics Institute
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack.package import *
+
+
+class PerlLogAny(PerlPackage):
+    """Bringing loggers and listeners together"""
+
+    homepage = "https://metacpan.org/pod/Log::Any"
+    url = "https://cpan.metacpan.org/authors/id/P/PR/PREACTION/Log-Any-1.717.tar.gz"
+
+    maintainers("EbiArnie")
+
+    version("1.717", sha256="56649da0f3900230c9e3d29252cb0a74806fb2ddebd22805acd7368959a65bca")
+
+    def test_use(self):
+        """Test 'use module'"""
+        options = ["-we", 'use strict; use Log::Any; print("OK\n")']
+
+        perl = self.spec["perl"].command
+        out = perl(*options, output=str.split, error=str.split)
+        assert "OK" in out
