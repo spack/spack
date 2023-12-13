@@ -138,7 +138,7 @@ class Rocblas(CMakePackage):
     depends_on("cmake@3.5:", type="build")
 
     depends_on("googletest@1.10.0:", type="test")
-    depends_on("openblas", type="test")
+    depends_on("amdblis", type="test")
 
     for ver in ["5.6.0", "5.6.1", "5.7.0", "5.7.1"]:
         depends_on("rocm-openmp-extras@" + ver, type="test", when="@" + ver)
@@ -254,7 +254,7 @@ class Rocblas(CMakePackage):
     # Finding Python package and set command python as python3
     patch("0004-Find-python.patch", when="@5.2.0:5.4")
     patch("0006-Guard-use-of-OpenMP-to-make-it-optional-5.4.patch", when="@5.4")
-    patch("0007-add-openmp-extras-inc-and-use-openblas.patch", when="@5.6:")
+    patch("0007-add-rocm-openmp-extras-include-dir.patch", when="@5.6:")
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
@@ -279,12 +279,17 @@ class Rocblas(CMakePackage):
             self.define_from_variant("BUILD_WITH_TENSILE", "tensile"),
         ]
         if self.run_tests:
-            args.append(self.define("LINK_BLIS", "OFF"))
+            args.append(self.define("LINK_BLIS", "ON"))
             if self.spec.satisfies("@5.6.0:"):
                 args.append(
                     self.define("ROCM_OPENMP_EXTRAS_DIR", self.spec["rocm-openmp-extras"].prefix)
                 )
-                args.append(self.define("OPENBLAS_DIR", self.spec["openblas"].prefix))
+                args.append(
+                    self.define("BLIS_INCLUDE_DIR", self.spec["amdblis"].prefix + "/include/blis/")
+                )
+                args.append(
+                    self.define("BLAS_LIBRARY", self.spec["amdblis"].prefix + "/lib/libblis.a")
+                )
 
         arch_define_name = "AMDGPU_TARGETS"
         if "+tensile" in self.spec:
