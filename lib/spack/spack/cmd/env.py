@@ -30,7 +30,6 @@ import spack.environment.shell
 import spack.schema.env
 import spack.spec
 import spack.tengine
-import spack.util.spack_yaml as syaml
 from spack.cmd.common import arguments
 from spack.util.environment import EnvironmentModifications
 
@@ -52,7 +51,6 @@ subcommands = [
     "update",
     "revert",
     "depfile",
-    "freeze",
 ]
 
 
@@ -724,32 +722,6 @@ def env_depfile(args):
             f.write(makefile)
     else:
         sys.stdout.write(makefile)
-
-
-def env_freeze_setup_parser(subparser):
-    """freeze and flatten the current configuration"""
-    subparser.add_argument(
-        "-o", "--output", default=None, metavar="FILE", help="write to FILE rather than to stdout"
-    )
-    subparser.add_argument(
-        "--blame", action="store_true", help="add provenance information to config entries"
-    )
-
-
-def env_freeze(args):
-    spack.cmd.require_active_env(cmd_name="env freeze")
-    environment = ev.active_environment()
-
-    flattened = environment.manifest.pristine_yaml_content.copy()
-    for config_section in spack.config.SECTION_SCHEMAS:
-        current = spack.config.get(config_section)
-        flattened[spack.schema.env.TOP_LEVEL_KEY][config_section] = current
-
-    if args.output:
-        with open(args.output, mode="w", encoding="utf-8") as stream:
-            syaml.dump_config(flattened, stream=stream, default_flow_style=False, blame=args.blame)
-    else:
-        syaml.dump_config(flattened, stream=sys.stdout, default_flow_style=False, blame=args.blame)
 
 
 #: Dictionary mapping subcommand names and aliases to functions

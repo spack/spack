@@ -1023,7 +1023,7 @@ _spack_env() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="activate deactivate create remove rm list ls status st loads view update revert depfile freeze"
+        SPACK_COMPREPLY="activate deactivate create remove rm list ls status st loads view update revert depfile"
     fi
 }
 
@@ -1121,10 +1121,6 @@ _spack_env_depfile() {
     else
         _all_packages
     fi
-}
-
-_spack_env_freeze() {
-    SPACK_COMPREPLY="-h --help -o --output --blame"
 }
 
 _spack_extensions() {
