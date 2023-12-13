@@ -27,6 +27,7 @@ import functools
 import json
 import os
 import os.path
+import pathlib
 import sys
 import uuid
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -38,13 +39,16 @@ import spack.binary_distribution
 import spack.config
 import spack.detection
 import spack.environment
+import spack.fetch_strategy
 import spack.modules
 import spack.paths
 import spack.platforms
 import spack.platforms.linux
 import spack.repo
+import spack.resource
 import spack.spec
 import spack.store
+import spack.stage
 import spack.user_environment
 import spack.util.environment
 import spack.util.executable
@@ -53,9 +57,11 @@ import spack.util.spack_yaml
 import spack.util.url
 import spack.version
 
+import shutil
+
 from ._common import _executables_in_store, _python_import, _root_spec, _try_import_from_store
 from .clingo import ClingoBootstrapConcretizer
-from .config import spack_python_interpreter, spec_for_current_python
+from .config import root_path, spack_python_interpreter, spec_for_current_python
 
 #: Name of the file containing metadata about the bootstrapping source
 METADATA_YAML_FILENAME = "metadata.yaml"
@@ -68,6 +74,18 @@ _bootstrap_methods = {}
 
 
 ConfigDictionary = Dict[str, Any]
+
+
+def _windows_resource_root() -> pathlib.Path:
+    """Returns the root of the Windows resources required for bootstrapping"""
+    return pathlib.Path(root_path()) / "windows-resources"
+
+
+def insert_resource_into_environment(name):
+    resource_root = _windows_resource_root() / name
+    env = spack.util.environment.EnvironmentModifications()
+    env.append_path("PATH", str(resource_root))
+    env.apply_modifications()
 
 
 def bootstrapper(bootstrapper_type: str):
@@ -460,6 +478,49 @@ def _add_externals_if_missing() -> None:
     )
 
 
+class BootstrapResource():
+    """Represents a resource required by Spack to run, fetched as part
+    of the bootstrapping operation
+
+    More or less identical to package based resources but exposes additional logic related
+    to bootstrapping/ resource visibility.
+
+    Composes a name and a fetch strategy
+    """
+    def __init__(self, name, conf):
+        """
+        Args:
+            name (str): Name of resource to be fetched
+            conf (dict): Dictionary representing resource endpoint layout
+        """
+        self._name = name
+        fetcher = spack.fetch_strategy.URLFetchStrategy(url=conf["endpoint"], checksum=conf["sha256"])
+        resource = spack.resource.Resource(name, fetcher, destination=self.stage.path)
+        stage = spack.stage.Stage(fetcher, path=str(_windows_resource_root()))
+        self.stage = spack.stage.ResourceStage(fetcher, stage, resource, path=str(_windows_resource_root()))
+
+    def acquire_resource(self):
+        "fetches, expands, and 'installs' resource"
+        with self.stage as s:
+            s.fetch()
+            s.expand_archive()
+            shutil.copytree(pathlib.Path(s.path) / self._name, _windows_resource_root() / self._name)
+
+
+def ensure_resource(name):
+    """Acquires resource from configured sources"""
+    resource_sources = spack.config.get("resource:sources")
+    resources = []
+    for source in resource_sources:
+        with open(pathlib.Path(source["resource_layout"]) / "layout.yaml", "r") as f:
+            cnf = spack.util.spack_yaml.load(f)
+            resources.append(BootstrapResource(name, cnf))
+    for resource in resources:
+        if resource.acquire_resource():
+            insert_resource_into_environment(name)
+            return
+
+
 def clingo_root_spec() -> str:
     """Return the root spec used to bootstrap clingo"""
     return _root_spec("clingo-bootstrap@spack+python")
@@ -561,12 +622,29 @@ before proceeding with Spack or provide the path to a non standard install with 
     spack.detection.update_configuration(externals, buildable=False)
 
 
+def ensure_file_in_path_or_raise() -> None:
+    """Ensure file is in the PATH or raise"""
+    file = spack.util.executable.which("file")
+    if not file:
+        raise RuntimeError("Bootstrap resource 'file' not found in the PATH")
+
+
+def ensure_win_resources() -> None:
+    ensure_resource("file")
+    ensure_resource("gpg")
+
+
 def ensure_core_dependencies() -> None:
     """Ensure the presence of all the core dependencies."""
     if sys.platform.lower() == "linux":
         ensure_patchelf_in_path_or_raise()
-    if not IS_WINDOWS:
-        ensure_gpg_in_path_or_raise()
+    if IS_WINDOWS:
+        ensure_win_resources()
+        ensure_file_in_path_or_raise()
+    # This call needs to be made after ensure_win_resources
+    # as that method is responsible for adding gpg to the path
+    # on Windows
+    ensure_gpg_in_path_or_raise()
     ensure_clingo_importable_or_raise()
 
 
