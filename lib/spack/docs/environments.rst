@@ -142,6 +142,21 @@ user's prompt to begin with the environment name in brackets.
    $ spack env activate -p myenv
    [myenv] $ ...
 
+The ``activate`` command can also be used to create a new environment, if it is
+not already defined, by adding the ``--create`` flag. Managed and anonymous
+environments, anonymous environments are explained in the next section,
+can both be created using the same flags that `spack env create` accepts.
+If an environment already exists then spack will simply activate it and ignore the
+create specific flags.
+
+.. code-block:: console
+   
+   $ spack env activate --create -p myenv
+   # ...
+   # [creates if myenv does not exist yet]
+   # ...
+   [myenv] $ ...
+
 To deactivate an environment, use the command:
 
 .. code-block:: console
@@ -156,19 +171,6 @@ or the shortcut alias
 
 If the environment was activated with its view, deactivating the
 environment will remove the view from the user environment.
-
-The ``activate`` command can also be used to create a new environment, if it is 
-not already defined, by adding the ``--create`` flag. Managed and unmanaged 
-environments can both be created and if an environment already exists then spack will
-simply activate it.
-
-.. code-block:: console
-   
-   $ spack env activate --create -p myenv
-   # ...
-   # [creates if myenv does not exist yet]
-   # ...
-   [myenv] $ ...
 
 ^^^^^^^^^^^^^^^^^^^^^^
 Anonymous Environments
