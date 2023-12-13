@@ -64,7 +64,7 @@ class Hepmc3(CMakePackage):
             args.extend(
                 [
                     self.define("HEPMC3_PYTHON_VERSIONS", str(py_ver)),
-                    self.define("HEPMC3_Python_SITEARCH" + py_ver.joined, python_platlib),
+                    self.define("HEPMC3_Python_SITEARCH" + str(py_ver.joined), python_platlib),
                 ]
             )
 
