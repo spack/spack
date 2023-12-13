@@ -283,7 +283,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         conflicts("@:8")
 
     with when("+libvori"):
-        depends_on("libvori+fpic", when="@2023.1:")
+        depends_on("libvori+pic", when="@2023.1:")
         depends_on("libvori@201219:", when="@8.1")
         depends_on("libvori@210412:", when="@8.2:")
         depends_on("libvori@220621:", when="@2023.1:")
