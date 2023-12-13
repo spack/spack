@@ -247,7 +247,7 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
     def initconfig_mpi_entries(self):
         spec = self.spec
 
-        entries = super(CHAI, self).initconfig_mpi_entries()
+        entries = super(Chai, self).initconfig_mpi_entries()
         entries.append(cmake_cache_option("ENABLE_MPI", "+mpi" in spec))
 
         return entries
