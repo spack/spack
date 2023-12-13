@@ -77,7 +77,9 @@ class PyPip(Package, PythonExtension):
             args.insert(0, os.path.join(whl, "pip"))
         python(*args)
 
-    def setup_dependent_package(self, module, dependent_spec):
-        pip = dependent_spec["python"].command
+    def setup_dependent_package(self, module, dependent_spec: Spec):
+        # Old installs do not depend on python-venv, fall back to underlying python.
+        pkg = "python-venv" if dependent_spec.dependencies("python-venv") else "python"
+        pip = dependent_spec[pkg].command
         pip.add_default_arg("-m", "pip")
         setattr(module, "pip", pip)

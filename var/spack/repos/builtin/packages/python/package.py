@@ -8,19 +8,16 @@ import json
 import os
 import platform
 import re
-import stat
 import subprocess
 import sys
 from shutil import copy
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import is_nonsymlink_exe_with_shebang, path_contains_subdirectory
 from llnl.util.lang import dedupe
 
 from spack.build_environment import dso_suffix, stat_suffix
 from spack.package import *
-from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
 
 
@@ -1115,7 +1112,7 @@ print(json.dumps(config))
         path = self.config_vars["platlib"]
         if path.startswith(prefix):
             return path.replace(prefix, "")
-        return os.path.join("lib64", "python{}".format(self.version.up_to(2)), "site-packages")
+        return os.path.join("lib64", f"python{self.version.up_to(2)}", "site-packages")
 
     @property
     def purelib(self):
@@ -1135,7 +1132,7 @@ print(json.dumps(config))
         path = self.config_vars["purelib"]
         if path.startswith(prefix):
             return path.replace(prefix, "")
-        return os.path.join("lib", "python{}".format(self.version.up_to(2)), "site-packages")
+        return os.path.join("lib", f"python{self.version.up_to(2)}", "site-packages")
 
     @property
     def include(self):
@@ -1163,39 +1160,6 @@ print(json.dumps(config))
         """Set PYTHONPATH to include the site-packages directory for the
         extension and any other python extensions it depends on.
         """
-        # Ensure the current Python is first in the PATH
-        path = os.path.dirname(self.command.path)
-        if not is_system_path(path):
-            env.prepend_path("PATH", path)
-
-        # Add installation prefix to PYTHONPATH, needed to run import tests
-        prefixes = set()
-        if dependent_spec.package.extends(self.spec):
-            prefixes.add(dependent_spec.prefix)
-
-        # Add direct build/run/test dependencies to PYTHONPATH,
-        # needed to build the package and to run import tests
-        for direct_dep in dependent_spec.dependencies(deptype=("build", "run", "test")):
-            if direct_dep.package.extends(self.spec):
-                prefixes.add(direct_dep.prefix)
-
-                # Add recursive run dependencies of all direct dependencies,
-                # needed by direct dependencies at run-time
-                for indirect_dep in direct_dep.traverse(deptype="run"):
-                    if indirect_dep.package.extends(self.spec):
-                        prefixes.add(indirect_dep.prefix)
-
-        for prefix in prefixes:
-            # Packages may be installed in platform-specific or platform-independent
-            # site-packages directories
-            for directory in {self.platlib, self.purelib}:
-                env.prepend_path("PYTHONPATH", os.path.join(prefix, directory))
-
-            if self.spec.satisfies("platform=windows"):
-                prefix_scripts_dir = prefix.Scripts
-                if os.path.exists(prefix_scripts_dir):
-                    env.prepend_path("PATH", prefix_scripts_dir)
-
         # We need to make sure that the extensions are compiled and linked with
         # the Spack wrapper. Paths to the executables that are used for these
         # operations are normally taken from the sysconfigdata file, which we
@@ -1241,9 +1205,7 @@ print(json.dumps(config))
                 # invoked directly (no change would be required in that case
                 # because Spack arranges for the Spack ld wrapper to be the
                 # first instance of "ld" in PATH).
-                new_link = config_link.replace(
-                    " {0} ".format(config_compile), " {0} ".format(new_compile)
-                )
+                new_link = config_link.replace(f" {config_compile} ", f" {new_compile} ")
 
             # There is logic in the sysconfig module that is sensitive to the
             # fact that LDSHARED is set in the environment, therefore we export
@@ -1256,65 +1218,23 @@ print(json.dumps(config))
         """Set PYTHONPATH to include the site-packages directory for the
         extension and any other python extensions it depends on.
         """
-        if dependent_spec.package.extends(self.spec):
-            # Packages may be installed in platform-specific or platform-independent
-            # site-packages directories
-            for directory in {self.platlib, self.purelib}:
-                env.prepend_path("PYTHONPATH", os.path.join(dependent_spec.prefix, directory))
+        if not dependent_spec.package.extends(self.spec) or dependent_spec.dependencies(
+            "python-venv"
+        ):
+            return
+
+        # Packages may be installed in platform-specific or platform-independent site-packages
+        # directories
+        for directory in {self.platlib, self.purelib}:
+            env.prepend_path("PYTHONPATH", os.path.join(dependent_spec.prefix, directory))
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before python modules' install() methods."""
 
         module.python = self.command
-
         module.python_include = join_path(dependent_spec.prefix, self.include)
         module.python_platlib = join_path(dependent_spec.prefix, self.platlib)
         module.python_purelib = join_path(dependent_spec.prefix, self.purelib)
-
-    def add_files_to_view(self, view, merge_map, skip_if_exists=True):
-        # The goal is to copy the `python` executable, so that its search paths are relative to the
-        # view instead of the install prefix. This is an obsolete way of creating something that
-        # resembles a virtual environnent. Also we copy scripts with shebang lines. Finally we need
-        # to re-target symlinks pointing to copied files.
-        bin_dir = self.spec.prefix.bin if sys.platform != "win32" else self.spec.prefix
-        copied_files: Dict[Tuple[int, int], str] = {}  # File identifier -> source
-        delayed_links: List[Tuple[str, str]] = []  # List of symlinks from merge map
-        for src, dst in merge_map.items():
-            if skip_if_exists and os.path.lexists(dst):
-                continue
-
-            # Files not in the bin dir are linked the default way.
-            if not path_contains_subdirectory(src, bin_dir):
-                view.link(src, dst, spec=self.spec)
-                continue
-
-            s = os.lstat(src)
-
-            # Symlink is delayed because we may need to re-target if its target is copied in view
-            if stat.S_ISLNK(s.st_mode):
-                delayed_links.append((src, dst))
-                continue
-
-            # Anything that's not a symlink gets copied. Scripts with shebangs are immediately
-            # updated when necessary.
-            copied_files[(s.st_dev, s.st_ino)] = dst
-            copy(src, dst)
-            if is_nonsymlink_exe_with_shebang(src):
-                filter_file(
-                    self.spec.prefix, os.path.abspath(view.get_projection_for_spec(self.spec)), dst
-                )
-
-        # Finally re-target the symlinks that point to copied files.
-        for src, dst in delayed_links:
-            try:
-                s = os.stat(src)
-                target = copied_files[(s.st_dev, s.st_ino)]
-            except (OSError, KeyError):
-                target = None
-            if target:
-                os.symlink(os.path.relpath(target, os.path.dirname(dst)), dst)
-            else:
-                view.link(src, dst, spec=self.spec)
 
     def test_hello_world(self):
         """run simple hello world program"""
