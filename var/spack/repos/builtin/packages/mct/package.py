@@ -16,9 +16,9 @@ class Mct(AutotoolsPackage):
 
     maintainers("climbfuji")
 
-    # This is a custom license that doesn't match any of the ones listed
-    # in https://spdx.org/licenses/, but similar to Creative Commons?
-    license("https://github.com/MCSclimate/MCT/blob/master/LICENSE")
+    # TODO: MCT uses a custom license not representable by an SPDX identifier.
+    # Once there is a consensus and documentation on how to represent custom
+    # licenses, add a license annotation here.
 
     version("2.11.0", sha256="1b2a30bcba0081226ff1f1f5152e82afa3a2bb911215883965e669f776dcb365")
     version("2.10.0", sha256="42f32e3ab8bba31d16a1c6c9533f717a9d950e42c9b03b864b3436335d4e1b71")
