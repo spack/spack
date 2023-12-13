@@ -219,7 +219,7 @@ def env_activate_setup_parser(subparser):
         "--create",
         action="store_true",
         default=False,
-        help="create and activate the environment if it doesn't exist", 
+        help="create and activate the environment if it doesn't exist",
     )
     subparser.add_argument(
         "--envfile",
