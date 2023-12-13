@@ -22,8 +22,6 @@ class Libvori(CMakePackage):
 
     variant("pic", default=True, description="Compile the library with position independent code")
 
-
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
         args = [self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic")]
         return args
