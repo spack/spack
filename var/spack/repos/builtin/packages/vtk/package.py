@@ -49,7 +49,7 @@ class Vtk(CMakePackage):
     # VTK7 defaults to OpenGL2 rendering backend
     variant("opengl2", default=True, description="Enable OpenGL2 backend")
     variant("osmesa", default=False, description="Enable OSMesa support")
-    variant("python", default=False, description="Enable Python support", when="@8.2.1a:")
+    variant("python", default=False, description="Enable Python support", when="@8:")
     variant("qt", default=False, description="Build with support for Qt")
     variant("xdmf", default=False, description="Build XDMF file support")
     variant("ffmpeg", default=False, description="Build with FFMPEG support")
@@ -78,6 +78,7 @@ class Vtk(CMakePackage):
     with when("+python"):
         # Depend on any Python, add bounds below.
         extends("python@2.7:", type=("build", "run"))
+        depends_on("python@:3.7", when="@:8.2.0", type=("build", "run"))
         # Python 3.8 support from vtk 9 and patched 8.2
         depends_on("python@:3.8", when="@:8.2.1a", type=("build", "run"))
         # Python 3.10 support from vtk 9.2
