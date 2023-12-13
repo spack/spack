@@ -444,6 +444,14 @@ def _now(args):
     with spack.bootstrap.ensure_bootstrap_configuration():
         spack.bootstrap.ensure_core_dependencies()
         if args.dev:
+            if sys.version_info < (3, 8):
+                llnl.util.tty.warn(
+                    "Spack does not support installing Python libraries with EOL versions of "
+                    "Python: https://devguide.python.org/versions/. If the install fails, try "
+                    "running Spack with a newer version of Python, or use pip to install the "
+                    "development dependencies, or use `@spackbot fix style` on your GitHub PR "
+                    "instead of `spack style` on the command line."
+                )
             spack.bootstrap.ensure_environment_dependencies()
 
 

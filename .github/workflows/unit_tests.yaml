@@ -150,7 +150,7 @@ jobs:
       shell: runuser -u spack-test -- bash {0}
       run: |
           source share/spack/setup-env.sh
-          spack -d bootstrap now --dev
+          spack -d bootstrap now
           spack unit-test -k 'not cvs and not svn and not hg' -x --verbose
   # Test for the clingo based solver (using clingo-cffi)
   clingo-cffi:
