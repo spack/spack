@@ -26,6 +26,7 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
     tags = ["ecp", "ecp-apps"]
 
     version("master", branch="master")
+    version("2.0.0", tag="v2.0.0")
 
     variant("pic", default=True, description="Position independent code")
     variant(
@@ -66,6 +67,7 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("mpi")
     depends_on("yaml-cpp@0.5.3:")
+    depends_on("trilinos@=13.4.1+exodus+zoltan+stk", when="@=2.0.0")
     depends_on(
         "trilinos@13:"
         "+exodus+tpetra+zoltan+stk+boost"
@@ -115,8 +117,6 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
     variant(
         "cxxstd", default="17", values=supported_cxxstd, multi=False, description="cxx standard"
     )
-    variant("tests", default=True, description="Activate regression tests")
-    variant("unit-tests", default=True, description="Activate unit tests")
     for std in supported_cxxstd:
         depends_on("trilinos cxxstd=%s" % std, when="cxxstd=%s" % std)
 
