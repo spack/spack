@@ -283,6 +283,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         conflicts("@:8")
 
     with when("+libvori"):
+        depends_on("libvori+fpic", when="@2023.1:")
         depends_on("libvori@201219:", when="@8.1")
         depends_on("libvori@210412:", when="@8.2:")
         depends_on("libvori@220621:", when="@2023.1:")
@@ -332,7 +333,16 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     # versions. Instead just mark all unsupported cuda archs as conflicting.
 
     supported_cuda_arch_list = ("35", "37", "60", "70", "80")
-    supported_rocm_arch_list = ("gfx906", "gfx908", "gfx90a", "gfx90a:xnack-", "gfx90a:xnack+")
+    supported_rocm_arch_list = (
+        "gfx906",
+        "gfx908",
+        "gfx90a",
+        "gfx90a:xnack-",
+        "gfx90a:xnack+",
+        "gfx1103",
+        "gfx1103:xnack-",
+        "gfx1103:xnack+",
+    )
     gpu_map = {
         "35": "K40",
         "37": "K80",
@@ -344,7 +354,11 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         "gfx90a": "Mi250",
         "gfx90a:xnack-": "Mi250",
         "gfx90a:xnack+": "Mi250",
+        "gfx1103:xnack+": "Mi300",
+        "gfx1103:xnack-": "Mi300",
+        "gfx1103": "Mi300",
     }
+
     cuda_msg = "cp2k only supports cuda_arch {0}".format(supported_cuda_arch_list)
     rocm_msg = "cp2k only supports amdgpu_target {0}".format(supported_rocm_arch_list)
 
@@ -975,8 +989,6 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                     self.define("CP2K_USE_ACCEL", "HIP"),
                     self.define("CP2K_WITH_GPU", gpu_ver),
                 ]
-
-        # we need to add the quip package to spack.
 
         args += [
             self.define_from_variant("CP2K_ENABLE_REGTESTS", "enable_regtests"),
