@@ -69,7 +69,7 @@ spack:
   - butterflypack
   - cabana
   - caliper
-  - chai ~benchmarks ~tests
+  - chai
   - charliecloud
   - conduit
   - datatransferkit
@@ -196,7 +196,7 @@ spack:
   - arborx +cuda cuda_arch=75 ^kokkos +wrapper
   - cabana +cuda cuda_arch=75 ^kokkos +wrapper +cuda_lambda +cuda cuda_arch=75
   - caliper +cuda cuda_arch=75
-  - chai ~benchmarks ~tests +cuda cuda_arch=75 ^umpire ~shared
+  - chai +cuda cuda_arch=75 ^umpire ~shared
   - flecsi +cuda cuda_arch=75
   - ginkgo +cuda cuda_arch=75
   - heffte +cuda cuda_arch=75
@@ -241,7 +241,7 @@ spack:
   - arborx +cuda cuda_arch=80 ^kokkos +wrapper
   - cabana +cuda cuda_arch=80 ^kokkos +wrapper +cuda_lambda +cuda cuda_arch=80
   - caliper +cuda cuda_arch=80
-  - chai ~benchmarks ~tests +cuda cuda_arch=80 ^umpire ~shared
+  - chai +cuda cuda_arch=80 ^umpire ~shared
   - flecsi +cuda cuda_arch=80
   - ginkgo +cuda cuda_arch=80
   - heffte +cuda cuda_arch=80
@@ -286,7 +286,7 @@ spack:
   - arborx +cuda cuda_arch=90 ^kokkos +wrapper
   - cabana +cuda cuda_arch=90  ^kokkos +wrapper +cuda_lambda +cuda cuda_arch=90
   - caliper +cuda cuda_arch=90
-  - chai ~benchmarks ~tests +cuda cuda_arch=90 ^umpire ~shared
+  - chai +cuda cuda_arch=90 ^umpire ~shared
   - flecsi +cuda cuda_arch=90
   - ginkgo +cuda cuda_arch=90
   - heffte +cuda cuda_arch=90

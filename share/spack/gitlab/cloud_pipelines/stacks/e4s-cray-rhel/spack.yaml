@@ -75,7 +75,7 @@ spack:
   - boost +python +filesystem +iostreams +system
   - cabana
   - caliper
-  - chai ~benchmarks ~tests
+  - chai
   - charliecloud
   - conduit
   - datatransferkit
