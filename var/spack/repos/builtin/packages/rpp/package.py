@@ -15,11 +15,20 @@ class Rpp(CMakePackage):
 
     homepage = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp"
     git = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git"
-    url = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/archive/0.97.tar.gz"
+    url = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/archive/refs/tags/rocm-5.7.0.tar.gz"
+
+    def url_for_version(self, version):
+        if version >= Version("5.7.0"):
+            url = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/archive/refs/tags/rocm-{0}.tar.gz"
+        else:
+            url = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/archive/{0}.tar.gz"
+        return url.format(version)
 
     maintainers = ["srekolam", "afzpatel"]
     tags = ["rocm"]
-
+    version("5.7.1", sha256="36fff5f1c52d969c3e2e0c75b879471f731770f193c9644aa6ab993fb8fa4bbf")
+    version("5.7.0", sha256="1c612cde3c3d3840ae75ee5c1ee59bd8d61b1fdbf84421ae535cda863470fc06")
+    version("1.2.0", sha256="660a11e1bd8706967835597b26daa874fd1507459bfebe22818149444bec540c")
     version("1.1.0", sha256="9b1b9e721df27ee577819710b261071c68b2dccba96d9daf5d0535ee5f0e045f")
     version("1.0.0", sha256="040601e356b0a06c4ffb2043320ae822ab0da78af867392002c7b68dbd85989c")
     version("0.99", sha256="f1d7ec65d0148ddb7b3ce836a7e058727036df940d72d1683dee590a913fd44a")

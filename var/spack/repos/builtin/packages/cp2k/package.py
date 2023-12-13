@@ -271,7 +271,8 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         depends_on("sirius@7.0.0:7.0", when="@8:8.2")
         depends_on("sirius@7.2", when="@8.3:8.9")
         depends_on("sirius@7.3:", when="@9.1")
-        depends_on("sirius@7.4:", when="@2023.2")
+        depends_on("sirius@7.4:7.5", when="@2023.2")
+        depends_on("sirius@7.5:", when="@master")
         conflicts("~mpi", msg="SIRIUS requires MPI")
         # sirius support was introduced in 7, but effectively usable starting from CP2K 9
         conflicts("@:8")
@@ -297,6 +298,9 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     depends_on("wannier90", when="@3.0+mpi")
 
     with when("build_system=cmake"):
+        depends_on("cmake@3.22:", type="build")
+
+        # DBCSR as external dependency
         depends_on("dbcsr@2.6:")
         depends_on("dbcsr+openmp", when="+openmp")
         depends_on("dbcsr+cuda", when="+cuda")
