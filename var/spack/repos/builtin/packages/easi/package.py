@@ -34,7 +34,7 @@ class Easi(CMakePackage):
 
     depends_on("impalajit@llvm-1.0.0", when="jit=impalajit-llvm")
     depends_on("lua@5.3.2", when="jit=lua")
-    depends_on("impalajit", when="jit=impalajit")
+    depends_on("impalajit@main", when="jit=impalajit")
 
     conflicts("jit=impalajit", when="jit=impalajit-llvm")
     conflicts("jit=impalajit-llvm", when="jit=impalajit")
