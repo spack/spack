@@ -6,7 +6,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 set -e
 
-spack_intel_compiler_commit="361a185ddb"
+# Intel compiler needs to be installed from a specific spack git commit.
+# The best solution would be to have the compilers hash (or packages contents) be part of the
+# individual packages hashes. I don't see this at the moment.
+spack_intel_compiler_commit="v0.20.1"
 
 set_pcluster_defaults() {
     # Set versions of pre-installed software in packages.yaml
@@ -93,8 +96,6 @@ install_compilers() {
         spack compiler add --scope site
     )
 
-    # Intel compiler needs to be installed from a specific spack git commit.
-    # The best solution would be to have the compilers hash (or packages contents) be part of the individual packages hashes. I don't see this ATM.
     if ! echo "${SPACK_TARGET_ARCH}" | grep -q neoverse; then
         pushd "${SPACK_ROOT}"
         git fetch --depth=1 origin ${spack_intel_compiler_commit}
