@@ -95,7 +95,7 @@ install_compilers() {
 
     if ! echo "${SPACK_TARGET_ARCH}" | grep -q neoverse; then
         pushd "${SPACK_ROOT}"
-        git fetch --depth=1 origin ${spack_intel_compiler_commit}
+        git fetch --depth=1 -t origin ${spack_intel_compiler_commit}
         latest_commit=$(git log | head -n1 | awk '/commit/{print $2}')
         git checkout ${spack_intel_compiler_commit}
         popd
