@@ -9,7 +9,7 @@ set -e
 # Intel compiler needs to be installed from a specific spack git commit.
 # The best solution would be to have the compilers hash (or packages contents) be part of the
 # individual packages hashes. I don't see this at the moment.
-spack_intel_compiler_commit="v0.20.1"
+spack_intel_compiler_commit="v0.20.2"
 
 set_pcluster_defaults() {
     # Set versions of pre-installed software in packages.yaml
