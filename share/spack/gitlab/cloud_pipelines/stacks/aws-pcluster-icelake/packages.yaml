@@ -5,7 +5,7 @@ packages:
       - one_of: ['cflags=-std=c18', '%gcc']
   gromacs:
     require:
-      - one_of: ["gromacs@2020.1 +blas +intel_provided_gcc +lapack %intel ^intel-oneapi-mkl"]
+      - one_of: ["gromacs@2020.1 +blas +intel_provided_gcc +lapack %intel ^intel-oneapi-mkl", "%gcc"]
   intel-mpi:
     variants: +external-libfabric
   intel-oneapi-compilers:
@@ -15,7 +15,7 @@ packages:
     variants: +external-libfabric generic-names=True
   lammps:
     require:
-      - one_of: ["lammps@develop lammps_sizes=bigbig +molecule +kspace +rigid +asphere +opt +openmp +openmp-package +intel %intel ^intel-oneapi-mkl"]
+      - one_of: ["lammps@develop lammps_sizes=bigbig +molecule +kspace +rigid +asphere +opt +openmp +openmp-package +intel %intel ^intel-oneapi-mkl", "%gcc"]
   libidn2:
     require:
       - one_of: ['cflags=-std=c18', '%gcc']
@@ -29,7 +29,7 @@ packages:
       - one_of: ['cflags=-std=c18', '%gcc']
   mpas-model:
     require:
-      - one_of: ["precision=single %intel ^parallelio+pnetcdf"]
+      - one_of: ["precision=single %intel ^parallelio+pnetcdf", "%gcc"]
   mpich:
     require:
       - one_of: ["mpich pmi=pmi2 device=ch4 netmod=ofi +slurm"]
@@ -41,15 +41,12 @@ packages:
     require: '@4:'
   palace:
     require:
-      - one_of: ["palace %oneapi ^fmt@9.1.0"]
+      - one_of: ["palace %oneapi ^fmt@9.1.0", "%gcc"]
   pmix:
     require: ["pmix@3"]
-  py-devito:
-    require:
-      - one_of: ["+mpi %intel"]
   quantum-espresso:
     require:
-      - one_of: ["quantum-espresso@6.6 %intel ^intel-oneapi-mkl+cluster"]
+      - one_of: ["quantum-espresso@6.6 %intel ^intel-oneapi-mkl+cluster", "%gcc"]
   slurm:
     buildable: false
     externals:
@@ -57,9 +54,9 @@ packages:
         spec: slurm@${SLURM_VERSION} +pmix
   wrf:
     require:
-      - one_of: ["wrf@4 build_type=dm+sm %intel"]
+      - one_of: ["wrf@4 build_type=dm+sm %intel", "%gcc"]
   all:
-    compiler: [intel, gcc, clang]
+    compiler: [intel, gcc]
     permissions:
       read: world
       write: user

@@ -81,11 +81,12 @@ install_compilers() {
     # changes in the compilers are not reflected in the package hashes built in the CI. Hence, those
     # packages will reference a wrong compiler path once the path changes.
 
-    # Get gcc from buildcache
-    if echo "${SPACK_TARGET_ARCH}" | grep -q neoverse; then
-        gcc_hash="jttj24nibqy5jsqf34as5m63umywfa3d"
-    else
+    # `gcc@12.3.0%gcc@7.3.1` is created as part of building the pipeline containers.
+    # https://github.com/spack/gitlab-runners/pkgs/container/pcluster-amazonlinux-2/106126845?tag=v2023-07-01 produced the following hashes.
+    if [ "x86_64" == "$(arch)" ]; then
         gcc_hash="yyvkvlgimaaxjhy32oa5x5eexqekrevc"
+    else
+        gcc_hash="jttj24nibqy5jsqf34as5m63umywfa3d"
     fi
 
     spack install --no-check-signature /${gcc_hash}
@@ -94,20 +95,23 @@ install_compilers() {
         spack compiler add --scope site
     )
 
-    if ! echo "${SPACK_TARGET_ARCH}" | grep -q neoverse; then
-        pushd "${SPACK_ROOT}"
-        git fetch --depth=1 -t origin ${spack_intel_compiler_commit}
-        latest_commit=$(git log | head -n1 | awk '/commit/{print $2}')
-        git checkout ${spack_intel_compiler_commit}
-        popd
-
-        # Add oneapi@latest & intel@latest
-        spack install intel-oneapi-compilers-classic
-        bash -c ". \"$(spack location -i intel-oneapi-compilers)\"/setvars.sh; spack compiler add --scope site"
-
-        pushd "${SPACK_ROOT}"
-        git checkout "${latest_commit}"
-        popd
+    # Install Intel compilers through a static spack version such that the compiler's hash does not change.
+    # The compilers needs to be in the same install tree as the rest of the software such that the path
+    # relocation works correctly. This holds the danger that this part will fail when the current spack gets
+    # incompatible with the one in $spack_intel_compiler_commit. Therefore, we make intel installations optional
+    # in package.yaml files.
+    if [ "x86_64" == "$(arch)" ]; then
+        (
+            CURRENT_SPACK_ROOT=${SPACK_ROOT}
+            DIR="$(mktemp -d)"
+            cd "${DIR}"
+            git clone --depth=1 -b ${spack_intel_compiler_commit} https://github.com/spack/spack.git \
+                && cp "${CURRENT_SPACK_ROOT}/share/spack/gitlab/cloud_pipelines/configs/config.yaml" spack/etc/spack/ \
+                && . spack/share/spack/setup-env.sh \
+                && spack install intel-oneapi-compilers-classic \
+                && bash -c ". \"$(spack location -i intel-oneapi-compilers)\"/setvars.sh; spack compiler add --scope site" || true
+            rm -rf "${DIR}"
+        )
     fi
 }
 
