@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-
 from spack.package import *
 
 
@@ -27,11 +25,4 @@ class RedlandBindings(AutotoolsPackage):
     extends("python")
 
     def configure_args(self):
-        plib = self.spec["python"].prefix.lib
-        plib64 = self.spec["python"].prefix.lib64
-        mybase = self.prefix.lib
-        if os.path.isdir(plib64) and not os.path.isdir(plib):
-            mybase = self.prefix.lib64
-        pver = "python{0}".format(self.spec["python"].version.up_to(2))
-        myplib = join_path(mybase, pver, "site-packages")
-        return ["--with-python", "PYTHON_LIB={0}".format(myplib)]
+        return ["--with-python", f"PYTHON_LIB={python_platlib}"]

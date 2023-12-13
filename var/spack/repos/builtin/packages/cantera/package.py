@@ -134,13 +134,9 @@ class Cantera(SConsPackage):
 
         # Python module
         if "+python" in spec:
-            args.extend(
-                ["python_package=full", "python_cmd={0}".format(spec["python"].command.path)]
-            )
+            args.extend(["python_package=full", "python_cmd={0}".format(python.path)])
             if spec["python"].satisfies("@3:"):
-                args.extend(
-                    ["python3_package=y", "python3_cmd={0}".format(spec["python"].command.path)]
-                )
+                args.extend(["python3_package=y", "python3_cmd={0}".format(python.path)])
             else:
                 args.append("python3_package=n")
         else:

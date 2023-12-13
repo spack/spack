@@ -402,12 +402,8 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
         )
         entries.append(cmake_cache_option("protobuf_MODULE_COMPATIBLE", True))
 
-        if spec.satisfies("^python") and "+pfe" in spec:
-            entries.append(
-                cmake_cache_path(
-                    "LBANN_PFE_PYTHON_EXECUTABLE", "{0}/python3".format(spec["python"].prefix.bin)
-                )
-            )
+        if spec.satisfies("+pfe ^python"):
+            entries.append(cmake_cache_path("LBANN_PFE_PYTHON_EXECUTABLE", python.path))
             entries.append(
                 cmake_cache_string("LBANN_PFE_PYTHONPATH", env["PYTHONPATH"])
             )  # do NOT need to sub ; for : because

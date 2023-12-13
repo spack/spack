@@ -41,7 +41,12 @@ def _maybe_set_python_hints(pkg: spack.package_base.PackageBase, args: List[str]
     ``find_python_hints`` for context."""
     if not getattr(pkg, "find_python_hints", False):
         return
-    pythons = pkg.spec.dependencies("python", dt.BUILD | dt.LINK)
+    spec = pkg.spec
+    # If this package depends on python-venv, we use its Python executable: it should report the
+    # correct install layout, even if the underlying Python is external. The external Python would
+    # give a layout that applies to system installations, which is not what we want.
+    deptype = dt.BUILD | dt.LINK
+    pythons = spec.dependencies("python-venv", deptype) or spec.dependencies("python", deptype)
     if len(pythons) != 1:
         return
     try:
