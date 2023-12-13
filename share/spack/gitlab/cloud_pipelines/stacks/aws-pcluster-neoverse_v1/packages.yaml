@@ -1,39 +1,40 @@
 ---  # Neoverse V1 packages
 packages:
   acfl:
-    target: [aarch64]
-    compiler: [gcc]
+    require:
+      - one_of: ["%gcc target=aarch64"]
+        message: "Clang based compilers need GCC libraries and they should be made available for the wide range of CPUs they actually support.
+                Edit $SPACK_ROOT/etc/spack/packages.yaml to change this default."
   gromacs:
     require:
-      - one_of: ["gromacs@2021.3 %gcc ^fftw^openmpi"]
+      - one_of: ['gromacs@2021.3 %arm ^fftw ^openmpi', 'gromacs@2021.3 %gcc ^armpl-gcc ^openmpi']
   libfabric:
     buildable: false
     externals:
-      - modules:
-          - ${LIBFABRIC_MODULE}
+      - prefix: /opt/amazon/efa/
         spec: libfabric@${LIBFABRIC_VERSION} fabrics=efa
-  llvm:
-    variants: ~lldb
-  nvhpc:
-    compiler: [gcc]
-    target: [aarch64]
+  mpas-model:
+    require: "precision=single make_target=llvm %arm ^parallelio+pnetcdf"
   mpich:
     require:
       - one_of: ["mpich pmi=pmi2 device=ch4 netmod=ofi +slurm"]
+  nvhpc:
+    require:
+      - one_of: ["nvhpc %gcc target=aarch64"]
+        message: "NVHPC should be built with GCC and should be made available for the wide range of CPUs they actually support.
+                Edit $SPACK_ROOT/etc/spack/packages.yaml to change this default."
   openfoam:
     require:
       - one_of: ["openfoam %gcc ^scotch@6.0.9"]
   openmpi:
     variants: ~atomics ~cuda ~cxx ~cxx_exceptions ~internal-hwloc ~java +legacylaunchers ~lustre ~memchecker +pmi +romio ~singularity +vt +wrapper-rpath fabrics=ofi schedulers=slurm
+    require: '@4:'
   # Spack cannot read cflags="", re-enable when https://github.com/spack/spack/issues/39671 is fixed
   # palace:
   #   require:
   #     - one_of: ["palace cxxflags=\"-include cstdint\" ^fmt@9.1.0"]
   pmix:
     require: ["pmix@3"]
-  py-devito:
-    require:
-      - one_of: ["py-devito %gcc +mpi"]
   quantum-espresso:
     require:
       - one_of: ["quantum-espresso@6.6 %gcc ^armpl-gcc"]
@@ -42,8 +43,11 @@ packages:
     externals:
       - prefix: /opt/slurm/
         spec: slurm@${SLURM_VERSION} +pmix
+  wrf:
+    require:
+      - one_of: ["wrf%arm", "wrf%gcc"]
   all:
-    compiler: [nvhpc, gcc, clang]
+    compiler: [gcc, arm, nvhpc, clang]
     providers:
       blas: [armpl-gcc, openblas]
       fftw-api: [armpl-gcc, fftw]
@@ -53,3 +57,16 @@ packages:
     permissions:
       read: world
       write: user
+
+
+    
+
+
+  # TODO: re-check after ompi releases something after 4.1.5
+  hpl:
+    require:
+      - one_of:
+          - 'hpl +openmp %arm ^acfl'
+          - 'hpl %gcc ^armpl-gcc'
+
+  #     - one_of['wrf%arm cflags=\"-Wno-implicit-function-declaration -Wno-int-conversion -Wno-implicit-int\" ^perl%gcc ^cmake%gcc ^jasper%gcc', 'wrf%gcc']

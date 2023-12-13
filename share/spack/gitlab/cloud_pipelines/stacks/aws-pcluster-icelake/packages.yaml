@@ -22,8 +22,7 @@ packages:
   libfabric:
     buildable: false
     externals:
-      - modules:
-          - ${LIBFABRIC_MODULE}
+      - prefix: /opt/amazon/efa/
         spec: libfabric@${LIBFABRIC_VERSION} fabrics=efa
   libunistring:
     require:
