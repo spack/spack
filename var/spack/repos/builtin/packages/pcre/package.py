@@ -41,8 +41,11 @@ class Pcre(AutotoolsPackage, CMakePackage):
     )
 
     variant("shared", default=True, description="Build shared libraries")
-    variant("pic", default=True, description="Enable position-independent code (PIC)")
+    variant("static", default=True, description="Build static libraries")
+    conflicts("-shared -static", msg="Must build one of shared and static")
+    conflicts("+shared +static", when="build_system=cmake", msg="CMake can only build either shared or static")
 
+    variant("pic", default=True, description="Enable position-independent code (PIC)")
     requires("+pic", when="+shared build_system=autotools")
 
 
@@ -51,6 +54,7 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
         args = []
 
         args.extend(self.enable_or_disable("shared"))
+        args.extend(self.enable_or_disable("static"))
         args.extend(self.with_or_without("pic"))
 
         args.extend(self.enable_or_disable("jit"))
@@ -68,15 +72,16 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
         args = []
 
-        args.extend(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
-        args.extend(self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"))
+        args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
+        args.append(self.define_from_variant("BUILD_STATIC_LIBS", "static"))
+        args.append(self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"))
 
-        args.extend(self.define_from_variant("PCRE_SUPPORT_JIT", "jit"))
+        args.append(self.define_from_variant("PCRE_SUPPORT_JIT", "jit"))
 
-        args.extend(self.define_from_variant("PCRE_BUILD_PCRE16", "multibyte"))
-        args.extend(self.define_from_variant("PCRE_BUILD_PCRE32", "multibyte"))
+        args.append(self.define_from_variant("PCRE_BUILD_PCRE16", "multibyte"))
+        args.append(self.define_from_variant("PCRE_BUILD_PCRE32", "multibyte"))
 
-        args.extend(self.define_from_variant("PCRE_SUPPORT_UTF", "utf"))
-        args.extend(self.define_from_variant("PCRE_SUPPORT_UNICODE_PROPERTIES", "utf"))
+        args.append(self.define_from_variant("PCRE_SUPPORT_UTF", "utf"))
+        args.append(self.define_from_variant("PCRE_SUPPORT_UNICODE_PROPERTIES", "utf"))
 
         return args
