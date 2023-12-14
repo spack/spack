@@ -246,7 +246,7 @@ def generate_module_index(root, modules, remove_hashes=None, overwrite=False):
             try:
                 entries.pop(hash)
             except KeyError:
-                tty.debug(f"Attempted to remove nonexistent hash \"{hash}\" from module index")
+                tty.debug(f'Attempted to remove nonexistent hash "{hash}" from module index')
 
     index = {"module_index": entries}
     llnl.util.filesystem.mkdirp(root)
