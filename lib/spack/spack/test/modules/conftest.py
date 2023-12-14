@@ -46,7 +46,7 @@ def factory(request, mock_modules_root):
 
 @pytest.fixture()
 def mock_module_filename(monkeypatch, tmp_path):
-    random_chars = random.choices(string.ascii_lowercase, k=5)
+    random_chars = ''.join(random.choices(string.ascii_lowercase, k=5))
     filename = tmp_path / f"module{random_chars}"
     # Set for both module types so we can test both
     monkeypatch.setattr(spack.modules.lmod.LmodFileLayout, "filename", str(filename))
