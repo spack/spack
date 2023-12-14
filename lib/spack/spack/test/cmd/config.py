@@ -91,15 +91,10 @@ def test_config_edit(mutable_config, working_env):
 
 
 def test_config_get_gets_spack_yaml(mutable_mock_env_path):
-    config("get", fail_on_error=False)
-    assert config.returncode == 1
-
     with ev.create("test") as env:
         assert "mpileaks" not in config("get")
-
         env.add("mpileaks")
         env.write()
-
         assert "mpileaks" in config("get")
 
 
@@ -119,11 +114,6 @@ def test_config_add_with_scope_adds_to_scope(mutable_config, mutable_mock_env_pa
 
 def test_config_edit_fails_correctly_with_no_env(mutable_mock_env_path):
     output = config("edit", "--print-file", fail_on_error=False)
-    assert "requires a section argument or an active environment" in output
-
-
-def test_config_get_fails_correctly_with_no_env(mutable_mock_env_path):
-    output = config("get", fail_on_error=False)
     assert "requires a section argument or an active environment" in output
 
 

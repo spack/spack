@@ -139,25 +139,26 @@ def print_configuration(args, *, blame: bool) -> None:
 
     if args.section is not None:
         spack.config.CONFIG.print_section(args.section, blame=blame, scope=args.scope)
+        return
 
-    elif ev.active_environment():
-        print_flattened_configuration(blame=blame)
-
-    else:
-        tty.die("`spack config get` requires a section argument or an active environment.")
+    print_flattened_configuration(blame=blame)
 
 
 def print_flattened_configuration(*, blame: bool) -> None:
-    """Prints to stdout a flattened version of the active environment configuration.
+    """Prints to stdout a flattened version of the configuration.
 
     Args:
         blame: if True, shows file provenance for each entry in the configuration.
     """
     env = ev.active_environment()
-    assert env is not None, "expected an active environment"
-    pristine = env.manifest.pristine_yaml_content
-    flattened = pristine.copy()
-    flattened[spack.schema.env.TOP_LEVEL_KEY] = pristine[spack.schema.env.TOP_LEVEL_KEY].copy()
+    if env is not None:
+        pristine = env.manifest.pristine_yaml_content
+        flattened = pristine.copy()
+        flattened[spack.schema.env.TOP_LEVEL_KEY] = pristine[spack.schema.env.TOP_LEVEL_KEY].copy()
+    else:
+        flattened = syaml.syaml_dict()
+        flattened[spack.schema.env.TOP_LEVEL_KEY] = syaml.syaml_dict()
+
     for config_section in spack.config.SECTION_SCHEMAS:
         current = spack.config.get(config_section)
         flattened[spack.schema.env.TOP_LEVEL_KEY][config_section] = current
