@@ -58,6 +58,7 @@ specs to avoid ambiguity.  Both are provided because ~ can cause shell
 expansion when it is the first character in an id typed on the command line.
 """
 import enum
+import json
 import pathlib
 import re
 import sys
@@ -95,12 +96,54 @@ if not IS_WINDOWS:
 else:
     FILENAME = WINDOWS_FILENAME
 
+#: These are legal values that *can* be parsed bare, without quotes on the command line.
 VALUE = r"(?:[a-zA-Z_0-9\-+\*.,:=\~\/\\]+)"
-QUOTED_VALUE = r"[\"']+(?:[a-zA-Z_0-9\-+\*.,:=\~\/\\\s]+)[\"']+"
+
+#: Variant/flag values that match this can be left unquoted in Spack output
+NO_QUOTES_NEEDED = r"^[a-zA-Z0-9,/_.-]+$"
+
+#: Quoted values can be *anything* in between quotes, including escaped quotes.
+QUOTED_VALUE = r"(?:'(?:[^']|(?<=\\)')*'|\"(?:[^\"]|(?<=\\)\")*\")"
 
 VERSION = r"=?(?:[a-zA-Z0-9_][a-zA-Z_0-9\-\.]*\b)"
 VERSION_RANGE = rf"(?:(?:{VERSION})?:(?:{VERSION}(?!\s*=))?)"
 VERSION_LIST = rf"(?:{VERSION_RANGE}|{VERSION})(?:\s*,\s*(?:{VERSION_RANGE}|{VERSION}))*"
+
+#: Regex with groups to use for splitting (optionally propagated) key-value pairs
+SPLIT_KVP = rf"^({NAME})(==?)(.*)$"
+
+#: Regex to strip quotes. Group 2 will be the unquoted string.
+STRIP_QUOTES = r"^(['\"])(.*)\1$"
+
+
+def strip_quotes_and_unescape(string: str) -> str:
+    """Remove surrounding single or double quotes from string, if present."""
+    match = re.match(STRIP_QUOTES, string)
+    if not match:
+        return string
+
+    # replace any escaped quotes with bare quotes
+    quote, result = match.groups()
+    return result.replace(rf"\{quote}", quote)
+
+
+def quote_if_needed(value: str) -> str:
+    """Add quotes around the value if it requires quotes.
+
+    This will add quotes around the value unless it matches ``NO_QUOTES_NEEDED``.
+
+    This adds:
+    * single quotes by default
+    * double quotes around any value that contains single quotes
+
+    If double quotes are used, we json-escpae the string. That is, we escape ``\\``,
+    ``"``, and control codes.
+
+    """
+    if re.match(spack.parser.NO_QUOTES_NEEDED, value):
+        return value
+
+    return json.dumps(value) if "'" in value else f"'{value}'"
 
 
 class TokenBase(enum.Enum):
@@ -138,8 +181,8 @@ class TokenType(TokenBase):
     # Variants
     PROPAGATED_BOOL_VARIANT = rf"(?:(?:\+\+|~~|--)\s*{NAME})"
     BOOL_VARIANT = rf"(?:[~+-]\s*{NAME})"
-    PROPAGATED_KEY_VALUE_PAIR = rf"(?:{NAME}\s*==\s*(?:{VALUE}|{QUOTED_VALUE}))"
-    KEY_VALUE_PAIR = rf"(?:{NAME}\s*=\s*(?:{VALUE}|{QUOTED_VALUE}))"
+    PROPAGATED_KEY_VALUE_PAIR = rf"(?:{NAME}==(?:{VALUE}|{QUOTED_VALUE}))"
+    KEY_VALUE_PAIR = rf"(?:{NAME}=(?:{VALUE}|{QUOTED_VALUE}))"
     # Compilers
     COMPILER_AND_VERSION = rf"(?:%\s*(?:{NAME})(?:[\s]*)@\s*(?:{VERSION_LIST}))"
     COMPILER = rf"(?:%\s*(?:{NAME}))"
@@ -351,12 +394,14 @@ class SpecNodeParser:
         # accept another package name afterwards in a node
         if self.ctx.accept(TokenType.UNQUALIFIED_PACKAGE_NAME):
             initial_spec.name = self.ctx.current_token.value
+
         elif self.ctx.accept(TokenType.FULLY_QUALIFIED_PACKAGE_NAME):
             parts = self.ctx.current_token.value.split(".")
             name = parts[-1]
             namespace = ".".join(parts[:-1])
             initial_spec.name = name
             initial_spec.namespace = namespace
+
         elif self.ctx.accept(TokenType.FILENAME):
             return FileParser(self.ctx).parse(initial_spec)
 
@@ -370,6 +415,7 @@ class SpecNodeParser:
                 compiler_name = self.ctx.current_token.value[1:]
                 initial_spec.compiler = spack.spec.CompilerSpec(compiler_name.strip(), ":")
                 self.has_compiler = True
+
             elif self.ctx.accept(TokenType.COMPILER_AND_VERSION):
                 if self.has_compiler:
                     raise spack.spec.DuplicateCompilerSpecError(
@@ -381,6 +427,7 @@ class SpecNodeParser:
                     compiler_name.strip(), compiler_version
                 )
                 self.has_compiler = True
+
             elif (
                 self.ctx.accept(TokenType.VERSION_HASH_PAIR)
                 or self.ctx.accept(TokenType.GIT_VERSION)
@@ -395,31 +442,39 @@ class SpecNodeParser:
                 )
                 initial_spec.attach_git_version_lookup()
                 self.has_version = True
+
             elif self.ctx.accept(TokenType.BOOL_VARIANT):
                 variant_value = self.ctx.current_token.value[0] == "+"
                 initial_spec._add_flag(
                     self.ctx.current_token.value[1:].strip(), variant_value, propagate=False
                 )
+
             elif self.ctx.accept(TokenType.PROPAGATED_BOOL_VARIANT):
                 variant_value = self.ctx.current_token.value[0:2] == "++"
                 initial_spec._add_flag(
                     self.ctx.current_token.value[2:].strip(), variant_value, propagate=True
                 )
+
             elif self.ctx.accept(TokenType.KEY_VALUE_PAIR):
-                name, value = self.ctx.current_token.value.split("=", maxsplit=1)
-                name = name.strip("'\" ")
-                value = value.strip("'\" ")
-                initial_spec._add_flag(name, value, propagate=False)
+                match = re.match(SPLIT_KVP, self.ctx.current_token.value)
+                assert match, "SPLIT_KVP and KEY_VALUE_PAIR do not agree."
+
+                name, delim, value = match.groups()
+                initial_spec._add_flag(name, strip_quotes_and_unescape(value), propagate=False)
+
             elif self.ctx.accept(TokenType.PROPAGATED_KEY_VALUE_PAIR):
-                name, value = self.ctx.current_token.value.split("==", maxsplit=1)
-                name = name.strip("'\" ")
-                value = value.strip("'\" ")
-                initial_spec._add_flag(name, value, propagate=True)
+                match = re.match(SPLIT_KVP, self.ctx.current_token.value)
+                assert match, "SPLIT_KVP and PROPAGATED_KEY_VALUE_PAIR do not agree."
+
+                name, delim, value = match.groups()
+                initial_spec._add_flag(name, strip_quotes_and_unescape(value), propagate=True)
+
             elif self.ctx.expect(TokenType.DAG_HASH):
                 if initial_spec.abstract_hash:
                     break
                 self.ctx.accept(TokenType.DAG_HASH)
                 initial_spec.abstract_hash = self.ctx.current_token.value[1:]
+
             else:
                 break
 
