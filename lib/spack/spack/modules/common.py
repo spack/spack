@@ -1065,6 +1065,9 @@ class BaseModuleFileWriter:
         """Deletes the module file."""
         mod_file = self.layout.filename
         if os.path.exists(mod_file):
+            # remove this spec from the module index
+            # this happens before testing for clashes, or else they could never be resolved
+            generate_module_index(self.layout.dirname(), [], remove_hashes=[self.spec.dag_hash()])
             if self.test_name_clash():
                 spec_fmt_str = "{name}@={version}%{compiler}/{hash:7} {variants} arch={arch}"
                 tty.warn('\n'.join([
@@ -1080,9 +1083,6 @@ class BaseModuleFileWriter:
                 os.removedirs(
                     os.path.dirname(mod_file)
                 )  # Remove all the empty directories from the leaf up
-                generate_module_index(
-                    self.layout.dirname(), [], remove_hashes=[self.spec.dag_hash()]
-                ) # remove this spec from the module index
             except OSError:
                 # removedirs throws OSError on first non-empty directory found
                 pass
