@@ -9,7 +9,7 @@ from spack.package import *
 class Libgrpp(CMakePackage):
     """A library for the evaluation of molecular integrals of the"""
 
-    """generalized relativistic pseudopotential operator (GRPP) over Gaussian functions."""
+    """A library for the evaluation of molecular integrals of the generalized relativistic pseudopotential operator over Gaussian functions"""
 
     homepage = "https://github.com/aoleynichenko/libgrpp"
     git = "https://github.com/aoleynichenko/libgrpp.git"
