@@ -3,10 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import pathlib
-
-import string
-import pytest
 import random
+import string
+
+import pytest
 
 import spack.config
 import spack.modules.common
