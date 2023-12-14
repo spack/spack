@@ -18,10 +18,7 @@ class PerlTemplateToolkit(PerlPackage):
     version("3.101", sha256="d2a32dd6c21e4b37c6a93df8087ca9e880cfae613a3e5efaea307b0bdcaedb58")
 
     def configure_args(self):
-        return [
-            'TT_XS_DEFAULT=y',
-            'TT_ACCEPT=y'
-        ]
+        return ["TT_XS_DEFAULT=y", "TT_ACCEPT=y"]
 
     def test_use(self):
         """Test 'use module'"""
