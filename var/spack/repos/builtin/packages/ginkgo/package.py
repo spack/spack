@@ -24,7 +24,9 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
-    version("1.7.0", commit="49242ff89af1e695d7794f6d50ed9933024b66fe")  # v1.7.0
+    version("1.7.0", commit="49242ff89af1e695d7794f6d50ed9933024b66fe", preferred=True)  # v1.7.0
+    # v1.7.0 with (unmerged) resource manager feature for openCARP
+    version("1.7.0.opencarp_experimental", branch="openCARP_experimental")
     version("1.6.0", commit="1f1ed46e724334626f016f105213c047e16bc1ae")  # v1.6.0
     version("1.5.0", commit="234594c92b58e2384dfb43c2d08e7f43e2b58e7a")  # v1.5.0
     version(
@@ -160,6 +162,10 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
 
         if self.run_tests:
             args.append("-DGINKGO_USE_EXTERNAL_GTEST=ON")
+
+        if self.spec.satisfies("@1.7.0.opencarp_experimental"):
+            args.append("-DGINKGO_BUILD_CONFIG_PARSER=ON")
+            args.append("-DGINKGO_BUILD_EXTENSIONS=ON")
 
         if "+cuda" in spec:
             archs = spec.variants["cuda_arch"].value
