@@ -28,7 +28,8 @@ class Opencarp(CMakePackage):
     version(
         "13.0.ginkgo_integration",
         branch="ginkdo_distributed_backend",
-        submodules=False, no_cache=True
+        submodules=False,
+        no_cache=True,
     )
     version(
         "12.0", commit="a34c11af3e8c2afd6e123e586a446c6993e0b039", submodules=False, no_cache=True
@@ -55,7 +56,12 @@ class Opencarp(CMakePackage):
 
     variant("carputils", default=False, description="Installs the carputils framework")
     variant("meshtool", default=False, description="Installs the meshtool software")
-    variant("ginkgo", default=False, description="Enable the Ginkgo as linear algebra backend", when="@13.0.ginkgo_integration")
+    variant(
+        "ginkgo",
+        default=False,
+        description="Enable the Ginkgo as linear algebra backend",
+        when="@13.0.ginkgo_integration",
+    )
 
     # Patch removing problematic steps in CMake process
     patch("opencarp7.patch", when="@7.0")
@@ -77,17 +83,13 @@ class Opencarp(CMakePackage):
         depends_on("py-carputils@oc" + ver, when="@" + ver + " +carputils")
         depends_on("meshtool@oc" + ver, when="@" + ver + " +meshtool")
 
-
     # The ginkgo integration relies on carputils features only in master,
-    #or in release >oc14.0
+    # or in release >oc14.0
     depends_on("py-carputils@master", when="@13.0.ginkgo_integration+carputils")
     depends_on("meshtool@oc13.0", when="@13.0.ginkgo_integration+meshtool")
 
     def cmake_args(self):
-        args = [
-            self.define("DLOPEN", True),
-            self.define("SPACK_BUILD", True)
-        ]
+        args = [self.define("DLOPEN", True), self.define("SPACK_BUILD", True)]
         if "+ginkgo" in self.spec:
             args.append("-DENABLE_GINKGO=ON")
         return args
