@@ -69,7 +69,6 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
 
     conflicts("+openmp", when="+rocm")
     conflicts("+openmp", when="+cuda")
-    depends_on("chai tests=benchmarks")
 
     def cmake_args(self):
         spec = self.spec
