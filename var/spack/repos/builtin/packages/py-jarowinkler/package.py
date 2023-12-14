@@ -14,8 +14,10 @@ class PyJarowinkler(PythonPackage):
 
     maintainers("LydDeb")
 
+    version("2.0.0", sha256="7cfb5e5caef5d22bae44e9cadcd1ff7313970e70303feff31ff78e8b69c92648")
     version("1.2.3", sha256="af28ea284cfbd1b21b29ff94b759f20e94e4f7c06f424b0b4702e701c2a21668")
 
+    depends_on("python@3.8:", when="@2:", type="build")
     depends_on("py-setuptools@42:", type="build")
-    depends_on("py-scikit-build@0.15.0", type="build")
-    depends_on("py-rapidfuzz-capi@1.0.5", type="build")
+    depends_on("py-scikit-build@0.15.0:", when="@1.2.3", type="build")
+    depends_on("py-rapidfuzz-capi@1.0.5", when="@1.2.3:", type="build")
