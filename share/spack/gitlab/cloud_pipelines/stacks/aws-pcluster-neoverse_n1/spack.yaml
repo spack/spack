@@ -4,7 +4,7 @@ spack:
   definitions:
 
   - optimized_configs:
-    - gromacs
+    - gromacs target=neoverse_n1
     # - lammps
     # - mpas-model
     # - openfoam
@@ -36,7 +36,6 @@ spack:
         - - cp share/spack/gitlab/cloud_pipelines/configs/config.yaml etc/spack/
           - /bin/bash "${SPACK_ROOT}/share/spack/gitlab/cloud_pipelines/stacks/aws-pcluster-neoverse_n1/setup-pcluster.sh"
           - rm etc/spack/config.yaml
-          - spack config --scope site add "packages:all:target:[${SPACK_TARGET_ARCH}]"
     - signing-job:
         before_script:
           # Do not distribute Intel & ARM binaries

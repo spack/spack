@@ -830,7 +830,6 @@ deprecated-ci-build:
       - cp "share/spack/gitlab/cloud_pipelines/configs/config.yaml" "etc/spack/"
       - /bin/bash "${SPACK_ROOT}/share/spack/gitlab/cloud_pipelines/stacks/aws-pcluster-neoverse_n1/setup-pcluster.sh"
       - rm "etc/spack/config.yaml"
-      - spack config --scope site add "packages:all:target:[${SPACK_TARGET_ARCH}]"
 
 # Icelake (one pipeline per target)
 .aws-pcluster-icelake:

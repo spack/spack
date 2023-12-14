@@ -18,7 +18,7 @@ set_pcluster_defaults() {
     [ -z "${LIBFABRIC_VERSION}" ] && LIBFABRIC_VERSION=$(awk '/Version:/{print $2}' "$(find /opt/amazon/efa/ -name libfabric.pc | head -n1)" | sed -e 's?~??g' -e 's?amzn.*??g')
     export SLURM_VERSION LIBFABRIC_VERSION
 
-    envsubst < "${SPACK_ROOT}"/share/spack/gitlab/cloud_pipelines/stacks/aws-pcluster-"${SPACK_TARGET_ARCH}"/packages.yaml > "${SPACK_ROOT}"/etc/spack/packages.yaml
+    envsubst < "${SPACK_ROOT}/share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}/packages.yaml" > "${SPACK_ROOT}"/etc/spack/packages.yaml
 }
 
 setup_spack() {
