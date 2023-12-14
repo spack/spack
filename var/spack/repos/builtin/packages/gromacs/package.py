@@ -544,20 +544,20 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         if "+cufftmp" in self.spec:
             options.append("-DGMX_USE_CUFFTMP=ON")
             options.append(
-                f'-DcuFFTMp_ROOT={self.spec["nvhpc"].prefix}/Linux_{self.spec.target.family}' +
-                f'/{self.spec["nvhpc"].version}/math_libs'
+                f'-DcuFFTMp_ROOT={self.spec["nvhpc"].prefix}/Linux_{self.spec.target.family}'
+                + f'/{self.spec["nvhpc"].version}/math_libs'
             )
             options.append(
-                f'-DcuFFTMp_ROOT={self.spec["nvhpc"].prefix}/Linux_{self.spec.target.family}' +
-                f'/{self.spec["nvhpc"].version}/math_libs'
+                f'-DcuFFTMp_ROOT={self.spec["nvhpc"].prefix}/Linux_{self.spec.target.family}'
+                + f'/{self.spec["nvhpc"].version}/math_libs'
             )
             # Add option to include cufft-mp's nvhshmem dependency.
             # This currently requires the NVIDIA device drivers to be installed on the build
             # machine to fulfill nvshmem_host's dependency on nvidia-ml.
             options.append(
-                f'-DcuFFTMp_NVSHMEM_ROOT={self.spec["nvhpc"].prefix}/Linux_{self.spec.target.family}' +
-                f'/{self.spec["nvhpc"].version}/comm_libs/{self.spec["cuda"].version.up_to(2)}' +
-                f'/nvshmem_cufftmp_compat'
+                f'-DcuFFTMp_NVSHMEM_ROOT={self.spec["nvhpc"].prefix}/Linux_{self.spec.target.family}'
+                + f'/{self.spec["nvhpc"].version}/comm_libs/{self.spec["cuda"].version.up_to(2)}'
+                + f'/nvshmem_cufftmp_compat'
             )
 
         if "+heffte" in self.spec:
