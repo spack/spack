@@ -311,6 +311,29 @@ class AspFunction(AspObject):
         """
         return AspFunction(self.name, self.args + args)
 
+    def match(self, pattern: "AspFunction"):
+        """Compare name and args of this ASP function to a match pattern.
+
+        Arguments of ``pattern`` function can be strings, arbitrary objects or ``any``:
+
+        * ``any`` matches any argument;
+        * ``str`` arguments are treated as regular expressions and match against the
+          string representation of the args of this function.
+        * any other object is compared with `==`.
+        """
+        if self.name != pattern.name or len(pattern.args) > len(self.args):
+            return False
+
+        for parg, arg in zip(pattern.args, self.args):
+            if parg is any:
+                continue
+            elif isinstance(parg, str) and not re.match(parg, str(arg)):
+                return False
+            elif parg != arg:
+                return False
+
+        return True
+
     def symbol(self, positive=True):
         def argify(arg):
             if isinstance(arg, bool):
@@ -1131,6 +1154,7 @@ class SpackSolverSetup:
         self.possible_oses = set()
         self.variant_values_from_specs = set()
         self.version_constraints = set()
+        self.synced_version_constraints = set()
         self.target_constraints = set()
         self.default_targets = []
         self.compiler_version_constraints = set()
@@ -1631,6 +1655,27 @@ class SpackSolverSetup:
                     )
             self.gen.newline()
 
+    def transform_my_version(
+        self, require: spack.spec.Spec, impose: spack.spec.Spec, funcs: List[AspFunction]
+    ) -> List[AspFunction]:
+        """Replace symbolic "my" version with reference to dependent's version."""
+        result = []
+        for f in funcs:
+            if not f.match(fn.attr("node_version_satisfies", any, r"^my\.version$")):
+                result.append(f)
+                continue
+
+            # get Version from version(Package, Version) and generate
+            # node_version_satisfies(dep, Version)
+            dep = f.args[1]
+            sync = fn.attr("sync", dep, "node_version_satisfies", fn.attr("version", require.name))
+            result.append(sync)
+
+            # remember to generate version_satisfies/3 for my.version constraints
+            self.synced_version_constraints.add((require.name, dep))
+
+        return result
+
     def package_dependencies_rules(self, pkg):
         """Translate 'depends_on' directives into ASP logic."""
         for _, conditions in sorted(pkg.dependencies.items()):
@@ -1671,7 +1716,7 @@ class SpackSolverSetup:
                     name=pkg.name,
                     msg=msg,
                     transform_required=[track_dependencies],
-                    transform_imposed=[remove_node, dependency_holds],
+                    transform_imposed=[remove_node, dependency_holds, self.transform_my_version],
                 )
 
                 self.gen.newline()
@@ -2438,6 +2483,15 @@ class SpackSolverSetup:
 
     def define_version_constraints(self):
         """Define what version_satisfies(...) means in ASP logic."""
+        # quadratic for now b/c we're anticipating pkg_ver being an
+        # expression/range/etc. right now this only does exact matches until we can
+        # propagate an expression from depends_on to here.
+        for pkg, dep in self.synced_version_constraints:
+            for pkg_ver in self.possible_versions[pkg]:
+                for dep_ver in self.possible_versions[dep]:
+                    if dep_ver.satisfies(pkg_ver):
+                        self.gen.fact(fn.pkg_fact(dep, fn.version_satisfies(dep_ver, pkg_ver)))
+
         for pkg_name, versions in sorted(self.version_constraints):
             # generate facts for each package constraint and the version
             # that satisfies it

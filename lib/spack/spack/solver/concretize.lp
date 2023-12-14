@@ -366,6 +366,11 @@ attr(Name, node(X, A1), A2)         :- impose(ID, PackageNode), imposed_constrai
 attr(Name, node(X, A1), A2, A3)     :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2, A3),     imposed_nodes(ID, PackageNode, node(X, A1)), not multiple_nodes_attribute(Name).
 attr(Name, node(X, A1), A2, A3, A4) :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2, A3, A4), imposed_nodes(ID, PackageNode, node(X, A1)).
 
+attr(DepAttrName, DepNode, Value)
+   :- depends_on(node(X, Package), DepNode),
+      attr(PackageAttrName, node(X, Package), Value),
+      attr("sync", DepNode, DepAttrName, attr(PackageAttrName, Package)).
+
 % For node flag sources we need to look at the condition_set of the source, since it is the dependent
 % of the package on which I want to impose the constraint
 attr("node_flag_source", node(X, A1), A2, node(Y, A3))
