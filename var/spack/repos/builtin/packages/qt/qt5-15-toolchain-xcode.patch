@@ -1,0 +1,28 @@
+diff --git a/qtbase/mkspecs/features/toolchain.prf b/qtbase/mkspecs/features/toolchain.prf
+index 0c505fc965..c70f2797c8 100644
+--- a/qtbase/mkspecs/features/toolchain.prf
++++ b/qtbase/mkspecs/features/toolchain.prf
+@@ -288,9 +288,12 @@ isEmpty($${target_prefix}.INCDIRS) {
+                 }
+             }
+         }
+-        isEmpty(QMAKE_DEFAULT_LIBDIRS)|isEmpty(QMAKE_DEFAULT_INCDIRS): \
++        isEmpty(QMAKE_DEFAULT_INCDIRS): \
+             !integrity: \
+-                error("failed to parse default search paths from compiler output")
++                error("failed to parse default include paths from compiler output")
++        isEmpty(QMAKE_DEFAULT_LIBDIRS): \
++            !integrity:!darwin: \
++                error("failed to parse default library paths from compiler output")
+         QMAKE_DEFAULT_LIBDIRS = $$unique(QMAKE_DEFAULT_LIBDIRS)
+     } else: ghs {
+         cmd = $$QMAKE_CXX $$QMAKE_CXXFLAGS -$${LITERAL_HASH} -o /tmp/fake_output /tmp/fake_input.cpp
+@@ -412,7 +415,7 @@ isEmpty($${target_prefix}.INCDIRS) {
+         QMAKE_DEFAULT_INCDIRS = $$split(INCLUDE, $$QMAKE_DIRLIST_SEP)
+     }
+ 
+-    unix:if(!cross_compile|host_build) {
++    unix:!darwin:if(!cross_compile|host_build) {
+         isEmpty(QMAKE_DEFAULT_INCDIRS): QMAKE_DEFAULT_INCDIRS = /usr/include /usr/local/include
+         isEmpty(QMAKE_DEFAULT_LIBDIRS): QMAKE_DEFAULT_LIBDIRS = /lib /usr/lib
+     }
