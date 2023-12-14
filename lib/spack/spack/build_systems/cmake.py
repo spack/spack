@@ -276,6 +276,15 @@ class CMakeBuilder(BaseBuilder):
             define("CMAKE_BUILD_TYPE", build_type),
         ]
 
+        # Avoid linking to system libraries
+        if pkg.spec.satisfies("^cmake@3.16:"):
+            args.extend(
+                [
+                    define("CMAKE_FIND_USE_CMAKE_SYSTEM_PATH", True),
+                    define("CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH", True),
+                ]
+            )
+
         # CMAKE_INTERPROCEDURAL_OPTIMIZATION only exists for CMake >= 3.9
         if pkg.spec.satisfies("^cmake@3.9:"):
             args.append(define("CMAKE_INTERPROCEDURAL_OPTIMIZATION", ipo))
