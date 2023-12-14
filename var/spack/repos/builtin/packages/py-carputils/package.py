@@ -30,7 +30,6 @@ class PyCarputils(PythonPackage):
 
     # cusettings:11: DeprecationWarning:
     # The distutils package is deprecated and slated for removal in Python 3.12.
-    conflicts("python@3.10:", when="@master")
     conflicts("python@3.10:", when="@:oc13.0")
 
     depends_on("py-numpy@1.14.5:", type=("build", "run"))
