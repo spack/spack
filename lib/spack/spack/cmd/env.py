@@ -33,6 +33,30 @@ import spack.tengine
 from spack.cmd.common import arguments
 from spack.util.environment import EnvironmentModifications
 
+import os
+import os.path
+import tempfile
+from typing import Optional
+
+import llnl.util.tty
+
+import spack.cmd
+import spack.container
+import spack.container.images
+import spack.oci.oci
+import spack.stage
+from spack.cmd.buildcache import (
+    _archspec_to_gooarch,
+    _make_pool,
+    _push_oci,
+    _put_manifest,
+    copy_missing_layers_with_retry,
+    default_config,
+    default_manifest,
+)
+from spack.cmd.common import arguments
+from spack.oci.image import ImageReference
+
 description = "manage virtual environments"
 section = "environments"
 level = "short"
@@ -51,6 +75,7 @@ subcommands = [
     "update",
     "revert",
     "depfile",
+    "image",
 ]
 
 
@@ -722,6 +747,50 @@ def env_depfile(args):
             f.write(makefile)
     else:
         sys.stdout.write(makefile)
+
+
+
+def env_image_setup_parser(subparser):
+    """generate an OCI compatible container image the already installed environment"""
+    subparser.add_argument("--base-image")
+    subparser.add_argument("--force", default=False, action="store_true")
+    subparser.add_argument("--tag", "-t", required=True)
+    subparser.add_argument("mirror", type=arguments.mirror_name_or_url)
+
+
+def env_image(args):
+    image_ref = spack.oci.oci.image_from_mirror(args.mirror)
+    env = spack.cmd.require_active_env("env image")
+    roots = env.concrete_roots()
+
+    base_image_ref: Optional[ImageReference] = (
+        ImageReference.from_string(args.base_image) if args.base_image else None
+    )
+
+    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+        with _make_pool() as pool:
+            _, base_images, checksums = _push_oci(args, image_ref, env.all_specs(), tmpdir, pool)
+
+        architecture = _archspec_to_gooarch(roots[0])
+
+        if architecture not in base_images:
+            if base_image_ref is None:
+                base_images[architecture] = (
+                    default_manifest(),
+                    default_config(architecture, "linux"),
+                )
+            else:
+                base_images[architecture] = copy_missing_layers_with_retry(
+                    base_image_ref, image_ref, architecture
+                )
+
+        # Add a manifest for the environment
+        environment_tag = image_ref.with_tag(args.tag)
+        _put_manifest(
+            base_images, checksums, environment_tag, tmpdir, None, None, *env.concrete_roots()
+        )
+
+        llnl.util.tty.info(f"Pushed {environment_tag}")
 
 
 #: Dictionary mapping subcommand names and aliases to functions

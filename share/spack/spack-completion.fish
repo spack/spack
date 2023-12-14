@@ -1240,54 +1240,22 @@ complete -c spack -n '__fish_spack_using_command config revert' -s y -l yes-to-a
 complete -c spack -n '__fish_spack_using_command config revert' -s y -l yes-to-all -d 'assume "yes" is the answer to every confirmation request'
 
 # spack containerize
-set -g __fish_spack_optspecs_spack_containerize h/help
-complete -c spack -n '__fish_spack_using_command_pos 0 containerize' -f -a recipe -d 'Create a recipe to build a container image'
-complete -c spack -n '__fish_spack_using_command_pos 0 containerize' -f -a oci -d 'Create a container image out of a locally installed Spack environment'
+set -g __fish_spack_optspecs_spack_containerize h/help list-os last-stage=
 complete -c spack -n '__fish_spack_using_command containerize' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command containerize' -s h -l help -d 'show this help message and exit'
-
-# spack containerize recipe
-set -g __fish_spack_optspecs_spack_containerize_recipe h/help list-os last-stage=
-complete -c spack -n '__fish_spack_using_command containerize recipe' -s h -l help -f -a help
-complete -c spack -n '__fish_spack_using_command containerize recipe' -s h -l help -d 'show this help message and exit'
-complete -c spack -n '__fish_spack_using_command containerize recipe' -l list-os -f -a list_os
-complete -c spack -n '__fish_spack_using_command containerize recipe' -l list-os -d 'list all the OS that can be used in the bootstrap phase and exit'
-complete -c spack -n '__fish_spack_using_command containerize recipe' -l last-stage -r -f -a 'bootstrap build final'
-complete -c spack -n '__fish_spack_using_command containerize recipe' -l last-stage -r -d 'last stage in the container recipe'
-
-# spack containerize oci
-set -g __fish_spack_optspecs_spack_containerize_oci h/help base-image= force t/tag=
-
-complete -c spack -n '__fish_spack_using_command containerize oci' -s h -l help -f -a help
-complete -c spack -n '__fish_spack_using_command containerize oci' -s h -l help -d 'show this help message and exit'
-complete -c spack -n '__fish_spack_using_command containerize oci' -l base-image -r -f -a base_image
-complete -c spack -n '__fish_spack_using_command containerize oci' -l force -f -a force
-complete -c spack -n '__fish_spack_using_command containerize oci' -l tag -s t -r -f -a tag
+complete -c spack -n '__fish_spack_using_command containerize' -l list-os -f -a list_os
+complete -c spack -n '__fish_spack_using_command containerize' -l list-os -d 'list all the OS that can be used in the bootstrap phase and exit'
+complete -c spack -n '__fish_spack_using_command containerize' -l last-stage -r -f -a 'bootstrap build final'
+complete -c spack -n '__fish_spack_using_command containerize' -l last-stage -r -d 'last stage in the container recipe'
 
 # spack containerise
-set -g __fish_spack_optspecs_spack_containerise h/help
-complete -c spack -n '__fish_spack_using_command_pos 0 containerise' -f -a recipe -d 'Create a recipe to build a container image'
-complete -c spack -n '__fish_spack_using_command_pos 0 containerise' -f -a oci -d 'Create a container image out of a locally installed Spack environment'
+set -g __fish_spack_optspecs_spack_containerise h/help list-os last-stage=
 complete -c spack -n '__fish_spack_using_command containerise' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command containerise' -s h -l help -d 'show this help message and exit'
-
-# spack containerize recipe
-set -g __fish_spack_optspecs_spack_containerize_recipe h/help list-os last-stage=
-complete -c spack -n '__fish_spack_using_command containerize recipe' -s h -l help -f -a help
-complete -c spack -n '__fish_spack_using_command containerize recipe' -s h -l help -d 'show this help message and exit'
-complete -c spack -n '__fish_spack_using_command containerize recipe' -l list-os -f -a list_os
-complete -c spack -n '__fish_spack_using_command containerize recipe' -l list-os -d 'list all the OS that can be used in the bootstrap phase and exit'
-complete -c spack -n '__fish_spack_using_command containerize recipe' -l last-stage -r -f -a 'bootstrap build final'
-complete -c spack -n '__fish_spack_using_command containerize recipe' -l last-stage -r -d 'last stage in the container recipe'
-
-# spack containerize oci
-set -g __fish_spack_optspecs_spack_containerize_oci h/help base-image= force t/tag=
-
-complete -c spack -n '__fish_spack_using_command containerize oci' -s h -l help -f -a help
-complete -c spack -n '__fish_spack_using_command containerize oci' -s h -l help -d 'show this help message and exit'
-complete -c spack -n '__fish_spack_using_command containerize oci' -l base-image -r -f -a base_image
-complete -c spack -n '__fish_spack_using_command containerize oci' -l force -f -a force
-complete -c spack -n '__fish_spack_using_command containerize oci' -l tag -s t -r -f -a tag
+complete -c spack -n '__fish_spack_using_command containerise' -l list-os -f -a list_os
+complete -c spack -n '__fish_spack_using_command containerise' -l list-os -d 'list all the OS that can be used in the bootstrap phase and exit'
+complete -c spack -n '__fish_spack_using_command containerise' -l last-stage -r -f -a 'bootstrap build final'
+complete -c spack -n '__fish_spack_using_command containerise' -l last-stage -r -d 'last stage in the container recipe'
 
 # spack create
 set -g __fish_spack_optspecs_spack_create h/help keep-stage n/name= t/template= r/repo= N/namespace= f/force skip-editor b/batch
@@ -1489,6 +1457,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a view -d 'manag
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a update -d 'update environments to the latest format'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a revert -d 'restore environments to their state before update'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a depfile -d 'generate a depfile from the concrete environment specs'
+complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a image -d 'generate an OCI compatible container image the already installed environment'
 complete -c spack -n '__fish_spack_using_command env' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env' -s h -l help -d 'show this help message and exit'
 
@@ -1637,6 +1606,15 @@ complete -c spack -n '__fish_spack_using_command env depfile' -s o -l output -r 
 complete -c spack -n '__fish_spack_using_command env depfile' -s o -l output -r -d 'write the depfile to FILE rather than to stdout'
 complete -c spack -n '__fish_spack_using_command env depfile' -s G -l generator -r -f -a make
 complete -c spack -n '__fish_spack_using_command env depfile' -s G -l generator -r -d 'specify the depfile type'
+
+# spack env image
+set -g __fish_spack_optspecs_spack_env_image h/help base-image= force t/tag=
+
+complete -c spack -n '__fish_spack_using_command env image' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command env image' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command env image' -l base-image -r -f -a base_image
+complete -c spack -n '__fish_spack_using_command env image' -l force -f -a force
+complete -c spack -n '__fish_spack_using_command env image' -l tag -s t -r -f -a tag
 
 # spack extensions
 set -g __fish_spack_optspecs_spack_extensions h/help l/long L/very-long d/deps p/paths s/show=

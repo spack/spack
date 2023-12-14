@@ -909,47 +909,11 @@ _spack_config_revert() {
 }
 
 _spack_containerize() {
-    if $list_options
-    then
-        SPACK_COMPREPLY="-h --help"
-    else
-        SPACK_COMPREPLY="recipe oci"
-    fi
-}
-
-_spack_containerize_recipe() {
     SPACK_COMPREPLY="-h --help --list-os --last-stage"
-}
-
-_spack_containerize_oci() {
-    if $list_options
-    then
-        SPACK_COMPREPLY="-h --help --base-image --force --tag -t"
-    else
-        _mirrors
-    fi
 }
 
 _spack_containerise() {
-    if $list_options
-    then
-        SPACK_COMPREPLY="-h --help"
-    else
-        SPACK_COMPREPLY="recipe oci"
-    fi
-}
-
-_spack_containerize_recipe() {
     SPACK_COMPREPLY="-h --help --list-os --last-stage"
-}
-
-_spack_containerize_oci() {
-    if $list_options
-    then
-        SPACK_COMPREPLY="-h --help --base-image --force --tag -t"
-    else
-        _mirrors
-    fi
 }
 
 _spack_create() {
@@ -1059,7 +1023,7 @@ _spack_env() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="activate deactivate create remove rm list ls status st loads view update revert depfile"
+        SPACK_COMPREPLY="activate deactivate create remove rm list ls status st loads view update revert depfile image"
     fi
 }
 
@@ -1156,6 +1120,15 @@ _spack_env_depfile() {
         SPACK_COMPREPLY="-h --help --make-prefix --make-target-prefix --make-disable-jobserver --use-buildcache -o --output -G --generator"
     else
         _all_packages
+    fi
+}
+
+_spack_env_image() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --base-image --force --tag -t"
+    else
+        _mirrors
     fi
 }
 
