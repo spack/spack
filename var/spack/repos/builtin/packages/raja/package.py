@@ -134,12 +134,12 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant("openmp", default=True, description="Build OpenMP backend")
     variant("shared", default=True, description="Build shared libs")
     variant("desul", default=False, description="Build desul atomics backend")
-    variant("plugins", default=False, description="Enable runtime plugins")
     variant("vectorization", default=True, description="Build SIMD/SIMT intrinsics support")
     variant(
         "omptask", default=False, description="Build OpenMP task variants of internal algorithms"
     )
 
+    variant("plugins", default=False, description="Enable runtime plugins")
     variant("examples", default=True, description="Build examples.")
     variant("exercises", default=True, description="Build exercises.")
     # TODO: figure out gtest dependency and then set this default True
@@ -236,6 +236,10 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         entries = super().initconfig_hardware_entries()
 
+        entries.append("#------------------{0}".format("-" * 30))
+        entries.append("# Package custom hardware settings")
+        entries.append("#------------------{0}\n".format("-" * 30))
+
         entries.append(cmake_cache_option("ENABLE_OPENMP", "+openmp" in spec))
 
         if "+cuda" in spec:
@@ -289,19 +293,25 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append(cmake_cache_string("CMAKE_BUILD_TYPE", spec.variants["build_type"].value))
         entries.append(cmake_cache_option("BUILD_SHARED_LIBS", "+shared" in spec))
 
-        entries.append(cmake_cache_option("RAJA_ENABLE_RUNTIME_PLUGINS", "+plugins" in spec))
-
         entries.append(cmake_cache_option("RAJA_ENABLE_DESUL_ATOMICS", "+desul" in spec))
 
         entries.append(cmake_cache_option("RAJA_ENABLE_VECTORIZATION", "+vectorization" in spec))
 
         entries.append(cmake_cache_option("RAJA_ENABLE_OPENMP_TASK", "+omptask" in spec))
 
-        entries.append(cmake_cache_string("BLT_CXX_STD", "c++14"))
+        # C++14
+        if spec.satisfies("@0.14.0:"):
+            entries.append(cmake_cache_string("BLT_CXX_STD", "c++14"))
+
+            if "+desul" in spec:
+                if "+cuda" in spec:
+                    entries.append(cmake_cache_string("CMAKE_CUDA_STANDARD", "14"))
 
         if "+desul" in spec:
             if "+cuda" in spec:
                 entries.append(cmake_cache_string("CMAKE_CUDA_STANDARD", "14"))
+
+        entries.append(cmake_cache_option("RAJA_ENABLE_RUNTIME_PLUGINS", "+plugins" in spec))
 
         entries.append(
             cmake_cache_option("{}ENABLE_EXAMPLES".format(option_prefix), "+examples" in spec)
@@ -315,19 +325,50 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         else:
             entries.append(cmake_cache_option("ENABLE_EXERCISES", "+exercises" in spec))
 
+        # TODO: Treat the workaround when building tests with spack wrapper
+        #       For now, removing it to test CI, which builds tests outside of wrapper.
         # Work around spack adding -march=ppc64le to SPACK_TARGET_ARGS which
         # is used by the spack compiler wrapper.  This can go away when BLT
         # removes -Werror from GTest flags
-        if self.spec.satisfies("%clang target=ppc64le:") or not self.run_tests:
+        #
+        # if self.spec.satisfies("%clang target=ppc64le:")
+        #   or (not self.run_tests and "+tests" not in spec):
+        if not self.run_tests and "+tests" not in spec:
             entries.append(cmake_cache_option("ENABLE_TESTS", False))
         else:
             entries.append(cmake_cache_option("ENABLE_TESTS", True))
+            if "+run-all-tests" not in spec:
+                if spec.satisfies("%clang@12.0.0:13.9.999"):
+                    entries.append(
+                        cmake_cache_string(
+                            "CTEST_CUSTOM_TESTS_IGNORE",
+                            "test-algorithm-sort-OpenMP.exe;test-algorithm-stable-sort-OpenMP.exe",
+                        )
+                    )
+                excluded_tests = [
+                    "test-algorithm-sort-Cuda.exe",
+                    "test-algorithm-stable-sort-Cuda.exe",
+                    "test-algorithm-sort-OpenMP.exe",
+                    "test-algorithm-stable-sort-OpenMP.exe",
+                ]
+                if spec.satisfies("+cuda %clang@12.0.0:13.9.999"):
+                    entries.append(
+                        cmake_cache_string("CTEST_CUSTOM_TESTS_IGNORE", ";".join(excluded_tests))
+                    )
+                if spec.satisfies("+cuda %xl@16.1.1.12"):
+                    entries.append(
+                        cmake_cache_string(
+                            "CTEST_CUSTOM_TESTS_IGNORE",
+                            "test-algorithm-sort-Cuda.exe;test-algorithm-stable-sort-Cuda.exe",
+                        )
+                    )
+
+        entries.append(cmake_cache_option("RAJA_HOST_CONFIG_LOADED", True))
 
         return entries
 
     def cmake_args(self):
-        options = []
-        return options
+        return []
 
     @property
     def build_relpath(self):

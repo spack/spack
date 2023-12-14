@@ -185,7 +185,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     )
     variant("tools", default=False, description="Enable tools")
     variant("backtrace", default=False, description="Enable backtrace tools")
-    variant("dev_benchmarks", default=False, description="Enable Developer Benchmarks")
+    variant("dev_benchmarks", default=False, description="Enable developer benchmarks")
     variant("device_alloc", default=False, description="Enable DeviceAllocator")
     variant("werror", default=False, description="Enable warnings as errors")
     variant("asan", default=False, description="Enable ASAN")
@@ -262,11 +262,6 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     # currently only available for cuda.
     conflicts("+shared", when="+cuda")
 
-    # https://github.com/LLNL/Umpire/issues/653
-    # This range looks weird, but it ensures the concretizer looks at it as a
-    # range, not as a concrete version, so that it also matches 10.3.* versions.
-    conflicts("%gcc@10.3.0:10.3", when="+cuda")
-
     def _get_sys_type(self, spec):
         sys_type = spec.architecture
         if "SYS_TYPE" in env:
@@ -311,6 +306,10 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     def initconfig_hardware_entries(self):
         spec = self.spec
         entries = super().initconfig_hardware_entries()
+
+        entries.append("#------------------{0}".format("-" * 30))
+        entries.append("# Package custom hardware settings")
+        entries.append("#------------------{0}\n".format("-" * 30))
 
         option_prefix = "UMPIRE_" if spec.satisfies("@2022.03.0:") else ""
 
