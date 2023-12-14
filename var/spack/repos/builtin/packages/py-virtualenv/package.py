@@ -14,6 +14,7 @@ class PyVirtualenv(PythonPackage):
     git = "https://github.com/pypa/virtualenv.git"
 
     version("20.24.5", sha256="e8361967f6da6fbdf1426483bfe9fca8287c242ac0bc30429905721cefbff752")
+    version("20.23.0", sha256="a85caa554ced0c0afbd0d638e7e2d7b5f92d23478d05d17a76daeac8f279f924")
     version("20.22.0", sha256="278753c47aaef1a0f14e6db8a4c5e1e040e90aea654d0fc1dc7e0d8a42616cc3")
     version("20.17.1", sha256="f8b927684efc6f1cc206c9db297a570ab9ad0e51c16fa9e45487d36d1905c058")
     version("20.16.4", sha256="014f766e4134d0008dcaa1f95bafa0fb0f575795d07cae50b1bee514185d6782")
