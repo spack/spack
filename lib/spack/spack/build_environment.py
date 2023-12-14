@@ -324,19 +324,29 @@ def set_compiler_environment_variables(pkg, env):
     # ttyout, ttyerr, etc.
     link_dir = spack.paths.build_env_path
 
-    # Set SPACK compiler variables so that our wrapper knows what to call
+    # Set SPACK compiler variables so that our wrapper knows what to
+    # call.  If there is no compiler configured then use a default
+    # wrapper which will emit an error if it is used.
     if compiler.cc:
         env.set("SPACK_CC", compiler.cc)
         env.set("CC", os.path.join(link_dir, compiler.link_paths["cc"]))
+    else:
+        env.set("CC", os.path.join(link_dir, "cc"))
     if compiler.cxx:
         env.set("SPACK_CXX", compiler.cxx)
         env.set("CXX", os.path.join(link_dir, compiler.link_paths["cxx"]))
+    else:
+        env.set("CC", os.path.join(link_dir, "c++"))
     if compiler.f77:
         env.set("SPACK_F77", compiler.f77)
         env.set("F77", os.path.join(link_dir, compiler.link_paths["f77"]))
+    else:
+        env.set("F77", os.path.join(link_dir, "f77"))
     if compiler.fc:
         env.set("SPACK_FC", compiler.fc)
         env.set("FC", os.path.join(link_dir, compiler.link_paths["fc"]))
+    else:
+        env.set("FC", os.path.join(link_dir, "fc"))
 
     # Set SPACK compiler rpath flags so that our wrapper knows what to use
     env.set("SPACK_CC_RPATH_ARG", compiler.cc_rpath_arg)

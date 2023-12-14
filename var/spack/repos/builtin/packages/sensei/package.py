@@ -19,6 +19,7 @@ class Sensei(CMakePackage):
     maintainers("sshudler", "kwryankrattiger")
 
     version("develop", branch="develop")
+    version("5.0.0", sha256="3ef948d753d37dfddbbc2c993c823487d4ce40543d35abc008e90c75dfbfa16e")
     version("4.1.0", sha256="e1154240c022069fee454c747d7c60e065d36b4d1dc71852b3cd527c22b531c1")
     version("4.0.0", sha256="fc1538aa1051789dbdefbe18b7f251bc46e7a6ae1db3a940c123552e0318db8b")
     version("3.2.2", sha256="d554b654880e899d97d572f02de87b0202faadaf899420ef871093b5bce320c0")

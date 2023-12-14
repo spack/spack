@@ -22,6 +22,8 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("5.7.1", sha256="794e9298f48ffbe3bd1c1ab87a5c2c2b953713500155fdec9ef8cbb11f81fc8a")
+    version("5.7.0", sha256="8c6cd2ffa4ce6ab03e05feffe074685b5525610870aebe9d78f817b3037f33a4")
     version("5.6.1", sha256="f9da82fbefc68b84081ea0ed0139b91d2a540357fcf505c7f1d57eab01eb327c")
     version("5.6.0", sha256="9453a31324e10ba528f8f4755d2c270d0ed9baa33e980d8f8383204d8e28a563")
     version("5.5.1", sha256="5920c9a9c83cf7e2b42d1f99f5d5091cac7f6c0a040a737e869e57b92d7045a9")
@@ -132,10 +134,7 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
     patch("link-clients-blas.patch", when="@4.3.0:4.3.2")
     patch("link-clients-blas-4.5.0.patch", when="@4.5.0:4.5.2")
     patch("hipblas-link-clients-blas-5.0.0.patch", when="@5.0.0:5.0.2")
-
-    def check(self):
-        exe = join_path(self.build_directory, "clients", "staging", "hipblas-test")
-        self.run_test(exe, options=["--gtest_filter=-*known_bug*"])
+    patch("remove-hipblas-clients-file-installation.patch", when="@5.5:")
 
     depends_on("rocm-cmake@5.2.0:", type="build", when="@5.2.0:")
     depends_on("rocm-cmake@4.5.0:", type="build", when="@4.5.0:")
@@ -171,6 +170,8 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
         "5.5.1",
         "5.6.0",
         "5.6.1",
+        "5.7.0",
+        "5.7.1",
         "master",
         "develop",
     ]:
@@ -222,3 +223,9 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
             args.append("-DCMAKE_INSTALL_LIBDIR=lib")
 
         return args
+
+    @run_after("build")
+    @on_package_attributes(run_tests=True)
+    def check_build(self):
+        exe = Executable(join_path(self.build_directory, "clients", "staging", "hipblas-test"))
+        exe("--gtest_filter=-*known_bug*")

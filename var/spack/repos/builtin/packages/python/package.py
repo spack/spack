@@ -1231,11 +1231,6 @@ print(json.dumps(config))
         module.python_platlib = join_path(dependent_spec.prefix, self.platlib)
         module.python_purelib = join_path(dependent_spec.prefix, self.purelib)
 
-        # Make the site packages directory for extensions
-        if dependent_spec.package.is_extension:
-            mkdirp(module.python_platlib)
-            mkdirp(module.python_purelib)
-
     def add_files_to_view(self, view, merge_map, skip_if_exists=True):
         bin_dir = self.spec.prefix.bin if sys.platform != "win32" else self.spec.prefix
         for src, dst in merge_map.items():

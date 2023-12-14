@@ -286,6 +286,54 @@ def _deprecated_preferences(error_cls):
     return errors
 
 
+@config_packages
+def _avoid_mismatched_variants(error_cls):
+    """Warns if variant preferences have mismatched types or names."""
+    errors = []
+    packages_yaml = spack.config.CONFIG.get_config("packages")
+
+    def make_error(config_data, summary):
+        s = io.StringIO()
+        s.write("Occurring in the following file:\n")
+        syaml.dump_config(config_data, stream=s, blame=True)
+        return error_cls(summary=summary, details=[s.getvalue()])
+
+    for pkg_name in packages_yaml:
+        # 'all:' must be more forgiving, since it is setting defaults for everything
+        if pkg_name == "all" or "variants" not in packages_yaml[pkg_name]:
+            continue
+
+        preferences = packages_yaml[pkg_name]["variants"]
+        if not isinstance(preferences, list):
+            preferences = [preferences]
+
+        for variants in preferences:
+            current_spec = spack.spec.Spec(variants)
+            pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+            for variant in current_spec.variants.values():
+                # Variant does not exist at all
+                if variant.name not in pkg_cls.variants:
+                    summary = (
+                        f"Setting a preference for the '{pkg_name}' package to the "
+                        f"non-existing variant '{variant.name}'"
+                    )
+                    errors.append(make_error(preferences, summary))
+                    continue
+
+                # Variant cannot accept this value
+                s = spack.spec.Spec(pkg_name)
+                try:
+                    s.update_variant_validate(variant.name, variant.value)
+                except Exception:
+                    summary = (
+                        f"Setting the variant '{variant.name}' of the '{pkg_name}' package "
+                        f"to the invalid value '{str(variant)}'"
+                    )
+                    errors.append(make_error(preferences, summary))
+
+    return errors
+
+
 #: Sanity checks on package directives
 package_directives = AuditClass(
     group="packages",
@@ -678,13 +726,37 @@ def _unknown_variants_in_directives(pkgs, error_cls):
 
 
 @package_directives
-def _unknown_variants_in_dependencies(pkgs, error_cls):
-    """Report unknown dependencies and wrong variants for dependencies"""
+def _issues_in_depends_on_directive(pkgs, error_cls):
+    """Reports issues with 'depends_on' directives.
+
+    Issues might be unknown dependencies, unknown variants or variant values, or declaration
+    of nested dependencies.
+    """
     errors = []
     for pkg_name in pkgs:
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
         filename = spack.repo.PATH.filename_for_package_name(pkg_name)
         for dependency_name, dependency_data in pkg_cls.dependencies.items():
+            # Check if there are nested dependencies declared. We don't want directives like:
+            #
+            #     depends_on('foo+bar ^fee+baz')
+            #
+            # but we'd like to have two dependencies listed instead.
+            for when, dependency_edge in dependency_data.items():
+                dependency_spec = dependency_edge.spec
+                nested_dependencies = dependency_spec.dependencies()
+                if nested_dependencies:
+                    summary = (
+                        f"{pkg_name}: invalid nested dependency "
+                        f"declaration '{str(dependency_spec)}'"
+                    )
+                    details = [
+                        f"split depends_on('{str(dependency_spec)}', when='{str(when)}') "
+                        f"into {len(nested_dependencies) + 1} directives",
+                        f"in {filename}",
+                    ]
+                    errors.append(error_cls(summary=summary, details=details))
+
             # No need to analyze virtual packages
             if spack.repo.PATH.is_virtual(dependency_name):
                 continue

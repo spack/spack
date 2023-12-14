@@ -441,7 +441,7 @@ class AutotoolsBuilder(BaseBuilder, autotools.AutotoolsBuilder):
         if "~shared" in hdf5:
             if "+szip" in hdf5:
                 extra_libs.append(hdf5["szip"].libs)
-            extra_libs.append(hdf5["zlib"].libs)
+            extra_libs.append(hdf5["zlib-api"].libs)
 
         if self.spec.satisfies("@4.9.0:+shared"):
             lib_search_dirs.extend(self.spec["zlib-api"].libs.directories)

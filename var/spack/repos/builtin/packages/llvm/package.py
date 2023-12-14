@@ -246,6 +246,7 @@ class Llvm(CMakePackage, CudaPackage):
         description="Enable zstd support for static analyzer / lld",
     )
 
+    provides("libllvm@17", when="@17.0.0:17")
     provides("libllvm@16", when="@16.0.0:16")
     provides("libllvm@15", when="@15.0.0:15")
     provides("libllvm@14", when="@14.0.0:14")
@@ -308,14 +309,14 @@ class Llvm(CMakePackage, CudaPackage):
         depends_on("swig", when="+python")
         depends_on("xz")
 
-    # Use ^swig cause it's triggered by both python & lua scripting in lldb
-    with when("^swig"):
-        depends_on("swig@2:", when="@10:")
-        depends_on("swig@3:", when="@12:")
-        depends_on("swig@4:", when="@17:")
-        # Commits f0a25fe0b746f56295d5c02116ba28d2f965c175 and
-        # 81fc5f7909a4ef5a8d4b5da2a10f77f7cb01ba63 fixed swig 4.1 support
-        depends_on("swig@:4.0", when="@:15")
+    for _when_spec in ("+lldb+python", "+lldb+lua"):
+        with when(_when_spec):
+            depends_on("swig@2:", when="@10:")
+            depends_on("swig@3:", when="@12:")
+            depends_on("swig@4:", when="@17:")
+            # Commits f0a25fe0b746f56295d5c02116ba28d2f965c175 and
+            # 81fc5f7909a4ef5a8d4b5da2a10f77f7cb01ba63 fixed swig 4.1 support
+            depends_on("swig@:4.0", when="@:15")
 
     # gold support, required for some features
     depends_on("binutils+gold+ld+plugins+headers", when="+gold")

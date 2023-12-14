@@ -32,6 +32,14 @@ class Libdap4(AutotoolsPackage):
     depends_on("curl")
     depends_on("libxml2")
     depends_on("uuid")
+    depends_on("rpc")
+
+    def setup_build_environment(self, env):
+        # Configure script will search for RPC library, but not actually add RPC library references
+        # during configure tests. This can cause a failure with libtirpc if the following variable
+        # is not set.
+        if self.spec.satisfies("^libtirpc"):
+            env.set("TIRPC_LIBS", self.spec["rpc"].libs)
 
     def configure_args(self):
         # libxml2 exports ./include/libxml2/ instead of ./include/, which we

@@ -14,7 +14,6 @@ from llnl.util import lang, tty
 
 import spack.build_environment
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.environment as ev
 import spack.fetch_strategy
@@ -23,6 +22,7 @@ import spack.paths
 import spack.report
 import spack.spec
 import spack.store
+from spack.cmd.common import arguments
 from spack.error import SpackError
 from spack.installer import PackageInstaller
 
@@ -162,8 +162,8 @@ def setup_parser(subparser):
         "--no-check-signature",
         action="store_true",
         dest="unsigned",
-        default=False,
-        help="do not check signatures of binary packages",
+        default=None,
+        help="do not check signatures of binary packages (override mirror config)",
     )
     subparser.add_argument(
         "--show-log-on-error",

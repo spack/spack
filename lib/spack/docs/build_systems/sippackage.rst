@@ -124,7 +124,7 @@ are wrong, you can provide the names yourself by overriding
 
 .. code-block:: python
 
-   import_modules = ['PyQt5']
+   import_modules = ["PyQt5"]
 
 
 These tests often catch missing dependencies and non-RPATHed
