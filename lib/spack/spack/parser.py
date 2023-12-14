@@ -100,7 +100,7 @@ else:
 VALUE = r"(?:[a-zA-Z_0-9\-+\*.,:=\~\/\\]+)"
 
 #: Variant/flag values that match this can be left unquoted in Spack output
-NO_QUOTES_NEEDED = r"^[a-zA-Z0-9,/_.-]+$"
+NO_QUOTES_NEEDED = re.compile(r"^[a-zA-Z0-9,/_.-]+$")
 
 #: Quoted values can be *anything* in between quotes, including escaped quotes.
 QUOTED_VALUE = r"(?:'(?:[^']|(?<=\\)')*'|\"(?:[^\"]|(?<=\\)\")*\")"
@@ -110,15 +110,15 @@ VERSION_RANGE = rf"(?:(?:{VERSION})?:(?:{VERSION}(?!\s*=))?)"
 VERSION_LIST = rf"(?:{VERSION_RANGE}|{VERSION})(?:\s*,\s*(?:{VERSION_RANGE}|{VERSION}))*"
 
 #: Regex with groups to use for splitting (optionally propagated) key-value pairs
-SPLIT_KVP = rf"^({NAME})(==?)(.*)$"
+SPLIT_KVP = re.compile(rf"^({NAME})(==?)(.*)$")
 
 #: Regex to strip quotes. Group 2 will be the unquoted string.
-STRIP_QUOTES = r"^(['\"])(.*)\1$"
+STRIP_QUOTES = re.compile(r"^(['\"])(.*)\1$")
 
 
 def strip_quotes_and_unescape(string: str) -> str:
     """Remove surrounding single or double quotes from string, if present."""
-    match = re.match(STRIP_QUOTES, string)
+    match = STRIP_QUOTES.match(string)
     if not match:
         return string
 
@@ -140,7 +140,7 @@ def quote_if_needed(value: str) -> str:
     ``"``, and control codes.
 
     """
-    if re.match(spack.parser.NO_QUOTES_NEEDED, value):
+    if NO_QUOTES_NEEDED.match(value):
         return value
 
     return json.dumps(value) if "'" in value else f"'{value}'"
@@ -456,14 +456,14 @@ class SpecNodeParser:
                 )
 
             elif self.ctx.accept(TokenType.KEY_VALUE_PAIR):
-                match = re.match(SPLIT_KVP, self.ctx.current_token.value)
+                match = SPLIT_KVP.match(self.ctx.current_token.value)
                 assert match, "SPLIT_KVP and KEY_VALUE_PAIR do not agree."
 
                 name, delim, value = match.groups()
                 initial_spec._add_flag(name, strip_quotes_and_unescape(value), propagate=False)
 
             elif self.ctx.accept(TokenType.PROPAGATED_KEY_VALUE_PAIR):
-                match = re.match(SPLIT_KVP, self.ctx.current_token.value)
+                match = SPLIT_KVP.match(self.ctx.current_token.value)
                 assert match, "SPLIT_KVP and PROPAGATED_KEY_VALUE_PAIR do not agree."
 
                 name, delim, value = match.groups()
