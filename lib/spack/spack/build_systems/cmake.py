@@ -280,8 +280,8 @@ class CMakeBuilder(BaseBuilder):
         if pkg.spec.satisfies("^cmake@3.16:"):
             args.extend(
                 [
-                    define("CMAKE_FIND_USE_CMAKE_SYSTEM_PATH", True),
-                    define("CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH", True),
+                    define("CMAKE_FIND_USE_CMAKE_SYSTEM_PATH", False),
+                    define("CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH", False),
                 ]
             )
 
