@@ -50,6 +50,8 @@ class Mpifileutils(Package):
 
     depends_on("attr", when="@0.11.1:+xattr")
 
+    depends_on("daos", when="+daos")
+
     depends_on("bzip2")
 
     depends_on("libcap")
@@ -106,6 +108,9 @@ class Mpifileutils(Package):
 
         if "+daos" in self.spec:
             args.append("-DENABLE_DAOS=ON")
+            args.append("-DWITH_DAOS_PREFIX=%s" % self.spec["daos"].prefix)
+        else:
+            args.append("-DENABLE_DAOS=OFF")
 
         return args
 
