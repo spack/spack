@@ -307,10 +307,6 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
                 if "+cuda" in spec:
                     entries.append(cmake_cache_string("CMAKE_CUDA_STANDARD", "14"))
 
-        if "+desul" in spec:
-            if "+cuda" in spec:
-                entries.append(cmake_cache_string("CMAKE_CUDA_STANDARD", "14"))
-
         entries.append(cmake_cache_option("RAJA_ENABLE_RUNTIME_PLUGINS", "+plugins" in spec))
 
         entries.append(
