@@ -108,12 +108,14 @@ install_compilers() {
             git clone --depth=1 -b ${spack_intel_compiler_commit} https://github.com/spack/spack.git \
                 && cp "${CURRENT_SPACK_ROOT}/etc/spack/config.yaml" spack/etc/spack/ \
                 && cp "${CURRENT_SPACK_ROOT}/etc/spack/compilers.yaml" spack/etc/spack/ \
+                && cp "${CURRENT_SPACK_ROOT}/etc/spack/packages.yaml" spack/etc/spack/ \
                 && . spack/share/spack/setup-env.sh \
                 && spack install intel-oneapi-compilers-classic
             rm -rf "${DIR}"
         )
         bash -c ". \"$(spack location -i intel-oneapi-compilers)\"/setvars.sh; spack compiler add --scope site" \
             || true
+        spack clean -m
     fi
 }
 
