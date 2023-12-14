@@ -1040,10 +1040,29 @@ class BaseModuleFileWriter:
                 with open(modulerc_path, "w") as f:
                     f.write("\n".join(content))
 
+    def test_name_clash(self) -> bool:
+        """Scan the module index to see if more than one package claims to use this module."""
+        module_index = read_module_index(self.layout.dirname())
+        already_found_package = False
+        for module_properties in module_index.values():
+            if module_properties.path == self.layout.filename:
+                if already_found_package:
+                    return True
+                already_found_package = True
+        return False
+
     def remove(self):
         """Deletes the module file."""
         mod_file = self.layout.filename
         if os.path.exists(mod_file):
+            if self.test_name_clash():
+                spec_fmt_str = "{name}@={version}%{compiler}/{hash:7} {variants} arch={arch}"
+                tty.warn('\n'.join([
+                    "Skipping module deletion due to name clash:",
+                    f"file: {mod_file}",
+                    f"spec: {self.spec.format(spec_fmt_str)}"
+                ]))
+                return
             try:
                 os.remove(mod_file)  # Remove the module file
                 self.remove_module_defaults()  # Remove default targeting module file
