@@ -815,7 +815,7 @@ deprecated-ci-build:
       job: deprecated-ci-generate
 
 ########################################
-# AWS PCLUSTER
+# AWS ParallelCluster
 ########################################
 
 .aws-pcluster-generate-image:
@@ -852,23 +852,23 @@ aws-pcluster-build-icelake:
       job: aws-pcluster-generate-icelake
 
 # Skylake_avx512 (one pipeline per target)
-.aws-pcluster-skylake:
-  variables:
-    SPACK_CI_STACK_NAME: aws-pcluster-skylake_avx512
+# .aws-pcluster-skylake:
+#   variables:
+#     SPACK_CI_STACK_NAME: aws-pcluster-skylake_avx512
 
-aws-pcluster-generate-skylake:
-  extends: [ ".linux_skylake", ".aws-pcluster-skylake", ".generate-x86_64", ".tags-x86_64_v4", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
+# aws-pcluster-generate-skylake:
+#   extends: [ ".linux_skylake", ".aws-pcluster-skylake", ".generate-x86_64", ".tags-x86_64_v4", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
 
-aws-pcluster-build-skylake:
-  extends: [ ".linux_skylake", ".aws-pcluster-skylake", ".build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: aws-pcluster-generate-skylake
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: aws-pcluster-generate-skylake
+# aws-pcluster-build-skylake:
+#   extends: [ ".linux_skylake", ".aws-pcluster-skylake", ".build" ]
+#   trigger:
+#     include:
+#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+#         job: aws-pcluster-generate-skylake
+#     strategy: depend
+#   needs:
+#     - artifacts: True
+#       job: aws-pcluster-generate-skylake
 
 # Neoverse_n1 (one pipeline per target)
 .aws-pcluster-neoverse_n1:
