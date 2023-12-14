@@ -16,8 +16,8 @@ class Libxi(AutotoolsPackage, XorgPackage):
 
     maintainers("wdconinc")
 
-    version("1.8.1", sha256="3b5f47c223e4b63d7f7fe758886b8bf665b20a7edb6962c423892fd150e326ea")
-    version("1.8", sha256="c80fd200a1190e4406bb4cc6958839d9651638cb47fa546a595d4bebcd3b9e2d")
+    # version("1.8.1", sha256="3b5f47c223e4b63d7f7fe758886b8bf665b20a7edb6962c423892fd150e326ea")
+    # version("1.8", sha256="c80fd200a1190e4406bb4cc6958839d9651638cb47fa546a595d4bebcd3b9e2d")
     version("1.7.10", sha256="b51e106c445a49409f3da877aa2f9129839001b24697d75a54e5c60507e9a5e3")
     version("1.7.9", sha256="463cc5370191404bc0f8a450fdbf6d9159efbbf274e5e0f427a60191fed9cf4b")
     version("1.7.8", sha256="7466d0c626a9cc2e53fd78c811815e82924cd7582236a82401df3d282a9c2889")
@@ -32,7 +32,7 @@ class Libxi(AutotoolsPackage, XorgPackage):
     depends_on("xproto@7.0.13:")
     depends_on("xextproto@7.0.3:")
     depends_on("inputproto@2.2.99.1:", when="@1.7:")
-    depends_on("inputproto@2.3.99.1:", when="@1.8:")
+    # depends_on("inputproto@2.3.99.1:", when="@1.8:")
 
     @property
     def libs(self):
