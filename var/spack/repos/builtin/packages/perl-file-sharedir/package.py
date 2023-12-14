@@ -12,6 +12,17 @@ class PerlFileSharedir(PerlPackage):
     homepage = "https://metacpan.org/pod/File::ShareDir"
     url = "https://cpan.metacpan.org/authors/id/R/RE/REHSACK/File-ShareDir-1.118.tar.gz"
 
+    maintainers("EbiArnie")
+
     version("1.118", sha256="3bb2a20ba35df958dc0a4f2306fc05d903d8b8c4de3c8beefce17739d281c958")
 
-    # depends_on("perl-module-build", type="build")
+    depends_on("perl-class-inspector@1.12:", type=("build", "run", "test"))
+    depends_on("perl-file-sharedir-install@0.13:", type=("build", "link"))
+
+    def test_use(self):
+        """Test 'use module'"""
+        options = ["-we", 'use strict; use File::ShareDir; print("OK\n")']
+
+        perl = self.spec["perl"].command
+        out = perl(*options, output=str.split, error=str.split)
+        assert "OK" in out
