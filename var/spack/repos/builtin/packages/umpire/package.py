@@ -187,10 +187,10 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant("asan", default=False, description="Enable ASAN")
     variant("sanitizer_tests", default=False, description="Enable address sanitizer tests")
 
-    depends_on("cmake@3.20:", when="@2022.03.0: +rocm", type="build")
-    depends_on("cmake@3.14:", when="@2022.03.0:", type="build")
     depends_on("cmake@3.23:", when="@2022.10.0: +rocm", type="build")
     depends_on("cmake@3.20:", when="@2022.10.0:", type="build")
+    depends_on("cmake@3.20:", when="@2022.03.0: +rocm", type="build")
+    depends_on("cmake@3.14:", when="@2022.03.0:", type="build")
     depends_on("cmake@3.9:", when="+cuda", type="build")
     depends_on("cmake@3.8:", type="build")
 
@@ -331,6 +331,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
                 "{}ENABLE_OPENMP_TARGET".format(option_prefix), "+openmp_target" in spec
             )
         )
+
         if "+openmp_target" in spec and "%xl" in spec:
             entries.append(cmake_cache_string("OpenMP_CXX_FLAGS", "-qsmp;-qoffload"))
 

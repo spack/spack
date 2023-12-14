@@ -75,6 +75,7 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     variant("enable_pick", default=False, description="Enable pick method")
     variant("shared", default=True, description="Build Shared Libs")
+    variant("mpi", default=False, description="Enable MPI support")
     variant("raja", default=False, description="Build plugin for RAJA")
     variant("examples", default=True, description="Build examples.")
     variant("openmp", default=False, description="Build using OpenMP")
@@ -101,12 +102,14 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
     conflicts("^blt@:0.3.6", when="+rocm")
 
     depends_on("umpire")
+    depends_on("umpire@main", when="@main")
     depends_on("umpire@2023.06.0:", when="@2023.06.0:")
     depends_on("umpire@2022.10.0:", when="@2022.10.0:")
     depends_on("umpire@2022.03.0:", when="@2022.03.0:")
     depends_on("umpire@6.0.0", when="@2.4.0")
     depends_on("umpire@4.1.2", when="@2.2.0:2.3.0")
-    depends_on("umpire@main", when="@main")
+
+    depends_on("umpire+mpi", when="+mpi")
 
     with when("+cuda"):
         depends_on("umpire+cuda")
@@ -121,15 +124,16 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
             )
 
     with when("+raja"):
-        depends_on("raja~openmp", when="~openmp")
-        depends_on("raja+openmp", when="+openmp")
+        depends_on("raja@main", when="@main")
+        depends_on("raja@2023.06.0:", when="@2023.06.0:")
+        depends_on("raja@2022.10.0:", when="@2022.10.0:")
+        depends_on("raja@2022.03.0:", when="@2022.03.0:")
         depends_on("raja@0.14.0", when="@2.4.0")
         depends_on("raja@0.13.0", when="@2.3.0")
         depends_on("raja@0.12.0", when="@2.2.0:2.2.2")
-        depends_on("raja@2022.03.0:", when="@2022.03.0:")
-        depends_on("raja@2022.10.0:", when="@2022.10.0:")
-        depends_on("raja@2023.06.0:", when="@2023.06.0:")
-        depends_on("raja@main", when="@main")
+
+        depends_on("raja~openmp", when="~openmp")
+        depends_on("raja+openmp", when="+openmp")
 
         with when("+cuda"):
             depends_on("raja+cuda")
@@ -142,6 +146,8 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
                     "raja+rocm amdgpu_target={0}".format(arch),
                     when="amdgpu_target={0}".format(arch),
                 )
+
+    depends_on("mpi", when="+mpi")
 
     def _get_sys_type(self, spec):
         sys_type = spec.architecture
@@ -210,6 +216,14 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append(cmake_cache_option("ENABLE_HIP", True))
         else:
             entries.append(cmake_cache_option("ENABLE_HIP", False))
+
+        return entries
+
+    def initconfig_mpi_entries(self):
+        spec = self.spec
+
+        entries = super(Chai, self).initconfig_mpi_entries()
+        entries.append(cmake_cache_option("ENABLE_MPI", "+mpi" in spec))
 
         return entries
 
