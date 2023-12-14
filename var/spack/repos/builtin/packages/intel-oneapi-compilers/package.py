@@ -34,8 +34,11 @@ versions = [
         "cpp": {
             "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/d85fbeee-44ec-480a-ba2f-13831bac75f7/l_dpcpp-cpp-compiler_p_2023.2.3.12_offline.sh",
             "sha256": "b80119a3e54306b85198e907589b00b11c072f107ac39c1686a1996f76466b26",
-        },        
-        "ftn": {},
+        },
+        "ftn": {
+            "url": "https://registrationcenter-download.intel.com/akdlm//IRC_NAS/0d65c8d4-f245-4756-80c4-6712b43cf835/l_fortran-compiler_p_2023.2.1.8_offline.sh",
+            "sha256": "d4e36abc014c184698fec318a127f15a696b5333b3b0282aba1968b351207185",
+        },
     },
     {
         "version": "2023.2.1",
