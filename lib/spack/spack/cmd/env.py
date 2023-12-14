@@ -275,7 +275,7 @@ def env_activate(args):
         tty.die("Calling spack env activate with --env, --env-dir and --no-env is ambiguous")
 
     # special parser error handling relative to the --temp flag
-    temp_conflicts = iter([args.keep_relative, args.dir, args.env_name])
+    temp_conflicts = iter([args.keep_relative, args.dir, args.env_name, args.with_view])
     if args.temp and any(temp_conflicts):
         tty.die(
             "spack env activate --temp cannot be combined with managed environments, --with-view,"
