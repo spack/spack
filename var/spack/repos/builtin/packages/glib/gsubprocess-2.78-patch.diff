@@ -1,0 +1,14 @@
+diff --git a/gio/tests/gsubprocess.c b/gio/tests/gsubprocess.c
+index 45fdf93b2f5b3b1354439518a7807d300ada2d15..1a0d6df3480e69eea7d2beb61ad3ec4103f849e3 100644
+--- a/gio/tests/gsubprocess.c
++++ b/gio/tests/gsubprocess.c
+@@ -2006,7 +2006,9 @@ trace_children (pid_t main_child)
+   g_assert_no_errno (waitpid (main_child, &wstatus, 0));
+   g_assert_no_errno (ptrace (PTRACE_SETOPTIONS, main_child, NULL,
+                              (PTRACE_O_TRACEFORK |
++#ifdef PTRACE_O_EXITKILL
+                               PTRACE_O_EXITKILL |
++#endif
+                               PTRACE_O_TRACEVFORK |
+                               PTRACE_O_TRACECLONE |
+                               PTRACE_O_TRACEEXEC)));

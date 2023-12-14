@@ -161,24 +161,14 @@ class Glib(MesonPackage, AutotoolsPackage):
     patch("old-kernels.patch", when="@2.56.0:2.56.1 os=centos6")
     patch("old-kernels.patch", when="@2.56.0:2.56.1 os=scientific6")
     # fix multiple definition error in gio tests for 2.76.1
-    patch(
-        "https://gitlab.gnome.org/GNOME/glib/-/merge_requests/3368.diff",
-        sha256="fa31180b55a832cbb75cc640bb115b7b092a26d7bcf0f48768de55576f0a38d3",
-        when="@2.76.1",
-    )
-
+    patch("meson-build-2.76-patch.diff", when="@2.76.1")
     # glib prefers the libc version of gettext, which breaks the build if the
     # external version is also found.
     patch("meson-gettext.patch", when="@2.58:2.64")
     patch("meson-gettext-2.66.patch", when="@2.66:2.68,2.72")
     patch("meson-gettext-2.70.patch", when="@2.70")
-
     # Don't use PTRACE_O_EXITKILL if it's not defined
-    patch(
-        "https://gitlab.gnome.org/GNOME/glib/-/commit/bda87264372c006c94e21ffb8ff9c50ecb3e14bd.diff",
-        sha256="2c25d7b3bf581b3ec992d7af997fa6c769174d49b9350e0320c33f5e048cba99",
-        when="@2.78.0",
-    )
+    patch("gsubprocess-2.78-patch.diff", when="@2.78.0")
 
     def url_for_version(self, version):
         """Handle glib's version-based custom URLs."""

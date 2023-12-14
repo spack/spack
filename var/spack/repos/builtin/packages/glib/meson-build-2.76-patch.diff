@@ -1,0 +1,13 @@
+diff --git a/gio/tests/meson.build b/gio/tests/meson.build
+index b4a64926e9ce18e21d370e2accaf7834063bddad..2631b1285395322aaace42dae32cabe3aa16389b 100644
+--- a/gio/tests/meson.build
++++ b/gio/tests/meson.build
+@@ -929,7 +929,7 @@ if not meson.is_cross_build()
+       input : test_gresource_binary,
+       output : 'test_resources.o',
+       command : cc.cmd_array() + ['-Wl,-z,noexecstack', '-r', '-Wl,-b,binary',
+-                                  '@INPUT@', '-o','@OUTPUT@'])
++                                  '-nostdlib', '@INPUT@', '-o','@OUTPUT@'])
+ 
+     # Rename symbol to match the one in the C file
+     if cc.get_id() == 'gcc' and host_system == 'windows'
