@@ -154,7 +154,8 @@ class Qt(Package):
     patch(
         "https://github.com/qt/qtbase/commit/cdf64b0e47115cc473e1afd1472b4b09e130b2a5.patch?full_index=1",
         sha256="2b881ffb2808f8fa79f51f8bec71be91a886bcdc59b1d7b6986cba26ed18d1d3",
-        when="@5.12.1: %apple-clang@15:")
+        when="@5.12.1: %apple-clang@15:",
+    )
     conflicts("%apple-clang@15:", when="@:5.12.0")
 
     # Spack path substitution uses excessively long paths that exceed the hard-coded
