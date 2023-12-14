@@ -1071,11 +1071,15 @@ class BaseModuleFileWriter:
             generate_module_index(self.layout.dirname(), [], remove_hashes=[self.spec.dag_hash()])
             if is_clash:
                 spec_fmt_str = "{name}@={version}%{compiler}/{hash:7} {variants} arch={arch}"
-                tty.warn('\n'.join([
-                    "Skipping module deletion due to name clash:",
-                    f"file: {mod_file}",
-                    f"spec: {self.spec.format(spec_fmt_str)}"
-                ]))
+                tty.warn(
+                    "\n".join(
+                        [
+                            "Skipping module deletion due to name clash:",
+                            f"file: {mod_file}",
+                            f"spec: {self.spec.format(spec_fmt_str)}",
+                        ]
+                    )
+                )
                 return
             try:
                 os.remove(mod_file)  # Remove the module file
