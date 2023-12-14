@@ -228,7 +228,7 @@ def root_path(name, module_set_name):
     return spack.util.path.canonicalize_path(path)
 
 
-def generate_module_index(root, modules, overwrite=False):
+def generate_module_index(root, modules, remove_hashes=None, overwrite=False):
     index_path = os.path.join(root, "module-index.yaml")
     if overwrite or not os.path.exists(index_path):
         entries = syaml.syaml_dict()
@@ -240,6 +240,11 @@ def generate_module_index(root, modules, overwrite=False):
     for m in modules:
         entry = {"path": m.layout.filename, "use_name": m.layout.use_name}
         entries[m.spec.dag_hash()] = entry
+
+    if remove_hashes is not None:
+        for hash in remove_hashes:
+            entries.pop(hash)
+
     index = {"module_index": entries}
     llnl.util.filesystem.mkdirp(root)
     with open(index_path, "w") as index_file:
@@ -976,6 +981,8 @@ class BaseModuleFileWriter:
         # record module hiddenness if implicit
         self.update_module_hiddenness()
 
+        generate_module_index(self.layout.dirname(), [self])
+
     def update_module_defaults(self):
         if any(self.spec.satisfies(default) for default in self.conf.defaults):
             # This spec matches a default, it needs to be symlinked to default
@@ -1063,6 +1070,10 @@ class BaseModuleFileWriter:
                     f"spec: {self.spec.format(spec_fmt_str)}"
                 ]))
                 return
+    def remove(self):
+        """Deletes the module file."""
+        mod_file = self.layout.filename
+        if os.path.exists(mod_file):
             try:
                 os.remove(mod_file)  # Remove the module file
                 self.remove_module_defaults()  # Remove default targeting module file
@@ -1070,6 +1081,7 @@ class BaseModuleFileWriter:
                 os.removedirs(
                     os.path.dirname(mod_file)
                 )  # Remove all the empty directories from the leaf up
+                generate_module_index(self.layout.dirname(), [], remove_hashes=[self.spec.dag_hash()])
             except OSError:
                 # removedirs throws OSError on first non-empty directory found
                 pass
