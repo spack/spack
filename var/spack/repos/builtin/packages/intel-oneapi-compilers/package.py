@@ -30,6 +30,13 @@ versions = [
         },
     },
     {
+        "version": "2023.2.3",
+        "cpp": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/d85fbeee-44ec-480a-ba2f-13831bac75f7/l_dpcpp-cpp-compiler_p_2023.2.3.12_offline.sh",
+            "sha256": "b80119a3e54306b85198e907589b00b11c072f107ac39c1686a1996f76466b26",
+        },
+    },
+    {
         "version": "2023.2.1",
         "cpp": {
             "url": "https://registrationcenter-download.intel.com/akdlm//IRC_NAS/ebf5d9aa-17a7-46a4-b5df-ace004227c0e/l_dpcpp-cpp-compiler_p_2023.2.1.8_offline.sh",
