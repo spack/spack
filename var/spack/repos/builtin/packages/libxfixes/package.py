@@ -17,6 +17,7 @@ class Libxfixes(AutotoolsPackage, XorgPackage):
 
     maintainers("wdconinc")
 
+    # Newer versions are blocked by https://github.com/spack/spack/issues/41688
     # version("6.0.1", sha256="e69eaa321173c748ba6e2f15c7cf8da87f911d3ea1b6af4b547974aef6366bec")
     # version("6.0.0", sha256="82045da5625350838390c9440598b90d69c882c324ca92f73af9f0e992cb57c7")
     version("5.0.3", sha256="9ab6c13590658501ce4bd965a8a5d32ba4d8b3bb39a5a5bc9901edffc5666570")
