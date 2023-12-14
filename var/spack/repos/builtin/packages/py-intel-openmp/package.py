@@ -18,7 +18,17 @@ class PyIntelOpenmp(PythonPackage):
 
     homepage = "https://pypi.org/project/intel-openmp/"
 
+    version("2021.2.0", sha256="2c40b766bbcf346d298c54b92733c75a70b5f4f3b63461fa92753e49f14e4ac0", expand=False)
+
+
+
     if sys.platform.startswith("linux"):
+        version(
+            "2021.2.0",
+            url="https://pypi.io/packages/py2.py3/i/intel-openmp/intel_openmp-2021.2.0-py2.py3-none-manylinux1_x86_64.whl",
+            sha256="2c40b766bbcf346d298c54b92733c75a70b5f4f3b63461fa92753e49f14e4ac0",
+            expand=False,
+        )
         version(
             "2021.1.2",
             url="https://pypi.io/packages/py2.py3/i/intel-openmp/intel_openmp-2021.1.2-py2.py3-none-manylinux1_x86_64.whl",
@@ -27,6 +37,12 @@ class PyIntelOpenmp(PythonPackage):
         )
 
     if sys.platform.startswith("darwin"):
+        version(
+            "2021.2.0",
+            url="https://pypi.io/packages/py2.py3/i/intel-openmp/intel_openmp-2021.2.0-py2.py3-none-macosx_10_15_x86_64.whl",
+            sha256="39467008e822d6c2a7b183f443acb6521098ebee6bb084f3f97fec338b40fa4c",
+            expand=False,
+        )
         version(
             "2021.1.2",
             url="https://pypi.io/packages/py2.py3/i/intel-openmp/intel_openmp-2021.1.2-py2.py3-none-macosx_10_15_x86_64.whl",
