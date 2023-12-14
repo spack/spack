@@ -14,6 +14,7 @@ class PyKeyring(PythonPackage):
     homepage = "https://github.com/jaraco/keyring"
     pypi = "keyring/keyring-23.0.1.tar.gz"
 
+    version("24.0.0", sha256="4e87665a19c514c7edada8b15015cf89bd99b8d7edabc5c43cca77166fa8dfad")
     version("23.13.1", sha256="ba2e15a9b35e21908d0aaf4e0a47acc52d6ae33444df0da2b49d41a46ef6d678")
     version("23.9.1", sha256="39e4f6572238d2615a82fcaa485e608b84b503cf080dc924c43bbbacb11c1c18")
     version("23.5.0", sha256="9012508e141a80bd1c0b6778d5c610dd9f8c464d75ac6774248500503f972fb9")
@@ -37,11 +38,12 @@ class PyKeyring(PythonPackage):
     depends_on(
         "py-importlib-metadata@4.11.4:", when="@23.10: ^python@:3.11", type=("build", "run")
     )
+    depends_on("py-importlib-metadata@4.11.4:", when="@24: ^python@:3.12", type=("build", "run"))
     depends_on("py-importlib-metadata@3.6:", when="@23: ^python@:3.9", type=("build", "run"))
     depends_on("py-importlib-metadata@1:", when="@21:22", type=("build", "run"))
     depends_on("py-importlib-metadata", when="@20:", type=("build", "run"))
     depends_on("py-jaraco-classes", when="@23.9.1:", type=("build", "run"))
-    depends_on("py-importlib-resources", when="@23.13: ^python@:3.8", type=("build", "run"))
+    depends_on("py-importlib-resources", when="@23.13: ^python@:3.9", type=("build", "run"))
 
     # TODO: additional dependency on pywin32-ctypes required for Windows
 
