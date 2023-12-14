@@ -154,7 +154,7 @@ def quote_kvp(string: str) -> str:
     or ``name==``, and we assume the rest of the argument is the value. This covers the
     common cases of passign flags, e.g., ``cflags="-O2 -g"`` on the command line.
     """
-    match = re.match(spack.parser.SPLIT_KVP, string)
+    match = spack.parser.SPLIT_KVP.match(string)
     if not match:
         return string
 
