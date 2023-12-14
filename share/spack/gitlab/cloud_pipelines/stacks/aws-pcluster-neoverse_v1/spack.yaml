@@ -4,6 +4,7 @@ spack:
   definitions:
   - optimized_configs:
     - gromacs target=neoverse_v1
+    - gromacs target=neoverse_n1
     # - lammps
     # - mpas-model
     # - openfoam
