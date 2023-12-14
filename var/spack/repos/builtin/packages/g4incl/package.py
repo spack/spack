@@ -19,6 +19,7 @@ class G4incl(Package):
     maintainers("drbenmorgan")
 
     # Only versions relevant to Geant4 releases built by spack are added
+    version("1.1", sha256="5d82e71db5f5a1b659937506576be58db7de7753ec5913128141ae7fce673b44")
     version("1.0", sha256="716161821ae9f3d0565fbf3c2cf34f4e02e3e519eb419a82236eef22c2c4367d")
 
     def install(self, spec, prefix):
