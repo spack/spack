@@ -916,6 +916,11 @@ class BaseModuleFileWriter:
             tty.debug(msg.format(self.spec.cshort_spec))
             return
 
+        # register this spec to this module file in the module index
+        # even if it already exists and I'm not about to overwrite it
+        # this allows me to avoid accidentally deleting that file in the future
+        generate_module_index(self.layout.dirname(), [self])
+
         # Print a warning in case I am accidentally overwriting
         # a module file that is already there (name clash)
         if not overwrite and os.path.exists(self.layout.filename):
@@ -980,8 +985,6 @@ class BaseModuleFileWriter:
 
         # record module hiddenness if implicit
         self.update_module_hiddenness()
-
-        generate_module_index(self.layout.dirname(), [self])
 
     def update_module_defaults(self):
         if any(self.spec.satisfies(default) for default in self.conf.defaults):
@@ -1070,10 +1073,6 @@ class BaseModuleFileWriter:
                     f"spec: {self.spec.format(spec_fmt_str)}"
                 ]))
                 return
-    def remove(self):
-        """Deletes the module file."""
-        mod_file = self.layout.filename
-        if os.path.exists(mod_file):
             try:
                 os.remove(mod_file)  # Remove the module file
                 self.remove_module_defaults()  # Remove default targeting module file
@@ -1081,7 +1080,9 @@ class BaseModuleFileWriter:
                 os.removedirs(
                     os.path.dirname(mod_file)
                 )  # Remove all the empty directories from the leaf up
-                generate_module_index(self.layout.dirname(), [], remove_hashes=[self.spec.dag_hash()])
+                generate_module_index(
+                    self.layout.dirname(), [], remove_hashes=[self.spec.dag_hash()]
+                ) # remove this spec from the module index
             except OSError:
                 # removedirs throws OSError on first non-empty directory found
                 pass
