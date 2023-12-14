@@ -38,9 +38,9 @@ class VbzCompression(CMakePackage):
 
     def cmake_args(self):
         args = [
-                "-DCMAKE_BUILD_TYPE=Release",
-                "-DENABLE_CONAN=OFF",
-                "-DENABLE_PERF_TESTING=OFF",
-                "-DENABLE_PYTHON=OFF"
+            "-DCMAKE_BUILD_TYPE=Release",
+            "-DENABLE_CONAN=OFF",
+            "-DENABLE_PERF_TESTING=OFF",
+            "-DENABLE_PYTHON=OFF",
         ]
         return args
