@@ -42,3 +42,5 @@ class VbzCompression(CMakePackage):
                 "-DENABLE_CONAN=OFF",
                 "-DENABLE_PERF_TESTING=OFF",
                 "-DENABLE_PYTHON=OFF"
+        ]
+        return args
