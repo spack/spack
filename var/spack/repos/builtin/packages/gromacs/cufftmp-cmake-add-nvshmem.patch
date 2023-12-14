@@ -1,0 +1,62 @@
+diff -uNr a/cmake/FindcuFFTMp.cmake b/cmake/FindcuFFTMp.cmake
+--- a/cmake/FindcuFFTMp.cmake	2023-12-14 07:31:29.905756661 +0000
++++ b/cmake/FindcuFFTMp.cmake	2023-12-14 09:45:29.270603244 +0000
+@@ -34,8 +34,10 @@
+ # - Find cuFFTMp, NVIDIA's FFT library for multi-GPU multi-node
+ #
+ # This script does define cache variables
+-#   CUFFTMP_INCLUDE_DIR    - Location of cuFFTMP's include directory.
+-#   CUFFTMP_LIBRARY        - Location of cuFFTMP's libraries
++#   cuFFTMp_INCLUDE_DIR     - Location of cuFFTMP's include directory.
++#   cuFFTMp_LIBRARY         - cuFFTMP library
++#   cuFFTMp_NVSHMEM_LIBRARY - nvshmem library to use with cuFFTMP
++#   cuFFTMp_NVSHMEM_HOST_LIBRARY nvshmem_host library to use with cuFFTMP
+ #
+ # If your cuFFTMp installation is not in a standard installation
+ # directory, you may provide a hint to where it may be found. Simply
+@@ -73,6 +75,33 @@
+     ${PC_cuFFTMp_LIBRARY_DIRS}
+     )
+
++# cufftmp depends on a particular NVSHEM
++#
++# TODO: If nvhpc is used cuFFTMp_NVSHMEM_ROOT_DIR could be derived from
++# cuFFTMp_ROOT_DIR and the CUDA version used.
++#
++find_path(cuFFTMp_NVSHMEM_ROOT_DIR
++    NAMES
++    include/nvshmem.h
++    HINTS
++    ${cuFFTMp_NVSHMEM_ROOT}
++    DOC "cuFFTMp-compatible NVSHMEM root directory.")
++
++find_library(cuFFTMp_NVSHMEM_LIBRARY
++    NAMES nvshmem
++    HINTS
++    ${cuFFTMp_NVSHMEM_ROOT_DIR}/lib64
++    ${cuFFTMp_NVSHMEM_ROOT_DIR}/lib
++)
++
++# nvshmem seem to depend on nvshmem_host
++find_library(cuFFTMp_NVSHMEM_HOST_LIBRARY
++    NAMES nvshmem_host
++    HINTS
++    ${cuFFTMp_NVSHMEM_ROOT_DIR}/lib64
++    ${cuFFTMp_NVSHMEM_ROOT_DIR}/lib
++)
++
+ # handle the QUIETLY and REQUIRED arguments and set cuFFTMp_FOUND to TRUE if
+ # all listed variables are TRUE
+ include(FindPackageHandleStandardArgs)
+diff -uNr a/src/gromacs/CMakeLists.txt b/src/gromacs/CMakeLists.txt
+--- a/src/gromacs/CMakeLists.txt	2023-12-14 07:31:29.846750717 +0000
++++ b/src/gromacs/CMakeLists.txt	2023-12-14 08:29:03.422645290 +0000
+@@ -185,6 +185,8 @@
+     #we cannot link with both cufftmp and cufft
+     if(GMX_USE_cuFFTMp)
+         target_link_libraries(libgromacs PRIVATE ${cuFFTMp_LIBRARY})
++	target_link_libraries(libgromacs PRIVATE ${cuFFTMp_NVSHMEM_LIBRARY})
++	target_link_libraries(libgromacs PRIVATE ${cuFFTMp_NVSHMEM_HOST_LIBRARY})
+     else()
+         target_link_libraries(libgromacs PRIVATE ${CUDA_CUFFT_LIBRARIES})
+     endif()
