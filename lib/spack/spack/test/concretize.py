@@ -2434,7 +2434,8 @@ def test_reusable_externals_match(mock_packages, tmpdir):
     spec.external_path = tmpdir.strpath
     spec.external_modules = ["mpich/4.1"]
     spec._mark_concrete()
-    assert spack.solver.asp._is_reusable_external(
+    assert spack.solver.asp._is_reusable(
+        spec,
         {
             "mpich": {
                 "externals": [
@@ -2442,7 +2443,6 @@ def test_reusable_externals_match(mock_packages, tmpdir):
                 ]
             }
         },
-        spec,
     )
 
 
@@ -2451,7 +2451,8 @@ def test_reusable_externals_match_virtual(mock_packages, tmpdir):
     spec.external_path = tmpdir.strpath
     spec.external_modules = ["mpich/4.1"]
     spec._mark_concrete()
-    assert spack.solver.asp._is_reusable_external(
+    assert spack.solver.asp._is_reusable(
+        spec,
         {
             "mpi": {
                 "externals": [
@@ -2459,7 +2460,6 @@ def test_reusable_externals_match_virtual(mock_packages, tmpdir):
                 ]
             }
         },
-        spec,
     )
 
 
@@ -2468,7 +2468,8 @@ def test_reusable_externals_different_prefix(mock_packages, tmpdir):
     spec.external_path = "/other/path"
     spec.external_modules = ["mpich/4.1"]
     spec._mark_concrete()
-    assert not spack.solver.asp._is_reusable_external(
+    assert not spack.solver.asp._is_reusable(
+        spec,
         {
             "mpich": {
                 "externals": [
@@ -2476,7 +2477,6 @@ def test_reusable_externals_different_prefix(mock_packages, tmpdir):
                 ]
             }
         },
-        spec,
     )
 
 
@@ -2486,7 +2486,8 @@ def test_reusable_externals_different_modules(mock_packages, tmpdir, modules):
     spec.external_path = tmpdir.strpath
     spec.external_modules = modules
     spec._mark_concrete()
-    assert not spack.solver.asp._is_reusable_external(
+    assert not spack.solver.asp._is_reusable(
+        spec,
         {
             "mpich": {
                 "externals": [
@@ -2494,7 +2495,6 @@ def test_reusable_externals_different_modules(mock_packages, tmpdir, modules):
                 ]
             }
         },
-        spec,
     )
 
 
@@ -2502,6 +2502,6 @@ def test_reusable_externals_different_spec(mock_packages, tmpdir):
     spec = Spec("mpich@4.1%gcc@13.1.0~debug build_system=generic arch=linux-ubuntu23.04-zen2")
     spec.external_path = tmpdir.strpath
     spec._mark_concrete()
-    assert not spack.solver.asp._is_reusable_external(
-        {"mpich": {"externals": [{"spec": "mpich@4.1 +debug", "prefix": tmpdir.strpath}]}}, spec
+    assert not spack.solver.asp._is_reusable(
+        spec, {"mpich": {"externals": [{"spec": "mpich@4.1 +debug", "prefix": tmpdir.strpath}]}}
     )
