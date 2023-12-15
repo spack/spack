@@ -514,7 +514,7 @@ packages:
     assert s2.satisfies("@2.5")
 
 
-def test_reuse_oneof(concretize_scope, create_test_repo, mutable_database, fake_installs):
+def test_reuse_oneof(concretize_scope, _create_test_repo, mutable_database, fake_installs):
     conf_str = """\
 packages:
   y:
@@ -522,7 +522,7 @@ packages:
     - one_of: ["@2.5", "%gcc"]
 """
 
-    with spack.repo.use_repositories(create_test_repo):
+    with spack.repo.use_repositories(_create_test_repo):
         s1 = Spec("y@2.5%gcc").concretized()
         s1.package.do_install(fake=True, explicit=True)
 
