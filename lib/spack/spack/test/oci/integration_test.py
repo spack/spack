@@ -15,7 +15,7 @@ import spack.environment as ev
 import spack.oci.opener
 from spack.binary_distribution import gzip_compressed_tarfile
 from spack.main import SpackCommand
-from spack.oci.image import Digest, ImageReference, default_config, default_manifest
+from spack.oci.image import Digest, ImageReference, default_config, default_manifest, default_index_tag
 from spack.oci.oci import blob_exists, get_manifest_and_config, upload_blob, upload_manifest
 from spack.test.oci.mock_registry import DummyServer, InMemoryOCIRegistry, create_opener
 
@@ -82,6 +82,9 @@ def test_env_image_command(
 
         # without a base image, we should have one layer per spec
         assert len(manifest["layers"]) == len(specs)
+
+        # also check that the build cache index was created
+        assert get_manifest_and_config(name.with_tag(default_index_tag))
 
 
 def test_buildcache_push_with_base_image_command(

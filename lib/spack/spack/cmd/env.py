@@ -738,6 +738,7 @@ def env_image(args):
     image_ref = spack.oci.oci.image_from_mirror(args.mirror)
     env = spack.cmd.require_active_env("env image")
     roots = env.concrete_roots()
+    specs = env.all_specs()
 
     base_image_ref: Optional[ImageReference] = (
         ImageReference.from_string(args.base_image) if args.base_image else None
@@ -745,9 +746,7 @@ def env_image(args):
 
     with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
         with bc._make_pool() as pool:
-            _, base_images, checksums = bc._push_oci(
-                args, image_ref, env.all_specs(), tmpdir, pool
-            )
+            skipped, base_images, checksums = bc._push_oci(args, image_ref, specs, tmpdir, pool)
 
         architecture = bc._archspec_to_gooarch(roots[0])
 
@@ -761,6 +760,10 @@ def env_image(args):
                 base_images[architecture] = bc.copy_missing_layers_with_retry(
                     base_image_ref, image_ref, architecture
                 )
+
+        # If anything was pushed, we update the build cache index for convenience.
+        if len(skipped) < len(specs):
+            bc._update_index_oci(image_ref, tmpdir, pool)
 
         # Add a manifest for the environment
         environment_tag = image_ref.with_tag(args.tag)
