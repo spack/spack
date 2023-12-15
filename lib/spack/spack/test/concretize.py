@@ -1817,12 +1817,14 @@ class TestConcretize:
 
     @pytest.mark.regression("31484")
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
-    def test_installed_externals_are_reused(self, mutable_database, repo_with_changing_recipe):
+    def test_installed_externals_are_reused(
+        self, mutable_database, repo_with_changing_recipe, tmp_path
+    ):
         """Test that external specs that are in the DB can be reused."""
         external_conf = {
             "changing": {
                 "buildable": False,
-                "externals": [{"spec": "changing@1.0", "prefix": "/usr"}],
+                "externals": [{"spec": "changing@1.0", "prefix": str(tmp_path)}],
             }
         }
         spack.config.set("packages", external_conf)
@@ -1847,12 +1849,12 @@ class TestConcretize:
 
     @pytest.mark.regression("31484")
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
-    def test_user_can_select_externals_with_require(self, mutable_database):
+    def test_user_can_select_externals_with_require(self, mutable_database, tmp_path):
         """Test that users have means to select an external even in presence of reusable specs."""
         external_conf = {
             "mpi": {"buildable": False},
             "multi-provider-mpi": {
-                "externals": [{"spec": "multi-provider-mpi@2.0.0", "prefix": "/usr"}]
+                "externals": [{"spec": "multi-provider-mpi@2.0.0", "prefix": str(tmp_path)}]
             },
         }
         spack.config.set("packages", external_conf)
