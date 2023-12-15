@@ -168,10 +168,10 @@ class Ncl(Package):
         f90_wrappers = ["ncargf90", "nhlf90"]
         lib_paths = []
 
-        for dep in ["cairo", "libx11"]:
-            lib_paths.append(self.spec[dep].prefix.lib)
+        for dep in spec.dependencies(deptype="link"):
+            lib_paths.append(spec[dep.name].prefix.lib)
 
-        with working_dir(self.spec.prefix.bin):
+        with working_dir(spec.prefix.bin):
             # Change NCARG compiler wrappers to use real compiler, not Spack wrappers
             for wrapper in c_wrappers:
                 filter_file(spack_cc, self.compiler.cc, wrapper)
@@ -187,7 +187,7 @@ class Ncl(Package):
                     r'\1 "{}"'.format(" ".join(["-L{}".format(p) for p in lib_paths])),
                     wrapper,
                 )
-                filter_file("^(set cairolib[ ]*=).*", r'\1 "-lcairo"', wrapper)
+                filter_file("^(set cairolib[ ]*=).*", r'\1 "-lcairo -lfreetype"', wrapper)
 
     def setup_run_environment(self, env):
         env.set("NCARG_ROOT", self.spec.prefix)
@@ -197,9 +197,9 @@ class Ncl(Package):
             env.set("ESMFBINDIR", self.spec["esmf"].prefix.bin)
 
     def prepare_site_config(self):
-        fc_flags = []
-        cc_flags = []
-        c2f_flags = []
+        fc_flags = [self.compiler.fc_pic_flag]
+        cc_flags = [self.compiler.cc_pic_flag]
+        c2f_flags = [self.compiler.cc_pic_flag]
 
         if "+openmp" in self.spec:
             fc_flags.append(self.compiler.openmp_flag)
