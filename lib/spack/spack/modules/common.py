@@ -1073,15 +1073,10 @@ class BaseModuleFileWriter:
             # must be in module index for clash test, must be removed whether clash or not
             generate_module_index(self.layout.dirname(), [], remove_hashes=[self.spec.dag_hash()])
             if is_clash:
-                spec_fmt_str = "{name}@={version}%{compiler}/{hash:7} {variants} arch={arch}"
                 tty.warn(
-                    "\n".join(
-                        [
-                            "Skipping module deletion due to name clash:",
-                            f"file: {mod_file}",
-                            f"spec: {self.spec.format(spec_fmt_str)}",
-                        ]
-                    )
+                    "Skipping module deletion due to name clash:\n" + \
+                    f"file: {mod_file}\n" + \
+                    f"spec: {self.spec.format(self.spec.cshort_spec)}"
                 )
                 return
             try:
