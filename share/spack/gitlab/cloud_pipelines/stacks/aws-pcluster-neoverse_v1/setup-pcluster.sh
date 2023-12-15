@@ -105,11 +105,16 @@ install_compilers() {
             CURRENT_SPACK_ROOT=${SPACK_ROOT}
             DIR="$(mktemp -d)"
             cd "${DIR}"
+            # This needs to include commit 361a185ddb such that `ifx` picks up the correct toolchain. Otherwise
+            # this leads to libstdc++.so errors during linking (e.g. slepc).
             git clone --depth=1 -b ${spack_intel_compiler_commit} https://github.com/spack/spack.git \
-                && cp "${CURRENT_SPACK_ROOT}/etc/spack/config.yaml" spack/etc/spack/ \
-                && cp "${CURRENT_SPACK_ROOT}/etc/spack/compilers.yaml" spack/etc/spack/ \
-                && cp "${CURRENT_SPACK_ROOT}/etc/spack/packages.yaml" spack/etc/spack/ \
-                && . spack/share/spack/setup-env.sh \
+                && cd spack \
+                && curl -sL https://github.com/spack/spack/pull/40557.patch | patch -p1 \
+                && curl -sL https://github.com/spack/spack/pull/40561.patch | patch -p1 \
+                && cp "${CURRENT_SPACK_ROOT}/etc/spack/config.yaml" etc/spack/ \
+                && cp "${CURRENT_SPACK_ROOT}/etc/spack/compilers.yaml" etc/spack/ \
+                && cp "${CURRENT_SPACK_ROOT}/etc/spack/packages.yaml" etc/spack/ \
+                && . share/spack/setup-env.sh \
                 && spack install intel-oneapi-compilers-classic
             rm -rf "${DIR}"
         )
