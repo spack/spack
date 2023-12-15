@@ -3951,21 +3951,6 @@ class Spec:
         """Return list of any virtual deps in this spec."""
         return [spec for spec in self.traverse() if spec.virtual]
 
-    # should require concrete
-    def trim(self, dep_name):
-        dep_spec = Spec(dep_name)
-        remove = [dep_spec]
-        if dep_spec.virtual:
-            remove = list(spack.repo.PATH.providers_for(dep_name))
-        # Create a list to avoid modification during traversal
-        for spec in list(self.traverse()):
-            new_dependencies = _EdgeMap()  # A new _EdgeMap
-            for pkg_name, edge_list in spec._dependencies.items():
-                if not any(Spec(pkg_name).satisfies(x) for x in remove):
-                    for edge in edge_list:
-                        new_dependencies.add(edge)
-            spec._dependencies = new_dependencies
-
     @property  # type: ignore[misc] # decorated prop not supported in mypy
     def patches(self):
         """Return patch objects for any patch sha256 sums on this Spec.
@@ -4740,6 +4725,24 @@ class Spec:
     @build_spec.setter
     def build_spec(self, value):
         self._build_spec = value
+
+    def trim(self, dep_name):
+        """
+        Remove any package that is or provides `dep_name` transitively
+        from this tree.
+        """
+        dep_spec = Spec(dep_name)
+        remove = [dep_spec]
+        if dep_spec.virtual:
+            remove = list(spack.repo.PATH.providers_for(dep_name))
+        # Create a list to avoid modification during traversal
+        for spec in list(self.traverse()):
+            new_dependencies = _EdgeMap()  # A new _EdgeMap
+            for pkg_name, edge_list in spec._dependencies.items():
+                if not any(Spec(pkg_name).satisfies(x) for x in remove):
+                    for edge in edge_list:
+                        new_dependencies.add(edge)
+            spec._dependencies = new_dependencies
 
     def splice(self, other, transitive):
         """Splices dependency "other" into this ("target") Spec, and return the
