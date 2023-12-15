@@ -287,12 +287,8 @@ class CachedCMakeBuilder(CMakeBuilder):
             entries.append(
                 cmake_cache_filepath("CMAKE_HIP_COMPILER", os.path.join(llvm_bin, "clang++"))
             )
-            archs = self.spec.variants["amdgpu_target"].value
             if archs[0] != "none":
                 arch_str = ";".join(archs)
-                entries.append(
-                    cmake_cache_string("HIP_HIPCC_FLAGS", "--amdgpu-target={0}".format(arch_str))
-                )
                 entries.append(
                     cmake_cache_string("CMAKE_HIP_ARCHITECTURES", "{0}".format(arch_str))
                 )

@@ -319,6 +319,13 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         if "+rocm" in spec:
             entries.append(cmake_cache_option("ENABLE_HIP", True))
+
+            archs = self.spec.variants["amdgpu_target"].value
+            hipcc_flags = []
+            if archs[0] != "none":
+                arch_str = ";".join(archs)
+                hipcc_flags.append("--amdgpu-target={0}".format(arch_str))
+            entries.append(cmake_cache_string("HIP_HIPCC_FLAGS", " ".join(hipcc_flags)))
         else:
             entries.append(cmake_cache_option("ENABLE_HIP", False))
 

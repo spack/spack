@@ -247,7 +247,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         if "+rocm" in spec:
             entries.append(cmake_cache_option("ENABLE_HIP", True))
             hipcc_flags = []
-            if self.spec.satisfies("@0.14.0"):
+            if self.spec.satisfies("@0.14.0:"):
                 hipcc_flags.append("-std=c++14")
             archs = self.spec.variants["amdgpu_target"].value
             if archs[0] != "none":
