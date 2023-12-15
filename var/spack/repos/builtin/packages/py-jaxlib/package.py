@@ -29,10 +29,12 @@ class PyJaxlib(PythonPackage, CudaPackage):
     depends_on("python@3.8:", when="@:0.4.13", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy@1.22:", when="@0.4.14:", type=("build", "run"))
-    depends_on("py-numpy@1.20:", when="@0.3:", type=("build", "run"))
+    depends_on("py-numpy@1.21:", when="@0.4.7:0.4.13", type=("build", "run"))
+    depends_on("py-numpy@1.20:", when="@0.3:0.4.6", type=("build", "run"))
     depends_on("py-numpy@1.18:", type=("build", "run"))
     depends_on("py-scipy@1.7:", when="@0.4.7:", type=("build", "run"))
     depends_on("py-scipy@1.5:", type=("build", "run"))
+    depends_on("py-importlib-metadata@4.6:", when="^python@:3.9", type=("build", "run"))
 
     # .bazelversion
     depends_on("bazel@5.1.1:6.1.2", when="@0.3:", type="build")
