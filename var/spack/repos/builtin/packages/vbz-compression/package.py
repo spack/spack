@@ -22,7 +22,6 @@ class VbzCompression(CMakePackage):
     homepage = "https://nanoporetech.com"
     git = "https://github.com/nanoporetech/vbz_compression.git"
 
-    # See https://spdx.org/licenses/ for a list.
     license("MPL-2.0")
 
     version("1.0.3", commit="02fb8f50b93921ffa3c040106e809aaf8adbe5c5", submodules=True)
@@ -34,7 +33,6 @@ class VbzCompression(CMakePackage):
     depends_on("cmake@3.11:")
     depends_on("zstd@1.3.1:")
     depends_on("hdf5@1.8.16:")
-    #  depends_on("htslib")
 
     def cmake_args(self):
         args = [
