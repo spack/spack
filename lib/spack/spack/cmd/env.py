@@ -22,19 +22,13 @@ from llnl.util.tty.color import colorize
 import spack.cmd
 import spack.cmd.buildcache as bc
 import spack.cmd.common
-import spack.cmd.common.arguments
 import spack.cmd.common.arguments as arguments
-import spack.cmd.install
 import spack.cmd.modules
 import spack.config
-import spack.container
-import spack.container.images
 import spack.environment as ev
 import spack.environment.depfile as depfile
 import spack.environment.shell
 import spack.oci.oci
-import spack.schema.env
-import spack.spec
 import spack.stage
 import spack.tengine
 from spack.cmd.common import arguments
