@@ -380,24 +380,21 @@ class TestTcl:
         w1, _ = factory("mpileaks")
         w2, _ = factory("callpath")
 
-        assert w1.layout.filename == w2.layout.filename # pytest usefixtures should cause clash
+        assert w1.layout.filename == w2.layout.filename  # pytest usefixtures should cause clash
         clashing_modulefile_path = w1.layout.filename
 
         w1.write()
-        with open(clashing_modulefile_path, 'r', encoding="utf8") as clashing_modulefile:
-            modulefile_contents_before = clashing_modulefile.read()
-
+        before_mtime = os.path.getmtime(clashing_modulefile_path)
         w2.write()
-        with open(clashing_modulefile_path, 'r', encoding="utf8") as clashing_modulefile:
-            modulefile_contents_after = clashing_modulefile.read()
-        
-        assert modulefile_contents_before == modulefile_contents_after # module was not overwritten
+        after_mtime = os.path.getmtime(clashing_modulefile_path)
+
+        assert before_mtime == after_mtime  # module was not overwritten
 
         w2.remove()
-        assert os.path.isfile(clashing_modulefile_path) # module was not deleted
+        assert os.path.isfile(clashing_modulefile_path)  # module was not deleted
 
         w1.remove()
-        assert not os.path.isfile(clashing_modulefile_path) # module was deleted
+        assert not os.path.isfile(clashing_modulefile_path)  # module was deleted
 
     def test_suffixes(self, module_configuration, factory):
         """Tests adding suffixes to module file name."""
