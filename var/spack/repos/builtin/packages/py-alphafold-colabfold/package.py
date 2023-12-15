@@ -21,6 +21,13 @@ class PyAlphafoldColabfold(PythonPackage, CudaPackage):
 
     conflicts("platform=darwin", msg="alphafold is only supported on Linux")
 
+    conflicts(
+        "cuda_arch=none",
+        when="+cuda",
+        msg="Must specify CUDA compute capabilities of your GPU, see "
+        "https://developer.nvidia.com/cuda-gpus",
+    )
+
     # lots of hints on versions and patching taken from docker/Dockerfile
     # and requirements.txt
     depends_on("python@3.7:3.10", type=("build", "run"))
@@ -33,7 +40,9 @@ class PyAlphafoldColabfold(PythonPackage, CudaPackage):
     depends_on("py-docker", type=("build", "run"))
     depends_on("py-immutabledict@2.0.0:", type=("build", "run"))
     depends_on("py-jax@0.3.17:", type=("build", "run"), when="@2.3.5:")
-    depends_on("py-jaxlib@0.3.17: +cuda cuda_arch=61,70,75,80,86", type=("build", "run"), when="@2.3.5: +cuda")
+    if self.spec.satisfies("+cuda"):
+        cuda_arch = self.spec.variants["cuda_arch"].value
+        depends_on(f"py-jaxlib@0.3.17: +cuda cuda_arch={cuda_arch}", when="@2.3.5:", type=("build", "run"))
     depends_on("py-ml-collections@0.1.0:", type=("build", "run"))
     depends_on("py-numpy@1.21.6:", type=("build", "run"), when="@2.3.5:")
     depends_on("py-pandas@1.3.4:", type=("build", "run"))
