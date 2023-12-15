@@ -1288,6 +1288,17 @@ def test_call_dag_hash_on_old_dag_hash_spec(mock_packages, default_mock_concreti
             spec.package_hash()
 
 
+def test_spec_trim(mock_packages, config):
+    top = Spec("dt-diamond").concretized()
+    top.trim("dt-diamond-left")
+    remaining = set(x.name for x in top.traverse())
+    assert set(["dt-diamond", "dt-diamond-right", "dt-diamond-bottom"]) == remaining
+
+    top.trim("dt-diamond-right")
+    remaining = set(x.name for x in top.traverse())
+    assert set(["dt-diamond"]) == remaining
+
+
 @pytest.mark.regression("30861")
 def test_concretize_partial_old_dag_hash_spec(mock_packages, config):
     # create an "old" spec with no package hash
