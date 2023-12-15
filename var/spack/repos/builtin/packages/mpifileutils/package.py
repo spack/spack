@@ -86,27 +86,27 @@ class Mpifileutils(Package):
         args.append("-DWITH_DTCMP_PREFIX=%s" % self.spec["dtcmp"].prefix)
         args.append("-DWITH_LibCircle_PREFIX=%s" % self.spec["libcircle"].prefix)
 
-        if "+xattr" in self.spec:
+        if self.spec.satisfies("+xattr"):
             args.append("-DENABLE_XATTRS=ON")
         else:
             args.append("-DENABLE_XATTRS=OFF")
 
-        if "+lustre" in self.spec:
+        if self.spec.satisfies("+lustre"):
             args.append("-DENABLE_LUSTRE=ON")
         else:
             args.append("-DENABLE_LUSTRE=OFF")
 
-        if "+gpfs" in self.spec:
+        if self.spec.satisfies("+gpfs"):
             args.append("-DENABLE_GPFS=ON")
         else:
             args.append("-DENABLE_GPFS=OFF")
 
-        if "+experimental" in self.spec:
+        if self.spec.satisfies("+experimental"):
             args.append("-DENABLE_EXPERIMENTAL=ON")
         else:
             args.append("-DENABLE_EXPERIMENTAL=OFF")
 
-        if "+daos" in self.spec:
+        if self.spec.satisfies("+daos"):
             args.append("-DENABLE_DAOS=ON")
             args.append("-DWITH_DAOS_PREFIX=%s" % self.spec["daos"].prefix)
         else:
@@ -145,16 +145,16 @@ class Mpifileutils(Package):
         )
         args.append("--with-dtcmp=%s" % self.spec["dtcmp"].prefix)
 
-        if "+xattr" in self.spec:
+        if self.spec.satisfies("+xattr"):
             args.append("CFLAGS=-DDCOPY_USE_XATTRS")
 
-        if "+lustre" in self.spec:
+        if self.spec.satisfies("+lustre"):
             args.append("--enable-lustre")
         else:
             args.append("--disable-lustre")
 
         if self.spec.satisfies("@0.7:"):
-            if "+experimental" in self.spec:
+            if self.spec.satisfies("+experimental"):
                 args.append("--enable-experimental")
             else:
                 args.append("--disable-experimental")
