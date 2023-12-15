@@ -52,7 +52,7 @@ where the ``spack.yaml`` file is stored and giving the following command:
 
 .. code-block:: console
 
-   $ spack containerize recipe > Dockerfile
+   $ spack containerize > Dockerfile
 
 The ``Dockerfile`` that gets created uses multi-stage builds and
 other techniques to minimize the size of the final image:
@@ -104,7 +104,7 @@ tools suitable for the task. For instance, if we decided to use ``docker``:
 
 .. code-block:: bash
 
-   $ spack containerize recipe > Dockerfile
+   $ spack containerize > Dockerfile
    $ docker build -t myimage .
    [ ... ]
    $ docker run -it myimage
@@ -335,7 +335,7 @@ at a later time.
 The list of operating systems that can be used to bootstrap Spack can be
 obtained with:
 
-.. command-output:: spack containerize recipe --list-os
+.. command-output:: spack containerize --list-os
 
 .. note::
 
@@ -462,7 +462,7 @@ attribute:
      container:
        format: singularity
 
-   $ spack containerize recipe > hdf5.def
+   $ spack containerize > hdf5.def
    $ sudo singularity build hdf5.sif hdf5.def
 
 The minimum version of Singularity required to build a SIF (Singularity Image Format)
