@@ -5,6 +5,7 @@
 
 import argparse
 import os
+import os.path
 import shlex
 import shutil
 import sys
@@ -13,49 +14,32 @@ from typing import Optional
 
 import llnl.string as string
 import llnl.util.filesystem as fs
+import llnl.util.tty
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 from llnl.util.tty.color import colorize
 
 import spack.cmd
+import spack.cmd.buildcache as bc
 import spack.cmd.common
 import spack.cmd.common.arguments
+import spack.cmd.common.arguments as arguments
 import spack.cmd.install
 import spack.cmd.modules
-import spack.cmd.uninstall
 import spack.config
+import spack.container
+import spack.container.images
 import spack.environment as ev
 import spack.environment.depfile as depfile
 import spack.environment.shell
+import spack.oci.oci
 import spack.schema.env
 import spack.spec
+import spack.stage
 import spack.tengine
 from spack.cmd.common import arguments
-from spack.util.environment import EnvironmentModifications
-
-import os
-import os.path
-import tempfile
-from typing import Optional
-
-import llnl.util.tty
-
-import spack.cmd
-import spack.container
-import spack.container.images
-import spack.oci.oci
-import spack.stage
-from spack.cmd.buildcache import (
-    _archspec_to_gooarch,
-    _make_pool,
-    _push_oci,
-    _put_manifest,
-    copy_missing_layers_with_retry,
-    default_config,
-    default_manifest,
-)
-from spack.cmd.common import arguments
 from spack.oci.image import ImageReference
+from spack.util.environment import EnvironmentModifications
 
 description = "manage virtual environments"
 section = "environments"
@@ -589,7 +573,7 @@ def env_update_setup_parser(subparser):
     subparser.add_argument(
         metavar="env", dest="update_env", help="name or directory of the environment to activate"
     )
-    spack.cmd.common.arguments.add_common_arguments(subparser, ["yes_to_all"])
+    arguments.add_common_arguments(subparser, ["yes_to_all"])
 
 
 def env_update(args):
@@ -626,7 +610,7 @@ def env_revert_setup_parser(subparser):
     subparser.add_argument(
         metavar="env", dest="revert_env", help="name or directory of the environment to activate"
     )
-    spack.cmd.common.arguments.add_common_arguments(subparser, ["yes_to_all"])
+    arguments.add_common_arguments(subparser, ["yes_to_all"])
 
 
 def env_revert(args):
@@ -749,7 +733,6 @@ def env_depfile(args):
         sys.stdout.write(makefile)
 
 
-
 def env_image_setup_parser(subparser):
     """generate an OCI compatible container image the already installed environment"""
     subparser.add_argument("--base-image")
@@ -768,25 +751,27 @@ def env_image(args):
     )
 
     with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
-        with _make_pool() as pool:
-            _, base_images, checksums = _push_oci(args, image_ref, env.all_specs(), tmpdir, pool)
+        with bc._make_pool() as pool:
+            _, base_images, checksums = bc._push_oci(
+                args, image_ref, env.all_specs(), tmpdir, pool
+            )
 
-        architecture = _archspec_to_gooarch(roots[0])
+        architecture = bc._archspec_to_gooarch(roots[0])
 
         if architecture not in base_images:
             if base_image_ref is None:
                 base_images[architecture] = (
-                    default_manifest(),
-                    default_config(architecture, "linux"),
+                    bc.default_manifest(),
+                    bc.default_config(architecture, "linux"),
                 )
             else:
-                base_images[architecture] = copy_missing_layers_with_retry(
+                base_images[architecture] = bc.copy_missing_layers_with_retry(
                     base_image_ref, image_ref, architecture
                 )
 
         # Add a manifest for the environment
         environment_tag = image_ref.with_tag(args.tag)
-        _put_manifest(
+        bc._put_manifest(
             base_images, checksums, environment_tag, tmpdir, None, None, *env.concrete_roots()
         )
 

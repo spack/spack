@@ -11,6 +11,7 @@ import json
 import os
 from contextlib import contextmanager
 
+import spack.environment as ev
 import spack.oci.opener
 from spack.binary_distribution import gzip_compressed_tarfile
 from spack.main import SpackCommand
@@ -20,6 +21,8 @@ from spack.test.oci.mock_registry import DummyServer, InMemoryOCIRegistry, creat
 
 buildcache = SpackCommand("buildcache")
 mirror = SpackCommand("mirror")
+env = SpackCommand("env")
+install = SpackCommand("install")
 
 
 @contextmanager
@@ -51,6 +54,34 @@ def test_buildcache_push_command(mutable_database, disable_parallel_buildcache_p
 
         # And let's check that the bin/mpileaks executable is there
         assert os.path.exists(os.path.join(spec.prefix, "bin", "mpileaks"))
+
+
+def test_env_image_command(
+    install_mockery, mock_fetch, mutable_mock_env_path, disable_parallel_buildcache_push
+):
+    """Tests whether we can create an OCI image from a full environment with multiple roots."""
+    env("create", "test")
+    with ev.read("test"):
+        install("--add", "libelf")
+        install("--add", "trivial-install-test-package")
+
+    registry = InMemoryOCIRegistry("example.com")
+
+    with oci_servers(registry):
+        mirror("add", "oci-test", "oci://example.com/image")
+
+        with ev.read("test"):
+            env("image", "--tag", "full_env", "oci-test")
+
+        name = ImageReference.from_string("example.com/image:full_env")
+
+        with ev.read("test") as e:
+            specs = e.all_specs()
+
+        manifest, config = get_manifest_and_config(name)
+
+        # without a base image, we should have one layer per spec
+        assert len(manifest["layers"]) == len(specs)
 
 
 def test_buildcache_push_with_base_image_command(
