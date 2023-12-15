@@ -551,9 +551,9 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             # This currently requires the NVIDIA device drivers to be installed on the build
             # machine to fulfill nvshmem_host's dependency on nvidia-ml.
             options.append(
-                f'-DcuFFTMp_NVSHMEM_ROOT={self.spec["nvhpc"].prefix}/Linux_{self.spec.target.family}'
-                + f'/{self.spec["nvhpc"].version}/comm_libs/{self.spec["cuda"].version.up_to(2)}'
-                + f"/nvshmem_cufftmp_compat"
+                f'-DcuFFTMp_NVSHMEM_ROOT={self.spec["nvhpc"].prefix}/'
+                + f'Linux_{self.spec.target.family}/{self.spec["nvhpc"].version}'
+                + f'/comm_libs/{self.spec["cuda"].version.up_to(2)}/nvshmem_cufftmp_compat'
             )
 
         if "+heffte" in self.spec:
