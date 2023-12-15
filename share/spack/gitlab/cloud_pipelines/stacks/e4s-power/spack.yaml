@@ -50,10 +50,6 @@ spack:
       require: "+examples"
     cuda:
       require: "@11.4.4"
-    ascent:
-      require:
-        - spec: "^umpire@2022.03.1"
-
 
   specs:
   # CPU

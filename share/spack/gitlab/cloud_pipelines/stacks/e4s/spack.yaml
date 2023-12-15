@@ -66,9 +66,6 @@ spack:
       require:
         - spec: "~mpi"
           when: "+rocm"
-    ascent:
-      require:
-        - spec: "^umpire@2022.03.1"
 
   specs:
   # CPU

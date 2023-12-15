@@ -15,7 +15,7 @@ spack:
 
   definitions:
   - radiuss:
-    - ascent ^umpire@2022.03.1
+    - ascent
     - blt
     - caliper
     - caliper +cuda
