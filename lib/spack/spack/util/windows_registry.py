@@ -62,7 +62,7 @@ class RegistryKey:
     @classmethod
     def open_key_from_root(cls, root, key):
         name = os.path.join(str(root), key)
-        key = winreg.OpenKeyEx(root, key, access=winreg.KEY_READ)
+        key = winreg.OpenKeyEx(root.hkey, key, access=winreg.KEY_READ)
         return cls(name, key)
 
     def OpenKeyEx(self, subname, **kwargs):
@@ -71,11 +71,16 @@ class RegistryKey:
         try:
             return winreg.OpenKeyEx(self.hkey, subname, **kwargs)
         except OSError as e:
+            # Expected errors that occur on occasion, these are easily
+            # debug-able and have sufficiently verbose reporting and obvious cause
+            if hasattr(e, "winerror") and e.winerror in (5, 2):
+                raise e
+            # Other OS errors are more difficult to diagnose, so we wrap them in some extra
+            # reporting
             raise InvalidRegistryOperation("OpenKeyEx", e, self.name, subname, **kwargs) from e
 
     def QueryInfoKey(self):
         """Convenience wrapper around winreg.QueryInfoKey"""
-        tty.debug(f"[WINREG ACCESS] Obtaining key,value information from registry key {self.name}")
         try:
             return winreg.QueryInfoKey(self.hkey)
         except OSError as e:
@@ -87,6 +92,12 @@ class RegistryKey:
         try:
             return winreg.EnumKey(self.hkey, index)
         except OSError as e:
+            # Expected errors that occur on occasion, these are easily
+            # debug-able and have sufficiently verbose reporting and obvious cause
+            if hasattr(e, "winerror") and e.winerror in (5, 2):
+                raise e
+            # Other OS errors are more difficult to diagnose, so we wrap them in some extra
+            # reporting
             raise InvalidRegistryOperation("EnumKey", e, self.name, index) from e
 
     def EnumValue(self, index):
@@ -95,6 +106,12 @@ class RegistryKey:
         try:
             return winreg.EnumValue(self.hkey, index)
         except OSError as e:
+            # Expected errors that occur on occasion, these are easily
+            # debug-able and have sufficiently verbose reporting and obvious cause
+            if hasattr(e, "winerror") and e.winerror in (5, 2):
+                raise e
+            # Other OS errors are more difficult to diagnose, so we wrap them in some extra
+            # reporting
             raise InvalidRegistryOperation("EnumValue", e, self.name, index) from e
 
     def QueryValueEx(self, name, **kwargs):
@@ -103,6 +120,12 @@ class RegistryKey:
         try:
             return winreg.QueryValueEx(self.hkey, name, **kwargs)
         except OSError as e:
+            # Expected errors that occur on occasion, these are easily
+            # debug-able and have sufficiently verbose reporting and obvious cause
+            if hasattr(e, "winerror") and e.winerror in (5, 2):
+                raise e
+            # Other OS errors are more difficult to diagnose, so we wrap them in some extra
+            # reporting
             raise InvalidRegistryOperation("QueryValueEx", e, self.name, name, **kwargs) from e
 
     def __str__(self):
@@ -423,7 +446,8 @@ class InvalidKeyError(RegistryError):
 class InvalidRegistryOperation(RegistryError):
     """A Runtime Error ecountered when a registry operation is invalid for a non deterministic reason"""
     def __init__(self, name, e, *args, **kwargs):
-        message = f"Windows registry operations: {name} encountered error: {str(e)}\nMethod invoked with parameters:"
+        message = f"Windows registry operations: {name} encountered error: {str(e)}\nMethod invoked with parameters:\n"
         message += '\n\t'.join([f"{k}:{v}" for k,v in kwargs.items()])
+        message += "\n"
         message += '\n\t'.join(args)
         super().__init__(self, message)
