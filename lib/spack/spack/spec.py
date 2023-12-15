@@ -3951,6 +3951,20 @@ class Spec:
         """Return list of any virtual deps in this spec."""
         return [spec for spec in self.traverse() if spec.virtual]
 
+    # should require concrete
+    def trim(self, dep_name):
+        dep_spec = Spec(dep_name)
+        remove = [dep_spec]
+        if dep_spec.virtual:
+            remove = list(spack.repo.PATH.providers_for(dep_name))
+        # Create a list to avoid modification during traversal
+        for spec in list(self.traverse()):
+            new_dependencies = _EdgeMap() # A new _EdgeMap
+            for key, value in new_dependencies.items():
+                if not any(Spec(key).satisfies(x) for x in remove):
+                    new_dependencies[key] = value
+            spec._dependencies = new_dependencies
+
     @property  # type: ignore[misc] # decorated prop not supported in mypy
     def patches(self):
         """Return patch objects for any patch sha256 sums on this Spec.
