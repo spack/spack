@@ -141,7 +141,7 @@ class RegistryKey:
 
     def get_value(self, val_name):
         """Returns value associated with this key in RegistryValue object"""
-        return RegistryValue(val_name, QueryValueEx(self, val_name)[0], self)
+        return RegistryValue(val_name, self.QueryValueEx(val_name)[0], self)
 
 
 class _HKEY_CONSTANT(RegistryKey):
