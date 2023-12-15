@@ -18,6 +18,46 @@ if sys.platform == "win32":
     import winreg
 
 
+def OpenKeyEx(key, subname, **kwargs):
+    """Convenience wrapper around winreg.OpenKeyEx"""
+    try:
+        return winreg.OpenKeyEx(key, subname, **kwargs)
+    except OSError as e:
+        raise InvalidRegistryOperation("OpenKeyEx", e, key, subname, **kwargs) from e
+
+
+def QueryInfoKey(key):
+    """Convenience wrapper around winreg.QueryInfoKey"""
+    try:
+        return winreg.QueryInfoKey(key)
+    except OSError as e:
+        raise InvalidRegistryOperation("QueryInfoKey", e, key) from e
+
+
+def EnumKey(key, index):
+    """Convenience wrapper around winreg.EnumKey"""
+    try:
+        return winreg.EnumKey(key, index)
+    except OSError as e:
+        raise InvalidRegistryOperation("EnumKey", e, key, index) from e
+
+
+def EnumValue(key, index):
+    """Convenience wrapper around winreg.EnumValue"""
+    try:
+        return winreg.EnumValue(key, index)
+    except OSError as e:
+        raise InvalidRegistryOperation("EnumValue", e, key, index) from e
+
+
+def QueryValueEx(key, name,**kwargs):
+    """Convenience wrapper around winreg.QueryValueEx"""
+    try:
+        return winreg.QueryValueEx(key, name, **kwargs)
+    except OSError as e:
+        raise InvalidRegistryOperation("QueryValueEx", e, key, name, **kwargs) from e
+
+
 class RegistryValue:
     """
     Class defining a Windows registry entry
@@ -66,11 +106,11 @@ class RegistryKey:
         """Composes all subkeys into a list for access"""
         if self._keys:
             return
-        sub_keys, _, _ = winreg.QueryInfoKey(self.hkey)
+        sub_keys, _, _ = QueryInfoKey(self.hkey)
         for i in range(sub_keys):
-            sub_name = winreg.EnumKey(self.hkey, i)
+            sub_name = EnumKey(self.hkey, i)
             try:
-                sub_handle = winreg.OpenKeyEx(self.hkey, sub_name, access=winreg.KEY_READ)
+                sub_handle = OpenKeyEx(self.hkey, sub_name, access=winreg.KEY_READ)
                 self._keys.append(RegistryKey(os.path.join(self.path, sub_name), sub_handle))
             except OSError as e:
                 if hasattr(e, "winerror"):
@@ -87,21 +127,21 @@ class RegistryKey:
         """Compose all values for this key into a dict of form value name: RegistryValue Object"""
         if self._values:
             return
-        _, values, _ = winreg.QueryInfoKey(self.hkey)
+        _, values, _ = QueryInfoKey(self.hkey)
         for i in range(values):
-            value_name, value_data, _ = winreg.EnumValue(self.hkey, i)
+            value_name, value_data, _ = EnumValue(self.hkey, i)
             self._values[value_name] = RegistryValue(value_name, value_data, self.hkey)
 
     def get_subkey(self, sub_key):
         """Returns subkey of name sub_key in a RegistryKey objects"""
         return RegistryKey(
             os.path.join(self.path, sub_key),
-            winreg.OpenKeyEx(self.hkey, sub_key, access=winreg.KEY_READ),
+            OpenKeyEx(self.hkey, sub_key, access=winreg.KEY_READ),
         )
 
     def get_value(self, val_name):
         """Returns value associated with this key in RegistryValue object"""
-        return RegistryValue(val_name, winreg.QueryValueEx(self.hkey, val_name)[0], self.hkey)
+        return RegistryValue(val_name, QueryValueEx(self.hkey, val_name)[0], self.hkey)
 
 
 class _HKEY_CONSTANT(RegistryKey):
@@ -199,7 +239,7 @@ class WindowsRegistryView:
         try:
             self._reg = RegistryKey(
                 os.path.join(str(self.root), self.key),
-                winreg.OpenKeyEx(self.root.hkey, self.key, access=winreg.KEY_READ),
+                OpenKeyEx(self.root.hkey, self.key, access=winreg.KEY_READ),
             )
         except FileNotFoundError as e:
             if sys.platform == "win32" and e.winerror == 2:
@@ -271,7 +311,7 @@ class WindowsRegistryView:
         """
         collection = []
         if not self._valid_reg_check():
-            raise RegistryError("Cannot query values from invalid key %s" % self.key)
+            raise InvalidKeyError(self.key)
         with self.invalid_reg_ref_error_handler():
             queue = self.reg.subkeys
             for key in queue:
@@ -366,5 +406,20 @@ class WindowsRegistryView:
                 return key.values[val_name]
 
 
-class RegistryError(RuntimeError):
+class RegistryError(Exception):
+    """RunTime Error concerning the Windows Registry"""
+
+class InvalidKeyError(RegistryError):
     """Runtime Error describing issue with invalid key access to Windows registry"""
+    def __init__(self, key):
+        message = f"Cannot query invalid key: {key}"
+        super().__init__(message)
+
+class InvalidRegistryOperation(RegistryError):
+    """A Runtime Error ecountered when a registry operation is invalid for a non deterministic reason"""
+    def __init__(self, name, e, *args, **kwargs):
+        message = f"Windows registry operations: {name} encountered error: {str(e)}"
+        message += '\n\t'.join([f"{k}:{v}" for k,v in kwargs.items()])
+        message += '\n'
+        message += '\n\t'.join(args)
+        super().__init__(self, message)
