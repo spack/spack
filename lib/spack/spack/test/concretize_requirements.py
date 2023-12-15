@@ -6,6 +6,7 @@ import os
 import pathlib
 
 import pytest
+from spack.test.conftest import create_test_repo
 
 import spack.build_systems.generic
 import spack.config
@@ -92,30 +93,13 @@ class U(Package):
 
 
 @pytest.fixture
-def create_test_repo(tmpdir, mutable_config):
-    repo_path = str(tmpdir)
-    repo_yaml = tmpdir.join("repo.yaml")
-    with open(str(repo_yaml), "w") as f:
-        f.write(
-            """\
-repo:
-  namespace: testcfgrequirements
-"""
-        )
-
-    packages_dir = tmpdir.join("packages")
-    for pkg_name, pkg_str in [_pkgx, _pkgy, _pkgv, _pkgt, _pkgu]:
-        pkg_dir = packages_dir.ensure(pkg_name, dir=True)
-        pkg_file = pkg_dir.join("package.py")
-        with open(str(pkg_file), "w") as f:
-            f.write(pkg_str)
-
-    yield spack.repo.Repo(repo_path)
+def _create_test_repo(tmpdir, mutable_config):
+    yield create_test_repo(tmpdir, [_pkgx, _pkgy, _pkgv, _pkgt, _pkgu])
 
 
 @pytest.fixture
-def test_repo(create_test_repo, monkeypatch, mock_stage):
-    with spack.repo.use_repositories(create_test_repo) as mock_repo_path:
+def test_repo(_create_test_repo, monkeypatch, mock_stage):
+    with spack.repo.use_repositories(_create_test_repo) as mock_repo_path:
         yield mock_repo_path
 
 

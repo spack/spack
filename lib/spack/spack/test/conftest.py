@@ -1976,3 +1976,24 @@ def mock_modules_root(tmp_path, monkeypatch):
     """Sets the modules root to a temporary directory, to avoid polluting configuration scopes."""
     fn = functools.partial(_root_path, path=str(tmp_path))
     monkeypatch.setattr(spack.modules.common, "root_path", fn)
+
+
+def create_test_repo(tmpdir, pkg_name_content_tuples):
+    repo_path = str(tmpdir)
+    repo_yaml = tmpdir.join("repo.yaml")
+    with open(str(repo_yaml), "w") as f:
+        f.write(
+            """\
+repo:
+  namespace: testcfgrequirements
+"""
+        )
+
+    packages_dir = tmpdir.join("packages")
+    for pkg_name, pkg_str in pkg_name_content_tuples:
+        pkg_dir = packages_dir.ensure(pkg_name, dir=True)
+        pkg_file = pkg_dir.join("package.py")
+        with open(str(pkg_file), "w") as f:
+            f.write(pkg_str)
+
+    return spack.repo.Repo(repo_path)

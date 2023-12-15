@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import pytest
+from spack.test.conftest import create_test_repo
 
 import spack.cmd.diff
 import spack.config
@@ -14,6 +15,130 @@ import spack.util.spack_json as sjson
 install_cmd = spack.main.SpackCommand("install")
 diff_cmd = spack.main.SpackCommand("diff")
 find_cmd = spack.main.SpackCommand("find")
+
+
+_p1 = (
+    "p1",
+    """\
+class P1(Package):
+    version("1.0")
+
+    variant("p1var", default=True)
+    variant("usev1", default=True)
+
+    depends_on("p2")
+    depends_on("v1", when="+usev1")
+""",
+)
+
+
+_p2 = (
+    "p2",
+    """\
+class P2(Package):
+    version("1.0")
+
+    variant("p2var", default=True)
+
+    depends_on("p3")
+""",
+)
+
+
+_p3 = (
+    "p3",
+    """\
+class P3(Package):
+    version("1.0")
+
+    variant("p3var", default=True)
+""",
+)
+
+_i1 = (
+    "i1",
+    """\
+class I1(Package):
+    version("1.0")
+
+    provides("v1")
+
+    variant("i1var", default=True)
+
+    depends_on("p3")
+    depends_on("p4")
+""",
+)
+
+_i2 = (
+    "i2",
+    """\
+class I2(Package):
+    version("1.0")
+
+    provides("v1")
+
+    variant("i2var", default=True)
+
+    depends_on("p3")
+    depends_on("p4")
+""",
+)
+
+
+_p4 = (
+    "p4",
+    """\
+class P4(Package):
+    version("1.0")
+
+    variant("p4var", default=True)
+""",
+)
+
+
+@pytest.fixture
+def _create_test_repo(tmpdir, mutable_config):
+    """
+    p0
+    |
+
+    p1____
+    |     \
+    p2     v1____
+    | ____/ |    \
+    p3      p4    p5 (only i2)
+
+    i1 and i2 provide v1 (and both have the same dependencies)
+
+    All packages have an associated variant
+    """
+    yield create_test_repo(tmpdir, [_p1, _p2, _p3, _i1, _i2, _p4])
+
+
+@pytest.fixture
+def test_repo(_create_test_repo, monkeypatch, mock_stage):
+    with spack.repo.use_repositories(_create_test_repo) as mock_repo_path:
+        yield mock_repo_path
+
+
+def test_diff_ignore(test_repo):
+    specA = spack.spec.Spec("p1+usev1").concretized()
+    specB = spack.spec.Spec("p1~usev1").concretized()
+
+    c1 = spack.cmd.diff.compare_specs(specA, specB, to_string=False)
+
+    def match(function, name, args):
+        #if function.name == "package_hash":
+        #    import pdb; pdb.set_trace()
+        limit = len(args)
+        return function.name == name and list(args[:limit]) == list(function.args[:limit])
+
+    assert any(match(f, "package_hash", ["p4"]) for f in c1["a_not_b"])
+
+    #import pdb; pdb.set_trace()
+
+    #raise Exception()
 
 
 def test_diff_cmd(install_mockery, mock_fetch, mock_archive, mock_packages):
