@@ -415,6 +415,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     # when in non-standard location
     patch("accelerator-cuda-fix-bug-in-makefile.patch", when="@5.0.0")
     patch("btlsmcuda-fix-problem-with-makefile.patch", when="@5.0.0")
+    patch("accelerator-build-components-as-dso-s-by-default.patch", when="@5.0.0")
 
     variant(
         "fabrics",
