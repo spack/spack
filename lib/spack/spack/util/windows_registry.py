@@ -59,12 +59,6 @@ class RegistryKey:
     def hkey(self):
         return self._handle
 
-    @classmethod
-    def open_key_from_root(cls, root, key):
-        name = os.path.join(str(root), key)
-        key = winreg.OpenKeyEx(root.hkey, key, access=winreg.KEY_READ)
-        return cls(name, key)
-
     def OpenKeyEx(self, subname, **kwargs):
         """Convenience wrapper around winreg.OpenKeyEx"""
         tty.debug(f"[WINREG ACCESS] Accessing Reg Key {self.path}/{subname} with {kwargs.get('access', 'default')} access")
@@ -267,7 +261,7 @@ class WindowsRegistryView:
 
     def _load_key(self):
         try:
-            self._reg = RegistryKey.open_key_from_root(self.root, self.key)
+            self._reg = self.root.get_subkey(self.key)
         except FileNotFoundError as e:
             if sys.platform == "win32" and e.winerror == 2:
                 self._reg = -1
