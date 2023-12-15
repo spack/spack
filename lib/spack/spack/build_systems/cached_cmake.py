@@ -13,9 +13,10 @@ import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
 import spack.builder
-from spack.version import Version
 
 from .cmake import CMakeBuilder, CMakePackage
+
+# from spack.version import Version
 
 
 def spec_uses_toolchain(spec):
@@ -303,8 +304,8 @@ class CachedCMakeBuilder(CMakeBuilder):
             # )
 
             # The old way ...
-            #if spec["hip"].version < Version("5.5.0"):
-            #    entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc))
+            # if spec["hip"].version < Version("5.5.0"):
+            #     entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc))
 
             llvm_bin = spec["llvm-amdgpu"].prefix.bin
             llvm_prefix = spec["llvm-amdgpu"].prefix
