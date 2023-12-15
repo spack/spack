@@ -7,6 +7,7 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/packages.py
    :lines: 13-
 """
+import spack.schema.environment
 
 permissions = {
     "type": "object",
@@ -155,7 +156,13 @@ properties = {
                                 "spec": {"type": "string"},
                                 "prefix": {"type": "string"},
                                 "modules": {"type": "array", "items": {"type": "string"}},
-                                "extra_attributes": {"type": "object"},
+                                "extra_attributes": {
+                                    "type": "object",
+                                    "properties": {
+                                        "additionalProperties": True,
+                                        "environment": spack.schema.environment.definition,
+                                    },
+                                },
                             },
                             "additionalProperties": True,
                             "required": ["spec"],
