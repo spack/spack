@@ -312,7 +312,8 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         if "+cuda" in spec:
             entries.append(cmake_cache_option("ENABLE_CUDA", True))
-            # Umpire used to pick only the first architecture in the list. The shared logic in CachedCMakePackage keeps the list of architectures.
+            # Umpire used to pick only the first architecture in the list. The shared logic in
+            # CachedCMakePackage keeps the list of architectures.
         else:
             entries.append(cmake_cache_option("ENABLE_CUDA", False))
 
