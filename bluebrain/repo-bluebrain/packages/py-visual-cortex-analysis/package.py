@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyVisualCortexAnalysis(PythonPackage):
     homepage = "https://bbpgitlab.epfl.ch/circuits/proj120/visual-cortex-analysis"
     git = "ssh://git@bbpgitlab.epfl.ch/circuits/proj120/visual-cortex-analysis.git"
 
-    version("0.0.1.dev0", tag="visual-cortex-analysis-v0.0.1.dev0")
+    version("0.1.0.dev0", tag="visual-cortex-analysis-v0.1.0.dev0")
 
     depends_on("py-setuptools", type="build")
 
