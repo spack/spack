@@ -1401,7 +1401,7 @@ complete -c spack -n '__fish_spack_using_command develop' -s f -l force -r -f -a
 complete -c spack -n '__fish_spack_using_command develop' -s f -l force -r -d 'remove any files or directories that block cloning source code'
 
 # spack diff
-set -g __fish_spack_optspecs_spack_diff h/help json first a/attribute=
+set -g __fish_spack_optspecs_spack_diff h/help json first a/attribute= ignore=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 diff' -f -a '(__fish_spack_installed_specs)'
 complete -c spack -n '__fish_spack_using_command diff' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command diff' -s h -l help -d 'show this help message and exit'
@@ -1411,6 +1411,8 @@ complete -c spack -n '__fish_spack_using_command diff' -l first -f -a load_first
 complete -c spack -n '__fish_spack_using_command diff' -l first -d 'load the first match if multiple packages match the spec'
 complete -c spack -n '__fish_spack_using_command diff' -s a -l attribute -r -f -a attribute
 complete -c spack -n '__fish_spack_using_command diff' -s a -l attribute -r -d 'select the attributes to show (defaults to all)'
+complete -c spack -n '__fish_spack_using_command diff' -l ignore -r -f -a ignore
+complete -c spack -n '__fish_spack_using_command diff' -l ignore -r -d 'omit diffs related to these dependencies'
 
 # spack docs
 set -g __fish_spack_optspecs_spack_docs h/help
