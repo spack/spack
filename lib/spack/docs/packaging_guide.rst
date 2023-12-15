@@ -4379,10 +4379,17 @@ implementation was selected for this build:
    elif "mvapich" in spec:
        configure_args.append("--with-mvapich")
 
-It's also a bit more concise than satisfies.  The difference between
-the two functions is that ``satisfies()`` tests whether spec
-constraints overlap at all, while ``in`` tests whether a spec or any
-of its dependencies satisfy the provided spec.
+It's also a bit more concise than satisfies.
+
+.. note::
+
+   The ``satisfies()`` method tests whether spec constraints overlap at all,
+   while ``in`` tests whether a spec or any of its dependencies satisfy the
+   provided spec.
+
+   If the provided spec is anonymous (e.g., ":1.2:", "+shared") or has the
+   same name as the spec being checked, then ``in`` works the same as
+   ``satisfies()``; however, use of ``satisfies()`` is more intuitive.
 
 ^^^^^^^^^^^^^^^^^^^^^^^
 Architecture specifiers
