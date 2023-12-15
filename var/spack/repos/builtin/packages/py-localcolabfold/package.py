@@ -36,8 +36,16 @@ class PyLocalcolabfold(PythonPackage, CudaPackage):
     depends_on("py-biopython@1.79", type=("build", "run"))
 
     def patch(self):
-        filter_file("from matplotlib import pyplot as plt", "import matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt", "colabfold/plot.py")
-        filter_file("appdirs.user_cache_dir(__package__ or \"colabfold\")", f"\"{self.prefix}/colabfold\"", "colabfold/download.py")
+        filter_file(
+            "from matplotlib import pyplot as plt",
+            "import matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt",
+            "colabfold/plot.py",
+        )
+        filter_file(
+            'appdirs.user_cache_dir(__package__ or "colabfold")',
+            f'"{self.prefix}/colabfold"',
+            "colabfold/download.py",
+        )
 
     def setup_run_environment(self, env):
         env.prepend_path("PATH", self.prefix.bin)

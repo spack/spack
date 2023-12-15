@@ -15,14 +15,10 @@ class PyColabfold(PythonPackage, CudaPackage):
     url = "https://github.com/sokrypton/ColabFold/archive/refs/tags/v1.5.2.tar.gz"
     git = "https://github.com/sokrypton/ColabFold"
 
-    version(
-        "1.5.3",
-        sha256="1b2776f285981796559effbc3691ebbcfcde68514cc05559583ebab76c4c25e8"
-    )
+    version("1.5.3", sha256="1b2776f285981796559effbc3691ebbcfcde68514cc05559583ebab76c4c25e8")
 
     variant("jax", default=True, description="Install with Jax")
     variant("alphafold_colabfold", default=True, description="Install with py-alphafold-colabfold")
-
 
     # Inspired by the meta.yaml file of the corresponding Conda environment available here:
     # https://anaconda.org/bioconda/colabfold/1.5.3/download/noarch/colabfold-1.5.3-pyh7cba7a3_1.tar.bz2
@@ -30,7 +26,7 @@ class PyColabfold(PythonPackage, CudaPackage):
     patch(
         "fix-jax-04-nan.patch",
         when="1.5.3",
-        sha256="6244c2143987dd4a6a87c1174c7a801c220034fbeb8d13f901b0f950b69d8543"
+        sha256="6244c2143987dd4a6a87c1174c7a801c220034fbeb8d13f901b0f950b69d8543",
     )
 
     depends_on("py-poetry-core@1.8.1", type="build")
@@ -39,13 +35,19 @@ class PyColabfold(PythonPackage, CudaPackage):
 
     depends_on("py-absl-py@1.4:", type=("build", "run"))
     depends_on("py-jax@0.4.14", type=("build", "run"), when="+jax")
-    depends_on("py-jaxlib@0.4.14 +cuda cuda_arch=61,70,75,80,86", type=("build", "run"), when="+jax +cuda")
+    depends_on(
+        "py-jaxlib@0.4.14 +cuda cuda_arch=61,70,75,80,86", type=("build", "run"), when="+jax +cuda"
+    )
     depends_on("py-matplotlib@3.2.2:3", type=("build", "run"))
     depends_on("py-tensorflow@2.12.1 ~cuda", type=("build", "run"))
     depends_on("py-numpy@1.21.6:", type=("build", "run"))
     depends_on("py-pandas@1.3.4:", type=("build", "run"))
     depends_on("py-alphafold-colabfold@2.3.5", type=("build", "run"), when="+alphafold_colabfold")
-    depends_on("py-alphafold-colabfold@2.3.5 +cuda cuda_arch=61,70,75,80,86", type=("build", "run"), when="+alphafold_colabfold +cuda")
+    depends_on(
+        "py-alphafold-colabfold@2.3.5 +cuda cuda_arch=61,70,75,80,86",
+        type=("build", "run"),
+        when="+alphafold_colabfold +cuda",
+    )
     depends_on("py-requests@2.26.0:", type=("build", "run"))
     depends_on("py-tqdm", type=("build", "run"))
     depends_on("py-appdirs@1.4.4:", type=("build", "run"))

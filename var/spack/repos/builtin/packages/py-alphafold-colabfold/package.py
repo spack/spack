@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import glob
+
 from spack.package import *
 
 
@@ -33,7 +34,11 @@ class PyAlphafoldColabfold(PythonPackage, CudaPackage):
     depends_on("py-docker", type=("build", "run"))
     depends_on("py-immutabledict@2.0.0:", type=("build", "run"))
     depends_on("py-jax@0.3.17:", type=("build", "run"), when="@2.3.5:")
-    depends_on("py-jaxlib@0.3.17: +cuda cuda_arch=61,70,75,80,86", type=("build", "run"), when="@2.3.5: +cuda")
+    depends_on(
+        "py-jaxlib@0.3.17: +cuda cuda_arch=61,70,75,80,86",
+        type=("build", "run"),
+        when="@2.3.5: +cuda",
+    )
     depends_on("py-ml-collections@0.1.0:", type=("build", "run"))
     depends_on("py-numpy@1.21.6:", type=("build", "run"), when="@2.3.5:")
     depends_on("py-pandas@1.3.4:", type=("build", "run"))
