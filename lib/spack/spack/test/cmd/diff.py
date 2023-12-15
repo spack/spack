@@ -96,7 +96,8 @@ class P4(Package):
 """,
 )
 
-
+# Note that the hash of p1 will differ depending on the variant chosen
+# we probably always want to omit that from diffs
 @pytest.fixture
 def _create_test_repo(tmpdir, mutable_config):
     """

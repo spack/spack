@@ -100,6 +100,9 @@ def compare_specs(a, b, to_string=False, color=None, ignore_packages=None):
         if func.name == "attr"
     )
 
+    if ignore_packages:
+        import pdb; pdb.set_trace()
+
     # We want to present them to the user as simple key: values
     intersect = sorted(a_facts.intersection(b_facts))
     spec1_not_spec2 = sorted(a_facts.difference(b_facts))
