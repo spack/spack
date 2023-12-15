@@ -101,14 +101,11 @@ class P4(Package):
 @pytest.fixture
 def _create_test_repo(tmpdir, mutable_config):
     """
-    p0
-    |
-
     p1____
     |     \
-    p2     v1____
-    | ____/ |    \
-    p3      p4    p5 (only i2)
+    p2     v1
+    | ____/ |
+    p3      p4
 
     i1 and i2 provide v1 (and both have the same dependencies)
 
@@ -136,12 +133,12 @@ def test_diff_ignore(test_repo):
     def find(function_list, name, args):
         return any(match(f, name, args) for f in function_list)
 
-    assert find(c1["a_not_b"], "package_hash", ["p4"])
+    assert find(c1["a_not_b"], "node_os", ["p4"])
 
     c2 = spack.cmd.diff.compare_specs(specA, specB, ignore_packages=["v1"], to_string=False)
 
-    assert not find(c2["a_not_b"], "package_hash", ["p4"])
-    assert find(c2["intersect"], "package_hash", ["p3"])
+    assert not find(c2["a_not_b"], "node_os", ["p4"])
+    assert find(c2["intersect"], "node_os", ["p3"])
 
 
 def test_diff_cmd(install_mockery, mock_fetch, mock_archive, mock_packages):
