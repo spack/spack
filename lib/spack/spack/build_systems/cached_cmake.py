@@ -132,6 +132,9 @@ class CachedCMakeBuilder(CMakeBuilder):
             "endif()\n",
         ]
 
+        if "+rocm" in spec:
+            entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc))
+
         flags = spec.compiler_flags
 
         # use global spack compiler flags
@@ -252,6 +255,13 @@ class CachedCMakeBuilder(CMakeBuilder):
                 entries.append(
                     cmake_cache_string("CMAKE_CUDA_ARCHITECTURES", "{0}".format(arch_str))
                 )
+                # TODO: Additional definitions that may not be needed anymore
+                # This is an imperfect merge of the radiuss way and the "spack"
+                # way: radiuss used to define only the first arch in the list,
+                # even for CMAKE_CUDA_ARCHITECTURE. What do we want?
+                entries.append(cmake_cache_string("CUDA_ARCH", "sm_{0}".format(archs[0])))
+                flag = "-arch sm_{0}".format(archs[0])
+                entries.append(cmake_cache_string("CMAKE_CUDA_FLAGS", "{0}".format(flag)))
 
         if "+rocm" in spec:
             entries.append("#------------------{0}".format("-" * 30))
@@ -267,8 +277,6 @@ class CachedCMakeBuilder(CMakeBuilder):
 
             # Explicitly setting HIP_ROOT_DIR may be a patch that is no longer necessary
             entries.append(cmake_cache_path("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)))
-            entries.append(
-                cmake_cache_path("HIP_CXX_COMPILER", "{0}".format(self.spec["hip"].hipcc))
             )
             llvm_bin = spec["llvm-amdgpu"].prefix.bin
             llvm_prefix = spec["llvm-amdgpu"].prefix
@@ -282,6 +290,9 @@ class CachedCMakeBuilder(CMakeBuilder):
             archs = self.spec.variants["amdgpu_target"].value
             if archs[0] != "none":
                 arch_str = ";".join(archs)
+                entries.append(
+                    cmake_cache_string("HIP_HIPCC_FLAGS", "--amdgpu-target={0}".format(arch_str))
+                )
                 entries.append(
                     cmake_cache_string("CMAKE_HIP_ARCHITECTURES", "{0}".format(arch_str))
                 )

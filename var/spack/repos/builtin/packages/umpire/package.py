@@ -287,9 +287,6 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         # Default entries are already defined in CachedCMakePackage, inherit them:
         entries = super().initconfig_compiler_entries()
 
-        if "+rocm" in spec:
-            entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
-
         option_prefix = "UMPIRE_" if spec.satisfies("@2022.03.0:") else ""
 
         if "+fortran" in spec and compiler.fc is not None:
@@ -315,30 +312,12 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         if "+cuda" in spec:
             entries.append(cmake_cache_option("ENABLE_CUDA", True))
-
-            if not spec.satisfies("cuda_arch=none"):
-                cuda_arch = spec.variants["cuda_arch"].value
-                entries.append(cmake_cache_string("CUDA_ARCH", "sm_{0}".format(cuda_arch[0])))
-                entries.append(
-                    cmake_cache_string("CMAKE_CUDA_ARCHITECTURES", "{0}".format(cuda_arch[0]))
-                )
-                flag = "-arch sm_{0}".format(cuda_arch[0])
-                entries.append(cmake_cache_string("CMAKE_CUDA_FLAGS", "{0}".format(flag)))
+            # Umpire used to pick only the first architecture in the list. The shared logic in CachedCMakePackage keeps the list of architectures.
         else:
             entries.append(cmake_cache_option("ENABLE_CUDA", False))
 
         if "+rocm" in spec:
             entries.append(cmake_cache_option("ENABLE_HIP", True))
-            entries.append(cmake_cache_path("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)))
-            archs = self.spec.variants["amdgpu_target"].value
-            if archs != "none":
-                arch_str = ",".join(archs)
-                entries.append(
-                    cmake_cache_string("HIP_HIPCC_FLAGS", "--amdgpu-target={0}".format(arch_str))
-                )
-                entries.append(
-                    cmake_cache_string("CMAKE_HIP_ARCHITECTURES", "{0}".format(arch_str))
-                )
         else:
             entries.append(cmake_cache_option("ENABLE_HIP", False))
 

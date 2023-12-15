@@ -227,9 +227,6 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         llnl_link_helpers(entries, spec, compiler)
 
-        if "+rocm" in spec:
-            entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
-
         return entries
 
     def initconfig_hardware_entries(self):
@@ -244,25 +241,17 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         if "+cuda" in spec:
             entries.append(cmake_cache_option("ENABLE_CUDA", True))
-
-            if not spec.satisfies("cuda_arch=none"):
-                cuda_arch = spec.variants["cuda_arch"].value
-                entries.append(cmake_cache_string("CUDA_ARCH", "sm_{0}".format(cuda_arch[0])))
-                entries.append(
-                    cmake_cache_string("CMAKE_CUDA_ARCHITECTURES", "{0}".format(cuda_arch[0]))
-                )
         else:
             entries.append(cmake_cache_option("ENABLE_CUDA", False))
 
         if "+rocm" in spec:
             entries.append(cmake_cache_option("ENABLE_HIP", True))
-            entries.append(cmake_cache_path("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)))
             hipcc_flags = []
             if self.spec.satisfies("@0.14.0"):
                 hipcc_flags.append("-std=c++14")
             archs = self.spec.variants["amdgpu_target"].value
-            if archs != "none":
-                arch_str = ",".join(archs)
+            if archs[0] != "none":
+                arch_str = ";".join(archs)
                 hipcc_flags.append("--amdgpu-target={0}".format(arch_str))
             entries.append(cmake_cache_string("HIP_HIPCC_FLAGS", " ".join(hipcc_flags)))
         else:
