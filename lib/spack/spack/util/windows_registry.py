@@ -59,6 +59,12 @@ class RegistryKey:
     def hkey(self):
         return self._handle
 
+    @classmethod
+    def open_key_from_root(cls, root, key):
+        name = os.path.join(str(root), key)
+        key = winreg.OpenKeyEx(root, key, access=winreg.KEY_READ)
+        return cls(name, key)
+
     def OpenKeyEx(self, subname, **kwargs):
         """Convenience wrapper around winreg.OpenKeyEx"""
         tty.debug(f"[WINREG ACCESS] Accessing Reg Key {self.name}/{subname} with {kwargs.get('access', ' default')} access")
@@ -237,10 +243,7 @@ class WindowsRegistryView:
 
     def _load_key(self):
         try:
-            self._reg = RegistryKey(
-                os.path.join(str(self.root), self.key),
-                OpenKeyEx(self.root.hkey, self.key, access=winreg.KEY_READ),
-            )
+            self._reg = RegistryKey.open_key_from_root(self.root, self.key)
         except FileNotFoundError as e:
             if sys.platform == "win32" and e.winerror == 2:
                 self._reg = -1
@@ -250,7 +253,7 @@ class WindowsRegistryView:
 
     def _valid_reg_check(self):
         if self.reg == -1:
-            tty.debug("Cannot perform operation for nonexistent key %s" % self.key)
+            tty.debug(f"[WINREG ACCESS] Cannot perform operation for nonexistent key {self.key}")
             return False
         return True
 
@@ -267,19 +270,19 @@ class WindowsRegistryView:
     def get_value(self, value_name):
         """Return registry value corresponding to provided argument (if it exists)"""
         if not self._valid_reg_check():
-            raise RegistryError("Cannot query value from invalid key %s" % self.key)
+            raise RegistryError(f"Cannot query value from invalid key {self.key}")
         with self.invalid_reg_ref_error_handler():
             return self.reg.get_value(value_name)
 
     def get_subkey(self, subkey_name):
         if not self._valid_reg_check():
-            raise RegistryError("Cannot query subkey from invalid key %s" % self.key)
+            raise RegistryError(f"Cannot query subkey from invalid key {self.key}")
         with self.invalid_reg_ref_error_handler():
             return self.reg.get_subkey(subkey_name)
 
     def get_subkeys(self):
         if not self._valid_reg_check():
-            raise RegistryError("Cannot query subkeys from invalid key %s" % self.key)
+            raise RegistryError(f"Cannot query subkeys from invalid key {self.key}")
         with self.invalid_reg_ref_error_handler():
             return self.reg.subkeys
 
@@ -292,7 +295,7 @@ class WindowsRegistryView:
 
     def get_values(self):
         if not self._valid_reg_check():
-            raise RegistryError("Cannot query values from invalid key %s" % self.key)
+            raise RegistryError(f"Cannot query values from invalid key {self.key}")
         with self.invalid_reg_ref_error_handler():
             return self.reg.values
 
@@ -409,17 +412,18 @@ class WindowsRegistryView:
 class RegistryError(Exception):
     """RunTime Error concerning the Windows Registry"""
 
+
 class InvalidKeyError(RegistryError):
     """Runtime Error describing issue with invalid key access to Windows registry"""
     def __init__(self, key):
         message = f"Cannot query invalid key: {key}"
         super().__init__(message)
 
+
 class InvalidRegistryOperation(RegistryError):
     """A Runtime Error ecountered when a registry operation is invalid for a non deterministic reason"""
     def __init__(self, name, e, *args, **kwargs):
-        message = f"Windows registry operations: {name} encountered error: {str(e)}"
+        message = f"Windows registry operations: {name} encountered error: {str(e)}\nMethod invoked with parameters:"
         message += '\n\t'.join([f"{k}:{v}" for k,v in kwargs.items()])
-        message += '\n'
         message += '\n\t'.join(args)
         super().__init__(self, message)
