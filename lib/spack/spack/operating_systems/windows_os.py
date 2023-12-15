@@ -87,7 +87,7 @@ class WindowsOs(OperatingSystem):
         msft = winreg.WindowsRegistryView(
             "SOFTWARE\\WOW6432Node\\Microsoft", winreg.HKEY.HKEY_LOCAL_MACHINE
         )
-        vs_entries = msft.find_subkeys(r"VisualStudio_.*")
+        vs_entries = msft.find_subkeys(r"VisualStudio_.*", depth=False)
         vs_paths = []
 
         def clean_vs_path(path):

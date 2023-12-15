@@ -67,7 +67,7 @@ class RegistryKey:
 
     def OpenKeyEx(self, subname, **kwargs):
         """Convenience wrapper around winreg.OpenKeyEx"""
-        tty.debug(f"[WINREG ACCESS] Accessing Reg Key {self.name}/{subname} with {kwargs.get('access', ' default')} access")
+        tty.debug(f"[WINREG ACCESS] Accessing Reg Key {self.path}/{subname} with {kwargs.get('access', 'default')} access")
         try:
             return winreg.OpenKeyEx(self.hkey, subname, **kwargs)
         except OSError as e:
@@ -77,18 +77,19 @@ class RegistryKey:
                 raise e
             # Other OS errors are more difficult to diagnose, so we wrap them in some extra
             # reporting
-            raise InvalidRegistryOperation("OpenKeyEx", e, self.name, subname, **kwargs) from e
+            raise InvalidRegistryOperation("OpenKeyEx", e, self.path, subname, **kwargs) from e
 
     def QueryInfoKey(self):
         """Convenience wrapper around winreg.QueryInfoKey"""
+        tty.debug(f"[WINREG ACCESS] Obtaining key,value information from key {self.path}")
         try:
             return winreg.QueryInfoKey(self.hkey)
         except OSError as e:
-            raise InvalidRegistryOperation("QueryInfoKey", e, self.name) from e
+            raise InvalidRegistryOperation("QueryInfoKey", e, self.path) from e
 
     def EnumKey(self, index):
         """Convenience wrapper around winreg.EnumKey"""
-        tty.debug(f"[WINREG ACCESS] Obtaining name of subkey at index {index} from registry key {self.name}")
+        tty.debug(f"[WINREG ACCESS] Obtaining name of subkey at index {index} from registry key {self.path}")
         try:
             return winreg.EnumKey(self.hkey, index)
         except OSError as e:
@@ -98,11 +99,11 @@ class RegistryKey:
                 raise e
             # Other OS errors are more difficult to diagnose, so we wrap them in some extra
             # reporting
-            raise InvalidRegistryOperation("EnumKey", e, self.name, index) from e
+            raise InvalidRegistryOperation("EnumKey", e, self.path, index) from e
 
     def EnumValue(self, index):
         """Convenience wrapper around winreg.EnumValue"""
-        tty.debug(f"[WINREG ACCESS] Obtaining value at index {index} from registry key {self.name}")
+        tty.debug(f"[WINREG ACCESS] Obtaining value at index {index} from registry key {self.path}")
         try:
             return winreg.EnumValue(self.hkey, index)
         except OSError as e:
@@ -112,11 +113,11 @@ class RegistryKey:
                 raise e
             # Other OS errors are more difficult to diagnose, so we wrap them in some extra
             # reporting
-            raise InvalidRegistryOperation("EnumValue", e, self.name, index) from e
+            raise InvalidRegistryOperation("EnumValue", e, self.path, index) from e
 
     def QueryValueEx(self, name, **kwargs):
         """Convenience wrapper around winreg.QueryValueEx"""
-        tty.debug(f"[WINREG ACCESS] Obtaining value {name} from registry key {self.name}")
+        tty.debug(f"[WINREG ACCESS] Obtaining value {name} from registry key {self.path}")
         try:
             return winreg.QueryValueEx(self.hkey, name, **kwargs)
         except OSError as e:
@@ -126,7 +127,7 @@ class RegistryKey:
                 raise e
             # Other OS errors are more difficult to diagnose, so we wrap them in some extra
             # reporting
-            raise InvalidRegistryOperation("QueryValueEx", e, self.name, name, **kwargs) from e
+            raise InvalidRegistryOperation("QueryValueEx", e, self.path, name, **kwargs) from e
 
     def __str__(self):
         return self.name
@@ -322,7 +323,7 @@ class WindowsRegistryView:
         with self.invalid_reg_ref_error_handler():
             return self.reg.values
 
-    def _traverse_subkeys(self, stop_condition, collect_all_matching=False):
+    def _traverse_subkeys(self, stop_condition, collect_all_matching=False, depth_search=True):
         """Perform simple BFS of subkeys, returning the key
         that successfully triggers the stop condition.
         Args:
@@ -346,25 +347,11 @@ class WindowsRegistryView:
                         collection.append(key)
                     else:
                         return key
-                queue.extend(key.subkeys)
+                if depth_search:
+                    queue.extend(key.subkeys)
             return collection if collection else None
 
-    def _find_subkey_s(self, search_key, collect_all_matching=False):
-        """Retrieve one or more keys regex matching `search_key`.
-        One key will be returned unless `collect_all_matching` is enabled,
-        in which case call matches are returned.
-
-        Args:
-            search_key (str): regex string represeting a subkey name structure
-                              to be matched against.
-                              Cannot be provided alongside `direct_subkey`
-            collect_all_matching (bool): No-op if `direct_subkey` is specified
-        Return:
-            the desired subkey as a RegistryKey object, or none
-        """
-        return self._traverse_subkeys(search_key, collect_all_matching=collect_all_matching)
-
-    def find_subkey(self, subkey_name):
+    def find_subkey(self, subkey_name, depth=True):
         """Perform a BFS of subkeys until desired key is found
         Returns None or RegistryKey object corresponding to requested key name
 
@@ -375,11 +362,12 @@ class WindowsRegistryView:
 
         For more details, see the WindowsRegistryView._find_subkey_s method docstring
         """
-        return self._find_subkey_s(
-            WindowsRegistryView.KeyMatchConditions.name_matcher(subkey_name)
+        return self._traverse_subkeys(
+            WindowsRegistryView.KeyMatchConditions.name_matcher(subkey_name),
+            depth_search=depth
         )
 
-    def find_matching_subkey(self, subkey_name):
+    def find_matching_subkey(self, subkey_name, depth=True):
         """Perform a BFS of subkeys until a key matching subkey name regex is found
         Returns None or the first RegistryKey object corresponding to requested key name
 
@@ -390,11 +378,12 @@ class WindowsRegistryView:
 
         For more details, see the WindowsRegistryView._find_subkey_s method docstring
         """
-        return self._find_subkey_s(
-            WindowsRegistryView.KeyMatchConditions.regex_matcher(subkey_name)
+        return self._traverse_subkeys(
+            WindowsRegistryView.KeyMatchConditions.regex_matcher(subkey_name),
+            depth_search=depth
         )
 
-    def find_subkeys(self, subkey_name):
+    def find_subkeys(self, subkey_name, depth=True):
         """Exactly the same as find_subkey, except this function tries to match
         a regex to multiple keys
 
@@ -405,8 +394,9 @@ class WindowsRegistryView:
 
         For more details, see the WindowsRegistryView._find_subkey_s method docstring
         """
-        kwargs = {"collect_all_matching": True}
-        return self._find_subkey_s(
+        kwargs = {"collect_all_matching": True,
+                  "depth_search": depth}
+        return self._traverse_subkeys(
             WindowsRegistryView.KeyMatchConditions.regex_matcher(subkey_name), **kwargs
         )
 
