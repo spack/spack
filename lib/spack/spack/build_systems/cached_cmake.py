@@ -277,7 +277,7 @@ class CachedCMakeBuilder(CMakeBuilder):
 
             # Explicitly setting HIP_ROOT_DIR may be a patch that is no longer necessary
             entries.append(cmake_cache_path("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)))
-            )
+
             llvm_bin = spec["llvm-amdgpu"].prefix.bin
             llvm_prefix = spec["llvm-amdgpu"].prefix
             # Some ROCm systems seem to point to /<path>/rocm-<ver>/ and
