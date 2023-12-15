@@ -4729,7 +4729,8 @@ class Spec:
     def trim(self, dep_name):
         """
         Remove any package that is or provides `dep_name` transitively
-        from this tree.
+        from this tree. This can also remove other dependencies if
+        they are only present because of `dep_name`.
         """
         dep_spec = Spec(dep_name)
         remove = [dep_spec]
