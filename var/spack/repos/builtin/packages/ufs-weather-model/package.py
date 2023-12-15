@@ -68,6 +68,7 @@ class UfsWeatherModel(CMakePackage):
     depends_on("sp")
     depends_on("w3emc")
     depends_on("w3nco")
+    depends_on("python", type=("build"))
 
     def setup_build_environment(self, env):
         spec = self.spec
