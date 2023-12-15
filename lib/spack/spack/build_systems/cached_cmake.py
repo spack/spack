@@ -279,17 +279,21 @@ class CachedCMakeBuilder(CMakeBuilder):
             entries.append("# ROCm")
             entries.append("#------------------{0}\n".format("-" * 30))
 
-            hip_root = spec["hip"].prefix
-            rocm_root = hip_root + "/.."
-            rocm_bin = rocm_root + "/llvm/bin"
-            rocm_include = rocm_root + "/llvm/include"
+            # hip_root = spec["hip"].prefix
+            # rocm_root = hip_root + "/.."
+            # rocm_bin = rocm_root + "/llvm/bin"
+            # rocm_include = rocm_root + "/llvm/include"
 
             # Explicitly setting HIP_ROOT_DIR may be a patch that is no longer necessary
-            entries.append(cmake_cache_path("HIP_ROOT_DIR", hip_root))
-            entries.append(cmake_cache_path("ROCM_ROOT_DIR", rocm_root))
-            # TODO: test if this helps
-            entries.append(cmake_cache_string("HIP_CLANG_PATH", rocm_bin))
-            entries.append(cmake_cache_string("HIP_CLANG_INCLUDE_PATH", rocm_include))
+            entries.append(cmake_cache_path("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)))
+            entries.append(
+                cmake_cache_path("HIP_CXX_COMPILER", "{0}".format(self.spec["hip"].hipcc))
+            )
+            # entries.append(cmake_cache_path("HIP_ROOT_DIR", hip_root))
+            # entries.append(cmake_cache_path("ROCM_ROOT_DIR", rocm_root))
+            #  TODO: test if this helps
+            # entries.append(cmake_cache_string("HIP_CLANG_PATH", rocm_bin))
+            # entries.append(cmake_cache_string("HIP_CLANG_INCLUDE_PATH", rocm_include))
 
             # entries.append(
             #     cmake_cache_path(
@@ -299,8 +303,8 @@ class CachedCMakeBuilder(CMakeBuilder):
             # )
 
             # The old way ...
-            if spec["hip"].version < Version("5.5.0"):
-                entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc))
+            #if spec["hip"].version < Version("5.5.0"):
+            #    entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc))
 
             llvm_bin = spec["llvm-amdgpu"].prefix.bin
             llvm_prefix = spec["llvm-amdgpu"].prefix
@@ -319,6 +323,8 @@ class CachedCMakeBuilder(CMakeBuilder):
                 entries.append(
                     cmake_cache_string("CMAKE_HIP_ARCHITECTURES", "{0}".format(arch_str))
                 )
+                entries.append(cmake_cache_string("AMDGPU_TARGETS", "{0}".format(arch_str)))
+                entries.append(cmake_cache_string("GPU_TARGETS", "{0}".format(arch_str)))
 
             # # Arbitrate between gnu and llvm toolchains.
             # hip_link_flags = ""
