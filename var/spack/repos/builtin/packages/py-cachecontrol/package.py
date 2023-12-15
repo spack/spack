@@ -20,10 +20,13 @@ class PyCachecontrol(PythonPackage):
     variant("filecache", default=False, description="Add lockfile dependency")
 
     depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools", when="@:0.13.0", type="build")
+    depends_on("py-flit-core@3.2:3", when="@0.13.1:", type="build")
+    depends_on("py-requests@2.16.0:", when="@0.13.1:", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"))
     depends_on("py-msgpack@0.5.2:", type=("build", "run"))
-    depends_on("py-lockfile@0.9:", when="+filecache", type="run")
+    depends_on("py-filelock@3.8.0:", when="@0.13.1: +filecache", type="run")
+    depends_on("py-lockfile@0.9:", when="@:0.13.0 +filecache", type="run")
 
     def url_for_version(self, version):
         if version <= Version("0.13.0"):
