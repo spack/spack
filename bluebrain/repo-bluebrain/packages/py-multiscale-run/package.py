@@ -12,9 +12,10 @@ class PyMultiscaleRun(PythonPackage):
     homepage = "https://bbpgitlab.epfl.ch/-/ide/project/molsys/multiscale_run"
     git = "ssh://git@bbpgitlab.epfl.ch/molsys/multiscale_run.git"
 
-    maintainers("tristan0x")
+    maintainers("tristan0x", "cattabiani")
 
     version("develop", branch="main")
+    version("0.2", tag="0.2")
     version("0.1", tag="0.1")
 
     depends_on("py-setuptools", type=("build", "run"))
