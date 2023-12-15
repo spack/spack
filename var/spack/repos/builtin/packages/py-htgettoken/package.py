@@ -33,8 +33,8 @@ class PyHtgettoken(PythonPackage):
     depends_on("py-urllib3", type=("build", "run"))
 
     def setup_run_environment(self, env):
-        dir = env.get("XDG_RUNTIME_DIR") or "/tmp"
-        uid = env.get("UID") or os.geteuid()
+        dir = os.environ["XDG_RUNTIME_DIR"] or "/tmp"
+        uid = os.environ["UID"] or os.geteuid()
         file = join_path(dir, "bt_u" + uid)
         env.set("BEARER_TOKEN", file)
         env.set("BEARER_TOKEN_FILE", file)
