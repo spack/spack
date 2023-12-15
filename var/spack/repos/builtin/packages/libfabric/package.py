@@ -99,9 +99,7 @@ class Libfabric(AutotoolsPackage):
 
     variant("debug", default=False, description="Enable debugging")
 
-    variant(
-        "uring", default=False, when="@1.17.0:", description="Enable uring support"
-    )
+    variant("uring", default=False, when="@1.17.0:", description="Enable uring support")
 
     # For version 1.9.0:
     # headers: fix forward-declaration of enum fi_collective_op with C++
@@ -196,7 +194,7 @@ class Libfabric(AutotoolsPackage):
         else:
             args.append("--with-kdreg=no")
 
-        if "+uring" in self.spec:
+        if self.spec.satisfies("+uring"):
             args.append("--with-uring=yes")
 
         for fabric in [f if isinstance(f, str) else f[0].value for f in self.fabrics]:
