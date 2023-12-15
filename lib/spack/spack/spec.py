@@ -3960,9 +3960,10 @@ class Spec:
         # Create a list to avoid modification during traversal
         for spec in list(self.traverse()):
             new_dependencies = _EdgeMap()  # A new _EdgeMap
-            for key, value in new_dependencies.items():
-                if not any(Spec(key).satisfies(x) for x in remove):
-                    new_dependencies[key] = value
+            for pkg_name, edge_list in spec._dependencies.items():
+                if not any(Spec(pkg_name).satisfies(x) for x in remove):
+                    for edge in edge_list:
+                        new_dependencies.add(edge)
             spec._dependencies = new_dependencies
 
     @property  # type: ignore[misc] # decorated prop not supported in mypy
