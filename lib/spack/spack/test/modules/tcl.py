@@ -387,8 +387,8 @@ class TestTcl:
         before_mtime = os.path.getmtime(clashing_modulefile_path)
         w2.write()
         after_mtime = os.path.getmtime(clashing_modulefile_path)
-        
-        assert (before_mtime == after_mtime) # module was not overwritten
+
+        assert before_mtime == after_mtime  # module was not overwritten
 
         w2.remove()
         assert os.path.isfile(clashing_modulefile_path)  # module was not deleted
