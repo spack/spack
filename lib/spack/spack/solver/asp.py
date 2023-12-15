@@ -3154,7 +3154,12 @@ def _is_reusable(spec: spack.spec.Spec, packages) -> bool:
     if not spec.external:
         return True
 
-    for name in {spec.name, *(p.name for p in spec.package.provided)}:
+    try:
+        provided = [p.name for p in spec.package.provided]
+    except spack.repo.RepoError:
+        provided = []
+
+    for name in {spec.name, *provided}:
         for entry in packages.get(name, {}).get("externals", []):
             if (
                 spec.satisfies(entry["spec"])
