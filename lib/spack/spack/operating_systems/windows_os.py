@@ -15,6 +15,7 @@ from spack.version import Version
 
 from ._operating_system import OperatingSystem
 
+from llnl.util import tty
 
 def windows_version():
     """Windows version as a Version object"""
@@ -83,11 +84,17 @@ class WindowsOs(OperatingSystem):
                     os.path.join(str(os.getenv("ONEAPI_ROOT")), "compiler", "*", "windows", "bin")
                 )
             )
-        # Second strategy: Find MSVC via the registry
-        msft = winreg.WindowsRegistryView(
-            "SOFTWARE\\WOW6432Node\\Microsoft", winreg.HKEY.HKEY_LOCAL_MACHINE
-        )
-        vs_entries = msft.find_subkeys(r"VisualStudio_.*", depth=False)
+        try:
+            # Second strategy: Find MSVC via the registry
+            # Registry interactions are subject to race conditions, etc and can generally
+            # be flakey, do this in a catch block to prevent reg issues from interfering
+            # with compiler detection
+            msft = winreg.WindowsRegistryView(
+                "SOFTWARE\\WOW6432Node\\Microsoft", winreg.HKEY.HKEY_LOCAL_MACHINE
+            )
+            vs_entries = msft.find_subkeys(r"VisualStudio_.*", depth=False)
+        except OSError as e:
+                tty.debug(f"Windows registry query on \"SOFTWARE\\WOW6432Node\\Microsoft\" under HKEY_LOCAL_MACHINE: {str(e)}")
         vs_paths = []
 
         def clean_vs_path(path):
