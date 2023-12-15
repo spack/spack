@@ -1016,7 +1016,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                     continue
 
                 abspath = os.path.join(bin_path, filename)
-                if os.path.islink(abspath):
+
+                # Skip broken symlinks (https://github.com/spack/spack/issues/41327)
+                if not os.path.exists(abspath):
                     continue
 
                 # Set the proper environment variable
