@@ -302,15 +302,15 @@ class CachedCMakeBuilder(CMakeBuilder):
             if spec["hip"].version < Version("5.5.0"):
                 entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc))
 
-            # llvm_bin = spec["llvm-amdgpu"].prefix.bin
-            # llvm_prefix = spec["llvm-amdgpu"].prefix
-            # # Some ROCm systems seem to point to /<path>/rocm-<ver>/ and
-            # # others point to /<path>/rocm-<ver>/llvm
-            # if os.path.basename(os.path.normpath(llvm_prefix)) != "llvm":
-            #     llvm_bin = os.path.join(llvm_prefix, "llvm/bin/")
-            # entries.append(
-            #     cmake_cache_filepath("CMAKE_HIP_COMPILER", os.path.join(llvm_bin, "clang++"))
-            # )
+            llvm_bin = spec["llvm-amdgpu"].prefix.bin
+            llvm_prefix = spec["llvm-amdgpu"].prefix
+            # Some ROCm systems seem to point to /<path>/rocm-<ver>/ and
+            # others point to /<path>/rocm-<ver>/llvm
+            if os.path.basename(os.path.normpath(llvm_prefix)) != "llvm":
+                llvm_bin = os.path.join(llvm_prefix, "llvm/bin/")
+            entries.append(
+                cmake_cache_filepath("CMAKE_HIP_COMPILER", os.path.join(llvm_bin, "clang++"))
+            )
 
             # Setting the amdgpu_target through CMAKE_HIP_ARCHITECTURE should be enough.
             archs = self.spec.variants["amdgpu_target"].value
