@@ -19,10 +19,11 @@ class PyRapidfuzz(PythonPackage):
     depends_on("python", type=("build", "link", "run"))
     depends_on("py-setuptools@42:", when="@2:", type="build")
     depends_on("py-setuptools", type="build")
-    depends_on("py-scikit-build@0.17", when="@3:", type="build")
-    depends_on("py-scikit-build@0.13:", when="@2.2:", type="build")
-    depends_on("py-rapidfuzz-capi@1.0.5", when="@2", type="build")
+    depends_on("py-scikit-build@0.17.0:", when="@3:", type="build")
+    depends_on("py-scikit-build@0.13:", when="@2.2", type="build")
+    depends_on("py-rapidfuzz-capi@1.0.5", when="@2:", type="build")
     depends_on("py-jarowinkler@1.2.0:1", when="@2", type=("build", "run"))
+    depends_on("py-jarowinkler@2", when="@3:", type=("build", "run"))
 
     # CMakeLists.txt
     depends_on("cmake@3.12:", type="build")

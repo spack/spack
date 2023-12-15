@@ -12,9 +12,19 @@ class PyPoetryPluginExport(PythonPackage):
     homepage = "https://python-poetry.org/"
     pypi = "poetry-plugin-export/poetry-plugin-export-1.0.7.tar.gz"
 
+    version("1.6.0", sha256="091939434984267a91abf2f916a26b00cff4eee8da63ec2a24ba4b17cf969a59")
     version("1.0.7", sha256="f6ac707ae227b06b2481249ed2678ff6b810b3487cac0fbb66eb0dc2bfd6ecf1")
 
     depends_on("python@3.7:3", type=("build", "run"))
+    depends_on("python@3.8:3", when="@1.6.0:", type=("build", "run"))
     depends_on("py-poetry-core@1.1:1", type=("build", "run"))
+    depends_on("py-poetry-core@1.7:1", when="@1.6.0:", type=("build", "run"))
 
     # depends_on("py-poetry@1.2:1", type="run") # circular dependency
+
+    def url_for_version(self, version):
+        if version > Version("1.1.2"):
+            url = "https://files.pythonhosted.org/packages/source/p/poetry-plugin-export/poetry_plugin_export-{}.tar.gz"
+        elif version <= Version("1.1.2"):
+            url = "https://files.pythonhosted.org/packages/source/p/poetry-plugin-export/poetry-plugin-export-{}.tar.gz"
+        return url.format(version)
