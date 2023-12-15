@@ -131,6 +131,10 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         "0.1.3", tag="v0.1.3", commit="cc347edeb17f5f30f694aa47f395d17369a2e449", submodules=True
     )
 
+    # Some projects importing both camp and umpire targets end up with conflicts in BLT targets
+    # import. This is not addressing the root cause, which will be addressed in BLT@5.4.0 and will
+    # require adapting umpire build system.
+    patch("dual_blt_import_umpire_2022.10_2023.06.patch", when="@2022.10.0:")
     patch("std-filesystem-pr784.patch", when="@2022.03.1 +rocm ^blt@0.5.2:")
     patch("camp_target_umpire_3.0.0.patch", when="@3.0.0")
     patch("cmake_version_check.patch", when="@4.1")
@@ -183,7 +187,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant("backtrace", default=False, description="Enable backtrace tools")
     variant("dev_benchmarks", default=False, description="Enable developer benchmarks")
     variant("device_alloc", default=False, description="Enable DeviceAllocator")
-    variant("werror", default=True, description="Enable warnings as errors")
+    variant("werror", default=False, description="Enable warnings as errors")
     variant("asan", default=False, description="Enable ASAN")
     variant("sanitizer_tests", default=False, description="Enable address sanitizer tests")
 
