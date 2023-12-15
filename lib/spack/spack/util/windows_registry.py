@@ -18,46 +18,6 @@ if sys.platform == "win32":
     import winreg
 
 
-def OpenKeyEx(key, subname, **kwargs):
-    """Convenience wrapper around winreg.OpenKeyEx"""
-    try:
-        return winreg.OpenKeyEx(key, subname, **kwargs)
-    except OSError as e:
-        raise InvalidRegistryOperation("OpenKeyEx", e, key, subname, **kwargs) from e
-
-
-def QueryInfoKey(key):
-    """Convenience wrapper around winreg.QueryInfoKey"""
-    try:
-        return winreg.QueryInfoKey(key)
-    except OSError as e:
-        raise InvalidRegistryOperation("QueryInfoKey", e, key) from e
-
-
-def EnumKey(key, index):
-    """Convenience wrapper around winreg.EnumKey"""
-    try:
-        return winreg.EnumKey(key, index)
-    except OSError as e:
-        raise InvalidRegistryOperation("EnumKey", e, key, index) from e
-
-
-def EnumValue(key, index):
-    """Convenience wrapper around winreg.EnumValue"""
-    try:
-        return winreg.EnumValue(key, index)
-    except OSError as e:
-        raise InvalidRegistryOperation("EnumValue", e, key, index) from e
-
-
-def QueryValueEx(key, name,**kwargs):
-    """Convenience wrapper around winreg.QueryValueEx"""
-    try:
-        return winreg.QueryValueEx(key, name, **kwargs)
-    except OSError as e:
-        raise InvalidRegistryOperation("QueryValueEx", e, key, name, **kwargs) from e
-
-
 class RegistryValue:
     """
     Class defining a Windows registry entry
@@ -99,6 +59,46 @@ class RegistryKey:
     def hkey(self):
         return self._handle
 
+    def OpenKeyEx(self, subname, **kwargs):
+        """Convenience wrapper around winreg.OpenKeyEx"""
+        tty.debug(f"[WINREG ACCESS] Accessing Reg Key {self.name}/{subname} with {kwargs.get('access', ' default')} access")
+        try:
+            return winreg.OpenKeyEx(self.hkey, subname, **kwargs)
+        except OSError as e:
+            raise InvalidRegistryOperation("OpenKeyEx", e, self.name, subname, **kwargs) from e
+
+    def QueryInfoKey(self):
+        """Convenience wrapper around winreg.QueryInfoKey"""
+        tty.debug(f"[WINREG ACCESS] Obtaining key,value information from registry key {self.name}")
+        try:
+            return winreg.QueryInfoKey(self.hkey)
+        except OSError as e:
+            raise InvalidRegistryOperation("QueryInfoKey", e, self.name) from e
+
+    def EnumKey(self, index):
+        """Convenience wrapper around winreg.EnumKey"""
+        tty.debug(f"[WINREG ACCESS] Obtaining name of subkey at index {index} from registry key {self.name}")
+        try:
+            return winreg.EnumKey(self.hkey, index)
+        except OSError as e:
+            raise InvalidRegistryOperation("EnumKey", e, self.name, index) from e
+
+    def EnumValue(self, index):
+        """Convenience wrapper around winreg.EnumValue"""
+        tty.debug(f"[WINREG ACCESS] Obtaining value at index {index} from registry key {self.name}")
+        try:
+            return winreg.EnumValue(self.hkey, index)
+        except OSError as e:
+            raise InvalidRegistryOperation("EnumValue", e, self.name, index) from e
+
+    def QueryValueEx(self, name, **kwargs):
+        """Convenience wrapper around winreg.QueryValueEx"""
+        tty.debug(f"[WINREG ACCESS] Obtaining value {name} from registry key {self.name}")
+        try:
+            return winreg.QueryValueEx(self.hkey, name, **kwargs)
+        except OSError as e:
+            raise InvalidRegistryOperation("QueryValueEx", e, self.name, name, **kwargs) from e
+
     def __str__(self):
         return self.name
 
@@ -106,11 +106,11 @@ class RegistryKey:
         """Composes all subkeys into a list for access"""
         if self._keys:
             return
-        sub_keys, _, _ = QueryInfoKey(self.hkey)
+        sub_keys, _, _ = self.QueryInfoKey()
         for i in range(sub_keys):
-            sub_name = EnumKey(self.hkey, i)
+            sub_name = self.EnumKey(i)
             try:
-                sub_handle = OpenKeyEx(self.hkey, sub_name, access=winreg.KEY_READ)
+                sub_handle = self.OpenKeyEx(sub_name, access=winreg.KEY_READ)
                 self._keys.append(RegistryKey(os.path.join(self.path, sub_name), sub_handle))
             except OSError as e:
                 if hasattr(e, "winerror"):
@@ -127,21 +127,21 @@ class RegistryKey:
         """Compose all values for this key into a dict of form value name: RegistryValue Object"""
         if self._values:
             return
-        _, values, _ = QueryInfoKey(self.hkey)
+        _, values, _ = self.QueryInfoKey()
         for i in range(values):
-            value_name, value_data, _ = EnumValue(self.hkey, i)
-            self._values[value_name] = RegistryValue(value_name, value_data, self.hkey)
+            value_name, value_data, _ = self.EnumValue(i)
+            self._values[value_name] = RegistryValue(value_name, value_data, self)
 
     def get_subkey(self, sub_key):
         """Returns subkey of name sub_key in a RegistryKey objects"""
         return RegistryKey(
             os.path.join(self.path, sub_key),
-            OpenKeyEx(self.hkey, sub_key, access=winreg.KEY_READ),
+            self.OpenKeyEx(sub_key, access=winreg.KEY_READ),
         )
 
     def get_value(self, val_name):
         """Returns value associated with this key in RegistryValue object"""
-        return RegistryValue(val_name, QueryValueEx(self.hkey, val_name)[0], self.hkey)
+        return RegistryValue(val_name, QueryValueEx(self, val_name)[0], self)
 
 
 class _HKEY_CONSTANT(RegistryKey):

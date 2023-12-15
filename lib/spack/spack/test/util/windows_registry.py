@@ -23,7 +23,7 @@ def OpenKeyEx(key, subname, **kwargs):
 
 def QueryInfoKeySuccess(key):
     """Testing wrapper around winreg.QueryInfoKey"""
-    return len(key.subkeys), len(key.values), len(0)
+    return len(key.subkeys), len(key.values.items()), len(0)
 
 
 def QueryInfoKeyRaiseUnexpected(key):
