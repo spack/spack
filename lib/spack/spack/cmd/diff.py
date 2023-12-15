@@ -104,8 +104,8 @@ def compare_specs(a, b, to_string=False, color=None, ignore_packages=None):
         # If we are ignoring differences in dependencies, we probably want
         # to also ignore differences in hashes (since any difference in a
         # dep will transitively propagate to all parent hashes)
-        a_facts = set(x for x in a_facts if not x.name in ["hash"])
-        b_facts = set(x for x in b_facts if not x.name in ["hash"])
+        a_facts = set(x for x in a_facts if x.name not in ["hash"])
+        b_facts = set(x for x in b_facts if x.name not in ["hash"])
 
     # We want to present them to the user as simple key: values
     intersect = sorted(a_facts.intersection(b_facts))

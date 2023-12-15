@@ -6,7 +6,6 @@ import os
 import pathlib
 
 import pytest
-from spack.test.conftest import create_test_repo
 
 import spack.build_systems.generic
 import spack.config
@@ -17,6 +16,7 @@ import spack.util.spack_yaml as syaml
 import spack.version
 from spack.solver.asp import InternalConcretizerError, UnsatisfiableSpecError
 from spack.spec import Spec
+from spack.test.conftest import create_test_repo
 from spack.util.url import path_to_file_url
 
 pytestmark = [

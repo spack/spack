@@ -4,13 +4,13 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import pytest
-from spack.test.conftest import create_test_repo
 
 import spack.cmd.diff
 import spack.config
 import spack.main
 import spack.store
 import spack.util.spack_json as sjson
+from spack.test.conftest import create_test_repo
 
 install_cmd = spack.main.SpackCommand("install")
 diff_cmd = spack.main.SpackCommand("diff")
@@ -95,6 +95,7 @@ class P4(Package):
     variant("p4var", default=True)
 """,
 )
+
 
 # Note that the hash of p1 will differ depending on the variant chosen
 # we probably always want to omit that from diffs
