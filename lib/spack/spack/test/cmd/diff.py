@@ -141,6 +141,18 @@ def test_diff_ignore(test_repo):
     assert not find(c2["a_not_b"], "node_os", ["p4"])
     assert find(c2["intersect"], "node_os", ["p3"])
 
+    # Check ignoring changes on multiple packages
+
+    specA = spack.spec.Spec("p1+usev1 ^p3+p3var").concretized()
+    specA = spack.spec.Spec("p1~usev1 ^p3~p3var").concretized()
+
+    c3 = spack.cmd.diff.compare_specs(specA, specB, to_string=False)
+    assert find(c3["a_not_b"], "variant_value", ["p3", "p3var"])
+
+    c4 = spack.cmd.diff.compare_specs(specA, specB, ignore_packages=["v1", "p3"], to_string=False)
+    assert not find(c4["a_not_b"], "node_os", ["p4"])
+    assert not find(c4["a_not_b"], "variant_value", ["p3"])
+
 
 def test_diff_cmd(install_mockery, mock_fetch, mock_archive, mock_packages):
     """Test that we can install two packages and diff them"""
