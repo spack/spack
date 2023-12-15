@@ -905,7 +905,7 @@ class BaseModuleFileWriter:
         # ... and return the first match
         return choices.pop(0)
 
-    def write(self, overwrite=False):
+    def write(self, overwrite=False, do_update_index=True):
         """Writes the module file.
 
         Args:
@@ -922,7 +922,8 @@ class BaseModuleFileWriter:
         # register this spec to this module file in the module index
         # even if it already exists and I'm not about to overwrite it
         # this allows me to avoid accidentally deleting that file in the future
-        generate_module_index(self.layout.dirname(), [self])
+        if do_update_index:
+            generate_module_index(self.layout.dirname(), [self])
 
         # Print a warning in case I am accidentally overwriting
         # a module file that is already there (name clash)

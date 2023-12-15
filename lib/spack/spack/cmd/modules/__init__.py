@@ -352,7 +352,7 @@ def refresh(module_type, specs, args):
     errors = []
     for x in writers:
         try:
-            x.write(overwrite=True)
+            x.write(overwrite=True, do_update_index=False)
         except spack.error.SpackError as e:
             msg = f"{x.layout.filename}: {e.message}"
             errors.append(msg)
