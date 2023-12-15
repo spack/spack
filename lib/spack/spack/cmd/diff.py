@@ -45,9 +45,7 @@ def setup_parser(subparser):
         help="select the attributes to show (defaults to all)",
     )
     subparser.add_argument(
-        "--ignore",
-        action="append",
-        help="omit diffs related to these dependencies",
+        "--ignore", action="append", help="omit diffs related to these dependencies"
     )
 
 

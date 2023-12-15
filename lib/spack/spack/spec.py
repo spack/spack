@@ -3959,7 +3959,7 @@ class Spec:
             remove = list(spack.repo.PATH.providers_for(dep_name))
         # Create a list to avoid modification during traversal
         for spec in list(self.traverse()):
-            new_dependencies = _EdgeMap() # A new _EdgeMap
+            new_dependencies = _EdgeMap()  # A new _EdgeMap
             for key, value in new_dependencies.items():
                 if not any(Spec(key).satisfies(x) for x in remove):
                     new_dependencies[key] = value
