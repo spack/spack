@@ -1074,9 +1074,9 @@ class BaseModuleFileWriter:
             generate_module_index(self.layout.dirname(), [], remove_hashes=[self.spec.dag_hash()])
             if is_clash:
                 tty.warn(
-                    "Skipping module deletion due to name clash:\n" + \
-                    f"file: {mod_file}\n" + \
-                    f"spec: {self.spec.format(self.spec.cshort_spec)}"
+                    "Skipping module deletion due to name clash:\n"
+                    + f"file: {mod_file}\n"
+                    + f"spec: {self.spec.format(self.spec.cshort_spec)}"
                 )
                 return
             try:
