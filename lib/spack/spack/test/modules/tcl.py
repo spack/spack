@@ -24,7 +24,7 @@ pytestmark = [
 ]
 
 
-@pytest.mark.usefixtures("config", "mock_packages", "mock_module_filename")
+@pytest.mark.usefixtures("config", "mock_packages")
 class TestTcl:
     def test_simple_case(self, modulefile_content, module_configuration):
         """Tests the generation of a simple Tcl module file."""
