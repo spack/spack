@@ -129,12 +129,14 @@ def test_diff_ignore(test_repo):
     c1 = spack.cmd.diff.compare_specs(specA, specB, to_string=False)
 
     def match(function, name, args):
-        #if function.name == "package_hash":
-        #    import pdb; pdb.set_trace()
         limit = len(args)
         return function.name == name and list(args[:limit]) == list(function.args[:limit])
 
-    assert any(match(f, "package_hash", ["p4"]) for f in c1["a_not_b"])
+    def find(function_list, name, args):
+        return any(match(f, name, args) for f in function_list)
+
+    assert find(c1["a_not_b"], "package_hash", ["p4"])
+
 
     #import pdb; pdb.set_trace()
 
