@@ -287,6 +287,7 @@ class CachedCMakeBuilder(CMakeBuilder):
             entries.append(
                 cmake_cache_filepath("CMAKE_HIP_COMPILER", os.path.join(llvm_bin, "clang++"))
             )
+            archs = self.spec.variants["amdgpu_target"].value
             if archs[0] != "none":
                 arch_str = ";".join(archs)
                 entries.append(
