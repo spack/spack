@@ -137,10 +137,10 @@ def test_diff_ignore(test_repo):
 
     assert find(c1["a_not_b"], "package_hash", ["p4"])
 
+    c2 = spack.cmd.diff.compare_specs(specA, specB, ignore_packages=["v1"], to_string=False)
 
-    #import pdb; pdb.set_trace()
-
-    #raise Exception()
+    assert not find(c2["a_not_b"], "package_hash", ["p4"])
+    assert find(c2["intersect"], "package_hash", ["p3"])
 
 
 def test_diff_cmd(install_mockery, mock_fetch, mock_archive, mock_packages):
