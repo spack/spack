@@ -950,15 +950,6 @@ def _main(argv=None):
         parser.print_help()
         return 1
 
-    # -h, -H, and -V are special as they do not require a command, but
-    # all the other options do nothing without a command.
-    if args.version:
-        print(get_version())
-        return 0
-    elif args.help:
-        sys.stdout.write(parser.format_help(level=args.help))
-        return 0
-
     # ------------------------------------------------------------------------
     # This part of the `main()` sets up Spack's configuration.
     #
@@ -975,6 +966,15 @@ def _main(argv=None):
 
     # ensure options on spack command come before everything
     setup_main_options(args)
+
+    # -h, -H, and -V are special as they do not require a command, but
+    # all the other options do nothing without a command.
+    if args.version:
+        print(get_version())
+        return 0
+    elif args.help:
+        sys.stdout.write(parser.format_help(level=args.help))
+        return 0
 
     # activate an environment if one was specified on the command line
     env_format_error = None
