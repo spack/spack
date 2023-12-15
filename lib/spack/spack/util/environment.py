@@ -340,63 +340,6 @@ class NameValueModifier:
         raise NotImplementedError("must be implemented by derived classes")
 
 
-class WindowsPathModifierMixin:
-    """
-    Insulate path variable operations on Windows to ensure
-    safe env variable length limits are enforced
-
-    Abstract the "value" being added to an env variable
-    to reference a shorter path which has been symlinked to
-    mirror the contents of the original value.
-    Functional impact of env path variable modification is unchanged
-    """
-
-    @property
-    def value(self):
-        return self._value
-
-    @value.setter
-    def value(self, value):
-        if sys.platform == "win32":
-            root = win_env_view_manager.get_next_view(value)
-            self._env_view = WindowsEnvView(self.name, root, value, enabled=self.safe_windows)
-            self._value = root if self.safe_windows else value
-        else:
-            self._value = value
-
-
-class WindowsPathModifierMeta(type):
-    def __new__(cls, clsname, bases, attrs):
-        def wrapper(func):
-            def wrap(self, *args, **kwargs):
-                self._env_view.create_filesystem_view()
-                return func(self, *args, **kwargs)
-
-            return wrap
-
-        if sys.platform == "win32":
-            attrs["execute"] = wrapper(attrs["execute"])
-        return super().__new__(cls, clsname, bases, attrs)
-
-
-class SafeNameValueModifier(
-    WindowsPathModifierMixin, NameValueModifier, metaclass=WindowsPathModifierMeta
-):
-    """NameValueModifier with added protections to prevent env variable smashing on Windows
-    A no-op on all other platforms"""
-
-    def __init__(self, name, value, *args, safe_windows=True, **kwargs):
-        self.safe_windows = safe_windows
-        self.name = name
-        self.value = value
-        super().__init__(name, value, *args, **kwargs)
-
-    def execute(self, env: MutableMapping[str, str]):
-        """Apply the modification to the mapping passed as input
-        Need to override these here so the metaclass doesn't complain about the missing attr"""
-        raise NotImplementedError("must be implemented by derived classes")
-
-
 class SetEnv(NameValueModifier):
     __slots__ = ("force", "raw")
 
@@ -443,14 +386,14 @@ class RemoveFlagsEnv(NameValueModifier):
         env[self.name] = self.separator.join(flags)
 
 
-class SetPath(SafeNameValueModifier):
+class SetPath(NameValueModifier):
     def execute(self, env: MutableMapping[str, str]):
         string_path = self.separator.join(str(item) for item in self.value)
         tty.debug(f"SetPath: {self.name}={string_path}", level=3)
         env[self.name] = string_path
 
 
-class AppendPath(SafeNameValueModifier):
+class AppendPath(NameValueModifier):
     def execute(self, env: MutableMapping[str, str]):
         tty.debug(f"AppendPath: {self.name}+{str(self.value)}", level=3)
         environment_value = env.get(self.name, "")
@@ -459,7 +402,7 @@ class AppendPath(SafeNameValueModifier):
         env[self.name] = self.separator.join(directories)
 
 
-class PrependPath(SafeNameValueModifier):
+class PrependPath(NameValueModifier):
     def execute(self, env: MutableMapping[str, str]):
         tty.debug(f"PrependPath: {self.name}+{str(self.value)}", level=3)
         environment_value = env.get(self.name, "")
@@ -510,7 +453,6 @@ class EnvironmentModifications:
         self,
         other: Optional["EnvironmentModifications"] = None,
         traced: Union[None, bool] = None,
-        safe_windows: bool = True,
     ):
         """Initializes a new instance, copying commands from 'other'
         if it is not None.
@@ -519,12 +461,8 @@ class EnvironmentModifications:
             other: list of environment modifications to be extended (optional)
             traced: enable or disable stack trace inspection to log the origin
                 of the environment modifications
-            safe_windows: prevent modifications to the Windows env from smashing
-                          the env variables being modified due to cmd cli length limits
-                          default is True
         """
         self.traced = TRACING_ENABLED if traced is None else bool(traced)
-        self.safe_windows = safe_windows
         self.env_modifications: List[Union[NameModifier, NameValueModifier]] = []
         if other is not None:
             self.extend(other)
@@ -623,7 +561,6 @@ class EnvironmentModifications:
             elements,
             separator=separator,
             trace=self._trace(),
-            safe_windows=self.safe_windows,
         )
         self.env_modifications.append(item)
 
@@ -637,7 +574,7 @@ class EnvironmentModifications:
             separator: separator for the paths (default: os.pathsep)
         """
         item = AppendPath(
-            name, path, separator=separator, trace=self._trace(), safe_windows=self.safe_windows
+            name, path, separator=separator, trace=self._trace()
         )
         self.env_modifications.append(item)
 
@@ -651,7 +588,7 @@ class EnvironmentModifications:
             separator: separator for the paths (default: os.pathsep)
         """
         item = PrependPath(
-            name, path, separator=separator, trace=self._trace(), safe_windows=self.safe_windows
+            name, path, separator=separator, trace=self._trace()
         )
         self.env_modifications.append(item)
 
@@ -1234,7 +1171,7 @@ def sanitize(
     return environment
 
 
-class WindowsEnvViewManager:
+class ShortLinkManager:
     def __init__(self, root: str = None):
         self.root = pathlib.Path(root) if root else self._establish_shortest_root()
         self.current = "a"
@@ -1272,11 +1209,11 @@ class WindowsEnvViewManager:
         shutil.rmtree(str(self.root))
 
 
-win_env_view_manager = WindowsEnvViewManager()
+win_env_view_manager = ShortLinkManager()
 
 
-class WindowsEnvView:
-    def __init__(self, name, root, *path_additions, enabled=True):
+class ShortLink:
+    def __init__(self, name, root, *path_additions):
         """
         Args:
             name (str): the env variable whose value is to be abtracted
@@ -1291,7 +1228,6 @@ class WindowsEnvView:
             enabled (bool): default is True, toggled whether or not
                 this class is a no-op
         """
-        self.enabled = enabled
         self.name = name
         self.root = pathlib.Path(root)
         self._paths = path_additions
@@ -1301,20 +1237,15 @@ class WindowsEnvView:
             self.root.mkdir(parents=True)
 
     def _generate_link(self, path):
-        symlink.symlink(path, str(self.root / path))
-
-    def _collect_entries(self, path):
-        return path.iterdir()
+        symlink.symlink(path, str(self.root / path.name))
 
     def create_filesystem_view(self):
         """Generate symlink view of path mods
         One subdirectory from root is created per path mod
         operation."""
-        if self.enabled:
-            self._create_root()
-            for entry in self._paths:
-                for pth in self._collect_entries(pathlib.Path(entry)):
-                    self._generate_link(pth)
+        self._create_root()
+        for entry in self._paths:
+            self._generate_link(pathlib.Path(entry))
 
     def get_env_view(self) -> EnvironmentModifications:
         """Generate env mods corresonding to view structure"""
