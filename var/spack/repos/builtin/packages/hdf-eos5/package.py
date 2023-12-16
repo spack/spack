@@ -89,8 +89,9 @@ class HdfEos5(AutotoolsPackage):
         # problems because h5cc differs when HDF5 is built with autotools vs cmake,
         # and we lose all nice flags from the Spack wrappers. These filter operations
         # allow use to use the Spack wrappers again.
-        filter_file("\\$CC -show &> /dev/null", "true", "configure")
-        filter_file("CC=./\\$SZIP_CC", "", "configure")
+        with keep_modification_time("configure"):
+            filter_file(r"$CC -show &> /dev/null", "true", "configure", string=True)
+            filter_file(r"CC=./$SZIP_CC", "", "configure", string=True)
 
     def configure_args(self):
         extra_args = []

@@ -193,7 +193,7 @@ class Ncl(Package):
         env.set("NCARG_ROOT", self.spec.prefix)
 
         # We cannot rely on Spack knowledge of esmf when NCL is an external
-        if self.spec.satisfies("^esmf"):
+        if not self.spec.external:
             env.set("ESMFBINDIR", self.spec["esmf"].prefix.bin)
 
     def prepare_site_config(self):
@@ -222,11 +222,6 @@ class Ncl(Package):
             fc_flags.append("-fallow-argument-mismatch")
             cc_flags.append("-fcommon")
 
-        if self.spec.satisfies("+byteswapped"):
-            bytelines = "#define StdDefines -DByteSwapped\n#define ByteSwapped\n"
-        else:
-            bytelines = ""
-
         if self.spec.satisfies("+grib"):
             gribline = (
                 "#define GRIB2lib %s/external/g2clib-1.6.0/libgrib2c.a -ljasper -lpng -lz -ljpeg\n"
@@ -239,7 +234,9 @@ class Ncl(Package):
             f.writelines(
                 [
                     "#define HdfDefines\n",
-                    bytelines,
+                    "#define StdDefines -DByteSwapped\n#define ByteSwapped\n"
+                    if self.spec.satisfies("+byteswapped")
+                    else "",
                     "#define CppCommand '/usr/bin/env cpp -traditional'\n",
                     "#define CCompiler {0}\n".format(spack_cc),
                     "#define FCompiler {0}\n".format(spack_fc),
