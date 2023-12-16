@@ -18,6 +18,7 @@ spack:
           - py-flake8
           - py-h5py+mpi
           - py-libsonata
+          - py-libsonata-mpi
           - py-mpi4py
           - py-notebook
           - py-numpy
@@ -52,6 +53,7 @@ spack:
     - py-flake8
     - py-h5py
     - py-libsonata
+    - py-libsonata-mpi
     - py-mpi4py
     - py-notebook
     - py-numpy
