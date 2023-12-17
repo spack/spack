@@ -8,8 +8,6 @@ import os
 import sys
 
 from spack.package import *
-from spack.pkg.builtin.llvm import get_llvm_targets_to_build
-
 
 class Dpcpp(CMakePackage, CudaPackage, ROCmPackage):
     """Data Parallel C++ compiler: Intel's implementation of SYCL programming model"""
@@ -146,7 +144,7 @@ class Dpcpp(CMakePackage, CudaPackage, ROCmPackage):
         libclc_targets_to_build = ""
         libclc_gen_remangled_variants = "OFF"
         sycl_enabled_plugins = "opencl"
-        llvm_targets_to_build = get_llvm_targets_to_build(spec)
+        llvm_targets_to_build = get_llvm_targets_to_build(spec.target.family)
 
         if spec.platform != "darwin":
             sycl_enabled_plugins += ";level_zero"
@@ -275,3 +273,18 @@ class Dpcpp(CMakePackage, CudaPackage, ROCmPackage):
         env.set("CC", join_path(spec.prefix.bin, "clang"))
         env.set("CXX", join_path(spec.prefix.bin, "clang++"))
         env.prepend_path("LD_LIBRARY_PATH", join_path(spec.prefix, "lib"))
+
+def get_llvm_targets_to_build(family):
+    host_target = ""
+    if family in ("x86", "x86_64"):
+        host_target = "X86"
+    elif family == "arm":
+        host_target = "ARM"
+    elif family == "aarch64":
+        host_target = "AArch64"
+    elif family in ("sparc", "sparc64"):
+        host_target = "Sparc"
+    elif family in ("ppc64", "ppc64le", "ppc", "ppcle"):
+        host_target = "PowerPC"
+    return host_target
+
