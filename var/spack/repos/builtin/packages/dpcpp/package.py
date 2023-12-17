@@ -8,7 +8,7 @@ import os
 import sys
 
 from spack.package import *
-
+from spack.pkg.builtin.llvm import get_llvm_targets_to_build
 
 class Dpcpp(CMakePackage, CudaPackage, ROCmPackage):
     """Data Parallel C++ compiler: Intel's implementation of SYCL programming model"""
@@ -51,6 +51,37 @@ class Dpcpp(CMakePackage, CudaPackage, ROCmPackage):
         multi=False,
         description="Enables security flags for compile & link",
     )
+    variant(
+        "targets",
+        default="all",
+        description=(
+            "What targets to build. Spack's target family is always added "
+            "(e.g. X86 is automatically enabled when targeting znver2)."
+        ),
+        values=(
+            "all",
+            "none",
+            "aarch64",
+            "amdgpu",
+            "arm",
+            "avr",
+            "bpf",
+            "cppbackend",
+            "hexagon",
+            "lanai",
+            "mips",
+            "msp430",
+            "nvptx",
+            "powerpc",
+            "riscv",
+            "sparc",
+            "systemz",
+            "webassembly",
+            "x86",
+            "xcore",
+        ),
+        multi=True,
+    )
 
     depends_on("cmake@3.14:", type="build")
 
@@ -83,7 +114,7 @@ class Dpcpp(CMakePackage, CudaPackage, ROCmPackage):
         libclc_targets_to_build = ""
         libclc_gen_remangled_variants = "OFF"
         sycl_enabled_plugins = "opencl"
-        llvm_targets_to_build = get_llvm_targets_to_build(spec.target.family)
+        llvm_targets_to_build = get_llvm_targets_to_build(spec)
 
         if spec.platform != "darwin":
             sycl_enabled_plugins += ";level_zero"
@@ -201,18 +232,3 @@ class Dpcpp(CMakePackage, CudaPackage, ROCmPackage):
         env.set("CC", join_path(spec.prefix.bin, "clang"))
         env.set("CXX", join_path(spec.prefix.bin, "clang++"))
         env.prepend_path("LD_LIBRARY_PATH", join_path(spec.prefix, "lib"))
-
-
-def get_llvm_targets_to_build(family):
-    host_target = ""
-    if family in ("x86", "x86_64"):
-        host_target = "X86"
-    elif family == "arm":
-        host_target = "ARM"
-    elif family == "aarch64":
-        host_target = "AArch64"
-    elif family in ("sparc", "sparc64"):
-        host_target = "Sparc"
-    elif family in ("ppc64", "ppc64le", "ppc", "ppcle"):
-        host_target = "PowerPC"
-    return host_target
