@@ -25,9 +25,20 @@ import pathlib
 import socket
 import sys
 import time
-from typing import Any, Callable, Dict, Generator, List, NamedTuple, Set, Type, Union
-
-import spack.deptypes as dt
+from typing import (
+    Any,
+    Callable,
+    Container,
+    Dict,
+    Generator,
+    List,
+    NamedTuple,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    Union,
+)
 
 try:
     import uuid
@@ -37,11 +48,10 @@ except ImportError:
     _use_uuid = False
     pass
 
-from typing import Optional, Tuple
-
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
+import spack.deptypes as dt
 import spack.hash_types as ht
 import spack.spec
 import spack.util.lock as lk
@@ -297,7 +307,7 @@ _QUERY_DOCSTRING = """
             end_date (datetime.datetime or None): filters the query discarding
                 specs that have been installed after ``end_date``.
 
-            hashes (typing.Container): list or set of hashes that we can use to
+            hashes (Container): list or set of hashes that we can use to
                 restrict the search
 
             in_buildcache (bool or None): Specs that are marked in
@@ -1648,31 +1658,47 @@ class Database:
         with self.read_transaction():
             return path in self._installed_prefixes
 
-    @property
-    def unused_specs(self):
-        """Return all the specs that are currently installed but not needed
-        at runtime to satisfy user's requests.
+    def all_hashes(self):
+        """Return dag hash of every spec in the database."""
+        return list(self._data.keys())
 
-        Specs in the return list are those which are not either:
-            1. Installed on an explicit user request
-            2. Installed as a "run" or "link" dependency (even transitive) of
-               a spec at point 1.
+    def unused_specs(
+        self,
+        root_hashes: Optional[Container[str]] = None,
+        deptypes: Tuple[str, ...] = ("link", "run"),
+    ) -> "List[spack.spec.Spec]":
+        """Return all specs that are currently installed but not needed by root specs.
+
+        By default, roots are all explicit specs in the database. If a set of root
+        hashes are passed in, they are instead used as the roots.
+
+        Arguments:
+            root_hashes: optional list of roots to consider when evaluating needed installations.
+            deptypes: if a spec is reachable from a root via these dependency types, it is
+                considered needed. By default only link and run dependency types are considered.
         """
-        needed, visited = set(), set()
+
+        def root(key, record):
+            """Whether a DB record is a root for garbage collection."""
+            return key in root_hashes if root_hashes is not None else record.explicit
+
+        needed: Set[str] = set()
+        visited: Set[spack.spec.Spec] = set()
+
         with self.read_transaction():
-            for key, rec in self._data.items():
-                if not rec.explicit:
+            for key, record in self._data.items():
+                if not root(key, record):
                     continue
 
                 # recycle `visited` across calls to avoid redundantly traversing
-                for spec in rec.spec.traverse(visited=visited, deptype=("link", "run")):
+                for spec in record.spec.traverse(visited=visited, deptype=deptypes):
                     needed.add(spec.dag_hash())
 
-            unused = [
-                rec.spec for key, rec in self._data.items() if key not in needed and rec.installed
+            return [
+                record.spec
+                for key, record in self._data.items()
+                if key not in needed and record.installed
             ]
-
-        return unused
 
     def update_explicit(self, spec, explicit):
         """
