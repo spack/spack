@@ -37,13 +37,13 @@ class Dpcpp(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("ravil-mobile")
 
-    variant("esimd-emulator", default=False, description="build with ESIMD emulation support")
+    variant("esimd-emulator", when="@:2023-03", default=False, description="build with ESIMD emulation support")
     variant("assertions", default=False, description="build with assertions")
     variant("docs", default=False, description="build Doxygen documentation")
     variant("werror", default=False, description="treat warnings as errors")
     variant("shared-libs", default=False, description="build shared libraries")
     variant("lld", default=False, description="use LLD linker for build")
-    variant("fusion", default=True, description="Enable the kernel fusion JIT compiler")
+    variant("fusion", when="@2023-03:", default=True, description="Enable the kernel fusion JIT compiler")
     variant(
         "security_flags",
         default="none",
@@ -101,7 +101,8 @@ class Dpcpp(CMakePackage, CudaPackage, ROCmPackage):
         description="Build the LLVM polyhedral optimization plugin, only builds for 3.7.0+",
     )
     
-    depends_on("cmake@3.14:", type="build")
+    depends_on("cmake@3.14:", when="@:2023-03", type="build")
+    depends_on("cmake@3.20:", when="@2023-10:", type="build")
 
     conflicts("~lld", when="+rocm", msg="lld is needed for HIP plugin on AMD")
     conflicts("~lld", when=(sys.platform == "windows"), msg="lld is needed on Windows")
