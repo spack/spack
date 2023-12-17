@@ -893,6 +893,9 @@ as an option to the ``version()`` directive. Example situations would be a
 "snapshot"-like Version Control System (VCS) tag, a VCS branch such as
 ``v6-16-00-patches``, or a URL specifying a regularly updated snapshot tarball.
 
+
+.. _version-comparison:
+
 ^^^^^^^^^^^^^^^^^^
 Version comparison
 ^^^^^^^^^^^^^^^^^^
@@ -2468,7 +2471,7 @@ requires Python 2, you can similarly leave out the lower bound:
 Notice that we didn't use ``@:3``. Version ranges are *inclusive*, so
 ``@:3`` means "up to and including any 3.x version".
 
-If we require Python 3 exactly, we can simply write:
+If we require Python 3 exclusively, we can simply write:
 
 .. code-block:: python
 
@@ -2476,16 +2479,8 @@ If we require Python 3 exactly, we can simply write:
 
 since we don't care about the latter digits. You can think of this as a
 short-hand for ``@3:3``. Among equivalent specs, usually the most succinct is
-preferred.
-
-Note that if a version part is alphabetic, it is considered to precede
-numeric versions, and it is compared to other alphabetic sequences using
-dictionary order, unless it is a
-:py:data:`special name <spack.version.infinity_versions>`, so:
-
-.. code-block:: text
-
-   a < z < zz < 0 < 9 == 09 < 99 < stable < main < develop
+preferred. Note that there are `special rules <version-comparison_>`_ for
+version parts that are alphabetic (e.g., "rc" or "develop").
 
 You can also simply write
 
@@ -2513,6 +2508,15 @@ but there are known issues with 1.64.0, 1.65.0, and 1.66.0, you can say:
 .. code-block:: python
 
    depends_on("boost@1.59.0:1.63,1.65.1,1.67.0:")
+
+Finally, there is a syntax which matches a version "exactly", not allowing
+subsequent digits:
+
+.. code-block:: python
+
+   depends_on('package@=1.0')
+   
+This won't match 1.0.1 or 1.0.2, only 1.0.
 
 
 .. _dependency-types:
