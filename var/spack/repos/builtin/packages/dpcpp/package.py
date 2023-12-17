@@ -51,12 +51,6 @@ class Dpcpp(CMakePackage, CudaPackage, ROCmPackage):
         multi=False,
         description="Enables security flags for compile & link",
     )
-    variant(
-        "llvm-external-projects",
-        values=str,
-        default="none",
-        description="Add external projects to build. Add as a comma seperated list.",
-    )
 
     depends_on("cmake@3.14:", type="build")
 
