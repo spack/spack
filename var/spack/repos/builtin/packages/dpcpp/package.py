@@ -21,7 +21,7 @@ class Dpcpp(CMakePackage, CudaPackage, ROCmPackage):
 
     version(
         "2023-10",
-        sha256="5b68d973cd7ad95f3840767117aac60dea30add29f27d882fj353eb3675530eef",
+        sha256="5b68d973cd7ad95f3840767117aac60dea30add29f27d882f353eb3675530eef",
         url="https://github.com/intel/llvm/tarball/f4e0d3177338",
     )
 
