@@ -168,7 +168,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("cmake@3.8:", type="build")
     depends_on("cmake@3.9:", when="+cuda", type="build")
-    depends_on("cmake@3.14:", when="@2022.03.0:")
+    depends_on("cmake@3.14:", when="@2022.03.0:", type="build")
 
     depends_on("blt@0.5.2:", type="build", when="@2022.10.0:")
     depends_on("blt@0.5.0:", type="build", when="@2022.03.0:")
@@ -207,11 +207,6 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     # device allocator exports device code, which requires static libs
     # currently only available for cuda.
     conflicts("+shared", when="+cuda")
-
-    # https://github.com/LLNL/Umpire/issues/653
-    # This range looks weird, but it ensures the concretizer looks at it as a
-    # range, not as a concrete version, so that it also matches 10.3.* versions.
-    conflicts("%gcc@10.3.0:10.3", when="+cuda")
 
     def _get_sys_type(self, spec):
         sys_type = spec.architecture

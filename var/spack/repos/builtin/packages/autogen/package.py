@@ -36,7 +36,7 @@ class Autogen(AutotoolsPackage, GNUMirrorPackage):
         ]
 
         if "+xml" in spec:
-            args.append("--with-libxml2={0}".format(spec["libxml2"].prefix))
+            args.append(f"--with-libxml2={spec['libxml2'].prefix}")
         else:
             args.append("--without-libxml2")
 

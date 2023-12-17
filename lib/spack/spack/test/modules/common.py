@@ -17,7 +17,10 @@ import spack.spec
 from spack.modules.common import UpstreamModuleIndex
 from spack.spec import Spec
 
-pytestmark = pytest.mark.not_on_windows("does not run on windows")
+pytestmark = [
+    pytest.mark.not_on_windows("does not run on windows"),
+    pytest.mark.usefixtures("mock_modules_root"),
+]
 
 
 def test_update_dictionary_extending_list():
@@ -174,6 +177,7 @@ def test_load_installed_package_not_in_repo(install_mockery, mock_fetch, monkeyp
     """Test that installed packages that have been removed are still loadable"""
     spec = Spec("trivial-install-test-package").concretized()
     spec.package.do_install()
+    spack.modules.module_types["tcl"](spec, "default", True).write()
 
     def find_nothing(*args):
         raise spack.repo.UnknownPackageError("Repo package access is disabled for test")
@@ -194,7 +198,6 @@ def test_load_installed_package_not_in_repo(install_mockery, mock_fetch, monkeyp
 def test_check_module_set_name(mutable_config):
     """Tests that modules set name are validated correctly and an error is reported if the
     name we require does not exist or is reserved by the configuration."""
-
     # Minimal modules.yaml config.
     spack.config.set(
         "modules",

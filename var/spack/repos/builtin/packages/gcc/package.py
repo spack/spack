@@ -337,11 +337,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     #   on XCode 12.5
     conflicts("+bootstrap", when="@:11.1 %apple-clang@12.0.5")
 
-    # aarch64/M1 is supported in GCC 11.3-12.2
-    conflicts(
-        "@:11.2,12.3:",
+    # aarch64/M1 is supported in GCC 11.3-12.2 and 13
+    requires(
+        "@11.3,12.2,13.1:",
         when="target=aarch64: platform=darwin",
-        msg="Only GCC 11.3-12.2 support macOS M1 (aarch64)",
+        msg="Only GCC 11.3-12.2, 13.1+ support macOS M1 (aarch64)",
     )
 
     # Newer binutils than RHEL's is required to run `as` on some instructions
@@ -413,7 +413,17 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             sha256="a7843b5c6bf1401e40c20c72af69c8f6fc9754ae980bb4a5f0540220b3dcb62d",
             when="@12.2.0 target=aarch64:",
         )
-        conflicts("+bootstrap", when="@11.3.0 target=aarch64:")
+        patch(
+            "https://raw.githubusercontent.com/Homebrew/formula-patches/5c206c47/gcc/gcc-13.1.0.diff",
+            sha256="cb4e8a89387f748a744da0273025d0dc2e3c76780cc390b18ada704676afea11",
+            when="@13.1.0 target=aarch64:",
+        )
+        patch(
+            "https://raw.githubusercontent.com/Homebrew/formula-patches/3c5cbc8e9cf444a1967786af48e430588e1eb481/gcc/gcc-13.2.0.diff",
+            sha256="2df7ef067871a30b2531a2013b3db661ec9e61037341977bfc451e30bf2c1035",
+            when="@13.2.0 target=aarch64:",
+        )
+        conflicts("+bootstrap", when="@11.3.0,13.1: target=aarch64:")
 
         # Use -headerpad_max_install_names in the build,
         # otherwise updated load commands won't fit in the Mach-O header.
@@ -444,8 +454,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     # Backport libsanitizer patch for glibc >= 2.36
     # https://reviews.llvm.org/D129471
-    patch("glibc-2.36-libsanitizer-gcc-5-9.patch", when="@5.1:5.5,6.1:6.5,7.1:7.5,8.1:8.5,9.1:9.5")
-    patch("glibc-2.36-libsanitizer-gcc-10-12.patch", when="@10.1:10.4,11.1:11.3,12.1.0")
+    patch("glibc-2.36-libsanitizer-gcc-5-9.patch", when="@5:9")
+    patch("glibc-2.36-libsanitizer-gcc-10-12.patch", when="@10:10.4,11:11.3,12.1.0")
 
     # Older versions do not compile with newer versions of glibc
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81712
@@ -773,6 +783,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                     "--with-as=" + binutils.join("as"),
                 ]
             )
+        elif spec.satisfies("%apple-clang@15:"):
+            # https://github.com/iains/gcc-darwin-arm64/issues/117
+            # https://github.com/iains/gcc-12-branch/issues/22
+            # https://github.com/iains/gcc-13-branch/issues/8
+            options.append("--with-ld=/Library/Developer/CommandLineTools/usr/bin/ld-classic")
 
         # enable_bootstrap
         if spec.satisfies("+bootstrap"):

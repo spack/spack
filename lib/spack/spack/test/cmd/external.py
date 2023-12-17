@@ -28,21 +28,12 @@ def executables_found(monkeypatch):
     return _factory
 
 
-@pytest.fixture
-def _platform_executables(monkeypatch):
-    def _win_exe_ext():
-        return ".bat"
-
-    monkeypatch.setattr(spack.util.path, "win_exe_ext", _win_exe_ext)
-
-
 def define_plat_exe(exe):
     if sys.platform == "win32":
         exe += ".bat"
     return exe
 
 
-@pytest.mark.xfail(sys.platform == "win32", reason="https://github.com/spack/spack/pull/39850")
 def test_find_external_single_package(mock_executable):
     cmake_path = mock_executable("cmake", output="echo cmake version 1.foo")
     search_dir = cmake_path.parent.parent
@@ -54,7 +45,7 @@ def test_find_external_single_package(mock_executable):
     assert len(detected_spec) == 1 and detected_spec[0].spec == Spec("cmake@1.foo")
 
 
-def test_find_external_two_instances_same_package(mock_executable, _platform_executables):
+def test_find_external_two_instances_same_package(mock_executable):
     # Each of these cmake instances is created in a different prefix
     # In Windows, quoted strings are echo'd with quotes includes
     # we need to avoid that for proper regex.
@@ -120,8 +111,9 @@ def test_find_external_cmd_not_buildable(mutable_config, working_env, mock_execu
     "names,tags,exclude,expected",
     [
         # find --all
-        (None, ["detectable"], [], ["find-externals1"]),
+        (None, ["detectable"], [], ["builtin.mock.find-externals1"]),
         # find --all --exclude find-externals1
+        (None, ["detectable"], ["builtin.mock.find-externals1"], []),
         (None, ["detectable"], ["find-externals1"], []),
         # find cmake (and cmake is not detectable)
         (["cmake"], ["detectable"], [], []),
@@ -202,19 +194,6 @@ def test_find_external_manifest_failure(mutable_config, mutable_mock_repo, tmpdi
     assert "Skipping manifest and continuing" in output
 
 
-def test_find_external_nonempty_default_manifest_dir(
-    mutable_database, mutable_mock_repo, tmpdir, monkeypatch, directory_with_manifest
-):
-    """The user runs 'spack external find'; the default manifest directory
-    contains a manifest file. Ensure that the specs are read.
-    """
-    monkeypatch.setenv("PATH", "")
-    monkeypatch.setattr(spack.cray_manifest, "default_path", str(directory_with_manifest))
-    external("find")
-    specs = spack.store.STORE.db.query("hwloc")
-    assert any(x.dag_hash() == "hwlocfakehashaaa" for x in specs)
-
-
 def test_find_external_merge(mutable_config, mutable_mock_repo):
     """Check that 'spack find external' doesn't overwrite an existing spec
     entry in packages.yaml.
@@ -248,32 +227,7 @@ def test_list_detectable_packages(mutable_config, mutable_mock_repo):
     assert external.returncode == 0
 
 
-@pytest.mark.xfail(sys.platform == "win32", reason="https://github.com/spack/spack/pull/39850")
-def test_packages_yaml_format(mock_executable, mutable_config, monkeypatch, _platform_executables):
-    # Prepare an environment to detect a fake gcc
-    gcc_exe = mock_executable("gcc", output="echo 4.2.1")
-    prefix = os.path.dirname(gcc_exe)
-    monkeypatch.setenv("PATH", prefix)
-
-    # Find the external spec
-    external("find", "gcc")
-
-    # Check entries in 'packages.yaml'
-    packages_yaml = spack.config.get("packages")
-    assert "gcc" in packages_yaml
-    assert "externals" in packages_yaml["gcc"]
-    externals = packages_yaml["gcc"]["externals"]
-    assert len(externals) == 1
-    external_gcc = externals[0]
-    assert external_gcc["spec"] == "gcc@4.2.1 languages=c"
-    assert external_gcc["prefix"] == os.path.dirname(prefix)
-    assert "extra_attributes" in external_gcc
-    extra_attributes = external_gcc["extra_attributes"]
-    assert "prefix" not in extra_attributes
-    assert extra_attributes["compilers"]["c"] == str(gcc_exe)
-
-
-def test_overriding_prefix(mock_executable, mutable_config, monkeypatch, _platform_executables):
+def test_overriding_prefix(mock_executable, mutable_config, monkeypatch):
     gcc_exe = mock_executable("gcc", output="echo 4.2.1")
     search_dir = gcc_exe.parent
 
@@ -294,10 +248,7 @@ def test_overriding_prefix(mock_executable, mutable_config, monkeypatch, _platfo
     assert gcc.external_path == os.path.sep + os.path.join("opt", "gcc", "bin")
 
 
-@pytest.mark.xfail(sys.platform == "win32", reason="https://github.com/spack/spack/pull/39850")
-def test_new_entries_are_reported_correctly(
-    mock_executable, mutable_config, monkeypatch, _platform_executables
-):
+def test_new_entries_are_reported_correctly(mock_executable, mutable_config, monkeypatch):
     # Prepare an environment to detect a fake gcc
     gcc_exe = mock_executable("gcc", output="echo 4.2.1")
     prefix = os.path.dirname(gcc_exe)

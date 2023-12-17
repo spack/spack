@@ -17,6 +17,12 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/pika-org/pika.git"
     maintainers("msimberg", "albestro", "teonnik", "aurianer")
 
+    license("BSL-1.0")
+
+    version("0.21.0", sha256="0ab24966e6ae026b355147f02354af4bd2117c342915fe844addf8e493735a33")
+    version("0.20.0", sha256="f338cceea66a0e3954806b2aca08f6560bba524ecea222f04bc18b483851c877")
+    version("0.19.1", sha256="674675abf0dd4c6f5a0b2fa3db944b277ed65c62f654029d938a8cab608a9c1d")
+    version("0.19.0", sha256="f45cc16e4e50cbb183ed743bdc8b775d49776ee33c13ea39a650f4230a5744cb")
     version("0.18.0", sha256="f34890e0594eeca6ac57f2b988d0807b502782817e53a7f7043c3f921b08c99f")
     version("0.17.0", sha256="717429fc1bc986d62cbec190a69939e91608122d09d54bda1b028871c9ca9ad4")
     version("0.16.0", sha256="59f2baec91cc9bf71ca96d21d0da1ec0092bf59da106efa51789089e0d7adcbb")
@@ -40,8 +46,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     generator("ninja")
 
-    map_cxxstd = lambda cxxstd: "2a" if cxxstd == "20" else cxxstd
-    cxxstds = ("17", "20")
+    cxxstds = ("17", "20", "23")
     variant(
         "cxxstd",
         default="17",
@@ -88,6 +93,10 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("%gcc@:8", when="@0.2:")
     conflicts("%clang@:8", when="@0.2:")
     conflicts("+stdexec", when="cxxstd=17")
+    conflicts("cxxstd=23", when="^cmake@:3.20.2")
+    # CUDA version <= 11 does not support C++20 and newer
+    for cxxstd in filter(lambda x: x != "17", cxxstds):
+        conflicts(f"cxxstd={cxxstd}", when="^cuda@:11")
 
     # Other dependencies
     depends_on("boost@1.71:")
@@ -117,27 +126,17 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     with when("+rocm"):
         for val in ROCmPackage.amdgpu_targets:
-            depends_on(
-                "whip@0.1: amdgpu_target={0}".format(val),
-                when="@0.9: amdgpu_target={0}".format(val),
-            )
-            depends_on(
-                "rocsolver amdgpu_target={0}".format(val),
-                when="@0.5: amdgpu_target={0}".format(val),
-            )
-            depends_on(
-                "rocblas amdgpu_target={0}".format(val), when="amdgpu_target={0}".format(val)
-            )
+            depends_on(f"whip@0.1: amdgpu_target={val}", when=f"@0.9: amdgpu_target={val}")
+            depends_on(f"rocsolver amdgpu_target={val}", when=f"@0.5: amdgpu_target={val}")
+            depends_on(f"rocblas amdgpu_target={val}", when=f"amdgpu_target={val}")
 
     with when("+cuda"):
         for val in CudaPackage.cuda_arch_values:
-            depends_on(
-                "whip@0.1: cuda_arch={0}".format(val), when="@0.9: cuda_arch={0}".format(val)
-            )
+            depends_on(f"whip@0.1: cuda_arch={val}", when=f"@0.9: cuda_arch={val}")
 
     for cxxstd in cxxstds:
-        depends_on("boost cxxstd={0}".format(map_cxxstd(cxxstd)), when="cxxstd={0}".format(cxxstd))
-        depends_on("fmt cxxstd={0}".format(cxxstd), when="@0.11: cxxstd={0}".format(cxxstd))
+        depends_on(f"boost cxxstd={cxxstd}", when=f"cxxstd={cxxstd}")
+        depends_on(f"fmt cxxstd={cxxstd}", when=f"@0.11: cxxstd={cxxstd}")
 
     # COROUTINES
     # ~generic_coroutines conflict is not fully implemented

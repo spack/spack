@@ -326,4 +326,42 @@ def test_correct_specs_are_pushed(
 
     buildcache(*buildcache_create_args)
 
-    assert packages_to_push == expected
+    # Order is not guaranteed, so we can't just compare lists
+    assert set(packages_to_push) == set(expected)
+
+    # Ensure no duplicates
+    assert len(set(packages_to_push)) == len(packages_to_push)
+
+
+@pytest.mark.parametrize("signed", [True, False])
+def test_push_and_install_with_mirror_marked_unsigned_does_not_require_extra_flags(
+    tmp_path, mutable_database, mock_gnupghome, signed
+):
+    """Tests whether marking a mirror as unsigned makes it possible to push and install to/from
+    it without requiring extra flags on the command line (and no signing keys configured)."""
+
+    # Create a named mirror with signed set to True or False
+    add_flag = "--signed" if signed else "--unsigned"
+    mirror("add", add_flag, "my-mirror", str(tmp_path))
+    spec = mutable_database.query_local("libelf", installed=True)[0]
+
+    # Push
+    if signed:
+        # Need to pass "--unsigned" to override the mirror's default
+        args = ["push", "--update-index", "--unsigned", "my-mirror", f"/{spec.dag_hash()}"]
+    else:
+        # No need to pass "--unsigned" if the mirror is unsigned
+        args = ["push", "--update-index", "my-mirror", f"/{spec.dag_hash()}"]
+
+    buildcache(*args)
+
+    # Install
+    if signed:
+        # Need to pass "--no-check-signature" to avoid install errors
+        kwargs = {"cache_only": True, "unsigned": True}
+    else:
+        # No need to pass "--no-check-signature" if the mirror is unsigned
+        kwargs = {"cache_only": True}
+
+    spec.package.do_uninstall(force=True)
+    spec.package.do_install(**kwargs)

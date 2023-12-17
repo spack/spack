@@ -6,34 +6,56 @@ import inspect
 import os
 import re
 import shutil
-from typing import Optional
+from typing import Iterable, List, Mapping, Optional
 
 import archspec
 
 import llnl.util.filesystem as fs
 import llnl.util.lang as lang
 import llnl.util.tty as tty
+from llnl.util.filesystem import HeaderList, LibraryList
 
 import spack.builder
 import spack.config
+import spack.deptypes as dt
 import spack.detection
 import spack.multimethod
 import spack.package_base
 import spack.spec
 import spack.store
 from spack.directives import build_system, depends_on, extends, maintainers
-from spack.error import NoHeadersError, NoLibrariesError, SpecError
+from spack.error import NoHeadersError, NoLibrariesError
 from spack.install_test import test_part
-from spack.version import Version
+from spack.spec import Spec
+from spack.util.prefix import Prefix
 
 from ._checks import BaseBuilder, execute_install_time_tests
+
+
+def _flatten_dict(dictionary: Mapping[str, object]) -> Iterable[str]:
+    """Iterable that yields KEY=VALUE paths through a dictionary.
+
+    Args:
+        dictionary: Possibly nested dictionary of arbitrary keys and values.
+
+    Yields:
+        A single path through the dictionary.
+    """
+    for key, item in dictionary.items():
+        if isinstance(item, dict):
+            # Recursive case
+            for value in _flatten_dict(item):
+                yield f"{key}={value}"
+        else:
+            # Base case
+            yield f"{key}={item}"
 
 
 class PythonExtension(spack.package_base.PackageBase):
     maintainers("adamjstewart")
 
     @property
-    def import_modules(self):
+    def import_modules(self) -> Iterable[str]:
         """Names of modules that the Python package provides.
 
         These are used to test whether or not the installation succeeded.
@@ -48,7 +70,7 @@ class PythonExtension(spack.package_base.PackageBase):
         detected, this property can be overridden by the package.
 
         Returns:
-            list: list of strings of module names
+            List of strings of module names.
         """
         modules = []
         pkg = self.spec["python"].package
@@ -85,14 +107,14 @@ class PythonExtension(spack.package_base.PackageBase):
         return modules
 
     @property
-    def skip_modules(self):
+    def skip_modules(self) -> Iterable[str]:
         """Names of modules that should be skipped when running tests.
 
         These are a subset of import_modules. If a module has submodules,
         they are skipped as well (meaning a.b is skipped if a is contained).
 
         Returns:
-            list: list of strings of module names
+            List of strings of module names.
         """
         return []
 
@@ -168,12 +190,12 @@ class PythonExtension(spack.package_base.PackageBase):
 
         view.remove_files(to_remove)
 
-    def test_imports(self):
+    def test_imports(self) -> None:
         """Attempts to import modules of the installed package."""
 
         # Make sure we are importing the installed modules,
         # not the ones in the source directory
-        python = inspect.getmodule(self).python
+        python = inspect.getmodule(self).python  # type: ignore[union-attr]
         for module in self.import_modules:
             with test_part(
                 self,
@@ -226,52 +248,7 @@ class PythonExtension(spack.package_base.PackageBase):
 
                     python.external_path = self.spec.external_path
                     python._mark_concrete()
-            self.spec.add_dependency_edge(python, deptypes=("build", "link", "run"), virtuals=())
-
-
-class PythonPackage(PythonExtension):
-    """Specialized class for packages that are built using pip."""
-
-    #: Package name, version, and extension on PyPI
-    pypi: Optional[str] = None
-
-    # To be used in UI queries that require to know which
-    # build-system class we are using
-    build_system_class = "PythonPackage"
-    #: Legacy buildsystem attribute used to deserialize and install old specs
-    legacy_buildsystem = "python_pip"
-
-    #: Callback names for install-time test
-    install_time_test_callbacks = ["test"]
-
-    build_system("python_pip")
-
-    with spack.multimethod.when("build_system=python_pip"):
-        extends("python")
-        depends_on("py-pip", type="build")
-        # FIXME: technically wheel is only needed when building from source, not when
-        # installing a downloaded wheel, but I don't want to add wheel as a dep to every
-        # package manually
-        depends_on("py-wheel", type="build")
-
-    py_namespace: Optional[str] = None
-
-    @lang.classproperty
-    def homepage(cls):
-        if cls.pypi:
-            name = cls.pypi.split("/")[0]
-            return "https://pypi.org/project/" + name + "/"
-
-    @lang.classproperty
-    def url(cls):
-        if cls.pypi:
-            return "https://files.pythonhosted.org/packages/source/" + cls.pypi[0] + "/" + cls.pypi
-
-    @lang.classproperty
-    def list_url(cls):
-        if cls.pypi:
-            name = cls.pypi.split("/")[0]
-            return "https://pypi.org/simple/" + name + "/"
+            self.spec.add_dependency_edge(python, depflag=dt.BUILD | dt.LINK | dt.RUN, virtuals=())
 
     def get_external_python_for_prefix(self):
         """
@@ -314,13 +291,64 @@ class PythonPackage(PythonExtension):
 
         raise StopIteration("No external python could be detected for %s to depend on" % self.spec)
 
+
+class PythonPackage(PythonExtension):
+    """Specialized class for packages that are built using pip."""
+
+    #: Package name, version, and extension on PyPI
+    pypi: Optional[str] = None
+
+    # To be used in UI queries that require to know which
+    # build-system class we are using
+    build_system_class = "PythonPackage"
+    #: Legacy buildsystem attribute used to deserialize and install old specs
+    legacy_buildsystem = "python_pip"
+
+    #: Callback names for install-time test
+    install_time_test_callbacks = ["test"]
+
+    build_system("python_pip")
+
+    with spack.multimethod.when("build_system=python_pip"):
+        extends("python")
+        depends_on("py-pip", type="build")
+        # FIXME: technically wheel is only needed when building from source, not when
+        # installing a downloaded wheel, but I don't want to add wheel as a dep to every
+        # package manually
+        depends_on("py-wheel", type="build")
+
+    py_namespace: Optional[str] = None
+
+    @lang.classproperty
+    def homepage(cls) -> Optional[str]:  # type: ignore[override]
+        if cls.pypi:
+            name = cls.pypi.split("/")[0]
+            return f"https://pypi.org/project/{name}/"
+        return None
+
+    @lang.classproperty
+    def url(cls) -> Optional[str]:
+        if cls.pypi:
+            return f"https://files.pythonhosted.org/packages/source/{cls.pypi[0]}/{cls.pypi}"
+        return None
+
+    @lang.classproperty
+    def list_url(cls) -> Optional[str]:  # type: ignore[override]
+        if cls.pypi:
+            name = cls.pypi.split("/")[0]
+            return f"https://pypi.org/simple/{name}/"
+        return None
+
     @property
-    def headers(self):
+    def headers(self) -> HeaderList:
         """Discover header files in platlib."""
 
+        # Remove py- prefix in package name
+        name = self.spec.name[3:]
+
         # Headers may be in either location
-        include = self.prefix.join(self.spec["python"].package.include)
-        platlib = self.prefix.join(self.spec["python"].package.platlib)
+        include = self.prefix.join(self.spec["python"].package.include).join(name)
+        platlib = self.prefix.join(self.spec["python"].package.platlib).join(name)
         headers = fs.find_all_headers(include) + fs.find_all_headers(platlib)
 
         if headers:
@@ -330,17 +358,18 @@ class PythonPackage(PythonExtension):
         raise NoHeadersError(msg.format(self.spec.name, include, platlib))
 
     @property
-    def libs(self):
+    def libs(self) -> LibraryList:
         """Discover libraries in platlib."""
 
         # Remove py- prefix in package name
-        library = "lib" + self.spec.name[3:].replace("-", "?")
-        root = self.prefix.join(self.spec["python"].package.platlib)
+        name = self.spec.name[3:]
 
-        for shared in [True, False]:
-            libs = fs.find_libraries(library, root, shared=shared, recursive=True)
-            if libs:
-                return libs
+        root = self.prefix.join(self.spec["python"].package.platlib).join(name)
+
+        libs = fs.find_all_libraries(root, recursive=True)
+
+        if libs:
+            return libs
 
         msg = "Unable to recursively locate {} libraries in {}"
         raise NoLibrariesError(msg.format(self.spec.name, root))
@@ -357,13 +386,13 @@ class PythonPipBuilder(BaseBuilder):
     legacy_long_methods = ("install_options", "global_options", "config_settings")
 
     #: Names associated with package attributes in the old build-system format
-    legacy_attributes = ("build_directory", "install_time_test_callbacks")
+    legacy_attributes = ("archive_files", "build_directory", "install_time_test_callbacks")
 
     #: Callback names for install-time test
     install_time_test_callbacks = ["test"]
 
     @staticmethod
-    def std_args(cls):
+    def std_args(cls) -> List[str]:
         return [
             # Verbose
             "-vvv",
@@ -388,7 +417,7 @@ class PythonPipBuilder(BaseBuilder):
         ]
 
     @property
-    def build_directory(self):
+    def build_directory(self) -> str:
         """The root directory of the Python package.
 
         This is usually the directory containing one of the following files:
@@ -399,75 +428,75 @@ class PythonPipBuilder(BaseBuilder):
         """
         return self.pkg.stage.source_path
 
-    def config_settings(self, spec, prefix):
+    def config_settings(self, spec: Spec, prefix: Prefix) -> Mapping[str, object]:
         """Configuration settings to be passed to the PEP 517 build backend.
 
-        Requires pip 22.1 or newer.
+        Requires pip 22.1 or newer for keys that appear only a single time,
+        or pip 23.1 or newer if the same key appears multiple times.
 
         Args:
-            spec (spack.spec.Spec): build spec
-            prefix (spack.util.prefix.Prefix): installation prefix
+            spec: Build spec.
+            prefix: Installation prefix.
 
         Returns:
-            dict: dictionary of KEY, VALUE settings
+            Possibly nested dictionary of KEY, VALUE settings.
         """
         return {}
 
-    def install_options(self, spec, prefix):
+    def install_options(self, spec: Spec, prefix: Prefix) -> Iterable[str]:
         """Extra arguments to be supplied to the setup.py install command.
 
         Requires pip 23.0 or older.
 
         Args:
-            spec (spack.spec.Spec): build spec
-            prefix (spack.util.prefix.Prefix): installation prefix
+            spec: Build spec.
+            prefix: Installation prefix.
 
         Returns:
-            list: list of options
+            List of options.
         """
         return []
 
-    def global_options(self, spec, prefix):
+    def global_options(self, spec: Spec, prefix: Prefix) -> Iterable[str]:
         """Extra global options to be supplied to the setup.py call before the install
         or bdist_wheel command.
 
         Deprecated in pip 23.1.
 
         Args:
-            spec (spack.spec.Spec): build spec
-            prefix (spack.util.prefix.Prefix): installation prefix
+            spec: Build spec.
+            prefix: Installation prefix.
 
         Returns:
-            list: list of options
+            List of options.
         """
         return []
 
-    def install(self, pkg, spec, prefix):
+    def install(self, pkg: PythonPackage, spec: Spec, prefix: Prefix) -> None:
         """Install everything from build directory."""
 
-        args = PythonPipBuilder.std_args(pkg) + ["--prefix=" + prefix]
+        args = PythonPipBuilder.std_args(pkg) + [f"--prefix={prefix}"]
 
-        for key, value in self.config_settings(spec, prefix).items():
-            if spec["py-pip"].version < Version("22.1"):
-                raise SpecError(
-                    "'{}' package uses 'config_settings' which is only supported by "
-                    "pip 22.1+. Add the following line to the package to fix this:\n\n"
-                    '    depends_on("py-pip@22.1:", type="build")'.format(spec.name)
-                )
-
-            args.append("--config-settings={}={}".format(key, value))
-
+        for setting in _flatten_dict(self.config_settings(spec, prefix)):
+            args.append(f"--config-settings={setting}")
         for option in self.install_options(spec, prefix):
-            args.append("--install-option=" + option)
+            args.append(f"--install-option={option}")
         for option in self.global_options(spec, prefix):
-            args.append("--global-option=" + option)
+            args.append(f"--global-option={option}")
 
         if pkg.stage.archive_file and pkg.stage.archive_file.endswith(".whl"):
             args.append(pkg.stage.archive_file)
         else:
             args.append(".")
 
-        pip = inspect.getmodule(pkg).pip
+        pip = spec["python"].command
+        # Hide user packages, since we don't have build isolation. This is
+        # necessary because pip / setuptools may run hooks from arbitrary
+        # packages during the build. There is no equivalent variable to hide
+        # system packages, so this is not reliable for external Python.
+        pip.add_default_env("PYTHONNOUSERSITE", "1")
+        pip.add_default_arg("-m")
+        pip.add_default_arg("pip")
         with fs.working_dir(self.build_directory):
             pip(*args)
 

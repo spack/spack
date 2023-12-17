@@ -225,6 +225,8 @@ class PyHorovod(PythonPackage, CudaPackage):
     conflicts(
         "controllers=gloo", when="@:0.20.0 platform=darwin", msg="Gloo cannot be compiled on MacOS"
     )
+    # https://github.com/horovod/horovod/issues/3996
+    conflicts("^py-torch@2.1:")
 
     # https://github.com/horovod/horovod/pull/1835
     patch("fma.patch", when="@0.19.0:0.19.1")

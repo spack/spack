@@ -15,6 +15,7 @@ import llnl.util.tty as tty
 import spack.config
 import spack.mirror
 import spack.paths
+import spack.url
 import spack.util.path
 import spack.util.s3
 import spack.util.url as url_util
@@ -97,36 +98,36 @@ def test_spider(depth, expected_found, expected_not_found, expected_text):
 def test_spider_no_response(monkeypatch):
     # Mock the absence of a response
     monkeypatch.setattr(spack.util.web, "read_from_url", lambda x, y: (None, None, None))
-    pages, links = spack.util.web.spider(root, depth=0)
+    pages, links, _, _ = spack.util.web._spider(root, collect_nested=False, _visited=set())
     assert not pages and not links
 
 
 def test_find_versions_of_archive_0():
-    versions = spack.util.web.find_versions_of_archive(root_tarball, root, list_depth=0)
+    versions = spack.url.find_versions_of_archive(root_tarball, root, list_depth=0)
     assert Version("0.0.0") in versions
 
 
 def test_find_versions_of_archive_1():
-    versions = spack.util.web.find_versions_of_archive(root_tarball, root, list_depth=1)
+    versions = spack.url.find_versions_of_archive(root_tarball, root, list_depth=1)
     assert Version("0.0.0") in versions
     assert Version("1.0.0") in versions
 
 
 def test_find_versions_of_archive_2():
-    versions = spack.util.web.find_versions_of_archive(root_tarball, root, list_depth=2)
+    versions = spack.url.find_versions_of_archive(root_tarball, root, list_depth=2)
     assert Version("0.0.0") in versions
     assert Version("1.0.0") in versions
     assert Version("2.0.0") in versions
 
 
 def test_find_exotic_versions_of_archive_2():
-    versions = spack.util.web.find_versions_of_archive(root_tarball, root, list_depth=2)
+    versions = spack.url.find_versions_of_archive(root_tarball, root, list_depth=2)
     # up for grabs to make this better.
     assert Version("2.0.0b2") in versions
 
 
 def test_find_versions_of_archive_3():
-    versions = spack.util.web.find_versions_of_archive(root_tarball, root, list_depth=3)
+    versions = spack.url.find_versions_of_archive(root_tarball, root, list_depth=3)
     assert Version("0.0.0") in versions
     assert Version("1.0.0") in versions
     assert Version("2.0.0") in versions
@@ -135,16 +136,14 @@ def test_find_versions_of_archive_3():
 
 
 def test_find_exotic_versions_of_archive_3():
-    versions = spack.util.web.find_versions_of_archive(root_tarball, root, list_depth=3)
+    versions = spack.url.find_versions_of_archive(root_tarball, root, list_depth=3)
     assert Version("2.0.0b2") in versions
     assert Version("3.0a1") in versions
     assert Version("4.5-rc5") in versions
 
 
 def test_find_versions_of_archive_with_fragment():
-    versions = spack.util.web.find_versions_of_archive(
-        root_tarball, root_with_fragment, list_depth=0
-    )
+    versions = spack.url.find_versions_of_archive(root_tarball, root_with_fragment, list_depth=0)
     assert Version("5.0.0") in versions
 
 
@@ -311,7 +310,7 @@ def test_remove_s3_url(monkeypatch, capfd):
     def get_s3_session(url, method="fetch"):
         return MockS3Client()
 
-    monkeypatch.setattr(spack.util.s3, "get_s3_session", get_s3_session)
+    monkeypatch.setattr(spack.util.web, "get_s3_session", get_s3_session)
 
     current_debug_level = tty.debug_level()
     tty.set_debug(1)

@@ -35,6 +35,10 @@ class Llvm(CMakePackage, CudaPackage):
     family = "compiler"  # Used by lmod
 
     version("main", branch="main")
+    version("17.0.4", sha256="46200b79f52a02fe26d0a43fd856ab6ceff49ab2a0b7c240ac4b700a6ada700c")
+    version("17.0.3", sha256="1e3d9d04fb5fbd8d0080042ad72c7e2a5c68788b014b186647a604dbbdd625d2")
+    version("17.0.2", sha256="dcba3eb486973dce45b6edfe618f3f29b703ae7e6ef9df65182fb50fb6fe4235")
+    version("17.0.1", sha256="d51b10be66c10a6a81f4c594b554ffbf1063ffbadcb810af37d1f88d6e0b49dd")
     version("16.0.6", sha256="56b2f75fdaa95ad5e477a246d3f0d164964ab066b4619a01836ef08e475ec9d5")
     version("16.0.5", sha256="e0fbca476693fcafa125bc71c8535587b6d9950293122b66b262bb4333a03942")
     version("16.0.4", sha256="10c3fe1757d2e4f1cd7745dc548ecf687680a71824ec81701c38524c2a0753e2")
@@ -242,6 +246,9 @@ class Llvm(CMakePackage, CudaPackage):
         description="Enable zstd support for static analyzer / lld",
     )
 
+    provides("libllvm@17", when="@17.0.0:17")
+    provides("libllvm@16", when="@16.0.0:16")
+    provides("libllvm@15", when="@15.0.0:15")
     provides("libllvm@14", when="@14.0.0:14")
     provides("libllvm@13", when="@13.0.0:13")
     provides("libllvm@12", when="@12.0.0:12")
@@ -302,14 +309,14 @@ class Llvm(CMakePackage, CudaPackage):
         depends_on("swig", when="+python")
         depends_on("xz")
 
-    # Use ^swig cause it's triggered by both python & lua scripting in lldb
-    with when("^swig"):
-        depends_on("swig@2:", when="@10:")
-        depends_on("swig@3:", when="@12:")
-        depends_on("swig@4:", when="@17:")
-        # Commits f0a25fe0b746f56295d5c02116ba28d2f965c175 and
-        # 81fc5f7909a4ef5a8d4b5da2a10f77f7cb01ba63 fixed swig 4.1 support
-        depends_on("swig@:4.0", when="@:15")
+    for _when_spec in ("+lldb+python", "+lldb+lua"):
+        with when(_when_spec):
+            depends_on("swig@2:", when="@10:")
+            depends_on("swig@3:", when="@12:")
+            depends_on("swig@4:", when="@17:")
+            # Commits f0a25fe0b746f56295d5c02116ba28d2f965c175 and
+            # 81fc5f7909a4ef5a8d4b5da2a10f77f7cb01ba63 fixed swig 4.1 support
+            depends_on("swig@:4.0", when="@:15")
 
     # gold support, required for some features
     depends_on("binutils+gold+ld+plugins+headers", when="+gold")
@@ -422,6 +429,12 @@ class Llvm(CMakePackage, CudaPackage):
         when="@14:15",
     )
 
+    # missing <cstdint> include
+    patch(
+        "https://github.com/llvm/llvm-project/commit/ff1681ddb303223973653f7f5f3f3435b48a1983.patch?full_index=1",
+        sha256="c6ca6b925f150e8644ce756023797b7f94c9619c62507231f979edab1c09af78",
+        when="@6:13",
+    )
     # fix building of older versions of llvm with newer versions of glibc
     for compiler_rt_as in ["project", "runtime"]:
         with when("compiler-rt={0}".format(compiler_rt_as)):
@@ -559,6 +572,16 @@ class Llvm(CMakePackage, CudaPackage):
     patch("add-include-for-libelf-llvm-12-14.patch", when="@12:14")
     patch("add-include-for-libelf-llvm-15.patch", when="@15")
 
+    @when("@14:17")
+    def patch(self):
+        # https://github.com/llvm/llvm-project/pull/69458
+        filter_file(
+            r"${TERMINFO_LIB}",
+            r"${Terminfo_LIBRARIES}",
+            "lldb/source/Core/CMakeLists.txt",
+            string=True,
+        )
+
     # The functions and attributes below implement external package
     # detection for LLVM. See:
     #
@@ -596,6 +619,8 @@ class Llvm(CMakePackage, CudaPackage):
             compiler = Executable(exe)
             output = compiler("--version", output=str, error=str)
             if "Apple" in output:
+                return None
+            if "AMD" in output:
                 return None
             match = version_regex.search(output)
             if match:
@@ -736,14 +761,6 @@ class Llvm(CMakePackage, CudaPackage):
                     mkdirp(self.stage.path)
                     os.symlink(bin, sym)
             env.prepend_path("PATH", self.stage.path)
-
-    def setup_run_environment(self, env):
-        if "+clang" in self.spec:
-            env.set("CC", join_path(self.spec.prefix.bin, "clang"))
-            env.set("CXX", join_path(self.spec.prefix.bin, "clang++"))
-        if "+flang" in self.spec:
-            env.set("FC", join_path(self.spec.prefix.bin, "flang"))
-            env.set("F77", join_path(self.spec.prefix.bin, "flang"))
 
     root_cmakelists_dir = "llvm"
 
@@ -967,7 +984,10 @@ class Llvm(CMakePackage, CudaPackage):
                 ninja()
                 ninja("install")
         if "+python" in self.spec:
-            install_tree("llvm/bindings/python", python_platlib)
+            if spec.version < Version("17.0.0"):
+                # llvm bindings were removed in v17:
+                # https://releases.llvm.org/17.0.1/docs/ReleaseNotes.html#changes-to-the-python-bindings
+                install_tree("llvm/bindings/python", python_platlib)
 
             if "+clang" in self.spec:
                 install_tree("clang/bindings/python", python_platlib)

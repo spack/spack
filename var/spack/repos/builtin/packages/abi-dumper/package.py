@@ -25,4 +25,4 @@ class AbiDumper(Package):
     depends_on("vtable-dumper@1.1:")
 
     def install(self, spec, prefix):
-        make("prefix={0}".format(prefix), "install")
+        make(f"prefix={prefix}", "install")
