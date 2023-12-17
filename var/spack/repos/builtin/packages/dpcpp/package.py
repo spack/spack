@@ -10,7 +10,7 @@ import sys
 from spack.package import *
 
 
-class Dpcpp(CMakePackage):
+class Dpcpp(CMakePackage, CudaPackage, ROCmPackage):
     """Data Parallel C++ compiler: Intel's implementation of SYCL programming model"""
 
     homepage = "https://intel.github.io/llvm-docs/"
@@ -37,8 +37,6 @@ class Dpcpp(CMakePackage):
 
     maintainers("ravil-mobile")
 
-    variant("cuda", default=False, description="switch from OpenCL to CUDA")
-    variant("rocm", default=False, description="switch from OpenCL to HIP")
     variant("esimd-emulator", default=False, description="build with ESIMD emulation support")
     variant("assertions", default=False, description="build with assertions")
     variant("docs", default=False, description="build Doxygen documentation")
