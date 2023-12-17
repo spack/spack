@@ -213,6 +213,9 @@ class Dpcpp(CMakePackage, CudaPackage, ROCmPackage):
             from_variant("LINK_POLLY_INTO_TOOLS", "polly"),
         ]
 
+        if self.compiler.name == "gcc":
+            args.append(define("GCC_INSTALL_PREFIX", self.compiler.prefix))
+
         with when("@:2021-12"):
             args.append(from_variant("SYCL_BUILD_PI_ESIMD_EMULATOR", "esimd-emulator"))
 
