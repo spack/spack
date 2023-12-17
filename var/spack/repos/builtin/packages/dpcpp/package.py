@@ -20,7 +20,7 @@ class Dpcpp(CMakePackage, CudaPackage, ROCmPackage):
 
     version(
         "2023-10",
-        sha256="5b68d973cd7ad95f3840767117aac60dea30add29f27d882f353eb3675530eef",
+        sha256="5b68d973cd7ad95f3840767117aac60dea30add29f27d882fj353eb3675530eef",
         url="https://github.com/intel/llvm/tarball/f4e0d3177338",
     )
 
@@ -32,8 +32,8 @@ class Dpcpp(CMakePackage, CudaPackage, ROCmPackage):
 
     generator("ninja")
 
-    version("2021.09", commit="bd68232bb96386bf7649345c0557ba520e73c02d", deprecated=True)
-    version("2021.12", commit="27f59d8906fcc8aece7ff6aa570ccdee52168c2d", deprecated=True)
+    version("2021-12", commit="27f59d8906fcc8aece7ff6aa570ccdee52168c2d", deprecated=True)
+    version("2021-09", commit="bd68232bb96386bf7649345c0557ba520e73c02d", deprecated=True)
 
     maintainers("ravil-mobile")
 
@@ -142,11 +142,19 @@ class Dpcpp(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("EXTRA_SECURITY_FLAGS", "security_flags"),
         ]
 
+        with when("@:2021-12"):
+            args.append(self.define_from_variant("SYCL_BUILD_PI_ESIMD_EMULATOR", "esimd-emulator"))
+
         if "+cuda" in spec:
             args.append(self.define("CUDA_TOOLKIT_ROOT_DIR", spec["cuda"].prefix))
+            with when("@:2021-12"):
+                args.append(self.define("SYCL_BUILD_PI_CUDA", "ON"))
 
         if "+rocm" in spec:
             args.append(self.define("SYCL_BUILD_PI_HIP_ROCM_DIR", spec["hip"].prefix))
+            with when("@:2021-12"):
+                args.append(self.define("SYCL_BUILD_PI_HIP", "ON"))
+                args.append(self.define("SYCL_BUILD_PI_HIP_PLATFORM", "AMD"))
 
         return args
 
