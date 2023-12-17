@@ -2509,6 +2509,7 @@ but there are known issues with 1.64.0, 1.65.0, and 1.66.0, you can say:
 
    depends_on("boost@1.59.0:1.63,1.65.1,1.67.0:")
 
+
 .. _dependency-types:
 
 ^^^^^^^^^^^^^^^^
