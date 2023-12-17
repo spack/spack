@@ -48,7 +48,7 @@ class Dpcpp(CMakePackage, CudaPackage, ROCmPackage):
     variant("docs", default=False, description="build Doxygen documentation")
     variant("werror", default=False, description="treat warnings as errors")
     variant("shared-libs", default=False, description="build shared libraries")
-    variant("lld", default=False, description="use LLD linker for build")
+    variant("lld", default=True, description="use LLD linker for build")
     variant(
         "fusion",
         when="@2023-03:",
