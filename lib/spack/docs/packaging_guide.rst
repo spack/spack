@@ -2498,8 +2498,8 @@ if you need to distinguish between ``2.7`` and ``2.7.1``:
 
    depends_on("pkg@=2.7")
 
-But in general, you should try to use version ranges (even ``@2.7``) as much as
-possible, so that custom suffixes are included too.
+But in general, you should try to use version ranges or partial version (e.g.,
+``@2.7``) as much as possible, so that custom suffixes are included too.
 
 A spec can contain a version list of ranges and individual versions
 separated by commas. For example, if you need Boost 1.59.0 or newer,
@@ -2508,16 +2508,6 @@ but there are known issues with 1.64.0, 1.65.0, and 1.66.0, you can say:
 .. code-block:: python
 
    depends_on("boost@1.59.0:1.63,1.65.1,1.67.0:")
-
-Finally, there is a syntax which matches a version "exactly", not allowing
-subsequent digits:
-
-.. code-block:: python
-
-   depends_on('package@=1.0')
-   
-This won't match 1.0.1 or 1.0.2, only 1.0.
-
 
 .. _dependency-types:
 
