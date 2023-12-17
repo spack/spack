@@ -51,6 +51,18 @@ class Dpcpp(CMakePackage, CudaPackage, ROCmPackage):
         multi=False,
         description="Enables security flags for compile & link",
     )
+    variant("split_dwarf", default=False, description="Build with split dwarf information")
+    variant(
+        "llvm_dylib",
+        default=True,
+        description="Build a combined LLVM shared library with all components",
+    )
+    variant(
+        "link_llvm_dylib",
+        default=False,
+        when="+llvm_dylib",
+        description="Link LLVM tools against the LLVM shared library",
+    )
     variant(
         "targets",
         default="all",
@@ -83,6 +95,12 @@ class Dpcpp(CMakePackage, CudaPackage, ROCmPackage):
         multi=True,
     )
 
+    variant(
+        "polly",
+        default=True,
+        description="Build the LLVM polyhedral optimization plugin, only builds for 3.7.0+",
+    )
+    
     depends_on("cmake@3.14:", type="build")
 
     conflicts("~lld", when="+rocm", msg="lld is needed for HIP plugin on AMD")
@@ -93,6 +111,8 @@ class Dpcpp(CMakePackage, CudaPackage, ROCmPackage):
 
     def cmake_args(self):
         spec = self.spec
+        define = self.define
+        from_variant = self.define_from_variant
 
         llvm_external_projects = "sycl;llvm-spirv;opencl;xpti;xptifw"
         libclc_amd_target_names = ";amdgcn--;amdgcn--amdhsa"
@@ -118,6 +138,9 @@ class Dpcpp(CMakePackage, CudaPackage, ROCmPackage):
 
         if spec.platform != "darwin":
             sycl_enabled_plugins += ";level_zero"
+
+        if "+polly" in spec:
+            llvm_enable_projects += ";polly"
 
         if "+lld" in spec:
             llvm_enable_projects += ";lld"
@@ -145,47 +168,52 @@ class Dpcpp(CMakePackage, CudaPackage, ROCmPackage):
             )
 
         args = [
-            self.define_from_variant("LLVM_ENABLE_ASSERTIONS", "assertions"),
-            self.define("LLVM_TARGETS_TO_BUILD", llvm_targets_to_build),
-            self.define("LLVM_EXTERNAL_PROJECTS", llvm_external_projects),
-            self.define("LLVM_EXTERNAL_SYCL_SOURCE_DIR", sycl_dir),
-            self.define("LLVM_EXTERNAL_LLVM_SPIRV_SOURCE_DIR", spirv_dir),
-            self.define("LLVM_EXTERNAL_XPTI_SOURCE_DIR", xpti_dir),
-            self.define("XPTI_SOURCE_DIR", xpti_dir),
-            self.define("LLVM_EXTERNAL_XPTIFW_SOURCE_DIR", xptifw_dir),
-            self.define("LLVM_EXTERNAL_LIBDEVICE_SOURCE_DIR", libdevice_dir),
-            self.define("LLVM_EXTERNAL_SYCL_FUSION_SOURCE_DIR", fusion_dir),
-            self.define("LLVM_ENABLE_PROJECTS", llvm_enable_projects),
-            self.define("LIBCLC_TARGETS_TO_BUILD", libclc_targets_to_build),
-            self.define("LIBCLC_GENERATE_REMANGLED_VARIANTS", libclc_gen_remangled_variants),
-            self.define("SYCL_BUILD_PI_HIP_PLATFORM", "AMD"),
-            self.define("LLVM_BUILD_TOOLS", "ON"),
-            self.define_from_variant("SYCL_ENABLE_WERROR", "werror"),
-            self.define("SYCL_INCLUDE_TESTS", "ON"),
-            self.define_from_variant("LLVM_ENABLE_DOXYGEN", "docs"),
-            self.define_from_variant("LLVM_ENABLE_SPHINX", "docs"),
-            self.define_from_variant("BUILD_SHARED_LIBS", "shared-libs"),
-            self.define("SYCL_ENABLE_XPTI_TRACING", "ON"),
-            self.define_from_variant("LLVM_ENABLE_LLD", "lld"),
-            self.define_from_variant("XPTI_ENABLE_WERROR", "werror"),
-            self.define("SYCL_ENABLE_PLUGINS", sycl_enabled_plugins),
-            self.define_from_variant("SYCL_ENABLE_KERNEL_FUSION", "fusion"),
-            self.define_from_variant("EXTRA_SECURITY_FLAGS", "security_flags"),
+            from_variant("LLVM_ENABLE_ASSERTIONS", "assertions"),
+            define("LLVM_TARGETS_TO_BUILD", llvm_targets_to_build),
+            define("LLVM_EXTERNAL_PROJECTS", llvm_external_projects),
+            define("LLVM_EXTERNAL_SYCL_SOURCE_DIR", sycl_dir),
+            define("LLVM_EXTERNAL_LLVM_SPIRV_SOURCE_DIR", spirv_dir),
+            define("LLVM_EXTERNAL_XPTI_SOURCE_DIR", xpti_dir),
+            define("XPTI_SOURCE_DIR", xpti_dir),
+            define("LLVM_EXTERNAL_XPTIFW_SOURCE_DIR", xptifw_dir),
+            define("LLVM_EXTERNAL_LIBDEVICE_SOURCE_DIR", libdevice_dir),
+            define("LLVM_EXTERNAL_SYCL_FUSION_SOURCE_DIR", fusion_dir),
+            define("LLVM_ENABLE_PROJECTS", llvm_enable_projects),
+            define("LIBCLC_TARGETS_TO_BUILD", libclc_targets_to_build),
+            define("LIBCLC_GENERATE_REMANGLED_VARIANTS", libclc_gen_remangled_variants),
+            define("SYCL_BUILD_PI_HIP_PLATFORM", "AMD"),
+            define("LLVM_BUILD_TOOLS", "ON"),
+            from_variant("SYCL_ENABLE_WERROR", "werror"),
+            define("SYCL_INCLUDE_TESTS", "ON"),
+            from_variant("LLVM_ENABLE_DOXYGEN", "docs"),
+            from_variant("LLVM_ENABLE_SPHINX", "docs"),
+            from_variant("BUILD_SHARED_LIBS", "shared-libs"),
+            define("SYCL_ENABLE_XPTI_TRACING", "ON"),
+            from_variant("LLVM_ENABLE_LLD", "lld"),
+            from_variant("XPTI_ENABLE_WERROR", "werror"),
+            define("SYCL_ENABLE_PLUGINS", sycl_enabled_plugins),
+            from_variant("SYCL_ENABLE_KERNEL_FUSION", "fusion"),
+            from_variant("EXTRA_SECURITY_FLAGS", "security_flags"),
+            from_variant("LLVM_BUILD_LLVM_DYLIB", "llvm_dylib"),
+            from_variant("LLVM_LINK_LLVM_DYLIB", "link_llvm_dylib"),
+            from_variant("LLVM_USE_SPLIT_DWARF", "split_dwarf"),
+            define("LIBCXX_ENABLE_STATIC_ABI_LIBRARY", True),
+            from_variant("LINK_POLLY_INTO_TOOLS", "polly"),
         ]
 
         with when("@:2021-12"):
-            args.append(self.define_from_variant("SYCL_BUILD_PI_ESIMD_EMULATOR", "esimd-emulator"))
+            args.append(from_variant("SYCL_BUILD_PI_ESIMD_EMULATOR", "esimd-emulator"))
 
         if "+cuda" in spec:
-            args.append(self.define("CUDA_TOOLKIT_ROOT_DIR", spec["cuda"].prefix))
+            args.append(define("CUDA_TOOLKIT_ROOT_DIR", spec["cuda"].prefix))
             with when("@:2021-12"):
-                args.append(self.define("SYCL_BUILD_PI_CUDA", "ON"))
+                args.append(define("SYCL_BUILD_PI_CUDA", "ON"))
 
         if "+rocm" in spec:
-            args.append(self.define("SYCL_BUILD_PI_HIP_ROCM_DIR", spec["hip"].prefix))
+            args.append(define("SYCL_BUILD_PI_HIP_ROCM_DIR", spec["hip"].prefix))
             with when("@:2021-12"):
-                args.append(self.define("SYCL_BUILD_PI_HIP", "ON"))
-                args.append(self.define("SYCL_BUILD_PI_HIP_PLATFORM", "AMD"))
+                args.append(define("SYCL_BUILD_PI_HIP", "ON"))
+                args.append(define("SYCL_BUILD_PI_HIP_PLATFORM", "AMD"))
 
         return args
 
