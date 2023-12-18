@@ -353,6 +353,37 @@ class TestTcl:
         assert len(index) == 1
         assert index[s3.dag_hash()].use_name == w3.layout.use_name
 
+    def test_reverse_module_index(self, module_configuration, factory, tmpdir_factory):
+        module_configuration("suffix")
+
+        w1, s1 = factory("mpileaks")
+        w2, s2 = factory("callpath")
+        w3, s3 = factory("openblas")
+
+        test_root = str(tmpdir_factory.mktemp("module-root"))
+
+        spack.modules.common.generate_reverse_module_index(test_root, [w1, w2])
+
+        index = spack.modules.common.read_reverse_module_index(test_root)
+
+        assert index[w1.layout.filename] == s1.dag_hash()
+        assert index[w2.layout.filename] == s2.dag_hash()
+
+        spack.modules.common.generate_reverse_module_index(test_root, [w3])
+
+        index = spack.modules.common.read_reverse_module_index(test_root)
+
+        assert len(index) == 3
+        assert index[w1.layout.filename] == s1.dag_hash()
+        assert index[w2.layout.filename] == s2.dag_hash()
+
+        spack.modules.common.generate_reverse_module_index(test_root, [w3], overwrite=True)
+
+        index = spack.modules.common.read_reverse_module_index(test_root)
+
+        assert len(index) == 1
+        assert index[w3.layout.filename] == s3.dag_hash()
+
     def test_module_index_update(self, module_configuration, factory, tmpdir_factory):
         w1, _ = factory("mpileaks")
         w2, _ = factory("callpath")
