@@ -169,13 +169,16 @@ class ConfigScope:
 class SingleFileScope(ConfigScope):
     """This class represents a configuration scope in a single YAML file."""
 
-    def __init__(self, name, path, schema, yaml_path=None):
+    def __init__(
+        self, name: str, path: str, schema: Dict[str, Any], yaml_path: Optional[List[str]] = None
+    ) -> None:
         """Similar to ``ConfigScope`` but can be embedded in another schema.
 
         Arguments:
             schema (dict): jsonschema for the file to read
             yaml_path (list): path in the schema where config data can be
                 found.
+
                 If the schema accepts the following yaml data, the yaml_path
                 would be ['outer', 'inner']
 
@@ -192,13 +195,13 @@ class SingleFileScope(ConfigScope):
         self.yaml_path = yaml_path or []
 
     @property
-    def is_platform_dependent(self):
+    def is_platform_dependent(self) -> bool:
         return False
 
-    def get_section_filename(self, section):
+    def get_section_filename(self, section) -> str:
         return self.path
 
-    def get_section(self, section):
+    def get_section(self, section: str) -> Optional[Dict[str, Any]]:
         # read raw data from the file, which looks like:
         # {
         #   'config': {
@@ -247,8 +250,8 @@ class SingleFileScope(ConfigScope):
 
         return self.sections.get(section, None)
 
-    def _write_section(self, section):
-        data_to_write = self._raw_data
+    def _write_section(self, section: str) -> None:
+        data_to_write: Optional[Dict[str, Any]] = self._raw_data
 
         # If there is no existing data, this section SingleFileScope has never
         # been written to disk. We need to construct the portion of the data
@@ -288,7 +291,7 @@ class SingleFileScope(ConfigScope):
         except (syaml.SpackYAMLError, OSError) as e:
             raise ConfigFileError(f"cannot write to config file {str(e)}") from e
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<SingleFileScope: {self.name}: {self.path}>"
 
 
