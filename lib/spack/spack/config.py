@@ -35,12 +35,9 @@ import functools
 import os
 import re
 import sys
-from contextlib import contextmanager
 from typing import Dict, List, Optional, Union
 
-import llnl.util.lang
-import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp, rename
+from llnl.util import filesystem, lang, tty
 
 import spack.compilers
 import spack.paths
@@ -152,7 +149,7 @@ class ConfigScope:
         validate(validate_data, SECTION_SCHEMAS[section])
 
         try:
-            mkdirp(self.path)
+            filesystem.mkdirp(self.path)
             with open(filename, "w") as f:
                 syaml.dump_config(data, stream=f, default_flow_style=False)
         except (syaml.SpackYAMLError, IOError) as e:
@@ -278,12 +275,12 @@ class SingleFileScope(ConfigScope):
         validate(data_to_write, self.schema)
         try:
             parent = os.path.dirname(self.path)
-            mkdirp(parent)
+            filesystem.mkdirp(parent)
 
             tmp = os.path.join(parent, ".%s.tmp" % os.path.basename(self.path))
             with open(tmp, "w") as f:
                 syaml.dump_config(data_to_write, stream=f, default_flow_style=False)
-            rename(tmp, self.path)
+            filesystem.rename(tmp, self.path)
 
         except (syaml.SpackYAMLError, IOError) as e:
             raise ConfigFileError(f"cannot write to config file {str(e)}") from e
@@ -574,7 +571,7 @@ class Configuration:
         """
         return self._get_config_memoized(section, scope)
 
-    @llnl.util.lang.memoized
+    @lang.memoized
     def _get_config_memoized(self, section, scope):
         _validate_section_name(section)
 
@@ -700,7 +697,7 @@ class Configuration:
             raise ConfigError(f"cannot read '{section}' configuration") from e
 
 
-@contextmanager
+@contextlib.contextmanager
 def override(path_or_scope, value=None):
     """Simple way to override config settings within a context.
 
@@ -829,7 +826,7 @@ def create():
 
 
 #: This is the singleton configuration instance for Spack.
-CONFIG: Union[Configuration, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(create)
+CONFIG: Union[Configuration, lang.Singleton] = lang.Singleton(create)
 
 
 def add_from_file(filename, scope=None):
@@ -1451,7 +1448,7 @@ def use_configuration(*scopes_or_paths):
         CONFIG = saved_config
 
 
-@llnl.util.lang.memoized
+@lang.memoized
 def _config_from(scopes_or_paths):
     scopes = []
     for scope_or_path in scopes_or_paths:
