@@ -33,8 +33,8 @@ class Mvdtool(CMakePackage):
     depends_on("hdf5~mpi", when="~mpi")
     depends_on("libsonata+mpi", when="+mpi")
     depends_on("libsonata~mpi", when="~mpi")
-    depends_on("highfive+mpi", when="+mpi")
-    depends_on("highfive~mpi", when="~mpi")
+    depends_on("highfive+mpi+boost", when="+mpi")
+    depends_on("highfive~mpi+boost", when="~mpi")
 
     def patch(self):
         filter_file("(EXTLIB_FROM_SUBMODULES)=ON", r"\1=OFF", "setup.py")
