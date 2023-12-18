@@ -73,7 +73,7 @@ def gc(parser, args):
     if not root_hashes:
         # only gc the current environment (note: `spack -e ENV gc -b` likely does nothing)
         if active_env:
-            tty.msg(f"Restricting garbage collection to environment '{env.name}'")
+            tty.msg(f"Restricting garbage collection to environment '{active_env.name}'")
             root_hashes = set(spack.store.STORE.db.all_hashes())  # keep everything
             root_hashes -= set(active_env.all_hashes())  # except this env
             root_hashes |= set(active_env.concretized_order)  # but keep its roots
