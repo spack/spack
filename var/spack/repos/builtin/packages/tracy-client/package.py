@@ -14,6 +14,8 @@ class TracyClient(CMakePackage):
     url = "https://github.com/wolfpld/tracy/archive/v0.0.0.tar.gz"
     maintainers("msimberg")
 
+    license("BSD-3-Clause")
+
     version("master", git="https://github.com/wolfpld/tracy.git", branch="master")
     version("0.10", sha256="a76017d928f3f2727540fb950edd3b736caa97b12dbb4e5edce66542cbea6600")
     version("0.9", sha256="93a91544e3d88f3bc4c405bad3dbc916ba951cdaadd5fcec1139af6fa56e6bfc")

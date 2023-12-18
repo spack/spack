@@ -8,13 +8,13 @@ import os
 import llnl.util.tty as tty
 
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.environment as ev
 import spack.package_base
 import spack.repo
 import spack.stage
 import spack.traverse
+from spack.cmd.common import arguments
 
 description = "expand downloaded archive in preparation for install"
 section = "build"

@@ -451,8 +451,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     # Backport libsanitizer patch for glibc >= 2.36
     # https://reviews.llvm.org/D129471
-    patch("glibc-2.36-libsanitizer-gcc-5-9.patch", when="@5.1:5.5,6.1:6.5,7.1:7.5,8.1:8.5,9.1:9.5")
-    patch("glibc-2.36-libsanitizer-gcc-10-12.patch", when="@10.1:10.4,11.1:11.3,12.1.0")
+    patch("glibc-2.36-libsanitizer-gcc-5-9.patch", when="@5:9")
+    patch("glibc-2.36-libsanitizer-gcc-10-12.patch", when="@10:10.4,11:11.3,12.1.0")
 
     # Older versions do not compile with newer versions of glibc
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81712
@@ -1031,7 +1031,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                     continue
 
                 abspath = os.path.join(bin_path, filename)
-                if os.path.islink(abspath):
+
+                # Skip broken symlinks (https://github.com/spack/spack/issues/41327)
+                if not os.path.exists(abspath):
                     continue
 
                 # Set the proper environment variable

@@ -5,6 +5,7 @@
 
 import argparse
 import os
+import shlex
 import shutil
 import sys
 import tempfile
@@ -19,7 +20,6 @@ from llnl.util.tty.color import colorize
 import spack.cmd
 import spack.cmd.common
 import spack.cmd.common.arguments
-import spack.cmd.common.arguments as arguments
 import spack.cmd.install
 import spack.cmd.modules
 import spack.cmd.uninstall
@@ -30,6 +30,7 @@ import spack.environment.shell
 import spack.schema.env
 import spack.spec
 import spack.tengine
+from spack.cmd.common import arguments
 from spack.util.environment import EnvironmentModifications
 
 description = "manage virtual environments"
@@ -144,10 +145,13 @@ def create_temp_env_directory():
     return tempfile.mkdtemp(prefix="spack-")
 
 
-def env_activate(args):
-    if not args.activate_env and not args.dir and not args.temp:
-        tty.die("spack env activate requires an environment name, directory, or --temp")
+def _tty_info(msg):
+    """tty.info like function that prints the equivalent printf statement for eval."""
+    decorated = f'{colorize("@*b{==>}")} {msg}\n'
+    print(f"printf {shlex.quote(decorated)};")
 
+
+def env_activate(args):
     if not args.shell:
         spack.cmd.common.shell_init_instructions(
             "spack env activate", "    eval `spack env activate {sh_arg} [...]`"
@@ -160,12 +164,25 @@ def env_activate(args):
 
     env_name_or_dir = args.activate_env or args.dir
 
+    # When executing `spack env activate` without further arguments, activate
+    # the default environment. It's created when it doesn't exist yet.
+    if not env_name_or_dir and not args.temp:
+        short_name = "default"
+        if not ev.exists(short_name):
+            ev.create(short_name)
+            action = "Created and activated"
+        else:
+            action = "Activated"
+        env_path = ev.root(short_name)
+        _tty_info(f"{action} default environment in {env_path}")
+
     # Temporary environment
-    if args.temp:
+    elif args.temp:
         env = create_temp_env_directory()
         env_path = os.path.abspath(env)
         short_name = os.path.basename(env_path)
         ev.create_in_dir(env).write(regenerate=False)
+        _tty_info(f"Created and activated temporary environment in {env_path}")
 
     # Managed environment
     elif ev.exists(env_name_or_dir) and not args.dir:
@@ -385,7 +402,7 @@ def env_remove(args):
         try:
             env = ev.read(env_name)
             read_envs.append(env)
-        except spack.config.ConfigFormatError:
+        except (spack.config.ConfigFormatError, ev.SpackEnvironmentConfigError):
             bad_envs.append(env_name)
 
     if not args.yes_to_all:
@@ -553,8 +570,8 @@ def env_update_setup_parser(subparser):
 def env_update(args):
     manifest_file = ev.manifest_file(args.update_env)
     backup_file = manifest_file + ".bkp"
-    needs_update = not ev.is_latest_format(manifest_file)
 
+    needs_update = not ev.is_latest_format(manifest_file)
     if not needs_update:
         tty.msg('No update needed for the environment "{0}"'.format(args.update_env))
         return
