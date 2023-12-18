@@ -1101,8 +1101,8 @@ class BaseModuleFileWriter:
         try:
             owner_dag_hash = reverse_module_index[self.layout.filename]
         except KeyError:
-            tty.warn(
-                f'Ownership of unregistered modulefile "{self.layout.filename}"\n'
+            tty.debug(
+                f'Ownership of unregistered modulefile "{self.layout.filename}" '
                 + f'has been granted to "{self.spec.cshort_spec}"'
             )
             return True
@@ -1112,6 +1112,7 @@ class BaseModuleFileWriter:
         """Deletes the module file."""
         mod_file_path = self.layout.filename
         if not os.path.exists(mod_file_path):
+            tty.warn(f'Attempted to delete nonexistent module file "{self.layout.filename}"')
             return
         if not self.test_ownership():
             tty.warn(
