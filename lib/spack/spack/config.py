@@ -111,6 +111,9 @@ SCOPES_METAVAR = "{defaults,system,site,user}[/PLATFORM] or env:ENVIRONMENT"
 #: Base name for the (internal) overrides scope.
 _OVERRIDES_BASE_NAME = "overrides-"
 
+#: Type used for raw YAML configuration
+YamlConfigDict = Dict[str, Any]
+
 
 class ConfigScope:
     """This class represents a configuration scope.
@@ -134,7 +137,7 @@ class ConfigScope:
         _validate_section_name(section)
         return os.path.join(self.path, f"{section}.yaml")
 
-    def get_section(self, section: str) -> Optional[Dict[str, Any]]:
+    def get_section(self, section: str) -> Optional[YamlConfigDict]:
         """Returns the data associated with a given section"""
         if section not in self.sections:
             path = self.get_section_filename(section)
@@ -172,7 +175,7 @@ class SingleFileScope(ConfigScope):
     """This class represents a configuration scope in a single YAML file."""
 
     def __init__(
-        self, name: str, path: str, schema: Dict[str, Any], yaml_path: Optional[List[str]] = None
+        self, name: str, path: str, schema: YamlConfigDict, yaml_path: Optional[List[str]] = None
     ) -> None:
         """Similar to ``ConfigScope`` but can be embedded in another schema.
 
@@ -192,7 +195,7 @@ class SingleFileScope(ConfigScope):
                          install_tree: $spack/opt/spack
         """
         super().__init__(name, path)
-        self._raw_data: Optional[Dict[str, Any]] = None
+        self._raw_data: Optional[YamlConfigDict] = None
         self.schema = schema
         self.yaml_path = yaml_path or []
 
@@ -203,7 +206,7 @@ class SingleFileScope(ConfigScope):
     def get_section_filename(self, section) -> str:
         return self.path
 
-    def get_section(self, section: str) -> Optional[Dict[str, Any]]:
+    def get_section(self, section: str) -> Optional[YamlConfigDict]:
         # read raw data from the file, which looks like:
         # {
         #   'config': {
@@ -253,7 +256,7 @@ class SingleFileScope(ConfigScope):
         return self.sections.get(section, None)
 
     def _write_section(self, section: str) -> None:
-        data_to_write: Optional[Dict[str, Any]] = self._raw_data
+        data_to_write: Optional[YamlConfigDict] = self._raw_data
 
         # If there is no existing data, this section SingleFileScope has never
         # been written to disk. We need to construct the portion of the data
@@ -318,7 +321,7 @@ class InternalConfigScope(ConfigScope):
     override settings from files.
     """
 
-    def __init__(self, name: str, data: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(self, name: str, data: Optional[YamlConfigDict] = None) -> None:
         super().__init__(name, None)
         self.sections = syaml.syaml_dict()
 
@@ -332,7 +335,7 @@ class InternalConfigScope(ConfigScope):
     def get_section_filename(self, section: str) -> str:
         raise NotImplementedError("Cannot get filename for InternalConfigScope.")
 
-    def get_section(self, section: str) -> Optional[Dict[str, Any]]:
+    def get_section(self, section: str) -> Optional[YamlConfigDict]:
         """Just reads from an internal dictionary."""
         if section not in self.sections:
             self.sections[section] = None
@@ -353,11 +356,11 @@ class InternalConfigScope(ConfigScope):
         pass
 
     @staticmethod
-    def _process_dict_keyname_overrides(data: Dict[str, Any]) -> Dict[str, Any]:
+    def _process_dict_keyname_overrides(data: YamlConfigDict) -> YamlConfigDict:
         """Turn a trailing `:' in a key name into an override attribute."""
         # Below we have a lot of type directives, since we hack on types and monkey-patch them
         # by adding attributes that otherwise they won't have.
-        result: Dict[str, Any] = {}
+        result: YamlConfigDict = {}
         for sk, sv in data.items():
             if sk.endswith(":"):
                 key = syaml.syaml_str(sk[:-1])
@@ -554,7 +557,7 @@ class Configuration:
 
         scope._write_section(section)
 
-    def get_config(self, section: str, scope: Optional[str] = None) -> Dict[str, Any]:
+    def get_config(self, section: str, scope: Optional[str] = None) -> YamlConfigDict:
         """Get configuration settings for a section.
 
         If ``scope`` is ``None`` or not provided, return the merged contents
@@ -582,7 +585,7 @@ class Configuration:
         return self._get_config_memoized(section, scope)
 
     @lang.memoized
-    def _get_config_memoized(self, section: str, scope: Optional[str]) -> Dict[str, Any]:
+    def _get_config_memoized(self, section: str, scope: Optional[str]) -> YamlConfigDict:
         _validate_section_name(section)
 
         if scope is None:
@@ -1033,8 +1036,8 @@ def _validate_section_name(section: str) -> None:
 
 
 def validate(
-    data: Dict[str, Any], schema: Dict[str, Any], filename: Optional[str] = None
-) -> Dict[str, Any]:
+    data: YamlConfigDict, schema: YamlConfigDict, filename: Optional[str] = None
+) -> YamlConfigDict:
     """Validate data read in from a Spack YAML file.
 
     Arguments:
@@ -1063,8 +1066,8 @@ def validate(
 
 
 def read_config_file(
-    filename: str, schema: Optional[Dict[str, Any]] = None
-) -> Optional[Dict[str, Any]]:
+    filename: str, schema: Optional[YamlConfigDict] = None
+) -> Optional[YamlConfigDict]:
     """Read a YAML configuration file.
 
     User can provide a schema for validation. If no schema is provided,
@@ -1404,7 +1407,7 @@ def default_modify_scope(section: str = "config") -> str:
         return CONFIG.highest_precedence_non_platform_scope().name
 
 
-def _update_in_memory(data: Dict[str, Any], section: str) -> bool:
+def _update_in_memory(data: YamlConfigDict, section: str) -> bool:
     """Update the format of the configuration data in memory.
 
     This function assumes the section is valid (i.e. validation
@@ -1422,7 +1425,7 @@ def _update_in_memory(data: Dict[str, Any], section: str) -> bool:
     return changed
 
 
-def ensure_latest_format_fn(section: str) -> Callable[[Dict[str, Any]], bool]:
+def ensure_latest_format_fn(section: str) -> Callable[[YamlConfigDict], bool]:
     """Return a function that takes as input a dictionary read from
     a configuration file and update it to the latest format.
 
@@ -1595,7 +1598,7 @@ class ConfigFormatError(ConfigError):
     def __init__(
         self,
         validation_error,
-        data: Dict[str, Any],
+        data: YamlConfigDict,
         filename: Optional[str] = None,
         line: Optional[int] = None,
     ) -> None:
