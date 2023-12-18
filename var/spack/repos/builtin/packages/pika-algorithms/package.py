@@ -46,12 +46,11 @@ class PikaAlgorithms(CMakePackage):
     # Other dependencies
     depends_on("boost@1.71:")
     depends_on("fmt@9:")
-    depends_on("pika@0.11:")
-    depends_on("pika@0.11", when="@0.1.0")
-    depends_on("pika@0.11:0.12", when="@0.1.1")
-    depends_on("pika@0.11:0.15", when="@0.1.2")
-    depends_on("pika@0.11:0.16", when="@0.1.3")
-    depends_on("pika@0.11:0.20", when="@0.1.4")
+    depends_on("pika@0.11:0.20")
+    depends_on("pika@:0.11", when="@0.1.0")
+    depends_on("pika@:0.12", when="@0.1.1")
+    depends_on("pika@:0.15", when="@0.1.2")
+    depends_on("pika@:0.16", when="@0.1.3")
 
     for cxxstd in cxxstds:
         depends_on("boost cxxstd={0}".format(map_cxxstd(cxxstd)), when="cxxstd={0}".format(cxxstd))
