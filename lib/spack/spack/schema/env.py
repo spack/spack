@@ -37,21 +37,6 @@ schema = {
                 # extra environment schema properties
                 {
                     "include": {"type": "array", "default": [], "items": {"type": "string"}},
-                    "develop": {
-                        "type": "object",
-                        "default": {},
-                        "additionalProperties": False,
-                        "patternProperties": {
-                            r"\w[\w-]*": {
-                                "type": "object",
-                                "additionalProperties": False,
-                                "properties": {
-                                    "spec": {"type": "string"},
-                                    "path": {"type": "string"},
-                                },
-                            }
-                        },
-                    },
                     "specs": spack.schema.spec_list_schema,
                     "view": {
                         "anyOf": [

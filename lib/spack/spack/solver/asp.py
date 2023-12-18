@@ -2697,7 +2697,7 @@ class SpackSolverSetup:
             # Special condition triggered by "literal_solved"
             self.gen.fact(fn.literal(trigger_id))
             self.gen.fact(fn.pkg_fact(spec.name, fn.condition_trigger(condition_id, trigger_id)))
-            self.gen.fact(fn.condition_reason(condition_id, f"{spec} requested from CLI"))
+            self.gen.fact(fn.condition_reason(condition_id, f"{spec} requested explicitly"))
 
             imposed_spec_key = str(spec), None
             cache = self._effect_cache[spec.name]
