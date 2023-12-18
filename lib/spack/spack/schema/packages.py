@@ -160,7 +160,7 @@ properties = {
                                     "type": "object",
                                     "additionalProperties": True,
                                     "properties": {
-                                        "environment": spack.schema.environment.definition,
+                                        "environment": spack.schema.environment.definition
                                     },
                                 },
                             },
