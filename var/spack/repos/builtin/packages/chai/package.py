@@ -175,34 +175,10 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
     def initconfig_compiler_entries(self):
         spec = self.spec
         compiler = self.compiler
+        # Default entries are already defined in CachedCMakePackage, inherit them:
         entries = super().initconfig_compiler_entries()
 
-        # BEGIN: Override CachedCMakePackage CMAKE_C_FLAGS and CMAKE_CXX_FLAGS
-        flags = spec.compiler_flags
-
-        # use global spack compiler flags
-        cppflags = " ".join(flags["cppflags"])
-        if cppflags:
-            # avoid always ending up with " " with no flags defined
-            cppflags += " "
-
-        cflags = cppflags + " ".join(flags["cflags"])
-        if cflags:
-            entries.append(cmake_cache_string("CMAKE_C_FLAGS", cflags))
-
-        cxxflags = cppflags + " ".join(flags["cxxflags"])
-        if cxxflags:
-            entries.append(cmake_cache_string("CMAKE_CXX_FLAGS", cxxflags))
-
-        fflags = " ".join(flags["fflags"])
-        if fflags:
-            entries.append(cmake_cache_string("CMAKE_Fortran_FLAGS", fflags))
-        # END: Override CachedCMakePackage CMAKE_C_FLAGS and CMAKE_CXX_FLAGS
-
         llnl_link_helpers(entries, spec, compiler)
-
-        if "+rocm" in spec:
-            entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
 
         return entries
 
@@ -219,26 +195,17 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append(cmake_cache_option("CMAKE_CUDA_SEPARABLE_COMPILATION", True))
             entries.append(cmake_cache_option("CUDA_SEPARABLE_COMPILATION", True))
 
-            if not spec.satisfies("cuda_arch=none"):
-                cuda_arch = spec.variants["cuda_arch"].value
-                entries.append(cmake_cache_string("CUDA_ARCH", "sm_{0}".format(cuda_arch[0])))
-                entries.append(
-                    cmake_cache_string("CMAKE_CUDA_ARCHITECTURES", "{0}".format(cuda_arch[0]))
-                )
-                flag = "-arch sm_{0}".format(cuda_arch[0])
-                entries.append(cmake_cache_string("CMAKE_CUDA_FLAGS", "{0}".format(flag)))
         else:
             entries.append(cmake_cache_option("ENABLE_CUDA", False))
 
         if "+rocm" in spec:
             entries.append(cmake_cache_option("ENABLE_HIP", True))
-            entries.append(cmake_cache_path("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)))
+            hipcc_flags = []
             archs = self.spec.variants["amdgpu_target"].value
-            if archs != "none":
-                arch_str = ",".join(archs)
-                entries.append(
-                    cmake_cache_string("HIP_HIPCC_FLAGS", "--amdgpu-target={0}".format(arch_str))
-                )
+            if archs[0] != "none":
+                arch_str = ";".join(archs)
+                hipcc_flags.append("--amdgpu-target={0}".format(arch_str))
+            entries.append(cmake_cache_string("HIP_HIPCC_FLAGS", " ".join(hipcc_flags)))
         else:
             entries.append(cmake_cache_option("ENABLE_HIP", False))
 
