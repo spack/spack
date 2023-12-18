@@ -583,6 +583,8 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
     depends_on("openssh", type="run", when="+rsh")
 
+    depends_on("cuda", type=("build", "link", "run"), when="@5: +cuda")
+
     conflicts("+cxx_exceptions", when="%nvhpc", msg="nvc does not ignore -fexceptions, but errors")
 
     # CUDA support was added in 1.7, and since the variant is part of the
