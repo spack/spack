@@ -82,10 +82,12 @@ def environment_modifications_for_specs(
             been built on a different but compatible OS)
     """
     env = environment.EnvironmentModifications()
-    topo_ordered = traverse.traverse_nodes(specs, root=True, deptype=("run", "link"), order="topo")
+    topo_ordered = list(
+        traverse.traverse_nodes(specs, root=True, deptype=("run", "link"), order="topo")
+    )
 
     # Static environment changes (prefix inspections)
-    for s in reversed(list(topo_ordered)):
+    for s in reversed(topo_ordered):
         static = environment.inspect_path(
             s.prefix, prefix_inspections(s.platform), exclude=environment.is_system_path
         )
@@ -101,7 +103,7 @@ def environment_modifications_for_specs(
     if view:
         prefix_to_prefix = {
             s.prefix: view.get_projection_for_spec(s)
-            for s in traverse.traverse_nodes(specs)
+            for s in reversed(topo_ordered)
             if not s.external
         }
         prefix_regex = re.compile("|".join(re.escape(p) for p in prefix_to_prefix.keys()))
