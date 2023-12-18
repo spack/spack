@@ -76,7 +76,19 @@ def setup_parser(subparser: argparse.ArgumentParser):
     )
     push_sign = push.add_mutually_exclusive_group(required=False)
     push_sign.add_argument(
-        "--unsigned", "-u", action="store_true", help="push unsigned buildcache tarballs"
+        "--unsigned",
+        "-u",
+        action="store_false",
+        dest="signed",
+        default=None,
+        help="push unsigned buildcache tarballs",
+    )
+    push_sign.add_argument(
+        "--signed",
+        action="store_true",
+        dest="signed",
+        default=None,
+        help="push signed buildcache tarballs",
     )
     push_sign.add_argument(
         "--key", "-k", metavar="key", type=str, default=None, help="key for signing"
@@ -328,17 +340,27 @@ def push_fn(args):
             "The flag `--allow-root` is the default in Spack 0.21, will be removed in Spack 0.22"
         )
 
+    mirror: spack.mirror.Mirror = args.mirror
+
     # Check if this is an OCI image.
     try:
-        image_ref = spack.oci.oci.image_from_mirror(args.mirror)
+        image_ref = spack.oci.oci.image_from_mirror(mirror)
     except ValueError:
         image_ref = None
+
+    push_url = mirror.push_url
+
+    # When neither --signed, --unsigned nor --key are specified, use the mirror's default.
+    if args.signed is None and not args.key:
+        unsigned = not mirror.signed
+    else:
+        unsigned = not (args.key or args.signed)
 
     # For OCI images, we require dependencies to be pushed for now.
     if image_ref:
         if "dependencies" not in args.things_to_install:
             tty.die("Dependencies must be pushed for OCI images.")
-        if not args.unsigned:
+        if not unsigned:
             tty.warn(
                 "Code signing is currently not supported for OCI images. "
                 "Use --unsigned to silence this warning."
@@ -351,12 +373,10 @@ def push_fn(args):
         dependencies="dependencies" in args.things_to_install,
     )
 
-    url = args.mirror.push_url
-
     # When pushing multiple specs, print the url once ahead of time, as well as how
     # many specs are being pushed.
     if len(specs) > 1:
-        tty.info(f"Selected {len(specs)} specs to push to {url}")
+        tty.info(f"Selected {len(specs)} specs to push to {push_url}")
 
     failed = []
 
@@ -373,10 +393,10 @@ def push_fn(args):
             try:
                 bindist.push_or_raise(
                     spec,
-                    url,
+                    push_url,
                     bindist.PushOptions(
                         force=args.force,
-                        unsigned=args.unsigned,
+                        unsigned=unsigned,
                         key=args.key,
                         regenerate_index=args.update_index,
                     ),
@@ -384,7 +404,7 @@ def push_fn(args):
 
                 msg = f"{_progress(i, len(specs))}Pushed {_format_spec(spec)}"
                 if len(specs) == 1:
-                    msg += f" to {url}"
+                    msg += f" to {push_url}"
                 tty.info(msg)
 
             except bindist.NoOverwriteException:
