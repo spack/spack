@@ -16,6 +16,9 @@ class AbseilCpp(CMakePackage):
     tags = ["windows"]
 
     version(
+        "20230802.1", sha256="987ce98f02eefbaf930d6e38ab16aa05737234d7afbab2d5c4ea7adbe50c28ed"
+    )
+    version(
         "20230125.3", sha256="5366d7e7fa7ba0d915014d387b66d0d002c03236448e1ba9ef98122c13b35c36"
     )
     version(

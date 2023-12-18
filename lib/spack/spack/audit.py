@@ -726,13 +726,37 @@ def _unknown_variants_in_directives(pkgs, error_cls):
 
 
 @package_directives
-def _unknown_variants_in_dependencies(pkgs, error_cls):
-    """Report unknown dependencies and wrong variants for dependencies"""
+def _issues_in_depends_on_directive(pkgs, error_cls):
+    """Reports issues with 'depends_on' directives.
+
+    Issues might be unknown dependencies, unknown variants or variant values, or declaration
+    of nested dependencies.
+    """
     errors = []
     for pkg_name in pkgs:
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
         filename = spack.repo.PATH.filename_for_package_name(pkg_name)
         for dependency_name, dependency_data in pkg_cls.dependencies.items():
+            # Check if there are nested dependencies declared. We don't want directives like:
+            #
+            #     depends_on('foo+bar ^fee+baz')
+            #
+            # but we'd like to have two dependencies listed instead.
+            for when, dependency_edge in dependency_data.items():
+                dependency_spec = dependency_edge.spec
+                nested_dependencies = dependency_spec.dependencies()
+                if nested_dependencies:
+                    summary = (
+                        f"{pkg_name}: invalid nested dependency "
+                        f"declaration '{str(dependency_spec)}'"
+                    )
+                    details = [
+                        f"split depends_on('{str(dependency_spec)}', when='{str(when)}') "
+                        f"into {len(nested_dependencies) + 1} directives",
+                        f"in {filename}",
+                    ]
+                    errors.append(error_cls(summary=summary, details=details))
+
             # No need to analyze virtual packages
             if spack.repo.PATH.is_virtual(dependency_name):
                 continue

@@ -101,6 +101,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     variant("mmg", default=False, description="Activates support for MMG")
     variant("parmmg", default=False, description="Activates support for ParMMG (only parallel)")
     variant("tetgen", default=False, description="Activates support for Tetgen")
+    variant("zoltan", default=False, description="Activates support for Zoltan")
     # Mumps is disabled by default, because it depends on Scalapack
     # which is not portable to all HPC systems
     variant("mumps", default=False, description="Activates support for MUMPS (only parallel)")
@@ -160,12 +161,17 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     variant("kokkos", default=False, description="Activates support for kokkos and kokkos-kernels")
     variant("fortran", default=True, description="Activates fortran support")
 
-    # https://github.com/spack/spack/issues/37416
-    conflicts("^rocprim@5.3.0:5.3.2", when="+rocm")
-    # petsc 3.20 has workaround for breaking change in hipsparseSpSV_solve api,
-    # but it seems to misdetect hipsparse@5.6.1 as 5.6.0, so the workaround
-    # only makes things worse
-    conflicts("^hipsparse@5.6", when="+rocm @3.20.0")
+    with when("+rocm"):
+        # https://github.com/spack/spack/issues/37416
+        conflicts("^rocprim@5.3.0:5.3.2")
+        # hipsparse@5.6.0 broke hipsparseSpSV_solve() API, reverted in 5.6.1.
+        patch(
+            "https://gitlab.com/petsc/petsc/-/commit/ef7140cce45367033b48bbd2624dfd2b6aa4b997.diff",
+            when="@3.20.0",
+            sha256="ba327f8b2a0fa45209dfb7a4278f3e9a323965b5a668be204c1c77c17a963a7f",
+        )
+        patch("hip-5.6.0-for-3.18.diff", when="@3.18:3.19 ^hipsparse@5.6.0")
+        patch("hip-5.7-plus-for-3.18.diff", when="@3.18:3.19 ^hipsparse@5.7:")
 
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
     conflicts("^intel-mkl", when="@3.8.0")
@@ -224,15 +230,17 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on("mpi", when="+mpi")
     depends_on("cuda", when="+cuda")
     depends_on("hip", when="+rocm")
-    depends_on("hipblas", when="+rocm")
-    depends_on("hipsparse", when="+rocm")
-    depends_on("hipsolver", when="+rocm")
-    depends_on("rocsparse", when="+rocm")
-    depends_on("rocsolver", when="+rocm")
-    depends_on("rocblas", when="+rocm")
-    depends_on("rocrand", when="+rocm")
-    depends_on("rocthrust", when="+rocm")
-    depends_on("rocprim", when="+rocm")
+
+    with when("+rocm"):
+        depends_on("hipblas")
+        depends_on("hipsparse")
+        depends_on("hipsolver")
+        depends_on("rocsparse")
+        depends_on("rocsolver")
+        depends_on("rocblas")
+        depends_on("rocrand")
+        depends_on("rocthrust")
+        depends_on("rocprim")
 
     # Build dependencies
     depends_on("python@2.6:2.8,3.4:3.8", when="@:3.13", type="build")
@@ -267,6 +275,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on("mmg", when="+parmmg")
     depends_on("parmmg", when="+parmmg")
     depends_on("tetgen+pic", when="+tetgen")
+    depends_on("zoltan", when="+zoltan")
 
     depends_on("hypre+fortran", when="+hypre+fortran")
     depends_on("hypre~fortran", when="+hypre~fortran")
@@ -519,6 +528,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             "mmg",
             "parmmg",
             ("tetgen", "tetgen", False, False),
+            "zoltan",
         ):
             # Cannot check `library in spec` because of transitive deps
             # Cannot check variants because parmetis keys on +metis
