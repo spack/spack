@@ -22,3 +22,6 @@ class Flexiblas(CMakePackage):
     # virtual dependency
     provides("blas")
     provides("lapack")
+
+    def cmake_args(self):
+        return [self.define("SYSCONFDIR", self.prefix.etc)]
