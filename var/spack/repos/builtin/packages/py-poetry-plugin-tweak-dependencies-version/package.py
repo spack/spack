@@ -19,3 +19,4 @@ class PyPoetryPluginTweakDependenciesVersion(PythonPackage):
 
     depends_on("py-poetry-core@1.0.0:", type="build")
     depends_on("py-poetry-dynamic-versioning", type="build")
+    depends_on("py-poetry@1.6", type=("build", "run"))
