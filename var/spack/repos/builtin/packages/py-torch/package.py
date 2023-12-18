@@ -567,9 +567,11 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         if self.spec["blas"].name == "atlas":
             env.set("BLAS", "ATLAS")
             env.set("WITH_BLAS", "atlas")
+            env.set("Atlas_ROOT_DIR", self.spec["atlas"].prefix)
         elif self.spec["blas"].name in ["blis", "amdblis"]:
             env.set("BLAS", "BLIS")
             env.set("WITH_BLAS", "blis")
+            env.set("BLIS_HOME", self.spec["blas"].prefix)
         elif self.spec["blas"].name == "eigen":
             env.set("BLAS", "Eigen")
         elif self.spec["lapack"].name in ["libflame", "amdlibflame"]:
