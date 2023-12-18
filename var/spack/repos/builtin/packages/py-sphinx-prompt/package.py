@@ -17,8 +17,8 @@ class PySphinxPrompt(PythonPackage):
     version("1.8.0", sha256="47482f86fcec29662fdfd23e7c04ef03582714195d01f5d565403320084372ed")
     version("1.1.0", sha256="3d9cf382b750291f73d1f6f1713c4af0557c30208af124cd3d8731e607a4febf")
 
-    depends_on("python@3.9:3.11", when="@1.8.0", type=("build","run"))
-    depends_on("py-poetry@1.6", when="@1.8.0", type=("build","run"))
+    depends_on("python@3.9:3.11", when="@1.8.0", type=("build", "run"))
+    depends_on("py-poetry@1.6", when="@1.8.0", type=("build", "run"))
     depends_on("py-poetry-core@1.0.0:", when="@1.8.0", type="build")
     depends_on("py-poetry-plugin-tweak-dependencies-version", when="@1.8.0", type="build")
     depends_on("py-poetry-dynamic-versioning", when="@1.8.0", type="build")
@@ -34,4 +34,3 @@ class PySphinxPrompt(PythonPackage):
         else:
             url = "https://files.pythonhosted.org/packages/source/s/sphinx_prompt/sphinx-prompt-{0}.tar.gz"
         return url.format(version)
-
