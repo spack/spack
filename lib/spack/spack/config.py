@@ -35,7 +35,7 @@ import functools
 import os
 import re
 import sys
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from llnl.util import filesystem, lang, tty
 
@@ -116,23 +116,26 @@ class ConfigScope:
     """This class represents a configuration scope.
 
     A scope is one directory containing named configuration files.
-    Each file is a config "section" (e.g., mirrors, compilers, etc).
+    Each file is a config "section" (e.g., mirrors, compilers, etc.).
     """
 
-    def __init__(self, name, path):
+    def __init__(self, name, path) -> None:
         self.name = name  # scope name.
         self.path = path  # path to directory containing configs.
         self.sections = syaml.syaml_dict()  # sections read from config files.
 
     @property
-    def is_platform_dependent(self):
+    def is_platform_dependent(self) -> bool:
+        """Returns true if the scope name is platform specific"""
         return os.sep in self.name
 
-    def get_section_filename(self, section):
+    def get_section_filename(self, section: str) -> str:
+        """Returns the filename associated with a given section"""
         _validate_section_name(section)
         return os.path.join(self.path, f"{section}.yaml")
 
-    def get_section(self, section):
+    def get_section(self, section: str) -> Optional[Dict[str, Any]]:
+        """Returns the data associated with a given section"""
         if section not in self.sections:
             path = self.get_section_filename(section)
             schema = SECTION_SCHEMAS[section]
@@ -140,7 +143,7 @@ class ConfigScope:
             self.sections[section] = data
         return self.sections[section]
 
-    def _write_section(self, section):
+    def _write_section(self, section: str) -> None:
         filename = self.get_section_filename(section)
         data = self.get_section(section)
 
@@ -155,11 +158,11 @@ class ConfigScope:
         except (syaml.SpackYAMLError, OSError) as e:
             raise ConfigFileError(f"cannot write to '{filename}'") from e
 
-    def clear(self):
+    def clear(self) -> None:
         """Empty cached config information."""
         self.sections = syaml.syaml_dict()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<ConfigScope: {self.name}: {self.path}>"
 
 
