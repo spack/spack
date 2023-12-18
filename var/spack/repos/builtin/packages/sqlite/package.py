@@ -10,12 +10,13 @@ import spack.platforms
 from spack.package import *
 
 
-class Sqlite(AutotoolsPackage):
+class Sqlite(AutotoolsPackage, NMakePackage):
     """SQLite is a C-language library that implements a small, fast,
     self-contained, high-reliability, full-featured, SQL database engine.
     """
 
     homepage = "https://www.sqlite.org"
+    tags = ["windows"]
 
     version("3.43.2", sha256="6d422b6f62c4de2ca80d61860e3a3fb693554d2f75bb1aaca743ccc4d6f609f0")
     version("3.42.0", sha256="7abcfd161c6e2742ca5c6c0895d1f853c940f203304a0b49da4e1eca5d088ca6")
@@ -47,20 +48,25 @@ class Sqlite(AutotoolsPackage):
     # All versions prior to 3.26.0 are vulnerable to Magellan when FTS
     # is enabled, see https://blade.tencent.com/magellan/index_en.html
 
-    variant(
-        "functions",
-        default=False,
-        when="+dynamic_extensions",
-        description="Provide mathematical and string extension functions for SQL "
-        "queries using the loadable extensions mechanism",
-    )
-    variant("fts", default=True, description="Include fts4 and fts5 support")
-    variant("column_metadata", default=True, description="Build with COLUMN_METADATA")
-    variant("dynamic_extensions", default=True, description="Support loadable extensions")
-    variant("rtree", default=True, description="Build with Rtree module")
 
-    depends_on("readline")
+    # no hard readline dep on Windows + no variant support, makefile has minimal to no options
+    for plat in ["linux", "darwin", "cray"]:
+        variant(
+            "functions",
+            default=False,
+            when="+dynamic_extensions",
+            description="Provide mathematical and string extension functions for SQL "
+            "queries using the loadable extensions mechanism",
+            when=f"platform={plat}"
+        )
+        variant("fts", default=True, description="Include fts4 and fts5 support", when=f"platform={plat}")
+        variant("column_metadata", default=True, description="Build with COLUMN_METADATA", when=f"platform={plat}")
+        variant("dynamic_extensions", default=True, description="Support loadable extensions", when=f"platform={plat}")
+        variant("rtree", default=True, description="Build with Rtree module", when=f"platform={plat}")
+        depends_on("readline", when=f"platform={plat}")
+
     depends_on("zlib-api")
+    depends_on("tcl", when="platform=windows")
 
     # See https://blade.tencent.com/magellan/index_en.html
     conflicts("+fts", when="@:3.25")
@@ -86,6 +92,8 @@ class Sqlite(AutotoolsPackage):
     # Starting version 3.21.0 SQLite doesn't use the built-ins if Intel
     # compiler is used.
     patch("remove_overflow_builtins.patch", when="@3.17.0:3.20%intel")
+
+    build_system("autotools", "nmake")
 
     executables = ["^sqlite3$"]
 
@@ -188,6 +196,34 @@ class Sqlite(AutotoolsPackage):
         host_platform = spack.platforms.host()
         return str(host_platform.target("default_target"))
 
+    def test_example(self):
+        """check example table dump"""
+
+        test_data_dir = self.test_suite.current_test_data_dir
+        db_filename = test_data_dir.join("packages.db")
+
+        # Ensure the database only contains one table
+        sqlite3 = which(self.prefix.bin.sqlite3)
+        out = sqlite3(db_filename, ".tables", output=str.split, error=str.split)
+        assert "packages" in out
+
+        # Ensure the database dump matches expectations, where special
+        # characters are replaced with spaces in the expected and actual
+        # output to avoid pattern errors.
+        expected = get_escaped_text_output(test_data_dir.join("dump.out"))
+        out = sqlite3(db_filename, ".dump", output=str.split, error=str.split)
+        check_outputs(expected, out)
+
+    def test_version(self):
+        """ensure version is expected"""
+        vers_str = str(self.spec.version)
+
+        sqlite3 = which(self.prefix.bin.sqlite3)
+        out = sqlite3("-version", output=str.split, error=str.split)
+        assert vers_str in out
+
+
+class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
     def configure_args(self):
         args = []
 
@@ -224,28 +260,12 @@ class Sqlite(AutotoolsPackage):
             )
             install(libraryname, self.prefix.lib)
 
-    def test_example(self):
-        """check example table dump"""
 
-        test_data_dir = self.test_suite.current_test_data_dir
-        db_filename = test_data_dir.join("packages.db")
+class NMakeBuilder(spack.build_systems.nmake.NMakeBuilder):
+    @property
+    def makefile_name(self):
+        return "Makefile.msc"
 
-        # Ensure the database only contains one table
-        sqlite3 = which(self.prefix.bin.sqlite3)
-        out = sqlite3(db_filename, ".tables", output=str.split, error=str.split)
-        assert "packages" in out
-
-        # Ensure the database dump matches expectations, where special
-        # characters are replaced with spaces in the expected and actual
-        # output to avoid pattern errors.
-        expected = get_escaped_text_output(test_data_dir.join("dump.out"))
-        out = sqlite3(db_filename, ".dump", output=str.split, error=str.split)
-        check_outputs(expected, out)
-
-    def test_version(self):
-        """ensure version is expected"""
-        vers_str = str(self.spec.version)
-
-        sqlite3 = which(self.prefix.bin.sqlite3)
-        out = sqlite3("-version", output=str.split, error=str.split)
-        assert vers_str in out
+    def nmake_args(self):
+        args = [self.define("TCLDIR", self.spec["tcl"].prefix)]
+        return args
