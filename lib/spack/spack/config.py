@@ -1404,14 +1404,6 @@ def default_modify_scope(section: str = "config") -> str:
         return CONFIG.highest_precedence_non_platform_scope().name
 
 
-def default_list_scope() -> None:
-    """Return the config scope that is listed by default.
-
-    Commands that list configuration list *all* scopes (merged) by default.
-    """
-    return None
-
-
 def _update_in_memory(data: Dict[str, Any], section: str) -> bool:
     """Update the format of the configuration data in memory.
 
