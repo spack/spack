@@ -9,7 +9,7 @@ from spack.package import *
 class PyCasadi(PythonPackage):
     """CasADi -- framework for algorithmic differentiation and numeric optimization"""
 
-    homepage = "casadi.org"
+    homepage = "https://web.casadi.org/"
     pypi = "casadi/casadi-3.6.4.tar.gz"
 
     license("LGPL")
@@ -17,4 +17,4 @@ class PyCasadi(PythonPackage):
     version("3.6.4", sha256="affdca1a99c14580992cdf34d247754b7d851080b712c2922ad2e92442eeaa35")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-numpy", type="run")
+    depends_on("py-numpy", type=("build", "run"))

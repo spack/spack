@@ -11,7 +11,7 @@ class PyPyomo(PythonPackage):
     diverse set of optimization capabilities for formulating and analyzing
     optimization models."""
 
-    homepage = "http://www.pyomo.org/"
+    homepage = "https://www.pyomo.org/"
     pypi = "Pyomo/Pyomo-5.6.6.tar.gz"
     git = "https://github.com/Pyomo/pyomo.git"
 
