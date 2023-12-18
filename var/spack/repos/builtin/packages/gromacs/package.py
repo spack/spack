@@ -555,6 +555,14 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                 + f'Linux_{self.spec.target.family}/{self.spec["nvhpc"].version}'
                 + f'/comm_libs/{self.spec["cuda"].version.up_to(2)}/nvshmem_cufftmp_compat'
             )
+            # The stub directories included in the Cuda Toolkit are
+            # internally versioned but not linked/name after their
+            # SONAME version. When compiling an executable the linker
+            # wants to load the versioned libraries and will fail for
+            # libnvidia.so.<VER> unless we relax this
+            # requirment. Unfortunately this relaxes this for all
+            # libraries.
+            options.append("-DGMX_EXE_LINKER_FLAGS=-Wl,--allow-shlib-undefined")
 
         if "+heffte" in self.spec:
             options.append("-DGMX_USE_HEFFTE=on")
