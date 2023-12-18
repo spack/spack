@@ -16,7 +16,7 @@ class Kalign(AutotoolsPackage, CMakePackage):
     version("3.3.1", sha256="7f10acf9a3fa15deabbc0304e7c14efa25cea39108318c9f02b47257de2d7390")
 
     build_system(
-        conditional("cmake", when="@3.4.0"),
+        conditional("cmake", when="@3.4.0:"),
         conditional("autotools", when="@3.3.1"),
         default="cmake",
     )
