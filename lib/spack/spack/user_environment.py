@@ -106,6 +106,9 @@ def environment_modifications_for_specs(
             for s in reversed(topo_ordered)
             if not s.external
         }
+        # Avoid empty regex if all external
+        if not prefix_to_prefix:
+            return env
         prefix_regex = re.compile("|".join(re.escape(p) for p in prefix_to_prefix.keys()))
         for mod in env.env_modifications:
             if isinstance(mod, environment.NameValueModifier):
