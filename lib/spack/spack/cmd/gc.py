@@ -8,6 +8,7 @@ import llnl.util.tty as tty
 import spack.cmd.common.arguments
 import spack.cmd.common.confirmation
 import spack.cmd.uninstall
+import spack.deptypes as dt
 import spack.environment as ev
 import spack.store
 
@@ -44,9 +45,9 @@ def setup_parser(subparser):
 
 
 def gc(parser, args):
-    deptypes = ("link", "run")
+    deptype = dt.LINK | dt.RUN
     if args.keep_build_dependencies:
-        deptypes += ("build",)
+        deptype |= dt.BUILD
 
     active_env = ev.active_environment()
 
@@ -81,7 +82,7 @@ def gc(parser, args):
             # consider all explicit specs roots (this is the default for db.unused_specs())
             root_hashes = None
 
-    specs = spack.store.STORE.db.unused_specs(root_hashes=root_hashes, deptypes=deptypes)
+    specs = spack.store.STORE.db.unused_specs(root_hashes=root_hashes, deptype=deptype)
     if not specs:
         tty.msg("There are no unused specs. Spack's store is clean.")
         return

@@ -1665,7 +1665,7 @@ class Database:
     def unused_specs(
         self,
         root_hashes: Optional[Container[str]] = None,
-        deptypes: Optional[Tuple[str, ...]] = None,
+        deptype: Union[dt.DepFlag, dt.DepTypes] = dt.LINK | dt.RUN,
     ) -> "List[spack.spec.Spec]":
         """Return all specs that are currently installed but not needed by root specs.
 
@@ -1674,10 +1674,9 @@ class Database:
 
         Arguments:
             root_hashes: optional list of roots to consider when evaluating needed installations.
-            deptypes: if a spec is reachable from a root via these dependency types, it is
+            deptype: if a spec is reachable from a root via these dependency types, it is
                 considered needed. By default only link and run dependency types are considered.
         """
-        deptypes = ("link", "run") if deptypes is None else deptypes
 
         def root(key, record):
             """Whether a DB record is a root for garbage collection."""
@@ -1692,7 +1691,7 @@ class Database:
                     continue
 
                 # recycle `visited` across calls to avoid redundantly traversing
-                for spec in record.spec.traverse(visited=visited, deptype=deptypes):
+                for spec in record.spec.traverse(visited=visited, deptype=deptype):
                     needed.add(spec.dag_hash())
 
             return [

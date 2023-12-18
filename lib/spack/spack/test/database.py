@@ -25,6 +25,7 @@ import llnl.util.lock as lk
 from llnl.util.tty.colify import colify
 
 import spack.database
+import spack.deptypes as dt
 import spack.package_base
 import spack.repo
 import spack.spec
@@ -785,28 +786,30 @@ def test_query_unused_specs(mutable_database):
     externaltest = spack.store.STORE.db.query_one("externaltest").dag_hash()
     trivial_smoke_test = spack.store.STORE.db.query_one("trivial-smoke-test").dag_hash()
 
-    def check_unused(roots, deptypes, expected):
-        unused = spack.store.STORE.db.unused_specs(root_hashes=roots, deptypes=deptypes)
+    def check_unused(roots, deptype, expected):
+        unused = spack.store.STORE.db.unused_specs(root_hashes=roots, deptype=deptype)
         assert set(u.name for u in unused) == set(expected)
 
-    check_unused(None, None, ["cmake"])
-    check_unused(None, ("link", "run"), ["cmake"])
+    default_dt = dt.LINK | dt.RUN
+    check_unused(None, default_dt, ["cmake"])
     check_unused(
-        [si, ml_mpich, ml_mpich2, ml_zmpi, externaltest], None, ["trivial-smoke-test", "cmake"]
+        [si, ml_mpich, ml_mpich2, ml_zmpi, externaltest],
+        default_dt,
+        ["trivial-smoke-test", "cmake"],
     )
     check_unused(
         [si, ml_mpich, ml_mpich2, ml_zmpi, externaltest],
-        ("build", "link", "run"),
+        dt.LINK | dt.RUN | dt.BUILD,
         ["trivial-smoke-test"],
     )
     check_unused(
         [si, ml_mpich, ml_mpich2, externaltest, trivial_smoke_test],
-        ("build", "link", "run"),
+        dt.LINK | dt.RUN | dt.BUILD,
         ["mpileaks", "callpath", "zmpi", "fake"],
     )
     check_unused(
         [si, ml_mpich, ml_mpich2, ml_zmpi],
-        None,
+        default_dt,
         ["trivial-smoke-test", "cmake", "externaltest", "externaltool", "externalvirtual"],
     )
 
