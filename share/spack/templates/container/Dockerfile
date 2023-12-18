@@ -1,12 +1,13 @@
 {% if render_phase.bootstrap %}
 {{ bootstrap.recipe }}
-
 {% endif %}
+
 {% if render_phase.build %}
 # Build stage with Spack pre-installed and ready to be used
 FROM {{ build.image }} as builder
 
 {% block build_stage %}
+
 {% if os_packages_build %}
 # Install OS packages needed to build the software
 RUN {% if os_package_update %}{{ os_packages_build.update }} \
@@ -28,9 +29,9 @@ RUN cd {{ paths.environment }} && spack env activate . && spack concretize && sp
 {% else %}
 RUN cd {{ paths.environment }} && spack env activate . && spack install --fail-fast && spack gc -y
 {% endif %}
-{% if strip %}
 {% endblock install_software %}
 
+{% if strip %}
 {% block strip_binaries %}
 # Strip all the binaries
 RUN find -L {{ paths.view }}/* -type f -exec readlink -f '{}' \; | \
@@ -73,13 +74,13 @@ RUN { \
 {% endblock make_entrypoint %}
 
 {% block final_stage %}
-
 {% if os_packages_final %}
 RUN {% if os_package_update %}{{ os_packages_final.update }} \
  && {% endif %}{{ os_packages_final.install }} {{ os_packages_final.list | join | replace('\n', ' ') }} \
  && {{ os_packages_final.clean }}
 {% endif %}
 {% endblock final_stage %}
+
 {% for label, value in labels.items() %}
 LABEL "{{ label }}"="{{ value }}"
 {% endfor %}
