@@ -35,6 +35,9 @@ class PyJaxlib(PythonPackage, CudaPackage):
     depends_on("py-scipy@1.7:", when="@0.4.7:", type=("build", "run"))
     depends_on("py-scipy@1.5:", type=("build", "run"))
     depends_on("py-importlib-metadata@4.6:", when="^python@:3.9", type=("build", "run"))
+    # jaxlib/tools/build_wheel.py
+    depends_on("py-build", when="@0.4.14:", type=("build", "run"))
+    
 
     # .bazelversion
     depends_on("bazel@5.1.1:6.1.2", when="@0.3:", type="build")
