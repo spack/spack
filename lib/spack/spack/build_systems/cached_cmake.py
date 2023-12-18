@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections.abc
+import glob
 import os
 from typing import Tuple
 
@@ -12,8 +13,6 @@ import llnl.util.tty as tty
 import spack.builder
 
 from .cmake import CMakeBuilder, CMakePackage
-
-# import glob
 
 
 def cmake_cache_path(name, value, comment="", force=False):
@@ -276,12 +275,12 @@ class CachedCMakeBuilder(CMakeBuilder):
                 cmake_cache_path("HIP_CXX_COMPILER", "{0}".format(self.spec["hip"].hipcc))
             )
 
-            # entries.append(
-            #     cmake_cache_path(
-            #         "HIP_CLANG_INCLUDE_PATH",
-            #         glob.glob("{}/lib/clang/*/include".format(spec["llvm-amdgpu"].prefix))[0],
-            #     )
-            # )
+            entries.append(
+                cmake_cache_path(
+                    "HIP_CLANG_INCLUDE_PATH",
+                    glob.glob("{}/lib/clang/*/include".format(spec["llvm-amdgpu"].prefix))[0],
+                )
+            )
 
             llvm_bin = spec["llvm-amdgpu"].prefix.bin
             llvm_prefix = spec["llvm-amdgpu"].prefix
