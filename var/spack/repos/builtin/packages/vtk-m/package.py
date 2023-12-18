@@ -147,6 +147,11 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/3160
     patch("mr3160-rocthrust-fix.patch", when="@2.1:")
 
+    # VTK-M PR#3176
+    # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/3176
+    patch("mr3176-0001-rocthrust-fix.patch", when="@2.1:")
+    patch("mr3176-0002-rocthrust-fix.patch", when="@2.1:")
+
     def cmake_args(self):
         spec = self.spec
         options = []

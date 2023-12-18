@@ -1,0 +1,122 @@
+From 3eed0d9b4175273c36b5b8b3de1f619268bf81e4 Mon Sep 17 00:00:00 2001
+From: Vicente Adolfo Bolea Sanchez <vicente.bolea@kitware.com>
+Date: Fri, 29 Dec 2023 21:28:57 -0500
+Subject: [PATCH] kokkos: add vtkm lib for kokkos cont sources
+
+This is needed since some dependencies such as rocthrust do not
+discrimitate between sources files of different languages. For instance
+the can apply HIP compiler options to the CXX source files leading to
+build errors.
+---
+ CMakeLists.txt                           |  1 +
+ vtkm/cont/CMakeLists.txt                 |  8 ++++-
+ vtkm/cont/kokkos/internal/CMakeLists.txt | 37 ++++++++++++++----------
+ vtkm/cont/kokkos/vtkm.module             |  5 +++-
+ 4 files changed, 34 insertions(+), 17 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 26eb875cf2..d01a9cdecc 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -239,6 +239,7 @@ cmake_dependent_option(VTKm_ENABLE_KOKKOS_THRUST "Enable Kokkos thrust support (
+ 
+ # CUDA already provides thrust
+ if (VTKm_ENABLE_KOKKOS_THRUST AND TARGET vtkm_kokkos_hip)
++  find_package(rocprim REQUIRED CONFIG)
+   find_package(rocthrust REQUIRED CONFIG)
+ endif()
+ 
+diff --git a/vtkm/cont/CMakeLists.txt b/vtkm/cont/CMakeLists.txt
+index 5ff482a1f6..6abd3c3b68 100644
+--- a/vtkm/cont/CMakeLists.txt
++++ b/vtkm/cont/CMakeLists.txt
+@@ -297,8 +297,14 @@ if(TARGET vtkm_openmp)
+   list(APPEND backends vtkm_openmp)
+ endif()
+ if(TARGET vtkm_kokkos)
+-  list(APPEND backends vtkm_kokkos)
++  # We still need vtkm_kokkos for vtkm/atomic.h
++  list(APPEND backends vtkm_kokkos vtkm_cont_kokkos)
+ endif()
+ 
+ target_link_libraries(vtkm_cont PUBLIC vtkm_compiler_flags ${backends})
+ target_link_libraries(vtkm_cont PUBLIC Threads::Threads)
++
++if (NOT TARGET vtkm_kokkos)
++  target_sources(vtkm_cont PRIVATE
++    ${CMAKE_CURRENT_SOURCE_DIR}/kokkos/internal/DeviceAdapterRuntimeDetectorKokkos.cxx)
++endif()
+diff --git a/vtkm/cont/kokkos/internal/CMakeLists.txt b/vtkm/cont/kokkos/internal/CMakeLists.txt
+index 9b731c9fdd..8882050376 100644
+--- a/vtkm/cont/kokkos/internal/CMakeLists.txt
++++ b/vtkm/cont/kokkos/internal/CMakeLists.txt
+@@ -18,28 +18,35 @@ set(headers
+   RuntimeDeviceConfigurationKokkos.h
+   )
+ 
+-vtkm_declare_headers(${headers})
+-
+ if (TARGET vtkm_kokkos)
+   set(sources
+     ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterAlgorithmKokkos.cxx
+     ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterMemoryManagerKokkos.cxx
+     ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterRuntimeDetectorKokkos.cxx
+     ${CMAKE_CURRENT_SOURCE_DIR}/KokkosAlloc.cxx
+-    ${CMAKE_CURRENT_SOURCE_DIR}/KokkosTypes.cxx)
+-  target_sources(vtkm_cont PRIVATE ${sources})
+-
+-  if (TARGET vtkm_kokkos_cuda)
+-    set_source_files_properties(${sources} TARGET_DIRECTORY vtkm_cont PROPERTIES LANGUAGE CUDA)
+-  elseif(TARGET vtkm_kokkos_hip)
+-    set_source_files_properties(${sources} TARGET_DIRECTORY vtkm_cont PROPERTIES LANGUAGE HIP)
+-    kokkos_compilation(SOURCE ${sources})
+-    if (VTKm_ENABLE_KOKKOS_THRUST)
+-      target_link_libraries(vtkm_cont INTERFACE roc::rocthrust)
++    ${CMAKE_CURRENT_SOURCE_DIR}/KokkosTypes.cxx
++    )
++  vtkm_library(
++    NAME vtkm_cont_kokkos
++    HEADERS ${headers}
++    DEVICE_SOURCES ${sources}
++    )
++  target_link_libraries(vtkm_cont_kokkos PUBLIC vtkm_compiler_flags PRIVATE vtkm_kokkos)
++  if(TARGET vtkm_kokkos_hip AND VTKm_ENABLE_KOKKOS_THRUST)
++    target_link_libraries(vtkm_cont_kokkos PRIVATE roc::rocthrust PUBLIC roc::rocprim)
++    get_target_property(rocthrust_include_dirs roc::rocthrust INTERFACE_INCLUDE_DIRECTORIES)
++    get_target_property(rocthrust_compile_defs roc::rocthrust INTERFACE_COMPILE_DEFINITIONS)
++    get_target_property(rocthrust_compile_opts roc::rocthrust INTERFACE_COMPILE_OPTIONS)
++    if (rocthrust_include_dirs)
++      target_include_directories(vtkm_cont_kokkos INTERFACE $<$<COMPILE_LANGUAGE:HIP>:${rocthrust_include_dirs}>)
++    endif()
++    if (rocthrust_compile_defs)
++      target_compile_definitions(vtkm_cont_kokkos INTERFACE $<$<COMPILE_LANGUAGE:HIP>:${rocthrust_compile_defs}>)
++    endif()
++    if (rocthrust_compile_opts)
++      target_compile_options(vtkm_cont_kokkos INTERFACE $<$<COMPILE_LANGUAGE:HIP>:${rocthrust_compile_opts}>)
+     endif()
+   endif()
+-
+ else()
+-  target_sources(vtkm_cont PRIVATE
+-    ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterRuntimeDetectorKokkos.cxx)
++  vtkm_declare_headers(${headers})
+ endif()
+diff --git a/vtkm/cont/kokkos/vtkm.module b/vtkm/cont/kokkos/vtkm.module
+index 1c41028fd9..de289c02d8 100644
+--- a/vtkm/cont/kokkos/vtkm.module
++++ b/vtkm/cont/kokkos/vtkm.module
+@@ -3,7 +3,10 @@ NAME
+ GROUPS
+   Core
+ DEPENDS
+-  vtkm_cont
++  vtkm_optionparser
++  vtkm_diy
++OPTIONAL_DEPENDS
++  vtkm_loguru
+ TEST_DEPENDS
+   vtkm_worklet
+   vtkm_kokkos
+-- 
+2.35.3
+
