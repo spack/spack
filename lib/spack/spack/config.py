@@ -130,7 +130,7 @@ class ConfigScope:
 
     def get_section_filename(self, section):
         _validate_section_name(section)
-        return os.path.join(self.path, "%s.yaml" % section)
+        return os.path.join(self.path, f"{section}.yaml")
 
     def get_section(self, section):
         if section not in self.sections:
@@ -152,7 +152,7 @@ class ConfigScope:
             filesystem.mkdirp(self.path)
             with open(filename, "w") as f:
                 syaml.dump_config(data, stream=f, default_flow_style=False)
-        except (syaml.SpackYAMLError, IOError) as e:
+        except (syaml.SpackYAMLError, OSError) as e:
             raise ConfigFileError(f"cannot write to '{filename}'") from e
 
     def clear(self):
@@ -160,7 +160,7 @@ class ConfigScope:
         self.sections = syaml.syaml_dict()
 
     def __repr__(self):
-        return "<ConfigScope: %s: %s>" % (self.name, self.path)
+        return f"<ConfigScope: {self.name}: {self.path}>"
 
 
 class SingleFileScope(ConfigScope):
@@ -277,16 +277,16 @@ class SingleFileScope(ConfigScope):
             parent = os.path.dirname(self.path)
             filesystem.mkdirp(parent)
 
-            tmp = os.path.join(parent, ".%s.tmp" % os.path.basename(self.path))
+            tmp = os.path.join(parent, f".{os.path.basename(self.path)}.tmp")
             with open(tmp, "w") as f:
                 syaml.dump_config(data_to_write, stream=f, default_flow_style=False)
             filesystem.rename(tmp, self.path)
 
-        except (syaml.SpackYAMLError, IOError) as e:
+        except (syaml.SpackYAMLError, OSError) as e:
             raise ConfigFileError(f"cannot write to config file {str(e)}") from e
 
     def __repr__(self):
-        return "<SingleFileScope: %s: %s>" % (self.name, self.path)
+        return f"<SingleFileScope: {self.name}: {self.path}>"
 
 
 class ImmutableConfigScope(ConfigScope):
@@ -296,10 +296,10 @@ class ImmutableConfigScope(ConfigScope):
     """
 
     def _write_section(self, section):
-        raise ConfigError("Cannot write to immutable scope %s" % self)
+        raise ConfigError(f"Cannot write to immutable scope {self}")
 
     def __repr__(self):
-        return "<ImmutableConfigScope: %s: %s>" % (self.name, self.path)
+        return f"<ImmutableConfigScope: {self.name}: {self.path}>"
 
 
 class InternalConfigScope(ConfigScope):
@@ -338,7 +338,7 @@ class InternalConfigScope(ConfigScope):
         self.sections[section] = _mark_internal(data, self.name)
 
     def __repr__(self):
-        return "<InternalConfigScope: %s>" % self.name
+        return f"<InternalConfigScope: {self.name}>"
 
     def clear(self):
         # no cache to clear here.
@@ -408,21 +408,21 @@ class Configuration:
     @_config_mutator
     def push_scope(self, scope: ConfigScope):
         """Add a higher precedence scope to the Configuration."""
-        tty.debug("[CONFIGURATION: PUSH SCOPE]: {}".format(str(scope)), level=2)
+        tty.debug(f"[CONFIGURATION: PUSH SCOPE]: {str(scope)}", level=2)
         self.scopes[scope.name] = scope
 
     @_config_mutator
     def pop_scope(self) -> ConfigScope:
         """Remove the highest precedence scope and return it."""
         name, scope = self.scopes.popitem(last=True)  # type: ignore[call-arg]
-        tty.debug("[CONFIGURATION: POP SCOPE]: {}".format(str(scope)), level=2)
+        tty.debug(f"[CONFIGURATION: POP SCOPE]: {str(scope)}", level=2)
         return scope
 
     @_config_mutator
     def remove_scope(self, scope_name: str) -> Optional[ConfigScope]:
         """Remove scope by name; has no effect when ``scope_name`` does not exist"""
         scope = self.scopes.pop(scope_name, None)
-        tty.debug("[CONFIGURATION: POP SCOPE]: {}".format(str(scope)), level=2)
+        tty.debug(f"[CONFIGURATION: POP SCOPE]: {str(scope)}", level=2)
         return scope
 
     @property
@@ -479,7 +479,7 @@ class Configuration:
 
         else:
             raise ValueError(
-                "Invalid config scope: '%s'.  Must be one of %s" % (scope, self.scopes.keys())
+                f"Invalid config scope: '{scope}'.  Must be one of {self.scopes.keys()}"
             )
 
     def get_config_filename(self, scope, section) -> str:
@@ -684,8 +684,7 @@ class Configuration:
 
     def __iter__(self):
         """Iterate over scopes in this configuration."""
-        for scope in self.scopes.values():
-            yield scope
+        yield from self.scopes.values()
 
     def print_section(self, section, blame=False):
         """Print a configuration to stdout."""
@@ -693,7 +692,7 @@ class Configuration:
             data = syaml.syaml_dict()
             data[section] = self.get_config(section)
             syaml.dump_config(data, stream=sys.stdout, default_flow_style=False, blame=blame)
-        except (syaml.SpackYAMLError, IOError) as e:
+        except (syaml.SpackYAMLError, OSError) as e:
             raise ConfigError(f"cannot read '{section}' configuration") from e
 
 
@@ -716,10 +715,10 @@ def override(path_or_scope, value=None):
     else:
         base_name = _OVERRIDES_BASE_NAME
         # Ensure the new override gets a unique scope name
-        current_overrides = [s.name for s in CONFIG.matching_scopes(r"^{0}".format(base_name))]
+        current_overrides = [s.name for s in CONFIG.matching_scopes(rf"^{base_name}")]
         num_overrides = len(current_overrides)
         while True:
-            scope_name = "{0}{1}".format(base_name, num_overrides)
+            scope_name = f"{base_name}{num_overrides}"
             if scope_name in current_overrides:
                 num_overrides += 1
             else:
@@ -758,12 +757,12 @@ def _add_command_line_scopes(cfg, command_line_scopes):
         # We ensure that these scopes exist and are readable, as they are
         # provided on the command line by the user.
         if not os.path.isdir(path):
-            raise ConfigError("config scope is not a directory: '%s'" % path)
+            raise ConfigError(f"config scope is not a directory: '{path}'")
         elif not os.access(path, os.R_OK):
-            raise ConfigError("config scope is not readable: '%s'" % path)
+            raise ConfigError(f"config scope is not readable: '{path}'")
 
         # name based on order on the command line
-        name = "cmd_scope_%d" % i
+        name = f"cmd_scope_{i:d}"
         cfg.push_scope(ImmutableConfigScope(name, path))
         _add_platform_scope(cfg, ImmutableConfigScope, name, path)
 
@@ -1007,8 +1006,7 @@ def _validate_section_name(section):
     """Exit if the section is not a valid section."""
     if section not in SECTION_SCHEMAS:
         raise ConfigSectionError(
-            "Invalid config section: '%s'. Options are: %s"
-            % (section, " ".join(SECTION_SCHEMAS.keys()))
+            f"Invalid config section: '{section}'. Options are: {' '.join(SECTION_SCHEMAS.keys())}"
         )
 
 
@@ -1052,17 +1050,17 @@ def read_config_file(filename, schema=None):
 
     if not os.path.exists(filename):
         # Ignore nonexistent files.
-        tty.debug("Skipping nonexistent config path {0}".format(filename), level=3)
+        tty.debug(f"Skipping nonexistent config path {filename}", level=3)
         return None
 
     elif not os.path.isfile(filename):
-        raise ConfigFileError("Invalid configuration. %s exists but is not a file." % filename)
+        raise ConfigFileError(f"Invalid configuration. {filename} exists but is not a file.")
 
     elif not os.access(filename, os.R_OK):
-        raise ConfigFileError("Config file is not readable: {0}".format(filename))
+        raise ConfigFileError(f"Config file is not readable: {filename}")
 
     try:
-        tty.debug("Reading config from file {0}".format(filename))
+        tty.debug(f"Reading config from file {filename}")
         with open(filename) as f:
             data = syaml.load_config(f)
 
@@ -1080,7 +1078,7 @@ def read_config_file(filename, schema=None):
     except syaml.SpackYAMLError as e:
         raise ConfigFileError(str(e)) from e
 
-    except IOError as e:
+    except OSError as e:
         raise ConfigFileError(f"Error reading configuration file {filename}: {str(e)}") from e
 
 
@@ -1181,7 +1179,7 @@ def get_valid_type(path):
                     return types[schema_type]()
     else:
         return type(None)
-    raise ConfigError("Cannot determine valid type for path '%s'." % path)
+    raise ConfigError(f"Cannot determine valid type for path '{path}'.")
 
 
 def remove_yaml(dest, source):
@@ -1322,14 +1320,14 @@ def process_config_path(path):
     """
     result = []
     if path.startswith(":"):
-        raise syaml.SpackYAMLError("Illegal leading `:' in path `{0}'".format(path), "")
+        raise syaml.SpackYAMLError(f"Illegal leading `:' in path `{path}'", "")
     seen_override_in_path = False
     while path:
         front, sep, path = path.partition(":")
         if (sep and not path) or path.startswith(":"):
             if seen_override_in_path:
                 raise syaml.SpackYAMLError(
-                    "Meaningless second override" " indicator `::' in path `{0}'".format(path), ""
+                    f"Meaningless second override indicator `::' in path `{path}'", ""
                 )
             path = path.lstrip(":")
             front = syaml.syaml_str(front)
@@ -1459,7 +1457,7 @@ def _config_from(scopes_or_paths):
 
         # Otherwise we need to construct it
         path = os.path.normpath(scope_or_path)
-        assert os.path.isdir(path), '"{0}" must be a directory'.format(path)
+        assert os.path.isdir(path), f'"{path}" must be a directory'
         name = os.path.basename(path)
         scopes.append(ConfigScope(name, path))
 
@@ -1526,7 +1524,7 @@ def fetch_remote_configs(url: str, dest_dir: str, skip_existing: bool = True) ->
 
     def _fetch_file(url):
         raw = raw_github_gitlab_url(url)
-        tty.debug("Reading config from url {0}".format(raw))
+        tty.debug(f"Reading config from url {raw}")
         return web_util.fetch_url_text(raw, dest_dir=dest_dir)
 
     if not url:
@@ -1542,8 +1540,8 @@ def fetch_remote_configs(url: str, dest_dir: str, skip_existing: bool = True) ->
         basename = os.path.basename(config_url)
         if skip_existing and basename in existing_files:
             tty.warn(
-                "Will not fetch configuration from {0} since a version already"
-                "exists in {1}".format(config_url, dest_dir)
+                f"Will not fetch configuration from {config_url} since a "
+                f"version already exists in {dest_dir}"
             )
             path = os.path.join(dest_dir, basename)
         else:
@@ -1555,7 +1553,7 @@ def fetch_remote_configs(url: str, dest_dir: str, skip_existing: bool = True) ->
     if paths:
         return dest_dir if len(paths) > 1 else paths[0]
 
-    raise ConfigFileError("Cannot retrieve configuration (yaml) from {0}".format(url))
+    raise ConfigFileError(f"Cannot retrieve configuration (yaml) from {url}")
 
 
 class ConfigError(SpackError):
@@ -1587,11 +1585,11 @@ class ConfigFormatError(ConfigError):
         # construct location
         location = "<unknown file>"
         if filename:
-            location = "%s" % filename
+            location = f"{filename}"
         if line is not None:
-            location += ":%d" % line
+            location += f":{line:d}"
 
-        message = "%s: %s" % (location, validation_error.message)
+        message = f"{location}: {validation_error.message}"
         super().__init__(message)
 
     def _get_mark(self, validation_error, data):
