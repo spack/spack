@@ -42,10 +42,7 @@ def setup_parser(subparser):
     # List
     list_parser = sp.add_parser("list", help=repo_list.__doc__)
     list_parser.add_argument(
-        "--scope",
-        action=arguments.ConfigScope,
-        default=lambda: spack.config.default_list_scope(),
-        help="configuration scope to read from",
+        "--scope", action=arguments.ConfigScope, help="configuration scope to read from"
     )
 
     # Add
