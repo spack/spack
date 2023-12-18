@@ -59,6 +59,12 @@ class Mgard(CMakePackage, CudaPackage):
     )
     conflicts("%gcc@:7", when="@2022-11-18:", msg="requires std::optional and other c++17 things")
 
+    def flag_handler(self, name, flags):
+        if name == "cxxflags":
+            if self.spec.satisfies("@2020-10-01 %oneapi@2023:"):
+                flags.append("-Wno-error=c++11-narrowing")
+        return (flags, None, None)
+
     def cmake_args(self):
         spec = self.spec
         args = ["-DBUILD_TESTING=OFF"]

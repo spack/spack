@@ -357,7 +357,8 @@ def _print_installed_pkg(message: str) -> None:
     Args:
         message (str): message to be output
     """
-    print(colorize("@*g{[+]} ") + spack.util.path.debug_padded_filter(message))
+    if tty.msg_enabled():
+        print(colorize("@*g{[+]} ") + spack.util.path.debug_padded_filter(message))
 
 
 def print_install_test_log(pkg: "spack.package_base.PackageBase") -> None:
@@ -380,7 +381,10 @@ def _print_timer(pre: str, pkg_id: str, timer: timer.BaseTimer) -> None:
 
 
 def _install_from_cache(
-    pkg: "spack.package_base.PackageBase", cache_only: bool, explicit: bool, unsigned: bool = False
+    pkg: "spack.package_base.PackageBase",
+    cache_only: bool,
+    explicit: bool,
+    unsigned: Optional[bool] = False,
 ) -> bool:
     """
     Extract the package from binary cache
@@ -390,8 +394,7 @@ def _install_from_cache(
         cache_only: only extract from binary cache
         explicit: ``True`` if installing the package was explicitly
             requested by the user, otherwise, ``False``
-        unsigned: ``True`` if binary package signatures to be checked,
-            otherwise, ``False``
+        unsigned: if ``True`` or ``False`` override the mirror signature verification defaults
 
     Return: ``True`` if the package was extract from binary cache, ``False`` otherwise
     """
@@ -461,7 +464,7 @@ def _process_external_package(pkg: "spack.package_base.PackageBase", explicit: b
 def _process_binary_cache_tarball(
     pkg: "spack.package_base.PackageBase",
     explicit: bool,
-    unsigned: bool,
+    unsigned: Optional[bool],
     mirrors_for_spec: Optional[list] = None,
     timer: timer.BaseTimer = timer.NULL_TIMER,
 ) -> bool:
@@ -471,8 +474,7 @@ def _process_binary_cache_tarball(
     Args:
         pkg: the package being installed
         explicit: the package was explicitly requested by the user
-        unsigned: ``True`` if binary package signatures to be checked,
-            otherwise, ``False``
+        unsigned: if ``True`` or ``False`` override the mirror signature verification defaults
         mirrors_for_spec: Optional list of concrete specs and mirrors
         obtained by calling binary_distribution.get_mirrors_for_spec().
         timer: timer to keep track of binary install phases.
@@ -492,9 +494,7 @@ def _process_binary_cache_tarball(
     tty.msg(f"Extracting {package_id(pkg)} from binary cache")
 
     with timer.measure("install"), spack.util.path.filter_padding():
-        binary_distribution.extract_tarball(
-            pkg.spec, download_result, unsigned=unsigned, force=False, timer=timer
-        )
+        binary_distribution.extract_tarball(pkg.spec, download_result, force=False, timer=timer)
 
         pkg.installed_from_binary_cache = True
         spack.store.STORE.db.add(pkg.spec, spack.store.STORE.layout, explicit=explicit)
@@ -504,7 +504,7 @@ def _process_binary_cache_tarball(
 def _try_install_from_binary_cache(
     pkg: "spack.package_base.PackageBase",
     explicit: bool,
-    unsigned: bool = False,
+    unsigned: Optional[bool] = None,
     timer: timer.BaseTimer = timer.NULL_TIMER,
 ) -> bool:
     """
@@ -513,8 +513,7 @@ def _try_install_from_binary_cache(
     Args:
         pkg: package to be extracted from binary cache
         explicit: the package was explicitly requested by the user
-        unsigned: ``True`` if binary package signatures to be checked,
-            otherwise, ``False``
+        unsigned: if ``True`` or ``False`` override the mirror signature verification defaults
         timer: timer to keep track of binary install phases.
     """
     # Early exit if no binary mirrors are configured.
@@ -824,7 +823,7 @@ class BuildRequest:
             ("restage", False),
             ("skip_patch", False),
             ("tests", False),
-            ("unsigned", False),
+            ("unsigned", None),
             ("verbose", False),
         ]:
             _ = self.install_args.setdefault(arg, default)
@@ -1662,7 +1661,7 @@ class PackageInstaller:
         use_cache = task.use_cache
         tests = install_args.get("tests", False)
         assert isinstance(tests, (bool, list))  # make mypy happy.
-        unsigned = bool(install_args.get("unsigned"))
+        unsigned: Optional[bool] = install_args.get("unsigned")
 
         pkg, pkg_id = task.pkg, task.pkg_id
 
@@ -2007,7 +2006,9 @@ class PackageInstaller:
 
         # Only enable the terminal status line when we're in a tty without debug info
         # enabled, so that the output does not get cluttered.
-        term_status = TermStatusLine(enabled=sys.stdout.isatty() and not tty.is_debug())
+        term_status = TermStatusLine(
+            enabled=sys.stdout.isatty() and tty.msg_enabled() and not tty.is_debug()
+        )
 
         while self.build_pq:
             task = self._pop_task()

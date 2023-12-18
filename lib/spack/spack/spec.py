@@ -59,7 +59,7 @@ import platform
 import re
 import socket
 import warnings
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
 
 import llnl.path
 import llnl.string
@@ -910,19 +910,23 @@ class FlagMap(lang.HashableMap):
             yield flags
 
     def __str__(self):
-        sorted_keys = [k for k in sorted(self.keys()) if self[k] != []]
-        cond_symbol = " " if len(sorted_keys) > 0 else ""
-        return (
-            cond_symbol
-            + " ".join(
-                key
-                + ('=="' if True in [f.propagate for f in self[key]] else '="')
-                + " ".join(self[key])
-                + '"'
-                for key in sorted_keys
-            )
-            + cond_symbol
-        )
+        sorted_items = sorted((k, v) for k, v in self.items() if v)
+
+        result = ""
+        for flag_type, flags in sorted_items:
+            normal = [f for f in flags if not f.propagate]
+            if normal:
+                result += f" {flag_type}={spack.parser.quote_if_needed(' '.join(normal))}"
+
+            propagated = [f for f in flags if f.propagate]
+            if propagated:
+                result += f" {flag_type}=={spack.parser.quote_if_needed(' '.join(propagated))}"
+
+        # TODO: somehow add this space only if something follows in Spec.format()
+        if sorted_items:
+            result += " "
+
+        return result
 
 
 def _sort_by_dep_types(dspec: DependencySpec):
@@ -1463,6 +1467,26 @@ class Spec:
             depflag: allowed dependency types
         """
         return [d for d in self._dependencies.select(child=name, depflag=depflag)]
+
+    @property
+    def edge_attributes(self) -> str:
+        """Helper method to print edge attributes in spec literals"""
+        edges = self.edges_from_dependents()
+        if not edges:
+            return ""
+
+        union = DependencySpec(parent=Spec(), spec=self, depflag=0, virtuals=())
+        for edge in edges:
+            union.update_deptypes(edge.depflag)
+            union.update_virtuals(edge.virtuals)
+        deptypes_str = (
+            f"deptypes={','.join(dt.flag_to_tuple(union.depflag))}" if union.depflag else ""
+        )
+        virtuals_str = f"virtuals={','.join(union.virtuals)}" if union.virtuals else ""
+        if not deptypes_str and not virtuals_str:
+            return ""
+        result = f"{deptypes_str} {virtuals_str}".strip()
+        return f"[{result}]"
 
     def dependencies(self, name=None, deptype: Union[dt.DepTypes, dt.DepFlag] = dt.ALL):
         """Return a list of direct dependencies (nodes in the DAG).
@@ -3108,9 +3132,7 @@ class Spec:
 
         except spack.error.UnsatisfiableSpecError as e:
             # Here, the DAG contains two instances of the same package
-            # with inconsistent constraints.  Users cannot produce
-            # inconsistent specs like this on the command line: the
-            # parser doesn't allow it. Spack must be broken!
+            # with inconsistent constraints.
             raise InconsistentSpecError("Invalid Spec DAG: %s" % e.message) from e
 
     def index(self, deptype="all"):
@@ -3688,8 +3710,15 @@ class Spec:
         if other.concrete and self.concrete:
             return self.dag_hash() == other.dag_hash()
 
-        self_hash = self.dag_hash() if self.concrete else self.abstract_hash
-        other_hash = other.dag_hash() if other.concrete else other.abstract_hash
+        elif self.concrete:
+            return self.satisfies(other)
+
+        elif other.concrete:
+            return other.satisfies(self)
+
+        # From here we know both self and other are not concrete
+        self_hash = self.abstract_hash
+        other_hash = other.abstract_hash
 
         if (
             self_hash
@@ -3777,10 +3806,6 @@ class Spec:
         other_index = spack.provider_index.ProviderIndex(
             repository=spack.repo.PATH, specs=other.traverse(), restrict=True
         )
-
-        # This handles cases where there are already providers for both vpkgs
-        if not self_index.satisfies(other_index):
-            return False
 
         # These two loops handle cases where there is an overly restrictive
         # vpkg in one spec for a provider in the other (e.g., mpi@3: is not
@@ -3879,7 +3904,46 @@ class Spec:
             return False
 
         # If we arrived here, then rhs is abstract. At the moment we don't care about the edge
-        # structure of an abstract DAG - hence the deps=False parameter.
+        # structure of an abstract DAG, so we check if any edge could satisfy the properties
+        # we ask for.
+        lhs_edges: Dict[str, Set[DependencySpec]] = collections.defaultdict(set)
+        for rhs_edge in other.traverse_edges(root=False, cover="edges"):
+            # If we are checking for ^mpi we need to verify if there is any edge
+            if rhs_edge.spec.virtual:
+                rhs_edge.update_virtuals(virtuals=(rhs_edge.spec.name,))
+
+            if not rhs_edge.virtuals:
+                continue
+
+            if not lhs_edges:
+                # Construct a map of the link/run subDAG + direct "build" edges,
+                # keyed by dependency name
+                for lhs_edge in self.traverse_edges(
+                    root=False, cover="edges", deptype=("link", "run")
+                ):
+                    lhs_edges[lhs_edge.spec.name].add(lhs_edge)
+                    for virtual_name in lhs_edge.virtuals:
+                        lhs_edges[virtual_name].add(lhs_edge)
+
+                build_edges = self.edges_to_dependencies(depflag=dt.BUILD)
+                for lhs_edge in build_edges:
+                    lhs_edges[lhs_edge.spec.name].add(lhs_edge)
+                    for virtual_name in lhs_edge.virtuals:
+                        lhs_edges[virtual_name].add(lhs_edge)
+
+            # We don't have edges to this dependency
+            current_dependency_name = rhs_edge.spec.name
+            if current_dependency_name not in lhs_edges:
+                return False
+
+            for virtual in rhs_edge.virtuals:
+                has_virtual = any(
+                    virtual in edge.virtuals for edge in lhs_edges[current_dependency_name]
+                )
+                if not has_virtual:
+                    return False
+
+        # Edges have been checked above already, hence deps=False
         return all(
             any(lhs.satisfies(rhs, deps=False) for lhs in self.traverse(root=False))
             for rhs in other.traverse(root=False)
@@ -4081,9 +4145,7 @@ class Spec:
         """
         query_parameters = name.split(":")
         if len(query_parameters) > 2:
-            msg = "key has more than one ':' symbol."
-            msg += " At most one is admitted."
-            raise KeyError(msg)
+            raise KeyError("key has more than one ':' symbol. At most one is admitted.")
 
         name, query_parameters = query_parameters[0], query_parameters[1:]
         if query_parameters:
@@ -4108,11 +4170,17 @@ class Spec:
                 itertools.chain(
                     # Regular specs
                     (x for x in order() if x.name == name),
+                    (
+                        x
+                        for x in order()
+                        if (not x.virtual)
+                        and any(name in edge.virtuals for edge in x.edges_from_dependents())
+                    ),
                     (x for x in order() if (not x.virtual) and x.package.provides(name)),
                 )
             )
         except StopIteration:
-            raise KeyError("No spec with name %s in %s" % (name, self))
+            raise KeyError(f"No spec with name {name} in {self}")
 
         if self._concrete:
             return SpecBuildInterface(value, name, query_parameters)
@@ -4490,10 +4558,26 @@ class Spec:
         return str(path_ctor(*output_path_components))
 
     def __str__(self):
-        sorted_nodes = [self] + sorted(
-            self.traverse(root=False), key=lambda x: x.name or x.abstract_hash
+        root_str = [self.format()]
+        sorted_dependencies = sorted(
+            self.traverse(root=False), key=lambda x: (x.name, x.abstract_hash)
         )
-        spec_str = " ^".join(d.format() for d in sorted_nodes)
+        sorted_dependencies = [
+            d.format("{edge_attributes} " + DEFAULT_FORMAT) for d in sorted_dependencies
+        ]
+        spec_str = " ^".join(root_str + sorted_dependencies)
+        return spec_str.strip()
+
+    @property
+    def colored_str(self):
+        root_str = [self.cformat()]
+        sorted_dependencies = sorted(
+            self.traverse(root=False), key=lambda x: (x.name, x.abstract_hash)
+        )
+        sorted_dependencies = [
+            d.cformat("{edge_attributes} " + DISPLAY_FORMAT) for d in sorted_dependencies
+        ]
+        spec_str = " ^".join(root_str + sorted_dependencies)
         return spec_str.strip()
 
     def install_status(self):

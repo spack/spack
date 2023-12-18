@@ -69,6 +69,8 @@ from spack.util.cpus import cpus_available
 SECTION_SCHEMAS = {
     "compilers": spack.schema.compilers.schema,
     "concretizer": spack.schema.concretizer.schema,
+    "definitions": spack.schema.definitions.schema,
+    "develop": spack.schema.develop.schema,
     "mirrors": spack.schema.mirrors.schema,
     "repos": spack.schema.repos.schema,
     "packages": spack.schema.packages.schema,
@@ -926,6 +928,84 @@ def scopes():
     return CONFIG.scopes
 
 
+def writable_scopes() -> List[ConfigScope]:
+    """
+    Return list of writable scopes
+    """
+    return list(
+        reversed(
+            list(
+                x
+                for x in CONFIG.scopes.values()
+                if not isinstance(x, (InternalConfigScope, ImmutableConfigScope))
+            )
+        )
+    )
+
+
+def writable_scope_names() -> List[str]:
+    return list(x.name for x in writable_scopes())
+
+
+def matched_config(cfg_path):
+    return [(scope, get(cfg_path, scope=scope)) for scope in writable_scope_names()]
+
+
+def change_or_add(section_name, find_fn, update_fn):
+    """Change or add a subsection of config, with additional logic to
+    select a reasonable scope where the change is applied.
+
+    Search through config scopes starting with the highest priority:
+    the first matching a criteria (determined by ``find_fn``) is updated;
+    if no such config exists, find the first config scope that defines
+    any config for the named section; if no scopes define any related
+    config, then update the highest-priority config scope.
+    """
+    configs_by_section = matched_config(section_name)
+
+    found = False
+    for scope, section in configs_by_section:
+        found = find_fn(section)
+        if found:
+            break
+
+    if found:
+        update_fn(section)
+        spack.config.set(section_name, section, scope=scope)
+        return
+
+    # If no scope meets the criteria specified by ``find_fn``,
+    # then look for a scope that has any content (for the specified
+    # section name)
+    for scope, section in configs_by_section:
+        if section:
+            update_fn(section)
+            found = True
+            break
+
+    if found:
+        spack.config.set(section_name, section, scope=scope)
+        return
+
+    # If no scopes define any config for the named section, then
+    # modify the highest-priority scope.
+    scope, section = configs_by_section[0]
+    update_fn(section)
+    spack.config.set(section_name, section, scope=scope)
+
+
+def update_all(section_name, change_fn):
+    """Change a config section, which may have details duplicated
+    across multiple scopes.
+    """
+    configs_by_section = matched_config("develop")
+
+    for scope, section in configs_by_section:
+        modified = change_fn(section)
+        if modified:
+            spack.config.set(section_name, section, scope=scope)
+
+
 def _validate_section_name(section):
     """Exit if the section is not a valid section."""
     if section not in SECTION_SCHEMAS:
@@ -994,6 +1074,7 @@ def read_config_file(filename, schema=None):
                 key = next(iter(data))
                 schema = _ALL_SCHEMAS[key]
             validate(data, schema)
+
         return data
 
     except StopIteration:

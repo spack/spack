@@ -25,6 +25,7 @@ from urllib.request import HTTPHandler, Request, build_opener
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.lang import memoized
+from llnl.util.tty.color import cescape, colorize
 
 import spack
 import spack.binary_distribution as bindist
@@ -45,7 +46,22 @@ from spack.error import SpackError
 from spack.reporters import CDash, CDashConfiguration
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
 
-JOB_RETRY_CONDITIONS = ["always"]
+# See https://docs.gitlab.com/ee/ci/yaml/#retry for descriptions of conditions
+JOB_RETRY_CONDITIONS = [
+    # "always",
+    "unknown_failure",
+    "script_failure",
+    "api_failure",
+    "stuck_or_timeout_failure",
+    "runner_system_failure",
+    "runner_unsupported",
+    "stale_schedule",
+    # "job_execution_timeout",
+    "archived_failure",
+    "unmet_prerequisites",
+    "scheduler_failure",
+    "data_integrity_failure",
+]
 
 TEMP_STORAGE_MIRROR_NAME = "ci_temporary_mirror"
 SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
@@ -95,15 +111,6 @@ def get_job_name(spec: spack.spec.Spec, build_group: str = ""):
 def _remove_reserved_tags(tags):
     """Convenience function to strip reserved tags from jobs"""
     return [tag for tag in tags if tag not in SPACK_RESERVED_TAGS]
-
-
-def _get_spec_string(spec):
-    format_elements = ["{name}{@version}", "{%compiler}"]
-
-    if spec.architecture:
-        format_elements.append(" {arch=architecture}")
-
-    return spec.format("".join(format_elements))
 
 
 def _spec_deps_key(s):
@@ -210,22 +217,22 @@ def _print_staging_summary(spec_labels, stages, mirrors_to_check, rebuild_decisi
 
     tty.msg("Staging summary ([x] means a job needs rebuilding):")
     for stage_index, stage in enumerate(stages):
-        tty.msg("  stage {0} ({1} jobs):".format(stage_index, len(stage)))
+        tty.msg(f"  stage {stage_index} ({len(stage)} jobs):")
 
-        for job in sorted(stage):
+        for job in sorted(stage, key=lambda j: (not rebuild_decisions[j].rebuild, j)):
             s = spec_labels[job]
-            rebuild = rebuild_decisions[job].rebuild
             reason = rebuild_decisions[job].reason
-            reason_msg = " ({0})".format(reason) if reason else ""
-            tty.msg(
-                "    [{1}] {0} -> {2}{3}".format(
-                    job, "x" if rebuild else " ", _get_spec_string(s), reason_msg
-                )
-            )
-            if rebuild_decisions[job].mirrors:
-                tty.msg("          found on the following mirrors:")
-                for murl in rebuild_decisions[job].mirrors:
-                    tty.msg("            {0}".format(murl))
+            reason_msg = f" ({reason})" if reason else ""
+            spec_fmt = "{name}{@version}{%compiler}{/hash:7}"
+            if rebuild_decisions[job].rebuild:
+                status = colorize("@*g{[x]}  ")
+                msg = f"  {status}{s.cformat(spec_fmt)}{reason_msg}"
+            else:
+                msg = f"{s.format(spec_fmt)}{reason_msg}"
+                if rebuild_decisions[job].mirrors:
+                    msg += f" [{', '.join(rebuild_decisions[job].mirrors)}]"
+                msg = colorize(f"  @K -   {cescape(msg)}@.")
+            tty.msg(msg)
 
 
 def _compute_spec_deps(spec_list):
@@ -932,7 +939,7 @@ def generate_gitlab_ci_yaml(
 
     # Speed up staging by first fetching binary indices from all mirrors
     try:
-        bindist.binary_index.update()
+        bindist.BINARY_INDEX.update()
     except bindist.FetchCacheError as e:
         tty.warn(e)
 
@@ -2258,13 +2265,13 @@ class CDashHandler:
                 spec.architecture,
                 self.build_group,
             )
-            tty.verbose(
+            tty.debug(
                 "Generated CDash build name ({0}) from the {1}".format(build_name, spec.name)
             )
             return build_name
 
         build_name = os.environ.get("SPACK_CDASH_BUILD_NAME")
-        tty.verbose("Using CDash build name ({0}) from the environment".format(build_name))
+        tty.debug("Using CDash build name ({0}) from the environment".format(build_name))
         return build_name
 
     @property  # type: ignore
@@ -2278,11 +2285,11 @@ class CDashHandler:
         Returns: (str) current CDash build stamp"""
         build_stamp = os.environ.get("SPACK_CDASH_BUILD_STAMP")
         if build_stamp:
-            tty.verbose("Using build stamp ({0}) from the environment".format(build_stamp))
+            tty.debug("Using build stamp ({0}) from the environment".format(build_stamp))
             return build_stamp
 
         build_stamp = cdash_build_stamp(self.build_group, time.time())
-        tty.verbose("Generated new build stamp ({0})".format(build_stamp))
+        tty.debug("Generated new build stamp ({0})".format(build_stamp))
         return build_stamp
 
     @property  # type: ignore

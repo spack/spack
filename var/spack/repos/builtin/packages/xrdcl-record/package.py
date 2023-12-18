@@ -13,8 +13,6 @@ class XrdclRecord(CMakePackage):
     homepage = "https://github.com/xrootd/xrdcl-record"
     url = "https://github.com/xrootd/xrdcl-record/archive/refs/tags/v5.4.2.tar.gz"
 
-    maintainers("iarspider")
-
     version("5.4.2", sha256="fb76284491ff4e723bce4c9e9d87347e98e278e70c597167bc39a162bc876734")
 
     depends_on("xrootd")

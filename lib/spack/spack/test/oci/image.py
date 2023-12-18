@@ -34,6 +34,10 @@ from spack.oci.image import Digest, ImageReference, default_tag, tag
         ("myname:1234/myimage:abc", ("myname:1234", "myimage", "abc", None)),
         ("localhost/myimage:abc", ("localhost", "myimage", "abc", None)),
         ("localhost:1234/myimage:abc", ("localhost:1234", "myimage", "abc", None)),
+        (
+            "example.com/UPPERCASE/lowercase:AbC",
+            ("example.com", "uppercase/lowercase", "AbC", None),
+        ),
     ],
 )
 def test_name_parsing(image_ref, expected):

@@ -324,19 +324,29 @@ def set_compiler_environment_variables(pkg, env):
     # ttyout, ttyerr, etc.
     link_dir = spack.paths.build_env_path
 
-    # Set SPACK compiler variables so that our wrapper knows what to call
+    # Set SPACK compiler variables so that our wrapper knows what to
+    # call.  If there is no compiler configured then use a default
+    # wrapper which will emit an error if it is used.
     if compiler.cc:
         env.set("SPACK_CC", compiler.cc)
         env.set("CC", os.path.join(link_dir, compiler.link_paths["cc"]))
+    else:
+        env.set("CC", os.path.join(link_dir, "cc"))
     if compiler.cxx:
         env.set("SPACK_CXX", compiler.cxx)
         env.set("CXX", os.path.join(link_dir, compiler.link_paths["cxx"]))
+    else:
+        env.set("CC", os.path.join(link_dir, "c++"))
     if compiler.f77:
         env.set("SPACK_F77", compiler.f77)
         env.set("F77", os.path.join(link_dir, compiler.link_paths["f77"]))
+    else:
+        env.set("F77", os.path.join(link_dir, "f77"))
     if compiler.fc:
         env.set("SPACK_FC", compiler.fc)
         env.set("FC", os.path.join(link_dir, compiler.link_paths["fc"]))
+    else:
+        env.set("FC", os.path.join(link_dir, "fc"))
 
     # Set SPACK compiler rpath flags so that our wrapper knows what to use
     env.set("SPACK_CC_RPATH_ARG", compiler.cc_rpath_arg)
@@ -743,28 +753,23 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
         set_compiler_environment_variables(pkg, env_mods)
         set_wrapper_variables(pkg, env_mods)
 
-    tty.debug("setup_package: grabbing modifications from dependencies")
-    env_mods.extend(setup_context.get_env_modifications())
-    tty.debug("setup_package: collected all modifications from dependencies")
-
-    # architecture specific setup
+    # Platform specific setup goes before package specific setup. This is for setting
+    # defaults like MACOSX_DEPLOYMENT_TARGET on macOS.
     platform = spack.platforms.by_name(pkg.spec.architecture.platform)
     target = platform.target(pkg.spec.architecture.target)
     platform.setup_platform_environment(pkg, env_mods)
 
-    if context == Context.BUILD:
-        tty.debug("setup_package: setup build environment for root")
-        builder = spack.builder.create(pkg)
-        builder.setup_build_environment(env_mods)
+    tty.debug("setup_package: grabbing modifications from dependencies")
+    env_mods.extend(setup_context.get_env_modifications())
+    tty.debug("setup_package: collected all modifications from dependencies")
 
-        if (not dirty) and (not env_mods.is_unset("CPATH")):
-            tty.debug(
-                "A dependency has updated CPATH, this may lead pkg-"
-                "config to assume that the package is part of the system"
-                " includes and omit it when invoked with '--cflags'."
-            )
-    elif context == Context.TEST:
+    if context == Context.TEST:
         env_mods.prepend_path("PATH", ".")
+    elif context == Context.BUILD and not dirty and not env_mods.is_unset("CPATH"):
+        tty.debug(
+            "A dependency has updated CPATH, this may lead pkg-config to assume that the package "
+            "is part of the system includes and omit it when invoked with '--cflags'."
+        )
 
     # First apply the clean environment changes
     env_base.apply_modifications()
@@ -953,8 +958,11 @@ class SetupContext:
             reversed(specs_with_type), lambda t: t[0].external
         )
         self.should_be_runnable = UseMode.BUILDTIME_DIRECT | UseMode.RUNTIME_EXECUTABLE
-        self.should_setup_run_env = UseMode.RUNTIME | UseMode.RUNTIME_EXECUTABLE
+        self.should_setup_run_env = (
+            UseMode.BUILDTIME_DIRECT | UseMode.RUNTIME | UseMode.RUNTIME_EXECUTABLE
+        )
         self.should_setup_dependent_build_env = UseMode.BUILDTIME | UseMode.BUILDTIME_DIRECT
+        self.should_setup_build_env = UseMode.ROOT if context == Context.BUILD else UseMode(0)
 
         if context == Context.RUN or context == Context.TEST:
             self.should_be_runnable |= UseMode.ROOT
@@ -994,8 +1002,9 @@ class SetupContext:
         - Updating PATH for packages that are required at runtime
         - Updating CMAKE_PREFIX_PATH and PKG_CONFIG_PATH so that their respective
         tools can find Spack-built dependencies (when context=build)
-        - Running custom package environment modifications (setup_run_environment,
-        setup_dependent_build_environment, setup_dependent_run_environment)
+        - Running custom package environment modifications: setup_run_environment,
+        setup_dependent_run_environment, setup_build_environment,
+        setup_dependent_build_environment.
 
         The (partial) order imposed on the specs is externals first, then topological
         from leaf to root. That way externals cannot contribute search paths that would shadow
@@ -1008,19 +1017,27 @@ class SetupContext:
             if self.should_setup_dependent_build_env & flag:
                 self._make_buildtime_detectable(dspec, env)
 
-                for spec in self.specs:
-                    builder = spack.builder.create(pkg)
-                    builder.setup_dependent_build_environment(env, spec)
+                for root in self.specs:  # there is only one root in build context
+                    spack.builder.create(pkg).setup_dependent_build_environment(env, root)
+
+            if self.should_setup_build_env & flag:
+                spack.builder.create(pkg).setup_build_environment(env)
 
             if self.should_be_runnable & flag:
                 self._make_runnable(dspec, env)
 
             if self.should_setup_run_env & flag:
-                # TODO: remove setup_dependent_run_environment...
-                for spec in dspec.dependents(deptype=dt.RUN):
+                run_env_mods = EnvironmentModifications()
+                for spec in dspec.dependents(deptype=dt.LINK | dt.RUN):
                     if id(spec) in self.nodes_in_subdag:
-                        pkg.setup_dependent_run_environment(env, spec)
-                pkg.setup_run_environment(env)
+                        pkg.setup_dependent_run_environment(run_env_mods, spec)
+                pkg.setup_run_environment(run_env_mods)
+                if self.context == Context.BUILD:
+                    # Don't let the runtime environment of comiler like dependencies leak into the
+                    # build env
+                    run_env_mods.drop("CC", "CXX", "F77", "FC")
+                env.extend(run_env_mods)
+
         return env
 
     def _make_buildtime_detectable(self, dep: spack.spec.Spec, env: EnvironmentModifications):

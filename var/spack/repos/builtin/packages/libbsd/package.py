@@ -35,6 +35,8 @@ class Libbsd(AutotoolsPackage):
     patch("cdefs.h.patch", when="@0.8.6 %gcc@:4")
     patch("local-elf.h.patch", when="@:0.10 %intel")
 
+    conflicts("platform=freebsd")
+
     # https://gitlab.freedesktop.org/libbsd/libbsd/issues/1
     conflicts("platform=darwin")
 

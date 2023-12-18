@@ -16,6 +16,7 @@ class Taskflow(CMakePackage):
     git = "https://github.com/taskflow/taskflow.git"
 
     version("master", branch="master")
+    version("3.6.0", sha256="5a1cd9cf89f93a97fcace58fd73ed2fc8ee2053bcb43e047acb6bc121c3edf4c")
     version("2.7.0", sha256="bc2227dcabec86abeba1fee56bb357d9d3c0ef0184f7c2275d7008e8758dfc3e")
 
     # Compiler must offer C++14 support

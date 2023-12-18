@@ -24,6 +24,16 @@ image, or to set up a proper entrypoint to run the image. These tasks are
 usually both necessary and repetitive, so Spack comes with a command
 to generate recipes for container images starting from a ``spack.yaml``.
 
+.. seealso::
+
+  This page is a reference for generating recipes to build container images.
+  It means that your environment is built from scratch inside the container
+  runtime.
+
+  Since v0.21, Spack can also create container images from existing package installations
+  on your host system. See :ref:`binary_caches_oci` for more information on
+  that topic.
+
 --------------------
 A Quick Introduction
 --------------------
