@@ -41,7 +41,7 @@ class PyJupyterlab(PythonPackage):
     depends_on("py-importlib-metadata@4.8.3:", when="@4: ^python@:3.9", type=("build", "run"))
     depends_on("py-importlib-resources@1.4:", when="@4: ^python@:3.8", type=("build", "run"))
     depends_on("py-ipykernel", when="@4:", type=("build", "run"))
-    depends_on("py-jinja2@3.0.3", when="@4:", type=("build", "run"))
+    depends_on("py-jinja2@3.0.3:", when="@4:", type=("build", "run"))
     depends_on("py-jupyter-core", when="@3:", type=("build", "run"))
     depends_on("py-jupyter-lsp@2:", when="@4:", type=("build", "run"))
     depends_on("py-jupyter-server@2.4:2", when="@4:", type=("build", "run"))
