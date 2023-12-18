@@ -419,6 +419,13 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         when="@2.0.0:2.0.1",
     )
 
+    # Use correct OpenBLAS include path under prefix
+    patch(
+        "https://patch-diff.githubusercontent.com/raw/pytorch/pytorch/pull/110063.patch?full_index=1",
+        sha256="23fb4009f7337051fc5303927ff977186a5af960245e7212895406477d8b2f66",
+        when="@:2.2",
+    )
+
     @when("@1.5.0:")
     def patch(self):
         # https://github.com/pytorch/pytorch/issues/52208
@@ -427,13 +434,6 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             "torch_global_deps PROPERTIES LINKER_LANGUAGE CXX",
             "caffe2/CMakeLists.txt",
         )
-
-    # Use correct OpenBLAS include path under prefix
-    patch(
-        "https://patch-diff.githubusercontent.com/raw/pytorch/pytorch/pull/110063.patch?full_index=1",
-        sha256="23fb4009f7337051fc5303927ff977186a5af960245e7212895406477d8b2f66",
-        when="@:2.2",
-    )
 
     def setup_build_environment(self, env):
         """Set environment variables used to control the build.
