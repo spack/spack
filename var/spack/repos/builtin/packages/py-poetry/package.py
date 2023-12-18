@@ -31,9 +31,7 @@ class PyPoetry(PythonPackage):
     depends_on(
         "py-backports-cached-property@1.0.2:1", when="@1.2.1 ^python@:3.7", type=("build", "run")
     )
-    depends_on(
-        "py-cachecontrol@0.12.9:0.12+filecache", when="@1.2.1", type=("build", "run")
-    )
+    depends_on("py-cachecontrol@0.12.9:0.12+filecache", when="@1.2.1", type=("build", "run"))
     depends_on(
         "py-cachecontrol@0.12.9:0.12+filecache", when="@:1.6 ^python@3.6:3", type=("build", "run")
     )
