@@ -349,6 +349,9 @@ def refresh(module_type, specs, args):
     spack.modules.common.generate_module_index(
         module_type_root, writers, overwrite=args.delete_tree
     )
+    spack.modules.common.generate_reverse_module_index(
+        module_type_root, writers, overwrite=args.delete_tree
+    )
     errors = []
     for x in writers:
         try:

@@ -383,18 +383,36 @@ class TestTcl:
         assert w1.layout.filename == w2.layout.filename  # pytest usefixtures should cause clash
         clashing_modulefile_path = w1.layout.filename
 
+        # test 1: w2 cannot overwrite or delete module owned by w1
         w1.write()
         before_mtime = os.path.getmtime(clashing_modulefile_path)
         w2.write()
         after_mtime = os.path.getmtime(clashing_modulefile_path)
-
         assert before_mtime == after_mtime  # module was not overwritten
-
         w2.remove()
         assert os.path.isfile(clashing_modulefile_path)  # module was not deleted
-
         w1.remove()
         assert not os.path.isfile(clashing_modulefile_path)  # module was deleted
+
+        # test 2: ownership of modulefile transfers to w2 when w2 uses overwrite
+        w1.write()
+        before_mtime = os.path.getmtime(clashing_modulefile_path)
+        w2.write(overwrite=True)
+        after_mtime = os.path.getmtime(clashing_modulefile_path)
+        assert after_mtime > before_mtime  # module was overwritten
+        w2.remove()
+        assert not os.path.isfile(clashing_modulefile_path)  # module was deleted
+        w1.remove()
+
+        # test 3: ownership of modulefile transfers to w2 when no owner is specified
+        w1.write(do_update_index=False)
+        before_mtime = os.path.getmtime(clashing_modulefile_path)
+        w2.write()
+        after_mtime = os.path.getmtime(clashing_modulefile_path)
+        assert after_mtime > before_mtime  # module was overwritten
+        w2.remove()
+        assert not os.path.isfile(clashing_modulefile_path)  # module was deleted
+        w1.remove()
 
     def test_suffixes(self, module_configuration, factory):
         """Tests adding suffixes to module file name."""

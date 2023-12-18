@@ -254,6 +254,32 @@ def generate_module_index(root, modules, remove_hashes=None, overwrite=False):
         syaml.dump(index, default_flow_style=False, stream=index_file)
 
 
+def generate_reverse_module_index(root, modules, remove_paths=None, overwrite=False):
+    index_path = os.path.join(root, "module-index-reverse.yaml")
+    if overwrite or not os.path.exists(index_path):
+        entries = syaml.syaml_dict()
+    else:
+        with open(index_path) as index_file:
+            yaml_content = syaml.load(index_file)
+            entries = yaml_content["reverse_module_index"]
+
+    for m in modules:
+        entries[m.layout.filename] = m.spec.dag_hash()
+
+    if remove_paths is not None:
+        for path in remove_paths:
+            try:
+                entries.pop(path)
+            except KeyError:
+                msg = f'Attempted to remove nonexistent path "{path}" from reverse module index'
+                tty.debug(msg)
+
+    index = {"reverse_module_index": entries}
+    llnl.util.filesystem.mkdirp(root)
+    with open(index_path, "w") as index_file:
+        syaml.dump(index, default_flow_style=False, stream=index_file)
+
+
 def _generate_upstream_module_index():
     module_indices = read_module_indices()
 
@@ -272,6 +298,15 @@ def read_module_index(root):
         return {}
     with open(index_path) as index_file:
         return _read_module_index(index_file)
+
+
+def read_reverse_module_index(root):
+    index_path = os.path.join(root, "module-index-reverse.yaml")
+    if not os.path.exists(index_path):
+        return {}
+    with open(index_path) as index_file:
+        yaml_content = syaml.load(index_file)
+        return yaml_content["reverse_module_index"]
 
 
 def _read_module_index(str_or_file):
@@ -913,6 +948,7 @@ class BaseModuleFileWriter:
                 existing file. If False the operation is skipped an we print
                 a warning to the user.
             do_update_index (bool): enables/disables the updating of `module-index.yaml`
+                and `module-index-reverse.yaml`.
         """
         # Return immediately if the module is excluded
         if self.conf.excluded:
@@ -920,18 +956,28 @@ class BaseModuleFileWriter:
             tty.debug(msg.format(self.spec.cshort_spec))
             return
 
-        # register this spec to this module file in the module index
-        # even if it already exists and I'm not about to overwrite it
-        # this allows me to avoid accidentally deleting that file in the future
-        if do_update_index:
-            generate_module_index(self.layout.dirname(), [self])
-
         # Print a warning in case I am accidentally overwriting
         # a module file that is already there (name clash)
         if not overwrite and os.path.exists(self.layout.filename):
             message = "Module file {0.filename} exists and will not be overwritten"
             tty.warn(message.format(self.layout))
             return
+
+        if not self.test_ownership():
+            if overwrite:
+                tty.warn(
+                    f"Module file {self.layout.filename} was previously used by another package "
+                    + f"but is now being overwritten by {self.spec.cshort_spec()}"
+                )
+            else:
+                msg = "Module file {0.filename} will not be overwritten due to lack of ownership"
+                tty.warn(msg.format(self.layout))
+                return
+
+        # register this spec to this module file in the module index
+        if do_update_index:
+            self.add_to_module_index()
+            self.add_to_reverse_module_index()
 
         # If we are here it means it's ok to write the module file
         msg = "\tWRITE: {0} [{1}]"
@@ -1055,42 +1101,43 @@ class BaseModuleFileWriter:
                 with open(modulerc_path, "w") as f:
                     f.write("\n".join(content))
 
-    def test_name_clash(self) -> bool:
-        """Scan the module index to see if more than one package claims to use this module."""
-        module_index = read_module_index(self.layout.dirname())
-        already_found_package = False
-        for module_properties in module_index.values():
-            if module_properties.path == self.layout.filename:
-                if already_found_package:
-                    return True
-                already_found_package = True
-        return False
+    def test_ownership(self) -> bool:
+        """Check the reverse module index to see if another package is using the file."""
+        reverse_module_index = read_reverse_module_index(self.layout.dirname())
+        try:
+            owner_dag_hash = reverse_module_index[self.layout.filename]
+        except KeyError:
+            tty.warn(
+                f'Ownership of unregistered modulefile "{self.layout.filename}"\n'
+                + f'has been granted to "{self.spec.cshort_spec}"'
+            )
+            return True
+        return owner_dag_hash == self.spec.dag_hash()
 
     def remove(self):
         """Deletes the module file."""
-        mod_file = self.layout.filename
-        if os.path.exists(mod_file):
-            is_clash = self.test_name_clash()
-            # remove this spec from the module index
-            # must be in module index for clash test, must be removed whether clash or not
-            generate_module_index(self.layout.dirname(), [], remove_hashes=[self.spec.dag_hash()])
-            if is_clash:
-                tty.warn(
-                    "Skipping module deletion due to name clash:\n"
-                    + f"file: {mod_file}\n"
-                    + f"spec: {self.spec.format(self.spec.cshort_spec)}"
-                )
-                return
-            try:
-                os.remove(mod_file)  # Remove the module file
-                self.remove_module_defaults()  # Remove default targeting module file
-                self.update_module_hiddenness(remove=True)  # Remove hide cmd in modulerc
-                os.removedirs(
-                    os.path.dirname(mod_file)
-                )  # Remove all the empty directories from the leaf up
-            except OSError:
-                # removedirs throws OSError on first non-empty directory found
-                pass
+        mod_file_path = self.layout.filename
+        if not os.path.exists(mod_file_path):
+            return
+        if not self.test_ownership():
+            tty.warn(
+                "Module file will not be deleted due to lack of ownership:\n"
+                + f"file: '{mod_file_path}'\n"
+                + f"spec: '{self.spec.format(self.spec.cshort_spec)}'"
+            )
+            return
+        try:
+            os.remove(mod_file_path)  # Remove the module file
+            self.remove_module_defaults()  # Remove default targeting module file
+            self.update_module_hiddenness(remove=True)  # Remove hide cmd in modulerc
+            self.delete_from_module_index()
+            self.delete_from_reverse_module_index()
+            os.removedirs(
+                os.path.dirname(mod_file_path)
+            )  # Remove all the empty directories from the leaf up
+        except OSError:
+            # removedirs throws OSError on first non-empty directory found
+            pass
 
     def remove_module_defaults(self):
         if not any(self.spec.satisfies(default) for default in self.conf.defaults):
@@ -1103,6 +1150,20 @@ class BaseModuleFileWriter:
             os.unlink(default_symlink)
         except OSError:
             pass
+
+    def add_to_module_index(self):
+        generate_module_index(self.layout.dirname(), [self])
+
+    def add_to_reverse_module_index(self):
+        generate_reverse_module_index(self.layout.dirname(), [self])
+
+    def delete_from_module_index(self):
+        generate_module_index(self.layout.dirname(), [], remove_hashes=[self.spec.dag_hash()])
+
+    def delete_from_reverse_module_index(self):
+        generate_reverse_module_index(
+            self.layout.dirname(), [], remove_paths=[self.layout.filename]
+        )
 
 
 @contextlib.contextmanager
