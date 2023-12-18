@@ -4732,16 +4732,11 @@ class Spec:
         from this tree. This can also remove other dependencies if
         they are only present because of `dep_name`.
         """
-        dep_spec = Spec(dep_name)
-        remove = [dep_spec]
-        if dep_spec.virtual:
-            remove = list(spack.repo.PATH.providers_for(dep_name))
-        # Create a list to avoid modification during traversal
         for spec in list(self.traverse()):
             new_dependencies = _EdgeMap()  # A new _EdgeMap
             for pkg_name, edge_list in spec._dependencies.items():
-                if not any(Spec(pkg_name).satisfies(x) for x in remove):
-                    for edge in edge_list:
+                for edge in edge_list:
+                    if (dep_name not in edge.virtuals) and (not dep_name == edge.spec.name):
                         new_dependencies.add(edge)
             spec._dependencies = new_dependencies
 
