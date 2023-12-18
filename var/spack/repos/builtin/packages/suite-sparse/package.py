@@ -65,7 +65,9 @@ class SuiteSparse(Package, CMakePackage, CudaPackage):
     # Support for TBB has been removed in version 5.11
     variant("tbb", default=False, description="Build with Intel TBB", when="@4.5.3:5.10")
 
-    build_system(conditional("generic", when="@:7.3"), conditional("cmake", when="@7.4:"))
+    build_system(
+        conditional("generic", when="@:7.3"), conditional("cmake", when="@7.4:"), default="cmake"
+    )
 
     depends_on("blas")
     depends_on("lapack")
