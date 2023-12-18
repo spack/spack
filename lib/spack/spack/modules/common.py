@@ -912,6 +912,7 @@ class BaseModuleFileWriter:
             overwrite (bool): if True it is fine to overwrite an already
                 existing file. If False the operation is skipped an we print
                 a warning to the user.
+            do_update_index (bool): enables/disables the updating of `module-index.yaml`
         """
         # Return immediately if the module is excluded
         if self.conf.excluded:
