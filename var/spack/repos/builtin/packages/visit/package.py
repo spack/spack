@@ -323,11 +323,7 @@ class Visit(CMakePackage):
             )
 
         if "+adios2" in spec:
-            args.extend(
-                [
-                    self.define("VISIT_ADIOS2_DIR", spec["adios2"].prefix),
-                ]
-            )
+            args.extend([self.define("VISIT_ADIOS2_DIR", spec["adios2"].prefix)])
 
         if "+mfem" in spec:
             args.extend(
