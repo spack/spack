@@ -778,9 +778,37 @@ def test_query_unused_specs(mutable_database):
     s.concretize()
     s.package.do_install(fake=True, explicit=True)
 
-    unused = spack.store.STORE.db.unused_specs
-    assert len(unused) == 1
-    assert unused[0].name == "cmake"
+    si = s.dag_hash()
+    ml_mpich = spack.store.STORE.db.query_one("mpileaks ^mpich").dag_hash()
+    ml_mpich2 = spack.store.STORE.db.query_one("mpileaks ^mpich2").dag_hash()
+    ml_zmpi = spack.store.STORE.db.query_one("mpileaks ^zmpi").dag_hash()
+    externaltest = spack.store.STORE.db.query_one("externaltest").dag_hash()
+    trivial_smoke_test = spack.store.STORE.db.query_one("trivial-smoke-test").dag_hash()
+
+    def check_unused(roots, deptypes, expected):
+        unused = spack.store.STORE.db.unused_specs(root_hashes=roots, deptypes=deptypes)
+        assert set(u.name for u in unused) == set(expected)
+
+    check_unused(None, None, ["cmake"])
+    check_unused(None, ("link", "run"), ["cmake"])
+    check_unused(
+        [si, ml_mpich, ml_mpich2, ml_zmpi, externaltest], None, ["trivial-smoke-test", "cmake"]
+    )
+    check_unused(
+        [si, ml_mpich, ml_mpich2, ml_zmpi, externaltest],
+        ("build", "link", "run"),
+        ["trivial-smoke-test"],
+    )
+    check_unused(
+        [si, ml_mpich, ml_mpich2, externaltest, trivial_smoke_test],
+        ("build", "link", "run"),
+        ["mpileaks", "callpath", "zmpi", "fake"],
+    )
+    check_unused(
+        [si, ml_mpich, ml_mpich2, ml_zmpi],
+        None,
+        ["trivial-smoke-test", "cmake", "externaltest", "externaltool", "externalvirtual"],
+    )
 
 
 @pytest.mark.regression("10019")
