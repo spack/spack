@@ -53,7 +53,6 @@ class SuiteSparse(Package, CMakePackage, CudaPackage):
         default=True,
         description="Build position independent code (required to link with shared libraries)",
     )
-    variant("cuda", default=False, description="Build with CUDA")
     variant("openmp", default=True, description="Build with OpenMP")
     variant(
         "graphblas",
@@ -71,9 +70,7 @@ class SuiteSparse(Package, CMakePackage, CudaPackage):
     depends_on("blas")
     depends_on("lapack")
 
-    with when("+cuda"):
-        depends_on("cuda")
-        depends_on("cuda@11.2:", when="@5.11:")
+    depends_on("cuda@11.2:", when="@5.11: +cuda")
 
     depends_on("mpfr@4.0.0:", when="@5.8.0:")
     depends_on("gmp", when="@5.8.0:")
