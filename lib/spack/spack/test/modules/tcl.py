@@ -377,13 +377,12 @@ class TestTcl:
 
     @pytest.mark.usefixtures("mock_module_filename")
     def test_clash(self, factory):
+        """Tests that w2 cannot overwrite or delete module owned by w1"""
         w1, _ = factory("mpileaks")
         w2, _ = factory("callpath")
-
         assert w1.layout.filename == w2.layout.filename  # pytest usefixtures should cause clash
         clashing_modulefile_path = w1.layout.filename
 
-        # test 1: w2 cannot overwrite or delete module owned by w1
         w1.write()
         before_mtime = os.path.getmtime(clashing_modulefile_path)
         w2.write()
@@ -394,25 +393,43 @@ class TestTcl:
         w1.remove()
         assert not os.path.isfile(clashing_modulefile_path)  # module was deleted
 
-        # test 2: ownership of modulefile transfers to w2 when w2 uses overwrite
-        w1.write()
-        before_mtime = os.path.getmtime(clashing_modulefile_path)
-        w2.write(overwrite=True)
-        after_mtime = os.path.getmtime(clashing_modulefile_path)
-        assert after_mtime > before_mtime  # module was overwritten
-        w2.remove()
-        assert not os.path.isfile(clashing_modulefile_path)  # module was deleted
-        w1.remove()
+    @pytest.mark.usefixtures("mock_module_filename")
+    def test_clash2(self, factory):
+        """Tests that w1 is able to delete its module even when w2 would like to use it"""
+        w1, _ = factory("mpileaks")
+        w2, _ = factory("callpath")
+        assert w1.layout.filename == w2.layout.filename  # pytest usefixtures should cause clash
+        clashing_modulefile_path = w1.layout.filename
 
-        # test 3: ownership of modulefile transfers to w2 when no owner is specified
-        w1.write(do_update_index=False)
+        w1.write()
         before_mtime = os.path.getmtime(clashing_modulefile_path)
         w2.write()
         after_mtime = os.path.getmtime(clashing_modulefile_path)
-        assert after_mtime > before_mtime  # module was overwritten
-        w2.remove()
-        assert not os.path.isfile(clashing_modulefile_path)  # module was deleted
+        assert before_mtime == after_mtime  # module was not overwritten
         w1.remove()
+        assert not os.path.isfile(clashing_modulefile_path)  # module was deleted
+
+    @pytest.mark.usefixtures("mock_module_filename")
+    def test_clash_overwrite(self, factory):
+        """Tests that ownership of module transfers from w1 to w2 when overwrite=True"""
+        w1, _ = factory("mpileaks")
+        w2, _ = factory("callpath")
+        assert w1.layout.filename == w2.layout.filename  # pytest usefixtures should cause clash
+
+        w1.write()
+        w2.write(overwrite=True)
+        assert w2.test_ownership()
+
+    @pytest.mark.usefixtures("mock_module_filename")
+    def test_clash_no_owner_specified(self, factory):
+        """Tests that ownership of module transfers from w1 to w2 when no owner is specified"""
+        w1, _ = factory("mpileaks")
+        w2, _ = factory("callpath")
+        assert w1.layout.filename == w2.layout.filename  # pytest usefixtures should cause clash
+
+        w1.write(do_update_index=False)
+        w2.write()
+        assert w2.test_ownership()
 
     def test_suffixes(self, module_configuration, factory):
         """Tests adding suffixes to module file name."""

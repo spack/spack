@@ -944,9 +944,8 @@ class BaseModuleFileWriter:
         """Writes the module file.
 
         Args:
-            overwrite (bool): if True it is fine to overwrite an already
-                existing file. If False the operation is skipped an we print
-                a warning to the user.
+            overwrite (bool): if True it is fine to overwrite a module owned by another package.
+                If False the operation is skipped an we print a warning to the user.
             do_update_index (bool): enables/disables the updating of `module-index.yaml`
                 and `module-index-reverse.yaml`.
         """
@@ -956,22 +955,17 @@ class BaseModuleFileWriter:
             tty.debug(msg.format(self.spec.cshort_spec))
             return
 
-        # Print a warning in case I am accidentally overwriting
-        # a module file that is already there (name clash)
-        if not overwrite and os.path.exists(self.layout.filename):
-            message = "Module file {0.filename} exists and will not be overwritten"
-            tty.warn(message.format(self.layout))
-            return
-
         if not self.test_ownership():
             if overwrite:
                 tty.warn(
                     f"Module file {self.layout.filename} was previously used by another package "
-                    + f"but is now being overwritten by {self.spec.cshort_spec()}"
+                    + f"but is now being overwritten by {self.spec.cshort_spec}"
                 )
             else:
-                msg = "Module file {0.filename} will not be overwritten due to lack of ownership"
-                tty.warn(msg.format(self.layout))
+                tty.warn(
+                    f"Module file {self.layout.filename} will not be overwritten due to lack of "
+                    + "ownership."
+                )
                 return
 
         # register this spec to this module file in the module index
