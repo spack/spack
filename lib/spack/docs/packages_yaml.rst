@@ -123,7 +123,7 @@ follows:
              prepend_path:
                LD_LIBRARY_PATH: /path/to/hwloc/lib64
 
-See :ref:`_configuration_environment_variables` for more information on
+See :ref:`configuration_environment_variables` for more information on
 how to configure environment modifications in Spack config files.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
