@@ -13,13 +13,13 @@ class PyDace(PythonPackage):
     optimized programmatically or interactively."""
 
     homepage = "https://github.com/spcl/dace"
-    pypi = "dace/dace-0.14.2.tar.gz"
+    pypi = "dace/dace-0.15.1.tar.gz"
     git = "https://github.com/spcl/dace.git"
 
     maintainers("tbennun")
 
     version("master", branch="master", submodules=True)
-    version("0.14.2", sha256="13e5c5af31ca7313839dee257305d2020ac79c3cfa77af8ea3feb5260b0582a4")
+    version("0.15.1", sha256="69bfdbbd5c7177f2926a874f5fa82fcdef61fc532c022b4bc12e1e9218724093")
 
     variant(
         "counters",
@@ -27,21 +27,30 @@ class PyDace(PythonPackage):
         default=False,
     )
 
-    depends_on("python@3.6:3.10", when="@0.14.2:", type=("build", "run"))
+    depends_on("python@3.6:3.12", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    # From setup.py
-    depends_on("cmake@3.15.0:", when="@0.14.2:", type=("build", "run"))
-    depends_on("py-numpy@1.19:", when="@0.14.2:", type=("build", "run"))
-    depends_on("py-networkx@2.5:", when="@0.14.2:", type=("build", "run"))
-    depends_on("py-astunparse@1.6.3:", when="@0.14.2:", type=("build", "run"))
-    depends_on("py-sympy@1.10:", when="@0.14.2:", type=("build", "run"))
-    depends_on("py-pyyaml@5.1:", when="@0.14.2:", type=("build", "run"))
-    depends_on("py-ply@3.8:", when="@0.14.2:", type=("build", "run"))
-    depends_on("py-websockets@10.3:", when="@0.14.2:", type=("build", "run"))
-    depends_on("py-requests@2.24:", when="@0.14.2:", type=("build", "run"))
-    depends_on("py-aenum@3.1.11:", when="@0.14.2:", type=("build", "run"))
-    depends_on("py-flask@2.2.2:", when="@0.14.2:", type=("build", "run"))
-    depends_on("py-dill@0.3.6:", when="@0.14.2:", type=("build", "run"))
+
+    # Dependencies from setup.py
+    depends_on("cmake@3.15.0:", type=("build", "run"))
+    depends_on("py-networkx@2.5:", type=("build", "run"))
+    depends_on("py-pyyaml", type=("build", "run"))
+    depends_on("py-ply", type=("build", "run"))
+    depends_on("py-websockets", type=("build", "run"))
+    depends_on("py-jinja2", type=("build", "run"))
+    depends_on("py-aenum@3.1:", type=("build", "run"))
+    depends_on("py-dill", type=("build", "run"))
+    depends_on("py-fparser@0.1.3:", type=("build", "run"))
+
+    depends_on("py-pyreadline", when="platform=win32", type=("build", "run"))
+    depends_on("py-dataclasses", when="^python@:3.6", type=("build", "run"))
+    depends_on("py-typing-compat", when="^python@:3.7", type=("build", "run"))
+
+    # A typo in the 0.15.1 setup.py specifies sympy <= 1.9 instead of >= 1.9
+    depends_on("py-sympy@1.9:", type=("build", "run"))
+
+    # Dependencies in setup.py with specific constraints in requirements.txt
+    depends_on("py-numpy@1.21:", type=("build", "run"))
+    depends_on("py-astunparse@1.6.3:", type=("build", "run"))
 
     # From performance counters requirements
-    depends_on("likwid@5.2.2:", when="@0.14.2:+counters", type=("build", "run"))
+    depends_on("likwid@5.2.2:", when="+counters", type=("build", "run"))
