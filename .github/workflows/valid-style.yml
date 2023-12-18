@@ -26,11 +26,12 @@ jobs:
     - name: Install Python Packages
       run: |
         pip install --upgrade pip setuptools
-        pip install -r .github/workflows/style/requirements.txt
+        pip install -r .github/workflows/requirements/style.txt
     - name: vermin (Spack's Core)
       run: vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv lib/spack/spack/ lib/spack/llnl/ bin/
     - name: vermin (Repositories)
       run: vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv var/spack/repos
+
   # Run style checks on the files that have been changed
   style:
     runs-on: ubuntu-latest
@@ -38,6 +39,7 @@ jobs:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
       with:
         fetch-depth: 0
+        filter: tree:0
     - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c
       with:
         python-version: '3.11'
@@ -45,7 +47,7 @@ jobs:
     - name: Install Python packages
       run: |
         pip install --upgrade pip setuptools
-        pip install -r .github/workflows/style/requirements.txt
+        pip install -r .github/workflows/requirements/style.txt
     - name: Setup git configuration
       run: |
         # Need this for the git tests to succeed.
@@ -54,11 +56,13 @@ jobs:
     - name: Run style tests
       run: |
           share/spack/qa/run-style-tests
+
   audit:
     uses: ./.github/workflows/audit.yaml
     with:
       with_coverage: ${{ inputs.with_coverage }}
       python_version: '3.11'
+
   # Check that spack can bootstrap the development environment on Python 3.6 - RHEL8
   bootstrap-dev-rhel8:
     runs-on: ubuntu-latest
@@ -69,7 +73,7 @@ jobs:
           dnf install -y \
               bzip2 curl file gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
               make patch tcl unzip which xz
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # @v2
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
       - name: Setup repo and non-root user
         run: |
           git --version
