@@ -579,6 +579,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         elif self.spec["blas"].name == "openblas":
             env.set("BLAS", "OpenBLAS")
             env.set("WITH_BLAS", "open")
+            env.set("OpenBLAS_HOME", self.spec["openblas"].prefix)
         elif self.spec["blas"].name == "veclibfort":
             env.set("BLAS", "vecLib")
             env.set("WITH_BLAS", "veclib")
