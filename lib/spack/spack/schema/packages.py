@@ -158,8 +158,8 @@ properties = {
                                 "modules": {"type": "array", "items": {"type": "string"}},
                                 "extra_attributes": {
                                     "type": "object",
+                                    "additionalProperties": True,
                                     "properties": {
-                                        "additionalProperties": True,
                                         "environment": spack.schema.environment.definition,
                                     },
                                 },
