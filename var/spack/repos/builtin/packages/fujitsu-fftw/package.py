@@ -50,16 +50,7 @@ class FujitsuFftw(FftwBase):
         when="%fj",
         msg="ARM-SVE vector instructions only works in single or double precision",
     )
-    conflicts("%arm")
-    conflicts("%cce")
-    conflicts("%apple-clang")
-    conflicts("%clang")
-    conflicts("%gcc")
-    conflicts("%intel")
-    conflicts("%nag")
-    conflicts("%pgi")
-    conflicts("%xl")
-    conflicts("%xl_r")
+    requires("%fj")
 
     def autoreconf(self, spec, prefix):
         if spec.target != "a64fx":

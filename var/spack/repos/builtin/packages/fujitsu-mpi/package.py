@@ -13,18 +13,8 @@ class FujitsuMpi(Package):
 
     homepage = "https://www.fujitsu.com/us/"
 
-    conflicts("%arm")
-    conflicts("%cce")
-    conflicts("%apple-clang")
-    conflicts("%clang")
-    conflicts("%gcc")
-    conflicts("%intel")
-    conflicts("%nag")
-    conflicts("%pgi")
-    conflicts("%xl")
-    conflicts("%xl_r")
-
     provides("mpi@3.1:")
+    requires("%fj")
 
     def install(self, spec, prefix):
         raise InstallError("Fujitsu MPI is not installable; it is vendor supplied")
