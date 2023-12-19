@@ -73,6 +73,7 @@ default:
 # Job templates
 ########################################
 .base-job:
+  when: manual
   variables:
     PIPELINE_MIRROR_TEMPLATE: "single-src-protected-mirrors.yaml.in"
     # TODO: We can remove this when we drop the "deprecated" stack
