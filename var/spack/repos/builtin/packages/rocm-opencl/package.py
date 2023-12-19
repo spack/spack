@@ -24,8 +24,10 @@ class RocmOpencl(CMakePackage):
             return (
                 "https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime/archive/roc-3.5.0.tar.gz"
             )
-        elif version <=Version("5.6.1"):
-            url = "https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime/archive/rocm-{0}.tar.gz"
+        elif version <= Version("5.6.1"):
+            url = (
+                "https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime/archive/rocm-{0}.tar.gz"
+            )
         else:
             url = "https://github.com/ROCm/clr/archive/refs/tags/rocm-{0}.tar.gz"
         return url.format(version)
