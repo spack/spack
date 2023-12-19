@@ -10,7 +10,7 @@ set -e
 # The best solution would be to have the compilers hash (or packages contents) be part of the
 # individual packages hashes. I don't see this at the moment.
 # Set to the first tag which includes _DB_VERSION 7:
-spack_intel_compiler_commit="develop-2023-06-25"
+spack_intel_compiler_commit="develop-2023-08-06"
 
 set_pcluster_defaults() {
     # Set versions of pre-installed software in packages.yaml
