@@ -130,8 +130,7 @@ def python_interpreter(args):
     elif args.python_args:
         propagate_exceptions_from(console)
         sys.argv = args.python_args
-        with open(args.python_args[0]) as file:
-            console.runsource(file.read(), args.python_args[0], "exec")
+        runpy.run_path(args.python_args[0], run_name="__main__")
     else:
         # Provides readline support, allowing user to use arrow keys
         console.push("import readline")
