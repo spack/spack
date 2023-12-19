@@ -107,7 +107,8 @@ class Tau(Package):
     depends_on("zlib-api", type="link")
     depends_on("pdt", when="+pdt")  # Required for TAU instrumentation
     depends_on("scorep", when="+scorep")
-    depends_on("otf2@2.1:2.3", when="+otf2")
+    depends_on("otf2@2.1:2.3", when="@:2.33.0 +otf2")
+    depends_on("otf2@3:", when="@2.33.1: +otf2")
     depends_on("likwid", when="+likwid")
     depends_on("papi", when="+papi")
     depends_on("libdwarf", when="+libdwarf")
