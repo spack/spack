@@ -31,8 +31,8 @@ RUN cd {{ paths.environment }} && spack env activate . && spack install --fail-f
 {% endif %}
 {% endblock install_software %}
 
-{% if strip %}
 {% block strip_binaries %}
+{% if strip %}
 # Strip all the binaries
 RUN find -L {{ paths.view }}/* -type f -exec readlink -f '{}' \; | \
     xargs file -i | \
@@ -85,8 +85,8 @@ RUN {% if os_package_update %}{{ os_packages_final.update }} \
 LABEL "{{ label }}"="{{ value }}"
 {% endfor %}
 
-{% block define_entrypoint_cmd %}
+{% block set_entrypoint %}
 ENTRYPOINT [ "/entrypoint.sh" ]
 CMD [ "/bin/bash" ]
-{% endblock define_entrypoint_cmd %}
+{% endblock set_entrypoint %}
 {% endif %}
