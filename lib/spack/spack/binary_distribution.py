@@ -2215,13 +2215,12 @@ def _ensure_common_prefix(tar: tarfile.TarFile) -> str:
     # dirs of it.
     has_prefix = False
     for member in tar.getmembers():
+        stripped = member.name.rstrip("/")
         if not (
-            member.name.startswith(pkg_prefix)
-            or member.isdir()
-            and pkg_prefix.startswith(member.name)
+            stripped.startswith(pkg_prefix) or member.isdir() and pkg_prefix.startswith(stripped)
         ):
-            raise ValueError(f"Tarball contains file {member.name} outside of prefix {pkg_prefix}")
-        if member.isdir() and member.name == pkg_prefix:
+            raise ValueError(f"Tarball contains file {stripped} outside of prefix {pkg_prefix}")
+        if member.isdir() and stripped == pkg_prefix:
             has_prefix = True
 
     # This is technically not required, but let's be defensive about the existence of the package
