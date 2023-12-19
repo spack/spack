@@ -1032,6 +1032,11 @@ class SetupContext:
                     if id(spec) in self.nodes_in_subdag:
                         pkg.setup_dependent_run_environment(run_env_mods, spec)
                 pkg.setup_run_environment(run_env_mods)
+
+                external_env = (dspec.extra_attributes or {}).get("environment", {})
+                if external_env:
+                    run_env_mods.extend(spack.schema.environment.parse(external_env))
+
                 if self.context == Context.BUILD:
                     # Don't let the runtime environment of comiler like dependencies leak into the
                     # build env

@@ -285,6 +285,24 @@ def test_compiler_config_modifications(
         assert name not in os.environ
 
 
+def test_external_config_env(mock_packages, mutable_config, working_env):
+    cmake_config = {
+        "externals": [
+            {
+                "spec": "cmake@1.0",
+                "prefix": "/fake/path",
+                "extra_attributes": {"environment": {"set": {"TEST_ENV_VAR_SET": "yes it's set"}}},
+            }
+        ]
+    }
+    spack.config.set("packages:cmake", cmake_config)
+
+    cmake_client = spack.spec.Spec("cmake-client").concretized()
+    spack.build_environment.setup_package(cmake_client.package, False)
+
+    assert os.environ["TEST_ENV_VAR_SET"] == "yes it's set"
+
+
 @pytest.mark.regression("9107")
 def test_spack_paths_before_module_paths(config, mock_packages, monkeypatch, working_env):
     s = spack.spec.Spec("cmake")
