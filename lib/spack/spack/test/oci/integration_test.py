@@ -35,7 +35,7 @@ def test_buildcache_push_command(mutable_database, disable_parallel_buildcache_p
         mirror("add", "oci-test", "oci://example.com/image")
 
         # Push the package(s) to the OCI registry
-        buildcache("push", "--update-index", "oci-test", "mpileaks^mpich")
+        buildcache("push", "oci-test", "mpileaks^mpich")
 
         # Remove mpileaks from the database
         matches = mutable_database.query_local("mpileaks^mpich")

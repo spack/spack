@@ -348,10 +348,10 @@ def test_push_and_install_with_mirror_marked_unsigned_does_not_require_extra_fla
     # Push
     if signed:
         # Need to pass "--unsigned" to override the mirror's default
-        args = ["push", "--update-index", "--unsigned", "my-mirror", f"/{spec.dag_hash()}"]
+        args = ["push", "--unsigned", "my-mirror", f"/{spec.dag_hash()}"]
     else:
         # No need to pass "--unsigned" if the mirror is unsigned
-        args = ["push", "--update-index", "my-mirror", f"/{spec.dag_hash()}"]
+        args = ["push", "my-mirror", f"/{spec.dag_hash()}"]
 
     buildcache(*args)
 

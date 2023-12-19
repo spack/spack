@@ -96,13 +96,22 @@ def setup_parser(subparser: argparse.ArgumentParser):
     push.add_argument(
         "mirror", type=arguments.mirror_name_or_url, help="mirror name, path, or URL"
     )
-    push.add_argument(
+    push_update_index = push.add_mutually_exclusive_group(required=False)
+    push_update_index.add_argument(
         "--update-index",
         "--rebuild-index",
         action="store_true",
-        default=False,
-        help="regenerate buildcache index after building package(s)",
+        dest="update_index",
+        help="regenerate buildcache index after pushing (default)",
     )
+    push_update_index.add_argument(
+        "--no-update-index",
+        "--no-rebuild-index",
+        action="store_false",
+        dest="update_index",
+        help="do not regenerate buildcache index after pushing packages",
+    )
+    push_update_index.set_defaults(update_index=True)
     push.add_argument(
         "--spec-file", default=None, help="create buildcache entry for spec from json or yaml file"
     )

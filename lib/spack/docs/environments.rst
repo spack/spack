@@ -1132,7 +1132,7 @@ index once every package is pushed. Note how this target uses the generated
    example/push/%: example/install/%
    	@mkdir -p $(dir $@)
    	$(info About to push $(SPEC) to a buildcache)
-   	$(SPACK) -e . buildcache push --allow-root --only=package $(BUILDCACHE_DIR) /$(HASH)
+   	$(SPACK) -e . buildcache push --no-update-index --only=package $(BUILDCACHE_DIR) /$(HASH)
    	@touch $@
 
    push: $(addprefix example/push/,$(example/SPACK_PACKAGE_IDS))
