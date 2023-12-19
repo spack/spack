@@ -21,12 +21,8 @@ class HipTensor(CMakePackage, ROCmPackage):
     version("5.7.0", sha256="4b17f6d43b17fe2dc1d0c61e9663d4752006f7898cc94231206444a1663eb252")
 
     for ver in ["5.7.0", "5.7.1", "master"]:
-        depends_on("composable-kernel@" + ver, when="@" + ver)
-        depends_on("rocm-cmake@" + ver, when="@" + ver)
+        depends_on(f"composable-kernel@{ver}", when=f"@{ver}")
+        depends_on(f"rocm-cmake@{ver}", when=f"@{ver}")
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
-
-    def cmake_args(self):
-        args = []
-        return args
