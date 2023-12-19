@@ -519,7 +519,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                     [
                         "-DGMX_GPU:STRING=SYCL",
                         "-DGMX_SYCL_HIPSYCL=ON",
-                        f"-DHIPSYCL_TARGETS='hip:{arch_str}'",
+                        f"-DHIPSYCL_TARGETS=hip:{arch_str}",
                     ]
                 )
             elif "+sycl" in self.spec:
