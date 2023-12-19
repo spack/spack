@@ -456,7 +456,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     patch(
         "https://patch-diff.githubusercontent.com/raw/OSGeo/gdal/pull/8964.patch?full_index=1",
         when="@3.5.0:",
-        sha256="52459dc9903ced5005ba81515762a55cd829d8f5420607405c211c4a77c2bf79"
+        sha256="52459dc9903ced5005ba81515762a55cd829d8f5420607405c211c4a77c2bf79",
     )
 
     executables = ["^gdal-config$"]
