@@ -423,7 +423,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     patch(
         "https://patch-diff.githubusercontent.com/raw/pytorch/pytorch/pull/110063.patch?full_index=1",
         sha256="23fb4009f7337051fc5303927ff977186a5af960245e7212895406477d8b2f66",
-        when="@:2.2",
+        when="@:2.1",
     )
 
     @when("@1.5.0:")
