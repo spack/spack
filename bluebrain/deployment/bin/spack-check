@@ -31,16 +31,15 @@ pip install -U pip setuptools wheel
 
 mods=""
 for stage in ${STAGES}; do
-    available_modules=$(module avail -t |& sed -n -e '/\/'"${stage}"'\/.*:$/,/:$/ {/:$/ d; p}'|sort)
+    available_modules=$(module avail -t|&sed -n -e '/\/'"${stage}"'\/.*:$/,/:$/ {/:$/ d; p}'|sort)
     for mod in ${available_modules}; do
-        module purge
-        module load ${RELEASE} 2> /dev/null
-        modulefile=$(module show ${mod} |& sed -n -e '2 { s/:$//; p }')
-        if [[ -z $(grep "Autoloading python" "${modulefile}") ]]; then
-            # echo "SKIPPING ${mod}: no python dependency"
+        if [[ -z $(module show ${mod}|&grep '^module\s*load\s*python') ]]; then
+            echo "SKIPPING ${mod}: no python dependency"
             continue
         fi
+        echo "TESTING ${mod}"
         mods="${mods} ${mod}"
+        modulefile=$(module show ${mod}|&sed -n -e '2 { s/:$//; p }')
         cat <<EOF >> ${MAKEFILE}
 ${mod}:
 	@module-check ${VENV} ${CONFIG} ${RELEASE} ${modulefile}
