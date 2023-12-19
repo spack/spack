@@ -3729,33 +3729,37 @@ class Spec:
 
         # If the names are different, we need to consider virtuals
         if self.name != other.name and self.name and other.name:
-            if self.virtual and other.virtual:
-                # Two virtual specs intersect only if there are providers for both
-                lhs = spack.repo.PATH.providers_for(str(self))
-                rhs = spack.repo.PATH.providers_for(str(other))
-                intersection = [s for s in lhs if any(s.intersects(z) for z in rhs)]
-                return bool(intersection)
+            self_virtual, other_virtual = self.virtual, other.virtual
+            if not self_virtual and not other_virtual:
+                return False
 
-            # A provider can satisfy a virtual dependency.
-            elif self.virtual or other.virtual:
-                virtual_spec, non_virtual_spec = (self, other) if self.virtual else (other, self)
-                try:
-                    # Here we might get an abstract spec
-                    pkg_cls = spack.repo.PATH.get_pkg_class(non_virtual_spec.fullname)
-                    pkg = pkg_cls(non_virtual_spec)
-                except spack.repo.UnknownEntityError:
-                    # If we can't get package info on this spec, don't treat
-                    # it as a provider of this vdep.
+            elif self_virtual and other_virtual:
+                # Two virtual specs intersect only if there are providers for both
+                lhs = spack.repo.PATH.providers_for(self)
+                rhs = spack.repo.PATH.providers_for(other)
+                if not any(s.intersects(z) for s in lhs for z in rhs):
                     return False
 
-                if pkg.provides(virtual_spec.name):
-                    for provided, when_specs in pkg.provided.items():
-                        if any(
-                            non_virtual_spec.intersects(when, deps=False) for when in when_specs
-                        ):
-                            if provided.intersects(virtual_spec):
-                                return True
-            return False
+            else:
+                # If one is virtual, the other has to provide it
+                virtual, non_virtual = (self, other) if self_virtual else (other, self)
+                try:
+                    pkg = spack.repo.PATH.get_pkg_class(non_virtual.fullname)(non_virtual)
+                except spack.repo.UnknownEntityError:
+                    return False
+
+                if not any(
+                    # we only care about versions of virtuals (and they are not concrete because
+                    # nowhere do we define possible virtual versions)
+                    provided.versions.intersects(virtual.versions)
+                    for provided, when_specs in pkg.provided.items()
+                    if provided.name == virtual.name
+                    and any(non_virtual.intersects(when, deps=False) for when in when_specs)
+                ):
+                    return False
+            with_virtuals = True
+        else:
+            with_virtuals = False
 
         # namespaces either match, or other doesn't require one.
         if (
@@ -3765,7 +3769,7 @@ class Spec:
         ):
             return False
 
-        if self.versions and other.versions:
+        if not with_virtuals and self.versions and other.versions:
             if not self.versions.intersects(other.versions):
                 return False
 
@@ -3773,7 +3777,7 @@ class Spec:
             if not self.compiler.intersects(other.compiler):
                 return False
 
-        if not self.variants.intersects(other.variants):
+        if not with_virtuals and not self.variants.intersects(other.variants):
             return False
 
         if self.architecture and other.architecture:
@@ -3844,23 +3848,26 @@ class Spec:
 
         # If the names are different, we need to consider virtuals
         if self.name != other.name and self.name and other.name:
-            # A concrete provider can satisfy a virtual dependency.
-            if not self.virtual and other.virtual:
-                try:
-                    # Here we might get an abstract spec
-                    pkg_cls = spack.repo.PATH.get_pkg_class(self.fullname)
-                    pkg = pkg_cls(self)
-                except spack.repo.UnknownEntityError:
-                    # If we can't get package info on this spec, don't treat
-                    # it as a provider of this vdep.
-                    return False
+            # Only a provider can satisfy a virtual
+            if self.virtual or not other.virtual:
+                return False
+            try:
+                pkg = spack.repo.PATH.get_pkg_class(self.fullname)(self)
+            except spack.repo.UnknownEntityError:
+                return False
 
-                if pkg.provides(other.name):
-                    for provided, when_specs in pkg.provided.items():
-                        if any(self.satisfies(when, deps=False) for when in when_specs):
-                            if provided.intersects(other):
-                                return True
-            return False
+            if not any(
+                # we only care about versions of virtuals (and they are not concrete because
+                # nowhere do we define possible virtual versions)
+                provided.versions.intersects(other.versions)
+                for provided, when_specs in pkg.provided.items()
+                if provided.name == other.name
+                and any(self.satisfies(when, deps=False) for when in when_specs)
+            ):
+                return False
+            with_virtuals = True
+        else:
+            with_virtuals = False
 
         # namespaces either match, or other doesn't require one.
         if (
@@ -3870,7 +3877,7 @@ class Spec:
         ):
             return False
 
-        if not self.versions.satisfies(other.versions):
+        if not with_virtuals and not self.versions.satisfies(other.versions):
             return False
 
         if self.compiler and other.compiler:
@@ -3879,7 +3886,7 @@ class Spec:
         elif other.compiler and not self.compiler:
             return False
 
-        if not self.variants.satisfies(other.variants):
+        if not with_virtuals and not self.variants.satisfies(other.variants):
             return False
 
         if self.architecture and other.architecture:
