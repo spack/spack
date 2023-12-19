@@ -14,7 +14,7 @@ class Easi(CMakePackage):
     homepage = "https://easyinit.readthedocs.io"
     git = "https://github.com/SeisSol/easi.git"
 
-    maintainers("ravil-mobile", "Thomas-Ulrich", "krenzland", "ThrudPrimrose")
+    maintainers("ravil-mobile", "Thomas-Ulrich", "krenzland", "ThrudPrimrose", "davschneller")
 
     version("develop", branch="master")
     version("1.2.0", tag="v1.2.0", commit="305a119338116a0ceac6b68b36841a50250d05b1")
@@ -34,7 +34,7 @@ class Easi(CMakePackage):
 
     depends_on("impalajit@llvm-1.0.0", when="jit=impalajit-llvm")
     depends_on("lua@5.3.2", when="jit=lua")
-    depends_on("impalajit", when="jit=impalajit")
+    depends_on("impalajit@main", when="jit=impalajit")
 
     conflicts("jit=impalajit", when="jit=impalajit-llvm")
     conflicts("jit=impalajit-llvm", when="jit=impalajit")
