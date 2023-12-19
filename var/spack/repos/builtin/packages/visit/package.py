@@ -167,7 +167,7 @@ class Visit(CMakePackage):
     depends_on("mfem+shared+exceptions+fms+conduit", when="+mfem")
     depends_on("libfms@0.2:", when="+mfem")
 
-    depends_on("adios2@2.6:", when="+adios2")
+    depends_on("adios2@2.7.1", when="+adios2")
     depends_on("adios2+hdf5", when="+adios2+hdf5")
     depends_on("adios2~hdf5", when="+adios2~hdf5")
     depends_on("adios2+mpi", when="+adios2+mpi")
