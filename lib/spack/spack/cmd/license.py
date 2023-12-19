@@ -18,13 +18,13 @@ section = "developer"
 level = "long"
 
 #: SPDX license id must appear in the first <license_lines> lines of a file
-license_lines = 7
+LICENSE_LINES = 7
 
 #: Spack's license identifier
-apache2_mit_spdx = "(Apache-2.0 OR MIT)"
+APACHE2_MIT_SPDX = "(Apache-2.0 OR MIT)"
 
 #: regular expressions for licensed files.
-licensed_files = [
+LICENSED_FILES = [
     # spack scripts
     r"^bin/spack$",
     r"^bin/spack\.bat$",
@@ -65,7 +65,7 @@ licensed_files = [
 
 #: licensed files that can have LGPL language in them
 #: so far, just this command -- so it can find LGPL things elsewhere
-lgpl_exceptions = [r"lib/spack/spack/cmd/license.py", r"lib/spack/spack/test/cmd/license.py"]
+LGPL_EXCEPTIONS = [r"lib/spack/spack/cmd/license.py", r"lib/spack/spack/test/cmd/license.py"]
 
 
 def _all_spack_files(root=spack.paths.prefix):
@@ -82,7 +82,7 @@ def _all_spack_files(root=spack.paths.prefix):
 
 def _licensed_files(args):
     for relpath in _all_spack_files(args.root):
-        if any(regex.match(relpath) for regex in licensed_files):
+        if any(regex.match(relpath) for regex in LICENSED_FILES):
             yield relpath
 
 
@@ -97,13 +97,13 @@ def list_files(args):
 OLD_LICENSE, SPDX_MISMATCH, GENERAL_MISMATCH = range(1, 4)
 
 #: Latest year that copyright applies. UPDATE THIS when bumping copyright.
-latest_year = datetime.date.today().year
-strict_date = r"Copyright 2013-%s" % latest_year
+LATEST_YEAR = datetime.date.today().year
+STRICT_DATE = rf"Copyright 2013-{LATEST_YEAR}"
 
 #: regexes for valid license lines at tops of files
-license_line_regexes = [
-    r"Copyright 2013-(%d|%d) Lawrence Livermore National Security, LLC and other"
-    % (latest_year - 1, latest_year),  # allow a little leeway: current or last year
+LICENSE_LINE_REGEXES = [
+    # allow a little leeway: current or last year
+    rf"Copyright 2013-({LATEST_YEAR - 1:d}|{LATEST_YEAR:d}) Lawrence Livermore National Security, LLC and other",
     r"(Spack|sbang) [Pp]roject [Dd]evelopers\. See the top-level COPYRIGHT file for details.",
     r"SPDX-License-Identifier: \(Apache-2\.0 OR MIT\)",
 ]
@@ -138,17 +138,17 @@ def _check_license(lines, path):
     for line in lines:
         line = re.sub(r"^[\s#\%\.\:]*", "", line)
         line = line.rstrip()
-        for i, line_regex in enumerate(license_line_regexes):
+        for i, line_regex in enumerate(LICENSE_LINE_REGEXES):
             if re.match(line_regex, line):
                 # The first line of the license contains the copyright date.
                 # We allow it to be out of date but print a warning if it is
                 # out of date.
                 if i == 0:
-                    if not re.search(strict_date, line):
+                    if not re.search(STRICT_DATE, line):
                         tty.debug("{0}: copyright date mismatch".format(path))
                 found.append(i)
 
-    if len(found) == len(license_line_regexes) and found == list(sorted(found)):
+    if len(found) == len(LICENSE_LINE_REGEXES) and found == list(sorted(found)):
         return
 
     def old_license(line, path):
@@ -160,10 +160,10 @@ def _check_license(lines, path):
     # did not match the above regex)
     def wrong_spdx_identifier(line, path):
         m = re.search(r"SPDX-License-Identifier: ([^\n]*)", line)
-        if m and m.group(1) != apache2_mit_spdx:
+        if m and m.group(1) != APACHE2_MIT_SPDX:
             print(
                 "{0}: SPDX license identifier mismatch"
-                "(expecting {1}, found {2})".format(path, apache2_mit_spdx, m.group(1))
+                "(expecting {1}, found {2})".format(path, APACHE2_MIT_SPDX, m.group(1))
             )
             return SPDX_MISMATCH
 
@@ -192,7 +192,7 @@ def verify(args):
     for relpath in _licensed_files(args):
         path = os.path.join(args.root, relpath)
         with open(path) as f:
-            lines = [line for line in f][:license_lines]
+            lines = [line for line in f][:LICENSE_LINES]
 
         error = _check_license(lines, path)
         if error:
@@ -211,13 +211,13 @@ def update_copyright_year(args):
     for filename in _licensed_files(args):
         fs.filter_file(
             r"Copyright \d{4}-\d{4}" + llns_and_other,
-            strict_date + llns_and_other,
+            STRICT_DATE + llns_and_other,
             os.path.join(args.root, filename),
         )
 
     # also update MIT license file at root. Don't use llns_and_other; it uses
     # a shortened version of that for better github detection.
-    mit_date = strict_date.replace("Copyright", "Copyright (c)")
+    mit_date = STRICT_DATE.replace("Copyright", "Copyright (c)")
     mit_file = os.path.join(args.root, "LICENSE-MIT")
     fs.filter_file(r"Copyright \(c\) \d{4}-\d{4}", mit_date, mit_file)
 
@@ -237,7 +237,7 @@ def setup_parser(subparser):
 
 
 def license(parser, args):
-    licensed_files[:] = [re.compile(regex) for regex in licensed_files]
+    LICENSED_FILES[:] = [re.compile(regex) for regex in LICENSED_FILES]
 
     commands = {
         "list-files": list_files,
