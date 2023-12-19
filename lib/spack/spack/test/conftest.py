@@ -630,7 +630,7 @@ def platform_config():
     spack.config.add_default_platform_scope(spack.platforms.real_host().name)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def default_config():
     """Isolates the default configuration from the user configs.
 
@@ -713,9 +713,6 @@ def configuration_dir(tmpdir_factory, linux_os):
     t = tmpdir.join("site", "compilers.yaml")
     t.write(content)
     yield tmpdir
-
-    # Once done, cleanup the directory
-    shutil.rmtree(str(tmpdir))
 
 
 def _create_mock_configuration_scopes(configuration_dir):

@@ -150,6 +150,14 @@ class Qt(Package):
     )
     # https://github.com/microsoft/vcpkg/issues/21055
     patch("qt5-macos12.patch", working_dir="qtbase", when="@5.14: %apple-clang@13:")
+    # https://codereview.qt-project.org/c/qt/qtbase/+/503172
+    patch(
+        "https://github.com/qt/qtbase/commit/cdf64b0e47115cc473e1afd1472b4b09e130b2a5.patch?full_index=1",
+        sha256="2b881ffb2808f8fa79f51f8bec71be91a886bcdc59b1d7b6986cba26ed18d1d3",
+        working_dir="qtbase",
+        when="@5.12.1: %apple-clang@15:",
+    )
+    conflicts("%apple-clang@15:", when="@:5.12.0")
 
     # Spack path substitution uses excessively long paths that exceed the hard-coded
     # limit of 256 used by teh generated code with the prefix path as string literals

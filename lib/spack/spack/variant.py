@@ -19,6 +19,7 @@ from llnl.string import comma_or
 
 import spack.directives
 import spack.error as error
+import spack.parser
 
 special_variant_values = [None, "none", "*"]
 
@@ -399,13 +400,12 @@ class AbstractVariant:
         return item in self._value
 
     def __repr__(self):
-        cls = type(self)
-        return "{0.__name__}({1}, {2})".format(cls, repr(self.name), repr(self._original_value))
+        return f"{type(self).__name__}({repr(self.name)}, {repr(self._original_value)})"
 
     def __str__(self):
-        if self.propagate:
-            return "{0}=={1}".format(self.name, ",".join(str(x) for x in self.value))
-        return "{0}={1}".format(self.name, ",".join(str(x) for x in self.value))
+        delim = "==" if self.propagate else "="
+        values = spack.parser.quote_if_needed(",".join(str(v) for v in self.value))
+        return f"{self.name}{delim}{values}"
 
 
 class MultiValuedVariant(AbstractVariant):
@@ -443,15 +443,14 @@ class MultiValuedVariant(AbstractVariant):
         self._original_value = ",".join(self._value)
 
     def __str__(self):
-        # Special-case patches to not print the full 64 character hashes
+        # Special-case patches to not print the full 64 character sha256
         if self.name == "patches":
             values_str = ",".join(x[:7] for x in self.value)
         else:
             values_str = ",".join(str(x) for x in self.value)
 
-        if self.propagate:
-            return "{0}=={1}".format(self.name, values_str)
-        return "{0}={1}".format(self.name, values_str)
+        delim = "==" if self.propagate else "="
+        return f"{self.name}{delim}{spack.parser.quote_if_needed(values_str)}"
 
 
 class SingleValuedVariant(AbstractVariant):
@@ -467,9 +466,8 @@ class SingleValuedVariant(AbstractVariant):
         self._value = str(self._value[0])
 
     def __str__(self):
-        if self.propagate:
-            return "{0}=={1}".format(self.name, self.value)
-        return "{0}={1}".format(self.name, self.value)
+        delim = "==" if self.propagate else "="
+        return f"{self.name}{delim}{spack.parser.quote_if_needed(self.value)}"
 
     @implicit_variant_conversion
     def satisfies(self, other):

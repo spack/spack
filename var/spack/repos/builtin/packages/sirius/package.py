@@ -187,6 +187,7 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("umpire+rocm~device_alloc", when="+rocm")
 
     patch("mpi_datatypes.patch", when="@:7.2.6")
+    patch("fj.patch", when="@7.3.2: %fj")
 
     def cmake_args(self):
         spec = self.spec

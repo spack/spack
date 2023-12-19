@@ -17,6 +17,7 @@ class Igv(Package):
 
     maintainers("snehring")
 
+    version("2.16.2", sha256="489d34ed4e807a3d32a3720f11248d2ddf1e21d264b06bea44fbe1ccb74b3aa2")
     version("2.12.3", sha256="c87a109deb35994e1b28dee80b5acfd623ec3257f031fcd9cfce008cd32a4cf2")
     version("2.8.0", sha256="33f3ac57017907b931f90c35b63b2de2e4f8d2452f0fbb5be39d30288fc9b2c6")
 

@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
-from spack.build_systems import autotools, nmake
 from spack.package import *
 
 
@@ -197,7 +196,7 @@ class Libxml2(AutotoolsPackage, NMakePackage):
             xmllint("--dtdvalid", dtd_path, data_dir.join("info.xml"))
 
 
-class RunAfter:
+class BaseBuilder(metaclass=spack.builder.PhaseCallbacksMeta):
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def import_module_test(self):
@@ -206,7 +205,7 @@ class RunAfter:
                 python("-c", "import libxml2")
 
 
-class AutotoolsBuilder(autotools.AutotoolsBuilder, RunAfter):
+class AutotoolsBuilder(BaseBuilder, spack.build_systems.autotools.AutotoolsBuilder):
     def configure_args(self):
         spec = self.spec
 
@@ -232,7 +231,7 @@ class AutotoolsBuilder(autotools.AutotoolsBuilder, RunAfter):
         return args
 
 
-class NMakeBuilder(nmake.NMakeBuilder, RunAfter):
+class NMakeBuilder(BaseBuilder, spack.build_systems.nmake.NMakeBuilder):
     phases = ("configure", "build", "install")
 
     @property

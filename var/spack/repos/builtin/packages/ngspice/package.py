@@ -55,8 +55,34 @@ class Ngspice(AutotoolsPackage):
     variant("fft", default=True, description="Use external fftw lib")
     variant("osdi", default=False, description="Use osdi/OpenVAF")
 
-    depends_on("fftw-api@3:~mpi~openmp", when="+fft~openmp")
-    depends_on("fftw-api@3:~mpi+openmp", when="+fft+openmp")
+    depends_on("fftw-api@3", when="+fft")
+    with when("+fft+openmp"):
+        depends_on("acfl threads=openmp", when="^[virtuals=fftw-api] acfl")
+        depends_on("amdfftw+openmp", when="^[virtuals=fftw-api] amdfftw")
+        depends_on("armpl-gcc threads=openmp", when="^[virtuals=fftw-api] armpl-gcc")
+        depends_on("cray-fftw+openmp", when="^[virtuals=fftw-api] cray-fftw")
+        depends_on("fftw+openmp", when="^[virtuals=fftw-api] fftw")
+        depends_on("fujitsu-fftw+openmp", when="^[virtuals=fftw-api] fujitsu-fftw")
+        depends_on("intel-mkl threads=openmp", when="^[virtuals=fftw-api] intel-mkl")
+        depends_on("intel-oneapi-mkl threads=openmp", when="^[virtuals=fftw-api] intel-oneapi-mkl")
+        depends_on(
+            "intel-parallel-studio threads=openmp",
+            when="^[virtuals=fftw-api] intel-parallel-studio",
+        )
+
+    with when("+fft~openmp"):
+        depends_on("acfl threads=none", when="^[virtuals=fftw-api] acfl")
+        depends_on("amdfftw~openmp", when="^[virtuals=fftw-api] amdfftw")
+        depends_on("armpl-gcc threads=none", when="^[virtuals=fftw-api] armpl-gcc")
+        depends_on("cray-fftw~openmp", when="^[virtuals=fftw-api] cray-fftw")
+        depends_on("fftw~openmp", when="^[virtuals=fftw-api] fftw")
+        depends_on("fujitsu-fftw~openmp", when="^[virtuals=fftw-api] fujitsu-fftw")
+        depends_on("intel-mkl threads=none", when="^[virtuals=fftw-api] intel-mkl")
+        depends_on("intel-oneapi-mkl threads=none", when="^[virtuals=fftw-api] intel-oneapi-mkl")
+        depends_on(
+            "intel-parallel-studio threads=none", when="^[virtuals=fftw-api] intel-parallel-studio"
+        )
+
     depends_on("readline", when="+readline build=bin")
 
     # Needed for autoreconf:
