@@ -699,11 +699,11 @@ class Configuration:
         """Iterate over scopes in this configuration."""
         yield from self.scopes.values()
 
-    def print_section(self, section: str, blame: bool = False) -> None:
+    def print_section(self, section: str, blame: bool = False, *, scope=None) -> None:
         """Print a configuration to stdout."""
         try:
             data = syaml.syaml_dict()
-            data[section] = self.get_config(section)
+            data[section] = self.get_config(section, scope=scope)
             syaml.dump_config(data, stream=sys.stdout, default_flow_style=False, blame=blame)
         except (syaml.SpackYAMLError, OSError) as e:
             raise ConfigError(f"cannot read '{section}' configuration") from e
