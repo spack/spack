@@ -8,6 +8,7 @@ import os
 import pathlib
 import re
 from collections import defaultdict
+from typing import List
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -96,7 +97,7 @@ def list_files(args):
 
 # Error codes for license verification. All values are chosen such that
 # bool(value) evaluates to True
-OLD_LICENSE, SPDX_MISMATCH, GENERAL_MISMATCH = range(1, 4)
+OLD_LICENSE, SPDX_MISMATCH, GENERAL_MISMATCH, EXTRA_COPYRIGHT = range(1, 5)
 
 #: Latest year that copyright applies. UPDATE THIS when bumping copyright.
 LATEST_YEAR = datetime.date.today().year
@@ -105,7 +106,10 @@ STRICT_DATE = rf"Copyright 2013-{LATEST_YEAR}"
 #: regexes for valid license lines at tops of files
 LICENSE_LINE_REGEXES = [
     # allow a little leeway: current or last year
-    rf"Copyright 2013-({LATEST_YEAR - 1:d}|{LATEST_YEAR:d}) Lawrence Livermore National Security, LLC and other",
+    (
+        rf"Copyright 2013-({LATEST_YEAR - 1:d}|{LATEST_YEAR:d}) "
+        "Lawrence Livermore National Security, LLC and other"
+    ),
     r"(Spack|sbang) [Pp]roject [Dd]evelopers\. See the top-level COPYRIGHT file for details.",
     r"SPDX-License-Identifier: \(Apache-2\.0 OR MIT\)",
 ]
@@ -126,16 +130,47 @@ class LicenseError:
         missing = self.error_counts[GENERAL_MISMATCH]
         spdx_mismatch = self.error_counts[SPDX_MISMATCH]
         old_license = self.error_counts[OLD_LICENSE]
+        extra_copyright = self.error_counts[EXTRA_COPYRIGHT]
         return (
-            "%d improperly licensed files" % (total),
-            "files with wrong SPDX-License-Identifier:   %d" % spdx_mismatch,
-            "files with old license header:              %d" % old_license,
-            "files not containing expected license:      %d" % missing,
+            f"{total:d} improperly licensed files",
+            f"files with wrong SPDX-License-Identifier:   {spdx_mismatch:d}",
+            f"files with old license header:              {old_license:d}",
+            f"files with extra Copyright lines:           {extra_copyright:d}",
+            f"files not containing expected license:      {missing:d}",
         )
 
 
+class HeaderExtractor:
+    """Extracts the header of a file"""
+
+    comment_character = {r".py": r"#", r".lp": r"%"}
+
+    def __init__(self, file: pathlib.Path) -> None:
+        self.file = file
+
+    def extract(self) -> List[str]:
+        """Extracts the header from a file, returns a list of lines.
+
+        For Python and clingo files the header is the first block of consecutive comments.
+        For other kind of files it's the first LICENSE_LINES lines in the file.
+        """
+        c = self.comment_character.get(self.file.suffix, None)
+        if c is None:
+            with open(self.file) as f:
+                return [line for line in f][:LICENSE_LINES]
+
+        starts_with_comment = re.compile(rf"^\s*[{c}]")
+        result = []
+        with open(self.file) as f:
+            for line in f:
+                if not starts_with_comment.match(line):
+                    break
+                result.append(line)
+        return result
+
+
 def _check_license(lines, path):
-    found = []
+    found, extra_copyright = [], []
 
     for line in lines:
         line = re.sub(r"^[\s#\%\.\:]*", "", line)
@@ -149,8 +184,17 @@ def _check_license(lines, path):
                     if not re.search(STRICT_DATE, line):
                         tty.debug("{0}: copyright date mismatch".format(path))
                 found.append(i)
+                break
 
-    if len(found) == len(LICENSE_LINE_REGEXES) and found == list(sorted(found)):
+        else:
+            if line and "copyright" in line.lower():
+                extra_copyright.append(line)
+
+    if (
+        len(found) == len(LICENSE_LINE_REGEXES)
+        and found == list(sorted(found))
+        and not extra_copyright
+    ):
         return
 
     def old_license(line, path):
@@ -177,12 +221,17 @@ def _check_license(lines, path):
             if error:
                 return error
 
-    print(
-        "{0}: the license header at the top of the file does not match the \
-          expected format".format(
-            path
-        )
-    )
+    if extra_copyright:
+        msg = f"{path}:\n\tThe license header has extra Copyright lines, which are not necessary\n"
+        msg += "\tSpack contributors always retain copyright, see COPYRIGHT for more information\n"
+        msg += "\tExtra copyright lines:\n"
+        for line in extra_copyright:
+            msg += f"\t\t{line}\n"
+
+        print(msg)
+        return EXTRA_COPYRIGHT
+
+    print(f"{path}: the license header at the top of the file does not match the expected format")
     return GENERAL_MISMATCH
 
 
@@ -193,9 +242,7 @@ def verify(args):
 
     for relpath in _licensed_files(args):
         path = pathlib.Path(args.root) / relpath
-        with open(path) as f:
-            lines = [line for line in f][:LICENSE_LINES]
-
+        lines = HeaderExtractor(path).extract()
         error = _check_license(lines, path)
         if error:
             license_errors.add_error(error)
