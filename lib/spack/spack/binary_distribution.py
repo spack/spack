@@ -1176,7 +1176,9 @@ def tarfile_of_spec_prefix(tar: tarfile.TarFile, prefix: str) -> None:
 
     # First add all directories leading up to `prefix` (Spack <= 0.21 did not do this, leading to
     # issues when tarballs are used in runtimes like AWS lambda). Skip the file system root.
-    for parent_dir in reversed(pathlib.Path(prefix).parents[:-1]):
+    parent_dirs = reversed(pathlib.Path(prefix).parents)
+    next(parent_dirs)  # skip the root: python 3.6 doesn't support slicing.
+    for parent_dir in parent_dirs:
         dir_info = tarfile.TarInfo(_tarinfo_name(str(parent_dir)))
         dir_info.type = tarfile.DIRTYPE
         dir_info.mode = 0o755
