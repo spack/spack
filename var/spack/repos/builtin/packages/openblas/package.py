@@ -195,6 +195,17 @@ class Openblas(CMakePackage, MakefilePackage):
         when="@0.3.21 %gcc@:9",
     )
 
+    # Some installations of clang and libomp have non-standard locations for
+    # libomp. OpenBLAS adds the correct linker flags but overwrites the
+    # variables in a couple places, causing link-time failures.
+    patch("openblas_append_lflags.patch", when="@:0.3.23 threads=openmp")
+
+    # Some builds of libomp on certain systems cause test failures related to
+    # forking, so disable the specific test that's failing. This is currently
+    # an open issue upstream:
+    # https://github.com/llvm/llvm-project/issues/63908
+    patch("openblas_libomp_fork.patch", when="%clang@15:")
+
     # Fix build on A64FX for OpenBLAS v0.3.24
     patch(
         "https://github.com/OpenMathLib/OpenBLAS/commit/90231bfc4e4afc51f67c248328fbef0cecdbd2c2.patch?full_index=1",
