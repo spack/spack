@@ -9,7 +9,7 @@ set -e
 # Intel compiler needs to be installed from a specific spack git commit.
 # The best solution would be to have the compilers hash (or packages contents) be part of the
 # individual packages hashes. I don't see this at the moment.
-# Set to the first tag which includes _DB_VERSION 7:
+# Set to the latest tag including a recent oneapi compiler.
 spack_intel_compiler_commit="develop-2023-08-06"
 
 set_pcluster_defaults() {
