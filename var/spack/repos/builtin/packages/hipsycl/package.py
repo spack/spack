@@ -24,7 +24,12 @@ class Hipsycl(CMakePackage, ROCmPackage):
     provides("sycl")
 
     version("stable", branch="stable", submodules=True)
-    version("23.10.0", commit="3952b468c9da89edad9dff953cdcab0a3c3bf78c", submodules=True, get_full_repo=True)
+    version(
+        "23.10.0",
+        commit="3952b468c9da89edad9dff953cdcab0a3c3bf78c",
+        submodules=True,
+        get_full_repo=True,
+    )
     version("0.9.4", commit="99d9e24d462b35e815e0e59c1b611936c70464ae", submodules=True)
     version("0.9.3", commit="51507bad524c33afe8b124804091b10fa25618dc", submodules=True)
     version("0.9.2", commit="49fd02499841ae884c61c738610e58c27ab51fdb", submodules=True)
@@ -157,7 +162,9 @@ class Hipsycl(CMakePackage, ROCmPackage):
                     "found: {0}".format(so_paths)
                 )
             rpaths.add(path.dirname(so_paths[0]))
-            config["default-cuda-link-line"] += " " + " ".join("-rpath {0}".format(p) for p in rpaths)
+            config["default-cuda-link-line"] += " " + " ".join(
+                "-rpath {0}".format(p) for p in rpaths
+            )
         # Replace the installed config file
         with open(config_file_path, "w") as f:
             json.dump(config, f, indent=2)

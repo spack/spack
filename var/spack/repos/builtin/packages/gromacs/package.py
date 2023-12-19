@@ -515,10 +515,13 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             elif "+rocm" in self.spec:
                 archs = self.spec.variants["amdgpu_target"].value
                 arch_str = ",".join(archs)
-                options.extend([
-                    "-DGMX_GPU:STRING=SYCL",
-                    "-DGMX_SYCL_HIPSYCL=ON",
-                    f"-DHIPSYCL_TARGETS='hip:{arch_str}'"])
+                options.extend(
+                    [
+                        "-DGMX_GPU:STRING=SYCL",
+                        "-DGMX_SYCL_HIPSYCL=ON",
+                        f"-DHIPSYCL_TARGETS='hip:{arch_str}'",
+                    ]
+                )
             elif "+sycl" in self.spec:
                 options.append("-DGMX_GPU:STRING=SYCL")
             else:
