@@ -143,11 +143,18 @@ class Xyce(CMakePackage):
         when="@7.4:7.6 +pymi",
     )
 
-    # fix oneapi issue
+    # fix missing type
     patch(
-        "454-oneapi-xyce.patch",
-        sha256="76a3ff987e43d1657f24d55cfd864b487876a72a9a7c8a37c3151a9b586a21c1",
-        when="%oneapi",
+        "https://github.com/Xyce/Xyce/commit/47d9dd04ec55cd8722cb3704a88beb228dfcf363.patch?full_index=1",
+        sha256="62c3d0c17b3225be5f61b6ec3d9cf762cc08bb20a80e768d87a37e87c522bbf1",
+        when="@:7.7",
+    )
+
+    # fix cmake trilinos test issue
+    patch(
+        "454-cmake-xyce.patch",
+        sha256="4d47cd1f10607205e64910ac124c6dd329f1ecbf861416e9da24a1736f2149ff",
+        when="@7.6:",
     )
 
     def cmake_args(self):
