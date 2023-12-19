@@ -68,7 +68,7 @@ from spack.util.executable import which
 
 BUILD_CACHE_RELATIVE_PATH = "build_cache"
 BUILD_CACHE_KEYS_RELATIVE_PATH = "_pgp"
-CURRENT_BUILD_CACHE_LAYOUT_VERSION = 1
+CURRENT_BUILD_CACHE_LAYOUT_VERSION = 2
 
 
 class BuildCacheDatabase(spack_db.Database):
@@ -2120,7 +2120,7 @@ def extract_tarball(spec, download_result, force=False, timer=timer.NULL_TIMER):
             _delete_staged_downloads(download_result)
             shutil.rmtree(tmpdir)
             raise e
-    elif layout_version == 1:
+    elif 1 <= layout_version <= 2:
         # Newer buildcache layout: the .spack file contains just
         # in the install tree, the signature, if it exists, is
         # wrapped around the spec.json at the root.  If sig verify
