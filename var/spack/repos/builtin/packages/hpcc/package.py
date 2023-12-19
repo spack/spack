@@ -51,7 +51,7 @@ class Hpcc(MakefilePackage):
     depends_on("gmake", type="build")
     depends_on("mpi@1.1:")
     depends_on("blas")
-    depends_on("fftw-api@2+mpi", when="fft=fftw2")
+    depends_on("fftw@2+mpi", when="fft=fftw2")
     depends_on("mkl", when="fft=mkl")
 
     arch = "{0}-{1}".format(platform.system(), platform.processor())

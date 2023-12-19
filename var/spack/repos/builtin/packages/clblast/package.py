@@ -33,7 +33,8 @@ class Clblast(CMakePackage):
     version("1.0.1", sha256="6c9415a1394c554debce85c47349ecaaebdc9d5baa187d3ecb84be00ae9c70f0")
     version("1.0.0", sha256="230a55a868bdd21425867cbd0dcb7ec046aa5ca522fb5694e42740b5b16d0f59")
 
-    depends_on("opencl +icd")
+    depends_on("opencl")
+    depends_on("pocl+icd", when="^[virtuals=opencl] pocl")
 
     variant("shared", description="Build a shared libraries", default=True)
     variant("tuners", description="Enable compilation of the tuners", default=False)

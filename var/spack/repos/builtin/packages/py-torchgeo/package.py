@@ -65,7 +65,15 @@ class PyTorchgeo(PythonPackage):
     depends_on("pil@8:", when="@0.5:", type=("build", "run"))
     depends_on("pil@6.2:", type=("build", "run"))
     # JPEG, TIFF, and compressed PNG support required for file I/O in several datasets.
-    depends_on("pil+jpeg+tiff+zlib", type=("build", "run"))
+    depends_on(
+        "py-pillow +jpeg+tiff+zlib", type=("build", "run"), when="^[virtuals=pil] py-pillow"
+    )
+    depends_on(
+        "py-pillow-simd +jpeg+tiff+zlib",
+        type=("build", "run"),
+        when="^[virtuals=pil] py-pillow-simd",
+    )
+
     depends_on("py-pyproj@3:", when="@0.5:", type=("build", "run"))
     depends_on("py-pyproj@2.2:", type=("build", "run"))
     depends_on("py-rasterio@1.2:", when="@0.5:", type=("build", "run"))

@@ -96,7 +96,8 @@ class Octopus(AutotoolsPackage, CudaPackage):
     depends_on("netcdf-fortran", when="+netcdf")  # NetCDF fortran lib without mpi variant
     with when("+mpi"):  # list all the parallel dependencies
         depends_on("fftw@3:+mpi+openmp", when="@8:9")  # FFT library
-        depends_on("fftw-api@3:+mpi+openmp", when="@10:")
+        depends_on("fftw-api@3:", when="@10:")
+        depends_on("fftw+mpi+openmp", when="^[virtuals=fftw-api] fftw")
         depends_on("libvdwxc+mpi", when="+libvdwxc")
         depends_on("arpack-ng+mpi", when="+arpack")
         depends_on("elpa+mpi", when="+elpa")
@@ -105,7 +106,8 @@ class Octopus(AutotoolsPackage, CudaPackage):
 
     with when("~mpi"):  # list all the serial dependencies
         depends_on("fftw@3:+openmp~mpi", when="@8:9")  # FFT library
-        depends_on("fftw-api@3:+openmp~mpi", when="@10:")
+        depends_on("fftw-api@3:", when="@10:")
+        depends_on("fftw~mpi+openmp", when="^[virtuals=fftw-api] fftw")
         depends_on("libvdwxc~mpi", when="+libvdwxc")
         depends_on("arpack-ng~mpi", when="+arpack")
         depends_on("elpa~mpi", when="+elpa")
