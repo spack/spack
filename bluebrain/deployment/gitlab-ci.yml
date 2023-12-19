@@ -244,7 +244,7 @@ github_information:
     # move afterwards
     -     spack export --scope=user --module tcl --explicit --unbuildable cuda intel-oneapi-mkl likwid llvm openscenegraph optix --exclude 'neuron|hdf5|nvhpc|openjdk' ${shas} > "spack_config/packages.yaml.tmp"
     -     sed -e "/:':/{s/'//g}" "spack_config/packages.yaml.tmp" > "spack_config/packages.yaml"
-    -     spack config add 'packages:python:require:"@3.11"'
+    -     spack config add "packages:python:require:\"@$DEFAULT_PYTHON_VERSION\""
     - fi
     # Fail if software fails to build!
     - if grep -q -m1 -l -R '<failure' "spack_tests"; then exit 1; fi
@@ -326,12 +326,17 @@ update_config:
     - if grep -q -m1 -l -R '<failure' "$DEPLOYMENT_ARTIFACTS"; then exit 1; fi
     # Will create $DEPLOYMENT_ROOT/modules
     - merge-modules "$DEPLOYMENT_ROOT"
-    # Find the GCC module and set a default version
+    # Find the GCC and Python modules and set a default version
     - |
       gcc_module=$(find "$DEPLOYMENT_ROOT/modules" -wholename "*/gcc/$DEFAULT_GCC_VERSION")
       cat <<EOF > "${gcc_module%$DEFAULT_GCC_VERSION}/.version"
       #%Module1.0
       set ModulesVersion "$DEFAULT_GCC_VERSION"
+      EOF
+      python_module=$(find "$DEPLOYMENT_ROOT/modules" -wholename "*/python/$DEFAULT_PYTHON_VERSION")
+      cat <<EOF > "${python_module%$DEFAULT_PYTHON_VERSION}/.version"
+      #%Module1.0
+      set ModulesVersion "$DEFAULT_PYTHON_VERSION"
       EOF
 
     # Sync modules for the current month
