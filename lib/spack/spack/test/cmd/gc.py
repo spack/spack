@@ -127,3 +127,12 @@ def test_gc_except_specific_environments(config, mutable_database, mutable_mock_
     assert "Restricting garbage collection" not in output
     assert "Successfully uninstalled zmpi" in output
     assert "zmpi" not in find()
+
+
+@pytest.mark.db
+def test_gc_except_specific_dir_env(
+    config, mutable_database, mutable_mock_env_path, capsys, tmpdir
+):
+    output = gc("-ye", tmpdir.strpath, fail_on_error=False)
+    assert "No such environment" in output
+    gc.returncode == 1
