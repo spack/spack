@@ -103,7 +103,6 @@ packages:
     require: "@3.18"
   python:
     variants: +tk
-    version: [3.11.6]
   py-frozendict:
     # older versions fail to work with Python 3.11
     require: "@2.3.10"
