@@ -141,7 +141,9 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on("xerces-c transcoder=iconv")
     depends_on("xz+pic libs=static", type="link")
     depends_on("yaml-cpp@0.7.0: +shared", when="@2022.10:")
-    depends_on("zlib-api+shared")
+
+    depends_on("zlib-api")
+    depends_on("zlib+shared", when="^[virtuals=zlib-api] zlib")
 
     depends_on("cuda", when="+cuda")
     depends_on("oneapi-level-zero", when="+level_zero")
