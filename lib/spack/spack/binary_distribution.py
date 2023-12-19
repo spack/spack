@@ -2211,6 +2211,7 @@ def _ensure_common_prefix(tar: tarfile.TarFile) -> str:
 
     # Ensure all tar entries are in the pkg_prefix dir, and if they're not, they should be parent
     # dirs of it.
+    has_prefix = False
     for member in tar.getmembers():
         if not (
             member.name.startswith(pkg_prefix)
@@ -2218,6 +2219,13 @@ def _ensure_common_prefix(tar: tarfile.TarFile) -> str:
             and pkg_prefix.startswith(member.name)
         ):
             raise ValueError(f"Tarball contains file {member.name} outside of prefix {pkg_prefix}")
+        if member.isdir() and member.name == pkg_prefix:
+            has_prefix = True
+
+    # This is technically not required, but let's be defensive about the existence of the package
+    # prefix dir.
+    if not has_prefix:
+        raise ValueError(f"Tarball does not contain a common prefix {pkg_prefix}")
 
     return pkg_prefix
 
