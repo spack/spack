@@ -697,7 +697,7 @@ complete -c spack -n '__fish_spack_using_command buildcache' -s h -l help -f -a 
 complete -c spack -n '__fish_spack_using_command buildcache' -s h -l help -d 'show this help message and exit'
 
 # spack buildcache push
-set -g __fish_spack_optspecs_spack_buildcache_push h/help f/force a/allow-root u/unsigned signed k/key= update-index spec-file= only= fail-fast base-image= j/jobs=
+set -g __fish_spack_optspecs_spack_buildcache_push h/help f/force a/allow-root u/unsigned signed k/key= update-index no-update-index spec-file= only= fail-fast base-image= j/jobs=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 1 buildcache push' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command buildcache push' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache push' -s h -l help -d 'show this help message and exit'
@@ -712,7 +712,9 @@ complete -c spack -n '__fish_spack_using_command buildcache push' -l signed -d '
 complete -c spack -n '__fish_spack_using_command buildcache push' -l key -s k -r -f -a key
 complete -c spack -n '__fish_spack_using_command buildcache push' -l key -s k -r -d 'key for signing'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l update-index -l rebuild-index -f -a update_index
-complete -c spack -n '__fish_spack_using_command buildcache push' -l update-index -l rebuild-index -d 'regenerate buildcache index after building package(s)'
+complete -c spack -n '__fish_spack_using_command buildcache push' -l update-index -l rebuild-index -d 'regenerate buildcache index after pushing (default)'
+complete -c spack -n '__fish_spack_using_command buildcache push' -l no-update-index -l no-rebuild-index -f -a update_index
+complete -c spack -n '__fish_spack_using_command buildcache push' -l no-update-index -l no-rebuild-index -d 'do not regenerate buildcache index after pushing packages'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l spec-file -r -f -a spec_file
 complete -c spack -n '__fish_spack_using_command buildcache push' -l spec-file -r -d 'create buildcache entry for spec from json or yaml file'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l only -r -f -a 'package dependencies'
@@ -725,7 +727,7 @@ complete -c spack -n '__fish_spack_using_command buildcache push' -s j -l jobs -
 complete -c spack -n '__fish_spack_using_command buildcache push' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
 
 # spack buildcache create
-set -g __fish_spack_optspecs_spack_buildcache_create h/help f/force a/allow-root u/unsigned signed k/key= update-index spec-file= only= fail-fast base-image= j/jobs=
+set -g __fish_spack_optspecs_spack_buildcache_create h/help f/force a/allow-root u/unsigned signed k/key= update-index no-update-index spec-file= only= fail-fast base-image= j/jobs=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 1 buildcache create' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command buildcache create' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache create' -s h -l help -d 'show this help message and exit'
@@ -740,7 +742,9 @@ complete -c spack -n '__fish_spack_using_command buildcache create' -l signed -d
 complete -c spack -n '__fish_spack_using_command buildcache create' -l key -s k -r -f -a key
 complete -c spack -n '__fish_spack_using_command buildcache create' -l key -s k -r -d 'key for signing'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l update-index -l rebuild-index -f -a update_index
-complete -c spack -n '__fish_spack_using_command buildcache create' -l update-index -l rebuild-index -d 'regenerate buildcache index after building package(s)'
+complete -c spack -n '__fish_spack_using_command buildcache create' -l update-index -l rebuild-index -d 'regenerate buildcache index after pushing (default)'
+complete -c spack -n '__fish_spack_using_command buildcache create' -l no-update-index -l no-rebuild-index -f -a update_index
+complete -c spack -n '__fish_spack_using_command buildcache create' -l no-update-index -l no-rebuild-index -d 'do not regenerate buildcache index after pushing packages'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l spec-file -r -f -a spec_file
 complete -c spack -n '__fish_spack_using_command buildcache create' -l spec-file -r -d 'create buildcache entry for spec from json or yaml file'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l only -r -f -a 'package dependencies'
