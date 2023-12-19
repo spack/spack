@@ -498,6 +498,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     # Variants to use internal packages
     variant("internal-hwloc", default=False, description="Use internal hwloc")
     variant("internal-pmix", default=False, description="Use internal pmix")
+    variant("internal-libevent", default=False, description="Use internal libevent")
     variant("openshmem", default=False, description="Enable building OpenSHMEM")
 
     provides("mpi")
@@ -565,7 +566,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         depends_on("pmix@:4.2.2", when="@:4.1.5")
 
     # Libevent is required when *vendored* PMIx is used
-    depends_on("libevent@2:", when="@main")
+    depends_on("libevent@2:", when="~internal-libevent")
 
     depends_on("openssh", type="run", when="+rsh")
 
