@@ -5,6 +5,7 @@
 
 import datetime
 import os
+import pathlib
 import re
 from collections import defaultdict
 
@@ -81,8 +82,9 @@ def _all_spack_files(root=spack.paths.prefix):
 
 
 def _licensed_files(args):
+    licensed_regex = re.compile("|".join(LICENSED_FILES))
     for relpath in _all_spack_files(args.root):
-        if any(regex.match(relpath) for regex in LICENSED_FILES):
+        if licensed_regex.match(relpath):
             yield relpath
 
 
@@ -190,7 +192,7 @@ def verify(args):
     license_errors = LicenseError()
 
     for relpath in _licensed_files(args):
-        path = os.path.join(args.root, relpath)
+        path = pathlib.Path(args.root) / relpath
         with open(path) as f:
             lines = [line for line in f][:LICENSE_LINES]
 
@@ -237,8 +239,6 @@ def setup_parser(subparser):
 
 
 def license(parser, args):
-    LICENSED_FILES[:] = [re.compile(regex) for regex in LICENSED_FILES]
-
     commands = {
         "list-files": list_files,
         "verify": verify,
