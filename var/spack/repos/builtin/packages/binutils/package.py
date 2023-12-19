@@ -86,6 +86,16 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
         deprecated=True,
     )
 
+    variant(
+        "glibc_version",
+        default="off",
+        description="build a spack bootstrap compiler, value is the sysroot view path DO NOT USE unless you know what this means"
+        )
+    variant(
+        "sysroot",
+        default="off",
+        description="build a spack sysroot bootstrap compiler, value is the sysroot view path DO NOT USE unless you know what this means"
+        )
     variant("plugins", default=True, description="enable plugins, needed for gold linker")
     # When you build ld.gold you automatically get ld, even when you add the
     # --disable-ld flag
@@ -130,7 +140,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     # pkg-config is used to find zstd in gas/configure
     depends_on("pkgconfig", type="build")
     depends_on("zstd@1.4.0:", when="@2.40:")
-    depends_on("zlib-api")
+    depends_on("zlib-api", when="sysroot=off")
 
     depends_on("diffutils", type="build")
     depends_on("gettext", when="+nls")
@@ -253,9 +263,14 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
             "--enable-multilib",
             "--enable-pic",
             "--enable-targets={}".format(targets),
-            "--with-sysroot=/",
-            "--with-system-zlib",
         ]
+        if self.spec.variants['sysroot'].value == "off":
+            args.append("--with-system-zlib")
+        else:
+            # todo, if we want to support other kernels here
+            args.append("--with-sysroot={}".format(self.spec.variants["sysroot"].value))
+            args.append('--with-lib-path=/lib')
+            args.append('--target={}-spack-linux-gnu'.format(str(self.spec.architecture).split('-')[2]))
         args += self.enable_or_disable("gas")
         args += self.enable_or_disable("gold")
         args += self.enable_or_disable("gprofng")

@@ -12,6 +12,7 @@ from archspec.cpu import UnsupportedMicroarchitecture
 
 import llnl.util.tty as tty
 from llnl.util.lang import classproperty
+from llnl.util.link_tree import LinkTree
 
 import spack.platforms
 import spack.util.executable
@@ -151,7 +152,22 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         description="Use Profile Guided Optimization",
         when="+bootstrap %gcc",
     )
+    variant(
+        "sysroot",
+        default="off",
+        description="build a spack sysroot bootstrap compiler, value is the sysroot view path DO NOT USE unless you know what this means"
+        )
+    variant(
+        "stage1",
+        default=False,
+        description="build a spack bootstrap compiler, value is the sysroot view path DO NOT USE unless you know what this means"
+        )
 
+    depends_on("glibc +stage1", when="+stage1")
+    # glibc has no crypt header or lib, add libxcrypt here
+    depends_on("libxcrypt", when="+stage1")
+    depends_on("libstdcxx +binutils", when="+stage1")
+    conflicts("~binutils", when="+stage1")
     depends_on("flex", type="build", when="@master")
 
     # https://gcc.gnu.org/install/prerequisites.html
@@ -757,6 +773,78 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             "--disable-nls",
         ]
 
+
+        sysroot_target = '{}-spack-linux-gnu'.format(
+                str(self.spec.architecture).split('-')[2]
+                )
+        # Binutils
+        if spec.satisfies("+binutils"):
+            if self.spec.variants['sysroot'].value == "off" and "+stage1" not in self.spec:
+                binutils = spec["binutils"].prefix.bin
+            else:
+                binutils = spec["binutils"].prefix.join(sysroot_target).bin
+            options.extend(
+                [
+                    "--with-gnu-ld",
+                    "--with-ld=" + binutils.ld,
+                    "--with-gnu-as",
+                    "--with-as=" + binutils.join("as"),
+                ]
+            )
+        elif spec.satisfies("%apple-clang@15:"):
+            # https://github.com/iains/gcc-darwin-arm64/issues/117
+            # https://github.com/iains/gcc-12-branch/issues/22
+            # https://github.com/iains/gcc-13-branch/issues/8
+            options.append("--with-ld=/Library/Developer/CommandLineTools/usr/bin/ld-classic")
+
+        if self.spec.variants['sysroot'].value != "off" or '+stage1' in self.spec:
+            # set up links to binutils, required for gcc to build this way
+            if '+stage1' in self.spec:
+                options.extend([
+                    '--host=' + sysroot_target,
+                    'LDFLAGS_FOR_TARGET=-L' + join_path(self.stage.source_path,sysroot_target,'libgcc'),
+                    'CXXFLAGS=-isystem ' + self.spec['libstdcxx'].prefix.include.join("c++"),
+                    'CXXFLAGS_FOR_BUILD=-isystem ' + self.spec['libstdcxx'].prefix.include.join("c++"),
+                    'CXXFLAGS_FOR_TARGET=-isystem ' + self.spec['libstdcxx'].prefix.include.join("c++"),
+                    '--with-boot-ldflags=' + " ".join([
+                        '--sysroot=' + self.spec['glibc'].prefix,
+                        '-Wl,--dynamic-linker=' + self.spec['glibc'].prefix,
+                        '-L' + self.spec['glibc'].prefix.lib,
+                        '-Wl,-rpath,' + self.spec['glibc'].prefix.lib,
+                        '-L' + self.spec['libstdcxx'].prefix.lib,
+                        '-L' + self.spec['libstdcxx'].prefix.lib64,
+                        '-Wl,-rpath,' + self.spec['libstdcxx'].prefix.lib,
+                        '-Wl,-rpath,' + self.spec['libstdcxx'].prefix.lib64,
+                                ]) ])
+            else:
+                options.extend([
+                        "--without-headers",
+                        "--with-newlib",
+                        "--disable-shared",
+                        "--disable-libstdcxx",
+                        "--with-glibc-version=2.38", # TODO: figure out how to fix this cycle
+                                ])
+            options.extend(
+                    [
+                     '--target=' + sysroot_target,
+                        "--with-native-system-header-dir=/include",
+                        "--with-sysroot=" + self.spec.variants['sysroot'].value,
+                        "--enable-default-pie",
+                        "--enable-default-ssp",
+                        "--disable-nls",
+                        "--disable-multilib",
+                        "--disable-threads",
+                        "--disable-libatomic",
+                        "--disable-libgomp",
+                        "--disable-libquadmath",
+                        "--disable-libssp",
+                        "--disable-libvtv",
+                        "--enable-languages=c,c++",
+                        ]
+                    )
+            if '+stage1' not in self.spec:
+                return options
+
         # Avoid excessive realpath/stat calls for every system header
         # by making -fno-canonical-system-headers the default.
         if self.version >= Version("4.8.0"):
@@ -773,23 +861,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         # Enabling language "jit" requires --enable-host-shared.
         if "languages=jit" in spec:
             options.append("--enable-host-shared")
-
-        # Binutils
-        if spec.satisfies("+binutils"):
-            binutils = spec["binutils"].prefix.bin
-            options.extend(
-                [
-                    "--with-gnu-ld",
-                    "--with-ld=" + binutils.ld,
-                    "--with-gnu-as",
-                    "--with-as=" + binutils.join("as"),
-                ]
-            )
-        elif spec.satisfies("%apple-clang@15:"):
-            # https://github.com/iains/gcc-darwin-arm64/issues/117
-            # https://github.com/iains/gcc-12-branch/issues/22
-            # https://github.com/iains/gcc-13-branch/issues/8
-            options.append("--with-ld=/Library/Developer/CommandLineTools/usr/bin/ld-classic")
 
         # enable_bootstrap
         if spec.satisfies("+bootstrap"):
@@ -932,6 +1003,25 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         return spec_dir[0] if spec_dir else None
 
     @run_after("install")
+    def generate_limits(self):
+        if self.spec.variants['sysroot'].value != "off":
+            # in sysroot we're building without glibc existing, need to create limits.h manually
+            limits = ""
+            files = ["limitx.h", "glimits.h", "limity.h"]
+            for f in files:
+                with open(join_path(self.stage.source_path, "gcc", f)) as fo:
+                    limits += fo.read()
+            sysroot_target = '{}-spack-linux-gnu'.format(
+                    str(self.spec.architecture).split('-')[2]
+                    )
+            gcc = Executable(self.spec["gcc"].prefix.bin.join(sysroot_target+'-gcc'))
+            out_path = os.path.dirname(gcc('-print-libgcc-file-name', output=str).strip())
+            with open(join_path(out_path, "include", "limits.h"), "+w") as fo:
+                fo.write(limits)
+
+
+
+    @run_after("install")
     def write_rpath_specs(self):
         """Generate a spec file so the linker adds a rpath to the libs
         the compiler used to build the executable.
@@ -963,7 +1053,14 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             )
             return
 
-        gcc = self.spec["gcc"].command
+        
+        sysroot_target = '{}-spack-linux-gnu'.format(
+                str(self.spec.architecture).split('-')[2]
+                )
+        try:
+            gcc = self.spec["gcc"].command
+        except Exception:
+            gcc = Executable(self.spec["gcc"].prefix.bin.join(sysroot_target+'-gcc'))
         lines = gcc("-dumpspecs", output=str).splitlines(True)
         specs_file = join_path(self.spec_dir, "specs")
 
@@ -973,29 +1070,50 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         # Find which directories have shared libraries
         rpath_libdirs = []
-        for dir in ["lib", "lib64"]:
-            libdir = join_path(self.prefix, dir)
-            if glob.glob(join_path(libdir, "*." + dso_suffix)):
-                rpath_libdirs.append(libdir)
+        prefixes = [self.prefix]
+        if '+stage1' in self.spec:
+            prefixes.append(self.spec['glibc'].prefix)
+        elif self.spec.variants['sysroot'].value != "off":
+            prefixes.append(self.spec.variants['sysroot'].value)
+        for pfx in prefixes:
+            for dir in ["lib", "lib64"]:
+                libdir = join_path(pfx, dir)
+                if glob.glob(join_path(libdir, "*." + dso_suffix)):
+                    rpath_libdirs.append(libdir)
 
         if not rpath_libdirs:
             # No shared libraries
             tty.warn("No dynamic libraries found in lib/lib64")
             return
 
+        add_sysroot = "+stage1" in self.spec or self.spec.variants['sysroot'].value != "off"
         # Overwrite the specs file
         with open(specs_file, "w") as out:
+            loader = re.compile(':-dynamic-linker ')
             for line in lines:
+                if add_sysroot:
+                    line = loader.sub(':-dynamic-linker %(spack_sysroot)', line)
                 out.write(line)
                 if line.startswith("*link_libgcc:"):
                     # Insert at start of line following link_libgcc, which gets
                     # inserted into every call to the linker
                     out.write("%(link_libgcc_rpath) ")
+                if add_sysroot:
+                    if line.startswith("*link:"):
+                        out.write("--sysroot=%(spack_sysroot) ")
 
             # Add easily-overridable rpath string at the end
             out.write("*link_libgcc_rpath:\n")
             out.write(" ".join("-rpath " + lib for lib in rpath_libdirs))
             out.write("\n")
+            out.write("\n")
+            if add_sysroot:
+                out.write("*spack_sysroot:\n")
+                if '+stage1' in self.spec:
+                    out.write(self.spec['glibc'].prefix)
+                else: # must have sysroot set explicitly
+                    out.write(self.spec.variants['sysroot'].value)
+                out.write("\n")
         set_install_permissions(specs_file)
         tty.info("Wrote new spec file to {0}".format(specs_file))
 
