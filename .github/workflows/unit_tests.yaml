@@ -72,7 +72,7 @@ jobs:
       run: |
           # Need this for the git tests to succeed.
           git --version
-          . .github/workflows/setup_git.sh
+          . .github/workflows/bin/setup_git.sh
     - name: Bootstrap clingo
       if: ${{ matrix.concretizer == 'clingo' }}
       env:
@@ -116,7 +116,7 @@ jobs:
       run: |
           # Need this for the git tests to succeed.
           git --version
-          . .github/workflows/setup_git.sh
+          . .github/workflows/bin/setup_git.sh
     - name: Run shell tests
       env:
           COVERAGE: true
@@ -143,7 +143,7 @@ jobs:
           git --version
           git config --global --add safe.directory /__w/spack/spack
           git fetch --unshallow
-          . .github/workflows/setup_git.sh
+          . .github/workflows/bin/setup_git.sh
           useradd spack-test
           chown -R spack-test .
     - name: Run unit tests
@@ -174,7 +174,7 @@ jobs:
       run: |
           # Need this for the git tests to succeed.
           git --version
-          . .github/workflows/setup_git.sh
+          . .github/workflows/bin/setup_git.sh
     - name: Run unit tests (full suite with coverage)
       env:
           COVERAGE: true
@@ -210,7 +210,7 @@ jobs:
         SPACK_TEST_PARALLEL: 4
       run: |
         git --version
-        . .github/workflows/setup_git.sh
+        . .github/workflows/bin/setup_git.sh
         . share/spack/setup-env.sh
         $(which spack) bootstrap disable spack-install
         $(which spack) solve zlib

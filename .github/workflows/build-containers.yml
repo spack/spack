@@ -76,7 +76,7 @@ jobs:
         env:
           SPACK_YAML_OS: "${{ matrix.dockerfile[2] }}"
         run: |
-          .github/workflows/generate_spack_yaml_containerize.sh
+          .github/workflows/bin/generate_spack_yaml_containerize.sh
           . share/spack/setup-env.sh
           mkdir -p dockerfiles/${{ matrix.dockerfile[0] }}
           spack containerize --last-stage=bootstrap | tee dockerfiles/${{ matrix.dockerfile[0] }}/Dockerfile

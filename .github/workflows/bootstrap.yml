@@ -37,7 +37,7 @@ jobs:
         shell: runuser -u spack-test -- bash {0}
         run: |
           git --version
-          . .github/workflows/setup_git.sh
+          . .github/workflows/bin/setup_git.sh
       - name: Bootstrap clingo
         shell: runuser -u spack-test -- bash {0}
         run: |
@@ -75,7 +75,7 @@ jobs:
         shell: runuser -u spack-test -- bash {0}
         run: |
           git --version
-          . .github/workflows/setup_git.sh
+          . .github/workflows/bin/setup_git.sh
       - name: Bootstrap clingo
         shell: runuser -u spack-test -- bash {0}
         run: |
@@ -112,7 +112,7 @@ jobs:
         shell: runuser -u spack-test -- bash {0}
         run: |
           git --version
-          . .github/workflows/setup_git.sh
+          . .github/workflows/bin/setup_git.sh
       - name: Bootstrap clingo
         shell: runuser -u spack-test -- bash {0}
         run: |
@@ -141,7 +141,7 @@ jobs:
           # See [1] below
           git config --global --add safe.directory /__w/spack/spack
           git --version
-          . .github/workflows/setup_git.sh
+          . .github/workflows/bin/setup_git.sh
       - name: Bootstrap clingo
         run: |
           source share/spack/setup-env.sh
@@ -196,7 +196,7 @@ jobs:
                 not_found=0
                 old_path="$PATH"
                 export PATH="$ver_dir:$PATH"
-                ./bin/spack-tmpconfig -b ./.github/workflows/bootstrap-test.sh
+                ./bin/spack-tmpconfig -b ./.github/workflows/bin/bootstrap-test.sh
                 export PATH="$old_path"
               fi
             fi
@@ -213,7 +213,7 @@ jobs:
       - name: Setup repo
         run: |
           git --version
-          . .github/workflows/setup_git.sh
+          . .github/workflows/bin/setup_git.sh
       - name: Bootstrap clingo
         run: |
           set -ex
@@ -227,7 +227,7 @@ jobs:
                 not_found=0
                 old_path="$PATH"
                 export PATH="$ver_dir:$PATH"
-                ./bin/spack-tmpconfig -b ./.github/workflows/bootstrap-test.sh
+                ./bin/spack-tmpconfig -b ./.github/workflows/bin/bootstrap-test.sh
                 export PATH="$old_path"
               fi
             fi
@@ -263,7 +263,7 @@ jobs:
         shell: runuser -u spack-test -- bash {0}
         run: |
           git --version
-          . .github/workflows/setup_git.sh
+          . .github/workflows/bin/setup_git.sh
       - name: Bootstrap GnuPG
         shell: runuser -u spack-test -- bash {0}
         run: |
@@ -300,7 +300,7 @@ jobs:
         shell: runuser -u spack-test -- bash {0}
         run: |
           git --version
-          . .github/workflows/setup_git.sh
+          . .github/workflows/bin/setup_git.sh
       - name: Bootstrap GnuPG
         shell: runuser -u spack-test -- bash {0}
         run: |
