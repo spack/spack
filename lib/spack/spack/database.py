@@ -54,6 +54,7 @@ import llnl.util.tty as tty
 import spack.deptypes as dt
 import spack.hash_types as ht
 import spack.spec
+import spack.traverse as tr
 import spack.util.lock as lk
 import spack.util.spack_json as sjson
 import spack.version as vn
@@ -1682,23 +1683,10 @@ class Database:
             """Whether a DB record is a root for garbage collection."""
             return key in root_hashes if root_hashes is not None else record.explicit
 
-        needed: Set[str] = set()
-        visited: Set[spack.spec.Spec] = set()
-
         with self.read_transaction():
-            for key, record in self._data.items():
-                if not root(key, record):
-                    continue
-
-                # recycle `visited` across calls to avoid redundantly traversing
-                for spec in record.spec.traverse(visited=visited, deptype=deptype):
-                    needed.add(spec.dag_hash())
-
-            return [
-                record.spec
-                for key, record in self._data.items()
-                if key not in needed and record.installed
-            ]
+            roots = [rec.spec for key, rec in self._data.items() if root(key, rec)]
+            needed = set(id(spec) for spec in tr.traverse_nodes(roots, deptype=deptype))
+            return [rec.spec for rec in self._data.values() if id(rec.spec) not in needed]
 
     def update_explicit(self, spec, explicit):
         """
