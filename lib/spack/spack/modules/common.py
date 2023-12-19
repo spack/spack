@@ -727,6 +727,21 @@ class BaseContext(tengine.Context):
             spec.prefix, prefix_inspections, exclude=spack.util.environment.is_system_path
         )
 
+        # Let the extendee/dependency modify their extensions/dependencies
+
+        # The only thing we care about is `setup_dependent_run_environment`, but
+        # for that to work, globals have to be set on the package modules, and the
+        # whole chain of setup_dependent_package has to be followed from leaf to spec.
+        # So: just run it here, but don't collect env mods.
+        spack.build_environment.SetupContext(
+            spec, context=Context.RUN
+        ).set_all_package_py_globals()
+
+        # Then run setup_dependent_run_environment before setup_run_environment.
+        for dep in spec.dependencies(deptype=("link", "run")):
+            dep.package.setup_dependent_run_environment(env, spec)
+        spec.package.setup_run_environment(env)
+
         # BlueBrain: we do not generate modules for dependencies, include
         # their modifications and bin/ directories here
         #
@@ -745,27 +760,14 @@ class BaseContext(tengine.Context):
             return True
 
         for dep in set(spec.traverse(root=False, deptype="run")):
-            dep.package.setup_dependent_package(spec.package.module, spec)
-        for dep in set(spec.traverse(root=False, deptype="run")):
             if qualifies_for_modifications(dep):
+                # BlueBrain: include the runtime environment modifications + the ones from
+                # packages that the dependencies themselves extend.
                 dep.package.setup_run_environment(env)
+                for subdep in set(dep.traverse(root=False, deptype="run")):
+                    subdep.package.setup_dependent_run_environment(env, dep)
                 if os.path.isdir(dep.prefix.bin):
                     env.prepend_path("PATH", dep.prefix.bin)
-
-        # Let the extendee/dependency modify their extensions/dependencies
-
-        # The only thing we care about is `setup_dependent_run_environment`, but
-        # for that to work, globals have to be set on the package modules, and the
-        # whole chain of setup_dependent_package has to be followed from leaf to spec.
-        # So: just run it here, but don't collect env mods.
-        spack.build_environment.SetupContext(
-            spec, context=Context.RUN
-        ).set_all_package_py_globals()
-
-        # Then run setup_dependent_run_environment before setup_run_environment.
-        for dep in spec.dependencies(deptype=("link", "run")):
-            dep.package.setup_dependent_run_environment(env, spec)
-        spec.package.setup_run_environment(env)
 
         # Modifications required from modules.yaml
         env.extend(self.conf.env)
