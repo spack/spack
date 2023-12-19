@@ -1174,6 +1174,14 @@ def tarfile_of_spec_prefix(tar: tarfile.TarFile, prefix: str) -> None:
     except OSError:
         files_to_skip = []
 
+    # First add all directories leading up to `prefix` (Spack <= 0.21 did not do this, leading to
+    # issues when tarballs are used in runtimes like AWS lambda). Skip the file system root.
+    for parent_dir in reversed(pathlib.Path(prefix).parents[:-1]):
+        dir_info = tarfile.TarInfo(_tarinfo_name(str(parent_dir)))
+        dir_info.type = tarfile.DIRTYPE
+        dir_info.mode = 0o755
+        tar.addfile(dir_info)
+
     dir_stack = [prefix]
     while dir_stack:
         dir = dir_stack.pop()
@@ -2051,7 +2059,7 @@ def _tar_strip_component(tar: tarfile.TarFile, prefix: str):
     # Including trailing /, otherwise we end up with absolute paths.
     regex = re.compile(re.escape(prefix) + "/*")
 
-    # Remove the top-level directory from the member (link)names.
+    # Only yield members in the package prefix.
     # Note: when a tarfile is created, relative in-prefix symlinks are
     # expanded to matching member names of tarfile entries. So, we have
     # to ensure that those are updated too.
@@ -2059,12 +2067,14 @@ def _tar_strip_component(tar: tarfile.TarFile, prefix: str):
     # them.
     for m in tar.getmembers():
         result = regex.match(m.name)
-        assert result is not None
+        if not result:
+            continue
         m.name = m.name[result.end() :]
         if m.linkname:
             result = regex.match(m.linkname)
             if result:
                 m.linkname = m.linkname[result.end() :]
+        yield m
 
 
 def extract_tarball(spec, download_result, force=False, timer=timer.NULL_TIMER):
@@ -2138,8 +2148,10 @@ def extract_tarball(spec, download_result, force=False, timer=timer.NULL_TIMER):
     try:
         with closing(tarfile.open(tarfile_path, "r")) as tar:
             # Remove install prefix from tarfil to extract directly into spec.prefix
-            _tar_strip_component(tar, prefix=_ensure_common_prefix(tar))
-            tar.extractall(path=spec.prefix)
+            tar.extractall(
+                path=spec.prefix,
+                members=_tar_strip_component(tar, prefix=_ensure_common_prefix(tar)),
+            )
     except Exception:
         shutil.rmtree(spec.prefix, ignore_errors=True)
         _delete_staged_downloads(download_result)
@@ -2174,20 +2186,40 @@ def extract_tarball(spec, download_result, force=False, timer=timer.NULL_TIMER):
 
 
 def _ensure_common_prefix(tar: tarfile.TarFile) -> str:
-    # Get the shortest length directory.
-    common_prefix = min((e.name for e in tar.getmembers() if e.isdir()), key=len, default=None)
+    # Find the lowest `binary_distribution` file (hard-coded forward slash is on purpose).
+    binary_distribution = min(
+        (
+            e.name
+            for e in tar.getmembers()
+            if e.isfile() and e.name.endswith(".spack/binary_distribution")
+        ),
+        key=len,
+        default=None,
+    )
 
-    if common_prefix is None:
-        raise ValueError("Tarball does not contain a common prefix")
+    if binary_distribution is None:
+        raise ValueError("Tarball is not a Spack package, missing binary_distribution file")
 
-    # Validate that each file starts with the prefix
+    pkg_path = pathlib.PurePosixPath(binary_distribution).parent.parent
+
+    # Even the most ancient Spack version has required to list the dir of the package itself, so
+    # guard against broken tarballs where `path.parent.parent` is empty.
+    if pkg_path == pathlib.PurePosixPath():
+        raise ValueError("Invalid tarball, missing package prefix dir")
+
+    pkg_prefix = str(pkg_path)
+
+    # Ensure all tar entries are in the pkg_prefix dir, and if they're not, they should be parent
+    # dirs of it.
     for member in tar.getmembers():
-        if not member.name.startswith(common_prefix):
-            raise ValueError(
-                f"Tarball contains file {member.name} outside of prefix {common_prefix}"
-            )
+        if not (
+            member.name.startswith(pkg_prefix)
+            or member.isdir()
+            and pkg_prefix.startswith(member.name)
+        ):
+            raise ValueError(f"Tarball contains file {member.name} outside of prefix {pkg_prefix}")
 
-    return common_prefix
+    return pkg_prefix
 
 
 def install_root_node(spec, unsigned=False, force=False, sha256=None):
