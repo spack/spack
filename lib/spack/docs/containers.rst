@@ -41,7 +41,7 @@ just have to configure and OCI registry and run ``spack buildcache push``.
    spack -e . mirror add --oci-username ... --oci-password ... container-registry oci://example.com/name/image
 
    # Push the image
-   spack -e . buildcache push --base-image ubuntu:22.04 --tag my_env container-registry
+   spack -e . buildcache push --update-index --base-image ubuntu:22.04 --tag my_env container-registry
 
 The resulting container image can then be run as follows:
 
@@ -66,7 +66,8 @@ Linux distribution as long as the libc is compatible.
 
 For convenience, Spack also turns the OCI registry into a :ref:`build cache <binary_caches_oci>`,
 so that future ``spack install`` of the environment will simply pull the binaries from the
-registry instead of doing source builds.
+registry instead of doing source builds. The flag ``--update-index`` is needed to make Spack
+take the build cache into account when concretizing.
 
 .. note::
 
