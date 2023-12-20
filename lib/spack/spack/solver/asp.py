@@ -3134,14 +3134,38 @@ def _develop_specs_from_env(spec, env):
     spec.constrain(dev_info["spec"])
 
 
-def _is_reusable_external(packages, spec: spack.spec.Spec) -> bool:
-    """Returns true iff spec is an external that can be reused.
+def _is_reusable(spec: spack.spec.Spec, packages, local: bool) -> bool:
+    """A spec is reusable if it's not a dev spec, it's imported from the cray manifest, it's not
+    external, or it's external with matching packages.yaml entry. The latter prevents two issues:
+
+    1. Externals in build caches: avoid installing an external on the build machine not
+       available on the target machine
+    2. Local externals: avoid reusing an external if the local config changes. This helps in
+       particular when a user removes an external from packages.yaml, and expects that that
+       takes effect immediately.
 
     Arguments:
-        packages: the packages configuration
         spec: the spec to check
+        packages: the packages configuration
     """
-    for name in {spec.name, *(p.name for p in spec.package.provided)}:
+    if "dev_path" in spec.variants:
+        return False
+
+    if not spec.external:
+        return True
+
+    # Cray external manifest externals are always reusable
+    if local:
+        _, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
+        if record and record.origin == "external-db":
+            return True
+
+    try:
+        provided = [p.name for p in spec.package.provided]
+    except spack.repo.RepoError:
+        provided = []
+
+    for name in {spec.name, *provided}:
         for entry in packages.get(name, {}).get("externals", []):
             if (
                 spec.satisfies(entry["spec"])
@@ -3188,29 +3212,21 @@ class Solver:
     def _reusable_specs(self, specs):
         reusable_specs = []
         if self.reuse:
+            packages = spack.config.get("packages")
             # Specs from the local Database
             with spack.store.STORE.db.read_transaction():
                 reusable_specs.extend(
-                    [
-                        s
-                        for s in spack.store.STORE.db.query(installed=True)
-                        if not s.satisfies("dev_path=*")
-                    ]
+                    s
+                    for s in spack.store.STORE.db.query(installed=True)
+                    if _is_reusable(s, packages, local=True)
                 )
 
             # Specs from buildcaches
             try:
-                # Specs in a build cache that depend on externals are reusable as long as local
-                # config has matching externals. This should guard against picking up binaries
-                # linked against externals not available locally, while still supporting the use
-                # case of distributing binaries across machines with similar externals.
-                packages = spack.config.get("packages")
                 reusable_specs.extend(
-                    [
-                        s
-                        for s in spack.binary_distribution.update_cache_and_get_specs()
-                        if not s.external or _is_reusable_external(packages, s)
-                    ]
+                    s
+                    for s in spack.binary_distribution.update_cache_and_get_specs()
+                    if _is_reusable(s, packages, local=False)
                 )
             except (spack.binary_distribution.FetchCacheError, IndexError):
                 # this is raised when no mirrors had indices.
