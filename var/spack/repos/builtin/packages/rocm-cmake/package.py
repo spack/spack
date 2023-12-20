@@ -54,11 +54,11 @@ class RocmCmake(CMakePackage):
         deprecated=True,
     )
     version("5.1.3",
-        sha256="19b2da0d56300aab454655b57435ab3ed9e101ecb96561336ea8865bbd993c23")
+        sha256="19b2da0d56300aab454655b57435ab3ed9e101ecb96561336ea8865bbd993c23",
         deprecated=True,
     )
     version("5.1.0",
-        sha256="2eff47b7cf5bd56d465ff3c110eb936d31860df60182a82ba511ba11bbcf23fc")
+        sha256="2eff47b7cf5bd56d465ff3c110eb936d31860df60182a82ba511ba11bbcf23fc",
         deprecated=True,
     )
     version(
