@@ -59,7 +59,11 @@ subcommands = [
 #
 def env_create_setup_parser(subparser):
     """create a new environment"""
-    subparser.add_argument("env_name", metavar="env", help="name of environment to create")
+    subparser.add_argument(
+        "env_name",
+        metavar="env",
+        help="name of managed environment or directory of the anonymous env (when using --dir/-d) to activate",
+    )
     subparser.add_argument(
         "-d", "--dir", action="store_true", help="create an environment in a specific directory"
     )
@@ -245,7 +249,7 @@ def env_activate_setup_parser(subparser):
         dest="env_name",
         nargs="?",
         default=None,
-        help="name of environment to activate",
+        help="name of managed environment or directory of the anonymous env (when using --dir/-d) to activate",
     )
 
 
@@ -282,11 +286,11 @@ def env_activate(args):
             " --keep-relative, or --dir."
         )
 
-    env_name_or_dir = args.env_name
+    args.env_name
 
     # When executing `spack env activate` without further arguments, activate
     # the default environment. It's created when it doesn't exist yet.
-    if not env_name_or_dir and not args.temp:
+    if not args.env_name and not args.temp:
         short_name = "default"
         if not ev.exists(short_name):
             ev.create(short_name)
@@ -305,13 +309,13 @@ def env_activate(args):
         _tty_info(f"Created and activated temporary environment in {env_path}")
 
     # Managed environment
-    elif ev.exists(env_name_or_dir) and not args.dir:
-        env_path = ev.root(env_name_or_dir)
-        short_name = env_name_or_dir
+    elif ev.exists(args.env_name) and not args.dir:
+        env_path = ev.root(args.env_name)
+        short_name = args.env_name
 
     # Environment directory
-    elif ev.is_env_dir(env_name_or_dir):
-        env_path = os.path.abspath(env_name_or_dir)
+    elif ev.is_env_dir(args.env_name):
+        env_path = os.path.abspath(args.env_name)
         short_name = os.path.basename(env_path)
 
     # create if user requested, and then recall recursively
@@ -323,7 +327,7 @@ def env_activate(args):
         return
 
     else:
-        tty.die("No such environment: '%s'" % env_name_or_dir)
+        tty.die("No such environment: '%s'" % args.env_name)
 
     env_prompt = "[%s]" % short_name
 
