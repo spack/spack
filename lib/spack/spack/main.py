@@ -561,8 +561,11 @@ def make_argument_parser(**kwargs):
     return parser
 
 
-def send_warning_to_tty(message, *args):
+def send_warning_to_tty(message, category, filename, lineno, file=None, line=None):
     """Redirects messages to tty.warn."""
+    if category == FutureWarning:
+        tty.warn(f"{message}:\n\tfrom {filename}:{lineno}")
+        return
     tty.warn(message)
 
 
