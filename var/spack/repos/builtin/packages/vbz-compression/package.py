@@ -42,5 +42,9 @@ class VbzCompression(CMakePackage):
     )
 
     def cmake_args(self):
-        args = ["-DENABLE_CONAN=OFF", "-DENABLE_PERF_TESTING=OFF", "-DENABLE_PYTHON=OFF"]
+        args = [
+            self.define("ENABLE_CONAN", False),
+            self.define("ENABLE_PERF_TESTING", False),
+            self.define("ENABLE_PYTHON", False),
+        ]
         return args
