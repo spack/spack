@@ -48,6 +48,9 @@ RUN cd {{ paths.environment }} && \
     spack env activate --sh -d . > activate.sh
 {% endblock make_activate %}
 
+{% block build_stage_extra_instructions %}
+{% endblock build_stage_extra_instructions %}
+
 {% endblock build_stage %}
 {% endif %}
 
@@ -79,6 +82,10 @@ RUN {% if os_package_update %}{{ os_packages_final.update }} \
  && {% endif %}{{ os_packages_final.install }} {{ os_packages_final.list | join | replace('\n', ' ') }} \
  && {{ os_packages_final.clean }}
 {% endif %}
+
+{% block final_stage_extra_instructions %}
+{% endblock final_stage_extra_instructions %}
+
 {% endblock final_stage %}
 
 {% for label, value in labels.items() %}
