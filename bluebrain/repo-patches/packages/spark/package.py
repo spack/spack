@@ -7,6 +7,7 @@ class Spark(BuiltinSpark):
 
     url = "https://archive.apache.org/dist/spark/spark-2.0.0/spark-2.0.0-bin-3.2.0.tgz"
 
+    version("3.5.0", sha256="ac064ec620129b4b9630e180e25ac2b71a8ccd4c6912bf5b5631943b742f0379")
     version("3.4.0", sha256="345174179387e836efdecdd3e1fe5a7129c198b6f720ad8b1d87ec08c0d1a205")
     version("3.3.0", sha256="306b550f42ce1b06772d6084c545ef8448414f2bf451e0b1175405488f2a322f")
     version("3.2.1", sha256="224e058cb0c6fb68b39896427a3ccd11ae2246e9bf465b5e29e4fb192d39a59c")
