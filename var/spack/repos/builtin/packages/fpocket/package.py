@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.build_systems import makefile
 from spack.package import *
 
 
@@ -21,7 +22,7 @@ class Fpocket(MakefilePackage):
     depends_on("qhull")
 
 
-class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
+class MakefileBuilder(makefile.MakefileBuilder):
     def setup_build_environment(self, env):
         if self.pkg.compiler.name == "gcc":
             env.set("CXX", "g++")

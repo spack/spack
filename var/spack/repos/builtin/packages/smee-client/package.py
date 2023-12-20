@@ -5,7 +5,6 @@
 
 
 from spack.package import *
-from spack.util.executable import ProcessError
 
 
 class SmeeClient(Package):
@@ -35,7 +34,7 @@ class SmeeClient(Package):
         # Allow tsc to fail with typing "errors" which don't affect results
         output = npm("run", "build", output=str, error=str, fail_on_error=False)
         if npm.returncode not in (0, 2):
-            raise ProcessError(output)
+            raise InstallError(output)
 
     def install(self, spec, prefix):
         npm = which("npm", required=True)
