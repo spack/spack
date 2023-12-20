@@ -191,7 +191,7 @@ class Cmake(Package):
         when="@3.15.5",
     )
 
-    depends_on("ninja", when="platform=windows")
+    depends_on("ninja-build", type=("build", "run"))
 
     # We default ownlibs to true because it greatly speeds up the CMake
     # build, and CMake is built frequently. Also, CMake is almost always
@@ -328,7 +328,6 @@ class Cmake(Package):
     def bootstrap_args(self):
         spec = self.spec
         args = []
-        self.generator = make
 
         # The Intel compiler isn't able to deal with noinline member functions of
         # template classes defined in headers.  As such it outputs
@@ -337,20 +336,12 @@ class Cmake(Package):
         if spec.satisfies("%intel@:2021.6.0"):
             args.append("CXXFLAGS=-diag-disable=2196")
 
-        if self.spec.satisfies("platform=windows"):
-            args.append("-GNinja")
-            self.generator = ninja
+        # always use ninja
+        args.append("--generator=Ninja")
+        self.generator = ninja
 
         if not sys.platform == "win32":
             args.append("--prefix={0}".format(self.prefix))
-
-            jobs = spack.build_environment.get_effective_jobs(
-                make_jobs,
-                parallel=self.parallel,
-                supports_jobserver=self.generator.supports_jobserver,
-            )
-            if jobs is not None:
-                args.append("--parallel={0}".format(jobs))
 
             if "+ownlibs" in spec:
                 # Build and link to the CMake-provided third-party libraries

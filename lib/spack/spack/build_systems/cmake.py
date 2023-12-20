@@ -116,7 +116,7 @@ class CMakePackage(spack.package_base.PackageBase):
 
         depends_on("cmake", type="build")
         depends_on("gmake", type="build", when="generator=make")
-        depends_on("ninja", type="build", when="generator=ninja")
+        depends_on("ninja-build", type="build", when="generator=ninja")
 
     def flags_to_build_system_args(self, flags):
         """Return a list of all command line arguments to pass the specified
