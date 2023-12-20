@@ -60,6 +60,7 @@ class Amdlibflame(LibflameBase):
     conflicts("+ilp64", when="@:3.0.0", msg="ILP64 is supported from 3.0.1 onwards")
     conflicts("threads=pthreads", msg="pthread is not supported")
     conflicts("threads=openmp", when="@:3", msg="openmp is not supported by amdlibflame < 4.0")
+    requires("target=x86_64:", msg="AMD libflame available only on x86_64")
 
     patch("aocc-2.2.0.patch", when="@:2", level=1)
     patch("cray-compiler-wrapper.patch", when="@:3.0.0", level=1)

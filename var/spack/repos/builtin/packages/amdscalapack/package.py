@@ -42,6 +42,7 @@ class Amdscalapack(ScalapackBase):
     variant("ilp64", default=False, description="Build with ILP64 support")
 
     conflicts("+ilp64", when="@:3.0", msg="ILP64 is supported from 3.1 onwards")
+    requires("target=x86_64:", msg="AMD scalapack available only on x86_64")
 
     def url_for_version(self, version):
         vers = "https://github.com/amd/{0}/archive/{1}.tar.gz"
