@@ -3210,11 +3210,10 @@ class Solver:
             # Specs from the local Database
             with spack.store.STORE.db.read_transaction():
                 reusable_specs.extend(
-                    [
-                        s
-                        for s in spack.store.STORE.db.query(installed=True)
-                        if _is_reusable(s, packages)
-                    ]
+                    record.spec
+                    for record in spack.store.STORE.db._data.values()
+                    if record.installed
+                    and (record.origin == "external-db" or _is_reusable(record.spec, packages))
                 )
 
             # Specs from buildcaches
