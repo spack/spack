@@ -5,7 +5,6 @@
 
 from spack.package import *
 from spack.pkg.builtin.ninja import NinjaBase
-from spack.util.executable import which_string
 
 
 class NinjaFortran(NinjaBase):
