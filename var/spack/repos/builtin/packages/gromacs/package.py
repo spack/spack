@@ -285,6 +285,8 @@ class Gromacs(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("nvhpc", when="+cufftmp")
     depends_on("heffte", when="+heffte")
 
+    conflicts("^hipsycl~rocm", when="+rocm")
+
     requires(
         "%intel",
         "%oneapi",

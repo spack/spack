@@ -78,13 +78,13 @@ class Hipsycl(CMakePackage, ROCmPackage):
         spec = self.spec
         args = [
             "-DWITH_CPU_BACKEND:Bool=TRUE",
-            # TODO: no ROCm stuff available in spack yet
             "-DWITH_ROCM_BACKEND:Bool={0}".format("TRUE" if "+rocm" in spec else "FALSE"),
             "-DWITH_CUDA_BACKEND:Bool={0}".format("TRUE" if "+cuda" in spec else "FALSE"),
             # prevent hipSYCL's cmake to look for other LLVM installations
             # if the specified one isn't compatible
             "-DDISABLE_LLVM_VERSION_CHECK:Bool=TRUE",
         ]
+        args += [f"-DACPP_VERSION_SUFFIX=spack-{self.version}"]
         if "+rocm" in spec:
             args += [f"-DHIP_CXX_COMPILER={self.compiler.cxx}"]
         # LLVM directory containing all installed CMake files
