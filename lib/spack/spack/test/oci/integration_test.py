@@ -15,12 +15,7 @@ import spack.environment as ev
 import spack.oci.opener
 from spack.binary_distribution import gzip_compressed_tarfile
 from spack.main import SpackCommand
-from spack.oci.image import (
-    Digest,
-    ImageReference,
-    default_config,
-    default_manifest,
-)
+from spack.oci.image import Digest, ImageReference, default_config, default_manifest
 from spack.oci.oci import blob_exists, get_manifest_and_config, upload_blob, upload_manifest
 from spack.test.oci.mock_registry import DummyServer, InMemoryOCIRegistry, create_opener
 
@@ -87,6 +82,18 @@ def test_buildcache_tag(
 
         # without a base image, we should have one layer per spec
         assert len(manifest["layers"]) == len(specs)
+
+        # Now create yet another tag, but with just a single selected spec as root. This should
+        # also test the case where Spack doesn't have to upload any binaries, it just has to create
+        # a new tag.
+        libelf = next(s for s in specs if s.name == "libelf")
+        with ev.read("test"):
+            # Get libelf spec
+            buildcache("push", "--tag", "single_spec", "oci-test", libelf.format("libelf{/hash}"))
+
+        name = ImageReference.from_string("example.com/image:single_spec")
+        manifest, config = get_manifest_and_config(name)
+        assert len(manifest["layers"]) == 1
 
 
 def test_buildcache_push_with_base_image_command(
