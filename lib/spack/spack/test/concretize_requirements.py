@@ -16,6 +16,7 @@ import spack.util.spack_yaml as syaml
 import spack.version
 from spack.solver.asp import InternalConcretizerError, UnsatisfiableSpecError
 from spack.spec import Spec
+from spack.test.conftest import create_test_repo
 from spack.util.url import path_to_file_url
 
 pytestmark = [
@@ -92,30 +93,13 @@ class U(Package):
 
 
 @pytest.fixture
-def create_test_repo(tmpdir, mutable_config):
-    repo_path = str(tmpdir)
-    repo_yaml = tmpdir.join("repo.yaml")
-    with open(str(repo_yaml), "w") as f:
-        f.write(
-            """\
-repo:
-  namespace: testcfgrequirements
-"""
-        )
-
-    packages_dir = tmpdir.join("packages")
-    for pkg_name, pkg_str in [_pkgx, _pkgy, _pkgv, _pkgt, _pkgu]:
-        pkg_dir = packages_dir.ensure(pkg_name, dir=True)
-        pkg_file = pkg_dir.join("package.py")
-        with open(str(pkg_file), "w") as f:
-            f.write(pkg_str)
-
-    yield spack.repo.Repo(repo_path)
+def _create_test_repo(tmpdir, mutable_config):
+    yield create_test_repo(tmpdir, [_pkgx, _pkgy, _pkgv, _pkgt, _pkgu])
 
 
 @pytest.fixture
-def test_repo(create_test_repo, monkeypatch, mock_stage):
-    with spack.repo.use_repositories(create_test_repo) as mock_repo_path:
+def test_repo(_create_test_repo, monkeypatch, mock_stage):
+    with spack.repo.use_repositories(_create_test_repo) as mock_repo_path:
         yield mock_repo_path
 
 
@@ -530,7 +514,7 @@ packages:
     assert s2.satisfies("@2.5")
 
 
-def test_reuse_oneof(concretize_scope, create_test_repo, mutable_database, fake_installs):
+def test_reuse_oneof(concretize_scope, _create_test_repo, mutable_database, fake_installs):
     conf_str = """\
 packages:
   y:
@@ -538,7 +522,7 @@ packages:
     - one_of: ["@2.5", "%gcc"]
 """
 
-    with spack.repo.use_repositories(create_test_repo):
+    with spack.repo.use_repositories(_create_test_repo):
         s1 = Spec("y@2.5%gcc").concretized()
         s1.package.do_install(fake=True, explicit=True)
 
