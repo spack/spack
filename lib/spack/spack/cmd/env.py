@@ -5,7 +5,6 @@
 
 import argparse
 import os
-import os.path
 import shlex
 import shutil
 import sys
@@ -14,24 +13,24 @@ from typing import Optional
 
 import llnl.string as string
 import llnl.util.filesystem as fs
-import llnl.util.tty
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 from llnl.util.tty.color import colorize
 
 import spack.cmd
-import spack.cmd.buildcache as bc
 import spack.cmd.common
+import spack.cmd.common.arguments
+import spack.cmd.install
 import spack.cmd.modules
+import spack.cmd.uninstall
 import spack.config
 import spack.environment as ev
 import spack.environment.depfile as depfile
 import spack.environment.shell
-import spack.oci.oci
-import spack.stage
+import spack.schema.env
+import spack.spec
 import spack.tengine
 from spack.cmd.common import arguments
-from spack.oci.image import ImageReference
 from spack.util.environment import EnvironmentModifications
 
 description = "manage virtual environments"
@@ -52,7 +51,6 @@ subcommands = [
     "update",
     "revert",
     "depfile",
-    "image",
 ]
 
 
@@ -566,7 +564,7 @@ def env_update_setup_parser(subparser):
     subparser.add_argument(
         metavar="env", dest="update_env", help="name or directory of the environment to activate"
     )
-    arguments.add_common_arguments(subparser, ["yes_to_all"])
+    spack.cmd.common.arguments.add_common_arguments(subparser, ["yes_to_all"])
 
 
 def env_update(args):
@@ -603,7 +601,7 @@ def env_revert_setup_parser(subparser):
     subparser.add_argument(
         metavar="env", dest="revert_env", help="name or directory of the environment to activate"
     )
-    arguments.add_common_arguments(subparser, ["yes_to_all"])
+    spack.cmd.common.arguments.add_common_arguments(subparser, ["yes_to_all"])
 
 
 def env_revert(args):
@@ -724,54 +722,6 @@ def env_depfile(args):
             f.write(makefile)
     else:
         sys.stdout.write(makefile)
-
-
-def env_image_setup_parser(subparser):
-    """generate an OCI compatible container image the already installed environment"""
-    subparser.add_argument("--base-image")
-    subparser.add_argument("--force", default=False, action="store_true")
-    subparser.add_argument("--tag", "-t", required=True)
-    subparser.add_argument("mirror", type=arguments.mirror_name_or_url)
-
-
-def env_image(args):
-    image_ref = spack.oci.oci.image_from_mirror(args.mirror)
-    env = spack.cmd.require_active_env("env image")
-    roots = env.concrete_roots()
-    specs = env.all_specs()
-
-    base_image_ref: Optional[ImageReference] = (
-        ImageReference.from_string(args.base_image) if args.base_image else None
-    )
-
-    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
-        with bc._make_pool() as pool:
-            skipped, base_images, checksums = bc._push_oci(args, image_ref, specs, tmpdir, pool)
-
-        architecture = bc._archspec_to_gooarch(roots[0])
-
-        if architecture not in base_images:
-            if base_image_ref is None:
-                base_images[architecture] = (
-                    bc.default_manifest(),
-                    bc.default_config(architecture, "linux"),
-                )
-            else:
-                base_images[architecture] = bc.copy_missing_layers_with_retry(
-                    base_image_ref, image_ref, architecture
-                )
-
-        # If anything was pushed, we update the build cache index for convenience.
-        if len(skipped) < len(specs):
-            bc._update_index_oci(image_ref, tmpdir, pool)
-
-        # Add a manifest for the environment
-        environment_tag = image_ref.with_tag(args.tag)
-        bc._put_manifest(
-            base_images, checksums, environment_tag, tmpdir, None, None, *env.concrete_roots()
-        )
-
-        llnl.util.tty.info(f"Pushed {environment_tag}")
 
 
 #: Dictionary mapping subcommand names and aliases to functions
