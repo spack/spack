@@ -504,22 +504,16 @@ class GitRepoChangeDetector:
         the hash) and return whether it differs from the prior state.
 
         Returns:
-            (int): NO_PRIOR if there is no prior state available to
-                check; CHANGED if the new Git hash differs, and
-                NOT_CHANGED otherwise.
+            (bool): ``True`` if the new Git hash differs or if there
+                is no prior hash available, False if the prior hash
+                is available and matches the current hash.
         """
         self.current_hash = self.git_modification_hash()
         prior_hash = self.prior_hash()
         if not prior_hash:
-            # Note: originally I thought about returning NOT_CHANGED
-            # if the git state is "clean", but technically a user
-            # could have initially installed with a dirty state, and
-            # then reverted their changes.
-            return GitRepoChangeDetector.NO_PRIOR
-        if self.current_hash == prior_hash:
-            return GitRepoChangeDetector.NOT_CHANGED
+            return True
         else:
-            return GitRepoChangeDetector.CHANGED
+            return self.current_hash != prior_hash
 
     def update_prior(self):
         if not self.current_hash:

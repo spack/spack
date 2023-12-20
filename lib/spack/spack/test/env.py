@@ -816,23 +816,25 @@ class TestGitRepoChangeDetector:
         git_change_detector = GitRepoChangeDetector.from_src_dir(repo_path)
         # If no prior recorded state exists the default should be to
         # indicate that a rebuild is required.
-        assert git_change_detector.update_current() == GitRepoChangeDetector.NO_PRIOR
-
-        git_change_detector.update_prior()
-
-        assert git_change_detector.update_current() == GitRepoChangeDetector.NOT_CHANGED
-
-        with fs.working_dir(repo_path):
-            with open(managed_file, "a") as f:
-                f.write("extra content")
-
-        assert git_change_detector.update_current() == GitRepoChangeDetector.CHANGED
+        assert git_change_detector.update_current()
 
         git_change_detector.update_prior()
 
         # Now that prior has updated, and no change has occurred since
         # then, we should go back to reporting no change.
-        assert git_change_detector.update_current() == GitRepoChangeDetector.NOT_CHANGED
+        assert not git_change_detector.update_current()
+
+        with fs.working_dir(repo_path):
+            with open(managed_file, "a") as f:
+                f.write("extra content")
+
+        # A change has occurred since the last time we updated our
+        # prior state: it should be indicated that a rebuild is needed
+        assert git_change_detector.update_current()
+
+        git_change_detector.update_prior()
+
+        assert not git_change_detector.update_current()
 
     def test_not_a_git_repo(self, tmpdir):
         not_a_git_repo = tmpdir.mkdir("env_dir").strpath
