@@ -123,7 +123,14 @@ def setup_parser(subparser: argparse.ArgumentParser):
         help="stop pushing on first failure (default is best effort)",
     )
     push.add_argument(
-        "--base-image", default=None, help="specify the base image for the buildcache. "
+        "--base-image", default=None, help="specify the base image for the buildcache"
+    )
+    push.add_argument(
+        "--tag",
+        "-t",
+        default=None,
+        help="when pushing to an OCI registry, tag an image containing all root specs and their "
+        "runtime dependencies",
     )
     arguments.add_common_arguments(push, ["specs", "jobs"])
     push.set_defaults(func=push_fn)
@@ -332,9 +339,9 @@ def push_fn(args):
         )
 
     if args.specs or args.spec_file:
-        specs = _matching_specs(spack.cmd.parse_specs(args.specs or args.spec_file))
+        roots = _matching_specs(spack.cmd.parse_specs(args.specs or args.spec_file))
     else:
-        specs = spack.cmd.require_active_env("buildcache push").all_specs()
+        roots = spack.cmd.require_active_env("buildcache push").concrete_roots()
 
     if args.allow_root:
         tty.warn(
@@ -345,9 +352,9 @@ def push_fn(args):
 
     # Check if this is an OCI image.
     try:
-        image_ref = spack.oci.oci.image_from_mirror(mirror)
+        target_image = spack.oci.oci.image_from_mirror(mirror)
     except ValueError:
-        image_ref = None
+        target_image = None
 
     push_url = mirror.push_url
 
@@ -358,7 +365,7 @@ def push_fn(args):
         unsigned = not (args.key or args.signed)
 
     # For OCI images, we require dependencies to be pushed for now.
-    if image_ref:
+    if target_image:
         if "dependencies" not in args.things_to_install:
             tty.die("Dependencies must be pushed for OCI images.")
         if not unsigned:
@@ -369,7 +376,7 @@ def push_fn(args):
 
     # This is a list of installed, non-external specs.
     specs = bindist.specs_to_be_packaged(
-        specs,
+        roots,
         root="package" in args.things_to_install,
         dependencies="dependencies" in args.things_to_install,
     )
@@ -382,11 +389,35 @@ def push_fn(args):
     failed = []
 
     # TODO: unify this logic in the future.
-    if image_ref:
+    if target_image:
+        base_image = ImageReference.from_string(args.base_image) if args.base_image else None
         with tempfile.TemporaryDirectory(
             dir=spack.stage.get_stage_root()
         ) as tmpdir, _make_pool() as pool:
-            skipped, _, _ = _push_oci(args, image_ref, specs, tmpdir, pool)
+            skipped, base_images, checksums = _push_oci(
+                target_image=target_image,
+                base_image=base_image,
+                installed_specs_with_deps=specs,
+                force=args.force,
+                tmpdir=tmpdir,
+                pool=pool,
+            )
+
+        # Apart from creating manifests for each individual spec, we allow users to create a
+        # separate image tag for all root specs and their runtime dependencies.
+        if args.tag:
+            tagged_image = target_image.with_tag(args.tag)
+            # _push_oci may not populate base_images if binaries were already in the registry
+            for spec in roots:
+                _update_base_images(
+                    base_image=base_image,
+                    target_image=target_image,
+                    spec=spec,
+                    base_image_cache=base_images,
+                )
+            _put_manifest(base_images, checksums, tagged_image, tmpdir, None, None, *roots)
+            tty.info(f"Tagged {tagged_image}")
+
     else:
         skipped = []
 
@@ -447,11 +478,11 @@ def push_fn(args):
     # Update the index if requested
     # TODO: remove update index logic out of bindist; should be once after all specs are pushed
     # not once per spec.
-    if image_ref and len(skipped) < len(specs) and args.update_index:
+    if target_image and len(skipped) < len(specs) and args.update_index:
         with tempfile.TemporaryDirectory(
             dir=spack.stage.get_stage_root()
         ) as tmpdir, _make_pool() as pool:
-            _update_index_oci(image_ref, tmpdir, pool)
+            _update_index_oci(target_image, tmpdir, pool)
 
 
 def _get_spack_binary_blob(image_ref: ImageReference) -> Optional[spack.oci.oci.Blob]:
@@ -602,35 +633,56 @@ def _put_manifest(
     os.unlink(config_file)
 
 
+def _update_base_images(
+    *,
+    base_image: Optional[ImageReference],
+    target_image: ImageReference,
+    spec: spack.spec.Spec,
+    base_image_cache: Dict[str, Tuple[dict, dict]],
+):
+    """For a given spec and base image, copy the missing layers of the base image with matching
+    arch to the registry of the target image. If no base image is specified, create a dummy
+    manifest and config file."""
+    architecture = _archspec_to_gooarch(spec)
+    if architecture in base_image_cache:
+        return
+    if base_image is None:
+        base_image_cache[architecture] = (
+            default_manifest(),
+            default_config(architecture, "linux"),
+        )
+    else:
+        base_image_cache[architecture] = copy_missing_layers_with_retry(
+            base_image, target_image, architecture
+        )
+
+
 def _push_oci(
-    args,
-    image_ref: ImageReference,
+    *,
+    target_image: ImageReference,
+    base_image: Optional[ImageReference],
     installed_specs_with_deps: List[Spec],
     tmpdir: str,
     pool: multiprocessing.pool.Pool,
+    force: bool = False,
 ) -> Tuple[List[str], Dict[str, Tuple[dict, dict]], Dict[str, spack.oci.oci.Blob]]:
     """Push specs to an OCI registry
 
     Args:
-        args: The command line arguments.
-        image_ref: The image reference.
+        image_ref: The target OCI image
+        base_image: Optional base image, which will be copied to the target registry.
         installed_specs_with_deps: The installed specs to push, excluding externals,
             including deps, ordered from roots to leaves.
+        force: Whether to overwrite existing layers and manifests in the buildcache.
 
     Returns:
         A tuple consisting of the list of skipped specs already in the build cache,
         a dictionary mapping architectures to base image manifests and configs,
-        and a dictionary mapping spec dag hashes to blobs.
+        and a dictionary mapping each spec's dag hash to a blob.
     """
 
     # Reverse the order
     installed_specs_with_deps = list(reversed(installed_specs_with_deps))
-
-    # The base image to use for the package. When not set, we use
-    # the OCI registry only for storage, and do not use any base image.
-    base_image_ref: Optional[ImageReference] = (
-        ImageReference.from_string(args.base_image) if args.base_image else None
-    )
 
     # Spec dag hash -> blob
     checksums: Dict[str, spack.oci.oci.Blob] = {}
@@ -641,11 +693,11 @@ def _push_oci(
     # Specs not uploaded because they already exist
     skipped = []
 
-    if not args.force:
+    if not force:
         tty.info("Checking for existing specs in the buildcache")
         to_be_uploaded = []
 
-        tags_to_check = (image_ref.with_tag(default_tag(s)) for s in installed_specs_with_deps)
+        tags_to_check = (target_image.with_tag(default_tag(s)) for s in installed_specs_with_deps)
         available_blobs = pool.map(_get_spack_binary_blob, tags_to_check)
 
         for spec, maybe_blob in zip(installed_specs_with_deps, available_blobs):
@@ -661,30 +713,27 @@ def _push_oci(
         return skipped, base_images, checksums
 
     tty.info(
-        f"{len(to_be_uploaded)} specs need to be pushed to {image_ref.domain}/{image_ref.name}"
+        f"{len(to_be_uploaded)} specs need to be pushed to "
+        f"{target_image.domain}/{target_image.name}"
     )
 
     # Upload blobs
     new_blobs = pool.starmap(
-        _push_single_spack_binary_blob, ((image_ref, spec, tmpdir) for spec in to_be_uploaded)
+        _push_single_spack_binary_blob, ((target_image, spec, tmpdir) for spec in to_be_uploaded)
     )
 
     # And update the spec to blob mapping
     for spec, blob in zip(to_be_uploaded, new_blobs):
         checksums[spec.dag_hash()] = blob
 
-    # Copy base image layers, probably fine to do sequentially.
+    # Copy base images if necessary
     for spec in to_be_uploaded:
-        architecture = _archspec_to_gooarch(spec)
-        # Get base image details, if we don't have them yet
-        if architecture in base_images:
-            continue
-        if base_image_ref is None:
-            base_images[architecture] = (default_manifest(), default_config(architecture, "linux"))
-        else:
-            base_images[architecture] = copy_missing_layers_with_retry(
-                base_image_ref, image_ref, architecture
-            )
+        _update_base_images(
+            base_image=base_image,
+            target_image=target_image,
+            spec=spec,
+            base_image_cache=base_images,
+        )
 
     def extra_config(spec: Spec):
         spec_dict = spec.to_dict(hash=ht.dag_hash)
@@ -703,7 +752,7 @@ def _push_oci(
             (
                 base_images,
                 checksums,
-                image_ref.with_tag(default_tag(spec)),
+                target_image.with_tag(default_tag(spec)),
                 tmpdir,
                 extra_config(spec),
                 {"org.opencontainers.image.description": spec.format()},
@@ -715,7 +764,7 @@ def _push_oci(
 
     # Print the image names of the top-level specs
     for spec in to_be_uploaded:
-        tty.info(f"Pushed {_format_spec(spec)} to {image_ref.with_tag(default_tag(spec))}")
+        tty.info(f"Pushed {_format_spec(spec)} to {target_image.with_tag(default_tag(spec))}")
 
     return skipped, base_images, checksums
 
