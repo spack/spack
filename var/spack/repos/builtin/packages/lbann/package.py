@@ -6,6 +6,7 @@
 import os
 import socket
 
+import spack.platforms.cray
 from spack.package import *
 
 
