@@ -31,15 +31,42 @@ class Hip(CMakePackage):
     version("5.6.0", sha256="a8237768c1ae70029d972376f8d279f4de18a1e6106fff6215d1e16847bc375e")
     version("5.5.1", sha256="1f5f6bb72d8d64335ccc8242ef2e2ea8efeb380cce2997f475b1ee77528d9fb4")
     version("5.5.0", sha256="5b0d0253e62f85cc21d043513f7c11c64e4a4ec416159668f0b160d732d09a3c")
-    version("5.4.3", sha256="23e51d3af517cd63019f8d199e46b84d5a18251d148e727f3985e8d99ccb0e58")
-    version("5.4.0", sha256="e290f835d69ef23e8b5833a7e616b0a989ff89ada4412d9742430819546efc6c")
-    version("5.3.3", sha256="51d4049dc37d261afb9e1270e60e112708ff06b470721ff21023e16e040e4403")
-    version("5.3.0", sha256="05225832fb5a4d24f49a773ac27e315239943a6f24291a50d184e2913f2cdbe0")
-    version("5.2.3", sha256="5b83d1513ea4003bfad5fe8fa741434104e3e49a87e1d7fad49e5a8c1d06e57b")
-    version("5.2.1", sha256="7d4686a2f8a9124bb21f7f3958e451c57019f48a0cbb42ffdc56ed02860a46c3")
-    version("5.2.0", sha256="a6e0515d4d25865c037b546035df9c51f0882cd2700e759c266ff7e199f37c3a")
-    version("5.1.3", sha256="ce755ee6e407904eba3f6b3c9efcdd48eb4f58a26b06e1892166d05f19a75973")
-    version("5.1.0", sha256="47e542183699f4005c48631d96f6a1fbdf27e07ad3402ccd7b5f707c2c602266")
+    version("5.4.3",
+        sha256="23e51d3af517cd63019f8d199e46b84d5a18251d148e727f3985e8d99ccb0e58",
+        deprecated=True,
+    )
+    version("5.4.0",
+        sha256="e290f835d69ef23e8b5833a7e616b0a989ff89ada4412d9742430819546efc6c",
+        deprecated=True,
+    )
+    version("5.3.3",
+        sha256="51d4049dc37d261afb9e1270e60e112708ff06b470721ff21023e16e040e4403",
+        deprecated=True,
+    )
+    version("5.3.0",
+        sha256="05225832fb5a4d24f49a773ac27e315239943a6f24291a50d184e2913f2cdbe0",
+        deprecated=True,
+    )
+    version("5.2.3",
+        sha256="5b83d1513ea4003bfad5fe8fa741434104e3e49a87e1d7fad49e5a8c1d06e57b",
+        deprecated=True,
+    )
+    version("5.2.1",
+        sha256="7d4686a2f8a9124bb21f7f3958e451c57019f48a0cbb42ffdc56ed02860a46c3",
+        deprecated=True,
+    )
+    version("5.2.0",
+        sha256="a6e0515d4d25865c037b546035df9c51f0882cd2700e759c266ff7e199f37c3a",
+        deprecated=True,
+    )
+    version("5.1.3",
+        sha256="ce755ee6e407904eba3f6b3c9efcdd48eb4f58a26b06e1892166d05f19a75973",
+        deprecated=True,
+    )
+    version("5.1.0",
+        sha256="47e542183699f4005c48631d96f6a1fbdf27e07ad3402ccd7b5f707c2c602266",
+        deprecated=True,
+    )
     version(
         "5.0.2",
         sha256="e23601e6f4f62083899ea6356fffbe88d1deb20fa61f2c970e3c0474cd8886ca",
