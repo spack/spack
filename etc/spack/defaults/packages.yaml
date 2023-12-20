@@ -44,6 +44,7 @@ packages:
       mpe: [mpe2]
       mpi: [openmpi, mpich]
       mysql-client: [mysql, mariadb-c-client]
+      ninja-build: [ninja-fortran, ninja]
       opencl: [pocl]
       onedal: [intel-oneapi-dal]
       pbs: [openpbs, torque]
