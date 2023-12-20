@@ -2445,6 +2445,7 @@ def test_reusable_externals_match(mock_packages, tmpdir):
                 ]
             }
         },
+        local=False,
     )
 
 
@@ -2462,6 +2463,7 @@ def test_reusable_externals_match_virtual(mock_packages, tmpdir):
                 ]
             }
         },
+        local=False,
     )
 
 
@@ -2479,6 +2481,7 @@ def test_reusable_externals_different_prefix(mock_packages, tmpdir):
                 ]
             }
         },
+        local=False,
     )
 
 
@@ -2497,6 +2500,7 @@ def test_reusable_externals_different_modules(mock_packages, tmpdir, modules):
                 ]
             }
         },
+        local=False,
     )
 
 
@@ -2505,5 +2509,7 @@ def test_reusable_externals_different_spec(mock_packages, tmpdir):
     spec.external_path = tmpdir.strpath
     spec._mark_concrete()
     assert not spack.solver.asp._is_reusable(
-        spec, {"mpich": {"externals": [{"spec": "mpich@4.1 +debug", "prefix": tmpdir.strpath}]}}
+        spec,
+        {"mpich": {"externals": [{"spec": "mpich@4.1 +debug", "prefix": tmpdir.strpath}]}},
+        local=False,
     )
