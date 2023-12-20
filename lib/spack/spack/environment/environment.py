@@ -466,8 +466,7 @@ class GitRepoChangeDetector:
 
     @property
     def cache_state(self):
-        """Path that stores the hash of the git repository.
-        """
+        """Path that stores the hash of the git repository."""
         return self.spack_state / "spackdev-git-hash"
 
     @staticmethod
