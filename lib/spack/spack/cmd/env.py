@@ -62,7 +62,10 @@ def env_create_setup_parser(subparser):
     subparser.add_argument(
         "env_name",
         metavar="env",
-        help="name of managed environment or directory of the anonymous env (when using --dir/-d) to activate",
+        help=(
+            "name of managed environment or directory of the anonymous env "
+            "(when using --dir/-d) to activate"
+        ),
     )
     subparser.add_argument(
         "-d", "--dir", action="store_true", help="create an environment in a specific directory"
@@ -249,7 +252,10 @@ def env_activate_setup_parser(subparser):
         dest="env_name",
         nargs="?",
         default=None,
-        help="name of managed environment or directory of the anonymous env (when using --dir/-d) to activate",
+        help=(
+            "name of managed environment or directory of the anonymous env"
+            " (when using --dir/-d) to activate"
+        ),
     )
 
 
