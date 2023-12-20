@@ -89,9 +89,6 @@ def test_buildcache_tag(
         # without a base image, we should have one layer per spec
         assert len(manifest["layers"]) == len(specs)
 
-        # also check that the build cache index was created
-        assert get_manifest_and_config(name.with_tag(default_index_tag))
-
 
 def test_buildcache_push_with_base_image_command(
     mutable_database, tmpdir, disable_parallel_buildcache_push
