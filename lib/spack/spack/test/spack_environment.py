@@ -13,6 +13,8 @@ import spack.spec
 from spack.main import SpackCommand
 
 env = SpackCommand("env")
+add = SpackCommand("add")
+develop = SpackCommand("develop")
 
 pytestmark = pytest.mark.skipif(
     sys.platform == "win32", reason="Environments are not supported on Windows yet"
@@ -35,8 +37,8 @@ spack:
 
     env("create", "test", spack_yaml)
     with ev.read("test") as e:
-        e.add("dependent-of-dev-build")
-        e.develop(spack.spec.Spec("dev-build-test-install@=0.0.0"), path=str(existing_dev_path))
+        add("dependent-of-dev-build")
+        develop(f"--path={str(existing_dev_path)}", "dev-build-test-install@=0.0.0")
         e.concretize()
 
         user_to_concretized = list(e.concretized_specs())
