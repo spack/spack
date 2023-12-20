@@ -341,7 +341,7 @@ def push_fn(args):
     if args.specs or args.spec_file:
         roots = _matching_specs(spack.cmd.parse_specs(args.specs or args.spec_file))
     else:
-        roots = spack.cmd.require_active_env("buildcache push").concrete_roots()
+        roots = spack.cmd.require_active_env(cmd_name="buildcache push").concrete_roots()
 
     if args.allow_root:
         tty.warn(
