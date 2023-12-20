@@ -12,6 +12,7 @@ import re
 import shutil
 import stat
 import sys
+import tempfile
 import time
 import urllib.parse
 import urllib.request
@@ -449,9 +450,25 @@ class GitRepoChangeDetector:
     def __init__(self, dev_path):
         self.base_dir = pathlib.Path(dev_path)
         self.git_dir = self.base_dir / ".git"
-        self.spack_state = self.base_dir / ".spack"
-        self.cache_state = self.spack_state / "spackdev-git-hash"
+        self._spack_state = self.base_dir / ".spack"
         self.current_hash = None
+
+    @property
+    def spack_state(self):
+        """A directory where we store the hash that represents the
+        state of the git repo.
+
+        This accessor instantiates the directory so that it is
+        always available when needed.
+        """
+        self._spack_state.mkdir(exist_ok=True)
+        return self._spack_state
+
+    @property
+    def cache_state(self):
+        """Path that stores the hash of the git repository.
+        """
+        return self.spack_state / "spackdev-git-hash"
 
     @staticmethod
     def from_src_dir(dev_path):
@@ -467,21 +484,20 @@ class GitRepoChangeDetector:
         in the repository.
         """
         git_index = self.git_dir / "index"
-        tmp_index = self.spack_state / "spack-package-git-index"
 
-        try:
-            os.remove(tmp_index)
-        except FileNotFoundError:
-            pass
-        self.spack_state.mkdir(exist_ok=True)
-        shutil.copyfile(git_index, tmp_index)
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_index = pathlib.Path(tmp_dir) / "spack-package-git-index"
 
-        env = {"GIT_INDEX_FILE": str(tmp_index)}
-        git = spack.util.git.git(required=True)
-        with fs.working_dir(self.base_dir):
-            git("add", "-u", env=env)
-            hash = git("write-tree", env=env, output=str)
-        return hash
+            shutil.copyfile(git_index, tmp_index)
+
+            env = {"GIT_INDEX_FILE": str(tmp_index)}
+            git = spack.util.git.git(required=True)
+            with fs.working_dir(self.base_dir):
+                git("add", "-u", env=env)
+                hash = git("write-tree", env=env, output=str)
+                if hash:
+                    hash = hash.strip()
+            return hash
 
     def update_current(self):
         """
