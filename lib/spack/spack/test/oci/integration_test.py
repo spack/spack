@@ -19,7 +19,6 @@ from spack.oci.image import (
     Digest,
     ImageReference,
     default_config,
-    default_index_tag,
     default_manifest,
 )
 from spack.oci.oci import blob_exists, get_manifest_and_config, upload_blob, upload_manifest
