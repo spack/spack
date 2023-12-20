@@ -49,14 +49,12 @@ spack:
         db._add(root)
 
         class MockGitChangeDetector:
-            def __init__(self, git_status):
-                self.git_status = git_status
-
             def update_current(self):
-                return self.git_status
+                # Always indicate that a rebuild is required
+                return True
 
         def mock_git_checker(git_dir):
-            return MockGitChangeDetector(GitRepoChangeDetector.CHANGED)
+            return MockGitChangeDetector()
 
         needs_reinstall, git_states = e._get_overwrite_specs(
             _database=db, _git_checker=mock_git_checker

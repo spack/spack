@@ -443,10 +443,6 @@ class GitRepoChangeDetector:
     subdirectory (creating it if it does not exist).
     """
 
-    CHANGED = 0
-    NO_PRIOR = 1
-    NOT_CHANGED = 2
-
     def __init__(self, dev_path):
         self.base_dir = pathlib.Path(dev_path)
         self.git_dir = self.base_dir / ".git"
@@ -1959,16 +1955,11 @@ class Environment:
                     # This is appended regardless of whether there was a change: we want
                     # to store the state the first time we install the package
                     git_states.append(git_state)
-
-                    change_status = git_state.update_current()
-                    if change_status == GitRepoChangeDetector.CHANGED:
+                    if git_state.update_current():
                         changed_dev_specs.append(s)
-                        continue
-                    elif change_status == GitRepoChangeDetector.NOT_CHANGED:
-                        continue
-                    elif change_status == GitRepoChangeDetector.NO_PRIOR:
-                        # Fall back on timestamp checking
-                        pass
+                    # If the dev_path is a Git repo, always use that to determine whether
+                    # to rebuild - don't fall back on timestamp checking
+                    continue
 
             # This runs if (a) we are not detecting changes with git or (b) the
             # developed benchmark is not managed with git or (c) if we have not
