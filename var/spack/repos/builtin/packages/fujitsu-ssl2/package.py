@@ -18,20 +18,11 @@ class FujitsuSsl2(Package):
 
     variant("parallel", default=True, description="Build with thread-parallel versions")
 
-    conflicts("%arm")
-    conflicts("%cce")
-    conflicts("%apple-clang")
-    conflicts("%clang")
-    conflicts("%gcc")
-    conflicts("%intel")
-    conflicts("%nag")
-    conflicts("%pgi")
-    conflicts("%xl")
-    conflicts("%xl_r")
-
     provides("blas")
     provides("lapack")
     provides("scalapack")
+
+    requires("%fj")
 
     def install(self, spec, prefix):
         raise InstallError(
