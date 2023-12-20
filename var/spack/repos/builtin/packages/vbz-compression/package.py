@@ -34,11 +34,13 @@ class VbzCompression(CMakePackage):
     depends_on("zstd@1.3.1:")
     depends_on("hdf5@1.8.16:")
 
+    variant(
+        "build_type",
+        default="Release",
+        description="CMake build type",
+        values=("Release", "Default"),
+    )
+
     def cmake_args(self):
-        args = [
-            "-DCMAKE_BUILD_TYPE=Release",
-            "-DENABLE_CONAN=OFF",
-            "-DENABLE_PERF_TESTING=OFF",
-            "-DENABLE_PYTHON=OFF",
-        ]
+        args = ["-DENABLE_CONAN=OFF", "-DENABLE_PERF_TESTING=OFF", "-DENABLE_PYTHON=OFF"]
         return args
