@@ -403,20 +403,20 @@ def push_fn(args):
                 pool=pool,
             )
 
-        # Apart from creating manifests for each individual spec, we allow users to create a
-        # separate image tag for all root specs and their runtime dependencies.
-        if args.tag:
-            tagged_image = target_image.with_tag(args.tag)
-            # _push_oci may not populate base_images if binaries were already in the registry
-            for spec in roots:
-                _update_base_images(
-                    base_image=base_image,
-                    target_image=target_image,
-                    spec=spec,
-                    base_image_cache=base_images,
-                )
-            _put_manifest(base_images, checksums, tagged_image, tmpdir, None, None, *roots)
-            tty.info(f"Tagged {tagged_image}")
+            # Apart from creating manifests for each individual spec, we allow users to create a
+            # separate image tag for all root specs and their runtime dependencies.
+            if args.tag:
+                tagged_image = target_image.with_tag(args.tag)
+                # _push_oci may not populate base_images if binaries were already in the registry
+                for spec in roots:
+                    _update_base_images(
+                        base_image=base_image,
+                        target_image=target_image,
+                        spec=spec,
+                        base_image_cache=base_images,
+                    )
+                _put_manifest(base_images, checksums, tagged_image, tmpdir, None, None, *roots)
+                tty.info(f"Tagged {tagged_image}")
 
     else:
         skipped = []
