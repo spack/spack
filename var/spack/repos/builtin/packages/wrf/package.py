@@ -7,8 +7,8 @@ import glob
 import re
 import sys
 import time
+from os.path import basename
 from pathlib import Path
-from os.path import basename, dirname
 from subprocess import PIPE, Popen
 
 from llnl.util import tty
