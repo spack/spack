@@ -60,6 +60,7 @@ class Julia(MakefilePackage):
     depends_on("libuv", when="@:1.7")
     depends_on("libuv-julia@1.42.0", when="@1.8.0:1.8.1")
     depends_on("libuv-julia@1.44.2", when="@1.8.2:")
+    depends_on("suite-sparse@5.4:5.10", when="@1.6:1.9")
 
     with when("@1.9.0:1.9"):
         # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.14, mbedcrypto.so.7, mbedx509.so.1

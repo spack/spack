@@ -4728,6 +4728,20 @@ class Spec:
     def build_spec(self, value):
         self._build_spec = value
 
+    def trim(self, dep_name):
+        """
+        Remove any package that is or provides `dep_name` transitively
+        from this tree. This can also remove other dependencies if
+        they are only present because of `dep_name`.
+        """
+        for spec in list(self.traverse()):
+            new_dependencies = _EdgeMap()  # A new _EdgeMap
+            for pkg_name, edge_list in spec._dependencies.items():
+                for edge in edge_list:
+                    if (dep_name not in edge.virtuals) and (not dep_name == edge.spec.name):
+                        new_dependencies.add(edge)
+            spec._dependencies = new_dependencies
+
     def splice(self, other, transitive):
         """Splices dependency "other" into this ("target") Spec, and return the
         result as a concrete Spec.

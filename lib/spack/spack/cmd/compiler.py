@@ -64,20 +64,14 @@ def setup_parser(subparser):
     # List
     list_parser = sp.add_parser("list", help="list available compilers")
     list_parser.add_argument(
-        "--scope",
-        action=arguments.ConfigScope,
-        default=lambda: spack.config.default_list_scope(),
-        help="configuration scope to read from",
+        "--scope", action=arguments.ConfigScope, help="configuration scope to read from"
     )
 
     # Info
     info_parser = sp.add_parser("info", help="show compiler paths")
     info_parser.add_argument("compiler_spec")
     info_parser.add_argument(
-        "--scope",
-        action=arguments.ConfigScope,
-        default=lambda: spack.config.default_list_scope(),
-        help="configuration scope to read from",
+        "--scope", action=arguments.ConfigScope, help="configuration scope to read from"
     )
 
 

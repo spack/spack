@@ -34,6 +34,8 @@ class Amdblis(BlisBase):
 
     maintainers("amd-toolchain-support")
 
+    requires("target=x86_64:", msg="AMD blis available only on x86_64")
+
     version("4.1", sha256="a05c6c7d359232580d1d599696053ad0beeedf50f3b88d5d22ee7d34375ab577")
     version("4.0", sha256="cddd31176834a932753ac0fc4c76332868feab3e9ac607fa197d8b44c1e74a41")
     version("3.2", sha256="5a400ee4fc324e224e12f73cc37b915a00f92b400443b15ce3350278ad46fff6")
