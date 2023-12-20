@@ -8,7 +8,7 @@ spack:
           # - apptainer
           - bison
           - blender
-          # - ccache
+          - ccache
           - clang-tools
           - cli-tools
           - cmake
@@ -82,7 +82,8 @@ spack:
     - bison
     - blender
     - boost~mpi
-    # - ccache
+    # 2024 deployment: 4.8 fails with a compiler error
+    - ccache@4.7
     - cli-tools
     - cmake
     # NVHPC 23.1 ships CUDA 12.0.0 (version.json)
