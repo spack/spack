@@ -451,6 +451,14 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
         sha256="9f9824296e75b34b3e78284ec772a5ac8f8ba92c17253ea9ca242caf766767ce",
     )
 
+    # https://github.com/spack/spack/issues/41299
+    # ensures the correct build specific libproj is used with cmake builds (gdal >=3.5.0)
+    patch(
+        "https://patch-diff.githubusercontent.com/raw/OSGeo/gdal/pull/8964.patch?full_index=1",
+        when="@3.5:3.8",
+        sha256="52459dc9903ced5005ba81515762a55cd829d8f5420607405c211c4a77c2bf79",
+    )
+
     executables = ["^gdal-config$"]
 
     @classmethod
