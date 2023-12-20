@@ -607,15 +607,13 @@ The template also defines a number of inner blocks for finer-grained control ove
 An example using two of these inner blocks might look like this:
 
 .. code-block::
-   :emphasize-lines: 4-5,9
+   :emphasize-lines: 3-4,7
 
    {% extends "container/Dockerfile" %}
-
    {% block make_manifest %}
-   RUN mkdir {{ paths.environment }} {{ manifest }} > {{ paths.environment }}/spack.yaml
+   {{ super() }}
    COPY custom_packages {{ paths.environment }}/custom_packages
    {% endblock make_manifest %}
-
    {% block final_stage_extra_instructions %}
    COPY data /share/myapp/data
    {% endblock %}
