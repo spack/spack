@@ -10,7 +10,8 @@ spack:
 
   packages:
     all:
-      require: '%cce'
+      require:
+      - any_of: ["%cce", "@:"]  # cce as a strong preference; not all packages support it
       compiler: [cce]
       providers:
         blas: [cray-libsci]
