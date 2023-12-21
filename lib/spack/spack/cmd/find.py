@@ -261,10 +261,8 @@ def find(parser, args):
 
     # Exit early with an error code if no package matches the constraint
     if not results and args.constraint:
-        msg = "No package matches the query: {0}"
-        msg = msg.format(" ".join(args.constraint))
-        tty.msg(msg)
-        raise SystemExit(1)
+        constraint_str = " ".join(str(s) for s in args.constraint_specs)
+        tty.die(f"No package matches the query: {constraint_str}")
 
     # If tags have been specified on the command line, filter by tags
     if args.tags:
