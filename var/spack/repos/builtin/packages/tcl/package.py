@@ -155,6 +155,7 @@ class BaseBuilder(TclMixin, metaclass=spack.builder.PhaseCallbacksMeta):
 
 class AutotoolsBuilder(BaseBuilder, spack.build_systems.autotools.AutotoolsBuilder):
     configure_directory = "unix"
+
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
             make("install")
@@ -183,6 +184,7 @@ class AutotoolsBuilder(BaseBuilder, spack.build_systems.autotools.AutotoolsBuild
         # Don't install binaries in src/ tree
         with working_dir(join_path(installed_src, self.configure_directory)):
             make("clean")
+
 
 class NMakeBuilder(BaseBuilder, spack.build_systems.nmake.NMakeBuilder):
     build_targets = ["all"]
