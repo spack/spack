@@ -68,6 +68,10 @@ class Papi(AutotoolsPackage, ROCmPackage):
     conflicts("%gcc@8:", when="@5.3.0", msg="Requires GCC version less than 8.0")
     conflicts("+sde", when="@:5", msg="Software defined events (SDE) added in 6.0.0")
     conflicts("^cuda", when="@:5", msg="CUDA support for versions < 6.0.0 not implemented")
+    conflicts("^hip@5.4:")
+    conflicts("^hsa-rocr-dev@5.4:")
+    conflicts("^rocprofiler-dev@5.4:")
+    conflicts("^rocm-smi-lib@5.4:")
 
     conflicts("@=6.0.0", when="+static_tools", msg="Static tools cannot build on version 6.0.0")
 
@@ -93,13 +97,12 @@ class Papi(AutotoolsPackage, ROCmPackage):
             env.set("PAPI_ROCM_ROOT", spec["hsa-rocr-dev"].prefix)
             env.set("HSA_TOOLS_LIB", "%s/librocprofiler64.so" % spec["rocprofiler-dev"].prefix.lib)
             env.append_flags("CFLAGS", "-I%s/rocprofiler/include" % spec["rocprofiler-dev"].prefix)
-            env.set(
-                "ROCP_METRICS", "%s/rocprofiler/lib/metrics.xml" % spec["rocprofiler-dev"].prefix
-            )
+            env.set("ROCP_METRICS", find(spec["rocprofiler-dev"].prefix, "metrics.xml")[0])
             env.set("ROCPROFILER_LOG", "1")
             env.set("HSA_VEN_AMD_AQLPROFILE_LOG", "1")
             env.set("AQLPROFILE_READ_API", "1")
         if "+rocm_smi" in spec:
+            env.set("PAPI_ROCMSMI_ROOT", spec["rocm-smi-lib"].prefix)
             env.append_flags("CFLAGS", "-I%s/rocm_smi" % spec["rocm-smi-lib"].prefix.include)
         #
         # Intel OneAPI LLVM cannot compile papi unless the DBG enviroment variable is cleared
