@@ -50,21 +50,36 @@ class Sqlite(AutotoolsPackage, NMakePackage):
     # All versions prior to 3.26.0 are vulnerable to Magellan when FTS
     # is enabled, see https://blade.tencent.com/magellan/index_en.html
 
-
     # no hard readline dep on Windows + no variant support, makefile has minimal to no options
     for plat in ["linux", "darwin", "cray"]:
         variant(
             "functions",
             default=False,
-            when="+dynamic_extensions",
             description="Provide mathematical and string extension functions for SQL "
             "queries using the loadable extensions mechanism",
-            when=f"platform={plat}"
+            when=f"+dynamic_extensions platform={plat}",
         )
-        variant("fts", default=True, description="Include fts4 and fts5 support", when=f"platform={plat}")
-        variant("column_metadata", default=True, description="Build with COLUMN_METADATA", when=f"platform={plat}")
-        variant("dynamic_extensions", default=True, description="Support loadable extensions", when=f"platform={plat}")
-        variant("rtree", default=True, description="Build with Rtree module", when=f"platform={plat}")
+        variant(
+            "fts",
+            default=True,
+            description="Include fts4 and fts5 support",
+            when=f"platform={plat}",
+        )
+        variant(
+            "column_metadata",
+            default=True,
+            description="Build with COLUMN_METADATA",
+            when=f"platform={plat}",
+        )
+        variant(
+            "dynamic_extensions",
+            default=True,
+            description="Support loadable extensions",
+            when=f"platform={plat}",
+        )
+        variant(
+            "rtree", default=True, description="Build with Rtree module", when=f"platform={plat}"
+        )
         depends_on("readline", when=f"platform={plat}")
 
     depends_on("zlib-api")
