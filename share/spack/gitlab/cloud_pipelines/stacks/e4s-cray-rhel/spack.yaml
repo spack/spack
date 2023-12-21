@@ -11,7 +11,7 @@ spack:
   packages:
     all:
       require:
-      - one_of: ["%cce", "@:"]  # cce as a strong preference; not all packages support it
+      - any_of: ["%cce", "@:"]  # cce as a strong preference; not all packages support it
       compiler: [cce]
       providers:
         blas: [cray-libsci]
