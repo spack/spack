@@ -34,6 +34,13 @@ def setup_parser(subparser):
         default=False,
         help="show full pytest help, with advanced options",
     )
+    subparser.add_argument(
+        "-n",
+        "--numprocesses",
+        type=int,
+        default=1,
+        help="run tests in parallel up to this wide, default 1 for sequential",
+    )
 
     # extra spack arguments to list tests
     list_group = subparser.add_argument_group("listing tests")
@@ -228,6 +235,16 @@ def unit_test(parser, args, unknown_args):
     pytest_root = spack.paths.spack_root
     if args.extension:
         pytest_root = spack.extensions.load_extension(args.extension)
+
+    if args.numprocesses is not None and args.numprocesses > 1:
+        pytest_args.extend(
+            [
+                "--dist",
+                "loadfile",
+                "--tx",
+                f"{args.numprocesses}*popen//python=spack-tmpconfig spack python",
+            ]
+        )
 
     # pytest.ini lives in the root of the spack repository.
     with llnl.util.filesystem.working_dir(pytest_root):
