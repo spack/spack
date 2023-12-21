@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
+import spack.builder
+from spack.build_systems import autotools, nmake
 from spack.package import *
 
 
@@ -205,7 +207,7 @@ class BaseBuilder(metaclass=spack.builder.PhaseCallbacksMeta):
                 python("-c", "import libxml2")
 
 
-class AutotoolsBuilder(BaseBuilder, spack.build_systems.autotools.AutotoolsBuilder):
+class AutotoolsBuilder(BaseBuilder, autotools.AutotoolsBuilder):
     def configure_args(self):
         spec = self.spec
 
@@ -231,7 +233,7 @@ class AutotoolsBuilder(BaseBuilder, spack.build_systems.autotools.AutotoolsBuild
         return args
 
 
-class NMakeBuilder(BaseBuilder, spack.build_systems.nmake.NMakeBuilder):
+class NMakeBuilder(BaseBuilder, nmake.NMakeBuilder):
     phases = ("configure", "build", "install")
 
     @property
