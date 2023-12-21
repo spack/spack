@@ -31,6 +31,7 @@ class PyMultiscaleRun(PythonPackage):
     depends_on("py-julia", type=("build", "run"))
     depends_on("py-libsonata", type=("build", "run"))
     depends_on("py-mpi4py", type=("build", "run"))
+    depends_on("py-nbconvert", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-pandas", type=("build", "run"))
     depends_on("py-psutil", type=("build", "run"))
