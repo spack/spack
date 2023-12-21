@@ -58,6 +58,7 @@ module_file_configuration = {
             "patternProperties": {r"\w[\w-]*": {"type": "string"}},  # key
         },
         "environment": spack.schema.environment.definition,
+        "custom_code_block": {"type": "string", "default": ""}
     },
 }
 
