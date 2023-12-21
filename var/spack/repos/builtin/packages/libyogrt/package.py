@@ -61,6 +61,12 @@ class Libyogrt(AutotoolsPackage):
                 version
             )
 
+    def flag_handler(self, name, flags):
+        if name == "cflags":
+            if self.spec.satisfies("%oneapi"):
+                flags.append("-Wno-error=implicit-function-declaration")
+        return (flags, None, None)
+
     def configure_args(self):
         args = []
 

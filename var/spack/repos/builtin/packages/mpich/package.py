@@ -55,7 +55,7 @@ class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant("hydra", default=True, description="Build the hydra process manager")
     variant("romio", default=True, description="Enable ROMIO MPI I/O implementation")
     variant("verbs", default=False, description="Build support for OpenFabrics verbs.")
-    variant("slurm", default=False, description="Enable SLURM support")
+    variant("slurm", default=False, description="Enable Slurm support")
     variant("wrapperrpath", default=True, description="Enable wrapper rpath")
     variant(
         "pmi",
@@ -70,16 +70,14 @@ class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
         description="""Abstract Device Interface (ADI)
 implementation. The ch4 device is in experimental state for versions
 before 3.4.""",
-        values=("ch3", "ch4"),
+        values=("ch3", "ch4", "ch3:sock"),
         multi=False,
     )
     variant(
         "netmod",
         default="ofi",
         description="""Network module. Only single netmod builds are
-supported. For ch3 device configurations, this presumes the
-ch3:nemesis communication channel. ch3:sock is not supported by this
-spack package at this time.""",
+supported, and netmod is ignored if device is ch3:sock.""",
         values=("tcp", "mxm", "ofi", "ucx"),
         multi=False,
     )
@@ -121,6 +119,7 @@ spack package at this time.""",
     depends_on("yaksa+cuda", when="+cuda ^yaksa")
     depends_on("yaksa+rocm", when="+rocm ^yaksa")
     conflicts("datatype-engine=yaksa", when="device=ch3")
+    conflicts("datatype-engine=yaksa", when="device=ch3:sock")
 
     variant(
         "hcoll",
@@ -135,8 +134,10 @@ spack package at this time.""",
     # overriding the variant from CudaPackage.
     conflicts("+cuda", when="@:3.3")
     conflicts("+cuda", when="device=ch3")
+    conflicts("+cuda", when="device=ch3:sock")
     conflicts("+rocm", when="@:4.0")
     conflicts("+rocm", when="device=ch3")
+    conflicts("+rocm", when="device=ch3:sock")
     conflicts("+cuda", when="+rocm", msg="CUDA must be disabled to support ROCm")
 
     provides("mpi@:4.0")
@@ -164,7 +165,7 @@ spack package at this time.""",
     patch(
         "https://github.com/pmodels/mpich/commit/8a851b317ee57366cd15f4f28842063d8eff4483.patch?full_index=1",
         sha256="d2dafc020941d2d8cab82bc1047e4a6a6d97736b62b06e2831d536de1ac01fd0",
-        when="@3.3:3.3.99 +hwloc",
+        when="@3.3 +hwloc",
     )
 
     # fix MPI_Barrier segmentation fault
@@ -249,14 +250,14 @@ spack package at this time.""",
     # building from git requires regenerating autotools files
     depends_on("automake@1.15:", when="@develop", type="build")
     depends_on("libtool@2.4.4:", when="@develop", type="build")
-    depends_on("m4", when="@develop", type="build"),
+    depends_on("m4", when="@develop", type="build")
     depends_on("autoconf@2.67:", when="@develop", type="build")
 
     # building with "+hwloc' also requires regenerating autotools files
-    depends_on("automake@1.15:", when="@3.3:3.3.99 +hwloc", type="build")
-    depends_on("libtool@2.4.4:", when="@3.3:3.3.99 +hwloc", type="build")
-    depends_on("m4", when="@3.3:3.3.99 +hwloc", type="build"),
-    depends_on("autoconf@2.67:", when="@3.3:3.3.99 +hwloc", type="build")
+    depends_on("automake@1.15:", when="@3.3 +hwloc", type="build")
+    depends_on("libtool@2.4.4:", when="@3.3 +hwloc", type="build")
+    depends_on("m4", when="@3.3 +hwloc", type="build")
+    depends_on("autoconf@2.67:", when="@3.3 +hwloc", type="build")
 
     # MPICH's Yaksa submodule requires python to configure
     depends_on("python@3.0:", when="@develop", type="build")
@@ -271,6 +272,7 @@ spack package at this time.""",
     conflicts("netmod=tcp", when="device=ch4")
     conflicts("pmi=pmi2", when="device=ch3 netmod=ofi")
     conflicts("pmi=pmix", when="device=ch3")
+    conflicts("pmi=pmix", when="device=ch3:sock")
     conflicts("pmi=pmix", when="+hydra")
     conflicts("pmi=cray", when="+hydra")
 
@@ -462,7 +464,7 @@ spack package at this time.""",
     def autoreconf(self, spec, prefix):
         """Not needed usually, configure should be already there"""
         # If configure exists nothing needs to be done
-        if os.path.exists(self.configure_abs_path) and not spec.satisfies("@3.3:3.3.99 +hwloc"):
+        if os.path.exists(self.configure_abs_path) and not spec.satisfies("@3.3 +hwloc"):
             return
         # Else bootstrap with autotools
         bash = which("bash")
@@ -556,7 +558,10 @@ spack package at this time.""",
         elif "device=ch3" in spec:
             device_config = "--with-device=ch3:nemesis:"
 
-        if "netmod=ucx" in spec:
+        # Do not apply any netmod if device is ch3:sock
+        if "device=ch3:sock" in spec:
+            device_config = "--with-device=ch3:sock"
+        elif "netmod=ucx" in spec:
             device_config += "ucx"
         elif "netmod=ofi" in spec:
             device_config += "ofi"

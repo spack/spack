@@ -25,6 +25,7 @@ class Xyce(CMakePackage):
     maintainers("kuberry", "tbird2001")
 
     version("master", branch="master")
+    version("7.7.0", sha256="1b95450e1905c3af3c16b42c41d5ef1f8ab0e640f48086d0cb4d52961a90a175")
     version("7.6.0", sha256="fc25557e2edc82adbe0436a15fca2929a2f9ab08ddf91f1a47aab5e8b27ec88c")
     version("7.5.0", sha256="854d7d5e19e0ee2138d1f20f10f8f27f2bebb94ec81c157040955cff7250dacd")
     version("7.4.0", sha256="2d6bc1b7377834b2e0bf50131e96728c5be83dbb3548e765bb48911067c87c91")
@@ -123,9 +124,9 @@ class Xyce(CMakePackage):
 
     # fix MPI issue
     patch(
-        "450-mpich-xyce.patch",
-        sha256="e91063d22afeeff01e6c572cef2ac2e3abea27b2fcb5a7e6ac5f41e4734a556d",
-        when="@:7.6,master",
+        "https://github.com/xyce/xyce/commit/2f95783637a5171a7f65f5d18c24d9a580a7f39e.patch?full_index=1",
+        sha256="1aeaac78830fbc9ae089a50ef61c6cbd89d29ead54ce7fdca258e194fa05b1a3",
+        when="@:7.6",
     )
 
     # fix RPATH issue on mac
@@ -142,12 +143,18 @@ class Xyce(CMakePackage):
         when="@7.4:7.6 +pymi",
     )
 
-    # fix oneapi issue 7.6 and prior
-    # can switch to github PR once in master
+    # fix missing type
     patch(
-        "454-oneapi-xyce.patch",
-        sha256="76a3ff987e43d1657f24d55cfd864b487876a72a9a7c8a37c3151a9b586a21c1",
-        when="@:7.6",
+        "https://github.com/Xyce/Xyce/commit/47d9dd04ec55cd8722cb3704a88beb228dfcf363.patch?full_index=1",
+        sha256="62c3d0c17b3225be5f61b6ec3d9cf762cc08bb20a80e768d87a37e87c522bbf1",
+        when="@:7.7",
+    )
+
+    # fix cmake trilinos test issue
+    patch(
+        "454-cmake-xyce.patch",
+        sha256="4d47cd1f10607205e64910ac124c6dd329f1ecbf861416e9da24a1736f2149ff",
+        when="@7.6:",
     )
 
     def cmake_args(self):

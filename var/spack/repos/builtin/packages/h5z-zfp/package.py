@@ -12,9 +12,13 @@ class H5zZfp(MakefilePackage):
 
     homepage = "https://h5z-zfp.readthedocs.io/en/latest"
     git = "https://github.com/LLNL/H5Z-ZFP.git"
-    url = "https://github.com/LLNL/H5Z-ZFP/archive/refs/tags/v1.0.1.tar.gz"
+    url = "https://github.com/LLNL/H5Z-ZFP/archive/refs/tags/v1.1.1.tar.gz"
+
+    maintainers("markcmiller86", "brtnfld", "byrnHDF")
 
     version("develop", branch="master")
+    version("1.1.1", sha256="921af7b9d1c8c46c036b46544f2785f69d405c0701abe1c1ce3aca2bd5899171")
+    version("1.1.0", sha256="48a81e69d1f3b61d9a1eb07e868164fadf3b88690ec930efd849f5889681a893")
     version("1.0.1", sha256="b9ed91dab8e2ef82dc6706b4242c807fb352875e3b21c217dd00782dd1a22b24")
     version("0.8.0", sha256="a5eb089191369a5e929c51ec9e5da107afaee39c6ab3b7ad693c454319ab9217")
     version("0.7.0", sha256="f728b0bcb9e9cf8bafe05909ab02fec39415635d275e98b661176f69d34f87b3")
@@ -66,3 +70,8 @@ class H5zZfp(MakefilePackage):
     def install_targets(self):
         make_args = ["install"]
         return make_args + self.make_defs
+
+    @run_after("build")
+    @on_package_attributes(run_tests=True)
+    def check_build(self):
+        make("check", *self.make_defs, parallel=False)

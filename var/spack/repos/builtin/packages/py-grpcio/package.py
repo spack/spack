@@ -37,7 +37,7 @@ class PyGrpcio(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-six@1.5.2:", when="@:1.48", type=("build", "run"))
-    depends_on("py-cython@0.23:", type="build")
+    depends_on("py-cython@0.23:2", type="build")
     depends_on("openssl")
     depends_on("zlib-api")
     depends_on("c-ares")
@@ -55,8 +55,10 @@ class PyGrpcio(PythonPackage):
 
         for dep in self.spec.dependencies(deptype="link"):
             query = self.spec[dep.name]
-            env.prepend_path("LIBRARY_PATH", query.libs.directories[0])
-            env.prepend_path("CPATH", query.headers.directories[0])
+            for p in query.libs.directories:
+                env.prepend_path("LIBRARY_PATH", p)
+            for p in query.headers.directories:
+                env.prepend_path("CPATH", p)
 
     def patch(self):
         filter_file("-std=gnu99", "", "setup.py")

@@ -20,4 +20,8 @@ class PyGraphqlCore(PythonPackage):
     version("2.3.2", sha256="aac46a9ac524c9855910c14c48fc5d60474def7f99fd10245e76608eba7af746")
 
     depends_on("python@3.6:3", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    depends_on("py-poetry@1", when="@3:", type="build")
+    depends_on("py-setuptools", when="@2", type="build")
+    depends_on("py-six@1.10.0:", type=("build", "run"), when="@2.3.2")
+    depends_on("py-promise@2.3:2", type=("build", "run"), when="@2.3.2")
+    depends_on("py-rx@1.6:1", type=("build", "run"), when="@2.3.2")

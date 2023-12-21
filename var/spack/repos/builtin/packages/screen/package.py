@@ -14,6 +14,7 @@ class Screen(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/screen/"
     gnu_mirror_path = "screen/screen-4.3.1.tar.gz"
 
+    version("4.9.1", sha256="26cef3e3c42571c0d484ad6faf110c5c15091fbf872b06fa7aa4766c7405ac69")
     version("4.9.0", sha256="f9335281bb4d1538ed078df78a20c2f39d3af9a4e91c57d084271e0289c730f4")
     version("4.8.0", sha256="6e11b13d8489925fde25dfb0935bf6ed71f9eb47eff233a181e078fde5655aa1")
     version("4.6.2", sha256="1b6922520e6a0ce5e28768d620b0f640a6631397f95ccb043b70b91bb503fa3a")

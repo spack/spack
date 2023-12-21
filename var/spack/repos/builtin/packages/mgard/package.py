@@ -50,7 +50,7 @@ class Mgard(CMakePackage, CudaPackage):
     depends_on("libarchive", when="@2021-11-12:")
     depends_on("tclap", when="@2021-11-12")
     depends_on("yaml-cpp", when="@2021-11-12:")
-    depends_on("cmake@3.19:")
+    depends_on("cmake@3.19:", type="build")
     depends_on("nvcomp@2.2.0:", when="@2022-11-18:+cuda")
     depends_on("nvcomp@2.0.2", when="@:2021-11-12+cuda")
     conflicts("cuda_arch=none", when="+cuda")
@@ -58,6 +58,12 @@ class Mgard(CMakePackage, CudaPackage):
         "~cuda", when="@2021-11-12", msg="without cuda MGARD@2021-11-12 has undefined symbols"
     )
     conflicts("%gcc@:7", when="@2022-11-18:", msg="requires std::optional and other c++17 things")
+
+    def flag_handler(self, name, flags):
+        if name == "cxxflags":
+            if self.spec.satisfies("@2020-10-01 %oneapi@2023:"):
+                flags.append("-Wno-error=c++11-narrowing")
+        return (flags, None, None)
 
     def cmake_args(self):
         spec = self.spec

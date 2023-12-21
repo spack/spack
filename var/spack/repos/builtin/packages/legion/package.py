@@ -27,16 +27,16 @@ class Legion(CMakePackage, ROCmPackage):
 
     maintainers("pmccormick", "streichler", "elliottslaughter")
     tags = ["e4s"]
-    version("23.06.0", tag="legion-23.06.0")
-    version("23.03.0", tag="legion-23.03.0")
-    version("22.12.0", tag="legion-22.12.0")
-    version("22.09.0", tag="legion-22.09.0")
-    version("22.06.0", tag="legion-22.06.0")
-    version("22.03.0", tag="legion-22.03.0")
-    version("21.12.0", tag="legion-21.12.0")
-    version("21.09.0", tag="legion-21.09.0")
-    version("21.06.0", tag="legion-21.06.0")
-    version("21.03.0", tag="legion-21.03.0")
+    version("23.06.0", tag="legion-23.06.0", commit="7b5ff2fb9974511c28aec8d97b942f26105b5f6d")
+    version("23.03.0", tag="legion-23.03.0", commit="12f6051c9d75229d00ac0b31d6be1ff2014f7e6a")
+    version("22.12.0", tag="legion-22.12.0", commit="9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5")
+    version("22.09.0", tag="legion-22.09.0", commit="5b6e013ad74fa6b4c5a24cbb329c676b924550a9")
+    version("22.06.0", tag="legion-22.06.0", commit="f721be968fb969339334b07a3175a0400700eced")
+    version("22.03.0", tag="legion-22.03.0", commit="bf6ce4560c99397da4a5cf61a306b521ec7069d0")
+    version("21.12.0", tag="legion-21.12.0", commit="e1443112edaa574804b3b9d2a24803e937b127fd")
+    version("21.09.0", tag="legion-21.09.0", commit="5a991b714cf55c3eaa513c7a18abb436d86a0a90")
+    version("21.06.0", tag="legion-21.06.0", commit="30e00fa6016527c4cf60025a461fb7865f8def6b")
+    version("21.03.0", tag="legion-21.03.0", commit="0cf9ddd60c227c219c8973ed0580ddc5887c9fb2")
     version("stable", branch="stable")
     version("master", branch="master")
     version("cr", branch="control_replication")
@@ -50,11 +50,10 @@ class Legion(CMakePackage, ROCmPackage):
     depends_on("ucx", when="network=ucx")
     depends_on("ucx", when="conduit=ucx")
     depends_on("mpi", when="conduit=mpi")
-    depends_on("cray-pmi", when="conduit=ofi-slingshot11 ^cray-mpich")
-    depends_on("cuda@10.0:11.9", when="+cuda_unsupported_compiler @:23.03.0")
-    depends_on("cuda@10.0:11.9", when="+cuda @:23.03.0")
-    depends_on("cuda@10.0:12.2", when="+cuda_unsupported_compiler @23.06.0:")
-    depends_on("cuda@10.0:12.2", when="+cuda @23.06.0:")
+    depends_on("cuda@10.0:11.9", when="+cuda_unsupported_compiler @21.03.0:23.03.0")
+    depends_on("cuda@10.0:11.9", when="+cuda @21.03.0:23.03.0")
+    depends_on("cuda@10.0:12.2", when="+cuda_unsupported_compiler")
+    depends_on("cuda@10.0:12.2", when="+cuda")
     depends_on("hdf5", when="+hdf5")
     depends_on("hwloc", when="+hwloc")
 
@@ -75,6 +74,15 @@ class Legion(CMakePackage, ROCmPackage):
 
     # https://github.com/spack/spack/issues/37232#issuecomment-1553376552
     patch("hip-offload-arch.patch", when="@23.03.0 +rocm")
+
+    def patch(self):
+        if "network=gasnet conduit=ofi-slingshot11 ^cray-mpich+wrappers" in self.spec:
+            filter_file(
+                r"--with-mpi-cc=cc",
+                f"--with-mpi-cc={self.spec['mpi'].mpicc}",
+                "stanfordgasnet/gasnet/configs/config.ofi-slingshot11.release",
+                string=True,
+            )
 
     # HIP specific
     variant(
@@ -269,11 +277,6 @@ class Legion(CMakePackage, ROCmPackage):
         description="Maximum number of nodes supported by Legion.",
     )
 
-    def setup_build_environment(self, build_env):
-        spec = self.spec
-        if "+rocm" in spec:
-            build_env.set("HIP_PATH", "{0}/hip".format(spec["hip"].prefix))
-
     def cmake_args(self):
         spec = self.spec
         cmake_cxx_flags = []
@@ -345,6 +348,7 @@ class Legion(CMakePackage, ROCmPackage):
             options.append(from_variant("Legion_HIP_TARGET", "hip_target"))
             options.append(from_variant("Legion_HIP_ARCH", "amdgpu_target"))
             options.append(from_variant("Legion_HIJACK_HIP", "hip_hijack"))
+            options.append(self.define("HIP_PATH", "{0}/hip".format(spec["hip"].prefix)))
 
         if "+fortran" in spec:
             # default is off.

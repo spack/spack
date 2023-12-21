@@ -41,7 +41,7 @@ class Ack(Package):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        ack_source = "ack-{0}-single-file".format(self.version)
+        ack_source = f"ack-{self.version}-single-file"
         ack_installed = join_path(prefix.bin, "ack")
 
         # install source

@@ -29,7 +29,7 @@ class PyFenicsFiat(PythonPackage):
         "2017.1.0.post1", sha256="1784fe1cb9479ca7cd85f63b0afa6e07634feec8d8e82fa8be4c480649cb9621"
     )
     version("2017.1.0", sha256="d4288401ad16c4598720f9db0810a522f7f0eadad35d8211bac7120bce5fde94")
-    version("2016.2.0", tag="fiat-2016.2.0")
+    version("2016.2.0", tag="fiat-2016.2.0", commit="e021c825cab938ae8809b738410cda26e392db05")
 
     depends_on("python@3:", type=("build", "run"))
     depends_on("py-setuptools", type="build")

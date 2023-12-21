@@ -16,7 +16,7 @@ class PyDadi(PythonPackage):
 
     maintainers("dorton21")
 
-    version("2020-12-02", commit="047bac0")
+    version("2020-12-02", commit="047bac0db5245009d9c724e91a851149c34c9de0")
     version("2.1.0", sha256="97a15aa7ef501850cad4cff66b11b66ecb65d5d68acbf2ff713585c81c3a1038")
 
     depends_on("py-setuptools", type=("build"))

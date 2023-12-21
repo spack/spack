@@ -8,8 +8,8 @@ import os
 from llnl.util.lang import memoized
 
 import spack.spec
+import spack.version
 from spack.compilers.clang import Clang
-from spack.spec import CompilerSpec
 from spack.util.executable import Executable, ProcessError
 
 
@@ -17,7 +17,9 @@ class ABI:
     """This class provides methods to test ABI compatibility between specs.
     The current implementation is rather rough and could be improved."""
 
-    def architecture_compatible(self, target, constraint):
+    def architecture_compatible(
+        self, target: spack.spec.Spec, constraint: spack.spec.Spec
+    ) -> bool:
         """Return true if architecture of target spec is ABI compatible
         to the architecture of constraint spec. If either the target
         or constraint specs have no architecture, target is also defined
@@ -34,7 +36,7 @@ class ABI:
         a compiler's libstdc++ or libgcc_s"""
         from spack.build_environment import dso_suffix
 
-        spec = CompilerSpec("gcc", version)
+        spec = spack.spec.CompilerSpec("gcc", version)
         compilers = spack.compilers.compilers_for_spec(spec)
         if not compilers:
             return None
@@ -77,16 +79,20 @@ class ABI:
             return False
         return plib == clib
 
-    def _intel_compiler_compare(self, pversion, cversion):
+    def _intel_compiler_compare(
+        self, pversion: spack.version.ClosedOpenRange, cversion: spack.version.ClosedOpenRange
+    ) -> bool:
         """Returns true iff the intel version pversion and cversion
         are ABI compatible"""
 
         # Test major and minor versions.  Ignore build version.
-        if len(pversion.version) < 2 or len(cversion.version) < 2:
-            return False
-        return pversion.version[:2] == cversion.version[:2]
+        pv = pversion.lo
+        cv = cversion.lo
+        return pv.up_to(2) == cv.up_to(2)
 
-    def compiler_compatible(self, parent, child, **kwargs):
+    def compiler_compatible(
+        self, parent: spack.spec.Spec, child: spack.spec.Spec, loose: bool = False
+    ) -> bool:
         """Return true if compilers for parent and child are ABI compatible."""
         if not parent.compiler or not child.compiler:
             return True
@@ -95,7 +101,7 @@ class ABI:
             # Different compiler families are assumed ABI incompatible
             return False
 
-        if kwargs.get("loose", False):
+        if loose:
             return True
 
         # TODO: Can we move the specialized ABI matching stuff
@@ -116,9 +122,10 @@ class ABI:
                     return True
         return False
 
-    def compatible(self, target, constraint, **kwargs):
+    def compatible(
+        self, target: spack.spec.Spec, constraint: spack.spec.Spec, loose: bool = False
+    ) -> bool:
         """Returns true if target spec is ABI compatible to constraint spec"""
-        loosematch = kwargs.get("loose", False)
         return self.architecture_compatible(target, constraint) and self.compiler_compatible(
-            target, constraint, loose=loosematch
+            target, constraint, loose=loose
         )

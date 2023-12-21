@@ -17,10 +17,7 @@ class PyProtobuf(PythonPackage):
     homepage = "https://developers.google.com/protocol-buffers/"
     pypi = "protobuf/protobuf-3.11.0.tar.gz"
 
-    variant("cpp", default=True, when="@:4.21", description="Enable the cpp implementation")
-
-    # Newer versions seem to require bazel to build?
-    # https://github.com/protocolbuffers/protobuf/tree/main/python
+    version("4.24.3", sha256="12e9ad2ec079b833176d2921be2cb24281fa591f0b119b208b788adc48c2561d")
     version("4.23.3", sha256="7a92beb30600332a52cdadbedb40d33fd7c8a0d7f549c440347bc606fb3fe34b")
     version("4.21.9", sha256="61f21493d96d2a77f9ca84fefa105872550ab5ef71d21c458eb80edcf4885a99")
     version("4.21.7", sha256="71d9dba03ed3432c878a801e2ea51e034b0ea01cf3a4344fb60166cb5f6c8757")
@@ -62,18 +59,22 @@ class PyProtobuf(PythonPackage):
     version("3.3.0", sha256="1cbcee2c45773f57cb6de7ee0eceb97f92b9b69c0178305509b162c0160c1f04")
     version("3.0.0", sha256="ecc40bc30f1183b418fe0ec0c90bc3b53fa1707c4205ee278c6b90479e5b6ff5")
 
+    variant("cpp", default=False, when="@:4.21", description="Enable the cpp implementation")
+
+    depends_on("python", type=("build", "link", "run"))
     depends_on("py-setuptools", type=("build", "run"))
     # in newer pip versions --install-option does not exist
-    depends_on("py-pip@:23.0", when="@:4.21", type=("build", "run"))
+    depends_on("py-pip@:23.0", when="+cpp", type=("build", "run"))
     depends_on("py-six@1.9:", when="@3.0:3.17", type=("build", "run"))
 
     # Setup dependencies for protobuf to use the same minor version as py-protobuf
     # Handle mapping the 4.x release to the protobuf 3.x releases
-    for ver in list(range(21, 24)):
-        depends_on("protobuf@3." + str(ver), when="+cpp @4." + str(ver))
+    depends_on("protobuf@3.21", when="+cpp @4.21")
     # Handle the 3.x series releases
     for ver in list(range(0, 21)):
-        depends_on("protobuf@3." + str(ver), when="+cpp @3." + str(ver))
+        depends_on(f"protobuf@3.{ver}", when=f"@3.{ver}+cpp")
+
+    conflicts("+cpp", when="^python@3.11:")
 
     @property
     def build_directory(self):

@@ -170,20 +170,20 @@ class PyNvidiaDali(PythonPackage):
         )
 
     cuda120_versions = (
-        "1.27.0-cuda120",
-        "1.26.0-cuda120",
-        "1.25.0-cuda120",
-        "1.24.0-cuda120",
-        "1.23.0-cuda120",
-        "1.22.0-cuda120",
+        "@1.27.0-cuda120",
+        "@1.26.0-cuda120",
+        "@1.25.0-cuda120",
+        "@1.24.0-cuda120",
+        "@1.23.0-cuda120",
+        "@1.22.0-cuda120",
     )
     cuda110_versions = (
-        "1.27.0-cuda110",
-        "1.26.0-cuda110",
-        "1.25.0-cuda110",
-        "1.24.0-cuda110",
-        "1.23.0-cuda110",
-        "1.22.0-cuda110",
+        "@1.27.0-cuda110",
+        "@1.26.0-cuda110",
+        "@1.25.0-cuda110",
+        "@1.24.0-cuda110",
+        "@1.23.0-cuda110",
+        "@1.22.0-cuda110",
     )
 
     for v in cuda120_versions:

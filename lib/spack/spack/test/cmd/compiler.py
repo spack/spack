@@ -4,12 +4,14 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import shutil
-import sys
 
 import pytest
 
+import spack.cmd.compiler
 import spack.compilers
 import spack.main
+import spack.spec
+import spack.util.pattern
 import spack.version
 
 compiler = spack.main.SpackCommand("compiler")
@@ -146,7 +148,7 @@ done
 
     compilers_before_find = set(spack.compilers.all_compiler_specs())
     args = spack.util.pattern.Bunch(
-        all=None, compiler_spec=None, add_paths=[str(root_dir)], scope=None
+        all=None, compiler_spec=None, add_paths=[str(root_dir)], scope=None, mixed_toolchain=False
     )
     spack.cmd.compiler.compiler_find(args)
     compilers_after_find = set(spack.compilers.all_compiler_specs())
@@ -159,10 +161,15 @@ done
 
 @pytest.mark.not_on_windows("Cannot execute bash script on Windows")
 @pytest.mark.regression("17590")
-def test_compiler_find_mixed_suffixes(no_compilers_yaml, working_env, compilers_dir):
+@pytest.mark.parametrize("mixed_toolchain", [True, False])
+def test_compiler_find_mixed_suffixes(
+    mixed_toolchain, no_compilers_yaml, working_env, compilers_dir
+):
     """Ensure that we'll mix compilers with different suffixes when necessary."""
     os.environ["PATH"] = str(compilers_dir)
-    output = compiler("find", "--scope=site")
+    output = compiler(
+        "find", "--scope=site", "--mixed-toolchain" if mixed_toolchain else "--no-mixed-toolchain"
+    )
 
     assert "clang@11.0.0" in output
     assert "gcc@8.4.0" in output
@@ -176,9 +183,8 @@ def test_compiler_find_mixed_suffixes(no_compilers_yaml, working_env, compilers_
     assert clang["paths"] == {
         "cc": str(compilers_dir / "clang"),
         "cxx": str(compilers_dir / "clang++"),
-        # we only auto-detect mixed clang on macos
-        "f77": gfortran_path if sys.platform == "darwin" else None,
-        "fc": gfortran_path if sys.platform == "darwin" else None,
+        "f77": gfortran_path if mixed_toolchain else None,
+        "fc": gfortran_path if mixed_toolchain else None,
     }
 
     assert gcc["paths"] == {

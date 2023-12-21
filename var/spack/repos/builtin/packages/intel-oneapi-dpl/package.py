@@ -23,6 +23,12 @@ class IntelOneapiDpl(IntelOneApiLibraryPackage):
     homepage = "https://github.com/oneapi-src/oneDPL"
 
     version(
+        "2022.3.0",
+        url="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/be027095-148a-4433-aff4-c6e8582da3ca/l_oneDPL_p_2022.3.0.49386_offline.sh",
+        sha256="1e40c6562bc41fa5a46c80c09222bf12d36d8e82f749476d0a7e97503d4659df",
+        expand=False,
+    )
+    version(
         "2022.2.0",
         url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/44f88a97-7526-48f0-8515-9bf1356eb7bb/l_oneDPL_p_2022.2.0.49287_offline.sh",
         sha256="5f75e5c4e924b833a5b5d7a8cb812469d524a3ca4bda68c8ac850484dc0afd23",
@@ -78,15 +84,15 @@ class IntelOneapiDpl(IntelOneApiLibraryPackage):
     )
 
     @property
+    def v2_layout_versions(self):
+        return "@2022.3:"
+
+    @property
     def component_dir(self):
         return "dpl"
 
     @property
     def headers(self):
-        include_path = join_path(self.component_prefix, "linux", "include")
-        headers = find_headers("*", include_path, recursive=True)
-        # Force this directory to be added to include path, even
-        # though no files are here because all includes are relative
-        # to this path
-        headers.directories = [include_path]
-        return headers
+        return self.header_directories(
+            [self.component_prefix.include, self.component_prefix.linux.include]
+        )

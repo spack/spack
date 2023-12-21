@@ -31,7 +31,7 @@ class Aragorn(Package):
 
     # fix checksum error
     def url_for_version(self, version):
-        return "http://www.ansikte.se/ARAGORN/Downloads/aragorn{0}.c".format(version)
+        return f"http://www.ansikte.se/ARAGORN/Downloads/aragorn{version}.c"
 
     def install(self, spec, prefix):
         cc = Executable(spack_cc)

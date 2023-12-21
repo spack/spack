@@ -38,9 +38,9 @@ class Archer(CMakePackage):
 
     def cmake_args(self):
         return [
-            "-DCMAKE_C_COMPILER=clang",
-            "-DCMAKE_CXX_COMPILER=clang++",
-            "-DOMP_PREFIX:PATH=%s" % self.spec["llvm-openmp-ompt"].prefix,
+            self.define("CMAKE_C_COMPILER", "clang"),
+            self.define("CMAKE_CXX_COMPILER", "clang++"),
+            self.define("OMP_PREFIX:PATH", self.spec["llvm-openmp-ompt"].prefix),
         ]
 
     @run_after("install")
@@ -56,7 +56,7 @@ class Archer(CMakePackage):
             raise SkipTest("Parallel test directory does not exist")
 
         test_exe = "parallel-simple"
-        test_src = "{0}.c".format(test_exe)
+        test_src = f"{test_exe}.c"
         with working_dir(test_dir):
             clang = which("clang-archer")
             clang("-o", test_exe, test_src)

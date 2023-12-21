@@ -83,9 +83,8 @@ class Ruby(AutotoolsPackage, NMakePackage):
         return url.format(version.up_to(2), version)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
-        for d in dependent_spec.traverse(deptype=("run"), root=True):
-            if d.package.extends(self.spec):
-                env.prepend_path("GEM_PATH", d.prefix)
+        if dependent_spec.package.extends(self.spec):
+            env.prepend_path("GEM_PATH", dependent_spec.prefix)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before ruby modules' install() methods.  Sets GEM_HOME

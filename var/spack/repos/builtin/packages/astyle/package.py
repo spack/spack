@@ -30,11 +30,11 @@ class Astyle(MakefilePackage):
 
     def edit(self, spec, prefix):
         makefile = join_path(self.build_directory, "Makefile")
-        filter_file(r"^CXX\s*=.*", "CXX=%s" % spack_cxx, makefile)
+        filter_file(r"^CXX\s*=.*", f"CXX={spack_cxx}", makefile)
         # If the group is not a user account, the installation will fail,
         # so remove the -o $ (USER) -g $ (USER) parameter.
         filter_file(r"^INSTALL=.*", "INSTALL=install", makefile)
 
     @property
     def install_targets(self):
-        return ["install", "prefix={0}".format(self.prefix)]
+        return ["install", f"prefix={self.prefix}"]

@@ -12,7 +12,7 @@ from llnl.util.lang import stable_partition
 
 import spack.cmd
 import spack.config
-import spack.dependency as dep
+import spack.deptypes as dt
 import spack.environment as ev
 import spack.mirror
 import spack.modules
@@ -114,17 +114,41 @@ class SetParallelJobs(argparse.Action):
 
 
 class DeptypeAction(argparse.Action):
-    """Creates a tuple of valid dependency types from a deptype argument."""
+    """Creates a flag of valid dependency types from a deptype argument."""
 
     def __call__(self, parser, namespace, values, option_string=None):
-        deptype = dep.all_deptypes
-        if values:
-            deptype = tuple(x.strip() for x in values.split(","))
-            if deptype == ("all",):
-                deptype = "all"
-            deptype = dep.canonical_deptype(deptype)
-
+        if not values or values == "all":
+            deptype = dt.ALL
+        else:
+            deptype = dt.canonicalize(values.split(","))
         setattr(namespace, self.dest, deptype)
+
+
+class ConfigScope(argparse.Action):
+    """Pick the currently configured config scopes."""
+
+    def __init__(self, *args, **kwargs) -> None:
+        kwargs.setdefault("metavar", spack.config.SCOPES_METAVAR)
+        super().__init__(*args, **kwargs)
+
+    @property
+    def default(self):
+        return self._default() if callable(self._default) else self._default
+
+    @default.setter
+    def default(self, value):
+        self._default = value
+
+    @property
+    def choices(self):
+        return spack.config.scopes().keys()
+
+    @choices.setter
+    def choices(self, value):
+        pass
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, values)
 
 
 def _cdash_reporter(namespace):
@@ -285,9 +309,8 @@ def deptype():
     return Args(
         "--deptype",
         action=DeptypeAction,
-        default=dep.all_deptypes,
-        help="comma-separated list of deptypes to traverse\n\ndefault=%s"
-        % ",".join(dep.all_deptypes),
+        default=dt.ALL,
+        help="comma-separated list of deptypes to traverse (default=%s)" % ",".join(dt.ALL_TYPES),
     )
 
 
@@ -361,10 +384,11 @@ def install_status():
         "--install-status",
         action="store_true",
         default=True,
-        help="show install status of packages\n\npackages can be: "
-        "installed [+], missing and needed by an installed package [-], "
-        "installed in an upstream instance [^], "
-        "or not installed (no annotation)",
+        help=(
+            "show install status of packages\n"
+            "[+] installed       [^] installed in an upstream\n"
+            " -  not installed   [-] missing dep of installed package\n"
+        ),
     )
 
 
@@ -547,7 +571,7 @@ def add_concretizer_args(subparser):
     )
 
 
-def add_s3_connection_args(subparser, add_help):
+def add_connection_args(subparser, add_help):
     subparser.add_argument(
         "--s3-access-key-id", help="ID string to use to connect to this S3 mirror"
     )
@@ -563,6 +587,8 @@ def add_s3_connection_args(subparser, add_help):
     subparser.add_argument(
         "--s3-endpoint-url", help="endpoint URL to use to connect to this S3 mirror"
     )
+    subparser.add_argument("--oci-username", help="username to use to connect to this OCI mirror")
+    subparser.add_argument("--oci-password", help="password to use to connect to this OCI mirror")
 
 
 def use_buildcache(cli_arg_value):

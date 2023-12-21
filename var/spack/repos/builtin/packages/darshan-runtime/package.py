@@ -115,9 +115,9 @@ class DarshanRuntime(AutotoolsPackage):
         if "+apmpi" in spec:
             extra_args.append("--enable-apmpi-mod")
         if "+apmpi_sync" in spec:
-            extra_args.append(["--enable-apmpi-mod", "--enable-apmpi-coll-sync"])
+            extra_args.extend(["--enable-apmpi-mod", "--enable-apmpi-coll-sync"])
         if "+apxc" in spec:
-            extra_args.append(["--enable-apxc-mod"])
+            extra_args.append("--enable-apxc-mod")
 
         extra_args.append("--with-mem-align=8")
         extra_args.append("--with-log-path-by-env=DARSHAN_LOG_DIR_PATH")

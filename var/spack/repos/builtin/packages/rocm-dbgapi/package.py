@@ -23,6 +23,10 @@ class RocmDbgapi(CMakePackage):
     libraries = ["librocm-dbgapi"]
 
     version("master", branch="amd-master")
+    version("5.7.1", sha256="0ee9c2f083868849f2ea0cec7010e0270c27e7679ccbbadd12072cc0ef6c8a6f")
+    version("5.7.0", sha256="285ddded8e7f1981d8861ffc1cd7770b78129e4955da08ad55a4779945699716")
+    version("5.6.1", sha256="c7241bf94bdb97a4cf1befbf25b8c35720797710da6f6b5b9d6a4094c1bc9c8b")
+    version("5.6.0", sha256="9b66e47f4eccb3c8bbc324aade92aac6139539dda449427b7823d0c45341afc8")
     version("5.5.1", sha256="c41dfc62591bcf42003fe744d8bd03a51311d54e4b012f946ca0ede0c14dd977")
     version("5.5.0", sha256="ce572340a3fe99e4f1538eb614933153456003f8dfe9306a5735cdd25b451e25")
     version("5.4.3", sha256="d647c9121a50f2c54367c567d8f39a145cb135e1ceed931581659f57f49f61e5")
@@ -134,12 +138,16 @@ class RocmDbgapi(CMakePackage):
         "5.4.3",
         "5.5.0",
         "5.5.1",
+        "5.6.0",
+        "5.6.1",
+        "5.7.0",
+        "5.7.1",
         "master",
     ]:
         depends_on("hsa-rocr-dev@" + ver, type="build", when="@" + ver)
         depends_on("comgr@" + ver, type=("build", "link"), when="@" + ver)
 
-    for ver in ["5.5.0", "5.5.1"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
 
     @classmethod

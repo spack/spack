@@ -392,7 +392,7 @@ See section
 :ref:`Configuration Scopes <configuration-scopes>`
 for an explanation about the different files
 and section
-:ref:`Build customization <build-settings>`
+:ref:`Build customization <packages-config>`
 for specifics and examples for ``packages.yaml`` files.
 
 .. If your system administrator did not provide modules for pre-installed Intel
@@ -934,9 +934,9 @@ a *virtual* ``mkl`` package is declared in Spack.
   .. code-block:: python
 
      # Examples for absolute and conditional dependencies:
-     depends_on('mkl')
-     depends_on('mkl', when='+mkl')
-     depends_on('mkl', when='fftw=mkl')
+     depends_on("mkl")
+     depends_on("mkl", when="+mkl")
+     depends_on("mkl", when="fftw=mkl")
 
   The ``MKLROOT`` environment variable (part of the documented API) will be set
   during all stages of client package installation, and is available to both
@@ -972,8 +972,8 @@ a *virtual* ``mkl`` package is declared in Spack.
       def configure_args(self):
           args = []
           ...
-          args.append('--with-blas=%s' % self.spec['blas'].libs.ld_flags)
-          args.append('--with-lapack=%s' % self.spec['lapack'].libs.ld_flags)
+          args.append("--with-blas=%s" % self.spec["blas"].libs.ld_flags)
+          args.append("--with-lapack=%s" % self.spec["lapack"].libs.ld_flags)
           ...
 
   .. tip::
@@ -989,13 +989,13 @@ a *virtual* ``mkl`` package is declared in Spack.
 
   .. code-block:: python
 
-    self.spec['blas'].headers.include_flags
+    self.spec["blas"].headers.include_flags
 
   and to generate linker options (``-L<dir> -llibname ...``), use the same as above,
 
   .. code-block:: python
 
-    self.spec['blas'].libs.ld_flags
+    self.spec["blas"].libs.ld_flags
 
   See
   :ref:`MakefilePackage <makefilepackage>`

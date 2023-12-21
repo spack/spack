@@ -17,7 +17,7 @@ class Palace(CMakePackage):
     maintainers("sebastiangrimberg")
 
     version("develop", branch="main")
-    version("0.11.2", tag="v0.11.2")
+    version("0.11.2", tag="v0.11.2", commit="6c3aa5f84a934a6ddd58022b2945a1bdb5fa329d")
 
     variant("shared", default=True, description="Enables the build of shared libraries")
     variant("int64", default=False, description="Use 64 bit integers")
@@ -81,7 +81,8 @@ class Palace(CMakePackage):
         depends_on("mumps~openmp", when="~openmp")
 
     with when("+slepc"):
-        depends_on("slepc ^petsc+mpi+double+complex")
+        depends_on("slepc")
+        depends_on("petsc+mpi+double+complex")
         depends_on("petsc+shared", when="+shared")
         depends_on("petsc~shared", when="~shared")
         depends_on("petsc+int64", when="+int64")

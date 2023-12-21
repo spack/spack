@@ -20,6 +20,7 @@ class Numaprof(CMakePackage):
     maintainers("svalat")
 
     # Versions
+    version("1.1.5", sha256="7c479cc6d39f2fe685532b9aaeb9efce8153350177fdcc24133e447dd0776323")
     version("1.1.4", sha256="96cc5e153895f43d8be58e052433c9e7c9842071cc6bf915b3b1b346908cbbff")
 
     # Variants

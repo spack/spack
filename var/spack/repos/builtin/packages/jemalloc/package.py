@@ -13,8 +13,6 @@ class Jemalloc(AutotoolsPackage):
     homepage = "http://jemalloc.net/"
     url = "https://github.com/jemalloc/jemalloc/releases/download/4.0.4/jemalloc-4.0.4.tar.bz2"
 
-    maintainers("iarspider")
-
     version("5.3.0", sha256="2db82d1e7119df3e71b7640219b6dfe84789bc0537983c3b7ac4f7189aecfeaa")
     version("5.2.1", sha256="34330e5ce276099e2e8950d9335db5a875689a4c6a56751ef3b1d8c537f887f6")
     version("5.2.0", sha256="74be9f44a60d2a99398e706baa921e4efde82bf8fd16e5c0643c375c5851e3b4")

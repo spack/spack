@@ -27,6 +27,7 @@ class Fortrilinos(CMakePackage):
     tags = ["e4s"]
     test_requires_compiler = True
 
+    version("2.3.0", sha256="7be5efecaea61ad773d3fe182aa28735ebc3e7af821e1805ad284e4ed4e31a49")
     version("2.2.0", sha256="9e73fc71066bfaf7cde040e1467baf7a1ec797ff2874add49f9741e93f9fffb5")
     version("2.1.0", sha256="2c62bb6106ae86a804497d549080cb6877c5d860b6bf2e72ec5cbcbbe63e3b5b")
     version("2.0.1", sha256="291a62c885cd4ffd76cbebafa02789649bd4fa73f1005cf8da51fd153acb9e1a")
@@ -50,9 +51,10 @@ class Fortrilinos(CMakePackage):
     variant("shared", default=True, description="Build shared libraries")
 
     # Trilinos version dependencies
-    depends_on("trilinos@13.4.0:13.4", when="@2.2.0:2.2")
-    depends_on("trilinos@13.2.0:13.2", when="@2.1.0:2.1")
-    depends_on("trilinos@13.0.0:13.2", when="@2.0.0:2.0")
+    depends_on("trilinos@14.0", when="@2.3")
+    depends_on("trilinos@13.4", when="@2.2")
+    depends_on("trilinos@13.2", when="@2.1.0:2.1")
+    depends_on("trilinos@13:13.2", when="@2.0")
     depends_on("trilinos@12.18.1", when="@2.0.dev3")
     depends_on("trilinos@12.18.1", when="@2.0.dev2")
 

@@ -20,6 +20,7 @@ import spack.compilers
 import spack.concretize
 import spack.config
 import spack.database
+import spack.deptypes as dt
 import spack.installer as inst
 import spack.package_base
 import spack.package_prefs as prefs
@@ -718,13 +719,12 @@ def test_check_deps_status_external(install_mockery, monkeypatch):
     installer = create_installer(const_arg)
     request = installer.build_requests[0]
 
-    # Mock the known dependent, b, as external so assumed to be installed
+    # Mock the dependencies as external so assumed to be installed
     monkeypatch.setattr(spack.spec.Spec, "external", True)
     installer._check_deps_status(request)
 
-    # exotic architectures will add dependencies on gnuconfig, which we want to ignore
-    installed = [x for x in installer.installed if not x.startswith("gnuconfig")]
-    assert installed[0].startswith("b")
+    for dep in request.spec.traverse(root=False):
+        assert inst.package_id(dep.package) in installer.installed
 
 
 def test_check_deps_status_upstream(install_mockery, monkeypatch):
@@ -732,13 +732,12 @@ def test_check_deps_status_upstream(install_mockery, monkeypatch):
     installer = create_installer(const_arg)
     request = installer.build_requests[0]
 
-    # Mock the known dependent, b, as installed upstream
+    # Mock the known dependencies as installed upstream
     monkeypatch.setattr(spack.spec.Spec, "installed_upstream", True)
     installer._check_deps_status(request)
 
-    # exotic architectures will add dependencies on gnuconfig, which we want to ignore
-    installed = [x for x in installer.installed if not x.startswith("gnuconfig")]
-    assert installed[0].startswith("b")
+    for dep in request.spec.traverse(root=False):
+        assert inst.package_id(dep.package) in installer.installed
 
 
 def test_add_bootstrap_compilers(install_mockery, monkeypatch):
@@ -1386,6 +1385,26 @@ def test_single_external_implicit_install(install_mockery, explicit_args, is_exp
     s.external_path = "/usr"
     create_installer([(s, explicit_args)]).install()
     assert spack.store.STORE.db.get_record(pkg).explicit == is_explicit
+
+
+def test_overwrite_install_does_install_build_deps(install_mockery, mock_fetch):
+    """When overwrite installing something from sources, build deps should be installed."""
+    s = spack.spec.Spec("dtrun3").concretized()
+    create_installer([(s, {})]).install()
+
+    # Verify there is a pure build dep
+    edge = s.edges_to_dependencies(name="dtbuild3").pop()
+    assert edge.depflag == dt.BUILD
+    build_dep = edge.spec
+
+    # Uninstall the build dep
+    build_dep.package.do_uninstall()
+
+    # Overwrite install the root dtrun3
+    create_installer([(s, {"overwrite": [s.dag_hash()]})]).install()
+
+    # Verify that the build dep was also installed.
+    assert build_dep.installed
 
 
 @pytest.mark.parametrize("run_tests", [True, False])

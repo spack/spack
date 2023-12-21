@@ -14,9 +14,18 @@ class IqTree(CMakePackage):
     git = "https://github.com/iqtree/iqtree2.git"
     url = "https://github.com/Cibiv/IQ-TREE/archive/v1.6.12.tar.gz"
 
-    version("2.2.2.7", tag="v2.2.2.7", submodules=True)
-    version("2.1.3", tag="v2.1.3", submodules=True)
-    version("2.0.6", tag="v2.0.6", submodules=True)
+    version(
+        "2.2.2.7",
+        tag="v2.2.2.7",
+        commit="bd3468c7af6572ea29002dfdba377804f8f56c26",
+        submodules=True,
+    )
+    version(
+        "2.1.3", tag="v2.1.3", commit="3d31be9e56b05ffbc5f8488fc8285597b433c99f", submodules=True
+    )
+    version(
+        "2.0.6", tag="v2.0.6", commit="219e88407ac915a209a29808a81084bf0d5f1a84", submodules=True
+    )
     version("1.6.12", sha256="9614092de7a157de82c9cc402b19cc8bfa0cb0ffc93b91817875c2b4bb46a284")
 
     variant("openmp", default=True, description="Enable OpenMP support.")

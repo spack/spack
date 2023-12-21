@@ -29,7 +29,12 @@ class PalisadeDevelopment(CMakePackage):
     maintainers("wohlbier")
 
     version("feature-fixed-point-encoding", branch="feature-fixed-point-encoding", submodules=True)
-    version("fppe-logreg-v1.0", tag="fppe-logreg-v1.0", submodules=True)
+    version(
+        "fppe-logreg-v1.0",
+        tag="fppe-logreg-v1.0",
+        commit="5ccb14ffffd65e70db048e143ec2350b97a20d40",
+        submodules=True,
+    )
     version("master", branch="master", preferred=True, submodules=True)
 
     variant("shared", default=True, description="Build shared library.")

@@ -26,9 +26,10 @@ class Ncview(AutotoolsPackage):
         patched_file = "configure"
         with keep_modification_time(patched_file):
             filter_file(
-                "if test x\$CC_TEST_SAME != x\$NETCDF_CC_TEST_SAME; then",  # noqa: W605
+                "if test x$CC_TEST_SAME != x$NETCDF_CC_TEST_SAME; then",
                 "if false; then",
                 patched_file,
+                string=True,
             )
 
     def url_for_version(self, version):

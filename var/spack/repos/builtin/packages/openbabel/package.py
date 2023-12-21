@@ -19,11 +19,11 @@ class Openbabel(CMakePackage):
     maintainers("RMeli")
 
     version("master", branch="master")
-    version("3.1.1", tag="openbabel-3-1-1")
-    version("3.1.0", tag="openbabel-3-1-0")
-    version("3.0.0", tag="openbabel-3-0-0")
-    version("2.4.1", tag="openbabel-2-4-1")
-    version("2.4.0", tag="openbabel-2-4-0")
+    version("3.1.1", tag="openbabel-3-1-1", commit="cbd4db43f8908b874864280fdc03bf92569eebc1")
+    version("3.1.0", tag="openbabel-3-1-0", commit="1e593abc1edf47352d5e8a0887654edf69a2f5f3")
+    version("3.0.0", tag="openbabel-3-0-0", commit="49f9cfb32bd0bc6ea440639d338123eb27accbe2")
+    version("2.4.1", tag="openbabel-2-4-1", commit="701f6049c483b1349118c2ff736a7f609a84dedd")
+    version("2.4.0", tag="openbabel-2-4-0", commit="087f33320e6796f39e6a1da04f4de7ec46bec4af")
 
     variant("python", default=True, description="Build Python bindings")
     variant("gui", default=True, description="Build with GUI")

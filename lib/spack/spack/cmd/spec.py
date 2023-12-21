@@ -10,11 +10,11 @@ import llnl.util.tty as tty
 
 import spack
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.spec
 import spack.store
+from spack.cmd.common import arguments
 
 description = "show what would be installed, given a spec"
 section = "build"
@@ -77,7 +77,7 @@ for further documentation regarding the spec syntax, see:
 def spec(parser, args):
     install_status_fn = spack.spec.Spec.install_status
 
-    fmt = spack.spec.display_format
+    fmt = spack.spec.DISPLAY_FORMAT
     if args.namespaces:
         fmt = "{namespace}." + fmt
 

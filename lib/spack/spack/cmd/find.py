@@ -12,9 +12,9 @@ import llnl.util.tty.color as color
 
 import spack.bootstrap
 import spack.cmd as cmd
-import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 import spack.repo
+from spack.cmd.common import arguments
 from spack.database import InstallStatuses
 
 description = "list and search installed packages"

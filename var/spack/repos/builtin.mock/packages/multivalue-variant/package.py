@@ -19,7 +19,7 @@ class MultivalueVariant(Package):
     variant(
         "foo",
         description="Multi-valued variant",
-        values=any_combination_of("bar", "baz", "barbaz"),
+        values=any_combination_of("bar", "baz", "barbaz", "fee"),
     )
 
     variant(
