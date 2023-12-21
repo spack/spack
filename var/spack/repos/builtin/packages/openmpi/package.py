@@ -453,7 +453,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     # Additional support options
     variant("atomics", default=False, description="Enable built-in atomics")
     variant("java", default=False, when="@1.7.4:", description="Build Java support")
-    variant("static", default=True, description="Build static libraries")
+    variant("static", default=False, description="Build static libraries")
     variant("sqlite3", default=False, when="@1.7.3:1", description="Build SQLite3 support")
     variant("vt", default=True, description="Build VampirTrace support")
     variant(
