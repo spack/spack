@@ -44,10 +44,13 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
     # Current
     version(
-        "5.0.0", sha256="9d845ca94bc1aeb445f83d98d238cd08f6ec7ad0f73b0f79ec1668dbfdacd613"
-    )  # libmpi.so.40.40.0
+        "5.0.1", sha256="e357043e65fd1b956a47d0dae6156a90cf0e378df759364936c1781f1a25ef80"
+    )  # libmpi.so.40.40.1
 
     # Still supported
+    version(
+        "5.0.0", sha256="9d845ca94bc1aeb445f83d98d238cd08f6ec7ad0f73b0f79ec1668dbfdacd613"
+    )  # libmpi.so.40.40.0
     version(
         "4.1.6", sha256="f740994485516deb63b5311af122c265179f5328a0d857a567b85db00b11e415"
     )  # libmpi.so.40.30.6
@@ -415,7 +418,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     # when in non-standard location
     patch("accelerator-cuda-fix-bug-in-makefile.patch", when="@5.0.0")
     patch("btlsmcuda-fix-problem-with-makefile.patch", when="@5.0.0")
-    patch("accelerator-build-components-as-dso-s-by-default.patch", when="@5.0.0")
+    patch("accelerator-build-components-as-dso-s-by-default.patch", when="@5.0.0:5.0.1")
 
     variant(
         "fabrics",
@@ -523,9 +526,9 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     if sys.platform != "darwin":
         depends_on("numactl")
 
-    depends_on("autoconf @2.69:", type="build", when="@5.0.0,main")
-    depends_on("automake @1.13.4:", type="build", when="@5.0.0,main")
-    depends_on("libtool @2.4.2:", type="build", when="@5.0.0,main")
+    depends_on("autoconf @2.69:", type="build", when="@5.0.0:,main")
+    depends_on("automake @1.13.4:", type="build", when="@5.0.0:,main")
+    depends_on("libtool @2.4.2:", type="build", when="@5.0.0:,main")
 
     depends_on("perl", type="build")
     depends_on("pkgconfig", type="build")
@@ -927,7 +930,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         perl = which("perl")
         perl("autogen.pl")
 
-    @when("@5.0.0")
+    @when("@5.0.0:5.0.1")
     def autoreconf(self, spec, prefix):
         perl = which("perl")
         perl("autogen.pl", "--force")
