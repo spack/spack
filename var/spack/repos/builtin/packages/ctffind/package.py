@@ -33,13 +33,14 @@ class Ctffind(AutotoolsPackage):
     depends_on("jpeg")
 
     patch("configure.patch", when="@4.1.8")
-    patch("power9.patch", when="@4.1.14 target=power9le")
+    patch("no_sincos_asm.patch", when="@4.1.14 target=power9le")
+    patch("no_sincos_asm.patch", when="@4.1.14 target=aarch64:")
     patch("fix_return_types.patch", when="@4.1.13:4.1.14")
 
     def configure_args(self):
         config_args = []
 
-        if "^mkl" in self.spec:
+        if self.spec["fftw-api"].name in INTEL_MATH_LIBRARIES:
             config_args.extend(
                 [
                     "--enable-mkl",

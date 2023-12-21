@@ -15,7 +15,9 @@ class PyPythonLibsbml(PythonPackage):
     pypi = "python-libsbml/python-libsbml-5.19.7.tar.gz"
 
     version("5.19.7", sha256="447b1fde7aceccd11a93dc9f589ffd9319ba854d7b7583f911259a8b0127ab7b")
-    version("5.19.5", tag="v5.19.5", submodules=True)
+    version(
+        "5.19.5", tag="v5.19.5", commit="6081d9e1b0aa2b3ff4198b39680b726094c47e85", submodules=True
+    )
 
     depends_on("py-setuptools", type="build")
 

@@ -13,6 +13,9 @@ class Libxc(AutotoolsPackage, CudaPackage):
     homepage = "https://tddft.org/programs/libxc/"
     url = "https://gitlab.com/libxc/libxc/-/archive/6.1.0/libxc-6.1.0.tar.gz"
 
+    version("6.2.2", sha256="3b0523924579cf494cafc6fea92945257f35692b004217d3dfd3ea7ca780e8dc")
+    version("6.2.1", sha256="b5f3b4514db6bc4ccda1da90ac6176ea1f82e12241cc66427c58cbc4a5197b9b")
+    version("6.2.0", sha256="3d25878782b5f94e7e4d41bd6de27f98983584cd0be0c65e69a9ada986b56b4d")
     version("6.1.0", sha256="f593745fa47ebfb9ddc467aaafdc2fa1275f0d7250c692ce9761389a90dd8eaf")
     version("6.0.0", sha256="0c774e8e195dd92800b9adf3df5f5721e29acfe9af4b191a9937c7de4f9aa9f6")
     version("5.2.3", sha256="7b7a96d8eeb472c7b8cca7ac38eae27e0a8113ef44dae5359b0eb12592b4bcf2")
@@ -30,6 +33,8 @@ class Libxc(AutotoolsPackage, CudaPackage):
     version("2.2.1", sha256="ade61c1fa4ed238edd56408fd8ee6c2e305a3d5753e160017e2a71817c98fd00")
 
     variant("shared", default=True, description="Build shared libraries")
+    variant("kxc", default=False, when="@5:", description="Build with third derivatives")
+    variant("lxc", default=False, when="@5:", description="Build with fourth derivatives")
 
     conflicts("+shared +cuda", msg="Only ~shared supported with +cuda")
     conflicts("+cuda", when="@:4", msg="CUDA support only in libxc 5.0.0 and above")
@@ -118,6 +123,10 @@ class Libxc(AutotoolsPackage, CudaPackage):
         args = []
         args += self.enable_or_disable("shared")
         args += self.enable_or_disable("cuda")
+        if "+kxc" in self.spec:
+            args.append("--enable-kxc")
+        if "+lxc" in self.spec:
+            args.append("--enable-lxc")
         return args
 
     @run_after("configure")

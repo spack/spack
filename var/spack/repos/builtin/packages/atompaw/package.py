@@ -49,8 +49,8 @@ class Atompaw(AutotoolsPackage):
         spec = self.spec
         linalg = spec["lapack"].libs + spec["blas"].libs
         return [
-            "--with-linalg-libs=%s" % linalg.ld_flags,
+            f"--with-linalg-libs={linalg.ld_flags}",
             "--enable-libxc",
-            "--with-libxc-incs=-I%s" % spec["libxc"].prefix.include,
-            "--with-libxc-libs=-L%s -lxcf90 -lxc" % spec["libxc"].prefix.lib,
+            f"--with-libxc-incs=-I{spec['libxc'].prefix.include}",
+            f"--with-libxc-libs=-L{spec['libxc'].prefix.lib} -lxcf90 -lxc",
         ]

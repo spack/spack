@@ -17,8 +17,12 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
 
     version("develop", branch="develop", submodules="True")
     version("master", branch="main", submodules="True")
-    version("0.3.0", tag="v0.3.0", submodules="True")
-    version("0.2.0", tag="v0.2.0", submodules="True")
+    version(
+        "0.3.0", tag="v0.3.0", commit="5e2b69b2836c9f2215207ca9a36a690cb77eea33", submodules="True"
+    )
+    version(
+        "0.2.0", tag="v0.2.0", commit="30135e03b14b1dc753634e9147dafede0663906f", submodules="True"
+    )
 
     variant("openmp", default=False, description="Build Shared Libs")
     variant(
@@ -34,6 +38,7 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("blt@0.4.0:", type="build", when="@0.3.1:")
     depends_on("blt@:0.3.6", type="build", when="@:0.3.0")
+    conflicts("^blt@:0.3.6", when="+rocm")
 
     depends_on("camp")
     depends_on("umpire@develop")

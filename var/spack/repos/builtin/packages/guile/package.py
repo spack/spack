@@ -48,6 +48,14 @@ class Guile(AutotoolsPackage, GNUMirrorPackage):
     conflicts("threads=posix", when="%intel")
     conflicts("threads=dgux386", when="%intel")
 
+    def flag_handler(self, name, flags):
+        # Intel oneAPI's compiler enables fast math by default, which
+        # breaks Guile's build. See https://github.com/spack/spack/discussions/38689
+        if name == "cflags" and "%oneapi" in self.spec:
+            flags.append("-fp-model=precise")
+
+        return (flags, None, None)
+
     def configure_args(self):
         spec = self.spec
 

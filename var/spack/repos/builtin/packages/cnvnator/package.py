@@ -21,7 +21,7 @@ class Cnvnator(MakefilePackage):
     depends_on("bzip2")
     depends_on("curl")
     depends_on("xz")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libdeflate")
     depends_on("openssl")
 
@@ -42,7 +42,7 @@ class Cnvnator(MakefilePackage):
 
         # Link more libs
         ldflags = [
-            spec["zlib"].libs.ld_flags,
+            spec["zlib-api"].libs.ld_flags,
             spec["bzip2"].libs.ld_flags,
             spec["curl"].libs.ld_flags,
             spec["xz"].libs.ld_flags,

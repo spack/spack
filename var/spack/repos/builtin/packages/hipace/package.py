@@ -12,12 +12,14 @@ class Hipace(CMakePackage):
     """
 
     homepage = "https://hipace.readthedocs.io"
-    url = "https://github.com/Hi-PACE/hipace/archive/refs/tags/v21.09.tar.gz"
+    url = "https://github.com/Hi-PACE/hipace/archive/refs/tags/v23.07.tar.gz"
     git = "https://github.com/Hi-PACE/hipace.git"
 
     maintainers("ax3l", "MaxThevenet", "SeverinDiederichs")
 
     version("develop", branch="development")
+    version("23.07", sha256="2b1f61c91d2543d7ee360eba3630c864107e29f7bcfd0221451beea88f414f21")
+    version("23.05", sha256="33a15cfeada3ca16c2a3af1538caa7ff731df13b48b884045a0fe7974382fcd1")
     version("21.09", sha256="5d27824fe6aac47ce26ca69759140ab4d7844f9042e436c343c03ea4852825f1")
 
     variant(
@@ -37,10 +39,11 @@ class Hipace(CMakePackage):
         description="Floating point precision (single/double)",
     )
 
+    depends_on("cmake@3.18.0:", type="build", when="@23.05:")
     depends_on("cmake@3.15.0:", type="build")
-    depends_on("cuda@9.2.88:", when="compute=cuda")
     depends_on("mpi", when="+mpi")
     with when("+openpmd"):
+        depends_on("openpmd-api@0.15.1:", when="@23.05:")
         depends_on("openpmd-api@0.14.2:")
         depends_on("openpmd-api ~mpi", when="~mpi")
         depends_on("openpmd-api +mpi", when="+mpi")
@@ -54,6 +57,13 @@ class Hipace(CMakePackage):
         depends_on("fftw +mpi", when="+mpi")
         depends_on("pkgconfig", type="build")
         depends_on("llvm-openmp", when="%apple-clang")
+    with when("compute=cuda"):
+        depends_on("cuda@:12.1", when="%gcc@:12.2")
+        depends_on("cuda@:12.0", when="%gcc@:12.1")
+        depends_on("cuda@:12.1", when="%gcc@:12.2")
+        depends_on("cuda@:11.8", when="%gcc@:9")
+        depends_on("cuda@:10", when="%gcc@:8")
+        depends_on("cuda@9.2.88:")
     with when("compute=hip"):
         depends_on("rocfft")
         depends_on("rocprim")

@@ -13,13 +13,8 @@ class PyGenshi(PythonPackage):
 
     version("0.7.7", sha256="c100520862cd69085d10ee1a87e91289e7f59f6b3d9bd622bf58b2804e6b9aab")
 
-    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-six", type=("build", "run", "test"))
 
-    def test(self):
-        # All the unittests pass for py-genshi@0.7.7 but 14 tests fail for
-        # @0.6.1:0.7, many of them related to templates, likely because the
-        # template path needs to be setup.  But those versions didn't use tox
-        # and setting up the test environment to find the template files doesn't
-        # seem to be documented.
+    def test_testsuite(self):
         python("-m", "unittest", "-v", "genshi.tests.suite")

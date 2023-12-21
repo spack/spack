@@ -14,6 +14,8 @@ class PyMaturin(PythonPackage):
     homepage = "https://github.com/pyo3/maturin"
     pypi = "maturin/maturin-0.13.7.tar.gz"
 
+    version("1.1.0", sha256="4650aeaa8debd004b55aae7afb75248cbd4d61cd7da2dcf4ead8b22b58cecae0")
+    version("0.14.17", sha256="fb4e3311e8ce707843235fbe8748a05a3ae166c3efd6d2aa335b53dfc2bd3b88")
     version("0.13.7", sha256="c0a77aa0c57f945649ca711c806203a1b6888ad49c2b8b85196ffdcf0421db77")
 
     depends_on("py-setuptools", type="build")

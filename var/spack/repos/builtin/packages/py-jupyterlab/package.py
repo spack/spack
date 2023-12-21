@@ -24,7 +24,11 @@ class PyJupyterlab(PythonPackage):
     version("3.1.14", sha256="13174cb6076dd5da6f1b85725ccfcc9518d8f98e86b8b644fc89b1dfaeda63a9")
     version("3.0.18", sha256="0e4bb4b89014607a16658b54f13df2f0af14f3c286109a0e14d5a46cbbe28caf")
     version("3.0.16", sha256="7ad4fbe1f6d38255869410fd151a8b15692a663ca97c0a8146b3f5c40e275c23")
-    version("3.0.14", sha256="713a84991dfcca8c0bc260911f1bd54ac25a386a86285713b9555a60f795059b")
+    version(
+        "3.0.14",
+        sha256="713a84991dfcca8c0bc260911f1bd54ac25a386a86285713b9555a60f795059b",
+        deprecated=True,
+    )
     version("2.2.7", sha256="a72ffd0d919cba03a5ef8422bc92c3332a957ff97b0490494209c83ad93826da")
     version("2.1.0", sha256="8c239aababf5baa0b3d36e375fddeb9fd96f3a9a24a8cda098d6a414f5bbdc81")
 
@@ -50,12 +54,9 @@ class PyJupyterlab(PythonPackage):
 
     with when("@:3"):
         depends_on("py-setuptools", when="@:3", type=("build", "run"))
-        # TODO: replace this after concretizer learns how to concretize separate build deps
-        depends_on("py-jupyter-packaging11", when="@3.0.15:3", type="build")
-        depends_on("py-jupyter-packaging7", when="@3.0.0:3.0.14", type="build")
-        # depends_on('py-jupyter-packaging@0.9:0', when='@3.0.15:', type='build')
-        # depends_on('py-jupyter-packaging@0.7.3:0.7', when='@3.0.0:3.0.14',
-        #            type=('build', 'run'))
+        depends_on("py-jupyter-packaging@0.9:1", when="@3.4.8", type="build")
+        depends_on("py-jupyter-packaging@0.9:0", when="@3.0.15:3.4.2", type="build")
+        depends_on("py-jupyter-packaging@0.7.3:0.7", when="@3.0.0:3.0.14", type=("build", "run"))
         depends_on("py-pre-commit", when="@3.4:3.4.3", type="build")
 
         depends_on("py-ipython", when="@3", type=("build", "run"))

@@ -76,7 +76,7 @@ class Metis(CMakePackage, MakefilePackage):
             )
 
 
-class SetupEnvironment(object):
+class SetupEnvironment:
     def setup_build_environment(self, env):
         # Ignore warnings/errors re unrecognized omp pragmas on %intel
         if "%intel@14:" in self.spec:

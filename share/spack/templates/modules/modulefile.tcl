@@ -11,16 +11,16 @@
 
 {% block header %}
 {% if short_description %}
-module-whatis "{{ short_description }}"
+module-whatis {{ '{' }}{{ short_description }}{{ '}' }}
 {% endif %}
 
 proc ModulesHelp { } {
-    puts stderr "Name   : {{ spec.name }}"
-    puts stderr "Version: {{ spec.version }}"
-    puts stderr "Target : {{ spec.target }}"
+    puts stderr {{ '{' }}Name   : {{ spec.name }}{{ '}' }}
+    puts stderr {{ '{' }}Version: {{ spec.version }}{{ '}' }}
+    puts stderr {{ '{' }}Target : {{ spec.target }}{{ '}' }}
 {% if long_description %}
-    puts stderr ""
-{{ long_description| textwrap(72)| quote()| prepend_to_line('    puts stderr ')| join() }}
+    puts stderr {}
+{{ long_description| textwrap(72)| curly_quote()| prepend_to_line('    puts stderr ')| join() }}
 {% endif %}
 }
 {% endblock %}
@@ -54,13 +54,25 @@ conflict {{ name }}
 {% block environment %}
 {% for command_name, cmd in environment_modifications %}
 {% if command_name == 'PrependPath' %}
-prepend-path --delim "{{ cmd.separator }}" {{ cmd.name }} "{{ cmd.value }}"
+{% if cmd.separator == ':' %}
+prepend-path {{ cmd.name }} {{ '{' }}{{ cmd.value }}{{ '}' }}
+{% else %}
+prepend-path --delim {{ '{' }}{{ cmd.separator }}{{ '}' }} {{ cmd.name }} {{ '{' }}{{ cmd.value }}{{ '}' }}
+{% endif %}
 {% elif command_name in ('AppendPath', 'AppendFlagsEnv') %}
-append-path --delim "{{ cmd.separator }}" {{ cmd.name }} "{{ cmd.value }}"
+{% if cmd.separator == ':' %}
+append-path {{ cmd.name }} {{ '{' }}{{ cmd.value }}{{ '}' }}
+{% else %}
+append-path --delim {{ '{' }}{{ cmd.separator }}{{ '}' }} {{ cmd.name }} {{ '{' }}{{ cmd.value }}{{ '}' }}
+{% endif %}
 {% elif command_name in ('RemovePath', 'RemoveFlagsEnv') %}
-remove-path --delim "{{ cmd.separator }}" {{ cmd.name }} "{{ cmd.value }}"
+{% if cmd.separator == ':' %}
+remove-path {{ cmd.name }} {{ '{' }}{{ cmd.value }}{{ '}' }}
+{% else %}
+remove-path --delim {{ '{' }}{{ cmd.separator }}{{ '}' }} {{ cmd.name }} {{ '{' }}{{ cmd.value }}{{ '}' }}
+{% endif %}
 {% elif command_name == 'SetEnv' %}
-setenv {{ cmd.name }} "{{ cmd.value }}"
+setenv {{ cmd.name }} {{ '{' }}{{ cmd.value }}{{ '}' }}
 {% elif command_name == 'UnsetEnv' %}
 unsetenv {{ cmd.name }}
 {% endif %}
@@ -68,7 +80,7 @@ unsetenv {{ cmd.name }}
 {% endfor %}
 {# Make sure system man pages are enabled by appending trailing delimiter to MANPATH #}
 {% if has_manpath_modifications %}
-append-path --delim ":" MANPATH ""
+append-path MANPATH {{ '{' }}{{ '}' }}
 {% endif %}
 {% endblock %}
 

@@ -12,7 +12,7 @@ class Cce(Compiler):
     """Cray compiler environment compiler."""
 
     def __init__(self, *args, **kwargs):
-        super(Cce, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         # For old cray compilers on module based systems we replace
         # ``version_argument`` with the old value. Cannot be a property
         # as the new value is used in classmethods for path-based detection

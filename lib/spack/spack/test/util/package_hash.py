@@ -20,9 +20,9 @@ datadir = os.path.join(spack.paths.test_path, "data", "unparse")
 
 def compare_sans_name(eq, spec1, spec2):
     content1 = ph.canonical_source(spec1)
-    content1 = content1.replace(spack.repo.path.get_pkg_class(spec1.name).__name__, "TestPackage")
+    content1 = content1.replace(spack.repo.PATH.get_pkg_class(spec1.name).__name__, "TestPackage")
     content2 = ph.canonical_source(spec2)
-    content2 = content2.replace(spack.repo.path.get_pkg_class(spec2.name).__name__, "TestPackage")
+    content2 = content2.replace(spack.repo.PATH.get_pkg_class(spec2.name).__name__, "TestPackage")
     if eq:
         assert content1 == content2
     else:
@@ -31,12 +31,12 @@ def compare_sans_name(eq, spec1, spec2):
 
 def compare_hash_sans_name(eq, spec1, spec2):
     content1 = ph.canonical_source(spec1)
-    pkg_cls1 = spack.repo.path.get_pkg_class(spec1.name)
+    pkg_cls1 = spack.repo.PATH.get_pkg_class(spec1.name)
     content1 = content1.replace(pkg_cls1.__name__, "TestPackage")
     hash1 = pkg_cls1(spec1).content_hash(content=content1)
 
     content2 = ph.canonical_source(spec2)
-    pkg_cls2 = spack.repo.path.get_pkg_class(spec2.name)
+    pkg_cls2 = spack.repo.PATH.get_pkg_class(spec2.name)
     content2 = content2.replace(pkg_cls2.__name__, "TestPackage")
     hash2 = pkg_cls2(spec2).content_hash(content=content2)
 
@@ -337,15 +337,15 @@ def test_remove_complex_package_logic_filtered():
         ("grads", "rrlmwml3f2frdnqavmro3ias66h5b2ce"),
         ("llvm", "nufffum5dabmaf4l5tpfcblnbfjknvd3"),
         # has @when("@4.1.0") and raw unicode literals
-        ("mfem", "qtneutm6khd6epd2rhyuv2y6zavsxbed"),
-        ("mfem@4.0.0", "qtneutm6khd6epd2rhyuv2y6zavsxbed"),
-        ("mfem@4.1.0", "uit2ydzhra3b2mlvnq262qlrqqmuwq3d"),
+        ("mfem", "lbhr43gm5zdye2yhqznucxb4sg6vhryl"),
+        ("mfem@4.0.0", "lbhr43gm5zdye2yhqznucxb4sg6vhryl"),
+        ("mfem@4.1.0", "vjdjdgjt6nyo7ited2seki5epggw5gza"),
         # has @when("@1.5.0:")
         ("py-torch", "qs7djgqn7dy7r3ps4g7hv2pjvjk4qkhd"),
         ("py-torch@1.0", "qs7djgqn7dy7r3ps4g7hv2pjvjk4qkhd"),
         ("py-torch@1.6", "p4ine4hc6f2ik2f2wyuwieslqbozll5w"),
         # has a print with multiple arguments
-        ("legion", "sffy6vz3dusxnxeetofoomlaieukygoj"),
+        ("legion", "efpfd2c4pzhsbyc3o7plqcmtwm6b57yh"),
         # has nested `with when()` blocks and loops
         ("trilinos", "vqrgscjrla4hi7bllink7v6v6dwxgc2p"),
     ],

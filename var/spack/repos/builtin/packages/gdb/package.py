@@ -79,7 +79,7 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
     # https://bugzilla.redhat.com/show_bug.cgi?id=1829702
     depends_on("python@:3.8", when="@:9.2+python", type=("build", "link", "run"))
     depends_on("xz", when="+xz")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("zstd", when="@13.1:")
     depends_on("source-highlight", when="+source-highlight")
     depends_on("ncurses", when="+tui")

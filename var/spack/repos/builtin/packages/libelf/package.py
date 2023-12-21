@@ -50,3 +50,10 @@ class Libelf(AutotoolsPackage):
 
     def install(self, spec, prefix):
         make("install", parallel=False)
+
+    def flag_handler(self, name, flags):
+        if name == "cflags":
+            if self.spec.satisfies("%clang@16:"):
+                flags.append("-Wno-error=implicit-int")
+                flags.append("-Wno-error=implicit-function-declaration")
+        return (flags, None, None)

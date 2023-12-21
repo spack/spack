@@ -15,6 +15,8 @@ class Ut(CMakePackage):
 
     maintainers("msimberg")
 
+    license("BSL-1.0")
+
     version("master", branch="master")
     version("1.1.9", sha256="1a666513157905aa0e53a13fac602b5673dcafb04a869100a85cd3f000c2ed0d")
 

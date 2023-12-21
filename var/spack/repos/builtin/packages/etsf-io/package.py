@@ -52,23 +52,10 @@ class EtsfIo(Package):
         make("check")
         make("install")
 
-    def test(self):
-        """Run this smoke test when requested explicitly"""
+    def test_etsf_io_help(self):
+        """check etsf_io can execute (--help)"""
 
-        # Test is to run "etsf_io --help"
-        spec = self.spec
-        exe = join_path(spec["etsf-io"].prefix.bin, "etsf_io")
-        options = ["--help"]
-        purpose = "Check etsf_io can execute (--help)"
-        expected = ["Usage: etsf_io"]
-
-        self.run_test(
-            exe,
-            options=options,
-            expected=expected,
-            status=[0],
-            installed=False,
-            purpose=purpose,
-            skip_missing=False,
-            work_dir=None,
-        )
+        path = self.spec["etsf-io"].prefix.bin.etsf_io
+        etsfio = which(path)
+        out = etsfio("--help", output=str.split, error=str.split)
+        assert "Usage: etsf_io" in out

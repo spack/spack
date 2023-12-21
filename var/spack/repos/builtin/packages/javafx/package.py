@@ -20,7 +20,7 @@ _versions = {
             ),
         },
         "darwin": {
-            "aarch64": (
+            "arm64": (
                 "https://download2.gluonhq.com/openjfx/20.0.1/openjfx-20.0.1_osx-aarch64_bin-sdk.zip",
                 "baebdbbe283c17df62fc4c0bdc2bde4415f2253f99ba41437f9336e2272c255e",
             ),

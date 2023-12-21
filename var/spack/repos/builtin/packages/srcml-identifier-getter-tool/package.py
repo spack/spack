@@ -17,10 +17,10 @@ class SrcmlIdentifierGetterTool(CMakePackage):
     version("2022-10-17", commit="01394c247ae6f61cc5864a9697e72e3623d8e7fb", submodules=True)
 
     depends_on("libxml2")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("lzma")
 
     def install(self, spec, prefix):
-        super(SrcmlIdentifierGetterTool, self).install(spec, prefix)
+        super().install(spec, prefix)
         mkdir(prefix.bin)
         install(join_path(self.build_directory, "bin", "grabidentifiers"), prefix.bin)

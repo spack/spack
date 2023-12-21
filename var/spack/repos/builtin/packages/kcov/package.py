@@ -17,7 +17,7 @@ class Kcov(CMakePackage):
     version("38", sha256="b37af60d81a9b1e3b140f9473bdcb7975af12040feb24cc666f9bb2bb0be68b4")
 
     depends_on("cmake@2.8.4:", type="build")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("curl")
     depends_on("elfutils", when="platform=linux")
     depends_on("binutils +libiberty", when="platform=linux", type="link")

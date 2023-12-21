@@ -57,7 +57,7 @@ class Sbml(CMakePackage):
 
     depends_on("swig@2:", type="build")
     depends_on("cmake", type="build")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("bzip2")
     depends_on("libxml2")
 

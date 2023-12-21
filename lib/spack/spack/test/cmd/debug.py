@@ -6,7 +6,6 @@
 import os
 import os.path
 import platform
-import sys
 
 import pytest
 
@@ -17,7 +16,7 @@ from spack.util.executable import which
 
 debug = SpackCommand("debug")
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 @pytest.mark.db

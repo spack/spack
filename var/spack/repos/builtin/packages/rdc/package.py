@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+import re
+
 from spack.package import *
 
 
@@ -11,7 +13,7 @@ class Rdc(CMakePackage):
     """ROCm Data Center Tool"""
 
     homepage = "https://github.com/RadeonOpenCompute/rdc"
-    url = "https://github.com/RadeonOpenCompute/rdc/archive/rocm-5.4.0.tar.gz"
+    url = "https://github.com/RadeonOpenCompute/rdc/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
@@ -24,6 +26,10 @@ class Rdc(CMakePackage):
         url = "https://github.com/RadeonOpenCompute/rdc/archive/rocm-{0}.tar.gz"
         return url.format(version)
 
+    version("5.6.1", sha256="9e9f57cebbc5ae386a405957ed2c17344cdb42db5e1a71285f2c9bc09eea6519")
+    version("5.6.0", sha256="5213cd89215463862f6a1e9480ebe017944a6bb6b0db1722628afaa34af57991")
+    version("5.5.1", sha256="a58a319ee702cf61cf71a4eba647c231392f68449b35419d941079c6de944844")
+    version("5.5.0", sha256="56e85e77581963fbcfcc43e091a91773de470152347808ae730bcaf92c9f5ee8")
     version("5.4.3", sha256="c44f0b070b5650bc78e2eb968aae57a8ac1e1fd160e897055b79f3026c4fbad3")
     version("5.4.0", sha256="268aab43e31045443b08a21aee8750da4cf04750c6f419ec171ec704d377a4e4")
     version("5.3.3", sha256="1bf1a02f305e3a629801e62584116a34eafbd1b26627837a2a8c10550fcf611b")
@@ -94,19 +100,13 @@ class Rdc(CMakePackage):
         deprecated=True,
     )
 
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
-
     depends_on("cmake@3.15:3.19.7", type="build", when="@:4.3.1")
     depends_on("cmake@3.15:", type="build", when="@4.5.0:")
     depends_on("grpc@1.28.1+shared", type="build", when="@:5.3")
-    depends_on("grpc@1.44.0+shared", when="@5.4.0:")
-    depends_on("protobuf", type=("build", "link"))
-    depends_on("libcap", type=("build", "link"))
+    depends_on("grpc@1.44.0+shared", when="@5.4.0:5.4")
+    depends_on("grpc@1.55.0+shared", when="@5.5.0:")
+    depends_on("protobuf")
+    depends_on("libcap")
 
     for ver in [
         "3.8.0",
@@ -130,6 +130,10 @@ class Rdc(CMakePackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
     ]:
         depends_on("rocm-smi-lib@" + ver, type=("build", "link"), when="@" + ver)
 
@@ -145,8 +149,15 @@ class Rdc(CMakePackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
     ]:
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
+
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
+        depends_on("rocm-core@" + ver, when="@" + ver)
 
     def patch(self):
         filter_file(r"\${ROCM_DIR}/rocm_smi", "${ROCM_SMI_DIR}", "CMakeLists.txt")

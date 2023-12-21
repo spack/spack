@@ -22,5 +22,5 @@ class Mosesdecoder(Package):
     depends_on("tcl")
     depends_on("gcc")
     depends_on("boost")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("python")

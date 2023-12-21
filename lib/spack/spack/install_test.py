@@ -17,6 +17,7 @@ from typing import Callable, List, Optional, Tuple, Type, TypeVar, Union
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+from llnl.string import plural
 from llnl.util.lang import nullcontext
 from llnl.util.tty.color import colorize
 
@@ -26,7 +27,6 @@ import spack.util.spack_json as sjson
 from spack.installer import InstallError
 from spack.spec import Spec
 from spack.util.prefix import Prefix
-from spack.util.string import plural
 
 #: Stand-alone test failure info type
 TestFailureType = Tuple[BaseException, str]
@@ -1039,7 +1039,7 @@ class TestSuite:
         Returns:
             str: the install test package identifier
         """
-        return spec.format("{name}-{version}-{hash:7}")
+        return spec.format_path("{name}-{version}-{hash:7}")
 
     @classmethod
     def test_log_name(cls, spec):
@@ -1147,12 +1147,12 @@ class TestSuite:
     def write_reproducibility_data(self):
         for spec in self.specs:
             repo_cache_path = self.stage.repo.join(spec.name)
-            spack.repo.path.dump_provenance(spec, repo_cache_path)
+            spack.repo.PATH.dump_provenance(spec, repo_cache_path)
             for vspec in spec.package.virtuals_provided:
                 repo_cache_path = self.stage.repo.join(vspec.name)
                 if not os.path.exists(repo_cache_path):
                     try:
-                        spack.repo.path.dump_provenance(vspec, repo_cache_path)
+                        spack.repo.PATH.dump_provenance(vspec, repo_cache_path)
                     except spack.repo.UnknownPackageError:
                         pass  # not all virtuals have package files
 

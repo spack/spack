@@ -30,8 +30,6 @@ spack:
   - $optimized_configs
   # - $optimized_libs
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/aws-pcluster-skylake" }
-
   ci:
     pipeline-gen:
     - build-job:
@@ -48,7 +46,7 @@ spack:
           - spack gpg trust /bootstrap/public-key
           - diff /bootstrap/postinstall.sh /bootstrap/postinstall.sh.bkp || echo Done
         - - /bin/bash "${SPACK_ARTIFACTS_ROOT}/postinstall.sh" -fg
-          - spack config --scope site add "packages:all:target:\"target=${SPACK_TARGET_ARCH}\""
+          - spack config --scope site add "packages:all:target:[${SPACK_TARGET_ARCH}]"
     - signing-job:
         before_script:
           # Do not distribute Intel & ARM binaries

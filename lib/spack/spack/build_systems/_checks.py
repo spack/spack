@@ -39,7 +39,7 @@ def sanity_check_prefix(builder: spack.builder.Builder):
     check_paths(pkg.sanity_check_is_file, "file", os.path.isfile)
     check_paths(pkg.sanity_check_is_dir, "directory", os.path.isdir)
 
-    ignore_file = llnl.util.lang.match_predicate(spack.store.layout.hidden_file_regexes)
+    ignore_file = llnl.util.lang.match_predicate(spack.store.STORE.layout.hidden_file_regexes)
     if all(map(ignore_file, os.listdir(pkg.prefix))):
         msg = "Install failed for {0}.  Nothing was installed!"
         raise spack.installer.InstallError(msg.format(pkg.name))

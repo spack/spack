@@ -18,7 +18,7 @@ class Creduce(CMakePackage):
     maintainers("olupton")
 
     version("develop", branch="master")
-    version("2.10.0", tag="creduce-2.10.0")
+    version("2.10.0", tag="creduce-2.10.0", commit="fb91843c547794f165e5764a003166191e6c6643")
 
     depends_on("flex")
     depends_on("libxml2")
@@ -29,4 +29,4 @@ class Creduce(CMakePackage):
     depends_on("perl-getopt-tabular")
     depends_on("perl-regexp-common")
     depends_on("perl-termreadkey")
-    depends_on("zlib")
+    depends_on("zlib-api")

@@ -18,6 +18,8 @@ class PyLightgbm(PythonPackage):
     variant("mpi", default=False, description="Build with mpi support")
 
     depends_on("py-setuptools", type="build")
+    # in newer pip versions --install-option does not exist
+    depends_on("py-pip@:23.0", when="+mpi", type="build")
     depends_on("py-wheel", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))

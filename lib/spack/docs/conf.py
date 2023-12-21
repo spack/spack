@@ -48,9 +48,6 @@ os.environ["PATH"] += "%s%s" % (os.pathsep, os.path.abspath("_spack_root/bin"))
 os.environ["COLIFY_SIZE"] = "25x120"
 os.environ["COLUMNS"] = "120"
 
-# Generate full package list if needed
-subprocess.call(["spack", "list", "--format=html", "--update=package_list.html"])
-
 # Generate a command index if an update is needed
 subprocess.call(
     [
@@ -97,9 +94,7 @@ class PatchedPythonDomain(PythonDomain):
     def resolve_xref(self, env, fromdocname, builder, typ, target, node, contnode):
         if "refspecific" in node:
             del node["refspecific"]
-        return super(PatchedPythonDomain, self).resolve_xref(
-            env, fromdocname, builder, typ, target, node, contnode
-        )
+        return super().resolve_xref(env, fromdocname, builder, typ, target, node, contnode)
 
 
 #
@@ -209,6 +204,7 @@ nitpick_ignore = [
     ("py:class", "clingo.Control"),
     ("py:class", "six.moves.urllib.parse.ParseResult"),
     ("py:class", "TextIO"),
+    ("py:class", "hashlib._Hash"),
     # Spack classes that are private and we don't want to expose
     ("py:class", "spack.provider_index._IndexBase"),
     ("py:class", "spack.repo._PrependFileLoader"),
@@ -216,6 +212,8 @@ nitpick_ignore = [
     # Spack classes that intersphinx is unable to resolve
     ("py:class", "spack.version.StandardVersion"),
     ("py:class", "spack.spec.DependencySpec"),
+    ("py:class", "spack.spec.InstallStatus"),
+    ("py:class", "spack.spec.SpecfileReaderBase"),
     ("py:class", "spack.install_test.Pb"),
 ]
 

@@ -26,11 +26,11 @@ class Usalign(Package):
     # date assumed from paper publication date
     version(
         "20220829",
-        sha256="9ee129017a68125c22ce89123ecbac9421add87ee077cd1994c6e8a39a8a8b21",
+        sha256="fdc447a0c48813f91cf3045b9c19bd0c6b98fc6a3ad23780ef75fac8d4662e8c",
         expand=False,
     )
 
-    variant("fast-math", default=False)
+    variant("fast-math", default=False, description="Enable fast math")
 
     phases = ["build", "install"]
 

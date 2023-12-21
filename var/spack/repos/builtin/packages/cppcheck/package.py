@@ -47,7 +47,7 @@ class Cppcheck(CMakePackage):
         return args
 
     def install(self, spec, prefix):
-        super(Cppcheck, self).install(spec, prefix)
+        super().install(spec, prefix)
         # Manually install the final cppcheck binary
         if spec.satisfies("+htmlreport"):
             install("htmlreport/cppcheck-htmlreport", prefix.bin)

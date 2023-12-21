@@ -13,6 +13,7 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import is_exe, working_dir
 
 import spack.config
+import spack.error
 import spack.fetch_strategy as fs
 import spack.repo
 import spack.util.crypto as crypto
@@ -173,7 +174,7 @@ def test_fetch(
 
 
 # TODO-27021
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     "spec,url,digest",
     [
@@ -204,7 +205,7 @@ def test_from_list_url(mock_packages, config, spec, url, digest, _fetch_method):
         assert fetch_strategy.extra_options == {"timeout": 60}
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
 @pytest.mark.parametrize(
     "requested_version,tarball,digest",
@@ -221,12 +222,10 @@ def test_from_list_url(mock_packages, config, spec, url, digest, _fetch_method):
         ("2.0.0", "foo-2.0.0b2.tar.gz", "000000000000000000000000000200b2"),
     ],
 )
+@pytest.mark.only_clingo("Original concretizer doesn't resolve concrete versions to known ones")
 def test_new_version_from_list_url(
     mock_packages, config, _fetch_method, requested_version, tarball, digest
 ):
-    if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer doesn't resolve concrete versions to known ones")
-
     """Test non-specific URLs from the url-list-test package."""
     with spack.config.override("config:url_fetch_method", _fetch_method):
         s = Spec("url-list-test @%s" % requested_version).concretized()
@@ -351,7 +350,7 @@ def test_missing_curl(tmpdir, monkeypatch):
 
 
 def test_url_fetch_text_without_url(tmpdir):
-    with pytest.raises(web_util.FetchError, match="URL is required"):
+    with pytest.raises(spack.error.FetchError, match="URL is required"):
         web_util.fetch_url_text(None)
 
 
@@ -368,18 +367,18 @@ def test_url_fetch_text_curl_failures(tmpdir, monkeypatch):
     monkeypatch.setattr(spack.util.web, "which", _which)
 
     with spack.config.override("config:url_fetch_method", "curl"):
-        with pytest.raises(web_util.FetchError, match="Missing required curl"):
+        with pytest.raises(spack.error.FetchError, match="Missing required curl"):
             web_util.fetch_url_text("https://github.com/")
 
 
 def test_url_check_curl_errors():
     """Check that standard curl error returncodes raise expected errors."""
     # Check returncode 22 (i.e., 404)
-    with pytest.raises(web_util.FetchError, match="not found"):
+    with pytest.raises(spack.error.FetchError, match="not found"):
         web_util.check_curl_code(22)
 
     # Check returncode 60 (certificate error)
-    with pytest.raises(web_util.FetchError, match="invalid certificate"):
+    with pytest.raises(spack.error.FetchError, match="invalid certificate"):
         web_util.check_curl_code(60)
 
 
@@ -396,12 +395,12 @@ def test_url_missing_curl(tmpdir, monkeypatch):
     monkeypatch.setattr(spack.util.web, "which", _which)
 
     with spack.config.override("config:url_fetch_method", "curl"):
-        with pytest.raises(web_util.FetchError, match="Missing required curl"):
+        with pytest.raises(spack.error.FetchError, match="Missing required curl"):
             web_util.url_exists("https://github.com/")
 
 
 def test_url_fetch_text_urllib_bad_returncode(tmpdir, monkeypatch):
-    class response(object):
+    class response:
         def getcode(self):
             return 404
 
@@ -411,7 +410,7 @@ def test_url_fetch_text_urllib_bad_returncode(tmpdir, monkeypatch):
     monkeypatch.setattr(spack.util.web, "read_from_url", _read_from_url)
 
     with spack.config.override("config:url_fetch_method", "urllib"):
-        with pytest.raises(web_util.FetchError, match="failed with error code"):
+        with pytest.raises(spack.error.FetchError, match="failed with error code"):
             web_util.fetch_url_text("https://github.com/")
 
 
@@ -422,5 +421,5 @@ def test_url_fetch_text_urllib_web_error(tmpdir, monkeypatch):
     monkeypatch.setattr(spack.util.web, "read_from_url", _raise_web_error)
 
     with spack.config.override("config:url_fetch_method", "urllib"):
-        with pytest.raises(web_util.FetchError, match="fetch failed to verify"):
+        with pytest.raises(spack.error.FetchError, match="fetch failed to verify"):
             web_util.fetch_url_text("https://github.com/")

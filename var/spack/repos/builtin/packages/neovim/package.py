@@ -16,7 +16,11 @@ class Neovim(CMakePackage):
     maintainers("albestro", "trws")
 
     version("master", branch="master")
-    version("stable", tag="stable")
+    version("stable", tag="stable", commit="d772f697a281ce9c58bf933997b87c7f27428a60")
+    version("0.9.4", sha256="148356027ee8d586adebb6513a94d76accc79da9597109ace5c445b09d383093")
+    version("0.9.2", sha256="06b8518bad4237a28a67a4fbc16ec32581f35f216b27f4c98347acee7f5fb369")
+    version("0.9.1", sha256="8db17c2a1f4776dcda00e59489ea0d98ba82f7d1a8ea03281d640e58d8a3a00e")
+    version("0.9.0", sha256="39d79107c54d2f3babcad2cd157c399241c04f6e75e98c18e8afaf2bb5e82937")
     version("0.8.3", sha256="adf45ff160e1d89f519b6114732eba03485ae469beb27919b0f7a4f6b44233c1")
     version("0.8.2", sha256="c516c8db73e1b12917a6b2e991b344d0914c057cef8266bce61a2100a28ffcc9")
     version("0.8.0", sha256="505e3dfb71e2f73495c737c034a416911c260c0ba9fd2092c6be296655be4d18")
@@ -84,7 +88,7 @@ class Neovim(CMakePackage):
 
     # dependencies to allow regular lua to work
     depends_on("lua-ffi", when="^lua", type=("link", "run"))
-    depends_on("lua-bitlib", type="link", when="^lua")
+    depends_on("lua-bitlib", type=("link", "run"), when="^lua")
 
     # base dependencies
     depends_on("cmake@3.0:", type="build")
@@ -117,7 +121,7 @@ class Neovim(CMakePackage):
     with when("@0.6:"):
         depends_on("cmake@3.10:", type="build")
         depends_on("gperf@3.1:", type="link")
-        conflicts("libiconv@:1.14")
+        conflicts("^libiconv@:1.14")
         depends_on("libtermkey@0.22:", type="link")
         depends_on("libvterm@0.1.4:", type="link")
         depends_on("msgpack-c@3.0.0:", type="link")
@@ -128,6 +132,8 @@ class Neovim(CMakePackage):
         depends_on("tree-sitter@0.20.6:")
     with when("@0.8:"):
         depends_on("libvterm@0.3:", type="link")
+    with when("@0.9:"):
+        depends_on("tree-sitter@0.20.8:")
 
     # Support for `libvterm@0.2:` has been added in neovim@0.8.0
     # term: Add support for libvterm >= 0.2 (https://github.com/neovim/neovim/releases/tag/v0.8.0)

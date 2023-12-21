@@ -72,7 +72,7 @@ class NodeJs(Package):
     # depends_on('bash-completion', when="+bash-completion")
     depends_on("icu4c", when="+icu4c")
     depends_on("openssl@1.1:", when="+openssl")
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
 
     phases = ["configure", "build", "install"]
 
@@ -137,8 +137,8 @@ class NodeJs(Package):
             args.extend(
                 [
                     "--shared-zlib",
-                    "--shared-zlib-includes={0}".format(self.spec["zlib"].prefix.include),
-                    "--shared-zlib-libpath={0}".format(self.spec["zlib"].prefix.lib),
+                    "--shared-zlib-includes={0}".format(self.spec["zlib-api"].prefix.include),
+                    "--shared-zlib-libpath={0}".format(self.spec["zlib-api"].prefix.lib),
                 ]
             )
 

@@ -5,6 +5,8 @@
 
 import os
 
+from llnl.util import tty
+
 from spack.package import *
 
 
@@ -19,7 +21,7 @@ class Amdlibm(SConsPackage):
     LICENSING INFORMATION: By downloading, installing and using this software,
     you agree to the terms and conditions of the AMD AOCL-FFTW license
     agreement.  You may obtain a copy of this license agreement from
-    https://www.amd.com/en/developer/aocl/libm/libm-4-0-eula.html
+    https://www.amd.com/en/developer/aocl/libm/eula/libm-4-1-eula.html
     https://www.amd.com/en/developer/aocl/libm/libm-eula.html
     """
 
@@ -29,6 +31,7 @@ class Amdlibm(SConsPackage):
     url = "https://github.com/amd/aocl-libm-ose/archive/refs/tags/3.0.tar.gz"
     maintainers("amd-toolchain-support")
 
+    version("4.1", sha256="5bbbbc6bc721d9a775822eab60fbc11eb245e77d9f105b4fcb26a54d01456122")
     version("4.0", sha256="038c1eab544be77598eccda791b26553d3b9e2ee4ab3f5ad85fdd2a77d015a7d")
     version("3.2", sha256="c75b287c38a3ce997066af1f5c8d2b19fc460d5e56678ea81f3ac33eb79ec890")
     version("3.1", sha256="dee487cc2d89c2dc93508be2c67592670ffc1d02776c017e8907317003f48845")
@@ -40,19 +43,35 @@ class Amdlibm(SConsPackage):
     # Mandatory dependencies
     depends_on("python@3.6.1:", type=("build", "run"))
     depends_on("scons@3.1.2:", type=("build"))
+    depends_on("aocl-utils", type=("build"), when="@4.1: ")
     depends_on("mpfr", type=("link"))
 
     patch("0001-libm-ose-Scripts-cleanup-pyc-files.patch", when="@2.2")
     patch("0002-libm-ose-prevent-log-v3.c-from-building.patch", when="@2.2")
 
     conflicts("%gcc@:9.1.0", msg="Minimum supported GCC version is 9.2.0")
-    conflicts("%gcc@12.2.0:", msg="Maximum supported GCC version is 12.1.0")
-    conflicts("%clang@9:", msg="Minimum supported Clang version is 9.0.0")
+    conflicts("%gcc@13.2.0:", msg="Maximum supported GCC version is 13.1.0")
+    conflicts("%clang@9.0:16.0", msg="supported Clang version is from 9 to 16")
     conflicts("%aocc@3.2.0", msg="dependency on python@3.6.2")
 
     def build_args(self, spec, prefix):
         """Setting build arguments for amdlibm"""
         args = ["--prefix={0}".format(prefix)]
+
+        if self.spec.satisfies("@4.1: "):
+            args.append("--aocl_utils_install_path={0}".format(self.spec["aocl-utils"].prefix))
+
+        if not (
+            self.spec.satisfies(r"%aocc@3.2:4.1")
+            or self.spec.satisfies(r"%gcc@12.2:13.1")
+            or self.spec.satisfies(r"%clang@15:16")
+        ):
+            tty.warn(
+                "AOCL has been tested to work with the following compilers\
+                    versions - gcc@12.2:13.1, aocc@3.2:4.1, and clang@15:16\
+                    see the following aocl userguide for details: \
+                    https://www.amd.com/content/dam/amd/en/documents/developer/version-4-1-documents/aocl/aocl-4-1-user-guide.pdf"
+            )
 
         # we are circumventing the use of
         # Spacks compiler wrappers because

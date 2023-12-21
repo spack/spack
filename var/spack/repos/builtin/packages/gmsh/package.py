@@ -88,7 +88,7 @@ class Gmsh(CMakePackage):
     depends_on("freetype", when="+oce")
     depends_on("freetype", when="+opencascade")
     depends_on("slepc", when="+slepc+petsc")
-    depends_on("zlib", when="+compression")
+    depends_on("zlib-api", when="+compression")
     depends_on("metis", when="+metis+external")
     depends_on("cgns", when="+cgns")
     depends_on("cgns~scoping", when="+cgns @:4.7.1")
@@ -106,6 +106,12 @@ class Gmsh(CMakePackage):
     conflicts("+oce", when="+opencascade")
     conflicts("+oce", when="^gmsh@4.10:4.10.3")
     conflicts("+metis", when="+external", msg="External Metis cannot build with GMSH")
+
+    def flag_handler(self, name, flags):
+        if name == "cflags":
+            if self.spec.satisfies("%oneapi"):
+                flags.append("-Wno-error=implicit-function-declaration")
+        return (flags, None, None)
 
     def cmake_args(self):
         spec = self.spec

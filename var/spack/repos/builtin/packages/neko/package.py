@@ -16,6 +16,7 @@ class Neko(AutotoolsPackage, CudaPackage, ROCmPackage):
     url = "https://github.com/ExtremeFLOW/neko/releases/download/v0.3.2/neko-0.3.2.tar.gz"
     maintainers("njansson")
 
+    version("0.6.1", sha256="6282baaf9c8a201669e274cba23c37922f7ad701ba20ef086442e48f00dabf29")
     version("0.6.0", sha256="ce37c7cea1a7bf1bf554c5717aa7fed35bbd079ff68c2fc9d3529facc717e31a")
     version("0.5.2", sha256="8873f5ada106f92f21c9bb13ea8164550bccde9301589b9e7f1c1a82a2efe2b8")
     version("0.5.1", sha256="8b176bcc9f2d4a6804b68dd93a2f5e02e2dfa986d5c88063bbc72d39e9659cc4")
@@ -27,6 +28,7 @@ class Neko(AutotoolsPackage, CudaPackage, ROCmPackage):
     version("develop", branch="develop")
     variant("parmetis", default=False, description="Build with support for parmetis")
     variant("xsmm", default=False, description="Build with support for libxsmm")
+    variant("gslib", default=False, when="@develop", description="Build with support for gslib")
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
@@ -38,6 +40,8 @@ class Neko(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on("mpi")
     depends_on("blas")
     depends_on("lapack")
+    depends_on("json-fortran", when="@develop")
+    depends_on("gslib", when="+gslib")
 
     def configure_args(self):
         args = []
@@ -46,6 +50,7 @@ class Neko(AutotoolsPackage, CudaPackage, ROCmPackage):
         args += self.with_or_without("parmetis", variant="parmetis", activation_value="prefix")
         args += self.with_or_without("metis", variant="parmetis", activation_value="prefix")
         args += self.with_or_without("libxsmm", variant="xsmm")
+        args += self.with_or_without("gslib", variant="gslib", activation_value="prefix")
         args += self.with_or_without("cuda", activation_value="prefix")
         rocm_fn = lambda x: self.spec["hip"].prefix
         args += self.with_or_without("hip", variant="rocm", activation_value=rocm_fn)

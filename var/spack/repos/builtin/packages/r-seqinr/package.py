@@ -27,4 +27,4 @@ class RSeqinr(RPackage):
     depends_on("r@2.10.0:", type=("build", "run"), when="@4.2-30:")
     depends_on("r-ade4", type=("build", "run"))
     depends_on("r-segmented", type=("build", "run"))
-    depends_on("zlib")
+    depends_on("zlib-api")

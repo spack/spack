@@ -33,7 +33,7 @@ from llnl.util.lang import ensure_last, list_modules
 import spack.paths
 
 
-class _HookRunner(object):
+class _HookRunner:
     #: Stores all hooks on first call, shared among
     #: all HookRunner objects
     _hooks = None

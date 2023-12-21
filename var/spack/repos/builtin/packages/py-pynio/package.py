@@ -22,7 +22,7 @@ class PyPynio(PythonPackage):
     # The setup.py claims it requires these abolutely.
     depends_on("libpng")
     depends_on("jpeg")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     # Spack does not currently have netcdf below 4.x, and 3.x is a
     # fundamentally different format. So, currently this is only providing

@@ -26,6 +26,7 @@ class SentieonGenomics(Package):
     url = "https://s3.amazonaws.com/sentieon-release/software/sentieon-genomics-201808.01.tar.gz"
     maintainers("snehring")
 
+    version("202308", sha256="d663067f46e499c23819e344cf548fdc362abbf94d3ef086a2e655c072ebe0d6")
     version("202112.07", sha256="7178769bb5a9619840996356bda4660410fb6f228b2c0b86611bcb1c6bcfc2e1")
     version("202112.06", sha256="18306036f01c3d41dd7ae738b18ae76fd6b666f1172dd4696cd55b4a8465270d")
     version("202112.05", sha256="c97b14b0484a0c0025115ad7b911453af7bdcd09874c26cbc39fd0bc5588a306")

@@ -18,7 +18,7 @@ class Libmng(CMakePackage):
     version("2.0.2", sha256="4908797bb3541fb5cd8fffbe0b1513ed163509f2a4d57a78b26a96f8d1dd05a2")
 
     depends_on("jpeg")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("lcms")
 
     def patch(self):

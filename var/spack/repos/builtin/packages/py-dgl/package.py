@@ -22,9 +22,15 @@ class PyDgl(CMakePackage, PythonExtension, CudaPackage):
     maintainers("adamjstewart", "meyersbs")
 
     version("master", branch="master", submodules=True)
-    version("1.0.1", tag="1.0.1", submodules=True)
-    version("0.4.3", tag="0.4.3", submodules=True)
-    version("0.4.2", tag="0.4.2", submodules=True)
+    version(
+        "1.0.1", tag="1.0.1", commit="cc2e9933f309f585fae90965ab61ad11ac1eecd5", submodules=True
+    )
+    version(
+        "0.4.3", tag="0.4.3", commit="e1d90f9b5eeee7359a6b4f5edca7473a497984ba", submodules=True
+    )
+    version(
+        "0.4.2", tag="0.4.2", commit="55e056fbae8f25f3da4aab0a0d864d72c2a445ff", submodules=True
+    )
 
     variant("cuda", default=True, description="Build with CUDA")
     variant("openmp", default=True, description="Build with OpenMP")

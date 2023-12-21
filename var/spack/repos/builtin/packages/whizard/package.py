@@ -12,7 +12,10 @@ class Whizard(AutotoolsPackage):
     and simulated event samples."""
 
     homepage = "whizard.hepforge.org"
-    url = "https://whizard.hepforge.org/downloads/?f=whizard-2.8.3.tar.gz"
+    urls = [
+        "https://launchpad.net/whizard/3.1.x/3.1.2/+download/whizard-3.1.2.tar.gz",
+        "https://whizard.hepforge.org/downloads/?f=whizard-2.8.3.tar.gz",
+    ]
     git = "https://gitlab.tp.nt.uni-siegen.de/whizard/public.git"
 
     tags = ["hep"]
@@ -20,6 +23,8 @@ class Whizard(AutotoolsPackage):
     maintainers("vvolkl")
 
     version("master", branch="master")
+    version("3.1.2", sha256="4f706f8ef02a580ae4dba867828691dfe0b3f9f9b8982b617af72eb8cd4c6fa3")
+    version("3.1.1", sha256="dd48e4e39b8a4990be47775ec6171f89d8147cb2e9e293afc7051a7dbc5a23ef")
     version("3.1.0", sha256="9dc5e6d1a25d2fc708625f85010cb81b63559ff02cceb9b35024cf9f426c0ad9")
     version("3.0.3", sha256="20f2269d302fc162a6aed8e781b504ba5112ef0711c078cdb08b293059ed67cf")
     version("3.0.2", sha256="f1db92cd95a0281f6afbf4ac32ab027670cb97a57ad8f5139c0d1f61593d66ec")
@@ -64,7 +69,7 @@ class Whizard(AutotoolsPackage):
         when="+openloops",
     )
     depends_on("texlive", when="+latex")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     # Fix for https://github.com/key4hep/key4hep-spack/issues/71
     # NOTE: This will become obsolete in a future release of whizard, so once
@@ -77,7 +82,7 @@ class Whizard(AutotoolsPackage):
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
-    depends_on("pkgconf", type="build")
+    depends_on("pkgconfig", type="build")
 
     conflicts(
         "%gcc@:5.0",
@@ -98,6 +103,8 @@ class Whizard(AutotoolsPackage):
         # and seems incompatible with
         # filter_compiler_wrappers, thus the
         # actual compilers need to be used to build
+        if self.spec.satisfies("+lcio"):
+            env.set("LCIO", self.spec["lcio"].prefix)
         env.set("CC", self.compiler.cc)
         env.set("CXX", self.compiler.cxx)
         env.set("FC", self.compiler.fc)

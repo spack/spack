@@ -124,9 +124,9 @@ def _read_and_sanitize_configuration() -> Dict[str, Any]:
 def _bootstrap_config_scopes() -> Sequence["spack.config.ConfigScope"]:
     tty.debug("[BOOTSTRAP CONFIG SCOPE] name=_builtin")
     config_scopes: MutableSequence["spack.config.ConfigScope"] = [
-        spack.config.InternalConfigScope("_builtin", spack.config.config_defaults)
+        spack.config.InternalConfigScope("_builtin", spack.config.CONFIG_DEFAULTS)
     ]
-    configuration_paths = (spack.config.configuration_defaults_path, ("bootstrap", _config_path()))
+    configuration_paths = (spack.config.CONFIGURATION_DEFAULTS_PATH, ("bootstrap", _config_path()))
     for name, path in configuration_paths:
         platform = spack.platforms.host().name
         platform_scope = spack.config.ConfigScope(
@@ -143,25 +143,28 @@ def _bootstrap_config_scopes() -> Sequence["spack.config.ConfigScope"]:
 def _add_compilers_if_missing() -> None:
     arch = spack.spec.ArchSpec.frontend_arch()
     if not spack.compilers.compilers_for_arch(arch):
-        new_compilers = spack.compilers.find_new_compilers()
+        new_compilers = spack.compilers.find_new_compilers(
+            mixed_toolchain=sys.platform == "darwin"
+        )
         if new_compilers:
             spack.compilers.add_compilers_to_config(new_compilers, init_config=False)
 
 
 @contextlib.contextmanager
 def _ensure_bootstrap_configuration() -> Generator:
+    spack.store.ensure_singleton_created()
     bootstrap_store_path = store_path()
     user_configuration = _read_and_sanitize_configuration()
     with spack.environment.no_active_environment():
         with spack.platforms.prevent_cray_detection(), spack.platforms.use_platform(
             spack.platforms.real_host()
-        ), spack.repo.use_repositories(spack.paths.packages_path), spack.store.use_store(
-            bootstrap_store_path
-        ):
+        ), spack.repo.use_repositories(spack.paths.packages_path):
             # Default configuration scopes excluding command line
             # and builtin but accounting for platform specific scopes
             config_scopes = _bootstrap_config_scopes()
-            with spack.config.use_configuration(*config_scopes):
+            with spack.config.use_configuration(*config_scopes), spack.store.use_store(
+                bootstrap_store_path, extra_data={"padded_length": 0}
+            ):
                 # We may need to compile code from sources, so ensure we
                 # have compilers for the current platform
                 _add_compilers_if_missing()

@@ -52,7 +52,7 @@ class NcbiToolkit(AutotoolsPackage):
     depends_on("pcre")
     depends_on("giflib")
     depends_on("sqlite@3.6.6:")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("samtools")
     depends_on("bamtools")
     depends_on("berkeley-db")

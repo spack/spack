@@ -34,53 +34,43 @@ class PyIpython(PythonPackage):
     version("7.3.0", sha256="06de667a9e406924f97781bda22d5d76bfb39762b678762d86a466e63f65dc39")
     version("5.8.0", sha256="4bac649857611baaaf76bc82c173aa542f7486446c335fe1a6c05d0d491c8906")
     version("5.1.0", sha256="7ef4694e1345913182126b219aaa4a0047e191af414256da6772cf249571b961")
-    version(
-        "3.1.0",
-        sha256="532092d3f06f82b1d8d1e5c37097eae19fcf025f8f6a4b670dd49c3c338d5624",
-        deprecated=True,
-    )
-    version(
-        "2.3.1",
-        sha256="3e98466aa2fe54540bcba9aa6e01a39f40110d67668c297340c4b9514b7cc49c",
-        deprecated=True,
-    )
 
     depends_on("python@3.9:", when="@8.13.1:", type=("build", "run"))
     depends_on("python@3.8:", when="@8:", type=("build", "run"))
     depends_on("py-setuptools@51:", when="@8:", type="build")
-    depends_on("py-setuptools@18.5:", when="@4.1:7", type="run")
+    depends_on("py-setuptools@18.5:", when="@:7", type="run")
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-appnope", when="@4: platform=darwin", type=("build", "run"))
+    depends_on("py-appnope", when="platform=darwin", type=("build", "run"))
     depends_on("py-backcall", when="@7.3.0:", type=("build", "run"))
-    depends_on("py-colorama", when="@5: platform=windows", type=("build", "run"))
-    depends_on("py-decorator", when="@4:", type=("build", "run"))
+    depends_on("py-colorama", when="platform=windows", type=("build", "run"))
+    depends_on("py-decorator", type=("build", "run"))
     depends_on("py-jedi@0.16:", when="@7.18,7.20:", type=("build", "run"))
     depends_on("py-jedi@0.10:", when="@7.5:7.17,7.19", type=("build", "run"))
     depends_on("py-matplotlib-inline", when="@7.23:", type=("build", "run"))
     depends_on("py-pexpect@4.4:", when="@7.18: platform=linux", type=("build", "run"))
     depends_on("py-pexpect@4.4:", when="@7.18: platform=darwin", type=("build", "run"))
     depends_on("py-pexpect@4.4:", when="@7.18: platform=cray", type=("build", "run"))
-    depends_on("py-pexpect", when="@4: platform=linux", type=("build", "run"))
-    depends_on("py-pexpect", when="@4: platform=darwin", type=("build", "run"))
-    depends_on("py-pexpect", when="@4: platform=cray", type=("build", "run"))
-    depends_on("py-pickleshare", when="@4:", type=("build", "run"))
+    depends_on("py-pexpect", when="platform=linux", type=("build", "run"))
+    depends_on("py-pexpect", when="platform=darwin", type=("build", "run"))
+    depends_on("py-pexpect", when="platform=cray", type=("build", "run"))
+    depends_on("py-pickleshare", type=("build", "run"))
     depends_on("py-prompt-toolkit@3.0.30:3.0.36,3.0.38:3.0", when="@8.11:", type=("build", "run"))
     depends_on("py-prompt-toolkit@3.0.2:3.0", when="@8.5:", type=("build", "run"))
     depends_on("py-prompt-toolkit@2.0.0:2,3.0.2:3.0", when="@7.26:", type=("build", "run"))
     depends_on("py-prompt-toolkit@3.0.2:3.0", when="@7.18:7.25", type=("build", "run"))
     depends_on("py-prompt-toolkit@2.0.0:2.0", when="@7.5.0", type=("build", "run"))
     depends_on("py-prompt-toolkit@2.0.0:2", when="@7.0.0:7.5.0", type=("build", "run"))
-    depends_on("py-prompt-toolkit@1.0.4:1", when="@5:7.0.0", type=("build", "run"))
-    depends_on("py-prompt-toolkit@1.0.3:1", when="@5:7.0.0", type=("build", "run"))
+    depends_on("py-prompt-toolkit@1.0.4:1", when="@:7.0.0", type=("build", "run"))
+    depends_on("py-prompt-toolkit@1.0.3:1", when="@:7.0.0", type=("build", "run"))
     depends_on("py-pygments@2.4:", when="@8.1:", type=("build", "run"))
-    depends_on("py-pygments", when="@5:", type=("build", "run"))
+    depends_on("py-pygments", type=("build", "run"))
     depends_on("py-stack-data", when="@8:", type=("build", "run"))
     depends_on("py-traitlets@5:", when="@8:", type=("build", "run"))
-    depends_on("py-traitlets@4.2:", when="@5:", type=("build", "run"))
-    depends_on("py-traitlets", when="@4:", type=("build", "run"))
+    depends_on("py-traitlets@4.2:", type=("build", "run"))
+    depends_on("py-traitlets", type=("build", "run"))
     depends_on("py-typing-extensions", when="@8.12: ^python@:3.9", type=("build", "run"))
 
     # Historical dependencies
     depends_on("py-black", when="@8.0", type=("build", "run"))
-    depends_on("py-simplegeneric@0.8:", when="@4:7.0.0", type=("build", "run"))
+    depends_on("py-simplegeneric@0.8:", when="@:7.0.0", type=("build", "run"))

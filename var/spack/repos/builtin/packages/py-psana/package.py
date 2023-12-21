@@ -38,6 +38,7 @@ class PyPsana(PythonPackage):
     depends_on("opencv", type=("build", "run"))
     depends_on("py-scikit-learn", type=("build", "run"))
     depends_on("py-pyabel", type=("build", "run"))
+    depends_on("py-prometheus-client", type=("build", "run"))
     depends_on("xtcdata", type=("build", "run", "link"))
     depends_on("psalg", type=("build", "run", "link"))
 

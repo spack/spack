@@ -20,7 +20,7 @@ class Minimap2(PythonPackage):
     version("2.2", sha256="7e8683aa74c4454a8cfe3821f405c4439082e24c152b4b834fdb56a117ecaed9")
 
     conflicts("target=aarch64:", when="@:2.10")
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
     depends_on("py-setuptools", type="build")
     depends_on("py-cython", type="build")
 

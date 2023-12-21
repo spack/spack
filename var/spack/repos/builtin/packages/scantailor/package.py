@@ -22,7 +22,7 @@ class Scantailor(CMakePackage):
 
     depends_on("qt@5:")
     depends_on("libjpeg")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libpng")
     depends_on("libtiff")
     depends_on("boost@1.35:")

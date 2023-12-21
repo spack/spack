@@ -16,6 +16,7 @@ class Squashfuse(AutotoolsPackage):
     maintainers("haampie")
 
     version("master", branch="master")
+    version("0.5.0", sha256="d7602c7a3b1d0512764547d27cb8cc99d1b21181e1c9819e76461ee96c2ab4d9")
     version("0.1.104", sha256="aa52460559e0d0b1753f6b1af5c68cfb777ca5a13913285e93f4f9b7aa894b3a")
     version("0.1.103", sha256="42d4dfd17ed186745117cfd427023eb81effff3832bab09067823492b6b982e7")
 
@@ -40,7 +41,7 @@ class Squashfuse(AutotoolsPackage):
     depends_on("pkgconfig", type="build")
 
     # compression libs
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
     depends_on("lz4", when="+lz4")
     depends_on("lzo", when="+lzo")
     depends_on("xz", when="+xz")
@@ -63,7 +64,10 @@ class Squashfuse(AutotoolsPackage):
         args = ["--disable-demo"]
         args += self.enable_or_disable("shared")
         args += self.enable_or_disable("static")
-        args += self.with_or_without("zlib", activation_value="prefix")
+        if "+zlib" in self.spec:
+            args.append("--with-zlib=%s" % self.spec["zlib-api"].prefix)
+        else:
+            args.append("--without-zlib")
         args += self.with_or_without("lz4", activation_value="prefix")
         args += self.with_or_without("lzo", activation_value="prefix")
         args += self.with_or_without("xz", activation_value="prefix")

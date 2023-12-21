@@ -18,12 +18,16 @@ class Moab(AutotoolsPackage):
 
     homepage = "https://bitbucket.org/fathomteam/moab"
     git = "https://bitbucket.org/fathomteam/moab.git"
-    url = "https://ftp.mcs.anl.gov/pub/fathom/moab-5.0.0.tar.gz"
+    url = "https://ftp.mcs.anl.gov/pub/fathom/moab-5.5.0.tar.gz"
 
     maintainers("vijaysm", "iulian787")
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("5.5.0", sha256="58969f8a1b209ec9036c08c53a6b7078b368eb3bf99d0368a4de5a2f2a8db678")
+    version("5.4.1", sha256="3625e25321bf37f88d98438f5d56c280b2774172602d8b6eb6c34eedf37686fc")
+    version("5.4.0", sha256="a30d2a1911fbf214ae0175b0856e0475c0077dc51ea5914c850d631155a72952")
+    version("5.3.1", sha256="2404fab2d84f87be72b57cfef5ea237bfa444aaca059e66a158f22134956fe54")
     version("5.3.0", sha256="51c31ccbcaa76d9658a44452b9a39f076b795b27a1c9f408fc3d0eea97e032ef")
     version("5.2.1", sha256="60d31762be3f0e5c89416c764e844ec88dac294169b59a5ead3c316b50f85c29")
     version("5.2.0", sha256="805ed3546deff39e076be4d1f68aba1cf0dda8c34ce43e1fc179d1aff57c5d5d")
@@ -36,22 +40,23 @@ class Moab(AutotoolsPackage):
     version("4.9.0", sha256="267a7c05da847e4ea856db2c649a5484fb7bdc132ab56721ca50ee69a7389f4d")
     version("4.8.2", sha256="b105cff42930058dc14eabb9a25e979df7289b175732fe319d2494e83e09e968")
 
-    variant("mpi", default=True, description="enable mpi support")
-    variant("hdf5", default=True, description="Required to enable the hdf5 (default I/O) format")
-    variant("netcdf", default=False, description="Required to enable the ExodusII reader/writer.")
-    variant("pnetcdf", default=False, description="Enable pnetcdf (AKA parallel-netcdf) support")
-    variant("zoltan", default=False, description="Enable zoltan support")
-    variant("cgm", default=False, description="Enable common geometric module")
-    variant("metis", default=True, description="Enable metis link")
-    variant("parmetis", default=True, description="Enable parmetis link")
-    variant("irel", default=False, description="Enable irel interface")
-    variant("fbigeom", default=False, description="Enable fbigeom interface")
+    variant("mpi", default=True, description="Enable MPI parallelism support")
+    variant("hdf5", default=True, description="Enable the HDF5 (default I/O) format")
+    variant("netcdf", default=False, description="Enable the ExodusII reader/writer support")
+    variant("pnetcdf", default=False, description="Enable parallel-Netcdf library support")
+    variant("zoltan", default=True, description="Enable Zoltan partitioner support")
+    variant("eigen", default=True, description="Enable Eigen template library for linear algebra")
+    variant("cgm", default=False, description="Enable the Common Geometry Module")
+    variant("metis", default=False, description="Enable Metis partitioner")
+    variant("parmetis", default=False, description="Enable Parmetis partitioner")
+    variant("irel", default=False, description="Enable iRel interface")
+    variant("fbigeom", default=False, description="Enable FBiGeom interface")
     variant("coupler", default=True, description="Enable mbcoupler tool")
-    variant("dagmc", default=False, description="Enable dagmc tool")
+    variant("dagmc", default=False, description="Enable DagMC tool")
 
-    variant("debug", default=False, description="enable debug symbols")
+    variant("debug", default=False, description="Enable debug symbols in libraries")
     variant("shared", default=False, description="Enables the build of shared libraries")
-    variant("fortran", default=True, description="Enable Fortran support")
+    variant("fortran", default=False, description="Enable Fortran support")
 
     conflicts("+irel", when="~cgm")
     conflicts("+pnetcdf", when="~mpi")
@@ -80,6 +85,7 @@ class Moab(AutotoolsPackage):
     depends_on("cgm", when="+cgm")
     depends_on("metis", when="+metis")
     depends_on("parmetis", when="+parmetis")
+    depends_on("eigen", when="+eigen")
     # FIXME it seems that zoltan needs to be built without fortran
     depends_on("zoltan~fortran", when="+zoltan")
 
@@ -126,6 +132,8 @@ class Moab(AutotoolsPackage):
 
         options.append("--with-blas=%s" % spec["blas"].libs.ld_flags)
         options.append("--with-lapack=%s" % spec["lapack"].libs.ld_flags)
+        if "+eigen" in spec:
+            options.append("--with-eigen3=%s" % spec["eigen"].prefix.include.eigen3)
 
         if "+hdf5" in spec:
             options.append("--with-hdf5=%s" % spec["hdf5"].prefix)

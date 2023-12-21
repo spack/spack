@@ -50,7 +50,7 @@ class _3dtk(CMakePackage):
         "boost@:1.75+serialization+graph+regex+filesystem+system+thread+date_time+program_options"
     )
     depends_on("suite-sparse")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libpng")
     depends_on("eigen")
     depends_on("cgal", when="+cgal")

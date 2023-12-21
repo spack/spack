@@ -34,7 +34,7 @@ class Openjpeg(CMakePackage):
 
     variant("codec", default=False, description="Build the CODEC executables")
 
-    depends_on("zlib", when="+codec")
+    depends_on("zlib-api", when="+codec")
     depends_on("libpng", when="+codec")
     depends_on("libtiff", when="+codec")
     depends_on("lcms", when="+codec")
@@ -46,7 +46,7 @@ class Openjpeg(CMakePackage):
 
     def url_for_version(self, version):
         if version >= Version("2.1.1"):
-            return super(Openjpeg, self).url_for_version(version)
+            return super().url_for_version(version)
 
         # Before version 2.2.0, release tarballs of the versions like x.y.0
         # did not have the ".0" in their names:

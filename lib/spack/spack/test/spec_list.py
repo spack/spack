@@ -10,7 +10,7 @@ from spack.spec import Spec
 from spack.spec_list import SpecList
 
 
-class TestSpecList(object):
+class TestSpecList:
     default_input = ["mpileaks", "$mpis", {"matrix": [["hypre"], ["$gccs", "$clangs"]]}, "libelf"]
 
     default_reference = {

@@ -16,7 +16,7 @@ class Tabix(MakefilePackage):
 
     depends_on("perl", type=("build", "run"))
     depends_on("python", type=("build", "run"))
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

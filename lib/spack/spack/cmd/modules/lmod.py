@@ -30,7 +30,7 @@ def add_command(parser, command_dict):
 
 
 def setdefault(module_type, specs, args):
-    """Set the default module file, when multiple are present"""
+    """set the default module file, when multiple are present"""
     # For details on the underlying mechanism see:
     #
     # https://lmod.readthedocs.io/en/latest/060_locating.html#marking-a-version-as-default

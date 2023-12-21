@@ -153,6 +153,25 @@ class CDash(Reporter):
             elif cdash_phase:
                 report_data[cdash_phase]["loglines"].append(xml.sax.saxutils.escape(line))
 
+        # something went wrong pre-cdash "configure" phase b/c we have an exception and only
+        # "update" was encounterd.
+        # dump the report in the configure line so teams can see what the issue is
+        if len(phases_encountered) == 1 and package["exception"]:
+            # TODO this mapping is not ideal since these are pre-configure errors
+            # we need to determine if a more appropriate cdash phase can be utilized
+            # for now we will add a message to the log explaining this
+            cdash_phase = "configure"
+            phases_encountered.append(cdash_phase)
+
+            log_message = (
+                "Pre-configure errors occured in Spack's process that terminated the "
+                "build process prematurely.\nSpack output::\n{0}".format(
+                    xml.sax.saxutils.escape(package["exception"])
+                )
+            )
+
+            report_data[cdash_phase]["loglines"].append(log_message)
+
         # Move the build phase to the front of the list if it occurred.
         # This supports older versions of CDash that expect this phase
         # to be reported before all others.

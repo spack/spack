@@ -29,7 +29,7 @@ def add_o3_to_build_system_cflags(pkg, name, flags):
 
 
 @pytest.mark.usefixtures("config", "mock_packages")
-class TestFlagHandlers(object):
+class TestFlagHandlers:
     def test_no_build_system_flags(self, temp_env):
         # Test that both autotools and cmake work getting no build_system flags
         s1 = spack.spec.Spec("cmake-client").concretized()
@@ -121,7 +121,6 @@ class TestFlagHandlers(object):
             "-DCMAKE_EXE_LINKER_FLAGS=-mthreads",
             "-DCMAKE_MODULE_LINKER_FLAGS=-mthreads",
             "-DCMAKE_SHARED_LINKER_FLAGS=-mthreads",
-            "-DCMAKE_STATIC_LINKER_FLAGS=-mthreads",
         }
 
     def test_ld_libs_cmake(self, temp_env):

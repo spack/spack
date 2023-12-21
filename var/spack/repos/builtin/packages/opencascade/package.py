@@ -136,7 +136,7 @@ class Opencascade(CMakePackage):
     depends_on("tk", when="+tk")
     depends_on("gl")
 
-    conflicts("vtk@9.2", when="@:7.7.0 +vtk")
+    conflicts("^vtk@9.2", when="@:7.7.0 +vtk")
 
     def url_for_version(self, version):
         url = (
@@ -182,7 +182,7 @@ class Opencascade(CMakePackage):
         args.append("-DBUILD_DOC_Overview=OFF")
 
         # Always build the foundation classes
-        args.append(self.define("BUILD_MODULE_FoundationClasses", true))
+        args.append(self.define("BUILD_MODULE_FoundationClasses", True))
         # Specify which modules to build
         for module in [
             "ApplicationFramework",

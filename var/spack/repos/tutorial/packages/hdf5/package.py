@@ -104,7 +104,7 @@ class Hdf5(CMakePackage):
     if sys.platform != "darwin":
         depends_on("numactl", when="+mpi+fortran")
     depends_on("szip", when="+szip")
-    depends_on("zlib@1.1.2:")
+    depends_on("zlib-api")
 
     # The compiler wrappers (h5cc, h5fc, etc.) run 'pkg-config'.
     depends_on("pkgconfig", type="run")

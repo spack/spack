@@ -46,6 +46,7 @@ class AutotoolsPackage(spack.package_base.PackageBase):
         depends_on("gnuconfig", type="build", when="target=ppc64le:")
         depends_on("gnuconfig", type="build", when="target=aarch64:")
         depends_on("gnuconfig", type="build", when="target=riscv64:")
+        depends_on("gmake", type="build")
         conflicts("platform=windows")
 
     def flags_to_build_system_args(self, flags):
@@ -55,7 +56,8 @@ class AutotoolsPackage(spack.package_base.PackageBase):
         setattr(self, "configure_flag_args", [])
         for flag, values in flags.items():
             if values:
-                values_str = "{0}={1}".format(flag.upper(), " ".join(values))
+                var_name = "LIBS" if flag == "ldlibs" else flag.upper()
+                values_str = "{0}={1}".format(var_name, " ".join(values))
                 self.configure_flag_args.append(values_str)
         # Spack's fflags are meant for both F77 and FC, therefore we
         # additionaly set FCFLAGS if required.

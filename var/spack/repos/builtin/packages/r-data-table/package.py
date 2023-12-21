@@ -38,4 +38,4 @@ class RDataTable(RPackage):
     version("1.9.6", sha256="6f74c349c1731823aef6899edcf18418454167d04eba983e3a6fe17ee9fd236e")
 
     depends_on("r@3.1.0:", type=("build", "run"))
-    depends_on("zlib")
+    depends_on("zlib-api")

@@ -30,8 +30,11 @@ class Gromacs(CMakePackage, CudaPackage):
 
     version("main", branch="main")
     version("master", branch="main", deprecated=True)
+    version("2023.3", sha256="4ec8f8d0c7af76b13f8fd16db8e2c120e749de439ae9554d9f653f812d78d1cb")
+    version("2023.2", sha256="bce1480727e4b2bb900413b75d99a3266f3507877da4f5b2d491df798f9fcdae")
     version("2023.1", sha256="eef2bb4a6cb6314cf9da47f26df2a0d27af4bf7b3099723d43601073ab0a42f4")
     version("2023", sha256="ac92c6da72fbbcca414fd8a8d979e56ecf17c4c1cdabed2da5cfb4e7277b7ba8")
+    version("2022.6", sha256="75d277138475679dd3e334e384a71516570cde767310476687f2a5b72333ea41")
     version("2022.5", sha256="083cc3c424bb93ffe86c12f952e3e5b4e6c9f6520de5338761f24b75e018c223")
     version("2022.4", sha256="c511be602ff29402065b50906841def98752639b92a95f1b0a1060d9b5e27297")
     version("2022.3", sha256="14cfb130ddaf8f759a3af643c04f5a0d0d32b09bc3448b16afa5b617f5e35dae")
@@ -87,9 +90,26 @@ class Gromacs(CMakePackage, CudaPackage):
         default=False,
         description="Produces a double precision version of the executables",
     )
-    variant("cufftmp", default=False, when="+cuda+mpi", description="Enable Multi GPU FFT support")
+    variant(
+        "cufftmp",
+        default=False,
+        when="@2022: +cuda+mpi",
+        description="Enable multi-GPU FFT support with cuFFTMp",
+    )
+    variant(
+        "heffte",
+        default=False,
+        when="@2021: +sycl+mpi",
+        description="Enable multi-GPU FFT support with HeFFTe",
+    )
     variant("opencl", default=False, description="Enable OpenCL support")
-    variant("sycl", default=False, description="Enable SYCL support")
+    variant("sycl", default=False, when="@2021:", description="Enable SYCL support")
+    variant(
+        "intel-data-center-gpu-max",
+        default=False,
+        when="@2022: +sycl",
+        description="Enable support for Intel Data Center GPU Max",
+    )
     variant("nosuffix", default=False, description="Disable default suffixes")
     variant(
         "build_type",
@@ -104,6 +124,18 @@ class Gromacs(CMakePackage, CudaPackage):
             "RelWithAssert",
             "Profile",
         ),
+    )
+    variant(
+        "nblib",
+        default=True,
+        when="@2021:",
+        description="Build and install the NB-LIB C++ API for GROMACS",
+    )
+    variant(
+        "gmxapi",
+        default=True,
+        when="@2019:",
+        description="Build and install the gmxlib python API for GROMACS",
     )
     variant(
         "mdrun_only",
@@ -139,8 +171,6 @@ class Gromacs(CMakePackage, CudaPackage):
         msg="GMX_RELAXED_DOUBLE_PRECISION option removed for GROMACS 2021.",
     )
     variant("hwloc", default=True, description="Use the hwloc portable hardware locality library")
-    variant("lapack", default=False, description="Enables an external LAPACK library")
-    variant("blas", default=False, description="Enables an external BLAS library")
     variant("cycle_subcounters", default=False, description="Enables cycle subcounters")
 
     variant("cp2k", default=False, description="CP2K QM/MM interface integration")
@@ -148,69 +178,62 @@ class Gromacs(CMakePackage, CudaPackage):
         "+cp2k", when="@:2021", msg="CP2K QM/MM support have been introduced in GROMACS 2022"
     )
     conflicts("+shared", when="+cp2k", msg="Enabling CP2K requires static build")
-    conflicts(
-        "~lapack",
-        when="+cp2k",
-        msg="GROMACS and CP2K should use the same lapack, please disable bundled lapack",
-    )
-    conflicts(
-        "~blas",
-        when="+cp2k",
-        msg="GROMACS and CP2K should use the same blas, please disable bundled blas",
-    )
     conflicts("%intel", when="@2022:", msg="GROMACS %intel support was removed in version 2022")
     conflicts("%gcc@:8", when="@2023:", msg="GROMACS requires GCC 9 or later since version 2023")
     conflicts(
-        "intel-oneapi-mkl@:2021.2",
+        "^intel-oneapi-mkl@:2021.2",
         when="@2023:",
         msg="GROMACS requires oneMKL 2021.3 or later since version 2023",
     )
 
     depends_on("mpi", when="+mpi")
 
-    # Plumed 2.8.2 needs Gromacs 2022.5 2021.7, 2020.7, 2019.6
-    # Plumed 2.8.1 needs Gromacs 2022.3 2021.6, 2020.7, 2019.6
-    # Plumed 2.8.0 needs Gromacs        2021.4, 2020.6, 2019.6
-    # Plumed 2.7.6 needs Gromacs        2021.5, 2020.6, 2019.6
-    # Plumed 2.7.5 needs Gromacs        2021.5, 2020.6, 2019.6
-    # Plumed 2.7.4 needs Gromacs        2021.4, 2020.6, 2019.6
-    # Plumed 2.7.3 needs Gromacs        2021.4, 2020.6, 2019.6
-    # Plumed 2.7.2 needs Gromacs        2021,   2020.6, 2019.6
-    # Plumed 2.7.1 needs Gromacs        2021,   2020.5, 2019.6
-    # Plumed 2.7.0 needs Gromacs                2020.4, 2019.6
-    # Plumed 2.6.6 needs Gromacs                2020.4, 2019.6, 2018.8
-    # Plumed 2.6.5 needs Gromacs                2020.4, 2019.6, 2018.8
-    # Plumed 2.6.4 needs Gromacs                2020.4, 2019.6, 2018.8
-    # Plumed 2.6.3 needs Gromacs                2020.4, 2019.6, 2018.8
-    # Plumed 2.6.2 needs Gromacs                2020.4, 2019.6, 2018.8
-    # Plumed 2.6.1 needs Gromacs                2020.2, 2019.6, 2018.8
-    # Plumed 2.6.0 needs Gromacs                        2019.4, 2018.8
-    # Plumed 2.5.7 needs Gromacs                        2019.4, 2018.8, 2016.6
-    # Plumed 2.5.6 needs Gromacs                        2019.4, 2018.8, 2016.6
-    # Plumed 2.5.5 needs Gromacs                        2019.4, 2018.8, 2016.6
-    # Plumed 2.5.4 needs Gromacs                        2019.4, 2018.8, 2016.6
-    # Plumed 2.5.3 needs Gromacs                        2019.4, 2018.8, 2016.6
-    # Plumed 2.5.2 needs Gromacs                        2019.2, 2018.6, 2016.6
-    # Plumed 2.5.1 needs Gromacs                                2018.6, 2016.6
-    # Plumed 2.5.0 needs Gromacs                                2018.4, 2016.5
+    # Plumed 2.9.0 needs Gromacs 2023,  2022.5, 2021.7, 2020.7
+    # Plumed 2.8.3 needs Gromacs        2022.5, 2021.7, 2020.7, 2019.6
+    # Plumed 2.8.2 needs Gromacs        2022.5, 2021.7, 2020.7, 2019.6
+    # Plumed 2.8.1 needs Gromacs        2022.3, 2021.6, 2020.7, 2019.6
+    # Plumed 2.8.0 needs Gromacs                2021.4, 2020.6, 2019.6
+    # Plumed 2.7.6 needs Gromacs                2021.5, 2020.6, 2019.6
+    # Plumed 2.7.5 needs Gromacs                2021.5, 2020.6, 2019.6
+    # Plumed 2.7.4 needs Gromacs                2021.4, 2020.6, 2019.6
+    # Plumed 2.7.3 needs Gromacs                2021.4, 2020.6, 2019.6
+    # Plumed 2.7.2 needs Gromacs                2021,   2020.6, 2019.6
+    # Plumed 2.7.1 needs Gromacs                2021,   2020.5, 2019.6
+    # Plumed 2.7.0 needs Gromacs                        2020.4, 2019.6
+    # Plumed 2.6.6 needs Gromacs                        2020.4, 2019.6, 2018.8
+    # Plumed 2.6.5 needs Gromacs                        2020.4, 2019.6, 2018.8
+    # Plumed 2.6.4 needs Gromacs                        2020.4, 2019.6, 2018.8
+    # Plumed 2.6.3 needs Gromacs                        2020.4, 2019.6, 2018.8
+    # Plumed 2.6.2 needs Gromacs                        2020.4, 2019.6, 2018.8
+    # Plumed 2.6.1 needs Gromacs                        2020.2, 2019.6, 2018.8
+    # Plumed 2.6.0 needs Gromacs                                2019.4, 2018.8
+    # Plumed 2.5.7 needs Gromacs                                2019.4, 2018.8, 2016.6
+    # Plumed 2.5.6 needs Gromacs                                2019.4, 2018.8, 2016.6
+    # Plumed 2.5.5 needs Gromacs                                2019.4, 2018.8, 2016.6
+    # Plumed 2.5.4 needs Gromacs                                2019.4, 2018.8, 2016.6
+    # Plumed 2.5.3 needs Gromacs                                2019.4, 2018.8, 2016.6
+    # Plumed 2.5.2 needs Gromacs                                2019.2, 2018.6, 2016.6
+    # Plumed 2.5.1 needs Gromacs                                        2018.6, 2016.6
+    # Plumed 2.5.0 needs Gromacs                                        2018.4, 2016.5
 
     # Above dependencies can be verified, and new versions added, by going to
-    # https://github.com/plumed/plumed2/tree/v2.7.1/patches
+    # https://github.com/plumed/plumed2/tree/v2.9.0/patches
     # and switching tags.
     plumed_patches = {
-        "2022.5": "2.8.2",
+        "2023": "2.9.0",
+        "2022.5": "2.8.2:2.9.0",
         "2022.3": "2.8.1",
-        "2021.7": "2.8.2",
+        "2021.7": "2.8.2:2.9.0",
         "2021.6": "2.8.1",
         "2021.5": "2.7.5:2.7.6",
         "2021.4": "2.7.3:2.8.0",
         "2021": "2.7.1:2.7.2",
-        "2020.7": "2.8.1:2.8.2",
+        "2020.7": "2.8.1:2.9.0",
         "2020.6": "2.7.2:2.8.0",
         "2020.5": "2.7.1",
         "2020.4": "2.6.2:2.7.0",
         "2020.2": "2.6.1",
-        "2019.6": "2.6.1:2.8.2",
+        "2019.6": "2.6.1:2.8.3",
         "2019.4": "2.5.3:2.6.0",
         "2019.2": "2.5.2",
         "2018.8": "2.5.3:2.6",
@@ -249,8 +272,8 @@ class Gromacs(CMakePackage, CudaPackage):
     depends_on("cmake@3.16.0:3", type="build", when="%fj")
     depends_on("cuda", when="+cuda")
     depends_on("sycl", when="+sycl")
-    depends_on("lapack", when="+lapack")
-    depends_on("blas", when="+blas")
+    depends_on("lapack")
+    depends_on("blas")
     depends_on("gcc", when="%oneapi ~intel_provided_gcc")
     depends_on("gcc", when="%intel ~intel_provided_gcc")
 
@@ -258,9 +281,9 @@ class Gromacs(CMakePackage, CudaPackage):
     depends_on("hwloc", when="+hwloc@2019:")
 
     depends_on("cp2k@8.1:", when="+cp2k")
-    depends_on("dbcsr", when="+cp2k")
 
     depends_on("nvhpc", when="+cufftmp")
+    depends_on("heffte", when="+heffte")
 
     requires(
         "%intel",
@@ -270,8 +293,19 @@ class Gromacs(CMakePackage, CudaPackage):
         msg="Only attempt to find gcc libs for Intel compiler if Intel compiler is used.",
     )
 
+    # If the Intel suite is used for Lapack, it must be used for fftw and vice-versa
+    for _intel_pkg in INTEL_MATH_LIBRARIES:
+        requires(f"^[virtuals=fftw-api] {_intel_pkg}", when=f"^[virtuals=lapack]   {_intel_pkg}")
+        requires(f"^[virtuals=lapack]   {_intel_pkg}", when=f"^[virtuals=fftw-api] {_intel_pkg}")
+
     patch("gmxDetectCpu-cmake-3.14.patch", when="@2018:2019.3^cmake@3.14.0:")
     patch("gmxDetectSimd-cmake-3.14.patch", when="@5.0:2017^cmake@3.14.0:")
+    # 2021.2 will always try to build tests (see https://gromacs.bioexcel.eu/t/compilation-failure-for-gromacs-2021-1-and-2021-2-with-cmake-3-20-2/2129)
+    patch(
+        "https://gitlab.com/gromacs/gromacs/-/commit/10262892e11a87fda0f59e633c89ed5ab1100509.diff",
+        sha256="2c30d00404b76421c13866cc42afa5e63276f7926c862838751b158df8727b1b",
+        when="@2021.1:2021.2",
+    )
 
     filter_compiler_wrappers(
         "*.cmake", relative_root=os.path.join("share", "cmake", "gromacs_mpi")
@@ -493,21 +527,13 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         if "+cuda" in self.spec:
             options.append("-DCUDA_TOOLKIT_ROOT_DIR:STRING=" + self.spec["cuda"].prefix)
 
-        if "+lapack" in self.spec:
-            options.append("-DGMX_EXTERNAL_LAPACK:BOOL=ON")
-            if self.spec["lapack"].libs:
-                options.append(
-                    "-DGMX_LAPACK_USER={0}".format(self.spec["lapack"].libs.joined(";"))
-                )
-        else:
-            options.append("-DGMX_EXTERNAL_LAPACK:BOOL=OFF")
+        options.append("-DGMX_EXTERNAL_LAPACK:BOOL=ON")
+        if self.spec["lapack"].libs:
+            options.append("-DGMX_LAPACK_USER={0}".format(self.spec["lapack"].libs.joined(";")))
 
-        if "+blas" in self.spec:
-            options.append("-DGMX_EXTERNAL_BLAS:BOOL=ON")
-            if self.spec["blas"].libs:
-                options.append("-DGMX_BLAS_USER={0}".format(self.spec["blas"].libs.joined(";")))
-        else:
-            options.append("-DGMX_EXTERNAL_BLAS:BOOL=OFF")
+        options.append("-DGMX_EXTERNAL_BLAS:BOOL=ON")
+        if self.spec["blas"].libs:
+            options.append("-DGMX_BLAS_USER={0}".format(self.spec["blas"].libs.joined(";")))
 
         if "+cp2k" in self.spec:
             options.append("-DGMX_CP2K:BOOL=ON")
@@ -519,6 +545,19 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                 f'-DcuFFTMp_ROOT={self.spec["nvhpc"].prefix}/Linux_{self.spec.target.family}'
                 + f'/{self.spec["nvhpc"].version}/math_libs'
             )
+
+        if "+heffte" in self.spec:
+            options.append("-DGMX_USE_HEFFTE=on")
+            options.append(f'-DHeffte_ROOT={self.spec["heffte"].prefix}')
+
+        if "+intel-data-center-gpu-max" in self.spec:
+            options.append("-DGMX_GPU_NB_CLUSTER_SIZE=8")
+            options.append("-DGMX_GPU_NB_NUM_CLUSTER_PER_CELL_X=1")
+
+        if "~nblib" in self.spec:
+            options.append("-DGMX_INSTALL_NBLIB_API=OFF")
+        if "~gmxapi" in self.spec:
+            options.append("-DGMXAPI=OFF")
 
         # Activate SIMD based on properties of the target
         target = self.spec.target
@@ -603,11 +642,11 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                 "-DGMX_OPENMP_MAX_THREADS=%s" % self.spec.variants["openmp_max_threads"].value
             )
 
-        if "^mkl" in self.spec:
+        if self.spec["lapack"].name in INTEL_MATH_LIBRARIES:
             # fftw-api@3 is provided by intel-mkl or intel-parllel-studio
             # we use the mkl interface of gromacs
             options.append("-DGMX_FFT_LIBRARY=mkl")
-            if not self.spec["mkl"].satisfies("@2023:"):
+            if self.spec.satisfies("@:2022"):
                 options.append(
                     "-DMKL_INCLUDE_DIR={0}".format(self.spec["mkl"].headers.directories[0])
                 )

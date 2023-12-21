@@ -344,6 +344,8 @@ class Libpressio(CMakePackage, CudaPackage):
             args.append("-DLIBPRESSIO_HAS_QoZ=ON")
         if "+cusz" in self.spec:
             args.append("-DLIBPRESSIO_HAS_CUSZ=ON")
+        if self.spec.satisfies("+cusz +cuda"):
+            args.append("-DCMAKE_EXE_LINKER_FLAGS=-Wl,--allow-shlib-undefined")
         if "+core" in self.spec:
             args.append("-DLIBPRESSIO_BUILD_MODE=FULL")
         else:

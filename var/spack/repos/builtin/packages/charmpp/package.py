@@ -187,9 +187,7 @@ class Charmpp(Package):
             ("linux", "ppc", "pami"): "pami-linux-ppc64le",
             ("linux", "ppc", "verbs"): "verbs-linux-ppc64le",
             ("linux", "arm", "netlrts"): "netlrts-linux-arm7",
-            ("linux", "arm", "multicore"): "multicore-arm7",
             ("linux", "aarch64", "netlrts"): "netlrts-linux-arm8",
-            ("linux", "aarch64", "multicore"): "multicore-arm8",
             ("win", "x86_64", "mpi"): "mpi-win-x86_64",
             ("win", "x86_64", "multicore"): "multicore-win-x86_64",
             ("win", "x86_64", "netlrts"): "netlrts-win-x86_64",
@@ -203,10 +201,22 @@ class Charmpp(Package):
             versions.update({("linux", "i386", "multicore"): "multicore-linux"})
             versions.update({("linux", "i386", "netlrts"): "netlrts-linux"})
             versions.update({("linux", "i386", "uth"): "uth-linux"})
+            versions.update(
+                {
+                    ("linux", "arm", "multicore"): "multicore-arm7",
+                    ("linux", "aarch64", "multicore"): "multicore-arm8",
+                }
+            )
         else:
             versions.update({("linux", "i386", "mpi"): "mpi-linux-i386"})
             versions.update({("linux", "i386", "multicore"): "multicore-linux-i386"})
             versions.update({("linux", "i386", "netlrts"): "netlrts-linux-i386"})
+            versions.update(
+                {
+                    ("linux", "arm", "multicore"): "multicore-linux-arm7",
+                    ("linux", "aarch64", "multicore"): "multicore-linux-arm8",
+                }
+            )
 
         if (plat, mach, comm) not in versions:
             raise InstallError(

@@ -50,7 +50,9 @@ def create_manifest_entry(path: str) -> Dict[str, Any]:
 
 def write_manifest(spec):
     manifest_file = os.path.join(
-        spec.prefix, spack.store.layout.metadata_dir, spack.store.layout.manifest_file_name
+        spec.prefix,
+        spack.store.STORE.layout.metadata_dir,
+        spack.store.STORE.layout.manifest_file_name,
     )
 
     if not os.path.exists(manifest_file):
@@ -107,14 +109,14 @@ def check_file_manifest(filename):
     dirname = os.path.dirname(filename)
 
     results = VerificationResults()
-    while spack.store.layout.metadata_dir not in os.listdir(dirname):
+    while spack.store.STORE.layout.metadata_dir not in os.listdir(dirname):
         if dirname == os.path.sep:
             results.add_error(filename, "not owned by any package")
             return results
         dirname = os.path.dirname(dirname)
 
     manifest_file = os.path.join(
-        dirname, spack.store.layout.metadata_dir, spack.store.layout.manifest_file_name
+        dirname, spack.store.STORE.layout.metadata_dir, spack.store.STORE.layout.manifest_file_name
     )
 
     if not os.path.exists(manifest_file):
@@ -140,7 +142,7 @@ def check_spec_manifest(spec):
 
     results = VerificationResults()
     manifest_file = os.path.join(
-        prefix, spack.store.layout.metadata_dir, spack.store.layout.manifest_file_name
+        prefix, spack.store.STORE.layout.metadata_dir, spack.store.STORE.layout.manifest_file_name
     )
 
     if not os.path.exists(manifest_file):
@@ -177,7 +179,7 @@ def check_spec_manifest(spec):
     return results
 
 
-class VerificationResults(object):
+class VerificationResults:
     def __init__(self):
         self.errors = {}
 

@@ -16,7 +16,6 @@ class PyAwkward(PythonPackage):
     maintainers("vvolkl")
 
     version("main", branch="main")
-    version("master", branch="main", deprecated=True)
     version("2.1.1", sha256="fda8e1634161b8b46b151c074ff0fc631fc0feaec2ec277c4b40a2095110b0dd")
     version("2.1.0", sha256="73f7a76a1fb43e2557befee54b1381f3e6d90636983cdc54da1c2bcb9ad4c1a8")
     version("2.0.10", sha256="8dae67afe50f5cf1677b4062f9b29dc7e6893420d0af5a0649364b117a3502af")

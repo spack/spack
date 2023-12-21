@@ -16,7 +16,7 @@ class Linux(Platform):
     priority = 90
 
     def __init__(self):
-        super(Linux, self).__init__("linux")
+        super().__init__("linux")
 
         for name in archspec.cpu.TARGETS:
             self.add_target(name, spack.target.Target(name))

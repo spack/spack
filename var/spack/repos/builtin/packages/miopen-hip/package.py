@@ -14,12 +14,15 @@ class MiopenHip(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/MIOpen"
     git = "https://github.com/ROCmSoftwarePlatform/MIOpen.git"
-    url = "https://github.com/ROCmSoftwarePlatform/MIOpen/archive/rocm-5.4.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/MIOpen/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["libMIOpen"]
-
+    version("5.6.1", sha256="ff627d68ed9e52433a3c808b5d3ff179a398b77ce81b00cfea7b2c4da5162c6c")
+    version("5.6.0", sha256="d620ddab5b488bdf81242654fefa337c6b71dc410c2ff26d30a4ee86a8d22d11")
+    version("5.5.1", sha256="2cd75071b8ee876c69a94f028b6c8a9346d6d2fde7d4b64e6d635f3b6c994262")
+    version("5.5.0", sha256="791087242551669e546225e36123c21663f0dad14dbcfd6d0ce0e7bad0ab0de1")
     version("5.4.3", sha256="37ffe2ed3d7942da8ea2f6bdb85c7a2f58e3ccd31767db158a322769d3604efd")
     version("5.4.0", sha256="b4153791f9eeee4cbc5534bc6ad8b32c0947bcd38e08b77ebe144065a4fa5456")
     version("5.3.3", sha256="7efc98215d23a2caaf212378c37e9a6484f54a4ed3e9660719286e4f287d3715")
@@ -100,13 +103,6 @@ class MiopenHip(CMakePackage):
         deprecated=True,
     )
 
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
-
     depends_on("cmake@3.5:", type="build")
     depends_on("pkgconfig", type="build")
 
@@ -118,7 +114,7 @@ class MiopenHip(CMakePackage):
     depends_on("bzip2")
     depends_on("sqlite")
     depends_on("half")
-    depends_on("zlib", when="@3.9.0:")
+    depends_on("zlib-api", when="@3.9.0:")
 
     patch("0001-Add-rocm-path-and-rocm-device-lib-path-flags.patch", when="@3.9.0:5.0.2")
     patch("miopen-hip-include-nlohmann-include-directory.patch", when="@5.4.0:")
@@ -147,6 +143,10 @@ class MiopenHip(CMakePackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
@@ -156,13 +156,16 @@ class MiopenHip(CMakePackage):
     for ver in ["5.1.0", "5.1.3", "5.2.0", "5.2.1", "5.2.3", "5.3.0", "5.3.3"]:
         depends_on("mlirmiopen@" + ver, when="@" + ver)
 
-    for ver in ["5.4.0", "5.4.3"]:
-        depends_on("rocmlir@" + ver, when="@" + ver)
+    for ver in ["5.5.1", "5.6.0", "5.6.1"]:
         depends_on("nlohmann-json", type="link")
+        depends_on("composable-kernel@" + ver, when="@" + ver)
+    for ver in ["5.4.0", "5.4.3", "5.5.0"]:
+        depends_on("nlohmann-json", type="link")
+        depends_on("rocmlir@" + ver, when="@" + ver)
 
     def setup_build_environment(self, env):
         if "@3.9.0:" in self.spec:
-            lib_dir = self.spec["zlib"].libs.directories[0]
+            lib_dir = self.spec["zlib-api"].libs.directories[0]
             env.prepend_path("LIBRARY_PATH", lib_dir)
 
     def get_bitcode_dir(self):
@@ -203,11 +206,19 @@ class MiopenHip(CMakePackage):
         if self.spec.satisfies("@5.1.0:5.3"):
             mlir_inc = spec["mlirmiopen"].prefix.include
             args.append(self.define("CMAKE_CXX_FLAGS", "-I{0}".format(mlir_inc)))
-        # TODO: need to turn on composable-kernel to on at a later date
-        # requires a new recipe for composable-kernel
         if self.spec.satisfies("@5.4.0:"):
-            args.append(self.define("MIOPEN_USE_COMPOSABLEKERNEL", "OFF"))
             args.append(
                 "-DNLOHMANN_JSON_INCLUDE={0}".format(self.spec["nlohmann-json"].prefix.include)
             )
+        if self.spec.satisfies("@5.4.0:5.5.0"):
+            args.append(self.define("MIOPEN_USE_COMPOSABLEKERNEL", "OFF"))
+            args.append(self.define("MIOPEN_USE_MLIR", "ON"))
+            args.append(self.define("MIOPEN_ENABLE_AI_KERNEL_TUNING", "OFF"))
+        if self.spec.satisfies("@5.5.1:"):
+            args.append(self.define("MIOPEN_USE_COMPOSABLEKERNEL", "ON"))
+            args.append(self.define("MIOPEN_ENABLE_AI_KERNEL_TUNING", "OFF"))
+            args.append(self.define("MIOPEN_USE_MLIR", "OFF"))
+        args.append(
+            "-DNLOHMANN_JSON_INCLUDE={0}".format(self.spec["nlohmann-json"].prefix.include)
+        )
         return args

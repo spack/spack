@@ -28,6 +28,12 @@ properties = {
             "unify": {
                 "oneOf": [{"type": "boolean"}, {"type": "string", "enum": ["when_possible"]}]
             },
+            "duplicates": {
+                "type": "object",
+                "properties": {
+                    "strategy": {"type": "string", "enum": ["none", "minimal", "full"]}
+                },
+            },
         },
     }
 }

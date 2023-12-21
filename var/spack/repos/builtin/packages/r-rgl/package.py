@@ -45,7 +45,7 @@ class RRgl(RPackage):
     depends_on("libx11")
     depends_on("gl")
     depends_on("glu")
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
     depends_on("libpng@1.2.9:", type="link")
     depends_on("freetype", type="link")
     depends_on("pandoc@1.14:", type="build")

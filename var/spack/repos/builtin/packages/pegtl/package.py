@@ -19,6 +19,7 @@ class Pegtl(CMakePackage):
     git = "https://github.com/taocpp/PEGTL.git"
 
     version("master", branch="master")
+    version("3.2.7", sha256="444c3c33686c6b2d8d45ad03af5041b7bc910ef44ac10216237d8e3e8d6e7025")
     version("3.2.0", sha256="91aa6529ef9e6b57368e7b5b1f04a3bd26a39419d30e35a3c5c66ef073926b56")
     version("2.8.3", sha256="370afd0fbe6d73c448a33c10fbe4a7254f92077f5a217317d0a32a9231293015")
     version("2.1.4", sha256="d990dccc07b4d9ba548326d11c5c5e34fa88b34fe113cb5377da03dda29f23f2")

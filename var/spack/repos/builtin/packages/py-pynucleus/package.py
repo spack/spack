@@ -19,8 +19,12 @@ class PyPynucleus(PythonPackage):
     for ref in refs:
         version(ref, branch=ref)
 
+    variant("examples", default=True, description="Install examples")
+    variant("tests", default=True, description="Install tests")
+
+    depends_on("python@3.10:", type=("build", "run"))
     depends_on("py-mpi4py@2.0.0:", type=("build", "link", "run"))
-    depends_on("py-cython", type=("build", "run"))
+    depends_on("py-cython@0.29.32:", type=("build", "run"))
     depends_on("py-numpy", type=("build", "link", "run"))
     depends_on("py-scipy", type=("build", "link", "run"))
     depends_on("metis", type=("build", "link", "run"))
@@ -35,8 +39,8 @@ class PyPynucleus(PythonPackage):
     depends_on("py-meshpy", type=("build", "run"))
     depends_on("py-pytools", type=("build", "run"))
     depends_on("py-psutil", type="run")
-
-    variant("examples", default=True, description="Install examples")
+    depends_on("py-pytest", when="+tests", type="run")
+    depends_on("py-pytest-html", when="+tests", type="run")
 
     import_modules = [
         "PyNucleus",
@@ -47,6 +51,9 @@ class PyPynucleus(PythonPackage):
         "PyNucleus-multilevelSolver",
         "PyNucleus-nl",
     ]
+
+    def setup_build_environment(self, env):
+        env.set("PYNUCLEUS_BUILD_PARALLELISM", make_jobs)
 
     @run_before("install")
     def install_python(self):
@@ -60,5 +67,9 @@ class PyPynucleus(PythonPackage):
     def install_additional_files(self):
         spec = self.spec
         prefix = self.prefix
-        if "+examples" in spec:
+        if "+examples" in spec or "+tests" in spec:
             install_tree("drivers", prefix.drivers)
+        if "+examples" in spec:
+            install_tree("examples", prefix.examples)
+        if "+tests" in spec:
+            install_tree("tests", prefix.tests)

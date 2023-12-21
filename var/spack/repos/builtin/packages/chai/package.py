@@ -21,18 +21,43 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     version("develop", branch="develop", submodules=False)
     version("main", branch="main", submodules=False)
-    version("2022.03.0", tag="v2022.03.0", submodules=False)
-    version("2.4.0", tag="v2.4.0", submodules=True)
-    version("2.3.0", tag="v2.3.0", submodules=True)
-    version("2.2.2", tag="v2.2.2", submodules=True)
-    version("2.2.1", tag="v2.2.1", submodules=True)
-    version("2.2.0", tag="v2.2.0", submodules=True)
-    version("2.1.1", tag="v2.1.1", submodules=True)
-    version("2.1.0", tag="v2.1.0", submodules=True)
-    version("2.0.0", tag="v2.0.0", submodules=True)
-    version("1.2.0", tag="v1.2.0", submodules=True)
-    version("1.1.0", tag="v1.1.0", submodules=True)
-    version("1.0", tag="v1.0", submodules=True)
+    version(
+        "2022.03.0",
+        tag="v2022.03.0",
+        commit="f0b809de1ac194376866b3ac0f5933d4146ec09e",
+        submodules=False,
+    )
+    version(
+        "2.4.0", tag="v2.4.0", commit="77d22da28187245a2c5454cf471c0c352bd98ad7", submodules=True
+    )
+    version(
+        "2.3.0", tag="v2.3.0", commit="42f3fbcc0b966227b40b4467dc919a4c24f07196", submodules=True
+    )
+    version(
+        "2.2.2", tag="v2.2.2", commit="56e75fc0f805b2746f3992af0c00c474513e3b24", submodules=True
+    )
+    version(
+        "2.2.1", tag="v2.2.1", commit="c912f583828ea5963850816e3e232cc45608ccf7", submodules=True
+    )
+    version(
+        "2.2.0", tag="v2.2.0", commit="18536c61a4817db6b3b3025f35e2dd3ae532330c", submodules=True
+    )
+    version(
+        "2.1.1", tag="v2.1.1", commit="496911e00d15c350560860f7964cd5fb5ab7f515", submodules=True
+    )
+    version(
+        "2.1.0", tag="v2.1.0", commit="fff02768068a64970b34760a1041585319edee87", submodules=True
+    )
+    version(
+        "2.0.0", tag="v2.0.0", commit="63139cf45443b1266950826b165e042c7679b557", submodules=True
+    )
+    version(
+        "1.2.0", tag="v1.2.0", commit="7bb5bc12e4508db45910d8e2b98444687da7ebf6", submodules=True
+    )
+    version(
+        "1.1.0", tag="v1.1.0", commit="907d5f40d653a73955387067799913397807adf3", submodules=True
+    )
+    version("1.0", tag="v1.0", commit="501a098ad879dc8deb4a74fcfe8c08c283a10627", submodules=True)
 
     variant("enable_pick", default=False, description="Enable pick method")
     variant("shared", default=True, description="Build Shared Libs")
@@ -52,6 +77,7 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("blt@0.4.1:", type="build", when="@2.4.0:")
     depends_on("blt@0.4.0:", type="build", when="@2.3.0")
     depends_on("blt@0.3.6:", type="build", when="@:2.2.2")
+    conflicts("^blt@:0.3.6", when="+rocm")
 
     depends_on("umpire")
     depends_on("umpire@2022.03.0:", when="@2022.03.0:")
@@ -114,14 +140,14 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     def initconfig_compiler_entries(self):
         spec = self.spec
-        entries = super(Chai, self).initconfig_compiler_entries()
+        entries = super().initconfig_compiler_entries()
         if "+rocm" in spec:
             entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
         return entries
 
     def initconfig_hardware_entries(self):
         spec = self.spec
-        entries = super(Chai, self).initconfig_hardware_entries()
+        entries = super().initconfig_hardware_entries()
 
         entries.append(cmake_cache_option("ENABLE_OPENMP", "+openmp" in spec))
 

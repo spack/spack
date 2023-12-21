@@ -109,11 +109,11 @@ class Atlas(Package):
 
         # Lapack resource to provide full lapack build. Note that
         # ATLAS only provides a few LAPACK routines natively.
-        options.append("--with-netlib-lapack-tarfile=%s" % self.stage[1].archive_file)
+        options.append(f"--with-netlib-lapack-tarfile={self.stage[1].archive_file}")
 
         with working_dir("spack-build", create=True):
             configure = Executable("../configure")
-            configure("--prefix=%s" % prefix, *options)
+            configure(f"--prefix={prefix}", *options)
             make()
             make("check")
             make("ptcheck")
@@ -147,7 +147,7 @@ class Atlas(Package):
         source_file = join_path(os.path.dirname(self.module.__file__), "test_cblas_dgemm.c")
         blessed_file = join_path(os.path.dirname(self.module.__file__), "test_cblas_dgemm.output")
 
-        include_flags = ["-I%s" % self.spec.prefix.include]
+        include_flags = [f"-I{self.spec.prefix.include}"]
         link_flags = self.spec["atlas"].libs.ld_flags.split()
 
         output = compile_c_and_execute(source_file, include_flags, link_flags)

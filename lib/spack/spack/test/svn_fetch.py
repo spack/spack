@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import sys
 
 import pytest
 
@@ -22,7 +21,7 @@ pytestmark = [
     pytest.mark.skipif(
         not which("svn") or not which("svnadmin"), reason="requires subversion to be installed"
     ),
-    pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows"),
+    pytest.mark.not_on_windows("does not run on windows"),
 ]
 
 
