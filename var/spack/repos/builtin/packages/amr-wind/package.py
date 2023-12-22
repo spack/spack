@@ -18,6 +18,7 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
     tags = ["ecp", "ecp-apps"]
 
     version("main", branch="main", submodules=True)
+    version("0.9.0", tag="v0.9.0", submodules=True)
 
     variant("hypre", default=True, description="Enable Hypre integration")
     variant("ascent", default=False, description="Enable Ascent integration")
@@ -43,6 +44,7 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hypre+umpire", when="+umpire")
     depends_on("hypre+sycl", when="+sycl")
     depends_on("hypre+gpu-aware-mpi", when="+gpu-aware-mpi")
+    depends_on("hypre@2.29.0:", when="@0.9.0:+hypre")
 
     for arch in CudaPackage.cuda_arch_values:
         depends_on("hypre+cuda cuda_arch=%s" % arch, when="+cuda+hypre cuda_arch=%s" % arch)
@@ -119,12 +121,11 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
 
         if "+sycl" in self.spec:
             cmake_options.append(self.define("AMR_WIND_ENABLE_SYCL", True))
-            # SYCL GPU backend only supported with Intel's oneAPI or DPC++ compilers
-            sycl_compatible_compilers = ["dpcpp", "icpx"]
-            if not (os.path.basename(self.compiler.cxx) in sycl_compatible_compilers):
-                raise InstallError(
-                    "AMReX's SYCL GPU Backend requires DPC++ (dpcpp)"
-                    + " or the oneAPI CXX (icpx) compiler."
-                )
+            requires(
+                "%dpcpp",
+                "%oneapi",
+                policy="one_of",
+                msg="AMReX's SYCL GPU Backend requires DPC++ (dpcpp) or the oneAPI CXX (icpx) compiler.",
+            )
 
         return args

@@ -48,6 +48,7 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
     variant("catalyst", default=False, description="Compile with Catalyst support")
     variant("shared", default=True, description="Build shared libraries")
     variant("fftw", default=False, description="Compile with FFTW support")
+    variant("fsi", default=False, description="Enable fluid-structure-interaction models")
     variant("boost", default=False, description="Enable Boost integration")
     variant("gpu-aware-mpi", default=False, description="gpu-aware-mpi")
     variant("wind-utils", default=False, description="Build wind-utils")
@@ -67,7 +68,9 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("mpi")
     depends_on("yaml-cpp@0.5.3:")
-    depends_on("trilinos@=13.4.1+exodus+zoltan+stk", when="@=2.0.0")
+    depends_on("openfast@4.0.0:+cxx+netcdf", when="+fsi")
+    depends_on("trilinos@13.4.1+exodus+zoltan+stk", when="@=2.0.0")
+    depends_on("hypre@2.29.0:", when="@2.0.0:+hypre")
     depends_on(
         "trilinos@13:"
         "+exodus+tpetra+zoltan+stk+boost"

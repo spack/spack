@@ -19,6 +19,7 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
     # Testing is currently always enabled, but should be optional in the future
     # to avoid cloning the mesh submodule
     version("master", branch="main", submodules=True)
+    version("1.0.0", tag="v1.0.0", submodules=True)
 
     variant("openfast", default=False, description="Enable OpenFAST integration")
     variant("hypre", default=True, description="Enable hypre solver")
@@ -53,6 +54,9 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("amr-wind+tiny_profile", when="+tiny_profile")
     depends_on("nalu-wind+gpu-aware-mpi", when="+gpu-aware-mpi")
     depends_on("amr-wind+gpu-aware-mpi", when="+gpu-aware-mpi")
+    depends_on("nalu-wind@2.0.0:", when="@1.0.0:")
+    depends_on("amr-wind@0.9.0:", when="@1.0.0:")
+    depends_on("tioga@1.0.0:", when="@1.0.0:")
 
     def cmake_args(self):
         spec = self.spec
@@ -71,10 +75,10 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
         if spec.satisfies("+rocm"):
             targets = self.spec.variants["amdgpu_target"].value
             args.append(self.define("EXAWIND_ENABLE_ROCM", True))
-            args.append("-DCMAKE_CXX_COMPILER={0}".format(self.spec["hip"].hipcc))
-            args.append("-DCMAKE_HIP_ARCHITECTURES=" + ";".join(str(x) for x in targets))
-            args.append("-DAMDGPU_TARGETS=" + ";".join(str(x) for x in targets))
-            args.append("-DGPU_TARGETS=" + ";".join(str(x) for x in targets))
+            args.append(self.define("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc))
+            args.append(self.define("CMAKE_HIP_ARCHITECTURES", ";".join(str(x) for x in targets)))
+            args.append(self.define("AMDGPU_TARGETS", ";".join(str(x) for x in targets)))
+            args.append(self.define("GPU_TARGETS", ";".join(str(x) for x in targets)))
 
         if spec.satisfies("^amr-wind+hdf5"):
             args.append(self.define("H5Z_ZFP_USE_STATIC_LIBS", True))
