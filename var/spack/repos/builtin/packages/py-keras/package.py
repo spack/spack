@@ -19,6 +19,7 @@ class PyKeras(PythonPackage):
     git = "https://github.com/keras-team/keras.git"
     pypi = "keras/keras-3.0.0.tar.gz"
 
+    version("3.0.2", sha256="526b6c053cdd880a33467c5bfd5c460a5bdc0c58869c2683171c2dec2ad3c2d0")
     version("3.0.1", sha256="d993721510fa654582132192193f69b1b3165418a6e00a73c3edce615b3cc672")
     version("3.0.0", sha256="82a9fa4b32a049b38151d11188ed15d74f21f853f163e78da0950dce1f244ccc")
     version("2.14.0", sha256="a845d446b6ae626f61dde5ab2fa952530b6c17b4f9ed03e9362bd20172d00cca")
@@ -77,9 +78,9 @@ class PyKeras(PythonPackage):
     depends_on("py-jax", type=("build", "run"), when="@3: backend=jax")
 
     # requirements-torch-cuda.txt
-    depends_on("py-torch@2.1.1", type=("build", "run"), when="@3.0.1 backend=torch")
+    depends_on("py-torch@2.1.1", type=("build", "run"), when="@3.0.1: backend=torch")
     depends_on("py-torch@2.1.0", type=("build", "run"), when="@3.0.0 backend=torch")
-    depends_on("py-torchvision@0.16.1", type=("build", "run"), when="@3.0.1 backend=torch")
+    depends_on("py-torchvision@0.16.1", type=("build", "run"), when="@3.0.1: backend=torch")
     depends_on("py-torchvision@0.16.0", type=("build", "run"), when="@3.0.0 backend=torch")
 
     # Historical dependencies
