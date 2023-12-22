@@ -1308,6 +1308,8 @@ class SpackSolverSetup:
     def package_requirement_rules(self, pkg):
         rules = self.requirement_rules_from_package_py(pkg)
         rules.extend(self.requirement_rules_from_packages_yaml(pkg))
+        rules.extend(self.requirement_rules_from_prefer_in_packages_yaml(pkg))
+        rules.extend(self.requirement_rules_from_conflict_in_packages_yaml(pkg))
         self.emit_facts_from_requirement_rules(rules)
 
     def requirement_rules_from_package_py(self, pkg):
@@ -1335,6 +1337,52 @@ class SpackSolverSetup:
             requirements = config.get("all", {}).get("require", [])
             kind = RequirementKind.DEFAULT
         return self._rules_from_requirements(pkg_name, requirements, kind=kind)
+
+    def requirement_rules_from_prefer_in_packages_yaml(self, pkg):
+        pkg_name = pkg.name
+        config = spack.config.get("packages")
+        requirements = config.get(pkg_name, {}).get("prefer", [])
+        kind = RequirementKind.PACKAGE
+        if not requirements:
+            requirements = config.get("all", {}).get("prefer", [])
+            kind = RequirementKind.DEFAULT
+
+        result = []
+        for strong_preference in requirements:
+            result.append(
+                RequirementRule(
+                    pkg_name=pkg_name,
+                    policy="any_of",
+                    requirements=[strong_preference, "@:"],
+                    kind=kind,
+                    message=None,
+                    condition=None,
+                )
+            )
+        return result
+
+    def requirement_rules_from_conflict_in_packages_yaml(self, pkg):
+        pkg_name = pkg.name
+        config = spack.config.get("packages")
+        requirements = config.get(pkg_name, {}).get("conflict", [])
+        kind = RequirementKind.PACKAGE
+        if not requirements:
+            requirements = config.get("all", {}).get("conflict", [])
+            kind = RequirementKind.DEFAULT
+
+        result = []
+        for conflict in requirements:
+            result.append(
+                RequirementRule(
+                    pkg_name=pkg_name,
+                    policy="one_of",
+                    requirements=[conflict, "@:"],
+                    kind=kind,
+                    message=None,
+                    condition=None,
+                )
+            )
+        return result
 
     def _rules_from_requirements(
         self, pkg_name: str, requirements, *, kind: RequirementKind

@@ -1035,3 +1035,59 @@ def test_requiring_package_on_multiple_virtuals(concretize_scope, mock_packages)
     assert s["blas"].name == "intel-parallel-studio"
     assert s["lapack"].name == "intel-parallel-studio"
     assert s["scalapack"].name == "intel-parallel-studio"
+
+
+@pytest.mark.parametrize(
+    "packages_yaml,spec_str,expected,not_expected",
+    [
+        (
+            """
+        packages:
+          all:
+            prefer:
+            - "%clang"
+            compiler: [gcc]
+    """,
+            "multivalue-variant",
+            ["%clang"],
+            ["%gcc"],
+        ),
+        (
+            """
+            packages:
+              all:
+                prefer:
+                - "%clang"
+        """,
+            "multivalue-variant %gcc",
+            ["%gcc"],
+            ["%clang"],
+        ),
+    ],
+)
+def test_strong_preferences_packages_yaml(
+    packages_yaml, spec_str, expected, not_expected, concretize_scope, mock_packages
+):
+    """Tests that "preferred" specs are stronger than usual preferences, but can be overridden."""
+    update_packages_config(packages_yaml)
+    s = Spec(spec_str).concretized()
+
+    for constraint in expected:
+        assert s.satisfies(constraint), constraint
+
+    for constraint in not_expected:
+        assert not s.satisfies(constraint), constraint
+
+
+@pytest.mark.parametrize("conflict_str,spec_str", [("%clang", "multivalue-variant %clang")])
+def test_conflict_packages_yaml(conflict_str, spec_str, concretize_scope, mock_packages):
+    """Tests conflicts that are specified from configuration files."""
+    packages_yaml = f"""
+        packages:
+          all:
+            conflict:
+            - "{conflict_str}"
+    """
+    update_packages_config(packages_yaml)
+    with pytest.raises(UnsatisfiableSpecError):
+        Spec(spec_str).concretized()
