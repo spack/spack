@@ -756,7 +756,7 @@ def test_wild_card_valued_variants_equivalent_to_str():
         validator=None,
     )
 
-    several_arbitrary_values=("doe", "re", "mi")
+    several_arbitrary_values = ("doe", "re", "mi")
     # "*" case
     wild_output = wild_var.make_variant(several_arbitrary_values)
     wild_var.validate_or_raise(wild_output)
