@@ -26,6 +26,9 @@ class PyDgl(CMakePackage, PythonExtension, CudaPackage):
         "1.0.1", tag="1.0.1", commit="cc2e9933f309f585fae90965ab61ad11ac1eecd5", submodules=True
     )
     version(
+        "0.6.1", tag="0.6.1", commit="d4a1be3266857c963e4a8e76746baeba3be8f369", submodules=True
+    )
+    version(
         "0.4.3", tag="0.4.3", commit="e1d90f9b5eeee7359a6b4f5edca7473a497984ba", submodules=True
     )
     version(

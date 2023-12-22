@@ -20,6 +20,12 @@ class PyIntelOpenmp(PythonPackage):
 
     if sys.platform.startswith("linux"):
         version(
+            "2021.2.0",
+            url="https://files.pythonhosted.org/packages/21/96/b566bbf10c4a24126eeff677258e58dc9beb78f8fc6fd6bb6ac30b41a7d9/intel_openmp-2021.2.0-py2.py3-none-manylinux1_x86_64.whl",
+            sha256="2c40b766bbcf346d298c54b92733c75a70b5f4f3b63461fa92753e49f14e4ac0",
+            expand=False,
+        )
+        version(
             "2021.1.2",
             url="https://pypi.io/packages/py2.py3/i/intel-openmp/intel_openmp-2021.1.2-py2.py3-none-manylinux1_x86_64.whl",
             sha256="8796797ecae99f39b27065e4a7f1f435e2ca08afba654ca57a77a2717f864dca",

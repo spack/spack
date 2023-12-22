@@ -24,6 +24,7 @@ class PyTorchGeometric(PythonPackage):
     version(
         "2.1.0.post1", sha256="32347402076ccf60fa50312825178f1e3e5ce5e7b3b3a8b2729ac699da24525d"
     )
+    version("1.7.2", sha256="a57b115cb3891c81d16960380e0bc4d842da2c96bea5ca019d6d139e6f026b31")
     version("1.6.3", sha256="347f693bebcc8a621eda4867dafab91c04db5f596d7ed7ecb89b242f8ab5c6a1")
     version("1.6.0", sha256="fbf43fe15421c9affc4fb361ba4db55cb9d3c64d0c29576bb58d332bf6d27fef")
 

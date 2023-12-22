@@ -15,6 +15,7 @@ class PyTorchScatter(PythonPackage):
     homepage = "https://github.com/rusty1s/pytorch_scatter"
     url = "https://github.com/rusty1s/pytorch_scatter/archive/2.0.5.tar.gz"
 
+    version("2.0.7", sha256="0d5568f907a3f948b3359cf741838bd34cd840cf31efd686b0c44f6671fc325e")
     version("2.0.5", sha256="e29b364beaa9c84a99e0e236be89ed19d4452d89010ff736184ddcce488b47f6")
 
     variant("cuda", default=False, description="Enable CUDA support")
