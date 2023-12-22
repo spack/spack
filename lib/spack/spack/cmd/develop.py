@@ -158,8 +158,7 @@ def develop(parser, args):
             spack.config.add(
                 "packages:{}:package_attributes:build_directory:{}".format(
                     spec.name, args.build_directory
-                  ),
-                  scope,
-              )
+                ),
+                scope,
+            )
         _update_config(spec, path)
-
