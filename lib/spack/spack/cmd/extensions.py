@@ -10,10 +10,10 @@ import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
 import spack.cmd as cmd
-import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 import spack.repo
 import spack.store
+from spack.cmd.common import arguments
 
 description = "list extensions for package"
 section = "extensions"
@@ -58,7 +58,7 @@ def extensions(parser, args):
 
         extendable_pkgs = []
         for name in spack.repo.all_package_names():
-            pkg_cls = spack.repo.path.get_pkg_class(name)
+            pkg_cls = spack.repo.PATH.get_pkg_class(name)
             if pkg_cls.extendable:
                 extendable_pkgs.append(name)
 
@@ -81,7 +81,7 @@ def extensions(parser, args):
 
     if args.show in ("packages", "all"):
         # List package names of extensions
-        extensions = spack.repo.path.extensions_for(spec)
+        extensions = spack.repo.PATH.extensions_for(spec)
         if not extensions:
             tty.msg("%s has no extensions." % spec.cshort_spec)
         else:
@@ -91,7 +91,7 @@ def extensions(parser, args):
 
     if args.show in ("installed", "all"):
         # List specs of installed extensions.
-        installed = [s.spec for s in spack.store.db.installed_extensions_for(spec)]
+        installed = [s.spec for s in spack.store.STORE.db.installed_extensions_for(spec)]
 
         if args.show == "all":
             print

@@ -39,6 +39,8 @@ class Molgw(MakefilePackage):
 
     # enforce scalapack-capable mkl when asking +scalapack (and using intel-oneapi-mkl)
     depends_on("intel-oneapi-mkl+cluster", when="+scalapack ^intel-oneapi-mkl")
+    # enforce threaded mkl when asking +openmp (and using intel-oneapi-mkl)
+    depends_on("intel-oneapi-mkl threads=openmp", when="+openmp ^intel-oneapi-mkl")
     # enforce threaded openblas when asking +openmp (and using openblas)
     depends_on("openblas threads=openmp", when="+openmp ^openblas")
 
@@ -76,7 +78,7 @@ class Molgw(MakefilePackage):
         flags["PREFIX"] = prefix
 
         # Set LAPACK and SCALAPACK
-        if "^mkl" in spec:
+        if spec["lapack"].name not in INTEL_MATH_LIBRARIES:
             flags["LAPACK"] = self._get_mkl_ld_flags(spec)
         else:
             flags["LAPACK"] = spec["lapack"].libs.ld_flags + " " + spec["blas"].libs.ld_flags
@@ -103,7 +105,7 @@ class Molgw(MakefilePackage):
         if "+scalapack" in spec:
             flags["CPPFLAGS"] = flags.get("CPPFLAGS", "") + " -DHAVE_SCALAPACK -DHAVE_MPI "
 
-        if "^mkl" in spec:
+        if spec["lapack"].name in INTEL_MATH_LIBRARIES:
             flags["CPPFLAGS"] = flags.get("CPPFLAGS", "") + " -DHAVE_MKL "
 
         # Write configuration file

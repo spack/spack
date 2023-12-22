@@ -5,9 +5,7 @@
 
 import errno
 import os
-import platform
 import shutil
-import sys
 
 import pytest
 
@@ -27,7 +25,7 @@ gpg = spack.main.SpackCommand("gpg")
 mirror = spack.main.SpackCommand("mirror")
 uninstall = spack.main.SpackCommand("uninstall")
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 @pytest.fixture()
@@ -49,11 +47,8 @@ def mock_get_specs_multiarch(database, monkeypatch):
     monkeypatch.setattr(spack.binary_distribution, "update_cache_and_get_specs", lambda: specs)
 
 
-@pytest.mark.skipif(
-    platform.system().lower() != "linux", reason="implementation for MacOS still missing"
-)
-@pytest.mark.db
-def test_buildcache_preview_just_runs(database):
+def test_buildcache_preview_just_runs():
+    # TODO: remove in Spack 0.21
     buildcache("preview", "mpileaks")
 
 
@@ -159,7 +154,7 @@ def test_update_key_index(
     # Put installed package in the buildcache, which, because we're signing
     # it, should result in the public key getting pushed to the buildcache
     # as well.
-    buildcache("push", "-a", mirror_dir.strpath, s.name)
+    buildcache("push", mirror_dir.strpath, s.name)
 
     # Now make sure that when we pass the "--keys" argument to update-index
     # it causes the index to get update.
@@ -213,13 +208,13 @@ def test_buildcache_sync(
     # Install a package and put it in the buildcache
     s = Spec(out_env_pkg).concretized()
     install(s.name)
-    buildcache("push", "-u", "-f", "-a", src_mirror_url, s.name)
+    buildcache("push", "-u", "-f", src_mirror_url, s.name)
 
     env("create", "test")
     with ev.read("test"):
         add(in_env_pkg)
         install()
-        buildcache("push", "-u", "-f", "-a", src_mirror_url, in_env_pkg)
+        buildcache("push", "-u", "-f", src_mirror_url, in_env_pkg)
 
         # Now run the spack buildcache sync command with all the various options
         # for specifying mirrors
@@ -331,4 +326,42 @@ def test_correct_specs_are_pushed(
 
     buildcache(*buildcache_create_args)
 
-    assert packages_to_push == expected
+    # Order is not guaranteed, so we can't just compare lists
+    assert set(packages_to_push) == set(expected)
+
+    # Ensure no duplicates
+    assert len(set(packages_to_push)) == len(packages_to_push)
+
+
+@pytest.mark.parametrize("signed", [True, False])
+def test_push_and_install_with_mirror_marked_unsigned_does_not_require_extra_flags(
+    tmp_path, mutable_database, mock_gnupghome, signed
+):
+    """Tests whether marking a mirror as unsigned makes it possible to push and install to/from
+    it without requiring extra flags on the command line (and no signing keys configured)."""
+
+    # Create a named mirror with signed set to True or False
+    add_flag = "--signed" if signed else "--unsigned"
+    mirror("add", add_flag, "my-mirror", str(tmp_path))
+    spec = mutable_database.query_local("libelf", installed=True)[0]
+
+    # Push
+    if signed:
+        # Need to pass "--unsigned" to override the mirror's default
+        args = ["push", "--update-index", "--unsigned", "my-mirror", f"/{spec.dag_hash()}"]
+    else:
+        # No need to pass "--unsigned" if the mirror is unsigned
+        args = ["push", "--update-index", "my-mirror", f"/{spec.dag_hash()}"]
+
+    buildcache(*args)
+
+    # Install
+    if signed:
+        # Need to pass "--no-check-signature" to avoid install errors
+        kwargs = {"cache_only": True, "unsigned": True}
+    else:
+        # No need to pass "--no-check-signature" if the mirror is unsigned
+        kwargs = {"cache_only": True}
+
+    spec.package.do_uninstall(force=True)
+    spec.package.do_install(**kwargs)

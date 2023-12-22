@@ -49,6 +49,8 @@ class Ncl(Package):
         when="%gcc@10:",
         sha256="64f3502c9deab48615a4cbc26073173081c0774faf75778b044d251e45d238f7",
     )
+    # g2clib does not have a ymakefile. This patch avoids a benign ymake error.
+    patch("ymake-grib.patch", when="+grib")
 
     # This installation script is implemented according to this manual:
     # http://www.ncl.ucar.edu/Download/build_from_src.shtml
@@ -58,6 +60,7 @@ class Ncl(Package):
     variant("triangle", default=True, description="Enable Triangle support.")
     variant("udunits2", default=True, description="Enable UDUNITS-2 support.")
     variant("openmp", default=True, description="Enable OpenMP support.")
+    variant("grib", default=True, description="Enable GRIB support.")
 
     # Non-optional dependencies according to the manual:
     depends_on("jpeg")
@@ -104,6 +107,7 @@ class Ncl(Package):
     depends_on("hdf", when="+hdf4")
     depends_on("gdal@:2.4", when="+gdal")
     depends_on("udunits", when="+udunits2")
+    depends_on("jasper@2.0.32", when="+grib")
 
     # We need src files of triangle to appear in ncl's src tree if we want
     # triangle's features.
@@ -143,6 +147,11 @@ class Ncl(Package):
         self.prepare_src_tree()
         make("Everything", parallel=False)
 
+        # Build system may fail without errors, so check for main program.
+        exes = os.listdir(self.spec.prefix.bin)
+        if "ncl" not in exes:
+            raise RuntimeError("Installation failed (ncl executable was not created)")
+
     def setup_run_environment(self, env):
         env.set("NCARG_ROOT", self.spec.prefix)
         env.set("ESMFBINDIR", self.spec["esmf"].prefix.bin)
@@ -173,6 +182,14 @@ class Ncl(Package):
             fc_flags.append("-fallow-argument-mismatch")
             cc_flags.append("-fcommon")
 
+        if self.spec.satisfies("+grib"):
+            gribline = (
+                "#define GRIB2lib %s/external/g2clib-1.6.0/libgrib2c.a -ljasper -lpng -lz -ljpeg\n"
+                % self.stage.source_path
+            )
+        else:
+            gribline = ""
+
         with open("./config/Spack", "w") as f:
             f.writelines(
                 [
@@ -200,7 +217,8 @@ class Ncl(Package):
                         if len(fc_flags) > 0
                         else ""
                     ),
-                    "#define BuildShared NO",
+                    "#define BuildShared NO\n",
+                    gribline,
                 ]
             )
 
@@ -244,6 +262,11 @@ class Ncl(Package):
                 ]
             )
 
+        gribinc = (
+            " " + self.stage.source_path + "/external/g2clib-1.6.0/"
+            if self.spec.satisfies("+grib")
+            else ""
+        )
         config_answers.extend(
             [
                 # Build Triangle support (optional) into NCL
@@ -257,7 +280,7 @@ class Ncl(Package):
                 # Build EEMD support (optional) into NCL?
                 "n\n",
                 # Build Udunits-2 support (optional) into NCL?
-                "y\n" if "+uduints2" in self.spec else "n\n",
+                "y\n" if "+udunits2" in self.spec else "n\n",
                 # Build Vis5d+ support (optional) into NCL?
                 "n\n",
                 # Build HDF-EOS2 support (optional) into NCL?
@@ -267,17 +290,22 @@ class Ncl(Package):
                 # Build HDF-EOS5 support (optional) into NCL?
                 "n\n",
                 # Build GRIB2 support (optional) into NCL?
-                "n\n",
+                "y\n" if self.spec.satisfies("+grib") else "n\n",
                 # Enter local library search path(s) :
                 self.spec["fontconfig"].prefix.lib
                 + " "
                 + self.spec["pixman"].prefix.lib
                 + " "
                 + self.spec["bzip2"].prefix.lib
+                + (
+                    (" " + self.spec["jasper"].prefix.lib64)
+                    if self.spec.satisfies("+grib")
+                    else ""
+                )
                 + "\n",
                 # Enter local include search path(s) :
                 # All other paths will be passed by the Spack wrapper.
-                self.spec["freetype"].headers.directories[0] + "\n",
+                self.spec["freetype"].headers.directories[0] + gribinc + "\n",
                 # Go back and make more changes or review?
                 "n\n",
                 # Save current configuration?
@@ -318,3 +346,13 @@ class Ncl(Package):
                     os.remove(filename)
                 except OSError as e:
                     raise InstallError("Failed to delete file %s: %s" % (e.filename, e.strerror))
+
+    @when("+grib")
+    def patch(self):
+        filter_file("image.inmem_=1;", "", "external/g2clib-1.6.0/enc_jpeg2000.c")
+        filter_file("SUBDIRS = ", "SUBDIRS = g2clib-1.6.0 ", "external/yMakefile")
+        filter_file(
+            "INC=.*",
+            "INC=%s" % self.spec["jasper"].prefix.include,
+            "external/g2clib-1.6.0/makefile",
+        )

@@ -12,13 +12,18 @@ class RocmBandwidthTest(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/rocm_bandwidth_test"
     git = "https://github.com/RadeonOpenCompute/rocm_bandwidth_test.git"
-    url = "https://github.com/RadeonOpenCompute/rocm_bandwidth_test/archive/rocm-5.4.3.tar.gz"
+    url = "https://github.com/RadeonOpenCompute/rocm_bandwidth_test/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
 
     version("master", branch="master")
-
+    version("5.7.1", sha256="7426ef1e317b8293e4d6389673cfa8c63efb3f7d061e2f50a6f0b1b706e2a2a7")
+    version("5.7.0", sha256="fa95c28488ab4bb6d920b9f3c316554ca340f44c87ec2efb4cf8fa488e63ddd9")
+    version("5.6.1", sha256="849af715d08dfd89e7aa5e4453b624151db1cafaa567ab5fa36a77948b90bf0d")
+    version("5.6.0", sha256="ae2f7263a21a3a650068f43e3112b2b765eea80a5af2297572f850c77f83c85e")
+    version("5.5.1", sha256="768b3da49fe7d4bb4e6536a8ee15be9f5e865d961e813ed4a407f32402685e1f")
+    version("5.5.0", sha256="1070ce14d45f34c2c6b2fb003184f3ae735ccfd640e9df1c228988b2a5a82949")
     version("5.4.3", sha256="a2f5a75bf47db1e39a4626a9f5cd2d120bcafe56b1baf2455d794f7a4734993e")
     version("5.4.0", sha256="47a1ef92e565d5ce7a167cc1ebe3d4198cc04d598b259426245b8c11eb795677")
     version("5.3.3", sha256="2bc079297e639d45d57c8017f6f47bc44d4ed34613ec76c80574bb703d79b498")
@@ -99,13 +104,6 @@ class RocmBandwidthTest(CMakePackage):
         deprecated=True,
     )
 
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
-
     depends_on("cmake@3:", type="build")
 
     for ver in [
@@ -132,9 +130,18 @@ class RocmBandwidthTest(CMakePackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
+        "5.7.0",
+        "5.7.1",
         "master",
     ]:
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
+
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1"]:
+        depends_on("rocm-core@" + ver, when="@" + ver)
 
     build_targets = ["package"]

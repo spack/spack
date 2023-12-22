@@ -25,7 +25,7 @@ class PyFlye(PythonPackage):
     depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("gmake", type="build")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     msg = "C++ compiler with C++11 support required"
     conflicts("%gcc@:4.7", msg=msg)

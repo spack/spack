@@ -70,12 +70,37 @@ class KokkosKernels(CMakePackage, CudaPackage):
         depends_on("kokkos+%s" % backend.lower(), when="+%s" % backend.lower())
 
     space_etis = {
-        "execspace_cuda": ("auto", "", "cuda"),
-        "execspace_openmp": ("auto", "", "openmp"),
-        "execspace_threads": ("auto", "", "threads"),
-        "execspace_serial": ("auto", "", "serial"),
-        "memspace_cudauvmspace": ("auto", "", "cuda"),
-        "memspace_cudaspace": ("auto", "", "cuda"),
+        "execspace_cuda": (
+            "auto",
+            "Whether to pre instantiate kernels for the execution space Kokkos::Cuda",
+            "cuda",
+        ),
+        "execspace_openmp": (
+            "auto",
+            "Whether to pre instantiate kernels for the execution space "
+            "Kokkos::Experimental::OpenMPTarget",
+            "openmp",
+        ),
+        "execspace_threads": (
+            "auto",
+            "Whether to build kernels for the execution space Kokkos::Threads",
+            "threads",
+        ),
+        "execspace_serial": (
+            "auto",
+            "Whether to build kernels for the execution space Kokkos::Serial",
+            "serial",
+        ),
+        "memspace_cudauvmspace": (
+            "auto",
+            "Whether to pre instantiate kernels for the memory space Kokkos::CudaUVMSpace",
+            "cuda",
+        ),
+        "memspace_cudaspace": (
+            "auto",
+            "Whether to pre instantiate kernels for the memory space Kokkos::CudaSpace",
+            "cuda",
+        ),
     }
     for eti in space_etis:
         deflt, descr, backend_required = space_etis[eti]
@@ -97,7 +122,7 @@ class KokkosKernels(CMakePackage, CudaPackage):
     }
     for eti in numeric_etis:
         deflt, cmake_name, vals = numeric_etis[eti]
-        variant(eti, default=deflt, values=vals, multi=True)
+        variant(eti, default=deflt, description=eti, values=vals, multi=True)
 
     tpls = {
         # variant name   #deflt   #spack name   #root var name #docstring

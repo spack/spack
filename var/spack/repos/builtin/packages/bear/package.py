@@ -23,10 +23,10 @@ class Bear(CMakePackage):
     version("2.0.4", sha256="33ea117b09068aa2cd59c0f0f7535ad82c5ee473133779f1cc20f6f99793a63e")
 
     depends_on("pkgconfig", when="@3:")
-    depends_on("fmt", when="@3.0.0:")
-    depends_on("grpc", when="@3.0.0:")
+    depends_on("fmt@8", when="@3.0.0:")
+    depends_on("grpc +shared", when="@3.0.0:")
     depends_on("nlohmann-json", when="@3.0.0:")
-    depends_on("spdlog", when="@3.0.0:")
+    depends_on("spdlog +fmt_external", when="@3.0.0:")
     depends_on("cmake@2.8:", type="build")
     depends_on("python", type="build")
     depends_on("googletest", type="test", when="@3:")

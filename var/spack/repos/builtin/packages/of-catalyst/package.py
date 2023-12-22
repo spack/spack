@@ -26,13 +26,12 @@ class OfCatalyst(CMakePackage):
     git = "https://develop.openfoam.com/Community/catalyst.git"
 
     version("develop", branch="develop")
-    version("1806", tag="v1806")
+    version("1806", tag="v1806", commit="d97babec3581bad413fd602e17fcd4bc1e312d26")
 
     variant("full", default=False, description="Build against paraview (full) or catalyst (light)")
 
     depends_on("openfoam@1806", when="@1806", type=("build", "link", "run"))
     depends_on("openfoam@develop", when="@develop", type=("build", "link", "run"))
-    depends_on("catalyst@5.5:", when="~full")
     depends_on("paraview@5.5:+osmesa~qt", when="+full")
 
     root_cmakelists_dir = "src/catalyst"

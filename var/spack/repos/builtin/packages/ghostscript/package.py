@@ -38,7 +38,7 @@ class Ghostscript(AutotoolsPackage):
     depends_on("lcms")
     depends_on("libpng")
     depends_on("libtiff")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libxext")
     depends_on("gtkplus")
 
@@ -81,7 +81,7 @@ class Ghostscript(AutotoolsPackage):
 
         filter_file(
             "ZLIBDIR=src",
-            "ZLIBDIR={0}".format(self.spec["zlib"].prefix.include),
+            "ZLIBDIR={0}".format(self.spec["zlib-api"].prefix.include),
             "configure.ac",
             "configure",
             string=True,

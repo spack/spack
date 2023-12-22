@@ -121,7 +121,6 @@ class TestFlagHandlers:
             "-DCMAKE_EXE_LINKER_FLAGS=-mthreads",
             "-DCMAKE_MODULE_LINKER_FLAGS=-mthreads",
             "-DCMAKE_SHARED_LINKER_FLAGS=-mthreads",
-            "-DCMAKE_STATIC_LINKER_FLAGS=-mthreads",
         }
 
     def test_ld_libs_cmake(self, temp_env):

@@ -843,27 +843,6 @@ class Singleton:
         return repr(self.instance)
 
 
-class LazyReference:
-    """Lazily evaluated reference to part of a singleton."""
-
-    def __init__(self, ref_function):
-        self.ref_function = ref_function
-
-    def __getattr__(self, name):
-        if name == "ref_function":
-            raise AttributeError()
-        return getattr(self.ref_function(), name)
-
-    def __getitem__(self, name):
-        return self.ref_function()[name]
-
-    def __str__(self):
-        return str(self.ref_function())
-
-    def __repr__(self):
-        return repr(self.ref_function())
-
-
 def load_module_from_file(module_name, module_path):
     """Loads a python module from the path of the corresponding file.
 
@@ -1068,9 +1047,9 @@ class GroupedExceptionHandler:
         """Whether any exceptions were handled."""
         return bool(self.exceptions)
 
-    def forward(self, context: str) -> "GroupedExceptionForwarder":
+    def forward(self, context: str, base: type = BaseException) -> "GroupedExceptionForwarder":
         """Return a contextmanager which extracts tracebacks and prefixes a message."""
-        return GroupedExceptionForwarder(context, self)
+        return GroupedExceptionForwarder(context, self, base)
 
     def _receive_forwarded(self, context: str, exc: Exception, tb: List[str]):
         self.exceptions.append((context, exc, tb))
@@ -1093,15 +1072,18 @@ class GroupedExceptionForwarder:
     """A contextmanager to capture exceptions and forward them to a
     GroupedExceptionHandler."""
 
-    def __init__(self, context: str, handler: GroupedExceptionHandler):
+    def __init__(self, context: str, handler: GroupedExceptionHandler, base: type):
         self._context = context
         self._handler = handler
+        self._base = base
 
     def __enter__(self):
         return None
 
     def __exit__(self, exc_type, exc_value, tb):
         if exc_value is not None:
+            if not issubclass(exc_type, self._base):
+                return False
             self._handler._receive_forwarded(self._context, exc_value, traceback.format_tb(tb))
 
         # Suppress any exception from being re-raised:

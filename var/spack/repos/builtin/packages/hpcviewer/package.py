@@ -47,6 +47,8 @@ class Hpcviewer(Package):
     maintainers("mwkrentel")
 
     darwin_sha = {
+        ("2023.07", "aarch64"): "6e3146fc3c6d778a256938a3589818ad3ac6496415f9fe27a012b6c1e7fbe766",
+        ("2023.07", "x86_64"): "0711a71d44e0323ec4a274983e63f07d13d09a41ead08427d273808326565cc9",
         ("2023.05", "aarch64"): "b34e1ebc021e91c7260cc91a888e966a81913691de04c5e972da613d0dc34294",
         ("2023.05", "x86_64"): "689c2c18f70d53a8e1f27527f65d30c61b6f70db98f63378a97f236926ef1ac5",
         ("2023.04", "aarch64"): "85fc1c8823e2ef442666d60e98674a55315771e57205a0d2cef739d39fea699f",
@@ -67,6 +69,9 @@ class Hpcviewer(Package):
     }
 
     viewer_sha = {
+        ("2023.07", "aarch64"): "641c151ed0bc5d85db40187eb39ba4bcb7a4fdeeb07d5b4d00ed6a6d457f59b4",
+        ("2023.07", "ppc64le"): "e76558377b5e64d8a07f6232468c8098d5aba32c2a6210c58bef26acd3ce8c9b",
+        ("2023.07", "x86_64"): "06db75b1aab80f1142058716ca295bb43956a2b315bd7f385ec4c3a74ade0cbb",
         ("2023.05", "aarch64"): "901b58b73890180b1cb7572d91c1b6cc205a5d3d50927c50d05d2b05554918c6",
         ("2023.05", "ppc64le"): "d948e4777aea3a0c06300aedd4ce04e28f97b3ac306f78d672a5f692152bbdef",
         ("2023.05", "x86_64"): "8c51df8b958ec600c9b7547461d7e9abb0e07a048d4031f58efd47df7ec79091",
@@ -195,7 +200,7 @@ class Hpcviewer(Package):
                     key[0],
                     url=viewer_url(*key),
                     sha256=viewer_sha[key],
-                    deprecated=(key[0] <= "2020.01"),
+                    deprecated=(key[0] <= "2020.99"),
                 )
 
                 # Current versions include the viewer and trace viewer in

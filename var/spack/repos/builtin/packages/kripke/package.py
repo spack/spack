@@ -19,23 +19,42 @@ class Kripke(CMakePackage, CudaPackage, ROCmPackage):
     maintainers("vsrana01")
 
     version("develop", branch="develop", submodules=False)
-    version("1.2.4", submodules=False, tag="v1.2.4")
-    version("1.2.3", submodules=True, tag="v1.2.3")
-    version("1.2.2", submodules=True, tag="v1.2.2-CORAL2")
-    version("1.2.1", submodules=True, tag="v1.2.1-CORAL2")
-    version("1.2.0", submodules=True, tag="v1.2.0-CORAL2")
+    version(
+        "1.2.4", submodules=False, tag="v1.2.4", commit="d85c6bc462f17a2382b11ba363059febc487f771"
+    )
+    version(
+        "1.2.3", submodules=True, tag="v1.2.3", commit="66046d8cd51f5bcf8666fd8c810322e253c4ce0e"
+    )
+    version(
+        "1.2.2",
+        submodules=True,
+        tag="v1.2.2-CORAL2",
+        commit="a12bce71e751f8f999009aa2fd0839b908b118a4",
+    )
+    version(
+        "1.2.1",
+        submodules=True,
+        tag="v1.2.1-CORAL2",
+        commit="c36453301ddd684118bb0fb426cfa62764d42398",
+    )
+    version(
+        "1.2.0",
+        submodules=True,
+        tag="v1.2.0-CORAL2",
+        commit="67e4b0a2f092009d61f44b5122111d388a3bec2a",
+    )
 
     variant("mpi", default=True, description="Build with MPI.")
     variant("openmp", default=False, description="Build with OpenMP enabled.")
     variant("caliper", default=False, description="Build with Caliper support enabled.")
 
     depends_on("mpi", when="+mpi")
-    depends_on("blt")
-    depends_on("cmake")
+    depends_on("blt", type="build")
     depends_on("caliper", when="+caliper")
     depends_on("chai~examples+raja")
     depends_on("raja~exercises~examples")
     depends_on("umpire~examples")
+    conflicts("^blt@:0.3.6", when="+rocm")
 
     def cmake_args(self):
         spec = self.spec

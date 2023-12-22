@@ -9,10 +9,10 @@ import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 import spack.repo
 import spack.store
+from spack.cmd.common import arguments
 
 description = "show packages that depend on another"
 section = "basic"
@@ -47,14 +47,14 @@ def inverted_dependencies():
     actual dependents.
     """
     dag = {}
-    for pkg_cls in spack.repo.path.all_package_classes():
+    for pkg_cls in spack.repo.PATH.all_package_classes():
         dag.setdefault(pkg_cls.name, set())
         for dep in pkg_cls.dependencies:
             deps = [dep]
 
             # expand virtuals if necessary
-            if spack.repo.path.is_virtual(dep):
-                deps += [s.name for s in spack.repo.path.providers_for(dep)]
+            if spack.repo.PATH.is_virtual(dep):
+                deps += [s.name for s in spack.repo.PATH.providers_for(dep)]
 
             for d in deps:
                 dag.setdefault(d, set()).add(pkg_cls.name)
@@ -96,7 +96,7 @@ def dependents(parser, args):
         format_string = "{name}{@version}{%compiler}{/hash:7}"
         if sys.stdout.isatty():
             tty.msg("Dependents of %s" % spec.cformat(format_string))
-        deps = spack.store.db.installed_relatives(spec, "parents", args.transitive)
+        deps = spack.store.STORE.db.installed_relatives(spec, "parents", args.transitive)
         if deps:
             spack.cmd.display_specs(deps, long=True)
         else:

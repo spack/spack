@@ -41,7 +41,7 @@ class Bcl2fastq2(Package):
     depends_on("libxml2@2.7.8")
     depends_on("libxslt@1.1.26~crypto")
     depends_on("libgcrypt")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     # Their cmake macros don't set the flag when they find a library
     # that makes them happy.
@@ -49,6 +49,8 @@ class Bcl2fastq2(Package):
     # After finding the libxslt bits, cmake still needs to wire in the
     # libexslt bits.
     patch("cxxConfigure-cmake.patch")
+    # -msse2 isn't valid for arm
+    patch("cxxConfigure-aarch64.patch", when="target=aarch64:")
 
     root_cmakelists_dir = "src"
 

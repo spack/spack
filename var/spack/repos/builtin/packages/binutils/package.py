@@ -21,6 +21,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
 
     executables = ["^nm$", "^readelf$"]
 
+    version("2.41", sha256="a4c4bec052f7b8370024e60389e194377f3f48b56618418ea51067f67aaab30b")
     version("2.40", sha256="f8298eb153a4b37d112e945aa5cb2850040bcf26a3ea65b5a715c83afe05e48a")
     version("2.39", sha256="da24a84fef220102dd24042df06fdea851c2614a5377f86effa28f33b7b16148")
     version("2.38", sha256="070ec71cf077a6a58e0b959f05a09a35015378c2d8a51e90f3aeabfe30590ef8")
@@ -95,13 +96,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
         when="@2.37:",
     )
     variant("ld", default=False, description="Enable ld.")
-    # When you build binutils with ~ld and +gas and load it in your PATH, you
-    # may end up with incompatibilities between a potentially older system ld
-    # and a recent assembler. For instance the linker on ubuntu 16.04 from
-    # binutils 2.26 and the assembler from binutils 2.36.1 will result in:
-    # "unable to initialize decompress status for section .debug_info"
-    # when compiling with debug symbols on gcc.
-    variant("gas", default=False, when="+ld", description="Enable as assembler.")
+    variant("gas", default=False, description="Enable as assembler.")
     variant("interwork", default=False, description="Enable interwork.")
     variant("gprofng", default=False, description="Enable gprofng.", when="@2.39:")
     variant(
@@ -130,7 +125,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     # pkg-config is used to find zstd in gas/configure
     depends_on("pkgconfig", type="build")
     depends_on("zstd@1.4.0:", when="@2.40:")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     depends_on("diffutils", type="build")
     depends_on("gettext", when="+nls")
@@ -160,6 +155,14 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     conflicts(
         "~lto", when="+pgo", msg="Profile-guided optimization enables link-time optimization"
     )
+
+    # When you build binutils with ~ld and +gas and load it in your PATH, you
+    # may end up with incompatibilities between a potentially older system ld
+    # and a recent assembler. For instance the linker on ubuntu 16.04 from
+    # binutils 2.26 and the assembler from binutils 2.36.1 will result in:
+    # "unable to initialize decompress status for section .debug_info"
+    # when compiling with debug symbols on gcc.
+    conflicts("+gas", "~ld", msg="Assembler not always compatible with system ld")
 
     @classmethod
     def determine_version(cls, exe):

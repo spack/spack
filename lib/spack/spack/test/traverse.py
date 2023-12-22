@@ -5,6 +5,7 @@
 
 import pytest
 
+import spack.deptypes as dt
 import spack.traverse as traverse
 from spack.spec import Spec
 
@@ -19,7 +20,9 @@ def create_dag(nodes, edges):
     """
     specs = {name: Spec(name) for name in nodes}
     for parent, child, deptypes in edges:
-        specs[parent].add_dependency_edge(specs[child], deptypes=deptypes, virtuals=())
+        specs[parent].add_dependency_edge(
+            specs[child], depflag=dt.canonicalize(deptypes), virtuals=()
+        )
     return specs
 
 

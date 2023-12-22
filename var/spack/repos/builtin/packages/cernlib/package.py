@@ -20,6 +20,8 @@ class Cernlib(CMakePackage):
         sha256="733d148415ef78012ff81f21922d3bf641be7514b0242348dd0200cf1b003e46",
     )
 
+    variant("shared", default=True, description="Build shared libraries")
+
     depends_on("freetype")
     depends_on("motif")
     depends_on("libnsl")
@@ -35,5 +37,5 @@ class Cernlib(CMakePackage):
         filter_file("crypto", "crypt", "packlib/CMakeLists.txt")
 
     def cmake_args(self):
-        args = ["-DCERNLIB_BUILD_SHARED:BOOL=ON"]
+        args = [self.define_from_variant("CERNLIB_BUILD_SHARED", "shared")]
         return args

@@ -106,7 +106,7 @@ class Fenics(CMakePackage):
     depends_on("python@3.5:", type=("build", "run"), when="+python")
     depends_on("eigen@3.2.0:")
     depends_on("pkgconfig", type="build")
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
 
     depends_on("boost+filesystem+program_options+system+iostreams+timer+regex+chrono")
     depends_on(

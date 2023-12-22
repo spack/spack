@@ -29,7 +29,7 @@ except ImportError:
     pass
 
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 @contextlib.contextmanager

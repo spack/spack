@@ -28,4 +28,4 @@ class RAffyio(RPackage):
 
     depends_on("r@2.6.0:", type=("build", "run"))
     depends_on("r-zlibbioc", type=("build", "run"))
-    depends_on("zlib")
+    depends_on("zlib-api")

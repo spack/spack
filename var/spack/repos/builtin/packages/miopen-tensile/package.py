@@ -44,7 +44,13 @@ class MiopenTensile(CMakePackage):
 
     tensile_architecture = ("all", "gfx906", "gfx908", "gfx803", "gfx900")
 
-    variant("tensile_architecture", default="all", values=tensile_architecture, multi=True)
+    variant(
+        "tensile_architecture",
+        default="all",
+        description="AMD GPU architecture",
+        values=tensile_architecture,
+        multi=True,
+    )
     variant(
         "build_type",
         default="Release",

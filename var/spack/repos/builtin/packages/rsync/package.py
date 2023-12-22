@@ -24,7 +24,7 @@ class Rsync(AutotoolsPackage):
     version("3.1.2", sha256="ecfa62a7fa3c4c18b9eccd8c16eaddee4bd308a76ea50b5c02a5840f09c0a1c2")
     version("3.1.1", sha256="7de4364fcf5fe42f3bdb514417f1c40d10bbca896abe7e7f2c581c6ea08a2621")
 
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("popt")
     depends_on("openssl", when="@3.2:")
     depends_on("xxhash", when="@3.2:")

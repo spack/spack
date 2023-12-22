@@ -19,5 +19,5 @@ class TheSilverSearcher(AutotoolsPackage):
 
     depends_on("pcre")
     depends_on("xz")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("pkgconfig", type="build")

@@ -14,6 +14,7 @@ class Rocksdb(MakefilePackage):
     git = "https://github.com/facebook/rocksdb.git"
 
     version("master", git=git, branch="master", submodules=True)
+    version("8.6.7", sha256="cdb2fc3c6a556f20591f564cb8e023e56828469aa3f76e1d9535c443ba1f0c1a")
     version("8.1.1", sha256="9102704e169cfb53e7724a30750eeeb3e71307663852f01fa08d5a320e6155a8")
     version("7.7.3", sha256="b8ac9784a342b2e314c821f6d701148912215666ac5e9bdbccd93cf3767cb611")
     version("7.2.2", sha256="c4ea6bd2e3ffe3f0f8921c699234d59108c9122d61b0ba2aa78358642a7b614e")
@@ -42,7 +43,7 @@ class Rocksdb(MakefilePackage):
     depends_on("gflags")
     depends_on("lz4", when="+lz4")
     depends_on("snappy", when="+snappy")
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
     depends_on("zstd", when="+zstd")
     depends_on("tbb", when="+tbb")
 
@@ -67,8 +68,8 @@ class Rocksdb(MakefilePackage):
             cflags.append("-Wno-error=redundant-move")
 
         if "+zlib" in self.spec:
-            cflags.append("-I" + self.spec["zlib"].prefix.include)
-            ldflags.append(self.spec["zlib"].libs.ld_flags)
+            cflags.append("-I" + self.spec["zlib-api"].prefix.include)
+            ldflags.append(self.spec["zlib-api"].libs.ld_flags)
         else:
             env["ROCKSDB_DISABLE_ZLIB"] = "YES"
 

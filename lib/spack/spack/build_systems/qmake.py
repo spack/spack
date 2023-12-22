@@ -28,7 +28,7 @@ class QMakePackage(spack.package_base.PackageBase):
 
     build_system("qmake")
 
-    depends_on("qt", type="build", when="build_system=qmake")
+    depends_on("qmake", type="build", when="build_system=qmake")
 
 
 @spack.builder.builder("qmake")

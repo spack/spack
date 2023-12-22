@@ -32,6 +32,11 @@ class Libffi(AutotoolsPackage):
     patch("clang-powerpc-3.2.1.patch", when="@3.2.1%clang platform=linux")
     # ref.: https://github.com/libffi/libffi/pull/561
     patch("powerpc-3.3.patch", when="@3.3")
+    patch(
+        "https://github.com/libffi/libffi/commit/ce077e5565366171aa1b4438749b0922fce887a4.patch?full_index=1",
+        sha256="070b1f3aa87f2b56f83aff38afc42157e1692bfaa580276ecdbad2048b818ed7",
+        when="@3.4.3:3.4.4",
+    )
 
     @property
     def headers(self):
@@ -40,7 +45,11 @@ class Libffi(AutotoolsPackage):
 
     def flag_handler(self, name, flags):
         if name == "cflags":
-            if self.spec.satisfies("%oneapi@2023:") or self.spec.satisfies("%arm@23.04:"):
+            if (
+                self.spec.satisfies("%oneapi@2023:")
+                or self.spec.satisfies("%arm@23.04:")
+                or self.spec.satisfies("%clang@16:")
+            ):
                 flags.append("-Wno-error=implicit-function-declaration")
         return (flags, None, None)
 

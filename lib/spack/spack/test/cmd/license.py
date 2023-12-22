@@ -5,7 +5,6 @@
 
 import os.path
 import re
-import sys
 
 import pytest
 
@@ -17,7 +16,7 @@ from spack.main import SpackCommand
 
 license = SpackCommand("license")
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 def test_list_files():

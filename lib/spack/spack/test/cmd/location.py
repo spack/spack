@@ -5,7 +5,6 @@
 
 import os
 import shutil
-import sys
 
 import pytest
 
@@ -19,7 +18,7 @@ from spack.main import SpackCommand, SpackCommandError
 # Everything here uses (or can use) the mock config and database.
 pytestmark = [
     pytest.mark.usefixtures("config", "database"),
-    pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows"),
+    pytest.mark.not_on_windows("does not run on windows"),
 ]
 # location prints out "locations of packages and spack directories"
 location = SpackCommand("location")

@@ -13,7 +13,7 @@ class Vifi(Package):
     homepage = "https://github.com/namphuon/ViFi"
     git = "https://github.com/namphuon/ViFi.git"
 
-    version("master", tag="master")
+    version("master", branch="master")
 
     depends_on("perl", type="run")
     depends_on("python", type="run")

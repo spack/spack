@@ -53,7 +53,11 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("cub", when="+cuda")
 
-    depends_on("blt")
+    depends_on("blt", type="build")
+
+    patch("gcc-13-missing-header.patch", when="@:2022.10 %gcc@13:")
+
+    conflicts("^blt@:0.3.6", when="+rocm")
 
     def cmake_args(self):
         spec = self.spec

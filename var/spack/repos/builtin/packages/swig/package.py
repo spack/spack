@@ -69,7 +69,7 @@ class Swig(AutotoolsPackage, SourceforgePackage):
 
     depends_on("pcre", when="@:4.0")
     depends_on("pcre2", when="@4.1:")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     AUTOCONF_VERSIONS = "@" + ",".join(
         [

@@ -4,14 +4,16 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import sys
 
 import pytest
 
 import spack.config
 import spack.environment as ev
+import spack.package_base
 import spack.repo
-from spack.main import SpackCommand
+import spack.stage
+import spack.traverse
+from spack.main import SpackCommand, SpackCommandError
 from spack.version import Version
 
 stage = SpackCommand("stage")
@@ -20,7 +22,8 @@ env = SpackCommand("env")
 pytestmark = pytest.mark.usefixtures("install_mockery", "mock_packages")
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="not implemented on windows")
+@pytest.mark.not_on_windows("not implemented on windows")
+@pytest.mark.disable_clean_stage_check
 def test_stage_spec(monkeypatch):
     """Verify that staging specs works."""
 
@@ -48,7 +51,7 @@ def check_stage_path(monkeypatch, tmpdir):
     return expected_path
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="PermissionError")
+@pytest.mark.not_on_windows("PermissionError")
 def test_stage_path(check_stage_path):
     """Verify that --path only works with single specs."""
     stage("--path={0}".format(check_stage_path), "trivial-install-test-package")
@@ -56,11 +59,12 @@ def test_stage_path(check_stage_path):
 
 def test_stage_path_errors_multiple_specs(check_stage_path):
     """Verify that --path only works with single specs."""
-    with pytest.raises(spack.main.SpackCommandError):
-        stage("--path={0}".format(check_stage_path), "trivial-install-test-package", "mpileaks")
+    with pytest.raises(SpackCommandError):
+        stage(f"--path={check_stage_path}", "trivial-install-test-package", "mpileaks")
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="not implemented on windows")
+@pytest.mark.not_on_windows("not implemented on windows")
+@pytest.mark.disable_clean_stage_check
 def test_stage_with_env_outside_env(mutable_mock_env_path, monkeypatch):
     """Verify that stage concretizes specs not in environment instead of erroring."""
 
@@ -78,7 +82,8 @@ def test_stage_with_env_outside_env(mutable_mock_env_path, monkeypatch):
         stage("trivial-install-test-package")
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="not implemented on windows")
+@pytest.mark.not_on_windows("not implemented on windows")
+@pytest.mark.disable_clean_stage_check
 def test_stage_with_env_inside_env(mutable_mock_env_path, monkeypatch):
     """Verify that stage filters specs in environment instead of reconcretizing."""
 
@@ -96,7 +101,8 @@ def test_stage_with_env_inside_env(mutable_mock_env_path, monkeypatch):
         stage("mpileaks")
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="not implemented on windows")
+@pytest.mark.not_on_windows("not implemented on windows")
+@pytest.mark.disable_clean_stage_check
 def test_stage_full_env(mutable_mock_env_path, monkeypatch):
     """Verify that stage filters specs in environment."""
 
@@ -105,10 +111,7 @@ def test_stage_full_env(mutable_mock_env_path, monkeypatch):
     e.concretize()
 
     # list all the package names that should be staged
-    expected = set()
-    for spec in e.specs_by_hash.values():
-        for dep in spec.traverse():
-            expected.add(dep.name)
+    expected = set(dep.name for dep in spack.traverse.traverse_nodes(e.concrete_roots()))
 
     # pop the package name from the list instead of actually staging
     def fake_stage(pkg, mirror_only=False):

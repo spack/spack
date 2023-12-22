@@ -26,7 +26,7 @@ class Krakenuniq(Package):
     variant("jellyfish", default=False, description="Install jellyfish v1.1.")
 
     depends_on("bzip2")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("wget", when="+jellyfish")
 
     def install(self, spec, prefix):

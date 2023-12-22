@@ -60,12 +60,12 @@ class Abyss(AutotoolsPackage):
     def configure_args(self):
         maxk = int(self.spec.variants["maxk"].value)
         args = [
-            "--with-boost=%s" % self.spec["boost"].prefix,
-            "--with-sqlite=%s" % self.spec["sqlite"].prefix,
-            "--with-mpi=%s" % self.spec["mpi"].prefix,
+            f"--with-boost={self.spec['boost'].prefix}",
+            f"--with-sqlite={self.spec['sqlite'].prefix}",
+            f"--with-mpi={self.spec['mpi'].prefix}",
         ]
         if maxk:
-            args.append("--enable-maxk=%s" % maxk)
+            args.append(f"--enable-maxk={maxk}")
         if self.spec["mpi"].name == "mpich":
             args.append("--enable-mpich")
         return args

@@ -14,9 +14,11 @@ class Sigio(CMakePackage):
 
     homepage = "https://noaa-emc.github.io/NCEPLIBS-sigio"
     url = "https://github.com/NOAA-EMC/NCEPLIBS-sigio/archive/refs/tags/v2.3.2.tar.gz"
+    git = "https://github.com/NOAA-EMC/NCEPLIBS-sigio"
 
-    maintainers("t-brown", "AlexanderRichert-NOAA", "Hang-Lei-NOAA", "edwardhartnett")
+    maintainers("AlexanderRichert-NOAA", "Hang-Lei-NOAA", "edwardhartnett")
 
+    version("develop", branch="develop")
     version("2.3.2", sha256="333f3cf3a97f97103cbafcafc2ad89b24faa55b1332a98adc1637855e8a5b613")
 
     def setup_run_environment(self, env):

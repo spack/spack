@@ -11,13 +11,14 @@ import shutil
 import sys
 
 from llnl.util import filesystem, tty
+from llnl.util.tty import color
 
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.modules
 import spack.modules.common
 import spack.repo
+from spack.cmd.common import arguments
 
 description = "manipulate module files"
 section = "environment"
@@ -308,7 +309,7 @@ def refresh(module_type, specs, args):
 
     # Skip unknown packages.
     writers = [
-        cls(spec, args.module_set_name) for spec in specs if spack.repo.path.exists(spec.name)
+        cls(spec, args.module_set_name) for spec in specs if spack.repo.PATH.exists(spec.name)
     ]
 
     # Filter excluded packages early
@@ -320,12 +321,13 @@ def refresh(module_type, specs, args):
         file2writer[item.layout.filename].append(item)
 
     if len(file2writer) != len(writers):
+        spec_fmt_str = "{name}@={version}%{compiler}/{hash:7} {variants} arch={arch}"
         message = "Name clashes detected in module files:\n"
         for filename, writer_list in file2writer.items():
             if len(writer_list) > 1:
                 message += "\nfile: {0}\n".format(filename)
                 for x in writer_list:
-                    message += "spec: {0}\n".format(x.spec.format())
+                    message += "spec: {0}\n".format(x.spec.format(spec_fmt_str))
         tty.error(message)
         tty.error("Operation aborted")
         raise SystemExit(1)
@@ -347,14 +349,20 @@ def refresh(module_type, specs, args):
     spack.modules.common.generate_module_index(
         module_type_root, writers, overwrite=args.delete_tree
     )
+    errors = []
     for x in writers:
         try:
             x.write(overwrite=True)
+        except spack.error.SpackError as e:
+            msg = f"{x.layout.filename}: {e.message}"
+            errors.append(msg)
         except Exception as e:
-            tty.debug(e)
-            msg = "Could not write module file [{0}]"
-            tty.warn(msg.format(x.layout.filename))
-            tty.warn("\t--> {0} <--".format(str(e)))
+            msg = f"{x.layout.filename}: {str(e)}"
+            errors.append(msg)
+
+    if errors:
+        errors.insert(0, color.colorize("@*{some module files could not be written}"))
+        tty.warn("\n".join(errors))
 
 
 #: Dictionary populated with the list of sub-commands.
@@ -369,7 +377,7 @@ callbacks = {"refresh": refresh, "rm": rm, "find": find, "loads": loads}
 def modules_cmd(parser, args, module_type, callbacks=callbacks):
     # Qualifiers to be used when querying the db for specs
     constraint_qualifiers = {
-        "refresh": {"installed": True, "known": lambda x: not spack.repo.path.exists(x)}
+        "refresh": {"installed": True, "known": lambda x: not spack.repo.PATH.exists(x)}
     }
     query_args = constraint_qualifiers.get(args.subparser_name, {})
 
@@ -380,21 +388,15 @@ def modules_cmd(parser, args, module_type, callbacks=callbacks):
         callbacks[args.subparser_name](module_type, specs, args)
 
     except MultipleSpecsMatch:
-        msg = "the constraint '{query}' matches multiple packages:\n"
+        query = " ".join(str(s) for s in args.constraint_specs)
+        msg = f"the constraint '{query}' matches multiple packages:\n"
         for s in specs:
             spec_fmt = "{hash:7} {name}{@version}{%compiler}"
             spec_fmt += "{compiler_flags}{variants}{arch=architecture}"
             msg += "\t" + s.cformat(spec_fmt) + "\n"
-        tty.error(msg.format(query=args.constraint))
-        tty.die(
-            "In this context exactly **one** match is needed: "
-            "please specify your constraints better."
-        )
+        tty.die(msg, "In this context exactly *one* match is needed.")
 
     except NoSpecMatches:
-        msg = "the constraint '{query}' matches no package."
-        tty.error(msg.format(query=args.constraint))
-        tty.die(
-            "In this context exactly **one** match is needed: "
-            "please specify your constraints better."
-        )
+        query = " ".join(str(s) for s in args.constraint_specs)
+        msg = f"the constraint '{query}' matches no package."
+        tty.die(msg, "In this context exactly *one* match is needed.")

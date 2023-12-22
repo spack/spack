@@ -16,7 +16,7 @@ class Lulesh(MakefilePackage):
     homepage = "https://computing.llnl.gov/projects/co-design/lulesh"
     git = "https://github.com/LLNL/LULESH.git"
 
-    version("2.0.3", tag="2.0.3")
+    version("2.0.3", tag="2.0.3", commit="46c2a1d6db9171f9637d79f407212e0f176e8194")
 
     variant("mpi", default=True, description="Build with MPI support")
     variant("openmp", default=True, description="Build with OpenMP support")

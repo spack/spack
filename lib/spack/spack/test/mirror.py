@@ -5,11 +5,10 @@
 
 import filecmp
 import os
-import sys
 
 import pytest
 
-from llnl.util.filesystem import resolve_link_target_relative_to_the_link
+from llnl.util.symlink import resolve_link_target_relative_to_the_link
 
 import spack.mirror
 import spack.repo
@@ -22,7 +21,7 @@ from spack.util.executable import which
 from spack.util.spack_yaml import SpackYAMLError
 
 pytestmark = [
-    pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows"),
+    pytest.mark.not_on_windows("does not run on windows"),
     pytest.mark.usefixtures("mutable_config", "mutable_mock_repo"),
 ]
 
@@ -65,7 +64,7 @@ def check_mirror():
             assert os.path.isdir(mirror_root)
 
             for spec in specs:
-                fetcher = spec.package.fetcher[0]
+                fetcher = spec.package.fetcher
                 per_package_ref = os.path.join(spec.name, "-".join([spec.name, str(spec.version)]))
                 mirror_paths = spack.mirror.mirror_archive_paths(fetcher, per_package_ref)
                 expected_path = os.path.join(mirror_root, mirror_paths.storage_path)
@@ -229,6 +228,9 @@ def test_mirror_with_url_patches(mock_packages, config, monkeypatch):
     def successful_apply(*args, **kwargs):
         pass
 
+    def successful_symlink(*args, **kwargs):
+        pass
+
     with Stage("spack-mirror-test") as stage:
         mirror_root = os.path.join(stage.path, "test-mirror")
 
@@ -236,6 +238,7 @@ def test_mirror_with_url_patches(mock_packages, config, monkeypatch):
         monkeypatch.setattr(spack.fetch_strategy.URLFetchStrategy, "expand", successful_expand)
         monkeypatch.setattr(spack.patch, "apply_patch", successful_apply)
         monkeypatch.setattr(spack.caches.MirrorCache, "store", record_store)
+        monkeypatch.setattr(spack.caches.MirrorCache, "symlink", successful_symlink)
 
         with spack.config.override("config:checksum", False):
             spack.mirror.create(mirror_root, list(spec.traverse()))

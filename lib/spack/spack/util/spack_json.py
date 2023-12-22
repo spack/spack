@@ -11,7 +11,7 @@ import spack.error
 
 __all__ = ["load", "dump", "SpackJSONError"]
 
-_json_dump_args = {"indent": 2, "separators": (",", ": ")}
+_json_dump_args = {"indent": None, "separators": (",", ":")}
 
 
 def load(stream: Any) -> Dict:

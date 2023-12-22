@@ -11,7 +11,6 @@ import os
 import pathlib
 import platform
 import shutil
-import sys
 from collections import OrderedDict
 
 import pytest
@@ -21,15 +20,15 @@ from llnl.util.symlink import symlink
 
 import spack.binary_distribution as bindist
 import spack.cmd.buildcache as buildcache
+import spack.error
 import spack.package_base
 import spack.repo
 import spack.store
 import spack.util.gpg
 import spack.util.url as url_util
-from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
+from spack.fetch_strategy import URLFetchStrategy
 from spack.paths import mock_gpg_keys_path
 from spack.relocate import (
-    ensure_binary_is_relocatable,
     macho_find_paths,
     macho_make_paths_normal,
     macho_make_paths_relative,
@@ -40,16 +39,14 @@ from spack.relocate import (
 )
 from spack.spec import Spec
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 @pytest.mark.usefixtures("install_mockery", "mock_gnupghome")
 def test_buildcache(mock_archive, tmp_path, monkeypatch, mutable_config):
     # Install a test package
     spec = Spec("trivial-install-test-package").concretized()
-    fetcher = FetchStrategyComposite()
-    fetcher.append(URLFetchStrategy(mock_archive.url))
-    monkeypatch.setattr(spec.package, "fetcher", fetcher)
+    monkeypatch.setattr(spec.package, "fetcher", URLFetchStrategy(mock_archive.url))
     spec.package.do_install()
     pkghash = "/" + str(spec.dag_hash(7))
 
@@ -73,7 +70,7 @@ def test_buildcache(mock_archive, tmp_path, monkeypatch, mutable_config):
         parser = argparse.ArgumentParser()
         buildcache.setup_parser(parser)
 
-        create_args = ["create", "-a", "-f", mirror_path, pkghash]
+        create_args = ["create", "-f", "--rebuild-index", mirror_path, pkghash]
         # Create a private key to sign package with if gpg2 available
         spack.util.gpg.create(
             name="test key 1",
@@ -81,8 +78,6 @@ def test_buildcache(mock_archive, tmp_path, monkeypatch, mutable_config):
             email="spack@googlegroups.com",
             comment="Spack test key",
         )
-
-        create_args.insert(create_args.index("-a"), "--rebuild-index")
 
         args = parser.parse_args(create_args)
         buildcache.buildcache(parser, args)
@@ -141,7 +136,6 @@ def test_relocate_text(tmp_path):
     dummy_txt = tmp_path / "dummy.txt"
     dummy_txt.write_text(original_dir)
 
-    ensure_binary_is_relocatable(os.path.realpath(dummy_txt))
     relocate_text([str(dummy_txt)], {original_dir: relocation_dir})
     text = dummy_txt.read_text()
 
@@ -154,7 +148,14 @@ def test_relocate_links(tmpdir):
 
     own_prefix_path = str(tmpdir.join("prefix_a", "file"))
     dep_prefix_path = str(tmpdir.join("prefix_b", "file"))
+    new_own_prefix_path = str(tmpdir.join("new_prefix_a", "file"))
+    new_dep_prefix_path = str(tmpdir.join("new_prefix_b", "file"))
     system_path = os.path.join(os.path.sep, "system", "path")
+
+    fs.touchp(own_prefix_path)
+    fs.touchp(new_own_prefix_path)
+    fs.touchp(dep_prefix_path)
+    fs.touchp(new_dep_prefix_path)
 
     # Old prefixes to new prefixes
     prefix_to_prefix = OrderedDict(
@@ -489,8 +490,7 @@ def mock_download():
                 "<non-existent URL>", "This FetchStrategy always fails"
             )
 
-    fetcher = FetchStrategyComposite()
-    fetcher.append(FailedDownloadStrategy())
+    fetcher = FailedDownloadStrategy()
 
     @property
     def fake_fn(self):
@@ -523,7 +523,7 @@ def test_manual_download(
         monkeypatch.setattr(spack.package_base.PackageBase, "download_instr", _instr)
 
     expected = spec.package.download_instr if manual else "All fetchers failed"
-    with pytest.raises(spack.util.web.FetchError, match=expected):
+    with pytest.raises(spack.error.FetchError, match=expected):
         spec.package.do_fetch()
 
 
@@ -536,9 +536,7 @@ def fetching_not_allowed(monkeypatch):
         def fetch(self):
             raise Exception("Sources are fetched but shouldn't have been")
 
-    fetcher = FetchStrategyComposite()
-    fetcher.append(FetchingNotAllowed())
-    monkeypatch.setattr(spack.package_base.PackageBase, "fetcher", fetcher)
+    monkeypatch.setattr(spack.package_base.PackageBase, "fetcher", FetchingNotAllowed())
 
 
 def test_fetch_without_code_is_noop(

@@ -44,7 +44,7 @@ class Axl(CMakePackage):
     )
 
     depends_on("kvtree")
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
 
     depends_on("kvtree@main", when="@main")
     depends_on("kvtree@:1.2.0", when="@:0.5.0")

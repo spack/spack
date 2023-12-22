@@ -29,7 +29,7 @@ def setup_parser(subparser):
 
 def _show_patch(sha256):
     """Show a record from the patch index."""
-    patches = spack.repo.path.patch_index.index
+    patches = spack.repo.PATH.patch_index.index
     data = patches.get(sha256)
 
     if not data:
@@ -47,7 +47,7 @@ def _show_patch(sha256):
         owner = rec["owner"]
 
         if "relative_path" in rec:
-            pkg_dir = spack.repo.path.get_pkg_class(owner).package_dir
+            pkg_dir = spack.repo.PATH.get_pkg_class(owner).package_dir
             path = os.path.join(pkg_dir, rec["relative_path"])
             print("    path:       %s" % path)
         else:
@@ -60,7 +60,7 @@ def _show_patch(sha256):
 
 def resource_list(args):
     """list all resources known to spack (currently just patches)"""
-    patches = spack.repo.path.patch_index.index
+    patches = spack.repo.PATH.patch_index.index
     for sha256 in patches:
         if args.only_hashes:
             print(sha256)

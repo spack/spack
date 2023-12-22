@@ -15,12 +15,12 @@ from llnl.util import lang, tty
 from llnl.util.tty import colify
 
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 import spack.install_test
 import spack.package_base
 import spack.repo
 import spack.report
+from spack.cmd.common import arguments
 
 description = "run spack's tests for an install"
 section = "admin"
@@ -174,7 +174,7 @@ def test_run(args):
     specs = spack.cmd.parse_specs(args.specs) if args.specs else [None]
     specs_to_test = []
     for spec in specs:
-        matching = spack.store.db.query_local(spec, hashes=hashes, explicit=explicit)
+        matching = spack.store.STORE.db.query_local(spec, hashes=hashes, explicit=explicit)
         if spec and not matching:
             tty.warn("No {0}installed packages match spec {1}".format(explicit_str, spec))
             """
@@ -228,7 +228,7 @@ def create_reporter(args, specs_to_test, test_suite):
 
 def test_list(args):
     """list installed packages with available tests"""
-    tagged = set(spack.repo.path.packages_with_tags(*args.tag)) if args.tag else set()
+    tagged = set(spack.repo.PATH.packages_with_tags(*args.tag)) if args.tag else set()
 
     def has_test_and_tags(pkg_class):
         tests = spack.install_test.test_functions(pkg_class)
@@ -237,7 +237,7 @@ def test_list(args):
     if args.list_all:
         report_packages = [
             pkg_class.name
-            for pkg_class in spack.repo.path.all_package_classes()
+            for pkg_class in spack.repo.PATH.all_package_classes()
             if has_test_and_tags(pkg_class)
         ]
 
@@ -252,7 +252,7 @@ def test_list(args):
     env = ev.active_environment()
     hashes = env.all_hashes() if env else None
 
-    specs = spack.store.db.query(hashes=hashes)
+    specs = spack.store.STORE.db.query(hashes=hashes)
     specs = list(filter(lambda s: has_test_and_tags(s.package_class), specs))
 
     spack.cmd.display_specs(specs, long=True)
@@ -329,7 +329,7 @@ def _report_suite_results(test_suite, args, constraints):
         qspecs = spack.cmd.parse_specs(constraints)
         specs = {}
         for spec in qspecs:
-            for s in spack.store.db.query(spec, installed=True):
+            for s in spack.store.STORE.db.query(spec, installed=True):
                 specs[s.dag_hash()] = s
         specs = sorted(specs.values())
         test_specs = dict((test_suite.test_pkg_id(s), s) for s in test_suite.specs if s in specs)

@@ -209,12 +209,11 @@ def unit_test(parser, args, unknown_args):
     # mock configuration used by unit tests
     # Note: skip on windows here because for the moment,
     # clingo is wholly unsupported from bootstrap
-    if sys.platform != "win32":
-        with spack.bootstrap.ensure_bootstrap_configuration():
-            spack.bootstrap.ensure_core_dependencies()
-            if pytest is None:
-                spack.bootstrap.ensure_environment_dependencies()
-                import pytest
+    with spack.bootstrap.ensure_bootstrap_configuration():
+        spack.bootstrap.ensure_core_dependencies()
+        if pytest is None:
+            spack.bootstrap.ensure_environment_dependencies()
+            import pytest
 
     if args.pytest_help:
         # make the pytest.main help output more accurate
@@ -228,9 +227,7 @@ def unit_test(parser, args, unknown_args):
     # has been used, then test that extension.
     pytest_root = spack.paths.spack_root
     if args.extension:
-        target = args.extension
-        extensions = spack.extensions.get_extension_paths()
-        pytest_root = spack.extensions.path_for_extension(target, *extensions)
+        pytest_root = spack.extensions.load_extension(args.extension)
 
     # pytest.ini lives in the root of the spack repository.
     with llnl.util.filesystem.working_dir(pytest_root):

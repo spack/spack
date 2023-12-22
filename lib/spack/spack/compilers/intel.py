@@ -86,6 +86,14 @@ class Intel(Compiler):
             return "-std=c++14"
 
     @property
+    def cxx17_flag(self):
+        # https://www.intel.com/content/www/us/en/developer/articles/news/c17-features-supported-by-c-compiler.html
+        if self.real_version < Version("19"):
+            raise UnsupportedCompilerFlag(self, "the C++17 standard", "cxx17_flag", "< 19")
+        else:
+            return "-std=c++17"
+
+    @property
     def c99_flag(self):
         if self.real_version < Version("12"):
             raise UnsupportedCompilerFlag(self, "the C99 standard", "c99_flag", "< 12")

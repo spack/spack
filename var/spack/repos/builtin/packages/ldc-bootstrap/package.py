@@ -25,7 +25,7 @@ class LdcBootstrap(CMakePackage):
     version("0.17.4", sha256="48428afde380415640f3db4e38529345f3c8485b1913717995547f907534c1c3")
 
     depends_on("llvm@3.7:")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libconfig")
     depends_on("curl")
     depends_on("libedit")

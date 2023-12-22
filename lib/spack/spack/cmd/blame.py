@@ -126,7 +126,7 @@ def blame(parser, args):
             blame_file = path
 
     if not blame_file:
-        pkg_cls = spack.repo.path.get_pkg_class(args.package_or_file)
+        pkg_cls = spack.repo.PATH.get_pkg_class(args.package_or_file)
         blame_file = pkg_cls.module.__file__.rstrip("c")  # .pyc -> .py
 
     # get git blame for the package

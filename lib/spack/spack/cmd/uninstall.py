@@ -10,14 +10,13 @@ from llnl.util import tty
 from llnl.util.tty.colify import colify
 
 import spack.cmd
-import spack.cmd.common.arguments as arguments
+import spack.cmd.common.confirmation as confirmation
 import spack.environment as ev
-import spack.error
 import spack.package_base
-import spack.repo
 import spack.spec
 import spack.store
 import spack.traverse as traverse
+from spack.cmd.common import arguments
 from spack.database import InstallStatuses
 
 description = "remove installed packages"
@@ -103,7 +102,7 @@ def find_matching_specs(
     has_errors = False
     for spec in specs:
         install_query = [InstallStatuses.INSTALLED, InstallStatuses.DEPRECATED]
-        matching = spack.store.db.query_local(
+        matching = spack.store.STORE.db.query_local(
             spec, hashes=hashes, installed=install_query, origin=origin
         )
         # For each spec provided, make sure it refers to only one package.
@@ -139,7 +138,7 @@ def installed_dependents(specs: List[spack.spec.Spec]) -> List[spack.spec.Spec]:
     # input; in that case we return an empty list.
 
     def is_installed(spec):
-        record = spack.store.db.query_local_by_spec_hash(spec.dag_hash())
+        record = spack.store.STORE.db.query_local_by_spec_hash(spec.dag_hash())
         return record and record.installed
 
     specs = traverse.traverse_nodes(
@@ -278,7 +277,7 @@ def uninstall_specs(args, specs):
         return
 
     if not args.yes_to_all:
-        confirm_removal(uninstall_list)
+        confirmation.confirm_action(uninstall_list, "uninstalled", "uninstallation")
 
     # Uninstall everything on the list
     do_uninstall(uninstall_list, args.force)
@@ -290,21 +289,6 @@ def uninstall_specs(args, specs):
             env.write()
 
         env.regenerate_views()
-
-
-def confirm_removal(specs: List[spack.spec.Spec]):
-    """Display the list of specs to be removed and ask for confirmation.
-
-    Args:
-        specs: specs to be removed
-    """
-    tty.msg("The following {} packages will be uninstalled:\n".format(len(specs)))
-    spack.cmd.display_specs(specs, **display_args)
-    print("")
-    answer = tty.get_yes_or_no("Do you want to proceed?", default=False)
-    if not answer:
-        tty.msg("Aborting uninstallation")
-        sys.exit(0)
 
 
 def uninstall(parser, args):

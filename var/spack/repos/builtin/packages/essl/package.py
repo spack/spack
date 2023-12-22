@@ -22,13 +22,15 @@ class Essl(BundlePackage):
         multi=False,
     )
     variant("cuda", default=False, description="CUDA acceleration")
+    variant("lapackforessl", default=False, description="Provides lapackforessl lapack library")
 
     provides("blas")
+    provides("lapack", when="+lapackforessl")
 
     conflicts(
         "+cuda",
         when="+ilp64",
-        msg="ESSL+cuda+ilp64 cannot combine CUDA acceleration" " 64 bit integers",
+        msg="ESSL+cuda+ilp64 cannot combine CUDA acceleration 64 bit integers",
     )
 
     conflicts(
@@ -62,4 +64,11 @@ class Essl(BundlePackage):
         essl_root = prefix.lib64
         essl_libs = find_libraries(essl_lib, root=essl_root, shared=True)
 
+        return essl_libs
+
+    @property
+    def lapack_libs(self):
+        essl_libs = find_libraries(
+            ["liblapackforessl", "liblapackforessl_"], root=self.prefix.lib64, shared=True
+        )
         return essl_libs

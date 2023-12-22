@@ -28,7 +28,7 @@ class Express(CMakePackage):
         "+atomic+container+math+thread+program_options"
     )
     depends_on("bamtools")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     # patch from the debian package repo:
     # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=811859

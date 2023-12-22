@@ -24,6 +24,7 @@ class Namd(MakefilePackage, CudaPackage):
     maintainers("jcphill")
 
     version("master", branch="master")
+    version("3.0b3", sha256="20c32b6161f9c376536e3cb97c3bfe5367e1baaaace3c716ff79831fc2eb8199")
     version("2.15a2", sha256="8748cbaa93fc480f92fc263d9323e55bce6623fc693dbfd4a40f59b92669713e")
     version("2.15a1", branch="master", tag="release-2-15-alpha-1")
     # Same as above, but lets you use a local file instead of git
@@ -53,6 +54,7 @@ class Namd(MakefilePackage, CudaPackage):
     )
 
     variant("avxtiles", when="target=x86_64_v4:", default=False, description="Enable avxtiles")
+    variant("single_node_gpu", default=False, description="Single node GPU")
 
     # init_tcl_pointers() declaration and implementation are inconsistent
     # "src/colvarproxy_namd.C", line 482: error: inherited member is not
@@ -62,7 +64,8 @@ class Namd(MakefilePackage, CudaPackage):
     # Handle change in python-config for python@3.8:
     patch("namd-python38.patch", when="interface=python ^python@3.8:")
 
-    depends_on("charmpp@6.10.1:6", when="@2.14:")
+    depends_on("charmpp@7.0.0:", when="@3.0b3")
+    depends_on("charmpp@6.10.1:6", when="@2.14:2")
     depends_on("charmpp@6.8.2", when="@2.13")
     depends_on("charmpp@6.7.1", when="@2.12")
 
@@ -88,7 +91,11 @@ class Namd(MakefilePackage, CudaPackage):
 
     def _copy_arch_file(self, lib):
         config_filename = "arch/{0}.{1}".format(self.arch, lib)
-        copy("arch/Linux-x86_64.{0}".format(lib), config_filename)
+        if self.arch == "linux-aarch64":
+            copy("arch/Linux-ARM64.{0}".format(lib), config_filename)
+        else:
+            copy("arch/Linux-x86_64.{0}".format(lib), config_filename)
+
         if lib == "tcl":
             filter_file(
                 r"-ltcl8\.5", "-ltcl{0}".format(self.spec["tcl"].version.up_to(2)), config_filename
@@ -259,6 +266,11 @@ class Namd(MakefilePackage, CudaPackage):
                 "CUDADIR={0}".format(spec["cuda"].prefix),
                 join_path("arch", self.arch + ".cuda"),
             )
+            for cuda_arch in spec.variants["cuda_arch"].value:
+                opts.extend(["--cuda-gencode", f"arch=compute_{cuda_arch},code=sm_{cuda_arch}"])
+
+            if "+single_node_gpu" in spec:
+                opts.extend(["--with-single-node-cuda"])
 
         config = Executable("./config")
 
@@ -279,7 +291,10 @@ class Namd(MakefilePackage, CudaPackage):
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
             mkdirp(prefix.bin)
-            install("namd2", prefix.bin)
+            if spec.version < Version("3"):
+                install("namd2", prefix.bin)
+            else:
+                install("namd3", prefix.bin)
             install("psfgen", prefix.bin)
 
             # I'm not sure this is a good idea or if an autoload of the charm

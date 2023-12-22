@@ -780,7 +780,7 @@ class winlog:
             raise RuntimeError("file argument must be set by __init__ ")
 
         # Open both write and reading on logfile
-        if type(self.logfile) == io.StringIO:
+        if isinstance(self.logfile, io.StringIO):
             self._ioflag = True
             # cannot have two streams on tempfile, so we must make our own
             sys.stdout = self.logfile

@@ -9,11 +9,11 @@ import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 import spack.package_base
 import spack.repo
 import spack.store
+from spack.cmd.common import arguments
 
 description = "show dependencies of a package"
 section = "basic"
@@ -60,7 +60,7 @@ def dependencies(parser, args):
         format_string = "{name}{@version}{%compiler}{/hash:7}"
         if sys.stdout.isatty():
             tty.msg("Dependencies of %s" % spec.format(format_string, color=True))
-        deps = spack.store.db.installed_relatives(
+        deps = spack.store.STORE.db.installed_relatives(
             spec, "children", args.transitive, deptype=args.deptype
         )
         if deps:
@@ -74,7 +74,7 @@ def dependencies(parser, args):
             spec,
             transitive=args.transitive,
             expand_virtuals=args.expand_virtuals,
-            deptype=args.deptype,
+            depflag=args.deptype,
         )
 
         if spec.name in dependencies:

@@ -27,7 +27,7 @@ if sys.platform != "win32":
     import grp
 
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 too_long = sbang.system_shebang_limit + 1
@@ -53,13 +53,12 @@ php_in_text = ("line\n") * 100 + "php\n" + ("line\n" * 100)
 php_line_patched = "<?php #!/this/" + ("x" * too_long) + "/is/php\n"
 php_line_patched2 = "?>\n"
 
-sbang_line = "#!/bin/sh %s/bin/sbang\n" % spack.store.store.unpadded_root
 last_line = "last!\n"
 
 
 @pytest.fixture  # type: ignore[no-redef]
 def sbang_line():
-    yield "#!/bin/sh %s/bin/sbang\n" % spack.store.layout.root
+    yield "#!/bin/sh %s/bin/sbang\n" % spack.store.STORE.layout.root
 
 
 class ScriptDirectory:
@@ -309,7 +308,7 @@ all:
 def check_sbang_installation(group=False):
     sbang_path = sbang.sbang_install_path()
     sbang_bin_dir = os.path.dirname(sbang_path)
-    assert sbang_path.startswith(spack.store.store.unpadded_root)
+    assert sbang_path.startswith(spack.store.STORE.unpadded_root)
 
     assert os.path.exists(sbang_path)
     assert fs.is_exe(sbang_path)
@@ -333,7 +332,7 @@ def run_test_install_sbang(group):
     sbang_path = sbang.sbang_install_path()
     sbang_bin_dir = os.path.dirname(sbang_path)
 
-    assert sbang_path.startswith(spack.store.store.unpadded_root)
+    assert sbang_path.startswith(spack.store.STORE.unpadded_root)
     assert not os.path.exists(sbang_bin_dir)
 
     sbang.install_sbang()

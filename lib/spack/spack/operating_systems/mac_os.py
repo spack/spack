@@ -142,6 +142,7 @@ class MacOs(OperatingSystem):
             "11": "bigsur",
             "12": "monterey",
             "13": "ventura",
+            "14": "sonoma",
         }
 
         version = macos_version()

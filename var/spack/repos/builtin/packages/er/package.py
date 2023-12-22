@@ -29,7 +29,7 @@ class Er(CMakePackage):
     depends_on("rankstr", when="@0.0.4:")
     depends_on("redset")
     depends_on("shuffile")
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
 
     depends_on("kvtree@:1.2.0", when="@:0.1.0")
     depends_on("kvtree@1.3.0", when="@0.2.0:0.3.0")

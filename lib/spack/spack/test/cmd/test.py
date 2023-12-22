@@ -5,7 +5,6 @@
 
 import argparse
 import os
-import sys
 
 import pytest
 
@@ -22,7 +21,7 @@ from spack.main import SpackCommand
 install = SpackCommand("install")
 spack_test = SpackCommand("test")
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 def test_test_package_not_installed(

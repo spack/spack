@@ -26,7 +26,7 @@ class Denovogear(CMakePackage):
     )
     depends_on("htslib@1.2:", type=("build"))
     depends_on("eigen", type=("build"))
-    depends_on("zlib", type=("link"))
+    depends_on("zlib-api", type=("link"))
 
     patch("stream-open.patch", when="@:1.1.1")
     # fix: ordered comparison between pointer and zero.

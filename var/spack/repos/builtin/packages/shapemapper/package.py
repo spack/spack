@@ -24,7 +24,8 @@ class Shapemapper(CMakePackage):
         url="https://github.com/Weeks-UNC/shapemapper2/releases/download/2.1.5/shapemapper-2.1.5-source-only.tar.gz",
     )
 
-    depends_on("bowtie2@2.3.0: ^perl+threads", type="run")
+    depends_on("bowtie2@2.3.0:", type="run")
+    depends_on("perl+threads", type="run")
     # hard version dep due to jni
     depends_on("bbmap@37.78", type="run")
     depends_on("boost+filesystem+program_options+iostreams+system")

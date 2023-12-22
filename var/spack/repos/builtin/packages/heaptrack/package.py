@@ -20,7 +20,7 @@ class Heaptrack(CMakePackage):
     depends_on("cmake@2.8.9:", type="build")
     depends_on("elfutils")
     depends_on("libunwind")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("zstd")
 
     def cmake_args(self):

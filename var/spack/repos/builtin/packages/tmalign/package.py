@@ -27,7 +27,7 @@ class Tmalign(Package):
         deprecated=True,
     )
 
-    variant("fast-math", default=False, when="@20220412:")
+    variant("fast-math", default=False, description="Enable fast math", when="@20220412:")
 
     with when("@20220412:"):
         phases = ["build", "install"]

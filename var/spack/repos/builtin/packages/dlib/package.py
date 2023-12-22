@@ -23,7 +23,7 @@ class Dlib(CMakePackage):
 
     variant("shared", default=True, description="build the shared libraries")
 
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libpng")
     depends_on("libjpeg")
     depends_on("blas")

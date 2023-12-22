@@ -29,7 +29,7 @@ class Gcta(CMakePackage):
     depends_on("eigen@3.3.1", when="@1.91.2")
     depends_on("eigen@3.3.7:", when="@1.94.0beta:")
     depends_on("boost@1.79:", when="@1.94.0beta:")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("sqlite@3.3.1:", when="@1.94.0beta:")
     depends_on("zstd@1.4.4:", when="@1.94.0beta:")
     depends_on("spectra", when="@1.94.0beta:")

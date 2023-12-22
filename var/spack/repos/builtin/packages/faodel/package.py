@@ -9,9 +9,9 @@ from spack.package import *
 class Faodel(CMakePackage):
     """Flexible, Asynchronous, Object Data-Exchange Libraries"""
 
-    homepage = "https://github.com/faodel/faodel"
-    url = "https://github.com/faodel/faodel/archive/v1.2108.1.tar.gz"
-    git = "https://github.com/faodel/faodel.git"
+    homepage = "https://github.com/sandialabs/faodel"
+    url = "https://github.com/sandialabs/faodel/archive/v1.2108.1.tar.gz"
+    git = "https://github.com/sandialabs/faodel.git"
 
     maintainers("tkordenbrock", "craigulmer")
 

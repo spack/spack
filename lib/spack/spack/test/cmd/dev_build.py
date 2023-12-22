@@ -4,26 +4,27 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import sys
 
 import pytest
 
 import llnl.util.filesystem as fs
 
+import spack.build_environment
 import spack.environment as ev
+import spack.error
 import spack.spec
+import spack.store
 from spack.main import SpackCommand
 
 dev_build = SpackCommand("dev-build")
 install = SpackCommand("install")
 env = SpackCommand("env")
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
-def test_dev_build_basics(tmpdir, mock_packages, install_mockery):
-    spec = spack.spec.Spec("dev-build-test-install@0.0.0 dev_path=%s" % tmpdir)
-    spec.concretize()
+def test_dev_build_basics(tmpdir, install_mockery):
+    spec = spack.spec.Spec(f"dev-build-test-install@0.0.0 dev_path={tmpdir}").concretized()
 
     assert "dev_path" in spec.variants
 
@@ -40,9 +41,8 @@ def test_dev_build_basics(tmpdir, mock_packages, install_mockery):
     assert os.path.exists(str(tmpdir))
 
 
-def test_dev_build_before(tmpdir, mock_packages, install_mockery):
-    spec = spack.spec.Spec("dev-build-test-install@0.0.0 dev_path=%s" % tmpdir)
-    spec.concretize()
+def test_dev_build_before(tmpdir, install_mockery):
+    spec = spack.spec.Spec(f"dev-build-test-install@0.0.0 dev_path={tmpdir}").concretized()
 
     with tmpdir.as_cwd():
         with open(spec.package.filename, "w") as f:
@@ -57,9 +57,8 @@ def test_dev_build_before(tmpdir, mock_packages, install_mockery):
     assert not os.path.exists(spec.prefix)
 
 
-def test_dev_build_until(tmpdir, mock_packages, install_mockery):
-    spec = spack.spec.Spec("dev-build-test-install@0.0.0 dev_path=%s" % tmpdir)
-    spec.concretize()
+def test_dev_build_until(tmpdir, install_mockery):
+    spec = spack.spec.Spec(f"dev-build-test-install@0.0.0 dev_path={tmpdir}").concretized()
 
     with tmpdir.as_cwd():
         with open(spec.package.filename, "w") as f:
@@ -72,13 +71,12 @@ def test_dev_build_until(tmpdir, mock_packages, install_mockery):
             assert f.read() == spec.package.replacement_string
 
     assert not os.path.exists(spec.prefix)
-    assert not spack.store.db.query(spec, installed=True)
+    assert not spack.store.STORE.db.query(spec, installed=True)
 
 
-def test_dev_build_until_last_phase(tmpdir, mock_packages, install_mockery):
+def test_dev_build_until_last_phase(tmpdir, install_mockery):
     # Test that we ignore the last_phase argument if it is already last
-    spec = spack.spec.Spec("dev-build-test-install@0.0.0 dev_path=%s" % tmpdir)
-    spec.concretize()
+    spec = spack.spec.Spec(f"dev-build-test-install@0.0.0 dev_path={tmpdir}").concretized()
 
     with tmpdir.as_cwd():
         with open(spec.package.filename, "w") as f:
@@ -91,13 +89,12 @@ def test_dev_build_until_last_phase(tmpdir, mock_packages, install_mockery):
             assert f.read() == spec.package.replacement_string
 
     assert os.path.exists(spec.prefix)
-    assert spack.store.db.query(spec, installed=True)
+    assert spack.store.STORE.db.query(spec, installed=True)
     assert os.path.exists(str(tmpdir))
 
 
-def test_dev_build_before_until(tmpdir, mock_packages, install_mockery, capsys):
-    spec = spack.spec.Spec("dev-build-test-install@0.0.0 dev_path=%s" % tmpdir)
-    spec.concretize()
+def test_dev_build_before_until(tmpdir, install_mockery, capsys):
+    spec = spack.spec.Spec(f"dev-build-test-install@0.0.0 dev_path={tmpdir}").concretized()
 
     with tmpdir.as_cwd():
         with open(spec.package.filename, "w") as f:
@@ -135,7 +132,6 @@ def mock_module_noop(*args):
 
 def test_dev_build_drop_in(tmpdir, mock_packages, monkeypatch, install_mockery, working_env):
     monkeypatch.setattr(os, "execvp", print_spack_cc)
-
     monkeypatch.setattr(spack.build_environment, "module", mock_module_noop)
 
     with tmpdir.as_cwd():
@@ -143,7 +139,7 @@ def test_dev_build_drop_in(tmpdir, mock_packages, monkeypatch, install_mockery, 
         assert "lib/spack/env" in output
 
 
-def test_dev_build_fails_already_installed(tmpdir, mock_packages, install_mockery):
+def test_dev_build_fails_already_installed(tmpdir, install_mockery):
     spec = spack.spec.Spec("dev-build-test-install@0.0.0 dev_path=%s" % tmpdir)
     spec.concretize()
 
@@ -167,8 +163,15 @@ def test_dev_build_fails_multiple_specs(mock_packages):
 
 
 def test_dev_build_fails_nonexistent_package_name(mock_packages):
-    output = dev_build("no_such_package", fail_on_error=False)
-    assert "No package for 'no_such_package' was found" in output
+    output = ""
+
+    try:
+        dev_build("no_such_package")
+        assert False, "no exception was raised!"
+    except spack.repo.UnknownPackageError as e:
+        output = e.message
+
+    assert "Package 'no_such_package' not found" in output
 
 
 def test_dev_build_fails_no_version(mock_packages):
@@ -176,7 +179,7 @@ def test_dev_build_fails_no_version(mock_packages):
     assert "dev-build spec must have a single, concrete version" in output
 
 
-def test_dev_build_env(tmpdir, mock_packages, install_mockery, mutable_mock_env_path):
+def test_dev_build_env(tmpdir, install_mockery, mutable_mock_env_path):
     """Test Spack does dev builds for packages in develop section of env."""
     # setup dev-build-test-install package for dev build
     build_dir = tmpdir.mkdir("build")
@@ -192,7 +195,7 @@ def test_dev_build_env(tmpdir, mock_packages, install_mockery, mutable_mock_env_
     with envdir.as_cwd():
         with open("spack.yaml", "w") as f:
             f.write(
-                """\
+                f"""\
 spack:
   specs:
   - dev-build-test-install@0.0.0
@@ -200,11 +203,9 @@ spack:
   develop:
     dev-build-test-install:
       spec: dev-build-test-install@0.0.0
-      path: %s
+      path: {os.path.relpath(str(build_dir), start=str(envdir))}
 """
-                % os.path.relpath(str(build_dir), start=str(envdir))
             )
-
         env("create", "test", "./spack.yaml")
         with ev.read("test"):
             install()
@@ -214,9 +215,7 @@ spack:
         assert f.read() == spec.package.replacement_string
 
 
-def test_dev_build_env_version_mismatch(
-    tmpdir, mock_packages, install_mockery, mutable_mock_env_path
-):
+def test_dev_build_env_version_mismatch(tmpdir, install_mockery, mutable_mock_env_path):
     """Test Spack constraints concretization by develop specs."""
     # setup dev-build-test-install package for dev build
     build_dir = tmpdir.mkdir("build")
@@ -232,7 +231,7 @@ def test_dev_build_env_version_mismatch(
     with envdir.as_cwd():
         with open("spack.yaml", "w") as f:
             f.write(
-                """\
+                f"""\
 spack:
   specs:
   - dev-build-test-install@0.0.0
@@ -240,20 +239,17 @@ spack:
   develop:
     dev-build-test-install:
       spec: dev-build-test-install@1.1.1
-      path: %s
+      path: {build_dir}
 """
-                % build_dir
             )
 
         env("create", "test", "./spack.yaml")
         with ev.read("test"):
-            with pytest.raises(RuntimeError):
+            with pytest.raises((RuntimeError, spack.error.UnsatisfiableSpecError)):
                 install()
 
 
-def test_dev_build_multiple(
-    tmpdir, mock_packages, install_mockery, mutable_mock_env_path, mock_fetch
-):
+def test_dev_build_multiple(tmpdir, install_mockery, mutable_mock_env_path, mock_fetch):
     """Test spack install with multiple developer builds
 
     Test that only the root needs to be specified in the environment
@@ -266,7 +262,7 @@ def test_dev_build_multiple(
     # root and dependency if they wanted a dev build for both.
     leaf_dir = tmpdir.mkdir("leaf")
     leaf_spec = spack.spec.Spec("dev-build-test-install@=1.0.0")  # non-existing version
-    leaf_pkg_cls = spack.repo.path.get_pkg_class(leaf_spec.name)
+    leaf_pkg_cls = spack.repo.PATH.get_pkg_class(leaf_spec.name)
     with leaf_dir.as_cwd():
         with open(leaf_pkg_cls.filename, "w") as f:
             f.write(leaf_pkg_cls.original_string)
@@ -275,7 +271,7 @@ def test_dev_build_multiple(
     # don't concretize outside environment -- dev info will be wrong
     root_dir = tmpdir.mkdir("root")
     root_spec = spack.spec.Spec("dev-build-test-dependent@0.0.0")
-    root_pkg_cls = spack.repo.path.get_pkg_class(root_spec.name)
+    root_pkg_cls = spack.repo.PATH.get_pkg_class(root_spec.name)
     with root_dir.as_cwd():
         with open(root_pkg_cls.filename, "w") as f:
             f.write(root_pkg_cls.original_string)
@@ -285,20 +281,19 @@ def test_dev_build_multiple(
     with envdir.as_cwd():
         with open("spack.yaml", "w") as f:
             f.write(
-                """\
+                f"""\
 spack:
   specs:
   - dev-build-test-dependent@0.0.0
 
   develop:
     dev-build-test-install:
-      path: %s
+      path: {leaf_dir}
       spec: dev-build-test-install@=1.0.0
     dev-build-test-dependent:
       spec: dev-build-test-dependent@0.0.0
-      path: %s
+      path: {root_dir}
 """
-                % (leaf_dir, root_dir)
             )
 
         env("create", "test", "./spack.yaml")
@@ -317,9 +312,7 @@ spack:
             assert f.read() == spec.package.replacement_string
 
 
-def test_dev_build_env_dependency(
-    tmpdir, mock_packages, install_mockery, mock_fetch, mutable_mock_env_path
-):
+def test_dev_build_env_dependency(tmpdir, install_mockery, mock_fetch, mutable_mock_env_path):
     """
     Test non-root specs in an environment are properly marked for dev builds.
     """
@@ -329,7 +322,7 @@ def test_dev_build_env_dependency(
     dep_spec = spack.spec.Spec("dev-build-test-install")
 
     with build_dir.as_cwd():
-        dep_pkg_cls = spack.repo.path.get_pkg_class(dep_spec.name)
+        dep_pkg_cls = spack.repo.PATH.get_pkg_class(dep_spec.name)
         with open(dep_pkg_cls.filename, "w") as f:
             f.write(dep_pkg_cls.original_string)
 
@@ -338,7 +331,7 @@ def test_dev_build_env_dependency(
     with envdir.as_cwd():
         with open("spack.yaml", "w") as f:
             f.write(
-                """\
+                f"""\
 spack:
   specs:
   - dependent-of-dev-build@0.0.0
@@ -346,11 +339,9 @@ spack:
   develop:
     dev-build-test-install:
       spec: dev-build-test-install@0.0.0
-      path: %s
+      path: {os.path.relpath(str(build_dir), start=str(envdir))}
 """
-                % os.path.relpath(str(build_dir), start=str(envdir))
             )
-
         env("create", "test", "./spack.yaml")
         with ev.read("test"):
             # concretize in the environment to get the dev build info
@@ -372,7 +363,7 @@ spack:
 
 @pytest.mark.parametrize("test_spec", ["dev-build-test-install", "dependent-of-dev-build"])
 def test_dev_build_rebuild_on_source_changes(
-    test_spec, tmpdir, mock_packages, install_mockery, mutable_mock_env_path, mock_fetch
+    test_spec, tmpdir, install_mockery, mutable_mock_env_path, mock_fetch
 ):
     """Test dev builds rebuild on changes to source code.
 
@@ -417,4 +408,4 @@ spack:
             fs.touch(os.path.join(str(build_dir), "test"))
             output = install()
 
-    assert "Installing %s" % test_spec in output
+    assert f"Installing {test_spec}" in output

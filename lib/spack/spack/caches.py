@@ -20,9 +20,9 @@ import spack.util.path
 
 
 def misc_cache_location():
-    """The ``misc_cache`` is Spack's cache for small data.
+    """The ``MISC_CACHE`` is Spack's cache for small data.
 
-    Currently the ``misc_cache`` stores indexes for virtual dependency
+    Currently the ``MISC_CACHE`` stores indexes for virtual dependency
     providers and for which packages provide which tags.
     """
     path = spack.config.get("config:misc_cache", spack.paths.default_misc_cache_path)
@@ -35,7 +35,7 @@ def _misc_cache():
 
 
 #: Spack's cache for small data
-misc_cache: Union[
+MISC_CACHE: Union[
     spack.util.file_cache.FileCache, llnl.util.lang.Singleton
 ] = llnl.util.lang.Singleton(_misc_cache)
 
@@ -91,6 +91,6 @@ class MirrorCache:
 
 
 #: Spack's local cache for downloaded source archives
-fetch_cache: Union[
+FETCH_CACHE: Union[
     spack.fetch_strategy.FsCache, llnl.util.lang.Singleton
 ] = llnl.util.lang.Singleton(_fetch_cache)

@@ -32,7 +32,7 @@ class Ferret(Package):
     depends_on("netcdf-c")
     depends_on("netcdf-fortran")
     depends_on("readline")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libx11")
     depends_on("curl")
 
@@ -66,7 +66,7 @@ class Ferret(Package):
         hdf5_prefix = spec["hdf5"].prefix
         netcdff_prefix = spec["netcdf-fortran"].prefix
         readline_prefix = spec["readline"].prefix
-        libz_prefix = spec["zlib"].prefix
+        libz_prefix = spec["zlib-api"].prefix
 
         work_dir = "FERRET" if "@:7.2" in spec else "."
         with working_dir(work_dir, create=False):

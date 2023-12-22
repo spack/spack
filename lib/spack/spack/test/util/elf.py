@@ -14,6 +14,7 @@ import llnl.util.filesystem as fs
 import spack.platforms
 import spack.util.elf as elf
 import spack.util.executable
+from spack.hooks.drop_redundant_rpaths import drop_redundant_rpaths
 
 
 # note that our elf parser is platform independent... but I guess creating an elf file
@@ -119,6 +120,21 @@ def test_parser_doesnt_deal_with_nonzero_offset():
         elf.parse_elf(elf_at_offset_one)
 
 
+def test_only_header():
+    # When passing only_header=True parsing a file that is literally just a header
+    # without any sections/segments should not error.
+
+    # 32 bit
+    elf_32 = elf.parse_elf(io.BytesIO(b"\x7fELF\x01\x01" + b"\x00" * 46), only_header=True)
+    assert not elf_32.is_64_bit
+    assert elf_32.is_little_endian
+
+    # 64 bit
+    elf_64 = elf.parse_elf(io.BytesIO(b"\x7fELF\x02\x01" + b"\x00" * 58), only_header=True)
+    assert elf_64.is_64_bit
+    assert elf_64.is_little_endian
+
+
 @pytest.mark.requires_executables("gcc")
 @skip_unless_linux
 def test_elf_get_and_replace_rpaths(binary_with_rpaths):
@@ -159,3 +175,30 @@ def test_elf_get_and_replace_rpaths(binary_with_rpaths):
                 [(b"/short-a", b"/very/long/prefix-a"), (b"/short-b", b"/very/long/prefix-b")]
             ),
         )
+
+
+@pytest.mark.requires_executables("gcc")
+@skip_unless_linux
+def test_drop_redundant_rpath(tmpdir, binary_with_rpaths):
+    """Test the post install hook that drops redundant rpath entries"""
+
+    # Use existing and non-existing dirs in tmpdir
+    non_existing_dirs = [str(tmpdir.join("a")), str(tmpdir.join("b"))]
+    existing_dirs = [str(tmpdir.join("c")), str(tmpdir.join("d"))]
+    all_dirs = non_existing_dirs + existing_dirs
+
+    tmpdir.ensure("c", dir=True)
+    tmpdir.ensure("d", dir=True)
+
+    # Create a binary with rpaths to both existing and non-existing dirs
+    binary = binary_with_rpaths(rpaths=all_dirs)
+
+    # Verify that the binary has all the rpaths
+    # sometimes compilers add extra rpaths, so we test for a subset
+    assert set(all_dirs).issubset(elf.get_rpaths(binary))
+
+    # Test whether the right rpaths are dropped
+    drop_redundant_rpaths(binary)
+    new_rpaths = elf.get_rpaths(binary)
+    assert set(existing_dirs).issubset(new_rpaths)
+    assert set(non_existing_dirs).isdisjoint(new_rpaths)

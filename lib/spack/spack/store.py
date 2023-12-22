@@ -25,13 +25,14 @@ import uuid
 from typing import Any, Callable, Dict, Generator, List, Optional, Union
 
 import llnl.util.lang
-import llnl.util.tty as tty
+from llnl.util import tty
 
 import spack.config
 import spack.database
 import spack.directory_layout
 import spack.error
 import spack.paths
+import spack.spec
 import spack.util.path
 
 #: default installation root, relative to the Spack install path
@@ -134,18 +135,21 @@ def parse_install_tree(config_dict):
 class Store:
     """A store is a path full of installed Spack packages.
 
-    Stores consist of packages installed according to a
-    ``DirectoryLayout``, along with an index, or _database_ of their
-    contents.  The directory layout controls what paths look like and how
-    Spack ensures that each unique spec gets its own unique directory (or
-    not, though we don't recommend that). The database is a single file
-    that caches metadata for the entire Spack installation.  It prevents
-    us from having to spider the install tree to figure out what's there.
+    Stores consist of packages installed according to a ``DirectoryLayout``, along with a database
+    of their contents.
+
+    The directory layout controls what paths look like and how Spack ensures that each unique spec
+    gets its own unique directory (or not, though we don't recommend that).
+
+    The database is a single file that caches metadata for the entire Spack installation. It
+    prevents us from having to spider the install tree to figure out what's there.
+
+    The store is also able to lock installation prefixes, and to mark installation failures.
 
     Args:
         root: path to the root of the install tree
-        unpadded_root: path to the root of the install tree without padding.
-            The sbang script has to be installed here to work with padded roots
+        unpadded_root: path to the root of the install tree without padding. The sbang script has
+            to be installed here to work with padded roots
         projections: expression according to guidelines that describes how to construct a path to
             a package prefix in this store
         hash_length: length of the hashes used in the directory layout. Spec hash suffixes will be
@@ -170,6 +174,19 @@ class Store:
         self.upstreams = upstreams
         self.lock_cfg = lock_cfg
         self.db = spack.database.Database(root, upstream_dbs=upstreams, lock_cfg=lock_cfg)
+
+        timeout_format_str = (
+            f"{str(lock_cfg.package_timeout)}s" if lock_cfg.package_timeout else "No timeout"
+        )
+        tty.debug("PACKAGE LOCK TIMEOUT: {0}".format(str(timeout_format_str)))
+
+        self.prefix_locker = spack.database.SpecLocker(
+            spack.database.prefix_lock_path(root), default_timeout=lock_cfg.package_timeout
+        )
+        self.failure_tracker = spack.database.FailureTracker(
+            self.root, default_timeout=lock_cfg.package_timeout
+        )
+
         self.layout = spack.directory_layout.DirectoryLayout(
             root, projections=projections, hash_length=hash_length
         )
@@ -195,7 +212,7 @@ def create(configuration: ConfigurationType) -> Store:
     Args:
         configuration: configuration to create a store.
     """
-    configuration = configuration or spack.config.config
+    configuration = configuration or spack.config.CONFIG
     config_dict = configuration.get("config")
     root, unpadded_root, projections = parse_install_tree(config_dict)
     hash_length = configuration.get("config:install_hash_length")
@@ -217,78 +234,30 @@ def create(configuration: ConfigurationType) -> Store:
 
 
 def _create_global() -> Store:
-    # Check that the user is not trying to install software into the store
-    # reserved by Spack to bootstrap its own dependencies, since this would
-    # lead to bizarre behaviors (e.g. cleaning the bootstrap area would wipe
-    # user installed software)
-    import spack.bootstrap
-
-    enable_bootstrap = spack.config.config.get("bootstrap:enable", True)
-    if enable_bootstrap and spack.bootstrap.store_path() == root:
-        msg = (
-            'please change the install tree root "{0}" in your '
-            "configuration [path reserved for Spack internal use]"
-        )
-        raise ValueError(msg.format(root))
-    return create(configuration=spack.config.config)
+    result = create(configuration=spack.config.CONFIG)
+    return result
 
 
 #: Singleton store instance
-store: Union[Store, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(_create_global)
-
-
-def _store_root() -> str:
-    return store.root
-
-
-def _store_unpadded_root() -> str:
-    return store.unpadded_root
-
-
-def _store_db() -> spack.database.Database:
-    return store.db
-
-
-def _store_layout() -> spack.directory_layout.DirectoryLayout:
-    return store.layout
-
-
-# convenience accessors for parts of the singleton store
-root: Union[llnl.util.lang.LazyReference, str] = llnl.util.lang.LazyReference(_store_root)
-unpadded_root: Union[llnl.util.lang.LazyReference, str] = llnl.util.lang.LazyReference(
-    _store_unpadded_root
-)
-db: Union[llnl.util.lang.LazyReference, spack.database.Database] = llnl.util.lang.LazyReference(
-    _store_db
-)
-layout: Union[
-    llnl.util.lang.LazyReference, "spack.directory_layout.DirectoryLayout"
-] = llnl.util.lang.LazyReference(_store_layout)
+STORE: Union[Store, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(_create_global)
 
 
 def reinitialize():
     """Restore globals to the same state they would have at start-up. Return a token
     containing the state of the store before reinitialization.
     """
-    global store
-    global root, unpadded_root, db, layout
+    global STORE
 
-    token = store, root, unpadded_root, db, layout
-
-    store = llnl.util.lang.Singleton(_create_global)
-    root = llnl.util.lang.LazyReference(_store_root)
-    unpadded_root = llnl.util.lang.LazyReference(_store_unpadded_root)
-    db = llnl.util.lang.LazyReference(_store_db)
-    layout = llnl.util.lang.LazyReference(_store_layout)
+    token = STORE
+    STORE = llnl.util.lang.Singleton(_create_global)
 
     return token
 
 
 def restore(token):
     """Restore the environment from a token returned by reinitialize"""
-    global store
-    global root, unpadded_root, db, layout
-    store, root, unpadded_root, db, layout = token
+    global STORE
+    STORE = token
 
 
 def _construct_upstream_dbs_from_install_roots(
@@ -330,7 +299,7 @@ def find(
         constraints: spec(s) to be matched against installed packages
         multiple: if True multiple matches per constraint are admitted
         query_fn (Callable): query function to get matching specs. By default,
-            ``spack.store.db.query``
+            ``spack.store.STORE.db.query``
         **kwargs: keyword arguments forwarded to the query function
     """
     if isinstance(constraints, str):
@@ -338,7 +307,7 @@ def find(
 
     matching_specs: List[spack.spec.Spec] = []
     errors = []
-    query_fn = query_fn or spack.store.db.query
+    query_fn = query_fn or spack.store.STORE.db.query
     for spec in constraints:
         current_matches = query_fn(spec, **kwargs)
 
@@ -374,6 +343,11 @@ def specfile_matches(filename: str, **kwargs) -> List["spack.spec.Spec"]:
     return spack.store.find(query, **kwargs)
 
 
+def ensure_singleton_created() -> None:
+    """Ensures the lazily evaluated singleton is created"""
+    _ = STORE.db
+
+
 @contextlib.contextmanager
 def use_store(
     path: Union[str, pathlib.Path], extra_data: Optional[Dict[str, Any]] = None
@@ -388,7 +362,7 @@ def use_store(
     Yields:
         Store object associated with the context manager's store
     """
-    global store, db, layout, root, unpadded_root
+    global STORE
 
     assert not isinstance(path, Store), "cannot pass a store anymore"
     scope_name = "use-store-{}".format(uuid.uuid4())
@@ -397,23 +371,19 @@ def use_store(
         data.update(extra_data)
 
     # Swap the store with the one just constructed and return it
-    _ = store.db
-    spack.config.config.push_scope(
+    ensure_singleton_created()
+    spack.config.CONFIG.push_scope(
         spack.config.InternalConfigScope(name=scope_name, data={"config": {"install_tree": data}})
     )
-    temporary_store = create(configuration=spack.config.config)
-    original_store, store = store, temporary_store
-    db, layout = store.db, store.layout
-    root, unpadded_root = store.root, store.unpadded_root
+    temporary_store = create(configuration=spack.config.CONFIG)
+    original_store, STORE = STORE, temporary_store
 
     try:
         yield temporary_store
     finally:
         # Restore the original store
-        store = original_store
-        db, layout = original_store.db, original_store.layout
-        root, unpadded_root = original_store.root, original_store.unpadded_root
-        spack.config.config.remove_scope(scope_name=scope_name)
+        STORE = original_store
+        spack.config.CONFIG.remove_scope(scope_name=scope_name)
 
 
 class MatchError(spack.error.SpackError):

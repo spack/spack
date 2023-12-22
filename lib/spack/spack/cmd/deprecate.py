@@ -20,9 +20,9 @@ import llnl.util.tty as tty
 from llnl.util.symlink import symlink
 
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 import spack.store
+from spack.cmd.common import arguments
 from spack.database import InstallStatuses
 from spack.error import SpackError
 
@@ -130,7 +130,7 @@ def deprecate(parser, args):
         already_deprecated = []
         already_deprecated_for = []
         for spec in all_deprecate:
-            deprecated_for = spack.store.db.deprecator(spec)
+            deprecated_for = spack.store.STORE.db.deprecator(spec)
             if deprecated_for:
                 already_deprecated.append(spec)
                 already_deprecated_for.append(deprecated_for)
