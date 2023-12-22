@@ -1306,156 +1306,8 @@ class SpackSolverSetup:
             self.gen.fact(f)
 
     def package_requirement_rules(self, pkg):
-        rules = self.requirement_rules_from_package_py(pkg)
-        rules.extend(self.requirement_rules_from_packages_yaml(pkg))
-        rules.extend(self.requirement_rules_from_prefer_in_packages_yaml(pkg))
-        rules.extend(self.requirement_rules_from_conflict_in_packages_yaml(pkg))
-        self.emit_facts_from_requirement_rules(rules)
-
-    def requirement_rules_from_package_py(self, pkg):
-        rules = []
-        for when_spec, requirement_list in pkg.requirements.items():
-            for requirements, policy, message in requirement_list:
-                rules.append(
-                    RequirementRule(
-                        pkg_name=pkg.name,
-                        policy=policy,
-                        requirements=requirements,
-                        kind=RequirementKind.PACKAGE,
-                        condition=when_spec,
-                        message=message,
-                    )
-                )
-        return rules
-
-    def requirement_rules_from_packages_yaml(self, pkg):
-        pkg_name = pkg.name
-        config = spack.config.get("packages")
-        requirements = config.get(pkg_name, {}).get("require", [])
-        kind = RequirementKind.PACKAGE
-        if not requirements:
-            requirements = config.get("all", {}).get("require", [])
-            kind = RequirementKind.DEFAULT
-        return self._rules_from_requirements(pkg_name, requirements, kind=kind)
-
-    def requirement_rules_from_prefer_in_packages_yaml(self, pkg):
-        pkg_name = pkg.name
-        config = spack.config.get("packages")
-        requirements = config.get(pkg_name, {}).get("prefer", [])
-        kind = RequirementKind.PACKAGE
-        if not requirements:
-            requirements = config.get("all", {}).get("prefer", [])
-            kind = RequirementKind.DEFAULT
-
-        result = []
-        for strong_preference in requirements:
-            result.append(
-                RequirementRule(
-                    pkg_name=pkg_name,
-                    policy="any_of",
-                    requirements=[strong_preference, "@:"],
-                    kind=kind,
-                    message=None,
-                    condition=None,
-                )
-            )
-        return result
-
-    def requirement_rules_from_conflict_in_packages_yaml(self, pkg):
-        pkg_name = pkg.name
-        config = spack.config.get("packages")
-        requirements = config.get(pkg_name, {}).get("conflict", [])
-        kind = RequirementKind.PACKAGE
-        if not requirements:
-            requirements = config.get("all", {}).get("conflict", [])
-            kind = RequirementKind.DEFAULT
-
-        result = []
-        for conflict in requirements:
-            result.append(
-                RequirementRule(
-                    pkg_name=pkg_name,
-                    policy="one_of",
-                    requirements=[conflict, "@:"],
-                    kind=kind,
-                    message=None,
-                    condition=None,
-                )
-            )
-        return result
-
-    def _rules_from_requirements(
-        self, pkg_name: str, requirements, *, kind: RequirementKind
-    ) -> List[RequirementRule]:
-        """Manipulate requirements from packages.yaml, and return a list of tuples
-        with a uniform structure (name, policy, requirements).
-        """
-        if isinstance(requirements, str):
-            requirements = [requirements]
-
-        rules = []
-        for requirement in requirements:
-            # A string is equivalent to a one_of group with a single element
-            if isinstance(requirement, str):
-                requirement = {"one_of": [requirement]}
-
-            for policy in ("spec", "one_of", "any_of"):
-                if policy not in requirement:
-                    continue
-
-                constraints = requirement[policy]
-                # "spec" is for specifying a single spec
-                if policy == "spec":
-                    constraints = [constraints]
-                    policy = "one_of"
-
-                # validate specs from YAML first, and fail with line numbers if parsing fails.
-                constraints = [
-                    sc.parse_spec_from_yaml_string(constraint) for constraint in constraints
-                ]
-                when_str = requirement.get("when")
-                when = sc.parse_spec_from_yaml_string(when_str) if when_str else spack.spec.Spec()
-
-                # filter constraints
-                constraints = [
-                    c
-                    for c in constraints
-                    if not self.reject_requirement_constraint(pkg_name, constraint=c, kind=kind)
-                ]
-                if not constraints:
-                    continue
-
-                rules.append(
-                    RequirementRule(
-                        pkg_name=pkg_name,
-                        policy=policy,
-                        requirements=constraints,
-                        kind=kind,
-                        message=requirement.get("message"),
-                        condition=when,
-                    )
-                )
-        return rules
-
-    def reject_requirement_constraint(
-        self, pkg_name: str, *, constraint: "spack.spec.Spec", kind: RequirementKind
-    ) -> bool:
-        """Returns True if a requirement constraint should be rejected"""
-        if kind == RequirementKind.DEFAULT:
-            # Requirements under all: are applied only if they are satisfiable considering only
-            # package rules, so e.g. variants must exist etc. Otherwise, they are rejected.
-            try:
-                s = spack.spec.Spec(pkg_name)
-                s.constrain(constraint)
-                s.validate_or_raise()
-            except spack.error.SpackError as e:
-                tty.debug(
-                    f"[SETUP] Rejecting the default '{constraint}' requirement "
-                    f"on '{pkg_name}': {str(e)}",
-                    level=2,
-                )
-                return True
-        return False
+        parser = RequirementParser(spack.config.CONFIG)
+        self.emit_facts_from_requirement_rules(parser.rules(pkg))
 
     def pkg_rules(self, pkg, tests):
         pkg = self.pkg_class(pkg)
@@ -1788,13 +1640,10 @@ class SpackSolverSetup:
             "Internal Error: possible_virtuals is not populated. Please report to the spack"
             " maintainers"
         )
-        packages_yaml = spack.config.CONFIG.get("packages")
+        parser = RequirementParser(spack.config.CONFIG)
         assert self.possible_virtuals is not None, msg
         for virtual_str in sorted(self.possible_virtuals):
-            requirements = packages_yaml.get(virtual_str, {}).get("require", [])
-            rules = self._rules_from_requirements(
-                virtual_str, requirements, kind=RequirementKind.VIRTUAL
-            )
+            rules = parser.rules_from_virtual(virtual_str)
             if rules:
                 self.emit_facts_from_requirement_rules(rules)
                 self.trigger_rules()
@@ -2930,6 +2779,168 @@ class SpackSolverSetup:
             namespace = self.explicitly_required_namespaces[pkg_name]
             request = f"{namespace}.{pkg_name}"
         return spack.repo.PATH.get_pkg_class(request)
+
+
+class RequirementParser:
+    """Parses requirements from package.py files and configuration, and returns rules."""
+
+    def __init__(self, configuration):
+        self.config = configuration
+
+    def rules(self, pkg: spack.package_base.PackageBase) -> List[RequirementRule]:
+        result = []
+        result.extend(self.rules_from_package_py(pkg))
+        result.extend(self.rules_from_require(pkg))
+        result.extend(self.rules_from_prefer(pkg))
+        result.extend(self.rules_from_conflict(pkg))
+        return result
+
+    def rules_from_package_py(self, pkg) -> List[RequirementRule]:
+        rules = []
+        for when_spec, requirement_list in pkg.requirements.items():
+            for requirements, policy, message in requirement_list:
+                rules.append(
+                    RequirementRule(
+                        pkg_name=pkg.name,
+                        policy=policy,
+                        requirements=requirements,
+                        kind=RequirementKind.PACKAGE,
+                        condition=when_spec,
+                        message=message,
+                    )
+                )
+        return rules
+
+    def rules_from_virtual(self, virtual_str: str) -> List[RequirementRule]:
+        requirements = self.config.get("packages", {}).get(virtual_str, {}).get("require", [])
+        return self._rules_from_requirements(
+            virtual_str, requirements, kind=RequirementKind.VIRTUAL
+        )
+
+    def rules_from_require(self, pkg: spack.package_base.PackageBase) -> List[RequirementRule]:
+        kind, requirements = self._raw_yaml_data(pkg, section="require")
+        return self._rules_from_requirements(pkg.name, requirements, kind=kind)
+
+    def rules_from_prefer(self, pkg: spack.package_base.PackageBase) -> List[RequirementRule]:
+        result = []
+        kind, preferences = self._raw_yaml_data(pkg, section="prefer")
+        for spec_str in preferences:
+            result.append(
+                # A strong preference is defined as:
+                #
+                # require:
+                # - any_of: [spec_str, "@:"]
+                RequirementRule(
+                    pkg_name=pkg.name,
+                    policy="any_of",
+                    requirements=[spec_str, "@:"],
+                    kind=kind,
+                    message=None,
+                    condition=None,
+                )
+            )
+        return result
+
+    def rules_from_conflict(self, pkg):
+        result = []
+        kind, conflicts = self._raw_yaml_data(pkg, section="conflict")
+        for spec_str in conflicts:
+            # A conflict is defined as:
+            #
+            # require:
+            # - one_of: [spec_str, "@:"]
+            result.append(
+                RequirementRule(
+                    pkg_name=pkg.name,
+                    policy="one_of",
+                    requirements=[spec_str, "@:"],
+                    kind=kind,
+                    message=None,
+                    condition=None,
+                )
+            )
+        return result
+
+    def _raw_yaml_data(self, pkg: spack.package_base.PackageBase, *, section: str):
+        config = self.config.get("packages")
+        data = config.get(pkg.name, {}).get(section, [])
+        kind = RequirementKind.PACKAGE
+        if not data:
+            data = config.get("all", {}).get(section, [])
+            kind = RequirementKind.DEFAULT
+        return kind, data
+
+    def _rules_from_requirements(
+        self, pkg_name: str, requirements, *, kind: RequirementKind
+    ) -> List[RequirementRule]:
+        """Manipulate requirements from packages.yaml, and return a list of tuples
+        with a uniform structure (name, policy, requirements).
+        """
+        if isinstance(requirements, str):
+            requirements = [requirements]
+
+        rules = []
+        for requirement in requirements:
+            # A string is equivalent to a one_of group with a single element
+            if isinstance(requirement, str):
+                requirement = {"one_of": [requirement]}
+
+            for policy in ("spec", "one_of", "any_of"):
+                if policy not in requirement:
+                    continue
+
+                constraints = requirement[policy]
+                # "spec" is for specifying a single spec
+                if policy == "spec":
+                    constraints = [constraints]
+                    policy = "one_of"
+
+                # validate specs from YAML first, and fail with line numbers if parsing fails.
+                constraints = [
+                    sc.parse_spec_from_yaml_string(constraint) for constraint in constraints
+                ]
+                when_str = requirement.get("when")
+                when = sc.parse_spec_from_yaml_string(when_str) if when_str else spack.spec.Spec()
+
+                constraints = [
+                    x
+                    for x in constraints
+                    if not self.reject_requirement_constraint(pkg_name, constraint=x, kind=kind)
+                ]
+                if not constraints:
+                    continue
+
+                rules.append(
+                    RequirementRule(
+                        pkg_name=pkg_name,
+                        policy=policy,
+                        requirements=constraints,
+                        kind=kind,
+                        message=requirement.get("message"),
+                        condition=when,
+                    )
+                )
+        return rules
+
+    def reject_requirement_constraint(
+        self, pkg_name: str, *, constraint: str, kind: RequirementKind
+    ) -> bool:
+        """Returns True if a requirement constraint should be rejected"""
+        if kind == RequirementKind.DEFAULT:
+            # Requirements under all: are applied only if they are satisfiable considering only
+            # package rules, so e.g. variants must exist etc. Otherwise, they are rejected.
+            try:
+                s = spack.spec.Spec(pkg_name)
+                s.constrain(constraint)
+                s.validate_or_raise()
+            except spack.error.SpackError as e:
+                tty.debug(
+                    f"[SETUP] Rejecting the default '{constraint}' requirement "
+                    f"on '{pkg_name}': {str(e)}",
+                    level=2,
+                )
+                return True
+        return False
 
 
 class RuntimePropertyRecorder:
