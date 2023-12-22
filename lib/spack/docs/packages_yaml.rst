@@ -487,6 +487,42 @@ present. For instance with a configuration like:
 
 you will use ``mvapich2~cuda %gcc`` as an ``mpi`` provider.
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Conflicts and strong preferences
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The semantic of requirements allows for expressing both "strong preferences" and "conflicts"
+from configuration files. The syntax for doing so, though, may not be immediately clear. For
+instance, if we want to prevent any package to use ``%clang``, we can set:
+
+.. code-block:: yaml
+
+   packages:
+     all:
+       require:
+       - one_of: ['%clang', '@:']
+
+Since only one of the requirements must hold, and ``@:`` is always true, the rule above is
+equivalent to a conflict. For "strong preferences" we need to substitute the ``one_of`` policy
+with ``any_of``.
+
+Since the syntax above obfuscates the meaning of the rules added by a user, there is some
+syntactic sugar that can be used in configuration:
+
+.. code-block:: yaml
+
+   packages:
+     all:
+       prefer:
+       - '%clang'
+       conflict:
+       - '+shared'
+
+The ``prefer`` and ``conflict`` sections can be used whenever a ``require`` section is allowed,
+and they translate internally to the more complex syntax based on requirements. They always
+accept a list of spec constraints.
+
+
 .. _package-preferences:
 
 -------------------
