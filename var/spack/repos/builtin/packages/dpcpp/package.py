@@ -142,11 +142,6 @@ class Dpcpp(CMakePackage, CudaPackage, ROCmPackage):
             libclc_targets_to_build += libclc_amd_target_names
             sycl_enabled_plugins += ";hip"
 
-        if "+llvm-external-projects" in spec:
-            llvm_external_projects += ";" + spec.variants["llvm-external-projects"].value.replace(
-                ",", ";"
-            )
-
         args = [
             from_variant("LLVM_ENABLE_ASSERTIONS", "assertions"),
             define("LLVM_TARGETS_TO_BUILD", llvm_targets_to_build),
