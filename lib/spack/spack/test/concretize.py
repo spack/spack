@@ -1246,6 +1246,9 @@ class TestConcretize:
         if spack.config.get("config:concretizer") == "original":
             pytest.xfail("Known failure of the original concretizer")
 
+        # reuse turned off in concretizer
+        spack.config.set("concretizer:reuse", False)
+
         # Install a spec
         root = Spec("root").concretized()
         dependency = root["changing"].copy()
