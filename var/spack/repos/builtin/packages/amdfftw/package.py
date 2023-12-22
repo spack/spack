@@ -145,6 +145,8 @@ class Amdfftw(FftwBase):
         )
         conflicts("precision=quad", msg="Quad precision is not supported with amd-app-opt")
 
+    requires("target=x86_64:", msg="AMD FFTW available only on x86_64")
+
     def configure(self, spec, prefix):
         """Configure function"""
         # Base options
