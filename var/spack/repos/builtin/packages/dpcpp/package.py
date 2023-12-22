@@ -72,37 +72,6 @@ class Dpcpp(CMakePackage, CudaPackage, ROCmPackage):
         when="+llvm_dylib",
         description="Link LLVM tools against the LLVM shared library",
     )
-    variant(
-        "targets",
-        default="all",
-        description=(
-            "What targets to build. Spack's target family is always added "
-            "(e.g. X86 is automatically enabled when targeting znver2)."
-        ),
-        values=(
-            "all",
-            "none",
-            "aarch64",
-            "amdgpu",
-            "arm",
-            "avr",
-            "bpf",
-            "cppbackend",
-            "hexagon",
-            "lanai",
-            "mips",
-            "msp430",
-            "nvptx",
-            "powerpc",
-            "riscv",
-            "sparc",
-            "systemz",
-            "webassembly",
-            "x86",
-            "xcore",
-        ),
-        multi=True,
-    )
 
     variant(
         "polly",
@@ -287,4 +256,3 @@ def get_llvm_targets_to_build(family):
     elif family in ("ppc64", "ppc64le", "ppc", "ppcle"):
         host_target = "PowerPC"
     return host_target
-
