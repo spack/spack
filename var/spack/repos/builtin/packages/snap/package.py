@@ -19,6 +19,8 @@ class Snap(MakefilePackage):
 
     tags = ["proxy-app"]
 
+    license("Unlicense")
+
     version("master")
 
     variant("openmp", default=False, description="Build with OpenMP support")

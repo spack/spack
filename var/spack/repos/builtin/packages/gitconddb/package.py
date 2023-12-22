@@ -16,6 +16,8 @@ class Gitconddb(CMakePackage):
 
     maintainers("drbenmorgan")
 
+    license("Apache-2.0")
+
     version("master", branch="master")
     version("0.2.0", sha256="dfbaa33581d5c6fac1102668c542b32d14499a30a2793bc55b133aba9f7295fc")
     version("0.1.3", sha256="29ed88498fd7ea3fd24bc80e9bfdec796cbeb584796c94c6c6b0baa368842ad4")

@@ -21,6 +21,8 @@ class SlurmDrmaa(AutotoolsPackage):
 
     maintainers("pwablito")
 
+    license("GPL-3.0-or-later")
+
     version("main", branch="main", submodules=True)
     version("1.1.2", sha256="5bfe25d501de83729df3c8c8f28535b9da3e99aea7738e259903abd6f1f5c836")
 

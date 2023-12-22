@@ -16,6 +16,8 @@ class Mindthegap(CMakePackage):
 
     maintainers("snehring")
 
+    license("AGPL-3.0-only")
+
     version(
         "2.3.0", tag="v2.3.0", commit="fe85c308434a4ad1ae7977dad67e966abc2bf93e", submodules=True
     )

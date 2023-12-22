@@ -15,6 +15,8 @@ class PyConfigspace(PythonPackage):
     homepage = "https://automl.github.io/ConfigSpace/master/"
     pypi = "ConfigSpace/ConfigSpace-0.4.20.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.4.20", sha256="2e4ca06f5a6a61e5322a73dd7545468c79f2a3e8385cab92fdada317af41d9e9")
 
     depends_on("python@3.7:", type=("build", "run"))

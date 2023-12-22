@@ -15,6 +15,8 @@ class Sshpass(AutotoolsPackage):
     homepage = "https://sourceforge.net/projects/sshpass/"
     url = "https://sourceforge.net/projects/sshpass/files/sshpass/1.06/sshpass-1.06.tar.gz"
 
+    license("GPL-2.0-or-later")
+
     version("1.06", sha256="c6324fcee608b99a58f9870157dfa754837f8c48be3df0f5e2f3accf145dee60")
     version("1.05", sha256="c3f78752a68a0c3f62efb3332cceea0c8a1f04f7cf6b46e00ec0c3000bc8483e")
     version("1.04", sha256="e8abb9a409f25928722251a5855a74854f6d64af3eb136b804a04fd630d70c80")

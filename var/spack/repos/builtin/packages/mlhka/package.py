@@ -13,6 +13,8 @@ class Mlhka(Package):
     homepage = "https://wright.eeb.utoronto.ca"
     git = "https://github.com/rossibarra/MLHKA.git"
 
+    license("GPL-3.0-only")
+
     version("2.1", commit="e735ddd39073af58da21b00b27dea203736e5467")
 
     def install(self, spec, prefix):

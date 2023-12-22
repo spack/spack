@@ -16,6 +16,8 @@ class PyAlpacaFarm(PythonPackage):
 
     maintainers("meyersbs")
 
+    license("Apache-2.0")
+
     version("0.1.9", sha256="1039d33c814d0bbbcab6a0e77ed8e897992ad7107d5c4999d56bdad7e0b0a59f")
 
     depends_on("py-setuptools", type="build")

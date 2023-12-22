@@ -22,6 +22,8 @@ class RocmDbgapi(CMakePackage):
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["librocm-dbgapi"]
 
+    license("MIT")
+
     version("master", branch="amd-master")
     version("5.7.1", sha256="0ee9c2f083868849f2ea0cec7010e0270c27e7679ccbbadd12072cc0ef6c8a6f")
     version("5.7.0", sha256="285ddded8e7f1981d8861ffc1cd7770b78129e4955da08ad55a4779945699716")

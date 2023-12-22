@@ -36,6 +36,8 @@ class IntelGtpin(Package):
 
     maintainers("rashawnlk")
 
+    license("MIT")
+
     version(
         "3.2.2",
         sha256="6c51b08451935ed8c86778d197e2ff36d4b91883f41292968ff413b53ac8910a",

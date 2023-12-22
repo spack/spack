@@ -20,6 +20,8 @@ class Cgns(CMakePackage):
 
     parallel = False
 
+    license("Zlib")
+
     version("develop", branch="develop")
     version("master", branch="master")
     version("4.4.0", sha256="3b0615d1e6b566aa8772616ba5fd9ca4eca1a600720e36eadd914be348925fe2")

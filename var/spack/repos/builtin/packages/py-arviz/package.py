@@ -14,6 +14,8 @@ class PyArviz(PythonPackage):
     homepage = "https://github.com/arviz-devs/arviz"
     pypi = "arviz/arviz-0.6.1.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.6.1", sha256="435edf8db49c41a8fa198f959e7581063006c49a4efdef4755bb778db6fd4f72")
 
     depends_on("py-setuptools", type="build")

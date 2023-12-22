@@ -14,6 +14,8 @@ class PyResponses(PythonPackage):
 
     maintainers("dorton21")
 
+    license("Apache-2.0")
+
     version("0.13.3", sha256="18a5b88eb24143adbf2b4100f328a2f5bfa72fbdacf12d97d41f07c26c45553d")
 
     depends_on("python@2.7:2.8,3.5:", type=("build", "run"))

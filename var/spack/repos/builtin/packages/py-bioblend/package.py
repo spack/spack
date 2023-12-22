@@ -13,6 +13,8 @@ class PyBioblend(PythonPackage):
     homepage = "https://bioblend.readthedocs.io"
     pypi = "bioblend/bioblend-1.0.0.tar.gz"
 
+    license("MIT")
+
     version("1.0.0", sha256="3794288bbf891ae6edc1bcdd9618a3ae16b6ed4a04c946505f7e29f2f28898a5")
 
     depends_on("python@3.7:", type=("build", "run"))

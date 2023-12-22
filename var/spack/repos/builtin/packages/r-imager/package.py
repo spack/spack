@@ -18,6 +18,8 @@ class RImager(RPackage):
 
     cran = "imager"
 
+    license("LGPL-3.0-only")
+
     version("0.42.19", sha256="187abccba648ecece5e466ca6333acd5c8fdd1476daa2d04d5fa9ec5400ae1e2")
     version("0.42.13", sha256="d90a9893d11190ba249c7fae5bd6517a77907efbce2941452cb2aec57bb5cf7f")
     version("0.42.11", sha256="47f8b7ff8d05a5191e30ad1869f12a62bdbe3142b22b12a6032dec9b5f8532a8")

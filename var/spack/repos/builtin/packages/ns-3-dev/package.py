@@ -18,6 +18,8 @@ class Ns3Dev(WafPackage):
 
     maintainers("yee29")
 
+    license("GPL-2.0-or-later")
+
     version("3.34", sha256="a565d46a73ff7de68808535d93884f59a6ed7c9faa94de1248ed4f59fb6d5d3d")
     version("3.33", sha256="0deb7da501fc19ba4818997c5aefd942be5ab1bbd3cfaa6ba28c07b387900275")
     version("3.32", sha256="a0e425c16748f909e10dce63275898508cb4f521739ec00a038316c148b8c3ee")

@@ -16,6 +16,8 @@ class RRaster(RPackage):
 
     cran = "raster"
 
+    license("GPL-3.0-or-later")
+
     version("3.6-20", sha256="7e5be49f4e37a2c14a3b87661b252956643b959146cbdb08e983660c1d59a813")
     version("3.6-3", sha256="9f06e0f7c36258790a97421b3a26d98c9b6a2cb702f941e58ab0b18f21b0c3c6")
     version("3.5-15", sha256="29c7d3c5d34284f8b5a2ddc9989fbcf092ce209d5eb5310ebc772b5ebdfdd685")

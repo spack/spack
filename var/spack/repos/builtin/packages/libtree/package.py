@@ -15,6 +15,8 @@ class Libtree(MakefilePackage, CMakePackage):
     url = "https://github.com/haampie/libtree/archive/refs/tags/v2.0.0.tar.gz"
     maintainers("haampie")
 
+    license("MIT")
+
     version("master", branch="master")
     version("3.1.1", sha256="6148436f54296945d22420254dd78e1829d60124bb2f5b9881320a6550f73f5c")
     version("3.1.0", sha256="8057edb2dd77b0acf6ceab6868741993979dccd41fc41a58bde743f11666d781")

@@ -26,6 +26,8 @@ class Findutils(AutotoolsPackage, GNUMirrorPackage):
 
     executables = ["^find$"]
 
+    license("GPL-3.0-or-later")
+
     version("4.9.0", sha256="a2bfb8c09d436770edc59f50fa483e785b161a3b7b9d547573cb08065fd462fe")
     version("4.8.0", sha256="57127b7e97d91282c6ace556378d5455a9509898297e46e10443016ea1387164")
     version("4.7.0", sha256="c5fefbdf9858f7e4feb86f036e1247a54c79fc2d8e4b7064d5aaa1f47dfa789a")

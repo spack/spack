@@ -16,6 +16,8 @@ class Minivite(MakefilePackage):
     homepage = "https://hpc.pnl.gov/people/hala/grappolo.html"
     git = "https://github.com/Exa-Graph/miniVite.git"
 
+    license("BSD-3-Clause")
+
     version("develop", branch="master")
     version("1.0", tag="v1.0", commit="65ccaa8a4ec0b4bea516e2abdafbeb2f8a5f0c94")
     version("1.1", tag="v1.1", commit="23476d9d41eb8a17bf4108ac56852dacda89b253")

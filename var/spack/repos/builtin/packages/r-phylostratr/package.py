@@ -12,6 +12,8 @@ class RPhylostratr(RPackage):
     homepage = "https://github.com/arenasee/phylostratr"
     git = "https://github.com/arendsee/phylostratr.git"
 
+    license("GPL-3.0-or-later")
+
     version("20190323", commit="9f6d1ee2e93d973dabcfc72a44af9a032cb7ebbd")
 
     depends_on("r@3.4.0:", type=("build", "run"))

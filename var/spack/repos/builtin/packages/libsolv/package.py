@@ -14,6 +14,8 @@ class Libsolv(CMakePackage):
 
     maintainers("charmoniumQ")
 
+    license("BSD-3-Clause")
+
     version("0.7.22", sha256="968aef452b5493751fa0168cd58745a77c755e202a43fe8d549d791eb16034d5")
 
     variant("shared", default=True, description="Build shared libraries")

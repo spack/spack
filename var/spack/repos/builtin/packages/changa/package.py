@@ -20,6 +20,8 @@ class Changa(AutotoolsPackage):
     url = "https://github.com/N-BodyShop/changa/archive/v3.4.tar.gz"
     git = "https://github.com/N-BodyShop/changa.git"
 
+    license("GPL-2.0-or-later")
+
     version("master", branch="master")
     version("3.4", sha256="c2bceb6ac00025dfd704bb6960bc17c6df7c746872185845d1e75f47e6ce2a94")
     patch("fix_configure_path.patch")

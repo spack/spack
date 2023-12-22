@@ -13,6 +13,8 @@ class PyAzureStorageBlob(PythonPackage):
     pypi = "azure-storage-blob/azure-storage-blob-12.9.0.zip"
     maintainers("marcusboden")
 
+    license("MIT")
+
     version("12.9.0", sha256="cff66a115c73c90e496c8c8b3026898a3ce64100840276e9245434e28a864225")
 
     depends_on("py-setuptools", type="build")

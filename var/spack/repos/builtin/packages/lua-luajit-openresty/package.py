@@ -15,6 +15,8 @@ class LuaLuajitOpenresty(LuaImplPackage):
     homepage = "https://openresty.org/en/luajit.html"
     url = "https://github.com/openresty/luajit2/archive/refs/tags/v2.1-20230410.tar.gz"
 
+    license("MIT")
+
     version(
         "2.1-20220111", sha256="1ad2e34b111c802f9d0cdf019e986909123237a28c746b21295b63c9e785d9c3"
     )

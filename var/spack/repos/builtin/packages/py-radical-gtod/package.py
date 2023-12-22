@@ -18,6 +18,8 @@ class PyRadicalGtod(PythonPackage):
 
     maintainers("andre-merzky")
 
+    license("LGPL-3.0-or-later")
+
     version("develop", branch="devel")
     version("1.20.0", sha256="8d0846de7a5d094146c01fbb7c137f343e4da06af51efafeba79dd3fdfe421dc")
     version("1.16.0", sha256="1fe9da598a965c7194ed9c7df49d5b30632a11a7f9ece12152bea9aaa91bd4b8")

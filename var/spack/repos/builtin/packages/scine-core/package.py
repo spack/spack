@@ -15,6 +15,8 @@ class ScineCore(CMakePackage):
     url = "https://github.com/qcscine/core/archive/refs/tags/4.0.2.tar.gz"
     git = "https://github.com/qcscine/core.git"
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("4.0.2", sha256="7181c6f93d71def22f1e0e5767afc7587c04b49abc03516f6926394868e7adc6")
 

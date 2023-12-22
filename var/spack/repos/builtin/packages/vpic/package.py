@@ -20,6 +20,8 @@ class Vpic(CMakePackage):
     homepage = "https://github.com/lanl/vpic"
     git = "https://github.com/lanl/vpic.git"
 
+    license("BSD-3-Clause")
+
     version("develop", branch="master", submodules=True)
 
     depends_on("cmake@3.1:", type="build")

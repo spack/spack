@@ -21,6 +21,8 @@ class Nvcomp(CMakePackage, CudaPackage):
 
     maintainers("robertu94")
 
+    license("BSD-3-Clause")
+
     version("2.2.0", commit="3737f6e5028ed1887b0023ad0fc033e139d57574")
     version("2.0.2", commit="5d5c194f3449486d989057f632d10954b8d11d75")
 

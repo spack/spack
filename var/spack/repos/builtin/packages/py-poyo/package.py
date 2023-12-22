@@ -12,6 +12,8 @@ class PyPoyo(PythonPackage):
     homepage = "https://github.com/hackebrot/poyo"
     url = "https://github.com/hackebrot/poyo/archive/0.4.1.tar.gz"
 
+    license("MIT")
+
     version("0.4.1", sha256="9f069dc9c8ee359abc8ef9e7304cb1b1c23556d1f4ae64f4247c1e45de43c1f1")
 
     depends_on("py-setuptools", type="build")

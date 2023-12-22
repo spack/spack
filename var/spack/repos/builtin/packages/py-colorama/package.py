@@ -12,6 +12,8 @@ class PyColorama(PythonPackage):
     homepage = "https://github.com/tartley/colorama"
     pypi = "colorama/colorama-0.3.7.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.4.6", sha256="08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44")
     version("0.4.5", sha256="e6c6b4334fc50988a639d9b98aa429a0b57da6e17b9a44f0451f930b6967b7a4")
     version("0.4.4", sha256="5941b2b48a20143d2267e95b1c2a7603ce057ee39fd88e7329b0c292aa16869b")

@@ -21,6 +21,8 @@ class Mariadb(CMakePackage):
     homepage = "https://mariadb.org/about/"
     url = "http://ftp.hosteurope.de/mirror/archive.mariadb.org/mariadb-10.2.8/source/mariadb-10.2.8.tar.gz"
 
+    license("GPL-2.0-or-later")
+
     version("10.8.2", sha256="14e0f7f8817a41bbcb5ebdd2345a9bd44035fde7db45c028b6d4c35887ae956c")
     version("10.4.12", sha256="fef1e1d38aa253dd8a51006bd15aad184912fce31c446bb69434fcde735aa208")
     version("10.4.8", sha256="10cc2c3bdb76733c9c6fd1e3c6c860d8b4282c85926da7d472d2a0e00fffca9b")

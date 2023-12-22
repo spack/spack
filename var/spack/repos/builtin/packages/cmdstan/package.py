@@ -12,6 +12,8 @@ class Cmdstan(MakefilePackage):
     homepage = "https://mc-stan.org/users/interfaces/cmdstan"
     url = "https://github.com/stan-dev/cmdstan/releases/download/v2.30.1/cmdstan-2.30.1.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("2.30.1", sha256="bab76dcefa7f4c955595c0bf0496770507fc6ab0df5896e8cf8c2db0a17eedb9")
 
     variant("threads", default=True, description="enable thread support")

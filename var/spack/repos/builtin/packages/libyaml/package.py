@@ -13,6 +13,8 @@ class Libyaml(AutotoolsPackage):
     url = "https://pyyaml.org/download/libyaml/yaml-0.2.4.tar.gz"
     git = "https://github.com/yaml/libyaml.git"
 
+    license("MIT")
+
     version("master", branch="master")
     version("0.2.5", sha256="c642ae9b75fee120b2d96c712538bd2cf283228d2337df2cf2988e3c02678ef4")
     version("0.2.4", sha256="d80aeda8747b7c26fbbfd87ab687786e58394a8435ae3970e79cb97882e30557")

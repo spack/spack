@@ -27,6 +27,8 @@ class RedisPlusPlus(CMakePackage):
     variant("test", default=False, description="Builds test suite")
     variant("tls", default=False, description="Builds with TLS support")
 
+    license("Apache-2.0")
+
     version("1.3.8", sha256="ad521b4a24d1591a1564f945ba6370875b501210222e324f398065251df41641")
     version("1.3.6", sha256="87dcadca50c6f0403cde47eb1f79af7ac8dd5a19c3cad2bb54ba5a34f9173a3e")
     version("1.3.5", sha256="a49a72fef26ed39d36a278fcc4e4d92822e111697b5992d8f26f70d16edc6c1f")

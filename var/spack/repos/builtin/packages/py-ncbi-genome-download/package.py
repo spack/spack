@@ -13,6 +13,8 @@ class PyNcbiGenomeDownload(PythonPackage):
     homepage = "https://github.com/kblin/ncbi-genome-download/"
     pypi = "ncbi-genome-download/ncbi-genome-download-0.3.1.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.3.1", sha256="74675e94f184b8d80429641b27ed6d46ed81028d95156337de6d09f8dd739c6e")
 
     depends_on("py-setuptools", type="build")

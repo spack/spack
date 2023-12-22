@@ -17,6 +17,8 @@ class MelissaApi(CMakePackage):
     git = "https://gitlab.inria.fr/melissa/melissa.git"
     maintainers("robcaulk", "mschouler", "raffino")
 
+    license("BSD-3-Clause")
+
     version("develop", branch="develop")
 
     depends_on("cmake@3.7.2:", type="build")

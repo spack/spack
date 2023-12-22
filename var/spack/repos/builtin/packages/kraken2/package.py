@@ -18,6 +18,8 @@ class Kraken2(Package):
 
     maintainers("rberg2")
 
+    license("MIT")
+
     version("2.1.2", sha256="e5f431e8bc3d5493a79e1d8125f4aacbad24f9ea2cc9657b66da06a32bef6ff3")
     version("2.1.1", sha256="8f3e928cdb32b9e8e6f55b44703d1557b2a5fc3f30f63e8d16e465e19a81dee4")
     version(

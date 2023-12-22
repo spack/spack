@@ -14,6 +14,8 @@ class RReshape2(RPackage):
 
     cran = "reshape2"
 
+    license("MIT")
+
     version("1.4.4", sha256="d88dcf9e2530fa9695fc57d0c78adfc5e361305fe8919fe09410b17da5ca12d8")
     version("1.4.3", sha256="8aff94c935e75032344b52407593392ddd4e16a88bb206984340c816d42c710e")
     version("1.4.2", sha256="6d3783610379be4c5676d9236cf66276a166b5b96c18f2759e9b219758959b6b")

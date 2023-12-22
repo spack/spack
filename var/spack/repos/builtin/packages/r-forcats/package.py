@@ -16,6 +16,8 @@ class RForcats(RPackage):
 
     cran = "forcats"
 
+    license("MIT")
+
     version("1.0.0", sha256="c5bb157909d92e1e1a427c0dc5cb358ea00a43a14918a9088fa4f6630962254e")
     version("0.5.2", sha256="14a60a43183f82da0fbf42633cee446d21dcbb98a8c37361b5c8061a4da86141")
     version("0.5.1", sha256="c4fb96e874e2bedaa8a1aa32ea22abdee7906d93b5c5c7b42c0894c0c5b6a289")

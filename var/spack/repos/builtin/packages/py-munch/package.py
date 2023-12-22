@@ -13,6 +13,8 @@ class PyMunch(PythonPackage):
     homepage = "https://github.com/Infinidat/munch"
     pypi = "munch/munch-2.5.0.tar.gz"
 
+    license("MIT")
+
     version("2.5.0", sha256="2d735f6f24d4dba3417fa448cae40c6e896ec1fdab6cdb5e6510999758a4dbd2")
     version("2.2.0", sha256="62fb4fb318e965a464b088e6af52a63e0905a50500b770596a939d3855e7aa15")
 

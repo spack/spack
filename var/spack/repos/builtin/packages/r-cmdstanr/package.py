@@ -19,6 +19,8 @@ class RCmdstanr(RPackage):
     homepage = "https://mc-stan.org/cmdstanr/"
     url = "https://github.com/stan-dev/cmdstanr/archive/refs/tags/v0.5.3.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.5.3", sha256="dafd5808e1a17d2e4ae4048437235b4399464a7c65de68ba4af0ab2b03e27871")
     version("0.5.2", sha256="5bc2e164e7cce3bfb93d592df5e3059157c8d510b136535bdb6d09c3ef060f64")
     version("0.5.1", sha256="5b3e83d48c19d309ccca720979449a8ac130ba7e443e70992b1771a1dd9124c9")

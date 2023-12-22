@@ -26,6 +26,8 @@ class Redis(MakefilePackage):
 
     maintainers("lpottier")
 
+    license("BSD-3-Clause")
+
     version("7.0.5", sha256="67054cc37b58c125df93bd78000261ec0ef4436a26b40f38262c780e56315cc3")
     version("7.0.4", sha256="f0e65fda74c44a3dd4fa9d512d4d4d833dd0939c934e946a5c622a630d057f2f")
     version("7.0.3", sha256="2cde7d17214ffe305953da9fff12333e8a72caa57fd4923e4872f6362a208e73")

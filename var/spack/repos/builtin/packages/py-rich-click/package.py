@@ -14,6 +14,8 @@ class PyRichClick(PythonPackage):
     homepage = "https://github.com/ewels/rich-click"
     pypi = "rich-click/rich-click-1.5.2.tar.gz"
 
+    license("MIT")
+
     version("1.5.2", sha256="a57ca70242cb8b372a670eaa0b0be48f2440b66656deb4a56e6aadc1bbb79670")
 
     depends_on("python@3.7:", type=("build", "run"))

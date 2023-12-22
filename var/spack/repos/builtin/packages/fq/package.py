@@ -15,6 +15,8 @@ class Fq(Package):
     url = "https://github.com/stjude-rust-labs/fq/archive/refs/tags/v0.10.0.tar.gz"
     maintainers("pabloaledo")
 
+    license("MIT")
+
     version("0.10.0", sha256="34007ab71a873e1b066d910e90c5bdac3dcc4299ae6c9891ac6d8233cffeabb8")
 
     depends_on("rust")

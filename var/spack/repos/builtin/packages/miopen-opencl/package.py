@@ -20,6 +20,8 @@ class MiopenOpencl(CMakePackage):
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["libMIOpen"]
 
+    license("MIT")
+
     version("5.5.1", sha256="2cd75071b8ee876c69a94f028b6c8a9346d6d2fde7d4b64e6d635f3b6c994262")
     version("5.5.0", sha256="791087242551669e546225e36123c21663f0dad14dbcfd6d0ce0e7bad0ab0de1")
     version("5.4.3", sha256="37ffe2ed3d7942da8ea2f6bdb85c7a2f58e3ccd31767db158a322769d3604efd")

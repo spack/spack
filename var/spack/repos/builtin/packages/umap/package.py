@@ -17,6 +17,8 @@ class Umap(CMakePackage):
 
     tags = ["e4s"]
 
+    license("LGPL-2.1-or-later")
+
     version("develop", branch="develop")
     version("2.1.0", sha256="dfdc5b717aecdbfbb0da22e8567b9f2ffbc3607000a31122bf7c5ab3b85cecd9")
     version("2.0.0", sha256="85c4bc68e8790393847a84eb54eaf6fc321acade382a399a2679d541b0e34150")

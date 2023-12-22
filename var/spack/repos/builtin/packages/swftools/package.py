@@ -17,6 +17,8 @@ class Swftools(AutotoolsPackage):
     homepage = "http://swftools.org"
     url = "http://swftools.org/swftools-0.9.2.tar.gz"
 
+    license("GPL-2.0-only")
+
     version("0.9.2", sha256="bf6891bfc6bf535a1a99a485478f7896ebacbe3bbf545ba551298080a26f01f1")
 
     patch("configure.patch")

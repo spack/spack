@@ -15,6 +15,8 @@ class PyFastdownload(PythonPackage):
     homepage = "https://github.com/fastai/fastdownload/tree/master/"
     pypi = "fastdownload/fastdownload-0.0.5.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.0.5", sha256="64e67af30690fa98ae1c8a1b52495769842f723565239a5430208ad05585af18")
 
     depends_on("python@3.6:", type=("build", "run"))

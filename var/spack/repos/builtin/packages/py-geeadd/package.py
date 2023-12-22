@@ -12,6 +12,8 @@ class PyGeeadd(PythonPackage):
     homepage = "https://github.com/samapriya/gee_asset_manager_addon"
     pypi = "geeadd/geeadd-0.3.0.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.3.0", sha256="591e6ff2847122598ed5b0452a892a76e332ce227d4ba75e4d03eca2c7a4beea")
 
     depends_on("py-setuptools", type="build")

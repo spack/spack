@@ -13,6 +13,8 @@ class Tinygltf(CMakePackage):
     url = "https://github.com/syoyo/tinygltf/archive/refs/tags/v2.5.0.tar.gz"
     git = "https://github.com/syoyo/tinygltf/"
 
+    license("MIT")
+
     version("release", branch="release")
     version("2.8.14", sha256="63cd43746c9ddfe5777494500422e831a312299e386fbf80922839dc1a5575f8")
     version("2.7.0", sha256="a1bbc0b831719e3a809a1bb01ce299a60e80b4e15221f58e822303ba22a69d45")

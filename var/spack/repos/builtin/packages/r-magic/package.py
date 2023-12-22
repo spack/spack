@@ -22,6 +22,8 @@ class RMagic(RPackage):
 
     cran = "magic"
 
+    license("GPL-2.0-only")
+
     version("1.6-1", sha256="ca79ec7ae92b736cb128556c081abf547f49956c326e053a76579889cbcb7976")
     version("1.6-0", sha256="4516d48c9618e3f395db873e886f5deb3b66b32ebe10d4c26c1420ac848acbbf")
     version("1.5-9", sha256="fa1d5ef2d39e880f262d31b77006a2a7e76ea38e306aae4356e682b90d6cd56a")

@@ -15,6 +15,8 @@ class RAutomap(RPackage):
 
     cran = "automap"
 
+    license("GPL-2.0-or-later")
+
     version("1.1-9", sha256="f3070aed385352d2595ceddd74cb03cd71965f2e60b675832d16ec2ead6f3a43")
 
     depends_on("r@2.10.0:", type=("build", "run"))

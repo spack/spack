@@ -13,6 +13,8 @@ class Psmc(MakefilePackage):
     homepage = "https://github.com/lh3/psmc"
     git = "https://github.com/lh3/psmc.git"
 
+    license("MIT")
+
     version("2016-1-21", commit="e5f7df5d00bb75ec603ae0beff62c0d7e37640b9")
 
     depends_on("zlib-api", type="link")

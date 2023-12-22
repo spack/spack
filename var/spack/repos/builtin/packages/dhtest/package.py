@@ -15,6 +15,8 @@ class Dhtest(MakefilePackage):
     homepage = "https://github.com/saravana815/dhtest"
     url = "https://github.com/saravana815/dhtest/archive/v1.5.tar.gz"
 
+    license("GPL-2.0-or-later")
+
     version("1.5", sha256="df66150429a59a3b6cea9b29e2687707d04ab10db5dfe1c893ba3e0b0531b151")
 
     def install(self, spec, prefix):

@@ -13,6 +13,8 @@ class PyShroud(PythonPackage):
     git = "https://github.com/LLNL/shroud.git"
     tags = ["radiuss"]
 
+    license("MIT")
+
     version("develop", branch="develop")
     version("master", branch="master")
     version("0.12.2", tag="v0.12.2", commit="939ba0a3e8b5a885da3ddaebb92bf93cb12b0401")

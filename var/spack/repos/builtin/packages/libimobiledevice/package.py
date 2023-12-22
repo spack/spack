@@ -14,6 +14,8 @@ class Libimobiledevice(AutotoolsPackage):
     url = "https://www.libimobiledevice.org/downloads/libimobiledevice-1.2.0.tar.bz2"
     git = "https://git.libimobiledevice.org/libimobiledevice.git"
 
+    license("LGPL-2.1-or-later")
+
     version("master", branch="master")
     version("1.2.0", sha256="786b0de0875053bf61b5531a86ae8119e320edab724fc62fe2150cc931f11037")
 

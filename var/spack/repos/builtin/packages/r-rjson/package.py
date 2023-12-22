@@ -13,6 +13,8 @@ class RRjson(RPackage):
 
     cran = "rjson"
 
+    license("GPL-2.0-only")
+
     version("0.2.21", sha256="982b56d35ccc0c7db0b20c1d3eab5f5f47c620309646fdc278ff1cc3433ea2e2")
     version("0.2.20", sha256="3a287c1e5ee7c333ed8385913c0a307daf99335fbdf803e9dcca6e3d5adb3f6c")
     version("0.2.19", sha256="5c2672461986f2b715416cab92ed262abe9875f31299bc8a1a072ef7c6dd49bc")

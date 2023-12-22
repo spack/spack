@@ -17,6 +17,8 @@ class Bedops(MakefilePackage):
 
     maintainers("jacorvar")
 
+    license("bzip2-1.0.6")
+
     version("2.4.41", sha256="3b868c820d59dd38372417efc31e9be3fbdca8cf0a6b39f13fb2b822607d6194")
     version("2.4.40", sha256="8c01db76669dc58c595e2e1b9bdb6d462f3363fc569b15c460a63a63b8b6bf30")
     version("2.4.39", sha256="f8bae10c6e1ccfb873be13446c67fc3a54658515fb5071663883f788fc0e4912")

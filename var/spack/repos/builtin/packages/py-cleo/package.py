@@ -14,6 +14,8 @@ class PyCleo(PythonPackage):
 
     maintainers("LydDeb")
 
+    license("MIT")
+
     version("2.1.0", sha256="0b2c880b5d13660a7ea651001fb4acb527696c01f15c9ee650f377aa543fd523")
     version("2.0.1", sha256="eb4b2e1f3063c11085cebe489a6e9124163c226575a3c3be69b2e51af4a15ec5")
     version("2.0.0", sha256="fbc5cb141cbc31ea8ffd3d5cd67d3b183fa38aa5098fd37e39e9a953a232fda9")

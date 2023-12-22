@@ -16,6 +16,8 @@ class PyElephant(PythonPackage):
     # list of GitHub accounts to notify when the package is updated.
     maintainers("Moritz-Alexander-Kern")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("0.14.0", sha256="02ce3b2a8d08dc19828f95384551339ea0946bc405c1db9aace54135417c2b0f")
     version("0.13.0", sha256="2c6463cf9ace41631f2af196c5b80b468bf1c4b264d3a6b1ea0fb587d9e7dd67")

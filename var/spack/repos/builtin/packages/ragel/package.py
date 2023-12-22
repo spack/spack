@@ -20,6 +20,8 @@ class Ragel(AutotoolsPackage):
     git = "git://colm.net/ragel.git"
     url = "https://www.colm.net/files/ragel/ragel-6.10.tar.gz"
 
+    license("GPL-2.0-or-later")
+
     version("6.10", sha256="5f156edb65d20b856d638dd9ee2dfb43285914d9aa2b6ec779dac0270cd56c3f")
 
     depends_on("colm", type="build")

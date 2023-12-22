@@ -15,6 +15,8 @@ class PyPsmon(PythonPackage):
 
     maintainers("valmar")
 
+    license("MIT")
+
     version("1.1.1", sha256="ecbd4e3a34b5f20ac5c62e4cd1e19f7384c6d72f2dd7d66c7b4bc36b529b8385")
 
     depends_on("python@3.6:", type=("build", "run"))

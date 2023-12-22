@@ -17,6 +17,8 @@ class PyStatmorph(PythonPackage):
 
     maintainers("meyersbs")
 
+    license("BSD-3-Clause")
+
     version("0.4.0", sha256="7d1bb802baf3e203ac44c630a58c5049da5eb4d85091ac35e3f5c6ee4af8b05a")
 
     depends_on("py-setuptools", type="build")

@@ -14,6 +14,8 @@ class Librsb(AutotoolsPackage):
     url = "http://download.sourceforge.net/librsb/librsb-1.3.0.1.tar.gz"
     list_url = "https://sourceforge.net/projects/librsb/files/"
 
+    license("LGPL-3.0-only")
+
     version("1.3.0.1", sha256="3fc024a410f94aca2a7139ae79f4d713b11fa83304293630c363786874c17db4")
     version("1.3.0.0", sha256="2ac8725d1f988f57df9383ae6b0bb2ed221ec935187d31ebb62ea95ee868a790")
     version("1.2.0.11", sha256="0686be29bbe277e227c6021de6bd0564e4fc83f996b787886437d28048057bc8")

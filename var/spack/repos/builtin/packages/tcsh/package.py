@@ -23,6 +23,8 @@ class Tcsh(AutotoolsPackage):
     url = "http://ftp.funet.fi/pub/mirrors/ftp.astron.com/pub/tcsh/tcsh-6.20.00.tar.gz"
     list_url = "https://ftp.funet.fi/pub/mirrors/ftp.astron.com/pub/tcsh/old/"
 
+    license("BSD-3-Clause")
+
     version("6.24.00", sha256="60be2c504bd8f1fa6e424b1956495d7e7ced52a2ac94db5fd27f4b6bfc8f74f0")
     version("6.22.02", sha256="ed287158ca1b00ba477e8ea57bac53609838ebcfd05fcb05ca95021b7ebe885b")
     version("6.21.00", sha256="c438325448371f59b12a4c93bfd3f6982e6f79f8c5aef4bc83aac8f62766e972")

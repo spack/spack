@@ -12,6 +12,8 @@ class Pthreadpool(CMakePackage):
     homepage = "https://github.com/Maratyszcza/pthreadpool"
     git = "https://github.com/Maratyszcza/pthreadpool.git"
 
+    license("BSD-2-Clause")
+
     version("master", branch="master")
     version("2021-04-13", commit="a134dd5d4cee80cce15db81a72e7f929d71dd413")  # py-torch@1.9
     version("2020-10-05", commit="fa75e65a58a5c70c09c30d17a1fe1c1dff1093ae")  # py-torch@1.8

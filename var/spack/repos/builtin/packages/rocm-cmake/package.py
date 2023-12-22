@@ -18,6 +18,8 @@ class RocmCmake(CMakePackage):
 
     maintainers("srekolam", "renjithravindrankannath")
 
+    license("MIT")
+
     version("master", branch="master")
     version("5.7.1", sha256="4a4c6aa09576ccb834f869bdcb49e98cc0f0bac3678b802358065d1179a9d6f1")
     version("5.7.0", sha256="93b98144201a1143eeca32744a9927d063f4685189f132ba52a6f3bba158a86b")

@@ -14,6 +14,8 @@ class Hc(MakefilePackage):
     homepage = "https://geodynamics.org/cig/software/hc/"
     url = "https://geodynamics.org/cig/software/hc/hc-1.0.7.tar.gz"
 
+    license("GPL-2.0-only")
+
     version("1.0.7", sha256="7499ea76ac4739a9c0941bd57d124fb681fd387c8d716ebb358e6af3395103ed")
 
     depends_on("gmt@4.2.1:4")

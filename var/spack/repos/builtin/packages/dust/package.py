@@ -14,6 +14,8 @@ class Dust(Package):
 
     maintainers("fangohr")
 
+    license("Apache-2.0")
+
     version("0.8.6", sha256="feede818e814011207c5bfeaf06dd9fc95825c59ab70942aa9b9314791c5d6b6")
     version("0.7.5", sha256="f892aaf7a0a7852e12d01b2ced6c2484fb6dc5fe7562abdf0c44a2d08aa52618")
 

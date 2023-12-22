@@ -17,6 +17,8 @@ class PerlXmlLibxml(PerlPackage):
     homepage = "https://metacpan.org/pod/XML::LibXML"
     url = "https://cpan.metacpan.org/authors/id/S/SH/SHLOMIF/XML-LibXML-2.0201.tar.gz"
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("2.0201", sha256="e008700732502b3f1f0890696ec6e2dc70abf526cd710efd9ab7675cae199bc2")
 
     depends_on("libxml2")

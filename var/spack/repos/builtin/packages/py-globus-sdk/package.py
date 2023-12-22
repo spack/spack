@@ -17,6 +17,8 @@ class PyGlobusSdk(PythonPackage):
 
     maintainers("hategan")
 
+    license("Apache-2.0")
+
     version("3.10.1", sha256="c20fec55fc7e099f4d0c8224a36e194604577539445c5985cb465b23779baee8")
     version("3.10.0", sha256="7a7e7cd5cfbc40c6dc75bdb92b050c4191f992b5f7081cd08895bf119fd97bbf")
     version("3.9.0", sha256="456f707b25a8c502607134f1d699b5970ef1aa9d17877474db73fc6d87c711e9")

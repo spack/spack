@@ -16,6 +16,8 @@ class PyPysimdjson(PythonPackage):
 
     maintainers("haralmha")
 
+    license("MIT")
+
     version("4.0.3", sha256="61900992d7f992b073a8c5f93cafa4af9bfd3209624baa775699b0fdd6f67517")
     version("3.2.0", sha256="643baa0941752367761dbc091bf552bf4ca196cf67bf41ef89c90c2db2ec1477")
 

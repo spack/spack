@@ -14,6 +14,8 @@ class PerlXmlDom(PerlPackage):
     homepage = "https://metacpan.org/pod/XML::DOM"
     url = "https://cpan.metacpan.org/authors/id/T/TJ/TJMATHER/XML-DOM-1.46.tar.gz"
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("1.46", sha256="8ba24b0b459b01d6c5e5b0408829c7d5dfe47ff79b3548c813759048099b175e")
 
     depends_on("perl-xml-parser", type=("build", "run"))

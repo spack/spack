@@ -15,6 +15,8 @@ class Gegelati(CMakePackage):
     # notify when the package is updated.
     maintainers("lucascarvalhoroncoroni")
 
+    license("CECILL-C")
+
     version("1.2.0", sha256="039997c7d6cb394f910f6c40620165b32094e0c85c170be01eb74b55488a1d4c")
 
     depends_on("sdl2")

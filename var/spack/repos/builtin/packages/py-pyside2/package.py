@@ -16,6 +16,8 @@ class PyPyside2(PythonPackage):
     # the offical Qt umbrella.  For more information, see:
     # https://wiki.qt.io/Qt_for_Python_Development_Getting_Started
 
+    license("LGPL-3.0-or-later")
+
     version("develop", tag="dev")
     version(
         "5.15.2.1",

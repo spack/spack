@@ -15,6 +15,8 @@ class RIca(RPackage):
 
     cran = "ica"
 
+    license("GPL-2.0-or-later")
+
     version("1.0-3", sha256="474d3530b16b76a1bf1a1114d24092678ea7215fa57c6fdcee6333f1e768b865")
     version("1.0-2", sha256="e721596fc6175d3270a60d5e0b5b98be103a8fd0dd93ef16680af21fe0b54179")
     version("1.0-1", sha256="98559a8bb12dd134a40ce8fd133803e2a38456b45d0e2a507d66022a8e2274ae")

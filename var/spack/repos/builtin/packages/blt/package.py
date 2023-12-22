@@ -17,6 +17,8 @@ class Blt(Package):
 
     maintainers("white238", "davidbeckingsale")
 
+    license("BSD-3-Clause")
+
     version("develop", branch="develop")
     version("main", branch="main")
     # Note: 0.4.0+ contains a breaking change to BLT created targets

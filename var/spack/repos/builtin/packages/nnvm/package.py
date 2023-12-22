@@ -13,6 +13,8 @@ class Nnvm(CMakePackage):
     homepage = "https://github.com/dmlc/nnvm"
     git = "https://github.com/dmlc/nnvm.git"
 
+    license("Apache-2.0")
+
     version("master", branch="master")
     version("20170418", commit="b279286304ac954098d94a2695bca599e832effb")
 

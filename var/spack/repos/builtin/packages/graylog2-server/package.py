@@ -12,6 +12,8 @@ class Graylog2Server(Package):
     homepage = "https://www.graylog.org/"
     url = "https://github.com/Graylog2/graylog2-server/archive/3.2.4.tar.gz"
 
+    license("GPL-3.0-or-later")
+
     version("3.2.4", sha256="d34cc9fd42b2ee0b872c0f644fe53ef9b2e9790029c5d2182f782f66f1e1d99d")
     version("3.2.3", sha256="6da5ba1da897a371a490a6ba7c9d017a479a22e3c16a39280a49e61f551280c0")
     version("3.2.2", sha256="dc7baa5c0e451b0927b28320c4d9ca19810f4690eb2c521ed8a8272c99fb3bc3")

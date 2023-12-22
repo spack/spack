@@ -16,6 +16,8 @@ class Irep(CMakePackage):
 
     maintainers("tomstitt", "kennyweiss")
 
+    license("MIT")
+
     version("1.0.0", sha256="b84203ac92de824dbdc672de45cfdb9609373791c4ee84a5201fa6e4ccecc1a4")
 
     depends_on("lua-lang")

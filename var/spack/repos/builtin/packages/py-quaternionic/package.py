@@ -14,6 +14,8 @@ class PyQuaternionic(PythonPackage):
 
     maintainers("nilsvu", "moble")
 
+    license("MIT")
+
     version("1.0.1", sha256="ea69733d7311784963922bf08cc0c9c938b62fee2f91219f56544ff30658c10e")
 
     depends_on("python@3.6:3.9", type=("build", "run"))

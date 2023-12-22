@@ -15,6 +15,8 @@ class Repeatmodeler(Package):
 
     maintainers("snehring")
 
+    license("OSL-2.1")
+
     version("2.0.4", sha256="94aad46cc70911d48de3001836fc3165adb95b2b282b5c53ab0d1da98c27a6b6")
     version(
         "1.0.11",

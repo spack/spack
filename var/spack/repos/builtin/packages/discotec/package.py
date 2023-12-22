@@ -16,6 +16,8 @@ class Discotec(CMakePackage):
 
     maintainers("freifrauvonbleifrei", "pfluegdk")
 
+    license("LGPL-3.0-only")
+
     version("main", branch="main")
 
     variant("compression", default=False, description="Write sparse grid files compressed")

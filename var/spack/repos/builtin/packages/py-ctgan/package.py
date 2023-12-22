@@ -15,6 +15,8 @@ class PyCtgan(PythonPackage):
     homepage = "https://github.com/sdv-dev/CTGAN"
     pypi = "ctgan/ctgan-0.5.0.tar.gz"
 
+    license("MIT")
+
     version("0.5.0", sha256="b8a5dbf21dab2d2e2690013f13feb0922f5bad13440b15bc031ce9d58c7fb988")
 
     depends_on("python@3.6:", type=("build", "run"))

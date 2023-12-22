@@ -12,6 +12,8 @@ class PyGoogleCloudCore(PythonPackage):
     homepage = "https://github.com/GoogleCloudPlatform/google-cloud-python"
     pypi = "google-cloud-core/google-cloud-core-1.0.3.tar.gz"
 
+    license("Apache-2.0")
+
     version("2.3.2", sha256="b9529ee7047fd8d4bf4a2182de619154240df17fbe60ead399078c1ae152af9a")
     version("1.0.3", sha256="10750207c1a9ad6f6e082d91dbff3920443bdaf1c344a782730489a9efa802f1")
 

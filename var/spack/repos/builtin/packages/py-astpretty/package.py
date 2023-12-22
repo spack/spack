@@ -12,6 +12,8 @@ class PyAstpretty(PythonPackage):
     homepage = "https://github.com/asottile/astpretty"
     pypi = "astpretty/astpretty-2.0.0.tar.gz"
 
+    license("MIT")
+
     version("2.0.0", sha256="e4724bfd753636ba4a84384702e9796e5356969f40af2596d846ce64addde086")
 
     variant("typed", default=False, description="Add support for typed comments")

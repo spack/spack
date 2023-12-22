@@ -12,6 +12,8 @@ class PyPathml(PythonPackage):
     homepage = "https://github.com/Dana-Farber-AIOS/pathml"
     pypi = "pathml/pathml-2.1.0.tar.gz"
 
+    license("GPL-2.0-or-later")
+
     version("2.1.0", sha256="462bb2f16452dddad310c30f62678a1336ce492263355fd6722c07ee4840ea6a")
 
     depends_on("py-setuptools@42:", type="build")

@@ -14,6 +14,8 @@ class Kcov(CMakePackage):
     homepage = "https://simonkagstrom.github.io/kcov/index.html"
     url = "https://github.com/SimonKagstrom/kcov/archive/38.tar.gz"
 
+    license("GPL-2.0-or-later")
+
     version("38", sha256="b37af60d81a9b1e3b140f9473bdcb7975af12040feb24cc666f9bb2bb0be68b4")
 
     depends_on("cmake@2.8.4:", type="build")

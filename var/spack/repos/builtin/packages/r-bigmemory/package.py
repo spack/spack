@@ -16,6 +16,8 @@ class RBigmemory(RPackage):
 
     cran = "bigmemory"
 
+    license("LGPL-3.0-only OR Apache-2.0")
+
     version("4.6.1", sha256="b56e157c87ed6c4fc69d4cb9c697ae9a2001726e776e41aa7c48b35327b65141")
     version("4.5.36", sha256="18c67fbe6344b2f8223456c4f19ceebcf6c1166255eab81311001fd67a45ef0e")
 

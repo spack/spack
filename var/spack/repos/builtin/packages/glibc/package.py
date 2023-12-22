@@ -21,6 +21,8 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
 
     build_directory = "build"
 
+    license("LGPL-2.1-or-later")
+
     version("master", branch="master")
     version("2.38", sha256="16e51e0455e288f03380b436e41d5927c60945abd86d0c9852b84be57dd6ed5e")
     version("2.37", sha256="e3a790c2f84eed5c5d569ed6172c253c607dd3962135437da413aa39aa4fd352")

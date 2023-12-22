@@ -14,4 +14,6 @@ class RRematch(RPackage):
 
     cran = "rematch"
 
+    license("MIT")
+
     version("1.0.1", sha256="a409dec978cd02914cdddfedc974d9b45bd2975a124d8870d52cfd7d37d47578")

@@ -15,6 +15,8 @@ class PySeqeval(PythonPackage):
     homepage = "https://github.com/chakki-works/seqeval"
     pypi = "seqeval/seqeval-1.2.2.tar.gz"
 
+    license("MIT")
+
     version("1.2.2", sha256="f28e97c3ab96d6fcd32b648f6438ff2e09cfba87f05939da9b3970713ec56e6f")
 
     depends_on("python@2.6:2,3.3:", type=("build", "run"))

@@ -13,6 +13,8 @@ class PyXenv(PythonPackage):
     pypi = "xenv/xenv-1.0.0.tar.gz"
     git = "https://gitlab.cern.ch/gaudi/xenv.git"
 
+    license("GPL-3.0-or-later")
+
     version("develop", branch="master")
     version("1.0.0", sha256="cea9547295f0bd07c87e68353bb9eb1c2f2d1c09a840e3196c19cbc807ee4558")
 

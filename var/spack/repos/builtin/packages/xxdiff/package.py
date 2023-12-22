@@ -14,6 +14,8 @@ class Xxdiff(MakefilePackage):
 
     maintainers("vanderwb")
 
+    license("GPL-2.0-or-later")
+
     version("master", branch="master")
     version("2023-01-10", commit="604300ea9875611726ba885fb14f872b964df579")
 

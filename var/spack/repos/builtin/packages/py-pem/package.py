@@ -15,6 +15,8 @@ class PyPem(PythonPackage):
     homepage = "https://pem.readthedocs.io/en/stable/"
     url = "https://github.com/hynek/pem/archive/20.1.0.tar.gz"
 
+    license("MIT")
+
     version("20.1.0", sha256="140df7388f72bdf95d5a40e152cfda4fd62856b8320a9a808ffdc2bee37d5c36")
     version("19.3.0", sha256="22c526314db05559d5a6b0661aa6a21f26a1ad9f6f10a6ba2d386534ad12b175")
     version("19.2.0", sha256="93772e1574c8ff3442e553025fe42ed66cea3abff7ce75363baffa8eb606e596")

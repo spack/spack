@@ -18,6 +18,8 @@ class PyLmodule(PythonPackage):
 
     maintainers("shahzebsiddiqui")
 
+    license("MIT")
+
     version("0.1.0", sha256="cac8f3dad2df27b10e051b2c56ccbde1fcdd7044af594d13fd2e4144d3d46a29")
 
     depends_on("python@3.6.0:", type=("build", "run"))

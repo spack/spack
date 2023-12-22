@@ -18,6 +18,8 @@ class Vgm(CMakePackage):
 
     maintainer = ["wdconinc"]
 
+    license("GPL-3.0-or-later")
+
     version("master", branch="master")
     version("5-0", sha256="ab929df1aa9b0cda40451f5a98982c3328901865b33e30207ee9b9fe14331344")
     version("4-8", sha256="4fcd607b4f100fc00a65fec7a5803575daf9d4919d1808bbd6a30be263c001dd")

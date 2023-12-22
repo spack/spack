@@ -13,6 +13,8 @@ class Activeharmony(MakefilePackage):
     homepage = "https://www.dyninst.org/harmony"
     url = "https://www.dyninst.org/sites/default/files/downloads/harmony/ah-4.5.tar.gz"
 
+    license("LGPL-3.0-only")
+
     version("4.6.0", sha256="9ce5009cfd8e2f4cf5f3536e1fea9993414fc25920fc90d0a2cb56f044787dbb")
     version("4.5", sha256="31d9990c8dd36724d336707d260aa4d976e11eaa899c4c7cc11f80a56cdac684")
 

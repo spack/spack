@@ -17,6 +17,8 @@ class Ramulator(MakefilePackage):
 
     maintainers("jjwilke")
 
+    license("MIT")
+
     version("sst", commit="7d2e72306c6079768e11a1867eb67b60cee34a1c")
 
     patch("ramulator_sha_7d2e723_gcc48Patch.patch", when="@sst")

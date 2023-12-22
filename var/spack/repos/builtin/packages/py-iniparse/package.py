@@ -13,6 +13,8 @@ class PyIniparse(PythonPackage):
     pypi = "iniparse/iniparse-0.4.tar.gz"
     git = "https://github.com/candlepin/python-iniparse.git"
 
+    license("MIT")
+
     version("master", branch="master")
 
     depends_on("python@2.6:2.8,3.3:", when="@master:", type=("build", "run"))

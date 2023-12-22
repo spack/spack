@@ -13,6 +13,8 @@ class PyDataladDeprecated(PythonPackage):
     homepage = "https://github.com/datalad/datalad-deprecated"
     pypi = "datalad_deprecated/datalad_deprecated-0.3.0.tar.gz"
 
+    license("MIT")
+
     version("0.3.0", sha256="874cf31c7640a9eafe7c5ecf36f0924d5d5b47222666a55ef10eabb9c29f46cd")
 
     depends_on("py-setuptools@43:", type="build")

@@ -15,6 +15,8 @@ class Flap(CMakePackage):
 
     maintainers("fluidnumerics-joe")
 
+    license("GPL-3.0-only")
+
     version("master", branch="master", submodules=True)
 
     def flag_handler(self, name, flags):

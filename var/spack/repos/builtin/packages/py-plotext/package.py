@@ -12,6 +12,8 @@ class PyPlotext(PythonPackage):
     pypi = "plotext/plotext-5.2.8.tar.gz"
     git = "https://github.com/piccolomo/plotext.git"
 
+    license("MIT")
+
     version("master", branch="master")
     version("5.2.8", sha256="319a287baabeb8576a711995f973a2eba631c887aa6b0f33ab016f12c50ffebe")
 

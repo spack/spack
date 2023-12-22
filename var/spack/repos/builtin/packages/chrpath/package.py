@@ -13,4 +13,6 @@ class Chrpath(AutotoolsPackage):
     homepage = "https://directory.fsf.org/wiki/Chrpath"
     url = "https://cfhcable.dl.sourceforge.net/project/pisilinux/source/chrpath-0.16.tar.gz"
 
+    license("GPL-2.0-or-later")
+
     version("0.16", sha256="bb0d4c54bac2990e1bdf8132f2c9477ae752859d523e141e72b3b11a12c26e7b")

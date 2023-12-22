@@ -14,6 +14,8 @@ class RChemometrics(RPackage):
 
     cran = "chemometrics"
 
+    license("GPL-3.0-or-later")
+
     version("1.4.2", sha256="b705832fa167dc24b52b642f571ed1efd24c5f53ba60d02c7797986481b6186a")
     version("1.4.1", sha256="7646da0077657d672356204aa2094be68e10ec13617f92ae97ff53a389053905")
     version("1.3.9", sha256="553eda53789b6a4d0f77842c175f98be5b9a04bccc9d2ba0ecde1bb5c8a53f21")

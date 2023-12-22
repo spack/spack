@@ -16,6 +16,8 @@ class Nauty(AutotoolsPackage):
     homepage = "https://pallini.di.uniroma1.it/index.html"
     url = "https://pallini.di.uniroma1.it//nauty26r7.tar.gz"
 
+    license("Apache-2.0")
+
     version("2.6r7", sha256="97b5648de17645895cbd56a9a0b3e23cf01f5332c476d013ea459f1a0363cdc6")
 
     # Debian/ Fedora patches for @2.6r7:

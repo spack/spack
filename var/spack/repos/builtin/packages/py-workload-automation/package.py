@@ -13,6 +13,8 @@ class PyWorkloadAutomation(PythonPackage):
     homepage = "https://github.com/ARM-software/workload-automation"
     url = "https://github.com/ARM-software/workload-automation/archive/v3.2.tar.gz"
 
+    license("Apache-2.0")
+
     version("3.2", sha256="a3db9df6a9e0394231560ebe6ba491a513f6309e096eaed3db6f4cb924c393ea")
     version("3.1.4", sha256="217fc33a3739d011a086315ef86b90cf332c16d1b03c9dcd60d58c9fd1f37f98")
     version("3.1.3", sha256="152470808cf8dad8a833fd7b2cb7d77cf8aa5d1af404e37fa0a4ff3b07b925b2")

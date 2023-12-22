@@ -15,6 +15,8 @@ class Xwidgets(CMakePackage):
 
     maintainers("tomstitt")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("0.25.0", sha256="7b6d36999e3b926c40389167c48b33f234a075365f089f89571b33a160421d8e")
 

@@ -14,6 +14,8 @@ class PyJupyterlabWidgets(PythonPackage):
     # https://github.com/jupyter-widgets/ipywidgets/issues/3324
     url = "https://files.pythonhosted.org/packages/py3/j/jupyterlab_widgets/jupyterlab_widgets-1.0.2-py3-none-any.whl"
 
+    license("BSD-3-Clause")
+
     version(
         "3.0.3",
         sha256="6aa1bc0045470d54d76b9c0b7609a8f8f0087573bae25700a370c11f82cb38c8",

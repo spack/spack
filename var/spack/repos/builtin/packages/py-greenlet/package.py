@@ -15,6 +15,8 @@ class PyGreenlet(PythonPackage):
     # Requires objgraph
     skip_modules = ["greenlet.tests"]
 
+    license("PSF-2.0")
+
     version("3.0.0a1", sha256="1bd4ea36f0aeb14ca335e0c9594a5aaefa1ac4e2db7d86ba38f0be96166b3102")
     version(
         "2.0.2",

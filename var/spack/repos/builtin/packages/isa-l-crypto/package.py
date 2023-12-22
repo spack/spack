@@ -26,6 +26,8 @@ class IsaLCrypto(AutotoolsPackage):
     git = "https://github.com/intel/isa-l_crypto.git"
     maintainers("hyoklee")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
 
     # Current

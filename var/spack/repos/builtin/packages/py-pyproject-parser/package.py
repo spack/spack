@@ -13,6 +13,8 @@ class PyPyprojectParser(PythonPackage):
     homepage = "https://github.com/repo-helper/pyproject-parser"
     pypi = "pyproject_parser/pyproject-parser-0.9.1.tar.gz"
 
+    license("MIT")
+
     version("0.9.1", sha256="fa0b2ff78bc95788b08d00e1aafa66d3f7f3ab693f19d9c2e23e20000a69fd9b")
 
     depends_on("py-wheel@0.34.2:", type="build")

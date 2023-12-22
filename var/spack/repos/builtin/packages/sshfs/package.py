@@ -15,6 +15,8 @@ class Sshfs(MesonPackage):
 
     maintainers("haampie")
 
+    license("GPL-2.0-or-later")
+
     version("3.7.1", sha256="fe5d3436d61b46974889e0c4515899c21a9d67851e3793c209989f72353d7750")
 
     depends_on("glib")

@@ -18,6 +18,8 @@ class Mesquite(AutotoolsPackage):
     homepage = "https://software.sandia.gov/mesquite"
     url = "https://software.sandia.gov/mesquite/mesquite-2.3.0.tar.gz"
 
+    license("LGPL-2.1-or-later")
+
     version("2.99", sha256="7d834dbcc3132d903dbecb59337dc5b47505b7fb579b68f1ce66e5df87106954")
     version("2.3.0", sha256="4ab4ceadfa596e16c00dbb0e8b830a9112fa1b73291ca07633ec379a39b8bb28")
     version("2.2.0", sha256="3d48322c3e148431ee1af155d6bb94dfeef15795da1f46996c112df27778a4a2")

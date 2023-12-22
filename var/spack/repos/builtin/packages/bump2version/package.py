@@ -14,4 +14,6 @@ class Bump2version(PythonPackage):
 
     depends_on("py-setuptools", type="build")
 
+    license("MIT")
+
     version("1.0.1", sha256="762cb2bfad61f4ec8e2bdf452c7c267416f8c70dd9ecb1653fd0bbb01fa936e6")

@@ -12,6 +12,8 @@ class PyPyusb(PythonPackage):
     homepage = "https://github.com/pyusb/pyusb"
     pypi = "pyusb/pyusb-1.0.2.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("1.0.2", sha256="4e9b72cc4a4205ca64fbf1f3fff39a335512166c151ad103e55c8223ac147362")
 
     depends_on("py-setuptools", type=("build", "run"))

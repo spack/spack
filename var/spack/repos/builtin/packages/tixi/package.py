@@ -14,6 +14,8 @@ class Tixi(CMakePackage):
     url = "https://github.com/DLR-SC/tixi/archive/v3.0.3.tar.gz"
     git = "https://github.com/DLR-SC/tixi.git"
 
+    license("Apache-2.0")
+
     version("3.3.0", sha256="988d79ccd53c815d382cff0c244c0bb8e393986377dfb45385792766adf6f6a9")
     version("3.2.0", sha256="8df65c4d252d56e98c5ef2657c7aff6086a07b5686716e786891609adaca9d2d")
     version("3.1.0", sha256="4547133e452f3455b5a39045a8528955dce55faf059afe652a350ecf37d709ba")

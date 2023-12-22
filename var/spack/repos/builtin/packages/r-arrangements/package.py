@@ -19,6 +19,8 @@ class RArrangements(RPackage):
 
     cran = "arrangements"
 
+    license("MIT")
+
     version("1.1.9", sha256="e9b5dcb185ec9b28201b196384b04a8d5a15f4ddb9e0b0b2a0c718635ff7345b")
 
     depends_on("r@3.4.0:", type=("build", "run"))

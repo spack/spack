@@ -12,6 +12,8 @@ class PyMultiecho(PythonPackage):
     homepage = "https://github.com/Donders-Institute/multiecho"
     pypi = "multiecho/multiecho-0.28.tar.gz"
 
+    license("MIT")
+
     version("0.28", sha256="d0459bd03398547116d8e989b2d2b7922af0ae7ae77e233794dd7253a2abced3")
 
     depends_on("python@3.6:3.9", type=("build", "run"))

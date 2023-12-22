@@ -13,6 +13,8 @@ class PyNibetaseries(PythonPackage):
     pypi = "nibetaseries/nibetaseries-0.6.0.tar.gz"
     git = "https://github.com/HBClab/NiBetaSeries.git"
 
+    license("MIT")
+
     version("master", branch="master")
 
     depends_on("python@3.5:", type=("build", "run"))

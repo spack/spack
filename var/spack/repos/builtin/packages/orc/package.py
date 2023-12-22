@@ -13,6 +13,8 @@ class Orc(CMakePackage):
     homepage = "https://orc.apache.org/"
     url = "https://github.com/apache/orc/archive/rel/release-1.6.5.tar.gz"
 
+    license("BSD-2-Clause")
+
     version("1.6.5", sha256="df5885db8fa2e4435db8d486c6c7fc4e2c565d6197eee27729cf9cbdf36353c0")
 
     depends_on("maven")

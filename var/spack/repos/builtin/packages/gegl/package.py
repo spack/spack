@@ -18,6 +18,8 @@ class Gegl(MesonPackage):
 
     maintainers("benkirk")
 
+    license("GPL-3.0-or-later AND LGPL-3.0-or-later")
+
     version("0.4.44", sha256="0a4cdb41635e406a0849cd0d3f03caf7d97cab8aa13d28707d532d0089d56126")
     version("0.4.42", sha256="aba83a0cbaa6c56edc29ea22f2e8172950a53b96daa51592083d59222bdde02d")
     version("0.4.40", sha256="cdde80d15a49dab9a614ef98f804c8ce6e4cfe1339a3c240c34f3fb45436b85d")

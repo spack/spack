@@ -17,6 +17,8 @@ class PyPymumps(PythonPackage):
     # package is updated
     maintainers("payerle")
 
+    license("BSD-3-Clause")
+
     version("0.3.2", sha256="f290ec4850098f108fb91cb9e7fa07302ebf5076e4329f8e6ea4924de8ba35df")
 
     depends_on("py-cython", type="build")

@@ -11,6 +11,8 @@ class PyGenshi(PythonPackage):
 
     pypi = "Genshi/Genshi-0.7.7.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.7.7", sha256="c100520862cd69085d10ee1a87e91289e7f59f6b3d9bd622bf58b2804e6b9aab")
 
     depends_on("py-setuptools", type=("build", "run"))

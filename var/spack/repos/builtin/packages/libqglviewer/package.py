@@ -15,6 +15,8 @@ class Libqglviewer(QMakePackage):
     url = "http://libqglviewer.com/src/libQGLViewer-2.7.2.tar.gz"
     git = "https://github.com/GillesDebunne/libQGLViewer.git"
 
+    license("GPL-2.0-or-later")
+
     version("2.7.2", sha256="e2d2799dec5cff74548e951556a1fa06a11d9bcde2ce6593f9c27a17543b7c08")
 
     # http://libqglviewer.com/installUnix.html

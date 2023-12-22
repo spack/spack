@@ -14,6 +14,8 @@ class Numamma(CMakePackage):
     url = "https://github.com/numamma/numamma/archive/numamma-1.1.1.tar.gz"
     maintainers("trahay")
 
+    license("MIT")
+
     version("1.1.1", sha256="f79ca22a95df33a1af529ddd653d043f7f0d32a6d196e559aee8bef8fc74771f")
 
     depends_on("numap")

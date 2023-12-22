@@ -21,6 +21,8 @@ class RIterpc(RPackage):
 
     cran = "iterpc"
 
+    license("GPL-2.0-only")
+
     version("0.4.2", sha256="38bd464042a27536f676e889263eb2c257a431b59083f58cb54473f42ba2071b")
 
     depends_on("r@3.0.0:", type=("build", "run"))

@@ -16,6 +16,8 @@ class Alpaka(CMakePackage, CudaPackage):
 
     maintainers("vvolkl")
 
+    license("MPL-2.0-no-copyleft-exception")
+
     version("develop", branch="develop")
     version("0.8.0", sha256="e01bc377a7657d9a3e0c5f8d3f83dffbd7d0b830283c59efcbc1fb98cf88de43")
     version("0.7.0", sha256="4b61119a7b3b073f281ba15b63430db98b77dbd9420bc290a114f80121fbdd97")

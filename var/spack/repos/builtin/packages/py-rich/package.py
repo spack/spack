@@ -14,6 +14,8 @@ class PyRich(PythonPackage):
     homepage = "https://github.com/willmcgugan/rich"
     pypi = "rich/rich-9.4.0.tar.gz"
 
+    license("MIT")
+
     version("13.4.2", sha256="d653d6bccede5844304c605d5aac802c7cf9621efd700b46c7ec2b51ea914898")
     version("12.5.1", sha256="63a5c5ce3673d3d5fbbf23cd87e11ab84b6b451436f1b7f19ec54b6bc36ed7ca")
     version("10.14.0", sha256="8bfe4546d56b4131298d3a9e571a0742de342f1593770bd0d4707299f772a0af")

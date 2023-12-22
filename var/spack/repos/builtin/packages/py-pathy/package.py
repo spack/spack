@@ -12,6 +12,8 @@ class PyPathy(PythonPackage):
     homepage = "https://github.com/justindujardin/pathy"
     pypi = "pathy/pathy-0.10.1.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.10.1", sha256="4cd6e71b4cd5ff875cfbb949ad9fa5519d8d1dbe69d5fc1d1b23aa3cb049618b")
 
     depends_on("py-setuptools", type="build")

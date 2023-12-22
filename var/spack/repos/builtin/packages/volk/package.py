@@ -27,6 +27,8 @@ class Volk(CMakePackage):
 
     maintainers("aweits")
 
+    license("GPL-3.0-or-later")
+
     version("2.3.0", sha256="f42c928f561b128acfe4adb21227e4a62a3f6ab8103592fc3233765ff326d5fc")
 
     depends_on("python@3.4:", type=("build", "run"))

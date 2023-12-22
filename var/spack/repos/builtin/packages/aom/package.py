@@ -11,6 +11,9 @@ class Aom(CMakePackage):
 
     homepage = "https://aomedia.googlesource.com/aom"
     git = "https://aomedia.googlesource.com/aom"
+
+    license("BSD-2-Clause AND custom")
+
     version("v1.0.0-errata1", commit="29d8ce4836630df5cc7ab58f1afc4836765fc212")
     depends_on("yasm")
 

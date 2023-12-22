@@ -14,6 +14,8 @@ class RMarray(RPackage):
 
     bioc = "marray"
 
+    license("GPL-2.0-or-later")
+
     version("1.78.0", commit="97d74b2af40568eda445378b4708a2e2d33291cd")
     version("1.76.0", commit="88cb0fd21cc60ac65410ca4314eca2e351933ec5")
     version("1.74.0", commit="9130a936fffb7d2d445ff21d04520e78b62625ac")

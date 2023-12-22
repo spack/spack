@@ -17,6 +17,8 @@ class PerlStarFusion(Package):
     homepage = "https://github.com/STAR-Fusion/STAR-Fusion"
     git = "https://github.com/STAR-Fusion/STAR-Fusion.git"
 
+    license("BSD-3-Clause")
+
     version("master", commit="8c5a541ab701debebb68e5c4ee9d6a03e03d65ca")
 
     extends("perl")

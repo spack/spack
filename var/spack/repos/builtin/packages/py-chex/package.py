@@ -13,6 +13,8 @@ class PyChex(PythonPackage):
     homepage = "https://github.com/deepmind/chex"
     pypi = "chex/chex-0.1.0.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.1.5", sha256="686858320f8f220c82a6c7eeb54dcdcaa4f3d7f66690dacd13a24baa1ee8299e")
     version("0.1.0", sha256="9e032058f5fed2fc1d5e9bf8e12ece5910cf6a478c12d402b6d30984695f2161")
 

@@ -16,6 +16,8 @@ class RTextshaping(RPackage):
 
     cran = "textshaping"
 
+    license("MIT")
+
     version("0.3.6", sha256="80e2c087962f55ce2811fbc798b09f5638c06c6b28c10cd3cb3827005b902ada")
 
     depends_on("r@3.2.0:", type=("build", "run"))

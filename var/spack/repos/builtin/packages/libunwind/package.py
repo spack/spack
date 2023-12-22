@@ -15,6 +15,8 @@ class Libunwind(AutotoolsPackage):
     git = "https://github.com/libunwind/libunwind"
     maintainers("mwkrentel")
 
+    license("MIT")
+
     version("master", branch="master")
     version("1.6-stable", branch="v1.6-stable")
     version("1.6.2", sha256="4a6aec666991fb45d0889c44aede8ad6eb108071c3554fcdff671f9c94794976")

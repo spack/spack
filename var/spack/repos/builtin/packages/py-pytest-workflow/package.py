@@ -16,6 +16,8 @@ class PyPytestWorkflow(PythonPackage):
     homepage = "https://github.com/LUMC/pytest-workflow"
     pypi = "pytest-workflow/pytest-workflow-1.6.0.tar.gz"
 
+    license("AGPL-3.0-or-later")
+
     version("1.6.0", sha256="8fb9fb31a6132c783231afbbbb92941297a42713dcd459694b5efe4a13b8cba7")
 
     depends_on("python@3.6:", type=("build", "run"))

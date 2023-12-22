@@ -17,6 +17,8 @@ class Elfio(CMakePackage):
 
     maintainers("haampie")
 
+    license("MIT")
+
     version("3.11", sha256="3307b104c205399786edbba203906de9517e36297709fe747faf9478d55fbb91")
     version("3.10", sha256="cdc6362ede2e0c8d1d6db15d7da4b526f461d9cfae6f6337369e416a8bc60234")
     version("3.9", sha256="767b269063fc35aba6d361139f830aa91c45dc6b77942f082666876c1aa0be0f")

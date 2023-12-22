@@ -17,6 +17,8 @@ class PyHollandBackup(PythonPackage):
     homepage = "https://hollandbackup.org/"
     url = "https://github.com/holland-backup/holland/archive/1.2.2.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("1.2.2", sha256="836337c243b2dff5ff6a3ce0b647f123ab24697a5de8ac8ae8b7839aa23dff68")
 
     depends_on("py-setuptools", type=("build", "run"))

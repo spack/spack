@@ -21,6 +21,8 @@ class PyTorchGeometric(PythonPackage):
     homepage = "https://github.com/pyg-team/pytorch_geometric"
     pypi = "torch-geometric/torch_geometric-2.1.0.post1.tar.gz"
 
+    license("MIT")
+
     version(
         "2.1.0.post1", sha256="32347402076ccf60fa50312825178f1e3e5ce5e7b3b3a8b2729ac699da24525d"
     )

@@ -15,6 +15,8 @@ class PyAstropyHelpers(PythonPackage):
     homepage = "https://github.com/astropy/astropy-helpers"
     url = "https://github.com/astropy/astropy-helpers/archive/v4.0.1.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("4.0.1", sha256="88602971c3b63d6aaa6074d013f995d1e234acb3d517d70d7fcebd30cdaf5c89")
 
     depends_on("python@3.6:", type=("build", "run"))

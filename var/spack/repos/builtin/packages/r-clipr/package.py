@@ -14,6 +14,8 @@ class RClipr(RPackage):
 
     cran = "clipr"
 
+    license("GPL-3.0-only")
+
     version("0.8.0", sha256="32c2931992fbec9c31b71de3e27059f1cbb45b4b1f45fd42e0e8dbcec6de3be9")
     version("0.7.1", sha256="ffad477b07847e3b68f7e4406bbd323025a8dae7e3c768943d4d307ee3248afb")
     version("0.7.0", sha256="03a4e4b72ec63bd08b53fe62673ffc19a004cc846957a335be2b30d046b8c2e2")

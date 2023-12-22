@@ -15,6 +15,8 @@ class RTiff(RPackage):
 
     cran = "tiff"
 
+    license("GPL-2.0-only OR GPL-3.0-only")
+
     version("0.1-11", sha256="b8c3ea15114d972f8140541c7b01f5ce2e5322af1f63c1a083aaf766fd3eec75")
     version("0.1-10", sha256="535154e89e85e14fe697469d2c59826a44c7937e7eca2eaca1aee6b0fe320afe")
     version("0.1-6", sha256="623bd9c16a426df7e6056738c5d91da86ea9b49df375eea6b5127e4e458dc4fb")

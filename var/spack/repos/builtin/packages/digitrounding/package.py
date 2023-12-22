@@ -14,6 +14,8 @@ class Digitrounding(CMakePackage):
 
     maintainers("robertu94")
 
+    license("LGPL-3.0-or-later")
+
     version("master", branch="master")
     version("2020-02-27", commit="7b18679aded7a85e6f221f7f5cd4f080f322bc33")
 

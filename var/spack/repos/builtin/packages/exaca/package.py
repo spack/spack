@@ -18,6 +18,8 @@ class Exaca(CMakePackage):
 
     tags = ["ecp"]
 
+    license("MIT")
+
     version("master", branch="master")
     version("1.2.0", sha256="5038d63de96c6142ddea956998e1f4ebffbc4a5723caa4da0e73eb185e6623e4")
     version("1.1.0", sha256="10106fb1836964a19bc5bab3f374baa24188ba786c768e554442ab896b31ff24")

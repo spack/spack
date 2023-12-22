@@ -15,6 +15,8 @@ class PerlHttpCookiejar(PerlPackage):
 
     maintainers("EbiArnie")
 
+    license("Apache-2.0")
+
     version("0.014", sha256="7094ea5c91f536d263b85e83ab4e9a963e11c4408ce08ecae553fa9c0cc47e73")
 
     depends_on("perl@5.8.1:", type=("build", "link", "run", "test"))

@@ -12,6 +12,8 @@ class PyPykerberos(PythonPackage):
     homepage = "https://github.com/02strich/pykerberos"
     pypi = "pykerberos/pykerberos-1.2.4.tar.gz"
 
+    license("Apache-2.0")
+
     version("1.2.4", sha256="9d701ebd8fc596c99d3155d5ba45813bd5908d26ef83ba0add250edb622abed4")
 
     depends_on("py-setuptools", type="build")

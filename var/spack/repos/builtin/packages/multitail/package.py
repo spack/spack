@@ -13,6 +13,8 @@ class Multitail(MakefilePackage):
     homepage = "https://www.vanheusden.com/multitail/index.php"
     url = "https://www.vanheusden.com/multitail/multitail-6.4.2.tgz"
 
+    license("Apache-2.0")
+
     version("6.4.2", sha256="af1d5458a78ad3b747c5eeb135b19bdca281ce414cefdc6ea0cff6d913caa1fd")
 
     depends_on("ncurses")

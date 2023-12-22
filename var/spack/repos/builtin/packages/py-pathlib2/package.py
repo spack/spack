@@ -11,6 +11,8 @@ class PyPathlib2(PythonPackage):
 
     pypi = "pathlib2/pathlib2-2.3.2.tar.gz"
 
+    license("MIT")
+
     version(
         "2.3.7.post1", sha256="9fe0edad898b83c0c3e199c842b27ed216645d2e177757b2dd67384d4113c641"
     )

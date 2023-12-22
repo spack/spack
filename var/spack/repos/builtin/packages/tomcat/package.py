@@ -16,6 +16,8 @@ class Tomcat(Package):
     homepage = "https://tomcat.apache.org/"
     url = "https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.30/bin/apache-tomcat-9.0.30.tar.gz"
 
+    license("Apache-2.0")
+
     version("9.0.30", sha256="43a9b268671bbd3aace427637fbf577e742b521901e111342321ae901478100b")
     version("9.0.29", sha256="1bf634413326ec96972fc1c3ac6666e8e4cab49ad3fc9f5e3228b85208d9c4b0")
     version("9.0.27", sha256="6616a150e1593ef1a622298aaef9b889db70c8ee5122d35ad52adfcda1084d10")

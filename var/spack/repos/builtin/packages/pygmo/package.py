@@ -16,6 +16,8 @@ class Pygmo(CMakePackage):
     url = "https://github.com/esa/pygmo2/archive/v2.18.0.tar.gz"
     git = "https://github.com/esa/pygmo2.git"
 
+    license("MPL-2.0")
+
     version("master", branch="master")
     version("2.18.0", sha256="9f081cc973297894af09f713f889870ac452bfb32b471f9f7ba08a5e0bb9a125")
 

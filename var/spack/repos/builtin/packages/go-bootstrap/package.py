@@ -61,6 +61,8 @@ class GoBootstrap(Package):
     os = platform.system().lower()
     target = go_targets.get(platform.machine().lower(), platform.machine().lower())
 
+    license("BSD-3-Clause")
+
     # construct releases for current system configuration
     for release in go_releases:
         if os in go_releases[release] and target in go_releases[release][os]:

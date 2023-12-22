@@ -15,6 +15,8 @@ class Gffcompare(MakefilePackage):
         "https://github.com/gpertea/gffcompare/releases/download/v0.12.6/gffcompare-0.12.6.tar.gz"
     )
 
+    license("MIT")
+
     version("0.12.6", sha256="0e713bc9177d874c935802d11669776da5e9377a8c4d031153b48a783d3391d0")
 
     def build(self, spec, prefix):

@@ -12,6 +12,8 @@ class PyScikitFuzzy(PythonPackage):
     homepage = "https://github.com/scikit-fuzzy/scikit-fuzzy"
     pypi = "scikit-fuzzy/scikit-fuzzy-0.4.2.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.4.2", sha256="1ab12424d847ede1bc79670d8058167be7c8dd660b00756e9b844817ceb1e12e")
 
     depends_on("python@3.6:", type=("build", "run"))

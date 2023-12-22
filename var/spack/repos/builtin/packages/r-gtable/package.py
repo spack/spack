@@ -17,6 +17,8 @@ class RGtable(RPackage):
 
     cran = "gtable"
 
+    license("MIT")
+
     version("0.3.3", sha256="2f9a58d978e2a487b7fd8841539ea33cf948e55ddf6f7a9bd2dd3362600a7b3a")
     version("0.3.1", sha256="8bd62c5722d5188914d667cabab12991c555f657f4f5ce7b547571ae3aec7cb5")
     version("0.3.0", sha256="fd386cc4610b1cc7627dac34dba8367f7efe114b968503027fb2e1265c67d6d3")

@@ -15,6 +15,8 @@ class Flcl(CMakePackage):
 
     maintainers("womeld", "agaspar")
 
+    license("BSD-3-Clause")
+
     version("develop", branch="develop")
     version("0.99.0", sha256="edb8310154e5e5cf315dad63cd59f13b2537e0ba698869ce9757b04e38047464")
     version("0.5.0", sha256="bfd9b9092904eab1135d3bb4c458a50653b3325c176a722af56f158da0a16f19")

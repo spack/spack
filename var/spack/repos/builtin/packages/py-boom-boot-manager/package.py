@@ -14,6 +14,8 @@ class PyBoomBootManager(PythonPackage):
     homepage = "https://github.com/snapshotmanager/boom"
     url = "https://github.com/snapshotmanager/boom/archive/1.2.tar.gz"
 
+    license("GPL-2.0-or-later")
+
     version("1.2", sha256="7e066caad5c91e7dd8475a5034e88bd0e8e6735aec412f904c0e93029b43ae47")
     version("1.1", sha256="0ddbfa914c1d997fae64833585eb6d781100ef32974c894ce2558cda6ce66d23")
     version("1.0", sha256="13f757e247f26959a9e64a0fbfcbf145881f299f892b164637b160089ae66a87")

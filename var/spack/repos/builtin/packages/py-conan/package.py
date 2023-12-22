@@ -12,6 +12,8 @@ class PyConan(PythonPackage):
     homepage = "https://conan.io/"
     pypi = "conan/conan-1.52.0.tar.gz"
 
+    license("MIT")
+
     version("1.52.0", sha256="184761f16d00fde17615e60125d2f14fca692ffba7666cc7d6d834fc3858cf82")
 
     depends_on("python@3.6:", type=("build", "run"))

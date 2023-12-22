@@ -15,6 +15,8 @@ class PyApptools(PythonPackage):
     homepage = "https://docs.enthought.com/apptools"
     pypi = "apptools/apptools-4.5.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("4.5.0", sha256="260ae0e2a86cb2df2fede631ab6ac8ece694a58a1def78cd015c890c57140582")
 
     depends_on("py-setuptools", type="build")

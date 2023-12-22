@@ -13,6 +13,8 @@ class Openrasmol(MakefilePackage):
     homepage = "http://www.openrasmol.org/"
     url = "https://sourceforge.net/projects/openrasmol/files/RasMol/RasMol_2.7.5/RasMol-2.7.5.2.tar.gz"
 
+    license("GPL-2.0-only")
+
     version("2.7.5.2", sha256="b975e6e69d5c6b161a81f04840945d2f220ac626245c61bcc6c56181b73a5718")
 
     depends_on("imake", type="build")

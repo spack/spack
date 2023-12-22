@@ -21,6 +21,8 @@ class PyFenicsFiat(PythonPackage):
     git = "https://github.com/FEniCS/fiat.git"
     maintainers("js947", "chrisrichardson")
 
+    license("LGPL-3.0-or-later")
+
     version("master", branch="master")
     version("2019.1.0", sha256="2a6d175a825ed725843918ef28846edbcf710a879c2fe8caaeda77b1ce9b9a1c")
     version("2018.1.0", sha256="7468709c7aacf7dfb22c09fb5250448eb24084b9dd088ec2632a96d56c0f3830")

@@ -16,6 +16,8 @@ class Libpulsar(CMakePackage):
 
     maintainers("aahmed-se")
 
+    license("Apache-2.0")
+
     version("2.7.0", sha256="5bf8e5115075e12c848a9e4474cd47067c3200f7ff13c45f624f7383287e8e5e")
 
     depends_on("zstd")

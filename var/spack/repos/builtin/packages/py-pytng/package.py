@@ -16,6 +16,8 @@ class PyPytng(PythonPackage):
 
     maintainers("RMeli")
 
+    license("BSD-3-Clause")
+
     version("0.3.0", sha256="f563f9ea260ca8c8e17b3bcf9458bae35aedd5c58e1c5ac4dfff77a1e036506e")
 
     depends_on("python@3.8:", type=("build", "run"))

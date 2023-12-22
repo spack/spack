@@ -28,6 +28,8 @@ class Gromacs(CMakePackage, CudaPackage):
     git = "https://gitlab.com/gromacs/gromacs.git"
     maintainers("danielahlin", "eirrgang", "junghans")
 
+    license("BSD-2-Clause")
+
     version("main", branch="main")
     version("master", branch="main", deprecated=True)
     version("2023.3", sha256="4ec8f8d0c7af76b13f8fd16db8e2c120e749de439ae9554d9f653f812d78d1cb")

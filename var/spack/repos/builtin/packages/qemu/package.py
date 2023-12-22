@@ -15,6 +15,8 @@ class Qemu(AutotoolsPackage):
 
     maintainers("anderbubble")
 
+    license("GPL-2.0-only AND LGPL-2.1-only")
+
     version("4.1.1", sha256="ed6fdbbdd272611446ff8036991e9b9f04a2ab2e3ffa9e79f3bab0eb9a95a1d2")
     version("4.1.0", sha256="656e60218689bdeec69903087fd7582d5d3e72238d02f4481d8dc6d79fd909c6")
     version("4.0.1", sha256="f2674dd6053ef1d48593aa1f0a50c5ac9039f7a059ecb6f9b8307f3fb2fcedad")

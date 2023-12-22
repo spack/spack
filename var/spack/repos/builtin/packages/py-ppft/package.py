@@ -12,6 +12,8 @@ class PyPpft(PythonPackage):
     homepage = "https://github.com/uqfoundation/ppft"
     pypi = "ppft/ppft-1.6.4.9.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("1.6.6.4", sha256="473442cc6731856990bd25bd6b454bb98720007de4523a73c560bdd0060463d2")
     version("1.6.4.9", sha256="5537b00afb7b247da0f59cc57ee5680178be61c8b2e21b5a0672b70a3d247791")
     version("1.6.4.7.1", sha256="f94b26491b4a36adc975fc51dba7568089a24756007a3a4ef3414a98d7337651")

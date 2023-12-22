@@ -12,6 +12,8 @@ class PyLightningFabric(PythonPackage):
     homepage = "https://github.com/Lightning-AI/lightning"
     pypi = "lightning-fabric/lightning-fabric-2.0.0.tar.gz"
 
+    license("Apache-2.0")
+
     version("2.0.0", sha256="56ecf23e2857f76cc1ca4528cc314b884fed1541182d4e8b130e3c2efd39c896")
 
     # src/lightning_fabric/__setup__.py

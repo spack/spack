@@ -13,6 +13,8 @@ class PyLazyarray(PythonPackage):
     homepage = "https://lazyarray.readthedocs.io/en/latest/"
     pypi = "lazyarray/lazyarray-0.2.8.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.5.2", sha256="fe31804d82115ed7c382840a1708f498419ec1455cac084707ece9908310c7d1")
     version("0.5.1", sha256="76964dd1384a6d020ae0e70806983d15d8fcd731734063f716696ebe300ab0af")
     version("0.5.0", sha256="4cc4b54940def52fd96818a1c10528c4b7ecca77aa617d9e4fecfb42b51e73cf")

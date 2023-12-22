@@ -19,6 +19,8 @@ class ImprovedRdock(MakefilePackage):
     homepage = "https://github.com/clinfo/improved_rDock"
     git = "https://github.com/clinfo/improved_rDock.git"
 
+    license("LGPL-3.0-or-later")
+
     version("main", branch="main")
 
     depends_on("popt")

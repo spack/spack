@@ -18,6 +18,8 @@ class AwsSdkCpp(CMakePackage):
     homepage = "https://github.com/aws/aws-sdk-cpp"
     git = "https://github.com/aws/aws-sdk-cpp.git"
 
+    license("Apache-2.0")
+
     version(
         "1.11.144",
         tag="1.11.144",

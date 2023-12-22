@@ -20,6 +20,8 @@ class Pulseaudio(AutotoolsPackage):
     homepage = "https://www.freedesktop.org/wiki/Software/PulseAudio/"
     url = "https://freedesktop.org/software/pulseaudio/releases/pulseaudio-13.0.tar.xz"
 
+    license("LGPL-2.1-or-later")
+
     version("13.0", sha256="961b23ca1acfd28f2bc87414c27bb40e12436efcf2158d29721b1e89f3f28057")
 
     variant("alsa", default=False, description="alsa support")

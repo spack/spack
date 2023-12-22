@@ -14,6 +14,8 @@ class Libgain(AutotoolsPackage):
     homepage = "https://bigdft.org/"
     git = "https://gitlab.com/l_sim/bigdft-suite.git"
 
+    license("GPL-3.0-only")
+
     version(
         "1.0.0",
         sha256="3e02637433272f5edfee74ea47abf93ab7e3f1ce717664d22329468a5bd45c3a",

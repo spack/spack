@@ -12,6 +12,8 @@ class Libxres(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/lib/libXRes"
     xorg_mirror_path = "lib/libXres-1.0.7.tar.gz"
 
+    license("custom")
+
     version("1.0.7", sha256="488c9fa14b38f794d1f019fe62e6b06514a39f1a7538e55ece8faf22482fefcd")
 
     depends_on("libx11")

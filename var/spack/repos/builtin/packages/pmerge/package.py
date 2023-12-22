@@ -17,6 +17,8 @@ class Pmerge(AutotoolsPackage):
     homepage = "https://github.com/beiko-lab/PMERGE"
     git = "https://github.com/beiko-lab/PMERGE.git"
 
+    license("GPL-3.0-only")
+
     version("master", branch="master")
 
     depends_on("automake@1.14.0:1.14", type="build")

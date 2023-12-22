@@ -14,6 +14,8 @@ class PyAsdfTransformSchemas(PythonPackage):
 
     maintainers("lgarrison")
 
+    license("BSD-3-Clause")
+
     version("0.3.0", sha256="0cf2ff7b22ccb408fe58ddd9b2441a59ba73fe323e416d59b9e0a4728a7d2dd6")
 
     depends_on("python@3.8:", type=("build", "run"))

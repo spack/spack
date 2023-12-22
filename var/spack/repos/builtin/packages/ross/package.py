@@ -13,6 +13,8 @@ class Ross(CMakePackage):
     git = "https://github.com/ROSS-org/ROSS.git"
     url = "https://github.com/ROSS-org/ROSS/archive/v7.0.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("develop", branch="develop")
     version("master", branch="master")
     version("7.2.0", sha256="c937f4c7baa1918b6cd08f4eafae8cab44eddcd4aaa1175c23ff8562583ad726")

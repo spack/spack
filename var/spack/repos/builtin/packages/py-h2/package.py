@@ -12,6 +12,8 @@ class PyH2(PythonPackage):
     homepage = "https://github.com/python-hyper/hyper-h2"
     pypi = "h2/h2-4.0.0.tar.gz"
 
+    license("MIT")
+
     version("4.1.0", sha256="a83aca08fbe7aacb79fec788c9c0bac936343560ed9ec18b82a13a12c28d2abb")
     version("4.0.0", sha256="bb7ac7099dd67a857ed52c815a6192b6b1f5ba6b516237fc24a085341340593d")
     version("3.2.0", sha256="875f41ebd6f2c44781259005b157faed1a5031df3ae5aa7bcb4628a6c0782f14")

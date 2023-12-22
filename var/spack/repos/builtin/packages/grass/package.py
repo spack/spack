@@ -19,6 +19,8 @@ class Grass(AutotoolsPackage):
 
     maintainers("adamjstewart")
 
+    license("MIT")
+
     version("master", branch="master")
     version("8.2.0", sha256="621c3304a563be19c0220ae28f931a5e9ba74a53218c5556cd3f7fbfcca33a80")
     version("7.8.5", sha256="a359bb665524ecccb643335d70f5436b1c84ffb6a0e428b78dffebacd983ff37")

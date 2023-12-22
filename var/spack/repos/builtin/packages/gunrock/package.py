@@ -13,6 +13,8 @@ class Gunrock(CMakePackage, CudaPackage):
     homepage = "https://gunrock.github.io/docs/"
     git = "https://github.com/gunrock/gunrock.git"
 
+    license("Apache-2.0")
+
     version("master", submodules=True)
     version("1.2", submodules=True, tag="v1.2", commit="5ee3df50c45f702eb247ef1abcea7a490b60b2ea")
     # v1.1 build is broken. See:

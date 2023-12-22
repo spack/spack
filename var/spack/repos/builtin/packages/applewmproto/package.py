@@ -16,6 +16,8 @@ class Applewmproto(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/proto/applewmproto"
     xorg_mirror_path = "proto/applewmproto-1.4.2.tar.gz"
 
+    license("MIT")
+
     version("1.4.2", sha256="ff8ac07d263a23357af2d6ff0cca3c1d56b043ddf7797a5a92ec624f4704df2e")
 
     depends_on("pkgconfig", type="build")

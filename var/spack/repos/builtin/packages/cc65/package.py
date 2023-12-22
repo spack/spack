@@ -14,6 +14,8 @@ class Cc65(MakefilePackage):
     homepage = "https://cc65.github.io/"
     url = "https://github.com/cc65/cc65/archive/V2.18.tar.gz"
 
+    license("Zlib")
+
     version("2.18", sha256="d14a22fb87c7bcbecd8a83d5362d5d317b19c6ce2433421f2512f28293a6eaab")
     version("2.17", sha256="73b89634655bfc6cef9aa0b8950f19657a902ee5ef0c045886e418bb116d2eac")
     version("2.16", sha256="fdbbf1efbf2324658a5774fdceef4a1b202322a04f895688d95694843df76792")

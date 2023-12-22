@@ -14,6 +14,8 @@ class Nbdkit(AutotoolsPackage):
     homepage = "https://github.com/libguestfs/nbdkit"
     url = "https://github.com/libguestfs/nbdkit/archive/v1.23.7.tar.gz"
 
+    license("Ruby")
+
     version("1.23.7", sha256="70909721f60f06abadfac8646b37f942ceeaf73ce88909ab48402175ae1b6391")
     version("1.23.6", sha256="5a62cbcc41143a90c204d4a48ebe13225f21776fbc4e8fe8ca59531bb1c751fc")
     version("1.23.5", sha256="d07aa309b7d6f088a491fbbe645f23d56cd6e68995c4b73fb5bb609fc6b0de53")

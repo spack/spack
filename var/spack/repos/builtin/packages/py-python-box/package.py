@@ -17,6 +17,8 @@ class PyPythonBox(PythonPackage):
     homepage = "https://github.com/cdgriffith/Box"
     pypi = "python-box/python-box-5.3.0.tar.gz"
 
+    license("MIT")
+
     version("5.3.0", sha256="4ed4ef5d34de505a65c01e3f1911de8cdb29484fcae0c035141dce535c6c194a")
 
     variant("extras", default=False, description='install the "extras" packages')

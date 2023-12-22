@@ -23,6 +23,8 @@ class PyUproot(PythonPackage):
 
     tags = ["hep"]
 
+    license("BSD-3-Clause")
+
     version("5.0.5", sha256="1a2ac98d595bde7c83c7d5b716d33bb74abd44df6e8d84af62c638edb6c9abab")
     version("5.0.4", sha256="c4ea1af198e3292a4649e3fe789d11b038c1ed57c10f167fc3f52100300c2eea")
     version("5.0.3", sha256="a4ab3f2ea0b98746f601d43115a64b36f9c2145e9793da1e1cd9aaca72f311ab")

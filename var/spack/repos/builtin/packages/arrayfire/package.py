@@ -15,6 +15,8 @@ class Arrayfire(CMakePackage, CudaPackage):
     git = "https://github.com/arrayfire/arrayfire.git"
     maintainers("umar456")
 
+    license("FreeImage")
+
     version("master")
     version("3.8.1", commit="823e8e399fe8c120c6ec7ec75f09e6106b3074ca", tag="v3.8.1")
     version(

@@ -18,6 +18,8 @@ class Magics(CMakePackage):
     url = "https://confluence.ecmwf.int/download/attachments/3473464/Magics-4.2.4-Source.tar.gz?api=v2"
     list_url = "https://software.ecmwf.int/wiki/display/MAGP/Releases"
 
+    license("Apache-2.0")
+
     # The policy on which minor releases remain available and which get deleted
     # after a newer version becomes available is unclear.
     version("4.9.3", sha256="c01ee7c4b05c5512e93e573748d2766d299fa1a60c226f2a0d0989f3d7c5239b")

@@ -13,6 +13,8 @@ class Msmc(MakefilePackage):
     homepage = "https://github.com/stschiff/msmc"
     url = "https://github.com/stschiff/msmc/archive/v1.1.0.tar.gz"
 
+    license("GPL-3.0-or-later")
+
     version("1.1.0", sha256="989064400fe392ca3d2ac1a253ce7edf1801b6a7eeb77bbf2ff7bf67910216c4")
 
     depends_on("gsl", type=("build", "run"))

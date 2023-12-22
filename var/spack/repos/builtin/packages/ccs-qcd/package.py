@@ -35,6 +35,8 @@ class CcsQcd(MakefilePackage):
 
     tags = ["hep"]
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("1.2.1", commit="d7c6b6923f35a824e997ba8db5bd12dc20dda45c")
 

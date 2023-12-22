@@ -13,6 +13,8 @@ class Sleef(CMakePackage):
     url = "https://github.com/shibatch/sleef/archive/3.2.tar.gz"
     git = "https://github.com/shibatch/sleef.git"
 
+    license("BSL-1.0")
+
     version("master", branch="master")
     version("3.5.1_2020-12-22", commit="e0a003ee838b75d11763aa9c3ef17bf71a725bff")  # py-torch@1.8:
     version(

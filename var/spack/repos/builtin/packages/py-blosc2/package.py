@@ -12,6 +12,8 @@ class PyBlosc2(PythonPackage):
     homepage = "https://github.com/Blosc/python-blosc2"
     pypi = "blosc2/blosc2-2.2.8.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("2.2.8", sha256="59065aac5e9b01b0e9f3825d8e7f69f64b59bbfab148a47c54e4115f62a97474")
     version("2.0.0", sha256="f19b0b3674f6c825b490f00d8264b0c540c2cdc11ec7e81178d38b83c57790a1")
 

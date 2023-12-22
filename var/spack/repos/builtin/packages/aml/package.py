@@ -28,6 +28,8 @@ class Aml(AutotoolsPackage):
     url = "https://github.com/anlsys/aml/releases/download/v0.2.0/aml-0.2.0.tar.gz"
     git = "https://github.com/anlsys/aml.git"
 
+    license("ISC")
+
     # version string is generated from git tags, requires entire repo
     version("master", branch="master", submodules=True, get_full_repo=True)
 

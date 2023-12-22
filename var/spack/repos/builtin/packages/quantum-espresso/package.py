@@ -22,6 +22,8 @@ class QuantumEspresso(CMakePackage, Package):
 
     build_system(conditional("cmake", when="@6.8:"), "generic", default="cmake")
 
+    license("GPL-2.0-only")
+
     version("develop", branch="develop")
     version("7.2", sha256="b348a4a7348b66a73545d9ca317a2645755c98d343c1cfe8def475ad030808c0")
     version("7.1", sha256="d56dea096635808843bd5a9be2dee3d1f60407c01dbeeda03f8256a3bcfc4eb6")

@@ -13,6 +13,8 @@ class PyMmtfPython(PythonPackage):
     homepage = "https://github.com/rcsb/mmtf-python"
     pypi = "mmtf-python/mmtf-python-1.1.2.tar.gz"
 
+    license("Apache-2.0")
+
     version("1.1.2", sha256="a5caa7fcd2c1eaa16638b5b1da2d3276cbd3ed3513f0c2322957912003b6a8df")
 
     depends_on("py-setuptools", type="build")

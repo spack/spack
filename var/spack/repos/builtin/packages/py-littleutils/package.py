@@ -15,6 +15,8 @@ class PyLittleutils(PythonPackage):
 
     maintainers("meyersbs")
 
+    license("MIT")
+
     version("0.2.2", sha256="e6cae3a4203e530d51c9667ed310ffe3b1948f2876e3d69605b3de4b7d96916f")
 
     depends_on("py-setuptools", type="build")

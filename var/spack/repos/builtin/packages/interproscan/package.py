@@ -19,6 +19,8 @@ class Interproscan(Package):
     url = "https://github.com/ebi-pf-team/interproscan/archive/5.36-75.0.tar.gz"
     maintainers("snehring")
 
+    license("Apache-2.0")
+
     version("5.63-95.0", sha256="3d7babd09e64da3d7104c58f1e5104a298d69425e3210952331bc3f1ddf89ca6")
     version("5.61-93.0", sha256="70aca3b14983733fe5119b6978cb707156d006d7f737aa60ce6c9addd6c288e4")
     version("5.56-89.0", sha256="75e6a8f86ca17356a2f77f75b07d6d8fb7b397c9575f6e9716b64983e490b230")

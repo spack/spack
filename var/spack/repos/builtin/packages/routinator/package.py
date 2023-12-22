@@ -14,6 +14,8 @@ class Routinator(Package):
 
     maintainers("aweits")
 
+    license("BSD-3-Clause")
+
     version("0.12.1", sha256="8150fe544f89205bb2d65bca46388f055cf13971d3163fe17508bf231f9ab8bc")
     version(
         "0.11.2",

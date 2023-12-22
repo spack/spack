@@ -16,6 +16,8 @@ class PyPyamg(PythonPackage):
     # A list of GitHub accounts to notify when the package is updated.
     maintainers("benc303")
 
+    license("MIT")
+
     version("5.0.0", sha256="088be4b38203e708905fa45295593c1336b127a28391486d4f5917cf0b96f5f2")
     version("4.2.3", sha256="dcf23808e0e8edf177fc4f71a6b36e0823ffb117137a33a9eee14b391ddbb733")
     version("4.1.0", sha256="9e340aef5da11280a1e28f28deeaac390f408e38ee0357d0fdbb77503747bbc4")

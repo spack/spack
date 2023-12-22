@@ -13,6 +13,8 @@ class PyRoutes(PythonPackage):
     homepage = "https://routes.readthedocs.io/"
     pypi = "routes/Routes-2.5.1.tar.gz"
 
+    license("MIT")
+
     version("2.5.1", sha256="b6346459a15f0cbab01a45a90c3d25caf980d4733d628b4cc1952b865125d053")
 
     depends_on("py-setuptools", type="build")

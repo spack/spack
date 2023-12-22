@@ -15,6 +15,8 @@ class PyH5py(PythonPackage):
     git = "https://github.com/h5py/h5py.git"
     maintainers("bryanherman", "takluyver")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("3.8.0", sha256="6fead82f0c4000cf38d53f9c030780d81bfa0220218aee13b90b7701c937d95f")
     version("3.7.0", sha256="3fcf37884383c5da64846ab510190720027dca0768def34dd8dcb659dbe5cbf3")

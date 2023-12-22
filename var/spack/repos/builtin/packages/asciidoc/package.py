@@ -15,6 +15,8 @@ class Asciidoc(AutotoolsPackage):
     url = "https://github.com/asciidoc-py/asciidoc-py/archive/8.6.10.tar.gz"
     git = "https://github.com/asciidoc-py/asciidoc-py.git"
 
+    license("GPL-2.0-or-later AND MIT")
+
     version("master", branch="master")
     version("9.1.0", sha256="5056c20157349f8dc74f005b6e88ccbf1078c4e26068876f13ca3d1d7d045fe7")
     version("9.0.5", sha256="edc8328c3682a8568172656f6fc309b189f65219a49517966c7ea144cb25f8b2")

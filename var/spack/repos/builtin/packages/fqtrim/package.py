@@ -15,6 +15,8 @@ class Fqtrim(MakefilePackage):
     homepage = "https://ccb.jhu.edu/software/fqtrim/"
     url = "https://ccb.jhu.edu/software/fqtrim/dl/fqtrim-0.9.7.tar.gz"
 
+    license("Artistic-2.0")
+
     version("0.9.7", sha256="4951538f69dde14a23fc4841ff020434d26eb9622c4e06b43c068c702aa3d0d6")
 
     def build(self, spec, prefix):

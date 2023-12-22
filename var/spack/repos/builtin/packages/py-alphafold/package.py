@@ -17,6 +17,8 @@ class PyAlphafold(PythonPackage, CudaPackage):
     url = "https://github.com/deepmind/alphafold/archive/refs/tags/v2.1.1.tar.gz"
     maintainers("aweits")
 
+    license("Apache-2.0")
+
     version("2.2.4", sha256="8d756e16f6dc7897331d834aade8493820d0ff6a03bf60ce511bac4756c1b1e8")
     version("2.1.1", sha256="1adb6e213ba9ac321fc1acb1c563ba9b4fc054c1cebe1191bc0e2aaa671dadf7")
 

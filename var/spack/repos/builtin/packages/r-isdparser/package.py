@@ -19,6 +19,8 @@ class RIsdparser(RPackage):
 
     cran = "isdparser"
 
+    license("MIT")
+
     version("0.4.0", sha256="6f609e8f5ae4ce2e7904401f289d60d219b8f3a2bec9f661d10afa18ab73b317")
     version("0.3.0", sha256="6c9e1d7f3661802838010d659d7c77b964423dcc9a6623402df1fe3be627b7b9")
 

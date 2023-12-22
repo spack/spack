@@ -13,6 +13,8 @@ class PyArgon2Cffi(PythonPackage):
     homepage = "https://argon2-cffi.readthedocs.io/"
     pypi = "argon2-cffi/argon2-cffi-20.1.0.tar.gz"
 
+    license("MIT")
+
     version("21.3.0", sha256="d384164d944190a7dd7ef22c6aa3ff197da12962bd04b17f64d4e93d934dba5b")
     version("21.1.0", sha256="f710b61103d1a1f692ca3ecbd1373e28aa5e545ac625ba067ff2feca1b2bb870")
     version("20.1.0", sha256="d8029b2d3e4b4cea770e9e5a0104dd8fa185c1724a0f01528ae4826a6d25f97d")

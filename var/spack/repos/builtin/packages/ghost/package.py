@@ -20,6 +20,8 @@ class Ghost(CMakePackage, CudaPackage):
 
     maintainers("jthies")
 
+    license("BSD-3-Clause")
+
     version("develop", branch="devel")
 
     variant("shared", default=True, description="Enables the build of shared libraries")

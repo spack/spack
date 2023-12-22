@@ -17,6 +17,8 @@ class RSf(RPackage):
 
     cran = "sf"
 
+    license("GPL-2.0-only OR MIT")
+
     version("1.0-12", sha256="3778ebf58d824b1dfa6297ca8363714d5d85eda04c55ab2bf39597cac1d91287")
     version("1.0-9", sha256="85c0c71a0a64750281e79aa96e36d13e6285927008b2d37d699e52aba7d8013b")
     version("1.0-8", sha256="3ddc7090e79d6b5e3fad69e01254677ab5ec86a0b25e7e73493c8eac0ea98732")

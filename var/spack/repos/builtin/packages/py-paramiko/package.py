@@ -12,6 +12,8 @@ class PyParamiko(PythonPackage):
     homepage = "https://www.paramiko.org/"
     pypi = "paramiko/paramiko-2.7.1.tar.gz"
 
+    license("LGPL-2.1-or-later")
+
     version("2.12.0", sha256="376885c05c5d6aa6e1f4608aac2a6b5b0548b1add40274477324605903d9cd49")
     version("2.9.2", sha256="944a9e5dbdd413ab6c7951ea46b0ab40713235a9c4c5ca81cfe45c6f14fa677b")
     version("2.7.1", sha256="920492895db8013f6cc0179293147f830b8c7b21fdfc839b6bad760c27459d9f")

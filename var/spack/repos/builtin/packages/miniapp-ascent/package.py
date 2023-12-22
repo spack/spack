@@ -13,6 +13,8 @@ class MiniappAscent(Package):
     git = "https://github.com/cinemascienceworkflows/2021-04_Miniapp-Ascent.git"
     url = "https://github.com/cinemascienceworkflows/2021-04_Miniapp-Ascent/archive/refs/heads/master.zip"
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
 
     depends_on("ascent", type=("run"))

@@ -14,6 +14,8 @@ class Jafka(Package):
     homepage = "https://github.com/adyliu/jafka"
     url = "https://github.com/adyliu/jafka/releases/download/3.0.6/jafka-3.0.6.tgz"
 
+    license("Apache-2.0")
+
     version("3.0.6", sha256="89c9456360ace5d43c3af52b5d2e712fc49be2f88b1b3dcfe0c8f195a3244e17")
     version("3.0.5", sha256="43f1b4188a092c30f48f9cdd0bddd3074f331a9b916b6cb566da2e9e40bc09a7")
     version("3.0.4", sha256="a5334fc9280764f9fd4b5eb156154c721f074c1bcc1e5496189af7c06cd16b45")

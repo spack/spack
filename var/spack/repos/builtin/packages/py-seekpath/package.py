@@ -15,6 +15,8 @@ class PySeekpath(PythonPackage):
 
     maintainers("meyersbs")
 
+    license("MIT")
+
     version("2.0.1", sha256="188513ee187fbbace49066a29ecea9bbd351f23da3bea33d507d0f590856b082")
 
     depends_on("py-setuptools", type="build")

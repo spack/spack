@@ -19,6 +19,8 @@ class Fish(CMakePackage):
 
     maintainers("funnell", "adamjstewart")
 
+    license("GPL-2.0-only")
+
     version("master", branch="master")
     version("3.6.1", sha256="55402bb47ca6739d8aba25e41780905b5ce1bce0a5e0dd17dca908b5bc0b49b2")
     version("3.6.0", sha256="97044d57773ee7ca15634f693d917ed1c3dc0fa7fde1017f1626d60b83ea6181")

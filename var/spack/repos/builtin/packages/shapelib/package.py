@@ -15,4 +15,6 @@ class Shapelib(CMakePackage):
     homepage = "http://shapelib.maptools.org/"
     url = "https://github.com/OSGeo/shapelib/archive/v1.5.0.tar.gz"
 
+    license("LGPL-2.0-only OR MIT")
+
     version("1.5.0", sha256="48de3a6a8691b0b111b909c0b908af4627635c75322b3a501c0c0885f3558cad")

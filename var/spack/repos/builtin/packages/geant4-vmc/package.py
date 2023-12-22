@@ -17,6 +17,8 @@ class Geant4Vmc(CMakePackage):
 
     maintainer = ["wdconinc"]
 
+    license("GPL-3.0-only")
+
     version("master", branch="master")
     version("6-1-p1", sha256="b3115cd891192ae6cb347737854ee01a22620498f005beb7644af12461ad8b9d")
     version("5-3", sha256="22f58530963988380509a7741ad6b3dde21806f3862fb55c11cc27f25d3d3c2d")

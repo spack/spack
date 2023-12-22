@@ -12,6 +12,8 @@ class PerlTestException(PerlPackage):
     homepage = "https://metacpan.org/pod/Test::Exception"
     url = "http://search.cpan.org/CPAN/authors/id/E/EX/EXODIST/Test-Exception-0.43.tar.gz"
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("0.43", sha256="156b13f07764f766d8b45a43728f2439af81a3512625438deab783b7883eb533")
 
     depends_on("perl-sub-uplevel", type=("build", "run"))

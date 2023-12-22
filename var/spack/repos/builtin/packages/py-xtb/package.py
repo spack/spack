@@ -15,6 +15,8 @@ class PyXtb(PythonPackage):
 
     maintainers("awvwgk")
 
+    license("LGPL-3.0-or-later")
+
     version("22.1", sha256="7a59e7b783fc6e8b7328f55211de681e535a83991b07c4bab73494063f5e9018")
 
     depends_on("pkgconfig", type="build")

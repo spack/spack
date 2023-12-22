@@ -14,6 +14,8 @@ class PyStopit(PythonPackage):
 
     pypi = "stopit/stopit-1.1.2.tar.gz"
 
+    license("MIT")
+
     version("1.1.2", sha256="f7f39c583fd92027bd9d06127b259aee7a5b7945c1f1fa56263811e1e766996d")
 
     depends_on("python@2.6:2.8,3.3:", type=("build", "run"))

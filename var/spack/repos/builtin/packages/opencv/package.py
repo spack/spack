@@ -18,6 +18,8 @@ class Opencv(CMakePackage, CudaPackage):
 
     maintainers("bvanessen", "adamjstewart")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("4.8.0", sha256="cbf47ecc336d2bff36b0dcd7d6c179a9bb59e805136af6b9670ca944aef889bd")
     version("4.7.0", sha256="8df0079cdbe179748a18d44731af62a245a45ebf5085223dc03133954c662973")

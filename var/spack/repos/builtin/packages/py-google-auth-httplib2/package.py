@@ -12,6 +12,8 @@ class PyGoogleAuthHttplib2(PythonPackage):
     homepage = "https://github.com/GoogleCloudPlatform/google-auth-library-python-httplib2"
     pypi = "google-auth-httplib2/google-auth-httplib2-0.0.3.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.1.0", sha256="a07c39fd632becacd3f07718dfd6021bf396978f03ad3ce4321d060015cc30ac")
     version("0.0.3", sha256="098fade613c25b4527b2c08fa42d11f3c2037dda8995d86de0745228e965d445")
 

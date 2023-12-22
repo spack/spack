@@ -14,6 +14,8 @@ class PerlNamespaceClean(PerlPackage):
 
     maintainers("EbiArnie")
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("0.27", sha256="8a10a83c3e183dc78f9e7b7aa4d09b47c11fb4e7d3a33b9a12912fd22e31af9d")
 
     depends_on("perl@5.8.1:", type=("build", "link", "run", "test"))

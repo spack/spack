@@ -17,6 +17,8 @@ class Lazyten(CMakePackage):
 
     maintainers("mfherbst")
 
+    license("GPL-3.0-only")
+
     #
     # Versions
     #

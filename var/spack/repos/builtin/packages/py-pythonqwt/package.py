@@ -12,6 +12,8 @@ class PyPythonqwt(PythonPackage):
     homepage = "https://github.com/PierreRaybaut/PythonQwt"
     pypi = "PythonQwt/PythonQwt-0.5.5.zip"
 
+    license("LGPL-2.1-or-later")
+
     version("0.5.5", sha256="1f13cc8b555a57f8fe0f806d6c2f6d847050e4d837649503932b81316d12788a")
 
     depends_on("py-setuptools", type="build")

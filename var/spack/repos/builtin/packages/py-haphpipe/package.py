@@ -15,6 +15,8 @@ class PyHaphpipe(PythonPackage):
 
     maintainers("dorton21")
 
+    license("GPL-3.0-or-later")
+
     version("1.0.3", sha256="9a9e8632a217ff4207c1dea66887a471e0ea04bbb7c0f0d72631acaba214bd37")
 
     # Deps. taken from

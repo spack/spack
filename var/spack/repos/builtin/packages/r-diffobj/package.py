@@ -14,6 +14,8 @@ class RDiffobj(RPackage):
 
     cran = "diffobj"
 
+    license("GPL-2.0-only OR GPL-3.0-only")
+
     version("0.3.5", sha256="d860a79b1d4c9e369282d7391b539fe89228954854a65ba47181407c53e3cf60")
     version("0.3.3", sha256="414e5573470b9565b9149a0a61c7e8344fb37f889d23dc4e131acc8aa62e6df4")
 

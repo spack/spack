@@ -24,6 +24,8 @@ class Netpbm(MakefilePackage):
 
     maintainers("cessenat")
 
+    license("IJG AND BSD-3-Clause AND GPL-2.0-only")
+
     version("10.73.43", sha256="f9fd9a7f932258224d1925bfce61396a15e0fad93e3853d6324ac308d1adebf8")
     version("10.73.40", sha256="8542ae62aa744dfd52c8e425208f895f082955a0629ac1749f80278d6afc0344")
     version("10.73.35", sha256="628dbe8490bc43557813d1fedb2720dfdca0b80dd3f2364cb2a45c6ff04b0f18")

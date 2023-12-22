@@ -14,6 +14,8 @@ class Libreproc(CMakePackage):
 
     maintainers("charmoniumQ")
 
+    license("MIT")
+
     version("14.2.4", sha256="55c780f7faa5c8cabd83ebbb84b68e5e0e09732de70a129f6b3c801e905415dd")
 
     variant("cxx", default=False, description="Build reproc C++ bindings")

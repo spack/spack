@@ -12,6 +12,8 @@ class PyBuild(PythonPackage):
     homepage = "https://github.com/pypa/build"
     pypi = "build/build-0.7.0.tar.gz"
 
+    license("MIT")
+
     version("1.0.3", sha256="538aab1b64f9828977f84bc63ae570b060a8ed1be419e7870b8b4fc5e6ea553b")
     version("1.0.0", sha256="49a60f212df4d9925727c2118e1cbe3abf30b393eff7d0e7287d2170eb36844d")
     version("0.10.0", sha256="d5b71264afdb5951d6704482aac78de887c80691c52b88a9ad195983ca2c9269")

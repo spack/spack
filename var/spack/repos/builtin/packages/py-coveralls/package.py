@@ -14,6 +14,8 @@ class PyCoveralls(PythonPackage):
 
     maintainers("dorton21")
 
+    license("MIT")
+
     version("3.0.1", sha256="cbb942ae5ef3d2b55388cb5b43e93a269544911535f1e750e1c656aef019ce60")
 
     variant("pyyaml", default=False, description="Enable useage of pyyaml")

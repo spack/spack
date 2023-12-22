@@ -35,6 +35,8 @@ class Pmix(AutotoolsPackage):
     git = "https://github.com/openpmix/openpmix.git"
     maintainers("rhc54")
 
+    license("BSD-3-Clause-Open-MPI")
+
     # Branches 4.2 & 5.0 will also need submodules
     version("master", branch="master", submodules=True)
     version("5.0.1", sha256="d4371792d4ba4c791e1010100b4bf9a65500ababaf5ff25d681f938527a67d4a")

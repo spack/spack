@@ -13,6 +13,8 @@ class PyIbmWatson(PythonPackage):
     homepage = "https://github.com/watson-developer-cloud/python-sdk"
     pypi = "ibm-watson/ibm-watson-5.1.0.tar.gz"
 
+    license("Apache-2.0")
+
     version("5.1.0", sha256="faea1e519f6d846a5ca9e03aefc9f894ff8da1eed9117ace6a6fa8f218ba0bc7")
 
     depends_on("py-setuptools", type="build")

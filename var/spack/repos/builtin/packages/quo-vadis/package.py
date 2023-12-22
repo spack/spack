@@ -15,6 +15,8 @@ class QuoVadis(CMakePackage):
 
     maintainers("samuelkgutierrez")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
 
     variant("fortran", default=True, description="Build with Fortran bindings")

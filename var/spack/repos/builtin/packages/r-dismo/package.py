@@ -15,6 +15,8 @@ class RDismo(RPackage):
 
     cran = "dismo"
 
+    license("GPL-3.0-or-later")
+
     version("1.3-9", sha256="3924521db67716b004a4c870985c65d037edfe926b14222740fd6c2b2093beee")
     version("1.3-5", sha256="812e1932d42c0f40acf2ab5c5b2d068f93128caf648626e1d11baf1a09340ee7")
     version("1.3-3", sha256="fd65331ac18a4287ba0856b90508ddd0e2738c653eecc5f3eb2b14e1d06949ca")

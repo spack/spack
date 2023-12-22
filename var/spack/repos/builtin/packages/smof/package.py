@@ -15,6 +15,8 @@ class Smof(Package):
     homepage = "https://github.com/incertae-sedis/smof"
     url = "https://github.com/incertae-sedis/smof/archive/2.13.1.tar.gz"
 
+    license("GPL-2.0-or-later")
+
     version("2.13.1", sha256="bae75703728c62398f2af58b142ab2555f9be2224e13ff108913607777ea2a2e")
 
     depends_on("python@3:", type="run")

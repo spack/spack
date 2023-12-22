@@ -13,6 +13,8 @@ class PyAiosignal(PythonPackage):
     homepage = "https://aiosignal.readthedocs.io/"
     pypi = "aiosignal/aiosignal-1.2.0.tar.gz"
 
+    license("Apache-2.0")
+
     version("1.2.0", sha256="78ed67db6c7b7ced4f98e495e572106d5c432a93e1ddd1bf475e1dc05f5b7df2")
 
     depends_on("python@3.6:", type=("build", "run"))

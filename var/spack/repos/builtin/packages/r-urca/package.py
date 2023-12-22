@@ -14,6 +14,8 @@ class RUrca(RPackage):
 
     cran = "urca"
 
+    license("GPL-2.0-or-later")
+
     version("1.3-3", sha256="43baa8b6735f8325a69e6a43686f4fecd77a0eb7f60da25b4fc5c51b9271e9f1")
     version("1.3-0", sha256="621cc82398e25b58b4a16edf000ed0a1484d9a0bc458f734e97b6f371cc76aaa")
 

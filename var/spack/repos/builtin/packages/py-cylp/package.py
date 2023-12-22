@@ -17,6 +17,8 @@ class PyCylp(PythonPackage):
     homepage = "https://github.com/coin-or/cylp"
     pypi = "cylp/cylp-0.91.5.tar.gz"
 
+    license("EPL-2.0")
+
     version("0.91.5", sha256="d68ab1dde125be60abf45c8fd9edd24ab880c8144ad881718ddfa01ff6674c77")
 
     depends_on("py-setuptools", type="build")

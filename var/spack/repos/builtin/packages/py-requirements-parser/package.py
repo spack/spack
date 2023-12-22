@@ -15,6 +15,8 @@ class PyRequirementsParser(PythonPackage):
 
     maintainers("DaxLynch", "eugeneswalker")
 
+    license("Apache-2.0")
+
     version("0.5.0", sha256="3336f3a3ae23e06d3f0f88595e4052396e3adf91688787f637e5d2ca1a904069")
 
     depends_on("python@3.6:3.99", type=("build", "run"))

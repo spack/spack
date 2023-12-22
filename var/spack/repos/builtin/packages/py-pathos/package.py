@@ -12,6 +12,8 @@ class PyPathos(PythonPackage):
     homepage = "https://github.com/uqfoundation/pathos"
     pypi = "pathos/pathos-0.2.3.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.2.8", sha256="1f0f27a90f7ab66c423ba796529000fde9360d17b2d8e50097641ff405fc6f15")
     version("0.2.3", sha256="954c5b0a8b257c375e35d311c65fa62a210a3d65269195557de38418ac9f61f9")
     version("0.2.0", sha256="2f4e67e7914c95fb0cce766bab173eb2c5860ee420108fa183099557ac2e50e9")

@@ -39,6 +39,8 @@ class Go(Package):
 
     maintainers("alecbcs")
 
+    license("BSD-3-Clause")
+
     version("1.21.3", sha256="186f2b6f8c8b704e696821b09ab2041a5c1ee13dcbc3156a13adcf75931ee488")
 
     # Deprecated Versions

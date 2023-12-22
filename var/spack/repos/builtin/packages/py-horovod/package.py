@@ -16,6 +16,8 @@ class PyHorovod(PythonPackage, CudaPackage):
 
     maintainers("adamjstewart", "aweits", "tgaddair", "thomas-bouvier")
 
+    license("Apache-2.0")
+
     version("master", branch="master", submodules=True)
     version(
         "0.28.1", tag="v0.28.1", commit="1d217b59949986d025f6db93c49943fb6b6cc78f", submodules=True

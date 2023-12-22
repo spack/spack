@@ -12,6 +12,8 @@ class PyJupyterLsp(PythonPackage):
     homepage = "https://github.com/jupyter-lsp/jupyterlab-lsp"
     pypi = "jupyter-lsp/jupyter-lsp-2.2.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("2.2.0", sha256="8ebbcb533adb41e5d635eb8fe82956b0aafbf0fd443b6c4bfa906edeeb8635a1")
 
     depends_on("python@3.8:", type=("build", "run"))

@@ -13,6 +13,8 @@ class PyDvc(PythonPackage):
     homepage = "https://www.dvc.org"
     pypi = "dvc/dvc-1.11.10.tar.gz"
 
+    license("Apache-2.0")
+
     version("2.1.0", sha256="46cfbf0db27107fb3a2d5c643e3a948bb24539bf165ef70e77ce64283959e481")
     version("1.11.10", sha256="6b53ebf1bd5619836f131181402bb21f7b44109166e9db8f8d6a0d8c7ce9458d")
     version("1.11.6", sha256="41ba76c51c6142b28dae3aab039cb12423ba52fed6bd2a838f8308f315cfc20b")

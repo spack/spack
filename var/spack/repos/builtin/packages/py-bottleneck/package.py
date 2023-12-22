@@ -12,6 +12,8 @@ class PyBottleneck(PythonPackage):
     homepage = "https://github.com/pydata/bottleneck"
     pypi = "Bottleneck/Bottleneck-1.0.0.tar.gz"
 
+    license("BSD-2-Clause")
+
     version("1.3.7", sha256="e1467e373ad469da340ed0ff283214d6531cc08bfdca2083361a3aa6470681f8")
     version("1.3.5", sha256="2c0d27afe45351f6f421893362621804fa7dea14fe29a78eaa52d4323f646de7")
     version("1.3.2", sha256="20179f0b66359792ea283b69aa16366419132f3b6cf3adadc0c48e2e8118e573")

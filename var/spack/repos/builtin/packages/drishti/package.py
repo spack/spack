@@ -18,6 +18,8 @@ class Drishti(PythonPackage):
 
     maintainers("jeanbez", "sbyna")
 
+    license("BSD-3-Clause-LBNL")
+
     version("master", branch="master")
 
     version("0.4", sha256="bbbb272b4f6f44ae762f6cba28a2c589e15608691c559af0cc2f552590335d7b")

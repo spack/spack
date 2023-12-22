@@ -13,6 +13,8 @@ class PyCufflinks(PythonPackage):
     homepage = "https://github.com/santosjorge/cufflinks"
     pypi = "cufflinks/cufflinks-0.17.3.tar.gz"
 
+    license("MIT")
+
     version("0.17.3", sha256="48c1b3406dc030004121966489eebc5518cea70fd4e3f16379b491328501a644")
 
     depends_on("py-setuptools@34.4.1:", type=("build", "run"))

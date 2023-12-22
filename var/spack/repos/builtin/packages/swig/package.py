@@ -27,6 +27,8 @@ class Swig(AutotoolsPackage, SourceforgePackage):
 
     executables = ["^swig$"]
 
+    license("GPL-3.0-only")
+
     version("master", git="https://github.com/swig/swig.git")
     version(
         "4.1.1",

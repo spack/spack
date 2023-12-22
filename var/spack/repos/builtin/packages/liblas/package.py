@@ -14,6 +14,8 @@ class Liblas(CMakePackage):
     homepage = "https://liblas.org/"
     url = "https://download.osgeo.org/liblas/libLAS-1.8.1.tar.bz2"
 
+    license("BSD-3-Clause")
+
     version("1.8.1", sha256="9adb4a98c63b461ed2bc82e214ae522cbd809cff578f28511122efe6c7ea4e76")
 
     # libLAS linkage of GDAL and libgeotiff enhances spatial coordinate system

@@ -12,6 +12,8 @@ class PerlLwpProtocolHttps(PerlPackage):
     homepage = "https://metacpan.org/pod/LWP::Protocol::https"
     url = "http://search.cpan.org/CPAN/authors/id/G/GA/GAAS/LWP-Protocol-https-6.04.tar.gz"
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("6.04", sha256="1ef67750ee363525cf729b59afde805ac4dc80eaf8d36ca01082a4d78a7af629")
 
     depends_on("perl-test-requiresinternet", type=("build", "run"))

@@ -22,6 +22,8 @@ class RJanitor(RPackage):
 
     cran = "janitor"
 
+    license("MIT")
+
     version("2.2.0", sha256="29d5d0185e4e824bb38f905b158162a12f52dc01c2e8a487fc730ce46bf6baae")
     version("2.1.0", sha256="d60615940fbe174f67799c8abc797f27928eca4ac180418527c5897a4aaad826")
     version("1.2.0", sha256="5e15a2292c65c5ddd6160289dec2604b05a813651a2be0d7854ace4548a32b8c")

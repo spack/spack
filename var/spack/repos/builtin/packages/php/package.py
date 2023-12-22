@@ -17,6 +17,8 @@ class Php(AutotoolsPackage):
     homepage = "https://php.net/"
     url = "https://github.com/php/php-src/archive/php-7.3.13.tar.gz"
 
+    license("PHP-3.01")
+
     version("7.4.1", sha256="4d9d7c5681bec3af38a935d033657dce09a9913498f8022d7ca163a7f2f493a7")
     version("7.4.0", sha256="91d34b48025ab9789216df89e247b6904912eeeaeff38c300ef314bdda8920b0")
     version("7.3.13", sha256="e68b8d9e659f2993eee912f05860e546fdc18e459f31cd2771f404df21285f0b")

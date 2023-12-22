@@ -17,6 +17,8 @@ class Banner(AutotoolsPackage):
 
     maintainers("cessenat")
 
+    license("GPL-2.0-only")
+
     version("1.3.5", sha256="fb21c42620a0a668334b5732a6216b23b3990ca5d87cf3b15f0689dc617e7fdc")
 
     def url_for_version(self, version):

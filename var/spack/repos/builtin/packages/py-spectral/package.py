@@ -16,6 +16,8 @@ class PySpectral(PythonPackage):
     homepage = "http://www.spectralpython.net/"
     pypi = "spectral/spectral-0.22.4.tar.gz"
 
+    license("MIT")
+
     version("0.22.4", sha256="b208ffd1042e32fd2276a35e098e3df26a5f6ff1310b829e97d222c66645a9af")
 
     depends_on("py-setuptools", type="build")

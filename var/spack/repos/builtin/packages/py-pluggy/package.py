@@ -12,6 +12,8 @@ class PyPluggy(PythonPackage):
     homepage = "https://github.com/pytest-dev/pluggy"
     pypi = "pluggy/pluggy-0.13.0.tar.gz"
 
+    license("MIT")
+
     version("1.0.0", sha256="4224373bacce55f955a878bf9cfa763c1e360858e330072059e10bad68531159")
     version("0.13.0", sha256="fa5fa1622fa6dd5c030e9cad086fa19ef6a0cf6d7a2d12318e10cb49d6d68f34")
     version("0.12.0", sha256="0825a152ac059776623854c1543d65a4ad408eb3d33ee114dff91e57ec6ae6fc")

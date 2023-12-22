@@ -23,6 +23,8 @@ class Orthofinder(Package):
     homepage = "https://github.com/davidemms/OrthoFinder"
     url = "https://github.com/davidemms/OrthoFinder/releases/download/2.5.2/OrthoFinder_source.tar.gz"
 
+    license("GPL-3.0-or-later")
+
     version("2.5.5", sha256="43d034a66a13adba8872a0d4a76e32c25305a7fae638754adb61c37a3f957bd9")
     version("2.5.4", sha256="a735c81999e8e3026ad62536b14e5b0391c9fc632f872f99857936ac60003ba5")
     version("2.5.2", sha256="e0752b66866e23a11f0592e880fac5f67258f9cf926f926dec8849564c41b8f7")

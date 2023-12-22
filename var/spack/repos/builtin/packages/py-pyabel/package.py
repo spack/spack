@@ -14,6 +14,8 @@ class PyPyabel(PythonPackage):
 
     maintainers("valmar")
 
+    license("MIT")
+
     version("0.9.0", sha256="4052143de9da19be13bb321fb0524090ffc8cdc56e0e990e5d6f557f18109f08")
 
     depends_on("py-setuptools@44.0:", type="build")

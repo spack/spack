@@ -24,6 +24,8 @@ class Mvapich(AutotoolsPackage):
 
     executables = ["^mpiname$", "^mpichversion$"]
 
+    license("Unlicense")
+
     # Prefer the latest stable release
     version("3.0b", sha256="52d8a742e16eef69e944754fea7ebf8ba4ac572dac67dbda528443d9f32547cc")
 

@@ -16,6 +16,8 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
 
     maintainers("mlxd", "AmintorDusko")
 
+    license("Apache-2.0")
+
     version("master", branch="master")
     version("0.32.0", sha256="124edae1828c7e72e7b3bfbb0e75e98a07a490d7f1eab19eebb3311bfa8a23d4")
     version("0.31.0", sha256="b177243625b6fdac0699d163bbc330c92ca87fb9f427643785069273d2a255f6")

@@ -13,6 +13,8 @@ class Graphblast(MakefilePackage, CudaPackage):
     homepage = "https://github.com/gunrock/graphblast"
     git = "https://github.com/gunrock/graphblast.git"
 
+    license("Apache-2.0")
+
     version("master", submodules=True)
     version(
         "2020-05-07",

@@ -13,6 +13,8 @@ class PyGravity(PythonPackage):
     homepage = "https://github.com/galaxyproject/gravity"
     pypi = "gravity/gravity-0.13.6.tar.gz"
 
+    license("MIT")
+
     version("0.13.6", sha256="6fc2377e7c61b7db9406fb5b5c70bf72c571fb777f1313fc98787ef4cd007394")
 
     depends_on("python@3.6:", type=("build", "run"))

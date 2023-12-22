@@ -12,6 +12,8 @@ class Kdiff3(Package):
     homepage = "http://kdiff3.sourceforge.net/"
     url = "https://downloads.sourceforge.net/project/kdiff3/kdiff3/0.9.98/kdiff3-0.9.98.tar.gz"
 
+    license("GPL-2.0-or-later")
+
     version("0.9.98", sha256="802c1ababa02b403a5dca15955c01592997116a24909745016931537210fd668")
 
     depends_on("qt@:4,5.2.0:")

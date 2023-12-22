@@ -11,6 +11,8 @@ class X264(AutotoolsPackage):
     homepage = "https://www.videolan.org/developers/x264.html"
     git = "https://code.videolan.org/videolan/x264.git"
 
+    license("GPL-2.0-or-later")
+
     version("20210613", commit="5db6aa6cab1b146e07b60cc1736a01f21da01154")
 
     depends_on("nasm")

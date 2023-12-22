@@ -12,6 +12,8 @@ class Libsm(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/lib/libSM"
     xorg_mirror_path = "lib/libSM-1.2.2.tar.gz"
 
+    license("MIT")
+
     version("1.2.3", sha256="1e92408417cb6c6c477a8a6104291001a40b3bb56a4a60608fdd9cd2c5a0f320")
     version("1.2.2", sha256="14bb7c669ce2b8ff712fbdbf48120e3742a77edcd5e025d6b3325ed30cf120f4")
 

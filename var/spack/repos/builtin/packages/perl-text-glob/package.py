@@ -13,6 +13,8 @@ class PerlTextGlob(PerlPackage):
     homepage = "https://metacpan.org/pod/Text::Glob"
     url = "https://cpan.metacpan.org/authors/id/R/RC/RCLAMP/Text-Glob-0.11.tar.gz"
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("0.11", sha256="069ccd49d3f0a2dedb115f4bdc9fbac07a83592840953d1fcdfc39eb9d305287")
 
     depends_on("perl-extutils-makemaker", type="build")

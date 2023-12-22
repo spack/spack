@@ -20,6 +20,8 @@ class SstDumpi(AutotoolsPackage):
 
     maintainers("berquist", "jpkenny", "calewis")
 
+    license("BSD-3-Clause")
+
     version("13.0.0", sha256="0eaa5cf5826c9fbba6cfeed42f52af67c5a7d45bc8cbb485c2a3867b7438229b")
     version("12.1.0", sha256="b718658cbb0be957d28883f7cc914617bff97b3629fad7017cd62e14ed667d9d")
     version("12.0.1", sha256="6e74e5f16ee26c83b17ecd5c272a61ec37977f07f531066533dd610805f9117b")

@@ -19,6 +19,8 @@ class RDistributional(RPackage):
 
     cran = "distributional"
 
+    license("GPL-3.0-only")
+
     version("0.3.2", sha256="c883d633398233aee5a8ca6b587687f765bdfe0732a84e4961e7f71ac0d008f8")
     version("0.3.1", sha256="727e56cbcf0c8a8adacca8030214ddbd14f68ee28d0aad716467bd68b027235f")
     version("0.3.0", sha256="fab36c7346617d8f2ca4b3cd0e3c9da93cb2f95fb7f102a3ae88670e694751d6")

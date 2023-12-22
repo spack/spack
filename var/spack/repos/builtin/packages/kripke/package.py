@@ -18,6 +18,8 @@ class Kripke(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("vsrana01")
 
+    license("BSD-3-Clause")
+
     version("develop", branch="develop", submodules=False)
     version(
         "1.2.4", submodules=False, tag="v1.2.4", commit="d85c6bc462f17a2382b11ba363059febc487f771"

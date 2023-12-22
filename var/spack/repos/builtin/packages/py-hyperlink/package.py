@@ -12,6 +12,8 @@ class PyHyperlink(PythonPackage):
     homepage = "https://github.com/python-hyper/hyperlink"
     pypi = "hyperlink/hyperlink-21.0.0.tar.gz"
 
+    license("MIT")
+
     version("21.0.0", sha256="427af957daa58bc909471c6c40f74c5450fa123dd093fc53efd2e91d2705a56b")
 
     depends_on("python@2.6:2,3.4:", type=("build", "run"))

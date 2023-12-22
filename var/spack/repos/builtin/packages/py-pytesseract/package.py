@@ -12,6 +12,8 @@ class PyPytesseract(PythonPackage):
     homepage = "https://github.com/madmaze/pytesseract"
     pypi = "pytesseract/pytesseract-0.3.8.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.3.8", sha256="6148a01e4375760862e8f56ea718e22b5d13b281454df46ea8dac9807793fc5a")
 
     depends_on("python@3.6:", type=("build", "run"))

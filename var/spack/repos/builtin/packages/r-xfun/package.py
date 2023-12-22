@@ -14,6 +14,8 @@ class RXfun(RPackage):
 
     cran = "xfun"
 
+    license("MIT")
+
     version("0.39", sha256="d0ecaabb243dd3496da6029932fcdd4772914843de7ffd0b78a172efde1356c9")
     version("0.34", sha256="50e76c1febb988c044e44fb78e1abc1ba681173c9ff3c336f4c0ad71e6a2853d")
     version("0.33", sha256="45fbc2d252867b69bbde64d4a4e3d2e049ad1d3a84984e9cfb242d8d1f41ee6c")

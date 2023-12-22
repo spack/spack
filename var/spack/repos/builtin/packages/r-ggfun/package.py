@@ -14,6 +14,8 @@ class RGgfun(RPackage):
 
     cran = "ggfun"
 
+    license("Artistic-2.0")
+
     version("0.0.9", sha256="5c740e9d1e73b77658f41ed65e21492f4e71b12c7c9ff4b9e52ebf5f8f197612")
     version("0.0.8", sha256="9471a12fc7af203a419767b845e6b6c1e63c080370cb8f2dac80187194122273")
     version("0.0.7", sha256="a83b5fb95f61e366f96d6d8e6b04dafff8e885e7c80c913614876b50ebb8e174")

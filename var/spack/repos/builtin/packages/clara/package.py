@@ -24,6 +24,8 @@ class Clara(CMakePackage, Package):
 
     variant("single_header", default=True, description="Install a single header only.")
 
+    license("BSL-1.0")
+
     version("1.1.5", sha256="767dc1718e53678cbea00977adcd0a8a195802a505aec3c537664cf25a173142")
     version("1.1.4", sha256="ed3f9cc32e4ea6075c26caff63ee14a87e43dee1f3010c02bd041b9a0c86f72d")
     version("1.1.3", sha256="a8132befb6b32bf447a74f7e758ac0b63e7bab86974aeb55ee2fd1cd77385f9e")

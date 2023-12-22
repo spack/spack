@@ -13,6 +13,8 @@ class PyQiskitIbmProvider(PythonPackage):
     homepage = "https://github.com/Qiskit/qiskit-ibm-provider"
     pypi = "qiskit-ibm-provider/qiskit-ibm-provider-0.5.1.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.5.1", sha256="0135d455d5fc4238efe1b852767c243fb995f003fbcac0bb836608426a0c0597")
 
     depends_on("python@3.7:", type=("build", "run"))

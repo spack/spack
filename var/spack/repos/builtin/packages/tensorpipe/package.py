@@ -12,6 +12,8 @@ class Tensorpipe(CMakePackage):
     homepage = "https://github.com/pytorch/tensorpipe"
     git = "https://github.com/pytorch/tensorpipe.git"
 
+    license("BSD-3-Clause")
+
     version("master", branch="master", submodules=True)
     version(
         "2021-05-13", commit="05e4c890d4bd5f8ac9a4ba8f3c21e2eba3f66eda", submodules=True

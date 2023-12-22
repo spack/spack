@@ -14,6 +14,8 @@ class PerlXmlSax(PerlPackage):
     homepage = "https://metacpan.org/pod/XML::SAX"
     url = "https://cpan.metacpan.org/authors/id/G/GR/GRANTM/XML-SAX-1.02.tar.gz"
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("1.02", sha256="4506c387043aa6a77b455f00f57409f3720aa7e553495ab2535263b4ed1ea12a")
 
     depends_on("perl-xml-namespacesupport", type=("build", "run"))

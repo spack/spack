@@ -13,6 +13,8 @@ class PrinseqLite(Package):
     homepage = "http://prinseq.sourceforge.net"
     url = "https://sourceforge.net/projects/prinseq/files/standalone/prinseq-lite-0.20.4.tar.gz"
 
+    license("GPL-3.0-only")
+
     version("0.20.4", sha256="9b5e0dce3b7f02f09e1cc7e8a2dd77c0b133e5e35529d570ee901f53ebfeb56f")
 
     variant("nopca", default=True, description="Graphs version without PCA")

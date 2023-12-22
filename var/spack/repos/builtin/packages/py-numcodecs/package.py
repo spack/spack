@@ -20,6 +20,8 @@ class PyNumcodecs(PythonPackage):
     # an additional dependency on 'pytest'
     import_modules = ["numcodecs"]
 
+    license("MIT")
+
     version("master", branch="master", submodules=True)
     version("0.11.0", sha256="6c058b321de84a1729299b0eae4d652b2e48ea1ca7f9df0da65cb13470e635eb")
     version("0.7.3", sha256="022b12ad83eb623ec53f154859d49f6ec43b15c36052fa864eaf2d9ee786dd85")

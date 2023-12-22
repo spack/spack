@@ -19,6 +19,8 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("davidbeckingsale")
 
+    license("BSD-3-Clause")
+
     version("develop", branch="develop", submodules=False)
     version("main", branch="main", submodules=False)
     version(

@@ -12,6 +12,8 @@ class PyPy(PythonPackage):
     homepage = "https://py.readthedocs.io/en/latest/"
     pypi = "py/py-1.8.0.tar.gz"
 
+    license("MIT")
+
     version("1.11.0", sha256="51c75c4126074b472f746a24399ad32f6053d1b34b68d2fa41e558e6f4a98719")
     version("1.9.0", sha256="9ca6883ce56b4e8da7e79ac18787889fa5206c79dcc67fb065376cd2fe03f342")
     version("1.8.2", sha256="f3b3a4c36512a4c4f024041ab51866f11761cc169670204b235f6b20523d4e6b")

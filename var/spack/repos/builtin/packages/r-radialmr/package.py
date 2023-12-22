@@ -15,6 +15,8 @@ class RRadialmr(RPackage):
     homepage = "https://github.com/WSpiller/RadialMR"
     git = "https://github.com/WSpiller/RadialMR"
 
+    license("GPL-3.0-or-later")
+
     version("1.0", commit="d63d3fc8270836ab441b9e14a5ba3eeb2795d7cb")
 
     depends_on("r@3.5.0:", type=("build", "run"))

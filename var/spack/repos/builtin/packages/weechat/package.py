@@ -14,6 +14,8 @@ class Weechat(CMakePackage):
     homepage = "https://weechat.org"
     url = "https://weechat.org/files/src/weechat-2.9.tar.gz"
 
+    license("GPL-3.0-or-later")
+
     version("2.9", sha256="3a78063b76c42ba306eacf8f74cb8c9a260f8a61d1915d0b5d76f11d2be69a53")
 
     variant("perl", default=False, description="Include perl support")

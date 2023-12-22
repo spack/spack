@@ -14,6 +14,8 @@ class BppPhyl(CMakePackage):
 
     maintainers("snehring")
 
+    license("CECILL-2.0")
+
     version("2.4.1", sha256="e7bf7d4570f756b7773904ffa600ffcd77c965553ddb5cbc252092d1da962ff2")
     version(
         "2.2.0",

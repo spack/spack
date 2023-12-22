@@ -16,6 +16,8 @@ class PyGpyopt(PythonPackage):
     homepage = "http://sheffieldml.github.io/GPyOpt/"
     pypi = "GPyOpt/GPyOpt-1.2.6.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("1.2.6", sha256="e714daa035bb529a6db23c53665a762a4ab3456b9329c19ad3b03983f94c9b2a")
 
     depends_on("py-setuptools", type="build")

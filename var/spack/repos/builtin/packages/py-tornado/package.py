@@ -13,6 +13,8 @@ class PyTornado(PythonPackage):
     homepage = "https://github.com/tornadoweb/tornado"
     pypi = "tornado/tornado-6.1.tar.gz"
 
+    license("Apache-2.0")
+
     version("6.3.3", sha256="e7d8db41c0181c80d76c982aacc442c0783a2c54d6400fe028954201a2e032fe")
     version("6.2", sha256="9b630419bde84ec666bfd7ea0a4cb2a8a651c2d5cccdbdd1972a0c859dfc3c13")
     version("6.1", sha256="33c6e81d7bd55b468d2e793517c909b139960b6c790a60b7991b9b6b76fb9791")

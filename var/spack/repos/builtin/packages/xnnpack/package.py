@@ -13,6 +13,8 @@ class Xnnpack(CMakePackage):
     homepage = "https://github.com/google/XNNPACK"
     git = "https://github.com/google/XNNPACK.git"
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("2022-02-16", commit="ae108ef49aa5623b896fc93d4298c49d1750d9ba")  # py-torch@1.12
     version("2021-06-21", commit="79cd5f9e18ad0925ac9a050b00ea5a36230072db")  # py-torch@1.10:1.11

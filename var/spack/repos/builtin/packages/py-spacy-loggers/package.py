@@ -12,6 +12,8 @@ class PySpacyLoggers(PythonPackage):
     homepage = "https://github.com/explosion/spacy-loggers"
     pypi = "spacy-loggers/spacy-loggers-1.0.4.tar.gz"
 
+    license("MIT")
+
     version("1.0.4", sha256="e6f983bf71230091d5bb7b11bf64bd54415eca839108d5f83d9155d0ba93bf28")
 
     depends_on("python@3.6:", type=("build", "run"))

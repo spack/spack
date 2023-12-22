@@ -16,6 +16,8 @@ class PyOpppy(PythonPackage):
     git = "https://github.com/lanl/OPPPY.git"
     maintainers("clevelam")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("0_1_7", sha256="6ef17e289de2c469ac931288fc5debee77583b300e35fa72080ee06d0e27f7af")
     version("0_1_6", sha256="1f385ffa39c90d3b338aceb563c5f4952d01041fff0ec94084c84e9e1107023e")

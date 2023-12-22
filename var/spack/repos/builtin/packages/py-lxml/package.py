@@ -14,6 +14,8 @@ class PyLxml(PythonPackage):
     pypi = "lxml/lxml-4.6.1.tar.gz"
     git = "https://github.com/lxml/lxml"
 
+    license("BSD-3-Clause")
+
     version("4.9.2", sha256="2455cfaeb7ac70338b3257f41e21f0724f4b5b0c0e7702da67ee6c3640835b67")
     version("4.9.1", sha256="fe749b052bb7233fe5d072fcb549221a8cb1a16725c47c37e42b0b9cb3ff2c3f")
     version("4.9.0", sha256="520461c36727268a989790aef08884347cd41f2d8ae855489ccf40b50321d8d7")

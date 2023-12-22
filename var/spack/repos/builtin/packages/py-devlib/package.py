@@ -12,6 +12,8 @@ class PyDevlib(PythonPackage):
     homepage = "https://github.com/ARM-software/devlib"
     url = "https://github.com/ARM-software/devlib/archive/v1.2.tar.gz"
 
+    license("Apache-2.0")
+
     version("1.2", sha256="4cdb6767a9430b49eecffe34e2b9fcbcfc7e65328122d909aa71c3d11a86503d")
     version("1.1.2", sha256="c900420cb97239b4642f5e333e43884fb09507b530edb55466e7b82103b4deaa")
     version("1.1.1", sha256="eceb7a2721197a6023bbc2bbf346663fc117e4f54e1eb8334a3085dead9c8036")

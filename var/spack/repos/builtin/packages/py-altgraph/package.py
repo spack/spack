@@ -15,6 +15,8 @@ class PyAltgraph(PythonPackage):
 
     pypi = "altgraph/altgraph-0.16.1.tar.gz"
 
+    license("MIT")
+
     version("0.16.1", sha256="ddf5320017147ba7b810198e0b6619bd7b5563aa034da388cea8546b877f9b0c")
 
     depends_on("py-setuptools", type="build")

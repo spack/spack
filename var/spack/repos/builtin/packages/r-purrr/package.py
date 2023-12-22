@@ -13,6 +13,8 @@ class RPurrr(RPackage):
 
     cran = "purrr"
 
+    license("MIT")
+
     version("1.0.1", sha256="0a7911be3539355a4c40d136f2602befcaaad5a3f7222078500bfb969a6f2ba2")
     version("0.3.5", sha256="a2386cd7e78a043cb9c14703023fff15ab1c879bf648816879d2c0c4a554fcef")
     version("0.3.4", sha256="23ebc93bc9aed9e7575e8eb9683ff4acc0270ef7d6436cc2ef4236a9734840b2")

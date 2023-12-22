@@ -18,6 +18,8 @@ class Genfit(CMakePackage):
 
     tags = ["hep"]
 
+    license("LGPL-3.0-or-later")
+
     version("master", branch="master")
     version("02-00-05", sha256="8c37d1692e592f9f28a145c38aa41b0a6ed9211947846e9d10e34a2759ee446e")
     version("02-00-04", sha256="b833e40cfe5343424262d28f9cb715fc80255313a985508453ac17c3a522b273")

@@ -15,6 +15,8 @@ class Nmap(AutotoolsPackage):
     url = "https://nmap.org/dist/nmap-7.70.tar.bz2"
     list_url = "https://nmap.org/dist-old/"
 
+    license("custom")
+
     version("7.93", sha256="55bcfe4793e25acc96ba4274d8c4228db550b8e8efd72004b38ec55a2dd16651")
     version("7.92", sha256="a5479f2f8a6b0b2516767d2f7189c386c1dc858d997167d7ec5cfc798c7571a1")
     version("7.91", sha256="18cc4b5070511c51eb243cdd2b0b30ff9b2c4dc4544c6312f75ce3a67a593300")

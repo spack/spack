@@ -17,6 +17,8 @@ class PyRadicalPilot(PythonPackage):
 
     maintainers("andre-merzky")
 
+    license("MIT")
+
     version("develop", branch="devel")
     version("1.20.0", sha256="a0747e573a01a856dc330797dbee158f7e1cf8652001dc26f06a1d6c5e553bc6")
     version("1.18.1", sha256="fd6a0ffaa727b6b9bab35d8f2dc300bf4d9c4ff3541136d83560aa7b853d6100")

@@ -14,6 +14,8 @@ class Pangolin(CMakePackage):
     homepage = "https://github.com/stevenlovegrove/Pangolin"
     git = "https://github.com/stevenlovegrove/Pangolin.git"
 
+    license("MIT")
+
     version("master", branch="master")
 
     # Required dependencies

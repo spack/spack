@@ -30,6 +30,8 @@ class Verible(Package):
     homepage = "https://chipsalliance.github.io/verible"
     git = "https://github.com/chipsalliance/verible.git"
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
 
     version(

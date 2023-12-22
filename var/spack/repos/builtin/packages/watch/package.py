@@ -16,6 +16,8 @@ class Watch(AutotoolsPackage):
     homepage = "https://gitlab.com/procps-ng/procps"
     git = "https://gitlab.com/procps-ng/procps.git"
 
+    license("GPL-2.0-or-later")
+
     version("master", branch="master")
     version("3.3.15", tag="v3.3.15", commit="7bb949bcba13c107fa0f45d2d0298b1ad6b6d6cc")
 

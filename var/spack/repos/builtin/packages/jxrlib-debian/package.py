@@ -17,6 +17,8 @@ class JxrlibDebian(MakefilePackage):
 
     variant("shared", default=False, description="Build shared libs")
 
+    license("BSD-2-Clause")
+
     version(
         "1.2_git20170615.f752187-5",
         sha256="3d9d5d6ca972b51259efe1f37a8e42892e90920b13308d70b8a24eb9a82bf34c",

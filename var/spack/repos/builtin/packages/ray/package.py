@@ -12,6 +12,8 @@ class Ray(CMakePackage, SourceforgePackage):
     homepage = "http://denovoassembler.sourceforge.net/"
     sourceforge_mirror_path = "denovoassembler/Ray-2.3.1.tar.bz2"
 
+    license("GPL-3.0-or-later")
+
     version("2.3.1", sha256="3122edcdf97272af3014f959eab9a0f0e5a02c8ffc897d842b06b06ccd748036")
 
     depends_on("mpi")

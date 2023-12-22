@@ -14,6 +14,8 @@ class Sbp(CMakePackage):
 
     maintainers("jayvdb")
 
+    license("MIT")
+
     version(
         "3.4.10", tag="v3.4.10", commit="d8ec454a3d7f1b2f8b8f515934612c184b8d5fa3", submodules=True
     )

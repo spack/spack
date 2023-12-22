@@ -19,6 +19,8 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
     homepage = "https://github.com/microsoft/onnxruntime"
     git = "https://github.com/microsoft/onnxruntime.git"
 
+    license("MIT")
+
     version(
         "1.10.0", tag="v1.10.0", commit="0d9030e79888d1d5828730b254fedc53c7b640c1", submodules=True
     )

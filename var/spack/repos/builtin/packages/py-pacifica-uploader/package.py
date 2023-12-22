@@ -12,6 +12,8 @@ class PyPacificaUploader(PythonPackage):
     homepage = "https://github.com/pacifica/pacifica-python-uploader/"
     pypi = "pacifica-uploader/pacifica-uploader-0.3.1.tar.gz"
 
+    license("LGPL-3.0-only")
+
     version("0.3.1", sha256="adda18b28f01f0b1e6fbaf927fec9b8cf07c86f1b74185bed2a624e8a4597578")
 
     depends_on("py-setuptools", type="build")

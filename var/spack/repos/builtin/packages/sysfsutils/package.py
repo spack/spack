@@ -17,6 +17,8 @@ class Sysfsutils(AutotoolsPackage):
     homepage = "https://github.com/linux-ras/sysfsutils/"
     url = "https://github.com/linux-ras/sysfsutils/archive/sysfsutils_0_5.tar.gz"
 
+    license("GPL-2.0-only AND LGPL-2.1-only")
+
     version("0_5", sha256="6878c8a4281e7de52e57b40fe543b1b4e01d6fbce4ffd45a36e5fc25e376746f")
     version("0_4_0", sha256="9c78edb118c6bd962e04558ddb2df46d456273284fe3f23bb930dc287225aea5")
     version("0_3_0", sha256="f10250aa09513d245cb4ed61ac0dbfd7dfb2e7810bcd8804a07b3fe18f08a74a")

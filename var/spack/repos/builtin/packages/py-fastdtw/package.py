@@ -17,6 +17,8 @@ class PyFastdtw(PythonPackage):
     homepage = "https://github.com/slaypni/fastdtw"
     pypi = "fastdtw/fastdtw-0.3.4.tar.gz"
 
+    license("MIT")
+
     version("0.3.4", sha256="2350fa6ec36bcad186eaf81f46eff35181baf04e324f522de8aeb43d0243f64f")
 
     depends_on("py-setuptools", type="build")

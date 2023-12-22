@@ -16,6 +16,8 @@ class Byacc(AutotoolsPackage):
     homepage = "https://invisible-island.net/byacc/byacc.html"
     url = "ftp://ftp.invisible-island.net/pub/byacc/byacc-20210808.tgz"
 
+    license("Public-Domain")
+
     # Check FTP directory ftp://ftp.invisible-island.net/byacc/ to find the latest version
     version("20210808", sha256="f158529be9d0594263c7f11a87616a49ea23e55ac63691252a2304fbbc7d3a83")
 

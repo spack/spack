@@ -13,6 +13,8 @@ class OpenIscsi(MakefilePackage):
     homepage = "https://github.com/open-iscsi/"
     url = "https://github.com/open-iscsi/open-iscsi/archive/2.1.1.tar.gz"
 
+    license("GPL-2.0-only")
+
     version("2.1.1", sha256="dfc1ea37f230f9d116f5b39c795b35be43002d65c81330ccd3878786532b811b")
     version("2.1.0", sha256="5b381b6a74bef3ca57cd8d5fa7a3ff07d45c8009b0e4aac5ba3a811ff0c48ee4")
     version("2.0.878", sha256="5aeef0069c4a9d7f288269bcf56588d09a3c529a35f865f16dd8119ab8672208")

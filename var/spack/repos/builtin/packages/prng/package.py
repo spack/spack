@@ -12,6 +12,8 @@ class Prng(AutotoolsPackage):
     homepage = "https://statmath.wu.ac.at/prng/"
     url = "https://statmath.wu.ac.at/prng/prng-3.0.2.tar.gz"
 
+    license("GPL-2.0-only")
+
     version("3.0.2", sha256="8299182b97c24b7891d74590a8a8438641a6c681ce34d6c3f7bc98a0649da48b")
 
     depends_on("automake", type="build")

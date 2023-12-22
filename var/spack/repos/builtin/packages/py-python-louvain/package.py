@@ -17,6 +17,8 @@ class PyPythonLouvain(PythonPackage):
     homepage = "https://github.com/taynaud/python-louvain"
     pypi = "python-louvain/python-louvain-0.14.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.15", sha256="2a856edfbe29952a60a5538a84bb78cca18f6884a88b9325e85a11c8dd4917eb")
 
     depends_on("py-setuptools", type="build")

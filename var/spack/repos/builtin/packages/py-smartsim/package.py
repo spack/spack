@@ -19,6 +19,8 @@ class PySmartsim(PythonPackage):
 
     maintainers("MattToast")
 
+    license("BSD-2-Clause")
+
     version("0.5.0", sha256="35b36243dc84af62261a7f772bae92f0b3502faf01401423899cb2a48339858c")
 
     variant("torch", default=True, description="Build with the pytorch backend")

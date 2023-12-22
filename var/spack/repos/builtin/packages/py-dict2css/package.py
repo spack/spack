@@ -14,6 +14,8 @@ class PyDict2css(PythonPackage):
 
     maintainers("LydDeb")
 
+    license("MIT")
+
     version("0.3.0", sha256="1e8b1bf580dca2083198f88a60ec88c878a8829d760dfe45483ef80fe2905117")
 
     depends_on("py-whey", type="build")

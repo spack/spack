@@ -15,6 +15,8 @@ class Meraculous(CMakePackage, SourceforgePackage):
     sourceforge_mirror_path = "meraculous20/Meraculous-v2.2.4.tar.gz"
     git = "https://bitbucket.org/berkeleylab/genomics-meraculous2.git"
 
+    license("BSD-3-Clause-LBNL")
+
     version("2.2.5.1", branch="release-2.2.5.1")
     version("2.2.4", sha256="3b4b8848232be902af9ebc77b38b83bcc531f12120115be089bdd6371ad2bf5b")
 

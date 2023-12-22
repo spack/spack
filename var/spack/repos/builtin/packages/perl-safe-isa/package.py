@@ -15,6 +15,8 @@ class PerlSafeIsa(PerlPackage):
 
     maintainers("EbiArnie")
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("1.000010", sha256="87f4148aa0ff1d5e652723322eab7dafa3801c967d6f91ac9147a3c467b8a66a")
 
     depends_on("perl@5.6.0:", type=("build", "link", "run", "test"))

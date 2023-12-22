@@ -13,6 +13,8 @@ class Pnmpi(CMakePackage):
     homepage = "https://github.com/LLNL/PnMPI"
     url = "https://github.com/LLNL/PnMPI/releases/download/v1.7/PnMPI-v1.7-full.tar.gz"
 
+    license("LGPL-2.1-or-later")
+
     version("1.7", sha256="523228bdc220ae417d6812c0766bba698a240d71c69981cb0cb2b09a75ef4a9e")
 
     variant("fortran", default=False, description="Configure PnMPI with Fortran support")

@@ -15,6 +15,8 @@ class Njet(AutotoolsPackage):
 
     tags = ["hep"]
 
+    license("GPL-3.0-or-later")
+
     version("2.1.1", sha256="3858ad37e84f3652711aa033819a6566352ecff04a1cb0189d6590af75b7bb56")
     version("2.0.0", sha256="a1f5c171b8aff3553d9dde24d3ced5479bdaeec67f4c90c70a846ee3449b40ea")
 

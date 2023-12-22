@@ -15,6 +15,8 @@ class Pathfinder(MakefilePackage):
 
     tags = ["proxy-app"]
 
+    license("LGPL-3.0-only")
+
     version("1.0.0", sha256="e002ff7df1ee9a6ee8a892fc208e047e2daf4215ff0d77e7ddc6b09d0506be16")
 
     build_targets = ["--directory=PathFinder_ref", "CC=cc"]

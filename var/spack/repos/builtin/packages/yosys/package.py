@@ -25,6 +25,8 @@ class Yosys(MakefilePackage):
 
     maintainers("davekeeshan")
 
+    license("ISC")
+
     version("master", branch="master")
 
     version("0.36", sha256="d69beedcb76db80681c2a0f445046311f3ba16716d5d0c3c5034dabcb6bd9b23")

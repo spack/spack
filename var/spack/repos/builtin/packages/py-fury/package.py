@@ -12,6 +12,8 @@ class PyFury(PythonPackage):
     homepage = "https://github.com/fury-gl/fury"
     pypi = "fury/fury-0.7.1.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.7.1", sha256="bc7bdbdf1632f317f40c717c2f34a6b8424ce5abda3ebda31a058c0b725a316a")
 
     depends_on("python@2.7:", type=("build", "run"))

@@ -12,6 +12,8 @@ class PyFilemagic(PythonPackage):
     homepage = "https://filemagic.readthedocs.io/en/latest/"
     pypi = "filemagic/filemagic-1.6.tar.gz"
 
+    license("Apache-2.0")
+
     version("1.6", sha256="e684359ef40820fe406f0ebc5bf8a78f89717bdb7fed688af68082d991d6dbf3")
 
     depends_on("py-setuptools", type="build")

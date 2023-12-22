@@ -30,6 +30,8 @@ class Povray(AutotoolsPackage):
 
     # maintainers('payerle' )
 
+    license("AGPL-3.0-or-later")
+
     version("3.7.0.8", sha256="53d11ebd2972fc452af168a00eb83aefb61387662c10784e81b63e44aa575de4")
 
     variant("boost", default=True, description="Build with boost support")

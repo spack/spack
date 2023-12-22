@@ -28,6 +28,8 @@ class RCheckpoint(RPackage):
 
     cran = "checkpoint"
 
+    license("GPL-2.0-only")
+
     version("1.0.2", sha256="a80390d834534e908058a597a2a5ee60a111023e76f13f370949963582dd07a5")
     version("1.0.1", sha256="8542029395b7d557c1b39423326611f408788fcd02f5cbeb5ed252f368f8dcd2")
     version("1.0.0", sha256="d36146093763ca29e0296729399b96e0f2e7764745283d6cea1066a96fa085a7")

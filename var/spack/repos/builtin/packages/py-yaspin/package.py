@@ -12,6 +12,8 @@ class PyYaspin(PythonPackage):
     homepage = "https://github.com/pavdmyt/yaspin"
     pypi = "yaspin/yaspin-2.1.0.tar.gz"
 
+    license("MIT")
+
     version("2.1.0", sha256="c8d34eca9fda3f4dfbe59f57f3cf0f3641af3eefbf1544fbeb9b3bacf82c580a")
 
     depends_on("python@3.6.2:3", type=("build", "run"))

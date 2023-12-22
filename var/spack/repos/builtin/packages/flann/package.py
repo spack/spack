@@ -21,6 +21,8 @@ class Flann(CMakePackage):
     homepage = "https://github.com/mariusmuja/flann"
     url = "https://github.com/mariusmuja/flann/archive/1.9.1.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("1.9.2", sha256="e26829bb0017f317d9cc45ab83ddcb8b16d75ada1ae07157006c1e7d601c8824")
     version("1.9.1", sha256="b23b5f4e71139faa3bcb39e6bbcc76967fbaf308c4ee9d4f5bfbeceaa76cc5d3")
     version("1.8.5", sha256="59a9925dac0705b281496ae52b5dfd79d6b69316d37015e3d3b38c859bac4f2f")

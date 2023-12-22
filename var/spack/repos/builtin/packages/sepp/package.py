@@ -14,6 +14,8 @@ class Sepp(Package):
     url = "https://github.com/smirarab/sepp/archive/refs/tags/4.5.1.tar.gz"
     maintainers("snehring")
 
+    license("GPL-3.0-or-later")
+
     version("4.5.1", sha256="51e052569ae89f586a1a94c804f09fe1b7910a3ffff7664e2005f18c7d3f717b")
 
     depends_on("python@3.6:", type=("build", "run"))

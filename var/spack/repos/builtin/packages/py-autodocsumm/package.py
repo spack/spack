@@ -14,6 +14,8 @@ class PyAutodocsumm(PythonPackage):
 
     maintainers("LydDeb")
 
+    license("Apache-2.0")
+
     version("0.2.11", sha256="183212bd9e9f3b58a96bb21b7958ee4e06224107aa45b2fd894b61b83581b9a9")
 
     depends_on("py-setuptools@61.0:", type="build")

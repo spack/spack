@@ -22,6 +22,8 @@ class Ninja(Package):
 
     executables = ["^ninja$"]
 
+    license("Apache-2.0")
+
     version("kitware", branch="features-for-fortran", git="https://github.com/Kitware/ninja.git")
     version("master", branch="master")
     version("1.11.1", sha256="31747ae633213f1eda3842686f83c2aa1412e0f5691d1c14dbbcc67fe7400cea")

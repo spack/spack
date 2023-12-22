@@ -15,6 +15,8 @@ class Qnnpack(CMakePackage):
     homepage = "https://github.com/pytorch/QNNPACK"
     git = "https://github.com/pytorch/QNNPACK.git"
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("2019-08-28", commit="7d2a4e9931a82adc3814275b6219a03e24e36b4c")  # py-torch@1.3:1.9
     version("2018-12-27", commit="6c62fddc6d15602be27e9e4cbb9e985151d2fa82")  # py-torch@1.2

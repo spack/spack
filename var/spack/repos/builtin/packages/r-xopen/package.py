@@ -14,6 +14,8 @@ class RXopen(RPackage):
 
     cran = "xopen"
 
+    license("MIT")
+
     version("1.0.0", sha256="e207603844d69c226142be95281ba2f4a056b9d8cbfae7791ba60535637b3bef")
 
     depends_on("r@3.1:", type=("build", "run"))

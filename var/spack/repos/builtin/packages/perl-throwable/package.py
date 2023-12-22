@@ -15,6 +15,8 @@ class PerlThrowable(PerlPackage):
 
     maintainers("EbiArnie")
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("1.001", sha256="d0cb5e9d7d06d70f2cc56eecf857a83a45eaca43850dcdda91d3feb4ddde4c51")
 
     depends_on("perl-devel-stacktrace@1.32:", type=("run", "test"))

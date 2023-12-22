@@ -13,6 +13,8 @@ class XtensorBlas(CMakePackage):
     url = "https://github.com/xtensor-stack/xtensor-blas/archive/refs/tags/0.20.0.tar.gz"
     git = "git://github.com/xtensor-stack/xtensor-blas.git"
 
+    license("BSD-3-Clause")
+
     version("develop", branch="master")
     version("0.20.0", sha256="272f5d99bb7511a616bfe41b13a000e63de46420f0b32a25fa4fb935b462c7ff")
     version("0.19.2", sha256="ef678c0e3f581cc8d61ea002c904c76513c8b0f798f9c9acaf980a835f9d09aa")

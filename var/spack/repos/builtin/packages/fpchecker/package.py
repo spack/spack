@@ -18,6 +18,8 @@ class Fpchecker(CMakePackage):
 
     maintainers("ilagunap")
 
+    license("Apache-2.0")
+
     version("master", branch="master")
     version("0.4.0", sha256="59d18a3fb5211645bb1cfde1502ba78a9cca4234604dfd879534d7f13ae5d5b9")
     version("0.3.5", sha256="ed7277318af8e0a22b05c5655c9acc99e1d3036af41095ec2f1b1ada4d6e90f6")

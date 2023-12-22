@@ -12,6 +12,8 @@ class PerlCairo(PerlPackage):
     homepage = "https://metacpan.org/pod/Cairo"
     url = "http://search.cpan.org/CPAN/authors/id/X/XA/XAOC/Cairo-1.106.tar.gz"
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("1.106", sha256="e64803018bc7cba49e73e258547f5378cc4249797beafec524852140f49c45c4")
 
     depends_on("cairo")

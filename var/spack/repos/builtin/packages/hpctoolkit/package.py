@@ -26,6 +26,8 @@ class Hpctoolkit(AutotoolsPackage):
 
     test_requires_compiler = True
 
+    license("BSD-3-Clause")
+
     version("develop", branch="develop")
     version("2023.08.stable", branch="release/2023.08")
     version("2023.08.1", tag="2023.08.1", commit="753a72affd584a5e72fe153d1e8c47a394a3886e")

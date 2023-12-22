@@ -12,6 +12,8 @@ class PyPytestRemotedata(PythonPackage):
     homepage = "https://github.com/astropy/pytest-remotedata"
     pypi = "pytest-remotedata/pytest-remotedata-0.4.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.4.0", sha256="be21c558e34d7c11b0f6aeb50956c09520bffcd02b7fce9c6f8e8531a401a1c8")
 
     depends_on("py-setuptools@30.3:", type="build")

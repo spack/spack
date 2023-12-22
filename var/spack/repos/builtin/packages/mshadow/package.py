@@ -13,6 +13,8 @@ class Mshadow(Package):
     homepage = "https://github.com/dmlc/mshadow"
     git = "https://github.com/dmlc/mshadow.git"
 
+    license("Apache-2.0")
+
     version("master", branch="master")
     version("20170721", commit="20b54f068c1035f0319fa5e5bbfb129c450a5256")
 

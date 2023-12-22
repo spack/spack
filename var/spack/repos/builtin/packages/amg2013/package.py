@@ -17,6 +17,8 @@ class Amg2013(MakefilePackage):
     homepage = "https://computing.llnl.gov/projects/co-design/amg2013"
     git = "https://github.com/LLNL/AMG.git"
 
+    license("LGPL-2.1-or-later")
+
     version("develop", branch="master")
     version("1.2", tag="1.2", commit="3ada8a128e311543e84d9d66344ece77924127a8")
     version("1.1", tag="1.1", commit="09fe8a78baf6ba5eaef7d2804f7b653885d60fee")

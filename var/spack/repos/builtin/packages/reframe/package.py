@@ -23,6 +23,8 @@ class Reframe(Package):
     # notify when the package is updated.
     maintainers("victorusu", "vkarak")
 
+    license("BSD-3-Clause")
+
     version("develop", branch="develop")
     version("4.0.4", sha256="a9fb10bf2dc01f721142453297e348084683acfc0b8caa38ad1daa1b5c66456e")
     version("4.0.3", sha256="ae216b0ccfda9f5f5c09f0be46cf8ab04183a0c30edf581917767dc3bb8de010")

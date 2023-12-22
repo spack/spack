@@ -12,6 +12,8 @@ class PyCovCore(PythonPackage):
     homepage = "https://github.com/schlamar/cov-core"
     pypi = "cov-core/cov-core-1.15.0.tar.gz"
 
+    license("MIT")
+
     version("1.15.0", sha256="4a14c67d520fda9d42b0da6134638578caae1d374b9bb462d8de00587dba764c")
 
     depends_on("py-setuptools", type="build")

@@ -21,6 +21,8 @@ class Sonlib(MakefilePackage):
     url = "https://github.com/ComparativeGenomicsToolkit/sonLib"
     git = "https://github.com/ComparativeGenomicsToolkit/sonLib.git"
 
+    license("MIT")
+
     version("master", branch="master")
     version("2020-04-01", commit="7ebe2ede05a6ee366d93a7a993db69a99943a68f")
 

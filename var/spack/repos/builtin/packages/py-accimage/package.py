@@ -16,6 +16,8 @@ class PyAccimage(PythonPackage):
     homepage = "https://github.com/pytorch/accimage"
     url = "https://github.com/pytorch/accimage/archive/v0.1.1.tar.gz"
 
+    license("BSD-2-Clause")
+
     version("0.1.1", sha256="573c56866a42683c7cf25185620fe82ec2ce78468e0621c29fac8f4134a785f5")
 
     depends_on("python", type=("build", "link", "run"))

@@ -16,6 +16,8 @@ class PyUnyt(PythonPackage):
 
     maintainers("charmoniumq")
 
+    license("BSD-3-Clause")
+
     version("main", branch="main")
     version("2.9.2", sha256="8d4bf3dd3f7b4c29580728c0359caa17d62239673eeab436448d0777adeee5e1")
 

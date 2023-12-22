@@ -15,6 +15,8 @@ class PyOrTools(CMakePackage):
     homepage = "https://developers.google.com/optimization/"
     url = "https://github.com/google/or-tools/archive/v7.8.tar.gz"
 
+    license("Apache-2.0")
+
     version("7.8", sha256="d93a9502b18af51902abd130ff5f23768fcf47e266e6d1f34b3586387aa2de68")
 
     depends_on("cmake@3.14:", type="build")

@@ -18,6 +18,8 @@ class Dpdk(MakefilePackage, MesonPackage):
 
     maintainers("hyoklee")
 
+    license("BSD-3-Clause AND GPL-2.0-only")
+
     version("main", branch="main")
     version("23.03", sha256="8a8fa67941b1e0d428937f9068f401457e4e4fd576031479450da065385b332c")
     version("22.11", sha256="ed8b2a2b153f0311ffa065d35af29a098367af44a22b3c33e191e1a74211f2e3")

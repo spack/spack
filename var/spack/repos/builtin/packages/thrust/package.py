@@ -13,6 +13,8 @@ class Thrust(Package):
     homepage = "https://thrust.github.io"
     url = "https://github.com/NVIDIA/thrust/archive/1.12.0.tar.gz"
 
+    license("BSL-1.0")
+
     version("1.16.0", sha256="93b9553e3ee544e05395022bea67e6d600f8f3eb680950ec7cf73c0f55162487")
     version("1.15.0", sha256="0eeaf5a77cd7cb143f3443bd96b215ae1c4eacf18a712762e6a5c85213f80cc2")
     version("1.14.0", sha256="ddba9f3ed47b1a33562a4aea2d000a2ca2abcd45ff760af12aa81b8b7e492962")

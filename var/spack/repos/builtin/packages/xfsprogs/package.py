@@ -12,6 +12,8 @@ class Xfsprogs(AutotoolsPackage):
     homepage = "https://github.com/mtanski/xfsprogs"
     url = "http://kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-4.17.0.tar.xz"
 
+    license("LGPL-2.1-or-later")
+
     version("5.11.0", sha256="0e9c390fcdbb8a79e1b8f5e6e25fd529fc9f9c2ef8f2d5e647b3556b82d1b353")
     version("5.8.0", sha256="8ef46ed9e6bb927f407f541dc4324857c908ddf1374265edc910d23724048c6b")
     version("5.7.0", sha256="8f2348a68a686a3f4491dda5d62dd32d885fbc52d32875edd41e2c296e7b4f35")

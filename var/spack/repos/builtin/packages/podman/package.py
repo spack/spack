@@ -13,6 +13,8 @@ class Podman(Package):
     url = "https://github.com/containers/podman/archive/refs/tags/v4.3.1.tar.gz"
     maintainers("alecbcs")
 
+    license("Apache-2.0")
+
     version("4.5.1", sha256="ee2c8b02b7fe301057f0382637b995a9c6c74e8d530692d6918e4c509ade6e39")
     version("4.3.1", sha256="455c29c4ee78cd6365e5d46e20dd31a5ce4e6e1752db6774253d76bd3ca78813")
     version("3.4.7", sha256="4af6606dd072fe946960680611ba65201be435b43edbfc5cc635b2a01a899e6e")

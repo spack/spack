@@ -12,6 +12,8 @@ class PyAcmeTiny(PythonPackage):
     homepage = "https://github.com/diafygi/acme-tiny"
     git = "https://github.com/diafygi/acme-tiny.git"
 
+    license("MIT")
+
     version("master", branch="master")
     version("4.0.4", commit="5350420d35177eda733d85096433a24e55f8d00e")
 

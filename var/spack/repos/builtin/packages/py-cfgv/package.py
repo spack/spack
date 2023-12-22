@@ -12,6 +12,8 @@ class PyCfgv(PythonPackage):
     homepage = "https://github.com/asottile/cfgv/"
     pypi = "cfgv/cfgv-2.0.1.tar.gz"
 
+    license("MIT")
+
     version("3.4.0", sha256="e52591d4c5f5dead8e0f673fb16db7949d2cfb3f7da4582893288f0ded8fe560")
     version("3.3.1", sha256="f5a830efb9ce7a445376bb66ec94c638a9787422f96264c98edc6bdeed8ab736")
     version("2.0.1", sha256="edb387943b665bf9c434f717bf630fa78aecd53d5900d2e05da6ad6048553144")

@@ -16,6 +16,8 @@ class PyPot(PythonPackage):
     homepage = "https://github.com/PythonOT/POT"
     pypi = "POT/POT-0.7.0.tar.gz"
 
+    license("MIT")
+
     version("0.7.0", sha256="d4ac2bc8791f049a3166820d51e218d6c299885449b735eafef8d18c76d4ad06")
 
     # Avoid that CC and CXX are overridden with g++ in setup.py.

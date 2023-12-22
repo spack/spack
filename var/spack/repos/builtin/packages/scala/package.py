@@ -17,6 +17,8 @@ class Scala(Package):
     homepage = "https://www.scala-lang.org/"
     url = "https://downloads.lightbend.com/scala/2.12.1/scala-2.12.1.tgz"
 
+    license("Apache-2.0")
+
     version("2.13.1", sha256="6918ccc494e34810a7254ad2c4e6f0e1183784c22e7b4801b7dbc8d1994a04db")
     version("2.12.10", sha256="3b12bda3300fedd91f64fc7f9165fd45c58328b1b760af24ca6ffe92e3b0656a")
     version("2.12.6", sha256="1ac7444c5a85ed1ea45db4a268ee9ea43adf80e7f5724222863afb5492883416")

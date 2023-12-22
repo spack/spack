@@ -12,6 +12,8 @@ class PyHvac(PythonPackage):
     homepage = "https://github.com/hvac/hvac/"
     url = "https://github.com/hvac/hvac/archive/v0.2.17.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.9.6", sha256="ff60972edc512c73ac4811e91bcffccdb99f0d8975c0b41e44a4c79d73c711af")
     version("0.9.5", sha256="3e4af2d84833b8f61c9c3351d4a9799bf8e8e4344d0ad4e162609a7379961a16")
     version("0.9.4", sha256="ebb14b9a5b347c4f0b4dcea59f435dcc190d8ccb4cb9a20e5daf260af6509dd6")

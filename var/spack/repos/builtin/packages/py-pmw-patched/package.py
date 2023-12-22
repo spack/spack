@@ -15,6 +15,8 @@ class PyPmwPatched(PythonPackage):
     homepage = "https://github.com/schrodinger/pmw-patched"
     git = "https://github.com/schrodinger/pmw-patched"
 
+    license("MIT")
+
     version("02-10-2020", commit="8bedfc8747e7757c1048bc5e11899d1163717a43")
 
     # pip silently replaces distutils with setuptools

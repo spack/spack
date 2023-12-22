@@ -14,6 +14,8 @@ class PyMotmetrics(PythonPackage):
     homepage = "https://github.com/cheind/py-motmetrics"
     pypi = "motmetrics/motmetrics-1.2.0.tar.gz"
 
+    license("MIT")
+
     version("1.2.0", sha256="7328d8468c948400b38fcc212f3e448bc1f2fdfc727e170d85a029e49f1cdbc6")
 
     depends_on("py-setuptools", type="build")

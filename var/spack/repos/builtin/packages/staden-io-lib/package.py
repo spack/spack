@@ -15,6 +15,8 @@ class StadenIoLib(AutotoolsPackage):
         "https://sourceforge.net/projects/staden/files/io_lib/1.14.8/io_lib-1.14.8.tar.gz/download"
     )
 
+    license("BSD-3-Clause")
+
     version("1.14.8", sha256="3bd560309fd6d70b14bbb8230e1baf8706b804eb6201220bb6c3d6db72003d1b")
 
     variant("curl", default=False, description="Build with curl support")

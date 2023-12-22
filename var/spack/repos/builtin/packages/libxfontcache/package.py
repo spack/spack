@@ -12,6 +12,8 @@ class Libxfontcache(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/lib/libXfontcache"
     xorg_mirror_path = "lib/libXfontcache-1.0.5.tar.gz"
 
+    license("BSD-2-Clause")
+
     version("1.0.5", sha256="fdba75307a0983d2566554e0e9effa7079551f1b7b46e8de642d067998619659")
 
     depends_on("libx11")

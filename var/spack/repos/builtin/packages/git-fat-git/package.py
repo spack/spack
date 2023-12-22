@@ -13,6 +13,8 @@ class GitFatGit(Package):
     homepage = "https://github.com/jedbrown/git-fat"
     git = "https://github.com/jedbrown/git-fat.git"
 
+    license("BSD-2-Clause")
+
     version("2018-08-21", commit="e1733b1c7c4169d0a1d31cb76f168fb0880176c0")
 
     depends_on("python", type="run")

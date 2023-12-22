@@ -16,6 +16,8 @@ class Iegenlib(CMakePackage):
 
     maintainers("dhuth")
 
+    license("BSD-2-Clause")
+
     version("master", branch="master")
     version(
         "2018-07-03",

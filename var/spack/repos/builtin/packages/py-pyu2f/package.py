@@ -12,6 +12,8 @@ class PyPyu2f(PythonPackage):
     homepage = "https://github.com/google/pyu2f"
     pypi = "pyu2f/pyu2f-0.1.5.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.1.5", sha256="a3caa3a11842fc7d5746376f37195e6af5f17c0a15737538bb1cebf656fb306b")
 
     depends_on("py-setuptools", type="build")

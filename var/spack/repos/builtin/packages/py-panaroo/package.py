@@ -13,6 +13,8 @@ class PyPanaroo(PythonPackage):
     homepage = "https://gtonkinhill.github.io/panaroo"
     url = "https://github.com/gtonkinhill/panaroo/archive/refs/tags/v1.2.10.tar.gz"
 
+    license("MIT")
+
     version("1.2.10", sha256="066e5cd96b59918fa4fcd2dc12c92a273457ee17e2fe55576657c793566e948e")
 
     depends_on("python@3.6.0:", type=("build", "run"))

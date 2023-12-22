@@ -12,6 +12,8 @@ class Unibilium(Package):
     homepage = "https://github.com/mauke/unibilium"
     url = "https://github.com/mauke/unibilium/archive/v2.0.0.tar.gz"
 
+    license("LGPL-3.0-or-later")
+
     version("2.0.0", sha256="78997d38d4c8177c60d3d0c1aa8c53fd0806eb21825b7b335b1768d7116bc1c1")
     version("1.2.0", sha256="623af1099515e673abfd3cae5f2fa808a09ca55dda1c65a7b5c9424eb304ead8")
 

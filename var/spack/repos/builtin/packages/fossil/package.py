@@ -18,6 +18,8 @@ class Fossil(AutotoolsPackage):
 
     maintainers("eschnett")
 
+    license("BSD-2-Clause")
+
     version(
         "2.18",
         url="https://fossil-scm.org/home/tarball/84f25d7eb10c0714109d69bb2809abfa8b4b5c3d73b151a5b10df724dacd46d8/fossil-src-2.18.tar.gz",

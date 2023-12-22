@@ -19,6 +19,8 @@ class Dyninst(CMakePackage):
 
     tags = ["e4s"]
 
+    license("LGPL-2.1-or-later")
+
     version("master", branch="master")
     version("12.3.0", sha256="956b0378d2badb765a7e677c0b66c0b8b8cacca7631222bfe7a27b369abf7dd4")
     version("12.2.1", sha256="c304af3c6191e92acd27350fd9b7b02899767a0e38abb3a08a378abe01d1ef01")

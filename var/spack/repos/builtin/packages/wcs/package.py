@@ -14,6 +14,8 @@ class Wcs(CMakePackage):
     git = "https://github.com/LLNL/wcs.git"
     maintainers("rblake-llnl")
 
+    license("MIT")
+
     version("master", branch="master")
     version("develop", branch="devel")
 

@@ -15,6 +15,8 @@ class PySmartredis(PythonPackage):
 
     maintainers("MattToast")
 
+    license("BSD-2-Clause")
+
     version("0.4.1", sha256="fff16ed1eb09648ac3c3f845373beb37f3ffe7414d8745ae36af9daf585f8c5b")
     version("0.4.0", sha256="d12779aa8bb038e837c25eac41b178aab9e16b729d50ee360b5af8f813d9f1dd")
 

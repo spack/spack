@@ -16,6 +16,8 @@ class Global(Package):
 
     maintainers("gaber")
 
+    license("LGPL-3.0-only")
+
     version("6.6.7", sha256="69a0f77f53827c5568176c1d382166df361e74263a047f0b3058aa2f2ad58a3c")
     version("6.6.6", sha256="758078afff98d4c051c58785c7ada3ed1977fabb77f8897ff657b71cc62d4d5d")
     version("6.6.4", sha256="987e8cb956c53f8ebe4453b778a8fde2037b982613aba7f3e8e74bcd05312594")

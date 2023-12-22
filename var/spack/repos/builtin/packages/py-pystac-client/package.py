@@ -12,6 +12,8 @@ class PyPystacClient(PythonPackage):
     homepage = "https://github.com/stac-utils/pystac-client.git"
     pypi = "pystac-client/pystac-client-0.5.1.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.5.1", sha256="f585bd9bcd52ee399c8a292dbb7e0405c0da359a73bc07c1ef82a65c17124d94")
 
     depends_on("py-setuptools", type="build")

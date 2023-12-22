@@ -21,6 +21,8 @@ class Flume(Package):
     homepage = "https://cwiki.apache.org/FLUME"
     url = "https://www.apache.org/dist/flume/1.9.0/apache-flume-1.9.0-bin.tar.gz"
 
+    license("Apache-2.0")
+
     version("1.9.0", sha256="0373ed5abfd44dc4ab23d9a02251ffd7e3b32c02d83a03546e97ec15a7b23619")
     version("1.8.0", sha256="be1b554a5e23340ecc5e0b044215bf7828ff841f6eabe647b526d31add1ab5fa")
     version("1.7.0", sha256="b97254cf37c36b6e5045f764095d86fc6d9a8043dda169e950547fcae35681ec")

@@ -12,4 +12,6 @@ class Clustalw(AutotoolsPackage):
     homepage = "http://www.clustal.org/clustal2/"
     url = "http://www.clustal.org/download/2.1/clustalw-2.1.tar.gz"
 
+    license("LGPL-3.0-only")
+
     version("2.1", sha256="e052059b87abfd8c9e695c280bfba86a65899138c82abccd5b00478a80f49486")

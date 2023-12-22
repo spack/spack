@@ -14,6 +14,8 @@ class PyPickle5(PythonPackage):
     homepage = "https://github.com/pitrou/pickle5-backport"
     pypi = "pickle5/pickle5-0.0.11.tar.gz"
 
+    license("PSF-2.0")
+
     version("0.0.11", sha256="7e013be68ba7dde1de5a8dbcc241f201dab1126e326715916ce4a26c27919ffc")
 
     depends_on("python@3.5:", type=("build", "run"))

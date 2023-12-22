@@ -15,6 +15,8 @@ class PyIpyrad(PythonPackage):
 
     url = "https://github.com/dereneaton/ipyrad/archive/refs/tags/0.9.85.tar.gz"
 
+    license("GPL-3.0-only")
+
     version("0.9.90", sha256="8b95aa3bae30da15baba90abb03176932411ff708c54d5e4481b811cceb8a4a8")
     version("0.9.85", sha256="17b07466531655db878919e426743ac649cfab2e92c06c4e45f76ee1517633f9")
 

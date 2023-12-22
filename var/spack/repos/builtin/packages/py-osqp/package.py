@@ -15,6 +15,8 @@ class PyOsqp(PythonPackage):
 
     maintainers("meyersbs")
 
+    license("Apache-2.0")
+
     version(
         "0.6.2.post8", sha256="23d6bae4a3612f60d5f652d0e5fa4b2ead507cabfff5d930d822057ae6ed6677"
     )

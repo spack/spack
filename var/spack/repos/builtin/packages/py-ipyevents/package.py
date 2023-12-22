@@ -12,6 +12,8 @@ class PyIpyevents(PythonPackage):
     homepage = "https://github.com/mwcraig/ipyevents"
     pypi = "ipyevents/ipyevents-2.0.1.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("2.0.1", sha256="23eb2afab13d9056397f120a88051dd3beb067b698d08b33adffc9e077f019cb")
 
     depends_on("python@3.6:", type=("build", "run"))

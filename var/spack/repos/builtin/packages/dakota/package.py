@@ -40,6 +40,8 @@ class Dakota(CMakePackage):
     git = "https://github.com/snl-dakota/dakota.git"
     url = "https://dakota.sandia.gov/sites/default/files/distributions/public/dakota-6.12-release-public.src.tar.gz"
 
+    license("LGPL-2.1-or-later")
+
     version(
         "6.18",
         tag="v6.18.0",

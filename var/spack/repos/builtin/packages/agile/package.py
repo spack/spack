@@ -17,6 +17,8 @@ class Agile(AutotoolsPackage):
 
     maintainers("vvolkl")
 
+    license("GPL-2.0-only")
+
     version("1.5.1", sha256="e38536300060e4b845ccaaed824c7495944f9117a0d7e4ee74a18bf278e2012f")
 
     depends_on("hepmc")

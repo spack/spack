@@ -13,6 +13,8 @@ class Sailfish(CMakePackage):
     homepage = "https://www.cs.cmu.edu/~ckingsf/software/sailfish"
     url = "https://github.com/kingsfordgroup/sailfish/archive/v0.10.1.tar.gz"
 
+    license("GPL-3.0-only")
+
     version("0.10.1", sha256="a0d6d944382f2e07ffbfd0371132588e2f22bb846ecfc3d3435ff3d81b30d6c6")
 
     depends_on("boost@1.55:")

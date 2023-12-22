@@ -12,6 +12,8 @@ class Unzip(MakefilePackage):
     homepage = "http://www.info-zip.org/Zip.html"
     url = "http://downloads.sourceforge.net/infozip/unzip60.tar.gz"
 
+    license("custom")
+
     version("6.0", sha256="036d96991646d0449ed0aa952e4fbe21b476ce994abc276e49d30e686708bd37")
 
     patch("configure-cflags.patch", when="%clang@16:")

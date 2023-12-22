@@ -12,6 +12,8 @@ class PyPyparsing(PythonPackage):
     homepage = "https://pyparsing-docs.readthedocs.io/en/latest/"
     pypi = "pyparsing/pyparsing-2.4.2.tar.gz"
 
+    license("MIT")
+
     version("3.0.9", sha256="2b020ecf7d21b687f219b71ecad3631f644a47f01403fa1d1036b0c6416d70fb")
     version("3.0.6", sha256="d9bdec0013ef1eb5a84ab39a3b3868911598afa494f5faa038647101504e2b81")
     version("2.4.7", sha256="c203ec8783bf771a155b207279b9bccb8dea02d8f0c9e5f8ead507bc3246ecc1")

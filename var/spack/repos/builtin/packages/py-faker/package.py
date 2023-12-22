@@ -16,6 +16,8 @@ class PyFaker(PythonPackage):
     homepage = "https://github.com/joke2k/faker"
     pypi = "Faker/Faker-9.8.2.tar.gz"
 
+    license("MIT")
+
     version("9.8.2", sha256="393bd1b5becf3ccbc04a4f0f13da7e437914b24cafd1a4d8b71b5fecff54fb34")
 
     depends_on("python@3.6:", type=("build", "run"))

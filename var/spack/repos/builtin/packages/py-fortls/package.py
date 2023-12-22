@@ -14,6 +14,8 @@ class PyFortls(PythonPackage):
 
     maintainers("RMeli")
 
+    license("MIT")
+
     version("2.13.0", sha256="23c5013e8dd8e1d65bf07be610d0827bc48aa7331a7a7ce13612d4c646d0db31")
 
     depends_on("py-setuptools@45:", type="build")

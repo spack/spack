@@ -14,6 +14,8 @@ class RKknn(RPackage):
 
     cran = "kknn"
 
+    license("GPL-2.0-or-later")
+
     version("1.3.1", sha256="22840e70ec2afa40371e274b583634c8f6d27149a87253ee411747d5db78f3db")
 
     depends_on("r@2.10:", type=("build", "run"))

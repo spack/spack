@@ -13,6 +13,8 @@ class PyCerberus(PythonPackage):
     homepage = "http://docs.python-cerberus.org/"
     pypi = "Cerberus/Cerberus-1.3.4.tar.gz"
 
+    license("0BSD")
+
     version("1.3.4", sha256="d1b21b3954b2498d9a79edf16b3170a3ac1021df88d197dc2ce5928ba519237c")
 
     depends_on("python@2.7:", type=("build", "run"))

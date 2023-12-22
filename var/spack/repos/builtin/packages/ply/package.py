@@ -14,6 +14,8 @@ class Ply(AutotoolsPackage):
     homepage = "https://github.com/iovisor/ply"
     git = "https://github.com/iovisor/ply.git"
 
+    license("GPL-2.0-only")
+
     version("2.1.1", commit="899afb0c35ba2191dd7aa21f13bc7fde2655c475")
 
     depends_on("autoconf", type="build")

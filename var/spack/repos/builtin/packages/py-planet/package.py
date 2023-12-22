@@ -11,6 +11,9 @@ class PyPlanet(PythonPackage):
 
     homepage = "https://github.com/planetlabs/planet-client-python"
     pypi = "planet/planet-1.4.6.tar.gz"
+
+    license("Apache-2.0")
+
     version("1.4.6", sha256="43ff6a765f465302f500aaf65b81a46ac6aad7bb42899e4a7543bdc293d4ca0d")
 
     depends_on("py-setuptools", type="build")

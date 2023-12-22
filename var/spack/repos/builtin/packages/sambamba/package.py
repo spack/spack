@@ -12,6 +12,8 @@ class Sambamba(Package):
     homepage = "https://lomereiter.github.io/sambamba/"
     git = "https://github.com/lomereiter/sambamba.git"
 
+    license("GPL-2.0-only")
+
     version(
         "0.6.6", tag="v0.6.6", commit="63cfd5c7b3053e1f7045dec0b5a569f32ef73d06", submodules=True
     )

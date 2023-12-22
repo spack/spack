@@ -36,6 +36,8 @@ class PerlBioperl(PerlPackage):
     homepage = "https://metacpan.org/pod/BioPerl"
     url = "https://cpan.metacpan.org/authors/id/C/CD/CDRAUG/BioPerl-1.7.6.tar.gz"
 
+    license("Artistic-1.0")
+
     version(
         "1.7.6",
         sha256="df2a3efc991b9b5d7cc9d038a1452c6dac910c9ad2a0e47e408dd692c111688d",

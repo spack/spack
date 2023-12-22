@@ -15,6 +15,8 @@ class PyTern(PythonPackage):
     pypi = "tern/tern-2.8.0.tar.gz"
     git = "https://github.com/tern-tools/tern.git"
 
+    license("BSD-2-Clause")
+
     version("main", branch="main")
 
     depends_on("py-setuptools", type="build")

@@ -18,6 +18,8 @@ class RDownloader(RPackage):
 
     cran = "downloader"
 
+    license("GPL-2.0-only")
+
     version("0.4", sha256="1890e75b028775154023f2135cafb3e3eed0fe908138ab4f7eff1fc1b47dafab")
 
     depends_on("r-digest", type=("build", "run"))

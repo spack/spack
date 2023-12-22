@@ -13,6 +13,8 @@ class PyAzureCliTelemetry(PythonPackage):
     homepage = "https://github.com/Azure/azure-cli"
     pypi = "azure-cli-telemetry/azure-cli-telemetry-1.0.4.tar.gz"
 
+    license("MIT")
+
     version("1.0.4", sha256="1f239d544d309c29e827982cc20113eb57037dba16db6cdd2e0283e437e0e577")
 
     depends_on("py-setuptools", type="build")

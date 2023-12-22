@@ -13,6 +13,8 @@ class PyMemprof(PythonPackage):
     homepage = "https://jmdana.github.io/memprof/"
     pypi = "memprof/memprof-0.3.6.tar.gz"
 
+    license("GPL-3.0-or-later")
+
     version("0.3.6", sha256="a8376ce476bf82a5eb465d1a30b8ffc86cc55b0b6de7aa4cdeccb4c99586d967")
 
     depends_on("py-setuptools", type="build")

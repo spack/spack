@@ -30,6 +30,8 @@ class IntelTbb(CMakePackage, MakefilePackage):
     # Note: when adding new versions, please check and update the
     # patches, filters and url_for_version() below as needed.
 
+    license("Apache-2.0")
+
     version("master", branch="master")
     version("2021.9.0", sha256="1ce48f34dada7837f510735ff1172f6e2c261b09460e3bf773b49791d247d24e")
     version("2021.8.0", sha256="eee380323bb7ce864355ed9431f85c43955faaae9e9bce35c62b372d7ffd9f8b")

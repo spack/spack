@@ -19,6 +19,8 @@ class Neo4j(MavenPackage):
     homepage = "https://neo4j.com/"
     url = "https://github.com/neo4j/neo4j/archive/4.0.3.tar.gz"
 
+    license("GPL-3.0-or-later")
+
     version("4.0.3", sha256="19d79052657665dd661bbe906b3552b88108bf379d39fa007b883fff718cabee")
     version("4.0.1", sha256="3f91f566e49000119c6a71d6127e73cfccdee37b68133a067b2ee05932c26dba")
     version("4.0.0", sha256="7173b97baf53be82b46f95fa52f99af591606a318e03915917ddd7141936fec5")

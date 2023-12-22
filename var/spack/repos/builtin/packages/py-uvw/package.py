@@ -18,6 +18,8 @@ class PyUvw(PythonPackage):
 
     maintainers("prs513rosewood")
 
+    license("MIT")
+
     version("master", branch="master")
     version("0.5.0", sha256="dd4501bc2f8c6080467f19d7537a282123a51d849c6b7ace18191ab751ec7621")
     version("0.4.0", sha256="688052832c96ac6ead93f15e577d4f1c2339376300e781520c43cf8652ed3dd8")

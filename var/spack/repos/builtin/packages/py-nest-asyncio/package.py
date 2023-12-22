@@ -13,6 +13,8 @@ class PyNestAsyncio(PythonPackage):
     homepage = "https://github.com/erdewit/nest_asyncio"
     pypi = "nest-asyncio/nest_asyncio-1.4.0.tar.gz"
 
+    license("BSD-2-Clause")
+
     version("1.5.6", sha256="d267cc1ff794403f7df692964d1d2a3fa9418ffea2a3f6859a439ff482fef290")
     version("1.5.5", sha256="e442291cd942698be619823a17a86a5759eabe1f8613084790de189fe9e16d65")
     version("1.5.4", sha256="f969f6013a16fadb4adcf09d11a68a4f617c6049d7af7ac2c676110169a63abd")

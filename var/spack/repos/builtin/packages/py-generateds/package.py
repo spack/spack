@@ -14,6 +14,8 @@ class PyGenerateds(PythonPackage):
 
     maintainers("LydDeb")
 
+    license("MIT")
+
     version("2.43.2", sha256="e86f033f4d93414dd5b04cab9544a68b8f46d559073d85cd0990266b7b9ec09e")
     version("2.43.1", sha256="2d3d71b42a09ba153bc51d2204324d04e384d0f15e41bdba881ee2daff9bbd68")
     version("2.42.2", sha256="1d322aa7e074c262062b068660dd0c53bbdb0bb2b30152bb9e0074bd29fd365a")

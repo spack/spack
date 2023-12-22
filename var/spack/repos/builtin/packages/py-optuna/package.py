@@ -19,6 +19,8 @@ class PyOptuna(PythonPackage):
 
     maintainers("elliottslaughter", "eugeneswalker")
 
+    license("MIT")
+
     version("3.2.0", sha256="683d8693643a761a41d251a6b8e13263b24acacf9fc46a9233d5f6aa3ce5c683")
 
     depends_on("py-setuptools@61.1:", type="build")

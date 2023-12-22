@@ -21,6 +21,8 @@ class PySeriate(PythonPackage):
     homepage = "https://github.com/src-d/seriate"
     url = "https://github.com/src-d/seriate/archive/1.1.2.tar.gz"
 
+    license("Apache-2.0")
+
     version("1.1.2", sha256="5e031e865398fbe24aebdbb4a2e0015447aec50478830850f29d38660fd266e3")
 
     depends_on("py-setuptools", type="build")

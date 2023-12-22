@@ -15,6 +15,8 @@ class Xsimd(CMakePackage):
 
     maintainers("ax3l")
 
+    license("BSD-3-Clause")
+
     version("develop", branch="master")
     version("8.1.0", sha256="d52551360d37709675237d2a0418e28f70995b5b7cdad7c674626bcfbbf48328")
     version("8.0.5", sha256="0e1b5d973b63009f06a3885931a37452580dbc8d7ca8ad40d4b8c80d2a0f84d7")

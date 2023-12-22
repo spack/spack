@@ -19,6 +19,8 @@ class Rocblas(CMakePackage):
     maintainers("cgmb", "srekolam", "renjithravindrankannath", "haampie")
     libraries = ["librocblas"]
 
+    license("MIT")
+
     version("develop", branch="develop")
     version("master", branch="master")
     version("5.7.1", sha256="2984a5ed0ea5a05d40996ee3fddecb24399cbe8ea3e4921fc254e54d8f52fe4f")

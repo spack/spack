@@ -13,6 +13,8 @@ class PyBackportsLzma(PythonPackage):
     homepage = "https://github.com/peterjc/backports.lzma"
     url = "https://github.com/peterjc/backports.lzma/archive/backports.lzma.v0.0.14.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.0.14", sha256="904854d152825b475ebf0f6074fa545474b4ef4eac833f2d9a565e2820dc3a2d")
     version("0.0.13", sha256="42c9d15fa16f691c07e3b325c90f7f9449811e9f7fc46bf4ad43c29bdbaf0b71")
     version("0.0.12", sha256="648592f13d34c7d10791cfb6ce1556cfa25f3657a24e349f266a87708f3af112")

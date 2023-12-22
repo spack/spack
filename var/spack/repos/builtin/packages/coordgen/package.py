@@ -14,6 +14,8 @@ class Coordgen(CMakePackage):
 
     maintainers("RMeli")
 
+    license("BSD-3-Clause")
+
     version("3.0.2", sha256="f67697434f7fec03bca150a6d84ea0e8409f6ec49d5aab43badc5833098ff4e3")
 
     variant("maeparser", default=True, description="Use MAE parser")

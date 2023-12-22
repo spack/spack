@@ -17,6 +17,8 @@ class PyPyhull(PythonPackage):
 
     maintainers("meyersbs")
 
+    license("MIT")
+
     version("2015.2.1", sha256="d2ff0aa3298b548287587609a24f4e2aae7f7b8b1df152a90cd313260abc3a24")
 
     # From setup.py:

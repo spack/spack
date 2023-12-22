@@ -16,6 +16,8 @@ class PyGensim(PythonPackage):
 
     maintainers("adamjstewart")
 
+    license("LGPL-2.1-only")
+
     version("4.3.1", sha256="8b5f11c0e6a5308086b48e8f6841223a4fa1a37d513684612b7ee854b533015f")
     version("3.8.3", sha256="786adb0571f75114e9c5f7a31dd2e6eb39a9791f22c8757621545e2ded3ea367")
     version("3.8.1", sha256="33277fc0a8d7b0c7ce70fcc74bb82ad39f944c009b334856c6e86bf552b1dfdc")

@@ -15,6 +15,8 @@ class Libunistring(AutotoolsPackage, GNUMirrorPackage):
     git = "https://git.savannah.gnu.org/git/libunistring.git"
     maintainers("bernhardkaindl")
 
+    license("GPL-2.0-or-later OR LGPL-3.0-or-later")
+
     version("master", branch="master")
     version("1.1", sha256="827c1eb9cb6e7c738b171745dac0888aa58c5924df2e59239318383de0729b98")
     version("1.0", sha256="5bab55b49f75d77ed26b257997e919b693f29fd4a1bc22e0e6e024c246c72741")

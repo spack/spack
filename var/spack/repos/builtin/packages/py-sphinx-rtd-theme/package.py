@@ -12,6 +12,8 @@ class PySphinxRtdTheme(PythonPackage):
     homepage = "https://github.com/readthedocs/sphinx_rtd_theme"
     pypi = "sphinx-rtd-theme/sphinx_rtd_theme-0.5.1.tar.gz"
 
+    license("MIT")
+
     version("1.2.2", sha256="01c5c5a72e2d025bd23d1f06c59a4831b06e6ce6c01fdd5ebfe9986c0a880fc7")
     version("1.2.0", sha256="a0d8bd1a2ed52e0b338cbe19c4b2eef3c5e7a048769753dac6a9f059c7b641b8")
     version("1.0.0", sha256="eec6d497e4c2195fa0e8b2016b337532b8a699a68bcb22a512870e16925c6a5c")

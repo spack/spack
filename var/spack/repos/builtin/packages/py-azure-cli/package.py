@@ -13,6 +13,8 @@ class PyAzureCli(PythonPackage):
     homepage = "https://github.com/Azure/azure-cli"
     pypi = "azure-cli/azure-cli-2.9.1.tar.gz"
 
+    license("MIT")
+
     version("2.9.1", sha256="749d850f73ea8956ab510288c1061dd7066180a8583081a6d560fdc7ac8314d6")
 
     depends_on("py-setuptools", type="build")

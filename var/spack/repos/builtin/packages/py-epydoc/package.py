@@ -12,6 +12,8 @@ class PyEpydoc(PythonPackage):
 
     pypi = "epydoc/epydoc-3.0.1.tar.gz"
 
+    license("MIT")
+
     version("3.0.1", sha256="c81469b853fab06ec42b39e35dd7cccbe9938dfddef324683d89c1e5176e48f2")
 
     # pip silently replaces distutils with setuptools

@@ -13,6 +13,8 @@ class Heaptrack(CMakePackage):
     homepage = "https://github.com/KDE/heaptrack"
     url = "https://github.com/KDE/heaptrack/archive/v1.1.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("1.3.0", sha256="794b067772f4e4219bb7b6ff1bc1b2134b1b242e748a2cc5c47626040c631956")
     version("1.1.0", sha256="bd247ac67d1ecf023ec7e2a2888764bfc03e2f8b24876928ca6aa0cdb3a07309")
 

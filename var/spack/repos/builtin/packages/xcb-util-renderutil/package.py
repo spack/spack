@@ -17,6 +17,8 @@ class XcbUtilRenderutil(AutotoolsPackage, XorgPackage):
     homepage = "https://gitlab.freedesktop.org/xorg/lib/libxcb-renderutil"
     xorg_mirror_path = "lib/xcb-util-renderutil-0.3.10.tar.xz"
 
+    license("MIT")
+
     version("0.3.10", sha256="3e15d4f0e22d8ddbfbb9f5d77db43eacd7a304029bf25a6166cc63caa96d04ba")
     version(
         "0.3.9",

@@ -12,6 +12,8 @@ class Tiptop(AutotoolsPackage):
     homepage = "https://github.com/FeCastle/tiptop"
     git = "https://github.com/FeCastle/tiptop.git"
 
+    license("GPL-2.0")
+
     version("master", commit="529886d445ec32febad14246245372a8f244b3eb")
 
     depends_on("papi")

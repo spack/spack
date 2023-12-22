@@ -16,6 +16,8 @@ class Exawind(CMakePackage):
 
     tags = ["ecp", "ecp-apps"]
 
+    license("Apache-2.0")
+
     version("master", branch="main")
 
     depends_on("trilinos+stk")

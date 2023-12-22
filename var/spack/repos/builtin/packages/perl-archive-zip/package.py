@@ -12,4 +12,6 @@ class PerlArchiveZip(PerlPackage):
     homepage = "https://metacpan.org/pod/Archive::Zip"
     url = "https://cpan.metacpan.org/authors/id/P/PH/PHRED/Archive-Zip-1.68.tar.gz"
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("1.68", sha256="984e185d785baf6129c6e75f8eb44411745ac00bf6122fb1c8e822a3861ec650")

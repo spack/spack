@@ -13,6 +13,8 @@ class PyEphem(PythonPackage):
     homepage = "https://rhodesmill.org/pyephem/"
     url = "https://github.com/brandon-rhodes/pyephem/archive/v3.7.7.1.tar.gz"
 
+    license("MIT")
+
     version("3.7.7.1", sha256="d9d05d85c0d38a79169acaef25964ac9df2d808f0d833354545b9ef681ff584d")
 
     # pip silently replaces distutils with setuptools

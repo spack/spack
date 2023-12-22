@@ -13,6 +13,8 @@ class Flint(Package):
     url = "https://mirrors.mit.edu/sage/spkg/upstream/flint/flint-2.5.2.tar.gz"
     git = "https://github.com/wbhart/flint2.git"
 
+    license("LGPL-2.1-or-later")
+
     version("develop", branch="trunk")
     version("2.5.2", sha256="cbf1fe0034533c53c5c41761017065f85207a1b770483e98b2392315f6575e87")
     version("2.4.5", sha256="e489354df00f0d84976ccdd0477028693977c87ccd14f3924a89f848bb0e01e3")

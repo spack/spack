@@ -14,6 +14,8 @@ class PyLdap3(PythonPackage):
 
     maintainers("LydDeb")
 
+    license("LGPL-3.0-or-later")
+
     version("2.9.1", sha256="f3e7fc4718e3f09dda568b57100095e0ce58633bcabbed8667ce3f8fbaa4229f")
 
     depends_on("py-setuptools", type="build")

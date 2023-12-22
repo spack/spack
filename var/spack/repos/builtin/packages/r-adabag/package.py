@@ -32,6 +32,8 @@ class RAdabag(RPackage):
 
     cran = "adabag"
 
+    license("GPL-2.0-or-later")
+
     version("4.2", sha256="47019eb8cefc8372996fbb2642f64d4a91d7cedc192690a8d8be6e7e03cd3c81")
     version("4.1", sha256="ff938c36122cdf58a71a59a6bf79a3c7816966ee7cc4907c4a0a3c0732e3d028")
 

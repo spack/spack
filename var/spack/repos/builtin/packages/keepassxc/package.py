@@ -15,6 +15,8 @@ class Keepassxc(CMakePackage):
 
     maintainers("cessenat")
 
+    license("GPL-2.0-only OR GPL-3.0-only")
+
     version("master", branch="master")
     version("2.7.1", sha256="6001ba626c35c316dbda6de35736f012a2264f95139fcb4a094b8eb49b15d3e7")
     version("2.7.0", sha256="83be76890904cd6703343fa097d68bcfdd99bb525cf518fa62a7df9293026aa7")

@@ -13,6 +13,8 @@ class PyEdamOntology(PythonPackage):
     homepage = "https://github.com/edamontology/edam-ontology.py"
     pypi = "edam-ontology/edam-ontology-1.25.2.tar.gz"
 
+    license("MIT")
+
     version("1.25.2", sha256="608c062ecb1ec260637645f73b4157d5abd47b19058a4ccca3bf292e373b8e06")
 
     depends_on("python@3.5:", type=("build", "run"))

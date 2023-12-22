@@ -15,6 +15,8 @@ class PerlTestSharedfork(PerlPackage):
 
     maintainers("EbiArnie")
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("0.35", sha256="2932e865610e80758f764c586757ef8e11db1284d958e25e4b7a85098414c59f")
 
     depends_on("perl@5.8.1:", type=("build", "link", "run", "test"))

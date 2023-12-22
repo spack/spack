@@ -12,6 +12,8 @@ class PyJedi(PythonPackage):
     homepage = "https://github.com/davidhalter/jedi"
     pypi = "jedi/jedi-0.9.0.tar.gz"
 
+    license("MIT")
+
     version("0.18.2", sha256="bae794c30d07f6d910d32a7048af09b5a39ed740918da923c6b780790ebac612")
     version("0.18.1", sha256="74137626a64a99c8eb6ae5832d99b3bdd7d29a3850fe2aa80a4126b2a7d949ab")
     version("0.18.0", sha256="92550a404bad8afed881a137ec9a461fed49eca661414be45059329614ed0707")

@@ -12,6 +12,8 @@ class Smartmontools(AutotoolsPackage):
     homepage = "https://smartmontools.sourceforge.net"
     url = "https://nchc.dl.sourceforge.net/project/smartmontools/smartmontools/6.6/smartmontools-6.6.tar.gz"
 
+    license("GPL-2.0-or-later")
+
     version("6.6", sha256="51f43d0fb064fccaf823bbe68cf0d317d0895ff895aa353b3339a3b316a53054")
 
     def setup_run_environment(self, env):

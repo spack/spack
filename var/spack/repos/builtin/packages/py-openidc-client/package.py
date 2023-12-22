@@ -12,6 +12,8 @@ class PyOpenidcClient(PythonPackage):
     homepage = "https://github.com/puiterwijk/python-openidc-client"
     pypi = "openidc-client/openidc-client-0.6.0.tar.gz"
 
+    license("MIT")
+
     version("0.6.0", sha256="680e969cae18c30adbddd6a087ed09f6a296b4937b4c8bc69be813bdbbfa9847")
     version("0.5.0", sha256="59d59d6fbfd26c5b57c53e582bdf2379274602f96133a163e7ff1ef39c363353")
     version("0.2.0", sha256="50a1f5abc1960c206a462b3b2f2da1f03abdcb542beb1d6d89d2736def228ab9")

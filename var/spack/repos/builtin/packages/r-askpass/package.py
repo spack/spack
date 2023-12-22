@@ -20,6 +20,8 @@ class RAskpass(RPackage):
 
     cran = "askpass"
 
+    license("MIT")
+
     version("1.1", sha256="db40827d1bdbb90c0aa2846a2961d3bf9d76ad1b392302f9dd84cc2fd18c001f")
 
     depends_on("r-sys@2.1:", type=("build", "run"))

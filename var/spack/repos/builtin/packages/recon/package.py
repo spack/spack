@@ -15,6 +15,8 @@ class Recon(MakefilePackage):
     homepage = "http://eddylab.org/software/recon/"
     url = "http://eddylab.org/software/recon/RECON1.05.tar.gz"
 
+    license("GPL-2.0-only")
+
     version("1.05", sha256="4d4f76f439bcffd50380cffc41a80dc15fa4a80f38a04234e24da893ed7c025a")
 
     variant("repeatmasker", default=False, description="Use RepeatMasker developer patches (1.08)")

@@ -24,6 +24,8 @@ class Parsec(CMakePackage, CudaPackage):
 
     test_requires_compiler = True
 
+    license("BSD-3-Clause-Open-MPI")
+
     version("master", branch="master")
     version(
         "3.0.2209",

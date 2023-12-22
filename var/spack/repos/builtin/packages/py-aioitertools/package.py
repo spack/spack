@@ -14,6 +14,8 @@ class PyAioitertools(PythonPackage):
     homepage = "https://aioitertools.omnilib.dev/en/stable/"
     pypi = "aioitertools/aioitertools-0.7.1.tar.gz"
 
+    license("MIT")
+
     version("0.11.0", sha256="42c68b8dd3a69c2bf7f2233bf7df4bb58b557bca5252ac02ed5187bbc67d6831")
     version("0.7.1", sha256="54a56c7cf3b5290d1cb5e8974353c9f52c677612b5d69a859369a020c53414a3")
 

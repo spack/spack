@@ -12,6 +12,8 @@ class PyPydotplus(PythonPackage):
     homepage = "https://pydotplus.readthedocs.io/"
     pypi = "pydotplus/pydotplus-2.0.2.tar.gz"
 
+    license("MIT")
+
     version("2.0.2", sha256="91e85e9ee9b85d2391ead7d635e3d9c7f5f44fd60a60e59b13e2403fa66505c4")
 
     variant("docs", default=False, description="Build docs")

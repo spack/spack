@@ -25,6 +25,8 @@ class Petaca(CMakePackage):
 
     maintainers("pbrady", "zjibben")
 
+    license("MIT")
+
     version("develop", branch="master")
     version("22.03", sha256="e6559e928c7cca6017ef0582c204eee775f6bb3f927f1c224c515c2ad574cc32")
     version("21.03", commit="f17df95193ca1a3879687a59a91a123be25e3efa")

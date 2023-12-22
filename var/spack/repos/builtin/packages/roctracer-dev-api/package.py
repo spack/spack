@@ -16,6 +16,8 @@ class RoctracerDevApi(Package):
     url = "https://github.com/ROCm-Developer-Tools/roctracer/archive/refs/tags/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
+    license("MIT")
+
     maintainers("srekolam", "renjithravindrankannath")
     version("5.7.1", sha256="ec0453adac7e62b142eb0df1e1e2506863aac4c3f2ce9d117c3184c08c0c6b48")
     version("5.7.0", sha256="40bb757920488466e29df90bb80a975cc340bf7f8771fb1d754dfbb6b688d78e")

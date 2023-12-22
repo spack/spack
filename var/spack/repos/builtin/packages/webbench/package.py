@@ -12,6 +12,8 @@ class Webbench(MakefilePackage):
     homepage = "http://home.tiscali.cz/~cz210552/webbench.html"
     git = "https://github.com/EZLippi/WebBench.git"
 
+    license("GPL-3.0-or-later")
+
     version("1.5", commit="b1acf3c01cc914729fe188dfc8ed761858028d4f")
 
     depends_on("ntirpc")

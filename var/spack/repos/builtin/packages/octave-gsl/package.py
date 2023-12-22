@@ -12,6 +12,8 @@ class OctaveGsl(OctavePackage, SourceforgePackage):
     homepage = "https://octave.sourceforge.io/gsl/"
     sourceforge_mirror_path = "octave/gsl-2.1.1.tar.gz"
 
+    license("GPL-2.0-or-later")
+
     version("2.1.1", sha256="d028c52579e251c3f21ebfdf065dffab3ad7893434efda33b501225ef1ea6ed3")
 
     depends_on("gsl@2.4:")

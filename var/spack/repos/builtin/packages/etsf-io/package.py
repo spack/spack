@@ -18,6 +18,8 @@ class EtsfIo(Package):
     homepage = "https://github.com/ElectronicStructureLibrary/libetsf_io"
     url = "https://launchpad.net/etsf-io/1.0/1.0.4/+download/etsf_io-1.0.4.tar.gz"
 
+    license("LGPL-2.1-or-later")
+
     version("1.0.4", sha256="3140c2cde17f578a0e6b63acb27a5f6e9352257a1371a17b9c15c3d0ef078fa4")
 
     variant("mpi", default=True, description="Add MPI support")

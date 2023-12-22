@@ -13,6 +13,8 @@ class PyRsatoolbox(PythonPackage):
     pypi = "rsatoolbox/rsatoolbox-0.0.3.tar.gz"
     git = "https://github.com/rsagroup/rsatoolbox.git"
 
+    license("MIT")
+
     version("main", branch="main")
     version("0.1.2", sha256="2d091cbaa33373bf9da4df5ca8d127f0e427431a3db726076090ab2d54fe1213")
     version("0.1.0", sha256="245f909d31909ba896b765fa51ea019510dd690c6bb8d04b178a9c76ec36dce9")

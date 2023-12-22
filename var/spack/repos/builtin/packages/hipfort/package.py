@@ -14,6 +14,8 @@ class Hipfort(CMakePackage):
     url = "https://github.com/ROCmSoftwarePlatform/hipfort/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
+    license("MIT")
+
     maintainers("cgmb", "srekolam", "renjithravindrankannath")
     version("5.7.1", sha256="859fac509e195f3ab97c555b5f63afea325a61aae0f281cb19a970a1b533dead")
     version("5.7.0", sha256="57b04d59f61683a1b141d6d831d10c9fdecea483991ec02d14c14e441e935c05")

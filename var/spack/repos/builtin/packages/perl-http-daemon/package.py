@@ -12,6 +12,8 @@ class PerlHttpDaemon(PerlPackage):
     homepage = "https://metacpan.org/pod/HTTP::Daemon"
     url = "http://search.cpan.org/CPAN/authors/id/G/GA/GAAS/HTTP-Daemon-6.01.tar.gz"
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("6.01", sha256="43fd867742701a3f9fcc7bd59838ab72c6490c0ebaf66901068ec6997514adc2")
 
     depends_on("perl-lwp-mediatypes", type=("build", "run"))

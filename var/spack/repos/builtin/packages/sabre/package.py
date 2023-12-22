@@ -20,6 +20,8 @@ class Sabre(MakefilePackage):
     homepage = "https://github.com/najoshi/sabre"
     git = "https://github.com/najoshi/sabre.git"
 
+    license("MIT")
+
     version("2013-09-27", commit="039a55e500ba07b7e6432ea6ec2ddcfb3471d949")
 
     depends_on("zlib-api")

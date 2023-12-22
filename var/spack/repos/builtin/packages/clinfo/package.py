@@ -16,6 +16,8 @@ class Clinfo(MakefilePackage):
 
     maintainers("matthiasdiener")
 
+    license("CC0-1.0")
+
     version(
         "3.0.21.02.21", sha256="e52f5c374a10364999d57a1be30219b47fb0b4f090e418f2ca19a0c037c1e694"
     )

@@ -17,6 +17,8 @@ class PyMaestrowf(PythonPackage):
 
     maintainers("FrankD412")
 
+    license("MIT")
+
     # git branches
     version("develop", branch="develop")
     version("master", branch="master")

@@ -15,6 +15,8 @@ class PyControl(PythonPackage):
 
     maintainers("haralmha")
 
+    license("BSD-3-Clause")
+
     version("0.9.1", sha256="8c9084bf386eafcf5d74008f780fae6dec68d243d18a380c866ac10a3549f8d3")
 
     depends_on("py-setuptools", type="build")

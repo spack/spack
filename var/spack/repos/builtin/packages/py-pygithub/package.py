@@ -12,6 +12,8 @@ class PyPygithub(PythonPackage):
     homepage = "https://pygithub.readthedocs.io/"
     pypi = "PyGithub/PyGithub-1.54.1.tar.gz"
 
+    license("LGPL-3.0-only")
+
     version("2.1.1", sha256="ecf12c2809c44147bce63b047b3d2e9dac8a41b63e90fcb263c703f64936b97c")
     version("1.59.1", sha256="c44e3a121c15bf9d3a5cc98d94c9a047a5132a9b01d22264627f58ade9ddc217")
     version("1.55", sha256="1bbfff9372047ff3f21d5cd8e07720f3dbfdaf6462fcaed9d815f528f1ba7283")

@@ -12,6 +12,8 @@ class Mc(AutotoolsPackage):
     homepage = "https://midnight-commander.org"
     url = "http://ftp.midnight-commander.org/mc-4.8.20.tar.bz2"
 
+    license("GPL-3.0-or-later")
+
     version("4.8.28", sha256="6bb47533d7a55bb21e46292d2f94786c9037bd7a70bf02b6a3c48adb0c9ce20c")
     version("4.8.26", sha256="9d6358d0a351a455a1410aab57f33b6b48b0fcf31344b9a10b0ff497595979d1")
     version("4.8.23", sha256="238c4552545dcf3065359bd50753abbb150c1b22ec5a36eaa02c82808293267d")

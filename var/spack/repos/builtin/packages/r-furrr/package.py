@@ -18,6 +18,8 @@ class RFurrr(RPackage):
 
     maintainers("jgaeb")
 
+    license("MIT")
+
     version("0.3.1", sha256="0d91735e2e9be759b1ab148d115c2c7429b79740514778828e5dab631dc0e48b")
     version("0.3.0", sha256="3fe91cc1614f9404c708ea3a15b6a40289fa57f40f3ece54452093408d91fd84")
     version("0.2.3", sha256="0a213422dc0a2e84173f2d3e6c7900dcb677f980c255d6b6ccf666fba1173700")

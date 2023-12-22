@@ -14,6 +14,8 @@ class PyShortbred(PythonPackage):
     homepage = "https://huttenhower.sph.harvard.edu/shortbred/"
     pypi = "shortbred/shortbred-0.9.5.tar.gz"
 
+    license("MIT")
+
     version("0.9.5", sha256="a6ac09b858f14e2c0b8622b122ec91e5d02d32c12429cad66626d7ef26df10d5")
 
     depends_on("python@2.7.9:", type=("build", "run"))

@@ -16,6 +16,8 @@ class Brigand(CMakePackage):
 
     maintainers("nilsvu")
 
+    license("BSL-1.0")
+
     version("master", branch="master")
     version("1.3.0", sha256="2468107c5b9ab0b56d84797dfc6636d0aae0507ae9cd6cb1acc1de85e5787acd")
     version("1.2.0", sha256="4287fa7278cc000a63e90f1a1b903952b7f606b1a3cf95c23a422d2fe96ca50d")

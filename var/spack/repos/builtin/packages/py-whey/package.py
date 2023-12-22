@@ -13,6 +13,8 @@ class PyWhey(PythonPackage):
     homepage = "https://github.com/repo-helper/whey"
     pypi = "whey/whey-0.0.24.tar.gz"
 
+    license("MIT")
+
     version("0.0.24", sha256="411905d85aa8aa239733818894e08dc20b682f0a3614f942aa35b430db568aa2")
 
     depends_on("py-wheel@0.34.2", type="build")

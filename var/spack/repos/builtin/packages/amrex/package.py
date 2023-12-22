@@ -23,6 +23,8 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("WeiqunZhang", "asalmgren", "atmyers")
 
+    license("BSD-3-Clause")
+
     version("develop", branch="development")
     version("23.12", sha256="90e00410833d7a82bf6d9e71a70ce85d2bfb89770da7e34d0dda940f2bf5384a")
     version("23.11", sha256="49b9fea10cd2a2b6cb0fedf7eac8f7889eacc68a05ae5ac7c5702bc0eb1b3848")

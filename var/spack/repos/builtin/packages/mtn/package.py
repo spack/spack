@@ -15,6 +15,8 @@ class Mtn(MakefilePackage):
 
     maintainers("ledif")
 
+    license("GPL-2.0-or-later")
+
     version("3.4.2", sha256="19b2076c00f5b0ad70c2467189b17f335c6e7ece5d1a01ed8910779f6a5ca52a")
 
     depends_on("ffmpeg")

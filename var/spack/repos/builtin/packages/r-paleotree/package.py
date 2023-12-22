@@ -15,6 +15,8 @@ class RPaleotree(RPackage):
 
     cran = "paleotree"
 
+    license("CC0-1.0")
+
     version("3.4.5", sha256="c4dceb3352b74730643aa9f62ceb7f020ce6763614ba334723aadf0eb003d125")
     version("3.4.4", sha256="8809c3395e6904669db8c7cc3b54dd5c3c76948c8568d310cf02e4a5dbc678e4")
     version("3.3.25", sha256="aa64b9120075581229439227a12db776d052b03eb5f9721692a16a9402ac8712")

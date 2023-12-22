@@ -19,6 +19,8 @@ class RCredentials(RPackage):
 
     cran = "credentials"
 
+    license("MIT")
+
     version("1.3.2", sha256="2ffa7c11bedbfa034adf553d0a2f2e4f6a496b858af753a09a89219cff9028b8")
     version("1.3.0", sha256="c119ec26fd97b977c3b0cd1eb8fad3c59b84df6262c3adbf5ee9f3d6c9903ff1")
 

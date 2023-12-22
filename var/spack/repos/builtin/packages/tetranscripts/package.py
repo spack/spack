@@ -13,6 +13,8 @@ class Tetranscripts(PythonPackage):
     homepage = "https://hammelllab.labsites.cshl.edu/software/#TEtranscripts"
     pypi = "TEtranscripts/TEtranscripts-2.2.3.tar.gz"
 
+    license("GPL-3.0-only")
+
     version("2.2.3", sha256="e53577e8e73e41c6495fb819977e3e537bbeac7b2fa1635029201a37ee0bf7b8")
 
     # python dependencies

@@ -19,6 +19,8 @@ class RMclogit(RPackage):
 
     cran = "mclogit"
 
+    license("GPL-2.0-only")
+
     version("0.9.6", sha256="9adc5f6d8649960abe009c30d9b4c448ff7d174c455a594cbf104a33d5a36f69")
 
     depends_on("r-matrix", type=("build", "run"))

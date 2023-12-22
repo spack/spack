@@ -12,6 +12,8 @@ class PyAnsiwrap(PythonPackage):
     homepage = "https://github.com/jonathaneunice/ansiwrap"
     pypi = "ansiwrap/ansiwrap-0.8.4.zip"
 
+    license("Apache-2.0")
+
     version("0.8.4", sha256="ca0c740734cde59bf919f8ff2c386f74f9a369818cdc60efe94893d01ea8d9b7")
 
     depends_on("py-setuptools", type="build")

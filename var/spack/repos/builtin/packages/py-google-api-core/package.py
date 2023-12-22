@@ -16,6 +16,8 @@ class PyGoogleApiCore(PythonPackage):
     # Leave them out of 'import_modules' to avoid optional dependency.
     import_modules = ["google.api_core", "google.api_core.future"]
 
+    license("Apache-2.0")
+
     version("2.11.0", sha256="4b9bb5d5a380a0befa0573b302651b8a9a89262c1730e37bf423cec511804c22")
     version("1.14.2", sha256="2c23fbc81c76b941ffb71301bb975ed66a610e9b03f918feacd1ed59cf43a6ec")
 

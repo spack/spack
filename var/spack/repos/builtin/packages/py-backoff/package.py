@@ -12,6 +12,8 @@ class PyBackoff(PythonPackage):
     homepage = "https://github.com/litl/backoff"
     pypi = "backoff/backoff-2.2.1.tar.gz"
 
+    license("MIT")
+
     version("2.2.1", sha256="03f829f5bb1923180821643f8753b0502c3b682293992485b0eef2807afa5cba")
 
     depends_on("python@3.7:3", type=("build", "run"))

@@ -16,6 +16,8 @@ class RocmTensile(CMakePackage):
     url = "https://github.com/ROCmSoftwarePlatform/Tensile/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
+    license("MIT")
+
     maintainers("srekolam", "renjithravindrankannath", "haampie")
     version("5.7.1", sha256="9211a51b23c22b7a79e4e494e8ff3c31e90bf21adb8cce260acc57891fb2c917")
     version("5.7.0", sha256="fe2ae067c1c579f33d7a1e26da3fe6b4ed44befa08f9dfce2ceae586f184b816")

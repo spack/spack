@@ -17,6 +17,8 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
 
     tags = ["ecp", "ecp-apps"]
 
+    license("BSD-3-Clause")
+
     version("main", branch="main", submodules=True)
 
     variant("hypre", default=True, description="Enable Hypre integration")

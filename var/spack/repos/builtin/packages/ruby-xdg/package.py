@@ -17,6 +17,8 @@ class RubyXdg(RubyPackage):
     # https://github.com/rubyworks/xdg but I was unable to get it to build
     # from source
 
+    license("Hippocratic-2.1")
+
     version(
         "2.2.5",
         sha256="f3a5f799363852695e457bb7379ac6c4e3e8cb3a51ce6b449ab47fbb1523b913",

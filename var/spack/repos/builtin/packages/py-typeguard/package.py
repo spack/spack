@@ -16,6 +16,8 @@ class PyTypeguard(PythonPackage):
 
     maintainers("meyersbs")
 
+    license("MIT")
+
     version("3.0.2", sha256="fee5297fdb28f8e9efcb8142b5ee219e02375509cd77ea9d270b5af826358d5a")
     version("2.13.3", sha256="00edaa8da3a133674796cf5ea87d9f4b4c367d77476e185e80251cc13dfbb8c4")
     version("2.12.1", sha256="c2af8b9bdd7657f4bd27b45336e7930171aead796711bc4cfc99b4731bb9d051")

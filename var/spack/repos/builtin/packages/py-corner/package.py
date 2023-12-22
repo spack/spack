@@ -14,6 +14,8 @@ class PyCorner(PythonPackage):
 
     maintainers("LydDeb")
 
+    license("BSD-2-Clause")
+
     version("2.2.2", sha256="4bc79f3b6778c270103f0926e64ef2606c48c3b6f92daf5382fc4babf5d608d1")
 
     depends_on("python@3.9:", type=("build", "run"))

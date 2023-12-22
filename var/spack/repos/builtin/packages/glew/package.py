@@ -17,6 +17,8 @@ class Glew(CMakePackage):
 
     maintainers("biddisco")
 
+    license("GPL-2.0-or-later")
+
     version("2.2.0", sha256="d4fc82893cfb00109578d0a1a2337fb8ca335b3ceccf97b97e5cc7f08e4353e1")
     version("2.1.0", sha256="04de91e7e6763039bc11940095cd9c7f880baba82196a7765f727ac05a993c95")
     version("2.0.0", sha256="c572c30a4e64689c342ba1624130ac98936d7af90c3103f9ce12b8a0c5736764")

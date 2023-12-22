@@ -12,6 +12,8 @@ class PyOrjson(PythonPackage):
     homepage = "https://github.com/ijl/orjson"
     pypi = "orjson/orjson-3.8.7.tar.gz"
 
+    license("Apache-2.0")
+
     version("3.8.7", sha256="8460c8810652dba59c38c80d27c325b5092d189308d8d4f3e688dbd8d4f3b2dc")
 
     depends_on("py-maturin@0.13:0.14", type="build")

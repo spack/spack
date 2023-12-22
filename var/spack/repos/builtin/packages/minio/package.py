@@ -15,6 +15,8 @@ class Minio(MakefilePackage):
     homepage = "https://min.io/"
     url = "https://github.com/minio/minio/archive/RELEASE.2020-07-13T18-09-56Z.tar.gz"
 
+    license("AGPL-3.0-or-later")
+
     version(
         "2020-07-13T18-09-56Z",
         sha256="147fca3930389162cc7306a0fa5cf478ee2deba4b31a9317f3d35e82aa58d41e",

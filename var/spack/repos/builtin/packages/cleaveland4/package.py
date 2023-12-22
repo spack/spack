@@ -13,6 +13,8 @@ class Cleaveland4(Package):
     homepage = "https://github.com/MikeAxtell/CleaveLand4"
     url = "https://github.com/MikeAxtell/CleaveLand4/archive/v4.4.tar.gz"
 
+    license("GPL-3.0-or-later")
+
     version("4.5", sha256="d0ad584a8bc2391cdee5f6279b2351f7db972362669467564e6bd3f94dcd9dd1")
     version("4.4", sha256="bf7fe6ad730ea2bfb2e0c0f863734f189073a69b1754532012f1261b368b24e7")
 

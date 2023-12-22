@@ -13,6 +13,8 @@ class PyHttpx(PythonPackage):
     homepage = "https://github.com/encode/httpx"
     pypi = "httpx/httpx-0.15.2.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.23.3", sha256="9818458eb565bb54898ccb9b8b251a28785dd4a55afbc23d0eb410754fe7d0f9")
     version("0.22.0", sha256="d8e778f76d9bbd46af49e7f062467e3157a5a3d2ae4876a4bbfd8a51ed9c9cb4")
     version("0.15.2", sha256="713a2deaf96d85bbd4a1fbdf0edb27d6b4ee2c9aaeda8433042367e4b9e1628d")

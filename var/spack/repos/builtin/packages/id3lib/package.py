@@ -12,6 +12,8 @@ class Id3lib(AutotoolsPackage):
     homepage = "http://id3lib.sourceforge.net/"
     url = "https://downloads.sourceforge.net/project/id3lib/id3lib/3.8.3/id3lib-3.8.3.tar.gz"
 
+    license("GPL-2.0-only")
+
     version("3.8.3", sha256="2749cc3c0cd7280b299518b1ddf5a5bcfe2d1100614519b68702230e26c7d079")
 
     depends_on("zlib-api")

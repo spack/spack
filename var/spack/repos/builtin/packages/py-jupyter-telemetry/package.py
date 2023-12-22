@@ -13,6 +13,8 @@ class PyJupyterTelemetry(PythonPackage):
 
     pypi = "jupyter-telemetry/jupyter_telemetry-0.1.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.1.0", sha256="445c613ae3df70d255fe3de202f936bba8b77b4055c43207edf22468ac875314")
     version("0.0.5", sha256="d3eaac14be17510a4d288f3737580107ce14eef543e6133d56654d3f0e742b9b")
 

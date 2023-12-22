@@ -18,6 +18,8 @@ class TclTcllib(AutotoolsPackage):
     list_url = "https://sourceforge.net/projects/tcllib/files/tcllib/"
     list_depth = 1
 
+    license("TCL")
+
     version("1.19", sha256="01fe87cf1855b96866cf5394b6a786fd40b314022714b34110aeb6af545f6a9c")
     version("1.18", sha256="72667ecbbd41af740157ee346db77734d1245b41dffc13ac80ca678dd3ccb515")
     version("1.17", sha256="00c16aa28512ff6a67f199ffa5e04acaeb7b8464b2b7dc70ad8d00ce4c8d25ce")

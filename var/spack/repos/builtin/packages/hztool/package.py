@@ -19,6 +19,8 @@ class Hztool(AutotoolsPackage):
 
     tags = ["hep"]
 
+    license("GPL-2.0-only")
+
     version("4.3.2", sha256="2a8d334abd96a7a9f70d53cfbb46f35902ccd1108861333a87542f8357152fd4")
     version("4.3", sha256="af1a302c16e9f0bfbfdd77a486a5f47553d81d1d049bc83cc72321ba285af264")
     version("4.2", sha256="87b74b2e424a1e6bd990cc12a0bfcba15854a6451ffa20aff8dc4bdfed559160")

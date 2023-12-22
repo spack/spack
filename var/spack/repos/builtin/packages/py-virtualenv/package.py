@@ -13,6 +13,8 @@ class PyVirtualenv(PythonPackage):
     pypi = "virtualenv/virtualenv-16.7.6.tar.gz"
     git = "https://github.com/pypa/virtualenv.git"
 
+    license("MIT")
+
     version("20.24.5", sha256="e8361967f6da6fbdf1426483bfe9fca8287c242ac0bc30429905721cefbff752")
     version("20.22.0", sha256="278753c47aaef1a0f14e6db8a4c5e1e040e90aea654d0fc1dc7e0d8a42616cc3")
     version("20.17.1", sha256="f8b927684efc6f1cc206c9db297a570ab9ad0e51c16fa9e45487d36d1905c058")

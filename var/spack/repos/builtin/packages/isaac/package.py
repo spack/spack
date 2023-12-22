@@ -15,6 +15,8 @@ class Isaac(CMakePackage):
 
     maintainers("ax3l")
 
+    license("LGPL-3.0-only")
+
     version("develop", branch="dev")
     version("master", branch="master")
     version("1.5.2", sha256="9cedd72bea06f387b697b17a0db076e50fb3b85b74f21d3a6d99ed0d664a9ef2")

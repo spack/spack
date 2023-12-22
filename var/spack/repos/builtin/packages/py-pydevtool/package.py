@@ -12,6 +12,8 @@ class PyPydevtool(PythonPackage):
     homepage = "https://github.com/pydoit/pydevtool"
     pypi = "pydevtool/pydevtool-0.3.0.tar.gz"
 
+    license("MIT")
+
     version("0.3.0", sha256="25e3ba4f3d33ccac33ee2b9775995848d49e9b318b7a146477fb5d52f786fc8a")
 
     depends_on("python@3.8:", type=("build", "run"))

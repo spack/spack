@@ -20,6 +20,8 @@ class RScs(RPackage):
 
     cran = "scs"
 
+    license("GPL-3.0-only")
+
     version("3.2.4", sha256="c3f39874bf4532fa8c2f2e2c41533ba4fe20b61cf6dfc6314407dc981621298f")
     version("3.0-1", sha256="d6881eeec7282f8bfbf60847327786e7f90299e4b8c0b084d8bd11fec7705913")
 

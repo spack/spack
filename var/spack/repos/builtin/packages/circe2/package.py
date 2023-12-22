@@ -20,6 +20,8 @@ class Circe2(AutotoolsPackage):
 
     maintainers("tmadlener")
 
+    license("GPL-2.0-or-later")
+
     version("3.1.2.1", sha256="8bb09e6f566adefcf7b5b1cf9d9fe4536dd3dd11ed3674861de29e177ee0bb04")
 
     variant("doc", default=False, description="Create the latex documentation")

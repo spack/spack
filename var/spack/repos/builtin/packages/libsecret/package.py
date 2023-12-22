@@ -18,6 +18,8 @@ class Libsecret(AutotoolsPackage):
     homepage = "https://wiki.gnome.org/Projects/Libsecret"
     url = "http://ftp.gnome.org/pub/gnome/sources/libsecret/0.18/libsecret-0.18.8.tar.xz"
 
+    license("LGPL-2.1-or-later")
+
     version("0.18.8", sha256="3bfa889d260e0dbabcf5b9967f2aae12edcd2ddc9adc365de7a5cc840c311d15")
 
     variant("gcrypt", default=True, description="Build with libgcrypt")

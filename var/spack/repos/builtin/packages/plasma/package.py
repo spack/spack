@@ -24,6 +24,8 @@ class Plasma(CMakePackage):
 
     tags = ["e4s"]
 
+    license("BSD-3-Clause")
+
     version("develop", git=git)
     version("23.8.2", sha256="2db34de0575f3e3d16531bdcf1caddef146f68e71335977a3e8ec193003ab943")
     version("22.9.29", sha256="78827898b7e3830eee2e388823b9180858279f77c5eda5aa1be173765c53ade5")

@@ -16,6 +16,8 @@ class RDownlit(RPackage):
 
     cran = "downlit"
 
+    license("MIT")
+
     version("0.4.2", sha256="33dff66909104d1a5ba8e57b1288986e82b61fd5e91dce0cd358d53724b37e3c")
 
     depends_on("r@3.4.0:", type=("build", "run"))

@@ -15,6 +15,8 @@ class RHttr(RPackage):
 
     cran = "httr"
 
+    license("MIT")
+
     version("1.4.5", sha256="f93bac7f882b0df099abca47dd5aae3686fb3cd2d3e9926fcd639bcddff76f6c")
     version("1.4.4", sha256="41d82523f3ee260d409a7b5ae4136190cbc5aecbc270b40ed7064f83e7f5435d")
     version("1.4.3", sha256="9a8613fa96173ac910c021391af1ced4d0609169049c802cf7cdfe1c40897c6a")

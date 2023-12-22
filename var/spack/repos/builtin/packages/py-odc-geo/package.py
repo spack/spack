@@ -12,6 +12,8 @@ class PyOdcGeo(PythonPackage):
     homepage = "https://github.com/opendatacube/odc-geo/"
     pypi = "odc-geo/odc-geo-0.1.2.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.1.2", sha256="c5ec3c66a326b138df5a28aa639b1c2c3c644093af463948255219bdc2513408")
 
     depends_on("python@3.8:", type=("build", "run"))

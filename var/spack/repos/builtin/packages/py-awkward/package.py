@@ -15,6 +15,8 @@ class PyAwkward(PythonPackage):
 
     maintainers("vvolkl")
 
+    license("BSD-3-Clause")
+
     version("main", branch="main")
     version("2.1.1", sha256="fda8e1634161b8b46b151c074ff0fc631fc0feaec2ec277c4b40a2095110b0dd")
     version("2.1.0", sha256="73f7a76a1fb43e2557befee54b1381f3e6d90636983cdc54da1c2bcb9ad4c1a8")

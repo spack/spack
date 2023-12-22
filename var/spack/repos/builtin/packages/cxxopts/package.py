@@ -13,6 +13,8 @@ class Cxxopts(CMakePackage):
     url = "https://github.com/jarro2783/cxxopts/archive/v2.2.0.tar.gz"
     maintainers("haampie")
 
+    license("MIT")
+
     version("3.1.1", sha256="523175f792eb0ff04f9e653c90746c12655f10cb70f1d5e6d6d9491420298a08")
     version("3.0.0", sha256="36f41fa2a46b3c1466613b63f3fa73dc24d912bc90d667147f1e43215a8c6d00")
     version("2.2.1", sha256="984aa3c8917d649b14d7f6277104ce38dd142ce378a9198ec926f03302399681")

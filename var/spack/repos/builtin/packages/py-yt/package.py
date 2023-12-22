@@ -22,6 +22,8 @@ class PyYt(PythonPackage):
 
     maintainers("charmoniumq")
 
+    license("BSD-3-Clause")
+
     version("4.1.2", sha256="0ae03288b067721baad14c016f253dc791cd444a1f2dd5d804cf91da622a0c76")
     version("3.6.1", sha256="be454f9d05dcbe0623328b4df43a1bfd1f0925e516be97399710452931a19bb0")
     version("3.6.0", sha256="effb00536f19fd2bdc18f67dacd5550b82066a6adce5b928f27a01d7505109ec")

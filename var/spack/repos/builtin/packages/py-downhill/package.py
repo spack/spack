@@ -12,6 +12,8 @@ class PyDownhill(PythonPackage):
     homepage = "http://github.com/lmjohns3/downhill"
     pypi = "downhill/downhill-0.4.0.tar.gz"
 
+    license("MIT")
+
     version("0.4.0", sha256="074ad91deb06c05108c67d982ef71ffffb6ede2c77201abc69e332649f823b42")
 
     depends_on("py-setuptools", type="build")

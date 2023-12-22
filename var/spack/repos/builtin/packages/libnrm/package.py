@@ -12,6 +12,9 @@ class Libnrm(AutotoolsPackage):
 
     homepage = "https://xgitlab.cels.anl.gov/argo/libnrm"
     url = "https://www.mcs.anl.gov/research/projects/argo/downloads/libnrm-0.1.0.tar.gz"
+
+    license("BSD-3-Clause")
+
     version("0.1.0", sha256="f849ada384025fa41251acc2a43aa335e0cb1b9cd1c8ab8b9d1808a036ae551e")
 
     tags = ["e4s"]

@@ -12,6 +12,8 @@ class Libxt(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/lib/libXt"
     xorg_mirror_path = "lib/libXt-1.1.5.tar.gz"
 
+    license("MIT")
+
     version("1.1.5", sha256="b59bee38a9935565fa49dc1bfe84cb30173e2e07e1dcdf801430d4b54eb0caa3")
 
     depends_on("libsm")

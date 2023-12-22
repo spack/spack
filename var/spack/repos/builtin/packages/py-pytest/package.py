@@ -13,6 +13,8 @@ class PyPytest(PythonPackage):
     pypi = "pytest/pytest-5.2.1.tar.gz"
     git = "https://github.com/pytest-dev/pytest"
 
+    license("MIT")
+
     version("7.3.2", sha256="ee990a3cc55ba808b80795a79944756f315c67c12b56abd3ac993a7b8c17030b")
     version("7.2.1", sha256="d45e0952f3727241918b8fd0f376f5ff6b301cc0777c6f9a556935c92d8a7d42")
     version("7.1.3", sha256="4f365fec2dff9c1162f834d9f18af1ba13062db0c708bf7b946f8a5c76180c39")

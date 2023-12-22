@@ -12,6 +12,8 @@ class PyBrotlipy(PythonPackage):
     homepage = "https://github.com/python-hyper/brotlipy/"
     pypi = "brotlipy/brotlipy-0.7.0.tar.gz"
 
+    license("MIT")
+
     version("0.7.0", sha256="36def0b859beaf21910157b4c33eb3b06d8ce459c942102f16988cca6ea164df")
 
     depends_on("py-setuptools", type="build")

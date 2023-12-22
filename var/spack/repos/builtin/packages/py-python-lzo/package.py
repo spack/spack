@@ -13,6 +13,8 @@ class PyPythonLzo(PythonPackage):
     homepage = "https://github.com/jd-boyd/python-lzo"
     pypi = "python-lzo/python-lzo-1.12.tar.gz"
 
+    license("GPL-2.0-only")
+
     version("1.15", sha256="a57aaa00c5c3a0515dd9f7426ba2cf601767dc19dc023d8b99d4a13b0a327b49")
     version("1.12", sha256="97a8e46825e8f1abd84c2a3372bc09adae9745a5be5d3af2692cd850dac35345")
 

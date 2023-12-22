@@ -15,6 +15,8 @@ class PerlTestNowarnings(PerlPackage):
 
     maintainers("EbiArnie")
 
+    license("LGPL-2.1-only")
+
     version("1.06", sha256="c2dc51143b7eb63231210e27df20d2c8393772e0a333547ec8b7a205ed62f737")
 
     depends_on("perl@5.6.0:", type=("build", "link", "run", "test"))

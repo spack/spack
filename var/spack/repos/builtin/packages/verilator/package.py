@@ -38,6 +38,8 @@ class Verilator(AutotoolsPackage):
 
     maintainers("davekeeshan")
 
+    license("LGPL-3.0-only")
+
     version("master", branch="master")
 
     version("5.018", sha256="8b544273eedee379e3c1a3bb849e14c754c9b5035d61ad03acdf3963092ba6c0")

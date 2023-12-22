@@ -14,6 +14,8 @@ class PyChemfiles(PythonPackage):
 
     maintainers("RMeli")
 
+    license("BSD-3-Clause")
+
     version("0.10.3", sha256="4bbb8b116492a57dbf6ddb4c84aad0133cd782e0cc0e53e4b957f2d93e6806ea")
 
     depends_on("chemfiles@0.10.3+shared", when="@0.10.3")

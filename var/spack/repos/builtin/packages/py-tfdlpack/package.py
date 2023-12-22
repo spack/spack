@@ -15,6 +15,8 @@ class PyTfdlpack(CMakePackage, PythonExtension):
 
     maintainers("adamjstewart")
 
+    license("Apache-2.0")
+
     version("master", branch="master", submodules=True)
     version(
         "0.1.1", tag="v0.1.1", commit="a1fdb53096158c2ec9189bb1ff46c92c6f571bbe", submodules=True

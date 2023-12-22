@@ -12,6 +12,8 @@ class PyRequestsUnixsocket(PythonPackage):
     homepage = "https://github.com/msabramo/requests-unixsocket"
     pypi = "requests-unixsocket/requests-unixsocket-0.2.0.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.3.0", sha256="28304283ea9357d45fff58ad5b11e47708cfbf5806817aa59b2a363228ee971e")
     version("0.2.0", sha256="9e5c1a20afc3cf786197ae59c79bcdb0e7565f218f27df5f891307ee8817c1ea")
 

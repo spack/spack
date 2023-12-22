@@ -17,6 +17,8 @@ class PyPubchempy(PythonPackage):
 
     maintainers("meyersbs")
 
+    license("MIT")
+
     version("1.0.4", sha256="24e9dc2fc90ab153b2764bf805e510b1410700884faf0510a9e7cf0d61d8ed0e")
 
     depends_on("py-setuptools", type="build")

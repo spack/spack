@@ -12,6 +12,8 @@ class PyElasticsearch(PythonPackage):
     homepage = "https://github.com/elastic/elasticsearch-py"
     pypi = "elasticsearch/elasticsearch-5.2.0.tar.gz"
 
+    license("Apache-2.0")
+
     version("8.6.2", sha256="084458e84caa91e3ad807b68aa82c022e785bead853a3b125641a25e894a1d47")
     version("7.6.0", sha256="d228b2d37ac0865f7631335268172dbdaa426adec1da3ed006dddf05134f89c8")
     version("7.5.1", sha256="2a0ca516378ae9b87ac840e7bb529ec508f3010360dd9feed605dff2a898aff5")

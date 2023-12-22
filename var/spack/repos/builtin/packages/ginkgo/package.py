@@ -22,6 +22,8 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
 
     tags = ["e4s"]
 
+    license("MIT")
+
     version("develop", branch="develop")
     version("master", branch="master")
     version("1.7.0", commit="49242ff89af1e695d7794f6d50ed9933024b66fe")  # v1.7.0

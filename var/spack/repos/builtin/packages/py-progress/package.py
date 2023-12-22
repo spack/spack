@@ -12,6 +12,8 @@ class PyProgress(PythonPackage):
     homepage = "https://github.com/verigak/progress/"
     pypi = "progress/progress-1.4.tar.gz"
 
+    license("ISC")
+
     version("1.4", sha256="5e2f9da88ed8236a76fffbee3ceefd259589cf42dfbc2cec2877102189fae58a")
 
     depends_on("py-setuptools", type="build")

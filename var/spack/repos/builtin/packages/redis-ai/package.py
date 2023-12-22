@@ -16,6 +16,8 @@ class RedisAi(MakefilePackage):
 
     maintainers("MattToast")
 
+    license("Apache-2.0")
+
     version(
         "1.2.7", tag="v1.2.7", commit="1bf38d86233ba06e1350ca9de794df2b07cdb274", submodules=True
     )

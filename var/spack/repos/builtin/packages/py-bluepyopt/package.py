@@ -11,6 +11,8 @@ class PyBluepyopt(PythonPackage):
     homepage = "https://github.com/BlueBrain/BluePyOpt"
     pypi = "bluepyopt/bluepyopt-1.9.27.tar.gz"
 
+    license("LGPL-3.0-only")
+
     # NOTE : while adding new release check pmi_rank.patch compatibility
     version("1.14.4", sha256="7567fd736053250ca06030f67ad93c607b100c2b98df8dc588c26b64cb3e171c")
 

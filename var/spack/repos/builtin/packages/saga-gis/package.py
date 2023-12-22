@@ -17,6 +17,8 @@ class SagaGis(AutotoolsPackage, SourceforgePackage):
     sourceforge_mirror_path = "SAGA%20-%205.0.0/saga-5.0.0.tar.gz"
     git = "git://git.code.sf.net/p/saga-gis/code"
 
+    license("GPL-2.0-or-later")
+
     version("develop", branch="master")
     version("7.4.0", branch="release-7.4.0")
     version("7.3.0", branch="release-7.3.0")

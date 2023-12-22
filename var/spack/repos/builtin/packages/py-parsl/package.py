@@ -16,6 +16,8 @@ class PyParsl(PythonPackage):
 
     maintainers("hategan")
 
+    license("Apache-2.0")
+
     version(
         "2023.08.21", sha256="d7d6145ad5ab63baf9c9f9441a0a6ea5be6f896ef8094d47bf64d949a56b1782"
     )

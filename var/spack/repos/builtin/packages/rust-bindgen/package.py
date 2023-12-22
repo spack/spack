@@ -14,6 +14,8 @@ class RustBindgen(Package):
     homepage = "https://www.rust-lang.org"
     url = "https://github.com/servo/rust-bindgen/archive/v0.20.5.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.20.5", sha256="4f5236e7979d262c43267afba365612b1008b91b8f81d1efc6a8a2199d52bb37")
 
     extends("rust")

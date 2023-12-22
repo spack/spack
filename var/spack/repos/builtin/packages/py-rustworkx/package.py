@@ -18,6 +18,8 @@ class PyRustworkx(PythonPackage):
     homepage = "https://github.com/Qiskit/rustworkx"
     pypi = "rustworkx/rustworkx-0.12.1.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.12.1", sha256="13a19a2f64dff086b3bffffb294c4630100ecbc13634b4995d9d36a481ae130e")
 
     depends_on("python@3.7:", type=("build", "run"))

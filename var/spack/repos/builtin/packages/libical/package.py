@@ -12,6 +12,8 @@ class Libical(CMakePackage):
     homepage = "https://github.com/libical/libical"
     url = "https://github.com/libical/libical/archive/v3.0.8.tar.gz"
 
+    license("LGPL-2.1-only OR MPL-2.0")
+
     version("3.0.11", sha256="1e6c5e10c5a48f7a40c68958055f0e2759d9ab3563aca17273fe35a5df7dbbf1")
     version("3.0.8", sha256="09fecacaf75ba5a242159e3a9758a5446b5ce4d0ab684f98a7040864e1d1286f")
 

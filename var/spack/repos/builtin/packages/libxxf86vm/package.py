@@ -12,6 +12,8 @@ class Libxxf86vm(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/lib/libXxf86vm"
     xorg_mirror_path = "lib/libXxf86vm-1.1.4.tar.gz"
 
+    license("MIT")
+
     version("1.1.4", sha256="5108553c378a25688dcb57dca383664c36e293d60b1505815f67980ba9318a99")
 
     depends_on("libx11@1.6:")

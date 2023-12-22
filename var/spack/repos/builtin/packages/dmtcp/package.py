@@ -15,6 +15,8 @@ class Dmtcp(AutotoolsPackage):
     url = "https://github.com/dmtcp/dmtcp/archive/refs/tags/3.0.0.tar.gz"
     git = "https://github.com/dmtcp/dmtcp.git"
 
+    license("LGPL-3.0-only")
+
     maintainers("karya0")
     version("master", branch="master")
     version("3.0.0", sha256="2c7e95e1dbc55db33433bfee48a65f274298e98f246a36ab6dad1e0694750d37")

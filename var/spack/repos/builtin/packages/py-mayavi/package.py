@@ -13,6 +13,8 @@ class PyMayavi(PythonPackage):
     homepage = "https://github.com/enthought/mayavi"
     pypi = "mayavi/mayavi-4.7.3.tar.gz"
 
+    license("EPL-1.0")
+
     version("4.7.3", sha256="670d0023b9cd2d2346c451db9ba2f61da23a5df5033b25aea89cb6d81b9464f0")
     version(
         "4.7.1",

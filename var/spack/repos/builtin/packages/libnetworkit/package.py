@@ -22,6 +22,8 @@ class Libnetworkit(CMakePackage):
 
     maintainers("fabratu")
 
+    license("MIT")
+
     version("9.0", sha256="c574473bc7d86934f0f4b3049c0eeb9c4444cfa873e5fecda194ee5b1930f82c")
     version("8.1", sha256="0a22eb839606b9fabfa68c7add12c4de5eee735c6f8bb34420e5916ce5d7f829")
     version("8.0", sha256="cdf9571043edbe76c447622ed33efe9cba2880f887ca231d98f6d3c22027e20e")

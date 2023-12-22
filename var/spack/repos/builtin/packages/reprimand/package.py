@@ -20,6 +20,8 @@ class Reprimand(MesonPackage):
 
     maintainers("eschnett")
 
+    license("CC-BY-NC-SA-4.0")
+
     version("develop", git="https://github.com/wokast/RePrimAnd", branch="public")
     version("1.5", sha256="bc71030c1ae337c3631cfc7e46270260b0663e4ad73129148bf443c9220afb86")
     version("1.4", sha256="260730696175fa21d35d1a92df2c68b69243bb617083c82616efcb4720d557e8")

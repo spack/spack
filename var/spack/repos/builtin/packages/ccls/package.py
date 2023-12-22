@@ -15,6 +15,8 @@ class Ccls(CMakePackage):
 
     maintainers("jacobmerson")
 
+    license("Apache-2.0")
+
     version(
         "0.20220729", sha256="af19be36597c2a38b526ce7138c72a64c7fb63827830c4cff92256151fc7a6f4"
     )

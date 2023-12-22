@@ -12,6 +12,8 @@ class PyBackportsZoneinfo(PythonPackage):
     homepage = "https://github.com/pganssle/zoneinfo"
     pypi = "backports.zoneinfo/backports.zoneinfo-0.2.1.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.2.1", sha256="fadbfe37f74051d024037f223b8e001611eac868b5c5b06144ef4d8b799862f2")
 
     depends_on("py-setuptools@40.8.0:", type="build")

@@ -12,6 +12,8 @@ class PyPythonCrfsuite(PythonPackage):
     homepage = "https://github.com/scrapinghub/python-crfsuite"
     pypi = "python-crfsuite/python-crfsuite-0.9.7.tar.gz"
 
+    license("MIT")
+
     version("0.9.7", sha256="3b4538d2ce5007e4e42005818247bf43ade89ef08a66d158462e2f7c5d63cee7")
 
     depends_on("py-setuptools", type="build")

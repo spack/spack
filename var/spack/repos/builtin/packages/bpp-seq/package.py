@@ -14,6 +14,8 @@ class BppSeq(CMakePackage):
 
     maintainers("snehring")
 
+    license("CECILL-2.0")
+
     version("2.4.1", sha256="dbfcb04803e4b7f08f9f159da8a947c91906c3ca8b20683ac193f6dc524d4655")
     version(
         "2.2.0",

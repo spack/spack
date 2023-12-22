@@ -16,6 +16,8 @@ class RLabelled(RPackage):
 
     cran = "labelled"
 
+    license("GPL-3.0-or-later")
+
     version("2.11.0", sha256="eddc5299ca448ea9c244960af65b95f4164495febd609f719e0f453598a0e5dd")
     version("2.10.0", sha256="5e93e29dcbbf0f6273b502b744695426e238ffe106f1db2bb5daeb1f17c9c40a")
     version("2.9.1", sha256="9eb10b245f64f3fb7346121aa4cd98638946e1cc4208dd5e28791ef8fd62fa40")

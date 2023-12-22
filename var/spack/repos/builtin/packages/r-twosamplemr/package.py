@@ -18,6 +18,8 @@ class RTwosamplemr(RPackage):
     homepage = "https://mrcieu.github.io/TwoSampleMR/"
     url = "https://github.com/MRCIEU/TwoSampleMR/archive/refs/tags/v0.5.6.tar.gz"
 
+    license("MIT")
+
     version("0.5.6", sha256="c63eb008ab7ed08a6f30ccbf0c299beb31b2f5835e5e2aa1b59c5e4fe284a30c")
 
     depends_on("r@3.6.0:", type=("build", "run"))

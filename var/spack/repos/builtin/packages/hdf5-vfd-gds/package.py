@@ -15,6 +15,8 @@ class Hdf5VfdGds(CMakePackage, CudaPackage):
     git = "https://github.com/hpc-io/vfd-gds.git"
     maintainers("hyoklee", "lrknox")
 
+    license("BSD-3-Clause-LBNL")
+
     # Versions
     version("master", branch="master")
     version("1.0.2", sha256="f7df64ff62e057b525bc30ed6534f9c0752e52bd58b65f7c147878d6c68105ae")

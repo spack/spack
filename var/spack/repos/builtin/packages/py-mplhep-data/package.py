@@ -12,6 +12,8 @@ class PyMplhepData(PythonPackage):
     homepage = "https://github.com/Scikit-HEP/mplhep_data"
     pypi = "mplhep_data/mplhep_data-0.0.3.tar.gz"
 
+    license("MIT")
+
     version("0.0.3", sha256="b54d257f3f53c93a442cda7a6681ce267277e09173c0b41fd78820f78321772f")
 
     depends_on("python@3.7:", type=("build", "run"))

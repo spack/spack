@@ -13,4 +13,6 @@ class PerlTestLeaktrace(PerlPackage):
     homepage = "https://metacpan.org/pod/Test::LeakTrace"
     url = "https://cpan.metacpan.org/authors/id/L/LE/LEEJO/Test-LeakTrace-0.17.tar.gz"
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("0.17", sha256="777d64d2938f5ea586300eef97ef03eacb43d4c1853c9c3b1091eb3311467970")

@@ -13,6 +13,8 @@ class PyCattrs(PythonPackage):
     homepage = "https://github.com/python-attrs/cattrs"
     pypi = "cattrs/cattrs-22.2.0.tar.gz"
 
+    license("MIT")
+
     version("22.2.0", sha256="f0eed5642399423cf656e7b66ce92cdc5b963ecafd041d1b24d136fdde7acf6d")
 
     depends_on("python@3.7:", type=("build", "run"))

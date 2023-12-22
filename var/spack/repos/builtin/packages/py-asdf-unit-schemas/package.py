@@ -14,6 +14,8 @@ class PyAsdfUnitSchemas(PythonPackage):
 
     maintainers("lgarrison")
 
+    license("BSD-3-Clause")
+
     version("0.1.0", sha256="42b78d67213efe4ffd4529fb0e58d9c7a0dab5cbf8839b230f1bc0a446bff999")
 
     depends_on("python@3.8:", type=("build", "run"))

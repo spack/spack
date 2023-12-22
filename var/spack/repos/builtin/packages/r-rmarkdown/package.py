@@ -14,6 +14,8 @@ class RRmarkdown(RPackage):
 
     cran = "rmarkdown"
 
+    license("GPL-3.0-only")
+
     version("2.21", sha256="c25b20a422d11a115c93460f41c488874002154abb349b14e0d6518682fdac28")
     version("2.17", sha256="aa576c458ec4c2e8468aaa4e3f60202d8d9c7ef54fa01d6b2d243bffee08c4be")
     version("2.16", sha256="d3d34e0419c419d3ab20eb60952a0f0f4c391d202277af55dcd673d25561fa71")

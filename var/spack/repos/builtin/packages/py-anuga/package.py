@@ -15,6 +15,8 @@ class PyAnuga(PythonPackage):
     url = "https://github.com/GeoscienceAustralia/anuga_core/archive/2.1.tar.gz"
     git = "https://github.com/GeoscienceAustralia/anuga_core.git"
 
+    license("Apache-2.0")
+
     # The git main branch of the repo is now python3-only
     version("main", branch="main")
 

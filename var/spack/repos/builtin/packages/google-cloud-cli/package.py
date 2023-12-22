@@ -43,6 +43,8 @@ class GoogleCloudCli(Package):
         machine = targets[machine]
     ext = "zip" if system == "windows" else "tar.gz"
 
+    license("Apache-2.0")
+
     for ver in versions:
         if system in versions[ver] and machine in versions[ver][system]:
             version(ver, sha256=versions[ver][system][machine])

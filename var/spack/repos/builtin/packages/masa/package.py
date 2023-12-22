@@ -16,6 +16,8 @@ class Masa(AutotoolsPackage):
     homepage = "https://github.com/manufactured-solutions/MASA"
     git = "https://github.com/manufactured-solutions/MASA.git"
 
+    license("LGPL-2.1-or-later")
+
     version("master", branch="master")
 
     variant("fortran", default=True, description="Compile with Fortran interfaces")

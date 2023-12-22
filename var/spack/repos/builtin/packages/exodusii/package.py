@@ -22,6 +22,8 @@ class Exodusii(CMakePackage):
     git = "https://github.com/gsjaardema/seacas.git"
     url = "https://github.com/gsjaardema/seacas/archive/refs/tags/v2021-04-05.zip"
 
+    license("X11")
+
     version(
         "2021-04-05", sha256="f40d318674753287b8b28d2b4e5cca872cd772d4c7383af4a8f3eeb48fcc7ec0"
     )

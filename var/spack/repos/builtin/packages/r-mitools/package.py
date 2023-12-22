@@ -14,6 +14,8 @@ class RMitools(RPackage):
 
     cran = "mitools"
 
+    license("GPL-2.0-only")
+
     version("2.4", sha256="f204f3774e29d79810f579f128de892539518f2cbe6ed237e08c8e7283155d30")
 
     depends_on("r-dbi", type=("build", "run"))

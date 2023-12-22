@@ -24,6 +24,8 @@ class RCopula(RPackage):
 
     cran = "copula"
 
+    license("GPL-3.0-or-later OR custom")
+
     version("1.1-2", sha256="88f9454d25e4dcdf53d8ca5156daf48e664769f5e13b1e835ed64f37251587d3")
     version("1.1-0", sha256="9ab76e6256534db2a18d3880143b8c67e385767010de861bbde25212aa75d924")
     version("1.0-1", sha256="d09b2ccffc7379e48b00952aa6b282baf502feebaf55cc44e93f881d7b909742")

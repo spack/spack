@@ -14,6 +14,8 @@ class PyProfilehooks(PythonPackage):
 
     git = "https://github.com/mgedmin/profilehooks.git"
 
+    license("MIT")
+
     version("1.11.2", sha256="41a74c1abdc5eeaf7dec024e9e89627f70e158374d263a3098bef31a06d38ab2")
 
     depends_on("python@2.7:2.8,3.5:", type=("build", "run"))

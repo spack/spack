@@ -15,6 +15,8 @@ class RTestit(RPackage):
 
     cran = "testit"
 
+    license("GPL-3.0-only")
+
     version("0.13", sha256="90d47168ab6bdbd1274b600b457626ac07697ce09792c92b2043be5f5b678d80")
     version("0.12", sha256="9acdf912f0e7a68a5b6a7946d5ebb0c2007b3d6cd2e39075eddae2b586354e89")
     version("0.9", sha256="9cf6b3df9b2c700e4e7dcbd5b8cb64fabefe674e1f40346ccaf39fe7feda5e55")

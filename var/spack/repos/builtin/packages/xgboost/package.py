@@ -21,6 +21,8 @@ class Xgboost(CMakePackage, CudaPackage):
 
     maintainers("adamjstewart")
 
+    license("Apache-2.0")
+
     version("master", branch="master", submodules=True)
     version(
         "1.6.2", tag="v1.6.2", commit="b9934246faa9a25e10a12339685dfbe56d56f70b", submodules=True

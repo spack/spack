@@ -17,6 +17,8 @@ class PyJupyterServerProxy(PythonPackage):
     homepage = "https://github.com/jupyterhub/jupyter-server-proxy"
     pypi = "jupyter-server-proxy/jupyter-server-proxy-3.2.2.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("3.2.2", sha256="54690ea9467035d187c930c599e76065017baf16e118e6eebae0d3a008c4d946")
 
     depends_on("py-jupyter-packaging@0.7.9:0.7", type="build")

@@ -13,6 +13,8 @@ class PyJupyterCore(PythonPackage):
     pypi = "jupyter-core/jupyter_core-4.6.0.tar.gz"
     git = "https://github.com/jupyter/jupyter_core.git"
 
+    license("BSD-3-Clause")
+
     version("5.3.0", sha256="6db75be0c83edbf1b7c9f91ec266a9a24ef945da630f3120e1a0046dc13713fc")
     version("5.1.0", sha256="a5ae7c09c55c0b26f692ec69323ba2b62e8d7295354d20f6cd57b749de4a05bf")
     version("4.11.1", sha256="2e5f244d44894c4154d06aeae3419dd7f1b0ef4494dc5584929b398c61cfd314")

@@ -12,6 +12,8 @@ class PyNbqa(PythonPackage):
     homepage = "https://github.com/nbQA-dev/nbQA"
     pypi = "nbqa/nbqa-1.6.3.tar.gz"
 
+    license("MIT")
+
     version("1.6.3", sha256="5394a29fc6d27b9a950c0a36d2d9de25de980be9acfe2a3f3aea0d27b5f7fec1")
 
     depends_on("python@3.8:", type=("build", "run"))

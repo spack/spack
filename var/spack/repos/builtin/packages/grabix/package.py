@@ -19,6 +19,8 @@ class Grabix(MakefilePackage):
 
     maintainers("robqiao")
 
+    license("MIT")
+
     version("0.1.7", sha256="d90735c55c0985a4d751858d7ce9e36ad534fff4103257e8e981e34d5c915b28")
 
     conflicts("%gcc@7:", msg="grabix cannot be compiled with newer versions of GCC")

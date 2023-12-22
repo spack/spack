@@ -15,6 +15,8 @@ class Prism(MakefilePackage):
 
     maintainers("snehring")
 
+    license("GPL-2.0-only")
+
     version("4.7", sha256="16186047ba49efc6532de6e9c3993c8c73841a7c76c99758d6ee769e72092d6d")
     version("4.5", sha256="1cb7a77538b5c997d98a8c209030c46f9e8f021f7a8332e5eb2fd3b4a23936fd")
 

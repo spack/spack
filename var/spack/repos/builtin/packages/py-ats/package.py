@@ -16,6 +16,8 @@ class PyAts(PythonPackage):
 
     maintainers("white238")
 
+    license("MIT")
+
     version("main", branch="main")
     version("7.0.105", tag="7.0.105", commit="3a3461061d4493a002018f5bb3715db702212f72")
     version("7.0.100", tag="7.0.100", commit="202c18d11b8f1c14f1a3361a6e45c9e4f83a3fa1")

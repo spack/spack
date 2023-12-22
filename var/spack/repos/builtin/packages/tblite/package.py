@@ -15,6 +15,8 @@ class Tblite(MesonPackage):
 
     maintainers("awvwgk")
 
+    license("LGPL-3.0-or-later")
+
     version("0.3.0", sha256="46d77c120501ac55ed6a64dea8778d6593b26fb0653c591f8e8c985e35884f0a")
 
     variant("openmp", default=True, description="Use OpenMP parallelisation")

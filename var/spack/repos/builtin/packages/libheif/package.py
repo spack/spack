@@ -12,6 +12,8 @@ class Libheif(CMakePackage):
     homepage = "https://github.com/strukturag/libheif"
     url = "https://github.com/strukturag/libheif/archive/refs/tags/v1.12.0.tar.gz"
 
+    license("LGPL-3.0-or-later")
+
     version("1.12.0", sha256="086145b0d990182a033b0011caadb1b642da84f39ab83aa66d005610650b3c65")
 
     depends_on("cmake@3.13:", type="build")

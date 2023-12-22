@@ -12,4 +12,6 @@ class PerlMemoryProcess(PerlPackage):
     homepage = "https://metacpan.org/pod/Memory::Process"
     url = "https://cpan.metacpan.org/authors/id/S/SK/SKIM/Memory-Process-0.06.tar.gz"
 
+    license("BSD-2-Clause")
+
     version("0.06", sha256="35814488ffd29c97621625ea3b3d700afbfa60ed055bd759d4e58d9c8fd44e4e")

@@ -19,6 +19,8 @@ class Atlas(Package):
 
     homepage = "http://math-atlas.sourceforge.net/"
 
+    license("Apache-2.0")
+
     # Developer (unstable)
     version("3.11.41", sha256="477d567a8d683e891d786e9e8bb6ad6659daa9ba18e8dd0e2f70b7a54095f8de")
     version("3.11.39", sha256="584bd44572746142bf19348139530c18f4538ce41d94330ff86ede38c36eddc9")

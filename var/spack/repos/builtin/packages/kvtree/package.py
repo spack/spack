@@ -17,6 +17,8 @@ class Kvtree(CMakePackage):
 
     maintainers("CamStan", "gonsie")
 
+    license("MIT")
+
     version("main", branch="main")
     version("1.4.0", sha256="48a36fd578f0d1198a9c1512d6446c830b915ace5bb97539eec615495bee5a51")
     version("1.3.0", sha256="8281e075772d3534183c46133553d5765455d79ed98a895743663db891755ca9")

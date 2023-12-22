@@ -14,6 +14,8 @@ class PyCykhash(PythonPackage):
 
     maintainers("snehring")
 
+    license("MIT")
+
     version("2.0.1", sha256="b4794bc9f549114d8cf1d856d9f64e08ff5f246bf043cf369fdb414e9ceb97f7")
 
     depends_on("py-setuptools", type="build")

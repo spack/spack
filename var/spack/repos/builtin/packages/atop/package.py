@@ -12,6 +12,8 @@ class Atop(Package):
     homepage = "https://www.atoptool.nl/index.php"
     url = "https://www.atoptool.nl/download/atop-2.2-3.tar.gz"
 
+    license("GPL-2.0-or-later")
+
     version("2.5.0", sha256="4b911057ce50463b6e8b3016c5963d48535c0cddeebc6eda817e292b22f93f33")
     version("2.4.0", sha256="be1c010a77086b7d98376fce96514afcd73c3f20a8d1fe01520899ff69a73d69")
     version("2.3.0", sha256="73e4725de0bafac8c63b032e8479e2305e3962afbe977ec1abd45f9e104eb264")

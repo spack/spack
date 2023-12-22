@@ -13,6 +13,8 @@ class JettyProject(MavenPackage):
     homepage = "https://www.eclipse.org/jetty"
     url = "https://github.com/eclipse/jetty.project/archive/jetty-9.4.31.v20200723.tar.gz"
 
+    license("Apache-2.0")
+
     version(
         "9.4.31.v20200723",
         sha256="3cab80ddc14763764509552d79d5f1f17b565a3eb0a1951991d4a6fcfee9b4b1",

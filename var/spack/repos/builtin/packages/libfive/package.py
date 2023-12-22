@@ -13,6 +13,8 @@ class Libfive(CMakePackage):
     homepage = "https://libfive.com"
     git = "https://github.com/libfive/libfive.git"
 
+    license("GPL-2.0")
+
     # https://libfive.com/download/ recommends working from the master branch
     # and currently, all tags are from 2017:
     version("master", branch="master")

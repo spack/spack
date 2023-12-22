@@ -12,6 +12,8 @@ class PyGast(PythonPackage):
     homepage = "https://github.com/serge-sans-paille/gast"
     pypi = "gast/gast-0.3.2.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.5.4", sha256="9c270fe5f4b130969b54174de7db4e764b09b4f7f67ccfc32480e29f78348d97")
     version("0.5.3", sha256="cfbea25820e653af9c7d1807f659ce0a0a9c64f2439421a7bba4f0983f532dea")
     version("0.5.2", sha256="f81fcefa8b982624a31c9e4ec7761325a88a0eba60d36d1da90e47f8fe3c67f7")

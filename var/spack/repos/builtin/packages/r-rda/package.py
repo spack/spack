@@ -14,6 +14,8 @@ class RRda(RPackage):
 
     cran = "rda"
 
+    license("GPL-3.0-or-later")
+
     version("1.2-1", sha256="37038a9131c9133519f5e64fa1a86dbe28b21f519cf6528503234648a139ae9a")
     version("1.0.2-2.1", sha256="eea3a51a2e132a023146bfbc0c384f5373eb3ea2b61743d7658be86a5b04949e")
     version("1.0.2-2", sha256="52ee41249b860af81dc692eee38cd4f8f26d3fbe34cb274f4e118de0013b58bc")

@@ -23,6 +23,8 @@ class PyTensorboardPluginWit(PythonPackage):
 
     maintainers("aweits")
 
+    license("Apache-2.0")
+
     version(
         "1.8.1",
         sha256="ff26bdd583d155aa951ee3b152b3d0cffae8005dc697f72b44a8e8c2a77a8cbe",

@@ -16,6 +16,8 @@ class Ack(Package):
     homepage = "https://beyondgrep.com/"
     url = "https://beyondgrep.com/ack-2.14-single-file"
 
+    license("Artistic-2.0")
+
     version(
         "2.22",
         sha256="fd0617585b88517a3d41d3d206c1dc38058c57b90dfd88c278049a41aeb5be38",

@@ -11,6 +11,8 @@ class Nyancat(MakefilePackage):
     homepage = "https://nyancat.dakko.us/"
     url = "https://github.com/klange/nyancat/archive/1.5.1.tar.gz"
 
+    license("NCSA")
+
     version("1.5.2", sha256="88cdcaa9c7134503dd0364a97fa860da3381a09cb555c3aae9918360827c2032")
     version("1.5.1", sha256="c948c769d230b4e41385173540ae8ab1f36176de689b6e2d6ed3500e9179b50a")
     version("1.5.0", sha256="9ae4f740060b77bba815d8d4e97712d822bd0812a118b88b7fd6b4136a971bce")

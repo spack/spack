@@ -15,6 +15,8 @@ class Bannergrab(MakefilePackage):
     homepage = "https://github.com/johanburati/bannergrab"
     git = "https://github.com/johanburati/bannergrab.git"
 
+    license("GPL-3.0-or-later")
+
     version("master", branch="master")
 
     def install(self, spec, prefix):

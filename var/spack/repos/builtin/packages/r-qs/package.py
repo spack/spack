@@ -16,6 +16,8 @@ class RQs(RPackage):
 
     maintainers("dorton21")
 
+    license("GPL-3.0-only")
+
     version("0.25.5", sha256="3f87388708a0fdfb0e68caade75ed771fd395cb4f649973459bc97f41d42064c")
     version("0.25.4", sha256="92c49206a9c1c66dbd95f12efc3a57acb728e1f8387b549c437519fb2b98a533")
     version("0.25.3", sha256="51adf6a112c19f78ceeefa55acf800c7e6bf2664e7d9cea9d932abb24f22be6b")

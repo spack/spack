@@ -13,5 +13,7 @@ class Libexif(AutotoolsPackage, SourceforgePackage):
 
     maintainers("TheQueasle")
 
+    license("LGPL-2.0-or-later")
+
     version("0.6.21", sha256="16cdaeb62eb3e6dfab2435f7d7bccd2f37438d21c5218ec4e58efa9157d4d41a")
     depends_on("glib")

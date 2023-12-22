@@ -13,4 +13,6 @@ class RNortest(RPackage):
 
     cran = "nortest"
 
+    license("GPL-2.0-or-later")
+
     version("1.0-4", sha256="a3850a048181d5d059c1e74903437569873b430c915b709808237d71fee5209f")

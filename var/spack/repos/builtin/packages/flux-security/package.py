@@ -19,6 +19,8 @@ class FluxSecurity(AutotoolsPackage):
 
     maintainers("grondo")
 
+    license("LGPL-3.0-or-later")
+
     version("master", branch="master")
     version("0.11.0", sha256="d1ef78a871155a252f07e4f0a636eb272d6c2048d5e0e943860dd687c6cf808a")
     version("0.10.0", sha256="b0f39c5e32322f901454469ffd6154019b6dffafc064b55b3e593f70db6a6f68")

@@ -16,6 +16,8 @@ class Qd(AutotoolsPackage):
 
     tags = ["hep"]
 
+    license("BSD-3-Clause-LBNL")
+
     version("2.3.13", commit="a57dde96b3255b80f7f39cd80217c213bf78d949")
 
     depends_on("autoconf", type="build")

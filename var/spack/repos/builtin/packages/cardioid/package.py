@@ -13,6 +13,8 @@ class Cardioid(CMakePackage):
     git = "https://github.com/LLNL/cardioid.git"
     maintainers("rblake-llnl")
 
+    license("MIT")
+
     version("develop", branch="master")
     version("elecfem", branch="elec-fem")
 

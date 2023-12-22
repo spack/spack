@@ -16,6 +16,8 @@ class PyPyscf(PythonPackage):
 
     maintainers("naromero77")
 
+    license("Apache-2.0")
+
     version("2.2.0", sha256="8f65042cf7e86aa5088756988eb90418befcd18f07a6b8c597229a5f2ba4f644")
     version("2.1.1", sha256="608442171f5db106b02a95c878c65798fbbd87dc0ce50551a2e081e7d206adb0")
     version("2.1.0", sha256="45feecc9c9a0ce18dee73c5b178fb0faa3f0c0d3dd5f98b48dc2370c9e13d05b")

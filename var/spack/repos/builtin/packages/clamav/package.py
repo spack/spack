@@ -13,6 +13,8 @@ class Clamav(AutotoolsPackage):
     homepage = "https://www.clamav.net/"
     url = "https://www.clamav.net/downloads/production/clamav-0.101.2.tar.gz"
 
+    license("GPL-2.0-only")
+
     version("0.101.2", sha256="0a12ebdf6ff7a74c0bde2bdc2b55cae33449e6dd953ec90824a9e01291277634")
 
     depends_on("pkgconfig", type="build")

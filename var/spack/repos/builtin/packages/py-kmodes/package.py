@@ -13,6 +13,8 @@ class PyKmodes(PythonPackage):
     homepage = "https://github.com/nicodv/kmodes"
     pypi = "kmodes/kmodes-0.10.1.tar.gz"
 
+    license("MIT")
+
     version("0.10.1", sha256="3222c2f672a6356be353955c02d1e38472d9f6074744b4ffb0c058e8c2235ea1")
 
     depends_on("python@3.4:", type=("build", "run"))

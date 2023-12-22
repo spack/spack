@@ -12,6 +12,8 @@ class Graphmap(MakefilePackage):
     homepage = "https://github.com/isovic/graphmap"
     git = "https://github.com/isovic/graphmap.git"
 
+    license("MIT")
+
     version("0.3.0", commit="eb8c75d68b03be95464318afa69b645a59f8f6b7")
 
     depends_on("zlib-api", type="link")

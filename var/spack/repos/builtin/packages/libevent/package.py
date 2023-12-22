@@ -18,6 +18,8 @@ class Libevent(AutotoolsPackage):
     url = "https://github.com/libevent/libevent/releases/download/release-2.1.8-stable/libevent-2.1.8-stable.tar.gz"
     list_url = "https://libevent.org/old-releases.html"
 
+    license("BSD-3-Clause")
+
     version("2.1.12", sha256="92e6de1be9ec176428fd2367677e61ceffc2ee1cb119035037a27d346b0403bb")
     version("2.1.11", sha256="a65bac6202ea8c5609fd5c7e480e6d25de467ea1917c08290c521752f147283d")
     version("2.1.10", sha256="e864af41a336bb11dab1a23f32993afe963c1f69618bd9292b89ecf6904845b0")

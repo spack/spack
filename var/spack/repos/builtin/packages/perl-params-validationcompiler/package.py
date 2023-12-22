@@ -15,6 +15,8 @@ class PerlParamsValidationcompiler(PerlPackage):
 
     maintainers("EbiArnie")
 
+    license("Artistic-2.0")
+
     version("0.31", sha256="7b6497173f1b6adb29f5d51d8cf9ec36d2f1219412b4b2410e9d77a901e84a6d")
 
     depends_on("perl-eval-closure", type=("build", "run", "test"))

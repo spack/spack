@@ -12,6 +12,8 @@ class PyNipype(PythonPackage):
     homepage = "https://github.com/nipy/nipype"
     pypi = "nipype/nipype-1.6.0.tar.gz"
 
+    license("Apache-2.0")
+
     version("1.8.6", sha256="977b1315e8f70f94163ec07e31e5571be83f2add6023141c5a06ac700126f8d1")
     version("1.8.5", sha256="e3842743fb660464dd29de73dcfc9ef66d273be10bcc64059ff21cd5ef1e9655")
     version("1.7.0", sha256="e689fe2e5049598c9cd3708e8df1cac732fa1a88696f283e3bc0a70fecb8ab51")

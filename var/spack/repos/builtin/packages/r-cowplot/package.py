@@ -19,6 +19,8 @@ class RCowplot(RPackage):
 
     cran = "cowplot"
 
+    license("GPL-2.0-only")
+
     version("1.1.1", sha256="c7dce625b456dffc59ba100c816e16226048d12fdd29a7335dc1f6f6e12eed48")
     version("1.0.0", sha256="70f9a7c46d10f409d1599f1afc9fd3c947051cf2b430f01d903c64ef1e6c98a5")
     version("0.9.3", sha256="3e10475fd7506ea9297ed72eb1a3acf858c6fa99d26e46fc39654eba000c3dcb")

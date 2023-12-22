@@ -19,6 +19,8 @@ class Fftx(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("spiralgen")
 
+    license("BSD-3-Clause-LBNL")
+
     version("develop", branch="develop")
     version("main", branch="main")
     version("1.2.0", sha256="7be541bdb5905361e24bfb098314f946fe89f7b10f587d91e2397d821434b48b")

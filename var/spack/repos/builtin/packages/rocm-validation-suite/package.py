@@ -19,6 +19,8 @@ class RocmValidationSuite(CMakePackage):
     url = "https://github.com/ROCm-Developer-Tools/ROCmValidationSuite/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
+    license("MIT")
+
     maintainers("srekolam", "renjithravindrankannath")
     version("5.7.1", sha256="202f2b6e014bbbeec40af5d3ec630c042f09a61087a77bd70715d81044ea4d65")
     version("5.7.0", sha256="f049b7786a220e9b6dfe099f17727dd0d9e41be9e680fe8309eae400cc5536ea")

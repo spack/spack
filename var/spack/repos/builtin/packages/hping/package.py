@@ -12,6 +12,8 @@ class Hping(AutotoolsPackage):
     homepage = "http://www.hping.org"
     git = "https://github.com/antirez/hping.git"
 
+    license("GPL-2.0-only")
+
     version("master", commit="3547c7691742c6eaa31f8402e0ccbb81387c1b99")
 
     patch("bpf.patch", sha256="99b9f91a308ffca306f69ccdb285e289ee3d280ec47ec7229e3a7669cca512f2")

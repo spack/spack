@@ -12,6 +12,8 @@ class PyAuxlib(PythonPackage):
     homepage = "https://github.com/kalefranz/auxlib"
     pypi = "auxlib/auxlib-0.0.43.tar.gz"
 
+    license("ISC")
+
     version("0.0.43", sha256="0f175637e96a090a785767ce28483cf1aeec316a19afce9b2fbd113e1122786a")
 
     depends_on("py-setuptools", type="build")

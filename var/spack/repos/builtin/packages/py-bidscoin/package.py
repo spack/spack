@@ -13,6 +13,8 @@ class PyBidscoin(PythonPackage):
     homepage = "https://github.com/Donders-Institute/bidscoin"
     pypi = "bidscoin/bidscoin-3.7.4.tar.gz"
 
+    license("GPL-3.0-or-later")
+
     version("4.1.1", sha256="28730e9202d3c44d77c0bbdea9565e00adfdd23e85a6f3f121c1bfce1a7b462b")
     version("4.0.0", sha256="3b0c26f2e250e06b6f526cdbee09517e1f339da8035c0a316609b4463d75824d")
     version("3.7.4", sha256="efa32238fb7b75e533e7f5cc318ad5a703716d291985435d43f1de4f18402517")

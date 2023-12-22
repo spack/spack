@@ -12,6 +12,8 @@ class PyRise(PythonPackage):
     homepage = "https://rise.readthedocs.io/"
     pypi = "rise/rise-5.6.1.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("5.6.1", sha256="1343f068d01adc4dd0226d9b278ce93fc92f365d827431a57e8d5679eb39f4d6")
 
     depends_on("python@2.7.0:2.7,3.4:", type=("build", "run"))

@@ -13,6 +13,8 @@ class PyCachecontrol(PythonPackage):
     homepage = "https://github.com/ionrock/cachecontrol"
     pypi = "CacheControl/CacheControl-0.12.10.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.13.1", sha256="f012366b79d2243a6118309ce73151bf52a38d4a5dac8ea57f09bd29087e506b")
     version("0.13.0", sha256="fd3fd2cb0ca66b9a6c1d56cc9709e7e49c63dbd19b1b1bcbd8d3f94cedfe8ce5")
     version("0.12.11", sha256="a5b9fcc986b184db101aa280b42ecdcdfc524892596f606858e0b7a8b4d9e144")

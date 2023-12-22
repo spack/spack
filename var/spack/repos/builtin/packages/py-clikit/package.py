@@ -13,6 +13,8 @@ class PyClikit(PythonPackage):
     homepage = "https://github.com/sdispater/clikit"
     pypi = "clikit/clikit-0.6.2.tar.gz"
 
+    license("MIT")
+
     version("0.6.2", sha256="442ee5db9a14120635c5990bcdbfe7c03ada5898291f0c802f77be71569ded59")
 
     depends_on("python@2.7,3.4:3", type=("build", "run"))

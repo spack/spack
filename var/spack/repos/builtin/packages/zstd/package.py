@@ -21,6 +21,8 @@ class Zstd(CMakePackage, MakefilePackage):
 
     maintainers("haampie")
 
+    license("BSD-3-Clause OR GPL-2.0-or-later")
+
     version("develop", branch="dev")
     version("1.5.5", sha256="98e9c3d949d1b924e28e01eccb7deed865eefebf25c2f21c702e5cd5b63b85e1")
     version("1.5.4", sha256="35ad983197f8f8eb0c963877bf8be50490a0b3df54b4edeb8399ba8a8b2f60a4")

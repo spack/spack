@@ -15,6 +15,8 @@ class Flink(Package):
     homepage = "https://flink.apache.org/"
     url = "https://archive.apache.org/dist/flink/flink-1.9.1/flink-1.9.1-bin-scala_2.11.tgz"
 
+    license("BSD-2-Clause")
+
     version("1.9.1", sha256="f69de344cd593e92f8261e19ae8a47b3910e9a70a7cd1ccfb1ecd1ff000b93ea")
     version("1.9.0", sha256="a2245f68309e94ed54d86a680232a518aed9c5ea030bcc0b298bc8f27165eeb7")
     version("1.8.3", sha256="1ba90e99f70ad7e2583d48d1404d1c09e327e8fb8fa716b1823e427464cc8dc0")

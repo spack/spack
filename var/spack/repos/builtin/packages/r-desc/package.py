@@ -14,6 +14,8 @@ class RDesc(RPackage):
 
     cran = "desc"
 
+    license("MIT")
+
     version("1.4.2", sha256="758acf14be478c09ba7e84ade3a7ce512becf35d44e5e6a997b932065f2a227c")
     version("1.4.1", sha256="8f9ebb51eccf925b2e76bc65ecf495e8f3882b8c0053023f396622f0402d6f54")
     version("1.4.0", sha256="8220e4c706449b8121b822e70b1414f391ef419aed574836a234c63b83e5d649")

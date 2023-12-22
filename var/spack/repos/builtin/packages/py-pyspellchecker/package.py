@@ -12,6 +12,8 @@ class PyPyspellchecker(PythonPackage):
     homepage = "https://github.com/barrust/pyspellchecker"
     pypi = "pyspellchecker/pyspellchecker-0.6.2.tar.gz"
 
+    license("MIT")
+
     version("0.6.2", sha256="af6a1d0393a175499475a873f31e52135f1efd5fc912c979101b795b3c2ee77f")
 
     depends_on("python@3.0:", type=("build", "run"))

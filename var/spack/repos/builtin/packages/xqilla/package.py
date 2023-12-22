@@ -13,6 +13,8 @@ class Xqilla(AutotoolsPackage, SourceforgePackage):
     homepage = "http://xqilla.sourceforge.net/HomePage"
     sourceforge_mirror_path = "xqilla/XQilla-2.3.3.tar.gz"
 
+    license("Apache-2.0")
+
     version("2.3.3", sha256="8f76b9b4f966f315acc2a8e104e426d8a76ba4ea3441b0ecfdd1e39195674fd6")
 
     variant("debug", default=False, description="Build a debugging version.")

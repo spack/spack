@@ -27,6 +27,8 @@ class Abinit(AutotoolsPackage):
     homepage = "https://www.abinit.org/"
     url = "https://www.abinit.org/sites/default/files/packages/abinit-8.6.3.tar.gz"
 
+    license("Apache-2.0")
+
     maintainers("downloadico")
     version("9.10.3", sha256="3f2a9aebbf1fee9855a09dd687f88d2317b8b8e04f97b2628ab96fb898dce49b")
     version("9.8.4", sha256="a086d5045f0093b432e6a044d5f71f7edf5a41a62d67b3677cb0751d330c564a")

@@ -13,6 +13,8 @@ class PyAttmap(PythonPackage):
     homepage = "https://github.com/pepkit/attmap/"
     pypi = "attmap/attmap-0.13.2.tar.gz"
 
+    license("BSD-2-Clause")
+
     version("0.13.2", sha256="fdffa45f8671c13428eb8c3a1702bfdd1123badb99f7af14d72ad53cc7e770de")
 
     depends_on("py-setuptools", type="build")

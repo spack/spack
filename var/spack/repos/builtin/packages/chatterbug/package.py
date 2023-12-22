@@ -18,6 +18,8 @@ class Chatterbug(MakefilePackage):
     homepage = "https://chatterbug.readthedocs.io"
     git = "https://github.com/LLNL/chatterbug.git"
 
+    license("MIT")
+
     version("develop", branch="master")
     version("1.0", tag="v1.0", commit="ee1b13c634943dbe32ac22f5e2154b00eab8c574")
 

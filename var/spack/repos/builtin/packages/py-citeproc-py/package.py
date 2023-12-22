@@ -12,6 +12,8 @@ class PyCiteprocPy(PythonPackage):
     homepage = "https://github.com/brechtm/citeproc-py"
     pypi = "citeproc-py/citeproc-py-0.6.0.tar.gz"
 
+    license("BSD-2-Clause-FreeBSD")
+
     version("0.6.0", sha256="d9e3a224f936fe2e5033b5d9ffdacab769cedb61d96c4e0cf2f0b488f1d24b4e")
 
     depends_on("python@3.6:", type=("build", "run"))

@@ -38,6 +38,8 @@ class Conduit(CMakePackage):
     git = "https://github.com/LLNL/conduit.git"
     tags = ["radiuss", "e4s"]
 
+    license("Apache-2.0")
+
     version("develop", branch="develop", submodules=True)
     # note: the main branch in conduit was renamed to develop, this next entry
     # is to bridge any spack dependencies that are still using the name master

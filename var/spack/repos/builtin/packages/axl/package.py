@@ -24,6 +24,8 @@ class Axl(CMakePackage):
 
     maintainers("CamStan", "gonsie")
 
+    license("MIT")
+
     version("main", branch="main")
     version("0.8.0", sha256="9fcd4eae143a67ff02622feda2a541b85e9a108749c039faeb473cbbc2330459")
     version("0.7.1", sha256="526a055c072c85cc989beca656717e06b128f148fda8eb19d1d9b43a3325b399")

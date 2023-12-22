@@ -19,6 +19,8 @@ class Ftk(CMakePackage):
     # notify when the package is updated.
     maintainers("hguo")
 
+    license("MIT")
+
     version("master", branch="master")
     version("dev", branch="dev")
     version("0.0.7.1", sha256="6090fd436f971316062dbb4fcbf2c44603ed5c29341df8f2b80b85770a3bcda2")

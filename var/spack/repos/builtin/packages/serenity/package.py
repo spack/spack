@@ -13,6 +13,8 @@ class Serenity(CMakePackage):
     url = "https://github.com/qcserenity/serenity/archive/refs/tags/1.4.0.tar.gz"
     git = "https://github.com/qcserenity/serenity.git"
 
+    license("LGPL-3.0-only")
+
     version("master", branch="master")
     version("1.4.0", sha256="c7a87fc8e6f8ca21685a27e08d09d49824d9a1e9947fc6abb40d20fbba0cc6e8")
 

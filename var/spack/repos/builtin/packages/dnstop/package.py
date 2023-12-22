@@ -12,6 +12,8 @@ class Dnstop(AutotoolsPackage):
     homepage = "https://github.com/measurement-factory/dnstop"
     git = "https://github.com/measurement-factory/dnstop.git"
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
 
     depends_on("libpcap")

@@ -15,6 +15,8 @@ class Fpocket(MakefilePackage):
     homepage = "https://github.com/Discngine/fpocket"
     url = "https://github.com/Discngine/fpocket/archive/refs/tags/4.1.tar.gz"
 
+    license("MIT")
+
     version("4.1", "1a2af2d3f2df42de67301996db3b93c7eaff0375f866443c0468dcf4b1750688")
 
     depends_on("netcdf-c")

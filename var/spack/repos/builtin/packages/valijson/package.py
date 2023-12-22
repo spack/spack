@@ -15,5 +15,7 @@ class Valijson(CMakePackage):
     url = "https://github.com/tristanpenman/valijson/archive/refs/tags/v1.0.tar.gz"
     git = "https://github.com/tristanpenman/valijson.git"
 
+    license("BSD-2-Clause")
+
     version("master", branch="master")
     version("1.0", sha256="6b9f0bc89880feb3fe09aa469cd81f6168897d2fbb4e715853da3b94afd3779a")

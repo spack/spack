@@ -14,6 +14,8 @@ class PyMailchecker(PythonPackage):
     homepage = "https://github.com/FGRibreau/mailchecker"
     pypi = "mailchecker/mailchecker-4.0.3.tar.gz"
 
+    license("MIT")
+
     version("4.0.3", sha256="00dbe9739c754366233eb3887c5deef987672482a26e814314c3e749fc7b1d1f")
 
     depends_on("py-setuptools", type="build")

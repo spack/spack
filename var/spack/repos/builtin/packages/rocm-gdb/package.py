@@ -15,6 +15,8 @@ class RocmGdb(AutotoolsPackage):
     url = "https://github.com/ROCm-Developer-Tools/ROCgdb/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
+    license("LGPL-2.0-or-later")
+
     maintainers("srekolam", "renjithravindrankannath")
     version("5.7.1", sha256="5cd150b5796aea9d77efd43b89d30a34fa4125338179eb87c6053abcac9f3c62")
     version("5.7.0", sha256="94fba57b2f17b593de61f7593b404fabc00b054d38567be57d12cf7654b7969a")

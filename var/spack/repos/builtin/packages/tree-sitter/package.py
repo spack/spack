@@ -17,6 +17,8 @@ class TreeSitter(MakefilePackage):
 
     maintainers("albestro")
 
+    license("MIT")
+
     version("0.20.8", sha256="6181ede0b7470bfca37e293e7d5dc1d16469b9485d13f13a605baec4a8b1f791")
     version("0.20.6", sha256="4d37eaef8a402a385998ff9aca3e1043b4a3bba899bceeff27a7178e1165b9de")
     version("0.20.4", sha256="979ad0b36eb90975baf0c65d155d106276cac08afb1c2fe0ad54d4b7d498ce39")

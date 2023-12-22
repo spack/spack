@@ -15,6 +15,8 @@ class PyAnnoy(PythonPackage):
     homepage = "https://github.com/spotify/annoy"
     pypi = "annoy/annoy-1.17.1.tar.gz"
 
+    license("Apache-2.0")
+
     version("1.17.1", sha256="bf177dbeafb81f63b2ac1e1246b1f26a2acc82e73ba46638734d29d8258122da")
 
     depends_on("py-setuptools", type="build")

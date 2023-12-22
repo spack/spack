@@ -14,6 +14,8 @@ class RSubplex(RPackage):
 
     cran = "subplex"
 
+    license("GPL-3.0-only")
+
     version("1.8", sha256="3bc31d8990380c9f790c9c7d84cb2e39f4945eff934eddfa1196d597465be5a5")
     version("1.7", sha256="d5ecf4a484936d71cb294f08c3968ef5a8dcbdc861bfc0e97e3b1ab99afff887")
     version("1.6", sha256="0d05da1622fffcd20a01cc929fc6c2b7df40a8246e7018f7f1f3c175b774cbf9")

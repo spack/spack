@@ -13,6 +13,8 @@ class PyGlmsingle(PythonPackage):
     url = "https://github.com/cvnlab/GLMsingle/archive/refs/tags/1.0.tar.gz"
     git = "https://github.com/cvnlab/GLMsingle.git"
 
+    license("BSD-3-Clause")
+
     version("main", branch="main")
     version("1.1", sha256="3fe3cb1f0d1e96976f2c707b1f9e8ddb932b74f58e99debbfa6f17761fdbd37b")
     version("1.0", sha256="0481f8ea7637d7e9cb53a7f22c73ba67b9fb8aefebc8c6c98bd4712de95db6aa")

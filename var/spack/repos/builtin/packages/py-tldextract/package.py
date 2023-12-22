@@ -19,6 +19,8 @@ class PyTldextract(PythonPackage):
 
     maintainers("LydDeb")
 
+    license("BSD-3-Clause")
+
     version("5.1.1", sha256="9b6dbf803cb5636397f0203d48541c0da8ba53babaf0e8a6feda2d88746813d4")
     version("3.4.1", sha256="fa9e50c4a03bede2a1d95dca620d661678484626858ccf388cf9671a0dd497a4")
 

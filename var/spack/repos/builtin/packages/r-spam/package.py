@@ -19,6 +19,8 @@ class RSpam(RPackage):
 
     cran = "spam"
 
+    license("LGPL-2.0-only OR BSD-3-Clause")
+
     version("2.9-1", sha256="c32e219279988b1bfc258aaf64f5a46efa558202848a9ae64946ffbe8b497ddb")
     version("2.8-0", sha256="d98177435b028d1c706d0197ea8132bfaffae6052c3ce6064a7f64178512d6aa")
     version("2.6-0", sha256="638fdd658e94f7544b46f6b6568b20a9f390bcd703aff572a3a5249fef66be5c")

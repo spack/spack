@@ -17,4 +17,6 @@ class Stress(AutotoolsPackage):
     homepage = "https://github.com/javiroman/system-stress"
     url = "https://github.com/javiroman/system-stress/archive/v1.0.4.tar.gz"
 
+    license("GPL-2.0-or-later")
+
     version("1.0.4", sha256="b03dbb9664d7f8dcb3eadc918c2e8eb822f5a3ba47d9bd51246540bac281bd75")

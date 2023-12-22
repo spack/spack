@@ -13,6 +13,8 @@ class PyShap(PythonPackage):
     homepage = "https://github.com/slundberg/shap/"
     pypi = "shap/shap-0.41.0.tar.gz"
 
+    license("MIT")
+
     version("0.41.0", sha256="a49ea4d65aadbc845a695fa3d7ea0bdfc8c928b8e213b0feedf5868ade4b3ca5")
 
     depends_on("py-setuptools", type="build")

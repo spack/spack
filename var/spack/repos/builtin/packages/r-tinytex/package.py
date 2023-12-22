@@ -18,6 +18,8 @@ class RTinytex(RPackage):
 
     cran = "tinytex"
 
+    license("MIT")
+
     version("0.45", sha256="0c2fbbd09e80af80ca6b685bf0653f070da97b85413d39af966aba28f376e92c")
     version("0.42", sha256="205f7a1978118aa38b6d9f7d3e1667c635da262b43967d1a879520284c2e22b1")
     version("0.39", sha256="f22e9b77c200fe44cc073b759c2b2bc3310a2382d897282548aa02dcbabc25ed")

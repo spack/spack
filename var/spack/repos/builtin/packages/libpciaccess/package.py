@@ -12,6 +12,8 @@ class Libpciaccess(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/lib/libpciaccess/"
     xorg_mirror_path = "lib/libpciaccess-0.13.5.tar.gz"
 
+    license("X11")
+
     version("0.17", sha256="bf6985a77d2ecb00e2c79da3edfb26b909178ffca3f2e9d14ed0620259ab733b")
     version("0.16", sha256="84413553994aef0070cf420050aa5c0a51b1956b404920e21b81e96db6a61a27")
     version("0.13.5", sha256="fe26ec788732b4ef60b550f2d3fa51c605d27f646e18ecec878f061807a3526e")

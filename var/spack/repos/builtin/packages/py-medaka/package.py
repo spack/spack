@@ -17,6 +17,8 @@ class PyMedaka(PythonPackage):
     homepage = "https://github.com/nanoporetech/medaka"
     pypi = "medaka/medaka-1.7.2.tar.gz"
 
+    license("MPL-2.0")
+
     version("1.7.2", sha256="7629546ed9193ffb6b1f881a6ce74b7d13d94972e032556098577ddb43bee763")
 
     # disable Makefile driven build of htslib and link to system htslib instead

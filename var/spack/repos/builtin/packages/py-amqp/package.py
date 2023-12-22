@@ -11,6 +11,8 @@ class PyAmqp(PythonPackage):
 
     pypi = "amqp/amqp-2.4.1.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("5.0.9", sha256="1e5f707424e544078ca196e72ae6a14887ce74e02bd126be54b7c03c971bef18")
     version("5.0.1", sha256="9881f8e6fe23e3db9faa6cfd8c05390213e1d1b95c0162bc50552cad75bffa5f")
     version("2.6.1", sha256="70cdb10628468ff14e57ec2f751c7aa9e48e7e3651cfd62d431213c0c4e58f21")

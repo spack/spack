@@ -12,6 +12,8 @@ class PySoupsieve(PythonPackage):
     homepage = "https://github.com/facelessuser/soupsieve"
     pypi = "soupsieve/soupsieve-1.9.3.tar.gz"
 
+    license("MIT")
+
     version("2.4.1", sha256="89d12b2d5dfcd2c9e8c22326da9d9aa9cb3dfab0a83a024f05704076ee8d35ea")
     version(
         "2.3.2.post1", sha256="fc53893b3da2c33de295667a0e19f078c14bf86544af307354de5fcf12a3f30d"

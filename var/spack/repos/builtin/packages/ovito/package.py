@@ -17,6 +17,8 @@ class Ovito(Package):
     homepage = "https://www.ovito.org"
     url = "https://www.ovito.org/download/master/ovito-basic-3.6.0-x86_64.tar.xz"
 
+    license("MIT")
+
     version("3.6.0", sha256="6ac43a3a39b1ec3cccab577602756a8b7010cc1f1f046c4f6a939590d12f0339")
 
     def install(self, spec, prefix):

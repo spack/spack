@@ -15,6 +15,8 @@ class RArgparse(RPackage):
 
     cran = "argparse"
 
+    license("GPL-2.0-or-later")
+
     version("2.2.2", sha256="b62c9bf5e6ca35fb7a2e614a916815c04cbf6c6db3f89f99b4df76470a4a856d")
     version("2.1.6", sha256="2ad7faad795878b88969ac5d91ba38f4e96deb85dfea7148c3510f0eaa3de592")
     version("2.1.5", sha256="83e112beb47733849980b286d93ac930f0cbe6ac78fcb94fc9f6b0eea882658d")

@@ -16,6 +16,8 @@ class RReadxl(RPackage):
 
     cran = "readxl"
 
+    license("MIT")
+
     version("1.4.2", sha256="387304e2c5be0dca4861ec0232f0d92cc1882b660ca917f8f2a8a4ae858aba11")
     version("1.4.1", sha256="f6bebb7f940fb21baacd60345b7075c77eb1d026466c55e6a36148de680da1fa")
     version("1.4.0", sha256="ab9239c249f79b649f7665a612b3dbf4b774ab633115e6dee41091a8cb2491f7")

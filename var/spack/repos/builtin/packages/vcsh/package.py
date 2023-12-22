@@ -13,6 +13,8 @@ class Vcsh(Package):
     homepage = "https://github.com/RichiH/vcsh"
     url = "https://github.com/RichiH/vcsh/archive/v1.20151229.tar.gz"
 
+    license("GPL-2.0-or-later")
+
     version(
         "1.20151229-1", sha256="7682a517eaf88a86ea5e38ad81707800e965375eaff8b5cfd882e210fe2fef71"
     )

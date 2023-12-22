@@ -12,6 +12,8 @@ class PyMffpy(PythonPackage):
     homepage = "https://github.com/BEL-Public/mffpy"
     pypi = "mffpy/mffpy-0.6.3.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.6.3", sha256="fceaf59f5fccb26b6e8a0363579d27e53db547493af353737a24983d95dc012d")
 
     depends_on("python@3.6:", type=("build", "run"))

@@ -15,6 +15,8 @@ class PyGsutil(PythonPackage):
 
     maintainers("dorton21")
 
+    license("Apache-2.0")
+
     version("5.24", sha256="1f841645cda40fcc817e9ca84d285cdf541cc015fd38a5862017b085756729a0")
     version("5.2", sha256="08857eedbd89c7c6d10176b14f94fb1168d5ef88f5b5b15b3e8a37e29302b79b")
     version("4.59", sha256="349e0e0b48c281659acec205917530ae57e2eb23db7220375f5add44688d3ddf")

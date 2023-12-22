@@ -15,6 +15,8 @@ class PyFastpath(PythonPackage):
     homepage = "https://github.com/deprekate/fastpath"
     pypi = "fastpath/fastpath-1.9.tar.gz"
 
+    license("GPL-3.0-only")
+
     version("1.9", sha256="3372d306a3c4e4e764b3995946132333726a229e9002879b9112779dd442b31a")
 
     depends_on("python@3.5.3:", type=("build", "run"))

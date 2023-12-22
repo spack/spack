@@ -13,6 +13,8 @@ class PyPymdownExtensions(PythonPackage):
     homepage = "https://github.com/facelessuser/pymdown-extensions"
     pypi = "pymdown_extensions/pymdown_extensions-9.5.tar.gz"
 
+    license("MIT")
+
     version("9.5", sha256="3ef2d998c0d5fa7eb09291926d90d69391283561cf6306f85cd588a5eb5befa0")
 
     depends_on("python@3.7:", type=("build", "run"))

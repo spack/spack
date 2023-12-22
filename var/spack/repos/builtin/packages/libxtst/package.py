@@ -21,6 +21,8 @@ class Libxtst(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/lib/libXtst"
     xorg_mirror_path = "lib/libXtst-1.2.2.tar.gz"
 
+    license("MIT")
+
     version("1.2.2", sha256="221838960c7b9058cd6795c1c3ee8e25bae1c68106be314bc3036a4f26be0e6c")
 
     depends_on("libx11")

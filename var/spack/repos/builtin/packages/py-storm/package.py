@@ -12,6 +12,8 @@ class PyStorm(PythonPackage):
     homepage = "https://storm.canonical.com/"
     pypi = "storm/storm-0.25.tar.gz"
 
+    license("LGPL-2.1-or-later")
+
     version("0.25", sha256="ec7cc8897638f94f6b75c6a2af74aa9b31f5492d7a2f9482c08a8dd7b46adb14")
     version(
         "0.23",

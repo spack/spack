@@ -18,6 +18,8 @@ class T8code(AutotoolsPackage):
 
     maintainers = ["Davknapp", "melven"]
 
+    license("GPL-2.0-or-later")
+
     version("1.4.1", sha256="b0ec0c9b4a182f8ac7e930ba80cd20e6dc5baefc328630e4a9dac8c688749e9a")
 
     variant("mpi", default=True, description="Enable MPI parallel code")

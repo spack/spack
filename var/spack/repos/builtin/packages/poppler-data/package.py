@@ -17,6 +17,8 @@ class PopplerData(CMakePackage):
     homepage = "https://poppler.freedesktop.org/"
     url = "https://poppler.freedesktop.org/poppler-data-0.4.9.tar.gz"
 
+    license("GPL-2.0-or-later AND BSD-3-Clause AND MIT")
+
     version("0.4.12", sha256="c835b640a40ce357e1b83666aabd95edffa24ddddd49b8daff63adb851cdab74")
     version("0.4.9", sha256="1f9c7e7de9ecd0db6ab287349e31bf815ca108a5a175cf906a90163bdbe32012")
 

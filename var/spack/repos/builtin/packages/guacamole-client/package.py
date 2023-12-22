@@ -13,6 +13,8 @@ class GuacamoleClient(MavenPackage):
     homepage = "https://guacamole.apache.org/"
     url = "https://github.com/apache/guacamole-client/archive/1.2.0.tar.gz"
 
+    license("Apache-2.0")
+
     version("1.2.0", sha256="2327368a32e61cf82032311be79ded4e5eefbc59ac9fb6e0a054b4f49168843e")
 
     depends_on("java@8", type=("build", "run"))

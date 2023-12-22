@@ -15,6 +15,8 @@ class PyGnuplot(PythonPackage):
         "http://downloads.sourceforge.net/project/gnuplot-py/Gnuplot-py/1.8/gnuplot-py-1.8.tar.gz"
     )
 
+    license("LGPL-2.1-or-later")
+
     version("1.8", sha256="ab339be7847d30a8acfd616f27b5021bfde0999b7bf2d68400fbe62c53106e21")
 
     # pip silently replaces distutils with setuptools

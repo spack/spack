@@ -14,6 +14,8 @@ class PyPynvim(PythonPackage):
 
     maintainers("trws")
 
+    license("Apache-2.0")
+
     version("0.4.3", sha256="3a795378bde5e8092fbeb3a1a99be9c613d2685542f1db0e5c6fd467eed56dff")
 
     depends_on("py-setuptools", type="build")

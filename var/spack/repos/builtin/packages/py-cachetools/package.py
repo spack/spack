@@ -14,6 +14,8 @@ class PyCachetools(PythonPackage):
     homepage = "https://github.com/tkem/cachetools"
     pypi = "cachetools/cachetools-3.1.1.tar.gz"
 
+    license("MIT")
+
     version("5.2.0", sha256="6a94c6402995a99c3970cc7e4884bb60b4a8639938157eeed436098bf9831757")
     version("4.2.4", sha256="89ea6f1b638d5a73a4f9226be57ac5e4f399d22770b92355f92dcb0f7f001693")
     version("4.2.2", sha256="61b5ed1e22a0924aed1d23b478f37e8d52549ff8a961de2909c69bf950020cff")

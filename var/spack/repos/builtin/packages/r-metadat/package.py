@@ -15,6 +15,8 @@ class RMetadat(RPackage):
 
     cran = "metadat"
 
+    license("GPL-2.0-or-later")
+
     version("1.2-0", sha256="f0cce5e30c3d256eaf5a41e4f52ffc7108e195016a4b99409e0ab4c2ef58f5b8")
 
     depends_on("r@4.0.0:", type=("build", "run"))

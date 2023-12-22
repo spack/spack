@@ -16,6 +16,8 @@ class RGeonames(RPackage):
 
     cran = "geonames"
 
+    license("GPL-3.0-only")
+
     version("0.999", sha256="1dd7bbd82d9425d14eb36f8e5bf431feaccfe3b0c4e70bf38f44f13dfc59e17b")
 
     depends_on("r@2.2.0:", type=("build", "run"))

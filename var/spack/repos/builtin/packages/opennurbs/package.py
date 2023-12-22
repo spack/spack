@@ -17,6 +17,8 @@ class Opennurbs(Package):
 
     maintainers("jrood-nrel")
 
+    license("Zlib")
+
     version("develop", branch="develop")
 
     version(

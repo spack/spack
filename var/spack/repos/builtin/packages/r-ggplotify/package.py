@@ -17,6 +17,8 @@ class RGgplotify(RPackage):
 
     cran = "ggplotify"
 
+    license("Artistic-2.0")
+
     version("0.1.0", sha256="178f73d6d3dc391c3efb1a62c95fe38587044f9e3288dffb915d3687941bb38a")
     version("0.0.5", sha256="035ea6a70023c4819c8a486d0fd94c2765aa4d6df318747e104eeb9829b9d65d")
     version("0.0.3", sha256="7e7953a2933aa7127a0bac54375e3e0219a0744cfc3249c3d7b76065f7a51892")

@@ -14,6 +14,8 @@ class PyAgate(PythonPackage):
     homepage = "https://agate.readthedocs.io/en/latest/"
     pypi = "agate/agate-1.6.1.tar.gz"
 
+    license("MIT")
+
     version("1.6.1", sha256="c93aaa500b439d71e4a5cf088d0006d2ce2c76f1950960c8843114e5f361dfd3")
 
     depends_on("py-setuptools", type="build")

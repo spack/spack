@@ -17,6 +17,8 @@ class RRngtools(RPackage):
 
     cran = "rngtools"
 
+    license("GPL-3.0-only")
+
     version("1.5.2", sha256="7f8c76ca4c7851b69a86e27be09b02ddc86357f0388659ef8787634682e8a74d")
     version("1.5", sha256="8274873b73f7acbe0ce007e62893bf4d369d2aab8768754a60da46b3f078f575")
     version("1.4", sha256="3aa92366e5d0500537964302f5754a750aff6b169a27611725e7d84552913bce")

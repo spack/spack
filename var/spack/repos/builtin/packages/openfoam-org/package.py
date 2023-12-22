@@ -67,6 +67,8 @@ class OpenfoamOrg(Package):
     url = "https://github.com/OpenFOAM/OpenFOAM-6/archive/version-6.tar.gz"
     git = "https://github.com/OpenFOAM/OpenFOAM-dev.git"
 
+    license("GPL-3.0-or-later")
+
     version("develop", branch="master")
     version("10", sha256="59d712ba798ca44b989b6ac50bcb7c534eeccb82bcf961e10ec19fc8d84000cf")
     version("9", sha256="0c48fb56e2fbb4dd534112811364d3b2dc12106e670a6486b361e4f864b435ee")

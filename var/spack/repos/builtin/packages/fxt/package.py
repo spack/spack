@@ -21,6 +21,8 @@ class Fxt(AutotoolsPackage):
 
     maintainers("nfurmento", "sthibaul")
 
+    license("GPL-2.0-only")
+
     version("0.3.14", sha256="317d8d93175cd9f27ec43b8390b6d29dc66114f06aa74f2329847d49baaaebf2")
     version("0.3.5", sha256="3c0b33c82a01c4fb710c53ee9fc2c803314beba6fb60c397e13e874811e34a22")
     version("0.3.4", sha256="fcd35a5278ac0f10eba12fed4fa436dce79559897fde5b8176d5eee9081970f7")

@@ -11,6 +11,8 @@ class PyLigoSegments(PythonPackage):
 
     pypi = "ligo-segments/ligo-segments-1.2.0.tar.gz"
 
+    license("GPL-3.0-or-later")
+
     version("1.2.0", sha256="5edbcb88cae007c4e154a61cb2c9d0a6d6d4016c1ecaf0a59a667a267bd20e7a")
 
     depends_on("py-setuptools", type="build")

@@ -13,6 +13,8 @@ class PyAioredis(PythonPackage):
     homepage = "https://github.com/aio-libs/aioredis"
     pypi = "aioredis/aioredis-1.3.1.tar.gz"
 
+    license("MIT")
+
     version("1.3.1", sha256="15f8af30b044c771aee6787e5ec24694c048184c7b9e54c3b60c750a4b93273a")
 
     depends_on("python@3.5:", type=("build", "run"))

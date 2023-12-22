@@ -13,4 +13,6 @@ class PerlGdgraphHistogram(PerlPackage):
     homepage = "https://metacpan.org/pod/GD::Graph::histogram"
     url = "https://cpan.metacpan.org/authors/id/W/WH/WHIZDOG/GDGraph-histogram-1.1.tar.gz"
 
+    license("Artistic-1.0-cl8")
+
     version("1.1", sha256="20f752d0e6deb59b29aa2ec3496b5883476d00280b6e83f5b47c33fac4097f8a")

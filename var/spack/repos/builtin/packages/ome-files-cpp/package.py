@@ -19,6 +19,8 @@ class OmeFilesCpp(CMakePackage):
 
     maintainers("omsai")
 
+    license("BSD-2-Clause")
+
     version("master", branch="master")
     version("0.6.0", sha256="e0baf3eeb2ea639f426292a36b58adcaa42ce61a4a0f15f34690602f3f5d47c1")
 

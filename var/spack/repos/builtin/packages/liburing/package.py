@@ -17,6 +17,8 @@ class Liburing(AutotoolsPackage):
     url = "https://github.com/axboe/liburing/archive/refs/tags/liburing-2.3.tar.gz"
     git = "https://github.com/axboe/liburing.git"
 
+    license("LGPL-2.1-or-later OR MIT")
+
     version("master", branch="master")
     version("2.3", sha256="60b367dbdc6f2b0418a6e0cd203ee0049d9d629a36706fcf91dfb9428bae23c8")
 

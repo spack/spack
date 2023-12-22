@@ -12,6 +12,8 @@ class Gzip(AutotoolsPackage):
     homepage = "https://www.gnu.org/software/gzip/"
     url = "https://ftp.gnu.org/gnu/gzip/gzip-1.10.tar.gz"
 
+    license("GPL-3.0-or-later")
+
     version("1.13", sha256="20fc818aeebae87cdbf209d35141ad9d3cf312b35a5e6be61bfcfbf9eddd212a")
     version(
         "1.12",

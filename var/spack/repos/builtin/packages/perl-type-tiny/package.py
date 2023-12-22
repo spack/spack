@@ -15,6 +15,8 @@ class PerlTypeTiny(PerlPackage):
 
     maintainers("EbiArnie")
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("2.004000", sha256="697e7f775edfc85f4cf07792d04fd19b09c25285f98f5938e8efc4f74507a128")
 
     depends_on("perl@5.8.1:", type=("build", "link", "run", "test"))

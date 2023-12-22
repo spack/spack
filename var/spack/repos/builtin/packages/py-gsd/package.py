@@ -20,6 +20,8 @@ class PyGsd(PythonPackage):
 
     maintainers("RMeli")
 
+    license("BSD-2-Clause")
+
     version("2.8.0", sha256="f2b031a26a7a5bee5f3940dc2f36c5a5b6670307b297c526adf2e26c1f5b46ae")
     version("1.9.3", sha256="c6b37344e69020f69fda2b8d97f894cb41fd720840abeda682edd680d1cff838")
 

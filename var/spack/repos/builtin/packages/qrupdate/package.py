@@ -16,6 +16,8 @@ class Qrupdate(MakefilePackage, SourceforgePackage):
     homepage = "https://sourceforge.net/projects/qrupdate/"
     sourceforge_mirror_path = "qrupdate/qrupdate-1.1.2.tar.gz"
 
+    license("GPL-3.0-only")
+
     version("1.1.2", sha256="e2a1c711dc8ebc418e21195833814cb2f84b878b90a2774365f0166402308e08")
 
     depends_on("blas")

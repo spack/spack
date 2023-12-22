@@ -19,6 +19,8 @@ class Onednn(CMakePackage):
 
     maintainers("adamjstewart")
 
+    license("Apache-2.0")
+
     version("master", branch="master")
     version("3.0", sha256="b93ac6d12651c060e65086396d85191dabecfbc01f30eb1f139c6dd56bf6e34c")
     version("2.7.3", sha256="a50993aa6265b799b040fe745e0010502f9f7103cc53a9525d59646aef006633")

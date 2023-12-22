@@ -12,6 +12,8 @@ class PyPytestParallel(PythonPackage):
     homepage = "https://github.com/browsertron/pytest-parallel"
     pypi = "pytest-parallel/pytest-parallel-0.1.1.tar.gz"
 
+    license("MIT")
+
     version("0.1.1", sha256="9aac3fc199a168c0a8559b60249d9eb254de7af58c12cee0310b54d4affdbfab")
 
     depends_on("python@3.7:", type=("build", "run"))

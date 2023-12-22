@@ -16,6 +16,8 @@ class Spath(CMakePackage):
 
     maintainers("CamStan", "gonsie")
 
+    license("MIT")
+
     version("main", branch="main")
     version("0.3.0", sha256="cb155a31cebde8b7bf397123de3be290fd99d3863509b4ba9b0252caba660082")
     version("0.2.0", sha256="2de8a25547b53ef064664d79b543141bc3020219f40ff0e1076f676e13a9e77a")

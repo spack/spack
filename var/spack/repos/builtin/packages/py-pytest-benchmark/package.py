@@ -13,6 +13,8 @@ class PyPytestBenchmark(PythonPackage):
     homepage = "https://github.com/ionelmc/pytest-benchmark"
     pypi = "pytest-benchmark/pytest-benchmark-3.2.3.tar.gz"
 
+    license("BSD-2-Clause")
+
     version("3.2.3", sha256="ad4314d093a3089701b24c80a05121994c7765ce373478c8f4ba8d23c9ba9528")
 
     depends_on("python@2.7:2.8,3.5:", type=("build", "run"))

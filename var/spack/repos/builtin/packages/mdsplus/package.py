@@ -17,6 +17,8 @@ class Mdsplus(AutotoolsPackage):
 
     parallel = False
 
+    license("BSD-2-Clause")
+
     version(
         "stable_release-7-96-17",
         tag="stable_release-7-96-17",

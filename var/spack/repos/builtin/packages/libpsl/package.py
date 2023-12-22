@@ -13,6 +13,8 @@ class Libpsl(AutotoolsPackage):
     url = "https://github.com/rockdaboot/libpsl/releases/download/0.21.2/libpsl-0.21.2.tar.gz"
     list_url = "https://github.com/rockdaboot/libpsl/tags"
 
+    license("MIT")
+
     version("0.21.2", sha256="e35991b6e17001afa2c0ca3b10c357650602b92596209b7492802f3768a6285f")
     version("0.20.2", sha256="7aa949fd3fdba61b0dc7b3f4c2520263b942c189746e157f48436386eca3398e")
     version("0.19.1", sha256="9b47387a087bcac2af31ea0c94f644bfa32e0be6d079bfa430452b7521ad8c57")

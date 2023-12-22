@@ -13,6 +13,8 @@ class PyJeepney(PythonPackage):
     homepage = "https://gitlab.com/takluyver/jeepney"
     pypi = "jeepney/jeepney-0.4.3.tar.gz"
 
+    license("MIT")
+
     version("0.8.0", sha256="5efe48d255973902f6badc3ce55e2aa6c5c3b3bc642059ef3a91247bcfcc5806")
     version("0.7.1", sha256="fa9e232dfa0c498bd0b8a3a73b8d8a31978304dcef0515adc859d4e096f96f4f")
     version("0.6.0", sha256="7d59b6622675ca9e993a6bd38de845051d315f8b0c72cca3aef733a20b648657")

@@ -13,6 +13,8 @@ class Libshm(Package):
     homepage = "https://github.com/afeldman/libshm"
     git = "https://github.com/afeldman/libshm.git"
 
+    license("MIT")
+
     version("master")
 
     def install(self, spec, prefix):

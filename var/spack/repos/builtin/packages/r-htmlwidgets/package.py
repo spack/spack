@@ -15,6 +15,8 @@ class RHtmlwidgets(RPackage):
 
     cran = "htmlwidgets"
 
+    license("MIT")
+
     version("1.6.2", sha256="7fda1672a4c0fbc203c790677b6ee7c40d2c2d72be4f6772f75288fc712b10bc")
     version("1.5.4", sha256="1a3fc60f40717de7f1716b754fd1c31a132e489a2560a278636ee78eba46ffc1")
     version("1.5.3", sha256="01a5833182cc224bd100be2815e57e67b524de9f2bb1542787b6e3d1303f0f29")

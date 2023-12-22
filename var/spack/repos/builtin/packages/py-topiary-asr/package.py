@@ -16,6 +16,8 @@ class PyTopiaryAsr(PythonPackage):
 
     maintainers("snehring")
 
+    license("MIT")
+
     version("main", branch="main")
     version("0.9.9", sha256="5601fba92e7add33a3732482426b2c7ef46b0fccc4a4ea11357537e1b937903c")
 

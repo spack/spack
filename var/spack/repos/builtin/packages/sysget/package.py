@@ -15,6 +15,8 @@ class Sysget(MakefilePackage):
     homepage = "https://github.com/emilengler/sysget"
     url = "https://github.com/emilengler/sysget/archive/v2.3.tar.gz"
 
+    license("GPL-3.0-only")
+
     version("2.3", sha256="bba647bfd7093d18ee2b471a79f0cc50d84846aa3a04d790244acfefded79477")
     version("2.2", sha256="8f55ee8402d6de3cc16fa0577148b484e35da6688ad5f3ee3e9c1be04c88863a")
     version("2.1", sha256="0590aaae10494ca76c6749264925feb0e40b6e4b3822a8a4d148761addcb66c1")

@@ -17,6 +17,8 @@ class Fox(AutotoolsPackage):
     homepage = "http://fox-toolkit.org/"
     url = "http://fox-toolkit.org/ftp/fox-1.7.67.tar.gz"
 
+    license("LGPL-3.0-or-later")
+
     version("1.7.67", sha256="7e511685119ef096fa90d334da46f0e50cfed8d414df32d80a7850442052f57d")
     version(
         "1.6.57",

@@ -17,6 +17,8 @@ class Highwayhash(MakefilePackage):
     homepage = "https://github.com/google/highwayhash"
     git = "https://github.com/google/highwayhash.git"
 
+    license("Apache-2.0")
+
     version("dfcb97", commit="dfcb97ca4fe9277bf9dc1802dd979b071896453b")
 
     build_targets = ["all", "libhighwayhash.a"]

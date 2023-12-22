@@ -15,6 +15,8 @@ class PyQiskitNature(PythonPackage):
     homepage = "https://github.com/Qiskit/qiskit-nature"
     pypi = "qiskit-nature/qiskit-nature-0.2.2.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.2.2", sha256="ce3558d4acf2511111cc398361146af36391d67e5a9fe9c4bd0f727cb56022bf")
 
     depends_on("python@3.6:", type=("build", "run"))

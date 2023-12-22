@@ -12,6 +12,8 @@ class PyChardet(PythonPackage):
     homepage = "https://github.com/chardet/chardet"
     pypi = "chardet/chardet-3.0.4.tar.gz"
 
+    license("LGPL-2.1-or-later")
+
     version("5.2.0", sha256="1b3b6ff479a8c414bc3fa2c0852995695c4a026dcd6d0633b2dd092ca39c1cf7")
     version("5.1.0", sha256="0d62712b956bc154f85fb0a266e2a3c5913c2967e00348701b32411d6def31e5")
     version("5.0.0", sha256="0368df2bfd78b5fc20572bb4e9bb7fb53e2c094f60ae9993339e8671d0afb8aa")

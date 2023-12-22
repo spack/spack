@@ -12,6 +12,8 @@ class PyMccabe(PythonPackage):
     homepage = "https://github.com/PyCQA/mccabe"
     pypi = "mccabe/mccabe-0.7.0.tar.gz"
 
+    license("MIT")
+
     version("0.7.0", sha256="348e0240c33b60bbdf4e523192ef919f28cb2c3d7d5c7794f74009290f236325")
     version("0.6.1", sha256="dd8d182285a0fe56bace7f45b5e7d1a6ebcbf524e8f3bd87eb0f125271b8831f")
     version("0.6.0", sha256="de9bbfe5b771e4c11b1521f3e338fe265a12296b59302f43a3bbf3e02d4b98b1")

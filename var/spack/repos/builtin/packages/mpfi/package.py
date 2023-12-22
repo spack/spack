@@ -12,6 +12,8 @@ class Mpfi(AutotoolsPackage):
     # Notice: no simple way to deduct URL from version
     homepage = "https://perso.ens-lyon.fr/nathalie.revol/software.html"
 
+    license("LGPL-3.0-only")
+
     version(
         "1.5.4",
         url="https://gforge.inria.fr/frs/download.php/file/38111/mpfi-1.5.4.tgz",

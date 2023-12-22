@@ -20,6 +20,8 @@ class PySpgl1(PythonPackage):
 
     maintainers("archxlith")
 
+    license("LGPL-2.1-or-later")
+
     version("master", branch="master")
     version("0.0.2", sha256="a2a524724097bad18dd88a306dbcc99124c6c46ffcbb1a96d6ba6dd6fe2f7404")
     version("0.0.1", sha256="24ff37ab5be57f0ccf14c53090b171e019c3c12799c80f368e628e1cc9ac9a1f")

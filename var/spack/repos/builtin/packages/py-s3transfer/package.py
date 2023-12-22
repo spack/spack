@@ -17,6 +17,8 @@ class PyS3transfer(PythonPackage):
     depends_on("python@2.7:2.8,3.6:", when="@0.4.2", type=("build", "run"))
     depends_on("python@2.7:2.8,3.4:", when="@0.3.4", type=("build", "run"))
 
+    license("Apache-2.0")
+
     version("0.6.0", sha256="2ed07d3866f523cc561bf4a00fc5535827981b117dd7876f036b0c1aca42c947")
     version("0.5.0", sha256="50ed823e1dc5868ad40c8dc92072f757aa0e653a192845c94a3b676f4a62da4c")
     version("0.4.2", sha256="cb022f4b16551edebbb31a377d3f09600dbada7363d8c5db7976e7f47732e1b2")

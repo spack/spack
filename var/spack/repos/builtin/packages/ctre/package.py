@@ -12,6 +12,8 @@ class Ctre(CMakePackage):
     url = "https://github.com/hanickadot/compile-time-regular-expressions/archive/v2.8.3.tar.gz"
     git = "https://github.com/hanickadot/compile-time-regular-expressions.git"
 
+    license("Apache-2.0")
+
     version("master", branch="master")
     version("2.8.4", sha256="99b981857f1b66cab5e71161ae74deca268ed39a96ec6507def92d4f445cadd6")
     version("2.8.3", sha256="5833a9d0fbce39ee39bd6e29df2f7fcafc82e41c373e8675ed0774bcf76fdc7a")

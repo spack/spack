@@ -20,6 +20,8 @@ class RPicante(RPackage):
 
     cran = "picante"
 
+    license("GPL-2.0-only")
+
     version("1.8.2", sha256="56565ca7f7c37f49c961372a816724967c21a4f5025cd69b8b671122bfdc4aa7")
     version("1.8", sha256="81a6308dbb53c9cdab30c1f9ac727abee76314351823b3a2142c21ed8e1498ad")
     version("1.7", sha256="75e4d73080db67e776562a1d58685438461cbde39af46900c7838da56aef0a62")

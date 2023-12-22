@@ -15,6 +15,8 @@ class Xmlto(AutotoolsPackage):
     homepage = "https://pagure.io/xmlto"
     url = "https://releases.pagure.org/xmlto/xmlto-0.0.28.tar.gz"
 
+    license("GPL-2.0-or-later")
+
     version("0.0.28", sha256="2f986b7c9a0e9ac6728147668e776d405465284e13c74d4146c9cbc51fd8aad3")
 
     # FIXME: missing a lot of dependencies

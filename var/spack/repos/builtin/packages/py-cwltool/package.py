@@ -13,6 +13,8 @@ class PyCwltool(PythonPackage):
     homepage = "https://github.com/common-workflow-language/cwltool"
     pypi = "cwltool/cwltool-3.1.20221201130942.tar.gz"
 
+    license("Apache-2.0")
+
     version(
         "3.1.20221201130942",
         sha256="0152d8cdf6acaf3620f557b442941f577bff2851d9e2e866e6051ea48a37bdbe",

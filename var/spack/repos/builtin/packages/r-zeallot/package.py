@@ -16,4 +16,6 @@ class RZeallot(RPackage):
 
     cran = "zeallot"
 
+    license("MIT")
+
     version("0.1.0", sha256="439f1213c97c8ddef9a1e1499bdf81c2940859f78b76bc86ba476cebd88ba1e9")

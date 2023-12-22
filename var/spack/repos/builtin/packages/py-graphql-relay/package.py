@@ -14,6 +14,8 @@ class PyGraphqlRelay(PythonPackage):
 
     maintainers("LydDeb")
 
+    license("MIT")
+
     version("2.0.1", sha256="870b6b5304123a38a0b215a79eace021acce5a466bf40cd39fa18cb8528afabb")
 
     depends_on("py-setuptools", type="build")

@@ -12,6 +12,8 @@ class PerlFileListing(PerlPackage):
     homepage = "https://metacpan.org/pod/File::Listing"
     url = "http://search.cpan.org/CPAN/authors/id/G/GA/GAAS/File-Listing-6.04.tar.gz"
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("6.04", sha256="1e0050fcd6789a2179ec0db282bf1e90fb92be35d1171588bd9c47d52d959cf5")
 
     depends_on("perl-http-date", type=("build", "run"))

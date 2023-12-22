@@ -21,6 +21,8 @@ class REnergy(RPackage):
 
     cran = "energy"
 
+    license("GPL-2.0-or-later")
+
     version("1.7-11", sha256="c29f8fb000c979d2504f6f6d3a99c773004f77d58793e7e2a5766155272b6511")
     version("1.7-10", sha256="543de4875c46cc90e711e71c45b082d962fbb5158a094f9f10d37d3f57e1bea7")
     version("1.7-9", sha256="68d0e0ed99f5a8a03858603ed36010a2f67b87a947dbcc65a9da2e08a2d3bad9")

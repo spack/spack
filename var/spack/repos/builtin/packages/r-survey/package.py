@@ -19,6 +19,8 @@ class RSurvey(RPackage):
 
     cran = "survey"
 
+    license("GPL-2.0-only OR GPL-3.0-only")
+
     version("4.1-1", sha256="05e89a1678a39e32bfb41af8a31d643b04fc4d2660a96e701825e6bffcd75a52")
     version("4.0", sha256="b053f40f4cfa90507ca524f72d3b3a4b4869def52f11f907a14f1c6d90063de1")
     version("3.36", sha256="90f32e9d2b52eacf881e6717a4b5edfc5a3beb5da516f8372293549589d79475")

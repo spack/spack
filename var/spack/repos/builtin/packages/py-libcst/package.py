@@ -12,6 +12,8 @@ class PyLibcst(PythonPackage):
     homepage = "https://github.com/Instagram/LibCST"
     pypi = "libcst/libcst-0.4.9.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.4.9", sha256="01786c403348f76f274dbaf3888ae237ffb73e6ed6973e65eba5c1fc389861dd")
 
     depends_on("py-setuptools", type="build")

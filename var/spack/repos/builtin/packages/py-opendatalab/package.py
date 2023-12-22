@@ -12,6 +12,8 @@ class PyOpendatalab(PythonPackage):
     homepage = "https://github.com/opendatalab/opendatalab-python-sdk"
     pypi = "opendatalab/opendatalab-0.0.9.tar.gz"
 
+    license("MIT")
+
     version("0.0.9", sha256="4648b66d5be096ba38fa087b6c7906c24218d02a49906c8b41c069b9a8747530")
 
     depends_on("python@3.7:", type=("build", "run"))

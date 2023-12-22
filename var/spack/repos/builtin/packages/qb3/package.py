@@ -12,6 +12,8 @@ class Qb3(CMakePackage):
     homepage = "https://github.com/lucianpls/QB3"
     git = "https://github.com/lucianpls/QB3.git"
 
+    license("Apache-2.0")
+
     version("master", branch="master")
 
     depends_on("cmake@3.5:", type="build")

@@ -12,6 +12,8 @@ class PyTriangle(PythonPackage):
     homepage = "https://github.com/drufat/triangle"
     pypi = "triangle/triangle-20200424.tar.gz"
 
+    license("LGPL-3.0")
+
     version("20200424", sha256="fc207641f8f39986f7d2bee1b91688a588cd235d2e67777422f94e61fece27e9")
 
     depends_on("python@:3.9", type=("build", "run"))

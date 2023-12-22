@@ -12,6 +12,8 @@ class PyConfection(PythonPackage):
     homepage = "https://github.com/explosion/confection"
     pypi = "confection/confection-0.0.4.tar.gz"
 
+    license("MIT")
+
     version("0.0.4", sha256="b1ddf5885da635f0e260a40b339730806dfb1bd17d30e08764f35af841b04ecf")
 
     depends_on("python@3.6:", type=("build", "run"))

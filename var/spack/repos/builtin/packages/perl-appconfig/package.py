@@ -13,4 +13,6 @@ class PerlAppconfig(PerlPackage):
     homepage = "https://metacpan.org/pod/AppConfig"
     url = "https://cpan.metacpan.org/authors/id/N/NE/NEILB/AppConfig-1.71.tar.gz"
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("1.71", sha256="1177027025ecb09ee64d9f9f255615c04db5e14f7536c344af632032eb887b0f")

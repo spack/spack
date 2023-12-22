@@ -13,6 +13,8 @@ class Logrotate(AutotoolsPackage):
     homepage = "https://github.com/logrotate/logrotate"
     url = "https://github.com/logrotate/logrotate/archive/3.17.0.tar.gz"
 
+    license("GPL-2.0-or-later")
+
     version("3.21.0", sha256="7f58d6ab7e4eab3403528a88d3747a91b03e83e866a8fb966551016e0df527bb")
     version("3.17.0", sha256="c25ea219018b024988b791e91e9f6070c34d2056efa6ffed878067866c0ed765")
     version("3.16.0", sha256="bc6acfd09925045d48b5ff553c24c567cfd5f59d513c4ac34bfb51fa6b79dc8a")

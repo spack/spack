@@ -21,6 +21,8 @@ class Abacus(MakefilePackage):
     git = "https://github.com/abacusmodeling/abacus-develop.git"
     url = "https://github.com/abacusmodeling/abacus-develop/archive/refs/tags/v2.2.1.tar.gz"
 
+    license("LGPL-3.0-or-later")
+
     version("develop", branch="develop")
     version("2.2.3", sha256="88dbf6a3bdd907df3e097637ec8e51fde13e2f5e0b44f3667443195481320edf")
     version("2.2.2", sha256="4a7cf2ec6e43dd5c53d5f877a941367074f4714d93c1977a719782957916169e")

@@ -15,6 +15,8 @@ class BppSuite(CMakePackage):
 
     maintainers("snehring")
 
+    license("CECILL-2.0")
+
     version("2.4.1", sha256="0485adcc17e37439069d27e4fac144e5ae38036ba21f31e6d21f070ce4ea5199")
     version(
         "2.2.0",

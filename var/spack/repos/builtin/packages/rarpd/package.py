@@ -17,6 +17,8 @@ class Rarpd(MakefilePackage):
 
     maintainers("jcpunk")
 
+    license("GPL-2.0-only")
+
     version(
         "0.981107-fixes", sha256="92b44adc4a061dcedeb01f7e1c1700374199cccceef1a798de97303d387bb4c2"
     )

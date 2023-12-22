@@ -12,6 +12,8 @@ class Erne(AutotoolsPackage):
     homepage = "http://erne.sourceforge.net/"
     url = "https://downloads.sourceforge.net/project/erne/2.1.1/erne-2.1.1-source.tar.gz"
 
+    license("GPL-3.0-only")
+
     version("2.1.1", sha256="f32ab48481fd6c129b0a0246ab02b6e3a2a9da84024e1349510a59c15425d983")
 
     variant("mpi", default=False, description="Build with OpenMPI support")

@@ -12,6 +12,9 @@ class Gpcnet(MakefilePackage):
 
     homepage = "https://github.com/netbench/GPCNET"
     git = "https://github.com/netbench/GPCNET.git"
+
+    license("Apache-2.0")
+
     version("master")
 
     depends_on("mpi", type=("build", "run"))

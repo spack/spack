@@ -13,6 +13,8 @@ class Canu(MakefilePackage):
     homepage = "https://canu.readthedocs.io/"
     url = "https://github.com/marbl/canu/archive/v1.5.tar.gz"
 
+    license("GPL-2.0-only")
+
     version(
         "2.2",
         sha256="e4d0c7b82149114f442ccd39e18f7fe2061c63b28d53700ad896e022b73b7404",

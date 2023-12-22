@@ -14,6 +14,8 @@ class PyMizani(PythonPackage):
     homepage = "https://mizani.readthedocs.io/en/latest"
     pypi = "mizani/mizani-0.7.4.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.8.1", sha256="8ad0a0efa52f1bcdf41f675b64a8c0f7cd24e763d53baced6613f20bd6ed4928")
     version("0.7.4", sha256="b84b923cd3b8b4c0421a750672e5a85ed2aa05e632bd37af8419d5bbf65c397c")
     version("0.7.3", sha256="f521300bd29ca918fcd629bc8ab50fa04e41bdbe00f6bcf74055d3c6273770a4")

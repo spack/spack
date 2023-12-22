@@ -15,6 +15,8 @@ class SysSage(CMakePackage):
 
     maintainers("stepanvanecek")
 
+    license("Apache-2.0")
+
     version("0.4.3", sha256="e24313c4274576c1511a62e1b27c86a78cea7e4c123b8a53303cfc70de978faa")
     version("master", branch="master")
     version("develop", branch="develop")

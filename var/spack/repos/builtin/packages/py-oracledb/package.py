@@ -14,6 +14,8 @@ class PyOracledb(PythonPackage):
     homepage = "https://oracle.github.io/python-oracledb/"
     pypi = "oracledb/oracledb-1.2.2.tar.gz"
 
+    license("Apache-2.0")
+
     version("1.2.2", sha256="dd9f63084e44642b484a46b2fcfb4fc921f39facf494a1bab00628fa6409f4fc")
 
     depends_on("py-setuptools@40.6.0:", type="build")

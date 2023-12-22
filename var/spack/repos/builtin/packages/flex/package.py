@@ -19,6 +19,8 @@ class Flex(AutotoolsPackage):
 
     executables = ["^flex$"]
 
+    license("BSD-2-Clause")
+
     version("2.6.4", sha256="e87aae032bf07c26f85ac0ed3250998c37621d95f8bd748b31f15b33c45ee995")
     version(
         "2.6.3",

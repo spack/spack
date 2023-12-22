@@ -14,6 +14,8 @@ class PyQmtest(PythonPackage):
 
     maintainers("haralmha")
 
+    license("GPL-2.0-only")
+
     version("2.4.1", sha256="098f705aea9c8f7f5b6b5fe131974cee33b50cad3e13977e39708f306ce9ac91")
 
     # Patch to fix python 3.10 and above compatibility

@@ -21,6 +21,8 @@ class RPosterior(RPackage):
 
     cran = "posterior"
 
+    license("BSD-3-Clause")
+
     version("1.4.1", sha256="2b8953fa8d6890a105521023c431ddea725465eb95cf9454a88852e43ebb58d3")
     version("1.3.1", sha256="7000780290a24be86dbc406dd4338aec622d8dee1e471b68b55abb4872934d7a")
     version("1.2.1", sha256="b757e06885a1f21e7ad8f5a3feaecbe0a71ae8d766e4aec4c3aa2183a810afe1")

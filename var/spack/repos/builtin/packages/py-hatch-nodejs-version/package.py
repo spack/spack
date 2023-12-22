@@ -12,6 +12,8 @@ class PyHatchNodejsVersion(PythonPackage):
     homepage = "https://github.com/agoose77/hatch-nodejs-version"
     pypi = "hatch_nodejs_version/hatch_nodejs_version-0.3.1.tar.gz"
 
+    license("MIT")
+
     version("0.3.1", sha256="0e55fd713d92c5c1ccfee778efecaa780fd8bcd276d4ca7aff9f6791f6f76d9c")
 
     depends_on("python@3.7:", type=("build", "run"))

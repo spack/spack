@@ -12,6 +12,8 @@ class PyPythonLogstash(PythonPackage):
     homepage = "https://github.com/vklochan/python-logstash"
     pypi = "python-logstash/python-logstash-0.4.6.tar.gz"
 
+    license("MIT")
+
     version("0.4.6", sha256="10943e5df83f592b4d61b63ad1afff855ccc8c9467f78718f0a59809ba1fe68c")
 
     # pip silently replaces distutils with setuptools

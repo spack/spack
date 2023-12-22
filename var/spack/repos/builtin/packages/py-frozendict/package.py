@@ -12,6 +12,8 @@ class PyFrozendict(PythonPackage):
     homepage = "An immutable dictionary"
     pypi = "frozendict/frozendict-1.2.tar.gz"
 
+    license("LGPL-3.0-only")
+
     version("2.3.4", sha256="15b4b18346259392b0d27598f240e9390fafbff882137a9c48a1e0104fb17f78")
     version("1.2", sha256="774179f22db2ef8a106e9c38d4d1f8503864603db08de2e33be5b778230f6e45")
 

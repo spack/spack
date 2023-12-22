@@ -16,6 +16,8 @@ class UniversalCtags(AutotoolsPackage):
     url = "https://github.com/universal-ctags/ctags/archive/p5.9.20210912.0.tar.gz"
     git = "https://github.com/universal-ctags/ctags.git"
 
+    license("GPL-2.0-or-later")
+
     version("master", branch="master")
     version(
         "5.9.20210912.0", sha256="5082d4f7e5695be3d697c46e2232d76c6d8adff51d22ba7a4b869362f444ee21"

@@ -13,6 +13,8 @@ class PyStarlette(PythonPackage):
     homepage = "https://github.com/encode/starlette"
     pypi = "starlette/starlette-0.23.1.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.27.0", sha256="6a6b0d042acb8d469a01eba54e9cda6cbd24ac602c4cd016723117d6a7e73b75")
     version("0.23.1", sha256="8510e5b3d670326326c5c1d4cb657cc66832193fe5d5b7015a51c7b1e1b1bf42")
     version("0.22.0", sha256="b092cbc365bea34dd6840b42861bdabb2f507f8671e642e8272d2442e08ea4ff")

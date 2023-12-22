@@ -12,6 +12,8 @@ class PyReadchar(PythonPackage):
     homepage = "https://github.com/magmax/python-readchar"
     pypi = "readchar/readchar-4.0.5.tar.gz"
 
+    license("MIT")
+
     version("4.0.5", sha256="08a456c2d7c1888cde3f4688b542621b676eb38cd6cfed7eb6cb2e2905ddc826")
 
     depends_on("py-setuptools@41:", type=("build", "run"))

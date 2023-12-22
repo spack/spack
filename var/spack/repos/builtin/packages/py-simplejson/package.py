@@ -13,6 +13,8 @@ class PySimplejson(PythonPackage):
     homepage = "https://github.com/simplejson/simplejson"
     pypi = "simplejson/simplejson-3.10.0.tar.gz"
 
+    license("AFL-2.1")
+
     version("3.19.1", sha256="6277f60848a7d8319d27d2be767a7546bc965535b28070e310b3a9af90604a4c")
     version("3.18.0", sha256="58a429d2c2fa80834115b923ff689622de8f214cf0dc4afa9f59e824b444ab31")
     version("3.17.2", sha256="75ecc79f26d99222a084fbdd1ce5aad3ac3a8bd535cd9059528452da38b68841")

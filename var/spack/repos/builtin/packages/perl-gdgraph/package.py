@@ -12,6 +12,8 @@ class PerlGdgraph(PerlPackage):
     homepage = "https://metacpan.org/pod/GD::Graph"
     url = "http://search.cpan.org/CPAN/authors/id/B/BW/BWARFIELD/GDGraph-1.4308.tar.gz"
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("1.4308", sha256="75b3c7e280431404ed096c6e120d552cc39052a8610787149515e94b9ba237cb")
 
     depends_on("perl-capture-tiny", type=("build", "run"))

@@ -14,6 +14,8 @@ class PyMultiqc(PythonPackage):
     homepage = "https://multiqc.info"
     pypi = "multiqc/multiqc-1.0.tar.gz"
 
+    license("GPL-3.0-only")
+
     version("1.15", sha256="ce5359a12226cf4ce372c6fdad142cfe2ae7501ffa97ac7aab544ced4db5ea3c")
     version("1.14", sha256="dcbba405f0c9521ed2bbd7e8f7a9200643047311c9619878b81d167300149362")
     version("1.13", sha256="0564fb0f894e6ca0822a0f860941b3ed2c33dce407395ac0c2103775d45cbfa0")

@@ -16,6 +16,8 @@ class PyBakta(PythonPackage):
 
     maintainers("oschwengers")
 
+    license("GPL-3.0-only")
+
     version("1.5.1", sha256="36781612c4eaa99e6e24a00e8ab5b27dadf21c98ae6d16432f3e78c96a4adb5d")
 
     depends_on("python@3.8:", type=("build", "run"))

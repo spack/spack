@@ -16,6 +16,8 @@ class PyMsgpackNumpy(PythonPackage):
     homepage = "https://github.com/lebedov/msgpack-numpy"
     pypi = "msgpack-numpy/msgpack-numpy-0.4.7.1.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.4.7.1", sha256="7eaf51acf82d7c467d21aa71df94e1c051b2055e54b755442051b474fa7cf5e1")
     version("0.4.7", sha256="8e975dd7dd9eb13cbf5e8cd90af1f12af98706bbeb7acfcbd8d558fd005a85d7")
     version("0.4.6", sha256="ef3c5fe3d6cbab5c9db97de7062681c18f82d32a37177aaaf58b483d0336f135")

@@ -15,6 +15,8 @@ class PyMrcfile(PythonPackage):
 
     maintainers("dorton21")
 
+    license("BSD-3-Clause")
+
     version("1.3.0", sha256="034f1868abf87f4e494b8b039030b50045cabccf352b8b3e88a6bd3a6d665715")
 
     depends_on("python@3.4.0:")

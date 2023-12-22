@@ -14,6 +14,8 @@ class PyCssutils(PythonPackage):
 
     maintainers("LydDeb")
 
+    license("LGPL-3.0-or-later")
+
     version("2.7.1", sha256="340ecfd9835d21df8f98500f0dfcea0aee41cb4e19ecbc2cf94f0a6d36d7cb6c")
 
     depends_on("py-setuptools@56:", type="build")

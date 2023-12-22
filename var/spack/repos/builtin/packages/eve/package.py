@@ -14,6 +14,8 @@ class Eve(CMakePackage):
     maintainers("jfalcou")
     git = "https://github.com/jfalcou/eve.git"
 
+    license("BSL-1.0")
+
     version("main", branch="main")
     version(
         "2023.02.15", sha256="7a5fb59c0e6ef3bef3e8b36d62e138d31e7f2a9f1bdfe95a8e96512b207f84c5"

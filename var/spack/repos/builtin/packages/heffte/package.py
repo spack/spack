@@ -18,6 +18,8 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
 
     test_requires_compiler = True
 
+    license("BSD-3-Clause")
+
     version("develop", branch="master")
     version("2.4.0", sha256="02310fb4f9688df02f7181667e61c3adb7e38baf79611d80919d47452ff7881d")
     version("2.3.0", sha256="63db8c9a8822211d23e29f7adf5aa88bb462c91d7a18c296c3ef3a06be8d6171")

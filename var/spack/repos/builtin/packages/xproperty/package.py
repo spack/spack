@@ -15,6 +15,8 @@ class Xproperty(CMakePackage):
 
     maintainers("tomstitt")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("0.11.0", sha256="bf86a11c6758308aa0aa0f64d8dd24cd3e9d78378467b74002f552bfb75fc0eb")
 

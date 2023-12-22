@@ -15,6 +15,8 @@ class Pasta(PythonPackage):
     git = "https://github.com/smirarab/pasta"
     maintainers("snehring")
 
+    license("GPL-3.0-or-later")
+
     version("1.9.0", commit="370ae2d21ef461bcb2cef7c20cb5a4a1db7ff99d")
 
     depends_on("python@3:", type=("build", "run"))

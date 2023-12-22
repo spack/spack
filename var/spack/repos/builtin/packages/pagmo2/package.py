@@ -17,6 +17,8 @@ class Pagmo2(CMakePackage):
     git = "https://github.com/esa/pagmo2.git"
     maintainers("liuyangzhuan")
 
+    license("LGPL-3.0-or-later")
+
     version("master", branch="master")
     version("2.18.0", sha256="5ad40bf3aa91857a808d6b632d9e1020341a33f1a4115d7a2b78b78fd063ae31")
 

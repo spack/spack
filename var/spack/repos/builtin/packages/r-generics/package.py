@@ -15,6 +15,8 @@ class RGenerics(RPackage):
 
     cran = "generics"
 
+    license("MIT")
+
     version("0.1.3", sha256="75046163bfa8b8a4f4214c1b689e796207f6447182f2e5062cf570302387d053")
     version("0.1.2", sha256="63eab37a9148f820ce2d67bda3dab6dedb9db6890baa5284949c39ab1b4c5898")
     version("0.1.1", sha256="a2478ebf1a0faa8855a152f4e747ad969a800597434196ed1f71975a9eb11912")

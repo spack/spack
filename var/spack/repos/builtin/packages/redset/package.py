@@ -16,6 +16,8 @@ class Redset(CMakePackage):
 
     maintainers("CamStan", "gonsie")
 
+    license("MIT")
+
     version("main", branch="main")
     version("0.3.0", sha256="007ca5e7e5f4400e22ad7bca82e366cd51c73f28067c955cc16d7d0ff0c06a1b")
     version("0.2.0", sha256="0438b0ba56dafcd5694a8fceeb5a932901307353e056ab29817d30b8387f787f")

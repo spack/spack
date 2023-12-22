@@ -12,6 +12,8 @@ class PySphinxCopybutton(PythonPackage):
     homepage = "https://github.com/choldgraf/sphinx-copybutton"
     pypi = "sphinx-copybutton/sphinx-copybutton-0.2.12.tar.gz"
 
+    license("MIT")
+
     version("0.2.12", sha256="9492883786984b6179c92c07ab0410237b26efa826adfa792acfd17b91a63e5c")
 
     depends_on("py-setuptools", type="build")

@@ -20,6 +20,8 @@ class PyGffutils(PythonPackage):
 
     maintainers("dorton21")
 
+    license("MIT")
+
     version("0.10.1", sha256="a8fc39006d7aa353147238160640e2210b168f7849cb99896be3fc9441e351cb")
 
     depends_on("py-setuptools", type="build")

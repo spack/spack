@@ -17,6 +17,8 @@ class Faodel(CMakePackage):
 
     tags = ["e4s"]
 
+    license("MIT")
+
     version("master", branch="master")
     version("1.2108.1", sha256="66c53daa510b28f906faac7c67d944a034900da2e296159a2879c3c0b0080ffd")
     version("1.1906.2", sha256="fd61c0a9c4303cd6b8c33bf04414acfc80ceaf08272be99bf3ebc854b37656a0")

@@ -19,6 +19,8 @@ class Delphes(CMakePackage):
 
     maintainers("drbenmorgan", "vvolkl", "selvaggi")
 
+    license("CC-BY-SA-4.0")
+
     version("master", branch="master")
     version("3.5.0", sha256="37685b945ef43aab09217d70b0ac7f9c5d3c2c27cf3b3f8d64c4e6eb5c5fd9aa")
     version("3.4.2", sha256="d46a7c5474de650befdb89377115feee31f1743107ceb3d8da699be9d48c097b")

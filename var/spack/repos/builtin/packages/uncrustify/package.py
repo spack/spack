@@ -15,6 +15,8 @@ class Uncrustify(CMakePackage, AutotoolsPackage):
 
     maintainers("gmaurel")
 
+    license("GPL-2.0-or-later")
+
     version("master", branch="master")
     version("0.74", commit="62048b01507304653ea98a74b31e0edbadaf7496")
     version("0.73", commit="25b765b4ccf1fc50302df3779188ccd402962ee0")

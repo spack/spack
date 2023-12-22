@@ -17,6 +17,8 @@ class PyWsproto(PythonPackage):
     homepage = "https://github.com/python-hyper/wsproto/"
     pypi = "wsproto/wsproto-1.0.0.tar.gz"
 
+    license("MIT")
+
     version("1.0.0", sha256="868776f8456997ad0d9720f7322b746bbe9193751b5b290b7f924659377c8c38")
 
     depends_on("python@3.6.1:", type=("build", "run"))

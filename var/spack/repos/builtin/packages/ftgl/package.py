@@ -12,6 +12,8 @@ class Ftgl(CMakePackage):
     homepage = "https://github.com/frankheckenbach/ftgl"
     git = "https://github.com/frankheckenbach/ftgl.git"
 
+    license("MIT")
+
     version("master", branch="master")
     version("2.4.0", commit="483639219095ad080538e07ceb5996de901d4e74")
     version("2.3.1", commit="3c0fdf367824b6381f29df3d8b4590240db62ab7")

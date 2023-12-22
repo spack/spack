@@ -12,6 +12,8 @@ class PyPockets(PythonPackage):
     homepage = "http://pockets.readthedocs.org/"
     pypi = "pockets/pockets-0.9.1.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.9.1", sha256="9320f1a3c6f7a9133fe3b571f283bcf3353cd70249025ae8d618e40e9f7e92b3")
 
     depends_on("py-setuptools", type="build")

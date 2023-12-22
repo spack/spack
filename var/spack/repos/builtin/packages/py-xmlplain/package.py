@@ -14,6 +14,8 @@ class PyXmlplain(PythonPackage):
 
     maintainers("LydDeb")
 
+    license("Unlicense")
+
     version("1.6.0", sha256="a9ccfa8ab36e4df1b0580458312501b7ae7625bad3c4fcc1b8c124aad775d8e3")
 
     depends_on("py-setuptools", type="build")

@@ -22,6 +22,8 @@ class PyReproject(PythonPackage):
     homepage = "https://reproject.readthedocs.io/"
     pypi = "reproject/reproject-0.7.1.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.7.1", sha256="95c0fa49e6b4e36455b91fa09ad1b71b230c990ad91d948af67ea3509a1a4ccb")
 
     depends_on("python@3.6:", type=("build", "run"))

@@ -12,6 +12,8 @@ class PySlurmPipeline(PythonPackage):
     homepage = "https://github.com/acorg/slurm-pipeline"
     pypi = "slurm-pipeline/slurm-pipeline-1.1.13.tar.gz"
 
+    license("MIT")
+
     version("4.0.4", sha256="5496e46edb890ef745231b4d05b8dfd194374b3fe2c6b33da43cda9685f145c8")
     version("3.0.2", sha256="28e07eb93e846b395a16e6778fd3fc8344a82d115a6a8420276ec68f67f7131c")
     version("2.0.9", sha256="2360e43965ecfa3701f287b7d597c99b4accd4dc8faf9d55cfdcc2228c4054cc")

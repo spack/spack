@@ -14,6 +14,8 @@ class PyContextily(PythonPackage):
 
     maintainers("adamjstewart")
 
+    license("BSD-3-Clause")
+
     version("1.0.1", sha256="f7dc25dbc8e01163be6cdeedb49a56da9cd0d586c838861f442ef2ee45eba9d4")
 
     depends_on("python@3.6:", type=("build", "run"))

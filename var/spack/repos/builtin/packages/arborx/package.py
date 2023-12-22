@@ -20,6 +20,8 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
 
     test_requires_compiler = True
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("1.5", sha256="c26f23c17e749ccf3e2d353a68969aa54d31b8e720dbfdbc2cef16c5d8477e9e")
     version("1.4.1", sha256="2ca828ef6615859654b233a7df17017e7cfd904982b80026ec7409eb46b77a95")

@@ -16,6 +16,8 @@ class RSn(RPackage):
 
     cran = "sn"
 
+    license("GPL-2.0-only OR GPL-3.0-only")
+
     version("2.1.1", sha256="f9f6b56d91dc7cb18dc8308d0875b9648c90b268d1aaf8f4c5164ff016df22bd")
     version("2.1.0", sha256="495f9baed26e2e70357eda996fdb327ccc22673486e375686c32daec727a448b")
     version("2.0.2", sha256="957b49027c2111f51893433e902486141a942a5ed384ca605714605de80d1790")

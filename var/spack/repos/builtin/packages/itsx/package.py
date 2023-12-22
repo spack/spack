@@ -14,6 +14,8 @@ class Itsx(Package):
     homepage = "https://microbiology.se/software/itsx/"
     url = "https://microbiology.se/sw/ITSx_1.0.11.tar.gz"
 
+    license("GPL-3.0-or-later")
+
     version("1.0.11", sha256="8f4f76fc9c43b61f4dd4cd8dc4e495e9687943e15515396583f7a757651d435e")
 
     depends_on("perl", type=("build", "run"))

@@ -15,6 +15,8 @@ class Everytrace(CMakePackage):
 
     maintainers("citibeth")
 
+    license("LGPL-3.0-or-later")
+
     version("develop", branch="develop")
     version("0.2.2", sha256="0487276bb24e648388862d8e1d8cfe56b529f7e3d840df3fcb5b3a3dad4016e1")
 

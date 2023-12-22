@@ -16,6 +16,8 @@ class PyMsal(PythonPackage):
     homepage = "https://github.com/AzureAD/microsoft-authentication-library-for-python"
     pypi = "msal/msal-1.3.0.tar.gz"
 
+    license("MIT")
+
     # If you get diamond dependency problems on py-pyjwt,
     # consider using v1.20.0, which has looser constraints
     version("1.20.0", sha256="78344cd4c91d6134a593b5e3e45541e666e37b747ff8a6316c3668dd1e6ab6b2")

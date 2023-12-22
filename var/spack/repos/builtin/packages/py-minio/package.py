@@ -14,6 +14,8 @@ class PyMinio(PythonPackage):
     homepage = "https://github.com/minio/minio-py"
     pypi = "minio/minio-7.1.2.tar.gz"
 
+    license("Apache-2.0")
+
     version("7.1.2", sha256="40d0cdb4dba5d5610d6599ea740cf827102db5bfa71279fc220c3cf7305bedc1")
 
     depends_on("py-setuptools", type="build")

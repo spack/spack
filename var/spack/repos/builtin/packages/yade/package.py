@@ -14,6 +14,8 @@ class Yade(CMakePackage):
 
     maintainers("lmagdanello")
 
+    license("GPL-2.0-only")
+
     version("2023.02a", sha256="f76b5a0aa7f202716efa94cd730e4bc442ffcb40a99caaf6e579ab8695efb0c1")
     version("2022.01a", sha256="3b76185b706aba6113d1e932c5b883cd772e8d8c6b4e5230a01f3370e2b6904c")
     version("2021.01a", sha256="3afab3380e8f5d185af7929213f63341445d6a5ee6bc21bbae102d8ffd93df1d")

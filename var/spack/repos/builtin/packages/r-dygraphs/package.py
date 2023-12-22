@@ -17,6 +17,8 @@ class RDygraphs(RPackage):
 
     cran = "dygraphs"
 
+    license("MIT")
+
     version("1.1.1.6", sha256="c3d331f30012e721a048e04639f60ea738cd7e54e4f930ac9849b95f0f005208")
     version("1.1.1.5", sha256="274035988fdd6833121fd5831692355d383acc828d540788dbcecaf88eb2d72d")
     version("0.9", sha256="2aa4754a7d824d8994c2a97ee02bab163319f065b4d10d289337dc8398c0646c")

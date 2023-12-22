@@ -20,6 +20,8 @@ class PyPyerfa(PythonPackage):
 
     maintainers("meyersbs")
 
+    license("BSD-3-Clause")
+
     version("2.0.0.1", sha256="2fd4637ffe2c1e6ede7482c13f583ba7c73119d78bef90175448ce506a0ede30")
 
     # From setup.cfg

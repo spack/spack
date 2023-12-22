@@ -18,6 +18,8 @@ class Blaspp(CMakePackage, CudaPackage, ROCmPackage):
     url = "https://github.com/icl-utk-edu/blaspp/releases/download/v2023.01.00/blaspp-2023.01.00.tar.gz"
     maintainers("teonnik", "Sely85", "G-Ragghianti", "mgates3")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version(
         "2023.08.25", sha256="1d9c7227a6d8776944aa866592142b7b51c6e4ba5529d168eb8ae2b329c47401"

@@ -12,6 +12,8 @@ class PyAutomat(PythonPackage):
     homepage = "https://github.com/glyph/Automat"
     pypi = "Automat/Automat-20.2.0.tar.gz"
 
+    license("MIT")
+
     version("20.2.0", sha256="7979803c74610e11ef0c0d68a2942b152df52da55336e0c9d58daf1831cbdf33")
 
     depends_on("py-setuptools", type="build")

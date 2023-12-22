@@ -20,6 +20,8 @@ class Winbison(CMakePackage):
 
     executables = [r"^bison(.*)?$"]
 
+    license("GFDL-1.3-only")
+
     version("2.5.25", sha256="8e1b71e037b524ba3f576babb0cf59182061df1f19cd86112f085a882560f60b")
     version("2.5.24", sha256="a49d6e310636e3487e1e066e411d908cfeae2d5b5fde1f3cf74fe1d6d4301062")
     version("2.5.23", sha256="445bd1bcb90e0c84e97f6e44de76869f8e778c60ddbd7c39a7b2142f8ba43e61")

@@ -16,6 +16,8 @@ class RSass(RPackage):
 
     cran = "sass"
 
+    license("MIT")
+
     version("0.4.5", sha256="eba161d982d2db108c8c0b61ec6b41a20d3adec430c7cc39537ab388c1007a90")
     version("0.4.2", sha256="b409049d0de9fae853f46c19d353226c8e9244ce847bdada033d8669fc2c9646")
     version("0.4.1", sha256="850fcb6bd49085d5afd25ac18da0744234385baf1f13d8c0a320f4da2de608bb")

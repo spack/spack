@@ -15,6 +15,8 @@ class Hub(Package):
     url = "https://github.com/github/hub/archive/v2.2.2.tar.gz"
     git = "https://github.com/github/hub.git"
 
+    license("MIT")
+
     version("master", branch="master")
     version("2.14.2", sha256="e19e0fdfd1c69c401e1c24dd2d4ecf3fd9044aa4bd3f8d6fd942ed1b2b2ad21a")
     version(

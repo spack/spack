@@ -12,6 +12,8 @@ class PyNatsort(PythonPackage):
     homepage = "https://github.com/SethMMorton/natsort"
     url = "https://github.com/SethMMorton/natsort/archive/5.2.0.zip"
 
+    license("MIT")
+
     version("7.1.1", sha256="ada96d9ca0db0d44b891718ff7baff5ac34cf5b6d9def356c0f7a8ea67ae2113")
     version("7.1.0", sha256="c3de32c8e5e91cf4f2dd1655b4c167ca4676cc28ce397050fc8d229582a71f0d")
     version("7.0.1", sha256="1a422a344d089f7a2acba788087ca6253ca47a544bda677721f99516cdfd8668")

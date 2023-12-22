@@ -20,6 +20,8 @@ class Pajeng(CMakePackage):
 
     maintainers("viniciusvgp", "schnorr")
 
+    license("GPL-3.0-only")
+
     version("develop", git="https://github.com/schnorr/pajeng.git")
     version("1.3.6", sha256="1a2722bfaeb0c6437fb9e8efc2592edbf14ba01172f97e01c7839ffea8b9d0b3")
     version("1.3.5", sha256="ea8ca02484de4091dcf57289724876ec17dd98e3a032dc609b7ea020ca2629eb")

@@ -13,6 +13,8 @@ class RGh(RPackage):
 
     cran = "gh"
 
+    license("MIT")
+
     version("1.4.0", sha256="68c69fcd18429b378e639a09652465a4e92b7b5b5704804d0c5b1ca2b9b58b71")
     version("1.3.1", sha256="fbaea2abdeceb03d28839fd0e58c2eea01092f9ef92dcc044718ef0d298612ef")
     version("1.3.0", sha256="a44039054e8ca56496f2d9c7a10cdadf4a7383bc91086e768ba7e7f1fbcaed1c")

@@ -16,6 +16,8 @@ class RIrlba(RPackage):
 
     cran = "irlba"
 
+    license("GPL-3.0-only")
+
     version("2.3.5.1", sha256="2cfe6384fef91c223a9920895ce89496f990d1450d731e44309fdbec2bb5c5cf")
     version("2.3.5", sha256="26fc8c0d36460e422ab77f43a597b8ec292eacd452628c54d34b8bf7d5269bb9")
     version("2.3.3", sha256="6ee233697bcd579813bd0af5e1f4e6dd1eea971e8919c748408130d970fef5c0")

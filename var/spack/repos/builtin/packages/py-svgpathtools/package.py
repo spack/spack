@@ -13,6 +13,8 @@ class PySvgpathtools(PythonPackage):
 
     pypi = "svgpathtools/svgpathtools-1.3.3.tar.gz"
 
+    license("MIT")
+
     version("1.3.3", sha256="e4b3784ae41b725fbce6a33a8981210967b16d0b557cb5d98c0ed0c81f0f89b9")
 
     depends_on("py-setuptools", type="build")

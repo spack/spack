@@ -19,6 +19,8 @@ class RMcmc(RPackage):
 
     cran = "mcmc"
 
+    license("MIT")
+
     version("0.9-7", sha256="b7c4d3d5f9364c67a4a3cd49296a61c315ad9bd49324a22deccbacb314aa8260")
 
     depends_on("r@3.0.2:", type=("build", "run"))

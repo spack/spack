@@ -12,6 +12,8 @@ class PyNbclassic(PythonPackage):
     homepage = "https://github.com/jupyterlab/nbclassic"
     pypi = "nbclassic/nbclassic-0.3.1.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("1.0.0", sha256="0ae11eb2319455d805596bf320336cda9554b41d99ab9a3c31bf8180bffa30e3")
     version("0.4.8", sha256="c74d8a500f8e058d46b576a41e5bc640711e1032cf7541dde5f73ea49497e283")
     version("0.3.5", sha256="99444dd63103af23c788d9b5172992f12caf8c3098dd5a35c787f0df31490c29")

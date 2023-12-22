@@ -32,6 +32,8 @@ class Hdf5Blosc(Package):
     homepage = "https://github.com/Blosc/hdf5-blosc"
     git = "https://github.com/Blosc/hdf5-blosc.git"
 
+    license("MIT")
+
     version("master", branch="master")
 
     depends_on("c-blosc")

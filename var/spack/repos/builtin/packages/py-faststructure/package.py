@@ -13,6 +13,8 @@ class PyFaststructure(PythonPackage):
     homepage = "https://github.com/rajanil/fastStructure"
     url = "https://github.com/rajanil/fastStructure/archive/v1.0.tar.gz"
 
+    license("MIT")
+
     version("1.0", sha256="f1bfb24bb5ecd108bc3a90145fad232012165c1e60608003f1c87d200f867b81")
 
     # pip silently replaces distutils with setuptools

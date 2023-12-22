@@ -17,6 +17,8 @@ class PyUnicycler(PythonPackage):
     homepage = "https://github.com/rrwick/Unicycler"
     url = "https://github.com/rrwick/Unicycler/archive/v0.4.5.tar.gz"
 
+    license("GPL-3.0-or-later")
+
     version("0.5.0", sha256="84a8709c9f2e624225410af702d779ffb0cb06f7c22c20e1f01b989945e08a47")
     version("0.4.9", sha256="84bea8f3e8f99a1e63e5230ffe474a696db8caa67569c3a96ae12906d32a35eb")
     version("0.4.8", sha256="e948871e4de9db5964c9ca6f8f877c3cbe6a46f62052dfab52ffe0f45bbbd203")

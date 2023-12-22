@@ -21,6 +21,8 @@ class Ssht(CMakePackage):
 
     maintainers("eschnett")
 
+    license("GPL-3.0-only")
+
     version("1.5.2", sha256="6ce3e48d36a4af57cab9d96f5f845f905808dac8ac8b3ec195f6b49d017a890d")
     version("1.5.1", sha256="f0b6fb6a1de40354fcf4eafe09b953c96a72ba9c533a42e290802e93cd14170c")
     version("1.5.0", sha256="ff42103463c973a11da84b757d2a6661679c8a60745e44f0ccf697f88593083a")

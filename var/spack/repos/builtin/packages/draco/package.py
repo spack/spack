@@ -17,6 +17,8 @@ class Draco(CMakePackage):
     git = "https://github.com/lanl/Draco.git"
     maintainers("KineticTheory")
 
+    license("BSD-3-Clause-Open-MPI")
+
     version("develop", branch="develop")
     version("7.14.1", sha256="b05c75f1b8ea1d4fac4900d897fb1c948b470826b174ed8b97b32c6da9f030bf")
     version("7.14.0", sha256="c8abf293d81c1b8020907557c20d8d2f2edf9ac7ae60a534eab052a8c3b7f99d")

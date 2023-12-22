@@ -12,6 +12,8 @@ class PyPapermill(PythonPackage):
     homepage = "https://github.com/nteract/papermill"
     pypi = "papermill/papermill-2.4.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("2.4.0", sha256="6f8f8a9b06b39677f207c09100c8d386bcf592f0cbbdda9f0f50e81445697627")
 
     depends_on("py-setuptools", type="build")

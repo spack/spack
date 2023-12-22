@@ -13,6 +13,8 @@ class Re2(CMakePackage):
     homepage = "https://github.com/google/re2"
     url = "https://github.com/google/re2/archive/2020-08-01.tar.gz"
 
+    license("BSD-3-Clause")
+
     version(
         "2023-09-01", sha256="5bb6875ae1cd1e9fedde98018c346db7260655f86fdb8837e3075103acd3649b"
     )

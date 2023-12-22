@@ -13,6 +13,8 @@ class PyKeras2onnx(PythonPackage):
 
     url = "https://github.com/onnx/keras-onnx/archive/refs/tags/v1.7.0.tar.gz"
 
+    license("MIT")
+
     version("1.7.0", sha256="8ec9c4e1c1f870d420934d1aa7cbc9faab80c6af366900bf95e5f48280c0d199")
 
     depends_on("py-setuptools", type="build")

@@ -15,6 +15,8 @@ class PyCircus(PythonPackage):
     homepage = "https://github.com/circus-tent/circus"
     pypi = "circus/circus-0.18.0.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.18.0", sha256="193ce8224e068ced66724cf483106fb6674b51a57583ac1a0e7ed7a7ee8c71ab")
 
     depends_on("python@3.7:", type=("build", "run"))

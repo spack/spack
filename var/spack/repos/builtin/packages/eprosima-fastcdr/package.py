@@ -14,4 +14,6 @@ class EprosimaFastcdr(CMakePackage):
     homepage = "https://www.eprosima.com/"
     url = "https://github.com/eProsima/Fast-CDR/archive/v1.0.27.tar.gz"
 
+    license("Apache-2.0")
+
     version("1.0.27", sha256="a9bc8fd31a2c2b95e6d2fb46e6ce1ad733e86dc4442f733479e33ed9cdc54bf6")

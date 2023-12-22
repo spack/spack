@@ -15,6 +15,8 @@ class PyBmapTools(PythonPackage):
     homepage = "https://github.com/intel/bmap-tools/"
     url = "https://github.com/intel/bmap-tools/archive/v3.4.tar.gz"
 
+    license("GPL-2.0-only")
+
     version("3.5", sha256="d410e2d97192d0fc2f88ef160a0bb6ed83fce99da97a606d7f6890cc654ec594")
     version("3.4", sha256="483c5dd9589920b5bdec85d4cdbe150adb3ca404d205504f85c0fb03edc69c2a")
     version("3.2", sha256="4cf2adcd34be99cd4b892accaef6942cd9c67a4d09f5b1a5377d1e37ca5a2cd0")

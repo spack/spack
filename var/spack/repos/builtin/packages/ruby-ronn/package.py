@@ -14,6 +14,8 @@ class RubyRonn(RubyPackage):
     homepage = "https://rtomayko.github.io/ronn/"
     url = "https://github.com/rtomayko/ronn/archive/0.7.3.tar.gz"
 
+    license("MIT")
+
     version("0.7.3", sha256="808aa6668f636ce03abba99c53c2005cef559a5099f6b40bf2c7aad8e273acb4")
     version("0.7.0", sha256="ea14337093de8707aa8a67b97357332fa8a03b0df722bdbf4f027fbe4379b185")
 

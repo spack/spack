@@ -12,6 +12,8 @@ class PyLarkParser(PythonPackage):
     homepage = "https://github.com/lark-parser/lark/"
     pypi = "lark-parser/lark-parser-0.6.2.tar.gz"
 
+    license("MIT")
+
     version("0.12.0", sha256="15967db1f1214013dca65b1180745047b9be457d73da224fcda3d9dd4e96a138")
 
     depends_on("py-setuptools", type="build")

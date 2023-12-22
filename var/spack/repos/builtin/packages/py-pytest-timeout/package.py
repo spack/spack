@@ -14,6 +14,8 @@ class PyPytestTimeout(PythonPackage):
     homepage = "https://github.com/pytest-dev/pytest-timeout/"
     pypi = "pytest-timeout/pytest-timeout-1.4.2.tar.gz"
 
+    license("MIT")
+
     version("1.4.2", sha256="20b3113cf6e4e80ce2d403b6fb56e9e1b871b510259206d40ff8d609f48bda76")
 
     depends_on("python@2.7:2.8,3.5:", type=("build", "run"))

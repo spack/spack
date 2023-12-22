@@ -13,6 +13,8 @@ class Mosesdecoder(Package):
     homepage = "http://www2.statmt.org/moses/"
     url = "https://github.com/moses-smt/mosesdecoder/archive/refs/tags/RELEASE-4.0.tar.gz"
 
+    license("LGPL-2.1-or-later")
+
     version("4.0", sha256="357376cdbb225a17cdf17195625d0fa7e10d722807e9e0b8a633ffbd7eec9b8f")
 
     depends_on("git")

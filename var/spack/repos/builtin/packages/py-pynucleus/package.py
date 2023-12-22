@@ -16,6 +16,8 @@ class PyPynucleus(PythonPackage):
 
     refs = ["master", "develop"]
 
+    license("MIT")
+
     for ref in refs:
         version(ref, branch=ref)
 

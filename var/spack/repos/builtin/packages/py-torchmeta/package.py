@@ -14,6 +14,8 @@ class PyTorchmeta(PythonPackage):
     homepage = "https://github.com/tristandeleu/pytorch-meta"
     pypi = "torchmeta/torchmeta-1.7.0.tar.gz"
 
+    license("MIT")
+
     version("1.7.0", sha256="148d42b6a1ec27970408f7bcb97cf1cb203f8699214e06424fe43d78faa848d9")
 
     depends_on("python@3.6:", type=("build", "run"))

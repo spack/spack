@@ -12,6 +12,8 @@ class PyIsort(PythonPackage):
     homepage = "https://github.com/timothycrosley/isort"
     pypi = "isort/isort-4.2.15.tar.gz"
 
+    license("MIT")
+
     version("5.12.0", sha256="8bef7dde241278824a6d83f44a544709b065191b95b6e50894bdc722fcba0504")
     version("5.11.5", sha256="6be1f76a507cb2ecf16c7cf14a37e41609ca082330be4e3436a18ef74add55db")
     version("5.10.1", sha256="e8443a5e7a020e9d7f97f1d7d9cd17c88bcb3bc7e218bf9cf5095fe550be2951")

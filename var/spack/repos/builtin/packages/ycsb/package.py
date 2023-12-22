@@ -14,6 +14,8 @@ class Ycsb(MavenPackage):
     url = "https://github.com/brianfrankcooper/YCSB/archive/0.17.0.tar.gz"
     git = "https://github.com/brianfrankcooper/YCSB.git"
 
+    license("Apache-2.0")
+
     version("master", branch="master")
     version("0.17.0", sha256="5dd1a3d4dd7ac336eadccc83b097c811e142cfe1b23fc278f247054a1892c0e0")
     version("0.16.0", sha256="4296fd5e90d7d6d7dfcbad90039ddf16e785706a07f99c1c8a06e6ee06440f71")

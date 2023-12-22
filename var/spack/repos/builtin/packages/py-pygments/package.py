@@ -13,6 +13,8 @@ class PyPygments(PythonPackage):
     pypi = "Pygments/Pygments-2.4.2.tar.gz"
     git = "https://github.com/pygments/pygments.git"
 
+    license("BSD-2-Clause")
+
     version("2.16.1", sha256="1daff0494820c69bc8941e407aa20f577374ee88364ee10a98fdbe0aece96e29")
     version("2.16.0", sha256="4f6df32f21dca07a54a0a130bda9a25d2241e9e0a206841d061c85a60cc96145")
     version("2.15.1", sha256="8ace4d3c1dd481894b2005f560ead0f9f19ee64fe983366be1a21e171d12775c")

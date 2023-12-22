@@ -13,6 +13,8 @@ class PyTuspy(PythonPackage):
     homepage = "http://github.com/tus/tus-py-client/"
     pypi = "tuspy/tuspy-1.0.0.tar.gz"
 
+    license("MIT")
+
     version("1.0.0", sha256="09a81eba7b0ce4da7870961721892c62f1d62570913bcef6727ef5599e3f4181")
 
     depends_on("python@3:", type=("build", "run"))

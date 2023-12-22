@@ -14,6 +14,8 @@ class Topaz(PythonPackage):
     homepage = "https://topaz-em.readthedocs.io/"
     pypi = "topaz-em/topaz-em-0.2.5.tar.gz"
 
+    license("GPL-3.0-or-later")
+
     version("0.2.5", sha256="002a6eb775598b6c4df0225f3a488bfe6a6da9246e8ca42eb4e7d58f694c25cc")
 
     depends_on("py-setuptools", type="build")

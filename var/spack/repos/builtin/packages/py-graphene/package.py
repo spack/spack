@@ -14,6 +14,8 @@ class PyGraphene(PythonPackage):
 
     maintainers("LydDeb")
 
+    license("MIT")
+
     version("2.1.9", sha256="b9f2850e064eebfee9a3ef4a1f8aa0742848d97652173ab44c82cc8a62b9ed93")
 
     depends_on("py-setuptools", type="build")

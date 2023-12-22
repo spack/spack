@@ -17,6 +17,8 @@ class PyTextblob(PythonPackage):
     homepage = "https://textblob.readthedocs.io/"
     url = "https://github.com/sloria/TextBlob/archive/0.16.0.tar.gz"
 
+    license("MIT")
+
     version("0.16.0", sha256="bf29369f3260cc779b22b2b86337bcce0c8e929d994b1c8f0d39545ec2fb33aa")
 
     depends_on("python@3:", type=("build", "run"))

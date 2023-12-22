@@ -13,6 +13,8 @@ class PyGevent(PythonPackage):
     pypi = "gevent/gevent-23.7.0.tar.gz"
     git = "https://github.com/gevent/gevent.git"
 
+    license("MIT")
+
     version("23.7.0", sha256="d0d3630674c1b344b256a298ab1ff43220f840b12af768131b5d74e485924237")
     version("21.12.0", sha256="f48b64578c367b91fa793bf8eaaaf4995cb93c8bc45860e473bf868070ad094e")
     version("21.8.0", sha256="43e93e1a4738c922a2416baf33f0afb0a20b22d3dba886720bc037cd02a98575")

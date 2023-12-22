@@ -14,6 +14,8 @@ class PyAmrex(PythonPackage, CudaPackage, ROCmPackage):
 
     maintainers("ax3l", "RTSandberg", "sayerhs", "WeiqunZhang")
 
+    license("BSD-3-Clause-LBNL")
+
     version("develop", branch="development")
 
     variant("dimensions", default="3", description="Dimensionality", values=("1", "2", "3"))

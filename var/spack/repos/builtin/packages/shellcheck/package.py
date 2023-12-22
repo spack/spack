@@ -35,6 +35,8 @@ class Shellcheck(Package):
     # challenges with Haskell, and see the pandoc package for a precedent of
     # downloading a Haskell-derived binary.
 
+    license("GPL-3.0")
+
     for ver, packages in _versions.items():
         system = platform.system().lower()
         machine = platform.machine().lower()

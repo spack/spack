@@ -21,6 +21,8 @@ class Superlu(CMakePackage, Package):
 
     test_requires_compiler = True
 
+    license("BSD-3-Clause")
+
     version("6.0.0", sha256="5c199eac2dc57092c337cfea7e422053e8f8229f24e029825b0950edd1d17e8e")
     version(
         "5.3.0",

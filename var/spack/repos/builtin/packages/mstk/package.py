@@ -27,6 +27,8 @@ class Mstk(CMakePackage):
 
     maintainers("raovgarimella", "julienloiseau")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("3.3.6", sha256="30041ee6f32d754e5d9b46db8f62609bb66d2686f8e6e16ad254f552849cb0f1")
     version("3.3.5", sha256="64c976e12d1393aafd086ef941b176add6cfb963f463c33259596e7ef641cdd8")

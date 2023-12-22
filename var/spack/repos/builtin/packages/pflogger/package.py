@@ -17,6 +17,8 @@ class Pflogger(CMakePackage):
 
     maintainers("mathomp4", "tclune")
 
+    license("Apache-2.0")
+
     version("develop", branch="develop")
     version("main", branch="main")
 

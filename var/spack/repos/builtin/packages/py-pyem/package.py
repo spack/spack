@@ -16,6 +16,8 @@ class PyPyem(PythonPackage):
 
     pypi = "pyem/pyem-2.1.0.tar.gz"
 
+    license("ISC")
+
     version("2.1.0", sha256="5234a20427ab2813a8a0bf1e9112d4d854b1b0502b3e63d17c1b1a3c4be9340e")
 
     depends_on("python@3.7:", type=("build", "run"))

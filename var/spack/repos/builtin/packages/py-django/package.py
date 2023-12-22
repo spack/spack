@@ -12,6 +12,8 @@ class PyDjango(PythonPackage):
     homepage = "https://www.djangoproject.com/"
     url = "https://github.com/django/django/archive/3.0.5.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("3.0.5", sha256="ef2d4f26414dc9598afce9c56cee4578313b88861cedfc5b3d9a71078e5cc79b")
     version("3.0.4", sha256="99699643d83acfab51d3ad73c2c2904173e03a4f59fe24c3d494e4fafc0b679f")
     version("3.0.3", sha256="d953c950f0c395db065c8bc39d20e87faded376632a3aacf889ae92d5adaac8b")

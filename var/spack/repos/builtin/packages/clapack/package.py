@@ -18,6 +18,8 @@ class Clapack(MakefilePackage):
     homepage = "https://www.netlib.org/clapack/"
     url = "https://www.netlib.org/clapack/clapack.tgz"
 
+    license("BSD-3-Clause")
+
     version("3.2.1", sha256="6dc4c382164beec8aaed8fd2acc36ad24232c406eda6db462bd4c41d5e455fac")
 
     variant("external-blas", default=True, description="Build with external BLAS (ATLAS here).")

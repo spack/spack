@@ -21,6 +21,8 @@ class RangeV3(CMakePackage):
     git = "https://github.com/ericniebler/range-v3.git"
     maintainers("greenc-FNAL")
 
+    license("BSL-1.0")
+
     version("master", branch="master")
     version("0.11.0", sha256="376376615dbba43d3bef75aa590931431ecb49eb36d07bb726a19f680c75e20c")
     version("0.10.0", sha256="5a1cd44e7315d0e8dcb1eee4df6802221456a9d1dbeac53da02ac7bd4ea150cd")

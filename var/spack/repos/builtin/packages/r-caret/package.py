@@ -14,6 +14,8 @@ class RCaret(RPackage):
 
     cran = "caret"
 
+    license("GPL-2.0-or-later")
+
     version("6.0-94", sha256="2715e83ca260bb739cd926a55b0d2da1e3f6308b17b56862466e738d930d29a8")
     version("6.0-93", sha256="4c156b88879d390436a54779ea19ffbae3f476533d83caaf30400d76130c4a07")
     version("6.0-92", sha256="1d814a2a921a23ad8b9a7da6f788e6abc06f5668b3918bd440d4355bc4b81511")

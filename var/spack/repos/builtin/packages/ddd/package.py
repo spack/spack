@@ -16,6 +16,8 @@ class Ddd(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/ddd"
     gnu_mirror_path = "ddd/ddd-3.3.12.tar.gz"
 
+    license("LGPL-3.0-only")
+
     version("3.3.12", sha256="3ad6cd67d7f4b1d6b2d38537261564a0d26aaed077bf25c51efc1474d0e8b65c")
 
     variant("shared", default=True, description="Build shared libraries")

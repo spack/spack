@@ -13,6 +13,8 @@ class PyDistMeta(PythonPackage):
     homepage = "https://github.com/repo-helper/dist-meta"
     pypi = "dist_meta/dist-meta-0.8.0.tar.gz"
 
+    license("MIT")
+
     version("0.8.0", sha256="541d51f75b7f580c80d8d7b23112d0b4bf3edbc9442e425a7c4fcd75f4138551")
 
     depends_on("py-wheel@0.34.2:", type="build")

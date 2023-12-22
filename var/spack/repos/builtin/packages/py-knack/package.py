@@ -13,6 +13,8 @@ class PyKnack(PythonPackage):
     homepage = "https://github.com/microsoft/knack"
     pypi = "knack/knack-0.7.1.tar.gz"
 
+    license("MIT")
+
     version("0.7.1", sha256="fcef6040164ebe7d69629e4e089b398c9b980791446496301befcf8381dba0fc")
 
     depends_on("py-setuptools", type="build")

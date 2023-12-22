@@ -14,6 +14,8 @@ class Bind9(AutotoolsPackage):
     homepage = "https://github.com/isc-projects/bind9"
     url = "https://github.com/isc-projects/bind9/archive/v9_14_6.tar.gz"
 
+    license("Apache-2.0")
+
     version("9_14_6", sha256="98be7a7b6d614b519f6c8d6ec7a8a39759ae9604d87228d9dc7c034471e5433e")
 
     depends_on("libuv", type="link")

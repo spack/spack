@@ -17,6 +17,8 @@ class PyPromise(PythonPackage):
 
     maintainers("dorton21")
 
+    license("MIT")
+
     version("2.3", sha256="dfd18337c523ba4b6a58801c164c1904a9d4d1b1747c7d5dbf45b693a49d93d0")
 
     depends_on("py-setuptools", type="build")

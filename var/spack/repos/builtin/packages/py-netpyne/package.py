@@ -15,6 +15,8 @@ class PyNetpyne(PythonPackage):
     url = "https://github.com/suny-downstate-medical-center/netpyne/archive/refs/tags/v1.0.3.1.tar.gz"
     git = "https://github.com/suny-downstate-medical-center/netpyne.git"
 
+    license("MIT")
+
     version("master", branch="master")
     version("1.0.3.1", sha256="4f8492d58ff1dd7ec5ba6ed1f58f94548b8c1e4e9fd50b8a6d2e9f8eb400736d")
 

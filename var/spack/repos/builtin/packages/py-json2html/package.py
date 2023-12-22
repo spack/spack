@@ -15,6 +15,8 @@ class PyJson2html(PythonPackage):
 
     maintainers("meyersbs")
 
+    license("MIT")
+
     version("1.3.0", sha256="8951a53662ae9cfd812685facdba693fc950ffc1c1fd1a8a2d3cf4c34600689c")
 
     depends_on("py-setuptools", type="build")

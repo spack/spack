@@ -12,6 +12,8 @@ class PyTomlkit(PythonPackage):
     homepage = "https://github.com/sdispater/tomlkit"
     pypi = "tomlkit/tomlkit-0.7.0.tar.gz"
 
+    license("MIT")
+
     version("0.12.1", sha256="38e1ff8edb991273ec9f6181244a6a391ac30e9f5098e7535640ea6be97a7c86")
     version("0.11.4", sha256="3235a9010fae54323e727c3ac06fb720752fe6635b3426e379daec60fbd44a83")
     version("0.11.0", sha256="71ceb10c0eefd8b8f11fe34e8a51ad07812cb1dc3de23247425fbc9ddc47b9dd")

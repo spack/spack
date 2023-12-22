@@ -14,6 +14,8 @@ class PyMike(PythonPackage):
     homepage = "https://github.com/jimporter/mike"
     pypi = "mike/mike-1.1.2.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("1.1.2", sha256="56c3f1794c2d0b5fdccfa9b9487beb013ca813de2e3ad0744724e9d34d40b77b")
 
     depends_on("python@3.6:", type=("build", "run"))

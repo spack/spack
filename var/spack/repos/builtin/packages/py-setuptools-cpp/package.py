@@ -14,6 +14,8 @@ class PySetuptoolsCpp(PythonPackage):
 
     maintainers("dorton")
 
+    license("MIT")
+
     version("0.1.0", sha256="4fd5e08603237578d06d28efd592d9847b523ede3e502f660be44b1e6254674d")
 
     depends_on("py-setuptools", type="build")

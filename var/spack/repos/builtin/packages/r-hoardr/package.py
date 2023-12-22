@@ -17,6 +17,8 @@ class RHoardr(RPackage):
 
     cran = "hoardr"
 
+    license("MIT")
+
     version("0.5.3", sha256="b9e4d1350e1fde7db922e55128306e3768ee46ff9532f05c96543dcae383647c")
     version("0.5.2", sha256="819113f0e25da105f120a676b5173872a4144f2f6f354cad14b35f898e76dc54")
 

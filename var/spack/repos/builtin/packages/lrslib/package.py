@@ -15,6 +15,8 @@ class Lrslib(Package):
     homepage = "http://cgm.cs.mcgill.ca/~avis/C/lrs.html"
     url = "http://cgm.cs.mcgill.ca/~avis/C/lrslib/archive/lrslib-062.tar.gz"
 
+    license("GPL-2.0-only")
+
     version("6.2", sha256="adf92f9c7e70c001340b9c28f414208d49c581df46b550f56ab9a360348e4f09")
     version("6.1", sha256="6d5b30ee67e1fdcd6bf03e14717616f18912d59b3707f6d53f9c594c1674ec45")
     version("6.0", sha256="1a569786ecd89ef4f2ddee5ebc32e321f0339505be40f4ffbd2daa95fed1c505")

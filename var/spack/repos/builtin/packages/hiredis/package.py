@@ -15,6 +15,8 @@ class Hiredis(MakefilePackage, CMakePackage):
 
     maintainers("lpottier", "rblake-llnl")
 
+    license("BSD-3-Clause")
+
     version("1.1.0", sha256="fe6d21741ec7f3fc9df409d921f47dfc73a4d8ff64f4ac6f1d95f951bf7f53d6")
     version("1.0.2", sha256="e0ab696e2f07deb4252dda45b703d09854e53b9703c7d52182ce5a22616c3819")
     version("1.0.1", sha256="a420df40775ac7b4b46550dd4df78ffe6620616333496a17c9c9fc556815ba4b")

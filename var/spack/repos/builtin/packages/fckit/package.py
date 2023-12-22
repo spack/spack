@@ -18,6 +18,8 @@ class Fckit(CMakePackage):
 
     maintainers("climbfuji")
 
+    license("Apache-2.0")
+
     version("master", branch="master")
     version("develop", branch="develop")
     version("0.11.0", sha256="846f5c369940c0a3d42cd12932f7d6155339e79218d149ebbfdd02e759dc86c5")

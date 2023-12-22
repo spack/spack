@@ -16,6 +16,8 @@ class PyPennylane(PythonPackage):
 
     maintainers("mlxd", "AmintorDusko", "marcodelapierre")
 
+    license("Apache-2.0")
+
     version("master", branch="master")
     version("0.32.0", sha256="8a2206268d7cae0a59f9067b6075175eec93f4843519b371f02716c49a22e750")
     version("0.31.0", sha256="f3b68700825c120e44434ed2b2ab71d0be9d3111f3043077ec0598661ec33477")

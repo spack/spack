@@ -14,6 +14,8 @@ class Antimony(CMakePackage):
 
     maintainers("rblake-llnl")
 
+    license("BSD-3-Clause")
+
     version("2.8", sha256="7e3e38706c074b72e241ac56ef4ce23e87ef8c718c70f29b2207f1847c43770f")
     version("2.7", sha256="7ad181cac632282ae77ced09388dd92db87ea4683eed8c45f2b43861ae2acad4")
     version("2.6", sha256="afc8dc5ec6bc2cd3085038f80362327456f219171b09a13f775b50550c8b1d87")

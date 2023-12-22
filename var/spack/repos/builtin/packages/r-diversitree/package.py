@@ -19,6 +19,8 @@ class RDiversitree(RPackage):
 
     cran = "diversitree"
 
+    license("GPL-2.0-or-later")
+
     version("0.9-16", sha256="4c236970b58e56b922352f3f5d97010c74d8ec5783b375c311fe11abfb99f967")
     version("0.9-15", sha256="c739ef3d4fcc24fd6855b1d297d31e0f89fbaff1efe8a2d149044458ecd363ea")
     version("0.9-11", sha256="4caa6a468f93de9f1c8c30e4457f34bb8346e1acdaf74f684005bfa86a950ecb")

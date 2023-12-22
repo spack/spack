@@ -12,6 +12,8 @@ class PyUcMicroPy(PythonPackage):
     homepage = "https://github.com/tsutsu3/uc.micro-py"
     pypi = "uc-micro-py/uc-micro-py-1.0.2.tar.gz"
 
+    license("MIT")
+
     version("1.0.2", sha256="30ae2ac9c49f39ac6dce743bd187fcd2b574b16ca095fa74cd9396795c954c54")
 
     depends_on("python@3.7:", type=("build", "run"))

@@ -14,6 +14,8 @@ class Chaco(CMakePackage):
 
     maintainers("pbrady", "zjibben")
 
+    license("LGPL-2.1-or-later")
+
     version("develop", branch="truchas")
     version("2020-07-16", commit="92a877b381933d12b02507413897f696d81b4682", preferred=True)
 

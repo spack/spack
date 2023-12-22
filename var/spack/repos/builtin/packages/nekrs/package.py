@@ -30,6 +30,8 @@ class Nekrs(Package, CudaPackage, ROCmPackage):
 
     maintainers("thilinarmtb", "stgeke")
 
+    license("BSD-3-Clause")
+
     version("21.0", tag="v21.0", commit="bcd890bf3f9fb4d91224c83aeda75c33570f1eaa")
 
     variant("opencl", default=False, description="Activates support for OpenCL")

@@ -16,6 +16,8 @@ class PyRapidfuzzCapi(PythonPackage):
 
     maintainers("LydDeb")
 
+    license("MIT")
+
     version("1.0.5", sha256="b3af179874b28364ba1b7850e37d0d353de9cf5b844e3569c023b74da3a9c68e")
 
     depends_on("py-setuptools", type="build")

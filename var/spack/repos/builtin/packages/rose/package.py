@@ -22,6 +22,8 @@ class Rose(AutotoolsPackage):
     # ROSE Versions
     # --------------------------------------------------------------------------
 
+    license("BSD-3-Clause")
+
     version("0.9.13.0", sha256="64092793dfd38d476152696721e29a410bb31dc3eeb6064c7520087aa8c904a6")
 
     # Version for edg binary is found in src/frontend/CxxFrontend/EDG_VERSION

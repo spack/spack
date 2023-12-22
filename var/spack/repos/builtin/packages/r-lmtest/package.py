@@ -15,6 +15,8 @@ class RLmtest(RPackage):
 
     cran = "lmtest"
 
+    license("GPL-2.0-only OR GPL-3.0-only")
+
     version("0.9-40", sha256="64400d4d6cc635316531042971f1783539686e9015c76f5741c07304fa14d997")
     version("0.9-39", sha256="71f8d67cbe559b33fe02910a3e98cddc60c9dcc421c64f7878c647218f07d488")
     version("0.9-38", sha256="32a22cea45398ffc5732d9f5c0391431d0cdd3a9e29cc7b77bea32c1eb4a216b")

@@ -25,6 +25,8 @@ class PyWarpx(PythonPackage):
 
     tags = ["e4s", "ecp"]
 
+    license("BSD-3-Clause-LBNL")
+
     # NOTE: if you update the versions here, also see warpx
     version("develop", branch="development")
     version("23.08", sha256="67695ff04b83d1823ea621c19488e54ebaf268532b0e5eb4ea8ad293d7ab3ddc")

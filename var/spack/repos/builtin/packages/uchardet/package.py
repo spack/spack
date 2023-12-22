@@ -16,6 +16,8 @@ class Uchardet(CMakePackage):
     url = "https://www.freedesktop.org/software/uchardet/releases/uchardet-0.0.6.tar.xz"
     git = "https://gitlab.freedesktop.org/uchardet/uchardet.git"
 
+    license("MPL-1.1")
+
     version("master", branch="master")
     version("0.0.7", sha256="8351328cdfbcb2432e63938721dd781eb8c11ebc56e3a89d0f84576b96002c61")
     version("0.0.6", sha256="8351328cdfbcb2432e63938721dd781eb8c11ebc56e3a89d0f84576b96002c61")

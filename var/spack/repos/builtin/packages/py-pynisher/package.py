@@ -13,6 +13,8 @@ class PyPynisher(PythonPackage):
     homepage = "https://github.com/automl/pynisher"
     pypi = "pynisher/pynisher-0.6.4.tar.gz"
 
+    license("MIT")
+
     version("0.6.4", sha256="111d91aad471375c0509a912415ff90053ef909100facf412511383af107c124")
 
     depends_on("python@3.6:", type=("build", "run"))

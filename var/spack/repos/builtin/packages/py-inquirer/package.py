@@ -12,6 +12,8 @@ class PyInquirer(PythonPackage):
     homepage = "https://github.com/magmax/python-inquirer"
     pypi = "inquirer/inquirer-3.1.3.tar.gz"
 
+    license("MIT")
+
     version("3.1.3", sha256="aac309406f5b49d4b8ab7c6872117f43bf082a552dc256aa16bc95e16bb58bec")
 
     depends_on("python@3.8:", type=("build", "run"))

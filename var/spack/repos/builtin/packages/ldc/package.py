@@ -19,6 +19,8 @@ class Ldc(CMakePackage):
     homepage = "https://dlang.org/"
     url = "https://github.com/ldc-developers/ldc/releases/download/v1.3.0/ldc-1.3.0-src.tar.gz"
 
+    license("BSD-3-Clause AND BSL-1.0 AND ( Artistic-1.0 OR GPL-2.0-or-later ) AND NCSA AND MIT")
+
     version("1.3.0", sha256="efe31a639bcb44e1f5b752da21713376d9410a01279fecc8aab8572065a3050b")
 
     variant("shared", default=True, description="Build runtime and tooling as shared libs")

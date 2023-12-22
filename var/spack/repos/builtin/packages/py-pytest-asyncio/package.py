@@ -13,6 +13,8 @@ class PyPytestAsyncio(PythonPackage):
     homepage = "https://github.com/pytest-dev/pytest-asyncio"
     pypi = "pytest-asyncio/pytest-asyncio-0.18.3.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.18.3", sha256="7659bdb0a9eb9c6e3ef992eef11a2b3e69697800ad02fb06374a210d85b29f91")
     version("0.9.0", sha256="fbd92c067c16111174a1286bfb253660f1e564e5146b39eeed1133315cf2c2cf")
 

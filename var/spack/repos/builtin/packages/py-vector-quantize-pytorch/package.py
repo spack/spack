@@ -15,6 +15,8 @@ class PyVectorQuantizePytorch(PythonPackage):
     homepage = "https://github.com/lucidrains/vector-quantize-pytorch"
     pypi = "vector_quantize_pytorch/vector_quantize_pytorch-0.3.9.tar.gz"
 
+    license("MIT")
+
     version("0.3.9", sha256="783ca76251299f0e3eb244062bc05c4416bb29157e57077e4a8969c5277f05ee")
 
     depends_on("py-setuptools", type="build")

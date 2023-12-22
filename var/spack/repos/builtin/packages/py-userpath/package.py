@@ -12,6 +12,8 @@ class PyUserpath(PythonPackage):
     homepage = "https://github.com/ofek/userpath"
     pypi = "userpath/userpath-1.8.0.tar.gz"
 
+    license("MIT")
+
     version("1.8.0", sha256="04233d2fcfe5cff911c1e4fb7189755640e1524ff87a4b82ab9d6b875fee5787")
 
     depends_on("python@3.7:", type=("build", "run"))

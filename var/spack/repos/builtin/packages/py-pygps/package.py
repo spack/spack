@@ -13,6 +13,8 @@ class PyPygps(PythonPackage):
     homepage = "https://github.com/marionmari/pyGPs"
     pypi = "pygps/pyGPs-1.3.5.tar.gz"
 
+    license("DOC")
+
     version("1.3.5", sha256="5af668415a7bf1666c7c6da3bb09d29e48c395862c6feb23964b476972a015d4")
 
     depends_on("py-setuptools", type="build")

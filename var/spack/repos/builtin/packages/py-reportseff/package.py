@@ -12,6 +12,8 @@ class PyReportseff(PythonPackage):
     homepage = "https://github.com/troycomi/reportseff"
     pypi = "reportseff/reportseff-2.7.2.tar.gz"
 
+    license("MIT")
+
     version("2.7.2", sha256="63cf99ceb0111de511636b214ade937c6c1b8444531e8026dbc34ddf92049c41")
 
     depends_on("python@3.7:3", type=("build", "run"))

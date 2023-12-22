@@ -19,6 +19,8 @@ class RNeuralnet(RPackage):
 
     cran = "neuralnet"
 
+    license("GPL-2.0-or-later")
+
     version("1.44.2", sha256="5f66cd255db633322c0bd158b9320cac5ceff2d56f93e4864a0540f936028826")
 
     depends_on("r@2.9.0:", type=("build", "run"))

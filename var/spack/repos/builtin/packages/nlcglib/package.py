@@ -15,6 +15,8 @@ class Nlcglib(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers = ["simonpintarelli"]
 
+    license("BSD-3-Clause")
+
     version("develop", branch="develop")
     version("master", branch="master")
 

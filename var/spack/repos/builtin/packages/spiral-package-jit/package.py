@@ -19,6 +19,8 @@ class SpiralPackageJit(Package):
     # such.  If this package is required spiral-software should be installed
     # with the +jit variant active
 
+    license("BSD-2-Clause-FreeBSD")
+
     version("develop", branch="develop")
     version("main", branch="main")
     version("1.1.0", sha256="64cebf31b7a02fdcb3992a581c2fef67576f92bf893eaf88cd5ed1b1d853d550")

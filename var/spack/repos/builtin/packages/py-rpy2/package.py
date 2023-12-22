@@ -16,6 +16,8 @@ class PyRpy2(PythonPackage):
 
     pypi = "rpy2/rpy2-2.5.4.tar.gz"
 
+    license("GPL-2.0-or-later")
+
     version("3.0.4", sha256="2af5158a5d56af7f7bf5e54d8d7e87b6f115ff40f056d82f93cad0cbf6acc0cb")
     version("3.0.0", sha256="34efc2935d9015527837d6b1de29641863d184b19d39ad415d5384be8a015bce")
     version("2.9.4", sha256="be57f741d0c284b5d8785ab03dff0e829303e5ac30e548d5ceb46e05b168812e")

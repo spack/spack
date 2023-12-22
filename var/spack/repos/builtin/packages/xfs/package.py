@@ -12,6 +12,8 @@ class Xfs(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/xfs"
     xorg_mirror_path = "app/xfs-1.1.4.tar.gz"
 
+    license("X11")
+
     version("1.2.1", sha256="76df0106dbf845cb44534eb89f1ed7e9fb4d466125200baeb4719eb2586ded29")
     version("1.2.0", sha256="56ebdc5ff85af332a0c5dc60c9b971551624bbc312bf6af3d13b925600ea367f")
     version("1.1.4", sha256="28f89b854d1ff14fa1efa5b408e5e1c4f6a145420310073c4e44705feeb6d23b")

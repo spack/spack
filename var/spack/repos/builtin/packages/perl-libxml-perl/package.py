@@ -14,4 +14,6 @@ class PerlLibxmlPerl(PerlPackage):
     homepage = "https://metacpan.org/release/libxml-perl"
     url = "https://cpan.metacpan.org/authors/id/K/KM/KMACLEOD/libxml-perl-0.08.tar.gz"
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("0.08", sha256="4571059b7b5d48b7ce52b01389e95d798bf5cf2020523c153ff27b498153c9cb")

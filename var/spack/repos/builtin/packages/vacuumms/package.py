@@ -22,6 +22,8 @@ class Vacuumms(CMakePackage):
 
     maintainers("frankwillmore")
 
+    license("Unlicense")
+
     version("master", branch="master")
     version("1.1.1", tag="v1.1.1", commit="a395930c87f5b52ab0ab8db278bd2bde592e8f12")
     version(

@@ -13,6 +13,8 @@ class FrHit(Package):
     homepage = "http://weizhong-lab.ucsd.edu/frhit"
     url = "http://weizhong-lab.ucsd.edu/frhit/fr-hit-v0.7.1-2013-02-20.tar.gz"
 
+    license("MIT")
+
     version(
         "0.7.1-2013-02-20",
         sha256="44dcfeb73106529fcefb02c017ec7b95b04b6523a2a57683b2bc905c142e62eb",

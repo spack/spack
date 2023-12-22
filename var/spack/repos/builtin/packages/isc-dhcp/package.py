@@ -19,6 +19,8 @@ class IscDhcp(AutotoolsPackage):
 
     parallel = False
 
+    license("MPL-2.0")
+
     version("4.4.2", sha256="1a7ccd64a16e5e68f7b5e0f527fd07240a2892ea53fe245620f4f5f607004521")
     version("4.4.1", sha256="2a22508922ab367b4af4664a0472dc220cc9603482cf3c16d9aff14f3a76b608")
     version("4.4.0", sha256="4a90be0f22ad81c987f5584661b60a594f1b21c581b82bfba3ae60f89ae44397")

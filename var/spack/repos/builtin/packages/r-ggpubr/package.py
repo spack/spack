@@ -19,6 +19,8 @@ class RGgpubr(RPackage):
 
     cran = "ggpubr"
 
+    license("GPL-2.0-or-later")
+
     version("0.6.0", sha256="2e6ec5d8151991d17ef8832259cf545fa0d1a50b326ba8c1c4657700171df774")
     version("0.4.0", sha256="abb21ec0b1ae3fa1c58eedca2d59b9b009621b30e3660f1247b3880c5fa50675")
     version("0.2.2", sha256="1c93dc6d1f08680dd00a10b6842445700d1fccb11f18599fbdf51e70c6b6b364")

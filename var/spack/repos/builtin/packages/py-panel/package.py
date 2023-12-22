@@ -12,6 +12,8 @@ class PyPanel(PythonPackage):
     homepage = "http://panel.holoviz.org/"
     pypi = "panel/panel-0.14.4.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.14.4", sha256="b853d2f53d7738ec6372525360c5bf9427a71ed990685ccac703bc9b442e9951")
 
     depends_on("py-param@1.12:", type=("build", "run"))

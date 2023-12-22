@@ -14,6 +14,8 @@ class Montage(MakefilePackage):
     url = "http://montage.ipac.caltech.edu/download/Montage_v6.0.tar.gz"
     maintainers("snehring")
 
+    license("BSD-3-Clause")
+
     version("6.0", sha256="1f540a7389d30fcf9f8cd9897617cc68b19350fbcde97c4d1cdc5634de1992c6")
 
     depends_on("freetype")

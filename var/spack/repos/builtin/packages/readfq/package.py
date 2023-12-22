@@ -14,6 +14,8 @@ class Readfq(Package):
     homepage = "https://github.com/lh3/readfq"
     git = "https://github.com/lh3/readfq.git"
 
+    license("MIT")
+
     version("2013.04.10", commit="4fb766095d8f459e0f8025be70f9173673905d12")
 
     def install(self, spec, prefix):

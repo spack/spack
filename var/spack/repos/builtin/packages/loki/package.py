@@ -14,6 +14,8 @@ class Loki(MakefilePackage):
     url = "https://downloads.sourceforge.net/project/loki-lib/Loki/Loki%200.1.7/loki-0.1.7.tar.bz2"
     tags = ["e4s"]
 
+    license("Apache-2.0")
+
     version("0.1.7", sha256="07553754f6be2738559947db69b0718512665bf4a34015fa3a875b6eb1111198")
 
     variant("shared", default=True, description="Build shared libraries")

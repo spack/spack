@@ -12,6 +12,8 @@ class PyPivy(PythonPackage):
     homepage = "https://github.com/coin3d/pivy"
     url = "https://github.com/coin3d/pivy/archive/refs/tags/0.6.8.tar.gz"
 
+    license("0BSD")
+
     version("0.6.8", sha256="c443dd7dd724b0bfa06427478b9d24d31e0c3b5138ac5741a2917a443b28f346")
 
     depends_on("coin3d")

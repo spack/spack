@@ -16,6 +16,8 @@ class Nsimd(CMakePackage):
 
     maintainers("eschnett")
 
+    license("MIT")
+
     version("3.0.1", sha256="6a90d7ce5f9da5cfac872463951f3374bb0e0824d92f714db0fd4901b32497fd")
     version("3.0", sha256="5cab09020ce3a6819ddb3b3b8cafa6bc1377821b596c0f2954f52c852d092d5c")
     version("2.2", sha256="7916bec6c8ea9ddc690a5bfc80fb1b9402f9e1b2a4b4bb6b6bb8eb5a07eb018e")

@@ -23,6 +23,8 @@ class RMice(RPackage):
 
     cran = "mice"
 
+    license("GPL-2.0-or-later")
+
     version("3.15.0", sha256="3d64dd260e3dce9c4c2f7be8c99f3063769df9ccfd3a0fc827c2de0ac842e87b")
     version("3.14.0", sha256="f87bb73d8bfee36c6bf4f15779c59ff6b70c70ca25b1388b4ee236757276d605")
     version("3.12.0", sha256="575d9e650d5fc8cd66c0b5a2f1e659605052b26d61f772fff5eed81b414ef144")

@@ -16,6 +16,8 @@ class Mpiwrapper(CMakePackage):
 
     maintainers("eschnett")
 
+    license("MIT")
+
     version("develop", branch="main")
     version("2.10.4", sha256="af644bf4ba69964a4f7b35fbe6b8bbc67afe7bef75ba69895a227f4f465b3eaa")
     version("2.10.3", sha256="63f34df837cb9d7cae0b5ab8c0f09e8c5a60a8c0e85f248bf34fedda6488a870")

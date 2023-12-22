@@ -23,6 +23,8 @@ class Openblas(CMakePackage, MakefilePackage):
 
     libraries = ["libopenblas", "openblas"]
 
+    license("BSD-3-Clause")
+
     version("develop", branch="develop")
     version("0.3.25", sha256="4c25cb30c4bb23eddca05d7d0a85997b8db6144f5464ba7f8c09ce91e2f35543")
     version("0.3.24", sha256="ceadc5065da97bd92404cac7254da66cc6eb192679cf1002098688978d4d5132")

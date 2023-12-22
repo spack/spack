@@ -15,6 +15,8 @@ class Daos(SConsPackage):
     git = "https://github.com/daos-stack/daos.git"
     maintainers("hyoklee")
 
+    license("BSD-2-Clause-Patent")
+
     version("master", branch="master", submodules=True)
     version(
         "2.2.0", tag="v2.2.0", commit="d2a1f2790c946659c9398926254e6203fd957b7c", submodules=True

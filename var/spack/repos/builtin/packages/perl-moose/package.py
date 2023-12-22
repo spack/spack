@@ -12,6 +12,8 @@ class PerlMoose(PerlPackage):
     homepage = "https://metacpan.org/pod/Moose"
     url = "https://search.cpan.org/CPAN/authors/id/E/ET/ETHER/Moose-2.2006.tar.gz"
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("2.2203", sha256="fa7814acf4073fa434c148d403cbbf8a7b62f73ad396fa8869f3036d6e3241a7")
     version("2.2010", sha256="af0905b69f18c27de1177c9bc7778ee495d4ec91be1f223e8ca8333af4de08c5")
     version("2.2009", sha256="63ba8a5e27dbcbdbac2cd8f4162fff50a31e9829d8955a196a5898240c02d194")

@@ -24,6 +24,8 @@ class Xyce(CMakePackage):
     url = "https://github.com/Xyce/Xyce/archive/Release-7.2.0.tar.gz"
     maintainers("kuberry", "tbird2001")
 
+    license("GPL-3.0-or-later")
+
     version("master", branch="master")
     version("7.7.0", sha256="1b95450e1905c3af3c16b42c41d5ef1f8ab0e640f48086d0cb4d52961a90a175")
     version("7.6.0", sha256="fc25557e2edc82adbe0436a15fca2929a2f9ab08ddf91f1a47aab5e8b27ec88c")

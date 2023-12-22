@@ -13,6 +13,8 @@ class Libcint(CMakePackage):
     url = "https://github.com/sunqm/libcint/archive/v3.0.4.tar.gz"
     maintainers("mfherbst")
 
+    license("BSD-2-Clause")
+
     #
     # Versions
     #

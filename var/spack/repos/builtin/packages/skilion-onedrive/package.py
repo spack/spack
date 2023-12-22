@@ -13,6 +13,8 @@ class SkilionOnedrive(MakefilePackage):
     homepage = "https://github.com/skilion/onedrive"
     url = "https://github.com/skilion/onedrive/archive/v1.1.1.tar.gz"
 
+    license("GPL-3.0-or-later")
+
     version("1.1.1", sha256="fb51c81ec95c28f3fe3b29e3b7f915e30161bd5f4b14bb53ae5c2233cc1e92e9")
 
     depends_on("dmd")

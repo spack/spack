@@ -16,6 +16,8 @@ class PyExarl(PythonPackage):
 
     maintainers("cmahrens")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("develop", branch="develop")
     version("update-spack", branch="update-spack")

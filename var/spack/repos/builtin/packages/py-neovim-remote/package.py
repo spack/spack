@@ -14,6 +14,8 @@ class PyNeovimRemote(PythonPackage):
 
     maintainers("trws")
 
+    license("MIT")
+
     version("2.4.0", sha256="f199ebb61c3decf462feed4e7d467094ed38d8afaf43620736b5983a12fe2427")
 
     depends_on("python@3.5:", type=("build", "run"))

@@ -17,6 +17,8 @@ class PyPerformance(PythonPackage):
     homepage = "http://pyperformance.readthedocs.io/"
     url = "https://github.com/python/performance/archive/0.6.1.tar.gz"
 
+    license("MIT")
+
     version("0.6.1", sha256="cc48dd7579da2f4b0e4cff0c8220811f5ba7019493bb408819c1532acf53d13a")
     version("0.6.0", sha256="4636e276445e96563f628e071cacd5df31dc587d83899e7d03fa8b31760f2cd2")
 

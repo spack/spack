@@ -15,6 +15,8 @@ class PyFlake8Polyfill(PythonPackage):
     homepage = "https://gitlab.com/pycqa/flake8-polyfill"
     pypi = "flake8-polyfill/flake8-polyfill-1.0.2.tar.gz"
 
+    license("MIT")
+
     version("1.0.2", sha256="e44b087597f6da52ec6393a709e7108b2905317d0c0b744cdca6208e670d8eda")
 
     depends_on("py-setuptools", type="build")

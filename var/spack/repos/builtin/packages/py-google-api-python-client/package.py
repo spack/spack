@@ -13,6 +13,8 @@ class PyGoogleApiPythonClient(PythonPackage):
     homepage = "https://github.com/google/google-api-python-client/"
     pypi = "google-api-python-client/google-api-python-client-1.7.10.tar.gz"
 
+    license("Apache-2.0")
+
     version("2.80.0", sha256="51dd62d467da7ad3df63c3f0e6fca84266ce50c2218691204b2e8cd651a0719a")
     version("1.7.10", sha256="2e55a5c7b56233c68945b6804c73e253445933f4d485d4e69e321b38772b9dd6")
 

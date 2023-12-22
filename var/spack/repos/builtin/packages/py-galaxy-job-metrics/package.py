@@ -13,6 +13,8 @@ class PyGalaxyJobMetrics(PythonPackage):
     homepage = "https://github.com/galaxyproject/galaxy"
     pypi = "galaxy-job-metrics/galaxy-job-metrics-22.1.1.tar.gz"
 
+    license("CC-BY-3.0")
+
     version("22.1.1", sha256="53d9c791d60372a90a59709863570246066f395b9e83f0011865f930a53a63b4")
 
     depends_on("py-setuptools", type="build")

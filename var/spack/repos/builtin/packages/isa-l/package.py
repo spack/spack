@@ -26,6 +26,8 @@ class IsaL(AutotoolsPackage):
     git = "https://github.com/intel/isa-l.git"
     maintainers("hyoklee")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
 
     # Current

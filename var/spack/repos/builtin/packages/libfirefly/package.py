@@ -15,6 +15,8 @@ class Libfirefly(CMakePackage):
 
     maintainers("tbhaxor")
 
+    license("GPL-3.0-or-later")
+
     version("master", branch="master")
     version("2.1.0", sha256="4de4b216c73199a1826de7a0d45205b401603315347d7947d8b5950d3e6b893d")
 

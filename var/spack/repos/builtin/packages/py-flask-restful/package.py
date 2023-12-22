@@ -12,6 +12,8 @@ class PyFlaskRestful(PythonPackage):
     homepage = "https://www.github.com/flask-restful/flask-restful/"
     pypi = "Flask-RESTful/Flask-RESTful-0.3.8.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.3.9", sha256="ccec650b835d48192138c85329ae03735e6ced58e9b2d9c2146d6c84c06fa53e")
 
     depends_on("py-setuptools", type="build")

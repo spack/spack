@@ -16,6 +16,8 @@ class Fiat(CMakePackage):
 
     maintainers("climbfuji")
 
+    license("Apache-2.0")
+
     version("main", branch="main", no_cache=True)
     version("1.2.0", sha256="758147410a4a3c493290b87443b4091660b915fcf29f7c4d565c5168ac67745f")
     version("1.1.0", sha256="58354e60d29a1b710bfcea9b87a72c0d89c39182cb2c9523ead76a142c695f82")

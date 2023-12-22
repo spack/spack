@@ -14,6 +14,8 @@ class PyAccelerate(PythonPackage):
 
     maintainers("meyersbs")
 
+    license("Apache-2.0")
+
     version("0.21.0", sha256="e2959a0bf74d97c0b3c0e036ed96065142a060242281d27970d4c4e34f11ca59")
     version("0.16.0", sha256="d13e30f3e6debfb46cada7b931af85560619b6a6a839d0cafeeab6ed7c6a498d")
 

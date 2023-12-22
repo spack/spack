@@ -15,6 +15,8 @@ class Zopfli(CMakePackage):
 
     variant("shared", default=False, description="Build shared libraries")
 
+    license("Apache-2.0")
+
     version("1.0.3", sha256="e955a7739f71af37ef3349c4fa141c648e8775bceb2195be07e86f8e638814bd")
 
     def cmake_args(self):

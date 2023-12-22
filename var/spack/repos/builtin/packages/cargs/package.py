@@ -15,6 +15,8 @@ class Cargs(CMakePackage):
     url = "https://github.com/likle/cargs/archive/refs/tags/v1.0.3.tar.gz"
     git = "https://github.com/likle/cargs.git"
 
+    license("MIT")
+
     version("1.0.3", sha256="ddba25bd35e9c6c75bc706c126001b8ce8e084d40ef37050e6aa6963e836eb8b")
 
     depends_on("cmake@3.14.7:", type=("build"))

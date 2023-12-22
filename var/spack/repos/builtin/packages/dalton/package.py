@@ -17,6 +17,8 @@ class Dalton(CMakePackage):
 
     maintainers("foeroyingur")
 
+    license("LGPL-2.1-or-later")
+
     version("master", branch="master", submodules=True)
     version(
         "2020.0", tag="2020.0", commit="66052b3af5ea7225e31178bf9a8b031913c72190", submodules=True

@@ -18,6 +18,8 @@ class SpiralPackageMpi(Package):
     # such.  If this package is required spiral-software should be installed
     # with the +mpi variant active
 
+    license("BSD-2-Clause-FreeBSD")
+
     version("develop", branch="develop")
     version("main", branch="main")
     version("1.1.0", sha256="baf3c9dac7fee330e4bb4adbd24cc7e55f27fc27417644c0b216124f9052f1f5")

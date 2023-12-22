@@ -18,6 +18,8 @@ class Branson(CMakePackage):
 
     tags = ["proxy-app"]
 
+    license("MIT")
+
     version("develop", branch="develop")
 
     version(

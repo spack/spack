@@ -16,6 +16,8 @@ class PyFlaskSqlalchemy(PythonPackage):
 
     maintainers("charmoniumq")
 
+    license("BSD-3-Clause")
+
     version("3.0.2", sha256="16199f5b3ddfb69e0df2f52ae4c76aedbfec823462349dabb21a1b2e0a2b65e9")
 
     # https://github.com/pallets-eco/flask-sqlalchemy/blob/3.0.2/pyproject.toml

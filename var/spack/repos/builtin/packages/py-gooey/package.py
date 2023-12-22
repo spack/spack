@@ -15,6 +15,8 @@ class PyGooey(PythonPackage):
 
     maintainers("dorton21")
 
+    license("MIT")
+
     version("1.0.8.1", sha256="08d6bf534f4d50d50dafba5cfc68dcf31a6e9eeef13a94cbe3ea17c4e45c4671")
 
     depends_on("py-setuptools", type="build")

@@ -14,6 +14,8 @@ class PyPykml(PythonPackage):
 
     pypi = "pykml/pykml-0.1.3.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.2.0", sha256="44a1892e7c2a649c8ae9f8e2899ff76cae79ec6749ffb64d11140b4e87d0f957")
 
     depends_on("py-setuptools", type="build")

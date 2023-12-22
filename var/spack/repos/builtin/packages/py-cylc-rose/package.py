@@ -14,6 +14,8 @@ class PyCylcRose(PythonPackage):
 
     maintainers("LydDeb")
 
+    license("GPL-3.0-only")
+
     version("1.3.0", sha256="017072b69d7a50fa6d309a911d2428743b07c095f308529b36b1b787ebe7ab88")
 
     depends_on("py-setuptools", type="build")

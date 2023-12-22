@@ -13,6 +13,8 @@ class Miniasm(MakefilePackage):
     homepage = "http://www.example.co://github.com/lh3/miniasm"
     git = "https://github.com/lh3/miniasm.git"
 
+    license("MIT")
+
     version("2018-3-30", commit="55cf0189e2f7d5bda5868396cebe066eec0a9547")
 
     depends_on("zlib-api")

@@ -16,6 +16,8 @@ class Augustus(MakefilePackage):
     homepage = "https://bioinf.uni-greifswald.de/augustus/"
     url = "https://github.com/Gaius-Augustus/Augustus/archive/v3.3.4.tar.gz"
 
+    license("Artistic-1.0")
+
     # Releases have moved to github
     version("3.5.0", sha256="5ed6ce6106303b800c5e91d37a250baff43b20824657b853ae04d11ad8bdd686")
     version("3.4.0", sha256="2c06cf5953da5afdce1478fa10fcd3c280a3b050f1b2367bf3e731d7374d9bb8")

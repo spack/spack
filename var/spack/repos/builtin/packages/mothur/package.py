@@ -14,6 +14,8 @@ class Mothur(MakefilePackage):
     homepage = "https://github.com/mothur/mothur"
     url = "https://github.com/mothur/mothur/archive/v1.39.5.tar.gz"
 
+    license("GPL-3.0-or-later")
+
     version("1.48.0", sha256="9494406abd8d14b821782ab9db811f045ded9424f28f01234ee6764d4e78941d")
     version("1.46.1", sha256="29b500b3c92d726cde34922f697f2e47f0b7127d76d9a6fb167cc2b8ba3d00fd")
     version("1.43.0", sha256="12ccd95a85bec3bb1564b8feabd244ea85413973740754803d01fc71ecb0a2c1")

@@ -12,6 +12,8 @@ class PyBokeh(PythonPackage):
     homepage = "https://bokeh.org/"
     pypi = "bokeh/bokeh-0.12.2.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("3.3.1", sha256="2a7b3702d7e9f03ef4cd801b02b7380196c70cff2773859bcb84fa565218955c")
     version("2.4.3", sha256="ef33801161af379665ab7a34684f2209861e3aefd5c803a21fbbb99d94874b03")
     version("2.4.1", sha256="d0410717d743a0ac251e62480e2ea860a7341bdcd1dbe01499a904f233c90512")

@@ -16,6 +16,8 @@ class Timemory(CMakePackage, PythonExtension):
     git = "https://github.com/NERSC/timemory.git"
     maintainers("jrmadsen")
 
+    license("MIT")
+
     version("master", branch="master", submodules=True)
     version("develop", branch="develop", submodules=True)
     version("3.2.3", commit="d535e478646e331a4c65cfd8c8f759c9a363ccc9", submodules=True)

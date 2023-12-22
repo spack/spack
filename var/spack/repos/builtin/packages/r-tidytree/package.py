@@ -16,6 +16,8 @@ class RTidytree(RPackage):
 
     cran = "tidytree"
 
+    license("Artistic-2.0")
+
     version("0.4.2", sha256="cb831a66d8afa5e21f5072e4fbebcbd2228881090d0040f87605f5aeefda155e")
     version("0.4.1", sha256="fbc4364d17e1b1c26ed06af0cdf36c88a5bc562fdbd4731ab179e30bba4009eb")
     version("0.3.9", sha256="12435d4f4c4d734b2a758cb13eb3b44bdfa8fdfa79a6e81fb99f7ce3a5d82edf")

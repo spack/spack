@@ -16,6 +16,8 @@ class PyTorchtext(PythonPackage):
 
     maintainers("adamjstewart")
 
+    license("BSD-3-Clause")
+
     version("main", branch="main")
     version("0.16.2", tag="v0.16.2", commit="299b90e908c1b492139a4cf9da3912660e79a06b")
     version("0.16.1", tag="v0.16.1", commit="66671007c84e07386da3c04e5ca403b8a417c8e5")

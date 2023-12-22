@@ -12,4 +12,6 @@ class PerlEvalClosure(PerlPackage):
     homepage = "https://metacpan.org/pod/Eval::Closure"
     url = "http://search.cpan.org/CPAN/authors/id/D/DO/DOY/Eval-Closure-0.14.tar.gz"
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("0.14", sha256="ea0944f2f5ec98d895bef6d503e6e4a376fea6383a6bc64c7670d46ff2218cad")

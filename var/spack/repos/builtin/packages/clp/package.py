@@ -18,6 +18,8 @@ class Clp(AutotoolsPackage):
     depends_on("osi")
     depends_on("pkgconfig", type="build")
 
+    license("EPL-2.0")
+
     version("1.17.7", sha256="c4c2c0e014220ce8b6294f3be0f3a595a37bef58a14bf9bac406016e9e73b0f5")
     version("1.17.6", sha256="afff465b1620cfcbb7b7c17b5d331d412039650ff471c4160c7eb24ae01284c9")
     version("1.17.4", sha256="ef412cde00cb1313d9041115a700d8d59d4b8b8b5e4dde43e9deb5108fcfbea8")

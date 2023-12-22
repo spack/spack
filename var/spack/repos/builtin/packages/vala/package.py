@@ -17,6 +17,8 @@ class Vala(AutotoolsPackage):
 
     maintainers("benkirk")
 
+    license("LGPL-2.0-or-later")
+
     version("0.48.25", sha256="50cb3c5eccddc7fd4368bfa96414a556045e79d2b15a68918c727b8c83b18a24")
     version("0.48.24", sha256="3649ef84573b6865fc3470640ee603720099eb915b39faad19b7498de1a7df24")
     version("0.48.23", sha256="de3cc858d995e07474219e25a3e1f0ed998070d2e206d3a313d4379a5f77a06a")

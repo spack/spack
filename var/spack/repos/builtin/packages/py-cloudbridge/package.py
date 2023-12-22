@@ -13,6 +13,8 @@ class PyCloudbridge(PythonPackage):
     homepage = "http://cloudbridge.cloudve.org"
     pypi = "cloudbridge/cloudbridge-3.1.0.tar.gz"
 
+    license("MIT")
+
     version("3.1.0", sha256="f9d3c1ae36b14a1c953d36c21a35fa2c72d42831cbbfe6117d13b25e9cccb28c")
 
     depends_on("python@3.4:", type=("build", "run"))

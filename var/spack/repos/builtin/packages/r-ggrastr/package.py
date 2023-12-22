@@ -16,6 +16,8 @@ class RGgrastr(RPackage):
 
     cran = "ggrastr"
 
+    license("MIT")
+
     version("1.0.1", sha256="82d6e90fa38dec85e829f71018532ed5b709a50a585455fc07cb3bae282f5d1f")
 
     depends_on("r@3.2.2:", type=("build", "run"))

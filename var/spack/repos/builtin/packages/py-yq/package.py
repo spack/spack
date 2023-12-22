@@ -14,6 +14,8 @@ class PyYq(PythonPackage):
 
     maintainers("qwertos")
 
+    license("Apache-2.0")
+
     version("2.12.2", sha256="2f156d0724b61487ac8752ed4eaa702a5737b804d5afa46fa55866951cd106d2")
 
     depends_on("py-setuptools", type=("build", "run"))

@@ -16,6 +16,8 @@ class PyPetastorm(PythonPackage):
 
     maintainers("adamjstewart")
 
+    license("Apache-2.0")
+
     version("0.12.0", sha256="79b98b87a619f34ca96a3dd42670506ce9439d321b3aab356cdf7edac8ff5c5c")
     version("0.11.4", sha256="7090dfc86f110e641d95798bcc75f8b1ca14cd56ed3feef491baaa6849629e51")
     version("0.9.8", sha256="571855224411b88b759ba5d48b288ad2ba09997ebd259292f72b9246144b8101")

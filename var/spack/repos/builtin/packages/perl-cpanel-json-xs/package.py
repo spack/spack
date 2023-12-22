@@ -15,6 +15,8 @@ class PerlCpanelJsonXs(PerlPackage):
 
     maintainers("EbiArnie")
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("4.37", sha256="c241615a0e17ff745aaa86bbf466a6e29cd240515e65f06a7a05017b619e6d4b")
 
     def test_use(self):

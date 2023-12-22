@@ -12,6 +12,8 @@ class Linkphase3(Package):
     homepage = "https://github.com/tdruet/LINKPHASE3"
     git = "https://github.com/tdruet/LINKPHASE3.git"
 
+    license("GPL-3.0-only")
+
     version("2017-06-14", commit="559913593fc818bb1adb29796a548cf5bf323827")
 
     def install(self, spec, prefix):

@@ -16,6 +16,8 @@ class RVctrs(RPackage):
 
     cran = "vctrs"
 
+    license("MIT")
+
     version("0.6.2", sha256="feecabe11f6c55e04377d36fa59842187f0a6fe52aaf867c08289a948781ee84")
     version("0.5.0", sha256="7c372e13c39ddace9c9bb9f33238de6dd2cd0f37dcc7054ba6435d271e5df686")
     version("0.4.2", sha256="5414d1d6977163b4e85efa40d6facdd98089d6ffd460daaba729d4200942d815")

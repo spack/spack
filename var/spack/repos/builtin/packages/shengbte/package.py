@@ -12,6 +12,8 @@ class Shengbte(MakefilePackage):
     homepage = "www.shengbte.org"
     url = "www.shengbte.org/downloads/ShengBTE-v1.1.1-8a63749.tar.bz2"
 
+    license("GPL-3.0-only")
+
     version(
         "1.1.1-8a63749", sha256="43920740d19ae854c8ecae0b648acfdf1d7726ca4c2b44f1a1684457f2f88522"
     )

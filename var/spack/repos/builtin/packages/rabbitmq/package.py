@@ -17,6 +17,8 @@ class Rabbitmq(Package):
     homepage = "https://www.rabbitmq.com/"
     url = "http://www.rabbitmq.com/releases/rabbitmq-server/v3.6.15/rabbitmq-server-generic-unix-3.6.15.tar.xz"
 
+    license("BSD-2-Clause")
+
     version("3.6.15", sha256="04e6a291642f80e87fc892d5e8ea309fb3fab85ebb64a79a70dfe6c6cfde36fb")
 
     def install(self, spec, prefix):

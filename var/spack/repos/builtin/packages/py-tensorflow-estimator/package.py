@@ -17,6 +17,8 @@ class PyTensorflowEstimator(Package):
 
     maintainers("aweits")
 
+    license("Apache-2.0")
+
     version("2.14.0", sha256="622797bf5311f239c2b123364fa360868ae97d16b678413e5e0633241f7d7d5c")
     version("2.13.0", sha256="4175e9276a1eb8b5e4e876d228e4605871832e7bd8517965d6a47f1481af2c3e")
     version("2.12.0", sha256="86c75e830c6ba762d0e3cf04c160096930fb12a992e69b3f24674b9f58902063")

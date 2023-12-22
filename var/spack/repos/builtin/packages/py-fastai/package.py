@@ -18,6 +18,8 @@ class PyFastai(PythonPackage):
     homepage = "https://github.com/fastai/fastai/tree/master/"
     pypi = "fastai/fastai-2.5.3.tar.gz"
 
+    license("Apache-2.0")
+
     version("2.5.3", sha256="0cae50617979b052f0ed7337800e6814ee346b792203cf48305709c935e8eeb7")
 
     depends_on("python@3.6:", type=("build", "run"))

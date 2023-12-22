@@ -12,6 +12,8 @@ class LuaLuaposix(LuaPackage):
     homepage = "https://github.com/luaposix/luaposix/"
     url = "https://github.com/luaposix/luaposix/archive/release-v33.4.0.tar.gz"
 
+    license("MIT")
+
     version(
         "35.0",
         sha256="a4edf2f715feff65acb009e8d1689e57ec665eb79bc36a6649fae55eafd56809",

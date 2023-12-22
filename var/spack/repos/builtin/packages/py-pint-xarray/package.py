@@ -12,6 +12,8 @@ class PyPintXarray(PythonPackage):
     homepage = "https://github.com/xarray-contrib/pint-xarray"
     pypi = "pint-xarray/pint-xarray-0.2.1.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.3", sha256="3545dfa78bee3f98eba29b8bd17500e3b5cb7c7b03a2c2781c4d4d59b6a82841")
     version("0.2.1", sha256="1ee6bf74ee7b52b946f226a96469276fa4f5c68f7381c1b2aae66852562cb275")
 

@@ -13,6 +13,8 @@ class Chapel(AutotoolsPackage):
     homepage = "https://chapel-lang.org/"
     url = "https://github.com/chapel-lang/chapel/releases/download/1.24.1/chapel-1.24.1.tar.gz"
 
+    license("Apache-2.0")
+
     version("1.24.1", sha256="f898f266fccaa34d937b38730a361d42efb20753ba43a95e5682816e008ce5e4")
     version("1.24.0", sha256="77c6087f3e0837268470915f2ad260d49cf7ac4adf16f5b44862ae624c1be801")
     version("1.23.0", sha256="7ae2c8f17a7b98ac68378e94a842cf16d4ab0bcfeabc0fee5ab4aaa07b205661")

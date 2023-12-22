@@ -15,6 +15,8 @@ class RSurvival(RPackage):
 
     cran = "survival"
 
+    license("LGPL-2.0-or-later")
+
     version("3.5-5", sha256="1375a509554b0258e04e27baca2e073e179406e2a9a71e6d3e0c777072568476")
     version("3.4-0", sha256="a48e23d47265fe4d90fb5f0f9fc388906014f8063211980856985db9e89cf812")
     version("3.3-1", sha256="14878705cd0c7edcfead79011444aa84f680759293bde8634721c49f37cb4dc7")

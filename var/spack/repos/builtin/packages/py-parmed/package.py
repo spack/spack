@@ -15,6 +15,8 @@ class PyParmed(PythonPackage):
     homepage = "https://parmed.github.io/ParmEd/html/index.html"
     pypi = "ParmEd/ParmEd-3.4.3.tar.gz"
 
+    license("MIT")
+
     version("3.4.3", sha256="90afb155e3ffe69230a002922b28968464126d4450059f0bd97ceca679c6627c")
 
     depends_on("python@2.7:", type=("build", "run"))

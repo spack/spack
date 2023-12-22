@@ -15,6 +15,8 @@ class PyPanedr(PythonPackage):
 
     maintainers("RMeli")
 
+    license("LGPL-2.1-or-later")
+
     version("0.7.2", sha256="2181009a962dc35745348d1146608c64fb1ba3ef5ae74043416fef739d1409e4")
     version("0.7.1", sha256="64c74863f72d51729ac5cb1e2dbb18747f7137588990c308ef8ca120fbf2ddd4")
 

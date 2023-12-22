@@ -16,6 +16,8 @@ class AdolC(AutotoolsPackage):
     git = "https://github.com/coin-or/ADOL-C.git"
     maintainers("jppelteret")
 
+    license("EPL-1.0")
+
     version("master", branch="master")
     version("2.7.2", sha256="701e0856baae91b98397960d5e0a87a549988de9d4002d0e9a56fa08f5455f6e")
     version("2.7.1", sha256="a05422cc7faff5700e134e113822d1934fb540ad247e63778524d5d6d75bb0ef")

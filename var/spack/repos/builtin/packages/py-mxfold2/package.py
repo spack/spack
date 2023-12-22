@@ -15,6 +15,8 @@ class PyMxfold2(PythonPackage):
 
     maintainers("dorton21")
 
+    license("MIT")
+
     version("0.1.1", sha256="9f39c6ff4138212d1ad2639005f5c05ffb4df0f7e22f5e7ad49466a05aa047e5")
 
     depends_on("python@3.7:", type=("build", "run"))

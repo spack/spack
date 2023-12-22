@@ -14,6 +14,8 @@ class PyRequestsFile(PythonPackage):
 
     maintainers("LydDeb")
 
+    license("Apache-2.0")
+
     version("1.5.1", sha256="07d74208d3389d01c38ab89ef403af0cfec63957d53a0081d8eca738d0247d8e")
 
     depends_on("py-setuptools", type="build")

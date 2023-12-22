@@ -13,6 +13,8 @@ class Libhugetlbfs(MakefilePackage):
     homepage = "https://github.com/libhugetlbfs/libhugetlbfs"
     url = "https://github.com/libhugetlbfs/libhugetlbfs/releases/download/2.22/libhugetlbfs-2.22.tar.gz"
 
+    license("LGPL-2.1-or-later")
+
     version("2.22", sha256="94dca9ea2c527cd77bf28904094fe4708865a85122d416bfccc8f4b73b9a6785")
 
     def install(self, spec, prefix):

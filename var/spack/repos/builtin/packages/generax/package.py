@@ -17,6 +17,8 @@ class Generax(CMakePackage):
 
     maintainers("snehring")
 
+    license("AGPL-3.0-or-later")
+
     version("master", branch="master", submodules=True)
     version("dev", branch="dev", submodules=True)
     version("2.0.4", commit="e4fab40f407bdd3b588d3d69a449f8c1be56f9fa", submodules=True)

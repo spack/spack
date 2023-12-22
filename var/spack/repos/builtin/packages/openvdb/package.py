@@ -20,6 +20,8 @@ class Openvdb(CMakePackage):
     # Github account name for drew@lagrangian.xyz
     maintainers("eloop")
 
+    license("MPL-2.0")
+
     version("develop", branch="develop")
     version("10.0.0", sha256="6d4f6b5ccd0f9d35a4886d9a51a98c97fa314f75bf9737c5121e91b706e2db70")
     version("9.1.0", sha256="914ee417b4607c75c95b53bc73a0599de4157c7d6a32e849e80f24e40fb64181")

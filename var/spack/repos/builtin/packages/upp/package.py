@@ -19,6 +19,8 @@ class Upp(CMakePackage):
 
     maintainers("AlexanderRichert-NOAA", "edwardhartnett", "Hang-Lei-NOAA")
 
+    license("LGPL-3.0-or-later")
+
     version("develop", branch="develop")
     version(
         "11.0.0",

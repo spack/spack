@@ -12,6 +12,8 @@ class PyWarlock(PythonPackage):
     homepage = "https://github.com/bcwaldon/warlock"
     url = "https://github.com/bcwaldon/warlock/archive/1.3.3.tar.gz"
 
+    license("Apache-2.0")
+
     version("1.3.3", sha256="b77e4977d5dc54d47f88cbcc9ab2d716f5f10171d123138785dad96aeb2858d0")
 
     depends_on("py-setuptools", type="build")

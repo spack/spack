@@ -12,6 +12,8 @@ class PyRsa(PythonPackage):
     homepage = "https://stuvel.eu/rsa"
     pypi = "rsa/rsa-3.4.2.tar.gz"
 
+    license("Apache-2.0")
+
     version("4.9", sha256="e38464a49c6c85d7f1351b0126661487a7e0a14a50f1675ec50eb34d4f20ef21")
     version("4.7.2", sha256="9d689e6ca1b3038bc82bf8d23e944b6b6037bc02301a574935b2dd946e0353b9")
     version("4.0", sha256="1a836406405730121ae9823e19c6e806c62bbad73f890574fff50efa4122c487")

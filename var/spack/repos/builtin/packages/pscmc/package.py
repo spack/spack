@@ -19,6 +19,8 @@ class Pscmc(MakefilePackage):
     homepage = "https://github.com/JianyuanXiao/PSCMC"
     git = "https://github.com/JianyuanXiao/PSCMC.git"
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
 
     def setup_run_environment(self, env):

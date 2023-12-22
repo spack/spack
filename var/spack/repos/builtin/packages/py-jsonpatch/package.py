@@ -12,6 +12,8 @@ class PyJsonpatch(PythonPackage):
     homepage = "https://github.com/stefankoegl/python-json-patch"
     pypi = "jsonpatch/jsonpatch-1.23.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("1.23", sha256="49f29cab70e9068db3b1dc6b656cbe2ee4edf7dfe9bf5a0055f17a4b6804a4b9")
 
     depends_on("py-setuptools", type="build")

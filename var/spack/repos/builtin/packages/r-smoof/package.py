@@ -17,6 +17,8 @@ class RSmoof(RPackage):
 
     cran = "smoof"
 
+    license("BSD-2-Clause")
+
     version("1.6.0.3", sha256="af8664b152876c545f6545528de6e05a289d0714103fac7afc52960a9a855fb1")
     version("1.6.0.2", sha256="d82dba9702eade00afb84c2c12167de6cec790be7d23ac227f8fe705bdcefc93")
     version("1.5.1", sha256="cfb6f6460e9593351428656b225b5ba3867a216d35a05f2babdb20db6ba35306")

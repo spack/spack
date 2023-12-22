@@ -13,6 +13,8 @@ class Dialign(MakefilePackage):
     homepage = "https://bibiserv.cebitec.uni-bielefeld.de/dialign"
     url = "https://bibiserv.cebitec.uni-bielefeld.de/applications/dialign/resources/downloads/dialign-2.2.1-src.tar.gz"
 
+    license("LGPL-2.1-or-later")
+
     version("2.2.1", sha256="046361bb4ca6e4ab2ac5e634cfcd673f964a887006c09c1b8bd3310fac86f519")
 
     build_directory = "src"

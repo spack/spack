@@ -17,6 +17,8 @@ class XcbUtilWm(AutotoolsPackage, XorgPackage):
     homepage = "https://gitlab.freedesktop.org/xorg/lib/libxcb-wm"
     xorg_mirror_path = "lib/xcb-util-wm-0.4.2.tar.xz"
 
+    license("MIT")
+
     version("0.4.2", sha256="62c34e21d06264687faea7edbf63632c9f04d55e72114aa4a57bb95e4f888a0b")
     version(
         "0.4.1",

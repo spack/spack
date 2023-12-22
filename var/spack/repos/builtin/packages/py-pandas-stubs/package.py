@@ -16,6 +16,8 @@ class PyPandasStubs(PythonPackage):
     homepage = "https://pandas.pydata.org/"
     pypi = "pandas_stubs/pandas_stubs-2.0.2.230605.tar.gz"
 
+    license("BSD-3-Clause")
+
     version(
         "2.0.2.230605", sha256="624c7bb06d38145a44b61be459ccd19b038e0bf20364a025ecaab78fea65e858"
     )

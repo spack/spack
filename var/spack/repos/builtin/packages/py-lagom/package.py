@@ -15,6 +15,8 @@ class PyLagom(PythonPackage):
     url = "https://github.com/meadsteve/lagom/archive/refs/tags/2.2.0.tar.gz"
     git = "https://github.com/meadsteve/lagom.git"
 
+    license("MIT")
+
     version("2.2.0", sha256="69f701a2f81d9ca0ea7c93a5b15f7420bbe03d14175ec128959ad82e2b67460b")
 
     depends_on("py-setuptools@59.6:", type="build")

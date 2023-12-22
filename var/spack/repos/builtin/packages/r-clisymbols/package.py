@@ -16,4 +16,6 @@ class RClisymbols(RPackage):
 
     cran = "clisymbols"
 
+    license("MIT")
+
     version("1.2.0", sha256="0649f2ce39541820daee3ed408d765eddf83db5db639b493561f4e5fbf88efe0")

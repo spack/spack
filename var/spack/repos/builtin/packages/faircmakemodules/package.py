@@ -14,6 +14,8 @@ class Faircmakemodules(CMakePackage):
     git = "https://github.com/FairRootGroup/FairCMakeModules.git"
     maintainers("dennisklein", "ChristianTackeGSI")
 
+    license("LGPL-3.0-or-later")
+
     version("main", branch="main", get_full_repo=True)
     version("1.0.0", sha256="ec60c31f38050c1173d512c58c684650db66736877c580936f7ecca33eeaf696")
 

@@ -15,6 +15,8 @@ class PyTorchgeo(PythonPackage):
 
     maintainers("adamjstewart", "calebrob6")
 
+    license("MIT")
+
     version("main", branch="main")
     version("0.5.1", sha256="5f86a34d18fe36eeb9146b057b21e5356252ef8ab6a9db33feebb120a01feff8")
     version("0.5.0", sha256="2bc2f9c4a19a569790cb3396499fdec17496632b0e52b86be390a2cc7a1a7033")

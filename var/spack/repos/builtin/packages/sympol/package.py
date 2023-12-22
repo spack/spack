@@ -14,6 +14,8 @@ class Sympol(CMakePackage):
     homepage = "https://www.math.uni-rostock.de/~rehn/software/sympol.html"
     url = "https://www.math.uni-rostock.de/~rehn/software/sympol-0.1.8.tar.gz"
 
+    license("GPL-2.0-only")
+
     version("0.1.8", sha256="8f4c013fa563e696fc8c27c408fd1f3d47783639815e8141e3a99826f1f3d54f")
 
     depends_on("cmake@2.6:", type="build")

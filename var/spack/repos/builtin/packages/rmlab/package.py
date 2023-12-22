@@ -14,6 +14,8 @@ class Rmlab(CMakePackage):
 
     maintainers("ax3l")
 
+    license("GPL-3.0-or-later")
+
     version("develop", branch="develop")
 
     variant("png", default=True, description="Enable PNG conversion support")

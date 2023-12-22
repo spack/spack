@@ -18,6 +18,8 @@ class Patchelf(AutotoolsPackage):
 
     maintainers("haampie")
 
+    license("GPL-3.0-or-later")
+
     version("0.18.0", sha256="64de10e4c6b8b8379db7e87f58030f336ea747c0515f381132e810dbf84a86e7")
     # patchelf 0.18 breaks libraries:
     # https://github.com/spack/spack/issues/39252

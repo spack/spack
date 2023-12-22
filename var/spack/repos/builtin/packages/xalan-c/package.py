@@ -18,6 +18,8 @@ class XalanC(CMakePackage):
 
     maintainers("omsai")
 
+    license("Apache-2.0")
+
     version("1.12", sha256="ee7d4b0b08c5676f5e586c7154d94a5b32b299ac3cbb946e24c4375a25552da7")
 
     variant(

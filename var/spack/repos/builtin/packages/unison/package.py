@@ -18,6 +18,8 @@ class Unison(Package):
     url = "https://github.com/bcpierce00/unison/archive/v2.51.2.tar.gz"
     maintainers("hseara")
 
+    license("GPL-3.0-or-later")
+
     version("2.51.2", sha256="a2efcbeab651be6df69cc9b253011a07955ecb91fb407a219719451197849d5e")
     version("2.48.15v4", sha256="f8c7e982634bbe1ed6510fe5b36b6c5c55c06caefddafdd9edc08812305fdeec")
 

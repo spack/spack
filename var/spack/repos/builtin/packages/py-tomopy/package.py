@@ -15,6 +15,8 @@ class PyTomopy(PythonPackage):
     url = "https://github.com/tomopy/tomopy/archive/1.0.0.tar.gz"
     git = "https://github.com/tomopy/tomopy.git"
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("1.11.0", sha256="4e5691c2b083753692ba4376ce301578037071c83fc61a6ae9e5bc9e6fcd3d1f")
     version("1.0.0", sha256="ee45f7a062e5a66d6f18a904d2e204e48d85a1ce1464156f9e2f6353057dfe4c")

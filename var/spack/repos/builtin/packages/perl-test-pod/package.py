@@ -15,6 +15,8 @@ class PerlTestPod(PerlPackage):
 
     maintainers("EbiArnie")
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("1.52", sha256="60a8dbcc60168bf1daa5cc2350236df9343e9878f4ab9830970a5dde6fe8e5fc")
 
     depends_on("perl@5.8.0:", type=("build", "link", "run", "test"))

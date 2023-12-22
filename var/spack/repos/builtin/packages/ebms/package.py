@@ -20,6 +20,8 @@ class Ebms(MakefilePackage):
     homepage = "https://github.com/ANL-CESAR/EBMS"
     git = "https://github.com/ANL-CESAR/EBMS.git"
 
+    license("MIT")
+
     version("develop")
 
     depends_on("mpi@2:")

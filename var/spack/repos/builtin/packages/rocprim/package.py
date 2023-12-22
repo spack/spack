@@ -14,6 +14,8 @@ class Rocprim(CMakePackage):
     url = "https://github.com/ROCmSoftwarePlatform/rocPRIM/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
+    license("MIT")
+
     maintainers("cgmb", "srekolam", "renjithravindrankannath")
     version("5.7.1", sha256="15d820a0f61aed60efbba88b6efe6942878b02d912f523f9cf8f33a4583d6cd7")
     version("5.7.0", sha256="a1bf94bbad13a0410b49476771270606d8a9d257188ee3ec3a37eee80540fe9b")

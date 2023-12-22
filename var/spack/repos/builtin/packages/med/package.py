@@ -14,6 +14,8 @@ class Med(CMakePackage):
 
     maintainers("likask")
 
+    license("LGPL-3.0-only")
+
     # 4.1.0 does not compile in static mode
     version("4.1.0", sha256="847db5d6fbc9ce6924cb4aea86362812c9a5ef6b9684377e4dd6879627651fce")
     version(

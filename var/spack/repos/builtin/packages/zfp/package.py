@@ -23,6 +23,8 @@ class Zfp(CMakePackage, CudaPackage):
     maintainers("lindstro", "GarrettDMorrison")
     tags = ["radiuss", "e4s"]
 
+    license("BSD-3-Clause")
+
     # Versions
     version("develop", branch="develop")
     version("1.0.0", sha256="0ea08ae3e50e3c92f8b8cf41ba5b6e2de8892bc4a4ca0c59b8945b6c2ab617c4")

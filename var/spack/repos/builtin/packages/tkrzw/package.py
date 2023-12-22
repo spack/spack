@@ -13,6 +13,8 @@ class Tkrzw(AutotoolsPackage):
     url = "https://dbmx.net/tkrzw/pkg/tkrzw-0.9.22.tar.gz"
     git = "https://github.com/estraier/tkrzw.git"
 
+    license("Apache-2.0")
+
     version("master", branch="master")
     version("0.9.44", sha256="088ac619fbf7fc22c110674b3f8fe8d8573a1d7088e5616b268fd9f68ba25650")
     version("0.9.43", sha256="60f7b579edb4f911ecaf35ff6c07f53b3d566424d8bf179b1991ade5071f0bbc")

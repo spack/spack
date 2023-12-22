@@ -18,6 +18,8 @@ class Tmux(AutotoolsPackage):
     url = "https://github.com/tmux/tmux/releases/download/2.6/tmux-2.6.tar.gz"
     git = "https://github.com/tmux/tmux.git"
 
+    license("ISC")
+
     version("3.3a", sha256="e4fd347843bd0772c4f48d6dde625b0b109b7a380ff15db21e97c11a4dcdf93f")
     version("3.2a", sha256="551553a4f82beaa8dadc9256800bcc284d7c000081e47aa6ecbb6ff36eacd05f")
     version("3.2", sha256="664d345338c11cbe429d7ff939b92a5191e231a7c1ef42f381cebacb1e08a399")

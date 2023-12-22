@@ -14,4 +14,6 @@ class Sheenbidi(MesonPackage):
     url = "https://github.com/Tehreer/SheenBidi/archive/v2.6.tar.gz"
     git = "https://github.com/Tehreer/SheenBidi.git"
 
+    license("Apache-2.0")
+
     version("2.6", sha256="f538f51a7861dd95fb9e3f4ad885f39204b5c670867019b5adb7c4b410c8e0d9")

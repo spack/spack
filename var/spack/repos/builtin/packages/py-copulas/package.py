@@ -17,6 +17,8 @@ class PyCopulas(PythonPackage):
     homepage = "https://github.com/sdv-dev/Copulas"
     pypi = "copulas/copulas-0.6.0.tar.gz"
 
+    license("MIT")
+
     version("0.6.0", sha256="9de6cc738769db19794fc18e2f506a4b5ee17e6902519c0842a4698c0efb6749")
 
     depends_on("python@3.6:", type=("build", "run"))

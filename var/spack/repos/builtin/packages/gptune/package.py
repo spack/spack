@@ -17,6 +17,8 @@ class Gptune(CMakePackage):
     git = "https://github.com/gptune/GPTune.git"
     maintainers("liuyangzhuan")
 
+    license("BSD-3-Clause-LBNL")
+
     version("master", branch="master")
     version("4.0.0", sha256="4f954a810d83b73f5abe5b15b79e3ed5b7ebf7bc0ae7335d27b68111bd078102")
     version("3.0.0", sha256="e19bfc3033fff11ff8c20cae65b88b7ca005d2c4e4db047f9f23226126ec92fa")

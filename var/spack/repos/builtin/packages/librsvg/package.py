@@ -12,6 +12,8 @@ class Librsvg(AutotoolsPackage):
     homepage = "https://wiki.gnome.org/Projects/LibRsvg"
     url = "https://download.gnome.org/sources/librsvg/2.44/librsvg-2.44.14.tar.xz"
 
+    license("LGPL-2.1-or-later")
+
     version("2.56.2", sha256="3ec3c4d8f73e0ba4b9130026969e8371c092b734298d36e2fdb3eb4afcec1200")
     version("2.51.0", sha256="89d32e38445025e1b1d9af3dd9d3aeb9f6fce527aeecbecf38b369b34c80c038")
     version("2.50.2", sha256="6211f271ce4cd44a7318190d36712e9cea384a933d3e3570004edeb210a056d3")

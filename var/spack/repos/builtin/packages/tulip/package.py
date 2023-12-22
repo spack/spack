@@ -20,6 +20,8 @@ class Tulip(CMakePackage):
     homepage = "https://tulip.labri.fr"
     url = "https://sourceforge.net/projects/auber/files/tulip/tulip-5.4.0/tulip-5.4.0_src.tar.gz"
 
+    license("LGPL-3.0-only")
+
     version("5.4.0", sha256="2175e4e1a79028ab7a2479e882242f304fd3e01fedf80e1f29f8f5e9a6eb1325")
 
     extends("python")

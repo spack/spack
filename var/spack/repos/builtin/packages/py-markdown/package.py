@@ -17,6 +17,8 @@ class PyMarkdown(PythonPackage):
     homepage = "https://python-markdown.github.io/"
     pypi = "markdown/Markdown-2.6.11.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("3.4.1", sha256="3b809086bb6efad416156e00a0da66fe47618a5d6918dd688f53f40c8e4cfeff")
     version("3.3.4", sha256="31b5b491868dcc87d6c24b7e3d19a0d730d59d3e46f4eea6430a321bed387a49")
     version("3.1.1", sha256="2e50876bcdd74517e7b71f3e7a76102050edec255b3983403f1a63e7c8a41e7a")

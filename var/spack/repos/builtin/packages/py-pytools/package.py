@@ -12,6 +12,8 @@ class PyPytools(PythonPackage):
     homepage = "https://github.com/inducer/pytools"
     pypi = "pytools/pytools-2019.1.1.tar.gz"
 
+    license("MIT")
+
     version("2022.1.14", sha256="41017371610bb2a03685597c5285205e6597c7f177383d95c8b871244b12c14e")
     version("2022.1.12", sha256="4d62875e9a2ab2a24e393a9a8b799492f1a721bffa840af3807bfd42871dd1f4")
     version("2021.2.9", sha256="db6cf83c9ba0a165d545029e2301621486d1e9ef295684072e5cd75316a13755")

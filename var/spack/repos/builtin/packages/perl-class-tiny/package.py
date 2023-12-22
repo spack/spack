@@ -15,6 +15,8 @@ class PerlClassTiny(PerlPackage):
 
     maintainers("EbiArnie")
 
+    license("Apache-2.0")
+
     version("1.008", sha256="ee058a63912fa1fcb9a72498f56ca421a2056dc7f9f4b67837446d6421815615")
 
     depends_on("perl@5.6.0:", type=("build", "link", "run", "test"))

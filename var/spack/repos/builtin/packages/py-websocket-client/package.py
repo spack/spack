@@ -13,6 +13,8 @@ class PyWebsocketClient(PythonPackage):
     homepage = "https://github.com/websocket-client/websocket-client.git"
     pypi = "websocket-client/websocket-client-0.57.0.tar.gz"
 
+    license("Apache-2.0")
+
     version("1.6.3", sha256="3aad25d31284266bcfcfd1fd8a743f63282305a364b8d0948a43bd606acc652f")
     version("1.5.1", sha256="3f09e6d8230892547132177f575a4e3e73cfdf06526e20cc02aa1c3b47184d40")
     version("1.4.1", sha256="f9611eb65c8241a67fb373bef040b3cf8ad377a9f6546a12b620b6511e8ea9ef")

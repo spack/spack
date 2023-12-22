@@ -13,6 +13,8 @@ class PyAzureCliNspkg(PythonPackage):
     homepage = "https://github.com/Azure/azure-cli"
     pypi = "azure-cli-nspkg/azure-cli-nspkg-3.0.4.tar.gz"
 
+    license("MIT")
+
     version("3.0.4", sha256="1bde56090f548c6435bd3093995cf88e4c445fb040604df8b5b5f70780d79181")
 
     depends_on("py-setuptools", type="build")

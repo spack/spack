@@ -13,6 +13,8 @@ class PyIpympl(PythonPackage):
     pypi = "ipympl/ipympl-0.8.8.tar.gz"
     maintainers("haralmha")
 
+    license("BSD-3-Clause")
+
     version("0.8.8", sha256="5bf5d780b07fafe7924922ac6b2f3abd22721f341e5e196b3b82737dfbd0e1c9")
 
     depends_on("py-setuptools@40.8:", type="build")

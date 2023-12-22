@@ -16,6 +16,8 @@ class Trexio(AutotoolsPackage):
     # notify when the package is updated.
     maintainers("q-posev", "scemama")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("2.2.0", sha256="e6340c424fcea18ae0b643a5707e16005c7576ee21a5aac679fbc132d70b36d9")
     version("2.1.0", sha256="232866c943b98fa8a42d34b55e940f7501634eb5bd426555ba970f5c09775e83")

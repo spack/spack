@@ -14,6 +14,8 @@ class PyBsddb3(PythonPackage):
 
     pypi = "bsddb3/bsddb3-6.2.5.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("6.2.5", sha256="784bf40ad935258507594a89b32ea11f362cde120751c8b96de163955ced7db8")
 
     depends_on("python@2.6:")

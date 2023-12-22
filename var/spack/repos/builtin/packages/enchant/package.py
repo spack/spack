@@ -15,6 +15,8 @@ class Enchant(AutotoolsPackage):
     homepage = "https://abiword.github.io/enchant/"
     url = "https://github.com/AbiWord/enchant/releases/download/v2.2.5/enchant-2.2.5.tar.gz"
 
+    license("LGPL-2.1-or-later")
+
     version("2.2.7", sha256="1b22976135812b35cb5b8d21a53ad11d5e7c1426c93f51e7a314a2a42cab3a09")
     version("2.2.6", sha256="8048c5bd26190b21279745cfecd05808c635bc14912e630340cd44a49b87d46d")
     version("2.2.5", sha256="ffce4ea00dbda1478d91c3e1538cadfe5761d9d6c0ceb27bc3dba51882fe1c47")

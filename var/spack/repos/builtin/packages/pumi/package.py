@@ -23,6 +23,8 @@ class Pumi(CMakePackage):
 
     tags = ["e4s"]
 
+    license("BSD-3-Clause")
+
     # We will use the scorec/core master branch as the 'nightly' version
     # of pumi in spack.  The master branch is more stable than the
     # scorec/core develop branch and we prefer not to expose spack users

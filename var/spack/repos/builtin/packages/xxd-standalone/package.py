@@ -21,6 +21,8 @@ class XxdStandalone(MakefilePackage):
 
     provides("xxd")
 
+    license("Vim")
+
     version("8.2.1201", sha256="39032fe866f44724b104468038dc9ac4ff2c00a4b18c9a1e2c27064ab1f1143d")
 
     def install(self, spec, prefix):

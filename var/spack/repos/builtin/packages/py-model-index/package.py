@@ -12,6 +12,8 @@ class PyModelIndex(PythonPackage):
     homepage = "https://github.com/paperswithcode/model-index"
     git = "https://github.com/paperswithcode/model-index.git"
 
+    license("MIT")
+
     version("0.1.11", commit="a39af5f8aaa2a90b8fc7180744a855282360067a")
 
     depends_on("py-setuptools", type="build")

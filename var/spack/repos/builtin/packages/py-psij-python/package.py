@@ -16,6 +16,8 @@ class PyPsijPython(PythonPackage):
 
     maintainers("andre-merzky")
 
+    license("MIT")
+
     version(
         "0.1.0.post2", sha256="78f4fb147248be479aa6128b583dff9052698c49f36c6e9811b4c3f9db326043"
     )

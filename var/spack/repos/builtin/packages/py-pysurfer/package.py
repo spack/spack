@@ -12,6 +12,8 @@ class PyPysurfer(PythonPackage):
     homepage = "https://github.com/nipy/PySurfer"
     pypi = "pysurfer/pysurfer-0.11.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.11.0", sha256="ae709b6f933694f1810eb3c8f517bdb76c13576d74a7a5a1704e05239df0a179")
 
     variant("save_movie", default=False, description="Enable save_movie support")

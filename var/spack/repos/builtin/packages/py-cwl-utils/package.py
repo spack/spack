@@ -15,6 +15,8 @@ class PyCwlUtils(PythonPackage):
     homepage = "https://github.com/common-workflow-language/cwl-utils"
     pypi = "cwl-utils/cwl-utils-0.21.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.21", sha256="583f05010f7572f3a69310325472ccb6efc2db7f43dc6428d03552e0ffcbaaf9")
 
     depends_on("python@3.6:", type=("build", "run"))

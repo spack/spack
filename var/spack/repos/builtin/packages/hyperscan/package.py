@@ -27,6 +27,8 @@ class Hyperscan(CMakePackage):
     homepage = "https://www.hyperscan.io/"
     url = "https://github.com/intel/hyperscan/archive/v5.2.1.tar.gz"
 
+    license("BSD-2-Clause")
+
     for ver, packages in _versions.items():
         key = "{0}-{1}".format(platform.system(), platform.machine())
         pkg = packages.get(key)

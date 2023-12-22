@@ -12,6 +12,8 @@ class PyMonkeytype(PythonPackage):
     homepage = "https://github.com/instagram/MonkeyType"
     pypi = "MonkeyType/MonkeyType-22.2.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("22.2.0", sha256="6b0c00b49dcc5095a2c08d28246cf005e05673fc51f64d203f9a6bca2036dfab")
 
     depends_on("py-setuptools", type="build")

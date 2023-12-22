@@ -17,6 +17,8 @@ class Symengine(CMakePackage):
     git = "https://github.com/symengine/symengine.git"
     maintainers("HaoZeke", "jppelteret")
 
+    license("MIT")
+
     version("master", branch="master")
     version("0.9.0", sha256="dcf174ac708ed2acea46691f6e78b9eb946d8a2ba62f75e87cf3bf4f0d651724")
     version("0.8.1", sha256="41eb6ae6901c09e53d7f61f0758f9201e81fc534bfeecd4b2bd4b4e6f6768693")

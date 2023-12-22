@@ -14,6 +14,8 @@ class PyJupyterlab(PythonPackage):
     homepage = "https://github.com/jupyterlab/jupyterlab"
     pypi = "jupyterlab/jupyterlab-2.2.7.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("4.0.1", sha256="4dc3901f7bbfd4704c994b7a893a49955256abf57dba9831f4825e3f3165b8bb")
     version("3.4.8", sha256="1fafb8b657005d91603f3c3adfd6d9e8eaf33fdc601537fef09283332efe67cb")
     version("3.4.2", sha256="38abd3a4f83a8f97e3f15bebbcc0825903c15519809eedfaa41340d260be2160")

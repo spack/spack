@@ -14,6 +14,8 @@ class PyUrllib3(PythonPackage):
     pypi = "urllib3/urllib3-1.25.6.tar.gz"
     git = "https://github.com/urllib3/urllib3.git"
 
+    license("MIT")
+
     version("2.1.0", sha256="df7aa8afb0148fa78488e7899b2c59b5f4ffcfa82e6c54ccb9dd37c1d7b52d54")
     version("2.0.7", sha256="c97dfde1f7bd43a71c8d2a58e369e9b2bf692d1334ea9f9cae55add7d0dd0f84")
     version("2.0.6", sha256="b19e1a85d206b56d7df1d5e683df4a7725252a964e3993648dd0fb5a1c157564")

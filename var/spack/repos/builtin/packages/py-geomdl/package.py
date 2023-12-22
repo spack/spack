@@ -12,6 +12,8 @@ class PyGeomdl(PythonPackage):
     homepage = "https://pypi.org/project/geomdl"
     pypi = "geomdl/geomdl-5.3.1.tar.gz"
 
+    license("MIT")
+
     version("5.3.1", sha256="e81a31b4d5f111267b16045ba1d9539235a98b2cff5e4bad18f7ddcd4cb804c8")
 
     depends_on("py-setuptools@40.6.3:", type="build")

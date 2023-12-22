@@ -14,6 +14,8 @@ class Mcl(AutotoolsPackage):
     homepage = "https://www.micans.org/mcl/index.html"
     url = "https://www.micans.org/mcl/src/mcl-14-137.tar.gz"
 
+    license("GPL-3.0-or-later")
+
     version("14-137", sha256="b5786897a8a8ca119eb355a5630806a4da72ea84243dba85b19a86f14757b497")
 
     @when("%gcc@10:")

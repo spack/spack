@@ -21,6 +21,8 @@ class Geos(CMakePackage):
 
     maintainers("adamjstewart")
 
+    license("LGPL-2.1-or-later")
+
     version("3.12.1", sha256="d6ea7e492224b51193e8244fe3ec17c4d44d0777f3c32ca4fb171140549a0d03")
     version("3.12.0", sha256="d96db96011259178a35555a0f6d6e75a739e52a495a6b2aa5efb3d75390fbc39")
     version("3.11.3", sha256="80d60a2bbc0cde7745a3366b9eb8c0d65a142b03e063ea0a52c364758cd5ee89")

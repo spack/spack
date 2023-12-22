@@ -16,6 +16,8 @@ class Postgis(AutotoolsPackage):
     homepage = "https://postgis.net/"
     url = "https://download.osgeo.org/postgis/source/postgis-2.5.3.tar.gz"
 
+    license("GPL-2.0-or-later")
+
     version("3.0.1", sha256="5a5432f95150d9bae9215c6d1c7bb354e060482a7c379daa9b8384e1d03e6353")
     version("3.0.0", sha256="c06fd2cd5cea0119106ffe17a7235d893c2bbe6f4b63c8617c767630973ba594")
     version("2.5.3", sha256="72e8269d40f981e22fb2b78d3ff292338e69a4f5166e481a77b015e1d34e559a")

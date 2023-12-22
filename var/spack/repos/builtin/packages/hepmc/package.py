@@ -16,6 +16,8 @@ class Hepmc(CMakePackage):
 
     tags = ["hep"]
 
+    license("GPL-2.0-or-later")
+
     version("2.06.11", sha256="86b66ea0278f803cde5774de8bd187dd42c870367f1cbf6cdaec8dc7cf6afc10")
     version("2.06.10", sha256="5adedd9e3f7447e1e5fc01b72f745ab87da2c1611df89208bb3d7c6ea94c11a4")
     version("2.06.09", sha256="e0f8fddd38472c5615210894444686ac5d72df3be682f7d151b562b236d9b422")

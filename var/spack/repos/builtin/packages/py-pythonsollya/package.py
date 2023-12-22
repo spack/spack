@@ -12,6 +12,8 @@ class PyPythonsollya(PythonPackage):
     homepage = "Python wrapper for the Sollya library"
     url = "https://gitlab.com/metalibm-dev/pythonsollya/-/archive/release-0.4.0-alpha0/pythonsollya-release-0.4.0-alpha0.tar.gz"
 
+    license("CECILL-2.1")
+
     version(
         "0.4.0-alpha0", sha256="faac899744c92b1d20980cadef309cd5610d79722322e97940ff142c207c41b5"
     )

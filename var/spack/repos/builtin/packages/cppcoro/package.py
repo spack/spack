@@ -14,6 +14,8 @@ class Cppcoro(CMakePackage):
 
     maintainers("pbrady")
 
+    license("MIT")
+
     version("develop", branch="master")
     version("2021-01-13", commit="7cc9433436fe8f2482138019cfaafce8e1d7a896")
 

@@ -15,6 +15,8 @@ class Open3d(CMakePackage, CudaPackage):
     url = "https://github.com/isl-org/Open3D/archive/refs/tags/v0.13.0.tar.gz"
     git = "https://github.com/isl-org/Open3D.git"
 
+    license("MIT")
+
     version(
         "0.13.0", tag="v0.13.0", commit="c3f9de224e13838a72da0e5565a7ba51038b0f11", submodules=True
     )

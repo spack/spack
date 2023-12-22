@@ -12,6 +12,8 @@ class Gemmlowp(Package):
     homepage = "https://github.com/google/gemmlowp"
     git = "https://github.com/google/gemmlowp.git"
 
+    license("Apache-2.0")
+
     version("a6f29d9ac", commit="a6f29d8ac48d63293f845f2253eccbf86bc28321")
 
     def install(self, spec, prefix):

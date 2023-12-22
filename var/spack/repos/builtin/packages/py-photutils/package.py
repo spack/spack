@@ -15,6 +15,8 @@ class PyPhotutils(PythonPackage):
     homepage = "https://github.com/astropy/photutils"
     pypi = "photutils/photutils-1.5.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("1.5.0", sha256="014f7aa5a571401094d5cf9ffb57803b48869233feb80476ce377ecb91113689")
 
     maintainers("meyersbs")

@@ -14,6 +14,8 @@ class PyPypng(PythonPackage):
 
     maintainers("snehring")
 
+    license("MIT")
+
     version(
         "0.20220715.0", sha256="739c433ba96f078315de54c0db975aee537cbc3e1d0ae4ed9aab0ca1e427e2c1"
     )
