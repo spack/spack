@@ -57,9 +57,7 @@ class Mxnet(CMakePackage, CudaPackage, PythonExtension):
     depends_on("py-cython", when="+python", type="build")
     depends_on("py-numpy@1.17:", when="@2.0.0:+python", type=("build", "run"))
     depends_on("py-numpy@1.16.1:1", when="@1.6:1.8.0+python", type=("build", "run"))
-    depends_on("py-numpy@1.8.2:1.15.0", when="@1.3.0+python", type=("build", "run"))
     depends_on("py-requests@2.20.0:2", when="@1.6:+python", type=("build", "run"))
-    depends_on("py-requests@2.18.4:2.18", when="@1.3.0+python", type=("build", "run"))
     depends_on("py-graphviz@0.8.1:0.8", when="+python", type=("build", "run"))
 
     conflicts("+cudnn", when="~cuda")
