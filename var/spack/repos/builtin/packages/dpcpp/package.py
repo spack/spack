@@ -9,6 +9,7 @@ import sys
 
 from spack.package import *
 
+
 class Dpcpp(CMakePackage, CudaPackage, ROCmPackage):
     """Data Parallel C++ compiler: Intel's implementation of SYCL programming model"""
 
@@ -242,6 +243,7 @@ class Dpcpp(CMakePackage, CudaPackage, ROCmPackage):
         env.set("CC", join_path(spec.prefix.bin, "clang"))
         env.set("CXX", join_path(spec.prefix.bin, "clang++"))
         env.prepend_path("LD_LIBRARY_PATH", join_path(spec.prefix, "lib"))
+
 
 def get_llvm_targets_to_build(family):
     host_target = ""
