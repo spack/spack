@@ -14,13 +14,14 @@ class Fftx(CMakePackage, CudaPackage, ROCmPackage):
     operations composed of linear operations combined with DFT transforms."""
 
     homepage = "https://spiralgen.com"
-    url = "https://github.com/spiral-software/fftx/archive/refs/tags/1.1.3.tar.gz"
+    url = "https://github.com/spiral-software/fftx/archive/refs/tags/1.2.0.tar.gz"
     git = "https://github.com/spiral-software/fftx.git"
 
     maintainers("spiralgen")
 
     version("develop", branch="develop")
     version("main", branch="main")
+    version("1.2.0", sha256="7be541bdb5905361e24bfb098314f946fe89f7b10f587d91e2397d821434b48b")
     version("1.1.3", sha256="17ed0baf9c2dcf30c789fdae530e006ae3ff2d2c9006989b1e6348e4ae50cef9")
     version("1.1.2", sha256="b2c4a7791305481af9e1bd358c1215efa4506c91c943cddca3780a1ccbc27810")
     version("1.1.1", sha256="5cbca66ef09eca02ee8f336f58eb45cfac69cfb29cd6eb945852ad74085d8a60")
