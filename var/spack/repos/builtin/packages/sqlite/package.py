@@ -207,10 +207,6 @@ class Sqlite(AutotoolsPackage, NMakePackage):
     def libs(self):
         return find_libraries("libsqlite3", root=self.prefix.lib)
 
-    def get_arch(self):
-        host_platform = spack.platforms.host()
-        return str(host_platform.target("default_target"))
-
     def test_example(self):
         """check example table dump"""
 
@@ -259,6 +255,10 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
             args.append("CPPFLAGS=-DSQLITE_ENABLE_COLUMN_METADATA=1")
 
         return args
+
+    def get_arch(self):
+        host_platform = spack.platforms.host()
+        return str(host_platform.target("default_target"))
 
     @run_after("install")
     def build_libsqlitefunctions(self):
