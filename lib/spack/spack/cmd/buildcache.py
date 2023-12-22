@@ -327,7 +327,7 @@ def _progress(i: int, total: int):
 
 
 def _make_pool():
-    return multiprocessing.pool.Pool(determine_number_of_jobs(parallel=True))
+    return multiprocessing.pool.ThreadPool(determine_number_of_jobs(parallel=True))
 
 
 def push_fn(args):
