@@ -51,7 +51,7 @@ class Tcl(AutotoolsPackage, NMakePackage, SourceforgePackage, TclMixin):
     depends_on("zlib-api")
 
     # No compiler wrappers on Windows
-    for plat in ["linux", "darwin", "cray"]:
+    for plat in ["linux", "darwin", "cray", "freebsd"]:
         filter_compiler_wrappers("tclConfig.sh", relative_root="lib", when=f"platform={plat}")
 
     build_system("autotools", "nmake")
