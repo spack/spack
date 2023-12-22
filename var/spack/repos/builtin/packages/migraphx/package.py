@@ -19,6 +19,10 @@ class Migraphx(CMakePackage):
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["libmigraphx"]
 
+    version("5.7.1", sha256="3e58c043a5a7d1357ee05725fd6cd41e190b070f1ba57f61300128429902089c")
+    version("5.7.0", sha256="14f13554367d2d6490d66f8b5b739203225e7acce25085559e7c4acf29e2a4d5")
+    version("5.6.1", sha256="b108c33f07572ffd880b20f6de06f1934ab2a1b41ae69095612322ac412fa91c")
+    version("5.6.0", sha256="eaec90535d62002fd5bb264677ad4a7e30c55f18d2a287680d0495c7e60432b2")
     version("5.5.1", sha256="e71c4744f8ef6a1a99c179bbad94b8fe9bd7686eaa9397f376b70988c3341f0c")
     version("5.5.0", sha256="6084eb596b170f5e38f22b5fa37e66aa43a8cbc626712c9f03cde48c8fecfc8f")
     version("5.4.3", sha256="f83e7bbe5d6d0951fb2cf0abf7e8b3530e9a5e45f7cec6d760da055d6905d568")
@@ -110,23 +114,27 @@ class Migraphx(CMakePackage):
 
         return url
 
-    patch("0001-Adding-nlohmann-json-include-directory.patch", when="@3.9.0:")
+    patch("0001-Adding-nlohmann-json-include-directory.patch", when="@3.9.0:5.5")
     # Restrict Python 2.7 usage to fix the issue below
     # https://github.com/spack/spack/issues/24429
     patch("0002-restrict-python-2.7-usage.patch", when="@3.9.0:5.1.3")
     patch("0003-restrict-python-2.7-usage.patch", when="@5.2.0:5.4")
-    patch("0004-restrict-python2.7-usage-for-5.5.0.patch", when="@5.5.0:")
+    patch("0004-restrict-python2.7-usage-for-5.5.0.patch", when="@5.5.0")
+    patch("0005-Adding-half-include-directory-path-migraphx.patch", when="@5.6.0:")
+    patch("0006-add-option-to-turn-off-ck.patch", when="@5.7")
 
     depends_on("cmake@3.5:", type="build")
     depends_on("protobuf", type="link")
     depends_on("blaze", type="build")
     depends_on("nlohmann-json", type="link")
     depends_on("msgpack-c", type="link")
-    depends_on("half@1.12.0", type="link")
+    depends_on("half@1.12.0", type="link", when="@:5.5")
+    depends_on("half@2:", when="@5.6:")
     depends_on("python@3.5:", type="build")
     depends_on("py-pybind11", type="build", when="@:4.0.0")
     depends_on("py-pybind11@2.6:", type="build", when="@4.1.0:")
     depends_on("pkgconfig", type="build", when="@5.3.0:")
+    depends_on("abseil-cpp")
 
     for ver in [
         "3.5.0",
@@ -154,12 +162,19 @@ class Migraphx(CMakePackage):
         "5.4.3",
         "5.5.0",
         "5.5.1",
+        "5.6.0",
+        "5.6.1",
+        "5.7.0",
+        "5.7.1",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, when="@" + ver)
         depends_on("rocblas@" + ver, when="@" + ver)
         depends_on("miopen-hip@" + ver, when="@" + ver)
+
+    for ver in ["5.7.0", "5.7.1"]:
+        depends_on("composable-kernel@" + ver, when="@" + ver)
 
     @property
     def cmake_python_hints(self):
@@ -192,4 +207,15 @@ class Migraphx(CMakePackage):
             args += self.cmake_python_hints
         if "@5.5.0:" in self.spec:
             args.append(self.define("CMAKE_CXX_FLAGS", "-I{0}".format(abspath)))
+            args.append(self.define("MIGRAPHX_ENABLE_PYTHON", "OFF"))
+        if "@5.7" in self.spec:
+            args.append(self.define("MIGRAPHX_USE_COMPOSABLEKERNEL", "OFF"))
         return args
+
+    def test(self):
+        if self.spec.satisfies("@:5.5.0"):
+            print("Skipping: stand-alone tests")
+            return
+        test_dir = join_path(self.spec["migraphx"].prefix, "bin")
+        with working_dir(test_dir, create=True):
+            self.run_test("UnitTests")

@@ -19,6 +19,12 @@ class UfsUtils(CMakePackage):
     maintainers("t-brown", "edwardhartnett", "AlexanderRichert-NOAA", "Hang-Lei-NOAA")
 
     version(
+        "1.11.0",
+        tag="ufs_utils_1_11_0",
+        commit="72701ab45165ae67a1c4b4d855e763bf5674dbd2",
+        submodules=True,
+    )
+    version(
         "1.10.0",
         tag="ufs_utils_1_10_0",
         commit="d1e928bca221361a62d747964826bf80775db6af",

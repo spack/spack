@@ -27,6 +27,8 @@ class Abinit(AutotoolsPackage):
     homepage = "https://www.abinit.org/"
     url = "https://www.abinit.org/sites/default/files/packages/abinit-8.6.3.tar.gz"
 
+    maintainers("downloadico")
+    version("9.10.3", sha256="3f2a9aebbf1fee9855a09dd687f88d2317b8b8e04f97b2628ab96fb898dce49b")
     version("9.8.4", sha256="a086d5045f0093b432e6a044d5f71f7edf5a41a62d67b3677cb0751d330c564a")
     version("9.8.3", sha256="de823878aea2c20098f177524fbb4b60de9b1b5971b2e835ec244dfa3724589b")
     version("9.6.1", sha256="b6a12760fd728eb4aacca431ae12150609565bedbaa89763f219fcd869f79ac6")
@@ -85,6 +87,11 @@ class Abinit(AutotoolsPackage):
     # libxml2
     depends_on("libxml2", when="@9:+libxml2")
 
+    # If the Intel suite is used for Lapack, it must be used for fftw and vice-versa
+    for _intel_pkg in INTEL_MATH_LIBRARIES:
+        requires(f"^[virtuals=fftw-api] {_intel_pkg}", when=f"^[virtuals=lapack]   {_intel_pkg}")
+        requires(f"^[virtuals=lapack]   {_intel_pkg}", when=f"^[virtuals=fftw-api] {_intel_pkg}")
+
     # Cannot ask for +scalapack if it does not depend on MPI
     conflicts("+scalapack", when="~mpi")
 
@@ -101,11 +108,7 @@ class Abinit(AutotoolsPackage):
     # TODO: The logic here can be reversed with the new concretizer. Instead of
     # using `conflicts`, `depends_on` could be used instead.
     for fftw in ["amdfftw", "cray-fftw", "fujitsu-fftw", "fftw"]:
-        conflicts(
-            "+openmp",
-            when="^{0}~openmp".format(fftw),
-            msg="Need to request {0} +openmp".format(fftw),
-        )
+        conflicts("+openmp", when=f"^{fftw}~openmp", msg=f"Need to request {fftw} +openmp")
 
     mkl_message = "Need to set dependent variant to threads=openmp"
     conflicts("+openmp", when="^intel-mkl threads=none", msg=mkl_message)
@@ -137,34 +140,36 @@ class Abinit(AutotoolsPackage):
 
         oapp = options.append
         if "@:8" in spec:
-            oapp("--enable-optim={0}".format(self.spec.variants["optimization-flavor"].value))
+            oapp(f"--enable-optim={self.spec.variants['optimization-flavor'].value}")
         else:
-            oapp("--with-optim-flavor={0}".format(self.spec.variants["optimization-flavor"].value))
+            oapp(f"--with-optim-flavor={self.spec.variants['optimization-flavor'].value}")
 
         if "+wannier90" in spec:
-            if "@:8" in spec:
-                oapp(
-                    "--with-wannier90-libs=-L{0}".format(
-                        spec["wannier90"].prefix.lib + " -lwannier -lm"
-                    )
-                )
-                oapp("--with-wannier90-incs=-I{0}".format(spec["wannier90"].prefix.modules))
-                oapp("--with-wannier90-bins={0}".format(spec["wannier90"].prefix.bin))
+            if spec.satisfies("@:8"):
+                oapp(f"--with-wannier90-libs=-L{spec['wannier90'].prefix.lib} -lwannier -lm")
+                oapp(f"--with-wannier90-incs=-I{spec['wannier90'].prefix.modules}")
+                oapp(f"--with-wannier90-bins={spec['wannier90'].prefix.bin}")
                 oapp("--enable-connectors")
                 oapp("--with-dft-flavor=atompaw+libxc+wannier90")
+            elif spec.satisfies("@:9.8"):
+                options.extend(
+                    [
+                        f"WANNIER90_CPPFLAGS=-I{spec['wannier90'].prefix.modules}",
+                        f"WANNIER90_LIBS=-L{spec['wannier90'].prefix.lib} -lwannier",
+                    ]
+                )
             else:
                 options.extend(
                     [
-                        "WANNIER90_CPPFLAGS=-I{0}".format(spec["wannier90"].prefix.modules),
-                        "WANNIER90_LIBS=-L{0} {1}".format(
-                            spec["wannier90"].prefix.lib, "-lwannier"
-                        ),
+                        f"WANNIER90_CPPFLAGS=-I{spec['wannier90'].prefix.modules}",
+                        f"WANNIER90_LIBS=-L{spec['wannier90'].prefix.lib}"
+                        "WANNIER90_LDFLAGS=-lwannier",
                     ]
                 )
         else:
             if "@:9.8" in spec:
-                oapp("--with-fftw={0}".format(spec["fftw-api"].prefix))
-                oapp("--with-hdf5={0}".format(spec["hdf5"].prefix))
+                oapp(f"--with-fftw={spec['fftw-api'].prefix}")
+                oapp(f"--with-hdf5={spec['hdf5'].prefix}")
 
             if "@:8" in spec:
                 oapp("--with-dft-flavor=atompaw+libxc")
@@ -172,9 +177,12 @@ class Abinit(AutotoolsPackage):
                 "--without-wannier90",
 
         if "+mpi" in spec:
-            oapp("CC={0}".format(spec["mpi"].mpicc))
-            oapp("CXX={0}".format(spec["mpi"].mpicxx))
-            oapp("FC={0}".format(spec["mpi"].mpifc))
+            oapp(f"CC={spec['mpi'].mpicc}")
+            oapp(f"CXX={spec['mpi'].mpicxx}")
+            if spec.satisfies("@9.8:"):
+                oapp(f"F90={spec['mpi'].mpifc}")
+            else:
+                oapp(f"FC={spec['mpi'].mpifc}")
 
             # MPI version:
             # let the configure script auto-detect MPI support from mpi_prefix
@@ -196,7 +204,8 @@ class Abinit(AutotoolsPackage):
 
         # BLAS/LAPACK/SCALAPACK-ELPA
         linalg = spec["lapack"].libs + spec["blas"].libs
-        if "^mkl" in spec:
+        is_using_intel_libraries = spec["lapack"].name in INTEL_MATH_LIBRARIES
+        if is_using_intel_libraries:
             linalg_flavor = "mkl"
         elif "@9:" in spec and "^openblas" in spec:
             linalg_flavor = "openblas"
@@ -208,16 +217,16 @@ class Abinit(AutotoolsPackage):
         if "+scalapack" in spec:
             linalg = spec["scalapack"].libs + linalg
             if "@:8" in spec:
-                linalg_flavor = "scalapack+{0}".format(linalg_flavor)
+                linalg_flavor = f"scalapack+{linalg_flavor}"
 
         if "@:8" in spec:
-            oapp("--with-linalg-libs={0}".format(linalg.ld_flags))
+            oapp(f"--with-linalg-libs={linalg.ld_flags}")
         else:
-            oapp("LINALG_LIBS={0}".format(linalg.ld_flags))
+            oapp(f"LINALG_LIBS={linalg.ld_flags}")
 
-        oapp("--with-linalg-flavor={0}".format(linalg_flavor))
+        oapp(f"--with-linalg-flavor={linalg_flavor}")
 
-        if "^mkl" in spec:
+        if is_using_intel_libraries:
             fftflavor = "dfti"
         else:
             if "+openmp" in spec:
@@ -225,32 +234,32 @@ class Abinit(AutotoolsPackage):
             else:
                 fftflavor, fftlibs = "fftw3", "-lfftw3 -lfftw3f"
 
-        oapp("--with-fft-flavor={0}".format(fftflavor))
+        oapp(f"--with-fft-flavor={fftflavor}")
 
         if "@:8" in spec:
-            if "^mkl" in spec:
-                oapp("--with-fft-incs={0}".format(spec["fftw-api"].headers.cpp_flags))
-                oapp("--with-fft-libs={0}".format(spec["fftw-api"].libs.ld_flags))
+            if is_using_intel_libraries:
+                oapp(f"--with-fft-incs={spec['fftw-api'].headers.cpp_flags}")
+                oapp(f"--with-fft-libs={spec['fftw-api'].libs.ld_flags}")
             else:
                 options.extend(
                     [
-                        "--with-fft-incs={0}".format(spec["fftw-api"].headers.cpp_flags),
-                        "--with-fft-libs=-L{0} {1}".format(spec["fftw-api"].prefix.lib, fftlibs),
+                        f"--with-fft-incs={spec['fftw-api'].headers.cpp_flags}",
+                        f"--with-fft-libs=-L{spec['fftw-api'].prefix.lib} {fftlibs}",
                     ]
                 )
         else:
-            if "^mkl" in spec:
+            if is_using_intel_libraries:
                 options.extend(
                     [
-                        "FFT_CPPFLAGS={0}".format(spec["fftw-api"].headers.cpp_flags),
-                        "FFT_LIBs={0}".format(spec["fftw-api"].libs.ld_flags),
+                        f"FFT_CPPFLAGS={spec['fftw-api'].headers.cpp_flags}",
+                        f"FFT_LIBs={spec['fftw-api'].libs.ld_flags}",
                     ]
                 )
             else:
                 options.extend(
                     [
-                        "FFTW3_CPPFLAGS={0}".format(spec["fftw-api"].headers.cpp_flags),
-                        "FFTW3_LIBS=-L{0} {1}".format(spec["fftw-api"].prefix.lib, fftlibs),
+                        f"FFTW3_CPPFLAGS={spec['fftw-api'].headers.cpp_flags}",
+                        f"FFTW3_LIBS=-L{spec['fftw-api'].prefix.lib} {fftlibs}",
                     ]
                 )
 
@@ -259,12 +268,12 @@ class Abinit(AutotoolsPackage):
         if "@:8" in spec:
             options.extend(
                 [
-                    "--with-libxc-incs={0}".format(libxc.headers.cpp_flags),
-                    "--with-libxc-libs={0}".format(libxc.libs.ld_flags + " -lm"),
+                    f"--with-libxc-incs={libxc.headers.cpp_flags}",
+                    f"--with-libxc-libs={libxc.libs.ld_flags + ' -lm'}",
                 ]
             )
         else:
-            oapp("--with-libxc={0}".format(libxc.prefix))
+            oapp(f"--with-libxc={libxc.prefix}")
 
         # Netcdf4/HDF5
         hdf5 = spec["hdf5:hl"]
@@ -276,24 +285,21 @@ class Abinit(AutotoolsPackage):
             # to link with the high level HDF5 library
             options.extend(
                 [
-                    "--with-netcdf-incs={0}".format(
+                    "--with-netcdf-incs={}".format(
                         netcdfc.headers.cpp_flags + " " + netcdff.headers.cpp_flags
                     ),
-                    "--with-netcdf-libs={0}".format(
+                    "--with-netcdf-libs={}".format(
                         netcdff.libs.ld_flags + " " + hdf5.libs.ld_flags
                     ),
                 ]
             )
         else:
             options.extend(
-                [
-                    "--with-netcdf={0}".format(netcdfc.prefix),
-                    "--with-netcdf-fortran={0}".format(netcdff.prefix),
-                ]
+                [f"--with-netcdf={netcdfc.prefix}", f"--with-netcdf-fortran={netcdff.prefix}"]
             )
 
         if self.spec.satisfies("%fj"):
-            oapp("FCFLAGS_MODDIR=-M{0}".format(join_path(self.stage.source_path, "src/mods")))
+            oapp(f"FCFLAGS_MODDIR=-M{join_path(self.stage.source_path, 'src/mods')}")
 
         return options
 

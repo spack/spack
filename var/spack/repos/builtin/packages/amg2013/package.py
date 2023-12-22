@@ -46,9 +46,9 @@ class Amg2013(MakefilePackage):
         if "+int64" in self.spec:
             include_cflags.append("-DHYPRE_BIGINT")
 
-        targets.append("INCLUDE_CFLAGS={0}".format(" ".join(include_cflags)))
-        targets.append("INCLUDE_LFLAGS={0}".format(" ".join(include_lflags)))
-        targets.append("CC={0}".format(self.spec["mpi"].mpicc))
+        targets.append(f"INCLUDE_CFLAGS={' '.join(include_cflags)}")
+        targets.append(f"INCLUDE_LFLAGS={' '.join(include_lflags)}")
+        targets.append(f"CC={self.spec['mpi'].mpicc}")
 
         return targets
 

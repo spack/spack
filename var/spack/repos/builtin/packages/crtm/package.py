@@ -28,13 +28,6 @@ class Crtm(CMakePackage):
     variant(
         "fix", default=False, description='Download CRTM coeffecient or "fix" files (several GBs).'
     )
-    variant(
-        "build_type",
-        default="RelWithDebInfo",
-        description="CMake build type",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-    )
-
     depends_on("cmake@3.15:")
     depends_on("git-lfs")
     depends_on("netcdf-fortran", when="@2.4.0:")

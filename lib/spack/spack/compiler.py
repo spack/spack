@@ -13,6 +13,7 @@ import sys
 import tempfile
 from typing import List, Optional, Sequence
 
+import llnl.path
 import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import path_contains_subdirectory, paths_containing_libs
@@ -24,7 +25,6 @@ import spack.util.executable
 import spack.util.module_cmd
 import spack.version
 from spack.util.environment import filter_system_paths
-from spack.util.path import system_path_filter
 
 __all__ = ["Compiler"]
 
@@ -160,7 +160,7 @@ def _parse_link_paths(string):
     return implicit_link_dirs
 
 
-@system_path_filter
+@llnl.path.system_path_filter
 def _parse_non_system_link_dirs(string: str) -> List[str]:
     """Parses link paths out of compiler debug output.
 

@@ -31,6 +31,10 @@ class Nwchem(Package):
     variant("openmp", default=False, description="Enables OpenMP support")
     variant("mpipr", default=False, description="Enables ARMCI with progress rank")
     variant("fftw3", default=False, description="Link against the FFTW library")
+    variant("libxc", default=False, description="Support additional functionals via libxc")
+    variant(
+        "elpa", default=False, description="Enable optimised diagonalisation routines from ELPA"
+    )
 
     # This patch is for the modification of the build system (e.g. compiler flags) and
     # Fortran syntax to enable the compilation with Fujitsu compilers. The modification
@@ -52,7 +56,9 @@ class Nwchem(Package):
     depends_on("lapack")
     depends_on("mpi")
     depends_on("scalapack")
-    depends_on("fftw-api")
+    depends_on("fftw-api@3", when="+fftw3")
+    depends_on("libxc", when="+libxc")
+    depends_on("elpa", when="+elpa")
     depends_on("python@3:3.9", type=("build", "link", "run"), when="@:7.0.2")
     depends_on("python@3", type=("build", "link", "run"), when="@7.2.0:")
 
@@ -65,20 +71,22 @@ class Nwchem(Package):
         args = []
         args.extend(
             [
-                "NWCHEM_TOP=%s" % self.stage.source_path,
+                f"NWCHEM_TOP={self.stage.source_path}",
                 # NWCHEM is picky about FC and CC. They should NOT be full path.
                 # see https://nwchemgit.github.io/Special_AWCforum/sp/id7524
-                "CC=%s" % os.path.basename(spack_cc),
-                "FC=%s" % os.path.basename(spack_fc),
+                f"CC={os.path.basename(spack_cc)}",
+                f"FC={os.path.basename(spack_fc)}",
                 "USE_MPI=y",
-                "PYTHONVERSION=%s" % spec["python"].version.up_to(2),
-                "BLASOPT=%s" % ((lapack + blas).ld_flags),
-                "LAPACK_LIB=%s" % lapack.ld_flags,
-                "SCALAPACK_LIB=%s" % scalapack.ld_flags,
+                "USE_MPIF=y",
+                "PYTHONVERSION={}".format(spec["python"].version.up_to(2)),
+                f"BLASOPT={(lapack + blas).ld_flags}",
+                f"LAPACK_LIB={lapack.ld_flags}",
+                f"SCALAPACK_LIB={scalapack.ld_flags}",
                 "USE_NOIO=Y",  # skip I/O algorithms
                 "MRCC_METHODS=y",  # TCE extra module
                 "IPCCSD=y",  # TCE extra module
                 "EACCSD=y",  # TCE extra module
+                "CCSDTQ=y",  # TCE extra module
                 "V=1",  # verbose build
             ]
         )
@@ -93,10 +101,10 @@ class Nwchem(Package):
         # TODO: query if blas/lapack/scalapack uses 64bit Ints
         # A flag to distinguish between 32bit and 64bit integers in linear
         # algebra (Blas, Lapack, Scalapack)
-        use_32_bit_lin_alg = True
+        use_32_bit_lin_alg = True if "~ilp64" in self.spec["blas"] else False
 
         if use_32_bit_lin_alg:
-            args.extend(["USE_64TO32=y", "BLAS_SIZE=4", "SCALAPACK_SIZE=4"])
+            args.extend(["USE_64TO32=y", "BLAS_SIZE=4", "SCALAPACK_SIZE=4", "USE_MPIF4=y"])
         else:
             args.extend(["BLAS_SIZE=8", "SCALAPACK_SIZE=8"])
 
@@ -106,18 +114,30 @@ class Nwchem(Package):
         else:
             target = "LINUX64"
 
-        args.extend(["NWCHEM_TARGET=%s" % target])
+        args.extend([f"NWCHEM_TARGET={target}"])
 
-        if "+openmp" in spec:
+        if spec.satisfies("+openmp"):
             args.extend(["USE_OPENMP=y"])
 
-        if "+mpipr" in spec:
+        if spec.satisfies("+mpipr"):
             args.extend(["ARMCI_NETWORK=MPI-PR"])
 
-        if "+fftw3" in spec:
+        if spec.satisfies("+fftw3"):
             args.extend(["USE_FFTW3=y"])
-            args.extend(["LIBFFTW3=%s" % fftw.ld_flags])
+            args.extend([f"LIBFFTW3={fftw.ld_flags}"])
             args.extend(["FFTW3_INCLUDE={0}".format(spec["fftw-api"].prefix.include)])
+
+        if spec.satisfies("+libxc"):
+            args.extend([f"LIBXC_LIB={0}".format(spec["libxc"].libs.ld_flags)])
+            args.extend([f"LIBXC_INCLUDE={0}".format(spec["libxc"].prefix.include)])
+
+        if spec.satisfies("+elpa"):
+            elpa = spec["elpa"]
+            args.extend([f"ELPA={elpa.libs.ld_flags} -I{elpa.prefix.include}"])
+            if use_32_bit_lin_alg:
+                args.extend(["ELPA_SIZE=4"])
+            else:
+                args.extend(["ELPA_SIZE=8"])
 
         with working_dir("src"):
             make("nwchem_config", *args)

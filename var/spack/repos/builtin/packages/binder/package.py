@@ -49,6 +49,6 @@ class Binder(CMakePackage):
     def setup_dependent_package(self, module, dependent_spec):
         llvm_dir = self.spec["llvm"].prefix
         self.spec.clang_include_dirs = llvm_dir.include
-        self.spec.LibClang_include_dir = llvm_dir.lib.clang.join(
+        self.spec.libclang_include_dir = llvm_dir.lib.clang.join(
             format(self.spec["llvm"].version)
         ).include

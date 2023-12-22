@@ -24,6 +24,10 @@ class PyCffi(PythonPackage):
     version("1.10.0", sha256="b3b02911eb1f6ada203b0763ba924234629b51586f72a21faacc638269f4ced5")
     version("1.1.2", sha256="390970b602708c91ddc73953bb6929e56291c18a4d80f360afa00fad8b6f3339")
 
+    # ./spack-src/cffi/ffiplatform.py has _hack_at_distutils which imports
+    # setuptools before distutils, but only on Windows. This could be made
+    # unconditional to support Python 3.12
+    depends_on("python@:3.11", type=("build", "run"))
     depends_on("pkgconfig", type="build")
     depends_on("py-setuptools", type="build")
     depends_on("py-pycparser", type=("build", "run"))

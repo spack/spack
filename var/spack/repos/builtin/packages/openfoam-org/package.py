@@ -120,7 +120,7 @@ class OpenfoamOrg(Package):
         sha256="05d17e17f94e6fe8188a9c0b91ed34c9b62259414589d908c152a4c40fe6b7e2",
         when="@7",
     )
-    patch("50-etc.patch", when="@5.0:5.9")
+    patch("50-etc.patch", when="@5.0")
     patch("41-etc.patch", when="@4.1")
     patch("41-site.patch", when="@4.1:")
     patch("240-etc.patch", when="@:2.4.0")
@@ -236,8 +236,24 @@ class OpenfoamOrg(Package):
         # to build correctly!
         parent = os.path.dirname(self.stage.source_path)
         original = os.path.basename(self.stage.source_path)
-        target = "OpenFOAM-{0}".format(self.version)
-        # Could also grep through etc/bashrc for WM_PROJECT_VERSION
+
+        # Grep for WM_PROJECT_VERSION in etc/bashrc
+        #   e.g. "export WM_PROJECT_VERSION=5.x"
+        #
+        # note: WM_PROJECT is assumed to be OpenFOAM and the project folder is assumed to
+        #       be "OpenFOAM-${WM_PROJECT_VERSION}"
+        target = None
+        with open(join_path(self.stage.source_path, "etc/bashrc"), "r") as bashrc_file:
+            import re
+
+            for line in bashrc_file.readlines():
+                m = re.match("export WM_PROJECT_VERSION=(.*)", line)
+                if m:
+                    target = f"OpenFOAM-{m.group(1)}"
+                    break
+        if target is None:
+            raise InstallError("Failed to infer projet directory name from build script.")
+
         with working_dir(parent):
             if original != target and not os.path.lexists(target):
                 os.rename(original, target)

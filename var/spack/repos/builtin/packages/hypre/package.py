@@ -24,6 +24,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version("develop", branch="master")
+    version("2.30.0", sha256="8e2af97d9a25bf44801c6427779f823ebc6f306438066bba7fcbc2a5f9b78421")
     version("2.29.0", sha256="98b72115407a0e24dbaac70eccae0da3465f8f999318b2c9241631133f42d511")
     version("2.28.0", sha256="2eea68740cdbc0b49a5e428f06ad7af861d1e169ce6a12d2cf0aa2fc28c4a2ae")
     version("2.27.0", sha256="507a3d036bb1ac21a55685ae417d769dd02009bde7e09785d0ae7446b4ae1f98")
@@ -107,6 +108,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on("rocthrust", when="+rocm")
     depends_on("rocrand", when="+rocm")
     depends_on("rocprim", when="+rocm")
+    depends_on("hipblas", when="+rocm +superlu-dist")
     depends_on("umpire", when="+umpire")
     depends_on("caliper", when="+caliper")
 
@@ -258,6 +260,8 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         if "+rocm" in spec:
             rocm_pkgs = ["rocsparse", "rocthrust", "rocprim", "rocrand"]
+            if "+superlu-dist" in spec:
+                rocm_pkgs.append("hipblas")
             rocm_inc = ""
             for pkg in rocm_pkgs:
                 if "^" + pkg in spec:

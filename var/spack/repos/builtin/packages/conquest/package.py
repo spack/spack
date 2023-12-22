@@ -49,6 +49,15 @@ class Conquest(MakefilePackage):
 
     build_directory = "src"
 
+    # The SYSTEM variable is required above version 1.2.
+    # Versions 1.2 and older should ignore it.
+    @property
+    def build_targets(self):
+        if self.version > Version("1.2"):
+            return ["SYSTEM = example", "Conquest"]
+        else:
+            return ["Conquest"]
+
     def edit(self, spec, prefix):
         fflags = "-O3 -fallow-argument-mismatch"
         ldflags = ""
@@ -63,12 +72,23 @@ class Conquest(MakefilePackage):
 
         lapack_ld = self.spec["lapack"].libs.ld_flags
         blas_ld = self.spec["blas"].libs.ld_flags
+        fftw_ld = self.spec["fftw"].libs.ld_flags
+        libxc_ld = self.spec["libxc"].libs.ld_flags
 
-        defs_file = FileFilter("./src/system.make")
+        # Starting from 1.3 there's automated logic in the Makefile that picks
+        # from a list of possible files for system/compiler-specific definitions.
+        # This is useful for manual builds, but since the spack will do its own
+        # automation of compiler-specific flags, we will override it.
+        if self.version > Version("1.2"):
+            defs_file = FileFilter("./src/system/system.example.make")
+        else:
+            defs_file = FileFilter("./src/system.make")
 
-        defs_file.filter("COMPFLAGS=.*", f"COMPFLAGS= {fflags}")
-        defs_file.filter("LINKFLAGS=.*", f"LINKFLAGS= {ldflags}")
-        defs_file.filter("# BLAS=.*", f"BLAS= {lapack_ld} -llapack {blas_ld} -lblas")
+        defs_file.filter(".*COMPFLAGS=.*", f"COMPFLAGS= {fflags}")
+        defs_file.filter(".*LINKFLAGS=.*", f"LINKFLAGS= {ldflags}")
+        defs_file.filter(".*BLAS=.*", f"BLAS= {lapack_ld} {blas_ld}")
+        defs_file.filter(".*FFT_LIB=.*", f"FFT_LIB={fftw_ld}")
+        defs_file.filter(".*XC_LIB=.*", f"XC_LIB={libxc_ld} -lxcf90 -lxc")
 
         if "+openmp" in self.spec:
             defs_file.filter("OMP_DUMMY = DUMMY", "OMP_DUMMY = ")
@@ -81,3 +101,5 @@ class Conquest(MakefilePackage):
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install("./bin/Conquest", prefix.bin)
+        if self.version > Version("1.2"):
+            install_tree("./benchmarks/", join_path(prefix, "benchmarks"))

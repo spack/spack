@@ -78,7 +78,7 @@ spack:
         verify_ssl: False
         dirty: False
     packages:
-        libelf:
+        all:
             compiler: [ 'gcc@4.5.3' ]
     repos:
         - /x/y/z
@@ -500,6 +500,34 @@ def test_parse_install_tree(config_settings, expected, mutable_config):
     assert root == expected_root
     assert unpadded_root == expected_unpadded_root
     assert projections == expected_proj
+
+
+def test_change_or_add(mutable_config, mock_packages):
+    spack.config.add("packages:a:version:['1.0']", scope="user")
+
+    spack.config.add("packages:b:version:['1.1']", scope="system")
+
+    class ChangeTest:
+        def __init__(self, pkg_name, new_version):
+            self.pkg_name = pkg_name
+            self.new_version = new_version
+
+        def find_fn(self, section):
+            return self.pkg_name in section
+
+        def change_fn(self, section):
+            pkg_section = section.get(self.pkg_name, {})
+            pkg_section["version"] = self.new_version
+            section[self.pkg_name] = pkg_section
+
+    change1 = ChangeTest("b", ["1.2"])
+    spack.config.change_or_add("packages", change1.find_fn, change1.change_fn)
+    assert "b" not in mutable_config.get("packages", scope="user")
+    assert mutable_config.get("packages")["b"]["version"] == ["1.2"]
+
+    change2 = ChangeTest("c", ["1.0"])
+    spack.config.change_or_add("packages", change2.find_fn, change2.change_fn)
+    assert "c" in mutable_config.get("packages", scope="user")
 
 
 @pytest.mark.not_on_windows("Padding unsupported on Windows")
@@ -942,7 +970,7 @@ def test_single_file_scope(config, env_yaml):
         # from the single-file config
         assert spack.config.get("config:verify_ssl") is False
         assert spack.config.get("config:dirty") is False
-        assert spack.config.get("packages:libelf:compiler") == ["gcc@4.5.3"]
+        assert spack.config.get("packages:all:compiler") == ["gcc@4.5.3"]
 
         # from the lower config scopes
         assert spack.config.get("config:checksum") is True
@@ -965,7 +993,7 @@ spack:
     config:
         verify_ssl: False
     packages::
-        libelf:
+        all:
             compiler: [ 'gcc@4.5.3' ]
     repos:
         - /x/y/z
@@ -977,7 +1005,7 @@ spack:
     with spack.config.override(scope):
         # from the single-file config
         assert spack.config.get("config:verify_ssl") is False
-        assert spack.config.get("packages:libelf:compiler") == ["gcc@4.5.3"]
+        assert spack.config.get("packages:all:compiler") == ["gcc@4.5.3"]
 
         # from the lower config scopes
         assert spack.config.get("config:checksum") is True
@@ -1239,11 +1267,11 @@ def test_user_config_path_is_default_when_env_var_is_empty(working_env):
     assert os.path.expanduser("~%s.spack" % os.sep) == spack.paths._get_user_config_path()
 
 
-def test_default_install_tree(monkeypatch):
+def test_default_install_tree(monkeypatch, default_config):
     s = spack.spec.Spec("nonexistent@x.y.z %none@a.b.c arch=foo-bar-baz")
     monkeypatch.setattr(s, "dag_hash", lambda: "abc123")
-    projection = spack.config.get("config:install_tree:projections:all", scope="defaults")
-    assert s.format(projection) == "foo-bar-baz/none-a.b.c/nonexistent-x.y.z-abc123"
+    _, _, projections = spack.store.parse_install_tree(spack.config.get("config"))
+    assert s.format(projections["all"]) == "foo-bar-baz/none-a.b.c/nonexistent-x.y.z-abc123"
 
 
 def test_local_config_can_be_disabled(working_env):

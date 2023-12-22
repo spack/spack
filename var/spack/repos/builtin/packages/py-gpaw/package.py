@@ -35,7 +35,7 @@ class PyGpaw(PythonPackage):
     depends_on("py-ase@3.19.0:", type=("build", "run"), when="@20.1.0")
     depends_on("py-ase@3.20.1:", type=("build", "run"), when="@20.10.0")
     depends_on("py-ase@3.21.0:", type=("build", "run"), when="@21.1.0")
-    depends_on("py-numpy +blas +lapack", type=("build", "run"))
+    depends_on("py-numpy", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
     depends_on("libxc@3:4.3.4")
     depends_on("blas")

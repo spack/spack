@@ -16,6 +16,8 @@ class Scorep(AutotoolsPackage):
     url = "https://perftools.pages.jsc.fz-juelich.de/cicd/scorep/tags/scorep-7.1/scorep-7.1.tar.gz"
     maintainers("wrwilliams")
 
+    version("8.3", sha256="76c914e6319221c059234597a3bc53da788ed679179ac99c147284dcefb1574a")
+    # version 8.2 was immediately superseded before it hit Spack
     version("8.1", sha256="3a40b481fce610871ddf6bdfb88a6d06b9e5eb38c6080faac6d5e44990060a37")
     version("8.0", sha256="4c0f34f20999f92ebe6ca1ff706d0846b8ce6cd537ffbedb49dfaef0faa66311")
     version("7.1", sha256="98dea497982001fb82da3429ca55669b2917a0858c71abe2cfe7cd113381f1f7")
@@ -93,8 +95,10 @@ class Scorep(AutotoolsPackage):
     # SCOREP 8
     depends_on("binutils", type="link", when="@8:")
     depends_on("otf2@3:", when="@8:")
-    depends_on("cubew@4.8:", when="@8:")
-    depends_on("cubelib@4.8:", when="@8:")
+    depends_on("cubew@4.8.2:", when="@8.3:")
+    depends_on("cubelib@4.8.2:", when="@8.3:")
+    depends_on("cubew@4.8:", when="@8:8.2")
+    depends_on("cubelib@4.8:", when="@8:8.2")
     # fall through to Score-P 7's OPARI2, no new release
     # SCOREP 7
     depends_on("otf2@2.3:2.3.99", when="@7.0:7")

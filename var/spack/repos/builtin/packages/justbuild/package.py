@@ -22,6 +22,8 @@ class Justbuild(Package):
     maintainers("asartori86")
 
     version("master", branch="master")
+    version("1.2.3", tag="v1.2.3", commit="45e9c1c85399f00372ad8b72894979a0002d8f95")
+    version("1.2.2", tag="v1.2.2", commit="e1ee04684c34ae30ac3c91b6753e99a81a9dc51c")
     version("1.2.1", tag="v1.2.1", commit="959cd90083d0c783389cd09e187c98322c16469f")
     version("1.1.4", tag="v1.1.4", commit="32e96afd159f2158ca129fd00bf02c273d8e1e48")
     version("1.1.3", tag="v1.1.3", commit="3aed5d450aec38be18edec822ac2efac6d49a938")

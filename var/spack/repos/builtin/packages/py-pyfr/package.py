@@ -41,7 +41,7 @@ class PyPyfr(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("py-h5py@2.10:", type=("build", "run"))
     depends_on("py-mako@1.0.0:", type=("build", "run"))
     depends_on("py-mpi4py@3.1.0:", type=("build", "run"))
-    depends_on("py-numpy@1.20:+blas", type=("build", "run"))
+    depends_on("py-numpy@1.20:", type=("build", "run"))
     depends_on("py-platformdirs@2.2.0:", type=("build", "run"))
     depends_on("py-pytools@2016.2.1:", type=("build", "run"))
 

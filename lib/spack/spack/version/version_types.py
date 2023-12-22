@@ -12,6 +12,7 @@ from spack.util.spack_yaml import syaml_dict
 
 from .common import (
     COMMIT_VERSION,
+    EmptyRangeError,
     VersionLookupError,
     infinity_versions,
     is_git_version,
@@ -595,14 +596,17 @@ class GitVersion(ConcreteVersion):
 class ClosedOpenRange:
     def __init__(self, lo: StandardVersion, hi: StandardVersion):
         if hi < lo:
-            raise ValueError(f"{lo}:{hi} is an empty range")
+            raise EmptyRangeError(f"{lo}..{hi} is an empty range")
         self.lo: StandardVersion = lo
         self.hi: StandardVersion = hi
 
     @classmethod
     def from_version_range(cls, lo: StandardVersion, hi: StandardVersion):
         """Construct ClosedOpenRange from lo:hi range."""
-        return ClosedOpenRange(lo, next_version(hi))
+        try:
+            return ClosedOpenRange(lo, next_version(hi))
+        except EmptyRangeError as e:
+            raise EmptyRangeError(f"{lo}:{hi} is an empty range") from e
 
     def __str__(self):
         # This simplifies 3.1:<3.2 to 3.1:3.1 to 3.1

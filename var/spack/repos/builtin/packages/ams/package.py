@@ -16,6 +16,12 @@ class Ams(CMakePackage, CudaPackage):
 
     version("develop", branch="develop", submodules=False)
     version(
+        "11.08.23.alpha",
+        tag="11.08.23.alpha",
+        commit="1a42b29268bb916dae301654ca0b92fdfe288732",
+        submodules=False,
+    )
+    version(
         "07.25.23-alpha",
         tag="07.25.23-alpha",
         commit="3aa8421f1f1ce1ae448d017214c602b9def19c90",

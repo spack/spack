@@ -19,7 +19,7 @@ class Anicalculator(Package):
     https://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://ani.jgi.doe.gov/html/download.php?"
-    url = "file://{0}/ANIcalculator_v1.tgz".format(os.getcwd())
+    url = f"file://{os.getcwd()}/ANIcalculator_v1.tgz"
     manual_download = True
 
     version("1", sha256="236596a9a204cbcad162fc66be3506b2530b1f48f4f84d9647ccec3ca7483a43")

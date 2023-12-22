@@ -24,8 +24,7 @@ class PyGevent(PythonPackage):
     depends_on("py-setuptools@40.8:", when="@20.5.1:", type=("build", "run"))
     depends_on("py-setuptools@40.8:", when="@1.5:", type="build")
     depends_on("py-setuptools@24.2:", when="@:1.4", type="build")
-    # TODO: relax this until we support separate concretization of build deps by default
-    # depends_on("py-cython@3:", when="@20.5.1:", type="build")
+    depends_on("py-cython@3:", when="@20.5.1:", type="build")
     depends_on("py-cython@0.29.14:", when="@1.5:", type="build")
     depends_on("py-cffi@1.12.3:", type=("build", "run"))
     depends_on("py-greenlet@3:", when="@23.7: ^python@3.12:", type=("build", "run"))
@@ -40,7 +39,7 @@ class PyGevent(PythonPackage):
     conflicts("^py-cython@3:", when="@:20.5.0")
 
     # Deprecated compiler options. upstream PR: https://github.com/gevent/gevent/pull/1896
-    patch("icc.patch", when="%intel")
+    patch("icc.patch", when="@:21.12.0 %intel")
 
     @run_before("install")
     def recythonize(self):

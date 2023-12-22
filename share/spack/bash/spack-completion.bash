@@ -370,7 +370,7 @@ _spack_compress_aliases() {
     # If there are zero or one completions, don't do anything
     # If this isn't the first argument, bail because aliases currently only apply
     # to top-level commands.
-    if [ "${#COMPREPLY[@]}" -le "1" ] || [ "$COMP_CWORD" != "1" ]; then
+    if [ "${#COMPREPLY[@]}" -le "1" ] || [ "$COMP_CWORD_NO_FLAGS" != "1" ]; then
         return
     fi
 

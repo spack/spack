@@ -21,6 +21,10 @@ class Rocblas(CMakePackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("5.7.1", sha256="2984a5ed0ea5a05d40996ee3fddecb24399cbe8ea3e4921fc254e54d8f52fe4f")
+    version("5.7.0", sha256="024edd98de9687ee5394badc4dd4c543eef4eb3f71c96ff64100705d851e1744")
+    version("5.6.1", sha256="73896ebd445162a69af97f9fd462684609b4e0cf617eab450cd4558b4a23941e")
+    version("5.6.0", sha256="6a70b27eede02c45f46095a6ce8421af9a774a565e39f5e1074783ecf00c1ea7")
     version("5.5.1", sha256="7916a8d238d51cc239949d799f0b61c9d5cd63c6ccaed0e16749489b89ca8ff3")
     version("5.5.0", sha256="b5260517f199e806ae18f2c4495f163884e0d7a0a7c67af0770f7428ea50f898")
     version("5.4.3", sha256="d82cd334b7a9b40d16ec4f4bb1fb5662382dcbfc86ee5e262413ed63d9e6a701")
@@ -174,6 +178,10 @@ class Rocblas(CMakePackage):
         "5.4.3",
         "5.5.0",
         "5.5.1",
+        "5.6.0",
+        "5.6.1",
+        "5.7.0",
+        "5.7.1",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, type="build", when="@" + ver)
@@ -191,6 +199,8 @@ class Rocblas(CMakePackage):
         depends_on("py-wheel", type="build")
         depends_on("py-msgpack", type="build")
         depends_on("py-pip", type="build")
+        depends_on("py-joblib", type="build", when="@5.6:")
+        depends_on("procps", type="build", when="@5.6:")
 
     for t_version, t_commit in [
         ("@3.5.0", "f842a1a4427624eff6cbddb2405c36dec9a210cd"),
@@ -218,6 +228,10 @@ class Rocblas(CMakePackage):
         ("@5.4.3", "5aec08937473b27865fa969bb38a83bcf9463c2b"),
         ("@5.5.0", "38d444a9f2b6cddfeaeedcb39a5688150fa27093"),
         ("@5.5.1", "38d444a9f2b6cddfeaeedcb39a5688150fa27093"),
+        ("@5.6.0", "7d0a9d040c3bbae893df7ecef6a19d9cd1c304aa"),
+        ("@5.6.1", "7d0a9d040c3bbae893df7ecef6a19d9cd1c304aa"),
+        ("@5.7.0", "97e0cfc2c8cb87a1e38901d99c39090dc4181652"),
+        ("@5.7.1", "97e0cfc2c8cb87a1e38901d99c39090dc4181652"),
     ]:
         resource(
             name="Tensile",

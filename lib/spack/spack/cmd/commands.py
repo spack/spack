@@ -796,7 +796,9 @@ def names(args: Namespace, out: IO) -> None:
     commands = copy.copy(spack.cmd.all_commands())
 
     if args.aliases:
-        commands.extend(spack.main.aliases.keys())
+        aliases = spack.config.get("config:aliases")
+        if aliases:
+            commands.extend(aliases.keys())
 
     colify(commands, output=out)
 
@@ -812,8 +814,10 @@ def bash(args: Namespace, out: IO) -> None:
     parser = spack.main.make_argument_parser()
     spack.main.add_all_commands(parser)
 
-    aliases = ";".join(f"{key}:{val}" for key, val in spack.main.aliases.items())
-    out.write(f'SPACK_ALIASES="{aliases}"\n\n')
+    aliases_config = spack.config.get("config:aliases")
+    if aliases_config:
+        aliases = ";".join(f"{key}:{val}" for key, val in aliases_config.items())
+        out.write(f'SPACK_ALIASES="{aliases}"\n\n')
 
     writer = BashCompletionWriter(parser.prog, out, args.aliases)
     writer.write(parser)

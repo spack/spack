@@ -34,7 +34,7 @@ class PyTomopy(PythonPackage):
     # Note: The module name of py-scikit-build is skbuild:
     depends_on("py-scikit-build", type=("build"))
     depends_on("py-scikit-image@0.17:", type=("build", "run"))
-    depends_on("py-numpy+blas", type=("build", "run"))
+    depends_on("py-numpy", type=("build", "run"))
     depends_on("py-pyfftw", type=("build", "run"), when="@1.0:1.9")
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-setuptools", type="build")

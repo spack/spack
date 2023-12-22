@@ -28,6 +28,7 @@ import os
 import os.path
 import re
 import shutil
+import urllib.error
 import urllib.parse
 from typing import List, Optional
 
@@ -35,11 +36,13 @@ import llnl.url
 import llnl.util
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+from llnl.string import comma_and, quote
 from llnl.util.filesystem import get_single_file, mkdirp, temp_cwd, temp_rename, working_dir
 from llnl.util.symlink import symlink
 
 import spack.config
 import spack.error
+import spack.oci.opener
 import spack.url
 import spack.util.crypto as crypto
 import spack.util.git
@@ -49,7 +52,6 @@ import spack.version
 import spack.version.git_ref_lookup
 from spack.util.compression import decompressor_for
 from spack.util.executable import CommandNotFoundError, which
-from spack.util.string import comma_and, quote
 
 #: List of all fetch strategies, created by FetchStrategy metaclass.
 all_strategies = []
@@ -537,6 +539,34 @@ class CacheURLFetchStrategy(URLFetchStrategy):
         tty.msg("Using cached archive: {0}".format(path))
 
 
+class OCIRegistryFetchStrategy(URLFetchStrategy):
+    def __init__(self, url=None, checksum=None, **kwargs):
+        super().__init__(url, checksum, **kwargs)
+
+        self._urlopen = kwargs.get("_urlopen", spack.oci.opener.urlopen)
+
+    @_needs_stage
+    def fetch(self):
+        file = self.stage.save_filename
+        tty.msg(f"Fetching {self.url}")
+
+        try:
+            response = self._urlopen(self.url)
+        except urllib.error.URLError as e:
+            # clean up archive on failure.
+            if self.archive_file:
+                os.remove(self.archive_file)
+            if os.path.lexists(file):
+                os.remove(file)
+            raise FailedDownloadError(self.url, f"Failed to fetch {self.url}: {e}") from e
+
+        if os.path.lexists(file):
+            os.remove(file)
+
+        with open(file, "wb") as f:
+            shutil.copyfileobj(response, f)
+
+
 class VCSFetchStrategy(FetchStrategy):
     """Superclass for version control system fetch strategies.
 
@@ -734,13 +764,16 @@ class GitFetchStrategy(VCSFetchStrategy):
     @property
     def git(self):
         if not self._git:
-            self._git = spack.util.git.git()
+            try:
+                self._git = spack.util.git.git(required=True)
+            except CommandNotFoundError as exc:
+                tty.error(str(exc))
+                raise
 
             # Disable advice for a quieter fetch
             # https://github.com/git/git/blob/master/Documentation/RelNotes/1.7.2.txt
             if self.git_version >= spack.version.Version("1.7.2"):
-                self._git.add_default_arg("-c")
-                self._git.add_default_arg("advice.detachedHead=false")
+                self._git.add_default_arg("-c", "advice.detachedHead=false")
 
             # If the user asked for insecure fetching, make that work
             # with git as well.

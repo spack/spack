@@ -40,7 +40,12 @@ class Dakota(CMakePackage):
     git = "https://github.com/snl-dakota/dakota.git"
     url = "https://dakota.sandia.gov/sites/default/files/distributions/public/dakota-6.12-release-public.src.tar.gz"
 
-    version("6.18", tag="v6.18.0", submodules=submodules)
+    version(
+        "6.18",
+        tag="v6.18.0",
+        commit="f6cb33b517bb304795e1e14d3673fe289df2ec9b",
+        submodules=submodules,
+    )
     version("6.12", sha256="4d69f9cbb0c7319384ab9df27643ff6767eb410823930b8fbd56cc9de0885bc9")
     version("6.9", sha256="989b689278964b96496e3058b8ef5c2724d74bcd232f898fe450c51eba7fe0c2")
     version("6.3", sha256="0fbc310105860d77bb5c96de0e8813d75441fca1a5e6dfaf732aa095c4488d52")

@@ -20,10 +20,25 @@ class Upp(CMakePackage):
     maintainers("AlexanderRichert-NOAA", "edwardhartnett", "Hang-Lei-NOAA")
 
     version("develop", branch="develop")
-    version("11.0.0", tag="upp_v11.0.0", submodules=True)
+    version(
+        "11.0.0",
+        tag="upp_v11.0.0",
+        commit="6b5c589c7650132c6f13a729a2853676a7b93bbb",
+        submodules=True,
+    )
     version("10.0.10", sha256="0c96a88d0e79b554d5fcee9401efcf4d6273da01d15e3413845274f73d70b66e")
-    version("10.0.9", tag="upp_v10.0.9", submodules=True)
-    version("10.0.8", tag="upp_v10.0.8", submodules=True)
+    version(
+        "10.0.9",
+        tag="upp_v10.0.9",
+        commit="a49af0549958def4744cb3903c7315476fe44530",
+        submodules=True,
+    )
+    version(
+        "10.0.8",
+        tag="upp_v10.0.8",
+        commit="ce989911a7a09a2e2a0e61b3acc87588b5b9fc26",
+        submodules=True,
+    )
     version("8.2.0", sha256="38de2178dc79420f42aa3fb8b85796fc49d43d66f90e5276e47ab50c282627ac")
 
     variant("openmp", default=True, description="Use OpenMP threading")

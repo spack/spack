@@ -64,6 +64,7 @@ __all__ = [
     "depends_on",
     "extends",
     "maintainers",
+    "license",
     "provides",
     "patch",
     "variant",
@@ -136,6 +137,7 @@ class DirectiveMeta(type):
     _directive_dict_names: Set[str] = set()
     _directives_to_be_executed: List[str] = []
     _when_constraints_from_context: List[str] = []
+    _default_args: List[dict] = []
 
     def __new__(cls, name, bases, attr_dict):
         # Initialize the attribute containing the list of directives
@@ -199,6 +201,16 @@ class DirectiveMeta(type):
         return DirectiveMeta._when_constraints_from_context.pop()
 
     @staticmethod
+    def push_default_args(default_args):
+        """Push default arguments"""
+        DirectiveMeta._default_args.append(default_args)
+
+    @staticmethod
+    def pop_default_args():
+        """Pop default arguments"""
+        return DirectiveMeta._default_args.pop()
+
+    @staticmethod
     def directive(dicts=None):
         """Decorator for Spack directives.
 
@@ -258,7 +270,13 @@ class DirectiveMeta(type):
             directive_names.append(decorated_function.__name__)
 
             @functools.wraps(decorated_function)
-            def _wrapper(*args, **kwargs):
+            def _wrapper(*args, **_kwargs):
+                # First merge default args with kwargs
+                kwargs = dict()
+                for default_args in DirectiveMeta._default_args:
+                    kwargs.update(default_args)
+                kwargs.update(_kwargs)
+
                 # Inject when arguments from the context
                 if DirectiveMeta._when_constraints_from_context:
                     # Check that directives not yet supporting the when= argument
@@ -572,17 +590,21 @@ def extends(spec, type=("build", "run"), **kwargs):
     return _execute_extends
 
 
-@directive("provided")
-def provides(*specs, **kwargs):
-    """Allows packages to provide a virtual dependency.  If a package provides
-    'mpi', other packages can declare that they depend on "mpi", and spack
-    can use the providing package to satisfy the dependency.
+@directive(dicts=("provided", "provided_together"))
+def provides(*specs, when: Optional[str] = None):
+    """Allows packages to provide a virtual dependency.
+
+    If a package provides "mpi", other packages can declare that they depend on "mpi",
+    and spack can use the providing package to satisfy the dependency.
+
+    Args:
+        *specs: virtual specs provided by this package
+        when: condition when this provides clause needs to be considered
     """
 
     def _execute_provides(pkg):
         import spack.parser  # Avoid circular dependency
 
-        when = kwargs.get("when")
         when_spec = make_when_spec(when)
         if not when_spec:
             return
@@ -590,15 +612,18 @@ def provides(*specs, **kwargs):
         # ``when`` specs for ``provides()`` need a name, as they are used
         # to build the ProviderIndex.
         when_spec.name = pkg.name
+        spec_objs = [spack.spec.Spec(x) for x in specs]
+        spec_names = [x.name for x in spec_objs]
+        if len(spec_names) > 1:
+            pkg.provided_together.setdefault(when_spec, []).append(set(spec_names))
 
-        for string in specs:
-            for provided_spec in spack.parser.parse(string):
-                if pkg.name == provided_spec.name:
-                    raise CircularReferenceError("Package '%s' cannot provide itself." % pkg.name)
+        for provided_spec in spec_objs:
+            if pkg.name == provided_spec.name:
+                raise CircularReferenceError("Package '%s' cannot provide itself." % pkg.name)
 
-                if provided_spec not in pkg.provided:
-                    pkg.provided[provided_spec] = set()
-                pkg.provided[provided_spec].add(when_spec)
+            if provided_spec not in pkg.provided:
+                pkg.provided[provided_spec] = set()
+            pkg.provided[provided_spec].add(when_spec)
 
     return _execute_provides
 
@@ -862,6 +887,44 @@ def maintainers(*names: str):
     return _execute_maintainer
 
 
+def _execute_license(pkg, license_identifier: str, when):
+    # If when is not specified the license always holds
+    when_spec = make_when_spec(when)
+    if not when_spec:
+        return
+
+    for other_when_spec in pkg.licenses:
+        if when_spec.intersects(other_when_spec):
+            when_message = ""
+            if when_spec != make_when_spec(None):
+                when_message = f"when {when_spec}"
+            other_when_message = ""
+            if other_when_spec != make_when_spec(None):
+                other_when_message = f"when {other_when_spec}"
+            err_msg = (
+                f"{pkg.name} is specified as being licensed as {license_identifier} "
+                f"{when_message}, but it is also specified as being licensed under "
+                f"{pkg.licenses[other_when_spec]} {other_when_message}, which conflict."
+            )
+            raise OverlappingLicenseError(err_msg)
+
+    pkg.licenses[when_spec] = license_identifier
+
+
+@directive("licenses")
+def license(license_identifier: str, when=None):
+    """Add a new license directive, to specify the SPDX identifier the software is
+    distributed under.
+
+    Args:
+        license_identifiers: A list of SPDX identifiers specifying the licenses
+            the software is distributed under.
+        when: A spec specifying when the license applies.
+    """
+
+    return lambda pkg: _execute_license(pkg, license_identifier, when)
+
+
 @directive("requirements")
 def requires(*requirement_specs, policy="one_of", when=None, msg=None):
     """Allows a package to request a configuration to be present in all valid solutions.
@@ -920,3 +983,7 @@ class DependencyPatchError(DirectiveError):
 
 class UnsupportedPackageDirective(DirectiveError):
     """Raised when an invalid or unsupported package directive is specified."""
+
+
+class OverlappingLicenseError(DirectiveError):
+    """Raised when two licenses are declared that apply on overlapping specs."""

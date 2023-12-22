@@ -21,6 +21,17 @@ class RustBootstrap(Package):
     # should update these binary releases as bootstrapping requirements are
     # modified by new releases of Rust.
     rust_releases = {
+        "1.73.0": {
+            "darwin": {
+                "x86_64": "ece9646bb153d4bc0f7f1443989de0cbcd8989a7d0bf3b7fb9956e1223954f0c",
+                "aarch64": "9c96e4c57328fb438ee2d87aa75970ce89b4426b49780ccb3c16af0d7c617cc6",
+            },
+            "linux": {
+                "x86_64": "aa4cf0b7e66a9f5b7c623d4b340bb1ac2864a5f2c2b981f39f796245dc84f2cb",
+                "aarch64": "e54d7d886ba413ae573151f668e76ea537f9a44406d3d29598269a4a536d12f6",
+                "powerpc64le": "8fa215ee3e274fb64364e7084613bc570369488fa22cf5bc8e0fe6dc810fe2b9",
+            },
+        },
         "1.70.0": {
             "darwin": {
                 "x86_64": "e5819fdbfc7f1a4d5d82cb4c3b7662250748450b45a585433bfb75648bc45547",
@@ -73,7 +84,7 @@ class RustBootstrap(Package):
 
     # Determine system os and architecture/target.
     os = platform.system().lower()
-    target = rust_targets[platform.machine().lower()]
+    target = rust_targets.get(platform.machine().lower(), platform.machine().lower())
 
     # Pre-release versions of the bootstrap compiler.
     # Note: These versions are unchecksumed since they will change

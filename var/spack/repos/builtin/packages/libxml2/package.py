@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
+import spack.builder
 from spack.build_systems import autotools, nmake
 from spack.package import *
 
@@ -74,8 +75,8 @@ class Libxml2(AutotoolsPackage, NMakePackage):
     # Use NAN/INFINITY if available to avoid SIGFPE
     # See https://gitlab.gnome.org/GNOME/libxml2/-/merge_requests/186
     patch(
-        "https://gitlab.gnome.org/GNOME/libxml2/-/commit/c9925454fd384a17c8c03d358c6778a552e9287b.patch",
-        sha256="3e06d42596b105839648070a5921157fe284b932289ffdbfa304ddc3457e5637",
+        "https://gitlab.gnome.org/GNOME/libxml2/-/commit/c9925454fd384a17c8c03d358c6778a552e9287b.diff",
+        sha256="5dc43fed02b443d2563a502a52caafe39477c06fc30b70f786d5ed3eb5aea88d",
         when="@2.9.11:2.9.14",
     )
     build_system(conditional("nmake", when="platform=windows"), "autotools", default="autotools")
@@ -197,7 +198,7 @@ class Libxml2(AutotoolsPackage, NMakePackage):
             xmllint("--dtdvalid", dtd_path, data_dir.join("info.xml"))
 
 
-class RunAfter:
+class BaseBuilder(metaclass=spack.builder.PhaseCallbacksMeta):
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def import_module_test(self):
@@ -206,7 +207,7 @@ class RunAfter:
                 python("-c", "import libxml2")
 
 
-class AutotoolsBuilder(autotools.AutotoolsBuilder, RunAfter):
+class AutotoolsBuilder(BaseBuilder, autotools.AutotoolsBuilder):
     def configure_args(self):
         spec = self.spec
 
@@ -232,7 +233,7 @@ class AutotoolsBuilder(autotools.AutotoolsBuilder, RunAfter):
         return args
 
 
-class NMakeBuilder(nmake.NMakeBuilder, RunAfter):
+class NMakeBuilder(BaseBuilder, nmake.NMakeBuilder):
     phases = ("configure", "build", "install")
 
     @property

@@ -29,7 +29,7 @@ class AsperaCli(Package):
         # Update destination path
         filter_file(
             "INSTALL_DIR=~/.aspera",
-            "INSTALL_DIR=%s" % prefix,
+            f"INSTALL_DIR={prefix}",
             runfile,
             string=True,
             stop_at="__ARCHIVE_FOLLOWS__",

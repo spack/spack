@@ -110,19 +110,28 @@ class LinkParser(HTMLParser):
                     self.links.append(val)
 
 
-class IncludeFragmentParser(HTMLParser):
+class ExtractMetadataParser(HTMLParser):
     """This parser takes an HTML page and selects the include-fragments,
-    used on GitHub, https://github.github.io/include-fragment-element."""
+    used on GitHub, https://github.github.io/include-fragment-element,
+    as well as a possible base url."""
 
     def __init__(self):
         super().__init__()
-        self.links = []
+        self.fragments = []
+        self.base_url = None
 
     def handle_starttag(self, tag, attrs):
+        # <include-fragment src="..." />
         if tag == "include-fragment":
             for attr, val in attrs:
                 if attr == "src":
-                    self.links.append(val)
+                    self.fragments.append(val)
+
+        # <base href="..." />
+        elif tag == "base":
+            for attr, val in attrs:
+                if attr == "href":
+                    self.base_url = val
 
 
 def read_from_url(url, accept_content_type=None):
@@ -625,12 +634,15 @@ def _spider(url: urllib.parse.ParseResult, collect_nested: bool, _visited: Set[s
 
         # Parse out the include-fragments in the page
         # https://github.github.io/include-fragment-element
-        include_fragment_parser = IncludeFragmentParser()
-        include_fragment_parser.feed(page)
+        metadata_parser = ExtractMetadataParser()
+        metadata_parser.feed(page)
+
+        # Change of base URL due to <base href="..." /> tag
+        response_url = metadata_parser.base_url or response_url
 
         fragments = set()
-        while include_fragment_parser.links:
-            raw_link = include_fragment_parser.links.pop()
+        while metadata_parser.fragments:
+            raw_link = metadata_parser.fragments.pop()
             abs_link = url_util.join(response_url, raw_link.strip(), resolve_href=True)
 
             try:

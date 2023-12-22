@@ -45,7 +45,7 @@ class AtSpi2Core(MesonPackage):
     def url_for_version(self, version):
         """Handle gnome's version-based custom URLs."""
         url = "http://ftp.gnome.org/pub/gnome/sources/at-spi2-core"
-        return url + "/%s/at-spi2-core-%s.tar.xz" % (version.up_to(2), version)
+        return url + f"/{version.up_to(2)}/at-spi2-core-{version}.tar.xz"
 
     def setup_run_environment(self, env):
         env.prepend_path("GI_TYPELIB_PATH", join_path(self.prefix.lib, "girepository-1.0"))

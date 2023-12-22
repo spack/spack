@@ -25,6 +25,20 @@ from spack.package import *
 
 preferred_ver = "11.8.0"
 _versions = {
+    "12.3.0": {
+        "Linux-aarch64": (
+            "9a8fb8acf46b88faf0d711bda3149e1706efbbae02fcb40ab72addfd0e9ce5df",
+            "https://developer.download.nvidia.com/compute/cuda/12.3.0/local_installers/cuda_12.3.0_545.23.06_linux_sbsa.run",
+        ),
+        "Linux-x86_64": (
+            "7c13face3af64d6e1648d6e3101d31c8111e747143acb0077d973c1690820422",
+            "https://developer.download.nvidia.com/compute/cuda/12.3.0/local_installers/cuda_12.3.0_545.23.06_linux.run",
+        ),
+        "Linux-ppc64le": (
+            "de15c04380ec35b194c07503bf434837bac5b427cf77b19a63962b1653d195d5",
+            "https://developer.download.nvidia.com/compute/cuda/12.3.0/local_installers/cuda_12.3.0_545.23.06_linux_ppc64le.run",
+        ),
+    },
     "12.2.1": {
         "Linux-aarch64": (
             "a9ae6bd02684c7acfb229484368bf2691d592767ce1aed10ae9aed92c81b9f09",
@@ -582,6 +596,8 @@ class Cuda(Package):
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set("CUDAHOSTCXX", dependent_spec.package.compiler.cxx)
+        env.set("CUDA_HOME", self.prefix)
+        env.set("NVHPC_CUDA_HOME", self.prefix)
 
     @property
     def cmake_prefix_paths(self):
@@ -593,6 +609,7 @@ class Cuda(Package):
 
     def setup_run_environment(self, env):
         env.set("CUDA_HOME", self.prefix)
+        env.set("NVHPC_CUDA_HOME", self.prefix)
 
     def install(self, spec, prefix):
         if os.path.exists("/tmp/cuda-installer.log"):

@@ -42,10 +42,13 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
     # Current
     version(
-        "4.1.5", sha256="a640986bc257389dd379886fdae6264c8cfa56bc98b71ce3ae3dfbd8ce61dbe3"
-    )  # libmpi.so.40.30.5
+        "4.1.6", sha256="f740994485516deb63b5311af122c265179f5328a0d857a567b85db00b11e415"
+    )  # libmpi.so.40.30.6
 
     # Still supported
+    version(
+        "4.1.5", sha256="a640986bc257389dd379886fdae6264c8cfa56bc98b71ce3ae3dfbd8ce61dbe3"
+    )  # libmpi.so.40.30.5
     version(
         "4.1.4", sha256="92912e175fd1234368c8730c03f4996fe5942e7479bb1d10059405e7f2b3930d"
     )  # libmpi.so.40.30.4
@@ -495,6 +498,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     # Variants to use internal packages
     variant("internal-hwloc", default=False, description="Use internal hwloc")
     variant("internal-pmix", default=False, description="Use internal pmix")
+    variant("internal-libevent", default=False, description="Use internal libevent")
     variant("openshmem", default=False, description="Enable building OpenSHMEM")
 
     provides("mpi")
@@ -552,14 +556,17 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
     # PMIx is unavailable for @1, and required for @2:
     # OpenMPI @2: includes a vendored version:
-    # depends_on('pmix@1.1.2', when='@2.1.6')
-    # depends_on('pmix@3.2.3', when='@4.1.2')
-    depends_on("pmix@1.0:1", when="@2.0:2 ~internal-pmix")
-    depends_on("pmix@3.2:", when="@4.0:4 ~internal-pmix")
-    depends_on("pmix@4.2:", when="@5.0:5 ~internal-pmix")
+    with when("~internal-pmix"):
+        depends_on("pmix@1", when="@2")
+        depends_on("pmix@3.2:", when="@4:")
+        depends_on("pmix@4.2:", when="@5:")
+
+        # pmix@4.2.3 contains a breaking change, compat fixed in openmpi@4.1.6
+        # See https://www.mail-archive.com/announce@lists.open-mpi.org//msg00158.html
+        depends_on("pmix@:4.2.2", when="@:4.1.5")
 
     # Libevent is required when *vendored* PMIx is used
-    depends_on("libevent@2:", when="@main")
+    depends_on("libevent@2:", when="~internal-libevent")
 
     depends_on("openssh", type="run", when="+rsh")
 
@@ -589,7 +596,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     conflicts(
         "schedulers=slurm ~pmi",
         when="@1.5.4",
-        msg="+pmi is required for openmpi to work with SLURM.",
+        msg="+pmi is required for openmpi to work with Slurm.",
     )
     conflicts(
         "schedulers=loadleveler",

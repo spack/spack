@@ -44,6 +44,10 @@ class Bzip2(Package, SourcewarePackage):
     if sys.platform != "win32":
         depends_on("diffutils", type="build")
 
+    depends_on("gmake", type="build", when="platform=linux")
+    depends_on("gmake", type="build", when="platform=cray")
+    depends_on("gmake", type="build", when="platform=darwin")
+
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)("--help", output=str, error=str)

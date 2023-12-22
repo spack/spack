@@ -1522,20 +1522,27 @@ class Database:
         # TODO: like installed and known that can be queried?  Or are
         # TODO: these really special cases that only belong here?
 
-        # Just look up concrete specs with hashes; no fancy search.
-        if isinstance(query_spec, spack.spec.Spec) and query_spec.concrete:
-            # TODO: handling of hashes restriction is not particularly elegant.
-            hash_key = query_spec.dag_hash()
-            if hash_key in self._data and (not hashes or hash_key in hashes):
-                return [self._data[hash_key].spec]
-            else:
-                return []
+        if query_spec is not any:
+            if not isinstance(query_spec, spack.spec.Spec):
+                query_spec = spack.spec.Spec(query_spec)
+
+            # Just look up concrete specs with hashes; no fancy search.
+            if query_spec.concrete:
+                # TODO: handling of hashes restriction is not particularly elegant.
+                hash_key = query_spec.dag_hash()
+                if hash_key in self._data and (not hashes or hash_key in hashes):
+                    return [self._data[hash_key].spec]
+                else:
+                    return []
 
         # Abstract specs require more work -- currently we test
         # against everything.
         results = []
         start_date = start_date or datetime.datetime.min
         end_date = end_date or datetime.datetime.max
+
+        # save specs whose name doesn't match for last, to avoid a virtual check
+        deferred = []
 
         for key, rec in self._data.items():
             if hashes is not None and rec.spec.dag_hash() not in hashes:
@@ -1561,8 +1568,26 @@ class Database:
                 if not (start_date < inst_date < end_date):
                     continue
 
-            if query_spec is any or rec.spec.satisfies(query_spec):
+            if query_spec is any:
                 results.append(rec.spec)
+                continue
+
+            # check anon specs and exact name matches first
+            if not query_spec.name or rec.spec.name == query_spec.name:
+                if rec.spec.satisfies(query_spec):
+                    results.append(rec.spec)
+
+            # save potential virtual matches for later, but not if we already found a match
+            elif not results:
+                deferred.append(rec.spec)
+
+        # Checking for virtuals is expensive, so we save it for last and only if needed.
+        # If we get here, we didn't find anything in the DB that matched by name.
+        # If we did fine something, the query spec can't be virtual b/c we matched an actual
+        # package installation, so skip the virtual check entirely. If we *didn't* find anything,
+        # check all the deferred specs *if* the query is virtual.
+        if not results and query_spec is not any and deferred and query_spec.virtual:
+            results = [spec for spec in deferred if spec.satisfies(query_spec)]
 
         return results
 

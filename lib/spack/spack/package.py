@@ -32,14 +32,17 @@ from spack.build_systems.autotools import AutotoolsPackage
 from spack.build_systems.bundle import BundlePackage
 from spack.build_systems.cached_cmake import (
     CachedCMakePackage,
+    cmake_cache_filepath,
     cmake_cache_option,
     cmake_cache_path,
     cmake_cache_string,
 )
+from spack.build_systems.cargo import CargoPackage
 from spack.build_systems.cmake import CMakePackage, generator
 from spack.build_systems.cuda import CudaPackage
 from spack.build_systems.generic import Package
 from spack.build_systems.gnu import GNUMirrorPackage
+from spack.build_systems.go import GoPackage
 from spack.build_systems.intel import IntelPackage
 from spack.build_systems.lua import LuaPackage
 from spack.build_systems.makefile import MakefilePackage
@@ -49,7 +52,9 @@ from spack.build_systems.msbuild import MSBuildPackage
 from spack.build_systems.nmake import NMakePackage
 from spack.build_systems.octave import OctavePackage
 from spack.build_systems.oneapi import (
+    INTEL_MATH_LIBRARIES,
     IntelOneApiLibraryPackage,
+    IntelOneApiLibraryPackageWithSdk,
     IntelOneApiPackage,
     IntelOneApiStaticLibraryList,
 )
@@ -85,7 +90,7 @@ from spack.installer import (
     UpstreamPackageError,
 )
 from spack.mixins import filter_compiler_wrappers
-from spack.multimethod import when
+from spack.multimethod import default_args, when
 from spack.package_base import (
     DependencyConflictError,
     build_system_flags,

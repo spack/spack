@@ -14,7 +14,7 @@ from typing import IO, Any, Callable, ContextManager, Dict, Generator, Optional,
 
 from llnl.util import lang, tty
 
-import spack.util.string
+from ..string import plural
 
 if sys.platform != "win32":
     import fcntl
@@ -169,7 +169,7 @@ def _attempts_str(wait_time, nattempts):
     if nattempts <= 1:
         return ""
 
-    attempts = spack.util.string.plural(nattempts, "attempt")
+    attempts = plural(nattempts, "attempt")
     return " after {} and {}".format(lang.pretty_seconds(wait_time), attempts)
 
 
