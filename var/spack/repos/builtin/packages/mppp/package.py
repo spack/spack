@@ -31,16 +31,23 @@ class Mppp(CMakePackage):
     version("0.20", sha256="c736daeaac30e38e1c09a19d249209ad49f8ec92ab1315a8fb9a47cc1f54e607")
 
     variant(
-        "mpfr", default=True,
-        description=("Enable features relying on GNU MPFR library. Used in the"
-                     " implementation of the real class and for providing "
-                     "support for the long double type in integer and "
-                     "rational")
+        "mpfr",
+        default=True,
+        description=(
+            "Enable features relying on GNU MPFR library. Used in the"
+            " implementation of the real class and for providing "
+            "support for the long double type in integer and "
+            "rational"
+        ),
     )
     variant(
-        "mpc", default=True, when="+mpfr",
-        description=("Enable features relying on the GNU MPC library. Used in "
-                     "the implementation of the complex class.")
+        "mpc",
+        default=True,
+        when="+mpfr",
+        description=(
+            "Enable features relying on the GNU MPC library. Used in "
+            "the implementation of the complex class."
+        ),
     )
     # FIXME: No spack package exists for arb
     # variant(
@@ -51,33 +58,46 @@ class Mppp(CMakePackage):
     #                  "suite.")
     # )
     variant(
-        "quadmath", default=False,
-        description=("Enable features relying on the GNU quadmath library. "
-                     "Used in the implementation of the real128 and complex128"
-                     " classes.")
+        "quadmath",
+        default=False,
+        description=(
+            "Enable features relying on the GNU quadmath library. "
+            "Used in the implementation of the real128 and complex128"
+            " classes."
+        ),
     )
     variant(
-        "serialization", default=False, when="@0.22:",
-        description=("Enable support for serialization via the "
-                     "Boost.serialization library")
+        "serialization",
+        default=False,
+        when="@0.22:",
+        description="Enable support for serialization via the Boost.serialization library",
     )
-    variant("fmt", default=True, when="@0.27:",
-            description="Enable support for formatting via the fmt library")
-    variant("tests", default=False,
-            description="Build the test suite")
-    variant("benchmarks", default=False, when="+serialization +fmt",
-            description="Build the benchmarking suite")
     variant(
-        "static", default=False,
-        description=("build mp++ as a static library, instead of a dynamic"
-                     " library")
+        "fmt",
+        default=True,
+        when="@0.27:",
+        description="Enable support for formatting via the fmt library",
+    )
+    variant("tests", default=False, description="Build the test suite")
+    variant(
+        "benchmarks",
+        default=False,
+        when="+serialization +fmt",
+        description="Build the benchmarking suite",
+    )
+    variant(
+        "static",
+        default=False,
+        description="build mp++ as a static library, instead of a dynamic library",
     )
     # variant("msvc_unicode", default=False,
     #         description="enable Unicode solutions for MSVC")
     variant(
-        "ipo", default=False,
-        description=("Enable link-time optimisations (requires CMake >= 3.9 "
-                     "and compiler support)")
+        "ipo",
+        default=False,
+        description=(
+            "Enable link-time optimisations (requires CMake >= 3.9 and compiler support)"
+        ),
     )
 
     # Dependencies

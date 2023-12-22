@@ -30,22 +30,24 @@ class Heyoka(CMakePackage):
     version("0.18.0", sha256="2a14a988d973d9a76424df05d38f89ae64f7a1e1c12131022e338fe2de2dcb94")
 
     # Define variants of the package
-    variant("mppp", default=False,
-            description="enable features relying on the mp++ library")
-    variant("sleef", default=False,
-            description="enable features relying on the SLEEF library")
-    variant("tests", default=False,
-            description="build the test suite")
-    variant("benchmarks", default=False,
-            description="build the benchmarking suite")
-    variant("tutorials", default=False,
-            description="build the tutorials")
-    variant("static", default=False,
-            description=("build heyoka as a static library, instead of a "
-                         "dynamic library"))
-    variant("ipo", default=False,
-            description=("enable link-time optimisations when building the "
-                         "heyoka library (requires compiler support)"))
+    variant("mppp", default=False, description="enable features relying on the mp++ library")
+    variant("sleef", default=False, description="enable features relying on the SLEEF library")
+    variant("tests", default=False, description="build the test suite")
+    variant("benchmarks", default=False, description="build the benchmarking suite")
+    variant("tutorials", default=False, description="build the tutorials")
+    variant(
+        "static",
+        default=False,
+        description=("build heyoka as a static library, instead of a " "dynamic library"),
+    )
+    variant(
+        "ipo",
+        default=False,
+        description=(
+            "enable link-time optimisations when building the "
+            "heyoka library (requires compiler support)"
+        ),
+    )
 
     # Dependencies
 
