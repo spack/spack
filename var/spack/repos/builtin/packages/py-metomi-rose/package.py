@@ -14,6 +14,8 @@ class PyMetomiRose(PythonPackage):
 
     maintainers("LydDeb")
 
+    license("GPL-3.0-only")
+
     version("2.1.0", sha256="1b60135a434fe4325d364a57e8f5e81e90f39b373b9d68733458c1adc2513c05")
 
     depends_on("py-setuptools", type="build")

@@ -21,6 +21,8 @@ class RRpostgresql(RPackage):
 
     cran = "RPostgreSQL"
 
+    license("PostgreSQL")
+
     version("0.7-5", sha256="6b5401ee55bd948ae7bc84520d789ceb422533a7d5e5bd6e10e3b54447f29fa1")
     version("0.7-4", sha256="b6adf60094f2b03dff1959147cde7f61c2f4c4576d77b2a263c63f8e3cd556c6")
     version("0.7-3", sha256="bdbca10329aeb357f05364772964716dfb5ce2470f7eb4a33770862b6ded71b9")

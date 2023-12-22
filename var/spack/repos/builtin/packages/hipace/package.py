@@ -17,6 +17,8 @@ class Hipace(CMakePackage):
 
     maintainers("ax3l", "MaxThevenet", "SeverinDiederichs")
 
+    license("BSD-3-Clause-LBNL")
+
     version("develop", branch="development")
     version("23.07", sha256="2b1f61c91d2543d7ee360eba3630c864107e29f7bcfd0221451beea88f414f21")
     version("23.05", sha256="33a15cfeada3ca16c2a3af1538caa7ff731df13b48b884045a0fe7974382fcd1")

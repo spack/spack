@@ -17,6 +17,8 @@ class SingularityHpc(PythonPackage):
     homepage = "https://github.com/singularityhub/singularity-hpc"
     pypi = "singularity-hpc/singularity-hpc-0.1.16.tar.gz"
 
+    license("MPL-2.0")
+
     version("0.1.16", sha256="00aca234259b962914987ec725181dafc11096fa721d610485615585753d769f")
     version("0.1.12", sha256="760cbcae7b07b319ff6147938578648ce6f0af760701e62bf5f88649ef08f793")
 

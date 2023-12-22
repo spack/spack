@@ -54,6 +54,8 @@ class RFf(RPackage):
 
     cran = "ff"
 
+    license("GPL-2.0-only OR GPL-3.0-only OR custom")
+
     version("4.0.9", sha256="722053271987a0c9673c3ff9e7968bbab47979d529a2fe6bb1a3179408ee3c4f")
     version("4.0.7", sha256="0a47333d31c7afc3f95387166e21a3e4c763cbef47d9b5927753aef4ff8d83fa")
     version("4.0.5", sha256="9aba9e271144ec224063ddba0d791e2fcdb9c912d48fdc49e204fce628355037")

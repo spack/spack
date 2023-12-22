@@ -16,6 +16,8 @@ class Mercury(CMakePackage):
 
     tags = ["e4s"]
 
+    license("GPL-2.0-only")
+
     version("master", branch="master", submodules=True)
     version("2.3.1", sha256="36182d49f2db7e2b075240cab4aaa1d4ec87a7756450c87643ededd1e6f16104")
     version("2.3.0", sha256="e9e62ce1bb2fd482f0e85ad75fa255d9750c6fed50ba441a03de93b3b8eae742")

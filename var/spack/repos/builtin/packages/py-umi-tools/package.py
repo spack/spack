@@ -12,6 +12,8 @@ class PyUmiTools(PythonPackage):
     homepage = "https://github.com/CGATOxford/UMI-tools"
     url = "https://github.com/CGATOxford/UMI-tools/archive/0.5.3.tar.gz"
 
+    license("MIT")
+
     version("1.1.4", sha256="945c4c98e2007369c301a7a009c6f9deb0fda74b0117cd14e14bd134164a4ff6")
     version("1.0.0", sha256="7f73ef29120134123351c19089e9b7b7c03a8f241a19f8cb0e43d17f0e2f9fc7")
     version("0.5.5", sha256="9834a4388dd1ea0b971071009db7ccdbd447c6019796a3c061b0bb383c9ad992")

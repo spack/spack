@@ -16,6 +16,8 @@ class Picsarlite(MakefilePackage):
     homepage = "https://picsar.net"
     git = "https://bitbucket.org/berkeleylab/picsar.git"
 
+    license("BSD-3-Clause-LBNL")
+
     version("develop", branch="PICSARlite")
     version("0.1", tag="PICSARlite-0.1", commit="3c9cee9bdf32da0998f504bff7af31fcae2f0452")
 

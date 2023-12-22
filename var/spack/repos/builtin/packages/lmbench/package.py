@@ -15,6 +15,8 @@ class Lmbench(MakefilePackage):
     homepage = "http://lmbench.sourceforge.net/"
     git = "https://github.com/intel/lmbench.git"
 
+    license("GPL-2.0-only")
+
     version("master", branch="master")
 
     depends_on("libtirpc")

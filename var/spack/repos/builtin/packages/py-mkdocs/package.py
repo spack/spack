@@ -14,6 +14,8 @@ class PyMkdocs(PythonPackage):
     homepage = "https://www.mkdocs.org/"
     pypi = "mkdocs/mkdocs-1.3.1.tar.gz"
 
+    license("BSD-2-Clause")
+
     version("1.3.1", sha256="a41a2ff25ce3bbacc953f9844ba07d106233cd76c88bac1f59cb1564ac0d87ed")
 
     depends_on("python@3.6:", type=("build", "run"))

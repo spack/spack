@@ -16,6 +16,8 @@ class RCircstats(RPackage):
 
     maintainers("dorton21")
 
+    license("GPL-2.0-only")
+
     version("0.2-6", sha256="8efed93b75b314577341effea214e3dd6e0a515cfe1212eb051047a1f3276f1d")
 
     depends_on("r-mass", type=("build", "run"))

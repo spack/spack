@@ -30,6 +30,8 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
 
     test_requires_compiler = True
 
+    license("BSD-3-Clause-LBNL")
+
     version("master", branch="master")
     version("7.2.0", sha256="6988c00c3213f13e53d75fb474102358f4fecf07a4b4304b7123d86fdc784639")
     version("7.1.3", sha256="c951f38ee7af20da3ff46429e38fcebd57fb6f12619b2c56040d6da5096abcb0")

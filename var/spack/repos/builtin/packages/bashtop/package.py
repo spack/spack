@@ -12,6 +12,8 @@ class Bashtop(Package):
     homepage = "https://github.com/aristocratos/bashtop"
     url = "https://github.com/aristocratos/bashtop/archive/v0.8.17.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.8.17", sha256="853a7143de533437cc1654b853bc89da54ff91c629820ac45b7c8708dababf1f")
     version("0.8.16", sha256="6249e5c678fdb0a2a87d6fa13b9fe1f6bd56f7dbcaba0066d2a5275a7f9a9355")
     version("0.8.15", sha256="617aab0a23b1a9430f2ef7d51e4f89eb06c5b3f2ff40768cb6849fc2899ffc6a")

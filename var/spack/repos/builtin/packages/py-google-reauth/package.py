@@ -12,6 +12,8 @@ class PyGoogleReauth(PythonPackage):
     homepage = "https://github.com/Google/google-reauth-python"
     pypi = "google-reauth/google-reauth-0.1.1.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.1.1", sha256="f9f6852a55c2c5453d581cd01f3d1278e86147c03d008409800390a834235892")
 
     depends_on("py-setuptools", type="build")

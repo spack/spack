@@ -13,6 +13,8 @@ class PyMyhdl(PythonPackage):
     homepage = "http://www.myhdl.org"
     pypi = "myhdl/myhdl-0.9.0.tar.gz"
 
+    license("LGPL-2.1-or-later")
+
     version("0.9.0", sha256="52d12a5fe2cda22558806272af3c2b519b6f7095292b8e6c8ad255fb604507a5")
 
     depends_on("python@2.6:2.8,3.4:")

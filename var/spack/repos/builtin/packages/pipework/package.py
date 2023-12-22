@@ -15,6 +15,8 @@ class Pipework(Package):
     homepage = "https://github.com/jpetazzo/pipework"
     git = "https://github.com/jpetazzo/pipework.git"
 
+    license("Apache-2.0")
+
     version("master", branch="master")
 
     def install(self, spec, prefix):

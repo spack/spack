@@ -12,6 +12,8 @@ class PyWatchfiles(PythonPackage):
     homepage = "https://github.com/samuelcolvin/watchfiles"
     pypi = "watchfiles/watchfiles-0.18.1.tar.gz"
 
+    license("MIT")
+
     version("0.18.1", sha256="4ec0134a5e31797eb3c6c624dbe9354f2a8ee9c720e0b46fc5b7bab472b7c6d4")
 
     depends_on("py-maturin@0.13", type="build")

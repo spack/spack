@@ -17,6 +17,8 @@ class Libassuan(AutotoolsPackage):
 
     maintainers("alalazo")
 
+    license("LGPL-2.1-or-later")
+
     version("2.5.6", sha256="e9fd27218d5394904e4e39788f9b1742711c3e6b41689a31aa3380bd5aa4f426")
     version("2.5.5", sha256="8e8c2fcc982f9ca67dcbb1d95e2dc746b1739a4668bc20b3a3c5be632edb34e4")
     version("2.5.4", sha256="c080ee96b3bd519edd696cfcebdecf19a3952189178db9887be713ccbcb5fbf0")

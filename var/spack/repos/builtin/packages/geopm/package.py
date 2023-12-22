@@ -22,6 +22,8 @@ class Geopm(AutotoolsPackage):
 
     tags = ["e4s"]
 
+    license("BSD-3-Clause")
+
     # Add additional proper versions and checksums here. "spack checksum geopm"
     version("develop", branch="dev")
     version("master", branch="master")

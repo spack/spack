@@ -12,6 +12,8 @@ class PyBeniget(PythonPackage):
     homepage = "https://github.com/serge-sans-paille/beniget/"
     pypi = "beniget/beniget-0.3.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.4.1", sha256="75554b3b8ad0553ce2f607627dad3d95c60c441189875b98e097528f8e23ac0c")
     version("0.4.0", sha256="72bbd47b1ae93690f5fb2ad3902ce1ae61dcd868ce6cfbf33e9bad71f9ed8749")
     version("0.3.0", sha256="062c893be9cdf87c3144fb15041cce4d81c67107c1591952cd45fdce789a0ff1")

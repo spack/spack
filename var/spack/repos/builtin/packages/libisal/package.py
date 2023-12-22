@@ -13,6 +13,8 @@ class Libisal(AutotoolsPackage):
     homepage = "https://github.com/intel/isa-l"
     url = "https://github.com/intel/isa-l/archive/v2.29.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("2.29.0", sha256="832d9747ef3f0c8c05d39e3d7fd6ee5299a844e1ee7382fc8c8b52a268f36eda")
 
     depends_on("autoconf", type="build")

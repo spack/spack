@@ -12,6 +12,8 @@ class PyPkgconfig(PythonPackage):
     homepage = "https://github.com/matze/pkgconfig"
     pypi = "pkgconfig/pkgconfig-1.2.2.tar.gz"
 
+    license("MIT")
+
     version("1.5.5", sha256="deb4163ef11f75b520d822d9505c1f462761b4309b1bb713d08689759ea8b899")
     version("1.5.1", sha256="97bfe3d981bab675d5ea3ef259045d7919c93897db7d3b59d4e8593cba8d354f")
     version("1.4.0", sha256="048c3b457da7b6f686b647ab10bf09e2250e4c50acfe6f215398a8b5e6fcdb52")

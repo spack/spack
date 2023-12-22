@@ -14,6 +14,8 @@ class PyAmityping(PythonPackage):
 
     maintainers("valmar")
 
+    license("BSD-3-Clause-LBNL")
+
     version("1.1.12", sha256="e00e7102a53fa6ee343f018669f6b811d703a2da4728b497f80579bf89efbd3c")
 
     depends_on("py-setuptools", type="build")

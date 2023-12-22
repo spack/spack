@@ -18,6 +18,8 @@ class Ipm(AutotoolsPackage):
 
     maintainers("Christoph-TU")
 
+    license("LGPL-2.1-or-later")
+
     version("master", branch="master", preferred=True)
     version("2.0.6", tag="2.0.6", commit="b008141ee16d39b33e20bffde615564afa107575")
 

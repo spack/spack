@@ -12,6 +12,8 @@ class PerlExtutilsInstallpaths(PerlPackage):
     homepage = "https://metacpan.org/pod/ExtUtils::InstallPaths"
     url = "https://cpan.metacpan.org/authors/id/L/LE/LEONT/ExtUtils-InstallPaths-0.012.tar.gz"
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("0.012", sha256="84735e3037bab1fdffa3c2508567ad412a785c91599db3c12593a50a1dd434ed")
 
     depends_on("perl-extutils-config", type=("build", "run"))

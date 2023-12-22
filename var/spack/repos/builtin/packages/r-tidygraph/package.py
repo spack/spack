@@ -17,6 +17,8 @@ class RTidygraph(RPackage):
 
     cran = "tidygraph"
 
+    license("MIT")
+
     version("1.2.3", sha256="b09c06b12583ae57edd1ec01e61a0e1b7a4b82358361fb28a6046dbece475687")
     version("1.2.2", sha256="d555cad6b5b56bd2edaa29950a0fd15942e972db21561bfd5cd64fd9a8936470")
     version("1.2.1", sha256="2fbdc2db18c5ad48c72f14d2d04111f4b0d4c434ad87c280eda3bcb98673ad36")

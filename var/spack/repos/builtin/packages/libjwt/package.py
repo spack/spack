@@ -15,6 +15,8 @@ class Libjwt(AutotoolsPackage):
 
     maintainers("bollig")
 
+    license("MPL-2.0")
+
     version("1.15.3", sha256="cb2fd95123689e7d209a3a8c060e02f68341c9a5ded524c0cd881a8cd20d711f")
     version("1.15.2", sha256="a366531ad7d5d559b1f8c982e7bc7cece7eaefacf7e91ec36d720609c01dc410")
     version("1.13.1", sha256="4df55ac89c6692adaf3badb43daf3241fd876612c9ab627e250dfc4bb59993d9")

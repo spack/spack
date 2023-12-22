@@ -15,6 +15,8 @@ class Mumax(MakefilePackage, CudaPackage):
     homepage = "https://mumax.github.io"
     url = "https://github.com/mumax/3/archive/v3.10.tar.gz"
 
+    license("CC-BY-3.0")
+
     version(
         "3.10",
         sha256="42c858661cec3896685ff4babea11e711f71fd6ea37d20c2bed7e4a918702caa",

@@ -23,6 +23,8 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     test_requires_compiler = True
 
+    license("MIT")
+
     version("develop", branch="master")
     version("2.30.0", sha256="8e2af97d9a25bf44801c6427779f823ebc6f306438066bba7fcbc2a5f9b78421")
     version("2.29.0", sha256="98b72115407a0e24dbaac70eccae0da3465f8f999318b2c9241631133f42d511")

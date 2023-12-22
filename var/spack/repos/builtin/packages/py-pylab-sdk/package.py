@@ -12,6 +12,8 @@ class PyPylabSdk(PythonPackage):
     homepage = "https://github.com/PyLabCo/pylab-sdk"
     pypi = "pylab-sdk/pylab-sdk-1.3.2.tar.gz"
 
+    license("MIT")
+
     version("1.3.2", sha256="ea53e97fec45ea15f65bd53da6b25dc16a9accf3a7f5decbaa970592d760148d")
 
     depends_on("python@3:", type=("build", "run"))

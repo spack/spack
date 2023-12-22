@@ -13,6 +13,8 @@ class PyPydv(PythonPackage):
     homepage = "https://github.com/griffin28/PyDV"
     url = "https://github.com/griffin28/PyDV/archive/pydv-2.4.2.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("2.4.2", sha256="46bda76e27e85beaad446455d0cc279388d455f05912a8ff8e4fb66de983992c")
 
     depends_on("py-setuptools", type="build")

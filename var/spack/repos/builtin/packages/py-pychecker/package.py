@@ -14,6 +14,8 @@ class PyPychecker(PythonPackage):
         "http://sourceforge.net/projects/pychecker/files/pychecker/0.8.19/pychecker-0.8.19.tar.gz"
     )
 
+    license("BSD-3-Clause")
+
     version("0.8.19", sha256="44fb26668f74aca3738f02d072813762a37ce1242f50dbff573720fa2e953279")
 
     # pip silently replaces distutils with setuptools

@@ -21,6 +21,8 @@ class SpiralPackageFftx(Package):
     # such.  If this package is required spiral-software should be installed
     # with the +fftx variant active
 
+    license("BSD-2-Clause-FreeBSD")
+
     version("develop", branch="develop")
     version("main", branch="main")
     version("1.3.0", sha256="f798165bd9a96b41262e889ca235d86dfda4e0fdc414bfb9b463c50ca86f480b")

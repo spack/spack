@@ -14,6 +14,8 @@ class PyAzureMultiapiStorage(PythonPackage):
     homepage = "https://github.com/Azure/azure-multiapi-storage-python"
     pypi = "azure-multiapi-storage/azure-multiapi-storage-0.3.5.tar.gz"
 
+    license("MIT")
+
     version("0.3.5", sha256="71c238c785786a159b3ffd587a5e7fa1d9a517b66b592ae277fed73a9fbfa2b0")
 
     depends_on("py-setuptools", type="build")

@@ -12,6 +12,8 @@ class Openpa(AutotoolsPackage):
     homepage = "https://github.com/pmodels/openpa"
     url = "https://github.com/pmodels/openpa/releases/download/v1.0.4/openpa-1.0.4.tar.gz"
 
+    license("mpich2")
+
     version("1.0.4", sha256="9e5904b3bbdcb24e8429c12d613422e716a3479f3e0aeefbd9ce546852899e3a")
     version("1.0.3", sha256="b73943f341b0d4475109f8f341a5229258e43510b62cb5d488cf7f0e84fa5557")
     version("1.0.2", sha256="13b5ef8ea3502822ab03861bf9d047c3bda722b22605edf3f508fb355746db4f")

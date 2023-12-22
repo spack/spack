@@ -14,4 +14,6 @@ class PyAffine(PythonPackage):
 
     depends_on("py-setuptools", type="build")
 
+    license("BSD-3-Clause")
+
     version("2.1.0", sha256="b67b7dee9a9865185a931758a3e347ad8583d0ac985895b90985a477ccfa4745")

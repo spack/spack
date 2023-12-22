@@ -12,6 +12,8 @@ class Ctffind(AutotoolsPackage):
     homepage = "https://grigoriefflab.umassmed.edu/ctffind4"
     url = "https://grigoriefflab.umassmed.edu/system/tdf?path=ctffind-4.1.8.tar.gz&file=1&type=node&id=26"
 
+    license("BSD-3-Clause")
+
     version(
         "4.1.14",
         sha256="db17b2ebeb3c3b2b3764e42b820cd50d19ccccf6956c64257bfe5d5ba6b40cb5",

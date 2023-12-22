@@ -20,6 +20,8 @@ class PyIpython(PythonPackage):
     # for py-ipython@8: "IPython.kernel" was removed
     skip_modules = ["IPython.kernel"]
 
+    license("BSD-3-Clause")
+
     version("8.14.0", sha256="1d197b907b6ba441b692c48cf2a3a2de280dc0ac91a3405b39349a50272ca0a1")
     version("8.11.0", sha256="735cede4099dbc903ee540307b9171fbfef4aa75cfcacc5a273b2cda2f02be04")
     version("8.5.0", sha256="097bdf5cd87576fd066179c9f7f208004f7a6864ee1b20f37d346c0bcb099f84")

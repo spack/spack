@@ -12,6 +12,8 @@ class PyResampy(PythonPackage):
     homepage = "https://github.com/bmcfee/resampy"
     pypi = "resampy/resampy-0.2.2.tar.gz"
 
+    license("ISC")
+
     version("0.2.2", sha256="62af020d8a6674d8117f62320ce9470437bb1d738a5d06cd55591b69b463929e")
 
     depends_on("py-setuptools", type="build")

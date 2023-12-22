@@ -13,6 +13,8 @@ class Wcslib(AutotoolsPackage):
     homepage = "https://www.atnf.csiro.au/people/mcalabre/WCS/wcslib/"
     url = "ftp://ftp.atnf.csiro.au/pub/software/wcslib/wcslib-7.3.tar.bz2"
 
+    license("LGPL-3.0-or-later")
+
     version("7.3", sha256="4b01cf425382a26ca4f955ed6841a5f50c55952a2994367f8e067e4183992961")
     version("6.4", sha256="13c11ff70a7725563ec5fa52707a9965fce186a1766db193d08c9766ea107000")
 

@@ -17,6 +17,8 @@ class RRecipes(RPackage):
 
     cran = "recipes"
 
+    license("MIT")
+
     version("1.0.6", sha256="105e97127cdd6aaeb9fb3348e51a9c46e21fb8bcb734cb3bbd6dbdf2b6b2fc8f")
     version("1.0.2", sha256="1a7b5a9a2946fa34599935b6d93101ec559d8a901d49cc691972c75df8d5670e")
     version("1.0.1", sha256="9e3ae212413409bf41ec7d1a311586e12c0ca79943cef436707d041c57125bc9")

@@ -39,6 +39,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # see https://www.cpan.org/src/README.html for
     # explanation of version numbering scheme
 
+    license("Artistic-1.0-Perl OR GPL-1.0-or-later")
+
     # Maintenance releases (even numbers, preferred)
     version(
         "5.38.0",

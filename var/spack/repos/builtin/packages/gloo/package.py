@@ -12,6 +12,8 @@ class Gloo(CMakePackage, CudaPackage):
     homepage = "https://github.com/facebookincubator/gloo"
     git = "https://github.com/facebookincubator/gloo.git"
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("2023-05-19", commit="597accfd79f5b0f9d57b228dec088ca996686475")  # py-torch@2.1:
     version("2023-01-17", commit="10909297fedab0a680799211a299203e53515032")  # py-torch@2.0

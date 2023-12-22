@@ -37,6 +37,8 @@ class Acts(CMakePackage, CudaPackage):
 
     tags = ["hep"]
 
+    license("MPL-2.0")
+
     # Supported Acts versions
     version("main", branch="main")
     version("master", branch="main", deprecated=True)  # For compatibility

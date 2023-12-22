@@ -12,6 +12,8 @@ class PyBluepyemodel(PythonPackage):
     homepage = "https://github.com/BlueBrain/BluePyEModel"
     pypi = "bluepyemodel/bluepyemodel-0.0.46.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.0.46", sha256="ad4c125e491f3337fcc341a4f389b8a616d883ce50fd77d9fb0ea6e13be5da61")
 
     depends_on("py-setuptools", type="build")

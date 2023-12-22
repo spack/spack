@@ -14,6 +14,8 @@ class PyDryscrape(PythonPackage):
     pypi = "dryscrape/dryscrape-1.0.tar.gz"
     git = "https://github.com/niklasb/dryscrape.git"
 
+    license("MIT")
+
     version("develop", branch="master")
     version("1.0", sha256="a99858786434947266cb81d5634cb1722de48aaf6b9cdffda15b7cd4a8e07340")
 

@@ -14,6 +14,8 @@ class Time(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/time/"
     gnu_mirror_path = "time/time-1.9.tar.gz"
 
+    license("GPL-3.0-only")
+
     version("1.9", sha256="fbacf0c81e62429df3e33bda4cee38756604f18e01d977338e23306a3e3b521e")
 
     build_directory = "spack-build"

@@ -12,6 +12,8 @@ class Libxpm(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/lib/libXpm"
     xorg_mirror_path = "lib/libXpm-3.5.12.tar.gz"
 
+    license("X11")
+
     version("3.5.12", sha256="2523acc780eac01db5163267b36f5b94374bfb0de26fc0b5a7bee76649fd8501")
     version("3.5.11", sha256="53ddf924441b7ed2de994d4934358c13d9abf4828b1b16e1255ade5032b31df7")
     version("3.5.10", sha256="f73f06928a140fd2090c439d1d55c6682095044495af6bf886f8e66cf21baee5")

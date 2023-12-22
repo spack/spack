@@ -17,6 +17,8 @@ class Opendatadetector(CMakePackage):
 
     tags = ["hep"]
 
+    license("MPL-2.0-no-copyleft-exception")
+
     version("main", branch="main")
     version("v3.0.0", tag="v3.0.0", commit="e3b1eceae96fd5dddf10223753964c570ee868c9")
     version("v2", tag="v2", commit="7041ae086dff4ee4a8d5b65f5d9559acc6dbec47")

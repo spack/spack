@@ -17,6 +17,8 @@ class Poplddecay(MakefilePackage):
 
     maintainers("robqiao")
 
+    license("MIT")
+
     version("3.41", sha256="b84fe5c9a1e1f6798eebbe4445b0b4bc7d02ac9f03fd01cb9cdcc8ee4db71040")
     version("3.40", sha256="5070930166fb90f7eaaa4b87c4430caa8a827d79c54683e2f56434a4daf69778")
 

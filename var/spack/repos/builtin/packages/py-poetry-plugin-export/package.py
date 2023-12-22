@@ -12,6 +12,8 @@ class PyPoetryPluginExport(PythonPackage):
     homepage = "https://python-poetry.org/"
     pypi = "poetry-plugin-export/poetry_plugin_export-1.6.0.tar.gz"
 
+    license("MIT")
+
     version("1.6.0", sha256="091939434984267a91abf2f916a26b00cff4eee8da63ec2a24ba4b17cf969a59")
     version("1.0.7", sha256="f6ac707ae227b06b2481249ed2678ff6b810b3487cac0fbb66eb0dc2bfd6ecf1")
 

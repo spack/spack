@@ -13,6 +13,8 @@ class PyAsyncTimeout(PythonPackage):
     homepage = "https://github.com/aio-libs/async-timeout"
     pypi = "async-timeout/async-timeout-3.0.1.tar.gz"
 
+    license("Apache-2.0")
+
     version("4.0.2", sha256="2163e1640ddb52b7a8c80d0a67a08587e5d245cc9c553a74a847056bc2976b15")
     version("4.0.1", sha256="b930cb161a39042f9222f6efb7301399c87eeab394727ec5437924a36d6eef51")
     version("4.0.0", sha256="7d87a4e8adba8ededb52e579ce6bc8276985888913620c935094c2276fd83382")

@@ -18,6 +18,8 @@ class PyFenicsUfl(PythonPackage):
     git = "https://github.com/FEniCS/ufl.git"
     maintainers("chrisrichardson", "garth-wells", "jhale")
 
+    license("LGPL-3.0-or-later")
+
     version("main", branch="main")
     version("2023.2.0", sha256="d1d3209e8ebd4bd70513c26890f51823bac90edc956233c47bd8e686e064436e")
     version(

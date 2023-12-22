@@ -15,6 +15,8 @@ class PerlMimeTypes(PerlPackage):
 
     maintainers("EbiArnie")
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("2.24", sha256="629e361f22b220be50c2da7354e23c0451757709a03c25a22f3160edb94cb65f")
 
     def test_use(self):

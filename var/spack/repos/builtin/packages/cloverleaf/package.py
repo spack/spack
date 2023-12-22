@@ -19,6 +19,8 @@ class Cloverleaf(MakefilePackage):
 
     tags = ["proxy-app"]
 
+    license("LGPL-3.0-or-later")
+
     version("master", branch="master", submodules=True)
     version("1.1", sha256="de87f7ee6b917e6b3d243ccbbe620370c62df890e3ef7bdbab46569b57be132f")
 

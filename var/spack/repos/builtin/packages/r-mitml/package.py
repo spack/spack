@@ -16,6 +16,8 @@ class RMitml(RPackage):
 
     cran = "mitml"
 
+    license("GPL-2.0-or-later")
+
     version("0.4-5", sha256="056aec823187cc3793640d8a5e74d74093bae74260a975ceb098a83a52e2eeeb")
     version("0.4-3", sha256="49bd3eb68a60fb2a269e7ddca8b862e1e81e0651e2b29759482fb7bcad452102")
     version("0.3-7", sha256="c6f796d0059f1b093b599a89d955982fa257de9c45763ecc2cbbce10fdec1e7b")

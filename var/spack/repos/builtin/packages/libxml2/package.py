@@ -26,6 +26,8 @@ class Libxml2(AutotoolsPackage, NMakePackage):
             return url.format(version.up_to(2), version)
         return "http://xmlsoft.org/sources/libxml2-{0}.tar.gz".format(version)
 
+    license("MIT")
+
     version("2.10.3", sha256="5d2cc3d78bec3dbe212a9d7fa629ada25a7da928af432c93060ff5c17ee28a9c")
     version("2.10.2", sha256="d240abe6da9c65cb1900dd9bf3a3501ccf88b3c2a1cb98317d03f272dda5b265")
     version("2.10.1", sha256="21a9e13cc7c4717a6c36268d0924f92c3f67a1ece6b7ff9d588958a6db9fb9d8")

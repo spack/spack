@@ -15,6 +15,8 @@ class H5cpp(CMakePackage):
 
     maintainers("eschnett")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("1.10.4-6", sha256="4fbc8e777dc78a37ec2fe8c7b6a47114080ffe587f083e83a2046b5e794aef93")
     version("1.10.4-5", sha256="661ccc4d76e081afc73df71ef11d027837d92dd1089185f3650afcaec9d418ec")

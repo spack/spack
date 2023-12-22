@@ -23,6 +23,8 @@ class Proj(CMakePackage, AutotoolsPackage):
     # Many packages that depend on proj do not yet support the newer API.
     # See https://github.com/OSGeo/PROJ/wiki/proj.h-adoption-status
 
+    license("MIT")
+
     version("9.2.1", sha256="15ebf4afa8744b9e6fccb5d571fc9f338dc3adcf99907d9e62d1af815d4971a1")
     version("9.2.0", sha256="dea816f5aa732ae6b2ee3977b9bdb28b1d848cf56a1aad8faf6708b89f0ed50e")
     version("9.1.1", sha256="003cd4010e52bb5eb8f7de1c143753aa830c8902b6ed01209f294846e40e6d39")

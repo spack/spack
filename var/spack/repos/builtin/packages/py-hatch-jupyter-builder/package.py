@@ -12,6 +12,8 @@ class PyHatchJupyterBuilder(PythonPackage):
     homepage = "https://github.com/jupyterlab/hatch-jupyter-builder"
     pypi = "hatch_jupyter_builder/hatch_jupyter_builder-0.8.3.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.8.3", sha256="0dbd14a8aef6636764f88a8fd1fcc9a91921e5c50356e6aab251782f264ae960")
 
     depends_on("python@3.8:", type=("build", "run"))

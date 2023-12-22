@@ -16,6 +16,8 @@ class Mruby(Package):
 
     maintainers = ["mdorier"]
 
+    license("MIT")
+
     version("master", branch="master")
     version("3.2.0", sha256="3c198e4a31d31fe8524013066fac84a67fe6cd6067d92c25a1c79089744cb608")
     version("3.1.0", sha256="64ce0a967028a1a913d3dfc8d3f33b295332ab73be6f68e96d0f675f18c79ca8")

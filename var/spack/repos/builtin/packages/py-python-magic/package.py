@@ -16,6 +16,8 @@ class PyPythonMagic(PythonPackage):
     homepage = "https://github.com/ahupp/python-magic"
     pypi = "python-magic/python-magic-0.4.15.tar.gz"
 
+    license("MIT")
+
     version("0.4.24", sha256="de800df9fb50f8ec5974761054a708af6e4246b03b4bdaee993f948947b0ebcf")
     version("0.4.15", sha256="f3765c0f582d2dfc72c15f3b5a82aecfae9498bd29ca840d72f37d7bd38bfcd5")
 

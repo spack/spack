@@ -15,6 +15,8 @@ class PyOcnn(PythonPackage):
 
     maintainers("wdconinc")
 
+    license("MIT")
+
     version("2.2.0", sha256="5fb54305130921ece4cccf1697ec281f49d3e95837ba0e124cab9f8a567ecb80")
 
     depends_on("python@3.6:", type=("build", "run"))

@@ -19,6 +19,8 @@ class PyNumpy(PythonPackage):
 
     maintainers("adamjstewart", "rgommers")
 
+    license("BSD-3-Clause")
+
     version("main", branch="main")
     version("1.26.2", sha256="f65738447676ab5777f11e6bbbdb8ce11b785e105f690bc45966574816b6d3ea")
     version("1.26.1", sha256="c8c6c72d4a9f831f328efb1312642a1cafafaa88981d9ab76368d50d07d93cbe")

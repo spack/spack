@@ -16,6 +16,8 @@ class Nlopt(CMakePackage):
     url = "https://github.com/stevengj/nlopt/archive/v2.5.0.tar.gz"
     git = "https://github.com/stevengj/nlopt.git"
 
+    license("LGPL-2.1-or-later")
+
     version("master", branch="master")
 
     version("2.7.0", sha256="b881cc2a5face5139f1c5a30caf26b7d3cb43d69d5e423c9d78392f99844499f")

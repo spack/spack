@@ -16,6 +16,8 @@ class Prmon(CMakePackage):
 
     maintainers("graeme-a-stewart", "amete", "vvolkl")
 
+    license("Apache-2.0")
+
     version("main", branch="main")
     version("3.0.2", sha256="ea9ff521689fecb8c395e35e9540be18c7ab37812354c4a5c0ba505e2ab467c1")
     version("3.0.0", sha256="fd6f4e3a95e055d265fbbaba08d680826cb4770eb8830cc987898d6504ac7474")

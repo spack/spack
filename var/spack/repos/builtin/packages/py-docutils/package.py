@@ -18,6 +18,8 @@ class PyDocutils(PythonPackage):
     homepage = "http://docutils.sourceforge.net/"
     pypi = "docutils/docutils-0.15.2.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.20.1", sha256="f08a4e276c3a1583a86dce3e34aba3fe04d02bba2dd51ed16106244e8a923e3b")
     version("0.19", sha256="33995a6753c30b7f577febfc2c50411fec6aac7f7ffeb7c4cfe5991072dcf9e6")
     version("0.18.1", sha256="679987caf361a7539d76e584cbeddc311e3aee937877c87346f31debc63e9d06")

@@ -17,6 +17,8 @@ class PyParam(PythonPackage):
 
     maintainers("haralmha")
 
+    license("BSD-3-Clause")
+
     version("1.12.0", sha256="35d0281c8e3beb6dd469f46ff0b917752a54bed94d1b0c567346c76d0ff59c4a")
 
     depends_on("python@2.7:", type=("build", "run"))

@@ -16,6 +16,8 @@ class PyWebargs(PythonPackage):
 
     maintainers("haralmha")
 
+    license("MIT")
+
     version("8.1.0", sha256="f1f0b7f054a22263cf750529fc0926709ca47da9a2c417d423ad88d9fa6a5d33")
 
     depends_on("python@3.7:", type=("build", "run"))

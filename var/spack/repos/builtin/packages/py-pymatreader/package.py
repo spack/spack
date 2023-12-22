@@ -12,6 +12,8 @@ class PyPymatreader(PythonPackage):
     homepage = "https://gitlab.com/obob/pymatreader"
     pypi = "pymatreader/pymatreader-0.0.30.tar.gz"
 
+    license("BSD-2-Clause")
+
     version("0.0.30", sha256="c8187b6ee77a9b1ec0d8ccae9b22c9031d01104a412737cc4a71e6d993a1a12b")
 
     depends_on("py-setuptools", type="build")

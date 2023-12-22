@@ -12,6 +12,8 @@ class PyEventlet(PythonPackage):
     homepage = "https://github.com/eventlet/eventlet"
     url = "https://github.com/eventlet/eventlet/releases/download/v0.22.0/eventlet-0.22.0.tar.gz"
 
+    license("MIT")
+
     version("0.22.0", sha256="6d22464f448fdf144a9d566c157299d686bbe324554dd7729df9ccd05ca66439")
 
     depends_on("py-setuptools", type="build")

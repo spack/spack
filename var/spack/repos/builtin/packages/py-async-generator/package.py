@@ -11,6 +11,8 @@ class PyAsyncGenerator(PythonPackage):
 
     pypi = "async_generator/async_generator-1.10.tar.gz"
 
+    license("Apache-2.0")
+
     version("1.10", sha256="6ebb3d106c12920aaae42ccb6f787ef5eefdcdd166ea3d628fa8476abe712144")
 
     depends_on("py-setuptools", type="build")

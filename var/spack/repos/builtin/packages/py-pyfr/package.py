@@ -17,6 +17,8 @@ class PyPyfr(PythonPackage, CudaPackage, ROCmPackage):
     git = "https://github.com/PyFR/PyFR/"
     maintainers("MichaelLaufer")
 
+    license("BSD-3-Clause")
+
     # git branches
     version("develop", branch="develop")
     version("master", branch="master")

@@ -13,6 +13,8 @@ class PyPaste(PythonPackage):
     homepage = "https://pythonpaste.readthedocs.io"
     pypi = "Paste/Paste-3.5.2.tar.gz"
 
+    license("MIT")
+
     version("3.5.2", sha256="d5a7340c30bcdf3023dd0106c8a5c430dd8fe84aeb8113bc7b93f8dd729f4af6")
 
     depends_on("python@3:", type=("build", "run"))

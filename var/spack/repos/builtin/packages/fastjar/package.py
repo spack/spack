@@ -12,6 +12,8 @@ class Fastjar(AutotoolsPackage):
     homepage = "https://savannah.nongnu.org/projects/fastjar/"
     url = "http://download.savannah.gnu.org/releases/fastjar/fastjar-0.98.tar.gz"
 
+    license("GPL-2.0")
+
     version("0.98", sha256="f156abc5de8658f22ee8f08d7a72c88f9409ebd8c7933e9466b0842afeb2f145")
 
     depends_on("zlib-api")

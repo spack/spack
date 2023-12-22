@@ -12,6 +12,8 @@ class Graph500(MakefilePackage):
     homepage = "https://graph500.org"
     url = "https://github.com/graph500/graph500/archive/graph500-3.0.0.tar.gz"
 
+    license("BSL-1.0")
+
     version("3.0.0", sha256="887dcff56999987fba4953c1c5696d50e52265fe61b6ffa8bb14cc69ff27e8a0")
 
     depends_on("mpi@2.0:")

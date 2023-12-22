@@ -14,6 +14,8 @@ class PyMesonPython(PythonPackage):
 
     maintainers("eli-schwartz", "adamjstewart", "rgommers")
 
+    license("MIT")
+
     version("0.13.1", sha256="63b3170001425c42fa4cfedadb9051cbd28925ff8eed7c40d36ba0099e3c7618")
     version("0.12.0", sha256="8cb159a8093a2e73cfa897f8092ec93b74e3842f94dff7fde381c6fe0e0b064d")
     version("0.11.0", sha256="110258837c2ffe762f5f855c7ea5385f1edd44074e93a0f317ffefc7aab42b09")

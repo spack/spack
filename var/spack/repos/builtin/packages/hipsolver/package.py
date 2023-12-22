@@ -24,6 +24,8 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
     maintainers("cgmb", "srekolam", "renjithravindrankannath")
     libraries = ["libhipsolver"]
 
+    license("MIT")
+
     version("develop", branch="develop")
     version("master", branch="master")
     version("5.7.1", sha256="5592e965c0dc5722931302289643d1ece370220af2c7afc58af97b3395295658")

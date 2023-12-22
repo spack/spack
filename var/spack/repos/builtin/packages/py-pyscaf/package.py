@@ -12,6 +12,8 @@ class PyPyscaf(PythonPackage):
 
     pypi = "pyScaf/pyScaf-0.12a4.tar.gz"
 
+    license("GPL-3.0-only")
+
     version("0.12a4", sha256="3ce3f6fe80bd058831b6a38a56d464ef10f3ebbdd6bc3dcb0d7f127c0b2c1b36")
 
     depends_on("py-setuptools", type="build")

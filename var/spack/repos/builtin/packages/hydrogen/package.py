@@ -25,6 +25,8 @@ class Hydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("bvanessen")
 
+    license("GPL-2.0-or-later")
+
     version("develop", branch="hydrogen")
     version("1.5.3", sha256="faefbe738bd364d0e26ce9ad079a11c93a18c6f075719a365fd4fa5f1f7a989a")
     version("1.5.2", sha256="a902cad3962471216cfa278ba0561c18751d415cd4d6b2417c02a43b0ab2ea33")

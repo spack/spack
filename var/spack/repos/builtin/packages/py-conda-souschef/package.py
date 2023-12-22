@@ -12,6 +12,8 @@ class PyCondaSouschef(PythonPackage):
     homepage = "https://github.com/marcelotrevisani/souschef"
     pypi = "conda-souschef/conda-souschef-2.2.3.tar.gz"
 
+    license("Apache-2.0")
+
     version("2.2.3", sha256="9bf3dba0676bc97616636b80ad4a75cd90582252d11c86ed9d3456afb939c0c3")
 
     depends_on("python@3.8:", type=("build", "run"))

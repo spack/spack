@@ -25,6 +25,8 @@ class Clingo(CMakePackage):
     tags = ["windows"]
     maintainers("tgamblin", "alalazo")
 
+    license("MIT")
+
     version("master", branch="master", submodules=True)
     version("spack", commit="2a025667090d71b2c9dce60fe924feb6bde8f667", submodules=True)
     version("5.6.2", sha256="81eb7b14977ac57c97c905bd570f30be2859eabc7fe534da3cdc65eaca44f5be")

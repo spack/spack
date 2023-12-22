@@ -38,6 +38,8 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
     tags = ["e4s"]
 
+    license("custom")
+
     version("main", branch="main", submodules=True)
 
     # Current

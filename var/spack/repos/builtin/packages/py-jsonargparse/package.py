@@ -15,6 +15,8 @@ class PyJsonargparse(PythonPackage):
     homepage = "https://github.com/omni-us/jsonargparse"
     pypi = "jsonargparse/jsonargparse-4.19.0.tar.gz"
 
+    license("MIT")
+
     version("4.25.0", sha256="4eaadae69c387a3d83a76b1eaf20ca98d5274d8637f180dca0754ce5405adb6b")
     version("4.19.0", sha256="63aa3c7bbdb219d0f254a5ae86f3d54384ebc1ffa905e776cc19283bc843787b")
 

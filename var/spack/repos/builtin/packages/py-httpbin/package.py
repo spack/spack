@@ -12,6 +12,8 @@ class PyHttpbin(PythonPackage):
     homepage = "https://github.com/Runscope/httpbin"
     pypi = "httpbin/httpbin-0.7.0.tar.gz"
 
+    license("0BSD")
+
     version("0.7.0", sha256="cbb37790c91575f4f15757f42ad41d9f729eb227d5edbe89e4ec175486db8dfa")
     version("0.5.0", sha256="79fbc5d27e4194ea908b0fa18e09a59d95d287c91667aa69bcd010342d1589b5")
 

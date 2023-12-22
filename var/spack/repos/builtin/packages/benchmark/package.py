@@ -13,6 +13,8 @@ class Benchmark(CMakePackage):
     url = "https://github.com/google/benchmark/archive/v1.6.0.tar.gz"
     git = "https://github.com/google/benchmark.git"
 
+    license("Apache-2.0")
+
     # first properly installed CMake config packages in
     # 1.2.0 release: https://github.com/google/benchmark/issues/363
     version("main", branch="main")

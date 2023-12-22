@@ -22,6 +22,8 @@ class Mpifileutils(Package):
 
     tags = ["e4s"]
 
+    license("BSD-3-Clause")
+
     version("develop", branch="main")
     version("0.11.1", sha256="e2cba53309b5b3ee581b6ff82e4e66f54628370cce694c34224ed947fece32d4")
     version("0.11", sha256="f5dc1b39077b3c04f79b2c335c4fd80306f8c57ecfbcacbb82cf532caf02b5fd")

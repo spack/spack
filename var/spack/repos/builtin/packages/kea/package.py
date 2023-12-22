@@ -13,6 +13,8 @@ class Kea(AutotoolsPackage):
     homepage = "https://www.isc.org/kea/"
     url = "https://downloads.isc.org/isc/kea/1.6.2/kea-1.6.2.tar.gz"
 
+    license("MPL-2.0")
+
     version("1.6.2", sha256="2af7336027143c3e98d8d1d44165b2c2cbb0252a92bd88f6dd4d2c6adb69d7b5")
 
     depends_on("m4", type="build")

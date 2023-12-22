@@ -13,6 +13,8 @@ class AbiDumper(Package):
     homepage = "https://github.com/lvc/abi-dumper"
     url = "https://github.com/lvc/abi-dumper/archive/1.2.tar.gz"
 
+    license("LGPL-2.1-or-later")
+
     version("1.2", sha256="8a9858c91b4e9222c89b676d59422053ad560fa005a39443053568049bd4d27e")
     version("1.1", sha256="ef63201368e0d76a29d2f7aed98c488f6fb71898126762d65baed1e762988083")
     version("1.0", sha256="bfa0189a172fa788afc603b1ae675808a57556a77a008e4af8f643d396c34bbb")

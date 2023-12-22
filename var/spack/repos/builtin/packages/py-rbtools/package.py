@@ -13,6 +13,8 @@ class PyRbtools(PythonPackage):
     homepage = "https://github.com/reviewboard/rbtools"
     url = "https://github.com/reviewboard/rbtools/archive/release-1.0.2.tar.gz"
 
+    license("MIT")
+
     version("1.0.2", sha256="dd7aa95691be91f394d085120e44bcec3dc440b01a8f7e2742e09a8d756c831c")
     version("1.0.1", sha256="bc5e3c511a2273ec61c43a82f56b4cef0b23beae81e277cecbb37ce6761edf29")
     version("1.0", sha256="dbab2cc89d798462c7e74952d43ba1ff1c97eb9c8f92876e600c6520f72454c9")

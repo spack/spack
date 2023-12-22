@@ -23,6 +23,8 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     tags = ["e4s"]
     test_requires_compiler = True
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version(
         "2023.08.25", sha256="0894d8669ed88358cc7c4cb7b77d8467336613245a7b843f3504e9224632ce0e"

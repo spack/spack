@@ -13,6 +13,8 @@ class PyAutoray(PythonPackage):
     homepage = "https://github.com/jcmgray/autoray"
     pypi = "autoray/autoray-0.5.3.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.5.3", sha256="ecbecbc1ab65dd704234b3307fa7c7a511a36f6b9339a0ffcdaa4e5a7aab826b")
 
     depends_on("python@3.6:", type=("build", "run"))

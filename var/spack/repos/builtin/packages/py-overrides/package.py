@@ -12,6 +12,8 @@ class PyOverrides(PythonPackage):
     homepage = "https://github.com/mkorpela/overrides"
     pypi = "overrides/overrides-7.3.1.tar.gz"
 
+    license("Apache-2.0")
+
     version("7.3.1", sha256="8b97c6c1e1681b78cbc9424b138d880f0803c2254c5ebaabdde57bb6c62093f2")
 
     depends_on("py-setuptools", type="build")

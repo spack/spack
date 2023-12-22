@@ -17,6 +17,8 @@ class PyPhanotate(PythonPackage):
     homepage = "https://github.com/deprekate/phanotate"
     pypi = "phanotate/phanotate-1.5.0.tar.gz"
 
+    license("GPL-3.0-or-later")
+
     version("1.5.0", sha256="589e441d2369e5550aef98b8d99fd079d130363bf881a70ac862fc7a8e0d2c88")
 
     depends_on("python@3.5.3:", type=("build", "run"))

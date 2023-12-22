@@ -12,6 +12,8 @@ class Tldd(MakefilePackage):
     homepage = "https://gitlab.com/miscripts/tldd"
     git = "https://gitlab.com/miscripts/tldd.git"
 
+    license("GPL-3.0-only")
+
     version("2018-10-05", commit="61cb512cc992ea6cbb7239e99ec7ac92ea072507")
     version("master", branch="master")
 

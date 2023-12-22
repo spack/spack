@@ -14,6 +14,8 @@ class Batchedblas(MakefilePackage):
     homepage = "https://www.r-ccs.riken.jp/labs/lpnctrt/projects/batchedblas/index.html"
     url = "https://www.r-ccs.riken.jp/labs/lpnctrt/projects/batchedblas/BatchedBLAS-1.0.tar.gz"
 
+    license("BSD-2-Clause")
+
     version("1.0", sha256="798ae4e7cc4ad5c3d5f3479f3d001da566d7d5205779103aaf10cd5b956ba433")
 
     depends_on("blas")

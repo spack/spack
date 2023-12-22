@@ -25,6 +25,8 @@ class W3m(AutotoolsPackage):
     url = "https://downloads.sourceforge.net/project/w3m/w3m/w3m-0.5.3/w3m-0.5.3.tar.gz"
     maintainers("ronin_gw")
 
+    license("MIT")
+
     version("0.5.3", sha256="e994d263f2fd2c22febfbe45103526e00145a7674a0fda79c822b97c2770a9e3")
 
     # mandatory dependency

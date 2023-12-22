@@ -19,6 +19,8 @@ class PyQsymm(PythonPackage):
     # package is updated
     maintainers("payerle")
 
+    license("BSD-2-Clause")
+
     version("1.2.7", sha256="9af92a30c3f72883c744d4717e4ec30c8b48121e208c10553e8e0e428fe43bbc")
 
     depends_on("python@3.5:", type=("build", "run"))

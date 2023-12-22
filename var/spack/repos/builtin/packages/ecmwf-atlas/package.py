@@ -18,6 +18,8 @@ class EcmwfAtlas(CMakePackage):
 
     maintainers("climbfuji", "srherbener")
 
+    license("Apache-2.0")
+
     version("master", branch="master")
     version("develop", branch="develop")
     version("0.36.0", sha256="39bf748aa7b22df80b9791fbb6b4351ed9a9f85587b58fc3225314278a2a68f8")

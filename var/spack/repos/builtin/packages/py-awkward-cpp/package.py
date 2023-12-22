@@ -16,6 +16,8 @@ class PyAwkwardCpp(PythonPackage):
 
     maintainers("vvolkl", "wdconinc")
 
+    license("BSD-3-Clause")
+
     version("12", sha256="429f7fcc37a671afa67fe9680f2edc3a123d1c74d399e5889c654f9529f9f8f2")
     version("11", sha256="02d719a4da7487564b29b8e8b78925a32ac818b6f5572c2f55912b4e0e59c7a4")
     version("10", sha256="d1c856cb6ef5cf3d4f67506a7efc59239f595635865cc9f4ab18440b8bfb11c6")

@@ -17,6 +17,8 @@ class HipifyClang(CMakePackage):
 
     maintainers("srekolam", "renjithravindrankannath")
 
+    license("MIT")
+
     version("master", branch="master")
     version("5.7.1", sha256="43121e62233dab010ab686d6805bc2d3163f0dc5e89cc503d50c4bcd59eeb394")
     version("5.7.0", sha256="10e4386727e102fba166f012147120a6ec776e8d95fbcac3af93e243205d80a6")

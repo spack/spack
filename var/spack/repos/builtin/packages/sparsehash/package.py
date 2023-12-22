@@ -12,5 +12,7 @@ class Sparsehash(AutotoolsPackage):
     homepage = "https://github.com/sparsehash/sparsehash"
     url = "https://github.com/sparsehash/sparsehash/archive/sparsehash-2.0.4.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("2.0.4", sha256="8cd1a95827dfd8270927894eb77f62b4087735cbede953884647f16c521c7e58")
     version("2.0.3", sha256="05e986a5c7327796dad742182b2d10805a8d4f511ad090da0490f146c1ff7a8c")

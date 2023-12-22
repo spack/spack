@@ -18,6 +18,8 @@ class PyGosam(Package):
 
     extends("python")
 
+    license("GPL-3.0-only")
+
     version(
         "2.1.1",
         url="https://github.com/gudrunhe/gosam/releases/download/2.1.1/gosam-2.1.1-4b98559.tar.gz",

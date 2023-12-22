@@ -13,6 +13,8 @@ class Miniocli(MakefilePackage):
     homepage = "https://docs.min.io/docs/minio-client-complete-guide.html"
     url = "https://github.com/minio/mc/archive/refs/tags/RELEASE.2022-02-02T02-03-24Z.tar.gz"
 
+    license("AGPL-3.0-only")
+
     version(
         "2023-06-28",
         sha256="033a80439474595665bdbc3ec72b059dc9e69e99db85fe6820877ad8973a080b",

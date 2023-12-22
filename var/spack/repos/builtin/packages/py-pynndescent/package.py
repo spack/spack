@@ -13,6 +13,8 @@ class PyPynndescent(PythonPackage):
     homepage = "https://github.com/lmcinnes/pynndescent"
     pypi = "pynndescent/pynndescent-0.5.7.tar.gz"
 
+    license("BSD-2-Clause")
+
     version("0.5.7", sha256="ecb395255fa36a748b5870b4ba0300ea0f7da8b1964864b8edd62577a84dfd7d")
 
     depends_on("py-setuptools", type="build")

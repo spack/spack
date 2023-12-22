@@ -22,6 +22,8 @@ class Ruby(AutotoolsPackage, NMakePackage):
     list_depth = 1
     tags = ["windows"]
 
+    license("Ruby AND BSD-2-Clause AND MIT")
+
     version("3.1.0", sha256="50a0504c6edcb4d61ce6b8cfdbddaa95707195fab0ecd7b5e92654b2a9412854")
     version("3.0.2", sha256="5085dee0ad9f06996a8acec7ebea4a8735e6fac22f22e2d98c3f2bc3bef7e6f1")
     version("3.0.1", sha256="369825db2199f6aeef16b408df6a04ebaddb664fb9af0ec8c686b0ce7ab77727")

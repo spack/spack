@@ -16,6 +16,8 @@ class Express(CMakePackage):
     homepage = "http://bio.math.berkeley.edu/eXpress/"
     url = "https://github.com/adarob/eXpress/archive/1.5.2.zip"
 
+    license("Artistic-2.0")
+
     # 1.5.1 used to be known as 2015-11-29 (same commit), but they've
     # added tags, so lets use 'em
     version("1.5.3", sha256="dfea819bbe7187a06462d6549a13f9cad7f3f128cb5c62bd90946f972c45a1f2")

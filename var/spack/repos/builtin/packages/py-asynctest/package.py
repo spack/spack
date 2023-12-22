@@ -13,6 +13,8 @@ class PyAsynctest(PythonPackage):
     homepage = "https://asynctest.readthedocs.io"
     pypi = "asynctest/asynctest-0.13.0.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.13.0", sha256="c27862842d15d83e6a34eb0b2866c323880eb3a75e4485b079ea11748fd77fac")
 
     depends_on("python@3.5:", type=("build", "run"))

@@ -18,6 +18,8 @@ class PyNbval(PythonPackage):
     homepage = "https://github.com/computationalmodelling/nbval"
     pypi = "nbval/nbval-0.9.6.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.9.6", sha256="cfefcd2ef66ee2d337d0b252c6bcec4023384eb32e8b9e5fcc3ac80ab8cd7d40")
 
     depends_on("py-setuptools", type="build")

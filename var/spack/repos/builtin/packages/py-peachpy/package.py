@@ -12,6 +12,8 @@ class PyPeachpy(PythonPackage):
     homepage = "https://github.com/Maratyszcza/PeachPy"
     git = "https://github.com/Maratyszcza/PeachPy.git"
 
+    license("BSD-2-Clause")
+
     version("master", branch="master")
 
     depends_on("py-setuptools", type="build")

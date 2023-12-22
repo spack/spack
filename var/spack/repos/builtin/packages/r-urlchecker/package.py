@@ -15,6 +15,8 @@ class RUrlchecker(RPackage):
 
     cran = "urlchecker"
 
+    license("GPL-3.0-only")
+
     version("1.0.1", sha256="62165ddbe1b748b58c71a50c8f07fdde6f3d19a7b39787b9fa2b4f9216250318")
 
     depends_on("r@3.3:", type=("build", "run"))

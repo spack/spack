@@ -14,6 +14,8 @@ class PyPyct(PythonPackage):
 
     maintainers("vvolkl")
 
+    license("BSD-3-Clause")
+
     version("0.4.8", sha256="23d7525b5a1567535c093aea4b9c33809415aa5f018dd77f6eb738b1226df6f7")
 
     depends_on("python@2.7:", type=("build", "run"))

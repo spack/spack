@@ -17,6 +17,8 @@ class Libzmq(AutotoolsPackage):
 
     maintainers("dennisklein")
 
+    license("MPL-2.0")
+
     version("master", branch="master")
     version("4.3.5", sha256="6653ef5910f17954861fe72332e68b03ca6e4d9c7160eb3a8de5a5a913bfab43")
     version("4.3.4", sha256="c593001a89f5a85dd2ddf564805deb860e02471171b3f204944857336295c3e5")

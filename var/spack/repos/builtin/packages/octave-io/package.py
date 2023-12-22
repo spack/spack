@@ -13,6 +13,8 @@ class OctaveIo(OctavePackage, SourceforgePackage):
     homepage = "https://octave.sourceforge.io/io/"
     sourceforge_mirror_path = "octave/io-2.6.3.tar.gz"
 
+    license("GPL-3.0-only")
+
     version("2.6.3", sha256="6bc63c6498d79cada01a6c4446f793536e0bb416ddec2a5201dd8d741d459e10")
     version("2.6.2", sha256="01dbf8885a8011e76c919e271727c1d44f625bf6b217948b79438039ba368ceb")
     version("2.6.1", sha256="83253561f883c96ca3021a771223d23795122dc4cb800766e9cb893c6f8262dd")

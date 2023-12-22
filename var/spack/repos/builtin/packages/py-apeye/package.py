@@ -13,6 +13,8 @@ class PyApeye(PythonPackage):
     homepage = "https://github.com/domdfcoding/apeye"
     pypi = "apeye/apeye-1.4.1.tar.gz"
 
+    license("LGPL-3.0-or-later")
+
     version("1.4.1", sha256="14ea542fad689e3bfdbda2189a354a4908e90aee4bf84c15ab75d68453d76a36")
 
     depends_on("py-flit-core@3.2:3", type="build")

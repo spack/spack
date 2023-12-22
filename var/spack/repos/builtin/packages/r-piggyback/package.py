@@ -26,6 +26,8 @@ class RPiggyback(RPackage):
 
     maintainers("jgaeb")
 
+    license("GPL-3.0-only")
+
     version("0.1.5", sha256="983b5a46792ff5f2895f36ee29afcbd7723d05fe3daefdaefaada12987e36aee")
     version("0.1.4", sha256="9e9d6d75e13f82559e5322182af557b3c79f9a6e9b0bc8c1e1b193544dcda511")
     version("0.1.3", sha256="6fccae21a97653f6a1d90d97c4f089bf403126a808f4b4023f4b0c6a496e0b07")

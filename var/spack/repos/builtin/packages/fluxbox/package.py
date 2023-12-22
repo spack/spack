@@ -16,6 +16,8 @@ class Fluxbox(AutotoolsPackage):
     homepage = "http://fluxbox.org/"
     url = "http://sourceforge.net/projects/fluxbox/files/fluxbox/1.3.7/fluxbox-1.3.7.tar.gz"
 
+    license("MIT")
+
     version("1.3.7", sha256="c99e2baa06fff1e96342b20415059d12ff1fa2917ade0173c75b2fa570295b9f")
 
     # Referenced:https://sourceforge.net/p/fluxbox/bugs/1171/

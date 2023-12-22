@@ -13,6 +13,8 @@ class CppLogger(CMakePackage):
     git = "https://github.com/hariharan-devarajan/cpp-logger.git"
     maintainers("hariharan-devarajan")
 
+    license("MIT")
+
     version("develop", branch="develop")
     version("master", branch="master")
     version("0.0.1", tag="v0.0.1", commit="d48b38ab14477bb7c53f8189b8b4be2ea214c28a")

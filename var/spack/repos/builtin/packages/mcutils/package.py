@@ -15,6 +15,8 @@ class Mcutils(MakefilePackage):
 
     tags = ["hep"]
 
+    license("GPL-3.0-or-later")
+
     version("1.3.5", tag="mcutils-1.3.5", commit="d0e65bb7b6f80d6df50a71a25c54683b0db997a5")
     version("1.3.4", tag="mcutils-1.3.4", commit="ddb527e5d03b8e4d13ae4e6d78fbcd7d35f7153b")
     version("1.3.3", tag="mcutils-1.3.3", commit="638aabe930b05f8ecfe272bdd2f2a7ed65e5fc45")

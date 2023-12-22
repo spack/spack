@@ -30,6 +30,8 @@ class Papi(AutotoolsPackage, ROCmPackage):
     url = "https://icl.utk.edu/projects/papi/downloads/papi-5.4.1.tar.gz"
     git = "https://github.com/icl-utk-edu/papi"
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("7.1.0", sha256="950d0e997e9e908f58c103efd54983e905b6cffa75ef52ed8fdd1ab441977bb6")
     version("7.0.1", sha256="c105da5d8fea7b113b0741a943d467a06c98db959ce71bdd9a50b9f03eecc43e")

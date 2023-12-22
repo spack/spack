@@ -12,6 +12,8 @@ class Miranda(AutotoolsPackage):
     homepage = "http://www.microrna.org/microrna/getDownloads.do"
     url = "https://cbio.mskcc.org/microrna_data/miRanda-aug2010.tar.gz"
 
+    license("GPL-2.0-only")
+
     version(
         "3.3a",
         sha256="a671da562cf4636ef5085b27349df2df2f335774663fd423deb08f31212ec778",

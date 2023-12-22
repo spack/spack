@@ -12,6 +12,8 @@ class PyPynrrd(PythonPackage):
     homepage = "https://github.com/mhe/pynrrd"
     pypi = "pynrrd/pynrrd-0.4.0.tar.gz"
 
+    license("MIT")
+
     version("1.0.0", sha256="4eb4caba03fbca1b832114515e748336cb67bce70c7f3ae36bfa2e135fc990d2")
 
     depends_on("py-setuptools", type="build")

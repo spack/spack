@@ -11,6 +11,8 @@ class PyPyfaidx(PythonPackage):
 
     pypi = "pyfaidx/pyfaidx-0.5.5.2.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.5.5.2", sha256="9ac22bdc7b9c5d995d32eb9dc278af9ba970481636ec75c0d687d38c26446caa")
 
     depends_on("py-setuptools@0.7:", type=("build", "run"))

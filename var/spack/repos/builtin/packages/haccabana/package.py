@@ -19,6 +19,8 @@ class Haccabana(CMakePackage):
 
     tags = ["proxy-app", "ecp-proxy-app"]
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
 
     variant("shared", default=True, description="Build shared libraries")

@@ -13,6 +13,8 @@ class Textparser(CMakePackage):
     homepage = "https://github.com/avr-aics-riken/TextParser"
     git = "https://github.com/avr-aics-riken/TextParser.git"
 
+    license("BSD-2-Clause")
+
     version("master", branch="master")
     version("1.8.8", commit="31ec1f23df21611d0765c27a6458fdbbf4cde66d")
 

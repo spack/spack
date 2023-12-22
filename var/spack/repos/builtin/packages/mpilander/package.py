@@ -14,6 +14,8 @@ class Mpilander(CMakePackage):
 
     maintainers("ax3l")
 
+    license("MIT")
+
     version("develop", branch="master")
 
     # variant('cuda', default=False, description='Enable CUDA support')

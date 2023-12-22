@@ -14,6 +14,8 @@ class Hisea(MakefilePackage):
 
     homepage = "https://doi.org/10.1186/s12859-017-1953-9"
 
+    license("GPL-3.0-only")
+
     version(
         "2017.12.26",
         sha256="3c6ddfb8490a327cc5f9e45f64cd4312abc6ef5719661ce8892db8a20a1e9c5e",

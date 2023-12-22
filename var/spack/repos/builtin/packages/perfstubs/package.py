@@ -21,6 +21,8 @@ class Perfstubs(CMakePackage):
     homepage = "https://github.com/khuck/perfstubs"
     git = "https://github.com/khuck/perfstubs.git"
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     variant("static", default=False, description="Build static executable support")
 

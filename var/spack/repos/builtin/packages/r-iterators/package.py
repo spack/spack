@@ -14,6 +14,8 @@ class RIterators(RPackage):
 
     cran = "iterators"
 
+    license("Apache-2.0")
+
     version("1.0.14", sha256="cef3075a0930e1408c764e4da56bbadd4f7d14315809df8f38dd51f80ccc677b")
     version("1.0.13", sha256="778e30e4c292da9f94d62acc637cf55273dae258199d847e62658f44840f11a4")
     version("1.0.12", sha256="96bf31d60ebd23aefae105d9b7790715e63327eec0deb2ddfb3d543994ea9f4b")

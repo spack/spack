@@ -15,6 +15,8 @@ class Grid(AutotoolsPackage):
 
     maintainers("giordano")
 
+    license("GPL-2.0-only")
+
     version("develop", branch="develop")
 
     variant(

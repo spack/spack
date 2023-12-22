@@ -17,6 +17,8 @@ class Httping(AutotoolsPackage):
     homepage = "https://www.vanheusden.com/httping/"
     url = "https://github.com/flok99/httping/archive/2.5.tar.gz"
 
+    license("GPL-2.0-or-later")
+
     version("2.5", sha256="2ad423097fa7a0d2d20a387050e34374326a703dddce897e152a8341e47ea500")
     version("2.3.4", sha256="45ed71a72fd8c9c3975e49706c739395f75e3977b91f96e7e25652addfa0f242")
     version("2.3.3", sha256="b76ec14cb4f6cd29b60a974254f4be37ed721c1660ecde9f6aac516ba521ab86")

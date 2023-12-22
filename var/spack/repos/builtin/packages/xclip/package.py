@@ -17,6 +17,8 @@ class Xclip(AutotoolsPackage):
     homepage = "https://github.com/astrand/xclip"
     git = "https://github.com/astrand/xclip.git"
 
+    license("GPL-2.0-or-later")
+
     version("0.13", commit="9aa7090c3b8b437c6489edca32ae43d82e0c1281")
 
     depends_on("libxmu")

@@ -18,6 +18,8 @@ class Lshw(MakefilePackage):
     homepage = "https://github.com/lyonel/lshw"
     url = "https://github.com/lyonel/lshw/archive/B.02.18.tar.gz"
 
+    license("GPL-3.0-or-later")
+
     version("02.18", sha256="aa8cb2eebf36e9e46dfc227f24784aa8c87181ec96e57ee6c455da8a0ce4fa77")
     version("02.17", sha256="0bb76c7df7733dc9b80d5d35f9d9752409ddb506e190453a2cc960461de5ddeb")
     version("02.16", sha256="58a7731d204791dd33db5eb3fde9808d1235283e069e6c33a193637ccec27b3e")

@@ -14,6 +14,8 @@ class PyVisdom(PythonPackage):
     homepage = "https://github.com/facebookresearch/visdom"
     pypi = "visdom/visdom-0.1.8.9.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.1.8.9", sha256="c73ad23723c24a48156899f78dd76bd4538eba3edf9120b6c65a9528fa677126")
 
     depends_on("py-setuptools", type="build")

@@ -20,6 +20,8 @@ class RCvxr(RPackage):
 
     cran = "CVXR"
 
+    license("Apache-2.0")
+
     version("1.0-11", sha256="e92a9638f35f4909e2a29c3b7106081e3dae7ff88b14bb6466b87fbdc80b972a")
 
     depends_on("r@3.4.0:", type=("build", "run"))

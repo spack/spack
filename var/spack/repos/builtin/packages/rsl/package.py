@@ -13,6 +13,8 @@ class Rsl(AutotoolsPackage):
     homepage = "https://trmm-fc.gsfc.nasa.gov/trmm_gv/software/rsl/"
     url = "https://trmm-fc.gsfc.nasa.gov/trmm_gv/software/rsl/software/rsl-v1.50.tar.gz"
 
+    license("LGPL-2.0-only")
+
     version("1.50", sha256="9e4e3fe45eb1e4aebea63255d4956b00eb69527044a83f182cde1b43510bd342")
 
     depends_on("bzip2")

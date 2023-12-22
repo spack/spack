@@ -12,6 +12,8 @@ class PyPyfasta(PythonPackage):
 
     pypi = "pyfasta/pyfasta-0.5.2.tar.gz"
 
+    license("MIT")
+
     version("0.5.2", sha256="ab08d75fa90253bc91933d10567d5d9cca2718f4796ef3bdc36b68df0e45b258")
 
     depends_on("python@2.6:")

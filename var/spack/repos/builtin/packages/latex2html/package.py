@@ -18,6 +18,8 @@ class Latex2html(AutotoolsPackage):
 
     maintainers("cessenat")
 
+    license("GPL-2.0-only")
+
     version("master", branch="master")
     version("2022.2", sha256="b1d5bba7bab7d0369d1241f2d8294137a52b7cb7df11239bfa15ec0a2546c093")
     version("2021", sha256="872fe7a53f91ababaafc964847639e3644f2b9fab3282ea059788e4e18cbba47")

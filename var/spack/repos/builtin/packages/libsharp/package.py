@@ -18,6 +18,8 @@ class Libsharp(AutotoolsPackage):
     homepage = "https://github.com/Libsharp/libsharp"
     git = "https://github.com/Libsharp/libsharp.git"
 
+    license("GPL-2.0-or-later")
+
     version("1.0.0", commit="cc4753ff4b0ef393f0d4ada41a175c6d1dd85d71", preferred=True)
     version("2018-01-17", commit="593d4eba67d61827191c32fb94bf235cb31205e1")
 

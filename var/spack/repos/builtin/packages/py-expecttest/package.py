@@ -12,6 +12,8 @@ class PyExpecttest(PythonPackage):
     homepage = "https://github.com/ezyang/expecttest"
     pypi = "expecttest/expecttest-0.1.6.tar.gz"
 
+    license("MIT")
+
     version("0.1.6", sha256="fd49563b6703b9c060a0bc946dfafc62bad74898867432192927eb1e5f9d8952")
 
     depends_on("python@:3", type=("build", "run"))

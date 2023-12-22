@@ -13,6 +13,8 @@ class PyPythonBenedict(PythonPackage):
     homepage = "https://github.com/fabiocaccamo/python-benedict"
     pypi = "python-benedict/python-benedict-0.22.2.tar.gz"
 
+    license("MIT")
+
     version("0.23.2", sha256="b7bdffd92ba1c9b9e044bda08ed545a48a45bd7a5207f93b4b2a8eb2660d1b4c")
 
     depends_on("python@2.7:2.8,3.4:", type=("build", "run"))

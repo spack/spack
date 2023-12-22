@@ -18,6 +18,8 @@ class Jali(CMakePackage):
 
     maintainers("raovgarimella")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("1.1.6", sha256="a2f4e4f238c60ea78486e0c9ea5b3e2cdd9d91c2ae5ea006a1d33a12e9eafa3a")
     version("1.1.5", sha256="4f18f3e8b50f20a89918e99596a7226c215944d84df642bc1fb2d6c31464b95b")

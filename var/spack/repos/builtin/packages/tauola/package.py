@@ -14,6 +14,8 @@ class Tauola(AutotoolsPackage):
 
     tags = ["hep"]
 
+    license("GPL-3.0-or-later")
+
     version("1.1.8", sha256="3f734e8a967682869cca2c1ffebd3e055562613c40853cc81820d8b666805ed5")
 
     variant("hepmc", default=True, description="Enable hepmc 2.x support")

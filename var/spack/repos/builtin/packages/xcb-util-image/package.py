@@ -17,6 +17,8 @@ class XcbUtilImage(AutotoolsPackage, XorgPackage):
     homepage = "https://gitlab.freedesktop.org/xorg/lib/libxcb-image"
     xorg_mirror_path = "lib/xcb-util-image-0.4.1.tar.xz"
 
+    license("MIT")
+
     version("0.4.1", sha256="ccad8ee5dadb1271fd4727ad14d9bd77a64e505608766c4e98267d9aede40d3d")
     version(
         "0.4.0",

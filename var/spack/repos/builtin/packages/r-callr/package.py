@@ -15,6 +15,8 @@ class RCallr(RPackage):
 
     cran = "callr"
 
+    license("MIT")
+
     version("3.7.3", sha256="567bfedf073a1d4c5785f0553341608a214938110567b9a6495ff20ebb2fd04e")
     version("3.7.2", sha256="12da8a212679e450d8d43c3c6e61ed09b82047f376f316f6f6392f1638580307")
     version("3.7.0", sha256="d67255148595c6d0ba4c4d241bc9f6b5e00cafe25fdc13e38c10acc38653360a")

@@ -12,6 +12,8 @@ class PyVirtualenvClone(PythonPackage):
     homepage = "https://github.com/edwardgeorge/virtualenv-clone"
     pypi = "virtualenv-clone/virtualenv-clone-0.2.6.tar.gz"
 
+    license("MIT")
+
     version("0.5.7", sha256="418ee935c36152f8f153c79824bb93eaf6f0f7984bae31d3f48f350b9183501a")
     version("0.2.6", sha256="6b3be5cab59e455f08c9eda573d23006b7d6fb41fae974ddaa2b275c93cc4405")
 

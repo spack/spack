@@ -19,6 +19,8 @@ class Beast2(Package):
 
     maintainers("snehring")
 
+    license("LGPL-2.1-or-later")
+
     version(
         "2.7.4",
         sha256="f5086c74a0337190ae3459ef018468fc6b2eff68ae2b53fb5c96eb7b5df84004",

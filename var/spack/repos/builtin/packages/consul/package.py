@@ -14,6 +14,8 @@ class Consul(MakefilePackage):
     homepage = "https://www.consul.io"
     url = "https://github.com/hashicorp/consul/archive/v1.8.1.tar.gz"
 
+    license("MPL-2.0")
+
     version("1.15.3", sha256="5137e9831b4bc094c8ce5be64c661dc0d9a96ee9509d756030d60d4bcca42503")
     version("1.8.1", sha256="c173e9866e6181b3679a942233adade118976414f6ca2da8deaea0fa2bba9b06")
     version("1.8.0", sha256="a87925bde6aecddf532dfd050e907b6a0a6447cdd5dc4f49b46d97c9f73b58f9")

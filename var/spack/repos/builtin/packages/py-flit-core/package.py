@@ -17,6 +17,8 @@ class PyFlitCore(PythonPackage):
 
     maintainers("takluyver")
 
+    license("BSD-3-Clause")
+
     version("3.9.0", sha256="72ad266176c4a3fcfab5f2930d76896059851240570ce9a98733b658cb786eba")
     version("3.8.0", sha256="b305b30c99526df5e63d6022dd2310a0a941a187bd3884f4c8ef0418df6c39f3")
     version("3.7.1", sha256="14955af340c43035dbfa96b5ee47407e377ee337f69e70f73064940d27d0a44f")

@@ -15,6 +15,8 @@ class RProj4(RPackage):
 
     cran = "proj4"
 
+    license("GPL-2.0-only")
+
     version("1.0-12", sha256="4aeb8a54d5b459674093c76068b92dbd3ce99a4e5db8829fbae868c2e43776f8")
     version("1.0-11", sha256="c5f186530267005d53cc2e86849613b254ca4515a8b10310146f712d45a1d11d")
     version("1.0-10.1", sha256="66857cbe5cba4930b18621070f9a7263ea0d8ddc3e5a035a051a1496e4e1da19")

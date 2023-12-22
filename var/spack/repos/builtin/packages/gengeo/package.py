@@ -19,6 +19,8 @@ class Gengeo(AutotoolsPackage):
 
     maintainers("dorton21")
 
+    license("Apache-2.0")
+
     version("163", sha256="9c896d430d8f315a45379d2b82e7d374f36259af66a745bfdee4c022a080d34d")
 
     extends("python")

@@ -14,6 +14,8 @@ class Jchronoss(CMakePackage):
     homepage = "https://jchronoss.hpcframework.com"
     url = "https://fs.paratools.com/mpc/contrib/apps/jchronoss/JCHRONOSS-1.2.tar.gz"
 
+    license("CECILL-C")
+
     version("1.2.1", sha256="ee5620f694d0adb584d19c63da16e284683b89fa76d0fc680c4e5e481cd5766a")
     version("1.2", sha256="52a565a28c0b83b433065060863d29f2b3e4b05f4f26b7a5893a21a2c66d6eba")
     version("1.1.1", sha256="5a11463b7295817f503c58dda1a82c0d3568bdee5e9d13d59e00d337ba84dc45")

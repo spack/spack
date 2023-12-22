@@ -12,6 +12,8 @@ class Liblognorm(AutotoolsPackage):
     homepage = "https://www.liblognorm.com/"
     url = "https://github.com/rsyslog/liblognorm/archive/v2.0.6.tar.gz"
 
+    license("LGPL-2.1-or-later AND Apache-2.0")
+
     version("2.0.6", sha256="594ea3318ef419cb7f21cf81c513db35a838b32207999a11a82b709da9ff9a2b")
     version("2.0.5", sha256="dd779b6992de37995555e1d54caf0716a694765efc65480eed2c713105ab46fe")
     version("2.0.4", sha256="af4d7d8ce11fb99514169f288163f87cb9ade1cb79595656d96b51b2482c493d")

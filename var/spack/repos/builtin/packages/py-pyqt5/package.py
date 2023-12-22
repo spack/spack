@@ -15,6 +15,8 @@ class PyPyqt5(SIPPackage):
     url = "https://files.pythonhosted.org/packages/source/P/PyQt5/PyQt5-5.15.9.tar.gz"
     list_url = "https://pypi.org/simple/PyQt5/"
 
+    license("GPL-3.0-only")
+
     version("5.15.9", sha256="dc41e8401a90dc3e2b692b411bd5492ab559ae27a27424eed4bd3915564ec4c0")
 
     # pyproject.toml

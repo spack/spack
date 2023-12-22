@@ -13,6 +13,8 @@ class Bcache(MakefilePackage):
     homepage = "https://bcache.evilpiepirate.org/"
     url = "https://github.com/g2p/bcache-tools/archive/v1.0.8.tar.gz"
 
+    license("GPL-2.0-only")
+
     version("1.0.8", sha256="d56923936f37287efc57a46315679102ef2c86cd0be5874590320acd48c1201c")
     version("1.0.7", sha256="64d76d1085afba8c3d5037beb67bf9d69ee163f357016e267bf328c0b1807abd")
     version("1.0.6", sha256="9677c6da3ceac4e1799d560617c4d00ea7e9d26031928f8f94b8ab327496d4e0")

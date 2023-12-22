@@ -31,6 +31,8 @@ class Phist(CMakePackage):
     # to provide 'mpi' like this: spack install phist ^mpich %gcc@7.5.0
     # Failure of this command to succeed breaks spack's gitlab CI pipelines!
 
+    license("BSD-3-Clause")
+
     version("develop", branch="devel")
     version("master", branch="master")
 

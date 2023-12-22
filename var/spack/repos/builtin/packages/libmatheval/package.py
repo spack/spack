@@ -17,6 +17,8 @@ class Libmatheval(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/libmatheval/"
     gnu_mirror_path = "libmatheval/libmatheval-1.1.11.tar.gz"
 
+    license("GPL-3.0-or-later")
+
     version("1.1.11", sha256="474852d6715ddc3b6969e28de5e1a5fbaff9e8ece6aebb9dc1cc63e9e88e89ab")
 
     # Only needed for unit tests, but configure crashes without it

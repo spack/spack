@@ -14,6 +14,8 @@ class PyCsvkit(PythonPackage):
     pypi = "csvkit/csvkit-0.9.1.tar.gz"
     git = "https://github.com/wireservice/csvkit.git"
 
+    license("MIT")
+
     version("1.1.1", sha256="beddb7b78f6b22adbed6ead5ad5de4bfb31dd2c55f3211b2a2b3b65529049223")
     version("1.0.4", sha256="1353a383531bee191820edfb88418c13dfe1cdfa9dd3dc46f431c05cd2a260a0")
     version("0.9.1", sha256="92f8b8647becb5cb1dccb3af92a13a4e85702d42ba465ce8447881fb38c9f93a")

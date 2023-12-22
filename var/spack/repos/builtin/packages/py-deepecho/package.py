@@ -13,6 +13,8 @@ class PyDeepecho(PythonPackage):
     homepage = "https://github.com/sdv-dev/DeepEcho"
     pypi = "deepecho/deepecho-0.3.0.post1.tar.gz"
 
+    license("MIT")
+
     version(
         "0.3.0.post1", sha256="9f67373a435b5bcd84441c53eae87a2ba17a27574419a59191f92198f400b914"
     )

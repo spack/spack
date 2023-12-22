@@ -17,6 +17,8 @@ class OfPrecice(Package):
     homepage = "https://precice.org/"
     git = "https://github.com/precice/openfoam-adapter.git"
 
+    license("GPL-3.0-only")
+
     # Currently develop only
     version("develop", branch="master")
 

@@ -14,6 +14,8 @@ class RHms(RPackage):
 
     cran = "hms"
 
+    license("MIT")
+
     version("1.1.3", sha256="e626f4c60af46efd53ea631b316a103e089470d8fd63c0e0c0efb99364990282")
     version("1.1.2", sha256="1ee6a9847336aaf58d3fcee5b56c290c2204e1213b6628862818419b2302bded")
     version("1.1.1", sha256="6b5f30db1845c70d27b5de33f31caa487cdd0787cd80a4073375e5f482269062")

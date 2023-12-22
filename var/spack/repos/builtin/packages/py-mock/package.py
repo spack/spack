@@ -14,6 +14,8 @@ class PyMock(PythonPackage):
     homepage = "https://github.com/testing-cabal/mock"
     pypi = "mock/mock-4.0.3.tar.gz"
 
+    license("BSD-2-Clause")
+
     version("4.0.3", sha256="7d3fbbde18228f4ff2f1f119a45cdffa458b4c0dee32eb4d2bb2f82554bac7bc")
     version("3.0.5", sha256="83657d894c90d5681d62155c82bda9c1187827525880eda8ff5df4ec813437c3")
     version("3.0.3", sha256="5eda46efb363128828d6fd2bf8d16f6ebb66f5b543b9f7f8f4eb224c5cb503fe")

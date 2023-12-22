@@ -20,6 +20,8 @@ class PyOgb(PythonPackage):
 
     maintainers("meyersbs")
 
+    license("MIT")
+
     version("1.3.5", sha256="ac958094ac3019822e742155b82cb2bf02830aa72a4264ba9ee09b288f0c080c")
 
     depends_on("py-setuptools", type="build")

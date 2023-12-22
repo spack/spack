@@ -18,6 +18,8 @@ class Adms(AutotoolsPackage):
 
     maintainers("cessenat")
 
+    license("GPL-3.0-only")
+
     version("master", branch="master")
     version("2.3.7", sha256="3a78e1283ecdc3f356410474b3ff44c4dcc82cb89772087fd3bbde8a1038ce08")
 

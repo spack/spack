@@ -15,6 +15,8 @@ class Omnitrace(CMakePackage):
     git = "https://github.com/AMDResearch/omnitrace.git"
     maintainers("jrmadsen")
 
+    license("MIT")
+
     version("main", branch="main", submodules=True)
     version("1.7.4", commit="12001d9633328f9f56210c7ebffce065bff06310", submodules=True)
     version("1.7.3", commit="2ebfe3fc30f977559142509edc4ea190c975992a", submodules=True)

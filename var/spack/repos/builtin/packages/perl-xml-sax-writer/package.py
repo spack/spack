@@ -15,6 +15,8 @@ class PerlXmlSaxWriter(PerlPackage):
     homepage = "https://metacpan.org/pod/XML::SAX::Writer"
     url = "https://cpan.metacpan.org/authors/id/P/PE/PERIGRIN/XML-SAX-Writer-0.57.tar.gz"
 
+    license("Artistic-1.0")
+
     version("0.57", sha256="3d61d07ef43b0126f5b4de4f415a256fa859fa88dc4fdabaad70b7be7c682cf0")
 
     depends_on("perl-xml-filter-buffertext", type=("build", "run"))

@@ -15,6 +15,8 @@ class RPkgload(RPackage):
 
     cran = "pkgload"
 
+    license("GPL-3.0-only")
+
     version("1.3.2", sha256="35d19a032bfeeefcab92d76a768b4a420c2ede0920badaf48cca878592b46b2f")
     version("1.3.1", sha256="c6b8b70d7b7e194e7d44a42364f0362e971d9ab9c5794c4ae5ed4f9e61b1679a")
     version("1.3.0", sha256="5af653c901662260cc221971cc968355428cc6183b61c15be80aa9545f9f4228")

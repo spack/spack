@@ -13,6 +13,8 @@ class CpuFeatures(CMakePackage):
     git = "https://github.com/google/cpu_features.git"
     url = "https://github.com/google/cpu_features/archive/refs/tags/v0.7.0.tar.gz"
 
+    license("Apache-2.0")
+
     version("main", branch="main")
     version("develop", branch="main", deprecated=True)
     version("0.7.0", sha256="df80d9439abf741c7d2fdcdfd2d26528b136e6c52976be8bd0cd5e45a27262c0")

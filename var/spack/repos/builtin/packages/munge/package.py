@@ -15,6 +15,8 @@ class Munge(AutotoolsPackage):
     url = "https://github.com/dun/munge/releases/download/munge-0.5.14/munge-0.5.14.tar.xz"
     maintainers("ChristianTackeGSI")
 
+    license("LGPL-3.0-only")
+
     version("0.5.15", sha256="3f979df117a34c74db8fe2835521044bdeb08e3b7d0f168ca97c3547f51da9ba")
     version("0.5.14", sha256="6606a218f18090fa1f702e3f6fb608073eb6aafed534cf7dd81b67b2e0d30640")
     version("0.5.13", sha256="99753dfd06a4f063c36f3fb0eb1964f394feb649937d94c4734d85b7964144da")

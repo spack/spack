@@ -12,6 +12,8 @@ class PyRaven(PythonPackage):
     homepage = "https://github.com/getsentry/raven-python"
     pypi = "raven/raven-6.10.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("6.10.0", sha256="3fa6de6efa2493a7c827472e984ce9b020797d0da16f1db67197bcc23c8fae54")
 
     variant("flask", default=False, description="Build flask backend")

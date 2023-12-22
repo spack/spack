@@ -14,6 +14,8 @@ class PyH5sh(PythonPackage):
 
     maintainers("sethrj")
 
+    license("BSD-3-Clause")
+
     version("0.1.1", sha256="ccd8fed532d479d297baef044265100a4fb9cd119bce6f43270f2ee9f63a2183")
 
     depends_on("py-setuptools", type=("build", "run"))

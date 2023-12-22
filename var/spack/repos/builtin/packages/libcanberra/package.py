@@ -14,6 +14,8 @@ class Libcanberra(AutotoolsPackage):
     homepage = "https://0pointer.de/lennart/projects/libcanberra/"
     url = "https://0pointer.de/lennart/projects/libcanberra/libcanberra-0.30.tar.xz"
 
+    license("LGPL-2.1-or-later")
+
     version("0.30", sha256="c2b671e67e0c288a69fc33dc1b6f1b534d07882c2aceed37004bf48c601afa72")
 
     # TODO: Add variants and dependencies for the following audio support:

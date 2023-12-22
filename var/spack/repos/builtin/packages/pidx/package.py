@@ -16,6 +16,8 @@ class Pidx(CMakePackage):
     homepage = "http://www.cedmav.com/pidx"
     git = "https://github.com/sci-visus/PIDX.git"
 
+    license("CC-BY-NC-ND-4.0")
+
     version("1.0", commit="6afa1cf71d1c41263296dc049c8fabaf73c296da")
 
     depends_on("cmake@2.8.4:", type="build")

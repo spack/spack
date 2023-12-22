@@ -15,6 +15,8 @@ class Sam2p(Package):
 
     maintainers("robertu94")
 
+    license("GPL-2.0-or-later")
+
     version("master", branch="master")
     version("2021-05-04", commit="f3e9cc0a2df1880a63f9f37c96e3595bca890cfa")
 

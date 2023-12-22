@@ -12,6 +12,8 @@ class Dysco(CMakePackage):
     homepage = "https://github.com/aroffringa/dysco"
     url = "https://github.com/aroffringa/dysco/archive/v1.2.tar.gz"
 
+    license("GPL-3.0-only")
+
     version("1.2", sha256="dd992c5a13df67173aa1d3f6dc5df9b51b0bea2fe77bc08f5be7a839be741269")
 
     depends_on("casacore")

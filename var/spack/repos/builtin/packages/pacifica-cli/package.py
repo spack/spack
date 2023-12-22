@@ -12,6 +12,8 @@ class PacificaCli(PythonPackage):
     homepage = "https://github.com/pacifica/pacifica-cli/"
     pypi = "pacifica-cli/pacifica-cli-0.5.2.tar.gz"
 
+    license("LGPL-3.0-only")
+
     version("0.5.2", sha256="fee5fa8ac38ffec2e9199bff23afbbae697c4f7554f13e340104f8b20a62843f")
 
     depends_on("py-setuptools", type="build")

@@ -12,6 +12,8 @@ class Kalign(AutotoolsPackage, CMakePackage):
     homepage = "https://github.com/TimoLassmann/kalign"
     url = "https://github.com/TimoLassmann/kalign/archive/refs/tags/v3.3.1.tar.gz"
 
+    license("GPL-3.0-or-later")
+
     version("3.4.0", sha256="67d1a562d54b3b7622cc3164588c05b9e2bf8f1a5140bb48a4e816c61a87d4a8")
     version("3.3.1", sha256="7f10acf9a3fa15deabbc0304e7c14efa25cea39108318c9f02b47257de2d7390")
 

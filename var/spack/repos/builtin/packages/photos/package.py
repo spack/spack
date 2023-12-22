@@ -15,6 +15,8 @@ class Photos(AutotoolsPackage):
 
     tags = ["hep"]
 
+    license("GPL-3.0-only")
+
     version("3.64", sha256="cb4096b4804289fc4d54a992caa566cbbd33f41f65f8906deb01200dc5163027")
     version("3.61", sha256="acd3bcb769ba2a3e263de399e9b89fd6296405c9cbc5045b83baba3e60db4b26")
 

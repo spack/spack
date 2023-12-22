@@ -24,6 +24,8 @@ class RReproducible(RPackage):
 
     maintainers("dorton21")
 
+    license("GPL-3.0-only")
+
     version("1.2.16", sha256="ec504cdc1adf305cd008ce65eff226e3cb60b7a454b2c8b98a871c84458546ae")
     version("1.2.10", sha256="fcee3aeb9d38c561c95df8663614ff0ed91a871719730766171b4ed19c82f729")
     version("1.2.8", sha256="6f453016404f6a2a235cb4d951a29aa7394dc3bd0b9cfc338dc85fb3d5045dd5")

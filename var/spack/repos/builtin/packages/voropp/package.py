@@ -16,6 +16,8 @@ class Voropp(MakefilePackage):
 
     variant("pic", default=True, description="Position independent code")
 
+    license("BSD-3-Clause-LBNL")
+
     version("0.4.6", sha256="ef7970071ee2ce3800daa8723649ca069dc4c71cc25f0f7d22552387f3ea437e")
 
     def edit(self, spec, prefix):

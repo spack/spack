@@ -15,6 +15,8 @@ class RGgvis(RPackage):
 
     cran = "ggvis"
 
+    license("GPL-2.0-only OR custom")
+
     version("0.4.8", sha256="3d5480a0b97a57c26b595785f826b13d7695dab1f1dd8fcf5d7964fa8546a26a")
     version("0.4.7", sha256="9e6b067e11d497c796d42156570e2481afb554c5db265f42afbb74d2ae0865e3")
     version("0.4.4", sha256="1332ea122b768688c8a407a483be80febc4576de0ec8929077738421b27cafaf")

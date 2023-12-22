@@ -13,6 +13,8 @@ class Stringtie(MakefilePackage):
     homepage = "https://ccb.jhu.edu/software/stringtie"
     url = "https://github.com/gpertea/stringtie/archive/v1.3.3b.tar.gz"
 
+    license("MIT")
+
     version("2.2.1", sha256="19592aa37e293f4dcd684a4c6e0a1439ee34876d9f22944fb4edceba8c09631b")
     version("1.3.4d", sha256="0134c0adc264efd31a1df4301b33bfcf3b3fe96bd3990ce3df90819bad9af968")
     version("1.3.4a", sha256="6164a5fa9bf8807ef68ec89f47e3a61fe57fa07fe858f52fb6627f705bf71add")

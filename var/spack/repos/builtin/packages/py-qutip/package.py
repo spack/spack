@@ -13,6 +13,8 @@ class PyQutip(PythonPackage):
     homepage = "https://qutip.org/"
     pypi = "qutip/qutip-4.7.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("4.7.1", sha256="9a87178e68b145c2145b526caa943ccc8400a111325ced45bd17f9b893663af2")
     version("4.7.0", sha256="a9dde64457991ef1c5a7d4186b5348a16a71480a610f1c0902e4d656ddc12e31")
 

@@ -14,6 +14,8 @@ class Libmodbus(AutotoolsPackage):
     homepage = "https://libmodbus.org/"
     url = "https://libmodbus.org/releases/libmodbus-3.0.8.tar.gz"
 
+    license("LGPL-2.1-or-later")
+
     version("3.1.6", sha256="d7d9fa94a16edb094e5fdf5d87ae17a0dc3f3e3d687fead81835d9572cf87c16")
     version("3.1.5", sha256="f7a9538f23a8786b1ee62a4b75879b5c0e194e728350de1b741ce7d595970f06")
     version("3.1.4", sha256="c8c862b0e9a7ba699a49bc98f62bdffdfafd53a5716c0e162696b4bf108d3637")

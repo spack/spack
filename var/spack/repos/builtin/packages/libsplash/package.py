@@ -20,6 +20,8 @@ class Libsplash(CMakePackage):
     git = "https://github.com/ComputationalRadiationPhysics/libSplash.git"
     maintainers("ax3l")
 
+    license("LGPL-3.0-only")
+
     version("develop", branch="dev")
     version("master", branch="master")
     version("1.7.0", sha256="51ab17c54233a8be86d7c5d59c755fb63a4a197315a510e5c49b20b070ebab73")

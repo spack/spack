@@ -15,6 +15,8 @@ class RPlotly(RPackage):
 
     cran = "plotly"
 
+    license("MIT")
+
     version("4.10.1", sha256="ac0921a1cba24e17a0f3a0a28b7a40ac930e17fe5caa9c3973c9a8d1e20c367a")
     version("4.10.0", sha256="bd995c654dbc8c09a84adaba8def99766919e3894caf18b551bb26b2f591389a")
     version("4.9.3", sha256="d44d1a16d96de28bc2d36f1c897384215eeec44d109546c6e9c2707db0880120")

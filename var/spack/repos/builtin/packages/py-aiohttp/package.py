@@ -16,6 +16,8 @@ class PyAiohttp(PythonPackage):
     homepage = "https://github.com/aio-libs/aiohttp"
     pypi = "aiohttp/aiohttp-3.8.1.tar.gz"
 
+    license("Apache-2.0")
+
     version("3.8.4", sha256="bf2e1a9162c1e441bf805a1fd166e249d574ca04e03b34f97e2928769e91ab5c")
     version("3.8.1", sha256="fc5471e1a54de15ef71c1bc6ebe80d4dc681ea600e68bfd1cbce40427f0b7578")
     version("3.8.0", sha256="d3b19d8d183bcfd68b25beebab8dc3308282fe2ca3d6ea3cb4cd101b3c279f8d")

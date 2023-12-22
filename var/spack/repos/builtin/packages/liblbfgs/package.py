@@ -20,6 +20,8 @@ class Liblbfgs(AutotoolsPackage):
 
     maintainers("RemiLacroix-IDRIS")
 
+    license("MIT")
+
     version("master", branch="master")
     version("1.10", sha256="4158ab7402b573e5c69d5f6b03c973047a91e16ca5737d3347e3af9c906868cf")
 

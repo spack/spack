@@ -16,6 +16,8 @@ class Libmesh(AutotoolsPackage):
     url = "https://github.com/libMesh/libmesh/releases/download/v1.0.0/libmesh-1.0.0.tar.bz2"
     git = "https://github.com/libMesh/libmesh.git"
 
+    license("LGPL-2.1-or-later")
+
     version("master", branch="master", submodules=True)
 
     version("1.4.1", sha256="67eb7d5a9c954d891ca1386b70f138333a87a141d9c44213449ca6be69a66414")

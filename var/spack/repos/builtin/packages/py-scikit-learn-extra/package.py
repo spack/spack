@@ -17,6 +17,8 @@ class PyScikitLearnExtra(PythonPackage):
     homepage = "https://github.com/scikit-learn-contrib/scikit-learn-extra"
     pypi = "scikit-learn-extra/scikit-learn-extra-0.2.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.2.0", sha256="3b1bb5fedde47920eb4b3fa0a0c18f80cc7359d9d0496720178788c6153b8019")
 
     # For upperbound see https://github.com/scikit-learn-contrib/scikit-learn-extra/issues/164

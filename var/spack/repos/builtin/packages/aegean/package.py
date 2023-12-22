@@ -15,6 +15,8 @@ class Aegean(MakefilePackage):
     homepage = "https://brendelgroup.github.io/AEGeAn/"
     url = "https://github.com/BrendelGroup/AEGeAn/archive/v0.15.2.tar.gz"
 
+    license("0BSD")
+
     version("0.15.2", sha256="734c9dd23ab3415c3966083bfde5fb72c81e6ace84e08ee3fe0d4c338331d975")
 
     depends_on("genometools")

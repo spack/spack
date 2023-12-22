@@ -15,6 +15,8 @@ class PyBabel(PythonPackage):
     pypi = "Babel/Babel-2.7.0.tar.gz"
     git = "https://github.com/python-babel/babel"
 
+    license("BSD-3-Clause")
+
     version("2.12.1", sha256="cc2d99999cd01d44420ae725a21c9e3711b3aadc7976d6147f622d8581963455")
     version("2.10.3", sha256="7614553711ee97490f732126dc077f8d0ae084ebc6a96e23db1482afabdb2c51")
     version("2.9.1", sha256="bc0c176f9f6a994582230df350aa6e05ba2ebe4b3ac317eab29d9be5d2768da0")

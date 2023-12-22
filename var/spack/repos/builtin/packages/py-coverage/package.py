@@ -12,6 +12,8 @@ class PyCoverage(PythonPackage):
     homepage = "https://github.com/nedbat/coveragepy"
     pypi = "coverage/coverage-4.5.4.tar.gz"
 
+    license("Apache-2.0")
+
     version("7.2.6", sha256="2025f913f2edb0272ef15d00b1f335ff8908c921c8eb2013536fcaf61f5a683d")
     version("6.4.4", sha256="e16c45b726acb780e1e6f88b286d3c10b3914ab03438f32117c4aa52d7f30d58")
     version("6.3.1", sha256="6c3f6158b02ac403868eea390930ae64e9a9a2a5bbfafefbb920d29258d9f2f8")

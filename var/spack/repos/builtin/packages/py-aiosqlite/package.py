@@ -12,6 +12,8 @@ class PyAiosqlite(PythonPackage):
     homepage = "https://aiosqlite.omnilib.dev"
     pypi = "aiosqlite/aiosqlite-0.17.0.tar.gz"
 
+    license("MIT")
+
     version("0.17.0", sha256="f0e6acc24bc4864149267ac82fb46dfb3be4455f99fe21df82609cc6e6baee51")
 
     depends_on("python@3.6:", type=("build", "run"))

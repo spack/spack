@@ -19,6 +19,8 @@ class SpiralPackageSimt(Package):
     # such.  If this package is required spiral-software should be installed
     # with the +simt variant active
 
+    license("BSD-2-Clause-FreeBSD")
+
     version("develop", branch="develop")
     version("main", branch="main")
     version("1.1.0", sha256="4d6a5e586889b9e000968c99f3068ba86a12cc389665c6deadc4734117ef7a95")

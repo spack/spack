@@ -14,6 +14,8 @@ class Kumi(CMakePackage):
     maintainers("jfalcou")
     git = "https://github.com/jfalcou/kumi.git"
 
+    license("BSL-1.0")
+
     version("main", branch="main")
     version("3.0", sha256="166b621e475935d2a3a195d13937a285060812c1fd7a95575a9c7b1dc425f2a1")
     version("2.1", sha256="34fc756780d463db35716e40eecd89b1505917926281262c74af425556a5260c")

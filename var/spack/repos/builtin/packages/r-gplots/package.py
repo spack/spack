@@ -32,6 +32,8 @@ class RGplots(RPackage):
 
     cran = "gplots"
 
+    license("GPL-2.0-only")
+
     version("3.1.3", sha256="9f853b9e205264d087e61e8825f797ce36c9eb585b187dab794563613a526716")
     version("3.1.1", sha256="f9ae19c2574b6d41adbeccaf7bc66cf56d7b2769004daba7e0038d5fbd821339")
     version("3.0.1.1", sha256="7db103f903a25d174cddcdfc7b946039b61e236c95084b90ad17f1a41da3770c")

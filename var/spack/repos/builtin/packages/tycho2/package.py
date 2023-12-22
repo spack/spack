@@ -15,6 +15,8 @@ class Tycho2(MakefilePackage):
     homepage = "https://github.com/lanl/tycho2"
     git = "https://github.com/lanl/tycho2.git"
 
+    license("Unlicense")
+
     version("develop", branch="master")
 
     depends_on("mpi")

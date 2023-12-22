@@ -14,6 +14,8 @@ class PyAtropos(PythonPackage):
     pypi = "atropos/atropos-1.1.22.tar.gz"
     git = "https://github.com/jdidion/atropos.git"
 
+    license("MIT")
+
     version("1.1.22", sha256="05e40cb9337421479c692e1154b962fbf811d7939b72c197a024929b7ae88b78")
 
     depends_on("python@3.3:", type=("build", "run"))

@@ -19,6 +19,8 @@ class RBasiliskUtils(RPackage):
 
     bioc = "basilisk.utils"
 
+    license("GPL-3.0-only")
+
     version("1.12.0", commit="8314f9a72ecc0f20b180431aec93647320de8c2c")
 
     depends_on("r-dir-expiry", type=("build", "run"))

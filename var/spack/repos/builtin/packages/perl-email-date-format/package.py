@@ -15,6 +15,8 @@ class PerlEmailDateFormat(PerlPackage):
 
     maintainers("EbiArnie")
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("1.008", sha256="432b7c83ff88749af128003f5257c573aec1a463418db90ed22843cbbc258b4f")
 
     depends_on("perl@5.12.0:", type=("build", "link", "run", "test"))

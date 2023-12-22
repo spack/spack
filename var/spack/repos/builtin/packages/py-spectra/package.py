@@ -11,6 +11,8 @@ class PySpectra(PythonPackage):
 
     pypi = "spectra/spectra-0.0.8.tar.gz"
 
+    license("MIT")
+
     version("0.0.11", sha256="8eb362a5187cb63cee13cd01186799c0c791a3ad3bec57b279132e12521762b8")
     version("0.0.8", sha256="851b88c9c0bba84e0be1fce5b9c02a7b4ef139a2b3e590b0d082d679e19f0759")
 

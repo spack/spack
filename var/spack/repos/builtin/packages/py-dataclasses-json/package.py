@@ -12,6 +12,8 @@ class PyDataclassesJson(PythonPackage):
     homepage = "https://github.com/lidatong/dataclasses-json"
     pypi = "dataclasses_json/dataclasses_json-0.5.12.tar.gz"
 
+    license("MIT")
+
     version("0.5.12", sha256="70e28da52e36f4be6b724e1f1e77fbcd19e0e0a6bf9a4c4c6e5abf713d4dab5a")
 
     depends_on("python@3.7:3.11", type=("build", "run"))

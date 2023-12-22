@@ -13,6 +13,8 @@ class PyLws(PythonPackage):
     homepage = "https://pypi.org/project/lws/"
     pypi = "lws/lws-1.2.6.tar.gz"
 
+    license("Apache-2.0")
+
     version("1.2.6", sha256="ac94834832aadfcd53fcf4a77e1d95155063b39adbce14c733f8345bdac76e87")
 
     depends_on("python@3:", type=("build", "run"))

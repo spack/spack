@@ -15,6 +15,8 @@ class PyThreadpoolctl(PythonPackage):
     homepage = "https://github.com/joblib/threadpoolctl"
     pypi = "threadpoolctl/threadpoolctl-2.0.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("3.1.0", sha256="a335baacfaa4400ae1f0d8e3a58d6674d2f8828e3716bb2802c44955ad391380")
     version("3.0.0", sha256="d03115321233d0be715f0d3a5ad1d6c065fe425ddc2d671ca8e45e9fd5d7a52a")
     version("2.0.0", sha256="48b3e3e9ee079d6b5295c65cbe255b36a3026afc6dde3fb49c085cd0c004bbcf")

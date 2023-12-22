@@ -17,6 +17,8 @@ class PyAbcpy(PythonPackage):
     homepage = "https://github.com/eth-cscs/abcpy"
     pypi = "abcpy/abcpy-0.6.3.tar.gz"
 
+    license("BSD-3-Clause-Clear")
+
     version("0.6.3", sha256="14cd959f3ccff8f5fd1d16239b8706cc8d1c1e2fe25d72855f500f005de41245")
 
     depends_on("python@3.6:", type=("build", "run"))

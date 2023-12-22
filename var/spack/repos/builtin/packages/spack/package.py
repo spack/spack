@@ -21,6 +21,8 @@ class Spack(Package):
     url = "https://github.com/spack/spack/releases/download/v0.16.2/spack-0.16.2.tar.gz"
     maintainers("haampie")
 
+    license("Apache-2.0")
+
     version("develop", branch="develop")
     version("0.20.1", sha256="141be037b56e4b095840a95ac51c428c29dad078f7f88140ae6355b2a1b32dc3")
     version("0.20.0", sha256="a189b4e8173eefdf76617445125b329d912f730767048846c38c8a2637396a7d")

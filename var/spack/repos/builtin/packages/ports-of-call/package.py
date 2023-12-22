@@ -15,6 +15,8 @@ class PortsOfCall(CMakePackage):
 
     maintainers("rbberger")
 
+    license("BSD-3-Clause")
+
     version("main", branch="main")
     version("1.5.2", sha256="73d16fe9236a9475010dbb01bf751c15bef01eb2e15bf92c8d9be2c0a606329f")
     version("1.5.1", sha256="b1f0232cd6d2aac65385d77cc061ec5035283ea50d0f167e7003eae034effb78")

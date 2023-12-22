@@ -12,6 +12,8 @@ class DhpmmF(MakefilePackage):
     homepage = "http://www.math.twcu.ac.jp/ogita/post-k/"
     url = "http://www.math.twcu.ac.jp/ogita/post-k/software/DHPMM_F/DHPMM_F_alpha.tar.gz"
 
+    license("MIT")
+
     version("alpha", sha256="35321ecbc749f2682775ffcd27833afc8c8eb4fa7753ce769727c9d1fe097848")
 
     depends_on("blas", type="link")

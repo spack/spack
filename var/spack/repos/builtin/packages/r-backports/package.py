@@ -18,6 +18,8 @@ class RBackports(RPackage):
 
     cran = "backports"
 
+    license("GPL-2.0-only OR GPL-3.0-only")
+
     version("1.4.1", sha256="845c3c59fbb05e5a892c4231b955a0afdd331d82b7cc815bcff0672023242474")
     version("1.4.0", sha256="e7611565d24a852ad8b08579a7c67ad9121c1bda148bade98c7bec686e8dabbf")
     version("1.2.1", sha256="a2834bbd57e305e5d8010322f1906ea1789b3b5ba5eca77c5ff4248aceb7c2d5")

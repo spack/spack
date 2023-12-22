@@ -13,6 +13,8 @@ class RBibtex(RPackage):
 
     cran = "bibtex"
 
+    license("GPL-2.0-or-later")
+
     version("0.5.1", sha256="f3c1a0a4e666c4addd73ff13ce8ce073d73d10ebca36d333328ade8a0b493ed1")
     version("0.5.0", sha256="ec81b4ee5b43f2114afd18d266f4633451abe20013422eb03848f00924b79167")
     version("0.4.2.3", sha256="7bad194920b412781ac9754ad41058d52d3cd7186e1851c2bce3640490e9bc6d")

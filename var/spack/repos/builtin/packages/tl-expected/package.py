@@ -15,6 +15,8 @@ class TlExpected(CMakePackage):
 
     maintainers("charmoniumQ")
 
+    license("CC0-1.0")
+
     # Note that the 1.0.0 has this issue:
     # https://github.com/TartanLlama/expected/issues/114
     # But no new patch version has been released,

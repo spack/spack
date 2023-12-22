@@ -18,6 +18,8 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("simonpintarelli", "haampie", "dev-zero", "AdhocMan", "toxa81")
 
+    license("BSD-2-Clause")
+
     version("develop", branch="develop")
     version("master", branch="master")
 

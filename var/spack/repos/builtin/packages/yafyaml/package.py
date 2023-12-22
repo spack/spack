@@ -26,6 +26,8 @@ class Yafyaml(CMakePackage):
 
     maintainers("mathomp4", "tclune")
 
+    license("Apache-2.0")
+
     version("main", branch="main")
 
     version("1.2.0", sha256="912a4248bbf2e2e84cf3e36f2ae8483bee6b32d2eaa4406dd2100ad660c9bfc6")

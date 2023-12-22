@@ -15,6 +15,8 @@ class PyGriffe(PythonPackage):
     homepage = "https://mkdocstrings.github.io/griffe/"
     pypi = "griffe/griffe-0.22.0.tar.gz"
 
+    license("ISC")
+
     version("0.22.0", sha256="a3c25a2b7bf729ecee7cd455b4eff548f01c620b8f58a8097a800caad221f12e")
 
     depends_on("python@3.7:", type=("build", "run"))

@@ -17,6 +17,8 @@ class BerkeleyDb(AutotoolsPackage):
 
     executables = [r"^db_load$"]  # One should be sufficient
 
+    license("UPL-1.0")
+
     version("18.1.40", sha256="0cecb2ef0c67b166de93732769abdeba0555086d51de1090df325e18ee8da9c8")
     version(
         "18.1.32",

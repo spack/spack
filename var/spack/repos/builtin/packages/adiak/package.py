@@ -19,6 +19,8 @@ class Adiak(CMakePackage):
     variant("mpi", default=True, description="Build with MPI support")
     variant("shared", default=True, description="Build dynamic libraries")
 
+    license("MIT")
+
     version(
         "0.4.0", commit="7e8b7233f8a148b402128ed46b2f0c643e3b397e", submodules=True, preferred=True
     )

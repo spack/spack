@@ -12,6 +12,8 @@ class PyOpenpyxl(PythonPackage):
     homepage = "https://openpyxl.readthedocs.org/"
     pypi = "openpyxl/openpyxl-3.1.2.tar.gz"
 
+    license("MIT")
+
     version("3.1.2", sha256="a6f5977418eff3b2d5500d54d9db50c8277a368436f4e4f8ddb1be3422870184")
     version("3.0.7", sha256="6456a3b472e1ef0facb1129f3c6ef00713cebf62e736cd7a75bcc3247432f251")
     version("3.0.3", sha256="547a9fc6aafcf44abe358b89ed4438d077e9d92e4f182c87e2dc294186dc4b64")

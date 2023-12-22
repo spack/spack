@@ -12,6 +12,8 @@ class PyCffconvert(PythonPackage):
     homepage = "https://github.com/citation-file-format/cff-converter-python"
     pypi = "cffconvert/cffconvert-2.0.0.tar.gz"
 
+    license("Apache-2.0")
+
     version("2.0.0", sha256="b4379ee415c6637dc9e3e7ba196605cb3cedcea24613e4ea242c607d9e98eb50")
 
     depends_on("python@3.6:", type=("build", "run"))

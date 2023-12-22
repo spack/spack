@@ -13,6 +13,8 @@ class RGgnewscale(RPackage):
 
     cran = "ggnewscale"
 
+    license("GPL-3.0-only")
+
     version("0.4.8", sha256="c7fefa6941ecbc789507e59be13fa96327fe2549681a938c43beb06ca22a9700")
 
     depends_on("r-ggplot2@3.0.0:", type=("build", "run"))
