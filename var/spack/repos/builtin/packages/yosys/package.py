@@ -62,9 +62,9 @@ class Yosys(MakefilePackage):
     def edit(self, spec, prefix):
         makefile = FileFilter("Makefile")
 
-        makefile.filter(r"ENABLE_ABC :=", f"ENABLE_ABC ?=")
-        makefile.filter(r"ENABLE_CCACHE :=", f"ENABLE_CCACHE ?=")
-
+        makefile.filter(r"ENABLE_ABC :=",  "ENABLE_ABC ?=")
+        makefile.filter(r"ENABLE_CCACHE :=",  "ENABLE_CCACHE ?=")
+    
     def setup_build_environment(self, env):
         env.set("PREFIX", self.prefix)
         env.set("CXXFLAGS", f'-I{self.spec["readline"].prefix.include}')
