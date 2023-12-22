@@ -15,6 +15,8 @@ class PyMypy(PythonPackage):
 
     maintainers("adamjstewart")
 
+    version("1.8.0", sha256="6ff8b244d7085a0b425b56d327b480c3b29cafbd2eff27316a004f9a7391ae07")
+    version("1.7.1", sha256="fcb6d9afb1b6208b4c712af0dafdc650f518836065df0d4fb1d800f5d6773db2")
     version("1.7.0", sha256="1e280b5697202efa698372d2f39e9a6713a0395a756b1c6bd48995f8d72690dc")
     version("1.6.1", sha256="4d01c00d09a0be62a4ca3f933e315455bde83f37f892ba4b08ce92f3cf44bcc1")
     version("1.6.0", sha256="4f3d27537abde1be6d5f2c96c29a454da333a2a271ae7d5bc7110e6d4b7beb3f")
