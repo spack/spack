@@ -734,3 +734,38 @@ def test_conditional_value_comparable_to_bool(other):
     value = spack.variant.Value("98", when="@1.0")
     comparison = value == other
     assert comparison is False
+
+
+@pytest.mark.regression("40405")
+def test_wild_card_valued_variants_equivalent_to_str():
+    str_var = spack.variant.Variant(
+        name="str_var",
+        default="none",
+        values=str,
+        description="str variant",
+        multi=True,
+        validator=None,
+    )
+
+    wild_var = spack.variant.Variant(
+        name="wild_var",
+        default="none",
+        values="*",
+        description="* variant",
+        multi=True,
+        validator=None,
+    )
+
+    several_arbitrary_values=("doe", "re", "mi")
+    # "*" case
+    wild_output = wild_var.make_variant(several_arbitrary_values)
+    wild_var.validate_or_raise(wild_output)
+    # str case
+    str_output = str_var.make_variant(several_arbitrary_values)
+    str_var.validate_or_raise(str_output)
+    # swap and validate outputs
+    # must swap names to ensure the contents are the same
+    str_output.name = wild_var.name
+    wild_output.name = str_var.name
+    str_var.validate_or_raise(wild_output)
+    wild_var.validate_or_raise(str_output)
