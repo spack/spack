@@ -738,6 +738,12 @@ def test_conditional_value_comparable_to_bool(other):
 
 @pytest.mark.regression("40405")
 def test_wild_card_valued_variants_equivalent_to_str():
+    """
+    There was a bug prioro to PR 40406 in that variants with wildcard values "*"
+    were being overwritten in the variant constructor.
+    The expected/appropriate behavior is for it to behave like value=str and this
+    test demonstrates that the two are now equivalent
+    """
     str_var = spack.variant.Variant(
         name="str_var",
         default="none",
@@ -763,9 +769,5 @@ def test_wild_card_valued_variants_equivalent_to_str():
     # str case
     str_output = str_var.make_variant(several_arbitrary_values)
     str_var.validate_or_raise(str_output)
-    # swap and validate outputs
-    # must swap names to ensure the contents are the same
-    str_output.name = wild_var.name
-    wild_output.name = str_var.name
-    str_var.validate_or_raise(wild_output)
-    wild_var.validate_or_raise(str_output)
+    # equivalence each instance already validated
+    assert str_output.value == wild_output.value
