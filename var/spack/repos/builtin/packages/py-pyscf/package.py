@@ -34,7 +34,6 @@ class PyPyscf(PythonPackage):
     conflicts("^py-numpy@1.16:1.17", when="@2:")
     depends_on("py-scipy@0.12:", type=("build", "run"))
     depends_on("py-scipy@0.19:", type=("build", "run"), when="@2.1:")
-    depends_on("py-scipy@:1.1.0", when="^python@:3.7 platform=darwin", type=("build", "run"))
     conflicts("^py-scipy@1.5.0:1.5.1", when="@2:")
     depends_on("py-h5py@2.3.0:", type=("build", "run"))
     depends_on("py-h5py@2.7.0:", type=("build", "run"), when="@2:")
