@@ -12,6 +12,7 @@ class PyNeurodamus(PythonPackage):
     git = "https://github.com/BlueBrain/neurodamus.git"
 
     version("develop", branch="main")
+    version("2.17.0", tag="2.17.0")
     version("2.16.6", tag="2.16.6")
     version("2.16.5", tag="2.16.5")
     version("2.16.4", tag="2.16.4")
