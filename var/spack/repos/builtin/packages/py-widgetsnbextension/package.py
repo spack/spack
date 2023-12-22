@@ -20,8 +20,7 @@ class PyWidgetsnbextension(PythonPackage):
     version("1.2.6", sha256="c618cfb32978c9517caf0b4ef3aec312f8dd138577745e7b0d4abfcc7315ce51")
 
     depends_on("py-setuptools", type="build")
-    # TODO: replace this after concretizer learns how to concretize separate build deps
-    depends_on("py-jupyter-packaging11", when="@4.0.3:", type="build")
+    depends_on("py-jupyter-packaging@0.10:0", when="@4.0.3:", type="build")
 
     depends_on("python@2.7:2.8,3.3:", type=("build", "run"))
     depends_on("python@3.7:", when="@4.0.3:", type=("build", "run"))

@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
 import pathlib
 
 import pytest
@@ -15,6 +16,7 @@ import spack.util.spack_yaml as syaml
 import spack.version
 from spack.solver.asp import InternalConcretizerError, UnsatisfiableSpecError
 from spack.spec import Spec
+from spack.test.conftest import create_test_repo
 from spack.util.url import path_to_file_url
 
 pytestmark = [
@@ -91,30 +93,13 @@ class U(Package):
 
 
 @pytest.fixture
-def create_test_repo(tmpdir, mutable_config):
-    repo_path = str(tmpdir)
-    repo_yaml = tmpdir.join("repo.yaml")
-    with open(str(repo_yaml), "w") as f:
-        f.write(
-            """\
-repo:
-  namespace: testcfgrequirements
-"""
-        )
-
-    packages_dir = tmpdir.join("packages")
-    for pkg_name, pkg_str in [_pkgx, _pkgy, _pkgv, _pkgt, _pkgu]:
-        pkg_dir = packages_dir.ensure(pkg_name, dir=True)
-        pkg_file = pkg_dir.join("package.py")
-        with open(str(pkg_file), "w") as f:
-            f.write(pkg_str)
-
-    yield spack.repo.Repo(repo_path)
+def _create_test_repo(tmpdir, mutable_config):
+    yield create_test_repo(tmpdir, [_pkgx, _pkgy, _pkgv, _pkgt, _pkgu])
 
 
 @pytest.fixture
-def test_repo(create_test_repo, monkeypatch, mock_stage):
-    with spack.repo.use_repositories(create_test_repo) as mock_repo_path:
+def test_repo(_create_test_repo, monkeypatch, mock_stage):
+    with spack.repo.use_repositories(_create_test_repo) as mock_repo_path:
         yield mock_repo_path
 
 
@@ -299,9 +284,14 @@ packages:
     assert s1.satisfies("@2.2")
 
 
+@pytest.mark.parametrize("require_checksum", (True, False))
 def test_requirement_adds_git_hash_version(
-    concretize_scope, test_repo, mock_git_version_info, monkeypatch
+    require_checksum, concretize_scope, test_repo, mock_git_version_info, monkeypatch, working_env
 ):
+    # A full commit sha is a checksummed version, so this test should pass in both cases
+    if require_checksum:
+        os.environ["SPACK_CONCRETIZER_REQUIRE_CHECKSUM"] = "yes"
+
     repo_path, filename, commits = mock_git_version_info
     monkeypatch.setattr(
         spack.package_base.PackageBase, "git", path_to_file_url(repo_path), raising=False
@@ -463,16 +453,22 @@ packages:
 
 
 @pytest.mark.regression("34241")
-def test_require_cflags(concretize_scope, test_repo):
+def test_require_cflags(concretize_scope, mock_packages):
     """Ensures that flags can be required from configuration."""
     conf_str = """\
 packages:
-  y:
+  mpich2:
     require: cflags="-g"
+  mpi:
+    require: mpich cflags="-O1"
 """
     update_packages_config(conf_str)
-    spec = Spec("y").concretized()
-    assert spec.satisfies("cflags=-g")
+
+    spec_mpich2 = Spec("mpich2").concretized()
+    assert spec_mpich2.satisfies("cflags=-g")
+
+    spec_mpi = Spec("mpi").concretized()
+    assert spec_mpi.satisfies("mpich cflags=-O1")
 
 
 def test_requirements_for_package_that_is_not_needed(concretize_scope, test_repo):
@@ -518,7 +514,7 @@ packages:
     assert s2.satisfies("@2.5")
 
 
-def test_reuse_oneof(concretize_scope, create_test_repo, mutable_database, fake_installs):
+def test_reuse_oneof(concretize_scope, _create_test_repo, mutable_database, fake_installs):
     conf_str = """\
 packages:
   y:
@@ -526,7 +522,7 @@ packages:
     - one_of: ["@2.5", "%gcc"]
 """
 
-    with spack.repo.use_repositories(create_test_repo):
+    with spack.repo.use_repositories(_create_test_repo):
         s1 = Spec("y@2.5%gcc").concretized()
         s1.package.do_install(fake=True, explicit=True)
 
@@ -537,21 +533,37 @@ packages:
             assert not s2.satisfies("@2.5 %gcc")
 
 
-def test_requirements_are_higher_priority_than_deprecation(concretize_scope, test_repo):
-    """Test that users can override a deprecated version with a requirement."""
-    # @2.3 is a deprecated versions. Ensure that any_of picks both constraints,
+@pytest.mark.parametrize(
+    "allow_deprecated,expected,not_expected",
+    [(True, ["@=2.3", "%gcc"], []), (False, ["%gcc"], ["@=2.3"])],
+)
+def test_requirements_and_deprecated_versions(
+    allow_deprecated, expected, not_expected, concretize_scope, test_repo
+):
+    """Tests the expected behavior of requirements and deprecated versions.
+
+    If deprecated versions are not allowed, concretization should just pick
+    the other requirement.
+
+    If deprecated versions are allowed, both requirements are honored.
+    """
+    # 2.3 is a deprecated versions. Ensure that any_of picks both constraints,
     # since they are possible
     conf_str = """\
 packages:
   y:
     require:
-    - any_of: ["@2.3", "%gcc"]
+    - any_of: ["@=2.3", "%gcc"]
 """
     update_packages_config(conf_str)
 
-    s1 = Spec("y").concretized()
-    assert s1.satisfies("@2.3")
-    assert s1.satisfies("%gcc")
+    with spack.config.override("config:deprecated", allow_deprecated):
+        s1 = Spec("y").concretized()
+        for constrain in expected:
+            assert s1.satisfies(constrain)
+
+        for constrain in not_expected:
+            assert not s1.satisfies(constrain)
 
 
 @pytest.mark.parametrize("spec_str,requirement_str", [("x", "%gcc"), ("x", "%clang")])
@@ -868,3 +880,134 @@ compilers::
     # This package can only be compiled with clang
     with pytest.raises(spack.error.SpackError, match="can only be compiled with Clang"):
         Spec("requires_clang").concretized()
+
+
+@pytest.mark.parametrize(
+    "packages_yaml",
+    [
+        # Simple string
+        """
+        packages:
+          all:
+            require: "+shared"
+    """,
+        # List of strings
+        """
+        packages:
+          all:
+            require:
+            - "+shared"
+    """,
+        # Objects with attributes
+        """
+        packages:
+          all:
+            require:
+            - spec: "+shared"
+    """,
+        """
+        packages:
+          all:
+            require:
+            - one_of: ["+shared"]
+    """,
+    ],
+)
+def test_default_requirements_semantic(packages_yaml, concretize_scope, mock_packages):
+    """Tests that requirements under 'all:' are by default applied only if the variant/property
+    required exists, but are strict otherwise.
+
+    For example:
+
+      packages:
+        all:
+          require: "+shared"
+
+    should enforce the value of "+shared" when a Boolean variant named "shared" exists. This is
+    not overridable from the command line, so with the configuration above:
+
+    > spack spec zlib~shared
+
+    is unsatisfiable.
+    """
+    update_packages_config(packages_yaml)
+
+    # Regular zlib concretize to +shared
+    s = Spec("zlib").concretized()
+    assert s.satisfies("+shared")
+
+    # If we specify the variant we can concretize only the one matching the constraint
+    s = Spec("zlib +shared").concretized()
+    assert s.satisfies("+shared")
+    with pytest.raises(UnsatisfiableSpecError):
+        Spec("zlib ~shared").concretized()
+
+    # A spec without the shared variant still concretize
+    s = Spec("a").concretized()
+    assert not s.satisfies("a +shared")
+    assert not s.satisfies("a ~shared")
+
+
+@pytest.mark.parametrize(
+    "packages_yaml,spec_str,expected,not_expected",
+    [
+        # The package has a 'libs' mv variant defaulting to 'libs=shared'
+        (
+            """
+        packages:
+          all:
+            require: "+libs"
+    """,
+            "multivalue-variant",
+            ["libs=shared"],
+            ["libs=static", "+libs"],
+        ),
+        (
+            """
+        packages:
+          all:
+            require: "libs=foo"
+    """,
+            "multivalue-variant",
+            ["libs=shared"],
+            ["libs=static", "libs=foo"],
+        ),
+        (
+            # (TODO): revisit this case when we'll have exact value semantic for mv variants
+            """
+        packages:
+          all:
+            require: "libs=static"
+    """,
+            "multivalue-variant",
+            ["libs=static", "libs=shared"],
+            [],
+        ),
+        (
+            # Constraint apply as a whole, so having a non-existing variant
+            # invalidate the entire constraint
+            """
+        packages:
+          all:
+            require: "libs=static +feefoo"
+    """,
+            "multivalue-variant",
+            ["libs=shared"],
+            ["libs=static"],
+        ),
+    ],
+)
+def test_default_requirements_semantic_with_mv_variants(
+    packages_yaml, spec_str, expected, not_expected, concretize_scope, mock_packages
+):
+    """Tests that requirements under 'all:' are behaving correctly under cases that could stem
+    from MV variants.
+    """
+    update_packages_config(packages_yaml)
+    s = Spec(spec_str).concretized()
+
+    for constraint in expected:
+        assert s.satisfies(constraint), constraint
+
+    for constraint in not_expected:
+        assert not s.satisfies(constraint), constraint

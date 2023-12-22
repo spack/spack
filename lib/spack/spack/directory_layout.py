@@ -104,7 +104,7 @@ class DirectoryLayout:
         _check_concrete(spec)
 
         projection = spack.projections.get_projection(self.projections, spec)
-        path = spec.format(projection)
+        path = spec.format_path(projection)
         return str(Path(path))
 
     def write_spec(self, spec, path):
@@ -120,10 +120,8 @@ class DirectoryLayout:
         versioning. We use it in the case that an analysis later needs to
         easily access this information.
         """
-        from spack.util.environment import get_host_environment_metadata
-
         env_file = self.env_metadata_path(spec)
-        environ = get_host_environment_metadata()
+        environ = spack.spec.get_host_environment_metadata()
         with open(env_file, "w") as fd:
             sjson.dump(environ, fd)
 

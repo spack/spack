@@ -10,7 +10,12 @@ class Libuv(AutotoolsPackage):
 
     homepage = "https://libuv.org"
     url = "https://dist.libuv.org/dist/v1.44.1/libuv-v1.44.1-dist.tar.gz"
+    list_url = "https://dist.libuv.org/dist"
+    list_depth = 1
 
+    version("1.46.0", sha256="94f101111ef3209340d7f09c2aa150ddb4feabd2f9d87d47d9f5bded835b8094")
+    version("1.45.0", sha256="3793d8c0d6fa587721d010d0555b7e82443fd4e8b3c91e529eb6607592f52b87")
+    version("1.44.2", sha256="8ff28f6ac0d6d2a31d2eeca36aff3d7806706c7d3f5971f5ee013ddb0bdd2e9e")
     version("1.44.1", sha256="b7293cefb470e17774dcf5d62c4c969636172726155b55ceef5092b7554863cc")
     version("1.44.0", sha256="6c52494401cfe8d08fb4ec245882f0bd4b1572b5a8e79d6c418b855422a1a27d")
     version("1.43.0", sha256="90d72bb7ae18de2519d0cac70eb89c319351146b90cd3f91303a492707e693a4")

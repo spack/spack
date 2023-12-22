@@ -10,12 +10,13 @@ class PyFiona(PythonPackage):
     """Fiona reads and writes spatial data files."""
 
     homepage = "https://github.com/Toblerity/Fiona"
-    pypi = "Fiona/Fiona-1.8.18.tar.gz"
+    pypi = "fiona/fiona-1.9.5.tar.gz"
     git = "https://github.com/Toblerity/Fiona.git"
 
     maintainers("adamjstewart")
 
     version("master", branch="master")
+    version("1.9.5", sha256="99e2604332caa7692855c2ae6ed91e1fffdf9b59449aa8032dd18e070e59a2f7")
     version("1.9.4", sha256="49f18cbcd3b1f97128c1bb038c3451b2e1be25baa52f02ce906c25cf75af95b6")
     version("1.9.3", sha256="60f3789ad9633c3a26acf7cbe39e82e3c7a12562c59af1d599fc3e4e8f7f8f25")
     version("1.9.2", sha256="f9263c5f97206bf2eb2c010d52e8ffc54e96886b0e698badde25ff109b32952a")
@@ -27,11 +28,13 @@ class PyFiona(PythonPackage):
     version("1.8.18", sha256="b732ece0ff8886a29c439723a3e1fc382718804bb057519d537a81308854967a")
 
     # pyproject.toml
-    depends_on("python@3.7:", when="@1.9:", type=("build", "link", "run"))
-    depends_on("python@2.6:", when="@1.8.22:1.8", type=("build", "link", "run"))
-    depends_on("python@2.6:3.10", when="@1.8.21", type=("build", "link", "run"))
-    depends_on("python@2.6:3.9", when="@:1.8.20", type=("build", "link", "run"))
-    depends_on("py-cython@0.29.29:0.29", when="@1.9:", type="build")
+    depends_on("python@:3.10", when="@1.8.21", type=("build", "link", "run"))
+    depends_on("python@:3.9", when="@:1.8.20", type=("build", "link", "run"))
+    depends_on("py-cython", type="build")
+    # Overly strict version requirements
+    # depends_on("py-cython@3.0.2:3", when="@1.9.5:", type="build")
+    # depends_on("py-cython@0.29.29:0.29", when="@1.9.0:1.9.4", type="build")
+    depends_on("py-setuptools@67.8:", when="@1.9.5:", type="build")
     depends_on("py-setuptools@61:", when="@1.9:", type="build")
     depends_on("py-attrs@19.2:", when="@1.9:", type=("build", "run"))
     depends_on("py-attrs@17:", type=("build", "run"))
@@ -43,12 +46,20 @@ class PyFiona(PythonPackage):
     depends_on("py-importlib-metadata", when="@1.9.2: ^python@:3.9", type=("build", "run"))
     depends_on("py-six", when="@1.9.4:", type=("build", "run"))
     depends_on("py-six@1.7:", when="@:1.8", type=("build", "run"))
+    depends_on("py-setuptools", when="@:1.9.1,1.9.5:", type="run")
 
     # setup.py or release notes
     depends_on("gdal@3.1:", when="@1.9:", type=("build", "link", "run"))
     depends_on("gdal@1.8:", type=("build", "link", "run"))
 
     # Historical dependencies
-    depends_on("py-setuptools", when="@:1.9.1", type=("build", "run"))
     depends_on("py-munch@2.3.2:", when="@1.9.0:1.9.3", type=("build", "run"))
     depends_on("py-munch", when="@:1.8", type=("build", "run"))
+
+    def url_for_version(self, version):
+        url = "https://files.pythonhosted.org/packages/source/{0}/{0}iona/{0}iona-{1}.tar.gz"
+        if version >= Version("1.9.5"):
+            letter = "f"
+        else:
+            letter = "F"
+        return url.format(letter, version)

@@ -5,7 +5,6 @@
 
 import os
 import re
-import sys
 
 import llnl.util.lang
 
@@ -39,10 +38,10 @@ class Clang(Compiler):
     cxx_names = ["clang++"]
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ["flang", "gfortran", "xlf_r"]
+    f77_names = ["flang"]
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ["flang", "gfortran", "xlf90_r"]
+    fc_names = ["flang"]
 
     version_argument = "--version"
 
@@ -56,7 +55,6 @@ class Clang(Compiler):
             "-gdwarf-5",
             "-gline-tables-only",
             "-gmodules",
-            "-gz",
             "-g",
         ]
 
@@ -182,16 +180,3 @@ class Clang(Compiler):
         if match:
             ver = match.group(match.lastindex)
         return ver
-
-    @classmethod
-    def fc_version(cls, fc):
-        # We could map from gcc/gfortran version to clang version, but on macOS
-        # we normally mix any version of gfortran with any version of clang.
-        if sys.platform == "darwin":
-            return cls.default_version("clang")
-        else:
-            return cls.default_version(fc)
-
-    @classmethod
-    def f77_version(cls, f77):
-        return cls.fc_version(f77)

@@ -27,6 +27,16 @@ class Mash(AutotoolsPackage):
     depends_on("capnproto")
     depends_on("gsl")
 
+    def patch(self):
+        if self.spec.satisfies("target=aarch64:"):
+            filter_file(
+                "CXXFLAGS += -include src/mash/memcpyLink.h -Wl,--wrap=memcpy",
+                "",
+                "Makefile.in",
+                string=True,
+            )
+            filter_file("CFLAGS += -include src/mash/memcpyLink.h", "", "Makefile.in", string=True)
+
     def configure_args(self):
         args = []
         args.append("--with-capnp=" + self.spec["capnproto"].prefix)

@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 
 import pytest
 
@@ -20,7 +21,10 @@ install = spack.main.SpackCommand("install")
 #: Class of the writer tested in this module
 writer_cls = spack.modules.lmod.LmodModulefileWriter
 
-pytestmark = pytest.mark.not_on_windows("does not run on windows")
+pytestmark = [
+    pytest.mark.not_on_windows("does not run on windows"),
+    pytest.mark.usefixtures("mock_modules_root"),
+]
 
 
 @pytest.fixture(params=["clang@=12.0.0", "gcc@=10.2.1"])
@@ -433,3 +437,84 @@ class TestLmod:
         path = module.layout.filename
 
         assert str(spec.os) not in path
+
+    def test_hide_implicits(self, module_configuration, temporary_store):
+        """Tests the addition and removal of hide command in modulerc."""
+        module_configuration("hide_implicits")
+
+        spec = spack.spec.Spec("mpileaks@2.3").concretized()
+
+        # mpileaks is defined as implicit, thus hide command should appear in modulerc
+        writer = writer_cls(spec, "default", False)
+        writer.write()
+        assert os.path.exists(writer.layout.modulerc)
+        with open(writer.layout.modulerc) as f:
+            content = [line.strip() for line in f.readlines()]
+        hide_implicit_mpileaks = f'hide_version("{writer.layout.use_name}")'
+        assert len([x for x in content if hide_implicit_mpileaks == x]) == 1
+
+        # The direct dependencies are all implicitly installed, and they should all be hidden,
+        # except for mpich, which is provider for mpi, which is in the hierarchy, and therefore
+        # can't be hidden. All other hidden modules should have a 7 character hash (the config
+        # hash_length = 0 only applies to exposed modules).
+        with open(writer.layout.filename) as f:
+            depends_statements = [line.strip() for line in f.readlines() if "depends_on" in line]
+            for dep in spec.dependencies(deptype=("link", "run")):
+                if dep.satisfies("mpi"):
+                    assert not any(dep.dag_hash(7) in line for line in depends_statements)
+                else:
+                    assert any(dep.dag_hash(7) in line for line in depends_statements)
+
+        # when mpileaks becomes explicit, its file name changes (hash_length = 0), meaning an
+        # extra module file is created; the old one still exists and remains hidden.
+        writer = writer_cls(spec, "default", True)
+        writer.write()
+        assert os.path.exists(writer.layout.modulerc)
+        with open(writer.layout.modulerc) as f:
+            content = [line.strip() for line in f.readlines()]
+        assert hide_implicit_mpileaks in content  # old, implicit mpileaks is still hidden
+        assert f'hide_version("{writer.layout.use_name}")' not in content
+
+        # after removing both the implicit and explicit module, the modulerc file would be empty
+        # and should be removed.
+        writer_cls(spec, "default", False).remove()
+        writer_cls(spec, "default", True).remove()
+        assert not os.path.exists(writer.layout.modulerc)
+        assert not os.path.exists(writer.layout.filename)
+
+        # implicit module is removed
+        writer = writer_cls(spec, "default", False)
+        writer.write()
+        assert os.path.exists(writer.layout.filename)
+        assert os.path.exists(writer.layout.modulerc)
+        writer.remove()
+        assert not os.path.exists(writer.layout.modulerc)
+        assert not os.path.exists(writer.layout.filename)
+
+        # three versions of mpileaks are implicit
+        writer = writer_cls(spec, "default", False)
+        writer.write(overwrite=True)
+        spec_alt1 = spack.spec.Spec("mpileaks@2.2").concretized()
+        spec_alt2 = spack.spec.Spec("mpileaks@2.1").concretized()
+        writer_alt1 = writer_cls(spec_alt1, "default", False)
+        writer_alt1.write(overwrite=True)
+        writer_alt2 = writer_cls(spec_alt2, "default", False)
+        writer_alt2.write(overwrite=True)
+        assert os.path.exists(writer.layout.modulerc)
+        with open(writer.layout.modulerc) as f:
+            content = [line.strip() for line in f.readlines()]
+        hide_cmd = f'hide_version("{writer.layout.use_name}")'
+        hide_cmd_alt1 = f'hide_version("{writer_alt1.layout.use_name}")'
+        hide_cmd_alt2 = f'hide_version("{writer_alt2.layout.use_name}")'
+        assert len([x for x in content if hide_cmd == x]) == 1
+        assert len([x for x in content if hide_cmd_alt1 == x]) == 1
+        assert len([x for x in content if hide_cmd_alt2 == x]) == 1
+
+        # one version is removed
+        writer_alt1.remove()
+        assert os.path.exists(writer.layout.modulerc)
+        with open(writer.layout.modulerc) as f:
+            content = [line.strip() for line in f.readlines()]
+        assert len([x for x in content if hide_cmd == x]) == 1
+        assert len([x for x in content if hide_cmd_alt1 == x]) == 0
+        assert len([x for x in content if hide_cmd_alt2 == x]) == 1

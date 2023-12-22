@@ -27,6 +27,6 @@ class Asdcplib(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
 
-        args = ["--with-openssl={0}".format(spec["openssl"].prefix)]
+        args = [f"--with-openssl={spec['openssl'].prefix}"]
 
         return args

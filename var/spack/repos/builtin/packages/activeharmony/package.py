@@ -29,7 +29,7 @@ class Activeharmony(MakefilePackage):
 
     @when("@:4.5")
     def install(self, spec, prefix):
-        make("install", "PREFIX=%s" % prefix)
+        make("install", f"PREFIX={prefix}")
 
     @when("@4.6.0:")
     def install(self, spec, prefix):

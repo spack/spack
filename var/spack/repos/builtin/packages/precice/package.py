@@ -47,6 +47,20 @@ class Precice(CMakePackage):
     variant("python", default=False, description="Enable Python support", when="@2:")
     variant("shared", default=True, description="Build shared libraries")
 
+    for build_type in ("Release", "RelWithDebInfo", "MinSizeRel"):
+        variant(
+            "debug_log",
+            default=False,
+            description="Enable debug log in non-debug builds",
+            when=f"@2.4: build_type={build_type}",
+        )
+        variant(
+            "checked",
+            default=False,
+            description="Enable assertions in non-debug builds",
+            when=f"@2.4: build_type={build_type}",
+        )
+
     depends_on("cmake@3.5:", type="build")
     depends_on("cmake@3.10.2:", type="build", when="@1.4:")
     depends_on("cmake@3.16.3:", type="build", when="@2.4:")
@@ -83,47 +97,66 @@ class Precice(CMakePackage):
     conflicts("%intel@:16")
     conflicts("%pgi@:17.3")
 
+    def xsdk_tpl_args(self):
+        return [
+            "-DTPL_ENABLE_BOOST:BOOL=ON",
+            "-DTPL_ENABLE_EIGEN3:BOOL=ON",
+            "-DTPL_ENABLE_LIBXML2:BOOL=ON",
+            self.define_from_variant("TPL_ENABLE_PETSC", "petsc"),
+            self.define_from_variant("TPL_ENABLE_PYTHON", "python"),
+        ]
+
     def cmake_args(self):
         """Populate cmake arguments for precice."""
         spec = self.spec
 
-        # The xSDK installation policies were implemented after 1.5.2
-        xsdk_mode = spec.satisfies("@1.6:")
-
         # Select the correct CMake variables by version
         mpi_option = "MPI"
-        if spec.satisfies("@2:"):
-            mpi_option = "PRECICE_MPICommunication"
         petsc_option = "PETSC"
-        if spec.satisfies("@2:"):
-            petsc_option = "PRECICE_PETScMapping"
         python_option = "PYTHON"
         if spec.satisfies("@2:"):
+            mpi_option = "PRECICE_MPICommunication"
+            petsc_option = "PRECICE_PETScMapping"
             python_option = "PRECICE_PythonActions"
+        if spec.satisfies("@3:"):
+            mpi_option = "PRECICE_FEATURE_MPI_COMMUNICATION"
+            petsc_option = "PRECICE_FEATURE_PETSC_MAPPING"
+            python_option = "PRECICE_FEATURE_PYTHON_ACTIONS"
 
-        def variant_bool(feature, on="ON", off="OFF"):
-            """Ternary for spec variant to ON/OFF string"""
-            if feature in spec:
-                return on
-            return off
+        cmake_args = [
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant(mpi_option, "mpi"),
+            self.define_from_variant(petsc_option, "petsc"),
+            self.define_from_variant(python_option, "python"),
+        ]
 
-        cmake_args = ["-DBUILD_SHARED_LIBS:BOOL=%s" % variant_bool("+shared")]
+        # The xSDK installation policies were implemented after 1.5.2.
+        # The TPL arguments were removed in 3.0.0.
+        if spec.satisfies("@1.6:3"):
+            cmake_args.extend(self.xsdk_tpl_args())
 
-        cmake_args.append("-D%s:BOOL=%s" % (mpi_option, variant_bool("+mpi")))
+        # Release options
+        if spec.satisfies("@2.4:"):
+            cmake_args.extend(
+                [
+                    self.define_from_variant("PRECICE_RELEASE_WITH_DEBUG_LOG", "debug_log"),
+                    self.define_from_variant("PRECICE_RELEASE_WITH_ASSERTIONS", "checked"),
+                ]
+            )
+
+        # Disable CPack
+        if spec.satisfies("@3:"):
+            cmake_args.append("-DPRECICE_CONFIGURE_PACKAGE_GENERATION:BOOL=OFF")
+
+        # Dependencies
 
         # Boost
-        if xsdk_mode:
-            cmake_args.append("-DTPL_ENABLE_BOOST=ON")
         cmake_args.append("-DBOOST_ROOT=%s" % spec["boost"].prefix)
 
         # Eigen3
-        if xsdk_mode:
-            cmake_args.append("-DTPL_ENABLE_EIGEN3=ON")
         cmake_args.append("-DEIGEN3_INCLUDE_DIR=%s" % spec["eigen"].headers.directories[0])
 
         # LibXML2
-        if xsdk_mode:
-            cmake_args.append("-DTPL_ENABLE_LIBXML2=ON")
         libxml2_includes = spec["libxml2"].headers.directories[0]
         cmake_args.extend(
             [
@@ -134,13 +167,7 @@ class Precice(CMakePackage):
 
         # PETSc
         if "+petsc" in spec:
-            if xsdk_mode:
-                cmake_args.append("-DTPL_ENABLE_PETSC:BOOL=ON")
-            else:
-                cmake_args.append("-D%s:BOOL=ON" % petsc_option)
             cmake_args.extend(["-DPETSC_DIR=%s" % spec["petsc"].prefix, "-DPETSC_ARCH=."])
-        else:
-            cmake_args.append("-D%s:BOOL=OFF" % petsc_option)
 
         # Python
         if "+python" in spec:
@@ -149,10 +176,6 @@ class Precice(CMakePackage):
             numpy_include = join_path(
                 spec["py-numpy"].prefix, spec["python"].package.platlib, "numpy", "core", "include"
             )
-            if xsdk_mode:
-                cmake_args.append("-DTPL_ENABLE_PYTHON:BOOL=ON")
-            else:
-                cmake_args.append("-D%s:BOOL=ON" % python_option)
             cmake_args.extend(
                 [
                     "-DPYTHON_INCLUDE_DIR=%s" % python_include,
@@ -160,7 +183,5 @@ class Precice(CMakePackage):
                     "-DPYTHON_LIBRARY=%s" % python_library,
                 ]
             )
-        else:
-            cmake_args.append("-D%s:BOOL=OFF" % python_option)
 
         return cmake_args

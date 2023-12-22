@@ -17,7 +17,10 @@ class Libtheora(AutotoolsPackage, MSBuildPackage):
 
     homepage = "https://www.theora.org"
     url = "http://downloads.xiph.org/releases/theora/libtheora-1.1.1.tar.xz"
+    git = "https://gitlab.xiph.org/xiph/theora.git"
 
+    version("master", branch="master")
+    version("stable", branch="theora-1.1")
     version("1.1.1", sha256="f36da409947aa2b3dcc6af0a8c2e3144bc19db2ed547d64e9171c59c66561c61")
     version("1.1.0", sha256="3d7b4fb1c115f1a530afd430eed2e8861fa57c8b179ec2d5a5d8f1cd0c7a4268")
 
@@ -43,12 +46,23 @@ class Libtheora(AutotoolsPackage, MSBuildPackage):
         "msbuild", "autotools", default="autotools" if sys.platform != "win32" else "msbuild"
     )
 
-    patch("exit-prior-to-running-configure.patch", when="@1.1.1")
     patch("fix_encoding.patch", when="@1.1:")
     patch(
-        "https://gitlab.xiph.org/xiph/theora/-/commit/7288b539c52e99168488dc3a343845c9365617c8.patch",
-        sha256="8b1f256fa6bfb4ce1355c5be1104e8cfe695c8484d8ea19db06c006880a02298",
-        when="^libpng@1.6:",
+        "https://gitlab.xiph.org/xiph/theora/-/commit/7288b539c52e99168488dc3a343845c9365617c8.diff",
+        sha256="e01ef71a1c19783a0b323b90a625e5c360ddb7ee03d2b6c201f1519f1704ea11",
+        when="@:1.1.1 ^libpng@1.6:",
+    )
+    # add -no-undefined
+    patch(
+        "https://gitlab.xiph.org/xiph/theora/-/commit/391ab0e99f2ad730231dbe5fc1154b990087f17d.diff",
+        sha256="d9bb5a9573819a27b3a925b1b66c33b36d9bca11b05d8aef88566eb6c8700690",
+        when="@:1.1.1",
+    )
+    # link theoraenc to theoradec
+    patch(
+        "https://gitlab.xiph.org/xiph/theora/-/commit/133b951b60fd845eabbc38bf7acd998bb9be75fc.diff",
+        sha256="e01511aff0130a40c889868d3713a56458744f39d1bb5ad98c8058da50233aa7",
+        when="@:1.1.1",
     )
     patch("libtheora-inc-external-ogg.patch", when="platform=windows")
 
@@ -62,10 +76,9 @@ class AutotoolsBuilder(AutotoolsBuilder):
 
     def autoreconf(self, pkg, spec, prefix):
         sh = which("sh")
-        if self.spec.satisfies("target=aarch64:"):
-            sh("./autogen.sh", "prefix={0}".format(prefix), "--build=arm-linux")
-        else:
-            sh("./autogen.sh", "prefix={0}".format(prefix))
+        # arguments are passed on to configure, let it just print its version
+        # and exit, so that configure can run in the configure build phase
+        sh("./autogen.sh", "-V")
 
 
 class MSBuildBuilder(MSBuildBuilder):

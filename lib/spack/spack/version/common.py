@@ -35,3 +35,7 @@ class VersionChecksumError(VersionError):
 
 class VersionLookupError(VersionError):
     """Raised for errors looking up git commits as versions."""
+
+
+class EmptyRangeError(VersionError):
+    """Raised when constructing an empty version range."""

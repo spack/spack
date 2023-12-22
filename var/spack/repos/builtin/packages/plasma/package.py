@@ -19,11 +19,13 @@ class Plasma(CMakePackage):
     homepage = "https://github.com/icl-utk-edu/plasma/"
     url = "https://github.com/icl-utk-edu/plasma/releases/download/21.8.29/plasma-21.8.29.tar.gz"
     git = "https://github.com/icl-utk-edu/plasma"
+
     maintainers("luszczek")
 
     tags = ["e4s"]
 
     version("develop", git=git)
+    version("23.8.2", sha256="2db34de0575f3e3d16531bdcf1caddef146f68e71335977a3e8ec193003ab943")
     version("22.9.29", sha256="78827898b7e3830eee2e388823b9180858279f77c5eda5aa1be173765c53ade5")
     version("21.8.29", sha256="e0bb4d9143c8540f9f46cbccac9ed0cbea12500a864e6954fce2fe94ea057a10")
     version("20.9.20", sha256="2144a77b739f8dd2f0dbe5b64d94cde0e916f55c4eb170facd168c0db7fc7970")

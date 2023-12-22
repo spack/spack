@@ -31,11 +31,62 @@ _os_map = {
     "rhel8": "RHEL-8",
     "rhel9": "RHEL-9",
     "rocky8": "RHEL-8",
+    "rocky9": "RHEL-9",
     "amzn2": "AmazonLinux-2",
     "amzn2023": "AmazonLinux-2023",
 }
 
 _versions = {
+    "23.10_gcc-12.2": {
+        "RHEL-7": ("e5e2c69ad281a676f2a06c835fbf31d4f9fdf46aa3f3f7c8aafff46985f64902"),
+        "RHEL-8": ("cc0f3572ead93d1e31797b7a39a40cff3414878df9bd24a452bf4877dc35ca4c"),
+        "RHEL-9": ("18c75f57333031e454921cc3f4f22fd567e5a701424ff9ac219bbfe9955a8a96"),
+        "SLES-15": ("e1e891eceaffedecf7351e2c499ef2b49a36c9af29174b366ff470d0a568c18f"),
+        "Ubuntu-20.04": ("976424875c52c2062fc76cbc5d527ee82413cdc0432d7c59f423295a3b0cc612"),
+        "Ubuntu-22.04": ("6dd778edf55e13e8b766d75c340f0259f6cb507a93966d76d188b8b3943c769b"),
+        "AmazonLinux-2": ("423ac3df262b5fcca6cea480503b693306c970dd8e8e05c753ece92446ac7fee"),
+        "AmazonLinux-2023": ("acadf3b6cde866cb41f7363b290a646a492769aaa5819d4c0d60df89913342a9"),
+    },
+    "23.10_gcc-11.3": {
+        "RHEL-7": ("b2afbdc056ae01fb5c71935448b19300ef368962a94ae76b8811f1d328c723c2"),
+        "RHEL-8": ("79b83a8a2c46b949896b3964c761cbd0b66c37826996afb62c466af5fb420bc2"),
+        "RHEL-9": ("7a84f561bcf941bb25123b3ef730b4c02616bc51215933870677163e78af38e3"),
+        "SLES-15": ("9243c405d092d3eabff112ccabc300e96f13c3d2c5c319df04d7093bb6f535a2"),
+        "Ubuntu-20.04": ("a16df088ef9303040d92b017b233c6e4c6f0300d09c2ad0a66c0318831bf009c"),
+        "Ubuntu-22.04": ("fabda66dc6388fa8c094443fa53deece5590db66caaa6a1e39e99e64d5bb0709"),
+        "AmazonLinux-2": ("db5d039fa1d07695a71b8733584d878bb778d41bc0ecc3e19059b75cffdcf8cd"),
+        "AmazonLinux-2023": ("977fd465702f086a69e3f7fc28f2bcb6c79a7af381dc7d865345115b26f4631f"),
+    },
+    "23.10_gcc-10.4": {
+        "RHEL-7": ("3c8bad3af82a76ca1a45705afd47028cc26c7093377a554e692e1cd6f61cb304"),
+        "RHEL-8": ("381afae0e3e94aa91029f571de0e51c2342e50b4f855db7a9b9ca66e16e26276"),
+        "SLES-15": ("226e9519407331b4ad5ded8699cd15f1d9b845843304bbf21f47009a399fe2a0"),
+        "Ubuntu-20.04": ("45de59f795ad9026a838ab611b03b1644169a034ce59d6cca2c7940850fa17ad"),
+        "AmazonLinux-2": ("637b51da12548dc66da9132328fe2ea39ba0736af66fb30332ca8eeb540e3373"),
+    },
+    "23.10_gcc-9.3": {
+        "RHEL-7": ("6fc2e3319b83ea2b1bf8d98ec43f614b937bb5f23d15aefe9e9171c882d24a60"),
+        "RHEL-8": ("1a05548a7051d1df42280fdcfcffeaf89d519aa7978bffd29171da60fdbccecf"),
+        "SLES-15": ("389ddd34e1299e4d942864f63f236158a81ce4190f59af512a1bea3221153bfe"),
+        "Ubuntu-20.04": ("a1a221859b5f0962df3a0c6ce31669827bff0bfffb185b80429620f14b40f4f4"),
+        "AmazonLinux-2": ("2eef9b28e95e75f0040eb61c9e1b406ec4d0b81cce3e95a652029aa0898733a0"),
+    },
+    "23.10_gcc-8.2": {
+        "RHEL-7": ("d6596721e74e7bdc8d9ce7b8b2a4c5ab2bd430f3ca69b9ec84f587f1aa181083"),
+        "RHEL-8": ("004aed52003e19a6c14df303456318e486ad783eb543b79285c7953a23722a4a"),
+        "SLES-15": ("12c638c0cc5bdc220699499ec6bb160a7b889f105901f4354bd2748a77d25c8e"),
+        "AmazonLinux-2": ("d039134236cda298cd0920c3c5b017eeef83fcab82949221dc7deb081026252f"),
+    },
+    "23.10_gcc-7.5": {
+        "RHEL-7": ("1a0ca860c168987d174923dfc7800e10521303914793162a8bae2b2cd3f68203"),
+        "AmazonLinux-2": ("58b201a6bbe7ee10563d8d42b32a77c4b15c57b4e81abb35d24b8c3fc9cff4d9"),
+    },
+    "23.10_flang-new_clang_17": {
+        "macOS": ("baf09cd6d1d1b7c780b8b31cfe1dd709596b182dc714127fbc9f23007ff9e23a")
+    },
+    "23.06_flang-new_clang_16": {
+        "macOS": ("232f5e89e0f1f4777480c64a790e477dfd2f423d3cf5704a116a2736f36250ea")
+    },
     "23.04.1_gcc-12.2": {
         "RHEL-7": ("789cc093cb7e0d9294aff0fdf94b74987435a09cdff4c1b7118a03350548d03c"),
         "RHEL-8": ("1b668baec6d3df2d48c5aedc70baa6a9b638983b94bf2cd58d378859a1da49f0"),
@@ -177,20 +228,28 @@ _versions = {
 
 
 def get_os(ver):
-    spack_os = spack.platforms.host().default_os
+    platform = spack.platforms.host()
+    if platform.name == "darwin":
+        return "macOS"
     if ver.startswith("22."):
-        return _os_map_before_23.get(spack_os, "")
+        return _os_map_before_23.get(platform.default_os, "")
     else:
-        return _os_map.get(spack_os, "RHEL-7")
+        return _os_map.get(platform.default_os, "RHEL-7")
 
 
 def get_package_url(version):
     base_url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/"
     armpl_version = version.split("_")[0]
     armpl_version_dashed = armpl_version.replace(".", "-")
-    gcc_version = version.split("_")[1]
+    compiler_version = version.split("_", 1)[1]
     os = get_os(armpl_version)
-    filename = "arm-performance-libraries_" + armpl_version + "_" + os + "_" + gcc_version + ".tar"
+    if os == "macOS":
+        if armpl_version.startswith("23.06"):
+            return f"{base_url}{armpl_version_dashed}/armpl_{armpl_version}_{compiler_version}.dmg"
+        else:
+            filename = f"arm-performance-libraries_{armpl_version}_macOS.dmg"
+            return f"{base_url}{armpl_version_dashed}/macos/{filename}"
+    filename = f"arm-performance-libraries_{armpl_version}_{os}_{compiler_version}.tar"
     os_short = ""
     if armpl_version.startswith("22.0."):
         os_short = os.replace("-", "")
@@ -198,7 +257,7 @@ def get_package_url(version):
         os_short = os.split(".")[0].lower()
         if "amazonlinux" in os_short:
             os_short = os_short.replace("amazonlinux", "al")
-    return base_url + armpl_version_dashed + "/" + os_short + "/" + filename
+    return f"{base_url}{armpl_version_dashed}/{os_short}/{filename}"
 
 
 def get_armpl_prefix(spec):
@@ -215,15 +274,25 @@ class ArmplGcc(Package):
     maintainers("annop-w")
 
     for ver, packages in _versions.items():
-        key = "{0}".format(get_os(ver))
+        key = get_os(ver)
         sha256sum = packages.get(key)
         url = get_package_url(ver)
         if sha256sum:
-            version(ver, sha256=sha256sum, url=url)
+            extension = os.path.splitext(url)[1]
+            # Don't attempt to expand .dmg files
+            expand = extension != ".dmg"
+            version(ver, sha256=sha256sum, url=url, extension=extension, expand=expand)
 
     conflicts("target=x86:", msg="Only available on Aarch64")
     conflicts("target=ppc64:", msg="Only available on Aarch64")
     conflicts("target=ppc64le:", msg="Only available on Aarch64")
+
+    conflicts("%gcc@:11", when="@23.10_gcc-12.2")
+    conflicts("%gcc@:10", when="@23.10_gcc-11.3")
+    conflicts("%gcc@:9", when="@23.10_gcc-10.4")
+    conflicts("%gcc@:8", when="@23.10_gcc-9.3")
+    conflicts("%gcc@:7", when="@23.10_gcc-8.2")
+    conflicts("%gcc@:6", when="@23.10_gcc-7.5")
 
     conflicts("%gcc@:11", when="@23.04.1_gcc-12.2")
     conflicts("%gcc@:10", when="@23.04.1_gcc-11.3")
@@ -266,17 +335,29 @@ class ArmplGcc(Package):
 
     # Run the installer with the desired install directory
     def install(self, spec, prefix):
+        if spec.platform == "darwin":
+            hdiutil = which("hdiutil")
+            # Mount image
+            mountpoint = os.path.join(self.stage.path, "mount")
+            hdiutil("attach", "-mountpoint", mountpoint, self.stage.archive_file)
+            try:
+                # Run installer
+                exe_name = f"armpl_{spec.version.string}_install.sh"
+                installer = Executable(os.path.join(mountpoint, exe_name))
+                installer("-y", f"--install_dir={prefix}")
+            finally:
+                # Unmount image
+                hdiutil("detach", mountpoint)
+            return
         if self.compiler.name != "gcc":
             raise spack.error.SpackError(("Only compatible with GCC.\n"))
 
         with when("@:22"):
-            armpl_version = "{}".format(spec.version.up_to(3)).split("_")[0]
+            armpl_version = spec.version.up_to(3).string.split("_")[0]
         with when("@23:"):
-            armpl_version = "{}".format(spec.version).split("_")[0]
+            armpl_version = spec.version.string.split("_")[0]
 
-        exe = Executable(
-            "./arm-performance-libraries_{0}_{1}.sh".format(armpl_version, get_os(armpl_version))
-        )
+        exe = Executable(f"./arm-performance-libraries_{armpl_version}_{get_os(armpl_version)}.sh")
         exe("--accept", "--force", "--install-to", prefix)
 
     @property
@@ -330,14 +411,22 @@ class ArmplGcc(Package):
 
     def setup_run_environment(self, env):
         armpl_dir = get_armpl_prefix(self.spec)
-        env.prepend_path("LD_LIBRARY_PATH", join_path(armpl_dir, "lib"))
+        if self.spec.platform == "darwin":
+            env.prepend_path("DYLD_LIBRARY_PATH", join_path(armpl_dir, "lib"))
+        else:
+            env.prepend_path("LD_LIBRARY_PATH", join_path(armpl_dir, "lib"))
 
     @run_after("install")
     def check_install(self):
         armpl_dir = get_armpl_prefix(self.spec)
         armpl_example_dir = join_path(armpl_dir, "examples")
         # run example makefile
-        make("-C", armpl_example_dir, "ARMPL_DIR=" + armpl_dir)
+        if self.spec.platform == "darwin":
+            # Fortran examples on MacOS requires flang-new which is
+            # not commonly installed, so only run the C examples.
+            make("-C", armpl_example_dir, "ARMPL_DIR=" + armpl_dir, "c_examples")
+        else:
+            make("-C", armpl_example_dir, "ARMPL_DIR=" + armpl_dir)
         # clean up
         make("-C", armpl_example_dir, "ARMPL_DIR=" + armpl_dir, "clean")
 

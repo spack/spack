@@ -17,6 +17,7 @@ class Relion(CMakePackage, CudaPackage):
     url = "https://github.com/3dem/relion/archive/4.0.0.zip"
     maintainers("dacolombo")
 
+    version("4.0.1", sha256="7e0d56fd4068c99f943dc309ae533131d33870392b53a7c7aae7f65774f667be")
     version("4.0.0", sha256="0987e684e9d2dfd630f1ad26a6847493fe9fcd829ec251d8bc471d11701d51dd")
 
     # 3.1.4 latest release in 3.1 branch
@@ -75,6 +76,7 @@ class Relion(CMakePackage, CudaPackage):
 
     depends_on("mpi")
     depends_on("cmake@3:", type="build")
+    depends_on("binutils@2.32:", type="build")
     depends_on("fftw precision=float,double", when="~mklfft")
 
     # use the +xft variant so the interface is not so horrible looking

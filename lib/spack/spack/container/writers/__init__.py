@@ -273,13 +273,6 @@ class PathContext(tengine.Context):
         return os_pkg_manager
 
     @tengine.context_property
-    def extra_instructions(self):
-        Extras = namedtuple("Extra", ["build", "final"])
-        extras = self.container_config.get("extra_instructions", {})
-        build, final = extras.get("build", None), extras.get("final", None)
-        return Extras(build=build, final=final)
-
-    @tengine.context_property
     def labels(self):
         return self.container_config.get("labels", {})
 

@@ -14,6 +14,8 @@ class Cdt(CMakePackage):
 
     maintainers("jcortial-safran")
 
+    version("1.4.0", sha256="cb5a95a39b417f5a4d170c7ebe97232d0ed36ea64069339b14964dd52dea95ab")
+    version("1.3.6", sha256="15881e4c451f3b7cceade9b11884b3813ff674dff3edae4fb7c440634f8d4c33")
     version("1.3.0", sha256="7e8feadf9534cf79f9bf188365510fd6bc68ea997758e1c68d1569f98da924da")
 
     variant(

@@ -24,6 +24,7 @@ class Bricks(CMakePackage):
     maintainers("ztuowen", "drhansj")
 
     version("r0.1", branch="r0.1")
+    version("2023.08.25", commit="d81725055c117c4b63a1b3835c6b634768b5bea7")  # no official release
 
     variant("cuda", default=False, description="Build bricks with CUDA enabled")
 

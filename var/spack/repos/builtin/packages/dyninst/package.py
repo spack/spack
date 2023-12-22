@@ -32,11 +32,21 @@ class Dyninst(CMakePackage):
     version("10.2.0", sha256="4212b93bef4563c7de7dce4258e899bcde52315a571087e87fde9f8040123b43")
     version("10.1.0", sha256="4a121d70c1bb020408a7a697d74602e18250c3c85800f230566fcccd593c0129")
     version("10.0.0", sha256="542fccf5c57c4fe784b1a9a9e3db01d40b16ad04e7174dc6f7eb23440485ba06")
-    version("9.3.2", tag="v9.3.2", deprecated=True)
-    version("9.3.0", tag="v9.3.0", deprecated=True)
-    version("9.2.0", tag="v9.2.0", deprecated=True)
-    version("9.1.0", tag="v9.1.0", deprecated=True)
-    version("8.2.1", tag="v8.2.1", deprecated=True)
+    version(
+        "9.3.2", tag="v9.3.2", commit="5d2ddacb273682daa014ae22f17f3575e05b411e", deprecated=True
+    )
+    version(
+        "9.3.0", tag="v9.3.0", commit="9b8e9c1f16d4616b827d2d36955604a8e3fb915c", deprecated=True
+    )
+    version(
+        "9.2.0", tag="v9.2.0", commit="3a6ad66df7294417cf61618acdcfcc0fecccb045", deprecated=True
+    )
+    version(
+        "9.1.0", tag="v9.1.0", commit="df6d090061bae7ff2ba5a6bd57bb2ecbf538ef7a", deprecated=True
+    )
+    version(
+        "8.2.1", tag="v8.2.1", commit="939afcbad1a8273636a3686a31b51dae4f1f0c11", deprecated=True
+    )
 
     variant(
         "openmp",

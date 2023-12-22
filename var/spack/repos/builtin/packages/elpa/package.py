@@ -132,16 +132,7 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
             options.append("--enable-generic")
 
         if self.compiler.name == "gcc":
-            gcc_options = []
-            gfortran_options = ["-ffree-line-length-none"]
-
-            space_separator = " "
-            options.extend(
-                [
-                    "CFLAGS=" + space_separator.join(gcc_options),
-                    "FCFLAGS=" + space_separator.join(gfortran_options),
-                ]
-            )
+            options.extend(["CFLAGS=-O3", "FCFLAGS=-O3 -ffree-line-length-none"])
 
         if "%aocc" in spec:
             options.extend(["FCFLAGS=-O3", "CFLAGS=-O3"])
@@ -185,6 +176,8 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         if "+autotune" in self.spec:
             options.append("--enable-autotune-redistribute-matrix")
+            # --enable-autotune-redistribute-matrix requires --enable-scalapack-tests as well
+            options.append("--enable-scalapack-tests")
 
         options.append("--disable-silent-rules")
         options.append("--without-threading-support-check-during-build")

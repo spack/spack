@@ -46,6 +46,8 @@ class Superlu(CMakePackage, Package):
         conditional("cmake", when="@5:"), conditional("generic", when="@:4"), default="cmake"
     )
 
+    requires("build_system=cmake", when="platform=windows")
+
     variant("pic", default=True, description="Build with position independent code")
 
     depends_on("blas")

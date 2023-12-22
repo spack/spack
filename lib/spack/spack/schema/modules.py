@@ -17,10 +17,8 @@ import spack.schema.projections
 #: THIS NEEDS TO BE UPDATED FOR EVERY NEW KEYWORD THAT
 #: IS ADDED IMMEDIATELY BELOW THE MODULE TYPE ATTRIBUTE
 spec_regex = (
-    r"(?!hierarchy|core_specs|verbose|hash_length|defaults|filter_hierarchy_specs|"
-    r"whitelist|blacklist|"  # DEPRECATED: remove in 0.20.
-    r"include|exclude|"  # use these more inclusive/consistent options
-    r"projections|naming_scheme|core_compilers|all)(^\w[\w-]*)"
+    r"(?!hierarchy|core_specs|verbose|hash_length|defaults|filter_hierarchy_specs|hide|"
+    r"include|exclude|projections|naming_scheme|core_compilers|all)(^\w[\w-]*)"
 )
 
 #: Matches a valid name for a module set
@@ -46,14 +44,7 @@ module_file_configuration = {
             "default": {},
             "additionalProperties": False,
             "properties": {
-                # DEPRECATED: remove in 0.20.
-                "environment_blacklist": {
-                    "type": "array",
-                    "default": [],
-                    "items": {"type": "string"},
-                },
-                # use exclude_env_vars instead
-                "exclude_env_vars": {"type": "array", "default": [], "items": {"type": "string"}},
+                "exclude_env_vars": {"type": "array", "default": [], "items": {"type": "string"}}
             },
         },
         "template": {"type": "string"},
@@ -80,15 +71,11 @@ module_type_configuration = {
             "properties": {
                 "verbose": {"type": "boolean", "default": False},
                 "hash_length": {"type": "integer", "minimum": 0, "default": 7},
-                # DEPRECATED: remove in 0.20.
-                "whitelist": array_of_strings,
-                "blacklist": array_of_strings,
-                "blacklist_implicits": {"type": "boolean", "default": False},
-                # whitelist/blacklist have been replaced with include/exclude
                 "include": array_of_strings,
                 "exclude": array_of_strings,
                 "exclude_implicits": {"type": "boolean", "default": False},
                 "defaults": array_of_strings,
+                "hide_implicits": {"type": "boolean", "default": False},
                 "naming_scheme": {"type": "string"},  # Can we be more specific here?
                 "projections": projections_scheme,
                 "all": module_file_configuration,

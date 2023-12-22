@@ -16,6 +16,7 @@ class Vcftools(AutotoolsPackage):
     homepage = "https://vcftools.github.io/"
     url = "https://github.com/vcftools/vcftools/releases/download/v0.1.14/vcftools-0.1.14.tar.gz"
 
+    version("0.1.16", sha256="dbfc774383c106b85043daa2c42568816aa6a7b4e6abc965eeea6c47dde914e3")
     # this is "a pre-release"
     # version('0.1.15', sha256='31e47afd5be679d89ece811a227525925b6907cce4af2c86f10f465e080383e3')
     version("0.1.14", sha256="76d799dd9afcb12f1ed42a07bc2886cd1a989858a4d047f24d91dcf40f608582")
@@ -26,7 +27,15 @@ class Vcftools(AutotoolsPackage):
     # this needs to be in sync with what setup_run_environment adds to
     # PERL5LIB below
     def configure_args(self):
-        return ["--with-pmdir={0}".format(self.prefix.lib)]
+        args = []
+        # between 0.1.16 and 14 the behavior of the configure script
+        # wrt the perl lib dir changed and it became relative to the
+        # install directory, if you specify the whole prefix in
+        # it now you end up with a nasty recreation of the
+        # prefix tree in self.prefix.
+        if self.spec.satisfies("@:0.1.14"):
+            args.append(f"--with-pmdir={self.prefix.lib}")
+        return args
 
     @run_before("install")
     def filter_sbang(self):

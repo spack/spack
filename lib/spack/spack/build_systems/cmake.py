@@ -142,10 +142,10 @@ class CMakePackage(spack.package_base.PackageBase):
         # We specify for each of them.
         if flags["ldflags"]:
             ldflags = " ".join(flags["ldflags"])
-            ld_string = "-DCMAKE_{0}_LINKER_FLAGS={1}"
             # cmake has separate linker arguments for types of builds.
-            for type in ["EXE", "MODULE", "SHARED", "STATIC"]:
-                self.cmake_flag_args.append(ld_string.format(type, ldflags))
+            self.cmake_flag_args.append(f"-DCMAKE_EXE_LINKER_FLAGS={ldflags}")
+            self.cmake_flag_args.append(f"-DCMAKE_MODULE_LINKER_FLAGS={ldflags}")
+            self.cmake_flag_args.append(f"-DCMAKE_SHARED_LINKER_FLAGS={ldflags}")
 
         # CMake has libs options separated by language. Apply ours to each.
         if flags["ldlibs"]:
@@ -274,7 +274,6 @@ class CMakeBuilder(BaseBuilder):
             generator,
             define("CMAKE_INSTALL_PREFIX", pathlib.Path(pkg.prefix).as_posix()),
             define("CMAKE_BUILD_TYPE", build_type),
-            define("BUILD_TESTING", pkg.run_tests),
         ]
 
         # CMAKE_INTERPROCEDURAL_OPTIMIZATION only exists for CMake >= 3.9
@@ -451,7 +450,6 @@ class CMakeBuilder(BaseBuilder):
 
             * CMAKE_INSTALL_PREFIX
             * CMAKE_BUILD_TYPE
-            * BUILD_TESTING
 
         which will be set automatically.
         """

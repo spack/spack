@@ -35,12 +35,14 @@ class Krb5(AutotoolsPackage):
     depends_on("openssl")
     depends_on("gettext")
     depends_on("findutils", type="build")
+    depends_on("pkgconfig", type="build", when="^openssl~shared")
 
     variant(
         "shared", default=True, description="install shared libraries if True, static if false"
     )
     # This patch is applied in newer upstream releases
     patch("mit-krb5-1.17-static-libs.patch", level=0, when="@:1.18.9")
+    patch("freebsd-link.patch", when="platform=freebsd")
 
     configure_directory = "src"
     build_directory = "src"
@@ -79,6 +81,11 @@ class Krb5(AutotoolsPackage):
         # https://github.com/spack/spack/issues/34193
         if "%gcc@10:" in self.spec:
             args.append("CFLAGS=-fcommon")
+
+        if self.spec["openssl"].satisfies("~shared"):
+            pkgconf = which("pkg-config")
+            ssllibs = pkgconf("--static", "--libs", "openssl", output=str)
+            args.append(f"LDFLAGS={ssllibs}")
 
         return args
 

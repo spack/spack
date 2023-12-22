@@ -93,12 +93,14 @@ class SpecList:
             if (isinstance(s, str) and not s.startswith("$")) and Spec(s) == Spec(spec)
         ]
         if not remove:
-            msg = "Cannot remove %s from SpecList %s\n" % (spec, self.name)
-            msg += "Either %s is not in %s or %s is " % (spec, self.name, spec)
+            msg = f"Cannot remove {spec} from SpecList {self.name}.\n"
+            msg += f"Either {spec} is not in {self.name} or {spec} is "
             msg += "expanded from a matrix and cannot be removed directly."
             raise SpecListError(msg)
-        assert len(remove) == 1
-        self.yaml_list.remove(remove[0])
+
+        # Remove may contain more than one string representation of the same spec
+        for item in remove:
+            self.yaml_list.remove(item)
 
         # invalidate cache variables when we change the list
         self._expanded_list = None
@@ -131,9 +133,8 @@ class SpecList:
 
         # Make sure the reference is valid
         if name not in self._reference:
-            msg = "SpecList %s refers to " % self.name
-            msg += "named list %s " % name
-            msg += "which does not appear in its reference dict"
+            msg = f"SpecList '{self.name}' refers to named list '{name}'"
+            msg += " which does not appear in its reference dict."
             raise UndefinedReferenceError(msg)
 
         return (name, sigil)

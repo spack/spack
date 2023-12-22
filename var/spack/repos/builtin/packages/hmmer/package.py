@@ -15,6 +15,7 @@ class Hmmer(Package):
     homepage = "http://www.hmmer.org"
     url = "http://eddylab.org/software/hmmer/hmmer-3.3.tar.gz"
 
+    version("3.4", sha256="ca70d94fd0cf271bd7063423aabb116d42de533117343a9b27a65c17ff06fbf3")
     version("3.3.2", sha256="92fee9b5efe37a5276352d3502775e7c46e9f7a0ee45a331eacb2a0cac713c69")
     version("3.3", sha256="0186bf40af67032666014971ed8ddc3cf2834bebc2be5b3bc0304a93e763736c")
     version("3.2.1", sha256="a56129f9d786ec25265774519fc4e736bbc16e4076946dcbd7f2c16efc8e2b9c")
@@ -31,7 +32,9 @@ class Hmmer(Package):
     depends_on("gsl", when="+gsl")
 
     # https://github.com/EddyRivasLab/hmmer/issues/283
-    conflicts("target=aarch64:", msg="hmmer is only available for x86_64 and PowerPC")
+    conflicts(
+        "target=aarch64:", when="@:3.3", msg="hmmer is only available for x86_64 and PowerPC"
+    )
 
     def install(self, spec, prefix):
         configure_args = ["--prefix={0}".format(prefix)]

@@ -35,8 +35,8 @@ class OpenpmdApi(CMakePackage):
     version("0.13.1", sha256="81ff79419982eb1b0865d1736f73f950f5d4c356d3c78200ceeab7f54dc07fd7")
     version("0.13.0", sha256="97c2e43d80ee5c5288f278bd54f0dcb40e7f48a575b278fcef9660214b779bb0")
     # C++11 up until here
-    version("0.12.0", tag="0.12.0-alpha")
-    version("0.11.1", tag="0.11.1-alpha")
+    version("0.12.0", tag="0.12.0-alpha", commit="23be484dd2570b5277779eafcc5f1eb70c6d98f2")
+    version("0.11.1", tag="0.11.1-alpha", commit="c40292aafbf564807710424d106304f9670a8304")
 
     variant("shared", default=True, description="Build a shared version of the library")
     variant("mpi", default=True, description="Enable parallel I/O")

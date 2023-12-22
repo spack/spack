@@ -98,6 +98,14 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
 
     conflicts("smm=blas", when="+opencl")
 
+    with when("+mpi"):
+        # When using mpich 4.1 or higher, mpi_f08 has to be used, otherwise:
+        # Error: Type mismatch in argument 'baseptr' at (1); passed TYPE(c_ptr)
+        # to INTEGER(8)
+        conflicts("^mpich@4.1:", when="@:2.5")
+        conflicts("~mpi_f08", when="^mpich@4.1:")
+        depends_on("mpich+fortran", when="^mpich")
+
     generator("ninja")
     depends_on("ninja@1.10:", type="build")
 

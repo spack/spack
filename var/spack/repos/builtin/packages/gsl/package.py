@@ -29,6 +29,8 @@ class Gsl(AutotoolsPackage, GNUMirrorPackage):
     version("1.16", sha256="73bc2f51b90d2a780e6d266d43e487b3dbd78945dd0b04b14ca5980fe28d2f53")
 
     variant("external-cblas", default=False, description="Build against external blas")
+    variant("shared", default=True, description="Build shared library")
+    variant("pic", default=True, description="Enable position-independent code (PIC)")
 
     # from https://dev.gentoo.org/~mgorny/dist/gsl-2.3-cblas.patch.bz2
     patch("gsl-2.3-cblas.patch", when="@2.3:2.5+external-cblas")
@@ -53,6 +55,9 @@ class Gsl(AutotoolsPackage, GNUMirrorPackage):
             configure_args.append("--with-external-cblas")
             configure_args.append("CBLAS_CFLAGS=%s" % self.spec["blas"].headers.include_flags)
             configure_args.append("CBLAS_LIBS=%s" % self.spec["blas"].libs.ld_flags)
+
+        configure_args.extend(self.enable_or_disable("shared"))
+        configure_args.extend(self.with_or_without("pic"))
 
         return configure_args
 

@@ -44,10 +44,10 @@ class AutodockVina(MakefilePackage):
         with working_dir(self.build_directory):
             makefile = FileFilter("Makefile")
             makefile.filter(
-                "BOOST_INCLUDE = .*", "BOOST_INCLUDE = %s" % self.spec["boost"].prefix.include
+                "BOOST_INCLUDE = .*", f"BOOST_INCLUDE = {self.spec['boost'].prefix.include}"
             )
             makefile.filter("C_PLATFORM=.*", "C_PLATFORM=-pthread")
-            makefile.filter("GPP=.*", "GPP=%s" % spack_cxx)
+            makefile.filter("GPP=.*", f"GPP={spack_cxx}")
 
     def build(self, spec, prefix):
         with working_dir(self.build_directory):

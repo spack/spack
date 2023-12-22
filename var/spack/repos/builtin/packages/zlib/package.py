@@ -60,6 +60,8 @@ class Zlib(MakefilePackage, Package):
 
     provides("zlib-api")
 
+    license("Zlib")
+
     @property
     def libs(self):
         shared = "+shared" in self.spec
