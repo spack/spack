@@ -13,6 +13,8 @@ class Smartdenovo(MakefilePackage):
     homepage = "https://github.com/ruanjue/smartdenovo"
     git = "https://github.com/ruanjue/smartdenovo.git"
 
+    license("GPL-3.0-only")
+
     version("master", branch="master")
 
     depends_on("sse2neon", when="target=aarch64:")

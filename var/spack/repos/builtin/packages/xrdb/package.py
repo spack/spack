@@ -12,6 +12,8 @@ class Xrdb(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/xrdb"
     xorg_mirror_path = "app/xrdb-1.1.0.tar.gz"
 
+    license("MIT")
+
     version("1.2.1", sha256="e674f5fb081a023e54878c0aac728dc30feb821207c989cff17a60f0c4a80ced")
     version("1.2.0", sha256="7dec50e243d55c6a0623ff828355259b6a110de74a0c65c40529514324ef7938")
     version("1.1.1", sha256="d19f856296c5f1742a703afc620654efc76fedfb86e1afe0bff9f1038b9e8a47")

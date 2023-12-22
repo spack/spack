@@ -13,6 +13,8 @@ class PyPytestCpp(PythonPackage):
     homepage = "https://github.com/pytest-dev/pytest-cpp"
     pypi = "pytest-cpp/pytest-cpp-1.4.0.tar.gz"
 
+    license("MIT")
+
     version("1.5.0", sha256="efb7eaac30f9f61515be181d04b70d80d60ce8871426f726ef1844e2db4f3353")
     version("1.4.0", sha256="aa3a04fe7906e50094d1a9b8d38bc10eb59d0a8330a11a0f7a660405228b48ca")
 

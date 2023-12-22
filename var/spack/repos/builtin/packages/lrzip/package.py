@@ -18,6 +18,8 @@ class Lrzip(Package):
     url = "https://github.com/ckolivas/lrzip/archive/v0.630.tar.gz"
     git = "https://github.com/ckolivas/lrzip.git"
 
+    license("GPL-2.0-or-later")
+
     version("master", branch="master")
     version("0.651", sha256="f4c84de778a059123040681fd47c17565fcc4fec0ccc68fcf32d97fad16cd892")
     version("0.630", sha256="7b9bf6415fb2294a8e83a5a1c6a8d7da17a19f4730567c8fa16e3016d79250a6")

@@ -16,6 +16,8 @@ class Hermes(CMakePackage):
 
     maintainers("hyoklee")
 
+    license("GPL-2.0-only")
+
     version("master", branch="master")
     version(
         "0.9.0-beta",

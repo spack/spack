@@ -23,6 +23,8 @@ class LlvmAmdgpu(CMakePackage):
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")
 
+    license("Apache-2.0")
+
     version("master", branch="amd-stg-open")
     version("5.7.1", sha256="6b54c422e45ad19c9bf5ab090ec21753e7f7d854ca78132c30eb146657b168eb")
     version("5.7.0", sha256="4abdf00b297a77c5886cedb37e63acda2ba11cb9f4c0a64e133b05800aadfcf0")

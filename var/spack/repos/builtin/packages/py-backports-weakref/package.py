@@ -12,6 +12,8 @@ class PyBackportsWeakref(PythonPackage):
     homepage = "https://github.com/PiDelport/backports.weakref"
     pypi = "backports.weakref/backports.weakref-1.0.post1.tar.gz"
 
+    license("PSF-2.0")
+
     version(
         "1.0.post1",
         sha256="bc4170a29915f8b22c9e7c4939701859650f2eb84184aee80da329ac0b9825c2",

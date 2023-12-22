@@ -17,6 +17,8 @@ class QESirius(CMakePackage):
 
     maintainers("simonpintarelli")
 
+    license("GPL-2.0-or-later")
+
     version("develop-ristretto", branch="ristretto", preferred=True, submodules=True)
     version(
         "6.7-rc1-sirius",

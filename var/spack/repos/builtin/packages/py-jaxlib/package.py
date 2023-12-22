@@ -17,6 +17,8 @@ class PyJaxlib(PythonPackage, CudaPackage):
     tmp_path = ""
     buildtmp = ""
 
+    license("Apache-2.0")
+
     version("0.4.3", sha256="2104735dc22be2b105e5517bd5bc6ae97f40e8e9e54928cac1585c6112a3d910")
     version("0.3.22", sha256="680a6f5265ba26d5515617a95ae47244005366f879a5c321782fde60f34e6d0d")
     version("0.1.74", sha256="bbc78c7a4927012dcb1b7cd135c7521f782d7dad516a2401b56d3190f81afe35")

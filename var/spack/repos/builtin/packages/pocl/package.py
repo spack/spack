@@ -19,6 +19,8 @@ class Pocl(CMakePackage):
     url = "https://github.com/pocl/pocl/archive/v1.1.tar.gz"
     git = "https://github.com/pocl/pocl.git"
 
+    license("MIT")
+
     version("master", branch="master")
     version("3.0", sha256="a3fd3889ef7854b90b8e4c7899c5de48b7494bf770e39fba5ad268a5cbcc719d")
     version("1.8", sha256="0f63377ae1826e16e90038fc8e7f65029be4ff6f9b059f6907174b5c0d1f8ab2")

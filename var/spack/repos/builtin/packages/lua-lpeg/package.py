@@ -13,6 +13,8 @@ class LuaLpeg(LuaPackage):
     homepage = "http://www.inf.puc-rio.br/~roberto/lpeg/"
     url = "https://luarocks.org/manifests/gvvaughan/lpeg-1.0.2-1.src.rock"
 
+    license("MIT")
+
     version(
         "1.0.2-1",
         sha256="e0d0d687897f06588558168eeb1902ac41a11edd1b58f1aa61b99d0ea0abbfbc",

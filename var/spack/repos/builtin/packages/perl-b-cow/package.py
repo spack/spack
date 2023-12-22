@@ -15,6 +15,8 @@ class PerlBCow(PerlPackage):
 
     maintainers("EbiArnie")
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("0.007", sha256="1290daf227e8b09889a31cf182e29106f1cf9f1a4e9bf7752f9de92ed1158b44")
 
     depends_on("perl@5.8.0:", type=("build", "link", "run", "test"))

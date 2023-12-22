@@ -13,6 +13,8 @@ class PyUhi(PythonPackage):
     homepage = "https://github.com/Scikit-HEP/uhi"
     pypi = "uhi/uhi-0.3.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.3.3", sha256="800caf3a5f1273b08bcc3bb4b49228fe003942e23423812b0110546aad9a24be")
     version("0.3.2", sha256="fd6ed2ae8ce68ba6be37b872de86e7775b45d54f858768c8fdaba162b6452ab2")
     version("0.3.1", sha256="6f1ebcadd1d0628337a30b012184325618047abc01c3539538b1655c69101d91")

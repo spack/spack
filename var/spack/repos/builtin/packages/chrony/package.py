@@ -15,6 +15,8 @@ class Chrony(AutotoolsPackage):
     homepage = "https://chrony.tuxfamily.org/"
     url = "https://github.com/mlichvar/chrony/archive/3.5.1.tar.gz"
 
+    license("GPL-2.0-or-later")
+
     version("3.5.1", sha256="881085b944a14853402e1c5cff4de5d815ff104ec6e12eea51c12e42f32f71bd")
     version("3.5", sha256="145a270fe4df42931f175e37dd3771a7e714122ae361921a4b93082e648a08c5")
     version("3.4", sha256="85fbe433f5a3ee961a20c47a72367760b074448587a9e2d3a6788a95750ed77e")

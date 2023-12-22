@@ -20,6 +20,8 @@ class Minighost(MakefilePackage):
 
     tags = ["proxy-app"]
 
+    license("LGPL-3.0-only")
+
     version("1.0.1", sha256="713f305559d892923cde0ad3cbc53c7cefc52a684f65275ccc9fb0b1d049cccc")
 
     variant("mpi", default=True, description="Enable MPI Support")

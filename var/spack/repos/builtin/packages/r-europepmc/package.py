@@ -23,6 +23,8 @@ class REuropepmc(RPackage):
 
     cran = "europepmc"
 
+    license("GPL-3.0-only")
+
     version("0.4.1", sha256="c1ba91a2a99432cabe18e86fea33ac9d20dbb3ac0b58f430d464b4d8ecba4a9a")
     version("0.4", sha256="d55f62963d0ee84830654bbc78f4ad8285e376b04be137cbeaf8ad2a98b7969c")
     version("0.3", sha256="5044a253d223e2bb8502063cd03c0fe4db856467e497d650da7ccd8f75d0f8d9")

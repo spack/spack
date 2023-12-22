@@ -14,6 +14,8 @@ class Aoflagger(CMakePackage):
     homepage = "https://sourceforge.net/projects/aoflagger/"
     url = "https://downloads.sourceforge.net/project/aoflagger/aoflagger-2.10.0/aoflagger-2.10.0.tar.bz2"
 
+    license("GPL-3.0-or-later")
+
     version("2.10.0", sha256="3ec1188d37101acf2029575ebc09c50b19c158c88a12b55ac5d25a96bd8fc18d")
 
     depends_on("casacore+python~fftpack@1.10:")

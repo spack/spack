@@ -16,6 +16,8 @@ class OpenclCHeaders(Package):
     url = "https://github.com/KhronosGroup/OpenCL-Headers/archive/v2020.06.16.tar.gz"
     maintainers("lorddavidiii")
 
+    license("Apache-2.0")
+
     version(
         "2022.01.04", sha256="6e716e2b13fc8d363b40a165ca75021b102f9328e2b38f8054d7db5884de29c9"
     )

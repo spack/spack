@@ -16,6 +16,8 @@ class Itstool(AutotoolsPackage):
 
     maintainers("agoodLANL")
 
+    license("GPL-3.0-or-later")
+
     version("2.0.7", sha256="6b9a7cd29a12bb95598f5750e8763cee78836a1a207f85b74d8b3275b27e87ca")
 
     depends_on("libxml2+python", type=("build", "run"))

@@ -18,6 +18,8 @@ class Datatransferkit(CMakePackage):
 
     maintainers("Rombur")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master", submodules=True)
     version("3.1.1", commit="bfb7673cc233c26a6a541cbf096f37f26df1e5fb", submodules=True)
     version("3.1.0", commit="60a4cbd0a55505e0450f1ac979e1eef8966dc03f", submodules=True)

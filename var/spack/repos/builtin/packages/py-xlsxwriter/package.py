@@ -12,6 +12,8 @@ class PyXlsxwriter(PythonPackage):
 
     pypi = "XlsxWriter/XlsxWriter-1.0.2.tar.gz"
 
+    license("BSD-2-Clause")
+
     version("3.1.7", sha256="353042efb0f8551ce72baa087e98228f3394fcb380e8b96313edf1eec8d50823")
     version("3.0.3", sha256="e89f4a1d2fa2c9ea15cde77de95cd3fd8b0345d0efb3964623f395c8c4988b7f")
     version("1.4.3", sha256="641db6e7b4f4982fd407a3f372f45b878766098250d26963e95e50121168cbe2")

@@ -16,6 +16,8 @@ class PyCmyt(PythonPackage):
 
     maintainers("charmoniumq")
 
+    license("BSD-3-Clause")
+
     version("main", branch="main")
 
     version("1.1.2", sha256="7027514a89331ee5cd672999e34c15feae218c8ed9b127832b6618c6771a869e")

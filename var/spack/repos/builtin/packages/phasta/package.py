@@ -13,6 +13,8 @@ class Phasta(CMakePackage):
     homepage = "https://www.scorec.rpi.edu/software.php"
     git = "https://github.com/PHASTA/phasta.git"
 
+    license("BSD-3-Clause")
+
     version("develop", branch="master")
     version("0.0.1", commit="11f431f2d1a53a529dab4b0f079ab8aab7ca1109")
 

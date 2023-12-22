@@ -14,6 +14,8 @@ class PyLscsoftGlue(PythonPackage):
     homepage = "https://www.lsc-group.phys.uwm.edu/daswg/projects/glue.html"
     pypi = "lscsoft-glue/lscsoft-glue-2.0.0.tar.gz"
 
+    license("GPL-3.0-only")
+
     version("2.0.0", sha256="9bdfaebe4c921d83d1e3d1ca24379a644665e9d7530e7070665f387767c66923")
 
     depends_on("py-setuptools", type="build")

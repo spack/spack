@@ -16,6 +16,8 @@ class Gchp(CMakePackage):
     git = "https://github.com/geoschem/GCHP.git"
     maintainers("lizziel", "laestrada")
 
+    license("MIT")
+
     version("13.4.0", commit="d8c6d4d8db1c5b0ba54d4893185d999a619afc58", submodules=True)
     version("13.3.4", commit="efb2346381648ffff04ce441d5d61d7fec0c53fe", submodules=True)
     version("13.2.1", commit="9dc2340cac684971fa961559a4dc3d8818326ab8", submodules=True)

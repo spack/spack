@@ -12,6 +12,8 @@ class PyPlanetaryComputer(PythonPackage):
     homepage = "https://github.com/microsoft/PlanetaryComputer"
     pypi = "planetary-computer/planetary-computer-0.4.9.tar.gz"
 
+    license("MIT")
+
     version("0.4.9", sha256="f25030aa5b1fc3e44bd0d48300325ffbdbbabbed4a837dfcea55764359249720")
 
     depends_on("py-setuptools@42:", type="build")

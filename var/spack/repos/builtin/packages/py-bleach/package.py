@@ -12,6 +12,8 @@ class PyBleach(PythonPackage):
     homepage = "https://github.com/mozilla/bleach"
     pypi = "bleach/bleach-3.1.0.tar.gz"
 
+    license("Apache-2.0")
+
     version("6.0.0", sha256="1a1a85c1595e07d8db14c5f09f09e6433502c51c595970edc090551f0db99414")
     version("5.0.1", sha256="0d03255c47eb9bd2f26aa9bb7f2107732e7e8fe195ca2f64709fcf3b0a4a085c")
     version("4.1.0", sha256="0900d8b37eba61a802ee40ac0061f8c2b5dee29c1927dd1d233e075ebf5a71da")

@@ -15,6 +15,8 @@ class PyTorchdata(PythonPackage):
 
     maintainers("adamjstewart")
 
+    license("BSD-3-Clause")
+
     version("main", branch="main")
     version("0.7.1", sha256="1b6589336776ccba19fd3bf435588416105d372f6b85d58a9f2b008286f483bf")
     version("0.7.0", sha256="0b444719c3abc67201ed0fea92ea9c4100e7f36551ba0d19a09446cc11154eb3")

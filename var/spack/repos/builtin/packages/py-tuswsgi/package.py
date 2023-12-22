@@ -13,6 +13,8 @@ class PyTuswsgi(PythonPackage):
     homepage = "https://github.com/mvdbeek/tusfilter"
     url = "https://pypi.io/packages/py2.py3/t/tuswsgi/tuswsgi-0.5.4-py2.py3-none-any.whl"
 
+    license("MIT")
+
     version(
         "0.5.4",
         sha256="f681a386254a161a97301a67c01ee7da77419c007d9bc43dbd48d5a987491a5e",

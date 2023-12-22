@@ -12,6 +12,9 @@ class Halide(CMakePackage, PythonExtension):
     homepage = "https://halide-lang.org/"
     url = "https://github.com/halide/Halide/archive/refs/tags/v14.0.0.tar.gz"
     git = "https://github.com/halide/Halide.git"
+
+    license("MIT")
+
     maintainers("wraith1995")
     version("main", branch="main")
     version("15.0.0", sha256="6680424f80c5731a85d977c06327096afe5af31da3667e91d4d36a25fabdda15")

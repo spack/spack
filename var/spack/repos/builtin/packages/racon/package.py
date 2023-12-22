@@ -14,6 +14,8 @@ class Racon(CMakePackage):
     homepage = "https://github.com/isovic/racon"
     url = "https://github.com/isovic/racon/releases/download/1.2.1/racon-v1.2.1.tar.gz"
 
+    license("MIT")
+
     version("1.4.3", sha256="dfce0bae8234c414ef72b690247701b4299e39a2593bcda548a7a864f51de7f2")
     version("1.4.2", sha256="b36d8b767e0fc9acdd3e9d34c99a8bbc02a3aae7a953c57923d935ebdf332700")
     version("1.4.0", sha256="3e1e97388f428326342dead3f8500e72b1986f292bdfd4d1be4a0d2a21f4cc61")

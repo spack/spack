@@ -16,6 +16,8 @@ class PyPastml(PythonPackage):
 
     maintainers("snehring")
 
+    license("GPL-3.0-or-later")
+
     version("1.9.40", sha256="5334bc8de70a968117240b90d90878ac935be18de6e6e485fb1a8f90cd539fea")
     version("1.9.38", sha256="43bf7d2a3a9b9b67da7c5881ecdeb2ee9cccd1585b8f65700e53761609945cc6")
 

@@ -17,6 +17,8 @@ class Costa(CMakePackage):
     homepage = "https://github.com/eth-cscs/COSTA"
     git = "https://github.com/eth-cscs/COSTA.git"
 
+    license("BSD-3-Clause")
+
     # note: The default archives produced with github do not have the archives
     #       of the submodules.
     version("master", branch="master", submodules=True)

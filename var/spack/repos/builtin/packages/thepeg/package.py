@@ -14,6 +14,8 @@ class Thepeg(AutotoolsPackage):
 
     tags = ["hep"]
 
+    license("GPL-3.0-or-later")
+
     # The commented out versions exist, but may need patches
     # and/or recipe changes
     version("2.2.3", sha256="f21473197a761fc32917b08a8d24d2bfaf93ff57f3441fd605da99ac9de5d50b")

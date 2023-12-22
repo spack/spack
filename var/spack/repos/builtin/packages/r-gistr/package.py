@@ -23,6 +23,8 @@ class RGistr(RPackage):
 
     cran = "gistr"
 
+    license("MIT")
+
     version("0.9.0", sha256="170ae025151ee688e7d31b9e49112086a8ddf4fef10155e9ee289ad7f28c8929")
     version("0.4.2", sha256="43c00c7f565732125f45f6c067724771ba1b337d6dd3a6e301639fe16e11032e")
     version("0.4.0", sha256="51771a257379a17552d0c88ada72ca6263954bbe896997f8a66cde3bf0b83ce0")

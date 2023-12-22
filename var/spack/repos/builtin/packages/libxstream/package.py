@@ -14,6 +14,8 @@ class Libxstream(Package):
     homepage = "https://github.com/hfp/libxstream"
     url = "https://github.com/hfp/libxstream/archive/0.9.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.9.0", sha256="03365f23b337533b8e5a049a24bc5a91c0f1539dd042ca5312abccc8f713b473")
 
     def patch(self):

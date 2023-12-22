@@ -14,6 +14,8 @@ class DmlcCore(CMakePackage):
     homepage = "https://github.com/dmlc/dmlc-core"
     git = "https://github.com/dmlc/dmlc-core.git"
 
+    license("Apache-2.0")
+
     version("master")
     version("20170508", commit="a6c5701219e635fea808d264aefc5b03c3aec314")
 

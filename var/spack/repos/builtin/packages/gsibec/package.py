@@ -17,6 +17,8 @@ class Gsibec(CMakePackage):
 
     maintainers("mathomp4", "danholdaway")
 
+    license("Apache-2.0")
+
     version("develop", branch="develop")
     version("1.1.3", sha256="9cac000562250487c16608e8245d97457cc1663b1793b3833be5a76ebccb4b47")
     version("1.1.2", sha256="8bdcdf1663e6071b6ad9e893a76307abc70a6de744fb75a13986e70242993ada")

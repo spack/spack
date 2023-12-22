@@ -16,6 +16,8 @@ class ComposableKernel(CMakePackage):
     url = "https://github.com/ROCmSoftwarePlatform/composable_kernel/archive/refs/tags/rocm-5.7.1.tar.gz"
     maintainers("srekolam", "afzpatel")
 
+    license("MIT")
+
     version("master", branch="develop")
     version("5.7.1", sha256="75f66e023c2e31948e91fa26366eaeac72d871fc2e5188361d4465179f13876e")
     version("5.7.0", sha256="d9624dbaef04e0138f9f73596c49b4fe9ded69974bae7236354baa32649bf21a")

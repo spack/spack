@@ -16,6 +16,8 @@ class Libmicrohttpd(AutotoolsPackage):
 
     maintainers("hainest")
 
+    license("LGPL-2.1-or-later")
+
     version("0.9.76", sha256="f0b1547b5a42a6c0f724e8e1c1cb5ce9c4c35fb495e7d780b9930d35011ceb4c")
     version("0.9.75", sha256="9278907a6f571b391aab9644fd646a5108ed97311ec66f6359cebbedb0a4e3bb")
     version("0.9.74", sha256="42035d0261373324bfb434018f4ab892514b10253d1af232e41b4cc2c11e650b")

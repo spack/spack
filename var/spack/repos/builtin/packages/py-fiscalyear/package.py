@@ -20,6 +20,8 @@ class PyFiscalyear(PythonPackage):
 
     maintainers("adamjstewart")
 
+    license("MIT")
+
     version("master", branch="master")
     version("0.4.0", sha256="12857a48bd7b97bda78d833b29e81f30ec5aa018241f690e714b472b25fa1b47")
     version("0.3.2", sha256="0697b2af4ab2d4c6188fac33d340f31dea9b0e1f0d3666d6752faeedd744f019")

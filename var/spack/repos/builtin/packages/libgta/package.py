@@ -12,6 +12,8 @@ class Libgta(CMakePackage):
     homepage = "https://marlam.de/gta/"
     url = "https://marlam.de/gta/releases/libgta-1.2.1.tar.xz"
 
+    license("LGPL-2.1-or-later")
+
     version("1.2.1", sha256="d445667e145f755f0bc34ac89b63a6bfdce1eea943f87ee7a3f23dc0dcede8b1")
 
     depends_on("cmake@3.5:", type="build")

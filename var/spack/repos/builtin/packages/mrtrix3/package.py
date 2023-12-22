@@ -16,6 +16,8 @@ class Mrtrix3(Package):
     url = "https://github.com/MRtrix3/mrtrix3/archive/refs/tags/3.0.3.tar.gz"
     git = "https://github.com/MRtrix3/mrtrix3.git"
 
+    license("MPL-2.0")
+
     version(
         "3.0.4",
         sha256="f1d1aa289cfc3e46e3a8eca93594b23d061c6d50a0cd03727433a7e2cd14f71a",

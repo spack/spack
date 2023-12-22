@@ -20,6 +20,8 @@ class Precice(CMakePackage):
 
     tags = ["e4s"]
 
+    license("LGPL-3.0-or-later")
+
     version("develop", branch="develop")
     version("2.5.0", sha256="76ec6ee0d1a66f6f3d3d2d11f03cfc5aa7ef4d9e5deb9b7a4b4455ec7f796c00")
     version("2.4.0", sha256="762e603fbcaa96c4fb0b378b7cb6789d09da0cf6193325603e5eeb13e4c7601c")

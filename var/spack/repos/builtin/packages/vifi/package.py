@@ -13,6 +13,8 @@ class Vifi(Package):
     homepage = "https://github.com/namphuon/ViFi"
     git = "https://github.com/namphuon/ViFi.git"
 
+    license("GPL-3.0-only")
+
     version("master", branch="master")
 
     depends_on("perl", type="run")

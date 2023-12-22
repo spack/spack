@@ -16,6 +16,8 @@ class Agrep(MakefilePackage):
     homepage = "https://www.tgries.de/agrep"
     url = "https://www.tgries.de/agrep/agrep-3.41.tgz"
 
+    license("GPL-2.0-or-later")
+
     version("3.41", sha256="0508eafaf9725fc67cc955eb6d32ba4f50138443a4fea4275508d2c3f67a234e")
 
     def install(self, spec, prefix):

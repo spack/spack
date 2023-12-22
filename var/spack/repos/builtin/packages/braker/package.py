@@ -16,6 +16,8 @@ class Braker(Package):
     url = "https://github.com/Gaius-Augustus/BRAKER/archive/v2.1.4.tar.gz"
     list_url = "http://bioinf.uni-greifswald.de/augustus/binaries/old"
 
+    license("Artistic-1.0")
+
     version("2.1.6", sha256="eef3c4037364472988a010322cbd79b5171158f9c016f4383809adade4866c06")
     version("2.1.4", sha256="d48af5649cc879343046f9ddf180fe2c709b5810e0b78cf314bf298514d31d52")
     version(

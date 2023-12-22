@@ -20,6 +20,8 @@ class Tealeaf(MakefilePackage):
 
     tags = ["proxy-app"]
 
+    license("LGPL-3.0-only")
+
     version("1.0", sha256="e11799d1a3fbe76041333ba98858043b225c5d65221df8c600479bc55e7197ce")
 
     depends_on("mpi")

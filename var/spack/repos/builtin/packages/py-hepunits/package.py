@@ -17,6 +17,8 @@ class PyHepunits(PythonPackage):
 
     maintainers("vvolkl")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("2.3.2", sha256="8a3366fa5d72c16af1166ed579cdaa81edd2676acb8f6a1fe7da290cefca3b08")
     version("2.3.1", sha256="b1174bba4d575b9939c01f341e24d9bdbe0e0cd4cc4ce2e7d77692da19145cfb")

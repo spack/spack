@@ -13,6 +13,8 @@ class PyHypercorn(PythonPackage):
     homepage = "https://gitlab.com/pgjones/hypercorn/"
     pypi = "Hypercorn/Hypercorn-0.13.2.tar.gz"
 
+    license("MIT")
+
     version("0.13.2", sha256="6307be5cbdf6ba411967d4661202dc4f79bd511b5d318bc4eed88b09418427f8")
 
     depends_on("python@3.7:", type=("build", "run"))

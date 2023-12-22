@@ -14,6 +14,8 @@ class Meep(AutotoolsPackage):
     git = "https://github.com/NanoComp/meep.git"
     url = "https://github.com/NanoComp/meep/archive/refs/tags/v1.21.0.tar.gz"
 
+    license("GPL-2.0-or-later")
+
     version("master", branch="master")
 
     version("1.25.0", sha256="3e5d6c6ef69a8cc7810bdd6d681ae494bfe7a4e91041abe5494f5c8a82d02e6f")

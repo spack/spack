@@ -13,6 +13,8 @@ class PyBarectf(PythonPackage):
 
     pypi = "barectf/barectf-3.1.2.tar.gz"
 
+    license("MIT")
+
     version("3.1.2", sha256="d4d626b22a33b7d9bc9ac033bba8893890aba0ee1011c9e78429a67296c09e1c")
 
     depends_on("py-poetry-core", type="build")

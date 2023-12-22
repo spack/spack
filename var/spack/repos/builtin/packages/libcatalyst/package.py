@@ -18,6 +18,8 @@ class Libcatalyst(CMakePackage):
     git = "https://gitlab.kitware.com/paraview/catalyst.git"
     url = "https://gitlab.kitware.com/api/v4/projects/paraview%2Fcatalyst/packages/generic/catalyst/v2.0.0/catalyst-v2.0.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     maintainers("mathstuf", "ayenpure")
     version("master", branch="master")
     version("2.0.0-rc4", sha256="cb491e4ccd344156cc2494f65b9f38885598c16d12e1016c36e2ee0bc3640863")

@@ -14,6 +14,8 @@ class PyMerlin(PythonPackage):
     git = "https://github.com/LLNL/merlin.git"
     tags = ["radiuss"]
 
+    license("MIT")
+
     version("develop", branch="develop")
     version("master", branch="master")
     version("1.10.3", sha256="6edaf17b502db090cef0bc53ae0118c55f77d7a16f43c7a235e0dd1770decadb")

@@ -14,6 +14,8 @@ class PyBlight(PythonPackage):
 
     maintainers("woodruffw")
 
+    license("Apache-2.0")
+
     version("0.0.47", sha256="eb4a881adb98e03a0a855b95bfcddb0f4b3ca568b00cb45b571f047ae75c5667")
 
     variant("dev", default=False, description="Install dependencies to help with development")

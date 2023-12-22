@@ -33,6 +33,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     maintainers("michaelkuhn", "alalazo")
 
+    license("GPL-2.0-or-later AND LGPL-2.1-or-later")
+
     version("master", branch="master")
 
     version("13.2.0", sha256="e275e76442a6067341a27f04c5c6b83d8613144004c0413528863dc6b5c743da")

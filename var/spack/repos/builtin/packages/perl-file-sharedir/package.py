@@ -14,6 +14,8 @@ class PerlFileSharedir(PerlPackage):
 
     maintainers("EbiArnie")
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("1.118", sha256="3bb2a20ba35df958dc0a4f2306fc05d903d8b8c4de3c8beefce17739d281c958")
 
     depends_on("perl-class-inspector@1.12:", type=("build", "run", "test"))

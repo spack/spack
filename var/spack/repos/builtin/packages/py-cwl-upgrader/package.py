@@ -13,6 +13,8 @@ class PyCwlUpgrader(PythonPackage):
     homepage = "https://github.com/common-workflow-language/cwl-upgrader"
     pypi = "cwl-upgrader/cwl-upgrader-1.2.4.tar.gz"
 
+    license("Apache-2.0")
+
     version("1.2.4", sha256="b25fc236407343d44cc830ac3f63eed395b8d872fc7e17db92cde583d4a3b2ec")
 
     depends_on("python@3.6:3", type=("build", "run"))

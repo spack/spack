@@ -13,6 +13,8 @@ class PyUrlNormalize(PythonPackage):
     homepage = "https://github.com/niksite/url-normalize"
     pypi = "url-normalize/url-normalize-1.4.3.tar.gz"
 
+    license("MIT")
+
     version("1.4.3", sha256="d23d3a070ac52a67b83a1c59a0e68f8608d1cd538783b401bc9de2c0fac999b2")
 
     depends_on("python@3.6:3", type=("build", "run"))

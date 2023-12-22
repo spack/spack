@@ -27,6 +27,8 @@ class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     keep_werror = "specific"
 
+    license("Unlicense")
+
     version("develop", submodules=True)
     version("4.1.2", sha256="3492e98adab62b597ef0d292fb2459b6123bc80070a8aa0a30be6962075a12f0")
     version("4.1.1", sha256="ee30471b35ef87f4c88f871a5e2ad3811cd9c4df32fd4f138443072ff4284ca2")

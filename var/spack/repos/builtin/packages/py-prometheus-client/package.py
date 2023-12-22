@@ -12,6 +12,8 @@ class PyPrometheusClient(PythonPackage):
     homepage = "https://github.com/prometheus/client_python"
     pypi = "prometheus_client/prometheus_client-0.7.1.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.17.0", sha256="9c3b26f1535945e85b8934fb374678d263137b78ef85f305b1156c7c881cd11b")
     version("0.14.1", sha256="5459c427624961076277fdc6dc50540e2bacb98eebde99886e59ec55ed92093a")
     version("0.12.0", sha256="1b12ba48cee33b9b0b9de64a1047cbd3c5f2d0ab6ebcead7ddda613a750ec3c5")

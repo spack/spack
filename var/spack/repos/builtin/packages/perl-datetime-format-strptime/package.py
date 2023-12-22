@@ -15,6 +15,8 @@ class PerlDatetimeFormatStrptime(PerlPackage):
 
     maintainers("EbiArnie")
 
+    license("Artistic-2.0")
+
     version("1.79", sha256="701e46802c86ed4d88695c1a6dacbbe90b3390beeb794f387e7c792300037579")
 
     depends_on("perl-datetime@1.00:", type=("build", "run", "test"))

@@ -23,6 +23,8 @@ class Hipsycl(CMakePackage):
 
     provides("sycl")
 
+    license("BSD-2-Clause")
+
     version("stable", branch="stable", submodules=True)
     version("0.9.4", commit="99d9e24d462b35e815e0e59c1b611936c70464ae", submodules=True)
     version("0.9.3", commit="51507bad524c33afe8b124804091b10fa25618dc", submodules=True)

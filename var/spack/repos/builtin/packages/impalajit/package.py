@@ -16,6 +16,8 @@ class Impalajit(CMakePackage):
 
     homepage = "https://github.com/manuel-fasching/ImpalaJIT/blob/master/README.md"
 
+    license("MIT-0")
+
     version(
         "main",
         git="https://github.com/manuel-fasching/ImpalaJIT.git",

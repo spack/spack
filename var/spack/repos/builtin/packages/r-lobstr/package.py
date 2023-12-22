@@ -16,6 +16,8 @@ class RLobstr(RPackage):
 
     cran = "lobstr"
 
+    license("MIT")
+
     version("1.1.2", sha256="9bc533ed7e8f816097a03acfbca33308c9940ba26d02674f4ba06311cf3a1718")
     version("1.1.1", sha256="b8c9ce00095bd4f304b4883ef71da24572022f0632a18c3e1ba317814e70716e")
     version("1.0.1", sha256="25fb288f73dbaf680ebbf27a50da338868c55d788501118fd33748854c5104fb")

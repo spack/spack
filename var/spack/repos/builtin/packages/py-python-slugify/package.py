@@ -12,6 +12,8 @@ class PyPythonSlugify(PythonPackage):
     homepage = "https://github.com/un33k/python-slugify"
     pypi = "python-slugify/python-slugify-4.0.0.tar.gz"
 
+    license("MIT")
+
     version("4.0.0", sha256="a8fc3433821140e8f409a9831d13ae5deccd0b033d4744d94b31fea141bdd84c")
 
     depends_on("python@2.7:2.8,3.5:", type=("build", "run"))

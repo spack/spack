@@ -12,6 +12,8 @@ class SomaticSniper(CMakePackage):
     homepage = "https://gmt.genome.wustl.edu/packages/somatic-sniper"
     url = "https://github.com/genome/somatic-sniper/archive/v1.0.5.0.tar.gz"
 
+    license("MIT")
+
     version("1.0.5.0", sha256="fc41e90237b059fcc591e404830c4b1be678642dd5afd76ce545b97b4b7b3de1")
 
     depends_on("ncurses")

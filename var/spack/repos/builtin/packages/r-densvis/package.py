@@ -33,6 +33,8 @@ class RDensvis(RPackage):
 
     bioc = "densvis"
 
+    license("MIT")
+
     version("1.10.0", commit="833db1fb7b2a5667575cc2e7c2fefc8360c8d7fb")
 
     depends_on("r-rcpp", type=("build", "run"))

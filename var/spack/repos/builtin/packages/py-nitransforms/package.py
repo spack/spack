@@ -12,6 +12,8 @@ class PyNitransforms(PythonPackage):
     homepage = "https://github.com/poldracklab/nitransforms"
     pypi = "nitransforms/nitransforms-21.0.0.tar.gz"
 
+    license("MIT")
+
     version("21.0.0", sha256="9e326a1ea5d5c6577219f99d33c1a680a760213e243182f370ce7e6b2476103a")
     version("20.0.0rc5", sha256="650eb12155f01fae099298445cc33721b9935d9c880f54ec486ec4adf3bffe6e")
 

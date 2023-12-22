@@ -12,6 +12,8 @@ class Pipx(PythonPackage):
     homepage = "https://pypa.github.io/pipx/"
     pypi = "pipx/pipx-1.2.0.tar.gz"
 
+    license("MIT")
+
     version("1.2.0", sha256="d1908041d24d525cafebeb177efb686133d719499cb55c54f596c95add579286")
 
     depends_on("python@3.7:", type=("build", "run"))

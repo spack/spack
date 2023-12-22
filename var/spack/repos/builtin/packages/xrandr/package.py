@@ -13,6 +13,8 @@ class Xrandr(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/xrandr"
     xorg_mirror_path = "app/xrandr-1.5.0.tar.gz"
 
+    license("MIT")
+
     version("1.5.0", sha256="ddfe8e7866149c24ccce8e6aaa0623218ae19130c2859cadcaa4228d8bb4a46d")
 
     depends_on("libxrandr@1.5:")

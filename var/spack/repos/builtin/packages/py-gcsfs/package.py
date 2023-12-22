@@ -12,6 +12,8 @@ class PyGcsfs(PythonPackage):
     homepage = "https://github.com/fsspec/gcsfs"
     pypi = "gcsfs/gcsfs-2023.1.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("2023.1.0", sha256="0a7b7ca8c1affa126a14ba35d7b7dff81c49e2aaceedda9732c7f159a4837a26")
 
     depends_on("py-setuptools", type="build")

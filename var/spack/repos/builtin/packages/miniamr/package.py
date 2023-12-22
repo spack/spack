@@ -18,6 +18,8 @@ class Miniamr(MakefilePackage):
 
     tags = ["proxy-app", "ecp-proxy-app"]
 
+    license("LGPL-3.0-only")
+
     version("master", branch="master")
     version("1.6.6", sha256="a7f79fae49e433ef8350cbd34cbf57c486089cf7ac0d1f1f3b23c820d3e5bb9f")
     version("1.6.5", sha256="c70f0f648c73ea4497817ceee158334eeb901fc5c32cf804deef3226cd9cf26a")

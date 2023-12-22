@@ -17,6 +17,8 @@ class PyDeephyper(PythonPackage):
 
     maintainers("mdorier", "Deathn0t")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("0.4.2", sha256="ee1811a22b08eff3c9098f63fbbb37f7c8703e2f878f2bdf2ec35a978512867f")
 

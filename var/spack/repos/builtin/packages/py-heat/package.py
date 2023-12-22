@@ -16,6 +16,8 @@ class PyHeat(PythonPackage):
 
     maintainers("mrfh92", "ClaudiaComito", "JuanPedroGHM")
 
+    license("MIT")
+
     version("1.3.0", sha256="fa247539a559881ffe574a70227d3c72551e7c4a9fb29b0945578d6a840d1c87")
 
     variant("docutils", default=False, description="Use the py-docutils package")

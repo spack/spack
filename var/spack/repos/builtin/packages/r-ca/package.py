@@ -15,6 +15,8 @@ class RCa(RPackage):
 
     cran = "ca"
 
+    license("GPL-2.0-or-later")
+
     version("0.71.1", sha256="040c2fc94c356075f116cc7cd880530b3c9e02206c0035182c03a525ee99b424")
 
     depends_on("r@3.0.0:", type=("build", "run"))

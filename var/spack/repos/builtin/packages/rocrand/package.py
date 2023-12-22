@@ -22,6 +22,8 @@ class Rocrand(CMakePackage):
     maintainers("cgmb", "srekolam", "renjithravindrankannath")
     libraries = ["librocrand"]
 
+    license("MIT")
+
     version("develop", branch="develop")
     version("master", branch="master")
     version("5.7.1", sha256="885cd905bbd23d02ba8f3f87d5c0b79bc44bd020ea9af190f3959cf5aa33d07d")

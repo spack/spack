@@ -15,6 +15,8 @@ class PyScikitFmm(PythonPackage):
 
     maintainers("archxlith")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("2019.1.30", sha256="eb64b6d8e30b8df8f8636d5fc4fd7ca6a9b05938ccd62518c80c1d9e823069dd")
 

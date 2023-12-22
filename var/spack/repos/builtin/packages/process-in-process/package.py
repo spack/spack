@@ -22,6 +22,8 @@ class ProcessInProcess(Package):
     conflicts("platform=darwin", msg="Darwin is not supported.")
     conflicts("platform=windows", msg="Windows is not supported.")
 
+    license("BSD-2-Clause-FreeBSD")
+
     # PiP version 1 is obsolete
     version("1", branch="pip-1", deprecated=True)
     # PiP version 2 is stable one

@@ -20,6 +20,8 @@ class PyTesorter(PythonPackage):
 
     maintainers("snehring")
 
+    license("GPL-3.0-or-later")
+
     version("1.4.6", sha256="c6952c98fa78d0084742fd6c7d2d1204d36db103c3cbeb19e52093cd9d311523")
 
     depends_on("py-biopython", type=("build", "run"))

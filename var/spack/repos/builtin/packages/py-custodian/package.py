@@ -18,6 +18,8 @@ class PyCustodian(PythonPackage):
 
     maintainers("meyersbs")
 
+    license("MIT")
+
     version("2022.5.26", sha256="92bdafa578c75f976176492e7bf3eb83abde97f112725e2e421633fa8954c6ef")
 
     # From setup.py:

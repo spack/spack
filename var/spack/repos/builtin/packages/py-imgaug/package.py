@@ -15,6 +15,8 @@ class PyImgaug(PythonPackage):
     homepage = "https://github.com/aleju/imgaug"
     pypi = "imgaug/imgaug-0.3.0.tar.gz"
 
+    license("MIT")
+
     version("0.4.0", sha256="46bab63ed38f8980630ff721a09ca2281b7dbd4d8c11258818b6ebcc69ea46c7")
     version("0.3.0", sha256="e1354d41921f1b306b50c5141b4870f17e81b531cae2f5c3093da9dc4dcb3cf4")
 

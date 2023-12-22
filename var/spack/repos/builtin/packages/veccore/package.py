@@ -19,6 +19,8 @@ class Veccore(CMakePackage):
 
     maintainers("drbenmorgan", "sethrj")
 
+    license("Apache-2.0")
+
     version("master", branch="master")
     version("0.8.1", sha256="7d7983947c2c6faa55c908b3a968f19f96f4d5c909447c536de30c34b439e008")
     version("0.8.0", sha256="2f8e49f2b609bf15a776026fbec899b3d5d4ba30f033d4fdac4b07a5220a4fd3")

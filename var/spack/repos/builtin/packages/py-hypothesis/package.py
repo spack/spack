@@ -12,6 +12,8 @@ class PyHypothesis(PythonPackage):
     homepage = "https://github.com/HypothesisWorks/hypothesis-python"
     pypi = "hypothesis/hypothesis-4.41.2.tar.gz"
 
+    license("MPL-2.0")
+
     version("6.23.1", sha256="23a1b0488aec5719e2f9e399342e10f30d497cbb9fd39470ef0975c1b502ae35")
     version("5.3.0", sha256="c9fdb53fe3bf1f8e7dcca1a7dd6e430862502f088aca2903d141511212e79429")
     version("4.57.1", sha256="3c4369a4b0a1348561048bcda5f1db951a1b8e2a514ea8e8c70d36e656bf6fa0")

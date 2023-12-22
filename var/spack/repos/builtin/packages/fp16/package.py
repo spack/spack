@@ -13,6 +13,8 @@ class Fp16(CMakePackage):
     homepage = "https://github.com/Maratyszcza/FP16/"
     git = "https://github.com/Maratyszcza/FP16.git"
 
+    license("MIT")
+
     version("master", branch="master")
     version("2020-05-14", commit="4dfe081cf6bcd15db339cf2680b9281b8451eeb3")  # py-torch@1.5:
     version("2018-11-28", commit="febbb1c163726b5db24bed55cc9dc42529068997")  # py-torch@1.1:1.4

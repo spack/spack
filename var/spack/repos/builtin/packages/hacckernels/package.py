@@ -18,6 +18,8 @@ class Hacckernels(CMakePackage):
 
     tags = ["proxy-app"]
 
+    license("BSD-3-Clause")
+
     version("develop", branch="master")
 
     def install(self, spec, prefix):

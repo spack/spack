@@ -14,6 +14,8 @@ class PyMpldock(PythonPackage):
 
     maintainers("LydDeb")
 
+    license("MIT")
+
     version("0.1", sha256="8fee2e9cb25e122c9e11c15ea3ad22c9d03e78a08a0bc2b7f453230d58a31a55")
 
     depends_on("py-setuptools", type="build")

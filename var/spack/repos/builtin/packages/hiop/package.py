@@ -21,6 +21,8 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/LLNL/hiop.git"
     maintainers("ryandanehy", "cameronrutherford", "pelesh")
 
+    license("BSD-3-Clause")
+
     # Most recent tagged snapshot is the preferred version when profiling.
     version(
         "1.0.1", tag="v1.0.1", commit="c5e156c6f27d046f590dc35114980e3f9c573ca6", submodules=True

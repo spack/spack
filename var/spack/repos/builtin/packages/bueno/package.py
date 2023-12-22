@@ -15,6 +15,8 @@ class Bueno(PythonPackage):
 
     maintainers("rbberger")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
 
     depends_on("python@3.7:", type=("build", "run"))

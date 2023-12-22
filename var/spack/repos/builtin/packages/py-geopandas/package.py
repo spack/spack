@@ -19,6 +19,8 @@ class PyGeopandas(PythonPackage):
 
     maintainers("adamjstewart")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("0.11.1", sha256="f0f0c8d0423d30cf81de2056d853145c4362739350a7f8f2d72cc7409ef1eca1")
     version("0.11.0", sha256="562fe7dc19a6e0f61532d654c4752f7bf46e0714990c5844fe3de3f9c99cb873")

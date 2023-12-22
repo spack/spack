@@ -12,6 +12,8 @@ class PyGradio(PythonPackage):
     homepage = "https://github.com/gradio-app/gradio"
     pypi = "gradio/gradio-3.36.1.tar.gz"
 
+    license("Apache-2.0")
+
     version("3.36.1", sha256="1d821cee15da066c24c197248ba9aaed5f5e59505d17754561c2f96f90e73a89")
 
     depends_on("python@3.8:", type=("build", "run"))

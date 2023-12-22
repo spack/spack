@@ -20,6 +20,8 @@ class Pinentry(AutotoolsPackage):
 
     maintainers("alalazo")
 
+    license("GPL-2.0-or-later")
+
     version("1.2.1", sha256="457a185e5a85238fb945a955dc6352ab962dc8b48720b62fc9fa48c7540a4067")
     version("1.2.0", sha256="10072045a3e043d0581f91cd5676fcac7ffee957a16636adedaa4f583a616470")
     version("1.1.1", sha256="cd12a064013ed18e2ee8475e669b9f58db1b225a0144debdb85a68cecddba57f")

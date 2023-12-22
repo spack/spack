@@ -14,6 +14,8 @@ class Quickjs(MakefilePackage):
     git = "https://github.com/bellard/quickjs.git"
     url = "https://bellard.org/quickjs/quickjs-2021-03-27.tar.xz"
 
+    license("MIT")
+
     version("master", branch="master")
     version(
         "2021-03-27", sha256="a45bface4c3379538dea8533878d694e289330488ea7028b105f72572fe7fe1a"

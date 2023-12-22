@@ -16,6 +16,8 @@ class RtTests(MakefilePackage):
     homepage = "https://git.kernel.org"
     url = "https://git.kernel.org/pub/scm/utils/rt-tests/rt-tests.git/snapshot/rt-tests-1.2.tar.gz"
 
+    license("GPL-2.0-only")
+
     version("1.2", sha256="7ccde036059c87681a4b00e7138678d9551b1232113441f6edda31ea45452426")
 
     def install(self, spec, prefix):

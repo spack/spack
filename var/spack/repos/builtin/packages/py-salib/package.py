@@ -14,6 +14,8 @@ class PySalib(PythonPackage):
 
     maintainers("schmitts")
 
+    license("MIT")
+
     version("1.4.4", sha256="50a6459088700f55261a683752818530d14ede30cece2c324ac94d4b9e288b6d")
     version("1.4.0.1", sha256="dbf6e865af9f3be82a79cf64889ed66d6d3b6803f0c22a242a112876789d49e7")
 

@@ -18,6 +18,8 @@ class AutodockGpu(MakefilePackage):
 
     maintainers("RemiLacroix-IDRIS")
 
+    license("LGPL-2.1-or-later")
+
     version("develop", branch="develop")
 
     variant(

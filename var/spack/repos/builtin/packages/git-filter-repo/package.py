@@ -15,6 +15,8 @@ class GitFilterRepo(Package):
 
     maintainers("aphedges")
 
+    license("MIT")
+
     version("2.38.0", sha256="db954f4cae9e47c6be3bd3161bc80540d44f5379cb9cf9df498f4e019f0a41a9")
     version("2.34.0", sha256="b1bf46af1e6a91a54056d0254e480803db8e40f631336c559a1a94d2a08389c4")
 

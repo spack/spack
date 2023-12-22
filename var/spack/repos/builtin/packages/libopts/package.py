@@ -13,6 +13,8 @@ class Libopts(AutotoolsPackage):
     homepage = "https://github.com/jppbsi/LibOPT/"
     git = "https://github.com/jppbsi/LibOPT.git"
 
+    license("Apache-2.0")
+
     version("master", branch="master")
 
     parallel = False

@@ -16,6 +16,8 @@ class Xdmf3(CMakePackage):
     homepage = "https://xdmf.org"
     git = "https://gitlab.kitware.com/xdmf/xdmf.git"
 
+    license("BSD-3-Clause")
+
     # There is no official release of XDMF and development has largely ceased,
     # but the current version, 3.x, is maintained on the master branch.
     version("2019-01-14", commit="8d9c98081d89ac77a132d56bc8bef53581db4078")

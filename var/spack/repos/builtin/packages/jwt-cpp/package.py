@@ -14,6 +14,8 @@ class JwtCpp(CMakePackage):
 
     maintainers("gartung", "greenc-FNAL", "marcmengel", "vitodb")
 
+    license("MIT")
+
     version("0.6.0", sha256="0227bd6e0356b211341075c7997c837f0b388c01379bd256aa525566a5553f03")
     version("0.5.2", sha256="d3188f9611597eb1bb285169879e1d87202bf10a08e4e7734c9f2097bfd4a850")
     version("0.5.1", sha256="d8f5ffb361824630b3b6f4aad26c730c915081071040c232ac57947d6177ef4f")

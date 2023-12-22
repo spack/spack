@@ -16,6 +16,8 @@ class Su2(MesonPackage):
     url = "https://github.com/su2code/SU2/archive/v7.0.3.tar.gz"
     git = "https://github.com/su2code/SU2.git"
 
+    license("BSD-3-Clause")
+
     version("7.5.1", commit="09ba9e3a9605c02d38290e34f42aa6982cb4dd05", submodules=True)
     version("7.5.0", commit="8e8ea59fe6225c8ec4e94d0e0a4b6690ea4294e5", submodules=True)
     version("7.4.0", commit="745e5d922c63c8ec6963b31808c20df2e3bfd075", submodules=True)

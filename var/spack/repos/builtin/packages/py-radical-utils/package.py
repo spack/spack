@@ -16,6 +16,8 @@ class PyRadicalUtils(PythonPackage):
 
     maintainers("andre-merzky")
 
+    license("MIT")
+
     version("develop", branch="devel")
     version("1.20.0", sha256="9b39dd616d70c387fb3f97d3510a506bac92c159b6482c3aebd3d11eeaeebcc9")
     version("1.18.1", sha256="5b3ab15417a1ef82f63f8a77763a177d6bc59b61a80823be0df8c0f7502d9b3e")

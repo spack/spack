@@ -12,6 +12,8 @@ class PyLmfit(PythonPackage):
     homepage = "https://lmfit.github.io/lmfit-py/"
     pypi = "lmfit/lmfit-0.9.5.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("1.0.2", sha256="67090ce56685cf7f92bd7358a1e7d4ad862b3758988109ec440e9825e5184b45")
     version("1.0.1", sha256="d249eb756899360f4d2a544c9458f47fc8f765ac22c09e099530585fd64e286e")
     version("0.9.15", sha256="cd7bdf47c09a3d49f30dff9a1c7f778973d15d1e1b5dc642f14c22f6630eaf2f")

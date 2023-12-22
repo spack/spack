@@ -18,6 +18,8 @@ class Hbase(Package):
     list_url = "https://archive.apache.org/dist/hbase"
     list_depth = 1
 
+    license("Apache-2.0")
+
     version("2.5.4", sha256="ffb929d1ffcaf0309e1617833f3b36645a9c9d9c10b47d6baccc7e50c6d0ed33")
     version("2.5.3", sha256="874f239c341a6a4a646051c79fda9e838242481b70463bf8daa28ba7239576c2")
     version("2.4.9", sha256="ed282a165fe0910b27d143f3ea21d552110bc155fd5456250a05dc51b0f0b6bd")

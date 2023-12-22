@@ -14,6 +14,8 @@ class PyAzote(PythonPackage):
     homepage = "https://github.com/nwg-piotr/azote"
     url = "https://github.com/nwg-piotr/azote/archive/v1.7.14.tar.gz"
 
+    license("GPL-3.0-only")
+
     version("1.7.14", sha256="68f9be55858dc33650a6712f68c9e5d2c96be9d7ca380dbde8ea9b2895f3f22f")
     version("1.7.12", sha256="71d56784decf19b4e1a30943e054fd95f5044f7d471a65cecfef885ac8ef917e")
     version("1.7.11", sha256="d8f0a63c3dacf1cb5b7c4b0b23a4f9190fc3c94c499a98f4f0827cace4b855b5")

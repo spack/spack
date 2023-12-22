@@ -14,6 +14,8 @@ class PyFenicsDijitso(PythonPackage):
     git = "https://bitbucket.org/fenics-project/dijitso.git"
     maintainers("js947", "chrisrichardson")
 
+    license("LGPL-3.0-only")
+
     version("master", branch="master")
     version("2019.1.0", sha256="eaa45eec4457f3f865d72a926b7cba86df089410e78de04cd89b15bb405e8fd9")
     version("2018.1.0", sha256="2084ada1e7bd6ecec0999b15a17db98c72e26f1ccbf3fcbe240b1a035a1a2e64")

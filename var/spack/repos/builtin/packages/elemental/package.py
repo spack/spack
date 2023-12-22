@@ -17,6 +17,8 @@ class Elemental(CMakePackage):
     url = "https://github.com/elemental/Elemental/archive/v0.87.7.tar.gz"
     git = "https://github.com/elemental/Elemental.git"
 
+    license("Apache-2.0")
+
     version("develop", branch="master")
     version("0.87.7", sha256="7becfdbc223e9c72e65ae876d842c48d2037d13f83e9f41cea285e21b840d7d9")
     version("0.87.6", sha256="b597987c99ddd3462e0619524c5b7f711177ae8ae541b1b961e11d96e15afc64")

@@ -12,6 +12,8 @@ class PyNumexpr(PythonPackage):
     homepage = "https://github.com/pydata/numexpr"
     url = "https://github.com/pydata/numexpr/archive/v2.7.0.tar.gz"
 
+    license("MIT")
+
     version("2.8.4", sha256="0e21addd25db5f62d60d97e4380339d9c1fb2de72c88b070c279776ee6455d10")
     version("2.8.3", sha256="389ceefca74eff30ec3fd03fc4c3b7ab3df8f22d1f235117a392ce702ed208c0")
     version("2.7.3", sha256="00d6b1518605afe0ed10417e0ff07123e5d531c02496c6eed7dd4b9923238e1e")

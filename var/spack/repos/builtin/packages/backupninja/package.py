@@ -12,6 +12,8 @@ class Backupninja(AutotoolsPackage):
     homepage = "https://github.com/lelutin/backupninja"
     git = "https://github.com/lelutin/backupninja.git"
 
+    license("GPL-2.0-or-later")
+
     version("master", branch="master")
 
     depends_on("autoconf", type="build")

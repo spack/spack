@@ -28,6 +28,8 @@ class Libdwarf(Package):
     url = "https://www.prevanders.net/libdwarf-20160507.tar.gz"
     list_url = homepage
 
+    license("LGPL-2.1-only")
+
     version("20180129", sha256="8bd91b57064b0c14ade5a009d3a1ce819f1b6ec0e189fc876eb8f42a8720d8a6")
     version("20160507", sha256="12ae39376e3915bf8fa92555989f3ad5f2f4f332b590a628541ce68987b337af")
     version("20130729", sha256="b6455d8616baf2883e2af91f006d6cbd583128fdfff46e3d1fae460bc223bb7b")

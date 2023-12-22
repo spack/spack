@@ -23,6 +23,8 @@ class RWru(RPackage):
 
     maintainers("jgaeb")
 
+    license("GPL-3.0-or-later")
+
     version("1.0.1", sha256="80b3f54cb2de77ea005755a2de3acfb923a1d380c0dbd52bc4d3e3fcb1d6f1fc")
     version("1.0.0", sha256="4eae65644981d0b99d3610adf40340b3606f40e6cd578e76a745524ba927e417")
     version("0.1-12", sha256="896ef4718109ab9fee686f050a3269cbab1589ef2aff7a45fc11a67f7bb35a29")

@@ -16,6 +16,8 @@ class PyExtensionHelpers(PythonPackage):
     homepage = "https://github.com/astropy/astropy-helpers"
     pypi = "extension-helpers/extension-helpers-0.1.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.1", sha256="ac8a6fe91c6d98986a51a9f08ca0c7945f8fd70d95b662ced4040ae5eb973882")
 
     depends_on("python@3.6:", type=("build", "run"))

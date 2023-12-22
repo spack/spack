@@ -16,6 +16,8 @@ class Fbgemm(CMakePackage):
 
     maintainers("dskhudia")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master", submodules=True)
     version(
         "2021-05-10", commit="7794b2950b35ddfa7426091e7fb2f991b1407557", submodules=True

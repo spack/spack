@@ -13,6 +13,8 @@ class Dcm2niix(CMakePackage):
     homepage = "https://github.com/rordenlab/dcm2niix"
     url = "https://github.com/rordenlab/dcm2niix/archive/refs/tags/v1.0.20220720.tar.gz"
 
+    license("Zlib")
+
     version(
         "1.0.20220720", sha256="a095545d6d70c5ce2efd90dcd58aebe536f135410c12165a9f231532ddab8991"
     )

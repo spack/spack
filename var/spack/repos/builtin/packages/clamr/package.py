@@ -16,6 +16,8 @@ class Clamr(CMakePackage):
     git = "https://github.com/lanl/CLAMR.git"
     tags = ["proxy-app"]
 
+    license("Unlicense")
+
     version("master")
 
     variant(

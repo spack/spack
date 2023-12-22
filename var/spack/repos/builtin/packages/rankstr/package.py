@@ -16,6 +16,8 @@ class Rankstr(CMakePackage):
 
     maintainers("CamStan", "gonsie")
 
+    license("MIT")
+
     version("main", branch="main")
     version("0.3.0", sha256="5e6378a8fe155b4c6c5cf45db8aaf0562d88e93471d0e12c1e922252ffcce5e6")
     version("0.2.0", sha256="a3f7fd8015156c1b600946af759a03e099e05c83e7b2da6bac394fe7c0d4efae")

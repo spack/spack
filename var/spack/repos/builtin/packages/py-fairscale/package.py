@@ -14,6 +14,8 @@ class PyFairscale(PythonPackage):
     homepage = "https://github.com/facebookresearch/fairscale"
     pypi = "fairscale/fairscale-0.4.13.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.4.13", sha256="1b797825c427f5dba92253fd0d8daa574e8bd651a2423497775fab1b30cfb768")
     version("0.4.4", sha256="7719898743dc58c04a2294c896ee6308c92ccb3af9e10632b2a62f77cb689357")
 

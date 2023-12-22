@@ -15,6 +15,8 @@ class PyScipy(PythonPackage):
 
     maintainers("adamjstewart", "rgommers")
 
+    license("BSD-3-Clause")
+
     version("main", branch="main")
     version("1.11.4", sha256="90a2b78e7f5733b9de748f589f09225013685f9b218275257f8a8168ededaeaa")
     version("1.11.3", sha256="bba4d955f54edd61899776bad459bf7326e14b9fa1c552181f0479cc60a568cd")

@@ -19,6 +19,8 @@ class RFarver(RPackage):
 
     cran = "farver"
 
+    license("MIT")
+
     version("2.1.1", sha256="0dcfda6ca743f465372790bcff1bcbc6a7145fdac1c682b021f654e8c6c996ce")
     version("2.1.0", sha256="e5c8630607049f682fb3002b99ca4f5e7c6b94f8b2a4342df594e7853b77cef4")
     version("2.0.3", sha256="0e1590df79ec6078f10426411b96216b70568a4eaf3ffd84ca723add0ed8e5cc")

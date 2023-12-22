@@ -14,6 +14,8 @@ class Setserial(AutotoolsPackage):
         "https://udomain.dl.sourceforge.net/project/setserial/setserial/2.17/setserial-2.17.tar.gz"
     )
 
+    license("GPL-2.0-only")
+
     version("2.17", sha256="7e4487d320ac31558563424189435d396ddf77953bb23111a17a3d1487b5794a")
 
     def install(self, spec, prefix):

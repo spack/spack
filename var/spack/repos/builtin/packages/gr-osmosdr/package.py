@@ -33,6 +33,8 @@ class GrOsmosdr(CMakePackage):
 
     variant("hackrf", default=True, description="Support HackRF Hardware")
 
+    license("GPL-3.0-only")
+
     version("0.2.2", sha256="5a7ce7afee38a56191b5d16cb4a91c92476729ff16ed09cbba5a3851ac619713")
 
     depends_on("gnuradio")

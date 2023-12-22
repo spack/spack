@@ -13,6 +13,8 @@ class PySncosmo(PythonPackage):
     homepage = "https://sncosmo.readthedocs.io/"
     pypi = "sncosmo/sncosmo-1.2.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("1.2.0", sha256="f3969eec5b25f60c70418dbd64765a2b4735bb53c210c61d0aab68916daea588")
 
     # Required dependencies

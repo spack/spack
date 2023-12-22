@@ -12,6 +12,8 @@ class PyPydataSphinxTheme(PythonPackage):
     homepage = "https://pydata-sphinx-theme.readthedocs.io/en/stable"
     pypi = "pydata_sphinx_theme/pydata_sphinx_theme-0.14.1.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.14.1", sha256="d8d4ac81252c16a002e835d21f0fea6d04cf3608e95045c816e8cc823e79b053")
 
     depends_on("python@3.8:", type=("build", "run"))

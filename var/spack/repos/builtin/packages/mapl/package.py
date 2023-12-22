@@ -33,6 +33,8 @@ class Mapl(CMakePackage):
         "AlexanderRichert-NOAA",
     )
 
+    license("Apache-2.0")
+
     version("develop", branch="develop")
     version("main", branch="main")
 

@@ -16,6 +16,8 @@ class Npm(Package):
     url = "https://registry.npmjs.org/npm/-/npm-9.3.1.tgz"
     git = "https://github.com/npm/cli.git"
 
+    license("Artistic-2.0")
+
     version("9.3.1", sha256="41caa26a340b0562bc5429d28792049c980fe3e872b42b82cad94e8f70e37f40")
     version("8.19.3", sha256="634bf4e0dc87be771ebf48a058629960e979a209c20a51ebdbc4897ca6a25260")
     version("7.24.2", sha256="5b9eeea011f8bc3b76e55cc33339e87213800677f37e0756ad13ef0e9eaccd64")

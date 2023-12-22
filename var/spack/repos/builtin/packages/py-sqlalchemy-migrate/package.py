@@ -13,6 +13,8 @@ class PySqlalchemyMigrate(PythonPackage):
     homepage = "http://www.openstack.org/"
     pypi = "sqlalchemy-migrate/sqlalchemy-migrate-0.13.0.tar.gz"
 
+    license("MIT")
+
     version("0.13.0", sha256="0bc02e292a040ade5e35a01d3ea744119e1309cdddb704fdb99bac13236614f8")
 
     depends_on("py-setuptools", type="build")

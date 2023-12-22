@@ -13,6 +13,8 @@ class PyFtputil(PythonPackage):
     pypi = "ftputil/ftputil-5.0.4.tar.gz"
     maintainers("charmoniumQ")
 
+    license("AFL-2.1")
+
     version("5.0.4", sha256="6889db8649dd20d9b6d40a6c5f0f84ccf340a7dac1e0bfc0f0024090fc2afb33")
 
     # https://git.sr.ht/~sschwarzer/ftputil/tree/v5.0.4/item/setup.py

@@ -12,6 +12,8 @@ class PyPygobject(PythonPackage):
 
     homepage = "https://pypi.python.org/pypi/pygobject"
 
+    license("LGPL-2.1-or-later")
+
     version("3.38.0", sha256="0372d1bb9122fc19f500a249b1f38c2bb67485000f5887497b4b205b3e7084d5")
     version("3.28.3", sha256="3dd3e21015d06e00482ea665fc1733b77e754a6ab656a5db5d7f7bfaf31ad0b0")
     version("2.28.6", sha256="fb8a1d4f665130a125011659bd347c7339c944232163dbb9a34fd0686577adb8")

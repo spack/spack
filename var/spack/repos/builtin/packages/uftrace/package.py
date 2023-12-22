@@ -19,6 +19,8 @@ class Uftrace(AutotoolsPackage):
     maintainers("bernhardkaindl")
     tags = ["trace-tools"]
 
+    license("GPL-2.0-or-later")
+
     # The build process uses 'git describe --tags' to get the package version
     version("master", branch="master", get_full_repo=True)
     version("0.11", sha256="101dbb13cb3320ee76525ec26426f2aa1de4e3ee5af74f79cb403ae4d2c6c871")

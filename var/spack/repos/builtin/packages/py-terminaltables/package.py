@@ -14,6 +14,8 @@ class PyTerminaltables(PythonPackage):
 
     maintainers("dorton21")
 
+    license("MIT")
+
     version("3.1.0", sha256="f3eb0eb92e3833972ac36796293ca0906e998dc3be91fbe1f8615b331b853b81")
 
     depends_on("py-setuptools", type="build")

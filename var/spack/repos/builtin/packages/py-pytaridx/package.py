@@ -17,6 +17,8 @@ class PyPytaridx(PythonPackage):
 
     maintainers("bhatiaharsh")
 
+    license("MIT")
+
     version("1.0.2", sha256="702c42ade13ae8688a56a8edfcd7e0e7512a489a22796c6cfdbcef677010ee47")
     version("master", branch="master")
 

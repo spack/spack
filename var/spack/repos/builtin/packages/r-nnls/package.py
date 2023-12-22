@@ -15,4 +15,6 @@ class RNnls(RPackage):
 
     cran = "nnls"
 
+    license("GPL-2.0-or-later")
+
     version("1.4", sha256="0e5d77abae12bc50639d34354f96a8e079408c9d7138a360743b73bd7bce6c1f")

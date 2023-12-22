@@ -12,6 +12,8 @@ class PyPyjwt(PythonPackage):
     homepage = "https://github.com/jpadilla/pyjwt"
     pypi = "PyJWT/PyJWT-1.7.1.tar.gz"
 
+    license("MIT")
+
     version("2.4.0", sha256="d42908208c699b3b973cbeb01a969ba6a96c821eefb1c5bfe4c390c01d67abba")
     version("2.1.0", sha256="fba44e7898bbca160a2b2b501f492824fc8382485d3a6f11ba5d0c1937ce6130")
     version("1.7.1", sha256="8d59a976fb773f3e6a39c85636357c4f0e242707394cadadd9814f5cbaa20e96")

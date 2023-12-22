@@ -15,6 +15,8 @@ class Libmonitor(AutotoolsPackage):
     git = "https://github.com/HPCToolkit/libmonitor.git"
     maintainers("mwkrentel")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("2023.03.15", commit="48520940b915352748950ea718fadc82f87f659d")
     version("2023.02.13", commit="6db182b25202552f75a087116ab57193652d150f")

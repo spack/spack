@@ -16,6 +16,8 @@ class Imlib2(AutotoolsPackage, SourceforgePackage):
 
     maintainers("TheQueasle")
 
+    license("Imlib2")
+
     version("1.7.1", sha256="033a6a639dcbc8e03f65ff05e57068e7346d50ee2f2fff304bb9095a1b2bc407")
     version("1.7.0", sha256="1976ca3db48cbae79cd0fc737dabe39cc81494fc2560e1d22821e7dc9c22b37d")
     version("1.6.1", sha256="4d393a77e13da883c8ee2da3b029da3570210fe37d000c9ac33d9fce751b166d")

@@ -14,6 +14,8 @@ class Umoci(MakefilePackage):
     homepage = "https://umo.ci/"
     url = "https://github.com/openSUSE/umoci/archive/v0.4.4.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.4.4", sha256="bc5c53812e0076d026aa275b197b878857cf7ba7a4f048fd13433de6107b9aed")
     version("0.4.3", sha256="b7d537fec84d4327b1bbfe27118f69df5591143a74a7a1b66cc9904d85c30226")
     version("0.4.2", sha256="fbc397dd39bda2570155dc3b1be0835809a36fccc342e2545b3edb9f0f9dc6f5")

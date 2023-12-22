@@ -13,6 +13,8 @@ class PyTempita(PythonPackage):
     homepage = "https://pypi.org/project/Tempita"
     pypi = "tempita/Tempita-0.5.2.tar.gz"
 
+    license("MIT")
+
     version("0.5.2", sha256="cacecf0baa674d356641f1d406b8bff1d756d739c46b869a54de515d08e6fc9c")
 
     depends_on("py-setuptools", type="build")

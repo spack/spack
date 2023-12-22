@@ -14,6 +14,8 @@ class Kmod(AutotoolsPackage):
     homepage = "https://github.com/lucasdemarchi/kmod"
     url = "https://github.com/lucasdemarchi/kmod/archive/v27.tar.gz"
 
+    license("GPL-2.0-or-later")
+
     version("27", sha256="969c4573b01f4c9e1d3e3c9d179bd16ec999bbb99dd55b7623f42551328478c3")
     version("26", sha256="f28bc40ead548dce4a8e956fccfc36fd80f2b40884d270b812f1bfbd886e858c")
     version("25", sha256="16a8bbd3ee321d0847847256ea2fd124f6250257c055c8cf97e78f18bf27559c")

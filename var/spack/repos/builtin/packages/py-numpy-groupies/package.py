@@ -22,6 +22,8 @@ class PyNumpyGroupies(PythonPackage):
     homepage = "https://github.com/ml31415/numpy-groupies"
     pypi = "numpy_groupies/numpy_groupies-0.9.20.tar.gz"
 
+    license("BSD-2-Clause")
+
     version("0.9.20", sha256="923a382d6bc6876384b58a9c0503b05b9d36a660f329695c2d33e4f93fcbbe3d")
 
     depends_on("python@3.7:", type=("build", "run"))

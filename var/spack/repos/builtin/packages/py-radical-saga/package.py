@@ -18,6 +18,8 @@ class PyRadicalSaga(PythonPackage):
 
     maintainers("andre-merzky")
 
+    license("MIT")
+
     version("develop", branch="devel")
     version("1.20.0", sha256="d85f3ed564d9eaf3ead2aa349c854e944ca459492ebf88542404106fce4204ab")
     version("1.18.0", sha256="544d4ffafc0b311151724db371ee11e27744103068748962866351ce31ccb810")

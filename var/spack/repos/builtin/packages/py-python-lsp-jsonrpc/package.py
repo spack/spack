@@ -14,6 +14,8 @@ class PyPythonLspJsonrpc(PythonPackage):
 
     maintainers("alecbcs")
 
+    license("MIT")
+
     version("1.0.0", sha256="7bec170733db628d3506ea3a5288ff76aa33c70215ed223abdb0d95e957660bd")
 
     depends_on("py-setuptools", type="build")

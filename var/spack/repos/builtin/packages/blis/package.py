@@ -113,6 +113,8 @@ class Blis(BlisBase):
     url = "https://github.com/flame/blis/archive/0.7.0.tar.gz"
     git = "https://github.com/flame/blis.git"
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("0.9.0", sha256="1135f664be7355427b91025075562805cdc6cc730d3173f83533b2c5dcc2f308")
     version("0.8.1", sha256="729694128719801e82fae7b5f2489ab73e4a467f46271beff09588c9265a697b")

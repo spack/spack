@@ -12,6 +12,8 @@ class PyMemray(PythonPackage):
     homepage = "https://github.com/bloomberg/memray"
     pypi = "memray/memray-1.1.0.tar.gz"
 
+    license("Apache-2.0")
+
     version("1.1.0", sha256="876e46e0cd42394be48b33f81314bc946f4eb023b04bf1def084c25ccf1d2bb6")
 
     depends_on("python@3.7:", type=("build", "link", "run"))

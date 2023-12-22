@@ -15,6 +15,8 @@ class PyBdbag(PythonPackage):
     homepage = "https://github.com/fair-research/bdbag/"
     pypi = "bdbag/bdbag-1.6.3.tar.gz"
 
+    license("Apache-2.0")
+
     version("1.6.3", sha256="1ad2e4956045cb3d43a6276391ad919e42a90a2443727dbc5b1ac6eeb6d6e3c9")
 
     depends_on("python@2.7:2,3.5:3", type=("build", "run"))

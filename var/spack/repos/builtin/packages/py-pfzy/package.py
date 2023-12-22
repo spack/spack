@@ -12,6 +12,8 @@ class PyPfzy(PythonPackage):
     homepage = "https://github.com/kazhala/pfzy"
     pypi = "pfzy/pfzy-0.3.4.tar.gz"
 
+    license("MIT")
+
     version("0.3.4", sha256="717ea765dd10b63618e7298b2d98efd819e0b30cd5905c9707223dceeb94b3f1")
 
     depends_on("python@3.7:3", type=("build", "run"))

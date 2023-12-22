@@ -15,6 +15,8 @@ class Zfs(AutotoolsPackage):
     homepage = "https://zfsonlinux.org/"
     url = "https://github.com/openzfs/zfs/releases/download/zfs-0.8.3/zfs-0.8.3.tar.gz"
 
+    license("CDDL-1.0")
+
     version("0.8.3", sha256="545a4897ce30c2d2dd9010a0fdb600a0d3d45805e2387093c473efc03aa9d7fd")
     version("0.8.2", sha256="47608e257c8ecebb918014ef1da6172c3a45d990885891af18e80f5cc28beab8")
     version("0.8.1", sha256="0af79fde44b7b8ecb94d5166ce2e4fff7409c20ed874c2d759db92909e6c2799")

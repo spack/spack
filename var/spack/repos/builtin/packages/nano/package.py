@@ -14,6 +14,8 @@ class Nano(AutotoolsPackage):
     list_url = "https://www.nano-editor.org/dist/"
     list_depth = 1
 
+    license("GPL-3.0-or-later")
+
     # 7.x
     version("7.2", sha256="86f3442768bd2873cec693f83cdf80b4b444ad3cc14760b74361474fc87a4526")
     # 6.x

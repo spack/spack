@@ -12,6 +12,8 @@ class PyPytestAstropyHeader(PythonPackage):
     homepage = "https://github.com/astropy/pytest-astropy-header"
     pypi = "pytest-astropy-header/pytest-astropy-header-0.2.2.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.2.2", sha256="77891101c94b75a8ca305453b879b318ab6001b370df02be2c0b6d1bb322db10")
 
     depends_on("py-setuptools@30.3.0:", type="build")

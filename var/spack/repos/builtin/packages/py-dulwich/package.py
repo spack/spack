@@ -15,6 +15,8 @@ class PyDulwich(PythonPackage):
     homepage = "https://www.dulwich.io"
     pypi = "dulwich/dulwich-0.20.15.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.21.6", sha256="30fbe87e8b51f3813c131e2841c86d007434d160bd16db586b40d47f31dd05b0")
     version("0.20.46", sha256="4f0e88ffff5db1523d93d92f1525fe5fa161318ffbaad502c1b9b3be7a067172")
     version("0.20.44", sha256="10e8d73763dd30c86a99a15ade8bfcf3ab8fe96532cdf497e8cb1d11832352b8")

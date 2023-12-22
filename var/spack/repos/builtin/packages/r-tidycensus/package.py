@@ -18,6 +18,8 @@ class RTidycensus(RPackage):
 
     cran = "tidycensus"
 
+    license("MIT")
+
     version("1.3.2", sha256="ca47323f19c94a3c767bef59986f4a6cb4e455b3eb21ea64f1b3d6339443c515")
     version("1.2.3", sha256="23bc58bb6e20e1056e40dca55a49576b5e186fdb324f00fa9d5c07fb675f32ff")
     version("1.2.2", sha256="5cdbb92314061c9d8d3d62f623699fa115d7faae1f4a961d55ab905538f8e7cc")

@@ -16,6 +16,8 @@ class Iproute2(AutotoolsPackage):
     depends_on("flex", type="build")
     depends_on("libmnl")
 
+    license("GPL-2.0-or-later")
+
     version("5.11.0", sha256="16b79e6ce65d4d5fd425cef2fd92a58c403a93faeeed0e0a3202b36a8e857d1f")
     version("5.10.0", sha256="164f1de457eefbdadb98d82c309a0977542b34e7a2dfe81e497a0b93675cb3d2")
     version("5.9.0", sha256="1afde56d416f136b1236ac2f8276e4edbe114ca3c2ab12f11af11b84cf0992e4")

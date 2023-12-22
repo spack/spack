@@ -28,6 +28,8 @@ class Openspeedshop(CMakePackage):
 
     maintainers("jgalarowicz")
 
+    license("GPL-2.0-only")
+
     version("develop", branch="master")
     version("2.4.2.1", branch="2.4.2.1")
     version("2.4.2", branch="2.4.2")

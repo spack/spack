@@ -14,6 +14,8 @@ class Biopieces(Package):
     homepage = "https://maasha.github.io/biopieces/"
     git = "https://github.com/maasha/biopieces.git"
 
+    license("GPL-2.0-only")
+
     version("2016-04-12", commit="982f80f7c55e2cae67737d80fe35a4e784762856", submodules=True)
 
     depends_on("perl", type=("build", "run"))

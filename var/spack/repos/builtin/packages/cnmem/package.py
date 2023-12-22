@@ -12,6 +12,8 @@ class Cnmem(CMakePackage):
     homepage = "https://github.com/NVIDIA/cnmem"
     git = "https://github.com/NVIDIA/cnmem.git"
 
+    license("BSD-3-Clause")
+
     version("git", branch="master")
 
     depends_on("cmake@2.8.8:", type="build")

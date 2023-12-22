@@ -18,6 +18,8 @@ class Libsodium(AutotoolsPackage):
     url = "https://download.libsodium.org/libsodium/releases/libsodium-1.0.13.tar.gz"
     list_url = "https://download.libsodium.org/libsodium/releases/old"
 
+    license("ISC")
+
     version("1.0.18", sha256="6f504490b342a4f8a4c4a02fc9b866cbef8622d5df4e5452b46be121e46636c1")
     version("1.0.17", sha256="0cc3dae33e642cc187b5ceb467e0ad0e1b51dcba577de1190e9ffa17766ac2b1")
     version("1.0.16", sha256="eeadc7e1e1bcef09680fb4837d448fbdf57224978f865ac1c16745868fbd0533")

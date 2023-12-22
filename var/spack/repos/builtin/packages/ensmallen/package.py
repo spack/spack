@@ -19,6 +19,8 @@ class Ensmallen(CMakePackage):
     homepage = "https://ensmallen.org"
     url = "https://github.com/mlpack/ensmallen/archive/refs/tags/2.19.1.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("2.19.1", sha256="f36ad7f08b0688d2a8152e1c73dd437c56ed7a5af5facf65db6ffd977b275b2e")
 
     variant("openmp", default=True, description="Use OpenMP for parallelization")

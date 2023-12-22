@@ -12,6 +12,8 @@ class PyWrapt(PythonPackage):
     homepage = "https://github.com/GrahamDumpleton/wrapt"
     pypi = "wrapt/wrapt-1.11.2.tar.gz"
 
+    license("BSD-2-Clause")
+
     version("1.15.0", sha256="d06730c6aed78cee4126234cf2d071e01b44b915e725a6cb439a879ec9754a3a")
     version("1.14.1", sha256="380a85cf89e0e69b7cfbe2ea9f765f004ff419f34194018a6827ac0e3edfed4d")
     version("1.13.3", sha256="1fea9cd438686e6682271d36f3481a9f3636195578bab9ca3382e2f5f01fc185")

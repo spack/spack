@@ -20,6 +20,8 @@ class PyScikitOptimize(PythonPackage):
 
     maintainers("liuyangzhuan")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("0.9.0", sha256="77d8c9e64947fc9f5cc05bbc6aed7b8a9907871ae26fe11997fd67be90f26008")
     version("0.5.2", sha256="1d7657a4b8ef9aa6d81e49b369c677c584e83269f11710557741d3b3f8fa0a75")

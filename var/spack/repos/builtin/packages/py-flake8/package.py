@@ -13,6 +13,8 @@ class PyFlake8(PythonPackage):
     homepage = "https://github.com/PyCQA/flake8"
     pypi = "flake8/flake8-4.0.1.tar.gz"
 
+    license("MIT")
+
     version("6.1.0", sha256="d5b3857f07c030bdb5bf41c7f53799571d75c4491748a3adcd47de929e34cd23")
     version("6.0.0", sha256="c61007e76655af75e6785a931f452915b371dc48f56efd765247c8fe68f2b181")
     version("5.0.4", sha256="6fbe320aad8d6b95cec8b8e47bc933004678dc63095be98528b7bdd2a9f510db")

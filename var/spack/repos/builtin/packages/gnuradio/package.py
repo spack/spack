@@ -22,6 +22,8 @@ class Gnuradio(CMakePackage):
 
     maintainers("aweits")
 
+    license("GPL-3.0-or-later")
+
     version("3.8.2.0", sha256="ddda12b55e3e1d925eefb24afb9d604bca7c9bbe0a431707aa48a2eed53eec2f")
 
     variant("gui", default=False, description="Build with gui support")

@@ -13,6 +13,8 @@ class Libxc(AutotoolsPackage, CudaPackage):
     homepage = "https://tddft.org/programs/libxc/"
     url = "https://gitlab.com/libxc/libxc/-/archive/6.1.0/libxc-6.1.0.tar.gz"
 
+    license("MPL-2.0-no-copyleft-exception")
+
     version("6.2.2", sha256="3b0523924579cf494cafc6fea92945257f35692b004217d3dfd3ea7ca780e8dc")
     version("6.2.1", sha256="b5f3b4514db6bc4ccda1da90ac6176ea1f82e12241cc66427c58cbc4a5197b9b")
     version("6.2.0", sha256="3d25878782b5f94e7e4d41bd6de27f98983584cd0be0c65e69a9ada986b56b4d")

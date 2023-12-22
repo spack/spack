@@ -13,6 +13,8 @@ class PyScineChemoton(PythonPackage):
     pypi = "scine_chemoton/scine_chemoton-2.2.0.tar.gz"
     git = "https://github.com/qcscine/puffin.git"
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("2.2.0", sha256="cda4f9de1e1c00ecc5e0b2d9c17a5edb56b468d454022e3f4045ec116ba2ec45")
 

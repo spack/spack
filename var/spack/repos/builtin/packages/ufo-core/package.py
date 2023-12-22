@@ -15,6 +15,8 @@ class UfoCore(CMakePackage):
     homepage = "https://ufo.kit.edu"
     url = "https://github.com/ufo-kit/ufo-core/archive/v0.14.0.tar.gz"
 
+    license("LGPL-3.0-only")
+
     version("0.14.0", sha256="3bf0d1924d6ae3f51673cc8b0b31b17873e79f1a0129a9af54b4062b1b2b3ad7")
 
     depends_on("glib")

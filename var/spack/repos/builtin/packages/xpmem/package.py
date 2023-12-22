@@ -20,6 +20,8 @@ class Xpmem(AutotoolsPackage):
 
     maintainers("skosukhin")
 
+    license("LGPL-2.1-or-later")
+
     version("master", branch="master")
 
     # Versions starting 2.6.4 are neither tagged nor released in the repo

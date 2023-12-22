@@ -14,6 +14,8 @@ class PrunersNinja(AutotoolsPackage):
     url = "https://github.com/PRUNERS/NINJA/releases/download/v1.0.0/NINJA-1.0.0.tar.gz"
     git = "https://github.com/PRUNERS/NINJA.git"
 
+    license("GPL-3.0-or-later")
+
     version("master", branch="master")
     version("1.0.1", sha256="53df5c019054b60c68e63d3e249127f1d5f267a70539c8809fb42a8ddbfcb29b")
     version("1.0.0", sha256="f25c189783b57801f298dfff8770f42733a43f926668aceff4abd287b6e3a4d1")

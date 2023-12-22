@@ -15,6 +15,8 @@ class Neovim(CMakePackage):
 
     maintainers("albestro", "trws")
 
+    license("Apache-2.0 AND Vim")
+
     version("master", branch="master")
     version("stable", tag="stable", commit="d772f697a281ce9c58bf933997b87c7f27428a60")
     version("0.9.4", sha256="148356027ee8d586adebb6513a94d76accc79da9597109ace5c445b09d383093")

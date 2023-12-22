@@ -15,6 +15,8 @@ class Dlib(CMakePackage):
 
     maintainer = ["robertu94"]
 
+    license("BSL-1.0")
+
     version("master", branch="master")
     version("19.22", sha256="5f44b67f762691b92f3e41dcf9c95dd0f4525b59cacb478094e511fdacb5c096")
     version("19.21", sha256="116f52e58be04b47dab52057eaad4b5c4d5c3032d927fe23d55b0741fc4107a0")

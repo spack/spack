@@ -12,6 +12,8 @@ class PyTomliW(PythonPackage):
     homepage = "https://github.com/hukkin/tomli-w"
     pypi = "tomli_w/tomli_w-1.0.0.tar.gz"
 
+    license("MIT")
+
     version("1.0.0", sha256="f463434305e0336248cac9c2dc8076b707d8a12d019dd349f5c1e382dd1ae1b9")
 
     depends_on("python@3.7:", type=("build", "run"))

@@ -14,6 +14,8 @@ class Ratel(MakefilePackage, CudaPackage, ROCmPackage):
 
     maintainers("jedbrown", "jeremylt")
 
+    license("BSD-2-Clause")
+
     version("develop", branch="main")
     version("0.3.0", tag="v0.3.0", commit="ca2f3357e10b89fb274626fba104aad30c72774b")
     version("0.2.1", tag="v0.2.1", commit="043b61696a2407205fdfd898681467d1a7ff59e0")

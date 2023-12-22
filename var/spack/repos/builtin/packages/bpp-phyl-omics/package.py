@@ -12,6 +12,8 @@ class BppPhylOmics(CMakePackage):
     homepage = "http://biopp.univ-montp2.fr/wiki/index.php/Installation"
     url = "https://github.com/BioPP/bpp-phyl-omics/archive/v2.4.1.tar.gz"
 
+    license("CECILL-2.0")
+
     version("2.4.1", sha256="fb0908422e59c71065db874e68d5c71acddf66d8a51776f7e04a5f8d5f0f6577")
     version("2.4.0", sha256="56cc0da613e72dbb8d0ed10d8209e182804a850fd96df1481e4710df97f18435")
     version("2.3.2", sha256="2320e2d33f7bc66bd1a1f0771a8d85e41ad3cec0347cef0f09463ba86f6efa96")

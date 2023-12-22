@@ -12,6 +12,8 @@ class PyHdfs(PythonPackage):
     homepage = "https://hdfscli.readthedocs.io/en/latest/"
     pypi = "hdfs/hdfs-2.1.0.tar.gz"
 
+    license("MIT")
+
     version("2.1.0", sha256="a40fe99ccb03b5c3247b33a4110eb21b57405dd7c3f1b775e362e66c19b44bc6")
 
     depends_on("py-setuptools", type="build")

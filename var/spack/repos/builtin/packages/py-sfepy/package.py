@@ -17,6 +17,8 @@ class PySfepy(PythonPackage):
     url = "https://github.com/sfepy/sfepy/archive/release_2021.3.tar.gz"
     git = "https://github.com/sfepy/sfepy.git"
 
+    license("BSD-3-Clause")
+
     version("2021.3", sha256="b2a760b0f3277ac223ff25821a4156b48d06b3769e6a9a3bd0bffef5a43cbe17")
 
     variant("petsc", default=False, description="Enable PETSc support")

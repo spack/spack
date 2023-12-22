@@ -12,6 +12,8 @@ class Highway(CMakePackage):
     homepage = "https://github.com/google/highway"
     url = "https://github.com/google/highway/archive/refs/tags/1.0.0.tar.gz"
 
+    license("Apache-2.0")
+
     version("1.0.7", sha256="5434488108186c170a5e2fca5e3c9b6ef59a1caa4d520b008a9b8be6b8abe6c5")
     version("1.0.6", sha256="d89664a045a41d822146e787bceeefbf648cc228ce354f347b18f2b419e57207")
     version("1.0.5", sha256="99b7dad98b8fa088673b720151458fae698ae5df9154016e39de4afdc23bb927")
