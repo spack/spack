@@ -31,6 +31,9 @@ class Papi(AutotoolsPackage, ROCmPackage):
     git = "https://github.com/icl-utk-edu/papi"
 
     version("master", branch="master")
+    version("7.1.0", sha256="950d0e997e9e908f58c103efd54983e905b6cffa75ef52ed8fdd1ab441977bb6")
+    version("7.0.1", sha256="c105da5d8fea7b113b0741a943d467a06c98db959ce71bdd9a50b9f03eecc43e")
+    # Note: version 7.0.0 is omitted due to build issues, see PR 33940 for more information
     version("6.0.0.1", sha256="3cd7ed50c65b0d21d66e46d0ba34cd171178af4bbf9d94e693915c1aca1e287f")
     version("6.0.0", sha256="3442709dae3405c2845b304c06a8b15395ecf4f3899a89ceb4d715103cb4055f")
     version("5.7.0", sha256="d1a3bb848e292c805bc9f29e09c27870e2ff4cda6c2fba3b7da8b4bba6547589")
@@ -63,6 +66,7 @@ class Papi(AutotoolsPackage, ROCmPackage):
     depends_on("cuda", when="+nvml")
     depends_on("hsa-rocr-dev", when="+rocm")
     depends_on("rocprofiler-dev", when="+rocm")
+    depends_on("llvm-amdgpu +openmp", when="+rocm")
     depends_on("rocm-smi-lib", when="+rocm_smi")
 
     conflicts("%gcc@8:", when="@5.3.0", msg="Requires GCC version less than 8.0")
@@ -80,6 +84,8 @@ class Papi(AutotoolsPackage, ROCmPackage):
     )
     patch("crayftn-fixes.patch", when="@6.0.0:%cce@9:")
     patch("intel-oneapi-compiler-fixes.patch", when="@6.0.0:%oneapi")
+    patch("intel-cray-freeform.patch", when="@7.0.1")
+    patch("spack-hip-path.patch", when="@7.0.1")
 
     configure_directory = "src"
 
@@ -87,12 +93,13 @@ class Papi(AutotoolsPackage, ROCmPackage):
         spec = self.spec
         if "+lmsensors" in spec and self.version >= Version("6"):
             env.set("PAPI_LMSENSORS_ROOT", spec["lm-sensors"].prefix)
-        if "^cuda" in spec:
+        if "+cuda" in spec:
             env.set("PAPI_CUDA_ROOT", spec["cuda"].prefix)
         if "+rocm" in spec:
             env.set("PAPI_ROCM_ROOT", spec["hsa-rocr-dev"].prefix)
             env.set("HSA_TOOLS_LIB", "%s/librocprofiler64.so" % spec["rocprofiler-dev"].prefix.lib)
             env.append_flags("CFLAGS", "-I%s/rocprofiler/include" % spec["rocprofiler-dev"].prefix)
+            env.append_flags("LDFLAGS", "-L%s/lib" % spec["llvm-amdgpu"].prefix)
             env.set(
                 "ROCP_METRICS", "%s/rocprofiler/lib/metrics.xml" % spec["rocprofiler-dev"].prefix
             )
