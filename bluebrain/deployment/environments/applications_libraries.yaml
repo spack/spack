@@ -34,9 +34,6 @@ spack:
           - python-dev
         projections:
           all: '{name}/{version}'
-  packages:
-    petsc:
-      variants: ~hypre
   specs:
     - boost+atomic+chrono+date_time+filesystem+json+locale+log+math+program_options+python+random+regex+serialization+shared+signals+stacktrace+system+test+timer+type_erasure
     - caliper+cuda cuda_arch=70
