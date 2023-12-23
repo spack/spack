@@ -56,6 +56,14 @@ spack:
     paraview:
       # Don't build GUI support or GLX rendering for HPC/container deployments
       require: "@5.11 ~qt+osmesa"
+    umpire:
+      require:
+        - spec: "~mpi"
+          when: "+rocm"
+    caliper:
+      require:
+        - spec: "~mpi"
+          when: "+rocm"
 
     # ROCm 5.4.3
     comgr:
@@ -248,7 +256,7 @@ spack:
   - arborx +rocm amdgpu_target=gfx908
   - cabana +rocm amdgpu_target=gfx908
   - caliper +rocm amdgpu_target=gfx908
-  - chai ~benchmarks +rocm amdgpu_target=gfx908
+  - chai +rocm amdgpu_target=gfx908
   - ecp-data-vis-sdk +paraview +vtkm +rocm amdgpu_target=gfx908
   - exago +mpi +python +raja +hiop +rocm amdgpu_target=gfx908 ~ipopt cxxflags="-Wno-error=non-pod-varargs" ^hiop@1.0.0 ~sparse +mpi +raja +rocm amdgpu_target=gfx908
   - gasnet +rocm amdgpu_target=gfx908
@@ -289,7 +297,7 @@ spack:
   - arborx +rocm amdgpu_target=gfx90a
   - cabana +rocm amdgpu_target=gfx90a
   - caliper +rocm amdgpu_target=gfx90a
-  - chai ~benchmarks +rocm amdgpu_target=gfx90a
+  - chai +rocm amdgpu_target=gfx90a
   - ecp-data-vis-sdk +paraview +vtkm +rocm amdgpu_target=gfx90a
   - exago +mpi +python +raja +hiop +rocm amdgpu_target=gfx90a ~ipopt cxxflags="-Wno-error=non-pod-varargs" ^hiop@1.0.0 ~sparse +mpi +raja +rocm amdgpu_target=gfx90a  
   - gasnet +rocm amdgpu_target=gfx90a

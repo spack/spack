@@ -18,7 +18,7 @@ spack:
       - blt
       - caliper
       #- care  ## ~benchmarks ~examples ~tests
-      #- chai  ## ~benchmarks ~examples ~tests
+      #- chai  ## ~examples
       - conduit  # ^hdf5+shared
       - flux-core
       #- flux-sched

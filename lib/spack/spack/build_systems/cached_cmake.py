@@ -3,7 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections.abc
+
+# import glob
 import os
+import re
 from typing import Tuple
 
 import llnl.util.filesystem as fs
@@ -13,6 +16,14 @@ import spack.build_environment
 import spack.builder
 
 from .cmake import CMakeBuilder, CMakePackage
+
+# from spack.version import Version
+
+
+def spec_uses_toolchain(spec):
+    gcc_toolchain_regex = re.compile(".*gcc-toolchain.*")
+    using_toolchain = list(filter(gcc_toolchain_regex.match, spec.compiler_flags["cxxflags"]))
+    return using_toolchain
 
 
 def cmake_cache_path(name, value, comment="", force=False):
@@ -188,7 +199,7 @@ class CachedCMakeBuilder(CMakeBuilder):
 
         # Check for slurm
         using_slurm = False
-        slurm_checks = ["+slurm", "schedulers=slurm", "process_managers=slurm"]
+        slurm_checks = ["+slurm", "schedulers=slurm", "process_managers=slurm", "cray-mpich"]
         if any(spec["mpi"].satisfies(variant) for variant in slurm_checks):
             using_slurm = True
 
@@ -246,23 +257,57 @@ class CachedCMakeBuilder(CMakeBuilder):
             # Include the deprecated CUDA_TOOLKIT_ROOT_DIR for supporting BLT packages
             entries.append(cmake_cache_path("CUDA_TOOLKIT_ROOT_DIR", cudatoolkitdir))
 
+            cuda_flags = []
             archs = spec.variants["cuda_arch"].value
             if archs[0] != "none":
                 arch_str = ";".join(archs)
                 entries.append(
                     cmake_cache_string("CMAKE_CUDA_ARCHITECTURES", "{0}".format(arch_str))
                 )
+                # TODO: Additional definitions that may not be needed anymore
+                # This is an imperfect merge of the radiuss way and the "spack"
+                # way: radiuss used to define only the first arch in the list,
+                # even for CMAKE_CUDA_ARCHITECTURE. What do we want?
+                cuda_flags.append("-arch sm_{0}".format(archs[0]))
+                entries.append(cmake_cache_string("CUDA_ARCH", "sm_{0}".format(archs[0])))
+            if spec_uses_toolchain(spec):
+                cuda_flags.append("-Xcompiler {}".format(spec_uses_toolchain(spec)[0]))
+            if spec.satisfies("%gcc@8.1: target=ppc64le"):
+                cuda_flags.append("-Xcompiler -mno-float128")
+            entries.append(cmake_cache_string("CMAKE_CUDA_FLAGS", " ".join(cuda_flags)))
 
         if "+rocm" in spec:
             entries.append("#------------------{0}".format("-" * 30))
             entries.append("# ROCm")
             entries.append("#------------------{0}\n".format("-" * 30))
 
+            # hip_root = spec["hip"].prefix
+            # rocm_root = hip_root + "/.."
+            # rocm_bin = rocm_root + "/llvm/bin"
+            # rocm_include = rocm_root + "/llvm/include"
+
             # Explicitly setting HIP_ROOT_DIR may be a patch that is no longer necessary
             entries.append(cmake_cache_path("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)))
             entries.append(
                 cmake_cache_path("HIP_CXX_COMPILER", "{0}".format(self.spec["hip"].hipcc))
             )
+            # entries.append(cmake_cache_path("HIP_ROOT_DIR", hip_root))
+            # entries.append(cmake_cache_path("ROCM_ROOT_DIR", rocm_root))
+            #  TODO: test if this helps
+            # entries.append(cmake_cache_string("HIP_CLANG_PATH", rocm_bin))
+            # entries.append(cmake_cache_string("HIP_CLANG_INCLUDE_PATH", rocm_include))
+
+            # entries.append(
+            #     cmake_cache_path(
+            #         "HIP_CLANG_INCLUDE_PATH",
+            #         glob.glob("{}/lib/clang/*/include".format(spec["llvm-amdgpu"].prefix))[0],
+            #     )
+            # )
+
+            # The old way ...
+            # if spec["hip"].version < Version("5.5.0"):
+            #     entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc))
+
             llvm_bin = spec["llvm-amdgpu"].prefix.bin
             llvm_prefix = spec["llvm-amdgpu"].prefix
             # Some ROCm systems seem to point to /<path>/rocm-<ver>/ and
@@ -272,6 +317,8 @@ class CachedCMakeBuilder(CMakeBuilder):
             entries.append(
                 cmake_cache_filepath("CMAKE_HIP_COMPILER", os.path.join(llvm_bin, "clang++"))
             )
+
+            # Setting the amdgpu_target through CMAKE_HIP_ARCHITECTURE should be enough.
             archs = self.spec.variants["amdgpu_target"].value
             if archs[0] != "none":
                 arch_str = ";".join(archs)
@@ -280,6 +327,42 @@ class CachedCMakeBuilder(CMakeBuilder):
                 )
                 entries.append(cmake_cache_string("AMDGPU_TARGETS", "{0}".format(arch_str)))
                 entries.append(cmake_cache_string("GPU_TARGETS", "{0}".format(arch_str)))
+
+            # # Arbitrate between gnu and llvm toolchains.
+            # hip_link_flags = ""
+            # if "%gcc" in spec or spec_uses_toolchain(spec):
+            #     if "%gcc" in spec:
+            #         gcc_bin = os.path.dirname(self.pkg.compiler.cxx)
+            #         gcc_prefix = os.path.join(gcc_bin, "..")
+
+            #         # TODO: really necessary ?
+            #         if spec["hip"].version >= Version("5.5.0")
+            #             # With > 5.5 rocm versions (or so) the use of amdclang
+            #             # compiler becomes mandatory. Spack does not allow
+            #             # dependencies on compilers yet, so we enforce the compiler
+            #             # here. The drawback being that this is not visible even in
+            #             # the full spec, only implied by the +rocm variant.
+            #             llvm_amdgpu_clang = os.path.join(llvm_bin, "clang++")
+            #             entries.append(cmake_cache_path("CMAKE_C_COMPILER", llvm_amdgpu_clang))
+            #             entries.append(cmake_cache_path("CMAKE_CXX_COMPILER", llvm_amdgpu_clang))
+            #     else:
+            #         gcc_prefix = spec_uses_toolchain(spec)[0]
+            #     toolchain_flag = "--gcc-toolchain={0}".format(gcc_prefix)
+            #     entries.append(
+            #         cmake_cache_string("HIP_CLANG_FLAGS", toolchain_flag)
+            #     )
+            #     entries.append(
+            #         cmake_cache_string(
+            #             "CMAKE_EXE_LINKER_FLAGS",
+            #             hip_link_flags + " -Wl,-rpath {}/lib64".format(gcc_prefix),
+            #         )
+            #     )
+            # else:
+            #     entries.append(
+            #         cmake_cache_string(
+            #             "CMAKE_EXE_LINKER_FLAGS", "-Wl,-rpath={0}/llvm/lib/".format(rocm_root)
+            #         )
+            #     )
 
         return entries
 
