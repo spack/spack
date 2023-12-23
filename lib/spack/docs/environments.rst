@@ -401,10 +401,17 @@ that git clone if ``foo`` is in the environment.
 Further development on ``foo`` can be tested by reinstalling the environment,
 and eventually committed and pushed to the upstream git repo.
 
-If the develop package supports out-of-source builds then users can use the
+If the package being developed supports out-of-source builds then users can use the
 ``--build_directory`` flag to control the location and name of the build directory. 
 This is a shortcut to set the ``package_attributes:build_directory`` in the
-``packages`` configuration (see :ref:`_assigning_package_attributes`).
+``packages`` configuration (see :ref:`assigning-package-attributes`).
+Currently the onerous of making sure the package supports out-of-source builds is on
+the user.
+For example, most ``autotool`` and ``makefile`` packages do not support out-of-source builds
+while all ``CMake`` packages do.
+Understanding these nuances are on the software developers and we strongly encourage
+developers to only redirect the build directory if they understand their package's
+build-system.
 
 ^^^^^^^
 Loading
