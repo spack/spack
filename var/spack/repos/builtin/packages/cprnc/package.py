@@ -15,7 +15,10 @@ class Cprnc(CMakePackage):
 
     maintainers("jedwards4b", "billsacks")
 
-    version("1.0.1", sha256="19517b52688f5ce40c385d7a718e06bf88a8731335943bc32e2b8410c489d6eb")
+    version("1.0.3", sha256="3e7400f9a13d5de01964d7dd95151d08e6e30818d2a1efa9a9c7896cf6646d69")
+    version("1.0.2", sha256="02edfa8050135ac0dc4a74aea05d19b0823d769b22cafa88b9352e29723d4179")
+    version("1.0.1", sha256="b8a8fd4ad7e2716968dfa60f677217c55636580807b1309276f4c062ee432ccd")
+    version("1.0.0", sha256="70ff75bbf01a0cef885db3074c78f39a8890949ca505530c0407398b8803552c")
 
     depends_on("netcdf-fortran")
     depends_on("cmake@3:", type="build")

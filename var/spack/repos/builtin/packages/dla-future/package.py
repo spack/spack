@@ -79,6 +79,22 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("rocsolver", when="+rocm")
     depends_on("rocthrust", when="+rocm")
 
+    # nvcc 11.2 and older is unable to detect fmt::formatter specializations.
+    # DLA-Future 0.3.1 includes a workaround to avoid including fmt in device
+    # code:
+    # https://github.com/pika-org/pika/issues/870
+    # https://github.com/eth-cscs/DLA-Future/pull/1045
+    conflicts("^fmt@10:", when="@:0.3.0 +cuda ^cuda@:11.2")
+
+    # Compilation problem triggered by the bundled fmt in Umpire together with
+    # fmt 10, which only happens with GCC 9 and nvcc 11.2 and older:
+    # https://github.com/eth-cscs/DLA-Future/issues/1044
+    conflicts("^fmt@10:", when="@:0.3.0 %gcc@9 +cuda ^cuda@:11.2 ^umpire@2022.10:")
+
+    # Pedantic warnings, triggered by GCC 9 and 10, are always errors until 0.3.1:
+    # https://github.com/eth-cscs/DLA-Future/pull/1043
+    conflicts("%gcc@9:10", when="@:0.3.0")
+
     depends_on("hdf5 +cxx+mpi+threadsafe+shared", when="+hdf5")
 
     conflicts("+cuda", when="+rocm")
@@ -107,6 +123,12 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
         for val in CudaPackage.cuda_arch_values:
             depends_on("pika cuda_arch={0}".format(val), when="cuda_arch={0}".format(val))
             depends_on("umpire cuda_arch={0}".format(val), when="cuda_arch={0}".format(val))
+
+    patch(
+        "https://github.com/eth-cscs/DLA-Future/pull/1063/commits/efc9c176a7a8c512b3f37d079dec8c25ac1b7389.patch?full_index=1",
+        sha256="7f382c872d89f22da1ad499e85ffe9881cc7404c8465e42877a210a09382e2ea",
+        when="@:0.3 %gcc@13:",
+    )
 
     def cmake_args(self):
         spec = self.spec

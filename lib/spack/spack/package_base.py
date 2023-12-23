@@ -1035,15 +1035,26 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # To fetch the current version
         source_stage = self._make_root_stage(self.fetcher)
 
-        # Extend it with all resources and patches
+        # all_stages is source + resources + patches
         all_stages = StageComposite()
         all_stages.append(source_stage)
         all_stages.extend(
             self._make_resource_stage(source_stage, r) for r in self._get_needed_resources()
         )
-        all_stages.extend(
-            p.stage for p in self.spec.patches if isinstance(p, spack.patch.UrlPatch)
-        )
+        if self.spec.concrete:
+            all_stages.extend(
+                p.stage for p in self.spec.patches if isinstance(p, spack.patch.UrlPatch)
+            )
+        else:
+            # The only code path that gets here is spack mirror create --all which just needs all
+            # matching patches.
+            all_stages.extend(
+                p.stage
+                for when_spec, patch_list in self.patches.items()
+                if self.spec.intersects(when_spec)
+                for p in patch_list
+                if isinstance(p, spack.patch.UrlPatch)
+            )
         return all_stages
 
     @property
@@ -1743,28 +1754,16 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             inspect.getmodule(self).ninja(target, *args, **kwargs)
 
     def _get_needed_resources(self):
-        resources = []
-        # Select the resources that are needed for this build
-        if self.spec.concrete:
-            for when_spec, resource_list in self.resources.items():
-                if when_spec in self.spec:
-                    resources.extend(resource_list)
-        else:
-            for when_spec, resource_list in self.resources.items():
-                # Note that variant checking is always strict for specs where
-                # the name is not specified. But with strict variant checking,
-                # only variants mentioned in 'other' are checked. Here we only
-                # want to make sure that no constraints in when_spec
-                # conflict with the spec, so we need to invoke
-                # when_spec.satisfies(self.spec) vs.
-                # self.spec.satisfies(when_spec)
-                if when_spec.intersects(self.spec):
-                    resources.extend(resource_list)
-        # Sorts the resources by the length of the string representing their
-        # destination. Since any nested resource must contain another
-        # resource's name in its path, it seems that should work
-        resources = sorted(resources, key=lambda res: len(res.destination))
-        return resources
+        # We use intersects here cause it would also work if self.spec is abstract
+        resources = [
+            resource
+            for when_spec, resource_list in self.resources.items()
+            if self.spec.intersects(when_spec)
+            for resource in resource_list
+        ]
+        # Sorts the resources by the length of the string representing their destination. Since any
+        # nested resource must contain another resource's path, that should work
+        return sorted(resources, key=lambda res: len(res.destination))
 
     def _resource_stage(self, resource):
         pieces = ["resource", resource.name, self.spec.dag_hash()]

@@ -62,7 +62,7 @@ class Likwid(Package):
     patch(
         "https://github.com/RRZE-HPC/likwid/releases/download/v5.2.0/likwid-icx-mem-group-fix.patch",
         sha256="af4ce278ef20cd1df26d8749a6b0e2716e4286685dae5a5e1eb4af8c383f7d10",
-        when="@5.2.0:",
+        when="@5.2.0:5.2.2",
     )
     variant("fortran", default=True, description="with fortran interface")
     variant("cuda", default=False, description="with Nvidia GPU profiling support")

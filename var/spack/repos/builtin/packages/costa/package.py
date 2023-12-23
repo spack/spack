@@ -37,6 +37,7 @@ class Costa(CMakePackage):
     depends_on("mpi@3:")
     depends_on("scalapack", when="+scalapack")
     depends_on("cxxopts", when="+apps")
+    depends_on("cxxopts", when="+tests")
     depends_on("semiprof", when="+profiling")
 
     def url_for_version(self, version):

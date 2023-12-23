@@ -141,7 +141,9 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on("xerces-c transcoder=iconv")
     depends_on("xz+pic libs=static", type="link")
     depends_on("yaml-cpp@0.7.0: +shared", when="@2022.10:")
-    depends_on("zlib-api+shared")
+
+    depends_on("zlib-api")
+    depends_on("zlib+shared", when="^[virtuals=zlib-api] zlib")
 
     depends_on("cuda", when="+cuda")
     depends_on("oneapi-level-zero", when="+level_zero")
@@ -172,6 +174,7 @@ class Hpctoolkit(AutotoolsPackage):
 
     conflicts("^binutils@2.35:2.35.1", msg="avoid binutils 2.35 and 2.35.1 (spews errors)")
     conflicts("^xz@5.2.7:5.2.8", msg="avoid xz 5.2.7:5.2.8 (broken symbol versions)")
+    conflicts("^intel-xed@2023.08:", when="@:2023.09")
 
     conflicts("+cray", when="@2022.10.01", msg="hpcprof-mpi is not available in 2022.10.01")
     conflicts("+mpi", when="@2022.10.01", msg="hpcprof-mpi is not available in 2022.10.01")

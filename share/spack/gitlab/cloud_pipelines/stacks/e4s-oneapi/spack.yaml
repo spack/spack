@@ -7,7 +7,9 @@ spack:
 
   packages:
     all:
-      require: '%oneapi target=x86_64_v3'
+      require:
+      - any_of: ["%oneapi", "@:"]  # oneapi as a strong preference; not all packages support it
+      - "target=x86_64_v3"
       providers:
         blas: [openblas]
         mpi: [mpich]
@@ -15,6 +17,8 @@ spack:
       variants: +mpi
     elfutils:
       variants: +bzip2 ~nls +xz
+    gcc-runtime:
+      require: "%gcc"
     hdf5:
       require: "%gcc"
       variants: +fortran +hl +shared
@@ -198,12 +202,12 @@ spack:
   # GPU
   - aml +ze
   - amrex +sycl
-  - arborx +sycl ^kokkos +sycl +openmp cxxstd=17 +tests +examples
-  - cabana +sycl ^kokkos +sycl +openmp cxxstd=17 +tests +examples
+  - arborx +sycl ^kokkos +sycl +openmp cxxstd=17 +examples
+  - cabana +sycl ^kokkos +sycl +openmp cxxstd=17 +examples
   - ginkgo +sycl
   - heffte +sycl
-  - kokkos +sycl +openmp cxxstd=17 +tests +examples
-  - kokkos-kernels build_type=Release %oneapi ^kokkos +sycl +openmp cxxstd=17 +tests +examples
+  - kokkos +sycl +openmp cxxstd=17 +examples
+  - kokkos-kernels build_type=Release %oneapi ^kokkos +sycl +openmp cxxstd=17 +examples
   - petsc +sycl
   - slate +sycl
   - sundials +sycl cxxstd=17 +examples-install

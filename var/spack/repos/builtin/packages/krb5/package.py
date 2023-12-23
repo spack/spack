@@ -42,6 +42,7 @@ class Krb5(AutotoolsPackage):
     )
     # This patch is applied in newer upstream releases
     patch("mit-krb5-1.17-static-libs.patch", level=0, when="@:1.18.9")
+    patch("freebsd-link.patch", when="platform=freebsd")
 
     configure_directory = "src"
     build_directory = "src"

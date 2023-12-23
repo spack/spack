@@ -84,8 +84,8 @@ The ``*.gemspec`` file may contain something like:
 
 .. code-block:: ruby
 
-   summary = 'An implementation of the AsciiDoc text processor and publishing toolchain'
-   description = 'A fast, open source text processor and publishing toolchain for converting AsciiDoc content to HTML 5, DocBook 5, and other formats.'
+   summary = "An implementation of the AsciiDoc text processor and publishing toolchain"
+   description = "A fast, open source text processor and publishing toolchain for converting AsciiDoc content to HTML 5, DocBook 5, and other formats."
 
 
 Either of these can be used for the description of the Spack package.
@@ -98,7 +98,7 @@ The ``*.gemspec`` file may contain something like:
 
 .. code-block:: ruby
 
-   homepage = 'https://asciidoctor.org'
+   homepage = "https://asciidoctor.org"
 
 
 This should be used as the official homepage of the Spack package.
@@ -112,21 +112,21 @@ the base class contains:
 
 .. code-block:: python
 
-   extends('ruby')
+   extends("ruby")
 
 
 The ``*.gemspec`` file may contain something like:
 
 .. code-block:: ruby
 
-   required_ruby_version = '>= 2.3.0'
+   required_ruby_version = ">= 2.3.0"
 
 
 This can be added to the Spack package using:
 
 .. code-block:: python
 
-   depends_on('ruby@2.3.0:', type=('build', 'run'))
+   depends_on("ruby@2.3.0:", type=("build", "run"))
 
 
 ^^^^^^^^^^^^^^^^^

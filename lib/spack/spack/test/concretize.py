@@ -203,7 +203,9 @@ class Changing(Package):
                 # TODO: in case tests using this fixture start failing.
                 if sys.modules.get("spack.pkg.changing.changing"):
                     del sys.modules["spack.pkg.changing.changing"]
+                if sys.modules.get("spack.pkg.changing.root"):
                     del sys.modules["spack.pkg.changing.root"]
+                if sys.modules.get("spack.pkg.changing"):
                     del sys.modules["spack.pkg.changing"]
 
                 # Change the recipe
@@ -1604,7 +1606,9 @@ class TestConcretize:
         assert not new_root["changing"].satisfies("@1.0")
 
     @pytest.mark.regression("28259")
-    def test_reuse_with_unknown_namespace_dont_raise(self, mock_custom_repository):
+    def test_reuse_with_unknown_namespace_dont_raise(
+        self, temporary_store, mock_custom_repository
+    ):
         with spack.repo.use_repositories(mock_custom_repository, override=False):
             s = Spec("c").concretized()
             assert s.namespace != "builtin.mock"
@@ -1615,8 +1619,8 @@ class TestConcretize:
         assert s.namespace == "builtin.mock"
 
     @pytest.mark.regression("28259")
-    def test_reuse_with_unknown_package_dont_raise(self, tmpdir, monkeypatch):
-        builder = spack.repo.MockRepositoryBuilder(tmpdir, namespace="myrepo")
+    def test_reuse_with_unknown_package_dont_raise(self, tmpdir, temporary_store, monkeypatch):
+        builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"), namespace="myrepo")
         builder.add_package("c")
         with spack.repo.use_repositories(builder.root, override=False):
             s = Spec("c").concretized()
@@ -1813,12 +1817,14 @@ class TestConcretize:
 
     @pytest.mark.regression("31484")
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
-    def test_installed_externals_are_reused(self, mutable_database, repo_with_changing_recipe):
+    def test_installed_externals_are_reused(
+        self, mutable_database, repo_with_changing_recipe, tmp_path
+    ):
         """Test that external specs that are in the DB can be reused."""
         external_conf = {
             "changing": {
                 "buildable": False,
-                "externals": [{"spec": "changing@1.0", "prefix": "/usr"}],
+                "externals": [{"spec": "changing@1.0", "prefix": str(tmp_path)}],
             }
         }
         spack.config.set("packages", external_conf)
@@ -1843,12 +1849,12 @@ class TestConcretize:
 
     @pytest.mark.regression("31484")
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
-    def test_user_can_select_externals_with_require(self, mutable_database):
+    def test_user_can_select_externals_with_require(self, mutable_database, tmp_path):
         """Test that users have means to select an external even in presence of reusable specs."""
         external_conf = {
             "mpi": {"buildable": False},
             "multi-provider-mpi": {
-                "externals": [{"spec": "multi-provider-mpi@2.0.0", "prefix": "/usr"}]
+                "externals": [{"spec": "multi-provider-mpi@2.0.0", "prefix": str(tmp_path)}]
             },
         }
         spack.config.set("packages", external_conf)
@@ -2423,3 +2429,87 @@ class TestConcretizeEdges:
         s = Spec("blas-only-client ^openblas").concretized()
         assert s.satisfies("^[virtuals=blas] openblas")
         assert not s.satisfies("^[virtuals=blas,lapack] openblas")
+
+
+def test_reusable_externals_match(mock_packages, tmpdir):
+    spec = Spec("mpich@4.1%gcc@13.1.0~debug build_system=generic arch=linux-ubuntu23.04-zen2")
+    spec.external_path = tmpdir.strpath
+    spec.external_modules = ["mpich/4.1"]
+    spec._mark_concrete()
+    assert spack.solver.asp._is_reusable(
+        spec,
+        {
+            "mpich": {
+                "externals": [
+                    {"spec": "mpich@4.1", "prefix": tmpdir.strpath, "modules": ["mpich/4.1"]}
+                ]
+            }
+        },
+        local=False,
+    )
+
+
+def test_reusable_externals_match_virtual(mock_packages, tmpdir):
+    spec = Spec("mpich@4.1%gcc@13.1.0~debug build_system=generic arch=linux-ubuntu23.04-zen2")
+    spec.external_path = tmpdir.strpath
+    spec.external_modules = ["mpich/4.1"]
+    spec._mark_concrete()
+    assert spack.solver.asp._is_reusable(
+        spec,
+        {
+            "mpi": {
+                "externals": [
+                    {"spec": "mpich@4.1", "prefix": tmpdir.strpath, "modules": ["mpich/4.1"]}
+                ]
+            }
+        },
+        local=False,
+    )
+
+
+def test_reusable_externals_different_prefix(mock_packages, tmpdir):
+    spec = Spec("mpich@4.1%gcc@13.1.0~debug build_system=generic arch=linux-ubuntu23.04-zen2")
+    spec.external_path = "/other/path"
+    spec.external_modules = ["mpich/4.1"]
+    spec._mark_concrete()
+    assert not spack.solver.asp._is_reusable(
+        spec,
+        {
+            "mpich": {
+                "externals": [
+                    {"spec": "mpich@4.1", "prefix": tmpdir.strpath, "modules": ["mpich/4.1"]}
+                ]
+            }
+        },
+        local=False,
+    )
+
+
+@pytest.mark.parametrize("modules", [None, ["mpich/4.1", "libfabric/1.19"]])
+def test_reusable_externals_different_modules(mock_packages, tmpdir, modules):
+    spec = Spec("mpich@4.1%gcc@13.1.0~debug build_system=generic arch=linux-ubuntu23.04-zen2")
+    spec.external_path = tmpdir.strpath
+    spec.external_modules = modules
+    spec._mark_concrete()
+    assert not spack.solver.asp._is_reusable(
+        spec,
+        {
+            "mpich": {
+                "externals": [
+                    {"spec": "mpich@4.1", "prefix": tmpdir.strpath, "modules": ["mpich/4.1"]}
+                ]
+            }
+        },
+        local=False,
+    )
+
+
+def test_reusable_externals_different_spec(mock_packages, tmpdir):
+    spec = Spec("mpich@4.1%gcc@13.1.0~debug build_system=generic arch=linux-ubuntu23.04-zen2")
+    spec.external_path = tmpdir.strpath
+    spec._mark_concrete()
+    assert not spack.solver.asp._is_reusable(
+        spec,
+        {"mpich": {"externals": [{"spec": "mpich@4.1 +debug", "prefix": tmpdir.strpath}]}},
+        local=False,
+    )

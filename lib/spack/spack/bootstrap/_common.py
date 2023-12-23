@@ -16,6 +16,7 @@ import archspec.cpu
 import llnl.util.filesystem as fs
 from llnl.util import tty
 
+import spack.platforms
 import spack.store
 import spack.util.environment
 import spack.util.executable
@@ -206,17 +207,19 @@ def _root_spec(spec_str: str) -> str:
     """Add a proper compiler and target to a spec used during bootstrapping.
 
     Args:
-        spec_str (str): spec to be bootstrapped. Must be without compiler and target.
+        spec_str: spec to be bootstrapped. Must be without compiler and target.
     """
-    # Add a proper compiler hint to the root spec. We use GCC for
-    # everything but MacOS and Windows.
-    if str(spack.platforms.host()) == "darwin":
+    # Add a compiler requirement to the root spec.
+    platform = str(spack.platforms.host())
+    if platform == "darwin":
         spec_str += " %apple-clang"
-    elif str(spack.platforms.host()) == "windows":
+    elif platform == "windows":
         # TODO (johnwparent): Remove version constraint when clingo patch is up
         spec_str += " %msvc@:19.37"
-    else:
+    elif platform == "linux":
         spec_str += " %gcc"
+    elif platform == "freebsd":
+        spec_str += " %clang"
 
     target = archspec.cpu.host().family
     spec_str += f" target={target}"
