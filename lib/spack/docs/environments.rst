@@ -401,6 +401,11 @@ that git clone if ``foo`` is in the environment.
 Further development on ``foo`` can be tested by reinstalling the environment,
 and eventually committed and pushed to the upstream git repo.
 
+If the develop package supports out-of-source builds then users can use the
+``--build_directory`` flag to control the location and name of the build directory. 
+This is a shortcut to set the ``package_attributes:build_directory`` in the
+``packages`` configuration (see :ref:`_assigning_package_attributes`).
+
 ^^^^^^^
 Loading
 ^^^^^^^
