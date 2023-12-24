@@ -19,33 +19,29 @@ pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 @pytest.mark.db
-def test_gc_without_build_dependency(config, mutable_database, capsys):
-    with capsys.disabled():
-        output = gc("-yb")
+def test_gc_without_build_dependency(config, mutable_database):
+    output = gc("-yb")
     assert "There are no unused specs." in output
 
-    with capsys.disabled():
-        output = gc("-y")
+    output = gc("-y")
     assert "There are no unused specs." in output
 
 
 @pytest.mark.db
-def test_gc_with_build_dependency(config, mutable_database, capsys):
+def test_gc_with_build_dependency(config, mutable_database):
     s = spack.spec.Spec("simple-inheritance")
     s.concretize()
     s.package.do_install(fake=True, explicit=True)
 
-    with capsys.disabled():
-        output = gc("-yb")
+    output = gc("-yb")
     assert "There are no unused specs." in output
 
-    with capsys.disabled():
-        output = gc("-y")
+    output = gc("-y")
     assert "Successfully uninstalled cmake" in output
 
 
 @pytest.mark.db
-def test_gc_with_environment(config, mutable_database, mutable_mock_env_path, capsys):
+def test_gc_with_environment(config, mutable_database, mutable_mock_env_path):
     s = spack.spec.Spec("simple-inheritance")
     s.concretize()
     s.package.do_install(fake=True, explicit=True)
@@ -54,17 +50,14 @@ def test_gc_with_environment(config, mutable_database, mutable_mock_env_path, ca
     with e:
         add("cmake")
         install()
-        with capsys.disabled():
-            assert "cmake" in find()
-            output = gc("-y")
+        assert "cmake" in find()
+        output = gc("-y")
     assert "Restricting garbage collection" in output
     assert "There are no unused specs" in output
 
 
 @pytest.mark.db
-def test_gc_with_build_dependency_in_environment(
-    config, mutable_database, mutable_mock_env_path, capsys
-):
+def test_gc_with_build_dependency_in_environment(config, mutable_database, mutable_mock_env_path):
     s = spack.spec.Spec("simple-inheritance")
     s.concretize()
     s.package.do_install(fake=True, explicit=True)
@@ -73,22 +66,20 @@ def test_gc_with_build_dependency_in_environment(
     with e:
         add("simple-inheritance")
         install()
-        with capsys.disabled():
-            assert "simple-inheritance" in find()
-            output = gc("-yb")
+        assert "simple-inheritance" in find()
+        output = gc("-yb")
     assert "Restricting garbage collection" in output
     assert "There are no unused specs" in output
 
     with e:
-        with capsys.disabled():
-            assert "simple-inheritance" in find()
-            output = gc("-y")
+        assert "simple-inheritance" in find()
+        output = gc("-y")
     assert "Restricting garbage collection" in output
     assert "Successfully uninstalled cmake" in output
 
 
 @pytest.mark.db
-def test_gc_except_any_environments(config, mutable_database, mutable_mock_env_path, capsys):
+def test_gc_except_any_environments(config, mutable_database, mutable_mock_env_path):
     s = spack.spec.Spec("simple-inheritance")
     s.concretize()
     s.package.do_install(fake=True, explicit=True)
@@ -99,8 +90,7 @@ def test_gc_except_any_environments(config, mutable_database, mutable_mock_env_p
     with e:
         add("simple-inheritance")
         install()
-        with capsys.disabled():
-            assert "simple-inheritance" in find()
+        assert "simple-inheritance" in find()
 
     output = gc("-yE")
     assert "Restricting garbage collection" not in output
@@ -114,7 +104,7 @@ def test_gc_except_any_environments(config, mutable_database, mutable_mock_env_p
 
 
 @pytest.mark.db
-def test_gc_except_specific_environments(config, mutable_database, mutable_mock_env_path, capsys):
+def test_gc_except_specific_environments(config, mutable_database, mutable_mock_env_path):
     s = spack.spec.Spec("simple-inheritance")
     s.concretize()
     s.package.do_install(fake=True, explicit=True)
@@ -125,8 +115,7 @@ def test_gc_except_specific_environments(config, mutable_database, mutable_mock_
     with e:
         add("simple-inheritance")
         install()
-        with capsys.disabled():
-            assert "simple-inheritance" in find()
+        assert "simple-inheritance" in find()
 
     output = gc("-ye", "test_gc")
     assert "Restricting garbage collection" not in output
@@ -135,18 +124,14 @@ def test_gc_except_specific_environments(config, mutable_database, mutable_mock_
 
 
 @pytest.mark.db
-def test_gc_except_nonexisting_dir_env(
-    config, mutable_database, mutable_mock_env_path, capsys, tmpdir
-):
+def test_gc_except_nonexisting_dir_env(config, mutable_database, mutable_mock_env_path, tmpdir):
     output = gc("-ye", tmpdir.strpath, fail_on_error=False)
     assert "No such environment" in output
     gc.returncode == 1
 
 
 @pytest.mark.db
-def test_gc_except_specific_dir_env(
-    config, mutable_database, mutable_mock_env_path, capsys, tmpdir
-):
+def test_gc_except_specific_dir_env(config, mutable_database, mutable_mock_env_path, tmpdir):
     s = spack.spec.Spec("simple-inheritance")
     s.concretize()
     s.package.do_install(fake=True, explicit=True)
@@ -157,8 +142,7 @@ def test_gc_except_specific_dir_env(
     with e:
         add("simple-inheritance")
         install()
-        with capsys.disabled():
-            assert "simple-inheritance" in find()
+        assert "simple-inheritance" in find()
 
     output = gc("-ye", tmpdir.strpath)
     assert "Restricting garbage collection" not in output
