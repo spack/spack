@@ -1039,6 +1039,16 @@ def test_check_parents(spec_str, parent_name, expected_nparents, database):
     assert len(edges) == expected_nparents
 
 
+def test_db_all_hashes(database):
+    # ensure we get the right number of hashes without a read transaction
+    hashes = database.all_hashes()
+    assert len(hashes) == 17
+
+    # and make sure the hashes match
+    with database.read_transaction():
+        assert set(s.dag_hash() for s in database.query()) == set(hashes)
+
+
 def test_consistency_of_dependents_upon_remove(mutable_database):
     # Check the initial state
     s = mutable_database.query_one("dyninst")
