@@ -107,6 +107,11 @@ def test_gc_except_any_environments(config, mutable_database, mutable_mock_env_p
     assert "Successfully uninstalled zmpi" in output
     assert "zmpi" not in find()
 
+    with e:
+        output = gc("-yE")
+    assert "Restricting garbage collection" not in output
+    assert "There are no unused specs" not in find()
+
 
 @pytest.mark.db
 def test_gc_except_specific_environments(config, mutable_database, mutable_mock_env_path, capsys):
@@ -130,9 +135,32 @@ def test_gc_except_specific_environments(config, mutable_database, mutable_mock_
 
 
 @pytest.mark.db
-def test_gc_except_specific_dir_env(
+def test_gc_except_nonexisting_dir_env(
     config, mutable_database, mutable_mock_env_path, capsys, tmpdir
 ):
     output = gc("-ye", tmpdir.strpath, fail_on_error=False)
     assert "No such environment" in output
     gc.returncode == 1
+
+
+@pytest.mark.db
+def test_gc_except_specific_dir_env(
+    config, mutable_database, mutable_mock_env_path, capsys, tmpdir
+):
+    s = spack.spec.Spec("simple-inheritance")
+    s.concretize()
+    s.package.do_install(fake=True, explicit=True)
+
+    assert "zmpi" in find()
+
+    e = ev.create_in_dir(tmpdir.strpath)
+    with e:
+        add("simple-inheritance")
+        install()
+        with capsys.disabled():
+            assert "simple-inheritance" in find()
+
+    output = gc("-ye", tmpdir.strpath)
+    assert "Restricting garbage collection" not in output
+    assert "Successfully uninstalled zmpi" in output
+    assert "zmpi" not in find()

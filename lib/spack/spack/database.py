@@ -1661,7 +1661,8 @@ class Database:
 
     def all_hashes(self):
         """Return dag hash of every spec in the database."""
-        return list(self._data.keys())
+        with self.read_transaction():
+            return list(self._data.keys())
 
     def unused_specs(
         self,

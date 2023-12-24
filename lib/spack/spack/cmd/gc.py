@@ -44,13 +44,7 @@ def setup_parser(subparser):
     spack.cmd.common.arguments.add_common_arguments(subparser, ["yes_to_all"])
 
 
-def gc(parser, args):
-    deptype = dt.LINK | dt.RUN
-    if args.keep_build_dependencies:
-        deptype |= dt.BUILD
-
-    active_env = ev.active_environment()
-
+def roots_from_environments(args, active_env):
     # if we're using -E or -e, make a list of environments whose roots we should consider.
     all_environments = []
 
@@ -62,6 +56,7 @@ def gc(parser, args):
 
     # -e says "also preserve things needed by this particular env"
     for env_name_or_dir in args.except_environment:
+        print("HMM", env_name_or_dir)
         if ev.exists(env_name_or_dir):
             env = ev.read(env_name_or_dir)
         elif ev.is_env_dir(env_name_or_dir):
@@ -75,25 +70,39 @@ def gc(parser, args):
     for env in all_environments:
         root_hashes |= set(env.concretized_order)
 
-    # if the user didn't specify they wanted to gc everything BUT particular envs,
-    # do normal garbage collection.
-    if not root_hashes:
-        # only gc the current environment (note: `spack -e ENV gc -b` likely does nothing)
-        if active_env:
+    return root_hashes
+
+
+def gc(parser, args):
+    deptype = dt.LINK | dt.RUN
+    if args.keep_build_dependencies:
+        deptype |= dt.BUILD
+
+    active_env = ev.active_environment()
+
+    # wrap the whole command with a read transaction to avoid multiple
+    with spack.store.STORE.db.read_transaction():
+        if args.except_environment or args.except_any_environment:
+            # if either of these is specified, we ignore the active environment and garbage
+            # collect anything NOT in specified environments.
+            root_hashes = roots_from_environments(args, active_env)
+
+        elif active_env:
+            # only gc what's in current environment
             tty.msg(f"Restricting garbage collection to environment '{active_env.name}'")
             root_hashes = set(spack.store.STORE.db.all_hashes())  # keep everything
             root_hashes -= set(active_env.all_hashes())  # except this env
             root_hashes |= set(active_env.concretized_order)  # but keep its roots
         else:
-            # consider all explicit specs roots (this is the default for db.unused_specs())
+            # consider all explicit specs roots (the default for db.unused_specs())
             root_hashes = None
 
-    specs = spack.store.STORE.db.unused_specs(root_hashes=root_hashes, deptype=deptype)
-    if not specs:
-        tty.msg("There are no unused specs. Spack's store is clean.")
-        return
+        specs = spack.store.STORE.db.unused_specs(root_hashes=root_hashes, deptype=deptype)
+        if not specs:
+            tty.msg("There are no unused specs. Spack's store is clean.")
+            return
 
-    if not args.yes_to_all:
-        spack.cmd.common.confirmation.confirm_action(specs, "uninstalled", "uninstall")
+        if not args.yes_to_all:
+            spack.cmd.common.confirmation.confirm_action(specs, "uninstalled", "uninstall")
 
-    spack.cmd.uninstall.do_uninstall(specs, force=False)
+        spack.cmd.uninstall.do_uninstall(specs, force=False)
