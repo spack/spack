@@ -17,7 +17,7 @@ class PyBlack(PythonPackage):
 
     maintainers("adamjstewart")
 
-    license("MIT")
+    license("MIT", checked_by="tgamblin")
 
     version("23.12.1", sha256="4ce3ef14ebe8d9509188014d96af1c456a910d5b5cbf434a09fef7e024b3d0d5")
     version("23.12.0", sha256="330a327b422aca0634ecd115985c1c7fd7bdb5b5a2ef8aa9888a82e2ebe9437a")

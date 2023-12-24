@@ -12,7 +12,7 @@ class Acl(AutotoolsPackage):
     homepage = "https://savannah.nongnu.org/projects/acl"
     url = "https://git.savannah.nongnu.org/cgit/acl.git/snapshot/acl-2.2.53.tar.gz"
 
-    license("LGPL-2.1-or-later AND GPL-2.0-or-later")
+    license("LGPL-2.1-or-later AND GPL-2.0-or-later", checked_by="tgamblin")
 
     version("2.2.53", sha256="9e905397ac10d06768c63edd0579c34b8431555f2ea8e8f2cee337b31f856805")
     version("2.2.52", sha256="f3f31d2229c903184ff877aa0ee658b87ec20fec8aebb51e65eaa68d7b24e629")

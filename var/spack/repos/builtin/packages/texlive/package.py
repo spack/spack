@@ -25,7 +25,7 @@ class Texlive(AutotoolsPackage):
     list_url = "http://ftp.math.utah.edu/pub/tex/historic/systems/texlive"
     list_depth = 1
 
-    license("GPL-2.0-or-later AND GPL-3.0-or-later")
+    license("GPL-2.0-or-later AND GPL-3.0-or-later", checked_by="tgamblin")
 
     # Below is the url for a binary distribution. This was originally how this
     # was distributed in Spack, but should be considered deprecated. Note that

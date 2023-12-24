@@ -23,7 +23,7 @@ class Rust(Package):
     # As a general rule of thumb Rust can be built with either the previous major
     # version or the current version of the compiler as shown above.
 
-    license("Apache-2.0 AND MIT")
+    license("Apache-2.0 OR MIT")
 
     # Pre-release versions.
     # Note: If you plan to use these versions remember to install with

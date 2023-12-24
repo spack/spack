@@ -26,7 +26,11 @@ class Apptainer(SingularityBase):
     url = "https://github.com/apptainer/apptainer/releases/download/v1.0.2/apptainer-1.0.2.tar.gz"
     git = "https://github.com/apptainer/apptainer.git"
 
-    license("BSD-3-Clause AND BSD-3-Clause-LBNL")
+    license(
+        "BSD-3-Clause AND BSD-3-Clause-LBNL"
+        " AND BSD-2-Clause AND Apache-2.0 AND MIT AND MPL-2.0 AND Unlicense",
+        checked_by="tgamblin",
+    )
 
     version("main", branch="main")
     version("1.1.9", sha256="c615777539154288542cf393d3fd44c04ccb3260bc6330dc324d4e4ebe902bfa")

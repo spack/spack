@@ -13,7 +13,7 @@ class XmlrpcC(AutotoolsPackage):
     homepage = "https://sourceforge.net/projects/xmlrpc-c/"
     url = "https://sourceforge.net/projects/xmlrpc-c/files/Xmlrpc-c%20Super%20Stable/1.51.06/xmlrpc-c-1.51.06.tgz"
 
-    license("BSD-3-Clause AND MIT")
+    license("BSD-3-Clause AND MIT", checked_by="tgamblin")
 
     version("1.51.06", sha256="06dcd87d9c88374559369ffbe83b3139cf41418c1a2d03f20e08808085f89fd0")
 
