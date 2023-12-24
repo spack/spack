@@ -13,7 +13,7 @@ class Atf(AutotoolsPackage):
     homepage = "https://github.com/jmmv/atf"
     url = "https://github.com/jmmv/atf/archive/atf-0.21.tar.gz"
 
-    license("BSD-2-Clause AND BSD-3-Clause")
+    license("BSD-2-Clause AND BSD-3-Clause", checked_by="tgamblin")
 
     version("0.21", sha256="da6b02d6e7242f768a7aaa7b7e52378680456e4bd9a913b6636187079c98f3cd")
     version("0.20", sha256="3677cf957d7f574835b8bdd385984ba928d5695b3ff28f958e4227f810483ab7")

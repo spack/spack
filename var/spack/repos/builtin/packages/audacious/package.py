@@ -11,7 +11,7 @@ class Audacious(AutotoolsPackage):
     homepage = "https://audacious-media-player.org/"
     url = "https://github.com/audacious-media-player/audacious/archive/audacious-4.0.2.tar.gz"
 
-    license("BSD-2-Clause AND ISC")
+    license("BSD-2-Clause AND BSD-3-Clause", checked_by="tgamblin")
 
     version("4.0.2", sha256="92f30a78353c50f99b536061b9d94b6b9128760d546fddbf863e3591c4ac5a8d")
     version("4.0.1", sha256="203195cf0d3c2e40d23c9895269ca0ace639c4a2b4dceb624169d75337059985")

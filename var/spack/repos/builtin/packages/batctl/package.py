@@ -12,7 +12,7 @@ class Batctl(MakefilePackage):
     homepage = "https://github.com/open-mesh-mirror/batctl"
     url = "https://github.com/open-mesh-mirror/batctl/archive/v2019.5.tar.gz"
 
-    license("GPL-2.0-only AND MIT")
+    license("GPL-2.0-only AND MIT AND ISC", checked_by="tgamblin")
 
     version("2019.5", sha256="ffe5857a33068ec174140c154610d76d833524d840a2fc2d1a15e16686213cad")
     version("2019.4", sha256="a3564eb9727335352dc0cfa2f2b29474c2c837384689ac5fcb387784a56e7685")
