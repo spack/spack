@@ -39,7 +39,7 @@ class PyGevent(PythonPackage):
     conflicts("^py-cython@3:", when="@:20.5.0")
 
     # Deprecated compiler options. upstream PR: https://github.com/gevent/gevent/pull/1896
-    patch("icc.patch", when="%intel")
+    patch("icc.patch", when="@:21.12.0 %intel")
 
     @run_before("install")
     def recythonize(self):

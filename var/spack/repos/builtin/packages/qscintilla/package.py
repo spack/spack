@@ -26,7 +26,10 @@ class Qscintilla(QMakePackage):
     variant("python", default=False, description="Build python bindings")
 
     depends_on("qmake")
-    depends_on("qmake+opengl", when="+python")
+    with when("+python"):
+        depends_on("qt+opengl", when="^[virtuals=qmake] qt")
+        depends_on("qt-base +opengl", when="^[virtuals=qmake] qt-base")
+
     depends_on("py-pyqt6", type=("build", "run"), when="+python ^qt-base")
     depends_on("py-pyqt-builder", type="build", when="+python")
     depends_on("py-pyqt5", type=("build", "run"), when="+python ^qt@5")
