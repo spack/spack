@@ -54,6 +54,10 @@ class Libxcb(AutotoolsPackage, XorgPackage):
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")
 
+    when("+use_spack_interpreter")
+    def setup_build_environment(self, env):
+        env.set("PYTHON", sys.executable)
+
     def configure_args(self):
         config_args = []
 
