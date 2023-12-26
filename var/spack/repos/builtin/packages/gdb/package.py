@@ -87,6 +87,7 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
     depends_on("ncurses", when="+tui")
     depends_on("gmp", when="@11.1:")
     depends_on("elfutils@0.179:+debuginfod", when="@10.1:+debuginfod")
+    depends_on("mpfr@4.2:", when="@14:")
 
     build_directory = "spack-build"
 
