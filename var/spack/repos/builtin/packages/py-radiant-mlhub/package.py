@@ -52,4 +52,4 @@ class PyRadiantMlhub(PythonPackage):
     depends_on("py-urllib3@1.26.11:1.26", when="@0.5.5:", type=("build", "run"))
 
     # Historical dependencies
-    depends_on("py-typing-extensions@3.7:", when="@0.4.1:0.4 ^python@:3.7", type=("build", "run"))
+    depends_on("py-typing-extensions@3.7:", when="@0.3:0.4 ^python@:3.7", type=("build", "run"))
