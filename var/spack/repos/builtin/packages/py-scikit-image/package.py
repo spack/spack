@@ -18,7 +18,7 @@ class PyScikitImage(PythonPackage):
         # Requires pytest
         "skimage.filters.rank.tests",
         # skimage.future.graph moved to skimage.graph
-        "skimage.future.graph"
+        "skimage.future.graph",
     ]
 
     version("0.20.0", sha256="2cd784fce18bd31d71ade62c6221440199ead03acf7544086261ee032264cf61")
