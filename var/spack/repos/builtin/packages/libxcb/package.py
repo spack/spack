@@ -33,7 +33,11 @@ class Libxcb(AutotoolsPackage, XorgPackage):
         deprecated=True,
     )
 
-    variant("use_spack_interpreter", default=False, description="Use the interpreter running spack to configure")
+    variant(
+        "use_spack_interpreter",
+        default=False,
+        description="Use the interpreter running spack to configure",
+    )
 
     depends_on("c", type="build")  # generated
 

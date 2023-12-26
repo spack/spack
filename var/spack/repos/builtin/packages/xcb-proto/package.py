@@ -43,7 +43,11 @@ class XcbProto(AutotoolsPackage, XorgPackage):
         deprecated=True,
     )
 
-    variant("use_spack_interpreter", default=False, description="Use the interpreter running spack to configure")
+    variant(
+        "use_spack_interpreter",
+        default=False,
+        description="Use the interpreter running spack to configure",
+    )
 
     depends_on("python", type="build", when="~use_spack_interpreter")
 
@@ -53,9 +57,6 @@ class XcbProto(AutotoolsPackage, XorgPackage):
     def setup_build_environment(self, env):
         env.set("PYTHON", sys.executable)
 
-    when("+use_spack_interpreter")
+    @when("+use_spack_interpreter")
     def configure_args(self):
-        return [
-            f"--with-python_prefix={self.prefix}",
-            f"--with-python_exec_prefix={self.prefix}",
-        ]
+        return [f"--with-python_prefix={self.prefix}", f"--with-python_exec_prefix={self.prefix}"]
