@@ -63,8 +63,8 @@ class Libxcb(AutotoolsPackage, XorgPackage):
 
         # use spack interpreter to avoid dependency cycles
         if self.spec.satisfies("+use_spack_interpreter"):
-            config_args.append(f"--with-python_prefix={sys.prefix}")
-            config_args.append(f"--with-python_exec_prefix={sys.exec_prefix}")
+            config_args.append(f"--with-python_prefix={self.prefix}")
+            config_args.append(f"--with-python_exec_prefix={self.prefix}")
 
         # -Werror flags are not properly interpreted by the NVIDIA compiler
         if self.spec.satisfies("%nvhpc@:20.11"):

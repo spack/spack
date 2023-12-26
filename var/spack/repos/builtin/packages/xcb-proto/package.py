@@ -56,6 +56,6 @@ class XcbProto(AutotoolsPackage, XorgPackage):
     when("+use_spack_interpreter")
     def configure_args(self):
         return [
-            f"--with-python_prefix={sys.prefix}",
-            f"--with-python_exec_prefix={sys.exec_prefix}",
+            f"--with-python_prefix={self.prefix}",
+            f"--with-python_exec_prefix={self.prefix}",
         ]
