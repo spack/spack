@@ -12,6 +12,9 @@ class PyPyvista(PythonPackage):
     homepage = "https://github.com/pyvista/pyvista"
     pypi = "pyvista/pyvista-0.32.1.tar.gz"
 
+    # Requires optional trame dependency
+    skip_modules = ["pyvista.trame"]
+
     maintainers("banesullivan")
 
     version("0.42.3", sha256="00159cf0dea05c1ecfd1695c8c6ccfcfff71b0744c9997fc0276e661dc052351")
