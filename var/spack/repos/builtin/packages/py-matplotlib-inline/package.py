@@ -19,3 +19,6 @@ class PyMatplotlibInline(PythonPackage):
     depends_on("python@3.5:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-traitlets", type=("build", "run"))
+
+    # Undocumented dependency
+    depends_on("py-matplotlib", type=("build", "run"))
