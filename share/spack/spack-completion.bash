@@ -1177,7 +1177,7 @@ _spack_find() {
 }
 
 _spack_gc() {
-    SPACK_COMPREPLY="-h --help -y --yes-to-all"
+    SPACK_COMPREPLY="-h --help -E --except-any-environment -e --except-environment -b --keep-build-dependencies -y --yes-to-all"
 }
 
 _spack_gpg() {
