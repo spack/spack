@@ -12,6 +12,9 @@ class PyGreenlet(PythonPackage):
     homepage = "https://github.com/python-greenlet/greenlet"
     pypi = "greenlet/greenlet-0.4.17.tar.gz"
 
+    # Requires objgraph
+    skip_modules = ["greenlet.tests"]
+
     version("3.0.0a1", sha256="1bd4ea36f0aeb14ca335e0c9594a5aaefa1ac4e2db7d86ba38f0be96166b3102")
     version(
         "2.0.2",
