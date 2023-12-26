@@ -14,6 +14,9 @@ class PyBeautifulsoup4(PythonPackage):
     homepage = "https://www.crummy.com/software/BeautifulSoup"
     pypi = "beautifulsoup4/beautifulsoup4-4.8.0.tar.gz"
 
+    # Requires pytest
+    skip_modules = ["bs4.tests"]
+
     version("4.12.2", sha256="492bbc69dca35d12daac71c4db1bfff0c876c00ef4a2ffacce226d4638eb72da")
     version("4.11.1", sha256="ad9aa55b65ef2808eb405f46cf74df7fcb7044d5cbc26487f96eb2ef2e436693")
     version("4.10.0", sha256="c23ad23c521d818955a4151a67d81580319d4bf548d3d49f4223ae041ff98891")
