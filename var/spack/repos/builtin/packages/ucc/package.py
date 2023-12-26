@@ -17,23 +17,33 @@ class Ucc(AutotoolsPackage, CudaPackage):
 
     version("1.2.0", sha256="c1552797600835c0cf401b82dc89c4d27d5717f4fb805d41daca8e19f65e509d")
 
-    variant("cuda", default=False, description="Enable CUDA TL", when="@1.1:")
-    variant("nccl", default=False, description="Enable NCCL TL")
+    variant("cuda", default=False, description="Enable CUDA TL")
+    variant("nccl", default=False, description="Enable NCCL TL", when="+cuda")
     # RCCL build not tested
     # variant("rccl", default=False, description="Enable RCCL TL")
 
-    conflicts("cuda@12:", when="@1.1", msg="UCC 1.1 supports CUDA <12")
-    conflicts("~cuda", when="+nccl", msg="UCC NCCL TL requires CUDA")
+    # https://github.com/openucx/ucc/pull/847
+    patch("https://github.com/openucx/ucc/commit/9d716eb9c964ec7a7a23e9ec663f28265ff8a357.patch?full_index=1",
+          sha256="f99d1ba6b94360375d2ea59b04de9cbf6bb3290458bc86ce13891ba90522f7e2",
+          when="@1.2.0 +cuda"
+    )
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
 
-    depends_on("cuda", when="+nccl")
     depends_on("ucx")
 
     depends_on("nccl", when="+nccl")
     # depends_on("rccl", when="+rccl")
+
+    with when("+nccl"):
+        for arch in CudaPackage.cuda_arch_values:
+            depends_on(
+                "nccl +cuda cuda_arch={0}".format(arch),
+                when="+cuda cuda_arch={0}".format(arch),
+            )
+
 
     def autoreconf(self, spec, prefix):
         Executable("./autogen.sh")()
