@@ -23,9 +23,10 @@ class Ucc(AutotoolsPackage, CudaPackage):
     # variant("rccl", default=False, description="Enable RCCL TL")
 
     # https://github.com/openucx/ucc/pull/847
-    patch("https://github.com/openucx/ucc/commit/9d716eb9c964ec7a7a23e9ec663f28265ff8a357.patch?full_index=1",
-          sha256="f99d1ba6b94360375d2ea59b04de9cbf6bb3290458bc86ce13891ba90522f7e2",
-          when="@1.2.0 +cuda"
+    patch(
+        "https://github.com/openucx/ucc/commit/9d716eb9c964ec7a7a23e9ec663f28265ff8a357.patch?full_index=1",
+        sha256="f99d1ba6b94360375d2ea59b04de9cbf6bb3290458bc86ce13891ba90522f7e2",
+        when="@1.2.0 +cuda",
     )
 
     depends_on("autoconf", type="build")
@@ -40,10 +41,8 @@ class Ucc(AutotoolsPackage, CudaPackage):
     with when("+nccl"):
         for arch in CudaPackage.cuda_arch_values:
             depends_on(
-                "nccl +cuda cuda_arch={0}".format(arch),
-                when="+cuda cuda_arch={0}".format(arch),
+                "nccl +cuda cuda_arch={0}".format(arch), when="+cuda cuda_arch={0}".format(arch)
             )
-
 
     def autoreconf(self, spec, prefix):
         Executable("./autogen.sh")()
