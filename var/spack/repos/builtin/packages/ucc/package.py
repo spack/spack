@@ -21,7 +21,8 @@ class Ucc(AutotoolsPackage, CudaPackage):
 
     variant("cuda", default=False, description="Enable CUDA TL", when="@1.1:")
     variant("nccl", default=False, description="Enable NCCL TL")
-    variant("rccl", default=False, description="Enable RCCL TL", when="@1.1:")
+    # RCCL build not tested
+    # variant("rccl", default=False, description="Enable RCCL TL")
 
     conflicts("cuda@12:", when="@1.1", msg="UCC 1.1 supports CUDA <12")
     conflicts("~cuda", when="+nccl", msg="UCC NCCL TL requires CUDA")
@@ -34,7 +35,7 @@ class Ucc(AutotoolsPackage, CudaPackage):
     depends_on("ucx")
 
     depends_on("nccl", when="+nccl")
-    depends_on("rccl", when="+rccl")
+    # depends_on("rccl", when="+rccl")
 
     def autoreconf(self, spec, prefix):
         Executable("./autogen.sh")()
@@ -43,5 +44,5 @@ class Ucc(AutotoolsPackage, CudaPackage):
         args = []
         args.extend(self.with_or_without("cuda", activation_value="prefix"))
         args.extend(self.with_or_without("nccl", activation_value="prefix"))
-        args.extend(self.with_or_without("rccl", activation_value="prefix"))
+        # args.extend(self.with_or_without("rccl", activation_value="prefix"))
         return args
