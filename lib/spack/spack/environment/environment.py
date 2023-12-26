@@ -793,7 +793,7 @@ class Environment:
         #: User specs from the last concretization
         self.concretized_user_specs: List[Spec] = []
         #: Roots associated with the last concretization, in order
-        self.concretized_order: List[Spec] = []
+        self.concretized_order: List[str] = []
         #: Concretized specs by hash
         self.specs_by_hash: Dict[str, Spec] = {}
         #: Repository for this environment (memoized)

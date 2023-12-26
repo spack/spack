@@ -21,10 +21,11 @@ def confirm_action(specs: List[spack.spec.Spec], participle: str, noun: str):
         participle: action expressed as a participle, e.g. "uninstalled"
         noun: action expressed as a noun, e.g. "uninstallation"
     """
-    tty.msg(f"The following {len(specs)} packages will be {participle}:\n")
     spack.cmd.display_specs(specs, **display_args)
-    print("")
-    answer = tty.get_yes_or_no("Do you want to proceed?", default=False)
+    print()
+    answer = tty.get_yes_or_no(
+        f"{len(specs)} packages will be {participle}. Do you want to proceed?", default=False
+    )
     if not answer:
         tty.msg(f"Aborting {noun}")
         sys.exit(0)
