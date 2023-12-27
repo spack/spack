@@ -36,6 +36,10 @@ class MpiSerial(AutotoolsPackage):
 
     provides("mpi")
 
+    depends_on("autoconf", type="build", when="@2.5.0")
+    depends_on("automake", type="build", when="@2.5.0")
+    depends_on("libtool",  type="build", when="@2.5.0")
+    
     def flag_handler(self, name, flags):
         spec = self.spec
         config_flags = []
