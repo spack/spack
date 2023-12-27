@@ -21,6 +21,16 @@ class Opari2(AutotoolsPackage):
     url = "https://www.vi-hps.org/cms/upload/packages/opari2/opari2-2.0.4.tar.gz"
 
     version(
+        "2.0.8",
+        sha256="196e59a2a625e6c795a6124c61e784bad142f9f38df0b4fa4d435ba9b9c19721",
+        url="https://perftools.pages.jsc.fz-juelich.de/cicd/opari2/tags/opari2-2.0.8/opari2-2.0.8.tar.gz",
+    )
+    version(
+        "2.0.7",
+        sha256="e302a4cc265eb2a4aa27c16a90eabd9e1e58cb02a191dd1c4d86f9a0df128715",
+        url="https://perftools.pages.jsc.fz-juelich.de/cicd/opari2/tags/opari2-2.0.7/opari2-2.0.7.tar.gz",
+    )
+    version(
         "2.0.6",
         sha256="55972289ce66080bb48622110c3189a36e88a12917635f049b37685b9d3bbcb0",
         url="https://perftools.pages.jsc.fz-juelich.de/cicd/opari2/tags/opari2-2.0.6/opari2-2.0.6.tar.gz",
