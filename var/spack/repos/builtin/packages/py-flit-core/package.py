@@ -11,6 +11,10 @@ class PyFlitCore(PythonPackage):
 
     homepage = "https://github.com/pypa/flit"
     pypi = "flit-core/flit_core-3.9.0.tar.gz"
+
+    # Tests import of a non-existing package
+    skip_modules = ["flit_core.tests"]
+
     maintainers("takluyver")
 
     version("3.9.0", sha256="72ad266176c4a3fcfab5f2930d76896059851240570ce9a98733b658cb786eba")
