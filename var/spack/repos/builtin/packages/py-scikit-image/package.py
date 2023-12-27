@@ -14,6 +14,13 @@ class PyScikitImage(PythonPackage):
     pypi = "scikit-image/scikit_image-0.17.2.tar.gz"
     git = "https://github.com/scikit-image/scikit-image.git"
 
+    skip_modules = [
+        # Requires pytest
+        "skimage.filters.rank.tests",
+        # skimage.future.graph moved to skimage.graph
+        "skimage.future.graph",
+    ]
+
     version("0.20.0", sha256="2cd784fce18bd31d71ade62c6221440199ead03acf7544086261ee032264cf61")
     version("0.19.3", sha256="24b5367de1762da6ee126dd8f30cc4e7efda474e0d7d70685433f0e3aa2ec450")
     version("0.18.3", sha256="ecae99f93f4c5e9b1bf34959f4dc596c41f2f6b2fc407d9d9ddf85aebd3137ca")
