@@ -84,6 +84,8 @@ class Papi(AutotoolsPackage, ROCmPackage):
         sha256="64c57b3ad4026255238cc495df6abfacc41de391a0af497c27d0ac819444a1f8",
         when="@5.4.0:5.6%gcc@8:",
     )
+    # 7.1.0 erroneously adds -ffree-form for all fortran compilers
+    patch("sysdetect-free-form-fix.patch", when="@7.1.0:")
     patch("crayftn-fixes.patch", when="@6.0.0:%cce@9:")
     patch("intel-oneapi-compiler-fixes.patch", when="@6.0.0:%oneapi")
     patch("intel-cray-freeform.patch", when="@7.0.1")
