@@ -11,8 +11,8 @@ from spack.package import *
 class MpiSerial(AutotoolsPackage):
     """A single processor implementation of the mpi library."""
 
-    homepage = "https://github.com/MCSclimate/mpi-serial"
-    url = "https://github.com/MCSclimate/mpi-serial/archive/refs/tags/MPIserial_2.3.0.tar.gz"
+    homepage = "https://github.com/ESMCI/mpi-serial"
+    url = "https://github.com/ESMCI/mpi-serial/archive/refs/tags/MPIserial_2.3.0.tar.gz"
 
     # notify when the package is updated.
     maintainers("jedwards4b")
