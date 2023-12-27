@@ -25,4 +25,4 @@ class PyPbr(PythonPackage):
     version("1.8.1", sha256="e2127626a91e6c885db89668976db31020f0af2da728924b56480fc7ccf09649")
 
     depends_on("python@2.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools", type=("build", "run"))

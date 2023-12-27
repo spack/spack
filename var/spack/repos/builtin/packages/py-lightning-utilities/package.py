@@ -25,7 +25,7 @@ class PyLightningUtilities(PythonPackage):
     version("0.3.0", sha256="d769ab9b76ebdee3243d1051d509aafee57d7947734ddc22977deef8a6427f2f")
 
     # setup.py
-    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools", type=("build", "run"))
 
     # requirements/base.txt
     depends_on("py-importlib-metadata@4:", when="@0.4.1: ^python@:3.7", type=("build", "run"))
