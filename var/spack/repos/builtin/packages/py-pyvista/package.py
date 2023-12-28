@@ -13,7 +13,7 @@ class PyPyvista(PythonPackage):
     pypi = "pyvista/pyvista-0.32.1.tar.gz"
 
     # Requires optional trame dependency
-    skip_modules = ["pyvista.trame"]
+    skip_modules = ["pyvista.ext", "pyvista.jupyter", "pyvista.trame"]
 
     maintainers("banesullivan")
 
