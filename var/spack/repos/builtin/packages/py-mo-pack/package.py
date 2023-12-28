@@ -13,6 +13,8 @@ class PyMoPack(PythonPackage):
     homepage = "https://github.com/SciTools/mo_pack"
     url = "https://github.com/SciTools/mo_pack/archive/v0.2.0.tar.gz"
 
+    license("LGPL-3.0-only")
+
     version("0.2.0", sha256="4aa70e1f846b666670843bc2514435dedf7393203e88abaf74d48f8f2717a726")
 
     depends_on("libmo-unpack")

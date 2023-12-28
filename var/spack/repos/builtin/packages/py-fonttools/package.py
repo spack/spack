@@ -18,6 +18,8 @@ class PyFonttools(PythonPackage):
 
     skip_modules = ["fontTools.ufoLib"]
 
+    license("MIT")
+
     version("4.39.4", sha256="dba8d7cdb8e2bac1b3da28c5ed5960de09e59a2fe7e63bb73f5a59e57b0430d2")
     version("4.37.3", sha256="f32ef6ec966cf0e7d2aa88601fed2e3a8f2851c26b5db2c80ccc8f82bee4eedc")
     version("4.31.2", sha256="236b29aee6b113e8f7bee28779c1230a86ad2aac9a74a31b0aedf57e7dfb62a4")

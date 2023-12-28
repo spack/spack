@@ -12,6 +12,8 @@ class Henson(CMakePackage):
     homepage = "https://github.com/henson-insitu/henson"
     git = "https://github.com/henson-insitu/henson.git"
 
+    license("BSD-3-Clause-LBNL")
+
     version("master", branch="master")
 
     maintainers("mrzv")

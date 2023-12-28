@@ -11,6 +11,8 @@ class Regcm(AutotoolsPackage):
 
     homepage = "https://gforge.ictp.it/gf/project/regcm/"
 
+    license("AFL-1.1")
+
     version(
         "4.7.0",
         sha256="456631c10dcb83d70e51c3babda2f7a1aa41ed9e60cb4209deb3764655267519",

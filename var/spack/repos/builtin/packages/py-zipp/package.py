@@ -12,6 +12,8 @@ class PyZipp(PythonPackage):
     homepage = "https://github.com/jaraco/zipp"
     pypi = "zipp/zipp-0.6.0.tar.gz"
 
+    license("MIT")
+
     version("3.17.0", sha256="84e64a1c28cf7e91ed2078bb8cc8c259cb19b76942096c8d7b84947690cabaf0")
     version("3.8.1", sha256="05b45f1ee8f807d0cc928485ca40a07cb491cf092ff587c0df9cb1fd154848d2")
     version("3.6.0", sha256="71c644c5369f4a6e07636f0aa966270449561fcea2e3d6747b8d23efaa9d7832")

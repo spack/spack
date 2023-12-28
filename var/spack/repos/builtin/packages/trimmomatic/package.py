@@ -14,6 +14,8 @@ class Trimmomatic(Package):
     homepage = "http://www.usadellab.org/cms/?page=trimmomatic"
     url = "http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/Trimmomatic-0.36.zip"
 
+    license("GPL-3.0-only")
+
     # Older version aren't explicitly made available, but the URL
     # works as we'd like it to, so...
     version("0.39", sha256="2f97e3a237378d55c221abfc38e4b11ea232c8a41d511b8b4871f00c0476abca")

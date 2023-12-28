@@ -12,6 +12,8 @@ class TemplightTools(CMakePackage):
     homepage = "https://github.com/mikael-s-persson/templight-tools"
     git = "https://github.com/mikael-s-persson/templight-tools.git"
 
+    license("GPL-3.0-only")
+
     version("develop", branch="master")
 
     depends_on("cmake @2.8.7:", type="build")

@@ -12,6 +12,8 @@ class Libicd(CMakePackage):
     homepage = "https://github.com/lucianpls/libicd"
     git = "https://github.com/lucianpls/libicd.git"
 
+    license("Apache-2.0")
+
     version("main", branch="main")
 
     depends_on("cmake@3.5:", type="build")

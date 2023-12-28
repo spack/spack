@@ -38,6 +38,8 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/LLNL/axom.git"
     tags = ["radiuss"]
 
+    license("BSD-3-Clause")
+
     version("main", branch="main")
     version("develop", branch="develop")
     version("0.8.1", tag="v0.8.1", commit="0da8a5b1be596887158ac2fcd321524ba5259e15")

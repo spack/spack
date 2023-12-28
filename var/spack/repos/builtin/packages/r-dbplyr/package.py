@@ -16,6 +16,8 @@ class RDbplyr(RPackage):
 
     cran = "dbplyr"
 
+    license("MIT")
+
     version("2.3.2", sha256="0ddc00595ec6b21962d0bb6f470f5f7c9d61c74a4f92681a37e94e1295707fac")
     version("2.2.1", sha256="a6f3f644c068fe1a3b3e99a3a10de55a150d43ef20b5130e6724d142afcb0df7")
     version("2.1.1", sha256="aba4cf47b85ab240fd3ec4cd8d512f6e1958201e151577c1a2ebc3d6ebc5bc08")

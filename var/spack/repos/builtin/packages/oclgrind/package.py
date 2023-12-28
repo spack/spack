@@ -15,6 +15,8 @@ class Oclgrind(CMakePackage):
 
     maintainers("matthiasdiener")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("19.10", sha256="f9a8f22cb9f6d88670f2578c46ba0d728ba8eaee5c481c2811129dc157c43dc0")
 

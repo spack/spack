@@ -22,6 +22,8 @@ class Picard(Package):
         "https://github.com/broadinstitute/picard/releases/download/{0}/picard-tools-{0}.zip"
     )
 
+    license("GPL-2.0-or-later")
+
     # They started distributing a single jar file at v2.6.0, prior to
     # that it was a .zip file with multiple .jar and .so files
     version(

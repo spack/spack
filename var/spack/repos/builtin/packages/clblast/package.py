@@ -21,6 +21,8 @@ class Clblast(CMakePackage):
 
     maintainers("umar456")
 
+    license("Apache-2.0")
+
     version("master", branch="master")
     version("1.5.2", sha256="0e3a017c3aa352e0bf94ea65cfc9609beb2c22204d31c2ef43d0478178cfee00")
     version("1.5.1", sha256="a0f0cb7308b59a495c23beaef1674093ed26996f66d439623808755dbf568c3f")

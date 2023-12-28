@@ -50,6 +50,8 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
 
     tags = ["e4s", "ecp"]
 
+    license("BSD-3-Clause-LBNL")
+
     version("develop", branch="develop")
     version("master", branch="master")
 

@@ -12,6 +12,8 @@ class PyJinja2Time(PythonPackage):
     homepage = "https://github.com/hackebrot/jinja2-time"
     url = "https://github.com/hackebrot/jinja2-time/archive/0.2.0.tar.gz"
 
+    license("MIT")
+
     version("0.2.0", sha256="0e647e525ba47523fa400a58fdec090b1cc6dcec4afbf095ee01e9e589e5a5ef")
 
     depends_on("py-setuptools", type="build")

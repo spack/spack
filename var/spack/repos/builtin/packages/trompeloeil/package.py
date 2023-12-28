@@ -14,6 +14,8 @@ class Trompeloeil(CMakePackage):
     url = "https://github.com/rollbear/trompeloeil/archive/v43.tar.gz"
     git = "https://github.com/rollbear/trompeloeil.git"
 
+    license("BSL-1.0")
+
     version("master", branch="master")
     version("45", sha256="124b0aa45d84415193719376b6557fc1f1180cbfebf4dc4f7ca247cb404d6bd8")
     version("44", sha256="004877db6ba22f24c7867e112e081eeb68858122f55ebe7c7dd9d8d9e3b46c88")

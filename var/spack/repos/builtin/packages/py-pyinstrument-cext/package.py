@@ -12,6 +12,8 @@ class PyPyinstrumentCext(PythonPackage):
     homepage = "https://github.com/joerick/pyinstrument_cext"
     pypi = "pyinstrument_cext/pyinstrument_cext-0.2.2.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.2.2", sha256="f29e25f71d74c0415ca9310e5567fff0f5d29f4240a09a885abf8b0eed71cc5b")
 
     depends_on("py-setuptools", type="build")

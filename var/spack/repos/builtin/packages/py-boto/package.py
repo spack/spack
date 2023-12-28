@@ -13,6 +13,8 @@ class PyBoto(PythonPackage):
     homepage = "https://github.com/boto/boto"
     url = "https://github.com/boto/boto/archive/2.49.0.tar.gz"
 
+    license("MIT")
+
     version("2.49.0", sha256="3dbefd4f4542f85a323d4f54601f31ed4d362fc87945245f32e4a85029513314")
 
     depends_on("python@2.6:", type=("build", "run"))

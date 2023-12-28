@@ -14,6 +14,8 @@ class Lftp(AutotoolsPackage):
     homepage = "https://lftp.yar.ru/"
     url = "https://lftp.yar.ru/ftp/lftp-4.9.2.tar.gz"
 
+    license("GPL-3.0-or-later")
+
     version("4.9.2", sha256="a37589c61914073f53c5da0e68bd233b41802509d758a022000e1ae2076da733")
     version("4.8.1", sha256="6117866215cd889dab30ff73292cd1d35fe0e12a9af5cd76d093500d07ab65a3")
     version("4.7.7", sha256="7bce216050094a1146ed05bed8fe5b3518224764ffe98884a848d44dc76fff8f")

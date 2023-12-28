@@ -16,6 +16,8 @@ class Otf(AutotoolsPackage):
 
     maintainers("michaelkuhn")
 
+    license("BSD-3-Clause")
+
     version(
         "1.12.5salmon", sha256="0a8427360dedb38e8ddca30f14d95f826420c550337c5a79dbb754904e194088"
     )

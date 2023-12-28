@@ -15,6 +15,8 @@ class PySpherical(PythonPackage):
 
     maintainers("nilsvu", "moble")
 
+    license("MIT")
+
     version("1.0.10", sha256="a7f1d902aa89fd51174a0c69b2379c352d229bf7e088907e8eb4461ad227d95f")
 
     depends_on("python@3.6:3.9", type=("build", "run"))

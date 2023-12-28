@@ -15,6 +15,8 @@ class PyPytestOpenfiles(PythonPackage):
     homepage = "https://github.com/astropy/pytest-openfiles"
     pypi = "pytest-openfiles/pytest-openfiles-0.5.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.5.0", sha256="179c2911d8aee3441fee051aba08e0d9b4dab61b829ae4811906d5c49a3b0a58")
 
     depends_on("python@3.6:", type=("build", "run"))

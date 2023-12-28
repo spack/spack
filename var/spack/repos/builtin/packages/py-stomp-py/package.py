@@ -16,6 +16,8 @@ class PyStompPy(PythonPackage):
 
     maintainers("haralmha")
 
+    license("Apache-2.0")
+
     version("8.0.0", sha256="7085935293bfcc4a112a9830513275b2e0f3b040c5aad5ff8907e78f285b8b57")
 
     depends_on("python@3.6.3:", type=("build", "run"))

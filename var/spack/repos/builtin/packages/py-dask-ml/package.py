@@ -12,6 +12,8 @@ class PyDaskMl(PythonPackage):
     homepage = "https://ml.dask.org/"
     pypi = "dask-ml/dask-ml-1.8.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("1.8.0", sha256="8fc4ac3ec1915e382fb8cae9ff1ec9b5ac1bee0b6f4c6975d6e6cb7191a4a815")
 
     variant("docs", default=False, description="Build HTML documentation")

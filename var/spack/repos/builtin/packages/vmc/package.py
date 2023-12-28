@@ -15,6 +15,8 @@ class Vmc(CMakePackage):
 
     maintainers("ChristianTackeGSI")
 
+    license("GPL-3.0-only")
+
     version("2-0", sha256="9f4c31d93eeb0e10eca22d6450bb9a1070cbe25e99eaf7e74d4e191612102d9c")
     version("1-1-p1", sha256="dc0d4d16c81899c0167bcd13b97e39d9ff2817d20552f61e1c0bce357ac69ee5")
     version("1-0-p3", sha256="46385776d7639fdf23df2a2a5426fb9a9a69836d237c1259b1a22bfb649cb47e")

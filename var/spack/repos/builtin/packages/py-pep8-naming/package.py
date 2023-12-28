@@ -12,6 +12,8 @@ class PyPep8Naming(PythonPackage):
     homepage = "https://github.com/PyCQA/pep8-naming"
     pypi = "pep8-naming/pep8-naming-0.10.0.tar.gz"
 
+    license("MIT")
+
     version("0.10.0", sha256="f3b4a5f9dd72b991bf7d8e2a341d2e1aa3a884a769b5aaac4f56825c1763bf3a")
     version("0.7.0", sha256="624258e0dd06ef32a9daf3c36cc925ff7314da7233209c5b01f7e5cdd3c34826")
 

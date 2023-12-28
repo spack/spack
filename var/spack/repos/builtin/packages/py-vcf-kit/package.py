@@ -13,6 +13,8 @@ class PyVcfKit(PythonPackage):
     homepage = "https://github.com/AndersenLab/VCF-kit"
     url = "https://github.com/AndersenLab/VCF-kit/archive/0.1.6.tar.gz"
 
+    license("MIT")
+
     version("0.1.6", sha256="4865414ac9dc6996c0baeefadf1d528c28e6d0c3cc3dbdc28a2cdc6e06212428")
 
     depends_on("python", type=("build", "run"))

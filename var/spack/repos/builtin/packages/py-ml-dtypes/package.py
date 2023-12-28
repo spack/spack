@@ -15,6 +15,8 @@ class PyMlDtypes(PythonPackage):
     git = "https://github.com/jax-ml/ml_dtypes.git"
     submodules = True
 
+    license("Apache-2.0")
+
     version("0.3.1", tag="v0.3.1", commit="bbeedd470ecac727c42e97648c0f27bfc312af30")
     version("0.2.0", tag="v0.2.0", commit="5b9fc9ad978757654843f4a8d899715dbea30e88")
 

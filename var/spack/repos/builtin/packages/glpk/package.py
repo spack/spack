@@ -16,6 +16,8 @@ class Glpk(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/glpk"
     gnu_mirror_path = "glpk/glpk-4.65.tar.gz"
 
+    license("GPL-3.0-only")
+
     version("5.0", sha256="4a1013eebb50f728fc601bdd833b0b2870333c3b3e5a816eeba921d95bec6f15")
     version("4.65", sha256="4281e29b628864dfe48d393a7bedd781e5b475387c20d8b0158f329994721a10")
     version("4.61", sha256="9866de41777782d4ce21da11b88573b66bb7858574f89c28be6967ac22dfaba9")

@@ -15,6 +15,8 @@ class PyResultsfile(PythonPackage):
 
     maintainers("scemama")
 
+    license("GPL-2.0-only")
+
     version("2.0", sha256="2a34208254e4bea155695690437f6a59bf5f7b0ddb421d6c1a2d377510f018f7")
 
     depends_on("python@3:", type=("build", "run"))

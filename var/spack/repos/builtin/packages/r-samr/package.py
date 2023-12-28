@@ -14,6 +14,8 @@ class RSamr(RPackage):
 
     cran = "samr"
 
+    license("LGPL-2.0-or-later")
+
     version("3.0", sha256="25f88ac002c2adce8881a562241bc12d683810a05defb553e8e3d4878f037506")
     version("2.0", sha256="090b5becd91d60f4bb8269df5c9bc19a03c09917d327b28e75b0ee7b80624e67")
 

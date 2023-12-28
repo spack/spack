@@ -19,6 +19,8 @@ class RTruncdist(RPackage):
 
     cran = "truncdist"
 
+    license("GPL-2.0-or-later")
+
     version("1.0-2", sha256="b848b68bdd983bd496fa7327632ffa8add8d2231229b8af5c8bc29d823e1300a")
 
     depends_on("r@2.0.1:", type=("build", "run"))

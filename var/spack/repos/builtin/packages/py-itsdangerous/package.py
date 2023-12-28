@@ -12,6 +12,8 @@ class PyItsdangerous(PythonPackage):
     homepage = "https://github.com/mitsuhiko/itsdangerous"
     pypi = "itsdangerous/itsdangerous-1.1.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("2.1.2", sha256="5dbbc68b317e5e42f327f9021763545dc3fc3bfe22e6deb96aaf1fc38874156a")
     version("2.0.1", sha256="9e724d68fc22902a1435351f84c3fb8623f303fffcc566a4cb952df8c572cff0")
     version("1.1.0", sha256="321b033d07f2a4136d3ec762eac9f16a10ccd60f53c0c91af90217ace7ba1f19")

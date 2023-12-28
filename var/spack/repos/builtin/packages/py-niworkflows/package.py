@@ -12,6 +12,8 @@ class PyNiworkflows(PythonPackage):
     homepage = "https://github.com/nipreps/niworkflows"
     pypi = "niworkflows/niworkflows-1.4.0.tar.gz"
 
+    license("Apache-2.0")
+
     version("1.4.0", sha256="d4e59070fde0290e0bfeece120ff1d2ff1f9573e3f2e6a719fe463c913af25ec")
     version("1.3.5", sha256="92e24f3462fb3ad4d8ee724506fba05da2b3ca0626850dd2e637a553e17d69b8")
     version("1.0.4", sha256="34bfa5561e6f872dbd85bb30a1b44c5e1be525167abe3932aee8ac06d15f6ed9")

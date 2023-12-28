@@ -13,6 +13,8 @@ class PyLightgbm(PythonPackage):
     homepage = "https://github.com/microsoft/LightGBM"
     pypi = "lightgbm/lightgbm-3.1.1.tar.gz"
 
+    license("MIT")
+
     version("3.1.1", sha256="babece2e3613e97748a67ed45387bb0e984bdb1f4126e39f010fbfe7503c7b20")
 
     variant("mpi", default=False, description="Build with mpi support")

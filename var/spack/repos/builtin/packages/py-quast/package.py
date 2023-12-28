@@ -13,6 +13,8 @@ class PyQuast(PythonPackage):
     homepage = "https://cab.spbu.ru/software/quast"
     pypi = "quast/quast-5.2.0.tar.gz"
 
+    license("GPL-2.0-only")
+
     version("5.2.0", sha256="23649fbd93253c6da982c0b67d719f9262461deecdc6dffbd690b75dfd790ad7")
     version("5.0.2", sha256="cdb8f83e20cc38f218ff7172b454280fcb1c7e2dff74e1f8618cacc53d46b48e")
     version("5.0.1", sha256="b1e4443b6598b01faaefddfc0f06fb270414ed4bdaffd0ad9aa420bc0d07d8ad")

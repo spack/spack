@@ -15,6 +15,8 @@ class PyExhale(PythonPackage):
 
     maintainers("svenevs")
 
+    license("BSD-3-Clause")
+
     version("0.3.6", sha256="ab41be313e1236bd4386e4696fb35f37ce8103c2059cf8d1f083da5411bb74d7")
 
     depends_on("python@3.7:", type=("build", "run"))

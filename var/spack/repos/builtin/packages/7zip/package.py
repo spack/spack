@@ -21,6 +21,8 @@ class _7zip(SourceforgePackage, Package):
 
     executables = ["7z"]
 
+    license("LGPL-2.0-only")
+
     version("21.07", sha256="213d594407cb8efcba36610b152ca4921eda14163310b43903d13e68313e1e39")
 
     variant(

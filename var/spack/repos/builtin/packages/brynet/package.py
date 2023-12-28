@@ -13,6 +13,8 @@ class Brynet(CMakePackage):
     homepage = "https://github.com/IronsDu/brynet"
     url = "https://github.com/IronsDu/brynet/archive/v1.0.8.tar.gz"
 
+    license("MIT")
+
     version("1.12.2", sha256="b8b740cae39804d1e7037866046321065856c0ea9f565d26f67aeccc7ccd3d51")
     version("1.10.0", sha256="a7bc20c4a2cc2f0f29af56e9355b8769256785850ddedcef226e9562e97d05cf")
     version("1.0.8", sha256="e37dee5fa14acec99bdd7ce8530a00ff5116f608f0a5401cd2e32e10f23975fc")

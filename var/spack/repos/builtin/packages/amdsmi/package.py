@@ -19,6 +19,8 @@ class Amdsmi(CMakePackage):
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["libamd_smi"]
 
+    license("MIT")
+
     version("5.7.0", sha256="144391d537710dafa9ef69571dd76203e56db6142ab61a1375346b5733137e23")
     version("5.6.0", sha256="595c9d6d79d9071290b2f19ab4ef9222c8d2983b4322b3143fcd9d0b1ce0f6d8")
     version("5.5.1", sha256="b794c7fd562fd92f2c9f2bbdc2d5dded7486101fcd4598f2e8c3484c9a939281")

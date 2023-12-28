@@ -12,4 +12,6 @@ class PerlTaskWeaken(PerlPackage):
     homepage = "https://metacpan.org/pod/Task::Weaken"
     url = "http://search.cpan.org/CPAN/authors/id/A/AD/ADAMK/Task-Weaken-1.04.tar.gz"
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("1.04", sha256="67e271c55900fe7889584f911daa946e177bb60c8af44c32f4584b87766af3c4")

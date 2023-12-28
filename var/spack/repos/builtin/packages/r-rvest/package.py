@@ -14,6 +14,8 @@ class RRvest(RPackage):
 
     cran = "rvest"
 
+    license("MIT")
+
     version("1.0.3", sha256="a465ef7391afaa3c26eebe8c61db02314ac04c4d8de5aa53f090716763d21c1e")
     version("1.0.2", sha256="89bb477e0944c80298a52ccf650db8f6377fd7ed3c1bc7034d000f695fdf05a4")
     version("0.3.6", sha256="6a2ee3a25d2d738031edbc1b5e2410f2a4538dfbb9705af145f9039504b902fa")

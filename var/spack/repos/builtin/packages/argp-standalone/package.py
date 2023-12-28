@@ -14,6 +14,8 @@ class ArgpStandalone(AutotoolsPackage):
     homepage = "https://www.lysator.liu.se/~nisse/misc"
     url = "https://www.lysator.liu.se/~nisse/misc/argp-standalone-1.3.tar.gz"
 
+    license("LGPL-2.1-or-later")
+
     version("1.3", sha256="dec79694da1319acd2238ce95df57f3680fea2482096e483323fddf3d818d8be")
 
     # Homebrew (https://github.com/Homebrew/homebrew-core) patches

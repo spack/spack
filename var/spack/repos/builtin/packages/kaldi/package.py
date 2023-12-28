@@ -18,6 +18,8 @@ class Kaldi(Package):  # Does not use Autotools
     homepage = "https://github.com/kaldi-asr/kaldi"
     git = "https://github.com/kaldi-asr/kaldi.git"
 
+    license("Apache-2.0")
+
     version("master")
     version("2021-11-16", commit="6e03a3f5f99d6d8c22494d90b7e7f9ceb0117ac8")
     version("2019-09-29", commit="6ffde4b41c58de778245149690927d592cd5956a")

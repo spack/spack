@@ -15,6 +15,8 @@ class Qualimap(Package):
     homepage = "http://qualimap.conesalab.org/"
     url = "https://bitbucket.org/kokonech/qualimap/downloads/qualimap_v2.2.1.zip"
 
+    license("GPL-2.0-or-later")
+
     version("2.2.1", sha256="08f1d66e49c83c76c56c4225c53aee44f41e0592c8bdc84b8c4ecd975700e045")
 
     depends_on("java", type="run")

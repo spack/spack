@@ -20,6 +20,8 @@ class PyHtgettoken(PythonPackage):
 
     maintainers("wdconinc")
 
+    license("BSD-3-Clause")
+
     # The following versions refer to setuptools-buildable commits after 1.16;
     # they are special reproducible version numbers from `git describe`
     version("1.16-33-g3788bb4", commit="3788bb4733e5e8f856cee51566df9a36cbfe097d")

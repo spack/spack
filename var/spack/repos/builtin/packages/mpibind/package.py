@@ -17,6 +17,8 @@ class Mpibind(AutotoolsPackage):
 
     maintainers("eleon")
 
+    license("MIT")
+
     # This package uses 'git describe --tags' to get the
     # package version in Autotools' AC_INIT, thus
     # 'get_full_repo' is needed.

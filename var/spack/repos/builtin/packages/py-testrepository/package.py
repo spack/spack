@@ -12,6 +12,8 @@ class PyTestrepository(PythonPackage):
     homepage = "https://launchpad.net/testrepository"
     pypi = "testrepository/testrepository-0.0.20.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.0.20", sha256="752449bc98c20253ec4611c40564aea93d435a5bf3ff672208e01cc10e5858eb")
 
     depends_on("py-setuptools", type="build")

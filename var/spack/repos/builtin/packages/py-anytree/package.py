@@ -13,6 +13,8 @@ class PyAnytree(PythonPackage):
     pypi = "anytree/anytree-2.8.0.tar.gz"
     maintainers("bernhardkaindl")
 
+    license("Apache-2.0")
+
     version("2.8.0", sha256="3f0f93f355a91bc3e6245319bf4c1d50e3416cc7a35cc1133c1ff38306bbccab")
 
     depends_on("py-setuptools", type="build")

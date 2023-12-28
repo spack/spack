@@ -13,6 +13,8 @@ class PySymengine(PythonPackage):
     pypi = "symengine/symengine-0.2.0.tar.gz"
     git = "https://github.com/symengine/symengine.py.git"
 
+    license("MIT")
+
     version("master", branch="master")
     version("0.9.2", sha256="0f7e45f5bba3fa844f7de7aa8d6640faaacb1075df76d8e4996e82b0ec6a4f62")
     # pypi source doesn't have necessary files in cmake directory

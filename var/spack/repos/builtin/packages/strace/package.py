@@ -17,6 +17,8 @@ class Strace(AutotoolsPackage):
 
     maintainers("michaelkuhn")
 
+    license("BSD-3-Clause")
+
     version("5.19", sha256="aa3dc1c8e60e4f6ff3d396514aa247f3c7bf719d8a8dc4dd4fa793be786beca3")
     version("5.17", sha256="5fb298dbd1331fd1e1bc94c5c32395860d376101b87c6cd3d1ba9f9aa15c161f")
     version("5.12", sha256="29171edf9d252f89c988a4c340dfdec662f458cb8c63d85431d64bab5911e7c4")

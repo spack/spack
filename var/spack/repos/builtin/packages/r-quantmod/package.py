@@ -14,6 +14,8 @@ class RQuantmod(RPackage):
 
     cran = "quantmod"
 
+    license("GPL-3.0-only")
+
     version("0.4.22", sha256="f29496f1ca9a9faf91aba70ac50bfe79303197ca8f1e369c96300005b5e6765e")
     version("0.4.20", sha256="f757df41595d885f7927e18f4835bc233d78d2d3ae48fd11c8874d4338c48e94")
     version("0.4.18", sha256="aa40448e93a1facf399213ac691784007731e869ad243fe762381ab099cd6c35")

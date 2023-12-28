@@ -15,6 +15,8 @@ class PyGlymur(PythonPackage):
     homepage = "https://github.com/quintusdias/glymur"
     pypi = "Glymur/Glymur-0.9.9.tar.gz"
 
+    license("MIT")
+
     version("0.9.9", sha256="25b8a6ac07892c98b4613f959295ada9ca5e76b27bfa25069ab0a8a5bb4048f4")
 
     depends_on("python@3.7:", type=("build", "run"))

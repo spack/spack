@@ -13,6 +13,8 @@ class PyGitdb(PythonPackage):
     homepage = "https://gitdb.readthedocs.io"
     pypi = "gitdb/gitdb-4.0.5.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("4.0.9", sha256="bac2fd45c0a1c9cf619e63a90d62bdc63892ef92387424b855792a6cabe789aa")
     version("4.0.8", sha256="858966a9310649cb24a387c101429bb5a1110068a312517722b0281077e78bc6")
     version("4.0.7", sha256="96bf5c08b157a666fec41129e6d327235284cca4c81e92109260f353ba138005")

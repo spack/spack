@@ -16,6 +16,8 @@ class IntelPin(Package):
     homepage = "http://www.pintool.org"
     maintainers("matthiasdiener")
 
+    license("MIT")
+
     version(
         "3.27",
         sha256="e7d44d25668632007d5a109e5033415e91db543b8ce9e665893a05e852b67707",

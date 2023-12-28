@@ -13,6 +13,8 @@ class PyPika(PythonPackage):
     git = "https://github.com/pika/pika.git"
     pypi = "pika/pika-1.3.2.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("1.3.2", sha256="b2a327ddddf8570b4965b3576ac77091b850262d34ce8c1d8cb4e4146aa4145f")
     version("1.3.1", sha256="beb19ff6dd1547f99a29acc2c6987ebb2ba7c44bf44a3f8e305877c5ef7d2fdc")
     version("1.3.0", sha256="15357ddc47a5c28f0b07d80e93d504cbbf7a1ad5e1cd129ecd27afe76472c529")

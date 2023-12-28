@@ -12,6 +12,8 @@ class Uthash(Package):
     homepage = "https://troydhanson.github.io/uthash/"
     url = "https://github.com/troydhanson/uthash/archive/refs/tags/v2.3.0.tar.gz"
 
+    license("BSD-2-Clause")
+
     version("2.3.0", sha256="e10382ab75518bad8319eb922ad04f907cb20cccb451a3aa980c9d005e661acc")
 
     def install(self, spec, prefix):

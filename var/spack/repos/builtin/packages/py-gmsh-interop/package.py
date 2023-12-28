@@ -15,6 +15,8 @@ class PyGmshInterop(PythonPackage):
 
     maintainers("cgcgcg")
 
+    license("MIT")
+
     version("2021.1.1", sha256="5456903283327dfa57fd973bb463c5fbc1c98c8f7ad15327441acb75da10b5f1")
 
     depends_on("python@3.6:3", type=("build", "run"))

@@ -15,6 +15,8 @@ class PyPymbolic(PythonPackage):
 
     maintainers("cgcgcg")
 
+    license("MIT")
+
     version("2022.2", sha256="f82776942bb3cb72329fa1f1aa2b68ec09f237db9178c95cfdc92a6aea7cec89")
 
     depends_on("python@3.8:3", type=("build", "run"))

@@ -17,6 +17,8 @@ class Oras(Package):
 
     maintainers("vsoch")
 
+    license("MIT")
+
     version("main", branch="main")
     version("0.12.0", sha256="5e19d61683a57b414efd75bd1b0290c941b8faace5fcc9d488f5e4aa674bf03e")
 

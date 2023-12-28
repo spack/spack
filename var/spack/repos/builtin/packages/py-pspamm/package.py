@@ -15,6 +15,8 @@ class PyPspamm(PythonPackage):
 
     maintainers("ravil-mobile")
 
+    license("BSD-3-Clause")
+
     version("develop", branch="master")
 
     variant("numpy", default=False, description="installs numpy")

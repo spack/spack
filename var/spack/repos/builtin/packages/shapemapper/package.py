@@ -18,6 +18,8 @@ class Shapemapper(CMakePackage):
 
     maintainers("snehring")
 
+    license("MIT")
+
     version(
         "2.1.5",
         sha256="0846a5d8b5f01d2d039fad4b957df0b6220a8505463f1a410368a1b90d2b227c",

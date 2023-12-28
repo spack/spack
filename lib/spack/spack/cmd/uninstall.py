@@ -277,7 +277,7 @@ def uninstall_specs(args, specs):
         return
 
     if not args.yes_to_all:
-        confirmation.confirm_action(uninstall_list, "uninstalled", "uninstallation")
+        confirmation.confirm_action(uninstall_list, "uninstalled", "uninstall")
 
     # Uninstall everything on the list
     do_uninstall(uninstall_list, args.force)

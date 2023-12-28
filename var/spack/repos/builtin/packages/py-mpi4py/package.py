@@ -16,6 +16,8 @@ class PyMpi4py(PythonPackage):
     pypi = "mpi4py/mpi4py-3.0.3.tar.gz"
     git = "https://github.com/mpi4py/mpi4py.git"
 
+    license("BSD-2-Clause")
+
     version("master", branch="master")
     version("3.1.5", sha256="a706e76db9255135c2fb5d1ef54cb4f7b0e4ad9e33cbada7de27626205f2a153")
     version("3.1.4", sha256="17858f2ebc623220d0120d1fa8d428d033dde749c4bc35b33d81a66ad7f93480")

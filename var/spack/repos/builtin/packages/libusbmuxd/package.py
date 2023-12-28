@@ -13,6 +13,8 @@ class Libusbmuxd(AutotoolsPackage):
     url = "https://www.libimobiledevice.org/downloads/libusbmuxd-1.0.10.tar.bz2"
     git = "https://git.libimobiledevice.org/libusbmuxd.git"
 
+    license("LGPL-2.1-or-later")
+
     version("master", branch="master")
     version("1.0.10", sha256="1aa21391265d2284ac3ccb7cf278126d10d354878589905b35e8102104fec9f2")
     version("1.0.9", sha256="2e3f708a3df30ad7832d2d2389eeb29f68f4e4488a42a20149cc99f4f9223dfc")

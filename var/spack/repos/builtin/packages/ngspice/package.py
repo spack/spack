@@ -16,6 +16,8 @@ class Ngspice(AutotoolsPackage):
 
     maintainers("aweits", "cessenat")
 
+    license("BSD-3-Clause")
+
     # Master version by default adds the experimental adms feature
     version("master", branch="master")
     version("41", sha256="1ce219395d2f50c33eb223a1403f8318b168f1e6d1015a7db9dbf439408de8c4")

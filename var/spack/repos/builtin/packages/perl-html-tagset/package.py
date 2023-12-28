@@ -12,4 +12,6 @@ class PerlHtmlTagset(PerlPackage):
     homepage = "https://metacpan.org/pod/HTML::Tagset"
     url = "http://search.cpan.org/CPAN/authors/id/P/PE/PETDANCE/HTML-Tagset-3.20.tar.gz"
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("3.20", sha256="adb17dac9e36cd011f5243881c9739417fd102fce760f8de4e9be4c7131108e2")

@@ -17,6 +17,8 @@ class PyTensorboardx(PythonPackage):
     homepage = "https://github.com/lanpa/tensorboardX"
     pypi = "tensorboardx/tensorboardX-1.8.tar.gz"
 
+    license("MIT")
+
     version("2.6.2.2", sha256="c6476d7cd0d529b0b72f4acadb1269f9ed8b22f441e87a84f2a3b940bb87b666")
     version("2.5.1", sha256="ea85a3446f22ce8a917fe4fa4d8a7a96222ef84ac835267d038c34bb99f6d61b")
     version("2.1", sha256="9e8907cf2ab900542d6cb72bf91aa87b43005a7f0aa43126268697e3727872f9")

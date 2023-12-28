@@ -14,6 +14,8 @@ class Htslib(AutotoolsPackage):
     homepage = "https://github.com/samtools/htslib"
     url = "https://github.com/samtools/htslib/releases/download/1.13/htslib-1.13.tar.bz2"
 
+    license("MIT AND BSD-3-Clause-Modification")
+
     version("1.19", sha256="8751c40c4fa7d1f23a6864c5b20a73744f8be68239535ae7729c5f7d394d0736")
     version("1.18", sha256="f1ab53a593a2320a1bfadf4ef915dae784006c5b5c922c8a8174d7530a9af18f")
     version("1.17", sha256="763779288c40f07646ec7ad98b96c378c739171d162ad98398868783b721839f")

@@ -12,6 +12,8 @@ class PyWordcloud(PythonPackage):
     homepage = "https://github.com/amueller/word_cloud"
     pypi = "wordcloud/wordcloud-1.8.1.tar.gz"
 
+    license("MIT")
+
     version("1.8.1", sha256="e6ef771aac17c1cf8558c8d5ef025796184066d7b78f8118aefe011fb0d22952")
 
     depends_on("py-setuptools", type="build")

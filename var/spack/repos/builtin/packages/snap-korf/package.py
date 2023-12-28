@@ -14,6 +14,8 @@ class SnapKorf(MakefilePackage):
     url = "http://korflab.ucdavis.edu/Software/snap-2013-11-29.tar.gz"
     git = "https://github.com/KorfLab/SNAP.git"
 
+    license("MIT")
+
     version("2021-11-04", commit="62ff3120fceccb03b5eea9d21afec3167dedfa94")
     version(
         "2013-11-29", sha256="e2a236392d718376356fa743aa49a987aeacd660c6979cee67121e23aeffc66a"

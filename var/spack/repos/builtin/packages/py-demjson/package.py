@@ -12,6 +12,8 @@ class PyDemjson(PythonPackage):
     homepage = "http://deron.meranda.us/python/demjson/"
     pypi = "demjson/demjson-2.2.4.tar.gz"
 
+    license("LGPL-3.0-only")
+
     version("2.2.4", sha256="31de2038a0fdd9c4c11f8bf3b13fe77bc2a128307f965c8d5fb4dc6d6f6beb79")
     version("2.2.3", sha256="9fb0f3c02fe500104680af2889a64d1637b395aebdb37341ae2309d77854f40c")
     version("2.2.2", sha256="5114563dd3a0324b6c9c74250528660adbb6a095b2a015038149e31a9b5727d5")

@@ -23,6 +23,8 @@ class Gqrx(CMakePackage):
 
     maintainers("aweits")
 
+    license("GPL-3.0-or-later")
+
     version("2.13.1", sha256="08b7b930bed00c6ac79330695c24919a9d779112e1a3dd37d22cc9ee38561e82")
     depends_on("cmake@3.2.0:", type="build")
     depends_on("gnuradio")

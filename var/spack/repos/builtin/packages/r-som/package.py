@@ -13,6 +13,8 @@ class RSom(RPackage):
 
     cran = "som"
 
+    license("GPL-3.0-or-later")
+
     version("0.3-5.1", sha256="a6f4c0e5b36656b7a8ea144b057e3d7642a8b71972da387a7133f3dd65507fb9")
     version("0.3-5", sha256="f7672afaaffcf41a8b2dd50e4c76b3a640ea2ad099f18b5dfcf00389abf6ba07")
     version("0.3-4", sha256="679e3d3f0af6e56da3b0a4d8577334e03ad45fe76916bbc2592548f85b6b1c84")

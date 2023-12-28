@@ -18,6 +18,8 @@ class Feynhiggs(AutotoolsPackage):
     maintainers("vvolkl")
     tags = ["hep"]
 
+    license("GPL-3.0-or-later")
+
     version("2.18.1", sha256="3aba89cac6397d7e1a8a9d9dcfeed9fb32eeeee98768b0c0c9f444c2cc125ab9")
 
     def configure_args(self):

@@ -19,6 +19,8 @@ class RAde4(RPackage):
 
     cran = "ade4"
 
+    license("GPL-2.0-or-later")
+
     version("1.7-22", sha256="007df54e83a2a6cb8d6da8006f0aace011e7eaa7744dc5f8230ac2c002b393b4")
     version("1.7-20", sha256="ddc75788b55902f17dabda209eb67c378aa0233767697e00fa3f8fc85e4bad7b")
     version("1.7-19", sha256="c85111881ff93a261ca34a5b5ef313d1c0ff9b84f0b23596bc56cfa696f165ef")

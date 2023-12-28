@@ -13,6 +13,8 @@ class Cppgsl(CMakePackage):
     url = "https://github.com/Microsoft/GSL/archive/v2.0.0.tar.gz"
     git = "https://github.com/Microsoft/GSL.git"
 
+    license("MIT")
+
     version("main", branch="main")
     version("4.0.0", sha256="f0e32cb10654fea91ad56bde89170d78cfbf4363ee0b01d8f097de2ba49f6ce9")
     version("3.1.0", sha256="d3234d7f94cea4389e3ca70619b82e8fb4c2f33bb3a070799f1e18eef500a083")

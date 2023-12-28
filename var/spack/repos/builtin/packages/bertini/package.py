@@ -14,6 +14,8 @@ class Bertini(AutotoolsPackage):
     homepage = "https://bertini.nd.edu/"
     url = "https://bertini.nd.edu/BertiniSource_v1.5.tar.gz"
 
+    license("GPL-3.0-or-later")
+
     version("1.5", sha256="a9a68a96e180fe6a93ba1bc1d61f522784c9a053b049b2cbd98008b5b6deec3c")
 
     variant("mpi", default=True, description="Compile in parallel")

@@ -27,6 +27,8 @@ class Kahip(CMakePackage):
     git = "https://github.com/KaHIP/KaHIP.git"
     maintainers("ma595")
 
+    license("MIT")
+
     version("develop", branch="master")
     version("3.14", sha256="9da04f3b0ea53b50eae670d6014ff54c0df2cb40f6679b2f6a96840c1217f242")
     version("3.13", sha256="fae21778a4ce8e59ccb98e5cbb6c01f0af7e594657d21f6c0eb2c6e74398deb1")

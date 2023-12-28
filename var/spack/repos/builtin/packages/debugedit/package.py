@@ -18,6 +18,8 @@ class Debugedit(AutotoolsPackage):
     git = "git://sourceware.org/git/debugedit.git"
     url = "https://sourceware.org/ftp/debugedit/0.2/debugedit-0.2.tar.xz"
 
+    license("LGPL-2.1-or-later")
+
     version("develop", branch="main")
     version("0.2", sha256="b78258240bb7ec5bbff109495092dcc111aa0393f135f2d2a4b43887ba26a942")
 

@@ -16,6 +16,8 @@ class Spfft(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("AdhocMan", "haampie")
 
+    license("BSD-3-Clause")
+
     version("develop", branch="develop")
     version("master", branch="master")
 

@@ -20,6 +20,8 @@ class RFactoextra(RPackage):
 
     cran = "factoextra"
 
+    license("GPL-2.0-only")
+
     version("1.0.7", sha256="624ff01c74933352aca55966f8a052b1ccc878f52c2c307e47f88e0665db94aa")
     version("1.0.5", sha256="8177a3f5107883ae248b2cd0afa388a1794741f5155a9455b3883788cf44d5d0")
     version("1.0.4", sha256="e4a000a04ef5b9aa0790dc6e5277451c482a19ba10dda9474f6c6982424aeed3")

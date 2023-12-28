@@ -12,6 +12,8 @@ class Libxscrnsaver(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/lib/libXScrnSaver"
     xorg_mirror_path = "lib/libXScrnSaver-1.2.2.tar.gz"
 
+    license("MIT")
+
     version("1.2.2", sha256="e12ba814d44f7b58534c0d8521e2d4574f7bf2787da405de4341c3b9f4cc8d96")
 
     depends_on("libx11")

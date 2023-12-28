@@ -15,6 +15,8 @@ class Channelflow(CMakePackage):
     homepage = "https://github.com/epfl-ecps/channelflow"
     git = "https://github.com/epfl-ecps/channelflow.git"
 
+    license("GPL-2.0-only")
+
     version("master", branch="master")
 
     variant("shared", default=True, description="Build shared libs")

@@ -16,6 +16,8 @@ class Er(CMakePackage):
 
     maintainers("CamStan", "gonsie")
 
+    license("MIT")
+
     version("main", branch="main")
     version("0.4.0", sha256="6cb5b6724ddac5c1f5ed6b326a5f3bf5d4eb1c6958a48218e6ca9bb7c02e48a8")
     version("0.3.0", sha256="01bc71bfb2ebb015ccb948f2bb9138b70972a3e8be0e53f9a4844e46b106a36c")

@@ -16,6 +16,8 @@ class Dri2proto(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/proto/dri2proto/"
     xorg_mirror_path = "proto/dri2proto-2.8.tar.gz"
 
+    license("ICU")
+
     version("2.8", sha256="7e65b031eaa6ebe23c75583d4abd993ded7add8009b4200a4db7aa10728b0f61")
 
     depends_on("pkgconfig", type="build")

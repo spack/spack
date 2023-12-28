@@ -13,6 +13,8 @@ class PyNgsTools(PythonPackage):
     homepage = "https://github.com/Lioscro/ngs-tools"
     pypi = "ngs-tools/ngs-tools-1.8.1.tar.gz"
 
+    license("MIT")
+
     version("1.8.1", sha256="59d606d6c3ff3024e5e1ccad947c4d7608098fca105762e344742e16aa2f0de3")
 
     depends_on("python@3.6:", type=("build", "run"))

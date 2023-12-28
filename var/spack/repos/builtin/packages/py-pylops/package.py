@@ -19,6 +19,8 @@ class PyPylops(PythonPackage):
 
     maintainers("archxlith")
 
+    license("LGPL-3.0-or-later")
+
     version("master", branch="master")
     version("1.12.0", sha256="0e9caef46bbef9691acd133cb9b6d13e19510e8682aaa8f4eb15d9bd9ff9ebb6")
     version("1.11.1", sha256="87010358b1119ebe1f8a601b2768d16d7bd26d55bd0c91a6e83db763e5715f7c")

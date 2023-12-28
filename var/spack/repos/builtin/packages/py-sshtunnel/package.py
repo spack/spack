@@ -13,6 +13,8 @@ class PySshtunnel(PythonPackage):
     homepage = "https://github.com/pahaz/sshtunnel"
     pypi = "sshtunnel/sshtunnel-0.1.5.tar.gz"
 
+    license("MIT")
+
     version("0.1.5", sha256="c813fdcda8e81c3936ffeac47cb69cfb2d1f5e77ad0de656c6dab56aeebd9249")
 
     depends_on("py-setuptools", type="build")

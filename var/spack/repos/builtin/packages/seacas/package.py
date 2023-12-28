@@ -29,6 +29,8 @@ class Seacas(CMakePackage):
     url = "https://github.com/sandialabs/seacas/archive/v2019-08-20.tar.gz"
     maintainers("gsjaardema")
 
+    license("Intel")
+
     # ###################### Versions ##########################
     version("master", branch="master")
     version(

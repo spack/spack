@@ -12,6 +12,8 @@ class Diffmark(AutotoolsPackage):
     homepage = "https://github.com/vbar/diffmark"
     git = "https://github.com/vbar/diffmark.git"
 
+    license("diffmark")
+
     version("master", branch="master")
 
     depends_on("autoconf", type="build")

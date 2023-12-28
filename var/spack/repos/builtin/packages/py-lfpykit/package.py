@@ -13,6 +13,8 @@ class PyLfpykit(PythonPackage):
     homepage = "https://github.com/LFPy/LFPykit"
     pypi = "lfpykit/LFPykit-0.5.tar.gz"
 
+    license("GPL-3.0-only")
+
     version("0.5", sha256="9a7ae80ad905bb8dd0eeab8517b43c3d5b4fff2b8766c9d5a36320a7a67bd545")
 
     depends_on("py-setuptools", type="build")

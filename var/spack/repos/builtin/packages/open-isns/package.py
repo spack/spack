@@ -13,6 +13,8 @@ class OpenIsns(AutotoolsPackage):
     homepage = "https://github.com/open-iscsi/open-isns"
     url = "https://github.com/open-iscsi/open-isns/archive/v0.100.tar.gz"
 
+    license("LGPL-2.1-or-later")
+
     version("0.100", sha256="b011edbb0f31690aaca902a8ecf4e1f17b01d6c9e9afc51909d26b0993b4328f")
     version("0.99", sha256="a8febecf888d5a38abfa2fcb290194d993b1a7f5bea0cb61f5cf2e9f9e5273c2")
     version("0.98", sha256="c5cbd161e51fb993728c04e56d3da693b73eb3f4e81d17f66eb5b7653c29e8eb")

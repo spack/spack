@@ -18,6 +18,8 @@ class Cpio(AutotoolsPackage, GNUMirrorPackage):
 
     executables = ["^cpio$"]
 
+    license("GPL-3.0-or-later")
+
     version("2.14", sha256="145a340fd9d55f0b84779a44a12d5f79d77c99663967f8cfa168d7905ca52454")
     version("2.13", sha256="e87470d9c984317f658567c03bfefb6b0c829ff17dbf6b0de48d71a4c8f3db88")
 

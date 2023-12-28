@@ -18,6 +18,8 @@ class RShinyjs(RPackage):
 
     cran = "shinyjs"
 
+    license("MIT")
+
     version("2.1.0", sha256="7ec20cbf1b1fd7a32d85a56dfc0df8b5f67c828d241da400a21d893cb37ea9c5")
     version("2.0.0", sha256="c2cdd9fab41f6b46bb41b288cd9b3fb3a7fe9627b664e3a58a0cb5dd4c19f8ff")
 

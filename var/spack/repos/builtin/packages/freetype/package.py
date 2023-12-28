@@ -19,6 +19,8 @@ class Freetype(AutotoolsPackage, CMakePackage):
 
     maintainers("michaelkuhn")
 
+    license("FTL OR GPL-2.0-or-later")
+
     version("2.11.1", sha256="f8db94d307e9c54961b39a1cc799a67d46681480696ed72ecf78d4473770f09b")
     version("2.11.0", sha256="a45c6b403413abd5706f3582f04c8339d26397c4304b78fa552f2215df64101f")
     version("2.10.4", sha256="5eab795ebb23ac77001cfb68b7d4d50b5d6c7469247b0b01b2c953269f658dac")

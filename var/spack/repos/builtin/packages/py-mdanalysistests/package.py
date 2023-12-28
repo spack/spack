@@ -14,6 +14,8 @@ class PyMdanalysistests(PythonPackage):
 
     maintainers("RMeli")
 
+    license("GPL-3.0-or-later")
+
     version("2.6.1", sha256="043f7451f4d9c42ea9e6609a81a6002948e2c74fd268282e0831416789b22e5e")
     version("2.6.0", sha256="16fdd10e5240b606e8f9210b7cbd9e4be110e6b8d79bb6e72ce6250c4731a817")
     version("2.5.0", sha256="a15b53b7f8bed67900a2bf542bbb3cab81dc71674fa6cddb3248dd11880e4c9d")

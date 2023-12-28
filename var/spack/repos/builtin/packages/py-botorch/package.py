@@ -14,6 +14,8 @@ class PyBotorch(PythonPackage):
 
     maintainers("adamjstewart", "meyersbs")
 
+    license("MIT")
+
     version("0.8.4", sha256="e2c17efa8fcda3c9353bbd14ba283ddf237d66151097c0af483bbaaaac61288b")
     version("0.8.3", sha256="e529f7adbb2b54f46125ae904682fc0f0d02ab8bdb9067ede521c379b355bf73")
     version("0.6.4", sha256="3fd28417f55749501a45378f72cd5ca7614e2e05b7b65c6b4eb9b72378bc665a")

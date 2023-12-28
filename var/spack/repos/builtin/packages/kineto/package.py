@@ -13,6 +13,8 @@ class Kineto(CMakePackage):
     homepage = "https://github.com/pytorch/kineto"
     git = "https://github.com/pytorch/kineto.git"
 
+    license("BSD-3-Clause")
+
     version("master", branch="master", submodules=True)
     version(
         "2021-05-12", commit="a631215ac294805d5360e0ecceceb34de6557ba8", submodules=True

@@ -11,6 +11,8 @@ class Memaxes(Package):
 
     homepage = "https://github.com/llnl/MemAxes"
 
+    license("LGPL-2.1-or-later")
+
     version(
         "0.5",
         sha256="9858f0f675b50e347d0b88545558e5d6b4333347c762b15d399b8d8004d7b68b",

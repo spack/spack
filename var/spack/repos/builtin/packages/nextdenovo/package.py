@@ -12,6 +12,8 @@ class Nextdenovo(MakefilePackage):
     homepage = "https://nextdenovo.readthedocs.io/en/latest/index.html"
     url = "https://github.com/Nextomics/NextDenovo/archive/refs/tags/2.5.2.tar.gz"
 
+    license("GPL-3.0-only")
+
     version("2.5.2", sha256="f1d07c9c362d850fd737c41e5b5be9d137b1ef3f1aec369dc73c637790611190")
 
     depends_on("python", type="run")

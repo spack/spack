@@ -14,6 +14,8 @@ class PyNltk(PythonPackage):
     homepage = "https://www.nltk.org/"
     pypi = "nltk/nltk-3.5.zip"
 
+    license("Apache-2.0")
+
     version("3.8.1", sha256="1834da3d0682cba4f2cede2f9aad6b0fafb6461ba451db0efb6f9c39798d64d3")
     version("3.5", sha256="845365449cd8c5f9731f7cb9f8bd6fd0767553b9d53af9eb1b3abf7700936b35")
 

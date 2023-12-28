@@ -17,6 +17,8 @@ class Babelflow(CMakePackage):
 
     maintainers("spetruzza")
 
+    license("BSD-3-Clause")
+
     version("1.1.0", sha256="6436b0e6b2f57fbe0cb9127dc9e7f513167de89de2a8c145055434013714989f")
     version("1.0.1", sha256="b7817870b7a1d7ae7ae2eff1a1acec2824675fb856f666d5dc95c41ce453ae91")
     version("1.0.0", sha256="4c4d7ddf60e25e8d3550c07875dba3e46e7c9e61b309cc47a409461b7ffa405e")

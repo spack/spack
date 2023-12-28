@@ -22,6 +22,8 @@ class Gmt(CMakePackage, AutotoolsPackage):
 
     maintainers("adamjstewart")
 
+    license("LGPL-3.0-only")
+
     version("master", branch="master")
     version("6.4.0", sha256="c39d23dbc8a85416457946f6b93c2b9a5f039f092453e7f4b1aaf88d4a288300")
     version("6.3.0", sha256="48712279da8228a7960f36fd4b7b04cc1a66489c37b2a5c03f8336a631aa3b24")

@@ -12,6 +12,8 @@ class PyPybktree(PythonPackage):
     homepage = "https://github.com/benhoyt/pybktree"
     pypi = "pybktree/pybktree-1.1.tar.gz"
 
+    license("MIT")
+
     version("1.1", sha256="eec0037cdd3d7553e6d72435a4379bede64be17c6712f149e485169638154d2b")
 
     depends_on("py-setuptools", type="build")

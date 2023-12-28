@@ -13,6 +13,8 @@ class Boxlib(CMakePackage):
     homepage = "https://ccse.lbl.gov/BoxLib/"
     url = "https://github.com/BoxLib-Codes/BoxLib/archive/16.12.2.tar.gz"
 
+    license("BSD-3-Clause-LBNL")
+
     version("16.12.2", sha256="e87faeccfcb14b3436d36c45fcd9f46ea20f65298d35c6db2a80d6332b036dd2")
 
     depends_on("mpi")

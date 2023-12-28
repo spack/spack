@@ -14,6 +14,8 @@ class RTigris(RPackage):
 
     cran = "tigris"
 
+    license("MIT")
+
     version("2.0.1", sha256="d87c6b0c11ffb967699d345c6bfcfa82581a0753e1130bf0c927b2960b074d8c")
     version("1.6.1", sha256="927e8da3f7120bcc10f0b4ded95687512693e069f082eea7aea6302a2f1b2db2")
     version("1.6", sha256="fa14fbbaf44f5ade1cc92e6e4e4ed2e775bc7c106310711d16b0135a948a1661")

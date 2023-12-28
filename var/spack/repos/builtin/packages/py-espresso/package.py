@@ -24,6 +24,8 @@ class PyEspresso(CMakePackage):
     git = "https://github.com/espressomd/espresso.git"
     url = "https://github.com/espressomd/espresso/releases/download/4.0.0/espresso-4.0.0.tar.gz"
 
+    license("GPL-3.0-only")
+
     version("develop", branch="python")
     version("4.0.2", sha256="89878ab44a58e90b69d56368e961b8ca13d9307f8d4b282967a1f3071a62c740")
     version("4.0.1", sha256="17b7268eeba652a77f861bc534cdd05d206e7641d203a9dd5029b44bd422304b")

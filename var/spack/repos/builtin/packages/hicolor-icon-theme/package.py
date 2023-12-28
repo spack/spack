@@ -14,6 +14,8 @@ class HicolorIconTheme(AutotoolsPackage):
     homepage = "https://www.freedesktop.org/wiki/Software/icon-theme/"
     url = "https://icon-theme.freedesktop.org/releases/hicolor-icon-theme-0.17.tar.xz"
 
+    license("GPL-2.0-only")
+
     version("0.17", sha256="317484352271d18cbbcfac3868eab798d67fff1b8402e740baa6ff41d588a9d8")
 
     def setup_dependent_build_environment(self, env, dependent_spec):

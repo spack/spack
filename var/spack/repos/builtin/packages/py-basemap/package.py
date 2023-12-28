@@ -13,6 +13,8 @@ class PyBasemap(PythonPackage):
     url = "https://github.com/matplotlib/basemap/archive/v1.2.0rel.tar.gz"
     homepage = "https://matplotlib.org/basemap/"
 
+    license("MIT")
+
     version("1.2.1", sha256="3fb30424f18cd4ffd505e30fd9c810ae81b999bb92f950c76553e1abc081faa7")
 
     # Per Github issue #3813, setuptools is required at runtime in order

@@ -21,6 +21,8 @@ class Occa(Package):
 
     maintainers("v-dobrev", "dmed256")
 
+    license("MIT")
+
     version("develop")
     version("1.2.0", tag="v1.2.0", commit="18379073b6497f677a20bfeced95b511f82c3355")
     version("1.1.0", tag="v1.1.0", commit="c8a587666a23e045f25dc871c3257364a5f6a7d5")

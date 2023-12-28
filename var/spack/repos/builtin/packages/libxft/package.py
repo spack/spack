@@ -16,6 +16,8 @@ class Libxft(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/lib/libXft"
     xorg_mirror_path = "lib/libXft-2.3.2.tar.gz"
 
+    license("MIT")
+
     version("2.3.2", sha256="26cdddcc70b187833cbe9dc54df1864ba4c03a7175b2ca9276de9f05dce74507")
 
     depends_on("freetype@2.1.6:")

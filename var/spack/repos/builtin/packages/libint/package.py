@@ -31,6 +31,8 @@ class Libint(AutotoolsPackage):
 
     maintainers("dev-zero")
 
+    license("LGPL-3.0-only")
+
     version("2.6.0", sha256="4ae47e8f0b5632c3d2a956469a7920896708e9f0e396ec10071b8181e4c8d9fa")
     version("2.4.2", sha256="86dff38065e69a3a51d15cfdc638f766044cb87e5c6682d960c14f9847e2eac3")
     version("2.4.1", sha256="0513be124563fdbbc7cd3c7043e221df1bda236a037027ba9343429a27db8ce4")

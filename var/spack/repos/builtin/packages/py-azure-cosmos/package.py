@@ -13,6 +13,8 @@ class PyAzureCosmos(PythonPackage):
     homepage = "https://github.com/Azure/azure-sdk-for-python"
     pypi = "azure-cosmos/azure-cosmos-4.0.0.zip"
 
+    license("MIT")
+
     version("4.0.0", sha256="c4e40e0d378fd0c96664f46f1ad08e6c8aaaac31c463726a74aae9eae724442d")
     version(
         "3.2.0",

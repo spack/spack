@@ -19,6 +19,8 @@ class Julea(MesonPackage):
     tags = ["HPC", "I/O", "storage"]
     maintainers("michaelkuhn")
 
+    license("LGPL-3.0-or-later")
+
     version("master", branch="master")
 
     variant("hdf5", default=True, description="Enable HDF5 support")

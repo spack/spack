@@ -13,6 +13,8 @@ class RubyErubis(RubyPackage):
     homepage = "http://www.kuwata-lab.com/erubis/"
     git = "https://github.com/kwatch/erubis.git"
 
+    license("MIT")
+
     version("master", branch="master")
     version("2.7.0", commit="14d3eab57fbc361312c8f3af350cbf9a5bafce17")
 

@@ -23,6 +23,8 @@ class RBiomartr(RPackage):
 
     cran = "biomartr"
 
+    license("GPL-2.0-only")
+
     version("1.0.2", sha256="7fd6cccd915aa39e593fb7591107ab9792d98a119dd42f3f666e5184f4e42743")
     version("0.9.2", sha256="d88085696e9c5614828602254c33f2cdd3bbfeebc2f21a705eee3cb961097c89")
 

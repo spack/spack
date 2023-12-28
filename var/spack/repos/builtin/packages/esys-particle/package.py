@@ -17,6 +17,8 @@ class EsysParticle(CMakePackage):
 
     maintainers("snehring")
 
+    license("Apache-2.0")
+
     version("3.0-alpha", sha256="4fba856a95c93991cacb904e6a54a7ded93558f7adc8c3e6da99bc347843a434")
 
     depends_on("mpi")

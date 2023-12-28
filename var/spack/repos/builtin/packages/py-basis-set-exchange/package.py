@@ -14,6 +14,8 @@ class PyBasisSetExchange(PythonPackage):
 
     maintainers("bennybp", "scemama")
 
+    license("BSD-3-Clause")
+
     version("0.8.12", sha256="41f0242e2c11392c511d3308c0345e14b0eb3344686d865bdfcb48257910fc0d")
     version("0.8.11", sha256="dbd4cf9382d97b79a3143c6b2086d1d24562bd13e0ab0d18fc0423b9ee877b9b")
     version("0.8.10", sha256="7f974faf513791d59ef47dd4eba9d8386f75bbd85f253ca5c08732ff56004a57")

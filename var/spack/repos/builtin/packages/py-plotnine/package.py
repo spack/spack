@@ -15,6 +15,8 @@ class PyPlotnine(PythonPackage):
     homepage = "https://plotnine.readthedocs.io/en/stable"
     pypi = "plotnine/plotnine-0.8.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.9.0", sha256="0e89a93015f3c71d6844ac7aa9fb0da09b908f5f7dfa7dd5d68a5ca32b2ebcea")
     version("0.8.0", sha256="39de59edcc28106761b65238647d0b1f6212ea7f3a78f8be0b846616db969276")
     version("0.7.1", sha256="02f2b0435dae2e917198c5367fd97b010445d64d9888c6b7e755d3cdfe7ad057")

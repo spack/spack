@@ -15,6 +15,8 @@ class PyOutdated(PythonPackage):
 
     maintainers("meyersbs")
 
+    license("MIT")
+
     version("0.2.2", sha256="4b7fdec88e36711120d096d485fc4d5035e4e5ffbd907cf3a6ce2af43058b970")
 
     depends_on("py-setuptools@44:", type=("build", "run"))

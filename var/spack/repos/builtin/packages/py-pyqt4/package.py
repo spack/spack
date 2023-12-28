@@ -15,6 +15,8 @@ class PyPyqt4(SIPPackage):
     homepage = "https://www.riverbankcomputing.com/software/pyqt/intro"
     url = "https://www.riverbankcomputing.com/static/Downloads/PyQt4/4.12.3/PyQt4_gpl_x11-4.12.3.tar.gz"
 
+    license("GPL-3.0-or-later")
+
     version("4.12.3", sha256="a00f5abef240a7b5852b7924fa5fdf5174569525dc076cd368a566619e56d472")
 
     # API files can be installed regardless if QScintilla is installed or not

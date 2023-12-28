@@ -15,6 +15,8 @@ class PyBagit(PythonPackage):
     homepage = "https://libraryofcongress.github.io/bagit-python"
     pypi = "bagit/bagit-1.8.1.tar.gz"
 
+    license("CC0-1.0")
+
     version("1.8.1", sha256="37df1330d2e8640c8dee8ab6d0073ac701f0614d25f5252f9e05263409cee60c")
 
     depends_on("python@2.7:", type=("build", "run"))

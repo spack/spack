@@ -13,6 +13,8 @@ class PyAmpltools(PythonPackage):
     homepage = "https://ampl.com/"
     pypi = "ampltools/ampltools-0.4.6.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.4.6", sha256="d54b399c1d78d02e3f4023aa2335b57832deb7d31cdefe4e219e4f2a2bb19a83")
 
     depends_on("py-requests", type=("build", "run"))

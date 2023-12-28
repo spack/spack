@@ -17,6 +17,8 @@ class Libde265(CMakePackage):
 
     maintainers("benkirk")
 
+    license("LGPL-3.0-or-later")
+
     version("1.0.9", sha256="153554f407718a75f1e0ae197d35b43147ce282118a54f894554dbe27c32163d")
 
     depends_on("cmake@3.13:", type="build")

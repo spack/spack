@@ -14,6 +14,8 @@ class PkgConfig(AutotoolsPackage):
     # URL must remain http:// so Spack can bootstrap curl
     url = "https://pkgconfig.freedesktop.org/releases/pkg-config-0.29.2.tar.gz"
 
+    license("GPL-2.0-only")
+
     version("0.29.2", sha256="6fc69c01688c9458a57eb9a1664c9aba372ccda420a02bf4429fe610e7e7d591")
     version("0.29.1", sha256="beb43c9e064555469bd4390dcfd8030b1536e0aa103f08d7abf7ae8cac0cb001")
     version("0.28", sha256="6b6eb31c6ec4421174578652c7e141fdaae2dabad1021f420d8713206ac1f845")

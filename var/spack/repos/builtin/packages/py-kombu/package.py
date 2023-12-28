@@ -11,6 +11,8 @@ class PyKombu(PythonPackage):
 
     pypi = "kombu/kombu-4.3.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("5.2.3", sha256="81a90c1de97e08d3db37dbf163eaaf667445e1068c98bfd89f051a40e9f6dbbd")
     version("5.0.2", sha256="f4965fba0a4718d47d470beeb5d6446e3357a62402b16c510b6a2f251e05ac3c")
     version("4.6.11", sha256="ca1b45faac8c0b18493d02a8571792f3c40291cf2bcf1f55afed3d8f3aa7ba74")

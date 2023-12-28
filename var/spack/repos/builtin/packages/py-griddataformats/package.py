@@ -17,6 +17,8 @@ class PyGriddataformats(PythonPackage):
 
     maintainers("RMeli")
 
+    license("LGPL-3.0-only")
+
     version("1.0.1", sha256="ad2c9ab7d672a6d8c426de7d083eee4f3e2b0bd59391675d30683c768ab83cc4")
 
     depends_on("py-setuptools", type="build")

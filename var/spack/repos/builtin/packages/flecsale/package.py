@@ -14,6 +14,8 @@ class Flecsale(CMakePackage):
     homepage = "https://github.com/laristra/flecsale"
     git = "https://github.com/laristra/flecsale.git"
 
+    license("Unlicense")
+
     version("develop", branch="master", submodules=True)
 
     variant("mpi", default=True, description="Build on top of mpi conduit for mpi inoperability")

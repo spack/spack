@@ -14,6 +14,8 @@ class RGss(RPackage):
 
     cran = "gss"
 
+    license("GPL-2.0-or-later")
+
     version("2.2-4", sha256="953e89dfe3bee9cac51df3e5325bf4d1496ad76e4393706c4efdb1834c0c7441")
     version("2.2-3", sha256="24306401cf4e5869f8a690eca7e17c044ece83edd66969bd2daf5976272d244b")
     version("2.2-2", sha256="1da4da894378ee730cff9628e8b4d2a0d7dfa344b94e5bce6953e66723c21fe4")

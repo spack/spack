@@ -19,6 +19,8 @@ class RCdcfluview(RPackage):
 
     cran = "cdcfluview"
 
+    license("MIT")
+
     version("0.9.4", sha256="776a155c4f0cc678fde94a6d47cc2783ff5c199f26cce642461092e1b6311dad")
     version("0.9.2", sha256="f2080fc80c5e0241f8b657f5ac3a251ea89dfc26c1ab13bdfaed4d4e97495015")
     version("0.9.0", sha256="1b2064886858cbb1790ef808d88fbab75d3a9cf55e720638221a3377ff8dd244")

@@ -17,5 +17,7 @@ class PerlTextNsp(PerlPackage):
 
     maintainers("snehring")
 
+    license("GPL-2.0-only")
+
     version("1.31", sha256="a01201beb29636b3e41ecda2a6cf6522fd265416bd6d994fad02f59fb49cf595")
     version("1.29", sha256="26610cc17ddc3a9a239ffd100bbcf42618e2577ab4b051de4c262f2082afd27e")

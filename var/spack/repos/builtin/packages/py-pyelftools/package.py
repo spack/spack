@@ -13,6 +13,8 @@ class PyPyelftools(PythonPackage):
     homepage = "https://github.com/eliben/pyelftools"
     pypi = "pyelftools/pyelftools-0.26.tar.gz"
 
+    license("Unlicense")
+
     version("0.29", sha256="ec761596aafa16e282a31de188737e5485552469ac63b60cfcccf22263fd24ff")
     version("0.28", sha256="53e5609cac016471d40bd88dc410cd90755942c25e58a61021cfdf7abdfeacff")
     version("0.27", sha256="cde854e662774c5457d688ca41615f6594187ba7067af101232df889a6b7a66b")

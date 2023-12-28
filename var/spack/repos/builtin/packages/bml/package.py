@@ -17,6 +17,8 @@ class Bml(CMakePackage):
 
     maintainers("jeanlucf22")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("2.2.0", sha256="41703eee605bcb0ce3bcb5dde5914363aaa382393138ab24f02acf84f670fad0")
     version("2.1.2", sha256="d5bb4726759eb35ec66fae7b6ce8b4978cee33fa879aed314bf7aa1fa7eece91")

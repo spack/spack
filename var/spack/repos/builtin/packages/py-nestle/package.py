@@ -12,6 +12,8 @@ class PyNestle(PythonPackage):
     homepage = "https://kbarbary.github.io/nestle/"
     pypi = "nestle/nestle-0.1.1.tar.gz"
 
+    license("MIT")
+
     version("0.1.1", sha256="d236a04f25494af5cda572eecf62729592b3231fbd874b1f72aff54718a3bb08")
 
     # pip silently replaces distutils with setuptools

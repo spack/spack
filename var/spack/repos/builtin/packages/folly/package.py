@@ -19,6 +19,9 @@ class Folly(CMakePackage):
 
     homepage = "https://github.com/facebook/folly"
     url = "https://github.com/facebook/folly/releases/download/v2021.05.24.00/folly-v2021.05.24.00.tar.gz"
+
+    license("MIT")
+
     version(
         "2021.05.24.00", sha256="9d308adefe4670637f5c7d96309b3b394ac3fa129bc954f5dfbdd8b741c02aad"
     )

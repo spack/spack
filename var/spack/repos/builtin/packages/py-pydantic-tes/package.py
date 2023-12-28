@@ -13,6 +13,8 @@ class PyPydanticTes(PythonPackage):
     homepage = "https://github.com/jmchilton/pydantic-tes"
     pypi = "pydantic-tes/pydantic-tes-0.1.5.tar.gz"
 
+    license("MIT")
+
     version("0.1.5", sha256="557cc77bdbeae86a6bd155af2d0aeaa5050cd9e3f7d9b17b817f14dd814a7423")
 
     depends_on("python@3.6:", type=("build", "run"))

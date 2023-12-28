@@ -18,6 +18,8 @@ class Cleverleaf(CMakePackage):
     homepage = "https://uk-mac.github.io/CleverLeaf/"
     git = "https://github.com/UK-MAC/CleverLeaf_ref.git"
 
+    license("LGPL-3.0-or-later")
+
     version("develop", branch="develop")
 
     depends_on("samrai@3.8.0:")

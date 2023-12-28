@@ -16,6 +16,8 @@ class UtilLinux(AutotoolsPackage):
     list_url = "https://www.kernel.org/pub/linux/utils/util-linux"
     list_depth = 1
 
+    license("GPL-2.0-only")
+
     version("2.39.1", sha256="d7c8a58eb2c7248a32754eb3a3b6772e368b984d9907ada834c2cf3e13024270")
     version("2.38.1", sha256="0820eb8eea90408047e3715424bc6be771417047f683950fecb4bdd2e2cbbc6e")
     version("2.38", sha256="c31d4e54f30b56b0f7ec8b342658c07de81378f2c067941c2b886da356f8ad42")

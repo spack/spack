@@ -15,4 +15,6 @@ class RBmp(RPackage):
 
     cran = "bmp"
 
+    license("GPL-2.0-or-later")
+
     version("0.3", sha256="bdf790249b932e80bc3a188a288fef079d218856cf64ffb88428d915423ea649")

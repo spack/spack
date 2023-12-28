@@ -13,6 +13,8 @@ class PySphinxcontribWebsupport(PythonPackage):
     homepage = "http://sphinx-doc.org/"
     pypi = "sphinxcontrib-websupport/sphinxcontrib-websupport-1.1.2.tar.gz"
 
+    license("BSD-2-Clause")
+
     version("1.1.2", sha256="1501befb0fdf1d1c29a800fdbf4ef5dc5369377300ddbdd16d2cd40e54c6eefc")
     version("1.1.0", sha256="9de47f375baf1ea07cdb3436ff39d7a9c76042c10a769c52353ec46e4e8fc3b9")
     version("1.0.1", sha256="7a85961326aa3a400cd4ad3c816d70ed6f7c740acd7ce5d78cd0a67825072eb9")

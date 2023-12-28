@@ -20,6 +20,8 @@ class ROptimx(RPackage):
 
     cran = "optimx"
 
+    license("GPL-2.0-only")
+
     version("2022-4.30", sha256="ebe9887a22296cf4b2db07981aaa1f898bf7c17fb61a4b398c228d4077d0b410")
     version(
         "2021-10.12", sha256="39384c856b5efa3992cd230548b60eff936d428111ad6ad5b8fb98a3bcbb7943"

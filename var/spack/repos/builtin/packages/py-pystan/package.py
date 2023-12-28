@@ -15,6 +15,8 @@ class PyPystan(PythonPackage):
 
     maintainers("haralmha")
 
+    license("ISC")
+
     version("3.5.0", sha256="078571d071a5b7c0af59206d4994a0979f4ac4b61f4a720b640c44fe35514929")
     version("3.4.0", sha256="325e2fb0ab804555c05a603e0c9152ab11fcc3af01f3e9a9ff9fe9954b93184f")
     version("2.19.1.1", sha256="fa8bad8dbc0da22bbe6f36af56c9abbfcf10f92df8ce627d59a36bd8d25eb038")

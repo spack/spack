@@ -12,6 +12,8 @@ class PyChalice(PythonPackage):
     homepage = "https://github.com/aws/chalice"
     url = "https://github.com/aws/chalice/archive/1.20.0.tar.gz"
 
+    license("Apache-2.0")
+
     version("1.20.0", sha256="0504fa8492379a658b123a7aa173b008be1a01c5a06d65f8ef1f1e6b87515e33")
     version("1.19.0", sha256="6d2f9e2d39e836c9cf32451a39443bb8d08d8dfd5ddc75792519ec97817b4fdd")
     version("1.18.1", sha256="fb52dc3851998ebe41813a5448d8e5687cc64e734a174db6e7e677c634d87823")

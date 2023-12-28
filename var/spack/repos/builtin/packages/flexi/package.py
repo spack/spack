@@ -13,6 +13,8 @@ class Flexi(CMakePackage):
     homepage = "https://www.flexi-project.org/"
     git = "https://github.com/flexi-framework/flexi.git"
 
+    license("GPL-3.0-or-later")
+
     version("master", preferred=True)
     version("21.03.0", tag="v21.03.0", commit="d061978e5d96cfc96c06edc1bae9d92cbe540c18")
 

@@ -32,6 +32,8 @@ class Amdscalapack(ScalapackBase):
 
     maintainers("amd-toolchain-support")
 
+    license("BSD-3-Clause-Open-MPI")
+
     version("4.1", sha256="b2e51c3604e5869d1faaef2e52c92071fcb3de1345aebb2ea172206622067ad9")
     version("4.0", sha256="f02913b5984597b22cdb9a36198ed61039a1bf130308e778dc31b2a7eb88b33b")
     version("3.2", sha256="9e00979bb1be39d627bdacb01774bc043029840d542fafc934d16fec3e3b0892")

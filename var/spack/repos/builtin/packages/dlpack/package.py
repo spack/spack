@@ -14,6 +14,8 @@ class Dlpack(Package):
     git = "https://github.com/dmlc/dlpack.git"
     url = "https://github.com/dmlc/dlpack/archive/refs/tags/v0.5.tar.gz"
 
+    license("Apache-2.0")
+
     version("master", branch="master")
     version("0.5", sha256="9209ac194a175aaab4381313891fba047cb173b2bdd15ac934f83f567f9cd514")
     version("0.4", sha256="d0a533189ecd45a033b72e276fccaa2122cfd76de125e0a5e126bdea0fec2d24")

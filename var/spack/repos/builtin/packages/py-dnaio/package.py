@@ -13,6 +13,8 @@ class PyDnaio(PythonPackage):
     pypi = "dnaio/dnaio-0.3.tar.gz"
     git = "https://github.com/marcelm/dnaio.git"
 
+    license("MIT")
+
     version("0.10.0", sha256="de51a50948f00b864297d74eddb588fbee5ac229855754e77564d18b24619d18")
     version("0.9.1", sha256="a1a14181995b27197b7e2b8897994a3107c649b9fc2dfe263caff3c455b0d0c4")
     version("0.4.2", sha256="fa55a45bfd5d9272409b714158fb3a7de5dceac1034a0af84502c7f503ee84f8")

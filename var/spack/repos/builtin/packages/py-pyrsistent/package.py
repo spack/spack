@@ -14,6 +14,8 @@ class PyPyrsistent(PythonPackage):
     homepage = "https://github.com/tobgu/pyrsistent/"
     pypi = "pyrsistent/pyrsistent-0.15.7.tar.gz"
 
+    license("MIT")
+
     version("0.19.3", sha256="1a2994773706bbb4995c31a97bc94f1418314923bd1048c6d964837040376440")
     version("0.18.1", sha256="d4d61f8b993a7255ba714df3aca52700f8125289f84f704cf80916517c46eb96")
     version("0.18.0", sha256="773c781216f8c2900b42a7b638d5b517bb134ae1acbebe4d1e8f1f41ea60eb4b")

@@ -13,6 +13,8 @@ class Ecos(MakefilePackage):
     homepage = "https://github.com/embotech/ecos"
     url = "https://github.com/embotech/ecos/archive/2.0.7.tar.gz"
 
+    license("GPL-3.0-only")
+
     version("2.0.7", sha256="bdb6a84f7d150820459bd0a796cb64ffbb019afb95dc456d22acc2dafb2e70e0")
 
     build_targets = ["all", "shared"]

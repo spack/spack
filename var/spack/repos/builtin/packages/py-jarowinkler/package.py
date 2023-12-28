@@ -14,6 +14,8 @@ class PyJarowinkler(PythonPackage):
 
     maintainers("LydDeb")
 
+    license("MIT")
+
     version("1.2.3", sha256="af28ea284cfbd1b21b29ff94b759f20e94e4f7c06f424b0b4702e701c2a21668")
 
     depends_on("py-setuptools@42:", type="build")

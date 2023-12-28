@@ -20,6 +20,8 @@ class Pagmo(CMakePackage):
     homepage = "https://esa.github.io/pagmo/"
     url = "https://github.com/esa/pagmo/archive/1.1.7.tar.gz"
 
+    license("GPL-3.0-or-later")
+
     version("1.1.7", sha256="6d8fab89ef9d5d5f30f148225bf9b84b2e5a38997f3d68b85547840e9fd95172")
 
     variant("examples", default=False, description="Build examples")

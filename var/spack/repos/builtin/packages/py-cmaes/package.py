@@ -15,6 +15,8 @@ class PyCmaes(PythonPackage):
 
     maintainers("eugeneswalker")
 
+    license("MIT")
+
     version("0.10.0", sha256="48afc70df027114739872b50489ae6b32461c307b92d084a63c7090a9742faf9")
 
     depends_on("py-setuptools@61:", type="build")

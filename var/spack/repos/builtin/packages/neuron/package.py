@@ -20,6 +20,8 @@ class Neuron(CMakePackage):
     git = "https://github.com/neuronsimulator/nrn"
     maintainers("pramodk", "nrnhines", "iomaganaris", "alexsavulescu")
 
+    license("BSD-3-Clause")
+
     version("develop", branch="master", submodules="True")
     version(
         "8.0.0", tag="8.0.0", commit="429d11ef34b1d860b3ddbfffc9f7960acb399b0c", submodules="True"

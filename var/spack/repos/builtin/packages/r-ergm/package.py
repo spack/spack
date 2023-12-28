@@ -17,6 +17,8 @@ class RErgm(RPackage):
 
     cran = "ergm"
 
+    license("GPL-3.0-only")
+
     version("4.4.0", sha256="2db152cc7fdd71d6f0065603405f30bf5e206591da39b8f542178ec6d6126173")
     version("4.3.1", sha256="3ff63c81ea4061ac0c79247fcd2e614494624f7f1df57a4634927e7e90800ed3")
     version("4.2.3", sha256="35d15373d4a8445872eb3713c81c6c6ac34b72096e0cdb04292a468e65ae9288")

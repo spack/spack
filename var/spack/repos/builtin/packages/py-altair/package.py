@@ -11,6 +11,8 @@ class PyAltair(PythonPackage):
 
     pypi = "altair/altair-4.2.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("4.2.0", sha256="d87d9372e63b48cd96b2a6415f0cf9457f50162ab79dc7a31cd7e024dd840026")
 
     depends_on("python@3.7:", type=("build", "run"))

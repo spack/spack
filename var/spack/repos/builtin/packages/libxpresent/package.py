@@ -13,6 +13,8 @@ class Libxpresent(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/lib/libXpresent/"
     xorg_mirror_path = "lib/libXpresent-1.0.0.tar.gz"
 
+    license("MIT")
+
     version("1.0.0", sha256="92f1bdfb67ae2ffcdb25ad72c02cac5e4912dc9bc792858240df1d7f105946fa")
 
     depends_on("libx11", type="link")

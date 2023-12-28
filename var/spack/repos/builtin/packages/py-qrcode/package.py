@@ -14,6 +14,8 @@ class PyQrcode(PythonPackage):
 
     maintainers("sethrj")
 
+    license("BSD-3-Clause")
+
     version("7.3.1", sha256="375a6ff240ca9bd41adc070428b5dfc1dcfbb0f2507f1ac848f6cded38956578")
 
     depends_on("python@3.6:", type=("build", "run"))

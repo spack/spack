@@ -12,6 +12,8 @@ class PyKbPython(PythonPackage):
     homepage = "https://github.com/pachterlab/kb_python"
     pypi = "kb_python/kb_python-0.27.3.tar.gz"
 
+    license("BSD-2-Clause")
+
     version("0.27.3", sha256="dc98f6ceb4402d666b7e0d19be17c63d33e8b710a35cdc33de7c0f457122f43f")
 
     depends_on("python@3.6:", type=("build", "run"))

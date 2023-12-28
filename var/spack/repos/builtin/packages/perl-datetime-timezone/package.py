@@ -14,6 +14,8 @@ class PerlDatetimeTimezone(PerlPackage):
 
     maintainers("EbiArnie")
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("2.60", sha256="f0460d379323905b579bed44e141237a337dc25dd26b6ab0c60ac2b80629323d")
 
     depends_on("perl@5.8.4:", type=("build", "link", "run", "test"))

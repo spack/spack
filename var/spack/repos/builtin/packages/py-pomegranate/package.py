@@ -12,6 +12,8 @@ class PyPomegranate(PythonPackage):
     homepage = "https://github.com/jmschrei/pomegranate"
     pypi = "pomegranate/pomegranate-0.12.0.tar.gz"
 
+    license("MIT")
+
     version("0.12.0", sha256="8b00c88f7cf9cad8d38ea00ea5274821376fefb217a1128afe6b1fcac54c975a")
 
     depends_on("py-setuptools", type="build")

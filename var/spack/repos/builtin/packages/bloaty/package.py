@@ -14,4 +14,6 @@ class Bloaty(CMakePackage):
 
     maintiners = ["cyrush"]
 
+    license("Apache-2.0")
+
     version("1.1", sha256="a308d8369d5812aba45982e55e7c3db2ea4780b7496a5455792fb3dcba9abd6f")

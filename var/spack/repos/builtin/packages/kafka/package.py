@@ -18,6 +18,8 @@ class Kafka(Package):
     list_url = "https://www-eu.apache.org/dist/kafka/"
     list_depth = 1
 
+    license("EPL-2.0")
+
     version(
         "2.13-3.5.1", sha256="f7b74d544023f2c0ec52a179de59975cb64e34ea03650d829328b407b560e4da"
     )

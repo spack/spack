@@ -15,6 +15,8 @@ class Heputils(MakefilePackage):
 
     tags = ["hep"]
 
+    license("GPL-3.0-only")
+
     version("1.3.2", sha256="be43586979ab1a81a55348d795c2f63a5da19fc6367d5f66f354217c76c809c0")
     version("1.3.1", sha256="7f33ef44364a3d3a39cc65005fb6aa9dfd06bd1b18b41151c0e5e3d28d6ba15b")
     version("1.3.0", sha256="1ec9d9d71d409ce6b2e668e4927b1090ddf2ee9acf25457f767925cf89b24852")

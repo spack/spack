@@ -20,6 +20,8 @@ class Scale(MakefilePackage):
 
     maintainers("t-yamaura")
 
+    license("BSD-2-Clause")
+
     version(
         "5.4.4",
         sha256="7d0ec4069c15d8b9ec7166f32c9a2eda772d975a8e08e420e6b16891ceebb316",

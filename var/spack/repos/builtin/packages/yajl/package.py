@@ -13,5 +13,7 @@ class Yajl(CMakePackage):
     url = "https://github.com/lloyd/yajl/archive/2.1.0.zip"
     git = "https://github.com/lloyd/yajl.git"
 
+    license("MIT")
+
     version("develop", branch="master")
     version("2.1.0", sha256="7458c4ed10ebe52c54f57e741bbfde69c73495e76e0f6a45d6d1986cf24794bc")

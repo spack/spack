@@ -17,6 +17,8 @@ class Onnx(CMakePackage):
     url = "https://github.com/onnx/onnx/archive/refs/tags/v1.9.0.tar.gz"
     git = "https://github.com/onnx/onnx.git"
 
+    license("Apache-2.0")
+
     version("master", branch="master")
     version(
         "1.13.1", sha256="090d3e10ec662a98a2a72f1bf053f793efc645824f0d4b779e0ce47468a0890e"

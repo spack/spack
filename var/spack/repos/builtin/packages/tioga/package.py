@@ -15,6 +15,8 @@ class Tioga(CMakePackage):
 
     maintainers("jrood-nrel")
 
+    license("LGPL-3.0-only")
+
     # The original TIOGA repo has possibly been abandoned,
     # so work on TIOGA has continued in the Exawind project
     version("develop", git="https://github.com/Exawind/tioga.git", branch="exawind")

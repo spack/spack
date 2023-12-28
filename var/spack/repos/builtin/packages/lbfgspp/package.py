@@ -12,6 +12,8 @@ class Lbfgspp(CMakePackage):
     homepage = "https://lbfgspp.statr.me/"
     url = "https://github.com/yixuan/LBFGSpp/archive/refs/tags/v0.2.0.tar.gz"
 
+    license("MIT")
+
     version("0.2.0", sha256="7101744a538c3aff52e10c82267305847b0b5e9d39f9974b4b29812cd1398ff9")
 
     depends_on("eigen @3:")

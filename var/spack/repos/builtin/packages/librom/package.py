@@ -13,6 +13,8 @@ class Librom(AutotoolsPackage):
     homepage = "https://github.com/LLNL/libROM"
     git = "https://github.com/LLNL/libROM.git"
 
+    license("Apache-2.0")
+
     version("develop", branch="master")
 
     depends_on("lapack")

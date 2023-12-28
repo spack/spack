@@ -21,6 +21,8 @@ class Bohrium(CMakePackage, CudaPackage):
 
     maintainers("mfherbst")
 
+    license("LGPL-3.0-only")
+
     #
     # Versions
     #

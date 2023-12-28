@@ -13,6 +13,8 @@ class ParquetCpp(CMakePackage):
     homepage = "https://github.com/apache/parquet-cpp"
     url = "https://github.com/apache/parquet-cpp/archive/apache-parquet-cpp-1.4.0.tar.gz"
 
+    license("Apache-2.0")
+
     version("1.4.0", sha256="52899be6c9dc49a14976d4ad84597243696c3fa2882e5c802b56e912bfbcc7ce")
 
     depends_on("arrow")

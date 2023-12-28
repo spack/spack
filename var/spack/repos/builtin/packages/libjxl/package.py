@@ -13,6 +13,8 @@ class Libjxl(CMakePackage):
     url = "https://github.com/libjxl/libjxl/archive/refs/tags/v0.6.1.tar.gz"
     git = "https://github.com/libjxl/libjxl.git"
 
+    license("Apache-2.0")
+
     version("main", branch="main", submodules=True)
     version(
         "0.7.0", tag="v0.7.0", commit="f95da131cf7c7ccd4da256356fde2fec1fa23bb5", submodules=True

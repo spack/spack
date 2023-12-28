@@ -14,6 +14,8 @@ class RLhs(RPackage):
 
     cran = "lhs"
 
+    license("GPL-3.0-only")
+
     version("1.1.6", sha256="e37fce44efe6a371677ba2f72f9e1e48270a0fdc60872d05def89270586cd23f")
     version("1.1.5", sha256="7a3c6fdcc953490e51026e17a0b1a9dc0ca8d03e6fc989457a7cdda2075b6339")
     version("1.1.3", sha256="e43b8d48db1cf26013697e2a798ed1d31d1ee1790f2ebfecb280176c0e0c06d1")

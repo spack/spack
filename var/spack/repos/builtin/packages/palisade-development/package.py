@@ -28,6 +28,8 @@ class PalisadeDevelopment(CMakePackage):
     git = "https://gitlab.com/palisade/palisade-development.git"
     maintainers("wohlbier")
 
+    license("BSD-2-Clause")
+
     version("feature-fixed-point-encoding", branch="feature-fixed-point-encoding", submodules=True)
     version(
         "fppe-logreg-v1.0",

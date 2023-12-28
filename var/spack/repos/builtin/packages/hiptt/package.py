@@ -16,6 +16,8 @@ class Hiptt(MakefilePackage, ROCmPackage):
 
     maintainers("bvanessen")
 
+    license("Unlicense")
+
     version("master", branch="master")
 
     patch("bugfix_make.patch")

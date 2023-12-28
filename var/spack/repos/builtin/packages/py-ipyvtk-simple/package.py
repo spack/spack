@@ -12,6 +12,8 @@ class PyIpyvtkSimple(PythonPackage):
     homepage = "https://github.com/Kitware/ipyvtklink"
     pypi = "ipyvtk_simple/ipyvtk_simple-0.1.4.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.1.4", sha256="ffac12e9287affd7c31538ac7f2d2390c72342a73b31010735b275ca841ceaa5")
 
     depends_on("py-setuptools", type="build")

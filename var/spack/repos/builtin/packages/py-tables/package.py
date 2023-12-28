@@ -14,6 +14,8 @@ class PyTables(PythonPackage):
     pypi = "tables/tables-3.6.1.tar.gz"
     git = "https://github.com/PyTables/PyTables.git"
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("3.9.0", sha256="27c9ca14c359d875caf945a6a527c12690e017650402dd17d8eb8b6caf6687d5")
     version("3.8.0", sha256="34f3fa2366ce20b18f1df573a77c1d27306ce1f2a41d9f9eff621b5192ea8788")

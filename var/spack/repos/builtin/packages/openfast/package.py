@@ -14,6 +14,8 @@ class Openfast(CMakePackage):
 
     maintainers("jrood-nrel")
 
+    license("Apache-2.0")
+
     version("develop", branch="dev")
     version("master", branch="main")
     version("3.4.1", tag="v3.4.1", commit="18704086dad861ab13daf804825da7c4b8d59428")

@@ -15,6 +15,8 @@ class Btop(MakefilePackage):
 
     maintainers("alalazo")
 
+    license("Apache-2.0")
+
     version("1.2.13", sha256="668dc4782432564c35ad0d32748f972248cc5c5448c9009faeb3445282920e02")
 
     conflicts("%gcc@:9", msg="C++ 20 is required")

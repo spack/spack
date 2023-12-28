@@ -15,6 +15,8 @@ class ROptparse(RPackage):
 
     cran = "optparse"
 
+    license("GPL-2.0-or-later")
+
     version("1.7.3", sha256="6287e1af051d4a65037900ce7b30bd962039450dd4eab63b6f2491eace6a07ed")
     version("1.7.1", sha256="324e304c13efd565d766766193d4ccd75e2cd949dfcfb416afc3939489071fe7")
     version("1.6.6", sha256="51779d497146e9354b1153713d939e81551e08948c2b00e4b117b1377c0b60d0")

@@ -15,6 +15,8 @@ class Mpip(AutotoolsPackage):
     git = "https://github.com/llnl/mpip.git"
     maintainers("cchambreau")
 
+    license("Unlicense")
+
     version("master", branch="master")
     version("3.5", sha256="e366843d53fa016fb03903e51c8aac901aa5155edabe64698a8d6fa618a03bbd")
 

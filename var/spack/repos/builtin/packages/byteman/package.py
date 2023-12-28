@@ -13,6 +13,8 @@ class Byteman(MavenPackage):
     homepage = "https://www.jboss.org/byteman"
     url = "https://github.com/bytemanproject/byteman/archive/4.0.12.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("4.0.12", sha256="72fdc904d7b8df9e743fbb5ae84e51ffc81d32b6e0b0b80fc7ac165dd8c9c7c2")
     version("4.0.11", sha256="8e4af6019702c8b22f354962f35f197f9ba2c8699235aac77ebd9263ac12261b")
     version("4.0.10", sha256="1b3c9e66fc3f230e407904db1ac43eb5cd4c33620f0d0f9f6c0cb23e4d28784e")

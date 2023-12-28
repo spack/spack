@@ -16,6 +16,8 @@ class UtilMacros(AutotoolsPackage, XorgPackage):
 
     maintainers("robert-mijakovic")
 
+    license("MIT")
+
     version("1.19.3", sha256="0f812e6e9d2786ba8f54b960ee563c0663ddbe2434bf24ff193f5feab1f31971")
     version("1.19.2", sha256="d7e43376ad220411499a79735020f9d145fdc159284867e99467e0d771f3e712")
     version("1.19.1", sha256="18d459400558f4ea99527bc9786c033965a3db45bf4c6a32eefdc07aa9e306a6")

@@ -15,6 +15,8 @@ class PyPyisemail(PythonPackage):
 
     maintainers("meyersbs")
 
+    license("MIT")
+
     version("2.0.1", sha256="daf4b3fb2150a38f406b0aaba729e19fcd638a6d1c0549c25ff54c7b804618f8")
 
     depends_on("py-hatchling", type="build")

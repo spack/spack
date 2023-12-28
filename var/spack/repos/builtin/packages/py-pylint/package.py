@@ -25,6 +25,8 @@ class PyPylint(PythonPackage):
         "pylint.reporters.ureports",
     ]
 
+    license("GPL-2.0-or-later")
+
     version("2.16.2", sha256="13b2c805a404a9bf57d002cd5f054ca4d40b0b87542bdaba5e05321ae8262c84")
     version("2.15.0", sha256="4f3f7e869646b0bd63b3dfb79f3c0f28fc3d2d923ea220d52620fd625aed92b0")
     version("2.14.4", sha256="47705453aa9dce520e123a7d51843d5f0032cbfa06870f89f00927aa1f735a4a")

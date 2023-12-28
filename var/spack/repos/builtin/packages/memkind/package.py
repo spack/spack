@@ -24,6 +24,8 @@ class Memkind(AutotoolsPackage):
     homepage = "https://github.com/memkind/memkind"
     url = "https://github.com/memkind/memkind/archive/v1.7.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("1.13.0", sha256="3f0d919b61fdd4d2ebce14e0b7dbb856e2144138778940107c13549523f3bdc0")
     version("1.12.0", sha256="b0781d493dec0da0089884fd54bcfdde03311019c56f90505ed0b884100bfbad")
     version("1.10.1", sha256="c203615d964a0bb151756ad8a5c9565391ee77d79c1f8b59d2ea8ff87989b294")

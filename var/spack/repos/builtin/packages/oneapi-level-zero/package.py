@@ -21,6 +21,8 @@ class OneapiLevelZero(CMakePackage):
 
     maintainers("rscohn2")
 
+    license("MIT")
+
     version("1.9.9", sha256="3d1784e790bbaae5f160b920c07e7dc2941640d9c631aaa668ccfd57aafc7b56")
     version("1.9.4", sha256="7f91ed993be1e643c752cf95a319a0fc64113d91ec481fbb8a2f478f433d3380")
     version("1.8.12", sha256="9c5d3dd912882abe8e2e3ba72f8c27e2a2d86759ac48f6318a0df091204985eb")

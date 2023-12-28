@@ -30,6 +30,8 @@ class RInterp(RPackage):
 
     cran = "interp"
 
+    license("GPL-2.0-or-later")
+
     version("1.1-4", sha256="4f7b5d388132a4d76e8635e2a7c4fa0d705df2b49e7d108faa16ce2236e34d06")
     version("1.1-3", sha256="b74e606b38cfb02985c1f9e3e45093620f76c0307b1b0b4058761e871eb5fa3f")
 

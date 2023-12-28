@@ -12,6 +12,8 @@ class PyTifffile(PythonPackage):
     homepage = "https://github.com/cgohlke/tifffile"
     pypi = "tifffile/tifffile-0.12.1.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("2023.8.30", sha256="6a8c53b012a286b75d09a1498ab32f202f24cc6270a105b5d5911dc4426f162a")
     version(
         "2022.10.10", sha256="50b61ba943b866d191295bc38a00191c9fdab23ece063544c7f1a264e3f6aa8e"

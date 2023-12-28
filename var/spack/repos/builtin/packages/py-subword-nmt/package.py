@@ -14,6 +14,8 @@ class PySubwordNmt(PythonPackage):
     homepage = "https://github.com/joeynmt/joeynmt"
     url = "https://github.com/rsennrich/subword-nmt/archive/refs/tags/v0.3.7.zip"
 
+    license("MIT")
+
     version("0.3.7", sha256="5c3eafe8d85d872a3bbde722b130fb25db19cc7942561936bfae26b6daf51ba0")
 
     depends_on("py-setuptools", type="build")

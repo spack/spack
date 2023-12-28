@@ -13,6 +13,8 @@ class Httpd(AutotoolsPackage):
     homepage = "https://httpd.apache.org/"
     url = "https://archive.apache.org/dist/httpd/httpd-2.4.43.tar.bz2"
 
+    license("Apache-2.0")
+
     version("2.4.55", sha256="11d6ba19e36c0b93ca62e47e6ffc2d2f2884942694bce0f23f39c71bdc5f69ac")
 
     # https://nvd.nist.gov/vuln/detail/CVE-2022-31813

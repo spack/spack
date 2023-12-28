@@ -12,6 +12,8 @@ class PyOpcodes(PythonPackage):
     homepage = "https://github.com/Maratyszcza/Opcodes"
     pypi = "opcodes/opcodes-0.3.14.tar.gz"
 
+    license("BSD-2-Clause")
+
     version("0.3.14", sha256="16ec1cea4cf3dda767e6c0a718f664ef97a34ed24c91998a3c25c3f960c15fba")
 
     depends_on("py-setuptools", type=("build", "run"))

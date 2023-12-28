@@ -17,6 +17,8 @@ class RGraphlayouts(RPackage):
 
     cran = "graphlayouts"
 
+    license("MIT")
+
     version("0.8.4", sha256="778d8f7e190b05d0dbbaa7e6dbdfc0b8fef3c83b71333a6fa89926e6c04690fd")
     version("0.8.3", sha256="f9e4e5d794b4d1c6eba962490b3220d09b73e10893f5fa3be210240bfc654421")
     version("0.8.2", sha256="0fa2777a2c159f3ef1209cd96838d2651d144c9c971abfef1d22bc6376f47bec")

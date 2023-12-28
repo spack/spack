@@ -18,6 +18,8 @@ class Tetgen(Package):
 
     homepage = "https://wias-berlin.de/software/tetgen/"
 
+    license("AGPL-3.0-only")
+
     version(
         "1.6.0",
         sha256="87b5e61ebd3a471fc4f2cdd7124c2b11dd6639f4feb1f941a5d2f5110d05ce39",

@@ -17,6 +17,8 @@ class XcbUtilKeysyms(AutotoolsPackage, XorgPackage):
     homepage = "https://gitlab.freedesktop.org/xorg/lib/libxcb-keysyms"
     xorg_mirror_path = "lib/xcb-util-keysyms-0.4.1.tar.xz"
 
+    license("MIT")
+
     version("0.4.1", sha256="7c260a5294412aed429df1da2f8afd3bd07b7cba3fec772fba15a613a6d5c638")
     version(
         "0.4.0",

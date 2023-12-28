@@ -12,6 +12,8 @@ class PyPytestMypy(PythonPackage):
     homepage = "https://github.com/dbader/pytest-mypy"
     pypi = "pytest-mypy/pytest-mypy-0.4.2.tar.gz"
 
+    license("MIT")
+
     version("0.4.2", sha256="5a5338cecff17f005b181546a13e282761754b481225df37f33d37f86ac5b304")
 
     depends_on("python@3.4:", type=("build", "run"))

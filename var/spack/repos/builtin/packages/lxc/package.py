@@ -16,6 +16,8 @@ class Lxc(AutotoolsPackage):
     homepage = "https://linuxcontainers.org/lxc/"
     url = "https://github.com/lxc/lxc/archive/lxc-4.0.2.tar.gz"
 
+    license("LGPL-2.1-or-later")
+
     version("4.0.2", sha256="89a9f1c6c9c0c43ffc4ec4d281381d60dcf698af1578effa491be97885ab282a")
     version("4.0.1", sha256="5b17c48db24d93f8a687bf4557358e252126c50a66f5756b3e0ea2cf04a60d05")
     version("4.0.0", sha256="8cd36f002f656bbcd01679e6b8892f81ed036d5589aed45b36358014b32277dd")

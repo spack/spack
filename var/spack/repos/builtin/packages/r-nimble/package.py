@@ -26,6 +26,8 @@ class RNimble(RPackage):
 
     cran = "nimble"
 
+    license("BSD-3-Clause OR GPL-2.0-or-later")
+
     version("0.13.1", sha256="dc70caab64a8a4e44fb13fa6d67f6f2a0453fa684669e24718758bb2a8cf8530")
     version("0.12.2", sha256="2af7a3ab159a7f0b3b4b139da1db45be4b602f2c0e115cb0403b060ab0101a1b")
     version("0.12.1", sha256="3520f3212a48c8cbe08a6a8e57b3a72180594f7c09f647d1daf417c9857867d8")

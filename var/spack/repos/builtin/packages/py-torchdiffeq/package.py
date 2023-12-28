@@ -12,6 +12,8 @@ class PyTorchdiffeq(PythonPackage):
     homepage = "https://github.com/rtqichen/torchdiffeq"
     pypi = "torchdiffeq/torchdiffeq-0.2.3.tar.gz"
 
+    license("MIT")
+
     version("0.2.3", sha256="fe75f434b9090ac0c27702e02bed21472b0f87035be6581f51edc5d4013ea31a")
 
     depends_on("python@3.6:3", type=("build", "run"))

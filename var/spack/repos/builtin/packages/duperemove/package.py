@@ -13,6 +13,8 @@ class Duperemove(MakefilePackage):
     homepage = "https://github.com/markfasheh/duperemove"
     url = "https://github.com/markfasheh/duperemove/archive/v0.11.1.tar.gz"
 
+    license("GPL-2.0-only")
+
     version("0.11.1", sha256="75c3c91baf7e5195acad62eab73a7afc3d0b88cbfccefac3e3412eba06a42ac8")
 
     depends_on("glib")

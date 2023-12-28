@@ -12,6 +12,8 @@ class Shocklibs(Package):
     homepage = "https://github.com/MG-RAST/Shock"
     url = "https://github.com/MG-RAST/Shock/archive/v0.9.24.tar.gz"
 
+    license("BSD-2-Clause")
+
     version("0.9.24", sha256="465d06f33df2570eaf3ffd535a38fc464084ac95a2f145ead5c71f34beeb0a35")
 
     def install(self, spec, prefix):

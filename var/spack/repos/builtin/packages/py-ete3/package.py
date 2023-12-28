@@ -18,6 +18,8 @@ class PyEte3(PythonPackage):
 
     maintainers("snehring")
 
+    license("GPL-3.0-only")
+
     version("3.1.2", sha256="4fc987b8c529889d6608fab1101f1455cb5cbd42722788de6aea9c7d0a8e59e9")
 
     depends_on("py-setuptools", type="build")

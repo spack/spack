@@ -41,6 +41,8 @@ class Oommf(Package):
 
     maintainers("fangohr")
 
+    license("TCL")
+
     version(
         "20b0_20220930",
         sha256="764f1983d858fbad4bae34c720b217940ce56f745647ba94ec74de4b185f1328",

@@ -14,6 +14,8 @@ class Picsar(MakefilePackage):
     homepage = "https://picsar.net"
     git = "https://bitbucket.org/berkeleylab/picsar.git"
 
+    license("BSD-3-Clause-LBNL")
+
     version("develop", branch="master")
 
     variant("prod", default=True, description="Production mode (without FFTW)")

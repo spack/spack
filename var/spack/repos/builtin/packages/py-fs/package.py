@@ -12,6 +12,8 @@ class PyFs(PythonPackage):
     homepage = "https://github.com/PyFilesystem/pyfilesystem2"
     pypi = "fs/fs-2.4.14.tar.gz"
 
+    license("MIT")
+
     version("2.4.14", sha256="9555dc2bc58c58cac03478ac7e9f622d29fe2d20a4384c24c90ab50de2c7b36c")
     version("0.5.4", sha256="ba2cca8773435a7c86059d57cb4b8ea30fda40f8610941f7822d1ce3ffd36197")
 

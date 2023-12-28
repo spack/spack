@@ -12,6 +12,8 @@ class PySoundfile(PythonPackage):
     homepage = "https://github.com/bastibe/PySoundFile"
     pypi = "SoundFile/SoundFile-0.10.3.post1.tar.gz"
 
+    license("BSD-3-Clause")
+
     version(
         "0.10.3.post1", sha256="490cff42650733d1832728b937fe99fa1802896f5ef4d61bcf78cf7ebecb107b"
     )

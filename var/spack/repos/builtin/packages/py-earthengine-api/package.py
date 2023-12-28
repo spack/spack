@@ -13,6 +13,8 @@ class PyEarthengineApi(PythonPackage):
     homepage = "https://github.com/google/earthengine-api"
     pypi = "earthengine-api/earthengine-api-0.1.186.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.1.344", sha256="bc5a270b8296aaae8574e68dfd93fe878bc5fbe77d1c41f90bcb5e5b830ca5c8")
 
     depends_on("py-setuptools", type="build")

@@ -14,6 +14,8 @@ class Libplist(AutotoolsPackage):
     url = "https://github.com/libimobiledevice/libplist/releases/download/2.2.0/libplist-2.2.0.tar.bz2"
     git = "https://git.libimobiledevice.org/libplist.git"
 
+    license("GPL-2.0-or-later AND LGPL-2.1-or-later")
+
     version("master", branch="master")
     version("2.2.0", sha256="4a5517e5377ec421df84c586ba85bb4e1d26f11ad203d7d450a907c0156fbd9a")
     version("2.0.0", sha256="3a7e9694c2d9a85174ba1fa92417cfabaea7f6d19631e544948dc7e17e82f602")

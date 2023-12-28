@@ -13,6 +13,8 @@ class PyXanaduCloudClient(PythonPackage):
     homepage = "https://github.com/XanaduAI/xanadu-cloud-client"
     pypi = "xanadu-cloud-client/xanadu-cloud-client-0.3.0.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.3.0", sha256="ef65ab7a629e7cd801b20bca8d300d278bf0136c6157c49e12d52c9108171edf")
 
     depends_on("python@3.7:", type=("build", "run"))

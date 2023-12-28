@@ -15,6 +15,8 @@ class Dnstracer(MakefilePackage):
     homepage = "https://github.com/Orc/dnstracer"
     git = "https://github.com/Orc/dnstracer.git"
 
+    license("BSD-2-Clause")
+
     version("master", branch="master")
 
     def edit(self, spec, prefix):

@@ -13,6 +13,8 @@ class PyZarr(PythonPackage):
     homepage = "https://zarr.readthedocs.io"
     pypi = "zarr/zarr-2.3.2.tar.gz"
 
+    license("MIT")
+
     version("2.10.2", sha256="5c6ae914ab9215631bb95c09e76b9b9b4fffa70fec0c7bca26b68387d858ebe2")
     version("2.6.1", sha256="fa7eac1e4ff47ff82d09c42bb4679e18e8a05a73ee81ce59cee6a441a210b2fd")
     version("2.5.0", sha256="d54f060739208392494c3dbcbfdf41c8df9fa23d9a32b91aea0549b4c5e2b77f")

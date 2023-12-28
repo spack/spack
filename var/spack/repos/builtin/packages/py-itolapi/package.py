@@ -14,6 +14,8 @@ class PyItolapi(PythonPackage):
 
     maintainers("snehring")
 
+    license("MIT")
+
     version("4.1.2", sha256="37a866a117a80d3d72a6eb6b2cba30444751c644cc6bc4242f050750375a8397")
 
     depends_on("py-setuptools", type="build")

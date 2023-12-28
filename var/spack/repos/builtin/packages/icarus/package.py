@@ -15,6 +15,8 @@ class Icarus(AutotoolsPackage):
 
     maintainers("davekeeshan")
 
+    license("GPL-2.0-only")
+
     version("master", branch="master")
     version("12_0", sha256="a68cb1ef7c017ef090ebedb2bc3e39ef90ecc70a3400afb4aa94303bc3beaa7d")
     version("11_0", sha256="6327fb900e66b46803d928b7ca439409a0dc32731d82143b20387be0833f1c95")

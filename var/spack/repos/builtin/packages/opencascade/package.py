@@ -21,6 +21,8 @@ class Opencascade(CMakePackage):
 
     maintainers("wdconinc")
 
+    license("LGPL-2.1-only")
+
     version(
         "7.7.1",
         extension="tar.gz",

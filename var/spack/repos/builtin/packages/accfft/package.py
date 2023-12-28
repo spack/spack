@@ -14,6 +14,8 @@ class Accfft(CMakePackage, CudaPackage):
     homepage = "http://accfft.org"
     git = "https://github.com/amirgholami/accfft.git"
 
+    license("GPL-2.0-only")
+
     version("develop", branch="master")
 
     variant("pnetcdf", default=True, description="Add support for parallel NetCDF")

@@ -18,6 +18,8 @@ class Qmcpack(CMakePackage, CudaPackage):
     maintainers("ye-luo")
     tags = ["ecp", "ecp-apps"]
 
+    license("CC0-1.0")
+
     # This download method is untrusted, and is not recommended by the
     # Spack manual. However, it is easier to maintain because github hashes
     # can occasionally change.

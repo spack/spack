@@ -20,6 +20,8 @@ class Spdk(AutotoolsPackage):
     git = "https://github.com/spdk/spdk"
     maintainers("hyoklee")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master", submodules=True)
     version(
         "23.01", tag="v23.01", commit="10edc60aa8b5f1b04d6496fea976dec75e276a95", submodules=True
