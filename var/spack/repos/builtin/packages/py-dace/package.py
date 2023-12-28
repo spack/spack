@@ -31,26 +31,24 @@ class PyDace(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     # Dependencies from setup.py
-    depends_on("cmake@3.15.0:", type=("build", "run"))
+    depends_on("py-numpy@1.21:", type=("build", "run"))
     depends_on("py-networkx@2.5:", type=("build", "run"))
+    depends_on("py-astunparse@1.6.3:", type=("build", "run"))
+    # A typo in the 0.15.1 setup.py specifies sympy <= 1.9 instead of >= 1.9.
+    # See https://github.com/spcl/dace/pull/1483 for more information.
+    depends_on("py-sympy@1.9:", type=("build", "run"))
     depends_on("py-pyyaml", type=("build", "run"))
     depends_on("py-ply", type=("build", "run"))
     depends_on("py-websockets", type=("build", "run"))
+    depends_on("py-requests", when='@:0.15.1', type=("build", "run"))
+    depends_on("py-flask", when='@:0.15.1', type=("build", "run"))
     depends_on("py-jinja2", type=("build", "run"))
+    depends_on("py-fparser@0.1.3:", type=("build", "run"))
     depends_on("py-aenum@3.1:", type=("build", "run"))
     depends_on("py-dill", type=("build", "run"))
-    depends_on("py-fparser@0.1.3:", type=("build", "run"))
+    depends_on("py-pyreadline", when="platform=windows", type=("build", "run"))
 
-    depends_on("py-pyreadline", when="platform=win32", type=("build", "run"))
-    depends_on("py-dataclasses", when="^python@:3.6", type=("build", "run"))
-    depends_on("py-typing-compat", when="^python@:3.7", type=("build", "run"))
-
-    # A typo in the 0.15.1 setup.py specifies sympy <= 1.9 instead of >= 1.9
-    depends_on("py-sympy@1.9:", type=("build", "run"))
-
-    # Dependencies in setup.py with specific constraints in requirements.txt
-    depends_on("py-numpy@1.21:", type=("build", "run"))
-    depends_on("py-astunparse@1.6.3:", type=("build", "run"))
+    depends_on("cmake@3.15.0:", type=("build", "run"))
 
     # From performance counters requirements
     depends_on("likwid@5.2.2:", when="+counters", type=("build", "run"))

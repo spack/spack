@@ -13,7 +13,7 @@ class PyPyreadline(PythonPackage):
     git = "https://github.com/pyreadline/pyreadline.git"
     pypi = "pyreadline/pyreadline-2.1.zip"
 
-    version("develop", branch="master")
+    version("master", branch="master")
     version("2.1", sha256="4530592fc2e85b25b1a9f79664433da09237c1a270e4d78ea5aa3a2c7229e2d1")
 
     depends_on("py-setuptools", type="build")
