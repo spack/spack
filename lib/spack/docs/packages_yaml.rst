@@ -493,7 +493,7 @@ Conflicts and strong preferences
 
 The semantic of requirements allows for expressing both "strong preferences" and "conflicts"
 from configuration files. The syntax for doing so, though, may not be immediately clear. For
-instance, if we want to prevent any package to use ``%clang``, we can set:
+instance, if we want to prevent any package from using ``%clang``, we can set:
 
 .. code-block:: yaml
 
