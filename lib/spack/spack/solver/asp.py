@@ -2787,7 +2787,7 @@ class RequirementParser:
     def __init__(self, configuration):
         self.config = configuration
 
-    def rules(self, pkg: spack.package_base.PackageBase) -> List[RequirementRule]:
+    def rules(self, pkg: "spack.package_base.PackageBase") -> List[RequirementRule]:
         result = []
         result.extend(self.rules_from_package_py(pkg))
         result.extend(self.rules_from_require(pkg))
@@ -2817,11 +2817,11 @@ class RequirementParser:
             virtual_str, requirements, kind=RequirementKind.VIRTUAL
         )
 
-    def rules_from_require(self, pkg: spack.package_base.PackageBase) -> List[RequirementRule]:
+    def rules_from_require(self, pkg: "spack.package_base.PackageBase") -> List[RequirementRule]:
         kind, requirements = self._raw_yaml_data(pkg, section="require")
         return self._rules_from_requirements(pkg.name, requirements, kind=kind)
 
-    def rules_from_prefer(self, pkg: spack.package_base.PackageBase) -> List[RequirementRule]:
+    def rules_from_prefer(self, pkg: "spack.package_base.PackageBase") -> List[RequirementRule]:
         result = []
         kind, preferences = self._raw_yaml_data(pkg, section="prefer")
         for spec_str in preferences:
@@ -2861,7 +2861,7 @@ class RequirementParser:
             )
         return result
 
-    def _raw_yaml_data(self, pkg: spack.package_base.PackageBase, *, section: str):
+    def _raw_yaml_data(self, pkg: "spack.package_base.PackageBase", *, section: str):
         config = self.config.get("packages")
         data = config.get(pkg.name, {}).get(section, [])
         kind = RequirementKind.PACKAGE
