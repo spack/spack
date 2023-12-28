@@ -252,6 +252,7 @@ class RocmTensile(CMakePackage):
             self.define("Tensile_LOGIC", "asm_full"),
             self.define("Tensile_CODE_OBJECT_VERSION", "V3"),
             self.define("Boost_USE_STATIC_LIBS", "OFF"),
+            self.define_from_variant("TENSILE_USE_OPENMP", "openmp"),
             self.define("BUILD_WITH_TENSILE_HOST", "ON" if "@3.7.0:" in self.spec else "OFF"),
         ]
 
@@ -265,7 +266,14 @@ class RocmTensile(CMakePackage):
         else:
             args.append(self.define("TENSILE_USE_OPENMP", "OFF")),
 
-        args.append(self.define("Tensile_ARCHITECTURE", self.get_gpulist_for_tensile_support()))
+        if self.spec.satisfies("^cmake@3.21.0:"):
+            args.append(
+                self.define("CMAKE_HIP_ARCHITECTURES", self.get_gpulist_for_tensile_support())
+            )
+        else:
+            args.append(
+                self.define("Tensile_ARCHITECTURE", self.get_gpulist_for_tensile_support())
+            )
 
         if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
             args.append(self.define("__skip_rocmclang", "ON"))
