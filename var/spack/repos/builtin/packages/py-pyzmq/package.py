@@ -12,24 +12,14 @@ class PyPyzmq(PythonPackage):
     homepage = "https://github.com/zeromq/pyzmq"
     pypi = "pyzmq/pyzmq-22.3.0.tar.gz"
 
-    import_modules = [
-        "zmq",
-        "zmq.green",
-        "zmq.green.eventloop",
-        "zmq.sugar",
-        "zmq.auth",
-        "zmq.auth.asyncio",
-        "zmq.utils",
-        "zmq.backend",
+    skip_modules = [
+        # Requires zmq.backend.cffi._cffi
         "zmq.backend.cffi",
-        "zmq.backend.cython",
-        "zmq.ssh",
+        # Requires tornado
         "zmq.eventloop",
-        "zmq.eventloop.minitornado",
-        "zmq.eventloop.minitornado.platform",
-        "zmq.log",
-        "zmq.asyncio",
-        "zmq.devices",
+        "zmq.green.eventloop",
+        # Requires pytest
+        "zmq.tests",
     ]
 
     license("BSD-3-Clause")
