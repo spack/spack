@@ -67,8 +67,7 @@ class Hdf5(CMakePackage):
     version("1.10.2", sha256="bfec1be8c366965a99812cf02ddc97e4b708c1754fccba5414d4adccdc073866")
     version("1.10.1", sha256="048a9d149fb99aaa1680a712963f5a78e9c43b588d0e79d55e06760ec377c172")
     version(
-        "1.10.0-patch1",
-        sha256="6e78cfe32a10e6e0629393cdfddf6cfa536571efdaf85f08e35326e1b4e9eff0",
+        "1.10.0-patch1", sha256="6e78cfe32a10e6e0629393cdfddf6cfa536571efdaf85f08e35326e1b4e9eff0"
     )
     version("1.10.0", sha256="81f6201aba5c30dced5dcd62f5d5477a2790fd5850e02ac514ca8bf3e2bb375a")
     version("1.8.23", sha256="37fa4eb6cd0e181eb49a10d54611cb00700e9537f805d03e6853503afe5abc27")
