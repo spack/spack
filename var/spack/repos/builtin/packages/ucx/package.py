@@ -17,6 +17,8 @@ class Ucx(AutotoolsPackage, CudaPackage):
 
     maintainers("hppritcha")
 
+    license("BSD-3-Clause")
+
     # Current
     version("1.14.1", sha256="baa0634cafb269a3112f626eb226bcd2ca8c9fcf0fec3b8e2a3553baad5f77aa")
 

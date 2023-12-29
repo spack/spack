@@ -24,6 +24,8 @@ class Git(AutotoolsPackage):
 
     executables = ["^git$"]
 
+    license("GPL-2.0-only")
+
     # Every new git release comes with a corresponding manpage resource:
     # https://www.kernel.org/pub/software/scm/git/git-manpages-{version}.tar.gz
     # https://mirrors.edge.kernel.org/pub/software/scm/git/sha256sums.asc

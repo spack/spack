@@ -22,6 +22,8 @@ class Moab(AutotoolsPackage):
 
     maintainers("vijaysm", "iulian787")
 
+    license("LGPL-3.0-only")
+
     version("develop", branch="develop")
     version("master", branch="master")
     version("5.5.1", sha256="67b6ed3a13c235cec16f60f8f46f9bf0371fd321cf36dea113d0e09f09d0d438")

@@ -12,6 +12,8 @@ class PyOnnxmltools(PythonPackage):
     homepage = "https://github.com/onnx/onnxmltools"
     pypi = "onnxmltools/onnxmltools-1.10.0.tar.gz"
 
+    license("Apache-2.0")
+
     # Source tarball not available on PyPI
     version(
         "1.11.1",

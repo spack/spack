@@ -16,6 +16,8 @@ class PremakeCore(MakefilePackage):
     homepage = "https://premake.github.io/"
     url = "https://github.com/premake/premake-core/archive/v5.0.0-alpha15.tar.gz"
 
+    license("BSD-3-Clause")
+
     version(
         "5.0.0-alpha15", sha256="188c590f23b944f8fb2a3254acbb63c9655617be021ba4a670d81e6d499ff6cf"
     )

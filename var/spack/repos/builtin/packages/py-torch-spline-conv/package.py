@@ -13,6 +13,8 @@ class PyTorchSplineConv(PythonPackage):
     homepage = "https://github.com/rusty1s/pytorch_spline_conv"
     url = "https://github.com/rusty1s/pytorch_spline_conv/archive/1.2.0.tar.gz"
 
+    license("MIT")
+
     version("1.2.0", sha256="ab8da41357c8a4785662366655bb6dc5e84fd0e938008194955409aefe535009")
 
     variant("cuda", default=False, description="Enable CUDA support")

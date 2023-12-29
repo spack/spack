@@ -16,6 +16,8 @@ class PyPyaestro(PythonPackage):
 
     maintainers("FrankD412")
 
+    license("MIT")
+
     # git branches
     version("main", branch="main")
     version("0.0.1a2", sha256="1f6a5068ff8dd9fe4838aba43850e51a5b622f379819ae62103617bf9c8aaa31")

@@ -15,6 +15,8 @@ class ScitokensCpp(CMakePackage):
 
     maintainers("gartung", "greenc-FNAL", "marcmengel", "vitodb")
 
+    license("Apache-2.0")
+
     version("1.0.1", sha256="d4660521fa17189e7a7858747d066052dd8ea8f430ce7649911c157d4423c412")
     version("1.0.0", sha256="88376c5cd065aac8d92445184a02ccf5186dc4890ccd7518e88be436978675c0")
     version("0.7.3", sha256="7d3c438596588cd74cf1af8255c55f44ca86a34293b81415ee24b33de64f886a")

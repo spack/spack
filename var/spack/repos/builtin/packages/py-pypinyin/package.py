@@ -12,6 +12,8 @@ class PyPypinyin(PythonPackage):
     homepage = "https://github.com/mozillazg/python-pinyin"
     pypi = "pypinyin/pypinyin-0.46.0.tar.gz"
 
+    license("MIT")
+
     version("0.46.0", sha256="0d2e41e95dbc20a232c0f5d3850654eebbfcba303d96358d2c46592725bb989c")
 
     depends_on("python@2.6:2,3.3:3", type=("build", "run"))

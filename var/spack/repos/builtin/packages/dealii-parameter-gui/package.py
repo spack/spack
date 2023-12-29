@@ -13,6 +13,8 @@ class DealiiParameterGui(CMakePackage):
     homepage = "https://github.com/dealii/parameter_gui"
     git = "https://github.com/dealii/parameter_gui.git"
 
+    license("LGPL-2.1-or-later")
+
     version("develop", branch="master")
 
     depends_on("qt")

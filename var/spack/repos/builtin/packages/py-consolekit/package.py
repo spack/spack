@@ -13,6 +13,8 @@ class PyConsolekit(PythonPackage):
     homepage = "https://github.com/domdfcoding/consolekit"
     pypi = "consolekit/consolekit-1.5.1.tar.gz"
 
+    license("MIT")
+
     version("1.5.1", sha256="55ea43e226863e1d618ec9b860c9842d84249d895c3376c03b158d8f3a335626")
 
     depends_on("py-flit-core@3.2:3", type="build")

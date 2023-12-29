@@ -13,6 +13,8 @@ class Psm(MakefilePackage):
     url = "https://github.com/intel/psm/archive/v3.3.tar.gz"
     git = "https://github.com/intel/psm.git"
 
+    license("GPL-2.0-only")
+
     version(
         "3.3",
         sha256="034b10e24d9f2967ef0f8d0f828572295e89cdfa1ba30c35e288b9b23c3dab8f",

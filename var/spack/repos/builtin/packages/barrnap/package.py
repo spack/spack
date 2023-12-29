@@ -12,6 +12,8 @@ class Barrnap(Package):
     homepage = "https://github.com/tseemann/barrnap"
     url = "https://github.com/tseemann/barrnap/archive/0.8.tar.gz"
 
+    license("CC0-1.0")
+
     version("0.9", sha256="36c27cd4350531d98b3b2fb7d294a2d35c15b7365771476456d7873ba33cce15")
     version("0.8", sha256="82004930767e92b61539c0de27ff837b8b7af01236e565f1473c63668cf0370f")
     version("0.7", sha256="ef2173e250f06cca7569c03404c9d4ab6a908ef7643e28901fbe9a732d20c09b")

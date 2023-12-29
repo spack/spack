@@ -17,6 +17,8 @@ class RBasilisk(RPackage):
 
     bioc = "basilisk"
 
+    license("GPL-3.0-or-later")
+
     version("1.12.0", commit="26c1c354526eb8d806268427a7c40b31bb89f489")
 
     depends_on("r-reticulate", type=("build", "run"))

@@ -18,6 +18,9 @@ class RocprofilerDev(CMakePackage):
 
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["librocprofiler64"]
+
+    license("MIT")
+
     version("5.4.3", sha256="86c3f43ee6cb9808796a21409c853cc8fd496578b9eef4de67ca77830229cac1")
     version("5.4.0", sha256="0322cbe5d1d3182e616f472da31f0707ad6040833c38c28f2b39381a85210f43")
     version("5.3.3", sha256="07ee28f3420a07fc9d45910e78ad7961b388109cfc0e74cfdf2666789e6af171")

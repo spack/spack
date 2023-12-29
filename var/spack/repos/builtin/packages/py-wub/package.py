@@ -14,6 +14,8 @@ class PyWub(PythonPackage):
     homepage = "https://github.com/nanoporetech/wub"
     url = "https://github.com/nanoporetech/wub/archive/v0.4.0.tar.gz"
 
+    license("MPL-2.0")
+
     version("0.4.0", sha256="1526aa392bccac71b872211c45f5b403ad3d55f5762e0ed34ff9086bc1dab6fd")
 
     depends_on("py-six", type=("build", "run"))

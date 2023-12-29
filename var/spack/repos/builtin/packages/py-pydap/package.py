@@ -12,6 +12,8 @@ class PyPydap(PythonPackage):
     homepage = "https://www.pydap.org/en/latest/"
     pypi = "Pydap/Pydap-3.2.2.tar.gz"
 
+    license("MIT")
+
     version("3.2.2", sha256="86326642e24f421595a74b0f9986da76d7932b277768f501fe214d72592bdc40")
 
     depends_on("py-setuptools", type="build")

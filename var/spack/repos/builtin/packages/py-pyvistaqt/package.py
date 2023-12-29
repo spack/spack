@@ -12,6 +12,8 @@ class PyPyvistaqt(PythonPackage):
     homepage = "https://github.com/pyvista/pyvistaqt"
     pypi = "pyvistaqt/pyvistaqt-0.5.0.tar.gz"
 
+    license("MIT")
+
     version("0.5.0", sha256="f2358825d3c5f434760c13fdff5d3681b3cf36898e6e909c8a7934a8e6448f71")
 
     depends_on("python@3.6:", type=("build", "run"))

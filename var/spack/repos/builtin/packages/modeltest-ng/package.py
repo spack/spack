@@ -15,6 +15,8 @@ class ModeltestNg(CMakePackage):
 
     maintainers("snehring")
 
+    license("GPL-3.0-only")
+
     version("20220721", commit="1066356b984100897b8bd38ac771c5c950984c01", submodules=True)
     version("0.1.7", commit="cc028888f1d4222aaa53b99c6b02cd934a279001", submodules=True)
 

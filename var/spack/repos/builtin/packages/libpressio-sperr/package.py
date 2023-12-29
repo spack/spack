@@ -15,6 +15,8 @@ class LibpressioSperr(CMakePackage):
 
     maintainers("robertu94")
 
+    license("GPL-3.0-only")
+
     version("master", branch="master")
     version("0.0.4", sha256="97f2879460b1a28ed8ebf0c300c1cf7ceeb2c7aa7b8a1307ed19bf8cce0b7941")
     version("0.0.3", sha256="e0d1fd083419aaaa243cbf780b7de17aeb96533000071088aa21ec238d358ecc")

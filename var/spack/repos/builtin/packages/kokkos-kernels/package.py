@@ -19,6 +19,8 @@ class KokkosKernels(CMakePackage, CudaPackage):
 
     maintainers("lucbv", "srajama1", "brian-kelley")
 
+    license("BSD-3-Clause")
+
     # generate checksum for each release tarball with the following command
     # openssl sha256 kokkos-kernels-x.y.z.tar.gz
     version("develop", branch="develop")

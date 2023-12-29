@@ -11,6 +11,8 @@ class PyWidgetsnbextension(PythonPackage):
 
     pypi = "widgetsnbextension/widgetsnbextension-1.2.6.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("4.0.3", sha256="34824864c062b0b3030ad78210db5ae6a3960dfb61d5b27562d6631774de0286")
     version("3.6.0", sha256="e84a7a9fcb9baf3d57106e184a7389a8f8eb935bf741a5eb9d60aa18cc029a80")
     version("3.5.1", sha256="079f87d87270bce047512400efd70238820751a11d2d8cb137a5a5bdbaf255c7")

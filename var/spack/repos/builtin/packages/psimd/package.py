@@ -12,6 +12,8 @@ class Psimd(CMakePackage):
     homepage = "https://github.com/Maratyszcza/psimd"
     git = "https://github.com/Maratyszcza/psimd.git"
 
+    license("MIT")
+
     version("master", branch="master")
     version("2020-05-17", commit="072586a71b55b7f8c584153d223e95687148a900")  # py-torch@1.6:1.9
     version("2019-12-26", commit="10b4ffc6ea9e2e11668f86969586f88bc82aaefa")  # py-torch@1.5

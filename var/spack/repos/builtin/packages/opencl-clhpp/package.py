@@ -16,6 +16,8 @@ class OpenclClhpp(CMakePackage):
     url = "https://github.com/KhronosGroup/OpenCL-CLHPP/archive/v2.0.12.tar.gz"
     maintainers("lorddavidiii")
 
+    license("Apache-2.0")
+
     version("2.0.16", sha256="869456032e60787eed9fceaeaf6c6cb4452bc0ff97e0f5a271510145a1c8f4d4")
     version("2.0.15", sha256="0175806508abc699586fc9a9387e01eb37bf812ca534e3b493ff3091ec2a9246")
     version("2.0.14", sha256="c8821a7638e57a2c4052631c941af720b581edda634db6ab0b59924c958d69b6")

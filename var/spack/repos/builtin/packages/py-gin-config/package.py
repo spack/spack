@@ -13,6 +13,8 @@ class PyGinConfig(PythonPackage):
     homepage = "https://github.com/google/gin-config"
     pypi = "gin-config/gin-config-0.5.0.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.5.0", sha256="0c6ea5026ded927c8c93c990b01c695257c1df446e45e549a158cfbc79e19ed6")
 
     depends_on("py-setuptools", type="build")

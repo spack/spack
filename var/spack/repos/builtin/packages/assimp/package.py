@@ -16,6 +16,8 @@ class Assimp(CMakePackage):
 
     maintainers("wdconinc")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("5.3.1", sha256="a07666be71afe1ad4bc008c2336b7c688aca391271188eb9108d0c6db1be53f1")
     version("5.2.5", sha256="b5219e63ae31d895d60d98001ee5bb809fb2c7b2de1e7f78ceeb600063641e1a")

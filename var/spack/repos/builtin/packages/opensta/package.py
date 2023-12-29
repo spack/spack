@@ -24,6 +24,8 @@ class Opensta(CMakePackage):
 
     maintainers("davekeeshan")
 
+    license("GPL-3.0-only")
+
     version("master", branch="master")
 
     variant("zlib", default=True, description="build with zlib support")

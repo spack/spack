@@ -14,6 +14,8 @@ class PyMacs3(PythonPackage):
 
     maintainers("snehring")
 
+    license("BSD-3-Clause")
+
     version("3.0.0b3", sha256="caa794d4cfcd7368447eae15878505315dac44c21546e8fecebb3561e9cee362")
 
     depends_on("python@3.9:", type=("build", "run"))

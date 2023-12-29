@@ -16,6 +16,8 @@ class PyNbclient(PythonPackage):
     pypi = "nbclient/nbclient-0.5.0.tar.gz"
     git = "https://github.com/jupyter/nbclient.git"
 
+    license("BSD-3-Clause")
+
     version("0.8.0", sha256="f9b179cd4b2d7bca965f900a2ebf0db4a12ebff2f36a711cb66861e4ae158e55")
     version("0.7.2", sha256="884a3f4a8c4fc24bb9302f263e0af47d97f0d01fe11ba714171b320c8ac09547")
     version("0.6.7", sha256="3c5a7fc6bb74be7d31edf2817b44501a65caa99e5e56363bc359649b97cd24b9")

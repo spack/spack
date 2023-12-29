@@ -16,6 +16,8 @@ class RConvevol(RPackage):
 
     cran = "convevol"
 
+    license("GPL-2.0-only")
+
     version("2.0.0", sha256="690664b93c1f144a409e80b2ebfc20dc34f0eb9405607d15e066e8db573e84de")
     version("1.3", sha256="d6b24b9796a559f5280e277746189d141151ade4b14cc6b4c2d9d496d7f314ac")
 

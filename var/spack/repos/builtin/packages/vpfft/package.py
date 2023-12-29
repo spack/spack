@@ -20,6 +20,8 @@ class Vpfft(MakefilePackage):
 
     tag = ["proxy-app"]
 
+    license("BSD-3-Clause")
+
     version("develop")
 
     depends_on("eigen")

@@ -16,6 +16,8 @@ class Jsonnet(MakefilePackage):
 
     maintainers("jcpunk")
 
+    license("Apache-2.0")
+
     version("master", branch="master")
     version("0.18.0", sha256="85c240c4740f0c788c4d49f9c9c0942f5a2d1c2ae58b2c71068107bc80a3ced4")
     version("0.17.0", sha256="076b52edf888c01097010ad4299e3b2e7a72b60a41abbc65af364af1ed3c8dbe")

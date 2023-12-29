@@ -13,6 +13,8 @@ class PySqlitedict(PythonPackage):
     homepage = "https://github.com/piskvorky/sqlitedict"
     pypi = "sqlitedict/sqlitedict-2.1.0.tar.gz"
 
+    license("Apache-2.0")
+
     version("2.1.0", sha256="03d9cfb96d602996f1d4c2db2856f1224b96a9c431bdd16e78032a72940f9e8c")
 
     depends_on("python@3.7:", type=("build", "run"))

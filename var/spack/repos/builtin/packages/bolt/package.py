@@ -28,6 +28,8 @@ class Bolt(CMakePackage):
 
     tags = ["e4s"]
 
+    license("LGPL-2.1-or-later")
+
     version("main", branch="main")
     version("2.0", sha256="f84b6a525953edbaa5d28748ef3ab172a3b6f6899b07092065ba7d1ccc6eb5ac")
     version("1.0.1", sha256="769e30dfc4042cee7ebbdadd23cf08796c03bcd8b335f516dc8cbc3f8adfa597")

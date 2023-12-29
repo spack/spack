@@ -12,6 +12,8 @@ class Elsdc(MakefilePackage):
     homepage = "http://ubee.enseeiht.fr/vision/ELSD/"
     git = "https://github.com/viorik/ELSDc.git"
 
+    license("AGPL-3.0-only")
+
     version("master", branch="master")
 
     depends_on("blas")

@@ -15,6 +15,8 @@ class Demuxlet(AutotoolsPackage):
 
     maintainers("snehring")
 
+    license("Apache-2.0")
+
     version("20210211", commit="f5044eb9ed5c6678aa3a80a8f2be7db7748ee732")
 
     depends_on("autoconf", type="build")

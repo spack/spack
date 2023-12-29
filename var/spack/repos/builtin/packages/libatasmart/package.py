@@ -13,6 +13,8 @@ class Libatasmart(AutotoolsPackage):
     homepage = "https://github.com/ebe-forks/libatasmart"
     url = "https://github.com/ebe-forks/libatasmart/archive/v0.19.tar.gz"
 
+    license("LGPL-2.1-or-later")
+
     version("0.19", sha256="10bb5321a254e28bd60fd297f284bfc81cce4fde92e150187640e62ec667e5fb")
     version("0.18", sha256="4a6e93fbaec2d4caffb06ddd47c2c35ea4ad2d3d22e805bf284adba949f64ddf")
     version("0.17", sha256="353b2ec097814254989a809fd495f95a315e608fdf320c2b96dc52d70392e955")

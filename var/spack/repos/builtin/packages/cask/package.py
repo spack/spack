@@ -16,6 +16,8 @@ class Cask(Package):
     homepage = "https://cask.readthedocs.io/en/latest/"
     url = "https://github.com/cask/cask/archive/v0.7.4.tar.gz"
 
+    license("GPL-3.0-only")
+
     version("0.8.1", sha256="8739ba608f23c79b3426faa8b068d5d1bc096c7305ce30b1163babd354be821c")
     # version 0.8.0 is broken
     version("0.7.4", sha256="b183ea1c50fc215c9040f402b758ecc335901fbc2c3afd4a7302386c888d437d")

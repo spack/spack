@@ -12,6 +12,8 @@ class PyQtpy(PythonPackage):
     homepage = "https://github.com/spyder-ide/qtpy"
     pypi = "QtPy/QtPy-1.2.1.tar.gz"
 
+    license("MIT")
+
     version("1.11.2", sha256="d6e4ae3a41f1fcb19762b58f35ad6dd443b4bdc867a4cb81ef10ccd85403c92b")
     version("1.7.1", sha256="e97275750934b3a1f4d8e263f5b889ae817ed36f26867ab0ce52be731ab1ed9e")
     version("1.2.1", sha256="5803ce31f50b24295e8e600b76cc91d7f2a3140a5a0d526d40226f9ec5e9097d")

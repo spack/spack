@@ -14,6 +14,8 @@ class Mitos(CMakePackage):
     url = "https://github.com/LLNL/Mitos/archive/v0.9.1.tar.gz"
     git = "https://github.com/llnl/Mitos.git"
 
+    license("LGPL-2.1-or-later")
+
     version("0.9.2", commit="8cb143a2e8c00353ff531a781a9ca0992b0aaa3d")
     version("0.9.1", sha256="67abe227d2f9b4d2f235031b526d3ceb2c4792ad98772b1b1d5af0d227a795fc")
 

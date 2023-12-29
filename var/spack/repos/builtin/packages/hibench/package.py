@@ -17,6 +17,8 @@ class Hibench(MavenPackage):
     homepage = "https://github.com/Intel-bigdata/HiBench"
     url = "https://github.com/Intel-bigdata/HiBench/archive/HiBench-7.1.tar.gz"
 
+    license("Apache-2.0")
+
     version("7.1", sha256="96572a837d747fb6347f2b906fd5f7fb97a62095435326ccfee5e75777a5c210")
     version("7.0", sha256="89b01f3ad90b758f24afd5ea2bee997c3d700ce9244b8a2b544acc462ab0e847")
     version("6.0", sha256="179f5415903f4029bd0ea1101a3d4c67faf88ca46a993d8179582299ad730f79")

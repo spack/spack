@@ -15,6 +15,8 @@ class PerlTest2Suite(PerlPackage):
 
     maintainers("EbiArnie")
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("0.000159", sha256="cb7453380d2a70682c450cb6ec44fecd02d1c48674a76d9799903b7f4444cc0e")
 
     depends_on("perl@5.8.1:", type=("build", "link", "run", "test"))

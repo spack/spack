@@ -17,6 +17,8 @@ class BoincClient(AutotoolsPackage):
     homepage = "https://boinc.berkeley.edu/"
     url = "https://github.com/BOINC/boinc/archive/client_release/7.16/7.16.5.tar.gz"
 
+    license("LGPL-3.0-only")
+
     version("7.16.5", sha256="33db60991b253e717c6124cce4750ae7729eaab4e54ec718b9e37f87012d668a")
 
     variant("manager", default=False, description="Builds the client manager")

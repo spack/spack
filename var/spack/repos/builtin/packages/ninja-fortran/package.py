@@ -13,6 +13,8 @@ class NinjaFortran(Package):
     homepage = "https://github.com/Kitware/ninja"
     url = "https://github.com/Kitware/ninja/archive/v1.9.0.g99df1.kitware.dyndep-1.jobserver-1.tar.gz"
 
+    license("Apache-2.0")
+
     # Each version is a fork off of a specific commit of ninja
     # Hashes don't sort properly, so added "artificial" tweak-level version
     # number prior to the hashes for sorting puposes

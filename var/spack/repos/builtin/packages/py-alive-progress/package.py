@@ -14,6 +14,8 @@ class PyAliveProgress(PythonPackage):
     homepage = "https://github.com/rsalmei/alive-progress"
     pypi = "alive-progress/alive-progress-2.4.1.tar.gz"
 
+    license("MIT")
+
     version("2.4.1", sha256="089757c8197f27ad972ba27e1060f6db92368d83c736884e159034fd74865323")
     version("1.6.2", sha256="642e1ce98becf226c8c36bf24e10221085998c5465a357a66fb83b7dc618b43e")
 

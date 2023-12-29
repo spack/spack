@@ -12,6 +12,8 @@ class PyRtoml(PythonPackage):
     homepage = "https://github.com/samuelcolvin/rtoml"
     pypi = "rtoml/rtoml-0.9.0.tar.gz"
 
+    license("MIT")
+
     version("0.9.0", sha256="113f2e133d152d9424269c475b4a7d0679987078b543e88fcb16c870dc2c460d")
 
     depends_on("rust", type="build")

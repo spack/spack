@@ -15,6 +15,8 @@ class Minced(Package):
     homepage = "https://github.com/ctSkennerton/minced"
     url = "https://github.com/ctSkennerton/minced/archive/0.2.0.tar.gz"
 
+    license("GPL-3.0-only")
+
     version("0.4.2", sha256="35b6ee22fe6bdc26a31d0203a7dcc6bd1a19fd6733c60d80ceb44431884af165")
     version("0.3.2", sha256="334aee43292d0b657c4849f818ddfb3ac7811eb505502bf24a01d66719084b44")
     version("0.2.0", sha256="e1ca61e0307e6a2a2480bc0a1291a2c677110f34c3247d4773fdba7e95a6b573")

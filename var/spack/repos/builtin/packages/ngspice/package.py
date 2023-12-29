@@ -16,6 +16,8 @@ class Ngspice(AutotoolsPackage):
 
     maintainers("aweits", "cessenat")
 
+    license("BSD-3-Clause")
+
     # Master version by default adds the experimental adms feature
     version("master", branch="master")
     version("41", sha256="1ce219395d2f50c33eb223a1403f8318b168f1e6d1015a7db9dbf439408de8c4")
@@ -55,8 +57,34 @@ class Ngspice(AutotoolsPackage):
     variant("fft", default=True, description="Use external fftw lib")
     variant("osdi", default=False, description="Use osdi/OpenVAF")
 
-    depends_on("fftw-api@3:~mpi~openmp", when="+fft~openmp")
-    depends_on("fftw-api@3:~mpi+openmp", when="+fft+openmp")
+    depends_on("fftw-api@3", when="+fft")
+    with when("+fft+openmp"):
+        depends_on("acfl threads=openmp", when="^[virtuals=fftw-api] acfl")
+        depends_on("amdfftw+openmp", when="^[virtuals=fftw-api] amdfftw")
+        depends_on("armpl-gcc threads=openmp", when="^[virtuals=fftw-api] armpl-gcc")
+        depends_on("cray-fftw+openmp", when="^[virtuals=fftw-api] cray-fftw")
+        depends_on("fftw+openmp", when="^[virtuals=fftw-api] fftw")
+        depends_on("fujitsu-fftw+openmp", when="^[virtuals=fftw-api] fujitsu-fftw")
+        depends_on("intel-mkl threads=openmp", when="^[virtuals=fftw-api] intel-mkl")
+        depends_on("intel-oneapi-mkl threads=openmp", when="^[virtuals=fftw-api] intel-oneapi-mkl")
+        depends_on(
+            "intel-parallel-studio threads=openmp",
+            when="^[virtuals=fftw-api] intel-parallel-studio",
+        )
+
+    with when("+fft~openmp"):
+        depends_on("acfl threads=none", when="^[virtuals=fftw-api] acfl")
+        depends_on("amdfftw~openmp", when="^[virtuals=fftw-api] amdfftw")
+        depends_on("armpl-gcc threads=none", when="^[virtuals=fftw-api] armpl-gcc")
+        depends_on("cray-fftw~openmp", when="^[virtuals=fftw-api] cray-fftw")
+        depends_on("fftw~openmp", when="^[virtuals=fftw-api] fftw")
+        depends_on("fujitsu-fftw~openmp", when="^[virtuals=fftw-api] fujitsu-fftw")
+        depends_on("intel-mkl threads=none", when="^[virtuals=fftw-api] intel-mkl")
+        depends_on("intel-oneapi-mkl threads=none", when="^[virtuals=fftw-api] intel-oneapi-mkl")
+        depends_on(
+            "intel-parallel-studio threads=none", when="^[virtuals=fftw-api] intel-parallel-studio"
+        )
+
     depends_on("readline", when="+readline build=bin")
 
     # Needed for autoreconf:

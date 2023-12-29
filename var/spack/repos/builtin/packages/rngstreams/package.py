@@ -12,4 +12,6 @@ class Rngstreams(AutotoolsPackage):
     homepage = "https://statmath.wu.ac.at/software/RngStreams"
     url = "https://statmath.wu.ac.at/software/RngStreams/rngstreams-1.0.1.tar.gz"
 
+    license("GPL-3.0-only")
+
     version("1.0.1", sha256="966195febb9fb9417e4e361948843425aee12efc8b4e85332acbcd011ff2d9b0")

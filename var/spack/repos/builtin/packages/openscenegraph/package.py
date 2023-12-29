@@ -18,6 +18,8 @@ class Openscenegraph(CMakePackage):
 
     maintainers("aumuell")
 
+    license("LGPL-2.1-or-later")
+
     version("master", branch="master")
     version("stable", branch="OpenSceneGraph-3.6")
     version("3.6.5", sha256="aea196550f02974d6d09291c5d83b51ca6a03b3767e234a8c0e21322927d1e12")

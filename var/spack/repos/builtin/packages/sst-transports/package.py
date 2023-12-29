@@ -15,6 +15,8 @@ class SstTransports(CMakePackage):
 
     maintainers("jjwilke")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
 
     depends_on("sst-macro")

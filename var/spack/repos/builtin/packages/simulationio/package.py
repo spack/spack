@@ -16,6 +16,8 @@ class Simulationio(CMakePackage):
 
     maintainers("eschnett")
 
+    license("LGPL-3.0-only")
+
     version("master", branch="master")
     version("9.0.3", sha256="d07192fb69ae0d43364dc5807ce788c6cf1f8fbaa46f83028311b6935fd76aa8")
     version("9.0.2", sha256="3dd3422e64f6a75215783f6157effd07430e1d0af5884e565f73388a815511f8")

@@ -15,6 +15,8 @@ class I3(AutotoolsPackage):
     homepage = "https://i3wm.org/"
     url = "https://github.com/i3/i3/archive/4.14.1.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("4.14.1", sha256="28d8102d656f17445a6e1523b12c1a730cc3925a520add1f75b56b9c842932f9")
 
     depends_on("autoconf", type="build")

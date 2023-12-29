@@ -13,6 +13,8 @@ class PyPdmPep517(PythonPackage):
     homepage = "https://pdm.fming.dev/latest/"
     pypi = "pdm-pep517/pdm-pep517-1.0.4.tar.gz"
 
+    license("MIT")
+
     version("1.0.4", sha256="392f8c2b47c6ec20550cb8e19e24b9dbd27373413f067b56ecd75f9767f93015")
 
     depends_on("python@3.7:", type=("build", "run"))

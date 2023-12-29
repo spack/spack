@@ -32,6 +32,8 @@ class Armcomputelibrary(SConsPackage):
 
     maintainers("annop-w")
 
+    license("MIT")
+
     version("23.02", sha256="bed1b24047ce00155e552204bc3983e86f46775414c554a34a7ece931d67ec62")
     version("22.11", sha256="2f70f54d84390625222503ea38650c00c49d4b70bc86a6b9aeeebee9d243865f")
     version("22.08", sha256="5d76d07406b105f0bdf74ef80263236cb03baf0ade882f2bf8446bbc239e0079")

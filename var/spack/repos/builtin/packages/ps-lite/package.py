@@ -13,6 +13,8 @@ class PsLite(CMakePackage):
     homepage = "https://github.com/dmlc/ps-lite"
     git = "https://github.com/dmlc/ps-lite.git"
 
+    license("Apache-2.0")
+
     version("master", branch="master")
     version("20170328", commit="acdb698fa3bb80929ef83bb37c705f025e119b82")
 

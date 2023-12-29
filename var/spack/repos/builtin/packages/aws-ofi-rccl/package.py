@@ -18,6 +18,8 @@ class AwsOfiRccl(AutotoolsPackage):
 
     maintainers("bvanessen")
 
+    license("Apache-2.0")
+
     version("cxi", branch="cxi", preferred=True)
     version("master", branch="master")
 

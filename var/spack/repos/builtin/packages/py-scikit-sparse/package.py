@@ -15,6 +15,8 @@ class PyScikitSparse(PythonPackage):
 
     maintainers("cgcgcg")
 
+    license("BSD-2-Clause")
+
     version("0.4.12", sha256="e6502fea9ba561cfa5491eb222ed2c81c16263d8182a293950db20509c941166")
     version("0.4.11", sha256="64c61a8777b7c7ba8e1f2bf76bc767f740e6426f1cce2d90f1324b177618e1ca")
     version("0.4.8", sha256="2a224c60da3ef951975242ea777478583d3265efc72db5cfb7861686521a4009")

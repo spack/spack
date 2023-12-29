@@ -13,6 +13,8 @@ class PyRefgenconf(PythonPackage):
     homepage = "https://github.com/refgenie/refgenconf"
     pypi = "refgenconf/refgenconf-0.12.2.tar.gz"
 
+    license("BSD-2-Clause")
+
     version("0.12.2", sha256="6c9f9ecd8b91b4f75a535cfbdbdfb136f2dc9e9864142d07aa0352c61cf0cf78")
 
     depends_on("python@3.5:", type=("build", "run"))

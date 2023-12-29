@@ -13,6 +13,8 @@ class Genomeworks(CMakePackage, CudaPackage):
     url = "https://github.com/clara-parabricks/GenomeWorks/archive/v0.5.3.tar.gz"
     git = "https://github.com/clara-parabricks/GenomeWorks.git"
 
+    license("Apache-2.0")
+
     version(
         "0.5.3", tag="v0.5.3", commit="b4b8bf76ea2ce44452d3a1107e66d47968414adb", submodules=True
     )

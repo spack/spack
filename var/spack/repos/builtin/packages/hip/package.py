@@ -24,6 +24,8 @@ class Hip(CMakePackage):
     maintainers("srekolam", "renjithravindrankannath", "haampie")
     libraries = ["libamdhip64"]
 
+    license("MIT")
+
     version("master", branch="master")
     version("5.7.1", sha256="eaa0e14a9ae45c58ed37863797b683a7778b3cbbf92f5b6529ec65fd61d61f3e")
     version("5.7.0", sha256="cb61234eec7879fb7e20937659ad535b93a6e66fc8de0a543da8b7702474f2fc")

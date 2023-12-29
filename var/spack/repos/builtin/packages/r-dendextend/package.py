@@ -17,6 +17,8 @@ class RDendextend(RPackage):
 
     cran = "dendextend"
 
+    license("GPL-2.0-only OR GPL-3.0-only")
+
     version("1.17.1", sha256="87e96e119e7236b4f5df1c6f1b0d4d4e12aab606a2142e039f56d8ec71f9e521")
     version("1.16.0", sha256="ec2fd09c31a2a93292d87a9bd5bfc261840de941dfded79d6c2fe87116708466")
     version("1.15.2", sha256="4ba3885b66694589d455ffef31c218fe653fa25aff3efb7e8db6c25008d2921b")

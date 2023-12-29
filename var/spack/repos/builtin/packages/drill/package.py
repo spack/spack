@@ -16,6 +16,8 @@ class Drill(Package):
     homepage = "https://drill.apache.org/"
     url = "https://www-eu.apache.org/dist/drill/drill-1.17.0/apache-drill-1.17.0.tar.gz"
 
+    license("Apache-2.0")
+
     version("1.17.0", sha256="a3d2d544bcc32b915fb53fced0f982670bd6fe2abd764423e566a5f6b54debf1")
     version("1.16.0", sha256="fd195d2b38f393459b37d8f13ac1f36cdbe38495eabb08252da38e3544e87839")
     version("1.15.0", sha256="188c1d0df28e50f0265f4bc3c5871b4e7abc9450a4e5a7dbe7f0b23146bec76b")

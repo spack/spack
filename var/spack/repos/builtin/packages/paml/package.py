@@ -15,6 +15,8 @@ class Paml(MakefilePackage):
     git = "https://github.com/abacus-gene/paml.git"
     maintainers("snehring")
 
+    license("GPL-3.0-or-later")
+
     version(
         "4.10.3",
         sha256="9b2a6e187e3f9f3bc55cd82db15eb701d43f031167d283a7c1b11c882b5d8a42",

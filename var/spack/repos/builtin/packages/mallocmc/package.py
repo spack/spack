@@ -25,6 +25,8 @@ class Mallocmc(CMakePackage):
 
     maintainers("ax3l")
 
+    license("MIT")
+
     version("develop", branch="dev")
     version("master", branch="master")
     version("2.2.0crp", sha256="1b500ee7fcea45a67a81fc0e1c294b4b0c413cd1f76168522f35ade7d44be9b6")

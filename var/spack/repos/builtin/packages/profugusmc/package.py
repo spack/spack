@@ -13,6 +13,8 @@ class Profugusmc(CMakePackage, CudaPackage):
     git = "https://code.ornl.gov/ProfugusMC/ProfugusMC.git"
     url = "https://code.ornl.gov/ProfugusMC/ProfugusMC/-/archive/master/ProfugusMC-master.tar.gz"
 
+    license("BSD-2-Clause")
+
     version("master", branch="master")
 
     variant("mpi", default=True, description="Enable MPI")

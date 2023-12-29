@@ -17,6 +17,8 @@ class RcclTests(MakefilePackage):
 
     maintainers("bvanessen")
 
+    license("BSD-3-Clause")
+
     version("develop", branch="develop", preferred=True)
     version("master", branch="master")
 

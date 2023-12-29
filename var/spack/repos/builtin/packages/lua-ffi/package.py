@@ -15,6 +15,8 @@ class LuaFfi(LuaPackage):
 
     maintainers("trws")
 
+    license("BSD-3-Clause")
+
     version(
         "0.0.1.fakever",
         git="https://github.com/facebook/luaffifb/",

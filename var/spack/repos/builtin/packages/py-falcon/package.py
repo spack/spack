@@ -13,6 +13,8 @@ class PyFalcon(PythonPackage):
     homepage = "https://github.com/falconry/falcon"
     url = "https://github.com/falconry/falcon/archive/3.0.0a2.tar.gz"
 
+    license("Apache-2.0")
+
     version("3.0.0a2", sha256="2e8471cf07df33a1b9929de8953aeb301c64a963c86d770ef296ce4dc8af34cd")
     version("3.0.0a1", sha256="cdc47996f664fa8c97041a2a4a586a472442654ee7e86075bb72c720744150ca")
     version("2.0.0rc4", sha256="30bb6a982cf3ab273b9605c9d2ab1e7d01323fee13fe53a485befd92186c3665")

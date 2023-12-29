@@ -13,6 +13,8 @@ class PyEtils(PythonPackage):
     homepage = "https://github.com/google/etils"
     pypi = "etils/etils-0.9.0.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.9.0", sha256="489103e9e499a566765c60458ee15d185cf0065f2060a4d16a68f8f46962ed0d")
 
     variant("epath", default=False, description="with epath module")

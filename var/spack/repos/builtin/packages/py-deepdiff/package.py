@@ -12,6 +12,8 @@ class PyDeepdiff(PythonPackage):
     homepage = "https://github.com/seperman/deepdiff"
     pypi = "deepdiff/deepdiff-5.6.0.tar.gz"
 
+    license("MIT")
+
     version("6.3.0", sha256="6a3bf1e7228ac5c71ca2ec43505ca0a743ff54ec77aa08d7db22de6bc7b2b644")
     version("5.6.0", sha256="e3f1c3a375c7ea5ca69dba6f7920f9368658318ff1d8a496293c79481f48e649")
 

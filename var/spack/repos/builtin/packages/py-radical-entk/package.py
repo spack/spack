@@ -16,6 +16,8 @@ class PyRadicalEntk(PythonPackage):
 
     maintainers("andre-merzky")
 
+    license("MIT")
+
     version("develop", branch="devel")
     version("1.20.0", sha256="1b9fc470b926a93528fd2a898636bdcd1c565bd58ba47608f9bead811d8a46d7")
     version("1.18.0", sha256="049f70ec7e95819ec0ea706ee6275db04799ceff119dd7b675ef0d36d814de6f")

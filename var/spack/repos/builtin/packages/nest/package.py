@@ -16,6 +16,8 @@ class Nest(CMakePackage):
     url = "https://github.com/nest/nest-simulator/archive/refs/tags/v3.0.tar.gz"
     git = "https://github.com/nest/nest-simulator.git"
 
+    license("GPL-2.0-or-later")
+
     version("master", branch="master")
     version("3.0", sha256="d481ea67f3251fe3aadf5252ab0a999172f0cd5536c5985366d271d772e686e6")
     version("2.20.1", sha256="df3d32b5899d5d444f708037b290f889ac6ff8eae6b7be9e9faee2c0d660d8e5")

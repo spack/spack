@@ -14,6 +14,8 @@ class Ldak(Package):
 
     maintainers("snehring")
 
+    license("GPL-3.0-only")
+
     version("5.2", sha256="ba3de4eb4f2d664b3c2a54bef2eb66d1a498ac423179e97a5795d010161b1805")
     version(
         "5.1",

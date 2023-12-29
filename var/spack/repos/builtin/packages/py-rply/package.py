@@ -12,6 +12,8 @@ class PyRply(PythonPackage):
     homepage = "https://github.com/alex/rply/"
     pypi = "rply/rply-0.7.8.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.7.8", sha256="2a808ac25a4580a9991fc304d64434e299a8fc75760574492f242cbb5bb301c9")
 
     depends_on("py-setuptools", type="build")

@@ -20,6 +20,8 @@ class Openloops(Package):
 
     tags = ["hep"]
 
+    license("GPL-3.0-only")
+
     version("2.1.2", sha256="f52575cae3d70b6b51a5d423e9cd0e076ed5961afcc015eec00987e64529a6ae")
     version("2.1.1", sha256="f1c47ece812227eab584e2c695fef74423d2f212873f762b8658f728685bcb91")
 

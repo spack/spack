@@ -13,6 +13,8 @@ class Wireshark(CMakePackage):
     homepage = "https://www.wireshark.org"
     url = "https://www.wireshark.org/download/src/all-versions/wireshark-2.6.0.tar.xz"
 
+    license("GPL-2.0-or-later")
+
     version("3.2.1", sha256="589f640058d6408ebbd695a80ebbd6e7bd99d8db64ecda253d27100dfd27e85b")
     version("3.2.0", sha256="4cfd33a19a454ff4002243e9d04d6afd64280a109a21ae652a192f2be2b1b66c")
     version("3.1.0", sha256="a7b54f9e35fc69291dcac5104ecbef8260534a75dec5b8105605b6c423fd3de3")

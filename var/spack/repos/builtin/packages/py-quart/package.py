@@ -13,6 +13,8 @@ class PyQuart(PythonPackage):
     homepage = "https://gitlab.com/pgjones/quart/"
     pypi = "Quart/Quart-0.16.3.tar.gz"
 
+    license("MIT")
+
     version("0.16.3", sha256="16521d8cf062461b158433d820fff509f98fb997ae6c28740eda061d9cba7d5e")
 
     depends_on("python@3.7:", type=("build", "run"))

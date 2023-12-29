@@ -23,6 +23,8 @@ class Openblas(CMakePackage, MakefilePackage):
 
     libraries = ["libopenblas", "openblas"]
 
+    license("BSD-3-Clause")
+
     version("develop", branch="develop")
     version("0.3.25", sha256="4c25cb30c4bb23eddca05d7d0a85997b8db6144f5464ba7f8c09ce91e2f35543")
     version("0.3.24", sha256="ceadc5065da97bd92404cac7254da66cc6eb192679cf1002098688978d4d5132")
@@ -194,6 +196,17 @@ class Openblas(CMakePackage, MakefilePackage):
         sha256="c20f5188a9145395c37c22ae5c1f72bfc24edfbccbb636cc8f9227345615daa8",
         when="@0.3.21 %gcc@:9",
     )
+
+    # Some installations of clang and libomp have non-standard locations for
+    # libomp. OpenBLAS adds the correct linker flags but overwrites the
+    # variables in a couple places, causing link-time failures.
+    patch("openblas_append_lflags.patch", when="@:0.3.23 threads=openmp")
+
+    # Some builds of libomp on certain systems cause test failures related to
+    # forking, so disable the specific test that's failing. This is currently
+    # an open issue upstream:
+    # https://github.com/llvm/llvm-project/issues/63908
+    patch("openblas_libomp_fork.patch", when="%clang@15:")
 
     # Fix build on A64FX for OpenBLAS v0.3.24
     patch(

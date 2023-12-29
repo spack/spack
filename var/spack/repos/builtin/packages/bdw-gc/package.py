@@ -13,6 +13,8 @@ class BdwGc(AutotoolsPackage):
     homepage = "https://www.hboehm.info/gc/"
     url = "https://github.com/ivmai/bdwgc/releases/download/v8.2.4/gc-8.2.4.tar.gz"
 
+    license("Xerox")
+
     version("8.2.4", sha256="3d0d3cdbe077403d3106bb40f0cbb563413d6efdbb2a7e1cd6886595dec48fc2")
     version("8.2.2", sha256="f30107bcb062e0920a790ffffa56d9512348546859364c23a14be264b38836a0")
     version("8.0.6", sha256="3b4914abc9fa76593596773e4da671d7ed4d5390e3d46fbf2e5f155e121bea11")

@@ -17,6 +17,8 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
 
     maintainers("AmintorDusko", "vincentmr")
 
+    license("Apache-2.0")
+
     version("main", branch="main")
 
     version("0.32.0", sha256="06f19dfb1073387ef9ee30c38ea44884844a771373256b694a0e1ceb87195bb2")

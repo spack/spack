@@ -20,6 +20,8 @@ class PySphinxcontribDevhelp(PythonPackage):
     # import any modules.
     import_modules: List[str] = []
 
+    license("BSD-2-Clause")
+
     version("1.0.2", sha256="ff7f1afa7b9642e7060379360a67e9c41e8f3121f2ce9164266f61b9f4b338e4")
     version("1.0.1", sha256="6c64b077937330a9128a4da74586e8c2130262f014689b4b89e2d08ee7294a34")
 

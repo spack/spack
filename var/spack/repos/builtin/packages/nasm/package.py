@@ -20,6 +20,8 @@ class Nasm(AutotoolsPackage, Package):
 
     build_system("autotools", conditional("generic", when="platform=windows"), default="autotools")
 
+    license("BSD-2-Clause")
+
     version("2.15.05", sha256="9182a118244b058651c576baa9d0366ee05983c4d4ae1d9ddd3236a9f2304997")
     version("2.14.02", sha256="b34bae344a3f2ed93b2ca7bf25f1ed3fb12da89eeda6096e3551fd66adeae9fc")
     version("2.13.03", sha256="23e1b679d64024863e2991e5c166e19309f0fe58a9765622b35bd31be5b2cc99")

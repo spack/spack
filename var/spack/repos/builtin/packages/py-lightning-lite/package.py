@@ -15,6 +15,8 @@ class PyLightningLite(PythonPackage):
 
     maintainers("adamjstewart")
 
+    license("Apache-2.0")
+
     version("1.8.0", sha256="a71940409d3d1a5bb20f63716c86a745157ce30100f1c16600dfe33d9b657955")
 
     # src/lightning_lite/__setup__.py

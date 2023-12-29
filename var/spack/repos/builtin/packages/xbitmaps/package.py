@@ -13,6 +13,8 @@ class Xbitmaps(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/data/bitmaps/"
     xorg_mirror_path = "data/xbitmaps-1.1.1.tar.gz"
 
+    license("MIT")
+
     version("1.1.1", sha256="3bc89e05be4179ce4d3dbba1ae554da4591d41f7a489d9e2735a18cfd8378188")
 
     depends_on("pkgconfig", type="build")

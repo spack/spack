@@ -14,6 +14,8 @@ class PyAstunparse(PythonPackage):
 
     pypi = "astunparse/astunparse-1.6.2.tar.gz"
 
+    license("PSF-2.0")
+
     version("1.6.3", sha256="5ad93a8456f0d084c3456d059fd9a92cce667963232cbf763eac3bc5b7940872")
     version("1.6.2", sha256="dab3e426715373fd76cd08bb1abe64b550f5aa494cf1e32384f26fd60961eb67")
 

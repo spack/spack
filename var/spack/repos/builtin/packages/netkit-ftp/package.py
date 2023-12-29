@@ -12,6 +12,8 @@ class NetkitFtp(AutotoolsPackage):
     homepage = "http://ftp.uk.linux.org/pub/linux/Networking/netkit"
     git = "https://github.com/mmaraya/netkit-ftp.git"
 
+    license("BSD-4-Clause-UC")
+
     version("master", branch="master")
 
     def install(self, spec, prefix):

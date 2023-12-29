@@ -12,6 +12,8 @@ class Brunsli(CMakePackage):
     homepage = "https://github.com/google/brunsli"
     git = "https://github.com/google/brunsli.git"
 
+    license("MIT")
+
     version("0.1", tag="v0.1", commit="8a0e9b8ca2e3e089731c95a1da7ce8a3180e667c", submodules=True)
 
     depends_on("cmake@3.1:", type="build")

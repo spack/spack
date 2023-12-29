@@ -17,6 +17,8 @@ class Claw(CMakePackage):
     git = "https://github.com/claw-project/claw-compiler.git"
     maintainers("clementval", "skosukhin")
 
+    license("BSD-2-Clause")
+
     version(
         "2.0.3", tag="v2.0.3", commit="4d8bc7a794af3651b8b61501388fc00096b23a85", submodules=True
     )

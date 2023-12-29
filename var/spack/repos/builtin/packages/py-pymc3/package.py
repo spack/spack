@@ -15,6 +15,8 @@ class PyPymc3(PythonPackage):
     homepage = "https://github.com/pymc-devs/pymc3"
     pypi = "pymc3/pymc3-3.8.tar.gz"
 
+    license("Apache-2.0")
+
     version("3.8", sha256="1bb2915e4a29877c681ead13932b0b7d276f7f496e9c3f09ba96b977c99caf00")
 
     depends_on("python@3.5.4:", type=("build", "run"))

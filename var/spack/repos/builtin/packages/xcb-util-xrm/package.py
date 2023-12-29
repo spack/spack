@@ -13,6 +13,8 @@ class XcbUtilXrm(AutotoolsPackage):
     homepage = "https://github.com/Airblader/xcb-util-xrm"
     git = "https://github.com/Airblader/xcb-util-xrm.git"
 
+    license("MIT")
+
     # This GitHub project includes some git submodules, which must be fetched
     # in order to build it.
     version("1.2", tag="v1.2", commit="a45b3d0bbaa94bf8a68405ab8c5c61404da464ce", submodules=True)

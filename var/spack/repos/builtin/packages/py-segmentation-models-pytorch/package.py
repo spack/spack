@@ -12,6 +12,8 @@ class PySegmentationModelsPytorch(PythonPackage):
     homepage = "https://github.com/qubvel/segmentation_models.pytorch"
     pypi = "segmentation_models_pytorch/segmentation_models_pytorch-0.2.0.tar.gz"
 
+    license("MIT")
+
     version("0.3.3", sha256="b3b21ab4cd26a6b2b9e7a6ed466ace6452eb26ed3c31ae491ea2d7cbb01e384b")
     version("0.3.2", sha256="8372733e57a10cb8f6b9e18a20577fbb3fb83549b6945664dc774a9b6d3ecd13")
     version("0.3.1", sha256="d4a4817cf48872c3461bb7d22864c00f9d491719a6460adb252c035f9b0e8d51")

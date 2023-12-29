@@ -15,6 +15,8 @@ class Xeus(CMakePackage):
 
     maintainers("tomstitt")
 
+    license("BSD-3-Clause")
+
     version("develop", branch="master")
     version("1.0.4", sha256="7324ff013eb97d579fd3b6f9770a13f8863d6046c8bbcdbe2fc7d2ac02f0161f")
     version("0.15.0", sha256="bc99235b24d5757dc129f3ed531501fb0d0667913927ed39ee24281952649183")

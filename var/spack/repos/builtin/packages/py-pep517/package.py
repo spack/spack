@@ -12,6 +12,8 @@ class PyPep517(PythonPackage):
     homepage = "https://github.com/pypa/pep517"
     pypi = "pep517/pep517-0.12.0.tar.gz"
 
+    license("MIT")
+
     version("0.12.0", sha256="931378d93d11b298cf511dd634cf5ea4cb249a28ef84160b3247ee9afb4e8ab0")
 
     depends_on("py-flit-core@2:3", type="build")

@@ -18,6 +18,8 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
 
     maintainers("alecbcs")
 
+    license("GPL-3.0-or-later")
+
     version("master", branch="master")
     version("29.1", sha256="5b80e0475b0e619d2ad395ef5bc481b7cb9f13894ed23c301210572040e4b5b1")
     version("28.2", sha256="a6912b14ef4abb1edab7f88191bfd61c3edd7085e084de960a4f86485cb7cad8")

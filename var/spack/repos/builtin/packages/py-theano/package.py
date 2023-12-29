@@ -14,6 +14,8 @@ class PyTheano(PythonPackage, CudaPackage):
     pypi = "Theano/Theano-0.8.2.tar.gz"
     git = "https://github.com/Theano/Theano.git"
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("1.0.5", sha256="6e9439dd53ba995fcae27bf20626074bfc2fff446899dc5c53cb28c1f9202e89")
     version("1.0.4", sha256="35c9bbef56b61ffa299265a42a4e8f8cb5a07b2997dabaef0f8830b397086913")

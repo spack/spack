@@ -22,6 +22,8 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
 
     tags = ["e4s"]
 
+    license("Apache-2.0")
+
     version("master", branch="master")
     version(
         "2.9.2",
@@ -211,6 +213,10 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
         when="@:2.7.1",
         sha256="8221073d1b2f8944395a88a5d60a15c7370646b62f5fc6309867bbb6a8c2096c",
     )
+
+    # Fix mismatched datatypes in comparison
+    # See https://github.com/ornladios/ADIOS2/pull/2701
+    patch("2.7.1-fix-broken-endian-reverse-compile.patch", when="@2.7.1")
 
     # cmake: find threads package first
     # https://github.com/ornladios/ADIOS2/pull/3893

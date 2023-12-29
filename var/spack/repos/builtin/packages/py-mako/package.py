@@ -14,6 +14,8 @@ class PyMako(PythonPackage):
     pypi = "Mako/Mako-1.0.1.tar.gz"
     git = "https://github.com/sqlalchemy/mako"
 
+    license("MIT")
+
     version("1.2.4", sha256="d60a3903dc3bb01a18ad6a89cdbe2e4eadc69c0bc8ef1e3773ba53d44c3f7a34")
     version("1.2.2", sha256="3724869b363ba630a272a5f89f68c070352137b8fd1757650017b7e06fda163f")
     version("1.1.6", sha256="4e9e345a41924a954251b95b4b28e14a301145b544901332e658907a7464b6b2")

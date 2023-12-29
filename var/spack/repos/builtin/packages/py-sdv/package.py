@@ -19,6 +19,8 @@ class PySdv(PythonPackage):
     homepage = "https://github.com/sdv-dev/SDV"
     pypi = "sdv/sdv-0.13.1.tar.gz"
 
+    license("MIT")
+
     version("0.14.0", sha256="a62714b73a7e14b95ffbda0920a3a5a6fe891a17d8611380af5f9ca1ff8fc234")
     version("0.13.1", sha256="c0a0dbc4a64e5f60cabd123a8c19b3f99594f5a0911de83e08d172b810222c93")
 

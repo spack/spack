@@ -35,6 +35,8 @@ class AoclUtils(CMakePackage):
 
     maintainers("amd-toolchain-support")
 
+    license("BSD-3-Clause")
+
     version("4.1", sha256="a2f271f5eef07da366dae421af3c89286ebb6239047a31a46451758d4a06bc85")
 
     variant("doc", default=False, description="enable documentation")

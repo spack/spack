@@ -12,6 +12,8 @@ class PyKerasPreprocessing(PythonPackage):
     homepage = "https://github.com/keras-team/keras-preprocessing"
     pypi = "Keras-Preprocessing/Keras_Preprocessing-1.1.2.tar.gz"
 
+    license("MIT")
+
     version("1.1.2", sha256="add82567c50c8bc648c14195bf544a5ce7c1f76761536956c3d2978970179ef3")
     version("1.1.0", sha256="5a8debe01d840de93d49e05ccf1c9b81ae30e210d34dacbcc47aeb3049b528e5")
     version("1.0.9", sha256="5e3700117981c2db762e512ed6586638124fac5842170701628088a11aeb51ac")

@@ -12,6 +12,8 @@ class EverytraceExample(CMakePackage):
     homepage = "https://github.com/citibeth/everytrace-example"
     git = "https://github.com/citibeth/everytrace-example.git"
 
+    license("GPL-3.0-or-later")
+
     version("develop", branch="develop")
 
     depends_on("everytrace+mpi+fortran")

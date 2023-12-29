@@ -19,6 +19,8 @@ class RPinfsc50(RPackage):
 
     maintainers("dorton21")
 
+    license("GPL-2.0-or-later")
+
     version("1.2.0", sha256="ed1fe214b9261feef8abfbf724c2bd9070d68e99a6ea95208aff2c57bbef8794")
 
     depends_on("r@3.2.1:", type=("build", "run"))

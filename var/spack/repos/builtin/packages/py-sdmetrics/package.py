@@ -17,6 +17,8 @@ class PySdmetrics(PythonPackage):
     homepage = "https://github.com/sdv-dev/SDMetrics"
     pypi = "sdmetrics/sdmetrics-0.4.1.tar.gz"
 
+    license("MIT")
+
     version("0.4.1", sha256="28df1cdd6988b3464306c1d189da19ee13a49023c53ca8b3db399fc9fd45fae8")
 
     depends_on("python@3.6:", type=("build", "run"))

@@ -16,6 +16,8 @@ class Sperr(CMakePackage):
     git = "https://github.com/NCAR/SPERR.git"
     maintainers("shaomeng", "robertu94")
 
+    license("GPL-3.0-only")
+
     # Versions
     version("main", branch="main")
     version("0.7.1", sha256="1c3f46200be365427d1f57f5873f1b0b6dbcd297de4603a47a7fa3f41b273d79")

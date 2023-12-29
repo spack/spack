@@ -18,6 +18,8 @@ class PyLifelines(PythonPackage):
     homepage = "https://github.com/CamDavidsonPilon/lifelines"
     pypi = "lifelines/lifelines-0.25.5.tar.gz"
 
+    license("MIT")
+
     version("0.25.5", sha256="f24260aa371829354440dfc2c1be8d59d9e841cce7a933230213cecd67787b89")
     version("0.9.4", sha256="0f19a8b18ace80c231de60487b2b1a3de3eb418445c6a6d0d72c1110d860f676")
 

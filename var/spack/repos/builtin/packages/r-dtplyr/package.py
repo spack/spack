@@ -15,6 +15,8 @@ class RDtplyr(RPackage):
 
     cran = "dtplyr"
 
+    license("MIT")
+
     version("1.3.1", sha256="a5a9689a640b8bd1274519af220c33deaa3919654acac4ebdff1ff365cc8d6e5")
     version("1.2.2", sha256="f85928fe63701bc3a0cadf705ba660834a2aaeab37cf20addab406430e53e2d4")
     version("1.2.1", sha256="2640e9cde4eaa06f02cff29e3f2b99fdd08488df07ea2e6629b2ed6a8285d0f3")

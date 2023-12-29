@@ -12,6 +12,8 @@ class Netdata(AutotoolsPackage):
     homepage = "https://www.netdata.cloud/"
     url = "https://github.com/netdata/netdata/releases/download/v1.30.1/netdata-v1.30.1.tar.gz"
 
+    license("GPL-3.0-or-later")
+
     version("1.38.1", sha256="e32a5427f0c00550210dbbf0046c2621313955256edf836db686e2bc270b8d10")
     version("1.31.0", sha256="ca68f725224e8bbec041b493891376fbf41aedb47c4ac06161c2eda990089c9f")
     version("1.30.1", sha256="3df188ac04f17094cb929e2990841ba77f68aa6af484e0509b99db298fa206c9")

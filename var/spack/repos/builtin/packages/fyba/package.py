@@ -14,6 +14,8 @@ class Fyba(AutotoolsPackage):
     homepage = "https://github.com/kartverket/fyba"
     url = "https://github.com/kartverket/fyba/archive/4.1.1.tar.gz"
 
+    license("Unlicense")
+
     version("4.1.1", sha256="99f658d52e8fd8997118bb6207b9c121500700996d9481a736683474e2534179")
 
     # configure: error: cannot find install-sh or install.sh

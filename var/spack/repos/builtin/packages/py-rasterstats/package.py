@@ -15,6 +15,8 @@ class PyRasterstats(PythonPackage):
     homepage = "https://github.com/perrygeo/python-rasterstats"
     pypi = "rasterstats/rasterstats-0.17.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.17.0", sha256="27975ebc0a402865dd9e92ad4ecf0dd62678e320735cc81e104c730e6d001298")
 
     depends_on("py-affine@:2", type=("build", "run"))

@@ -12,6 +12,8 @@ class Cquery(CMakePackage):
     homepage = "https://github.com/cquery-project/cquery"
     git = "https://github.com/cquery-project/cquery.git"
 
+    license("MIT")
+
     version("2018-08-23", commit="70c755b2e390d3edfb594a84a7531beb26b2bc07", submodules=True)
 
     depends_on("llvm")

@@ -12,6 +12,8 @@ class Libtomlc99(Package):
     homepage = "https://github.com/cktan/tomlc99"
     git = "https://github.com/cktan/tomlc99.git"
 
+    license("MIT")
+
     # Since there is no official versioning, yet, just use the date and prefix
     # with '0.' to make switching to proper versioning easier later.
     version("0.2020.12.23", commit="e97a56633e54297990158ab56a7e50a089cddf7d")

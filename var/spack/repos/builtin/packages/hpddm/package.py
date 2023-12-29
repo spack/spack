@@ -15,6 +15,8 @@ class Hpddm(Package):
 
     maintainers("corentin-dev")
 
+    license("LGPL-3.0-or-later")
+
     version("main", branch="main")
 
     version("2.2.3", commit="54228a5288a38cf1a144df13c96b00ac9240179c")

@@ -16,6 +16,8 @@ class PyUltralytics(PythonPackage):
     homepage = "https://github.com/ultralytics/ultralytics"
     pypi = "ultralytics/ultralytics-8.0.50.tar.gz"
 
+    license("AGPL-3.0")
+
     version("8.0.50", sha256="fdcb22300b63b72aa52da1713c33c01741aca031a61f15327eb6f02615bb4b97")
 
     depends_on("py-setuptools", type=("build", "run"))

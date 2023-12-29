@@ -16,6 +16,8 @@ class Mrchem(CMakePackage):
 
     maintainers("robertodr", "stigrj", "ilfreddy")
 
+    license("LGPL-3.0-only")
+
     version("1.1.2", sha256="b4e74ad5ee89fc5e8a7329474cf0fa93155423f93a1f95c8c2888f7c53e353ea")
     version("1.0.0", sha256="9cdda4d30b2baabb26400742f78ef8f3fc50a54f5218c8b6071b0cbfbed746c3")
     version("0.2.2", sha256="7519cc104c7df51eea8902c225aac6ecce2ac4ff30765145e502342d5bf3d96b")

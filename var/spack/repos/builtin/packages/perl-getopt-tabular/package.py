@@ -13,4 +13,6 @@ class PerlGetoptTabular(PerlPackage):
     homepage = "https://metacpan.org/pod/Getopt::Tabular"
     url = "https://cpan.metacpan.org/authors/id/G/GW/GWARD/Getopt-Tabular-0.3.tar.gz"
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("0.3", sha256="9bdf067633b5913127820f4e8035edc53d08372faace56ba6bfa00c968a25377")

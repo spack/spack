@@ -29,6 +29,8 @@ class OpenkimModels(CMakePackage):
     depends_on("kim-api@2.1.0:", when="@2019-07-25:")
     depends_on("kim-api@:2.0.2", when="@:2019-03-29")
 
+    license("CDDL-1.0")
+
     version(
         "2021-01-28", sha256="8824adee02ae4583bd378cc81140fbb49515c5965708ee98d856d122d48dd95f"
     )

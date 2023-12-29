@@ -32,6 +32,8 @@ class PyPyzmq(PythonPackage):
         "zmq.devices",
     ]
 
+    license("BSD-3-Clause")
+
     version("25.0.2", sha256="6b8c1bbb70e868dc88801aa532cae6bd4e3b5233784692b786f17ad2962e5149")
     version("24.0.1", sha256="216f5d7dbb67166759e59b0479bca82b8acf9bed6015b526b8eb10143fb08e77")
     version("22.3.0", sha256="8eddc033e716f8c91c6a2112f0a8ebc5e00532b4a6ae1eb0ccc48e027f9c671c")

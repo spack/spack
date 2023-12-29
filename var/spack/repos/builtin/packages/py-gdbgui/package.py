@@ -12,6 +12,8 @@ class PyGdbgui(PythonPackage):
     homepage = "https://gdbgui.com"
     pypi = "gdbgui/gdbgui-0.11.2.1.tar.gz"
 
+    license("GPL-3.0-or-later")
+
     version("0.13.2.0", sha256="80e347a08b8cc630ab9f68482a1ed92c844fbfde46dc21fd39f3e6ef14b72e54")
 
     depends_on("py-setuptools", type=("build", "run"))

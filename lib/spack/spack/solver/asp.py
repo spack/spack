@@ -11,13 +11,17 @@ import os
 import pathlib
 import pprint
 import re
+import sys
 import types
 import warnings
 from typing import Callable, Dict, List, NamedTuple, Optional, Sequence, Set, Tuple, Union
 
 import archspec.cpu
 
+import spack.config as sc
 import spack.deptypes as dt
+import spack.paths as sp
+import spack.util.path as sup
 
 try:
     import clingo  # type: ignore[import]
@@ -27,6 +31,36 @@ try:
 except ImportError:
     clingo = None  # type: ignore
     clingo_cffi = False
+except AttributeError:
+    # Reaching this point indicates a broken clingo installation
+    # If Spack derived clingo, suggest user re-run bootstrap
+    # if non-spack, suggest user investigate installation
+
+    # assume Spack is not responsibe for broken clingo
+    msg = (
+        f"Clingo installation at {clingo.__file__} is incomplete or invalid."
+        "Please repair installation or re-install. "
+        "Alternatively, consider installing clingo via Spack."
+    )
+    # check whether Spack is responsible
+    if (
+        pathlib.Path(
+            sup.canonicalize_path(sc.get("bootstrap:root", sp.default_user_bootstrap_path))
+        )
+        in pathlib.Path(clingo.__file__).parents
+    ):
+        # Spack is responsible for the broken clingo
+        msg = (
+            "Spack bootstrapped copy of Clingo is broken, "
+            "please re-run the bootstrapping process via command `spack bootstrap now`."
+            " If this issue persists, please file a bug at: github.com/spack/spack"
+        )
+    raise RuntimeError(
+        "Clingo installation may be broken or incomplete, "
+        "please verify clingo has been installed correctly"
+        "\n\nClingo does not provide symbol clingo.Symbol"
+        f"{msg}"
+    )
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -61,6 +95,8 @@ GitOrStandardVersion = Union[spack.version.GitVersion, spack.version.StandardVer
 ASTType = None
 parse_files = None
 
+#: Enable the addition of a runtime node
+WITH_RUNTIME = sys.platform != "win32"
 
 #: Data class that contain configuration on what a
 #: clingo solve should output.
@@ -122,6 +158,8 @@ class Provenance(enum.IntEnum):
     PACKAGE_PY = enum.auto()
     # An installed spec
     INSTALLED = enum.auto()
+    # A runtime injected from another package (e.g. a compiler)
+    RUNTIME = enum.auto()
 
     def __str__(self):
         return f"{self._name_.lower()}"
@@ -2023,7 +2061,9 @@ class SpackSolverSetup:
                     f.node_compiler_version(spec.name, spec.compiler.name, spec.compiler.version)
                 )
 
-            elif spec.compiler.versions:
+            elif spec.compiler.versions and spec.compiler.versions != vn.any_version:
+                # The condition above emits a facts only if we have an actual constraint
+                # on the compiler version, and avoids emitting them if any version is fine
                 clauses.append(
                     fn.attr(
                         "node_compiler_version_satisfies",
@@ -2578,6 +2618,9 @@ class SpackSolverSetup:
         self.possible_virtuals = node_counter.possible_virtuals()
         self.pkgs = node_counter.possible_dependencies()
 
+        runtimes = spack.repo.PATH.packages_with_tags("runtime")
+        self.pkgs.update(set(runtimes))
+
         # Fail if we already know an unreachable node is requested
         for spec in specs:
             missing_deps = [
@@ -2678,6 +2721,10 @@ class SpackSolverSetup:
         self.gen.h1("Variant Values defined in specs")
         self.define_variant_values()
 
+        if WITH_RUNTIME:
+            self.gen.h1("Runtimes")
+            self.define_runtime_constraints()
+
         self.gen.h1("Version Constraints")
         self.collect_virtual_constraints()
         self.define_version_constraints()
@@ -2688,6 +2735,21 @@ class SpackSolverSetup:
         self.gen.h1("Target Constraints")
         self.define_target_constraints()
 
+    def define_runtime_constraints(self):
+        """Define the constraints to be imposed on the runtimes"""
+        recorder = RuntimePropertyRecorder(self)
+        for compiler in self.possible_compilers:
+            if compiler.name != "gcc":
+                continue
+            try:
+                compiler_cls = spack.repo.PATH.get_pkg_class(compiler.name)
+            except spack.repo.UnknownPackageError:
+                continue
+            if hasattr(compiler_cls, "runtime_constraints"):
+                compiler_cls.runtime_constraints(compiler=compiler, pkg=recorder)
+
+        recorder.consume_facts()
+
     def literal_specs(self, specs):
         for spec in specs:
             self.gen.h2("Spec: %s" % str(spec))
@@ -2697,7 +2759,7 @@ class SpackSolverSetup:
             # Special condition triggered by "literal_solved"
             self.gen.fact(fn.literal(trigger_id))
             self.gen.fact(fn.pkg_fact(spec.name, fn.condition_trigger(condition_id, trigger_id)))
-            self.gen.fact(fn.condition_reason(condition_id, f"{spec} requested from CLI"))
+            self.gen.fact(fn.condition_reason(condition_id, f"{spec} requested explicitly"))
 
             imposed_spec_key = str(spec), None
             cache = self._effect_cache[spec.name]
@@ -2794,6 +2856,157 @@ class SpackSolverSetup:
             key = "one_of" if "one_of" in spec_group else "any_of"
             for s in spec_group[key]:
                 yield _spec_with_default_name(s, pkg_name)
+
+
+class RuntimePropertyRecorder:
+    """An object of this class is injected in callbacks to compilers, to let them declare
+    properties of the runtimes they support and of the runtimes they provide, and to add
+    runtime dependencies to the nodes using said compiler.
+
+    The usage of the object is the following. First, a runtime package name or the wildcard
+    "*" are passed as an argument to __call__, to set which kind of package we are referring to.
+    Then we can call one method with a directive-like API.
+
+    Examples:
+        >>> pkg = RuntimePropertyRecorder(setup)
+        >>> # Every package compiled with %gcc has a link dependency on 'gcc-runtime'
+        >>> pkg("*").depends_on(
+        ...     "gcc-runtime",
+        ...     when="%gcc",
+        ...     type="link",
+        ...     description="If any package uses %gcc, it depends on gcc-runtime"
+        ... )
+        >>> # The version of gcc-runtime is the same as the %gcc used to "compile" it
+        >>> pkg("gcc-runtime").requires("@=9.4.0", when="%gcc@=9.4.0")
+    """
+
+    def __init__(self, setup):
+        self._setup = setup
+        self.rules = []
+        self.runtime_conditions = set()
+        # State of this object set in the __call__ method, and reset after
+        # each directive-like method
+        self.current_package = None
+
+    def __call__(self, package_name: str) -> "RuntimePropertyRecorder":
+        """Sets a package name for the next directive-like method call"""
+        assert self.current_package is None, f"state was already set to '{self.current_package}'"
+        self.current_package = package_name
+        return self
+
+    def reset(self):
+        """Resets the current state."""
+        self.current_package = None
+
+    def depends_on(self, dependency_str: str, *, when: str, type: str, description: str) -> None:
+        """Injects conditional dependencies on packages.
+
+        Args:
+            dependency_str: the dependency spec to inject
+            when: anonymous condition to be met on a package to have the dependency
+            type: dependency type
+            description: human-readable description of the rule for adding the dependency
+        """
+        # TODO: The API for this function is not final, and is still subject to change. At
+        # TODO: the moment, we implemented only the features strictly needed for the
+        # TODO: functionality currently provided by Spack, and we assert nothing else is required.
+        msg = "the 'depends_on' method can be called only with pkg('*')"
+        assert self.current_package == "*", msg
+
+        when_spec = spack.spec.Spec(when)
+        assert when_spec.name is None, "only anonymous when specs are accepted"
+
+        dependency_spec = spack.spec.Spec(dependency_str)
+        if dependency_spec.versions != vn.any_version:
+            self._setup.version_constraints.add((dependency_spec.name, dependency_spec.versions))
+
+        placeholder = "XXX"
+        node_variable = "node(ID, Package)"
+        when_spec.name = placeholder
+
+        body_clauses = self._setup.spec_clauses(when_spec, body=True)
+        body_str = (
+            f"  {f',{os.linesep}  '.join(str(x) for x in body_clauses)},\n"
+            f"  not runtime(Package)"
+        ).replace(f'"{placeholder}"', f"{node_variable}")
+        head_clauses = self._setup.spec_clauses(dependency_spec, body=False)
+
+        runtime_pkg = dependency_spec.name
+        main_rule = (
+            f"% {description}\n"
+            f'1 {{ attr("depends_on", {node_variable}, node(0..X-1, "{runtime_pkg}"), "{type}") :'
+            f' max_dupes("gcc-runtime", X)}} 1:-\n'
+            f"{body_str}.\n\n"
+        )
+        self.rules.append(main_rule)
+        for clause in head_clauses:
+            if clause.args[0] == "node":
+                continue
+            runtime_node = f'node(RuntimeID, "{runtime_pkg}")'
+            head_str = str(clause).replace(f'"{runtime_pkg}"', runtime_node)
+            rule = (
+                f"{head_str} :-\n"
+                f'  attr("depends_on", {node_variable}, {runtime_node}, "{type}"),\n'
+                f"{body_str}.\n\n"
+            )
+            self.rules.append(rule)
+
+        self.reset()
+
+    def requires(self, impose: str, *, when: str):
+        """Injects conditional requirements on a given package.
+
+        Args:
+            impose: constraint to be imposed
+            when: condition triggering the constraint
+        """
+        msg = "the 'requires' method cannot be called with pkg('*') or without setting the package"
+        assert self.current_package is not None and self.current_package != "*", msg
+
+        imposed_spec = spack.spec.Spec(f"{self.current_package}{impose}")
+        when_spec = spack.spec.Spec(f"{self.current_package}{when}")
+
+        assert imposed_spec.versions.concrete, f"{impose} must have a concrete version"
+        assert when_spec.compiler.concrete, f"{when} must have a concrete compiler"
+
+        # Add versions to possible versions
+        for s in (imposed_spec, when_spec):
+            if not s.versions.concrete:
+                continue
+            self._setup.possible_versions[s.name].add(s.version)
+            self._setup.declared_versions[s.name].append(
+                DeclaredVersion(version=s.version, idx=0, origin=Provenance.RUNTIME)
+            )
+
+        self.runtime_conditions.add((imposed_spec, when_spec))
+        self.reset()
+
+    def consume_facts(self):
+        """Consume the facts collected by this object, and emits rules and
+        facts for the runtimes.
+        """
+        self._setup.gen.h2("Runtimes: rules")
+        self._setup.gen.newline()
+        for rule in self.rules:
+            if not isinstance(self._setup.gen.out, llnl.util.lang.Devnull):
+                self._setup.gen.out.write(rule)
+            self._setup.gen.control.add("base", [], rule)
+
+        self._setup.gen.h2("Runtimes: conditions")
+        for runtime_pkg in spack.repo.PATH.packages_with_tags("runtime"):
+            self._setup.gen.fact(fn.runtime(runtime_pkg))
+            self._setup.gen.fact(fn.possible_in_link_run(runtime_pkg))
+            self._setup.gen.newline()
+            # Inject version rules for runtimes (versions are declared based
+            # on the available compilers)
+            self._setup.pkg_version_rules(runtime_pkg)
+
+        for imposed_spec, when_spec in self.runtime_conditions:
+            msg = f"{when_spec} requires {imposed_spec} at runtime"
+            _ = self._setup.condition(when_spec, imposed_spec=imposed_spec, msg=msg)
+
+        self._setup.trigger_rules()
+        self._setup.effect_rules()
 
 
 class SpecBuilder:
@@ -3134,14 +3347,38 @@ def _develop_specs_from_env(spec, env):
     spec.constrain(dev_info["spec"])
 
 
-def _is_reusable_external(packages, spec: spack.spec.Spec) -> bool:
-    """Returns true iff spec is an external that can be reused.
+def _is_reusable(spec: spack.spec.Spec, packages, local: bool) -> bool:
+    """A spec is reusable if it's not a dev spec, it's imported from the cray manifest, it's not
+    external, or it's external with matching packages.yaml entry. The latter prevents two issues:
+
+    1. Externals in build caches: avoid installing an external on the build machine not
+       available on the target machine
+    2. Local externals: avoid reusing an external if the local config changes. This helps in
+       particular when a user removes an external from packages.yaml, and expects that that
+       takes effect immediately.
 
     Arguments:
-        packages: the packages configuration
         spec: the spec to check
+        packages: the packages configuration
     """
-    for name in {spec.name, *(p.name for p in spec.package.provided)}:
+    if "dev_path" in spec.variants:
+        return False
+
+    if not spec.external:
+        return True
+
+    # Cray external manifest externals are always reusable
+    if local:
+        _, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
+        if record and record.origin == "external-db":
+            return True
+
+    try:
+        provided = [p.name for p in spec.package.provided]
+    except spack.repo.RepoError:
+        provided = []
+
+    for name in {spec.name, *provided}:
         for entry in packages.get(name, {}).get("externals", []):
             if (
                 spec.satisfies(entry["spec"])
@@ -3188,29 +3425,21 @@ class Solver:
     def _reusable_specs(self, specs):
         reusable_specs = []
         if self.reuse:
+            packages = spack.config.get("packages")
             # Specs from the local Database
             with spack.store.STORE.db.read_transaction():
                 reusable_specs.extend(
-                    [
-                        s
-                        for s in spack.store.STORE.db.query(installed=True)
-                        if not s.satisfies("dev_path=*")
-                    ]
+                    s
+                    for s in spack.store.STORE.db.query(installed=True)
+                    if _is_reusable(s, packages, local=True)
                 )
 
             # Specs from buildcaches
             try:
-                # Specs in a build cache that depend on externals are reusable as long as local
-                # config has matching externals. This should guard against picking up binaries
-                # linked against externals not available locally, while still supporting the use
-                # case of distributing binaries across machines with similar externals.
-                packages = spack.config.get("packages")
                 reusable_specs.extend(
-                    [
-                        s
-                        for s in spack.binary_distribution.update_cache_and_get_specs()
-                        if not s.external or _is_reusable_external(packages, s)
-                    ]
+                    s
+                    for s in spack.binary_distribution.update_cache_and_get_specs()
+                    if _is_reusable(s, packages, local=False)
                 )
             except (spack.binary_distribution.FetchCacheError, IndexError):
                 # this is raised when no mirrors had indices.

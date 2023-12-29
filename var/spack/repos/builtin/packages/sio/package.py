@@ -18,6 +18,8 @@ class Sio(CMakePackage):
 
     maintainers("vvolkl", "tmadlener", "jmcarcell")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("0.2", sha256="416c93402e7314b7aadedba8e7f9e0d4b0b4f4e34ce26285b04cebb505ecfab2")
     version("0.1", sha256="0407c0daeae53660c0562f9302a220f72ab51547050cd9fe9113b995804ab4b4")

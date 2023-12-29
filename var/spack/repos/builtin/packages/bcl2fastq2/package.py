@@ -22,6 +22,8 @@ class Bcl2fastq2(Package):
 
     homepage = "https://support.illumina.com/downloads/bcl2fastq-conversion-software-v2-20.html"
 
+    license("BSD-3-Clause")
+
     version(
         "2.20.0.422", sha256="8dd3044767d044aa4ce46de0de562b111c44e5b8b7348e04e665eb1b4f101fe3"
     )

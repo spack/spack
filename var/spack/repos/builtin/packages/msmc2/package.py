@@ -17,6 +17,8 @@ class Msmc2(MakefilePackage):
 
     maintainers("robqiao")
 
+    license("GPL-3.0-or-later")
+
     version("2.1.4", sha256="e513723b9e956f01de8de89ff6d32c071f509512425185d12faa5bb76cf440d0")
     version("2.1.2", sha256="c8c2b6ed6ef1b5d6e6e15ec0d968288e5bdae2bea1f3b4ec790f599e96bb26cd")
     version("2.1.1", sha256="151dd75a8b0371ff94eed9504a7a73a2924e10466de30c230c1bb3c35a1a0913")

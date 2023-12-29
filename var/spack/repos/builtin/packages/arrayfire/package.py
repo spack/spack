@@ -15,6 +15,8 @@ class Arrayfire(CMakePackage, CudaPackage):
     git = "https://github.com/arrayfire/arrayfire.git"
     maintainers("umar456")
 
+    license("FreeImage")
+
     version("master")
     version("3.8.1", commit="823e8e399fe8c120c6ec7ec75f09e6106b3074ca", tag="v3.8.1")
     version(
@@ -35,7 +37,10 @@ class Arrayfire(CMakePackage, CudaPackage):
     depends_on("blas")
     depends_on("cuda@7.5:", when="+cuda")
     depends_on("cudnn", when="+cuda")
-    depends_on("opencl +icd", when="+opencl")
+
+    depends_on("opencl", when="+opencl")
+    depends_on("pocl+icd", when="^[virtuals=opencl] pocl")
+
     # TODO add more opencl backends:
     # currently only Cuda backend is enabled
     # https://github.com/arrayfire/arrayfire/wiki/Build-Instructions-for-Linux#opencl-backend-dependencies

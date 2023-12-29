@@ -23,6 +23,8 @@ class ROrdinal(RPackage):
 
     cran = "ordinal"
 
+    license("GPL-2.0-or-later")
+
     version(
         "2022.11-16", sha256="5488ad1dfa531a09d017d68d7393d376c8bc49cceeaa6a3e5f7d57b99168d493"
     )

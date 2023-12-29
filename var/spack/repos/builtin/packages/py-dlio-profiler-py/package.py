@@ -13,6 +13,8 @@ class PyDlioProfilerPy(PythonPackage):
     git = "https://github.com/hariharan-devarajan/dlio-profiler.git"
     maintainers("hariharan-devarajan")
 
+    license("MIT")
+
     version("develop", branch="dev")
     version("master", branch="master")
     version("0.0.2", tag="v0.0.2", commit="b72144abf1499e03d1db87ef51e780633e9e9533")

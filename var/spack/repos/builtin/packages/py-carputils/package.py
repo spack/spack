@@ -15,6 +15,8 @@ class PyCarputils(PythonPackage):
 
     maintainers("MarieHouillon")
 
+    license("Apache-2.0")
+
     version("master", branch="master")
     # Version to use with openCARP releases
     version("oc13.0", commit="216c3802c2ac2d14c739164dcd57f2e59aa2ede3")

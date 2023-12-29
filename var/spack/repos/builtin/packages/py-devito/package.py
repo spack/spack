@@ -18,6 +18,8 @@ class PyDevito(PythonPackage):
     homepage = "https://www.devitoproject.org/"
     pypi = "devito/devito-4.8.1.tar.gz"
 
+    license("MIT")
+
     version("4.8.1", sha256="56d0957a3226ed2a81c408107a614f04faa896d42c83a8b2bd1c8b1100adf51d")
 
     variant("mpi", default=False, description="Enable MPI support")

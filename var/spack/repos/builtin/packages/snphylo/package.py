@@ -12,6 +12,8 @@ class Snphylo(Package):
     homepage = "http://chibba.pgml.uga.edu/snphylo/"
     url = "https://github.com/thlee/SNPhylo/archive/refs/tags/20180901.tar.gz"
 
+    license("GPL-2.0-only")
+
     version("20180901", sha256="46273bcafc8f6cc2465fc524926af7dd122bcc7b7ce1b7c3f5c278111c3a9ddd")
     version(
         "2016-02-04",

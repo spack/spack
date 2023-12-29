@@ -16,6 +16,8 @@ class Crunch(CMakePackage):
     # fix compilation bugs. If these commits are ever merged into upstream, we can switch to that.
     git = "https://github.com/rouault/crunch.git"
 
+    license("Zlib")
+
     # No stable releases since 2012
     version("master", branch="build_fixes")
 

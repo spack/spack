@@ -14,6 +14,8 @@ class Direnv(Package):
 
     maintainers("acastanedam", "alecbcs")
 
+    license("MIT")
+
     version("2.33.0", sha256="8ef18051aa6bdcd6b59f04f02acdd0b78849b8ddbdbd372d4957af7889c903ea")
     version("2.32.3", sha256="c66f6d1000f28f919c6106b5dcdd0a0e54fb553602c63c60bf59d9bbdf8bd33c")
     version("2.32.2", sha256="352b3a65e8945d13caba92e13e5666e1854d41749aca2e230938ac6c64fa8ef9")

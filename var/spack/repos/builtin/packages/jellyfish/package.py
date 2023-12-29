@@ -13,6 +13,8 @@ class Jellyfish(AutotoolsPackage):
     url = "https://github.com/gmarcais/Jellyfish/releases/download/v2.3.0/jellyfish-2.3.0.tar.gz"
     list_url = "https://github.com/gmarcais/Jellyfish/releases"
 
+    license("GPL-3.0-only")
+
     version("2.3.0", sha256="e195b7cf7ba42a90e5e112c0ed27894cd7ac864476dc5fb45ab169f5b930ea5a")
     version(
         "2.2.7",

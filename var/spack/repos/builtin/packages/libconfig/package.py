@@ -14,6 +14,8 @@ class Libconfig(AutotoolsPackage):
 
     force_autoreconf = True
 
+    license("LGPL-2.1-or-later")
+
     version("1.7.3", sha256="68757e37c567fd026330c8a8449aa5f9cac08a642f213f2687186b903bd7e94e")
     version("1.7.2", sha256="f67ac44099916ae260a6c9e290a90809e7d782d96cdd462cac656ebc5b685726")
     version("1.7.1", sha256="d288e6ae817f4ef78df43cdb2647f768dc97899ee82fcc41f857e8eb9fd7fbdb")

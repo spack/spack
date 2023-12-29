@@ -13,6 +13,8 @@ class Cppunit(AutotoolsPackage):
     url = "https://dev-www.libreoffice.org/src/cppunit-1.13.2.tar.gz"
     git = "https://anongit.freedesktop.org/git/libreoffice/cppunit.git"
 
+    license("LGPL-2.1-or-later")
+
     version("master", branch="master")
     version("1.15_20220904", commit="78e64f0edb4f3271a6ddbcdf9cba05138597bfca")
     version(

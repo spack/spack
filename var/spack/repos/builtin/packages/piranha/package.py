@@ -16,6 +16,8 @@ class Piranha(CMakePackage):
     url = "https://github.com/bluescarni/piranha/archive/v0.5.tar.gz"
     git = "https://github.com/bluescarni/piranha.git"
 
+    license("LGPL-3.0-or-later")
+
     version("develop", branch="master")
     version("0.5", sha256="34a89bda8208ff48cfb116efa7d53c09e8a9b3838af4bb96ba2e19e4930b3a58")
 

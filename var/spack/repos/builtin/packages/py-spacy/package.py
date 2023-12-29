@@ -14,6 +14,8 @@ class PySpacy(PythonPackage):
     homepage = "https://spacy.io/"
     pypi = "spacy/spacy-2.3.2.tar.gz"
 
+    license("MIT")
+
     version("2.3.7", sha256="c0f2315fea23497662e28212f89af3a03667f97c867c597b599c37ab84092e22")
     version("2.3.2", sha256="818de26e0e383f64ccbe3db185574920de05923d8deac8bbb12113b9e33cee1f")
     version("2.2.4", sha256="f0f3a67c5841e6e35d62c98f40ebb3d132587d3aba4f4dccac5056c4e90ff5b9")

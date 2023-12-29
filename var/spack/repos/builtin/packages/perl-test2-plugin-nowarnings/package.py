@@ -15,6 +15,8 @@ class PerlTest2PluginNowarnings(PerlPackage):
 
     maintainers("EbiArnie")
 
+    license("Artistic-2.0")
+
     version("0.09", sha256="be3dd800042eef362bf17d2056cf9e934dee91ccce98e4f178b8fb5772f2fb74")
 
     depends_on("perl-ipc-run3", type=("build", "test"))

@@ -17,6 +17,8 @@ class Mongodb(SConsPackage):
 
     maintainers("DaxLynch")
 
+    license("SSPL-1.0")
+
     version("6.2", git="https://github.com/mongodb/mongo.git", branch="v6.2")
 
     requires(

@@ -24,6 +24,8 @@ class MpiTestSuite(AutotoolsPackage):
 
     maintainers("jcortial-safran")
 
+    license("BSD-3-Clause-Open-MPI")
+
     version("1.1.1", sha256="4cb7bdbdafa0855dab96d996f863b5d364c935e678c057ada3c8869c3666e926")
 
     depends_on("autoconf", type="build")

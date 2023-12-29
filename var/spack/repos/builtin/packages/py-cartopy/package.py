@@ -15,6 +15,8 @@ class PyCartopy(PythonPackage):
     maintainers("adamjstewart")
     skip_modules = ["cartopy.tests"]
 
+    license("LGPL-3.0-or-later")
+
     version("0.22.0", sha256="b300f90120931d43f11ef87c064ea1dacec1b59a4940aa76ebf82cf09548bb49")
     version("0.21.1", sha256="89d5649712c8582231c6e11825a04c85f6f0cee94dbb89e4db23eabca1cc250a")
     version("0.21.0", sha256="ce1d3a28a132e94c89ac33769a50f81f65634ab2bd40556317e15bd6cad1ce42")

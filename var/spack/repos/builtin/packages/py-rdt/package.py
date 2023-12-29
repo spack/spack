@@ -14,6 +14,8 @@ class PyRdt(PythonPackage):
     homepage = "https://github.com/sdv-dev/RDT"
     pypi = "rdt/rdt-0.6.1.tar.gz"
 
+    license("MIT")
+
     version("0.6.1", sha256="ee2ac0d3479b254f99f35a709a24ffd5f2c899de6ea71f1ee844c6113febba71")
 
     depends_on("python@3.6:", type=("build", "run"))

@@ -6,6 +6,7 @@
 import os
 import socket
 
+import spack.platforms.cray
 from spack.package import *
 
 
@@ -21,6 +22,8 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     tags = ["ecp", "radiuss"]
 
     maintainers("bvanessen")
+
+    license("Apache-2.0")
 
     version("develop", branch="develop")
     version("benchmarking", branch="benchmarking")
@@ -223,7 +226,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("py-setuptools", type="build", when="+pfe")
     depends_on("py-protobuf+cpp@3.10.0:4.21.12", type=("build", "run"), when="+pfe")
 
-    depends_on("protobuf+shared@3.10.0:3.21.12")
+    depends_on("protobuf@3.10.0:3.21.12")
     depends_on("zlib-api", when="^protobuf@3.11.0:")
 
     # using cereal@1.3.1 and above requires changing the

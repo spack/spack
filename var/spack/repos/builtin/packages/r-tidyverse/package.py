@@ -17,6 +17,8 @@ class RTidyverse(RPackage):
 
     cran = "tidyverse"
 
+    license("MIT")
+
     version("2.0.0", sha256="3d3c2d135056333247d309d1c2cc98cc0d87e2c781f4c6fbceab28d28c0728e5")
     version("1.3.2", sha256="37fbf8b72e49e96b1770dfb8e37f3e9e29269e8d6c96d6d3902561252ec1cf61")
     version("1.3.1", sha256="83cf95109d4606236274f5a8ec2693855bf75d3a1b3bc1ab4426dcc275ed6632")

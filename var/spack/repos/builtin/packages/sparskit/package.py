@@ -16,6 +16,8 @@ class Sparskit(MakefilePackage):
 
     homepage = "https://www-users.cse.umn.edu/~saad/software/SPARSKIT/"
 
+    license("LGPL-2.1-or-later")
+
     version(
         "develop",
         sha256="ecdd0a9968d6b45153a328710a42fe87600f0bba0e3c53896090b8ae1c113b7a",

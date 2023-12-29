@@ -12,6 +12,8 @@ class PerlDbdMysql(PerlPackage):
     homepage = "https://metacpan.org/pod/DBD::mysql"
     url = "https://search.cpan.org/CPAN/authors/id/M/MI/MICHIELB/DBD-mysql-4.043.tar.gz"
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version(
         "4.050",
         sha256="4f48541ff15a0a7405f76adc10f81627c33996fbf56c95c26c094444c0928d78",

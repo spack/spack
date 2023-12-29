@@ -17,6 +17,8 @@ class Vbfnlo(AutotoolsPackage):
 
     tags = ["hep"]
 
+    license("GPL-2.0-only")
+
     # The commented out versions exist, but are not tested
     version(
         "3.0.0beta5", sha256="777a3dedb365ea9abc38848a60f30d325da3799cbad69fa308664b94a8c31a90"

@@ -14,6 +14,8 @@ class PyQuestionary(PythonPackage):
     homepage = "https://github.com/tmbo/questionary"
     pypi = "questionary/questionary-1.9.0.tar.gz"
 
+    license("MIT")
+
     version("1.9.0", sha256="a050fdbb81406cddca679a6f492c6272da90cb09988963817828f697cf091c55")
 
     depends_on("python@3.6:3.9", type=("build", "run"))

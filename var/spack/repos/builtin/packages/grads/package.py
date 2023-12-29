@@ -18,6 +18,8 @@ class Grads(AutotoolsPackage):
 
     maintainers("vanderwb")
 
+    license("GPL-2.0-or-later")
+
     version("2.2.3", sha256="2cbb67284fe64763c589ecaf08d5bd31144554dfd82a1fccf71e1cc424695a9e")
     version("2.2.2", sha256="1b5a600d4d407ffcf2fbbbba42037a6e1ebfdb8246ba56b93c628e3c472b4ded")
     version("2.2.1", sha256="695e2066d7d131720d598bac0beb61ac3ae5578240a5437401dc0ffbbe516206")

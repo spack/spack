@@ -12,6 +12,8 @@ class PyPoetryDynamicVersioning(PythonPackage):
     homepage = "https://github.com/mtkennerly/poetry-dynamic-versioning"
     pypi = "poetry-dynamic-versioning/poetry-dynamic-versioning-0.19.0.tar.gz"
 
+    license("MIT")
+
     version("0.19.0", sha256="a11a7eba6e7be167c55a1dddec78f52b61a1832275c95519ad119c7a89a7f821")
 
     depends_on("python@3.7:3", type=("build", "run"))

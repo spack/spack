@@ -14,6 +14,8 @@ class PerlSpecio(PerlPackage):
 
     maintainers("EbiArnie")
 
+    license("Artistic-2.0")
+
     version("0.48", sha256="0c85793580f1274ef08173079131d101f77b22accea7afa8255202f0811682b2")
 
     depends_on("perl@5.8.0:", type=("build", "link", "run", "test"))

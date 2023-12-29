@@ -14,6 +14,8 @@ class PyDatacube(PythonPackage):
 
     maintainers("adamjstewart")
 
+    license("Apache-2.0")
+
     version("1.8.3", sha256="d1e1a49c615fdaebf6e6008da7f925bc09e9d7bf94f259a1c596d266d1c36649")
 
     # Excluding 'datacube.utils.aws' since it requires 'boto3'

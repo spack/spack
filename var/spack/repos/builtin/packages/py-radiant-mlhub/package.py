@@ -14,6 +14,8 @@ class PyRadiantMlhub(PythonPackage):
 
     maintainers("adamjstewart")
 
+    license("Apache-2.0")
+
     version("0.5.5", sha256="93cabc3c8e9ba343cdb3b0bfaec01bf7a36aae75704fabfe96c8bf5cab9fa899")
     version("0.5.3", sha256="f111983910e41f2ce40bf401ccf9e33b393e52cc1989f8f8b74c6b4e2bdd0127")
     version("0.5.2", sha256="d310afce962508a44c60f5738fef164c50e78f76c3e85813653824b39a189ca3")
@@ -52,4 +54,4 @@ class PyRadiantMlhub(PythonPackage):
     depends_on("py-urllib3@1.26.11:1.26", when="@0.5.5:", type=("build", "run"))
 
     # Historical dependencies
-    depends_on("py-typing-extensions@3.7:", when="@0.4.1:0.4 ^python@:3.7", type=("build", "run"))
+    depends_on("py-typing-extensions@3.7:", when="@0.3:0.4 ^python@:3.7", type=("build", "run"))

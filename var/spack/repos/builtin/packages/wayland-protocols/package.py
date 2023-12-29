@@ -26,6 +26,8 @@ class WaylandProtocols(MesonPackage, AutotoolsPackage):
         default="meson",
     )
 
+    license("MIT")
+
     version("1.31", sha256="04d3f66eca99d638ec8dbfdfdf79334290e22028f7d0b04c7034d9ef18a3248a")
     version("1.30", sha256="1c02ce27d5267c904f2f0d31039265f3e4112f15bf274b1c72bdacd5322f243d")
     version("1.29", sha256="4a85786ae69cd6d53bbe9278572f3c3d6ea342875ea444960edb6089237c3a18")

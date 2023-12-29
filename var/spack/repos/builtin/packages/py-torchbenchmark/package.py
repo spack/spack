@@ -14,6 +14,8 @@ class PyTorchbenchmark(Package):
 
     maintainers("adamjstewart")
 
+    license("BSD-3-Clause")
+
     version("main", branch="main")
 
     # README.md

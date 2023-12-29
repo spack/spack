@@ -14,6 +14,8 @@ class Tracer(MakefilePackage):
 
     maintainers("bhatele")
 
+    license("MIT")
+
     version("develop", branch="master")
     version("2.2", tag="v2.2", commit="fdd1b07a1a0faca14aac53dcbcbccc44237ae7cb")
 

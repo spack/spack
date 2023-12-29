@@ -21,6 +21,8 @@ class Libfabric(AutotoolsPackage):
 
     executables = ["^fi_info$"]
 
+    license("GPL-2.0-or-later")
+
     version("main", branch="main")
     version("1.20.0", sha256="7fbbaeb0e15c7c4553c0ac5f54e4ef7aecaff8a669d4ba96fa04b0fc780b9ddc")
     version("1.19.0", sha256="f14c764be9103e80c46223bde66e530e5954cb28b3835b57c8e728479603ef9e")
@@ -99,6 +101,8 @@ class Libfabric(AutotoolsPackage):
 
     variant("debug", default=False, description="Enable debugging")
 
+    variant("uring", default=False, when="@1.17.0:", description="Enable uring support")
+
     # For version 1.9.0:
     # headers: fix forward-declaration of enum fi_collective_op with C++
     patch(
@@ -119,6 +123,7 @@ class Libfabric(AutotoolsPackage):
     depends_on("ucx", when="@1.18.0: fabrics=ucx")
     depends_on("uuid", when="fabrics=opx")
     depends_on("numactl", when="fabrics=opx")
+    depends_on("liburing@2.1:", when="+uring")
 
     depends_on("m4", when="@main", type="build")
     depends_on("autoconf", when="@main", type="build")
@@ -190,6 +195,9 @@ class Libfabric(AutotoolsPackage):
             args.append("--with-kdreg=yes")
         else:
             args.append("--with-kdreg=no")
+
+        if self.spec.satisfies("+uring"):
+            args.append("--with-uring=yes")
 
         for fabric in [f if isinstance(f, str) else f[0].value for f in self.fabrics]:
             if "fabrics=" + fabric in self.spec:

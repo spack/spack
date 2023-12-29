@@ -17,6 +17,8 @@ class RDeldir(RPackage):
 
     cran = "deldir"
 
+    license("GPL-2.0-or-later")
+
     version("1.0-6", sha256="6df6d8325c607e0b7d63cbc53c29e774eff95ad4acf9c7ec8f70693b0505f8c5")
     version("0.2-3", sha256="2d24800f5ec6ad9dc57b9b265365b29c07717f4562d8f3e6344336d3340c364e")
     version("0.1-23", sha256="e0112bce9fc94daf73596a0fff9b3958b80872e3bbb487be73e157b13a6f201d")

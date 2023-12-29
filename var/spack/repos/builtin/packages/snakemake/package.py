@@ -13,6 +13,8 @@ class Snakemake(PythonPackage):
     pypi = "snakemake/snakemake-6.12.3.tar.gz"
     maintainers("marcusboden")
 
+    license("MIT")
+
     version("7.22.0", sha256="68d7bb4ab7555f7b58a3ba748a880024df919042cfb670da231886385de697cd")
     version("7.21.0", sha256="ebf91f4ca5c70809fcbfd2e8cbc982096cdadac1ec34138bb147b4a8c975c85b")
     version("7.20.0", sha256="f5b45191f1d419ebf28606880cb9bfac3bfa7c5949d1d2b64f551586d4212a2a")

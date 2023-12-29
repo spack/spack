@@ -14,6 +14,8 @@ class Fastani(CMakePackage, AutotoolsPackage):
     url = "https://github.com/ParBLiSS/FastANI/archive/v1.33.tar.gz"
     maintainers("snehring")
 
+    license("Apache-2.0")
+
     version("1.34", sha256="dc185cf29b9fa40cdcc2c83bb48150db46835e49b9b64a3dbff8bc4d0f631cb1")
     version("1.33", sha256="0b18b3074094722fb1b2247c1a1c4eb96295fff369b837f422e05072740e0013")
 

@@ -14,6 +14,8 @@ class Fabtests(AutotoolsPackage):
     url = "https://github.com/ofiwg/libfabric/releases/download/v1.9.1/fabtests-1.9.1.tar.bz2"
     maintainers("kgerheiser")
 
+    license("GPL-2.0-only")
+
     version("1.20.0", sha256="61d483452163b39d81dcb9f578e5d9007817e0496235bc2aac1e82b7737fd65e")
     version("1.19.0", sha256="82d714020df9258cfdd659c51f2be8f4507cbe157c7f03c992c70fc528d8d837")
     version("1.18.2", sha256="3d85486ff80151defdb66414a851a9a9a2d4adc6cf696e2b8e4bb3ce340512c2")

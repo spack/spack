@@ -15,6 +15,8 @@ class RRcmdcheck(RPackage):
 
     cran = "rcmdcheck"
 
+    license("MIT")
+
     version("1.4.0", sha256="bbd4ef7d514b8c2076196a7c4a6041d34623d55fbe73f2771758ce61fd32c9d0")
     version("1.3.3", sha256="1ab679eb1976d74cd3be5bcad0af7fcc673dbdfd4406bbce32591c8fddfb93b4")
 

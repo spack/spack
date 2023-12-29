@@ -12,6 +12,8 @@ class PyMeautility(PythonPackage):
     homepage = "https://github.com/alejoe91/MEAutility"
     pypi = "meautility/MEAutility-1.5.1.tar.gz"
 
+    license("GPL-3.0-or-later")
+
     version("1.5.1", sha256="de12cc9c1772d3321e941af78e6bfb36cdcb5702a7b1272a852cc95f413bbfcb")
 
     depends_on("py-setuptools", type="build")

@@ -12,6 +12,8 @@ class PyWebcolors(PythonPackage):
     homepage = "https://pypi.org/project/webcolors/"
     pypi = "webcolors/webcolors-1.11.1.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("1.11.1", sha256="76f360636957d1c976db7466bc71dcb713bb95ac8911944dffc55c01cb516de6")
 
     depends_on("python@3.5:", type=("build", "run"))

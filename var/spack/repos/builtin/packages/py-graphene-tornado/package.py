@@ -14,6 +14,8 @@ class PyGrapheneTornado(PythonPackage):
 
     maintainers("LydDeb")
 
+    license("MIT")
+
     version("2.6.1", sha256="953bf812267177224ce1ac2a93c669069d85a8fa187a9fac681b76b63dffebc2")
 
     depends_on("py-setuptools", type="build")

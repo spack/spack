@@ -15,6 +15,9 @@ class Tandem(CMakePackage):
 
     homepage = "https://tandem.readthedocs.io/en/latest/"
     git = "https://github.com/TEAR-ERC/tandem.git"
+
+    license("BSD-3-Clause")
+
     version("main", branch="main", submodules=True)
 
     # we cannot use the tar.gz file because it does not contains submodules

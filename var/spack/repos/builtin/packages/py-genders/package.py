@@ -14,6 +14,8 @@ class PyGenders(Package):
     homepage = "https://github.com/chaos/genders"
     url = "https://github.com/chaos/genders/releases/download/genders-1-22-1/genders-1.22.tar.gz"
 
+    license("GPL-2.0-or-later")
+
     version(
         "1.22",
         sha256="0ff292825a29201106239c4d47d9ce4c6bda3f51c78c0463eb2634ecc337b774",

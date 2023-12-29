@@ -12,6 +12,8 @@ class Libxext(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/lib/libXext"
     xorg_mirror_path = "lib/libXext-1.3.3.tar.gz"
 
+    license("MIT")
+
     version("1.3.3", sha256="eb0b88050491fef4716da4b06a4d92b4fc9e76f880d6310b2157df604342cfe5")
 
     depends_on("libx11@1.6:")

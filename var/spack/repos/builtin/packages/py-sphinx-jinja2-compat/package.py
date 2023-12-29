@@ -14,6 +14,8 @@ class PySphinxJinja2Compat(PythonPackage):
 
     maintainers("LydDeb")
 
+    license("MIT")
+
     version("0.2.0", sha256="c41346d859653e202b623f4236da8936243ed734abf5984adc3bef59d6f9a946")
 
     depends_on("py-whey", type="build")

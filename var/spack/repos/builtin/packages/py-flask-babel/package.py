@@ -12,6 +12,8 @@ class PyFlaskBabel(PythonPackage):
     homepage = "https://pythonhosted.org/Flask-Babel/"
     pypi = "Flask-Babel/Flask-Babel-2.0.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("2.0.0", sha256="f9faf45cdb2e1a32ea2ec14403587d4295108f35017a7821a2b1acb8cfd9257d")
 
     depends_on("python@3.5:", type=("build", "run"))

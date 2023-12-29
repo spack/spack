@@ -14,6 +14,8 @@ class Libsigcpp(AutotoolsPackage):
     list_url = "https://ftp.acc.umu.se/pub/GNOME/sources/libsigc++/"
     list_depth = 1
 
+    license("LGPL-3.0-only")
+
     version("2.99.12", sha256="d902ae277f5baf2d56025586e2153cc2f158472e382723c67f49049f7c6690a8")
     version("2.9.3", sha256="0bf9b301ad6198c550986c51150a646df198e8d1d235270c16486b0dda30097f")
     version("2.1.1", sha256="7a2bd0b521544b31051c476205a0e74ace53771ec1a939bfec3c297b50c9fd78")

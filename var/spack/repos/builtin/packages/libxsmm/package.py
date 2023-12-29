@@ -20,6 +20,8 @@ class Libxsmm(MakefilePackage):
 
     maintainers("hfp")
 
+    license("BSD-3-Clause")
+
     # 2.0 release is planned for Jan / Feb 2024. This commit from main is added
     # as a stable version that supports other targets than x86. Remove this
     # after 2.0 release.

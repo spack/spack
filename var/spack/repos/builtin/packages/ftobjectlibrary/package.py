@@ -16,4 +16,6 @@ class Ftobjectlibrary(CMakePackage):
 
     maintainers("schoonovernumerics")
 
+    license("MIT")
+
     version("main", branch="main")

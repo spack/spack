@@ -14,6 +14,8 @@ class PyContinuum(PythonPackage):
 
     maintainers("thomas-bouvier")
 
+    license("MIT")
+
     version("1.2.7", sha256="baadcdbe2f5b3c05254307c73434a012f2a3d663e1be9469a03d4b82559e98e1")
 
     # This patch moves the `prospector` dependency of package continuum to the

@@ -22,6 +22,8 @@ class RLoo(RPackage):
 
     cran = "loo"
 
+    license("GPL-3.0-or-later")
+
     version("2.6.0", sha256="66da60fdf53a62cbc93797fa696a4cc43bce77f1721dd4bc1a58d25b3f981210")
     version("2.5.1", sha256="866a2f54a4e8726cc3062e27daa8a073e6ac4aeb6719af7845284f7a668745f1")
     version("2.4.1", sha256="bc21fb6b4a93a7e95ee1be57e4e787d731895fb8b4743c26b30b43adee475b50")

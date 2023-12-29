@@ -17,6 +17,8 @@ class PyLhsmdu(PythonPackage):
     pypi = "lhsmdu/lhsmdu-1.1.tar.gz"
     maintainers("liuyangzhuan")
 
+    license("MIT")
+
     version("1.1", sha256="4bc1df6b9cdd27bae0bff75cf1693f455ba32e4fa87ca9a932f60696607fe712")
     version("0.1", sha256="ef462054b354cd20b10c6d80876c8fdb552a8d2e23eaf74179dc91956d68d32a")
 

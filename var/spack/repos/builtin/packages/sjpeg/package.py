@@ -12,6 +12,8 @@ class Sjpeg(CMakePackage):
     homepage = "https://github.com/webmproject/sjpeg"
     git = "https://github.com/webmproject/sjpeg.git"
 
+    license("Apache-2.0")
+
     version("master", branch="master")
 
     depends_on("cmake@2.8.7:", type="build")

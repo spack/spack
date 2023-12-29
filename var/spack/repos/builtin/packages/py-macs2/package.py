@@ -15,6 +15,8 @@ class PyMacs2(PythonPackage):
     homepage = "https://github.com/taoliu/MACS"
     pypi = "MACS2/MACS2-2.2.4.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("2.2.8", sha256="2a0a436ac89d8f8c94a1e410690037760e5e37929ad719c54696e74ef84a98e0")
     version("2.2.7.1", sha256="ad2ca69bdd02a8942a68aae23133289b5c16ba382bcbe20c39fabf3948929de5")
     version("2.2.4", sha256="b131aadc8f5fd94bec35308b821e1f7585def788d2e7c756fc8cac402ffee25b")

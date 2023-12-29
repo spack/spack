@@ -14,4 +14,6 @@ class Phoenix(MavenPackage):
     homepage = "https://github.com"
     git = "https://github.com/apache/phoenix.git"
 
+    license("Apache-2.0")
+
     version("master", branch="master")

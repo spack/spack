@@ -13,6 +13,8 @@ class PyPydeface(PythonPackage):
     pypi = "pydeface/pydeface-2.0.2.tar.gz"
     git = "https://github.com/poldracklab/pydeface"
 
+    license("MIT")
+
     version("2.0.2", sha256="662263072ccccff9929432568caf5c183075f7fbf8f9d5c170767c3202c78f36")
 
     depends_on("py-setuptools", type=("build", "run"))

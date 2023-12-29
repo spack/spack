@@ -757,6 +757,15 @@ def _issues_in_depends_on_directive(pkgs, error_cls):
                     ]
                     errors.append(error_cls(summary=summary, details=details))
 
+                for s in (dependency_spec, when):
+                    if s.virtual and s.variants:
+                        summary = f"{pkg_name}: virtual dependency cannot have variants"
+                        details = [
+                            f"remove variants from '{str(s)}' in depends_on directive",
+                            f"in {filename}",
+                        ]
+                        errors.append(error_cls(summary=summary, details=details))
+
             # No need to analyze virtual packages
             if spack.repo.PATH.is_virtual(dependency_name):
                 continue

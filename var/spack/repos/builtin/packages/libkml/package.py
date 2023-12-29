@@ -16,6 +16,8 @@ class Libkml(CMakePackage):
     homepage = "https://github.com/libkml/libkml"
     url = "https://github.com/libkml/libkml/archive/1.3.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("1.3.0", sha256="8892439e5570091965aaffe30b08631fdf7ca7f81f6495b4648f0950d7ea7963")
 
     variant("java", default=False, description="Build java bindings")

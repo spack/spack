@@ -14,6 +14,8 @@ class PyInquirerpy(PythonPackage):
     homepage = "https://github.com/kazhala/InquirerPy"
     pypi = "inquirerpy/InquirerPy-0.3.4.tar.gz"
 
+    license("MIT")
+
     version("0.3.4", sha256="89d2ada0111f337483cb41ae31073108b2ec1e618a49d7110b0d7ade89fc197e")
 
     depends_on("python@3.7:3", type=("build", "run"))

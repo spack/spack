@@ -13,6 +13,8 @@ class PyMkdocsAutorefs(PythonPackage):
     homepage = "https://mkdocstrings.github.io/autorefs/"
     pypi = "mkdocs-autorefs/mkdocs-autorefs-0.4.1.tar.gz"
 
+    license("ISC")
+
     version("0.4.1", sha256="70748a7bd025f9ecd6d6feeba8ba63f8e891a1af55f48e366d6d6e78493aba84")
 
     depends_on("python@3.7:", type=("build", "run"))

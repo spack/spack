@@ -16,6 +16,8 @@ class Fgsl(AutotoolsPackage):
     homepage = "https://github.com/reinh-bader/fgsl"
     url = "https://github.com/reinh-bader/fgsl/archive/v1.2.0.tar.gz"
 
+    license("GPL-2.0-or-later")
+
     version(
         "1.5.0",
         sha256="5013b4e000e556daac8b3c83192adfe8f36ffdc91d1d4baf0b1cb3100260e664",

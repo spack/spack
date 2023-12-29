@@ -16,6 +16,8 @@ class Pmlib(CMakePackage):
     homepage = "https://github.com/avr-aics-riken/PMlib"
     git = "https://github.com/avr-aics-riken/PMlib.git"
 
+    license("BSD-2-Clause")
+
     version("master", branch="master")
     version("6.4.1", commit="0a35f5bec8c12e532e5a1bdac8c32c659fd3ee11")
 

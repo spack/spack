@@ -27,6 +27,8 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     maintainers("danlipsa", "vicentebolea", "kwryankrattiger")
     tags = ["e4s"]
 
+    license("Apache-2.0")
+
     version("master", branch="master", submodules=True)
     version(
         "5.12.0-RC1", sha256="892eda2ae72831bbadd846be465d496ada35739779229c604cddd56e018a1aea"
@@ -309,7 +311,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     # Fix VTK to remove deprecated ADIOS2 functions
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/10113
-    patch("adios2-remove-deprecated-functions.patch", when="@5.10: ^adios2@2.9:")
+    patch("adios2-remove-deprecated-functions.patch", when="@5.10:5.11 ^adios2@2.9:")
 
     patch("exodusII-netcdf4.9.0.patch", when="@:5.10.2")
 

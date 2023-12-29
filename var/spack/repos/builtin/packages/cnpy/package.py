@@ -14,6 +14,8 @@ class Cnpy(CMakePackage):
     homepage = "https://github.com/rogersce/cnpy"
     git = "https://github.com/rogersce/cnpy.git"
 
+    license("MIT")
+
     version("master", branch="master")
 
     depends_on("zlib-api", type="link")

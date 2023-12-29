@@ -12,6 +12,8 @@ class Sicm(CMakePackage):
     homepage = "https://github.com/lanl/SICM/"
     git = "https://github.com/lanl/SICM.git"
 
+    license("BSD-2-Clause")
+
     version("master")
 
     depends_on("jemalloc jemalloc_prefix=je_")

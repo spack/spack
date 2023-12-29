@@ -19,6 +19,8 @@ class Vim(AutotoolsPackage):
     url = "https://github.com/vim/vim/archive/v8.1.0338.tar.gz"
     maintainers("sethrj")
 
+    license("Vim")
+
     version("9.0.0045", sha256="594a31e96e3eda07a358db305de939ca749693b4684de9e027bfa70311b1994d")
     version(
         "9.0.0000",

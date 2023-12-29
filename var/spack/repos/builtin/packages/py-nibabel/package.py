@@ -13,6 +13,8 @@ class PyNibabel(PythonPackage):
     pypi = "nibabel/nibabel-3.2.1.tar.gz"
     git = "https://github.com/nipy/nibabel"
 
+    license("PDDL-1.0")
+
     version("5.1.0", sha256="ce73ca5e957209e7219a223cb71f77235c9df2acf4d3f27f861ba38e9481ac53")
     version("4.0.2", sha256="45c49b5349351b45f6c045a91aa02b4f0d367686ff3284632ef95ac65b930786")
     version("3.2.2", sha256="b0dcc174b30405ce9e8fec1eab3cbbb20f5c5e4920976c08b22e050b7c124f94")

@@ -20,6 +20,8 @@ class Gpi2(AutotoolsPackage):
 
     maintainers("robert-mijakovic", "acastanedam", "mzeyen1985")
 
+    license("GPL-3.0-only")
+
     version("develop", branch="next")
     version("master", branch="master")
 

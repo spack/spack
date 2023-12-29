@@ -12,6 +12,8 @@ class PyBeartype(PythonPackage):
     homepage = "https://beartype.readthedocs.io/"
     pypi = "beartype/beartype-0.15.0.tar.gz"
 
+    license("MIT")
+
     version("0.16.2", sha256="47ec1c8c3be3f999f4f9f829e8913f65926aa7e85b180d9ffd305dc78d3e7d7b")
     version("0.15.0", sha256="2af6a8d8a7267ccf7d271e1a3bd908afbc025d2a09aa51123567d7d7b37438df")
 

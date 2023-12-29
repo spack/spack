@@ -17,6 +17,8 @@ class PyBiopandas(PythonPackage):
     # is missing the requirements.txt so we have to download
     # from github
 
+    license("BSD-3-Clause")
+
     version("0.2.5", branch="v0.2.5")
 
     depends_on("python@3.5:", type=("build", "run"))

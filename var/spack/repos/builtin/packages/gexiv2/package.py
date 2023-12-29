@@ -17,6 +17,8 @@ class Gexiv2(MesonPackage):
 
     maintainers("benkirk")
 
+    license("GPL-2.0-or-later")
+
     version("0.12.3", sha256="d23b7972a2fc6f840150bad1ed79c1cbec672951e180c1e1ec33ca6c730c59f3")
     version("0.12.2", sha256="2322b552aca330eef79724a699c51a302345d5e074738578b398b7f2ff97944c")
     version("0.12.1", sha256="8aeafd59653ea88f6b78cb03780ee9fd61a2f993070c5f0d0976bed93ac2bd77")

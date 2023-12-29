@@ -15,6 +15,8 @@ class PyStrawberryfields(PythonPackage):
 
     maintainers("marcodelapierre")
 
+    license("Apache-2.0")
+
     version("0.23.0", sha256="bfe94867cdee8e2904752573f1ff46b78d9f373da16a1cfa31e1bd6cdf2e3cb0")
 
     depends_on("python@3.7:", type=("build", "run"))

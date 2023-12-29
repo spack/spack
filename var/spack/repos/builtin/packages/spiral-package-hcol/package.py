@@ -19,6 +19,8 @@ class SpiralPackageHcol(Package):
     # such.  If this package is required spiral-software should be installed
     # with the +hcol variant active
 
+    license("BSD-2-Clause-FreeBSD")
+
     version("master", branch="master")
     version("1.0.0", sha256="18ae6f0a090de03723612a6c91ca17cf62971129540936d8c2738bd8f807a511")
 

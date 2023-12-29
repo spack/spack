@@ -32,6 +32,8 @@ class Lapackpp(CMakePackage, CudaPackage, ROCmPackage):
     url = "https://github.com/icl-utk-edu/lapackpp/releases/download/v2023.01.00/lapackpp-2023.01.00.tar.gz"
     maintainers("teonnik", "Sely85", "G-Ragghianti", "mgates3")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version(
         "2023.08.25", sha256="9effdd616a4a183a9b37c2ad33c85ddd3d6071b183e8c35e02243fbaa7333d4d"

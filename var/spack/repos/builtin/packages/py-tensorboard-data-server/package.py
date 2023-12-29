@@ -14,6 +14,8 @@ class PyTensorboardDataServer(PythonPackage):
     homepage = "https://github.com/tensorflow/tensorboard/tree/master/tensorboard/data/server"
     git = "https://github.com/tensorflow/tensorboard"
 
+    license("Apache-2.0")
+
     version("0.7.0", commit="f1cb31c86d871e0258250248ab9488575410e784")
     version("0.6.1", commit="6acf0be88b5727e546dd64a8b9b12d790601d561")
 
