@@ -15,9 +15,9 @@ from typing import List, Optional
 import llnl.string as string
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+from llnl.util.symlink import SymlinkError, symlink
 from llnl.util.tty.colify import colify
-from llnl.util.tty.color import cescape, colorize
-from llnl.util.symlink import symlink, SymlinkError
+from llnl.util.tty.color import colorize
 
 import spack.cmd
 import spack.cmd.common
