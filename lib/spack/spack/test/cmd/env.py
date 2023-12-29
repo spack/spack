@@ -150,15 +150,18 @@ def test_change_multiple_matches():
     assert all(x.intersects("%gcc") for x in e.user_specs if x.name == "mpileaks")
     assert any(x.intersects("%clang") for x in e.user_specs if x.name == "libelf")
 
+
 def test_env_add_nonexistant_path_fails():
     with pytest.raises(ev.SpackEnvironmentError, match=r"does not exist"):
         env("add", "path/does/not/exist")
+
 
 def test_env_add_existing_env_fails():
     env("create", "test")
 
     with pytest.raises(ev.SpackEnvironmentError, match=r"environment already exists"):
         env("add", "--name", "test", ev.environment_dir_from_name("test"))
+
 
 def test_env_pkg_add_virtual():
     env("create", "test")
