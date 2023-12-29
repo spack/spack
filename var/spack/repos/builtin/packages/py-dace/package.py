@@ -31,7 +31,7 @@ class PyDace(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     # Dependencies from setup.py
-    depends_on("py-numpy@1.21:", type=("build", "run"))
+    depends_on("py-numpy", type=("build", "run"))
     depends_on("py-networkx@2.5:", type=("build", "run"))
     depends_on("py-astunparse@1.6.3:", type=("build", "run"))
     # A typo in the 0.15.1 setup.py specifies sympy <= 1.9 instead of >= 1.9.
@@ -42,7 +42,6 @@ class PyDace(PythonPackage):
     depends_on("py-websockets", type=("build", "run"))
     depends_on("py-requests", when="@:0.15.1", type=("build", "run"))
     depends_on("py-flask", when="@:0.15.1", type=("build", "run"))
-    depends_on("py-jinja2", type=("build", "run"))
     depends_on("py-fparser@0.1.3:", type=("build", "run"))
     depends_on("py-aenum@3.1:", type=("build", "run"))
     depends_on("py-dill", type=("build", "run"))

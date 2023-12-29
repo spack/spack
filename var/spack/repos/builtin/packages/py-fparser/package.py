@@ -21,7 +21,8 @@ class PyFparser(PythonPackage):
 
     depends_on("py-setuptools@42:", type="build", when="@0.1:")
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm@6.2:+toml", type="build", when="@0.1:")
+    depends_on("py-setuptools-scm@6.2:+toml", type=("build", "run"), when="@0.1:")
+    depends_on("py-setuptools-scm-git-archive", type="build", when="@0.1:")
     depends_on("py-wheel@0.29:", type="build", when="@0.1:")
 
     depends_on("py-importlib-metadata", type=("build", "run"), when="@0.1:")
@@ -29,7 +30,7 @@ class PyFparser(PythonPackage):
     depends_on("py-numpy", type=("build", "run"), when="@:0.0.5")
     depends_on("py-nose", type=("build", "run"), when="@:0.0.7")
     # six is unused as of 0.0.15, but still listed in setup.py
-    depends_on("py-six", type=("build", "run"), when="@0.0.6:0.1")
+    depends_on("py-six", type=("build", "run"), when="@0.0.6:0.0.16")
 
     depends_on("py-pytest", type="test")
 
