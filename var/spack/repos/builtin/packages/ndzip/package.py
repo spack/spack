@@ -20,6 +20,8 @@ class Ndzip(CMakePackage, CudaPackage):
 
     maintainers("robertu94")
 
+    license("MIT")
+
     version("master", branch="master")
     version("2021-11-30", commit="5b3c34991005c0924a339f2ec06750729ebbf015")
 

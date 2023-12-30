@@ -12,6 +12,8 @@ class PyPyassimp(PythonPackage):
     homepage = "https://github.com/mikedh/pyassimp"
     pypi = "pyassimp/pyassimp-4.1.4.tar.gz"
 
+    license("ISC")
+
     version("4.1.4", sha256="266bd4be170d46065b8c2ad0f5396dad10938a6bbf9a566c4e4d56456e33aa6a")
 
     depends_on("py-setuptools", type="build")

@@ -14,6 +14,8 @@ class IqTree(CMakePackage):
     git = "https://github.com/iqtree/iqtree2.git"
     url = "https://github.com/Cibiv/IQ-TREE/archive/v1.6.12.tar.gz"
 
+    license("GPL-2.0-or-later")
+
     version(
         "2.2.2.7",
         tag="v2.2.2.7",

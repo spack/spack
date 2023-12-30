@@ -13,6 +13,8 @@ class PyMkdocstrings(PythonPackage):
     homepage = "https://mkdocstrings.github.io/"
     pypi = "mkdocstrings/mkdocstrings-0.19.0.tar.gz"
 
+    license("ISC")
+
     version("0.19.0", sha256="efa34a67bad11229d532d89f6836a8a215937548623b64f3698a1df62e01cc3e")
 
     depends_on("python@3.7:", type=("build", "run"))

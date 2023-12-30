@@ -23,6 +23,8 @@ class Proj(CMakePackage, AutotoolsPackage):
     # Many packages that depend on proj do not yet support the newer API.
     # See https://github.com/OSGeo/PROJ/wiki/proj.h-adoption-status
 
+    license("MIT")
+
     version("9.2.1", sha256="15ebf4afa8744b9e6fccb5d571fc9f338dc3adcf99907d9e62d1af815d4971a1")
     version("9.2.0", sha256="dea816f5aa732ae6b2ee3977b9bdb28b1d848cf56a1aad8faf6708b89f0ed50e")
     version("9.1.1", sha256="003cd4010e52bb5eb8f7de1c143753aa830c8902b6ed01209f294846e40e6d39")
@@ -85,6 +87,9 @@ class Proj(CMakePackage, AutotoolsPackage):
         when="@7:7.2.1",
     )
 
+    patch("proj.cmakelists.5.0.patch", when="@5.0")
+    patch("proj.cmakelists.5.1.patch", when="@5.1:5.2")
+
     # https://proj.org/install.html#build-requirements
     with when("build_system=cmake"):
         depends_on("cmake@3.9:", when="@6:", type="build")
@@ -137,6 +142,13 @@ class CMakeBuilder(BaseBuilder, cmake.CMakeBuilder):
         ]
         if self.spec.satisfies("@6:") and self.pkg.run_tests:
             args.append(self.define("USE_EXTERNAL_GTEST", True))
+        if self.spec.satisfies("@7:"):
+            test_flag = "BUILD_TESTING"
+        elif self.spec.satisfies("@5.1:"):
+            test_flag = "PROJ_TESTS"
+        else:
+            test_flag = "PROJ4_TESTS"
+        args.append(self.define(test_flag, self.pkg.run_tests))
         return args
 
 

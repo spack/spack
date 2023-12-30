@@ -20,6 +20,8 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
     url = "https://elpa.mpcdf.mpg.de/software/tarball-archive/Releases/2015.11.001/elpa-2015.11.001.tar.gz"
     git = "https://gitlab.mpcdf.mpg.de/elpa/elpa.git"
 
+    license("LGPL-3.0-only")
+
     version("master", branch="master")
 
     version(
@@ -132,16 +134,7 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
             options.append("--enable-generic")
 
         if self.compiler.name == "gcc":
-            gcc_options = []
-            gfortran_options = ["-ffree-line-length-none"]
-
-            space_separator = " "
-            options.extend(
-                [
-                    "CFLAGS=" + space_separator.join(gcc_options),
-                    "FCFLAGS=" + space_separator.join(gfortran_options),
-                ]
-            )
+            options.extend(["CFLAGS=-O3", "FCFLAGS=-O3 -ffree-line-length-none"])
 
         if "%aocc" in spec:
             options.extend(["FCFLAGS=-O3", "CFLAGS=-O3"])

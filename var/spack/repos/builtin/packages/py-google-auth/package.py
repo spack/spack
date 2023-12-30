@@ -13,6 +13,8 @@ class PyGoogleAuth(PythonPackage):
     homepage = "https://github.com/GoogleCloudPlatform/google-auth-library-python"
     pypi = "google-auth/google-auth-1.6.3.tar.gz"
 
+    license("Apache-2.0")
+
     version("2.20.0", sha256="030af34138909ccde0fbce611afc178f1d65d32fbff281f25738b1fe1c6f3eaa")
     version("2.16.2", sha256="07e14f34ec288e3f33e00e2e3cc40c8942aa5d4ceac06256a28cd8e786591420")
     version("2.11.0", sha256="ed65ecf9f681832298e29328e1ef0a3676e3732b2e56f41532d45f70a22de0fb")

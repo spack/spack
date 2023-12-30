@@ -12,6 +12,8 @@ class PyPygdbmi(PythonPackage):
     homepage = "https://github.com/cs01/pygdbmi"
     pypi = "pygdbmi/pygdbmi-0.8.2.0.tar.gz"
 
+    license("MIT")
+
     version("0.9.0.3", sha256="5bdf2f072e8f2f6471f19f8dcd87d6425c5d8069d47c0a5ffe8d0eff48cb171e")
 
     depends_on("python@3.5:", type=("build", "run"))

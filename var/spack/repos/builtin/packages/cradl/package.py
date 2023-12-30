@@ -17,6 +17,8 @@ class Cradl(Package):
 
     tags = ["proxy-app"]
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
 
     depends_on("py-pandas")

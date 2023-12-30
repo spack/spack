@@ -11,6 +11,8 @@ class PerlXmlLibxslt(PerlPackage):
     homepage = "https://metacpan.org/pod/XML::LibXSLT"
     url = "https://cpan.metacpan.org/authors/id/S/SH/SHLOMIF/XML-LibXSLT-1.96.tar.gz"
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("1.96", sha256="2a5e374edaa2e9f9d26b432265bfea9b4bb7a94c9fbfef9047b298fce844d473")
 
     depends_on("libxslt")

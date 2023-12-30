@@ -14,6 +14,8 @@ class JediCmake(CMakePackage):
 
     maintainers("climbfuji")
 
+    license("Apache-2.0")
+
     version("master", branch="master", no_cache=True)
     version("develop", branch="develop", no_cache=True)
     version(

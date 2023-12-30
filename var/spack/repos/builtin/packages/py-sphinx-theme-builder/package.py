@@ -13,6 +13,8 @@ class PySphinxThemeBuilder(PythonPackage):
     pypi = "sphinx-theme-builder/sphinx-theme-builder-0.2.0b2.tar.gz"
     git = "https://github.com/pradyunsg/sphinx-theme-builder"
 
+    license("MIT")
+
     version("0.2.0b2", sha256="e9cd98c2bb35bf414fe721469a043cdcc10f0808d1ffcf606acb4a6282a6f288")
 
     depends_on("py-flit-core@3.2:3", type="build")

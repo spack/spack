@@ -12,6 +12,8 @@ class PyZipfileDeflate64(PythonPackage):
     homepage = "https://github.com/brianhelba/zipfile-deflate64"
     pypi = "zipfile-deflate64/zipfile-deflate64-0.2.0.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.2.0", sha256="875a3299de102edf1c17f8cafcc528b1ca80b62dc4814b9cb56867ec59fbfd18")
 
     depends_on("python@3.6:", type=("build", "run"))

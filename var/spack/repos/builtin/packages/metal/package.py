@@ -12,6 +12,8 @@ class Metal(CMakePackage):
     homepage = "https://genome.sph.umich.edu/wiki/METAL"
     url = "https://github.com/statgen/METAL/archive/refs/tags/2020-05-05.tar.gz"
 
+    license("BSD-3-Clause")
+
     version(
         "2020-05-05", sha256="0ffa2419ca2ab43766e7e6e8c97822c8ce1f5b6233fb5f992d1b1be1955fede7"
     )

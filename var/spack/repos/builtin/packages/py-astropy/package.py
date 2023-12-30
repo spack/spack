@@ -17,6 +17,8 @@ class PyAstropy(PythonPackage):
     pypi = "astropy/astropy-4.0.1.post1.tar.gz"
     git = "https://github.com/astropy/astropy.git"
 
+    license("BSD-3-Clause")
+
     version("5.1", sha256="1db1b2c7eddfc773ca66fa33bd07b25d5b9c3b5eee2b934e0ca277fa5b1b7b7e")
     version(
         "4.0.1.post1", sha256="5c304a6c1845ca426e7bc319412b0363fccb4928cb4ba59298acd1918eec44b5"

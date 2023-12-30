@@ -19,6 +19,8 @@ class Fcgi(AutotoolsPackage):
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
 
+    license("OML")
+
     version("2.4.2", sha256="1fe83501edfc3a7ec96bb1e69db3fd5ea1730135bd73ab152186fd0b437013bc")
     version(
         "2.4.1-SNAP-0910052249",

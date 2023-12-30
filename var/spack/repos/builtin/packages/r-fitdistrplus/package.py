@@ -22,6 +22,8 @@ class RFitdistrplus(RPackage):
 
     cran = "fitdistrplus"
 
+    license("GPL-2.0-or-later")
+
     version("1.1-11", sha256="26274f2b710b2417a8bca314d400abf320d4ccf0387ad082743056699501b53d")
     version("1.1-8", sha256="f3c72310f40773b3839a9506c3cb781d044e09b94f2f38d332bb24e5f9960f5a")
     version("1.1-6", sha256="17c2990041a3bb7479f3c3a6d13d96c989db8eaddab17eff7e1fbe172a5b96be")

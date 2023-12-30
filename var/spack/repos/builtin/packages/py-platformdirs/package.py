@@ -14,6 +14,8 @@ class PyPlatformdirs(PythonPackage):
     homepage = "https://github.com/platformdirs/platformdirs"
     pypi = "platformdirs/platformdirs-2.4.0.tar.gz"
 
+    license("MIT")
+
     version("3.10.0", sha256="b45696dab2d7cc691a3226759c0d3b00c47c8b6e293d96f6436f733303f77f6d")
     version("3.5.3", sha256="e48fabd87db8f3a7df7150a4a5ea22c546ee8bc39bc2473244730d4b56d2cc4e")
     version("3.5.0", sha256="7954a68d0ba23558d753f73437c55f89027cf8f5108c19844d4b82e5af396335")

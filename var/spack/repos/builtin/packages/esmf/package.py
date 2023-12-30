@@ -136,6 +136,14 @@ class Esmf(MakefilePackage):
     # https://github.com/spack/spack/issues/35957
     patch("esmf_cpp_info.patch")
 
+    # This is strictly required on Cray systems that use
+    # the Cray compiler wrappers, where we need to swap
+    # out the spack compiler wrappers in esmf.mk with the
+    # Cray wrappers. It doesn't hurt/have any effect on
+    # other systems where the logic in setup_build_environment
+    # below sets the compilers to the MPI wrappers.
+    filter_compiler_wrappers("esmf.mk", relative_root="lib")
+
     # Make script from mvapich2.patch executable
     @when("@:7.0")
     @run_before("build")

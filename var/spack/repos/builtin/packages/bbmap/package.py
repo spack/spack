@@ -12,6 +12,8 @@ class Bbmap(Package, SourceforgePackage):
     homepage = "https://sourceforge.net/projects/bbmap/"
     sourceforge_mirror_path = "bbmap/BBMap_38.63.tar.gz"
 
+    license("BSD-3-Clause-LBNL")
+
     version("39.01", sha256="98608da50130c47f3abd095b889cc87f60beeb8b96169b664bc9d849abe093e6")
     version("38.63", sha256="089064104526c8d696164aefa067f935b888bc71ef95527c72a98c17ee90a01f")
     version("37.78", sha256="f2da19f64d2bfb7db4c0392212668b425c96a27c77bd9d88d8f0aea90a193509")

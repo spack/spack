@@ -17,6 +17,8 @@ class PyFraction(PythonPackage):
 
     maintainers("LydDeb")
 
+    license("MIT")
+
     version("2.2.0", sha256="2c1179f20c8b749622935fe04db1c7f2987f011f2376bdad84c2a39c8e3d0fdb")
 
     depends_on("py-setuptools", type="build")

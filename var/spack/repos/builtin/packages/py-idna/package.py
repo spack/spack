@@ -12,6 +12,8 @@ class PyIdna(PythonPackage):
     homepage = "https://github.com/kjd/idna"
     pypi = "idna/idna-3.2.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("3.4", sha256="814f528e8dead7d329833b91c5faa87d60bf71824cd12a7530b5526063d02cb4")
     version("3.3", sha256="9d643ff0a55b762d5cdb124b8eaa99c66322e2157b69160bc32796e824360e6d")
     version("3.2", sha256="467fbad99067910785144ce333826c71fb0e63a425657295239737f7ecd125f3")

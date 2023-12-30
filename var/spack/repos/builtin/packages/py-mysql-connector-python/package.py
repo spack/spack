@@ -16,6 +16,8 @@ class PyMysqlConnectorPython(PythonPackage):
     url = "https://github.com/mysql/mysql-connector-python/archive/8.0.13.tar.gz"
     git = "https://github.com/mysql/mysql-connector-python.git"
 
+    license("Artistic-1.0-Perl")
+
     version("8.0.13", sha256="d4c0834c583cdb90c0aeae90b1917d58355a4bf9b0266c16fd58874a5607f9d4")
 
     depends_on("py-setuptools", type=("build", "run"))

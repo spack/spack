@@ -13,6 +13,8 @@ class PyM2r(PythonPackage):
     homepage = "https://github.com/miyakogi/m2r"
     url = "https://github.com/miyakogi/m2r/archive/v0.2.1.tar.gz"
 
+    license("MIT")
+
     version("0.2.1", sha256="9286c1a5d7548f34b0a12017444e4c441781bef4b71f321f723e314b76b6c498")
     version("0.2.0", sha256="e9b7476203c4a5e3b822eb0ef110011d7b427d2c0dbdc4030f9cbcd239fbd4d6")
     version("0.1.15", sha256="4ca4c73385512f6e54db8e152ba157fc3eea84f9e942fe60a12ace5078ff83df")

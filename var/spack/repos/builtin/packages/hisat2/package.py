@@ -17,6 +17,8 @@ class Hisat2(MakefilePackage):
     homepage = "https://daehwankimlab.github.io/hisat2/"
     url = "ftp://ftp.ccb.jhu.edu/pub/infphilo/hisat2/downloads/hisat2-2.1.0-source.zip"
 
+    license("GPL-3.0-or-later")
+
     version(
         "2.2.1",
         sha256="48e933330d4d8470d2b3dfe7ec3918f2e98a75f7381891e23b7df1fb4f135eb1",

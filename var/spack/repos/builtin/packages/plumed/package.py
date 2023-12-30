@@ -28,6 +28,8 @@ class Plumed(AutotoolsPackage):
     git = "https://github.com/plumed/plumed2.git"
     maintainers("marcodelapierre")
 
+    license("LGPL-3.0-or-later")
+
     version("master", branch="master")
 
     version("2.9.0", sha256="612d2387416b5f82dd8545709921440370e144fd46cef633654cf0ee43bac5f8")

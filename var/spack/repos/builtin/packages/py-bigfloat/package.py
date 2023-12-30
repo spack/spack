@@ -12,6 +12,8 @@ class PyBigfloat(PythonPackage):
     homepage = "https://github.com/mdickinson/bigfloat"
     pypi = "bigfloat/bigfloat-0.4.0.tar.gz"
 
+    license("LGPL-3.0-or-later")
+
     version("0.4.0", sha256="58b96bde872aca5989d13d82eba3acf2aa1b94e22117dd72a16ba5911b0c0cb8")
 
     depends_on("python@2.7:2.8,3.5:", type=("build", "run"))

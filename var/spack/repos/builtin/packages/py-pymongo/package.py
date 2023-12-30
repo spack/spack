@@ -17,6 +17,8 @@ class PyPymongo(PythonPackage):
 
     pypi = "pymongo/pymongo-3.9.0.tar.gz"
 
+    license("Apache-2.0")
+
     version("4.2.0", sha256="72f338f6aabd37d343bd9d1fdd3de921104d395766bcc5cdc4039e4c2dd97766")
     version("3.12.1", sha256="704879b6a54c45ad76cea7c6789c1ae7185050acea7afd15b58318fa1932ed45")
     version("3.9.0", sha256="4249c6ba45587b959292a727532826c5032d59171f923f7f823788f413c2a5a3")

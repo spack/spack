@@ -16,6 +16,8 @@ class Slf4j(MavenPackage):
     homepage = "http://www.slf4j.org/"
     url = "https://github.com/qos-ch/slf4j/archive/v_1.7.30.tar.gz"
 
+    license("MIT")
+
     version("1.7.30", sha256="217519588d0dd1f85cee2357ca31afdd7c0a1a8a6963953b3bf455cf5174633e")
     version("1.7.29", sha256="e584f1f380d8c64ed8a45944cec3c2fb4d6b850783fd5bc166a9246bc8b6ac56")
     version("1.7.28", sha256="14063bfcbc942bda03e07759e64307163c1646d70a42c632f066812a8630eec7")

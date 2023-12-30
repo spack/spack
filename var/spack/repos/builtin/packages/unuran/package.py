@@ -12,6 +12,8 @@ class Unuran(AutotoolsPackage):
     homepage = "https://statmath.wu.ac.at/unuran"
     url = "https://statmath.wu.ac.at/unuran/unuran-1.8.1.tar.gz"
 
+    license("GPL-2.0-or-later")
+
     version("1.8.1", sha256="c270ae96857857dbac6450043df865e0517f52856ddbe5202fd35583b13c5193")
 
     variant("shared", default=True, description="Enable the build of shared libraries")

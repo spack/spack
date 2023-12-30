@@ -20,6 +20,8 @@ class RBroom(RPackage):
 
     cran = "broom"
 
+    license("MIT")
+
     version("1.0.4", sha256="1d5f11b509786a8a45ffdd137243e24d6445f2944947cbd62a0734a06add0ad6")
     version("1.0.1", sha256="4b5e5aa485f0e23ed993088fc84159e31a00087e3a12327071dda25193382892")
     version("0.8.0", sha256="66a1095d4430450dc810a5cea61cd7e7bee0e23739dcf5ddc5b57c9894fcf999")

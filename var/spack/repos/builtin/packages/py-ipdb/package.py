@@ -12,6 +12,8 @@ class PyIpdb(PythonPackage):
 
     pypi = "ipdb/ipdb-0.13.11.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.13.11", sha256="c23b6736f01fd4586cc2ecbebdf79a5eb454796853e1cd8f2ed3b7b91d4a3e93")
     version("0.13.10", sha256="6950715f491d59df6c27b49cb372f22c2f1763478a5e9ed03fb0507e2d85f460")
     version("0.13.9", sha256="951bd9a64731c444fd907a5ce268543020086a697f6be08f7cc2c9a752a278c5")

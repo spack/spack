@@ -15,6 +15,8 @@ class PyModepy(PythonPackage):
 
     maintainers("cgcgcg")
 
+    license("MIT")
+
     version("2021.1", sha256="4cddd2d4720128356e0019e8d972d979552eafad059f4acef01e106b22d8d297")
 
     depends_on("python@3.6:3", type=("build", "run"))

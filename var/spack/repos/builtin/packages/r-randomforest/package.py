@@ -14,6 +14,8 @@ class RRandomforest(RPackage):
 
     cran = "randomForest"
 
+    license("GPL-2.0-or-later")
+
     version("4.7-1.1", sha256="f59ea87534480edbcd6baf53d7ec57e8c69f4532c2d2528eacfd48924efa2cd6")
     version("4.6-14", sha256="f4b88920419eb0a89d0bc5744af0416d92d112988702dc726882394128a8754d")
     version("4.6-12", sha256="6e512f8f88a51c01a918360acba61f1f39432f6e690bc231b7864218558b83c4")

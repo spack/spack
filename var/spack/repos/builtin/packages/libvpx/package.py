@@ -17,6 +17,8 @@ class Libvpx(AutotoolsPackage):
     homepage = "https://chromium.googlesource.com/webm/libvpx"
     url = "https://github.com/webmproject/libvpx/archive/refs/tags/v1.10.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("1.10.0", sha256="85803ccbdbdd7a3b03d930187cb055f1353596969c1f92ebec2db839fa4f834a")
 
     variant("pic", default=True, description="Produce position-independent code (for shared libs)")

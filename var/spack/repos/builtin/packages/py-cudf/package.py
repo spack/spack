@@ -16,6 +16,8 @@ class PyCudf(PythonPackage):
     homepage = "https://rapids.ai"
     url = "https://github.com/rapidsai/cudf/archive/v0.15.0.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.15.0", sha256="2570636b72cce4c52f71e36307f51f630e2f9ea94a1abc018d40ce919ba990e4")
 
     build_directory = "python/cudf"

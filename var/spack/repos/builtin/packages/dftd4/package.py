@@ -15,6 +15,8 @@ class Dftd4(MesonPackage):
 
     maintainers("awvwgk")
 
+    license("LGPL-3.0-only")
+
     version("main", branch="main")
     version("3.5.0", sha256="d2bab992b5ef999fd13fec8eb1da9e9e8d94b8727a2e624d176086197a00a46f")
     version("3.4.0", sha256="24fcb225cdd5c292ac26f7d3204ee3c4024174adb5272eeda9ae7bc57113ec8d")

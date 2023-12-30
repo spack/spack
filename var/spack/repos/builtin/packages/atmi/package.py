@@ -18,6 +18,8 @@ class Atmi(CMakePackage):
     url = "https://github.com/RadeonOpenCompute/atmi/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
+    license("MIT")
+
     maintainers("srekolam", "renjithravindrankannath")
     version("5.5.1", sha256="6b3ee68433506315b55d093a4b47463916874fb6f3f602098eaff2ec283e69ab")
     version("5.5.0", sha256="b8bfd32e5c386f5169da62172964343f9b7fad207e0e74dd1093c7acf06d9811")

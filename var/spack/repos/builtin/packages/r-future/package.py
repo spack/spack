@@ -26,6 +26,8 @@ class RFuture(RPackage):
 
     cran = "future"
 
+    license("LGPL-2.1-or-later")
+
     version("1.32.0", sha256="d5bb74512d069745184dd580a36449dc0b50d95b1cbbbc1605db82de596f2f76")
     version("1.29.0", sha256="856d1fd51d2f998c6572490c49fdcc27e5f3e0c1ade75eecdbf64a2cd0954373")
     version("1.28.0", sha256="6fdda66acd9a255e5baa70ff5dacd3c57ab2ecc2d87fd6abeebdfb939c051bf6")

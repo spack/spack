@@ -14,6 +14,8 @@ class Cqrlib(MakefilePackage):
         "https://downloads.sourceforge.net/project/cqrlib/cqrlib/CQRlib-1.1.2/CQRlib-1.1.2.tar.gz"
     )
 
+    license("LGPL-2.1-or-later")
+
     version("1.1.2", sha256="af3cf2402974579f3c6efc6a6174a5da52786db4bfee9d38d504d93bc42410fd")
 
     depends_on("libtool", type="build")

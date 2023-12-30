@@ -17,6 +17,8 @@ class RSets(RPackage):
 
     maintainers("jgaeb")
 
+    license("GPL-2.0-only")
+
     version("1.0-24", sha256="e75733f5c9418eb09fb950a4a94ccf84ddd88231c61ee80d02b7f0917debcac9")
     version("1.0-23", sha256="e5b6bc52060421c572d7f2d99b25909a38eacabd5344a47e1cdb2662c62d690b")
     version("1.0-22", sha256="6fbf9aa6b0113a58e04f803ab35593feabb0fb55d486d54afb59e027008f9ec6")

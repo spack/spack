@@ -19,6 +19,8 @@ class PyParticle(PythonPackage):
 
     tags = ["hep"]
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("0.23.0", sha256="d810f8fc27deb8e7fd64174017d9607d50522249c0973a0008e580f93db11750")
     version("0.22.1", sha256="dcb45025cf7cff901e2c94922d150e1103245c46f2671eae4193c5fa767cc56c")

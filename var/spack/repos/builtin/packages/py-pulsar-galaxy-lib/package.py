@@ -13,6 +13,8 @@ class PyPulsarGalaxyLib(PythonPackage):
     homepage = "https://github.com/galaxyproject/pulsar"
     pypi = "pulsar-galaxy-lib/pulsar-galaxy-lib-0.14.16.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.14.16", sha256="f3330350d2e85c7228cebf83f74fc4c0cc5e8e7557bb6e5ae55f5556d7e6fbff")
 
     depends_on("py-setuptools", type="build")

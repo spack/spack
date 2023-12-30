@@ -146,7 +146,7 @@ class Xsdk(BundlePackage, CudaPackage, ROCmPackage):
     )
 
     xsdk_depends_on("superlu-dist@develop", when="@develop", cuda_var="cuda", rocm_var="rocm")
-    xsdk_depends_on("superlu-dist@8.2.0", when="@1.0.0", cuda_var="cuda", rocm_var="rocm")
+    xsdk_depends_on("superlu-dist@8.2.1", when="@1.0.0", cuda_var="cuda", rocm_var="rocm")
     xsdk_depends_on("superlu-dist@8.1.2", when="@0.8.0")
     xsdk_depends_on("superlu-dist@7.1.1", when="@0.7.0")
 

@@ -21,6 +21,8 @@ class Binder(CMakePackage):
 
     maintainers("lyskov", "kliegeois")
 
+    license("MIT")
+
     version("master", branch="master")
     version("1.3.0", tag="v1.3.0", commit="e9b55985af297ca161d615058e4a5da07c22bc77")
     version("1.2.0", tag="v1.2.0", commit="90cf5b31b6f4ecad3fe87518ca2b949dc9e8ed1a")
@@ -49,6 +51,6 @@ class Binder(CMakePackage):
     def setup_dependent_package(self, module, dependent_spec):
         llvm_dir = self.spec["llvm"].prefix
         self.spec.clang_include_dirs = llvm_dir.include
-        self.spec.LibClang_include_dir = llvm_dir.lib.clang.join(
+        self.spec.libclang_include_dir = llvm_dir.lib.clang.join(
             format(self.spec["llvm"].version)
         ).include

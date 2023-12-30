@@ -17,6 +17,8 @@ class RSimpleaffy(RPackage):
 
     bioc = "simpleaffy"
 
+    license("Unlicense")
+
     version("2.66.0", commit="902db69e4ea4b6d306f0c744d3be600f1418ebc9")
     version("2.60.0", commit="b32b5e7d5c65e43c10f98ab8684a1086a06d04f9")
     version("2.58.0", commit="70cf1199bad620f60eaa288279632110bb571200")

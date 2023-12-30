@@ -14,6 +14,8 @@ class Gmime(AutotoolsPackage):
     homepage = "http://spruce.sourceforge.net/gmime/"
     url = "https://download.gnome.org/sources/gmime/2.6/gmime-2.6.23.tar.xz"
 
+    license("LGPL-2.1-or-later")
+
     version("2.6.23", sha256="7149686a71ca42a1390869b6074815106b061aaeaaa8f2ef8c12c191d9a79f6a")
 
     depends_on("glib@2.18.0:")

@@ -15,6 +15,8 @@ class Bridger(MakefilePackage, SourceforgePackage):
     homepage = "https://sourceforge.net/projects/rnaseqassembly/"
     sourceforge_mirror_path = "rnaseqassembly/Bridger_r2014-12-01.tar.gz"
 
+    license("GPL-2.0-only")
+
     version(
         "2014-12-01", sha256="8fbec8603ea8ad2162cbd0c658e4e0a4af6453bdb53310b4b7e0d112e40b5737"
     )

@@ -35,6 +35,8 @@ class Istio(Package):
     list_url = "https://github.com/istio/istio/releases/download"
     list_depth = 1
 
+    license("Apache-2.0")
+
     for ver, packages in _versions.items():
         key = "{0}-{1}".format(platform.system(), platform.machine())
         sha_val = packages.get(key)

@@ -6,11 +6,11 @@
 import llnl.util.tty as tty
 
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.environment as ev
 import spack.repo
 import spack.traverse
+from spack.cmd.common import arguments
 
 description = "fetch archives for packages"
 section = "build"

@@ -17,6 +17,8 @@ class Nekbone(Package):
 
     tags = ["proxy-app", "ecp-proxy-app"]
 
+    license("mpich2")
+
     version("develop", branch="master")
     version(
         "17.0",

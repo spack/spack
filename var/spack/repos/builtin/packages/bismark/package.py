@@ -13,6 +13,8 @@ class Bismark(Package):
     homepage = "https://www.bioinformatics.babraham.ac.uk/projects/bismark"
     url = "https://github.com/FelixKrueger/Bismark/archive/0.23.0.tar.gz"
 
+    license("GPL-3.0-only")
+
     version("0.24.1", sha256="c5409f5fa470ea5ac07327ced28c60b793f5ef88c5a7bc75b71dde0f52f39894")
     version("0.23.0", sha256="ea1625808487c1442dbf825d9cbe5c0cbc37ea5bd1460f59e1e0ccc80cc01c9e")
     version("0.19.0", sha256="91707737f96a0574956a282b635abad7560e7d90bee188a67a7807b2470deae2")

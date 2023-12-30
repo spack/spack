@@ -14,6 +14,8 @@ class PyImagehash(PythonPackage):
 
     maintainers("thomas-bouvier")
 
+    license("BSD-2-Clause")
+
     version("4.3.1", sha256="7038d1b7f9e0585beb3dd8c0a956f02b95a346c0b5f24a9e8cc03ebadaf0aa70")
 
     depends_on("py-setuptools", type="build")

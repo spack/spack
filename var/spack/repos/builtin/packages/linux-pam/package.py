@@ -12,6 +12,8 @@ class LinuxPam(AutotoolsPackage):
     homepage = "http://www.linux-pam.org/"
     url = "https://github.com/linux-pam/linux-pam/releases/download/v1.5.2/Linux-PAM-1.5.2.tar.xz"
 
+    license("BSD-3-Clause")
+
     version("1.5.1", sha256="201d40730b1135b1b3cdea09f2c28ac634d73181ccd0172ceddee3649c5792fc")
     version("1.5.2", sha256="e4ec7131a91da44512574268f493c6d8ca105c87091691b8e9b56ca685d4f94d")
     version("1.5.0", sha256="02d39854b508fae9dc713f7733bbcdadbe17b50de965aedddd65bcb6cc7852c8")

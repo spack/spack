@@ -24,6 +24,8 @@ class Kadath(CMakePackage):
 
     maintainers("eschnett")
 
+    license("GPL-3.0-or-later")
+
     version("fuka", branch="fuka")
 
     variant("mpi", default=True, description="Enable MPI support")

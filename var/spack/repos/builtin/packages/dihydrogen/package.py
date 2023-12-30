@@ -54,6 +54,8 @@ class Dihydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("benson31", "bvanessen")
 
+    license("Apache-2.0")
+
     version("develop", branch="develop")
     version("master", branch="master")
 
@@ -130,7 +132,7 @@ class Dihydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("catch2@3.0.1:", type=("build", "test"), when="+developer")
     depends_on("cmake@3.21.0:", type="build")
     depends_on("cuda@11.0:", when="+cuda")
-    depends_on("spdlog@1.11.0", when="@:0.1,0.2:")
+    depends_on("spdlog@1.11.0:1.12.0", when="@:0.1,0.2:")
 
     with when("@0.3.0:"):
         depends_on("hydrogen +al")

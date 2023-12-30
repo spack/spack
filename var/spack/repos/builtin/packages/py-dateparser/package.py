@@ -12,6 +12,8 @@ class PyDateparser(PythonPackage):
     homepage = "https://github.com/scrapinghub/dateparser"
     pypi = "dateparser/dateparser-0.7.2.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.7.2", sha256="e1eac8ef28de69a554d5fcdb60b172d526d61924b1a40afbbb08df459a36006b")
 
     variant("calendars", default=True, description="Add calendar libraries")

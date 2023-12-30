@@ -17,6 +17,8 @@ class PyImbalancedLearn(PythonPackage):
 
     maintainers("meyersbs")
 
+    license("MIT")
+
     version("0.10.1", sha256="bc7609619ec3c38c442292928239ad3d10b5deb0af8a29c83822b7b57b319f8b")
 
     # From setup.py:

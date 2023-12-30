@@ -12,4 +12,6 @@ class PerlExtutilsConfig(PerlPackage):
     homepage = "https://metacpan.org/pod/ExtUtils::Config"
     url = "https://cpan.metacpan.org/authors/id/L/LE/LEONT/ExtUtils-Config-0.008.tar.gz"
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("0.008", sha256="ae5104f634650dce8a79b7ed13fb59d67a39c213a6776cfdaa3ee749e62f1a8c")

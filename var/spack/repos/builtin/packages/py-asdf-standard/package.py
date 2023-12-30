@@ -14,6 +14,8 @@ class PyAsdfStandard(PythonPackage):
 
     maintainers("lgarrison")
 
+    license("BSD-3-Clause")
+
     version("1.0.3", sha256="afd8ff9a70e7b17f6bcc64eb92a544867d5d4fe1f0076719142fdf62b96cfd44")
 
     depends_on("python@3.8:", type=("build", "run"))

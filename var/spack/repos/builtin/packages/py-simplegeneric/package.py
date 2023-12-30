@@ -12,6 +12,8 @@ class PySimplegeneric(PythonPackage):
 
     pypi = "simplegeneric/simplegeneric-0.8.zip"
 
+    license("ZPL-2.1")
+
     version("0.8.1", sha256="dc972e06094b9af5b855b3df4a646395e43d1c9d0d39ed345b7393560d0b9173")
     version("0.8", sha256="8c0c4963da2695ba7c0f953f2cdac31d2c41d619fe9419e9d75432f8a231f966")
 

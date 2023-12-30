@@ -17,6 +17,8 @@ class PyDynim(PythonPackage):
 
     maintainers("lpottier")
 
+    license("MIT")
+
     version("main", branch="main", submodules=True)
     version("0.1", commit="aebd780376e7998f7f8b92ba5fdd320bdba7b0d3")
 

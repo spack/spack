@@ -11,6 +11,8 @@ class PyCelery(PythonPackage):
 
     pypi = "celery/celery-4.2.1.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("5.2.3", sha256="e2cd41667ad97d4f6a2f4672d1c6a6ebada194c619253058b5f23704aaadaa82")
     version("5.0.0", sha256="313930fddde703d8e37029a304bf91429cd11aeef63c57de6daca9d958e1f255")
     version("4.4.7", sha256="d220b13a8ed57c78149acf82c006785356071844afe0b27012a4991d44026f9f")

@@ -11,6 +11,8 @@ class PyNoseCov(PythonPackage):
 
     pypi = "nose-cov/nose-cov-1.6.tar.gz"
 
+    license("MIT")
+
     version("1.6", sha256="8bec0335598f1cc69e3262cc50d7678c1a6010fa44625ce343c4ec1500774412")
 
     depends_on("py-setuptools", type="build")

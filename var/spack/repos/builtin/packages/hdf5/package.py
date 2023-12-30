@@ -31,6 +31,8 @@ class Hdf5(CMakePackage):
 
     test_requires_compiler = True
 
+    license("custom")
+
     # The 'develop' version is renamed so that we could uninstall (or patch) it
     # without affecting other develop version.
     version("develop-1.15", branch="develop")

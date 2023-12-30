@@ -13,6 +13,8 @@ class PyTypesentry(PythonPackage):
     homepage = "https://github.com/h2oai/typesentry"
     git = "https://github.com/h2oai/typesentry.git"
 
+    license("Apache-2.0")
+
     # See the git history of __version__.py for versioning information
     version("0.2.7", commit="0ca8ed0e62d15ffe430545e7648c9a9b2547b49c")
 

@@ -17,6 +17,8 @@ class Veloc(CMakePackage):
     maintainers = ["bnicolae"]
     tags = ["e4s"]
 
+    license("MIT")
+
     version("main", branch="main")
     version("1.7", sha256="ca50cb300830ea7f7e5679d32e3671ce4ea250eac384e7231def8dbb90e0cf31")
     version("1.6", sha256="451b46ad13e360270044c0dba09d8e4fbd64149f8e8d71310fdb520424c5eeaa")

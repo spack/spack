@@ -12,6 +12,8 @@ class PyVcrpy(PythonPackage):
     homepage = "https://github.com/kevin1024/vcrpy"
     pypi = "vcrpy/vcrpy-4.1.1.tar.gz"
 
+    license("MIT")
+
     version("5.1.0", sha256="bbf1532f2618a04f11bce2a99af3a9647a32c880957293ff91e0a5f187b6b3d2")
     version("4.2.1", sha256="7cd3e81a2c492e01c281f180bcc2a86b520b173d2b656cb5d89d99475423e013")
     version("4.1.1", sha256="57095bf22fc0a2d99ee9674cdafebed0f3ba763018582450706f7d3a74fff599")

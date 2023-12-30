@@ -13,6 +13,8 @@ class Aespipe(AutotoolsPackage):
     homepage = "http://loop-aes.sourceforge.net/"
     url = "https://sourceforge.net/projects/loop-aes/files/aespipe/v2.4f/aespipe-v2.4f.tar.bz2"
 
+    license("Intel")
+
     version("2.4f", sha256="b135e1659f58dc9be5e3c88923cd03d2a936096ab8cd7f2b3af4cb7a844cef96")
     version("2.4e", sha256="bad5abb8678c2a6062d22b893171623e0c8e6163b5c1e6e5086e2140e606b93a")
     version("2.4d", sha256="c5ce656e0ade49b93e1163ec7b35450721d5743d8d804ad3a9e39add0389e50f")

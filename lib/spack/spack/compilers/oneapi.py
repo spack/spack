@@ -6,6 +6,8 @@
 import os
 from os.path import dirname
 
+from llnl.util import tty
+
 from spack.compiler import Compiler
 
 
@@ -135,3 +137,13 @@ class Oneapi(Compiler):
         #   Executable "sycl-post-link" doesn't exist!
         if self.cxx:
             env.prepend_path("PATH", dirname(self.cxx))
+
+        # 2024 release bumped the libsycl version because of an ABI
+        # change, 2024 compilers are required.  You will see this
+        # error:
+        #
+        # /usr/bin/ld: warning: libsycl.so.7, needed by ...., not found
+        if pkg.spec.satisfies("%oneapi@:2023"):
+            for c in ["dnn"]:
+                if pkg.spec.satisfies(f"^intel-oneapi-{c}@2024:"):
+                    tty.warn(f"intel-oneapi-{c}@2024 SYCL APIs requires %oneapi@2024:")

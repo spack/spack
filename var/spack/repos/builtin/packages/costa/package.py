@@ -17,6 +17,8 @@ class Costa(CMakePackage):
     homepage = "https://github.com/eth-cscs/COSTA"
     git = "https://github.com/eth-cscs/COSTA.git"
 
+    license("BSD-3-Clause")
+
     # note: The default archives produced with github do not have the archives
     #       of the submodules.
     version("master", branch="master", submodules=True)
@@ -37,6 +39,7 @@ class Costa(CMakePackage):
     depends_on("mpi@3:")
     depends_on("scalapack", when="+scalapack")
     depends_on("cxxopts", when="+apps")
+    depends_on("cxxopts", when="+tests")
     depends_on("semiprof", when="+profiling")
 
     def url_for_version(self, version):

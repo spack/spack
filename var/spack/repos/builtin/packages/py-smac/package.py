@@ -15,6 +15,8 @@ class PySmac(PythonPackage):
     homepage = "https://automl.github.io/SMAC3/master/"
     pypi = "smac/smac-1.1.1.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("1.1.1", sha256="7b8c14c53384b32feb357b9f918a9b023cb01cbda2033e69125dee69ec0bd5b1")
 
     depends_on("python@3.7:", type=("build", "run"))

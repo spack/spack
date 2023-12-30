@@ -14,6 +14,8 @@ class Udunits(AutotoolsPackage):
 
     maintainers("AlexanderRichert-NOAA")
 
+    license("UCAR")
+
     # Unidata now only provides the latest version of each X.Y branch.
     # Older 2.2 versions have been deprecated accordingly but are still
     # available in the build cache.

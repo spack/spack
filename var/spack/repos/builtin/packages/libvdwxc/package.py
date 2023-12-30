@@ -14,6 +14,8 @@ class Libvdwxc(AutotoolsPackage):
     homepage = "https://libvdwxc.gitlab.io/libvdwxc/"
     url = "https://launchpad.net/libvdwxc/stable/0.4.0/+download/libvdwxc-0.4.0.tar.gz"
 
+    license("GPL-3.0-or-later")
+
     version("0.4.0", sha256="3524feb5bb2be86b4688f71653502146b181e66f3f75b8bdaf23dd1ae4a56b33")
 
     variant("mpi", default=True, description="Enable MPI support")

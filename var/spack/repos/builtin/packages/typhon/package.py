@@ -16,6 +16,8 @@ class Typhon(CMakePackage):
     url = "https://github.com/UK-MAC/Typhon/archive/v3.0.tar.gz"
     git = "https://github.com/UK-MAC/Typhon.git"
 
+    license("GPL-3.0-only")
+
     version("develop", branch="develop")
 
     version("3.0.2", sha256="28087eb07bf91d23792900214728b5eea61b5e81aa33df28c032dadd6d89b76e")

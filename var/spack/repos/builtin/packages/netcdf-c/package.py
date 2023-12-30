@@ -26,6 +26,8 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
 
     maintainers("skosukhin", "WardF")
 
+    license("BSD-3-Clause")
+
     version("main", branch="main")
     version("4.9.2", sha256="bc104d101278c68b303359b3dc4192f81592ae8640f1aee486921138f7f88cb7")
     version("4.9.0", sha256="9f4cb864f3ab54adb75409984c6202323d2fc66c003e5308f3cdf224ed41c0a6")
@@ -441,7 +443,7 @@ class AutotoolsBuilder(BaseBuilder, autotools.AutotoolsBuilder):
         if "~shared" in hdf5:
             if "+szip" in hdf5:
                 extra_libs.append(hdf5["szip"].libs)
-            extra_libs.append(hdf5["zlib"].libs)
+            extra_libs.append(hdf5["zlib-api"].libs)
 
         if self.spec.satisfies("@4.9.0:+shared"):
             lib_search_dirs.extend(self.spec["zlib-api"].libs.directories)

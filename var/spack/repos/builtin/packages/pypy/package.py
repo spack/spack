@@ -15,6 +15,8 @@ class Pypy(Package):
 
     maintainers("adamjstewart")
 
+    license("MIT")
+
     version(
         "3.10-v7.3.12", sha256="86e4e4eacc36046c6182f43018796537fe33a60e1d2a2cc6b8e7f91a5dcb3e42"
     )

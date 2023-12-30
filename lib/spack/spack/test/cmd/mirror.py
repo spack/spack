@@ -398,3 +398,12 @@ def test_mirror_set_2(mutable_config):
         "url": "http://example.com",
         "push": {"url": "http://example2.com", "access_pair": ["username", "password"]},
     }
+
+
+def test_mirror_add_set_signed(mutable_config):
+    mirror("add", "--signed", "example", "http://example.com")
+    assert spack.config.get("mirrors:example") == {"url": "http://example.com", "signed": True}
+    mirror("set", "--unsigned", "example")
+    assert spack.config.get("mirrors:example") == {"url": "http://example.com", "signed": False}
+    mirror("set", "--signed", "example")
+    assert spack.config.get("mirrors:example") == {"url": "http://example.com", "signed": True}

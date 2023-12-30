@@ -17,6 +17,8 @@ class Freecad(CMakePackage):
 
     maintainers("aweits")
 
+    license("LGPL-2.0-or-later")
+
     version("0.20.2", sha256="46922f3a477e742e1a89cd5346692d63aebb2b67af887b3e463e094a4ae055da")
 
     depends_on("opencascade")

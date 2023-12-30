@@ -13,6 +13,8 @@ class Ssmtp(AutotoolsPackage):
     homepage = "https://salsa.debian.org/debian/ssmtp"
     url = "https://deb.debian.org/debian/pool/main/s/ssmtp/ssmtp_2.64.orig.tar.bz2"
 
+    license("GPL-2.0")
+
     version("2.64", sha256="22c37dc90c871e8e052b2cab0ad219d010fa938608cd66b21c8f3c759046fa36")
 
     variant("ssl", default=True, description="Enable support for secure connection to mail server")

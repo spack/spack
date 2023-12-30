@@ -18,6 +18,8 @@ class Dsfmt(MakefilePackage):
     # so we add it for them.
     patch("targets.patch")
 
+    license("BSD-3-Clause")
+
     version("2.2.5", sha256="b7bc498cd140b4808963b1ff9f33b42a491870f54775c1060ecad0e02bcaffb4")
     version("2.2.4", sha256="39682961ecfba621a98dbb6610b6ae2b7d6add450d4f08d8d4edd0e10abd8174")
 

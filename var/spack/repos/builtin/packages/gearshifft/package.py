@@ -14,6 +14,8 @@ class Gearshifft(CMakePackage):
 
     maintainers("zyzzyxdonta")
 
+    license("Apache-2.0")
+
     version("0.4.0", sha256="15b9e4bfa1d9b4fe4ae316f289c67b7be0774cdada5bd7310df4d0e026d9d227")
 
     # gearshifft used the variable name `CMAKE_DEFAULT_BUILD_TYPE` which was

@@ -14,6 +14,8 @@ class PyGraphqlWs(PythonPackage):
 
     maintainers("LydDeb")
 
+    license("MIT")
+
     version("0.4.4", sha256="2ad38db70f37964f54d7eb3e2ede86dbe3f2a1ed7ea0a9f9a3b8b17162a22852")
 
     depends_on("py-setuptools", type="build")

@@ -14,6 +14,8 @@ class PyParalleltask(PythonPackage):
     homepage = "https://github.com/moold/ParallelTask"
     pypi = "Paralleltask/Paralleltask-0.2.2.tar.gz"
 
+    license("GPL-3.0-only")
+
     version("0.2.2", sha256="f00945e2bd5b6aff9cdc48fbd92aa7b48d23bb530d7f6643ac966fea11a7a9d5")
 
     depends_on("py-setuptools", type="build")

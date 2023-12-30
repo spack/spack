@@ -13,6 +13,8 @@ class PyScanpy(PythonPackage):
     homepage = "https://scanpy.readthedocs.io/en/stable/"
     pypi = "scanpy/scanpy-1.9.1.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("1.9.1", sha256="00c9a83b649da7e0171c91e9a08cff632102faa760614fd05cd4d1dbba4eb541")
 
     depends_on("python@3.7:", type=("build", "run"))

@@ -16,6 +16,8 @@ class PyImagecodecs(PythonPackage):
     homepage = "https://www.lfd.uci.edu/~gohlke/"
     pypi = "imagecodecs/imagecodecs-2022.2.22.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("2022.2.22", sha256="062bef6b003290a8163abed2744b406854238208dfdd41cf7165253c6e01c0bd")
 
     depends_on("python@3.8:", type=("build", "run"))
@@ -66,11 +68,12 @@ class PyImagecodecs(PythonPackage):
         )
         # 239
         filter_file(
-            "append\('/usr/include/jxrlib'\)",  # noqa: W605
+            "append('/usr/include/jxrlib')",
             "extend(('{0}/libjxr/image', '{0}/libjxr/common', '{0}/libjxr/glue'))".format(  # noqa: E501
                 spec["jxrlib-debian"].prefix.include
             ),
             "setup.py",
+            string=True,
         )
 
         # 367

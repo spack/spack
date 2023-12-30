@@ -25,6 +25,8 @@ class Tau(Package):
 
     tags = ["e4s"]
 
+    license("MIT")
+
     version("master", branch="master")
     version("2.33", sha256="04d9d67adb495bc1ea56561f33c5ce5ba44f51cc7f64996f65bd446fac5483d9")
     version("2.32.1", sha256="0eec3de46b0873846dfc639270c5e30a226b463dd6cb41aa12e975b7563f0eeb")
@@ -107,7 +109,8 @@ class Tau(Package):
     depends_on("zlib-api", type="link")
     depends_on("pdt", when="+pdt")  # Required for TAU instrumentation
     depends_on("scorep", when="+scorep")
-    depends_on("otf2@2.1:2.3", when="+otf2")
+    depends_on("otf2@2.1:2.3", when="@:2.33.0 +otf2")
+    depends_on("otf2@3:", when="@2.33.1: +otf2")
     depends_on("likwid", when="+likwid")
     depends_on("papi", when="+papi")
     depends_on("libdwarf", when="+libdwarf")

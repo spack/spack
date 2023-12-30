@@ -15,6 +15,8 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/LLNL/CARE.git"
     tags = ["radiuss"]
 
+    license("GPL-2.0-or-later")
+
     version("develop", branch="develop", submodules="True")
     version("master", branch="main", submodules="True")
     version(

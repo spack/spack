@@ -19,6 +19,8 @@ class Libp11(AutotoolsPackage):
     homepage = "https://github.com/OpenSC/libp11/wiki"
     url = "https://github.com/OpenSC/libp11/archive/libp11-0.4.10.tar.gz"
 
+    license("LGPL-2.1-or-later")
+
     version("0.4.11", sha256="56d6149879bda379613d89adfd3486ce5a3c20af6c1e3f9e83d15d900ab9e4bc")
     version("0.4.10", sha256="123c1525fa7ce7a34060f9a4148a30717482c517a378f428b704459820c1bf35")
     version("0.4.9", sha256="9d1c76d74c21ca224f96204982097ebc6b956f645b2b0b5f9c502a20e9ffcfd8")

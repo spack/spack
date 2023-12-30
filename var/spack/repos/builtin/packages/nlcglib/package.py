@@ -15,6 +15,8 @@ class Nlcglib(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers = ["simonpintarelli"]
 
+    license("BSD-3-Clause")
+
     version("develop", branch="develop")
     version("master", branch="master")
 
@@ -49,9 +51,12 @@ class Nlcglib(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("rocblas")
         depends_on("rocsolver")
 
-    with when("+cuda"):
-        depends_on("kokkos+cuda+cuda_lambda+wrapper", when="%gcc")
-        depends_on("kokkos+cuda")
+    for arch in CudaPackage.cuda_arch_values:
+        depends_on(
+            f"kokkos+cuda+cuda_lambda+wrapper cuda_arch={arch}",
+            when=f"%gcc +cuda cuda_arch={arch}",
+        )
+        depends_on(f"kokkos+cuda cuda_arch={arch}", when=f"+cuda cuda_arch={arch}")
 
     def cmake_args(self):
         options = [

@@ -20,6 +20,8 @@ class Cans(MakefilePackage):
 
     maintainers("lhxone", "p-costa", "nscapin", "GabrieleBoga")
 
+    license("MIT")
+
     version("1.1.4", sha256="8334c67810472edc18d5403a0bcb27fd57a620722c1e8c317518db4506867b81")
     version("1.1.3", sha256="01fa42e51ddcf6161fb63a124a0f2218c67f85ff4cc5236b995a5650d85e7615")
     version("1.1.2", sha256="31c8d6c1f619fb60b7919922c7a3a64dd614a1a2f89f38560184f75ed0526171")

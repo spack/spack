@@ -18,6 +18,8 @@ class SalomeMed(CMakePackage):
     homepage = "https://docs.salome-platform.org/latest/dev/MEDCoupling/developer/med-file.html"
     url = "ftp://ftp.cea.fr/pub/salome/prerequisites/med-4.1.0.tar.gz"
 
+    license("LGPL-3.0-only")
+
     version("4.1.0", sha256="847db5d6fbc9ce6924cb4aea86362812c9a5ef6b9684377e4dd6879627651fce")
     version("4.0.0", sha256="a474e90b5882ce69c5e9f66f6359c53b8b73eb448c5f631fa96e8cd2c14df004")
     version("3.3.1", sha256="856e9c4bb75eb0cceac3d5a5c65b1ce52fb3c46b9182920e1c9f34ae69bd2d5f")

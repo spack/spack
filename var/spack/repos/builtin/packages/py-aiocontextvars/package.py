@@ -13,6 +13,8 @@ class PyAiocontextvars(PythonPackage):
     homepage = "https://github.com/fantix/aiocontextvars"
     pypi = "aiocontextvars/aiocontextvars-0.2.2.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.2.2", sha256="f027372dc48641f683c559f247bd84962becaacdc9ba711d583c3871fb5652aa")
 
     depends_on("python@3.5:", type=("build", "run"))

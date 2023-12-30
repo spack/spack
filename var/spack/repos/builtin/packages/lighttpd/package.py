@@ -13,6 +13,8 @@ class Lighttpd(CMakePackage):
     homepage = "https://www.lighttpd.net"
     url = "https://download.lighttpd.net/lighttpd/releases-1.4.x/lighttpd-1.4.50.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("1.4.69", sha256="657010184c4c470ad98944abbf0a8e2281800fa2bb1836c7a2cd4a8874e97b28")
     version("1.4.55", sha256="065259fb618774df516add13df22a52cac76a8f59e4561f143fe3ec810f4a03a")
     version("1.4.54", sha256="5151d38cb7c4c40effa13710e77ebdbef899f945b062cf32befc02d128ac424c")

@@ -23,6 +23,8 @@ class Hpgmg(MakefilePackage):
 
     tags = ["proxy-app"]
 
+    license("BSD-2-Clause")
+
     version("develop", branch="master")
     version("0.4", sha256="abdabfe09453487299500b5bd8da4e6dc3d88477199bcfa38ac41d0b3c780f6f")
     version(

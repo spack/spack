@@ -13,6 +13,8 @@ class Elk(MakefilePackage):
     homepage = "https://elk.sourceforge.io/"
     url = "https://sourceforge.net/projects/elk/files/elk-3.3.17.tgz"
 
+    license("LGPL-3.0-or-later")
+
     version("8.3.22", sha256="1c31f09b7c09d6b24e775d4f0d5e1e8871f95a7656ee4ca21ac17dbe7ea16277")
     version("7.2.42", sha256="73f03776dbf9b2147bfcc5b7c062af5befa0944608f6fc4b6a1e590615400fc6")
     version("7.1.14", sha256="7c2ff30f4b1d72d5dc116de9d70761f2c206700c69d85dd82a17a5a6374453d2")
@@ -68,7 +70,12 @@ class Elk(MakefilePackage):
     depends_on("lapack", when="linalg=generic")
 
     depends_on("mkl", when="linalg=mkl")
-    depends_on("mkl threads=openmp", when="linalg=mkl +openmp")
+    with when("linalg=mkl +openmp"):
+        depends_on("intel-mkl threads=openmp", when="^[virtuals=mkl] intel-mkl")
+        depends_on("intel-oneapi-mkl threads=openmp", when="^[virtuals=mkl] intel-oneapi-mkl")
+        depends_on(
+            "intel-parallel-studio threads=openmp", when="^[virtuals=mkl] intel-parallel-studio"
+        )
 
     depends_on("openblas", when="linalg=openblas")
     depends_on("openblas threads=openmp", when="linalg=openblas +openmp")

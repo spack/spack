@@ -14,6 +14,8 @@ class RXml2(RPackage):
 
     cran = "xml2"
 
+    license("MIT")
+
     version("1.3.3", sha256="cb4e9c0d31618ed67d2bfa4c7b5e52680e11612ed356a8164b541d44163c1c8d")
     version("1.3.2", sha256="df22f9e7e3189d8c9b8804eaf0105324fdac983cffe743552f6d76613600a4cf")
     version("1.2.2", sha256="3050f147c4335be2925a576557bbda36bd52a5bba3110d47b740a2dd811a78f4")

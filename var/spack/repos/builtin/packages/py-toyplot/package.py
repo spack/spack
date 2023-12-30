@@ -14,6 +14,8 @@ class PyToyplot(PythonPackage):
 
     maintainers("snehring")
 
+    license("BSD-3-Clause")
+
     version("1.0.3", sha256="7b7b2bc5784fd75e5c695300bffc80d568c83bebef543bb54e6e6c2229912edd")
     version("0.19.0", sha256="d199b4ac2d5ee454fec8be937bd9f1a313145545adc192bb0db2fd3defada484")
 

@@ -19,6 +19,8 @@ class Ectrans(CMakePackage):
 
     maintainers("climbfuji")
 
+    license("Apache-2.0")
+
     version("develop", branch="develop", no_cache=True)
     version("main", branch="main", no_cache=True)
     version("1.2.0", sha256="2ee6dccc8bbfcc23faada1d957d141f24e41bb077c1821a7bc2b812148dd336c")

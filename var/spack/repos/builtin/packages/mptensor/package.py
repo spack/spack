@@ -13,6 +13,8 @@ class Mptensor(CMakePackage):
     homepage = "https://github.com/smorita/mptensor"
     url = "https://github.com/smorita/mptensor/archive/v0.3.0.tar.gz"
 
+    license("LGPL-3.0-or-later")
+
     version("0.3.0", sha256="819395a91551bddb77958615042fcb935a4b67ee37f912b9a2ca5b49c71befae")
 
     variant("mpi", default=False, description="Build with MPI library")

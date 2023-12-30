@@ -16,6 +16,8 @@ class Sarus(CMakePackage):
     git = "https://github.com/eth-cscs/sarus.git"
     maintainers("Madeeks", "taliaga", "teonnik")
 
+    license("BSD-3-Clause")
+
     version("develop", branch="develop")
     version("master", branch="master")
     version("1.4.1", commit="a73f6ca9cafb768f3132cfcef8c826af34eeff94")

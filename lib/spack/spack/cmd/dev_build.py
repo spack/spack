@@ -9,9 +9,9 @@ import sys
 import llnl.util.tty as tty
 
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.repo
+from spack.cmd.common import arguments
 
 description = "developer build: build from code in current working directory"
 section = "build"

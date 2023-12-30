@@ -16,6 +16,8 @@ class Mozjpeg(CMakePackage):
 
     maintainers("RemiLacroix-IDRIS")
 
+    license("Zlib")
+
     version("4.1.1", sha256="66b1b8d6b55d263f35f27f55acaaa3234df2a401232de99b6d099e2bb0a9d196")
 
     provides("jpeg")

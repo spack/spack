@@ -14,6 +14,8 @@ class PyKtLegacy(PythonPackage):
     homepage = "https://github.com/haifeng-jin/kt-legacy"
     pypi = "kt-legacy/kt-legacy-1.0.4.tar.gz"
 
+    license("Apache-2.0")
+
     version("1.0.4", sha256="a94112e42a50e7cc3aad31f3287aa384c23555ea1432c55b5823852e09e706cf")
 
     depends_on("py-setuptools", type="build")

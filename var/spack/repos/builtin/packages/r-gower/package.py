@@ -15,6 +15,8 @@ class RGower(RPackage):
 
     cran = "gower"
 
+    license("GPL-3.0-only")
+
     version("1.0.1", sha256="296a9d8e5efa8c3a8cc6b92cf38880915753afdef30281629af9dc8eae8315fc")
     version("1.0.0", sha256="671cb7baafe05140d822e8f26f9cd3576fc3bf4c6572b7223fb54da754ea385d")
     version("0.2.2", sha256="3f022010199fafe34f6e7431730642a76893e6b4249b84e5a61012cb83483631")

@@ -15,6 +15,8 @@ class PyPytestSubprocess(PythonPackage):
 
     maintainers("wdconinc")
 
+    license("MIT")
+
     version("1.5.0", sha256="d7693b96f588f39b84c7b2b5c04287459246dfae6be1dd4098937a728ad4fbe3")
 
     depends_on("py-setuptools", type="build")

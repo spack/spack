@@ -12,6 +12,8 @@ class PyIgor(PythonPackage):
     homepage = "http://blog.tremily.us/posts/igor/"
     pypi = "igor/igor-0.3.tar.gz"
 
+    license("LGPL-3.0-only")
+
     version("0.3", sha256="b04ac38c68fb81cf3167a9981dc5a20379112d40268bb72c5a8514dc8051abba")
 
     depends_on("py-setuptools", type="build")

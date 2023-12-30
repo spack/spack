@@ -15,6 +15,8 @@ class LlvmOpenmpOmpt(CMakePackage):
     homepage = "https://github.com/OpenMPToolsInterface/LLVM-openmp"
     git = "https://github.com/OpenMPToolsInterface/LLVM-openmp.git"
 
+    license("MIT")
+
     # tr6_forwards branch (last commit from 2017)
     version("tr6_forwards", commit="4b29de49ce90cfb5c3cbc6bb7d91660b70bddb5d")
     version("3.9.2b2", commit="5cdca5dd3c0c336d42a335ca7cff622e270c9d47")

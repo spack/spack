@@ -16,6 +16,8 @@ class Citcoms(AutotoolsPackage):
 
     maintainers("adamjstewart")
 
+    license("GPL-2.0-or-later")
+
     version("master", branch="master", submodules=True)
     version("3.3.1", sha256="e3520e0a933e4699d31e86fe309b8c154ea6ecb0f42a1cf6f25e8d13d825a4b3")
     version("3.2.0", sha256="773a14d91ecbb4a4d1e04317635fab79819d83c57b47f19380ff30b9b19cb07a")

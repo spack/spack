@@ -13,6 +13,8 @@ class PyPebble(PythonPackage):
     homepage = "https://github.com/noxdafox/pebble"
     pypi = "Pebble/Pebble-5.0.3.tar.gz"
 
+    license("LGPL-3.0-only")
+
     version("5.0.3", sha256="bdcfd9ea7e0aedb895b204177c19e6d6543d9962f4e3402ebab2175004863da8")
 
     depends_on("python@3.6:", type=("build", "run"))

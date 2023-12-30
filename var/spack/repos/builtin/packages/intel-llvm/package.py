@@ -16,6 +16,8 @@ class IntelLlvm(CMakePackage):
 
     family = "compiler"
 
+    license("Apache-2.0")
+
     version("sycl", branch="sycl")
 
     depends_on("cmake@3.4.3:", type="build")

@@ -12,6 +12,8 @@ class Gloo(CMakePackage, CudaPackage):
     homepage = "https://github.com/facebookincubator/gloo"
     git = "https://github.com/facebookincubator/gloo.git"
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("2023-05-19", commit="597accfd79f5b0f9d57b228dec088ca996686475")  # py-torch@2.1:
     version("2023-01-17", commit="10909297fedab0a680799211a299203e53515032")  # py-torch@2.0
@@ -35,6 +37,13 @@ class Gloo(CMakePackage, CudaPackage):
         sha256="8e6e9a44e0533ba4303a95a651b1934e5d73632cab08cc7d5a9435e1e64aa424",
         when="@:2023-01-16",
     )
+    # Fix building with gcc 12, see https://github.com/facebookincubator/gloo/pull/333
+    patch(
+        "https://github.com/facebookincubator/gloo/commit/4a5e339b764261d20fc409071dc7a8b8989aa195.patch?full_index=1",
+        sha256="dc8b3a9bea4693f32d6850ea2ce6ce75e1778538bfba464b50efca92bac425e3",
+        when="@2021-05-21:2022-05-18",
+    )
+
     generator("ninja")
     depends_on("cmake@2.8.12:", type="build")
 

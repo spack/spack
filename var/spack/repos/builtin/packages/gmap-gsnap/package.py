@@ -16,6 +16,8 @@ class GmapGsnap(AutotoolsPackage):
 
     maintainers("snehring")
 
+    license("Apache-2.0")
+
     version(
         "2023-07-20", sha256="19e70eebd9b282d8596721812d071efed188b6d5000627b9948f0486f87fe68f"
     )

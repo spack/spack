@@ -15,6 +15,8 @@ class Mrnet(AutotoolsPackage):
     git = "https://github.com/dyninst/mrnet.git"
     list_url = "http://ftp.cs.wisc.edu/paradyn/mrnet"
 
+    license("LGPL-2.1-or-later")
+
     version("master", branch="master")
     version("5.0.1-4", commit="2c5632aa27188de6866abc49bf1de70fb6b27af9")
     version("5.0.1-3", commit="7375ba5bb0df87c68e58ad15e9e5e351ae020c08")

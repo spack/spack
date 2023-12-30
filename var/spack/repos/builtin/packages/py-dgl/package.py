@@ -21,6 +21,8 @@ class PyDgl(CMakePackage, PythonExtension, CudaPackage):
 
     maintainers("adamjstewart", "meyersbs")
 
+    license("Apache-2.0")
+
     version("master", branch="master", submodules=True)
     version(
         "1.0.1", tag="1.0.1", commit="cc2e9933f309f585fae90965ab61ad11ac1eecd5", submodules=True

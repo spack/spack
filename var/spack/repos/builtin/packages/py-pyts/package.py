@@ -16,6 +16,8 @@ class PyPyts(PythonPackage):
     homepage = "https://github.com/johannfaouzi/pyts"
     pypi = "pyts/pyts-0.12.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.12.0", sha256="af85e09a14334cbe384318de6ca4379e9a30bf5bbd1aaf3a1c4a94872e9765b1")
 
     depends_on("python@3.7:", type=("build", "run"))

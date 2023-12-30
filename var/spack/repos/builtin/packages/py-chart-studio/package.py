@@ -12,6 +12,8 @@ class PyChartStudio(PythonPackage):
     homepage = "https://pypi.org/project/chart-studio/"
     pypi = "chart-studio/chart-studio-1.1.0.tar.gz"
 
+    license("MIT")
+
     version("1.1.0", sha256="a17283b62470306d77060b200f13f9749c807dd15613c113d36f8d057f5c7019")
 
     depends_on("py-setuptools", type="build")

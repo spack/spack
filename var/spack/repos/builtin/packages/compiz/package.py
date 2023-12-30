@@ -17,6 +17,8 @@ class Compiz(AutotoolsPackage, XorgPackage):
     homepage = "http://www.compiz.org/"
     xorg_mirror_path = "app/compiz-0.7.8.tar.gz"
 
+    license("MIT")
+
     version("0.7.8", sha256="b46f52b776cc78e85357a07688d04b36ec19c65eadeaf6f6cfcca7b8515e6503")
 
     depends_on("libxcb")

@@ -11,6 +11,8 @@ class PerlTermReadlineGnu(PerlPackage):
     homepage = "https://metacpan.org/pod/Term::ReadLine::Gnu"
     url = "https://cpan.metacpan.org/authors/id/H/HA/HAYASHI/Term-ReadLine-Gnu-1.36.tar.gz"
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("1.36", sha256="9a08f7a4013c9b865541c10dbba1210779eb9128b961250b746d26702bab6925")
 
     depends_on("readline")

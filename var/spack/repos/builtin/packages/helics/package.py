@@ -18,6 +18,8 @@ class Helics(CMakePackage):
 
     maintainers("nightlark")
 
+    license("BSD-3-Clause")
+
     version("develop", branch="develop", submodules=True)
     version("main", branch="main", submodules=True)
     version("master", branch="main", submodules=True)

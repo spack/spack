@@ -12,6 +12,8 @@ class PyTbparse(PythonPackage):
     homepage = "https://github.com/j3soon/tbparse"
     pypi = "tbparse/tbparse-0.0.7.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.0.7", sha256="0ddd3c764ceb1859bc0cb69ca355bff4fd5936c4bfe885e252e481564b2371a9")
 
     depends_on("python@3.7:", type=("build", "run"))

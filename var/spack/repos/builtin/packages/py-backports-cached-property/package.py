@@ -12,6 +12,8 @@ class PyBackportsCachedProperty(PythonPackage):
     homepage = "https://github.com/penguinolog/backports.cached_property"
     pypi = "backports.cached-property/backports.cached-property-1.0.2.tar.gz"
 
+    license("MIT")
+
     version("1.0.2", sha256="9306f9eed6ec55fd156ace6bc1094e2c86fae5fb2bf07b6a9c00745c656e75dd")
 
     depends_on("python@3.6:", type=("build", "run"))

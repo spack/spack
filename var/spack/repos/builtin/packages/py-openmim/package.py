@@ -12,6 +12,8 @@ class PyOpenmim(PythonPackage):
     homepage = "https://github.com/open-mmlab/mim"
     pypi = "openmim/openmim-0.3.9.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.3.9", sha256="b3977b92232b4b8c4d987cbc73e4515826d5543ccd3a66d49fcfc602cc5b3352")
 
     depends_on("py-setuptools", type="build")

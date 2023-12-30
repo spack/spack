@@ -12,6 +12,8 @@ class Star(MakefilePackage):
     homepage = "https://github.com/alexdobin/STAR"
     url = "https://github.com/alexdobin/STAR/archive/2.7.6a.tar.gz"
 
+    license("MIT")
+
     version("2.7.10b", sha256="0d1b71de6c5be1c5d90b32130d2abcd5785a4fc7c1e9bf19cc391947f2dc46e5")
     version("2.7.10a", sha256="af0df8fdc0e7a539b3ec6665dce9ac55c33598dfbc74d24df9dae7a309b0426a")
     version("2.7.6a", sha256="9320797c604673debea0fe8f2e3762db364915cc59755de1a0d87c8018f97d51")

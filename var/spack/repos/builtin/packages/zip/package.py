@@ -14,6 +14,8 @@ class Zip(MakefilePackage):
     homepage = "https://www.info-zip.org/Zip.html"
     url = "https://downloads.sourceforge.net/infozip/zip30.tar.gz"
 
+    license("Info-ZIP")
+
     version("3.0", sha256="f0e8bb1f9b7eb0b01285495a2699df3a4b766784c1765a8f1aeedf63c0806369")
 
     depends_on("bzip2")

@@ -26,6 +26,8 @@ class PyChainer(PythonPackage):
 
     skip_modules = ["onnx_chainer"]
 
+    license("MIT")
+
     version("7.2.0", sha256="6e2fba648cc5b8a5421e494385b76fe5ec154f1028a1c5908557f5d16c04f0b3")
     version("6.7.0", sha256="87cb3378a35e7c5c695028ec91d58dc062356bc91412384ea939d71374610389")
 

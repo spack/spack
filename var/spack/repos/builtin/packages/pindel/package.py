@@ -12,6 +12,8 @@ class Pindel(MakefilePackage):
     homepage = "https://gmt.genome.wustl.edu/packages/pindel/"
     url = "https://github.com/genome/pindel/archive/v0.2.5.tar.gz"
 
+    license("GPL-3.0-or-later")
+
     version("0.2.5b8", sha256="7f21fda0b751d420831724d96e60873ce332139cfd24396e81c7f1ae2f707a19")
     version("0.2.5b6", sha256="fe19aabdcf6334b9efe92d4509b80f0f266e621f1cc8db017b301d7e32e2eeac")
     version("0.2.5b5", sha256="2ebe9d959d8c3862d9103d8a3768265dcc79eab547035857dca8ab8cfe2544e4")

@@ -19,6 +19,8 @@ class Ferret(Package):
 
     maintainers("RemiLacroix-IDRIS")
 
+    license("Unlicense")
+
     version("7.6.0", sha256="69832d740bd44c9eadd198a5de4d96c4c01ae90ae28c2c3414c1bb9f43e475d1")
     version("7.5.0", sha256="2a038c547e6e80e6bd0645a374c3247360cf8c94ea56f6f3444b533257eb16db")
     version("7.4", sha256="5167bb9e6ef441ae9cf90da555203d2155e3fcf929e7b8dddb237de0d58c5e5f")

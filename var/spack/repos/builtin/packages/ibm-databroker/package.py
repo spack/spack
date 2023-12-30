@@ -21,6 +21,8 @@ class IbmDatabroker(CMakePackage, PythonExtension):
     # IBM dev team should take over
     maintainers("bhatiaharsh")
 
+    license("Apache-2.0")
+
     version("master", branch="master")
     version("0.7.0", sha256="5460fa1c5c05ad25c759b2ee4cecee92980d4dde5bc7c5f6da9242806cf22bb8")
     version("0.6.1", sha256="2c7d6c6a269d4ae97aad4d770533e742f367da84758130c283733f25df83e535")

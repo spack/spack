@@ -13,6 +13,8 @@ class PyBatchspawner(PythonPackage):
     homepage = "https://github.com/jupyterhub/batchspawner"
     pypi = "batchspawner/batchspawner-1.1.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("1.1.0", sha256="9bae72f7c1bd9bb11aa58ecc3bc9fae5475a10fdd92dc0c0d67fa7eb95c9dd3a")
 
     depends_on("python@3.3:3", type=("build", "run"))

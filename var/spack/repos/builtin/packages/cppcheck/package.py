@@ -14,6 +14,8 @@ class Cppcheck(CMakePackage):
 
     maintainers("white238")
 
+    license("GPL-3.0-or-later")
+
     version("2.9", sha256="d89f3282c70814fa66669e1ea0323c0484563b3f8249c7a2dcaac2ad07651dc7")
     version("2.8", sha256="a5ed97a99173d2952cd93fcb028a3405a7b3b992e7168e2ae9d527b991770203")
     version("2.7", sha256="ac74c0973c46a052760f4ff7ca6a84616ca5795510542d195a6f122c53079291")

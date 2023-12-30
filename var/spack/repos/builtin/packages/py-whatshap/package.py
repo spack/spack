@@ -14,6 +14,8 @@ class PyWhatshap(PythonPackage):
     homepage = "https://whatshap.readthedocs.io/en/latest/"
     url = "https://bitbucket.org/whatshap/whatshap/get/v0.17.tar.gz"
 
+    license("MIT")
+
     version("0.17", sha256="5f342cbd28f5d3e79490754f067aa67e8bb059da1c042d944b9f75663ef6b055")
 
     depends_on("python@3.4:", type=("build", "run"))

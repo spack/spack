@@ -16,6 +16,8 @@ class PyAsdf(PythonPackage):
 
     maintainers("lgarrison")
 
+    license("BSD-3-Clause")
+
     version("2.15.0", sha256="686f1c91ebf987d41f915cfb6aa70940d7ad17f87ede0be70463147ad2314587")
     version("2.4.2", sha256="6ff3557190c6a33781dae3fd635a8edf0fa0c24c6aca27d8679af36408ea8ff2")
 

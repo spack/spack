@@ -15,6 +15,8 @@ class PyHmmlearn(PythonPackage):
 
     maintainers("snehring")
 
+    license("BSD-3-Clause")
+
     version("0.3.0", sha256="d13a91ea3695df881465e3d36132d7eef4e84d483f4ba538a4b46e24b5ea100f")
 
     depends_on("py-setuptools", type="build")

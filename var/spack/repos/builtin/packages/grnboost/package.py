@@ -17,6 +17,8 @@ class Grnboost(Package):
 
     homepage = "https://github.com/aertslab/GRNBoost"
 
+    license("BSD-3-Clause")
+
     version(
         "2017-10-9",
         git="https://github.com/aertslab/GRNBoost.git",

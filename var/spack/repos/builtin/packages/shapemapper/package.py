@@ -18,13 +18,16 @@ class Shapemapper(CMakePackage):
 
     maintainers("snehring")
 
+    license("MIT")
+
     version(
         "2.1.5",
         sha256="0846a5d8b5f01d2d039fad4b957df0b6220a8505463f1a410368a1b90d2b227c",
         url="https://github.com/Weeks-UNC/shapemapper2/releases/download/2.1.5/shapemapper-2.1.5-source-only.tar.gz",
     )
 
-    depends_on("bowtie2@2.3.0: ^perl+threads", type="run")
+    depends_on("bowtie2@2.3.0:", type="run")
+    depends_on("perl+threads", type="run")
     # hard version dep due to jni
     depends_on("bbmap@37.78", type="run")
     depends_on("boost+filesystem+program_options+iostreams+system")

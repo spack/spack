@@ -16,6 +16,8 @@ class H5bench(CMakePackage):
 
     tags = ["e4s"]
 
+    license("BSD-3-Clause-LBNL")
+
     version("latest", branch="master", submodules=True)
     version("develop", branch="develop", submodules=True)
 

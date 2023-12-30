@@ -15,4 +15,6 @@ class RIni(RPackage):
 
     cran = "ini"
 
+    license("GPL-3.0-only")
+
     version("0.3.1", sha256="7b191a54019c8c52d6c2211c14878c95564154ec4865f57007953742868cd813")

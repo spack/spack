@@ -13,6 +13,8 @@ class PyGhpImport(PythonPackage):
     homepage = "https://github.com/c-w/ghp-import"
     pypi = "ghp-import/ghp-import-2.1.0.tar.gz"
 
+    license("Apache-2.0")
+
     version("2.1.0", sha256="9c535c4c61193c2df8871222567d7fd7e5014d835f97dc7b7439069e2413d343")
 
     depends_on("py-setuptools", type="build")

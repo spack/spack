@@ -12,6 +12,8 @@ class PyHpack(PythonPackage):
     homepage = "https://github.com/python-hyper/hpack"
     pypi = "hpack/hpack-4.0.0.tar.gz"
 
+    license("MIT")
+
     version("4.0.0", sha256="fc41de0c63e687ebffde81187a948221294896f6bdc0ae2312708df339430095")
     version("3.0.0", sha256="8eec9c1f4bfae3408a3f30500261f7e6a65912dc138526ea054f9ad98892e9d2")
 

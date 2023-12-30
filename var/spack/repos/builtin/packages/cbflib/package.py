@@ -18,6 +18,8 @@ class Cbflib(MakefilePackage):
         "https://downloads.sourceforge.net/project/cbflib/cbflib/CBFlib_0.9.2/CBFlib-0.9.2.tar.gz"
     )
 
+    license("Unlicense")
+
     version("0.9.2", sha256="367e37e1908a65d5472e921150291332823a751206804866e752b793bca17afc")
 
     depends_on("m4", type="build")

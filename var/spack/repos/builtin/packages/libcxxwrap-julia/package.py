@@ -16,6 +16,8 @@ class LibcxxwrapJulia(CMakePackage):
 
     maintainers("eloop")
 
+    license("MIT")
+
     # note: use the @main branch version if you're building for julia 1.7
     version("main", branch="main")
 

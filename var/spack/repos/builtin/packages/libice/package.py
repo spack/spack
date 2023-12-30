@@ -12,6 +12,8 @@ class Libice(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/lib/libICE"
     xorg_mirror_path = "lib/libICE-1.0.9.tar.gz"
 
+    license("X11")
+
     version("1.0.9", sha256="7812a824a66dd654c830d21982749b3b563d9c2dfe0b88b203cefc14a891edc0")
 
     depends_on("xproto")

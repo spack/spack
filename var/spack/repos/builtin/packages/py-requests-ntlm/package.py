@@ -12,6 +12,8 @@ class PyRequestsNtlm(PythonPackage):
     homepage = "https://github.com/requests/requests-ntlm"
     pypi = "requests_ntlm/requests_ntlm-1.1.0.tar.gz"
 
+    license("ISC")
+
     version("1.1.0", sha256="9189c92e8c61ae91402a64b972c4802b2457ce6a799d658256ebf084d5c7eb71")
 
     depends_on("py-setuptools", type="build")

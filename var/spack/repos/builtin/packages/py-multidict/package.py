@@ -13,6 +13,8 @@ class PyMultidict(PythonPackage):
     homepage = "https://github.com/aio-libs/multidict"
     pypi = "multidict/multidict-6.0.2.tar.gz"
 
+    license("Apache-2.0")
+
     version("6.0.4", sha256="3666906492efb76453c0e7b97f2cf459b0682e7402c0489a95484965dbc1da49")
     version("6.0.2", sha256="5ff3bd75f38e4c43f1f470f2df7a4d430b821c4ce22be384e1459cb57d6bb013")
     version("5.2.0", sha256="0dd1c93edb444b33ba2274b66f63def8a327d607c6c790772f448a53b6ea59ce")

@@ -13,6 +13,8 @@ class PyMdanalysistests(PythonPackage):
     pypi = "MDAnalysisTests/MDAnalysisTests-0.0.0.tar.gz"
 
     maintainers("RMeli")
+    
+    license("GPL-3.0-or-later")
 
     version("2.7.0", sha256="326d65d7f14da8d1b047aab87ca312a68459a5fd18ddf6d8cb9ac9c3ca51d9e5")
     version("2.6.1", sha256="043f7451f4d9c42ea9e6609a81a6002948e2c74fd268282e0831416789b22e5e")

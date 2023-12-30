@@ -14,6 +14,8 @@ class PySetuptoolsGitVersioning(PythonPackage):
 
     maintainers("angus-g")
 
+    license("MIT")
+
     version("1.13.3", sha256="9dfc59a31dcadcae04bcddc50534ccfc07a25a3180ab5cc1b1e3730217971c63")
 
     depends_on("py-setuptools", type=("build", "run"))

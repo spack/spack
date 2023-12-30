@@ -16,6 +16,8 @@ class Kicad(CMakePackage):
     url = "https://gitlab.com/kicad/code/kicad/-/archive/5.1.8/kicad-5.1.8.tar.gz"
     maintainers("aweits")
 
+    license("GPL-3.0-or-later")
+
     version("7.0.2", sha256="8df56648226061c91ddd1d2ca970c66190fc70c7ace23c99cc28c209713e4dfc")
     version("5.1.9", sha256="841be864b9dc5c761193c3ee9cbdbed6729952d7b38451aa8e1977bdfdb6081b")
     version("5.1.8", sha256="bf24f8ef427b4a989479b8e4af0b8ae5c54766755f12748e2e88a922c5344ca4")

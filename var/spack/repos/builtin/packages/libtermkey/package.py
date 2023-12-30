@@ -12,6 +12,8 @@ class Libtermkey(MakefilePackage):
     homepage = "http://www.leonerd.org.uk/code/libtermkey/"
     url = "http://www.leonerd.org.uk/code/libtermkey/libtermkey-0.18.tar.gz"
 
+    license("MIT")
+
     version("0.22", sha256="6945bd3c4aaa83da83d80a045c5563da4edd7d0374c62c0d35aec09eb3014600")
     version("0.18", sha256="239746de41c845af52bb3c14055558f743292dd6c24ac26c2d6567a5a6093926")
     version("0.17", sha256="68949364ed5eaad857b3dea10071cde74b00b9f236dfbb702169f246c3cef389")

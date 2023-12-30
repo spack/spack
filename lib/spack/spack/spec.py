@@ -910,19 +910,23 @@ class FlagMap(lang.HashableMap):
             yield flags
 
     def __str__(self):
-        sorted_keys = [k for k in sorted(self.keys()) if self[k] != []]
-        cond_symbol = " " if len(sorted_keys) > 0 else ""
-        return (
-            cond_symbol
-            + " ".join(
-                key
-                + ('=="' if True in [f.propagate for f in self[key]] else '="')
-                + " ".join(self[key])
-                + '"'
-                for key in sorted_keys
-            )
-            + cond_symbol
-        )
+        sorted_items = sorted((k, v) for k, v in self.items() if v)
+
+        result = ""
+        for flag_type, flags in sorted_items:
+            normal = [f for f in flags if not f.propagate]
+            if normal:
+                result += f" {flag_type}={spack.parser.quote_if_needed(' '.join(normal))}"
+
+            propagated = [f for f in flags if f.propagate]
+            if propagated:
+                result += f" {flag_type}=={spack.parser.quote_if_needed(' '.join(propagated))}"
+
+        # TODO: somehow add this space only if something follows in Spec.format()
+        if sorted_items:
+            result += " "
+
+        return result
 
 
 def _sort_by_dep_types(dspec: DependencySpec):
@@ -3128,9 +3132,7 @@ class Spec:
 
         except spack.error.UnsatisfiableSpecError as e:
             # Here, the DAG contains two instances of the same package
-            # with inconsistent constraints.  Users cannot produce
-            # inconsistent specs like this on the command line: the
-            # parser doesn't allow it. Spack must be broken!
+            # with inconsistent constraints.
             raise InconsistentSpecError("Invalid Spec DAG: %s" % e.message) from e
 
     def index(self, deptype="all"):
@@ -4725,6 +4727,20 @@ class Spec:
     @build_spec.setter
     def build_spec(self, value):
         self._build_spec = value
+
+    def trim(self, dep_name):
+        """
+        Remove any package that is or provides `dep_name` transitively
+        from this tree. This can also remove other dependencies if
+        they are only present because of `dep_name`.
+        """
+        for spec in list(self.traverse()):
+            new_dependencies = _EdgeMap()  # A new _EdgeMap
+            for pkg_name, edge_list in spec._dependencies.items():
+                for edge in edge_list:
+                    if (dep_name not in edge.virtuals) and (not dep_name == edge.spec.name):
+                        new_dependencies.add(edge)
+            spec._dependencies = new_dependencies
 
     def splice(self, other, transitive):
         """Splices dependency "other" into this ("target") Spec, and return the

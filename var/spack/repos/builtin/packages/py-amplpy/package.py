@@ -18,6 +18,8 @@ class PyAmplpy(PythonPackage):
     homepage = "https://ampl.com/"
     pypi = "amplpy/amplpy-0.8.6.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.8.6", sha256="ad0945d69f75e7762802bb54849009717fbcf226a6da6f37b539d9534bdcf68d")
 
     depends_on("py-future@0.15.0:", type=("build", "run"))

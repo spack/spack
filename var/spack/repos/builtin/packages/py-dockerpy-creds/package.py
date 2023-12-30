@@ -12,6 +12,8 @@ class PyDockerpyCreds(PythonPackage):
     homepage = "https://github.com/shin-/dockerpy-creds"
     url = "https://github.com/shin-/dockerpy-creds/archive/0.4.0.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.4.0", sha256="c76c2863c6e9a31b8f70ee5b8b0e5ac6860bfd422d930c04a387599e4272b4b9")
     version("0.3.0", sha256="3660a5e9fc7c2816ab967e4bdb4802f211e35011357ae612a601d6944721e153")
     version("0.2.3", sha256="7278a7e3c904ccea4bcc777b991a39cac9d4702bfd7d76b95ff6179500d886c4")

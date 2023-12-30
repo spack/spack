@@ -12,6 +12,8 @@ class PyPyvizComms(PythonPackage):
     homepage = "https://holoviz.org/"
     pypi = "pyviz_comms/pyviz_comms-2.2.1.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("2.2.1", sha256="a26145b8ce43d2d934b3c6826d77b913ce105c528eb2e494c890b3e3525ddf33")
 
     depends_on("py-setuptools@40.8:60", type="build")

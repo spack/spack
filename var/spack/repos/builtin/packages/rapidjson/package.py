@@ -13,6 +13,8 @@ class Rapidjson(CMakePackage):
     url = "https://github.com/Tencent/rapidjson/archive/v1.1.0.tar.gz"
     git = "https://github.com/Tencent/rapidjson.git"
 
+    license("MIT")
+
     version("1.2.0-2022-03-09", commit="8261c1ddf43f10de00fd8c9a67811d1486b2c784")
     version("1.2.0-2021-08-13", commit="00dbcf2c6e03c47d6c399338b6de060c71356464")
     version("1.1.0", sha256="bf7ced29704a1e696fbccf2a2b4ea068e7774fa37f6d7dd4039d0787f8bed98e")

@@ -11,6 +11,8 @@ class PyFilecheck(PythonPackage):
 
     pypi = "filecheck/filecheck-0.0.23.tar.gz"
 
+    license("Apache-2.0")
+
     version("0.0.23", sha256="1c5db511fb7b5a32e1e24736479cfe754ea27c9ae0d5b6d52c0af132c8db3e7d")
 
     depends_on("python@3.6.2:3", type=("build", "run"))

@@ -15,6 +15,8 @@ class RIsva(RPackage):
 
     cran = "isva"
 
+    license("GPL-2.0-only")
+
     version("1.9", sha256="9fd016e0b34034d271d45f8a0d0db62780bf0187112e45f610aa9237014e1d17")
 
     depends_on("r-qvalue", type=("build", "run"))

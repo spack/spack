@@ -18,6 +18,8 @@ class RGviz(RPackage):
 
     bioc = "Gviz"
 
+    license("Artistic-2.0")
+
     version("1.44.0", commit="e70aaa7dd27df8482ee854395475a87ec2121279")
     version("1.42.0", commit="4eddb688bca3fdeb65fd536d653d7ba7f7976121")
     version("1.40.1", commit="d21843710cd05135353de5cd4ce4d35cdd333b7c")

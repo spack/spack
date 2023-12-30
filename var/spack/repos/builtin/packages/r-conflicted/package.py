@@ -17,6 +17,8 @@ class RConflicted(RPackage):
 
     cran = "conflicted"
 
+    license("MIT")
+
     version("1.2.0", sha256="c99b86bb52da3e7d1f4d96d70c77304d0434db5bd906edd8d743e89ac9223088")
 
     depends_on("r@3.2:", type=("build", "run"))

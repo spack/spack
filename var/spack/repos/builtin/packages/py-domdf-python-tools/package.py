@@ -13,6 +13,8 @@ class PyDomdfPythonTools(PythonPackage):
     homepage = "https://github.com/domdfcoding/domdf_python_tools"
     pypi = "domdf_python_tools/domdf_python_tools-3.6.1.tar.gz"
 
+    license("MIT")
+
     version("3.6.1", sha256="acc04563d23bce4d437dd08af6b9bea788328c412772a044d8ca428a7ad861be")
 
     depends_on("py-wheel@0.34.2:", type="build")

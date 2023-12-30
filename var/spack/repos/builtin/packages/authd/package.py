@@ -14,6 +14,8 @@ class Authd(MakefilePackage):
     homepage = "https://github.com/InfrastructureServices/authd"
     url = "https://github.com/InfrastructureServices/authd/releases/download/v1.4.4/authd-1.4.4.tar.gz"
 
+    license("GPL-2.0-only")
+
     version("1.4.4", sha256="71ee3d1c3e107c93e082148f75ee460c949b203c861dd20d48f7c5cfdc272bf8")
 
     def setup_run_environment(self, env):

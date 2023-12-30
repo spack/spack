@@ -13,6 +13,8 @@ class PyFlye(PythonPackage):
     homepage = "https://github.com/fenderglass/Flye"
     url = "https://github.com/fenderglass/Flye/archive/2.6.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("2.9", sha256="158ea620d4aa92a53dae1832b09fd605e17552e45b83eecbf28e41a4516a6957")
     version("2.8.3", sha256="070f9fbee28eef8e8f87aaecc048053f50a8102a3715e71b16c9c46819a4e07c")
     version("2.8.2", sha256="f1284bd2a777356fbf808d89052bc0f9bf5602560dde7cf722d7974d9a94d03b")

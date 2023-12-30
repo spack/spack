@@ -17,6 +17,8 @@ class PyPycbc(PythonPackage):
     homepage = "https://pycbc.org/"
     pypi = "PyCBC/PyCBC-1.14.1.tar.gz"
 
+    license("GPL-3.0-or-later")
+
     version("1.14.1", sha256="4b0a309cb6209837aaebbd691413a286dd7200ccf4b977ffed1462a65ac35dc0")
 
     depends_on("py-setuptools", type="build")

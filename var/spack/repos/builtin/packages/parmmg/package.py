@@ -14,6 +14,8 @@ class Parmmg(CMakePackage):
 
     maintainers("corentin-dev")
 
+    license("LGPL-3.0-or-later")
+
     version("1.3.0", sha256="d43b73a73b62545b5a31bbe25562f69c9e63ad8a6d416bd459781203e37427cf")
     version("1.2.0", sha256="99729cc292dcb59c87e3f25d4cabf5a64841e83b624d383e1fd3fb7f960df672")
     version("1.1.0", sha256="a5904f1f56b7809ab9ec2f6118b03a082ec2b5564355a73c74fc55426cc69600")

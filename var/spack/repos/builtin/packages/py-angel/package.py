@@ -12,6 +12,8 @@ class PyAngel(PythonPackage):
     homepage = "https://github.com/PacificBiosciences/ANGEL"
     url = "https://github.com/PacificBiosciences/ANGEL/archive/v3.0.tar.gz"
 
+    license("MIT")
+
     version("3.0", sha256="a0319553055d3dfc84a4f732ed246c180c23ee9c397810c96acd7940721ae57d")
 
     depends_on("python@3.7:", type=("build", "run"))

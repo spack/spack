@@ -29,6 +29,8 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
 
     maintainers("dev-zero", "mtaillefumier")
 
+    license("GPL-2.0-or-later")
+
     version("2023.2", sha256="adbcc903c1a78cba98f49fe6905a62b49f12e3dfd7cedea00616d1a5f50550db")
     version("2023.1", sha256="dff343b4a80c3a79363b805429bdb3320d3e1db48e0ff7d20a3dfd1c946a51ce")
     version("2022.2", sha256="1a473dea512fe264bb45419f83de432d441f90404f829d89cbc3a03f723b8354")
@@ -229,6 +231,10 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         conflicts("~mpi", msg="elpa requires MPI")
         depends_on("elpa+openmp", when="+openmp")
         depends_on("elpa~openmp", when="~openmp")
+        depends_on("elpa+cuda", when="+cuda")
+        depends_on("elpa~cuda", when="~cuda")
+        depends_on("elpa+rocm", when="+rocm")
+        depends_on("elpa~rocm", when="~rocm")
         depends_on("elpa@2021.05:", when="@8.3:")
         depends_on("elpa@2021.11.001:", when="@9.1:")
         depends_on("elpa@2023.05.001:", when="@2023.2:")
@@ -238,7 +244,8 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
             "~mpi", msg="DLA-Future requires MPI. Only the distributed eigensolver is available."
         )
         depends_on("dla-future@0.2.1: +scalapack")
-        depends_on("dla-future ~cuda~rocm", when="~cuda~rocm")
+        depends_on("dla-future ~cuda", when="~cuda")
+        depends_on("dla-future ~rocm", when="~rocm")
         depends_on("dla-future +cuda", when="+cuda")
         depends_on("dla-future +rocm", when="+rocm")
 
@@ -266,7 +273,8 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         depends_on("sirius@7.0.0:7.0", when="@8:8.2")
         depends_on("sirius@7.2", when="@8.3:8.9")
         depends_on("sirius@7.3:", when="@9.1")
-        depends_on("sirius@7.4:", when="@2023.2")
+        depends_on("sirius@7.4:7.5", when="@2023.2")
+        depends_on("sirius@7.5:", when="@master")
         conflicts("~mpi", msg="SIRIUS requires MPI")
         # sirius support was introduced in 7, but effectively usable starting from CP2K 9
         conflicts("@:8")
@@ -292,6 +300,9 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     depends_on("wannier90", when="@3.0+mpi")
 
     with when("build_system=cmake"):
+        depends_on("cmake@3.22:", type="build")
+
+        # DBCSR as external dependency
         depends_on("dbcsr@2.6:")
         depends_on("dbcsr+openmp", when="+openmp")
         depends_on("dbcsr+cuda", when="+cuda")

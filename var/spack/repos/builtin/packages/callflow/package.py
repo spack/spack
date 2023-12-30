@@ -17,6 +17,8 @@ class Callflow(PythonPackage):
 
     maintainers("bhatiaharsh", "jarusified")
 
+    license("MIT")
+
     version("develop", branch="develop")
     version("1.1.2", sha256="60d2327843469f42be9366ff31d7a6afc85021af4e38b7d6704b2d8c3da7ed36")
     version("1.1.1", sha256="a52e6e0697a406dfe391225d3cc3c5c5a12a6c86b68f0f8e47777c79fd45cb28")

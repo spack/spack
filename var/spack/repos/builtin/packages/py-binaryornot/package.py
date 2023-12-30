@@ -12,6 +12,8 @@ class PyBinaryornot(PythonPackage):
     homepage = "https://binaryornot.readthedocs.io"
     url = "https://github.com/audreyr/binaryornot/archive/0.4.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("0.4.4", sha256="8cca04876a5e9d01f0dda79390e99089da87f3c1948ab2720661ba379d1b23f2")
 
     depends_on("py-setuptools", type="build")

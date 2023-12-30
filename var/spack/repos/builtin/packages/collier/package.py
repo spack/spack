@@ -18,6 +18,8 @@ class Collier(CMakePackage):
 
     maintainers("vvolkl")
 
+    license("GPL-3.0-only")
+
     version("1.2.8", sha256="5cb24ce24ba1f62b7a96c655b31e9fddccc603eff31e60f9033b16354a6afd89")
     version("1.2.7", sha256="fde4b144a17c1bf5aa2ceaa86c71c79da10c9de8fec7bd33c8bffb4198acd5ca")
     version("1.2.6", sha256="b0d517868c71d2d1b8b6d3e0c370a43c9eb18ea8393a6e80070a5a2206f7de36")

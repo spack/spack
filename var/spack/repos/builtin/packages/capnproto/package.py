@@ -17,6 +17,8 @@ class Capnproto(AutotoolsPackage):
 
     maintainers("alexrobomind")
 
+    license("MIT")
+
     version("master", branch="master")
 
     version("0.10.2", sha256="756262841fa66260c9969e900701cc86720c2548584fb96c8153348fd7edfe69")

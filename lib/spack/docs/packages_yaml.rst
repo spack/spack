@@ -97,6 +97,35 @@ Each package version and compiler listed in an external should
 have entries in Spack's packages and compiler configuration, even
 though the package and compiler may not ever be built.
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Extra attributes for external packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Sometimes external packages require additional attributes to be used
+effectively. This information can be defined on a per-package basis
+and stored in the ``extra_attributes`` section of the external package
+configuration. In addition to per-package information, this section
+can be used to define environment modifications to be performed
+whenever the package is used. For example, if an external package is
+built without ``rpath`` support, it may require ``LD_LIBRARY_PATH``
+settings to find its dependencies. This could be configured as
+follows:
+
+.. code-block:: yaml
+
+   packages:
+     mpich:
+       externals:
+       - spec: mpich@3.3 %clang@12.0.0 +hwloc
+         prefix: /path/to/mpich
+         extra_attributes:
+           environment:
+             prepend_path:
+               LD_LIBRARY_PATH: /path/to/hwloc/lib64
+
+See :ref:`configuration_environment_variables` for more information on
+how to configure environment modifications in Spack config files.
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Prevent packages from being built from sources
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -256,6 +285,11 @@ on the command line, because it can specify constraints on packages
 is not possible to specify constraints on dependencies while also keeping
 those dependencies optional.
 
+.. seealso::
+
+   FAQ: :ref:`Why does Spack pick particular versions and variants? <faq-concretizer-precedence>`
+
+
 ^^^^^^^^^^^^^^^^^^^
 Requirements syntax
 ^^^^^^^^^^^^^^^^^^^
@@ -378,7 +412,33 @@ like this:
 
 which means every spec will be required to use ``clang`` as a compiler.
 
-Note that in this case ``all`` represents a *default set of requirements* -
+Requirements on variants for all packages are possible too, but note that they
+are only enforced for those packages that define these variants, otherwise they
+are disregarded. For example:
+
+.. code-block:: yaml
+
+   packages:
+     all:
+       require:
+       - "+shared"
+       - "+cuda"
+
+will just enforce ``+shared`` on ``zlib``, which has a boolean ``shared`` variant but
+no ``cuda`` variant.
+
+Constraints in a single spec literal are always considered as a whole, so in a case like:
+
+.. code-block:: yaml
+
+   packages:
+     all:
+       require: "+shared +cuda"
+
+the default requirement will be enforced only if a package has both a ``cuda`` and
+a ``shared`` variant, and will never be partially enforced.
+
+Finally, ``all`` represents a *default set of requirements* -
 if there are specific package requirements, then the default requirements
 under ``all`` are disregarded. For example, with a configuration like this:
 
@@ -386,12 +446,18 @@ under ``all`` are disregarded. For example, with a configuration like this:
 
    packages:
      all:
-       require: '%clang'
+       require:
+       - 'build_type=Debug'
+       - '%clang'
      cmake:
-       require: '%gcc'
+       require:
+       - 'build_type=Debug'
+       - '%gcc'
 
 Spack requires ``cmake`` to use ``gcc`` and all other nodes (including ``cmake``
-dependencies) to use ``clang``.
+dependencies) to use ``clang``. If enforcing ``build_type=Debug`` is needed also
+on ``cmake``, it must be repeated in the specific ``cmake`` requirements.
+
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Setting requirements on virtual specs
@@ -434,6 +500,11 @@ they rather only set defaults. The concretizer is free to change
 them if it must, due to other constraints, and also prefers reusing
 installed packages over building new ones that are a better match for
 preferences.
+
+.. seealso::
+
+   FAQ: :ref:`Why does Spack pick particular versions and variants? <faq-concretizer-precedence>`
+
 
 Most package preferences (``compilers``, ``target`` and ``providers``)
 can only be set globally under the ``all`` section of ``packages.yaml``:

@@ -16,6 +16,8 @@ class PypyBootstrap(Package):
 
     maintainers("adamjstewart")
 
+    license("MIT")
+
     if platform.system() == "Linux":
         if platform.machine() == "x86_64":
             version(

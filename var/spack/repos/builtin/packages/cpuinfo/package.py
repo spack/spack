@@ -14,6 +14,8 @@ class Cpuinfo(CMakePackage):
     git = "https://github.com/pytorch/cpuinfo.git"
     tags = ["windows"]
 
+    license("BSD-2-Clause")
+
     version("main", branch="main")
     version("2022-08-19", commit="8ec7bd91ad0470e61cf38f618cc1f270dede599c")  # py-torch@1.13
     version("2020-12-17", commit="5916273f79a21551890fd3d56fc5375a78d1598d")  # py-torch@1.8:1.12

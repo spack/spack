@@ -13,6 +13,8 @@ class RDevtools(RPackage):
 
     cran = "devtools"
 
+    license("MIT")
+
     version("2.4.5", sha256="38160ebd839acdec7ebf0699a085b4ab1ebd5500d3c57a9fa7ae484f1909904b")
     version("2.4.4", sha256="acd6759d269f30893eda173a738b1ce6537a11313c8e8e12e116452c4296934d")
     version("2.4.3", sha256="e42159a9bca0b219170e76c282862e27ca283649d6cbf6a868175d8982e06b4f")

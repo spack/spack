@@ -19,6 +19,8 @@ class PyAxPlatform(PythonPackage):
 
     maintainers("meyersbs")
 
+    license("MIT")
+
     version("0.3.1", sha256="0bad1d16155560fdd8644308d2771edf7fd977ad41fea15a7ecf3f224bc36517")
 
     depends_on("py-setuptools@34.4:", type="build")

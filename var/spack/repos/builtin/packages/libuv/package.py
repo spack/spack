@@ -13,6 +13,8 @@ class Libuv(AutotoolsPackage):
     list_url = "https://dist.libuv.org/dist"
     list_depth = 1
 
+    license("MIT")
+
     version("1.46.0", sha256="94f101111ef3209340d7f09c2aa150ddb4feabd2f9d87d47d9f5bded835b8094")
     version("1.45.0", sha256="3793d8c0d6fa587721d010d0555b7e82443fd4e8b3c91e529eb6607592f52b87")
     version("1.44.2", sha256="8ff28f6ac0d6d2a31d2eeca36aff3d7806706c7d3f5971f5ee013ddb0bdd2e9e")

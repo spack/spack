@@ -13,6 +13,8 @@ class PpopenAt(MakefilePackage):
     homepage = "http://ppopenhpc.cc.u-tokyo.ac.jp/ppopenhpc/"
     git = "https://github.com/Post-Peta-Crest/ppOpenHPC.git"
 
+    license("MIT")
+
     version("master", branch="AT")
 
     def edit(self, spec, prefix):

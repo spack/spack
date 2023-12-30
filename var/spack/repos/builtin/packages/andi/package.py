@@ -14,6 +14,8 @@ class Andi(AutotoolsPackage):
     url = "https://github.com/EvolBioInf/andi/archive/v0.10.tar.gz"
     maintainers("snehring")
 
+    license("GPL-3.0-or-later")
+
     version("0.14", sha256="2c9e11524f38e74fe3f981e6acd9527c1a1ca30994a30c5e86808ba5165a25b7")
     version("0.10", sha256="1ff371de0b6db4080e402ded2687947dc2d6913e28626edec21dcf5149489ee8")
 

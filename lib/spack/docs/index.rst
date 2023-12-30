@@ -55,6 +55,7 @@ or refer to the full manual below.
    getting_started
    basic_usage
    replace_conda_homebrew
+   frequently_asked_questions
 
 .. toctree::
    :maxdepth: 2

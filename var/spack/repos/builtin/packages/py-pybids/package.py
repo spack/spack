@@ -12,6 +12,8 @@ class PyPybids(PythonPackage):
     homepage = "https://github.com/bids-standard/pybids"
     pypi = "pybids/pybids-0.13.1.tar.gz"
 
+    license("MIT")
+
     version("0.16.3", sha256="10e279350c8d14ca602c0d4469a5e4bf7ff393e8643c831a546ae735b6b82cc3")
     version("0.16.1", sha256="1a6ab06d375f3b783e738826e6d220b2f4145419b4b02f4edbcc8cb7c9b2208a")
     version("0.15.3", sha256="4d99c979bc4bc209cff70a02d1da309c9bf8c6b0338e2a0b66ebea77c7f3c461")

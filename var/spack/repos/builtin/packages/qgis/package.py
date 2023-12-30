@@ -17,6 +17,8 @@ class Qgis(CMakePackage):
 
     maintainers("adamjstewart", "Sinan81")
 
+    license("GPL-2.0-or-later")
+
     version("3.34.0", sha256="348a2df4c4520813a319b7f72546b3823e044cacd28646ba189b56a49c7d1b5f")
     # Prefer latest long term release
     version(

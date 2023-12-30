@@ -22,6 +22,8 @@ class Orca(Package):
     maintainers("snehring")
     manual_download = True
 
+    license("LGPL-2.1-or-later")
+
     version(
         "5.0.3-f.1",
         sha256="dea377459d61ef7d7e822e366420197ee2a4864991dfcdc4ea1a683f9be26c7f",

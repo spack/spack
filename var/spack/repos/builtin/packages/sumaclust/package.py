@@ -12,6 +12,8 @@ class Sumaclust(MakefilePackage):
 
     homepage = "https://git.metabarcoding.org/obitools/sumaclust"
 
+    license("CECILL-2.0")
+
     version(
         "1.0.20",
         sha256="b697495f9a2b93fe069ecdb3bc6bba75b07ec3ef9f01ed66c4dd69587a40cfc1",
