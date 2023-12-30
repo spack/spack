@@ -89,6 +89,7 @@ import spack.util.crypto
 import spack.util.executable
 import spack.util.hash
 import spack.util.module_cmd as md
+import spack.util.path as pth
 import spack.util.prefix
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
@@ -1833,7 +1834,9 @@ class Spec:
 
     @prefix.setter
     def prefix(self, value):
-        self._prefix = spack.util.prefix.Prefix(llnl.path.convert_to_platform_path(value))
+        self._prefix = spack.util.prefix.Prefix(
+            pth.substitute_path_variables(llnl.path.convert_to_platform_path(value))
+        )
 
     def spec_hash(self, hash):
         """Utility method for computing different types of Spec hashes.
