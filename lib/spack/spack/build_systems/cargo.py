@@ -25,7 +25,7 @@ class CargoPackage(spack.package_base.PackageBase):
     build_system("cargo")
 
     with when("build_system=cargo"):
-        depends_on("rust", type="build")
+        depends_on("rust+cargo", type="build")
 
 
 @spack.builder.builder("cargo")
