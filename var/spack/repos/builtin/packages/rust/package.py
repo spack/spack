@@ -71,13 +71,16 @@ class Rust(Package):
         default=False,
         description="Outputs code analysis that can be consumed by other tools",
     )
+    variant("cargo", default=True, description="The Rust package manager.")
     variant(
         "clippy",
-        default=True,
+        default=False,
         description="A bunch of lints to catch common mistakes and improve your Rust code.",
     )
     variant("docs", default=False, description="Build Rust documentation.")
-    variant("rustfmt", default=True, description="Formatting tool for Rust code.")
+    variant("rustdoc", default=True, description="Generate documentation for Rust projects.")
+    variant("rustfmt", default=False, description="Formatting tool for Rust code.")
+    variant("rust-analyzer", default=False, description="A Rust compiler front-end for IDEs")
     variant("src", default=True, description="Include standard library source files.")
 
     extendable = True
@@ -154,11 +157,13 @@ class Rust(Package):
         # Convert opts to '--set key=value' format.
         flags = [flag for opt in opts for flag in ("--set", opt)]
 
-        # Include both cargo and rustdoc in minimal install to match
-        # standard download of rust.
-        tools = ["cargo", "rustdoc"]
+        # Additional core rust tools to install.
+        tools = []
 
         # Add additional tools as directed by the package variants.
+        if spec.satisfies("+cargo"):
+            tools.append("cargo")
+
         if spec.satisfies("+analysis"):
             tools.append("analysis")
 
@@ -168,8 +173,14 @@ class Rust(Package):
         if spec.satisfies("+src"):
             tools.append("src")
 
+        if spec.satisfies("+rustdoc"):
+            tools.append("rustdoc")
+
         if spec.satisfies("+rustfmt"):
             tools.append("rustfmt")
+
+        if spec.satisfies("+rust-analyzer"):
+            tools.append("rust-analyzer")
 
         # Compile tools into flag for configure.
         flags.append(f"--tools={','.join(tools)}")
