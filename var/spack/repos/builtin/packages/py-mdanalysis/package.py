@@ -14,10 +14,11 @@ class PyMdanalysis(PythonPackage):
     topology formats.)"""
 
     homepage = "https://www.mdanalysis.org"
-    pypi = "MDAnalysis/MDAnalysis-2.4.2.tar.gz"
+    pypi = "MDAnalysis/MDAnalysis-0.0.0.tar.gz"
 
     maintainers("RMeli")
 
+    version("2.7.0", sha256="572e82945e5d058e3749ec5f18e6b3831ef7f2119cb54672567ae9a977201e93")
     version("2.6.1", sha256="9cc69b94bddd026f26ffcaf5bdbed6d568c1c10e19a341d84f8d37a2a70222f2")
     version("2.6.0", sha256="210b198a115165004c36fbbbe5eb83a13323f52b10ccaef30dd40bfe25ba3e61")
     version("2.5.0", sha256="06ce4efab6ca1dbd2ee2959fc668049e1d574a8fe94ab948a4608244da1d016b")
@@ -43,7 +44,7 @@ class PyMdanalysis(PythonPackage):
     depends_on("py-numpy@1.21.0:", when="@2.5.0:", type=("build", "run"))
     depends_on("py-numpy@1.20.0:", type=("build", "run"))
 
-    depends_on("py-biopython@1.80:", type=("build", "run"))
+    depends_on("py-biopython@1.80:", when="@:2.6.1", type=("build", "run"))
     depends_on("py-networkx@2.0:", type=("build", "run"))
     depends_on("py-griddataformats@0.4.0:", type=("build", "run"))
     depends_on("py-mmtf-python@1.0.0:", type=("build", "run"))
@@ -75,6 +76,7 @@ class PyMdanalysis(PythonPackage):
     depends_on("py-parmed", when="+extra_formats @2.6.0:", type=("build", "run"))
 
     # analysis (extras_require)
+    depends_on("py-biopython@1.80:", when="@2.7.0: +analysis", type=("build", "run"))
     depends_on("py-seaborn", when="+analysis", type=("build", "run"))
     depends_on("py-scikit-learn", when="+analysis", type=("build", "run"))
     depends_on("py-tidynamics@1:", when="+analysis", type=("build", "run"))
