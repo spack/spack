@@ -9,8 +9,8 @@ EOF
 . /workspaces/spack/share/spack/setup-env.sh
 
 # Ensure generic targets for maximum matching with buildcaches
-spack config add --scope site "packages:all:require:[target=x86_64_v3]"
-spack config add --scope site "concretizer:targets:granularity:generic"
+spack config --scope site add "packages:all:require:[target=x86_64_v3]"
+spack config --scope site add "concretizer:targets:granularity:generic"
 spack compiler find --scope site
 
 # Setup buildcaches
