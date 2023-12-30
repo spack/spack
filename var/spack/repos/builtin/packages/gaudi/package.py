@@ -62,8 +62,8 @@ class Gaudi(CMakePackage):
     patch("fmt_fix.patch", when="@36.6:36.12 ^fmt@10:")
     # fix issues with catch2 3.1 and above
     patch(
-        "https://gitlab.cern.ch/gaudi/Gaudi/-/commit/110f2189f386c3a23150ccdfdc47c1858fc7098e.patch?full_index=1",
-        sha256="f63276e9c4b6a51ad52507ac54f85e81b0564076e6a08b4243300bd79ba8a7d0",
+        "https://gitlab.cern.ch/gaudi/Gaudi/-/commit/110f2189f386c3a23150ccdfdc47c1858fc7098e.diff",
+        sha256="b05f6b7c1efb8c3af291c8d81fd1627e58af7c5f9a78a0098c6e3bfd7ec80c15",
         when="@37.1 ^catch2@3.1:",
     )
 
