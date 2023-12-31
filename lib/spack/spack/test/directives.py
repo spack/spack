@@ -101,7 +101,7 @@ def test_license_directive(config, mock_packages, package_name, expected_license
 
 def test_duplicate_exact_range_license():
     package = namedtuple("package", ["licenses", "name"])
-    package.licenses = {spack.directives.make_when_spec("+foo"): "Apache-2.0"}
+    package.licenses = {spack.spec.Spec("+foo"): "Apache-2.0"}
     package.name = "test_package"
 
     msg = (
@@ -115,7 +115,7 @@ def test_duplicate_exact_range_license():
 
 def test_overlapping_duplicate_licenses():
     package = namedtuple("package", ["licenses", "name"])
-    package.licenses = {spack.directives.make_when_spec("+foo"): "Apache-2.0"}
+    package.licenses = {spack.spec.Spec("+foo"): "Apache-2.0"}
     package.name = "test_package"
 
     msg = (
