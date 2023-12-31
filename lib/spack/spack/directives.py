@@ -91,7 +91,7 @@ Patcher = Callable[[Union["spack.package_base.PackageBase", Dependency]], None]
 PatchesType = Optional[Union[Patcher, str, List[Union[Patcher, str]]]]
 
 
-def make_when_spec(value: WhenType) -> Optional["spack.spec.Spec"]:
+def _make_when_spec(value: WhenType) -> Optional["spack.spec.Spec"]:
     """Create a ``Spec`` that indicates when a directive should be applied.
 
     Directives with ``when`` specs, e.g.:
@@ -471,7 +471,7 @@ def _depends_on(
     type: DepType = dt.DEFAULT_TYPES,
     patches: PatchesType = None,
 ):
-    when_spec = make_when_spec(when)
+    when_spec = _make_when_spec(when)
     if not when_spec:
         return
 
@@ -547,7 +547,7 @@ def conflicts(conflict_spec: SpecType, when: WhenType = None, msg: Optional[str]
 
     def _execute_conflicts(pkg: "spack.package_base.PackageBase"):
         # If when is not specified the conflict always holds
-        when_spec = make_when_spec(when)
+        when_spec = _make_when_spec(when)
         if not when_spec:
             return
 
@@ -599,7 +599,7 @@ def extends(spec, when=None, type=("build", "run"), patches=None):
     """
 
     def _execute_extends(pkg):
-        when_spec = make_when_spec(when)
+        when_spec = _make_when_spec(when)
         if not when_spec:
             return
 
@@ -627,7 +627,7 @@ def provides(*specs, when: Optional[str] = None):
     def _execute_provides(pkg):
         import spack.parser  # Avoid circular dependency
 
-        when_spec = make_when_spec(when)
+        when_spec = _make_when_spec(when)
         if not when_spec:
             return
 
@@ -685,7 +685,7 @@ def patch(
                 "Patches are not allowed in {0}: package has no code.".format(pkg.name)
             )
 
-        when_spec = make_when_spec(when)
+        when_spec = _make_when_spec(when)
         if not when_spec:
             return
 
@@ -813,7 +813,7 @@ def variant(
     description = str(description).strip()
 
     def _execute_variant(pkg):
-        when_spec = make_when_spec(when)
+        when_spec = _make_when_spec(when)
         when_specs = [when_spec]
 
         if not re.match(spack.spec.IDENTIFIER_RE, name):
@@ -855,7 +855,7 @@ def resource(**kwargs):
 
     def _execute_resource(pkg):
         when = kwargs.get("when")
-        when_spec = make_when_spec(when)
+        when_spec = _make_when_spec(when)
         if not when_spec:
             return
 
@@ -921,17 +921,17 @@ def maintainers(*names: str):
 
 def _execute_license(pkg, license_identifier: str, when):
     # If when is not specified the license always holds
-    when_spec = make_when_spec(when)
+    when_spec = _make_when_spec(when)
     if not when_spec:
         return
 
     for other_when_spec in pkg.licenses:
         if when_spec.intersects(other_when_spec):
             when_message = ""
-            if when_spec != make_when_spec(None):
+            if when_spec != _make_when_spec(None):
                 when_message = f"when {when_spec}"
             other_when_message = ""
-            if other_when_spec != make_when_spec(None):
+            if other_when_spec != _make_when_spec(None):
                 other_when_message = f"when {other_when_spec}"
             err_msg = (
                 f"{pkg.name} is specified as being licensed as {license_identifier} "
@@ -992,7 +992,7 @@ def requires(*requirement_specs: str, policy="one_of", when=None, msg=None):
             )
             raise DirectiveError(err_msg)
 
-        when_spec = make_when_spec(when)
+        when_spec = _make_when_spec(when)
         if not when_spec:
             return
 
