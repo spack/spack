@@ -20,6 +20,7 @@ import archspec.cpu
 
 import spack.config as sc
 import spack.deptypes as dt
+import spack.parser
 import spack.paths as sp
 import spack.util.path as sup
 
@@ -862,9 +863,13 @@ class ErrorHandler:
 
 
 #: Data class to collect information on a requirement
-RequirementRule = collections.namedtuple(
-    "RequirementRule", ["pkg_name", "policy", "requirements", "condition", "kind", "message"]
-)
+class RequirementRule(NamedTuple):
+    pkg_name: str
+    policy: str
+    requirements: List["spack.spec.Spec"]
+    condition: "spack.spec.Spec"
+    kind: RequirementKind
+    message: str
 
 
 class PyclingoDriver:
@@ -1352,10 +1357,18 @@ class SpackSolverSetup:
                     constraints = [constraints]
                     policy = "one_of"
 
+                # validate specs from YAML first, and fail with line numbers if parsing fails.
                 constraints = [
-                    x
-                    for x in constraints
-                    if not self.reject_requirement_constraint(pkg_name, constraint=x, kind=kind)
+                    sc.parse_spec_from_yaml_string(constraint) for constraint in constraints
+                ]
+                when_str = requirement.get("when")
+                when = sc.parse_spec_from_yaml_string(when_str) if when_str else spack.spec.Spec()
+
+                # filter constraints
+                constraints = [
+                    c
+                    for c in constraints
+                    if not self.reject_requirement_constraint(pkg_name, constraint=c, kind=kind)
                 ]
                 if not constraints:
                     continue
@@ -1367,13 +1380,13 @@ class SpackSolverSetup:
                         requirements=constraints,
                         kind=kind,
                         message=requirement.get("message"),
-                        condition=requirement.get("when"),
+                        condition=when,
                     )
                 )
         return rules
 
     def reject_requirement_constraint(
-        self, pkg_name: str, *, constraint: str, kind: RequirementKind
+        self, pkg_name: str, *, constraint: "spack.spec.Spec", kind: RequirementKind
     ) -> bool:
         """Returns True if a requirement constraint should be rejected"""
         if kind == RequirementKind.DEFAULT:
@@ -1740,20 +1753,13 @@ class SpackSolverSetup:
             virtual = rule.kind == RequirementKind.VIRTUAL
 
             pkg_name, policy, requirement_grp = rule.pkg_name, rule.policy, rule.requirements
-
             requirement_weight = 0
-            # TODO: don't call make_when_spec here; do it in directives.
-            main_requirement_condition = spack.directives.make_when_spec(rule.condition)
-            if main_requirement_condition is False:
-                continue
 
             # Write explicitly if a requirement is conditional or not
-            if main_requirement_condition != spack.spec.Spec():
+            if rule.condition != spack.spec.Spec():
                 msg = f"condition to activate requirement {requirement_grp_id}"
                 try:
-                    main_condition_id = self.condition(
-                        main_requirement_condition, name=pkg_name, msg=msg  # type: ignore
-                    )
+                    main_condition_id = self.condition(rule.condition, name=pkg_name, msg=msg)
                 except Exception as e:
                     if rule.kind != RequirementKind.DEFAULT:
                         raise RuntimeError(
