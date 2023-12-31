@@ -23,9 +23,11 @@ class Fides(CMakePackage):
 
     # Certain CMake versions have been found to break for our use cases
     depends_on("cmake@3.14.1:3.14,3.18.2:", type="build")
-
     depends_on("mpi", when="+mpi")
     depends_on("adios2")
+    depends_on("adios2@2.8:", when="@1.2:")
+    depends_on("adios2@2.7:2.8", when="@1.1")
+
     # Type check failures when using 32 bit IDs and ADIOS2 with ZFP in older
     # versions of Fides
     depends_on("adios2~zfp", when="@:1.1 ^vtk-m ~64bitids")
