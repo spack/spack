@@ -16,6 +16,9 @@ class PySetuptools(Package, PythonExtension):
 
     tags = ["build-tools"]
 
+    # Requires railroad
+    skip_modules = ["setuptools._vendor", "pkg_resources._vendor"]
+
     version(
         "68.0.0",
         sha256="11e52c67415a381d10d6b462ced9cfb97066179f0e871399e006c4ab101fc85f",
