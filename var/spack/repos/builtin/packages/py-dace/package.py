@@ -33,7 +33,7 @@ class PyDace(PythonPackage):
     # Dependencies from setup.py
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-networkx@2.5:", type=("build", "run"))
-    depends_on("py-astunparse@1.6.3:", type=("build", "run"))
+    depends_on("py-astunparse", type=("build", "run"))
     # A typo in the 0.15.1 setup.py specifies sympy <= 1.9 instead of >= 1.9.
     # See https://github.com/spcl/dace/pull/1483 for more information.
     depends_on("py-sympy@1.9:", type=("build", "run"))
