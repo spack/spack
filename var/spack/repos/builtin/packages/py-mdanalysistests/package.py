@@ -10,7 +10,7 @@ class PyMdanalysistests(PythonPackage):
     """Test suite for MDAnalysis"""
 
     homepage = "https://www.mdanalysis.org"
-    pypi = "MDAnalysisTests/MDAnalysisTests-0.0.0.tar.gz"
+    pypi = "MDAnalysisTests/MDAnalysisTests-2.4.2.tar.gz"
 
     maintainers("RMeli")
 

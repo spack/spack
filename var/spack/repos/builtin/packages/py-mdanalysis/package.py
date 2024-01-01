@@ -14,7 +14,7 @@ class PyMdanalysis(PythonPackage):
     topology formats.)"""
 
     homepage = "https://www.mdanalysis.org"
-    pypi = "MDAnalysis/MDAnalysis-0.0.0.tar.gz"
+    pypi = "MDAnalysis/MDAnalysis-2.4.2.tar.gz"
 
     maintainers("RMeli")
 
@@ -46,14 +46,11 @@ class PyMdanalysis(PythonPackage):
     depends_on("py-numpy@1.21.0:", when="@2.5.0:", type=("build", "run"))
     depends_on("py-numpy@1.20.0:", type=("build", "run"))
 
-    depends_on("py-biopython@1.80:", when="@:2.6.1", type=("build", "run"))
-    depends_on("py-networkx@2.0:", type=("build", "run"))
     depends_on("py-griddataformats@0.4.0:", type=("build", "run"))
     depends_on("py-mmtf-python@1.0.0:", type=("build", "run"))
     depends_on("py-joblib@0.12:", type=("build", "run"))
 
     depends_on("py-scipy@1.5.0:", type=("build", "run"))
-
     depends_on("py-matplotlib@1.5.1:", type=("build", "run"))
     depends_on("py-tqdm@4.43.0:", type=("build", "run"))
     depends_on("py-threadpoolctl", type=("build", "run"))
@@ -79,6 +76,11 @@ class PyMdanalysis(PythonPackage):
 
     # analysis (extras_require)
     depends_on("py-biopython@1.80:", when="@2.7.0: +analysis", type=("build", "run"))
+    depends_on("py-networkx@2.0:", when="@2.7.0 +analysis", type=("build", "run"))
     depends_on("py-seaborn", when="+analysis", type=("build", "run"))
     depends_on("py-scikit-learn", when="+analysis", type=("build", "run"))
     depends_on("py-tidynamics@1:", when="+analysis", type=("build", "run"))
+
+    # historical dependencies
+    depends_on("py-biopython@1.80:", when="@:2.6.1", type=("build", "run"))
+    depends_on("py-networkx@2.0:", when="@:2.6.1", type=("build", "run"))
