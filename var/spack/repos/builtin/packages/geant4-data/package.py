@@ -45,7 +45,7 @@ class Geant4Data(BundlePackage):
     _datasets = {
         "11.2.0:11.2": [
             "g4ndl@4.7",
-            "g4emlow@8.4",
+            "g4emlow@8.5",
             "g4photonevaporation@5.7",
             "g4radioactivedecay@5.6",
             "g4particlexs@4.0",
@@ -53,7 +53,7 @@ class Geant4Data(BundlePackage):
             "g4realsurface@2.2",
             "g4saiddata@2.0",
             "g4abla@3.3",
-            "g4incl@1.1",
+            "g4incl@1.2",
             "g4ensdfstate@2.3",
         ],
         "11.1.0:11.1": [
