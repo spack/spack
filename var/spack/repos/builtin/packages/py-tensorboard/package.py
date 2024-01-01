@@ -14,6 +14,9 @@ class PyTensorboard(PythonPackage):
     url = "https://files.pythonhosted.org/packages/py3/t/tensorboard/tensorboard-2.9.1-py3-none-any.whl"
     list_url = "https://pypi.org/simple/tensorboard/"
 
+    # Requires tensorflow
+    skip_modules = ["tensorboard.summary._tf"]
+
     maintainers("aweits")
 
     license("Apache-2.0")
