@@ -35,7 +35,7 @@ class PyOnnx(PythonPackage):
 
     # CMakeLists.txt
     depends_on("cmake@3.1:", type="build")
-    depends_on("py-pybind11@2.2:", type=("build", "run"))
+    depends_on("py-pybind11@2.2:", type=("build", "link"))
 
     # requirements.txt
     depends_on("py-setuptools@61:", type="build")
