@@ -188,6 +188,10 @@ class Boost(Package):
         multi=False,
         description="Use the specified C++ standard when building.",
     )
+
+    # 1.84.0 dropped support for 98/03
+    conflicts("cxxstd=98", when="@1.84.0:")
+
     variant("debug", default=False, description="Switch to the debug version of Boost")
     variant("shared", default=True, description="Additionally build shared libraries")
     variant(
