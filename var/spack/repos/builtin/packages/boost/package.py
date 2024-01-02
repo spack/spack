@@ -172,7 +172,7 @@ class Boost(Package):
 
     variant(
         "cxxstd",
-        default="98",
+        default="11",
         values=(
             "98",
             "11",
