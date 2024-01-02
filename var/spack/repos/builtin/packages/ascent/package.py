@@ -293,6 +293,8 @@ class Ascent(CMakePackage, CudaPackage):
     conflicts(
         "~fides", when="@0.9: +adios2", msg="Ascent >= 0.9 assumes FIDES when building ADIOS2"
     )
+    # Fides support needs VTK-m and ADIOS2
+    requires("+adios2 +vtkh", when="+fides")
 
     def setup_build_environment(self, env):
         env.set("CTEST_OUTPUT_ON_FAILURE", "1")
