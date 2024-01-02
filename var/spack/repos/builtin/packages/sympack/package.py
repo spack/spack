@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from os import environ as env
+
 from spack.package import *
 
 
@@ -51,6 +53,15 @@ class Sympack(CMakePackage, CudaPackage):
     variant("parmetis", default=False, description="Enable ParMETIS ordering")
     depends_on("parmetis", when="+parmetis")
 
+    variant(
+        "network",
+        default="auto",
+        multi=False,
+        values=("auto", "smp", "mpi", "ibv", "udp", "ofi", "ucx"),
+        description="The hardware-dependent UPC++ network backend to use. "
+        + "'auto' selects the default network provided by the UPC++ install.",
+    )
+
     build_targets = ["all", "run_sympack2D"]
 
     def cmake_args(self):
@@ -66,6 +77,12 @@ class Sympack(CMakePackage, CudaPackage):
             self.define_from_variant("ENABLE_PARMETIS", "parmetis"),
         ]
         return args
+
+    @run_before("cmake")
+    def set_cmake_env(self):
+        spec = self.spec
+        if "network=auto" not in spec:
+            env["UPCXX_NETWORK"] = spec.variants["network"].value
 
     @run_after("install")
     def finish_install(self):
