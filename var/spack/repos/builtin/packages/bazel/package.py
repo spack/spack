@@ -516,10 +516,10 @@ class Bazel(Package):
     }
     for resource_name in resource_dictionary.keys():
         resource(
-            when=resource_dico[resource_name]["when"],
+            when=resource_dictionary[resource_name]["when"],
             name=resource_name,
-            url=resource_dico[resource_name]["url"],
-            sha256=resource_dico[resource_name]["sha256"],
+            url=resource_dictionary[resource_name]["url"],
+            sha256=resource_dictionary[resource_name]["sha256"],
             destination="archive",
             expand=False,
         )
