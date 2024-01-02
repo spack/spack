@@ -502,17 +502,17 @@ class Bazel(Package):
     resource_dictionary["bazel_skylib"] = {
         "url": "https://github.com/bazelbuild/bazel-skylib/releases/download/1.0.1/bazel-skylib-1.0.1.tar.gz",
         "sha256": "f1c8360c01fcf276778d3519394805dc2a71a64274a3a0908bc9edff7b5aebc8",
-        "when": "@5:6"
+        "when": "@5:6",
     }
     resource_dictionary["zulu_11_56_19"] = {
         "url": "https://mirror.bazel.build/cdn.azul.com/zulu/bin/zulu11.56.19-ca-jdk11.0.15-linux_x64.tar.gz",
         "sha256": "e064b61d93304012351242bf0823c6a2e41d9e28add7ea7f05378b7243d34247",
-        "when": "@6"
+        "when": "@6",
     }
     resource_dictionary["zulu_11_50_19"] = {
         "url": "https://mirror.bazel.build/openjdk/azul-zulu11.50.19-ca-jdk11.0.12/zulu11.50.19-ca-jdk11.0.12-linux_x64.tar.gz",
         "sha256": "b8e8a63b79bc312aa90f3558edbea59e71495ef1a9c340e38900dd28a1c579f3",
-        "when": "@5"
+        "when": "@5",
     }
     for resource_name in resource_dictionary.keys():
         resource(
@@ -546,12 +546,17 @@ class Bazel(Package):
 
         # .WARNING: Option 'host_javabase' is deprecated
         # Use local java installation
-        args = "--color=no --define=ABSOLUTE_JAVABASE={0} --verbose_failures --jobs={1}".format(self.spec["java"].prefix,make_jobs)
+        args = "--color=no --define=ABSOLUTE_JAVABASE={0} --verbose_failures --jobs={1}".format(
+            self.spec["java"].prefix, make_jobs
+        )
         for resource_name in self.resource_dictionary.keys():
             if resource_name:
                 if self.spec.satisfies(self.resource_dictionary[resource_name]["when"]):
                     archive_path = self.stage.source_path
-                    archive_path = archive_path.replace("spack-stage-bazel-{0}".format(self.version), "resource-{0}".format(resource_name))
+                    archive_path = archive_path.replace(
+                        "spack-stage-bazel-{0}".format(self.version),
+                        "resource-{0}".format(resource_name),
+                    )
                     args += " --distdir={0}".format(archive_path)
 
         env.set("EXTRA_BAZEL_ARGS", args)
