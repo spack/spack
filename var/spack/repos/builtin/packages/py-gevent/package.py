@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -56,4 +56,6 @@ class PyGevent(PythonPackage):
         if name == "cflags":
             if self.spec.satisfies("%oneapi@2023:"):
                 flags.append("-Wno-error=incompatible-function-pointer-types")
+            if self.spec.compiler.name in ["intel", "oneapi"]:
+                flags.append("-we147")
         return (flags, None, None)
