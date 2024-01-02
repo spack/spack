@@ -28,6 +28,7 @@ class Sympack(CMakePackage, CudaPackage):
     depends_on("upcxx@2022.3.0:+cuda", when="+cuda")
 
     depends_on("mpi")
+    depends_on("blas")
 
     variant(
         "cuda",
