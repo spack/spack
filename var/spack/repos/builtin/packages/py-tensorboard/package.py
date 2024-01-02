@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,9 @@ class PyTensorboard(PythonPackage):
     homepage = "https://github.com/tensorflow/tensorboard"
     url = "https://files.pythonhosted.org/packages/py3/t/tensorboard/tensorboard-2.9.1-py3-none-any.whl"
     list_url = "https://pypi.org/simple/tensorboard/"
+
+    # Requires tensorflow
+    skip_modules = ["tensorboard.summary._tf"]
 
     maintainers("aweits")
 
