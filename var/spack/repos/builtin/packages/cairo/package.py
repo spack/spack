@@ -13,7 +13,7 @@ class Cairo(AutotoolsPackage):
     homepage = "https://www.cairographics.org/"
     url = "https://www.cairographics.org/releases/cairo-1.16.0.tar.xz"
 
-    license("LGPL-2.1-or-later OR MPL-1.1")
+    license("LGPL-2.1-or-later OR MPL-1.1", checked_by="tgamblin")
 
     version(
         "1.17.4",
