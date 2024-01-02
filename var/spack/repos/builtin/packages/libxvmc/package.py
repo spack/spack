@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Libxvmc(AutotoolsPackage, XorgPackage):
 
     homepage = "https://cgit.freedesktop.org/xorg/lib/libXvMC"
     xorg_mirror_path = "lib/libXvMC-1.0.9.tar.gz"
+
+    license("MIT")
 
     version("1.0.9", sha256="090f087fe65b30b3edfb996c79ff6cf299e473fb25e955fff1c4e9cb624da2c2")
 

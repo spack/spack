@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class RAplot(RPackage):
     bottom) with axes exactly matched."""
 
     cran = "aplot"
+
+    license("Artistic-2.0")
 
     version("0.1.10", sha256="d937768241f887628b88bb3b49dd6cbe9b7dae39ae7054e7380a9836721a67d1")
     version("0.1.8", sha256="d931d7769dc7ce4bc938e8c068973721e89da0aa5f40a04f8a9119621b33459c")

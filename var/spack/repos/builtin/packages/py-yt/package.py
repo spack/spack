@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class PyYt(PythonPackage):
     pypi = "yt/yt-4.1.2.tar.gz"
 
     maintainers("charmoniumq")
+
+    license("BSD-3-Clause")
 
     version("4.1.2", sha256="0ae03288b067721baad14c016f253dc791cd444a1f2dd5d804cf91da622a0c76")
     version("3.6.1", sha256="be454f9d05dcbe0623328b4df43a1bfd1f0925e516be97399710452931a19bb0")

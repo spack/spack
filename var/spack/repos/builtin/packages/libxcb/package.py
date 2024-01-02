@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Libxcb(AutotoolsPackage):
 
     homepage = "https://xcb.freedesktop.org/"
     url = "https://xorg.freedesktop.org/archive/individual/lib/libxcb-1.14.tar.xz"
+
+    license("MIT")
 
     version("1.14", sha256="a55ed6db98d43469801262d81dc2572ed124edc3db31059d4e9916eb9f844c34")
     version("1.13", sha256="0bb3cfd46dbd90066bf4d7de3cad73ec1024c7325a4a0cbf5f4a0d4fa91155fb")

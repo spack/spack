@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyFenicsFfcx(PythonPackage):
     url = "https://github.com/FEniCS/ffcx/archive/v0.1.0.tar.gz"
     git = "https://github.com/FEniCS/ffcx.git"
     maintainers("chrisrichardson", "garth-wells", "jhale")
+
+    license("LGPL-3.0-or-later")
 
     version("main", branch="main")
     version("0.7.0", sha256="7f3c3ca91d63ce7831d37799cc19d0551bdcd275bdfa4c099711679533dd1c71")

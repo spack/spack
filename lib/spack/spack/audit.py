@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -756,6 +756,15 @@ def _issues_in_depends_on_directive(pkgs, error_cls):
                         f"in {filename}",
                     ]
                     errors.append(error_cls(summary=summary, details=details))
+
+                for s in (dependency_spec, when):
+                    if s.virtual and s.variants:
+                        summary = f"{pkg_name}: virtual dependency cannot have variants"
+                        details = [
+                            f"remove variants from '{str(s)}' in depends_on directive",
+                            f"in {filename}",
+                        ]
+                        errors.append(error_cls(summary=summary, details=details))
 
             # No need to analyze virtual packages
             if spack.repo.PATH.is_virtual(dependency_name):

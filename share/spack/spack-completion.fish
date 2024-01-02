@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -697,7 +697,7 @@ complete -c spack -n '__fish_spack_using_command buildcache' -s h -l help -f -a 
 complete -c spack -n '__fish_spack_using_command buildcache' -s h -l help -d 'show this help message and exit'
 
 # spack buildcache push
-set -g __fish_spack_optspecs_spack_buildcache_push h/help f/force a/allow-root u/unsigned signed k/key= update-index spec-file= only= fail-fast base-image= j/jobs=
+set -g __fish_spack_optspecs_spack_buildcache_push h/help f/force a/allow-root u/unsigned signed k/key= update-index spec-file= only= fail-fast base-image= t/tag= j/jobs=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 1 buildcache push' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command buildcache push' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache push' -s h -l help -d 'show this help message and exit'
@@ -720,12 +720,14 @@ complete -c spack -n '__fish_spack_using_command buildcache push' -l only -r -d 
 complete -c spack -n '__fish_spack_using_command buildcache push' -l fail-fast -f -a fail_fast
 complete -c spack -n '__fish_spack_using_command buildcache push' -l fail-fast -d 'stop pushing on first failure (default is best effort)'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l base-image -r -f -a base_image
-complete -c spack -n '__fish_spack_using_command buildcache push' -l base-image -r -d 'specify the base image for the buildcache. '
+complete -c spack -n '__fish_spack_using_command buildcache push' -l base-image -r -d 'specify the base image for the buildcache'
+complete -c spack -n '__fish_spack_using_command buildcache push' -l tag -s t -r -f -a tag
+complete -c spack -n '__fish_spack_using_command buildcache push' -l tag -s t -r -d 'when pushing to an OCI registry, tag an image containing all root specs and their runtime dependencies'
 complete -c spack -n '__fish_spack_using_command buildcache push' -s j -l jobs -r -f -a jobs
 complete -c spack -n '__fish_spack_using_command buildcache push' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
 
 # spack buildcache create
-set -g __fish_spack_optspecs_spack_buildcache_create h/help f/force a/allow-root u/unsigned signed k/key= update-index spec-file= only= fail-fast base-image= j/jobs=
+set -g __fish_spack_optspecs_spack_buildcache_create h/help f/force a/allow-root u/unsigned signed k/key= update-index spec-file= only= fail-fast base-image= t/tag= j/jobs=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 1 buildcache create' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command buildcache create' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache create' -s h -l help -d 'show this help message and exit'
@@ -748,7 +750,9 @@ complete -c spack -n '__fish_spack_using_command buildcache create' -l only -r -
 complete -c spack -n '__fish_spack_using_command buildcache create' -l fail-fast -f -a fail_fast
 complete -c spack -n '__fish_spack_using_command buildcache create' -l fail-fast -d 'stop pushing on first failure (default is best effort)'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l base-image -r -f -a base_image
-complete -c spack -n '__fish_spack_using_command buildcache create' -l base-image -r -d 'specify the base image for the buildcache. '
+complete -c spack -n '__fish_spack_using_command buildcache create' -l base-image -r -d 'specify the base image for the buildcache'
+complete -c spack -n '__fish_spack_using_command buildcache create' -l tag -s t -r -f -a tag
+complete -c spack -n '__fish_spack_using_command buildcache create' -l tag -s t -r -d 'when pushing to an OCI registry, tag an image containing all root specs and their runtime dependencies'
 complete -c spack -n '__fish_spack_using_command buildcache create' -s j -l jobs -r -f -a jobs
 complete -c spack -n '__fish_spack_using_command buildcache create' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
 
@@ -1405,7 +1409,7 @@ complete -c spack -n '__fish_spack_using_command develop' -s f -l force -r -f -a
 complete -c spack -n '__fish_spack_using_command develop' -s f -l force -r -d 'remove any files or directories that block cloning source code'
 
 # spack diff
-set -g __fish_spack_optspecs_spack_diff h/help json first a/attribute=
+set -g __fish_spack_optspecs_spack_diff h/help json first a/attribute= ignore=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 diff' -f -a '(__fish_spack_installed_specs)'
 complete -c spack -n '__fish_spack_using_command diff' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command diff' -s h -l help -d 'show this help message and exit'
@@ -1415,6 +1419,8 @@ complete -c spack -n '__fish_spack_using_command diff' -l first -f -a load_first
 complete -c spack -n '__fish_spack_using_command diff' -l first -d 'load the first match if multiple packages match the spec'
 complete -c spack -n '__fish_spack_using_command diff' -s a -l attribute -r -f -a attribute
 complete -c spack -n '__fish_spack_using_command diff' -s a -l attribute -r -d 'select the attributes to show (defaults to all)'
+complete -c spack -n '__fish_spack_using_command diff' -l ignore -r -f -a ignore
+complete -c spack -n '__fish_spack_using_command diff' -l ignore -r -d 'omit diffs related to these dependencies'
 
 # spack docs
 set -g __fish_spack_optspecs_spack_docs h/help
@@ -1741,9 +1747,15 @@ complete -c spack -n '__fish_spack_using_command find' -l end-date -r -f -a end_
 complete -c spack -n '__fish_spack_using_command find' -l end-date -r -d 'latest date of installation [YYYY-MM-DD]'
 
 # spack gc
-set -g __fish_spack_optspecs_spack_gc h/help y/yes-to-all
+set -g __fish_spack_optspecs_spack_gc h/help E/except-any-environment e/except-environment= b/keep-build-dependencies y/yes-to-all
 complete -c spack -n '__fish_spack_using_command gc' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command gc' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command gc' -s E -l except-any-environment -f -a except_any_environment
+complete -c spack -n '__fish_spack_using_command gc' -s E -l except-any-environment -d 'remove everything unless needed by an environment'
+complete -c spack -n '__fish_spack_using_command gc' -s e -l except-environment -r -f -a except_environment
+complete -c spack -n '__fish_spack_using_command gc' -s e -l except-environment -r -d 'remove everything unless needed by specified environment'
+complete -c spack -n '__fish_spack_using_command gc' -s b -l keep-build-dependencies -f -a keep_build_dependencies
+complete -c spack -n '__fish_spack_using_command gc' -s b -l keep-build-dependencies -d 'do not remove installed build-only dependencies of roots'
 complete -c spack -n '__fish_spack_using_command gc' -s y -l yes-to-all -f -a yes_to_all
 complete -c spack -n '__fish_spack_using_command gc' -s y -l yes-to-all -d 'assume "yes" is the answer to every confirmation request'
 

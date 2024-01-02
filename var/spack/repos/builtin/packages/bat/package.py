@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Bat(Package):
 
     homepage = "https://github.com/sharkdp/bat"
     url = "https://github.com/sharkdp/bat/archive/v0.13.0.tar.gz"
+
+    license("Apache-2.0")
 
     version("0.23.0", sha256="30b6256bea0143caebd08256e0a605280afbbc5eef7ce692f84621eb232a9b31")
     version("0.21.0", sha256="3dff1e52d577d0a105f4afe3fe7722a4a2b8bb2eb3e7a6a5284ac7add586a3ee")

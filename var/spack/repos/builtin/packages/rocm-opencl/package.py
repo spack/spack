@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,6 +31,8 @@ class RocmOpencl(CMakePackage):
         else:
             url = "https://github.com/ROCm/clr/archive/refs/tags/rocm-{0}.tar.gz"
         return url.format(version)
+
+    license("MIT")
 
     version("master", branch="main")
     version("5.7.1", sha256="c78490335233a11b4d8a5426ace7417c555f5e2325de10422df06c0f0f00f7eb")

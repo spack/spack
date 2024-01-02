@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyNibabel(PythonPackage):
     homepage = "https://nipy.org/nibabel"
     pypi = "nibabel/nibabel-3.2.1.tar.gz"
     git = "https://github.com/nipy/nibabel"
+
+    license("PDDL-1.0")
 
     version("5.1.0", sha256="ce73ca5e957209e7219a223cb71f77235c9df2acf4d3f27f861ba38e9481ac53")
     version("4.0.2", sha256="45c49b5349351b45f6c045a91aa02b4f0d367686ff3284632ef95ac65b930786")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class PyRadicalGtod(PythonPackage):
     pypi = "radical.gtod/radical.gtod-1.20.0.tar.gz"
 
     maintainers("andre-merzky")
+
+    license("LGPL-3.0-or-later")
 
     version("develop", branch="devel")
     version("1.20.0", sha256="8d0846de7a5d094146c01fbb7c137f343e4da06af51efafeba79dd3fdfe421dc")

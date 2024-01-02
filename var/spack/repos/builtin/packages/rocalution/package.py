@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,9 @@ class Rocalution(CMakePackage):
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath")
     libraries = ["librocalution_hip"]
+
+    license("MIT")
+
     version("5.7.1", sha256="b95afa1285759843c5fea1ad6e1c1edf283922e0d448db03a3e1f42b6942bc24")
     version("5.7.0", sha256="48232a0d1250debce89e39a233bd0b5d52324a2454c078b99c9d44965cbbc0e9")
     version("5.6.1", sha256="7197b3617a0c91e90adaa32003c04d247a5f585d216e77493d20984ba215addb")
