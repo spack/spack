@@ -26,6 +26,9 @@ class Fides(CMakePackage):
 
     depends_on("mpi", when="+mpi")
     depends_on("adios2")
+    # adios2::Mode::ReadRandomAccess requires adios2 2.8.0. Support for older
+    # adios2 is added in https://gitlab.kitware.com/vtk/fides/-/merge_requests/146
+    depends_on("adios2@2.8.0:", when="@:1.2.0")
     # Type check failures when using 32 bit IDs and ADIOS2 with ZFP in older
     # versions of Fides
     depends_on("adios2~zfp", when="@:1.1 ^vtk-m ~64bitids")
