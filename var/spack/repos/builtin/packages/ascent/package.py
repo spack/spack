@@ -197,7 +197,8 @@ class Ascent(CMakePackage, CudaPackage):
     # VTK-m
     #######################
     depends_on("vtk-m@2.0:", when="@0.9.2: +vtkh")
-    depends_on("vtk-m@1.9:1.9", when="@0.9.0: +vtkh")
+    depends_on("vtk-m@1.9", when="@0.9.0:0.9.1 +vtkh")
+    depends_on("vtk-m +doubleprecision ~64bitids", when="+vtkh ^vtk-m")
 
     depends_on("vtk-m~tbb", when="@0.9.0: +vtkh")
     depends_on("vtk-m+openmp", when="@0.9.0: +vtkh+openmp")
