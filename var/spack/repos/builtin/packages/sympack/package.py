@@ -39,7 +39,7 @@ class Sympack(CMakePackage, CudaPackage):
     depends_on("cuda@6.0:", when="+cuda")
 
     variant("scotch", default=False, description="Enable SCOTCH ordering")
-    depends_on("scotch~mpi", when="+scotch")
+    depends_on("scotch", when="+scotch")
 
     variant("ptscotch", default=False, description="Enable PT-SCOTCH ordering")
     depends_on("scotch+mpi", when="+ptscotch")
@@ -57,7 +57,7 @@ class Sympack(CMakePackage, CudaPackage):
         meta = join_path(self.spec["upcxx"].prefix.bin, "upcxx-meta")
         cxx = Executable(meta)("CXX", output=str, error=str).strip()
         args = [
-            "-DCMAKE_CXX_COMPILER=" + cxx,
+            self.define("CMAKE_CXX_COMPILER", cxx),
             self.define_from_variant("ENABLE_CUDA", "cuda"),
             self.define_from_variant("ENABLE_SCOTCH", "scotch"),
             self.define_from_variant("ENABLE_PTSCOTCH", "ptscotch"),
