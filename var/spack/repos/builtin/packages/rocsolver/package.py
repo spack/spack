@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,6 +36,8 @@ class Rocsolver(CMakePackage):
             size and compile time by adding specialized kernels \
             for small matrix sizes",
     )
+
+    license("BSD-2-Clause")
 
     version("develop", branch="develop")
     version("master", branch="master")

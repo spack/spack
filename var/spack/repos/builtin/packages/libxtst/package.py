@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class Libxtst(AutotoolsPackage, XorgPackage):
 
     homepage = "https://cgit.freedesktop.org/xorg/lib/libXtst"
     xorg_mirror_path = "lib/libXtst-1.2.2.tar.gz"
+
+    license("MIT")
 
     version("1.2.2", sha256="221838960c7b9058cd6795c1c3ee8e25bae1c68106be314bc3036a4f26be0e6c")
 

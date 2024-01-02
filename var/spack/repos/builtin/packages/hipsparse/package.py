@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class Hipsparse(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath", "haampie")
     libraries = ["libhipsparse"]
+
+    license("MIT")
 
     version("5.7.1", sha256="16c3818260611226c3576d8d55ad8f51e0890d2473503edf2c9313250ae65ca7")
     version("5.7.0", sha256="729b749b5340034639873a99e6091963374f6f0456c8f36d076c96f03fe43888")

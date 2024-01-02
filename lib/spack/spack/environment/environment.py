@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -793,7 +793,7 @@ class Environment:
         #: User specs from the last concretization
         self.concretized_user_specs: List[Spec] = []
         #: Roots associated with the last concretization, in order
-        self.concretized_order: List[Spec] = []
+        self.concretized_order: List[str] = []
         #: Concretized specs by hash
         self.specs_by_hash: Dict[str, Spec] = {}
         #: Repository for this environment (memoized)

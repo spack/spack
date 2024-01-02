@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class ComposableKernel(CMakePackage):
     git = "https://github.com/ROCmSoftwarePlatform/composable_kernel.git"
     url = "https://github.com/ROCmSoftwarePlatform/composable_kernel/archive/refs/tags/rocm-5.7.1.tar.gz"
     maintainers("srekolam", "afzpatel")
+
+    license("MIT")
 
     version("master", branch="develop")
     version("5.7.1", sha256="75f66e023c2e31948e91fa26366eaeac72d871fc2e5188361d4465179f13876e")

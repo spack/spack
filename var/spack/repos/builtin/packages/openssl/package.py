@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,6 +29,8 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
     tags = ["core-packages", "windows"]
 
     executables = ["openssl"]
+
+    license("Apache-2.0")
 
     version("3.1.3", sha256="f0316a2ebd89e7f2352976445458689f80302093788c466692fb2a188b2eacf6")
     version("3.0.11", sha256="b3425d3bb4a2218d0697eb41f7fc0cdede016ed19ca49d168b78e8d947887f55")

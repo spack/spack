@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Edm4hep(CMakePackage):
     maintainers("vvolkl", "jmcarcell", "tmadlener")
 
     tags = ["hep", "key4hep"]
+
+    license("Apache-2.0")
 
     version("master", branch="master")
     version("0.10.2", sha256="c22c5c2f0fd1d09da9b734c1fa7ee546675fd2b047406db6ab8266e7657486d2")

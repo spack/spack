@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Libxi(AutotoolsPackage, XorgPackage):
 
     homepage = "https://cgit.freedesktop.org/xorg/lib/libXi"
     xorg_mirror_path = "lib/libXi-1.7.6.tar.gz"
+
+    license("MIT AND X11")
 
     version("1.7.6", sha256="4e88fa7decd287e58140ea72238f8d54e4791de302938c83695fc0c9ac102b7e")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class HipifyClang(CMakePackage):
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
+
+    license("MIT")
 
     version("master", branch="master")
     version("5.7.1", sha256="43121e62233dab010ab686d6805bc2d3163f0dc5e89cc503d50c4bcd59eeb394")

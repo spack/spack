@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Opencoarrays(CMakePackage):
 
     homepage = "http://www.opencoarrays.org/"
     url = "https://github.com/sourceryinstitute/OpenCoarrays/releases/download/2.2.0/OpenCoarrays-2.2.0.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("2.10.1", sha256="b04b8fa724e7e4e5addbab68d81d701414e713ab915bafdf1597ec5dd9590cd4")
     version("2.9.3", sha256="eeee0b3be665022ab6838c523ddab4af9c948d4147afd6cd7bc01f028583cfe1")

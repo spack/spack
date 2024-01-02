@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Mkfontscale(AutotoolsPackage, XorgPackage):
 
     homepage = "https://cgit.freedesktop.org/xorg/app/mkfontscale"
     xorg_mirror_path = "app/mkfontscale-1.1.2.tar.gz"
+
+    license("MIT")
 
     version("1.2.2", sha256="4a5af55e670713024639a7f7d10826d905d86faf574cd77e0f5aef2d00e70168")
     version("1.1.2", sha256="8bba59e60fbc4cb082092cf6b67e810b47b4fe64fbc77dbea1d7e7d55312b2e4")

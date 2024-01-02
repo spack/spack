@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class RocmClangOcl(CMakePackage):
     git = "https://github.com/RadeonOpenCompute/clang-ocl.git"
     url = "https://github.com/RadeonOpenCompute/clang-ocl/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
+
+    license("MIT")
 
     maintainers("srekolam", "renjithravindrankannath")
     version("master", branch="master")

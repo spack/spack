@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,8 @@ class Hip(CMakePackage):
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")
     libraries = ["libamdhip64"]
+
+    license("MIT")
 
     version("master", branch="master")
     version("5.7.1", sha256="eaa0e14a9ae45c58ed37863797b683a7778b3cbbf92f5b6529ec65fd61d61f3e")

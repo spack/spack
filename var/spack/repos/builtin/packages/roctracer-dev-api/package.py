@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class RoctracerDevApi(Package):
     git = "https://github.com/ROCm-Developer-Tools/roctracer.git"
     url = "https://github.com/ROCm-Developer-Tools/roctracer/archive/refs/tags/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
+
+    license("MIT")
 
     maintainers("srekolam", "renjithravindrankannath")
     version("5.7.1", sha256="ec0453adac7e62b142eb0df1e1e2506863aac4c3f2ce9d117c3184c08c0c6b48")

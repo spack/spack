@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -205,6 +205,8 @@ class RocmOpenmpExtras(Package):
     homepage = tools_url + "/aomp"
     url = tools_url + "/aomp/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
+
+    license("Apache-2.0")
 
     maintainers("srekolam", "renjithravindrankannath", "estewart08")
     version("5.7.1", sha256=versions_dict["5.7.1"]["aomp"])

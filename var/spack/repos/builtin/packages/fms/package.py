@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Fms(CMakePackage):
     homepage = "https://github.com/NOAA-GFDL/FMS"
     url = "https://github.com/NOAA-GFDL/FMS/archive/refs/tags/2022.04.tar.gz"
     git = "https://github.com/NOAA-GFDL/FMS.git"
+
+    license("LGPL-3.0-or-later")
 
     maintainers("AlexanderRichert-NOAA", "Hang-Lei-NOAA", "edwardhartnett", "rem1776", "climbfuji")
     version("2023.04", sha256="feb895ea2b3269ca66df296199a36af335f0dc281e2dab2f1bfebb19fd9c22c4")

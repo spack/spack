@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,8 @@ class Clingo(CMakePackage):
     git = "https://github.com/potassco/clingo.git"
     tags = ["windows"]
     maintainers("tgamblin", "alalazo")
+
+    license("MIT")
 
     version("master", branch="master", submodules=True)
     version("spack", commit="2a025667090d71b2c9dce60fe924feb6bde8f667", submodules=True)

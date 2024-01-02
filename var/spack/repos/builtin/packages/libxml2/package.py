@@ -1,9 +1,11 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
+import spack.builder
+from spack.build_systems import autotools, nmake
 from spack.package import *
 
 
@@ -23,6 +25,8 @@ class Libxml2(AutotoolsPackage, NMakePackage):
             url = "https://download.gnome.org/sources/libxml2/{0}/libxml2-{1}.tar.xz"
             return url.format(version.up_to(2), version)
         return "http://xmlsoft.org/sources/libxml2-{0}.tar.gz".format(version)
+
+    license("MIT")
 
     version("2.10.3", sha256="5d2cc3d78bec3dbe212a9d7fa629ada25a7da928af432c93060ff5c17ee28a9c")
     version("2.10.2", sha256="d240abe6da9c65cb1900dd9bf3a3501ccf88b3c2a1cb98317d03f272dda5b265")
@@ -205,7 +209,7 @@ class BaseBuilder(metaclass=spack.builder.PhaseCallbacksMeta):
                 python("-c", "import libxml2")
 
 
-class AutotoolsBuilder(BaseBuilder, spack.build_systems.autotools.AutotoolsBuilder):
+class AutotoolsBuilder(BaseBuilder, autotools.AutotoolsBuilder):
     def configure_args(self):
         spec = self.spec
 
@@ -231,7 +235,7 @@ class AutotoolsBuilder(BaseBuilder, spack.build_systems.autotools.AutotoolsBuild
         return args
 
 
-class NMakeBuilder(BaseBuilder, spack.build_systems.nmake.NMakeBuilder):
+class NMakeBuilder(BaseBuilder, nmake.NMakeBuilder):
     phases = ("configure", "build", "install")
 
     @property

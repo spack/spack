@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1177,7 +1177,7 @@ _spack_find() {
 }
 
 _spack_gc() {
-    SPACK_COMPREPLY="-h --help -y --yes-to-all"
+    SPACK_COMPREPLY="-h --help -E --except-any-environment -e --except-environment -b --keep-build-dependencies -y --yes-to-all"
 }
 
 _spack_gpg() {

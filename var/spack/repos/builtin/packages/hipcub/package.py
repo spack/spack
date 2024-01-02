@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Hipcub(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/ROCmSoftwarePlatform/hipCUB.git"
     url = "https://github.com/ROCmSoftwarePlatform/hipCUB/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
+
+    license("BSD-3-Clause")
 
     maintainers("srekolam", "renjithravindrankannath")
     version("5.7.1", sha256="9b23a58408bc4c549d3c754196cb3e2c1a50e177ab0a286101cbea2f7f173945")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Seqtk(Package):
 
     homepage = "https://github.com/lh3/seqtk"
     url = "https://github.com/lh3/seqtk/archive/v1.1.tar.gz"
+
+    license("MIT")
 
     version("1.4", sha256="d124604ec24f29ed14ce127426ab90e0f3a2c0280c80d1a3ff8b1c09feede19c")
     version("1.3", sha256="5a1687d65690f2f7fa3f998d47c3c5037e792f17ce119dab52fff3cfdca1e563")

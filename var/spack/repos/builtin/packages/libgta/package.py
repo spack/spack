@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Libgta(CMakePackage):
 
     homepage = "https://marlam.de/gta/"
     url = "https://marlam.de/gta/releases/libgta-1.2.1.tar.xz"
+
+    license("LGPL-2.1-or-later")
 
     version("1.2.1", sha256="d445667e145f755f0bc34ac89b63a6bfdce1eea943f87ee7a3f23dc0dcede8b1")
 

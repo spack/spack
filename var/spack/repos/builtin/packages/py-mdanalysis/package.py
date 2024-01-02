@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class PyMdanalysis(PythonPackage):
     pypi = "MDAnalysis/MDAnalysis-2.4.2.tar.gz"
 
     maintainers("RMeli")
+
+    license("CC-BY-ND-3.0")
 
     version("2.6.1", sha256="9cc69b94bddd026f26ffcaf5bdbed6d568c1c10e19a341d84f8d37a2a70222f2")
     version("2.6.0", sha256="210b198a115165004c36fbbbe5eb83a13323f52b10ccaef30dd40bfe25ba3e61")

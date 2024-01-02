@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Rocprim(CMakePackage):
     git = "https://github.com/ROCmSoftwarePlatform/rocPRIM.git"
     url = "https://github.com/ROCmSoftwarePlatform/rocPRIM/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
+
+    license("MIT")
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath")
     version("5.7.1", sha256="15d820a0f61aed60efbba88b6efe6942878b02d912f523f9cf8f33a4583d6cd7")

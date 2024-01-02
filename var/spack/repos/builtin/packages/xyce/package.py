@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,8 @@ class Xyce(CMakePackage):
     git = "https://github.com/Xyce/Xyce.git"
     url = "https://github.com/Xyce/Xyce/archive/Release-7.2.0.tar.gz"
     maintainers("kuberry", "tbird2001")
+
+    license("GPL-3.0-or-later")
 
     version("master", branch="master")
     version("7.7.0", sha256="1b95450e1905c3af3c16b42c41d5ef1f8ab0e640f48086d0cb4d52961a90a175")

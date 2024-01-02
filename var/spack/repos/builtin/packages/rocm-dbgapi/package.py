@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class RocmDbgapi(CMakePackage):
 
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["librocm-dbgapi"]
+
+    license("MIT")
 
     version("master", branch="amd-master")
     version("5.7.1", sha256="0ee9c2f083868849f2ea0cec7010e0270c27e7679ccbbadd12072cc0ef6c8a6f")

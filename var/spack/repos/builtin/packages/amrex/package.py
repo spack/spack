@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,8 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     tags = ["ecp", "e4s"]
 
     maintainers("WeiqunZhang", "asalmgren", "atmyers")
+
+    license("BSD-3-Clause")
 
     version("develop", branch="development")
     version("23.12", sha256="90e00410833d7a82bf6d9e71a70ce85d2bfb89770da7e34d0dda940f2bf5384a")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,8 @@ class LlvmAmdgpu(CMakePackage):
     generator("ninja")
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")
+
+    license("Apache-2.0")
 
     version("master", branch="amd-stg-open")
     version("5.7.1", sha256="6b54c422e45ad19c9bf5ab090ec21753e7f7d854ca78132c30eb146657b168eb")

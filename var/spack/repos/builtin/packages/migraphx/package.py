@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Migraphx(CMakePackage):
 
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["libmigraphx"]
+
+    license("MIT")
 
     version("5.7.1", sha256="3e58c043a5a7d1357ee05725fd6cd41e190b070f1ba57f61300128429902089c")
     version("5.7.0", sha256="14f13554367d2d6490d66f8b5b739203225e7acce25085559e7c4acf29e2a4d5")
