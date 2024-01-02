@@ -6,6 +6,8 @@
 import os
 import sys
 
+import llnl.util.tty as tty
+
 from spack.compiler import Compiler, UnsupportedCompilerFlag
 from spack.version import Version
 
@@ -49,6 +51,40 @@ class Intel(Compiler):
         return "-v"
 
     required_libs = ["libirc", "libifcore", "libifcoremt", "libirng"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Intel deprecated icc/icpc/ifort in 2022. The compilers emit
+        # a deprecation warning, but it will be in a log file and
+        # difficult to notice. This code adds a spack warning to make
+        # it more visible. Making it an error in January 2025 would
+        # give people one year to change to %oneapi.
+        #
+        # The warning is triggered by having an intel toolchain in
+        # your compilers.yaml, even if you do not use it.
+
+        # To make it work like package deprecation (error unless
+        # --deprecated is passed), then check the value of
+        # spack.config.get("config:deprecated", False)
+        #
+        # spack install
+        #
+        # accepts the --deprecated argument and sets the spack
+        # config. You will need to add support for the --deprecated
+        # option to some commands:
+        #
+        # spack compiler find
+        # spack spec
+        #
+        # I think the error behavior should only happen if you use the
+        # compiler, not just includes it in your compilers.yaml. That
+        # requires passing info to the wrapper.
+        message = (
+            "The %intel toolchain has been deprecated."
+            "Remove %intel from your compilers.yaml and use %oneapi instead."
+        )
+        tty.warn(message)
 
     @property
     def debug_flags(self):
