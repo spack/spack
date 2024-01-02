@@ -414,9 +414,6 @@ class Bazel(Package):
         description="Disable failing dependency checks due to injected absolute paths - "
         "required for most builds using bazel with spack",
     )
-    variant(
-        "download_data", default=False, description="Download resources to offline installation"
-    )
 
     # https://bazel.build/install/compile-source#bootstrap-unix-prereq
     depends_on("java", type=("build", "run"))
@@ -500,24 +497,24 @@ class Bazel(Package):
 
     executables = ["^bazel$"]
 
-    # Resources downloaded by the variant +download_data
-    resource_dico = {}
-    resource_dico["bazel_skylib"] = {
+    # Download resources to perform offline build with bazel.
+    resource_dictionary = {}
+    resource_dictionary["bazel_skylib"] = {
         "url": "https://github.com/bazelbuild/bazel-skylib/releases/download/1.0.1/bazel-skylib-1.0.1.tar.gz",
         "sha256": "f1c8360c01fcf276778d3519394805dc2a71a64274a3a0908bc9edff7b5aebc8",
-        "when": "+download_data",
+        "when": "@5:6"
     }
-    resource_dico["zulu_11_56_19"] = {
+    resource_dictionary["zulu_11_56_19"] = {
         "url": "https://mirror.bazel.build/cdn.azul.com/zulu/bin/zulu11.56.19-ca-jdk11.0.15-linux_x64.tar.gz",
         "sha256": "e064b61d93304012351242bf0823c6a2e41d9e28add7ea7f05378b7243d34247",
-        "when": "@6+download_data",
+        "when": "@6"
     }
-    resource_dico["zulu_11_50_19"] = {
+    resource_dictionary["zulu_11_50_19"] = {
         "url": "https://mirror.bazel.build/openjdk/azul-zulu11.50.19-ca-jdk11.0.12/zulu11.50.19-ca-jdk11.0.12-linux_x64.tar.gz",
         "sha256": "b8e8a63b79bc312aa90f3558edbea59e71495ef1a9c340e38900dd28a1c579f3",
-        "when": "@5+download_data",
+        "when": "@5"
     }
-    for resource_name in resource_dico.keys():
+    for resource_name in resource_dictionary.keys():
         resource(
             when=resource_dico[resource_name]["when"],
             name=resource_name,
@@ -547,28 +544,15 @@ class Bazel(Package):
         env.set("BAZEL_LINKOPTS", "")
         env.set("BAZEL_LINKLIBS", "-lstdc++")
 
-        if self.spec.satisfies("+download_data"):
-            # .WARNING: Option 'host_javabase' is deprecated
-            # Use local java installation
-            args = (
-                "--color=no --define=ABSOLUTE_JAVABASE={0} --verbose_failures --jobs={1}".format(
-                    self.spec["java"].prefix, make_jobs
-                )
-            )
-            for resource_name in self.resource_dico.keys():
-                if resource_name:
-                    if self.spec.satisfies(self.resource_dico[resource_name]["when"]):
-                        archive_path = self.stage.source_path
-                        archive_path = archive_path.replace(
-                            "spack-stage-bazel-{0}".format(self.version),
-                            "resource-{0}".format(resource_name),
-                        )
-                        args += " --distdir={0}".format(archive_path)
-        else:
-            # Spack's logs don't handle colored output well
-            args = "--color=no --host_javabase=@local_jdk//:jdk"
-            # Enable verbose output for failures
-            args += " --verbose_failures --jobs={0}".format(make_jobs)
+        # .WARNING: Option 'host_javabase' is deprecated
+        # Use local java installation
+        args = "--color=no --define=ABSOLUTE_JAVABASE={0} --verbose_failures --jobs={1}".format(self.spec["java"].prefix,make_jobs)
+        for resource_name in self.resource_dictionary.keys():
+            if resource_name:
+                if self.spec.satisfies(self.resource_dictionary[resource_name]["when"]):
+                    archive_path = self.stage.source_path
+                    archive_path = archive_path.replace("spack-stage-bazel-{0}".format(self.version), "resource-{0}".format(resource_name))
+                    args += " --distdir={0}".format(archive_path)
 
         env.set("EXTRA_BAZEL_ARGS", args)
 
