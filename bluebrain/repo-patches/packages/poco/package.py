@@ -21,7 +21,7 @@ class Poco(CMakePackage):
 
     depends_on("cmake@3.5:", type="build")
     depends_on("ninja", type="build")
-    depends_on("openssl")
+    depends_on("openssl@3:")
 
     def cmake_args(self):
         return [
