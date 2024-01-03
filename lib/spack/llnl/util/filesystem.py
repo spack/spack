@@ -1777,7 +1777,7 @@ def find_first(root: str, files: Union[Iterable[str], str], bfs_depth: int = 2) 
     return FindFirstFile(root, *files, bfs_depth=bfs_depth).find()
 
 
-def find(root, files, recursive=True):
+def find(root, files, recursive=True, max_depth=None):
     """Search for ``files`` starting from the ``root`` directory.
 
     Like GNU/BSD find but written entirely in Python.
@@ -1823,25 +1823,14 @@ def find(root, files, recursive=True):
     if isinstance(files, str):
         files = [files]
 
-    if recursive:
-        tty.debug(f"Find (recursive): {root} {str(files)}")
-        result = _find_recursive(root, files)
-    else:
-        tty.debug(f"Find (not recursive): {root} {str(files)}")
-        result = _find_non_recursive(root, files)
+    if not recursive:
+        max_depth = 0
+
+    tty.debug(f"Find (max depth = {max_depth}): {root} {str(files)}")
+    result = find_max_depth(root, files, max_depth)
 
     tty.debug(f"Find complete: {root} {str(files)}")
     return result
-
-
-@system_path_filter
-def _find_recursive(root, search_files):
-    return find_max_depth(root, search_files, max_depth=None)
-
-
-@system_path_filter
-def _find_non_recursive(root, search_files):
-    return find_max_depth(root, search_files, max_depth=0)
 
 
 @system_path_filter(arg_slice=slice(1))
