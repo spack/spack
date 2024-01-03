@@ -9,9 +9,9 @@ from spack.package import *
 class HipTensor(CMakePackage, ROCmPackage):
     """AMD’s C++ library for accelerating tensor primitives"""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/hipTensor"
-    git = "https://github.com/ROCmSoftwarePlatform/hipTensor.git"
-    url = "https://github.com/ROCmSoftwarePlatform/hipTensor/archive/refs/tags/rocm-5.7.1.tar.gz"
+    homepage = "https://github.com/ROCm/hipTensor"
+    git = "https://github.com/ROCm/hipTensor.git"
+    url = "https://github.com/ROCm/hipTensor/archive/refs/tags/rocm-5.7.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "afzpatel")
