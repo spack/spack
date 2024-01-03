@@ -1517,3 +1517,9 @@ def test_edge_equality_does_not_depend_on_virtual_order():
     assert edge1 == edge2
     assert tuple(sorted(edge1.virtuals)) == edge1.virtuals
     assert tuple(sorted(edge2.virtuals)) == edge1.virtuals
+
+
+def test_old_format_strings_trigger_error(default_mock_concretization):
+    s = Spec("a").concretized()
+    with pytest.raises(SpecFormatStringError):
+        s.format("${PACKAGE}-${VERSION}-${HASH}")
