@@ -77,6 +77,7 @@ def module(
         environb.clear()
         environb.update(new_environb)  # novermin
 
+        # We captured module command stdout and stderr both in stderr
         return str(stderr.decode())
 
     else:
