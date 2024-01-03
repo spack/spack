@@ -19,12 +19,12 @@ from spack.spec import (
     SpecFormatStringError,
     UnsupportedCompilerError,
 )
+from spack.test.conftest import create_test_repo
 from spack.variant import (
     InvalidVariantValueError,
     MultipleValuesInExclusiveVariantError,
     UnknownVariantError,
 )
-from spack.test.conftest import create_test_repo
 
 
 @pytest.mark.usefixtures("config", "mock_packages")
@@ -1531,7 +1531,8 @@ def test_edge_equality_does_not_depend_on_virtual_order():
     assert tuple(sorted(edge2.virtuals)) == edge1.virtuals
 
 
-_p1 = ("p1",
+_p1 = (
+    "p1",
     """\
 class P1(Package):
     version("1.0")
@@ -1540,7 +1541,8 @@ class P1(Package):
 """,
 )
 
-_i1 = ("i1",
+_i1 = (
+    "i1",
     """\
 class I1(Package):
     version("1.0")
@@ -1555,7 +1557,8 @@ class I1(Package):
 """,
 )
 
-_p2 = ("p2",
+_p2 = (
+    "p2",
     """\
 class P2(Package):
     version("1.0")
@@ -1581,6 +1584,7 @@ def _repo_virtual_libs_access(tmpdir, mutable_config):
 def use_repo_virtual_libs_access(_repo_virtual_libs_access, monkeypatch, mock_stage):
     with spack.repo.use_repositories(_repo_virtual_libs_access) as mock_repo_path:
         yield mock_repo_path
+
 
 def test_virtual_lib_access(use_repo_virtual_libs_access):
     p1 = spack.spec.Spec("p1").concretized()
