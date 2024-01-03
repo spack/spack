@@ -1878,6 +1878,33 @@ def _find_non_recursive(root, search_files):
     return answer
 
 
+def find_max_depth(root, globs, max_depth=None):
+    """Given a set of non-recursive glob file patterns, finds all
+    files matching those patterns up to a maximum specified depth.
+
+    Does not search in directories below the specified depth.
+    """
+    root = root
+    if isinstance(globs, str):
+        globs = [globs]
+    regexes = [re.compile(fnmatch.translate(x)) for x in globs]
+    found = list()
+
+    dir_queue = collections.deque([(0, root)])
+    while dir_queue:
+        depth, next_dir = dir_queue.pop()
+        for dir_entry in os.scandir(next_dir):
+            if dir_entry.is_dir():
+                if (max_depth is None) or depth < max_depth:
+                    dir_queue.appendleft((depth + 1, os.path.join(next_dir, dir_entry.name)))
+            else:
+                fname = dir_entry.name
+                if any(x.match(fname) for x in regexes):
+                    found.append(os.path.join(next_dir, fname))
+
+    return found
+
+
 # Utilities for libraries and headers
 
 
@@ -2839,33 +2866,6 @@ def filesummary(path, print_bytes=16) -> Tuple[int, bytes]:
         return size, short_contents
     except OSError:
         return 0, b""
-
-
-def find_max_depth(root, globs, max_depth=None):
-    """Given a set of non-recursive glob file patterns, finds all
-    files matching those patterns up to a maximum specified depth.
-
-    Does not search in directories below the specified depth.
-    """
-    root = root
-    if isinstance(globs, str):
-        globs = [globs]
-    regexes = [re.compile(fnmatch.translate(x)) for x in globs]
-    found = list()
-
-    dir_queue = collections.deque([(0, root)])
-    while dir_queue:
-        depth, next_dir = dir_queue.pop()
-        for dir_entry in os.scandir(next_dir):
-            if dir_entry.is_dir():
-                if (max_depth is None) or depth < max_depth:
-                    dir_queue.appendleft((depth + 1, os.path.join(next_dir, dir_entry.name)))
-            else:
-                fname = dir_entry.name
-                if any(x.match(fname) for x in regexes):
-                    found.append(os.path.join(next_dir, fname))
-
-    return found
 
 
 class FindFirstFile:
