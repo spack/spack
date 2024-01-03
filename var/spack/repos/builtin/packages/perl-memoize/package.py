@@ -18,4 +18,3 @@ class PerlMemoize(PerlPackage):
 
     depends_on("perl-extutils-makemaker", type="build")
     depends_on("perl-scalar-list-utils")
-
