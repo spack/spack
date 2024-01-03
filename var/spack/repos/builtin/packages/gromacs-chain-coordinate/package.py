@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -45,7 +45,7 @@ class GromacsChainCoordinate(Gromacs):
                 del self.versions[version_key]
 
     def __init__(self, spec):
-        super(GromacsChainCoordinate, self).__init__(spec)
+        super().__init__(spec)
 
         self.remove_parent_versions()
 

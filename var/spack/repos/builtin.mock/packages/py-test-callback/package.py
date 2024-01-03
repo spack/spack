@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,6 @@ class PyTestCallback(mp.Python):
 
     # TODO (post-34236): "test" -> "test_callback" once remove "test" support
     def test(self):
-        super(PyTestCallback, self).test()
+        super().test()
 
         print("PyTestCallback test")

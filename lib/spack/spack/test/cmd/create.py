@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,7 @@ create = SpackCommand("create")
             [r"TestNamedPackage(Package)", r"def install(self"],
         ),
         (["file://example.tar.gz"], "example", [r"Example(Package)", r"def install(self"]),
+        (["-n", "test-license"], "test-license", [r'license("UNKNOWN")']),
         # Template-specific cases
         (
             ["-t", "autoreconf", "/test-autoreconf"],
@@ -91,12 +92,7 @@ create = SpackCommand("create")
         (
             ["-t", "python", "/test-python"],
             "py-test-python",
-            [
-                r"PyTestPython(PythonPackage)",
-                r'depends_on("py-',
-                r"def global_options(self",
-                r"def install_options(self",
-            ],
+            [r"PyTestPython(PythonPackage)", r'depends_on("py-', r"def config_settings(self"],
         ),
         (
             ["-t", "qmake", "/test-qmake"],

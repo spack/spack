@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,11 @@ class Open3d(CMakePackage, CudaPackage):
     url = "https://github.com/isl-org/Open3D/archive/refs/tags/v0.13.0.tar.gz"
     git = "https://github.com/isl-org/Open3D.git"
 
-    version("0.13.0", tag="v0.13.0", submodules=True)
+    license("MIT")
+
+    version(
+        "0.13.0", tag="v0.13.0", commit="c3f9de224e13838a72da0e5565a7ba51038b0f11", submodules=True
+    )
 
     variant("python", default=False, description="Build the Python module")
 

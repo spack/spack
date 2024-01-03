@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,8 @@ class Bzip2(Package, SourcewarePackage):
     executables = [r"^bzip2$"]
     tags = ["windows"]
 
+    license("bzip2-1.0.6")
+
     version("1.0.8", sha256="ab5a03176ee106d3f0fa90e381da478ddae405918153cca248e682cd0c4a2269")
     version("1.0.7", sha256="e768a87c5b1a79511499beb41500bcc4caf203726fff46a6f5f9ad27fe08ab2b")
     version("1.0.6", sha256="a2848f34fcd5d6cf47def00461fcb528a0484d8edef8208d6d2e2909dc61d9cd")
@@ -43,6 +45,10 @@ class Bzip2(Package, SourcewarePackage):
 
     if sys.platform != "win32":
         depends_on("diffutils", type="build")
+
+    depends_on("gmake", type="build", when="platform=linux")
+    depends_on("gmake", type="build", when="platform=cray")
+    depends_on("gmake", type="build", when="platform=darwin")
 
     @classmethod
     def determine_version(cls, exe):
@@ -160,3 +166,22 @@ class Bzip2(Package, SourcewarePackage):
                 force_remove("bunzip2", "bzcat")
                 symlink("bzip2", "bunzip2")
                 symlink("bzip2", "bzcat")
+
+    @run_after("install")
+    def install_pkgconfig(self):
+        # Add pkgconfig file after installation
+        libdir = self.spec["bzip2"].libs.directories[0]
+        pkg_path = join_path(self.prefix.lib, "pkgconfig")
+        mkdirp(pkg_path)
+
+        with open(join_path(pkg_path, "bzip2.pc"), "w") as f:
+            f.write("prefix={0}\n".format(self.prefix))
+            f.write("exec_prefix=${prefix}/bin\n")
+            f.write("libdir={0}\n".format(libdir))
+            f.write("includedir={0}\n".format(self.prefix.include))
+            f.write("\n")
+            f.write("Name: bzip2\n")
+            f.write("Description: a file compression library\n")
+            f.write("Version: {0}\n".format(self.spec.version))
+            f.write("Libs: -L${libdir} -lbz2\n")
+            f.write("Cflags: -I${includedir}\n")

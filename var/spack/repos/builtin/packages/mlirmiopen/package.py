@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -44,7 +44,7 @@ class Mlirmiopen(CMakePackage):
 
     depends_on("python", type="build")
     depends_on("z3", type="link")
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
     depends_on("ncurses+termlib", type="link")
     depends_on("bzip2")
     depends_on("sqlite")

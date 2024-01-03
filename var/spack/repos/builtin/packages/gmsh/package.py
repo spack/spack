@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class Gmsh(CMakePackage):
     homepage = "https://gmsh.info"
     url = "https://gmsh.info/src/gmsh-4.4.1-source.tgz"
     git = "https://gitlab.onelab.info/gmsh/gmsh.git"
+
+    license("GPL-2.0-or-later")
 
     version("master", branch="master")
     version("4.10.3", sha256="a87d59ccea596d493d375b0d6bc380079a5e5a4baebf0d3383018b0cd6bd8e33")
@@ -88,7 +90,7 @@ class Gmsh(CMakePackage):
     depends_on("freetype", when="+oce")
     depends_on("freetype", when="+opencascade")
     depends_on("slepc", when="+slepc+petsc")
-    depends_on("zlib", when="+compression")
+    depends_on("zlib-api", when="+compression")
     depends_on("metis", when="+metis+external")
     depends_on("cgns", when="+cgns")
     depends_on("cgns~scoping", when="+cgns @:4.7.1")
@@ -106,6 +108,12 @@ class Gmsh(CMakePackage):
     conflicts("+oce", when="+opencascade")
     conflicts("+oce", when="^gmsh@4.10:4.10.3")
     conflicts("+metis", when="+external", msg="External Metis cannot build with GMSH")
+
+    def flag_handler(self, name, flags):
+        if name == "cflags":
+            if self.spec.satisfies("%oneapi"):
+                flags.append("-Wno-error=implicit-function-declaration")
+        return (flags, None, None)
 
     def cmake_args(self):
         spec = self.spec

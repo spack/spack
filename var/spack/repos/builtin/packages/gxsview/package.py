@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,11 @@ class Gxsview(QMakePackage):
     # Support email for questions ohnishi@m.mpat.go.jp
     maintainers("cessenat")
 
+    license("LGPL-3.0-only")
+
+    version(
+        "2023.05.29", sha256="1e768fd7afd22198b7f73adeb42f4ccf7e0ff68996a3843b1ea138225c4c1da3"
+    )
     version(
         "2022.11.04", sha256="28c299e4f87836b93e4a42934777364a166e35d305050ee5623a1b7cbc0ab561"
     )

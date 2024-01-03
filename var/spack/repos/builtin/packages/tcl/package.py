@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class Tcl(AutotoolsPackage, SourceforgePackage):
     homepage = "https://www.tcl.tk/"
     sourceforge_mirror_path = "tcl/tcl8.6.11-src.tar.gz"
 
+    license("TCL")
+
     version("8.6.12", sha256="26c995dd0f167e48b11961d891ee555f680c175f7173ff8cb829f4ebcde4c1a6")
     version("8.6.11", sha256="8c0486668586672c5693d7d95817cb05a18c5ecca2f40e2836b9578064088258")
     version("8.6.10", sha256="5196dbf6638e3df8d5c87b5815c8c2b758496eb6f0e41446596c9a4e638d87ed")
@@ -33,9 +35,11 @@ class Tcl(AutotoolsPackage, SourceforgePackage):
 
     extendable = True
 
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     configure_directory = "unix"
+
+    filter_compiler_wrappers("tclConfig.sh", relative_root="lib")
 
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
@@ -151,13 +155,12 @@ class Tcl(AutotoolsPackage, SourceforgePackage):
         # https://core.tcl-lang.org/tk/tktview/447bd3e4abe17452d19a80e6840dcc8a2603fcbc
         env.prepend_path("TCLLIBPATH", self.spec["tcl"].libs.directories[0], separator=" ")
 
-        for d in dependent_spec.traverse(deptype=("build", "run", "test")):
-            if d.package.extends(self.spec):
-                # Tcl libraries may be installed in lib or lib64, see #19546
-                for lib in ["lib", "lib64"]:
-                    tcllibpath = join_path(d.prefix, lib)
-                    if os.path.exists(tcllibpath):
-                        env.prepend_path("TCLLIBPATH", tcllibpath, separator=" ")
+        if dependent_spec.package.extends(self.spec):
+            # Tcl libraries may be installed in lib or lib64, see #19546
+            for lib in ["lib", "lib64"]:
+                tcllibpath = join_path(dependent_spec.prefix, lib)
+                if os.path.exists(tcllibpath):
+                    env.prepend_path("TCLLIBPATH", tcllibpath, separator=" ")
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         """Set TCLLIBPATH to include the tcl-shipped directory for
@@ -167,10 +170,9 @@ class Tcl(AutotoolsPackage, SourceforgePackage):
 
         * https://wiki.tcl-lang.org/page/TCLLIBPATH
         """
-        for d in dependent_spec.traverse(deptype=("build", "run", "test")):
-            if d.package.extends(self.spec):
-                # Tcl libraries may be installed in lib or lib64, see #19546
-                for lib in ["lib", "lib64"]:
-                    tcllibpath = join_path(d.prefix, lib)
-                    if os.path.exists(tcllibpath):
-                        env.prepend_path("TCLLIBPATH", tcllibpath, separator=" ")
+        if dependent_spec.package.extends(self.spec):
+            # Tcl libraries may be installed in lib or lib64, see #19546
+            for lib in ["lib", "lib64"]:
+                tcllibpath = join_path(dependent_spec.prefix, lib)
+                if os.path.exists(tcllibpath):
+                    env.prepend_path("TCLLIBPATH", tcllibpath, separator=" ")

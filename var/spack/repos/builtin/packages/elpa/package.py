@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,8 +20,13 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
     url = "https://elpa.mpcdf.mpg.de/software/tarball-archive/Releases/2015.11.001/elpa-2015.11.001.tar.gz"
     git = "https://gitlab.mpcdf.mpg.de/elpa/elpa.git"
 
+    license("LGPL-3.0-only")
+
     version("master", branch="master")
 
+    version(
+        "2023.05.001", sha256="ec64be5d6522810d601a3b8e6a31720e3c3eb4af33a434d8a64570d76e6462b6"
+    )
     version(
         "2022.11.001", sha256="75db3ac146f9a6a1598e3418ddcab2be2f40a30ef9ec4c00a3b5d3808c99c430"
     )
@@ -129,16 +134,7 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
             options.append("--enable-generic")
 
         if self.compiler.name == "gcc":
-            gcc_options = []
-            gfortran_options = ["-ffree-line-length-none"]
-
-            space_separator = " "
-            options.extend(
-                [
-                    "CFLAGS=" + space_separator.join(gcc_options),
-                    "FCFLAGS=" + space_separator.join(gfortran_options),
-                ]
-            )
+            options.extend(["CFLAGS=-O3", "FCFLAGS=-O3 -ffree-line-length-none"])
 
         if "%aocc" in spec:
             options.extend(["FCFLAGS=-O3", "CFLAGS=-O3"])
@@ -182,6 +178,8 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         if "+autotune" in self.spec:
             options.append("--enable-autotune-redistribute-matrix")
+            # --enable-autotune-redistribute-matrix requires --enable-scalapack-tests as well
+            options.append("--enable-scalapack-tests")
 
         options.append("--disable-silent-rules")
         options.append("--without-threading-support-check-during-build")

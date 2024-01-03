@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class Picard(Package):
     _oldurlfmt = (
         "https://github.com/broadinstitute/picard/releases/download/{0}/picard-tools-{0}.zip"
     )
+
+    license("GPL-2.0-or-later")
 
     # They started distributing a single jar file at v2.6.0, prior to
     # that it was a .zip file with multiple .jar and .so files
@@ -156,6 +158,8 @@ class Picard(Package):
     )
     version("1.140", sha256="0d27287217413db6b846284c617d502eaa578662dcb054a7017083eab9c54438")
 
+    variant("parameters", default=False, description="get java parameters in the adapter script")
+
     depends_on("java@17:", type="run", when="@3.0.0:")
     depends_on("java@8:", type="run", when="@:2.27.5")
 
@@ -169,7 +173,12 @@ class Picard(Package):
 
         # Set up a helper script to call java on the jar file,
         # explicitly codes the path for java and the jar file.
-        script_sh = join_path(os.path.dirname(__file__), "picard.sh")
+
+        script_sh = join_path(
+            os.path.dirname(__file__),
+            "picard_with_parameters.sh" if "+parameters" in spec else "picard.sh",
+        )
+
         script = prefix.bin.picard
         install(script_sh, script)
         set_executable(script)

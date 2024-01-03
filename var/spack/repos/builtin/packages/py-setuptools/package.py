@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,16 @@ class PySetuptools(Package, PythonExtension):
     url = "https://files.pythonhosted.org/packages/py3/s/setuptools/setuptools-62.3.2-py3-none-any.whl"
     list_url = "https://pypi.org/simple/setuptools/"
 
+    tags = ["build-tools"]
+
+    # Requires railroad
+    skip_modules = ["setuptools._vendor", "pkg_resources._vendor"]
+
+    version(
+        "68.0.0",
+        sha256="11e52c67415a381d10d6b462ced9cfb97066179f0e871399e006c4ab101fc85f",
+        expand=False,
+    )
     version(
         "67.6.0",
         sha256="b78aaa36f6b90a074c1fa651168723acbf45d14cb1196b6f02c0fd07f17623b2",
@@ -186,11 +196,22 @@ class PySetuptools(Package, PythonExtension):
     )
 
     extends("python")
+
     depends_on("python@3.7:", when="@59.7:", type=("build", "run"))
     depends_on("python@3.6:", when="@51:", type=("build", "run"))
     depends_on("python@3.5:", when="@45:50", type=("build", "run"))
     depends_on("python@2.7:2.8,3.5:", when="@44", type=("build", "run"))
     depends_on("python@2.7:2.8,3.4:", when="@:43", type=("build", "run"))
+
+    # Uses HTMLParser.unescape
+    depends_on("python@:3.8", when="@:41.0", type=("build", "run"))
+
+    # Uses collections.MutableMapping
+    depends_on("python@:3.9", when="@:40.4.2", type=("build", "run"))
+
+    # https://github.com/pypa/setuptools/issues/3661
+    depends_on("python@:3.11", when="@:67", type=("build", "run"))
+
     depends_on("py-pip", type="build")
 
     def url_for_version(self, version):

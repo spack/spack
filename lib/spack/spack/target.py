@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,7 +32,7 @@ def _ensure_other_is_target(method):
     return _impl
 
 
-class Target(object):
+class Target:
     def __init__(self, name, module_name=None):
         """Target models microarchitectures and their compatibility.
 

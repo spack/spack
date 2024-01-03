@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class RScatterplot3d(RPackage):
     Plots a three dimensional (3D) point cloud."""
 
     cran = "scatterplot3d"
+
+    license("GPL-2.0-only")
 
     version("0.3-43", sha256="90d7bfb535b76008768306ea9209adfb48e0e07f36eabbb59ab6ddb6522f16a5")
     version("0.3-42", sha256="a9fedde70e1a846c4dcafbff20f115425206d507896d12c2b21ff052556c5216")

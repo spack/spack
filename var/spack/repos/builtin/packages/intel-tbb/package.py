@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,6 +29,8 @@ class IntelTbb(CMakePackage, MakefilePackage):
 
     # Note: when adding new versions, please check and update the
     # patches, filters and url_for_version() below as needed.
+
+    license("Apache-2.0")
 
     version("master", branch="master")
     version("2021.9.0", sha256="1ce48f34dada7837f510735ff1172f6e2c261b09460e3bf773b49791d247d24e")
@@ -125,7 +127,7 @@ class IntelTbb(CMakePackage, MakefilePackage):
     patch("gcc_generic-pedantic-4.4.patch", level=1, when="@:2019.0")
 
     # Patch and conflicts for GCC 13 support (#1031).
-    patch("gcc_13-2021.patch", when="@2021.1:")
+    patch("gcc_13-2021-v2.patch", when="@2021.1:")
     conflicts("%gcc@13", when="@:2021.3")
 
     # Patch cmakeConfig.cmake.in to find the libraries where we install them.
@@ -143,6 +145,9 @@ class IntelTbb(CMakePackage, MakefilePackage):
     # https://github.com/oneapi-src/oneTBB/pull/258
     # https://github.com/oneapi-src/oneTBB/commit/86f6dcdc17a8f5ef2382faaef860cfa5243984fe.patch?full_index=1
     patch("macos-arm64.patch", when="@:2021.0")
+
+    # build older tbb with %oneapi
+    patch("intel-tbb.2020.3-icx.patch", when="@2020.3 %oneapi")
 
     # Support for building with %nvhpc
     # 1) remove flags nvhpc compilers do not recognize
@@ -181,7 +186,7 @@ class IntelTbb(CMakePackage, MakefilePackage):
         return find_libraries("libtbb*", root=self.prefix, shared=shared, recursive=True)
 
 
-class SetupEnvironment(object):
+class SetupEnvironment:
     # We set OS here in case the user has it set to something else
     # that TBB doesn't expect.
     def setup_build_environment(self, env):

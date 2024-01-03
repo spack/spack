@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,8 +15,12 @@ class PyTfdlpack(CMakePackage, PythonExtension):
 
     maintainers("adamjstewart")
 
+    license("Apache-2.0")
+
     version("master", branch="master", submodules=True)
-    version("0.1.1", tag="v0.1.1", submodules=True)
+    version(
+        "0.1.1", tag="v0.1.1", commit="a1fdb53096158c2ec9189bb1ff46c92c6f571bbe", submodules=True
+    )
 
     variant("cuda", default=True, description="Build with CUDA support")
 

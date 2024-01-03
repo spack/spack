@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -44,7 +44,13 @@ class MiopenTensile(CMakePackage):
 
     tensile_architecture = ("all", "gfx906", "gfx908", "gfx803", "gfx900")
 
-    variant("tensile_architecture", default="all", values=tensile_architecture, multi=True)
+    variant(
+        "tensile_architecture",
+        default="all",
+        description="AMD GPU architecture",
+        values=tensile_architecture,
+        multi=True,
+    )
     variant(
         "build_type",
         default="Release",

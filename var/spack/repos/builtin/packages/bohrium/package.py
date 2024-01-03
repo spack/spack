@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class Bohrium(CMakePackage, CudaPackage):
     git = "https://github.com/bh107/bohrium.git"
 
     maintainers("mfherbst")
+
+    license("LGPL-3.0-only")
 
     #
     # Versions
@@ -95,7 +97,7 @@ class Bohrium(CMakePackage, CudaPackage):
     depends_on("py-pip", type="build", when="+python")
     depends_on("py-wheel", type="build", when="+python")
 
-    depends_on("zlib", when="+proxy")
+    depends_on("zlib-api", when="+proxy")
 
     depends_on("libsigsegv")
 

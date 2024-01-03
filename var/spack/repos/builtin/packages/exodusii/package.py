@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class Exodusii(CMakePackage):
     homepage = "https://github.com/gsjaardema/seacas"
     git = "https://github.com/gsjaardema/seacas.git"
     url = "https://github.com/gsjaardema/seacas/archive/refs/tags/v2021-04-05.zip"
+
+    license("X11")
 
     version(
         "2021-04-05", sha256="f40d318674753287b8b28d2b4e5cca872cd772d4c7383af4a8f3eeb48fcc7ec0"
@@ -52,7 +54,7 @@ class Exodusii(CMakePackage):
     version(
         "2019-10-14", sha256="f143d90e8a7516d25979d1416e580dea638332db723f26ae94a712dfe4052e8f"
     )
-    version("2016-08-09", commit="2ffeb1b")
+    version("2016-08-09", commit="2ffeb1bd39454ad5aa230e12969ce976f3d1c92b")
     version("master", branch="master")
 
     variant("mpi", default=True, description="Enables MPI parallelism.")

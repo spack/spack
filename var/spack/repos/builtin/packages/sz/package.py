@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -66,7 +66,7 @@ class Sz(CMakePackage, AutotoolsPackage):
     # with Fujitsu compiler.
     patch("fix_optimization.patch", when="@2.0.2.0:%fj")
 
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("zstd")
 
     extends("python", when="+python")
@@ -81,6 +81,12 @@ class Sz(CMakePackage, AutotoolsPackage):
     conflicts("%clang@15:", when="@:2.1.12.4+hdf5")
 
     patch("ctags-only-if-requested.patch", when="@2.1.8.1:2.1.8.3")
+
+    def flag_handler(self, name, flags):
+        if name == "cflags":
+            if self.spec.satisfies("%oneapi"):
+                flags.append("-Wno-error=implicit-function-declaration")
+        return (flags, None, None)
 
     def setup_run_environment(self, env):
         if "+hdf5" in self.spec:

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,12 +16,17 @@ class Rccl(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rccl"
     git = "https://github.com/ROCmSoftwarePlatform/rccl.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rccl/archive/rocm-5.4.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rccl/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["librccl"]
-
+    version("5.7.1", sha256="fb4c1f0084196d1226ce8a726d0f012d3890b54508a06ca87bbda619be8b90b1")
+    version("5.7.0", sha256="4c2825a3e4323ef3c2f8855ef445c1a81cf1992fb37e3e8a07a50db354aa3954")
+    version("5.6.1", sha256="27ec6b86a1a329684d808f728c1fce134517ac8e6e7047689f95dbf8386c077e")
+    version("5.6.0", sha256="cce13c8a9e233e7ddf91a67b1626b7aaeaf818fefe61af8de6b6b6ff47cb358c")
+    version("5.5.1", sha256="f6b9dc6dafeb49d95c085825876b09317d8252771c746ccf5aa19a9204a404b2")
+    version("5.5.0", sha256="be2964b408741d046bcd606d339a233d1d1deac7b841647ec53d6d62d71452ba")
     version("5.4.3", sha256="a2524f602bd7b3b6afeb8ba9aff660216ee807fa836e46442d068b5ed5f51a4d")
     version("5.4.0", sha256="213f4f3d75389be588673e43f563e5c0d6908798228b0b6a71f27138fd4ed0c7")
     version("5.3.3", sha256="8995a2d010ad0748fc85ac06e8da7e8d110ba996db04d42b77526c9c059c05bb")
@@ -104,17 +109,16 @@ class Rccl(CMakePackage):
 
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
-    variant("amdgpu_target", values=auto_or_any_combination_of(*amdgpu_targets), sticky=True)
     variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
+        "amdgpu_target",
+        description="AMD GPU architecture",
+        values=auto_or_any_combination_of(*amdgpu_targets),
+        sticky=True,
     )
 
     patch("0001-Fix-numactl-path-issue.patch", when="@3.7.0:4.3.2")
     patch("0002-Fix-numactl-rocm-smi-path-issue.patch", when="@4.5.0:5.2.1")
-    patch("0003-Fix-numactl-rocm-smi-path-issue.patch", when="@5.2.3:")
+    patch("0003-Fix-numactl-rocm-smi-path-issue.patch", when="@5.2.3:5.6")
 
     depends_on("cmake@3.5:", type="build")
     for ver in [
@@ -141,6 +145,12 @@ class Rccl(CMakePackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
+        "5.7.0",
+        "5.7.1",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
@@ -170,6 +180,12 @@ class Rccl(CMakePackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
+        "5.7.0",
+        "5.7.1",
     ]:
         depends_on("numactl@2:", when="@" + ver)
     for ver in [
@@ -186,9 +202,19 @@ class Rccl(CMakePackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
+        "5.7.0",
+        "5.7.1",
     ]:
         depends_on("rocm-smi-lib@" + ver, when="@" + ver)
         depends_on("chrpath", when="@5.3.0:")
+
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1"]:
+        depends_on("rocm-core@" + ver, when="@" + ver)
+    depends_on("googletest@1.11.0:", when="@5.3:")
 
     @classmethod
     def determine_version(cls, lib):

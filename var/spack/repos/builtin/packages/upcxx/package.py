@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -49,6 +49,8 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
     git = "https://bitbucket.org/berkeleylab/upcxx.git"
 
     tags = ["e4s", "ecp"]
+
+    license("BSD-3-Clause-LBNL")
 
     version("develop", branch="develop")
     version("master", branch="master")
@@ -116,7 +118,7 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
     depends_on("mpi", when="+mpi")
     depends_on("python@2.7.5:", type=("build", "run"))
 
-    conflicts("hip@:4.4.0", when="+rocm")
+    conflicts("^hip@:4.4.0", when="+rocm")
 
     depends_on("oneapi-level-zero@1.8.0:", when="+level_zero")
 

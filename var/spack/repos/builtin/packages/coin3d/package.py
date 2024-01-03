@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Coin3d(AutotoolsPackage, CMakePackage):
 
     homepage = "https://github.com/coin3d/coin"
     url = "https://github.com/coin3d/coin/releases/download/Coin-4.0.0/coin-4.0.0-src.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("4.0.0", sha256="e4f4bd57804b8ed0e017424ad2e45c112912a928b83f86c89963df9015251476")
     version("3.1.0", sha256="70dd5ef39406e1d9e05eeadd54a5b51884a143e127530876a97744ca54173dc3")
@@ -58,6 +60,24 @@ class Coin3d(AutotoolsPackage, CMakePackage):
         else:
             url = "https://github.com/coin3d/coin/archive/Coin-{0}.tar.gz"
         return url.format(version.dotted)
+
+    # 2 patches for fixing missing dlopen, ... on CentOS 8
+    patch(
+        "https://github.com/coin3d/coin/commit/962e613609ba93301999f83e283b7f489dfac503.patch?full_index=1",
+        sha256="33da720d6ff50916403320c47c72600737bdfb4113a4d527bc3fa9e8fe368f49",
+        when="@4.0.0",
+    )
+    patch(
+        "https://github.com/coin3d/coin/commit/9a36b15d66c5e340cd8695415ce5867ad07ee2bb.patch?full_index=1",
+        sha256="fcfe07c45e4981976ccf8df377f8cea24c48231b9e5d9538e5c7e4e038970597",
+        when="@4.0.0",
+    )
+    # fix missing X11 libraries on CentOS 8
+    patch(
+        "https://github.com/coin3d/coin/commit/58a1b4c3e968f96d3a2091fa5cb625f360ce6811.patch?full_index=1",
+        sha256="a4fe39d430068a7b107d4bca1fdb932e40cf92c3b5be0f846c70cbdc333e924d",
+        when="@4.0.0",
+    )
 
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Fenics(CMakePackage):
     homepage = "https://fenicsproject.org/"
     git = "https://bitbucket.org/fenics-project/dolfin.git"
     url = "https://bitbucket.org/fenics-project/dolfin/downloads/dolfin-2019.1.0.post0.tar.gz"
+
+    license("LGPL-3.0-only")
 
     version(
         "2019.1.0.post0", sha256="61abdcdb13684ba2a3ba4afb7ea6c7907aa0896a46439d3af7e8848483d4392f"
@@ -106,7 +108,7 @@ class Fenics(CMakePackage):
     depends_on("python@3.5:", type=("build", "run"), when="+python")
     depends_on("eigen@3.2.0:")
     depends_on("pkgconfig", type="build")
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
 
     depends_on("boost+filesystem+program_options+system+iostreams+timer+regex+chrono")
     depends_on(

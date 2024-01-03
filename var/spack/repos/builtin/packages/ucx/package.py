@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Ucx(AutotoolsPackage, CudaPackage):
     git = "https://github.com/openucx/ucx.git"
 
     maintainers("hppritcha")
+
+    license("BSD-3-Clause")
 
     # Current
     version("1.14.1", sha256="baa0634cafb269a3112f626eb226bcd2ca8c9fcf0fec3b8e2a3553baad5f77aa")
@@ -72,6 +74,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
         description="Build shared libs, static libs or both",
     )
     variant("logging", default=False, description="Enable logging")
+    variant("numa", default=True, when="@:1.14", description="Enable NUMA support")
     variant("openmp", default=True, description="Use OpenMP")
     variant(
         "opt",
@@ -86,6 +89,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
     variant("rocm", default=False, description="Enable ROCm support")
     variant(
         "simd",
+        description="SIMD features",
         values=disjoint_sets(("auto",), simd_values)
         .with_default("auto")
         .with_non_feature_values("auto"),
@@ -126,7 +130,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
     depends_on("knem", when="+knem")
     depends_on("libfuse@3:", when="+vfs")
     depends_on("maven", when="+java")
-    depends_on("numactl")
+    depends_on("numactl", when="+numa")
     depends_on("pkgconfig", type="build")
     depends_on("rdma-core", when="+rdmacm")
     depends_on("rdma-core", when="+verbs")
@@ -162,6 +166,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
         spec = self.spec
         args = ["--without-go", "--disable-doxygen-doc"]  # todo  # todo
 
+        args += self.enable_or_disable("numa")
         args += self.enable_or_disable("assertions")
         args.append("--enable-compiler-opt=" + self.spec.variants["opt"].value)
         args += self.with_or_without("java", activation_value="prefix")

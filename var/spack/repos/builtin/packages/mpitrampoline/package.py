@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,10 @@ class Mpitrampoline(CMakePackage):
 
     maintainers("eschnett")
 
+    license("MIT")
+
     version("develop", branch="main")
+    version("5.3.1", sha256="8671370750587f212f059138abc6dcaa5a1079d3dbd9189dc21bf353611159eb")
     version("5.3.0", sha256="c20a04fe72965d46f747d5e2c4e7854cfe0cc1b2db47c2484b06a7f24f86728f")
     version("5.2.3", sha256="41ef0f5bc8bbf3497c4595e845cb15573dde1c9395a031b63a3f7e09673c8ce8")
     version("5.2.0", sha256="5f89c61f7b93d8f249ffc8de1abad7acab34c5f980e5d74915e4e041c461aeb4")

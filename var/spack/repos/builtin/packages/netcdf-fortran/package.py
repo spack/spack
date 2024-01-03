@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,9 @@ class NetcdfFortran(AutotoolsPackage):
 
     maintainers("skosukhin", "WardF")
 
+    license("Apache-2.0")
+
+    version("4.6.1", sha256="b50b0c72b8b16b140201a020936aa8aeda5c79cf265c55160986cd637807a37a")
     version("4.6.0", sha256="198bff6534cc85a121adc9e12f1c4bc53406c403bda331775a1291509e7b2f23")
     version("4.5.4", sha256="0a19b26a2b6e29fab5d29d7d7e08c24e87712d09a5cafeea90e16e0a2ab86b81")
     version("4.5.3", sha256="123a5c6184336891e62cf2936b9f2d1c54e8dee299cfd9d2c1a1eb05dd668a74")
@@ -128,10 +131,8 @@ class NetcdfFortran(AutotoolsPackage):
 
         return config_args
 
-    @when("@:4.4.5")
     def check(self):
-        with working_dir(self.build_directory):
-            make("check", parallel=False)
+        make("check", parallel=self.spec.satisfies("@4.5:"))
 
     @run_after("install")
     def cray_module_filenames(self):

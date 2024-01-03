@@ -35,7 +35,7 @@ jobs:
       core: ${{ steps.filter.outputs.core }}
       packages: ${{ steps.filter.outputs.packages }}
     steps:
-      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # @v2
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # @v2
         if: ${{ github.event_name == 'push' }}
         with:
           fetch-depth: 0

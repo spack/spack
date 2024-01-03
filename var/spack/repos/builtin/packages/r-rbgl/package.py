@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class RRbgl(RPackage):
     contained in the BOOST library."""
 
     bioc = "RBGL"
+
+    license("BSL-1.0")
 
     version("1.76.0", commit="18b7cc5f002435aa83e8b693e7bf269fc0b096a5")
     version("1.74.0", commit="e698db897b719992a8c0747138735c0e7d9dfb21")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,9 @@ class PyPsutil(PythonPackage):
     homepage = "https://github.com/giampaolo/psutil"
     pypi = "psutil/psutil-5.6.3.tar.gz"
 
+    license("BSD-3-Clause")
+
+    version("5.9.5", sha256="5410638e4df39c54d957fc51ce03048acd8e6d60abc0f5107af51e5fb566eb3c")
     version("5.9.4", sha256="3d7f9739eb435d4b1338944abe23f49584bde5395f27487d2ee25ad9a8774a62")
     version("5.9.2", sha256="feb861a10b6c3bb00701063b37e4afc754f8217f0f09c42280586bd6ac712b5c")
     version("5.8.0", sha256="0c9ccb99ab76025f2f0bbecf341d4656e9c1351db8cc8a03ccd62e318ab4b5c6")
@@ -27,7 +30,3 @@ class PyPsutil(PythonPackage):
     # pyproject.toml
     depends_on("py-setuptools@43:", when="@5.9.4:", type="build")
     depends_on("py-setuptools", type="build")
-
-    # setup.py
-    # depends_on("py-pywin32", when="platform=windows", type=("build", "run"))
-    # depends_on("py-wmi", when="platform=windows", type=("build", "run"))

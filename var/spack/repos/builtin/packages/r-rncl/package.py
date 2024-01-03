@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class RRncl(RPackage):
     'read_newick_phylo()' and 'read_nexus_phylo()'."""
 
     cran = "rncl"
+
+    license("BSD-2-Clause")
 
     version("0.8.7", sha256="1d876e4f5f2b8a24cc3ea1002c29eedbc0ca96011b0fa15b085e5b75cfc7993a")
     version("0.8.6", sha256="fcc972c04fb43ace0876eb640a6433caddf6ec8304f7ceee37107d812ce68ffb")

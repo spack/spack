@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -110,8 +110,9 @@ class Lorene(MakefilePackage):
                 )
 
     def install(self, spec, prefix):
-        mkdirp(prefix.lib)
         install_tree("Lib", prefix.lib)
+        install_tree("Export/C++/Include", prefix.include)
+        install_tree("C++/Include", prefix.include)
         mkdirp(prefix.bin)
         if "+bin_star" in spec:
             for exe in [
