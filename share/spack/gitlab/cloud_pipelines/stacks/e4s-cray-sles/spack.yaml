@@ -70,12 +70,12 @@ spack:
     - butterflypack
     - cabana
     - chai ~benchmarks ~tests
-    - charliecloud                # python: Could not find platform dependent libraries <exec_prefix>
+    - charliecloud
     - conduit
     - datatransferkit
     - flecsi
-    - flit                        # python: Could not find platform dependent libraries <exec_prefix>
-    - flux-core                   # python: Could not find platform dependent libraries <exec_prefix>
+    - flit
+    - flux-core
     - fortrilinos
     - ginkgo
     - globalarrays
@@ -86,7 +86,7 @@ spack:
     - hdf5-vol-cache
     - hdf5-vol-log
     - heffte +fftw
-    - hpx max_cpu_count=512 networking=mpi # python: Could not find platform dependent libraries <exec_prefix>
+    - hpx max_cpu_count=512 networking=mpi
     - hypre
     - kokkos +openmp
     - kokkos-kernels +openmp
@@ -106,19 +106,18 @@ spack:
     - nco
     - netlib-scalapack
     - omega-h
-    - openmpi
     - openpmd-api
     - papi
     - papyrus
     - pdt
-    - petsc                       # petsc: SyntaxError: (unicode error) \N escapes not supported (can't load unicodedata module)
-    - plumed                      # python: Could not find platform dependent libraries <exec_prefix>
-    - precice                     # petsc: SyntaxError: (unicode error) \N escapes not supported (can't load unicodedata module)
+    - petsc
+    - plumed
+    - precice
     - pumi
-    - py-h5py +mpi                # python: Could not find platform dependent libraries <exec_prefix>
-    - py-h5py ~mpi                # python: Could not find platform dependent libraries <exec_prefix>
-    - py-libensemble +mpi +nlopt  # python: Could not find platform dependent libraries <exec_prefix>
-    - py-petsc4py                 # python: Could not find platform dependent libraries <exec_prefix>
+    - py-h5py +mpi
+    - py-h5py ~mpi
+    - py-libensemble +mpi +nlopt
+    - py-petsc4py
     - qthreads scheduler=distrib
     - raja
     - slate ~cuda
@@ -130,21 +129,34 @@ spack:
     - swig@4.0.2-fortran
     - sz3
     - tasmanian
-    - tau +mpi +python            # tau: ERROR: Cannot find python library (libpython*.[so|dylib]
     - trilinos +belos +ifpack2 +stokhos
     - turbine
     - umap
     - umpire
     - veloc
     - wannier90
+    # --
+    # - openmpi # pmix%cce
+    # - tau +mpi +python
 
   specs:
   - matrix:
     - [$specs]
     - ["%cce"]
+    exclude:
+    - butterflypack
+    - mfem
+    - petsc
+    - plumed
+    - precice
+    - py-petsc4py
+    - slate
+    - superlu-dist
+
   - matrix:
     - [$specs]
     - ["%gcc"]
+
 
   # ERRORS
   # - caliper                     # caliper: ModuleNotFoundError: No module named 'math'; src/mpi/services/mpiwrap/CMakeFiles/caliper-mpiwrap.dir/build.make:77: src/mpi/services/mpiwrap/Wrapper.cpp] Error 1
