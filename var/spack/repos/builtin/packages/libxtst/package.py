@@ -23,6 +23,10 @@ class Libxtst(AutotoolsPackage, XorgPackage):
 
     license("MIT")
 
+    maintainers("wdconinc")
+
+    version("1.2.4", sha256="01366506aeb033f6dffca5326af85f670746b0cabbfd092aabefb046cf48c445")
+    version("1.2.3", sha256="a0c83acce02d4923018c744662cb28eb0dbbc33b4adc027726879ccf68fbc2c2")
     version("1.2.2", sha256="221838960c7b9058cd6795c1c3ee8e25bae1c68106be314bc3036a4f26be0e6c")
 
     depends_on("libx11")
