@@ -202,7 +202,7 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
 
     depends_on("bison", type="build")
     depends_on("texinfo", type="build")
-    depends_on("gettext", type="build")
+    # depends_on("gettext", type="build")
     depends_on("perl", type="build")
     depends_on("gawk", type="build")
     depends_on("sed", type="build")
@@ -224,7 +224,7 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
 
     def configure_args(self):
         sysroot_target = '{}-spack-linux-gnu'.format(
-                str(self.spec.architecture).split('-')[2]
+                self.spec.architecture.target.microarchitecture.family.name
                 )
         return [
             "--enable-kernel=3.7.0",
@@ -232,7 +232,7 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
             "--without-selinux",
         ] + [] if '+stage1' not in self.spec else [
                 '--host='+sysroot_target,
-                '--build=' + str(self.spec.architecture).split('-')[2] +"-unknown-linux-gnu", # current target triple
+                '--build=' + self.spec.architecture.target.microarchitecture.family.name +"-unknown-linux-gnu", # current target triple
                 # 'libc_cv_slibdir='+self.spec.prefix.lib,
                 # 'rootsbindir='+self.spec.prefix.sbin,
                 ]

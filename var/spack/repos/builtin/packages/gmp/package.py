@@ -29,6 +29,8 @@ class Gmp(AutotoolsPackage, GNUMirrorPackage):
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
+    # only required when developing
+    depends_on("gettext", when="~stage1")
 
     variant(
         "libs",
@@ -38,6 +40,13 @@ class Gmp(AutotoolsPackage, GNUMirrorPackage):
         description="Build shared libs, static libs or both",
     )
     variant("cxx", default=True, description="Enable C++ support")
+    variant(
+        "stage1",
+        default=False,
+        description="build a spack bootstrap compiler, DO NOT USE unless you know what this means"
+        )
+    depends_on("libstdcxx+stage1", when="+stage1")
+
 
     # avoid using register x18 on aarch64 machines to prevent segfaults
     # https://gmplib.org/repo/gmp/raw-rev/5f32dbc41afc
@@ -62,4 +71,30 @@ class Gmp(AutotoolsPackage, GNUMirrorPackage):
         args += self.enable_or_disable("libs")
         if "libs=static" in self.spec:
             args.append("--with-pic")
+        if '+stage1' in self.spec:
+            glibc = self.spec['glibc']
+            common_flags=(" ".join([
+                '-isystem ' ,
+                                             glibc.prefix.include,
+                                    '--sysroot=/',
+                                             '-B ', glibc.prefix,
+                                             "-B", glibc.prefix.lib,
+            ]))
+            args.extend(
+                [
+                    'CFLAGS=' + common_flags,
+                    'CXXFLAGS=' + (" ".join([
+                        # NOTE(trws): this is intentionally -I, otherwise we get a
+                        # failure to find stdlib.h with include_next from cstdlib
+                        '-I',  # '-isystem',
+                        self.spec['libstdcxx'].prefix.include.join("c++"),
+                        common_flags,
+                    ])),
+                    'LDFLAGS=' + (" ".join([
+                        common_flags,
+                        "-Wl,-rpath," + glibc.prefix.lib,
+                        "-Wl,--dynamic-linker," + glibc.prefix.lib.join("ld-linux-x86-64.so.2"),
+                    ])),
+                ]
+            )
         return args

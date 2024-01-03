@@ -116,9 +116,10 @@ class Libstdcxx(AutotoolsPackage, GNUMirrorPackage):
     depends_on("texinfo@4.7:", type="build")
     depends_on("libtool", type="build")
     # dependencies required for git versions
-    depends_on("m4@1.4.6:", when="@master", type="build")
-    depends_on("automake@1.15.1:", when="@master", type="build")
-    depends_on("autoconf@2.69:", when="@master", type="build")
+    depends_on("m4@1.4.6:", type="build")
+    depends_on("automake@1.15.1:", type="build")
+    # gcc's autoconf checks for *exactly* 2.69
+    depends_on("autoconf@2.69", type="build")
 
     depends_on("gmake@3.80:", type="build")
     depends_on("perl@5", type="build")
@@ -191,6 +192,7 @@ class Libstdcxx(AutotoolsPackage, GNUMirrorPackage):
         with fs.working_dir(self.build_directory, create=True):
             Executable(join_path(self.stage.source_path, "libstdc++-v3", "configure"))(*options)
 
+
     # https://gcc.gnu.org/install/configure.html
     def configure_args(self):
         spec = self.spec
@@ -207,7 +209,7 @@ class Libstdcxx(AutotoolsPackage, GNUMirrorPackage):
             "--disable-bootstrap",
         ]
 
-        sysroot_target = "{}-spack-linux-gnu".format(str(self.spec.architecture).split("-")[2])
+        sysroot_target = "{}-spack-linux-gnu".format(self.spec.architecture.target.microarchitecture.family.name)
         # Binutils
         if spec.satisfies("+binutils"):
             if "+stage1" not in self.spec:
@@ -225,14 +227,24 @@ class Libstdcxx(AutotoolsPackage, GNUMirrorPackage):
 
         if "+stage1" in self.spec:
             # set up links to binutils, required for gcc to build this way
+            glibc = self.spec['glibc']
+            common_flags=(" ".join(['-isystem ' ,
+                                             glibc.prefix.include,
+                                             '-B ', glibc.prefix,
+                                             "-B", glibc.prefix.lib, ]))
             options.extend(
                 [
                     "--target=" + sysroot_target,
-                    "--with-sysroot=" + self.spec["glibc"].prefix,
                     "--disable-libstdcxx-pch",
                     "--with-gxx-include-dir=" + self.prefix.include.join("c++"),
-                    "--disable-nls",
-                    "--disable-multilib",
+                    # NOTE(trws): we *must* set CFLAGS rather than CPPFLAGS or libtool
+                    # will find the wrong c runtime objects from the compiler
+                    'CFLAGS=' + common_flags,
+                    'CXXFLAGS=' + common_flags,
+                    'LDFLAGS=' + (" ".join([
+                        "-Wl,-rpath," + glibc.prefix.lib,
+                        "-Wl,--dynamic-linker," + glibc.prefix.lib.join("ld-linux-x86-64.so.2"),
+                    ])),
                 ]
             )
             return options

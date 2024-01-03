@@ -270,7 +270,7 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
             # todo, if we want to support other kernels here
             args.append("--with-sysroot={}".format(self.spec.variants["sysroot"].value))
             args.append('--with-lib-path=/lib')
-            args.append('--target={}-spack-linux-gnu'.format(str(self.spec.architecture).split('-')[2]))
+            args.append('--target={}-spack-linux-gnu'.format(self.spec.architecture.target.microarchitecture.family.name))
         args += self.enable_or_disable("gas")
         args += self.enable_or_disable("gold")
         args += self.enable_or_disable("gprofng")

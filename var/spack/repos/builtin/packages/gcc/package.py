@@ -13,6 +13,7 @@ from archspec.cpu import UnsupportedMicroarchitecture
 import llnl.util.tty as tty
 from llnl.util.lang import classproperty
 from llnl.util.link_tree import LinkTree
+from llnl.util.symlink import symlink
 
 import spack.platforms
 import spack.util.executable
@@ -160,13 +161,33 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     variant(
         "stage1",
         default=False,
-        description="build a spack bootstrap compiler, value is the sysroot view path DO NOT USE unless you know what this means"
+        description="build a spack bootstrap compiler, DO NOT USE unless you know what this means"
         )
+    # with when("+stage1"):
+    #     # use in-tree gmp to avoid needing gettext, mpc and mpfr need gmp too
+    #     resource(
+    #         name="gmp",
+    #         url="https://ftp.gnu.org/gnu/gmp/gmp-6.1.2.tar.bz2",
+    #         sha256="5275bb04f4863a13516b2f39392ac5e272f5e1bb8057b18aec1c9b79d73d8fb2",
+    #         destination="gmp-base",
+    #     )
+    #     resource(
+    #         name="mpc",
+    #         url="https://ftp.gnu.org/gnu/mpc/mpc-1.3.1.tar.gz",
+    #         sha256="ab642492f5cf882b74aa0cb730cd410a81edcdbec895183ce930e706c1c759b8",
+    #         destination="mpc-base",
+    #     )
+    #     resource(
+    #         name="mpfr",
+    #         url="https://ftp.gnu.org/gnu/mpfr/mpfr-4.2.0.tar.bz2",
+    #         sha256="691db39178e36fc460c046591e4b0f2a52c8f2b3ee6d750cc2eab25f1eaa999d",
+    #         destination="mpfr-base",
+    #     )
 
     depends_on("glibc +stage1", when="+stage1")
     # glibc has no crypt header or lib, add libxcrypt here
     depends_on("libxcrypt", when="+stage1")
-    depends_on("libstdcxx +binutils", when="+stage1")
+    # depends_on("libstdcxx +binutils", when="+stage1")
     conflicts("~binutils", when="+stage1")
     depends_on("flex", type="build", when="@master")
 
@@ -186,9 +207,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     # GCC 7.3 does not compile with newer releases on some platforms, see
     #   https://github.com/spack/spack/issues/6902#issuecomment-433030376
-    depends_on("mpfr@2.4.2:3.1.6", when="@:9.9")
-    depends_on("mpfr@3.1.0:", when="@10:")
-    depends_on("mpc@1.0.1:", when="@4.5:")
+    depends_on("mpfr@2.4.2:3.1.6")
+    depends_on("mpfr@3.1.0:")
+    depends_on("mpc@1.0.1:")
     # Already released GCC versions do not support any newer version of ISL
     #   GCC 5.4 https://github.com/spack/spack/issues/6902#issuecomment-433072097
     #   GCC 7.3 https://github.com/spack/spack/issues/6902#issuecomment-433030376
@@ -775,7 +796,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
 
         sysroot_target = '{}-spack-linux-gnu'.format(
-                str(self.spec.architecture).split('-')[2]
+                self.spec.architecture.target.microarchitecture.family.name
                 )
         # Binutils
         if spec.satisfies("+binutils"):
@@ -800,35 +821,83 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         if self.spec.variants['sysroot'].value != "off" or '+stage1' in self.spec:
             # set up links to binutils, required for gcc to build this way
             if '+stage1' in self.spec:
+                # config.guess returns the host triple, e.g. "x86_64-pc-linux-gnu"
+                guess = Executable("./config.guess")
+                targetguess = guess(output=str).rstrip("\n")
+                glibc = self.spec['glibc']
+                common_flags = (" ".join(['-isystem ' ,
+                                             glibc.prefix.include,
+                                             "-B" + glibc.prefix.lib,
+                                        ]))
                 options.extend([
+                    '--build=' + targetguess,
+                    '--target=' + sysroot_target,
                     '--host=' + sysroot_target,
-                    'LDFLAGS_FOR_TARGET=-L' + join_path(self.stage.source_path,sysroot_target,'libgcc'),
-                    'CXXFLAGS=-isystem ' + self.spec['libstdcxx'].prefix.include.join("c++"),
-                    'CXXFLAGS_FOR_BUILD=-isystem ' + self.spec['libstdcxx'].prefix.include.join("c++"),
-                    'CXXFLAGS_FOR_TARGET=-isystem ' + self.spec['libstdcxx'].prefix.include.join("c++"),
-                    '--with-boot-ldflags=' + " ".join([
-                        '--sysroot=' + self.spec['glibc'].prefix,
-                        '-Wl,--dynamic-linker=' + self.spec['glibc'].prefix,
-                        '-L' + self.spec['glibc'].prefix.lib,
-                        '-Wl,-rpath,' + self.spec['glibc'].prefix.lib,
-                        '-L' + self.spec['libstdcxx'].prefix.lib,
-                        '-L' + self.spec['libstdcxx'].prefix.lib64,
-                        '-Wl,-rpath,' + self.spec['libstdcxx'].prefix.lib,
-                        '-Wl,-rpath,' + self.spec['libstdcxx'].prefix.lib64,
-                                ]) ])
+                    # "--with-native-system-header-dir=" + glibc.prefix.include,
+                    "--with-native-system-header-dir=/include",
+                    "--with-sysroot=" + glibc.prefix,
+                    # prevent libstdc++ from trying to build against systemtap
+                    "glibcxx_cv_sys_sdt_h=no",
+                    "gcc_cv_sys_sdt_h=no",
+                    # "--with-build-sysroot=" + glibc.prefix,
+                    # "--with-build-sysroot=" + "/",  # glibc.prefix,
+                    # "--with-sysroot=" + "/",  # glibc.prefix,
+                    "--disable-lto",
+                    "--disable-plugin",
+                    "--disable-libsanitizer",
+                    "--disable-libitm",
+                    # "--disable-libstdcxx-pch",
+                    # "--enable-linker-plugin-flags='LDFLAGS=-Wl,-rpath," + glibc.prefix.lib+ " " +
+                    #     "-Wl,--dynamic-linker," + glibc.prefix.lib.join("ld-linux-x86-64.so.2") +"'",
+                    # 'LDFLAGS_FOR_TARGET=-L' + join_path(self.stage.source_path,sysroot_target,'libgcc'),
+                    # 'LDFLAGS_FOR_BUILD=-L' + join_path(self.stage.source_path,sysroot_target,'libgcc'),
+
+                    "CXXFLAGS=" + " ".join([
+                        # '-I',
+                        # self.spec['libstdcxx'].prefix.include.join("c++"),
+                        common_flags,
+                    ]),
+                    "CPPFLAGS=" + common_flags,
+                    "CFLAGS=" + common_flags,
+                    # '--with-boot-ldflags='
+                    "LDFLAGS=" + common_flags + " " + " ".join([
+                        "-Wl,-dynamic-linker," + glibc.prefix.lib.join("ld-linux-x86-64.so.2"),
+                        # '-L' + self.spec['glibc'].prefix.lib,
+                        # '-Wl,-rpath,' + self.spec['glibc'].prefix.lib,
+                        # '-L' + self.spec['libstdcxx'].prefix.lib,
+                        # '-L' + self.spec['libstdcxx'].prefix.lib64,
+                        # '-Wl,-rpath,' + self.spec['libstdcxx'].prefix.lib,
+                        # '-Wl,-rpath,' + self.spec['libstdcxx'].prefix.lib64,
+                                ]),
+                    "CXXFLAGS_FOR_TARGET=" + common_flags + " " + " ".join([
+                        # '-I',
+                        # self.spec['libstdcxx'].prefix.include.join("c++"),
+                        common_flags,
+                    ]),
+                    # "CFLAGS_FOR_TARGET=" + common_flags,
+                    "LDFLAGS_FOR_TARGET=" + common_flags + " " + " ".join([
+                        "-Wl,-dynamic-linker," + glibc.prefix.lib.join("ld-linux-x86-64.so.2"),
+                    #     '-L' + self.spec['glibc'].prefix.lib,
+                    #     '-Wl,-rpath,' + self.spec['glibc'].prefix.lib,
+                        # '-L' + self.spec['libstdcxx'].prefix.lib,
+                        # '-L' + self.spec['libstdcxx'].prefix.lib64,
+                        # '-Wl,-rpath,' + self.spec['libstdcxx'].prefix.lib,
+                        # '-Wl,-rpath,' + self.spec['libstdcxx'].prefix.lib64,
+                                ]),
+                ])
             else:
                 options.extend([
                         "--without-headers",
                         "--with-newlib",
+                        "--with-sysroot=" + self.spec.variants['sysroot'].value,
                         "--disable-shared",
                         "--disable-libstdcxx",
                         "--with-glibc-version=2.38", # TODO: figure out how to fix this cycle
+                        "--with-native-system-header-dir=/include",
                                 ])
             options.extend(
                     [
                      '--target=' + sysroot_target,
-                        "--with-native-system-header-dir=/include",
-                        "--with-sysroot=" + self.spec.variants['sysroot'].value,
                         "--enable-default-pie",
                         "--enable-default-ssp",
                         "--disable-nls",
@@ -931,6 +1000,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         return options
 
+
     # run configure/make/make(install) for the nvptx-none target
     # before running the host compiler phases
     @run_before("configure")
@@ -1012,7 +1082,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 with open(join_path(self.stage.source_path, "gcc", f)) as fo:
                     limits += fo.read()
             sysroot_target = '{}-spack-linux-gnu'.format(
-                    str(self.spec.architecture).split('-')[2]
+                    self.spec.architecture.target.microarchitecture.family.name
                     )
             gcc = Executable(self.spec["gcc"].prefix.bin.join(sysroot_target+'-gcc'))
             out_path = os.path.dirname(gcc('-print-libgcc-file-name', output=str).strip())
@@ -1055,7 +1125,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         
         sysroot_target = '{}-spack-linux-gnu'.format(
-                str(self.spec.architecture).split('-')[2]
+                self.spec.architecture.target.microarchitecture.family.name
                 )
         try:
             gcc = self.spec["gcc"].command
@@ -1086,34 +1156,34 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             tty.warn("No dynamic libraries found in lib/lib64")
             return
 
-        add_sysroot = "+stage1" in self.spec or self.spec.variants['sysroot'].value != "off"
+        # add_sysroot = "+stage1" in self.spec or self.spec.variants['sysroot'].value != "off"
         # Overwrite the specs file
         with open(specs_file, "w") as out:
-            loader = re.compile(':-dynamic-linker ')
+            # loader = re.compile(':-dynamic-linker ')
             for line in lines:
-                if add_sysroot:
-                    line = loader.sub(':-dynamic-linker %(spack_sysroot)', line)
+                # if add_sysroot:
+                #     line = loader.sub(':-dynamic-linker %(spack_sysroot)', line)
                 out.write(line)
                 if line.startswith("*link_libgcc:"):
                     # Insert at start of line following link_libgcc, which gets
                     # inserted into every call to the linker
                     out.write("%(link_libgcc_rpath) ")
-                if add_sysroot:
-                    if line.startswith("*link:"):
-                        out.write("--sysroot=%(spack_sysroot) ")
+                # if add_sysroot:
+                #     if line.startswith("*link:"):
+                #         out.write("--sysroot=%(spack_sysroot) ")
 
             # Add easily-overridable rpath string at the end
             out.write("*link_libgcc_rpath:\n")
             out.write(" ".join("-rpath " + lib for lib in rpath_libdirs))
             out.write("\n")
             out.write("\n")
-            if add_sysroot:
-                out.write("*spack_sysroot:\n")
-                if '+stage1' in self.spec:
-                    out.write(self.spec['glibc'].prefix)
-                else: # must have sysroot set explicitly
-                    out.write(self.spec.variants['sysroot'].value)
-                out.write("\n")
+            # if add_sysroot:
+            #     out.write("*spack_sysroot:\n")
+            #     if '+stage1' in self.spec:
+            #         out.write(self.spec['glibc'].prefix)
+            #     else: # must have sysroot set explicitly
+            #         out.write(self.spec.variants['sysroot'].value)
+            #     out.write("\n")
         set_install_permissions(specs_file)
         tty.info("Wrote new spec file to {0}".format(specs_file))
 
