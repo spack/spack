@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Fastdfs(Package):
 
     homepage = "https://github.com/happyfish100/fastdfs"
     url = "https://github.com/happyfish100/fastdfs/archive/V6.05.tar.gz"
+
+    license("GPL-3.0-or-later")
 
     version("6.05", sha256="00b736a1a7bd9cb5733aa51969efaa3b46df3764988c1edb43f06d72c4d575d9")
     version("6.04", sha256="76090f6bbd0add08b049ce17f30a7507a44ef0d883784cad774b380ba4906916")

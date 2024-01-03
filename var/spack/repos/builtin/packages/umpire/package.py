@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     tags = ["radiuss", "e4s"]
 
     maintainers("davidbeckingsale")
+
+    license("MIT")
 
     version("develop", branch="develop", submodules=False)
     version("main", branch="main", submodules=False)
@@ -148,6 +150,13 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         "https://github.com/LLNL/Umpire/pull/816/commits/2292d1d6078f6d9523b7ad0886ffa053644569d5.patch?full_index=1",
         sha256="0f43cad7cdaec3c225ab6414ab9f81bd405a1157abf5a508e515bcb6ca53326d",
         when="@2022.10.0",
+    )
+
+    # https://github.com/LLNL/Umpire/pull/853
+    patch(
+        "https://github.com/LLNL/Umpire/commit/4bd9b2ded81d3216b3f62e2aad62d0e34fe2c256.patch?full_index=1",
+        sha256="c9ddae1f4212cef72e1050b6ac482ce5b795dad4977d2462cff2e884b8d7aff5",
+        when="@2022.10:2023.06",
     )
 
     variant("fortran", default=False, description="Build C/Fortran API")

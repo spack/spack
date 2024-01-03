@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class RHaven(RPackage):
     library, <https://github.com/WizardMac/ReadStat>."""
 
     cran = "haven"
+
+    license("MIT")
 
     version("2.5.2", sha256="2131fb0377ae1beffae54bf4beb8b3a876e9b6b9841a5acc39a2a2615023561d")
     version("2.5.1", sha256="9f40462097a0b1cf3831bca493851fe4a6b3570d957a775ca81940f241c50a70")

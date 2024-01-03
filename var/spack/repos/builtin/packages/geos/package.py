@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class Geos(CMakePackage):
     git = "https://github.com/libgeos/geos.git"
 
     maintainers("adamjstewart")
+
+    license("LGPL-2.1-or-later")
 
     version("3.12.1", sha256="d6ea7e492224b51193e8244fe3ec17c4d44d0777f3c32ca4fb171140549a0d03")
     version("3.12.0", sha256="d96db96011259178a35555a0f6d6e75a739e52a495a6b2aa5efb3d75390fbc39")

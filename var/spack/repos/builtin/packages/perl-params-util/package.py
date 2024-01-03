@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,5 +11,7 @@ class PerlParamsUtil(PerlPackage):
 
     homepage = "https://metacpan.org/pod/Params::Util"
     url = "http://search.cpan.org/CPAN/authors/id/A/AD/ADAMK/Params-Util-1.07.tar.gz"
+
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
 
     version("1.07", sha256="30f1ec3f2cf9ff66ae96f973333f23c5f558915bb6266881eac7423f52d7c76c")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Tix(AutotoolsPackage):
 
     homepage = "https://sourceforge.net/projects/tix/"
     url = "https://sourceforge.net/projects/tix/files/tix/8.4.3/Tix8.4.3-src.tar.gz/download"
+
+    license("TCL")
 
     version("8.4.3", sha256="562f040ff7657e10b5cffc2c41935f1a53c6402eb3d5f3189113d734fd6c03cb")
 

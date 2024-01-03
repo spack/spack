@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,8 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     maintainers("janciesko", "crtrott")
+
+    license("BSD-3-Clause")
 
     version("master", branch="master")
     version("develop", branch="develop")
@@ -159,6 +161,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         "gfx942": "amd_gfx942",
         "gfx1030": "navi1030",
         "gfx1100": "navi1100",
+        "gfx942": "amd_gfx942",
     }
     amd_support_conflict_msg = (
         "{0} is not supported; "

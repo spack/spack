@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,8 @@ class Cmake(Package):
 
     executables = ["^cmake[0-9]*$"]
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("3.27.9", sha256="609a9b98572a6a5ea477f912cffb973109ed4d0a6a6b3f9e2353d2cdc048708e")
     version("3.27.8", sha256="fece24563f697870fbb982ea8bf17482c9d5f855d8c9bf0b82463d76c9e8d0cc")
@@ -36,6 +38,7 @@ class Cmake(Package):
     version("3.27.2", sha256="798e50085d423816fe96c9ef8bee5e50002c9eca09fed13e300de8a91d35c211")
     version("3.27.1", sha256="b1a6b0135fa11b94476e90f5b32c4c8fad480bf91cf22d0ded98ce22c5132004")
     version("3.27.0", sha256="aaeddb6b28b993d0a6e32c88123d728a17561336ab90e0bf45032383564d3cb8")
+    version("3.26.6", sha256="070b9a2422e666d2c1437e2dab239a236e8a63622d0a8d0ffe9e389613d2b76a")
     version("3.26.5", sha256="c0970b1e44a7fbca4322997ce05dac521b04748fe424922152faf22d20782bf9")
     version("3.26.4", sha256="313b6880c291bd4fe31c0aa51d6e62659282a521e695f30d5cc0d25abbd5c208")
     version("3.26.3", sha256="bbd8d39217509d163cb544a40d6428ac666ddc83e22905d3e52c925781f0f659")

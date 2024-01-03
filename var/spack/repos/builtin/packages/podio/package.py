@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,7 @@ class Podio(CMakePackage):
     tags = ["hep", "key4hep"]
 
     version("master", branch="master")
+    version("0.17.4", sha256="3ca86323c86e05e901f596a98fe84aeb2476ceed8c0b0e0b37049c23b903a9ad")
     version("0.17.3", sha256="079517eba9c43d01255ef8acd88468c3ead7bb9d8fed11792e121bb481d54dee")
     version("0.17.2", sha256="5b519335c4e1708f71ed85b3cac8ca81e544cc4572a5c37019ce9fc414c5e74d")
     version("0.17.1", sha256="97d6c5f81d50ee42bf7c01f041af2fd333c806f1bbf0a4828ca961a24cea6bb2")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class RRmutil(RPackage):
     <https://www.commanster.eu/rcode.html>)."""
 
     cran = "rmutil"
+
+    license("GPL-2.0-or-later")
 
     version("1.1.10", sha256="819fd7ce695cc742b4594705986eb06764460fc88521ea32de793c49de7ca5f9")
     version("1.1.9", sha256="3a68cc4058394fcb6bab960a680bad939ad7270888f4c271ca6438e49670333c")

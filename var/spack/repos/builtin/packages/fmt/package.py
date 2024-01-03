@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -82,6 +82,13 @@ class Fmt(CMakePackage):
         "https://github.com/fmtlib/fmt/commit/0b0f7cfbfcebd021c910078003d413354bd843e2.patch?full_index=1",
         sha256="08fb707bf8b4fc890d6eed29217ead666558cbae38f9249e22ddb82212f0eb4a",
         when="@9.0.0:9.1.0",
+    )
+
+    # Fix compilation with clang in CUDA mode: https://github.com/fmtlib/fmt/issues/3740
+    patch(
+        "https://github.com/fmtlib/fmt/commit/89860eb9013a345608c8144b1aad5f12b0682d7e.patch?full_index=1",
+        sha256="6ef12fe60a2b3625139c6d29c748dafd81b51e2a0690c1fa37604ed5b15615e0",
+        when="@10.0.0:10.1.1",
     )
 
     def cmake_args(self):

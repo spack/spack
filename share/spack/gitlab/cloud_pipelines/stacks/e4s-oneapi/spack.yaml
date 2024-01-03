@@ -7,7 +7,9 @@ spack:
 
   packages:
     all:
-      require: '%oneapi target=x86_64_v3'
+      require:
+      - any_of: ["%oneapi", "@:"]  # oneapi as a strong preference; not all packages support it
+      - "target=x86_64_v3"
       providers:
         blas: [openblas]
         mpi: [mpich]
@@ -15,6 +17,8 @@ spack:
       variants: +mpi
     elfutils:
       variants: +bzip2 ~nls +xz
+    gcc-runtime:
+      require: "%gcc"
     hdf5:
       require: "%gcc"
       variants: +fortran +hl +shared

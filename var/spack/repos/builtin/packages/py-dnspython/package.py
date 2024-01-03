@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyDnspython(PythonPackage):
 
     homepage = "https://www.dnspython.org"
     pypi = "dnspython/dnspython-2.2.1.tar.gz"
+
+    license("ISC")
 
     version("2.2.1", sha256="0f7569a4a6ff151958b64304071d370daa3243d15941a7beedf0c9fe5105603e")
 

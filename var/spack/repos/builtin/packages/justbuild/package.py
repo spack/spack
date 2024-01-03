@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class Justbuild(Package):
     executables = ["^just$"]
 
     maintainers("asartori86")
+
+    license("Apache-2.0")
 
     version("master", branch="master")
     version("1.2.3", tag="v1.2.3", commit="45e9c1c85399f00372ad8b72894979a0002d8f95")

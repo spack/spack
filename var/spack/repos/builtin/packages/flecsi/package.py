@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -78,7 +78,6 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("metis@5.1.0:")
     depends_on("parmetis@4.0.3:")
     depends_on("boost@1.70.0: cxxstd=17 +program_options +stacktrace")
-    depends_on("legion network=gasnet", when="backend=legion")
 
     # FleCSI@1.x
     depends_on("cmake@3.12:", when="@:1")
@@ -187,6 +186,9 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
             if "+rocm" in self.spec:
                 options.append(self.define("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc))
                 options.append(self.define("CMAKE_C_COMPILER", self.spec["hip"].hipcc))
+                if "backend=legion" in self.spec:
+                    # CMake pulled in via find_package(Legion) won't work without this
+                    options.append(self.define("HIP_PATH", "{0}/hip".format(spec["hip"].prefix)))
             elif "+kokkos" in self.spec:
                 options.append(self.define("CMAKE_CXX_COMPILER", self.spec["kokkos"].kokkos_cxx))
         else:
