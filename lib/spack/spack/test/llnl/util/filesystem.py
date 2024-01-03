@@ -996,3 +996,33 @@ def test_find_first_file(tmpdir, bfs_depth):
 
     # Should find first dir
     assert os.path.samefile(fs.find_first(root, "a", bfs_depth=bfs_depth), os.path.join(root, "a"))
+
+@pytest.fixture
+def dir_structure_with_things_to_find(tmpdir):
+    """
+    <root>/
+        dir_one/
+          file_one
+        dir_two/
+        dir_three/
+            dir_four/
+                file_two
+            file_three
+        file_four
+    """
+    dir_one = tmpdir.join("dir_one").ensure(dir=True)
+    dir_two = tmpdir.join("dir_two").ensure(dir=True)
+    dir_three = tmpdir.join("dir_three").ensure(dir=True)
+    dir_four = dir_three.join("dir_four").ensure(dir=True)
+ 
+    locations = {}
+    locations["file_one"] = str(dir_one.join("file_one").ensure())
+    locations["file_two"] = str(dir_four.join("file_two").ensure())
+    locations["file_three"] = str(dir_three.join("file_three").ensure())
+    locations["file_four"] = str(tmpdir.join("file_four").ensure())
+
+    return str(tmpdir), locations
+
+def test_find_max_depth(dir_structure_with_things_to_find):
+    root, locations = dir_structure_with_things_to_find
+    assert set(fs.find_max_depth(root, "*", 0)) == {locations["file_four"]}
