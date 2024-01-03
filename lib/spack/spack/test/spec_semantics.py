@@ -1550,12 +1550,8 @@ class I1(Package):
     depends_on("p2")
 
     @property
-    def libs(self):
-        raise Exception()
-
-    @property
     def v1_libs(self):
-        return LibraryList("/t1/a.so", "/t1/b.so")
+        return LibraryList(["/t1/a.so", "/t1/b.so"])
 """,
 )
 
@@ -1589,7 +1585,7 @@ def use_repo_virtual_libs_access(_repo_virtual_libs_access, monkeypatch, mock_st
 def test_virtual_lib_access(use_repo_virtual_libs_access):
     p1 = spack.spec.Spec("p1").concretized()
 
-    import pdb; pdb.set_trace()
+    #import pdb; pdb.set_trace()
     try:
         p1["p2"].libs
     except Exception:

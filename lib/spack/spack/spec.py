@@ -1126,18 +1126,18 @@ def _libs_default_handler(descriptor, spec, cls):
     name = spec.name.replace("-", "?")
     home = getattr(spec.package, "home")
 
-    import pdb; pdb.set_trace()
     provided = spec.package.virtuals_provided
     if provided:
+        #import pdb; pdb.set_trace()
         v_libs = []
         for v in provided:
             vlibs_accessor = f"{v}_libs"
             if hasattr(spec.package, vlibs_accessor):
                 v_libs.append(vlibs_accessor)
         if v_libs:
-            import pdb; pdb.set_trace()
-            aggregate_libs = getattr(spec.package, vlibs[0])
-            for vlibs_accessor in vlibs[1:]:
+            #import pdb; pdb.set_trace()
+            aggregate_libs = getattr(spec.package, v_libs[0])
+            for vlibs_accessor in v_libs[1:]:
                 aggregate_libs += getattr(spec.package, vlibs_accessor)
             return aggregate_libs
 
