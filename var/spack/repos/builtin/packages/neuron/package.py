@@ -102,15 +102,7 @@ class Neuron(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         args = []
-        for variant in [
-            "backtrace",
-            "coreneuron",
-            "interviews",
-            "mpi",
-            "python",
-            "rx3d",
-            "tests",
-        ]:
+        for variant in ["backtrace", "coreneuron", "interviews", "mpi", "python", "rx3d", "tests"]:
             args.append(self.define_from_variant("NRN_ENABLE_" + variant.upper(), variant))
 
         args.append(self.define_from_variant("CORENRN_ENABLE_SHARED", "shared"))
