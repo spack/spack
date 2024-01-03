@@ -354,7 +354,7 @@ def set_compiler_environment_variables(pkg, env):
             raise RuntimeError(message)
         else:
             tty.warn(message)
-        
+
     # Set SPACK compiler rpath flags so that our wrapper knows what to use
     env.set("SPACK_CC_RPATH_ARG", compiler.cc_rpath_arg)
     env.set("SPACK_CXX_RPATH_ARG", compiler.cxx_rpath_arg)

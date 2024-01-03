@@ -6,8 +6,6 @@
 import os
 import sys
 
-import llnl.util.tty as tty
-
 from spack.compiler import Compiler, UnsupportedCompilerFlag
 from spack.version import Version
 
