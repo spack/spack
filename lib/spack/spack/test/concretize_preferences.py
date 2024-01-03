@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -504,3 +504,13 @@ mpich:
         with spack.config.override("packages:sticky-variant", {"variants": "+allow-gcc"}):
             s = Spec("sticky-variant %gcc").concretized()
             assert s.satisfies("%gcc") and s.satisfies("+allow-gcc")
+
+    @pytest.mark.regression("41134")
+    @pytest.mark.only_clingo("Not backporting the fix to the old concretizer")
+    def test_default_preference_variant_different_type_does_not_error(self):
+        """Tests that a different type for an existing variant in the 'all:' section of
+        packages.yaml doesn't fail with an error.
+        """
+        with spack.config.override("packages:all", {"variants": "+foo"}):
+            s = Spec("a").concretized()
+            assert s.satisfies("foo=bar")

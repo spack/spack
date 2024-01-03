@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,8 @@ class Memkind(AutotoolsPackage):
 
     homepage = "https://github.com/memkind/memkind"
     url = "https://github.com/memkind/memkind/archive/v1.7.0.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("1.13.0", sha256="3f0d919b61fdd4d2ebce14e0b7dbb856e2144138778940107c13549523f3bdc0")
     version("1.12.0", sha256="b0781d493dec0da0089884fd54bcfdde03311019c56f90505ed0b884100bfbad")

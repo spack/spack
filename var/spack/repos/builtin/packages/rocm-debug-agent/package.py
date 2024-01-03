@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class RocmDebugAgent(CMakePackage):
 
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["librocm-debug-agent"]
+    version("5.7.1", sha256="3b8d2835935da98f41e7cfc5b808c596ac06dd705b9a07bb70283e002f8dea6a")
+    version("5.7.0", sha256="d9344ed02e82a01140f2162e901e6a519e5fee6b498e2f49417730ee2660c5c1")
     version("5.6.1", sha256="d3b1d5d757489ed3cc66d351cec56b7b850aaa7ecf6a55b0350b89c3dee3153a")
     version("5.6.0", sha256="0bed788f07906afeb9092d0bec184a7963233ac9d8ccd20b4afeb624a1d20698")
     version("5.5.1", sha256="1bb66734f11bb57df6efa507f0217651446653bf28b3ca36acfcf94511a7c2bc")
@@ -142,6 +144,8 @@ class RocmDebugAgent(CMakePackage):
         "5.5.1",
         "5.6.0",
         "5.6.1",
+        "5.7.0",
+        "5.7.1",
     ]:
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
@@ -173,11 +177,13 @@ class RocmDebugAgent(CMakePackage):
         "5.5.1",
         "5.6.0",
         "5.6.1",
+        "5.7.0",
+        "5.7.1",
     ]:
         depends_on("rocm-dbgapi@" + ver, when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
 
     # https://github.com/ROCm-Developer-Tools/rocr_debug_agent/pull/4

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Cmaq(Package):
 
     homepage = "https://www.epa.gov/CMAQ"
     url = "https://github.com/USEPA/CMAQ/archive/CMAQv5.3.1_19Dec2019.tar.gz"
+
+    license("CC0-1.0")
 
     version(
         "5.3.1",

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyJupyterlabWidgets(PythonPackage):
     # Source is also available, but I'm having issues getting it to build:
     # https://github.com/jupyter-widgets/ipywidgets/issues/3324
     url = "https://files.pythonhosted.org/packages/py3/j/jupyterlab_widgets/jupyterlab_widgets-1.0.2-py3-none-any.whl"
+
+    license("BSD-3-Clause")
 
     version(
         "3.0.3",

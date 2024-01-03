@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class LibnetfilterConntrack(AutotoolsPackage):
 
     homepage = "https://netfilter.org"
     url = "https://github.com/Distrotech/libnetfilter_conntrack/archive/libnetfilter_conntrack-1.0.4.tar.gz"
+
+    license("GPL-2.0-or-later")
 
     version("1.0.4", sha256="68168697b9d6430b7797ddd579e13a2cef06ea15c154dfd14e18be64e035ea6e")
     version("1.0.3", sha256="e2129d7c0346c7140355d643da8e3409cbd755689ea889bc0d6dbd557f1b5671")

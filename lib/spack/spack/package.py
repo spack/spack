@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,10 +37,12 @@ from spack.build_systems.cached_cmake import (
     cmake_cache_path,
     cmake_cache_string,
 )
+from spack.build_systems.cargo import CargoPackage
 from spack.build_systems.cmake import CMakePackage, generator
 from spack.build_systems.cuda import CudaPackage
 from spack.build_systems.generic import Package
 from spack.build_systems.gnu import GNUMirrorPackage
+from spack.build_systems.go import GoPackage
 from spack.build_systems.intel import IntelPackage
 from spack.build_systems.lua import LuaPackage
 from spack.build_systems.makefile import MakefilePackage

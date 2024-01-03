@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class Openturns(CMakePackage):
     url = "https://github.com/openturns/openturns/archive/refs/tags/v1.18.tar.gz"
     git = "https://github.com/openturns/openturns.git"
     maintainers("liuyangzhuan")
+
+    license("LGPL-3.0-or-later")
 
     version("master", branch="master")
     version("1.20", sha256="2be5247f0266d153619b35dfb1eeeb46736c502dad993b40aff8857d6314f293")

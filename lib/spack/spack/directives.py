@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -912,14 +912,21 @@ def _execute_license(pkg, license_identifier: str, when):
 
 
 @directive("licenses")
-def license(license_identifier: str, when=None):
+def license(
+    license_identifier: str,
+    checked_by: Optional[Union[str, List[str]]] = None,
+    when: Optional[Union[str, bool]] = None,
+):
     """Add a new license directive, to specify the SPDX identifier the software is
     distributed under.
 
     Args:
-        license_identifiers: A list of SPDX identifiers specifying the licenses
-            the software is distributed under.
+        license_identifiers: SPDX identifier specifying the license(s) the software
+            is distributed under.
+        checked_by: string or list of strings indicating which github user checked the
+            license (if any).
         when: A spec specifying when the license applies.
+            when: A spec specifying when the license applies.
     """
 
     return lambda pkg: _execute_license(pkg, license_identifier, when)

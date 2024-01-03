@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,8 @@ class Fpm(Package):
     url = "https://github.com/fortran-lang/fpm/releases/download/v0.4.0/fpm-0.4.0.zip"
 
     maintainers("awvwgk")
+
+    license("MIT")
 
     version("0.9.0", sha256="484debabd7d22186ac41f865ddf63475c279a61a51aaff5636ed615860b5b8d7")
     version("0.8.2", sha256="67fd8f4f78d19662c61855f531465e347ab0bc913ba59bd419f75f4022d2cd70")

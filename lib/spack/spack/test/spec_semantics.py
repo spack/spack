@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1286,6 +1286,17 @@ def test_call_dag_hash_on_old_dag_hash_spec(mock_packages, default_mock_concreti
 
         with pytest.raises(ValueError, match="Cannot call package_hash()"):
             spec.package_hash()
+
+
+def test_spec_trim(mock_packages, config):
+    top = Spec("dt-diamond").concretized()
+    top.trim("dt-diamond-left")
+    remaining = set(x.name for x in top.traverse())
+    assert set(["dt-diamond", "dt-diamond-right", "dt-diamond-bottom"]) == remaining
+
+    top.trim("dt-diamond-right")
+    remaining = set(x.name for x in top.traverse())
+    assert set(["dt-diamond"]) == remaining
 
 
 @pytest.mark.regression("30861")

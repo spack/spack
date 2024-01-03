@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Squashfuse(AutotoolsPackage):
     git = "https://github.com/vasi/squashfuse.git"
 
     maintainers("haampie")
+
+    license("BSD-2-Clause")
 
     version("master", branch="master")
     version("0.5.0", sha256="d7602c7a3b1d0512764547d27cb8cc99d1b21181e1c9819e76461ee96c2ab4d9")

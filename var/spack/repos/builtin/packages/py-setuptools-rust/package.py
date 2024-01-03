@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PySetuptoolsRust(PythonPackage):
 
     homepage = "https://github.com/PyO3/setuptools-rust"
     pypi = "setuptools-rust/setuptools-rust-0.12.1.tar.gz"
+
+    license("MIT")
 
     version("1.6.0", sha256="c86e734deac330597998bfbc08da45187e6b27837e23bd91eadb320732392262")
     version("1.5.1", sha256="0e05e456645d59429cb1021370aede73c0760e9360bbfdaaefb5bced530eb9d7")

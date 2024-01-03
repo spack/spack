@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,6 +32,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     keep_werror = "all"
 
     maintainers("michaelkuhn", "alalazo")
+
+    license("GPL-2.0-or-later AND LGPL-2.1-or-later")
 
     version("master", branch="master")
 
@@ -454,8 +456,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     # Backport libsanitizer patch for glibc >= 2.36
     # https://reviews.llvm.org/D129471
-    patch("glibc-2.36-libsanitizer-gcc-5-9.patch", when="@5.1:5.5,6.1:6.5,7.1:7.5,8.1:8.5,9.1:9.5")
-    patch("glibc-2.36-libsanitizer-gcc-10-12.patch", when="@10.1:10.4,11.1:11.3,12.1.0")
+    patch("glibc-2.36-libsanitizer-gcc-5-9.patch", when="@5:9")
+    patch("glibc-2.36-libsanitizer-gcc-10-12.patch", when="@10:10.4,11:11.3,12.1.0")
 
     # Older versions do not compile with newer versions of glibc
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81712
@@ -1016,7 +1018,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                     continue
 
                 abspath = os.path.join(bin_path, filename)
-                if os.path.islink(abspath):
+
+                # Skip broken symlinks (https://github.com/spack/spack/issues/41327)
+                if not os.path.exists(abspath):
                     continue
 
                 # Set the proper environment variable
@@ -1109,3 +1113,32 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                         ),
                     ),
                 )
+
+    @classmethod
+    def runtime_constraints(cls, *, compiler, pkg):
+        """Callback function to inject runtime-related rules into the solver.
+
+        Rule-injection is obtained through method calls of the ``pkg`` argument.
+
+        Documentation for this function is temporary. When the API will be in its final state,
+        we'll document the behavior at https://spack.readthedocs.io/en/latest/
+
+        Args:
+            compiler: compiler object (node attribute) currently considered
+            pkg: object used to forward information to the solver
+        """
+        pkg("*").depends_on(
+            "gcc-runtime",
+            when="%gcc",
+            type="link",
+            description="If any package uses %gcc, it depends on gcc-runtime",
+        )
+        pkg("*").depends_on(
+            f"gcc-runtime@{str(compiler.version)}:",
+            when=f"%{str(compiler.spec)}",
+            type="link",
+            description=f"If any package uses %{str(compiler.spec)}, "
+            f"it depends on gcc-runtime@{str(compiler.version)}:",
+        )
+        # The version of gcc-runtime is the same as the %gcc used to "compile" it
+        pkg("gcc-runtime").requires(f"@={str(compiler.version)}", when=f"%{str(compiler.spec)}")

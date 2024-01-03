@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class OptionalLite(CMakePackage):
 
     homepage = "https://github.com/martinmoene/optional-lite"
     url = "https://github.com/martinmoene/optional-lite/archive/v3.0.0.tar.gz"
+
+    license("BSL-1.0")
 
     version("3.5.0", sha256="6077cee87e2812afd05a273645051e0b55397a25c220295ddc1d6f49d0cf5cc8")
     version("3.2.0", sha256="069c92f6404878588be761d609b917a111b0231633a91f7f908288fc77eb24c8")

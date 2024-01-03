@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Mrcpp(CMakePackage):
     url = "https://github.com/MRChemSoft/mrcpp/archive/v1.3.6.tar.gz"
 
     maintainers("robertodr", "stigrj", "ilfreddy")
+
+    license("LGPL-3.0-only")
 
     version("1.4.2", sha256="cc7a4200eb0383967d984e770a95e621e76c88b79c5e7443433f5e642aee035b")
     version("1.3.6", sha256="2502e71f086a8bb5ea635d0c6b86e7ff60220a45583e96a08b3cfe7c9db4cecf")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -42,6 +42,7 @@ mirror_entry = {
     "properties": {
         "source": {"type": "boolean"},
         "binary": {"type": "boolean"},
+        "signed": {"type": "boolean"},
         "fetch": fetch_and_push,
         "push": fetch_and_push,
         **connection,  # type: ignore
