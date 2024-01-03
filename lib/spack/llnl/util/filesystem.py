@@ -2863,14 +2863,14 @@ def find_max_depth(root, globs, max_depth=None):
         depth, next_dir = dir_queue.pop()
         for dir_entry in os.scandir(next_dir):
             if dir_entry.is_dir():
-                if (max_depth is not None) and depth >= max_depth:
-                    continue
-                dir_queue.appendleft((depth + 1, os.path.join(next_dir, dir_entry.name)))
+                if (max_depth is None) or depth < max_depth:
+                    dir_queue.appendleft((depth + 1, os.path.join(next_dir, dir_entry.name)))
             else:
                 fname = dir_entry.name
                 if any(x.match(fname) for x in regexes):
                     found.append(os.path.join(next_dir, fname))
-        return found
+
+    return found
 
 
 class FindFirstFile:

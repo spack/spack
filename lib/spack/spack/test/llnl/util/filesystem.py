@@ -1002,7 +1002,7 @@ def dir_structure_with_things_to_find(tmpdir):
     """
     <root>/
         dir_one/
-          file_one
+            file_one
         dir_two/
         dir_three/
             dir_four/
@@ -1025,4 +1025,10 @@ def dir_structure_with_things_to_find(tmpdir):
 
 def test_find_max_depth(dir_structure_with_things_to_find):
     root, locations = dir_structure_with_things_to_find
+
+    # Make sure the paths we use to verify are absolute
+    assert os.path.isabs(locations["file_one"])
+
     assert set(fs.find_max_depth(root, "*", 0)) == {locations["file_four"]}
+    assert set(fs.find_max_depth(root, "*", 1)) == {locations["file_one"], locations["file_three"], locations["file_four"]}
+    assert set(fs.find_max_depth(root, "file_two", 3)) == {locations["file_two"]}
