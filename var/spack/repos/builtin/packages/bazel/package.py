@@ -127,7 +127,7 @@ class Bazel(Package):
     resource_dictionary["bazel_skylib"] = {
         "url": "https://github.com/bazelbuild/bazel-skylib/releases/download/1.0.1/bazel-skylib-1.0.1.tar.gz",
         "sha256": "f1c8360c01fcf276778d3519394805dc2a71a64274a3a0908bc9edff7b5aebc8",
-        "when": "@5:6",
+        "when": "@4:6",
     }
     resource_dictionary["zulu_11_56_19"] = {
         "url": "https://mirror.bazel.build/cdn.azul.com/zulu/bin/zulu11.56.19-ca-jdk11.0.15-linux_x64.tar.gz",
@@ -138,6 +138,11 @@ class Bazel(Package):
         "url": "https://mirror.bazel.build/openjdk/azul-zulu11.50.19-ca-jdk11.0.12/zulu11.50.19-ca-jdk11.0.12-linux_x64.tar.gz",
         "sha256": "b8e8a63b79bc312aa90f3558edbea59e71495ef1a9c340e38900dd28a1c579f3",
         "when": "@5",
+    }
+    resource_dictionary["zulu_11_37_17"] = {
+        "url": "https://mirror.bazel.build/openjdk/azul-zulu11.37.17-ca-jdk11.0.6/zulu11.37.17-ca-jdk11.0.6-linux_x64.tar.gz",
+        "sha256": "360626cc19063bc411bfed2914301b908a8f77a7919aaea007a977fa8fb3cde1",
+        "when": "@4",
     }
     for resource_name in resource_dictionary.keys():
         resource(
