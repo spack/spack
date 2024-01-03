@@ -348,6 +348,13 @@ def set_compiler_environment_variables(pkg, env):
     else:
         env.set("FC", os.path.join(link_dir, "fc"))
 
+    if hasattr(compiler, "deprecated") and not spack.config.get("config:deprecated"):
+        error, message = compiler.deprecated
+        if error:
+            raise RuntimeError(message)
+        else:
+            tty.warn(message)
+        
     # Set SPACK compiler rpath flags so that our wrapper knows what to use
     env.set("SPACK_CC_RPATH_ARG", compiler.cc_rpath_arg)
     env.set("SPACK_CXX_RPATH_ARG", compiler.cxx_rpath_arg)
