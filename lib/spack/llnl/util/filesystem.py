@@ -2302,7 +2302,7 @@ def find_system_libraries(libraries, shared=True):
     return libraries_found
 
 
-def find_libraries(libraries, root, shared=True, recursive=False, runtime=True):
+def find_libraries(libraries, root, shared=True, recursive=False, runtime=True, max_depth=None):
     """Returns an iterable of full paths to libraries found in a root dir.
 
     Accepts any glob characters accepted by fnmatch:
@@ -2382,7 +2382,7 @@ def find_libraries(libraries, root, shared=True, recursive=False, runtime=True):
         if found_libs:
             break
     else:
-        found_libs = find(root, libraries, True)
+        found_libs = find(root, libraries, recursive=True, max_depth=max_depth)
 
     return LibraryList(found_libs)
 
