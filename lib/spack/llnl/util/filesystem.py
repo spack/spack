@@ -1836,59 +1836,30 @@ def find(root, files, recursive=True):
 
 @system_path_filter
 def _find_recursive(root, search_files):
-    # The variable here is **on purpose** a defaultdict. The idea is that
-    # we want to poke the filesystem as little as possible, but still maintain
-    # stability in the order of the answer. Thus we are recording each library
-    # found in a key, and reconstructing the stable order later.
-    found_files = collections.defaultdict(list)
-
-    # Make the path absolute to have os.walk also return an absolute path
-    root = os.path.abspath(root)
-    for path, _, list_files in os.walk(root):
-        for search_file in search_files:
-            matches = glob.glob(os.path.join(path, search_file))
-            matches = [os.path.join(path, x) for x in matches]
-            found_files[search_file].extend(matches)
-
-    answer = []
-    for search_file in search_files:
-        answer.extend(found_files[search_file])
-
-    return answer
+    return find_max_depth(root, search_files, max_depth=None)
 
 
 @system_path_filter
 def _find_non_recursive(root, search_files):
-    # The variable here is **on purpose** a defaultdict as os.list_dir
-    # can return files in any order (does not preserve stability)
-    found_files = collections.defaultdict(list)
-
-    # Make the path absolute to have absolute path returned
-    root = os.path.abspath(root)
-
-    for search_file in search_files:
-        matches = glob.glob(os.path.join(root, search_file))
-        matches = [os.path.join(root, x) for x in matches]
-        found_files[search_file].extend(matches)
-
-    answer = []
-    for search_file in search_files:
-        answer.extend(found_files[search_file])
-
-    return answer
+    return find_max_depth(root, search_files, max_depth=0)
 
 
+@system_path_filter(arg_slice=slice(1))
 def find_max_depth(root, globs, max_depth=None):
     """Given a set of non-recursive glob file patterns, finds all
     files matching those patterns up to a maximum specified depth.
 
     Does not search in directories below the specified depth.
+
+    If ``globs`` is a list, files matching earlier entries are placed
+    in the return value before files matching later entries.
     """
     root = root
     if isinstance(globs, str):
         globs = [globs]
     regexes = [re.compile(fnmatch.translate(x)) for x in globs]
-    found = list()
+
+    found_files = collections.defaultdict(list)
 
     dir_queue = collections.deque([(0, root)])
     while dir_queue:
@@ -1899,10 +1870,11 @@ def find_max_depth(root, globs, max_depth=None):
                     dir_queue.appendleft((depth + 1, os.path.join(next_dir, dir_entry.name)))
             else:
                 fname = dir_entry.name
-                if any(x.match(fname) for x in regexes):
-                    found.append(os.path.join(next_dir, fname))
+                for pattern in regexes:
+                    if pattern.match(fname):
+                        found_files[pattern].append(os.path.join(next_dir, fname))
 
-    return found
+    return list(itertools.chain(*[found_files[x] for x in regexes]))
 
 
 # Utilities for libraries and headers
