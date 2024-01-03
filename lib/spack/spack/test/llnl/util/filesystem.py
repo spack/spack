@@ -997,6 +997,7 @@ def test_find_first_file(tmpdir, bfs_depth):
     # Should find first dir
     assert os.path.samefile(fs.find_first(root, "a", bfs_depth=bfs_depth), os.path.join(root, "a"))
 
+
 @pytest.fixture
 def dir_structure_with_things_to_find(tmpdir):
     """
@@ -1011,10 +1012,10 @@ def dir_structure_with_things_to_find(tmpdir):
         file_four
     """
     dir_one = tmpdir.join("dir_one").ensure(dir=True)
-    dir_two = tmpdir.join("dir_two").ensure(dir=True)
+    tmpdir.join("dir_two").ensure(dir=True)
     dir_three = tmpdir.join("dir_three").ensure(dir=True)
     dir_four = dir_three.join("dir_four").ensure(dir=True)
- 
+
     locations = {}
     locations["file_one"] = str(dir_one.join("file_one").ensure())
     locations["file_two"] = str(dir_four.join("file_two").ensure())
@@ -1023,6 +1024,7 @@ def dir_structure_with_things_to_find(tmpdir):
 
     return str(tmpdir), locations
 
+
 def test_find_max_depth(dir_structure_with_things_to_find):
     root, locations = dir_structure_with_things_to_find
 
@@ -1030,7 +1032,11 @@ def test_find_max_depth(dir_structure_with_things_to_find):
     assert os.path.isabs(locations["file_one"])
 
     assert set(fs.find_max_depth(root, "*", 0)) == {locations["file_four"]}
-    assert set(fs.find_max_depth(root, "*", 1)) == {locations["file_one"], locations["file_three"], locations["file_four"]}
+    assert set(fs.find_max_depth(root, "*", 1)) == {
+        locations["file_one"],
+        locations["file_three"],
+        locations["file_four"],
+    }
     assert set(fs.find_max_depth(root, "file_two", 2)) == {locations["file_two"]}
     assert not set(fs.find_max_depth(root, "file_two", 1))
     assert set(fs.find_max_depth(root, "file_two")) == {locations["file_two"]}

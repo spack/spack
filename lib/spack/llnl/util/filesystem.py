@@ -2841,11 +2841,6 @@ def filesummary(path, print_bytes=16) -> Tuple[int, bytes]:
         return 0, b""
 
 
-from collections import deque
-import fnmatch
-import re
-
-
 def find_max_depth(root, globs, max_depth=None):
     """Given a set of non-recursive glob file patterns, finds all
     files matching those patterns up to a maximum specified depth.
@@ -2858,7 +2853,7 @@ def find_max_depth(root, globs, max_depth=None):
     regexes = [re.compile(fnmatch.translate(x)) for x in globs]
     found = list()
 
-    dir_queue = deque([(0, root)])
+    dir_queue = collections.deque([(0, root)])
     while dir_queue:
         depth, next_dir = dir_queue.pop()
         for dir_entry in os.scandir(next_dir):
