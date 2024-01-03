@@ -1585,18 +1585,8 @@ def use_repo_virtual_libs_access(_repo_virtual_libs_access, monkeypatch, mock_st
 def test_virtual_lib_access(use_repo_virtual_libs_access):
     p1 = spack.spec.Spec("p1").concretized()
 
-    #import pdb; pdb.set_trace()
-    try:
-        p1["p2"].libs
-    except Exception:
-        import traceback
-        traceback.print_exc()
-
-    try:
-        l1 = p1["v1"].libs
-    except Exception:
-        import traceback
-        traceback.print_exc()
+    l1 = p1["v1"].libs
+    assert "/t1/a.so" in l1
 
     l2 = p1["i1"].libs
-    assert "/t1/a.so" in l1
+    assert "/t1/a.so" in l2
