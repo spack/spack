@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -211,6 +211,19 @@ def colorize_spec(spec):
             return "%s%s" % (COLOR_FORMATS[sep], clr.cescape(sep))
 
     return clr.colorize(re.sub(_SEPARATORS, insert_color(), str(spec)) + "@.")
+
+
+OLD_STYLE_FMT_RE = re.compile(r"\${[A-Z]+}")
+
+
+def ensure_modern_format_string(fmt: str) -> None:
+    """Ensure that the format string does not contain old ${...} syntax."""
+    result = OLD_STYLE_FMT_RE.search(fmt)
+    if result:
+        raise SpecFormatStringError(
+            f"Format string `{fmt}` contains old syntax `{result.group(0)}`. "
+            "This is no longer supported."
+        )
 
 
 @lang.lazy_lexicographic_ordering
@@ -4362,6 +4375,7 @@ class Spec:
                 that accepts a string and returns another one
 
         """
+        ensure_modern_format_string(format_string)
         color = kwargs.get("color", False)
         transform = kwargs.get("transform", {})
 
