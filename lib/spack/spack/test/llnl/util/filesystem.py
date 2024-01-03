@@ -1031,4 +1031,7 @@ def test_find_max_depth(dir_structure_with_things_to_find):
 
     assert set(fs.find_max_depth(root, "*", 0)) == {locations["file_four"]}
     assert set(fs.find_max_depth(root, "*", 1)) == {locations["file_one"], locations["file_three"], locations["file_four"]}
-    assert set(fs.find_max_depth(root, "file_two", 3)) == {locations["file_two"]}
+    assert set(fs.find_max_depth(root, "file_two", 2)) == {locations["file_two"]}
+    assert not set(fs.find_max_depth(root, "file_two", 1))
+    assert set(fs.find_max_depth(root, "file_two")) == {locations["file_two"]}
+    assert set(fs.find_max_depth(root, "*")) == set(locations.values())
