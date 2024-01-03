@@ -18,6 +18,8 @@ spack:
         scalapack: [netlib-scalapack]
       target: [zen4]
       variants: +mpi
+    gcc-runtime:
+      require: "%gcc"
     tbb:
       require: "intel-tbb"
     binutils:
