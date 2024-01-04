@@ -2218,11 +2218,12 @@ class TestConcretize:
             ("hdf5 ^gmake", {"gmake": "duplicates.test", "hdf5": "duplicates.test"}),
         ],
     )
+    @pytest.mark.only_clingo("Uses specs requiring multiple gmake specs")
     def test_select_lower_priority_package_from_repository_stack(
         self, spec_str, expected_namespaces
     ):
         """Tests that a user can explicitly select a lower priority, fully qualified dependency
-        from cli, if that dependency is never mentioned with a fully qualified name.
+        from cli.
         """
         # 'builtin.mock" and "duplicates.test" share a 'gmake' package
         additional_repo = os.path.join(spack.paths.repos_path, "duplicates.test")
