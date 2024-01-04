@@ -1479,6 +1479,8 @@ def test_config_file_read_invalid_yaml(tmpdir, mutable_empty_config):
         ('x:y:"{z}"', True),
         ('x:"y"+:z', True),
         ('x:"y"trail:z', False),
+        ("x:y:[1.0]", True),
+        ("x:y:['1.0']", True)
     ],
 )
 def test_config_path_dsl(path, it_should_work):
