@@ -907,7 +907,7 @@ def add(fullpath: str, scope: Optional[str] = None) -> None:
 
             # construct value from this point down
             for component in reversed(components[idx + 1 : -1]):
-                value = {component: value}
+                value: Dict[str, str] = {component: value}  # type: ignore[no-redef]
             break
 
     if override:
@@ -918,7 +918,7 @@ def add(fullpath: str, scope: Optional[str] = None) -> None:
 
     # append values to lists
     if isinstance(existing, list) and not isinstance(value, list):
-        value = [value]
+        value: List[str] = [value]  # type: ignore[no-redef]
 
     # merge value into existing
     new = merge_yaml(existing, value)
