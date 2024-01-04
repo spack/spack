@@ -44,7 +44,7 @@ class SimModel(Package):
     depends_on("coreneuron", when="+coreneuron ^neuron@:8", type=("build", "run"))
     depends_on("coreneuron+caliper", when="+coreneuron+caliper ^neuron@:8", type=("build", "run"))
     depends_on("neuron+caliper", when="+caliper", type=("build", "run"))
-    depends_on("gettext", when="^neuron+binary")
+    depends_on("gettext", when="^neuron")
 
     phases = ("build", "install")
 
@@ -188,11 +188,6 @@ class SimModel(Package):
                 break
         else:
             raise Exception("No libnrnmech found")
-
-        if self.spec.satisfies("^neuron~binary"):
-            # Patch special for the new libname
-            which("sed")("-i.bak", 's#-dll .*#-dll %s "$@"#' % lib_dst, prefix.bin.special)
-            os.remove(prefix.bin.join("special.bak"))
 
     def _install_src(self, prefix):
         """Copy original and translated c mods"""
