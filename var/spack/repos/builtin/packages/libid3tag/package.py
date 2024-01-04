@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Libid3tag(AutotoolsPackage):
     url = "ftp://ftp.mars.org/pub/mpeg/libid3tag-0.15.1b.tar.gz"
 
     maintainers("TheQueasle")
+
+    license("GPL-2.0-or-later")
 
     version("0.15.1b", sha256="63da4f6e7997278f8a3fef4c6a372d342f705051d1eeb6a46a86b03610e26151")
 

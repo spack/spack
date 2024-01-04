@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Grads(AutotoolsPackage):
     homepage = "http://cola.gmu.edu/grads/grads.php"
 
     maintainers("vanderwb")
+
+    license("GPL-2.0-or-later")
 
     version("2.2.3", sha256="2cbb67284fe64763c589ecaf08d5bd31144554dfd82a1fccf71e1cc424695a9e")
     version("2.2.2", sha256="1b5a600d4d407ffcf2fbbbba42037a6e1ebfdb8246ba56b93c628e3c472b4ded")

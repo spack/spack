@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Aria2(AutotoolsPackage):
 
     homepage = "https://aria2.github.io"
     url = "https://github.com/aria2/aria2/releases/download/release-1.36.0/aria2-1.36.0.tar.gz"
+
+    license("GPL-2.0-or-later")
 
     version("1.36.0", sha256="b593b2fd382489909c96c62c6e180054c3332b950be3d73e0cb0d21ea8afb3c5")
     version("1.35.0", sha256="fd85589416f8246cefc4e6ba2fa52da54fdf11fd5602a2db4b6749f7c33b5b2d")

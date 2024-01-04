@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Lcc(CMakePackage):
     git = "https://github.com/lanl/LCC.git"
 
     maintainers("cnegre")
+
+    license("BSD-3-Clause")
 
     version("main", branch="main", preferred=True)
     version("1.0.1", sha256="fa13364dcdf3b1f8d80fc768f0e7ad3849f8d98091fb96926100a6764f836020")

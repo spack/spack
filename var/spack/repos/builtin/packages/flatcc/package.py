@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Flatcc(CMakePackage):
     homepage = "https://github.com/dvidelabs/flatcc"
     url = "https://github.com/dvidelabs/flatcc/archive/v0.5.3.tar.gz"
     git = "https://github.com/dvidelabs/flatcc.git"
+
+    license("Apache-2.0")
 
     version("0.5.3", sha256="d7519a97569ebdc9d12b162be0f9861fdc2724244f68595264a411ac48e4e983")
     version("0.5.2", sha256="02dac93d3daf8d0a290aa8711a9b8a53f047436ec5331adb1972389061ec6615")

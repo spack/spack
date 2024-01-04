@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,10 @@ libdwarf_spec_string = "libdwarf target=x86_64"
 #: Class of the writer tested in this module
 writer_cls = spack.modules.tcl.TclModulefileWriter
 
-pytestmark = pytest.mark.not_on_windows("does not run on windows")
+pytestmark = [
+    pytest.mark.not_on_windows("does not run on windows"),
+    pytest.mark.usefixtures("mock_modules_root"),
+]
 
 
 @pytest.mark.usefixtures("config", "mock_packages", "mock_module_filename")
@@ -279,7 +282,7 @@ class TestTcl:
         projection = writer.spec.format(writer.conf.projections["all"])
         assert projection in writer.layout.use_name
 
-    def test_invalid_naming_scheme(self, factory, module_configuration, mock_module_filename):
+    def test_invalid_naming_scheme(self, factory, module_configuration):
         """Tests the evaluation of an invalid naming scheme."""
 
         module_configuration("invalid_naming_scheme")
@@ -290,7 +293,7 @@ class TestTcl:
         with pytest.raises(RuntimeError):
             writer.layout.use_name
 
-    def test_invalid_token_in_env_name(self, factory, module_configuration, mock_module_filename):
+    def test_invalid_token_in_env_name(self, factory, module_configuration):
         """Tests setting environment variables with an invalid name."""
 
         module_configuration("invalid_token_in_env_var_name")
@@ -425,40 +428,38 @@ class TestTcl:
 
     @pytest.mark.regression("4400")
     @pytest.mark.db
-    @pytest.mark.parametrize("config_name", ["hide_implicits", "exclude_implicits"])
-    def test_hide_implicits_no_arg(self, module_configuration, database, config_name):
-        module_configuration(config_name)
+    def test_hide_implicits_no_arg(self, module_configuration, database):
+        module_configuration("exclude_implicits")
 
         # mpileaks has been installed explicitly when setting up
         # the tests database
         mpileaks_specs = database.query("mpileaks")
         for item in mpileaks_specs:
             writer = writer_cls(item, "default")
-            assert not writer.conf.hidden
+            assert not writer.conf.excluded
 
         # callpath is a dependency of mpileaks, and has been pulled
         # in implicitly
         callpath_specs = database.query("callpath")
         for item in callpath_specs:
             writer = writer_cls(item, "default")
-            assert writer.conf.hidden
+            assert writer.conf.excluded
 
     @pytest.mark.regression("12105")
-    @pytest.mark.parametrize("config_name", ["hide_implicits", "exclude_implicits"])
-    def test_hide_implicits_with_arg(self, module_configuration, config_name):
-        module_configuration(config_name)
+    def test_hide_implicits_with_arg(self, module_configuration):
+        module_configuration("exclude_implicits")
 
         # mpileaks is defined as explicit with explicit argument set on writer
         mpileaks_spec = spack.spec.Spec("mpileaks")
         mpileaks_spec.concretize()
         writer = writer_cls(mpileaks_spec, "default", True)
-        assert not writer.conf.hidden
+        assert not writer.conf.excluded
 
         # callpath is defined as implicit with explicit argument set on writer
         callpath_spec = spack.spec.Spec("callpath")
         callpath_spec.concretize()
         writer = writer_cls(callpath_spec, "default", False)
-        assert writer.conf.hidden
+        assert writer.conf.excluded
 
     @pytest.mark.regression("9624")
     @pytest.mark.db

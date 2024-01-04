@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     tags = ["radiuss", "e4s"]
 
     maintainers("davidbeckingsale")
+
+    license("BSD-3-Clause")
 
     version("develop", branch="develop", submodules=False)
     version("main", branch="main", submodules=False)
@@ -161,6 +163,11 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         if "SYS_TYPE" in env:
             sys_type = env["SYS_TYPE"]
         return sys_type
+
+    @property
+    def libs(self):
+        shared = "+shared" in self.spec
+        return find_libraries("libRAJA", root=self.prefix, shared=shared, recursive=True)
 
     @property
     def cache_name(self):

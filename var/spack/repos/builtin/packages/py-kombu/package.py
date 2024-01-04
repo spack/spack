@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,6 +10,8 @@ class PyKombu(PythonPackage):
     """Messaging library for Python."""
 
     pypi = "kombu/kombu-4.3.0.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("5.2.3", sha256="81a90c1de97e08d3db37dbf163eaaf667445e1068c98bfd89f051a40e9f6dbbd")
     version("5.0.2", sha256="f4965fba0a4718d47d470beeb5d6446e3357a62402b16c510b6a2f251e05ac3c")
@@ -32,7 +34,7 @@ class PyKombu(PythonPackage):
     depends_on("py-amqp@5.0.0:5", when="@5.0.0:5.0.2", type=("build", "run"))
     depends_on("py-amqp@5.0.9:5.0", when="@5.2.3", type=("build", "run"))
     depends_on("py-vine", when="@5.1.0:", type=("build", "run"))
-    depends_on("py-importlib-metadata@0.18:", type=("build", "run"), when="python@:3.7")
-    depends_on("py-cached-property", type=("build", "run"), when="python@:3.7")
+    depends_on("py-importlib-metadata@0.18:", type=("build", "run"), when="^python@:3.7")
+    depends_on("py-cached-property", type=("build", "run"), when="^python@:3.7")
 
     depends_on("py-redis@3.4.1:3,4.0.2:", when="+redis", type=("build", "run"))

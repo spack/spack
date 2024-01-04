@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class RCaroline(RPackage):
     row, column and vector names in most functions."""
 
     cran = "caroline"
+
+    license("Artistic-2.0")
 
     version("0.9.0", sha256="7231daacf2f0e89d9363ea919071f8352ae487011f56e84a4054de11a9243ac8")
     version("0.8.0", sha256="58f464711f7279ca2aa173e6ce29d3308e01db37dccefbbf14cd7720c0231976")

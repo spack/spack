@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -53,6 +53,8 @@ concretize = SpackCommand("concretize")
 stage = SpackCommand("stage")
 uninstall = SpackCommand("uninstall")
 find = SpackCommand("find")
+develop = SpackCommand("develop")
+module = SpackCommand("module")
 
 sep = os.sep
 
@@ -284,7 +286,7 @@ def test_env_modifications_error_on_activate(install_mockery, mock_fetch, monkey
 
     _, err = capfd.readouterr()
     assert "cmake-client had issues!" in err
-    assert "Warning: couldn't load runtime environment" in err
+    assert "Warning: could not load runtime environment" in err
 
 
 def test_activate_adds_transitive_run_deps_to_path(install_mockery, mock_fetch, monkeypatch):
@@ -502,12 +504,12 @@ def test_env_activate_broken_view(
     # test that Spack detects the missing package and fails gracefully
     with spack.repo.use_repositories(mock_custom_repository):
         wrong_repo = env("activate", "--sh", "test")
-        assert "Warning: couldn't load runtime environment" in wrong_repo
+        assert "Warning: could not load runtime environment" in wrong_repo
         assert "Unknown namespace: builtin.mock" in wrong_repo
 
     # test replacing repo fixes it
     normal_repo = env("activate", "--sh", "test")
-    assert "Warning: couldn't load runtime environment" not in normal_repo
+    assert "Warning: could not load runtime environment" not in normal_repo
     assert "Unknown namespace: builtin.mock" not in normal_repo
 
 
@@ -718,10 +720,10 @@ spack:
     assert any(x.intersects("mpileaks@2.2") for x in e._get_environment_specs())
 
 
-def test_with_config_bad_include(environment_from_manifest):
+def test_with_config_bad_include_create(environment_from_manifest):
     """Confirm missing include paths raise expected exception and error."""
     with pytest.raises(spack.config.ConfigFileError, match="2 missing include path"):
-        e = environment_from_manifest(
+        environment_from_manifest(
             """
 spack:
   include:
@@ -729,9 +731,42 @@ spack:
   - no/such/file.yaml
 """
         )
-        with e:
-            e.concretize()
 
+
+def test_with_config_bad_include_activate(environment_from_manifest, tmpdir):
+    env_root = pathlib.Path(tmpdir.ensure("env-root", dir=True))
+    include1 = env_root / "include1.yaml"
+    include1.touch()
+
+    abs_include_path = os.path.abspath(tmpdir.join("subdir").ensure("include2.yaml"))
+
+    spack_yaml = env_root / ev.manifest_name
+    spack_yaml.write_text(
+        f"""
+spack:
+  include:
+  - ./include1.yaml
+  - {abs_include_path}
+"""
+    )
+
+    e = ev.Environment(env_root)
+    with e:
+        e.concretize()
+
+    # we've created an environment with some included config files (which do
+    # in fact exist): now we remove them and check that we get a sensible
+    # error message
+
+    os.remove(abs_include_path)
+    os.remove(include1)
+    with pytest.raises(spack.config.ConfigFileError) as exc:
+        ev.activate(e)
+
+    err = exc.value.message
+    assert "missing include" in err
+    assert abs_include_path in err
+    assert "include1.yaml" in err
     assert ev.active_environment() is None
 
 
@@ -1105,13 +1140,14 @@ def test_multi_env_remove(mutable_mock_env_path, monkeypatch, answer):
         assert all(e in env("list") for e in environments)
 
 
-def test_env_loads(install_mockery, mock_fetch):
+def test_env_loads(install_mockery, mock_fetch, mock_modules_root):
     env("create", "test")
 
     with ev.read("test"):
         add("mpileaks")
         concretize()
         install("--fake")
+        module("tcl", "refresh", "-y")
 
     with ev.read("test"):
         env("loads")
@@ -1171,7 +1207,7 @@ def test_env_blocks_uninstall(mock_stage, mock_fetch, install_mockery):
         add("mpileaks")
         install("--fake")
 
-    out = uninstall("mpileaks", fail_on_error=False)
+    out = uninstall("-y", "mpileaks", fail_on_error=False)
     assert uninstall.returncode == 1
     assert "The following environments still reference these specs" in out
 
@@ -2621,7 +2657,7 @@ spack:
   - matrix:
     - [mpileaks]
   packages:
-    mpileaks:
+    all:
       compiler: [gcc]
   view: true
 """
@@ -2900,13 +2936,15 @@ def test_virtual_spec_concretize_together(tmpdir):
     assert any(s.package.provides("mpi") for _, s in e.concretized_specs())
 
 
-def test_query_develop_specs():
+def test_query_develop_specs(tmpdir):
     """Test whether a spec is develop'ed or not"""
+    srcdir = tmpdir.ensure("here")
+
     env("create", "test")
     with ev.read("test") as e:
         e.add("mpich")
         e.add("mpileaks")
-        e.develop(Spec("mpich@=1"), "here", clone=False)
+        develop("--no-clone", "-p", str(srcdir), "mpich@=1")
 
         assert e.is_develop(Spec("mpich"))
         assert not e.is_develop(Spec("mpileaks"))
@@ -3538,7 +3576,7 @@ def test_environment_created_in_users_location(mutable_mock_env_path, tmp_path):
     assert os.path.isdir(os.path.join(env_dir, dir_name))
 
 
-def test_environment_created_from_lockfile_has_view(mock_packages, tmpdir):
+def test_environment_created_from_lockfile_has_view(mock_packages, temporary_store, tmpdir):
     """When an env is created from a lockfile, a view should be generated for it"""
     env_a = str(tmpdir.join("a"))
     env_b = str(tmpdir.join("b"))
