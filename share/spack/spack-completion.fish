@@ -2017,10 +2017,12 @@ complete -c spack -n '__fish_spack_using_command license update-copyright-year' 
 complete -c spack -n '__fish_spack_using_command license update-copyright-year' -s h -l help -d 'show this help message and exit'
 
 # spack list
-set -g __fish_spack_optspecs_spack_list h/help d/search-description format= v/virtuals t/tag= count update=
+set -g __fish_spack_optspecs_spack_list h/help r/repo= d/search-description format= v/virtuals t/tag= count update=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 list' -f -a '(__fish_spack_packages)'
 complete -c spack -n '__fish_spack_using_command list' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command list' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command list' -s r -l repo -s N -l namespace -r -f -a repos
+complete -c spack -n '__fish_spack_using_command list' -s r -l repo -s N -l namespace -r -d 'only list packages from the specified repo/namespace'
 complete -c spack -n '__fish_spack_using_command list' -s d -l search-description -f -a search_description
 complete -c spack -n '__fish_spack_using_command list' -s d -l search-description -d 'filtering will also search the description for a match'
 complete -c spack -n '__fish_spack_using_command list' -l format -r -f -a 'name_only version_json html'
