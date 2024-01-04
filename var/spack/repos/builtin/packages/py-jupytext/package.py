@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class PyJupytext(PythonPackage):
 
     maintainers("vvolkl")
 
+    license("MIT")
+
     version("1.14.1", sha256="314fa0e732b1d14764271843b676938ef8a7b9d53c3575ade636b45d13f341c8")
     version("1.13.6", sha256="c6c25918ddb6403d0d8504e08d35f6efc447baf0dbeb6a28b73adf39e866a0c4")
     version("1.13.0", sha256="fb220af65d2bd32d01c779b0e935c4c2b71e3f5f2f01bf1bab10d5f23fe121d4")
@@ -31,6 +33,4 @@ class PyJupytext(PythonPackage):
     # todo: in order to use jupytext as a jupyterlab extension,
     # some additional dependencies need to be added (and checked):
     depends_on("py-jupyterlab@3", type=("build", "run"))
-    # TODO: replace this after concretizer learns how to concretize separate build deps
-    depends_on("py-jupyter-packaging7", type="build")
-    # depends_on('py-jupyter-packaging@0.7.9:0.7', type='build')```
+    depends_on("py-jupyter-packaging@0.7.9:0.7", type="build")

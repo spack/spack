@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class VectorclassVersion2(Package):
     url = "https://github.com/vectorclass/version2/archive/refs/tags/v2.01.04.tar.gz"
 
     maintainers("haralmha")
+
+    license("Apache-2.0")
 
     version("2.01.04", sha256="7885c343b1af9eb940f4debdd7cd19544130a06ed70e0000e1a8471fb9c15118")
 

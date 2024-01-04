@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Brpc(CMakePackage):
 
     homepage = "https://github.com/apache/incubator-brpc"
     url = "https://github.com/apache/incubator-brpc/archive/0.9.7.tar.gz"
+
+    license("BSL-1.0")
 
     version("0.9.7", sha256="722cd342baf3b05189ca78ecf6c56ea6ffec22e62fc2938335e4e5bab545a49c")
     version("0.9.6", sha256="b872ca844999e0ba768acd823b409761f126590fb34cb0183da915a595161446")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class BppSuite(CMakePackage):
     url = "https://github.com/BioPP/bppsuite/archive/refs/tags/v2.4.1.tar.gz"
 
     maintainers("snehring")
+
+    license("CECILL-2.0")
 
     version("2.4.1", sha256="0485adcc17e37439069d27e4fac144e5ae38036ba21f31e6d21f070ce4ea5199")
     version(

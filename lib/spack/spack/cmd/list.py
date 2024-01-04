@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,9 +15,9 @@ from html import escape
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
-import spack.cmd.common.arguments as arguments
 import spack.deptypes as dt
 import spack.repo
+from spack.cmd.common import arguments
 from spack.version import VersionList
 
 description = "list and search available packages"

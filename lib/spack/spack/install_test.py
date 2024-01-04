@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1039,7 +1039,7 @@ class TestSuite:
         Returns:
             str: the install test package identifier
         """
-        return spec.format("{name}-{version}-{hash:7}")
+        return spec.format_path("{name}-{version}-{hash:7}")
 
     @classmethod
     def test_log_name(cls, spec):

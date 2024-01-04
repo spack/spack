@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Pism(CMakePackage):
     git = "https://github.com/pism/pism.git"
 
     maintainers("citibeth")
+
+    license("GPL-3.0-only")
 
     version("develop", branch="dev")
     version("1.1.4", sha256="8ccb867af3b37e8d103351dadc1d7e77512e64379519fe8a2592668deb27bc44")

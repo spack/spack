@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,7 @@ so package authors should use their judgement.
 """
 import functools
 import inspect
+from contextlib import contextmanager
 
 from llnl.util.lang import caller_locals
 
@@ -269,6 +270,13 @@ class when:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         spack.directives.DirectiveMeta.pop_from_context()
+
+
+@contextmanager
+def default_args(**kwargs):
+    spack.directives.DirectiveMeta.push_default_args(kwargs)
+    yield
+    spack.directives.DirectiveMeta.pop_default_args()
 
 
 class MultiMethodError(spack.error.SpackError):

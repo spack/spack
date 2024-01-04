@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Cosma(CMakePackage):
     homepage = "https://github.com/eth-cscs/COSMA"
     url = "https://github.com/eth-cscs/COSMA/archive/refs/tags/v2.6.6.tar.gz"
     git = "https://github.com/eth-cscs/COSMA.git"
+
+    license("BSD-3-Clause")
 
     # note: The default archives produced with github do not have the archives
     #       of the submodules.
@@ -47,6 +49,9 @@ class Cosma(CMakePackage):
 
     with when("+cuda"):
         variant("nccl", default=False, description="Use cuda nccl")
+
+    with when("+rocm"):
+        variant("rccl", default=False, description="Use rocm rccl")
 
     depends_on("cmake@3.22:", type="build")
     depends_on("mpi@3:")
@@ -114,6 +119,7 @@ class Cosma(CMakePackage):
             self.define_from_variant("COSMA_WITH_TESTS", "tests"),
             self.define_from_variant("COSMA_WITH_APPS", "apps"),
             self.define_from_variant("COSMA_WITH_NCCL", "nccl"),
+            self.define_from_variant("COSMA_WITH_RCCL", "rccl"),
             self.define_from_variant("COSMA_WITH_GPU_AWARE_MPI", "gpu_direct"),
             self.define_from_variant("COSMA_WITH_PROFILING", "profiling"),
             self.define("COSMA_WITH_BENCHMARKS", False),

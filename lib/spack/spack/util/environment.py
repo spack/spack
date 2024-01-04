@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -595,6 +595,14 @@ class EnvironmentModifications:
         for item in self:
             modifications[item.name].append(item)
         return modifications
+
+    def drop(self, *name) -> bool:
+        """Drop all modifications to the variable with the given name."""
+        old_mods = self.env_modifications
+        new_mods = [x for x in self.env_modifications if x.name not in name]
+        self.env_modifications = new_mods
+
+        return len(old_mods) != len(new_mods)
 
     def is_unset(self, variable_name: str) -> bool:
         """Returns True if the last modification to a variable is to unset it, False otherwise."""

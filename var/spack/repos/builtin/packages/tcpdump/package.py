@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Tcpdump(AutotoolsPackage):
 
     homepage = "https://www.tcpdump.org/"
     url = "https://www.tcpdump.org/release/tcpdump-4.9.3.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("4.99.4", sha256="0232231bb2f29d6bf2426e70a08a7e0c63a0d59a9b44863b7f5e2357a6e49fea")
     version("4.99.0", sha256="8cf2f17a9528774a7b41060323be8b73f76024f7778f59c34efa65d49d80b842")

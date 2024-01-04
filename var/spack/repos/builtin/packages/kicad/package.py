@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Kicad(CMakePackage):
     homepage = "https://kicad.org"
     url = "https://gitlab.com/kicad/code/kicad/-/archive/5.1.8/kicad-5.1.8.tar.gz"
     maintainers("aweits")
+
+    license("GPL-3.0-or-later")
 
     version("7.0.2", sha256="8df56648226061c91ddd1d2ca970c66190fc70c7ace23c99cc28c209713e4dfc")
     version("5.1.9", sha256="841be864b9dc5c761193c3ee9cbdbed6729952d7b38451aa8e1977bdfdb6081b")

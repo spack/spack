@@ -1,9 +1,11 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
 from typing import List, Set
+
+from llnl.util import lang
 
 import spack.deptypes as dt
 import spack.package_base
@@ -95,8 +97,17 @@ class MinimalDuplicatesCounter(NoDuplicatesCounter):
         )
         self._link_run_virtuals.update(self._possible_virtuals)
         for x in self._link_run:
-            current = spack.repo.PATH.get_pkg_class(x).dependencies_of_type(dt.BUILD)
-            self._direct_build.update(current)
+            build_dependencies = spack.repo.PATH.get_pkg_class(x).dependencies_of_type(dt.BUILD)
+            virtuals, reals = lang.stable_partition(
+                build_dependencies, spack.repo.PATH.is_virtual_safe
+            )
+
+            self._possible_virtuals.update(virtuals)
+            for virtual_dep in virtuals:
+                providers = spack.repo.PATH.providers_for(virtual_dep)
+                self._direct_build.update(str(x) for x in providers)
+
+            self._direct_build.update(reals)
 
         self._total_build = set(
             spack.package_base.possible_dependencies(

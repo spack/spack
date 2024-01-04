@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,8 @@ class Slurm(AutotoolsPackage):
 
     homepage = "https://slurm.schedmd.com"
     url = "https://github.com/SchedMD/slurm/archive/slurm-21-08-8-2.tar.gz"
+
+    license("GPL-2.0-or-later")
 
     version("23-02-4-1", sha256="7290143a71ce2797d0df3423f08396fd5c0ae4504749ff372d6860b2d6a3a1b0")
     version("23-02-3-1", sha256="c41747e4484011cf376d6d4bc73b6c4696cdc0f7db4f64174f111bb9f53fb603")
@@ -129,6 +131,10 @@ class Slurm(AutotoolsPackage):
         description="Set system configuration path (possibly /etc/slurm)",
     )
     variant("restd", default=False, description="Enable the slurmrestd server")
+    variant("nvml", default=False, description="Enable NVML autodetection")
+    variant("cgroup", default=False, description="Enable cgroup plugin")
+    variant("pam", default=False, description="Enable PAM support")
+    variant("rsmi", default=False, description="Enable ROCm SMI support")
 
     # TODO: add variant for BG/Q and Cray support
 
@@ -155,6 +161,11 @@ class Slurm(AutotoolsPackage):
     depends_on("http-parser", when="+restd")
     depends_on("libyaml", when="+restd")
     depends_on("libjwt", when="+restd")
+
+    depends_on("cuda", when="+nvml")
+    depends_on("dbus", when="+cgroup")
+    depends_on("linux-pam", when="+pam")
+    depends_on("rocm-smi-lib", when="+rsmi")
 
     executables = ["^srun$", "^salloc$"]
 
@@ -212,6 +223,15 @@ class Slurm(AutotoolsPackage):
             args.append("--with-pmix={0}".format(spec["pmix"].prefix))
         else:
             args.append("--without-pmix")
+
+        if spec.satisfies("+nvml"):
+            args.append(f"--with-nvml={spec['cuda'].prefix}")
+
+        if spec.satisfies("+pam"):
+            args.append(f"--with-pam_dir={spec['linux-pam'].prefix}")
+
+        if spec.satisfies("+rsmi"):
+            args.append(f"--with-rsmi={spec['rocm-smi-lib'].prefix}")
 
         sysconfdir = spec.variants["sysconfdir"].value
         if sysconfdir != "PREFIX/etc":

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class NetcdfFortran(AutotoolsPackage):
     url = "https://downloads.unidata.ucar.edu/netcdf-fortran/4.5.4/netcdf-fortran-4.5.4.tar.gz"
 
     maintainers("skosukhin", "WardF")
+
+    license("Apache-2.0")
 
     version("4.6.1", sha256="b50b0c72b8b16b140201a020936aa8aeda5c79cf265c55160986cd637807a37a")
     version("4.6.0", sha256="198bff6534cc85a121adc9e12f1c4bc53406c403bda331775a1291509e7b2f23")

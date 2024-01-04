@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Fio(AutotoolsPackage):
 
     homepage = "https://github.com/axboe/fio"
     url = "https://github.com/axboe/fio/archive/fio-3.26.tar.gz"
+
+    license("GPL-2.0-only")
 
     version("3.34", sha256="42ea28c78d269c4cc111b7516213f4d4b32986797a710b0ff364232cc7a3a0b7")
     version("3.33", sha256="f48b2547313ffd1799c58c6a170175176131bbd42bc847b5650784eaf6d914b3")

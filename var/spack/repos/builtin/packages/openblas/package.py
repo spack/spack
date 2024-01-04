@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,10 @@ class Openblas(CMakePackage, MakefilePackage):
 
     libraries = ["libopenblas", "openblas"]
 
+    license("BSD-3-Clause")
+
     version("develop", branch="develop")
+    version("0.3.25", sha256="4c25cb30c4bb23eddca05d7d0a85997b8db6144f5464ba7f8c09ce91e2f35543")
     version("0.3.24", sha256="ceadc5065da97bd92404cac7254da66cc6eb192679cf1002098688978d4d5132")
     version("0.3.23", sha256="5d9491d07168a5d00116cdc068a40022c3455bf9293c7cb86a65b1054d7e5114")
     version("0.3.22", sha256="7fa9685926ba4f27cfe513adbf9af64d6b6b63f9dcabb37baefad6a65ff347a7")
@@ -88,10 +91,12 @@ class Openblas(CMakePackage, MakefilePackage):
     )
 
     # virtual dependency
-    provides("blas")
-    provides("lapack")
+    provides("blas", "lapack")
     provides("lapack@3.9.1:", when="@0.3.15:")
     provides("lapack@3.7.0", when="@0.2.20")
+
+    # https://github.com/OpenMathLib/OpenBLAS/pull/4328
+    patch("xcode15-fortran.patch", when="@0.3.25 %apple-clang@15:")
 
     # https://github.com/xianyi/OpenBLAS/pull/2519/files
     patch("ifort-msvc.patch", when="%msvc")
@@ -192,6 +197,24 @@ class Openblas(CMakePackage, MakefilePackage):
         when="@0.3.21 %gcc@:9",
     )
 
+    # Some installations of clang and libomp have non-standard locations for
+    # libomp. OpenBLAS adds the correct linker flags but overwrites the
+    # variables in a couple places, causing link-time failures.
+    patch("openblas_append_lflags.patch", when="@:0.3.23 threads=openmp")
+
+    # Some builds of libomp on certain systems cause test failures related to
+    # forking, so disable the specific test that's failing. This is currently
+    # an open issue upstream:
+    # https://github.com/llvm/llvm-project/issues/63908
+    patch("openblas_libomp_fork.patch", when="%clang@15:")
+
+    # Fix build on A64FX for OpenBLAS v0.3.24
+    patch(
+        "https://github.com/OpenMathLib/OpenBLAS/commit/90231bfc4e4afc51f67c248328fbef0cecdbd2c2.patch?full_index=1",
+        sha256="139e314f3408dc5c080d28887471f382e829d1bd06c8655eb72593e4e7b921cc",
+        when="@0.3.24 target=a64fx",
+    )
+
     # See https://github.com/spack/spack/issues/19932#issuecomment-733452619
     # Notice: fixed on Amazon Linux GCC 7.3.1 (which is an unofficial version
     # as GCC only has major.minor releases. But the bound :7.3.0 doesn't hurt)
@@ -274,7 +297,7 @@ class Openblas(CMakePackage, MakefilePackage):
         search_shared = bool(spec.variants["shared"].value)
         suffix = spec.variants["symbol_suffix"].value
         if suffix != "none":
-            name += suffix
+            name = [x + suffix for x in name]
 
         return find_libraries(name, spec.prefix, shared=search_shared, recursive=True)
 
@@ -369,6 +392,14 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             # DYNAMIC_ARCH or TARGET=GENERIC. Once it does, this special
             # case can go away.
             args.append("TARGET=" + "RISCV64_GENERIC")
+
+        elif self.spec.satisfies("@0.3.19: target=a64fx"):
+            # Special case for Fujitsu's A64FX
+            if any(self.spec.satisfies(i) for i in ["%gcc@11:", "%clang", "%fj"]):
+                args.append("TARGET=A64FX")
+            else:
+                # fallback to armv8-a+sve without -mtune=a64fx flag
+                args.append("TARGET=ARMV8SVE")
 
         else:
             args.append("TARGET=" + microarch.name.upper())

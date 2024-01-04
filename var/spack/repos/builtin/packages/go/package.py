@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,10 +39,17 @@ class Go(Package):
 
     maintainers("alecbcs")
 
-    version("1.20.6", sha256="62ee5bc6fb55b8bae8f705e0cb8df86d6453626b4ecf93279e2867092e0b7f70")
-    version("1.19.11", sha256="e25c9ab72d811142b7f41ff6da5165fec2d1be5feec3ef2c66bc0bdecb431489")
+    license("BSD-3-Clause")
+
+    version("1.21.3", sha256="186f2b6f8c8b704e696821b09ab2041a5c1ee13dcbc3156a13adcf75931ee488")
 
     # Deprecated Versions
+    # https://nvd.nist.gov/vuln/detail/CVE-2023-39533
+    version(
+        "1.20.6",
+        sha256="62ee5bc6fb55b8bae8f705e0cb8df86d6453626b4ecf93279e2867092e0b7f70",
+        deprecated=True,
+    )
     # https://nvd.nist.gov/vuln/detail/CVE-2023-29405
     version(
         "1.20.4",
@@ -55,6 +62,11 @@ class Go(Package):
         deprecated=True,
     )
     version(
+        "1.19.11",
+        sha256="e25c9ab72d811142b7f41ff6da5165fec2d1be5feec3ef2c66bc0bdecb431489",
+        deprecated=True,
+    )
+    version(
         "1.19.9",
         sha256="131190a4697a70c5b1d232df5d3f55a3f9ec0e78e40516196ffb3f09ae6a5744",
         deprecated=True,
@@ -64,7 +76,6 @@ class Go(Package):
         sha256="1d7a67929dccafeaf8a29e55985bc2b789e0499cb1a17100039f084e3238da2f",
         deprecated=True,
     )
-
     # https://nvd.nist.gov/vuln/detail/CVE-2023-24538
     version(
         "1.20.2",
@@ -106,7 +117,7 @@ class Go(Package):
         bash = which("bash")
 
         with working_dir("src"):
-            bash("{0}.bash".format("all" if self.run_tests else "make"))
+            bash(f"{'all' if self.run_tests else 'make'}.bash")
 
     def install(self, spec, prefix):
         install_tree(".", prefix)

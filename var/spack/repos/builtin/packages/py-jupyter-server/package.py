@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyJupyterServer(PythonPackage):
 
     homepage = "https://github.com/jupyter-server/jupyter_server"
     pypi = "jupyter_server/jupyter_server-1.9.0.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("2.6.0", sha256="ae4af349f030ed08dd78cb7ac1a03a92d886000380c9ea6283f3c542a81f4b06")
     version("1.21.0", sha256="d0adca19913a3763359be7f0b8c2ea8bfde356f4b8edd8e3149d7d0fbfaa248b")
@@ -32,9 +34,7 @@ class PyJupyterServer(PythonPackage):
     depends_on("py-hatch-jupyter-builder@0.8.1:", when="@2:", type="build")
 
     with when("@:1"):
-        # TODO: replace this after concretizer learns how to concretize separate build deps
-        depends_on("py-jupyter-packaging11", when="@1.6.2:", type="build")
-        # depends_on('py-jupyter-packaging@0.9:0', when='@1.6.2:', type='build')
+        depends_on("py-jupyter-packaging@0.9:0", when="@1.6.2:", type="build")
         depends_on("py-pre-commit", when="@1.16:", type="build")
         depends_on("py-setuptools", type="build")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Libpostal(AutotoolsPackage):
 
     maintainers("jgaeb")
 
+    license("MIT")
+
     version("1.1", sha256="8cc473a05126895f183f2578ca234428d8b58ab6fadf550deaacd3bd0ae46032")
     version("1.0.0", sha256="3035af7e15b2894069753975d953fa15a86d968103913dbf8ce4b8aa26231644")
     version("0.3.4", sha256="8b3b95660c5b5d4fe48045b9acb000d1a0eb19d58d0c2d2041e78d9a96d88716")
@@ -28,7 +30,7 @@ class Libpostal(AutotoolsPackage):
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
     depends_on("curl", type="build")
-    depends_on("pkg-config", type="build")
+    depends_on("pkgconfig", type="build")
 
     def autoreconf(self, spec, prefix):
         which("sh")("bootstrap.sh")
