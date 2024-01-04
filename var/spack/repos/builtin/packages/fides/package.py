@@ -30,8 +30,7 @@ class Fides(CMakePackage):
     depends_on("adios2@2.8:", when="@1.2")
     depends_on("adios2@2.7:2.8", when="@1.1")
 
-    depends_on("vtk-m")
-    # fides 1.2 should support vtk-m 1.9 and 2.0
+    depends_on("vtk-m@1.9:")
     # vtk-m 2.0 has a breaking change in cmake target name
     depends_on("vtk-m@:1.9", when="@:1.1")
 
