@@ -20,6 +20,8 @@ class LinuxPerf(Package):
 
     executables = ["^perf$"]
 
+    maintainers("Jordan474")
+
     version("6.6", sha256="d926a06c63dd8ac7df3f86ee1ffc2ce2a3b81a2d168484e76b5b389aba8e56d0")
     version("6.5.7", sha256="0d09ea448005c9cfe5383e4c72a872b39188b928f8c44e146b03b1b7851fbb8c")
     version("6.1.58", sha256="ce987ed3d2f640b3a2a62a0a8573d538a36dfd3cc31e2d7a239ce5a16c1c21ad")
