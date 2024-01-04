@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class RRainbow(RPackage):
     Visualizing functional data and identifying functional outliers."""
 
     cran = "rainbow"
+
+    license("GPL-3.0-only")
 
     version("3.7", sha256="159dd90555eee237397f042d811f773aaee779f5036c4e0669a52c36e28d8db2")
     version("3.6", sha256="63d1246f88a498f3db0321b46a552163631b288a25b24400935db41326636e87")

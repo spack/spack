@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class TlExpected(CMakePackage):
     git = "https://github.com/TartanLlama/expected.git"
 
     maintainers("charmoniumQ")
+
+    license("CC0-1.0")
 
     # Note that the 1.0.0 has this issue:
     # https://github.com/TartanLlama/expected/issues/114

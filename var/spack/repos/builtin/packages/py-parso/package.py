@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyParso(PythonPackage):
     in your python file."""
 
     pypi = "parso/parso-0.6.1.tar.gz"
+
+    license("MIT")
 
     version("0.8.3", sha256="8c07be290bb59f03588915921e29e8a50002acaf2cdc5fa0e0114f91709fafa0")
     version("0.8.2", sha256="12b83492c6239ce32ff5eed6d3639d6a536170723c6f3f1506869f1ace413398")

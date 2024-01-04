@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class RCheckmate(RPackage):
     execution time overhead."""
 
     cran = "checkmate"
+
+    license("BSD-3-Clause")
 
     version("2.1.0", sha256="b784dd5163a0350d084ef34882d9781373839dedeaa9a8b8e6187d773d0d21c6")
     version("2.0.0", sha256="0dc25b0e20c04836359df1885d099c6e4ad8ae0e585a9e4107f7ea945d9c6fa4")

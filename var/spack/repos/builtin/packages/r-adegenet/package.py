@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class RAdegenet(RPackage):
     various methods."""
 
     cran = "adegenet"
+
+    license("GPL-2.0-or-later")
 
     version("2.1.10", sha256="ab62780ac1dd575d01f3e0869b34728a74b2ca2eaeeccb2f520007e9a578b163")
     version("2.1.8", sha256="80d72c3eefe077723dec91c98b7d46815b9659ab7196581d18b6e9d6c27f5025")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Cppzmq(CMakePackage):
     git = "https://github.com/zeromq/cppzmq.git"
 
     maintainers("wdconinc")
+
+    license("MIT")
 
     version("master", branch="master")
     version("4.9.0", sha256="3fdf5b100206953f674c94d40599bdb3ea255244dcc42fab0d75855ee3645581")

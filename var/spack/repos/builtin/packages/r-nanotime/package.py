@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class RNanotime(RPackage):
     duration functionality for nanosecond-resolution timestamps."""
 
     cran = "nanotime"
+
+    license("GPL-2.0-or-later")
 
     version("0.3.7", sha256="a771782653aef62a071682907fd7bd611f7f98fc80beda227d619aae166ccb15")
     version("0.3.6", sha256="df751a5cb11ca9ac8762cd1e33bc73e7d20fde9339d2c46bc6f85873388568df")

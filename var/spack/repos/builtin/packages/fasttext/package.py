@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Fasttext(CMakePackage):
 
     homepage = "https://github.com/facebookresearch/fastText"
     url = "https://github.com/facebookresearch/fastText/archive/v0.9.2.tar.gz"
+
+    license("MIT")
 
     version("0.9.2", sha256="7ea4edcdb64bfc6faaaec193ef181bdc108ee62bb6a04e48b2e80b639a99e27e")
     version("0.9.1", sha256="254ace2fc8dc3bea0fc6ad4897a221eb85c1e9adfa61d130b43398193ca1f061")

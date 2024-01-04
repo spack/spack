@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Libceed(MakefilePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/CEED/libCEED.git"
 
     maintainers("jedbrown", "v-dobrev", "tzanio", "jeremylt")
+
+    license("BSD-2-Clause")
 
     version("develop", branch="main")
     version("0.12.0", tag="v0.12.0", commit="60ef3feef7f5137af55ea7336903743d94ee71a8")

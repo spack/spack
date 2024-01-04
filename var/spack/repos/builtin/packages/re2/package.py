@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Re2(CMakePackage):
 
     homepage = "https://github.com/google/re2"
     url = "https://github.com/google/re2/archive/2020-08-01.tar.gz"
+
+    license("BSD-3-Clause")
 
     version(
         "2023-09-01", sha256="5bb6875ae1cd1e9fedde98018c346db7260655f86fdb8837e3075103acd3649b"

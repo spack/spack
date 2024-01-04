@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1594,3 +1594,9 @@ def test_virtual_lib_access(use_repo_virtual_libs_access):
 
     l2 = p1["i1"].libs
     assert "/t1/a.so" in l2
+
+
+def test_old_format_strings_trigger_error(default_mock_concretization):
+    s = Spec("a").concretized()
+    with pytest.raises(SpecFormatStringError):
+        s.format("${PACKAGE}-${VERSION}-${HASH}")

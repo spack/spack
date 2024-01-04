@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Hazelcast(MavenPackage):
 
     homepage = "http://www.hazelcast.com/"
     url = "https://github.com/hazelcast/hazelcast/archive/v3.12.8.tar.gz"
+
+    license("Apache-2.0")
 
     version("5.2.3", sha256="026c213d3bb520b6c44587ae2a67eca50b9a5a0fc56d2cdedfb2c09c7858a11f")
     version("4.0.2", sha256="4f01682583ae6603365ac7a24c568d7598cc3c1cbd736e5c6ed98bd75e39ffa3")

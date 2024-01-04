@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyHttpx(PythonPackage):
 
     homepage = "https://github.com/encode/httpx"
     pypi = "httpx/httpx-0.15.2.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("0.23.3", sha256="9818458eb565bb54898ccb9b8b251a28785dd4a55afbc23d0eb410754fe7d0f9")
     version("0.22.0", sha256="d8e778f76d9bbd46af49e7f062467e3157a5a3d2ae4876a4bbfd8a51ed9c9cb4")

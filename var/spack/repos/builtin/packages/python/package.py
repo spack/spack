@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,6 +39,8 @@ class Python(Package):
     #: phase
     install_targets = ["install"]
     build_targets: List[str] = []
+
+    license("0BSD")
 
     version("3.12.0", sha256="51412956d24a1ef7c97f1cb5f70e185c13e3de1f50d131c0aac6338080687afb")
     version(

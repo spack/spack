@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class PyTransformers(PythonPackage):
     pypi = "transformers/transformers-2.8.0.tar.gz"
 
     maintainers("adamjstewart")
+
+    license("Apache-2.0")
 
     version("4.35.2", sha256="2d125e197d77b0cdb6c9201df9fa7e2101493272e448b9fba9341c695bee2f52")
     version("4.31.0", sha256="4302fba920a1c24d3a429a29efff6a63eac03f3f3cf55b55927fc795d01cb273")

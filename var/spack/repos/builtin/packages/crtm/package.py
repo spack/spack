@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -45,6 +45,8 @@ class Crtm(CMakePackage):
     # ecbuild release v2.4.0 is broken
     # add ecbuild dependency for next release with fix
     # depends_on("ecbuild", when="@2.4.0:", type=("build"))
+
+    license("CC0-1.0")
 
     # REL-2.4.0_emc (v2.4.0 ecbuild does not work)
     version("2.4.0", commit="5ddd0d6b0138284764065feda73b5adf599082a2")
