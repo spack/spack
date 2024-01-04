@@ -6,7 +6,7 @@
 import re
 import sys
 
-import llnl.util.tty as tty
+from llnl.util import tty
 from llnl.util.filesystem import working_dir
 from llnl.util.tty.colify import colify
 
@@ -75,7 +75,7 @@ def update(parser, args):
         # check to see if the repository updated
         if old_head != new_head:
             changed_files = git(
-                "diff-tree", "-r", "--name-status", "{old_head}..{new_head}", output=str
+                "diff-tree", "-r", "--name-status", f"{old_head}..{new_head}", output=str
             )
             changed_packages = {"Added": [], "Updated": [], "Deleted": []}
 
