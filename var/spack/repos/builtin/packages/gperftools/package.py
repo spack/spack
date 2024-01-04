@@ -43,6 +43,11 @@ class Gperftools(AutotoolsPackage):
 
     depends_on("unwind", when="+libunwind")
 
+    # Linker error: src/base/dynamic_annotations.cc:46: undefined reference to
+    # `TCMallocGetenvSafe'
+    conflicts("target=ppc64:", when="@2.14")
+    conflicts("target=ppc64le:", when="@2.14")
+
     def configure_args(self):
         args = []
         args += self.enable_or_disable("sized-delete", variant="sized_delete")
