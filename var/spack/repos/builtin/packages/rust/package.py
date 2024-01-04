@@ -43,7 +43,11 @@ class Rust(Package):
     version("1.65.0", sha256="5828bb67f677eabf8c384020582b0ce7af884e1c84389484f7f8d00dd82c0038")
     version("1.60.0", sha256="20ca826d1cf674daf8e22c4f8c4b9743af07973211c839b85839742314c838b7")
 
-    variant("dev", default=False, description="Include rust developer tools like rustfmt, clippy, and rust-analyzer.")
+    variant(
+        "dev",
+        default=False,
+        description="Include rust developer tools like rustfmt, clippy, and rust-analyzer.",
+    )
     variant("docs", default=False, description="Build Rust core documentation.")
     variant("src", default=True, description="Include standard library source files.")
 

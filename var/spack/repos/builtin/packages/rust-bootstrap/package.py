@@ -30,7 +30,7 @@ class RustBootstrap(Package):
                 "x86_64": "473978b6f8ff216389f9e89315211c6b683cf95a966196e7914b46e8cf0d74f6",
                 "aarch64": "30828cd904fcfb47f1ac43627c7033c903889ea4aca538f53dcafbb3744a9a73",
                 "powerpc64le": "2599cdfea5860b4efbceb7bca69845a96ac1c96aa50cf8261151e82280b397a0",
-            }
+            },
         },
         "1.73.0": {
             "darwin": {
