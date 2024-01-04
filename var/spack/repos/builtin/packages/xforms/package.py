@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Xforms(AutotoolsPackage):
 
     homepage = "https://www.nongnu.org/xforms/"
     url = "http://download.savannah.gnu.org/releases/xforms/xforms-1.0.91.tar.gz"
+
+    license("LGPL-2.1-or-later")
 
     version("1.2.4", sha256="78cc6b07071bbeaa1f906e0a22d5e9980e48f8913577bc082d661afe5cb75696")
     version("1.2.3", sha256="7989b39598c769820ad451ad91e5cb0de29946940c8240aac94ca8238c2def61")

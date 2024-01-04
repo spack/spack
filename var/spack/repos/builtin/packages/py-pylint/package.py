@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,8 @@ class PyPylint(PythonPackage):
         "pylint.reporters",
         "pylint.reporters.ureports",
     ]
+
+    license("GPL-2.0-or-later")
 
     version("2.16.2", sha256="13b2c805a404a9bf57d002cd5f054ca4d40b0b87542bdaba5e05321ae8262c84")
     version("2.15.0", sha256="4f3f7e869646b0bd63b3dfb79f3c0f28fc3d2d923ea220d52620fd625aed92b0")
@@ -58,7 +60,8 @@ class PyPylint(PythonPackage):
     depends_on("py-astroid@2.12.4:2.13", when="@2.15", type=("build", "run"))
     depends_on("py-astroid@2.14.2:2.15", when="@2.16:", type=("build", "run"))
     depends_on("py-isort@4.2.5:", type=("build", "run"))
-    depends_on("py-isort@4.2.5:5", when="@2.3.1:", type=("build", "run"))
+    depends_on("py-isort@4.2.5:4", when="@2.3.1:2.5", type=("build", "run"))
+    depends_on("py-isort@4.2.5:5", when="@2.6:", type=("build", "run"))
     depends_on("py-mccabe", type=("build", "run"))
     depends_on("py-mccabe@0.6.0:0.6", when="@2.3.1:2.11", type=("build", "run"))
     depends_on("py-mccabe@0.6.0:0.7", when="@2.13:", type=("build", "run"))

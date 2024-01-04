@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,10 +20,18 @@ class Neuron(CMakePackage):
     git = "https://github.com/neuronsimulator/nrn"
     maintainers("pramodk", "nrnhines", "iomaganaris", "alexsavulescu")
 
+    license("BSD-3-Clause")
+
     version("develop", branch="master", submodules="True")
-    version("8.0.0", tag="8.0.0", submodules="True")
-    version("7.8.2", tag="7.8.2", submodules="True")
-    version("7.8.1", tag="7.8.1", submodules="True")
+    version(
+        "8.0.0", tag="8.0.0", commit="429d11ef34b1d860b3ddbfffc9f7960acb399b0c", submodules="True"
+    )
+    version(
+        "7.8.2", tag="7.8.2", commit="09b151ecb2b3984335c265932dc6ba3e4fcb318e", submodules="True"
+    )
+    version(
+        "7.8.1", tag="7.8.1", commit="47cd8c85aa3fde5dbb7319facd6f475438235d7d", submodules="True"
+    )
 
     variant("coreneuron", default=False, description="Enable CoreNEURON as submodule")
     variant("cross-compile", default=False, description="Build for cross-compile environment")

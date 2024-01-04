@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -79,14 +79,14 @@ class SingularityBase(MakefilePackage):
     # Hijack the edit stage to run mconfig.
     def edit(self, spec, prefix):
         with working_dir(self.build_directory):
-            confstring = "./mconfig --prefix=%s" % prefix
-            confstring += " " + " ".join(self.config_options)
+            _config_options = ["--prefix=%s" % prefix]
+            _config_options += self.config_options
             if "~suid" in spec:
-                confstring += " --without-suid"
+                _config_options += ["--without-suid"]
             if "~network" in spec:
-                confstring += " --without-network"
-            configure = Executable(confstring)
-            configure()
+                _config_options += ["--without-network"]
+            configure = Executable("./mconfig")
+            configure(*_config_options)
 
     # Set these for use by MakefilePackage's default build/install methods.
     build_targets = ["-C", "builddir", "parallel=False"]
@@ -190,12 +190,14 @@ class Singularityce(SingularityBase):
     See package definition or `spack-build-out.txt` build log for details,
     e.g.
 
-    tail -15 $(spack location -i singularity)/.spack/spack-build-out.txt
+    tail -15 $(spack location -i singularityce)/.spack/spack-build-out.txt
     """
 
     homepage = "https://sylabs.io/singularity/"
     url = "https://github.com/sylabs/singularity/releases/download/v3.9.1/singularity-ce-3.9.1.tar.gz"
     git = "https://github.com/sylabs/singularity.git"
+
+    license("Apache-2.0")
 
     maintainers("alalazo")
     version("master", branch="master")

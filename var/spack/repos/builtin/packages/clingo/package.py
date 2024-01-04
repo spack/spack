@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,8 @@ class Clingo(CMakePackage):
     tags = ["windows"]
     maintainers("tgamblin", "alalazo")
 
+    license("MIT")
+
     version("master", branch="master", submodules=True)
     version("spack", commit="2a025667090d71b2c9dce60fe924feb6bde8f667", submodules=True)
     version("5.6.2", sha256="81eb7b14977ac57c97c905bd570f30be2859eabc7fe534da3cdc65eaca44f5be")
@@ -42,6 +44,7 @@ class Clingo(CMakePackage):
     # See https://github.com/potassco/clingo/blob/v5.5.2/INSTALL.md
     depends_on("cmake@3.1:", type="build")
     depends_on("cmake@3.18:", type="build", when="@5.5:")
+    depends_on("py-setuptools", when="@5.6.2:", type="build")
 
     depends_on("doxygen", type="build", when="+docs")
 
@@ -49,6 +52,7 @@ class Clingo(CMakePackage):
         depends_on("re2c@0.13:", type="build")
         depends_on("bison@2.5:", type="build", when="platform=linux")
         depends_on("bison@2.5:", type="build", when="platform=darwin")
+        depends_on("bison@2.5:", type="build", when="platform=freebsd")
         depends_on("bison@2.5:", type="build", when="platform=cray")
 
     with when("platform=windows"):
@@ -60,13 +64,21 @@ class Clingo(CMakePackage):
         depends_on("python", type=("build", "link", "run"))
         # Clingo 5.5.0 supports Python 3.6 or later and needs CFFI
         depends_on("python@3.6.0:", type=("build", "link", "run"), when="@5.5.0:")
-        depends_on("py-cffi", type=("build", "run"), when="@5.5.0: platform=darwin")
         depends_on("py-cffi", type=("build", "run"), when="@5.5.0: platform=linux")
+        depends_on("py-cffi", type=("build", "run"), when="@5.5.0: platform=darwin")
+        depends_on("py-cffi", type=("build", "run"), when="@5.5.0: platform=freebsd")
         depends_on("py-cffi", type=("build", "run"), when="@5.5.0: platform=cray")
 
     patch("python38.patch", when="@5.3:5.4.0")
     patch("size-t.patch", when="%msvc")
     patch("vs2022.patch", when="%msvc@19.30:")
+    patch("clingo_msc_1938_native_handle.patch", when="%msvc@19.38:")
+
+    # TODO: Simplify this after Spack 0.21 release. The old concretizer has problems with
+    # py-setuptools ^python@3.6, so we only apply the distutils -> setuptools patch for Python 3.12
+    with when("@:5.6.1 ^python@3.12:"):
+        patch("setuptools-2.patch")
+        depends_on("py-setuptools", type="build")
 
     def patch(self):
         # Doxygen is optional but can't be disabled with a -D, so patch
@@ -119,6 +131,11 @@ class Clingo(CMakePackage):
                 args += self.cmake_python_hints
         else:
             args += ["-DCLINGO_BUILD_WITH_PYTHON=OFF"]
+
+        # Use LTO also for non-Intel compilers please. This can be removed when they
+        # bump cmake_minimum_required to VERSION 3.9.
+        if "+ipo" in self.spec:
+            args.append("-DCMAKE_POLICY_DEFAULT_CMP0069=NEW")
 
         return args
 

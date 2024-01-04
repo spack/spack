@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ import os
 
 import pytest
 
-from llnl.util.filesystem import resolve_link_target_relative_to_the_link
+from llnl.util.symlink import resolve_link_target_relative_to_the_link
 
 import spack.mirror
 import spack.repo
@@ -228,6 +228,9 @@ def test_mirror_with_url_patches(mock_packages, config, monkeypatch):
     def successful_apply(*args, **kwargs):
         pass
 
+    def successful_symlink(*args, **kwargs):
+        pass
+
     with Stage("spack-mirror-test") as stage:
         mirror_root = os.path.join(stage.path, "test-mirror")
 
@@ -235,6 +238,7 @@ def test_mirror_with_url_patches(mock_packages, config, monkeypatch):
         monkeypatch.setattr(spack.fetch_strategy.URLFetchStrategy, "expand", successful_expand)
         monkeypatch.setattr(spack.patch, "apply_patch", successful_apply)
         monkeypatch.setattr(spack.caches.MirrorCache, "store", record_store)
+        monkeypatch.setattr(spack.caches.MirrorCache, "symlink", successful_symlink)
 
         with spack.config.override("config:checksum", False):
             spack.mirror.create(mirror_root, list(spec.traverse()))

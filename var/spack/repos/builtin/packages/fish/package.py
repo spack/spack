@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,13 +13,17 @@ class Fish(CMakePackage):
     """
 
     homepage = "https://fishshell.com/"
-    url = "https://github.com/fish-shell/fish-shell/releases/download/3.5.1/fish-3.5.1.tar.xz"
+    url = "https://github.com/fish-shell/fish-shell/releases/download/3.6.1/fish-3.6.1.tar.xz"
     git = "https://github.com/fish-shell/fish-shell.git"
     list_url = homepage
 
     maintainers("funnell", "adamjstewart")
 
+    license("GPL-2.0-only")
+
     version("master", branch="master")
+    version("3.6.1", sha256="55402bb47ca6739d8aba25e41780905b5ce1bce0a5e0dd17dca908b5bc0b49b2")
+    version("3.6.0", sha256="97044d57773ee7ca15634f693d917ed1c3dc0fa7fde1017f1626d60b83ea6181")
     version("3.5.1", sha256="a6d45b3dc5a45dd31772e7f8dfdfecabc063986e8f67d60bd7ca60cc81db6928")
     version("3.4.1", sha256="b6f23b3843b04db6b0a90fea1f6f0d0e40cc027b4a732098200863f2864a94ea")
     version("3.3.1", sha256="b5b4ee1a5269762cbbe993a4bd6507e675e4100ce9bbe84214a5eeb2b19fae89")
@@ -30,6 +34,7 @@ class Fish(CMakePackage):
     variant("docs", default=False, description="Build documentation")
 
     # https://github.com/fish-shell/fish-shell#dependencies-1
+    depends_on("cmake@3.5:", when="@3.4:", type="build")
     depends_on("cmake@3.2:", type="build")
     depends_on("ncurses")
     depends_on("pcre2@10.21:")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class Spack(Package):
     git = "https://github.com/spack/spack.git"
     url = "https://github.com/spack/spack/releases/download/v0.16.2/spack-0.16.2.tar.gz"
     maintainers("haampie")
+
+    license("Apache-2.0 OR MIT")
 
     version("develop", branch="develop")
     version("0.20.1", sha256="141be037b56e4b095840a95ac51c428c29dad078f7f88140ae6355b2a1b32dc3")
@@ -61,10 +63,15 @@ class Spack(Package):
     # This should be read as "require at least curl", not "require curl".
     requires("fetchers=curl", when="@:0.16", msg="Curl is required for Spack < 0.17")
 
-    # Python (with spack python -i ipython support)
+    # Python
     depends_on("python@2.6.0:2.7,3.5:", type="run")
     depends_on("python@2.7.0:2.7,3.5:", type="run", when="@0.18.0:")
     depends_on("python@2.7.0:2.7,3.6:", type="run", when="@0.19.0:")
+
+    # Old Spack unfortunately depends on distutils, removed in Python 3.12
+    depends_on("python@:3.12", type="run", when="@0.18:0.20.1")
+
+    # spack python -i ipython support
     depends_on("py-ipython", type="run")
 
     # Concretizer

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -500,7 +500,7 @@ class YamlFilesystemView(FilesystemView):
 
         proj = spack.projections.get_projection(self.projections, locator_spec)
         if proj:
-            return os.path.join(self._root, locator_spec.format(proj))
+            return os.path.join(self._root, locator_spec.format_path(proj))
         return self._root
 
     def get_all_specs(self):
@@ -590,9 +590,9 @@ class YamlFilesystemView(FilesystemView):
                     print()
 
                 header = "%s{%s} / %s{%s}" % (
-                    spack.spec.architecture_color,
+                    spack.spec.ARCHITECTURE_COLOR,
                     architecture,
-                    spack.spec.compiler_color,
+                    spack.spec.COMPILER_COLOR,
                     compiler,
                 )
                 tty.hline(colorize(header), char="-")
@@ -776,7 +776,7 @@ class SimpleFilesystemView(FilesystemView):
             spec = spec.package.extendee_spec
 
         p = spack.projections.get_projection(self.projections, spec)
-        return spec.format(p) if p else ""
+        return spec.format_path(p) if p else ""
 
     def get_projection_for_spec(self, spec):
         """
@@ -791,7 +791,7 @@ class SimpleFilesystemView(FilesystemView):
 
         proj = spack.projections.get_projection(self.projections, spec)
         if proj:
-            return os.path.join(self._root, spec.format(proj))
+            return os.path.join(self._root, spec.format_path(proj))
         return self._root
 
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -253,8 +253,8 @@ def test_get_compiler_link_paths_load_env(working_env, monkeypatch, tmpdir):
     gcc = str(tmpdir.join("gcc"))
     with open(gcc, "w") as f:
         f.write(
-            """#!/bin/bash
-if [[ $ENV_SET == "1" && $MODULE_LOADED == "1" ]]; then
+            """#!/bin/sh
+if [ "$ENV_SET" = "1" ] && [ "$MODULE_LOADED" = "1" ]; then
   echo '"""
             + no_flag_output
             + """'
@@ -422,7 +422,6 @@ def test_clang_flags():
             "-gdwarf-5",
             "-gline-tables-only",
             "-gmodules",
-            "-gz",
             "-g",
         ],
         "clang@3.3",
@@ -445,7 +444,6 @@ def test_aocc_flags():
             "-gdwarf-5",
             "-gline-tables-only",
             "-gmodules",
-            "-gz",
             "-g",
         ],
         "aocc@2.2.0",
@@ -701,8 +699,8 @@ def test_compiler_get_real_version(working_env, monkeypatch, tmpdir):
     gcc = str(tmpdir.join("gcc"))
     with open(gcc, "w") as f:
         f.write(
-            """#!/bin/bash
-if [[ $CMP_ON == "1" ]]; then
+            """#!/bin/sh
+if [ "$CMP_ON" = "1" ]; then
     echo "$CMP_VER"
 fi
 """
@@ -747,8 +745,8 @@ def test_compiler_get_real_version_fails(working_env, monkeypatch, tmpdir):
     gcc = str(tmpdir.join("gcc"))
     with open(gcc, "w") as f:
         f.write(
-            """#!/bin/bash
-if [[ $CMP_ON == "1" ]]; then
+            """#!/bin/sh
+if [ "$CMP_ON" = "1" ]; then
     echo "$CMP_VER"
 fi
 """
@@ -801,7 +799,7 @@ def test_compiler_flags_use_real_version(working_env, monkeypatch, tmpdir):
     gcc = str(tmpdir.join("gcc"))
     with open(gcc, "w") as f:
         f.write(
-            """#!/bin/bash
+            """#!/bin/sh
 echo "4.4.4"
 """
         )  # Version for which c++11 flag is -std=c++0x

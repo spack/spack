@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Grass(AutotoolsPackage):
     git = "https://github.com/OSGeo/grass.git"
 
     maintainers("adamjstewart")
+
+    license("MIT")
 
     version("master", branch="master")
     version("8.2.0", sha256="621c3304a563be19c0220ae28f931a5e9ba74a53218c5556cd3f7fbfcca33a80")
@@ -87,7 +89,8 @@ class Grass(AutotoolsPackage):
     depends_on("opencl", when="+opencl")
     depends_on("bzip2", when="+bzlib")
     depends_on("zstd", when="+zstd")
-    depends_on("gdal@:3.2", when="+gdal")
+    depends_on("gdal", when="+gdal")
+    conflicts("^gdal@3.3:", when="@7.8")
     depends_on("liblas", when="+liblas")
     depends_on("wxwidgets", when="+wxwidgets")
     depends_on("py-wxpython@2.8.10.1:", when="+wxwidgets", type=("build", "run"))

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,6 +32,8 @@ class RDensvis(RPackage):
     space."""
 
     bioc = "densvis"
+
+    license("MIT")
 
     version("1.10.0", commit="833db1fb7b2a5667575cc2e7c2fefc8360c8d7fb")
 

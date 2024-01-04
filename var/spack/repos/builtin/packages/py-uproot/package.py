@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,8 @@ class PyUproot(PythonPackage):
     maintainers("vvolkl")
 
     tags = ["hep"]
+
+    license("BSD-3-Clause")
 
     version("5.0.11", sha256="54f3d9c133978c8e5ccbbcb8eb720c8f0eeebab0e4805567827e6a5888279902")
     version("5.0.10", sha256="f703992a37f6b6d0146ebaf03016afdb394008faaede2476ff53e51fa8fcd8d1")

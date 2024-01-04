@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class Perfstubs(CMakePackage):
 
     homepage = "https://github.com/khuck/perfstubs"
     git = "https://github.com/khuck/perfstubs.git"
+
+    license("BSD-3-Clause")
 
     version("master", branch="master")
     variant("static", default=False, description="Build static executable support")
