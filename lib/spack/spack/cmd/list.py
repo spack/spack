@@ -41,6 +41,16 @@ def setup_parser(subparser):
         help="optional case-insensitive glob patterns to filter results",
     )
     subparser.add_argument(
+        "-r",
+        "--repo",
+        "-N",
+        "--namespace",
+        dest="repos",
+        action="append",
+        default=[],
+        help="only list packages from the specified repo/namespace",
+    )
+    subparser.add_argument(
         "-d",
         "--search-description",
         action="store_true",
@@ -307,7 +317,11 @@ def list(parser, args):
     formatter = formatters[args.format]
 
     # Retrieve the names of all the packages
-    pkgs = set(spack.repo.all_package_names(args.virtuals))
+    repos = [spack.repo.PATH]
+    if args.repos:
+        repos = [spack.repo.PATH.get_repo(name) for name in args.repos]
+    pkgs = set().union(*[set(repo.all_package_names(args.virtuals)) for repo in repos])
+
     # Filter the set appropriately
     sorted_packages = filter_by_name(pkgs, args)
 
