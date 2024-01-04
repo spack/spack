@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Arrow(CMakePackage, CudaPackage):
 
     homepage = "https://arrow.apache.org"
     url = "https://github.com/apache/arrow/archive/apache-arrow-0.9.0.tar.gz"
+
+    license("Apache-2.0")
 
     version("14.0.1", sha256="a48e54a09d58168bc04d86b13e7dab04f0aaba18a6f7e4dadf3e9c7bb835c8f1")
     version("14.0.0", sha256="39e3388bbaba23faa7a5e8a82ebba7fe4c38ace2c394d6a3f26559715b30f401")

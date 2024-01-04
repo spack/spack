@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Amg2013(MakefilePackage):
 
     homepage = "https://computing.llnl.gov/projects/co-design/amg2013"
     git = "https://github.com/LLNL/AMG.git"
+
+    license("LGPL-2.1-or-later")
 
     version("develop", branch="master")
     version("1.2", tag="1.2", commit="3ada8a128e311543e84d9d66344ece77924127a8")

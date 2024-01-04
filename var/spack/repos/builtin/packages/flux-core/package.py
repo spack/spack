@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class FluxCore(AutotoolsPackage):
     tags = ["radiuss", "e4s"]
 
     maintainers("grondo")
+
+    license("LGPL-3.0-only")
 
     version("master", branch="master")
     version("0.57.0", sha256="a412b8370b5236605a5261c892f48d65c1357a83c88446cd1723236f58a807ce")

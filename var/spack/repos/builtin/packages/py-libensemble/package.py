@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class PyLibensemble(PythonPackage):
     maintainers("shuds13", "jlnav")
 
     tags = ["e4s"]
+
+    license("BSD-3-Clause")
 
     version("develop", branch="develop")
     version("1.1.0", sha256="3e3ddc4233272d3651e9d62c7bf420018930a4b9b135ef9ede01d5356235c1c6")

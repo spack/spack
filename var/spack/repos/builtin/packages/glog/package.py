@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Glog(Package):
 
     homepage = "https://github.com/google/glog"
     url = "https://github.com/google/glog/archive/v0.3.5.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("0.6.0", sha256="8a83bf982f37bb70825df71a9709fa90ea9f4447fb3c099e1d720a439d88bad6")
     version("0.4.0", sha256="f28359aeba12f30d73d9e4711ef356dc842886968112162bc73002645139c39c")

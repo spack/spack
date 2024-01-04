@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class CpuFeatures(CMakePackage):
     homepage = "https://github.com/google/cpu_features"
     git = "https://github.com/google/cpu_features.git"
     url = "https://github.com/google/cpu_features/archive/refs/tags/v0.7.0.tar.gz"
+
+    license("Apache-2.0")
 
     version("main", branch="main")
     version("develop", branch="main", deprecated=True)

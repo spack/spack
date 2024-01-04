@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,10 @@ from typing import Callable, Dict, List, NamedTuple, Optional, Sequence, Set, Tu
 
 import archspec.cpu
 
+import spack.config as sc
 import spack.deptypes as dt
+import spack.paths as sp
+import spack.util.path as sup
 
 try:
     import clingo  # type: ignore[import]
@@ -28,6 +31,36 @@ try:
 except ImportError:
     clingo = None  # type: ignore
     clingo_cffi = False
+except AttributeError:
+    # Reaching this point indicates a broken clingo installation
+    # If Spack derived clingo, suggest user re-run bootstrap
+    # if non-spack, suggest user investigate installation
+
+    # assume Spack is not responsibe for broken clingo
+    msg = (
+        f"Clingo installation at {clingo.__file__} is incomplete or invalid."
+        "Please repair installation or re-install. "
+        "Alternatively, consider installing clingo via Spack."
+    )
+    # check whether Spack is responsible
+    if (
+        pathlib.Path(
+            sup.canonicalize_path(sc.get("bootstrap:root", sp.default_user_bootstrap_path))
+        )
+        in pathlib.Path(clingo.__file__).parents
+    ):
+        # Spack is responsible for the broken clingo
+        msg = (
+            "Spack bootstrapped copy of Clingo is broken, "
+            "please re-run the bootstrapping process via command `spack bootstrap now`."
+            " If this issue persists, please file a bug at: github.com/spack/spack"
+        )
+    raise RuntimeError(
+        "Clingo installation may be broken or incomplete, "
+        "please verify clingo has been installed correctly"
+        "\n\nClingo does not provide symbol clingo.Symbol"
+        f"{msg}"
+    )
 
 import llnl.util.lang
 import llnl.util.tty as tty

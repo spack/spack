@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class PyTorchdata(PythonPackage):
     url = "https://github.com/pytorch/data/archive/refs/tags/v0.4.0.tar.gz"
 
     maintainers("adamjstewart")
+
+    license("BSD-3-Clause")
 
     version("main", branch="main")
     version("0.7.1", sha256="1b6589336776ccba19fd3bf435588416105d372f6b85d58a9f2b008286f483bf")

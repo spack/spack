@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class QuantumEspresso(CMakePackage, Package):
     maintainers("ye-luo", "bellenlau", "tgorni")
 
     build_system(conditional("cmake", when="@6.8:"), "generic", default="cmake")
+
+    license("GPL-2.0-only")
 
     version("develop", branch="develop")
     version("7.2", sha256="b348a4a7348b66a73545d9ca317a2645755c98d343c1cfe8def475ad030808c0")

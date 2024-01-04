@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,6 +29,8 @@ class ScineSparrow(CMakePackage):
     git = "https://github.com/qcscine/sparrow.git"
 
     maintainers("frobnitzem")
+
+    license("BSD-3-Clause")
 
     version("master", branch="master")
     version("3.1.0", sha256="91412de0f2670a1735c4ca76406db5bea04236eeac0bc1f93ccfe18104aa7ce4")

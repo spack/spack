@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,6 +28,8 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     list_url = "https://github.com/cp2k/cp2k/releases"
 
     maintainers("dev-zero", "mtaillefumier")
+
+    license("GPL-2.0-or-later")
 
     version("2023.2", sha256="adbcc903c1a78cba98f49fe6905a62b49f12e3dfd7cedea00616d1a5f50550db")
     version("2023.1", sha256="dff343b4a80c3a79363b805429bdb3320d3e1db48e0ff7d20a3dfd1c946a51ce")

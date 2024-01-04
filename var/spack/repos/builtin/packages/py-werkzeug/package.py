@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyWerkzeug(PythonPackage):
     homepage = "https://palletsprojects.com/p/werkzeug"
     pypi = "werkzeug/werkzeug-3.0.0.tar.gz"
     git = "https://github.com/pallets/werkzeug.git"
+
+    license("BSD-3-Clause")
 
     version("3.0.0", sha256="3ffff4dcc32db52ef3cc94dff3000a3c2846890f3a5a51800a27b909c5e770f0")
     version("2.3.7", sha256="2b8c0e447b4b9dbcc85dd97b6eeb4dcbaf6c8b6c3be0bd654e25553e0a2157d8")

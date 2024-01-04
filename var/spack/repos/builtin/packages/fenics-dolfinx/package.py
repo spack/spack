@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class FenicsDolfinx(CMakePackage):
     git = "https://github.com/FEniCS/dolfinx.git"
     url = "https://github.com/FEniCS/dolfinx/archive/v0.1.0.tar.gz"
     maintainers("chrisrichardson", "garth-wells", "nate-sime", "jhale")
+
+    license("LGPL-3.0-or-later")
 
     version("main", branch="main")
     version("0.7.2", sha256="7d9ce1338ce66580593b376327f23ac464a4ce89ef63c105efc1a38e5eae5c0b")
