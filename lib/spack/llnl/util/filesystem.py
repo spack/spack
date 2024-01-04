@@ -1849,7 +1849,6 @@ def find_max_depth(root, globs, max_depth=None):
     root = root
     if isinstance(globs, str):
         globs = [globs]
-    regexes = [re.compile(fnmatch.translate(x)) for x in globs]
 
     found_files = collections.defaultdict(list)
 
