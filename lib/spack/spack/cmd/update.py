@@ -49,7 +49,7 @@ def update(parser, args):
                     remote = git("config", f"branch.{branch}.remote", output=str).strip()
                     remote_url = git("config", f"remote.{remote}.url", output=str).strip()
 
-                    if remote_url.endswith("spack/spack.git"):
+                    if re.match(r"spack\/spack(\.git)?$", remote_url):
                         upstream_branch = branch
                         break
 
