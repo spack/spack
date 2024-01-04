@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,8 +25,11 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
 
     test_requires_compiler = True
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("2.10.0", sha256="14c4fb5edd5e67808d581523b4f8f05ace8549698c0e90d84b53171a77f58565")
+    version("2.9.1", sha256="4771d630de505eff9227e0ec498d0da33ae6f9c34df23cb201b56181b8759e9e")
     version("2.9.0", sha256="507ea74be64a2dfd111b292c24c4f55f459257528ba51a5242313fa50978371f")
     version("2.8.0", sha256="17807b364b5ac4b05997ead41bd173e773f9a26ff573ff2fe61e0e70eab496e4")
     version(
@@ -117,7 +120,10 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+rocm+cuda")
 
     patch("for_aarch64.patch", when="target=aarch64:")
-    patch("sampler-service-missing-libunwind-include-dir.patch", when="@2.9.0 +libunwind +sampler")
+    patch(
+        "sampler-service-missing-libunwind-include-dir.patch",
+        when="@2.9.0:2.9.1 +libunwind +sampler",
+    )
 
     def cmake_args(self):
         spec = self.spec

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -79,8 +79,7 @@ class ElfFilesWithRPathVisitor(BaseDirectoryVisitor):
     """Visitor that collects all elf files that have an rpath"""
 
     def __init__(self):
-        # Map from (ino, dev) -> path. We need 1 path per file, if there are hardlinks,
-        # we don't need to store the path multiple times.
+        # Keep track of what hardlinked files we've already visited.
         self.visited = set()
 
     def visit_file(self, root, rel_path, depth):
@@ -89,10 +88,10 @@ class ElfFilesWithRPathVisitor(BaseDirectoryVisitor):
         identifier = (s.st_ino, s.st_dev)
 
         # We're hitting a hardlink or symlink of an excluded lib, no need to parse.
-        if identifier in self.visited:
-            return
-
-        self.visited.add(identifier)
+        if s.st_nlink > 1:
+            if identifier in self.visited:
+                return
+            self.visited.add(identifier)
 
         result = drop_redundant_rpaths(filepath)
 

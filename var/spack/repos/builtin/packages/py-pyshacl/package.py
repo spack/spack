@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,6 +10,8 @@ class PyPyshacl(PythonPackage):
 
     homepage = "https://github.com/RDFLib/pySHACL"
     pypi = "pyshacl/pyshacl-0.17.2.tar.gz"
+
+    license("Apache-2.0")
 
     version("0.20.0", sha256="47f014c52cc69167b902c89b3940dd400f7f5d2169a62f97f837f3419b4a737d")
     version("0.17.2", sha256="46f31c7a7f7298aa5b483d92dbc850ff79a144d26f1f41e83267ed84b4d6ae23")

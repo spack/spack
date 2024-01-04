@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Datamash(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org/software/datamash/"
     gnu_mirror_path = "datamash/datamash-1.0.5.tar.gz"
+
+    license("GPL-3.0-or-later")
 
     version("1.8", sha256="7ad97e8c7ef616dd03aa5bd67ae24c488272db3e7d1f5774161c18b75f29f6fd")
     version("1.3", sha256="eebb52171a4353aaad01921384098cf54eb96ebfaf99660e017f6d9fc96657a6")

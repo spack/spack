@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,11 +7,11 @@ import argparse
 import os
 
 import spack.binary_distribution
-import spack.cmd.common.arguments as arguments
 import spack.mirror
 import spack.paths
 import spack.util.gpg
 import spack.util.url
+from spack.cmd.common import arguments
 
 description = "handle GPG actions for spack"
 section = "packaging"

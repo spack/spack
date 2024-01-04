@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Jemalloc(AutotoolsPackage):
     homepage = "http://jemalloc.net/"
     url = "https://github.com/jemalloc/jemalloc/releases/download/4.0.4/jemalloc-4.0.4.tar.bz2"
 
-    maintainers("iarspider")
+    license("BSD-2-Clause")
 
     version("5.3.0", sha256="2db82d1e7119df3e71b7640219b6dfe84789bc0537983c3b7ac4f7189aecfeaa")
     version("5.2.1", sha256="34330e5ce276099e2e8950d9335db5a875689a4c6a56751ef3b1d8c537f887f6")

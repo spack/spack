@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Clamr(CMakePackage):
     homepage = "https://github.com/lanl/CLAMR"
     git = "https://github.com/lanl/CLAMR.git"
     tags = ["proxy-app"]
+
+    license("Unlicense")
 
     version("master")
 

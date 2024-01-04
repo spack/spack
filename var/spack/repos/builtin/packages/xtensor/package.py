@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Xtensor(CMakePackage):
     git = "https://github.com/QuantStack/xtensor.git"
 
     maintainers("ax3l")
+
+    license("BSD-3-Clause")
 
     version("develop", branch="master")
     version("0.24.1", sha256="dd1bf4c4eba5fbcf386abba2627fcb4a947d14a806c33fde82d0cc1194807ee4")

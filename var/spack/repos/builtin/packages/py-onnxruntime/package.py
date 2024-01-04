@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
 
     homepage = "https://github.com/microsoft/onnxruntime"
     git = "https://github.com/microsoft/onnxruntime.git"
+
+    license("MIT")
 
     version(
         "1.10.0", tag="v1.10.0", commit="0d9030e79888d1d5828730b254fedc53c7b640c1", submodules=True
@@ -63,6 +65,12 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
     patch("libiconv-1.10.patch", level=0, when="@1.10.0 ^libiconv")
     # https://github.com/microsoft/onnxruntime/commit/de4089f8cbe0baffe56a363cc3a41595cc8f0809.patch
     patch("gcc11.patch", level=1, when="@1.7.2")
+    # https://github.com/microsoft/onnxruntime/pull/16257
+    patch(
+        "https://github.com/microsoft/onnxruntime/commit/a3a443c80431c390cbf8855e9c7b2a95d413cd54.patch?full_index=1",
+        sha256="537c43b061d31bf97d2778d723a41fbd390160f9ebc304f06726e3bfd8dc4583",
+        when="@1.10:1.15",
+    )
 
     dynamic_cpu_arch_values = ("NOAVX", "AVX", "AVX2", "AVX512")
 

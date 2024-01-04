@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -991,13 +991,14 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         return None
 
     def _make_resource_stage(self, root_stage, resource):
+        pretty_resource_name = fsys.polite_filename(f"{resource.name}-{self.version}")
         return ResourceStage(
             resource.fetcher,
             root=root_stage,
             resource=resource,
             name=self._resource_stage(resource),
             mirror_paths=spack.mirror.mirror_archive_paths(
-                resource.fetcher, os.path.join(self.name, f"{resource.name}-{self.version}")
+                resource.fetcher, os.path.join(self.name, pretty_resource_name)
             ),
             path=self.path,
         )
@@ -1008,8 +1009,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     def _make_root_stage(self, fetcher):
         # Construct a mirror path (TODO: get this out of package.py)
+        format_string = "{name}-{version}"
+        pretty_name = self.spec.format_path(format_string)
         mirror_paths = spack.mirror.mirror_archive_paths(
-            fetcher, os.path.join(self.name, f"{self.name}-{self.version}"), self.spec
+            fetcher, os.path.join(self.name, pretty_name), self.spec
         )
         # Construct a path where the stage should build..
         s = self.spec
@@ -1032,15 +1035,26 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # To fetch the current version
         source_stage = self._make_root_stage(self.fetcher)
 
-        # Extend it with all resources and patches
+        # all_stages is source + resources + patches
         all_stages = StageComposite()
         all_stages.append(source_stage)
         all_stages.extend(
             self._make_resource_stage(source_stage, r) for r in self._get_needed_resources()
         )
-        all_stages.extend(
-            p.stage for p in self.spec.patches if isinstance(p, spack.patch.UrlPatch)
-        )
+        if self.spec.concrete:
+            all_stages.extend(
+                p.stage for p in self.spec.patches if isinstance(p, spack.patch.UrlPatch)
+            )
+        else:
+            # The only code path that gets here is spack mirror create --all which just needs all
+            # matching patches.
+            all_stages.extend(
+                p.stage
+                for when_spec, patch_list in self.patches.items()
+                if self.spec.intersects(when_spec)
+                for p in patch_list
+                if isinstance(p, spack.patch.UrlPatch)
+            )
         return all_stages
 
     @property
@@ -1154,7 +1168,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """Return the install test root directory."""
         tty.warn(
             "The 'pkg.install_test_root' property is deprecated with removal "
-            "expected v0.21. Use 'install_test_root(pkg)' instead."
+            "expected v0.22. Use 'install_test_root(pkg)' instead."
         )
         return install_test_root(self)
 
@@ -1740,28 +1754,16 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             inspect.getmodule(self).ninja(target, *args, **kwargs)
 
     def _get_needed_resources(self):
-        resources = []
-        # Select the resources that are needed for this build
-        if self.spec.concrete:
-            for when_spec, resource_list in self.resources.items():
-                if when_spec in self.spec:
-                    resources.extend(resource_list)
-        else:
-            for when_spec, resource_list in self.resources.items():
-                # Note that variant checking is always strict for specs where
-                # the name is not specified. But with strict variant checking,
-                # only variants mentioned in 'other' are checked. Here we only
-                # want to make sure that no constraints in when_spec
-                # conflict with the spec, so we need to invoke
-                # when_spec.satisfies(self.spec) vs.
-                # self.spec.satisfies(when_spec)
-                if when_spec.intersects(self.spec):
-                    resources.extend(resource_list)
-        # Sorts the resources by the length of the string representing their
-        # destination. Since any nested resource must contain another
-        # resource's name in its path, it seems that should work
-        resources = sorted(resources, key=lambda res: len(res.destination))
-        return resources
+        # We use intersects here cause it would also work if self.spec is abstract
+        resources = [
+            resource
+            for when_spec, resource_list in self.resources.items()
+            if self.spec.intersects(when_spec)
+            for resource in resource_list
+        ]
+        # Sorts the resources by the length of the string representing their destination. Since any
+        # nested resource must contain another resource's path, that should work
+        return sorted(resources, key=lambda res: len(res.destination))
 
     def _resource_stage(self, resource):
         pieces = ["resource", resource.name, self.spec.dag_hash()]
@@ -1805,14 +1807,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             verbose (bool): Display verbose build output (by default,
                 suppresses it)
         """
-        # Non-transitive dev specs need to keep the dev stage and be built from
-        # source every time. Transitive ones just need to be built from source.
-        dev_path_var = self.spec.variants.get("dev_path", None)
-        if dev_path_var:
-            kwargs["keep_stage"] = True
-
-        builder = PackageInstaller([(self, kwargs)])
-        builder.install()
+        PackageInstaller([(self, kwargs)]).install()
 
     # TODO (post-34236): Update tests and all packages that use this as a
     # TODO (post-34236): package method to the routine made available to
@@ -1833,7 +1828,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """
         msg = (
             "'pkg.cache_extra_test_sources(srcs) is deprecated with removal "
-            "expected in v0.21. Use 'cache_extra_test_sources(pkg, srcs)' "
+            "expected in v0.22. Use 'cache_extra_test_sources(pkg, srcs)' "
             "instead."
         )
         warnings.warn(msg)

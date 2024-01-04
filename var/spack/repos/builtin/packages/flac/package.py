@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Flac(AutotoolsPackage):
 
     homepage = "https://xiph.org/flac/index.html"
     url = "http://downloads.xiph.org/releases/flac/flac-1.3.2.tar.xz"
+
+    license("BSD-3-Clause AND GPL-2.0-or-later")
 
     version("1.4.2", sha256="e322d58a1f48d23d9dd38f432672865f6f79e73a6f9cc5a5f57fcaa83eb5a8e4")
     version("1.3.3", sha256="213e82bd716c9de6db2f98bcadbc4c24c7e2efe8c75939a1a84e28539c4e1748")

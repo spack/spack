@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class Cgns(CMakePackage):
     maintainers("gsjaardema")
 
     parallel = False
+
+    license("Zlib")
 
     version("develop", branch="develop")
     version("master", branch="master")
@@ -87,6 +89,7 @@ class Cgns(CMakePackage):
                 self.define_from_variant("CGNS_ENABLE_LEGACY", "legacy"),
                 self.define_from_variant("CGNS_ENABLE_MEM_DEBUG", "mem_debug"),
                 self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
+                self.define_from_variant("CGNS_ENABLE_64BIT", "int64"),
             ]
         )
 
@@ -95,11 +98,10 @@ class Cgns(CMakePackage):
                 [
                     "-DCMAKE_C_COMPILER=%s" % spec["mpi"].mpicc,
                     "-DCMAKE_CXX_COMPILER=%s" % spec["mpi"].mpicxx,
-                    "-DCMAKE_Fortran_COMPILER=%s" % spec["mpi"].mpifc,
                 ]
             )
-
-        options.append(self.define_from_variant("CGNS_ENABLE_64BIT", "int64"))
+            if "+fortran" in spec:
+                options.append(self.define("CMAKE_Fortran_COMPILER", spec["mpi"].mpifc))
 
         if "+hdf5" in spec:
             options.extend(

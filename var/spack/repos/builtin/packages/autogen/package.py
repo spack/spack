@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Autogen(AutotoolsPackage, GNUMirrorPackage):
     gnu_mirror_path = "autogen/rel5.18.12/autogen-5.18.12.tar.gz"
     list_url = "https://ftp.gnu.org/gnu/autogen"
     list_depth = 1
+
+    license("GPL-3.0-only")
 
     version("5.18.12", sha256="805c20182f3cb0ebf1571d3b01972851c56fb34348dfdc38799fd0ec3b2badbe")
 
@@ -36,7 +38,7 @@ class Autogen(AutotoolsPackage, GNUMirrorPackage):
         ]
 
         if "+xml" in spec:
-            args.append("--with-libxml2={0}".format(spec["libxml2"].prefix))
+            args.append(f"--with-libxml2={spec['libxml2'].prefix}")
         else:
             args.append("--without-libxml2")
 

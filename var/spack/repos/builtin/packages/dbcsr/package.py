@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     list_url = "https://github.com/cp2k/dbcsr/releases"
 
     maintainers("dev-zero", "mtaillefumier")
+
+    license("GPL-2.0-or-later")
 
     version("develop", branch="develop")
     version("2.6.0", sha256="c67b02ff9abc7c1f529af446a9f01f3ef9e5b0574f220259128da8d5ca7e9dc6")
@@ -97,6 +99,14 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("^openblas threads=none", when="+openmp")
 
     conflicts("smm=blas", when="+opencl")
+
+    with when("+mpi"):
+        # When using mpich 4.1 or higher, mpi_f08 has to be used, otherwise:
+        # Error: Type mismatch in argument 'baseptr' at (1); passed TYPE(c_ptr)
+        # to INTEGER(8)
+        conflicts("^mpich@4.1:", when="@:2.5")
+        conflicts("~mpi_f08", when="^mpich@4.1:")
+        depends_on("mpich+fortran", when="^mpich")
 
     generator("ninja")
     depends_on("ninja@1.10:", type="build")

@@ -1,11 +1,10 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import glob
 import os
 
-import spack.compilers
 import spack.paths
 import spack.user_environment
 from spack.package import *
@@ -33,6 +32,13 @@ class ClingoBootstrap(Clingo):
         description="Enable a series of Spack-specific optimizations (PGO, LTO, mimalloc)",
     )
 
+    variant(
+        "force_setuptools",
+        default=False,
+        description="Force a dependency on setuptools to help the old concretizer",
+    )
+    depends_on("py-setuptools", type="build", when="+force_setuptools")
+
     # Enable LTO
     conflicts("~ipo", when="+optimized")
 
@@ -53,28 +59,26 @@ class ClingoBootstrap(Clingo):
     depends_on("cmake@3.16.0:", type="build")
 
     # On Linux we bootstrap with GCC or clang
-    for compiler_spec in [
-        c for c in spack.compilers.supported_compilers() if c not in ("gcc", "clang")
-    ]:
-        conflicts(
-            "%{0}".format(compiler_spec),
-            when="platform=linux",
-            msg="GCC or clang are required to bootstrap clingo on Linux",
-        )
-        conflicts(
-            "%{0}".format(compiler_spec),
-            when="platform=cray",
-            msg="GCC or clang are required to bootstrap clingo on Cray",
-        )
+    requires(
+        "%gcc",
+        "%clang",
+        when="platform=linux",
+        msg="GCC or clang are required to bootstrap clingo on Linux",
+    )
+    requires(
+        "%gcc",
+        "%clang",
+        when="platform=cray",
+        msg="GCC or clang are required to bootstrap clingo on Cray",
+    )
     conflicts("%gcc@:5", msg="C++14 support is required to bootstrap clingo")
 
     # On Darwin we bootstrap with Apple Clang
-    for compiler_spec in [c for c in spack.compilers.supported_compilers() if c != "apple-clang"]:
-        conflicts(
-            "%{0}".format(compiler_spec),
-            when="platform=darwin",
-            msg="Apple-clang is required to bootstrap clingo on MacOS",
-        )
+    requires(
+        "%apple-clang",
+        when="platform=darwin",
+        msg="Apple-clang is required to bootstrap clingo on MacOS",
+    )
 
     # Clingo needs the Python module to be usable by Spack
     conflicts("~python", msg="Python support is required to bootstrap Spack")
@@ -118,8 +122,9 @@ class ClingoBootstrap(Clingo):
 
         # Run spack solve --fresh hdf5 with instrumented clingo.
         python_runtime_env = EnvironmentModifications()
-        for s in self.spec.traverse(deptype=("run", "link"), order="post"):
-            python_runtime_env.extend(spack.user_environment.environment_modifications_for_spec(s))
+        python_runtime_env.extend(
+            spack.user_environment.environment_modifications_for_specs(self.spec)
+        )
         python_runtime_env.unset("SPACK_ENV")
         python_runtime_env.unset("SPACK_PYTHON")
         self.spec["python"].command(

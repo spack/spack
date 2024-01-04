@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,12 +31,12 @@ import pathlib
 import re
 
 import llnl.url
+from llnl.path import convert_to_posix_path
 from llnl.util.tty.color import cescape, colorize
 
 import spack.error
 import spack.util.web
 import spack.version
-from spack.util.path import convert_to_posix_path
 
 #
 # Note: We call the input to most of these functions a "path" but the functions
@@ -647,7 +647,7 @@ def find_versions_of_archive(
     list_urls |= additional_list_urls
 
     # Grab some web pages to scrape.
-    pages, links = spack.util.web.spider(list_urls, depth=list_depth, concurrency=concurrency)
+    _, links = spack.util.web.spider(list_urls, depth=list_depth, concurrency=concurrency)
 
     # Scrape them for archive URLs
     regexes = []

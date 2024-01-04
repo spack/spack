@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyGevent(PythonPackage):
     pypi = "gevent/gevent-23.7.0.tar.gz"
     git = "https://github.com/gevent/gevent.git"
 
+    license("MIT")
+
     version("23.7.0", sha256="d0d3630674c1b344b256a298ab1ff43220f840b12af768131b5d74e485924237")
     version("21.12.0", sha256="f48b64578c367b91fa793bf8eaaaf4995cb93c8bc45860e473bf868070ad094e")
     version("21.8.0", sha256="43e93e1a4738c922a2416baf33f0afb0a20b22d3dba886720bc037cd02a98575")
@@ -24,8 +26,7 @@ class PyGevent(PythonPackage):
     depends_on("py-setuptools@40.8:", when="@20.5.1:", type=("build", "run"))
     depends_on("py-setuptools@40.8:", when="@1.5:", type="build")
     depends_on("py-setuptools@24.2:", when="@:1.4", type="build")
-    # TODO: relax this until we support separate concretization of build deps by default
-    # depends_on("py-cython@3:", when="@20.5.1:", type="build")
+    depends_on("py-cython@3:", when="@20.5.1:", type="build")
     depends_on("py-cython@0.29.14:", when="@1.5:", type="build")
     depends_on("py-cffi@1.12.3:", type=("build", "run"))
     depends_on("py-greenlet@3:", when="@23.7: ^python@3.12:", type=("build", "run"))
@@ -40,7 +41,7 @@ class PyGevent(PythonPackage):
     conflicts("^py-cython@3:", when="@:20.5.0")
 
     # Deprecated compiler options. upstream PR: https://github.com/gevent/gevent/pull/1896
-    patch("icc.patch", when="%intel")
+    patch("icc.patch", when="@:21.12.0 %intel")
 
     @run_before("install")
     def recythonize(self):
@@ -55,4 +56,6 @@ class PyGevent(PythonPackage):
         if name == "cflags":
             if self.spec.satisfies("%oneapi@2023:"):
                 flags.append("-Wno-error=incompatible-function-pointer-types")
+            if self.spec.compiler.name in ["intel", "oneapi"]:
+                flags.append("-we147")
         return (flags, None, None)

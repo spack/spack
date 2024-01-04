@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,8 @@ class Xyce(CMakePackage):
     git = "https://github.com/Xyce/Xyce.git"
     url = "https://github.com/Xyce/Xyce/archive/Release-7.2.0.tar.gz"
     maintainers("kuberry", "tbird2001")
+
+    license("GPL-3.0-or-later")
 
     version("master", branch="master")
     version("7.7.0", sha256="1b95450e1905c3af3c16b42c41d5ef1f8ab0e640f48086d0cb4d52961a90a175")
@@ -143,11 +145,18 @@ class Xyce(CMakePackage):
         when="@7.4:7.6 +pymi",
     )
 
-    # fix oneapi issue
+    # fix missing type
     patch(
-        "454-oneapi-xyce.patch",
-        sha256="76a3ff987e43d1657f24d55cfd864b487876a72a9a7c8a37c3151a9b586a21c1",
-        when="%oneapi",
+        "https://github.com/Xyce/Xyce/commit/47d9dd04ec55cd8722cb3704a88beb228dfcf363.patch?full_index=1",
+        sha256="62c3d0c17b3225be5f61b6ec3d9cf762cc08bb20a80e768d87a37e87c522bbf1",
+        when="@:7.7",
+    )
+
+    # fix cmake trilinos test issue
+    patch(
+        "454-cmake-xyce.patch",
+        sha256="4d47cd1f10607205e64910ac124c6dd329f1ecbf861416e9da24a1736f2149ff",
+        when="@7.6:",
     )
 
     def cmake_args(self):

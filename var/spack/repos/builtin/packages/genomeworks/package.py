@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Genomeworks(CMakePackage, CudaPackage):
     homepage = "https://clara-parabricks.github.io/GenomeWorks/"
     url = "https://github.com/clara-parabricks/GenomeWorks/archive/v0.5.3.tar.gz"
     git = "https://github.com/clara-parabricks/GenomeWorks.git"
+
+    license("Apache-2.0")
 
     version(
         "0.5.3", tag="v0.5.3", commit="b4b8bf76ea2ce44452d3a1107e66d47968414adb", submodules=True

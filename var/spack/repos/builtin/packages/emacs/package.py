@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
     gnu_mirror_path = "emacs/emacs-24.5.tar.gz"
 
     maintainers("alecbcs")
+
+    license("GPL-3.0-or-later")
 
     version("master", branch="master")
     version("29.1", sha256="5b80e0475b0e619d2ad395ef5bc481b7cb9f13894ed23c301210572040e4b5b1")
