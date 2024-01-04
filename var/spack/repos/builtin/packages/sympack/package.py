@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from os import environ as env
-
 from spack.package import *
 
 
@@ -80,11 +78,10 @@ class Sympack(CMakePackage, CudaPackage):
         ]
         return args
 
-    @run_before("cmake")
-    def set_cmake_env(self):
+    def setup_build_environment(self, env):
         spec = self.spec
         if "network=auto" not in spec:
-            env["UPCXX_NETWORK"] = spec.variants["network"].value
+            env.set("UPCXX_NETWORK", spec.variants["network"].value)
 
     @run_after("install")
     def finish_install(self):
