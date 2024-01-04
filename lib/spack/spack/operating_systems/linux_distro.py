@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
 import platform as py_platform
 import re
 from subprocess import check_output
@@ -37,13 +38,17 @@ class LinuxDistro(OperatingSystem):
     """
 
     def __init__(self):
-        try:
-            # This will throw an error if imported on a non-Linux platform.
-            import distro
+        if os.environ.get( "SPACKOS_VERSION" ):
+            distname = "spack"
+            version = "0"
+        else:
+            try:
+                # This will throw an error if imported on a non-Linux platform.
+                import distro
 
-            distname, version = distro.id(), distro.version()
-        except ImportError:
-            distname, version = "unknown", ""
+                distname, version = distro.id(), distro.version()
+            except ImportError:
+                distname, version = "unknown", ""
 
         # Grabs major version from tuple on redhat; on other platforms
         # grab the first legal identifier in the version field.  On
