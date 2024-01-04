@@ -1843,6 +1843,9 @@ def find_max_depth(root, globs, max_depth=None):
     If ``globs`` is a list, files matching earlier entries are placed
     in the return value before files matching later entries.
     """
+    if not os.path.exists(root):
+        return []
+
     root = root
     if isinstance(globs, str):
         globs = [globs]
