@@ -30,9 +30,6 @@ class Fides(CMakePackage):
     depends_on("adios2@2.8:", when="@1.2")
     depends_on("adios2@2.7:2.8", when="@1.1")
 
-    # Type check failures when using 32 bit IDs and ADIOS2 with ZFP in older
-    # versions of Fides
-    depends_on("adios2~zfp", when="@:1.1 ^vtk-m ~64bitids")
     depends_on("vtk-m")
 
     # Fix missing implicit includes
