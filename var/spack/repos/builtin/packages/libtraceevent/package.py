@@ -15,6 +15,8 @@ class Libtraceevent(MakefilePackage):
 
     maintainers("Jordan474")
 
+    license("LGPL-2.1-or-later AND GPL-2.0-or-later")
+
     version("1.7.3", sha256="097b72e0d907f3107825fb2edf0188324bf70dc9da360f6efa68dc484ffde541")
 
     variant("doc", default=False, description="Build documentation")
