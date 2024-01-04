@@ -829,16 +829,22 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                                              glibc.prefix.include,
                                              "-B" + glibc.prefix.lib,
                                         ]))
+                ldflags = " ".join([
+                        "-Wl,-dynamic-linker," + glibc.prefix.lib.join("ld-linux-x86-64.so.2"),
+                        # '-L' + self.spec['glibc'].prefix.lib,
+                        # '-Wl,-rpath,' + self.spec['glibc'].prefix.lib,
+                        '-L' + self.spec['libstdcxx'].prefix.lib,
+                        '-L' + self.spec['libstdcxx'].prefix.lib64,
+                        '-Wl,-rpath,' + self.spec['libstdcxx'].prefix.lib,
+                        '-Wl,-rpath,' + self.spec['libstdcxx'].prefix.lib64,
+                                ])
                 options.extend([
                     '--build=' + targetguess,
                     '--target=' + sysroot_target,
                     '--host=' + sysroot_target,
-                    # "--with-native-system-header-dir=" + glibc.prefix.include,
-                    "--with-native-system-header-dir=/include",
-                    "--with-sysroot=" + glibc.prefix,
-                    # prevent libstdc++ from trying to build against systemtap
-                    "glibcxx_cv_sys_sdt_h=no",
-                    "gcc_cv_sys_sdt_h=no",
+                    "--with-native-system-header-dir=" + glibc.prefix.include,
+                    # "--with-native-system-header-dir=/include",
+                    "--with-build-sysroot=/",
                     # "--with-build-sysroot=" + glibc.prefix,
                     # "--with-build-sysroot=" + "/",  # glibc.prefix,
                     # "--with-sysroot=" + "/",  # glibc.prefix,
@@ -852,7 +858,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                     # 'LDFLAGS_FOR_TARGET=-L' + join_path(self.stage.source_path,sysroot_target,'libgcc'),
                     # 'LDFLAGS_FOR_BUILD=-L' + join_path(self.stage.source_path,sysroot_target,'libgcc'),
 
-                    "CXXFLAGS=" + " ".join([
+                    "EXTRA_FLAGS_FOR_TARGET=" + " ".join([
                         # '-I',
                         # self.spec['libstdcxx'].prefix.include.join("c++"),
                         common_flags,
@@ -860,30 +866,12 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                     "CPPFLAGS=" + common_flags,
                     "CFLAGS=" + common_flags,
                     # '--with-boot-ldflags='
-                    "LDFLAGS=" + common_flags + " " + " ".join([
-                        "-Wl,-dynamic-linker," + glibc.prefix.lib.join("ld-linux-x86-64.so.2"),
-                        # '-L' + self.spec['glibc'].prefix.lib,
-                        # '-Wl,-rpath,' + self.spec['glibc'].prefix.lib,
-                        # '-L' + self.spec['libstdcxx'].prefix.lib,
-                        # '-L' + self.spec['libstdcxx'].prefix.lib64,
-                        # '-Wl,-rpath,' + self.spec['libstdcxx'].prefix.lib,
-                        # '-Wl,-rpath,' + self.spec['libstdcxx'].prefix.lib64,
-                                ]),
-                    "CXXFLAGS_FOR_TARGET=" + common_flags + " " + " ".join([
-                        # '-I',
-                        # self.spec['libstdcxx'].prefix.include.join("c++"),
-                        common_flags,
-                    ]),
-                    # "CFLAGS_FOR_TARGET=" + common_flags,
-                    "LDFLAGS_FOR_TARGET=" + common_flags + " " + " ".join([
-                        "-Wl,-dynamic-linker," + glibc.prefix.lib.join("ld-linux-x86-64.so.2"),
-                    #     '-L' + self.spec['glibc'].prefix.lib,
-                    #     '-Wl,-rpath,' + self.spec['glibc'].prefix.lib,
-                        # '-L' + self.spec['libstdcxx'].prefix.lib,
-                        # '-L' + self.spec['libstdcxx'].prefix.lib64,
-                        # '-Wl,-rpath,' + self.spec['libstdcxx'].prefix.lib,
-                        # '-Wl,-rpath,' + self.spec['libstdcxx'].prefix.lib64,
-                                ]),
+                    "EXTRA_LDFLAGS_FOR_TARGET=" + common_flags + " " + ldflags,
+                    # for libstdc++ configure
+                    "CFLAGS_FOR_TARGET=" + common_flags + " " + ldflags,
+                    "CXXFLAGS_FOR_TARGET=" + common_flags + " " + ldflags,
+                    # for startfiles in target libs
+                    "FLAGS_FOR_TARGET=" + common_flags + " " + ldflags,
                 ])
             else:
                 options.extend([
@@ -1123,7 +1111,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             )
             return
 
-        
+
         sysroot_target = '{}-spack-linux-gnu'.format(
                 self.spec.architecture.target.microarchitecture.family.name
                 )
@@ -1156,34 +1144,37 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             tty.warn("No dynamic libraries found in lib/lib64")
             return
 
-        # add_sysroot = "+stage1" in self.spec or self.spec.variants['sysroot'].value != "off"
+        add_sysroot = "+stage1" in self.spec
+        # or self.spec.variants['sysroot'].value != "off"
         # Overwrite the specs file
         with open(specs_file, "w") as out:
-            # loader = re.compile(':-dynamic-linker ')
+            loader = re.compile(':-dynamic-linker ')
             for line in lines:
-                # if add_sysroot:
-                #     line = loader.sub(':-dynamic-linker %(spack_sysroot)', line)
+                if add_sysroot:
+                    line = loader.sub(':-dynamic-linker %(spack_sysroot)', line)
                 out.write(line)
                 if line.startswith("*link_libgcc:"):
                     # Insert at start of line following link_libgcc, which gets
                     # inserted into every call to the linker
                     out.write("%(link_libgcc_rpath) ")
-                # if add_sysroot:
-                #     if line.startswith("*link:"):
-                #         out.write("--sysroot=%(spack_sysroot) ")
+                if add_sysroot:
+                    if line.startswith("*cpp_options:"):
+                        out.write("-B%(spack_sysroot) ")
+                    if line.startswith("*link:"):
+                        out.write("-B%(spack_sysroot) ")
 
             # Add easily-overridable rpath string at the end
             out.write("*link_libgcc_rpath:\n")
             out.write(" ".join("-rpath " + lib for lib in rpath_libdirs))
             out.write("\n")
             out.write("\n")
-            # if add_sysroot:
-            #     out.write("*spack_sysroot:\n")
-            #     if '+stage1' in self.spec:
-            #         out.write(self.spec['glibc'].prefix)
-            #     else: # must have sysroot set explicitly
-            #         out.write(self.spec.variants['sysroot'].value)
-            #     out.write("\n")
+            if add_sysroot:
+                out.write("*spack_sysroot:\n")
+                if '+stage1' in self.spec:
+                    out.write(self.spec['glibc'].prefix.lib)
+                else: # must have sysroot set explicitly
+                    out.write(self.spec.variants['sysroot'].value)
+                out.write("\n")
         set_install_permissions(specs_file)
         tty.info("Wrote new spec file to {0}".format(specs_file))
 
