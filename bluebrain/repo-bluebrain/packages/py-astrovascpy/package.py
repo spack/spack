@@ -28,7 +28,7 @@ class PyAstrovascpy(PythonPackage):
     depends_on("py-cached-property", type=("build", "run"))
     depends_on("py-coverage", type=("build", "run"))
     depends_on("py-cython", type=("build", "run"))
-    depends_on("py-h5py", type=("build", "run"))
+    depends_on("py-h5py+mpi", type=("build", "run"))
     depends_on("py-libsonata", type=("build", "run"))
     depends_on("py-matplotlib", type=("build", "run"))
     depends_on("py-morphio", type=("build", "run"))

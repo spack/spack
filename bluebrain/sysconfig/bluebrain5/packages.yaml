@@ -7,7 +7,7 @@ packages:
     # Merged GCC / LLVM requirements
     variants: +gas+gold+ld+plugins~libiberty
   boost:
-    variants: +filesystem+pic+test
+    variants: +filesystem+pic+serialization+test
   coreneuron:
     # Keep this aligned with NEURON, otherwise the Spack solver may decide that
     # rolling back to NEURON 8.2.2 with external CoreNEURON is a net win
@@ -35,7 +35,7 @@ packages:
     # 1.12 fails on BB5 with gcc@12.3
     version: [1.11]
   gmsh:
-    variants: ~mmg~fltk
+    variants: ~cgns~fltk~med~mmg+mpi+openmp+shared
   hdf5:
     variants: +cxx+hl
   icu4c:
@@ -111,7 +111,7 @@ packages:
     - spec: opengl@4.5
       prefix: /usr
   petsc:
-    variants: ~fortran
+    variants: ~debug~fortran~hypre+int64+mpi
     # proven versions, 3.20 insists on using failing due to CUDA, *even when explicitly
     # told not to use it*
     require: "@3.18"

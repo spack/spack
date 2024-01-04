@@ -14,7 +14,6 @@ class PyBcsb(PythonPackage):
 
     version("develop", branch="develop")
     version("2.1.2", tag="v2.1.2")
-    version("2.1.1", tag="v2.1.1")
 
     depends_on("python@3.10:", type=("build", "run"))
     depends_on("py-setuptools", type=("build", "run"))
