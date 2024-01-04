@@ -17,21 +17,27 @@ class Berkeleygw(MakefilePackage):
     maintainers("migueldiascosta")
 
     version(
+        "3.1.0",
+        sha256="7e890a5faa5a6bb601aa665c73903b3af30df7bdd13ee09362b69793bbefa6d2",
+        url="https://app.box.com/shared/static/2bik75lrs85zt281ydbup2xa7i5594gy.gz",
+        expand=False,
+    )
+    version(
         "3.0.1",
         sha256="7d8c2cc1ee679afb48efbdd676689d4d537226b50e13a049dbcb052aaaf3654f",
-        url="https://berkeley.box.com/shared/static/m1dgnhiemo47lhxczrn6si71bwxoxor8.gz",
+        url="https://app.box.com/shared/static/m1dgnhiemo47lhxczrn6si71bwxoxor8.gz",
         expand=False,
     )
     version(
         "3.0",
         sha256="ab411acead5e979fd42b8d298dbb0a12ce152e7be9eee0bb87e9e5a06a638e2a",
-        url="https://berkeley.box.com/shared/static/lp6hj4kxr459l5a6t05qfuzl2ucyo03q.gz",
+        url="https://app.box.com/shared/static/lp6hj4kxr459l5a6t05qfuzl2ucyo03q.gz",
         expand=False,
     )
     version(
         "2.1",
         sha256="31f3b643dd937350c3866338321d675d4a1b1f54c730b43ad74ae67e75a9e6f2",
-        url="https://berkeley.box.com/shared/static/ze3azi5vlyw7hpwvl9i5f82kaiid6g0x.gz",
+        url="https://app.box.com/shared/static/ze3azi5vlyw7hpwvl9i5f82kaiid6g0x.gz",
         expand=False,
     )
 
