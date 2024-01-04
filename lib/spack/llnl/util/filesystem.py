@@ -1855,15 +1855,22 @@ def find_max_depth(root, globs, max_depth=None):
     dir_queue = collections.deque([(0, root)])
     while dir_queue:
         depth, next_dir = dir_queue.pop()
-        for dir_entry in os.scandir(next_dir):
-            if dir_entry.is_dir():
-                if (max_depth is None) or depth < max_depth:
-                    dir_queue.appendleft((depth + 1, os.path.join(next_dir, dir_entry.name)))
+        if (max_depth is None) or depth < max_depth:
+            for dir_entry in os.scandir(next_dir):
+                if dir_entry.is_dir():
+                    dir_path = os.path.join(next_dir, dir_entry.name)
+                    if not os.path.islink(dir_path):
+                        dir_queue.appendleft((depth + 1, os.path.join(next_dir, dir_entry.name)))
 
         for glob_pattern in globs:
             matches = glob.glob(os.path.join(next_dir, glob_pattern))
             matches = list(os.path.join(next_dir, x) for x in matches)
             found_files[glob_pattern].extend(matches)
+
+        # TODO: for fully-recursive searches, we can print a warning after
+        # after having searched everything up to some fixed depth (which
+        # requires BFS) or after searching some number of directories
+        # (which doesn't require BFS, but is not repeatable)
 
     return list(itertools.chain(*[found_files[x] for x in globs]))
 
