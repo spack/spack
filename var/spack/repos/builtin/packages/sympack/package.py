@@ -57,9 +57,11 @@ class Sympack(CMakePackage, CudaPackage):
         "network",
         default="auto",
         multi=False,
-        values=("auto", "smp", "mpi", "ibv", "udp", "ofi", "ucx"),
-        description="The hardware-dependent UPC++ network backend to use. "
-        + "'auto' selects the default network provided by the UPC++ install.",
+        values=("auto", "ibv", "udp", "ofi", "ucx", "aries", "mpi"),
+        description="The hardware-dependent UPC++ network backend to use.\n"
+        + "'auto' selects the default network provided by the UPC++ install.\n"
+        + "Note: smp-conduit is currently incompatible with symPACK, "
+        + "udp is recommended for single-node configurations.",
     )
 
     build_targets = ["all", "run_sympack2D"]
