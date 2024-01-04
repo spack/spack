@@ -1860,13 +1860,13 @@ def find_max_depth(root, globs, max_depth=None):
             if dir_entry.is_dir():
                 if (max_depth is None) or depth < max_depth:
                     dir_queue.appendleft((depth + 1, os.path.join(next_dir, dir_entry.name)))
-            else:
-                fname = dir_entry.name
-                for pattern in regexes:
-                    if pattern.match(fname):
-                        found_files[pattern].append(os.path.join(next_dir, fname))
 
-    return list(itertools.chain(*[found_files[x] for x in regexes]))
+        for glob_pattern in globs:
+            matches = glob.glob(os.path.join(next_dir, glob_pattern))
+            matches = list(os.path.join(next_dir, x) for x in matches)
+            found_files[glob_pattern].extend(matches)
+
+    return list(itertools.chain(*[found_files[x] for x in globs]))
 
 
 # Utilities for libraries and headers
