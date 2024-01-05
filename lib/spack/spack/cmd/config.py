@@ -269,8 +269,7 @@ def _can_update_config_file(scope: spack.config.ConfigScope, cfg_file):
 
 
 def _config_change_requires_scope(path, spec, scope, match_spec=None):
-    """Return whether or not anything changed.
-    """
+    """Return whether or not anything changed."""
     require = spack.config.get(path, scope=scope)
     if not require:
         return False

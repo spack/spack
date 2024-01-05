@@ -928,7 +928,7 @@ spack:
 def test_config_change_new(mutable_mock_env_path, tmp_path, mock_packages, mutable_config):
     spack_yaml = tmp_path / ev.manifest_name
     spack_yaml.write_text(
-        f"""\
+        """\
 spack:
   specs: []
 """
