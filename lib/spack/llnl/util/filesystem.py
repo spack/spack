@@ -1846,7 +1846,6 @@ def find_max_depth(root, globs, max_depth=None):
     if not os.path.exists(root):
         return []
 
-    root = root
     if isinstance(globs, str):
         globs = [globs]
 
@@ -2373,7 +2372,7 @@ def find_libraries(libraries, root, shared=True, recursive=False, runtime=True, 
 
     if not recursive:
         # If not recursive, look for the libraries directly in root
-        return LibraryList(find(root, libraries, False))
+        return LibraryList(find(root, libraries, recursive=False))
 
     # To speedup the search for external packages configured e.g. in /usr,
     # perform first non-recursive search in root/lib then in root/lib64 and
