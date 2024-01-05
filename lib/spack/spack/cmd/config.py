@@ -331,7 +331,10 @@ def _config_change(path, spec_str, match_spec_str=None):
         if not changed:
             existing_requirements = spack.config.get(path)
             if isinstance(existing_requirements, str):
-                raise spack.config.ConfigError("'config change' needs to append a requirement, but existing require: config is not a list")
+                raise spack.config.ConfigError(
+                    "'config change' needs to append a requirement,"
+                    " but existing require: config is not a list"
+                )
             update_path = f"{path}:[{str(spec)}]"
             spack.config.add(update_path)
     else:
