@@ -1777,7 +1777,14 @@ def find_first(root: str, files: Union[Iterable[str], str], bfs_depth: int = 2) 
     return FindFirstFile(root, *files, bfs_depth=bfs_depth).find()
 
 
-def find(root, files, recursive=True, max_depth=None):
+class _DefaultValue:
+    pass
+
+
+_unset = _DefaultValue()
+
+
+def find(root, files, recursive=True, max_depth=_unset):
     """Search for ``files`` starting from the ``root`` directory.
 
     Like GNU/BSD find but written entirely in Python.
@@ -1816,12 +1823,17 @@ def find(root, files, recursive=True, max_depth=None):
         files (str or collections.abc.Sequence): Library name(s) to search for
         recursive (bool): if False search only root folder,
             if True descends top-down from the root. Defaults to True.
+        max_depth (int): if set, don't search below this depth. Cannot be set
+            if recursive is False
 
     Returns:
         list: The files that have been found
     """
     if isinstance(files, str):
         files = [files]
+
+    if max_depth is not _unset and not recursive:
+        raise ValueError(f"max_depth cannot be set if recursive is False")
 
     if not recursive:
         max_depth = 0
@@ -1834,7 +1846,7 @@ def find(root, files, recursive=True, max_depth=None):
 
 
 @system_path_filter(arg_slice=slice(1))
-def find_max_depth(root, globs, max_depth=None):
+def find_max_depth(root, globs, max_depth=_unset):
     """Given a set of non-recursive glob file patterns, finds all
     files matching those patterns up to a maximum specified depth.
 
@@ -1854,7 +1866,7 @@ def find_max_depth(root, globs, max_depth=None):
     dir_queue = collections.deque([(0, root)])
     while dir_queue:
         depth, next_dir = dir_queue.pop()
-        if (max_depth is None) or depth < max_depth:
+        if (max_depth is _unset) or depth < max_depth:
             for dir_entry in os.scandir(next_dir):
                 if dir_entry.is_dir():
                     dir_path = os.path.join(next_dir, dir_entry.name)
@@ -2310,7 +2322,7 @@ def find_system_libraries(libraries, shared=True):
     return libraries_found
 
 
-def find_libraries(libraries, root, shared=True, recursive=False, runtime=True, max_depth=None):
+def find_libraries(libraries, root, shared=True, recursive=False, runtime=True, max_depth=_unset):
     """Returns an iterable of full paths to libraries found in a root dir.
 
     Accepts any glob characters accepted by fnmatch:
@@ -2331,6 +2343,8 @@ def find_libraries(libraries, root, shared=True, recursive=False, runtime=True, 
             otherwise for static. Defaults to True.
         recursive (bool): if False search only root folder,
             if True descends top-down from the root. Defaults to False.
+        max_depth (int): if set, don't search below this depth. Cannot be set
+            if recursive is False
         runtime (bool): Windows only option, no-op elsewhere. If true,
             search for runtime shared libs (.DLL), otherwise, search
             for .Lib files. If shared is false, this has no meaning.
@@ -2339,6 +2353,9 @@ def find_libraries(libraries, root, shared=True, recursive=False, runtime=True, 
     Returns:
         LibraryList: The libraries that have been found
     """
+    if max_depth is not _unset and not recursive:
+        raise ValueError(f"max_depth cannot be set if recursive is False")
+
     if isinstance(libraries, str):
         libraries = [libraries]
     elif not isinstance(libraries, collections.abc.Sequence):
