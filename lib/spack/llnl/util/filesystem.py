@@ -1833,7 +1833,7 @@ def find(root, files, recursive=True, max_depth=_unset):
         files = [files]
 
     if max_depth is not _unset and not recursive:
-        raise ValueError(f"max_depth cannot be set if recursive is False")
+        raise ValueError(f"max_depth ({max_depth}) cannot be set if recursive is False")
 
     if not recursive:
         max_depth = 0
@@ -2354,7 +2354,7 @@ def find_libraries(libraries, root, shared=True, recursive=False, runtime=True, 
         LibraryList: The libraries that have been found
     """
     if max_depth is not _unset and not recursive:
-        raise ValueError(f"max_depth cannot be set if recursive is False")
+        raise ValueError(f"max_depth ({max_depth}) cannot be set if recursive is False")
 
     if isinstance(libraries, str):
         libraries = [libraries]
