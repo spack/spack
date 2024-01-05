@@ -314,6 +314,11 @@ def config_change(args):
 
     config_path_components = spack.config.process_config_path(args.path)
     if config_path_components[-1] == "require":
+        # Extract the package name from the config path, which allows
+        # args.spec to be anonymous if desired
+        pkg_name = config_path_components[1]
+        spec.name = pkg_name
+
         for scope in spack.config.writable_scope_names():
             _config_change_requires_scope(args.path, spec, scope, match_spec=match_spec)
     else:
