@@ -76,9 +76,10 @@ def setup_parser(subparser):
     )
     add_parser.add_argument("-f", "--file", help="file from which to set all config values")
 
-    change_requires_parser = sp.add_parser("change-requires", help="swap variants etc. in config")
-    change_requires_parser.add_argument("spec", help="override spec")
-    change_requires_parser.add_argument(
+    change_parser = sp.add_parser("change", help="swap variants etc. on specs in config")
+    change_parser.add_argument("path", help="colon-separated path to config section with specs")
+    change_parser.add_argument("spec", help="override spec")
+    change_parser.add_argument(
         "--match-spec", help="only change constraints that match this"
     )
 
@@ -269,11 +270,8 @@ def _can_update_config_file(scope: spack.config.ConfigScope, cfg_file):
     return fs.can_write_to_dir(scope.path) and fs.can_access(cfg_file)
 
 
-def _config_change_requires_scope(spec, scope, match_spec=None):
-    packages = spack.config.get("packages", scope=scope)
-
-    require = packages.get(spec.name, {}).get("require", [])
-
+def _config_change_requires_scope(path, spec, scope, match_spec=None):
+    require = spack.config.get(path, scope=scope)
     if not require:
         return
 
@@ -308,13 +306,18 @@ def _config_change_requires_scope(spec, scope, match_spec=None):
     spack.config.set(f"packages:{spec.name}:require", new_require, scope=scope)
 
 
-def config_change_requires(args):
+def config_change(args):
     spec = spack.spec.Spec(args.spec)
     match_spec = None
     if args.match_spec:
         match_spec = spack.spec.Spec(args.match_spec)
-    for scope in spack.config.writable_scope_names():
-        _config_change_requires_scope(spec, scope, match_spec=match_spec)
+
+    config_path_components = spack.config.process_config_path(args.path)
+    if config_path_components[-1] == "require":
+        for scope in spack.config.writable_scope_names():
+            _config_change_requires_scope(args.path, spec, scope, match_spec=match_spec)
+    else:
+        raise ValueError("'config change' can currently only change 'require' sections")
 
 
 def config_update(args):
@@ -544,6 +547,6 @@ def config(parser, args):
         "update": config_update,
         "revert": config_revert,
         "prefer-upstream": config_prefer_upstream,
-        "change-requires": config_change_requires,
+        "change": config_change,
     }
     action[args.config_command](args)

@@ -908,19 +908,19 @@ spack:
 
     e = ev.Environment(tmp_path)
     with e:
-        config("change-requires", "mpich~debug")
+        config("change", "packages:mpich:require", "mpich~debug")
         test_spec = spack.spec.Spec("mpich").concretized()
         assert test_spec.satisfies("@3.0.2~debug")
 
-        config("change-requires", "mpich@3.0.3")
+        config("change", "packages:mpich:require", "mpich@3.0.3")
         test_spec = spack.spec.Spec("mpich").concretized()
         assert test_spec.satisfies("@3.0.3")
 
-        config("change-requires", "libelf@0.8.12")
+        config("change", "packages:libelf:require", "libelf@0.8.12")
         test_spec = spack.spec.Spec("libelf").concretized()
         assert test_spec.satisfies("@0.8.12")
 
-        config("change-requires", "--match-spec", "@1.2.0", "bowtie@1.2.2")
+        config("change", "packages:bowtie:require", "--match-spec", "@1.2.0", "bowtie@1.2.2")
         spack.spec.Spec("bowtie@1.3.0").concretize()
         spack.spec.Spec("bowtie@1.2.2").concretized()
 
