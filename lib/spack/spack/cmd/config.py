@@ -269,9 +269,13 @@ def _can_update_config_file(scope: spack.config.ConfigScope, cfg_file):
 
 
 def _config_change_requires_scope(path, spec, scope, match_spec=None):
+    """Return whether or not anything changed.
+    """
     require = spack.config.get(path, scope=scope)
     if not require:
-        return
+        return False
+
+    changed = False
 
     def override_cfg_spec(spec_str):
         init_spec = spack.spec.Spec(spec_str)
@@ -282,6 +286,7 @@ def _config_change_requires_scope(path, spec, scope, match_spec=None):
             # don't match it
             return spec_str
         elif not init_spec.intersects(spec):
+            changed = True
             return str(spack.spec.Spec.override(init_spec, spec))
         else:
             # Don't override things if they intersect, otherwise we'd
@@ -301,7 +306,8 @@ def _config_change_requires_scope(path, spec, scope, match_spec=None):
                 item["spec"] = override_cfg_spec(item["spec"])
             new_require.append(item)
 
-    spack.config.set(f"packages:{spec.name}:require", new_require, scope=scope)
+    spack.config.set(path, new_require, scope=scope)
+    return changed
 
 
 def config_change(args):
@@ -317,8 +323,13 @@ def config_change(args):
         pkg_name = config_path_components[1]
         spec.name = pkg_name
 
+        changed = False
         for scope in spack.config.writable_scope_names():
-            _config_change_requires_scope(args.path, spec, scope, match_spec=match_spec)
+            changed |= _config_change_requires_scope(args.path, spec, scope, match_spec=match_spec)
+
+        if not changed:
+            update_path = f"{args.path}:[{str(spec)}]"
+            spack.config.add(update_path)
     else:
         raise ValueError("'config change' can currently only change 'require' sections")
 

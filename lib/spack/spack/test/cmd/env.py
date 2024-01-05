@@ -870,7 +870,7 @@ spack:
     assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
 
 
-def test_config_change(mutable_mock_env_path, tmp_path, mock_packages, mutable_config):
+def test_config_change_existing(mutable_mock_env_path, tmp_path, mock_packages, mutable_config):
     """Test ``config change`` with config in the ``spack.yaml`` as well as an
     included file scope.
     """
@@ -923,6 +923,21 @@ spack:
         config("change", "packages:bowtie:require", "--match-spec", "@1.2.0", "@1.2.2")
         spack.spec.Spec("bowtie@1.3.0").concretize()
         spack.spec.Spec("bowtie@1.2.2").concretized()
+
+
+def test_config_change_new(mutable_mock_env_path, tmp_path, mock_packages, mutable_config):
+    spack_yaml = tmp_path / ev.manifest_name
+    spack_yaml.write_text(
+        f"""\
+spack:
+  specs: []
+"""
+    )
+
+    config("change", "packages:mpich:require", "~debug")
+    with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+        spack.spec.Spec("mpich+debug").concretized()
+    spack.spec.Spec("mpich~debug").concretized()
 
 
 def test_env_with_included_config_file_url(tmpdir, mutable_empty_config, packages_file):
