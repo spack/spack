@@ -59,6 +59,8 @@ class Cosma(CMakePackage):
     depends_on("scalapack", when="+scalapack")
     depends_on("cuda", when="+cuda")
     depends_on("rocblas", when="+rocm")
+    depends_on("nccl", when="+nccl")
+    depends_on("rccl", when="+rccl")
 
     with when("@2.6.3:"):
         depends_on("tiled-mm@2.2:+cuda", when="+cuda")
