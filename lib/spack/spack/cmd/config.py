@@ -335,8 +335,15 @@ def _config_change(path, spec_str, match_spec_str=None):
                     "'config change' needs to append a requirement,"
                     " but existing require: config is not a list"
                 )
+
+            ideal_scope_to_modify = None
+            for scope in spack.config.writable_scope_names():
+                if spack.config.get(path, scope=scope):
+                    ideal_scope_to_modify = scope
+                    break
+
             update_path = f"{path}:[{str(spec)}]"
-            spack.config.add(update_path)
+            spack.config.add(update_path, scope=ideal_scope_to_modify)
     else:
         raise ValueError("'config change' can currently only change 'require' sections")
 
