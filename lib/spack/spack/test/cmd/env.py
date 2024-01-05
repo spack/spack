@@ -954,7 +954,7 @@ spack:
     )
     with e:
         assert spack.spec.Spec("mpich").concretized().satisfies("@3.0.3")
-        with pytest.raises(spack.config.ConfigError):
+        with pytest.raises(spack.config.ConfigError, match="not a list"):
             config("change", "packages:mpich:require", "~debug")
 
 
