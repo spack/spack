@@ -183,6 +183,9 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
                 self.define_from_variant("VTKm_NO_DEPRECATED_VIRTUAL", "virtuals"),
                 self.define_from_variant("VTKm_USE_64BIT_IDS", "64bitids"),
                 self.define_from_variant("VTKm_USE_DOUBLE_PRECISION", "doubleprecision"),
+                self.define(
+                    "VTKm_USE_DEFAULT_TYPES_FOR_ASCENT", "~64bitids +doubleprecision" in spec
+                ),
             ]
 
             if "+tbb" in spec:
