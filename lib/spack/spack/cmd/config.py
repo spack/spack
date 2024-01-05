@@ -79,9 +79,7 @@ def setup_parser(subparser):
     change_parser = sp.add_parser("change", help="swap variants etc. on specs in config")
     change_parser.add_argument("path", help="colon-separated path to config section with specs")
     change_parser.add_argument("spec", help="override spec")
-    change_parser.add_argument(
-        "--match-spec", help="only change constraints that match this"
-    )
+    change_parser.add_argument("--match-spec", help="only change constraints that match this")
 
     prefer_upstream_parser = sp.add_parser(
         "prefer-upstream", help="set package preferences from upstream"
