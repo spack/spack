@@ -14,8 +14,9 @@ class Z3(CMakePackage):
     homepage = "https://github.com/Z3Prover/z3/wiki"
     url = "https://github.com/Z3Prover/z3/archive/z3-4.5.0.tar.gz"
 
-    license("MIT")
     maintainers("vmiheer")
+    
+    license("MIT")
 
     version("4.12.4", sha256="25e9b18d04ee22f1d872dfe0daaf4c39034744525214e34fedd206e25140e96e")
     version("4.11.2", sha256="e3a82431b95412408a9c994466fad7252135c8ed3f719c986cd75c8c5f234c7e")
