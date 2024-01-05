@@ -278,6 +278,8 @@ def _config_change_requires_scope(path, spec, scope, match_spec=None):
     changed = False
 
     def override_cfg_spec(spec_str):
+        nonlocal changed
+
         init_spec = spack.spec.Spec(spec_str)
         # Overridden spec cannot be anonymous
         init_spec.name = spec.name
@@ -310,13 +312,13 @@ def _config_change_requires_scope(path, spec, scope, match_spec=None):
     return changed
 
 
-def config_change(args):
-    spec = spack.spec.Spec(args.spec)
+def _config_change(path, spec_str, match_spec_str=None):
+    spec = spack.spec.Spec(spec_str)
     match_spec = None
-    if args.match_spec:
-        match_spec = spack.spec.Spec(args.match_spec)
+    if match_spec_str:
+        match_spec = spack.spec.Spec(match_spec_str)
 
-    config_path_components = spack.config.process_config_path(args.path)
+    config_path_components = spack.config.process_config_path(path)
     if config_path_components[-1] == "require":
         # Extract the package name from the config path, which allows
         # args.spec to be anonymous if desired
@@ -325,13 +327,17 @@ def config_change(args):
 
         changed = False
         for scope in spack.config.writable_scope_names():
-            changed |= _config_change_requires_scope(args.path, spec, scope, match_spec=match_spec)
+            changed |= _config_change_requires_scope(path, spec, scope, match_spec=match_spec)
 
         if not changed:
-            update_path = f"{args.path}:[{str(spec)}]"
+            update_path = f"{path}:[{str(spec)}]"
             spack.config.add(update_path)
     else:
         raise ValueError("'config change' can currently only change 'require' sections")
+
+
+def config_change(args):
+    _config_change(args.path, args.spec, args.match_spec)
 
 
 def config_update(args):
