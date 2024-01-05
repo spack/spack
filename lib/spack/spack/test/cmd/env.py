@@ -934,10 +934,28 @@ spack:
 """
     )
 
-    config("change", "packages:mpich:require", "~debug")
-    with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
-        spack.spec.Spec("mpich+debug").concretized()
-    spack.spec.Spec("mpich~debug").concretized()
+    e = ev.Environment(tmp_path)
+    with e:
+        config("change", "packages:mpich:require", "~debug")
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            spack.spec.Spec("mpich+debug").concretized()
+        spack.spec.Spec("mpich~debug").concretized()
+
+    # Now check that we raise an error if we need to add a require: constraint
+    # when preexisting config manually specified it as a singular spec
+    spack_yaml.write_text(
+        """\
+spack:
+  specs: []
+  packages:
+    mpich:
+      require: "@3.0.3"
+"""
+    )
+    with e:
+        assert spack.spec.Spec("mpich").concretized().satisfies("@3.0.3")
+        with pytest.raises(spack.config.ConfigError):
+            config("change", "packages:mpich:require", "~debug")
 
 
 def test_env_with_included_config_file_url(tmpdir, mutable_empty_config, packages_file):
