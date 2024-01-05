@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class BashCompletion(AutotoolsPackage):
     homepage = "https://github.com/scop/bash-completion"
     url = "https://github.com/scop/bash-completion/archive/2.3.tar.gz"
     git = "https://github.com/scop/bash-completion.git"
+
+    license("GPL-2.0-or-later")
 
     version("develop", branch="master")
     version("2.7", sha256="dba2b88c363178622b61258f35d82df64dc8d279359f599e3b93eac0375a416c")

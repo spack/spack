@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,9 @@ class Subversion(AutotoolsPackage):
     maintainers("cosmicexplorer")
 
     tags = ["build-tools"]
+
+    # internal lz4, x509, and utf8proc code have different licenses.
+    license("Apache-2.0 AND BSD-3-Clause AND BSD-2-Clause AND MIT", checked_by="tgamblin")
 
     version("1.14.2", sha256="fd826afad03db7a580722839927dc664f3e93398fe88b66905732c8530971353")
     version("1.14.1", sha256="dee2796abaa1f5351e6cc2a60b1917beb8238af548b20d3e1ec22760ab2f0cad")

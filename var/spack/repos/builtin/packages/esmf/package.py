@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -135,6 +135,14 @@ class Esmf(MakefilePackage):
     # Skip info print of ESMF_CPP due to permission denied errors
     # https://github.com/spack/spack/issues/35957
     patch("esmf_cpp_info.patch")
+
+    # This is strictly required on Cray systems that use
+    # the Cray compiler wrappers, where we need to swap
+    # out the spack compiler wrappers in esmf.mk with the
+    # Cray wrappers. It doesn't hurt/have any effect on
+    # other systems where the logic in setup_build_environment
+    # below sets the compilers to the MPI wrappers.
+    filter_compiler_wrappers("esmf.mk", relative_root="lib")
 
     # Make script from mvapich2.patch executable
     @when("@:7.0")

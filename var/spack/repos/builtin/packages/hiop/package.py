@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://github.com/LLNL/hiop"
     git = "https://github.com/LLNL/hiop.git"
     maintainers("ryandanehy", "cameronrutherford", "pelesh")
+
+    license("BSD-3-Clause")
 
     # Most recent tagged snapshot is the preferred version when profiling.
     version(

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Dbus(AutotoolsPackage):
 
     homepage = "https://dbus.freedesktop.org/"
     url = "https://dbus.freedesktop.org/releases/dbus/dbus-1.8.8.tar.gz"
+
+    license("AFL-2.1 OR GPL-2.0-or-later")
 
     version("1.13.6", sha256="b533693232d36d608a09f70c15440c1816319bac3055433300d88019166c1ae4")
     version("1.12.8", sha256="e2dc99e7338303393b6663a98320aba6a63421bcdaaf571c8022f815e5896eb3")

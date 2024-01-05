@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,9 @@ class Rkcommon(CMakePackage):
 
     # maintainers("github_user1",o"github_user2")
 
+    license("Apache-2.0")
+
+    version("1.12.0", sha256="6abb901073811cdbcbe336772e1fcb458d78cab5ad8d5d61de2b57ab83581e80")
     version("1.11.0", sha256="9cfeedaccdefbdcf23c465cb1e6c02057100c4a1a573672dc6cfea5348cedfdd")
     version("1.10.0", sha256="57a33ce499a7fc5a5aaffa39ec7597115cf69ed4ff773546b5b71ff475ee4730")
     version("1.9.0", sha256="b68aa02ef44c9e35c168f826a14802bb5cc6a9d769ba4b64b2c54f347a14aa53")

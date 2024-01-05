@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Qmcpack(CMakePackage, CudaPackage):
     git = "https://github.com/QMCPACK/qmcpack.git"
     maintainers("ye-luo")
     tags = ["ecp", "ecp-apps"]
+
+    license("CC0-1.0")
 
     # This download method is untrusted, and is not recommended by the
     # Spack manual. However, it is easier to maintain because github hashes

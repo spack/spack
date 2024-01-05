@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,10 +10,12 @@ class Asciidoc(AutotoolsPackage):
     """A presentable text document format for writing articles, UNIX man
     pages and other small to medium sized documents."""
 
-    homepage = "https://asciidoc.org/"
+    homepage = "https://asciidoc-py.org/"
     # Always working URL but strangely with another checksum
     url = "https://github.com/asciidoc-py/asciidoc-py/archive/8.6.10.tar.gz"
     git = "https://github.com/asciidoc-py/asciidoc-py.git"
+
+    license("GPL-2.0-only", checked_by="tgamblin")
 
     version("master", branch="master")
     version("9.1.0", sha256="5056c20157349f8dc74f005b6e88ccbf1078c4e26068876f13ca3d1d7d045fe7")

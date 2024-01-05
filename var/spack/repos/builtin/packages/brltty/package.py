@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Brltty(AutotoolsPackage):
 
     homepage = "https://brltty.app/"
     url = "https://github.com/brltty/brltty/archive/BRLTTY-6.0.tar.gz"
+
+    license("LGPL-2.1-or-later")
 
     version("6.0", sha256="acfea5274bdc9230b0ea1a87f8796e241615d4d2c1ba08d87601b9d116c7804c")
     version("5.6", sha256="74f35043943525396b340b9f65f0d73c3cc4054a8f63d1c685f27ccf59f46c5d")

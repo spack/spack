@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class RChemometrics(RPackage):
     in Chemometrics" written by K. Varmuza and P. Filzmoser (2009)."""
 
     cran = "chemometrics"
+
+    license("GPL-3.0-or-later")
 
     version("1.4.2", sha256="b705832fa167dc24b52b642f571ed1efd24c5f53ba60d02c7797986481b6186a")
     version("1.4.1", sha256="7646da0077657d672356204aa2094be68e10ec13617f92ae97ff53a389053905")

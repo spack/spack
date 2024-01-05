@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class PyKubernetes(PythonPackage):
     pypi = "kubernetes/kubernetes-17.17.0.tar.gz"
 
     maintainers("vvolkl")
+
+    license("Apache-2.0")
 
     version("25.3.0", sha256="213befbb4e5aed95f94950c7eed0c2322fc5a2f8f40932e58d28fdd42d90836c")
     version("21.7.0", sha256="c9849afc2eafdce60efa210049ee7a94e7ef6cf3a7afa14a69b3bf0447825977")

@@ -1,4 +1,4 @@
-% Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+% Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 % Spack Project Developers. See the top-level COPYRIGHT file for details.
 %
 % SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@
 % Integrity constraints on DAG nodes
 :- attr("root", PackageNode), not attr("node", PackageNode).
 :- attr("version", PackageNode, _), not attr("node", PackageNode), not attr("virtual_node", PackageNode).
-:- attr("node_version_satisfies", PackageNode), not attr("node", PackageNode).
+:- attr("node_version_satisfies", PackageNode, _), not attr("node", PackageNode), not attr("virtual_node", PackageNode).
 :- attr("hash", PackageNode, _), not attr("node", PackageNode).
 :- attr("node_platform", PackageNode, _), not attr("node", PackageNode).
 :- attr("node_os", PackageNode, _), not attr("node", PackageNode).

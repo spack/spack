@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class RPicante(RPackage):
     <doi:10.1093/bioinformatics/btq166>."""
 
     cran = "picante"
+
+    license("GPL-2.0-only")
 
     version("1.8.2", sha256="56565ca7f7c37f49c961372a816724967c21a4f5025cd69b8b671122bfdc4aa7")
     version("1.8", sha256="81a6308dbb53c9cdab30c1f9ac727abee76314351823b3a2142c21ed8e1498ad")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class CBlosc(CMakePackage):
 
     homepage = "https://www.blosc.org"
     url = "https://github.com/Blosc/c-blosc/archive/v1.11.1.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("1.21.5", sha256="32e61961bbf81ffea6ff30e9d70fca36c86178afd3e3cfa13376adec8c687509")
     version("1.21.4", sha256="e72bd03827b8564bbb3dc3ea0d0e689b4863871ce3861d946f2efd7a186ecf3e")

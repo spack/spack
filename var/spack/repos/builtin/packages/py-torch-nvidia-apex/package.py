@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyTorchNvidiaApex(PythonPackage, CudaPackage):
 
     homepage = "https://github.com/nvidia/apex/"
     git = "https://github.com/nvidia/apex/"
+
+    license("BSD-3-Clause")
 
     version("master", branch="master")
     version("2020-10-19", commit="8a1ed9e8d35dfad26fb973996319965e4224dcdd")

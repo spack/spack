@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Gdrcopy(MakefilePackage, CudaPackage):
     url = "https://github.com/NVIDIA/gdrcopy/archive/v2.1.tar.gz"
     git = "https://github.com/NVIDIA/gdrcopy"
     maintainers("scothalverson")
+
+    license("MIT")
 
     version("master", branch="master")
     version("2.3", sha256="b85d15901889aa42de6c4a9233792af40dd94543e82abe0439e544c87fd79475")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,8 @@ class Hwloc(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     maintainers("bgoglin")
     executables = ["^hwloc-bind$"]
+
+    license("BSD-3-Clause")
 
     version("master", branch="master")
     version("2.9.1", sha256="a440e2299f7451dc10a57ddbfa3f116c2a6c4be1bb97c663edd3b9c7b3b3b4cf")

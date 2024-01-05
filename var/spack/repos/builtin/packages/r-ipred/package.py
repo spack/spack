@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class RIpred(RPackage):
     based estimators of prediction error."""
 
     cran = "ipred"
+
+    license("GPL-2.0-or-later")
 
     version("0.9-14", sha256="81c83dc847d09c3db52ef15e36cd4dac38c50eead1008ddd458b9e89d7528f35")
     version("0.9-13", sha256="6168a062d93c2d3063c064a8f242cd3716dee99822e20363a1801261319c4c98")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class PyGsd(PythonPackage):
     pypi = "gsd/gsd-1.9.3.tar.gz"
 
     maintainers("RMeli")
+
+    license("BSD-2-Clause")
 
     version("2.8.0", sha256="f2b031a26a7a5bee5f3940dc2f36c5a5b6670307b297c526adf2e26c1f5b46ae")
     version("1.9.3", sha256="c6b37344e69020f69fda2b8d97f894cb41fd720840abeda682edd680d1cff838")

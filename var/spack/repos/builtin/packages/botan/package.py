@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Botan(MakefilePackage):
     url = "https://botan.randombit.net/releases/Botan-2.13.0.tar.xz"
 
     maintainers("aumuell")
+
+    license("BSD-2-Clause")
 
     version("3.2.0", sha256="049c847835fcf6ef3a9e206b33de05dd38999c325e247482772a5598d9e5ece3")
     version("3.1.1", sha256="30c84fe919936a98fef5331f246c62aa2c0e4d2085b2d4511207f6a20afa3a6b")
