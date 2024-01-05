@@ -242,9 +242,11 @@ github_information:
     #
     # As we're using the underlying config, create a temporary file and
     # move afterwards
+    -     spack -d config --scope=user update -y packages
+    -     spack config --scope=user add "packages:python:require:'@$DEFAULT_PYTHON_VERSION'"
     -     spack export --scope=user --module tcl --explicit --unbuildable cuda intel-oneapi-mkl likwid llvm openscenegraph optix --exclude 'neuron|hdf5|nvhpc|openjdk' ${shas} > "spack_config/packages.yaml.tmp"
     -     sed -e "/:':/{s/'//g}" "spack_config/packages.yaml.tmp" > "spack_config/packages.yaml"
-    -     spack config add "packages:python:require:\"@$DEFAULT_PYTHON_VERSION\""
+    -     spack config blame packages
     - fi
     # Fail if software fails to build!
     - if grep -q -m1 -l -R '<failure' "spack_tests"; then exit 1; fi

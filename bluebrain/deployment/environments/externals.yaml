@@ -13,7 +13,6 @@ spack:
           - cli-tools
           - cmake
           - cuda
-          - cudnn
           - darshan-runtime
           - darshan-util
           - doxygen
@@ -59,7 +58,6 @@ spack:
     all:
       providers:
         jpeg: [libjpeg-turbo]
-        lapack: [intel-mkl]
     cairo:
       variants: +pdf+png
     graphviz:
@@ -69,8 +67,6 @@ spack:
       variants: +cuda cuda_arch=70 +omp_tsan +link_dylib
     mvapich2:
       variants: fabrics=mrail process_managers=slurm file_systems=gpfs
-    pgi:
-      variants: +network+nvidia+mpi
   specs:
     - llvm@17.0.4
     # keep the x.y.z versions in sync with the llvm versions that we install
@@ -86,9 +82,8 @@ spack:
     - ccache@4.7
     - cli-tools
     - cmake
-    # NVHPC 23.1 ships CUDA 12.0.0 (version.json)
-    - cuda@12.0.0
-    - cudnn@8.0.3.33-11.0
+    # NVHPC 23.9 ships CUDA 12.2.0 (version.json)
+    - cuda@12.2.0
     - darshan-runtime
     - darshan-util
     - doxygen
@@ -120,6 +115,7 @@ spack:
     - python@3.9
     - python@3.10
     - python@3.11
+    - python@3.12
     - singularityce
     # BlueBrain TODO: re-enable and fix
     # - stat

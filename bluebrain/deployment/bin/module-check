@@ -16,6 +16,7 @@ SED_SCRIPT=$(mktemp)
 cat <<EOF >${SED_SCRIPT}
 /requires neuron, which is not installed/d
 /requires tensorflow, which is not installed/d
+/requires vtk, which is not installed/d
 EOF
 trap "rm -rf '${SED_SCRIPT}'" EXIT
 

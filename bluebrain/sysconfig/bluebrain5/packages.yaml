@@ -112,9 +112,6 @@ packages:
       prefix: /usr
   petsc:
     variants: ~debug~fortran~hypre+int64+mpi
-    # proven versions, 3.20 insists on using failing due to CUDA, *even when explicitly
-    # told not to use it*
-    require: "@3.18"
   python:
     variants: +tk
   py-frozendict:
