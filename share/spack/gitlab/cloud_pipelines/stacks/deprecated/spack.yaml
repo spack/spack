@@ -35,6 +35,7 @@ spack:
     - . "./share/spack/setup-env.sh"
     - spack --version
     - spack arch
+    - cat /proc/loadavg || true
     script:
     - spack compiler find
     - cd ${SPACK_CONCRETE_ENV_DIR}

@@ -136,6 +136,7 @@ default:
     - uname -a || true
     - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
     - nproc || true
+    - cat /proc/loadavg || true
     - . "./share/spack/setup-env.sh"
     - spack --version
     - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
@@ -206,6 +207,7 @@ default:
     - uname -a || true
     - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
     - nproc || true
+    - cat /proc/loadavg || true
     - . "./share/spack/setup-env.sh"
     - spack --version
     - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
