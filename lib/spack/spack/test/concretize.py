@@ -144,7 +144,7 @@ def fuzz_dep_order(request, monkeypatch):
     def reverser(pkg_name):
         if request.param:
             pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
-            reversed_dict = dict(reversed(pkg_cls.dependencies.items()))
+            reversed_dict = dict(reversed(list(pkg_cls.dependencies.items())))
             monkeypatch.setattr(pkg_cls, "dependencies", reversed_dict)
 
     return reverser
