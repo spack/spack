@@ -17,6 +17,6 @@ class PyNanoget(PythonPackage):
 
     depends_on("python@3")
     depends_on("py-biopython")
-    depends_on("py-pysam@0.10.0.0:")
+    depends_on("py-pysam@0.10.0.1:")
     depends_on("py-pandas@2.0.0:")
     depends_on("py-numpy")

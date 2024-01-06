@@ -17,4 +17,4 @@ class PyNanomath(PythonPackage):
 
     depends_on("python@3")
     depends_on("py-pandas")
-    depends_on("py-numpy@1.8:")
+    depends_on("py-numpy@1.9:")

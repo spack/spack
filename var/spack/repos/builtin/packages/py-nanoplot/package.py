@@ -17,7 +17,7 @@ class PyNanoplot(PythonPackage):
 
     depends_on("python@3")
     depends_on("py-biopython")
-    depends_on("py-pysam@0.10.0.0:")
+    depends_on("py-pysam@0.10.0.1:")
     depends_on("py-pandas@1.1.0:")
     depends_on("py-numpy@1.16.5:")
     depends_on("py-scipy")
