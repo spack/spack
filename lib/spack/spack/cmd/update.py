@@ -85,9 +85,7 @@ def update(parser: ArgumentParser, args: Namespace) -> None:
 
             for file in changed_files.split("\n"):
                 if file.endswith("package.py"):
-                    result = re.search(
-                        "var/spack/repos/builtin/packages/(.*)/package.py", file
-                    )
+                    result = re.search("var/spack/repos/builtin/packages/(.*)/package.py", file)
                     if result is None:
                         continue
                     pkg = result.group(1)
