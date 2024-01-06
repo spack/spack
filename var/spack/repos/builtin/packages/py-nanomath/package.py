@@ -15,6 +15,6 @@ class PyNanomath(PythonPackage):
 
     version("1.3.0", sha256="c35a024b10b34dd8f539cefed1fd69e0a46d18037ca48bed63c7941c67ae028e")
 
-    depends_on("python@3")
-    depends_on("py-pandas")
-    depends_on("py-numpy@1.9:")
+    depends_on("py-setuptools", type=("build",))
+    depends_on("py-pandas", type=("build", "run"))
+    depends_on("py-numpy@1.9:", type=("build", "run"))
