@@ -2662,7 +2662,7 @@ set -g __fish_spack_optspecs_spack_scout h/help mark= t/test=
 
 complete -c spack -n '__fish_spack_using_command scout' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command scout' -s h -l help -d 'show this help message and exit'
-complete -c spack -n '__fish_spack_using_command scout' -l mark -r -f -a 'implicit explicit'
+complete -c spack -n '__fish_spack_using_command scout' -l mark -r -f -a 'i implicit e explicit'
 complete -c spack -n '__fish_spack_using_command scout' -l mark -r -d 'mark pkgs after installation to keep/cleanup'
 complete -c spack -n '__fish_spack_using_command scout' -l test -s t -r -f -a 'root all'
 complete -c spack -n '__fish_spack_using_command scout' -l test -s t -r -d 'build pkgs with tests to validate'
