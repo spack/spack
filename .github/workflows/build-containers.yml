@@ -57,7 +57,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # @v2
 
-      - uses: docker/metadata-action@9dc751fe249ad99385a2583ee0d084c400eee04e
+      - uses: docker/metadata-action@dbef88086f6cef02e264edb7dbf63250c17cef6c
         id: docker_meta
         with:
           images: |
