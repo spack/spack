@@ -1342,18 +1342,14 @@ class ConfigPath:
     quoted_string = "(?:\"[^\"]+\")|(?:'[^']+')"
     unquoted_string = "[^:'\"]+"
     element = rf"(?:(?:{quoted_string})|(?:{unquoted_string}))"
-    validation_pattern = rf"^{element}[+-]?(?:\:\:?{element}[+-]?)*\:?\:?$"
-    token_pattern = rf"(^{element}[+-]?\:?\:?)"
-
-    """
-    the value can be an arbitrary yaml object
-    sometimes the final element is a value, sometimes not
-    keys cannot have "internal" quotes
-
-    Should I parse everything between intervening :?
-    and then ignore : inside quotes?
-    Does this need to fully validate?
-    """
+    key = element
+    # The final component of a path might be a value, which may contain
+    # internal quotes (and those sequences may contain ":"). Keys do
+    # not contain internal quotes
+    possible_value = rf"{element}+"
+    key_or_possible_value = rf"(?:(?:{key})|(?:{possible_value}))"
+    validation_pattern = rf"^{key}[+-]?(?:\:\:?{key}[+-]?)*\:?\:?(?:\:{key_or_possible_value})?$"
+    token_pattern = rf"(^{key_or_possible_value}[+-]?\:?\:?)"
 
     @staticmethod
     def validate(path):
