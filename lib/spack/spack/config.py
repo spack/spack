@@ -1345,6 +1345,16 @@ class ConfigPath:
     validation_pattern = rf"^{element}[+-]?(?:\:\:?{element}[+-]?)*\:?\:?$"
     token_pattern = rf"(^{element}[+-]?\:?\:?)"
 
+    """
+    the value can be an arbitrary yaml object
+    sometimes the final element is a value, sometimes not
+    keys cannot have "internal" quotes
+
+    Should I parse everything between intervening :?
+    and then ignore : inside quotes?
+    Does this need to fully validate?
+    """
+
     @staticmethod
     def validate(path):
         """Example valid config paths:
