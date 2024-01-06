@@ -42,6 +42,15 @@ def setup_parser(subparser):
         "-f", "--force", help="remove any files or directories that block cloning source code"
     )
 
+    subparser.add_argument(
+        "-a",
+        "--always-rebuild",
+        help=(
+            "always trigger incremental builds for develop specs by skipping last file updated"
+            " checks. this can improve performance on certain filesystems i.e. lustre and NFS"
+        ),
+    )
+
     arguments.add_common_arguments(subparser, ["spec"])
 
 
@@ -78,8 +87,15 @@ def _retrieve_develop_source(spec, abspath):
 
 
 def develop(parser, args):
-    if not args.spec:
+    # TODO: when https://github.com/spack/spack/pull/35307 is merged,
+    # an active env is not required if a scope is specified
+    if args.always_rebuild:
         env = spack.cmd.require_active_env(cmd_name="develop")
+        with env.write_transaction():
+            scope = env.env_file_config_scope_name()
+            spack.config.add("config:dev_specs_always_rebuild:true", scope)
+
+    if not args.spec:
         if args.clone is False:
             raise SpackError("No spec provided to spack develop command")
 
@@ -146,8 +162,6 @@ def develop(parser, args):
     # users would only ever want to do this for either (a) an active
     # env or (b) a specified config file (e.g. that is included by
     # an environment)
-    # TODO: when https://github.com/spack/spack/pull/35307 is merged,
-    # an active env is not required if a scope is specified
     env = spack.cmd.require_active_env(cmd_name="develop")
     tty.debug("Updating develop config for {0} transactionally".format(env.name))
     with env.write_transaction():

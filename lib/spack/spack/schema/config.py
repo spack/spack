@@ -69,6 +69,7 @@ properties = {
             "source_cache": {"type": "string"},
             "misc_cache": {"type": "string"},
             "environments_root": {"type": "string"},
+            "dev_specs_always_rebuild": {"type": "boolean"},
             "connect_timeout": {"type": "integer", "minimum": 0},
             "verify_ssl": {"type": "boolean"},
             "suppress_gpg_warnings": {"type": "boolean"},
