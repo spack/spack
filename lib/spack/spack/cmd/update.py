@@ -5,6 +5,7 @@
 
 import re
 import sys
+from argparse import ArgumentParser, Namespace
 
 from llnl.util import tty
 from llnl.util.filesystem import working_dir
@@ -19,11 +20,11 @@ section = "system"
 level = "short"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: ArgumentParser) -> None:
     subparser.add_argument("-b", "--branch", help="name of the branch to upate the repository to")
 
 
-def update(parser, args):
+def update(parser: ArgumentParser, args: Namespace) -> None:
     # make sure that spack is a git repository
     if not spack_is_git_repo():
         tty.die("This spack is not a git clone. Can't use 'spack update'")
