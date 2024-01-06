@@ -6,6 +6,7 @@
 import re
 import sys
 from argparse import ArgumentParser, Namespace
+from typing import Dict, List
 
 from llnl.util import tty
 from llnl.util.filesystem import working_dir
@@ -29,7 +30,9 @@ def update(parser: ArgumentParser, args: Namespace) -> None:
     if not spack_is_git_repo():
         tty.die("This spack is not a git clone. Can't use 'spack update'")
 
-    git = spack.util.git.git(required=True)
+    git = spack.util.git.git()
+    if git is None:
+        tty.die("Couldn't find a usable git executable in PATH. Unable to update.")
 
     # execute git within the spack repository
     with working_dir(spack.paths.prefix):
@@ -78,13 +81,16 @@ def update(parser: ArgumentParser, args: Namespace) -> None:
             changed_files = git(
                 "diff-tree", "-r", "--name-status", f"{old_head}..{new_head}", output=str
             )
-            changed_packages = {"Added": [], "Updated": [], "Deleted": []}
+            changed_packages: Dict[str, List] = {"Added": [], "Updated": [], "Deleted": []}
 
             for file in changed_files.split("\n"):
                 if file.endswith("package.py"):
-                    pkg = re.search(
+                    result = re.search(
                         "var/spack/repos/builtin/packages/(.*)/package.py", file
-                    ).group(1)
+                    )
+                    if result is None:
+                        continue
+                    pkg = result.group(1)
                     if file[0] == "A":
                         changed_packages["Added"].append(pkg)
                     elif file[0] == "M":
@@ -92,7 +98,7 @@ def update(parser: ArgumentParser, args: Namespace) -> None:
                     elif file[0] == "D":
                         changed_packages["Deleted"].append(pkg)
 
-            for action in changed_packages.keys():
-                if len(changed_packages[action]) > 0:
-                    tty.msg(f"{action} %d packages" % len(changed_packages[action]))
-                    colify(changed_packages[action], output=sys.stdout)
+            for action, pkgs in changed_packages.items():
+                if len(pkgs) > 0:
+                    tty.msg(f"{action} %d packages" % len(pkgs))
+                    colify(pkgs, output=sys.stdout)
