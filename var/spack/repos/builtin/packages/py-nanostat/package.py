@@ -15,6 +15,6 @@ class PyNanostat(PythonPackage):
 
     version("1.6.0", sha256="e45fa8d1ab49bdaed17596c26c0af148b44e4af46238391a8bb7a1b4cc940079")
 
-    depends_on("python@3")
-    depends_on("py-nanoget@1.13.2:")
-    depends_on("py-nanomath@1.0.0:")
+    depends_on("py-setuptools", type=("build",))
+    depends_on("py-nanoget@1.13.2:", type=("build","run"))
+    depends_on("py-nanomath@1.0.0:", type=("build","run"))
