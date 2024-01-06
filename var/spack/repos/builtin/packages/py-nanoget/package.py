@@ -15,7 +15,7 @@ class PyNanoget(PythonPackage):
 
     version("1.19.3", sha256="da981810edb1cbe42cbbfbe5fcf753f29bf5555204cd51256b28a284a036a71b")
 
-    depends_on("py-biopython")
-    depends_on("py-pysam@0.10.0.1:")
-    depends_on("py-pandas@2.0.0:")
-    depends_on("py-numpy")
+    depends_on("py-biopython", type=("build", "run"))
+    depends_on("py-pysam@0.10.0.1:", type=("build", "run"))
+    depends_on("py-pandas@2.0.0:", type=("build", "run"))
+    depends_on("py-numpy", type=("build", "run"))
