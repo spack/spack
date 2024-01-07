@@ -5,6 +5,7 @@
 
 from spack.package import *
 
+
 class PyNanoplot(PythonPackage):
     """Plotting scripts for long read sequencing data"""
 
