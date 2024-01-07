@@ -3429,6 +3429,14 @@ class Spec:
 
         any_change = self._normalize_helper(visited, all_spec_deps, provider_index, tests)
 
+        # remove any leftover dependents outside the spec from, e.g., pruning externals
+        valid = {id(spec) for spec in all_spec_deps.values()} | {id(self)}
+        for spec in all_spec_deps.values():
+            remove = [dep for dep in spec.dependents() if id(dep) not in valid]
+            for dep in remove:
+                del spec._dependents.edges[dep.name]
+                del dep._dependencies.edges[spec.name]
+
         # Mark the spec as normal once done.
         self._normal = True
         return any_change
