@@ -5,6 +5,7 @@
 
 from spack.package import *
 
+
 class PyKaleido(PythonPackage):
     """Static image export for web-based visualization libraries with zero dependencies"""
 
