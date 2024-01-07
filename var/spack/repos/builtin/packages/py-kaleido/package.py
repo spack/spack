@@ -9,8 +9,12 @@ class PyKaleido(PythonPackage):
     """Static image export for web-based visualization libraries with zero dependencies"""
 
     homepage = "https://github.com/wdecoster/nanostat"
-    pypi = "kaleido/kaleido-0.2.1.post1-py2.py3-none-manylinux2014_armv7l.whl"
+    url = "https://github.com/plotly/Kaleido/archive/refs/tags/v0.2.1.tar.gz"
 
     maintainers("Pandapip1")
 
-    version("0.2.1", sha256="d313940896c24447fc12c74f60d46ea826195fc991f58569a6e73864d53e5c20")
+    version("0.2.1", sha256="fdb673a9759835d4f455990fc1ff8919bd100a0d34f2d3de7bd5eeb2162b57ec")
+
+    depends_on("py-setuptools", type="build")
+    
+    build_directory = join_path("repos", "kaleido", "py")
