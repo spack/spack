@@ -17,6 +17,5 @@ class PyKaleido(PythonPackage):
     version("0.2.1", sha256="fdb673a9759835d4f455990fc1ff8919bd100a0d34f2d3de7bd5eeb2162b57ec")
 
     depends_on("py-setuptools", type="build")
-    
-    
+
     build_directory = join_path("repos", "kaleido", "py")
