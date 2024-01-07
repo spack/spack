@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,6 +29,8 @@ class KimApi(CMakePackage):
     git = "https://github.com/openkim/kim-api.git"
 
     maintainers("ellio167")
+
+    license("CDDL-1.0")
 
     version("develop", branch="devel")
     version("2.2.1", sha256="1d5a12928f7e885ebe74759222091e48a7e46f77e98d9147e26638c955efbc8e")

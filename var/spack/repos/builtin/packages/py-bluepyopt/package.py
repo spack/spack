@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,6 +10,8 @@ class PyBluepyopt(PythonPackage):
 
     homepage = "https://github.com/BlueBrain/BluePyOpt"
     pypi = "bluepyopt/bluepyopt-1.9.27.tar.gz"
+
+    license("LGPL-3.0-only")
 
     # NOTE : while adding new release check pmi_rank.patch compatibility
     version("1.14.4", sha256="7567fd736053250ca06030f67ad93c607b100c2b98df8dc588c26b64cb3e171c")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class PyMysqlclient(PythonPackage):
 
     homepage = "https://github.com/PyMySQL/mysqlclient-python"
     pypi = "mysqlclient/mysqlclient-1.4.4.tar.gz"
+
+    license("GPL-2.0-or-later")
 
     version("1.4.6", sha256="f3fdaa9a38752a3b214a6fe79d7cae3653731a53e577821f9187e67cbecb2e16")
     version("1.4.5", sha256="e80109b0ae8d952b900b31b623181532e5e89376d707dcbeb63f99e69cefe559")

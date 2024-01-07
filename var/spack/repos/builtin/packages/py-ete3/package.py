@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class PyEte3(PythonPackage):
     pypi = "ete3/ete3-3.1.2.tar.gz"
 
     maintainers("snehring")
+
+    license("GPL-3.0-only")
 
     version("3.1.2", sha256="4fc987b8c529889d6608fab1101f1455cb5cbd42722788de6aea9c7d0a8e59e9")
 

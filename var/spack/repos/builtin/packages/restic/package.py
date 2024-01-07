@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Restic(Package):
     url = "https://github.com/restic/restic/releases/download/v0.12.1/restic-0.12.1.tar.gz"
 
     maintainers("alecbcs")
+
+    license("BSD-2-Clause")
 
     version("0.16.2", sha256="88165b5b89b6064df37a9964d660f40ac62db51d6536e459db9aaea6f2b2fc11")
     version("0.16.0", sha256="b91f5ef6203a5c50a72943c21aaef336e1344f19a3afd35406c00f065db8a8b9")

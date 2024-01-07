@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Libmpdclient(MesonPackage):
 
     homepage = "https://www.musicpd.org/"
     url = "https://github.com/MusicPlayerDaemon/libmpdclient/archive/v2.19.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("2.19", sha256="12b566b75c3b6789ff8fc94698497d1f3fbaf0cbf9fa6c3a1e3906ef0d2bcbbb")
     version("2.18", sha256="9b97d00022f2053c06d87bff40b319dfab930ee2b5fa9b8dec208a2911ca3efc")

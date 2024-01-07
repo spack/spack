@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Lfortran(CMakePackage):
     url = "https://lfortran.github.io/tarballs/release/lfortran-0.19.0.tar.gz"
     git = "https://github.com/lfortran/lfortran.git"
     maintainers = ["certik"]
+
+    license("BSD-3-Clause")
 
     # The build process uses 'git describe --tags' to get the package version
     version("main", branch="main", get_full_repo=True)

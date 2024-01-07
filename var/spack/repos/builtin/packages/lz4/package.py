@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,9 @@ class Lz4(CMakePackage, MakefilePackage):
     url = "https://github.com/lz4/lz4/archive/v1.9.2.tar.gz"
 
     maintainers("AlexanderRichert-NOAA")
+
+    # liblz4 is BSD-2-clause; programs, manpages, and everything else are GPL2
+    license("BSD-2-Clause AND GPL-2.0-only", checked_by="tgamblin")
 
     version("1.9.4", sha256="0b0e3aa07c8c063ddf40b082bdf7e37a1562bda40a0ff5272957f3e987e0e54b")
     version("1.9.3", sha256="030644df4611007ff7dc962d981f390361e6c97a34e5cbc393ddfbe019ffe2c1")

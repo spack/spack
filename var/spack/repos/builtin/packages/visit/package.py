@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -95,6 +95,9 @@ class Visit(CMakePackage):
     patch("cmake-findvtkh-3.3.patch", when="@3.3.0:3.3.2+vtkm")
     patch("cmake-findjpeg.patch", when="@3.1.0:3.2.2")
     patch("cmake-findjpeg-3.3.patch", when="@3.3.0")
+    # add missing QT header includes for the QSurfaceFormat class
+    # (needed to fix "incomplete type" compiler errors)
+    patch("0001-fix-missing-header-includes-for-QSurfaceFormat.patch", when="@3.3.3+gui")
 
     # Fix pthread and librt link errors
     patch("visit32-missing-link-libs.patch", when="@3.2")
@@ -167,7 +170,7 @@ class Visit(CMakePackage):
     depends_on("mfem+shared+exceptions+fms+conduit", when="+mfem")
     depends_on("libfms@0.2:", when="+mfem")
 
-    depends_on("adios2@2.6:", when="+adios2")
+    depends_on("adios2@2.7.1", when="+adios2")
     depends_on("adios2+hdf5", when="+adios2+hdf5")
     depends_on("adios2~hdf5", when="+adios2~hdf5")
     depends_on("adios2+mpi", when="+adios2+mpi")
@@ -321,6 +324,9 @@ class Visit(CMakePackage):
                     self.define("CONDUIT_VERSION", spec["conduit"].version),
                 ]
             )
+
+        if "+adios2" in spec:
+            args.extend([self.define("VISIT_ADIOS2_DIR", spec["adios2"].prefix)])
 
         if "+mfem" in spec:
             args.extend(

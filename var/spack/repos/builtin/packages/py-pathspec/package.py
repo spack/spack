@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyPathspec(PythonPackage):
 
     homepage = "https://github.com/cpburnz/python-pathspec"
     pypi = "pathspec/pathspec-0.8.1.tar.gz"
+
+    license("MPL-2.0")
 
     version("0.11.1", sha256="2798de800fa92780e33acca925945e9a19a133b715067cf165b8866c15a31687")
     version("0.11.0", sha256="64d338d4e0914e91c1792321e6907b5a593f1ab1851de7fc269557a21b30ebbc")

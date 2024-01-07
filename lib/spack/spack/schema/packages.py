@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,6 +7,7 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/packages.py
    :lines: 13-
 """
+import spack.schema.environment
 
 permissions = {
     "type": "object",
@@ -155,7 +156,13 @@ properties = {
                                 "spec": {"type": "string"},
                                 "prefix": {"type": "string"},
                                 "modules": {"type": "array", "items": {"type": "string"}},
-                                "extra_attributes": {"type": "object"},
+                                "extra_attributes": {
+                                    "type": "object",
+                                    "additionalProperties": True,
+                                    "properties": {
+                                        "environment": spack.schema.environment.definition
+                                    },
+                                },
                             },
                             "additionalProperties": True,
                             "required": ["spec"],

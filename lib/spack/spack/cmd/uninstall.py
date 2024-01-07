@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,13 +10,13 @@ from llnl.util import tty
 from llnl.util.tty.colify import colify
 
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.cmd.common.confirmation as confirmation
 import spack.environment as ev
 import spack.package_base
 import spack.spec
 import spack.store
 import spack.traverse as traverse
+from spack.cmd.common import arguments
 from spack.database import InstallStatuses
 
 description = "remove installed packages"
@@ -277,7 +277,7 @@ def uninstall_specs(args, specs):
         return
 
     if not args.yes_to_all:
-        confirmation.confirm_action(uninstall_list, "uninstalled", "uninstallation")
+        confirmation.confirm_action(uninstall_list, "uninstalled", "uninstall")
 
     # Uninstall everything on the list
     do_uninstall(uninstall_list, args.force)

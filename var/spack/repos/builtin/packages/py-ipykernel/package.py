@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyIpykernel(PythonPackage):
 
     homepage = "https://github.com/ipython/ipykernel"
     pypi = "ipykernel/ipykernel-5.3.4.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("6.23.1", sha256="1aba0ae8453e15e9bc6b24e497ef6840114afcdb832ae597f32137fa19d42a6f")
     version("6.22.0", sha256="302558b81f1bc22dc259fb2a0c5c7cf2f4c0bdb21b50484348f7bafe7fb71421")

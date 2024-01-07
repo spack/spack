@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class RHtmltools(RPackage):
     Tools for HTML generation and output."""
 
     cran = "htmltools"
+
+    license("GPL-2.0-or-later")
 
     version("0.5.5", sha256="c8b23fab855a89c6ed0f6d6c7cad0ff9c5ae329c0bdb479940443ee752f26659")
     version("0.5.3", sha256="2c451b369ea8918358e2b280f548816664fe0143222c609e6bfb1f9cd2f7324f")

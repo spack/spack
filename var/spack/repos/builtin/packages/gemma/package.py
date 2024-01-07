@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Gemma(MakefilePackage):
     url = "https://github.com/genetics-statistics/GEMMA/archive/refs/tags/v0.98.5.tar.gz"
 
     maintainers("snehring", "dlkuehn")
+
+    license("GPL-3.0-or-later")
 
     version("0.98.5", sha256="3ed336deee29e370f96ec8f1a240f7b62550e57dcd1694245ce7ec8f42241677")
 

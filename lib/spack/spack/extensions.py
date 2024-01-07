@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,11 +6,13 @@
 for Spack's command extensions.
 """
 import difflib
+import glob
 import importlib
 import os
 import re
 import sys
 import types
+from typing import List
 
 import llnl.util.lang
 
@@ -75,6 +77,15 @@ def load_command_extension(command, path):
     if not os.path.exists(cmd_path):
         return None
 
+    ensure_extension_loaded(extension, path=path)
+
+    module = importlib.import_module(module_name)
+    sys.modules[module_name] = module
+
+    return module
+
+
+def ensure_extension_loaded(extension, *, path):
     def ensure_package_creation(name):
         package_name = "{0}.{1}".format(__name__, name)
         if package_name in sys.modules:
@@ -100,10 +111,22 @@ def load_command_extension(command, path):
     ensure_package_creation(extension)
     ensure_package_creation(extension + ".cmd")
 
-    module = importlib.import_module(module_name)
-    sys.modules[module_name] = module
 
-    return module
+def load_extension(name: str) -> str:
+    """Loads a single extension into the 'spack.extensions' package.
+
+    Args:
+        name: name of the extension
+    """
+    extension_root = path_for_extension(name, paths=get_extension_paths())
+    ensure_extension_loaded(name, path=extension_root)
+    commands = glob.glob(
+        os.path.join(extension_root, extension_name(extension_root), "cmd", "*.py")
+    )
+    commands = [os.path.basename(x).rstrip(".py") for x in commands]
+    for command in commands:
+        load_command_extension(command, extension_root)
+    return extension_root
 
 
 def get_extension_paths():
@@ -125,7 +148,7 @@ def get_command_paths():
     return command_paths
 
 
-def path_for_extension(target_name, *paths):
+def path_for_extension(target_name: str, *, paths: List[str]) -> str:
     """Return the test root dir for a given extension.
 
     Args:

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Chombo(MakefilePackage):
     git = "https://bitbucket.org/drhansj/chombo-xsdk.git"
 
     tags = ["ecp", "ecp-apps"]
+
+    license("BSD-3-Clause-LBNL")
 
     # Use whatever path Brian V. and Terry L. agreed upon, but preserve version
     version("3.2", commit="71d856c2f469e96755a606db1e5151067da0f54a")

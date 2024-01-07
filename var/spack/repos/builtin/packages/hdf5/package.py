@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,8 @@ class Hdf5(CMakePackage):
     executables = ["^h5cc$", "^h5pcc$"]
 
     test_requires_compiler = True
+
+    license("custom")
 
     # The 'develop' version is renamed so that we could uninstall (or patch) it
     # without affecting other develop version.

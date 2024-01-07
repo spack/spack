@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Expat(AutotoolsPackage, CMakePackage):
 
     homepage = "https://libexpat.github.io/"
     url = "https://github.com/libexpat/libexpat/releases/download/R_2_2_9/expat-2.2.9.tar.bz2"
+
+    license("MIT")
 
     version("2.5.0", sha256="6f0e6e01f7b30025fa05c85fdad1e5d0ec7fd35d9f61b22f34998de11969ff67")
     # deprecate all releases before 2.5.0 because of security issues
@@ -105,7 +107,7 @@ class Expat(AutotoolsPackage, CMakePackage):
     # `~libbsd`.
     variant(
         "libbsd",
-        default=sys.platform != "darwin" and sys.platform != "win32",
+        default=sys.platform == "linux",
         description="Use libbsd (for high quality randomness)",
     )
 
