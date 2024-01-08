@@ -1352,7 +1352,7 @@ class ConfigPath:
 
     # Patterns for validation
     key_pattern = rf"{element}[+-]?"
-    next_key_pattern = rf"\:\:?{key_pattern}"
+    next_key_pattern = rf"{key_pattern}"
     final_value_pattern = rf"\:\:?{possible_value}"
 
     @staticmethod
@@ -1364,10 +1364,17 @@ class ConfigPath:
         x:y+:z
         x:y::z
         x:y+::z
+        x:y:
+        x:y::
         """
+        original_path = path
         key, path = ConfigPath.next_validation_token(path, [ConfigPath.key_pattern])
         prior_key = None
         while path:
+            _, path = ConfigPath.next_validation_token(path, ["\:\:?"])
+            if not path:
+                # Path ended in ":"
+                break
             if prior_key:
                 if not re.match(ConfigPath.next_key_pattern, prior_key):
                     raise ValueError(f"Intermediate path element not a key: {prior_key}")
@@ -1380,8 +1387,8 @@ class ConfigPath:
         extract = rf"({any_of})"
         m = re.match(extract, path_str)
         if not m:
-            import pdb; pdb.set_trace()
-            raise ValueError("Expected token not matched")
+            raise ValueError(f"Error parsing remainder of path: {path_str}"
+                             f"\nExpected one of {', '.join(possible_patterns)}")
         token = m.group(1)
         return token, path_str[len(token) :]
 
