@@ -12,10 +12,12 @@ import pytest
 import llnl.util.filesystem as fs
 
 import spack.error
+import spack.mirror
 import spack.patch
 import spack.repo
 import spack.store
 import spack.util.spack_json as sjson
+from spack import binary_distribution
 from spack.package_base import (
     InstallError,
     PackageBase,
@@ -608,3 +610,48 @@ def test_empty_install_sanity_check_prefix(
     spec = Spec("failing-empty-install").concretized()
     with pytest.raises(spack.build_environment.ChildError, match="Nothing was installed"):
         spec.package.do_install()
+
+
+def test_install_from_binary_with_missing_patch_succeeds(
+    temporary_store: spack.store.Store, mutable_config, tmp_path, mock_packages
+):
+    """If a patch is missing in the local package repository, but was present when building and
+    pushing the package to a binary cache, installation from that binary cache shouldn't error out
+    because of the missing patch."""
+    # Create a spec s with non-existing patches
+    s = Spec("trivial-install-test-package").concretized()
+    patches = ["a" * 64]
+    s_dict = s.to_dict()
+    s_dict["spec"]["nodes"][0]["patches"] = patches
+    s_dict["spec"]["nodes"][0]["parameters"]["patches"] = patches
+    s = Spec.from_dict(s_dict)
+
+    # Create an install dir for it
+    os.makedirs(os.path.join(s.prefix, ".spack"))
+    with open(os.path.join(s.prefix, ".spack", "spec.json"), "w") as f:
+        s.to_json(f)
+
+    # And register it in the database
+    temporary_store.db.add(s, directory_layout=temporary_store.layout, explicit=True)
+
+    # Push it to a binary cache
+    build_cache = tmp_path / "my_build_cache"
+    binary_distribution.push_or_raise(
+        s,
+        build_cache.as_uri(),
+        binary_distribution.PushOptions(unsigned=True, regenerate_index=True),
+    )
+
+    # Now re-install it.
+    s.package.do_uninstall()
+    assert not temporary_store.db.query_local_by_spec_hash(s.dag_hash())
+
+    # Source install: fails, we don't have the patch.
+    with pytest.raises(InstallError, match="Couldn't find patch for package"):
+        s.package.do_install()
+
+    # Binary install: succeeds, we don't need the patch.
+    spack.mirror.add(spack.mirror.Mirror.from_local_path(str(build_cache)))
+    s.package.do_install(package_cache_only=True, dependencies_cache_only=True, unsigned=True)
+
+    assert temporary_store.db.query_local_by_spec_hash(s.dag_hash())
