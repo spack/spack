@@ -24,9 +24,9 @@ class PyJupytext(PythonPackage):
     version("1.13.0", sha256="fb220af65d2bd32d01c779b0e935c4c2b71e3f5f2f01bf1bab10d5f23fe121d4")
 
     depends_on("python@3.8:", type=("build", "run"), when="@1.16:")
-    depends_on("python@3.6:3", type=("build", "run"))
+    depends_on("python@3.6:3", type=("build", "run"), when="@:1.14")
 
-    depends_on("py-packaging", type=("build", "run"), when="@1.16:")
+    depends_on("py-hatchling@1.5.0:", type="build", when="@1.16:")
     depends_on("py-setuptools@40.8.0:", type="build", when="@:1.14.1")
 
     depends_on("py-nbformat", type=("build", "run"))
@@ -34,6 +34,7 @@ class PyJupytext(PythonPackage):
     depends_on("py-markdown-it-py@1.0:", type=("build", "run"), when="@1.16:")
     depends_on("py-markdown-it-py@1.0:2", type=("build", "run"), when="@1.14.1")
     depends_on("py-markdown-it-py@1.0:1", type=("build", "run"), when="@:1.13.6")
+    depends_on("py-packaging", type=("build", "run"), when="@1.16:")
     depends_on("py-pyyaml", type=("build", "run"))
     depends_on("py-toml", type=("build", "run"))
 
@@ -41,4 +42,5 @@ class PyJupytext(PythonPackage):
     # some additional dependencies need to be added (and checked):
     depends_on("py-jupyterlab@4:5", type=("build", "run"), when="@1.16:")
     depends_on("py-jupyterlab@3", type=("build", "run"), when="@:1.14")
+    depends_on("py-hatch-jupyter-builder@0.5:", type=("build", "run"), when="@1.16:")
     depends_on("py-jupyter-packaging@0.7.9:0.7", type="build", when="@:1.14")
