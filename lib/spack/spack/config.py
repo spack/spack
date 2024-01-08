@@ -1356,6 +1356,9 @@ class ConfigPath:
     final_value_pattern = rf"\:\:?{possible_value}"
     final_separator = rf"\:\:?"
 
+    # Singular validation pattern
+    validation_pattern = rf"^{key}[+-]?(?:\:\:?{key}[+-]?)*\:?\:?(?:\:{key_or_possible_value})?$"
+
     @staticmethod
     def validate(path):
         """Example valid config paths:
@@ -1368,6 +1371,9 @@ class ConfigPath:
         x:y:
         x:y::
         """
+        if not re.match(ConfigPath.validation_pattern, path):
+            raise ValueError(f"Invalid path string: {path}")
+
         original_path = path
         key, path = ConfigPath.next_validation_token(path, [ConfigPath.key_pattern])
         prior_key = None
