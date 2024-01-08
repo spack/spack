@@ -123,24 +123,20 @@ def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch, wo
 
     instance_rm_prefix = s.package.remove_prefix
 
-    try:
-        s.package.remove_prefix = mock_remove_prefix
-        with pytest.raises(MockInstallError):
-            s.package.do_install()
-        assert os.path.isdir(s.package.prefix)
-        rm_prefix_checker = RemovePrefixChecker(instance_rm_prefix)
-        s.package.remove_prefix = rm_prefix_checker.remove_prefix
+    s.package.remove_prefix = mock_remove_prefix
+    with pytest.raises(MockInstallError):
+        s.package.do_install()
+    assert os.path.isdir(s.package.prefix)
+    rm_prefix_checker = RemovePrefixChecker(instance_rm_prefix)
+    s.package.remove_prefix = rm_prefix_checker.remove_prefix
 
-        # must clear failure markings for the package before re-installing it
-        spack.store.STORE.failure_tracker.clear(s, True)
+    # must clear failure markings for the package before re-installing it
+    spack.store.STORE.failure_tracker.clear(s, True)
 
-        s.package.set_install_succeed()
-        s.package.do_install(restage=True)
-        assert rm_prefix_checker.removed
-        assert s.package.spec.installed
-
-    finally:
-        s.package.remove_prefix = instance_rm_prefix
+    s.package.set_install_succeed()
+    s.package.do_install(restage=True)
+    assert rm_prefix_checker.removed
+    assert s.package.spec.installed
 
 
 @pytest.mark.disable_clean_stage_check
