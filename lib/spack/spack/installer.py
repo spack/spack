@@ -380,14 +380,13 @@ def _print_timer(pre: str, pkg_id: str, timer: timer.BaseTimer) -> None:
 
 
 def _install_from_cache(
-    pkg: "spack.package_base.PackageBase", cache_only: bool, explicit: bool, unsigned: bool = False
+    pkg: "spack.package_base.PackageBase", explicit: bool, unsigned: bool = False
 ) -> bool:
     """
-    Extract the package from binary cache
+    Install the package from binary cache
 
     Args:
         pkg: package to install from the binary cache
-        cache_only: only extract from binary cache
         explicit: ``True`` if installing the package was explicitly
             requested by the user, otherwise, ``False``
         unsigned: ``True`` if binary package signatures to be checked,
@@ -399,15 +398,11 @@ def _install_from_cache(
     installed_from_cache = _try_install_from_binary_cache(
         pkg, explicit, unsigned=unsigned, timer=t
     )
-    pkg_id = package_id(pkg)
     if not installed_from_cache:
-        pre = f"No binary for {pkg_id} found"
-        if cache_only:
-            tty.die(f"{pre} when cache-only specified")
-
-        tty.msg(f"{pre}: installing from source")
         return False
     t.stop()
+
+    pkg_id = package_id(pkg)
     tty.debug(f"Successfully extracted {pkg_id} from binary cache")
 
     _write_timer_json(pkg, t, True)
@@ -1666,11 +1661,16 @@ class PackageInstaller:
         task.status = STATUS_INSTALLING
 
         # Use the binary cache if requested
-        if use_cache and _install_from_cache(pkg, cache_only, explicit, unsigned):
-            self._update_installed(task)
-            if task.compiler:
-                self._add_compiler_package_to_config(pkg)
-            return
+        if use_cache:
+            if _install_from_cache(pkg, explicit, unsigned):
+                self._update_installed(task)
+                if task.compiler:
+                    self._add_compiler_package_to_config(pkg)
+                return
+            elif cache_only:
+                raise InstallError("No binary found when cache-only was specified", pkg=pkg)
+            else:
+                tty.msg(f"No binary for {pkg_id} found: installing from source")
 
         pkg.run_tests = tests if isinstance(tests, bool) else pkg.name in tests
 
