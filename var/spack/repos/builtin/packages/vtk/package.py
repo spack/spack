@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class Vtk(CMakePackage):
     list_url = "https://www.vtk.org/download/"
 
     maintainers("chuckatkins", "danlipsa")
+
+    license("BSD-3-Clause")
 
     version("9.2.6", sha256="06fc8d49c4e56f498c40fcb38a563ed8d4ec31358d0101e8988f0bb4d539dd12")
     version("9.2.2", sha256="1c5b0a2be71fac96ff4831af69e350f7a0ea3168981f790c000709dcf9121075")
@@ -67,10 +69,13 @@ class Vtk(CMakePackage):
 
     # Patch for paraview 5.10: +hdf5 ^hdf5@1.13.2:
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/9690
-    patch("xdmf2-hdf51.13.2.patch", when="@9:9.2 +xdmf")
+    # patch seems to effectively been added to vtk@9.2.3 (e81a2fe)
+    patch("xdmf2-hdf51.13.2.patch", when="@9:9.2.2 +xdmf")
 
     # We cannot build with both osmesa and qt in spack
     conflicts("+osmesa", when="+qt")
+
+    conflicts("%gcc@13", when="@9.2")
 
     with when("+python"):
         # Depend on any Python, add bounds below.
@@ -165,8 +170,20 @@ class Vtk(CMakePackage):
     depends_on("proj@4:7", when="@9:")
     depends_on("cgns@4.1.1:+mpi", when="@9.1: +mpi")
     depends_on("cgns@4.1.1:~mpi", when="@9.1: ~mpi")
-    depends_on("seacas@2021-05-12:+mpi", when="@9.1: +mpi")
-    depends_on("seacas@2021-05-12:~mpi", when="@9.1: ~mpi")
+    with when("@9.1:"):
+        depends_on("seacas+mpi", when="+mpi")
+        depends_on("seacas~mpi", when="~mpi")
+        depends_on("seacas@2021-05-12:")
+
+    # seacas@2023-05-30 does not provide needed SEACASIoss_INCLUDE_DIRS:
+    # CMake Error at CMake/vtkModule.cmake:5552 (message):
+    # The variable `SEACASIoss_INCLUDE_DIRS` was expected to have been available,
+    # but was not defined:
+    conflicts("seacas@2023-05-30", when="@:9.2")
+
+    # vtk@9.2: need Ioss::Utils::get_debug_stream() which only 2022-10-14 provides,
+    # and to be safe against other issues, make them build with this version only:
+    depends_on("seacas@2022-10-14", when="@9.2:")
     depends_on("nlohmann-json", when="@9.2:")
 
     # For finding Fujitsu-MPI wrapper commands
@@ -181,10 +198,17 @@ class Vtk(CMakePackage):
     )
 
     patch(
-        "https://gitlab.kitware.com/vtk/vtk/-/commit/5a1c96e12e9b4a660d326be3bed115a2ceadb573.patch",
-        sha256="65175731c080961f85d779d613ac1f6bce89783745e54e864edec7637b03b18a",
+        "https://gitlab.kitware.com/vtk/vtk/-/commit/5a1c96e12e9b4a660d326be3bed115a2ceadb573.diff",
+        sha256="c446a90459b108082db5b28d9aeda99d030e636325e01929beba062cafb16b76",
         when="@9.1",
     )
+
+    @when("@9.2:")
+    def patch(self):
+        # provide definition for Ioss::Init::Initializer::Initializer(),
+        # required on macOS, as "-undefined error" is the default,
+        # but not on Linux, as undefined symbols are tolerated
+        filter_file("TARGETS Ioss", "TARGETS Ioss Ionit", "ThirdParty/ioss/CMakeLists.txt")
 
     def url_for_version(self, version):
         url = "http://www.vtk.org/files/release/{0}/VTK-{1}.tar.gz"

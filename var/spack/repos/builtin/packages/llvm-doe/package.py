@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -251,6 +251,8 @@ class LlvmDoe(CMakePackage, CudaPackage):
             compiler = Executable(exe)
             output = compiler("--version", output=str, error=str)
             if "Apple" in output:
+                return None
+            if "AMD" in output:
                 return None
             match = version_regex.search(output)
             if match:

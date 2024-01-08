@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class ScitokensCpp(CMakePackage):
     url = "https://github.com/scitokens/scitokens-cpp/archive/refs/tags/v0.7.0.tar.gz"
 
     maintainers("gartung", "greenc-FNAL", "marcmengel", "vitodb")
+
+    license("Apache-2.0")
 
     version("1.0.1", sha256="d4660521fa17189e7a7858747d066052dd8ea8f430ce7649911c157d4423c412")
     version("1.0.0", sha256="88376c5cd065aac8d92445184a02ccf5186dc4890ccd7518e88be436978675c0")

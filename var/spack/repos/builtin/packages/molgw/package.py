@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,8 @@ class Molgw(MakefilePackage):
     git = "https://github.com/bruneval/molgw.git"
 
     maintainers("bruneval")
+
+    license("GPL-3.0-only")
 
     version("3.2", sha256="a3f9a99db52d95ce03bc3636b5999e6d92b503ec2f4afca33d030480c3e10242")
 
@@ -78,7 +80,7 @@ class Molgw(MakefilePackage):
         flags["PREFIX"] = prefix
 
         # Set LAPACK and SCALAPACK
-        if "^mkl" in spec:
+        if spec["lapack"].name not in INTEL_MATH_LIBRARIES:
             flags["LAPACK"] = self._get_mkl_ld_flags(spec)
         else:
             flags["LAPACK"] = spec["lapack"].libs.ld_flags + " " + spec["blas"].libs.ld_flags
@@ -105,7 +107,7 @@ class Molgw(MakefilePackage):
         if "+scalapack" in spec:
             flags["CPPFLAGS"] = flags.get("CPPFLAGS", "") + " -DHAVE_SCALAPACK -DHAVE_MPI "
 
-        if "^mkl" in spec:
+        if spec["lapack"].name in INTEL_MATH_LIBRARIES:
             flags["CPPFLAGS"] = flags.get("CPPFLAGS", "") + " -DHAVE_MKL "
 
         # Write configuration file

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyGlmsingle(PythonPackage):
     homepage = "https://github.com/cvnlab/GLMsingle"
     url = "https://github.com/cvnlab/GLMsingle/archive/refs/tags/1.0.tar.gz"
     git = "https://github.com/cvnlab/GLMsingle.git"
+
+    license("BSD-3-Clause")
 
     version("main", branch="main")
     version("1.1", sha256="3fe3cb1f0d1e96976f2c707b1f9e8ddb932b74f58e99debbfa6f17761fdbd37b")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class RPolyclip(RPackage):
     self-intersections from polygon data."""
 
     cran = "polyclip"
+
+    license("BSL-1.0")
 
     version("1.10-4", sha256="84d2c9778771d3759b49d7d16fb54c8ddc5397da3b1d21074bc4aa42c02e6f56")
     version("1.10-0", sha256="74dabc0dfe5a527114f0bb8f3d22f5d1ae694e6ea9345912909bae885525d34b")

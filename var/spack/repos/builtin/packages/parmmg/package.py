@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Parmmg(CMakePackage):
     url = "https://github.com/MmgTools/ParMmg/archive/refs/tags/v1.3.0.tar.gz"
 
     maintainers("corentin-dev")
+
+    license("LGPL-3.0-or-later")
 
     version("1.3.0", sha256="d43b73a73b62545b5a31bbe25562f69c9e63ad8a6d416bd459781203e37427cf")
     version("1.2.0", sha256="99729cc292dcb59c87e3f25d4cabf5a64841e83b624d383e1fd3fb7f960df672")

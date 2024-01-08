@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,6 +37,7 @@ def mpileaks_possible_deps(mock_packages, mpi_names):
         "low-priority-provider": set(),
         "dyninst": set(["libdwarf", "libelf"]),
         "fake": set(),
+        "intel-parallel-studio": set(),
         "libdwarf": set(["libelf"]),
         "libelf": set(),
         "mpich": set(),
@@ -265,12 +266,6 @@ def test_package_fetcher_fails():
     pkg = BaseTestPackage(s)
     with pytest.raises(ValueError, match="without concrete version"):
         pkg.fetcher
-
-
-def test_package_no_extendees():
-    s = spack.spec.Spec("a")
-    pkg = BaseTestPackage(s)
-    assert pkg.extendee_args is None
 
 
 def test_package_test_no_compilers(mock_packages, monkeypatch, capfd):

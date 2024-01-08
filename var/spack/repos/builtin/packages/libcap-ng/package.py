@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class LibcapNg(AutotoolsPackage):
 
     homepage = "https://github.com/stevegrubb/libcap-ng/"
     url = "https://github.com/stevegrubb/libcap-ng/archive/v0.8.tar.gz"
+
+    license("GPL-2.0-or-later AND LGPL-2.1-or-later")
 
     version("0.8.3", sha256="e542e9139961f0915ab5878427890cdc7762949fbe216bd0cb4ceedb309bb854")
     version("0.8", sha256="836ea8188ae7c658cdf003e62a241509dd542f3dec5bc40c603f53a5aadaa93f")

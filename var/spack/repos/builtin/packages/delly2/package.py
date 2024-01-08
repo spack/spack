@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Delly2(MakefilePackage):
     url = "https://github.com/dellytools/delly/archive/refs/tags/v1.1.6.tar.gz"
     git = "https://github.com/dellytools/delly.git"
     maintainers("snehring")
+
+    license("BSD-3-Clause")
 
     version("1.1.6", sha256="08961e9c81431eb486476fa71eea94941ad24ec1970b71e5a7720623a39bfd2a")
     version("0.9.1", tag="v0.9.1", commit="ef1cd626a85cfd1c1b7acfca2b5fd5957f2a05f1")

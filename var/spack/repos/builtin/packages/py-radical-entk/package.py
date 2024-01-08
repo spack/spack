@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class PyRadicalEntk(PythonPackage):
     pypi = "radical.entk/radical.entk-1.20.0.tar.gz"
 
     maintainers("andre-merzky")
+
+    license("MIT")
 
     version("develop", branch="devel")
     version("1.20.0", sha256="1b9fc470b926a93528fd2a898636bdcd1c565bd58ba47608f9bead811d8a46d7")
