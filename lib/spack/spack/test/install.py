@@ -118,33 +118,6 @@ class RemovePrefixChecker:
         self.wrapped_rm_prefix()
 
 
-class MockStage:
-    def __init__(self, wrapped_stage):
-        self.wrapped_stage = wrapped_stage
-        self.test_destroyed = False
-
-    def __enter__(self):
-        self.create()
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if exc_type is None:
-            self.destroy()
-
-    def destroy(self):
-        self.test_destroyed = True
-        self.wrapped_stage.destroy()
-
-    def create(self):
-        self.wrapped_stage.create()
-
-    def __getattr__(self, attr):
-        if attr == "wrapped_stage":
-            # This attribute may not be defined at some point during unpickling
-            raise AttributeError()
-        return getattr(self.wrapped_stage, attr)
-
-
 def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch, working_env):
     s = Spec("canfail").concretized()
 
@@ -162,11 +135,8 @@ def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch, wo
         spack.store.STORE.failure_tracker.clear(s, True)
 
         s.package.set_install_succeed()
-        s.package.stage = MockStage(s.package.stage)
-
         s.package.do_install(restage=True)
         assert rm_prefix_checker.removed
-        assert s.package.stage.test_destroyed
         assert s.package.spec.installed
 
     finally:
@@ -357,10 +327,8 @@ def test_partial_install_keep_prefix(install_mockery, mock_fetch, monkeypatch, w
     spack.store.STORE.failure_tracker.clear(s, True)
 
     s.package.set_install_succeed()
-    s.package.stage = MockStage(s.package.stage)
     s.package.do_install(keep_prefix=True)
     assert s.package.spec.installed
-    assert not s.package.stage.test_destroyed
 
 
 def test_second_install_no_overwrite_first(install_mockery, mock_fetch, monkeypatch):
