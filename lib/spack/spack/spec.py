@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -211,6 +211,19 @@ def colorize_spec(spec):
             return "%s%s" % (COLOR_FORMATS[sep], clr.cescape(sep))
 
     return clr.colorize(re.sub(_SEPARATORS, insert_color(), str(spec)) + "@.")
+
+
+OLD_STYLE_FMT_RE = re.compile(r"\${[A-Z]+}")
+
+
+def ensure_modern_format_string(fmt: str) -> None:
+    """Ensure that the format string does not contain old ${...} syntax."""
+    result = OLD_STYLE_FMT_RE.search(fmt)
+    if result:
+        raise SpecFormatStringError(
+            f"Format string `{fmt}` contains old syntax `{result.group(0)}`. "
+            "This is no longer supported."
+        )
 
 
 @lang.lazy_lexicographic_ordering
@@ -910,19 +923,23 @@ class FlagMap(lang.HashableMap):
             yield flags
 
     def __str__(self):
-        sorted_keys = [k for k in sorted(self.keys()) if self[k] != []]
-        cond_symbol = " " if len(sorted_keys) > 0 else ""
-        return (
-            cond_symbol
-            + " ".join(
-                key
-                + ('=="' if True in [f.propagate for f in self[key]] else '="')
-                + " ".join(self[key])
-                + '"'
-                for key in sorted_keys
-            )
-            + cond_symbol
-        )
+        sorted_items = sorted((k, v) for k, v in self.items() if v)
+
+        result = ""
+        for flag_type, flags in sorted_items:
+            normal = [f for f in flags if not f.propagate]
+            if normal:
+                result += f" {flag_type}={spack.parser.quote_if_needed(' '.join(normal))}"
+
+            propagated = [f for f in flags if f.propagate]
+            if propagated:
+                result += f" {flag_type}=={spack.parser.quote_if_needed(' '.join(propagated))}"
+
+        # TODO: somehow add this space only if something follows in Spec.format()
+        if sorted_items:
+            result += " "
+
+        return result
 
 
 def _sort_by_dep_types(dspec: DependencySpec):
@@ -2751,14 +2768,16 @@ class Spec:
         if self._concrete:
             return
 
+        # take the spec apart once before starting the main concretization loop and resolving
+        # deps, but don't break dependencies during concretization as the spec is built.
+        user_spec_deps = self.flat_dependencies(disconnect=True)
+
         changed = True
         force = False
-
-        user_spec_deps = self.flat_dependencies(copy=False)
         concretizer = spack.concretize.Concretizer(self.copy())
         while changed:
             changes = (
-                self.normalize(force, tests=tests, user_spec_deps=user_spec_deps),
+                self.normalize(force, tests, user_spec_deps, disconnect=False),
                 self._expand_virtual_packages(concretizer),
                 self._concretize_helper(concretizer),
             )
@@ -3091,47 +3110,33 @@ class Spec:
         clone.concretize(tests=tests)
         return clone
 
-    def flat_dependencies(self, **kwargs):
-        """Return a DependencyMap containing all of this spec's
-        dependencies with their constraints merged.
+    def flat_dependencies(self, disconnect: bool = False):
+        """Build DependencyMap of all of this spec's dependencies with their constraints merged.
 
-        If copy is True, returns merged copies of its dependencies
-        without modifying the spec it's called on.
-
-        If copy is False, clears this spec's dependencies and
-        returns them. This disconnects all dependency links including
-        transitive dependencies, except for concrete specs: if a spec
-        is concrete it will not be disconnected from its dependencies
-        (although a non-concrete spec with concrete dependencies will
-        be disconnected from those dependencies).
+        Arguments:
+            disconnect: if True, disconnect all dependents and dependencies among nodes in this
+                spec's DAG.
         """
-        copy = kwargs.get("copy", True)
-
         flat_deps = {}
-        try:
-            deptree = self.traverse(root=False)
-            for spec in deptree:
-                if spec.name not in flat_deps:
-                    if copy:
-                        spec = spec.copy(deps=False)
-                    flat_deps[spec.name] = spec
-                else:
+        deptree = self.traverse(root=False)
+
+        for spec in deptree:
+            if spec.name not in flat_deps:
+                flat_deps[spec.name] = spec
+            else:
+                try:
                     flat_deps[spec.name].constrain(spec)
+                except spack.error.UnsatisfiableSpecError as e:
+                    # DAG contains two instances of the same package with inconsistent constraints.
+                    raise InconsistentSpecError("Invalid Spec DAG: %s" % e.message) from e
 
-            if not copy:
-                for spec in flat_deps.values():
-                    if not spec.concrete:
-                        spec.clear_edges()
-                self.clear_dependencies()
+        if disconnect:
+            for spec in flat_deps.values():
+                if not spec.concrete:
+                    spec.clear_edges()
+            self.clear_dependencies()
 
-            return flat_deps
-
-        except spack.error.UnsatisfiableSpecError as e:
-            # Here, the DAG contains two instances of the same package
-            # with inconsistent constraints.  Users cannot produce
-            # inconsistent specs like this on the command line: the
-            # parser doesn't allow it. Spack must be broken!
-            raise InconsistentSpecError("Invalid Spec DAG: %s" % e.message) from e
+        return flat_deps
 
     def index(self, deptype="all"):
         """Return a dictionary that points to all the dependencies in this
@@ -3166,7 +3171,7 @@ class Spec:
         for when_spec, dependency in conditions.items():
             if self.satisfies(when_spec):
                 if dep is None:
-                    dep = dp.Dependency(self.name, Spec(name), depflag=0)
+                    dep = dp.Dependency(Spec(self.name), Spec(name), depflag=0)
                 try:
                     dep.merge(dependency)
                 except spack.error.UnsatisfiableSpecError as e:
@@ -3362,7 +3367,7 @@ class Spec:
 
         return any_change
 
-    def normalize(self, force=False, tests=False, user_spec_deps=None):
+    def normalize(self, force=False, tests=False, user_spec_deps=None, disconnect=True):
         """When specs are parsed, any dependencies specified are hanging off
         the root, and ONLY the ones that were explicitly provided are there.
         Normalization turns a partial flat spec into a DAG, where:
@@ -3399,7 +3404,7 @@ class Spec:
         # user-specified dependencies are recorded separately in case they
         # refer to specs which take several normalization passes to
         # materialize.
-        all_spec_deps = self.flat_dependencies(copy=False)
+        all_spec_deps = self.flat_dependencies(disconnect=disconnect)
 
         if user_spec_deps:
             for name, spec in user_spec_deps.items():
@@ -3423,6 +3428,14 @@ class Spec:
         visited = set()
 
         any_change = self._normalize_helper(visited, all_spec_deps, provider_index, tests)
+
+        # remove any leftover dependents outside the spec from, e.g., pruning externals
+        valid = {id(spec) for spec in all_spec_deps.values()} | {id(self)}
+        for spec in all_spec_deps.values():
+            remove = [dep for dep in spec.dependents() if id(dep) not in valid]
+            for dep in remove:
+                del spec._dependents.edges[dep.name]
+                del dep._dependencies.edges[spec.name]
 
         # Mark the spec as normal once done.
         self._normal = True
@@ -4360,6 +4373,7 @@ class Spec:
                 that accepts a string and returns another one
 
         """
+        ensure_modern_format_string(format_string)
         color = kwargs.get("color", False)
         transform = kwargs.get("transform", {})
 
@@ -4725,6 +4739,20 @@ class Spec:
     @build_spec.setter
     def build_spec(self, value):
         self._build_spec = value
+
+    def trim(self, dep_name):
+        """
+        Remove any package that is or provides `dep_name` transitively
+        from this tree. This can also remove other dependencies if
+        they are only present because of `dep_name`.
+        """
+        for spec in list(self.traverse()):
+            new_dependencies = _EdgeMap()  # A new _EdgeMap
+            for pkg_name, edge_list in spec._dependencies.items():
+                for edge in edge_list:
+                    if (dep_name not in edge.virtuals) and (not dep_name == edge.spec.name):
+                        new_dependencies.add(edge)
+            spec._dependencies = new_dependencies
 
     def splice(self, other, transitive):
         """Splices dependency "other" into this ("target") Spec, and return the

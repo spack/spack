@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Yara(AutotoolsPackage):
 
     homepage = "https://virustotal.github.io/yara/"
     url = "https://github.com/VirusTotal/yara/archive/v3.9.0.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("3.9.0", sha256="ebe7fab0abadb90449a62afbd24e196e18b177efe71ffd8bf22df95c5386f64d")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyWebcolors(PythonPackage):
 
     homepage = "https://pypi.org/project/webcolors/"
     pypi = "webcolors/webcolors-1.11.1.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("1.11.1", sha256="76f360636957d1c976db7466bc71dcb713bb95ac8911944dffc55c01cb516de6")
 

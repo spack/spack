@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class OpenIscsi(MakefilePackage):
 
     homepage = "https://github.com/open-iscsi/"
     url = "https://github.com/open-iscsi/open-iscsi/archive/2.1.1.tar.gz"
+
+    license("GPL-2.0-only")
 
     version("2.1.1", sha256="dfc1ea37f230f9d116f5b39c795b35be43002d65c81330ccd3878786532b811b")
     version("2.1.0", sha256="5b381b6a74bef3ca57cd8d5fa7a3ff07d45c8009b0e4aac5ba3a811ff0c48ee4")

@@ -1,4 +1,4 @@
-.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -96,6 +96,35 @@ on its most-favored packages, and it may guess incorrectly.
 Each package version and compiler listed in an external should
 have entries in Spack's packages and compiler configuration, even
 though the package and compiler may not ever be built.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Extra attributes for external packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Sometimes external packages require additional attributes to be used
+effectively. This information can be defined on a per-package basis
+and stored in the ``extra_attributes`` section of the external package
+configuration. In addition to per-package information, this section
+can be used to define environment modifications to be performed
+whenever the package is used. For example, if an external package is
+built without ``rpath`` support, it may require ``LD_LIBRARY_PATH``
+settings to find its dependencies. This could be configured as
+follows:
+
+.. code-block:: yaml
+
+   packages:
+     mpich:
+       externals:
+       - spec: mpich@3.3 %clang@12.0.0 +hwloc
+         prefix: /path/to/mpich
+         extra_attributes:
+           environment:
+             prepend_path:
+               LD_LIBRARY_PATH: /path/to/hwloc/lib64
+
+See :ref:`configuration_environment_variables` for more information on
+how to configure environment modifications in Spack config files.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Prevent packages from being built from sources

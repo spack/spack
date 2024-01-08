@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyTorchCluster(PythonPackage):
 
     homepage = "https://github.com/rusty1s/pytorch_cluster"
     url = "https://github.com/rusty1s/pytorch_cluster/archive/1.5.7.tar.gz"
+
+    license("MIT")
 
     version("1.6.3", sha256="0e2b08095e03cf87ce9b23b7a7352236a25d3ed92d92351dc020fd927ea8dbfe")
     version("1.5.8", sha256="95c6e81e9c4a6235e1b2152ab917021d2060ad995199f6bd7fb39986d37310f0")

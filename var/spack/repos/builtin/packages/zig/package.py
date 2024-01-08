@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Zig(CMakePackage):
     git = "https://github.com/ziglang/zig.git"
 
     maintainers("alalazo")
+
+    license("MIT")
 
     version("0.11.0", tag="0.11.0", commit="67709b638224ac03820226c6744d8b6ead59184c")
     version("0.10.1", tag="0.10.1", commit="b57081f039bd3f8f82210e8896e336e3c3a6869b")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,6 @@ from llnl.util.tty.color import colorize
 import spack.cmd
 import spack.cmd.common
 import spack.cmd.common.arguments
-import spack.cmd.common.arguments as arguments
 import spack.cmd.install
 import spack.cmd.modules
 import spack.cmd.uninstall
@@ -31,6 +30,7 @@ import spack.environment.shell
 import spack.schema.env
 import spack.spec
 import spack.tengine
+from spack.cmd.common import arguments
 from spack.util.environment import EnvironmentModifications
 
 description = "manage virtual environments"

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -568,7 +568,7 @@ def depends_on(spec, when=None, type=dt.DEFAULT_TYPES, patches=None):
 
 
 @directive(("extendees", "dependencies"))
-def extends(spec, type=("build", "run"), **kwargs):
+def extends(spec, when=None, type=("build", "run"), patches=None):
     """Same as depends_on, but also adds this package to the extendee list.
 
     keyword arguments can be passed to extends() so that extension
@@ -578,14 +578,15 @@ def extends(spec, type=("build", "run"), **kwargs):
     """
 
     def _execute_extends(pkg):
-        when = kwargs.get("when")
         when_spec = make_when_spec(when)
         if not when_spec:
             return
 
-        _depends_on(pkg, spec, when=when, type=type)
+        _depends_on(pkg, spec, when=when, type=type, patches=patches)
         spec_obj = spack.spec.Spec(spec)
-        pkg.extendees[spec_obj.name] = (spec_obj, kwargs)
+
+        # TODO: the values of the extendees dictionary are not used. Remove in next refactor.
+        pkg.extendees[spec_obj.name] = (spec_obj, None)
 
     return _execute_extends
 
@@ -912,14 +913,21 @@ def _execute_license(pkg, license_identifier: str, when):
 
 
 @directive("licenses")
-def license(license_identifier: str, when=None):
+def license(
+    license_identifier: str,
+    checked_by: Optional[Union[str, List[str]]] = None,
+    when: Optional[Union[str, bool]] = None,
+):
     """Add a new license directive, to specify the SPDX identifier the software is
     distributed under.
 
     Args:
-        license_identifiers: A list of SPDX identifiers specifying the licenses
-            the software is distributed under.
+        license_identifiers: SPDX identifier specifying the license(s) the software
+            is distributed under.
+        checked_by: string or list of strings indicating which github user checked the
+            license (if any).
         when: A spec specifying when the license applies.
+            when: A spec specifying when the license applies.
     """
 
     return lambda pkg: _execute_license(pkg, license_identifier, when)

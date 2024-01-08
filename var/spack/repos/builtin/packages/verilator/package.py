@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,6 +38,8 @@ class Verilator(AutotoolsPackage):
 
     maintainers("davekeeshan")
 
+    license("LGPL-3.0-only")
+
     version("master", branch="master")
 
     version("5.018", sha256="8b544273eedee379e3c1a3bb849e14c754c9b5035d61ad03acdf3963092ba6c0")
@@ -70,10 +72,12 @@ class Verilator(AutotoolsPackage):
     depends_on("libtool", type="build")
     depends_on("help2man", type="build")
     depends_on("bison", type="build")
-    depends_on("flex", type="build")
+    depends_on("flex")
     depends_on("ccache", type=("build", "run"), when="@5.018:")
     depends_on("perl", type=("build", "run"))
     depends_on("bash", type="build")
+
+    conflicts("%gcc@:6", msg="C++14 support required")
 
     # we need to fix the CXX and LINK paths, as they point to the spack
     # wrapper scripts which aren't usable without spack

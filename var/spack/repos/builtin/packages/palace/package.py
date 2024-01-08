@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -81,7 +81,8 @@ class Palace(CMakePackage):
         depends_on("mumps~openmp", when="~openmp")
 
     with when("+slepc"):
-        depends_on("slepc ^petsc+mpi+double+complex")
+        depends_on("slepc")
+        depends_on("petsc+mpi+double+complex")
         depends_on("petsc+shared", when="+shared")
         depends_on("petsc~shared", when="~shared")
         depends_on("petsc+int64", when="+int64")

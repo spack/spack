@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Cosma(CMakePackage):
     homepage = "https://github.com/eth-cscs/COSMA"
     url = "https://github.com/eth-cscs/COSMA/archive/refs/tags/v2.6.6.tar.gz"
     git = "https://github.com/eth-cscs/COSMA.git"
+
+    license("BSD-3-Clause")
 
     # note: The default archives produced with github do not have the archives
     #       of the submodules.
@@ -57,6 +59,8 @@ class Cosma(CMakePackage):
     depends_on("scalapack", when="+scalapack")
     depends_on("cuda", when="+cuda")
     depends_on("rocblas", when="+rocm")
+    depends_on("nccl", when="+nccl")
+    depends_on("rccl", when="+rccl")
 
     with when("@2.6.3:"):
         depends_on("tiled-mm@2.2:+cuda", when="+cuda")

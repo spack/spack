@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/electronic-structure/SIRIUS.git"
 
     maintainers("simonpintarelli", "haampie", "dev-zero", "AdhocMan", "toxa81")
+
+    license("BSD-2-Clause")
 
     version("develop", branch="develop")
     version("master", branch="master")
@@ -187,6 +189,7 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("umpire+rocm~device_alloc", when="+rocm")
 
     patch("mpi_datatypes.patch", when="@:7.2.6")
+    patch("fj.patch", when="@7.3.2: %fj")
 
     def cmake_args(self):
         spec = self.spec
