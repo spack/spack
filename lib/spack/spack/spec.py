@@ -2768,14 +2768,16 @@ class Spec:
         if self._concrete:
             return
 
+        # take the spec apart once before starting the main concretization loop and resolving
+        # deps, but don't break dependencies during concretization as the spec is built.
+        user_spec_deps = self.flat_dependencies(disconnect=True)
+
         changed = True
         force = False
-
-        user_spec_deps = self.flat_dependencies(copy=False)
         concretizer = spack.concretize.Concretizer(self.copy())
         while changed:
             changes = (
-                self.normalize(force, tests=tests, user_spec_deps=user_spec_deps),
+                self.normalize(force, tests, user_spec_deps, disconnect=False),
                 self._expand_virtual_packages(concretizer),
                 self._concretize_helper(concretizer),
             )
@@ -3108,45 +3110,33 @@ class Spec:
         clone.concretize(tests=tests)
         return clone
 
-    def flat_dependencies(self, **kwargs):
-        """Return a DependencyMap containing all of this spec's
-        dependencies with their constraints merged.
+    def flat_dependencies(self, disconnect: bool = False):
+        """Build DependencyMap of all of this spec's dependencies with their constraints merged.
 
-        If copy is True, returns merged copies of its dependencies
-        without modifying the spec it's called on.
-
-        If copy is False, clears this spec's dependencies and
-        returns them. This disconnects all dependency links including
-        transitive dependencies, except for concrete specs: if a spec
-        is concrete it will not be disconnected from its dependencies
-        (although a non-concrete spec with concrete dependencies will
-        be disconnected from those dependencies).
+        Arguments:
+            disconnect: if True, disconnect all dependents and dependencies among nodes in this
+                spec's DAG.
         """
-        copy = kwargs.get("copy", True)
-
         flat_deps = {}
-        try:
-            deptree = self.traverse(root=False)
-            for spec in deptree:
-                if spec.name not in flat_deps:
-                    if copy:
-                        spec = spec.copy(deps=False)
-                    flat_deps[spec.name] = spec
-                else:
+        deptree = self.traverse(root=False)
+
+        for spec in deptree:
+            if spec.name not in flat_deps:
+                flat_deps[spec.name] = spec
+            else:
+                try:
                     flat_deps[spec.name].constrain(spec)
+                except spack.error.UnsatisfiableSpecError as e:
+                    # DAG contains two instances of the same package with inconsistent constraints.
+                    raise InconsistentSpecError("Invalid Spec DAG: %s" % e.message) from e
 
-            if not copy:
-                for spec in flat_deps.values():
-                    if not spec.concrete:
-                        spec.clear_edges()
-                self.clear_dependencies()
+        if disconnect:
+            for spec in flat_deps.values():
+                if not spec.concrete:
+                    spec.clear_edges()
+            self.clear_dependencies()
 
-            return flat_deps
-
-        except spack.error.UnsatisfiableSpecError as e:
-            # Here, the DAG contains two instances of the same package
-            # with inconsistent constraints.
-            raise InconsistentSpecError("Invalid Spec DAG: %s" % e.message) from e
+        return flat_deps
 
     def index(self, deptype="all"):
         """Return a dictionary that points to all the dependencies in this
@@ -3181,7 +3171,7 @@ class Spec:
         for when_spec, dependency in conditions.items():
             if self.satisfies(when_spec):
                 if dep is None:
-                    dep = dp.Dependency(self.name, Spec(name), depflag=0)
+                    dep = dp.Dependency(Spec(self.name), Spec(name), depflag=0)
                 try:
                     dep.merge(dependency)
                 except spack.error.UnsatisfiableSpecError as e:
@@ -3377,7 +3367,7 @@ class Spec:
 
         return any_change
 
-    def normalize(self, force=False, tests=False, user_spec_deps=None):
+    def normalize(self, force=False, tests=False, user_spec_deps=None, disconnect=True):
         """When specs are parsed, any dependencies specified are hanging off
         the root, and ONLY the ones that were explicitly provided are there.
         Normalization turns a partial flat spec into a DAG, where:
@@ -3414,7 +3404,7 @@ class Spec:
         # user-specified dependencies are recorded separately in case they
         # refer to specs which take several normalization passes to
         # materialize.
-        all_spec_deps = self.flat_dependencies(copy=False)
+        all_spec_deps = self.flat_dependencies(disconnect=disconnect)
 
         if user_spec_deps:
             for name, spec in user_spec_deps.items():
@@ -3438,6 +3428,14 @@ class Spec:
         visited = set()
 
         any_change = self._normalize_helper(visited, all_spec_deps, provider_index, tests)
+
+        # remove any leftover dependents outside the spec from, e.g., pruning externals
+        valid = {id(spec) for spec in all_spec_deps.values()} | {id(self)}
+        for spec in all_spec_deps.values():
+            remove = [dep for dep in spec.dependents() if id(dep) not in valid]
+            for dep in remove:
+                del spec._dependents.edges[dep.name]
+                del dep._dependencies.edges[spec.name]
 
         # Mark the spec as normal once done.
         self._normal = True
