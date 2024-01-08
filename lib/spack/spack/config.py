@@ -1352,8 +1352,9 @@ class ConfigPath:
 
     # Patterns for validation
     key_pattern = rf"{element}[+-]?"
-    next_key_pattern = rf"{key_pattern}"
+    next_key_pattern = rf"\:\:?{key_pattern}"
     final_value_pattern = rf"\:\:?{possible_value}"
+    final_separator = rf"\:\:?"
 
     @staticmethod
     def validate(path):
@@ -1370,16 +1371,17 @@ class ConfigPath:
         original_path = path
         key, path = ConfigPath.next_validation_token(path, [ConfigPath.key_pattern])
         prior_key = None
-        while path:
-            _, path = ConfigPath.next_validation_token(path, ["\:\:?"])
-            if not path:
-                # Path ended in ":"
-                break
-            if prior_key:
-                if not re.match(ConfigPath.next_key_pattern, prior_key):
-                    raise ValueError(f"Intermediate path element not a key: {prior_key}")
-            element, path = ConfigPath.next_validation_token(path, [ConfigPath.next_key_pattern, ConfigPath.final_value_pattern])
-            prior_key = element
+        parsed_elements = [key]
+        try:
+            while path:
+                if prior_key:
+                    if not re.match(ConfigPath.next_key_pattern, prior_key):
+                        raise ValueError(f"Intermediate path element not a key: {prior_key}")
+                element, path = ConfigPath.next_validation_token(path, [ConfigPath.next_key_pattern, ConfigPath.final_value_pattern, ConfigPath.final_separator])
+                parsed_elements.append(element)
+                prior_key = element
+        except ValueError as e:
+            raise ValueError(f"Original path: {original_path}\nElements: {parsed_elements}", e)
 
     @staticmethod
     def next_validation_token(path_str, possible_patterns):
