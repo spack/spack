@@ -34,7 +34,7 @@ class Libsixel(MesonPackage):
     depends_on("libpng", when="+png")
 
     def meson_args(self):
-        options = ["img2sixel", "sixel2png", "gd", "jpeg", "png", "libcurl", "gdk-pixbuf2"]
+        options = ["img2sixel", "sixel2png", "libcurl", "gdk-pixbuf2"]
         args = []
         for option in options:
             state = "enabled" if "+{}".format(option) in self.spec else "disabled"
