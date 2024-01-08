@@ -1348,8 +1348,12 @@ class ConfigPath:
     # not contain internal quotes
     possible_value = rf"{element}+"
     key_or_possible_value = rf"(?:(?:{key})|(?:{possible_value}))"
-    validation_pattern = rf"^{key}[+-]?(?:\:\:?{key}[+-]?)*\:?\:?(?:\:{key_or_possible_value})?$"
     token_pattern = rf"(^{key_or_possible_value}[+-]?\:?\:?)"
+
+    # Patterns for validation
+    key_pattern = rf"{element}[+-]?"
+    next_key_pattern = rf"\:\:?{key_pattern}"
+    final_value_pattern = rf"\:\:?{possible_value}"
 
     @staticmethod
     def validate(path):
@@ -1361,8 +1365,25 @@ class ConfigPath:
         x:y::z
         x:y+::z
         """
-        if not re.match(ConfigPath.validation_pattern, path):
-            raise ValueError(f"Invalid path string: {path}")
+        key, path = ConfigPath.next_validation_token(path, [ConfigPath.key_pattern])
+        prior_key = None
+        while path:
+            if prior_key:
+                if not re.match(ConfigPath.next_key_pattern, prior_key):
+                    raise ValueError(f"Intermediate path element not a key: {prior_key}")
+            element, path = ConfigPath.next_validation_token(path, [ConfigPath.next_key_pattern, ConfigPath.final_value_pattern])
+            prior_key = element
+
+    @staticmethod
+    def next_validation_token(path_str, possible_patterns):
+        any_of = '|'.join(rf"(?:{x})" for x in possible_patterns)
+        extract = rf"({any_of})"
+        m = re.match(extract, path_str)
+        if not m:
+            import pdb; pdb.set_trace()
+            raise ValueError("Expected token not matched")
+        token = m.group(1)
+        return token, path_str[len(token) :]
 
     @staticmethod
     def next_token(path_str):
