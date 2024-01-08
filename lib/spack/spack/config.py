@@ -638,7 +638,6 @@ class Configuration:
 
         We use ``:`` as the separator, like YAML objects.
         """
-        # TODO: Currently only handles maps. Think about lists if needed.
         parts = process_config_path(path)
         section = parts.pop(0)
 
