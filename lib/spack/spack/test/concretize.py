@@ -134,7 +134,7 @@ def current_host(request, monkeypatch):
 
 @pytest.fixture(scope="function", params=[True, False])
 def fuzz_dep_order(request, monkeypatch):
-    """Meta-function that tweaks the order of iteration over dependencies in in a package."""
+    """Meta-function that tweaks the order of iteration over dependencies in a package."""
 
     def reverser(pkg_name):
         if request.param:
