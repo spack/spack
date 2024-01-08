@@ -164,7 +164,7 @@ class Abinit(AutotoolsPackage):
                 options.extend(
                     [
                         f"WANNIER90_CPPFLAGS=-I{spec['wannier90'].prefix.modules}",
-                        f"WANNIER90_LIBS=-L{spec['wannier90'].prefix.lib}"
+                        f"WANNIER90_LIBS=-L{spec['wannier90'].prefix.lib}",
                         "WANNIER90_LDFLAGS=-lwannier",
                     ]
                 )
