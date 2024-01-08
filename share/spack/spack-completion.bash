@@ -990,7 +990,7 @@ _spack_dev_build() {
 _spack_develop() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -p --path --no-clone --clone -f --force"
+        SPACK_COMPREPLY="-h --help -p --path --no-clone --clone -f --force -a --always-rebuild"
     else
         _all_packages
     fi
