@@ -29,5 +29,5 @@ class BiobbCommon(PythonPackage):
     # Test
     @run_after('install')
     @on_package_attributes(run_tests=True)
-    def check_install (self):
+    def check_install(self):
         python("-c", 'import biobb_common')
