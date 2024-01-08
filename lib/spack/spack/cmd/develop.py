@@ -45,6 +45,8 @@ def setup_parser(subparser):
     subparser.add_argument(
         "-a",
         "--always-rebuild",
+        action="store_true",
+        default=None,
         help=(
             "always trigger incremental builds for develop specs by skipping last file updated"
             " checks. this can improve performance on certain filesystems i.e. lustre and NFS"
