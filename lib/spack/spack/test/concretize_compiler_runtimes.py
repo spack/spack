@@ -13,7 +13,10 @@ import spack.solver.asp
 import spack.spec
 from spack.version import Version
 
-pytestmark = [pytest.mark.only_clingo("Original concretizer does not support compiler runtimes")]
+pytestmark = [
+    pytest.mark.only_clingo("Original concretizer does not support compiler runtimes"),
+    pytest.mark.usefixtures("enable_runtimes"),
+]
 
 
 @pytest.fixture
@@ -31,7 +34,7 @@ def enable_runtimes():
     spack.solver.asp.WITH_RUNTIME = original
 
 
-def test_correct_gcc_runtime_is_injected_as_dependency(runtime_repo, enable_runtimes):
+def test_correct_gcc_runtime_is_injected_as_dependency(runtime_repo):
     s = spack.spec.Spec("a%gcc@10.2.1 ^b%gcc@4.5.0").concretized()
     a, b = s["a"], s["b"]
 
@@ -43,10 +46,10 @@ def test_correct_gcc_runtime_is_injected_as_dependency(runtime_repo, enable_runt
 
 
 @pytest.mark.regression("41972")
-def test_external_nodes_do_not_have_runtimes(runtime_repo, enable_runtimes, mutable_config):
+def test_external_nodes_do_not_have_runtimes(runtime_repo, mutable_config, tmp_path):
     """Tests that external nodes don't have runtime dependencies."""
 
-    packages_yaml = {"b": {"externals": [{"spec": "b@1.0", "prefix": "/usr"}]}}
+    packages_yaml = {"b": {"externals": [{"spec": "b@1.0", "prefix": f"{str(tmp_path)}"}]}}
     spack.config.set("packages", packages_yaml)
 
     s = spack.spec.Spec("a%gcc@10.2.1").concretized()
