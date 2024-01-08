@@ -6978,7 +6978,7 @@ Many of the licenses that are currently in the spack repositories have been
 automatically determined. While this is great for bulk adding license
 information and is most likely correct, there are sometimes edge cases that
 require manual intervention. To determine which licenses are validated and
-which are not, there is the `checked_by` paramter in the license directive:
+which are not, there is the `checked_by` parameter in the license directive:
 
 .. code-block:: python
 
