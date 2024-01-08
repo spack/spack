@@ -1395,7 +1395,7 @@ complete -c spack -n '__fish_spack_using_command dev-build' -l reuse-deps -f -a 
 complete -c spack -n '__fish_spack_using_command dev-build' -l reuse-deps -d 'reuse installed dependencies only'
 
 # spack develop
-set -g __fish_spack_optspecs_spack_develop h/help p/path= no-clone clone f/force= a/always-rebuild=
+set -g __fish_spack_optspecs_spack_develop h/help p/path= no-clone clone f/force= a/always-rebuild
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 develop' -f -k -a '(__fish_spack_specs_or_id)'
 complete -c spack -n '__fish_spack_using_command develop' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command develop' -s h -l help -d 'show this help message and exit'
@@ -1407,8 +1407,8 @@ complete -c spack -n '__fish_spack_using_command develop' -l clone -f -a clone
 complete -c spack -n '__fish_spack_using_command develop' -l clone -d 'clone the package even if the path already exists'
 complete -c spack -n '__fish_spack_using_command develop' -s f -l force -r -f -a force
 complete -c spack -n '__fish_spack_using_command develop' -s f -l force -r -d 'remove any files or directories that block cloning source code'
-complete -c spack -n '__fish_spack_using_command develop' -s a -l always-rebuild -r -f -a always_rebuild
-complete -c spack -n '__fish_spack_using_command develop' -s a -l always-rebuild -r -d 'always trigger incremental builds for develop specs by skipping last file updated checks. this can improve performance on certain filesystems i.e. lustre and NFS'
+complete -c spack -n '__fish_spack_using_command develop' -s a -l always-rebuild -f -a always_rebuild
+complete -c spack -n '__fish_spack_using_command develop' -s a -l always-rebuild -d 'always trigger incremental builds for develop specs by skipping last file updated checks. this can improve performance on certain filesystems i.e. lustre and NFS'
 
 # spack diff
 set -g __fish_spack_optspecs_spack_diff h/help json first a/attribute= ignore=
