@@ -1177,7 +1177,7 @@ def tarfile_of_spec_prefix(tar: tarfile.TarFile, prefix: str) -> None:
     # First add all directories leading up to `prefix` (Spack <= 0.21 did not do this, leading to
     # issues when tarballs are used in runtimes like AWS lambda). Skip the file system root.
     parent_dirs = reversed(pathlib.Path(prefix).parents)
-    next(parent_dirs)  # skip the root: python 3.6 doesn't support slicing.
+    next(parent_dirs)  # skip the root: slices are supported from python 3.10
     for parent_dir in parent_dirs:
         dir_info = tarfile.TarInfo(_tarinfo_name(str(parent_dir)))
         dir_info.type = tarfile.DIRTYPE
@@ -2057,7 +2057,8 @@ def _extract_inner_tarball(spec, filename, extract_to, signature_required: bool,
 
 
 def _tar_strip_component(tar: tarfile.TarFile, prefix: str):
-    """Strip the top-level directory `prefix` from the member names in a tarfile."""
+    """Yield all members of tarfile that start with given prefix, and strip that prefix (including
+    symlinks)"""
     # Including trailing /, otherwise we end up with absolute paths.
     regex = re.compile(re.escape(prefix) + "/*")
 
