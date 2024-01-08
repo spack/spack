@@ -40,3 +40,20 @@ def test_correct_gcc_runtime_is_injected_as_dependency(runtime_repo, enable_runt
 
     # And the gcc-runtime version should be that of the newest gcc used in the dag.
     assert a["gcc-runtime"].version == Version("10.2.1")
+
+
+@pytest.mark.regression("41972")
+def test_external_nodes_do_not_have_runtimes(runtime_repo, enable_runtimes, mutable_config):
+    """Tests that external nodes don't have runtime dependencies."""
+
+    packages_yaml = {"b": {"externals": [{"spec": "b@1.0", "prefix": "/usr"}]}}
+    spack.config.set("packages", packages_yaml)
+
+    s = spack.spec.Spec("a%gcc@10.2.1").concretized()
+
+    a, b = s["a"], s["b"]
+
+    # Since b is an external, it doesn't depend on gcc-runtime
+    assert a.dependencies("gcc-runtime")
+    assert a.dependencies("b")
+    assert not b.dependencies("gcc-runtime")
