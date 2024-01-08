@@ -68,6 +68,9 @@ from spack.util.executable import which
 
 BUILD_CACHE_RELATIVE_PATH = "build_cache"
 BUILD_CACHE_KEYS_RELATIVE_PATH = "_pgp"
+
+#: The build cache layout version that this version of Spack creates.
+#: Version 2: includes parent directories of the package prefix in the tarball
 CURRENT_BUILD_CACHE_LAYOUT_VERSION = 2
 
 
