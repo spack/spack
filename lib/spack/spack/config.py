@@ -1402,8 +1402,6 @@ class ConfigPath:
     @staticmethod
     def next_token(path_str):
         """Return the token along with the remainder of the path string
-
-        in fact, just handle the processing into syaml_str here
         """
         m = re.match(ConfigPath.token_pattern, path_str)
         token = m.group(1)
