@@ -1346,11 +1346,16 @@ class ConfigPath:
 
     @staticmethod
     def _split_front(string, extract):
-        m = re.match(extract, string)
-        if not m:
-            return None, None
-        token = m.group(1)
-        return token, string[len(token) :]
+        try:
+            m = re.match(extract, string)
+            if not m:
+                return None, None
+            token = m.group(1)
+            return token, string[len(token) :]
+        except:
+            import pdb; pdb.set_trace()
+            print("here")
+            raise
 
     @staticmethod
     def _validate(path):
@@ -1370,14 +1375,16 @@ class ConfigPath:
             raise ValueError(f"Config path does not start with a parse-able key: {path}")
         path_elements = [first_key]
         while path:
-            element, path = ConfigPath._split_front(path, ConfigPath.next_key_pattern)
+            element, remainder = ConfigPath._split_front(path, ConfigPath.next_key_pattern)
             if not element:
                 # If we can't parse something as a key, then it must be a
                 # value (if it's valid).
                 # TODO: catch yaml parsing errors (that would indicate an improper config path)
                 # yaml_value = syaml.load_config(path)
-                element = path
+                element = remainder
                 path = None  # The rest of the path was consumed into the value
+            else:
+                path = remainder
 
             path_elements.append(element)
 
