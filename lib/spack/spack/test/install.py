@@ -647,7 +647,7 @@ def test_install_from_binary_with_missing_patch_succeeds(
     assert not temporary_store.db.query_local_by_spec_hash(s.dag_hash())
 
     # Source install: fails, we don't have the patch.
-    with pytest.raises(InstallError, match="Couldn't find patch for package"):
+    with pytest.raises(spack.error.SpecError, match="Couldn't find patch for package"):
         s.package.do_install()
 
     # Binary install: succeeds, we don't need the patch.
