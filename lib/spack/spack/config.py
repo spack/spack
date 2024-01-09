@@ -1358,6 +1358,53 @@ class ConfigPath:
     # Singular validation pattern
     validation_pattern = rf"^{key}[+-]?(?:\:\:?{key}[+-]?)*\:?\:?(?:\:{key_or_possible_value})?$"
 
+    #unquoted_key = "[a-zA-Z0-9_-]+"
+
+    next1 = rf"(\:\:?{element}[+-]?)(?:\:|$)"
+    ends_with_sep = rf"\:\:?"
+    # The final element should be parsable as yaml if it isn't a key
+    ends_with_value rf"\:\:?.*"
+
+    @staticmethod
+    def _split_front(path, extract):
+        m = re.match(extract, path_str)
+        if not m:
+            return None, None
+        token = m.group(1)
+        return token, path_str[len(token) :]
+
+    @staticmethod
+    def process1(path):
+        starting_path = path
+        first_key, path = ConfigPath._split_front(path, ConfigPath.key_pattern)
+        if not first_key:
+            raise ValueError(f"Config path does not start with a parse-able key: {path}")
+        path_elements = [first_key]
+        while path:
+            element, path = ConfigPath._split_front(path, ConfigPath.next1)
+            if not element:
+                # If we can't parse something as a key, then it must be a
+                # value (if it's valid).
+                # TODO: catch yaml parsing errors (that would indicate an improper config path)
+                yaml_value = syaml.load_config(path)
+                element = path
+                path = None  # The rest of the path was consumed into the value
+
+            path_elements.append(element)
+
+        # The elements look like [a, :b, :c...], shift the ":"
+        # characters to the previous elements (that's the key that should
+        # encode the override)
+        for i, element in enumerate(path_elements):
+            separator_pattern = "(:+)"
+            if i == 0:
+                continue
+            separator, remaining_element = ConfigPath._split_front(element, separator_pattern)
+            path_elements[i - 1] += separator
+            path_elements[i] = remaining_element
+    
+        return path_elements
+
     @staticmethod
     def validate(path):
         """Example valid config paths:
