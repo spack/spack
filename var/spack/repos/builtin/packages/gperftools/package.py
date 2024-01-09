@@ -19,6 +19,7 @@ class Gperftools(AutotoolsPackage):
 
     license("BSD-3-Clause")
 
+    version("2.15", sha256="c69fef855628c81ef56f12e3c58f2b7ce1f326c0a1fe783e5cae0b88cbbe9a80")
     version("2.14", sha256="6b561baf304b53d0a25311bd2e29bc993bed76b7c562380949e7cb5e3846b299")
     version("2.13", sha256="4882c5ece69f8691e51ffd6486df7d79dbf43b0c909d84d3c0883e30d27323e7")
     version("2.12", sha256="fb611b56871a3d9c92ab0cc41f9c807e8dfa81a54a4a9de7f30e838756b5c7c6")
