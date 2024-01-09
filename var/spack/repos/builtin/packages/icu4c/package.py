@@ -3,10 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import pathlib
 from spack.package import *
 
 
-class Icu4c(AutotoolsPackage):
+class Icu4c(AutotoolsPackage, MSBuildPackage):
     """ICU is a mature, widely used set of C/C++ and Java libraries providing
     Unicode and Globalization support for software applications. ICU4C is the
     C/C++ interface."""
@@ -15,6 +16,8 @@ class Icu4c(AutotoolsPackage):
     url = "https://github.com/unicode-org/icu/releases/download/release-65-1/icu4c-65_1-src.tgz"
 
     license("Unicode-TOU")
+
+    build_system("autotools", "msbuild")
 
     version("74.2", sha256="68db082212a96d6f53e35d60f47d38b962e9f9d207a74cfac78029ae8ff5e08c")
     version("67.1", sha256="94a80cd6f251a53bd2a997f6f1b5ac6653fe791dfab66e1eb0227740fb86d5dc")
@@ -74,6 +77,8 @@ class Icu4c(AutotoolsPackage):
     def setup_build_environment(self, env):
         env.set("LC_ALL", "en_US.UTF-8")
 
+
+class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
     def configure_args(self):
         args = []
 
@@ -88,3 +93,15 @@ class Icu4c(AutotoolsPackage):
             args.append("--enable-rpath")
 
         return args
+
+
+class MSBuildBuilder(spack.build_systems.msbuild.MSBuildBuilder):
+    def msbuild_args(self):
+        return [
+            "allinone.sln",
+            self.define("OutputPath", self.spec.prefix)
+        ]
+
+    @property
+    def build_directory(self):
+        return str(pathlib.Path(self.pkg.stage.souce_path) / "icu4c" / "source" / "allinone")
