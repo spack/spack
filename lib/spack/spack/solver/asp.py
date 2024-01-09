@@ -870,7 +870,7 @@ class RequirementRule(NamedTuple):
     requirements: List["spack.spec.Spec"]
     condition: "spack.spec.Spec"
     kind: RequirementKind
-    message: str
+    message: Optional[str]
 
 
 class PyclingoDriver:
@@ -1683,8 +1683,8 @@ class SpackSolverSetup:
                 self.gen.fact(fn.requirement_message(pkg_name, requirement_grp_id, rule.message))
             self.gen.newline()
 
-            for spec_str in requirement_grp:
-                spec = spack.spec.Spec(spec_str)
+            for input_spec in requirement_grp:
+                spec = spack.spec.Spec(input_spec)
                 if not spec.name:
                     spec.name = pkg_name
                 spec.attach_git_version_lookup()
@@ -1704,7 +1704,7 @@ class SpackSolverSetup:
                         imposed_spec=spec,
                         name=pkg_name,
                         transform_imposed=transform,
-                        msg=f"{spec_str} is a requirement for package {pkg_name}",
+                        msg=f"{input_spec} is a requirement for package {pkg_name}",
                     )
                 except Exception as e:
                     # Do not raise if the rule comes from the 'all' subsection, since usability
@@ -2825,6 +2825,7 @@ class RequirementParser:
         result = []
         kind, preferences = self._raw_yaml_data(pkg, section="prefer")
         for spec_str in preferences:
+            spec = sc.parse_spec_from_yaml_string(spec_str)
             result.append(
                 # A strong preference is defined as:
                 #
@@ -2833,15 +2834,15 @@ class RequirementParser:
                 RequirementRule(
                     pkg_name=pkg.name,
                     policy="any_of",
-                    requirements=[spec_str, "@:"],
+                    requirements=[spec, spack.spec.Spec("@:")],
                     kind=kind,
                     message=None,
-                    condition=None,
+                    condition=spack.spec.Spec(),
                 )
             )
         return result
 
-    def rules_from_conflict(self, pkg):
+    def rules_from_conflict(self, pkg: "spack.package_base.PackageBase") -> List[RequirementRule]:
         result = []
         kind, conflicts = self._raw_yaml_data(pkg, section="conflict")
         for spec_str in conflicts:
@@ -2849,14 +2850,15 @@ class RequirementParser:
             #
             # require:
             # - one_of: [spec_str, "@:"]
+            spec = sc.parse_spec_from_yaml_string(spec_str)
             result.append(
                 RequirementRule(
                     pkg_name=pkg.name,
                     policy="one_of",
-                    requirements=[spec_str, "@:"],
+                    requirements=[spec, spack.spec.Spec("@:")],
                     kind=kind,
                     message=None,
-                    condition=None,
+                    condition=spack.spec.Spec(),
                 )
             )
         return result
@@ -2923,7 +2925,7 @@ class RequirementParser:
         return rules
 
     def reject_requirement_constraint(
-        self, pkg_name: str, *, constraint: str, kind: RequirementKind
+        self, pkg_name: str, *, constraint: spack.spec.Spec, kind: RequirementKind
     ) -> bool:
         """Returns True if a requirement constraint should be rejected"""
         if kind == RequirementKind.DEFAULT:
