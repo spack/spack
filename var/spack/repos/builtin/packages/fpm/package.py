@@ -25,6 +25,7 @@ class Fpm(Package):
 
     license("MIT")
 
+    version("0.10.0", sha256="00d687e17bdada4dcae0ff1ea2e01bad287dcc77a74c3bbde0c9ff9633b655bb")
     version("0.9.0", sha256="484debabd7d22186ac41f865ddf63475c279a61a51aaff5636ed615860b5b8d7")
     version("0.8.2", sha256="67fd8f4f78d19662c61855f531465e347ab0bc913ba59bd419f75f4022d2cd70")
     version("0.8.1", sha256="0bd978bb1d3f2a3297d82a0d6ac009746a466cfa9a59ba3b6513b74e5ce4b7bf")
