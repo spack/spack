@@ -119,7 +119,19 @@ def test_change_multiple_matches():
     assert any(x.intersects("%clang") for x in e.user_specs if x.name == "libelf")
 
 
-def test_env_add_virtual():
+def test_env_add_nonexistant_path_fails():
+    with pytest.raises(ev.SpackEnvironmentError, match=r"does not exist"):
+        env("add", "path/does/not/exist")
+
+
+def test_env_add_existing_env_fails():
+    env("create", "test")
+
+    with pytest.raises(ev.SpackEnvironmentError, match=r"environment already exists"):
+        env("add", "--name", "test", ev.environment_dir_from_name("test"))
+
+
+def test_env_pkg_add_virtual():
     env("create", "test")
 
     e = ev.read("test")
@@ -132,7 +144,7 @@ def test_env_add_virtual():
     assert spec.intersects("mpi")
 
 
-def test_env_add_nonexistant_fails():
+def test_env_pkg_add_nonexistant_fails():
     env("create", "test")
 
     e = ev.read("test")
@@ -3485,7 +3497,7 @@ all: post-install
 include include.mk
 
 example/post-install/%: example/install/%
-	$(info post-install: $(HASH)) # noqa: W191,E101
+    $(info post-install: $(HASH)) # noqa: W191,E101
 
 post-install: $(addprefix example/post-install/,$(example/SPACK_PACKAGE_IDS))
 """

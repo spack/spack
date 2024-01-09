@@ -1452,6 +1452,7 @@ set -g __fish_spack_optspecs_spack_env h/help
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a activate -d 'set the current environment'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a deactivate -d 'deactivate any active environment in the shell'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a create -d 'create a new environment'
+complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a add -d 'add an existing environment from a directory'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a remove -d 'remove an existing environment'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a rm -d 'remove an existing environment'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a list -d 'list available environments'
@@ -1520,6 +1521,16 @@ complete -c spack -n '__fish_spack_using_command env create' -l without-view -f 
 complete -c spack -n '__fish_spack_using_command env create' -l without-view -d 'do not maintain a view for this environment'
 complete -c spack -n '__fish_spack_using_command env create' -l with-view -r -f -a with_view
 complete -c spack -n '__fish_spack_using_command env create' -l with-view -r -d 'specify that this environment should maintain a view at the specified path (by default the view is maintained in the environment directory)'
+
+# spack env add
+set -g __fish_spack_optspecs_spack_env_add h/help n/name= y/yes-to-all
+complete -c spack -n '__fish_spack_using_command_pos 0 env add' -f -a '(__fish_spack_environments)'
+complete -c spack -n '__fish_spack_using_command env add' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command env add' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command env add' -s n -l name -r -f -a name
+complete -c spack -n '__fish_spack_using_command env add' -s n -l name -r -d 'custom environment name'
+complete -c spack -n '__fish_spack_using_command env add' -s y -l yes-to-all -f -a yes_to_all
+complete -c spack -n '__fish_spack_using_command env add' -s y -l yes-to-all -d 'assume "yes" is the answer to every confirmation request'
 
 # spack env remove
 set -g __fish_spack_optspecs_spack_env_remove h/help y/yes-to-all

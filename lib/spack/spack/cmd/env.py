@@ -14,6 +14,7 @@ from typing import Optional
 import llnl.string as string
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+from llnl.util.symlink import SymlinkError, symlink
 from llnl.util.tty.colify import colify
 from llnl.util.tty.color import colorize
 
@@ -43,6 +44,7 @@ subcommands = [
     "activate",
     "deactivate",
     "create",
+    "add",
     ["remove", "rm"],
     ["list", "ls"],
     ["status", "st"],
@@ -379,6 +381,35 @@ def _env_create(name_or_path, *, init_file=None, dir=False, with_view=None, keep
     tty.msg("You can activate this environment with:")
     tty.msg("  spack env activate %s" % env.path)
     return env
+
+
+#
+# env add
+#
+def env_add_setup_parser(subparser):
+    """add an existing environment from a directory"""
+    subparser.add_argument("-n", "--name", help="custom environment name")
+    subparser.add_argument("dir", help="path to environment")
+    arguments.add_common_arguments(subparser, ["yes_to_all"])
+
+
+def env_add(args):
+    src_path = os.path.abspath(args.dir)
+    name = os.path.basename(src_path)
+    if args.name:
+        name = args.name
+
+    dst_path = ev.environment_dir_from_name(name, exists_ok=False)
+
+    try:
+        symlink(src_path, dst_path, allow_broken_symlinks=False)
+    except SymlinkError as exc:
+        msg = f"cannot add the environment {src_path} does not exist"
+        raise ev.SpackEnvironmentError(msg) from exc
+
+    tty.msg(f"Linked environment in {src_path}")
+    tty.msg("You can activate this environment with:")
+    tty.msg(f"    spack env activate {name}")
 
 
 #
