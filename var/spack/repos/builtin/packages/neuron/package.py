@@ -83,6 +83,7 @@ class Neuron(CMakePackage):
 
     # next two needed after neuronsimulator/nrn#2235.
     depends_on("py-pip", type=("build"))
+    depends_on("py-setuptools", type=("build"))
     depends_on("py-packaging", type=("run"))
 
     depends_on("boost", when="+coreneuron+tests")
