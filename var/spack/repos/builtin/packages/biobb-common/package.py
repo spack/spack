@@ -9,7 +9,6 @@ from spack.package import *
 class BiobbCommon(PythonPackage):
     """Biobb_common is the base package required to use the biobb packages"""
 
-    # Homepage and download url
     homepage = "https://github.com/bioexcel/biobb_common"
     git = "https://github.com/bioexcel/biobb_common.git"
 
