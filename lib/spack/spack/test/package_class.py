@@ -71,7 +71,8 @@ def test_possible_direct_dependencies(mock_packages, mpileaks_possible_deps):
 
 def test_possible_dependencies_virtual(mock_packages, mpi_names):
     expected = dict(
-        (name, set(spack.repo.PATH.get_pkg_class(name).dependencies)) for name in mpi_names
+        (name, set(dep for dep in spack.repo.PATH.get_pkg_class(name).dependencies_by_name()))
+        for name in mpi_names
     )
 
     # only one mock MPI has a dependency

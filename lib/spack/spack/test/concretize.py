@@ -132,6 +132,19 @@ def current_host(request, monkeypatch):
             yield target
 
 
+@pytest.fixture(scope="function", params=[True, False])
+def fuzz_dep_order(request, monkeypatch):
+    """Meta-function that tweaks the order of iteration over dependencies in a package."""
+
+    def reverser(pkg_name):
+        if request.param:
+            pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+            reversed_dict = dict(reversed(list(pkg_cls.dependencies.items())))
+            monkeypatch.setattr(pkg_cls, "dependencies", reversed_dict)
+
+    return reverser
+
+
 @pytest.fixture()
 def repo_with_changing_recipe(tmpdir_factory, mutable_mock_repo):
     repo_namespace = "changing"
@@ -895,7 +908,15 @@ class TestConcretize:
             ("py-extension3@1.0 ^python@3.5.1", ["patchelf@0.10"], []),
         ],
     )
-    def test_conditional_dependencies(self, spec_str, expected, unexpected):
+    def test_conditional_dependencies(self, spec_str, expected, unexpected, fuzz_dep_order):
+        """Tests that conditional dependencies are correctly attached.
+
+        The original concretizer can be sensitive to the iteration order over the dependencies of
+        a package, so we use a fuzzer function to test concretization with dependencies iterated
+        forwards and backwards.
+        """
+        fuzz_dep_order("py-extension3")  # test forwards and backwards
+
         s = Spec(spec_str).concretized()
 
         for dep in expected:
@@ -1884,7 +1905,7 @@ class TestConcretize:
         """
         # Add a conflict to "mpich" that match an already installed "mpich~debug"
         pkg_cls = spack.repo.PATH.get_pkg_class("mpich")
-        monkeypatch.setitem(pkg_cls.conflicts, "~debug", [(Spec(), None)])
+        monkeypatch.setitem(pkg_cls.conflicts, Spec(), [("~debug", None)])
 
         # If we concretize with --fresh the conflict is taken into account
         with spack.config.override("concretizer:reuse", False):
