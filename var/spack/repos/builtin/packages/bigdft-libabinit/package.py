@@ -63,13 +63,15 @@ class BigdftLibabinit(AutotoolsPackage):
             args.append("--enable-dynamic-libraries")
 
         if "+mpi" in spec:
-            args.extend([
-                f"CC={spec['mpi'].mpicc}",
-                f"CXX={spec['mpi'].mpicxx}",
-                f"FC={spec['mpi'].mpifc}",
-                f"F90={spec['mpi'].mpifc}",
-                f"F77={spec['mpi'].mpif77}"
-            ])
+            args.extend(
+                [
+                    f"CC={spec['mpi'].mpicc}",
+                    f"CXX={spec['mpi'].mpicxx}",
+                    f"FC={spec['mpi'].mpifc}",
+                    f"F90={spec['mpi'].mpifc}",
+                    f"F77={spec['mpi'].mpif77}",
+                ]
+            )
         else:
             args.append("--disable-mpi")
 
