@@ -1345,16 +1345,11 @@ class ConfigPath:
 
     @staticmethod
     def _split_front(string, extract):
-        try:
-            m = re.match(extract, string)
-            if not m:
-                return None, None
-            token = m.group(1)
-            return token, string[len(token) :]
-        except:
-            import pdb; pdb.set_trace()
-            print("here")
-            raise
+        m = re.match(extract, string)
+        if not m:
+            return None, None
+        token = m.group(1)
+        return token, string[len(token) :]
 
     @staticmethod
     def _validate(path):
@@ -1368,16 +1363,14 @@ class ConfigPath:
         x:y:
         x:y::
         """
-        starting_path = path
         first_key, path = ConfigPath._split_front(path, ConfigPath.next_key_pattern)
         if not first_key:
             raise ValueError(f"Config path does not start with a parse-able key: {path}")
         path_elements = [first_key]
         path_index = 1
         while path:
-            separator, path = ConfigPath._split_front(path, rf"(\:+)")
+            separator, path = ConfigPath._split_front(path, r"(\:+)")
             if not separator:
-                import pdb; pdb.set_trace()
                 raise ValueError(f"Expected separator for {path}")
 
             path_elements[path_index - 1] += separator
@@ -1391,8 +1384,10 @@ class ConfigPath:
                 try:
                     syaml.load_config(path)
                 except spack.util.spack_yaml.SpackYAMLError as e:
-                    raise ValueError("Remainder of path is not a valid key"
-                                     f" and does not parse as a value {path}") from e
+                    raise ValueError(
+                        "Remainder of path is not a valid key"
+                        f" and does not parse as a value {path}"
+                    ) from e
                 element = remainder
                 path = None  # The rest of the path was consumed into the value
             else:
@@ -1400,7 +1395,7 @@ class ConfigPath:
 
             path_elements.append(element)
             path_index += 1
-    
+
         return path_elements
 
     @staticmethod
