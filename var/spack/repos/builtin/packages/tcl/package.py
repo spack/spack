@@ -15,8 +15,8 @@ class TclMixin:
     def _find_script_dir(self):
         # Put more-specific prefixes first
         check_prefixes = [
-            join_path(self.prefix, "share", "tcl{0}".format(self.version.up_to(2))),
-            self.prefix,
+            join_path(self.spec.prefix, "share", "tcl{0}".format(self.version.up_to(2))),
+            self.spec.prefix,
         ]
         for prefix in check_prefixes:
             result = find_first(prefix, "init.tcl")
@@ -112,7 +112,7 @@ class BaseBuilder(TclMixin, metaclass=spack.builder.PhaseCallbacksMeta):
     @run_after("install")
     def symlink_tclsh(self):
         with working_dir(self.prefix.bin):
-            symlink("tclsh{0}".format(self.version.up_to(2)), "tclsh")
+            symlink("tclsh{0}".format(self.pkg.version.up_to(2)), "tclsh")
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Set TCL_LIBRARY to the directory containing init.tcl.
@@ -131,8 +131,8 @@ class BaseBuilder(TclMixin, metaclass=spack.builder.PhaseCallbacksMeta):
         # where a system provided tcl is run against the standard libraries
         # of a Spack built tcl. See issue #7128 that relates to python but
         # it boils down to the same situation we have here.
-        if not is_system_path(self.prefix.bin):
-            env.prepend_path("PATH", self.prefix.bin)
+        if not is_system_path(self.spec.prefix.bin):
+            env.prepend_path("PATH", self.spec.prefix.bin)
 
         # WARNING: paths in $TCLLIBPATH must be *space* separated,
         # its value is meant to be a Tcl list, *not* an env list
@@ -158,7 +158,7 @@ class BaseBuilder(TclMixin, metaclass=spack.builder.PhaseCallbacksMeta):
 class AutotoolsBuilder(BaseBuilder, spack.build_systems.autotools.AutotoolsBuilder):
     configure_directory = "unix"
 
-    def install(self, spec, prefix):
+    def install(self, pkg, spec, prefix):
         with working_dir(self.build_directory):
             make("install")
 
@@ -172,8 +172,8 @@ class AutotoolsBuilder(BaseBuilder, spack.build_systems.autotools.AutotoolsBuild
             # Copy source to install tree
             # A user-provided install option might re-do this
             # https://github.com/spack/spack/pull/4102/files
-            installed_src = join_path(self.spec.prefix, "share", self.name, "src")
-            stage_src = os.path.realpath(self.stage.source_path)
+            installed_src = join_path(self.spec.prefix, "share", pkg.name, "src")
+            stage_src = os.path.realpath(pkg.stage.source_path)
             install_tree(stage_src, installed_src)
 
             # Replace stage dir -> installed src dir in tclConfig
