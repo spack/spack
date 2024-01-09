@@ -1341,52 +1341,41 @@ class ConfigPath:
     quoted_string = "(?:\"[^\"]+\")|(?:'[^']+')"
     unquoted_string = "[^:'\"]+"
     element = rf"(?:(?:{quoted_string})|(?:{unquoted_string}))"
-    key = element
-    # The final component of a path might be a value, which may contain
-    # internal quotes (and those sequences may contain ":"). Keys do
-    # not contain internal quotes
-    possible_value = rf"{element}+"
-    key_or_possible_value = rf"(?:(?:{key})|(?:{possible_value}))"
-    token_pattern = rf"(^{key_or_possible_value}[+-]?\:?\:?)"
-
-    # Patterns for validation
-    key_pattern = rf"{element}[+-]?"
-    next_key_pattern = rf"\:\:?{key_pattern}"
-    final_value_pattern = rf"\:\:?{possible_value}"
-    final_separator = rf"\:\:?"
-
-    # Singular validation pattern
-    validation_pattern = rf"^{key}[+-]?(?:\:\:?{key}[+-]?)*\:?\:?(?:\:{key_or_possible_value})?$"
-
-    #unquoted_key = "[a-zA-Z0-9_-]+"
-
-    next1 = rf"(\:\:?{element}[+-]?)(?:\:|$)"
-    ends_with_sep = rf"\:\:?"
-    # The final element should be parsable as yaml if it isn't a key
-    ends_with_value rf"\:\:?.*"
+    key_pattern = rf"({element}[+-]?)"
+    next_key_pattern = rf"(\:\:?{element}[+-]?)(?:\:|$)"
 
     @staticmethod
-    def _split_front(path, extract):
-        m = re.match(extract, path_str)
+    def _split_front(string, extract):
+        m = re.match(extract, string)
         if not m:
             return None, None
         token = m.group(1)
-        return token, path_str[len(token) :]
+        return token, string[len(token) :]
 
     @staticmethod
-    def process1(path):
+    def _validate(path):
+        """Example valid config paths:
+
+        x:y:z
+        x:"y":z
+        x:y+:z
+        x:y::z
+        x:y+::z
+        x:y:
+        x:y::
+        """
         starting_path = path
         first_key, path = ConfigPath._split_front(path, ConfigPath.key_pattern)
         if not first_key:
             raise ValueError(f"Config path does not start with a parse-able key: {path}")
         path_elements = [first_key]
         while path:
-            element, path = ConfigPath._split_front(path, ConfigPath.next1)
+            element, path = ConfigPath._split_front(path, ConfigPath.next_key_pattern)
             if not element:
                 # If we can't parse something as a key, then it must be a
                 # value (if it's valid).
                 # TODO: catch yaml parsing errors (that would indicate an improper config path)
-                yaml_value = syaml.load_config(path)
+                # yaml_value = syaml.load_config(path)
                 element = path
                 path = None  # The rest of the path was consumed into the value
 
@@ -1406,67 +1395,19 @@ class ConfigPath:
         return path_elements
 
     @staticmethod
-    def validate(path):
-        """Example valid config paths:
-
-        x:y:z
-        x:"y":z
-        x:y+:z
-        x:y::z
-        x:y+::z
-        x:y:
-        x:y::
-        """
-        if not re.match(ConfigPath.validation_pattern, path):
-            raise ValueError(f"Invalid path string: {path}")
-
-        original_path = path
-        key, path = ConfigPath.next_validation_token(path, [ConfigPath.key_pattern])
-        prior_key = None
-        parsed_elements = [key]
-        try:
-            while path:
-                if prior_key:
-                    if not re.match(ConfigPath.next_key_pattern, prior_key):
-                        raise ValueError(f"Intermediate path element not a key: {prior_key}")
-                element, path = ConfigPath.next_validation_token(path, [ConfigPath.next_key_pattern, ConfigPath.final_value_pattern, ConfigPath.final_separator])
-                parsed_elements.append(element)
-                prior_key = element
-        except ValueError as e:
-            raise ValueError(f"Original path: {original_path}\nElements: {parsed_elements}", e)
-
-    @staticmethod
-    def next_validation_token(path_str, possible_patterns):
-        any_of = '|'.join(rf"(?:{x})" for x in possible_patterns)
-        extract = rf"({any_of})"
-        m = re.match(extract, path_str)
-        if not m:
-            raise ValueError(f"Error parsing remainder of path: {path_str}"
-                             f"\nExpected one of {', '.join(possible_patterns)}")
-        token = m.group(1)
-        return token, path_str[len(token) :]
-
-    @staticmethod
-    def next_token(path_str):
-        """Return the token along with the remainder of the path string
-        """
-        m = re.match(ConfigPath.token_pattern, path_str)
-        token = m.group(1)
-        return token, path_str[len(token) :]
-
-    @staticmethod
     def process(path):
         result = []
         quote = "['\"]"
         seen_override_in_path = False
-        while path:
-            element, path = ConfigPath.next_token(path)
 
+        path_elements = ConfigPath._validate(path)
+        last_element_idx = len(path_elements) - 1
+        for i, element in enumerate(path_elements):
             override = False
             append = False
             prepend = False
             quoted = False
-            if element.endswith("::") or (element.endswith(":") and not path):
+            if element.endswith("::") or (element.endswith(":") and i == last_element_idx):
                 if seen_override_in_path:
                     raise syaml.SpackYAMLError(
                         "Meaningless second override indicator `::' in path `{0}'".format(path), ""
@@ -1526,8 +1467,6 @@ def process_config_path(path: str) -> List[str]:
     to ``syaml_str`` (if treating the final element as a value, the caller
     should not parse it in this case).
     """
-    ConfigPath.validate(path)
-
     return ConfigPath.process(path)
 
 

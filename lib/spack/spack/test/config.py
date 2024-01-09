@@ -1488,7 +1488,7 @@ def test_config_file_read_invalid_yaml(tmpdir, mutable_empty_config):
 )
 def test_config_path_dsl(path, it_should_work):
     if it_should_work:
-        spack.config.ConfigPath.validate(path)
+        spack.config.ConfigPath._validate(path)
     else:
         with pytest.raises(ValueError):
-            spack.config.ConfigPath.validate(path)
+            spack.config.ConfigPath._validate(path)
