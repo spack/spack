@@ -11,6 +11,8 @@ from subprocess import Popen
 
 from spack.package import *
 
+IS_WINDOWS = sys.platform == "win32"
+
 
 class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     """ParaView is an open-source, multi-platform data analysis and
@@ -222,8 +224,9 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("tbb", when="+tbb")
 
     depends_on("mpi", when="+mpi")
-    depends_on("qt+opengl", when="@5.3.0:+qt+opengl2")
-    depends_on("qt~opengl", when="@5.3.0:+qt~opengl2")
+
+    everywhere_but_windows(depends_on, "qt+opengl", when="@5.3.0:+qt+opengl2")
+    everywhere_but_windows(depends_on, "qt~opengl", when="@5.3.0:+qt~opengl2")
     depends_on("qt@:4", when="@:5.2.0+qt")
 
     depends_on("gl@3.2:", when="+opengl2")
@@ -567,6 +570,9 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         # so explicitly specify which QT major version is actually being used
         if spec.satisfies("+qt"):
             cmake_args.extend(["-DPARAVIEW_QT_VERSION=%s" % spec["qt"].version[0]])
+            if IS_WINDOWS:
+                # Windows does not currently support Qt Quick
+                cmake_args.append("-DVTK_MODULE_ENABLE_VTK_GUISupportQtQuick:STRING=OFF")
 
         if "+fortran" in spec:
             cmake_args.append("-DPARAVIEW_USE_FORTRAN:BOOL=ON")
