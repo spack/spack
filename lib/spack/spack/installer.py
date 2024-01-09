@@ -1335,7 +1335,6 @@ class PackageInstaller:
         """
         install_args = task.request.install_args
         keep_prefix = install_args.get("keep_prefix")
-        restage = install_args.get("restage")
 
         # Make sure the package is ready to be locally installed.
         self._ensure_install_ready(task.pkg)
@@ -1366,10 +1365,6 @@ class PackageInstaller:
                     task.pkg.remove_prefix()
                 else:
                     tty.debug(f"{task.pkg_id} is partially installed")
-
-            # Destroy the stage for a locally installed, non-DIYStage, package
-            if restage and task.pkg.stage.managed_by_spack:
-                task.pkg.stage.destroy()
 
         if (
             rec
@@ -1690,6 +1685,10 @@ class PackageInstaller:
 
         try:
             self._setup_install_dir(pkg)
+
+            # Create stage object now and let it be serialized for the child process. That
+            # way monkeypatch in tests works correctly.
+            pkg.stage
 
             # Create a child process to do the actual installation.
             # Preserve verbosity settings across installs.
@@ -2223,11 +2222,6 @@ class PackageInstaller:
                 if not keep_prefix and not action == InstallAction.OVERWRITE:
                     pkg.remove_prefix()
 
-                # The subprocess *may* have removed the build stage. Mark it
-                # not created so that the next time pkg.stage is invoked, we
-                # check the filesystem for it.
-                pkg.stage.created = False
-
             # Perform basic task cleanup for the installed spec to
             # include downgrading the write to a read lock
             self._cleanup_task(pkg)
@@ -2297,6 +2291,9 @@ class BuildProcessInstaller:
         # whether to keep the build stage after installation
         self.keep_stage = install_args.get("keep_stage", False)
 
+        # whether to restage
+        self.restage = install_args.get("restage", False)
+
         # whether to skip the patch phase
         self.skip_patch = install_args.get("skip_patch", False)
 
@@ -2327,9 +2324,13 @@ class BuildProcessInstaller:
     def run(self) -> bool:
         """Main entry point from ``build_process`` to kick off install in child."""
 
-        self.pkg.stage.keep = self.keep_stage
+        stage = self.pkg.stage
+        stage.keep = self.keep_stage
 
-        with self.pkg.stage:
+        if self.restage:
+            stage.destroy()
+
+        with stage:
             self.timer.start("stage")
 
             if not self.fake:
