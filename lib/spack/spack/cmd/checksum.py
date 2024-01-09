@@ -86,6 +86,10 @@ def checksum(parser, args):
     # Get the package we're going to generate checksums for
     pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
 
+    # Skip manually downloaded packages
+    if pkg.manual_download:
+        tty.die(pkg.download_instr)
+
     versions = [Version(v) for v in args.versions]
 
     # Define placeholder for remote versions.
