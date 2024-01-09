@@ -3,10 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import pathlib
 from spack.package import *
 
 
-class Lcms(AutotoolsPackage):
+class Lcms(AutotoolsPackage, MSBuildPackage):
     """Little cms is a color management library. Implements fast
     transforms between ICC profiles. It is focused on speed, and is
     portable across several platforms (MIT license)."""
@@ -35,6 +36,21 @@ class Lcms(AutotoolsPackage):
     depends_on("libtiff")
     depends_on("zlib-api")
 
+    build_system("autotools", "msbuild")
+
+
     @property
     def libs(self):
         return find_libraries("liblcms2", root=self.prefix, recursive=True)
+
+
+class MSBuildBuilder(spack.build_systems.msbuild.MSBuilder):
+    @property
+    def build_directory(self):
+        return pathlib.Path(self.pkg.stage.source_path) / "Projects" / f"VC{self.spec.compiler.visual_studio_version}"
+
+    def msbuild_args(self):
+        return [
+            "lcms2.sln"
+            self.define("OutputPath", self.spec.prefix)
+        ]
