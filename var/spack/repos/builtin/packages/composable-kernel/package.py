@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,10 +13,14 @@ class ComposableKernel(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/composable_kernel"
     git = "https://github.com/ROCmSoftwarePlatform/composable_kernel.git"
-
+    url = "https://github.com/ROCmSoftwarePlatform/composable_kernel/archive/refs/tags/rocm-5.7.1.tar.gz"
     maintainers("srekolam", "afzpatel")
 
+    license("MIT")
+
     version("master", branch="develop")
+    version("5.7.1", sha256="75f66e023c2e31948e91fa26366eaeac72d871fc2e5188361d4465179f13876e")
+    version("5.7.0", sha256="d9624dbaef04e0138f9f73596c49b4fe9ded69974bae7236354baa32649bf21a")
     version("5.6.1", commit="f5ec04f091fa5c48c67d7bacec36a414d0be06a5")
     version("5.6.0", commit="f5ec04f091fa5c48c67d7bacec36a414d0be06a5")
     version("5.5.1", commit="ac9e01e2cc3721be24619807adc444e1f59a9d25")
@@ -42,7 +46,7 @@ class ComposableKernel(CMakePackage):
     depends_on("pkgconfig", type="build")
     depends_on("cmake@3.16:", type="build")
 
-    for ver in ["master", "5.6.1", "5.6.0", "5.5.1", "5.5.0", "5.4.3", "5.4.0"]:
+    for ver in ["master", "5.7.1", "5.7.0", "5.6.1", "5.6.0", "5.5.1", "5.5.0", "5.4.3", "5.4.0"]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, when="@" + ver)
         depends_on("rocm-cmake@" + ver, when="@" + ver, type="build")

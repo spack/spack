@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class RGgridges(RPackage):
     plots in 'ggplot2'."""
 
     cran = "ggridges"
+
+    license("GPL-2.0-only OR custom")
 
     version("0.5.4", sha256="2bf71c2034804cec637e6748dc51d8cadad01d3ea4d14ace754327f082e8d851")
     version("0.5.3", sha256="f5eafab17f2d4a8a2a83821ad3e96ae7c26b62bbce9de414484c657383c7b42e")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,8 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
     tags = ["ecp", "ecp-apps"]
 
     maintainers("rbberger")
+
+    license("GPL-2.0-or-later")
 
     # rules for new versions and deprecation
     # * new stable versions should be added to stable_versions set

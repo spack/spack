@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Tracer(MakefilePackage):
     git = "https://github.com/LLNL/tracer.git"
 
     maintainers("bhatele")
+
+    license("MIT")
 
     version("develop", branch="master")
     version("2.2", tag="v2.2", commit="fdd1b07a1a0faca14aac53dcbcbccc44237ae7cb")

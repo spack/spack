@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class RNlme(RPackage):
     Fit and compare Gaussian linear and nonlinear mixed-effects models."""
 
     cran = "nlme"
+
+    license("GPL-2.0-or-later")
 
     version("3.1-162", sha256="ba6da2575554afa2614c4cba9971f8a9f8a07622d201284cb78899f3d6a2dc67")
     version("3.1-160", sha256="d4454623194876b083774c662fd223bc3b9e8325824cb758b8adecd5dc0d8a08")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,13 +13,10 @@ class PyCython(PythonPackage):
     pypi = "cython/Cython-0.29.21.tar.gz"
     tags = ["build-tools"]
 
+    license("Apache-2.0")
+
     version("3.0.4", sha256="2e379b491ee985d31e5faaf050f79f4a8f59f482835906efe4477b33b4fbe9ff")
     version("3.0.0", sha256="350b18f9673e63101dbbfcf774ee2f57c20ac4636d255741d76ca79016b1bd82")
-    version(
-        "3.0.0a9",
-        sha256="23931c45877432097cef9de2db2dc66322cbc4fc3ebbb42c476bb2c768cecff0",
-        deprecated=True,
-    )
     version("0.29.36", sha256="41c0cfd2d754e383c9eeb95effc9aa4ab847d0c9747077ddd7c0dcb68c3bc01f")
     version("0.29.35", sha256="6e381fa0bf08b3c26ec2f616b19ae852c06f5750f4290118bf986b6f85c8c527")
     version("0.29.34", sha256="1909688f5d7b521a60c396d20bba9e47a1b2d2784bfb085401e1e1e7d29a29a8")

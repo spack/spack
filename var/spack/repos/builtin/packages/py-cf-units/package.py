@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class PyCfUnits(PythonPackage):
     homepage = "https://scitools.org.uk"
     pypi = "cf-units/cf-units-2.1.1.tar.gz"
     git = "https://github.com/SciTools/cf-units.git"
+
+    license("LGPL-3.0-only")
 
     version("master", branch="master")
     version("2.1.4", sha256="25f81ad994af30713ee8f5ef18ffddd83c6ec1ac308e1bd89d45de9d2e0f1c31")

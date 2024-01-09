@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class PyDeepsigBiocomp(PythonPackage):
     homepage = "https://deepsig.biocomp.unibo.it"
 
     url = "https://github.com/BolognaBiocomp/deepsig/archive/refs/tags/v1.2.5.tar.gz"
+
+    license("GPL-3.0-only")
 
     version("1.2.5", sha256="e954b815d63c221c564c7d3fe27123d7cd2c39b191d6107369ab095d506496e0")
 

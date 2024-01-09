@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Treelite(CMakePackage):
 
     homepage = "https://github.com/dmlc/treelite"
     url = "https://github.com/dmlc/treelite/archive/0.93.tar.gz"
+
+    license("Apache-2.0")
 
     version("0.93", sha256="7d347372f7fdc069904afe93e69ed0bf696ba42d271fe2f8bf6835d2ab2f45d5")
 

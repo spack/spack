@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,10 @@ class Migraphx(CMakePackage):
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["libmigraphx"]
 
+    license("MIT")
+
+    version("5.7.1", sha256="3e58c043a5a7d1357ee05725fd6cd41e190b070f1ba57f61300128429902089c")
+    version("5.7.0", sha256="14f13554367d2d6490d66f8b5b739203225e7acce25085559e7c4acf29e2a4d5")
     version("5.6.1", sha256="b108c33f07572ffd880b20f6de06f1934ab2a1b41ae69095612322ac412fa91c")
     version("5.6.0", sha256="eaec90535d62002fd5bb264677ad4a7e30c55f18d2a287680d0495c7e60432b2")
     version("5.5.1", sha256="e71c4744f8ef6a1a99c179bbad94b8fe9bd7686eaa9397f376b70988c3341f0c")
@@ -119,6 +123,7 @@ class Migraphx(CMakePackage):
     patch("0003-restrict-python-2.7-usage.patch", when="@5.2.0:5.4")
     patch("0004-restrict-python2.7-usage-for-5.5.0.patch", when="@5.5.0")
     patch("0005-Adding-half-include-directory-path-migraphx.patch", when="@5.6.0:")
+    patch("0006-add-option-to-turn-off-ck.patch", when="@5.7")
 
     depends_on("cmake@3.5:", type="build")
     depends_on("protobuf", type="link")
@@ -161,12 +166,17 @@ class Migraphx(CMakePackage):
         "5.5.1",
         "5.6.0",
         "5.6.1",
+        "5.7.0",
+        "5.7.1",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, when="@" + ver)
         depends_on("rocblas@" + ver, when="@" + ver)
         depends_on("miopen-hip@" + ver, when="@" + ver)
+
+    for ver in ["5.7.0", "5.7.1"]:
+        depends_on("composable-kernel@" + ver, when="@" + ver)
 
     @property
     def cmake_python_hints(self):
@@ -200,6 +210,8 @@ class Migraphx(CMakePackage):
         if "@5.5.0:" in self.spec:
             args.append(self.define("CMAKE_CXX_FLAGS", "-I{0}".format(abspath)))
             args.append(self.define("MIGRAPHX_ENABLE_PYTHON", "OFF"))
+        if "@5.7" in self.spec:
+            args.append(self.define("MIGRAPHX_USE_COMPOSABLEKERNEL", "OFF"))
         return args
 
     def test(self):

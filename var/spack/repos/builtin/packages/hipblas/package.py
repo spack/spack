@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,8 +20,12 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
     maintainers("cgmb", "srekolam", "renjithravindrankannath", "haampie")
     libraries = ["libhipblas"]
 
+    license("MIT")
+
     version("develop", branch="develop")
     version("master", branch="master")
+    version("5.7.1", sha256="794e9298f48ffbe3bd1c1ab87a5c2c2b953713500155fdec9ef8cbb11f81fc8a")
+    version("5.7.0", sha256="8c6cd2ffa4ce6ab03e05feffe074685b5525610870aebe9d78f817b3037f33a4")
     version("5.6.1", sha256="f9da82fbefc68b84081ea0ed0139b91d2a540357fcf505c7f1d57eab01eb327c")
     version("5.6.0", sha256="9453a31324e10ba528f8f4755d2c270d0ed9baa33e980d8f8383204d8e28a563")
     version("5.5.1", sha256="5920c9a9c83cf7e2b42d1f99f5d5091cac7f6c0a040a737e869e57b92d7045a9")
@@ -168,6 +172,8 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
         "5.5.1",
         "5.6.0",
         "5.6.1",
+        "5.7.0",
+        "5.7.1",
         "master",
         "develop",
     ]:

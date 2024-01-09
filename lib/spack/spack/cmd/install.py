@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -162,8 +162,8 @@ def setup_parser(subparser):
         "--no-check-signature",
         action="store_true",
         dest="unsigned",
-        default=False,
-        help="do not check signatures of binary packages",
+        default=None,
+        help="do not check signatures of binary packages (override mirror config)",
     )
     subparser.add_argument(
         "--show-log-on-error",

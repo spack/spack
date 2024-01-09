@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,6 +31,8 @@ class RGplots(RPackage):
     [13] spacing points in an x-y plot so they don't overlap ('space')."""
 
     cran = "gplots"
+
+    license("GPL-2.0-only")
 
     version("3.1.3", sha256="9f853b9e205264d087e61e8825f797ce36c9eb585b187dab794563613a526716")
     version("3.1.1", sha256="f9ae19c2574b6d41adbeccaf7bc66cf56d7b2769004daba7e0038d5fbd821339")

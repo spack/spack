@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Gatk(Package):
     url = "https://github.com/broadinstitute/gatk/releases/download/4.2.2.0/gatk-4.2.2.0.zip"
     list_url = "https://github.com/broadinstitute/gatk/releases"
     maintainers("snehring")
+
+    license("Unlicense")
 
     version("4.4.0.0", sha256="444600f7b38b46ad0b3606b7d40ce921e0ff1910a50165872f1c73c7c4a1a390")
     version("4.3.0.0", sha256="e2c27229b34c3e22445964adf00639a0909887bbfcc040f6910079177bc6e2dd")

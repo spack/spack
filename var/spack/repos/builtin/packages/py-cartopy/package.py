@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class PyCartopy(PythonPackage):
 
     maintainers("adamjstewart")
     skip_modules = ["cartopy.tests"]
+
+    license("LGPL-3.0-or-later")
 
     version("0.22.0", sha256="b300f90120931d43f11ef87c064ea1dacec1b59a4940aa76ebf82cf09548bb49")
     version("0.21.1", sha256="89d5649712c8582231c6e11825a04c85f6f0cee94dbb89e4db23eabca1cc250a")

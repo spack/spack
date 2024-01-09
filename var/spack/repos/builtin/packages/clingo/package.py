@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,8 @@ class Clingo(CMakePackage):
     git = "https://github.com/potassco/clingo.git"
     tags = ["windows"]
     maintainers("tgamblin", "alalazo")
+
+    license("MIT")
 
     version("master", branch="master", submodules=True)
     version("spack", commit="2a025667090d71b2c9dce60fe924feb6bde8f667", submodules=True)
@@ -70,6 +72,7 @@ class Clingo(CMakePackage):
     patch("python38.patch", when="@5.3:5.4.0")
     patch("size-t.patch", when="%msvc")
     patch("vs2022.patch", when="%msvc@19.30:")
+    patch("clingo_msc_1938_native_handle.patch", when="%msvc@19.38:")
 
     # TODO: Simplify this after Spack 0.21 release. The old concretizer has problems with
     # py-setuptools ^python@3.6, so we only apply the distutils -> setuptools patch for Python 3.12

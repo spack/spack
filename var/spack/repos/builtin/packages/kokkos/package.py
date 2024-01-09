@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,8 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     maintainers("janciesko", "crtrott")
+
+    license("BSD-3-Clause")
 
     version("master", branch="master")
     version("develop", branch="develop")
@@ -156,6 +158,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         "gfx906": "vega906",
         "gfx908": "vega908",
         "gfx90a": "vega90A",
+        "gfx940": "amd_gfx940",
         "gfx942": "amd_gfx942",
         "gfx1030": "navi1030",
         "gfx1100": "navi1100",
@@ -237,6 +240,12 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     # Patches
     patch("hpx_profiling_fences.patch", when="@3.5.00 +hpx")
     patch("sycl_bhalft_test.patch", when="@4.2.00 +sycl")
+    # adds amd_gfx940 support to Kokkos 4.2.00 (upstreamed in https://github.com/kokkos/kokkos/pull/6671)
+    patch(
+        "https://github.com/rbberger/kokkos/commit/293319c5844f4d8eea51eb9cd1457115a5016d3f.patch?full_index=1",
+        sha256="145619e87dbf26b66ea23e76906576e2a854a3b09f2a2dd70363e61419fa6a6e",
+        when="@4.2.00",
+    )
 
     variant("shared", default=True, description="Build shared libraries")
 

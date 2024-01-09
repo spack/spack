@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     tags = ["e4s", "ecp"]
 
     test_requires_compiler = True
+
+    license("BSD-3-Clause")
 
     version("develop", branch="master")
     version("2.4.0", sha256="02310fb4f9688df02f7181667e61c3adb7e38baf79611d80919d47452ff7881d")
