@@ -8,6 +8,7 @@
 # launches the appropriate Python setup
 MY_VENV=$(mktemp -d)/venv
 trap "rm -rf '${MY_VENV}'" EXIT
+module load unstable python-dev
 python3 -mvenv "${MY_VENV}"
 . "${MY_VENV}/bin/activate"
 pip install requests pyyaml jinja2 lxml
