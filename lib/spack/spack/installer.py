@@ -1682,6 +1682,10 @@ class PackageInstaller:
         try:
             self._setup_install_dir(pkg)
 
+            # Create stage object now and let it be serialized for the child process. That
+            # way monkeypatch in tests works correctly.
+            pkg.stage
+
             # Create a child process to do the actual installation.
             # Preserve verbosity settings across installs.
             spack.package_base.PackageBase._verbose = spack.build_environment.start_build_process(
