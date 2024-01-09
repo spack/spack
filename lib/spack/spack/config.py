@@ -1341,8 +1341,7 @@ class ConfigPath:
     quoted_string = "(?:\"[^\"]+\")|(?:'[^']+')"
     unquoted_string = "[^:'\"]+"
     element = rf"(?:(?:{quoted_string})|(?:{unquoted_string}))"
-    key_pattern = rf"({element}[+-]?)"
-    next_key_pattern = rf"(\:\:?{element}[+-]?)(?:\:|$)"
+    next_key_pattern = rf"({element}[+-]?)(?:\:|$)"
 
     @staticmethod
     def _split_front(string, extract):
@@ -1370,11 +1369,21 @@ class ConfigPath:
         x:y::
         """
         starting_path = path
-        first_key, path = ConfigPath._split_front(path, ConfigPath.key_pattern)
+        first_key, path = ConfigPath._split_front(path, ConfigPath.next_key_pattern)
         if not first_key:
             raise ValueError(f"Config path does not start with a parse-able key: {path}")
         path_elements = [first_key]
+        path_index = 1
         while path:
+            separator, path = ConfigPath._split_front(path, rf"(\:+)")
+            if not separator:
+                import pdb; pdb.set_trace()
+                raise ValueError(f"Expected separator for {path}")
+
+            path_elements[path_index - 1] += separator
+            if not path:
+                break
+
             element, remainder = ConfigPath._split_front(path, ConfigPath.next_key_pattern)
             if not element:
                 # If we can't parse something as a key, then it must be a
@@ -1387,17 +1396,7 @@ class ConfigPath:
                 path = remainder
 
             path_elements.append(element)
-
-        # The elements look like [a, :b, :c...], shift the ":"
-        # characters to the previous elements (that's the key that should
-        # encode the override)
-        for i, element in enumerate(path_elements):
-            separator_pattern = "(:+)"
-            if i == 0:
-                continue
-            separator, remaining_element = ConfigPath._split_front(element, separator_pattern)
-            path_elements[i - 1] += separator
-            path_elements[i] = remaining_element
+            path_index += 1
     
         return path_elements
 
