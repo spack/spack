@@ -20,9 +20,9 @@ results of this translation in the form of one PKG_COMMIT=HASH declaration per
 line.
 
 For each expression the upper case package name (PKG) is transformed into the
-name of a Spack package, and the `develop` version of that package is modified:
- - to be the preferred version, and
- - to refer to the given commit.
+name of a Spack package, and the package preferences for that package are modified:
+ - to require the given commit
+ - set the given commit equivalent to the `develop` version
 
 If PKG cannot be uniquely mapped to a Spack package, or if multiple expressions
 are given for the same Spack package, an error code is returned.
@@ -32,6 +32,17 @@ level = "short"
 
 
 def setup_parser(subparser):
+    scopes = spack.config.scopes()
+
+    # User can only choose one
+    subparser.add_argument(
+        "--scope",
+        choices=scopes,
+        default="site",
+        metavar=spack.config.SCOPES_METAVAR,
+        help="configuration scope to read/modify",
+    )
+
     subparser.add_argument(
         "--ignore-packages",
         nargs="*",
@@ -46,10 +57,7 @@ def setup_parser(subparser):
         help="File to write {PACKAGE}_COMMIT=1234 values to.",
     )
     subparser.add_argument(
-        "modifications",
-        nargs="*",
-        type=str,
-        help="PACKAGE_{BRANCH,COMMIT,TAG}=foo values",
+        "modifications", nargs="*", type=str, help="PACKAGE_{BRANCH,COMMIT,TAG}=foo values"
     )
 
 
@@ -75,7 +83,7 @@ def configure_pipeline(parser, args):
         spack_package_name = simplify_name(package_name)
         # Check if this package exists
         try:
-            spack.repo.path.get_pkg_class(spack_package_name)
+            spack.repo.PATH.get_pkg_class(spack_package_name)
         except spack.repo.UnknownPackageError:
             raise Exception(
                 "Could not find a Spack package corresponding to {}, tried {}".format(
@@ -110,7 +118,7 @@ def configure_pipeline(parser, args):
             else:
                 assert info["ref_type"] == "tag"
                 remote_ref = "refs/tags/" + info["ref"]
-            spack_package = spack.repo.path.get_pkg_class(spack_package_name)
+            spack_package = spack.repo.PATH.get_pkg_class(spack_package_name)
             remote_refs = git("ls-remote", spack_package.git, remote_ref, output=str).splitlines()
             assert len(remote_refs) < 2
             if len(remote_refs) == 0:
@@ -135,45 +143,6 @@ def configure_pipeline(parser, args):
 
     # Now modify the Spack recipes of the given packages
     for spack_package_name, info in modifications.items():
-        spack_package = spack.repo.path.get_pkg_class(spack_package_name)
-        spack_recipe = os.path.join(spack_package.package_dir, spack.repo.package_file_name)
-        # Using filter_file seems neater than calling sed, but it is a little
-        # more limited. First, remove any existing branch/commit/tag from the
-        # develop version.
-        tty.info("{}@develop: remove branch/commit/tag".format(spack_package_name))
-        filter_file(
-            "version\\s*\\(\\s*(['\"]{1})develop\\1(.*?)"
-            + ",\\s*(branch|commit|tag)=(['\"]{1})(.*?)\\4(.*?)\\)",
-            "version('develop'\\2\\6) # old: \\3=\\4\\5\\4",
-            spack_recipe,
-        )
-        # Second, insert the new commit="sha" part
-        tty.info('{}@develop: use commit="{}"'.format(spack_package_name, info["commit"]))
-        filter_file(
-            "version\\('develop'",
-            "version('develop', commit='{}'".format(info["commit"]),
-            spack_recipe,
-        )
-        # Third, make sure that the develop version, and only the develop
-        # version, is flagged as the preferred version. Start by getting a list
-        # of versions that are already explicitly flagged as preferred.
-        already_preferred = {
-            str(v)
-            for v, v_info in spack_package.versions.items()
-            if v_info.get("preferred", False)
-        }
-        # Make sure the develop version has an explicit preferred=True.
-        if "develop" not in already_preferred:
-            tty.info("{}@develop: add preferred=True".format(spack_package_name))
-            filter_file("version\\('develop'", "version('develop', preferred=True", spack_recipe)
-        # Make sure no other versions have an explicit preferred=True.
-        for other_version in already_preferred - {"develop"}:
-            tty.info("{}@{}: remove preferred=True".format(spack_package_name, other_version))
-            escaped_version = re.escape(other_version)
-            filter_file(
-                "version\\s*\\(\\s*(['\"]{1})"
-                + escaped_version
-                + "\\1(.*?),\\s*preferred=True(.*?)\\)",
-                "version('{version}'\\2\\3)".format(version=other_version),
-                spack_recipe,
-            )
+        cfg = f"packages:{spack_package_name}:require: '@git.{info['commit']}=develop'"
+        tty.info(f"adding config: {cfg}")
+        spack.config.add(cfg, args.scope)
