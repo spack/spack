@@ -74,6 +74,8 @@ class Ip(CMakePackage):
             args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
             args.append(self.define("BUILD_4", self.spec.satisfies("precision=4")))
             args.append(self.define("BUILD_D", self.spec.satisfies("precision=d")))
+
+        if self.spec.satisfies("@4.2:"):
             args.append(self.define("BUILD_8", self.spec.satisfies("precision=8")))
 
         return args
