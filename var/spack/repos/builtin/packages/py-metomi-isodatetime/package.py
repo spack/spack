@@ -10,6 +10,7 @@ class PyMetomiIsodatetime(PythonPackage):
     """Python ISO 8601 date time parser and data model/manipulation utilities."""
 
     homepage = "https://github.com/metomi/isodatetime"
+    # NOTE: spack checksum does not yet work for epoch versions
     pypi = "metomi-isodatetime/metomi-isodatetime-1!3.0.0.tar.gz"
 
     maintainers("LydDeb")
