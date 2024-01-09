@@ -334,7 +334,7 @@ def _verify_exe_or_raise(exe):
         raise SpackGPGError(msg)
 
     output = exe("--version", output=str)
-    match = re.search(r"^gpg(conf)? \(GnuPG\) (.*)$", output, re.M)
+    match = re.search(r"^gpg(conf)? \(GnuPG(?:/MacGPG2)?\) (.*)$", output, re.M)
     if not match:
         raise SpackGPGError('Could not determine "{0}" version'.format(exe.name))
 
