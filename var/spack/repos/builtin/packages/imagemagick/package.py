@@ -22,19 +22,24 @@ class Imagemagick(AutotoolsPackage):
     version("7.0.2-6", sha256="7d49ca8030f895c683cae69c52d8edfc4876de651f5b8bfdbea907e222480bd3")
 
     variant("ghostscript", default=False, description="Compile with Ghostscript support")
+    variant("rsvg", default=False, description="Enable RSVG support")
 
-    depends_on("jpeg")
-    depends_on("pango")
+    depends_on("pkgconfig@0.20:", type="build")
     depends_on("libtool", type="build")
-    depends_on("libtool", when="@7.0.8:", type=("build", "link"))
-    depends_on("libpng")
-    depends_on("freetype")
-    depends_on("fontconfig")
-    depends_on("libtiff")
+
+    depends_on("fontconfig@2.1:")
+    depends_on("freetype@2.8:")
+    depends_on("jpeg")
+    depends_on("pango@1.28.1:")
+    depends_on("libpng@1:")
+    depends_on("librsvg@2.9:", when="+rsvg")
+    depends_on("libtiff@4:")
     depends_on("ghostscript", when="+ghostscript")
     depends_on("ghostscript-fonts", when="+ghostscript")
+
+    # TODO: are these actually required?
     depends_on("libsm")
-    depends_on("pkgconfig", type="build")
+    depends_on("libtool")
 
     def configure_args(self):
         args = []
@@ -45,6 +50,7 @@ class Imagemagick(AutotoolsPackage):
             args.append("--with-gs-font-dir={0}".format(gs_font_dir))
         else:
             args.append("--without-gslib")
+        args.extend(self.with_or_without("rsvg"))
         return args
 
     @property
