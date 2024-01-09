@@ -1388,9 +1388,11 @@ class ConfigPath:
             if not element:
                 # If we can't parse something as a key, then it must be a
                 # value (if it's valid).
-                # TODO: catch yaml parsing errors (that would indicate an improper config path)
-                # yaml_value = syaml.load_config(path)
-                syaml.load_config(path)
+                try:
+                    syaml.load_config(path)
+                except spack.util.spack_yaml.SpackYAMLError as e:
+                    raise ValueError("Remainder of path is not a valid key"
+                                     f" and does not parse as a value {path}") from e
                 element = remainder
                 path = None  # The rest of the path was consumed into the value
             else:
