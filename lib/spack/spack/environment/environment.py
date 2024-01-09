@@ -84,7 +84,7 @@ lockfile_name = "spack.lock"
 
 
 #: Name of the directory where environments store repos, logs, views
-env_subdir_name = ".spack-env"
+ENV_SUBDIR_NAME = ".spack-env"
 
 
 def env_root_path():
@@ -987,15 +987,19 @@ class Environment:
     @property
     def env_subdir_path(self):
         """Path to directory where the env stores repos, logs, views."""
-        return os.path.join(self.path, env_subdir_name)
+        return os.path.join(self.path, ENV_SUBDIR_NAME)
 
     @property
     def repos_path(self):
-        return os.path.join(self.path, env_subdir_name, "repos")
+        return os.path.join(self.path, ENV_SUBDIR_NAME, "repos")
 
     @property
     def log_path(self):
-        return os.path.join(self.path, env_subdir_name, "logs")
+        return os.path.join(self.path, ENV_SUBDIR_NAME, "logs")
+
+    @property
+    def snapshots_path(self):
+        return os.path.join(self.path, ENV_SUBDIR_NAME, "snapshots")
 
     @property
     def config_stage_dir(self):

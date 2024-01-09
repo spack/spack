@@ -369,6 +369,7 @@ from .environment import (
     spack_env_view_var,
     update_yaml,
 )
+from .snapshot import SnapshotLoader, SnapshotPrompter, SnapshotSaver, snapshot_from_dir
 
 __all__ = [
     "TOP_LEVEL_KEY",
@@ -399,6 +400,10 @@ __all__ = [
     "no_active_environment",
     "read",
     "root",
+    "SnapshotLoader",
+    "SnapshotPrompter",
+    "SnapshotSaver",
+    "snapshot_from_dir",
     "spack_env_var",
     "spack_env_view_var",
     "update_yaml",

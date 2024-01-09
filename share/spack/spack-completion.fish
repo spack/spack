@@ -1463,6 +1463,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a view -d 'manag
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a update -d 'update environments to the latest format'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a revert -d 'restore environments to their state before update'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a depfile -d 'generate a depfile from the concrete environment specs'
+complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a snapshot -d 'saves, loads or lists snapshots of the active environment'
 complete -c spack -n '__fish_spack_using_command env' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env' -s h -l help -d 'show this help message and exit'
 
@@ -1611,6 +1612,11 @@ complete -c spack -n '__fish_spack_using_command env depfile' -s o -l output -r 
 complete -c spack -n '__fish_spack_using_command env depfile' -s o -l output -r -d 'write the depfile to FILE rather than to stdout'
 complete -c spack -n '__fish_spack_using_command env depfile' -s G -l generator -r -f -a make
 complete -c spack -n '__fish_spack_using_command env depfile' -s G -l generator -r -d 'specify the depfile type'
+
+# spack env snapshot
+set -g __fish_spack_optspecs_spack_env_snapshot h/help
+complete -c spack -n '__fish_spack_using_command env snapshot' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command env snapshot' -s h -l help -d 'show this help message and exit'
 
 # spack extensions
 set -g __fish_spack_optspecs_spack_extensions h/help l/long L/very-long d/deps p/paths s/show=

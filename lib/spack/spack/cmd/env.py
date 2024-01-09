@@ -51,6 +51,7 @@ subcommands = [
     "update",
     "revert",
     "depfile",
+    "snapshot",
 ]
 
 
@@ -722,6 +723,17 @@ def env_depfile(args):
             f.write(makefile)
     else:
         sys.stdout.write(makefile)
+
+
+def env_snapshot_setup_parser(subparser):
+    """saves, loads or lists snapshots of the active environment"""
+
+
+def env_snapshot(args):
+    spack.cmd.require_active_env(cmd_name="env snapshot")
+    active_env = ev.active_environment()
+    prompter = ev.SnapshotPrompter(active_env, stream=sys.stdout)
+    prompter.prompt()
 
 
 #: Dictionary mapping subcommand names and aliases to functions
