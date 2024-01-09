@@ -4383,9 +4383,8 @@ It's also a bit more concise than satisfies.
 
 .. note::
 
-   The ``satisfies()`` method tests whether spec constraints intersect, while
-   ``in`` tests whether a spec or any of its dependencies satisfy the provided
-   spec.
+   The ``satisfies()`` method tests whether this spec has, at least, all the constraints of the argument spec,
+   while ``in`` tests whether a spec or any of its dependencies satisfy the provided spec.
 
    If the provided spec is anonymous (e.g., ":1.2:", "+shared") or has the
    same name as the spec being checked, then ``in`` works the same as
