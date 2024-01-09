@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack.package import *
 
 
@@ -22,3 +24,19 @@ class Cprnc(CMakePackage):
 
     depends_on("netcdf-fortran")
     depends_on("cmake@3:", type="build")
+
+    resource(
+        name="genf90",
+        git="https://github.com/PARALLELIO/genf90",
+        tag="genf90_200608",
+        destination="genf90-resource",
+    )
+
+    def cmake_args(self):
+        args = [
+            self.define(
+                "GENF90_PATH", os.path.join(self.stage.source_path, "genf90-resource/genf90")
+            )
+        ]
+
+        return args
