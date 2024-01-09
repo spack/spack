@@ -21,6 +21,9 @@ class BigdftAtlab(AutotoolsPackage):
     variant("mpi", default=True, description="Enable MPI support")
     variant("openmp", default=True, description="Enable OpenMP support")
     variant("openbabel", default=False, description="Enable detection of openbabel compilation")
+    variant(
+        "shared", default=True, description="Build shared libraries"
+    )  # Not default in bigdft, but is typically the default expectation
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
@@ -39,20 +42,31 @@ class BigdftAtlab(AutotoolsPackage):
         prefix = self.prefix
 
         fcflags = []
+        cflags = []
+        cxxflags = []
+
         if "+openmp" in spec:
             fcflags.append(self.compiler.openmp_flag)
 
+        if spec.satisfies("+shared"):
+            fcflags.append("-fPIC")
+            cflags.append("-fPIC")
+            cxxflags.append("-fPIC")
         if self.spec.satisfies("%gcc@10:"):
             fcflags.append("-fallow-argument-mismatch")
 
         args = [
             "FCFLAGS=%s" % " ".join(fcflags),
+            "CFLAGS=%s" % " ".join(cflags),
+            "CXXFLAGS=%s" % " ".join(cxxflags),
             "--with-futile-libs=%s" % spec["bigdft-futile"].libs.ld_flags,
             "--with-futile-incs=%s" % spec["bigdft-futile"].headers.include_flags + "/futile",
             "--with-moduledir=%s" % prefix.include,
             "--prefix=%s" % prefix,
             "--without-etsf-io",
         ]
+        if spec.satisfies("+shared"):
+            args.append("--enable-dynamic-libraries")
 
         if "+mpi" in spec:
             args.append("CC=%s" % spec["mpi"].mpicc)
