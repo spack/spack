@@ -15,7 +15,7 @@ from spack.package import *
 
 MACOS_VERSION = macos_version() if sys.platform == "darwin" else None
 LINUX_VERSION = kernel_version() if platform.system() == "Linux" else None
-
+IS_WINDOWS = sys.platform == "win32"
 
 class Qt(Package):
     """Qt is a comprehensive cross-platform C++ application framework."""
@@ -69,14 +69,16 @@ class Qt(Package):
     )
     variant("gtk", default=False, description="Build with gtkplus.")
     variant("gui", default=True, description="Build the Qt GUI module and dependencies")
-    variant("opengl", default=False, description="Build with OpenGL support.")
+    # Windows does not have support for opengl support at the moment
+    # TODO (johnwparent): port angle and llvmmesapipe so we can enable opengl
+    everywhere_but_windows(variant, "opengl", default=False, description="Build with OpenGL support.")
     variant("location", default=False, when="+opengl", description="Build the Qt Location module.")
     variant("phonon", default=False, description="Build with phonon support.")
     variant("shared", default=True, description="Build shared libraries.")
     variant("sql", default=True, description="Build with SQL support.")
     variant("ssl", default=True, description="Build with OpenSSL support.")
     variant("tools", default=True, description="Build tools, including Qt Designer.")
-    variant("webkit", default=False, description="Build the Webkit extension")
+    everywhere_but_windows(variant, "webkit", default=False, description="Build the Webkit extension")
 
     provides("qmake")
 
@@ -177,7 +179,7 @@ class Qt(Package):
     conflicts("%apple-clang@13:", when="@:5.13")
 
     # Build-only dependencies
-    depends_on("pkgconfig", type="build")
+    everywhere_but_windows(depends_on, "pkgconfig", type="build")
     depends_on("python", when="@5.7.0:", type="build")
 
     # Dependencies, then variant- and version-specific dependencies
@@ -201,7 +203,7 @@ class Qt(Package):
         depends_on("openssl@:1.0", when="@4:5.9")
         depends_on("openssl@1.1.1:", when="@5.15.0:")
 
-    depends_on("glib", when="@4:")
+    everywhere_but_windows(depends_on, "glib", when="@4:")
     depends_on("libpng", when="@4:")
     depends_on("dbus", when="@4:+dbus")
     depends_on("gl", when="@4:+opengl")
@@ -262,7 +264,7 @@ class Qt(Package):
     patch("qt51514-oneapi.patch", when="@5.15.14: %oneapi")
 
     # Non-macOS dependencies and special macOS constraints
-    if MACOS_VERSION is None:
+    if MACOS_VERSION is None and not IS_WINDOWS:
         with when("+gui"):
             depends_on("fontconfig")
             depends_on("libsm")
@@ -646,6 +648,9 @@ class Qt(Package):
         if qtplat is not None:
             config_args.extend(["-platform", qtplat])
 
+        if IS_WINDOWS:
+            config_args.extend(["-mp", "-icu"])
+
         return config_args
 
     @when("@3")
@@ -716,7 +721,7 @@ class Qt(Package):
                 # Errors on bluetooth even when bluetooth is disabled...
                 # at least on apple-clang%12
                 config_args.extend(["-skip", "connectivity"])
-        elif "+gui" in spec:
+        elif "+gui" in spec and not IS_WINDOWS:
             # Linux-only QT5 dependencies
             if version < Version("5.9.9"):
                 config_args.append("-system-xcb")
@@ -792,10 +797,16 @@ class Qt(Package):
         configure(*config_args)
 
     def build(self, spec, prefix):
-        make()
+        if IS_WINDOWS:
+            nmake()
+        else:
+            make()
 
     def install(self, spec, prefix):
-        make("install")
+        if IS_WINDOWS:
+            nmake("install")
+        else:
+            make("install")
 
     # Documentation generation requires the doc tools to be installed.
     # @when @run_after currently seems to ignore the 'when' restriction.
