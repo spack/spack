@@ -12,8 +12,7 @@ class BiobbCommon(PythonPackage):
     homepage = "https://github.com/bioexcel/biobb_common"
     git = "https://github.com/bioexcel/biobb_common.git"
 
-    # Set the gitlab accounts of this package maintainers
-    maintainers = ["d-beltran"]
+    maintainers("d-beltran")
 
     # Versions
     version("4.0.0", branch="master")
