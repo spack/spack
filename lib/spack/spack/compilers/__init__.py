@@ -176,6 +176,8 @@ def remove_compiler_from_config(compiler_spec, scope=None):
         compiler_spec: compiler to be removed
         scope: configuration scope to modify
     """
+
+    # TODO GBB: remove if it comes from packages.yaml as well
     candidate_scopes = [scope]
     if scope is None:
         candidate_scopes = spack.config.CONFIG.scopes.keys()
@@ -221,6 +223,7 @@ def all_compilers_config(scope=None, init_config=True):
     """Return a set of specs for all the compiler versions currently
     available to build with.  These are instances of CompilerSpec.
     """
+    # TODO GBB: return compiler specs from packages.yaml
     return get_compiler_config(scope, init_config)
 
 
@@ -388,7 +391,8 @@ def find_specs_by_arch(compiler_spec, arch_spec, scope=None, init_config=True):
 
 
 def all_compilers(scope=None, init_config=True):
-    config = get_compiler_config(scope, init_config=init_config)
+    # TODO GBB: get compilers from packages.yaml as well
+    config = all_compilers_config(scope, init_config=init_config)
     compilers = list()
     for items in config:
         items = items["compiler"]
@@ -403,10 +407,7 @@ def compilers_for_spec(
     """This gets all compilers that satisfy the supplied CompilerSpec.
     Returns an empty list if none are found.
     """
-    if use_cache:
-        config = all_compilers_config(scope, init_config)
-    else:
-        config = get_compiler_config(scope, init_config)
+    config = all_compilers_config(scope, init_config)
 
     matches = set(find(compiler_spec, scope, init_config))
     compilers = []
@@ -582,9 +583,7 @@ def get_compiler_duplicates(compiler_spec, arch_spec):
 
     scope_to_compilers = {}
     for scope in config.scopes:
-        compilers = compilers_for_spec(
-            compiler_spec, arch_spec=arch_spec, scope=scope, use_cache=False
-        )
+        compilers = compilers_for_spec(compiler_spec, arch_spec=arch_spec, scope=scope)
         if compilers:
             scope_to_compilers[scope] = compilers
 
