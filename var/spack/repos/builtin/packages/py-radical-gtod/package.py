@@ -25,18 +25,26 @@ class PyRadicalGtod(PythonPackage):
     version("1.39.0", sha256="254f1e805b58a33b93c6180f018904db25538710ec9e75b3a3a9969d7206ecf6")
     version("1.20.1", sha256="fa91a372b9b7be72fa83a9de414eeb39dd9aa431fdb75c58f3fe409ae908e806")
 
-    version("1.20.0",
-            sha256="8d0846de7a5d094146c01fbb7c137f343e4da06af51efafeba79dd3fdfe421dc",
-            deprecated=True)
-    version("1.16.0",
-            sha256="1fe9da598a965c7194ed9c7df49d5b30632a11a7f9ece12152bea9aaa91bd4b8",
-            deprecated=True)
-    version("1.13.0",
-            sha256="15df4ae728a8878b111cfdedffb9457aecc8003c2cfbdf2c918dfcb6b836cc93",
-            deprecated=True)
-    version("1.6.7",
-            sha256="8d7d32e3d0bcf6d7cf176454a9892a46919b03e1ed96bee389380e6d75d6eff8",
-            deprecated=True)
+    version(
+        "1.20.0",
+        sha256="8d0846de7a5d094146c01fbb7c137f343e4da06af51efafeba79dd3fdfe421dc",
+        deprecated=True,
+    )
+    version(
+        "1.16.0",
+        sha256="1fe9da598a965c7194ed9c7df49d5b30632a11a7f9ece12152bea9aaa91bd4b8",
+        deprecated=True,
+    )
+    version(
+        "1.13.0",
+        sha256="15df4ae728a8878b111cfdedffb9457aecc8003c2cfbdf2c918dfcb6b836cc93",
+        deprecated=True,
+    )
+    version(
+        "1.6.7",
+        sha256="8d7d32e3d0bcf6d7cf176454a9892a46919b03e1ed96bee389380e6d75d6eff8",
+        deprecated=True,
+    )
 
     depends_on("py-radical-utils", type=("build", "run"))
 
