@@ -61,8 +61,15 @@ class Fastjet(AutotoolsPackage):
 
     variant("shared", default=True, description="Builds a shared version of the library")
     variant("auto-ptr", default=False, description="Use auto_ptr")
-    variant("limited-thread-safety", default=True, when="@3.4.0:", description="Enables limited thread safety")
-    variant("thread-safety", default=False, when="@3.4.0:", description="Enables full thread safety")
+    variant(
+        "limited-thread-safety",
+        default=True,
+        when="@3.4.0:",
+        description="Enables limited thread safety",
+    )
+    variant(
+        "thread-safety", default=False, when="@3.4.0:", description="Enables full thread safety"
+    )
     variant("atlas", default=False, description="Patch to make random generator thread_local")
 
     patch("atlas.patch", when="@:3.3 +atlas", level=0)
