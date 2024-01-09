@@ -268,12 +268,6 @@ def test_package_fetcher_fails():
         pkg.fetcher
 
 
-def test_package_no_extendees():
-    s = spack.spec.Spec("a")
-    pkg = BaseTestPackage(s)
-    assert pkg.extendee_args is None
-
-
 def test_package_test_no_compilers(mock_packages, monkeypatch, capfd):
     def compilers(compiler, arch_spec):
         return None

@@ -568,7 +568,7 @@ def depends_on(spec, when=None, type=dt.DEFAULT_TYPES, patches=None):
 
 
 @directive(("extendees", "dependencies"))
-def extends(spec, type=("build", "run"), **kwargs):
+def extends(spec, when=None, type=("build", "run"), patches=None):
     """Same as depends_on, but also adds this package to the extendee list.
 
     keyword arguments can be passed to extends() so that extension
@@ -578,14 +578,15 @@ def extends(spec, type=("build", "run"), **kwargs):
     """
 
     def _execute_extends(pkg):
-        when = kwargs.get("when")
         when_spec = make_when_spec(when)
         if not when_spec:
             return
 
-        _depends_on(pkg, spec, when=when, type=type)
+        _depends_on(pkg, spec, when=when, type=type, patches=patches)
         spec_obj = spack.spec.Spec(spec)
-        pkg.extendees[spec_obj.name] = (spec_obj, kwargs)
+
+        # TODO: the values of the extendees dictionary are not used. Remove in next refactor.
+        pkg.extendees[spec_obj.name] = (spec_obj, None)
 
     return _execute_extends
 

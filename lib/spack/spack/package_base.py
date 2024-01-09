@@ -1260,20 +1260,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         else:
             # If it's not concrete, then return the spec from the
             # extends() directive since that is all we know so far.
-            spec_str, kwargs = next(iter(self.extendees.items()))
+            spec_str = next(iter(self.extendees))
             return spack.spec.Spec(spec_str)
-
-    @property
-    def extendee_args(self):
-        """
-        Spec of the extendee of this package, or None if it is not an extension
-        """
-        if not self.extendees:
-            return None
-
-        # TODO: allow multiple extendees.
-        name = next(iter(self.extendees))
-        return self.extendees[name][1]
 
     @property
     def is_extension(self):

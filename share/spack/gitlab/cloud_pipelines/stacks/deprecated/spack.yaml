@@ -35,6 +35,8 @@ spack:
     - . "./share/spack/setup-env.sh"
     - spack --version
     - spack arch
+    - cat /proc/loadavg || true
+    - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
     script:
     - spack compiler find
     - cd ${SPACK_CONCRETE_ENV_DIR}
@@ -54,6 +56,7 @@ spack:
       2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
     after_script:
     - cat /proc/loadavg || true
+    - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
     match_behavior: first
     mappings:
     - match:

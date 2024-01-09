@@ -2927,6 +2927,7 @@ class RuntimePropertyRecorder:
         body_clauses = self._setup.spec_clauses(when_spec, body=True)
         body_str = (
             f"  {f',{os.linesep}  '.join(str(x) for x in body_clauses)},\n"
+            f"  not external({node_variable}),\n"
             f"  not runtime(Package)"
         ).replace(f'"{placeholder}"', f"{node_variable}")
         head_clauses = self._setup.spec_clauses(dependency_spec, body=False)
