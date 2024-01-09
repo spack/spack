@@ -1390,6 +1390,7 @@ class ConfigPath:
                 # value (if it's valid).
                 # TODO: catch yaml parsing errors (that would indicate an improper config path)
                 # yaml_value = syaml.load_config(path)
+                syaml.load_config(path)
                 element = remainder
                 path = None  # The rest of the path was consumed into the value
             else:
