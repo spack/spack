@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class Pcre2(AutotoolsPackage):
+class Pcre2(AutotoolsPackage, CMakePackage):
     """The PCRE2 package contains Perl Compatible Regular Expression
     libraries. These are useful for implementing regular expression
     pattern matching using the same syntax and semantics as Perl 5."""
@@ -32,6 +32,18 @@ class Pcre2(AutotoolsPackage):
     variant("multibyte", default=True, description="Enable support for 16 and 32 bit characters.")
     variant("jit", default=False, description="enable Just-In-Time compiling support")
 
+
+    @property
+    def libs(self):
+        if "+multibyte" in self.spec:
+            name = "libpcre2-32"
+        else:
+            name = "libpcre2-8"
+
+        return find_libraries(name, root=self.prefix, recursive=True)
+
+
+class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
     def configure_args(self):
         args = []
 
@@ -44,11 +56,12 @@ class Pcre2(AutotoolsPackage):
 
         return args
 
-    @property
-    def libs(self):
-        if "+multibyte" in self.spec:
-            name = "libpcre2-32"
-        else:
-            name = "libpcre2-8"
 
-        return find_libraries(name, root=self.prefix, recursive=True)
+class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+    def cmake_args(self):
+        args = []
+        args.append(self.define_from_variant("PCRE2_BUILD_PCRE2_16", "multibyte"))
+        args.append(self.define_from_variant("PCRE2_BUILD_PCRE2_32", "multibyte"))
+        args.append(self.define_from_variant("PCRE2_SUPPORT_JIT", "jit"))
+
+        return args
