@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-
 from spack.package import *
 
 
@@ -35,7 +33,7 @@ class Cprnc(CMakePackage):
     def cmake_args(self):
         args = [
             self.define(
-                "GENF90_PATH", os.path.join(self.stage.source_path, "genf90-resource/genf90")
+                "GENF90_PATH", join_path(self.stage.source_path, "genf90-resource/genf90")
             )
         ]
 
