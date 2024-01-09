@@ -51,7 +51,8 @@ class BigdftLibabinit(AutotoolsPackage):
 
         args = [
             f"FCFLAGS={' '.join(fcflags)}",
-            f"--with-libxc-libs={spec['libxc'].libs.ld_flags} {spec['libxc'].libs.ld_flags + 'f90'}",
+            f"--with-libxc-libs={spec['libxc'].libs.ld_flags} "
+            f"{spec['libxc'].libs.ld_flags + 'f90'}",
             f"--with-libxc-incs={spec['libxc'].headers.include_flags}",
             f"--with-futile-libs={spec['bigdft-futile'].libs.ld_flags}",
             f"--with-futile-incs={spec['bigdft-futile'].headers.include_flags}",
@@ -62,11 +63,13 @@ class BigdftLibabinit(AutotoolsPackage):
             args.append("--enable-dynamic-libraries")
 
         if "+mpi" in spec:
-            args.append(f"CC={spec['mpi'].mpicc}")
-            args.append(f"CXX={spec['mpi'].mpicxx}")
-            args.append(f"FC={spec['mpi'].mpifc}")
-            args.append(f"F90={spec['mpi'].mpifc}")
-            args.append(f"F77={spec['mpi'].mpif77}")
+            args.extend([
+                f"CC={spec['mpi'].mpicc}",
+                f"CXX={spec['mpi'].mpicxx}",
+                f"FC={spec['mpi'].mpifc}",
+                f"F90={spec['mpi'].mpifc}",
+                f"F77={spec['mpi'].mpif77}"
+            ])
         else:
             args.append("--disable-mpi")
 
