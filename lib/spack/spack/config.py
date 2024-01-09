@@ -1388,7 +1388,7 @@ class ConfigPath:
                         "Remainder of path is not a valid key"
                         f" and does not parse as a value {path}"
                     ) from e
-                element = remainder
+                element = path
                 path = None  # The rest of the path was consumed into the value
             else:
                 path = remainder
