@@ -293,6 +293,13 @@ class Msvc(Compiler):
         vs22_toolset = Version(toolset_ver) > Version("142")
         return toolset_ver if not vs22_toolset else "143"
 
+    @property
+    def visual_studio_version(self):
+        return re.search(
+            r"[0-9]{4}",
+            self.cc
+        ).group(0)
+
     def _compiler_version(self, compiler):
         """Returns version object for given compiler"""
         # ignore_errors below is true here due to ifx's
