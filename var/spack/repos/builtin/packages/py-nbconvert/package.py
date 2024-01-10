@@ -82,6 +82,8 @@ class PyNbconvert(PythonPackage):
             join_path(self.package_dir, "style.min.css"),
             join_path("nbconvert", "resources", "style.min.css"),
         )
+        # Avoid install-time downloads of css files.
+        filter_file(r"css = urlopen\(url\).read\(\)", "assert False", "hatch_build.py")
 
     def setup_run_environment(self, env):
         env.prepend_path("JUPYTER_PATH", self.prefix.share.jupyter)
