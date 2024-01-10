@@ -198,22 +198,25 @@ class Glibc(AutotoolsPackageNoDep, GNUMirrorPackageNoDep):
             string=True,
         )
 
-    depends_on("bison", type="build")
-    depends_on("texinfo", type="build")
-    depends_on("gettext", type="build", when="~stage1")
-    depends_on("perl", type="build")
-    depends_on("gawk", type="build")
-    depends_on("sed", type="build")
-    depends_on("gmake", type="build")
+    # This is an absolutely wretched hack to allow building a glibc that doesn't pollute
+    # the new environment.  It should go away as soon as we have a way.
+    with when("~stage1"):
+        depends_on("bison", type="build")
+        depends_on("texinfo", type="build")
+        depends_on("gettext", type="build", when="~stage1")
+        depends_on("perl", type="build")
+        depends_on("gawk", type="build")
+        depends_on("sed", type="build")
+        depends_on("gmake", type="build")
 
-    # See 2d7ed98add14f75041499ac189696c9bd3d757fe
-    depends_on("gmake@:4.3", type="build", when="@:2.36")
+        # See 2d7ed98add14f75041499ac189696c9bd3d757fe
+        depends_on("gmake@:4.3", type="build", when="@:2.36")
 
-    # From 2.29: generates locale/C-translit.h
-    # before that it's a test dependency.
-    depends_on("python@3.4:", type="build", when="@2.29:")
+        # From 2.29: generates locale/C-translit.h
+        # before that it's a test dependency.
+        depends_on("python@3.4:", type="build", when="@2.29:")
 
-    depends_on("linux-headers")
+    depends_on("linux-headers", type="build")
 
     with when("@master"):
         depends_on("autoconf", type="build")
@@ -228,12 +231,12 @@ class Glibc(AutotoolsPackageNoDep, GNUMirrorPackageNoDep):
             "--enable-kernel=3.7.0",
             "--with-headers={}".format(self.spec["linux-headers"].prefix.include),
             "--without-selinux",
-        ] + [] if '+stage1' not in self.spec else [
+        ] + ([] if '+stage1' not in self.spec else [
                 '--host='+sysroot_target,
                 '--build=' + self.spec.architecture.target.microarchitecture.family.name +"-unknown-linux-gnu", # current target triple
                 # 'libc_cv_slibdir='+self.spec.prefix.lib,
                 # 'rootsbindir='+self.spec.prefix.sbin,
-                ]
+                ])
 
     def build(self, spec, prefix):
         # 1. build just ld.so

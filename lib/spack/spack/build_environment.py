@@ -409,12 +409,12 @@ def set_compiler_environment_variables(pkg, env):
                    ".so.2")
         cppf = inject_flags.get('cppflags', [])
         cppf.append("-B" + pkg.spec["glibc"].prefix.lib)
-        cppf.append("-isystem")
-        cppf.append(join_path(pkg.compiler.prefix, "include", "c++", pkg.compiler.version))
-        cppf.append("-isystem")
-        cppf.append(pkg.spec["glibc"].prefix.include)
-        cppf.append("-isystem")
+        # cppf.append("-isystem")
+        # cppf.append(join_path(pkg.compiler.prefix, "include", "c++", pkg.compiler.version))
+        cppf.append("-idirafter")
         cppf.append(pkg.spec["libxcrypt"].prefix.include)
+        cppf.append("-idirafter")
+        cppf.append(pkg.spec["glibc"].prefix.include)
 
         # if pkg.name != "gcc":
         #     ldf.append("--sysroot=/")
