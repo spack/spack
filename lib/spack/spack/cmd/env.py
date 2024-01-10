@@ -292,7 +292,6 @@ def env_activate(args):
             " --keep-relative, or --dir."
         )
 
-
     # When executing `spack env activate` without further arguments, activate
     # the default environment. It's created when it doesn't exist yet.
     if not args.env_name and not args.temp:
