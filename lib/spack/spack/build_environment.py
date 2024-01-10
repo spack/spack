@@ -402,32 +402,33 @@ def set_compiler_environment_variables(pkg, env):
         env_flags[flag] = envf or []
         build_system_flags[flag] = bsf or []
 
-    if pkg.spec.os == "spack" and '^glibc' in pkg.spec:
+    if 'spack' in pkg.spec.os and '^glibc' in pkg.spec:
         ldf = inject_flags.get('ldflags', [])
-        # ldf.append("-L" + pkg.spec["glibc"].prefix.lib)
         ldf.append("-Wl,--dynamic-linker=" + pkg.spec["glibc"].prefix + "/lib/ld-linux-"
                    + pkg.spec.architecture.target.microarchitecture.family.name.replace("_", "-") +
                    ".so.2")
-        # ldf.append("-Wl,-rpath," + pkg.spec["glibc"].prefix.lib)
         cppf = inject_flags.get('cppflags', [])
-        cppf.append("-B")
-        cppf.append(pkg.spec["glibc"].prefix.lib)
+        cppf.append("-B" + pkg.spec["glibc"].prefix.lib)
+        cppf.append("-isystem")
+        cppf.append(join_path(pkg.compiler.prefix, "include", "c++", pkg.compiler.version))
         cppf.append("-isystem")
         cppf.append(pkg.spec["glibc"].prefix.include)
+        cppf.append("-isystem")
+        cppf.append(pkg.spec["libxcrypt"].prefix.include)
 
-        if pkg.name != "gcc":
-            ldf.append("--sysroot=/")
-            cppf.append("--sysroot=/")
+        # if pkg.name != "gcc":
+        #     ldf.append("--sysroot=/")
+        #     cppf.append("--sysroot=/")
 
-        if '^libstdcxx' in pkg.spec:
-            ldf.append("-L" + pkg.spec["libstdcxx"].prefix.lib)
-            ldf.append("-L" + pkg.spec["libstdcxx"].prefix.lib64)
-            ldf.append("-Wl,-rpath," + pkg.spec["libstdcxx"].prefix.lib)
-            ldf.append("-Wl,-rpath," + pkg.spec["libstdcxx"].prefix.lib64)
-            # NOTE(trws): this is intentionally -I, otherwise we get a
-            # failure to find stdlib.h with include_next from cstdlib
-            cppf.append('-I')
-            cppf.append(pkg.spec['libstdcxx'].prefix.include.join("c++"))
+        # if '^libstdcxx' in pkg.spec:
+        #     # ldf.append("-L" + pkg.spec["libstdcxx"].prefix.lib)
+        #     # ldf.append("-L" + pkg.spec["libstdcxx"].prefix.lib64)
+        #     # ldf.append("-Wl,-rpath," + pkg.spec["libstdcxx"].prefix.lib)
+        #     # ldf.append("-Wl,-rpath," + pkg.spec["libstdcxx"].prefix.lib64)
+        #     # NOTE(trws): this is intentionally -I, otherwise we get a
+        #     # failure to find stdlib.h with include_next from cstdlib
+        #     cppf.append('-I')
+        #     cppf.append(pkg.spec['libstdcxx'].prefix.include.join("c++"))
 
         inject_flags['ldflags'] = ldf
         inject_flags['cppflags'] = cppf

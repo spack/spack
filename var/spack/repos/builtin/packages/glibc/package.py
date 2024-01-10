@@ -5,13 +5,14 @@
 
 import os
 
-import llnl.util.filesystem as fs
+from spack.build_systems.autotools import AutotoolsPackageNoDep
+from spack.build_systems.gnu import GNUMirrorPackageNoDep
 
 from spack.package import *
 from spack.util.elf import delete_rpath
 
 
-class Glibc(AutotoolsPackage, GNUMirrorPackage):
+class Glibc(AutotoolsPackageNoDep, GNUMirrorPackageNoDep):
     """The GNU C Library provides many of the low-level components used
     directly by programs written in the C or C++ languages."""
 
@@ -100,9 +101,6 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
 
     variant("stage1", default=False)
     #TODO, true but circular depends_on(f"gcc", when=f"+stage1")
-  
-    for v in versions:
-        depends_on(f"binutils glibc_version={v}", when=f"@{v}")
 
     # Fix for newer GCC, related to -fno-common
     patch("locs.patch", when="@2.23:2.25")
@@ -202,7 +200,7 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
 
     depends_on("bison", type="build")
     depends_on("texinfo", type="build")
-    # depends_on("gettext", type="build")
+    depends_on("gettext", type="build", when="~stage1")
     depends_on("perl", type="build")
     depends_on("gawk", type="build")
     depends_on("sed", type="build")

@@ -45,7 +45,8 @@ class Gmp(AutotoolsPackage, GNUMirrorPackage):
         default=False,
         description="build a spack bootstrap compiler, DO NOT USE unless you know what this means"
         )
-    depends_on("libstdcxx+stage1", when="+stage1")
+    # depends_on("libstdcxx+stage1", when="+stage1")
+    conflicts("+cxx", when="+stage1")
 
 
     # avoid using register x18 on aarch64 machines to prevent segfaults
@@ -83,13 +84,13 @@ class Gmp(AutotoolsPackage, GNUMirrorPackage):
             args.extend(
                 [
                     'CFLAGS=' + common_flags,
-                    'CXXFLAGS=' + (" ".join([
-                        # NOTE(trws): this is intentionally -I, otherwise we get a
-                        # failure to find stdlib.h with include_next from cstdlib
-                        '-I',  # '-isystem',
-                        self.spec['libstdcxx'].prefix.include.join("c++"),
-                        common_flags,
-                    ])),
+                    # 'CXXFLAGS=' + (" ".join([
+                    #     # NOTE(trws): this is intentionally -I, otherwise we get a
+                    #     # failure to find stdlib.h with include_next from cstdlib
+                    #     '-I',  # '-isystem',
+                    #     self.spec['libstdcxx'].prefix.include.join("c++"),
+                    #     common_flags,
+                    # ])),
                     'LDFLAGS=' + (" ".join([
                         common_flags,
                         "-Wl,-rpath," + glibc.prefix.lib,

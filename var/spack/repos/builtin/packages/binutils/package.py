@@ -87,11 +87,6 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     )
 
     variant(
-        "glibc_version",
-        default="off",
-        description="build a spack bootstrap compiler, value is the sysroot view path DO NOT USE unless you know what this means"
-        )
-    variant(
         "sysroot",
         default="off",
         description="build a spack sysroot bootstrap compiler, value is the sysroot view path DO NOT USE unless you know what this means"

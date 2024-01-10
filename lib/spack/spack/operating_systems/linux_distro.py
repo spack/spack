@@ -38,9 +38,9 @@ class LinuxDistro(OperatingSystem):
     """
 
     def __init__(self):
-        if os.environ.get( "SPACKOS_VERSION" ):
+        if os.environ.get("SPACKOS_VERSION"):
             distname = "spack"
-            version = "0"
+            version = ""
         else:
             try:
                 # This will throw an error if imported on a non-Linux platform.

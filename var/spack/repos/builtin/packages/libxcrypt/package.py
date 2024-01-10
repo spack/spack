@@ -4,9 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+from spack.build_systems.autotools import AutotoolsPackageNoDep
 
 
-class Libxcrypt(AutotoolsPackage):
+class Libxcrypt(AutotoolsPackageNoDep):
     """libxcrypt is a modern library for one-way hashing of passwords."""
 
     homepage = "https://github.com/besser82/libxcrypt"
@@ -39,6 +40,8 @@ class Libxcrypt(AutotoolsPackage):
         description="Enable all compatibility interfaces",
         when="@4.4.30:",
     )
+    variant("stage1", default=False)
+    depends_on("glibc", when="+stage1")
 
     patch("truncating-conversion.patch", when="@4.4.30")
 

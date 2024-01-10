@@ -184,15 +184,12 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     #         destination="mpfr-base",
     #     )
 
-    depends_on("glibc +stage1", when="+stage1")
-    # glibc has no crypt header or lib, add libxcrypt here
-    depends_on("libxcrypt", when="+stage1")
-    # depends_on("libstdcxx +binutils", when="+stage1")
     conflicts("~binutils", when="+stage1")
     depends_on("flex", type="build", when="@master")
 
     # https://gcc.gnu.org/install/prerequisites.html
     depends_on("gmp@4.3.2:")
+    depends_on("gmp ~stage1", when="~stage1")
     # mawk is not sufficient for go support
     depends_on("gawk@3.1.5:", type="build")
     depends_on("texinfo@4.7:", type="build")
@@ -724,6 +721,20 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 "gcc/config/nvptx/nvptx.opt",
                 string=True,
             )
+        if spec.satisfies("os=spack"):
+            if spec.satisfies("target=x86_64"):
+                # use <prefix>/lib rather than lib64
+                filter_file(
+                    r"m64=(.*)lib64",
+                    r"m64=\1lib",
+                    "gcc/config/i386/t-linux64",
+                )
+            for f in ("libgcc/Makefile.in", "libstdc++-v3/include/Makefile.in"):
+                filter_file(
+                    r"@thread_header@",
+                    r"gthr-posix.h",
+                    f,
+                )
         self.build_optimization_config()
 
     def get_common_target_flags(self, spec):
@@ -791,7 +802,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             "--disable-multilib",
             "--enable-languages={0}".format(",".join(spec.variants["languages"].value)),
             # Drop gettext dependency
-            "--disable-nls",
+            "--enable-libstdcxx-filesystem-ts",
+            "--enable-libstdcxx-threads",
         ]
 
 
@@ -818,60 +830,57 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             # https://github.com/iains/gcc-13-branch/issues/8
             options.append("--with-ld=/Library/Developer/CommandLineTools/usr/bin/ld-classic")
 
+        if self.spec.satisfies("os=spack"):
+            # config.guess returns the host triple, e.g. "x86_64-pc-linux-gnu"
+            glibc = self.spec['glibc']
+            common_flags = (" ".join([
+                '-isystem ' ,
+                glibc.prefix.include,
+                '-isystem ' ,
+                self.spec["libxcrypt"].prefix.include,
+                "-B" + glibc.prefix.lib,
+            ]))
+            ldflags = " ".join([
+                "-L" + self.spec["libxcrypt"].prefix.lib,
+                "-Wl,-dynamic-linker," + glibc.prefix.lib.join("ld-linux-x86-64.so.2"),
+            ])
+            options.extend([
+                "--with-native-system-header-dir=" + glibc.prefix.include,
+                "--with-build-sysroot=/",
+                "--with-glibc-version=" + str(glibc.version),
+                "CFLAGS_FOR_BUILD=" + common_flags + " " + ldflags,
+                "CXXFLAGS_FOR_BUILD=" + common_flags + " " + ldflags,
+                "FLAGS_FOR_BUILD=" + common_flags + " " + ldflags,
+                "LDFLAGS_FOR_BUILD=" + common_flags + " " + ldflags,
+                # for libstdc++ configure
+                "CFLAGS_FOR_TARGET=" + common_flags + " " + ldflags,
+                "CXXFLAGS_FOR_TARGET=" + common_flags + " " + ldflags,
+                # for startfiles in target libs
+                f"FLAGS_FOR_TARGET={common_flags} {ldflags}",
+                f"LDFLAGS_FOR_TARGET={common_flags} {ldflags}",
+                "--disable-libssp",  # TODO(trws) need to wrap xgcc or similar to pass glibc's -B to these
+                "--disable-libatomic",
+                "--disable-libquadmath",
+                "--disable-libsanitizer",
+                "--disable-libitm",
+            ])
         if self.spec.variants['sysroot'].value != "off" or '+stage1' in self.spec:
             # set up links to binutils, required for gcc to build this way
             if '+stage1' in self.spec:
-                # config.guess returns the host triple, e.g. "x86_64-pc-linux-gnu"
                 guess = Executable("./config.guess")
                 targetguess = guess(output=str).rstrip("\n")
-                glibc = self.spec['glibc']
-                common_flags = (" ".join(['-isystem ' ,
-                                             glibc.prefix.include,
-                                             "-B" + glibc.prefix.lib,
-                                        ]))
-                ldflags = " ".join([
-                        "-Wl,-dynamic-linker," + glibc.prefix.lib.join("ld-linux-x86-64.so.2"),
-                        # '-L' + self.spec['glibc'].prefix.lib,
-                        # '-Wl,-rpath,' + self.spec['glibc'].prefix.lib,
-                        '-L' + self.spec['libstdcxx'].prefix.lib,
-                        '-L' + self.spec['libstdcxx'].prefix.lib64,
-                        '-Wl,-rpath,' + self.spec['libstdcxx'].prefix.lib,
-                        '-Wl,-rpath,' + self.spec['libstdcxx'].prefix.lib64,
-                                ])
                 options.extend([
                     '--build=' + targetguess,
                     '--target=' + sysroot_target,
                     '--host=' + sysroot_target,
-                    "--with-native-system-header-dir=" + glibc.prefix.include,
-                    # "--with-native-system-header-dir=/include",
-                    "--with-build-sysroot=/",
-                    # "--with-build-sysroot=" + glibc.prefix,
-                    # "--with-build-sysroot=" + "/",  # glibc.prefix,
-                    # "--with-sysroot=" + "/",  # glibc.prefix,
+                    # NOTE(trws): without these two std::mutex will not exist in
+                    # libstdc++
+                    "--enable-long-long",
+                    "--enable-threads=posix",
                     "--disable-lto",
                     "--disable-plugin",
                     "--disable-libsanitizer",
                     "--disable-libitm",
-                    # "--disable-libstdcxx-pch",
-                    # "--enable-linker-plugin-flags='LDFLAGS=-Wl,-rpath," + glibc.prefix.lib+ " " +
-                    #     "-Wl,--dynamic-linker," + glibc.prefix.lib.join("ld-linux-x86-64.so.2") +"'",
-                    # 'LDFLAGS_FOR_TARGET=-L' + join_path(self.stage.source_path,sysroot_target,'libgcc'),
-                    # 'LDFLAGS_FOR_BUILD=-L' + join_path(self.stage.source_path,sysroot_target,'libgcc'),
-
-                    "EXTRA_FLAGS_FOR_TARGET=" + " ".join([
-                        # '-I',
-                        # self.spec['libstdcxx'].prefix.include.join("c++"),
-                        common_flags,
-                    ]),
-                    "CPPFLAGS=" + common_flags,
-                    "CFLAGS=" + common_flags,
-                    # '--with-boot-ldflags='
-                    "EXTRA_LDFLAGS_FOR_TARGET=" + common_flags + " " + ldflags,
-                    # for libstdc++ configure
-                    "CFLAGS_FOR_TARGET=" + common_flags + " " + ldflags,
-                    "CXXFLAGS_FOR_TARGET=" + common_flags + " " + ldflags,
-                    # for startfiles in target libs
-                    "FLAGS_FOR_TARGET=" + common_flags + " " + ldflags,
                 ])
             else:
                 options.extend([
@@ -879,8 +888,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                         "--with-newlib",
                         "--with-sysroot=" + self.spec.variants['sysroot'].value,
                         "--disable-shared",
+                        "--disable-threads",
                         "--disable-libstdcxx",
-                        "--with-glibc-version=2.38", # TODO: figure out how to fix this cycle
+                        "--with-glibc-version=2.38",  # TODO: figure out how to fix this cycle
                         "--with-native-system-header-dir=/include",
                                 ])
             options.extend(
@@ -890,7 +900,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                         "--enable-default-ssp",
                         "--disable-nls",
                         "--disable-multilib",
-                        "--disable-threads",
                         "--disable-libatomic",
                         "--disable-libgomp",
                         "--disable-libquadmath",
@@ -901,6 +910,15 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                     )
             if '+stage1' not in self.spec:
                 return options
+        else:
+            options.extend([
+                "--enable-__cxa_atexit",
+                "--enable-nls",
+                # NOTE(trws): without these two std::mutex will not exist in
+                # libstdc++
+                "--enable-long-long",
+                "--enable-threads=posix",
+            ])
 
         # Avoid excessive realpath/stat calls for every system header
         # by making -fno-canonical-system-headers the default.
@@ -988,6 +1006,49 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         return options
 
+
+    def my_flag_handler(self, name, flags):
+        if self.spec.satisfies("+stage1"):
+            if name == "cxxflags":
+                sysroot_target = '{}-spack-linux-gnu'.format(
+                    self.spec.architecture.target.microarchitecture.family.name
+                )
+                cxx_inc_base = self.spec.prefix.include.join("c++").join(str(self.spec.version))
+                flags.append('-I')
+                flags.append(cxx_inc_base)
+                flags.append('-I')
+                flags.append(join_path(cxx_inc_base, sysroot_target))
+                flags.append('-I')
+                flags.append(join_path(cxx_inc_base, "backward"))
+            elif name == "ldflags":
+                flags.extend([
+                    '-L' + self.spec.prefix.lib,
+                    '-L' + self.spec.prefix.lib64,
+                    '-Wl,-rpath,' + self.spec.prefix.lib,
+                    '-Wl,-rpath,' + self.spec.prefix.lib64,
+                ])
+        return (flags, None, None)
+
+    flag_handler = my_flag_handler
+    @run_before("configure", when="+stage1")
+    def bootstrap_libstdcxx(self):
+        args = self.configure_args()
+        lib_build_dir = join_path(self.build_directory, "libstdc++-v3")
+        sysroot_target = '{}-spack-linux-gnu'.format(
+                self.spec.architecture.target.microarchitecture.family.name
+                )
+        mkdirp(lib_build_dir)
+        with working_dir(lib_build_dir):
+            cfg = Executable(join_path(self.stage.source_path, "libstdc++-v3", "configure"))
+            cfg(
+                f"--prefix={self.spec.prefix}",
+                f"--with-gxx-include-dir={self.spec.prefix}/include/c++/{self.spec.version}",
+                *args,
+            )
+            make()
+            mkdirp(join_path(self.prefix,"lib"))
+            symlink(self.prefix.lib, self.prefix.lib64)
+            make("install")
 
     # run configure/make/make(install) for the nvptx-none target
     # before running the host compiler phases
@@ -1077,6 +1138,13 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             with open(join_path(out_path, "include", "limits.h"), "+w") as fo:
                 fo.write(limits)
 
+    # @run_after("install")
+    # def link_arch_prefixes(self):
+    #     sysroot_target = '{}-spack-linux-gnu'.format(
+    #         self.spec.architecture.target.microarchitecture.family.name
+    #     )
+
+
 
 
     @run_after("install")
@@ -1144,24 +1212,39 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             tty.warn("No dynamic libraries found in lib/lib64")
             return
 
-        add_sysroot = "+stage1" in self.spec
+        add_sysroot = self.spec.satisfies("os=spack")
         # or self.spec.variants['sysroot'].value != "off"
         # Overwrite the specs file
         with open(specs_file, "w") as out:
             loader = re.compile(':-dynamic-linker ')
+            next = False
+            name = None
             for line in lines:
                 if add_sysroot:
-                    line = loader.sub(':-dynamic-linker %(spack_sysroot)', line)
+                    if loader.search(line):
+                        line = loader.sub(':-dynamic-linker %(spack_glibc)', line)
+                        line = re.sub(r"/lib64/", "/lib/", line)
+                if next:
+                    next = False
+                    if name == "link_libgcc":
+                        # Insert at start of line following link_libgcc, which gets
+                        # inserted into every call to the linker
+                        out.write("%(link_libgcc_rpath) ")
+                    if add_sysroot:
+                        # if line.startswith("*cpp_options:"):
+                        #     out.write("-isystem %(spack_sysroot)/include ")
+                        # this doesn't work, need to rewrite all the crt object paths
+                        # instead of just build_environment to inject the appropriate stuff
+                        if name == "link":
+                            line = f'-L %(spack_glibc)/lib -rpath %(spack_glibc)/lib -L %(spack_libxcrypt)/lib -rpath %(spack_libxcrypt)/lib {line}'
+                        if name == "startfile":
+                            line = re.sub(r"(Mcrt1|Scrt1|grcrt1|gcrt1|rcrt1|crt1|crti)\.o", fr"%(spack_glibc)/lib/\1.o", line)
+                        if name == "endfile":
+                            line = re.sub(r"(crtn)\.o", fr"%(spack_glibc)/lib/\1.o", line)
+                if line.startswith("*") and line.endswith(":\n"):
+                    name = line[1:-2]
+                    next = True
                 out.write(line)
-                if line.startswith("*link_libgcc:"):
-                    # Insert at start of line following link_libgcc, which gets
-                    # inserted into every call to the linker
-                    out.write("%(link_libgcc_rpath) ")
-                if add_sysroot:
-                    if line.startswith("*cpp_options:"):
-                        out.write("-B%(spack_sysroot) ")
-                    if line.startswith("*link:"):
-                        out.write("-B%(spack_sysroot) ")
 
             # Add easily-overridable rpath string at the end
             out.write("*link_libgcc_rpath:\n")
@@ -1169,12 +1252,12 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             out.write("\n")
             out.write("\n")
             if add_sysroot:
-                out.write("*spack_sysroot:\n")
-                if '+stage1' in self.spec:
-                    out.write(self.spec['glibc'].prefix.lib)
-                else: # must have sysroot set explicitly
-                    out.write(self.spec.variants['sysroot'].value)
+                out.write("*spack_glibc:\n")
+                out.write(self.spec['glibc'].prefix)
                 out.write("\n")
+                out.write("\n")
+                out.write("*spack_libxcrypt:\n")
+                out.write(self.spec['libxcrypt'].prefix)
         set_install_permissions(specs_file)
         tty.info("Wrote new spec file to {0}".format(specs_file))
 

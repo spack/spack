@@ -30,7 +30,7 @@ from ._checks import (
 )
 
 
-class AutotoolsPackage(spack.package_base.PackageBase):
+class AutotoolsPackageNoDep(spack.package_base.PackageBaseNoDep):
     """Specialized class for packages built using GNU Autotools."""
 
     #: This attribute is used in UI queries that need to know the build
@@ -859,3 +859,7 @@ def _autoreconf_search_path_args(spec):
         flags = flags_external if dep.external else flags_spack
         flags.extend(["-I", path])
     return flags_spack + flags_external
+
+
+class AutotoolsPackage(AutotoolsPackageNoDep):
+    spack.package_base.add_base_deps()

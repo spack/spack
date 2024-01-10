@@ -468,7 +468,7 @@ def _names(when_indexed_dictionary):
     return sorted(all_names)
 
 
-class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
+class PackageBaseNoDep(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     """This is the superclass for all spack packages.
 
     ***The Package class***
@@ -2419,6 +2419,14 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     @property
     def builder(self):
         return spack.builder.create(self)
+
+
+def add_base_deps():
+    spack.directives.depends_on("spackos-base", when="os=spack")
+
+
+class PackageBase(PackageBaseNoDep):
+    add_base_deps()
 
 
 inject_flags = PackageBase.inject_flags

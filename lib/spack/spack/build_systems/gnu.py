@@ -9,7 +9,7 @@ import spack.package_base
 import spack.util.url
 
 
-class GNUMirrorPackage(spack.package_base.PackageBase):
+class GNUMirrorPackageNoDep(spack.package_base.PackageBaseNoDep):
     """Mixin that takes care of setting url and mirrors for GNU packages."""
 
     #: Path of the package in a GNU mirror
@@ -37,3 +37,7 @@ class GNUMirrorPackage(spack.package_base.PackageBase):
             cls_name = type(self).__name__
             msg = "{0} must define a `gnu_mirror_path` attribute" " [none defined]"
             raise AttributeError(msg.format(cls_name))
+
+
+class GNUMirrorPackage(GNUMirrorPackageNoDep):
+    spack.package_base.add_base_deps()
