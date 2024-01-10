@@ -15,6 +15,7 @@ class PyNbconvert(PythonPackage):
 
     license("BSD-3-Clause")
 
+    version("7.14.1", sha256="20cba10e0448dc76b3bebfe1adf923663e3b98338daf77b97b42511ef5a88618")
     version("7.4.0", sha256="51b6c77b507b177b73f6729dba15676e42c4e92bcb00edc8cc982ee72e7d89d7")
     version("7.0.0", sha256="fd1e361da30e30e4c5a5ae89f7cae95ca2a4d4407389672473312249a7ba0060")
     version("6.5.1", sha256="2c01f3f518fee736c3d3f999dd20e0a16febba17a0d60a3b0fd28fbdec14115d")
@@ -75,6 +76,57 @@ class PyNbconvert(PythonPackage):
     depends_on("py-testpath", when="@5:6.4", type=("build", "run"))
     depends_on("py-lxml", when="@6.5.1:7.0", type=("build", "run"))
 
+    resource(
+        name="index.css",
+        url="https://unpkg.com/@jupyterlab/nbconvert-css@4.0.2/style/index.css",
+        sha256="917ff47850a7cc08fd0658026fda7672a85220aaab258e8849e891b37426f947",
+        placement="resource_index.css",
+        when="@7.4.1:",
+        expand=False,
+    )
+    resource(
+        name="theme-light.css",
+        url="https://unpkg.com/@jupyterlab/theme-light-extension@4.0.2/style/variables.css",
+        sha256="11bf3558fd3ed353a4c1401ac0c1730d01df073f6436d357c5bbf02a03bd6962",
+        placement="resource_theme-light.css",
+        when="@7.4.1:",
+        expand=False,
+    )
+    resource(
+        name="theme-dark.css",
+        url="https://unpkg.com/@jupyterlab/theme-dark-extension@4.0.2/style/variables.css",
+        sha256="795f2d5069737cbeb5cba01e6b5c7cadbde227c909e43004c5a60f58d5160aec",
+        placement="resource_theme-dark.css",
+        when="@7.4.1:",
+        expand=False,
+    )
+    resource(
+        name="style.css",
+        url="https://cdn.jupyter.org/notebook/5.4.0/style/style.min.css",
+        sha256="5865a609f4437b0464bc121cd567b619074e540a0515a3b82f222f764eb51e01",
+        placement="resource_style.css",
+        when="@7.4.1:",
+        expand=False,
+    )
+
+    @run_before("install")
+    @when("@7.4.1:")
+    def install_css(self):
+        css = {
+            # target filename: [subdir, source filename]
+            "index.css": ["lab", "index.css"],
+            "theme-light.css": ["lab", "variables.css"],
+            "theme-dark.css": ["lab", "variables.css"],
+            "style.css": ["classic", "style.min.css"],
+        }
+        for f in css.keys():
+            dest = join_path(self.stage.source_path, "share", "templates", css[f][0], "static")
+            mkdirp(dest)
+            install(
+                join_path(self.stage.source_path, "resource_%s" % f, css[f][1]), join_path(dest, f)
+            )
+
+    @when("@:7.4.0")
     def patch(self):
         # We bundle this with the spack package so that the installer
         # doesn't try to download it.
