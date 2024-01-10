@@ -1863,7 +1863,7 @@ def find_max_depth(root, globs, max_depth=_unset):
 
     if isinstance(globs, str):
         globs = [globs]
-    regexes = [re.compile(fnmatch.translate(x)) for x in globs]
+    regexes = [re.compile(fnmatch.translate(os.path.normcase(x))) for x in globs]
 
     # Note later calls to os.scandir etc. return abspaths if the
     # input is absolute, see https://docs.python.org/3/library/os.html#os.DirEntry.path
