@@ -5,6 +5,7 @@
 
 from spack.package import *
 
+
 class Dorado(CMakePackage, CudaPackage):
     """Dorado is a high-performance, easy-to-use, open source basecaller
     for Oxford Nanopore reads."""
