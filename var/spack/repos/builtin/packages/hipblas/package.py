@@ -137,7 +137,8 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
     patch("link-clients-blas.patch", when="@4.3.0:4.3.2")
     patch("link-clients-blas-4.5.0.patch", when="@4.5.0:4.5.2")
     patch("hipblas-link-clients-blas-5.0.0.patch", when="@5.0.0:5.0.2")
-    patch("remove-hipblas-clients-file-installation.patch", when="@5.5:")
+    patch("remove-hipblas-clients-file-installation.patch", when="@5.5:5.7.1")
+    patch("remove-hipblas-clients-file-installation-6.0.patch", when="@6.0:")
 
     depends_on("rocm-cmake@5.2.0:", type="build", when="@5.2.0:5.7.1")
     depends_on("rocm-cmake@4.5.0:", type="build", when="@4.5.0:")
