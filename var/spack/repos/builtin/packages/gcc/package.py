@@ -729,12 +729,13 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                     r"m64=\1lib",
                     "gcc/config/i386/t-linux64",
                 )
-            for f in ("libgcc/Makefile.in", "libstdc++-v3/include/Makefile.in"):
-                filter_file(
-                    r"@thread_header@",
-                    r"gthr-posix.h",
-                    f,
-                )
+            if '~stage1' in self.spec:
+                for f in ("libgcc/Makefile.in", "libstdc++-v3/include/Makefile.in"):
+                    filter_file(
+                        r"@thread_header@",
+                        r"gthr-posix.h",
+                        f,
+                    )
             # directly inject the -B flag we need to find libc and crt files, no other
             # way in for target libs, otherwise the following disables are required
             # "--disable-libssp",
@@ -813,9 +814,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             # Xcode 10 dropped 32-bit support
             "--disable-multilib",
             "--enable-languages={0}".format(",".join(spec.variants["languages"].value)),
-            # Drop gettext dependency
-            "--enable-libstdcxx-filesystem-ts",
-            "--enable-libstdcxx-threads",
         ]
 
 
@@ -895,7 +893,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                         "--with-newlib",
                         "--with-sysroot=" + self.spec.variants['sysroot'].value,
                         "--disable-shared",
-                        "--disable-threads",
                         "--disable-libstdcxx",
                         "--with-glibc-version=2.38",  # TODO: figure out how to fix this cycle
                         "--with-native-system-header-dir=/include",
@@ -907,6 +904,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                         "--enable-default-ssp",
                         "--disable-nls",
                         "--disable-multilib",
+                        "--disable-threads",
                         "--disable-libatomic",
                         "--disable-libgomp",
                         "--disable-libquadmath",
