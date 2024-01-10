@@ -247,3 +247,48 @@ def test_compiler_list_empty(no_compilers_yaml, working_env, compilers_dir):
     out = compiler("list")
     assert not out
     assert compiler.returncode == 0
+
+
+def test_compilers_shows_packages_yaml(no_compilers_yaml, working_env, compilers_dir):
+    """Spack should see a single compiler defined from packages.yaml"""
+    gcc_entry = {
+        "externals": [{
+            "spec": "gcc@=7.7.7 os=foobar target=x86_64",
+            "prefix": "/path/to/fake",
+            "modules": ["gcc/7.7.7", "foobar"],
+            "extra_attributes": {
+                "paths": {
+                    "cc": "/path/to/fake/gcc",
+                    "cxx": "/path/to/fake/g++",
+                    "fc": "/path/to/fake/gfortran",
+                    "f77": "/path/to/fake/gfortran",
+                },
+                "flags": {
+                    "fflags": "-ffree-form"
+                }
+            }
+        }]
+    }
+
+    packages = spack.config.get("packages")
+    packages["gcc"] = gcc_entry
+    spack.config.set("packages", packages)
+
+    out = compiler("list")
+    assert out.count("gcc foobar-x86_64") == 1
+    assert out.count("gcc@7.7.7") == 1
+
+    out = compiler("info", "gcc@7.7.7")
+    expected = """gcc@7.7.7:
+	paths:
+		cc = /path/to/fake/gcc
+		cxx = /path/to/fake/g++
+		f77 = /path/to/fake/gfortran
+		fc = /path/to/fake/gfortran
+	flags:
+		fflags = ['-ffree-form']
+	modules  = ['gcc/7.7.7', 'foobar']
+	operating system  = foobar
+"""
+
+    assert out == expected
