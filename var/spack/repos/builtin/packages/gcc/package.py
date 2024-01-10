@@ -735,6 +735,18 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                     r"gthr-posix.h",
                     f,
                 )
+            # directly inject the -B flag we need to find libc and crt files, no other
+            # way in for target libs, otherwise the following disables are required
+            # "--disable-libssp",
+            # "--disable-libatomic",
+            # "--disable-libquadmath",
+            # "--disable-libsanitizer",
+            # "--disable-libitm",
+            filter_file(
+                "gcc/xgcc",
+                "gcc/xgcc -B" + self.spec['glibc'].prefix.lib,
+                "configure"
+            )
         self.build_optimization_config()
 
     def get_common_target_flags(self, spec):
@@ -858,11 +870,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 # for startfiles in target libs
                 f"FLAGS_FOR_TARGET={common_flags} {ldflags}",
                 f"LDFLAGS_FOR_TARGET={common_flags} {ldflags}",
-                "--disable-libssp",  # TODO(trws) need to wrap xgcc or similar to pass glibc's -B to these
-                "--disable-libatomic",
-                "--disable-libquadmath",
-                "--disable-libsanitizer",
-                "--disable-libitm",
             ])
         if self.spec.variants['sysroot'].value != "off" or '+stage1' in self.spec:
             # set up links to binutils, required for gcc to build this way
@@ -912,6 +919,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 return options
         else:
             options.extend([
+                '--build=' + sysroot_target,
+                '--target=' + sysroot_target,
+                '--host=' + sysroot_target,
                 "--enable-__cxa_atexit",
                 "--enable-nls",
                 # NOTE(trws): without these two std::mutex will not exist in
