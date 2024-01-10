@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Itensor(MakefilePackage):
 
     homepage = "https://itensor.org/index.html"
     url = "https://github.com/ITensor/ITensor/archive/v3.1.6.tar.gz"
+
+    license("Apache-2.0")
 
     version("3.1.11", sha256="bc6c48d34c4d4281d15116d7d95d7e6e2b6878b9a60ce33372b8967a96826e95")
     version("3.1.10", sha256="68c149e23a1ab936ef8175ea11fedc0ec64031c3686ede93c3a5ab0c893774f6")

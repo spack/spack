@@ -1,6 +1,5 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
-# Copyright 2023 EMBL-European Bioinformatics Institute
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -14,6 +13,8 @@ class Kyotocabinet(AutotoolsPackage):
     url = "https://dbmx.net/kyotocabinet/pkg/kyotocabinet-1.2.80.tar.gz"
 
     maintainers("EbiArnie")
+
+    license("GPL-3.0-or-later")
 
     version("1.2.80", sha256="4c85d736668d82920bfdbdb92ac3d66b7db1108f09581a769dd9160a02def349")
 

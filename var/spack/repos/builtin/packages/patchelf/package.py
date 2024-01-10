@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Patchelf(AutotoolsPackage):
     list_depth = 1
 
     maintainers("haampie")
+
+    license("GPL-3.0-or-later")
 
     version("0.18.0", sha256="64de10e4c6b8b8379db7e87f58030f336ea747c0515f381132e810dbf84a86e7")
     # patchelf 0.18 breaks libraries:

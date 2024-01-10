@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,8 @@ class Aluminum(CachedCMakePackage, CudaPackage, ROCmPackage):
     tags = ["ecp", "radiuss"]
 
     maintainers("benson31", "bvanessen")
+
+    license("Apache-2.0")
 
     version("master", branch="master")
     version("1.4.1", sha256="d130a67fef1cb7a9cb3bbec1d0de426f020fe68c9df6e172c83ba42281cd90e3")

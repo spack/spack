@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ import tarfile
 import urllib.error
 import urllib.request
 import urllib.response
-from pathlib import PurePath
+from pathlib import Path, PurePath
 
 import py
 import pytest
@@ -200,6 +200,9 @@ def dummy_prefix(tmpdir):
 
     with open(data, "w") as f:
         f.write("hello world")
+
+    with open(p.join(".spack", "binary_distribution"), "w") as f:
+        f.write("{}")
 
     os.symlink("app", relative_app_link)
     os.symlink(app, absolute_app_link)
@@ -887,24 +890,29 @@ def test_default_index_json_404():
         fetcher.conditional_fetch()
 
 
-def test_tarball_doesnt_include_buildinfo_twice(tmpdir):
+def _all_parents(prefix):
+    parts = [p for p in prefix.split("/")]
+    return ["/".join(parts[: i + 1]) for i in range(len(parts))]
+
+
+def test_tarball_doesnt_include_buildinfo_twice(tmp_path: Path):
     """When tarballing a package that was installed from a buildcache, make
     sure that the buildinfo file is not included twice in the tarball."""
-    p = tmpdir.mkdir("prefix")
-    p.mkdir(".spack")
+    p = tmp_path / "prefix"
+    p.joinpath(".spack").mkdir(parents=True)
 
     # Create a binary_distribution file in the .spack folder
-    with open(p.join(".spack", "binary_distribution"), "w") as f:
+    with open(p / ".spack" / "binary_distribution", "w") as f:
         f.write(syaml.dump({"metadata", "old"}))
 
     # Now create a tarball, which should include a new binary_distribution file
-    tarball = str(tmpdir.join("prefix.tar.gz"))
+    tarball = str(tmp_path / "prefix.tar.gz")
 
     bindist._do_create_tarball(
-        tarfile_path=tarball, binaries_dir=p.strpath, buildinfo={"metadata": "new"}
+        tarfile_path=tarball, binaries_dir=str(p), buildinfo={"metadata": "new"}
     )
 
-    expected_prefix = p.strpath.lstrip("/")
+    expected_prefix = str(p).lstrip("/")
 
     # Verify we don't have a repeated binary_distribution file,
     # and that the tarball contains the new one, not the old one.
@@ -913,21 +921,20 @@ def test_tarball_doesnt_include_buildinfo_twice(tmpdir):
             "metadata": "new"
         }
         assert tar.getnames() == [
-            f"{expected_prefix}",
+            *_all_parents(expected_prefix),
             f"{expected_prefix}/.spack",
             f"{expected_prefix}/.spack/binary_distribution",
         ]
 
 
-def test_reproducible_tarball_is_reproducible(tmpdir):
-    p = tmpdir.mkdir("prefix")
-    p.mkdir("bin")
-    p.mkdir(".spack")
+def test_reproducible_tarball_is_reproducible(tmp_path: Path):
+    p = tmp_path / "prefix"
+    p.joinpath("bin").mkdir(parents=True)
+    p.joinpath(".spack").mkdir(parents=True)
+    app = p / "bin" / "app"
 
-    app = p.join("bin", "app")
-
-    tarball_1 = str(tmpdir.join("prefix-1.tar.gz"))
-    tarball_2 = str(tmpdir.join("prefix-2.tar.gz"))
+    tarball_1 = str(tmp_path / "prefix-1.tar.gz")
+    tarball_2 = str(tmp_path / "prefix-2.tar.gz")
 
     with open(app, "w") as f:
         f.write("hello world")
@@ -936,16 +943,16 @@ def test_reproducible_tarball_is_reproducible(tmpdir):
 
     # Create a tarball with a certain mtime of bin/app
     os.utime(app, times=(0, 0))
-    bindist._do_create_tarball(tarball_1, binaries_dir=p.strpath, buildinfo=buildinfo)
+    bindist._do_create_tarball(tarball_1, binaries_dir=str(p), buildinfo=buildinfo)
 
     # Do it another time with different mtime of bin/app
     os.utime(app, times=(10, 10))
-    bindist._do_create_tarball(tarball_2, binaries_dir=p.strpath, buildinfo=buildinfo)
+    bindist._do_create_tarball(tarball_2, binaries_dir=str(p), buildinfo=buildinfo)
 
     # They should be bitwise identical:
     assert filecmp.cmp(tarball_1, tarball_2, shallow=False)
 
-    expected_prefix = p.strpath.lstrip("/")
+    expected_prefix = str(p).lstrip("/")
 
     # Sanity check for contents:
     with tarfile.open(tarball_1, mode="r") as f:
@@ -954,7 +961,7 @@ def test_reproducible_tarball_is_reproducible(tmpdir):
             assert m.uname == m.gname == ""
 
         assert set(f.getnames()) == {
-            f"{expected_prefix}",
+            *_all_parents(expected_prefix),
             f"{expected_prefix}/bin",
             f"{expected_prefix}/bin/app",
             f"{expected_prefix}/.spack",
@@ -1002,8 +1009,10 @@ def test_tarball_normalized_permissions(tmpdir):
 
 
 def test_tarball_common_prefix(dummy_prefix, tmpdir):
-    """Tests whether Spack can figure out the package directory
-    from the tarball contents, and strip them when extracting."""
+    """Tests whether Spack can figure out the package directory from the tarball contents, and
+    strip them when extracting. This test creates a CURRENT_BUILD_CACHE_LAYOUT_VERSION=1 type
+    tarball where the parent directories of the package prefix are missing. Spack should be able
+    to figure out the common prefix and extract the files into the correct location."""
 
     # When creating a tarball, Python (and tar) use relative paths,
     # Absolute paths become relative to `/`, so drop the leading `/`.
@@ -1020,11 +1029,10 @@ def test_tarball_common_prefix(dummy_prefix, tmpdir):
             common_prefix = bindist._ensure_common_prefix(tar)
             assert common_prefix == expected_prefix
 
-            # Strip the prefix from the tar entries
-            bindist._tar_strip_component(tar, common_prefix)
-
             # Extract into prefix2
-            tar.extractall(path="prefix2")
+            tar.extractall(
+                path="prefix2", members=bindist._tar_strip_component(tar, common_prefix)
+            )
 
         # Verify files are all there at the correct level.
         assert set(os.listdir("prefix2")) == {"bin", "share", ".spack"}
@@ -1044,13 +1052,30 @@ def test_tarball_common_prefix(dummy_prefix, tmpdir):
         )
 
 
+def test_tarfile_missing_binary_distribution_file(tmpdir):
+    """A tarfile that does not contain a .spack/binary_distribution file cannot be
+    used to install."""
+    with tmpdir.as_cwd():
+        # An empty .spack dir.
+        with tarfile.open("empty.tar", mode="w") as tar:
+            tarinfo = tarfile.TarInfo(name="example/.spack")
+            tarinfo.type = tarfile.DIRTYPE
+            tar.addfile(tarinfo)
+
+        with pytest.raises(ValueError, match="missing binary_distribution file"):
+            bindist._ensure_common_prefix(tarfile.open("empty.tar", mode="r"))
+
+
 def test_tarfile_without_common_directory_prefix_fails(tmpdir):
     """A tarfile that only contains files without a common package directory
     should fail to extract, as we won't know where to put the files."""
     with tmpdir.as_cwd():
         # Create a broken tarball with just a file, no directories.
         with tarfile.open("empty.tar", mode="w") as tar:
-            tar.addfile(tarfile.TarInfo(name="example/file"), fileobj=io.BytesIO(b"hello"))
+            tar.addfile(
+                tarfile.TarInfo(name="example/.spack/binary_distribution"),
+                fileobj=io.BytesIO(b"hello"),
+            )
 
         with pytest.raises(ValueError, match="Tarball does not contain a common prefix"):
             bindist._ensure_common_prefix(tarfile.open("empty.tar", mode="r"))
@@ -1091,7 +1116,7 @@ def test_tarfile_of_spec_prefix(tmpdir):
         # Verify that entries are added in depth-first pre-order, files preceding dirs,
         # entries ordered alphabetically
         assert tar.getnames() == [
-            f"{expected_prefix}",
+            *_all_parents(expected_prefix),
             f"{expected_prefix}/file",
             f"{expected_prefix}/hardlink",
             f"{expected_prefix}/symlink",
