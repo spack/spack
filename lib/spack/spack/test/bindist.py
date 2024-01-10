@@ -201,6 +201,9 @@ def dummy_prefix(tmpdir):
     with open(data, "w") as f:
         f.write("hello world")
 
+    with open(p.join(".spack", "binary_distribution"), "w") as f:
+        f.write("{}")
+
     os.symlink("app", relative_app_link)
     os.symlink(app, absolute_app_link)
 
@@ -1024,7 +1027,9 @@ def test_tarball_common_prefix(dummy_prefix, tmpdir):
             bindist._tar_strip_component(tar, common_prefix)
 
             # Extract into prefix2
-            tar.extractall(path="prefix2")
+            tar.extractall(
+                path="prefix2", members=bindist._tar_strip_component(tar, common_prefix)
+            )
 
         # Verify files are all there at the correct level.
         assert set(os.listdir("prefix2")) == {"bin", "share", ".spack"}
@@ -1044,13 +1049,30 @@ def test_tarball_common_prefix(dummy_prefix, tmpdir):
         )
 
 
+def test_tarfile_missing_binary_distribution_file(tmpdir):
+    """A tarfile that does not contain a .spack/binary_distribution file cannot be
+    used to install."""
+    with tmpdir.as_cwd():
+        # An empty .spack dir.
+        with tarfile.open("empty.tar", mode="w") as tar:
+            tarinfo = tarfile.TarInfo(name="example/.spack")
+            tarinfo.type = tarfile.DIRTYPE
+            tar.addfile(tarinfo)
+
+        with pytest.raises(ValueError, match="missing binary_distribution file"):
+            bindist._ensure_common_prefix(tarfile.open("empty.tar", mode="r"))
+
+
 def test_tarfile_without_common_directory_prefix_fails(tmpdir):
     """A tarfile that only contains files without a common package directory
     should fail to extract, as we won't know where to put the files."""
     with tmpdir.as_cwd():
         # Create a broken tarball with just a file, no directories.
         with tarfile.open("empty.tar", mode="w") as tar:
-            tar.addfile(tarfile.TarInfo(name="example/file"), fileobj=io.BytesIO(b"hello"))
+            tar.addfile(
+                tarfile.TarInfo(name="example/.spack/binary_distribution"),
+                fileobj=io.BytesIO(b"hello"),
+            )
 
         with pytest.raises(ValueError, match="Tarball does not contain a common prefix"):
             bindist._ensure_common_prefix(tarfile.open("empty.tar", mode="r"))
@@ -1166,7 +1188,7 @@ def test_get_valid_spec_file_no_json(tmp_path, filename):
 
 
 def test_download_tarball_with_unsupported_layout_fails(tmp_path, mutable_config, capsys):
-    layout_version = bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION + 1
+    layout_version = bindist.FORWARD_COMPAT_BUILD_CACHE_LAYOUT_VERSION + 1
     spec = Spec("gmake@4.4.1%gcc@13.1.0 arch=linux-ubuntu23.04-zen2")
     spec._mark_concrete()
     spec_dict = spec.to_dict()
