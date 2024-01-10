@@ -53,6 +53,9 @@ class Rpp(CMakePackage):
 
     patch("0001-include-half-openmp-through-spack-package.patch")
     patch("0002-declare-handle-in-header.patch")
+
+    """patch adds half include directory and modifies how the libjpegturbo
+    library is linked for the rpp unit test"""
     patch("0003-changes-to-rpp-unit-tests.patch", when="+add_tests")
 
     def patch(self):
