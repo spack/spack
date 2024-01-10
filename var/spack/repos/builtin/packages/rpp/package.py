@@ -45,7 +45,11 @@ class Rpp(CMakePackage):
     variant("opencl", default=False, description="Use OPENCL as the backend")
     variant("hip", default=True, description="Use HIP as backend")
     variant("cpu", default=False, description="Use CPU as backend")
-    variant("add_tests", default=False, description="add utilities folder")
+    variant(
+        "add_tests",
+        default=False,
+        description="add utilities folder which contains rpp unit tests"
+    )
 
     patch("0001-include-half-openmp-through-spack-package.patch")
     patch("0002-declare-handle-in-header.patch")

@@ -1,3 +1,10 @@
+From: Afzal Patel <afzal.patel@amd.com>
+Date: Tue Jan  9 09:57:48 PST 2024
+Subject: [PATCH] changes-to-rpp-unit-tests
+Description: This patch makes changes to the CMakeLists.txt for the rpp unit tests.
+             It adds the directory which contains half.hpp and also modifies the method
+             the libjpegturbo library is linked.
+---
 diff git a/utilities/test_suite/HIP/CMakeLists.txt b/utilities/test_suite/HIP/CMakeLists.txt
 index 8f32a66..456999e 100644
 --- a/utilities/test_suite/HIP/CMakeLists.txt
