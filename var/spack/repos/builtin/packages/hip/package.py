@@ -183,16 +183,16 @@ class Hip(CMakePackage):
             depends_on("roctracer-dev-api@" + ver, when="@" + ver)
 
         for ver in [
-            "5.4.0", 
-            "5.4.3", 
-            "5.5.0", 
-            "5.5.1", 
-            "5.6.0", 
-            "5.6.1", 
-            "5.7.0", 
-            "5.7.1", 
-            "6.0.0"
-	]:
+            "5.4.0",
+            "5.4.3",
+            "5.5.0",
+            "5.5.1",
+            "5.6.0",
+            "5.6.1",
+            "5.7.0",
+            "5.7.1",
+            "6.0.0",
+        ]:
             depends_on("hipify-clang", when="@" + ver)
         for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0"]:
             depends_on("rocm-core@" + ver, when="@" + ver)
