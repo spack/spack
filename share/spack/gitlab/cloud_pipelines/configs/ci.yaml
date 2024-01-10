@@ -6,6 +6,9 @@ ci:
     - papyrus
 
   pipeline-gen:
+  - any-job-remove:
+      id_tokens:: no-oidc-tokens
+
   - build-job:
       before_script-:
       - - cat /proc/loadavg || true
