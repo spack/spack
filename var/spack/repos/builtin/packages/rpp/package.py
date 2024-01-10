@@ -48,7 +48,7 @@ class Rpp(CMakePackage):
     variant(
         "add_tests",
         default=False,
-        description="add utilities folder which contains rpp unit tests"
+        description="add utilities folder which contains rpp unit tests",
     )
 
     patch("0001-include-half-openmp-through-spack-package.patch")
