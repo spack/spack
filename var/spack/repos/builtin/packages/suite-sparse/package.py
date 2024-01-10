@@ -338,7 +338,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         if "+graphblas" in self.spec:
             projects.extend(["graphblas", "lagraph"])
         return [
-            self.define_from_variant("ENABLE_CUDA", "cuda"),
-            self.define("NOPENMP", self.spec.satisfies("~openmp")),
+            self.define_from_variant("SUITESPARSE_USE_CUDA", "cuda"),
+            self.define_from_variant("SUITESPARSE_USE_OPENMP", "openmp"),
             self.define("SUITESPARSE_ENABLE_PROJECTS", projects),
         ]
