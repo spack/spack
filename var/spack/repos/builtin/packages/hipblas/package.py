@@ -140,7 +140,7 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
     patch("remove-hipblas-clients-file-installation.patch", when="@5.5:5.7.1")
     patch("remove-hipblas-clients-file-installation-6.0.patch", when="@6.0:")
 
-    depends_on("rocm-cmake@5.2.0:", type="build", when="@5.2.0:5.7.1")
+    depends_on("rocm-cmake@5.2.0:", type="build", when="@5.2.0:5.7")
     depends_on("rocm-cmake@4.5.0:", type="build", when="@4.5.0:")
     depends_on("rocm-cmake@3.5.0:", type="build")
     for ver in ["6.0.0"]:
