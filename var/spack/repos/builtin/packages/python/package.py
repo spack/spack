@@ -21,6 +21,7 @@ from spack.build_environment import dso_suffix, stat_suffix
 from spack.package import *
 from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
+import spack.error
 
 
 class Python(Package):
@@ -566,7 +567,13 @@ class Python(Package):
             # Currently, the only way to get SpecBuildInterface wrappers of the
             # dependencies (which we need to get their 'libs') is to get them
             # using spec.__getitem__.
-            ldflags = " ".join(spec[dep.name].libs.search_flags for dep in link_deps)
+            flags_list = []
+            for dep in link_deps:
+                try:
+                    flags_list.append(spec[dep.name].libs.search_flags)
+                except spack.error.NoLibrariesError:
+                    pass
+            ldflags = " ".join(flags_list)
 
             config_args.extend(["CPPFLAGS=" + cppflags, "LDFLAGS=" + ldflags])
 

@@ -45,18 +45,19 @@ class Libxcrypt(AutotoolsPackageNoDep):
 
     patch("truncating-conversion.patch", when="@4.4.30")
 
-    with when("@:4.4.17"):
-        depends_on("autoconf", type="build")
-        depends_on("automake@1.14:", type="build")
-        depends_on("libtool", type="build")
-        depends_on("m4", type="build")
+    with when("~stage1"):
+        with when("@:4.4.17"):
+            depends_on("autoconf", type="build")
+            depends_on("automake@1.14:", type="build")
+            depends_on("libtool", type="build")
+            depends_on("m4", type="build")
 
-    # Some distros have incomplete perl installs, +open catches that.
-    depends_on("perl@5.14.0: +open", type="build", when="@4.4.18:")
+        # Some distros have incomplete perl installs, +open catches that.
+        depends_on("perl@5.14.0: +open", type="build", when="@4.4.18:")
 
-    # Support Perl 5.38. todo: remove patch and update depends_on
-    # range once the commit ends up in a tagged release
-    depends_on("perl@:5.36", type="build", when="@:4.4.34")
+        # Support Perl 5.38. todo: remove patch and update depends_on
+        # range once the commit ends up in a tagged release
+        depends_on("perl@:5.36", type="build", when="@:4.4.34")
     patch("commit-95d56e0.patch", when="@4.4.35")
 
     def configure_args(self):

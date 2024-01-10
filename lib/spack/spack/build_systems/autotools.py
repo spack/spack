@@ -46,7 +46,6 @@ class AutotoolsPackageNoDep(spack.package_base.PackageBaseNoDep):
         depends_on("gnuconfig", type="build", when="target=ppc64le:")
         depends_on("gnuconfig", type="build", when="target=aarch64:")
         depends_on("gnuconfig", type="build", when="target=riscv64:")
-        depends_on("gmake", type="build")
         conflicts("platform=windows")
 
     def flags_to_build_system_args(self, flags):
@@ -863,3 +862,6 @@ def _autoreconf_search_path_args(spec):
 
 class AutotoolsPackage(AutotoolsPackageNoDep):
     spack.package_base.add_base_deps()
+    # NOTE: this is here to avoid glibc depending on gmake
+    with when("build_system=autotools"):
+        depends_on("gmake", type="build")
