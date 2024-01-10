@@ -19,14 +19,8 @@ class SuiteSparse(Package, CMakePackage, CudaPackage):
 
     license("Apache-2.0")
 
-    version(
-        "7.4.0.beta5", sha256="399be3af96f903215c06e416a64a2b9cfcf5501ff9563457b61799b5e12e4f07"
-    )
-    version(
-        "5.13.0",
-        sha256="59c6ca2959623f0c69226cf9afb9a018d12a37fab3a8869db5f6d7f83b6b147d",
-        preferred=True,
-    )
+    version("7.4.0", sha256="f9a5cc2316a967198463198f7bf10fb8c4332de6189b0e405419a7092bc921b7")
+    version("5.13.0", sha256="59c6ca2959623f0c69226cf9afb9a018d12a37fab3a8869db5f6d7f83b6b147d")
     version("5.12.0", sha256="5fb0064a3398111976f30c5908a8c0b40df44c6dd8f0cc4bfa7b9e45d8c647de")
     version("5.11.0", sha256="fdd957ed06019465f7de73ce931afaf5d40e96e14ae57d91f60868b8c123c4c8")
     version("5.10.1", sha256="acb4d1045f48a237e70294b950153e48dce5b5f9ca8190e86c2b8c54ce00a7ee")
