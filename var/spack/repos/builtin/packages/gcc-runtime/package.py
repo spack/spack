@@ -44,6 +44,11 @@ class GccRuntime(Package):
         "ubsan",
     ]
 
+    # libgfortran ABI
+    provides("gfortran@3", when="%gcc@:6")
+    provides("gfortran@4", when="%gcc@7")
+    provides("gfortran@5", when="%gcc@8:")
+
     def install(self, spec, prefix):
         if spec.platform in ["linux", "cray", "freebsd"]:
             libraries = self._get_libraries_elf()

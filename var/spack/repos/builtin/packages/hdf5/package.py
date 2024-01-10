@@ -33,6 +33,10 @@ class Hdf5(CMakePackage):
 
     license("custom")
 
+    language("c")
+    language("cxx", when="+cxx")
+    language("fortran", when="+fortran")
+
     # The 'develop' version is renamed so that we could uninstall (or patch) it
     # without affecting other develop version.
     version("develop-1.15", branch="develop")

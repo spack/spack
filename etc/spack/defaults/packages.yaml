@@ -25,6 +25,7 @@ packages:
       fftw-api: [fftw, amdfftw]
       flame: [libflame, amdlibflame]
       fuse: [libfuse]
+      gfortran: [gcc-runtime]
       gl: [glx, osmesa]
       glu: [mesa-glu, openglu]
       golang: [go, gcc]

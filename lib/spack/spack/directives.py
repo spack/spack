@@ -75,6 +75,7 @@ __all__ = [
     "resource",
     "build_system",
     "requires",
+    "language"
 ]
 
 #: These are variant names used by Spack internally; packages can't use them
@@ -967,7 +968,6 @@ def license(
         checked_by: string or list of strings indicating which github user checked the
             license (if any).
         when: A spec specifying when the license applies.
-            when: A spec specifying when the license applies.
     """
 
     return lambda pkg: _execute_license(pkg, license_identifier, when)
@@ -1012,6 +1012,26 @@ def requires(*requirement_specs: str, policy="one_of", when=None, msg=None):
         requirement_list.append((requirements, policy, msg_with_name))
 
     return _execute_requires
+
+
+@directive("languages")
+def language(lang: str, *, when: Optional[Union[str, bool]] = None):
+    """Declares a language used by this package.
+
+    Args:
+        lang: a language used by this package (e.g. 'fortran' or 'c')
+        when: condition under which the language is used
+    """
+
+    def _execute_languages(pkg: "spack.package_base.PackageBase"):
+        when_spec = _make_when_spec(when)
+        if not when_spec:
+            return
+
+        languages = pkg.languages.setdefault(when_spec, set())
+        languages.add(lang)
+
+    return _execute_languages
 
 
 class DirectiveError(spack.error.SpackError):
