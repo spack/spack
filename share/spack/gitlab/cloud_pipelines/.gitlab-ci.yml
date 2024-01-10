@@ -942,3 +942,26 @@ e4s-cray-sles-build:
   needs:
     - artifacts: True
       job: e4s-cray-sles-generate
+
+########################################
+# GCP - Base Packages
+########################################
+.gcp-base:
+  extends: [ ".linux_x86_64_v3" ]
+  variables:
+    SPACK_CI_STACK_NAME: gcp-base
+    tags: [ "gcp", "base"]
+
+gcp-base-generate:
+  extends: [ ".generate-base", ".gcp-base" ]
+
+gcp-base-build:
+  extends: [ ".build", ".gcp-base" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: gcp-base-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: gcp-base-generate

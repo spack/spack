@@ -1,0 +1,20 @@
+spack:
+  view: false
+  definitions:
+  - arch:
+    - %gcc
+
+  - packages:
+    - stream
+
+  - targets:
+    - target=x86_64_v3
+
+  specs:
+  - matrix:
+    - - $packages
+    - - $arch
+    - - $targets
+
+  cdash:
+    build-group: GCP Packages
