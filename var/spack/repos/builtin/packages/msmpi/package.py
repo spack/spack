@@ -69,10 +69,10 @@ class GenericBuilder(GenericBuilder):
             )
         args.append("/p:IFORT_BIN=%s" % os.path.dirname(ifort_bin))
         args.append("/p:VCToolsVersion=%s" % self.pkg.compiler.msvc_version)
-        args.append("/p:WindowsTargetPlatformVersion=%s" % str(self.pkg.spec["wdk"].version))
-        args.append("/p:PlatformToolset=%s" % self.pkg.compiler.cc_version)
+        args.append("/p:WindowsTargetPlatformVersion=%s" % str(self.pkg.spec["win-wdk"].version))
+        args.append("/p:PlatformToolset=%s" % self.pkg.compiler.cc_version("cl"))
         return args
 
-    def install(self, spec, prefix):
-        with working_dir(self.pkg.stage.build_directory, create=True):
+    def install(self, spec, prefix, *args):
+        with working_dir(self.pkg.stage.source_path, create=True):
             msbuild(*self.build_command_line())
