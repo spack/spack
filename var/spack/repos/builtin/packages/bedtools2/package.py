@@ -17,6 +17,7 @@ class Bedtools2(Package):
 
     license("MIT")
 
+    version("2.31.1", sha256="fc7e660c2279b1e008b80aca0165a4a157daf4994d08a533ee925d73ce732b97")
     version("2.31.0", sha256="183cf9a96aabc50ef4bd557a53fd01557a123c05a0dc87651371878f357439ec")
     version("2.30.0", sha256="c575861ec746322961cd15d8c0b532bb2a19333f1cf167bbff73230a7d67302f")
     version("2.29.2", sha256="bc2f36b5d4fc9890c69f607d54da873032628462e88c545dd633d2c787a544a5")
