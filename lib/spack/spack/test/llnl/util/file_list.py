@@ -326,6 +326,7 @@ def test_searching_order(search_fn, search_list, root, kwargs):
     assert len(rlist) == 0
 
 
+@pytest.mark.xfail(reason="Multi-dir find() no-longer supported")
 @pytest.mark.parametrize(
     "root,search_list,kwargs,expected",
     [
