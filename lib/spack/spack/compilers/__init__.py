@@ -125,6 +125,66 @@ def get_compiler_config(scope=None, init_config=True):
     return config
 
 
+def get_compiler_config_from_packages(scope=None):
+    """Return the compiler configuration from packages.yaml"""
+    packages = []
+    config = spack.config.get("packages", scope=scope)
+
+    if not config:
+        return packages
+
+    for name, entry in config.items():
+        if (name not in supported_compilers() and
+            name not in package_name_to_compiler_name.keys()):
+            continue
+        packages.extend(_compiler_config_from_package_config(entry))
+
+    return packages
+
+
+def _compiler_config_from_package_config(config):
+    externals = config.get("externals", None)
+    if not externals:
+        return []
+
+    compilers = []
+    for entry in externals:
+        compiler = _compiler_config_from_external(entry)
+        if compiler:
+            compilers.append(compiler)
+
+    return compilers
+
+
+def _compiler_config_from_external(config):
+    spec = spack.spec.Spec(config["spec"])
+    extra_attributes = config.get("extra_attributes", {})
+    paths = extra_attributes.get("paths", {})
+    if not paths or not spec.architecture:
+        return None
+
+    target = spec.target
+    os = spec.os
+
+    if not target or not os:
+        return None
+
+    compiler_entry = {
+        "compiler": {
+            "spec": str(spec),
+            "paths": paths,
+            "flags": extra_attributes.get("flags", {}),
+            "operating_system": os,
+            "target": str(target.family),
+            "modules": config.get("modules", []),
+            "environment": extra_attributes.get("environment", {}),
+            "extra_rpaths": extra_attributes.get("extra_rpaths", []),
+            "implicit_rpaths": extra_attributes.get("implicit_rpaths", True),
+        }
+    }
+    return compiler_entry
+
+
 def _init_compiler_config(*, scope):
     """Compiler search used when Spack has no compilers."""
     compilers = find_compilers()
@@ -223,8 +283,9 @@ def all_compilers_config(scope=None, init_config=True):
     """Return a set of specs for all the compiler versions currently
     available to build with.  These are instances of CompilerSpec.
     """
-    # TODO GBB: return compiler specs from packages.yaml
-    return get_compiler_config(scope, init_config)
+    from_compilers_yaml = get_compiler_config(scope, init_config)
+    from_packages_yaml = get_compiler_config_from_packages(scope)
+    return from_compilers_yaml + from_packages_yaml
 
 
 def all_compiler_specs(scope=None, init_config=True):
@@ -391,7 +452,6 @@ def find_specs_by_arch(compiler_spec, arch_spec, scope=None, init_config=True):
 
 
 def all_compilers(scope=None, init_config=True):
-    # TODO GBB: get compilers from packages.yaml as well
     config = all_compilers_config(scope, init_config=init_config)
     compilers = list()
     for items in config:
