@@ -1009,8 +1009,10 @@ def test_tarball_normalized_permissions(tmpdir):
 
 
 def test_tarball_common_prefix(dummy_prefix, tmpdir):
-    """Tests whether Spack can figure out the package directory
-    from the tarball contents, and strip them when extracting."""
+    """Tests whether Spack can figure out the package directory from the tarball contents, and
+    strip them when extracting. This test creates a CURRENT_BUILD_CACHE_LAYOUT_VERSION=1 type
+    tarball where the parent directories of the package prefix are missing. Spack should be able
+    to figure out the common prefix and extract the files into the correct location."""
 
     # When creating a tarball, Python (and tar) use relative paths,
     # Absolute paths become relative to `/`, so drop the leading `/`.
