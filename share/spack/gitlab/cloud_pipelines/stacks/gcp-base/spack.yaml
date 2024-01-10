@@ -15,6 +15,9 @@ spack:
     - - $packages
     - - $arch
     - - $targets
-
+  ci:
+    pipeline-gen:
+    - build-jobs:
+        tags: [gcp]
   cdash:
     build-group: GCP Packages
