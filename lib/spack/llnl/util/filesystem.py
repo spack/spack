@@ -1850,6 +1850,9 @@ def find_max_depth(root, globs, max_depth=_unset):
     """Given a set of non-recursive glob file patterns, finds all
     files matching those patterns up to a maximum specified depth.
 
+    If a directory has a name which matters an input pattern, it will
+    not be included in the results.
+
     Does not search in directories below the specified depth.
 
     If ``globs`` is a list, files matching earlier entries are placed
@@ -1860,6 +1863,7 @@ def find_max_depth(root, globs, max_depth=_unset):
 
     if isinstance(globs, str):
         globs = [globs]
+    regexes = [re.compile(fnmatch.translate(x)) for x in globs]
 
     # Note later calls to os.scandir etc. return abspaths if the
     # input is absolute, see https://docs.python.org/3/library/os.html#os.DirEntry.path
@@ -1870,29 +1874,31 @@ def find_max_depth(root, globs, max_depth=_unset):
     dir_queue = collections.deque([(0, root)])
     while dir_queue:
         depth, next_dir = dir_queue.pop()
-        if (max_depth is _unset) or depth < max_depth:
-            try:
-                dir_iter = os.scandir(next_dir)
-            except OSError:
-                # Most commonly, this would be a permissions issue, for
-                # example if we are scanning an external directory like /usr
-                continue
+        try:
+            dir_iter = os.scandir(next_dir)
+        except OSError:
+            # Most commonly, this would be a permissions issue, for
+            # example if we are scanning an external directory like /usr
+            continue
 
-            with dir_iter:
-                for dir_entry in dir_iter:
-                    if dir_entry.is_dir(follow_symlinks=False):
+        with dir_iter:
+            for dir_entry in dir_iter:
+                if dir_entry.is_dir(follow_symlinks=False):
+                    if (max_depth is _unset) or depth < max_depth:
                         dir_queue.appendleft((depth + 1, dir_entry.path))
-
-        for glob_pattern in globs:
-            matches = glob.glob(os.path.join(next_dir, glob_pattern))
-            found_files[glob_pattern].extend(matches)
+                elif dir_entry.is_file(follow_symlinks=True):
+                    fname = dir_entry.name
+                    for pattern in regexes:
+                        if pattern.match(fname):
+                            found_files[pattern].append(os.path.join(next_dir, fname))
+                # else: the entry is a symlink to a directory
 
         # TODO: for fully-recursive searches, we can print a warning after
         # after having searched everything up to some fixed depth (which
         # requires BFS) or after searching some number of directories
         # (which doesn't require BFS, but is not repeatable)
 
-    return list(itertools.chain(*[found_files[x] for x in globs]))
+    return list(itertools.chain(*[found_files[x] for x in regexes]))
 
 
 # Utilities for libraries and headers
