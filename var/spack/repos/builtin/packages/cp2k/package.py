@@ -20,7 +20,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     periodic, material, crystal, and biological systems
     """
 
-    build_system(conditional("cmake", when="@2023.2:"), "makefile", default="makefile")
+    build_system(conditional("cmake", when="@2023.2:"), "makefile", default="cmake")
 
     homepage = "https://www.cp2k.org"
     url = "https://github.com/cp2k/cp2k/releases/download/v3.0.0/cp2k-3.0.tar.bz2"
@@ -439,7 +439,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
             "aocc": ["-O2"],
         }
 
-        dflags = ["-DNDEBUG"]
+        dflags = ["-DNDEBUG"] if spec.satisfies("@:2023.2") else []
         cppflags = ["-D__FFTW3", "-I{0}".format(fftw_header_dir)]
 
         # CP2K requires MPI 3 starting at version 2023.1
