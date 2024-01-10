@@ -1861,6 +1861,10 @@ def find_max_depth(root, globs, max_depth=_unset):
     if isinstance(globs, str):
         globs = [globs]
 
+    # Note later calls to os.scandir etc. return abspaths if the
+    # input is absolute, see https://docs.python.org/3/library/os.html#os.DirEntry.path
+    root = os.path.abspath(root)
+
     found_files = collections.defaultdict(list)
 
     dir_queue = collections.deque([(0, root)])
@@ -1877,12 +1881,10 @@ def find_max_depth(root, globs, max_depth=_unset):
             with dir_iter:
                 for dir_entry in dir_iter:
                     if dir_entry.is_dir(follow_symlinks=False):
-                        dir_path = os.path.join(next_dir, dir_entry.name)
-                        dir_queue.appendleft((depth + 1, os.path.join(next_dir, dir_entry.name)))
+                        dir_queue.appendleft((depth + 1, dir_entry.path))
 
         for glob_pattern in globs:
             matches = glob.glob(os.path.join(next_dir, glob_pattern))
-            matches = list(os.path.join(next_dir, x) for x in matches)
             found_files[glob_pattern].extend(matches)
 
         # TODO: for fully-recursive searches, we can print a warning after
