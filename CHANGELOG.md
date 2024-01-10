@@ -1,3 +1,29 @@
+# v0.21.1 (2024-01-11)
+
+## New features
+- Add support for reading buildcaches created by Spack v0.22 (#41773)
+
+## Bugfixes
+
+- spack graph: fix coloring with environments (#41240)
+- spack info: sort variants in --variants-by-name (#41389)
+- Spec.format: error on old style format strings (#41934)
+- ASP-based solver: 
+  - fix infinite recursion when computing concretization errors (#41061)
+  - don't error for type mismatch on preferences (#41138)
+  - don't emit spurious debug output (#41218)
+- Improve the error message for deprecated preferences (#41075)
+- Fix MSVC preview version breaking clingo build on Windows (#41185)
+- Fix multi-word aliases (#41126)
+- Add a warning for unconfigured compiler (#41213)
+- environment: fix an issue with deconcretization/reconcretization of specs (#41294)
+- buildcache: don't error if a patch is missing, when installing from binaries (#41986)
+- Multiple improvements to unit-tests (#41215,#41369,#41495,#41359,#41361,#41345,#41342,#41308,#41226)
+
+## Package updates
+- root: add a webgui patch to address security issue (#41404)
+- BerkeleyGW: update source urls (#38218)
+
 # v0.21.0 (2023-11-11)
 
 `v0.21.0` is a major feature release.
