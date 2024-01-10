@@ -1867,10 +1867,17 @@ def find_max_depth(root, globs, max_depth=_unset):
     while dir_queue:
         depth, next_dir = dir_queue.pop()
         if (max_depth is _unset) or depth < max_depth:
-            for dir_entry in os.scandir(next_dir):
-                if dir_entry.is_dir():
-                    dir_path = os.path.join(next_dir, dir_entry.name)
-                    if not os.path.islink(dir_path):
+            try:
+                dir_iter = os.scandir(next_dir)
+            except OSError:
+                # Most commonly, this would be a permissions issue, for
+                # example if we are scanning an external directory like /usr
+                continue
+
+            with dir_iter:
+                for dir_entry in dir_iter:
+                    if dir_entry.is_dir(follow_symlinks=False):
+                        dir_path = os.path.join(next_dir, dir_entry.name)
                         dir_queue.appendleft((depth + 1, os.path.join(next_dir, dir_entry.name)))
 
         for glob_pattern in globs:
