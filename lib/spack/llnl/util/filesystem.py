@@ -1863,6 +1863,9 @@ def find_max_depth(root, globs, max_depth=_unset):
 
     if isinstance(globs, str):
         globs = [globs]
+    # Apply normcase to regular expressions and to the filenames:
+    # this respects case-sensitivity semantics of different OSes
+    # (e.g. file search is typically case-insensitive on Windows)
     regexes = [re.compile(fnmatch.translate(os.path.normcase(x))) for x in globs]
 
     # Note later calls to os.scandir etc. return abspaths if the
@@ -1889,7 +1892,7 @@ def find_max_depth(root, globs, max_depth=_unset):
                 elif dir_entry.is_file(follow_symlinks=True):
                     fname = dir_entry.name
                     for pattern in regexes:
-                        if pattern.match(fname):
+                        if pattern.match(os.path.normcase(fname)):
                             found_files[pattern].append(os.path.join(next_dir, fname))
                 # else: the entry is a symlink to a directory
 
