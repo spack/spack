@@ -21,3 +21,8 @@ spack:
         tags: [gcp]
   cdash:
     build-group: GCP Packages
+
+  ci:
+    pipeline-gen:
+    - build-job:
+        image: {"name": "ghrc.io/spack/e4s-centos-7:v2023-10-30", "entrypoint": [""]}
