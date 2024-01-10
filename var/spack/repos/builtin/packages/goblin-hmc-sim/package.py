@@ -20,7 +20,7 @@ class GoblinHmcSim(MakefilePackage):
     # For some reason .o files get thrashed inside Spack
     parallel = False
 
-    maintainers("jjwilke")
+    maintainers("berquist")
 
     license("BSD-2-Clause")
 
