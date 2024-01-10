@@ -1045,7 +1045,7 @@ def test_find_max_depth(dir_structure_with_things_to_find):
 
 def test_find_max_depth_relative(dir_structure_with_things_to_find):
     """find_max_depth should return absolute paths even if
-       the provided path is relative.
+    the provided path is relative.
     """
     root, locations = dir_structure_with_things_to_find
     with fs.working_dir(root):
