@@ -100,6 +100,12 @@ class SuiteSparse(Package, CMakePackage, CudaPackage):
     # Tested only with 5.9.0, previous versions probably work too
     patch("fix_cuda11.patch", when="@5.9.0:5.10.0+cuda ^cuda@11:")
 
+    patch(
+        "https://raw.githubusercontent.com/JuliaPackaging/Yggdrasil/dc31f1d5925725e35cf2afba1ca2fe34c95e8e7e/S/SuiteSparse/SuiteSparse%407/bundled/patches/blas_suffix.patch",
+        sha256="7db20e54c407232b9e4c1e9cb1d41a3bf3484aae1cdfe8dd4819584ab7438d92",
+        when="@7.4.0",
+    )
+
     conflicts(
         "%gcc@:4.8", when="@5.2.0:", msg="gcc version must be at least 4.9 for suite-sparse@5.2.0:"
     )
@@ -331,8 +337,23 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         ]
         if "+graphblas" in self.spec:
             projects.extend(["graphblas", "lagraph"])
-        return [
+
+        blas = self.spec["blas"]
+        ilp64 = blas.satisfies("+ilp64")
+
+        args = [
+            self.define("SUITESPARSE_USE_STRICT", True),
             self.define_from_variant("SUITESPARSE_USE_CUDA", "cuda"),
             self.define_from_variant("SUITESPARSE_USE_OPENMP", "openmp"),
             self.define("SUITESPARSE_ENABLE_PROJECTS", projects),
+            self.define("SUITESPARSE_USE_64BIT_BLAS", ilp64),
+            self.define("BLAS_LIBRARIES", blas.libs),
+            self.define("LAPACK_LIBRARIES", self.spec["lapack"].libs),
         ]
+
+        if blas.name == "openblas" and "symbol_suffix" in blas.variants:
+            suffix = blas.variants["symbol_suffix"].value
+            if suffix != "none":
+                args.append(self.define("BLAS64_SUFFIX", suffix))
+
+        return args
