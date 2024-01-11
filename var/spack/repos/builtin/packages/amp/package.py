@@ -82,6 +82,13 @@ class Amp(CMakePackage, CudaPackage, ROCmPackage):
         when="@2.0.0:",
     )
 
+    def setup_build_environment(self, env):
+        if "^kokkos-nvcc-wrapper" in self.spec:
+            # undo nvcc wrapper changes
+            env.set("MPICH_CXX", spack_cxx)
+            env.set("OMPI_CXX", spack_cxx)
+            env.set("MPICXX_CXX", spack_cxx)
+
     def cmake_args(self):
         spec = self.spec
 
@@ -94,6 +101,18 @@ class Amp(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("USE_MPI", "mpi"),
             self.define_from_variant("MPI_COMPILER", "mpi"),
         ]
+
+        if "+cuda" in spec:
+            cuda_arch = self.spec.variants["cuda_arch"].value
+            if cuda_arch[0] != "none":
+                options.extend(
+                  [
+                    self.define("USE_CUDA", True),
+                    self.define("CMAKE_CUDA_COMPILER", join_path(spec["cuda"].prefix.bin, "nvcc")),
+                    self.define("CMAKE_CUDA_ARCHITECTURES", cuda_arch),
+                    self.define("CMAKE_CUDA_FLAGS", "-extended-lambda --expt-relaxed-constexpr")
+                  ]
+                )
 
         if "+mpi" in spec:
             options.extend(
