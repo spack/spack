@@ -1,11 +1,15 @@
 spack:
   view: false
+  packages:
+    julia:
+      version:
+      - 1.9.3
   definitions:
   - arch:
     - "%gcc"
 
   - packages:
-    - stream
+    - julia
 
   - targets:
     - "target=x86_64_v3"
