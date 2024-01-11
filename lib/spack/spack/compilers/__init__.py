@@ -236,8 +236,6 @@ def remove_compiler_from_config(compiler_spec, scope=None):
         compiler_spec: compiler to be removed
         scope: configuration scope to modify
     """
-
-    # TODO GBB: remove if it comes from packages.yaml as well
     candidate_scopes = [scope]
     if scope is None:
         candidate_scopes = spack.config.CONFIG.scopes.keys()
@@ -246,6 +244,9 @@ def remove_compiler_from_config(compiler_spec, scope=None):
     for current_scope in candidate_scopes:
         removal_happened |= _remove_compiler_from_scope(compiler_spec, scope=current_scope)
 
+    msg = "`spack compiler remove` will not remove compilers defined in packages.yaml"
+    msg += "\nTo remove these compilers, either edit the config or use `spack external remove`"
+    tty.debug(msg)
     return removal_happened
 
 
