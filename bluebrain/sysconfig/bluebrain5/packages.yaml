@@ -21,6 +21,11 @@ packages:
     # require:
     #   - one_of:
     #     - "@12.0.0%gcc@12.3.0 target=skylake"
+  curl:
+    version: [7.29.0]
+    externals:
+    - spec: curl@7.29.0
+      prefix: /usr
   darshan-runtime:
     variants: +slurm
   eigen:
