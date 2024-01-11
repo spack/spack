@@ -2,13 +2,13 @@ spack:
   view: false
   definitions:
   - arch:
-    - %gcc
+    - "%gcc"
 
   - packages:
-    - stream
+    - "stream"
 
   - targets:
-    - target=x86_64_v3
+    - "target=x86_64_v3"
 
   specs:
   - matrix:
@@ -18,11 +18,8 @@ spack:
   ci:
     pipeline-gen:
     - build-jobs:
-        tags: [gcp]
-  cdash:
-    build-group: GCP Packages
-
-  ci:
-    pipeline-gen:
-    - build-job:
+        tags: ["gcp"]
         image: {"name": "ghrc.io/spack/e4s-centos-7:v2023-10-30", "entrypoint": [""]}
+
+  cdash:
+    build-group: "GCP Packages"

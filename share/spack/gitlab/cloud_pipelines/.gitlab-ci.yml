@@ -950,10 +950,10 @@ e4s-cray-sles-build:
   extends: [ ".linux_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: gcp-base
-    tags: [ "gcp", "base"]
 
 gcp-base-generate:
   extends: [ ".generate-base", ".gcp-base" ]
+  tags: [ "gcp", "base", "x86_64", "medium"]
 
 gcp-base-build:
   extends: [ ".build", ".gcp-base" ]
