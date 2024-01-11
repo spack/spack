@@ -20,8 +20,6 @@ class NvplLapack(Package):
 
     maintainers("albestro", "rasolca")
 
-    # FIXME: Add the SPDX identifier of the project's license below.
-    # See https://spdx.org/licenses/ for a list.
     license("UNKNOWN")
 
     version("0.1.0", sha256="7054f775b18916ee662c94ad7682ace53debbe8ee36fa926000fe412961edb0b")
