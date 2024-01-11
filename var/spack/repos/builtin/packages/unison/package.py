@@ -34,6 +34,10 @@ class Unison(MakefilePackage):
 
     depends_on("ocaml@4.10.0:~force-safe-string", type=("build", "link"))
 
+    with when("@:2.51.2"):
+        patch("large.patch", level=0)
+        patch("4.08-compatibility.patch", when="^ocaml@4.08:")
+
     parallel = False
 
     def install(self, spec, prefix):
