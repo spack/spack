@@ -1,15 +1,15 @@
 spack:
   view: false
   packages:
-    julia:
+    cmake:
       version:
-      - 1.9.3
+      - 3.27.9
   definitions:
   - arch:
     - "%gcc"
 
   - packages:
-    - julia
+    - cmake
 
   - targets:
     - "target=x86_64_v3"
