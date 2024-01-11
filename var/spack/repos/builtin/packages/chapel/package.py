@@ -11,16 +11,94 @@ class Chapel(AutotoolsPackage):
     portable, scalable and open-source."""
 
     homepage = "https://chapel-lang.org/"
-    url = "https://github.com/chapel-lang/chapel/releases/download/1.24.1/chapel-1.24.1.tar.gz"
 
+    url = "https://github.com/chapel-lang/chapel/archive/refs/tags/1.33.0.tar.gz"
+
+    # A list of GitHub accounts to notify when the package is updated.
+    maintainers("arezaii")
+
+    # See https://spdx.org/licenses/ for a list.
     license("Apache-2.0")
 
-    version("1.24.1", sha256="f898f266fccaa34d937b38730a361d42efb20753ba43a95e5682816e008ce5e4")
-    version("1.24.0", sha256="77c6087f3e0837268470915f2ad260d49cf7ac4adf16f5b44862ae624c1be801")
-    version("1.23.0", sha256="7ae2c8f17a7b98ac68378e94a842cf16d4ab0bcfeabc0fee5ab4aaa07b205661")
-    version("1.22.1", sha256="8235eb0869c9b04256f2e5ce3ac4f9eff558401582fba0eba05f254449a24989")
-    version("1.22.0", sha256="57ba6ee5dfc36efcd66854ecb4307e1c054700ea201eff73012bd8b4572c2ce6")
-    version("1.21.0", sha256="886f7ba0e0e86c86dba99417e3165f90b1d3eca59c8cd5a7f645ce28cb5d82a0")
-    version("1.20.0", sha256="08bc86df13e4ad56d0447f52628b0f8e36b0476db4e19a90eeb2bd5f260baece")
-    version("1.19.0", sha256="c2b68a20d87cc382c2f73dd1ecc6a4f42fb2f590b0b10fbc577382dd35c9e9bd")
-    version("1.18.0", sha256="68471e1f398b074edcc28cae0be26a481078adc3edea4df663f01c6bd3b6ae0d")
+    version("1.33.0", sha256="c7dfe691a043b6a5dcbea6fe7607ca030014f1a8019744c4c99f67caa8829ba3")
+    version("1.32.0", sha256="a359032b4355774e250fb2796887b3bbf58d010c468faba97f7b471bc6bab57d")
+    version("1.31.0", sha256="bf9a63f7e5d1f247e8680c9a07aeb330cbbf199777a282408100a87dda95918f")
+    version("1.30.0", sha256="d7d82f64f405b8c03e2ce6353d16aba5a261d3f0c63dc3bb64ea3841cfa597b9")
+    version("1.29.0", sha256="7fcd13db8e27f14d586358d4c2587e43c8f21d408126fa0ca27d1b7067b867c0")
+    version("1.28.0", sha256="321243a91f8f2dfb3b37a714e2d45298e6a967a9a115565f9ad9cc630ff0bd0e")
+
+    # TODO: Make a targets list for different makefile targets
+    variant("chpldoc", default=False, description="Build the chpldoc tool")
+    depends_on("doxygen@1.8.17:", when="+chpldoc")
+
+    variant(
+            "llvm", default="none",
+            description="LLVM backend type. 'spack' will use a spack LLVM package",
+            values=("none", "system", "bundled", "spack")
+    )
+
+    variant(
+            "comm",
+            default="none",
+            description="Build Chapel with multi-locale support",
+            values=("none","gasnet","ofi")
+    )
+    variant(
+            "substrate",
+            default="none",
+            description="Build Chapel with mulit-locale support using the supplied CHPL_COMM_SUBSTRATE",
+            values=("none","udp","ibv","ofi"),
+            multi=False
+    )
+
+    package_module_opts = ("zmq", "libevent", "protobuf", "ssl", "hdf5", "yaml")
+    package_module_dict = {
+                           "zmq":"libzmq",
+                           "libevent":"libevent",
+                           "protobuf":"protobuf",
+                           "ssl":"openssl",
+                           "hdf5":"hdf5+hl~mpi",
+                           "yaml":"libyaml"
+    }
+    variant(
+            "package_modules",
+            description="Include package module dependencies with spack",
+            values=disjoint_sets(
+            ("none",),
+            ("all",),
+            package_module_opts,
+        ).prohibit_empty_set().with_error(
+            "'none' or 'all' cannot be activated along with other package_modules"
+        ).with_default("none").with_non_feature_values("none", "all")
+    )
+
+    for opt, dep in package_module_dict.items():
+        depends_on(dep, when="package_modules={0}".format(opt), type="run")
+        depends_on(dep, when="package_modules=all", type="run")
+
+
+    # Add dependencies
+    depends_on("llvm@14:16", when="llvm=spack")
+    depends_on("python@3.7:3.10")
+    depends_on("cmake@3.16:")
+    depends_on("m4")
+
+    def setup_chpl_comm(self, env, spec):
+        env.set("CHPL_COMM",spec.variants["comm"].value)
+        if spec.variants["substrate"].value != "none":
+            env.set("CHPL_COMM_SUBSTRATE",spec.variants["substrate"].value)
+
+    def setup_build_environment(self, env):
+        env.set("CHPL_LLVM", self.spec.variants["llvm"].value)
+        env.set("CHPL_DEVELOPER","0")
+        if self.spec.variants["llvm"].value=="spack":
+            env.set("CHPL_LLVM_CONFIG",
+                    "{0}/{1}".format(self.spec["llvm"].prefix, "/bin/llvm-config"))
+            env.set("CHPL_LLVM", "system")
+        self.setup_chpl_comm(env, self.spec)
+
+    def setup_run_environment(self, env):
+        self.setup_build_environment(env)
+
+    def build(self, pkg, spec):
+        make("chpldoc", when="+chpldoc")
