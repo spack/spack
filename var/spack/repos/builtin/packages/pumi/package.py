@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+import warnings
 
 
 class Pumi(CMakePackage):
@@ -125,7 +126,14 @@ class Pumi(CMakePackage):
         description = "testing pumi uniform mesh refinement"
         self.run_test(exe, options, expected, purpose=description)
 
-        mpiexec = self.spec["mpi"].prefix.bin.mpiexec
+        mpiexec = ""
+        mpiexe_list = ["mpirun", "mpiexec", "srun"]
+        for mpiexe in mpiexe_list:
+            if which(mpiexe) is not None:
+                mpiexec = Executable(mpiexe).command
+                break
+        if mpiexec == "":
+            warnings.warn("MPI exec not found")
         data_dir = self.prefix.share.testdata
         options = [
             "-n",
