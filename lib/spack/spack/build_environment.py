@@ -407,14 +407,15 @@ def set_compiler_environment_variables(pkg, env):
         ldf.append("-Wl,--dynamic-linker=" + pkg.spec["glibc"].prefix + "/lib/ld-linux-"
                    + pkg.spec.architecture.target.microarchitecture.family.name.replace("_", "-") +
                    ".so.2")
+        cxxf = inject_flags.get('cxxflags', [])
         cppf = inject_flags.get('cppflags', [])
         cppf.append("-B" + pkg.spec["glibc"].prefix.lib)
-        # cppf.append("-isystem")
-        # cppf.append(join_path(pkg.compiler.prefix, "include", "c++", pkg.compiler.version))
-        cppf.append("-idirafter")
-        cppf.append(pkg.spec["libxcrypt"].prefix.include)
+        # cxxf.append("-I")
+        # cxxf.append(join_path(pkg.compiler.prefix, "include", "c++", pkg.compiler.version))
         cppf.append("-idirafter")
         cppf.append(pkg.spec["glibc"].prefix.include)
+        cppf.append("-idirafter")
+        cppf.append(pkg.spec["libxcrypt"].prefix.include)
 
         # if pkg.name != "gcc":
         #     ldf.append("--sysroot=/")
@@ -432,6 +433,7 @@ def set_compiler_environment_variables(pkg, env):
 
         inject_flags['ldflags'] = ldf
         inject_flags['cppflags'] = cppf
+        inject_flags['cxxflags'] = cxxf
 
     # Place compiler flags as specified by flag_handler
     for flag in spack.spec.FlagMap.valid_compiler_flags():
