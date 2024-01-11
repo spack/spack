@@ -13,8 +13,10 @@ class NvplLapack(Package):
     """
 
     homepage = "https://docs.nvidia.com/nvpl/_static/lapack/index.html"
-    url = ("https://developer.download.nvidia.com/compute/nvpl/redist"
-           "/nvpl_lapack/linux-sbsa/nvpl_lapack-linux-sbsa-0.2.0.1-archive.tar.xz")
+    url = (
+        "https://developer.download.nvidia.com/compute/nvpl/redist"
+        "/nvpl_lapack/linux-sbsa/nvpl_lapack-linux-sbsa-0.2.0.1-archive.tar.xz"
+    )
 
     maintainers("albestro", "rasolca")
 
@@ -49,15 +51,15 @@ class NvplLapack(Package):
         spec = self.spec
 
         if "+ilp64" in spec:
-          int_type = "ilp64"
+            int_type = "ilp64"
         else:
-          int_type = "lp64"
+            int_type = "lp64"
 
         if spec.satisfies("threads=openmp"):
-          threading_type="gomp"
+            threading_type = "gomp"
         else:
-          # threads=none
-          threading_type = "seq"
+            # threads=none
+            threading_type = "seq"
 
         name = ["libnvpl_lapack_core", f"libnvpl_lapack_{int_type}_{threading_type}"]
 

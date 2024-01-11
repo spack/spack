@@ -13,8 +13,10 @@ class NvplBlas(Package):
     """
 
     homepage = "https://docs.nvidia.com/nvpl/_static/blas/index.html"
-    url = ("https://developer.download.nvidia.com/compute/nvpl/redist"
-           "/nvpl_blas/linux-sbsa/nvpl_blas-linux-sbsa-0.1.0-archive.tar.xz")
+    url = (
+        "https://developer.download.nvidia.com/compute/nvpl/redist"
+        "/nvpl_blas/linux-sbsa/nvpl_blas-linux-sbsa-0.1.0-archive.tar.xz"
+    )
 
     maintainers("albestro", "rasolca")
 
@@ -49,15 +51,15 @@ class NvplBlas(Package):
         spec = self.spec
 
         if "+ilp64" in spec:
-          int_type = "ilp64"
+            int_type = "ilp64"
         else:
-          int_type = "lp64"
+            int_type = "lp64"
 
         if spec.satisfies("threads=openmp"):
-          threading_type="gomp"
+            threading_type = "gomp"
         else:
-          # threads=none
-          threading_type = "seq"
+            # threads=none
+            threading_type = "seq"
 
         name = ["libnvpl_blas_core", f"libnvpl_blas_{int_type}_{threading_type}"]
 
