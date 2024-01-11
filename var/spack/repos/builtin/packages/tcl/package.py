@@ -11,12 +11,15 @@ from spack.package import *
 from spack.util.environment import is_system_path
 
 
-class TclMixin:
-    def _find_script_dir(self):
+class TclHelper:
+    @staticmethod
+    def find_script_dir(spec):
         # Put more-specific prefixes first
         check_prefixes = [
-            join_path(self.spec.prefix, "share", "tcl{0}".format(self.version.up_to(2))),
-            self.spec.prefix,
+            join_path(
+                spec.prefix, "share", "tcl{0}".format(spec.package.version.up_to(2))
+            ),
+            spec.prefix,
         ]
         for prefix in check_prefixes:
             result = find_first(prefix, "init.tcl")
@@ -25,7 +28,7 @@ class TclMixin:
         raise RuntimeError("Cannot locate init.tcl")
 
 
-class Tcl(AutotoolsPackage, NMakePackage, SourceforgePackage, TclMixin):
+class Tcl(AutotoolsPackage, NMakePackage, SourceforgePackage, TclHelper):
     """Tcl (Tool Command Language) is a very powerful but easy to learn dynamic
     programming language, suitable for a very wide range of uses, including web and
     desktop applications, networking, administration, testing and many more. Open source
@@ -57,6 +60,7 @@ class Tcl(AutotoolsPackage, NMakePackage, SourceforgePackage, TclMixin):
         filter_compiler_wrappers("tclConfig.sh", relative_root="lib", when=f"platform={plat}")
 
     build_system("autotools", "nmake")
+    patch("tcl-quote-cc-path.patch", when="platform=windows")
     # ========================================================================
     # Set up environment to make install easy for tcl extensions.
     # ========================================================================
@@ -90,7 +94,7 @@ class Tcl(AutotoolsPackage, NMakePackage, SourceforgePackage, TclMixin):
         """
         # When using tkinter from within spack provided python+tkinter,
         # python will not be able to find Tcl unless TCL_LIBRARY is set.
-        env.set("TCL_LIBRARY", self._find_script_dir())
+        env.set("TCL_LIBRARY", TclHelper.find_script_dir(self.spec))
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         """Set TCLLIBPATH to include the tcl-shipped directory for
@@ -108,7 +112,7 @@ class Tcl(AutotoolsPackage, NMakePackage, SourceforgePackage, TclMixin):
                     env.prepend_path("TCLLIBPATH", tcllibpath, separator=" ")
 
 
-class BaseBuilder(TclMixin, metaclass=spack.builder.PhaseCallbacksMeta):
+class BaseBuilder(TclHelper, metaclass=spack.builder.PhaseCallbacksMeta):
     @run_after("install")
     def symlink_tclsh(self):
         with working_dir(self.prefix.bin):
@@ -124,7 +128,7 @@ class BaseBuilder(TclMixin, metaclass=spack.builder.PhaseCallbacksMeta):
         * https://wiki.tcl-lang.org/page/TCL_LIBRARY
         * https://wiki.tcl-lang.org/page/TCLLIBPATH
         """
-        env.set("TCL_LIBRARY", self._find_script_dir())
+        env.set("TCL_LIBRARY", TclHelper.find_script_dir(self.spec))
 
         # If we set TCLLIBPATH, we must also ensure that the corresponding
         # tcl is found in the build environment. This to prevent cases
