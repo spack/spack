@@ -123,6 +123,7 @@ class Bazel(Package):
     executables = ["^bazel$"]
 
     # Download resources to perform offline build with bazel.
+    # The following URLs and sha256 are in the file distdir_deps.bzl at the root of bazel sources.
     resource_dictionary = {}
     resource_dictionary["bazel_skylib"] = {
         "url": "https://github.com/bazelbuild/bazel-skylib/releases/download/1.0.1/bazel-skylib-1.0.1.tar.gz",
