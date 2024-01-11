@@ -1,11 +1,15 @@
 spack:
   view: false
+  packages:
+    stream:
+      version:
+      - 5.10
   definitions:
   - arch:
     - "%gcc"
 
   - packages:
-    - "stream"
+    - stream
 
   - targets:
     - "target=x86_64_v3"
@@ -15,10 +19,10 @@ spack:
     - - $packages
     - - $arch
     - - $targets
-  ci:
-    pipeline-gen:
-    - build-job:
-        image: "ghcr.io/spack/e4s-centos-7:v2023-10-30"
+  #ci:
+  #  pipeline-gen:
+  #  - build-job:
+  #      image: "ghcr.io/spack/e4s-centos-7:v2023-10-30"
 
   cdash:
     build-group: "GCP Packages"
