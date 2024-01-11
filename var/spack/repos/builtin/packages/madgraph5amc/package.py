@@ -22,9 +22,17 @@ class Madgraph5amc(MakefilePackage):
     tags = ["hep"]
 
     version(
+        "3.4.2",
+        sha256="ca8631e10cc384f9d05a4d3311f6cb101eeaa57cb39ab7325ee5d1aec1fe218f",
+    )
+    version(
+        "2.9.15",
+        sha256="1e0743a4f6300f6afb1907a6368c95aac5fc602f34cf72098caf23c5cab3c57e",
+    )
+
+    version(
         "2.8.1",
         sha256="acda34414beba201e529b8c03f87f4893fb3f99ed2956a131d60a387e76c5b8c",
-        url="https://launchpad.net/mg5amcnlo/2.0/2.8.x/+download/MG5_aMC_v2.8.1.tar.gz",
     )
     version("2.7.3.py3", sha256="400c26f9b15b07baaad9bd62091ceea785c2d3a59618fdc27cad213816bc7225")
 
@@ -49,7 +57,7 @@ class Madgraph5amc(MakefilePackage):
     depends_on("python@2.7.0:2.8.0,3.7:", when="@2.8.0:", type=("build", "run"))
     depends_on("libtirpc")
 
-    patch("array-bounds.patch")
+    patch("array-bounds.patch", when="%gcc@10")
     patch("madgraph5amc.patch", level=0)
     patch("madgraph5amc-2.7.3.atlas.patch", level=0, when="@2.7.3.py2+atlas")
     patch("madgraph5amc-2.7.3.atlas.patch", level=0, when="@2.7.3.py3+atlas")
@@ -81,6 +89,7 @@ class Madgraph5amc(MakefilePackage):
 
         set_parameter("automatic_html_opening", "False")
 
+    @when("@:2.8.1")
     def build(self, spec, prefix):
         with working_dir(join_path("vendor", "CutTools")):
             make(parallel=False)
@@ -89,7 +98,7 @@ class Madgraph5amc(MakefilePackage):
             for m in ["mcfio/arch_mcfio", "src/stdhep_arch"]:
                 arch = FileFilter(m)
                 arch.filter("CC.*=.*", "CC = {0}".format(spack_cc))
-            make(parallel=False)
+            make(f'CFLAGS=-I{spec["libtirpc"].prefix.include.tirpc}', parallel=False)
 
         if "+atlas" in spec:
             if os.path.exists(join_path("bin", "compile.py")):
@@ -98,6 +107,10 @@ class Madgraph5amc(MakefilePackage):
                 compile_py = Executable(join_path("bin", ".compile.py"))
 
             compile_py()
+
+    @when("@3:")
+    def build(self, spec, prefix):
+        pass
 
     def install(self, spec, prefix):
         def installdir(dirname):
@@ -120,3 +133,6 @@ class Madgraph5amc(MakefilePackage):
             join_path("Template", "LO", "Source", ".make_opts"),
             join_path(prefix, "Template", "LO", "Source", "make_opts"),
         )
+
+    def url_for_version(self, version):
+        return f'https://launchpad.net/mg5amcnlo/{version[0]}.0/{version[0]}.{version[1]}.x/+download/MG5_aMC_v{version}.tar.gz'
