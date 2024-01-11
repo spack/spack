@@ -75,7 +75,7 @@ __all__ = [
     "resource",
     "build_system",
     "requires",
-    "language"
+    "language",
 ]
 
 #: These are variant names used by Spack internally; packages can't use them

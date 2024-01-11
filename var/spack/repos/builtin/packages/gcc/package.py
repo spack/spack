@@ -1155,5 +1155,20 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             description=f"If any package uses %{str(compiler.spec)}, "
             f"it depends on gcc-runtime@{str(compiler.version)}:",
         )
+
+        gfortran_str = "gfortran@5"
+        if compiler.spec.satisfies("gcc@:6"):
+            gfortran_str = "gfortran@3"
+        elif compiler.spec.satisfies("gcc@7"):
+            gfortran_str = "gfortran@4"
+
+        pkg("*").depends_on(
+            f"{gfortran_str}",
+            when=f"%{str(compiler.spec)}",
+            languages=["fortran"],
+            type="link",
+            description=f"Add a dependency on '{gfortran_str}' for nodes compiled with "
+            f"{str(compiler.spec)} and using the 'fortran' language",
+        )
         # The version of gcc-runtime is the same as the %gcc used to "compile" it
         pkg("gcc-runtime").requires(f"@={str(compiler.version)}", when=f"%{str(compiler.spec)}")

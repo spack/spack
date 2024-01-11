@@ -50,3 +50,5 @@
 #show imposed_nodes/3.
 
 % debug
+max_dupes("gfortran", 1).
+possible_in_link_run("gfortran").
