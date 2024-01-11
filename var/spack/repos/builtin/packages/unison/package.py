@@ -40,6 +40,8 @@ class Unison(MakefilePackage):
 
     parallel = False
 
+    build_targets = ["UISTYLE=text", "DEBUGGING=false", "THREADS=true"]
+
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install("src/unison", prefix.bin)
