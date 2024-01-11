@@ -18,6 +18,7 @@ spack:
   ci:
     pipeline-gen:
     - build-job:
+        tags: ["gcp"]
         image: "ghcr.io/spack/e4s-centos-7:v2023-10-30"
 
   cdash:
