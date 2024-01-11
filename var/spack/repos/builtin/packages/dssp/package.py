@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Dssp(AutotoolsPackage):
 
     homepage = "https://github.com/cmbi/dssp"
     url = "https://github.com/cmbi/dssp/archive/3.1.4.tar.gz"
+
+    license("GPL-3.0-or-later")
 
     version("3.1.4", sha256="496282b4b5defc55d111190ab9f1b615a9574a2f090e7cf5444521c747b272d4")
     version("2.3.0", sha256="4c95976d86dc64949cb0807fbd58c7bee5393df0001999405863dc90f05846c6")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class SstElements(AutotoolsPackage):
     url = "https://github.com/sstsimulator/sst-elements/releases/download/v13.1.0_Final/sstelements-13.1.0.tar.gz"
 
     maintainers("berquist", "naromero77")
+
+    license("BSD-3-Clause")
 
     version("13.1.0", sha256="ebda6ee5af858192dff8a7faf3125010001d5c439beec22afe5b9828a74adf1a")
     version("13.0.0", sha256="1f6f6b403a8c1b22a27cdf2943c9e505825ee14866891e7bc944d4471b7b0321")

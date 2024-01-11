@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyTorchSparse(PythonPackage):
 
     homepage = "https://github.com/rusty1s/pytorch_sparse/"
     url = "https://github.com/rusty1s/pytorch_sparse/archive/0.6.7.tar.gz"
+
+    license("MIT")
 
     version("0.6.17", sha256="c964a70ed978bff65009250eb12fae96317c60c9a04d7d1b07f0beee8b4b9c22")
     version("0.6.8", sha256="98f7ff1f0f9cd5031bc81c70c11970c3864545ae33677025a6efd2466a97e6f9")

@@ -136,6 +136,8 @@ default:
     - uname -a || true
     - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
     - nproc || true
+    - cat /proc/loadavg || true
+    - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
     - . "./share/spack/setup-env.sh"
     - spack --version
     - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
@@ -150,6 +152,13 @@ default:
     - spack python -c "import os,sys; print(os.path.expandvars(sys.stdin.read()))"
       < "${SPACK_CI_CONFIG_ROOT}/${PIPELINE_MIRROR_TEMPLATE}" > "${SPACK_CI_CONFIG_ROOT}/mirrors.yaml"
     - spack config add -f "${SPACK_CI_CONFIG_ROOT}/mirrors.yaml"
+    - mkdir -p "${CI_PROJECT_DIR}/jobs_scratch_dir"
+    - spack
+      --config-scope "${SPACK_CI_CONFIG_ROOT}"
+      --config-scope "${SPACK_CI_CONFIG_ROOT}/${SPACK_TARGET_PLATFORM}"
+      --config-scope "${SPACK_CI_CONFIG_ROOT}/${SPACK_TARGET_PLATFORM}/${SPACK_TARGET_ARCH}"
+      ${CI_STACK_CONFIG_SCOPES}
+      config blame > "${CI_PROJECT_DIR}/jobs_scratch_dir/spack.yaml.blame"
     - spack -v  --color=always
       --config-scope "${SPACK_CI_CONFIG_ROOT}"
       --config-scope "${SPACK_CI_CONFIG_ROOT}/${SPACK_TARGET_PLATFORM}"
@@ -160,6 +169,7 @@ default:
       --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
   after_script:
     - cat /proc/loadavg || true
+    - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
   artifacts:
     paths:
       - "${CI_PROJECT_DIR}/jobs_scratch_dir"
@@ -199,6 +209,8 @@ default:
     - uname -a || true
     - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
     - nproc || true
+    - cat /proc/loadavg || true
+    - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
     - . "./share/spack/setup-env.sh"
     - spack --version
     - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
@@ -210,6 +222,7 @@ default:
       --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
   after_script:
     - cat /proc/loadavg || true
+    - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
   artifacts:
     paths:
       - "${CI_PROJECT_DIR}/jobs_scratch_dir"

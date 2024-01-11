@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,6 +38,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     # see https://www.cpan.org/src/README.html for
     # explanation of version numbering scheme
+
+    license("Artistic-1.0-Perl OR GPL-1.0-or-later")
 
     # Maintenance releases (even numbers, preferred)
     version(

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyPythonLspJsonrpc(PythonPackage):
     pypi = "python-lsp-jsonrpc/python-lsp-jsonrpc-1.0.0.tar.gz"
 
     maintainers("alecbcs")
+
+    license("MIT")
 
     version("1.0.0", sha256="7bec170733db628d3506ea3a5288ff76aa33c70215ed223abdb0d95e957660bd")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class Neuron(CMakePackage):
     url = "https://neuron.yale.edu/ftp/neuron/versions/v7.7/nrn-7.7.tar.gz"
     git = "https://github.com/neuronsimulator/nrn"
     maintainers("pramodk", "nrnhines", "iomaganaris", "alexsavulescu")
+
+    license("BSD-3-Clause")
 
     version("develop", branch="master", submodules="True")
     version(

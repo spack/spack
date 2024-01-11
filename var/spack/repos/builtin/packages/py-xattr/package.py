@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class PyXattr(PythonPackage):
     homepage = "https://pyxattr.k1024.org/"
     pypi = "xattr/xattr-0.9.6.tar.gz"
     git = "https://github.com/xattr/xattr"
+
+    license("MIT")
 
     version("master", branch="master")
     version("0.10.1", sha256="c12e7d81ffaa0605b3ac8c22c2994a8e18a9cf1c59287a1b7722a2289c952ec5")

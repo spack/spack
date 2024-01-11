@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Bamtools(CMakePackage):
 
     homepage = "https://github.com/pezmaster31/bamtools"
     url = "https://github.com/pezmaster31/bamtools/archive/v2.5.2.tar.gz"
+
+    license("MIT")
 
     version("2.5.2", sha256="4d8b84bd07b673d0ed41031348f10ca98dd6fa6a4460f9b9668d6f1d4084dfc8")
     version("2.5.1", sha256="4abd76cbe1ca89d51abc26bf43a92359e5677f34a8258b901a01f38c897873fc")

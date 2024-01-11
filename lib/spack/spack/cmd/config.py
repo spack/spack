@@ -1,10 +1,11 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
 import os
 import shutil
+import sys
 from typing import List
 
 import llnl.util.filesystem as fs
@@ -48,6 +49,7 @@ def setup_parser(subparser):
     blame_parser.add_argument(
         "section",
         help="configuration section to print\n\noptions: %(choices)s",
+        nargs="?",
         metavar="section",
         choices=spack.config.SECTION_SCHEMAS,
     )
@@ -131,32 +133,50 @@ def _get_scope_and_section(args):
     return scope, section
 
 
+def print_configuration(args, *, blame: bool) -> None:
+    if args.scope and args.section is None:
+        tty.die(f"the argument --scope={args.scope} requires specifying a section.")
+
+    if args.section is not None:
+        spack.config.CONFIG.print_section(args.section, blame=blame, scope=args.scope)
+        return
+
+    print_flattened_configuration(blame=blame)
+
+
+def print_flattened_configuration(*, blame: bool) -> None:
+    """Prints to stdout a flattened version of the configuration.
+
+    Args:
+        blame: if True, shows file provenance for each entry in the configuration.
+    """
+    env = ev.active_environment()
+    if env is not None:
+        pristine = env.manifest.pristine_yaml_content
+        flattened = pristine.copy()
+        flattened[spack.schema.env.TOP_LEVEL_KEY] = pristine[spack.schema.env.TOP_LEVEL_KEY].copy()
+    else:
+        flattened = syaml.syaml_dict()
+        flattened[spack.schema.env.TOP_LEVEL_KEY] = syaml.syaml_dict()
+
+    for config_section in spack.config.SECTION_SCHEMAS:
+        current = spack.config.get(config_section)
+        flattened[spack.schema.env.TOP_LEVEL_KEY][config_section] = current
+    syaml.dump_config(flattened, stream=sys.stdout, default_flow_style=False, blame=blame)
+
+
 def config_get(args):
     """Dump merged YAML configuration for a specific section.
 
     With no arguments and an active environment, print the contents of
     the environment's manifest file (spack.yaml).
     """
-    scope, section = _get_scope_and_section(args)
-
-    if section is not None:
-        spack.config.CONFIG.print_section(section)
-
-    elif scope and scope.startswith("env:"):
-        config_file = spack.config.CONFIG.get_config_filename(scope, section)
-        if os.path.exists(config_file):
-            with open(config_file) as f:
-                print(f.read())
-        else:
-            tty.die("environment has no %s file" % ev.manifest_name)
-
-    else:
-        tty.die("`spack config get` requires a section argument or an active environment.")
+    print_configuration(args, blame=False)
 
 
 def config_blame(args):
     """Print out line-by-line blame of merged YAML."""
-    spack.config.CONFIG.print_section(args.section, blame=True)
+    print_configuration(args, blame=True)
 
 
 def config_edit(args):

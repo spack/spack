@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -74,6 +74,15 @@ class Legion(CMakePackage, ROCmPackage):
 
     # https://github.com/spack/spack/issues/37232#issuecomment-1553376552
     patch("hip-offload-arch.patch", when="@23.03.0 +rocm")
+
+    def patch(self):
+        if "network=gasnet conduit=ofi-slingshot11 ^cray-mpich+wrappers" in self.spec:
+            filter_file(
+                r"--with-mpi-cc=cc",
+                f"--with-mpi-cc={self.spec['mpi'].mpicc}",
+                "stanfordgasnet/gasnet/configs/config.ofi-slingshot11.release",
+                string=True,
+            )
 
     # HIP specific
     variant(
@@ -268,11 +277,6 @@ class Legion(CMakePackage, ROCmPackage):
         description="Maximum number of nodes supported by Legion.",
     )
 
-    def setup_build_environment(self, build_env):
-        spec = self.spec
-        if "+rocm" in spec:
-            build_env.set("HIP_PATH", "{0}/hip".format(spec["hip"].prefix))
-
     def cmake_args(self):
         spec = self.spec
         cmake_cxx_flags = []
@@ -344,6 +348,7 @@ class Legion(CMakePackage, ROCmPackage):
             options.append(from_variant("Legion_HIP_TARGET", "hip_target"))
             options.append(from_variant("Legion_HIP_ARCH", "amdgpu_target"))
             options.append(from_variant("Legion_HIJACK_HIP", "hip_hijack"))
+            options.append(self.define("HIP_PATH", "{0}/hip".format(spec["hip"].prefix)))
 
         if "+fortran" in spec:
             # default is off.

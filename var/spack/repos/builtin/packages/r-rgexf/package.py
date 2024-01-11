@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class RRgexf(RPackage):
     "sigmajs" (a javascript library) and interact with the igraph package."""
 
     cran = "rgexf"
+
+    license("MIT")
 
     version("0.16.2", sha256="6ee052b0de99d0c7492366b991d345a51b3d0cc890d10a68b8670e1bd4fc8201")
     version("0.16.0", sha256="2a671df9ac70cfefd4092754317cb28e32a33df345b80e1975bf838e838245ee")

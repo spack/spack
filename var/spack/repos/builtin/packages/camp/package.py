@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,6 +37,8 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
     url = "https://github.com/LLNL/camp/archive/v0.1.0.tar.gz"
 
     maintainers("trws")
+
+    license("BSD-3-Clause")
 
     version("main", branch="main", submodules="True")
     version("2022.10.1", sha256="2d12f1a46f5a6d01880fc075cfbd332e2cf296816a7c1aa12d4ee5644d386f02")
