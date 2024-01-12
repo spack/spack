@@ -323,8 +323,10 @@ class DirectiveMeta(type):
         return _decorator
 
 
+SubmoduleCallback = Callable[
+    "spack.package_base.PackageBase", Union[str, List[str], bool]
+]
 directive = DirectiveMeta.directive
-
 
 @directive("versions")
 def version(
@@ -354,7 +356,7 @@ def version(
     tag: Optional[str] = None,
     branch: Optional[str] = None,
     get_full_repo: Optional[bool] = None,
-    submodules: Optional[bool] = None,
+    submodules: Union[SubmoduleCallback, Optional[bool]] = False,
     submodules_delete: Optional[bool] = None,
     # other version control
     svn: Optional[str] = None,
