@@ -280,15 +280,15 @@ def test_compilers_shows_packages_yaml(no_compilers_yaml, working_env, compilers
 
     out = compiler("info", "gcc@7.7.7")
     expected = """gcc@7.7.7:
-	paths:
-		cc = /path/to/fake/gcc
-		cxx = /path/to/fake/g++
-		f77 = /path/to/fake/gfortran
-		fc = /path/to/fake/gfortran
-	flags:
-		fflags = ['-ffree-form']
-	modules  = ['gcc/7.7.7', 'foobar']
-	operating system  = foobar
+\tpaths:
+\t\tcc = /path/to/fake/gcc
+\t\tcxx = /path/to/fake/g++
+\t\tf77 = /path/to/fake/gfortran
+\t\tfc = /path/to/fake/gfortran
+\tflags:
+\t\tfflags = ['-ffree-form']
+\tmodules  = ['gcc/7.7.7', 'foobar']
+\toperating system  = foobar
 """
 
     assert out == expected
@@ -316,15 +316,15 @@ def test_compilers_shows_packages_yaml_minimal(no_compilers_yaml, working_env, c
 
     out = compiler("info", "gcc@7.7.7")
     expected = f"""gcc@7.7.7:
-	paths:
-		cc = {compilers_dir}/gcc-8
-		cxx = {compilers_dir}/g++-8
-		f77 = {compilers_dir}/gfortran-8
-		fc = {compilers_dir}/gfortran-8
-	flags:
-		fflags = ['-ffree-form']
-	modules  = ['gcc/7.7.7', 'foobar']
-	operating system  = debian6
+\tpaths:
+\t\tcc = {compilers_dir}/gcc-8
+\t\tcxx = {compilers_dir}/g++-8
+\t\tf77 = {compilers_dir}/gfortran-8
+\t\tfc = {compilers_dir}/gfortran-8
+\tflags:
+\t\tfflags = ['-ffree-form']
+\tmodules  = ['gcc/7.7.7', 'foobar']
+\toperating system  = debian6
 """
 
     assert out == expected
