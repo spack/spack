@@ -398,6 +398,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     # https://github.com/iains/gcc-12-branch/issues/6
     conflicts("@:12", when="%apple-clang@14:14.0")
 
+    with when("os=spack"):
+        patch("./no-sys-dirs.patch", when="@:12")
+        patch("./gcc12-no-sys-dirs.patch", when="@12:")
+
     if sys.platform == "darwin":
         # Fix parallel build on APFS filesystem
         # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81797
