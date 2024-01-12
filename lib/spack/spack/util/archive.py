@@ -95,7 +95,15 @@ class ChecksumWriter(io.BufferedIOBase):
 
 @contextmanager
 def gzip_compressed_tarfile(path):
-    """Create a reproducible, compressed tarfile"""
+    """Create a reproducible, gzip compressed tarfile, and keep track of shasums of both the
+    compressed and uncompressed tarfile. Reproduciblity is achived by normalizing the gzip header
+    (no file name and zero mtime).
+
+    Yields a tuple of the following:
+        tarfile.TarFile: tarfile object
+        ChecksumWriter: checksum of the gzip compressed tarfile
+        ChecksumWriter: checksum of the uncompressed tarfile
+    """
     # Create gzip compressed tarball of the install prefix
     # 1) Use explicit empty filename and mtime 0 for gzip header reproducibility.
     #    If the filename="" is dropped, Python will use fileobj.name instead.
@@ -104,12 +112,12 @@ def gzip_compressed_tarfile(path):
     # compresslevel=6 gzip default: llvm takes 4mins, roughly 2.1GB
     # compresslevel=9 python default: llvm takes 12mins, roughly 2.1GB
     # So we follow gzip.
-    with open(path, "wb") as f, ChecksumWriter(f) as inner_checksum, closing(
-        GzipFile(filename="", mode="wb", compresslevel=6, mtime=0, fileobj=inner_checksum)
-    ) as gzip_file, ChecksumWriter(gzip_file) as outer_checksum, tarfile.TarFile(
-        name="", mode="w", fileobj=outer_checksum
+    with open(path, "wb") as f, ChecksumWriter(f) as gzip_checksum, closing(
+        GzipFile(filename="", mode="wb", compresslevel=6, mtime=0, fileobj=gzip_checksum)
+    ) as gzip_file, ChecksumWriter(gzip_file) as tarfile_checksum, tarfile.TarFile(
+        name="", mode="w", fileobj=tarfile_checksum
     ) as tar:
-        yield tar, inner_checksum, outer_checksum
+        yield tar, gzip_checksum, tarfile_checksum
 
 
 def reproducible_tarfile_from_prefix(
