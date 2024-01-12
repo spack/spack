@@ -154,9 +154,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         when="+bootstrap %gcc",
     )
     variant(
-        "sysroot",
-        default="off",
-        description="build a spack sysroot bootstrap compiler, value is the sysroot view path DO NOT USE unless you know what this means"
+        "stage0",
+        default=False,
+        description="build a spackos cross bootstrap compiler, DO NOT USE unless you know what this means"
         )
     variant(
         "stage1",
@@ -826,7 +826,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 )
         # Binutils
         if spec.satisfies("+binutils"):
-            if self.spec.variants['sysroot'].value == "off" and "+stage1" not in self.spec:
+            if "+stage0" not in spec and "+stage1" not in self.spec:
                 binutils = spec["binutils"].prefix.bin
             else:
                 binutils = spec["binutils"].prefix.join(sysroot_target).bin
@@ -873,7 +873,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 f"FLAGS_FOR_TARGET={common_flags} {ldflags}",
                 f"LDFLAGS_FOR_TARGET={common_flags} {ldflags}",
             ])
-        if self.spec.variants['sysroot'].value != "off" or '+stage1' in self.spec:
+        if "+stage0" in self.spec or '+stage1' in self.spec:
             # set up links to binutils, required for gcc to build this way
             if '+stage1' in self.spec:
                 guess = Executable("./config.guess")
@@ -895,7 +895,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 options.extend([
                         "--without-headers",
                         "--with-newlib",
-                        "--with-sysroot=" + self.spec.variants['sysroot'].value,
+                        "--with-sysroot=/some/nonexistent/path",
                         "--disable-shared",
                         "--disable-libstdcxx",
                         "--with-glibc-version=2.38",  # TODO: figure out how to fix this cycle
@@ -1135,8 +1135,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     @run_after("install")
     def generate_limits(self):
-        if self.spec.variants['sysroot'].value != "off":
-            # in sysroot we're building without glibc existing, need to create limits.h manually
+        if '+stage0' in self.spec:
+            # in stage0 we're building without glibc existing, need to create limits.h manually
             limits = ""
             files = ["limitx.h", "glimits.h", "limity.h"]
             for f in files:
@@ -1211,8 +1211,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         prefixes = [self.prefix]
         if '+stage1' in self.spec:
             prefixes.append(self.spec['glibc'].prefix)
-        elif self.spec.variants['sysroot'].value != "off":
-            prefixes.append(self.spec.variants['sysroot'].value)
         for pfx in prefixes:
             for dir in ["lib", "lib64"]:
                 libdir = join_path(pfx, dir)
@@ -1225,8 +1223,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             return
 
         add_sysroot = self.spec.satisfies("os=spack")
-        # or self.spec.variants['sysroot'].value != "off"
-        # Overwrite the specs file
         with open(specs_file, "w") as out:
             loader = re.compile(':-dynamic-linker ')
             next = False
