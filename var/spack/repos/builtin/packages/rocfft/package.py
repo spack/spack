@@ -183,7 +183,7 @@ class Rocfft(CMakePackage):
     # https://github.com/ROCm/rocFFT/pull/449)
     patch(
         "https://github.com/ROCm/rocFFT/commit/0ec78f1daac2d7fa1415f4deff0d129252c1c9de.patch?full_index=1",
-        sha256="ddfe9c422516369e386315c23a77f877d75de353ed3e1d9d6e4db135fb14a804",
+        sha256="bac7873185ac60f2aaa50e278f0b8d52b4d79d586bf7f52db1da33559569ba54",
         when="@6.0.0",
     )
 
