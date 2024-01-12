@@ -1132,11 +1132,6 @@ def generate_key_index(key_prefix, tmpdir=None):
                 shutil.rmtree(tmpdir)
 
 
-def _tarinfo_name(absolute_path: str, *, _path=pathlib.PurePath) -> str:
-    """Compute tarfile entry name as the relative path from the (system) root."""
-    return _path(*_path(absolute_path).parts[1:]).as_posix()
-
-
 def tarfile_of_spec_prefix(tar: tarfile.TarFile, prefix: str) -> None:
     """Create a tarfile of an install prefix of a spec. Skips existing buildinfo file.
 
@@ -1160,7 +1155,6 @@ def tarfile_of_spec_prefix(tar: tarfile.TarFile, prefix: str) -> None:
         # used in runtimes like AWS lambda.
         include_parent_directories=True,
         skip=skip,
-        path_to_name=_tarinfo_name,
     )
 
 
@@ -1175,7 +1169,9 @@ def _do_create_tarball(tarfile_path: str, binaries_dir: str, buildinfo: dict):
 
         # Serialize buildinfo for the tarball
         bstring = syaml.dump(buildinfo, default_flow_style=True).encode("utf-8")
-        tarinfo = tarfile.TarInfo(name=_tarinfo_name(buildinfo_file_name(binaries_dir)))
+        tarinfo = tarfile.TarInfo(
+            name=spack.util.archive.default_path_to_name(buildinfo_file_name(binaries_dir))
+        )
         tarinfo.type = tarfile.REGTYPE
         tarinfo.size = len(bstring)
         tarinfo.mode = 0o644

@@ -120,7 +120,7 @@ def gzip_compressed_tarfile(path):
         yield tar, gzip_checksum, tarfile_checksum
 
 
-def _default_path_to_name(path: str) -> str:
+def default_path_to_name(path: str) -> str:
     """Converts a path to a tarfile name, which uses posix path separators."""
     p = pathlib.PurePath(path)
     # Drop the leading slash on posix and the drive letter on windows, and always format as a
@@ -134,7 +134,7 @@ def reproducible_tarfile_from_prefix(
     *,
     include_parent_directories: bool = False,
     skip: Callable[[os.DirEntry], bool] = lambda entry: False,
-    path_to_name: Callable[[str], str] = _default_path_to_name,
+    path_to_name: Callable[[str], str] = default_path_to_name,
 ) -> None:
     """Create a tarball from a given directory. Only adds regular files, symlinks and dirs.
     Skips devices, fifos. Preserves hardlinks. Normalizes permissions like git. Tar entries are
