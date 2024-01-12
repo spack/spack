@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,8 @@ class Openblas(CMakePackage, MakefilePackage):
     git = "https://github.com/OpenMathLib/OpenBLAS.git"
 
     libraries = ["libopenblas", "openblas"]
+
+    license("BSD-3-Clause")
 
     version("develop", branch="develop")
     version("0.3.25", sha256="4c25cb30c4bb23eddca05d7d0a85997b8db6144f5464ba7f8c09ce91e2f35543")

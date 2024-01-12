@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,8 @@ class Hpctoolkit(AutotoolsPackage):
     tags = ["e4s"]
 
     test_requires_compiler = True
+
+    license("BSD-3-Clause")
 
     version("develop", branch="develop")
     version("2023.08.stable", branch="release/2023.08")

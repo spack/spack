@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -196,16 +196,18 @@ def test_nested_directives(mock_packages):
 
     # this ensures that results of dependency patches were properly added
     # to Dependency objects.
-    libelf_dep = next(iter(patcher.dependencies["libelf"].values()))
+    deps_by_name = patcher.dependencies_by_name()
+
+    libelf_dep = deps_by_name["libelf"][0]
     assert len(libelf_dep.patches) == 1
     assert len(libelf_dep.patches[Spec()]) == 1
 
-    libdwarf_dep = next(iter(patcher.dependencies["libdwarf"].values()))
+    libdwarf_dep = deps_by_name["libdwarf"][0]
     assert len(libdwarf_dep.patches) == 2
     assert len(libdwarf_dep.patches[Spec()]) == 1
     assert len(libdwarf_dep.patches[Spec("@20111030")]) == 1
 
-    fake_dep = next(iter(patcher.dependencies["fake"].values()))
+    fake_dep = deps_by_name["fake"][0]
     assert len(fake_dep.patches) == 1
     assert len(fake_dep.patches[Spec()]) == 2
 

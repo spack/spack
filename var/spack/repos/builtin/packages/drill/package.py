@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Drill(Package):
 
     homepage = "https://drill.apache.org/"
     url = "https://www-eu.apache.org/dist/drill/drill-1.17.0/apache-drill-1.17.0.tar.gz"
+
+    license("Apache-2.0")
 
     version("1.17.0", sha256="a3d2d544bcc32b915fb53fced0f982670bd6fe2abd764423e566a5f6b54debf1")
     version("1.16.0", sha256="fd195d2b38f393459b37d8f13ac1f36cdbe38495eabb08252da38e3544e87839")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Libvori(CMakePackage):
     url = "https://www.cp2k.org/static/downloads/libvori-201217.tar.gz"
 
     maintainers("dev-zero", "mtaillefumier")
+
+    license("LGPL-3.0-only")
 
     version("220621", sha256="1cfa98c564814bddacf1c0e7f11582137d758668f6307e6eb392c72317984c14")
     version("210412", sha256="331886aea9d093d8c44b95a07fab13d47f101b1f94a0640d7d670eb722bf90ac")

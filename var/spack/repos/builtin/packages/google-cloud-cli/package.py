@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -42,6 +42,8 @@ class GoogleCloudCli(Package):
     if machine in targets:
         machine = targets[machine]
     ext = "zip" if system == "windows" else "tar.gz"
+
+    license("Apache-2.0")
 
     for ver in versions:
         if system in versions[ver] and machine in versions[ver][system]:

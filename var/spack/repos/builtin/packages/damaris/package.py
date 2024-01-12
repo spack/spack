@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Damaris(CMakePackage):
     homepage = "https://project.inria.fr/damaris/"
     git = "https://gitlab.inria.fr/Damaris/damaris.git"
     maintainers("jcbowden")
+
+    license("LGPL-3.0-or-later")
 
     version("master", branch="master")
     version("1.9.2", tag="v1.9.2", commit="22c146b4b4ca047d4d36fd904d248e0280b3c0ea")

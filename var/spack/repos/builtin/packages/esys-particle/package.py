@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class EsysParticle(CMakePackage):
     url = "https://launchpadlibrarian.net/539636757/esys-particle-3.0-alpha.tar.gz"
 
     maintainers("snehring")
+
+    license("Apache-2.0")
 
     version("3.0-alpha", sha256="4fba856a95c93991cacb904e6a54a7ded93558f7adc8c3e6da99bc347843a434")
 

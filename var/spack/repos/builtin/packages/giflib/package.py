@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Giflib(MakefilePackage, SourceforgePackage):
 
     homepage = "http://giflib.sourceforge.net/"
     sourceforge_mirror_path = "giflib/giflib-5.1.4.tar.gz"
+
+    license("MIT")
 
     version("5.2.1", sha256="31da5562f44c5f15d63340a09a4fd62b48c45620cd302f77a6d9acf0077879bd")
     version("5.2.0", sha256="dc7257487c767137602d86c17098ec97065a718ff568a61cfcf1a9466f197b1f")

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class ScineXtb(CMakePackage):
     homepage = "https://scine.ethz.ch"
     url = "https://github.com/qcscine/xtb_wrapper/archive/refs/tags/1.0.2.tar.gz"
     git = "https://github.com/qcscine/xtb_wrapper.git"
+
+    license("BSD-3-Clause")
 
     version("master", branch="master")
     version("1.0.2", sha256="9beb1103467f3cfd9ad33beb2f3ec650bc3e6dc7094876774be3cc4e6f210487")

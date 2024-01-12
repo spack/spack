@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,5 +19,7 @@ class MysqlConnectorC(CMakePackage):
     depends_on("cmake")
 
     patch("fix-cmake.patch", when="@6.1.11")
+
+    license("GPL-2.0-or-later")
 
     version("6.1.11", sha256="c8664851487200162b38b6f3c8db69850bd4f0e4c5ff5a6d161dbfb5cb76b6c4")
