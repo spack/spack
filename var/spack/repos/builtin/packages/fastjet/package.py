@@ -61,6 +61,14 @@ class Fastjet(AutotoolsPackage):
 
     variant("shared", default=True, description="Builds a shared version of the library")
     variant("auto-ptr", default=False, description="Use auto_ptr")
+    variant(
+        "thread-safety",
+        default="limited",
+        values=("none", "limited", "full"),
+        multi=False,
+        when="@3.4.0:",
+        description="Enables thread safety",
+    )
     variant("atlas", default=False, description="Patch to make random generator thread_local")
 
     patch("atlas.patch", when="@:3.3 +atlas", level=0)
@@ -75,5 +83,9 @@ class Fastjet(AutotoolsPackage):
         extra_args = ["--enable-allplugins"]
         extra_args += self.enable_or_disable("shared")
         extra_args += self.enable_or_disable("auto-ptr")
+        if self.spec.variants["thread-safety"].value == "limited":
+            extra_args += ["--enable-limited-thread-safety"]
+        if self.spec.variants["thread-safety"].value == "full":
+            extra_args += ["--enable-thread-safety"]
 
         return extra_args
