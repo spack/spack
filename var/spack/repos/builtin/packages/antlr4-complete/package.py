@@ -56,3 +56,8 @@ class Antlr4Complete(Package):
         mkdirp(prefix.bin)
         rename(glob.glob("antlr-*-complete.jar")[0], "antlr-complete.jar")
         install("antlr-complete.jar", prefix.bin)
+
+    def setup_run_environment(self, env):
+        env.set("ANTLR4_JAR_LOCATION", join_path(self.prefix.bin, "antlr-complete.jar"))
+        env.set("ANTLR_JAR_LOCATION", join_path(self.prefix.bin, "antlr-complete.jar"))
+        env.set("ANTLR_EXECUTABLE", join_path(self.prefix.bin, "antlr-complete.jar"))
