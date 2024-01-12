@@ -251,5 +251,5 @@ class Glibc(AutotoolsPackageNoDep, GNUMirrorPackageNoDep):
     def add_linux_headers(self):
         if '+stage1' in self.spec:
             cp = which("cp")
-            cp('-sr', self.spec['linux-headers'].prefix.include, self.spec.prefix)
+            cp('-r', self.spec['linux-headers'].prefix.include, self.spec.prefix)
 
