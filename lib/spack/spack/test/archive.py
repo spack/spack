@@ -6,9 +6,9 @@
 import gzip
 import hashlib
 import os
-import pathlib
 import shutil
 import tarfile
+from pathlib import Path, PurePath
 
 import spack.util.crypto
 from spack.util.archive import gzip_compressed_tarfile, reproducible_tarfile_from_prefix
@@ -19,7 +19,7 @@ def test_gzip_compressed_tarball_is_reproducible(tmpdir):
 
     with tmpdir.as_cwd():
         # Create a few directories
-        root = pathlib.Path("root")
+        root = Path("root")
         dir_a = root / "a"
         dir_b = root / "b"
         root.mkdir(mode=0o777)
@@ -32,7 +32,7 @@ def test_gzip_compressed_tarball_is_reproducible(tmpdir):
         (dir_a / "executable").touch(mode=0o777)
         (dir_a / "data").touch(mode=0o666)
         (dir_a / "symlink_file").symlink_to("data")
-        (dir_a / "symlink_dir").symlink_to(pathlib.Path("..", "b"))
+        (dir_a / "symlink_dir").symlink_to(PurePath("..", "b"))
         try:
             os.link(dir_a / "executable", dir_a / "hardlink")
             hardlink_support = True
@@ -42,7 +42,7 @@ def test_gzip_compressed_tarball_is_reproducible(tmpdir):
         (dir_b / "executable").touch(mode=0o777)
         (dir_b / "data").touch(mode=0o666)
         (dir_b / "symlink_file").symlink_to("data")
-        (dir_b / "symlink_dir").symlink_to(pathlib.Path("..", "a"))
+        (dir_b / "symlink_dir").symlink_to(PurePath("..", "a"))
 
         # Create the first tarball
         with gzip_compressed_tarfile("fst.tar.gz") as (tar, gzip_checksum_1, tarfile_checksum_1):
@@ -51,7 +51,7 @@ def test_gzip_compressed_tarball_is_reproducible(tmpdir):
         # Expected mode for non-dirs is 644 if not executable, 755 if executable. Better to compute
         # that as we don't know the umask of the user running the test.
         expected_mode = (
-            lambda name: 0o755 if pathlib.Path(*name.split("/")).lstat().st_mode & 0o100 else 0o644
+            lambda name: 0o755 if Path(*name.split("/")).lstat().st_mode & 0o100 else 0o644
         )
 
         # Verify the tarball contents
@@ -92,11 +92,14 @@ def test_gzip_compressed_tarball_is_reproducible(tmpdir):
                 assert m.uid == m.gid == m.mtime == 0
                 assert m.uname == m.gname == ""
 
-            # Verify the symlink targets
-            assert tar.getmember("root/a/symlink_file").linkname == "data"
-            assert tar.getmember("root/a/symlink_dir").linkname == "../b"
-            assert tar.getmember("root/b/symlink_file").linkname == "data"
-            assert tar.getmember("root/b/symlink_dir").linkname == "../a"
+            # Verify the symlink targets. Notice that symlink targets are copied verbatim. That
+            # means the value is platform specific for relative symlinks within the current prefix,
+            # as on Windows they'd be ..\a and ..\b instead of ../a and ../b. So, reproducilility
+            # is only guaranteed per-platform currently.
+            assert PurePath(tar.getmember("root/a/symlink_file").linkname) == PurePath("data")
+            assert PurePath(tar.getmember("root/b/symlink_file").linkname) == PurePath("data")
+            assert PurePath(tar.getmember("root/a/symlink_dir").linkname) == PurePath("..", "b")
+            assert PurePath(tar.getmember("root/b/symlink_dir").linkname) == PurePath("..", "a")
 
             # Check hardlink if supported
             if hardlink_support:
@@ -105,6 +108,8 @@ def test_gzip_compressed_tarball_is_reproducible(tmpdir):
                 assert m.mode == expected_mode("root/a/hardlink")
                 assert m.uid == m.gid == 0
                 assert m.uname == m.gname == ""
+                # Hardlink targets are always in posix format, as they reference a file that exists
+                # in the tarball.
                 assert m.linkname == "root/a/executable"
 
             # Finally verify if entries are ordered by (is_dir, name)
