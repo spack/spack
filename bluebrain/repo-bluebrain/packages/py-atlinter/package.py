@@ -3,8 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.build_systems.python import PythonPackage
-from spack.directives import depends_on, variant, version
+from spack.package import *
 
 
 class PyAtlinter(PythonPackage):

@@ -61,11 +61,7 @@ class Brion(CMakePackage):
 
     def patch(self):
         if self.spec.satisfies("%gcc@12:") and not self.spec.satisfies("@develop"):
-            filter_file(
-                r"-Werror",
-                "",
-                "CMake/CompileOptions.cmake",
-            )
+            filter_file(r"-Werror", "", "CMake/CompileOptions.cmake")
 
     def cmake_args(self):
         args = [

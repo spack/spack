@@ -1,8 +1,6 @@
-import os
 import re
 
 from llnl.util import tty
-from llnl.util.filesystem import filter_file
 
 import spack.repo
 from spack.util.executable import which

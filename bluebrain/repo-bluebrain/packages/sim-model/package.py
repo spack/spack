@@ -81,8 +81,7 @@ class SimModel(Package):
         for dep_spec in self.spec.dependencies(deptype="link"):
             dep = self.spec[dep_spec.name]
             link_flag += " {0} {1}".format(
-                dep.libs.ld_flags,
-                " ".join(["-Wl,-rpath," + x for x in dep.libs.directories]),
+                dep.libs.ld_flags, " ".join(["-Wl,-rpath," + x for x in dep.libs.directories])
             )
             include_flag += " -I " + str(dep.prefix.include)
 

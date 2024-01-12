@@ -13,7 +13,11 @@ class PyIgor2(PythonPackage):
     homepage = "https://github.com/AFM-analysis/igor2"
     url = "https://pypi.io/packages/py3/i/igor2/igor2-0.5.3-py3-none-any.whl"
 
-    version("0.5.3", sha256="bb7b54a5926ec640e0e9176f46e0dd88ad956fec2d17ba3b0a7687eba82cefee", expand=False)
+    version(
+        "0.5.3",
+        sha256="bb7b54a5926ec640e0e9176f46e0dd88ad956fec2d17ba3b0a7687eba82cefee",
+        expand=False,
+    )
 
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy@1.25.1:", type=("build", "run"))

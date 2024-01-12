@@ -41,7 +41,11 @@ PackagesRepresenter.add_representer(syaml_list, PackagesRepresenter.represent_li
 def setup_parser(sp):
     scopes = spack.config.scopes()
     sp.add_argument(
-        "-f", "--format", help="specify format for path/module keys", metavar="FMT", default="{name}@{version}"
+        "-f",
+        "--format",
+        help="specify format for path/module keys",
+        metavar="FMT",
+        default="{name}@{version}",
     )
     sp.add_argument(
         "-d", "--dependencies", help="add selected dependencies to the specs", action="store_true"
