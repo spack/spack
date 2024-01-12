@@ -1,0 +1,38 @@
+# This is a Spack Environment file.
+#
+# It describes a set of packages to be installed, along with
+# configuration settings.
+spack:
+  specs:
+  - binutils
+  - gcc +binutils ~bootstrap
+  - linux-headers
+  # additional tools necessary to build glibc
+  - bison
+  - gawk
+  - gmake
+  - gnuconfig
+  - perl
+  - python
+  - sed
+  - texinfo
+  - pkg-config
+  - libtool
+  - autoconf
+  - automake
+  - diffutils
+  - m4
+  view:
+    default:
+      root: /scratch/spack/bootstraps/stage1/.spack-env/view/
+      link: roots
+      exclude: ['gettext']
+  packages:
+    all:
+      # set the sysroot for stage0 to the view because
+      # we can't know glibc's path yet
+      variants: sysroot=/nonexistant/path
+  concretizer:
+    unify: true
+    reuse: true
+
