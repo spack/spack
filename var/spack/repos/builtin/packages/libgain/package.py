@@ -22,6 +22,23 @@ class Libgain(AutotoolsPackage):
         url="https://gitlab.com/l_sim/bigdft-suite/-/raw/1.9.1/GaIn-1.0.tar.gz",
     )
 
+    def configure_args(self):
+        fcflags = []
+        cflags = []
+        cxxflags = []
+
+        if self.spec.satisfies("+shared"):
+            fcflags.append("-fPIC")
+            cflags.append("-fPIC")
+            cxxflags.append("-fPIC")
+
+        args = [
+            f"FCFLAGS={' '.join(fcflags)}",
+            f"CFLAGS={' '.join(cflags)}",
+            f"CXXFLAGS={' '.join(cxxflags)}",
+        ]
+        return args
+
     @property
     def libs(self):
         shared = "+shared" in self.spec
