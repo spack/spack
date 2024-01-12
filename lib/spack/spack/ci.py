@@ -70,6 +70,9 @@ SHARED_PR_MIRROR_URL = "s3://spack-binaries-prs/shared_pr_mirror"
 JOB_NAME_FORMAT = (
     "{name}{@version} {/hash:7} {%compiler.name}{@compiler.version}{arch=architecture}"
 )
+CI_TARGET_FORMATTERS = {
+    "gitlab": format_gitlab_yaml,
+}
 
 spack_gpg = spack.main.SpackCommand("gpg")
 spack_compiler = spack.main.SpackCommand("compiler")
@@ -587,6 +590,75 @@ class SpackCI:
         return self.ir
 
 
+def write_pipeline_manifest(specs, src_prefix, dest_prefix, output_file):
+    """Write out the file describing specs that should be copied"""
+    buildcache_copies = {}
+
+    for release_spec in specs:
+        release_spec_dag_hash = release_spec.dag_hash()
+        # TODO: This assumes signed version of the spec
+        buildcache_copies[release_spec_dag_hash] = [
+            {
+                "src": url_util.join(
+                    src_prefix,
+                    bindist.build_cache_relative_path(),
+                    bindist.tarball_name(release_spec, ".spec.json.sig"),
+                ),
+                "dest": url_util.join(
+                    dest_prefix,
+                    bindist.build_cache_relative_path(),
+                    bindist.tarball_name(release_spec, ".spec.json.sig"),
+                ),
+            },
+            {
+                "src": url_util.join(
+                    src_prefix,
+                    bindist.build_cache_relative_path(),
+                    bindist.tarball_path_name(release_spec, ".spack"),
+                ),
+                "dest": url_util.join(
+                    dest_prefix,
+                    bindist.build_cache_relative_path(),
+                    bindist.tarball_path_name(release_spec, ".spack"),
+                ),
+            },
+        ]
+
+    target_dir = os.path.dirname(output_file)
+
+    if not os.path.exists(target_dir):
+        os.makedirs(target_dir)
+
+    with open(output_file, "w") as fd:
+        fd.write(json.dumps(buildcache_copies))
+
+
+def check_for_broken_specs(pipeline_specs, broken_specs_url):
+    """Check the pipeline specs against the list of known broken specs and return
+        True if there were any matches, False otherwise."""
+    if broken_specs_url.startswith("http"):
+        # To make checking each spec against the list faster, we require
+        # a url protocol that allows us to iterate the url in advance.
+        tty.msg("Cannot use an http(s) url for broken specs, ignoring")
+        return False
+    else:
+        broken_spec_urls = web_util.list_url(broken_specs_url)
+
+        if broken_spec_urls is None:
+            return False
+
+        known_broken_specs_encountered = []
+        for release_spec in pipeline_specs:
+            release_spec_dag_hash = release_spec.dag_hash()
+            if release_spec_dag_hash in broken_spec_urls:
+                known_broken_specs_encountered.append(release_spec_dag_hash)
+
+        if known_broken_specs_encountered:
+            tty.error("This pipeline generated hashes known to be broken on develop:")
+            display_broken_spec_messages(broken_specs_url, known_broken_specs_encountered)
+            return True
+
+
 def generate_gitlab_ci_yaml(
     env,
     print_summary,
@@ -655,8 +727,11 @@ def generate_gitlab_ci_yaml(
         config_deprecated = True
 
     # Default target is gitlab...and only target is gitlab
-    if not ci_config.get("target", "gitlab") == "gitlab":
+    ci_target = ci_config.get("target", "gitlab")
+    if ci_target not in CI_TARGET_FORMATTERS:
         tty.die('Spack CI module only generates target "gitlab"')
+
+    target_formatter = CI_TARGET_FORMATTERS[ci_target]
 
     cdash_config = cfg.get("cdash")
     cdash_handler = CDashHandler(cdash_config) if "build-group" in cdash_config else None
@@ -749,20 +824,9 @@ def generate_gitlab_ci_yaml(
         mirror_urls = [url for url in ci_mirrors.values()]
         remote_mirror_url = mirror_urls[0]
 
-    spack_buildcache_copy = os.environ.get("SPACK_COPY_BUILDCACHE", None)
-    if spack_buildcache_copy:
-        buildcache_copies = {}
-        buildcache_copy_src_prefix = (
-            buildcache_destination.fetch_url
-            if buildcache_destination
-            else remote_mirror_override or remote_mirror_url
-        )
-        buildcache_copy_dest_prefix = spack_buildcache_copy
-
     # Check for a list of "known broken" specs that we should not bother
     # trying to build.
     broken_specs_url = ""
-    known_broken_specs_encountered = []
     if "broken-specs-url" in ci_config:
         broken_specs_url = ci_config["broken-specs-url"]
 
@@ -899,6 +963,71 @@ def generate_gitlab_ci_yaml(
     else:
         tty.msg("DAG (already built) pruning disabled")
 
+    pipeline_specs = [n.spec for _, (k, n) in pipeline.traverse(top_down=True)]
+
+    spack_buildcache_copy = os.environ.get("SPACK_COPY_BUILDCACHE", None)
+    if spack_buildcache_copy:
+        buildcache_copy_dest_prefix = spack_buildcache_copy
+        buildcache_copy_src_prefix = (
+            buildcache_destination.fetch_url
+            if buildcache_destination
+            else remote_mirror_override or remote_mirror_url
+        )
+
+        if copy_only_pipeline:
+            manifest_specs = [s for _, s in env.concretized_specs()]
+        else:
+            manifest_specs = pipeline_specs
+
+        copy_specs_dir = os.path.join(pipeline_artifacts_dir, "specs_to_copy")
+        copy_specs_file = os.path.join(
+            copy_specs_dir,
+            "copy_{}_specs.json".format(spack_stack_name if spack_stack_name else "rebuilt"),
+        )
+
+        write_pipeline_manifest(manifest_specs, buildcache_copy_src_prefix, buildcache_copy_dest_prefix, copy_specs_file)
+
+    # If this is configured, spack will fail "spack ci generate" if it
+    # generates any hash which exists under the broken specs url.
+    if broken_specs_url and not copy_only_pipeline:
+        broken = check_for_broken_specs(pipeline_specs, broken_specs_url)
+        if broken and not rebuild_everything:
+            sys.exit(1)
+
+    spack_ci = SpackCI(ci_config, pipeline)
+    spack_ci_ir = spack_ci.generate_ir()
+
+    target_formatter(pipeline, spack_ci_ir)
+
+    # Clean up remote mirror override if enabled
+    # TODO: Remove this block in Spack 0.23
+    if deprecated_mirror_config:
+        if remote_mirror_override:
+            spack.mirror.remove("ci_pr_mirror", cfg.default_modify_scope())
+        if spack_pipeline_type == "spack_pull_request":
+            spack.mirror.remove("ci_shared_pr_mirror", cfg.default_modify_scope())
+
+    # Use "all_job_names" to populate the build group for this set
+    if cdash_handler and cdash_handler.auth_token:
+        try:
+            cdash_handler.populate_buildgroup(all_job_names)
+        except (SpackError, HTTPError, URLError) as err:
+            tty.warn("Problem populating buildgroup: {0}".format(err))
+    else:
+        tty.warn("Unable to populate buildgroup without CDash credentials")
+
+
+def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, output_file: str):
+    """Given a pipeline graph and job attributes, write a pipeline that
+        can be consumed by GitLab to the given output file.
+
+    Arguments:
+        pipeline (PipelineDAG): An already pruned graph of jobs representing all
+            the specs to build
+        spack_ci_ir (SpackCI): An object containing the configured attributes of
+            all jobs in the pipeline
+        output_file (str): Path to output file to be written
+    """
     all_job_names = []
     output_object = {}
     job_id = 0
@@ -909,20 +1038,6 @@ def generate_gitlab_ci_yaml(
     max_length_needs = 0
     max_needs_job = ""
 
-    # If this is configured, spack will fail "spack ci generate" if it
-    # generates any hash which exists under the broken specs url.
-    broken_spec_urls = None
-    if broken_specs_url:
-        if broken_specs_url.startswith("http"):
-            # To make checking each spec against the list faster, we require
-            # a url protocol that allows us to iterate the url in advance.
-            tty.msg("Cannot use an http(s) url for broken specs, ignoring")
-        else:
-            broken_spec_urls = web_util.list_url(broken_specs_url)
-
-    spack_ci = SpackCI(ci_config, pipeline)
-    spack_ci_ir = spack_ci.generate_ir()
-
     for stage_jobs in stages:
         stage_name = "stage-{0}".format(stage_id)
         stage_names.append(stage_name)
@@ -931,26 +1046,6 @@ def generate_gitlab_ci_yaml(
         for spec_label in stage_jobs:
             release_spec = spec_labels[spec_label]
             release_spec_dag_hash = release_spec.dag_hash()
-
-            spec_record = RebuildDecision()
-            rebuild_decisions[spec_label] = spec_record
-
-            if prune_untouched_packages:
-                if release_spec not in affected_specs:
-                    spec_record.rebuild = False
-                    spec_record.reason = "Pruned, untouched by change."
-                    continue
-
-            up_to_date_mirrors = bindist.get_mirrors_for_spec(
-                spec=release_spec, mirrors_to_check=mirrors_to_check, index_only=check_index_only
-            )
-
-            spec_record.rebuild = not up_to_date_mirrors
-            if up_to_date_mirrors:
-                spec_record.reason = "Pruned, found in mirrors"
-                spec_record.mirrors = [m["mirror_url"] for m in up_to_date_mirrors]
-            else:
-                spec_record.reason = "Scheduled, not found anywhere"
 
             job_object = spack_ci_ir["jobs"][release_spec_dag_hash]["attributes"]
 
@@ -1030,39 +1125,6 @@ def generate_gitlab_ci_yaml(
                     spec_record.rebuild = True
                     spec_record.reason = "Scheduled, DAG pruning disabled"
 
-            if broken_spec_urls is not None and release_spec_dag_hash in broken_spec_urls:
-                known_broken_specs_encountered.append(release_spec_dag_hash)
-
-            # Only keep track of these if we are copying rebuilt cache entries
-            if spack_buildcache_copy:
-                # TODO: This assumes signed version of the spec
-                buildcache_copies[release_spec_dag_hash] = [
-                    {
-                        "src": url_util.join(
-                            buildcache_copy_src_prefix,
-                            bindist.build_cache_relative_path(),
-                            bindist.tarball_name(release_spec, ".spec.json.sig"),
-                        ),
-                        "dest": url_util.join(
-                            buildcache_copy_dest_prefix,
-                            bindist.build_cache_relative_path(),
-                            bindist.tarball_name(release_spec, ".spec.json.sig"),
-                        ),
-                    },
-                    {
-                        "src": url_util.join(
-                            buildcache_copy_src_prefix,
-                            bindist.build_cache_relative_path(),
-                            bindist.tarball_path_name(release_spec, ".spack"),
-                        ),
-                        "dest": url_util.join(
-                            buildcache_copy_dest_prefix,
-                            bindist.build_cache_relative_path(),
-                            bindist.tarball_path_name(release_spec, ".spack"),
-                        ),
-                    },
-                ]
-
             if artifacts_root:
                 job_object["needs"].append(
                     {"job": generate_job_name, "pipeline": "{0}".format(parent_pipeline_id)}
@@ -1123,29 +1185,12 @@ def generate_gitlab_ci_yaml(
     if print_summary:
         _print_staging_summary(spec_labels, stages, mirrors_to_check, rebuild_decisions)
 
-    # Clean up remote mirror override if enabled
-    # TODO: Remove this block in Spack 0.23
-    if deprecated_mirror_config:
-        if remote_mirror_override:
-            spack.mirror.remove("ci_pr_mirror", cfg.default_modify_scope())
-        if spack_pipeline_type == "spack_pull_request":
-            spack.mirror.remove("ci_shared_pr_mirror", cfg.default_modify_scope())
-
     tty.debug("{0} build jobs generated in {1} stages".format(job_id, stage_id))
 
     if job_id > 0:
         tty.debug(
             "The max_needs_job is {0}, with {1} needs".format(max_needs_job, max_length_needs)
         )
-
-    # Use "all_job_names" to populate the build group for this set
-    if cdash_handler and cdash_handler.auth_token:
-        try:
-            cdash_handler.populate_buildgroup(all_job_names)
-        except (SpackError, HTTPError, URLError) as err:
-            tty.warn("Problem populating buildgroup: {0}".format(err))
-    else:
-        tty.warn("Unable to populate buildgroup without CDash credentials")
 
     service_job_retries = {
         "max": 2,
@@ -1285,21 +1330,6 @@ def generate_gitlab_ci_yaml(
         if spack_stack_name:
             output_object["variables"]["SPACK_CI_STACK_NAME"] = spack_stack_name
 
-        if spack_buildcache_copy:
-            # Write out the file describing specs that should be copied
-            copy_specs_dir = os.path.join(pipeline_artifacts_dir, "specs_to_copy")
-
-            if not os.path.exists(copy_specs_dir):
-                os.makedirs(copy_specs_dir)
-
-            copy_specs_file = os.path.join(
-                copy_specs_dir,
-                "copy_{}_specs.json".format(spack_stack_name if spack_stack_name else "rebuilt"),
-            )
-
-            with open(copy_specs_file, "w") as fd:
-                fd.write(json.dumps(buildcache_copies))
-
         # TODO(opadron): remove this or refactor
         if run_optimizer:
             import spack.ci_optimization as ci_opt
@@ -1332,13 +1362,6 @@ def generate_gitlab_ci_yaml(
     sorted_output = {}
     for output_key, output_value in sorted(output_object.items()):
         sorted_output[output_key] = output_value
-
-    if known_broken_specs_encountered:
-        tty.error("This pipeline generated hashes known to be broken on develop:")
-        display_broken_spec_messages(broken_specs_url, known_broken_specs_encountered)
-
-        if not rebuild_everything:
-            sys.exit(1)
 
     with open(output_file, "w") as outf:
         outf.write(syaml.dump(sorted_output, default_flow_style=True))
