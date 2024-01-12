@@ -11,8 +11,8 @@ class RocmGdb(AutotoolsPackage):
     """This is ROCmgdb, the ROCm source-level debugger for Linux,
     based on GDB, the GNU source-level debugger."""
 
-    homepage = "https://github.com/ROCm-Developer-Tools/ROCgdb/"
-    url = "https://github.com/ROCm-Developer-Tools/ROCgdb/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/ROCgdb"
+    url = "https://github.com/ROCm/ROCgdb/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     license("LGPL-2.0-or-later")
@@ -162,7 +162,7 @@ class RocmGdb(AutotoolsPackage):
             # Distributor options
             "--program-prefix=roc",
             "--enable-64-bit-bfd",
-            "--with-bugurl=https://github.com/ROCm-Developer-Tools/ROCgdb/issues",
+            "--with-bugurl=https://github.com/ROCm/ROCgdb/issues",
             "--with-pkgversion=-ROCm",
             "--enable-targets=x86_64-linux-gnu,amdgcn-amd-amdhsa",
             "--disable-ld",

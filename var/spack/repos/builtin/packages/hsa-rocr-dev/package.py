@@ -15,9 +15,9 @@ class HsaRocrDev(CMakePackage):
     HSA ROCm kernel agents.AMD Heterogeneous System Architecture HSA -
     Linux HSA Runtime for Boltzmann (ROCm) platforms."""
 
-    homepage = "https://github.com/RadeonOpenCompute/ROCR-Runtime"
-    git = "https://github.com/RadeonOpenCompute/ROCR-Runtime.git"
-    url = "https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/ROCR-Runtime"
+    git = "https://github.com/ROCm/ROCR-Runtime.git"
+    url = "https://github.com/ROCm/ROCR-Runtime/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")

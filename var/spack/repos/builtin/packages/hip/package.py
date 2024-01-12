@@ -16,9 +16,9 @@ class Hip(CMakePackage):
     create portable applications for AMD and NVIDIA GPUs from
     single source code."""
 
-    homepage = "https://github.com/ROCm-Developer-Tools/HIP"
-    git = "https://github.com/ROCm-Developer-Tools/HIP.git"
-    url = "https://github.com/ROCm-Developer-Tools/HIP/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/HIP"
+    git = "https://github.com/ROCm/HIP.git"
+    url = "https://github.com/ROCm/HIP/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")
@@ -197,7 +197,7 @@ class Hip(CMakePackage):
         for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0"]:
             depends_on("rocm-core@" + ver, when="@" + ver)
         # hipcc likes to add `-lnuma` by default :(
-        # ref https://github.com/ROCm-Developer-Tools/HIP/pull/2202
+        # ref https://github.com/ROCm/HIP/pull/2202
         depends_on("numactl", when="@3.7.0:")
 
     # roc-obj-ls requirements
@@ -224,9 +224,7 @@ class Hip(CMakePackage):
     ]:
         resource(
             name="hipamd",
-            url="https://github.com/ROCm-Developer-Tools/hipamd/archive/rocm-{0}.tar.gz".format(
-                d_version
-            ),
+            url="https://github.com/ROCm/hipamd/archive/rocm-{0}.tar.gz".format(d_version),
             sha256=d_shasum,
             expand=True,
             destination="",
@@ -253,7 +251,7 @@ class Hip(CMakePackage):
     ]:
         resource(
             name="opencl",
-            url="https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime/archive/rocm-{0}.tar.gz".format(
+            url="https://github.com/ROCm/ROCm-OpenCL-Runtime/archive/rocm-{0}.tar.gz".format(
                 d_version
             ),
             sha256=d_shasum,
@@ -281,9 +279,7 @@ class Hip(CMakePackage):
     ]:
         resource(
             name="rocclr",
-            url="https://github.com/ROCm-Developer-Tools/ROCclr/archive/rocm-{0}.tar.gz".format(
-                d_version
-            ),
+            url="https://github.com/ROCm/ROCclr/archive/rocm-{0}.tar.gz".format(d_version),
             sha256=d_shasum,
             expand=True,
             destination="",
@@ -300,9 +296,7 @@ class Hip(CMakePackage):
     ]:
         resource(
             name="clr",
-            url="https://github.com/ROCm-Developer-Tools/clr/archive/refs/tags/rocm-{0}.tar.gz".format(
-                d_version
-            ),
+            url="https://github.com/ROCm/clr/archive/refs/tags/rocm-{0}.tar.gz".format(d_version),
             sha256=d_shasum,
             expand=True,
             destination="",
@@ -320,7 +314,7 @@ class Hip(CMakePackage):
     ]:
         resource(
             name="hipcc",
-            url="https://github.com/ROCm-Developer-Tools/HIPCC/archive/refs/tags/rocm-{0}.tar.gz".format(
+            url="https://github.com/ROCm/HIPCC/archive/refs/tags/rocm-{0}.tar.gz".format(
                 d_version
             ),
             sha256=d_shasum,
@@ -339,7 +333,7 @@ class Hip(CMakePackage):
     ]:
         resource(
             name="hip-tests",
-            url="https://github.com/ROCm-Developer-Tools/hip-tests/archive/refs/tags/rocm-{0}.tar.gz".format(
+            url="https://github.com/ROCm/hip-tests/archive/refs/tags/rocm-{0}.tar.gz".format(
                 d_version
             ),
             sha256=d_shasum,
@@ -381,10 +375,10 @@ class Hip(CMakePackage):
     )
     patch("0013-remove-compiler-rt-linkage-for-host.5.3.0.patch", when="@5.3.0:5.4")
 
-    # See https://github.com/ROCm-Developer-Tools/HIP/pull/2141
+    # See https://github.com/ROCm/HIP/pull/2141
     patch("0002-Fix-detection-of-HIP_CLANG_ROOT.patch", when="@:3.9.0")
 
-    # See https://github.com/ROCm-Developer-Tools/HIP/pull/2218
+    # See https://github.com/ROCm/HIP/pull/2218
     patch("0003-Improve-compilation-without-git-repo.3.7.0.patch", when="@3.7.0:3.9.0")
     patch("0003-Improve-compilation-without-git-repo.3.10.0.patch", when="@3.10.0:4.0.0")
     patch("0003-Improve-compilation-without-git-repo.4.1.0.patch", when="@4.1.0")
@@ -398,7 +392,7 @@ class Hip(CMakePackage):
         "_disabletests.4.5.0.patch",
         when="@4.5.0:4.5.3",
     )
-    # See https://github.com/ROCm-Developer-Tools/HIP/pull/2219
+    # See https://github.com/ROCm/HIP/pull/2219
     patch("0004-Drop-clang-rt-builtins-linking-on-hip-host.3.7.0.patch", when="@3.7.0:3.9.0")
     patch("0004-Drop-clang-rt-builtins-linking-on-hip-host.3.10.0.patch", when="@3.10.0:4.1.0")
 
@@ -417,11 +411,12 @@ class Hip(CMakePackage):
     patch("0014-Remove-compiler-rt-linkage-for-host-for-5.7.0.patch", when="@5.7.0:5.7")
     patch("0014-remove-compiler-rt-linkage-for-host.6.0.patch", when="@6.0:")
     patch("0015-reverting-operator-mixup-fix-for-slate.patch", when="@5.6:5.7")
-    patch("0017-Set-PARAMETERS_MIN_ALIGNMENT-to-the-native-alignment.patch", when="@5.7")
+    patch("0017-Set-PARAMETERS_MIN_ALIGNMENT-to-the-native-alignment.patch", when="@5.7:6.0")
+    patch("0018-reverting-hipMemoryType-with-memoryType.patch", when="@6.0")
 
-    # See https://github.com/ROCm-Developer-Tools/HIP/pull/3206
+    # See https://github.com/ROCm/HIP/pull/3206
     patch(
-        "https://github.com/ROCm-Developer-Tools/HIP/commit/50ee82f6bc4aad10908ce09198c9f7ebfb2a3561.patch?full_index=1",
+        "https://github.com/ROCm/HIP/commit/50ee82f6bc4aad10908ce09198c9f7ebfb2a3561.patch?full_index=1",
         sha256="c2ee21cdc55262c7c6ba65546b5ca5f65ea89730",
         when="@5.2:5.7",
     )
@@ -549,7 +544,7 @@ class Hip(CMakePackage):
 
             # This is a variable that does not exist in hipcc but was introduced
             # in a patch of ours since 3.5.0 to locate rocm_agent_enumerator:
-            # https://github.com/ROCm-Developer-Tools/HIP/pull/2138
+            # https://github.com/ROCm/HIP/pull/2138
             env.set("ROCMINFO_PATH", paths["rocminfo"])
 
             # This one is used in hipcc to run `clang --hip-device-lib-path=...`
@@ -564,7 +559,7 @@ class Hip(CMakePackage):
 
             # Used in comgr and seems necessary when using the JIT compiler, e.g.
             # hiprtcCreateProgram:
-            # https://github.com/RadeonOpenCompute/ROCm-CompilerSupport/blob/rocm-4.0.0/lib/comgr/src/comgr-env.cpp
+            # https://github.com/ROCm/ROCm-CompilerSupport/blob/rocm-4.0.0/lib/comgr/src/comgr-env.cpp
             env.set("LLVM_PATH", paths["llvm-amdgpu"])
             env.set("COMGR_PATH", paths["comgr"])
 
@@ -576,7 +571,7 @@ class Hip(CMakePackage):
             # and parsing of the <prefix>/bin/.hipVersion file. Let's just set this
             # to the hip prefix directory for non-external builds so that the
             # bin/.hipVersion file can still be parsed.
-            # See also https://github.com/ROCm-Developer-Tools/HIP/issues/2223
+            # See also https://github.com/ROCm/HIP/issues/2223
             if "@3.8.0:" in self.spec:
                 env.append_path(
                     "HIPCC_COMPILE_FLAGS_APPEND",

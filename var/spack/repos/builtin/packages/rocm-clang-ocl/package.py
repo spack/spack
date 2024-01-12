@@ -9,9 +9,9 @@ from spack.package import *
 class RocmClangOcl(CMakePackage):
     """OpenCL compilation with clang compiler"""
 
-    homepage = "https://github.com/RadeonOpenCompute/clang-ocl"
-    git = "https://github.com/RadeonOpenCompute/clang-ocl.git"
-    url = "https://github.com/RadeonOpenCompute/clang-ocl/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/clang-ocl"
+    git = "https://github.com/ROCm/clang-ocl.git"
+    url = "https://github.com/ROCm/clang-ocl/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     license("MIT")

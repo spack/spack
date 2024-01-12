@@ -9,9 +9,9 @@ from spack.package import *
 class Rocprim(CMakePackage):
     """Radeon Open Compute Parallel Primitives Library"""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/rocPRIM"
-    git = "https://github.com/ROCmSoftwarePlatform/rocPRIM.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocPRIM/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/rocPRIM"
+    git = "https://github.com/ROCm/rocPRIM.git"
+    url = "https://github.com/ROCm/rocPRIM/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     license("MIT")

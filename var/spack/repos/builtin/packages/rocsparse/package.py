@@ -15,9 +15,9 @@ class Rocsparse(CMakePackage):
     and toolchains. rocSPARSE is created using the HIP programming
     language and optimized for AMD's latest discrete GPUs."""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/rocSPARSE"
-    git = "https://github.com/ROCmSoftwarePlatform/rocSPARSE.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocSPARSE/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/rocSPARSE"
+    git = "https://github.com/ROCm/rocSPARSE.git"
+    url = "https://github.com/ROCm/rocSPARSE/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath")

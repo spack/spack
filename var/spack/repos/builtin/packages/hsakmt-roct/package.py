@@ -14,9 +14,9 @@ class HsakmtRoct(CMakePackage):
     Thunk Interface is a user-mode API interfaces used to interact
     with the ROCk driver."""
 
-    homepage = "https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface"
-    git = "https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface.git"
-    url = "https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/ROCT-Thunk-Interface"
+    git = "https://github.com/ROCm/ROCT-Thunk-Interface.git"
+    url = "https://github.com/ROCm/ROCT-Thunk-Interface/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
@@ -124,7 +124,7 @@ class HsakmtRoct(CMakePackage):
         depends_on("rocm-core@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, type="test", when="@" + ver)
 
-    # See https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface/issues/72
+    # See https://github.com/ROCm/ROCT-Thunk-Interface/issues/72
     # and https://github.com/spack/spack/issues/28398
     patch("0001-Remove-compiler-support-libraries-and-libudev-as-req.patch", when="@4.5.0:5.2")
     patch("0002-Remove-compiler-support-libraries-and-libudev-as-req-5.3.patch", when="@5.3.0:5.4")

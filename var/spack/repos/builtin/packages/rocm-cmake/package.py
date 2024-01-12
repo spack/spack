@@ -11,9 +11,9 @@ class RocmCmake(CMakePackage):
     """rocm-cmake provides CMake modules for common build tasks
     in the ROCm software stack"""
 
-    homepage = "https://github.com/RadeonOpenCompute/rocm-cmake"
-    git = "https://github.com/RadeonOpenCompute/rocm-cmake.git"
-    url = "https://github.com/RadeonOpenCompute/rocm-cmake/archive/rocm-5.6.0.tar.gz"
+    homepage = "https://github.com/ROCm/rocm-cmake"
+    git = "https://github.com/ROCm/rocm-cmake.git"
+    url = "https://github.com/ROCm/rocm-cmake/archive/rocm-5.6.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")

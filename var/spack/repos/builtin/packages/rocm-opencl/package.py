@@ -12,8 +12,8 @@ from spack.package import *
 class RocmOpencl(CMakePackage):
     """OpenCL: Open Computing Language on ROCclr"""
 
-    homepage = "https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime"
-    git = "https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime.git"
+    homepage = "https://github.com/ROCm/ROCm-OpenCL-Runtime"
+    git = "https://github.com/ROCm/ROCm-OpenCL-Runtime.git"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
@@ -21,11 +21,9 @@ class RocmOpencl(CMakePackage):
 
     def url_for_version(self, version):
         if version == Version("3.5.0"):
-            return (
-                "https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime/archive/roc-3.5.0.tar.gz"
-            )
+            return "https://github.com/ROCm/ROCm-OpenCL-Runtime/archive/roc-3.5.0.tar.gz"
 
-        url = "https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime/archive/rocm-{0}.tar.gz"
+        url = "https://github.com/ROCm/ROCm-OpenCL-Runtime/archive/rocm-{0}.tar.gz"
         return url.format(version)
 
     license("MIT")
@@ -140,9 +138,7 @@ class RocmOpencl(CMakePackage):
     ]:
         resource(
             name="rocclr",
-            url="https://github.com/ROCm-Developer-Tools/ROCclr/archive/rocm-{0}.tar.gz".format(
-                d_version
-            ),
+            url="https://github.com/ROCm/ROCclr/archive/rocm-{0}.tar.gz".format(d_version),
             sha256=d_shasum,
             expand=True,
             destination="",

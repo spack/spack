@@ -13,9 +13,9 @@ class RoctracerDev(CMakePackage, ROCmPackage):
     The goal of the implementation is to provide a generic independent from
     specific runtime profiler to trace API and asyncronous activity."""
 
-    homepage = "https://github.com/ROCm-Developer-Tools/roctracer"
-    git = "https://github.com/ROCm-Developer-Tools/roctracer.git"
-    url = "https://github.com/ROCm-Developer-Tools/roctracer/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/roctracer"
+    git = "https://github.com/ROCm/roctracer.git"
+    url = "https://github.com/ROCm/roctracer/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")

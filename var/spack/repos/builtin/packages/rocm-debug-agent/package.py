@@ -11,9 +11,9 @@ from spack.package import *
 class RocmDebugAgent(CMakePackage):
     """Radeon Open Compute (ROCm) debug agent"""
 
-    homepage = "https://github.com/ROCm-Developer-Tools/rocr_debug_agent"
-    git = "https://github.com/ROCm-Developer-Tools/rocr_debug_agent.git"
-    url = "https://github.com/ROCm-Developer-Tools/rocr_debug_agent/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/rocr_debug_agent"
+    git = "https://github.com/ROCm/rocr_debug_agent.git"
+    url = "https://github.com/ROCm/rocr_debug_agent/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
@@ -106,7 +106,7 @@ class RocmDebugAgent(CMakePackage):
     )
 
     def url_for_version(self, version):
-        url = "https://github.com/ROCm-Developer-Tools/rocr_debug_agent/archive/"
+        url = "https://github.com/ROCm/rocr_debug_agent/archive/"
         if version <= Version("3.7.0"):
             url += "roc-{0}.tar.gz".format(version)
         else:
@@ -189,7 +189,7 @@ class RocmDebugAgent(CMakePackage):
     for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
 
-    # https://github.com/ROCm-Developer-Tools/rocr_debug_agent/pull/4
+    # https://github.com/ROCm/rocr_debug_agent/pull/4
     patch("0001-Drop-overly-strict-Werror-flag.patch", when="@3.7.0:")
     patch("0002-add-hip-architecture.patch", when="@3.9.0:")
 

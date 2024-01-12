@@ -10,9 +10,9 @@ from spack.package import *
 class Rocminfo(CMakePackage):
     """Radeon Open Compute (ROCm) Runtime rocminfo tool"""
 
-    homepage = "https://github.com/RadeonOpenCompute/rocminfo"
-    git = "https://github.com/RadeonOpenCompute/rocminfo.git"
-    url = "https://github.com/RadeonOpenCompute/rocminfo/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/rocminfo"
+    git = "https://github.com/ROCm/rocminfo.git"
+    url = "https://github.com/ROCm/rocminfo/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")

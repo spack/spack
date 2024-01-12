@@ -10,9 +10,9 @@ from spack.package import *
 class RocmDeviceLibs(CMakePackage):
     """set of AMD specific device-side language runtime libraries"""
 
-    homepage = "https://github.com/RadeonOpenCompute/ROCm-Device-Libs"
-    git = "https://github.com/RadeonOpenCompute/ROCm-Device-Libs.git"
-    url = "https://github.com/RadeonOpenCompute/ROCm-Device-Libs/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/ROCm-Device-Libs"
+    git = "https://github.com/ROCm/ROCm-Device-Libs.git"
+    url = "https://github.com/ROCm/ROCm-Device-Libs/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")

@@ -12,9 +12,9 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
     """hipBLAS is a BLAS marshalling library, with multiple
     supported backends"""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/hipBLAS"
-    git = "https://github.com/ROCmSoftwarePlatform/hipBLAS.git"
-    url = "https://github.com/ROCmSoftwarePlatform/hipBLAS/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/hipBLAS"
+    git = "https://github.com/ROCm/hipBLAS.git"
+    url = "https://github.com/ROCm/hipBLAS/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath", "haampie")

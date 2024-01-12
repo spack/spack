@@ -16,9 +16,9 @@ class RocmSmiLib(CMakePackage):
     """It is a C library for Linux that provides a user space interface
     for applications to monitor and control GPU applications."""
 
-    homepage = "https://github.com/RadeonOpenCompute/rocm_smi_lib"
-    git = "https://github.com/RadeonOpenCompute/rocm_smi_lib.git"
-    url = "https://github.com/RadeonOpenCompute/rocm_smi_lib/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/rocm_smi_lib"
+    git = "https://github.com/ROCm/rocm_smi_lib.git"
+    url = "https://github.com/ROCm/rocm_smi_lib/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")

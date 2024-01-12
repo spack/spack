@@ -10,9 +10,9 @@ class HipifyClang(CMakePackage):
     """hipify-clang is a clang-based tool for translation CUDA
     sources into HIP sources"""
 
-    homepage = "https://github.com/ROCm-Developer-Tools/HIPIFY"
-    git = "https://github.com/ROCm-Developer-Tools/HIPIFY.git"
-    url = "https://github.com/ROCm-Developer-Tools/HIPIFY/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/HIPIFY"
+    git = "https://github.com/ROCm/HIPIFY.git"
+    url = "https://github.com/ROCm/HIPIFY/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")

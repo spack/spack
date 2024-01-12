@@ -146,7 +146,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
         if "+rocm" in spec:
             options.append(define("MAGMA_ENABLE_HIP", True))
             options.append(define("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
-            # See https://github.com/ROCmSoftwarePlatform/rocFFT/issues/322
+            # See https://github.com/ROCm/rocFFT/issues/322
             if spec.satisfies("^cmake@3.21.0:3.21.2"):
                 options.append(define("__skip_rocmclang", True))
         else:

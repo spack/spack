@@ -13,9 +13,9 @@ class Rocsolver(CMakePackage):
     """rocSOLVER is a work-in-progress implementation of a
     subset of LAPACK functionality on the ROCm platform."""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/rocSOLVER"
-    git = "https://github.com/ROCmSoftwarePlatform/rocSOLVER.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocSOLVER/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/rocSOLVER"
+    git = "https://github.com/ROCm/rocSOLVER.git"
+    url = "https://github.com/ROCm/rocSOLVER/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath", "haampie")
@@ -137,7 +137,7 @@ class Rocsolver(CMakePackage):
     depends_on("netlib-lapack@3.7.1:", type="test")
 
     patch("link-clients-blas.patch", when="@4.3.0:4.3.2")
-    # Backport https://github.com/ROCmSoftwarePlatform/rocSOLVER/commit/2bbfb8976f6e4d667499c77e41a6433850063e88
+    # Backport https://github.com/ROCm/rocSOLVER/commit/2bbfb8976f6e4d667499c77e41a6433850063e88
     patch("fmt-8.1-compatibility.patch", when="@4.5.0:5.1.3")
     # Maximize compatibility with other libraries that are using fmt.
     patch("fmt-9-compatibility.patch", when="@5.2.0:5.5")

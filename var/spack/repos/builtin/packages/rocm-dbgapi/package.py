@@ -14,9 +14,9 @@ class RocmDbgapi(CMakePackage):
     control of the execution and inspection of execution state of
     AMD's commercially available GPU architectures."""
 
-    homepage = "https://github.com/ROCm-Developer-Tools/ROCdbgapi"
-    git = "https://github.com/ROCm-Developer-Tools/ROCdbgapi.git"
-    url = "https://github.com/ROCm-Developer-Tools/ROCdbgapi/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/ROCdbgapi"
+    git = "https://github.com/ROCm/ROCdbgapi.git"
+    url = "https://github.com/ROCm/ROCdbgapi/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")

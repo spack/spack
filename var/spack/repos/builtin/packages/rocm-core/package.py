@@ -12,8 +12,8 @@ class RocmCore(CMakePackage):
     It also provides the Lmod modules files for the ROCm release.
     getROCmVersion function provides the ROCm version."""
 
-    homepage = "https://github.com/RadeonOpenCompute/rocm-core"
-    url = "https://github.com/RadeonOpenCompute/rocm-core/archive/refs/tags/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/rocm-core"
+    url = "https://github.com/ROCm/rocm-core/archive/refs/tags/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")

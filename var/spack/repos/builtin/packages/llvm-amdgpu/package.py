@@ -14,9 +14,9 @@ class LlvmAmdgpu(CMakePackage):
     """Toolkit for the construction of highly optimized compilers,
     optimizers, and run-time environments."""
 
-    homepage = "https://github.com/RadeonOpenCompute/llvm-project"
-    git = "https://github.com/RadeonOpenCompute/llvm-project.git"
-    url = "https://github.com/RadeonOpenCompute/llvm-project/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/llvm-project"
+    git = "https://github.com/ROCm/llvm-project.git"
+    url = "https://github.com/ROCm/llvm-project/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
     executables = [r"amdclang", r"amdclang\+\+", r"amdflang", r"clang.*", r"flang.*", "llvm-.*"]
     generator("ninja")
@@ -172,7 +172,7 @@ class LlvmAmdgpu(CMakePackage):
 
     # Below patch is to set the flag -mcode-object-version=none until
     # the below fix is available in device-libs release code.
-    # https://github.com/RadeonOpenCompute/ROCm-Device-Libs/commit/f0356159dbdc93ea9e545f9b61a7842f9c881fdf
+    # https://github.com/ROCm/ROCm-Device-Libs/commit/f0356159dbdc93ea9e545f9b61a7842f9c881fdf
     patch("patch-llvm-5.5.0.patch", when="@5.5:5.7 +rocm-device-libs")
 
     # i1 muls can sometimes happen after SCEV.
@@ -223,7 +223,7 @@ class LlvmAmdgpu(CMakePackage):
         resource(
             name="rocm-device-libs",
             placement="rocm-device-libs",
-            url="https://github.com/RadeonOpenCompute/ROCm-Device-Libs/archive/rocm-{0}.tar.gz".format(
+            url="https://github.com/ROCm/ROCm-Device-Libs/archive/rocm-{0}.tar.gz".format(
                 d_version
             ),
             sha256=d_shasum,
@@ -233,7 +233,7 @@ class LlvmAmdgpu(CMakePackage):
     resource(
         name="rocm-device-libs",
         placement="rocm-device-libs",
-        git="https://github.com/RadeonOpenCompute/ROCm-Device-Libs.git",
+        git="https://github.com/ROCm/ROCm-Device-Libs.git",
         branch="amd-stg-open",
         when="@master +rocm-device-libs",
     )
@@ -247,14 +247,14 @@ class LlvmAmdgpu(CMakePackage):
         resource(
             name="hsa-runtime",
             placement="hsa-runtime",
-            url=f"https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/rocm-{d_version}.tar.gz",
+            url=f"https://github.com/ROCm/ROCR-Runtime/archive/rocm-{d_version}.tar.gz",
             sha256=d_shasum,
             when="@{0}".format(d_version),
         )
     resource(
         name="hsa-runtime",
         placement="hsa-runtime",
-        git="https://github.com/RadeonOpenCompute/ROCR-Runtime.git",
+        git="https://github.com/ROCm/ROCR-Runtime.git",
         branch="master",
         when="@master",
     )
@@ -269,14 +269,14 @@ class LlvmAmdgpu(CMakePackage):
         resource(
             name="comgr",
             placement="comgr",
-            url=f"https://github.com/RadeonOpenCompute/ROCm-CompilerSupport/archive/rocm-{d_version}.tar.gz",
+            url=f"https://github.com/ROCm/ROCm-CompilerSupport/archive/rocm-{d_version}.tar.gz",
             sha256=d_shasum,
             when="@{0}".format(d_version),
         )
     resource(
         name="comgr",
         placement="comgr",
-        git="https://github.com/RadeonOpenCompute/ROCm-CompilerSupport.git",
+        git="https://github.com/ROCm/ROCm-CompilerSupport.git",
         branch="amd-stg-open",
         when="@master",
     )

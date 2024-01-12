@@ -14,9 +14,9 @@ class Rccl(CMakePackage):
     implementing all-reduce, all-gather, reduce, broadcast,
     and reduce-scatter."""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/rccl"
-    git = "https://github.com/ROCmSoftwarePlatform/rccl.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rccl/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/rccl"
+    git = "https://github.com/ROCm/rccl.git"
+    url = "https://github.com/ROCm/rccl/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")

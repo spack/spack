@@ -12,9 +12,9 @@ class Comgr(CMakePackage):
     """This provides various Lightning Compiler related services. It currently
     contains one library, the Code Object Manager (Comgr)"""
 
-    homepage = "https://github.com/RadeonOpenCompute/ROCm-CompilerSupport"
-    git = "https://github.com/RadeonOpenCompute/ROCm-CompilerSupport.git"
-    url = "https://github.com/RadeonOpenCompute/ROCm-CompilerSupport/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/ROCm-CompilerSupport"
+    git = "https://github.com/ROCm/ROCm-CompilerSupport.git"
+    url = "https://github.com/ROCm/ROCm-CompilerSupport/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")
