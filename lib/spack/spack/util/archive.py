@@ -120,18 +120,41 @@ def gzip_compressed_tarfile(path):
         yield tar, gzip_checksum, tarfile_checksum
 
 
+def _default_path_to_name(path: str) -> str:
+    """Converts a path to a tarfile name, which uses posix path separators."""
+    p = pathlib.PurePath(path)
+    # Drop the leading slash on posix and the drive letter on windows, and always format as a
+    # posix path.
+    return pathlib.PurePath(*p.parts[1:]).as_posix() if p.is_absolute() else p.as_posix()
+
+
 def reproducible_tarfile_from_prefix(
     tar: tarfile.TarFile,
     prefix: str,
     *,
     include_parent_directories: bool = False,
     skip: Callable[[os.DirEntry], bool] = lambda entry: False,
-    path_to_name: Callable[[str], str] = lambda path: path,
+    path_to_name: Callable[[str], str] = _default_path_to_name,
 ) -> None:
-    """Only adds regular files, symlinks and dirs. Skips devices, fifos. Preserves hardlinks.
-    Normalizes permissions like git. Tar entries are added in depth-first pre-order, with
-    dir entries partitioned by file | dir, and sorted alphabetically, for reproducibility.
-    Partitioning ensures only one dir is in memory at a time, and sorting improves compression."""
+    """Create a tarball from a given directory. Only adds regular files, symlinks and dirs.
+    Skips devices, fifos. Preserves hardlinks. Normalizes permissions like git. Tar entries are
+    added in depth-first pre-order, with dir entries partitioned by file | dir, and sorted
+    lexicographically, for reproducibility. Partitioning ensures only one dir is in memory at a
+    time, and sorting improves compression.
+
+    Args:
+        tar: tarfile object opened in write mode
+        prefix: path to directory to tar (either absolute or relative)
+        include_parent_directories: whether to include every directory leading up to ``prefix`` in
+            the tarball
+        skip: function that receives a DirEntry and returns True if the entry should be skipped,
+            whether it is a file or directory. Default implementation does not skip anything.
+        path_to_name: function that converts a path string to a tarfile entry name, which should be
+            in posix format. Not only is it necessary to transform paths in certain cases, such as
+            windows path to posix format, but it can also be used to prepend a directory to each
+            entry even if it does not exist on the filesystem. The default implementation drops the
+            leading slash on posix and the drive letter on windows for absolute paths, and formats
+            as a posix."""
 
     hardlink_to_tarinfo_name: Dict[Tuple[int, int], str] = dict()
 
