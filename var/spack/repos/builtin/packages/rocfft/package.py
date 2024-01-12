@@ -182,7 +182,7 @@ class Rocfft(CMakePackage):
     # Set LD_LIBRARY_PATH for executing the binaries from build directoryfix missing type
     # https://github.com/ROCm/rocFFT/pull/449)
     patch(
-        "https://github.com/ROCm/rocFFT/commit/0ec78f1daac2d7fa1415f4deff0d129252c1c9de.patch",
+        "https://github.com/ROCm/rocFFT/commit/0ec78f1daac2d7fa1415f4deff0d129252c1c9de.patch?full_index=1",
         sha256="ddfe9c422516369e386315c23a77f877d75de353ed3e1d9d6e4db135fb14a804",
         when="@6.0.0",
     )
