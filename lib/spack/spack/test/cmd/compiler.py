@@ -292,3 +292,41 @@ def test_compilers_shows_packages_yaml(no_compilers_yaml, working_env, compilers
 """
 
     assert out == expected
+
+
+def test_compilers_shows_packages_yaml_minimal(no_compilers_yaml, working_env, compilers_dir):
+    """Spack should see a single compiler defined from packages.yaml"""
+    gcc_entry = {
+        "externals": [{
+            "spec": "gcc@=7.7.7",
+            "prefix": str(compilers_dir),
+            "modules": ["gcc/7.7.7", "foobar"],
+            "extra_attributes": {
+                "flags": {
+                    "fflags": "-ffree-form"
+                }
+            }
+        }]
+    }
+
+    packages = spack.config.get("packages")
+    packages["gcc"] = gcc_entry
+    spack.config.set("packages", packages)
+
+    out = compiler("list")
+    assert out.count("gcc@7.7.7") == 1
+
+    out = compiler("info", "gcc@7.7.7")
+    expected = f"""gcc@7.7.7:
+	paths:
+		cc = {compilers_dir}/gcc-8
+		cxx = {compilers_dir}/g++-8
+		f77 = {compilers_dir}/gfortran-8
+		fc = {compilers_dir}/gfortran-8
+	flags:
+		fflags = ['-ffree-form']
+	modules  = ['gcc/7.7.7', 'foobar']
+	operating system  = debian6
+"""
+
+    assert out == expected

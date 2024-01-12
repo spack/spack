@@ -158,23 +158,63 @@ def _compiler_config_from_package_config(config):
 
 def _compiler_config_from_external(config):
     spec = spack.spec.Spec(config["spec"])
+    compiler_spec = spack.spec.CompilerSpec(
+        package_name_to_compiler_name.get(spec.name, spec.name), spec.version
+    )
+
     extra_attributes = config.get("extra_attributes", {})
+    prefix = config.get("prefix", None)
+
+    compiler_class = class_for_compiler_name(compiler_spec.name)
     paths = extra_attributes.get("paths", {})
-    if not paths or not spec.architecture:
+    compiler_langs = ["cc", "cxx", "fc", "f77"]
+    for compiler in compiler_langs:
+        if compiler in paths:
+            continue
+
+        if not prefix:
+            continue
+
+        bindir = prefix
+        if os.path.basename(prefix) != "bin":
+            bindir = os.path.join(prefix, "bin")
+
+        # Check for files that satisfy the naming scheme for this compiler
+        for file, regexp in itertools.product(
+            os.listdir(bindir), compiler_class.search_regexps(compiler)
+        ):
+            match = regexp.match(file)
+            if match:
+                paths[compiler] = os.path.join(bindir, file)
+
+    for compiler in compiler_langs:
+        if compiler not in paths:
+            paths[compiler] = None
+
+    if not any(paths.get(compiler, None) for compiler in compiler_langs):
         return None
 
-    target = spec.target
-    os = spec.os
+    if not spec.architecture:
+        host_platform = spack.platforms.host()
+        operating_system = host_platform.operating_system("default_os")
+        target = host_platform.target("default_target").microarchitecture
+    else:
+        target = spec.target
+        if not target:
+            host_platform = spack.platforms.host()
+            target = host_platform.target("default_target").microarchitecture
 
-    if not target or not os:
-        return None
+        operating_system = spec.os
+        if not operating_system:
+            host_platform = spack.platforms.host()
+            operating_system = host_platform.operating_system("default_os")
 
     compiler_entry = {
         "compiler": {
-            "spec": str(spec),
+            "spec": str(compiler_spec),
             "paths": paths,
             "flags": extra_attributes.get("flags", {}),
-            "operating_system": os,
+            "operating_system": operating_system,
             "target": str(target.family),
             "modules": config.get("modules", []),
             "environment": extra_attributes.get("environment", {}),
