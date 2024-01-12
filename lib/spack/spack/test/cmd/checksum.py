@@ -272,3 +272,12 @@ def test_checksum_verification_fails(install_mockery, capsys):
     assert out.count("Correct") == 0
     assert "No previous checksum" in out
     assert "Invalid checksum" in out
+
+
+def test_checksum_manual_download_fails(mock_packages, monkeypatch):
+    """Confirm that checksumming a manually downloadable package fails."""
+    pkg_cls = spack.repo.PATH.get_pkg_class("zlib")
+    versions = [str(v) for v in pkg_cls.versions]
+    monkeypatch.setattr(spack.package_base.PackageBase, "manual_download", True)
+    with pytest.raises(spack.main.SpackCommandError):
+        spack_checksum("zlib", *versions)
