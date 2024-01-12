@@ -9,13 +9,14 @@ import pathlib
 import platform
 import subprocess
 
+from llnl.util import tty
+
 from spack.error import SpackError
 from spack.util import windows_registry as winreg
 from spack.version import Version
 
 from ._operating_system import OperatingSystem
 
-from llnl.util import tty
 
 def windows_version():
     """Windows version as a Version object"""
@@ -94,7 +95,9 @@ class WindowsOs(OperatingSystem):
             )
             vs_entries = msft.find_subkeys(r"VisualStudio_.*", depth=False)
         except OSError as e:
-                tty.debug(f"Windows registry query on \"SOFTWARE\\WOW6432Node\\Microsoft\" under HKEY_LOCAL_MACHINE: {str(e)}")
+            tty.debug(
+                f'Windows registry query on "SOFTWARE\\WOW6432Node\\Microsoft" under HKEY_LOCAL_MACHINE: {str(e)}'
+            )
         vs_paths = []
 
         def clean_vs_path(path):

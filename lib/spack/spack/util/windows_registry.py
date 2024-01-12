@@ -61,7 +61,9 @@ class RegistryKey:
 
     def OpenKeyEx(self, subname, **kwargs):
         """Convenience wrapper around winreg.OpenKeyEx"""
-        tty.debug(f"[WINREG ACCESS] Accessing Reg Key {self.path}/{subname} with {kwargs.get('access', 'default')} access")
+        tty.debug(
+            f"[WINREG ACCESS] Accessing Reg Key {self.path}/{subname} with {kwargs.get('access', 'default')} access"
+        )
         try:
             return winreg.OpenKeyEx(self.hkey, subname, **kwargs)
         except OSError as e:
@@ -83,7 +85,9 @@ class RegistryKey:
 
     def EnumKey(self, index):
         """Convenience wrapper around winreg.EnumKey"""
-        tty.debug(f"[WINREG ACCESS] Obtaining name of subkey at index {index} from registry key {self.path}")
+        tty.debug(
+            f"[WINREG ACCESS] Obtaining name of subkey at index {index} from registry key {self.path}"
+        )
         try:
             return winreg.EnumKey(self.hkey, index)
         except OSError as e:
@@ -97,7 +101,9 @@ class RegistryKey:
 
     def EnumValue(self, index):
         """Convenience wrapper around winreg.EnumValue"""
-        tty.debug(f"[WINREG ACCESS] Obtaining value at index {index} from registry key {self.path}")
+        tty.debug(
+            f"[WINREG ACCESS] Obtaining value at index {index} from registry key {self.path}"
+        )
         try:
             return winreg.EnumValue(self.hkey, index)
         except OSError as e:
@@ -159,8 +165,7 @@ class RegistryKey:
     def get_subkey(self, sub_key):
         """Returns subkey of name sub_key in a RegistryKey objects"""
         return RegistryKey(
-            os.path.join(self.path, sub_key),
-            self.OpenKeyEx(sub_key, access=winreg.KEY_READ),
+            os.path.join(self.path, sub_key), self.OpenKeyEx(sub_key, access=winreg.KEY_READ)
         )
 
     def get_value(self, val_name):
@@ -357,8 +362,7 @@ class WindowsRegistryView:
         For more details, see the WindowsRegistryView._find_subkey_s method docstring
         """
         return self._traverse_subkeys(
-            WindowsRegistryView.KeyMatchConditions.name_matcher(subkey_name),
-            depth_search=depth
+            WindowsRegistryView.KeyMatchConditions.name_matcher(subkey_name), depth_search=depth
         )
 
     def find_matching_subkey(self, subkey_name, depth=True):
@@ -373,8 +377,7 @@ class WindowsRegistryView:
         For more details, see the WindowsRegistryView._find_subkey_s method docstring
         """
         return self._traverse_subkeys(
-            WindowsRegistryView.KeyMatchConditions.regex_matcher(subkey_name),
-            depth_search=depth
+            WindowsRegistryView.KeyMatchConditions.regex_matcher(subkey_name), depth_search=depth
         )
 
     def find_subkeys(self, subkey_name, depth=True):
@@ -388,8 +391,7 @@ class WindowsRegistryView:
 
         For more details, see the WindowsRegistryView._find_subkey_s method docstring
         """
-        kwargs = {"collect_all_matching": True,
-                  "depth_search": depth}
+        kwargs = {"collect_all_matching": True, "depth_search": depth}
         return self._traverse_subkeys(
             WindowsRegistryView.KeyMatchConditions.regex_matcher(subkey_name), **kwargs
         )
@@ -422,6 +424,7 @@ class RegistryError(Exception):
 
 class InvalidKeyError(RegistryError):
     """Runtime Error describing issue with invalid key access to Windows registry"""
+
     def __init__(self, key):
         message = f"Cannot query invalid key: {key}"
         super().__init__(message)
@@ -429,9 +432,10 @@ class InvalidKeyError(RegistryError):
 
 class InvalidRegistryOperation(RegistryError):
     """A Runtime Error ecountered when a registry operation is invalid for a non deterministic reason"""
+
     def __init__(self, name, e, *args, **kwargs):
         message = f"Windows registry operations: {name} encountered error: {str(e)}\nMethod invoked with parameters:\n"
-        message += '\n\t'.join([f"{k}:{v}" for k,v in kwargs.items()])
+        message += "\n\t".join([f"{k}:{v}" for k, v in kwargs.items()])
         message += "\n"
-        message += '\n\t'.join(args)
+        message += "\n\t".join(args)
         super().__init__(self, message)
