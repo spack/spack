@@ -323,10 +323,9 @@ class DirectiveMeta(type):
         return _decorator
 
 
-SubmoduleCallback = Callable[
-    "spack.package_base.PackageBase", Union[str, List[str], bool]
-]
+SubmoduleCallback = Callable["spack.package_base.PackageBase", Union[str, List[str], bool]]
 directive = DirectiveMeta.directive
+
 
 @directive("versions")
 def version(
