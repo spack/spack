@@ -89,6 +89,85 @@ class TemporaryDirectory:
         return False
 
 
+class PipelineNode(object):
+    spec: spack.spec.Spec
+    parents: List[str]
+    children: List[str]
+
+    def __init__(self, spec: spack.spec.Spec):
+        self.spec = spec
+        self.parents = []
+        self.children = []
+
+
+class PipelineDag:
+    """Turn a list of specs into a simple directed graph, that doesn't keep track
+    of edge types."""
+
+    @classmethod
+    def key(cls, spec: spack.spec.Spec) -> str:
+        return f"{spec.name}/{spec.dag_hash(7)}"
+
+    def __init__(self, specs: List[spack.spec.Spec]) -> None:
+        # Build dictionary of nodes
+        self.nodes: Dict[str, PipelineNode] = {
+            PipelineDag.key(s): PipelineNode(s) for s in spack.traverse.traverse_nodes(specs, deptype=all, root=True)
+        }
+
+        # Create edges
+        for edge in spack.traverse.traverse_edges(specs, deptype=all, root=False, cover="edges"):
+            parent_key = PipelineDag.key(edge.parent)
+            child_key = PipelineDag.key(edge.spec)
+
+            self.nodes[parent_key].children.append(child_key)
+            self.nodes[child_key].parents.append(parent_key)
+
+    def prune(self, node_key: str):
+        """Remove a node from the graph, and reconnect its parents and children"""
+        node = self.nodes[node_key]
+        for parent in node.parents:
+            self.nodes[parent].children.remove(node_key)
+            self.nodes[parent].children.extend(node.children)
+        for child in node.children:
+            self.nodes[child].parents.remove(node_key)
+            self.nodes[child].parents.extend(node.parents)
+        del self.nodes[node_key]
+
+    def traverse(self, top_down: bool=True):
+        visited = set()
+        level = 0
+
+        if top_down:
+            # Yields the roots first, followed by direct children of roots, followed
+            # by their children and so on.
+            next_level = [
+                (key, node) for key, node in self.nodes.items() if len(node.parents) == 0
+            ]
+            while next_level:
+                for key, node in next_level:
+                    if key not in visited:
+                        visited.add(key)
+                        yield (level, (key, node))
+                level += 1
+                next_level = [(k, self.nodes[k]) for _, n in next_level for k in n.children]
+        else:
+            # Yields the leaves first, followed by nodes whose only children were
+            # leaves, and so on.
+            next_level = [
+                (key, node) for key, node in self.nodes.items() if len(node.children) == 0
+            ]
+            while next_level:
+                for key, node in next_level:
+                    if key not in visited:
+                        visited.add(key)
+                        yield (level, (key, node))
+                level += 1
+                next_level = [
+                    (key, node) for key, node in self.nodes.items()
+                    if not key in visited and all([c in visited for c in node.children])
+                ]
+
+
 def get_job_name(spec: spack.spec.Spec, build_group: str = ""):
     """Given a spec and possibly a build group, return the job name. If the
     resulting name is longer than 255 characters, it will be truncated.
@@ -111,99 +190,6 @@ def get_job_name(spec: spack.spec.Spec, build_group: str = ""):
 def _remove_reserved_tags(tags):
     """Convenience function to strip reserved tags from jobs"""
     return [tag for tag in tags if tag not in SPACK_RESERVED_TAGS]
-
-
-def _spec_deps_key(s):
-    return "{0}/{1}".format(s.name, s.dag_hash(7))
-
-
-def _add_dependency(spec_label, dep_label, deps):
-    if spec_label == dep_label:
-        return
-    if spec_label not in deps:
-        deps[spec_label] = set()
-    deps[spec_label].add(dep_label)
-
-
-def _get_spec_dependencies(specs, deps, spec_labels):
-    spec_deps_obj = _compute_spec_deps(specs)
-
-    if spec_deps_obj:
-        dependencies = spec_deps_obj["dependencies"]
-        specs = spec_deps_obj["specs"]
-
-        for entry in specs:
-            spec_labels[entry["label"]] = entry["spec"]
-
-        for entry in dependencies:
-            _add_dependency(entry["spec"], entry["depends"], deps)
-
-
-def stage_spec_jobs(specs):
-    """Take a set of release specs and generate a list of "stages", where the
-        jobs in any stage are dependent only on jobs in previous stages.  This
-        allows us to maximize build parallelism within the gitlab-ci framework.
-
-    Arguments:
-        specs (Iterable): Specs to build
-
-    Returns: A tuple of information objects describing the specs, dependencies
-        and stages:
-
-        spec_labels: A dictionary mapping the spec labels (which are formatted
-            as pkg-name/hash-prefix) to concrete specs.
-
-        deps: A dictionary where the keys should also have appeared as keys in
-            the spec_labels dictionary, and the values are the set of
-            dependencies for that spec.
-
-        stages: An ordered list of sets, each of which contains all the jobs to
-            built in that stage.  The jobs are expressed in the same format as
-            the keys in the spec_labels and deps objects.
-
-    """
-
-    # The convenience method below, "_remove_satisfied_deps()", does not modify
-    # the "deps" parameter.  Instead, it returns a new dictionary where only
-    # dependencies which have not yet been satisfied are included in the
-    # return value.
-    def _remove_satisfied_deps(deps, satisfied_list):
-        new_deps = {}
-
-        for key, value in deps.items():
-            new_value = set([v for v in value if v not in satisfied_list])
-            if new_value:
-                new_deps[key] = new_value
-
-        return new_deps
-
-    deps = {}
-    spec_labels = {}
-
-    _get_spec_dependencies(specs, deps, spec_labels)
-
-    # Save the original deps, as we need to return them at the end of the
-    # function.  In the while loop below, the "dependencies" variable is
-    # overwritten rather than being modified each time through the loop,
-    # thus preserving the original value of "deps" saved here.
-    dependencies = deps
-    unstaged = set(spec_labels.keys())
-    stages = []
-
-    while dependencies:
-        dependents = set(dependencies.keys())
-        next_stage = unstaged.difference(dependents)
-        stages.append(next_stage)
-        unstaged.difference_update(next_stage)
-        # Note that "dependencies" is a dictionary mapping each dependent
-        # package to the set of not-yet-handled dependencies.  The final step
-        # below removes all the dependencies that are handled by this stage.
-        dependencies = _remove_satisfied_deps(dependencies, next_stage)
-
-    if unstaged:
-        stages.append(unstaged.copy())
-
-    return spec_labels, deps, stages
 
 
 def _print_staging_summary(spec_labels, stages, mirrors_to_check, rebuild_decisions):
@@ -233,89 +219,6 @@ def _print_staging_summary(spec_labels, stages, mirrors_to_check, rebuild_decisi
                     msg += f" [{', '.join(rebuild_decisions[job].mirrors)}]"
                 msg = colorize(f"  @K -   {cescape(msg)}@.")
             tty.msg(msg)
-
-
-def _compute_spec_deps(spec_list):
-    """
-    Computes all the dependencies for the spec(s) and generates a JSON
-    object which provides both a list of unique spec names as well as a
-    comprehensive list of all the edges in the dependency graph.  For
-    example, given a single spec like 'readline@7.0', this function
-    generates the following JSON object:
-
-    .. code-block:: JSON
-
-       {
-           "dependencies": [
-               {
-                   "depends": "readline/ip6aiun",
-                   "spec": "readline/ip6aiun"
-               },
-               {
-                   "depends": "ncurses/y43rifz",
-                   "spec": "readline/ip6aiun"
-               },
-               {
-                   "depends": "ncurses/y43rifz",
-                   "spec": "readline/ip6aiun"
-               },
-               {
-                   "depends": "pkgconf/eg355zb",
-                   "spec": "ncurses/y43rifz"
-               },
-               {
-                   "depends": "pkgconf/eg355zb",
-                   "spec": "readline/ip6aiun"
-               }
-           ],
-           "specs": [
-               {
-                 "spec": "readline@7.0%apple-clang@9.1.0 arch=darwin-highs...",
-                 "label": "readline/ip6aiun"
-               },
-               {
-                 "spec": "ncurses@6.1%apple-clang@9.1.0 arch=darwin-highsi...",
-                 "label": "ncurses/y43rifz"
-               },
-               {
-                 "spec": "pkgconf@1.5.4%apple-clang@9.1.0 arch=darwin-high...",
-                 "label": "pkgconf/eg355zb"
-               }
-           ]
-       }
-
-    """
-    spec_labels = {}
-
-    specs = []
-    dependencies = []
-
-    def append_dep(s, d):
-        dependencies.append({"spec": s, "depends": d})
-
-    for spec in spec_list:
-        for s in spec.traverse(deptype="all"):
-            if s.external:
-                tty.msg("Will not stage external pkg: {0}".format(s))
-                continue
-
-            skey = _spec_deps_key(s)
-            spec_labels[skey] = s
-
-            for d in s.dependencies(deptype="all"):
-                dkey = _spec_deps_key(d)
-                if d.external:
-                    tty.msg("Will not stage external dep: {0}".format(d))
-                    continue
-
-                append_dep(skey, dkey)
-
-    for spec_label, concrete_spec in spec_labels.items():
-        specs.append({"label": spec_label, "spec": concrete_spec})
-
-    deps_json_obj = {"specs": specs, "dependencies": dependencies}
-
-    return deps_json_obj
 
 
 def _spec_matches(spec, match_string):
@@ -433,6 +336,51 @@ def get_spec_filter_list(env, affected_pkgs, dependent_traverse_depth=None):
     return affected_specs
 
 
+def prune_unaffected_specs(pipeline, affected_specs):
+    """Prune any unaffected specs from the pipeline"""
+    to_prune = set()
+    for _, (key, node) in pipeline.traverse(top_down=True):
+        if node.spec not in affected_specs:
+            to_prune.add(key)
+
+    if to_prune:
+        tty.msg("Pruned the following unaffected specs:")
+        for key in to_prune:
+            tty.msg(f"  {key}")
+            pipeline.prune(key)
+    else:
+        tty.msg("There were no unaffected specs.")
+
+
+def prune_built_specs(pipeline, mirrors_to_check=None, check_index_only=True):
+    """Prune already built specs from the pipeline"""
+    # Speed up checking by first fetching binary indices from all mirrors
+    try:
+        bindist.BINARY_INDEX.update()
+    except bindist.FetchCacheError as e:
+        tty.warn(e)
+
+    to_prune = set()
+    found_on_mirrors = {}
+    for _, (key, node) in pipeline.traverse(top_down=True):
+        release_spec = node.spec
+        up_to_date_mirrors = bindist.get_mirrors_for_spec(
+            spec=release_spec, mirrors_to_check=mirrors_to_check, index_only=check_index_only
+        )
+        if up_to_date_mirrors:
+            to_prune.add(key)
+            found_on_mirrors[key] = [m["mirror_url"] for m in up_to_date_mirrors]
+
+    if to_prune:
+        tty.msg("Pruned the following already built specs:")
+        for key in to_prune:
+            spec_mirrors = found_on_mirrors[key]
+            tty.msg(f"  {key} [{', '.join(spec_mirrors)}]")
+            pipeline.prune(key)
+    else:
+        tty.msg("There were no already built specs.")
+
+
 def _build_jobs(spec_labels, stages):
     for stage_jobs in stages:
         for spec_label in stage_jobs:
@@ -455,13 +403,6 @@ def _unpack_script(script_section, op=_noop):
             script.append(op(cmd))
 
     return script
-
-
-class RebuildDecision:
-    def __init__(self):
-        self.rebuild = True
-        self.mirrors = []
-        self.reason = ""
 
 
 class SpackCI:
@@ -751,9 +692,9 @@ def generate_gitlab_ci_yaml(
                 affected_specs = get_spec_filter_list(
                     env, affected_pkgs, dependent_traverse_depth=dependent_depth
                 )
-                tty.debug("all affected specs:")
+                tty.msg(f"dependent_traverse_depth={dependent_depth}, affected specs:")
                 for s in affected_specs:
-                    tty.debug("  {0}/{1}".format(s.name, s.dag_hash()[:7]))
+                    tty.msg(f"  {PipelineDag.key(s)}")
 
     # Allow overriding --prune-dag cli opt with environment variable
     prune_dag_override = os.environ.get("SPACK_PRUNE_UP_TO_DATE", None)
@@ -937,19 +878,26 @@ def generate_gitlab_ci_yaml(
     rel_local_mirror_dir = os.path.join(local_mirror_dir, ci_project_dir)
     rel_user_artifacts_dir = os.path.relpath(user_artifacts_dir, ci_project_dir)
 
-    # Speed up staging by first fetching binary indices from all mirrors
-    try:
-        bindist.BINARY_INDEX.update()
-    except bindist.FetchCacheError as e:
-        tty.warn(e)
-
-    spec_labels, dependencies, stages = stage_spec_jobs(
+    # Build a pipeline from the specs in the concrete environment
+    pipeline = PipelineDag(
         [
             concrete
             for abstract, concrete in env.concretized_specs()
             if abstract in env.spec_lists["specs"]
         ]
     )
+
+    # Possibly prune specs that were unaffected by the change
+    if prune_untouched_packages:
+        prune_unaffected_specs(pipeline, affected_specs)
+    else:
+        tty.msg("Untouched spec pruning disabled")
+
+    # Possibly prune specs that are already built on some con
+    if prune_dag:
+        prune_built_specs(pipeline, mirrors_to_check, check_index_only)
+    else:
+        tty.msg("DAG (already built) pruning disabled")
 
     all_job_names = []
     output_object = {}
@@ -972,10 +920,8 @@ def generate_gitlab_ci_yaml(
         else:
             broken_spec_urls = web_util.list_url(broken_specs_url)
 
-    spack_ci = SpackCI(ci_config, spec_labels, stages)
+    spack_ci = SpackCI(ci_config, pipeline)
     spack_ci_ir = spack_ci.generate_ir()
-
-    rebuild_decisions = {}
 
     for stage_jobs in stages:
         stage_name = "stage-{0}".format(stage_id)
