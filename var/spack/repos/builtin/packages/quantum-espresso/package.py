@@ -105,6 +105,9 @@ class QuantumEspresso(CMakePackage, Package):
     with when("+nvtx~cuda"):
         depends_on("cuda")
 
+    # CLOCK variant to display program time in seconds
+    variant("clock", default=False, description="Display program time in seconds")
+
     # Apply upstream patches by default. Variant useful for 3rd party
     # patches which are incompatible with upstream patches
     desc = "Apply recommended upstream patches. May need to be set "
@@ -427,6 +430,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define_from_variant("QE_ENABLE_LIBXC", "libxc"),
             self.define_from_variant("QE_ENABLE_CUDA", "cuda"),
             self.define_from_variant("QE_ENABLE_PROFILE_NVTX", "nvtx"),
+            self.define_from_variant("QE_CLOCK_SECONDS", "clock"),
             self.define_from_variant("QE_ENABLE_MPI_GPU_AWARE", "mpigpu"),
         ]
 
