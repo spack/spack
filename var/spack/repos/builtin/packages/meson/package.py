@@ -90,7 +90,7 @@ class Meson(PythonPackage):
     patch("python-3.12-support.patch", when="@1.1:1.2.2")
 
     patch(
-        "https://github.com/matz-e/meson/commit/1c36fe4fb5e579aeb983194ec49bd71949249bd2.patch",
+        "https://github.com/matz-e/meson/commit/1c36fe4fb5e579aeb983194ec49bd71949249bd2.patch?full_index=1",
         sha256="ad980fa5cfaccc8fe69f978ec33ae186dd6200b21bf8ca91ee95d2b37abce6bf",
         when="@1.2.2",
     )
