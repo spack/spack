@@ -134,8 +134,7 @@ def get_compiler_config_from_packages(scope=None):
         return packages
 
     for name, entry in config.items():
-        if (name not in supported_compilers() and
-            name not in package_name_to_compiler_name.keys()):
+        if name not in supported_compilers() and name not in package_name_to_compiler_name.keys():
             continue
         packages.extend(_compiler_config_from_package_config(entry))
 
