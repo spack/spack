@@ -64,8 +64,9 @@ class {class_name}({base_class_name}):
     # maintainers("github_user1", "github_user2")
 
     # FIXME: Add the SPDX identifier of the project's license below.
-    # See https://spdx.org/licenses/ for a list.
-    license("UNKNOWN")
+    # See https://spdx.org/licenses/ for a list. Upon manually verifying
+    # the license, set checked_by to your Github username.
+    license("UNKNOWN", checked_by="github_user1")
 
 {versions}
 
