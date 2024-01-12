@@ -37,6 +37,7 @@ class BigdftCore(AutotoolsPackage, CudaPackage):
     depends_on("lapack")
     depends_on("py-pyyaml")
     depends_on("libgain")
+    depends_on("libgain+shared", when="+shared")
     depends_on("mpi", when="+mpi")
     depends_on("scalapack", when="+scalapack")
     depends_on("openbabel", when="+openbabel")
