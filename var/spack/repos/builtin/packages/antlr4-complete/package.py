@@ -3,12 +3,16 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import glob
+
+from spack.package import *
+
 
 class Antlr4Complete(Package):
     """
-    This package provides complete ANTLR tool, Java runtime and ST, which lets you run the tool and the generated code by version 4 of ANTLR (ANother Tool for Language Recognition).
+    This package provides complete ANTLR tool, Java runtime and ST,
+    which lets you run the tool and the generated code by
+    version 4 of ANTLR (ANother Tool for Language Recognition).
     """
 
     homepage = "https://www.antlr.org"
