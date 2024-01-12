@@ -5,6 +5,7 @@
 
 import gzip
 import hashlib
+import os
 import pathlib
 import shutil
 import tarfile
@@ -33,7 +34,7 @@ def test_gzip_compressed_tarball_is_reproducible(tmpdir):
         (dir_a / "symlink_file").symlink_to("data")
         (dir_a / "symlink_dir").symlink_to(pathlib.Path("..", "b"))
         try:
-            (dir_a / "hardlink").hardlink_to(dir_a / "executable")
+            os.link(dir_a / "executable", dir_a / "hardlink")
             hardlink_support = True
         except OSError:
             hardlink_support = False
