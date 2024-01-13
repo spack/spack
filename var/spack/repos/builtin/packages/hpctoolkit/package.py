@@ -324,25 +324,20 @@ class Hpctoolkit(AutotoolsPackage):
         with working_dir("tests"):
             make("check")
 
-    # Post-Install tests (spack test run).  These are the same tests
-    # but with a different Makefile that works outside the build
-    # directory.
-    @run_after("install")
-    def copy_test_files(self):
-        if self.spec.satisfies("@2022:"):
-            self.cache_extra_test_sources(["tests"])
-
-    def test_run_sort(self):
+    def test_sort(self):
         """build and run selection sort unit test"""
-        if not self.spec.satisfies("@2022:"):
-            raise SkipTest("No tests exist for versions prior to 2022.01.15")
+        exe = "tst-sort"
+        cxx = which(os.environ["CXX"])
+        cxx(self.test_suite.current_test_data_dir.join("sort.cpp"), "-o", exe)
 
-        test_dir = self.test_suite.current_test_cache_dir.tests
-        with working_dir(test_dir):
-            make = which("make")
-            make("-f", "Makefile.spack", "all")
+        hpcrun = which("hpcrun")
+        meas = "tst-sort.m"
+        hpcrun("-e", "REALTIME@5000", "-t", "-o", meas, "./" + exe)
 
-            run_sort = which(join_path(".", "run-sort"))
-            assert run_sort, "run-sort is missing"
+        hpcstruct = which("hpcstruct")
+        struct = "tst-sort.hpcstruct"
+        hpcstruct("-j", "4", "--time", "-o", struct, "./" + exe)
 
-            run_sort()
+        hpcprof = which("hpcprof")
+        db = "tst-sort.d"
+        hpcprof("-S", struct, "-o", db, meas)
