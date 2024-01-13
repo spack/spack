@@ -6,11 +6,7 @@ spack:
   specs:
   - binutils
   - gcc +binutils ~bootstrap
-  view:
-    default:
-      root: /scratch/spack/bootstraps/stage1/.spack-env/view/
-      link: roots
-      exclude: ['gettext']
+  view: true
   packages:
     all:
       # set the sysroot for stage0 to the view because
@@ -20,3 +16,18 @@ spack:
     unify: true
     reuse: true
 
+  compilers:
+  - compiler:
+      spec: gcc@=12.3.0
+      paths:
+        cc: /usr/bin/gcc-12
+        cxx: /usr/bin/g++-12
+        f77: null
+        fc: null
+      flags: {}
+      # yes, this is a lie, but a useful lie
+      operating_system: ubuntu22.04
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []

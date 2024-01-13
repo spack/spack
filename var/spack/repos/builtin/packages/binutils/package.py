@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import glob
 import os
 import re
 
@@ -87,9 +88,9 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     )
 
     variant(
-        "sysroot",
-        default="off",
-        description="build a spack sysroot bootstrap compiler, value is the sysroot view path DO NOT USE unless you know what this means"
+        "stage0",
+        default=False,
+        description="build a spack sysroot bootstrap compiler, DO NOT USE unless you know what this means"
         )
     variant("plugins", default=True, description="enable plugins, needed for gold linker")
     # When you build ld.gold you automatically get ld, even when you add the
@@ -135,7 +136,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     # pkg-config is used to find zstd in gas/configure
     depends_on("pkgconfig", type="build")
     depends_on("zstd@1.4.0:", when="@2.40:")
-    depends_on("zlib-api", when="sysroot=off")
+    depends_on("zlib-api", when="~stage0")
 
     depends_on("diffutils", type="build")
     depends_on("gettext", when="+nls")
@@ -259,13 +260,21 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
             "--enable-pic",
             "--enable-targets={}".format(targets),
         ]
-        if self.spec.variants['sysroot'].value == "off":
+        # To avoid namespace collisions with Darwin/BSD system tools,
+        # prefix executables with "g", e.g., gar, gnm; see Homebrew
+        # https://github.com/Homebrew/homebrew-core/blob/master/Formula/binutils.rb
+        extra = "g" if self.spec.satisfies("platform=darwin") else ""
+        args.append(
+            f"--program-prefix={self.spec.target_triple}-{extra}",
+        )
+        if '~stage0' in self.spec:
             args.append("--with-system-zlib")
         else:
             # todo, if we want to support other kernels here
-            args.append("--with-sysroot={}".format(self.spec.variants["sysroot"].value))
+            args.append("--with-sysroot=/some/random/path")
             args.append('--with-lib-path=/lib')
-            args.append('--target={}-spack-linux-gnu'.format(self.spec.architecture.target.microarchitecture.family.name))
+            args.append(f'--target={self.spec.target_triple}')
+            args.append(f'--host={self.spec.host_triple}')
         args += self.enable_or_disable("gas")
         args += self.enable_or_disable("gold")
         args += self.enable_or_disable("gprofng")
@@ -290,11 +299,6 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
             args.append("--enable-compressed-debug-sections=all")
             args.append("--enable-default-compressed-debug-sections-algorithm=zstd")
 
-        # To avoid namespace collisions with Darwin/BSD system tools,
-        # prefix executables with "g", e.g., gar, gnm; see Homebrew
-        # https://github.com/Homebrew/homebrew-core/blob/master/Formula/binutils.rb
-        if self.spec.satisfies("platform=darwin"):
-            args.append("--program-prefix=g")
 
         return args
 
@@ -318,3 +322,22 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
             if "+nls" in self.spec and "intl" in self.spec["gettext"].libs.names:
                 flags.append("-lintl")
         return self.build_system_flags(name, flags)
+
+    @run_after("install")
+    def link_arch_prefixes(self):
+        """ensure unprefixed versions of all tools exist after building them"""
+        prefix = f"{self.spec.target_triple}-"
+        for f in glob.glob(f"{self.spec.prefix.bin}/{prefix}*"):
+            tgt = self.spec.prefix.bin.join("-".join(os.path.basename(f).split("-")[4:]))
+            if not os.path.exists(tgt):
+                symlink(f, tgt)
+        if self.spec.host_triple != self.spec.target_triple:
+            p = f"{self.spec.prefix}/{self.spec.host_triple}/{self.spec.target_triple}"
+            for f in glob.glob(f"{p}/lib/*"):
+                tgt = self.spec.prefix.lib.join(os.path.basename(f))
+                if not os.path.exists(tgt):
+                    symlink(f, tgt)
+            for f in glob.glob(f"{p}/include/*"):
+                tgt = self.spec.prefix.include.join(os.path.basename(f))
+                if not os.path.exists(tgt):
+                    symlink(f, tgt)

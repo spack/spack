@@ -810,6 +810,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     def configure_args(self):
         spec = self.spec
 
+        if self.spec.host_triple == self.spec.target_triple:
+            # Same, no need
+            target_prefix = ""
+        else:
+            target_prefix = self.spec.target_triple
         # Generic options to compile GCC
         options = [
             # Distributor options
@@ -818,18 +823,17 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             # Xcode 10 dropped 32-bit support
             "--disable-multilib",
             "--enable-languages={0}".format(",".join(spec.variants["languages"].value)),
+            # always add the program prefix then link to unprefixed so we don't have to
+            # deal with the semi-randomness of when they're added otherwise
+            f"--program-prefix={target_prefix}-",
+            f'--target={self.spec.target_triple}',
         ]
 
-
-        sysroot_target = '{}-spack-linux-gnu'.format(
-                self.spec.architecture.target.microarchitecture.family.name
-                )
         # Binutils
         if spec.satisfies("+binutils"):
-            if "+stage0" not in spec and "+stage1" not in self.spec:
-                binutils = spec["binutils"].prefix.bin
-            else:
-                binutils = spec["binutils"].prefix.join(sysroot_target).bin
+            binutils = spec["binutils"].prefix.bin
+            if not os.path.isfile(binutils.ld):
+                binutils = spec["binutils"].prefix.join(self.spec.target_triple).bin
             options.extend(
                 [
                     "--with-gnu-ld",
@@ -843,6 +847,12 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             # https://github.com/iains/gcc-12-branch/issues/22
             # https://github.com/iains/gcc-13-branch/issues/8
             options.append("--with-ld=/Library/Developer/CommandLineTools/usr/bin/ld-classic")
+
+        # enable_bootstrap
+        if spec.satisfies("+bootstrap"):
+            options.extend(["--enable-bootstrap"])
+        else:
+            options.extend(["--disable-bootstrap"])
 
         if self.spec.satisfies("os=spack"):
             # config.guess returns the host triple, e.g. "x86_64-pc-linux-gnu"
@@ -877,11 +887,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             # set up links to binutils, required for gcc to build this way
             if '+stage1' in self.spec:
                 guess = Executable("./config.guess")
-                targetguess = guess(output=str).rstrip("\n")
+                hostguess = guess(output=str).rstrip("\n")
                 options.extend([
-                    '--build=' + targetguess,
-                    '--target=' + sysroot_target,
-                    '--host=' + sysroot_target,
+                    '--build=' + hostguess,
+                    '--host=' + hostguess,
                     # NOTE(trws): without these two std::mutex will not exist in
                     # libstdc++
                     "--enable-long-long",
@@ -895,7 +904,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 options.extend([
                         "--without-headers",
                         "--with-newlib",
-                        "--with-sysroot=/some/nonexistent/path",
+                        "--with-build-sysroot=/some/nonexistent/path",
                         "--disable-shared",
                         "--disable-libstdcxx",
                         "--with-glibc-version=2.38",  # TODO: figure out how to fix this cycle
@@ -903,7 +912,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                                 ])
             options.extend(
                     [
-                     '--target=' + sysroot_target,
                         "--enable-default-pie",
                         "--enable-default-ssp",
                         "--disable-nls",
@@ -919,11 +927,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                     )
             if '+stage1' not in self.spec:
                 return options
-        else:
+        if "+stage0" in self.spec or '+stage1' in self.spec or self.spec.satisfies("os=spack"):
             options.extend([
-                '--build=' + sysroot_target,
-                '--target=' + sysroot_target,
-                '--host=' + sysroot_target,
                 "--enable-__cxa_atexit",
                 "--enable-nls",
                 # NOTE(trws): without these two std::mutex will not exist in
@@ -948,12 +953,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         # Enabling language "jit" requires --enable-host-shared.
         if "languages=jit" in spec:
             options.append("--enable-host-shared")
-
-        # enable_bootstrap
-        if spec.satisfies("+bootstrap"):
-            options.extend(["--enable-bootstrap"])
-        else:
-            options.extend(["--disable-bootstrap"])
 
         # Configure include and lib directories explicitly for these
         # dependencies since the short GCC option assumes that libraries
@@ -1022,14 +1021,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     def my_flag_handler(self, name, flags):
         if self.spec.satisfies("+stage1"):
             if name == "cxxflags":
-                sysroot_target = '{}-spack-linux-gnu'.format(
-                    self.spec.architecture.target.microarchitecture.family.name
-                )
                 cxx_inc_base = self.spec.prefix.include.join("c++").join(str(self.spec.version))
                 flags.append('-I')
                 flags.append(cxx_inc_base)
                 flags.append('-I')
-                flags.append(join_path(cxx_inc_base, sysroot_target))
+                flags.append(join_path(cxx_inc_base, self.spec.target_triple))
                 flags.append('-I')
                 flags.append(join_path(cxx_inc_base, "backward"))
             elif name == "ldflags":
@@ -1046,9 +1042,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     def bootstrap_libstdcxx(self):
         args = self.configure_args()
         lib_build_dir = join_path(self.build_directory, "libstdc++-v3")
-        sysroot_target = '{}-spack-linux-gnu'.format(
-                self.spec.architecture.target.microarchitecture.family.name
-                )
         mkdirp(lib_build_dir)
         with working_dir(lib_build_dir):
             cfg = Executable(join_path(self.stage.source_path, "libstdc++-v3", "configure"))
@@ -1142,22 +1135,17 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             for f in files:
                 with open(join_path(self.stage.source_path, "gcc", f)) as fo:
                     limits += fo.read()
-            sysroot_target = '{}-spack-linux-gnu'.format(
-                    self.spec.architecture.target.microarchitecture.family.name
-                    )
-            gcc = Executable(self.spec["gcc"].prefix.bin.join(sysroot_target+'-gcc'))
+            gcc = Executable(self.spec["gcc"].prefix.bin.join(self.spec.target_triple+'-gcc'))
             out_path = os.path.dirname(gcc('-print-libgcc-file-name', output=str).strip())
             with open(join_path(out_path, "include", "limits.h"), "+w") as fo:
                 fo.write(limits)
 
-    # @run_after("install")
-    # def link_arch_prefixes(self):
-    #     sysroot_target = '{}-spack-linux-gnu'.format(
-    #         self.spec.architecture.target.microarchitecture.family.name
-    #     )
-
-
-
+    @run_after("install")
+    def link_arch_prefixes(self):
+        """ensure unprefixed versions of all tools exist after building them"""
+        prefix = f"{self.spec.target_triple}-"
+        for f in glob.glob(f"{self.spec.prefix.bin}/{prefix}*"):
+            symlink(f, join_path(self.spec.prefix.bin, "-".join(os.path.basename(f).split("-")[4:])))
 
     @run_after("install")
     def write_rpath_specs(self):
@@ -1239,9 +1227,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                         # inserted into every call to the linker
                         out.write("%(link_libgcc_rpath) ")
                     if add_sysroot:
-                        # if line.startswith("*cpp_options:"):
-                        #     out.write("-isystem %(spack_sysroot)/include ")
-                        # this doesn't work, need to rewrite all the crt object paths
+                        # rewrite all the crt object paths
                         # instead of just build_environment to inject the appropriate stuff
                         if name == "link":
                             line = f'-L %(spack_glibc)/lib -rpath %(spack_glibc)/lib -L %(spack_libxcrypt)/lib -rpath %(spack_libxcrypt)/lib {line}'

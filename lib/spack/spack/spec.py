@@ -1727,6 +1727,42 @@ class Spec:
         return not self.name and not self.abstract_hash
 
     @property
+    def host_triple(self):
+        # this draws too much from the spec, rather than the host, but seems to work for
+        # now
+        p = self.platform
+        # TODO: actually get the libc
+        libc = "gnu"
+        o = self.os
+        family = platform.machine()
+        # this is complex to get right, maybe actually use config.guess?
+        if self.os not in ("spack", "darwin", "win32", "unknown"):
+            if family == "x86_64" or (re.match("i.*86", family)):
+                o = "pc"
+            else:
+                o = "unknown"
+        return f"{family}-{o}-{p}-{libc}"
+
+    @property
+    def target_triple(self):
+        p = self.platform
+        # TODO: actually get the libc
+        libc = "gnu"
+        if '+stage0' in self or '+stage1' in self:
+            # we are bootstrapping spack, it's the target
+            o = "spack"
+        else:
+            o = self.os
+        family = self.architecture.target.microarchitecture.family.name
+        # this is complex to get right, maybe actually use config.guess?
+        if o not in ("spack", "darwin", "win32"):
+            if family == "x86_64" or (re.match("i.*86", family)):
+                o = "pc"
+            else:
+                o = "unknown"
+        return f"{family}-{o}-{p}-{libc}"
+
+    @property
     def root(self):
         """Follow dependent links and find the root of this spec's DAG.
 
