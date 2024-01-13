@@ -2660,7 +2660,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
              manifest_dir: directory containing the manifest and lockfile
         """
         # TBD: Should this be the abspath?
-        manifest_dir = pathlib.Path(os.path.abspath(str(manifest_dir)))
+        manifest_dir = pathlib.Path(manifest_dir)
         lockfile = manifest_dir / lockfile_name
         with lockfile.open("r") as f:
             data = sjson.load(f)
