@@ -163,6 +163,13 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         default=False,
         description="build a spack bootstrap compiler, DO NOT USE unless you know what this means"
         )
+    variant(
+        "pgo",
+        default=False,
+        description="Build with profile-guided optimization (slow)",
+    )
+    # PGO runs tests, which requires `runtest` from dejagnu
+    depends_on("dejagnu", when="+pgo", type="build")
     # with when("+stage1"):
     #     # use in-tree gmp to avoid needing gettext, mpc and mpfr need gmp too
     #     resource(
@@ -814,7 +821,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             # Same, no need
             target_prefix = ""
         else:
-            target_prefix = self.spec.target_triple
+            target_prefix = self.spec.target_triple + "-"
         # Generic options to compile GCC
         options = [
             # Distributor options
@@ -825,9 +832,13 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             "--enable-languages={0}".format(",".join(spec.variants["languages"].value)),
             # always add the program prefix then link to unprefixed so we don't have to
             # deal with the semi-randomness of when they're added otherwise
-            f"--program-prefix={target_prefix}-",
+            f"--program-prefix={target_prefix}",
             f'--target={self.spec.target_triple}',
         ]
+        if "+pgo" in self.spec:
+            options.append("--enable-pgo-build=lto")
+        else:
+            options.append("--disable-pgo-build")
 
         # Binutils
         if spec.satisfies("+binutils"):
@@ -886,11 +897,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         if "+stage0" in self.spec or '+stage1' in self.spec:
             # set up links to binutils, required for gcc to build this way
             if '+stage1' in self.spec:
-                guess = Executable("./config.guess")
-                hostguess = guess(output=str).rstrip("\n")
                 options.extend([
-                    '--build=' + hostguess,
-                    '--host=' + hostguess,
+                    '--build=' + self.spec.host_triple,
+                    '--host=' + self.spec.target_triple,
                     # NOTE(trws): without these two std::mutex will not exist in
                     # libstdc++
                     "--enable-long-long",
@@ -927,15 +936,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                     )
             if '+stage1' not in self.spec:
                 return options
-        if "+stage0" in self.spec or '+stage1' in self.spec or self.spec.satisfies("os=spack"):
-            options.extend([
-                "--enable-__cxa_atexit",
-                "--enable-nls",
-                # NOTE(trws): without these two std::mutex will not exist in
-                # libstdc++
-                "--enable-long-long",
-                "--enable-threads=posix",
-            ])
 
         # Avoid excessive realpath/stat calls for every system header
         # by making -fno-canonical-system-headers the default.
@@ -1145,7 +1145,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         """ensure unprefixed versions of all tools exist after building them"""
         prefix = f"{self.spec.target_triple}-"
         for f in glob.glob(f"{self.spec.prefix.bin}/{prefix}*"):
-            symlink(f, join_path(self.spec.prefix.bin, "-".join(os.path.basename(f).split("-")[4:])))
+            tgt = join_path(self.spec.prefix.bin, "-".join(os.path.basename(f).split("-")[4:]))
+            if not os.path.exists(tgt):
+                symlink(f, tgt)
 
     @run_after("install")
     def write_rpath_specs(self):

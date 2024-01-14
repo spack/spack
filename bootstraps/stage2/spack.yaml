@@ -5,75 +5,20 @@
 spack:
   # add package specs to the `specs` list
   specs:
-  - glibc @2.38 %gcc@=13.2.0 arch=linux-spack-x86_64
-  # - binutils sysroot=/spack/stage2/nonexistant arch=linux-spack-x86_64
-  # - gcc@13.2.0 ~bootstrap ~graphite +binutils arch=linux-spack-x86_64
-  # - linux-headers arch=linux-spack-x86_64
+  - glibc %gcc@=13.2.0 arch=linux-spack-x86_64 ^linux-headers%gcc@12
+  - binutils %gcc@=13.2.0 arch=linux-spack-x86_64
+  - gcc@13.2.0 %gcc@=13.2.0 ~bootstrap ~graphite +binutils arch=linux-spack-x86_64
+  - gmp +stage1 arch=linux-spack-x86_64
+  # we have no C++ right now, disable
+  - berkeley-db ~cxx ~stl
+  - ncurses ~cxx
   view: true
   concretizer:
     unify: true
   packages:
-    # binutils:
-    #   externals:
-    #   - spec: binutils@2.41
-    #     prefix: /scratch/spack/bootstraps/stage1/.spack-env/view
-    pkg-config:
-      externals:
-      - spec: pkg-config@0.29.2
-        prefix: /scratch/spack/bootstraps/stage1/.spack-env/view
-    libtool:
-      externals:
-      - spec: libtool@2.4.6
-        prefix: /scratch/spack/bootstraps/stage1/.spack-env/view
-    autoconf:
-      externals:
-      - spec: autoconf@2.69
-        prefix: /scratch/spack/bootstraps/stage1/.spack-env/view
-    automake:
-      externals:
-      - spec: automake@1.16.5
-        prefix: /scratch/spack/bootstraps/stage1/.spack-env/view
-    diffutils:
-      externals:
-      - spec: diffutils@3.9
-        prefix: /scratch/spack/bootstraps/stage1/.spack-env/view
-    m4:
-      externals:
-      - spec: m4@1.4.19
-        prefix: /scratch/spack/bootstraps/stage1/.spack-env/view
-    sed:
-      externals:
-      - spec: sed@4.9
-        prefix: /scratch/spack/bootstraps/stage1/.spack-env/view
-    gawk:
-      externals:
-      - spec: gawk@5.2.2
-        prefix: /scratch/spack/bootstraps/stage1/.spack-env/view
-    bison:
-      externals:
-      - spec: bison@3.8.2
-        prefix: /scratch/spack/bootstraps/stage1/.spack-env/view
-    gmake:
-      externals:
-      - spec: gmake@4.4.1
-        prefix: /scratch/spack/bootstraps/stage1/.spack-env/view
-    perl:
-      externals:
-      - spec: perl@5.38.0+cpanm+opcode+open+shared+threads
-        prefix: /scratch/spack/bootstraps/stage1/.spack-env/view
-    python:
-      externals:
-      - spec: python@3.11.6+bz2+crypt+ctypes+dbm+lzma~nis+pyexpat+pythoncmd+readline+sqlite3+ssl~tkinter+uuid+zlib
-        prefix: /scratch/spack/bootstraps/stage1/.spack-env/view
-    texinfo:
-      externals:
-      - spec: texinfo@7.0.3
-        prefix: /scratch/spack/bootstraps/stage1/.spack-env/view
     all:
       target: [x86_64]
-      # set the sysroot for stage0 to the view because
-      # we can't know glibc's path yet
-      variants: sysroot=/spack/stage2/nonexistant +stage1 +binutils
+      variants: ~stage0 +stage1 ~docs ~doc +binutils
   compilers:
   - compiler:
       spec: gcc@=13.2.0
@@ -84,6 +29,20 @@ spack:
         fc: null
       flags: {}
       # note, cross-compiling
+      operating_system: spack
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: gcc@=12.3.0
+      paths:
+        cc: /usr/bin/gcc-12
+        cxx: /usr/bin/g++-12
+        f77: null
+        fc: null
+      flags: {}
+      # yes, this is a lie, but a useful lie
       operating_system: spack
       target: x86_64
       modules: []

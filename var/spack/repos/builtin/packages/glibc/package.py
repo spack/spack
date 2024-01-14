@@ -224,16 +224,13 @@ class Glibc(AutotoolsPackageNoDep, GNUMirrorPackageNoDep):
         depends_on("libtool", type="build")
 
     def configure_args(self):
-        sysroot_target = '{}-spack-linux-gnu'.format(
-                self.spec.architecture.target.microarchitecture.family.name
-                )
         return [
             "--enable-kernel=3.7.0",
             "--with-headers={}".format(self.spec["linux-headers"].prefix.include),
             "--without-selinux",
         ] + ([] if '+stage1' not in self.spec else [
-                '--host='+sysroot_target,
-                '--build=' + self.spec.architecture.target.microarchitecture.family.name +"-unknown-linux-gnu", # current target triple
+                '--host='+self.spec.target_triple,
+                '--build=' + self.spec.host_triple,
                 # 'libc_cv_slibdir='+self.spec.prefix.lib,
                 # 'rootsbindir='+self.spec.prefix.sbin,
                 ])
@@ -252,4 +249,43 @@ class Glibc(AutotoolsPackageNoDep, GNUMirrorPackageNoDep):
         if '+stage1' in self.spec:
             cp = which("cp")
             cp('-r', self.spec['linux-headers'].prefix.include, self.spec.prefix)
-
+    @run_after("install")
+    def install_locales(self):
+        if '+stage1' in self.spec:
+            ldef = Executable(self.prefix.bin.localedef, )
+            mkdirp(self.spec.prefix.lib.locale)
+            ldef("-i","POSIX","-f","UTF-8","C.UTF-8", fail_on_error=False)
+            ldef("-i","cs_CZ","-f","UTF-8","cs_CZ.UTF-8")
+            ldef("-i","de_DE","-f","ISO-8859-1","de_DE")
+            ldef("-i","de_DE@euro","-f","ISO-8859-15","de_DE@euro")
+            ldef("-i","de_DE","-f","UTF-8","de_DE.UTF-8")
+            ldef("-i","el_GR","-f","ISO-8859-7","el_GR")
+            ldef("-i","en_GB","-f","ISO-8859-1","en_GB")
+            ldef("-i","en_GB","-f","UTF-8","en_GB.UTF-8")
+            ldef("-i","en_HK","-f","ISO-8859-1","en_HK")
+            ldef("-i","en_PH","-f","ISO-8859-1","en_PH")
+            ldef("-i","en_US","-f","ISO-8859-1","en_US")
+            ldef("-i","en_US","-f","UTF-8","en_US.UTF-8")
+            ldef("-i","es_ES","-f","ISO-8859-15","es_ES@euro")
+            ldef("-i","es_MX","-f","ISO-8859-1","es_MX")
+            ldef("-i","fa_IR","-f","UTF-8","fa_IR")
+            ldef("-i","fr_FR","-f","ISO-8859-1","fr_FR")
+            ldef("-i","fr_FR@euro","-f","ISO-8859-15","fr_FR@euro")
+            ldef("-i","fr_FR","-f","UTF-8","fr_FR.UTF-8")
+            ldef("-i","is_IS","-f","ISO-8859-1","is_IS")
+            ldef("-i","is_IS","-f","UTF-8","is_IS.UTF-8")
+            ldef("-i","it_IT","-f","ISO-8859-1","it_IT")
+            ldef("-i","it_IT","-f","ISO-8859-15","it_IT@euro")
+            ldef("-i","it_IT","-f","UTF-8","it_IT.UTF-8")
+            ldef("-i","ja_JP","-f","EUC-JP","ja_JP")
+            ldef("-i","ja_JP","-f","SHIFT_JIS","ja_JP.SJIS", fail_on_error=False)
+            ldef("-i","ja_JP","-f","UTF-8","ja_JP.UTF-8")
+            ldef("-i","nl_NL@euro","-f","ISO-8859-15","nl_NL@euro")
+            ldef("-i","ru_RU","-f","KOI8-R","ru_RU.KOI8-R")
+            ldef("-i","ru_RU","-f","UTF-8","ru_RU.UTF-8")
+            ldef("-i","se_NO","-f","UTF-8","se_NO.UTF-8")
+            ldef("-i","ta_IN","-f","UTF-8","ta_IN.UTF-8")
+            ldef("-i","tr_TR","-f","UTF-8","tr_TR.UTF-8")
+            ldef("-i","zh_CN","-f","GB18030","zh_CN.GB18030")
+            ldef("-i","zh_HK","-f","BIG5-HKSCS","zh_HK.BIG5-HKSCS")
+            ldef("-i","zh_TW","-f","UTF-8","zh_TW.UTF-8")

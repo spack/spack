@@ -14,7 +14,6 @@ spack:
       variants: +stage0
   concretizer:
     unify: true
-    reuse: true
 
   compilers:
   - compiler:
@@ -25,7 +24,6 @@ spack:
         f77: null
         fc: null
       flags: {}
-      # yes, this is a lie, but a useful lie
       operating_system: ubuntu22.04
       target: x86_64
       modules: []

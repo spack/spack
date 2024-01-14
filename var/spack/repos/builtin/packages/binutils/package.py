@@ -264,8 +264,13 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
         # prefix executables with "g", e.g., gar, gnm; see Homebrew
         # https://github.com/Homebrew/homebrew-core/blob/master/Formula/binutils.rb
         extra = "g" if self.spec.satisfies("platform=darwin") else ""
+        if self.spec.host_triple == self.spec.target_triple:
+            # Same, no need
+            target_prefix = ""
+        else:
+            target_prefix = self.spec.target_triple + "-"
         args.append(
-            f"--program-prefix={self.spec.target_triple}-{extra}",
+            f"--program-prefix={target_prefix}{extra}",
         )
         if '~stage0' in self.spec:
             args.append("--with-system-zlib")
