@@ -5,7 +5,7 @@
 spack:
   # add package specs to the `specs` list
   specs:
-  - spackos-base /qbg
+  - spackos-base
   - binutils +gold +lto arch=linux-spack-x86_64
   - gcc +binutils +piclibs languages=c,c++,fortran,lto ~bootstrap arch=linux-spack-x86_64
   view: true
@@ -14,9 +14,7 @@ spack:
   packages:
     all:
       target: [x86_64]
-      # set the sysroot for stage0 to the view because
-      # we can't know glibc's path yet
-      variants: ~stage1 +binutils sysroot=off
+      variants: ~stage0 ~stage1 +binutils
   compilers:
   - compiler:
       spec: gcc@=13.2.0
@@ -31,10 +29,19 @@ spack:
       modules: []
       environment: {}
       extra_rpaths: []
+  - compiler:
+      spec: gcc@=12.3.0
+      paths:
+        cc: /usr/bin/gcc-12
+        cxx: /usr/bin/g++-12
+        f77: null
+        fc: null
+      flags: {}
+      # yes, this is a lie, but a useful lie
+      operating_system: spack
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
   mirrors:
-    oci:
-      url: oci://trws/spack-experimental
-      access_pair:
-      - trws
-      - dckr_pat_a6WLGdQOdBODb-oeLdyI6yvm9IU
     my: file:///scratch/spack/spack-cache

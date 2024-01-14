@@ -833,7 +833,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             # always add the program prefix then link to unprefixed so we don't have to
             # deal with the semi-randomness of when they're added otherwise
             f"--program-prefix={target_prefix}",
-            f'--target={self.spec.target_triple}',
         ]
         if "+pgo" in self.spec:
             options.append("--enable-pgo-build=lto")
@@ -899,6 +898,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             if '+stage1' in self.spec:
                 options.extend([
                     '--build=' + self.spec.host_triple,
+                    f'--target={self.spec.target_triple}',
                     '--host=' + self.spec.target_triple,
                     # NOTE(trws): without these two std::mutex will not exist in
                     # libstdc++
@@ -921,6 +921,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                                 ])
             options.extend(
                     [
+                        f'--target={self.spec.target_triple}',
                         "--enable-default-pie",
                         "--enable-default-ssp",
                         "--disable-nls",

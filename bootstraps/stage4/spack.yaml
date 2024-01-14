@@ -1,0 +1,71 @@
+# This is a Spack Environment file.
+#
+# It describes a set of packages to be installed, along with
+# configuration settings.
+spack:
+  # add package specs to the `specs` list
+  specs:
+  # glibc from stage3, must match the gcc built there or we get two mixed
+  # together, use hash
+  - glibc %gcc@=13.2.0 arch=linux-spack-x86_64 /3jt6
+  - binutils +gold +lto arch=linux-spack-x86_64
+  - gcc +binutils +piclibs languages=c,c++,fortran,lto ~bootstrap arch=linux-spack-x86_64
+  # base system
+  - m4 arch=linux-spack-x86_64
+  - ncurses arch=linux-spack-x86_64
+  - bash arch=linux-spack-x86_64
+  - coreutils arch=linux-spack-x86_64
+  - diffutils arch=linux-spack-x86_64
+  - file arch=linux-spack-x86_64
+  - findutils arch=linux-spack-x86_64
+  - gawk arch=linux-spack-x86_64
+  - grep arch=linux-spack-x86_64
+  - bzip2 arch=linux-spack-x86_64
+  - gzip arch=linux-spack-x86_64
+  - gmake arch=linux-spack-x86_64
+  - patch arch=linux-spack-x86_64
+  - sed arch=linux-spack-x86_64
+  - tar arch=linux-spack-x86_64
+  - xz arch=linux-spack-x86_64
+  - gettext arch=linux-spack-x86_64
+  - bison arch=linux-spack-x86_64
+  - perl arch=linux-spack-x86_64
+  # if building outside of spackos, python somehow grabs something out of the
+  # local include paths, build like this:
+  # bwrap --dev-bind / / --tmpfs /usr/local --tmpfs
+  # /usr/include/x86_64-linux-gnu spack install -v python
+  - python arch=linux-spack-x86_64
+  - texinfo arch=linux-spack-x86_64
+  - util-linux
+  # spack bootstrap, base requirements
+  - unzip arch=linux-spack-x86_64
+  - git arch=linux-spack-x86_64
+  # spack bootstrap doesn't work, install manually
+  - gnupg arch=linux-spack-x86_64
+  - patchelf arch=linux-spack-x86_64
+  - clingo arch=linux-spack-x86_64
+  view: true
+  concretizer:
+    unify: true
+  packages:
+    all:
+      target: [x86_64]
+      # set the sysroot for stage0 to the view because
+      # we can't know glibc's path yet
+      variants: ~stage0 ~stage1 +binutils +lto
+  compilers:
+  - compiler:
+      spec: gcc@=13.2.0
+      paths:
+        cc: /scratch/spack/bootstraps/stage3/.spack-env/view/bin/gcc
+        cxx: /scratch/spack/bootstraps/stage3/.spack-env/view/bin/g++
+        f77: null
+        fc: null
+      flags: {}
+      operating_system: spack
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+
+
