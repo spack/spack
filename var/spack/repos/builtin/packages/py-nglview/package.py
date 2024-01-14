@@ -10,16 +10,17 @@ class PyNglview(PythonPackage):
     """Jupyter widget to interactively view molecular structures and trajectories."""
 
     homepage = "http://nglviewer.org"
-    pypi = "nglview/nglview-3.1.1.tar.gz"
+    pypi = "nglview/nglview-3.0.8.tar.gz"
 
-    version("3.1.1", sha256="71c61a69c2d459ee93b40698fa54ad9cc793003d3dbbbb520e9a61975813c1cd")
+    maintainers("w8jcik")
 
-    depends_on("py-ipywidgets@8:", type="run")
+    version("3.0.8", sha256="f9e468cd813dac319cbeca6ae20ae099008ff3a06399f5d23d75582dde28623a")
+
+    depends_on("py-ipywidgets@7:", type="run")
     depends_on("py-jupyterlab-widgets", type="run")
     depends_on("py-numpy", type="run")
-    depends_on("py-notebook@7:", type="run")
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools@40.8.0:", type="build")
-    depends_on("py-jupyter-packaging@0.7:", type="build")
+    depends_on("py-jupyter-packaging@0.7", type="build")
     depends_on("py-versioneer", type="build")
