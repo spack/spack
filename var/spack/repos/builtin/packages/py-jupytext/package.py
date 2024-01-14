@@ -40,7 +40,7 @@ class PyJupytext(PythonPackage):
 
     # todo: in order to use jupytext as a jupyterlab extension,
     # some additional dependencies need to be added (and checked):
-    depends_on("py-jupyterlab@4:5", type=("build", "run"), when="@1.16:")
+    depends_on("py-jupyterlab@4", type=("build", "run"), when="@1.16:")
     depends_on("py-jupyterlab@3", type=("build", "run"), when="@:1.14")
     depends_on("py-hatch-jupyter-builder@0.5:", type=("build", "run"), when="@1.16:")
     depends_on("py-jupyter-packaging@0.7.9:0.7", type="build", when="@:1.14")
