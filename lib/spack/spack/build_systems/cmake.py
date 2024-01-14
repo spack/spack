@@ -145,6 +145,7 @@ def generator(*names: str, default: Optional[str] = None):
         default=default,
         values=_values,
         description="the build system generator to use",
+        when="build_system=cmake",
     )
     for x in not_used:
         conflicts(f"generator={x}")
