@@ -14,6 +14,8 @@ class PyBiobbGromacs(PythonPackage):
     homepage = "https://biobb-gromacs.readthedocs.io"
     pypi = "biobb_gromacs/biobb_gromacs-4.1.1.tar.gz"
 
+    maintainers("w8jcik")
+
     version("4.1.1", sha256="270cce747fc214471527438c8319bda0613be5b76da9f4684e6f138d1927d2f7")
 
     depends_on("py-biobb-common@4.1.0", type="run")
