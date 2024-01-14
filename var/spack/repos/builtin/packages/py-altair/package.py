@@ -32,13 +32,13 @@ class PyAltair(PythonPackage):
     depends_on("py-entrypoints", type=("build", "run"), when="@2.0.0:4")
 
     depends_on("py-hatchling", type=("build"), when="@5.0.0:")
-    depends_on("py-packaging", type=("build", "run"), when="@5.1.0:")
 
     depends_on("py-importlib-metadata", type=("build", "run"), when="@5.0.0:5.0")
     depends_on("py-typing-extensions@4.0.1:", type=("build", "run"), when="@5.0.0: ^python@:3.10")
+    depends_on("py-jinja2", type=("build", "run"))
     depends_on("py-jsonschema@3.0.0:", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-pandas@0.18:", type=("build", "run"))
     depends_on("py-pandas@0.25:", type=("build", "run"), when="@5.1.0:")
     depends_on("py-toolz", type=("build", "run"))
-    depends_on("py-jinja2", type=("build", "run"))
+    depends_on("py-packaging", type=("build", "run"), when="@5.1.0:")
