@@ -7,7 +7,7 @@ spack:
 
   packages:
     all:
-      require: '%gcc@11.4.0 target=neoverse_v1'
+      require: '%gcc@11.4.0 target=aarch64'
       providers:
         blas: [openblas]
         mpi: [mpich]
@@ -31,6 +31,8 @@ spack:
         +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
     xz:
       variants: +pic
+    mesa:
+      version: [21.3.8]
     mpi:
       require: mpich
     mpich:
@@ -327,7 +329,7 @@ spack:
   ci:
     pipeline-gen:
     - build-job:
-        image: "ghcr.io/spack/ubuntu20.04-runner-arm64-gcc-11.4:2023.08.01"
+        image: "ecpe4s/ubuntu22.04-runner-arm64-gcc-11.4:2024.01.01"
 
   cdash:
-    build-group: E4S ARM Neoverse V1
+    build-group: E4S ARM AARCH64
