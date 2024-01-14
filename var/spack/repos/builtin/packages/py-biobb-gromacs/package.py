@@ -7,7 +7,9 @@ from spack.package import *
 
 
 class PyBiobbGromacs(PythonPackage):
-    """Biobb module collection to perform molecular dynamics simulations using the GROMACS MD suite."""
+    """
+    Biobb module collection to perform molecular dynamics simulations using the GROMACS MD suite.
+    """
 
     homepage = "https://biobb-gromacs.readthedocs.io"
     pypi = "biobb_gromacs/biobb_gromacs-4.1.1.tar.gz"
