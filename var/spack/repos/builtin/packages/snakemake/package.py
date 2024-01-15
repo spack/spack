@@ -34,69 +34,59 @@ class Snakemake(PythonPackage):
     version("6.13.1", sha256="22f57dcd8b1ca8a30aaa45c5d2c0f56d381d4731abd0988f24f9de46b7d9827c")
     version("6.12.3", sha256="af86af9a540da3dceb05dad1040f1d3d733e6a695f8b3f8c30f8cf3bc6570a88")
 
-    # See https://github.com/snakemake/snakemake/blob/v7.30.2/setup.cfg#L34
-    depends_on("python@3.9:", type=("build", "run"), when="@7.30.2:7.31.1")
-    # See https://github.com/snakemake/snakemake/releases/tag/v7.31.1
-    depends_on("python@3.7:", type=("build", "run"), when="@7.31.1:7")
-    # See https://github.com/snakemake/snakemake/blob/v8.0.0/setup.cfg#L34
     depends_on("python@3.11:", type=("build", "run"), when="@8:")
+    depends_on("python@3.7:", type=("build", "run"), when="@7.31.1:7")
+    depends_on("python@3.9:", type=("build", "run"), when="@7.30.2:7.31.1")
 
-    depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-setuptools@42:", type=("build", "run"), when="@7:")
-
-    # See https://github.com/snakemake/snakemake/pull/2065
+    depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-tomli", type=("build"), when="@7.20.0: ^python@:3.10")
-    # See https://github.com/snakemake/snakemake/blob/v7.20.0/setup.cfg#L44
-    depends_on("py-humanfriendly", type=("build", "run"), when="@7.20.0:")
-    # See https://github.com/snakemake/snakemake/blob/v7.18.2/setup.py#L56
-    depends_on("py-wrapt", type=("build", "run"))
-    depends_on("py-requests", type=("build", "run"))
-    depends_on("py-throttler", type=("build", "run"), when="@7:")
-    depends_on("py-pyyaml", type=("build", "run"))
-    depends_on("py-configargparse", type=("build", "run"))
+    
     depends_on("py-appdirs", type=("build", "run"))
+    depends_on("py-configargparse", type=("build", "run"))
+    depends_on("py-connectionpool@0.0.3:", type=("build", "run"))
     depends_on("py-datrie", type=("build", "run"))
-    depends_on("py-jsonschema", type=("build", "run"))
     depends_on("py-docutils", type=("build", "run"))
     depends_on("py-gitpython", type=("build", "run"))
-    depends_on("py-psutil", type=("build", "run"))
+    depends_on("py-humanfriendly", type=("build", "run"), when="@7.20.0:")
+    depends_on("py-jinja2@3", type=("build", "run"), when="@7:")
+    depends_on("py-jsonschema", type=("build", "run"))
     depends_on("py-nbformat", type=("build", "run"))
-    # See https://github.com/snakemake/snakemake/blob/v7.24.0/setup.cfg#L57
-    depends_on("py-toposort@1.10:", type=("build", "run"), when="@7.24.0:")
-    depends_on("py-toposort", type=("build", "run"), when="@:7.23")
-    depends_on("py-connectionpool@0.0.3:", type=("build", "run"))
+    depends_on("py-packaging", type=("build", "run"), when="@7.29.0:")
+    depends_on("py-psutil", type=("build", "run"))
     depends_on("py-pulp@2:", type=("build", "run"))
+    depends_on("py-pyyaml", type=("build", "run"))
+    depends_on("py-requests", type=("build", "run"))
+    depends_on("py-reretry", type=("build", "run"), when="@7:")
     depends_on("py-smart-open@3:", type=("build", "run"))
-    depends_on("py-filelock", type=("build", "run"), when="@:6")
     depends_on("py-stopit", type=("build", "run"))
     depends_on("py-tabulate", type=("build", "run"))
-    depends_on("py-ratelimiter", type=("build", "run"), when="@:6")
-    # See https://github.com/snakemake/snakemake/blob/v7.28.1/setup.cfg#L59
+    depends_on("py-throttler", type=("build", "run"), when="@7:")
+    depends_on("py-toposort@1.10:", type=("build", "run"), when="@7.24.0:")
+    depends_on("py-toposort", type=("build", "run"), when="@:7.23")
+    depends_on("py-wrapt", type=("build", "run"))
     depends_on("py-yte@1.5.1:1", type=("build", "run"), when="@7.28.1:")
     depends_on("py-yte@1", type=("build", "run"), when="@7:7.28.0")
-    depends_on("py-jinja2@3", type=("build", "run"), when="@7:")
-    depends_on("py-reretry", type=("build", "run"), when="@7:")
-    # See https://github.com/snakemake/snakemake/blob/v7.28.0/setup.cfg#L60
-    depends_on("py-msrest", type=("build", "run"), when="@7.28.0")
-    # See https://github.com/snakemake/snakemake/blob/v7.29.0/setup.cfg#L48
-    depends_on("py-packaging", type=("build", "run"), when="@7.29.0:")
 
     variant("reports", default=False, description="Generate self-contained HTML reports")
+
     with when("+reports"):
-        depends_on("py-jinja2", type=("build", "run"), when="@:7.19.1")
         depends_on("py-pygments", type=("build", "run"))
-        # https://github.com/snakemake/snakemake/pull/1470
+        # Historical dependencies
+        depends_on("py-jinja2", type=("build", "run"), when="@:7.19.1")
         depends_on("py-networkx", type=("build", "run"), when="@:7.1.1")
         depends_on("py-pygraphviz", type=("build", "run"), when="@:7.1.1")
 
     variant("google-cloud", default=False, description="Enable Google Cloud execution")
+
     with when("+google-cloud"):
-        depends_on("py-oauth2client", type=("build", "run"))
-        depends_on("py-google-crc32c", type=("build", "run"))
         depends_on("py-google-api-python-client", type=("build", "run"))
         depends_on("py-google-cloud-storage", type=("build", "run"))
+        depends_on("py-google-crc32c", type=("build", "run"))
+        depends_on("py-oauth2client", type=("build", "run"))
 
     variant("azure", default=False, description="Enable Azure execution", when="@7.28.0:")
+
     with when("+azure"):
         depends_on("py-azure-storage-blob", type=("build", "run"))
         depends_on("py-azure-batch", type=("build", "run"))
@@ -104,8 +94,14 @@ class Snakemake(PythonPackage):
         depends_on("py-azure-identity", type=("build", "run"))
         depends_on("py-azure-mgmt-batch", type=("build", "run"))
 
+    # Historical dependencies
+    depends_on("py-msrest", type=("build", "run"), when="@7.28.0")
+    depends_on("py-filelock", type=("build", "run"), when="@:6")
+    depends_on("py-ratelimiter", type=("build", "run"), when="@:6")
+
     # These variants are not in PyPI/pip, but they are undocumented dependencies
     # needed to make certain parts of Snakemake work.
+
     variant("ftp", default=False, description="Enable snakemake.remote.FTP")
     depends_on("py-ftputil", when="+ftp", type=("build", "run"))
 
