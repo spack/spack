@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,11 @@ class PyFsspec(PythonPackage):
 
     homepage = "https://github.com/intake/filesystem_spec"
     pypi = "fsspec/fsspec-0.4.4.tar.gz"
+
+    license("BSD-3-Clause")
+
+    # Requires pytest
+    skip_modules = ["fsspec.tests"]
 
     version("2023.10.0", sha256="330c66757591df346ad3091a53bd907e15348c2ba17d63fd54f5c39c4457d2a5")
     version("2023.1.0", sha256="fbae7f20ff801eb5f7d0bedf81f25c787c0dfac5e982d98fa3884a9cde2b5411")

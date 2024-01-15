@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class IscDhcp(AutotoolsPackage):
     list_depth = 1
 
     parallel = False
+
+    license("MPL-2.0")
 
     version("4.4.2", sha256="1a7ccd64a16e5e68f7b5e0f527fd07240a2892ea53fe245620f4f5f607004521")
     version("4.4.1", sha256="2a22508922ab367b4af4664a0472dc220cc9603482cf3c16d9aff14f3a76b608")

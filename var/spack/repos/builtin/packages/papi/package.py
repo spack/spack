@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,6 +29,8 @@ class Papi(AutotoolsPackage, ROCmPackage):
 
     url = "https://icl.utk.edu/projects/papi/downloads/papi-5.4.1.tar.gz"
     git = "https://github.com/icl-utk-edu/papi"
+
+    license("BSD-3-Clause")
 
     version("master", branch="master")
     version("7.1.0", sha256="950d0e997e9e908f58c103efd54983e905b6cffa75ef52ed8fdd1ab441977bb6")
@@ -82,6 +84,8 @@ class Papi(AutotoolsPackage, ROCmPackage):
         sha256="64c57b3ad4026255238cc495df6abfacc41de391a0af497c27d0ac819444a1f8",
         when="@5.4.0:5.6%gcc@8:",
     )
+    # 7.1.0 erroneously adds -ffree-form for all fortran compilers
+    patch("sysdetect-free-form-fix.patch", when="@7.1.0")
     patch("crayftn-fixes.patch", when="@6.0.0:%cce@9:")
     patch("intel-oneapi-compiler-fixes.patch", when="@6.0.0:%oneapi")
     patch("intel-cray-freeform.patch", when="@7.0.1")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class PyTorchvision(PythonPackage):
     git = "https://github.com/pytorch/vision.git"
 
     maintainers("adamjstewart")
+
+    license("BSD-3-Clause")
 
     version("main", branch="main")
     version("0.16.2", sha256="8c1f2951e98d8ada6e5a468f179af4be9f56d2ebc3ab057af873da61669806d7")
@@ -45,8 +47,8 @@ class PyTorchvision(PythonPackage):
     version("0.5.0", sha256="eb9afc93df3d174d975ee0914057a9522f5272310b4d56c150b955c287a4d74d")
 
     desc = "Enable support for native encoding/decoding of {} formats in torchvision.io"
-    variant("png", default=False, description=desc.format("PNG"))
-    variant("jpeg", default=False, description=desc.format("JPEG"))
+    variant("png", default=True, description=desc.format("PNG"))
+    variant("jpeg", default=True, description=desc.format("JPEG"))
     variant("nvjpeg", default=False, description=desc.format("JPEG"))
     variant("ffmpeg", default=False, description=desc.format("FFMPEG"))
     variant("video_codec", default=False, description=desc.format("video_codec"))

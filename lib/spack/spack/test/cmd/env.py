@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -2956,7 +2956,9 @@ def test_query_develop_specs(tmpdir):
 )
 def test_activation_and_deactiviation_ambiguities(method, env, no_env, env_dir, capsys):
     """spack [-e x | -E | -D x/]  env [activate | deactivate] y are ambiguous"""
-    args = Namespace(shell="sh", activate_env="a", env=env, no_env=no_env, env_dir=env_dir)
+    args = Namespace(
+        shell="sh", env_name="a", env=env, no_env=no_env, env_dir=env_dir, keep_relative=False
+    )
     with pytest.raises(SystemExit):
         method(args)
     _, err = capsys.readouterr()
@@ -2995,6 +2997,34 @@ def test_activate_temp(monkeypatch, tmpdir):
     active_env_var = next(line for line in shell.splitlines() if ev.spack_env_var in line)
     assert str(tmpdir) in active_env_var
     assert ev.is_env_dir(str(tmpdir))
+
+
+@pytest.mark.parametrize(
+    "conflict_arg", [["--dir"], ["--keep-relative"], ["--with-view", "foo"], ["env"]]
+)
+def test_activate_parser_conflicts_with_temp(conflict_arg):
+    with pytest.raises(SpackCommandError):
+        env("activate", "--sh", "--temp", *conflict_arg)
+
+
+def test_create_and_activate_managed(tmp_path):
+    with fs.working_dir(str(tmp_path)):
+        shell = env("activate", "--without-view", "--create", "--sh", "foo")
+        active_env_var = next(line for line in shell.splitlines() if ev.spack_env_var in line)
+        assert str(tmp_path) in active_env_var
+        active_ev = ev.active_environment()
+        assert "foo" == active_ev.name
+        env("deactivate")
+
+
+def test_create_and_activate_unmanaged(tmp_path):
+    with fs.working_dir(str(tmp_path)):
+        env_dir = os.path.join(str(tmp_path), "foo")
+        shell = env("activate", "--without-view", "--create", "--sh", "-d", env_dir)
+        active_env_var = next(line for line in shell.splitlines() if ev.spack_env_var in line)
+        assert str(env_dir) in active_env_var
+        assert ev.is_env_dir(env_dir)
+        env("deactivate")
 
 
 def test_activate_default(monkeypatch):

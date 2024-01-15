@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class PyMaestrowf(PythonPackage):
     tags = ["radiuss"]
 
     maintainers("FrankD412")
+
+    license("MIT")
 
     # git branches
     version("develop", branch="develop")

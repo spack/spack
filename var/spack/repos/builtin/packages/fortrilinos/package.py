@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,8 @@ class Fortrilinos(CMakePackage):
 
     tags = ["e4s"]
     test_requires_compiler = True
+
+    license("BSD-3-Clause")
 
     version("2.3.0", sha256="7be5efecaea61ad773d3fe182aa28735ebc3e7af821e1805ad284e4ed4e31a49")
     version("2.2.0", sha256="9e73fc71066bfaf7cde040e1467baf7a1ec797ff2874add49f9741e93f9fffb5")

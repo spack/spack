@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyTorchaudio(PythonPackage):
     homepage = "https://github.com/pytorch/audio"
     git = "https://github.com/pytorch/audio.git"
     submodules = True
+
+    license("BSD-2-Clause")
 
     version("main", branch="main")
     version("2.1.2", tag="v2.1.2", commit="c4c1957d24b423200fd83591d46066135979a5a8")

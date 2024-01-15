@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Duckdb(CMakePackage):
     homepage = "https://duckdb.org"
     url = "https://github.com/duckdb/duckdb/archive/refs/tags/v0.8.1.tar.gz"
     git = "https://github.com/duckdb/duckdb.git"
+
+    license("MIT")
 
     version("master", branch="master")
     version("0.8.1", sha256="a0674f7e320dc7ebcf51990d7fc1c0e7f7b2c335c08f5953702b5285e6c30694")

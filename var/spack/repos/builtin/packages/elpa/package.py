@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
     homepage = "https://elpa.mpcdf.mpg.de/"
     url = "https://elpa.mpcdf.mpg.de/software/tarball-archive/Releases/2015.11.001/elpa-2015.11.001.tar.gz"
     git = "https://gitlab.mpcdf.mpg.de/elpa/elpa.git"
+
+    license("LGPL-3.0-only")
 
     version("master", branch="master")
 

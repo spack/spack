@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Costa(CMakePackage):
     maintainers("haampie", "kabicm", "RMeli", "mtaillefumier")
     homepage = "https://github.com/eth-cscs/COSTA"
     git = "https://github.com/eth-cscs/COSTA.git"
+
+    license("BSD-3-Clause")
 
     # note: The default archives produced with github do not have the archives
     #       of the submodules.

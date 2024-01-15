@@ -59,6 +59,11 @@ default:
     SPACK_TARGET_PLATFORM: "linux"
     SPACK_TARGET_ARCH: "neoverse_v1"
 
+.linux_neoverse_v2:
+  variables:
+    SPACK_TARGET_PLATFORM: "linux"
+    SPACK_TARGET_ARCH: "neoverse_v2"
+
 .linux_aarch64:
   variables:
     SPACK_TARGET_PLATFORM: "linux"
@@ -136,6 +141,8 @@ default:
     - uname -a || true
     - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
     - nproc || true
+    - cat /proc/loadavg || true
+    - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
     - . "./share/spack/setup-env.sh"
     - spack --version
     - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
@@ -167,6 +174,7 @@ default:
       --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
   after_script:
     - cat /proc/loadavg || true
+    - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
   artifacts:
     paths:
       - "${CI_PROJECT_DIR}/jobs_scratch_dir"
@@ -206,6 +214,8 @@ default:
     - uname -a || true
     - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
     - nproc || true
+    - cat /proc/loadavg || true
+    - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
     - . "./share/spack/setup-env.sh"
     - spack --version
     - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
@@ -217,6 +227,7 @@ default:
       --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
   after_script:
     - cat /proc/loadavg || true
+    - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
   artifacts:
     paths:
       - "${CI_PROJECT_DIR}/jobs_scratch_dir"
@@ -327,6 +338,29 @@ e4s-build:
   needs:
     - artifacts: True
       job: e4s-generate
+
+########################################
+# E4S aarch64 pipeline
+########################################
+.e4s-aarch64:
+  extends: [ ".linux_aarch64" ]
+  variables:
+    SPACK_CI_STACK_NAME: e4s-aarch64
+
+e4s-aarch64-generate:
+  extends: [ ".e4s-aarch64", ".generate-aarch64" ]
+  image: ecpe4s/ubuntu22.04-runner-arm64-gcc-11.4:2024.01.01
+
+e4s-aarch64-build:
+  extends: [ ".e4s-aarch64", ".build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-aarch64-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-aarch64-generate
 
 ########################################
 # E4S Neoverse V1 pipeline

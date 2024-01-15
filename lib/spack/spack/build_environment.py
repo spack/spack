@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1338,7 +1338,7 @@ def get_package_context(traceback, context=3):
             # don't provide context if the code is actually in the base classes.
             obj = frame.f_locals["self"]
             func = getattr(obj, tb.tb_frame.f_code.co_name, "")
-            if func:
+            if func and hasattr(func, "__qualname__"):
                 typename, *_ = func.__qualname__.partition(".")
                 if isinstance(obj, CONTEXT_BASES) and typename not in basenames:
                     break

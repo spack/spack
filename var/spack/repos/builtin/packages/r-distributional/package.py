@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class RDistributional(RPackage):
     variances, intervals, and highest density regions."""
 
     cran = "distributional"
+
+    license("GPL-3.0-only")
 
     version("0.3.2", sha256="c883d633398233aee5a8ca6b587687f765bdfe0732a84e4961e7f71ac0d008f8")
     version("0.3.1", sha256="727e56cbcf0c8a8adacca8030214ddbd14f68ee28d0aad716467bd68b027235f")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Minimap2(PythonPackage):
     homepage = "https://github.com/lh3/minimap2"
     url = "https://github.com/lh3/minimap2/releases/download/v2.2/minimap2-2.2.tar.bz2"
     git = "https://github.com/lh3/minimap2.git"
+
+    license("MIT")
 
     version("2.26", sha256="6a588efbd273bff4f4808d5190957c50272833d2daeb4407ccf4c1b78143624c")
     version("2.24", sha256="9dd4c31ff082182948944bcdad6d328f64f09295d10547d72eba24189880a615")

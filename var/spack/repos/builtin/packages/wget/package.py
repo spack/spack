@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Wget(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org/software/wget/"
     gnu_mirror_path = "wget/wget-1.19.1.tar.gz"
+
+    license("GPL-3.0-or-later WITH OpenSSL-Exception")
 
     version("1.21.3", sha256="5726bb8bc5ca0f6dc7110f6416e4bb7019e2d2ff5bf93d1ca2ffcc6656f220e5")
     version("1.21.2", sha256="e6d4c76be82c676dd7e8c61a29b2ac8510ae108a810b5d1d18fc9a1d2c9a2497")

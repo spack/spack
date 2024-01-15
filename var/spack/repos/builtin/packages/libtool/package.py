@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Libtool(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org/software/libtool/"
     gnu_mirror_path = "libtool/libtool-2.4.6.tar.gz"
+
+    license("LGPL-2.0-or-later AND GPL-2.0-or-later")
 
     version(
         "develop",

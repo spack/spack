@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class PyPyamg(PythonPackage):
 
     # A list of GitHub accounts to notify when the package is updated.
     maintainers("benc303")
+
+    license("MIT")
 
     version("5.0.0", sha256="088be4b38203e708905fa45295593c1336b127a28391486d4f5917cf0b96f5f2")
     version("4.2.3", sha256="dcf23808e0e8edf177fc4f71a6b36e0823ffb117137a33a9eee14b391ddbb733")

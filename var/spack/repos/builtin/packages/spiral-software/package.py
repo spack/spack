@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class SpiralSoftware(CMakePackage):
     git = "https://github.com/spiral-software/spiral-software.git"
 
     maintainers("spiralgen")
+
+    license("BSD-2-Clause-FreeBSD")
 
     version("develop", branch="develop")
     version("master", branch="master")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Spla(CMakePackage):
     git = "https://github.com/eth-cscs/spla.git"
 
     maintainers("AdhocMan", "haampie")
+
+    license("BSD-3-Clause")
 
     version("1.5.5", sha256="bc0c366e228344b1b2df55b9ce750d73c1165380e512da5a04d471db126d66ce")
     version("1.5.4", sha256="de30e427d24c741e2e4fcae3d7668162056ac2574afed6522c0bb49d6f1d0f79")
