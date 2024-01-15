@@ -41,7 +41,9 @@ class Libxcrypt(AutotoolsPackageNoDep):
         when="@4.4.30:",
     )
     variant("stage1", default=False)
-    depends_on("glibc", when="+stage1")
+    depends_on("glibc+stage1", when="+stage1")
+    depends_on("glibc~stage1", when="~stage1")
+    depends_on("glibc", when="os=spack")
 
     patch("truncating-conversion.patch", when="@4.4.30")
 
