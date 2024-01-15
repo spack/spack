@@ -40,26 +40,6 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     version("8.2", sha256="2e24768720efed1a5a4a58e83e2aca502cd8b95544c21695eb0de71ed652f20a")
     version("8.1", sha256="7f37aead120730234a60b2989d0547ae5e5498d93b1e9b5eb548c041ee8e7772")
     version("7.1", sha256="ccd711a09a426145440e666310dd01cc5772ab103493c4ae6a3470898cd0addb")
-    version(
-        "6.1",
-        sha256="af803558e0a6b9e9d9ce8a3ab955ba32bacd179922455424e061c82c9fefa34b",
-        deprecated=True,
-    )
-    version(
-        "5.1",
-        sha256="e23613b593354fa82e0b8410e17d94c607a0b8c6d9b5d843528403ab09904412",
-        deprecated=True,
-    )
-    version(
-        "4.1",
-        sha256="4a3e4a101d8a35ebd80a9e9ecb02697fb8256364f1eccdbe4e5a85d31fe21343",
-        deprecated=True,
-    )
-    version(
-        "3.0",
-        sha256="1acfacef643141045b7cbade7006f9b7538476d861eeecd9658c9e468dc61151",
-        deprecated=True,
-    )
     version("master", branch="master", submodules="True")
 
     variant("mpi", default=True, description="Enable MPI support")
@@ -84,7 +64,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         "elpa",
         default=False,
         description="Enable optimised diagonalisation routines from ELPA",
-        when="@6.1:",
+        when="@7.1:",
     )
     variant(
         "dlaf",
@@ -110,8 +90,10 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         description="Use SPLA off-loading functionality. Only relevant when CUDA or ROCM"
         " are enabled",
     )
-    variant("pytorch", default=False, description="Enable libtorch support")
-    variant("quip", default=False, description="Enable quip support")
+    variant(
+        "pytorch", default=False, description="Enable libtorch support", when="build_system=cmake"
+    )
+    # variant("quip", default=False, description="Enable quip support")
     variant("mpi_f08", default=False, description="Use MPI F08 module")
 
     variant(
@@ -185,9 +167,8 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
 
     with when("+libint"):
         # ... and in CP2K 7.0+ for linking to libint2
-        depends_on("pkgconfig", type="build", when="@7.0:")
+        depends_on("pkgconfig", type="build")
         # libint & libxc are always statically linked
-        depends_on("libint@1.1.4:1.2", when="@3.0:6.9")
         for lmax in HFX_LMAX_RANGE:
             # libint2 can be linked dynamically again
             depends_on(
@@ -197,8 +178,6 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
 
     with when("+libxc"):
         depends_on("pkgconfig", when="@7.0:")
-        depends_on("libxc@2.2.2:3", when="@:5")
-        depends_on("libxc@4.0.3:4", when="@6.0:6.9")
         depends_on("libxc@4.0.3:4", when="@7.0:8.1")
         depends_on("libxc@5.1.3:5.1", when="@8.2:8")
         depends_on("libxc@5.1.7:5.1", when="@9:2022.2")
@@ -218,7 +197,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         conflicts("~mpi_f08", when="^mpich@4.1:")
 
     with when("+cosma"):
-        depends_on("cosma+scalapack")
+        depends_on("cosma+scalapack+shared")
         depends_on("cosma@2.5.1:", when="@9:")
         depends_on("cosma@2.6.3:", when="@2023.2:")
         depends_on("cosma+cuda", when="+cuda")
@@ -239,6 +218,11 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         depends_on("elpa@2021.11.001:", when="@9.1:")
         depends_on("elpa@2023.05.001:", when="@2023.2:")
 
+    with when("+pytorch"):
+        depends_on("py-torch", when="build_system=cmake")
+        depends_on("py-torch+cuda", when="+cuda")
+        depends_on("py-torch+rocm", when="+rocm")
+
     with when("+dlaf"):
         conflicts(
             "~mpi", msg="DLA-Future requires MPI. Only the distributed eigensolver is available."
@@ -258,8 +242,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     # dynamically, therefore can't set this as pure build-type dependency.
     with when("+pexsi"):
         conflicts("~mpi", msg="pexsi requires MPI")
-        depends_on("pexsi+fortran@0.9.0:0.9", when="@:4")
-        depends_on("pexsi+fortran@0.10.0:", when="@5.0:")
+        depends_on("pexsi+fortran@0.10.0:", when="@7.1:")
 
     # only OpenMP should be consistently used, all other common things
     # like ELPA, SCALAPACK are independent and Spack will ensure that
@@ -278,8 +261,11 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         conflicts("~mpi", msg="SIRIUS requires MPI")
         # sirius support was introduced in 7, but effectively usable starting from CP2K 9
         conflicts("@:8")
+        # needed to process the input files
+        conflicts("~libxc")
 
     with when("+libvori"):
+        depends_on("libvori+pic", when="@2023.1:")
         depends_on("libvori@201219:", when="@8.1")
         depends_on("libvori@210412:", when="@8.2:")
         depends_on("libvori@220621:", when="@2023.1:")
@@ -294,11 +280,6 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
 
     depends_on("spglib", when="+spglib")
 
-    # Apparently cp2k@4.1 needs an "experimental" version of libwannier.a
-    # which is only available contacting the developer directly. See INSTALL
-    # in the stage of cp2k@4.1
-    depends_on("wannier90", when="@3.0+mpi")
-
     with when("build_system=cmake"):
         depends_on("cmake@3.22:", type="build")
 
@@ -309,8 +290,8 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         depends_on("dbcsr+rocm", when="+rocm")
 
     with when("@2022: +rocm"):
-        depends_on("hipblas")
-        depends_on("hipfft")
+        depends_on("hipblas+rocm~cuda")
+        depends_on("hipfft+rocm~cuda")
 
     # CP2K needs compiler specific compilation flags, e.g. optflags
     conflicts("%apple-clang")
@@ -329,7 +310,16 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     # versions. Instead just mark all unsupported cuda archs as conflicting.
 
     supported_cuda_arch_list = ("35", "37", "60", "70", "80")
-    supported_rocm_arch_list = ("gfx906", "gfx908", "gfx90a", "gfx90a:xnack-", "gfx90a:xnack+")
+    supported_rocm_arch_list = (
+        "gfx906",
+        "gfx908",
+        "gfx90a",
+        "gfx90a:xnack-",
+        "gfx90a:xnack+",
+        "gfx1103",
+        "gfx1103:xnack-",
+        "gfx1103:xnack+",
+    )
     gpu_map = {
         "35": "K40",
         "37": "K80",
@@ -341,23 +331,25 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         "gfx90a": "Mi250",
         "gfx90a:xnack-": "Mi250",
         "gfx90a:xnack+": "Mi250",
+        "gfx1103:xnack+": "Mi300",
+        "gfx1103:xnack-": "Mi300",
+        "gfx1103": "Mi300",
     }
-    cuda_msg = "cp2k only supports cuda_arch {0}".format(supported_cuda_arch_list)
-    rocm_msg = "cp2k only supports amdgpu_target {0}".format(supported_rocm_arch_list)
 
-    conflicts("+cuda", when="cuda_arch=none")
+    # check that GPU architectures are supported by cp2k and forward this to the dependencies.
+    arch = ""
+    with when("+cuda"):
+        arch = "cuda_arch=" + cuda_arch()
 
     # ROCm already emits an error if +rocm amdgpu_target=none is given
-
-    with when("+cuda"):
-        for arch in CudaPackage.cuda_arch_values:
-            if arch not in supported_cuda_arch_list:
-                conflicts("+cuda", when="cuda_arch={0}".format(arch), msg=cuda_msg)
-
     with when("+rocm"):
-        for arch in ROCmPackage.amdgpu_targets:
-            if arch not in supported_rocm_arch_list:
-                conflicts("+rocm", when="amdgpu_target={0}".format(arch), msg=rocm_msg)
+        arch = "amdgpu_target=" + amdgpu_arch()
+
+    with when("+cuda") or when("+rocm"):
+        depends_on("dla-future {0}".format(arch), when="+dlaf {0}".format(arch))
+        depends_on("sirius {0}".format(arch), when="+sirius {0}".format(arch))
+        depends_on("dbcsr {0}".format(arch), when="{0}".format(arch))
+        depends_on("py-torch {0}".format(arch), when="+pytorch {0}".format(arch))
 
     # Fix 2- and 3-center integral calls to libint
     patch(
@@ -385,6 +377,42 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
 
     # Patch for an undefined constant due to incompatible changes in ELPA
     @when("@9.1:2022.2 +elpa")
+    @property
+    def cuda_arch(self):
+        supported_cuda_arch_list = ("35", "37", "60", "70", "80")
+        cuda_msg = "cp2k only supports cuda_arch {0}".format(supported_cuda_arch_list)
+
+        if (len(spec.variants["cuda_arch"].value[0]) > 1) or when("cuda_arch=none"):
+            raise InstallError("CP2K supports only one cuda_arch at a time.")
+
+        if spec.variants["cuda_arch"].value[0] not in supported_cuda_arch_list:
+            conflicts("+cuda", when="cuda_arch={0}".format(arch), msg=cuda_msg)
+
+        return spec.variants["cuda_arch"].value[0]
+
+    @property
+    def amdgpu_arch(self):
+        supported_rocm_arch_list = (
+            "gfx906",
+            "gfx908",
+            "gfx90a",
+            "gfx90a:xnack-",
+            "gfx90a:xnack+",
+            "gfx1103",
+            "gfx1103:xnack-",
+            "gfx1103:xnack+",
+        )
+
+        rocm_msg = "cp2k only supports amdgpu_target {0}".format(supported_rocm_arch_list)
+
+        if len(spec.variants["amdgpu_target"].value) > 1:
+            raise InstallError("CP2K supports only one amdgpu_target at a time.")
+
+        if spec.variants["amdgpu_target"].value[0] not in supported_rocm_arch_list:
+            conflicts("+rocm", when="amdgpu_target={0}".format(arch), msg=cuda_msg)
+
+        return spec.variants["amdgpu_target"].value[0]
+
     def patch(self):
         if self.spec["elpa"].satisfies("@2022.05.001:"):
             filter_file(
@@ -582,46 +610,20 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
             if "+mpi_f08" in spec:
                 cppflags.append("-D__MPI_F08")
 
-            if "wannier90" in spec:
-                cppflags.append("-D__WANNIER90")
-                wannier = join_path(spec["wannier90"].libs.directories[0], "libwannier.a")
-                libs.append(wannier)
-
         if "+libint" in spec:
             cppflags += ["-D__LIBINT"]
 
-            if "@:6.9" in spec:
-                cppflags += ["-D__LIBINT_MAX_AM=6", "-D__LIBDERIV_MAX_AM1=5"]
-
-                # libint-1.x.y has to be linked statically to work around
-                # inconsistencies in its Fortran interface definition
-                # (short-int vs int) which otherwise causes segfaults at
-                # runtime due to wrong offsets into the shared library
-                # symbols.
-                libs.extend(
-                    [
-                        join_path(spec["libint"].libs.directories[0], "libderiv.a"),
-                        join_path(spec["libint"].libs.directories[0], "libint.a"),
-                    ]
-                )
-            else:
-                fcflags += pkgconf("--cflags", "libint2", output=str).split()
-                libs += pkgconf("--libs", "libint2", output=str).split()
+        fcflags += pkgconf("--cflags", "libint2", output=str).split()
+        libs += pkgconf("--libs", "libint2", output=str).split()
 
         if "+libxc" in spec:
             cppflags += ["-D__LIBXC"]
 
-            if "@:6.9" in spec:
-                libxc = spec["libxc:fortran,static"]
-                cppflags += [libxc.headers.cpp_flags]
-                ldflags.append(libxc.libs.search_flags)
-                libs.append(str(libxc.libs))
-            else:
-                fcflags += pkgconf("--cflags", "libxcf03", output=str).split()
-                # some Fortran functions seem to be direct wrappers of the
-                # C functions such that we get a direct dependency on them,
-                # requiring `-lxc` to be present in addition to `-lxcf03`
-                libs += pkgconf("--libs", "libxcf03", "libxc", output=str).split()
+        fcflags += pkgconf("--cflags", "libxcf03", output=str).split()
+        # some Fortran functions seem to be direct wrappers of the
+        # C functions such that we get a direct dependency on them,
+        # requiring `-lxc` to be present in addition to `-lxcf03`
+        libs += pkgconf("--libs", "libxcf03", "libxc", output=str).split()
 
         if "+pexsi" in spec:
             cppflags.append("-D__LIBPEXSI")
@@ -665,18 +667,8 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
                     )
                 )
 
-            if spec.satisfies("@:4"):
-                if elpa.satisfies("@:2014.5"):
-                    cppflags.append("-D__ELPA")
-                elif elpa.satisfies("@2014.6:2015.10"):
-                    cppflags.append("-D__ELPA2")
-                else:
-                    cppflags.append("-D__ELPA3")
-            else:
-                cppflags.append(
-                    "-D__ELPA={0}{1:02d}".format(elpa.version[0], int(elpa.version[1]))
-                )
-                fcflags += ["-I{0}".format(join_path(elpa_incdir, "elpa"))]
+            cppflags.append("-D__ELPA={0}{1:02d}".format(elpa.version[0], int(elpa.version[1])))
+            fcflags += ["-I{0}".format(join_path(elpa_incdir, "elpa"))]
 
             if "+cuda" in spec and "+cuda" in elpa:
                 cppflags += ["-D__ELPA_NVIDIA_GPU"]
@@ -853,10 +845,6 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     def build_directory(self):
         build_dir = self.stage.source_path
 
-        if self.spec.satisfies("@:6"):
-            # prior to version 7.1 was the Makefile located in makefiles/
-            build_dir = join_path(build_dir, "makefiles")
-
         return build_dir
 
     @property
@@ -951,27 +939,18 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             "gfx90a": "Mi250",
             "gfx90a:xnack-": "Mi250",
             "gfx90a:xnack+": "Mi250",
+            "gfx1103:xnack+": "Mi300",
+            "gfx1103:xnack-": "Mi300",
+            "gfx1103": "Mi300",
         }
 
         if "+cuda" in spec:
-            if (len(spec.variants["cuda_arch"].value) > 1) or spec.satisfies("cuda_arch=none"):
-                raise InstallError("CP2K supports only one cuda_arch at a time.")
-            else:
-                gpu_ver = gpu_map[spec.variants["cuda_arch"].value[0]]
-                args += [
-                    self.define("CP2K_USE_ACCEL", "CUDA"),
-                    self.define("CP2K_WITH_GPU", gpu_ver),
-                ]
+            gpu_ver = gpu_map[spec.variants["cuda_arch"].value[0]]
+            args += [self.define("CP2K_USE_ACCEL", "CUDA"), self.define("CP2K_WITH_GPU", gpu_ver)]
 
         if "+rocm" in spec:
-            if len(spec.variants["amdgpu_target"].value) > 1:
-                raise InstallError("CP2K supports only one amdgpu_target at a time.")
-            else:
-                gpu_ver = gpu_map[spec.variants["amdgpu_target"].value[0]]
-                args += [
-                    self.define("CP2K_USE_ACCEL", "HIP"),
-                    self.define("CP2K_WITH_GPU", gpu_ver),
-                ]
+            gpu_ver = gpu_map[spec.variants["amdgpu_target"].value[0]]
+            args += [self.define("CP2K_USE_ACCEL", "HIP"), self.define("CP2K_WITH_GPU", gpu_ver)]
 
         args += [
             self.define_from_variant("CP2K_ENABLE_REGTESTS", "enable_regtests"),
@@ -989,7 +968,6 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define_from_variant("CP2K_USE_SPGLIB", "spglib"),
             self.define_from_variant("CP2K_USE_VORI", "libvori"),
             self.define_from_variant("CP2K_USE_SPLA", "spla"),
-            self.define_from_variant("CP2K_USE_QUIP", "quip"),
             self.define_from_variant("CP2K_USE_MPI_F08", "mpi_f08"),
         ]
 
