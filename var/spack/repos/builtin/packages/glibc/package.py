@@ -228,7 +228,7 @@ class Glibc(AutotoolsPackageNoDep, GNUMirrorPackageNoDep):
             "--enable-kernel=3.7.0",
             "--with-headers={}".format(self.spec["linux-headers"].prefix.include),
             "--without-selinux",
-        ] + ([] if '+stage1' not in self.spec else [
+        ] + ([] if not self.spec.satisfies("os=spack") else [
                 '--host='+self.spec.target_triple,
                 '--build=' + self.spec.host_triple,
                 # 'libc_cv_slibdir='+self.spec.prefix.lib,
@@ -246,12 +246,11 @@ class Glibc(AutotoolsPackageNoDep, GNUMirrorPackageNoDep):
 
     @run_after("install")
     def add_linux_headers(self):
-        if '+stage1' in self.spec:
-            cp = which("cp")
-            cp('-r', self.spec['linux-headers'].prefix.include, self.spec.prefix)
+        cp = which("cp")
+        cp('-r', self.spec['linux-headers'].prefix.include, self.spec.prefix)
     @run_after("install")
     def install_locales(self):
-        if '+stage1' in self.spec:
+        if self.spec.satisfies("os=spack"):
             ldef = Executable(self.prefix.bin.localedef, )
             mkdirp(self.spec.prefix.lib.locale)
             ldef("-i","POSIX","-f","UTF-8","C.UTF-8", fail_on_error=False)
