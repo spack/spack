@@ -18,7 +18,7 @@ class BiobbCommon(PythonPackage):
     version("4.0.0", branch="master")
 
     # Dependencies
-    depends_on("py-setuptools")
+    depends_on("py-setuptools", type="build")
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-pyyaml", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"))
