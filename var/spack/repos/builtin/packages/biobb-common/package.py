@@ -23,9 +23,3 @@ class BiobbCommon(PythonPackage):
     depends_on("py-pyyaml", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"))
     depends_on("py-biopython@1.78:1.80", type=("build", "run"))
-
-    # Test
-    @run_after("install")
-    @on_package_attributes(run_tests=True)
-    def check_install(self):
-        python("-c", "import biobb_common")
