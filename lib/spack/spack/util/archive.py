@@ -192,7 +192,9 @@ def reproducible_tarfile_from_prefix(
 
             file_info = tarfile.TarInfo(path_to_name(entry.path))
 
-            s = entry.stat(follow_symlinks=False)
+            # Use os.lstat because entry.stat has zero (st_ino, st_dev, st_nlink) on windows
+            # We need those values for tracking hardlinks
+            s = os.lstat(entry.path)
 
             # Normalize the mode
             file_info.mode = 0o644 if s.st_mode & 0o100 == 0 else 0o755
