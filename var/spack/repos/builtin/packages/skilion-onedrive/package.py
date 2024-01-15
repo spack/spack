@@ -28,7 +28,7 @@ class SkilionOnedrive(MakefilePackage):
         makefile.filter("$(shell git describe --tags)", "{0}".format(spec.version), string=True)
         # Patch sqlite.d https://github.com/skilion/onedrive/issues/392
         sqlited = FileFilter("src/sqlite.d")
-        sqlited.filter("std.c.stdlib", "core.stdc.stdlib", String=True)
+        sqlited.filter("std.c.stdlib", "core.stdc.stdlib", string=True)
 
     def build(self, spec, prefix):
         make("onedrive", "DESTDIR={0}".format(prefix), "PREFIX=/")
