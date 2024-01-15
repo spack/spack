@@ -9,16 +9,16 @@ from spack.package import *
 class BiobbCommon(PythonPackage):
     """Biobb_common is the base package required to use the biobb packages"""
 
-    pypi = "biobb_common/biobb_common-4.0.0.tar.gz"
+    pypi = "biobb_common/biobb_common-4.1.0.tar.gz"
 
     maintainers("d-beltran")
 
     # Versions
-    version("4.0.0", sha256="6e13d7d9ebae05f686b625f97a8f28a2b30b08accbbeada5fa3cda7a3036a480")
+    version("4.1.0", sha256="97637f359a3bb8ad79aca72b6c26f73fe2424845dc7f43005643971046e9d117")
 
     # Dependencies
     depends_on("py-setuptools", type="build")
-    depends_on("python@3.8:", type=("build", "run"))
+    depends_on("python@3.8:3.10", type=("build", "run"))
     depends_on("py-pyyaml", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"))
     depends_on("py-biopython@1.78:1.80", type=("build", "run"))
