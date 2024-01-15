@@ -165,7 +165,7 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
 
     def _find_mkl_libs(self, shared):
         libs = []
-        resolved_libs = []
+        threading_libs = []
 
         if self.spec.satisfies("+cluster"):
             libs.extend([self._xlp64_lib("libmkl_scalapack"), "libmkl_cdft_core"])
@@ -178,7 +178,7 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
                 libs.append("libmkl_intel_thread")
             else:
                 libs.append("libmkl_gnu_thread")
-            resolved_libs = self.openmp_libs
+            threading_libs += self.openmp_libs
         else:
             libs.append("libmkl_sequential")
 
@@ -214,7 +214,10 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         )
         lib_path = lib_path if isdir(lib_path) else dirname(lib_path)
 
-        resolved_libs += find_libraries(libs, lib_path, shared=shared)
+        # resolved_libs is populated as follows
+        # MKL-related + MPI-related + threading-related
+        resolved_libs = find_libraries(libs, lib_path, shared=shared)
+
         # Add MPI libraries for cluster support. If MPI is not in the
         # spec, then MKL is externally installed and application must
         # link with MPI libaries. If MPI is in spec, but there are no
@@ -225,6 +228,9 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
                 resolved_libs = resolved_libs + self.spec["mpi"].libs
         except spack.error.NoLibrariesError:
             pass
+
+        resolved_libs += threading_libs
+
         return resolved_libs
 
     def _xlp64_lib(self, lib):
