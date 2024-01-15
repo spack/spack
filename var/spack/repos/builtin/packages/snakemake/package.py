@@ -41,7 +41,7 @@ class Snakemake(PythonPackage):
     depends_on("py-setuptools@42:", type=("build", "run"), when="@7:")
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-tomli", type=("build"), when="@7.20.0: ^python@:3.10")
-    
+
     depends_on("py-appdirs", type=("build", "run"))
     depends_on("py-configargparse", type=("build", "run"))
     depends_on("py-connectionpool@0.0.3:", type=("build", "run"))
