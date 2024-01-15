@@ -7,7 +7,7 @@ spack:
   specs:
   # glibc from stage3, must match the gcc built there or we get two mixed
   # together, use hash
-  - glibc %gcc@=13.2.0 arch=linux-spack-x86_64 /3jt6
+  - glibc /3jt6 %gcc@=13.2.0  arch=linux-spack-x86_64
   - binutils +gold +lto arch=linux-spack-x86_64
   - gcc +binutils +piclibs languages=c,c++,fortran,lto ~bootstrap arch=linux-spack-x86_64
   # base system
@@ -32,8 +32,7 @@ spack:
   - perl arch=linux-spack-x86_64
   # if building outside of spackos, python somehow grabs something out of the
   # local include paths, build like this:
-  # bwrap --dev-bind / / --tmpfs /usr/local --tmpfs
-  # /usr/include/x86_64-linux-gnu spack install -v python
+  # $ bwrap --dev-bind / / --tmpfs /usr/local --tmpfs /usr/include/x86_64-linux-gnu spack install -v python
   - python arch=linux-spack-x86_64
   - texinfo arch=linux-spack-x86_64
   - util-linux
@@ -67,5 +66,20 @@ spack:
       modules: []
       environment: {}
       extra_rpaths: []
+  - compiler:
+      spec: gcc@=13.2.0
+      paths:
+        cc: /spack/base/.spack-env/view/bin/gcc
+        cxx: /spack/base/.spack-env/view/bin/g++
+        f77: null
+        fc: null
+      flags: {}
+      operating_system: spack
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
 
 
+  mirrors:
+    my: /scratch/spack/spack-cache
