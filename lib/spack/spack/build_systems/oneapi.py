@@ -9,7 +9,7 @@ import platform
 import shutil
 from os.path import basename, isdir
 
-from llnl.util.filesystem import HeaderList, find_libraries, join_path, mkdirp
+from llnl.util.filesystem import HeaderList, LibraryList, find_libraries, join_path, mkdirp
 from llnl.util.link_tree import LinkTree
 
 from spack.directives import conflicts, variant
@@ -194,6 +194,45 @@ class IntelOneApiLibraryPackage(IntelOneApiPackage):
     def libs(self):
         # for v2_layout all libraries are in the top level, v1 sometimes put them in intel64
         return find_libraries("*", root=self.component_prefix.lib, recursive=not self.v2_layout)
+
+    @property
+    def openmp_libs(self):
+        """Supply LibraryList for linking OpenMP"""
+
+        if "%intel" in self.spec:
+            # NB: Hunting down explicit library files may be the Spack way of
+            # doing things, but be aware that "{icc|ifort} --help openmp"
+            # steers us towards options instead: -qopenmp-link={dynamic,static}
+
+            omp_libnames = ["libiomp5"]
+            omp_libs = find_libraries(
+                omp_libnames,
+                root=self.component_lib_dir("compiler"),
+                shared=("+shared" in self.spec),
+            )
+            # Note about search root here: For MKL, the directory
+            # "$MKLROOT/../compiler" will be present even for an MKL-only
+            # product installation (as opposed to one being ghosted via
+            # packages.yaml), specificially to provide the 'iomp5' libs.
+
+        elif "%gcc" in self.spec:
+            with self.compiler.compiler_environment():
+                omp_lib_path = Executable(self.compiler.cc)(
+                    "--print-file-name", "libgomp.%s" % dso_suffix, output=str
+                )
+            omp_libs = LibraryList(omp_lib_path.strip())
+
+        elif "%clang" in self.spec:
+            with self.compiler.compiler_environment():
+                omp_lib_path = Executable(self.compiler.cc)(
+                    "--print-file-name", "libomp.%s" % dso_suffix, output=str
+                )
+            omp_libs = LibraryList(omp_lib_path.strip())
+
+        if len(omp_libs) < 1:
+            raise_lib_error("Cannot locate OpenMP libraries:", omp_libnames)
+
+        return omp_libs
 
 
 class IntelOneApiLibraryPackageWithSdk(IntelOneApiPackage):
