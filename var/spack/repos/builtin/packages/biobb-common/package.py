@@ -9,13 +9,12 @@ from spack.package import *
 class BiobbCommon(PythonPackage):
     """Biobb_common is the base package required to use the biobb packages"""
 
-    homepage = "https://github.com/bioexcel/biobb_common"
-    git = "https://github.com/bioexcel/biobb_common.git"
+    pypi = "biobb_common/biobb_common-4.0.0.tar.gz"
 
     maintainers("d-beltran")
 
     # Versions
-    version("4.0.0", branch="master")
+    version("4.0.0", sha256="6e13d7d9ebae05f686b625f97a8f28a2b30b08accbbeada5fa3cda7a3036a480")
 
     # Dependencies
     depends_on("py-setuptools", type="build")
