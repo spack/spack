@@ -896,3 +896,26 @@ compilers::
     # This package can only be compiled with clang
     with pytest.raises(spack.error.SpackError, match="can only be compiled with Clang"):
         Spec("requires_clang").concretized()
+
+
+@pytest.mark.regression("42084")
+def test_requiring_package_on_multiple_virtuals(concretize_scope, mock_packages):
+    update_packages_config(
+        """
+    packages:
+      all:
+        providers:
+          scalapack: [netlib-scalapack]
+      blas:
+        require: intel-parallel-studio
+      lapack:
+        require: intel-parallel-studio
+      scalapack:
+        require: intel-parallel-studio
+    """
+    )
+    s = Spec("dla-future").concretized()
+
+    assert s["blas"].name == "intel-parallel-studio"
+    assert s["lapack"].name == "intel-parallel-studio"
+    assert s["scalapack"].name == "intel-parallel-studio"
