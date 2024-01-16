@@ -33,6 +33,7 @@ class PyNbconvert(PythonPackage):
     variant("serve", default=True, description="Include a webserver")
 
     depends_on("python@3.7:", when="@6.2.0:", type=("build", "run"))
+    depends_on("py-hatchling@1.5:", when="@7.14:", type="build")
     depends_on("py-hatchling@0.25:", when="@7:", type="build")
 
     depends_on("py-beautifulsoup4", when="@6.4.4:", type=("build", "run"))
@@ -46,10 +47,12 @@ class PyNbconvert(PythonPackage):
     depends_on("py-jupyter-core", type=("build", "run"))
     depends_on("py-jupyterlab-pygments", when="@6:", type=("build", "run"))
     depends_on("py-markupsafe@2:", when="@6.4.5:", type=("build", "run"))
-    depends_on("py-mistune@2.0.3:2", when="@7:", type=("build", "run"))
+    depends_on("py-mistune@2.0.3:3", when="@7.4:", type=("build", "run"))
+    depends_on("py-mistune@2.0.3:2", when="@7:7.3", type=("build", "run"))
     depends_on("py-mistune@0.8.1:1", when="@:6", type=("build", "run"))
     depends_on("py-nbclient@0.5:", when="@6.5:", type=("build", "run"))
     depends_on("py-nbclient@0.5", when="@6:6.4", type=("build", "run"))
+    depends_on("py-nbformat@5.7:", when="@7.14:", type=("build", "run"))
     depends_on("py-nbformat@5.1:", when="@6.5:", type=("build", "run"))
     depends_on("py-nbformat@4.4:", when="@5:", type=("build", "run"))
     depends_on("py-nbformat", type=("build", "run"))
@@ -58,6 +61,7 @@ class PyNbconvert(PythonPackage):
     depends_on("py-pygments@2.4.1:", when="@6:", type=("build", "run"))
     depends_on("py-pygments", type=("build", "run"))
     depends_on("py-tinycss2", when="@6.5:", type=("build", "run"))
+    depends_on("py-traitlets@5.1:", when="@7.14:", type=("build", "run"))
     depends_on("py-traitlets@5:", when="@6.2.0:", type=("build", "run"))
     depends_on("py-traitlets@4.2:", when="@5:", type=("build", "run"))
     depends_on("py-traitlets", type=("build", "run"))
@@ -75,6 +79,8 @@ class PyNbconvert(PythonPackage):
     depends_on("py-entrypoints@0.2.2:", when="@5:6", type=("build", "run"))
     depends_on("py-testpath", when="@5:6.4", type=("build", "run"))
     depends_on("py-lxml", when="@6.5.1:7.0", type=("build", "run"))
+
+    conflicts("^bleach@5.0.0", when="@7.14:")
 
     resource(
         name="index.css",
