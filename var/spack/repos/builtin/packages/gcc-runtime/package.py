@@ -12,9 +12,10 @@ from llnl.util import tty
 
 from spack.package import *
 from spack.util.elf import parse_elf
+from spack.build_systems.generic import PackageNoDep
 
 
-class GccRuntime(Package):
+class GccRuntime(PackageNoDep):
     """Package for GCC compiler runtime libraries"""
 
     homepage = "https://gcc.gnu.org"
