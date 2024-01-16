@@ -153,6 +153,13 @@ class QtBase(QtPackage):
             depends_on("libxkbcommon")
             depends_on("libxcb@1.13:")  # requires xinput
             depends_on("libxrender")
+            depends_on("libx11")
+            depends_on("xcb-util")
+            depends_on("xcb-util-cursor")
+            depends_on("xcb-util-image")
+            depends_on("xcb-util-keysyms")
+            depends_on("xcb-util-renderutil")
+            depends_on("xcb-util-wm")
 
     with when("+network"):
         depends_on("openssl")
