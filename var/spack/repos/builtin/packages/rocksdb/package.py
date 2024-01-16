@@ -60,6 +60,10 @@ class Rocksdb(MakefilePackage):
     def patch(self):
         filter_file("-march=native", "", join_path("build_tools", "build_detect_platform"))
 
+    def setup_build_environment(self, env):
+        env.unset("LUA_PATH")
+        env.unset("LUA_CPATH")
+
     def install(self, spec, prefix):
         cflags = []
         ldflags = []
