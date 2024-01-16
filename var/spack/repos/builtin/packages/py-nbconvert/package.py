@@ -129,7 +129,8 @@ class PyNbconvert(PythonPackage):
             dest = join_path(self.stage.source_path, "share", "templates", subdir, "static")
             mkdirp(dest)
             install(
-                join_path(self.stage.source_path, "resource_%s" % target, source), join_path(dest, target)
+                join_path(self.stage.source_path, "resource_%s" % target, source),
+                join_path(dest, target),
             )
 
     @when("@:7.4.0")
