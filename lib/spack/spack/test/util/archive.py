@@ -88,7 +88,7 @@ def test_gzip_compressed_tarball_is_reproducible(tmpdir):
             ):
                 m = tar.getmember(file)
                 assert m.issym()
-                assert m.mode == expected_mode(file)
+                assert m.mode == 0o755
                 assert m.uid == m.gid == m.mtime == 0
                 assert m.uname == m.gname == ""
 

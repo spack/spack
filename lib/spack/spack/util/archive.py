@@ -192,19 +192,22 @@ def reproducible_tarfile_from_prefix(
 
             file_info = tarfile.TarInfo(path_to_name(entry.path))
 
-            # Use os.lstat because entry.stat has zero (st_ino, st_dev, st_nlink) on windows
-            # We need those values for tracking hardlinks
-            s = os.lstat(entry.path)
-
-            # Normalize the mode
-            file_info.mode = 0o644 if s.st_mode & 0o100 == 0 else 0o755
-
             if entry.is_symlink():
                 file_info.type = tarfile.SYMTYPE
                 file_info.linkname = os.readlink(entry.path)
+                # According to POSIX: "the value of the file mode bits returned in the
+                # st_mode field of the stat structure is unspecified." So we set it to
+                # something sensible without lstat'ing the link.
+                file_info.mode = 0o755
                 tar.addfile(file_info)
 
             elif entry.is_file(follow_symlinks=False):
+                # entry.stat has zero (st_ino, st_dev, st_nlink) on Windows: use lstat.
+                s = os.lstat(entry.path)
+
+                # Normalize permissions like git
+                file_info.mode = 0o755 if s.st_mode & 0o100 else 0o644
+
                 # Deduplicate hardlinks
                 if s.st_nlink > 1:
                     ident = (s.st_dev, s.st_ino)
@@ -215,7 +218,7 @@ def reproducible_tarfile_from_prefix(
                         continue
                     hardlink_to_tarinfo_name[ident] = file_info.name
 
-                # If file not yet seen, copy it.
+                # If file not yet seen, copy it
                 file_info.type = tarfile.REGTYPE
                 file_info.size = s.st_size
 
