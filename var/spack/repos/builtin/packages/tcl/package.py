@@ -4,11 +4,14 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 from llnl.util.filesystem import find_first
 
 from spack.package import *
 from spack.util.environment import is_system_path
+
+is_windows = sys.platform == "win32"
 
 
 class TclHelper:
@@ -16,9 +19,7 @@ class TclHelper:
     def find_script_dir(spec):
         # Put more-specific prefixes first
         check_prefixes = [
-            join_path(
-                spec.prefix, "share", "tcl{0}".format(spec.package.version.up_to(2))
-            ),
+            join_path(spec.prefix, "share", "tcl{0}".format(spec.package.version.up_to(2))),
             spec.prefix,
         ]
         for prefix in check_prefixes:
@@ -115,8 +116,20 @@ class Tcl(AutotoolsPackage, NMakePackage, SourceforgePackage, TclHelper):
 class BaseBuilder(TclHelper, metaclass=spack.builder.PhaseCallbacksMeta):
     @run_after("install")
     def symlink_tclsh(self):
+        # There's some logic regarding this suffix in the build system
+        # but the way Spack builds tcl, the Windows suffix is always 't'
+        # unless the version is >= 8.7, in which case there is no suffix
+        # if the build is ever switched to static, this will need to change
+        # to be "s[t]"
+        win_suffix = ""
+        ver_suffix = self.pkg.version.up_to(2)
+        if is_windows:
+            win_suffix = "t" if self.spec.satisfies("@:8.7") else ""
+            win_suffix += ".exe"
+            ver_suffix = ver_suffix.joined
+
         with working_dir(self.prefix.bin):
-            symlink("tclsh{0}".format(self.pkg.version.up_to(2)), "tclsh")
+            symlink(f"tclsh{ver_suffix}{win_suffix}", "tclsh")
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Set TCL_LIBRARY to the directory containing init.tcl.
