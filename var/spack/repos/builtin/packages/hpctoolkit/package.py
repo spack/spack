@@ -12,192 +12,6 @@ import llnl.util.tty as tty
 from spack.package import *
 
 
-class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
-    def configure_args(self):
-        spec = self.spec
-
-        args = [
-            "--with-boost=%s" % spec["boost"].prefix,
-            "--with-bzip=%s" % spec["bzip2"].prefix,
-            "--with-dyninst=%s" % spec["dyninst"].prefix,
-            "--with-elfutils=%s" % spec["elfutils"].prefix,
-            "--with-tbb=%s" % spec["intel-tbb"].prefix,
-            "--with-libmonitor=%s" % spec["libmonitor"].prefix,
-            "--with-libunwind=%s" % spec["libunwind"].prefix,
-            "--with-xerces=%s" % spec["xerces-c"].prefix,
-            "--with-lzma=%s" % spec["xz"].prefix,
-            "--with-zlib=%s" % spec["zlib-api"].prefix,
-        ]
-
-        if spec.satisfies("@2022.10:"):
-            args.append("--with-libiberty=%s" % spec["libiberty"].prefix)
-        else:
-            args.append("--with-binutils=%s" % spec["binutils"].prefix)
-            args.append("--with-libdwarf=%s" % spec["libdwarf"].prefix)
-
-        if spec.satisfies("@:2020.09"):
-            args.append("--with-gotcha=%s" % spec["gotcha"].prefix)
-
-        if spec.target.family == "x86_64":
-            args.append("--with-xed=%s" % spec["intel-xed"].prefix)
-
-        if spec.satisfies("@:2022.03"):
-            args.append("--with-mbedtls=%s" % spec["mbedtls"].prefix)
-
-        if spec.satisfies("@2021.05.01:"):
-            args.append("--with-memkind=%s" % spec["memkind"].prefix)
-
-        if spec.satisfies("+papi"):
-            args.append("--with-papi=%s" % spec["papi"].prefix)
-        else:
-            args.append("--with-perfmon=%s" % spec["libpfm4"].prefix)
-
-        if spec.satisfies("@2022.10:"):
-            args.append("--with-yaml-cpp=%s" % spec["yaml-cpp"].prefix)
-
-        if "+cuda" in spec:
-            args.append("--with-cuda=%s" % spec["cuda"].prefix)
-
-        if "+level_zero" in spec:
-            args.append("--with-level0=%s" % spec["oneapi-level-zero"].prefix)
-
-            # gtpin requires level_zero
-            if "+gtpin" in spec:
-                args.append("--with-gtpin=%s" % spec["intel-gtpin"].prefix)
-                args.append("--with-igc=%s" % spec["oneapi-igc"].prefix)
-
-        if "+opencl" in spec:
-            args.append("--with-opencl=%s" % spec["opencl-c-headers"].prefix)
-
-        if spec.satisfies("+rocm"):
-            args.extend(
-                [
-                    "--with-rocm-hip=%s" % spec["hip"].prefix,
-                    "--with-rocm-hsa=%s" % spec["hsa-rocr-dev"].prefix,
-                    "--with-rocm-tracer=%s" % spec["roctracer-dev"].prefix,
-                    "--with-rocm-profiler=%s" % spec["rocprofiler-dev"].prefix,
-                ]
-            )
-
-        if spec.satisfies("+python"):
-            p3config = join_path(spec["python"].prefix, "bin", "python3-config")
-            args.append("--with-python=%s" % p3config)
-
-        # MPI options for hpcprof-mpi. +cray supersedes +mpi.
-        if spec.satisfies("+cray"):
-            args.append("--enable-mpi-search=cray")
-            if spec.satisfies("@:2022.09 +cray-static"):
-                args.append("--enable-all-static")
-            else:
-                args.append("HPCPROFMPI_LT_LDFLAGS=-dynamic")
-
-        elif spec.satisfies("+mpi"):
-            args.append("MPICXX=%s" % spec["mpi"].mpicxx)
-
-        # Make sure MPICXX is not picked up through the environment.
-        else:
-            args.append("MPICXX=")
-
-        if spec.satisfies("+debug"):
-            args.append("--enable-develop")
-
-        return args
-
-    flag_handler = AutotoolsPackage.build_system_flags
-
-    # Build tests (spack install --run-tests).  Disable the default
-    # spack tests and run autotools 'make check', but only from the
-    # tests directory.
-    build_time_test_callbacks = []  # type: List[str]
-    install_time_test_callbacks = ["check_install"]  # type: List[str]
-
-    def check_install(self):
-        if not self.spec.satisfies("@2022:"):
-            tty.warn("requires 2022.01.15 or later")
-            return
-
-        with working_dir("tests"):
-            make("check")
-
-
-class MesonBuilder(spack.build_systems.meson.MesonBuilder):
-    def meson_args(self):
-        spec = self.spec
-
-        args = [
-            "-Dhpcprof_mpi=" + ("enabled" if "+mpi" in spec else "disabled"),
-            "-Dpython=" + ("enabled" if "+python" in spec else "disabled"),
-            "-Dpapi=" + ("enabled" if "+papi" in spec else "disabled"),
-            "-Dopencl=" + ("enabled" if "+opencl" in spec else "disabled"),
-            "-Dcuda=" + ("enabled" if "+cuda" in spec else "disabled"),
-            "-Drocm=" + ("enabled" if "+rocm" in spec else "disabled"),
-            "-Dlevel0=" + ("enabled" if "+level_zero" in spec else "disabled"),
-            "-Dgtpin=" + ("enabled" if "+gtpin" in spec else "disabled"),
-        ]
-
-        # We use a native file to provide paths to all the dependencies.
-        cfg = configparser.ConfigParser()
-        cfg["properties"] = {}
-        cfg["binaries"] = {}
-
-        cfg["properties"]["prefix_boost"] = f"'''{spec['boost'].prefix}'''"
-        cfg["properties"]["prefix_bzip"] = f"'''{spec['bzip2'].prefix}'''"
-        cfg["properties"]["prefix_dyninst"] = f"'''{spec['dyninst'].prefix}'''"
-        cfg["properties"]["prefix_elfutils"] = f"'''{spec['elfutils'].prefix}'''"
-        cfg["properties"]["prefix_tbb"] = f"'''{spec['intel-tbb'].prefix}'''"
-        cfg["properties"]["prefix_libmonitor"] = f"'''{spec['libmonitor'].prefix}'''"
-        cfg["properties"]["prefix_libunwind"] = f"'''{spec['libunwind'].prefix}'''"
-        cfg["properties"]["prefix_xerces"] = f"'''{spec['xerces-c'].prefix}'''"
-        cfg["properties"]["prefix_lzma"] = f"'''{spec['xz'].prefix}'''"
-        cfg["properties"]["prefix_zlib"] = f"'''{spec['zlib-api'].prefix}'''"
-        cfg["properties"]["prefix_libiberty"] = f"'''{spec['libiberty'].prefix}'''"
-
-        if spec.target.family == "x86_64":
-            cfg["properties"]["prefix_xed"] = f"'''{spec['intel-xed'].prefix}'''"
-
-        cfg["properties"]["prefix_memkind"] = f"'''{spec['memkind'].prefix}'''"
-
-        if spec.satisfies("+papi"):
-            cfg["properties"]["prefix_papi"] = f"'''{spec['papi'].prefix}'''"
-        else:
-            cfg["properties"]["prefix_perfmon"] = f"'''{spec['libpfm4'].prefix}'''"
-
-        cfg["properties"]["prefix_yaml_cpp"] = f"'''{spec['yaml-cpp'].prefix}'''"
-
-        if "+cuda" in spec:
-            cfg["properties"]["prefix_cuda"] = f"'''{spec['cuda'].prefix}'''"
-
-        if "+level_zero" in spec:
-            cfg["properties"]["prefix_level0"] = f"'''{spec['oneapi-level-zero'].prefix}'''"
-
-        if "+gtpin" in spec:
-            cfg["properties"]["prefix_gtpin"] = f"'''{spec['intel-gtpin'].prefix}'''"
-            cfg["properties"]["prefix_igc"] = f"'''{spec['oneapi-igc'].prefix}'''"
-
-        if "+opencl" in spec:
-            cfg["properties"]["prefix_opencl"] = f"'''{spec['opencl-c-headers'].prefix}'''"
-
-        if "+rocm" in spec:
-            cfg["properties"]["prefix_rocm_hip"] = f"'''{spec['hip'].prefix}'''"
-            cfg["properties"]["prefix_rocm_hsa"] = f"'''{spec['hsa-rocr-dev'].prefix}'''"
-            cfg["properties"]["prefix_rocm_tracer"] = f"'''{spec['roctracer-dev'].prefix}'''"
-            cfg["properties"]["prefix_rocm_profiler"] = f"'''{spec['rocprofiler-dev'].prefix}'''"
-
-        if "+python" in spec:
-            cfg["binaries"]["python"] = f"'''{spec['python'].command}'''"
-
-        if "+mpi" in spec:
-            cfg["binaries"]["mpicxx"] = f"'''{spec['mpi'].mpicxx}'''"
-
-        native_fd, native_path = tempfile.mkstemp(
-            prefix="spack-native.", suffix=".ini", dir=self.stage.path
-        )
-        with os.fdopen(native_fd, "w") as native_f:
-            cfg.write(native_f)
-
-        return ["--native-file", native_path] + args
-
-
 class Hpctoolkit(AutotoolsPackage, MesonPackage):
     """HPCToolkit is an integrated suite of tools for measurement and analysis
     of program performance on computers ranging from multicore desktop systems
@@ -437,3 +251,189 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
         hpcprof = which("hpcprof")
         db = "tst-sort.d"
         hpcprof("-S", struct, "-o", db, meas)
+
+
+class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+    def configure_args(self):
+        spec = self.spec
+
+        args = [
+            "--with-boost=%s" % spec["boost"].prefix,
+            "--with-bzip=%s" % spec["bzip2"].prefix,
+            "--with-dyninst=%s" % spec["dyninst"].prefix,
+            "--with-elfutils=%s" % spec["elfutils"].prefix,
+            "--with-tbb=%s" % spec["intel-tbb"].prefix,
+            "--with-libmonitor=%s" % spec["libmonitor"].prefix,
+            "--with-libunwind=%s" % spec["libunwind"].prefix,
+            "--with-xerces=%s" % spec["xerces-c"].prefix,
+            "--with-lzma=%s" % spec["xz"].prefix,
+            "--with-zlib=%s" % spec["zlib-api"].prefix,
+        ]
+
+        if spec.satisfies("@2022.10:"):
+            args.append("--with-libiberty=%s" % spec["libiberty"].prefix)
+        else:
+            args.append("--with-binutils=%s" % spec["binutils"].prefix)
+            args.append("--with-libdwarf=%s" % spec["libdwarf"].prefix)
+
+        if spec.satisfies("@:2020.09"):
+            args.append("--with-gotcha=%s" % spec["gotcha"].prefix)
+
+        if spec.target.family == "x86_64":
+            args.append("--with-xed=%s" % spec["intel-xed"].prefix)
+
+        if spec.satisfies("@:2022.03"):
+            args.append("--with-mbedtls=%s" % spec["mbedtls"].prefix)
+
+        if spec.satisfies("@2021.05.01:"):
+            args.append("--with-memkind=%s" % spec["memkind"].prefix)
+
+        if spec.satisfies("+papi"):
+            args.append("--with-papi=%s" % spec["papi"].prefix)
+        else:
+            args.append("--with-perfmon=%s" % spec["libpfm4"].prefix)
+
+        if spec.satisfies("@2022.10:"):
+            args.append("--with-yaml-cpp=%s" % spec["yaml-cpp"].prefix)
+
+        if "+cuda" in spec:
+            args.append("--with-cuda=%s" % spec["cuda"].prefix)
+
+        if "+level_zero" in spec:
+            args.append("--with-level0=%s" % spec["oneapi-level-zero"].prefix)
+
+            # gtpin requires level_zero
+            if "+gtpin" in spec:
+                args.append("--with-gtpin=%s" % spec["intel-gtpin"].prefix)
+                args.append("--with-igc=%s" % spec["oneapi-igc"].prefix)
+
+        if "+opencl" in spec:
+            args.append("--with-opencl=%s" % spec["opencl-c-headers"].prefix)
+
+        if spec.satisfies("+rocm"):
+            args.extend(
+                [
+                    "--with-rocm-hip=%s" % spec["hip"].prefix,
+                    "--with-rocm-hsa=%s" % spec["hsa-rocr-dev"].prefix,
+                    "--with-rocm-tracer=%s" % spec["roctracer-dev"].prefix,
+                    "--with-rocm-profiler=%s" % spec["rocprofiler-dev"].prefix,
+                ]
+            )
+
+        if spec.satisfies("+python"):
+            p3config = join_path(spec["python"].prefix, "bin", "python3-config")
+            args.append("--with-python=%s" % p3config)
+
+        # MPI options for hpcprof-mpi. +cray supersedes +mpi.
+        if spec.satisfies("+cray"):
+            args.append("--enable-mpi-search=cray")
+            if spec.satisfies("@:2022.09 +cray-static"):
+                args.append("--enable-all-static")
+            else:
+                args.append("HPCPROFMPI_LT_LDFLAGS=-dynamic")
+
+        elif spec.satisfies("+mpi"):
+            args.append("MPICXX=%s" % spec["mpi"].mpicxx)
+
+        # Make sure MPICXX is not picked up through the environment.
+        else:
+            args.append("MPICXX=")
+
+        if spec.satisfies("+debug"):
+            args.append("--enable-develop")
+
+        return args
+
+    flag_handler = AutotoolsPackage.build_system_flags
+
+    # Build tests (spack install --run-tests).  Disable the default
+    # spack tests and run autotools 'make check', but only from the
+    # tests directory.
+    build_time_test_callbacks = []  # type: List[str]
+    install_time_test_callbacks = ["check_install"]  # type: List[str]
+
+    def check_install(self):
+        if not self.spec.satisfies("@2022:"):
+            tty.warn("requires 2022.01.15 or later")
+            return
+
+        with working_dir("tests"):
+            make("check")
+
+
+class MesonBuilder(spack.build_systems.meson.MesonBuilder):
+    def meson_args(self):
+        spec = self.spec
+
+        args = [
+            "-Dhpcprof_mpi=" + ("enabled" if "+mpi" in spec else "disabled"),
+            "-Dpython=" + ("enabled" if "+python" in spec else "disabled"),
+            "-Dpapi=" + ("enabled" if "+papi" in spec else "disabled"),
+            "-Dopencl=" + ("enabled" if "+opencl" in spec else "disabled"),
+            "-Dcuda=" + ("enabled" if "+cuda" in spec else "disabled"),
+            "-Drocm=" + ("enabled" if "+rocm" in spec else "disabled"),
+            "-Dlevel0=" + ("enabled" if "+level_zero" in spec else "disabled"),
+            "-Dgtpin=" + ("enabled" if "+gtpin" in spec else "disabled"),
+        ]
+
+        # We use a native file to provide paths to all the dependencies.
+        cfg = configparser.ConfigParser()
+        cfg["properties"] = {}
+        cfg["binaries"] = {}
+
+        cfg["properties"]["prefix_boost"] = f"'''{spec['boost'].prefix}'''"
+        cfg["properties"]["prefix_bzip"] = f"'''{spec['bzip2'].prefix}'''"
+        cfg["properties"]["prefix_dyninst"] = f"'''{spec['dyninst'].prefix}'''"
+        cfg["properties"]["prefix_elfutils"] = f"'''{spec['elfutils'].prefix}'''"
+        cfg["properties"]["prefix_tbb"] = f"'''{spec['intel-tbb'].prefix}'''"
+        cfg["properties"]["prefix_libmonitor"] = f"'''{spec['libmonitor'].prefix}'''"
+        cfg["properties"]["prefix_libunwind"] = f"'''{spec['libunwind'].prefix}'''"
+        cfg["properties"]["prefix_xerces"] = f"'''{spec['xerces-c'].prefix}'''"
+        cfg["properties"]["prefix_lzma"] = f"'''{spec['xz'].prefix}'''"
+        cfg["properties"]["prefix_zlib"] = f"'''{spec['zlib-api'].prefix}'''"
+        cfg["properties"]["prefix_libiberty"] = f"'''{spec['libiberty'].prefix}'''"
+
+        if spec.target.family == "x86_64":
+            cfg["properties"]["prefix_xed"] = f"'''{spec['intel-xed'].prefix}'''"
+
+        cfg["properties"]["prefix_memkind"] = f"'''{spec['memkind'].prefix}'''"
+
+        if spec.satisfies("+papi"):
+            cfg["properties"]["prefix_papi"] = f"'''{spec['papi'].prefix}'''"
+        else:
+            cfg["properties"]["prefix_perfmon"] = f"'''{spec['libpfm4'].prefix}'''"
+
+        cfg["properties"]["prefix_yaml_cpp"] = f"'''{spec['yaml-cpp'].prefix}'''"
+
+        if "+cuda" in spec:
+            cfg["properties"]["prefix_cuda"] = f"'''{spec['cuda'].prefix}'''"
+
+        if "+level_zero" in spec:
+            cfg["properties"]["prefix_level0"] = f"'''{spec['oneapi-level-zero'].prefix}'''"
+
+        if "+gtpin" in spec:
+            cfg["properties"]["prefix_gtpin"] = f"'''{spec['intel-gtpin'].prefix}'''"
+            cfg["properties"]["prefix_igc"] = f"'''{spec['oneapi-igc'].prefix}'''"
+
+        if "+opencl" in spec:
+            cfg["properties"]["prefix_opencl"] = f"'''{spec['opencl-c-headers'].prefix}'''"
+
+        if "+rocm" in spec:
+            cfg["properties"]["prefix_rocm_hip"] = f"'''{spec['hip'].prefix}'''"
+            cfg["properties"]["prefix_rocm_hsa"] = f"'''{spec['hsa-rocr-dev'].prefix}'''"
+            cfg["properties"]["prefix_rocm_tracer"] = f"'''{spec['roctracer-dev'].prefix}'''"
+            cfg["properties"]["prefix_rocm_profiler"] = f"'''{spec['rocprofiler-dev'].prefix}'''"
+
+        if "+python" in spec:
+            cfg["binaries"]["python"] = f"'''{spec['python'].command}'''"
+
+        if "+mpi" in spec:
+            cfg["binaries"]["mpicxx"] = f"'''{spec['mpi'].mpicxx}'''"
+
+        native_fd, native_path = tempfile.mkstemp(
+            prefix="spack-native.", suffix=".ini", dir=self.stage.path
+        )
+        with os.fdopen(native_fd, "w") as native_f:
+            cfg.write(native_f)
+
+        return ["--native-file", native_path] + args
