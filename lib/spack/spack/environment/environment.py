@@ -189,16 +189,15 @@ def validate_env_name(name):
     return name
 
 
-def activate(env, use_env_repo=False):
+def activate(env: Environment, use_env_repo: bool = False):
     """Activate an environment.
 
-    To activate an environment, we add its configuration scope to the
-    existing Spack configuration, and we set active to the current
-    environment.
+    To activate an environment, we add its manifest's configuration scope to the
+    existing Spack configuration, and we set active to the current environment.
 
     Arguments:
-        env (Environment): the environment to activate
-        use_env_repo (bool): use the packages exactly as they appear in the
+        env: the environment to activate
+        use_env_repo: use the packages exactly as they appear in the
             environment's repository
     """
     global _active_environment
