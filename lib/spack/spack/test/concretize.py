@@ -2207,6 +2207,33 @@ class TestConcretize:
 
         assert with_reuse.dag_hash() == without_reuse.dag_hash()
 
+    @pytest.mark.regression("35536")
+    @pytest.mark.parametrize(
+        "spec_str,expected_namespaces",
+        [
+            # Single node with fully qualified namespace
+            ("builtin.mock.gmake", {"gmake": "builtin.mock"}),
+            # Dependency with fully qualified namespace
+            ("hdf5 ^builtin.mock.gmake", {"gmake": "builtin.mock", "hdf5": "duplicates.test"}),
+            ("hdf5 ^gmake", {"gmake": "duplicates.test", "hdf5": "duplicates.test"}),
+        ],
+    )
+    @pytest.mark.only_clingo("Uses specs requiring multiple gmake specs")
+    def test_select_lower_priority_package_from_repository_stack(
+        self, spec_str, expected_namespaces
+    ):
+        """Tests that a user can explicitly select a lower priority, fully qualified dependency
+        from cli.
+        """
+        # 'builtin.mock" and "duplicates.test" share a 'gmake' package
+        additional_repo = os.path.join(spack.paths.repos_path, "duplicates.test")
+        with spack.repo.use_repositories(additional_repo, override=False):
+            s = Spec(spec_str).concretized()
+
+        for name, namespace in expected_namespaces.items():
+            assert s[name].concrete
+            assert s[name].namespace == namespace
+
 
 @pytest.fixture()
 def duplicates_test_repository():
