@@ -24,6 +24,7 @@ import sys
 import textwrap
 import time
 import traceback
+import typing
 import warnings
 from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Type, TypeVar, Union
 
@@ -732,13 +733,13 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     @classmethod
     def possible_dependencies(
         cls,
-        transitive=True,
-        expand_virtuals=True,
+        transitive: bool = True,
+        expand_virtuals: bool = True,
         depflag: dt.DepFlag = dt.ALL,
-        visited=None,
-        missing=None,
-        virtuals=None,
-    ):
+        visited: Optional[dict] = None,
+        missing: Optional[dict] = None,
+        virtuals: Optional[set] = None,
+    ) -> Dict[str, Set[str]]:
         """Return dict of possible dependencies of this package.
 
         Args:
@@ -2493,14 +2494,21 @@ def flatten_dependencies(spec, flat_dir):
         dep_files.merge(flat_dir + "/" + name)
 
 
-def possible_dependencies(*pkg_or_spec, **kwargs):
+def possible_dependencies(
+    *pkg_or_spec: Union[str, spack.spec.Spec, typing.Type[PackageBase]],
+    transitive: bool = True,
+    expand_virtuals: bool = True,
+    depflag: dt.DepFlag = dt.ALL,
+    missing: Optional[dict] = None,
+    virtuals: Optional[set] = None,
+) -> Dict[str, Set[str]]:
     """Get the possible dependencies of a number of packages.
 
     See ``PackageBase.possible_dependencies`` for details.
     """
     packages = []
     for pos in pkg_or_spec:
-        if isinstance(pos, PackageMeta):
+        if isinstance(pos, PackageMeta) and issubclass(pos, PackageBase):
             packages.append(pos)
             continue
 
@@ -2513,9 +2521,16 @@ def possible_dependencies(*pkg_or_spec, **kwargs):
         else:
             packages.append(pos.package_class)
 
-    visited = {}
+    visited: Dict[str, Set[str]] = {}
     for pkg in packages:
-        pkg.possible_dependencies(visited=visited, **kwargs)
+        pkg.possible_dependencies(
+            visited=visited,
+            transitive=transitive,
+            expand_virtuals=expand_virtuals,
+            depflag=depflag,
+            missing=missing,
+            virtuals=virtuals,
+        )
 
     return visited
 
