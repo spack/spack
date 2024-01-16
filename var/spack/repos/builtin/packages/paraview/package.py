@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,9 +27,11 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     maintainers("danlipsa", "vicentebolea", "kwryankrattiger")
     tags = ["e4s"]
 
+    license("Apache-2.0")
+
     version("master", branch="master", submodules=True)
     version(
-        "5.12.0-RC1", sha256="892eda2ae72831bbadd846be465d496ada35739779229c604cddd56e018a1aea"
+        "5.12.0-RC2", sha256="5f43b1affee928a807b373024aefc8947f444247f9f4c3965bd52a836b95566b"
     )
     version(
         "5.11.2",
@@ -309,7 +311,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     # Fix VTK to remove deprecated ADIOS2 functions
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/10113
-    patch("adios2-remove-deprecated-functions.patch", when="@5.10: ^adios2@2.9:")
+    patch("adios2-remove-deprecated-functions.patch", when="@5.10:5.11 ^adios2@2.9:")
 
     patch("exodusII-netcdf4.9.0.patch", when="@:5.10.2")
 

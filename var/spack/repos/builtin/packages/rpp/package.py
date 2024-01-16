@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,9 @@ class Rpp(CMakePackage):
 
     maintainers = ["srekolam", "afzpatel"]
     tags = ["rocm"]
+
+    license("MIT")
+
     version("5.7.1", sha256="36fff5f1c52d969c3e2e0c75b879471f731770f193c9644aa6ab993fb8fa4bbf")
     version("5.7.0", sha256="1c612cde3c3d3840ae75ee5c1ee59bd8d61b1fdbf84421ae535cda863470fc06")
     version("1.2.0", sha256="660a11e1bd8706967835597b26daa874fd1507459bfebe22818149444bec540c")

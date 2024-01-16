@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -801,13 +801,13 @@ def mock_low_high_config(tmpdir):
 def _populate(mock_db):
     r"""Populate a mock database with packages.
 
-    Here is what the mock DB looks like:
+    Here is what the mock DB looks like (explicit roots at top):
 
-    o  mpileaks     o  mpileaks'    o  mpileaks''
-    |\              |\              |\
-    | o  callpath   | o  callpath'  | o  callpath''
-    |/|             |/|             |/|
-    o |  mpich      o |  mpich2     o |  zmpi
+    o  mpileaks     o  mpileaks'    o  mpileaks''     o externaltest     o trivial-smoke-test
+    |\              |\              |\                |
+    | o  callpath   | o  callpath'  | o  callpath''   o externaltool
+    |/|             |/|             |/|               |
+    o |  mpich      o |  mpich2     o |  zmpi         o externalvirtual
       |               |             o |  fake
       |               |               |
       |               |______________/

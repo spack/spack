@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class PyTensorflowHub(Package):
     url = "https://github.com/tensorflow/hub/archive/refs/tags/v0.12.0.tar.gz"
 
     maintainers("aweits")
+
+    license("Apache-2.0")
 
     version("0.12.0", sha256="b192ef3a9a6cbeaee46142d64b47b979828dbf41fc56d48c6587e08f6b596446")
     version("0.11.0", sha256="4715a4212b45531a7c25ada7207d850467d1b5480f1940f16623f8770ad64df4")

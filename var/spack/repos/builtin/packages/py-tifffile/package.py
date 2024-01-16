@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyTifffile(PythonPackage):
 
     homepage = "https://github.com/cgohlke/tifffile"
     pypi = "tifffile/tifffile-0.12.1.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("2023.8.30", sha256="6a8c53b012a286b75d09a1498ab32f202f24cc6270a105b5d5911dc4426f162a")
     version(

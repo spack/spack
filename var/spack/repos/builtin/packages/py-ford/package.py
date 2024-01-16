@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyFord(PythonPackage):
     pypi = "FORD/FORD-6.1.11.tar.gz"
 
     maintainers("wscullin")
+
+    license("GPL-3.0-only")
 
     version("6.1.13", sha256="95b743ea25c5a9c6a9e13db3633e04f91e11d1debb69f48ca3ef7fefc51f0559")
     version("6.1.12", sha256="101191e1aa33cfe780ea5b2d66d02c7281b9b314e82bb138d76809a49c08506a")

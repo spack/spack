@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class PyMetpy(PythonPackage):
     # Importing 'metpy.io' results in downloads, so skip it.
     # https://github.com/Unidata/MetPy/issues/1888
     import_modules = ["metpy", "metpy._vendor", "metpy.calc", "metpy.interpolate"]
+
+    license("BSD-3-Clause")
 
     version("1.0.1", sha256="16fa9806facc24f31f454b898741ec5639a72ba9d4ff8a19ad0e94629d93cb95")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class RocmTensile(CMakePackage):
     git = "https://github.com/ROCmSoftwarePlatform/Tensile.git"
     url = "https://github.com/ROCmSoftwarePlatform/Tensile/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
+
+    license("MIT")
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")
     version("5.7.1", sha256="9211a51b23c22b7a79e4e494e8ff3c31e90bf21adb8cce260acc57891fb2c917")
@@ -250,6 +252,7 @@ class RocmTensile(CMakePackage):
             self.define("Tensile_LOGIC", "asm_full"),
             self.define("Tensile_CODE_OBJECT_VERSION", "V3"),
             self.define("Boost_USE_STATIC_LIBS", "OFF"),
+            self.define_from_variant("TENSILE_USE_OPENMP", "openmp"),
             self.define("BUILD_WITH_TENSILE_HOST", "ON" if "@3.7.0:" in self.spec else "OFF"),
         ]
 
@@ -263,7 +266,14 @@ class RocmTensile(CMakePackage):
         else:
             args.append(self.define("TENSILE_USE_OPENMP", "OFF")),
 
-        args.append(self.define("Tensile_ARCHITECTURE", self.get_gpulist_for_tensile_support()))
+        if self.spec.satisfies("^cmake@3.21.0:"):
+            args.append(
+                self.define("CMAKE_HIP_ARCHITECTURES", self.get_gpulist_for_tensile_support())
+            )
+        else:
+            args.append(
+                self.define("Tensile_ARCHITECTURE", self.get_gpulist_for_tensile_support())
+            )
 
         if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
             args.append(self.define("__skip_rocmclang", "ON"))

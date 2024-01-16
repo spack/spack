@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class PyPandas(PythonPackage):
     pypi = "pandas/pandas-1.2.0.tar.gz"
 
     maintainers("adamjstewart")
+
+    license("Apache-2.0")
 
     version("2.1.4", sha256="fcb68203c833cc735321512e13861358079a96c174a61f5116a1de89c58c0ef7")
     version("2.1.3", sha256="22929f84bca106921917eb73c1521317ddd0a4c71b395bcf767a106e3494209f")

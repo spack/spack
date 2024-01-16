@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1580,6 +1580,49 @@ def fetch_remote_configs(url: str, dest_dir: str, skip_existing: bool = True) ->
     raise ConfigFileError(f"Cannot retrieve configuration (yaml) from {url}")
 
 
+def get_mark_from_yaml_data(obj):
+    """Try to get ``spack.util.spack_yaml`` mark from YAML data.
+
+    We try the object, and if that fails we try its first member (if it's a container).
+
+    Returns:
+        mark if one is found, otherwise None.
+    """
+    # mark of object itelf
+    mark = getattr(obj, "_start_mark", None)
+    if mark:
+        return mark
+
+    # mark of first member if it is a container
+    if isinstance(obj, (list, dict)):
+        first_member = next(iter(obj), None)
+        if first_member:
+            mark = getattr(first_member, "_start_mark", None)
+
+    return mark
+
+
+def parse_spec_from_yaml_string(string: str) -> "spack.spec.Spec":
+    """Parse a spec from YAML and add file/line info to errors, if it's available.
+
+    Parse a ``Spec`` from the supplied string, but also intercept any syntax errors and
+    add file/line information for debugging using file/line annotations from the string.
+
+    Arguments:
+        string: a string representing a ``Spec`` from config YAML.
+
+    """
+    try:
+        spec = spack.spec.Spec(string)
+        return spec
+    except spack.parser.SpecSyntaxError as e:
+        mark = spack.config.get_mark_from_yaml_data(string)
+        if mark:
+            msg = f"{mark.name}:{mark.line + 1}: {str(e)}"
+            raise spack.parser.SpecSyntaxError(msg) from e
+        raise e
+
+
 class ConfigError(SpackError):
     """Superclass for all Spack config related errors."""
 
@@ -1625,23 +1668,9 @@ class ConfigFormatError(ConfigError):
     def _get_mark(self, validation_error, data):
         """Get the file/line mark fo a validation error from a Spack YAML file."""
 
-        def _get_mark_or_first_member_mark(obj):
-            # mark of object itelf
-            mark = getattr(obj, "_start_mark", None)
-            if mark:
-                return mark
-
-            # mark of first member if it is a container
-            if isinstance(obj, (list, dict)):
-                first_member = next(iter(obj), None)
-                if first_member:
-                    mark = getattr(first_member, "_start_mark", None)
-                    if mark:
-                        return mark
-
         # Try various places, starting with instance and parent
         for obj in (validation_error.instance, validation_error.parent):
-            mark = _get_mark_or_first_member_mark(obj)
+            mark = get_mark_from_yaml_data(obj)
             if mark:
                 return mark
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class PyScipy(PythonPackage):
     git = "https://github.com/scipy/scipy.git"
 
     maintainers("adamjstewart", "rgommers")
+
+    license("BSD-3-Clause")
 
     version("main", branch="main")
     version("1.11.4", sha256="90a2b78e7f5733b9de748f589f09225013685f9b218275257f8a8168ededaeaa")

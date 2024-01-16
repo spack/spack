@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class DamaskGrid(CMakePackage):
     url = "https://damask.mpie.de/download/damask-3.0.0.tar.xz"
 
     maintainers("MarDiehl")
+
+    license("AGPL-3.0-or-later")
 
     version(
         "3.0.0-alpha8", sha256="f62c38123213d1c1fe2eb8910b0ffbdc1cac56273c2520f3b64a553363190b9d"

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class RocmValidationSuite(CMakePackage):
     homepage = "https://github.com/ROCm-Developer-Tools/ROCmValidationSuite"
     url = "https://github.com/ROCm-Developer-Tools/ROCmValidationSuite/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
+
+    license("MIT")
 
     maintainers("srekolam", "renjithravindrankannath")
     version("5.7.1", sha256="202f2b6e014bbbeec40af5d3ec630c042f09a61087a77bd70715d81044ea4d65")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Libjxl(CMakePackage):
     homepage = "https://github.com/libjxl/libjxl"
     url = "https://github.com/libjxl/libjxl/archive/refs/tags/v0.6.1.tar.gz"
     git = "https://github.com/libjxl/libjxl.git"
+
+    license("Apache-2.0")
 
     version("main", branch="main", submodules=True)
     version(

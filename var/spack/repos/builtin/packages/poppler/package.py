@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Poppler(CMakePackage):
     url = "https://poppler.freedesktop.org/poppler-21.09.0.tar.xz"
     list_url = "https://poppler.freedesktop.org/releases.html"
     git = "https://gitlab.freedesktop.org/poppler/poppler.git"
+
+    license("GPL-2.0-or-later")
 
     version("master", branch="master")
     version("23.04.0", sha256="b6d893dc7dcd4138b9e9df59a13c59695e50e80dc5c2cacee0674670693951a1")

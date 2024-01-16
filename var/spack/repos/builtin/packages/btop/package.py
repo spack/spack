@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Btop(MakefilePackage):
     url = "https://github.com/aristocratos/btop/archive/refs/tags/v1.2.13.tar.gz"
 
     maintainers("alalazo")
+
+    license("Apache-2.0")
 
     version("1.2.13", sha256="668dc4782432564c35ad0d32748f972248cc5c5448c9009faeb3445282920e02")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class PyScikitLearn(PythonPackage):
     git = "https://github.com/scikit-learn/scikit-learn.git"
 
     maintainers("adamjstewart")
+
+    license("BSD-3-Clause")
 
     version("master", branch="master")
     version("1.3.2", sha256="a2f54c76accc15a34bfb9066e6c7a56c1e7235dda5762b990792330b52ccfb05")

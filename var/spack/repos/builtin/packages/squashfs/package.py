@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Squashfs(MakefilePackage):
 
     homepage = "http://squashfs.sourceforge.net"
     url = "https://downloads.sourceforge.net/project/squashfs/squashfs/squashfs4.3/squashfs4.3.tar.gz"
+
+    license("GPL-2.0-or-later")
 
     # version      sha1
     version("4.6.1", sha256="94201754b36121a9f022a190c75f718441df15402df32c2b520ca331a107511c")
