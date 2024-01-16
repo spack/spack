@@ -178,7 +178,12 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
                 libs.append("libmkl_intel_thread")
             else:
                 libs.append("libmkl_gnu_thread")
-            threading_libs += self.openmp_libs
+
+            # this is slightly different than what link-line advisor suggests.
+            # here it uses what the compiler suggests to use to enable openmp,
+            # instead of being explicit about in which path openmp libraries
+            # are located (e.g. intel libiomp5, gcc libgomp, clang libomp).
+            threading_libs += [self.compiler.openmp_flag]
         else:
             libs.append("libmkl_sequential")
 
