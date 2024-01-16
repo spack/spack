@@ -206,16 +206,16 @@ spack:
   # - hpctoolkit +level_zero            # dyninst@12.3.0%gcc: /usr/bin/ld: libiberty/./d-demangle.c:142: undefined reference to `_intel_fast_memcpy'; can't mix intel-tbb@%oneapi with dyninst%gcc
   # - warpx compute=sycl                # warpx: spack-build-wzp6vvo/_deps/fetchedamrex-src/Src/Base/AMReX_RandomEngine.H:18:10: fatal error: 'oneapi/mkl/rng/device.hpp' file not found
   # --
-  # - aml                                                     # aml: /opt/intel/oneapi/compiler/2024.0/bin/sycl-post-link: error while loading shared libraries: libonnxruntime.1.12.22.721.so: cannot open shared object file: No such file or directory
-  # - aml +ze                                                 # aml: /opt/intel/oneapi/compiler/2024.0/bin/sycl-post-link: error while loading shared libraries: libonnxruntime.1.12.22.721.so: cannot open shared object file: No such file or directory
+  - aml                                                     # aml: /opt/intel/oneapi/compiler/2024.0/bin/sycl-post-link: error while loading shared libraries: libonnxruntime.1.12.22.721.so: cannot open shared object file: No such file or directory
+  - aml +ze                                                 # aml: /opt/intel/oneapi/compiler/2024.0/bin/sycl-post-link: error while loading shared libraries: libonnxruntime.1.12.22.721.so: cannot open shared object file: No such file or directory
   # - arborx +sycl ^kokkos +sycl +openmp cxxstd=17 +examples  # kokkos@4.2.00: CMake Error at cmake/Modules/FindTPLONEDPL.cmake:31 (FIND_PACKAGE):
   # - cabana +sycl ^kokkos +sycl +openmp cxxstd=17 +examples  # kokkos@4.2.00: CMake Error at cmake/Modules/FindTPLONEDPL.cmake:31 (FIND_PACKAGE):
   # - ginkgo +sycl                                            # ginkgo: Could NOT find PAPI (missing: PAPI_LIBRARY PAPI_INCLUDE_DIR sde) (Required is at least version "7.0.1.0") SYCL feature test compile failed! compile output is: CMake Error at /opt/intel/oneapi/compiler/2024.0/lib/cmake/IntelSYCL/IntelSYCLConfig.cmake:282 (SYCL_FEATURE_TEST_EXTRACT): SYCL_FEATURE_TEST_EXTRACT Function invoked with incorrect arguments for
-  # - heffte +sycl                                            # heffte: /opt/intel/oneapi/compiler/2024.0/bin/sycl-post-link: error while loading shared libraries: libonnxruntime.1.12.22.721.so: cannot open shared object file: No such file or directory
+  - heffte +sycl                                            # heffte: /opt/intel/oneapi/compiler/2024.0/bin/sycl-post-link: error while loading shared libraries: libonnxruntime.1.12.22.721.so: cannot open shared object file: No such file or directory
   # - kokkos +sycl +openmp cxxstd=17 +examples                # kokkos@4.2.00: CMake Error at cmake/Modules/FindTPLONEDPL.cmake:31 (FIND_PACKAGE):
   # - kokkos-kernels build_type=Release %oneapi ^kokkos +sycl +openmp cxxstd=17 +examples # kokkos@4.0.00: tpls/desul/include/desul/atomics/Adapt_SYCL.hpp:83:7: error: no template named 'sycl_memory_scope'
   # - petsc +sycl                                             # kokkos@4.0.00: tpls/desul/include/desul/atomics/Adapt_SYCL.hpp:83:7: error: no template named 'sycl_memory_scope'
-  # - slate +sycl                                             # blaspp: /opt/intel/oneapi/compiler/2024.0/bin/sycl-post-link: error while loading shared libraries: libonnxruntime.1.12.22.721.so: cannot open shared object file: No such file or directory
+  - slate +sycl                                             # blaspp: /opt/intel/oneapi/compiler/2024.0/bin/sycl-post-link: error while loading shared libraries: libonnxruntime.1.12.22.721.so: cannot open shared object file: No such file or directory
   # - sundials +sycl cxxstd=17 +examples-install              # sundials@6.6.2 /cakfnxs: CMake: could NOT find MPI_CXX (missing: MPI_CXX_WORKS) (Required is at least version "2.0.0")    
 
   - py-scipy
@@ -223,7 +223,7 @@ spack:
   ci:
     pipeline-gen:
     - build-job:
-        image: ecpe4s/ubuntu22.04-runner-amd64-oneapi-2024.0.0:2023.12.01
+        image: ecpe4s/ubuntu22.04-runner-amd64-oneapi-2024.0.0:2024.01.16b
 
   cdash:
     build-group: E4S OneAPI
