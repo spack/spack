@@ -1012,3 +1012,26 @@ def test_default_requirements_semantic_with_mv_variants(
 
     for constraint in not_expected:
         assert not s.satisfies(constraint), constraint
+
+
+@pytest.mark.regression("42084")
+def test_requiring_package_on_multiple_virtuals(concretize_scope, mock_packages):
+    update_packages_config(
+        """
+    packages:
+      all:
+        providers:
+          scalapack: [netlib-scalapack]
+      blas:
+        require: intel-parallel-studio
+      lapack:
+        require: intel-parallel-studio
+      scalapack:
+        require: intel-parallel-studio
+    """
+    )
+    s = Spec("dla-future").concretized()
+
+    assert s["blas"].name == "intel-parallel-studio"
+    assert s["lapack"].name == "intel-parallel-studio"
+    assert s["scalapack"].name == "intel-parallel-studio"
