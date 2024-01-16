@@ -112,7 +112,7 @@ spack:
     - graphviz
     - hdf5~mpi@1.10.7
     - help2man
-    - hpe-mpi@2.25.hmpt
+    - hpe-mpi@2.27.p1.hmpt
     - intel-mkl
     # Leads to issues down the line, where it is preferred over hpe-mpi
     # #providers
