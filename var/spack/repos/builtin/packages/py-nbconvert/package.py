@@ -119,11 +119,11 @@ class PyNbconvert(PythonPackage):
             "theme-dark.css": ["lab", "variables.css"],
             "style.css": ["classic", "style.min.css"],
         }
-        for f in css.keys():
-            dest = join_path(self.stage.source_path, "share", "templates", css[f][0], "static")
+        for target, (subdir, source) in css.items():
+            dest = join_path(self.stage.source_path, "share", "templates", subdir, "static")
             mkdirp(dest)
             install(
-                join_path(self.stage.source_path, "resource_%s" % f, css[f][1]), join_path(dest, f)
+                join_path(self.stage.source_path, "resource_%s" % target, source), join_path(dest, target)
             )
 
     @when("@:7.4.0")
