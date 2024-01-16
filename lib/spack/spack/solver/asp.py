@@ -1991,7 +1991,7 @@ class SpackSolverSetup:
             node_compiler_version = fn.attr("node_compiler_version_set")
             node_flag = fn.attr("node_flag_set")
             node_flag_source = fn.attr("node_flag_source")
-            node_flag_propagation_candidate= fn.attr("node_flag_propagation_candidate")
+            node_flag_propagation_candidate = fn.attr("node_flag_propagation_candidate")
             variant_propagation_candidate = fn.attr("variant_propagation_candidate")
 
         class Body:
@@ -2005,7 +2005,7 @@ class SpackSolverSetup:
             node_compiler_version = fn.attr("node_compiler_version")
             node_flag = fn.attr("node_flag")
             node_flag_source = fn.attr("node_flag_source")
-            node_flag_propagation_candidate= fn.attr("node_flag_propagation_candidate")
+            node_flag_propagation_candidate = fn.attr("node_flag_propagation_candidate")
             variant_propagation_candidate = fn.attr("variant_propagation_candidate")
 
         f = Body if body else Head
