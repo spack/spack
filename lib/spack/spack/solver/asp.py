@@ -1747,9 +1747,10 @@ class SpackSolverSetup:
             rules = self._rules_from_requirements(
                 virtual_str, requirements, kind=RequirementKind.VIRTUAL
             )
-            self.emit_facts_from_requirement_rules(rules)
-            self.trigger_rules()
-            self.effect_rules()
+            if rules:
+                self.emit_facts_from_requirement_rules(rules)
+                self.trigger_rules()
+                self.effect_rules()
 
     def emit_facts_from_requirement_rules(self, rules: List[RequirementRule]):
         """Generate facts to enforce requirements.

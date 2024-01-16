@@ -698,6 +698,18 @@ requirement_group_satisfied(node(ID, Package), X) :-
   activate_requirement(node(ID, Package), X),
   requirement_group(Package, X).
 
+% When we have a required provider, we need to ensure that the provider/2 facts respect
+% the requirement. This is particularly important for packages that could provide multiple
+% virtuals independently
+required_provider(Provider, Virtual)
+  :- requirement_group_member(ConditionID, Virtual, RequirementID),
+     condition_holds(ConditionID, _),
+     virtual(Virtual),
+     pkg_fact(Virtual, condition_effect(ConditionID, EffectID)),
+     imposed_constraint(EffectID, "node", Provider).
+
+:- provider(node(Y, Package), node(X, Virtual)), required_provider(Provider, Virtual), Package != Provider.
+
 % TODO: the following two choice rules allow the solver to add compiler
 % flags if their only source is from a requirement. This is overly-specific
 % and should use a more-generic approach like in https://github.com/spack/spack/pull/37180
