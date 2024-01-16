@@ -108,6 +108,10 @@ class R(AutotoolsPackage):
     # temporary fix to lower the optimization level.
     patch("change_optflags_tmp.patch", when="%fj@4.1.0")
 
+    # Make R use a symlink to which in Sys.which, otherwise an absolute path
+    # gets stored as compressed byte code, which is not relocatable
+    patch("relocate-which.patch")
+
     build_directory = "spack-build"
 
     # R custom URL version
