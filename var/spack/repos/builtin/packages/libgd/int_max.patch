@@ -1,0 +1,22 @@
+From c9b601a658a79e6ea2aad29fbf60ca6e24ccef1e Mon Sep 17 00:00:00 2001
+From: "Christoph M. Becker" <cmbecker69@gmx.de>
+Date: Wed, 18 Jan 2017 13:59:02 +0100
+Subject: [PATCH] Fix build issue regarding INT_MAX
+
+For portability gd_gd2.c needs to include <limits.h>.
+---
+ src/gd_gd2.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/gd_gd2.c b/src/gd_gd2.c
+index c2904cafa..049c4c568 100644
+--- a/src/gd_gd2.c
++++ b/src/gd_gd2.c
+@@ -74,6 +74,7 @@
+ 
+ /* 2.0.29: no more errno.h, makes windows happy */
+ #include <math.h>
++#include <limits.h>
+ #include <string.h>
+ #include "gd.h"
+ #include "gd_errors.h"

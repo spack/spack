@@ -39,6 +39,8 @@ class Libgd(AutotoolsPackage):
     depends_on("fontconfig")
     depends_on("libx11")
 
+    patch("int_max.patch", when="@2.2.4")
+
     def patch(self):
         p = self.spec["jpeg"].libs.search_flags
         filter_file(
