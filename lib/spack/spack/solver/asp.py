@@ -12,6 +12,7 @@ import pathlib
 import pprint
 import re
 import types
+import typing
 import warnings
 from typing import Callable, Dict, List, NamedTuple, Optional, Sequence, Set, Tuple, Union
 
@@ -379,7 +380,7 @@ def check_packages_exist(specs):
     for spec in specs:
         for s in spec.traverse():
             try:
-                check_passed = repo.exists(s.name) or repo.is_virtual(s.name)
+                check_passed = repo.repo_for_pkg(s).exists(s.name) or repo.is_virtual(s.name)
             except Exception as e:
                 msg = "Cannot find package: {0}".format(str(e))
                 check_passed = False
@@ -1132,6 +1133,7 @@ class SpackSolverSetup:
 
         # Set during the call to setup
         self.pkgs = None
+        self.explicitly_required_namespaces = {}
 
     def pkg_version_rules(self, pkg):
         """Output declared versions of a package.
@@ -1144,7 +1146,9 @@ class SpackSolverSetup:
             # Origins are sorted by "provenance" first, see the Provenance enumeration above
             return version.origin, version.idx
 
-        pkg = packagize(pkg)
+        if isinstance(pkg, str):
+            pkg = self.pkg_class(pkg)
+
         declared_versions = self.declared_versions[pkg.name]
         partially_sorted_versions = sorted(set(declared_versions), key=key_fn)
 
@@ -1336,7 +1340,10 @@ class SpackSolverSetup:
         )
 
     def pkg_rules(self, pkg, tests):
-        pkg = packagize(pkg)
+        pkg = self.pkg_class(pkg)
+
+        # Namespace of the package
+        self.gen.fact(fn.pkg_fact(pkg.name, fn.namespace(pkg.namespace)))
 
         # versions
         self.pkg_version_rules(pkg)
@@ -1973,7 +1980,7 @@ class SpackSolverSetup:
                 if not spec.concrete:
                     reserved_names = spack.directives.reserved_names
                     if not spec.virtual and vname not in reserved_names:
-                        pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
+                        pkg_cls = self.pkg_class(spec.name)
                         try:
                             variant_def, _ = pkg_cls.variants[vname]
                         except KeyError:
@@ -2092,7 +2099,7 @@ class SpackSolverSetup:
         """Declare any versions in specs not declared in packages."""
         packages_yaml = spack.config.get("packages")
         for pkg_name in possible_pkgs:
-            pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+            pkg_cls = self.pkg_class(pkg_name)
 
             # All the versions from the corresponding package.py file. Since concepts
             # like being a "develop" version or being preferred exist only at a
@@ -2554,8 +2561,6 @@ class SpackSolverSetup:
         """
         check_packages_exist(specs)
 
-        self.possible_virtuals = set(x.name for x in specs if x.virtual)
-
         node_counter = _create_counter(specs, tests=self.tests)
         self.possible_virtuals = node_counter.possible_virtuals()
         self.pkgs = node_counter.possible_dependencies()
@@ -2567,6 +2572,10 @@ class SpackSolverSetup:
             ]
             if missing_deps:
                 raise spack.spec.InvalidDependencyError(spec.name, missing_deps)
+
+        for node in spack.traverse.traverse_nodes(specs):
+            if node.namespace is not None:
+                self.explicitly_required_namespaces[node.name] = node.namespace
 
         # driver is used by all the functions below to add facts and
         # rules to generate an ASP program.
@@ -2777,6 +2786,13 @@ class SpackSolverSetup:
             for s in spec_group[key]:
                 yield _spec_with_default_name(s, pkg_name)
 
+    def pkg_class(self, pkg_name: str) -> typing.Type["spack.package_base.PackageBase"]:
+        request = pkg_name
+        if pkg_name in self.explicitly_required_namespaces:
+            namespace = self.explicitly_required_namespaces[pkg_name]
+            request = f"{namespace}.{pkg_name}"
+        return spack.repo.PATH.get_pkg_class(request)
+
 
 class SpecBuilder:
     """Class with actions to rebuild a spec from ASP results."""
@@ -2835,6 +2851,9 @@ class SpecBuilder:
             arch = spack.spec.ArchSpec()
             self._specs[node].architecture = arch
         return arch
+
+    def namespace(self, node, namespace):
+        self._specs[node].namespace = namespace
 
     def node_platform(self, node, platform):
         self._arch(node).platform = platform
@@ -3049,14 +3068,6 @@ class SpecBuilder:
                         continue
 
             action(*args)
-
-        # namespace assignment is done after the fact, as it is not
-        # currently part of the solve
-        for spec in self._specs.values():
-            if spec.namespace:
-                continue
-            repo = spack.repo.PATH.repo_for_pkg(spec)
-            spec.namespace = repo.namespace
 
         # fix flags after all specs are constructed
         self.reorder_flags()
