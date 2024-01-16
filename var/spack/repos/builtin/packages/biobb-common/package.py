@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class BiobbCommon(PythonPackage):
+class PyBiobbCommon(PythonPackage):
     """Biobb_common is the base package required to use the biobb packages"""
 
     pypi = "biobb_common/biobb_common-4.1.0.tar.gz"
