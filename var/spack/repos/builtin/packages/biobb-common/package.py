@@ -21,4 +21,4 @@ class PyBiobbCommon(PythonPackage):
     depends_on("python@3.8:3.10", type=("build", "run"))
     depends_on("py-pyyaml", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"))
-    depends_on("py-biopython@1.78:1.80", type=("build", "run"))
+    depends_on("py-biopython", type=("build", "run"))
