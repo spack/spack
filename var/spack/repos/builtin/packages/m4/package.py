@@ -48,20 +48,6 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
     patch("checks-198.sysval.2.patch", when="@1.4.19")
 
     variant("sigsegv", default=True, description="Build the libsigsegv dependency")
-    variant("compiler-rt", default=False, description="Build with the compiler runtime library")
-
-    # From package apple-libunwind
-    # The 'conflicts' directive only accepts valid spack specs;
-    # platforms cannot be negated -- 'platform!=darwin' is not a valid
-    # spec -- so expressing a conflict for any platform that isn't
-    # Darwin must be expressed by listing a conflict with every
-    # platform that isn't Darwin/macOS
-    for plat in ["linux", "cray"]:
-        conflicts("@:1.4.18%clang@:11~compiler-rt", when="platform=" + plat)
-        conflicts("%aocc~compiler-rt ", when="platform=" + plat)
-        conflicts("%arm~compiler-rt ", when="platform=" + plat)
-        conflicts("%fj~compiler-rt ", when="platform=" + plat)
-        conflicts("%cce@9:~compiler-rt ", when="platform=" + plat)
 
     depends_on("diffutils", type="build")
     depends_on("libsigsegv", when="+sigsegv")
@@ -108,7 +94,15 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
         spec = self.spec
         args = ["--enable-c++"]
 
-        if spec.satisfies("+compiler-rt"):
+        if spec.satisfies("%cce@9:"):
+            args.append("LDFLAGS=-rtlib=compiler-rt")
+
+        if (
+            spec.satisfies("@:1.4.18%clang@:11")
+            or spec.satisfies("%aocc")
+            or spec.satisfies("%arm")
+            or spec.satisfies("%fj")
+        ) and not spec.satisfies("platform=darwin"):
             args.append("LDFLAGS=-rtlib=compiler-rt")
 
         if spec.satisfies("%intel@:18"):
