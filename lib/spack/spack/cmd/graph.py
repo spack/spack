@@ -59,17 +59,10 @@ def graph(parser, args):
     if args.installed and env:
         tty.die("cannot use --installed with an active environment")
 
-    if args.installed and args.ascii:
-        tty.die("cannot use --installed with --ascii")
-
-    if env and args.ascii:
-        tty.die("cannot use --ascii with an active environment")
-
     if args.color and not args.dot:
         tty.die("the --color option can be used only with --dot")
 
     if args.installed:
-        args.dot = True
         if not args.specs:
             specs = spack.store.STORE.db.query()
         else:
@@ -78,10 +71,9 @@ def graph(parser, args):
                 result.extend(spack.store.STORE.db.query(item))
             specs = list(set(result))
     elif env:
-        args.dot = True
         specs = env.concrete_roots()
         if args.specs:
-            specs = [x for x in specs if any(x.satisfies(req) for req in args.specs)]
+            specs = env.all_matching_specs(*args.specs)
 
     else:
         specs = spack.cmd.parse_specs(args.specs, concretize=not args.static)
@@ -90,7 +82,6 @@ def graph(parser, args):
         tty.die("no spec matching the query")
 
     if args.static:
-        args.dot = True
         static_graph_dot(specs, depflag=args.deptype)
         return
 
