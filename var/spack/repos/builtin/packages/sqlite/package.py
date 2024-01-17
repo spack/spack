@@ -9,8 +9,6 @@ from tempfile import NamedTemporaryFile
 import spack.platforms
 from spack.package import *
 
-import llnl.util.filesystem as fs
-
 
 class Sqlite(AutotoolsPackage, NMakePackage):
     """SQLite is a C-language library that implements a small, fast,
@@ -296,4 +294,3 @@ class NMakeBuilder(spack.build_systems.nmake.NMakeBuilder):
             install(f"{self.build_directory}\\*.dll", prefix.bin)
             install(f"{self.build_directory}\\*.lib", prefix.lib)
             install(f"{self.build_directory}\\*.h", prefix.include)
-
