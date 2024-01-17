@@ -23,4 +23,4 @@ class PyNglview(PythonPackage):
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools@40.8.0:", type="build")
     depends_on("py-jupyter-packaging@0.7", type="build")
-    depends_on("py-versioneer", type="build")
+    depends_on("py-versioneer-518", type="build")
