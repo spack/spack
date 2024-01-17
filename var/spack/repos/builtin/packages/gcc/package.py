@@ -868,8 +868,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             # config.guess returns the host triple, e.g. "x86_64-pc-linux-gnu"
             glibc = self.spec['glibc']
             common_flags = (" ".join([
-                '-isystem ' ,
+                '-isystem ',
                 glibc.prefix.include,
+                '-isystem ' ,
+                self.spec["libxcrypt"].prefix.include,
                 "-B" + glibc.prefix.lib,
             ]))
             ldflags = " ".join([
