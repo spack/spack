@@ -16,7 +16,6 @@ class PyReretry(PythonPackage):
     license("Apache-2.0")
 
     version("0.11.8", sha256="f2791fcebe512ea2f1d153a2874778523a8064860b591cd90afc21a8bed432e3")
-    version("0.11.7", sha256="9dec89c74fb4d79ccfc92c564e67199e582c837c6d6352020bba49aa2eaead83")
     version("0.11.1", sha256="4ae1840ae9e443822bb70543c485bb9c45d1d009e32bd6809f2a9f2839149f5d")
 
     depends_on("python@3.7:", type=("build", "run"), when="@0.11.4:")
