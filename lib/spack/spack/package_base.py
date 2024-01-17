@@ -2559,3 +2559,7 @@ class DependencyConflictError(spack.error.SpackError):
 
     def __init__(self, conflict):
         super().__init__("%s conflicts with another file in the flattened directory." % (conflict))
+
+
+class ManualDownloadRequiredError(InvalidPackageOpError):
+    """Raised when attempting an invalid operation on a package that requires a manual download."""
