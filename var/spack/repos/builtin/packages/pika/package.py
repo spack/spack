@@ -94,9 +94,9 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("%clang@:8", when="@0.2:")
     conflicts("+stdexec", when="cxxstd=17")
     conflicts("cxxstd=23", when="^cmake@:3.20.2")
-    # CUDA version <= 11 does not support C++20 and newer
+    # nvcc version <= 11 does not support C++20 and newer
     for cxxstd in filter(lambda x: x != "17", cxxstds):
-        conflicts(f"cxxstd={cxxstd}", when="^cuda@:11")
+        requires("%nvhpc", when=f"cxxstd={cxxstd} ^cuda@:11")
 
     # Other dependencies
     depends_on("boost@1.71:")
