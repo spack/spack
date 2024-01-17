@@ -25,6 +25,8 @@ class Sed(AutotoolsPackage, GNUMirrorPackage):
 
     executables = ["^sed$"]
 
+    tags = ["build-tools"]
+
     def url_for_version(self, version):
         if Version("4.2") <= version < Version("4.3.0"):
             self.gnu_mirror_path = "sed/sed-{0}.tar.bz2".format(version)
