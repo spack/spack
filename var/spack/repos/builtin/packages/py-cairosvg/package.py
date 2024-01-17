@@ -12,6 +12,7 @@ class PyCairosvg(PythonPackage):
     It can export SVG files to PDF, EPS, PS, and PNG files.
     """
 
+    homepage = "https://cairosvg.org/"
     pypi = "CairoSVG/CairoSVG-2.7.1.tar.gz"
 
     version("2.7.1", sha256="432531d72347291b9a9ebfb6777026b607563fd8719c46ee742db0aef7271ba0")
