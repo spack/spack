@@ -19,13 +19,15 @@ class Countdown(CMakePackage, CudaPackage):
 
     maintainers = ['f-tesser', 'danielecesarini']
 
-    version("1.1.0", sha256="0fd2703bc8fcf69cbdb6122e4974a79b3987e897e9d4c86f5d3a1631731522bd")
+    version("1.1.1", sha256="ee7f00ffc047f000a21a7a71f6ea6f4049afb1a8407608adc04993929ceba917")
 
     variant("cuda", default=False, description="Build with CUDA")
     variant("shared", default=True, description="Build shared libraries")
     variant("no_profiling", default=False, description="Disable MPI profiling")
-    variant("no_acc_mpi", default=False, description="Disable the instrumentation of all accessory MPI functions")
-    variant("no_p2p_mpi", default=False, description="Disable the instrumentation of all point-to-point MPI functions")
+    variant("acc_mpi", default=True, description="Enable the instrumentation of all accessory MPI functions")
+    variant("p2p_mpi", default=True, description="Enable the instrumentation of all point-to-point MPI functions")
+    variant("coll_mpi", default=True, description="Enable the instrumentation of all collective MPI functions")
+    variant("excl_all_mpi", default=False, description="Disable the instrumentation of all MPI functions, except for initialization and finalization")
     variant("debug_mpi", default=False, description="Enable the debug prints on MPI functions")
     variant("mosquitto", default=False, description="Enable MQTT message passing")
     variant("hwp_auto_discovery", default=True, description="Autodiscovery of hwp-states")
@@ -43,8 +45,10 @@ class Countdown(CMakePackage, CudaPackage):
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("CNTD_ENABLE_CUDA", "cuda"),
             self.define_from_variant("CNTD_DISABLE_PROFILING_MPI", "no_profiling"),
-            self.define_from_variant("CNTD_DISABLE_ACCESSORY_MPI", "no_acc_mpi"),
-            self.define_from_variant("CNTD_DISABLE_P2P_MPI", "no_p2p_mpi"),
+            self.define_from_variant("CNTD_DISABLE_ACCESSORY_MPI", "acc_mpi"),
+            self.define_from_variant("CNTD_ENABLE_P2P_MPI", "p2p_mpi"),
+            self.define_from_variant("CNTD_ENABLE_COLLECTIVE_MPI", "coll_mpi"),
+            self.define_from_variant("CNTD_DISABLE_ALL_MPI_EXCEPT_INI_FIN", "excl_all_mpi"),
             self.define_from_variant("CNTD_ENABLE_DEBUG_MPI", "debug_mpi"),
             self.define_from_variant("CNTD_ENABLE_MOSQUITTO", "mosquitto"),
             self.define_from_variant("CNTD_HWP_AUTO_DISCOVER", "hwp_auto_discovery"),
