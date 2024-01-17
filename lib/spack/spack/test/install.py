@@ -478,7 +478,7 @@ def test_pkg_install_paths(install_mockery):
     # Get a basic concrete spec for the trivial install package.
     spec = Spec("trivial-install-test-package").concretized()
 
-    log_path = os.path.join(spec.prefix, ".spack", _spack_build_logfile)
+    log_path = os.path.join(spec.prefix, ".spack", _spack_build_logfile + ".gz")
     assert spec.package.install_log_path == log_path
 
     env_path = os.path.join(spec.prefix, ".spack", _spack_build_envfile)

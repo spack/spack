@@ -1834,19 +1834,18 @@ class Environment:
         ]
 
     def _install_log_links(self, spec):
-        if not spec.external:
-            # Make sure log directory exists
-            log_path = self.log_path
-            fs.mkdirp(log_path)
+        if spec.external:
+            return
+        # Make sure log directory exists
+        log_path = self.log_path
+        fs.mkdirp(log_path)
 
-            with fs.working_dir(self.path):
-                # Link the resulting log file into logs dir
-                build_log_link = os.path.join(
-                    log_path, "%s-%s.log" % (spec.name, spec.dag_hash(7))
-                )
-                if os.path.lexists(build_log_link):
-                    os.remove(build_log_link)
-                symlink(spec.package.build_log_path, build_log_link)
+        with fs.working_dir(self.path):
+            # Link the resulting log file into logs dir
+            build_log_link = os.path.join(log_path, f"{spec.name}-{spec.dag_hash(7)}.log")
+            if os.path.lexists(build_log_link):
+                os.remove(build_log_link)
+            symlink(spec.package.install_log_path, build_log_link)
 
     def _partition_roots_by_install_status(self):
         """Partition root specs into those that do not have to be passed to the
