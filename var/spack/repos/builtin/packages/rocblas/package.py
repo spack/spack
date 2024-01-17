@@ -133,7 +133,7 @@ class Rocblas(CMakePackage):
     # https://reviews.llvm.org/D124866
     # https://github.com/ROCm-Developer-Tools/HIP/issues/2678
     # https://github.com/ROCm-Developer-Tools/hipamd/blob/rocm-5.2.x/include/hip/amd_detail/host_defines.h#L50
-    conflicts("%gcc@12", when="@5.2.1:5.2.3")
+    conflicts("%gcc@12", when="@5.2")
 
     depends_on("cmake@3.16.8:", type="build", when="@4.2.0:")
     depends_on("cmake@3.8:", type="build", when="@3.9.0:")
