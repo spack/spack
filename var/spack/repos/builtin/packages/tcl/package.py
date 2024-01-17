@@ -71,16 +71,15 @@ class Tcl(AutotoolsPackage, NMakePackage, SourceforgePackage, TclHelper):
         ver_suffix = self.version.up_to(2)
         win_suffix = ""
         if is_windows:
-            if self.spec.satisfies("@:8.7") : win_suffix = "t"
+            if self.spec.satisfies("@:8.7"):
+                win_suffix = "t"
             ver_suffix = ver_suffix.joined
         return f"tclsh{ver_suffix}{win_suffix}"
 
     @property
     def libs(self):
         lib = "lib" if not is_windows else ""
-        return find_libraries(
-            [f"{lib}tcl{self._tcl_name}"], root=self.prefix, recursive=True
-        )
+        return find_libraries([f"{lib}tcl{self._tcl_name}"], root=self.prefix, recursive=True)
 
     @property
     def command(self):
@@ -93,9 +92,7 @@ class Tcl(AutotoolsPackage, NMakePackage, SourceforgePackage, TclHelper):
         # installations that may not have this symlink, or may have multiple versions
         # of Tcl installed in the same directory.
         exe = ".exe" if is_windows else ""
-        return Executable(
-            os.path.realpath(self.prefix.bin.join(f"tclsh{self._tcl_name}{exe}"))
-        )
+        return Executable(os.path.realpath(self.prefix.bin.join(f"tclsh{self._tcl_name}{exe}")))
 
     def setup_run_environment(self, env):
         """Set TCL_LIBRARY to the directory containing init.tcl.
