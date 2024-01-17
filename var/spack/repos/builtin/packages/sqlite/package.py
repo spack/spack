@@ -9,6 +9,8 @@ from tempfile import NamedTemporaryFile
 import spack.platforms
 from spack.package import *
 
+import llnl.util.filesystem as fs
+
 
 class Sqlite(AutotoolsPackage, NMakePackage):
     """SQLite is a C-language library that implements a small, fast,
@@ -109,6 +111,8 @@ class Sqlite(AutotoolsPackage, NMakePackage):
     # Starting version 3.21.0 SQLite doesn't use the built-ins if Intel
     # compiler is used.
     patch("remove_overflow_builtins.patch", when="@3.17.0:3.20%intel")
+
+    patch("quote_compiler_in_makefile.patch", when="platform=windows")
 
     build_system("autotools", "nmake")
 
@@ -283,6 +287,13 @@ class NMakeBuilder(spack.build_systems.nmake.NMakeBuilder):
     def makefile_name(self):
         return "Makefile.msc"
 
-    def nmake_args(self):
-        args = [self.define("TCLDIR", self.spec["tcl"].prefix)]
-        return args
+    def install(self, pkg, spec, prefix):
+        with working_dir(self.build_directory):
+            mkdirp(prefix.include)
+            mkdirp(prefix.lib)
+            mkdirp(prefix.bin)
+            install(f"{self.build_directory}\\*.exe", prefix.bin)
+            install(f"{self.build_directory}\\*.dll", prefix.bin)
+            install(f"{self.build_directory}\\*.lib", prefix.lib)
+            install(f"{self.build_directory}\\*.h", prefix.include)
+
