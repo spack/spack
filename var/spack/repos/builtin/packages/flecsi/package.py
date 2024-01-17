@@ -173,9 +173,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
                 self.define_from_variant("CALIPER_DETAIL", "caliper_detail"),
                 self.define_from_variant("ENABLE_FLOG", "flog"),
                 self.define_from_variant("ENABLE_GRAPHVIZ", "graphviz"),
-                self.define(
-                    "ENABLE_HDF5", "+hdf5" in spec and spec.variants["backend"].value != "hpx"
-                ),
+                self.define_from_variant("ENABLE_HDF5", "hdf5"),
                 self.define_from_variant("ENABLE_KOKKOS", "kokkos"),
                 self.define_from_variant("ENABLE_OPENMP", "openmp"),
                 self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
@@ -208,9 +206,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
                 self.define_from_variant("ENABLE_FLECSTAN", "flecstan"),
                 self.define("ENABLE_MPI", spec.variants["backend"].value != "serial"),
                 self.define("ENABLE_UNIT_TESTS", self.run_tests or "+unit_tests" in spec),
-                self.define(
-                    "ENABLE_HDF5", "+hdf5" in spec and spec.variants["backend"].value != "hpx"
-                ),
+                self.define_from_variant("ENABLE_HDF5", "hdf5"),
             ]
 
             if "+external_cinch" in spec:
