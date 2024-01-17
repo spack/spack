@@ -80,7 +80,7 @@ class PyNbconvert(PythonPackage):
     depends_on("py-testpath", when="@5:6.4", type=("build", "run"))
     depends_on("py-lxml", when="@6.5.1:7.0", type=("build", "run"))
 
-    conflicts("^bleach@5.0.0", when="@7.14:")
+    conflicts("^bleach@5.0.0")
 
     resource(
         name="index.css",
