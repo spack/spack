@@ -25,7 +25,7 @@ class Vcftools(AutotoolsPackage):
 
     depends_on("perl", type=("build", "run"))
     depends_on("zlib-api")
-    depends_on("pkg-config")
+    depends_on("pkgconfig")
 
     # this needs to be in sync with what setup_run_environment adds to
     # PERL5LIB below
