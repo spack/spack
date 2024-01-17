@@ -421,6 +421,12 @@ class Python(Package):
             r"^(.*)setup\.py(.*)((build)|(install))(.*)$", r"\1setup.py\2 --no-user-cfg \3\6"
         )
 
+        if self.spec.satisfies("os=spack"):
+            # we don't want explicitly injected /usr/include and similar if building for
+            # portability.  Cribbed from nixpkgs, converted to spackese
+            for p in ("/usr", "/sw", "/opt", "/pkg"):
+                filter_file(p, "/nonexistant/path", "setup.py")
+
     def setup_build_environment(self, env):
         spec = self.spec
 
