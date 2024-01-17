@@ -24,10 +24,15 @@ class Countdown(CMakePackage, CudaPackage):
     variant("cuda", default=False, description="Build with CUDA")
     variant("shared", default=True, description="Build shared libraries")
     variant("no_profiling", default=False, description="Disable MPI profiling")
-    variant("acc_mpi", default=True, description="Enable the instrumentation of all accessory MPI functions")
-    variant("p2p_mpi", default=True, description="Enable the instrumentation of all point-to-point MPI functions")
-    variant("coll_mpi", default=True, description="Enable the instrumentation of all collective MPI functions")
-    variant("excl_all_mpi", default=False, description="Disable the instrumentation of all MPI functions, except for initialization and finalization")
+    variant("acc_mpi", default=True, 
+            description="Enable the instrumentation of all accessory MPI functions")
+    variant("p2p_mpi", default=True, 
+            description="Enable the instrumentation of all point-to-point MPI functions")
+    variant("coll_mpi", default=True, 
+            description="Enable the instrumentation of all collective MPI functions")
+    variant("excl_all_mpi", default=False, 
+            description="Disable the instrumentation of all MPI functions, "
+                        "except for initialization and finalization")
     variant("debug_mpi", default=False, description="Enable the debug prints on MPI functions")
     variant("mosquitto", default=False, description="Enable MQTT message passing")
     variant("hwp_auto_discovery", default=True, description="Autodiscovery of hwp-states")
