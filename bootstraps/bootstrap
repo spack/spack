@@ -1,0 +1,26 @@
+#!/bin/sh
+
+: "${SPACK_ROOT:=$(pwd)}"
+: "${BASE_IMG:=gcc:12-bookworm}"
+: "${JOBS:=16}"
+: "${STAGES:=1 2 3 4}"
+
+dkr_run() {
+    docker run --rm -it \
+        -v "$SPACK_ROOT:/spack" \
+        -e SPACK_DISABLE_LOCAL_CONFIG=1 \
+        -e PATH="/spack/bin:$ADD:$PATH" \
+        -e JOBS \
+        -e STAGE \
+        $BASE_IMG \
+        "$@"
+}
+
+for STAGE in $STAGES ; do
+    ADD=""
+    if [ "$STAGE" -gt 1 ] ; then
+        ADD=/spack/bootstraps/stage$((STAGE - 1))/.spack-env/view/bin
+    fi
+    export JOBS STAGE
+    dkr_run /spack/bootstraps/bootstrap-inner
+done

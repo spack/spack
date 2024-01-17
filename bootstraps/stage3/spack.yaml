@@ -19,8 +19,8 @@ spack:
   - compiler:
       spec: gcc@=13.2.0
       paths:
-        cc: /scratch/spack/bootstraps/stage2/.spack-env/view/bin/gcc
-        cxx: /scratch/spack/bootstraps/stage2/.spack-env/view/bin/g++
+        cc: /spack/bootstraps/stage2/.spack-env/view/bin/gcc
+        cxx: /spack/bootstraps/stage2/.spack-env/view/bin/g++
         f77: null
         fc: null
       flags: {}
@@ -43,5 +43,3 @@ spack:
       modules: []
       environment: {}
       extra_rpaths: []
-  mirrors:
-    my: file:///scratch/spack/spack-cache

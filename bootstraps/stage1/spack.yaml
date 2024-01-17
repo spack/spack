@@ -4,14 +4,11 @@
 # configuration settings.
 spack:
   specs:
-  - binutils
-  - gcc +binutils ~bootstrap
+  - binutils +stage0
+  - gcc +stage0 +binutils ~bootstrap languages=c,c++
+  - gawk
+  - bison
   view: true
-  packages:
-    all:
-      # set the sysroot for stage0 to the view because
-      # we can't know glibc's path yet
-      variants: +stage0
   concretizer:
     unify: true
 
@@ -24,7 +21,7 @@ spack:
         f77: null
         fc: null
       flags: {}
-      operating_system: ubuntu22.04
+      operating_system: debian12
       target: x86_64
       modules: []
       environment: {}

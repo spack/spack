@@ -23,12 +23,11 @@ spack:
   - compiler:
       spec: gcc@=13.2.0
       paths:
-        cc: /scratch/spack/bootstraps/stage1/.spack-env/view/bin/x86_64-spack-linux-gnu-gcc
-        cxx: /scratch/spack/bootstraps/stage1/.spack-env/view/bin/x86_64-spack-linux-gnu-g++
+        cc: /spack/bootstraps/stage1/.spack-env/view/bin/x86_64-spack-linux-gnu-gcc
+        cxx: /spack/bootstraps/stage1/.spack-env/view/bin/x86_64-spack-linux-gnu-g++
         f77: null
         fc: null
       flags: {}
-      # note, cross-compiling
       operating_system: spack
       target: x86_64
       modules: []
@@ -48,6 +47,3 @@ spack:
       modules: []
       environment: {}
       extra_rpaths: []
-
-  mirrors:
-    me: ./spack-cache

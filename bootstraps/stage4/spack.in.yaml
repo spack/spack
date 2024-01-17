@@ -7,7 +7,7 @@ spack:
   specs:
   # glibc from stage3, must match the gcc built there or we get two mixed
   # together, use hash
-  - glibc /3jt6 %gcc@=13.2.0  arch=linux-spack-x86_64
+  - glibc GLIBC_HASH %gcc@=13.2.0  arch=linux-spack-x86_64
   - binutils +gold +lto arch=linux-spack-x86_64
   - gcc +binutils +piclibs languages=c,c++,fortran,lto ~bootstrap arch=linux-spack-x86_64
   # base system
@@ -59,8 +59,8 @@ spack:
   - compiler:
       spec: gcc@=13.2.0
       paths:
-        cc: /spack/base/.spack-env/view/bin/gcc
-        cxx: /spack/base/.spack-env/view/bin/g++
+        cc: /spack/bootstraps/stage3/.spack-env/view/bin/gcc
+        cxx: /spack/bootstraps/stage3/.spack-env/view/bin/g++
         f77: null
         fc: null
       flags: {}
@@ -69,7 +69,3 @@ spack:
       modules: []
       environment: {}
       extra_rpaths: []
-
-
-  mirrors:
-    my: /scratch/spack/spack-cache
