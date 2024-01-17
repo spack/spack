@@ -22,6 +22,7 @@ class SpackManager(Package):
 
     version("develop", branch="develop")
 
+    spack_extension = True
     # everything below here is generic
     scopes = list(spack.config.scopes().keys())
     scopes.remove("_builtin")
@@ -46,28 +47,3 @@ class SpackManager(Package):
                 register_args = ["--scope", scope]
                 register_args.extend(["add", "config:extensions:[{0}]".format(extension_path)])
                 config(*register_args)
-
-    @run_before("uninstall")
-    def pre_uninstall(spec):
-        breakpoint()
-        print("CLEANUP HAPPENING")
-        config = spack.main.SpackCommand("config")
-        extension_path = os.path.join(spec.prefix, spec.name)
-        for scope in spec.variants["scopes"].value:
-            if scope != "none":
-                rm_args = ["--scope", scope]
-                rm_args.extend(["rm", "config:extensions:[{0}]".format(extension_path)])
-                config(*rm_args)
-
-    @run_after("uninstall")
-    def cleanup(self):
-        breakpoint()
-        print("CLEANUP HAPPENING")
-        config = spack.main.SpackCommand("config")
-        extension_path = os.path.join(self.spec.prefix, self.spec.name)
-        for scope in self.spec.variants["scopes"].value:
-            if scope != "none":
-                rm_args = ["--scope", scope]
-                rm_args.extend(["rm", "config:extensions:[{0}]".format(extension_path)])
-                config(*rm_args)
-        # super().do_uninstall(force=force)
