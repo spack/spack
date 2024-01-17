@@ -13,6 +13,7 @@ class PyCssselect2(PythonPackage):
     (including cElementTree, lxml, html5lib, etc.)
     """
 
+    homepage = "https://github.com/Kozea/cssselect2"
     pypi = "cssselect2/cssselect2-0.7.0.tar.gz"
 
     version("0.7.0", sha256="1ccd984dab89fc68955043aca4e1b03e0cf29cad9880f6e28e3ba7a74b14aa5a")
