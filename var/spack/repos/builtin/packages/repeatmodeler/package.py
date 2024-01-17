@@ -84,7 +84,7 @@ class Repeatmodeler(Package):
             "util/visualizeAlignPNG.pl",
         ]
         for f in file_list:
-            filter_file("^#!/usr/bin/perl.*$", "#!/usr/bin/env perl", f)
+            filter_file("^#!/usr/bin/perl.*$", "#!/usr/bin/env perl", f, ignore_absent=True)
 
     def install(self, spec, prefix):
         # interactive configuration script
