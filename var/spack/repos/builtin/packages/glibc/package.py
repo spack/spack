@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
 import os
 
 from spack.build_systems.autotools import AutotoolsPackageNoDep
@@ -234,6 +235,18 @@ class Glibc(AutotoolsPackageNoDep, GNUMirrorPackageNoDep):
                 # 'libc_cv_slibdir='+self.spec.prefix.lib,
                 # 'rootsbindir='+self.spec.prefix.sbin,
                 ])
+
+    @property
+    def ld_so(self):
+        opts = glob.glob(f"{self.spec.prefix.lib.join('ld-linux')}*.so*")
+        if opts:
+            return opts[0]
+        else:
+            return None
+
+    @property
+    def dynamic_linker_flag(self):
+        return f"-Wl,--dynamic-linker={self.ld_so}"
 
     def build(self, spec, prefix):
         # 1. build just ld.so

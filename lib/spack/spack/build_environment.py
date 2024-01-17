@@ -404,32 +404,14 @@ def set_compiler_environment_variables(pkg, env):
 
     if 'spack' in pkg.spec.os and '^glibc' in pkg.spec:
         ldf = inject_flags.get('ldflags', [])
-        ldf.append("-Wl,--dynamic-linker=" + pkg.spec["glibc"].prefix + "/lib/ld-linux-"
-                   + pkg.spec.architecture.target.microarchitecture.family.name.replace("_", "-") +
-                   ".so.2")
+        ldf.append(pkg.spec["glibc"].package.dynamic_linker_flag)
         cxxf = inject_flags.get('cxxflags', [])
         cppf = inject_flags.get('cppflags', [])
         cppf.append("-B" + pkg.spec["glibc"].prefix.lib)
-        # cxxf.append("-I")
-        # cxxf.append(join_path(pkg.compiler.prefix, "include", "c++", pkg.compiler.version))
         cppf.append("-idirafter")
         cppf.append(pkg.spec["glibc"].prefix.include)
         cppf.append("-idirafter")
         cppf.append(pkg.spec["libxcrypt"].prefix.include)
-
-        # if pkg.name != "gcc":
-        #     ldf.append("--sysroot=/")
-        #     cppf.append("--sysroot=/")
-
-        # if '^libstdcxx' in pkg.spec:
-        #     # ldf.append("-L" + pkg.spec["libstdcxx"].prefix.lib)
-        #     # ldf.append("-L" + pkg.spec["libstdcxx"].prefix.lib64)
-        #     # ldf.append("-Wl,-rpath," + pkg.spec["libstdcxx"].prefix.lib)
-        #     # ldf.append("-Wl,-rpath," + pkg.spec["libstdcxx"].prefix.lib64)
-        #     # NOTE(trws): this is intentionally -I, otherwise we get a
-        #     # failure to find stdlib.h with include_next from cstdlib
-        #     cppf.append('-I')
-        #     cppf.append(pkg.spec['libstdcxx'].prefix.include.join("c++"))
 
         inject_flags['ldflags'] = ldf
         inject_flags['cppflags'] = cppf

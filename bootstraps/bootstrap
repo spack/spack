@@ -3,6 +3,8 @@
 : "${SPACK_ROOT:=$(pwd)}"
 : "${BASE_IMG:=gcc:12-bookworm}"
 : "${JOBS:=16}"
+: "${ARCH:=linux-spack-x86_64_v3}"
+: "${TARGET:=x86_64}"
 : "${STAGES:=1 2 3 4}"
 
 dkr_run() {
@@ -12,6 +14,8 @@ dkr_run() {
         -e PATH="/spack/bin:$ADD:$PATH" \
         -e JOBS \
         -e STAGE \
+        -e ARCH \
+        -e TARGET \
         $BASE_IMG \
         "$@"
 }
@@ -21,6 +25,6 @@ for STAGE in $STAGES ; do
     if [ "$STAGE" -gt 1 ] ; then
         ADD=/spack/bootstraps/stage$((STAGE - 1))/.spack-env/view/bin
     fi
-    export JOBS STAGE
+    export JOBS STAGE ARCH TARGET
     dkr_run /spack/bootstraps/bootstrap-inner
 done

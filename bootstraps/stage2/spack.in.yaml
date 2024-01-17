@@ -23,8 +23,8 @@ spack:
   - compiler:
       spec: gcc@=13.2.0
       paths:
-        cc: /spack/bootstraps/stage1/.spack-env/view/bin/x86_64-spack-linux-gnu-gcc
-        cxx: /spack/bootstraps/stage1/.spack-env/view/bin/x86_64-spack-linux-gnu-g++
+        cc: /spack/bootstraps/stage1/.spack-env/view/bin/gcc
+        cxx: /spack/bootstraps/stage1/.spack-env/view/bin/g++
         f77: null
         fc: null
       flags: {}

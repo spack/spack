@@ -870,13 +870,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             common_flags = (" ".join([
                 '-isystem ' ,
                 glibc.prefix.include,
-                '-isystem ' ,
-                self.spec["libxcrypt"].prefix.include,
                 "-B" + glibc.prefix.lib,
             ]))
             ldflags = " ".join([
                 "-L" + self.spec["libxcrypt"].prefix.lib,
-                "-Wl,-dynamic-linker," + glibc.prefix.lib.join("ld-linux-x86-64.so.2"),
+                glibc.package.dynamic_linker_flag,
             ])
             options.extend([
                 "--with-native-system-header-dir=" + glibc.prefix.include,

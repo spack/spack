@@ -1,10 +1,15 @@
 #!/bin/sh
 
+GLIBC_HASH=""
 if [ "$STAGE" -eq 4 ] ; then
     # generate final env yaml
     GLIBC_HASH=$(spack -e /spack/bootstraps/stage3 find -H glibc)
-    sed -e "s|GLIBC_HASH|$GLIBC_HASH|" /spack/bootstraps/stage4/spack.in.yaml > /spack/bootstraps/stage4/spack.yaml
 fi
+sed -e "s|@GLIBC_HASH@|$GLIBC_HASH|" \
+    -e "/target:/s|x86_64|$TARGET|" \
+    -e "s|linux-spack-x86_64|$ARCH|" \
+    /spack/bootstraps/stage"$STAGE"/spack.in.yaml > /spack/bootstraps/stage"$STAGE"/spack.yaml
+
 spack -e "/spack/bootstraps/stage${STAGE}/" concretize -f
 spack -e "/spack/bootstraps/stage${STAGE}/" install -v -j "$JOBS" 2>&1 | tee /spack/bootstraps/stage1.out
 if [ "$STAGE" -eq 4 ] ; then
