@@ -8,6 +8,9 @@ spack:
   - spackos-base
   - binutils +gold +lto arch=linux-spack-x86_64
   - gcc +binutils +piclibs languages=c,c++,fortran,lto ~bootstrap arch=linux-spack-x86_64
+  config:
+    install_root:
+      padded_length: 256
   view: true
   concretizer:
     unify: true

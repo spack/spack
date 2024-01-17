@@ -9,7 +9,7 @@ spack:
   # together, use hash
   - glibc @GLIBC_HASH@ %gcc@=13.2.0  arch=linux-spack-x86_64
   - binutils +gold +lto arch=linux-spack-x86_64
-  - gcc +binutils +piclibs languages=c,c++,fortran,lto +bootstrap +pgo arch=linux-spack-x86_64
+  - gcc +binutils +piclibs languages=c,c++,fortran,lto +bootstrap arch=linux-spack-x86_64
   # base system
   - m4 arch=linux-spack-x86_64
   - ncurses arch=linux-spack-x86_64
@@ -46,6 +46,9 @@ spack:
   - gnupg arch=linux-spack-x86_64
   - patchelf arch=linux-spack-x86_64
   - clingo arch=linux-spack-x86_64
+  config:
+    install_root:
+      padded_length: 256
   view: true
   concretizer:
     unify: true

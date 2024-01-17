@@ -3,18 +3,19 @@
 : "${SPACK_ROOT:=$(pwd)}"
 : "${BASE_IMG:=gcc:12-bookworm}"
 : "${JOBS:=16}"
-: "${ARCH:=linux-spack-x86_64_v3}"
+: "${FULL_ARCH:=linux-spack-x86_64_v3}"
 : "${TARGET:=x86_64}"
 : "${STAGES:=1 2 3 4}"
-
+mkdir -p "${SPACK_ROOT}/bootstrap"
 dkr_run() {
     docker run --rm -it \
         -v "$SPACK_ROOT:/spack" \
+        -v "$SPACK_ROOT/bootstrap:/root/.spack/bootstrap" \
         -e SPACK_DISABLE_LOCAL_CONFIG=1 \
         -e PATH="/spack/bin:$ADD:$PATH" \
         -e JOBS \
         -e STAGE \
-        -e ARCH \
+        -e FULL_ARCH \
         -e TARGET \
         $BASE_IMG \
         "$@"
@@ -25,6 +26,7 @@ for STAGE in $STAGES ; do
     if [ "$STAGE" -gt 1 ] ; then
         ADD=/spack/bootstraps/stage$((STAGE - 1))/.spack-env/view/bin
     fi
-    export JOBS STAGE ARCH TARGET
+    export JOBS STAGE FULL_ARCH TARGET
+    echo arch=$FULL_ARCH
     dkr_run /spack/bootstraps/bootstrap-inner
 done

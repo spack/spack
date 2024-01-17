@@ -12,6 +12,9 @@ spack:
   # we have no C++ right now, disable
   - berkeley-db ~cxx ~stl
   - ncurses ~cxx
+  config:
+    install_root:
+      padded_length: 256
   view: true
   concretizer:
     unify: true
