@@ -289,7 +289,7 @@ class Mivisionx(CMakePackage):
     depends_on(
         "opencv@4.5:"
         "+calib3d+features2d+highgui+imgcodecs+imgproc"
-        "+video+videoio+flann+photo+objdetect",
+        "+video+videoio+flann+photo+objdetect+png+jpeg",
         type="build",
         when="@5.3:",
     )

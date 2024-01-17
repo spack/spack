@@ -48,9 +48,18 @@ class Rpp(CMakePackage):
     variant("opencl", default=False, description="Use OPENCL as the backend")
     variant("hip", default=True, description="Use HIP as backend")
     variant("cpu", default=False, description="Use CPU as backend")
+    variant(
+        "add_tests",
+        default=False,
+        description="add utilities folder which contains rpp unit tests",
+    )
 
     patch("0001-include-half-openmp-through-spack-package.patch")
     patch("0002-declare-handle-in-header.patch")
+
+    # adds half.hpp include directory and modifies how the libjpegturbo
+    # library is linked for the rpp unit test
+    patch("0003-changes-to-rpp-unit-tests.patch", when="+add_tests")
 
     def patch(self):
         if self.spec.satisfies("+hip"):
@@ -62,6 +71,31 @@ class Rpp(CMakePackage):
                 "${ROCM_PATH}",
                 self.spec["rocm-opencl"].prefix,
                 "cmake/FindOpenCL.cmake",
+                string=True,
+            )
+        if self.spec.satisfies("+add_tests"):
+            filter_file(
+                "${ROCM_PATH}/include/rpp",
+                self.spec.prefix.include.rpp,
+                "utilities/test_suite/HOST/CMakeLists.txt",
+                string=True,
+            )
+            filter_file(
+                "${ROCM_PATH}/lib",
+                self.spec.prefix.lib,
+                "utilities/test_suite/HOST/CMakeLists.txt",
+                string=True,
+            )
+            filter_file(
+                "${ROCM_PATH}/include/rpp",
+                self.spec.prefix.include.rpp,
+                "utilities/test_suite/HIP/CMakeLists.txt",
+                string=True,
+            )
+            filter_file(
+                "${ROCM_PATH}/lib",
+                self.spec.prefix.lib,
+                "utilities/test_suite/HIP/CMakeLists.txt",
                 string=True,
             )
 
@@ -76,10 +110,10 @@ class Rpp(CMakePackage):
         "opencv@4.5:"
         "+calib3d+features2d+highgui+imgcodecs+imgproc"
         "+video+videoio+flann+photo+objdetect",
-        type="build",
+        type=("build", "link"),
         when="@1.0:",
     )
-    depends_on("libjpeg-turbo", type="build")
+    depends_on("libjpeg-turbo", type=("build", "link"))
     depends_on("rocm-openmp-extras")
     conflicts("+opencl+hip")
 
@@ -87,6 +121,10 @@ class Rpp(CMakePackage):
         depends_on("hip@5:")
     with when("~hip"):
         depends_on("rocm-opencl@5:")
+
+    def setup_run_environment(self, env):
+        if self.spec.satisfies("+add_tests"):
+            env.set("TURBO_JPEG_PATH", self.spec["libjpeg-turbo"].prefix)
 
     def cmake_args(self):
         spec = self.spec
@@ -105,3 +143,9 @@ class Rpp(CMakePackage):
                 )
             )
         return args
+
+    @run_after("install")
+    def add_tests(self):
+        if self.spec.satisfies("+add_tests"):
+            install_tree("utilities", self.spec.prefix.utilities)
+            install_tree("cmake", self.spec.prefix.cmake)
