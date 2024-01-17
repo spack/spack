@@ -1413,13 +1413,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             (str):  default manual download instructions
         """
         required = (
-            "Manual download is required for {0}. ".format(self.spec.name)
-            if self.manual_download
-            else ""
+            f"Manual download is required for {self.spec.name}. " if self.manual_download else ""
         )
-        return "{0}Refer to {1} for download instructions.".format(
-            required, self.spec.package.homepage
-        )
+        return f"{required}Refer to {self.homepage} for download instructions."
 
     def do_fetch(self, mirror_only=False):
         """
@@ -2578,3 +2574,7 @@ class DependencyConflictError(spack.error.SpackError):
 
     def __init__(self, conflict):
         super().__init__("%s conflicts with another file in the flattened directory." % (conflict))
+
+
+class ManualDownloadRequiredError(InvalidPackageOpError):
+    """Raised when attempting an invalid operation on a package that requires a manual download."""
