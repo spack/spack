@@ -330,18 +330,6 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
 
     supported_cuda_arch_list = ("35", "37", "60", "70", "80")
     supported_rocm_arch_list = ("gfx906", "gfx908", "gfx90a", "gfx90a:xnack-", "gfx90a:xnack+")
-    gpu_map = {
-        "35": "K40",
-        "37": "K80",
-        "60": "P100",
-        "70": "V100",
-        "80": "A100",
-        "gfx906": "Mi50",
-        "gfx908": "Mi100",
-        "gfx90a": "Mi250",
-        "gfx90a:xnack-": "Mi250",
-        "gfx90a:xnack+": "Mi250",
-    }
     cuda_msg = "cp2k only supports cuda_arch {0}".format(supported_cuda_arch_list)
     rocm_msg = "cp2k only supports amdgpu_target {0}".format(supported_rocm_arch_list)
 
@@ -687,6 +675,18 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
             fcflags += ["-I{0}".format(sirius.prefix.include.sirius)]
             libs += list(sirius.libs)
 
+        gpu_map = {
+            "35": "K40",
+            "37": "K80",
+            "60": "P100",
+            "70": "V100",
+            "80": "A100",
+            "gfx906": "Mi50",
+            "gfx908": "Mi100",
+            "gfx90a": "Mi250",
+            "gfx90a:xnack-": "Mi250",
+            "gfx90a:xnack+": "Mi250",
+        }
         gpuver = ""
         if spec.satisfies("+cuda"):
             libs += [
