@@ -87,7 +87,7 @@ class PyNbconvert(PythonPackage):
         url="https://unpkg.com/@jupyterlab/nbconvert-css@4.0.2/style/index.css",
         sha256="917ff47850a7cc08fd0658026fda7672a85220aaab258e8849e891b37426f947",
         placement="resource_index.css",
-        when="@7.4.1:",
+        when="@6:",
         expand=False,
     )
     resource(
@@ -95,7 +95,7 @@ class PyNbconvert(PythonPackage):
         url="https://unpkg.com/@jupyterlab/theme-light-extension@4.0.2/style/variables.css",
         sha256="11bf3558fd3ed353a4c1401ac0c1730d01df073f6436d357c5bbf02a03bd6962",
         placement="resource_theme-light.css",
-        when="@7.4.1:",
+        when="@6:",
         expand=False,
     )
     resource(
@@ -103,7 +103,7 @@ class PyNbconvert(PythonPackage):
         url="https://unpkg.com/@jupyterlab/theme-dark-extension@4.0.2/style/variables.css",
         sha256="795f2d5069737cbeb5cba01e6b5c7cadbde227c909e43004c5a60f58d5160aec",
         placement="resource_theme-dark.css",
-        when="@7.4.1:",
+        when="@6:",
         expand=False,
     )
     resource(
@@ -111,12 +111,12 @@ class PyNbconvert(PythonPackage):
         url="https://cdn.jupyter.org/notebook/5.4.0/style/style.min.css",
         sha256="5865a609f4437b0464bc121cd567b619074e540a0515a3b82f222f764eb51e01",
         placement="resource_style.css",
-        when="@7.4.1:",
+        when="@6:",
         expand=False,
     )
 
     @run_before("install")
-    @when("@7.4.1:")
+    @when("@6:")
     def install_css(self):
         css = {
             # target filename: [subdir, source filename]
@@ -133,14 +133,8 @@ class PyNbconvert(PythonPackage):
                 join_path(dest, target),
             )
 
-    @when("@:7.4.0")
+    @when("@7:")
     def patch(self):
-        # We bundle this with the spack package so that the installer
-        # doesn't try to download it.
-        install(
-            join_path(self.package_dir, "style.min.css"),
-            join_path("nbconvert", "resources", "style.min.css"),
-        )
         # Avoid install-time downloads of css files.
         filter_file("css = urlopen(url).read()", "assert False", "hatch_build.py", string=True)
 
