@@ -16,7 +16,6 @@ class PyBiobbChemistry(PythonPackage):
 
     version("4.1.0", sha256="0c0d118c7dbc6733e8a647b2c362703f03043d923d4087182b4f7cb819fb6776")
 
-    depends_on("py-biobb-common@4.1.0", type="run")
+    depends_on("py-biobb-common@4.1.0", type=("build", "run"))
 
-    depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
