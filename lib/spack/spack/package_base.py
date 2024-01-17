@@ -1131,13 +1131,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     @property
     def env_path(self):
         """Return the build environment file path associated with staging."""
-        # Backward compatibility: Return the name of an existing log path;
-        # otherwise, return the current install env path name.
-        old_filename = os.path.join(self.stage.path, "spack-build.env")
-        if os.path.exists(old_filename):
-            return old_filename
-        else:
-            return os.path.join(self.stage.path, _spack_build_envfile)
+        return os.path.join(self.stage.path, _spack_build_envfile)
 
     @property
     def env_mods_path(self):
