@@ -41,26 +41,6 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     version("8.2", sha256="2e24768720efed1a5a4a58e83e2aca502cd8b95544c21695eb0de71ed652f20a")
     version("8.1", sha256="7f37aead120730234a60b2989d0547ae5e5498d93b1e9b5eb548c041ee8e7772")
     version("7.1", sha256="ccd711a09a426145440e666310dd01cc5772ab103493c4ae6a3470898cd0addb")
-    version(
-        "6.1",
-        sha256="af803558e0a6b9e9d9ce8a3ab955ba32bacd179922455424e061c82c9fefa34b",
-        deprecated=True,
-    )
-    version(
-        "5.1",
-        sha256="e23613b593354fa82e0b8410e17d94c607a0b8c6d9b5d843528403ab09904412",
-        deprecated=True,
-    )
-    version(
-        "4.1",
-        sha256="4a3e4a101d8a35ebd80a9e9ecb02697fb8256364f1eccdbe4e5a85d31fe21343",
-        deprecated=True,
-    )
-    version(
-        "3.0",
-        sha256="1acfacef643141045b7cbade7006f9b7538476d861eeecd9658c9e468dc61151",
-        deprecated=True,
-    )
     version("master", branch="master", submodules="True")
 
     variant("mpi", default=True, description="Enable MPI support")
@@ -80,29 +60,33 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         "pexsi",
         default=False,
         description="Enable the alternative PEXSI method for density matrix evaluation",
+        when="+mpi",
     )
     variant(
         "elpa",
         default=False,
         description="Enable optimised diagonalisation routines from ELPA",
-        when="@6.1:",
+        when="+mpi",
     )
     variant(
         "dlaf",
         default=False,
         description="Enable DLA-Future eigensolver and Cholesky decomposition",
-        when="@2024.1: build_system=cmake",
+        when="@2024.1: build_system=cmake +mpi",
     )
+    # sirius support was introduced in 7, but effectively usable starting from CP2K 9
     variant(
         "sirius",
         default=False,
         description="Enable planewave electronic structure calculations via SIRIUS",
+        when="@9: +mpi",
     )
-    variant("cosma", default=False, description="Use COSMA for p?gemm")
+    variant("cosma", default=False, description="Use COSMA for p?gemm", when="@8: +mpi")
     variant(
         "libvori",
         default=False,
         description="Enable support for Voronoi integration and BQB compression",
+        when="@8:",
     )
     variant("spglib", default=False, description="Enable support for spglib")
     variant(
@@ -134,15 +118,13 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
             ),
         )
         variant(
-            "cuda_fft",
-            default=False,
-            description=("Use CUDA also for FFTs in the PW part of CP2K"),
+            "cuda_fft", default=False, description="Use CUDA also for FFTs in the PW part of CP2K"
         )
         variant(
             "cuda_blas",
             default=False,
             when="@:7",  # req in CP2K v8+
-            description=("Use CUBLAS for general matrix operations in DBCSR"),
+            description="Use CUBLAS for general matrix operations in DBCSR",
         )
 
     HFX_LMAX_RANGE = range(4, 8)
@@ -155,8 +137,7 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         multi=False,
     )
 
-    depends_on("python", type="build")
-    depends_on("python@3:", when="@8:", type="build")
+    depends_on("python@3", type="build")
 
     depends_on("blas")
     depends_on("lapack")
@@ -185,21 +166,15 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         conflicts("target=aarch64:", msg="libxsmm is not available on arm")
 
     with when("+libint"):
-        # ... and in CP2K 7.0+ for linking to libint2
         depends_on("pkgconfig", type="build", when="@7.0:")
-        # libint & libxc are always statically linked
-        depends_on("libint@1.1.4:1.2", when="@3.0:6.9")
         for lmax in HFX_LMAX_RANGE:
-            # libint2 can be linked dynamically again
             depends_on(
                 "libint@2.6.0:+fortran tune=cp2k-lmax-{0}".format(lmax),
                 when="@7.0: lmax={0}".format(lmax),
             )
 
     with when("+libxc"):
-        depends_on("pkgconfig", when="@7.0:")
-        depends_on("libxc@2.2.2:3", when="@:5")
-        depends_on("libxc@4.0.3:4", when="@6.0:6.9")
+        depends_on("pkgconfig", type="build", when="@7.0:")
         depends_on("libxc@4.0.3:4", when="@7.0:8.1")
         depends_on("libxc@5.1.3:5.1", when="@8.2:8")
         depends_on("libxc@5.1.7:5.1", when="@9:2022.2")
@@ -224,12 +199,8 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         depends_on("cosma@2.6.3:", when="@2023.2:")
         depends_on("cosma+cuda", when="+cuda")
         depends_on("cosma+rocm", when="+rocm")
-        conflicts("~mpi")
-        # COSMA support was introduced in 8+
-        conflicts("@:7")
 
     with when("+elpa"):
-        conflicts("~mpi", msg="elpa requires MPI")
         depends_on("elpa+openmp", when="+openmp")
         depends_on("elpa~openmp", when="~openmp")
         depends_on("elpa+cuda", when="+cuda")
@@ -241,9 +212,6 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         depends_on("elpa@2023.05.001:", when="@2023.2:")
 
     with when("+dlaf"):
-        conflicts(
-            "~mpi", msg="DLA-Future requires MPI. Only the distributed eigensolver is available."
-        )
         depends_on("dla-future@0.2.1: +scalapack")
         depends_on("dla-future ~cuda", when="~cuda")
         depends_on("dla-future ~rocm", when="~rocm")
@@ -257,10 +225,7 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
 
     # while we link statically against PEXSI, its own deps may be linked in
     # dynamically, therefore can't set this as pure build-type dependency.
-    with when("+pexsi"):
-        conflicts("~mpi", msg="pexsi requires MPI")
-        depends_on("pexsi+fortran@0.9.0:0.9", when="@:4")
-        depends_on("pexsi+fortran@0.10.0:", when="@5.0:")
+    depends_on("pexsi+fortran@0.10.0:", when="+pexsi")
 
     # only OpenMP should be consistently used, all other common things
     # like ELPA, SCALAPACK are independent and Spack will ensure that
@@ -276,16 +241,11 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         depends_on("sirius@7.3:", when="@9.1")
         depends_on("sirius@7.4:7.5", when="@2023.2")
         depends_on("sirius@7.5:", when="@2024.1:")
-        conflicts("~mpi", msg="SIRIUS requires MPI")
-        # sirius support was introduced in 7, but effectively usable starting from CP2K 9
-        conflicts("@:8")
 
     with when("+libvori"):
         depends_on("libvori@201219:", when="@8.1")
         depends_on("libvori@210412:", when="@8.2:")
         depends_on("libvori@220621:", when="@2023.1:")
-        # libvori support was introduced in 8+
-        conflicts("@:7")
 
     # the bundled libcusmm uses numpy in the parameter prediction (v7+)
     # which is written using Python 3
@@ -294,11 +254,6 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     depends_on("py-fypp")
 
     depends_on("spglib", when="+spglib")
-
-    # Apparently cp2k@4.1 needs an "experimental" version of libwannier.a
-    # which is only available contacting the developer directly. See INSTALL
-    # in the stage of cp2k@4.1
-    depends_on("wannier90", when="@3.0+mpi")
 
     with when("build_system=cmake"):
         depends_on("cmake@3.22:", type="build")
