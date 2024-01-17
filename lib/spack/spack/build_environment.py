@@ -217,6 +217,9 @@ def clean_environment():
     env.unset("R_HOME")
     env.unset("R_ENVIRON")
 
+    env.unset("LUA_PATH")
+    env.unset("LUA_CPATH")
+
     # Affects GNU make, can e.g. indirectly inhibit enabling parallel build
     # env.unset('MAKEFLAGS')
 
