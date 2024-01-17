@@ -107,10 +107,10 @@ class Rpp(CMakePackage):
         "opencv@4.5:"
         "+calib3d+features2d+highgui+imgcodecs+imgproc"
         "+video+videoio+flann+photo+objdetect",
-        type=("build", "run"),
+        type=("build", "link"),
         when="@1.0:",
     )
-    depends_on("libjpeg-turbo", type=("build", "run"))
+    depends_on("libjpeg-turbo", type=("build", "link"))
     depends_on("rocm-openmp-extras")
     conflicts("+opencl+hip")
 
