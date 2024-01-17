@@ -355,104 +355,6 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         return url.format(version)
 
 
-class CMakeBuilder(cmake.CMakeBuilder):
-    def cmake_args(self):
-        spec = self.spec
-        args = []
-
-        if "+cuda" in spec:
-            if (len(spec.variants["cuda_arch"].value) > 1) or spec.satisfies("cuda_arch=none"):
-                raise InstallError("CP2K supports only one cuda_arch at a time.")
-            else:
-                gpu_ver = GPU_MAP[spec.variants["cuda_arch"].value[0]]
-                args += [
-                    self.define("CP2K_USE_ACCEL", "CUDA"),
-                    self.define("CP2K_WITH_GPU", gpu_ver),
-                ]
-
-        if "+rocm" in spec:
-            if len(spec.variants["amdgpu_target"].value) > 1:
-                raise InstallError("CP2K supports only one amdgpu_target at a time.")
-            else:
-                gpu_ver = GPU_MAP[spec.variants["amdgpu_target"].value[0]]
-                args += [
-                    self.define("CP2K_USE_ACCEL", "HIP"),
-                    self.define("CP2K_WITH_GPU", gpu_ver),
-                ]
-
-        args += [
-            self.define_from_variant("CP2K_ENABLE_REGTESTS", "enable_regtests"),
-            self.define_from_variant("CP2K_USE_ELPA", "elpa"),
-            self.define_from_variant("CP2K_USE_DLAF", "dlaf"),
-            self.define_from_variant("CP2K_USE_LIBINT2", "libint"),
-            self.define_from_variant("CP2K_USE_SIRIUS", "sirius"),
-            self.define_from_variant("CP2K_USE_SPLA", "spla"),
-            self.define_from_variant("CP2K_USE_COSMA", "cosma"),
-            self.define_from_variant("CP2K_USE_LIBXC", "libxc"),
-            self.define_from_variant("CP2K_USE_LIBTORCH", "pytorch"),
-            self.define_from_variant("CP2K_USE_METIS", "pexsi"),
-            self.define_from_variant("CP2K_USE_SUPERLU", "pexsi"),
-            self.define_from_variant("CP2K_USE_PLUMED", "plumed"),
-            self.define_from_variant("CP2K_USE_SPGLIB", "spglib"),
-            self.define_from_variant("CP2K_USE_VORI", "libvori"),
-            self.define_from_variant("CP2K_USE_SPLA", "spla"),
-            self.define_from_variant("CP2K_USE_QUIP", "quip"),
-            self.define_from_variant("CP2K_USE_MPI_F08", "mpi_f08"),
-        ]
-
-        # we force the use elpa openmp threading support. might need to be revisited though
-        args += [
-            self.define(
-                "CP2K_ENABLE_ELPA_OPENMP_SUPPORT",
-                ("+elpa +openmp" in spec) or ("^elpa +openmp" in spec),
-            )
-        ]
-
-        if "spla" in spec and (spec.satisfies("+cuda") or spec.satisfies("+rocm")):
-            args += ["-DCP2K_USE_SPLA_GEMM_OFFLOADING=ON"]
-
-        args += ["-DCP2K_USE_FFTW3=ON"]
-
-        if spec.satisfies("smm=libxsmm"):
-            args += ["-DCP2K_USE_LIBXSMM=ON"]
-        else:
-            args += ["-DCP2K_USE_LIBXSMM=OFF"]
-
-        lapack = spec["lapack"]
-        blas = spec["blas"]
-
-        if blas.name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
-            args += ["-DCP2K_BLAS_VENDOR=MKL"]
-            if sys.platform == "darwin":
-                args += [
-                    self.define("CP2K_BLAS_VENDOR", "CUSTOM"),
-                    self.define("CP2K_SCALAPACK_VENDOR", "GENERIC"),
-                    self.define(
-                        "CP2K_SCALAPACK_LINK_LIBRARIES", spec["scalapack"].libs.joined(";")
-                    ),
-                ]
-            else:
-                args += ["-DCP2K_SCALAPACK_VENDOR=MKL"]
-        else:
-            args.extend(
-                [
-                    self.define("CP2K_LAPACK_FOUND", True),
-                    self.define("CP2K_LAPACK_LINK_LIBRARIES", lapack.libs.joined(";")),
-                    self.define("CP2K_BLAS_FOUND", True),
-                    self.define("CP2K_BLAS_LINK_LIBRARIES", blas.libs.joined(";")),
-                    self.define("CP2K_SCALAPACK_FOUND", True),
-                    self.define("CP2K_SCALAPACK_INCLUDE_DIRS", spec["scalapack"].prefix.include),
-                    self.define("CP2K_BLAS_VENDOR", "CUSTOM"),
-                    self.define("CP2K_SCALAPACK_VENDOR", "GENERIC"),
-                    self.define(
-                        "CP2K_SCALAPACK_LINK_LIBRARIES", spec["scalapack"].libs.joined(";")
-                    ),
-                ]
-            )
-
-        return args
-
-
 class MakefileBuilder(makefile.MakefileBuilder):
     def edit(self, pkg, spec, prefix):
         pkgconf = which("pkg-config")
@@ -985,3 +887,101 @@ class MakefileBuilder(makefile.MakefileBuilder):
 
             handle.seek(0)
             handle.write(content)
+
+
+class CMakeBuilder(cmake.CMakeBuilder):
+    def cmake_args(self):
+        spec = self.spec
+        args = []
+
+        if "+cuda" in spec:
+            if (len(spec.variants["cuda_arch"].value) > 1) or spec.satisfies("cuda_arch=none"):
+                raise InstallError("CP2K supports only one cuda_arch at a time.")
+            else:
+                gpu_ver = GPU_MAP[spec.variants["cuda_arch"].value[0]]
+                args += [
+                    self.define("CP2K_USE_ACCEL", "CUDA"),
+                    self.define("CP2K_WITH_GPU", gpu_ver),
+                ]
+
+        if "+rocm" in spec:
+            if len(spec.variants["amdgpu_target"].value) > 1:
+                raise InstallError("CP2K supports only one amdgpu_target at a time.")
+            else:
+                gpu_ver = GPU_MAP[spec.variants["amdgpu_target"].value[0]]
+                args += [
+                    self.define("CP2K_USE_ACCEL", "HIP"),
+                    self.define("CP2K_WITH_GPU", gpu_ver),
+                ]
+
+        args += [
+            self.define_from_variant("CP2K_ENABLE_REGTESTS", "enable_regtests"),
+            self.define_from_variant("CP2K_USE_ELPA", "elpa"),
+            self.define_from_variant("CP2K_USE_DLAF", "dlaf"),
+            self.define_from_variant("CP2K_USE_LIBINT2", "libint"),
+            self.define_from_variant("CP2K_USE_SIRIUS", "sirius"),
+            self.define_from_variant("CP2K_USE_SPLA", "spla"),
+            self.define_from_variant("CP2K_USE_COSMA", "cosma"),
+            self.define_from_variant("CP2K_USE_LIBXC", "libxc"),
+            self.define_from_variant("CP2K_USE_LIBTORCH", "pytorch"),
+            self.define_from_variant("CP2K_USE_METIS", "pexsi"),
+            self.define_from_variant("CP2K_USE_SUPERLU", "pexsi"),
+            self.define_from_variant("CP2K_USE_PLUMED", "plumed"),
+            self.define_from_variant("CP2K_USE_SPGLIB", "spglib"),
+            self.define_from_variant("CP2K_USE_VORI", "libvori"),
+            self.define_from_variant("CP2K_USE_SPLA", "spla"),
+            self.define_from_variant("CP2K_USE_QUIP", "quip"),
+            self.define_from_variant("CP2K_USE_MPI_F08", "mpi_f08"),
+        ]
+
+        # we force the use elpa openmp threading support. might need to be revisited though
+        args += [
+            self.define(
+                "CP2K_ENABLE_ELPA_OPENMP_SUPPORT",
+                ("+elpa +openmp" in spec) or ("^elpa +openmp" in spec),
+            )
+        ]
+
+        if "spla" in spec and (spec.satisfies("+cuda") or spec.satisfies("+rocm")):
+            args += ["-DCP2K_USE_SPLA_GEMM_OFFLOADING=ON"]
+
+        args += ["-DCP2K_USE_FFTW3=ON"]
+
+        if spec.satisfies("smm=libxsmm"):
+            args += ["-DCP2K_USE_LIBXSMM=ON"]
+        else:
+            args += ["-DCP2K_USE_LIBXSMM=OFF"]
+
+        lapack = spec["lapack"]
+        blas = spec["blas"]
+
+        if blas.name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
+            args += ["-DCP2K_BLAS_VENDOR=MKL"]
+            if sys.platform == "darwin":
+                args += [
+                    self.define("CP2K_BLAS_VENDOR", "CUSTOM"),
+                    self.define("CP2K_SCALAPACK_VENDOR", "GENERIC"),
+                    self.define(
+                        "CP2K_SCALAPACK_LINK_LIBRARIES", spec["scalapack"].libs.joined(";")
+                    ),
+                ]
+            else:
+                args += ["-DCP2K_SCALAPACK_VENDOR=MKL"]
+        else:
+            args.extend(
+                [
+                    self.define("CP2K_LAPACK_FOUND", True),
+                    self.define("CP2K_LAPACK_LINK_LIBRARIES", lapack.libs.joined(";")),
+                    self.define("CP2K_BLAS_FOUND", True),
+                    self.define("CP2K_BLAS_LINK_LIBRARIES", blas.libs.joined(";")),
+                    self.define("CP2K_SCALAPACK_FOUND", True),
+                    self.define("CP2K_SCALAPACK_INCLUDE_DIRS", spec["scalapack"].prefix.include),
+                    self.define("CP2K_BLAS_VENDOR", "CUSTOM"),
+                    self.define("CP2K_SCALAPACK_VENDOR", "GENERIC"),
+                    self.define(
+                        "CP2K_SCALAPACK_LINK_LIBRARIES", spec["scalapack"].libs.joined(";")
+                    ),
+                ]
+            )
+
+        return args
