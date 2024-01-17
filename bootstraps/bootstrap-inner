@@ -9,9 +9,12 @@ sed -e "s|@GLIBC_HASH@|$GLIBC_HASH|" \
     -e "/target:/s|x86_64|$TARGET|" \
     -e "s|arch=linux-spack-x86_64|arch=$FULL_ARCH|" \
     /spack/bootstraps/stage"$STAGE"/spack.in.yaml | tee /spack/bootstraps/stage"$STAGE"/spack.yaml
-
-spack -e "/spack/bootstraps/stage${STAGE}/" concretize -f
-spack -e "/spack/bootstraps/stage${STAGE}/" install -v -j "$JOBS" 2>&1 | tee /spack/bootstraps/stage1.out
-if [ "$STAGE" -eq 4 ] ; then
-    spack -e "/spack/bootstraps/stage${STAGE}/" buildcache push --unsigned --update-index /spack/spack-cache
+if [ -n "$FORCE_CMD" ] ; then
+    $FORCE_CMD
+else
+    spack -e "/spack/bootstraps/stage${STAGE}/" concretize -f
+    spack -e "/spack/bootstraps/stage${STAGE}/" install -v -j "$JOBS" 2>&1 | tee /spack/bootstraps/stage1.out
+    if [ "$STAGE" -eq 4 ] ; then
+        spack -e "/spack/bootstraps/stage${STAGE}/" buildcache push --unsigned --update-index /spack/spack-cache
+    fi
 fi

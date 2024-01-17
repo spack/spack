@@ -16,6 +16,7 @@ dkr_run() {
         -e JOBS \
         -e STAGE \
         -e FULL_ARCH \
+        -e FORCE_CMD \
         -e TARGET \
         $BASE_IMG \
         "$@"
