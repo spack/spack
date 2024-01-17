@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,10 @@ class RocmCore(CMakePackage):
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["librocm-core"]
 
+    license("MIT")
+
+    version("5.7.1", sha256="fc4915019ddfd126e8ef6a15006bce3aa7bd5fd11dc8eb04ce2ee6bdf9c6ae7f")
+    version("5.7.0", sha256="722689bfec46c35f5428a41c5aacfc31efec2294fc3b0112861c562f8a71ac93")
     version("5.6.1", sha256="eeef75e16e05380ccbc8df17a02dc141a66dddaadb444a97f7278f78067c498c")
     version("5.6.0", sha256="3c3d47c8b774968d768d42810a3fed42d058b7d6da248d5295df2a7ffb262568")
     version("5.5.1", sha256="bc73060432ffdc2e210394835d383890b9652476074ef4708d447473f273ce76")

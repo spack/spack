@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,11 @@ class LlvmAmdgpu(CMakePackage):
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")
 
+    license("Apache-2.0")
+
     version("master", branch="amd-stg-open")
+    version("5.7.1", sha256="6b54c422e45ad19c9bf5ab090ec21753e7f7d854ca78132c30eb146657b168eb")
+    version("5.7.0", sha256="4abdf00b297a77c5886cedb37e63acda2ba11cb9f4c0a64e133b05800aadfcf0")
     version("5.6.1", sha256="045e43c0c4a3f4f2f1db9fb603a4f1ea3d56e128147e19ba17909eb57d7f08e5")
     version("5.6.0", sha256="e922bd492b54d99e56ed88c81e2009ed6472059a180b10cc56ce1f9bd2d7b6ed")
     version("5.5.1", sha256="7d7181f20f89cb0715191aa32914186c67a34258c13457055570d47e15296553")
@@ -134,7 +138,8 @@ class LlvmAmdgpu(CMakePackage):
     provides("libllvm@13", when="@4.3:4.9")
     provides("libllvm@14", when="@5:5.2")
     provides("libllvm@15", when="@5.3:5.4")
-    provides("libllvm@16", when="@5.5:")
+    provides("libllvm@16", when="@5.5:5.6")
+    provides("libllvm@17", when="@5.7:")
 
     depends_on("cmake@3.4.3:", type="build", when="@:3.8")
     depends_on("cmake@3.13.4:", type="build", when="@3.9.0:")
@@ -162,6 +167,7 @@ class LlvmAmdgpu(CMakePackage):
     # as per 5.2.0 llvm code. It used to be llvm/bin/../lib/libdevice.
     # Below patch is to look in the old path.
     patch("adjust-openmp-bitcode-directory-for-llvm-link.patch", when="@5.2.0:5.6")
+    patch("0001-update-HIP_PATH-deduction-for-5.7.0.patch", when="@5.7.0:5.7")
 
     # Below patch is to set the flag -mcode-object-version=none until
     # the below fix is available in device-libs release code.
@@ -173,6 +179,7 @@ class LlvmAmdgpu(CMakePackage):
     # This fix is targeting 6.1 rocm release.
     # Need patch until https://github.com/llvm/llvm-project/pull/67291 is merged.
     patch("001-Add-i1-mul-patterns.patch", when="@5.6")
+    patch("001-Add-i1-mul-patterns-5.7.patch", when="@5.7")
 
     conflicts("^cmake@3.19.0")
 
@@ -181,6 +188,8 @@ class LlvmAmdgpu(CMakePackage):
 
     # Add device libs sources so they can be an external LLVM project
     for d_version, d_shasum in [
+        ("5.7.1", "703de8403c0bd0d80f37c970a698f10f148daf144d34f982e4484d04f7c7bbef"),
+        ("5.7.0", "0f8780b9098573f1c456bdc84358de924dcf00604330770a383983e1775bf61e"),
         ("5.6.1", "f0dfab272ff936225bfa1e9dabeb3c5d12ce08b812bf53ffbddd2ddfac49761c"),
         ("5.6.0", "efb5dcdca9b3a9fbe408d494fb4a23e0b78417eb5fa8eebd4a5d226088f28921"),
         ("5.5.1", "3b5f6dd85f0e3371f6078da7b59bf77d5b210e30f1cc66ef1e2de6bbcb775833"),
@@ -226,8 +235,9 @@ class LlvmAmdgpu(CMakePackage):
         branch="amd-stg-open",
         when="@master +rocm-device-libs",
     )
-
     for d_version, d_shasum in [
+        ("5.7.1", "655e9bfef4b0b6ad3f9b89c934dc0a8377273bb0bccbda6c399ac5d5d2c1c04c"),
+        ("5.7.0", "2c56ec5c78a36f2b847afd4632cb25dbf6ecc58661eb2ae038c2552342e6ce23"),
         ("5.6.1", "4de9a57c2092edf9398d671c8a2c60626eb7daf358caf710da70d9c105490221"),
         ("5.6.0", "30875d440df9d8481ffb24d87755eae20a0efc1114849a72619ea954f1e9206c"),
     ]:
@@ -247,6 +257,8 @@ class LlvmAmdgpu(CMakePackage):
     )
 
     for d_version, d_shasum in [
+        ("5.7.1", "3b9433b4a0527167c3e9dfc37a3c54e0550744b8d4a8e1be298c8d4bcedfee7c"),
+        ("5.7.0", "e234bcb93d602377cfaaacb59aeac5796edcd842a618162867b7e670c3a2c42c"),
         ("5.6.1", "0a85d84619f98be26ca7a32c71f94ed3c4e9866133789eabb451be64ce739300"),
         ("5.6.0", "9396a7238b547ee68146c669b10b9d5de8f1d76527c649133c75d8076a185a72"),
     ]:
@@ -327,6 +339,9 @@ class LlvmAmdgpu(CMakePackage):
             args.append(self.define("GCC_INSTALL_PREFIX", self.compiler.prefix))
         if self.spec.satisfies("@5.4.3:"):
             args.append("-DCMAKE_INSTALL_LIBDIR=lib")
+        if self.spec.satisfies("@5.5.0:"):
+            args.append("-DCLANG_DEFAULT_RTLIB=compiler-rt")
+            args.append("-DCLANG_DEFAULT_UNWINDLIB=libgcc")
         if self.spec.satisfies("@5.5.0:"):
             args.append("-DCLANG_DEFAULT_RTLIB=compiler-rt")
             args.append("-DCLANG_DEFAULT_UNWINDLIB=libgcc")

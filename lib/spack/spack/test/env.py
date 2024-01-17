@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -695,7 +695,7 @@ def test_removing_spec_from_manifest_with_exact_duplicates(
 
 @pytest.mark.regression("35298")
 @pytest.mark.only_clingo("Propagation not supported in the original concretizer")
-def test_variant_propagation_with_unify_false(tmp_path, mock_packages):
+def test_variant_propagation_with_unify_false(tmp_path, mock_packages, config):
     """Spack distributes concretizations to different processes, when unify:false is selected and
     the number of roots is 2 or more. When that happens, the specs to be concretized need to be
     properly reconstructed on the worker process, if variant propagation was requested.

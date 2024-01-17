@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,12 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
 
     tags = ["e4s"]
 
+    license("Apache-2.0")
+
     version("master", branch="master")
+    version(
+        "2.10.0-rc1", sha256="8b72142bd5aabfb80c7963f524df11b8721c09ef20caea6df5fb00c31a7747c0"
+    )
     version(
         "2.9.2",
         sha256="78309297c82a95ee38ed3224c98b93d330128c753a43893f63bbe969320e4979",
@@ -211,6 +216,10 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
         when="@:2.7.1",
         sha256="8221073d1b2f8944395a88a5d60a15c7370646b62f5fc6309867bbb6a8c2096c",
     )
+
+    # Fix mismatched datatypes in comparison
+    # See https://github.com/ornladios/ADIOS2/pull/2701
+    patch("2.7.1-fix-broken-endian-reverse-compile.patch", when="@2.7.1")
 
     # cmake: find threads package first
     # https://github.com/ornladios/ADIOS2/pull/3893

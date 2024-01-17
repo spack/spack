@@ -31,8 +31,6 @@ spack:
         +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
     xz:
       variants: +pic
-    mesa:
-      version: [21.3.8]
     mpi:
       require: mpich
     mpich:

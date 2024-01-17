@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,11 @@ class Rocfft(CMakePackage):
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath", "haampie")
     libraries = ["librocfft"]
+
+    license("MIT")
+
+    version("5.7.1", sha256="202f11f60dc8738e29bbd1b397d419e032794f8bffb7f48f2b31f09cc5f08bc2")
+    version("5.7.0", sha256="3c4a1537a6ec76dc9b622644fe3890647306bf9f28f61c5d2028259c31bb964f")
     version("5.6.1", sha256="a65861e453587c3e6393da75b0b1976508c61f968aecda77fbec920fea48489e")
     version("5.6.0", sha256="e3d4a6c1bdac78f9a22033f57011af783d560308103f73542f9e0e4dd133d38a")
     version("5.5.1", sha256="57423a64f5cdb1c37ff0891b6c17b59f73198d46be42db4ae23781ef2c0cd49d")
@@ -125,7 +130,8 @@ class Rocfft(CMakePackage):
     depends_on("googletest@1.10.0:", type="test")
     depends_on("fftw@3.3.8:", type="test")
     depends_on("boost@1.64.0: +program_options", type="test")
-    depends_on("llvm-amdgpu +openmp", type="test")
+    depends_on("rocm-openmp-extras", type="test")
+    depends_on("hiprand", type="test")
 
     def check(self):
         exe = join_path(self.build_directory, "clients", "staging", "rocfft-test")
@@ -159,6 +165,8 @@ class Rocfft(CMakePackage):
         "5.5.1",
         "5.6.0",
         "5.6.1",
+        "5.7.0",
+        "5.7.1",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,8 @@ class RBfast(RPackage):
     used to fit the time series data and detect structural changes (breaks)."""
 
     cran = "bfast"
+
+    license("GPL-2.0-or-later")
 
     version("1.6.1", sha256="aaf479af1924691cbec8c67c68005c00d97cead51b2b44863c18acd4cea453ee")
     version("1.5.7", sha256="01585fe8944d05ebdb13795214077bc1365f0c0372e2a1f7edb914356dace558")

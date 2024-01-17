@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Nlopt(CMakePackage):
     homepage = "https://nlopt.readthedocs.io"
     url = "https://github.com/stevengj/nlopt/archive/v2.5.0.tar.gz"
     git = "https://github.com/stevengj/nlopt.git"
+
+    license("LGPL-2.1-or-later")
 
     version("master", branch="master")
 

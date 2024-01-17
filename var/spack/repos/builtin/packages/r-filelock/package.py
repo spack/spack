@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class RFilelock(RPackage):
     and 'fcntl' locks on Unix-like systems."""
 
     cran = "filelock"
+
+    license("MIT")
 
     version("1.0.2", sha256="ac2915950789b16c43a625a2b8dab6ba423588db4a7d0daa75b74518b82b1403")
 

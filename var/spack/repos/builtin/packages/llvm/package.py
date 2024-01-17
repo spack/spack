@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,6 +33,8 @@ class Llvm(CMakePackage, CudaPackage):
     generator("ninja")
 
     family = "compiler"  # Used by lmod
+
+    license("Apache-2.0")
 
     version("main", branch="main")
     version("17.0.4", sha256="46200b79f52a02fe26d0a43fd856ab6ceff49ab2a0b7c240ac4b700a6ada700c")
@@ -246,6 +248,7 @@ class Llvm(CMakePackage, CudaPackage):
         description="Enable zstd support for static analyzer / lld",
     )
 
+    provides("libllvm@17", when="@17.0.0:17")
     provides("libllvm@16", when="@16.0.0:16")
     provides("libllvm@15", when="@15.0.0:15")
     provides("libllvm@14", when="@14.0.0:14")
@@ -308,14 +311,14 @@ class Llvm(CMakePackage, CudaPackage):
         depends_on("swig", when="+python")
         depends_on("xz")
 
-    # Use ^swig cause it's triggered by both python & lua scripting in lldb
-    with when("^swig"):
-        depends_on("swig@2:", when="@10:")
-        depends_on("swig@3:", when="@12:")
-        depends_on("swig@4:", when="@17:")
-        # Commits f0a25fe0b746f56295d5c02116ba28d2f965c175 and
-        # 81fc5f7909a4ef5a8d4b5da2a10f77f7cb01ba63 fixed swig 4.1 support
-        depends_on("swig@:4.0", when="@:15")
+    for _when_spec in ("+lldb+python", "+lldb+lua"):
+        with when(_when_spec):
+            depends_on("swig@2:", when="@10:")
+            depends_on("swig@3:", when="@12:")
+            depends_on("swig@4:", when="@17:")
+            # Commits f0a25fe0b746f56295d5c02116ba28d2f965c175 and
+            # 81fc5f7909a4ef5a8d4b5da2a10f77f7cb01ba63 fixed swig 4.1 support
+            depends_on("swig@:4.0", when="@:15")
 
     # gold support, required for some features
     depends_on("binutils+gold+ld+plugins+headers", when="+gold")
@@ -571,6 +574,8 @@ class Llvm(CMakePackage, CudaPackage):
     patch("add-include-for-libelf-llvm-12-14.patch", when="@12:14")
     patch("add-include-for-libelf-llvm-15.patch", when="@15")
 
+    patch("sanitizer-platform-limits-posix-xdr-macos.patch", when="@10:14 platform=darwin")
+
     @when("@14:17")
     def patch(self):
         # https://github.com/llvm/llvm-project/pull/69458
@@ -761,6 +766,14 @@ class Llvm(CMakePackage, CudaPackage):
                     os.symlink(bin, sym)
             env.prepend_path("PATH", self.stage.path)
 
+    def setup_run_environment(self, env):
+        if "+clang" in self.spec:
+            env.set("CC", join_path(self.spec.prefix.bin, "clang"))
+            env.set("CXX", join_path(self.spec.prefix.bin, "clang++"))
+        if "+flang" in self.spec:
+            env.set("FC", join_path(self.spec.prefix.bin, "flang"))
+            env.set("F77", join_path(self.spec.prefix.bin, "flang"))
+
     root_cmakelists_dir = "llvm"
 
     def cmake_args(self):
@@ -939,6 +952,26 @@ class Llvm(CMakePackage, CudaPackage):
 
         # Semicolon seperated list of runtimes to enable
         if runtimes:
+            # The older versions are not careful enough with the order of the runtimes.
+            # Instead of applying
+            # https://github.com/llvm/llvm-project/commit/06400a0142af8297b5d39b8f34a7c59db6f9910c,
+            # which might be incompatible with the version that we install,
+            # we sort the runtimes here according to the same order as
+            # in the aforementioned commit:
+            if self.spec.satisfies("@:14"):
+                runtimes_order = [
+                    "libc",
+                    "libunwind",
+                    "libcxxabi",
+                    "libcxx",
+                    "compiler-rt",
+                    "openmp",
+                ]
+                runtimes.sort(
+                    key=lambda x: runtimes_order.index(x)
+                    if x in runtimes_order
+                    else len(runtimes_order)
+                )
             cmake_args.extend(
                 [
                     define("LLVM_ENABLE_RUNTIMES", runtimes),

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -53,6 +53,7 @@ concretize = SpackCommand("concretize")
 stage = SpackCommand("stage")
 uninstall = SpackCommand("uninstall")
 find = SpackCommand("find")
+develop = SpackCommand("develop")
 module = SpackCommand("module")
 
 sep = os.sep
@@ -719,10 +720,10 @@ spack:
     assert any(x.intersects("mpileaks@2.2") for x in e._get_environment_specs())
 
 
-def test_with_config_bad_include(environment_from_manifest):
+def test_with_config_bad_include_create(environment_from_manifest):
     """Confirm missing include paths raise expected exception and error."""
     with pytest.raises(spack.config.ConfigFileError, match="2 missing include path"):
-        e = environment_from_manifest(
+        environment_from_manifest(
             """
 spack:
   include:
@@ -730,9 +731,42 @@ spack:
   - no/such/file.yaml
 """
         )
-        with e:
-            e.concretize()
 
+
+def test_with_config_bad_include_activate(environment_from_manifest, tmpdir):
+    env_root = pathlib.Path(tmpdir.ensure("env-root", dir=True))
+    include1 = env_root / "include1.yaml"
+    include1.touch()
+
+    abs_include_path = os.path.abspath(tmpdir.join("subdir").ensure("include2.yaml"))
+
+    spack_yaml = env_root / ev.manifest_name
+    spack_yaml.write_text(
+        f"""
+spack:
+  include:
+  - ./include1.yaml
+  - {abs_include_path}
+"""
+    )
+
+    e = ev.Environment(env_root)
+    with e:
+        e.concretize()
+
+    # we've created an environment with some included config files (which do
+    # in fact exist): now we remove them and check that we get a sensible
+    # error message
+
+    os.remove(abs_include_path)
+    os.remove(include1)
+    with pytest.raises(spack.config.ConfigFileError) as exc:
+        ev.activate(e)
+
+    err = exc.value.message
+    assert "missing include" in err
+    assert abs_include_path in err
+    assert "include1.yaml" in err
     assert ev.active_environment() is None
 
 
@@ -1173,7 +1207,7 @@ def test_env_blocks_uninstall(mock_stage, mock_fetch, install_mockery):
         add("mpileaks")
         install("--fake")
 
-    out = uninstall("mpileaks", fail_on_error=False)
+    out = uninstall("-y", "mpileaks", fail_on_error=False)
     assert uninstall.returncode == 1
     assert "The following environments still reference these specs" in out
 
@@ -2902,13 +2936,15 @@ def test_virtual_spec_concretize_together(tmpdir):
     assert any(s.package.provides("mpi") for _, s in e.concretized_specs())
 
 
-def test_query_develop_specs():
+def test_query_develop_specs(tmpdir):
     """Test whether a spec is develop'ed or not"""
+    srcdir = tmpdir.ensure("here")
+
     env("create", "test")
     with ev.read("test") as e:
         e.add("mpich")
         e.add("mpileaks")
-        e.develop(Spec("mpich@=1"), "here", clone=False)
+        develop("--no-clone", "-p", str(srcdir), "mpich@=1")
 
         assert e.is_develop(Spec("mpich"))
         assert not e.is_develop(Spec("mpileaks"))
@@ -2920,7 +2956,9 @@ def test_query_develop_specs():
 )
 def test_activation_and_deactiviation_ambiguities(method, env, no_env, env_dir, capsys):
     """spack [-e x | -E | -D x/]  env [activate | deactivate] y are ambiguous"""
-    args = Namespace(shell="sh", activate_env="a", env=env, no_env=no_env, env_dir=env_dir)
+    args = Namespace(
+        shell="sh", env_name="a", env=env, no_env=no_env, env_dir=env_dir, keep_relative=False
+    )
     with pytest.raises(SystemExit):
         method(args)
     _, err = capsys.readouterr()
@@ -2959,6 +2997,34 @@ def test_activate_temp(monkeypatch, tmpdir):
     active_env_var = next(line for line in shell.splitlines() if ev.spack_env_var in line)
     assert str(tmpdir) in active_env_var
     assert ev.is_env_dir(str(tmpdir))
+
+
+@pytest.mark.parametrize(
+    "conflict_arg", [["--dir"], ["--keep-relative"], ["--with-view", "foo"], ["env"]]
+)
+def test_activate_parser_conflicts_with_temp(conflict_arg):
+    with pytest.raises(SpackCommandError):
+        env("activate", "--sh", "--temp", *conflict_arg)
+
+
+def test_create_and_activate_managed(tmp_path):
+    with fs.working_dir(str(tmp_path)):
+        shell = env("activate", "--without-view", "--create", "--sh", "foo")
+        active_env_var = next(line for line in shell.splitlines() if ev.spack_env_var in line)
+        assert str(tmp_path) in active_env_var
+        active_ev = ev.active_environment()
+        assert "foo" == active_ev.name
+        env("deactivate")
+
+
+def test_create_and_activate_unmanaged(tmp_path):
+    with fs.working_dir(str(tmp_path)):
+        env_dir = os.path.join(str(tmp_path), "foo")
+        shell = env("activate", "--without-view", "--create", "--sh", "-d", env_dir)
+        active_env_var = next(line for line in shell.splitlines() if ev.spack_env_var in line)
+        assert str(env_dir) in active_env_var
+        assert ev.is_env_dir(env_dir)
+        env("deactivate")
 
 
 def test_activate_default(monkeypatch):
@@ -3540,7 +3606,7 @@ def test_environment_created_in_users_location(mutable_mock_env_path, tmp_path):
     assert os.path.isdir(os.path.join(env_dir, dir_name))
 
 
-def test_environment_created_from_lockfile_has_view(mock_packages, tmpdir):
+def test_environment_created_from_lockfile_has_view(mock_packages, temporary_store, tmpdir):
     """When an env is created from a lockfile, a view should be generated for it"""
     env_a = str(tmpdir.join("a"))
     env_b = str(tmpdir.join("b"))

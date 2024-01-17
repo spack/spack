@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,11 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
 
     maintainers("adamjstewart")
 
+    license("MIT")
+
+    version("3.8.3", sha256="ae2d160f65016e208eca34ff14490ec4511f1fa03fd386ac130449d15e82929d")
+    version("3.8.2", sha256="dc2921ee1cf7a5c0498e94d15fb9ab9c9689c296363a1d021fc3293dd242b4db")
+    version("3.8.1", sha256="75a20b23879bfa3d8c0db68e1d6f8b924f7f9d97f5fed089b01a72e404293900")
     version("3.8.0", sha256="ec0f78d9dc32352aeac6edc9c3b27a991b91f9dc6f92c452207d84431c58757d")
     version("3.7.3", sha256="e0a6f0c453ea7eb7c09967f50ac49426808fcd8f259dbc9888140eb69d7ffee6")
     version("3.7.2", sha256="40c0068591d2c711c699bbb734319398485ab169116ac28005d8302f80b923ad")
@@ -448,6 +453,14 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
         when="@3.3.0",
         level=2,
         sha256="9f9824296e75b34b3e78284ec772a5ac8f8ba92c17253ea9ca242caf766767ce",
+    )
+
+    # https://github.com/spack/spack/issues/41299
+    # ensures the correct build specific libproj is used with cmake builds (gdal >=3.5.0)
+    patch(
+        "https://patch-diff.githubusercontent.com/raw/OSGeo/gdal/pull/8964.patch?full_index=1",
+        when="@3.5:3.8",
+        sha256="52459dc9903ced5005ba81515762a55cd829d8f5420607405c211c4a77c2bf79",
     )
 
     executables = ["^gdal-config$"]

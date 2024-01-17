@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Matio(AutotoolsPackage):
     homepage = "https://sourceforge.net/projects/matio/"
     git = "https://github.com/tbeu/matio"
     url = "https://github.com/tbeu/matio/releases/download/v1.5.9/matio-1.5.9.tar.gz"
+
+    license("BSD-2-Clause")
 
     version("1.5.17", sha256="5e455527d370ab297c4abe5a2ab4d599c93ac7c1a0c85d841cc5c22f8221c400")
     version("1.5.16", sha256="47ba3d5d269d5709b8d9a7385c88c8b5fb5ff875ef781a1ced4892b5b03c4f44")

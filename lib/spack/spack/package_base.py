@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,8 +24,9 @@ import sys
 import textwrap
 import time
 import traceback
+import typing
 import warnings
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, TypeVar
+from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Type, TypeVar, Union
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
@@ -432,6 +433,43 @@ class PackageViewMixin:
 
 Pb = TypeVar("Pb", bound="PackageBase")
 
+WhenDict = Dict[spack.spec.Spec, Dict[str, Any]]
+NameValuesDict = Dict[str, List[Any]]
+NameWhenDict = Dict[str, Dict[spack.spec.Spec, List[Any]]]
+
+
+def _by_name(
+    when_indexed_dictionary: WhenDict, when: bool = False
+) -> Union[NameValuesDict, NameWhenDict]:
+    """Convert a dict of dicts keyed by when/name into a dict of lists keyed by name.
+
+    Optional Arguments:
+        when: if ``True``, don't discared the ``when`` specs; return a 2-level dictionary
+            keyed by name and when spec.
+    """
+    # very hard to define this type to be conditional on `when`
+    all_by_name: Dict[str, Any] = {}
+
+    for when_spec, by_name in when_indexed_dictionary.items():
+        for name, value in by_name.items():
+            if when:
+                when_dict = all_by_name.setdefault(name, {})
+                when_dict.setdefault(when_spec, []).append(value)
+            else:
+                all_by_name.setdefault(name, []).append(value)
+
+    return dict(sorted(all_by_name.items()))
+
+
+def _names(when_indexed_dictionary):
+    """Get sorted names from dicts keyed by when/name."""
+    all_names = set()
+    for when, by_name in when_indexed_dictionary.items():
+        for name in by_name:
+            all_names.add(name)
+
+    return sorted(all_names)
+
 
 class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     """This is the superclass for all spack packages.
@@ -523,9 +561,14 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     # Declare versions dictionary as placeholder for values.
     # This allows analysis tools to correctly interpret the class attributes.
     versions: dict
-
-    # Same for dependencies
-    dependencies: dict
+    dependencies: Dict["spack.spec.Spec", Dict[str, "spack.dependency.Dependency"]]
+    conflicts: Dict["spack.spec.Spec", List[Tuple["spack.spec.Spec", Optional[str]]]]
+    requirements: Dict[
+        "spack.spec.Spec", List[Tuple[Tuple["spack.spec.Spec", ...], str, Optional[str]]]
+    ]
+    provided: Dict["spack.spec.Spec", Set["spack.spec.Spec"]]
+    provided_together: Dict["spack.spec.Spec", List[Set[str]]]
+    patches: Dict["spack.spec.Spec", List["spack.patch.Patch"]]
 
     #: By default, packages are not virtual
     #: Virtual packages override this attribute
@@ -680,15 +723,23 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         super().__init__()
 
     @classmethod
+    def dependency_names(cls):
+        return _names(cls.dependencies)
+
+    @classmethod
+    def dependencies_by_name(cls, when: bool = False):
+        return _by_name(cls.dependencies, when=when)
+
+    @classmethod
     def possible_dependencies(
         cls,
-        transitive=True,
-        expand_virtuals=True,
+        transitive: bool = True,
+        expand_virtuals: bool = True,
         depflag: dt.DepFlag = dt.ALL,
-        visited=None,
-        missing=None,
-        virtuals=None,
-    ):
+        visited: Optional[dict] = None,
+        missing: Optional[dict] = None,
+        virtuals: Optional[set] = None,
+    ) -> Dict[str, Set[str]]:
         """Return dict of possible dependencies of this package.
 
         Args:
@@ -727,11 +778,12 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         visited.setdefault(cls.name, set())
 
-        for name, conditions in cls.dependencies.items():
+        for name, conditions in cls.dependencies_by_name(when=True).items():
             # check whether this dependency could be of the type asked for
             depflag_union = 0
-            for dep in conditions.values():
-                depflag_union |= dep.depflag
+            for deplist in conditions.values():
+                for dep in deplist:
+                    depflag_union |= dep.depflag
             if not (depflag & depflag_union):
                 continue
 
@@ -1035,15 +1087,26 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # To fetch the current version
         source_stage = self._make_root_stage(self.fetcher)
 
-        # Extend it with all resources and patches
+        # all_stages is source + resources + patches
         all_stages = StageComposite()
         all_stages.append(source_stage)
         all_stages.extend(
             self._make_resource_stage(source_stage, r) for r in self._get_needed_resources()
         )
-        all_stages.extend(
-            p.stage for p in self.spec.patches if isinstance(p, spack.patch.UrlPatch)
-        )
+        if self.spec.concrete:
+            all_stages.extend(
+                p.stage for p in self.spec.patches if isinstance(p, spack.patch.UrlPatch)
+            )
+        else:
+            # The only code path that gets here is spack mirror create --all which just needs all
+            # matching patches.
+            all_stages.extend(
+                p.stage
+                for when_spec, patch_list in self.patches.items()
+                if self.spec.intersects(when_spec)
+                for p in patch_list
+                if isinstance(p, spack.patch.UrlPatch)
+            )
         return all_stages
 
     @property
@@ -1208,7 +1271,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     @classmethod
     def dependencies_of_type(cls, deptypes: dt.DepFlag):
-        """Get dependencies that can possibly have these deptypes.
+        """Get names of dependencies that can possibly have these deptypes.
 
         This analyzes the package and determines which dependencies *can*
         be a certain kind of dependency. Note that they may not *always*
@@ -1216,11 +1279,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         so something may be a build dependency in one configuration and a
         run dependency in another.
         """
-        return dict(
-            (name, conds)
-            for name, conds in cls.dependencies.items()
-            if any(deptypes & cls.dependencies[name][cond].depflag for cond in conds)
-        )
+        return {
+            name
+            for name, dependencies in cls.dependencies_by_name().items()
+            if any(deptypes & dep.depflag for dep in dependencies)
+        }
 
     # TODO: allow more than one active extendee.
     @property
@@ -1249,20 +1312,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         else:
             # If it's not concrete, then return the spec from the
             # extends() directive since that is all we know so far.
-            spec_str, kwargs = next(iter(self.extendees.items()))
+            spec_str = next(iter(self.extendees))
             return spack.spec.Spec(spec_str)
-
-    @property
-    def extendee_args(self):
-        """
-        Spec of the extendee of this package, or None if it is not an extension
-        """
-        if not self.extendees:
-            return None
-
-        # TODO: allow multiple extendees.
-        name = next(iter(self.extendees))
-        return self.extendees[name][1]
 
     @property
     def is_extension(self):
@@ -1294,9 +1345,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         True if this package provides a virtual package with the specified name
         """
         return any(
-            any(self.spec.intersects(c) for c in constraints)
-            for s, constraints in self.provided.items()
-            if s.name == vpkg_name
+            any(spec.name == vpkg_name for spec in provided)
+            for when_spec, provided in self.provided.items()
+            if self.spec.intersects(when_spec)
         )
 
     @property
@@ -1306,9 +1357,15 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """
         return [
             vspec
-            for vspec, constraints in self.provided.items()
-            if any(self.spec.satisfies(c) for c in constraints)
+            for when_spec, provided in self.provided.items()
+            for vspec in provided
+            if self.spec.satisfies(when_spec)
         ]
+
+    @classmethod
+    def provided_virtual_names(cls):
+        """Return sorted list of names of virtuals that can be provided by this package."""
+        return sorted(set(vpkg.name for virtuals in cls.provided.values() for vpkg in virtuals))
 
     @property
     def prefix(self):
@@ -1743,28 +1800,16 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             inspect.getmodule(self).ninja(target, *args, **kwargs)
 
     def _get_needed_resources(self):
-        resources = []
-        # Select the resources that are needed for this build
-        if self.spec.concrete:
-            for when_spec, resource_list in self.resources.items():
-                if when_spec in self.spec:
-                    resources.extend(resource_list)
-        else:
-            for when_spec, resource_list in self.resources.items():
-                # Note that variant checking is always strict for specs where
-                # the name is not specified. But with strict variant checking,
-                # only variants mentioned in 'other' are checked. Here we only
-                # want to make sure that no constraints in when_spec
-                # conflict with the spec, so we need to invoke
-                # when_spec.satisfies(self.spec) vs.
-                # self.spec.satisfies(when_spec)
-                if when_spec.intersects(self.spec):
-                    resources.extend(resource_list)
-        # Sorts the resources by the length of the string representing their
-        # destination. Since any nested resource must contain another
-        # resource's name in its path, it seems that should work
-        resources = sorted(resources, key=lambda res: len(res.destination))
-        return resources
+        # We use intersects here cause it would also work if self.spec is abstract
+        resources = [
+            resource
+            for when_spec, resource_list in self.resources.items()
+            if self.spec.intersects(when_spec)
+            for resource in resource_list
+        ]
+        # Sorts the resources by the length of the string representing their destination. Since any
+        # nested resource must contain another resource's path, that should work
+        return sorted(resources, key=lambda res: len(res.destination))
 
     def _resource_stage(self, resource):
         pieces = ["resource", resource.name, self.spec.dag_hash()]
@@ -2449,14 +2494,21 @@ def flatten_dependencies(spec, flat_dir):
         dep_files.merge(flat_dir + "/" + name)
 
 
-def possible_dependencies(*pkg_or_spec, **kwargs):
+def possible_dependencies(
+    *pkg_or_spec: Union[str, spack.spec.Spec, typing.Type[PackageBase]],
+    transitive: bool = True,
+    expand_virtuals: bool = True,
+    depflag: dt.DepFlag = dt.ALL,
+    missing: Optional[dict] = None,
+    virtuals: Optional[set] = None,
+) -> Dict[str, Set[str]]:
     """Get the possible dependencies of a number of packages.
 
     See ``PackageBase.possible_dependencies`` for details.
     """
     packages = []
     for pos in pkg_or_spec:
-        if isinstance(pos, PackageMeta):
+        if isinstance(pos, PackageMeta) and issubclass(pos, PackageBase):
             packages.append(pos)
             continue
 
@@ -2469,9 +2521,16 @@ def possible_dependencies(*pkg_or_spec, **kwargs):
         else:
             packages.append(pos.package_class)
 
-    visited = {}
+    visited: Dict[str, Set[str]] = {}
     for pkg in packages:
-        pkg.possible_dependencies(visited=visited, **kwargs)
+        pkg.possible_dependencies(
+            visited=visited,
+            transitive=transitive,
+            expand_virtuals=expand_virtuals,
+            depflag=depflag,
+            missing=missing,
+            virtuals=virtuals,
+        )
 
     return visited
 

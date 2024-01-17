@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -106,7 +106,7 @@ class Met(AutotoolsPackage):
             ldflags.append(nc_config("--libs", "--static", output=str).strip())
             libs.append(nc_config("--libs", "--static", output=str).strip())
 
-        zlib = spec["zlib"]
+        zlib = spec["zlib-api"]
         cppflags.append("-D__64BIT__")
         ldflags.append("-L" + zlib.prefix.lib)
         libs.append("-lz")
@@ -128,6 +128,7 @@ class Met(AutotoolsPackage):
         if "+python" in spec:
             python = spec["python"]
             env.set("MET_PYTHON", python.command.path)
+            env.set("MET_PYTHON_BIN_EXE", python.command.path)
             env.set("MET_PYTHON_CC", "-I" + python.headers.directories[0])
             py_ld = [python.libs.ld_flags]
             if spec["python"].satisfies("~shared"):
@@ -142,6 +143,11 @@ class Met(AutotoolsPackage):
             hdfeos = spec["hdf-eos2"]
             env.set("MET_HDF5", hdf.prefix)
             env.set("MET_HDFEOS", hdfeos.prefix)
+
+            if "+szip" in hdf:
+                libs.append(" ".join(hdf["szip"].libs))
+            if "+external-xdr" in hdf:
+                libs.append(" ".join(hdf["rpc"].libs))
 
         if "+graphics" in spec:
             cairo = spec["cairo"]

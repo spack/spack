@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Hugo(Package):
     executables = ["^hugo$"]
 
     maintainers("alecbcs")
+
+    license("Apache-2.0")
 
     version("0.118.2", sha256="915d7dcb44fba949c80858f9c2a55a11256162ba28a9067752f808cfe8faedaa")
     version("0.112.7", sha256="d706e52c74f0fb00000caf4e95b98e9d62c3536a134d5e26b433b1fa1e2a74aa")

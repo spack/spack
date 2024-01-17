@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -158,7 +158,10 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         # Only if environment modifications are desired (default is +envmods)
         if self.spec.satisfies("+envmods"):
             env.set("MKLROOT", self.component_prefix)
+            # 2023.1.0 has the pkgconfig files in lib/pkgconfig, 2021.3.0 has them in
+            # tools/pkgconfig, just including both in PKG_CONFIG_PATH
             env.append_path("PKG_CONFIG_PATH", self.component_prefix.lib.pkgconfig)
+            env.append_path("PKG_CONFIG_PATH", self.component_prefix.tools.pkgconfig)
 
     def _find_mkl_libs(self, shared):
         libs = []

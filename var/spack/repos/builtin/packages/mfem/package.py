@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -44,6 +44,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     #
     # If this quick verification procedure fails, additional discussion
     # will be required to verify the new version.
+
+    license("BSD-3-Clause")
 
     # 'develop' is a special version that is always larger (or newer) than any
     # other version.
@@ -473,6 +475,11 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     patch("mfem-4.0.0-makefile-syntax-fix.patch", when="@4.0.0")
     patch("mfem-4.5.patch", when="@4.5.0")
     patch("mfem-4.6.patch", when="@4.6.0")
+    patch(
+        "https://github.com/mfem/mfem/pull/4005.patch?full_index=1",
+        when="@4.6.0 +gslib+shared+miniapps",
+        sha256="2a31682d876626529e2778a216d403648b83b90997873659a505d982d0e65beb",
+    )
 
     phases = ["configure", "build", "install"]
 

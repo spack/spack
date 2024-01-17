@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Eztrace(Package):
     homepage = "https://gitlab.com/eztrace"
     maintainers("trahay")
     git = "https://gitlab.com/eztrace/eztrace.git"
+
+    license("CECILL-B")
 
     version("master", branch="master")
     version("2.1", sha256="ab5076086eced78e4c6cf7736e7765ca1337dec95a881c9270a42b3251aeea19")
