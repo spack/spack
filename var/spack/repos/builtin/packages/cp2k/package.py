@@ -14,6 +14,19 @@ from spack.build_environment import dso_suffix
 from spack.build_systems import cmake, makefile
 from spack.package import *
 
+GPU_MAP = {
+    "35": "K40",
+    "37": "K80",
+    "60": "P100",
+    "70": "V100",
+    "80": "A100",
+    "gfx906": "Mi50",
+    "gfx908": "Mi100",
+    "gfx90a": "Mi250",
+    "gfx90a:xnack-": "Mi250",
+    "gfx90a:xnack+": "Mi250",
+}
+
 
 class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     """CP2K is a quantum chemistry and solid state physics software package
@@ -347,24 +360,11 @@ class CMakeBuilder(cmake.CMakeBuilder):
         spec = self.spec
         args = []
 
-        gpu_map = {
-            "35": "K40",
-            "37": "K80",
-            "60": "P100",
-            "70": "V100",
-            "80": "A100",
-            "gfx906": "Mi50",
-            "gfx908": "Mi100",
-            "gfx90a": "Mi250",
-            "gfx90a:xnack-": "Mi250",
-            "gfx90a:xnack+": "Mi250",
-        }
-
         if "+cuda" in spec:
             if (len(spec.variants["cuda_arch"].value) > 1) or spec.satisfies("cuda_arch=none"):
                 raise InstallError("CP2K supports only one cuda_arch at a time.")
             else:
-                gpu_ver = gpu_map[spec.variants["cuda_arch"].value[0]]
+                gpu_ver = GPU_MAP[spec.variants["cuda_arch"].value[0]]
                 args += [
                     self.define("CP2K_USE_ACCEL", "CUDA"),
                     self.define("CP2K_WITH_GPU", gpu_ver),
@@ -374,7 +374,7 @@ class CMakeBuilder(cmake.CMakeBuilder):
             if len(spec.variants["amdgpu_target"].value) > 1:
                 raise InstallError("CP2K supports only one amdgpu_target at a time.")
             else:
-                gpu_ver = gpu_map[spec.variants["amdgpu_target"].value[0]]
+                gpu_ver = GPU_MAP[spec.variants["amdgpu_target"].value[0]]
                 args += [
                     self.define("CP2K_USE_ACCEL", "HIP"),
                     self.define("CP2K_WITH_GPU", gpu_ver),
@@ -722,18 +722,6 @@ class MakefileBuilder(makefile.MakefileBuilder):
             fcflags += ["-I{0}".format(sirius.prefix.include.sirius)]
             libs += list(sirius.libs)
 
-        gpu_map = {
-            "35": "K40",
-            "37": "K80",
-            "60": "P100",
-            "70": "V100",
-            "80": "A100",
-            "gfx906": "Mi50",
-            "gfx908": "Mi100",
-            "gfx90a": "Mi250",
-            "gfx90a:xnack-": "Mi250",
-            "gfx90a:xnack+": "Mi250",
-        }
         gpuver = ""
         if spec.satisfies("+cuda"):
             libs += [
@@ -777,7 +765,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
                     libs += ["-lcufft", "-lcublas"]
 
             cuda_arch = spec.variants["cuda_arch"].value[0]
-            gpuver = gpu_map[cuda_arch]
+            gpuver = GPU_MAP[cuda_arch]
             if cuda_arch == "35" and spec.satisfies("+cuda_arch_35_k20x"):
                 gpuver = "K20X"
 
@@ -795,7 +783,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
             acc_flags_var = "NVFLAGS"
             cppflags += ["-D__ACC"]
             cppflags += ["-D__DBCSR_ACC"]
-            gpuver = gpu_map[spec.variants["amdgpu_target"].value[0]]
+            gpuver = GPU_MAP[spec.variants["amdgpu_target"].value[0]]
 
         if "smm=libsmm" in spec:
             lib_dir = join_path("lib", self.makefile_architecture, self.makefile_version)
