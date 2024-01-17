@@ -18,5 +18,4 @@ class PyBiobbAnalysis(PythonPackage):
 
     depends_on("py-biobb-common@4.1.0", type="run")
 
-    depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
