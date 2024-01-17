@@ -4,9 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+from spack.build_systems.generic import PackageNoDep
 
 
-class Gnuconfig(Package):
+class Gnuconfig(PackageNoDep):
     """
     The GNU config.guess and config.sub scripts versioned by timestamp.
     This package can be used as a build dependency for autotools packages that
