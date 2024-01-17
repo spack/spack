@@ -11,10 +11,11 @@ import spack.platforms
 import spack.util.environment
 import spack.util.executable
 from spack.build_environment import dso_suffix
+from spack.build_systems import cmake, makefile
 from spack.package import *
 
 
-class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
+class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     """CP2K is a quantum chemistry and solid state physics software package
     that can perform atomistic simulations of solid state, liquid, molecular,
     periodic, material, crystal, and biological systems
@@ -385,27 +386,120 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         url = "https://github.com/cp2k/cp2k/releases/download/v{0}/cp2k-{0}.tar.bz2"
         return url.format(version)
 
-    @property
-    def makefile_architecture(self):
-        return "{0.architecture}-{0.compiler.name}".format(self.spec)
 
-    @property
-    def makefile_version(self):
-        return "{prefix}{suffix}".format(
-            prefix="p" if "+mpi" in self.spec else "s",
-            suffix="smp" if "+openmp" in self.spec else "opt",
-        )
+class CMakeBuilder(cmake.CMakeBuilder):
+    def cmake_args(self):
+        spec = self.spec
+        args = []
 
-    @property
-    def makefile(self):
-        makefile_basename = ".".join([self.makefile_architecture, self.makefile_version])
-        return join_path("arch", makefile_basename)
+        gpu_map = {
+            "35": "K40",
+            "37": "K80",
+            "60": "P100",
+            "70": "V100",
+            "80": "A100",
+            "gfx906": "Mi50",
+            "gfx908": "Mi100",
+            "gfx90a": "Mi250",
+            "gfx90a:xnack-": "Mi250",
+            "gfx90a:xnack+": "Mi250",
+        }
 
-    @property
-    def archive_files(self):
-        return [join_path(self.stage.source_path, self.makefile)]
+        if "+cuda" in spec:
+            if (len(spec.variants["cuda_arch"].value) > 1) or spec.satisfies("cuda_arch=none"):
+                raise InstallError("CP2K supports only one cuda_arch at a time.")
+            else:
+                gpu_ver = gpu_map[spec.variants["cuda_arch"].value[0]]
+                args += [
+                    self.define("CP2K_USE_ACCEL", "CUDA"),
+                    self.define("CP2K_WITH_GPU", gpu_ver),
+                ]
 
-    def edit(self, spec, prefix):
+        if "+rocm" in spec:
+            if len(spec.variants["amdgpu_target"].value) > 1:
+                raise InstallError("CP2K supports only one amdgpu_target at a time.")
+            else:
+                gpu_ver = gpu_map[spec.variants["amdgpu_target"].value[0]]
+                args += [
+                    self.define("CP2K_USE_ACCEL", "HIP"),
+                    self.define("CP2K_WITH_GPU", gpu_ver),
+                ]
+
+        args += [
+            self.define_from_variant("CP2K_ENABLE_REGTESTS", "enable_regtests"),
+            self.define_from_variant("CP2K_USE_ELPA", "elpa"),
+            self.define_from_variant("CP2K_USE_DLAF", "dlaf"),
+            self.define_from_variant("CP2K_USE_LIBINT2", "libint"),
+            self.define_from_variant("CP2K_USE_SIRIUS", "sirius"),
+            self.define_from_variant("CP2K_USE_SPLA", "spla"),
+            self.define_from_variant("CP2K_USE_COSMA", "cosma"),
+            self.define_from_variant("CP2K_USE_LIBXC", "libxc"),
+            self.define_from_variant("CP2K_USE_LIBTORCH", "pytorch"),
+            self.define_from_variant("CP2K_USE_METIS", "pexsi"),
+            self.define_from_variant("CP2K_USE_SUPERLU", "pexsi"),
+            self.define_from_variant("CP2K_USE_PLUMED", "plumed"),
+            self.define_from_variant("CP2K_USE_SPGLIB", "spglib"),
+            self.define_from_variant("CP2K_USE_VORI", "libvori"),
+            self.define_from_variant("CP2K_USE_SPLA", "spla"),
+            self.define_from_variant("CP2K_USE_QUIP", "quip"),
+            self.define_from_variant("CP2K_USE_MPI_F08", "mpi_f08"),
+        ]
+
+        # we force the use elpa openmp threading support. might need to be revisited though
+        args += [
+            self.define(
+                "CP2K_ENABLE_ELPA_OPENMP_SUPPORT",
+                ("+elpa +openmp" in spec) or ("^elpa +openmp" in spec),
+            )
+        ]
+
+        if "spla" in spec and (spec.satisfies("+cuda") or spec.satisfies("+rocm")):
+            args += ["-DCP2K_USE_SPLA_GEMM_OFFLOADING=ON"]
+
+        args += ["-DCP2K_USE_FFTW3=ON"]
+
+        if spec.satisfies("smm=libxsmm"):
+            args += ["-DCP2K_USE_LIBXSMM=ON"]
+        else:
+            args += ["-DCP2K_USE_LIBXSMM=OFF"]
+
+        lapack = spec["lapack"]
+        blas = spec["blas"]
+
+        if blas.name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
+            args += ["-DCP2K_BLAS_VENDOR=MKL"]
+            if sys.platform == "darwin":
+                args += [
+                    self.define("CP2K_BLAS_VENDOR", "CUSTOM"),
+                    self.define("CP2K_SCALAPACK_VENDOR", "GENERIC"),
+                    self.define(
+                        "CP2K_SCALAPACK_LINK_LIBRARIES", spec["scalapack"].libs.joined(";")
+                    ),
+                ]
+            else:
+                args += ["-DCP2K_SCALAPACK_VENDOR=MKL"]
+        else:
+            args.extend(
+                [
+                    self.define("CP2K_LAPACK_FOUND", True),
+                    self.define("CP2K_LAPACK_LINK_LIBRARIES", lapack.libs.joined(";")),
+                    self.define("CP2K_BLAS_FOUND", True),
+                    self.define("CP2K_BLAS_LINK_LIBRARIES", blas.libs.joined(";")),
+                    self.define("CP2K_SCALAPACK_FOUND", True),
+                    self.define("CP2K_SCALAPACK_INCLUDE_DIRS", spec["scalapack"].prefix.include),
+                    self.define("CP2K_BLAS_VENDOR", "CUSTOM"),
+                    self.define("CP2K_SCALAPACK_VENDOR", "GENERIC"),
+                    self.define(
+                        "CP2K_SCALAPACK_LINK_LIBRARIES", spec["scalapack"].libs.joined(";")
+                    ),
+                ]
+            )
+
+        return args
+
+
+class MakefileBuilder(makefile.MakefileBuilder):
+    def edit(self, pkg, spec, prefix):
         pkgconf = which("pkg-config")
 
         fftw = spec["fftw-api:openmp" if "+openmp" in spec else "fftw-api"]
@@ -438,9 +532,9 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
             elif "^mpi@2:" in spec:
                 cppflags.append("-D__MPI_VERSION=2")
 
-        cflags = optimization_flags[self.spec.compiler.name][:]
-        cxxflags = optimization_flags[self.spec.compiler.name][:]
-        fcflags = optimization_flags[self.spec.compiler.name][:]
+        cflags = optimization_flags[spec.compiler.name][:]
+        cxxflags = optimization_flags[spec.compiler.name][:]
+        fcflags = optimization_flags[spec.compiler.name][:]
         nvflags = ["-O3"]
         ldflags = []
         libs = []
@@ -448,10 +542,10 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         # CP2K Makefile doesn't set C standard
         if spec.satisfies("@2023.2:"):
             # Use of DBL_DECIMAL_DIG
-            cflags.append(self.compiler.c11_flag)
+            cflags.append(pkg.compiler.c11_flag)
         else:
             # C99-style for-loops with inline definition of iterating variable.
-            cflags.append(self.compiler.c99_flag)
+            cflags.append(pkg.compiler.c99_flag)
 
         if "%intel" in spec:
             cflags.append("-fp-model precise")
@@ -481,11 +575,11 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
             fcflags.append("-fallow-argument-mismatch")
 
         if "+openmp" in spec:
-            cflags.append(self.compiler.openmp_flag)
-            cxxflags.append(self.compiler.openmp_flag)
-            fcflags.append(self.compiler.openmp_flag)
-            ldflags.append(self.compiler.openmp_flag)
-            nvflags.append('-Xcompiler="{0}"'.format(self.compiler.openmp_flag))
+            cflags.append(pkg.compiler.openmp_flag)
+            cxxflags.append(pkg.compiler.openmp_flag)
+            fcflags.append(pkg.compiler.openmp_flag)
+            ldflags.append(pkg.compiler.openmp_flag)
+            nvflags.append('-Xcompiler="{0}"'.format(pkg.compiler.openmp_flag))
         elif "%cce" in spec:  # Cray enables OpenMP by default
             cflags += ["-hnoomp"]
             cxxflags += ["-hnoomp"]
@@ -493,20 +587,18 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
             ldflags += ["-hnoomp"]
 
         if "@7:" in spec:  # recent versions of CP2K use C++14 CUDA code
-            cxxflags.append(self.compiler.cxx14_flag)
-            nvflags.append(self.compiler.cxx14_flag)
+            cxxflags.append(pkg.compiler.cxx14_flag)
+            nvflags.append(pkg.compiler.cxx14_flag)
 
         ldflags.append(fftw.libs.search_flags)
 
         if "superlu-dist@4.3" in spec:
             ldflags.insert(0, "-Wl,--allow-multiple-definition")
 
-        if "+plumed" in self.spec:
+        if "+plumed" in spec:
             dflags.extend(["-D__PLUMED2"])
             cppflags.extend(["-D__PLUMED2"])
-            libs.extend(
-                [join_path(self.spec["plumed"].prefix.lib, "libplumed.{0}".format(dso_suffix))]
-            )
+            libs.extend([join_path(spec["plumed"].prefix.lib, "libplumed.{0}".format(dso_suffix))])
 
         cc = spack_cc if "~mpi" in spec else spec["mpi"].mpicc
         cxx = spack_cxx if "~mpi" in spec else spec["mpi"].mpicxx
@@ -523,7 +615,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         ldflags.append((lapack + blas).search_flags)
         libs.extend([str(x) for x in (fftw.libs, lapack, blas)])
 
-        if self.spec.satisfies("platform=darwin"):
+        if spec.satisfies("platform=darwin"):
             cppflags.extend(["-D__NO_STATM_ACCESS"])
 
         if spec["blas"].name in ("intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"):
@@ -565,7 +657,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
 
             libs.extend(scalapack)
             libs.extend(mpi)
-            libs.extend(self.compiler.stdcxx_libs)
+            libs.extend(pkg.compiler.stdcxx_libs)
 
             if "+mpi_f08" in spec:
                 cppflags.append("-D__MPI_F08")
@@ -807,7 +899,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
             )
 
             if "%intel" in spec:
-                intel_bin_dir = ancestor(self.compiler.cc)
+                intel_bin_dir = ancestor(pkg.compiler.cc)
                 # CPP is a commented command in Intel arch of CP2K
                 # This is the hack through which cp2k developers avoid doing :
                 #
@@ -847,11 +939,34 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
 
             mkf.write("# CP2K-specific flags\n\n")
             mkf.write("GPUVER = {0}\n".format(gpuver))
-            mkf.write("DATA_DIR = {0}\n".format(self.prefix.share.data))
+            mkf.write("DATA_DIR = {0}\n".format(prefix.share.data))
+
+    def build(self, pkg, spec, prefix):
+        if "+cuda" in spec and len(spec.variants["cuda_arch"].value) > 1:
+            raise InstallError("cp2k supports only one cuda_arch at a time")
+
+        # Apparently the Makefile bases its paths on PWD
+        # so we need to set PWD = self.build_directory
+        with spack.util.environment.set_env(PWD=self.build_directory):
+            super().build(pkg, spec, prefix)
+
+            with working_dir(self.build_directory):
+                make("libcp2k", *self.build_targets)
+
+    def install(self, pkg, spec, prefix):
+        exe_dir = join_path("exe", self.makefile_architecture)
+        lib_dir = join_path("lib", self.makefile_architecture, self.makefile_version)
+
+        install_tree(exe_dir, self.prefix.bin)
+        install_tree("data", self.prefix.share.data)
+        install_tree(lib_dir, self.prefix.lib)
+
+        mkdirp(self.prefix.include)
+        install("src/start/libcp2k.h", join_path(self.prefix.include, "libcp2k.h"))
 
     @property
     def build_directory(self):
-        build_dir = self.stage.source_path
+        build_dir = self.pkg.stage.source_path
 
         if self.spec.satisfies("@:6"):
             # prior to version 7.1 was the Makefile located in makefiles/
@@ -866,30 +981,36 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
             "VERSION={0}".format(self.makefile_version),
         ]
 
-    def build(self, spec, prefix):
-        if "+cuda" in spec and len(spec.variants["cuda_arch"].value) > 1:
-            raise InstallError("cp2k supports only one cuda_arch at a time")
+    @property
+    def makefile(self):
+        makefile_basename = ".".join([self.makefile_architecture, self.makefile_version])
+        return join_path("arch", makefile_basename)
 
-        # Apparently the Makefile bases its paths on PWD
-        # so we need to set PWD = self.build_directory
-        with spack.util.environment.set_env(PWD=self.build_directory):
-            super().build(spec, prefix)
+    @property
+    def makefile_architecture(self):
+        return "{0.architecture}-{0.compiler.name}".format(self.spec)
 
+    @property
+    def makefile_version(self):
+        return "{prefix}{suffix}".format(
+            prefix="p" if "+mpi" in self.spec else "s",
+            suffix="smp" if "+openmp" in self.spec else "opt",
+        )
+
+    @property
+    def archive_files(self):
+        return [join_path(self.pkg.stage.source_path, self.makefile)]
+
+    def check(self):
+        data_dir = join_path(self.pkg.stage.source_path, "data")
+
+        # CP2K < 7 still uses $PWD to detect the current working dir
+        # and Makefile is in a subdir, account for both facts here:
+        with spack.util.environment.set_env(CP2K_DATA_DIR=data_dir, PWD=self.build_directory):
             with working_dir(self.build_directory):
-                make("libcp2k", *self.build_targets)
+                make("test", *self.build_targets)
 
-    def install(self, spec, prefix):
-        exe_dir = join_path("exe", self.makefile_architecture)
-        lib_dir = join_path("lib", self.makefile_architecture, self.makefile_version)
-
-        install_tree(exe_dir, self.prefix.bin)
-        install_tree("data", self.prefix.share.data)
-        install_tree(lib_dir, self.prefix.lib)
-
-        mkdirp(self.prefix.include)
-        install("src/start/libcp2k.h", join_path(self.prefix.include, "libcp2k.h"))
-
-    @run_after("install")
+    @run_after("install", when="@9.1:")
     def fix_package_config(self):
         """
         Default build procedure generates libcp2k.pc with invalid paths,
@@ -903,146 +1024,21 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         In case such approach causes issues in the future, it might be necessary
         to generate and override entire libcp2k.pc.
         """
-        if self.spec.satisfies("@9.1:"):
-            pkgconfig_file = join_path(self.prefix.lib.pkgconfig, "libcp2k.pc")
-            filter_file(r"(^includedir=).*", r"\1{0}".format(self.prefix.include), pkgconfig_file)
-            filter_file(r"(^libdir=).*", r"\1{0}".format(self.prefix.lib), pkgconfig_file)
+        pkgconfig_file = join_path(self.prefix.lib.pkgconfig, "libcp2k.pc")
+        filter_file(r"(^includedir=).*", r"\1{0}".format(self.prefix.include), pkgconfig_file)
+        filter_file(r"(^libdir=).*", r"\1{0}".format(self.prefix.lib), pkgconfig_file)
 
-            with open(pkgconfig_file, "r+") as handle:
-                content = handle.read().rstrip()
+        with open(pkgconfig_file, "r+") as handle:
+            content = handle.read().rstrip()
 
-                content += " " + self.spec["blas"].libs.ld_flags
-                content += " " + self.spec["lapack"].libs.ld_flags
-                content += " " + self.spec["fftw-api"].libs.ld_flags
+            content += " " + self.spec["blas"].libs.ld_flags
+            content += " " + self.spec["lapack"].libs.ld_flags
+            content += " " + self.spec["fftw-api"].libs.ld_flags
 
-                if (self.spec["fftw-api"].name == "fftw") and ("+openmp" in self.spec["fftw"]):
-                    content += " -lfftw3_omp"
+            if (self.spec["fftw-api"].name == "fftw") and ("+openmp" in self.spec["fftw"]):
+                content += " -lfftw3_omp"
 
-                content += "\n"
+            content += "\n"
 
-                handle.seek(0)
-                handle.write(content)
-
-    def check(self):
-        data_dir = join_path(self.stage.source_path, "data")
-
-        # CP2K < 7 still uses $PWD to detect the current working dir
-        # and Makefile is in a subdir, account for both facts here:
-        with spack.util.environment.set_env(CP2K_DATA_DIR=data_dir, PWD=self.build_directory):
-            with working_dir(self.build_directory):
-                make("test", *self.build_targets)
-
-
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
-    """Use the new CMake build system to build CP2K."""
-
-    def cmake_args(self):
-        spec = self.spec
-        args = []
-
-        gpu_map = {
-            "35": "K40",
-            "37": "K80",
-            "60": "P100",
-            "70": "V100",
-            "80": "A100",
-            "gfx906": "Mi50",
-            "gfx908": "Mi100",
-            "gfx90a": "Mi250",
-            "gfx90a:xnack-": "Mi250",
-            "gfx90a:xnack+": "Mi250",
-        }
-
-        if "+cuda" in spec:
-            if (len(spec.variants["cuda_arch"].value) > 1) or spec.satisfies("cuda_arch=none"):
-                raise InstallError("CP2K supports only one cuda_arch at a time.")
-            else:
-                gpu_ver = gpu_map[spec.variants["cuda_arch"].value[0]]
-                args += [
-                    self.define("CP2K_USE_ACCEL", "CUDA"),
-                    self.define("CP2K_WITH_GPU", gpu_ver),
-                ]
-
-        if "+rocm" in spec:
-            if len(spec.variants["amdgpu_target"].value) > 1:
-                raise InstallError("CP2K supports only one amdgpu_target at a time.")
-            else:
-                gpu_ver = gpu_map[spec.variants["amdgpu_target"].value[0]]
-                args += [
-                    self.define("CP2K_USE_ACCEL", "HIP"),
-                    self.define("CP2K_WITH_GPU", gpu_ver),
-                ]
-
-        args += [
-            self.define_from_variant("CP2K_ENABLE_REGTESTS", "enable_regtests"),
-            self.define_from_variant("CP2K_USE_ELPA", "elpa"),
-            self.define_from_variant("CP2K_USE_DLAF", "dlaf"),
-            self.define_from_variant("CP2K_USE_LIBINT2", "libint"),
-            self.define_from_variant("CP2K_USE_SIRIUS", "sirius"),
-            self.define_from_variant("CP2K_USE_SPLA", "spla"),
-            self.define_from_variant("CP2K_USE_COSMA", "cosma"),
-            self.define_from_variant("CP2K_USE_LIBXC", "libxc"),
-            self.define_from_variant("CP2K_USE_LIBTORCH", "pytorch"),
-            self.define_from_variant("CP2K_USE_METIS", "pexsi"),
-            self.define_from_variant("CP2K_USE_SUPERLU", "pexsi"),
-            self.define_from_variant("CP2K_USE_PLUMED", "plumed"),
-            self.define_from_variant("CP2K_USE_SPGLIB", "spglib"),
-            self.define_from_variant("CP2K_USE_VORI", "libvori"),
-            self.define_from_variant("CP2K_USE_SPLA", "spla"),
-            self.define_from_variant("CP2K_USE_QUIP", "quip"),
-            self.define_from_variant("CP2K_USE_MPI_F08", "mpi_f08"),
-        ]
-
-        # we force the use elpa openmp threading support. might need to be revisited though
-        args += [
-            self.define(
-                "CP2K_ENABLE_ELPA_OPENMP_SUPPORT",
-                ("+elpa +openmp" in spec) or ("^elpa +openmp" in spec),
-            )
-        ]
-
-        if "spla" in spec and (spec.satisfies("+cuda") or spec.satisfies("+rocm")):
-            args += ["-DCP2K_USE_SPLA_GEMM_OFFLOADING=ON"]
-
-        args += ["-DCP2K_USE_FFTW3=ON"]
-
-        if spec.satisfies("smm=libxsmm"):
-            args += ["-DCP2K_USE_LIBXSMM=ON"]
-        else:
-            args += ["-DCP2K_USE_LIBXSMM=OFF"]
-
-        lapack = spec["lapack"]
-        blas = spec["blas"]
-
-        if blas.name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
-            args += ["-DCP2K_BLAS_VENDOR=MKL"]
-            if sys.platform == "darwin":
-                args += [
-                    self.define("CP2K_BLAS_VENDOR", "CUSTOM"),
-                    self.define("CP2K_SCALAPACK_VENDOR", "GENERIC"),
-                    self.define(
-                        "CP2K_SCALAPACK_LINK_LIBRARIES", spec["scalapack"].libs.joined(";")
-                    ),
-                ]
-            else:
-                args += ["-DCP2K_SCALAPACK_VENDOR=MKL"]
-        else:
-            args.extend(
-                [
-                    self.define("CP2K_LAPACK_FOUND", True),
-                    self.define("CP2K_LAPACK_LINK_LIBRARIES", lapack.libs.joined(";")),
-                    self.define("CP2K_BLAS_FOUND", True),
-                    self.define("CP2K_BLAS_LINK_LIBRARIES", blas.libs.joined(";")),
-                    self.define("CP2K_SCALAPACK_FOUND", True),
-                    self.define("CP2K_SCALAPACK_INCLUDE_DIRS", spec["scalapack"].prefix.include),
-                    self.define("CP2K_BLAS_VENDOR", "CUSTOM"),
-                    self.define("CP2K_SCALAPACK_VENDOR", "GENERIC"),
-                    self.define(
-                        "CP2K_SCALAPACK_LINK_LIBRARIES", spec["scalapack"].libs.joined(";")
-                    ),
-                ]
-            )
-
-        return args
-
-    pass
+            handle.seek(0)
+            handle.write(content)
