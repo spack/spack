@@ -13,6 +13,7 @@ import pprint
 import re
 import sys
 import types
+import typing
 import warnings
 from typing import Callable, Dict, List, NamedTuple, Optional, Sequence, Set, Tuple, Union
 
@@ -20,6 +21,7 @@ import archspec.cpu
 
 import spack.config as sc
 import spack.deptypes as dt
+import spack.parser
 import spack.paths as sp
 import spack.util.path as sup
 
@@ -417,7 +419,7 @@ def check_packages_exist(specs):
     for spec in specs:
         for s in spec.traverse():
             try:
-                check_passed = repo.exists(s.name) or repo.is_virtual(s.name)
+                check_passed = repo.repo_for_pkg(s).exists(s.name) or repo.is_virtual(s.name)
             except Exception as e:
                 msg = "Cannot find package: {0}".format(str(e))
                 check_passed = False
@@ -862,9 +864,13 @@ class ErrorHandler:
 
 
 #: Data class to collect information on a requirement
-RequirementRule = collections.namedtuple(
-    "RequirementRule", ["pkg_name", "policy", "requirements", "condition", "kind", "message"]
-)
+class RequirementRule(NamedTuple):
+    pkg_name: str
+    policy: str
+    requirements: List["spack.spec.Spec"]
+    condition: "spack.spec.Spec"
+    kind: RequirementKind
+    message: str
 
 
 class PyclingoDriver:
@@ -1170,6 +1176,7 @@ class SpackSolverSetup:
 
         # Set during the call to setup
         self.pkgs = None
+        self.explicitly_required_namespaces = {}
 
     def pkg_version_rules(self, pkg):
         """Output declared versions of a package.
@@ -1182,7 +1189,9 @@ class SpackSolverSetup:
             # Origins are sorted by "provenance" first, see the Provenance enumeration above
             return version.origin, version.idx
 
-        pkg = packagize(pkg)
+        if isinstance(pkg, str):
+            pkg = self.pkg_class(pkg)
+
         declared_versions = self.declared_versions[pkg.name]
         partially_sorted_versions = sorted(set(declared_versions), key=key_fn)
 
@@ -1234,29 +1243,30 @@ class SpackSolverSetup:
         return [fn.attr("node_target_satisfies", spec.name, target)]
 
     def conflict_rules(self, pkg):
-        default_msg = "{0}: '{1}' conflicts with '{2}'"
-        no_constraint_msg = "{0}: conflicts with '{1}'"
-        for trigger, constraints in pkg.conflicts.items():
-            trigger_msg = f"conflict is triggered when {str(trigger)}"
-            trigger_spec = spack.spec.Spec(trigger)
-            trigger_id = self.condition(
-                trigger_spec, name=trigger_spec.name or pkg.name, msg=trigger_msg
-            )
+        for when_spec, conflict_specs in pkg.conflicts.items():
+            when_spec_msg = "conflict constraint %s" % str(when_spec)
+            when_spec_id = self.condition(when_spec, name=pkg.name, msg=when_spec_msg)
 
-            for constraint, conflict_msg in constraints:
+            for conflict_spec, conflict_msg in conflict_specs:
+                conflict_spec = spack.spec.Spec(conflict_spec)
                 if conflict_msg is None:
-                    if constraint == spack.spec.Spec():
-                        conflict_msg = no_constraint_msg.format(pkg.name, trigger)
+                    conflict_msg = f"{pkg.name}: "
+                    if when_spec == spack.spec.Spec():
+                        conflict_msg += f"conflicts with '{conflict_spec}'"
                     else:
-                        conflict_msg = default_msg.format(pkg.name, trigger, constraint)
+                        conflict_msg += f"'{conflict_spec}' conflicts with '{when_spec}'"
 
-                spec_for_msg = (
-                    spack.spec.Spec(pkg.name) if constraint == spack.spec.Spec() else constraint
+                spec_for_msg = conflict_spec
+                if conflict_spec == spack.spec.Spec():
+                    spec_for_msg = spack.spec.Spec(pkg.name)
+                conflict_spec_msg = f"conflict is triggered when {str(spec_for_msg)}"
+                conflict_spec_id = self.condition(
+                    conflict_spec, name=conflict_spec.name or pkg.name, msg=conflict_spec_msg
                 )
-                constraint_msg = f"conflict applies to spec {str(spec_for_msg)}"
-                constraint_id = self.condition(constraint, name=pkg.name, msg=constraint_msg)
                 self.gen.fact(
-                    fn.pkg_fact(pkg.name, fn.conflict(trigger_id, constraint_id, conflict_msg))
+                    fn.pkg_fact(
+                        pkg.name, fn.conflict(conflict_spec_id, when_spec_id, conflict_msg)
+                    )
                 )
                 self.gen.newline()
 
@@ -1302,8 +1312,8 @@ class SpackSolverSetup:
 
     def requirement_rules_from_package_py(self, pkg):
         rules = []
-        for requirements, conditions in pkg.requirements.items():
-            for when_spec, policy, message in conditions:
+        for when_spec, requirement_list in pkg.requirements.items():
+            for requirements, policy, message in requirement_list:
                 rules.append(
                     RequirementRule(
                         pkg_name=pkg.name,
@@ -1351,10 +1361,18 @@ class SpackSolverSetup:
                     constraints = [constraints]
                     policy = "one_of"
 
+                # validate specs from YAML first, and fail with line numbers if parsing fails.
                 constraints = [
-                    x
-                    for x in constraints
-                    if not self.reject_requirement_constraint(pkg_name, constraint=x, kind=kind)
+                    sc.parse_spec_from_yaml_string(constraint) for constraint in constraints
+                ]
+                when_str = requirement.get("when")
+                when = sc.parse_spec_from_yaml_string(when_str) if when_str else spack.spec.Spec()
+
+                # filter constraints
+                constraints = [
+                    c
+                    for c in constraints
+                    if not self.reject_requirement_constraint(pkg_name, constraint=c, kind=kind)
                 ]
                 if not constraints:
                     continue
@@ -1366,13 +1384,13 @@ class SpackSolverSetup:
                         requirements=constraints,
                         kind=kind,
                         message=requirement.get("message"),
-                        condition=requirement.get("when"),
+                        condition=when,
                     )
                 )
         return rules
 
     def reject_requirement_constraint(
-        self, pkg_name: str, *, constraint: str, kind: RequirementKind
+        self, pkg_name: str, *, constraint: "spack.spec.Spec", kind: RequirementKind
     ) -> bool:
         """Returns True if a requirement constraint should be rejected"""
         if kind == RequirementKind.DEFAULT:
@@ -1392,7 +1410,10 @@ class SpackSolverSetup:
         return False
 
     def pkg_rules(self, pkg, tests):
-        pkg = packagize(pkg)
+        pkg = self.pkg_class(pkg)
+
+        # Namespace of the package
+        self.gen.fact(fn.pkg_fact(pkg.name, fn.namespace(pkg.namespace)))
 
         # versions
         self.pkg_version_rules(pkg)
@@ -1614,19 +1635,20 @@ class SpackSolverSetup:
             self.gen.fact(fn.imposed_constraint(condition_id, *pred.args))
 
     def package_provider_rules(self, pkg):
-        for provider_name in sorted(set(s.name for s in pkg.provided.keys())):
-            if provider_name not in self.possible_virtuals:
+        for vpkg_name in pkg.provided_virtual_names():
+            if vpkg_name not in self.possible_virtuals:
                 continue
-            self.gen.fact(fn.pkg_fact(pkg.name, fn.possible_provider(provider_name)))
+            self.gen.fact(fn.pkg_fact(pkg.name, fn.possible_provider(vpkg_name)))
 
-        for provided, whens in pkg.provided.items():
-            if provided.name not in self.possible_virtuals:
-                continue
-            for when in whens:
-                msg = "%s provides %s when %s" % (pkg.name, provided, when)
-                condition_id = self.condition(when, provided, pkg.name, msg)
+        for when, provided in pkg.provided.items():
+            for vpkg in provided:
+                if vpkg.name not in self.possible_virtuals:
+                    continue
+
+                msg = f"{pkg.name} provides {vpkg} when {when}"
+                condition_id = self.condition(when, vpkg, pkg.name, msg)
                 self.gen.fact(
-                    fn.pkg_fact(when.name, fn.provider_condition(condition_id, provided.name))
+                    fn.pkg_fact(when.name, fn.provider_condition(condition_id, vpkg.name))
                 )
             self.gen.newline()
 
@@ -1643,8 +1665,8 @@ class SpackSolverSetup:
 
     def package_dependencies_rules(self, pkg):
         """Translate 'depends_on' directives into ASP logic."""
-        for _, conditions in sorted(pkg.dependencies.items()):
-            for cond, dep in sorted(conditions.items()):
+        for cond, deps_by_name in sorted(pkg.dependencies.items()):
+            for _, dep in sorted(deps_by_name.items()):
                 depflag = dep.depflag
                 # Skip test dependencies if they're not requested
                 if not self.tests:
@@ -1725,9 +1747,10 @@ class SpackSolverSetup:
             rules = self._rules_from_requirements(
                 virtual_str, requirements, kind=RequirementKind.VIRTUAL
             )
-            self.emit_facts_from_requirement_rules(rules)
-            self.trigger_rules()
-            self.effect_rules()
+            if rules:
+                self.emit_facts_from_requirement_rules(rules)
+                self.trigger_rules()
+                self.effect_rules()
 
     def emit_facts_from_requirement_rules(self, rules: List[RequirementRule]):
         """Generate facts to enforce requirements.
@@ -1739,19 +1762,13 @@ class SpackSolverSetup:
             virtual = rule.kind == RequirementKind.VIRTUAL
 
             pkg_name, policy, requirement_grp = rule.pkg_name, rule.policy, rule.requirements
-
             requirement_weight = 0
-            main_requirement_condition = spack.directives.make_when_spec(rule.condition)
-            if main_requirement_condition is False:
-                continue
 
             # Write explicitly if a requirement is conditional or not
-            if main_requirement_condition != spack.spec.Spec():
+            if rule.condition != spack.spec.Spec():
                 msg = f"condition to activate requirement {requirement_grp_id}"
                 try:
-                    main_condition_id = self.condition(
-                        main_requirement_condition, name=pkg_name, msg=msg
-                    )
+                    main_condition_id = self.condition(rule.condition, name=pkg_name, msg=msg)
                 except Exception as e:
                     if rule.kind != RequirementKind.DEFAULT:
                         raise RuntimeError(
@@ -2029,7 +2046,7 @@ class SpackSolverSetup:
                 if not spec.concrete:
                     reserved_names = spack.directives.reserved_names
                     if not spec.virtual and vname not in reserved_names:
-                        pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
+                        pkg_cls = self.pkg_class(spec.name)
                         try:
                             variant_def, _ = pkg_cls.variants[vname]
                         except KeyError:
@@ -2150,7 +2167,7 @@ class SpackSolverSetup:
         """Declare any versions in specs not declared in packages."""
         packages_yaml = spack.config.get("packages")
         for pkg_name in possible_pkgs:
-            pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+            pkg_cls = self.pkg_class(pkg_name)
 
             # All the versions from the corresponding package.py file. Since concepts
             # like being a "develop" version or being preferred exist only at a
@@ -2612,8 +2629,6 @@ class SpackSolverSetup:
         """
         check_packages_exist(specs)
 
-        self.possible_virtuals = set(x.name for x in specs if x.virtual)
-
         node_counter = _create_counter(specs, tests=self.tests)
         self.possible_virtuals = node_counter.possible_virtuals()
         self.pkgs = node_counter.possible_dependencies()
@@ -2628,6 +2643,10 @@ class SpackSolverSetup:
             ]
             if missing_deps:
                 raise spack.spec.InvalidDependencyError(spec.name, missing_deps)
+
+        for node in spack.traverse.traverse_nodes(specs):
+            if node.namespace is not None:
+                self.explicitly_required_namespaces[node.name] = node.namespace
 
         # driver is used by all the functions below to add facts and
         # rules to generate an ASP program.
@@ -2857,6 +2876,13 @@ class SpackSolverSetup:
             for s in spec_group[key]:
                 yield _spec_with_default_name(s, pkg_name)
 
+    def pkg_class(self, pkg_name: str) -> typing.Type["spack.package_base.PackageBase"]:
+        request = pkg_name
+        if pkg_name in self.explicitly_required_namespaces:
+            namespace = self.explicitly_required_namespaces[pkg_name]
+            request = f"{namespace}.{pkg_name}"
+        return spack.repo.PATH.get_pkg_class(request)
+
 
 class RuntimePropertyRecorder:
     """An object of this class is injected in callbacks to compilers, to let them declare
@@ -2927,6 +2953,7 @@ class RuntimePropertyRecorder:
         body_clauses = self._setup.spec_clauses(when_spec, body=True)
         body_str = (
             f"  {f',{os.linesep}  '.join(str(x) for x in body_clauses)},\n"
+            f"  not external({node_variable}),\n"
             f"  not runtime(Package)"
         ).replace(f'"{placeholder}"', f"{node_variable}")
         head_clauses = self._setup.spec_clauses(dependency_spec, body=False)
@@ -3066,6 +3093,9 @@ class SpecBuilder:
             arch = spack.spec.ArchSpec()
             self._specs[node].architecture = arch
         return arch
+
+    def namespace(self, node, namespace):
+        self._specs[node].namespace = namespace
 
     def node_platform(self, node, platform):
         self._arch(node).platform = platform
@@ -3281,14 +3311,6 @@ class SpecBuilder:
 
             action(*args)
 
-        # namespace assignment is done after the fact, as it is not
-        # currently part of the solve
-        for spec in self._specs.values():
-            if spec.namespace:
-                continue
-            repo = spack.repo.PATH.repo_for_pkg(spec)
-            spec.namespace = repo.namespace
-
         # fix flags after all specs are constructed
         self.reorder_flags()
 
@@ -3374,7 +3396,7 @@ def _is_reusable(spec: spack.spec.Spec, packages, local: bool) -> bool:
             return True
 
     try:
-        provided = [p.name for p in spec.package.provided]
+        provided = spack.repo.PATH.get(spec).provided_virtual_names()
     except spack.repo.RepoError:
         provided = []
 

@@ -51,7 +51,7 @@ def set_dependency(saved_deps, monkeypatch):
 
         cond = Spec(pkg_cls.name)
         dependency = Dependency(pkg_cls, spec)
-        monkeypatch.setitem(pkg_cls.dependencies, spec.name, {cond: dependency})
+        monkeypatch.setitem(pkg_cls.dependencies, cond, {spec.name: dependency})
 
     return _mock
 
@@ -322,7 +322,7 @@ class TestSpecDag:
         )[0].spec = Spec("mpich@2.0")
 
         with pytest.raises(spack.spec.InconsistentSpecError):
-            mpileaks.flat_dependencies(copy=False)
+            mpileaks.flat_dependencies()
 
     def test_normalize_twice(self):
         """Make sure normalize can be run twice on the same spec,
