@@ -49,14 +49,6 @@ class Mppp(CMakePackage):
             "the implementation of the complex class."
         ),
     )
-    # FIXME: No spack package exists for arb
-    # variant(
-    #     "arb", default=False, when="+mpfr",
-    #     description=("Enable features relying on the Arb library. Used in the "
-    #                  "implementation of additional special functions for the "
-    #                  "real and complex classes, and in the benchmarking "
-    #                  "suite.")
-    # )
     variant(
         "quadmath",
         default=False,
@@ -90,15 +82,6 @@ class Mppp(CMakePackage):
         default=False,
         description="build mp++ as a static library, instead of a dynamic library",
     )
-    # variant("msvc_unicode", default=False,
-    #         description="enable Unicode solutions for MSVC")
-    variant(
-        "ipo",
-        default=False,
-        description=(
-            "Enable link-time optimisations (requires CMake >= 3.9 and compiler support)"
-        ),
-    )
 
     # Dependencies
     depends_on("cmake@3.8:", type="build")
@@ -117,14 +100,12 @@ class Mppp(CMakePackage):
         args = [
             self.define_from_variant("MPPP_WITH_MPFR", "mpfr"),
             self.define_from_variant("MPPP_WITH_MPC", "mpc"),
-            # self.define_from_variant("MPPP_WITH_ARB", "arb"),
             self.define_from_variant("MPPP_WITH_QUADMATH", "quadmath"),
             self.define_from_variant("MPPP_WITH_BOOST_S11N", "serialization"),
             self.define_from_variant("MPPP_WITH_FMT", "fmt"),
             self.define_from_variant("MPPP_BUILD_TESTS", "tests"),
             self.define_from_variant("MPPP_BUILD_BENCHMARKS", "benchmarks"),
             self.define_from_variant("MPPP_BUILD_STATIC_LIBRARY", "static"),
-            # self.define_from_variant("MPPP_BUILD_MSVC_UNICODE", "msvc_unicode"),
             self.define_from_variant("MPPP_ENABLE_IPO", "ipo"),
         ]
         return args

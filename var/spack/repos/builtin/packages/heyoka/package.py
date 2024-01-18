@@ -38,15 +38,7 @@ class Heyoka(CMakePackage):
     variant(
         "static",
         default=False,
-        description=("build heyoka as a static library, instead of a " "dynamic library"),
-    )
-    variant(
-        "ipo",
-        default=False,
-        description=(
-            "enable link-time optimisations when building the "
-            "heyoka library (requires compiler support)"
-        ),
+        description=("build heyoka as a static library, instead of a dynamic library"),
     )
 
     # Dependencies
@@ -59,9 +51,7 @@ class Heyoka(CMakePackage):
     depends_on("boost@1.69: +serialization")
     depends_on("fmt@9:10")
     depends_on("spdlog +fmt_external")
-    # TBB 2020.3 seems to fail
-    # 2021.5.0 works
-    depends_on("intel-tbb")
+    depends_on("intel-tbb@2021.4.0:")
 
     # Optional dependencies
     depends_on("boost@1.69: +serialization +program_options", when="+benchmarks")
