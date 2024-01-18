@@ -59,7 +59,6 @@ class Embree(CMakePackage):
             "-DEMBREE_TUTORIALS=OFF",
             "-DEMBREE_IGNORE_CMAKE_CXX_FLAGS=ON",
             self.define_from_variant("EMBREE_ISPC_SUPPORT", "ispc"),
-            self.define("EMBREE_TBB_ROOT", spec["tbb"].prefix),
         ]
 
         if spec.satisfies("target=x86_64:") or spec.satisfies("target=x86:"):
