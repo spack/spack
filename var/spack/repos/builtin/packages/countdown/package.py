@@ -17,7 +17,7 @@ class Countdown(CMakePackage, CudaPackage):
 
     license("BSD-3-Clause")
 
-    maintainers = ['f-tesser', 'danielecesarini']
+    maintainers("f-tesser", "danielecesarini")
 
     version("1.1.1", sha256="ee7f00ffc047f000a21a7a71f6ea6f4049afb1a8407608adc04993929ceba917")
 
