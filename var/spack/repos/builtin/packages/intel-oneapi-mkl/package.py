@@ -134,6 +134,20 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     provides("mkl")
     provides("lapack", "blas")
 
+    @run_after("install")
+    def fixup_installation(self):
+        # fixup missing path in mkl cmake files. This issue was new in
+        # 2024.0.0 and expected to be fixed in the next release.
+        if self.spec.satisfies("@2024.0.0"):
+            # cannot use spack patch because this is applied to the
+            # installed mkl, not sources
+            filter_file(
+                'PATH_SUFFIXES "lib"',
+                'PATH_SUFFIXES "lib" "../../compiler/latest/lib"',
+                self.component_prefix.lib.cmake.mkl.join("MKLConfig.cmake"),
+                backup=False,
+            )
+
     @property
     def v2_layout_versions(self):
         return "@2024:"
