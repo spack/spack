@@ -137,6 +137,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
     depends_on("rdma-core", when="+verbs")
     depends_on("xpmem", when="+xpmem")
     depends_on("hip", when="+rocm")
+    depends_on("hsa-rocr-dev", when="+rocm")
 
     conflicts("+gdrcopy", when="~cuda", msg="gdrcopy currently requires cuda support")
     conflicts("+rocm", when="+gdrcopy", msg="gdrcopy > 2.0 does not support rocm")
