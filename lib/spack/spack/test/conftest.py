@@ -1950,17 +1950,5 @@ def pytest_runtest_setup(item):
 
 @pytest.fixture(scope="function")
 def disable_parallel_buildcache_push(monkeypatch):
-    class MockPool:
-        def map(self, func, args):
-            return [func(a) for a in args]
-
-        def starmap(self, func, args):
-            return [func(*a) for a in args]
-
-        def __enter__(self):
-            return self
-
-        def __exit__(self, *args):
-            pass
-
-    monkeypatch.setattr(spack.cmd.buildcache, "_make_pool", MockPool)
+    """Disable process pools in tests."""
+    monkeypatch.setattr(spack.cmd.buildcache, "_make_pool", spack.cmd.buildcache.NoPool)
