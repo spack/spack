@@ -312,9 +312,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         if spec.satisfies("@5.0.0:"):
             entries.append(cmake_cache_path("camp_DIR", spec["camp"].prefix))
         entries.append(cmake_cache_option("{}ENABLE_NUMA".format(option_prefix), "+numa" in spec))
-        entries.append(
-            cmake_cache_option("{}ENABLE_OPENMP".format(option_prefix), "+openmp" in spec)
-        )
+        entries.append(cmake_cache_option("ENABLE_OPENMP", "+openmp" in spec))
         entries.append(cmake_cache_option("ENABLE_BENCHMARKS", "tests=benchmarks" in spec))
         entries.append(
             cmake_cache_option("{}ENABLE_EXAMPLES".format(option_prefix), "+examples" in spec)
