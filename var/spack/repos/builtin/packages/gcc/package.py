@@ -756,8 +756,15 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             # "--disable-libitm",
             filter_file(
                 "gcc/xgcc",
-                "gcc/xgcc -B" + self.spec['glibc'].prefix.lib,
+                "gcc/xgcc -B" + self.spec['glibc'].prefix.lib + " ",
                 "configure"
+            )
+            # for +bootstrap the makefile overrides it, so we have to filter
+            # Makefile.in as well
+            filter_file(
+                r"(prev-gcc/xg..\$\(exeext\))",
+                r"\1 -B" + self.spec['glibc'].prefix.lib + " ",
+                "Makefile.in"
             )
         self.build_optimization_config()
 

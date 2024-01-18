@@ -1,4 +1,5 @@
 #!/bin/sh
+set -xeu
 
 GLIBC_HASH=""
 if [ "$STAGE" -eq 4 ] ; then
@@ -13,7 +14,7 @@ if [ -n "$FORCE_CMD" ] ; then
     $FORCE_CMD
 else
     spack -e "/spack/bootstraps/stage${STAGE}/" concretize -f
-    spack -e "/spack/bootstraps/stage${STAGE}/" install -v -j "$JOBS" 2>&1 | tee /spack/bootstraps/stage1.out
+    spack -e "/spack/bootstraps/stage${STAGE}/" install -j "$JOBS" 2>&1 | tee /spack/bootstraps/stage1.out
     if [ "$STAGE" -eq 4 ] ; then
         spack -e "/spack/bootstraps/stage${STAGE}/" buildcache push --unsigned --update-index /spack/spack-cache
     fi
