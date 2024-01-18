@@ -6,7 +6,6 @@
 from spack.package import *
 
 pycmake_versions = {
-    "3.28.1": "0d4051d101d151d8387156c463aa45c8cd0e164f870e0ac0c8c91d3ff08528e1",
     "3.27.9": "d8a40eef1268c91e5b520b28fd5fe0591d750e48e44276dbfd493a14ee595c41",
     "3.22.2": "b5bd5eeb488b13cf64ec963800f3d979eaeb90b4382861b86909df503379e219",
     "3.21.4": "30fa5ed8a5ad66dcd263adb87f3ce3dc2d0ec0ac3958f5becff577e4b62cd065",
