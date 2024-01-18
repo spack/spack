@@ -14,7 +14,7 @@ class PyDeeptools(PythonPackage):
     homepage = "https://pypi.python.org/pypi/deepTools/"
     url = "https://github.com/deeptools/deepTools/archive/3.3.0.tar.gz"
 
-    version("3.5.2", sha256="4d8be1bafa1e8f54a26f5eaac54da6c6e50709f3a3a72a57cd96ac0f22c30383")
+    version("3.5.2", sha256="31b28114c96271c1056e82112d74873267512d58ca6f59e15549c72fa5718554")
     version("3.3.0", sha256="a7aaf79fe939ca307fe6ec5e156750389fdfa4324bf0dd6bf5f53d5fda109358")
     version("3.2.1", sha256="dbee7676951a9fdb1b88956fe4a3294c99950ef193ea1e9edfba1ca500bd6a75")
     version("2.5.2", sha256="16d0cfed29af37eb3c4cedd9da89b4952591dc1a7cd8ec71fcba87c89c62bf79")
