@@ -14,9 +14,6 @@ import spack.builder
 
 from .cmake import CMakeBuilder, CMakePackage
 
-# import glob
-
-
 def cmake_cache_path(name, value, comment="", force=False):
     """Generate a string for a cmake cache variable"""
     force_str = " FORCE" if force else ""
@@ -274,18 +271,6 @@ class CachedCMakeBuilder(CMakeBuilder):
 
             # Explicitly setting HIP_ROOT_DIR may be a patch that is no longer necessary
             entries.append(cmake_cache_path("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)))
-
-            # entries.append(
-            #     cmake_cache_path("HIP_CXX_COMPILER", "{0}".format(self.spec["hip"].hipcc))
-            # )
-
-            # entries.append(
-            #     cmake_cache_path(
-            #         "HIP_CLANG_INCLUDE_PATH",
-            #         glob.glob("{}/lib/clang/*/include".format(spec["llvm-amdgpu"].prefix))[0],
-            #     )
-            # )
-
             llvm_bin = spec["llvm-amdgpu"].prefix.bin
             llvm_prefix = spec["llvm-amdgpu"].prefix
             # Some ROCm systems seem to point to /<path>/rocm-<ver>/ and
