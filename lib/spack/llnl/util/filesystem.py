@@ -1874,6 +1874,8 @@ def find_max_depth(root, globs, max_depth=_unset):
 
     found_files = collections.defaultdict(list)
 
+    visited_dirs = set()
+
     dir_queue = collections.deque([(0, root)])
     while dir_queue:
         depth, next_dir = dir_queue.pop()
@@ -1886,15 +1888,20 @@ def find_max_depth(root, globs, max_depth=_unset):
 
         with dir_iter:
             for dir_entry in dir_iter:
-                if dir_entry.is_dir(follow_symlinks=False):
-                    if (max_depth is _unset) or depth < max_depth:
+                if dir_entry.is_dir(follow_symlinks=True):
+                    stat_info = os.stat(dir_entry.path)
+                    # On POSIX systems, st_dev + st_ino forms a fully-unique
+                    # identifier
+                    uniq_id = (stat_info.st_dev, stat_info.st_ino)
+                    not_reached_maxdepth = (max_depth is _unset) or depth < max_depth
+                    if not_reached_maxdepth and (uniq_id not in visited):
                         dir_queue.appendleft((depth + 1, dir_entry.path))
-                elif dir_entry.is_file(follow_symlinks=True):
+                        visited_dirs.add(uniq_id)
+                else:
                     fname = dir_entry.name
                     for pattern in regexes:
                         if pattern.match(os.path.normcase(fname)):
                             found_files[pattern].append(os.path.join(next_dir, fname))
-                # else: the entry is a symlink to a directory
 
         # TODO: for fully-recursive searches, we can print a warning after
         # after having searched everything up to some fixed depth (which
