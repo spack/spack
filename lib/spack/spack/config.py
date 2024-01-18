@@ -950,7 +950,8 @@ def scopes() -> Dict[str, ConfigScope]:
 
 def writable_scopes() -> List[ConfigScope]:
     """
-    Return list of writable scopes
+    Return list of writable scopes. Higher-priority scopes come first in the
+    list.
     """
     return list(
         reversed(
