@@ -189,7 +189,7 @@ def validate_env_name(name):
     return name
 
 
-def activate(env: Environment, use_env_repo: bool = False):
+def activate(env: "Environment", use_env_repo: bool = False):
     """Activate an environment.
 
     To activate an environment, we add its manifest's configuration scope to the
@@ -1119,7 +1119,7 @@ class Environment:
 
         for idx, spec in matches:
             override_spec = Spec.override(spec, change_spec)
-            self.spec_lists[list_name].specs[idx] = override_spec
+            self.spec_lists[list_name].override(idx, str(override_spec))
             if list_name == user_speclist_name:
                 self.manifest.override_user_spec(str(override_spec), idx=idx)
             else:
@@ -1127,7 +1127,6 @@ class Environment:
                     str(spec), override=str(override_spec), list_name=list_name
                 )
         self.update_stale_references(from_list=list_name)
-        self._construct_state_from_manifest()
 
     def remove(self, query_spec, list_name=user_speclist_name, force=False):
         """Remove specs from an environment that match a query_spec"""
