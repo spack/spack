@@ -119,7 +119,7 @@ class SpecList:
         # invalidate cache variables when we change the list
         self._expanded_list = None
         self._constraints = None
-        self._specs[idx] = None
+        self._specs = None
 
     def extend(self, other, copy_reference=True):
         self.yaml_list.extend(other.yaml_list)
