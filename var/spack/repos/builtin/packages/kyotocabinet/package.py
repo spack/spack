@@ -19,3 +19,13 @@ class Kyotocabinet(AutotoolsPackage):
     version("1.2.80", sha256="4c85d736668d82920bfdbdb92ac3d66b7db1108f09581a769dd9160a02def349")
 
     depends_on("zlib-api@1.2.3:", type=("build", "link"))
+    depends_on("lzo", type=("build", "link"))
+    depends_on("xz", type=("build", "link"))
+
+    def configure_args(self):
+        args = []
+
+        args.append("--enable-lzo")
+        args.append("--enable-lzma")
+
+        return args

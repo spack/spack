@@ -45,6 +45,9 @@
 :- attr("depends_on", node(min_dupe_id, Package), node(ID, _), "link"), ID != min_dupe_id, unification_set("root", node(min_dupe_id, Package)), internal_error("link dependency out of the root unification set").
 :- attr("depends_on", node(min_dupe_id, Package), node(ID, _), "run"),  ID != min_dupe_id, unification_set("root", node(min_dupe_id, Package)), internal_error("run dependency out of the root unification set").
 
+% Namespaces are statically assigned by a package fact
+attr("namespace", node(ID, Package), Namespace) :- attr("node", node(ID, Package)), pkg_fact(Package, namespace(Namespace)).
+
 % Rules on "unification sets", i.e. on sets of nodes allowing a single configuration of any given package
 unify(SetID, PackageName) :- unification_set(SetID, node(_, PackageName)).
 :- 2 { unification_set(SetID, node(_, PackageName)) }, unify(SetID, PackageName).
@@ -694,6 +697,18 @@ requirement_group_satisfied(node(ID, Package), X) :-
   requirement_policy(Package, X, "any_of"),
   activate_requirement(node(ID, Package), X),
   requirement_group(Package, X).
+
+% When we have a required provider, we need to ensure that the provider/2 facts respect
+% the requirement. This is particularly important for packages that could provide multiple
+% virtuals independently
+required_provider(Provider, Virtual)
+  :- requirement_group_member(ConditionID, Virtual, RequirementID),
+     condition_holds(ConditionID, _),
+     virtual(Virtual),
+     pkg_fact(Virtual, condition_effect(ConditionID, EffectID)),
+     imposed_constraint(EffectID, "node", Provider).
+
+:- provider(node(Y, Package), node(X, Virtual)), required_provider(Provider, Virtual), Package != Provider.
 
 % TODO: the following two choice rules allow the solver to add compiler
 % flags if their only source is from a requirement. This is overly-specific
