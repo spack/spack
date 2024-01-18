@@ -21,20 +21,20 @@ class Countdown(CMakePackage, CudaPackage):
 
     version("1.1.1", sha256="ee7f00ffc047f000a21a7a71f6ea6f4049afb1a8407608adc04993929ceba917")
 
-    variant("acc_mpi", default=True, 
-        description="Enable the instrumentation of all accessory MPI functions")
-    variant("coll_mpi", default=True, 
-        description="Enable the instrumentation of all collective MPI functions")
+    variant("acc_mpi", default=True,
+            description="Enable the instrumentation of all accessory MPI functions")
+    variant("coll_mpi", default=True,
+            description="Enable the instrumentation of all collective MPI functions")
     variant("debug_mpi", default=False, description="Enable the debug prints on MPI functions")
-    variant("excl_all_mpi", default=False, 
-        description="Disable the instrumentation of all MPI functions, "
-                    "except for initialization and finalization")
+    variant("excl_all_mpi", default=False,
+            description="Disable the instrumentation of all MPI functions, "
+                        "except for initialization and finalization")
     variant("hwp_auto_discovery", default=True, description="Autodiscovery of hwp-states")
     variant("mosquitto", default=False, description="Enable MQTT message passing")
     variant("no_profiling", default=False, description="Disable MPI profiling")
     variant("use_cpufreq", default=True, description="Manual set of cpufreq interface")
     variant("use_hwp", default=False, description="Manual set if hwp-states are available")
-    variant("p2p_mpi", default=True, 
+    variant("p2p_mpi", default=True,
             description="Enable the instrumentation of all point-to-point MPI functions")
     variant("shared", default=True, description="Build shared libraries")
 
@@ -50,7 +50,7 @@ class Countdown(CMakePackage, CudaPackage):
     conflicts("+use_cpufreq", when="+use_hwp")
     conflicts("+use_hwp", when="+hwp_auto_discovery")
     conflicts("+use_hwp", when="+use_cpufreq")
-    
+
     depends_on("cmake@3.0.0:", type="build")
     depends_on("hwloc", type="link")
     depends_on("mpi@3.0.0:", type="link")
