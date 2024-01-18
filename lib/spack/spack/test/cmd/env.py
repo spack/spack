@@ -48,6 +48,7 @@ env = SpackCommand("env")
 install = SpackCommand("install")
 add = SpackCommand("add")
 change = SpackCommand("change")
+config = SpackCommand("config")
 remove = SpackCommand("remove")
 concretize = SpackCommand("concretize")
 stage = SpackCommand("stage")
@@ -867,6 +868,102 @@ spack:
         e.concretize()
 
     assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
+
+
+def test_config_change_existing(mutable_mock_env_path, tmp_path, mock_packages, mutable_config):
+    """Test ``config change`` with config in the ``spack.yaml`` as well as an
+    included file scope.
+    """
+
+    included_file = "included-packages.yaml"
+    included_path = tmp_path / included_file
+    with open(included_path, "w") as f:
+        f.write(
+            """\
+packages:
+  mpich:
+    require:
+    - spec: "@3.0.2"
+  libelf:
+    require: "@0.8.10"
+  bowtie:
+    require:
+    - one_of: ["@1.3.0", "@1.2.0"]
+"""
+        )
+
+    spack_yaml = tmp_path / ev.manifest_name
+    spack_yaml.write_text(
+        f"""\
+spack:
+  packages:
+    mpich:
+      require:
+      - spec: "+debug"
+  include:
+  - {os.path.join(".", included_file)}
+  specs: []
+"""
+    )
+
+    e = ev.Environment(tmp_path)
+    with e:
+        # List of requirements, flip a variant
+        config("change", "packages:mpich:require:~debug")
+        test_spec = spack.spec.Spec("mpich").concretized()
+        assert test_spec.satisfies("@3.0.2~debug")
+
+        # List of requirements, change the version (in a different scope)
+        config("change", "packages:mpich:require:@3.0.3")
+        test_spec = spack.spec.Spec("mpich").concretized()
+        assert test_spec.satisfies("@3.0.3")
+
+        # "require:" as a single string, also try specifying
+        # a spec string that requires enclosing in quotes as
+        # part of the config path
+        config("change", 'packages:libelf:require:"@0.8.12:"')
+        test_spec = spack.spec.Spec("libelf@0.8.12").concretized()
+        # No need for assert, if there wasn't a failure, we
+        # changed the requirement successfully.
+
+        # Use "--match-spec" to change one spec in a "one_of"
+        # list
+        config("change", "packages:bowtie:require:@1.2.2", "--match-spec", "@1.2.0")
+        spack.spec.Spec("bowtie@1.3.0").concretize()
+        spack.spec.Spec("bowtie@1.2.2").concretized()
+
+
+def test_config_change_new(mutable_mock_env_path, tmp_path, mock_packages, mutable_config):
+    spack_yaml = tmp_path / ev.manifest_name
+    spack_yaml.write_text(
+        """\
+spack:
+  specs: []
+"""
+    )
+
+    e = ev.Environment(tmp_path)
+    with e:
+        config("change", "packages:mpich:require:~debug")
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            spack.spec.Spec("mpich+debug").concretized()
+        spack.spec.Spec("mpich~debug").concretized()
+
+    # Now check that we raise an error if we need to add a require: constraint
+    # when preexisting config manually specified it as a singular spec
+    spack_yaml.write_text(
+        """\
+spack:
+  specs: []
+  packages:
+    mpich:
+      require: "@3.0.3"
+"""
+    )
+    with e:
+        assert spack.spec.Spec("mpich").concretized().satisfies("@3.0.3")
+        with pytest.raises(spack.config.ConfigError, match="not a list"):
+            config("change", "packages:mpich:require:~debug")
 
 
 def test_env_with_included_config_file_url(tmpdir, mutable_empty_config, packages_file):
