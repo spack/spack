@@ -908,18 +908,26 @@ spack:
 
     e = ev.Environment(tmp_path)
     with e:
+        # List of requirements, flip a variant
         config("change", "packages:mpich:require:~debug")
         test_spec = spack.spec.Spec("mpich").concretized()
         assert test_spec.satisfies("@3.0.2~debug")
 
+        # List of requirements, change the version (in a different scope)
         config("change", "packages:mpich:require:@3.0.3")
         test_spec = spack.spec.Spec("mpich").concretized()
         assert test_spec.satisfies("@3.0.3")
 
-        config("change", "packages:libelf:require:@0.8.12")
-        test_spec = spack.spec.Spec("libelf").concretized()
-        assert test_spec.satisfies("@0.8.12")
+        # "require:" as a single string, also try specifying
+        # a spec string that requires enclosing in quotes as
+        # part of the config path
+        config("change", 'packages:libelf:require:"@0.8.12:"')
+        test_spec = spack.spec.Spec("libelf@0.8.12").concretized()
+        # No need for assert, if there wasn't a failure, we
+        # changed the requirement successfully.
 
+        # Use "--match-spec" to change one spec in a "one_of"
+        # list
         config("change", "packages:bowtie:require:@1.2.2", "--match-spec", "@1.2.0")
         spack.spec.Spec("bowtie@1.3.0").concretize()
         spack.spec.Spec("bowtie@1.2.2").concretized()
