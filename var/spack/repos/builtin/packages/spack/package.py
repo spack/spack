@@ -69,7 +69,7 @@ class Spack(Package):
     depends_on("python@2.6.0:2.7,3.5:", type="run")
     depends_on("python@2.7.0:2.7,3.5:", type="run", when="@0.18.0:")
     depends_on("python@2.7.0:2.7,3.6:", type="run", when="@0.19.0:")
-    depends_on("python@3.6:", type="run", when="0.20.0:")
+    depends_on("python@3.6:", type="run", when="@0.20.0:")
 
     # Old Spack unfortunately depends on distutils, removed in Python 3.12
     depends_on("python@:3.12", type="run", when="@0.18:0.20.1")
