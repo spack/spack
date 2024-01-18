@@ -1885,7 +1885,7 @@ complete -c spack -n '__fish_spack_using_command graph' -s s -l static -d 'graph
 complete -c spack -n '__fish_spack_using_command graph' -s c -l color -f -a color
 complete -c spack -n '__fish_spack_using_command graph' -s c -l color -d 'use different colors for different dependency types'
 complete -c spack -n '__fish_spack_using_command graph' -s i -l installed -f -a installed
-complete -c spack -n '__fish_spack_using_command graph' -s i -l installed -d 'graph installed specs, or specs in the active env (implies --dot)'
+complete -c spack -n '__fish_spack_using_command graph' -s i -l installed -d 'graph specs from the DB'
 complete -c spack -n '__fish_spack_using_command graph' -l deptype -r -f -a deptype
 complete -c spack -n '__fish_spack_using_command graph' -l deptype -r -d 'comma-separated list of deptypes to traverse (default=build,link,run,test)'
 
