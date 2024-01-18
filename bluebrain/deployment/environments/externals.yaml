@@ -72,7 +72,8 @@ spack:
     # keep the x.y.z versions in sync with the llvm versions that we install
     # and the pN version in sync with the clang-tools recipe
     - clang-tools@17.0.4
-    - nvhpc@23.9
+    # last known version of NVHPC to work with modern Neuron code
+    - nvhpc@23.1
     - arm-forge+accept-eula
     # - apptainer
     - bison
@@ -83,7 +84,8 @@ spack:
     - cli-tools
     - cmake
     # NVHPC 23.9 ships CUDA 12.2.0 (version.json)
-    - cuda@12.2.0
+    # NVHPC 23.1 ships CUDA 12.0.0 (version.json)
+    - cuda@12.0.0
     - darshan-runtime
     - darshan-util
     - doxygen
