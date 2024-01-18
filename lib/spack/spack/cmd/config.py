@@ -78,7 +78,6 @@ def setup_parser(subparser):
 
     change_parser = sp.add_parser("change", help="swap variants etc. on specs in config")
     change_parser.add_argument("path", help="colon-separated path to config section with specs")
-    change_parser.add_argument("spec", help="override spec")
     change_parser.add_argument("--match-spec", help="only change constraints that match this")
 
     prefer_upstream_parser = sp.add_parser(
@@ -311,25 +310,29 @@ def _config_change_requires_scope(path, spec, scope, match_spec=None):
     return changed
 
 
-def _config_change(path, spec_str, match_spec_str=None):
-    spec = spack.spec.Spec(spec_str)
+def _config_change(config_path, match_spec_str=None):
+    all_components = spack.config.process_config_path(config_path)
+    key_components = all_components[:-1]
+    key_path = ":".join(key_components)
+
+    spec = spack.spec.Spec(syaml.syaml_str(all_components[-1]))
+
     match_spec = None
     if match_spec_str:
         match_spec = spack.spec.Spec(match_spec_str)
 
-    config_path_components = spack.config.process_config_path(path)
-    if config_path_components[-1] == "require":
+    if key_components[-1] == "require":
         # Extract the package name from the config path, which allows
         # args.spec to be anonymous if desired
-        pkg_name = config_path_components[1]
+        pkg_name = key_components[1]
         spec.name = pkg_name
 
         changed = False
         for scope in spack.config.writable_scope_names():
-            changed |= _config_change_requires_scope(path, spec, scope, match_spec=match_spec)
+            changed |= _config_change_requires_scope(key_path, spec, scope, match_spec=match_spec)
 
         if not changed:
-            existing_requirements = spack.config.get(path)
+            existing_requirements = spack.config.get(key_path)
             if isinstance(existing_requirements, str):
                 raise spack.config.ConfigError(
                     "'config change' needs to append a requirement,"
@@ -338,18 +341,18 @@ def _config_change(path, spec_str, match_spec_str=None):
 
             ideal_scope_to_modify = None
             for scope in spack.config.writable_scope_names():
-                if spack.config.get(path, scope=scope):
+                if spack.config.get(key_path, scope=scope):
                     ideal_scope_to_modify = scope
                     break
 
-            update_path = f"{path}:[{str(spec)}]"
+            update_path = f"{key_path}:[{str(spec)}]"
             spack.config.add(update_path, scope=ideal_scope_to_modify)
     else:
         raise ValueError("'config change' can currently only change 'require' sections")
 
 
 def config_change(args):
-    _config_change(args.path, args.spec, args.match_spec)
+    _config_change(args.path, args.match_spec)
 
 
 def config_update(args):

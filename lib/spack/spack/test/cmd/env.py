@@ -908,19 +908,19 @@ spack:
 
     e = ev.Environment(tmp_path)
     with e:
-        config("change", "packages:mpich:require", "~debug")
+        config("change", "packages:mpich:require:~debug")
         test_spec = spack.spec.Spec("mpich").concretized()
         assert test_spec.satisfies("@3.0.2~debug")
 
-        config("change", "packages:mpich:require", "@3.0.3")
+        config("change", "packages:mpich:require:@3.0.3")
         test_spec = spack.spec.Spec("mpich").concretized()
         assert test_spec.satisfies("@3.0.3")
 
-        config("change", "packages:libelf:require", "@0.8.12")
+        config("change", "packages:libelf:require:@0.8.12")
         test_spec = spack.spec.Spec("libelf").concretized()
         assert test_spec.satisfies("@0.8.12")
 
-        config("change", "packages:bowtie:require", "--match-spec", "@1.2.0", "@1.2.2")
+        config("change", "packages:bowtie:require:@1.2.2", "--match-spec", "@1.2.0")
         spack.spec.Spec("bowtie@1.3.0").concretize()
         spack.spec.Spec("bowtie@1.2.2").concretized()
 
@@ -936,7 +936,7 @@ spack:
 
     e = ev.Environment(tmp_path)
     with e:
-        config("change", "packages:mpich:require", "~debug")
+        config("change", "packages:mpich:require:~debug")
         with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
             spack.spec.Spec("mpich+debug").concretized()
         spack.spec.Spec("mpich~debug").concretized()
@@ -955,7 +955,7 @@ spack:
     with e:
         assert spack.spec.Spec("mpich").concretized().satisfies("@3.0.3")
         with pytest.raises(spack.config.ConfigError, match="not a list"):
-            config("change", "packages:mpich:require", "~debug")
+            config("change", "packages:mpich:require:~debug")
 
 
 def test_env_with_included_config_file_url(tmpdir, mutable_empty_config, packages_file):
