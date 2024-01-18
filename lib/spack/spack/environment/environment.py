@@ -459,25 +459,6 @@ def _eval_conditional(string):
     return eval(string, valid_variables)
 
 
-def _is_dev_spec_and_has_changed(spec):
-    """Check if the passed spec is a dev build and whether it has changed since the
-    last installation"""
-    # First check if this is a dev build and in the process already try to get
-    # the dev_path
-    dev_path_var = spec.variants.get("dev_path", None)
-    if not dev_path_var:
-        return False
-
-    # Now we can check whether the code changed since the last installation
-    if not spec.installed:
-        # Not installed -> nothing to compare against
-        return False
-
-    _, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
-    mtime = fs.last_modification_time_recursive(dev_path_var.value)
-    return mtime > record.installation_time
-
-
 def _error_on_nonempty_view_dir(new_root):
     """Defensively error when the target view path already exists and is not an
     empty directory. This usually happens when the view symlink was removed, but
@@ -1807,31 +1788,98 @@ class Environment:
         self.concretized_order.append(h)
         self.specs_by_hash[h] = concrete
 
-    def _get_overwrite_specs(self):
-        # Find all dev specs that were modified.
-        changed_dev_specs = [
-            s
-            for s in traverse.traverse_nodes(
-                self.concrete_roots(), order="breadth", key=traverse.by_dag_hash
-            )
-            if _is_dev_spec_and_has_changed(s)
-        ]
+    def _get_overwrite_specs(self, _database=None):
+        """Gather all specs that should be overwritten. There are three instances
+        where this is the case:
 
-        # Collect their hashes, and the hashes of their installed parents.
-        # Notice: with order=breadth all changed dev specs are at depth 0,
-        # even if they occur as parents of one another.
-        return [
-            spec.dag_hash()
-            for depth, spec in traverse.traverse_nodes(
-                changed_dev_specs,
-                root=True,
-                order="breadth",
-                depth=True,
-                direction="parents",
-                key=traverse.by_dag_hash,
-            )
-            if depth == 0 or spec.installed
-        ]
+        * The spec is a "develop" spec, and a user has (outside of spack)
+          modified one of the source files.
+        * Any parent of such a spec.
+        * A dependency that is a "develop" spec was installed more-recently.
+          This can occur if, for example, x->y, you change and reinstall
+          the in-development spec y, and then later reinstall the whole
+          environment.
+        """
+        db = _database or spack.store.STORE.db
+
+        overwrite_specs = set()
+        transitive_dev_install_times = collections.defaultdict(float)
+
+        # Like +=, but for max()
+        def max_equals(dict, key, value):
+            orig_value = dict.get(key, 0)
+            if value > orig_value:
+                dict[key] = value
+                return value
+            else:
+                return orig_value
+
+        def update_transitive_dev_install_times(spec, install_time_of_installed_spec):
+            dev_path_var = spec.variants.get("dev_path", None)
+            if dev_path_var and install_time_of_installed_spec:
+                latest_transitive_install_time = max_equals(
+                    transitive_dev_install_times, spec, install_time_of_installed_spec
+                )
+            else:
+                # else this is not a develop spec, and we don't want to record the
+                # installation time (we could have done an overwrite install of a
+                # non-develop spec, in which case it should not be necessary to
+                # reinstall the parent)
+                latest_transitive_install_time = transitive_dev_install_times[spec]
+
+            for parent in spec.dependents():
+                max_equals(transitive_dev_install_times, parent, latest_transitive_install_time)
+
+        def is_dev_spec_and_has_changed(spec, install_time_of_installed_spec):
+            if install_time_of_installed_spec is None:
+                return False
+
+            dev_path_var = spec.variants.get("dev_path", None)
+            if not dev_path_var:
+                return False
+
+            mtime = fs.last_modification_time_recursive(dev_path_var.value)
+            return mtime > install_time_of_installed_spec
+
+        for spec in traverse.traverse_nodes(
+            self.concrete_roots(), direction="children", order="post"
+        ):
+            # If it is a parent of an overwite spec (transitive), then
+            # overwrite
+            if any(child in overwrite_specs for child in spec.dependencies()):
+                overwrite_specs.add(spec)
+                continue
+
+            _, record = db.query_by_spec_hash(spec.dag_hash())
+            if record and record.installed:
+                install_time_of_installed_spec = record.installation_time
+            else:
+                install_time_of_installed_spec = None
+
+            # If a transitive child develop spec has a greater install
+            # time, then overwrite
+            if (
+                install_time_of_installed_spec
+                and install_time_of_installed_spec < transitive_dev_install_times[spec]
+            ):
+                overwrite_specs.add(spec)
+                # At this point we can skip transitive_dev_install_times (below)
+                # because parents of overwrite specs are automatically overwritten
+                continue
+
+            # We might be here just because the current spec is uninstalled, but
+            # that doesn't mean this (or its dependents) need to be overwritten:
+            # Say x->y->z, you force uninstall y, then you change the source
+            # of z (which is develop). x should be reinstalled, but not because
+            # of y.
+            update_transitive_dev_install_times(spec, install_time_of_installed_spec)
+
+            # If it is a dev spec and its sources are newer than the install
+            # time, then overwrite
+            if is_dev_spec_and_has_changed(spec, install_time_of_installed_spec):
+                overwrite_specs.add(spec)
+
+        return list(spec.dag_hash() for spec in overwrite_specs)
 
     def _install_log_links(self, spec):
         if not spec.external:
