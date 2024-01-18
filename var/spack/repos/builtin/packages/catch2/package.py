@@ -122,6 +122,7 @@ class Catch2(CMakePackage):
     )
     variant("shared", when="@3:", default=False, description="Build shared library")
 
+    @when("@3:")
     def patch(self):
         filter_file(
             r"#include \<catch2",
