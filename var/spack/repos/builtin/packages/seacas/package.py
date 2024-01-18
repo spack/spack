@@ -12,7 +12,7 @@ from spack.package import *
 # Need to add:
 #  KOKKOS support using an external (i.e. spack-supplied) kokkos library.
 #  Data Warehouse (FAODEL) enable/disable
-
+is_windows = sys.platform == "win32"
 
 class Seacas(CMakePackage):
     """The SEACAS Project contains the Exodus and IOSS I/O libraries
@@ -126,7 +126,8 @@ class Seacas(CMakePackage):
 
     # Build options
     variant("fortran", default=True, description="Compile with Fortran support")
-    variant("shared", default=True, description="Enables the build of shared libraries")
+    # NOTE: Turn this on at your own risk on Windows, SEACAS exports no symbols
+    variant("shared", default=not is_windows, description="Enables the build of shared libraries")
     variant("mpi", default=True, description="Enables MPI parallelism.")
 
     variant(
@@ -139,7 +140,7 @@ class Seacas(CMakePackage):
     variant("faodel", default=False, description="Enable Faodel")
     variant("matio", default=True, description="Compile with matio (MatLab) support")
     variant("metis", default=False, description="Compile with METIS and ParMETIS")
-    variant("x11", default=True, description="Compile with X11")
+    variant("x11", default=not is_windows, description="Compile with X11")
 
     # ###################### Dependencies ##########################
     depends_on("cmake@3.22:", when="@2023-10-24:", type="build")
@@ -213,6 +214,8 @@ class Seacas(CMakePackage):
                 from_variant(project_name_base + "_ENABLE_Fortran", "fortran"),
             ]
         )
+        if "platform=windows" in spec:
+            options.append(define("SEACAS_ENABLE_TESTS", False))
 
         options.append(from_variant("TPL_ENABLE_MPI", "mpi"))
         if "+mpi" in spec:
