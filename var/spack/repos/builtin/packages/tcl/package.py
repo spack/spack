@@ -74,7 +74,7 @@ class Tcl(AutotoolsPackage, NMakePackage, SourceforgePackage, TclHelper):
             if self.spec.satisfies("@:8.7"):
                 win_suffix = "t"
             ver_suffix = ver_suffix.joined
-        return f"tclsh{ver_suffix}{win_suffix}"
+        return f"{ver_suffix}{win_suffix}"
 
     @property
     def libs(self):
