@@ -194,6 +194,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     for dev, (dflt, desc) in devices_variants.items():
         variant(dev, default=dflt, description=desc)
     conflicts("+cuda", when="+rocm", msg="CUDA and ROCm are not compatible in Kokkos.")
+    depends_on("intel-oneapi-dpl", when="+sycl")
 
     for opt, (dflt, desc) in options_variants.items():
         variant(opt, default=dflt, description=desc, when=("+cuda" if "cuda" in opt else None))
