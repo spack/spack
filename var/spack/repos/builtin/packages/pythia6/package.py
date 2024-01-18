@@ -92,9 +92,9 @@ class Pythia6(CMakePackage):
         "main79.f": "27ca84d6d0877f3605cbc1b865c3e1f571e7d2c9301094a4122e726a903dbead",
         # Following files were not transferred to the new pythia.org website
         # https://web.archive.org/web/20150215042950/http://pythia6.hepforge.org/examples/main81.f
-        #"main81.f": "b02fecd1cd0f9ba16eaae53e9da0ba602569fdf0e46856cccdfb4c5b7ba33e8b",
+        # "main81.f": "b02fecd1cd0f9ba16eaae53e9da0ba602569fdf0e46856cccdfb4c5b7ba33e8b",
         # https://web.archive.org/web/20150215042950/http://pythia6.hepforge.org/examples/ttbar.lhe
-        #"ttbar.lhe": "db772b69ab4e0300d973b57414523ac8e7fa8535eac49ee52a6b69b1c131983d",
+        # "ttbar.lhe": "db772b69ab4e0300d973b57414523ac8e7fa8535eac49ee52a6b69b1c131983d",
     }
 
     for example, checksum in examples.items():
