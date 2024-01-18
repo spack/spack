@@ -311,7 +311,7 @@ class OCIAuthHandler(urllib.request.BaseHandler):
         # forth between auth server and registry
         if hasattr(req, "login_attempted"):
             raise spack.util.web.DetailedHTTPError(
-                req, code, f"Failed to login to {req.full_url}: {msg}", headers, fp
+                req, code, f"Failed to login: {msg}", headers, fp
             )
 
         # On 401 Unauthorized, parse the WWW-Authenticate header
