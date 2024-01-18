@@ -320,6 +320,14 @@ class CMakeBuilder(BaseBuilder):
 
         _maybe_set_python_hints(pkg, args)
 
+        # Disable CMake User Package Registry
+        if pkg.spec.satisfies("^cmake@3.15:"):
+            # see https://cmake.org/cmake/help/latest/policy/CMP0090.html
+            args.append(define("CMAKE_POLICY_DEFAULT_CMP0090", "NEW"));
+        elif pkg.spec.satisfies("^cmake@3.1:3.14"):
+            # see https://cmake.org/cmake/help/latest/variable/CMAKE_EXPORT_NO_PACKAGE_REGISTRY.html
+            args.append(define("CMAKE_EXPORT_NO_PACKAGE_REGISTRY", True));
+
         # Set up CMake rpath
         args.extend(
             [
