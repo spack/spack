@@ -23,7 +23,7 @@ class Btop(MakefilePackage, CMakePackage):
 
     build_system("makefile", conditional("cmake", when="@1.3.0:"), default="cmake")
 
-    variant("gpu", default=False, description="Enable GPU support")
+    variant("gpu", default=False, description="Enable GPU support", when="build_system=cmake")
 
     # Fix linking GPU support, by adding an explicit "target_link_libraries" to ${CMAKE_DL_LIBS}
     patch("link-dl.patch", when="+gpu")
