@@ -13,20 +13,15 @@ mkdir -p "${SPACK_ROOT}/bootstrap"
 dkr_run() {
     docker run --rm -it \
         -v "$SPACK_ROOT:/spack" \
-        -v "$SPACK_ROOT/bootstrap:/home/$USER/.spack/bootstrap" \
+        -v "$SPACK_ROOT/bootstrap:/root/.spack/bootstrap" \
         -v "$SPACK_ROOT/tmp:/tmp" \
         -e SPACK_DISABLE_LOCAL_CONFIG=1 \
-        -e SPACK_USER_CACHE_PATH=/tmp/spack \
         -e PATH="/spack/bin:$ADD:$PATH" \
         -e JOBS \
         -e STAGE \
         -e FULL_ARCH \
         -e FORCE_CMD \
         -e TARGET \
-        -u "$(id -u):$(id -g)" \
-        --volume="/etc/group:/etc/group:ro" \
-        --volume="/etc/passwd:/etc/passwd:ro" \
-        --volume="/etc/shadow:/etc/shadow:ro" \
         $BASE_IMG \
         "$@"
 }
