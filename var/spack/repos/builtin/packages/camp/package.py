@@ -71,9 +71,9 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
             options.append("-DHIP_ROOT_DIR={0}".format(spec["hip"].prefix))
 
             archs = self.spec.variants["amdgpu_target"].value
-            if archs != "none":
-                arch_str = ",".join(archs)
-                options.append("-DHIP_HIPCC_FLAGS=--amdgpu-target={0}".format(arch_str))
+            options.append("-DCMAKE_HIP_ARCHITECTURES={0}".format(archs))
+            options.append("-DGPU_TARGETS={0}".format(archs))
+            options.append("-DAMDGPU_TARGETS={0}".format(archs))
 
         options.append(self.define_from_variant("ENABLE_OPENMP", "openmp"))
         options.append(self.define_from_variant("ENABLE_TESTS", "tests"))

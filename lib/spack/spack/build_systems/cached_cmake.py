@@ -14,6 +14,7 @@ import spack.builder
 
 from .cmake import CMakeBuilder, CMakePackage
 
+
 def cmake_cache_path(name, value, comment="", force=False):
     """Generate a string for a cmake cache variable"""
     force_str = " FORCE" if force else ""
