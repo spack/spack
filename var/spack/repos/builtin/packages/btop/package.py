@@ -28,7 +28,7 @@ class Btop(MakefilePackage, CMakePackage):
     # Fix linking GPU support, by adding an explicit "target_link_libraries" to ${CMAKE_DL_LIBS}
     patch("link-dl.patch", when="+gpu")
 
-    requires("%gcc@10:", msg="C++ 20 is required")
+    requires("%gcc@10:", "%clang@16:", policy="one_of", msg="C++ 20 is required")
 
 
 class MakefileBuilder(makefile.MakefileBuilder):
