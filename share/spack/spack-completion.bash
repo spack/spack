@@ -873,7 +873,7 @@ _spack_config_change() {
     then
         SPACK_COMPREPLY="-h --help --match-spec"
     else
-        _all_packages
+        SPACK_COMPREPLY=""
     fi
 }
 

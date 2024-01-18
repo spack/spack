@@ -1212,7 +1212,6 @@ complete -c spack -n '__fish_spack_using_command config add' -s f -l file -r -d 
 # spack config change
 set -g __fish_spack_optspecs_spack_config_change h/help match-spec=
 complete -c spack -n '__fish_spack_using_command_pos 0 config change' -f -a '(__fish_spack_colon_path)'
-complete -c spack -n '__fish_spack_using_command_pos 1 config change' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command config change' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command config change' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command config change' -l match-spec -r -f -a match_spec
