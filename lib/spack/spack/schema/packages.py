@@ -42,7 +42,10 @@ requirements = {
                             "spec": {"type": "string"},
                             "message": {"type": "string"},
                             "when": {"type": "string"},
-                            "turn_off_for": {"type": "array", "items": {"type": "string", "enum": ["externals", "build"]}}
+                            "turn_off_for": {
+                                "type": "array",
+                                "items": {"type": "string", "enum": ["externals", "build"]},
+                            },
                         },
                     },
                     {"type": "string"},
