@@ -54,7 +54,23 @@ requirements = {
     ]
 }
 
-prefer_and_conflict = {"type": "array", "items": {"type": "string"}}
+prefer_and_conflict = {
+    "type": "array",
+    "items": {
+        "oneOf": [
+            {
+                "type": "object",
+                "additionalProperties": False,
+                "properties": {
+                    "spec": {"type": "string"},
+                    "message": {"type": "string"},
+                    "when": {"type": "string"},
+                },
+            },
+            {"type": "string"},
+        ]
+    },
+}
 
 permissions = {
     "type": "object",
@@ -189,7 +205,6 @@ properties = {
         },
     }
 }
-
 
 #: Full schema with metadata
 schema = {

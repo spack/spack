@@ -1063,6 +1063,19 @@ def test_requiring_package_on_multiple_virtuals(concretize_scope, mock_packages)
             ["%gcc"],
             ["%clang"],
         ),
+        # Test parsing objects instead of strings
+        (
+            """
+            packages:
+              all:
+                prefer:
+                - spec: "%clang"
+                compiler: [gcc]
+        """,
+            "multivalue-variant",
+            ["%clang"],
+            ["%gcc"],
+        ),
     ],
 )
 def test_strong_preferences_packages_yaml(
@@ -1079,15 +1092,33 @@ def test_strong_preferences_packages_yaml(
         assert not s.satisfies(constraint), constraint
 
 
-@pytest.mark.parametrize("conflict_str,spec_str", [("%clang", "multivalue-variant %clang")])
-def test_conflict_packages_yaml(conflict_str, spec_str, concretize_scope, mock_packages):
-    """Tests conflicts that are specified from configuration files."""
-    packages_yaml = f"""
+@pytest.mark.parametrize(
+    "packages_yaml,spec_str",
+    [
+        (
+            """
         packages:
           all:
             conflict:
-            - "{conflict_str}"
-    """
+            - "%clang"
+    """,
+            "multivalue-variant %clang",
+        ),
+        # Use an object instead of a string in configuration
+        (
+            """
+        packages:
+          all:
+            conflict:
+            - spec: "%clang"
+              message: "cannot use clang"
+    """,
+            "multivalue-variant %clang",
+        ),
+    ],
+)
+def test_conflict_packages_yaml(packages_yaml, spec_str, concretize_scope, mock_packages):
+    """Tests conflicts that are specified from configuration files."""
     update_packages_config(packages_yaml)
     with pytest.raises(UnsatisfiableSpecError):
         Spec(spec_str).concretized()

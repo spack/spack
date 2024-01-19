@@ -2824,8 +2824,8 @@ class RequirementParser:
     def rules_from_prefer(self, pkg: "spack.package_base.PackageBase") -> List[RequirementRule]:
         result = []
         kind, preferences = self._raw_yaml_data(pkg, section="prefer")
-        for spec_str in preferences:
-            spec = sc.parse_spec_from_yaml_string(spec_str)
+        for item in preferences:
+            spec, condition, message = self._parse_prefer_conflict_item(item)
             result.append(
                 # A strong preference is defined as:
                 #
@@ -2836,8 +2836,8 @@ class RequirementParser:
                     policy="any_of",
                     requirements=[spec, spack.spec.Spec("@:")],
                     kind=kind,
-                    message=None,
-                    condition=spack.spec.Spec(),
+                    message=message,
+                    condition=condition,
                 )
             )
         return result
@@ -2845,23 +2845,35 @@ class RequirementParser:
     def rules_from_conflict(self, pkg: "spack.package_base.PackageBase") -> List[RequirementRule]:
         result = []
         kind, conflicts = self._raw_yaml_data(pkg, section="conflict")
-        for spec_str in conflicts:
-            # A conflict is defined as:
-            #
-            # require:
-            # - one_of: [spec_str, "@:"]
-            spec = sc.parse_spec_from_yaml_string(spec_str)
+        for item in conflicts:
+            spec, condition, message = self._parse_prefer_conflict_item(item)
             result.append(
+                # A conflict is defined as:
+                #
+                # require:
+                # - one_of: [spec_str, "@:"]
                 RequirementRule(
                     pkg_name=pkg.name,
                     policy="one_of",
                     requirements=[spec, spack.spec.Spec("@:")],
                     kind=kind,
-                    message=None,
-                    condition=spack.spec.Spec(),
+                    message=message,
+                    condition=condition,
                 )
             )
         return result
+
+    def _parse_prefer_conflict_item(self, item):
+        # The item is either a string or an object with at least a "spec" attribute
+        if isinstance(item, str):
+            spec = sc.parse_spec_from_yaml_string(item)
+            condition = spack.spec.Spec()
+            message = None
+        else:
+            spec = sc.parse_spec_from_yaml_string(item["spec"])
+            condition = spack.spec.Spec(item.get("when"))
+            message = item.get("message")
+        return spec, condition, message
 
     def _raw_yaml_data(self, pkg: "spack.package_base.PackageBase", *, section: str):
         config = self.config.get("packages")
