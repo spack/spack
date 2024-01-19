@@ -18,6 +18,7 @@ class Fenics(CMakePackage):
     homepage = "https://fenicsproject.org/"
     git = "https://bitbucket.org/fenics-project/dolfin.git"
     url = "https://bitbucket.org/fenics-project/dolfin/downloads/dolfin-2019.1.0.post0.tar.gz"
+    maintainers("chrisrichardson", "garth-wells", "jhale")
 
     license("LGPL-3.0-only")
     version("master", branch="master")
@@ -102,7 +103,9 @@ class Fenics(CMakePackage):
         if ver == "master":
             depends_on("py-fenics-ufl-legacy@main", type=("build", "run"), when=wver + "+python")
         else:
-            depends_on("py-fenics-ufl{0}".format(wver), type=("build", "run"), when=wver + "+python")
+            depends_on(
+                "py-fenics-ufl{0}".format(wver), type=("build", "run"), when=wver + "+python"
+            )
         if ver in ["2019.1.0", "2017.2.0"]:
             wver = "@" + ver + ".post0"
         depends_on("py-fenics-ffc{0}".format(wver), type=("build", "run"), when=wver + "+python")
