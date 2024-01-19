@@ -20,7 +20,7 @@ class Fenics(CMakePackage):
     url = "https://bitbucket.org/fenics-project/dolfin/downloads/dolfin-2019.1.0.post0.tar.gz"
 
     license("LGPL-3.0-only")
-
+    version("master", branch="master")
     version(
         "2019.1.0.post0", sha256="61abdcdb13684ba2a3ba4afb7ea6c7907aa0896a46439d3af7e8848483d4392f"
     )
@@ -39,7 +39,7 @@ class Fenics(CMakePackage):
         deprecated=True,
     )
 
-    dolfin_versions = ["2019.1.0", "2018.1.0", "2017.2.0", "2016.2.0"]
+    dolfin_versions = ["master", "2019.1.0", "2018.1.0", "2017.2.0", "2016.2.0"]
 
     variant("python", default=True, description="Compile with Python interface")
     variant("hdf5", default=True, description="Compile with HDF5")
@@ -99,7 +99,10 @@ class Fenics(CMakePackage):
             depends_on(
                 "py-fenics-dijitso{0}".format(wver), type=("build", "run"), when=wver + "+python"
             )
-        depends_on("py-fenics-ufl{0}".format(wver), type=("build", "run"), when=wver + "+python")
+        if ver == "master":
+            depends_on("py-fenics-ufl-legacy@main", type=("build", "run"), when=wver + "+python")
+        else:
+            depends_on("py-fenics-ufl{0}".format(wver), type=("build", "run"), when=wver + "+python")
         if ver in ["2019.1.0", "2017.2.0"]:
             wver = "@" + ver + ".post0"
         depends_on("py-fenics-ffc{0}".format(wver), type=("build", "run"), when=wver + "+python")
