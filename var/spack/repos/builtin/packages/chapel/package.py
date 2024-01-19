@@ -5,34 +5,6 @@
 
 from spack.package import *
 
-### Taken from upcxx/package.py to detect Cray systems
-def is_CrayXC():
-    return (spack.platforms.host().name in ["linux", "cray"]) and (
-        os.environ.get("CRAYPE_NETWORK_TARGET") == "aries"
-    )
-
-
-def is_CrayEX():
-    if spack.platforms.host().name in ["linux", "cray"]:
-        target = os.environ.get("CRAYPE_NETWORK_TARGET")
-        if target in ["ofi", "ucx"]:  # normal case
-            return True
-        elif target is None:  # but some systems lack Cray PrgEnv
-            fi_info = which("fi_info")
-            if fi_info and fi_info("-l", output=str).find("cxi") >= 0:
-                return True
-    return False
-
-
-def cross_detect():
-    if is_CrayXC():
-        if which("srun"):
-            return "cray-aries-slurm"
-        if which("aprun"):
-            return "cray-aries-alps"
-    return "none"
-###
-
 class Chapel(AutotoolsPackage):
     """Chapel is a modern programming language that is parallel, productive,
     portable, scalable and open-source."""
@@ -66,9 +38,9 @@ class Chapel(AutotoolsPackage):
     depends_on("doxygen@1.8.17:")
 
     variant(
-            "llvm", default="none",
+            "llvm", default="unset",
             description="LLVM backend type. Use value 'spack' to have spack handle the LLVM package",
-            values=("none", "system", "bundled", "spack")
+            values=("none", "system", "bundled", "spack", "unset")
     )
 
     variant(
@@ -101,7 +73,7 @@ class Chapel(AutotoolsPackage):
             ("none",),
             ("all",),
             package_module_opts,
-        ).prohibit_empty_set().with_error(
+        ).with_error(
             "'none' or 'all' cannot be activated along with other package_modules"
         ).with_default("none").with_non_feature_values("none", "all")
     )
@@ -109,6 +81,81 @@ class Chapel(AutotoolsPackage):
     for opt, dep in package_module_dict.items():
         depends_on(dep, when="package_modules={0}".format(opt), type="run")
         depends_on(dep, when="package_modules=all", type="run")
+
+    platform_opts = ("unset", "cygwin32", "cygwin64", "darwin", "linux32",
+                     "linux64", "netbsd32", "netbsd64", "pwr6", "cray-cs",
+                     "cray-xc", "hpe-apollo", "hpe-cray-ex")
+
+    variant("host_platform", description="Host platform", default="unset",
+            values=platform_opts, multi=False)
+
+    variant("target_platform", description="Target platform for cross compilation",
+            default="unset", values=platform_opts, multi=False)
+
+    variant("tasks", description="Select tasking layer for intra-locale parallelism",
+            default="qthreads", values=("qthreads", "fifo"), multi=False)
+
+    variant("re2", description="Build with re2 support", default="bundled",
+            values=("none","bundled"), multi=False)
+
+    variant("gmp", description="Build with gmp support", default="unset",
+            values=("unset","system","none","bundled"),
+            multi=False)
+
+    variant("hwloc", description="Build with hwloc support", default="bundled",
+            values=("none","bundled"), multi=False)
+
+    variant("aux_filesys", description="Build with runtime support for certain filesystems",
+            default="none", values=("none","lustre"), multi=False)
+
+    # variant('locale_model', values=('flat', 'numa'), default='flat', description='Locale model to use', multi=False)
+
+    # variant('mem', values=('cstdlib', 'jemalloc'), default='jemalloc', description='Memory management layer', multi=False)
+
+    # variant('host_mem', values=('cstdlib', 'jemalloc'), default='jemalloc',
+    #         description='Memory management layer for the chpl compiler', multi=False)
+
+    # variant('host_jemalloc', values=('none', 'bundled', 'system'), multi=False,
+    #     description='Selects between no jemalloc, bundled jemalloc, or system jemalloc')
+
+    # variant('lib_pic', values=('pic', 'none'), default='none',
+    #     description='Build position-independent code suitable for shared libraries')
+
+    chpl_env_vars = [
+        "CHPL_HOME",
+        "CHPL_HOST_PLATFORM",
+        "CHPL_HOST_COMPILER",
+        "CHPL_HOST_CC",
+        "CHPL_HOST_CXX",
+        "CHPL_HOST_ARCH",
+        "CHPL_TARGET_PLATFORM",
+        "CHPL_TARGET_COMPILER",
+        "CHPL_TARGET_CC",
+        "CHPL_TARGET_CXX",
+        "CHPL_TARGET_LD",
+        "CHPL_TARGET_ARCH",
+        "CHPL_TARGET_CPU",
+        "CHPL_LOCALE_MODEL",
+        "CHPL_COMM",
+        "CHPL_TASKS",
+        "CHPL_LAUNCHER",
+        "CHPL_TIMERS",
+        "CHPL_UNWIND",
+        "CHPL_HOST_MEM",
+        "CHPL_MEM",
+        "CHPL_ATOMICS",
+        "CHPL_GMP",
+        "CHPL_HWLOC",
+        "CHPL_RE2",
+        "CHPL_LLVM",
+        "CHPL_LLVM_SUPPORT",
+        "CHPL_LLVM_CONFIG",
+        "CHPL_LLVM_VERSION",
+        "CHPL_AUX_FILESYS",
+        "CHPL_LIB_PIC",
+        "CHPL_SANITIZE",
+        "CHPL_SANITIZE_EXE"
+    ]
 
 
     # Add dependencies
@@ -119,21 +166,45 @@ class Chapel(AutotoolsPackage):
     depends_on("python@3.7:3.10")
     depends_on("cmake@3.16:")
 
+    def unset_chpl_env_vars(self, env):
+        for var in self.chpl_env_vars:
+            env.unset(var)
 
+    def configure(self, spec, prefix):
+        configure("--prefix={0}".format(prefix))
 
     def setup_chpl_comm(self, env, spec):
         env.set("CHPL_COMM",spec.variants["comm"].value)
         if spec.variants["substrate"].value != "none":
             env.set("CHPL_COMM_SUBSTRATE",spec.variants["substrate"].value)
 
-    def setup_build_environment(self, env):
-        env.set("CHPL_LLVM", self.spec.variants["llvm"].value)
-        env.set("CHPL_DEVELOPER","0")
-        if self.spec.variants["llvm"].value=="spack":
+    def setup_chpl_llvm(self, env, spec):
+        # Setup LLVM environment variables based on spec
+        if spec.variants["llvm"].value == "spack":
             env.set("CHPL_LLVM_CONFIG",
-                    "{0}/{1}".format(self.spec["llvm"].prefix, "/bin/llvm-config"))
+                    "{0}/{1}".format(spec["llvm"].prefix, "/bin/llvm-config"))
             env.set("CHPL_LLVM", "system")
+        elif spec.variants["llvm"].value != "unset":
+            env.set("CHPL_LLVM", spec.variants["llvm"].value)
+
+    def setup_env_vars(self, env):
+        self.setup_chpl_llvm(env, self.spec)
+        env.set("CHPL_AUX_FILESYSTEM", self.spec.variants["aux_filesys"].value)
+        env.set("CHPL_DEVELOPER","0") # TODO: handle this better, maybe with a variant
+        env.set("CHPL_RE2", self.spec.variants["re2"].value)
+        env.set("CHPL_HWLOC", self.spec.variants["hwloc"].value)
+        if self.spec.variants["host_platform"].value != "unset":
+            env.set("CHPL_HOST_PLATFORM", self.spec.variants["host_platform"].value)
+        if self.spec.variants["target_platform"].value != "unset":
+            env.set("CHPL_TARGET_PLATFORM", self.spec.variants["target_platform"].value)
+        if self.spec.variants["gmp"].value != "unset":
+            env.set("CHPL_GMP", self.spec.variants["gmp"].value)
+
         self.setup_chpl_comm(env, self.spec)
 
+    def setup_build_environment(self, env):
+        self.unset_chpl_env_vars(env)
+        self.setup_env_vars(env)
+
     def setup_run_environment(self, env):
-        self.setup_build_environment(env)
+        self.setup_env_vars(env)
