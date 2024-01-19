@@ -38,6 +38,7 @@ schema = {
                 {
                     "include": {"type": "array", "default": [], "items": {"type": "string"}},
                     "specs": spack.schema.spec_list_schema,
+                    "detect-changes-with-git": {"type": "boolean", "default": False},
                     "view": {
                         "anyOf": [
                             {"type": "boolean"},

@@ -12,6 +12,7 @@ import re
 import shutil
 import stat
 import sys
+import tempfile
 import time
 import urllib.parse
 import urllib.request
@@ -459,23 +460,107 @@ def _eval_conditional(string):
     return eval(string, valid_variables)
 
 
-def _is_dev_spec_and_has_changed(spec):
+def _timestamp_changed(spec, _database=None):
     """Check if the passed spec is a dev build and whether it has changed since the
     last installation"""
-    # First check if this is a dev build and in the process already try to get
-    # the dev_path
-    dev_path_var = spec.variants.get("dev_path", None)
-    if not dev_path_var:
-        return False
-
-    # Now we can check whether the code changed since the last installation
-    if not spec.installed:
-        # Not installed -> nothing to compare against
-        return False
-
-    _, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
+    db = _database or spack.store.STORE.db
+    dev_path_var = spec.variants.get("dev_path")
+    _, record = db.query_by_spec_hash(spec.dag_hash())
     mtime = fs.last_modification_time_recursive(dev_path_var.value)
     return mtime > record.installation_time
+
+
+class GitRepoChangeDetector:
+    """Associates with a Git repository. Uses Git to determine when
+    tracked files in the repository have changed, regardless of whether
+    they have been committed or staged (i.e. with ``git add``).
+
+    This does not look for changes in untracked files, and maintains
+    extra files for bookkeeping in this directory, within a ``.spack``
+    subdirectory (creating it if it does not exist).
+    """
+
+    def __init__(self, dev_path):
+        self.base_dir = pathlib.Path(dev_path)
+        self.git_dir = self.base_dir / ".git"
+        self._spack_state = self.base_dir / ".spack"
+        self.current_hash = None
+
+    @property
+    def spack_state(self):
+        """A directory where we store the hash that represents the
+        state of the git repo.
+
+        This accessor instantiates the directory so that it is
+        always available when needed.
+        """
+        self._spack_state.mkdir(exist_ok=True)
+        return self._spack_state
+
+    @property
+    def cache_state(self):
+        """Path that stores the hash of the git repository."""
+        return self.spack_state / "spackdev-git-hash"
+
+    @staticmethod
+    def from_src_dir(dev_path):
+        git_dir = pathlib.Path(dev_path) / ".git"
+        if not git_dir.is_dir():
+            return
+        return GitRepoChangeDetector(dev_path)
+
+    def git_modification_hash(self):
+        """
+        Given a Git repository directory, output a hash that represents the current
+        state of the directory, including all uncommitted changes to tracked files
+        in the repository.
+        """
+        git_index = self.git_dir / "index"
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_index = pathlib.Path(tmp_dir) / "spack-package-git-index"
+
+            shutil.copyfile(git_index, tmp_index)
+
+            env = {"GIT_INDEX_FILE": str(tmp_index)}
+            git = spack.util.git.git(required=True)
+            with fs.working_dir(self.base_dir):
+                git("add", "-u", env=env)
+                hash = git("write-tree", env=env, output=str)
+                if hash:
+                    hash = hash.strip()
+            return hash
+
+    def update_current(self):
+        """
+        Determine the current state of the Git repository (calculate
+        the hash) and return whether it differs from the prior state.
+
+        Returns:
+            (bool): ``True`` if the new Git hash differs or if there
+                is no prior hash available, False if the prior hash
+                is available and matches the current hash.
+        """
+        self.current_hash = self.git_modification_hash()
+        prior_hash = self.prior_hash()
+        if not prior_hash:
+            return True
+        else:
+            return self.current_hash != prior_hash
+
+    def update_prior(self):
+        if not self.current_hash:
+            raise Exception(
+                "Internal Spack error: update_current was not called before update_prior"
+            )
+        with open(self.cache_state, "w") as f:
+            f.write(self.current_hash)
+
+    def prior_hash(self):
+        if not self.cache_state.exists():
+            return None
+        with open(self.cache_state, "r") as f:
+            return f.read()
 
 
 def _error_on_nonempty_view_dir(new_root):
@@ -1803,15 +1888,50 @@ class Environment:
         self.concretized_order.append(h)
         self.specs_by_hash[h] = concrete
 
-    def _get_overwrite_specs(self):
+    def _get_overwrite_specs(self, _database=None, _git_checker=None):
         # Find all dev specs that were modified.
-        changed_dev_specs = [
-            s
-            for s in traverse.traverse_nodes(
-                self.concrete_roots(), order="breadth", key=traverse.by_dag_hash
-            )
-            if _is_dev_spec_and_has_changed(s)
-        ]
+
+        db = _database or spack.store.STORE.db
+
+        # Callable that can determine whether a directory is managed
+        # as a Git repository, returning a GitRepoChangeDetector for
+        # it if so
+        _git_checker = _git_checker or GitRepoChangeDetector.from_src_dir
+        detect_changes_with_git = self.manifest.configuration.get("detect-changes-with-git", False)
+
+        git_states = list()
+        changed_dev_specs = list()
+        for s in traverse.traverse_nodes(
+            self.concrete_roots(), order="breadth", key=traverse.by_dag_hash
+        ):
+            # First check if this is a dev build and in the process already try to get
+            # the dev_path
+            dev_path_var = s.variants.get("dev_path", None)
+            if not dev_path_var:
+                continue
+
+            # Now we can check whether the code changed since the last installation
+            if not db.installed(s):
+                # Not installed -> nothing to compare against
+                continue
+
+            if detect_changes_with_git:
+                git_state = _git_checker(dev_path_var.value)
+                if git_state:
+                    # This is appended regardless of whether there was a change: we want
+                    # to store the state the first time we install the package
+                    git_states.append(git_state)
+                    if git_state.update_current():
+                        changed_dev_specs.append(s)
+                    # If the dev_path is a Git repo, always use that to determine whether
+                    # to rebuild - don't fall back on timestamp checking
+                    continue
+
+            # This runs if (a) we are not detecting changes with git or (b) the
+            # developed benchmark is not managed with git or (c) if we have not
+            # yet computed a prior git hash
+            if _timestamp_changed(s, _database=db):
+                changed_dev_specs.append(s)
 
         # Collect their hashes, and the hashes of their installed parents.
         # Notice: with order=breadth all changed dev specs are at depth 0,
@@ -1826,8 +1946,8 @@ class Environment:
                 direction="parents",
                 key=traverse.by_dag_hash,
             )
-            if depth == 0 or spec.installed
-        ]
+            if depth == 0 or db.installed(spec)
+        ], git_states
 
     def _partition_roots_by_install_status(self):
         """Partition root specs into those that do not have to be passed to the
@@ -1889,7 +2009,7 @@ class Environment:
         else:
             tty.debug("Processing {0} uninstalled specs".format(len(specs_to_install)))
 
-        specs_to_overwrite = self._get_overwrite_specs()
+        specs_to_overwrite, git_states = self._get_overwrite_specs()
         tty.debug("{0} specs need to be overwritten".format(len(specs_to_overwrite)))
 
         install_args["overwrite"] = install_args.get("overwrite", []) + specs_to_overwrite
@@ -1903,6 +2023,9 @@ class Environment:
         try:
             builder = PackageInstaller(installs)
             builder.install()
+
+            for git_state in git_states:
+                git_state.update_prior()
         finally:
             # Ensure links are set appropriately
             for spec in specs_to_install:
