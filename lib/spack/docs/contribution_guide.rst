@@ -316,6 +316,166 @@ documentation tests to make sure there are no errors. Documentation changes can 
 in some obfuscated warning messages. If you don't understand what they mean, feel free
 to ask when you submit your PR.
 
+.. _spack-builders-and-pipelines:
+
+^^^^^^
+Stacks
+^^^^^^
+
+Spack welcomes the contribution of software stacks of interest to the community. These
+stacks are used to test package recipes and generate publically available build caches.
+Spack utilizes GitLab CI for managing the orchastration of build jobs.
+
+~~~~~~~~~~~~~~~~~~
+GitLab Entry Point
+~~~~~~~~~~~~~~~~~~
+
+Add stack entrypoint to the ``share/spack/gitlab/cloud_pipelines/.gitlab-ci.yml``. There
+are two stages required for each new stack, the generation stage and the build stage.
+
+The generate stage is defined using the job template ``.generate`` configured with
+environment variables defining the name of the stack in ``SPACK_CI_STACK_NAME`` and the
+platform (``SPACK_TARGET_PLATFORM``) and architecture (``SPACK_TARGET_ARCH``) configuration,
+and the tags associated with the class of runners to build on.
+
+.. note::
+
+    The ``SPACK_CI_STACK_NAME`` must match the name of the directory containing the
+    stacks ``spack.yaml``.
+
+
+.. note::
+
+    The platform and architecture components are specified in order to select the
+    correct configurations from the generic configurations used in Spack CI. The
+    predefined configurations currently available are:
+
+    * ``.cray_rhel_zen4``
+    * ``.cray_sles_zen4``
+    * ``.darwin_aarch64``
+    * ``.darwin_x86_64``
+    * ``.linux_aarch64``
+    * ``.linux_icelake``
+    * ``.linux_neoverse_n1``
+    * ``.linux_neoverse_v1``
+    * ``.linux_neoverse_v2``
+    * ``.linux_power``
+    * ``.linux_skylake``
+    * ``.linux_x86_64``
+
+    New configuratios can be added to accomodate new platforms and architectures.
+
+
+The build stage is defined as a trigger job that consumes the GitLab CI pipeline generated in
+the generate stage for this stack. Build stage jobs utilize the ``.build`` job template which
+handles the basic configuration.
+
+
+An example entry point for a new stack called ``my-super-cool-stack``
+
+.. code-blocks:: yaml
+
+    .my-super-cool-stack:
+      extends: [ ".linux_x86_64_v3" ]
+      variables:
+        SPACK_CI_STACK_NAME: my-super-cool-stack
+        tags: [ "all", "tags", "your", "job", "needs"]
+
+    my-super-cool-stack-generate:
+      extends: [ ".generate", ".my-super-cool-stack" ]
+      image: my-super-cool-stack-image:0.0.1
+
+    my-super-cool-stack-build:
+      extends: [ ".build", ".my-super-cool-stack" ]
+      trigger:
+        include:
+          - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+            job: my-super-cool-stack-generate
+        strategy: depend
+      needs:
+        - artifacts: True
+          job: my-super-cool-stack-generate
+
+
+~~~~~~~~~~~~~~~~~~~
+Stack Configuration
+~~~~~~~~~~~~~~~~~~~
+
+The stack configuration is a spack environment file with two additional sections added.
+Stack configurations should be located in ``share/spack/gitlab/cloud_pipelines/stacks/<stack_name>/spack.yaml``.
+
+The first section is optional depending on whether or not the stack will run on runners
+using a docker image or in the runners native shell, or there are other stack specific
+CI modifications reqquired. For more information on what goes in the ``ci`` section referense
+the docs on pipelines.
+
+The second section is for CDash. Spack configures most of the details for posting pipeline
+results to `cdash.spack.io <https://cdash.spack.io/index.php?project=Spack+Testing>`. The only
+requirement in the stack configuration is to define a ``build-group`` that is unqiue, usually
+this can be a long name of the stack.
+
+An example stack that builds ``zlib``.
+
+.. code-blocks:: yaml
+    spack:
+      view: false
+      packages:
+        all:
+          require: ["%gcc", "target=x86_64_v3"]
+      specs:
+      - zlib
+
+      ci:
+        pipeline-gen
+        - build-job:
+            image: my-super-cool-stack-image:0.0.1
+
+      cdash:
+        build-group: My Super Cool Stack
+
+
+^^^^^^^^^^^^^^^^^^^
+Registering Runners
+^^^^^^^^^^^^^^^^^^^
+
+Contributing computational resources to Spacks CI build farm is one way to help expand the
+capabilities and offerings of the public Spack build caches.
+
+* Runner Registration Token
+* OIDC Authentication
+
+
+Spack runners utilize OIDC authenication for connecting to the appropriate AWS bucket
+which is used for coordinating the communication of binaries between build jobs. In
+order to configure OIDC authenication, Spack CI runners utilize a script with minimal
+dependencies. This script can be configured for runners as seen here.
+
+.. code-block:: toml
+
+    [[runners]]
+      pre_build_script = """
+      echo 'Executing Spack pre-build setup script'
+
+      for cmd in "${PY3:-}" python3 python; do
+        if command -v > /dev/null "$cmd"; then
+          export PY3="$(command -v "$cmd")"
+          break
+        fi
+      done
+
+      if [ -z "${PY3:-}" ]; then
+        echo "Unable to find python3 executable"
+        exit 1
+      fi
+
+      $PY3 -c "import urllib.request;urllib.request.urlretrieve('https://raw.githubusercontent.com/spack/spack-infrastructure/main/scripts/gitlab_runner_pre_build/pre_build.py', 'pre_build.py')"
+      $PY3 pre_build.py > envvars
+
+      . ./envvars
+      rm -f envvars
+      unset GITLAB_OIDC_TOKEN
+      """
+
 --------
 Coverage
 --------
