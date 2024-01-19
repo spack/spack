@@ -994,10 +994,6 @@ class Environment:
         return os.path.join(self.path, env_subdir_name, "repos")
 
     @property
-    def log_path(self):
-        return os.path.join(self.path, env_subdir_name, "logs")
-
-    @property
     def config_stage_dir(self):
         """Directory for any staged configuration file(s)."""
         return os.path.join(self.env_subdir_path, "config")
@@ -1833,20 +1829,6 @@ class Environment:
             if depth == 0 or spec.installed
         ]
 
-    def _install_log_links(self, spec):
-        if spec.external:
-            return
-        # Make sure log directory exists
-        log_path = self.log_path
-        fs.mkdirp(log_path)
-
-        with fs.working_dir(self.path):
-            # Link the resulting log file into logs dir
-            build_log_link = os.path.join(log_path, f"{spec.name}-{spec.dag_hash(7)}.log")
-            if os.path.lexists(build_log_link):
-                os.remove(build_log_link)
-            symlink(spec.package.install_log_path, build_log_link)
-
     def _partition_roots_by_install_status(self):
         """Partition root specs into those that do not have to be passed to the
         installer, and those that should be, taking into account development
@@ -1926,12 +1908,6 @@ class Environment:
             for spec in specs_to_install:
                 if spec.installed:
                     self.new_installs.append(spec)
-                    try:
-                        self._install_log_links(spec)
-                    except OSError as e:
-                        tty.warn(
-                            "Could not install log links for {0}: {1}".format(spec.name, str(e))
-                        )
 
     def all_specs_generator(self) -> Iterable[Spec]:
         """Returns a generator for all concrete specs"""
