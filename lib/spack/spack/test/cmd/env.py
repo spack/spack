@@ -2970,7 +2970,11 @@ spack:
     assert spec.prefix not in contents
 
 
-def test_modules_exist_after_env_install(environment_from_manifest, install_mockery, mock_fetch):
+def test_modules_exist_after_env_install(
+    environment_from_manifest, install_mockery, mock_fetch, monkeypatch
+):
+    # Some caching issue
+    monkeypatch.setattr(spack.modules.tcl, "configuration_registry", {})
     environment_from_manifest(
         """
 spack:
