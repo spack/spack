@@ -5,6 +5,7 @@
 
 from spack.package import *
 
+
 class Chapel(AutotoolsPackage):
     """Chapel is a modern programming language that is parallel, productive,
     portable, scalable and open-source."""
@@ -38,44 +39,45 @@ class Chapel(AutotoolsPackage):
     depends_on("doxygen@1.8.17:")
 
     variant(
-            "llvm", default="unset",
-            description="LLVM backend type. Use value 'spack' to have spack handle the LLVM package",
-            values=("none", "system", "bundled", "spack", "unset")
+        "llvm", default="unset",
+        description="LLVM backend type. Use value 'spack' to have spack "
+                    "handle the LLVM package",
+        values=("none", "system", "bundled", "spack", "unset")
     )
 
     variant(
-            "comm",
-            default="none",
-            description="Build Chapel with multi-locale support",
-            values=("none","gasnet","ofi")
+        "comm",
+        default="none",
+        description="Build Chapel with multi-locale support",
+        values=("none", "gasnet", "ofi")
     )
     variant(
-            "substrate",
-            default="none",
-            description="Build Chapel with mulit-locale support using the supplied CHPL_COMM_SUBSTRATE",
-            values=("none","udp","ibv","ofi"),
-            multi=False
+        "substrate",
+        default="none",
+        description="Build Chapel with mulit-locale support using the "
+                    "supplied CHPL_COMM_SUBSTRATE",
+        values=("none", "udp", "ibv", "ofi"),
+        multi=False
     )
 
     package_module_opts = ("zmq", "libevent", "protobuf", "ssl", "hdf5", "yaml")
     package_module_dict = {
-                           "zmq":"libzmq",
-                           "libevent":"libevent",
-                           "protobuf":"protobuf",
-                           "ssl":"openssl",
-                           "hdf5":"hdf5+hl~mpi",
-                           "yaml":"libyaml"
+        "zmq": "libzmq",
+        "libevent": "libevent",
+        "protobuf": "protobuf",
+        "ssl": "openssl",
+        "hdf5": "hdf5+hl~mpi",
+        "yaml": "libyaml"
     }
     variant(
-            "package_modules",
-            description="Include package module dependencies with spack",
-            values=disjoint_sets(
+        "package_modules",
+        description="Include package module dependencies with spack",
+        values=disjoint_sets(
             ("none",),
             ("all",),
             package_module_opts,
-        ).with_error(
-            "'none' or 'all' cannot be activated along with other package_modules"
-        ).with_default("none").with_non_feature_values("none", "all")
+        ).with_error("'none' or 'all' cannot be activated along with other package_modules"
+                     ).with_default("none").with_non_feature_values("none", "all")
     )
 
     for opt, dep in package_module_dict.items():
@@ -96,21 +98,23 @@ class Chapel(AutotoolsPackage):
             default="qthreads", values=("qthreads", "fifo"), multi=False)
 
     variant("re2", description="Build with re2 support", default="bundled",
-            values=("none","bundled"), multi=False)
+            values=("none", "bundled"), multi=False)
 
     variant("gmp", description="Build with gmp support", default="unset",
-            values=("unset","system","none","bundled"),
+            values=("unset", "system", "none", "bundled"),
             multi=False)
 
     variant("hwloc", description="Build with hwloc support", default="bundled",
-            values=("none","bundled"), multi=False)
+            values=("none", "bundled"), multi=False)
 
     variant("aux_filesys", description="Build with runtime support for certain filesystems",
-            default="none", values=("none","lustre"), multi=False)
+            default="none", values=("none", "lustre"), multi=False)
 
-    # variant('locale_model', values=('flat', 'numa'), default='flat', description='Locale model to use', multi=False)
+    # variant('locale_model', values=('flat', 'numa'), default='flat',
+    #          description='Locale model to use', multi=False)
 
-    # variant('mem', values=('cstdlib', 'jemalloc'), default='jemalloc', description='Memory management layer', multi=False)
+    # variant('mem', values=('cstdlib', 'jemalloc'),
+    #         default='jemalloc', description='Memory management layer', multi=False)
 
     # variant('host_mem', values=('cstdlib', 'jemalloc'), default='jemalloc',
     #         description='Memory management layer for the chpl compiler', multi=False)
@@ -157,7 +161,6 @@ class Chapel(AutotoolsPackage):
         "CHPL_SANITIZE_EXE"
     ]
 
-
     # Add dependencies
     depends_on("llvm@14:16", when="llvm=spack")
     depends_on("m4")
@@ -174,9 +177,9 @@ class Chapel(AutotoolsPackage):
         configure("--prefix={0}".format(prefix))
 
     def setup_chpl_comm(self, env, spec):
-        env.set("CHPL_COMM",spec.variants["comm"].value)
+        env.set("CHPL_COMM", spec.variants["comm"].value)
         if spec.variants["substrate"].value != "none":
-            env.set("CHPL_COMM_SUBSTRATE",spec.variants["substrate"].value)
+            env.set("CHPL_COMM_SUBSTRATE", spec.variants["substrate"].value)
 
     def setup_chpl_llvm(self, env, spec):
         # Setup LLVM environment variables based on spec
@@ -190,7 +193,7 @@ class Chapel(AutotoolsPackage):
     def setup_env_vars(self, env):
         self.setup_chpl_llvm(env, self.spec)
         env.set("CHPL_AUX_FILESYSTEM", self.spec.variants["aux_filesys"].value)
-        env.set("CHPL_DEVELOPER","0") # TODO: handle this better, maybe with a variant
+        env.set("CHPL_DEVELOPER", "0")  # TODO: handle this better, maybe with a variant
         env.set("CHPL_RE2", self.spec.variants["re2"].value)
         env.set("CHPL_HWLOC", self.spec.variants["hwloc"].value)
         if self.spec.variants["host_platform"].value != "unset":
