@@ -323,8 +323,8 @@ Stacks
 ^^^^^^
 
 Spack welcomes the contribution of software stacks of interest to the community. These
-stacks are used to test package recipes and generate publically available build caches.
-Spack utilizes GitLab CI for managing the orchastration of build jobs.
+stacks are used to test package recipes and generate publicly available build caches.
+Spack uses GitLab CI for managing the orchestration of build jobs.
 
 ~~~~~~~~~~~~~~~~~~
 GitLab Entry Point
@@ -363,17 +363,17 @@ and the tags associated with the class of runners to build on.
     * ``.linux_skylake``
     * ``.linux_x86_64``
 
-    New configuratios can be added to accomodate new platforms and architectures.
+    New configurations can be added to accommodate new platforms and architectures.
 
 
 The build stage is defined as a trigger job that consumes the GitLab CI pipeline generated in
-the generate stage for this stack. Build stage jobs utilize the ``.build`` job template which
+the generate stage for this stack. Build stage jobs use the ``.build`` job template which
 handles the basic configuration.
 
 
 An example entry point for a new stack called ``my-super-cool-stack``
 
-.. code-blocks:: yaml
+.. code-block:: yaml
 
     .my-super-cool-stack:
       extends: [ ".linux_x86_64_v3" ]
@@ -405,18 +405,19 @@ The stack configuration is a spack environment file with two additional sections
 Stack configurations should be located in ``share/spack/gitlab/cloud_pipelines/stacks/<stack_name>/spack.yaml``.
 
 The first section is optional depending on whether or not the stack will run on runners
-using a docker image or in the runners native shell, or there are other stack specific
-CI modifications reqquired. For more information on what goes in the ``ci`` section referense
+using a docker image or in the runners' native shell, or there are other stack specific
+CI modifications required. For more information on what goes in the ``ci`` section refer to
 the docs on pipelines.
 
 The second section is for CDash. Spack configures most of the details for posting pipeline
-results to `cdash.spack.io <https://cdash.spack.io/index.php?project=Spack+Testing>`. The only
-requirement in the stack configuration is to define a ``build-group`` that is unqiue, usually
+results to `cdash.spack.io <https://cdash.spack.io/index.php?project=Spack+Testing>`_. The only
+requirement in the stack configuration is to define a ``build-group`` that is unique, usually
 this can be a long name of the stack.
 
 An example stack that builds ``zlib``.
 
-.. code-blocks:: yaml
+.. code-block:: yaml
+
     spack:
       view: false
       packages:
@@ -438,16 +439,16 @@ An example stack that builds ``zlib``.
 Registering Runners
 ^^^^^^^^^^^^^^^^^^^
 
-Contributing computational resources to Spacks CI build farm is one way to help expand the
+Contributing computational resources to Spack's CI build farm is one way to help expand the
 capabilities and offerings of the public Spack build caches.
 
 * Runner Registration Token
 * OIDC Authentication
 
 
-Spack runners utilize OIDC authenication for connecting to the appropriate AWS bucket
+Spack runners use OIDC authentication for connecting to the appropriate AWS bucket
 which is used for coordinating the communication of binaries between build jobs. In
-order to configure OIDC authenication, Spack CI runners utilize a script with minimal
+order to configure OIDC authentication, Spack CI runners use a script with minimal
 dependencies. This script can be configured for runners as seen here.
 
 .. code-block:: toml
