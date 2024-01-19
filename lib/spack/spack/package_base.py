@@ -24,6 +24,7 @@ import sys
 import textwrap
 import time
 import traceback
+import typing
 import warnings
 from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Type, TypeVar, Union
 
@@ -732,13 +733,13 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     @classmethod
     def possible_dependencies(
         cls,
-        transitive=True,
-        expand_virtuals=True,
+        transitive: bool = True,
+        expand_virtuals: bool = True,
         depflag: dt.DepFlag = dt.ALL,
-        visited=None,
-        missing=None,
-        virtuals=None,
-    ):
+        visited: Optional[dict] = None,
+        missing: Optional[dict] = None,
+        virtuals: Optional[set] = None,
+    ) -> Dict[str, Set[str]]:
         """Return dict of possible dependencies of this package.
 
         Args:
@@ -1130,13 +1131,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     @property
     def env_path(self):
         """Return the build environment file path associated with staging."""
-        # Backward compatibility: Return the name of an existing log path;
-        # otherwise, return the current install env path name.
-        old_filename = os.path.join(self.stage.path, "spack-build.env")
-        if os.path.exists(old_filename):
-            return old_filename
-        else:
-            return os.path.join(self.stage.path, _spack_build_envfile)
+        return os.path.join(self.stage.path, _spack_build_envfile)
 
     @property
     def env_mods_path(self):
@@ -1167,13 +1162,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     @property
     def log_path(self):
         """Return the build log file path associated with staging."""
-        # Backward compatibility: Return the name of an existing log path.
-        for filename in ["spack-build.out", "spack-build.txt"]:
-            old_log = os.path.join(self.stage.path, filename)
-            if os.path.exists(old_log):
-                return old_log
-
-        # Otherwise, return the current log path name.
         return os.path.join(self.stage.path, _spack_build_logfile)
 
     @property
@@ -1186,15 +1174,15 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     @property
     def install_log_path(self):
-        """Return the build log file path on successful installation."""
+        """Return the (compressed) build log file path on successful installation"""
         # Backward compatibility: Return the name of an existing install log.
-        for filename in ["build.out", "build.txt"]:
+        for filename in [_spack_build_logfile, "build.out", "build.txt"]:
             old_log = os.path.join(self.metadata_dir, filename)
             if os.path.exists(old_log):
                 return old_log
 
         # Otherwise, return the current install log path name.
-        return os.path.join(self.metadata_dir, _spack_build_logfile)
+        return os.path.join(self.metadata_dir, _spack_build_logfile + ".gz")
 
     @property
     def configure_args_path(self):
@@ -1412,13 +1400,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             (str):  default manual download instructions
         """
         required = (
-            "Manual download is required for {0}. ".format(self.spec.name)
-            if self.manual_download
-            else ""
+            f"Manual download is required for {self.spec.name}. " if self.manual_download else ""
         )
-        return "{0}Refer to {1} for download instructions.".format(
-            required, self.spec.package.homepage
-        )
+        return f"{required}Refer to {self.homepage} for download instructions."
 
     def do_fetch(self, mirror_only=False):
         """
@@ -2091,15 +2075,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """
         return True
 
-    @property
-    def build_log_path(self):
-        """
-        Return the expected (or current) build log file path.  The path points
-        to the staging build file until the software is successfully installed,
-        when it points to the file in the installation directory.
-        """
-        return self.install_log_path if self.spec.installed else self.log_path
-
     @classmethod
     def inject_flags(cls: Type[Pb], name: str, flags: Iterable[str]) -> FLAG_HANDLER_RETURN_TYPE:
         """
@@ -2493,14 +2468,21 @@ def flatten_dependencies(spec, flat_dir):
         dep_files.merge(flat_dir + "/" + name)
 
 
-def possible_dependencies(*pkg_or_spec, **kwargs):
+def possible_dependencies(
+    *pkg_or_spec: Union[str, spack.spec.Spec, typing.Type[PackageBase]],
+    transitive: bool = True,
+    expand_virtuals: bool = True,
+    depflag: dt.DepFlag = dt.ALL,
+    missing: Optional[dict] = None,
+    virtuals: Optional[set] = None,
+) -> Dict[str, Set[str]]:
     """Get the possible dependencies of a number of packages.
 
     See ``PackageBase.possible_dependencies`` for details.
     """
     packages = []
     for pos in pkg_or_spec:
-        if isinstance(pos, PackageMeta):
+        if isinstance(pos, PackageMeta) and issubclass(pos, PackageBase):
             packages.append(pos)
             continue
 
@@ -2513,9 +2495,16 @@ def possible_dependencies(*pkg_or_spec, **kwargs):
         else:
             packages.append(pos.package_class)
 
-    visited = {}
+    visited: Dict[str, Set[str]] = {}
     for pkg in packages:
-        pkg.possible_dependencies(visited=visited, **kwargs)
+        pkg.possible_dependencies(
+            visited=visited,
+            transitive=transitive,
+            expand_virtuals=expand_virtuals,
+            depflag=depflag,
+            missing=missing,
+            virtuals=virtuals,
+        )
 
     return visited
 
@@ -2563,3 +2552,7 @@ class DependencyConflictError(spack.error.SpackError):
 
     def __init__(self, conflict):
         super().__init__("%s conflicts with another file in the flattened directory." % (conflict))
+
+
+class ManualDownloadRequiredError(InvalidPackageOpError):
+    """Raised when attempting an invalid operation on a package that requires a manual download."""

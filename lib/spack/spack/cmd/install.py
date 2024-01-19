@@ -290,11 +290,11 @@ def require_user_confirmation_for_overwrite(concrete_specs, args):
 def _dump_log_on_error(e: spack.build_environment.InstallError):
     e.print_context()
     assert e.pkg, "Expected InstallError to include the associated package"
-    if not os.path.exists(e.pkg.build_log_path):
+    if not os.path.exists(e.pkg.log_path):
         tty.error("'spack install' created no log.")
     else:
         sys.stderr.write("Full build log:\n")
-        with open(e.pkg.build_log_path, errors="replace") as log:
+        with open(e.pkg.log_path, errors="replace") as log:
             shutil.copyfileobj(log, sys.stderr)
 
 
