@@ -80,7 +80,7 @@ def llnl_link_helpers(options, spec, compiler):
         version = "{0}".format(compiler.version)
 
         if version == "16.0.0" or version == "16.0.1":
-            # Here is another directory added by cce@16.0.0
+            # Here is another directory added by cce@16.0.0 and cce@16.0.1
             libdir = os.path.join(libdir, "x86_64-unknown-linux-gnu")
             linker_flags += " -Wl,-rpath,{0}".format(libdir)
 
