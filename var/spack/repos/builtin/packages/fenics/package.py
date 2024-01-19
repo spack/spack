@@ -94,7 +94,9 @@ class Fenics(CMakePackage):
         if ver == "master":
             depends_on("py-fenics-fiat@2019.1.0", type=("build", "run"), when=wver + "+python")
         else:
-            depends_on("py-fenics-fiat{0}".format(wver), type=("build", "run"), when=wver + "+python")
+            depends_on(
+                "py-fenics-fiat{0}".format(wver), type=("build", "run"), when=wver + "+python"
+            )
 
         if Version(ver) < Version("2018.1.0"):
             depends_on(
