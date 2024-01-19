@@ -1,0 +1,118 @@
+spack:
+  view: false
+  packages:
+    all:
+      require: target=ppc64le
+      variants: ~cuda~rocm
+    # Errors during py-torchaudio on Ubuntu build saying
+    # ppc64le is not supported for FFmpeg multi-version integration.
+    ffmpeg:
+      externals:
+        - spec: ffmpeg@3.2.3
+          prefix: /usr
+      buildable: false
+
+  specs:
+    # Horovod
+    # Still depends on py-tensorboard-data-server even when not using the tensorflow framework.
+    #- py-horovod
+
+    # Hugging Face
+    - py-transformers
+
+    # JAX
+    - py-jax
+    - py-jaxlib
+
+    # Keras
+    # Fails to install bazel and py-tensorboard-data-server
+    #- py-keras
+    - py-keras-applications
+    - py-keras-preprocessing
+    - py-keras2onnx
+
+    # MXNet
+    - mxnet
+
+    # PyTorch
+    - py-botorch
+    - py-efficientnet-pytorch
+    - py-gpytorch
+    - py-kornia
+    - py-lightning
+    - py-pytorch-gradual-warmup-lr
+    - py-pytorch-lightning
+    - py-segmentation-models-pytorch
+    - py-timm
+    - py-torch
+    - py-torch-cluster
+    - py-torch-geometric
+    - py-torch-nvidia-apex
+    - py-torch-scatter
+    - py-torch-sparse
+    - py-torch-spline-conv
+    - py-torchaudio
+    - py-torchdata
+    - py-torchfile
+    - py-torchgeo
+    - py-torchmetrics
+    - py-torchtext
+    - py-torchvision
+    - py-vector-quantize-pytorch
+
+    # scikit-learn
+    - py-scikit-learn
+    - py-scikit-learn-extra
+
+    # TensorBoard
+      # py-tensorboard-data-server fails in CI when compiling `ring v0.16.20` as part
+      # of the rust-cargo dependency builds.
+      #- py-tensorboard
+      #- py-tensorboard-data-server
+      #- py-tensorboard-plugin-wit
+      #- py-tensorboardx
+
+    # TensorFlow
+    # See py-tensorboard-data-server failures
+    #- py-tensorflow
+    #- py-tensorflow-datasets
+    #- py-tensorflow-estimator
+    #- py-tensorflow-hub
+    #- py-tensorflow-metadata
+    #- py-tensorflow-probability
+
+    # XGBoost
+    - py-xgboost
+    # - r-xgboost
+    - xgboost
+
+  mirrors:
+    mirror: s3://spack-binaries/develop/ml-linux-ppc64le-cpu
+
+  ci:
+    pipeline-gen:
+    - match_behavior: merge
+      submapping:
+      - match:
+        - os=ubuntu20.04
+        build-job:
+          image:
+            name: ecpe4s/ubuntu20.04-runner-ppc64le:2023-01-01
+            entrypoint: ['']
+      - match:
+        - os=rhel8
+        build-job:
+          image:
+            name: ecpe4s/rhel8-runner-ppc64le:2023-01-01
+            entrypoint: ['']
+            #    - build-job:
+            #        image:
+            #          name: ecpe4s/ubuntu20.04-runner-ppc64le:2023-01-01
+            #          entrypoint: ['']
+            #    - build-job:
+            #        image:
+            #          name: ecpe4s/rhel7-runner-ppc64le:2023-01-01
+            #          entrypoint: ['']
+
+  cdash:
+    build-group: Machine Learning

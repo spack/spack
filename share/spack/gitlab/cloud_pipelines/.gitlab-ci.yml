@@ -203,6 +203,10 @@ default:
   extends: [ ".generate-base" ]
   tags: ["spack", "public", "medium", "aarch64"]
 
+.generate-ppc64le:
+  extends: [ ".generate-base" ]
+  tags: ["spack", "public", "large", "ppc64le"]
+  
 .generate-neoverse_v1:
   extends: [ ".generate-base" ]
   tags: ["spack", "public", "medium", "aarch64", "graviton3"]
@@ -788,6 +792,82 @@ ml-darwin-aarch64-mps-build:
   needs:
     - artifacts: True
       job: ml-darwin-aarch64-mps-generate
+
+##########################################
+# Machine Learning - Linux ppc64le (CPU)
+##########################################
+.ml-linux-ppc64le-cpu:
+  extends: [ ".linux_power" ]
+  variables:
+    SPACK_CI_STACK_NAME: ml-linux-ppc64le-cpu
+
+ml-linux-ppc64le-cpu-ubuntu-generate:
+  extends: [ ".generate-ppc64le", ".ml-linux-ppc64le-cpu" ]
+  image: { "name": "ecpe4s/ubuntu20.04-runner-ppc64le:2023-01-01", "entrypoint": [""] }
+
+ml-linux-ppc64le-cpu-ubuntu-build:
+  extends: [ ".build", ".ml-linux-ppc64le-cpu" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-linux-ppc64le-cpu-ubuntu-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-linux-ppc64le-cpu-ubuntu-generate
+
+ml-linux-ppc64le-cpu-rhel8-generate:
+  extends: [ ".generate-ppc64le", ".ml-linux-ppc64le-cpu" ]
+  image: { "name": "ecpe4s/rhel8-runner-ppc64le:2023-01-01", "entrypoint": [""] }
+
+ml-linux-ppc64le-cpu-rhel8-build:
+  extends: [ ".build", ".ml-linux-ppc64le-cpu" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-linux-ppc64le-cpu-rhel8-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-linux-ppc64le-cpu-rhel8-generate
+
+###########################################
+# Machine Learning - Linux ppc64le (CUDA)
+###########################################
+.ml-linux-ppc64le-cuda:
+  extends: [ ".linux_power" ]
+  variables:
+    SPACK_CI_STACK_NAME: ml-linux-ppc64le-cuda
+
+ml-linux-ppc64le-cuda-ubuntu-generate:
+  extends: [ ".generate-ppc64le", ".ml-linux-ppc64le-cuda" ]
+  image: { "name": "ecpe4s/ubuntu20.04-runner-ppc64le:2023-01-01", "entrypoint": [""] }
+
+ml-linux-ppc64le-cuda-ubuntu-build:
+  extends: [ ".build", ".ml-linux-ppc64le-cuda"  ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-linux-ppc64le-cuda-ubuntu-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-linux-ppc64le-cuda-ubuntu-generate
+
+ml-linux-ppc64le-cuda-rhel8-generate:
+  extends: [ ".generate-ppc64le", ".ml-linux-ppc64le-cuda" ]
+  image: { "name": "ecpe4s/rhel8-runner-ppc64le:2023-01-01", "entrypoint": [""] }
+
+ml-linux-ppc64le-cuda-rhel8-build:
+  extends: [ ".build", ".ml-linux-ppc64le-cuda"  ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-linux-ppc64le-cuda-rhel8-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-linux-ppc64le-cuda-rhel8-generate
 
 ########################################
 # Deprecated CI testing
