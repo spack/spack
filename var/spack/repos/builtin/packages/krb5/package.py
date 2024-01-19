@@ -36,7 +36,6 @@ class Krb5(AutotoolsPackage):
     depends_on("openssl@:1", when="@:1.19")
     depends_on("openssl")
     depends_on("gettext")
-    depends_on("perl", type="build")
     depends_on("findutils", type="build")
     depends_on("pkgconfig", type="build", when="^openssl~shared")
 
