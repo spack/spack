@@ -86,6 +86,9 @@ class CMakePackage(spack.package_base.PackageBase):
     #: Legacy buildsystem attribute used to deserialize and install old specs
     legacy_buildsystem = "cmake"
 
+    #: Enable injecting FindPython{,3} hints
+    find_python_hints = True
+
     build_system("cmake")
 
     with when("build_system=cmake"):
@@ -286,6 +289,15 @@ class CMakeBuilder(BaseBuilder):
         if platform.mac_ver()[0]:
             args.extend(
                 [define("CMAKE_FIND_FRAMEWORK", "LAST"), define("CMAKE_FIND_APPBUNDLE", "LAST")]
+            )
+
+        if getattr(pkg, "find_python_hints", False) and "python" in pkg.dependency_names():
+            args.extend(
+                [
+                    define("PYTHON_EXECUTABLE", pkg.spec["python"].command.path),
+                    define("Python_EXECUTABLE", pkg.spec["python"].command.path),
+                    define("Python3_EXECUTABLE", pkg.spec["python"].command.path),
+                ]
             )
 
         # Set up CMake rpath
