@@ -379,7 +379,10 @@ class MakefileBuilder(makefile.MakefileBuilder):
         }
 
         dflags = ["-DNDEBUG"] if spec.satisfies("@:2023.2") else []
-        cppflags = ["-D__FFTW3", "-I{0}".format(fftw_header_dir)]
+        if spec["fftw-api"].name in ("intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"):
+            cppflags = ["-D__FFTW3_MKL", "-I{0}".format(fftw_header_dir)]
+        else:
+            cppflags = ["-D__FFTW3", "-I{0}".format(fftw_header_dir)]
 
         # CP2K requires MPI 3 starting at version 2023.1
         # and __MPI_VERSION is not supported anymore.
@@ -498,7 +501,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
             # while intel-mkl has a mpi variant and adds the scalapack
             # libs to its libs, intel-oneapi-mkl does not.
             if spec["scalapack"].name == "intel-oneapi-mkl":
-                mpi_impl = "openmpi" if spec["mpi"] == "openmpi" else "intelmpi"
+                mpi_impl = "openmpi" if spec["mpi"].name in ["openmpi", "hpcx-mpi"] else "intelmpi"
                 scalapack = [
                     join_path(
                         spec["intel-oneapi-mkl"].libs.directories[0], "libmkl_scalapack_lp64.so"
