@@ -1,6 +1,9 @@
 {% extends "container/bootstrap-base.dockerfile" %}
 {% block install_os_packages %}
-RUN dnf update -y \
+# import new gpg key due to key change on January 12, 2024
+# https://almalinux.org/blog/2023-12-20-almalinux-8-key-update/
+RUN rpm --import https://repo.almalinux.org/almalinux/RPM-GPG-KEY-AlmaLinux
+ && dnf update -y \
  && dnf install -y \
         bzip2 \
         curl \
