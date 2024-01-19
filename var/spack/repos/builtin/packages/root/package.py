@@ -124,6 +124,12 @@ class Root(CMakePackage):
         # Resolve circular dependency, _cf_
         # https://sft.its.cern.ch/jira/browse/ROOT-8226.
         patch("root6-60606-mathmore.patch", when="@6.06.06")
+        # Fix macOS build when cocoa is disabled:
+        patch(
+            "https://github.com/root-project/root/pull/14387.patch?full_index=1",
+            sha256="559495f7bdd6b7674d3b1019da9b76e8b374f6dca3dbe72fb1320b0be2b00e53",
+            when="@6.30:6.30.3 ~aqua",
+        )
 
     # ###################### Variants ##########################
     # See README.md for specific notes about what ROOT configuration
