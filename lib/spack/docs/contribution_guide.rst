@@ -318,15 +318,18 @@ to ask when you submit your PR.
 
 .. _spack-builders-and-pipelines:
 
-^^^^^^
-Stacks
-^^^^^^
+^^^^^^^^^
+GitLab CI
+^^^^^^^^^
+
+""""""""""""""""""
+Build Cache Stacks
+""""""""""""""""""
 
 Spack welcomes the contribution of software stacks of interest to the community. These
 stacks are used to test package recipes and generate publicly available build caches.
 Spack uses GitLab CI for managing the orchestration of build jobs.
 
-~~~~~~~~~~~~~~~~~~
 GitLab Entry Point
 ~~~~~~~~~~~~~~~~~~
 
@@ -346,9 +349,9 @@ and the tags associated with the class of runners to build on.
 
 .. note::
 
-    The platform and architecture components are specified in order to select the
+    The platform and architecture variables are specified in order to select the
     correct configurations from the generic configurations used in Spack CI. The
-    predefined configurations currently available are:
+    configurations currently available are:
 
     * ``.cray_rhel_zen4``
     * ``.cray_sles_zen4``
@@ -362,6 +365,7 @@ and the tags associated with the class of runners to build on.
     * ``.linux_power``
     * ``.linux_skylake``
     * ``.linux_x86_64``
+    * ``.linux_x86_64_v4``
 
     New configurations can be added to accommodate new platforms and architectures.
 
@@ -369,7 +373,6 @@ and the tags associated with the class of runners to build on.
 The build stage is defined as a trigger job that consumes the GitLab CI pipeline generated in
 the generate stage for this stack. Build stage jobs use the ``.build`` job template which
 handles the basic configuration.
-
 
 An example entry point for a new stack called ``my-super-cool-stack``
 
@@ -397,7 +400,6 @@ An example entry point for a new stack called ``my-super-cool-stack``
           job: my-super-cool-stack-generate
 
 
-~~~~~~~~~~~~~~~~~~~
 Stack Configuration
 ~~~~~~~~~~~~~~~~~~~
 
@@ -435,12 +437,13 @@ An example stack that builds ``zlib``.
         build-group: My Super Cool Stack
 
 
-^^^^^^^^^^^^^^^^^^^
+"""""""""""""""""""
 Registering Runners
-^^^^^^^^^^^^^^^^^^^
+"""""""""""""""""""
 
 Contributing computational resources to Spack's CI build farm is one way to help expand the
-capabilities and offerings of the public Spack build caches.
+capabilities and offerings of the public Spack build caches. Currently, Spack utilizes linux runners
+from AWS, Google, and the University of Oregon (UO).
 
 * Runner Registration Token
 * OIDC Authentication
