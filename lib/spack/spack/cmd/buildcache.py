@@ -716,8 +716,9 @@ def _config_from_tag(image_ref: ImageReference, tag: str) -> Optional[dict]:
 
 
 def _update_index_oci(image_ref: ImageReference, tmpdir: str, pool: MaybePool) -> None:
-    response = spack.oci.opener.urlopen(urllib.request.Request(url=image_ref.tags_url()))
-    spack.oci.opener.ensure_status(response, 200)
+    request = urllib.request.Request(url=image_ref.tags_url())
+    response = spack.oci.opener.urlopen(request)
+    spack.oci.opener.ensure_status(request, response, 200)
     tags = json.load(response)["tags"]
 
     # Fetch all image config files in parallel
