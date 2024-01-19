@@ -9,7 +9,7 @@ import sys
 from spack.package import *
 
 
-class OpenclCHeaders(Package):
+class OpenclCHeaders(CMakePackage):
     """OpenCL (Open Computing Language) C header files"""
 
     homepage = "https://www.khronos.org/registry/OpenCL/"
@@ -55,8 +55,6 @@ class OpenclCHeaders(Package):
         "2020.03.13", sha256="664bbe587e5a0a00aac267f645b7c413586e7bc56dca9ff3b00037050d06f476"
     )
 
-    def install(self, spec, prefix):
-        install_tree("CL", prefix.include.CL)
-        if sys.platform == "darwin":
-            ln = which("ln")
-            ln("-s", prefix.include.CL, prefix.include.OpenCL)
+    def cmake_args(self):
+        # Disable testing the headers. They definitely work.
+        return ["-DBUILD_TESTING=OFF"]
