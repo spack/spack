@@ -53,6 +53,9 @@ def setup_parser(subparser):
     find_parser.add_argument(
         "--all", action="store_true", help="search for all packages that Spack knows about"
     )
+    find_parser.add_argument(
+        "--debug-find", action="store_true", help="write all candidate paths seached for externals to stdout"
+    )
     arguments.add_common_arguments(find_parser, ["tags", "jobs"])
     find_parser.add_argument("packages", nargs=argparse.REMAINDER)
     find_parser.epilog = (
@@ -134,7 +137,7 @@ def external_find(args):
         names=args.packages, tags=args.tags, exclude=args.exclude
     )
     detected_packages = spack.detection.by_path(
-        candidate_packages, path_hints=args.path, max_workers=args.jobs
+        candidate_packages, path_hints=args.path, max_workers=args.jobs, debug_find=args.debug_find
     )
 
     new_entries = spack.detection.update_configuration(
