@@ -872,7 +872,7 @@ class RequirementRule(NamedTuple):
     kind: RequirementKind
     message: str
     not_externals: bool
-    root_only: bool
+    not_build: bool
 
 
 class PyclingoDriver:
@@ -1324,7 +1324,7 @@ class SpackSolverSetup:
                         kind=RequirementKind.PACKAGE,
                         condition=when_spec,
                         message=message,
-                        root_only=False,
+                        not_build=False,
                         not_externals=False,
                     )
                 )
@@ -1381,8 +1381,8 @@ class SpackSolverSetup:
                 if not constraints:
                     continue
 
-                not_externals = not requirement.get("applies_for_externals", True)
-                root_only = requirement.get("root_only", False)
+                not_externals = "externals" in requirement.get("turn_off_for", [])
+                not_build = "build" in requirement.get("turn_off_for", [])
 
                 rules.append(
                     RequirementRule(
@@ -1391,7 +1391,7 @@ class SpackSolverSetup:
                         requirements=constraints,
                         kind=kind,
                         not_externals=not_externals,
-                        root_only=root_only,
+                        not_build=not_build,
                         message=requirement.get("message"),
                         condition=when,
                     )
@@ -1797,8 +1797,8 @@ class SpackSolverSetup:
 
             if rule.not_externals:
                 self.gen.fact(fn.not_externals(pkg_name, requirement_grp_id))
-            if rule.root_only:
-                self.gen.fact(fn.root_only(pkg_name, requirement_grp_id))
+            if rule.not_build:
+                self.gen.fact(fn.exclude_requirement_for_build(pkg_name, requirement_grp_id))
 
             for spec_str in requirement_grp:
                 spec = spack.spec.Spec(spec_str)

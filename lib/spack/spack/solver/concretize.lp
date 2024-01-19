@@ -696,7 +696,7 @@ deactivate_requirements(node(ID, Package), X) :-
 
 deactivate_requirements(node(ID, Package), X) :-
   requirement_group(Package, X),
-  root_only(Package, X),
+  exclude_requirement_for_build(Package, X),
   not root_link_run_set(node(ID, Package)),
   attr("node", node(ID, Package)).
 
@@ -708,17 +708,17 @@ deactivate_requirements(node(ID, Package), X) :-
 
 %deactivate_requirements(node(ID, Package), X) :-
 %  requirement_group(Package, X),
-%  root_only(Package, X),
+%  exclude_requirement_for_build(Package, X),
 %  unification_set("generic_build", node(ID, Package)),
 %  attr("node", node(ID, Package)).
 
 %deactivate_requirements(node(ID, Package), X) :-
 %  requirement_group(Package, X),
-%  root_only(Package, X),
+%  exclude_requirement_for_build(Package, X),
 %  unification_set("build", node(ID, Package)),
 %  attr("node", node(ID, Package)).
 
-#defined root_only/2.
+#defined exclude_requirement_for_build/2.
 #defined not_externals/2.
 
 requirement_group_satisfied(node(ID, Package), X) :-

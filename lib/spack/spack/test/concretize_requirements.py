@@ -200,8 +200,7 @@ packages:
   all:
     require:
     - spec: "@1.0"
-      root_only: true
-      applies_for_externals: false
+      turn_off_for: ["build", "externals"]
 """
     update_packages_config(conf_str)
 
@@ -219,8 +218,7 @@ packages:
   all:
     require:
     - spec: "@1.0"
-      root_only: false
-      applies_for_externals: false
+      turn_off_for: ["externals"]
   tree1-bottom:
     buildable: false
     externals:
