@@ -219,6 +219,8 @@ def path_contains_subdirectory(path, root):
 @memoized
 def file_command(*args):
     """Creates entry point to `file` system command with provided arguments"""
+    if sys.platform == "win32":
+        raise RuntimeError("file not available on Windows")
     file_cmd = which("file", required=True)
     for arg in args:
         file_cmd.add_default_arg(arg)
@@ -230,11 +232,7 @@ def _get_mime_type():
     """Generate method to call `file` system command to aquire mime type
     for a specified path
     """
-    if sys.platform == "win32":
-        # -h option (no-dereference) does not exist in Windows
-        return file_command("-b", "--mime-type")
-    else:
-        return file_command("-b", "-h", "--mime-type")
+    return file_command("-b", "-h", "--mime-type")
 
 
 @memoized
@@ -262,6 +260,20 @@ def mime_type(filename):
     return type, subtype
 
 
+def binary_mime_type(filename):
+    """Returns the mime type of libraries/binaries
+    On Unix this shells out to `file`
+    On Windows there is no `file`. Instead manually parse
+        PE/COFF files and extract mime-type from Spack
+        Only vendors a subset of the `file` behavior
+        related to PE/COFF formats.
+    """
+    if sys.platform == "win32":
+        return get_win_pe_coff_type(filename)
+    else:
+        return mime_type(filename)
+
+
 def compressed_mime_type(filename):
     """Same as mime_type but checks for type that has been compressed
 
@@ -275,6 +287,100 @@ def compressed_mime_type(filename):
     tty.debug("==> " + output)
     type, _, subtype = output.partition("/")
     return type, subtype
+
+
+@contextmanager
+def stream_in_place(stream):
+    """Ensures that stream is returned to starting position
+    once context manager exits"""
+    current_stream_pos = stream.tell()
+    yield stream
+    stream.seek(current_stream_pos)
+
+
+class WinPE:
+    """Base class for Windows Portable Executable (PE)
+    file type characteristic definitions"""
+
+    signature = b"PE\x00\x00"
+    flag = 0
+    offset = 0x3C
+    type = "application"
+
+    @classmethod
+    def validate(cls, stream):
+        """Validate PE type (dll vs exe)"""
+        with stream_in_place(stream) as s:
+            # PE signature is offset by whatever value is at the
+            # address 0x3c in the binary file
+            sig_offset = s.read(cls.offset + 1)[cls.offset]
+            sig = s.read(sig_offset - 1 - 0x32 + 4)[-4:]
+            # Signature does not match general PE format
+            # short circuit as resolving subtype doesn't matter
+            if not sig == cls.signature:
+                return False
+            # We know the file is a win PE format
+            # now determine dll vs exe
+            # flag to determine file characteristics is
+            # offset by end of signature by 18 bytes
+            characteristics = s.read(20)[-2:]
+            hex_char = int.from_bytes(characteristics)
+            # Check for appropriate characteristics flag
+            return (hex_char & cls.flag) == cls.flag
+
+
+class WinExe(WinPE):
+    """Class defining the characteristics of a Windows EXE
+    file"""
+
+    sub_type = "x-executable"
+    flag = 0x0002
+
+
+class WinDll(WinPE):
+    """Class defining the characteristics of a Windows DLL
+    file"""
+
+    sub_type = "x-sharedlib"
+    flag = 0x2000
+
+
+class WinCoff:
+    """Class defining characteristics of a Windows
+    Common Object File Format (COFF) file
+
+    This is both static libraries and dll import libs
+    """
+
+    signature = b"!<arch>\n"
+    sub_type = "static-library"
+    type = "archive"
+    offset = 0
+
+    @classmethod
+    def validate(cls, stream):
+        """Return true if stream's first bytes are the first
+        few bytes of a valid COFF file"""
+        with stream_in_place(stream) as s:
+            read_sig = s.read(cls.offset + len(cls.signature))
+        return read_sig == cls.signature
+
+
+SUPPORTED_WIN_TYPES = [WinCoff, WinDll, WinExe]
+
+
+def get_win_pe_coff_type(file):
+    """Returns mime type for only PE/COFF files on Windows
+    A subset of the `file` command relating only to PE/COFF
+    Raises an error if invoked anywhere but Windows
+    """
+    if not sys.platform == "win32":
+        raise RuntimeError("get_win_pe_coff_type only available on Windows")
+    with open(file, "rb") as f:
+        for file in SUPPORTED_WIN_TYPES:
+            if file.validate(f):
+                return file.type, file.sub_type
+    return "unknown", "unknown"
 
 
 #: This generates the library filenames that may appear on any OS.
@@ -907,17 +1013,6 @@ def install_tree(
 def is_exe(path):
     """True if path is an executable file."""
     return os.path.isfile(path) and os.access(path, os.X_OK)
-
-
-@system_path_filter
-def get_filetype(path_name):
-    """
-    Return the output of file path_name as a string to identify file type.
-    """
-    file = Executable("file")
-    file.add_default_env("LC_ALL", "C")
-    output = file("-b", "-h", "%s" % path_name, output=str, error=str)
-    return output.strip()
 
 
 @system_path_filter
