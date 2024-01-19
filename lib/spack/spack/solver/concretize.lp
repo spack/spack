@@ -691,7 +691,7 @@ activate_requirement(node(ID, Package), X) :-
 
 deactivate_requirements(node(ID, Package), X) :-
   requirement_group(Package, X),
-  not_externals(Package, X),
+  exclude_requirement_for_externals(Package, X),
   external(node(ID, Package)).
 
 deactivate_requirements(node(ID, Package), X) :-
@@ -719,7 +719,7 @@ deactivate_requirements(node(ID, Package), X) :-
 %  attr("node", node(ID, Package)).
 
 #defined exclude_requirement_for_build/2.
-#defined not_externals/2.
+#defined exclude_requirement_for_externals/2.
 
 requirement_group_satisfied(node(ID, Package), X) :-
   1 { condition_holds(Y, node(ID, Package)) : requirement_group_member(Y, Package, X) } 1,

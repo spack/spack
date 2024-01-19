@@ -1796,7 +1796,7 @@ class SpackSolverSetup:
             self.gen.newline()
 
             if rule.not_externals:
-                self.gen.fact(fn.not_externals(pkg_name, requirement_grp_id))
+                self.gen.fact(fn.exclude_requirement_for_externals(pkg_name, requirement_grp_id))
             if rule.not_build:
                 self.gen.fact(fn.exclude_requirement_for_build(pkg_name, requirement_grp_id))
 
