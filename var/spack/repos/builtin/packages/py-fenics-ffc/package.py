@@ -42,7 +42,7 @@ class PyFenicsFfc(PythonPackage):
             depends_on("py-fenics-instant{0}".format(wver), type=("build", "run"), when=wver)
         else:
             depends_on("py-fenics-dijitso{0}".format(wver), type=("build", "run"), when=wver)
-        if version == "master":
+        if ver == "master":
             depends_on("py-fenics-ufl-legacy@main", type=("build", "run"), when=wver)
 
         else:
