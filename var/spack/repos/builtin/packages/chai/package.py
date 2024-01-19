@@ -80,6 +80,11 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
     patch("change_mpi_target_name_umpire_patch.patch", when="@2022.10.0:")
 
     variant("enable_pick", default=False, description="Enable pick method")
+    variant(
+        "separable_compilation",
+        default=True,
+        description="Build with CUDA_SEPARABLE_COMPILATION flag on ",
+    )
     variant("shared", default=True, description="Build Shared Libs")
     variant("mpi", default=False, description="Enable MPI support")
     variant("raja", default=False, description="Build plugin for RAJA")
@@ -194,8 +199,9 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         if "+cuda" in spec:
             entries.append(cmake_cache_option("ENABLE_CUDA", True))
-            entries.append(cmake_cache_option("CMAKE_CUDA_SEPARABLE_COMPILATION", True))
-            entries.append(cmake_cache_option("CUDA_SEPARABLE_COMPILATION", True))
+            if "+separable_compilation" in spec:
+                entries.append(cmake_cache_option("CMAKE_CUDA_SEPARABLE_COMPILATION", True))
+                entries.append(cmake_cache_option("CUDA_SEPARABLE_COMPILATION", True))
 
         else:
             entries.append(cmake_cache_option("ENABLE_CUDA", False))

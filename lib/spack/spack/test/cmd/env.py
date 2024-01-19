@@ -922,9 +922,21 @@ spack:
         # a spec string that requires enclosing in quotes as
         # part of the config path
         config("change", 'packages:libelf:require:"@0.8.12:"')
-        test_spec = spack.spec.Spec("libelf@0.8.12").concretized()
+        spack.spec.Spec("libelf@0.8.12").concretized()
         # No need for assert, if there wasn't a failure, we
         # changed the requirement successfully.
+
+        # Use change to add a requirement for a package that
+        # has no requirements defined
+        config("change", "packages:fftw:require:+mpi")
+        test_spec = spack.spec.Spec("fftw").concretized()
+        assert test_spec.satisfies("+mpi")
+        config("change", "packages:fftw:require:~mpi")
+        test_spec = spack.spec.Spec("fftw").concretized()
+        assert test_spec.satisfies("~mpi")
+        config("change", "packages:fftw:require:@1.0")
+        test_spec = spack.spec.Spec("fftw").concretized()
+        assert test_spec.satisfies("@1.0~mpi")
 
         # Use "--match-spec" to change one spec in a "one_of"
         # list
