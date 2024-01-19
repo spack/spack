@@ -17,6 +17,12 @@ class XorgCfFiles(AutotoolsPackage, XorgPackage):
 
     license("custom")
 
+    maintainers("wdconinc")
+
+    version("1.0.8", sha256="c6f1c9ffce96278a9d7c72d081e508d81c219dec69ae0dbaf8ae88f4bc9ef977")
+    version("1.0.7", sha256="a49478ba0c2138bc53de38979cd2dee073b6fd6728597c552d266a707747f472")
     version("1.0.6", sha256="6d56094e5d1a6c7d7a9576ac3a0fc2c042344509ea900d59f4b23df668b96c7a")
 
     depends_on("pkgconfig", type="build")
+    depends_on("xorg-macros@1.4:", type="build")
+    depends_on("xorg-macros@1.20:", when="@1.0.8:", type="build")
