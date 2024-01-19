@@ -21,14 +21,10 @@ class PyFenicsUflLegacy(PythonPackage):
     license("LGPL-3.0-or-later")
 
     version("main", branch="main")
-    version("2023.2.0", sha256="d1d3209e8ebd4bd70513c26890f51823bac90edc956233c47bd8e686e064436e")
-  
+    version("2022.3.0", sha256="2d0f4c88fe151d631e1d389faf61f58bbbe649fd08106e756fd5d6c53213660a")
 
-    depends_on("python@3.8:", when="@2023.2.0:", type=("build", "run"))
-
-    depends_on("py-setuptools@62:", when="@2023.2.0:", type="build")
-    depends_on("py-setuptools@58:", when="@2022.1.0:2023.1.1.post0", type="build")
-    depends_on("py-setuptools@40:", when="@2016.2.0:2021.1.0", type="build")
+    depends_on("python@3.8:", type=("build", "run"))
+    depends_on("py-setuptools@58:", type="build")
     depends_on("py-numpy", type=("build", "run"))
 
     depends_on("py-pytest", type="test")
