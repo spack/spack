@@ -147,11 +147,6 @@ class Vecgeom(CMakePackage, CudaPackage):
         commit="a7e0828c915ff936a79e672d1dd84b087a323b51",
         deprecated=True,
     )
-    version(
-        "0.3.rc",
-        sha256="a87a9ea4ab126b59ff9c79182bc0911ead3d76dd197194742e2a35ccd341299d",
-        deprecated=True,
-    )
 
     _cxxstd_values = (conditional("11", "14", when="@:1.1"), "17", conditional("20", when="@1.2:"))
     variant(
