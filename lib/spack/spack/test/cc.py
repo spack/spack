@@ -244,10 +244,10 @@ def test_no_wrapper_environment():
 def test_vcheck_mode(wrapper_environment):
     assert dump_mode(cc, ["-I/include", "--version"]) == "vcheck"
     assert dump_mode(cc, ["-I/include", "-V"]) == "vcheck"
+    assert dump_mode(cc, ["-I/include", "-v"]) == "vcheck"
     assert dump_mode(cc, ["-I/include", "-dumpversion"]) == "vcheck"
     assert dump_mode(cc, ["-I/include", "--version", "-c"]) == "vcheck"
     assert dump_mode(cc, ["-I/include", "-V", "-o", "output"]) == "vcheck"
-    assert dump_mode(ld, ["-I/include", "-v"]) == "vcheck"
 
 
 def test_cpp_mode(wrapper_environment):

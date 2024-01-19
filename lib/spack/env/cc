@@ -283,19 +283,10 @@ esac
 if [ -z "$mode" ] || [ "$mode" = ld ]; then
     for arg in "$@"; do
         case $arg in
-            -V|--version|-dumpversion)
+            -v|-V|--version|-dumpversion)
                 mode=vcheck
                 break
                 ;;
-            -v)
-                # NOTE(trws): -v is verbose on gcc, not version, this is an ld-mode flag only
-                # -V is invalid on gcc but may be valid on some other compiler so leaving that in
-                case "$mode" in
-                    ld)
-                        mode=vcheck
-                        break
-                        ;;
-                esac
         esac
     done
 fi
