@@ -98,7 +98,7 @@ spack:
     - git-lfs
     - graphviz
     - hdf5~mpi
-    - hpe-mpi@2.25.hmpt
+    - hpe-mpi@2.27.p1.hmpt
     - intel-oneapi-mkl@2023.2.0
     - intel-oneapi-tbb@2021.10.0
     # For Ospray`

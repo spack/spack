@@ -14,13 +14,13 @@ class Hdf5(BuiltinHdf5):
 
     patch(
         "hpe-mpi-type-free_v1.12.1.patch",
-        when="@1.12.1+mpi^hpe-mpi",
+        when="@1.12.1+mpi^hpe-mpi@:2.25.hmpt",
         sha256="3daa6efc8c04354ea8e7bf0c6529a904c8b94d77c9ae4cfb06ea9efb3e5b6afe",
     )
 
     patch(
         "hpe-mpi-type-free_v1.14.0.patch",
-        when="@1.14.0+mpi^hpe-mpi",
+        when="@1.14.0+mpi^hpe-mpi@:2.25.hmpt",
         sha256="474b58caf52eeff5afacc2d4c5ef7b501d2b75f2d81684d303dc60697769e2ec",
     )
 

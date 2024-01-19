@@ -15,8 +15,8 @@ class PyMultiscaleRun(PythonPackage):
     maintainers("tristan0x", "cattabiani")
 
     version("develop", branch="main")
+    version("0.3", tag="0.3")
     version("0.2", tag="0.2")
-    version("0.1", tag="0.1")
 
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-setuptools-scm", type=("build", "run"))

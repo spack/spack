@@ -44,6 +44,11 @@ class HpeMpi(Package):
         sha256="126a46bb2cbd4b63bd7b3aed74cee5e8d08e166e9748071fd0b308be29335e1a",
         url="file:///gpfs/bbp.cscs.ch/apps/hpc/download/hpe-mpi/hpe-mpi-2.25.hmpt.tar.xz",
     )
+    version(
+        "2.27.p1.hmpt",
+        sha256="0004454307870c54b4dfd76e685e8047500d192706e6e00795cffb105f5d1117",
+        url="file:///gpfs/bbp.cscs.ch/apps/hpc/download/hpe-mpi/hpe-mpi-2.27.p1.hmpt.tar.xz",
+    )
 
     provides("mpi")
 
