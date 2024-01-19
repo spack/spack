@@ -74,11 +74,7 @@ def setup_parser(subparser):
         help="location of the named or current environment",
     )
 
-    directories.add_argument(
-        "--logs",
-        action="store_true",
-        help="Location of logs for a spec",
-    )
+    directories.add_argument("--logs", action="store_true", help="Location of logs for a spec")
 
     subparser.add_argument(
         "--first",
