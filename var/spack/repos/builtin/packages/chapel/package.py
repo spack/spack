@@ -158,20 +158,44 @@ class Chapel(AutotoolsPackage):
         values=("none", "lustre"),
         multi=False,
     )
-    # variant('locale_model', values=('flat', 'numa'), default='flat',
-    #          description='Locale model to use', multi=False)
 
-    # variant('mem', values=('cstdlib', 'jemalloc'),
-    #         default='jemalloc', description='Memory management layer', multi=False)
+    variant(
+        "locale_model",
+        values=("flat", "numa"),
+        default="flat",
+        description="Locale model to use",
+        multi=False,
+    )
 
-    # variant('host_mem', values=('cstdlib', 'jemalloc'), default='jemalloc',
-    #         description='Memory management layer for the chpl compiler', multi=False)
+    variant(
+        "mem",
+        values=("cstdlib", "jemalloc"),
+        default="jemalloc",
+        description="Memory management layer",
+        multi=False,
+    )
 
-    # variant('host_jemalloc', values=('none', 'bundled', 'system'), multi=False,
-    #     description='Selects between no jemalloc, bundled jemalloc, or system jemalloc')
+    variant(
+        "host_mem",
+        values=("cstdlib", "jemalloc"),
+        default="jemalloc",
+        description="Memory management layer for the chpl compiler",
+        multi=False,
+    )
 
-    # variant('lib_pic', values=('pic', 'none'), default='none',
-    #     description='Build position-independent code suitable for shared libraries')
+    variant(
+        "host_jemalloc",
+        values=("none", "bundled", "system"),
+        multi=False,
+        description="Selects between no jemalloc, bundled jemalloc, or system jemalloc",
+    )
+
+    variant(
+        "lib_pic",
+        values=("pic", "none"),
+        default="none",
+        description="Build position-independent code suitable for shared libraries",
+    )
 
     chpl_env_vars = [
         "CHPL_HOME",
