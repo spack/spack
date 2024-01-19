@@ -37,5 +37,6 @@ class PyVlConvertPython(PythonPackage):
     version("0.0.1", sha256="cc6d922b734e25bc8a314c0c01d7744c35d87ed3095a6377299b65a2b79fd946")
 
     depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-maturin", type="build")
+    depends_on("py-maturin@1.1:1", type="build")
+
     depends_on("cmake", type="build")  # some rust dependcies need this
