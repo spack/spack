@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,6 +34,8 @@ class Pmix(AutotoolsPackage):
     url = "https://github.com/pmix/pmix/releases/download/v3.1.3/pmix-3.1.3.tar.bz2"
     git = "https://github.com/openpmix/openpmix.git"
     maintainers("rhc54")
+
+    license("BSD-3-Clause-Open-MPI")
 
     # Branches 4.2 & 5.0 will also need submodules
     version("master", branch="master", submodules=True)

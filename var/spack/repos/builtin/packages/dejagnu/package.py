@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Dejagnu(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org/software/dejagnu/"
     gnu_mirror_path = "dejagnu/dejagnu-1.6.tar.gz"
+
+    license("GPL-3.0-or-later")
 
     version("1.6.3", sha256="87daefacd7958b4a69f88c6856dbd1634261963c414079d0c371f589cd66a2e3")
     version("1.6", sha256="00b64a618e2b6b581b16eb9131ee80f721baa2669fa0cdee93c500d1a652d763")

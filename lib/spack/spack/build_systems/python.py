@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,13 +6,14 @@ import inspect
 import os
 import re
 import shutil
-from typing import Optional
+from typing import Iterable, List, Mapping, Optional
 
 import archspec
 
 import llnl.util.filesystem as fs
 import llnl.util.lang as lang
 import llnl.util.tty as tty
+from llnl.util.filesystem import HeaderList, LibraryList
 
 import spack.builder
 import spack.config
@@ -25,14 +26,18 @@ import spack.store
 from spack.directives import build_system, depends_on, extends, maintainers
 from spack.error import NoHeadersError, NoLibrariesError
 from spack.install_test import test_part
+from spack.spec import Spec
+from spack.util.prefix import Prefix
 
 from ._checks import BaseBuilder, execute_install_time_tests
 
 
-def _flatten_dict(dictionary):
+def _flatten_dict(dictionary: Mapping[str, object]) -> Iterable[str]:
     """Iterable that yields KEY=VALUE paths through a dictionary.
+
     Args:
         dictionary: Possibly nested dictionary of arbitrary keys and values.
+
     Yields:
         A single path through the dictionary.
     """
@@ -50,7 +55,7 @@ class PythonExtension(spack.package_base.PackageBase):
     maintainers("adamjstewart")
 
     @property
-    def import_modules(self):
+    def import_modules(self) -> Iterable[str]:
         """Names of modules that the Python package provides.
 
         These are used to test whether or not the installation succeeded.
@@ -65,7 +70,7 @@ class PythonExtension(spack.package_base.PackageBase):
         detected, this property can be overridden by the package.
 
         Returns:
-            list: list of strings of module names
+            List of strings of module names.
         """
         modules = []
         pkg = self.spec["python"].package
@@ -102,14 +107,14 @@ class PythonExtension(spack.package_base.PackageBase):
         return modules
 
     @property
-    def skip_modules(self):
+    def skip_modules(self) -> Iterable[str]:
         """Names of modules that should be skipped when running tests.
 
         These are a subset of import_modules. If a module has submodules,
         they are skipped as well (meaning a.b is skipped if a is contained).
 
         Returns:
-            list: list of strings of module names
+            List of strings of module names.
         """
         return []
 
@@ -185,12 +190,12 @@ class PythonExtension(spack.package_base.PackageBase):
 
         view.remove_files(to_remove)
 
-    def test_imports(self):
+    def test_imports(self) -> None:
         """Attempts to import modules of the installed package."""
 
         # Make sure we are importing the installed modules,
         # not the ones in the source directory
-        python = inspect.getmodule(self).python
+        python = inspect.getmodule(self).python  # type: ignore[union-attr]
         for module in self.import_modules:
             with test_part(
                 self,
@@ -315,24 +320,27 @@ class PythonPackage(PythonExtension):
     py_namespace: Optional[str] = None
 
     @lang.classproperty
-    def homepage(cls):
+    def homepage(cls) -> Optional[str]:  # type: ignore[override]
         if cls.pypi:
             name = cls.pypi.split("/")[0]
-            return "https://pypi.org/project/" + name + "/"
+            return f"https://pypi.org/project/{name}/"
+        return None
 
     @lang.classproperty
-    def url(cls):
+    def url(cls) -> Optional[str]:
         if cls.pypi:
-            return "https://files.pythonhosted.org/packages/source/" + cls.pypi[0] + "/" + cls.pypi
+            return f"https://files.pythonhosted.org/packages/source/{cls.pypi[0]}/{cls.pypi}"
+        return None
 
     @lang.classproperty
-    def list_url(cls):
+    def list_url(cls) -> Optional[str]:  # type: ignore[override]
         if cls.pypi:
             name = cls.pypi.split("/")[0]
-            return "https://pypi.org/simple/" + name + "/"
+            return f"https://pypi.org/simple/{name}/"
+        return None
 
     @property
-    def headers(self):
+    def headers(self) -> HeaderList:
         """Discover header files in platlib."""
 
         # Remove py- prefix in package name
@@ -350,7 +358,7 @@ class PythonPackage(PythonExtension):
         raise NoHeadersError(msg.format(self.spec.name, include, platlib))
 
     @property
-    def libs(self):
+    def libs(self) -> LibraryList:
         """Discover libraries in platlib."""
 
         # Remove py- prefix in package name
@@ -384,7 +392,7 @@ class PythonPipBuilder(BaseBuilder):
     install_time_test_callbacks = ["test"]
 
     @staticmethod
-    def std_args(cls):
+    def std_args(cls) -> List[str]:
         return [
             # Verbose
             "-vvv",
@@ -409,7 +417,7 @@ class PythonPipBuilder(BaseBuilder):
         ]
 
     @property
-    def build_directory(self):
+    def build_directory(self) -> str:
         """The root directory of the Python package.
 
         This is usually the directory containing one of the following files:
@@ -420,51 +428,51 @@ class PythonPipBuilder(BaseBuilder):
         """
         return self.pkg.stage.source_path
 
-    def config_settings(self, spec, prefix):
+    def config_settings(self, spec: Spec, prefix: Prefix) -> Mapping[str, object]:
         """Configuration settings to be passed to the PEP 517 build backend.
 
         Requires pip 22.1 or newer for keys that appear only a single time,
         or pip 23.1 or newer if the same key appears multiple times.
 
         Args:
-            spec (spack.spec.Spec): build spec
-            prefix (spack.util.prefix.Prefix): installation prefix
+            spec: Build spec.
+            prefix: Installation prefix.
 
         Returns:
-            dict: Possibly nested dictionary of KEY, VALUE settings
+            Possibly nested dictionary of KEY, VALUE settings.
         """
         return {}
 
-    def install_options(self, spec, prefix):
+    def install_options(self, spec: Spec, prefix: Prefix) -> Iterable[str]:
         """Extra arguments to be supplied to the setup.py install command.
 
         Requires pip 23.0 or older.
 
         Args:
-            spec (spack.spec.Spec): build spec
-            prefix (spack.util.prefix.Prefix): installation prefix
+            spec: Build spec.
+            prefix: Installation prefix.
 
         Returns:
-            list: list of options
+            List of options.
         """
         return []
 
-    def global_options(self, spec, prefix):
+    def global_options(self, spec: Spec, prefix: Prefix) -> Iterable[str]:
         """Extra global options to be supplied to the setup.py call before the install
         or bdist_wheel command.
 
         Deprecated in pip 23.1.
 
         Args:
-            spec (spack.spec.Spec): build spec
-            prefix (spack.util.prefix.Prefix): installation prefix
+            spec: Build spec.
+            prefix: Installation prefix.
 
         Returns:
-            list: list of options
+            List of options.
         """
         return []
 
-    def install(self, pkg, spec, prefix):
+    def install(self, pkg: PythonPackage, spec: Spec, prefix: Prefix) -> None:
         """Install everything from build directory."""
 
         args = PythonPipBuilder.std_args(pkg) + [f"--prefix={prefix}"]

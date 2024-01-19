@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,7 @@ import spack.parser
 import spack.repo
 import spack.spec
 from spack.main import SpackCommand
+from spack.package_base import ManualDownloadRequiredError
 from spack.stage import interactive_version_filter
 from spack.version import Version
 
@@ -272,3 +273,22 @@ def test_checksum_verification_fails(install_mockery, capsys):
     assert out.count("Correct") == 0
     assert "No previous checksum" in out
     assert "Invalid checksum" in out
+
+
+def test_checksum_manual_download_fails(mock_packages, monkeypatch):
+    """Confirm that checksumming a manually downloadable package fails."""
+    name = "zlib"
+    pkg_cls = spack.repo.PATH.get_pkg_class(name)
+    versions = [str(v) for v in pkg_cls.versions]
+    monkeypatch.setattr(spack.package_base.PackageBase, "manual_download", True)
+
+    # First check that the exception is raised with the default download
+    # instructions.
+    with pytest.raises(ManualDownloadRequiredError, match=f"required for {name}"):
+        spack_checksum(name, *versions)
+
+    # Now check that the exception is raised with custom download instructions.
+    error = "Cannot calculate the checksum for a manually downloaded package."
+    monkeypatch.setattr(spack.package_base.PackageBase, "download_instr", error)
+    with pytest.raises(ManualDownloadRequiredError, match=error):
+        spack_checksum(name, *versions)

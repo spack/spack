@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     periodic, material, crystal, and biological systems
     """
 
-    build_system(conditional("cmake", when="@2023.2:"), "makefile", default="makefile")
+    build_system(conditional("cmake", when="@2023.2:"), "makefile", default="cmake")
 
     homepage = "https://www.cp2k.org"
     url = "https://github.com/cp2k/cp2k/releases/download/v3.0.0/cp2k-3.0.tar.bz2"
@@ -29,6 +29,9 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
 
     maintainers("dev-zero", "mtaillefumier")
 
+    license("GPL-2.0-or-later")
+
+    version("2024.1", sha256="a7abf149a278dfd5283dc592a2c4ae803b37d040df25d62a5e35af5c4557668f")
     version("2023.2", sha256="adbcc903c1a78cba98f49fe6905a62b49f12e3dfd7cedea00616d1a5f50550db")
     version("2023.1", sha256="dff343b4a80c3a79363b805429bdb3320d3e1db48e0ff7d20a3dfd1c946a51ce")
     version("2022.2", sha256="1a473dea512fe264bb45419f83de432d441f90404f829d89cbc3a03f723b8354")
@@ -87,8 +90,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         "dlaf",
         default=False,
         description="Enable DLA-Future eigensolver and Cholesky decomposition",
-        # TODO: Pin version when integrated in a release
-        when="@master build_system=cmake",
+        when="@2024.1: build_system=cmake",
     )
     variant(
         "sirius",
@@ -272,7 +274,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         depends_on("sirius@7.2", when="@8.3:8.9")
         depends_on("sirius@7.3:", when="@9.1")
         depends_on("sirius@7.4:7.5", when="@2023.2")
-        depends_on("sirius@7.5:", when="@master")
+        depends_on("sirius@7.5:", when="@2024.1:")
         conflicts("~mpi", msg="SIRIUS requires MPI")
         # sirius support was introduced in 7, but effectively usable starting from CP2K 9
         conflicts("@:8")
@@ -298,6 +300,9 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     depends_on("wannier90", when="@3.0+mpi")
 
     with when("build_system=cmake"):
+        depends_on("cmake@3.22:", type="build")
+
+        # DBCSR as external dependency
         depends_on("dbcsr@2.6:")
         depends_on("dbcsr+openmp", when="+openmp")
         depends_on("dbcsr+cuda", when="+cuda")
@@ -325,18 +330,6 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
 
     supported_cuda_arch_list = ("35", "37", "60", "70", "80")
     supported_rocm_arch_list = ("gfx906", "gfx908", "gfx90a", "gfx90a:xnack-", "gfx90a:xnack+")
-    gpu_map = {
-        "35": "K40",
-        "37": "K80",
-        "60": "P100",
-        "70": "V100",
-        "80": "A100",
-        "gfx906": "Mi50",
-        "gfx908": "Mi100",
-        "gfx90a": "Mi250",
-        "gfx90a:xnack-": "Mi250",
-        "gfx90a:xnack+": "Mi250",
-    }
     cuda_msg = "cp2k only supports cuda_arch {0}".format(supported_cuda_arch_list)
     rocm_msg = "cp2k only supports amdgpu_target {0}".format(supported_rocm_arch_list)
 
@@ -434,7 +427,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
             "aocc": ["-O2"],
         }
 
-        dflags = ["-DNDEBUG"]
+        dflags = ["-DNDEBUG"] if spec.satisfies("@:2023.2") else []
         cppflags = ["-D__FFTW3", "-I{0}".format(fftw_header_dir)]
 
         # CP2K requires MPI 3 starting at version 2023.1
@@ -682,6 +675,18 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
             fcflags += ["-I{0}".format(sirius.prefix.include.sirius)]
             libs += list(sirius.libs)
 
+        gpu_map = {
+            "35": "K40",
+            "37": "K80",
+            "60": "P100",
+            "70": "V100",
+            "80": "A100",
+            "gfx906": "Mi50",
+            "gfx908": "Mi100",
+            "gfx90a": "Mi250",
+            "gfx90a:xnack-": "Mi250",
+            "gfx90a:xnack+": "Mi250",
+        }
         gpuver = ""
         if spec.satisfies("+cuda"):
             libs += [

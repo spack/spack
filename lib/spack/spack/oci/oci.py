@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -134,7 +134,7 @@ def upload_blob(
             return True
 
         # Otherwise, do another PUT request.
-        spack.oci.opener.ensure_status(response, 202)
+        spack.oci.opener.ensure_status(request, response, 202)
         assert "Location" in response.headers
 
         # Can be absolute or relative, joining handles both
@@ -143,19 +143,16 @@ def upload_blob(
         )
         f.seek(0)
 
-        response = _urlopen(
-            Request(
-                url=upload_url,
-                method="PUT",
-                data=f,
-                headers={
-                    "Content-Type": "application/octet-stream",
-                    "Content-Length": str(file_size),
-                },
-            )
+        request = Request(
+            url=upload_url,
+            method="PUT",
+            data=f,
+            headers={"Content-Type": "application/octet-stream", "Content-Length": str(file_size)},
         )
 
-        spack.oci.opener.ensure_status(response, 201)
+        response = _urlopen(request)
+
+        spack.oci.opener.ensure_status(request, response, 201)
 
     # print elapsed time and # MB/s
     _log_upload_progress(digest, file_size, time.time() - start)
@@ -189,16 +186,16 @@ def upload_manifest(
     if not tag:
         ref = ref.with_digest(digest)
 
-    response = _urlopen(
-        Request(
-            url=ref.manifest_url(),
-            method="PUT",
-            data=data,
-            headers={"Content-Type": oci_manifest["mediaType"]},
-        )
+    request = Request(
+        url=ref.manifest_url(),
+        method="PUT",
+        data=data,
+        headers={"Content-Type": oci_manifest["mediaType"]},
     )
 
-    spack.oci.opener.ensure_status(response, 201)
+    response = _urlopen(request)
+
+    spack.oci.opener.ensure_status(request, response, 201)
     return digest, size
 
 

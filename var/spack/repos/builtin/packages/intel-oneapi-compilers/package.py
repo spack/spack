@@ -1,12 +1,36 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import os
 
 from spack.build_environment import dso_suffix
 from spack.package import *
 
 versions = [
+    {
+        "version": "2024.0.2",
+        "cpp": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/bb99984f-370f-413d-bbec-38928d2458f2/l_dpcpp-cpp-compiler_p_2024.0.2.29_offline.sh",
+            "sha256": "0ec22d69f4207fea4b7488d1c9e62adbc14fb6daa1574d6edcadc912da007b3c",
+        },
+        "ftn": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/41df6814-ec4b-4698-a14d-421ee2b02aa7/l_fortran-compiler_p_2024.0.2.28_offline.sh",
+            "sha256": "396ac4fbcb3799d5c1a866a60cf81f85f7cab8c6f35289f61c5cda63c7101b5e",
+        },
+    },
+    {
+        "version": "2024.0.1",
+        "cpp": {
+            "url": "https://registrationcenter-download.intel.com/akdlm//IRC_NAS/c68c8f0a-47f5-4f26-8e8e-fa2627271279/l_dpcpp-cpp-compiler_p_2024.0.1.29_offline.sh",
+            "sha256": "22497c46bfb916c82677489775c113141510423799b7eca35f35dffeb2a14104",
+        },
+        "ftn": {
+            "url": "https://registrationcenter-download.intel.com/akdlm//IRC_NAS/4eedf77e-e097-40de-b62d-5fb70efecb59/l_fortran-compiler_p_2024.0.1.31_offline.sh",
+            "sha256": "9d49ecc1862c60eb0627bfdd80d63a47118095af0ff5adeeda10ec36aaffc82c",
+        },
+    },
     {
         "version": "2024.0.0",
         "cpp": {
@@ -16,6 +40,17 @@ versions = [
         "ftn": {
             "url": "https://registrationcenter-download.intel.com/akdlm//IRC_NAS/89b0fcf9-5c00-448a-93a1-5ee4078e008e/l_fortran-compiler_p_2024.0.0.49493_offline.sh",
             "sha256": "57faf854b8388547ee4ef2db387a9f6f3b4d0cebd67b765cf5e844a0a970d1f9",
+        },
+    },
+    {
+        "version": "2023.2.3",
+        "cpp": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/d85fbeee-44ec-480a-ba2f-13831bac75f7/l_dpcpp-cpp-compiler_p_2023.2.3.12_offline.sh",
+            "sha256": "b80119a3e54306b85198e907589b00b11c072f107ac39c1686a1996f76466b26",
+        },
+        "ftn": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/0ceccee5-353c-4fd2-a0cc-0aecb7492f87/l_fortran-compiler_p_2023.2.3.13_offline.sh",
+            "sha256": "ef8d95b7165d42da8576bf89a100bd21be7253d0aec039ff76c9213fa2aa9c62",
         },
     },
     {
@@ -185,13 +220,14 @@ class IntelOneapiCompilers(IntelOneApiPackage):
 
     for v in versions:
         version(v["version"], expand=False, **v["cpp"])
-        resource(
-            name="fortran-installer",
-            placement="fortran-installer",
-            when="@{0}".format(v["version"]),
-            expand=False,
-            **v["ftn"],
-        )
+        if "ftn" in v:
+            resource(
+                name="fortran-installer",
+                placement="fortran-installer",
+                when="@{0}".format(v["version"]),
+                expand=False,
+                **v["ftn"],
+            )
 
     @property
     def v2_layout_versions(self):
@@ -244,11 +280,13 @@ class IntelOneapiCompilers(IntelOneApiPackage):
         super().install(spec, prefix)
 
         # install fortran
-        self.install_component(find("fortran-installer", "*")[0])
+        ftn = find("fortran-installer", "*")
+        if ftn:
+            self.install_component(ftn[0])
 
-        # Some installers have a bug and do not return an error code when failing
-        if not is_exe(self._llvm_bin.ifx):
-            raise RuntimeError("Fortran install failed")
+            # Some installers have a bug and do not return an error code when failing
+            if not is_exe(self._llvm_bin.ifx):
+                raise RuntimeError("Fortran install failed")
 
     @run_after("install")
     def inject_rpaths(self):
@@ -278,10 +316,14 @@ class IntelOneapiCompilers(IntelOneApiPackage):
 
     def write_config_file(self, flags, path, compilers):
         for compiler in compilers:
-            p = path.join(compiler + ".cfg")
-            with open(p, "w") as f:
-                f.write(" ".join(flags))
-            set_install_permissions(p)
+            # Tolerate missing compilers.
+            # Initially, we installed icx/ifx/icc/ifort into a single prefix.
+            # Starting in 2024, there is no icc. 2023.2.3 does not have an ifx.
+            if os.path.exists(compiler):
+                p = path.join(compiler + ".cfg")
+                with open(p, "w") as f:
+                    f.write(" ".join(flags))
+                set_install_permissions(p)
 
     @run_after("install")
     def extend_config_flags(self):
@@ -318,11 +360,7 @@ class IntelOneapiCompilers(IntelOneApiPackage):
         self.write_config_file(common_flags + llvm_flags, self._llvm_bin, ["icx", "icpx"])
         self.write_config_file(common_flags + classic_flags, self._llvm_bin, ["ifx"])
         self.write_config_file(common_flags + classic_flags, self._classic_bin, ["ifort"])
-        # 2023 is the last release that includes icc
-        if self.spec.satisfies("@:2023"):
-            self.write_config_file(
-                common_flags + classic_flags, self._classic_bin, ["icc", "icpc"]
-            )
+        self.write_config_file(common_flags + classic_flags, self._classic_bin, ["icc", "icpc"])
 
     def _ld_library_path(self):
         # Returns an iterable of directories that might contain shared runtime libraries

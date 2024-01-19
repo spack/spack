@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Php(AutotoolsPackage):
 
     homepage = "https://php.net/"
     url = "https://github.com/php/php-src/archive/php-7.3.13.tar.gz"
+
+    license("PHP-3.01")
 
     version("7.4.1", sha256="4d9d7c5681bec3af38a935d033657dce09a9913498f8022d7ca163a7f2f493a7")
     version("7.4.0", sha256="91d34b48025ab9789216df89e247b6904912eeeaeff38c300ef314bdda8920b0")

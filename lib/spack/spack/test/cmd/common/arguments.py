@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -50,8 +50,8 @@ def test_negative_integers_not_allowed_for_parallel_jobs(job_parser):
     [
         (['coreutils cflags="-O3 -g"'], ["-O3", "-g"], [False, False], []),
         (['coreutils cflags=="-O3 -g"'], ["-O3", "-g"], [True, True], []),
-        (["coreutils", "cflags=-O3 -g"], ["-O3"], [False], ["g"]),
-        (["coreutils", "cflags==-O3 -g"], ["-O3"], [True], ["g"]),
+        (["coreutils", "cflags=-O3 -g"], ["-O3", "-g"], [False, False], []),
+        (["coreutils", "cflags==-O3 -g"], ["-O3", "-g"], [True, True], []),
         (["coreutils", "cflags=-O3", "-g"], ["-O3"], [False], ["g"]),
     ],
 )

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Psmc(MakefilePackage):
 
     homepage = "https://github.com/lh3/psmc"
     git = "https://github.com/lh3/psmc.git"
+
+    license("MIT")
 
     version("2016-1-21", commit="e5f7df5d00bb75ec603ae0beff62c0d7e37640b9")
 

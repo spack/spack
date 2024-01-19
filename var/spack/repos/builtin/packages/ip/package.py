@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,10 @@ class Ip(CMakePackage):
     maintainers("AlexanderRichert-NOAA", "edwardhartnett", "Hang-Lei-NOAA")
 
     version("develop", branch="develop")
+    version("4.4.0", sha256="858d9201ce0bc4d16b83581ef94a4a0262f498ed1ea1b0535de2e575da7a8b8c")
+    version("4.3.0", sha256="799308a868dea889d2527d96a0405af7b376869581410fe4cff681205e9212b4")
+    # Note that versions 4.0-4.2 contain constants_mod module, and should not be used when
+    # also compiling with packages containing Fortran modules of the same name, namely, FMS.
     version("4.2.0", sha256="9b9f47106822044ff224c6dfd9f140c146dffc833904f2a0c5db7b5d8932e39e")
     version("4.1.0", sha256="b83ca037d9a5ad3eb0fb1acfe665c38b51e01f6bd73ce9fb8bb2a14f5f63cdbe")
     version("4.0.0", sha256="a2ef0cc4e4012f9cb0389fab6097407f4c623eb49772d96eb80c44f804aa86b8")
@@ -70,6 +74,8 @@ class Ip(CMakePackage):
             args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
             args.append(self.define("BUILD_4", self.spec.satisfies("precision=4")))
             args.append(self.define("BUILD_D", self.spec.satisfies("precision=d")))
+
+        if self.spec.satisfies("@4.2:"):
             args.append(self.define("BUILD_8", self.spec.satisfies("precision=8")))
 
         return args

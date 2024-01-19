@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Xtl(CMakePackage):
     git = "https://github.com/QuantStack/xtl.git"
 
     maintainers("ax3l")
+
+    license("BSD-3-Clause")
 
     version("develop", branch="master")
     version("0.7.4", sha256="3c88be0e696b64150c4de7a70f9f09c00a335186b0b0b409771ef9f56bca7d9a")

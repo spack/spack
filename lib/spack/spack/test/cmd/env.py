@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -48,11 +48,13 @@ env = SpackCommand("env")
 install = SpackCommand("install")
 add = SpackCommand("add")
 change = SpackCommand("change")
+config = SpackCommand("config")
 remove = SpackCommand("remove")
 concretize = SpackCommand("concretize")
 stage = SpackCommand("stage")
 uninstall = SpackCommand("uninstall")
 find = SpackCommand("find")
+develop = SpackCommand("develop")
 module = SpackCommand("module")
 
 sep = os.sep
@@ -719,10 +721,10 @@ spack:
     assert any(x.intersects("mpileaks@2.2") for x in e._get_environment_specs())
 
 
-def test_with_config_bad_include(environment_from_manifest):
+def test_with_config_bad_include_create(environment_from_manifest):
     """Confirm missing include paths raise expected exception and error."""
     with pytest.raises(spack.config.ConfigFileError, match="2 missing include path"):
-        e = environment_from_manifest(
+        environment_from_manifest(
             """
 spack:
   include:
@@ -730,9 +732,42 @@ spack:
   - no/such/file.yaml
 """
         )
-        with e:
-            e.concretize()
 
+
+def test_with_config_bad_include_activate(environment_from_manifest, tmpdir):
+    env_root = pathlib.Path(tmpdir.ensure("env-root", dir=True))
+    include1 = env_root / "include1.yaml"
+    include1.touch()
+
+    abs_include_path = os.path.abspath(tmpdir.join("subdir").ensure("include2.yaml"))
+
+    spack_yaml = env_root / ev.manifest_name
+    spack_yaml.write_text(
+        f"""
+spack:
+  include:
+  - ./include1.yaml
+  - {abs_include_path}
+"""
+    )
+
+    e = ev.Environment(env_root)
+    with e:
+        e.concretize()
+
+    # we've created an environment with some included config files (which do
+    # in fact exist): now we remove them and check that we get a sensible
+    # error message
+
+    os.remove(abs_include_path)
+    os.remove(include1)
+    with pytest.raises(spack.config.ConfigFileError) as exc:
+        ev.activate(e)
+
+    err = exc.value.message
+    assert "missing include" in err
+    assert abs_include_path in err
+    assert "include1.yaml" in err
     assert ev.active_environment() is None
 
 
@@ -833,6 +868,114 @@ spack:
         e.concretize()
 
     assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
+
+
+def test_config_change_existing(mutable_mock_env_path, tmp_path, mock_packages, mutable_config):
+    """Test ``config change`` with config in the ``spack.yaml`` as well as an
+    included file scope.
+    """
+
+    included_file = "included-packages.yaml"
+    included_path = tmp_path / included_file
+    with open(included_path, "w") as f:
+        f.write(
+            """\
+packages:
+  mpich:
+    require:
+    - spec: "@3.0.2"
+  libelf:
+    require: "@0.8.10"
+  bowtie:
+    require:
+    - one_of: ["@1.3.0", "@1.2.0"]
+"""
+        )
+
+    spack_yaml = tmp_path / ev.manifest_name
+    spack_yaml.write_text(
+        f"""\
+spack:
+  packages:
+    mpich:
+      require:
+      - spec: "+debug"
+  include:
+  - {os.path.join(".", included_file)}
+  specs: []
+"""
+    )
+
+    e = ev.Environment(tmp_path)
+    with e:
+        # List of requirements, flip a variant
+        config("change", "packages:mpich:require:~debug")
+        test_spec = spack.spec.Spec("mpich").concretized()
+        assert test_spec.satisfies("@3.0.2~debug")
+
+        # List of requirements, change the version (in a different scope)
+        config("change", "packages:mpich:require:@3.0.3")
+        test_spec = spack.spec.Spec("mpich").concretized()
+        assert test_spec.satisfies("@3.0.3")
+
+        # "require:" as a single string, also try specifying
+        # a spec string that requires enclosing in quotes as
+        # part of the config path
+        config("change", 'packages:libelf:require:"@0.8.12:"')
+        spack.spec.Spec("libelf@0.8.12").concretized()
+        # No need for assert, if there wasn't a failure, we
+        # changed the requirement successfully.
+
+        # Use change to add a requirement for a package that
+        # has no requirements defined
+        config("change", "packages:fftw:require:+mpi")
+        test_spec = spack.spec.Spec("fftw").concretized()
+        assert test_spec.satisfies("+mpi")
+        config("change", "packages:fftw:require:~mpi")
+        test_spec = spack.spec.Spec("fftw").concretized()
+        assert test_spec.satisfies("~mpi")
+        config("change", "packages:fftw:require:@1.0")
+        test_spec = spack.spec.Spec("fftw").concretized()
+        assert test_spec.satisfies("@1.0~mpi")
+
+        # Use "--match-spec" to change one spec in a "one_of"
+        # list
+        config("change", "packages:bowtie:require:@1.2.2", "--match-spec", "@1.2.0")
+        spack.spec.Spec("bowtie@1.3.0").concretize()
+        spack.spec.Spec("bowtie@1.2.2").concretized()
+
+
+def test_config_change_new(mutable_mock_env_path, tmp_path, mock_packages, mutable_config):
+    spack_yaml = tmp_path / ev.manifest_name
+    spack_yaml.write_text(
+        """\
+spack:
+  specs: []
+"""
+    )
+
+    e = ev.Environment(tmp_path)
+    with e:
+        config("change", "packages:mpich:require:~debug")
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            spack.spec.Spec("mpich+debug").concretized()
+        spack.spec.Spec("mpich~debug").concretized()
+
+    # Now check that we raise an error if we need to add a require: constraint
+    # when preexisting config manually specified it as a singular spec
+    spack_yaml.write_text(
+        """\
+spack:
+  specs: []
+  packages:
+    mpich:
+      require: "@3.0.3"
+"""
+    )
+    with e:
+        assert spack.spec.Spec("mpich").concretized().satisfies("@3.0.3")
+        with pytest.raises(spack.config.ConfigError, match="not a list"):
+            config("change", "packages:mpich:require:~debug")
 
 
 def test_env_with_included_config_file_url(tmpdir, mutable_empty_config, packages_file):
@@ -1173,7 +1316,7 @@ def test_env_blocks_uninstall(mock_stage, mock_fetch, install_mockery):
         add("mpileaks")
         install("--fake")
 
-    out = uninstall("mpileaks", fail_on_error=False)
+    out = uninstall("-y", "mpileaks", fail_on_error=False)
     assert uninstall.returncode == 1
     assert "The following environments still reference these specs" in out
 
@@ -2902,13 +3045,15 @@ def test_virtual_spec_concretize_together(tmpdir):
     assert any(s.package.provides("mpi") for _, s in e.concretized_specs())
 
 
-def test_query_develop_specs():
+def test_query_develop_specs(tmpdir):
     """Test whether a spec is develop'ed or not"""
+    srcdir = tmpdir.ensure("here")
+
     env("create", "test")
     with ev.read("test") as e:
         e.add("mpich")
         e.add("mpileaks")
-        e.develop(Spec("mpich@=1"), "here", clone=False)
+        develop("--no-clone", "-p", str(srcdir), "mpich@=1")
 
         assert e.is_develop(Spec("mpich"))
         assert not e.is_develop(Spec("mpileaks"))
@@ -2920,7 +3065,9 @@ def test_query_develop_specs():
 )
 def test_activation_and_deactiviation_ambiguities(method, env, no_env, env_dir, capsys):
     """spack [-e x | -E | -D x/]  env [activate | deactivate] y are ambiguous"""
-    args = Namespace(shell="sh", activate_env="a", env=env, no_env=no_env, env_dir=env_dir)
+    args = Namespace(
+        shell="sh", env_name="a", env=env, no_env=no_env, env_dir=env_dir, keep_relative=False
+    )
     with pytest.raises(SystemExit):
         method(args)
     _, err = capsys.readouterr()
@@ -2959,6 +3106,34 @@ def test_activate_temp(monkeypatch, tmpdir):
     active_env_var = next(line for line in shell.splitlines() if ev.spack_env_var in line)
     assert str(tmpdir) in active_env_var
     assert ev.is_env_dir(str(tmpdir))
+
+
+@pytest.mark.parametrize(
+    "conflict_arg", [["--dir"], ["--keep-relative"], ["--with-view", "foo"], ["env"]]
+)
+def test_activate_parser_conflicts_with_temp(conflict_arg):
+    with pytest.raises(SpackCommandError):
+        env("activate", "--sh", "--temp", *conflict_arg)
+
+
+def test_create_and_activate_managed(tmp_path):
+    with fs.working_dir(str(tmp_path)):
+        shell = env("activate", "--without-view", "--create", "--sh", "foo")
+        active_env_var = next(line for line in shell.splitlines() if ev.spack_env_var in line)
+        assert str(tmp_path) in active_env_var
+        active_ev = ev.active_environment()
+        assert "foo" == active_ev.name
+        env("deactivate")
+
+
+def test_create_and_activate_unmanaged(tmp_path):
+    with fs.working_dir(str(tmp_path)):
+        env_dir = os.path.join(str(tmp_path), "foo")
+        shell = env("activate", "--without-view", "--create", "--sh", "-d", env_dir)
+        active_env_var = next(line for line in shell.splitlines() if ev.spack_env_var in line)
+        assert str(env_dir) in active_env_var
+        assert ev.is_env_dir(env_dir)
+        env("deactivate")
 
 
 def test_activate_default(monkeypatch):

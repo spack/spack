@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Libndp(AutotoolsPackage):
 
     homepage = "http://www.libndp.org/"
     url = "https://github.com/jpirko/libndp/archive/v1.7.tar.gz"
+
+    license("LGPL-2.1-or-later")
 
     version("1.7", sha256="44be73630ee785ed9f571f9aaaeba0e1d375fa337fd841270034c813b5b0e6fd")
     version("1.6", sha256="565d6c4167f83ec697c762ea002f23e8f0b00828d0749b1ce928f068543e5aad")
