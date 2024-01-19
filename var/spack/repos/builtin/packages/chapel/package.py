@@ -27,37 +27,42 @@ class Chapel(AutotoolsPackage):
     version("1.32.0", sha256="a359032b4355774e250fb2796887b3bbf58d010c468faba97f7b471bc6bab57d")
     version("1.31.0", sha256="bf9a63f7e5d1f247e8680c9a07aeb330cbbf199777a282408100a87dda95918f")
     version("1.30.0", sha256="d7d82f64f405b8c03e2ce6353d16aba5a261d3f0c63dc3bb64ea3841cfa597b9")
-    version("1.29.0",
-            deprecated=True,
-            sha256="7fcd13db8e27f14d586358d4c2587e43c8f21d408126fa0ca27d1b7067b867c0")
-    version("1.28.0",
-            deprecated=True,
-            sha256="321243a91f8f2dfb3b37a714e2d45298e6a967a9a115565f9ad9cc630ff0bd0e")
+    version(
+        "1.29.0",
+        deprecated=True,
+        sha256="7fcd13db8e27f14d586358d4c2587e43c8f21d408126fa0ca27d1b7067b867c0",
+    )
+    version(
+        "1.28.0",
+        deprecated=True,
+        sha256="321243a91f8f2dfb3b37a714e2d45298e6a967a9a115565f9ad9cc630ff0bd0e",
+    )
     # Do NOT add older versions here.
     # Chapel releases over 2 years old are not supported.
 
     depends_on("doxygen@1.8.17:")
 
     variant(
-        "llvm", default="unset",
+        "llvm",
+        default="unset",
         description="LLVM backend type. Use value 'spack' to have spack "
-                    "handle the LLVM package",
-        values=("none", "system", "bundled", "spack", "unset")
+        "handle the LLVM package",
+        values=("none", "system", "bundled", "spack", "unset"),
     )
 
     variant(
         "comm",
         default="none",
         description="Build Chapel with multi-locale support",
-        values=("none", "gasnet", "ofi")
+        values=("none", "gasnet", "ofi"),
     )
     variant(
         "substrate",
         default="none",
         description="Build Chapel with mulit-locale support using the "
-                    "supplied CHPL_COMM_SUBSTRATE",
+        "supplied CHPL_COMM_SUBSTRATE",
         values=("none", "udp", "ibv", "ofi"),
-        multi=False
+        multi=False,
     )
 
     package_module_opts = ("zmq", "libevent", "protobuf", "ssl", "hdf5", "yaml")
@@ -67,49 +72,92 @@ class Chapel(AutotoolsPackage):
         "protobuf": "protobuf",
         "ssl": "openssl",
         "hdf5": "hdf5+hl~mpi",
-        "yaml": "libyaml"
+        "yaml": "libyaml",
     }
     variant(
         "package_modules",
         description="Include package module dependencies with spack",
-        values=disjoint_sets(
-            ("none",),
-            ("all",),
-            package_module_opts,
-        ).with_error("'none' or 'all' cannot be activated along with other package_modules"
-                     ).with_default("none").with_non_feature_values("none", "all")
+        values=disjoint_sets(("none",), ("all",), package_module_opts)
+        .with_error("'none' or 'all' cannot be activated along with other package_modules")
+        .with_default("none")
+        .with_non_feature_values("none", "all"),
     )
 
     for opt, dep in package_module_dict.items():
         depends_on(dep, when="package_modules={0}".format(opt), type="run")
         depends_on(dep, when="package_modules=all", type="run")
 
-    platform_opts = ("unset", "cygwin32", "cygwin64", "darwin", "linux32",
-                     "linux64", "netbsd32", "netbsd64", "pwr6", "cray-cs",
-                     "cray-xc", "hpe-apollo", "hpe-cray-ex")
+    platform_opts = (
+        "unset",
+        "cygwin32",
+        "cygwin64",
+        "darwin",
+        "linux32",
+        "linux64",
+        "netbsd32",
+        "netbsd64",
+        "pwr6",
+        "cray-cs",
+        "cray-xc",
+        "hpe-apollo",
+        "hpe-cray-ex",
+    )
 
-    variant("host_platform", description="Host platform", default="unset",
-            values=platform_opts, multi=False)
+    variant(
+        "host_platform",
+        description="Host platform",
+        default="unset",
+        values=platform_opts,
+        multi=False,
+    )
 
-    variant("target_platform", description="Target platform for cross compilation",
-            default="unset", values=platform_opts, multi=False)
+    variant(
+        "target_platform",
+        description="Target platform for cross compilation",
+        default="unset",
+        values=platform_opts,
+        multi=False,
+    )
 
-    variant("tasks", description="Select tasking layer for intra-locale parallelism",
-            default="qthreads", values=("qthreads", "fifo"), multi=False)
+    variant(
+        "tasks",
+        description="Select tasking layer for intra-locale parallelism",
+        default="qthreads",
+        values=("qthreads", "fifo"),
+        multi=False,
+    )
 
-    variant("re2", description="Build with re2 support", default="bundled",
-            values=("none", "bundled"), multi=False)
+    variant(
+        "re2",
+        description="Build with re2 support",
+        default="bundled",
+        values=("none", "bundled"),
+        multi=False,
+    )
 
-    variant("gmp", description="Build with gmp support", default="unset",
-            values=("unset", "system", "none", "bundled"),
-            multi=False)
+    variant(
+        "gmp",
+        description="Build with gmp support",
+        default="unset",
+        values=("unset", "system", "none", "bundled"),
+        multi=False,
+    )
 
-    variant("hwloc", description="Build with hwloc support", default="bundled",
-            values=("none", "bundled"), multi=False)
+    variant(
+        "hwloc",
+        description="Build with hwloc support",
+        default="bundled",
+        values=("none", "bundled"),
+        multi=False,
+    )
 
-    variant("aux_filesys", description="Build with runtime support for certain filesystems",
-            default="none", values=("none", "lustre"), multi=False)
-
+    variant(
+        "aux_filesys",
+        description="Build with runtime support for certain filesystems",
+        default="none",
+        values=("none", "lustre"),
+        multi=False,
+    )
     # variant('locale_model', values=('flat', 'numa'), default='flat',
     #          description='Locale model to use', multi=False)
 
@@ -158,7 +206,7 @@ class Chapel(AutotoolsPackage):
         "CHPL_AUX_FILESYS",
         "CHPL_LIB_PIC",
         "CHPL_SANITIZE",
-        "CHPL_SANITIZE_EXE"
+        "CHPL_SANITIZE_EXE",
     ]
 
     # Add dependencies
@@ -184,8 +232,7 @@ class Chapel(AutotoolsPackage):
     def setup_chpl_llvm(self, env, spec):
         # Setup LLVM environment variables based on spec
         if spec.variants["llvm"].value == "spack":
-            env.set("CHPL_LLVM_CONFIG",
-                    "{0}/{1}".format(spec["llvm"].prefix, "/bin/llvm-config"))
+            env.set("CHPL_LLVM_CONFIG", "{0}/{1}".format(spec["llvm"].prefix, "/bin/llvm-config"))
             env.set("CHPL_LLVM", "system")
         elif spec.variants["llvm"].value != "unset":
             env.set("CHPL_LLVM", spec.variants["llvm"].value)
