@@ -444,41 +444,15 @@ def test_nosource_pkg_install_post_install(install_mockery, mock_fetch, mock_pac
 def test_pkg_build_paths(install_mockery):
     # Get a basic concrete spec for the trivial install package.
     spec = Spec("trivial-install-test-package").concretized()
-
-    log_path = spec.package.log_path
-    assert log_path.endswith(_spack_build_logfile)
-
-    env_path = spec.package.env_path
-    assert env_path.endswith(_spack_build_envfile)
-
-    # Backward compatibility checks
-    log_dir = os.path.dirname(log_path)
-    fs.mkdirp(log_dir)
-    with fs.working_dir(log_dir):
-        # Start with the older of the previous log filenames
-        older_log = "spack-build.out"
-        fs.touch(older_log)
-        assert spec.package.log_path.endswith(older_log)
-
-        # Now check the newer log filename
-        last_log = "spack-build.txt"
-        fs.rename(older_log, last_log)
-        assert spec.package.log_path.endswith(last_log)
-
-        # Check the old environment file
-        last_env = "spack-build.env"
-        fs.rename(last_log, last_env)
-        assert spec.package.env_path.endswith(last_env)
-
-    # Cleanup
-    shutil.rmtree(log_dir)
+    assert spec.package.log_path.endswith(_spack_build_logfile)
+    assert spec.package.env_path.endswith(_spack_build_envfile)
 
 
 def test_pkg_install_paths(install_mockery):
     # Get a basic concrete spec for the trivial install package.
     spec = Spec("trivial-install-test-package").concretized()
 
-    log_path = os.path.join(spec.prefix, ".spack", _spack_build_logfile)
+    log_path = os.path.join(spec.prefix, ".spack", _spack_build_logfile + ".gz")
     assert spec.package.install_log_path == log_path
 
     env_path = os.path.join(spec.prefix, ".spack", _spack_build_envfile)
