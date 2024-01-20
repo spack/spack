@@ -3,7 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack.package import *
+from spack.util.environment import path_put_first, set_env
 
 
 class Chapel(AutotoolsPackage):
@@ -74,6 +77,7 @@ class Chapel(AutotoolsPackage):
         "hdf5": "hdf5+hl~mpi",
         "yaml": "libyaml",
     }
+
     variant(
         "package_modules",
         description="Include package module dependencies with spack",
@@ -167,13 +171,47 @@ class Chapel(AutotoolsPackage):
         multi=False,
     )
 
-    variant(
-        "mem",
-        values=("cstdlib", "jemalloc"),
-        default="jemalloc",
-        description="Memory management layer",
-        multi=False,
+    compilers = (
+        "unset",
+        "allinea",
+        "clang",
+        "cray-prgenv-allinea",
+        "cray-prgenv-cray",
+        "cray-prgenv-gnu",
+        "cray-prgenv-intel",
+        "cray-prgenv-pgi",
+        "gnu",
+        "ibm",
+        "intel",
+        "llvm",
+        "pgi",
     )
+
+    variant(
+        "host_compiler",
+        values=compilers,
+        description="Compiler suite for building the Chapel compiler on CHPL_HOST_PLATFORM",
+        default="unset",
+    )
+
+    variant(
+        "target_compiler",
+        values=compilers,
+        description="Compiler suite for building runtime libraries and "
+        "generated code on CHPL_TARGET_PLATFORM",
+        default="unset",
+    )
+
+    # This variant is superceded by the host_mem variant below,
+    # TODO: determine what version introduced the host_mem variant and
+    # remove this one if it is old enough that all supported versions have host_mem
+    # variant(
+    #     "mem",
+    #     values=("cstdlib", "jemalloc"),
+    #     default="jemalloc",
+    #     description="Memory management layer",
+    #     multi=False,
+    # )
 
     variant(
         "host_mem",
@@ -186,6 +224,7 @@ class Chapel(AutotoolsPackage):
     variant(
         "host_jemalloc",
         values=("none", "bundled", "system"),
+        default="none",
         multi=False,
         description="Selects between no jemalloc, bundled jemalloc, or system jemalloc",
     )
@@ -197,8 +236,16 @@ class Chapel(AutotoolsPackage):
         description="Build position-independent code suitable for shared libraries",
     )
 
+    variant(
+        "developer",
+        values=(True, False),
+        default=False,
+        description="Build with developer flag to enable assertions and other checks",
+    )
+
     chpl_env_vars = [
         "CHPL_HOME",
+        "CHPL_DEVELOPER",
         "CHPL_HOST_PLATFORM",
         "CHPL_HOST_COMPILER",
         "CHPL_HOST_CC",
@@ -242,6 +289,7 @@ class Chapel(AutotoolsPackage):
     depends_on("cmake@3.16:")
 
     def unset_chpl_env_vars(self, env):
+        # Clean the environment from any pre-set CHPL_ variables that affect the build
         for var in self.chpl_env_vars:
             env.unset(var)
 
@@ -253,18 +301,21 @@ class Chapel(AutotoolsPackage):
         if spec.variants["substrate"].value != "none":
             env.set("CHPL_COMM_SUBSTRATE", spec.variants["substrate"].value)
 
-    def setup_chpl_llvm(self, env, spec):
+    def setup_chpl_llvm(self, env):
         # Setup LLVM environment variables based on spec
-        if spec.variants["llvm"].value == "spack":
-            env.set("CHPL_LLVM_CONFIG", "{0}/{1}".format(spec["llvm"].prefix, "/bin/llvm-config"))
+        if self.spec.variants["llvm"].value == "spack":
+            env.set(
+                "CHPL_LLVM_CONFIG", "{0}/{1}".format(self.spec["llvm"].prefix, "/bin/llvm-config")
+            )
             env.set("CHPL_LLVM", "system")
-        elif spec.variants["llvm"].value != "unset":
-            env.set("CHPL_LLVM", spec.variants["llvm"].value)
+        elif self.spec.variants["llvm"].value != "unset":
+            env.set("CHPL_LLVM", self.spec.variants["llvm"].value)
 
     def setup_env_vars(self, env):
-        self.setup_chpl_llvm(env, self.spec)
+        self.setup_chpl_llvm(env)
         env.set("CHPL_AUX_FILESYSTEM", self.spec.variants["aux_filesys"].value)
-        env.set("CHPL_DEVELOPER", "0")  # TODO: handle this better, maybe with a variant
+        if self.spec.variants["developer"].value:
+            env.set("CHPL_DEVELOPER", "1")
         env.set("CHPL_RE2", self.spec.variants["re2"].value)
         env.set("CHPL_HWLOC", self.spec.variants["hwloc"].value)
         if self.spec.variants["host_platform"].value != "unset":
@@ -282,3 +333,55 @@ class Chapel(AutotoolsPackage):
 
     def setup_run_environment(self, env):
         self.setup_env_vars(env)
+
+    @property
+    @llnl.util.lang.memoized
+    def _output_version(self):
+        spec_vers_str = str(self.spec.version.up_to(3))
+        return spec_vers_str
+
+    def test_version(self):
+        """Perform version checks on selected installed package binaries."""
+        expected = f"version {self._output_version}"
+
+        exes = ["chpl", "chpldoc"]
+
+        for exe in exes:
+            reason = f"ensure version of {exe} is {self._output_version}"
+            with test_part(self, f"test_version_{exe}", purpose=reason):
+                path = join_path(self.prefix.bin, exe)
+                if not os.path.isfile(path):
+                    raise SkipTest(f"{path} is not installed")
+                prog = which(path)
+                if "main" in str(self.spec.version):
+                    print("skipping detailed version check for main branch")
+                    prog("--version", output=str.split, error=str.split)
+                    assert prog.returncode == 0
+                else:
+                    output = prog("--version", output=str.split, error=str.split)
+                    assert expected in output
+
+    @run_after("install")
+    def self_check(self):
+        """Run the self-check after installing the package"""
+        print("Running self-check")
+        path_put_first("PATH", [self.prefix.bin])
+        self.test_version()
+        with set_env(CHPL_HOME=self.stage.source_path):
+            with working_dir(self.stage.source_path):
+                if self.spec.variants["comm"].value != "none":
+                    with set_env(
+                        GASNET_SPAWNFN="L",
+                        GASNET_QUIET="yes",
+                        GASNET_ROUTE_OUTPUT="0",
+                        QT_AFFINITY="no",
+                        CHPL_QTHREAD_ENABLE_OVERSUBSCRIPTION="1",
+                        CHPL_RT_MASTERIP="127.0.0.1",
+                        CHPL_RT_WORKERIP="127.0.0.0",
+                        CHPL_LAUNCHER="",
+                    ):
+                        make("check")
+                        make("check-chpldoc")
+                else:
+                    make("check")
+                    make("check-chpldoc")
