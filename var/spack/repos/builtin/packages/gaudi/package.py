@@ -17,6 +17,7 @@ class Gaudi(CMakePackage):
     tags = ["hep"]
 
     version("master", branch="master")
+    version("37.2", sha256="9b866caab46e182de98b59eddbde80d6fa0e670fe4a35906f1518b04bd99b2d2")
     version("37.1", sha256="1d7038fd5dfb5f2517ce57623cf8090549ffe2ea8f0171d534e5c1ca20bd009a")
     version("37.0", sha256="823f3821a4f498ddd2dd123fbb8a3787b361ddfd818f4ab13572076fc9afdfe4")
     version("36.14", sha256="b11e0afcb797d61a305856dfe8079d48d74c6b6867ceccc0a83aab5978c9ba5f")
