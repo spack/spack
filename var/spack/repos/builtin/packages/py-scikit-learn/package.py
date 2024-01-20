@@ -19,6 +19,7 @@ class PyScikitLearn(PythonPackage):
     license("BSD-3-Clause")
 
     version("master", branch="master")
+    version("1.4.0", sha256="d4373c984eba20e393216edd51a3e3eede56cbe93d4247516d205643c3b93121")
     version("1.3.2", sha256="a2f54c76accc15a34bfb9066e6c7a56c1e7235dda5762b990792330b52ccfb05")
     version("1.3.1", sha256="1a231cced3ee3fa04756b4a7ab532dc9417acd581a330adff5f2c01ac2831fcf")
     version("1.3.0", sha256="8be549886f5eda46436b6e555b0e4873b4f10aa21c07df45c4bc1735afbccd7a")
@@ -47,30 +48,35 @@ class PyScikitLearn(PythonPackage):
     variant("openmp", default=True, description="Build with OpenMP support")
 
     # Based on PyPI wheel availability
-    depends_on("python@3.8:3.12", when="@1.3.1:", type=("build", "run"))
-    depends_on("python@3.8:3.11", when="@1.1.3:1.3.0", type=("build", "run"))
-    depends_on("python@3.8:3.10", when="@1.1.0:1.1.2", type=("build", "run"))
-    depends_on("python@:3.10", when="@1.0.2", type=("build", "run"))
-    depends_on("python@:3.9", when="@0.24:1.0.1", type=("build", "run"))
-    depends_on("python@:3.8", when="@0.22:0.23", type=("build", "run"))
+    depends_on("python@3.9:3.12", when="@1.4:", type=("build", "link", "run"))
+    depends_on("python@3.8:3.12", when="@1.3.1:1.3", type=("build", "link", "run"))
+    depends_on("python@3.8:3.11", when="@1.1.3:1.3.0", type=("build", "link", "run"))
+    depends_on("python@3.8:3.10", when="@1.1.0:1.1.2", type=("build", "link", "run"))
+    depends_on("python@:3.10", when="@1.0.2", type=("build", "link", "run"))
+    depends_on("python@:3.9", when="@0.24:1.0.1", type=("build", "link", "run"))
+    depends_on("python@:3.8", when="@0.22:0.23", type=("build", "link", "run"))
 
     # pyproject.toml
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools@:59", when="@:1.2.1", type="build")
-    depends_on("py-cython@0.29.33:2", when="@1.3:", type="build")
+    depends_on("py-cython@0.29.33:", when="@1.4:", type="build")
+    depends_on("py-cython@0.29.33:2", when="@1.3", type="build")
     depends_on("py-cython@0.29.24:2", when="@1.0.2:", type="build")
     depends_on("py-cython@0.28.5:2", when="@0.21:", type="build")
 
     # sklearn/_min_dependencies.py
-    depends_on("py-numpy@1.17.3:", when="@1.1:", type=("build", "run"))
-    depends_on("py-numpy@1.14.6:", when="@1.0:", type=("build", "run"))
-    depends_on("py-numpy@1.13.3:", when="@0.23:", type=("build", "run"))
-    depends_on("py-numpy@1.11.0:", when="@0.21:", type=("build", "run"))
+    depends_on("py-numpy@1.19.5:", when="@1.4:", type=("build", "link", "run"))
+    depends_on("py-numpy@1.17.3:", when="@1.1:", type=("build", "link", "run"))
+    depends_on("py-numpy@1.14.6:", when="@1.0:", type=("build", "link", "run"))
+    depends_on("py-numpy@1.13.3:", when="@0.23:", type=("build", "link", "run"))
+    depends_on("py-numpy@1.11.0:", when="@0.21:", type=("build", "link", "run"))
+    depends_on("py-scipy@1.6:", when="@1.4:", type=("build", "run"))
     depends_on("py-scipy@1.5:", when="@1.3:", type=("build", "run"))
     depends_on("py-scipy@1.3.2:", when="@1.1:", type=("build", "run"))
     depends_on("py-scipy@1.1.0:", when="@1.0:", type=("build", "run"))
     depends_on("py-scipy@0.19.1:", when="@0.23:", type=("build", "run"))
     depends_on("py-scipy@0.17.0:", when="@0.21:", type=("build", "run"))
+    depends_on("py-joblib@1.2:", when="@1.4:", type=("build", "run"))
     depends_on("py-joblib@1.1.1:", when="@1.2:", type=("build", "run"))
     depends_on("py-joblib@1:", when="@1.1:", type=("build", "run"))
     depends_on("py-joblib@0.11:", type=("build", "run"))
@@ -78,12 +84,14 @@ class PyScikitLearn(PythonPackage):
     depends_on("llvm-openmp", when="%apple-clang +openmp")
 
     # Test dependencies
-    depends_on("py-matplotlib@3.1.3:", type="test")
-    depends_on("py-scikit-image@0.16.2:", type="test")
-    depends_on("py-pandas@1.0.5:", type="test")
+    depends_on("py-matplotlib@3.3.4:", type="test")
+    depends_on("py-scikit-image@0.17.2:", type="test")
+    depends_on("py-pandas@1.1.5:", type="test")
     depends_on("py-pytest@7.1.2:", type="test")
     depends_on("py-pyamg@4:", type="test")
-    depends_on("py-pooch@1.6:", type="test")
+    depends_on("py-polars@0.19.12:", when="@1.4:", type="test")
+    depends_on("py-pyarrow@12:", when="@1.4:", type="test")
+    depends_on("py-pooch@1.6:", when="@1.2:", type="test")
 
     # Release tarballs are already cythonized. If you wanted to build a release
     # version without OpenMP support, you would need to delete all .c files
