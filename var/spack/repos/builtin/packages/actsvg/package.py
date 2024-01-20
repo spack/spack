@@ -31,7 +31,9 @@ class Actsvg(CMakePackage):
 
     variant("examples", default=False, description="Build the example applications")
     variant("meta", default=True, description="Build the meta level interface")
-    variant("web", default=True, when="@0.4.36:", description="Build the webpage builder interface")
+    variant(
+        "web", default=True, when="@0.4.36:", description="Build the webpage builder interface"
+    )
 
     depends_on("boost +program_options", type="test")
     depends_on("boost +program_options", when="+examples")
