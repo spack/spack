@@ -638,7 +638,6 @@ class Configuration:
 
         We use ``:`` as the separator, like YAML objects.
         """
-        # TODO: Currently only handles maps. Think about lists if needed.
         parts = process_config_path(path)
         section = parts.pop(0)
 
@@ -883,7 +882,9 @@ def add(fullpath: str, scope: Optional[str] = None) -> None:
     has_existing_value = True
     path = ""
     override = False
-    value = syaml.load_config(components[-1])
+    value = components[-1]
+    if not isinstance(value, syaml.syaml_str):
+        value = syaml.load_config(value)
     for idx, name in enumerate(components[:-1]):
         # First handle double colons in constructing path
         colon = "::" if override else ":" if path else ""
@@ -905,7 +906,7 @@ def add(fullpath: str, scope: Optional[str] = None) -> None:
 
             # construct value from this point down
             for component in reversed(components[idx + 1 : -1]):
-                value = {component: value}
+                value: Dict[str, str] = {component: value}  # type: ignore[no-redef]
             break
 
     if override:
@@ -916,7 +917,7 @@ def add(fullpath: str, scope: Optional[str] = None) -> None:
 
     # append values to lists
     if isinstance(existing, list) and not isinstance(value, list):
-        value = [value]
+        value: List[str] = [value]  # type: ignore[no-redef]
 
     # merge value into existing
     new = merge_yaml(existing, value)
@@ -949,7 +950,8 @@ def scopes() -> Dict[str, ConfigScope]:
 
 def writable_scopes() -> List[ConfigScope]:
     """
-    Return list of writable scopes
+    Return list of writable scopes. Higher-priority scopes come first in the
+    list.
     """
     return list(
         reversed(
@@ -1336,56 +1338,141 @@ def merge_yaml(dest, source, prepend=False, append=False):
     return copy.copy(source)
 
 
+class ConfigPath:
+    quoted_string = "(?:\"[^\"]+\")|(?:'[^']+')"
+    unquoted_string = "[^:'\"]+"
+    element = rf"(?:(?:{quoted_string})|(?:{unquoted_string}))"
+    next_key_pattern = rf"({element}[+-]?)(?:\:|$)"
+
+    @staticmethod
+    def _split_front(string, extract):
+        m = re.match(extract, string)
+        if not m:
+            return None, None
+        token = m.group(1)
+        return token, string[len(token) :]
+
+    @staticmethod
+    def _validate(path):
+        """Example valid config paths:
+
+        x:y:z
+        x:"y":z
+        x:y+:z
+        x:y::z
+        x:y+::z
+        x:y:
+        x:y::
+        """
+        first_key, path = ConfigPath._split_front(path, ConfigPath.next_key_pattern)
+        if not first_key:
+            raise ValueError(f"Config path does not start with a parse-able key: {path}")
+        path_elements = [first_key]
+        path_index = 1
+        while path:
+            separator, path = ConfigPath._split_front(path, r"(\:+)")
+            if not separator:
+                raise ValueError(f"Expected separator for {path}")
+
+            path_elements[path_index - 1] += separator
+            if not path:
+                break
+
+            element, remainder = ConfigPath._split_front(path, ConfigPath.next_key_pattern)
+            if not element:
+                # If we can't parse something as a key, then it must be a
+                # value (if it's valid).
+                try:
+                    syaml.load_config(path)
+                except spack.util.spack_yaml.SpackYAMLError as e:
+                    raise ValueError(
+                        "Remainder of path is not a valid key"
+                        f" and does not parse as a value {path}"
+                    ) from e
+                element = path
+                path = None  # The rest of the path was consumed into the value
+            else:
+                path = remainder
+
+            path_elements.append(element)
+            path_index += 1
+
+        return path_elements
+
+    @staticmethod
+    def process(path):
+        result = []
+        quote = "['\"]"
+        seen_override_in_path = False
+
+        path_elements = ConfigPath._validate(path)
+        last_element_idx = len(path_elements) - 1
+        for i, element in enumerate(path_elements):
+            override = False
+            append = False
+            prepend = False
+            quoted = False
+            if element.endswith("::") or (element.endswith(":") and i == last_element_idx):
+                if seen_override_in_path:
+                    raise syaml.SpackYAMLError(
+                        "Meaningless second override indicator `::' in path `{0}'".format(path), ""
+                    )
+                override = True
+                seen_override_in_path = True
+            element = element.rstrip(":")
+
+            if element.endswith("+"):
+                prepend = True
+            elif element.endswith("-"):
+                append = True
+            element = element.rstrip("+-")
+
+            if re.match(f"^{quote}", element):
+                quoted = True
+            element = element.strip("'\"")
+
+            if any([append, prepend, override, quoted]):
+                element = syaml.syaml_str(element)
+                if append:
+                    element.append = True
+                if prepend:
+                    element.prepend = True
+                if override:
+                    element.override = True
+
+            result.append(element)
+
+        return result
+
+
 def process_config_path(path: str) -> List[str]:
     """Process a path argument to config.set() that may contain overrides ('::' or
     trailing ':')
 
-    Note: quoted value path components will be processed as a single value (escaping colons)
-        quoted path components outside of the value will be considered ill formed and will
-        raise.
-        e.g. `this:is:a:path:'value:with:colon'` will yield:
+    Colons will be treated as static strings if inside of quotes,
+    e.g. `this:is:a:path:'value:with:colon'` will yield:
 
-            [this, is, a, path, value:with:colon]
+        [this, is, a, path, value:with:colon]
+
+    The path may consist only of keys (e.g. for a `get`) or may end in a value.
+    Keys are always strings: if a user encloses a key in quotes, the quotes
+    should be removed. Values with quotes should be treated as strings,
+    but without quotes, may be parsed as a different yaml object (e.g.
+    '{}' is a dict, but '"{}"' is a string).
+
+    This function does not know whether the final element of the path is a
+    key or value, so:
+
+    * It must strip the quotes, in case it is a key (so we look for "key" and
+      not '"key"'))
+    * It must indicate somehow that the quotes were stripped, in case it is a
+      value (so that we don't process '"{}"' as a YAML dict)
+
+    Therefore, all elements with quotes are stripped, and then also converted
+    to ``syaml_str`` (if treating the final element as a value, the caller
+    should not parse it in this case).
     """
-    result = []
-    if path.startswith(":"):
-        raise syaml.SpackYAMLError(f"Illegal leading `:' in path `{path}'", "")
-    seen_override_in_path = False
-    while path:
-        front, sep, path = path.partition(":")
-        if (sep and not path) or path.startswith(":"):
-            if seen_override_in_path:
-                raise syaml.SpackYAMLError(
-                    f"Meaningless second override indicator `::' in path `{path}'", ""
-                )
-            path = path.lstrip(":")
-            front = syaml.syaml_str(front)
-            front.override = True  # type: ignore[attr-defined]
-            seen_override_in_path = True
-
-        elif front.endswith("+"):
-            front = front.rstrip("+")
-            front = syaml.syaml_str(front)
-            front.prepend = True  # type: ignore[attr-defined]
-
-        elif front.endswith("-"):
-            front = front.rstrip("-")
-            front = syaml.syaml_str(front)
-            front.append = True  # type: ignore[attr-defined]
-
-        result.append(front)
-
-        quote = "['\"]"
-        not_quote = "[^'\"]"
-
-        if re.match(f"^{quote}", path):
-            m = re.match(rf"^({quote}{not_quote}+{quote})$", path)
-            if not m:
-                raise ValueError("Quotes indicate value, but there are additional path entries")
-            result.append(m.group(1))
-            break
-
-    return result
+    return ConfigPath.process(path)
 
 
 #

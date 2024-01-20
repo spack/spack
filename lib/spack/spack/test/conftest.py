@@ -568,8 +568,8 @@ def mock_repo_path():
 def _pkg_install_fn(pkg, spec, prefix):
     # sanity_check_prefix requires something in the install directory
     mkdirp(prefix.bin)
-    if not os.path.exists(spec.package.build_log_path):
-        touchp(spec.package.build_log_path)
+    if not os.path.exists(spec.package.install_log_path):
+        touchp(spec.package.install_log_path)
 
 
 @pytest.fixture
@@ -1950,23 +1950,10 @@ def pytest_runtest_setup(item):
         pytest.skip(*not_on_windows_marker.args)
 
 
-class MockPool:
-    def map(self, func, args):
-        return [func(a) for a in args]
-
-    def starmap(self, func, args):
-        return [func(*a) for a in args]
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args):
-        pass
-
-
 @pytest.fixture(scope="function")
 def disable_parallel_buildcache_push(monkeypatch):
-    monkeypatch.setattr(spack.cmd.buildcache, "_make_pool", MockPool)
+    """Disable process pools in tests."""
+    monkeypatch.setattr(spack.cmd.buildcache, "_make_pool", spack.cmd.buildcache.NoPool)
 
 
 def _root_path(x, y, *, path):
