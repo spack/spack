@@ -153,6 +153,8 @@ properties = {
                 "additionalProperties": False,
                 "properties": {
                     "require": requirements,
+                    "prefer": prefer_and_conflict,
+                    "conflict": prefer_and_conflict,
                     "version": {
                         "type": "array",
                         "default": [],

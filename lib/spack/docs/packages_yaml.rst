@@ -491,8 +491,8 @@ you will use ``mvapich2~cuda %gcc`` as an ``mpi`` provider.
 Conflicts and strong preferences
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If the semantic of requirements is too strong, or too verbose to exclude a single configuration
-from a set, you can also express "strong preferences" and "conflicts" from configuration files:
+If the semantic of requirements is too strong, you can also express "strong preferences" and "conflicts"
+from configuration files:
 
 .. code-block:: yaml
 

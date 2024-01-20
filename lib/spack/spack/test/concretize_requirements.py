@@ -1115,6 +1115,17 @@ def test_strong_preferences_packages_yaml(
     """,
             "multivalue-variant %clang",
         ),
+        (
+            """
+            packages:
+              multivalue-variant:
+                conflict:
+                - spec: "%clang"
+                  when: "@2"
+                  message: "cannot use clang with version 2"
+        """,
+            "multivalue-variant@=2.3 %clang",
+        ),
     ],
 )
 def test_conflict_packages_yaml(packages_yaml, spec_str, concretize_scope, mock_packages):
