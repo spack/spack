@@ -40,7 +40,7 @@ class Fenics(CMakePackage):
         deprecated=True,
     )
 
-    dolfin_versions = ["master", "2019.1.0", "2018.1.0", "2017.2.0", "2016.2.0"]
+    dolfin_versions = ["2019.1.0", "2018.1.0", "2017.2.0", "2016.2.0"]
 
     variant("python", default=True, description="Compile with Python interface")
     variant("hdf5", default=True, description="Compile with HDF5")
@@ -91,12 +91,8 @@ class Fenics(CMakePackage):
     # fenics python package dependencies
     for ver in dolfin_versions:
         wver = "@" + ver
-        if ver == "master":
-            depends_on("py-fenics-fiat@2019.1.0", type=("build", "run"), when=wver + "+python")
-        else:
-            depends_on(
-                "py-fenics-fiat{0}".format(wver), type=("build", "run"), when=wver + "+python"
-            )
+
+        depends_on("py-fenics-fiat{0}".format(wver), type=("build", "run"), when=wver + "+python")
 
         if Version(ver) < Version("2018.1.0"):
             depends_on(
@@ -106,15 +102,17 @@ class Fenics(CMakePackage):
             depends_on(
                 "py-fenics-dijitso{0}".format(wver), type=("build", "run"), when=wver + "+python"
             )
-        if ver == "master":
-            depends_on("py-fenics-ufl-legacy@main", type=("build", "run"), when=wver + "+python")
-        else:
-            depends_on(
-                "py-fenics-ufl{0}".format(wver), type=("build", "run"), when=wver + "+python"
-            )
+
+        depends_on("py-fenics-ufl{0}".format(wver), type=("build", "run"), when=wver + "+python")
         if ver in ["2019.1.0", "2017.2.0"]:
             wver = "@" + ver + ".post0"
         depends_on("py-fenics-ffc{0}".format(wver), type=("build", "run"), when=wver + "+python")
+
+    # Adding special case for master
+    depends_on("py-fenics-fiat@2019.1.0", type=("build", "run"), when="@master+python")
+    depends_on("py-fenics-dijitso@master", type=("build", "run"), when="@master+python")
+    depends_on("py-fenics-ufl-legacy@main", type=("build", "run"), when="@master+python")
+    depends_on("py-fenics-ffc@master", type=("build", "run"), when="@master+python")
 
     # package dependencies
     depends_on("python@3.5:", type=("build", "run"), when="+python")
