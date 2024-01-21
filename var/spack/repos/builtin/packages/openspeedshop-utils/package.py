@@ -236,7 +236,6 @@ class OpenspeedshopUtils(CMakePackage):
         # Appends to cmake_options the options that will enable
         # the appropriate base level options to the openspeedshop
         # cmake build.
-        python_exe = spec["python"].command.path
         python_library = spec["python"].libs[0]
         python_include = spec["python"].headers.directories[0]
 
@@ -245,7 +244,6 @@ class OpenspeedshopUtils(CMakePackage):
         base_options.append("-DBINUTILS_DIR=%s" % spec["binutils"].prefix)
         base_options.append("-DLIBELF_DIR=%s" % spec["elfutils"].prefix)
         base_options.append("-DLIBDWARF_DIR=%s" % spec["libdwarf"].prefix)
-        base_options.append("-DPYTHON_EXECUTABLE=%s" % python_exe)
         base_options.append("-DPYTHON_INCLUDE_DIR=%s" % python_include)
         base_options.append("-DPYTHON_LIBRARY=%s" % python_library)
         base_options.append("-DBoost_NO_SYSTEM_PATHS=TRUE")

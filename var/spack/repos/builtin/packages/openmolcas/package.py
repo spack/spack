@@ -44,11 +44,7 @@ class Openmolcas(CMakePackage):
             env.append_path("PATH", self.prefix)
 
     def cmake_args(self):
-        args = [
-            "-DLINALG=OpenBLAS",
-            "-DOPENBLASROOT=%s" % self.spec["openblas"].prefix,
-            "-DPYTHON_EXECUTABLE=%s" % self.spec["python"].command.path,
-        ]
+        args = ["-DLINALG=OpenBLAS", "-DOPENBLASROOT=%s" % self.spec["openblas"].prefix]
         if "+mpi" in self.spec:
             mpi_args = [
                 "-DMPI=ON",

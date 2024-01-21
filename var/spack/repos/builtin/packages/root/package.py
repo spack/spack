@@ -505,7 +505,6 @@ class Root(CMakePackage):
         return " ".join(v)
 
     def cmake_args(self):
-        spec = self.spec
         define = self.define
         define_from_variant = self.define_from_variant
         options = []
@@ -688,9 +687,6 @@ class Root(CMakePackage):
             ftgl_prefix = self.spec["ftgl"].prefix
             options.append(define("FTGL_ROOT_DIR", ftgl_prefix))
             options.append(define("FTGL_INCLUDE_DIR", ftgl_prefix.include))
-        if "+python" in self.spec:
-            # See https://github.com/spack/spack/pull/11579
-            options.append(define("PYTHON_EXECUTABLE", spec["python"].command.path))
 
         return options
 

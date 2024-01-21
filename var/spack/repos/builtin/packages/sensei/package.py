@@ -151,9 +151,6 @@ class Sensei(CMakePackage):
             args.append("-DVISIT_DIR:PATH={0}/current/linux-x86_64".format(spec["visit"].prefix))
 
         if "+python" in spec:
-            args.append(self.define("PYTHON_EXECUTABLE", spec["python"].command.path))
-            args.append(self.define("Python_EXECUTABLE", spec["python"].command.path))
-            args.append(self.define("Python3_EXECUTABLE", spec["python"].command.path))
             if spec.satisfies("@3:"):
                 args.append(self.define("SENSEI_PYTHON_VERSION", 3))
             args.append(self.define_from_variant("ENABLE_CATALYST_PYTHON", "catalyst"))
