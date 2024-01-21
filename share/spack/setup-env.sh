@@ -65,7 +65,7 @@ _spack_shell_wrapper() {
     #     while $1 is set (while there are arguments)
     #       and $1 starts with '-' (and the arguments are flags)
     _sp_flags=""
-    while [ ! -z ${1+x} ] && [ "${1#-}" != "${1}" ]; do
+    while [ -n "${1+x}" ] && [ "${1#-}" != "${1}" ]; do
         _sp_flags="$_sp_flags $1"
         shift
     done
@@ -81,7 +81,7 @@ _spack_shell_wrapper() {
 
     # set the subcommand if there is one (if $1 is set)
     _sp_subcommand=""
-    if [ ! -z ${1+x} ]; then
+    if [ -n "${1+x}" ]; then
         _sp_subcommand="$1"
         shift
     fi
@@ -98,9 +98,9 @@ _spack_shell_wrapper() {
             if [ "$_sp_arg" = "-h" ] || [ "$_sp_arg" = "--help" ]; then
                 command spack cd -h
             else
-                LOC="$(SPACK_COLOR="${SPACK_COLOR:-always}" spack location $_sp_arg "$@")"
+                LOC="$(SPACK_COLOR="${SPACK_COLOR:-always}" spack location "$_sp_arg" "$@")"
                 if [ -d "$LOC" ] ; then
-                    cd "$LOC"
+                    cd "$LOC" || return 1
                 else
                     return 1
                 fi
@@ -122,7 +122,7 @@ _spack_shell_wrapper() {
                         # Get --sh, --csh, or -h/--help arguments.
                         # Space needed here becauses regexes start with a space
                         # and `-h` may be the only argument.
-                        _a=" $@"
+                        _a=" $*"
                         # Space needed here to differentiate between `-h`
                         # argument and environments with "-h" in the name.
                         # Also see: https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html#Shell-Parameter-Expansion
@@ -143,7 +143,7 @@ _spack_shell_wrapper() {
                         # Get --sh, --csh, or -h/--help arguments.
                         # Space needed here becauses regexes start with a space
                         # and `-h` may be the only argument.
-                        _a=" $@"
+                        _a=" $*"
                         # Space needed here to differentiate between `--sh`
                         # argument and environments with "--sh" in the name.
                         # Also see: https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html#Shell-Parameter-Expansion
@@ -162,7 +162,7 @@ _spack_shell_wrapper() {
                         fi
                         ;;
                     *)
-                        command spack env $_sp_arg "$@"
+                        command spack env "$_sp_arg" "$@"
                         ;;
                 esac
             fi
@@ -172,7 +172,7 @@ _spack_shell_wrapper() {
             # Get --sh, --csh, -h, or --help arguments.
             # Space needed here becauses regexes start with a space
             # and `-h` may be the only argument.
-            _a=" $@"
+            _a=" $*"
             # Space needed here to differentiate between `-h`
             # argument and specs with "-h" in the name.
             # Also see: https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html#Shell-Parameter-Expansion
@@ -183,14 +183,14 @@ _spack_shell_wrapper() {
                 [ "${_a#* --help}" != "$_a" ];
             then
                 # Args contain --sh, --csh, or -h/--help: just execute.
-                command spack $_sp_flags $_sp_subcommand "$@"
+                command spack $_sp_flags "$_sp_subcommand" "$@"
             else
-                stdout="$(SPACK_COLOR="${SPACK_COLOR:-always}" command spack $_sp_flags $_sp_subcommand --sh "$@")" || return
+                stdout="$(SPACK_COLOR="${SPACK_COLOR:-always}" command spack $_sp_flags "$_sp_subcommand" --sh "$@")" || return
                 eval "$stdout"
             fi
             ;;
         *)
-            command spack $_sp_flags $_sp_subcommand "$@"
+            command spack $_sp_flags "$_sp_subcommand" "$@"
             ;;
     esac
 }
