@@ -65,6 +65,7 @@ class PyPandas(PythonPackage):
     version("0.25.2", sha256="ca91a19d1f0a280874a24dca44aadce42da7f3a7edb7e9ab7c7baad8febee2be")
 
     variant("excel", when="@1.4:", default=False, description="Build with support for Excel")
+    variant("performance", default=True, description="Libraries providing speed improvements")
 
     # Required dependencies
     # https://pandas.pydata.org/pandas-docs/stable/getting_started/install.html#python-version-support
@@ -112,18 +113,20 @@ class PyPandas(PythonPackage):
 
     # Recommended dependencies
     # https://pandas.pydata.org/pandas-docs/stable/getting_started/install.html#performance-dependencies-recommended
-    depends_on("py-numexpr@2.8.0:", when="@2.1:", type=("build", "run"))
-    depends_on("py-numexpr@2.7.3:", when="@1.5:", type=("build", "run"))
-    depends_on("py-numexpr@2.7.1:", when="@1.4:", type=("build", "run"))
-    depends_on("py-numexpr@2.7.0:", when="@1.3:", type=("build", "run"))
-    depends_on("py-numexpr@2.6.8:", when="@1.2:", type=("build", "run"))
-    depends_on("py-numexpr@2.6.2:", when="@0.25:", type=("build", "run"))
-    depends_on("py-bottleneck@1.3.4:", when="@2.1:", type=("build", "run"))
-    depends_on("py-bottleneck@1.3.2:", when="@1.5:", type=("build", "run"))
-    depends_on("py-bottleneck@1.3.1:", when="@1.4:", type=("build", "run"))
-    depends_on("py-bottleneck@1.2.1:", when="@0.25:", type=("build", "run"))
-    depends_on("py-numba@0.55.2:", when="@2.1:", type=("build", "run"))
-    depends_on("py-numba@0.53.1:", when="@2.0:", type=("build", "run"))
+
+    with when("+performance"):
+        depends_on("py-numexpr@2.8.0:", when="@2.1:", type=("build", "run"))
+        depends_on("py-numexpr@2.7.3:", when="@1.5:", type=("build", "run"))
+        depends_on("py-numexpr@2.7.1:", when="@1.4:", type=("build", "run"))
+        depends_on("py-numexpr@2.7.0:", when="@1.3:", type=("build", "run"))
+        depends_on("py-numexpr@2.6.8:", when="@1.2:", type=("build", "run"))
+        depends_on("py-numexpr@2.6.2:", when="@0.25:", type=("build", "run"))
+        depends_on("py-bottleneck@1.3.4:", when="@2.1:", type=("build", "run"))
+        depends_on("py-bottleneck@1.3.2:", when="@1.5:", type=("build", "run"))
+        depends_on("py-bottleneck@1.3.1:", when="@1.4:", type=("build", "run"))
+        depends_on("py-bottleneck@1.2.1:", when="@0.25:", type=("build", "run"))
+        depends_on("py-numba@0.55.2:", when="@2.1:", type=("build", "run"))
+        depends_on("py-numba@0.53.1:", when="@2.0:", type=("build", "run"))
 
     # Optional dependencies
     # https://pandas.pydata.org/pandas-docs/stable/getting_started/install.html#optional-dependencies
