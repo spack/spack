@@ -86,7 +86,11 @@ class CMakePackage(spack.package_base.PackageBase):
     #: Legacy buildsystem attribute used to deserialize and install old specs
     legacy_buildsystem = "cmake"
 
-    #: Enable injecting FindPython{,3} hints
+    #: When this package depends on Python and ``find_python_hints`` is set to True, pass the
+    #: defines {Python3,Python,PYTHON}_EXECUTABLE explicitly, so that CMake locates the right
+    #: Python in its builtin FindPython3, FindPython, and FindPythonInterp modules. Spack does
+    #: CMake's job because CMake's modules by default only search for Python versions known at the
+    #: time of release.
     find_python_hints = True
 
     build_system("cmake")
@@ -291,12 +295,13 @@ class CMakeBuilder(BaseBuilder):
                 [define("CMAKE_FIND_FRAMEWORK", "LAST"), define("CMAKE_FIND_APPBUNDLE", "LAST")]
             )
 
-        if getattr(pkg, "find_python_hints", False) and "python" in pkg.dependency_names():
+        if getattr(pkg, "find_python_hints", False) and pkg.spec.dependencies("python"):
+            python_executable = pkg.spec["python"].command.path
             args.extend(
                 [
-                    define("PYTHON_EXECUTABLE", pkg.spec["python"].command.path),
-                    define("Python_EXECUTABLE", pkg.spec["python"].command.path),
-                    define("Python3_EXECUTABLE", pkg.spec["python"].command.path),
+                    define("PYTHON_EXECUTABLE", python_executable),
+                    define("Python_EXECUTABLE", python_executable),
+                    define("Python3_EXECUTABLE", python_executable),
                 ]
             )
 
