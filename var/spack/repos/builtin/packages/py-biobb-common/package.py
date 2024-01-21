@@ -16,8 +16,8 @@ class PyBiobbCommon(PythonPackage):
 
     version("4.1.0", sha256="97637f359a3bb8ad79aca72b6c26f73fe2424845dc7f43005643971046e9d117")
 
-    depends_on("py-pyyaml", type="run")
-    depends_on("py-requests", type="run")
-    depends_on("py-biopython", type="run")
+    depends_on("py-pyyaml", type=("build", "run"))
+    depends_on("py-requests", type=("build", "run"))
+    depends_on("py-biopython", type=("build", "run"))
 
     depends_on("py-setuptools", type="build")
