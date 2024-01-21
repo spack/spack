@@ -295,15 +295,17 @@ class CMakeBuilder(BaseBuilder):
                 [define("CMAKE_FIND_FRAMEWORK", "LAST"), define("CMAKE_FIND_APPBUNDLE", "LAST")]
             )
 
-        if getattr(pkg, "find_python_hints", False) and pkg.spec.dependencies("python"):
-            python_executable = pkg.spec["python"].command.path
-            args.extend(
-                [
-                    define("PYTHON_EXECUTABLE", python_executable),
-                    define("Python_EXECUTABLE", python_executable),
-                    define("Python3_EXECUTABLE", python_executable),
-                ]
-            )
+        if getattr(pkg, "find_python_hints", False):
+            python = pkg.spec.dependencies("python")
+            if len(python) == 1:
+                python_executable = python[0].package.command.path
+                args.extend(
+                    [
+                        define("PYTHON_EXECUTABLE", python_executable),
+                        define("Python_EXECUTABLE", python_executable),
+                        define("Python3_EXECUTABLE", python_executable),
+                    ]
+                )
 
         # Set up CMake rpath
         args.extend(
