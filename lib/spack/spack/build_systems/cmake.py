@@ -15,6 +15,7 @@ import llnl.util.filesystem as fs
 
 import spack.build_environment
 import spack.builder
+import spack.deptypes as dt
 import spack.package_base
 from spack.directives import build_system, conflicts, depends_on, variant
 from spack.multimethod import when
@@ -296,7 +297,7 @@ class CMakeBuilder(BaseBuilder):
             )
 
         if getattr(pkg, "find_python_hints", False):
-            python = pkg.spec.dependencies("python")
+            python = pkg.spec.dependencies("python", dt.BUILD | dt.LINK)
             if len(python) == 1:
                 python_executable = python[0].package.command.path
                 args.extend(
