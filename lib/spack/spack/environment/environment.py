@@ -2570,7 +2570,7 @@ def no_active_environment():
 
 @contextlib.contextmanager
 def manifest_config(manifest: "EnvironmentManifestFile"):
-    """Ensure only the current environment manifest configuration scopes are global.
+    """Ensure only the given environment manifest configuration scopes are global.
 
     Args:
         manifest: manifest file instance
@@ -2673,7 +2673,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         return manifest
 
     def __init__(self, manifest_dir: Union[pathlib.Path, str]) -> None:
-        self.manifest_dir = pathlib.Path(os.path.abspath(str(manifest_dir)))
+        self.manifest_dir = pathlib.Path(manifest_dir)
         self.manifest_file = self.manifest_dir / manifest_name
         self.scope_name = f"env:{environment_name(self.manifest_dir)}"
 
