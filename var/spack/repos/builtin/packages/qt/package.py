@@ -33,6 +33,7 @@ class Qt(Package):
 
     license("LGPL-3.0-only")
 
+    version("5.15.12", sha256="93f2c0889ee2e9cdf30c170d353c3f829de5f29ba21c119167dee5995e48ccce")
     version("5.15.11", sha256="7426b1eaab52ed169ce53804bdd05dfe364f761468f888a0f15a308dc1dc2951")
     version("5.15.10", sha256="b545cb83c60934adc9a6bbd27e2af79e5013de77d46f5b9f5bb2a3c762bf55ca")
     version("5.15.9", sha256="26d5f36134db03abe4a6db794c7570d729c92a3fc1b0bf9b1c8f86d0573cd02f")
