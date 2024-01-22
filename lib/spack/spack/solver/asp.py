@@ -601,6 +601,12 @@ class Result:
                 # TODO: this should probably raise an error. As is, unsatisfied
                 # specs just lead "spack concretize" to output nothing in some
                 # cases
+                msg = f"Unsatisfied input spec: {str(input_spec)}"
+                if candidate:
+                    msg += f"\n\tCandidate spec: {str(candidate)}"
+                else:
+                    msg += "\n\t(No candidate specs from solver)"
+                tty.debug(msg)
                 self._unsolved_specs.append(input_spec)
 
 
