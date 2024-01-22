@@ -150,7 +150,7 @@ class MakefileModel:
         # generated makefiles to add post-install hooks, like pushing to a buildcache,
         # running tests, etc.
         if make_prefix is None:
-            self.make_prefix = os.path.join(env.env_subdir_path, "makedeps")
+            self.make_prefix = os.path.join(ev.env_subdir_path(env.path), "makedeps")
             self.pkg_identifier_variable = "SPACK_PACKAGE_IDS"
         else:
             # NOTE: GNU Make allows directory separators in variable names, so for consistency

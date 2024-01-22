@@ -210,7 +210,7 @@ def activate(env, use_env_repo=False):
     # below.
     install_tree_before = spack.config.get("config:install_tree")
     upstreams_before = spack.config.get("upstreams")
-    prepare_config_scope(env.manifest)
+    env.manifest.prepare_config_scope()
     install_tree_after = spack.config.get("config:install_tree")
     upstreams_after = spack.config.get("upstreams")
     if install_tree_before != install_tree_after or upstreams_before != upstreams_after:
@@ -238,7 +238,7 @@ def deactivate():
     if hasattr(_active_environment, "store_token"):
         spack.store.restore(_active_environment.store_token)
         delattr(_active_environment, "store_token")
-    deactivate_config_scope(_active_environment.manifest)
+    _active_environment.manifest.deactivate_config_scope()
 
     # use _repo so we only remove if a repo was actually constructed
     if _active_environment._repo:
@@ -781,17 +781,6 @@ def _create_environment(path):
     return Environment(path)
 
 
-def config_stage_dir(manifest_dir: Union[str, pathlib.Path]) -> str:
-    """Path to locally staged environment configuration files.
-
-    Args:
-        manifest_dir:  directory containing the environment manifest file
-
-    Returns:  directory for any staged environment configuration files.
-    """
-    return os.path.join(env_subdir_path(manifest_dir), "config")
-
-
 def env_subdir_path(manifest_dir: Union[str, pathlib.Path]) -> str:
     """Path to where the environment stores repos, logs, views, configs.
 
@@ -837,9 +826,14 @@ class Environment:
         self._previous_active = None
         self._dev_specs = None
 
+        # Load the manifest file contents into memory
+        self._load_manifest_file()
+
+    def _load_manifest_file(self):
+        """Instantiate and load the manifest file contents into memory."""
         with lk.ReadTransaction(self.txlock):
-            self.manifest = EnvironmentManifestFile(manifest_dir)
-            with manifest_config(self.manifest):
+            self.manifest = EnvironmentManifestFile(self.path)
+            with self.manifest.use_config():
                 self._read()
 
     @property
@@ -858,8 +852,7 @@ class Environment:
     def _re_read(self):
         """Reinitialize the environment object."""
         self.clear(re_read=True)
-        self.manifest = EnvironmentManifestFile(self.path)
-        self._read()
+        self._load_manifest_file()
 
     def _read(self):
         self._construct_state_from_manifest()
@@ -979,7 +972,7 @@ class Environment:
         """The location of the lock file used to synchronize multiple
         processes updating the same environment.
         """
-        return os.path.join(self.env_subdir_path, "transaction_lock")
+        return os.path.join(env_subdir_path(self.path), "transaction_lock")
 
     @property
     def lock_path(self):
@@ -992,23 +985,13 @@ class Environment:
         return self.lock_path + ".backup.v1"
 
     @property
-    def env_subdir_path(self):
-        """Directory where the environment stores repos, logs, views, configs."""
-        return env_subdir_path(self.path)
-
-    @property
     def repos_path(self):
         return os.path.join(self.path, env_subdir_name, "repos")
-
-    #    @property
-    #    def config_stage_dir(self):
-    #        """Directory for any staged configuration file(s)."""
-    #        return os.path.join(self.env_subdir_path, "config")
 
     @property
     def view_path_default(self):
         # default path for environment views
-        return os.path.join(self.env_subdir_path, "view")
+        return os.path.join(env_subdir_path(self.path), "view")
 
     @property
     def repo(self):
@@ -2142,7 +2125,7 @@ class Environment:
         """
         fs.mkdirp(self.path)
         if dot_env:
-            fs.mkdirp(self.env_subdir_path)
+            fs.mkdirp(env_subdir_path(self.path))
 
     def update_environment_repository(self) -> None:
         """Updates the repository associated with the environment."""
@@ -2326,144 +2309,6 @@ def make_repo_path(root):
     return path
 
 
-def included_config_scopes(manifest: "EnvironmentManifestFile") -> List[spack.config.ConfigScope]:
-    """List of included configuration scopes from the manifest.
-
-    Scopes are listed in the YAML file in order from highest to
-    lowest precedence, so configuration from earlier scope will take
-    precedence over later ones.
-
-    This routine returns them in the order they should be pushed onto
-    the internal scope stack (so, in reverse, from lowest to highest).
-
-    Args:
-        manifest:  environment's manifest file instance
-
-    Returns:  Configuration scopes associated with the environment manifest
-    """
-    scopes = []
-
-    # load config scopes added via 'include:', in reverse so that
-    # highest-precedence scopes are last.
-    stage_dir = config_stage_dir(manifest.manifest_dir)
-    includes = manifest[TOP_LEVEL_KEY].get("include", [])
-    env_name = environment_name(manifest.manifest_dir)
-    missing = []
-    for i, config_path in enumerate(reversed(includes)):
-        # allow paths to contain spack config/environment variables, etc.
-        config_path = substitute_path_variables(config_path)
-
-        include_url = urllib.parse.urlparse(config_path)
-
-        # Transform file:// URLs to direct includes.
-        if include_url.scheme == "file":
-            config_path = urllib.request.url2pathname(include_url.path)
-
-        # Any other URL should be fetched.
-        elif include_url.scheme in ("http", "https", "ftp"):
-            # Stage any remote configuration file(s)
-            staged_configs = os.listdir(stage_dir) if os.path.exists(stage_dir) else []
-            remote_path = urllib.request.url2pathname(include_url.path)
-            basename = os.path.basename(remote_path)
-            if basename in staged_configs:
-                # Do NOT re-stage configuration files over existing
-                # ones with the same name since there is a risk of
-                # losing changes (e.g., from 'spack config update').
-                tty.warn(
-                    "Will not re-stage configuration from {0} to avoid "
-                    "losing changes to the already staged file of the "
-                    "same name.".format(remote_path)
-                )
-
-                # Recognize the configuration stage directory
-                # is flattened to ensure a single copy of each
-                # configuration file.
-                config_path = stage_dir
-                if basename.endswith(".yaml"):
-                    config_path = os.path.join(config_path, basename)
-            else:
-                staged_path = spack.config.fetch_remote_configs(
-                    config_path, stage_dir, skip_existing=True
-                )
-                if not staged_path:
-                    raise SpackEnvironmentError(
-                        "Unable to fetch remote configuration {0}".format(config_path)
-                    )
-                config_path = staged_path
-
-        elif include_url.scheme:
-            raise ValueError(
-                f"Unsupported URL scheme ({include_url.scheme}) for "
-                f"environment include: {config_path}"
-            )
-
-        # treat relative paths as relative to the environment
-        if not os.path.isabs(config_path):
-            config_path = os.path.join(manifest.manifest_dir, config_path)
-            config_path = os.path.normpath(os.path.realpath(config_path))
-
-        if os.path.isdir(config_path):
-            # directories are treated as regular ConfigScopes
-            config_name = "env:%s:%s" % (env_name, os.path.basename(config_path))
-            tty.debug("Creating ConfigScope {0} for '{1}'".format(config_name, config_path))
-            scope = spack.config.ConfigScope(config_name, config_path)
-        elif os.path.exists(config_path):
-            # files are assumed to be SingleFileScopes
-            config_name = "env:%s:%s" % (env_name, config_path)
-            tty.debug("Creating SingleFileScope {0} for '{1}'".format(config_name, config_path))
-            scope = spack.config.SingleFileScope(
-                config_name, config_path, spack.schema.merged.schema
-            )
-        else:
-            missing.append(config_path)
-            continue
-
-        scopes.append(scope)
-
-    if missing:
-        msg = "Detected {0} missing include path(s):".format(len(missing))
-        msg += "\n   {0}".format("\n   ".join(missing))
-        raise spack.config.ConfigFileError(msg)
-
-    return scopes
-
-
-def env_config_scopes(manifest: "EnvironmentManifestFile") -> List[spack.config.ConfigScope]:
-    """A list of all configuration scopes for the environment manifest.
-
-    Args:
-        manifest: manifest file for the environment
-
-    Returns:  All configuration scopes associated with the environment
-    """
-    config_name = manifest.scope_name
-    env_scope = spack.config.SingleFileScope(
-        config_name, str(manifest.manifest_file), spack.schema.env.schema, [TOP_LEVEL_KEY]
-    )
-
-    return check_disallowed_env_config_mods(included_config_scopes(manifest) + [env_scope])
-
-
-def prepare_config_scope(manifest: "EnvironmentManifestFile") -> None:
-    """Add an environment manifest's scopes to the global configuration search path.
-
-    Args:
-        manifest: manifest file for the environment
-    """
-    for scope in env_config_scopes(manifest):
-        spack.config.CONFIG.push_scope(scope)
-
-
-def deactivate_config_scope(manifest: "EnvironmentManifestFile") -> None:
-    """Remove any scopes from an environment's manifest from the global config path.
-
-    Args:
-        manifest: manifest file for the environment
-    """
-    for scope in env_config_scopes(manifest):
-        spack.config.CONFIG.remove_scope(scope.name)
-
-
 def manifest_file(env_name_or_dir):
     """Return the absolute path to a manifest file given the environment
     name or directory.
@@ -2566,19 +2411,6 @@ def no_active_environment():
         # TODO: we don't handle `use_env_repo` here.
         if env:
             activate(env)
-
-
-@contextlib.contextmanager
-def manifest_config(manifest: "EnvironmentManifestFile"):
-    """Ensure only the given environment manifest configuration scopes are global.
-
-    Args:
-        manifest: manifest file instance
-    """
-    with no_active_environment():
-        prepare_config_scope(manifest)
-        yield
-        deactivate_config_scope(manifest)
 
 
 def initialize_environment_dir(
@@ -2709,11 +2541,6 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             raise ValueError(f"cannot find a spec equivalent to {user_spec}")
 
         return result
-
-    @property
-    def env_subdir_path(self) -> str:
-        """Path to directory where the env stores repos, logs, views."""
-        return env_subdir_path(self.manifest_dir)
 
     def add_user_spec(self, user_spec: str) -> None:
         """Appends the user spec passed as input to the list of root specs.
@@ -2916,6 +2743,147 @@ class EnvironmentManifestFile(collections.abc.Mapping):
 
     def __str__(self):
         return str(self.manifest_file)
+
+    @property
+    def config_stage_dir(self) -> str:
+        """Path to locally staged environment configuration files as determined
+        by the location of the manifest file.
+
+        Returns:  directory for any staged environment configuration files.
+        """
+        return os.path.join(env_subdir_path(self.manifest_dir), "config")
+
+    @property
+    def included_config_scopes(self) -> List[spack.config.ConfigScope]:
+        """List of included configuration scopes from the manifest.
+
+        Scopes are listed in the YAML file in order from highest to
+        lowest precedence, so configuration from earlier scope will take
+        precedence over later ones.
+
+        This routine returns them in the order they should be pushed onto
+        the internal scope stack (so, in reverse, from lowest to highest).
+
+        Returns:  Configuration scopes associated with the environment manifest
+        """
+        scopes = []
+
+        # load config scopes added via 'include:', in reverse so that
+        # highest-precedence scopes are last.
+        stage_dir = self.config_stage_dir
+        includes = self[TOP_LEVEL_KEY].get("include", [])
+        env_name = environment_name(self.manifest_dir)
+        missing = []
+        for i, config_path in enumerate(reversed(includes)):
+            # allow paths to contain spack config/environment variables, etc.
+            config_path = substitute_path_variables(config_path)
+
+            include_url = urllib.parse.urlparse(config_path)
+
+            # Transform file:// URLs to direct includes.
+            if include_url.scheme == "file":
+                config_path = urllib.request.url2pathname(include_url.path)
+
+            # Any other URL should be fetched.
+            elif include_url.scheme in ("http", "https", "ftp"):
+                # Stage any remote configuration file(s)
+                staged_configs = os.listdir(stage_dir) if os.path.exists(stage_dir) else []
+                remote_path = urllib.request.url2pathname(include_url.path)
+                basename = os.path.basename(remote_path)
+                if basename in staged_configs:
+                    # Do NOT re-stage configuration files over existing
+                    # ones with the same name since there is a risk of
+                    # losing changes (e.g., from 'spack config update').
+                    tty.warn(
+                        "Will not re-stage configuration from {0} to avoid "
+                        "losing changes to the already staged file of the "
+                        "same name.".format(remote_path)
+                    )
+
+                    # Recognize the configuration stage directory
+                    # is flattened to ensure a single copy of each
+                    # configuration file.
+                    config_path = stage_dir
+                    if basename.endswith(".yaml"):
+                        config_path = os.path.join(config_path, basename)
+                else:
+                    staged_path = spack.config.fetch_remote_configs(
+                        config_path, stage_dir, skip_existing=True
+                    )
+                    if not staged_path:
+                        raise SpackEnvironmentError(
+                            "Unable to fetch remote configuration {0}".format(config_path)
+                        )
+                    config_path = staged_path
+
+            elif include_url.scheme:
+                raise ValueError(
+                    f"Unsupported URL scheme ({include_url.scheme}) for "
+                    f"environment include: {config_path}"
+                )
+
+            # treat relative paths as relative to the environment
+            if not os.path.isabs(config_path):
+                config_path = os.path.join(self.manifest_dir, config_path)
+                config_path = os.path.normpath(os.path.realpath(config_path))
+
+            if os.path.isdir(config_path):
+                # directories are treated as regular ConfigScopes
+                config_name = "env:%s:%s" % (env_name, os.path.basename(config_path))
+                tty.debug("Creating ConfigScope {0} for '{1}'".format(config_name, config_path))
+                scope = spack.config.ConfigScope(config_name, config_path)
+            elif os.path.exists(config_path):
+                # files are assumed to be SingleFileScopes
+                config_name = "env:%s:%s" % (env_name, config_path)
+                tty.debug(
+                    "Creating SingleFileScope {0} for '{1}'".format(config_name, config_path)
+                )
+                scope = spack.config.SingleFileScope(
+                    config_name, config_path, spack.schema.merged.schema
+                )
+            else:
+                missing.append(config_path)
+                continue
+
+            scopes.append(scope)
+
+        if missing:
+            msg = "Detected {0} missing include path(s):".format(len(missing))
+            msg += "\n   {0}".format("\n   ".join(missing))
+            raise spack.config.ConfigFileError(msg)
+
+        return scopes
+
+    @property
+    def env_config_scopes(self) -> List[spack.config.ConfigScope]:
+        """A list of all configuration scopes for the environment manifest.
+
+        Returns:  All configuration scopes associated with the environment
+        """
+        config_name = self.scope_name
+        env_scope = spack.config.SingleFileScope(
+            config_name, str(self.manifest_file), spack.schema.env.schema, [TOP_LEVEL_KEY]
+        )
+
+        return check_disallowed_env_config_mods(self.included_config_scopes + [env_scope])
+
+    def prepare_config_scope(self) -> None:
+        """Add the manifest's scopes to the global configuration search path."""
+        for scope in self.env_config_scopes:
+            spack.config.CONFIG.push_scope(scope)
+
+    def deactivate_config_scope(self) -> None:
+        """Remove any of the manifest's scopes from the global config path."""
+        for scope in self.env_config_scopes:
+            spack.config.CONFIG.remove_scope(scope.name)
+
+    @contextlib.contextmanager
+    def use_config(self):
+        """Ensure only the manifest's configuration scopes are global."""
+        with no_active_environment():
+            self.prepare_config_scope()
+            yield
+            self.deactivate_config_scope()
 
 
 class SpackEnvironmentError(spack.error.SpackError):
