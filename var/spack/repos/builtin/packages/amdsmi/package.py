@@ -12,8 +12,8 @@ class Amdsmi(CMakePackage):
     is a C library for Linux that provides a user space interface for
     applications to monitor and control AMD device."""
 
-    homepage = "https://github.com/RadeonOpenCompute/amdsmi"
-    url = "https://github.com/RadeonOpenCompute/amdsmi/archive/refs/tags/rocm-5.6.0.tar.gz"
+    homepage = "https://github.com/ROCm/amdsmi"
+    url = "https://github.com/ROCm/amdsmi/archive/refs/tags/rocm-5.6.0.tar.gz"
 
     tags = ["rocm"]
     maintainers("srekolam", "renjithravindrankannath")

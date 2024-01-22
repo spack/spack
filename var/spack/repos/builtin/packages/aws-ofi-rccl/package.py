@@ -11,9 +11,9 @@ class AwsOfiRccl(AutotoolsPackage):
     libfabric as a network provider while running AMD's RCCL based
     applications."""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/aws-ofi-rccl"
-    git = "https://github.com/ROCmSoftwarePlatform/aws-ofi-rccl.git"
-    url = "https://github.com/ROCmSoftwarePlatform/aws-ofi-rccl.git"
+    homepage = "https://github.com/ROCm/aws-ofi-rccl"
+    git = "https://github.com/ROCm/aws-ofi-rccl.git"
+    url = "https://github.com/ROCm/aws-ofi-rccl.git"
     tags = ["rocm"]
 
     maintainers("bvanessen")

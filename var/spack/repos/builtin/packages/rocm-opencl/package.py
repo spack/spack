@@ -12,8 +12,8 @@ from spack.package import *
 class RocmOpencl(CMakePackage):
     """OpenCL: Open Computing Language on ROCclr"""
 
-    homepage = "https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime"
-    git = "https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime.git"
+    homepage = "https://github.com/ROCm/ROCm-OpenCL-Runtime"
+    git = "https://github.com/ROCm/ROCm-OpenCL-Runtime.git"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
@@ -146,9 +146,7 @@ class RocmOpencl(CMakePackage):
     ]:
         resource(
             name="rocclr",
-            url="https://github.com/ROCm-Developer-Tools/ROCclr/archive/rocm-{0}.tar.gz".format(
-                d_version
-            ),
+            url="https://github.com/ROCm/ROCclr/archive/rocm-{0}.tar.gz".format(d_version),
             sha256=d_shasum,
             expand=True,
             destination="",

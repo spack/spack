@@ -11,9 +11,9 @@ from spack.package import *
 class Migraphx(CMakePackage):
     """AMD's graph optimization engine."""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX"
-    git = "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX.git"
-    url = "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/AMDMIGraphX"
+    git = "https://github.com/ROCm/AMDMIGraphX.git"
+    url = "https://github.com/ROCm/AMDMIGraphX/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
@@ -21,6 +21,7 @@ class Migraphx(CMakePackage):
 
     license("MIT")
 
+    version("6.0.0", sha256="7bb3f5011da9b1f3b79707b06118c523c1259215f650c2ffa5622a7e1d88868f")
     version("5.7.1", sha256="3e58c043a5a7d1357ee05725fd6cd41e190b070f1ba57f61300128429902089c")
     version("5.7.0", sha256="14f13554367d2d6490d66f8b5b739203225e7acce25085559e7c4acf29e2a4d5")
     version("5.6.1", sha256="b108c33f07572ffd880b20f6de06f1934ab2a1b41ae69095612322ac412fa91c")
@@ -108,7 +109,7 @@ class Migraphx(CMakePackage):
     )
 
     def url_for_version(self, version):
-        url = "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX/archive/"
+        url = "https://github.com/ROCm/AMDMIGraphX/archive/"
         if version <= Version("3.5.0"):
             url += "{0}.tar.gz".format(version)
         else:
@@ -168,6 +169,7 @@ class Migraphx(CMakePackage):
         "5.6.1",
         "5.7.0",
         "5.7.1",
+        "6.0.0",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
@@ -175,7 +177,7 @@ class Migraphx(CMakePackage):
         depends_on("rocblas@" + ver, when="@" + ver)
         depends_on("miopen-hip@" + ver, when="@" + ver)
 
-    for ver in ["5.7.0", "5.7.1"]:
+    for ver in ["5.7.0", "5.7.1", "6.0.0"]:
         depends_on("composable-kernel@" + ver, when="@" + ver)
 
     @property

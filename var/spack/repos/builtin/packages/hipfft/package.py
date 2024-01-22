@@ -14,9 +14,9 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
     It sits between the application and the backend FFT library, marshalling
     inputs into the backend and results back to the application."""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/hipFFT"
-    git = "https://github.com/ROCmSoftwarePlatform/hipFFT.git"
-    url = "https://github.com/ROCmSoftwarePlatform/hipfft/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/hipFFT"
+    git = "https://github.com/ROCm/hipFFT.git"
+    url = "https://github.com/ROCm/hipfft/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("renjithravindrankannath", "srekolam")
@@ -24,6 +24,7 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
     license("MIT")
 
     version("master", branch="master")
+    version("6.0.0", sha256="44f328b7862c066459089dfe62833cb7d626c6ceb71c57d8c7d6bba45dad491e")
     version("5.7.1", sha256="33452576649df479f084076c47d0b30f6f1da34864094bce767dd9bf609f04aa")
     version("5.7.0", sha256="daa5dc44580145e85ff8ffa7eb40a3d1ef41f3217549c01281715ff696a31588")
     version("5.6.1", sha256="d2ae36b8eacd39b865e8a7972b8eb86bcea2de4ac90711bba7e29b39b01eaa74")
@@ -125,6 +126,7 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
         "5.6.1",
         "5.7.0",
         "5.7.1",
+        "6.0.0",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("rocfft@" + ver, when="+rocm @" + ver)
@@ -133,6 +135,8 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
         depends_on(
             "rocfft amdgpu_target={0}".format(tgt), when="+rocm amdgpu_target={0}".format(tgt)
         )
+    # https://github.com/ROCm/rocFFT/pull/85)
+    patch("001-remove-submodule-and-sync-shared-files-from-rocFFT.patch", when="@6.0.0")
 
     def cmake_args(self):
         args = [self.define("BUILD_CLIENTS_SAMPLES", "OFF")]

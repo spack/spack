@@ -12,9 +12,9 @@ from spack.pkg.builtin.boost import Boost
 class MiopenOpencl(CMakePackage):
     """AMD's library for high performance machine learning primitives."""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/MIOpen"
-    git = "https://github.com/ROCmSoftwarePlatform/MIOpen.git"
-    url = "https://github.com/ROCmSoftwarePlatform/MIOpen/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/MIOpen"
+    git = "https://github.com/ROCm/MIOpen.git"
+    url = "https://github.com/ROCm/MIOpen/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")

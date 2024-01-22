@@ -15,13 +15,14 @@ class RocmValidationSuite(CMakePackage):
     computing environment, enabled using the ROCm software stack on a
     compatible platform."""
 
-    homepage = "https://github.com/ROCm-Developer-Tools/ROCmValidationSuite"
-    url = "https://github.com/ROCm-Developer-Tools/ROCmValidationSuite/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/ROCmValidationSuite"
+    url = "https://github.com/ROCm/ROCmValidationSuite/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     license("MIT")
 
     maintainers("srekolam", "renjithravindrankannath")
+    version("6.0.0", sha256="a84e36b5e50e70ba033fb6bc6fa99da2e32bf7eaef2098df3164365a77a8f14c")
     version("5.7.1", sha256="202f2b6e014bbbeec40af5d3ec630c042f09a61087a77bd70715d81044ea4d65")
     version("5.7.0", sha256="f049b7786a220e9b6dfe099f17727dd0d9e41be9e680fe8309eae400cc5536ea")
     version("5.6.1", sha256="d5e4100e2d07311dfa101563c15d026a8130442cdee8af9ef861832cd7866c0d")
@@ -122,9 +123,8 @@ class RocmValidationSuite(CMakePackage):
         "007-cleanup-path-reference-donot-download-googletest-yaml-library-path_5.6.patch",
         when="@5.6",
     )
-    patch(
-        "008-correcting-library-and-include-path-WITHOUT-RVS-BUILD-TESTS.patch", when="@5.7.0:5.7"
-    )
+    patch("008-correcting-library-and-include-path-WITHOUT-RVS-BUILD-TESTS.patch", when="@5.7")
+    patch("009-replacing-rocm-path-with-package-path.patch", when="@6.0")
     depends_on("cmake@3.5:", type="build")
     depends_on("zlib-api", type="link")
     depends_on("yaml-cpp~shared")
@@ -165,6 +165,7 @@ class RocmValidationSuite(CMakePackage):
         "5.6.1",
         "5.7.0",
         "5.7.1",
+        "6.0.0",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocminfo@" + ver, when="@" + ver)

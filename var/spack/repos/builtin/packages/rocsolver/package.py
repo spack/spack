@@ -13,9 +13,9 @@ class Rocsolver(CMakePackage):
     """rocSOLVER is a work-in-progress implementation of a
     subset of LAPACK functionality on the ROCm platform."""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/rocSOLVER"
-    git = "https://github.com/ROCmSoftwarePlatform/rocSOLVER.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocSOLVER/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/rocSOLVER"
+    git = "https://github.com/ROCm/rocSOLVER.git"
+    url = "https://github.com/ROCm/rocSOLVER/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath", "haampie")
@@ -41,6 +41,7 @@ class Rocsolver(CMakePackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("6.0.0", sha256="5fcaba96f3efafc2ecc3f4ec104095d96545c16e1b9f95410bd571cb0fc643ae")
     version("5.7.1", sha256="83e0c137b8690dbeb2e85d9e25415d96bd06979f09f2b10b2aff8e4c9f833fa4")
     version("5.7.0", sha256="bb16d360f14b34fe6e8a6b8ddc6e631672a5ffccbdcb25f0ce319edddd7f9682")
     version("5.6.1", sha256="6a8f366218aee599a0e56755030f94ee690b34f30e6d602748632226c5dc21bb")
@@ -136,7 +137,7 @@ class Rocsolver(CMakePackage):
     depends_on("netlib-lapack@3.7.1:", type="test")
 
     patch("link-clients-blas.patch", when="@4.3.0:4.3.2")
-    # Backport https://github.com/ROCmSoftwarePlatform/rocSOLVER/commit/2bbfb8976f6e4d667499c77e41a6433850063e88
+    # Backport https://github.com/ROCm/rocSOLVER/commit/2bbfb8976f6e4d667499c77e41a6433850063e88
     patch("fmt-8.1-compatibility.patch", when="@4.5.0:5.1.3")
     # Maximize compatibility with other libraries that are using fmt.
     patch("fmt-9-compatibility.patch", when="@5.2.0:5.5")
@@ -180,10 +181,11 @@ class Rocsolver(CMakePackage):
         "5.6.1",
         "5.7.0",
         "5.7.1",
+        "6.0.0",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocblas@" + ver, when="@" + ver)
-    for ver in ["5.6.0", "5.6.1", "5.7.0", "5.7.1"]:
+    for ver in ["5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0"]:
         depends_on("rocsparse@5.2:", when="@5.6:")
 
     for tgt in itertools.chain(["auto"], amdgpu_targets):

@@ -10,9 +10,9 @@ class RcclTests(MakefilePackage):
     """These tests check both the performance and the correctness of RCCL
     operations. They can be compiled against RCCL."""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/rccl-tests"
-    git = "https://github.com/ROCmSoftwarePlatform/rccl-tests.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rccl-tests.git"
+    homepage = "https://github.com/ROCm/rccl-tests"
+    git = "https://github.com/ROCm/rccl-tests.git"
+    url = "https://github.com/ROCm/rccl-tests.git"
     tags = ["rocm"]
 
     maintainers("bvanessen")

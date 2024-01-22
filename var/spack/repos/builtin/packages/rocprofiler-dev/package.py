@@ -11,9 +11,9 @@ from spack.package import *
 class RocprofilerDev(CMakePackage):
     """ROCPROFILER library for AMD HSA runtime API extension support"""
 
-    homepage = "https://github.com/ROCm-Developer-Tools/rocprofiler"
-    git = "https://github.com/ROCm-Developer-Tools/rocprofiler.git"
-    url = "https://github.com/ROCm-Developer-Tools/rocprofiler/archive/refs/tags/rocm-5.4.3.tar.gz"
+    homepage = "https://github.com/ROCm/rocprofiler"
+    git = "https://github.com/ROCm/rocprofiler.git"
+    url = "https://github.com/ROCm/rocprofiler/archive/refs/tags/rocm-5.4.3.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
@@ -133,7 +133,7 @@ class RocprofilerDev(CMakePackage):
         depends_on("roctracer-dev-api@" + ver, when="@" + ver)
 
     depends_on("numactl", type="link", when="@4.3.1")
-    # See https://github.com/ROCm-Developer-Tools/rocprofiler/pull/50
+    # See https://github.com/ROCm/rocprofiler/pull/50
     patch("fix-includes.patch")
     patch("0001-Continue-build-in-absence-of-aql-profile-lib.patch", when="@5.3:")
 

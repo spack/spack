@@ -12,9 +12,9 @@ class Miopengemm(CMakePackage):
     """An OpenCL general matrix multiplication (GEMM) API
     and kernel generator"""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/MIOpenGEMM"
-    git = "https://github.com/ROCmSoftwarePlatform/MIOpenGEMM.git"
-    url = "https://github.com/ROCmSoftwarePlatform/MIOpenGEMM/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/MIOpenGEMM"
+    git = "https://github.com/ROCm/MIOpenGEMM.git"
+    url = "https://github.com/ROCm/MIOpenGEMM/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
@@ -22,8 +22,8 @@ class Miopengemm(CMakePackage):
 
     def url_for_version(self, version):
         if version == Version("1.1.6"):
-            return "https://github.com/ROCmSoftwarePlatform/MIOpenGEMM/archive/1.1.6.tar.gz"
-        url = "https://github.com/ROCmSoftwarePlatform/MIOpenGEMM/archive/rocm-{0}.tar.gz"
+            return "https://github.com/ROCm/MIOpenGEMM/archive/1.1.6.tar.gz"
+        url = "https://github.com/ROCm/MIOpenGEMM/archive/rocm-{0}.tar.gz"
         return url.format(version)
 
     license("MIT")

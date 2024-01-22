@@ -489,6 +489,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     # workaround an NVCC bug with c++14 (https://github.com/trilinos/Trilinos/issues/6954)
     # avoid calling deprecated functions with CUDA-11
     patch("fix_cxx14_cuda11.patch", when="@13.0.0:13.0.1 cxxstd=14 ^cuda@11:")
+    patch(
+        "0001-use-the-gcnArchName-inplace-of-gcnArch-as-gcnArch-is.patch",
+        when="@15.0.0 ^hip@6.0.0 +rocm",
+    )
+
     # Allow building with +teko gotype=long
     patch(
         "https://github.com/trilinos/Trilinos/commit/b17f20a0b91e0b9fc5b1b0af3c8a34e2a4874f3f.patch?full_index=1",

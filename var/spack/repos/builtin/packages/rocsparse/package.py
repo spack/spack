@@ -15,9 +15,9 @@ class Rocsparse(CMakePackage):
     and toolchains. rocSPARSE is created using the HIP programming
     language and optimized for AMD's latest discrete GPUs."""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/rocSPARSE"
-    git = "https://github.com/ROCmSoftwarePlatform/rocSPARSE.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocSPARSE/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/rocSPARSE"
+    git = "https://github.com/ROCm/rocSPARSE.git"
+    url = "https://github.com/ROCm/rocSPARSE/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath")
@@ -34,7 +34,7 @@ class Rocsparse(CMakePackage):
     variant("test", default=False, description="Build rocsparse-test client")
 
     license("MIT")
-
+    version("6.0.0", sha256="bdc618677ec78830c6af315d61194d6ab8532345b8daeeb115aca96f274d4ca4")
     version("5.7.1", sha256="4c09b182b371124675d4057246021b5ed45e2833fdbf265b37a9b06b668baf0a")
     version("5.7.0", sha256="a42f0eb531b015b719e2bdcdff0cfb214e9894f73107966260f26931f982ecbc")
     version("5.6.1", sha256="6a50a64354507f1374e1a86aa7f5c07d1aaa96ac193ac292c279153087bb5d54")
@@ -153,6 +153,7 @@ class Rocsparse(CMakePackage):
         "5.6.1",
         "5.7.0",
         "5.7.1",
+        "6.0.0",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocprim@" + ver, when="@" + ver)
