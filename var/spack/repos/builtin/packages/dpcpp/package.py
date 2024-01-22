@@ -194,7 +194,7 @@ class Dpcpp(CMakePackage, CudaPackage, ROCmPackage):
                 args.append(define("SYCL_BUILD_PI_CUDA", "ON"))
 
         if "+rocm" in spec:
-            args.append(define("SYCL_BUILD_PI_HIP_ROCM_DIR", spec["hip"].prefix[:-3]))
+            args.append(define("SYCL_BUILD_PI_HIP_ROCM_DIR", spec["hip"].prefix))
             with when("@:2021-12"):
                 args.append(define("SYCL_BUILD_PI_HIP", "ON"))
                 args.append(define("SYCL_BUILD_PI_HIP_PLATFORM", "AMD"))
