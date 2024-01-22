@@ -30,27 +30,15 @@ class Chapel(AutotoolsPackage):
     version("1.32.0", sha256="a359032b4355774e250fb2796887b3bbf58d010c468faba97f7b471bc6bab57d")
     version("1.31.0", sha256="bf9a63f7e5d1f247e8680c9a07aeb330cbbf199777a282408100a87dda95918f")
     version("1.30.0", sha256="d7d82f64f405b8c03e2ce6353d16aba5a261d3f0c63dc3bb64ea3841cfa597b9")
-    version(
-        "1.29.0",
-        deprecated=True,
-        sha256="7fcd13db8e27f14d586358d4c2587e43c8f21d408126fa0ca27d1b7067b867c0",
-    )
-    version(
-        "1.28.0",
-        deprecated=True,
-        sha256="321243a91f8f2dfb3b37a714e2d45298e6a967a9a115565f9ad9cc630ff0bd0e",
-    )
-    # Do NOT add older versions here.
-    # Chapel releases over 2 years old are not supported.
 
     depends_on("doxygen@1.8.17:")
 
     variant(
         "llvm",
-        default="unset",
+        default="spack",
         description="LLVM backend type. Use value 'spack' to have spack "
         "handle the LLVM package",
-        values=("none", "system", "bundled", "spack", "unset"),
+        values=("none", "system", "bundled", "spack"),
     )
 
     variant(
@@ -60,7 +48,7 @@ class Chapel(AutotoolsPackage):
         values=("none", "gasnet", "ofi"),
     )
     variant(
-        "substrate",
+        "comm_substrate",
         default="none",
         description="Build Chapel with mulit-locale support using the "
         "supplied CHPL_COMM_SUBSTRATE",
@@ -142,8 +130,8 @@ class Chapel(AutotoolsPackage):
     variant(
         "gmp",
         description="Build with gmp support",
-        default="unset",
-        values=("unset", "system", "none", "bundled"),
+        default="spack",
+        values=("system", "none", "bundled", "spack"),
         multi=False,
     )
 
@@ -155,17 +143,18 @@ class Chapel(AutotoolsPackage):
         multi=False,
     )
 
-    variant(
-        "aux_filesys",
-        description="Build with runtime support for certain filesystems",
-        default="none",
-        values=("none", "lustre"),
-        multi=False,
-    )
+    # Deprecated as of (?)
+    # variant(
+    #     "aux_filesys",
+    #     description="Build with runtime support for certain filesystems",
+    #     default="none",
+    #     values=("none", "lustre"),
+    #     multi=False,
+    # )
 
     variant(
         "locale_model",
-        values=("flat", "numa"),
+        values=("flat", "gpu"),
         default="flat",
         description="Locale model to use",
         multi=False,
@@ -283,6 +272,7 @@ class Chapel(AutotoolsPackage):
     # Add dependencies
     depends_on("llvm@14:16", when="llvm=spack")
     depends_on("m4")
+    depends_on("gmp", when="gmp=spack", type=("build", "link", "run"))
 
     # TODO: Spack needs both of these, so do we even need to specify them?
     depends_on("python@3.7:3.10")
@@ -308,12 +298,12 @@ class Chapel(AutotoolsPackage):
                 "CHPL_LLVM_CONFIG", "{0}/{1}".format(self.spec["llvm"].prefix, "/bin/llvm-config")
             )
             env.set("CHPL_LLVM", "system")
-        elif self.spec.variants["llvm"].value != "unset":
+        else:
             env.set("CHPL_LLVM", self.spec.variants["llvm"].value)
 
     def setup_env_vars(self, env):
         self.setup_chpl_llvm(env)
-        env.set("CHPL_AUX_FILESYSTEM", self.spec.variants["aux_filesys"].value)
+        # env.set("CHPL_AUX_FILESYSTEM", self.spec.variants["aux_filesys"].value)
         if self.spec.variants["developer"].value:
             env.set("CHPL_DEVELOPER", "1")
         env.set("CHPL_RE2", self.spec.variants["re2"].value)
@@ -323,6 +313,19 @@ class Chapel(AutotoolsPackage):
         if self.spec.variants["target_platform"].value != "unset":
             env.set("CHPL_TARGET_PLATFORM", self.spec.variants["target_platform"].value)
         if self.spec.variants["gmp"].value != "unset":
+            env.set("CHPL_GMP", self.spec.variants["gmp"].value)
+        if self.spec.variants["host_compiler"].value != "unset":
+            env.set("CHPL_HOST_COMPILER", self.spec.variants["host_compiler"].value)
+        if self.spec.variants["target_compiler"].value != "unset":
+            env.set("CHPL_TARGET_COMPILER", self.spec.variants["target_compiler"].value)
+        env.prepend_path(
+            "PATH", join_path(self.prefix.share, "chapel", self._output_version_short, "util")
+        )
+        if self.spec.variants["gmp"].value == "spack":
+            env.set("CHPL_GMP", "system")
+            env.prepend_path("CPATH", self.spec["gmp"].prefix.include)
+            env.prepend_path("LD_LIBRARY_PATH", self.spec["gmp"].prefix.lib)
+        else:
             env.set("CHPL_GMP", self.spec.variants["gmp"].value)
 
         self.setup_chpl_comm(env, self.spec)
@@ -336,18 +339,28 @@ class Chapel(AutotoolsPackage):
 
     @property
     @llnl.util.lang.memoized
-    def _output_version(self):
+    def _output_version_long(self):
+        if str(self.spec.version).lower() == "main":
+            return "1.34.0"
         spec_vers_str = str(self.spec.version.up_to(3))
+        return spec_vers_str
+
+    @property
+    @llnl.util.lang.memoized
+    def _output_version_short(self):
+        if str(self.spec.version).lower() == "main":
+            return "1.34"
+        spec_vers_str = str(self.spec.version.up_to(2))
         return spec_vers_str
 
     def test_version(self):
         """Perform version checks on selected installed package binaries."""
-        expected = f"version {self._output_version}"
+        expected = f"version {self._output_version_long}"
 
         exes = ["chpl", "chpldoc"]
 
         for exe in exes:
-            reason = f"ensure version of {exe} is {self._output_version}"
+            reason = f"ensure version of {exe} is {self._output_version_long}"
             with test_part(self, f"test_version_{exe}", purpose=reason):
                 path = join_path(self.prefix.bin, exe)
                 if not os.path.isfile(path):
