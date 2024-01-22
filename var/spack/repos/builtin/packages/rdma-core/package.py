@@ -107,11 +107,4 @@ class RdmaCore(CMakePackage):
         if self.spec.satisfies("~man_pages"):
             cmake_args.append("-DNO_MAN_PAGES=1")
 
-        if self.spec.satisfies("@:39.0"):
-            cmake_args.extend(
-                [
-                    self.define("PYTHON_LIBRARY", self.spec["python"].libs[0]),
-                    self.define("PYTHON_INCLUDE_DIR", self.spec["python"].headers.directories[0]),
-                ]
-            )
         return cmake_args

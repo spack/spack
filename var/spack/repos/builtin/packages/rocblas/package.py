@@ -11,9 +11,9 @@ from spack.package import *
 class Rocblas(CMakePackage):
     """Radeon Open Compute BLAS library"""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/rocBLAS/"
-    git = "https://github.com/ROCmSoftwarePlatform/rocBLAS.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocBLAS/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/rocBLAS/"
+    git = "https://github.com/ROCm/rocBLAS.git"
+    url = "https://github.com/ROCm/rocBLAS/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath", "haampie")
@@ -23,6 +23,7 @@ class Rocblas(CMakePackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("6.0.0", sha256="befa4a75f1de0ea37f2358d4c2de5406d7bce671ca9936e2294b64d3b3bafb60")
     version("5.7.1", sha256="2984a5ed0ea5a05d40996ee3fddecb24399cbe8ea3e4921fc254e54d8f52fe4f")
     version("5.7.0", sha256="024edd98de9687ee5394badc4dd4c543eef4eb3f71c96ff64100705d851e1744")
     version("5.6.1", sha256="73896ebd445162a69af97f9fd462684609b4e0cf617eab450cd4558b4a23941e")
@@ -131,8 +132,8 @@ class Rocblas(CMakePackage):
     conflicts("amdgpu_target=gfx1012", when="@:4.2.1")
     conflicts("amdgpu_target=gfx1030", when="@:4.2.1")
     # https://reviews.llvm.org/D124866
-    # https://github.com/ROCm-Developer-Tools/HIP/issues/2678
-    # https://github.com/ROCm-Developer-Tools/hipamd/blob/rocm-5.2.x/include/hip/amd_detail/host_defines.h#L50
+    # https://github.com/ROCm/HIP/issues/2678
+    # https://github.com/ROCm/hipamd/blob/rocm-5.2.x/include/hip/amd_detail/host_defines.h#L50
     conflicts("%gcc@12", when="@5.2")
 
     depends_on("cmake@3.16.8:", type="build", when="@4.2.0:")
@@ -182,6 +183,7 @@ class Rocblas(CMakePackage):
         "5.6.1",
         "5.7.0",
         "5.7.1",
+        "6.0.0",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, type="build", when="@" + ver)
@@ -232,10 +234,11 @@ class Rocblas(CMakePackage):
         ("@5.6.1", "7d0a9d040c3bbae893df7ecef6a19d9cd1c304aa"),
         ("@5.7.0", "97e0cfc2c8cb87a1e38901d99c39090dc4181652"),
         ("@5.7.1", "97e0cfc2c8cb87a1e38901d99c39090dc4181652"),
+        ("@6.0.0", "17df881bde80fc20f997dfb290f4bb4b0e05a7e9"),
     ]:
         resource(
             name="Tensile",
-            git="https://github.com/ROCmSoftwarePlatform/Tensile.git",
+            git="https://github.com/ROCm/Tensile.git",
             commit=t_commit,
             when="{} +tensile".format(t_version),
         )
@@ -243,12 +246,12 @@ class Rocblas(CMakePackage):
     for ver in ["master", "develop"]:
         resource(
             name="Tensile",
-            git="https://github.com/ROCmSoftwarePlatform/Tensile.git",
+            git="https://github.com/ROCm/Tensile.git",
             branch=ver,
             when="@{} +tensile".format(ver),
         )
 
-    # Status: https://github.com/ROCmSoftwarePlatform/Tensile/commit/a488f7dadba34f84b9658ba92ce9ec5a0615a087
+    # Status: https://github.com/ROCm/Tensile/commit/a488f7dadba34f84b9658ba92ce9ec5a0615a087
     # Not yet landed in 3.7.0, nor 3.8.0.
     patch("0001-Fix-compilation-error-with-StringRef-to-basic-string.patch", when="@:3.8")
     patch("0002-Fix-rocblas-clients-blas.patch", when="@4.2.0:4.3.1")
@@ -256,7 +259,7 @@ class Rocblas(CMakePackage):
     # Finding Python package and set command python as python3
     patch("0004-Find-python.patch", when="@5.2.0:5.4")
     patch("0006-Guard-use-of-OpenMP-to-make-it-optional-5.4.patch", when="@5.4")
-    patch("0007-add-rocm-openmp-extras-include-dir.patch", when="@5.6:")
+    patch("0007-add-rocm-openmp-extras-include-dir.patch", when="@5.6:5.7")
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
@@ -309,14 +312,14 @@ class Rocblas(CMakePackage):
             # Restrict the number of jobs Tensile can spawn.
             # If we don't specify otherwise, Tensile creates a job per available core,
             # and that consumes a lot of system memory.
-            # https://github.com/ROCmSoftwarePlatform/Tensile/blob/93e10678a0ced7843d9332b80bc17ebf9a166e8e/Tensile/Parallel.py#L38
+            # https://github.com/ROCm/Tensile/blob/93e10678a0ced7843d9332b80bc17ebf9a166e8e/Tensile/Parallel.py#L38
             args.append(self.define("Tensile_CPU_THREADS", min(16, make_jobs)))
 
-        # See https://github.com/ROCmSoftwarePlatform/rocBLAS/commit/c1895ba4bb3f4f5947f3818ebd155cf71a27b634
+        # See https://github.com/ROCm/rocBLAS/commit/c1895ba4bb3f4f5947f3818ebd155cf71a27b634
         if "auto" not in self.spec.variants["amdgpu_target"]:
             args.append(self.define_from_variant(arch_define_name, "amdgpu_target"))
 
-        # See https://github.com/ROCmSoftwarePlatform/rocBLAS/issues/1196
+        # See https://github.com/ROCm/rocBLAS/issues/1196
         if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
             args.append(self.define("__skip_rocmclang", "ON"))
 
