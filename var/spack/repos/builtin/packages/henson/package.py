@@ -32,13 +32,8 @@ class Henson(CMakePackage):
     conflicts("^openmpi", when="+mpi-wrappers")
 
     def cmake_args(self):
-        args = [
+        return [
             self.define_from_variant("python", "python"),
             self.define_from_variant("mpi-wrappers", "mpi-wrappers"),
             self.define_from_variant("use_boost", "boost"),
         ]
-
-        if self.spec.satisfies("+python"):
-            args += [self.define("PYTHON_EXECUTABLE", self.spec["python"].command.path)]
-
-        return args

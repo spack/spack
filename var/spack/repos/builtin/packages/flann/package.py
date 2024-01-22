@@ -123,8 +123,4 @@ class Flann(CMakePackage):
         use_mpi = "ON" if "+mpi" in spec else "OFF"
         args.append("-DUSE_MPI:BOOL={0}".format(use_mpi))
 
-        # Configure the proper python executable
-        if "+python" in spec:
-            args.append("-DPYTHON_EXECUTABLE={0}".format(spec["python"].command.path))
-
         return args

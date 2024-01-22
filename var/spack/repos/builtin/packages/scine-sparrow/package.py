@@ -76,7 +76,7 @@ class ScineSparrow(CMakePackage):
         )
 
     def cmake_args(self):
-        args = [
+        return [
             self.define("SCINE_BUILD_TESTS", self.run_tests),
             self.define("SCINE_BUILD_PYTHON_BINDINGS", "+python" in self.spec),
             self.define("SCINE_MARCH", ""),
@@ -86,9 +86,6 @@ class ScineSparrow(CMakePackage):
             self.define("BOOST_NO_SYSTEM_PATHS", True),
             self.define("Boost_NO_BOOST_CMAKE", True),
         ]
-        if "+python" in self.spec:
-            args.append(self.define("PYTHON_EXECUTABLE", self.spec["python"].command.path))
-        return args
 
     # Adapted from ddd in MacPorts: cmake will build the executable
     # "sparrow" right next to the copy of the source directory "Sparrow".

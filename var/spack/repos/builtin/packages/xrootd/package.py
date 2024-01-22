@@ -203,12 +203,7 @@ class Xrootd(CMakePackage):
         ]
         # see https://github.com/spack/spack/pull/11581
         if "+python" in self.spec:
-            options.extend(
-                [
-                    define("PYTHON_EXECUTABLE", spec["python"].command.path),
-                    define("XRD_PYTHON_REQ_VERSION", spec["python"].version.up_to(2)),
-                ]
-            )
+            options.append(define("XRD_PYTHON_REQ_VERSION", spec["python"].version.up_to(2)))
 
         if "+scitokens-cpp" in self.spec:
             options.append("-DSCITOKENS_CPP_DIR=%s" % spec["scitokens-cpp"].prefix)

@@ -781,13 +781,11 @@ class Llvm(CMakePackage, CudaPackage):
         define = self.define
         from_variant = self.define_from_variant
 
-        python = spec["python"]
         cmake_args = [
             define("LLVM_REQUIRES_RTTI", True),
             define("LLVM_ENABLE_RTTI", True),
             define("LLVM_ENABLE_LIBXML2", False),
             define("CLANG_DEFAULT_OPENMP_RUNTIME", "libomp"),
-            define("PYTHON_EXECUTABLE", python.command.path),
             define("LIBOMP_USE_HWLOC", True),
             define("LIBOMP_HWLOC_INSTALL_DIR", spec["hwloc"].prefix),
             from_variant("LLVM_ENABLE_ZSTD", "zstd"),
@@ -810,11 +808,6 @@ class Llvm(CMakePackage, CudaPackage):
         shlib_symbol_version = spec.variants.get("shlib_symbol_version", None)
         if shlib_symbol_version is not None and shlib_symbol_version.value != "none":
             cmake_args.append(define("LLVM_SHLIB_SYMBOL_VERSION", shlib_symbol_version.value))
-
-        if python.version >= Version("3"):
-            cmake_args.append(define("Python3_EXECUTABLE", python.command.path))
-        else:
-            cmake_args.append(define("Python2_EXECUTABLE", python.command.path))
 
         projects = []
         runtimes = []

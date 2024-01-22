@@ -539,17 +539,6 @@ class Dealii(CMakePackage, CudaPackage):
         # Python bindings
         if spec.satisfies("@8.5.0:"):
             options.append(self.define_from_variant("DEAL_II_COMPONENT_PYTHON_BINDINGS", "python"))
-            if "+python" in spec:
-                python_exe = spec["python"].command.path
-                python_library = spec["python"].libs[0]
-                python_include = spec["python"].headers.directories[0]
-                options.extend(
-                    [
-                        self.define("PYTHON_EXECUTABLE", python_exe),
-                        self.define("PYTHON_INCLUDE_DIR", python_include),
-                        self.define("PYTHON_LIBRARY", python_library),
-                    ]
-                )
 
         # Simplex support (no longer experimental)
         if spec.satisfies("@9.3.0:9.4.0"):

@@ -172,7 +172,8 @@ class Precice(CMakePackage):
             cmake_args.extend(["-DPETSC_DIR=%s" % spec["petsc"].prefix, "-DPETSC_ARCH=."])
 
         # Python
-        if "+python" in spec:
+        if "@:2.3 +python" in spec:
+            # 2.4.0 and higher use find_package(Python3).
             python_library = spec["python"].libs[0]
             python_include = spec["python"].headers.directories[0]
             numpy_include = join_path(

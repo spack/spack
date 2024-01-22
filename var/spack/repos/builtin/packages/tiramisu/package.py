@@ -57,10 +57,7 @@ class Tiramisu(CMakePackage, CudaPackage, PythonExtension):
             self.define("USE_FLEXNLP", False),
         ]
         if "+python" in spec:
-            args += [
-                self.define("Tiramisu_INSTALL_PYTHONDIR", python_platlib),
-                self.define("Python3_EXECUTABLE", spec["python"].command.path),
-            ]
+            args += [self.define("Tiramisu_INSTALL_PYTHONDIR", python_platlib)]
         return args
 
     @property

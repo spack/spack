@@ -115,7 +115,7 @@ class Serenity(CMakePackage):
         )
 
     def cmake_args(self):
-        args = [
+        return [
             self.define("SERENITY_BUILD_TESTS", self.run_tests),
             self.define_from_variant("SERENITY_BUILD_PYTHON_BINDINGS", "python"),
             self.define("SERENITY_MARCH", ""),
@@ -137,6 +137,3 @@ class Serenity(CMakePackage):
             self.define("BOOST_NO_SYSTEM_PATHS", True),
             self.define("Boost_NO_BOOST_CMAKE", True),
         ]
-        if "+python" in self.spec:
-            args.append(self.define("PYTHON_EXECUTABLE", self.spec["python"].command.path))
-        return args

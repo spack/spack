@@ -33,6 +33,3 @@ class Cvise(CMakePackage):
 
     depends_on("py-pytest", when="+pytest", type=("build", "run"))
     depends_on("colordiff", when="+colordiff", type=("build", "run"))
-
-    def cmake_args(self):
-        return ["-DPYTHON_EXECUTABLE=" + self.spec["python"].command.path]

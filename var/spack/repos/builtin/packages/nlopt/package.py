@@ -53,16 +53,12 @@ class Nlopt(CMakePackage):
         # Specify on command line to alter defaults:
         # eg: spack install nlopt@master +guile -octave +cxx
 
-        # Spack should locate python by default - but to point to a build
-        if "+python" in spec:
-            args.append("-DPYTHON_EXECUTABLE=%s" % spec["python"].command.path)
-
         # On is default
-        if "-shared" in spec:
+        if "~shared" in spec:
             args.append("-DBUILD_SHARED_LIBS:Bool=OFF")
 
         # On is default
-        if "-octave" in spec:
+        if "~octave" in spec:
             args.append("-DNLOPT_OCTAVE:Bool=OFF")
 
         if "+cxx" in spec:

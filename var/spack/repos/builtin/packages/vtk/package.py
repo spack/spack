@@ -310,8 +310,6 @@ class Vtk(CMakePackage):
         # Enable/Disable wrappers for Python.
         if "+python" in spec:
             cmake_args.append("-DVTK_WRAP_PYTHON=ON")
-            if spec.satisfies("@:8"):
-                cmake_args.append("-DPYTHON_EXECUTABLE={0}".format(spec["python"].command.path))
             if "+mpi" in spec and spec.satisfies("@:8"):
                 cmake_args.append("-DVTK_USE_SYSTEM_MPI4PY:BOOL=ON")
             if spec.satisfies("@9.0.0: ^python@3:"):

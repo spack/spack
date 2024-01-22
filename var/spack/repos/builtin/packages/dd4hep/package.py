@@ -232,7 +232,6 @@ class Dd4hep(CMakePackage):
             "-DBUILD_TESTING={0}".format(self.run_tests),
             "-DBOOST_ROOT={0}".format(spec["boost"].prefix),
             "-DBoost_NO_BOOST_CMAKE=ON",
-            "-DPYTHON_EXECUTABLE={0}".format(spec["python"].command.path),
         ]
         subpackages = []
         if spec.satisfies("+ddg4"):

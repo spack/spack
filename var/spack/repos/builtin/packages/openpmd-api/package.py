@@ -123,13 +123,7 @@ class OpenpmdApi(CMakePackage):
 
         # switch internally shipped third-party libraries for spack
         if spec.satisfies("+python"):
-            py_exe_define = (
-                "Python_EXECUTABLE" if spec.version >= Version("0.13.0") else "PYTHON_EXECUTABLE"
-            )
-            args += [
-                self.define(py_exe_define, self.spec["python"].command.path),
-                self.define("openPMD_USE_INTERNAL_PYBIND11", False),
-            ]
+            args.append(self.define("openPMD_USE_INTERNAL_PYBIND11", False))
 
         args.append(self.define("openPMD_USE_INTERNAL_JSON", False))
         if spec.satisfies("@:0.14"):  # pre C++17 releases

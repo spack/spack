@@ -52,7 +52,7 @@ class ScineXtb(CMakePackage):
         os.rename("_dev", "dev")
 
     def cmake_args(self):
-        args = [
+        return [
             self.define("SCINE_BUILD_TESTS", self.run_tests),
             self.define("SCINE_BUILD_PYTHON_BINDINGS", "+python" in self.spec),
             self.define("SCINE_MARCH", ""),
@@ -62,6 +62,3 @@ class ScineXtb(CMakePackage):
             self.define("BOOST_NO_SYSTEM_PATHS", True),
             self.define("Boost_NO_BOOST_CMAKE", True),
         ]
-        if "+python" in self.spec:
-            args.append(self.define("PYTHON_EXECUTABLE", self.spec["python"].command.path))
-        return args

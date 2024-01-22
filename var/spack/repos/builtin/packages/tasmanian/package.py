@@ -114,11 +114,6 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
             args.append("-DBLAS_LIBRARIES={0}".format(spec["blas"].libs.joined(";")))
             args.append("-DLAPACK_LIBRARIES={0}".format(spec["lapack"].libs.joined(";")))
 
-        if spec.satisfies("+python"):
-            args.append(
-                "-DPYTHON_EXECUTABLE:FILEPATH={0}".format(self.spec["python"].command.path)
-            )
-
         return args
 
     @run_after("install")

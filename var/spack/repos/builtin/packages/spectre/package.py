@@ -307,7 +307,6 @@ class Spectre(CMakePackage):
         args = [
             self.define("CHARM_ROOT", self.spec["charmpp"].prefix),
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
-            self.define("Python_EXECUTABLE", self.spec["python"].command.path),
             self.define_from_variant("BUILD_PYTHON_BINDINGS", "python"),
             self.define("BUILD_TESTING", self.run_tests),
             self.define_from_variant("BUILD_DOCS", "doc"),

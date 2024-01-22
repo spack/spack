@@ -129,7 +129,6 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
 
         args = [
-            ("-DPYTHON_EXECUTABLE=%s" % spec["python"].command.path),
             "-DBUILD_TESTING=Off",
             "-DBUILD_DOCS=Off",
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),

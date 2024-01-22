@@ -537,7 +537,6 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
             cmake_args.extend(
                 [
                     "-DPARAVIEW_%s_PYTHON:BOOL=ON" % py_use_opt,
-                    "-DPYTHON_EXECUTABLE:FILEPATH=%s" % spec["python"].command.path,
                     "-D%s_PYTHON_VERSION:STRING=%d" % (py_ver_opt, py_ver_val),
                 ]
             )
