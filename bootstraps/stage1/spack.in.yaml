@@ -3,26 +3,17 @@
 # It describes a set of packages to be installed, along with
 # configuration settings.
 spack:
+  include:
+    - compilers.yaml
   specs:
   - binutils +stage0
-  - gcc +stage0 +binutils ~bootstrap languages=c,c++
+  - gcc @13.2.0 +stage0 +binutils ~bootstrap languages=c,c++
   - gawk
   - bison
   view: true
   concretizer:
     unify: true
-
-  compilers:
-  - compiler:
-      spec: gcc@=12.3.0
-      paths:
-        cc: /usr/bin/gcc-12
-        cxx: /usr/bin/g++-12
-        f77: null
-        fc: null
-      flags: {}
-      operating_system: debian12
-      target: x86_64
-      modules: []
-      environment: {}
-      extra_rpaths: []
+  packages:
+    all:
+      require:
+        - '%gcc'

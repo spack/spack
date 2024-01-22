@@ -4,11 +4,13 @@
 # configuration settings.
 spack:
   # add package specs to the `specs` list
+  include:
+    - compilers.yaml
   specs:
-  - glibc %gcc@=13.2.0 arch=linux-spack-x86_64 ^linux-headers%gcc@12
-  - binutils %gcc@=13.2.0 arch=linux-spack-x86_64
-  - gcc@13.2.0 %gcc@=13.2.0 ~bootstrap ~graphite +binutils arch=linux-spack-x86_64
-  - gmp +stage1 arch=linux-spack-x86_64
+  - glibc
+  - binutils
+  - gcc@13.2.0 ~bootstrap ~graphite +binutils
+  - gmp
   # we have no C++ right now, disable
   - berkeley-db ~cxx ~stl
   - ncurses ~cxx
@@ -20,33 +22,13 @@ spack:
     unify: true
   packages:
     all:
-      target: [x86_64]
-      variants: ~stage0 +stage1 ~docs ~doc +binutils
-  compilers:
-  - compiler:
-      spec: gcc@=13.2.0
-      paths:
-        cc: /spack/bootstraps/stage1/.spack-env/view/bin/gcc
-        cxx: /spack/bootstraps/stage1/.spack-env/view/bin/g++
-        f77: null
-        fc: null
-      flags: {}
-      operating_system: spack
-      target: x86_64
-      modules: []
-      environment: {}
-      extra_rpaths: []
-  - compiler:
-      spec: gcc@=12.3.0
-      paths:
-        cc: /usr/bin/gcc-12
-        cxx: /usr/bin/g++-12
-        f77: null
-        fc: null
-      flags: {}
-      # yes, this is a lie, but a useful lie
-      operating_system: spack
-      target: x86_64
-      modules: []
-      environment: {}
-      extra_rpaths: []
+      require:
+        - 'os=spack'
+        - 'target=x86_64_v3,aarch64'
+        - '~stage0'
+        - '+stage1'
+        - '%gcc@=13.2.0'
+    linux-headers:
+      require:
+        # Still not fond of this, better though
+        - '%gcc@:13.0.0'

@@ -3,11 +3,13 @@
 # It describes a set of packages to be installed, along with
 # configuration settings.
 spack:
+  include:
+    - compilers.yaml
   # add package specs to the `specs` list
   specs:
-  - spackos-base
-  - binutils +gold +lto arch=linux-spack-x86_64
-  - gcc +binutils +piclibs languages=c,c++,fortran,lto ~bootstrap arch=linux-spack-x86_64
+  - glibc @GLIBC_HASH@
+  - binutils +gold +lto
+  - gcc@13.2.0 +binutils +piclibs languages=c,c++,fortran,lto ~bootstrap
   config:
     install_root:
       padded_length: 256
@@ -16,33 +18,19 @@ spack:
     unify: true
   packages:
     all:
-      target: [x86_64]
-      variants: ~stage0 ~stage1 +binutils
-  compilers:
-  - compiler:
-      spec: gcc@=13.2.0
-      paths:
-        cc: /spack/bootstraps/stage2/.spack-env/view/bin/gcc
-        cxx: /spack/bootstraps/stage2/.spack-env/view/bin/g++
-        f77: null
-        fc: null
-      flags: {}
-      operating_system: spack
-      target: x86_64
-      modules: []
-      environment: {}
-      extra_rpaths: []
-  - compiler:
-      spec: gcc@=12.3.0
-      paths:
-        cc: /usr/bin/gcc-12
-        cxx: /usr/bin/g++-12
-        f77: null
-        fc: null
-      flags: {}
-      # yes, this is a lie, but a useful lie
-      operating_system: spack
-      target: x86_64
-      modules: []
-      environment: {}
-      extra_rpaths: []
+      require:
+        - 'os=spack'
+        - 'target=x86_64_v3,aarch64'
+        - '~stage0'
+        - '~stage1'
+        - '%gcc@=13.2.0'
+    glibc:
+      require:
+        - +stage1
+    libxcrypt:
+      require:
+      - +stage1
+    linux-headers:
+      require:
+        # Still not fond of this, better though
+        - '%gcc@:13.0.0'
