@@ -284,11 +284,9 @@ class CachedCMakeBuilder(CMakeBuilder):
             archs = self.spec.variants["amdgpu_target"].value
             if archs[0] != "none":
                 arch_str = ";".join(archs)
-                entries.append(
-                    cmake_cache_string("CMAKE_HIP_ARCHITECTURES", "{0}".format(arch_str))
-                )
-                entries.append(cmake_cache_string("AMDGPU_TARGETS", "{0}".format(arch_str)))
-                entries.append(cmake_cache_string("GPU_TARGETS", "{0}".format(arch_str)))
+                entries.append(cmake_cache_string("CMAKE_HIP_ARCHITECTURES", arch_str))
+                entries.append(cmake_cache_string("AMDGPU_TARGETS", arch_str))
+                entries.append(cmake_cache_string("GPU_TARGETS", arch_str))
 
         return entries
 
