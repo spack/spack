@@ -32,8 +32,30 @@ def _extract_primary_generator(generator):
     primary generator from the generator string which may contain an
     optional secondary generator.
     """
-    primary_generator = _primary_generator_extractor.match(generator).group(1)
-    return primary_generator
+    return _primary_generator_extractor.match(generator).group(1)
+
+
+def _maybe_set_python_hints(pkg: spack.package_base.PackageBase, args: List[str]) -> None:
+    """Set the PYTHON_EXECUTABLE, Python_EXECUTABLE, and Python3_EXECUTABLE CMake variables
+    if the package has Python as build or link dep and ``find_python_hints`` is set to True. See
+    ``find_python_hints`` for context."""
+    if not getattr(pkg, "find_python_hints", False):
+        return
+    pythons = pkg.spec.dependencies("python", dt.BUILD | dt.LINK)
+    if len(pythons) != 1:
+        return
+    try:
+        python_executable = pythons[0].package.command.path
+    except RuntimeError:
+        return
+
+    args.extend(
+        [
+            CMakeBuilder.define("PYTHON_EXECUTABLE", python_executable),
+            CMakeBuilder.define("Python_EXECUTABLE", python_executable),
+            CMakeBuilder.define("Python3_EXECUTABLE", python_executable),
+        ]
+    )
 
 
 def generator(*names: str, default: Optional[str] = None):
@@ -249,9 +271,9 @@ class CMakeBuilder(BaseBuilder):
         """Standard cmake arguments provided as a property for
         convenience of package writers
         """
-        std_cmake_args = CMakeBuilder.std_args(self.pkg, generator=self.generator)
-        std_cmake_args += getattr(self.pkg, "cmake_flag_args", [])
-        return std_cmake_args
+        args = CMakeBuilder.std_args(self.pkg, generator=self.generator)
+        args += getattr(self.pkg, "cmake_flag_args", [])
+        return args
 
     @staticmethod
     def std_args(pkg, generator=None):
@@ -296,17 +318,7 @@ class CMakeBuilder(BaseBuilder):
                 [define("CMAKE_FIND_FRAMEWORK", "LAST"), define("CMAKE_FIND_APPBUNDLE", "LAST")]
             )
 
-        if getattr(pkg, "find_python_hints", False):
-            python = pkg.spec.dependencies("python", dt.BUILD | dt.LINK)
-            if len(python) == 1:
-                python_executable = python[0].package.command.path
-                args.extend(
-                    [
-                        define("PYTHON_EXECUTABLE", python_executable),
-                        define("Python_EXECUTABLE", python_executable),
-                        define("Python3_EXECUTABLE", python_executable),
-                    ]
-                )
+        _maybe_set_python_hints(pkg, args)
 
         # Set up CMake rpath
         args.extend(
