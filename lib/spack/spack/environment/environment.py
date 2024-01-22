@@ -1803,8 +1803,8 @@ class Environment:
         self.concretized_order.append(h)
         self.specs_by_hash[h] = concrete
 
-    def _get_overwrite_specs(self):
-        # Find all dev specs that were modified.
+    def _dev_specs_that_need_overwrite(self):
+        """Return the hashes of all specs that need to be reinstalled due to source code change."""
         changed_dev_specs = [
             s
             for s in traverse.traverse_nodes(
@@ -1862,52 +1862,21 @@ class Environment:
         """
         self.install_specs(None, **install_args)
 
-    def install_specs(self, specs=None, **install_args):
-        tty.debug("Assessing installation status of environment packages")
-        # If "spack install" is invoked repeatedly for a large environment
-        # where all specs are already installed, the operation can take
-        # a large amount of time due to repeatedly acquiring and releasing
-        # locks. As a small optimization, drop already installed root specs.
-        installed_roots, uninstalled_roots = self._partition_roots_by_install_status()
-        if specs:
-            specs_to_install = [s for s in specs if s not in installed_roots]
-            specs_dropped = [s for s in specs if s in installed_roots]
-        else:
-            specs_to_install = uninstalled_roots
-            specs_dropped = installed_roots
+    def install_specs(self, specs: Optional[List[Spec]] = None, **install_args):
+        roots = self.concrete_roots()
+        specs = specs if specs is not None else roots
 
-        # We need to repeat the work of the installer thanks to the above optimization:
-        # Already installed root specs should be marked explicitly installed in the
-        # database.
-        if specs_dropped:
-            with spack.store.STORE.db.write_transaction():  # do all in one transaction
-                for spec in specs_dropped:
-                    spack.store.STORE.db.update_explicit(spec, True)
+        # Extend the set of specs to overwrite with modified dev specs and their parents
+        install_args["overwrite"] = (
+            install_args.get("overwrite", []) + self._dev_specs_that_need_overwrite()
+        )
 
-        if not specs_to_install:
-            tty.msg("All of the packages are already installed")
-        else:
-            tty.debug("Processing {0} uninstalled specs".format(len(specs_to_install)))
-
-        specs_to_overwrite = self._get_overwrite_specs()
-        tty.debug("{0} specs need to be overwritten".format(len(specs_to_overwrite)))
-
-        install_args["overwrite"] = install_args.get("overwrite", []) + specs_to_overwrite
-
-        installs = []
-        for spec in specs_to_install:
-            pkg_install_args = install_args.copy()
-            pkg_install_args["explicit"] = spec in self.roots()
-            installs.append((spec.package, pkg_install_args))
+        installs = [(spec.package, {**install_args, "explicit": spec in roots}) for spec in specs]
 
         try:
-            builder = PackageInstaller(installs)
-            builder.install()
+            PackageInstaller(installs).install()
         finally:
-            # Ensure links are set appropriately
-            for spec in specs_to_install:
-                if spec.installed:
-                    self.new_installs.append(spec)
+            self.new_installs.extend(s for s in specs if s.installed)
 
     def all_specs_generator(self) -> Iterable[Spec]:
         """Returns a generator for all concrete specs"""
