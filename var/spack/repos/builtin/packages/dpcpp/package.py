@@ -19,6 +19,12 @@ class Dpcpp(CMakePackage, CudaPackage, ROCmPackage):
     version("sycl", branch="sycl")
 
     version(
+        "2023-11",
+        sha256="c394a891558a23ee7426397d193117b5dec87f3a4b4260a38af6f00288d83638",
+        url="https://github.com/intel/llvm/tarball/f4ed132f243a"
+    )
+
+    version(
         "2023-10",
         sha256="5b68d973cd7ad95f3840767117aac60dea30add29f27d882f353eb3675530eef",
         url="https://github.com/intel/llvm/tarball/f4e0d3177338",
