@@ -207,6 +207,10 @@ default:
   extends: [ ".generate-base" ]
   tags: ["spack", "public", "medium", "aarch64", "graviton3"]
 
+.generate-neoverse-v2:
+  extends: [ ".generate-base" ]
+  tags: ["spack", "public", "medium", "neoverse_v2"]
+
 .generate-deprecated:
   extends: [ ".base-job" ]
   stage: generate
@@ -340,27 +344,27 @@ e4s-build:
       job: e4s-generate
 
 ########################################
-# E4S aarch64 pipeline
+# E4S Neoverse V2
 ########################################
-.e4s-aarch64:
-  extends: [ ".linux_aarch64" ]
+.e4s-neoverse-v2:
+  extends: [ ".linux_neoverse_v2" ]
   variables:
-    SPACK_CI_STACK_NAME: e4s-aarch64
+    SPACK_CI_STACK_NAME: e4s-neoverse-v2
 
-e4s-aarch64-generate:
-  extends: [ ".e4s-aarch64", ".generate-aarch64" ]
+e4s-neoverse-v2-generate:
+  extends: [ ".e4s-neoverse-v2", ".generate-neoverse-v2" ]
   image: ecpe4s/ubuntu22.04-runner-arm64-gcc-11.4:2024.01.01
 
-e4s-aarch64-build:
-  extends: [ ".e4s-aarch64", ".build" ]
+e4s-neoverse-v2-build:
+  extends: [ ".e4s-neoverse-v2", ".build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: e4s-aarch64-generate
+        job: e4s-neoverse-v2-generate
     strategy: depend
   needs:
     - artifacts: True
-      job: e4s-aarch64-generate
+      job: e4s-neoverse-v2-generate
 
 ########################################
 # E4S Neoverse V1 pipeline
@@ -441,7 +445,7 @@ e4s-rocm-external-build:
 
 e4s-oneapi-generate:
   extends: [ ".e4s-oneapi", ".generate-x86_64"]
-  image: ghcr.io/spack/ubuntu20.04-runner-amd64-oneapi-2023.2.1:2023.08.01
+  image:  ecpe4s/ubuntu22.04-runner-amd64-oneapi-2024.0.0:2024.01.16b
 
 e4s-oneapi-build:
   extends: [ ".e4s-oneapi", ".build" ]

@@ -7,7 +7,7 @@ spack:
 
   packages:
     all:
-      require: '%gcc@11.4.0 target=aarch64'
+      require: '%gcc@11.4.0 target=neoverse_v2'
       providers:
         blas: [openblas]
         mpi: [mpich]
@@ -332,4 +332,4 @@ spack:
         image: "ecpe4s/ubuntu22.04-runner-arm64-gcc-11.4:2024.01.01"
 
   cdash:
-    build-group: E4S ARM AARCH64
+    build-group: E4S ARM Neoverse V2
