@@ -48,6 +48,7 @@ class GccRuntime(Package):
     ]
 
     # libgfortran ABI
+    provides("fortran-rt", "gfortran")
     provides("gfortran@3", when="%gcc@:6")
     provides("gfortran@4", when="%gcc@7")
     provides("gfortran@5", when="%gcc@8:")

@@ -24,6 +24,7 @@ packages:
       elf: [elfutils]
       fftw-api: [fftw, amdfftw]
       flame: [libflame, amdlibflame]
+      fortran-rt: [gcc-runtime, intel-oneapi-runtime]
       fuse: [libfuse]
       gfortran: [gcc-runtime]
       gl: [glx, osmesa]

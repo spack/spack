@@ -2305,8 +2305,12 @@ class SpackSolverSetup:
         node_counter = _create_counter(specs, tests=self.tests)
         self.possible_virtuals = node_counter.possible_virtuals()
         self.pkgs = node_counter.possible_dependencies()
+
+        # TODO: unify this under an abstract operation
         self.possible_virtuals.add("gfortran")
         self.possible_virtuals.add("ifcore")
+        self.possible_virtuals.add("fortran-rt")
+
         self.pkgs.update(spack.repo.PATH.packages_with_tags("runtime"))
 
         # Fail if we already know an unreachable node is requested

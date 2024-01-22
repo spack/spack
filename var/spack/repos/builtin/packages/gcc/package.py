@@ -1162,13 +1162,14 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         elif compiler.spec.satisfies("gcc@7"):
             gfortran_str = "gfortran@4"
 
-        pkg("*").depends_on(
-            f"{gfortran_str}",
-            when=f"%{str(compiler.spec)}",
-            languages=["fortran"],
-            type="link",
-            description=f"Add a dependency on '{gfortran_str}' for nodes compiled with "
-            f"{str(compiler.spec)} and using the 'fortran' language",
-        )
+        for fortran_virtual in ("fortran-rt", gfortran_str):
+            pkg("*").depends_on(
+                fortran_virtual,
+                when=f"%{str(compiler.spec)}",
+                languages=["fortran"],
+                type="link",
+                description=f"Add a dependency on '{gfortran_str}' for nodes compiled with "
+                f"{str(compiler.spec)} and using the 'fortran' language",
+            )
         # The version of gcc-runtime is the same as the %gcc used to "compile" it
         pkg("gcc-runtime").requires(f"@={str(compiler.version)}", when=f"%{str(compiler.spec)}")

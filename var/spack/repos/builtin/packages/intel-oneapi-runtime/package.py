@@ -34,7 +34,7 @@ class IntelOneapiRuntime(Package):
     ]
 
     # libifcore ABI
-    provides("ifcore@5", when="%oneapi@2021:")
+    provides("fortran-rt", "ifcore@5", when="%oneapi@2021:")
 
     def install(self, spec, prefix):
         if spec.platform in ["linux", "cray", "freebsd"]:

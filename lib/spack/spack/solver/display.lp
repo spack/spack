@@ -52,3 +52,4 @@
 % debug
 possible_in_link_run("gfortran").
 possible_in_link_run("ifcore").
+possible_in_link_run("fortran-rt").
