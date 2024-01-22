@@ -2306,6 +2306,7 @@ class SpackSolverSetup:
         self.possible_virtuals = node_counter.possible_virtuals()
         self.pkgs = node_counter.possible_dependencies()
         self.possible_virtuals.add("gfortran")
+        self.possible_virtuals.add("ifcore")
         self.pkgs.update(spack.repo.PATH.packages_with_tags("runtime"))
 
         # Fail if we already know an unreachable node is requested
@@ -2451,10 +2452,13 @@ class SpackSolverSetup:
         """Define the constraints to be imposed on the runtimes"""
         recorder = RuntimePropertyRecorder(self)
         for compiler in self.possible_compilers:
-            if compiler.name != "gcc":
+            if compiler.name not in ("gcc", "oneapi"):
                 continue
+
+            compiler_with_different_cls_names = {"oneapi": "intel-oneapi-compilers"}
+            compiler_cls_name = compiler_with_different_cls_names.get(compiler.name, compiler.name)
             try:
-                compiler_cls = spack.repo.PATH.get_pkg_class(compiler.name)
+                compiler_cls = spack.repo.PATH.get_pkg_class(compiler_cls_name)
             except spack.repo.UnknownPackageError:
                 continue
             if hasattr(compiler_cls, "runtime_constraints"):

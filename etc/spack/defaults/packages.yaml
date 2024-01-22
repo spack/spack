@@ -31,6 +31,7 @@ packages:
       golang: [go, gcc]
       go-or-gccgo-bootstrap: [go-bootstrap, gcc]
       iconv: [libiconv]
+      ifcore: [intel-oneapi-runtime]
       ipp: [intel-oneapi-ipp]
       java: [openjdk, jdk, ibm-java]
       jpeg: [libjpeg-turbo, libjpeg]

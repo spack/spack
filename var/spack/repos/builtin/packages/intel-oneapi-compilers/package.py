@@ -388,3 +388,32 @@ class IntelOneapiCompilers(IntelOneApiPackage):
             p = join_path(self.component_prefix.linux, d)
             if find(p, "*." + dso_suffix, recursive=False):
                 yield p
+
+    @classmethod
+    def runtime_constraints(cls, *, compiler, pkg):
+        pkg("*").depends_on(
+            "intel-oneapi-runtime",
+            when="%oneapi",
+            type="link",
+            description="If any package uses %oneapi, it depends on intel-oneapi-runtime",
+        )
+        pkg("*").depends_on(
+            f"intel-oneapi-runtime@{str(compiler.version)}:",
+            when=f"%{str(compiler.spec)}",
+            type="link",
+            description=f"If any package uses %{str(compiler.spec)}, "
+            f"it depends on intel-oneapi-runtime@{str(compiler.version)}:",
+        )
+
+        pkg("*").depends_on(
+            "ifcore@5",
+            when=f"%{str(compiler.spec)}",
+            languages=["fortran"],
+            type="link",
+            description=f"Add a dependency on 'ifcore' for nodes compiled with "
+            f"{str(compiler.spec)} and using the 'fortran' language",
+        )
+        # The version of gcc-runtime is the same as the %gcc used to "compile" it
+        pkg("intel-oneapi-runtime").requires(
+            f"@={str(compiler.version)}", when=f"%{str(compiler.spec)}"
+        )
