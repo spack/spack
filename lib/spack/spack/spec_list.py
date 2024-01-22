@@ -107,8 +107,8 @@ class SpecList:
         self._constraints = None
         self._specs = None
 
-    def override(self, idx: int, spec: str):
-        """Override the existing spec at the index with the new one.
+    def replace(self, idx: int, spec: str):
+        """Replace the existing spec at the index with the new one.
 
         Args:
             idx: index of the spec to replace in the speclist

@@ -1119,7 +1119,7 @@ class Environment:
 
         for idx, spec in matches:
             override_spec = Spec.override(spec, change_spec)
-            self.spec_lists[list_name].override(idx, str(override_spec))
+            self.spec_lists[list_name].replace(idx, str(override_spec))
             if list_name == user_speclist_name:
                 self.manifest.override_user_spec(str(override_spec), idx=idx)
             else:
