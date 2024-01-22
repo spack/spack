@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyHypothesis(PythonPackage):
 
     homepage = "https://github.com/HypothesisWorks/hypothesis-python"
     pypi = "hypothesis/hypothesis-4.41.2.tar.gz"
+
+    license("MPL-2.0")
 
     version("6.23.1", sha256="23a1b0488aec5719e2f9e399342e10f30d497cbb9fd39470ef0975c1b502ae35")
     version("5.3.0", sha256="c9fdb53fe3bf1f8e7dcca1a7dd6e430862502f088aca2903d141511212e79429")

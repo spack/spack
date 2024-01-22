@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Ns3Dev(WafPackage):
     url = "https://gitlab.com/nsnam/ns-3-dev/-/archive/ns-3.30.1/ns-3-dev-ns-3.30.1.tar.bz2"
 
     maintainers("yee29")
+
+    license("GPL-2.0-or-later")
 
     version("3.34", sha256="a565d46a73ff7de68808535d93884f59a6ed7c9faa94de1248ed4f59fb6d5d3d")
     version("3.33", sha256="0deb7da501fc19ba4818997c5aefd942be5ab1bbd3cfaa6ba28c07b387900275")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Xdm(AutotoolsPackage, XorgPackage):
 
     homepage = "https://cgit.freedesktop.org/xorg/app/xdm"
     xorg_mirror_path = "app/xdm-1.1.11.tar.gz"
+
+    license("MIT")
 
     version("1.1.14", sha256="bcc543c3c120094d58d9cc9837958d4303693c2116ba342ba3dd9440137b4026")
     version("1.1.13", sha256="2f05aa58c205dcf10443ba414d27535b74ec11466dc95228343b0ce4f0c2a307")

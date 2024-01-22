@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,8 @@ class Plasma(CMakePackage):
     maintainers("luszczek")
 
     tags = ["e4s"]
+
+    license("BSD-3-Clause")
 
     version("develop", git=git)
     version("23.8.2", sha256="2db34de0575f3e3d16531bdcf1caddef146f68e71335977a3e8ec193003ab943")

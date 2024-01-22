@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Pidx(CMakePackage):
 
     homepage = "http://www.cedmav.com/pidx"
     git = "https://github.com/sci-visus/PIDX.git"
+
+    license("CC-BY-NC-ND-4.0")
 
     version("1.0", commit="6afa1cf71d1c41263296dc049c8fabaf73c296da")
 

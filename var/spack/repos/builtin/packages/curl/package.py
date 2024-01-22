@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,8 @@ class Curl(NMakePackage, AutotoolsPackage):
     tags = ["build-tools", "windows"]
 
     maintainers("alecbcs")
+
+    license("curl")
 
     version("8.4.0", sha256="e5250581a9c032b1b6ed3cf2f9c114c811fc41881069e9892d115cc73f9e88c6")
 
@@ -344,6 +346,12 @@ class Curl(NMakePackage, AutotoolsPackage):
     @property
     def command(self):
         return Executable(self.prefix.bin.join("curl-config"))
+
+    def flag_handler(self, name, flags):
+        build_system_flags = []
+        if name == "cflags" and self.spec.compiler.name in ["intel", "oneapi"]:
+            build_system_flags = ["-we147"]
+        return flags, None, build_system_flags
 
 
 class AutotoolsBuilder(AutotoolsBuilder):

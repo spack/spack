@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,7 +27,7 @@ level = "short"
 
 
 package_template = '''\
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -64,8 +64,9 @@ class {class_name}({base_class_name}):
     # maintainers("github_user1", "github_user2")
 
     # FIXME: Add the SPDX identifier of the project's license below.
-    # See https://spdx.org/licenses/ for a list.
-    license("UNKNOWN")
+    # See https://spdx.org/licenses/ for a list. Upon manually verifying
+    # the license, set checked_by to your Github username.
+    license("UNKNOWN", checked_by="github_user1")
 
 {versions}
 
@@ -172,6 +173,14 @@ class AutoreconfPackageTemplate(PackageTemplate):
         return args"""
 
 
+class CargoPackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for cargo-based packages"""
+
+    base_class_name = "CargoPackage"
+
+    body_def = ""
+
+
 class CMakePackageTemplate(PackageTemplate):
     """Provides appropriate overrides for CMake-based packages"""
 
@@ -184,6 +193,14 @@ class CMakePackageTemplate(PackageTemplate):
         # FIXME: If not needed delete this function
         args = []
         return args"""
+
+
+class GoPackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for Go-module-based packages"""
+
+    base_class_name = "GoPackage"
+
+    body_def = ""
 
 
 class LuaPackageTemplate(PackageTemplate):
@@ -575,28 +592,30 @@ class SIPPackageTemplate(PackageTemplate):
 
 
 templates = {
-    "autotools": AutotoolsPackageTemplate,
     "autoreconf": AutoreconfPackageTemplate,
-    "cmake": CMakePackageTemplate,
-    "bundle": BundlePackageTemplate,
-    "qmake": QMakePackageTemplate,
-    "maven": MavenPackageTemplate,
-    "scons": SconsPackageTemplate,
-    "waf": WafPackageTemplate,
+    "autotools": AutotoolsPackageTemplate,
     "bazel": BazelPackageTemplate,
+    "bundle": BundlePackageTemplate,
+    "cargo": CargoPackageTemplate,
+    "cmake": CMakePackageTemplate,
+    "generic": PackageTemplate,
+    "go": GoPackageTemplate,
+    "intel": IntelPackageTemplate,
+    "lua": LuaPackageTemplate,
+    "makefile": MakefilePackageTemplate,
+    "maven": MavenPackageTemplate,
+    "meson": MesonPackageTemplate,
+    "octave": OctavePackageTemplate,
+    "perlbuild": PerlbuildPackageTemplate,
+    "perlmake": PerlmakePackageTemplate,
     "python": PythonPackageTemplate,
+    "qmake": QMakePackageTemplate,
     "r": RPackageTemplate,
     "racket": RacketPackageTemplate,
-    "perlmake": PerlmakePackageTemplate,
-    "perlbuild": PerlbuildPackageTemplate,
-    "octave": OctavePackageTemplate,
     "ruby": RubyPackageTemplate,
-    "makefile": MakefilePackageTemplate,
-    "intel": IntelPackageTemplate,
-    "meson": MesonPackageTemplate,
-    "lua": LuaPackageTemplate,
+    "scons": SconsPackageTemplate,
     "sip": SIPPackageTemplate,
-    "generic": PackageTemplate,
+    "waf": WafPackageTemplate,
 }
 
 
@@ -679,6 +698,8 @@ class BuildSystemGuesser:
         clues = [
             (r"/CMakeLists\.txt$", "cmake"),
             (r"/NAMESPACE$", "r"),
+            (r"/Cargo\.toml$", "cargo"),
+            (r"/go\.mod$", "go"),
             (r"/configure$", "autotools"),
             (r"/configure\.(in|ac)$", "autoreconf"),
             (r"/Makefile\.am$", "autoreconf"),

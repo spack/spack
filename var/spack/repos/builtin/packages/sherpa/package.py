@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class Sherpa(AutotoolsPackage):
     tags = ["hep", "eic"]
 
     maintainers("wdconinc", "vvolkl")
+
+    license("GPL-3.0-only")
 
     version("2.2.15", sha256="0300fd719bf6a089b7dc5441f720e669ac1cb030045d87034a4733bee98e7bbc")
     version("2.2.14", sha256="f17d88d7f3bc4234a9db3872e8a3c1f3ef99e1e2dc881ada5ddf848715dc82da")
@@ -217,7 +219,7 @@ class Sherpa(AutotoolsPackage):
         args.extend(self.enable_or_disable("pythia"))
         hepmc_root = lambda x: self.spec["hepmc"].prefix
         args.extend(self.enable_or_disable("hepmc2", activation_value=hepmc_root))
-        if self.spec.satisfies("@2.2.13:"):
+        if self.spec.satisfies("@3:"):
             args.extend(self.enable_or_disable("hepmc3", activation_value="prefix"))
             args.extend(self.enable_or_disable("rivet", activation_value="prefix"))
             args.extend(self.enable_or_disable("lhapdf", activation_value="prefix"))

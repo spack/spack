@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Sdl2(CMakePackage):
     url = "https://libsdl.org/release/SDL2-2.0.5.tar.gz"
     git = "https://github.com/libsdl-org/SDL.git"
     list_url = "https://github.com/libsdl-org/SDL.git"
+
+    license("Zlib")
 
     version("2.26.5", sha256="ad8fea3da1be64c83c45b1d363a6b4ba8fd60f5bde3b23ec73855709ec5eabf7")
     version("2.24.1", sha256="bc121588b1105065598ce38078026a414c28ea95e66ed2adab4c44d80b309e1b")

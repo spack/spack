@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Lrzip(Package):
     homepage = "http://lrzip.kolivas.org"
     url = "https://github.com/ckolivas/lrzip/archive/v0.630.tar.gz"
     git = "https://github.com/ckolivas/lrzip.git"
+
+    license("GPL-2.0-or-later")
 
     version("master", branch="master")
     version("0.651", sha256="f4c84de778a059123040681fd47c17565fcc4fec0ccc68fcf32d97fad16cd892")

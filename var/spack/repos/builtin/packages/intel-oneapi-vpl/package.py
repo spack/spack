@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -73,6 +73,12 @@ class IntelOneapiVpl(IntelOneApiLibraryPackage):
         sha256="0fec42545b30b7bb2e4e33deb12ab27a02900f5703153d9601673a8ce43082ed",
         expand=False,
     )
+
+    # VPL no longer releases as part of oneapi, so there will never be
+    # a 2024 release
+    @property
+    def v2_layout_versions(self):
+        return "@2024:"
 
     @property
     def component_dir(self):

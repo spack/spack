@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class RDownlit(RPackage):
     automatic translation of ANSI escapes in output to the equivalent HTML."""
 
     cran = "downlit"
+
+    license("MIT")
 
     version("0.4.2", sha256="33dff66909104d1a5ba8e57b1288986e82b61fd5e91dce0cd358d53724b37e3c")
 

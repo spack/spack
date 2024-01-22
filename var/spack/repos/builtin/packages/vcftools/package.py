@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Vcftools(AutotoolsPackage):
 
     homepage = "https://vcftools.github.io/"
     url = "https://github.com/vcftools/vcftools/releases/download/v0.1.14/vcftools-0.1.14.tar.gz"
+
+    license("LGPL-3.0-only")
 
     version("0.1.16", sha256="dbfc774383c106b85043daa2c42568816aa6a7b4e6abc965eeea6c47dde914e3")
     # this is "a pre-release"

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,7 +30,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     homepage = "https://www.perl.org"
     # URL must remain http:// so Spack can bootstrap curl
     url = "http://www.cpan.org/src/5.0/perl-5.34.0.tar.gz"
-    tags = ["windows"]
+    tags = ["windows", "build-tools"]
 
     maintainers("LydDeb")
 
@@ -38,6 +38,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     # see https://www.cpan.org/src/README.html for
     # explanation of version numbering scheme
+
+    license("Artistic-1.0-Perl OR GPL-1.0-or-later")
 
     # Maintenance releases (even numbers, preferred)
     version(
@@ -119,6 +121,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     extendable = True
 
     if sys.platform != "win32":
+        depends_on("gmake", type="build")
         depends_on("gdbm@:1.23")
         # Bind us below gdbm-1.20 due to API change: https://github.com/Perl/perl5/issues/18915
         depends_on("gdbm@:1.19", when="@:5.35")

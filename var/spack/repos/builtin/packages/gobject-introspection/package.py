@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class GobjectIntrospection(MesonPackage, AutotoolsPackage):
     url = "https://download.gnome.org/sources/gobject-introspection/1.72/gobject-introspection-1.72.0.tar.xz"
 
     maintainers("michaelkuhn")
+
+    license("LGPL-2.0-or-later AND GPL-2.0-or-later AND MIT")
 
     version("1.76.1", sha256="196178bf64345501dcdc4d8469b36aa6fe80489354efe71cb7cb8ab82a3738bf")
     version("1.72.1", sha256="012e313186e3186cf0fde6decb57d970adf90e6b1fac5612fe69cbb5ba99543a")

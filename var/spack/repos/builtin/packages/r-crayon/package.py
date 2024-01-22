@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class RCrayon(RPackage):
     'chalk' 'JavaScript' project."""
 
     cran = "crayon"
+
+    license("MIT")
 
     version("1.5.2", sha256="70a9a505b5b3c0ee6682ad8b965e28b7e24d9f942160d0a2bad18eec22b45a7a")
     version("1.5.1", sha256="c025c73b78a8e88e8e4363c8e1a941da5089a7baea39e59ea5342ab9ebe45df9")

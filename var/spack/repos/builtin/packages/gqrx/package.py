@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,8 @@ class Gqrx(CMakePackage):
     url = "https://github.com/csete/gqrx/archive/v2.13.1.tar.gz"
 
     maintainers("aweits")
+
+    license("GPL-3.0-or-later")
 
     version("2.13.1", sha256="08b7b930bed00c6ac79330695c24919a9d779112e1a3dd37d22cc9ee38561e82")
     depends_on("cmake@3.2.0:", type="build")

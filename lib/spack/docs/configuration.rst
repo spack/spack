@@ -1,4 +1,4 @@
-.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ case you want to skip directly to specific docs:
 * :ref:`config.yaml <config-yaml>`
 * :ref:`mirrors.yaml <mirrors>`
 * :ref:`modules.yaml <modules>`
-* :ref:`packages.yaml <build-settings>`
+* :ref:`packages.yaml <packages-config>`
 * :ref:`repos.yaml <repositories>`
 
 You can also add any of these as inline configuration in the YAML

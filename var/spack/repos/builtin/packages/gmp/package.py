@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Gmp(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://gmplib.org"
     gnu_mirror_path = "gmp/gmp-6.1.2.tar.bz2"
+
+    license("LGPL-3.0-or-later OR GPL-2.0-or-later")
 
     version("6.2.1", sha256="eae9326beb4158c386e39a356818031bd28f3124cf915f8c5b1dc4c7a36b4d7c")
     version("6.2.0", sha256="f51c99cb114deb21a60075ffb494c1a210eb9d7cb729ed042ddb7de9534451ea")

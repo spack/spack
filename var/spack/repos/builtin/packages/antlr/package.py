@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Antlr(AutotoolsPackage):
 
     homepage = "https://www.antlr2.org/"
     url = "http://www.antlr2.org/download/antlr-2.7.7.tar.gz"
+
+    license("ANTLR-PD")
 
     version("2.7.7", sha256="853aeb021aef7586bda29e74a6b03006bcb565a755c86b66032d8ec31b67dbb9")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -227,9 +227,7 @@ def unit_test(parser, args, unknown_args):
     # has been used, then test that extension.
     pytest_root = spack.paths.spack_root
     if args.extension:
-        target = args.extension
-        extensions = spack.extensions.get_extension_paths()
-        pytest_root = spack.extensions.path_for_extension(target, *extensions)
+        pytest_root = spack.extensions.load_extension(args.extension)
 
     # pytest.ini lives in the root of the spack repository.
     with llnl.util.filesystem.working_dir(pytest_root):

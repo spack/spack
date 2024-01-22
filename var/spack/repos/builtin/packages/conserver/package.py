@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Conserver(AutotoolsPackage):
 
     homepage = "https://www.conserver.com/"
     url = "https://github.com/bstansell/conserver/releases/download/v8.2.5/conserver-8.2.5.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("8.2.7", sha256="0607f2147a4d384f1e677fbe4e6c68b66a3f015136b21bcf83ef9575985273d8")
     version("8.2.5", sha256="7db192f304126d7e5c15421c4c83cd5c08039f2f2b3c61b2998e71881ae47eea")

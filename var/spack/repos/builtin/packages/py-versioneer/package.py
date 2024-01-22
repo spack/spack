@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class PyVersioneer(PythonPackage):
     git = "https://github.com/python-versioneer/python-versioneer.git"
 
     maintainers("scemama")
+
+    license("Unlicense")
 
     version("0.29", sha256="5ab283b9857211d61b53318b7c792cf68e798e765ee17c27ade9f6c924235731")
     version("0.28", sha256="7175ca8e7bb4dd0e3c9779dd2745e5b4a6036304af3f5e50bd896f10196586d6")

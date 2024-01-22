@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class JxrlibDebian(MakefilePackage):
     url = "https://salsa.debian.org/debian-phototools-team/jxrlib/-/archive/debian/1.2_git20170615.f752187-5/jxrlib-debian-1.2_git20170615.f752187-5.tar.gz"
 
     variant("shared", default=False, description="Build shared libs")
+
+    license("BSD-2-Clause")
 
     version(
         "1.2_git20170615.f752187-5",

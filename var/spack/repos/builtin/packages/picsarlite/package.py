@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Picsarlite(MakefilePackage):
 
     homepage = "https://picsar.net"
     git = "https://bitbucket.org/berkeleylab/picsar.git"
+
+    license("BSD-3-Clause-LBNL")
 
     version("develop", branch="PICSARlite")
     version("0.1", tag="PICSARlite-0.1", commit="3c9cee9bdf32da0998f504bff7af31fcae2f0452")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Qb3(CMakePackage):
 
     homepage = "https://github.com/lucianpls/QB3"
     git = "https://github.com/lucianpls/QB3.git"
+
+    license("Apache-2.0")
 
     version("master", branch="master")
 

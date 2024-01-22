@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyPluggy(PythonPackage):
 
     homepage = "https://github.com/pytest-dev/pluggy"
     pypi = "pluggy/pluggy-0.13.0.tar.gz"
+
+    license("MIT")
 
     version("1.0.0", sha256="4224373bacce55f955a878bf9cfa763c1e360858e330072059e10bad68531159")
     version("0.13.0", sha256="fa5fa1622fa6dd5c030e9cad086fa19ef6a0cf6d7a2d12318e10cb49d6d68f34")

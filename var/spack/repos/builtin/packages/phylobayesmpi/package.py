@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Phylobayesmpi(MakefilePackage):
     homepage = "https://github.com/bayesiancook/pbmp"
     url = "https://github.com/bayesiancook/pbmpi/archive/v1.8b.tar.gz"
     git = "https://github.com/bayesiancook/pbmpi.git"
+
+    license("GPL-2.0-only")
 
     version("1.8b", sha256="7ff017bf492c1d8b42bfff3ee8e998ba1c50f4e4b3d9d6125647b91738017324")
 

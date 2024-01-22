@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Digitrounding(CMakePackage):
     git = "https://github.com/disheng222/digitroundingZ"
 
     maintainers("robertu94")
+
+    license("LGPL-3.0-or-later")
 
     version("master", branch="master")
     version("2020-02-27", commit="7b18679aded7a85e6f221f7f5cd4f080f322bc33")

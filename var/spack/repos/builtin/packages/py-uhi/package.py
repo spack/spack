@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyUhi(PythonPackage):
 
     homepage = "https://github.com/Scikit-HEP/uhi"
     pypi = "uhi/uhi-0.3.0.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("0.3.3", sha256="800caf3a5f1273b08bcc3bb4b49228fe003942e23423812b0110546aad9a24be")
     version("0.3.2", sha256="fd6ed2ae8ce68ba6be37b872de86e7775b45d54f858768c8fdaba162b6452ab2")

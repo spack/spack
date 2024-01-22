@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class RTestthat(RPackage):
     is easy to learn and use, and integrates with your existing 'workflow'."""
 
     cran = "testthat"
+
+    license("MIT")
 
     version("3.1.7", sha256="1ad86b1739481c6c46359a6634ecc706bf513f34b26d7a62cbc719bbd4658eab")
     version("3.1.5", sha256="a8f56b9426206ddfc30b550c82ff2f042ebe1c2f5bfd4184aec8facac8f5b7fc")

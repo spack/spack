@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Libhugetlbfs(MakefilePackage):
 
     homepage = "https://github.com/libhugetlbfs/libhugetlbfs"
     url = "https://github.com/libhugetlbfs/libhugetlbfs/releases/download/2.22/libhugetlbfs-2.22.tar.gz"
+
+    license("LGPL-2.1-or-later")
 
     version("2.22", sha256="94dca9ea2c527cd77bf28904094fe4708865a85122d416bfccc8f4b73b9a6785")
 

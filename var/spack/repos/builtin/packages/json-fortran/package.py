@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class JsonFortran(CMakePackage):
     homepage = "https://jacobwilliams.github.io/json-fortran/"
     url = "https://github.com/jacobwilliams/json-fortran/archive/8.3.0.tar.gz"
     git = "https://github.com/jacobwilliams"
+
+    license("BSD-3-Clause")
 
     version("master", branch="master")
     version("8.3.0", sha256="5fe9ad709a726416cec986886503e0526419742e288c4e43f63c1c22026d1e8a")

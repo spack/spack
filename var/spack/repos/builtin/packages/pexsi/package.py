@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,9 @@ class Pexsi(MakefilePackage, CMakePackage):
     build_system(
         conditional("cmake", when="@1:"), conditional("makefile", when="@0"), default="cmake"
     )
+
+    license("BSD-3-Clause-LBNL")
+
     version("2.0.0", sha256="c5c83c2931b2bd0c68a462a49eeec983e78b5aaa1f17dd0454de4e27b91ca11f")
     version("1.2.0", sha256="8bfad6ec6866c6a29e1cc87fb1c17a39809795e79ede98373c8ba9a3aaf820dd")
     version("0.10.2", sha256="8714c71b76542e096211b537a9cb1ffb2c28f53eea4f5a92f94cc1ca1e7b499f")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class Pfunit(CMakePackage):
 
     maintainers("mathomp4", "tclune")
 
+    version("4.8.0", sha256="b5c66ab949fd23bee5c3b4d93069254f7ea40decb8d21f622fd6aa45ee68ef10")
+    version("4.7.4", sha256="ac850e33ea99c283f503f75293bf238b4b601885d7adba333066e6185dad5c04")
     version("4.7.3", sha256="247239298b55e847417b7830183d7fc62cca93dc92c8ec7c0067784b7ce34544")
     version("4.7.2", sha256="3142a1e56b7d127fdc9589cf6deff8505174129834a6a268d0ce7e296f51ab02")
     version("4.7.1", sha256="64de3eb9f364b57ef6df81ba33400dfd4dcebca6eb5d0e9b7955ed8156e29165")
@@ -150,7 +152,6 @@ class Pfunit(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         args = [
-            self.define("Python_EXECUTABLE", spec["python"].command),
             self.define("BUILD_SHARED_LIBS", False),
             self.define("CMAKE_Fortran_MODULE_DIRECTORY", spec.prefix.include),
             self.define_from_variant("ENABLE_BUILD_DOXYGEN", "docs"),

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -283,6 +283,24 @@ def test_compiler_config_modifications(
             assert os.environ[name] == value
             continue
         assert name not in os.environ
+
+
+def test_external_config_env(mock_packages, mutable_config, working_env):
+    cmake_config = {
+        "externals": [
+            {
+                "spec": "cmake@1.0",
+                "prefix": "/fake/path",
+                "extra_attributes": {"environment": {"set": {"TEST_ENV_VAR_SET": "yes it's set"}}},
+            }
+        ]
+    }
+    spack.config.set("packages:cmake", cmake_config)
+
+    cmake_client = spack.spec.Spec("cmake-client").concretized()
+    spack.build_environment.setup_package(cmake_client.package, False)
+
+    assert os.environ["TEST_ENV_VAR_SET"] == "yes it's set"
 
 
 @pytest.mark.regression("9107")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,11 @@ class PyTorchtext(PythonPackage):
 
     maintainers("adamjstewart")
 
+    license("BSD-3-Clause")
+
     version("main", branch="main")
+    version("0.16.2", tag="v0.16.2", commit="299b90e908c1b492139a4cf9da3912660e79a06b")
+    version("0.16.1", tag="v0.16.1", commit="66671007c84e07386da3c04e5ca403b8a417c8e5")
     version("0.16.0", tag="v0.16.0", commit="4e255c95c76b1ccde4f6650391c0bc30650d6dbe")
     version("0.15.2", tag="v0.15.2", commit="4571036cf66c539e50625218aeb99a288d79f3e1")
     version("0.15.1", tag="v0.15.1", commit="c696895e524c61fd2b8b26916dd006411c5f3ba5")
@@ -58,6 +62,8 @@ class PyTorchtext(PythonPackage):
 
     # https://github.com/pytorch/text#installation
     depends_on("py-torch@main", when="@main", type=("build", "link", "run"))
+    depends_on("py-torch@2.1.2", when="@0.16.2", type=("build", "link", "run"))
+    depends_on("py-torch@2.1.1", when="@0.16.1", type=("build", "link", "run"))
     depends_on("py-torch@2.1.0", when="@0.16.0", type=("build", "link", "run"))
     depends_on("py-torch@2.0.1", when="@0.15.2", type=("build", "link", "run"))
     depends_on("py-torch@2.0.0", when="@0.15.1", type=("build", "link", "run"))

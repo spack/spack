@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class RPhangorn(RPackage):
     <doi:10.1111/2041-210X.12760>."""
 
     cran = "phangorn"
+
+    license("GPL-2.0-or-later")
 
     version("2.11.1", sha256="10096ecae03e118aa4dbc60d9866175fad4849c948e004cf10c3868e3feed420")
     version("2.10.0", sha256="d153f87053a1e6eebf46be98fad3f118349008c559a6797b55613629cab85dce")

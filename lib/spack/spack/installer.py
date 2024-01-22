@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,6 +36,7 @@ import shutil
 import sys
 import time
 from collections import defaultdict
+from gzip import GzipFile
 from typing import Dict, Iterator, List, Optional, Set, Tuple
 
 import llnl.util.filesystem as fs
@@ -357,7 +358,8 @@ def _print_installed_pkg(message: str) -> None:
     Args:
         message (str): message to be output
     """
-    print(colorize("@*g{[+]} ") + spack.util.path.debug_padded_filter(message))
+    if tty.msg_enabled():
+        print(colorize("@*g{[+]} ") + spack.util.path.debug_padded_filter(message))
 
 
 def print_install_test_log(pkg: "spack.package_base.PackageBase") -> None:
@@ -380,18 +382,16 @@ def _print_timer(pre: str, pkg_id: str, timer: timer.BaseTimer) -> None:
 
 
 def _install_from_cache(
-    pkg: "spack.package_base.PackageBase", cache_only: bool, explicit: bool, unsigned: bool = False
+    pkg: "spack.package_base.PackageBase", explicit: bool, unsigned: Optional[bool] = False
 ) -> bool:
     """
-    Extract the package from binary cache
+    Install the package from binary cache
 
     Args:
         pkg: package to install from the binary cache
-        cache_only: only extract from binary cache
         explicit: ``True`` if installing the package was explicitly
             requested by the user, otherwise, ``False``
-        unsigned: ``True`` if binary package signatures to be checked,
-            otherwise, ``False``
+        unsigned: if ``True`` or ``False`` override the mirror signature verification defaults
 
     Return: ``True`` if the package was extract from binary cache, ``False`` otherwise
     """
@@ -399,15 +399,11 @@ def _install_from_cache(
     installed_from_cache = _try_install_from_binary_cache(
         pkg, explicit, unsigned=unsigned, timer=t
     )
-    pkg_id = package_id(pkg)
     if not installed_from_cache:
-        pre = f"No binary for {pkg_id} found"
-        if cache_only:
-            tty.die(f"{pre} when cache-only specified")
-
-        tty.msg(f"{pre}: installing from source")
         return False
     t.stop()
+
+    pkg_id = package_id(pkg)
     tty.debug(f"Successfully extracted {pkg_id} from binary cache")
 
     _write_timer_json(pkg, t, True)
@@ -461,7 +457,7 @@ def _process_external_package(pkg: "spack.package_base.PackageBase", explicit: b
 def _process_binary_cache_tarball(
     pkg: "spack.package_base.PackageBase",
     explicit: bool,
-    unsigned: bool,
+    unsigned: Optional[bool],
     mirrors_for_spec: Optional[list] = None,
     timer: timer.BaseTimer = timer.NULL_TIMER,
 ) -> bool:
@@ -471,8 +467,7 @@ def _process_binary_cache_tarball(
     Args:
         pkg: the package being installed
         explicit: the package was explicitly requested by the user
-        unsigned: ``True`` if binary package signatures to be checked,
-            otherwise, ``False``
+        unsigned: if ``True`` or ``False`` override the mirror signature verification defaults
         mirrors_for_spec: Optional list of concrete specs and mirrors
         obtained by calling binary_distribution.get_mirrors_for_spec().
         timer: timer to keep track of binary install phases.
@@ -492,9 +487,7 @@ def _process_binary_cache_tarball(
     tty.msg(f"Extracting {package_id(pkg)} from binary cache")
 
     with timer.measure("install"), spack.util.path.filter_padding():
-        binary_distribution.extract_tarball(
-            pkg.spec, download_result, unsigned=unsigned, force=False, timer=timer
-        )
+        binary_distribution.extract_tarball(pkg.spec, download_result, force=False, timer=timer)
 
         pkg.installed_from_binary_cache = True
         spack.store.STORE.db.add(pkg.spec, spack.store.STORE.layout, explicit=explicit)
@@ -504,7 +497,7 @@ def _process_binary_cache_tarball(
 def _try_install_from_binary_cache(
     pkg: "spack.package_base.PackageBase",
     explicit: bool,
-    unsigned: bool = False,
+    unsigned: Optional[bool] = None,
     timer: timer.BaseTimer = timer.NULL_TIMER,
 ) -> bool:
     """
@@ -513,8 +506,7 @@ def _try_install_from_binary_cache(
     Args:
         pkg: package to be extracted from binary cache
         explicit: the package was explicitly requested by the user
-        unsigned: ``True`` if binary package signatures to be checked,
-            otherwise, ``False``
+        unsigned: if ``True`` or ``False`` override the mirror signature verification defaults
         timer: timer to keep track of binary install phases.
     """
     # Early exit if no binary mirrors are configured.
@@ -647,13 +639,12 @@ def archive_install_logs(pkg: "spack.package_base.PackageBase", phase_log_dir: s
         pkg: the package that was built and installed
         phase_log_dir: path to the archive directory
     """
-    # Archive the whole stdout + stderr for the package
-    fs.install(pkg.log_path, pkg.install_log_path)
-
-    # Archive all phase log paths
-    for phase_log in pkg.phase_log_files:
-        log_file = os.path.basename(phase_log)
-        fs.install(phase_log, os.path.join(phase_log_dir, log_file))
+    # Copy a compressed version of the install log
+    with open(pkg.log_path, "rb") as f, open(pkg.install_log_path, "wb") as g:
+        # Use GzipFile directly so we can omit filename / mtime in header
+        gzip_file = GzipFile(filename="", mode="wb", compresslevel=6, mtime=0, fileobj=g)
+        shutil.copyfileobj(f, gzip_file)
+        gzip_file.close()
 
     # Archive the install-phase test log, if present
     pkg.archive_install_test_log()
@@ -824,7 +815,7 @@ class BuildRequest:
             ("restage", False),
             ("skip_patch", False),
             ("tests", False),
-            ("unsigned", False),
+            ("unsigned", None),
             ("verbose", False),
         ]:
             _ = self.install_args.setdefault(arg, default)
@@ -1335,7 +1326,6 @@ class PackageInstaller:
         """
         install_args = task.request.install_args
         keep_prefix = install_args.get("keep_prefix")
-        restage = install_args.get("restage")
 
         # Make sure the package is ready to be locally installed.
         self._ensure_install_ready(task.pkg)
@@ -1366,10 +1356,6 @@ class PackageInstaller:
                     task.pkg.remove_prefix()
                 else:
                     tty.debug(f"{task.pkg_id} is partially installed")
-
-            # Destroy the stage for a locally installed, non-DIYStage, package
-            if restage and task.pkg.stage.managed_by_spack:
-                task.pkg.stage.destroy()
 
         if (
             rec
@@ -1662,7 +1648,7 @@ class PackageInstaller:
         use_cache = task.use_cache
         tests = install_args.get("tests", False)
         assert isinstance(tests, (bool, list))  # make mypy happy.
-        unsigned = bool(install_args.get("unsigned"))
+        unsigned: Optional[bool] = install_args.get("unsigned")
 
         pkg, pkg_id = task.pkg, task.pkg_id
 
@@ -1671,11 +1657,16 @@ class PackageInstaller:
         task.status = STATUS_INSTALLING
 
         # Use the binary cache if requested
-        if use_cache and _install_from_cache(pkg, cache_only, explicit, unsigned):
-            self._update_installed(task)
-            if task.compiler:
-                self._add_compiler_package_to_config(pkg)
-            return
+        if use_cache:
+            if _install_from_cache(pkg, explicit, unsigned):
+                self._update_installed(task)
+                if task.compiler:
+                    self._add_compiler_package_to_config(pkg)
+                return
+            elif cache_only:
+                raise InstallError("No binary found when cache-only was specified", pkg=pkg)
+            else:
+                tty.msg(f"No binary for {pkg_id} found: installing from source")
 
         pkg.run_tests = tests if isinstance(tests, bool) else pkg.name in tests
 
@@ -1690,6 +1681,10 @@ class PackageInstaller:
 
         try:
             self._setup_install_dir(pkg)
+
+            # Create stage object now and let it be serialized for the child process. That
+            # way monkeypatch in tests works correctly.
+            pkg.stage
 
             # Create a child process to do the actual installation.
             # Preserve verbosity settings across installs.
@@ -2007,7 +2002,9 @@ class PackageInstaller:
 
         # Only enable the terminal status line when we're in a tty without debug info
         # enabled, so that the output does not get cluttered.
-        term_status = TermStatusLine(enabled=sys.stdout.isatty() and not tty.is_debug())
+        term_status = TermStatusLine(
+            enabled=sys.stdout.isatty() and tty.msg_enabled() and not tty.is_debug()
+        )
 
         while self.build_pq:
             task = self._pop_task()
@@ -2223,11 +2220,6 @@ class PackageInstaller:
                 if not keep_prefix and not action == InstallAction.OVERWRITE:
                     pkg.remove_prefix()
 
-                # The subprocess *may* have removed the build stage. Mark it
-                # not created so that the next time pkg.stage is invoked, we
-                # check the filesystem for it.
-                pkg.stage.created = False
-
             # Perform basic task cleanup for the installed spec to
             # include downgrading the write to a read lock
             self._cleanup_task(pkg)
@@ -2297,6 +2289,9 @@ class BuildProcessInstaller:
         # whether to keep the build stage after installation
         self.keep_stage = install_args.get("keep_stage", False)
 
+        # whether to restage
+        self.restage = install_args.get("restage", False)
+
         # whether to skip the patch phase
         self.skip_patch = install_args.get("skip_patch", False)
 
@@ -2327,9 +2322,13 @@ class BuildProcessInstaller:
     def run(self) -> bool:
         """Main entry point from ``build_process`` to kick off install in child."""
 
-        self.pkg.stage.keep = self.keep_stage
+        stage = self.pkg.stage
+        stage.keep = self.keep_stage
 
-        with self.pkg.stage:
+        if self.restage:
+            stage.destroy()
+
+        with stage:
             self.timer.start("stage")
 
             if not self.fake:

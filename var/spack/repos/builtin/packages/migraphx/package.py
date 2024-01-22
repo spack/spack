@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,14 +11,19 @@ from spack.package import *
 class Migraphx(CMakePackage):
     """AMD's graph optimization engine."""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX"
-    git = "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX.git"
-    url = "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/AMDMIGraphX"
+    git = "https://github.com/ROCm/AMDMIGraphX.git"
+    url = "https://github.com/ROCm/AMDMIGraphX/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["libmigraphx"]
 
+    license("MIT")
+
+    version("6.0.0", sha256="7bb3f5011da9b1f3b79707b06118c523c1259215f650c2ffa5622a7e1d88868f")
+    version("5.7.1", sha256="3e58c043a5a7d1357ee05725fd6cd41e190b070f1ba57f61300128429902089c")
+    version("5.7.0", sha256="14f13554367d2d6490d66f8b5b739203225e7acce25085559e7c4acf29e2a4d5")
     version("5.6.1", sha256="b108c33f07572ffd880b20f6de06f1934ab2a1b41ae69095612322ac412fa91c")
     version("5.6.0", sha256="eaec90535d62002fd5bb264677ad4a7e30c55f18d2a287680d0495c7e60432b2")
     version("5.5.1", sha256="e71c4744f8ef6a1a99c179bbad94b8fe9bd7686eaa9397f376b70988c3341f0c")
@@ -104,7 +109,7 @@ class Migraphx(CMakePackage):
     )
 
     def url_for_version(self, version):
-        url = "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX/archive/"
+        url = "https://github.com/ROCm/AMDMIGraphX/archive/"
         if version <= Version("3.5.0"):
             url += "{0}.tar.gz".format(version)
         else:
@@ -119,6 +124,7 @@ class Migraphx(CMakePackage):
     patch("0003-restrict-python-2.7-usage.patch", when="@5.2.0:5.4")
     patch("0004-restrict-python2.7-usage-for-5.5.0.patch", when="@5.5.0")
     patch("0005-Adding-half-include-directory-path-migraphx.patch", when="@5.6.0:")
+    patch("0006-add-option-to-turn-off-ck.patch", when="@5.7")
 
     depends_on("cmake@3.5:", type="build")
     depends_on("protobuf", type="link")
@@ -131,6 +137,7 @@ class Migraphx(CMakePackage):
     depends_on("py-pybind11", type="build", when="@:4.0.0")
     depends_on("py-pybind11@2.6:", type="build", when="@4.1.0:")
     depends_on("pkgconfig", type="build", when="@5.3.0:")
+    depends_on("abseil-cpp")
 
     for ver in [
         "3.5.0",
@@ -160,12 +167,18 @@ class Migraphx(CMakePackage):
         "5.5.1",
         "5.6.0",
         "5.6.1",
+        "5.7.0",
+        "5.7.1",
+        "6.0.0",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, when="@" + ver)
         depends_on("rocblas@" + ver, when="@" + ver)
         depends_on("miopen-hip@" + ver, when="@" + ver)
+
+    for ver in ["5.7.0", "5.7.1", "6.0.0"]:
+        depends_on("composable-kernel@" + ver, when="@" + ver)
 
     @property
     def cmake_python_hints(self):
@@ -198,6 +211,9 @@ class Migraphx(CMakePackage):
             args += self.cmake_python_hints
         if "@5.5.0:" in self.spec:
             args.append(self.define("CMAKE_CXX_FLAGS", "-I{0}".format(abspath)))
+            args.append(self.define("MIGRAPHX_ENABLE_PYTHON", "OFF"))
+        if "@5.7" in self.spec:
+            args.append(self.define("MIGRAPHX_USE_COMPOSABLEKERNEL", "OFF"))
         return args
 
     def test(self):

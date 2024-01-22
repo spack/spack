@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class GoMd2man(Package):
 
     homepage = "https://github.com/cpuguy83/go-md2man"
     url = "https://github.com/cpuguy83/go-md2man/archive/v1.0.10.tar.gz"
+
+    license("MIT")
 
     version("2.0.2", sha256="2f52e37101ea2734b02f2b54a53c74305b95b3a9a27792fdac962b5354aa3e4a")
     version("1.0.10", sha256="76aa56849123b99b95fcea2b15502fd886dead9a5c35be7f78bdc2bad6be8d99")

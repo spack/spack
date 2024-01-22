@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Babl(MesonPackage):
     url = "https://download.gimp.org/babl/0.1/babl-0.1.98.tar.xz"
 
     maintainers("benkirk")
+
+    license("LGPL-3.0-or-later")
 
     version("0.1.106", sha256="d325135d3304f088c134cc620013acf035de2e5d125a50a2d91054e7377c415f")
     version("0.1.102", sha256="a88bb28506575f95158c8c89df6e23686e50c8b9fea412bf49fe8b80002d84f0")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Libnsl(AutotoolsPackage):
 
     homepage = "https://github.com/thkukuk/libnsl"
     url = "https://github.com/thkukuk/libnsl/archive/v1.3.0.tar.gz"
+
+    license("LGPL-2.0-or-later")
 
     version("2.0.0", sha256="eb37be57c1cf650b3a8a4fc7cd66c8b3dfc06215b41956a16325a9388171bc40")
     version("1.3.0", sha256="8e88017f01dd428f50386186b0cd82ad06c9b2a47f9c5ea6b3023fc6e08a6b0f")

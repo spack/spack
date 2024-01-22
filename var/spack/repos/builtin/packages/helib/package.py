@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,8 @@ class Helib(CMakePackage):
     url = "https://github.com/homenc/HElib/archive/refs/tags/v2.2.1.tar.gz"
 
     maintainers("wohlbier")
+
+    license("Apache-2.0")
 
     version("2.2.2", sha256="70c07d2a2da393c695095fe755836524e3d98efb27a336e206291f71db9cec7d")
     version("2.2.1", sha256="cbe030c752c915f1ece09681cadfbe4f140f6752414ab000b4cf076b6c3019e4")

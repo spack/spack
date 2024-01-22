@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,15 +16,18 @@ class RocmSmiLib(CMakePackage):
     """It is a C library for Linux that provides a user space interface
     for applications to monitor and control GPU applications."""
 
-    homepage = "https://github.com/RadeonOpenCompute/rocm_smi_lib"
-    git = "https://github.com/RadeonOpenCompute/rocm_smi_lib.git"
-    url = "https://github.com/RadeonOpenCompute/rocm_smi_lib/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/rocm_smi_lib"
+    git = "https://github.com/ROCm/rocm_smi_lib.git"
+    url = "https://github.com/ROCm/rocm_smi_lib/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["librocm_smi64"]
 
     version("master", branch="master")
+    version("6.0.0", sha256="0053b42402fd007e5ca9b3186c70f2c6f1b3026558f328722adadc2838c51309")
+    version("5.7.1", sha256="4d79cb0482b2f801cc7824172743e3dd2b44b9f6784d1ca2e5067f2fbb4ef803")
+    version("5.7.0", sha256="a399db3d9fc113ce2dd1ab5608a1cf9129ec4b6a2a79ab7922b1d9f43c454640")
     version("5.6.1", sha256="9e94f9a941202c3d7ce917fd1cd78c4e0f06f48d6c929f3aa916378ccef1e02c")
     version("5.6.0", sha256="88be875948a29454b8aacced8bb8ad967502a7a074ecbc579ed673c1650a2f7e")
     version("5.5.1", sha256="37f32350bfaf6c697312628696d1b1d5fd9165f183882759bc6cb9a5d65b9430")
@@ -114,9 +117,9 @@ class RocmSmiLib(CMakePackage):
     depends_on("cmake@3:", type="build")
     depends_on("python@3:", type=("build", "run"), when="@3.9.0:")
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
-    patch("disable_pdf_generation_with_doxygen_and_latex.patch", when="@4.5.2:")
+    patch("disable_pdf_generation_with_doxygen_and_latex.patch", when="@4.5.2:5.6")
 
     def cmake_args(self):
         args = [

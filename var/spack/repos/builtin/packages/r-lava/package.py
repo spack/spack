@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class RLava(RPackage):
     functions for a broad range of statistical models."""
 
     cran = "lava"
+
+    license("GPL-3.0-only")
 
     version("1.7.2.1", sha256="d42b1f5c7e4e76718e4f014c44608295f82b5de0eb25ce8e9b35c40c7839ef2e")
     version("1.7.0", sha256="3078da69f3828812bcd093acc2d1cd2c8cbc8480d81da222ae49a55bcb2e5e24")

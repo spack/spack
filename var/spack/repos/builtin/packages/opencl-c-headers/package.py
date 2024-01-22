@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class OpenclCHeaders(Package):
     homepage = "https://www.khronos.org/registry/OpenCL/"
     url = "https://github.com/KhronosGroup/OpenCL-Headers/archive/v2020.06.16.tar.gz"
     maintainers("lorddavidiii")
+
+    license("Apache-2.0")
 
     version(
         "2022.01.04", sha256="6e716e2b13fc8d363b40a165ca75021b102f9328e2b38f8054d7db5884de29c9"

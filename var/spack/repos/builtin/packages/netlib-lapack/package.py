@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class NetlibLapack(CMakePackage):
     homepage = "https://www.netlib.org/lapack/"
     url = "https://www.netlib.org/lapack/lapack-3.5.0.tgz"
     tags = ["windows"]
+
+    license("BSD-3-Clause-Open-MPI")
 
     version(
         "3.11.0",

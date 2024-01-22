@@ -57,7 +57,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # @v2
 
-      - uses: docker/metadata-action@96383f45573cb7f253c731d3b3ab81c87ef81934
+      - uses: docker/metadata-action@dbef88086f6cef02e264edb7dbf63250c17cef6c
         id: docker_meta
         with:
           images: |
@@ -113,7 +113,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build & Deploy ${{ matrix.dockerfile[0] }}
-        uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09
+        uses: docker/build-push-action@4a13e500e55cf31b7a5d59a38ab2040ab0f42f56
         with:
           context: dockerfiles/${{ matrix.dockerfile[0] }}
           platforms: ${{ matrix.dockerfile[1] }}

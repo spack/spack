@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,7 @@ class Fargparse(CMakePackage):
     version("develop", branch="develop")
     version("main", branch="main")
 
+    version("1.6.0", sha256="055a0af44f50c302f8f20a8bcf3d26c5bbeacf5222cdbaa5b19da4cff56eb9c0")
     version("1.5.0", sha256="1c16ead5f1bacb9c2f33aab99a0889c68c1a1ece754ddc3fd340f10a0d5da2f7")
     version("1.4.2", sha256="2cd3f14845235407c6a4171ab4602499dade045e3f9b7dc75190f4a315ac8b44")
     version("1.4.1", sha256="8f9b92a80f05b0a8ab2dd5cd309ad165041c7fcdd589b96bf75c7dd889b9b584")

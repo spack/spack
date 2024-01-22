@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Libpostal(AutotoolsPackage):
     url = "https://github.com/openvenues/libpostal/archive/refs/tags/v1.1.tar.gz"
 
     maintainers("jgaeb")
+
+    license("MIT")
 
     version("1.1", sha256="8cc473a05126895f183f2578ca234428d8b58ab6fadf550deaacd3bd0ae46032")
     version("1.0.0", sha256="3035af7e15b2894069753975d953fa15a86d968103913dbf8ce4b8aa26231644")

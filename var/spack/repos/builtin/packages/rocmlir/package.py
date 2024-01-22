@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,9 +12,9 @@ class Rocmlir(CMakePackage):
     targetting AMD hardware. This generator is mainly used from MIOpen and MIGraphX,
     but it can be used on a standalone basis."""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/rocMLIR"
-    git = "https://github.com/ROCmSoftwarePlatform/rocMLIR.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocMLIR/archive/refs/tags/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/rocMLIR"
+    git = "https://github.com/ROCm/rocMLIR.git"
+    url = "https://github.com/ROCm/rocMLIR/archive/refs/tags/rocm-6.0.0.tar.gz"
 
     maintainers("srekolam")
     version("5.5.1", commit="8c29325e7e68e3248e863172bf0e7f97055d45ee")

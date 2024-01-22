@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,8 @@ class RRms(RPackage):
     models, and quantile regression."""
 
     cran = "rms"
+
+    license("GPL-2.0-or-later")
 
     version("6.6-0", sha256="f3abadb94339f3aedadd27e1aceade069bcb53c94bf246626b0dc94b16b6625c")
     version("6.3-0", sha256="6c41eb670daf5e4391cc2f2a19e20a591f90769c124300a7ccf555820140d3f9")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -84,6 +84,14 @@ class Intel(Compiler):
             return "-std=c++1y"
         else:
             return "-std=c++14"
+
+    @property
+    def cxx17_flag(self):
+        # https://www.intel.com/content/www/us/en/developer/articles/news/c17-features-supported-by-c-compiler.html
+        if self.real_version < Version("19"):
+            raise UnsupportedCompilerFlag(self, "the C++17 standard", "cxx17_flag", "< 19")
+        else:
+            return "-std=c++17"
 
     @property
     def c99_flag(self):

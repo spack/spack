@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class PyNetworkit(PythonPackage):
     pypi = "networkit/networkit-6.1.tar.gz"
 
     maintainers("fabratu")
+
+    license("MIT")
 
     version("9.0", sha256="e27872d0d6a8a0a1ba862b0dab6adb4f0046fe6b20d3c47863075d1ee70226d3")
     version("8.1", sha256="5ff9e61496259280df4f913b1e37f51ca6f94974c4b9f623851f4d518f5ce0d5")

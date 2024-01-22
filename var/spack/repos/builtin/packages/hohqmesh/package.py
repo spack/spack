@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Hohqmesh(CMakePackage):
     url = "https://github.com/trixi-framework/HOHQMesh/archive/v1.0.0.tar.gz"
 
     maintainers("fluidnumerics-joe")
+
+    license("MIT")
 
     version("1.3.0", sha256="31ea80de15ece886df0dd1b941714d86ec06a9ed02c1415308b4ba23d8314eff")
     version("1.2.1", sha256="b1b13a680c3ef6b8d6a8d05406f68c1ff641c26f69c468ccf2d7bed8d556dd7e")

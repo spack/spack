@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class PyUcsfPyem(PythonPackage):
     git = "https://github.com/asarnow/pyem.git"
 
     maintainers("dorton21")
+
+    license("GPL-3.0-or-later")
 
     # Using commit since releases haven't been updated in 2 years
     version("2021-04-07", commit="ed0527f98657d21d887357426b74e5240d477fae")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Xcalc(AutotoolsPackage, XorgPackage):
 
     homepage = "https://cgit.freedesktop.org/xorg/app/xcalc"
     xorg_mirror_path = "app/xcalc-1.0.6.tar.gz"
+
+    license("MIT")
 
     version("1.1.1", sha256="9219c889bfb2d0e168ef9a14700662c5cde829b69b12875cb6d59b70d4b68f3b")
     version("1.1.0", sha256="a86418d9af9d0e57e5253ba1c29e754480509c828d369aaaca48400b2045e630")

@@ -1,4 +1,4 @@
-% Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+% Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 % Spack Project Developers. See the top-level COPYRIGHT file for details.
 %
 % SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@
 % Integrity constraints on DAG nodes
 :- attr("root", PackageNode), not attr("node", PackageNode).
 :- attr("version", PackageNode, _), not attr("node", PackageNode), not attr("virtual_node", PackageNode).
-:- attr("node_version_satisfies", PackageNode), not attr("node", PackageNode).
+:- attr("node_version_satisfies", PackageNode, _), not attr("node", PackageNode), not attr("virtual_node", PackageNode).
 :- attr("hash", PackageNode, _), not attr("node", PackageNode).
 :- attr("node_platform", PackageNode, _), not attr("node", PackageNode).
 :- attr("node_os", PackageNode, _), not attr("node", PackageNode).
@@ -44,6 +44,9 @@
 % Nodes in the "root" unification set cannot depend on non-root nodes if the dependency is "link" or "run"
 :- attr("depends_on", node(min_dupe_id, Package), node(ID, _), "link"), ID != min_dupe_id, unification_set("root", node(min_dupe_id, Package)), internal_error("link dependency out of the root unification set").
 :- attr("depends_on", node(min_dupe_id, Package), node(ID, _), "run"),  ID != min_dupe_id, unification_set("root", node(min_dupe_id, Package)), internal_error("run dependency out of the root unification set").
+
+% Namespaces are statically assigned by a package fact
+attr("namespace", node(ID, Package), Namespace) :- attr("node", node(ID, Package)), pkg_fact(Package, namespace(Namespace)).
 
 % Rules on "unification sets", i.e. on sets of nodes allowing a single configuration of any given package
 unify(SetID, PackageName) :- unification_set(SetID, node(_, PackageName)).
@@ -694,6 +697,18 @@ requirement_group_satisfied(node(ID, Package), X) :-
   requirement_policy(Package, X, "any_of"),
   activate_requirement(node(ID, Package), X),
   requirement_group(Package, X).
+
+% When we have a required provider, we need to ensure that the provider/2 facts respect
+% the requirement. This is particularly important for packages that could provide multiple
+% virtuals independently
+required_provider(Provider, Virtual)
+  :- requirement_group_member(ConditionID, Virtual, RequirementID),
+     condition_holds(ConditionID, _),
+     virtual(Virtual),
+     pkg_fact(Virtual, condition_effect(ConditionID, EffectID)),
+     imposed_constraint(EffectID, "node", Provider).
+
+:- provider(node(Y, Package), node(X, Virtual)), required_provider(Provider, Virtual), Package != Provider.
 
 % TODO: the following two choice rules allow the solver to add compiler
 % flags if their only source is from a requirement. This is overly-specific

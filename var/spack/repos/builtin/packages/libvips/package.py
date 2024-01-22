@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Libvips(AutotoolsPackage):
     homepage = "https://libvips.github.io/libvips/"
     url = "https://github.com/libvips/libvips/releases/download/v8.9.0/vips-8.9.0.tar.gz"
     git = "https://github.com/libvips/libvips.git"
+
+    license("LGPL-2.1-or-later")
 
     version("8.13.3", sha256="4eff5cdc8dbe1a05a926290a99014e20ba386f5dcca38d9774bef61413435d4c")
     version("8.10.5", sha256="a4eef2f5334ab6dbf133cd3c6d6394d5bdb3e76d5ea4d578b02e1bc3d9e1cfd8")
@@ -32,6 +34,7 @@ class Libvips(AutotoolsPackage):
 
     # TODO: Add more variants!
 
+    depends_on("pkgconfig", type="build")
     depends_on("glib")
     depends_on("expat")
 

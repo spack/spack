@@ -1,13 +1,34 @@
-# <img src="https://cdn.rawgit.com/spack/spack/develop/share/spack/logo/spack-logo.svg" width="64" valign="middle" alt="Spack"/> Spack
+<div align="left">
 
-[![Unit Tests](https://github.com/spack/spack/workflows/linux%20tests/badge.svg)](https://github.com/spack/spack/actions)
-[![Bootstrapping](https://github.com/spack/spack/actions/workflows/bootstrap.yml/badge.svg)](https://github.com/spack/spack/actions/workflows/bootstrap.yml)
-[![codecov](https://codecov.io/gh/spack/spack/branch/develop/graph/badge.svg)](https://codecov.io/gh/spack/spack)
-[![Containers](https://github.com/spack/spack/actions/workflows/build-containers.yml/badge.svg)](https://github.com/spack/spack/actions/workflows/build-containers.yml)
-[![Read the Docs](https://readthedocs.org/projects/spack/badge/?version=latest)](https://spack.readthedocs.io)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Slack](https://slack.spack.io/badge.svg)](https://slack.spack.io)
-[![Matrix](https://img.shields.io/matrix/spack-space%3Amatrix.org?label=Matrix)](https://matrix.to/#/#spack-space:matrix.org)
+<h2>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://cdn.rawgit.com/spack/spack/develop/share/spack/logo/spack-logo-white-text.svg" width="250">
+  <source media="(prefers-color-scheme: light)" srcset="https://cdn.rawgit.com/spack/spack/develop/share/spack/logo/spack-logo-text.svg" width="250">
+  <img alt="Spack" src="https://cdn.rawgit.com/spack/spack/develop/share/spack/logo/spack-logo-text.svg" width="250">
+</picture>
+
+<br>
+<br clear="all">
+
+<a href="https://github.com/spack/spack/actions/workflows/ci.yml"><img src="https://github.com/spack/spack/workflows/ci/badge.svg" alt="CI Status"></a>
+<a href="https://github.com/spack/spack/actions/workflows/bootstrapping.yml"><img src="https://github.com/spack/spack/actions/workflows/bootstrap.yml/badge.svg" alt="Bootstrap Status"></a>
+<a href="https://github.com/spack/spack/actions/workflows/build-containers.yml"><img src="https://github.com/spack/spack/actions/workflows/build-containers.yml/badge.svg" alt="Containers Status"></a>
+<a href="https://spack.readthedocs.io"><img src="https://readthedocs.org/projects/spack/badge/?version=latest" alt="Documentation Status"></a>
+<a href="https://codecov.io/gh/spack/spack"><img src="https://codecov.io/gh/spack/spack/branch/develop/graph/badge.svg" alt="Code coverage"/></a>
+<a href="https://slack.spack.io"><img src="https://slack.spack.io/badge.svg" alt="Slack"/></a>
+<a href="https://matrix.to/#/#spack-space:matrix.org"><img src="https://img.shields.io/matrix/spack-space%3Amatrix.org?label=matrix" alt="Matrix"/></a>
+
+</h2>
+
+**[Getting Started] &nbsp; • &nbsp; [Config] &nbsp; • &nbsp; [Community] &nbsp; • &nbsp; [Contributing] &nbsp; • &nbsp; [Packaging Guide]**
+
+[Getting Started]: https://spack.readthedocs.io/en/latest/getting_started.html
+[Config]: https://spack.readthedocs.io/en/latest/configuration.html
+[Community]: #community
+[Contributing]: https://spack.readthedocs.io/en/latest/contribution_guide.html
+[Packaging Guide]: https://spack.readthedocs.io/en/latest/packaging_guide.html
+
+</div>
 
 Spack is a multi-platform package manager that builds and installs
 multiple versions and configurations of software. It works on Linux,
@@ -66,10 +87,11 @@ Resources:
 * **Matrix space**: [#spack-space:matrix.org](https://matrix.to/#/#spack-space:matrix.org):
   [bridged](https://github.com/matrix-org/matrix-appservice-slack#matrix-appservice-slack) to Slack.
 * [**Github Discussions**](https://github.com/spack/spack/discussions):
-  not just for discussions, but also Q&A.
-* **Mailing list**: [groups.google.com/d/forum/spack](https://groups.google.com/d/forum/spack)
+  for Q&A and discussions. Note the pinned discussions for announcements.
 * **Twitter**: [@spackpm](https://twitter.com/spackpm). Be sure to
   `@mention` us!
+* **Mailing list**: [groups.google.com/d/forum/spack](https://groups.google.com/d/forum/spack):
+  only for announcements. Please use other venues for discussions.
 
 Contributing
 ------------------------

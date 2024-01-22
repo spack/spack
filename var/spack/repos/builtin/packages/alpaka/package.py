@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Alpaka(CMakePackage, CudaPackage):
     git = "https://github.com/alpaka-group/alpaka.git"
 
     maintainers("vvolkl")
+
+    license("MPL-2.0-no-copyleft-exception")
 
     version("develop", branch="develop")
     version("0.8.0", sha256="e01bc377a7657d9a3e0c5f8d3f83dffbd7d0b830283c59efcbc1fb98cf88de43")

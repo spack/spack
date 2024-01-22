@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,6 +34,8 @@ class AoclUtils(CMakePackage):
     git = "https://github.com/amd/aocl-utils"
 
     maintainers("amd-toolchain-support")
+
+    license("BSD-3-Clause")
 
     version("4.1", sha256="a2f271f5eef07da366dae421af3c89286ebb6239047a31a46451758d4a06bc85")
 

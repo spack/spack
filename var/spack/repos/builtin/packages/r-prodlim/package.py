@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class RProdlim(RPackage):
     history (survival) analysis. Kaplan-Meier and Aalen-Johansen method."""
 
     cran = "prodlim"
+
+    license("GPL-2.0-or-later")
 
     version(
         "2023.03.31", sha256="5510454f8511ca956666f27dfb77d875c56b9166188c33f22cd22b7615797800"

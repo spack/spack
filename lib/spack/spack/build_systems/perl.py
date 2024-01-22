@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,13 +10,12 @@ from llnl.util.filesystem import filter_file
 import spack.builder
 import spack.package_base
 from spack.directives import build_system, extends
-from spack.package_base import PackageBase
 from spack.util.executable import Executable
 
 from ._checks import BaseBuilder, execute_build_time_tests
 
 
-class PerlPackage(PackageBase):
+class PerlPackage(spack.package_base.PackageBase):
     """Specialized class for packages that are built using Perl."""
 
     #: This attribute is used in UI queries that need to know the build
@@ -61,6 +60,30 @@ class PerlBuilder(BaseBuilder):
     #: Callback names for build-time test
     build_time_test_callbacks = ["check"]
 
+    @property
+    def build_method(self):
+        """Searches the package for either a Makefile.PL or Build.PL.
+
+        Raises:
+            RuntimeError: if neither Makefile.PL nor Build.PL exist
+        """
+        if os.path.isfile("Makefile.PL"):
+            build_method = "Makefile.PL"
+        elif os.path.isfile("Build.PL"):
+            build_method = "Build.PL"
+        else:
+            raise RuntimeError("Unknown build_method for perl package")
+        return build_method
+
+    @property
+    def build_executable(self):
+        """Returns the executable method to build the perl package"""
+        if self.build_method == "Makefile.PL":
+            build_executable = inspect.getmodule(self.pkg).make
+        elif self.build_method == "Build.PL":
+            build_executable = Executable(os.path.join(self.pkg.stage.source_path, "Build"))
+        return build_executable
+
     def configure_args(self):
         """List of arguments passed to :py:meth:`~.PerlBuilder.configure`.
 
@@ -73,19 +96,7 @@ class PerlBuilder(BaseBuilder):
         """Run Makefile.PL or Build.PL with arguments consisting of
         an appropriate installation base directory followed by the
         list returned by :py:meth:`~.PerlBuilder.configure_args`.
-
-        Raises:
-            RuntimeError: if neither Makefile.PL nor Build.PL exist
         """
-        if os.path.isfile("Makefile.PL"):
-            self.build_method = "Makefile.PL"
-            self.build_executable = inspect.getmodule(self.pkg).make
-        elif os.path.isfile("Build.PL"):
-            self.build_method = "Build.PL"
-            self.build_executable = Executable(os.path.join(self.pkg.stage.source_path, "Build"))
-        else:
-            raise RuntimeError("Unknown build_method for perl package")
-
         if self.build_method == "Makefile.PL":
             options = ["Makefile.PL", "INSTALL_BASE={0}".format(prefix)]
         elif self.build_method == "Build.PL":

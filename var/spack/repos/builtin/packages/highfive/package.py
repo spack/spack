@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Highfive(CMakePackage):
     url = "https://github.com/BlueBrain/HighFive/archive/v1.2.tar.gz"
     git = "https://github.com/BlueBrain/HighFive.git"
     maintainers("alkino")
+
+    license("BSL-1.0")
 
     version("develop", branch="master")
     version("2.8.0", sha256="cd2502cae61bfb00e32dd18c9dc75289e09ad1db5c2a46d3b0eefd32e0df983b")

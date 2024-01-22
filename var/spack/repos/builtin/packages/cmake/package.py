@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,13 +20,17 @@ class Cmake(Package):
     url = "https://github.com/Kitware/CMake/releases/download/v3.19.0/cmake-3.19.0.tar.gz"
     git = "https://gitlab.kitware.com/cmake/cmake.git"
 
-    maintainers("alalazo")
+    maintainers("alalazo", "johnwparent")
 
     tags = ["build-tools", "windows"]
 
     executables = ["^cmake[0-9]*$"]
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
+    version("3.27.9", sha256="609a9b98572a6a5ea477f912cffb973109ed4d0a6a6b3f9e2353d2cdc048708e")
+    version("3.27.8", sha256="fece24563f697870fbb982ea8bf17482c9d5f855d8c9bf0b82463d76c9e8d0cc")
     version("3.27.7", sha256="08f71a106036bf051f692760ef9558c0577c42ac39e96ba097e7662bd4158d8e")
     version("3.27.6", sha256="ef3056df528569e0e8956f6cf38806879347ac6de6a4ff7e4105dc4578732cfb")
     version("3.27.4", sha256="0a905ca8635ca81aa152e123bdde7e54cbe764fdd9a70d62af44cad8b92967af")
@@ -34,6 +38,7 @@ class Cmake(Package):
     version("3.27.2", sha256="798e50085d423816fe96c9ef8bee5e50002c9eca09fed13e300de8a91d35c211")
     version("3.27.1", sha256="b1a6b0135fa11b94476e90f5b32c4c8fad480bf91cf22d0ded98ce22c5132004")
     version("3.27.0", sha256="aaeddb6b28b993d0a6e32c88123d728a17561336ab90e0bf45032383564d3cb8")
+    version("3.26.6", sha256="070b9a2422e666d2c1437e2dab239a236e8a63622d0a8d0ffe9e389613d2b76a")
     version("3.26.5", sha256="c0970b1e44a7fbca4322997ce05dac521b04748fe424922152faf22d20782bf9")
     version("3.26.4", sha256="313b6880c291bd4fe31c0aa51d6e62659282a521e695f30d5cc0d25abbd5c208")
     version("3.26.3", sha256="bbd8d39217509d163cb544a40d6428ac666ddc83e22905d3e52c925781f0f659")
@@ -234,13 +239,15 @@ class Cmake(Package):
     with when("~ownlibs"):
         depends_on("expat")
         # expat/zlib are used in CMake/CTest, so why not require them in libarchive.
-        depends_on("libarchive@3.1.0: xar=expat compression=zlib")
-        depends_on("libarchive@3.3.3:", when="@3.15.0:")
-        depends_on("libuv@1.0.0:1.10", when="@3.7.0:3.10.3")
-        depends_on("libuv@1.10.0:1.10", when="@3.11.0:3.11")
-        depends_on("libuv@1.10.0:", when="@3.12.0:")
-        depends_on("rhash", when="@3.8.0:")
-        depends_on("jsoncpp build_system=meson", when="@3.2:")
+        for plat in ["darwin", "cray", "linux"]:
+            with when("platform=%s" % plat):
+                depends_on("libarchive@3.1.0: xar=expat compression=zlib")
+                depends_on("libarchive@3.3.3:", when="@3.15.0:")
+                depends_on("libuv@1.0.0:1.10", when="@3.7.0:3.10.3")
+                depends_on("libuv@1.10.0:1.10", when="@3.11.0:3.11")
+                depends_on("libuv@1.10.0:", when="@3.12.0:")
+                depends_on("rhash", when="@3.8.0:")
+                depends_on("jsoncpp build_system=meson", when="@3.2:")
 
     depends_on("ncurses", when="+ncurses")
 
@@ -248,9 +255,6 @@ class Cmake(Package):
         depends_on("python@2.7.11:", type="build")
         depends_on("py-sphinx", type="build")
 
-    # TODO: update curl package to build with Windows SSL implementation
-    # at which point we can build with +ownlibs on Windows
-    conflicts("~ownlibs", when="platform=windows")
     # Cannot build with Intel, should be fixed in 3.6.2
     # https://gitlab.kitware.com/cmake/cmake/issues/16226
     patch("intel-c-gnu11.patch", when="@3.6.0:3.6.1")

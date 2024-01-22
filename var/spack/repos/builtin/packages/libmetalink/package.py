@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Libmetalink(AutotoolsPackage):
 
     homepage = "https://launchpad.net/libmetalink"
     url = "https://github.com/metalink-dev/libmetalink/archive/release-0.1.3.tar.gz"
+
+    license("MIT")
 
     version("0.1.3", sha256="7469c4a64b9dd78c3f23fa575fe001bbfd548c181492a2067b59609872122d7a")
     version("0.1.2", sha256="64af0979c11658f7a1659ca97ebc3c7bac8104253bf504015ac3b9c363382bae")

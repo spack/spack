@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Libconfuse(AutotoolsPackage):
 
     homepage = "https://github.com/martinh/libconfuse"
     url = "https://github.com/martinh/libconfuse/archive/v3.2.2.tar.gz"
+
+    license("0BSD")
 
     version("3.3", sha256="cb90c06f2dbec971792af576d5b9a382fb3c4ca2b1deea55ea262b403f4e641e")
     version("3.2.2", sha256="2cf7e032980aff8f488efba61510dc3fb95e9a4b9183f985dea457a5651b0e2c")

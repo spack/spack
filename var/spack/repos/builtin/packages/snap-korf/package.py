@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class SnapKorf(MakefilePackage):
     homepage = "http://korflab.ucdavis.edu/software.html"
     url = "http://korflab.ucdavis.edu/Software/snap-2013-11-29.tar.gz"
     git = "https://github.com/KorfLab/SNAP.git"
+
+    license("MIT")
 
     version("2021-11-04", commit="62ff3120fceccb03b5eea9d21afec3167dedfa94")
     version(

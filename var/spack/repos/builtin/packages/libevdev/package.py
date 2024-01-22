@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Libevdev(AutotoolsPackage):
 
     homepage = "https://cgit.freedesktop.org/libevdev"
     url = "https://github.com/whot/libevdev/archive/libevdev-1.5.4.tar.gz"
+
+    license("MIT")
 
     version("1.5.4", sha256="11ef3510970c049b0e30985be3149d27b4b36b7cbe14ca678746aac1ca86744d")
     version("1.5.3", sha256="14575ecac843af1f05dd90099a3163086da5b7a888da9d14263036b7b93894eb")

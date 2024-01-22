@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Httpd(AutotoolsPackage):
 
     homepage = "https://httpd.apache.org/"
     url = "https://archive.apache.org/dist/httpd/httpd-2.4.43.tar.bz2"
+
+    license("Apache-2.0")
 
     version("2.4.55", sha256="11d6ba19e36c0b93ca62e47e6ffc2d2f2884942694bce0f23f39c71bdc5f69ac")
 

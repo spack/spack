@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class MsgpackC(CMakePackage):
 
     homepage = "http://www.msgpack.org"
     url = "https://github.com/msgpack/msgpack-c/archive/cpp-3.0.1.tar.gz"
+
+    license("BSL-1.0")
 
     version("3.1.1", sha256="bda49f996a73d2c6080ff0523e7b535917cd28c8a79c3a5da54fc29332d61d1e")
     version("3.0.1", sha256="1b834ab0b5b41da1dbfb96dd4a673f6de7e79dbd7f212f45a553ff9cc54abf3b")

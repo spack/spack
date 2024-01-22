@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Twm(AutotoolsPackage, XorgPackage):
 
     homepage = "https://cgit.freedesktop.org/xorg/app/twm"
     xorg_mirror_path = "app/twm-1.0.9.tar.gz"
+
+    license("MIT")
 
     version("1.0.12", sha256="4150c9ec595520167ab8c4efcb5cf82641a4c4db78ce0a1cb4834e6aeb7c87fb")
     version("1.0.11", sha256="410ecabac54e6db7afd5c20a78d89c0134f3c74b149bee71b1fec775e6e060cc")

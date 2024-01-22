@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1016,14 +1016,16 @@ def _main(argv=None):
         bootstrap_context = bootstrap.ensure_bootstrap_configuration()
 
     with bootstrap_context:
-        return finish_parse_and_run(parser, cmd_name, args.command, env_format_error)
+        return finish_parse_and_run(parser, cmd_name, args, env_format_error)
 
 
-def finish_parse_and_run(parser, cmd_name, cmd, env_format_error):
+def finish_parse_and_run(parser, cmd_name, main_args, env_format_error):
     """Finish parsing after we know the command to run."""
     # add the found command to the parser and re-run then re-parse
     command = parser.add_command(cmd_name)
-    args, unknown = parser.parse_known_args()
+    args, unknown = parser.parse_known_args(main_args.command)
+    # we need to inherit verbose since the install command checks for it
+    args.verbose = main_args.verbose
 
     # Now that we know what command this is and what its args are, determine
     # whether we can continue with a bad environment and raise if not.

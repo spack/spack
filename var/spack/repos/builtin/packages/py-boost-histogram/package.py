@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyBoostHistogram(PythonPackage):
 
     homepage = "https://github.com/scikit-hep/boost-histogram"
     pypi = "boost_histogram/boost_histogram-1.2.1.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("1.3.2", sha256="e175efbc1054a27bc53fbbe95472cac9ea93999c91d0611840d776b99588d51a")
     version("1.3.1", sha256="31cd396656f3a37834e07d304cdb84d9906bc2172626a3d92fe577d08bcf410f")

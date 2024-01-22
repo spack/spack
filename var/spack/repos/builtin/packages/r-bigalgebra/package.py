@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class RBigalgebra(RPackage):
     objects."""
 
     cran = "bigalgebra"
+
+    license("LGPL-3.0-only OR Apache-2.0")
 
     version("1.1.0", sha256="e51530287a64826a3dfb55f41594bc8123b7b4c9b2074f6c8de218fa8b525734")
     version("1.0.1", sha256="ff7e261d0aa0e0f498e926d923ac62fc5cb783fa1f74bb2ff76a09167388a9d2")

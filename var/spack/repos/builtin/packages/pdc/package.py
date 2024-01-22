@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Pdc(CMakePackage):
     git = "https://github.com/hpc-io/pdc.git"
 
     maintainers("houjun", "sbyna")
+
+    license("BSD-3-Clause-LBNL")
 
     version("0.3", sha256="14a3abd5e1e604f9527105709fca545bcdebe51abd2b89884db74d48a38b5443")
     version("0.2", sha256="2829e74da227913a1a8e3e4f64e8f422ab9c0a049f8d73ff7b6ca12463959f8b")

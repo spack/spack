@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyIncremental(PythonPackage):
 
     homepage = "https://github.com/twisted/incremental"
     pypi = "incremental/incremental-21.3.0.tar.gz"
+
+    license("MIT")
 
     version("21.3.0", sha256="02f5de5aff48f6b9f665d99d48bfc7ec03b6e3943210de7cfc88856d755d6f57")
 

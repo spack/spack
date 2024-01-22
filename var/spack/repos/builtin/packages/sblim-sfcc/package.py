@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class SblimSfcc(AutotoolsPackage):
 
     homepage = "https://sourceforge.net/projects/sblim"
     url = "https://github.com/kkaempf/sblim-sfcc/archive/SFCC_2_2_1.tar.gz"
+
+    license("EPL-1.0")
 
     version("2_2_8", sha256="d8d0bf06a487483df507f512ddf0c7b2c1b878a1c9b039bf5c2357c4ba13b882")
     version("2_2_7", sha256="bb85bc75efd112411eb76e83a38413a33b3fb8b6b725c8d08fe326efcbea427f")

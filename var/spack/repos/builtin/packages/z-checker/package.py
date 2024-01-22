@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class ZChecker(AutotoolsPackage):
     url = "https://github.com/CODARcode/Z-checker/releases/download/0.7.0/Z-checker-0.7.0.tar.gz"
 
     maintainers("disheng222")
+
+    license("BSD-3-Clause")
 
     version("0.9.0", sha256="44436ad5971a24dd26a09d8262bc1fcd8c9fd0b746aff009a91ccbe57330baa1")
     version("0.7.0", sha256="02caf3af2dc59d116496f877da888dd2c2dffb9375c413b1d74401927963df3f")

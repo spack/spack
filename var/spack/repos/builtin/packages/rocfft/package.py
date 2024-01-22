@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,13 +11,18 @@ from spack.package import *
 class Rocfft(CMakePackage):
     """Radeon Open Compute FFT library"""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/rocFFT/"
-    git = "https://github.com/ROCmSoftwarePlatform/rocFFT.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocfft/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/rocFFT/"
+    git = "https://github.com/ROCm/rocFFT.git"
+    url = "https://github.com/ROCm/rocfft/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath", "haampie")
     libraries = ["librocfft"]
+
+    license("MIT")
+    version("6.0.0", sha256="fb8ba56572702e77e4383d922cd1fee4ad3fa5f63a5ebdb3d9c354439a446992")
+    version("5.7.1", sha256="202f11f60dc8738e29bbd1b397d419e032794f8bffb7f48f2b31f09cc5f08bc2")
+    version("5.7.0", sha256="3c4a1537a6ec76dc9b622644fe3890647306bf9f28f61c5d2028259c31bb964f")
     version("5.6.1", sha256="a65861e453587c3e6393da75b0b1976508c61f968aecda77fbec920fea48489e")
     version("5.6.0", sha256="e3d4a6c1bdac78f9a22033f57011af783d560308103f73542f9e0e4dd133d38a")
     version("5.5.1", sha256="57423a64f5cdb1c37ff0891b6c17b59f73198d46be42db4ae23781ef2c0cd49d")
@@ -125,7 +130,8 @@ class Rocfft(CMakePackage):
     depends_on("googletest@1.10.0:", type="test")
     depends_on("fftw@3.3.8:", type="test")
     depends_on("boost@1.64.0: +program_options", type="test")
-    depends_on("llvm-amdgpu +openmp", type="test")
+    depends_on("rocm-openmp-extras", type="test")
+    depends_on("hiprand", type="test")
 
     def check(self):
         exe = join_path(self.build_directory, "clients", "staging", "rocfft-test")
@@ -159,6 +165,9 @@ class Rocfft(CMakePackage):
         "5.5.1",
         "5.6.0",
         "5.6.1",
+        "5.7.0",
+        "5.7.1",
+        "6.0.0",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
@@ -169,6 +178,14 @@ class Rocfft(CMakePackage):
     patch("0003-Fix-clients-fftw3-include-dirs-rocm-4.5.patch", when="@4.5.0:5.1")
     # Patch to add install prefix header location for sqlite for 5.4
     patch("0004-fix-missing-sqlite-include-paths.patch", when="@5.4.0:5.5")
+
+    # Set LD_LIBRARY_PATH for executing the binaries from build directoryfix missing type
+    # https://github.com/ROCm/rocFFT/pull/449)
+    patch(
+        "https://github.com/ROCm/rocFFT/commit/0ec78f1daac2d7fa1415f4deff0d129252c1c9de.patch?full_index=1",
+        sha256="bac7873185ac60f2aaa50e278f0b8d52b4d79d586bf7f52db1da33559569ba54",
+        when="@6.0.0",
+    )
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
@@ -206,7 +223,7 @@ class Rocfft(CMakePackage):
                 self.define_from_variant("AMDGPU_TARGETS_SRAM_ECC", "amdgpu_target_sram_ecc")
             )
 
-        # See https://github.com/ROCmSoftwarePlatform/rocFFT/issues/322
+        # See https://github.com/ROCm/rocFFT/issues/322
         if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
             args.append(self.define("__skip_rocmclang", "ON"))
 

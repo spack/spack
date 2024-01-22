@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyGoogleapisCommonProtos(PythonPackage):
 
     homepage = "https://github.com/googleapis/googleapis"
     pypi = "googleapis-common-protos/googleapis-common-protos-1.6.0.tar.gz"
+
+    license("Apache-2.0")
 
     version("1.58.0", sha256="c727251ec025947d545184ba17e3578840fc3a24a0516a020479edab660457df")
     version("1.55.0", sha256="53eb313064738f45d5ac634155ae208e121c963659627b90dfcb61ef514c03e1")

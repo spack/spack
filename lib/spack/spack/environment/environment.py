@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ import time
 import urllib.parse
 import urllib.request
 import warnings
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import Dict, Iterable, List, Optional, Set, Tuple, Union
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -307,7 +307,7 @@ def create(
 
 
 def create_in_dir(
-    manifest_dir: Union[str, pathlib.Path],
+    root: Union[str, pathlib.Path],
     init_file: Optional[Union[str, pathlib.Path]] = None,
     with_view: Optional[Union[str, pathlib.Path, bool]] = None,
     keep_relative: bool = False,
@@ -318,35 +318,72 @@ def create_in_dir(
     are considered manifest files.
 
     Args:
-        manifest_dir: directory where to create the environment.
+        root: directory where to create the environment.
         init_file: either a lockfile, a manifest file, or None
         with_view: whether a view should be maintained for the environment. If the value is a
             string, it specifies the path to the view
         keep_relative: if True, develop paths are copied verbatim into the new environment file,
             otherwise they are made absolute
     """
-    initialize_environment_dir(manifest_dir, envfile=init_file)
+    initialize_environment_dir(root, envfile=init_file)
 
     if with_view is None and keep_relative:
-        return Environment(manifest_dir)
+        return Environment(root)
 
     try:
-        manifest = EnvironmentManifestFile(manifest_dir)
+        manifest = EnvironmentManifestFile(root)
 
         if with_view is not None:
             manifest.set_default_view(with_view)
 
-        if not keep_relative and init_file is not None and str(init_file).endswith(manifest_name):
-            init_file = pathlib.Path(init_file)
-            manifest.absolutify_dev_paths(init_file.parent)
-
         manifest.flush()
 
     except (spack.config.ConfigFormatError, SpackEnvironmentConfigError) as e:
-        shutil.rmtree(manifest_dir)
+        shutil.rmtree(root)
         raise e
 
-    return Environment(manifest_dir)
+    env = Environment(root)
+
+    if init_file:
+        init_file_dir = os.path.abspath(os.path.dirname(init_file))
+
+        if not keep_relative:
+            if env.path != init_file_dir:
+                # If we are here, we are creating an environment based on an
+                # spack.yaml file in another directory, and moreover we want
+                # dev paths in this environment to refer to their original
+                # locations.
+                _rewrite_relative_dev_paths_on_relocation(env, init_file_dir)
+
+    return env
+
+
+def _rewrite_relative_dev_paths_on_relocation(env, init_file_dir):
+    """When initializing the environment from a manifest file and we plan
+    to store the environment in a different directory, we have to rewrite
+    relative paths to absolute ones."""
+    with env:
+        dev_specs = spack.config.get("develop", default={}, scope=env.env_file_config_scope_name())
+        if not dev_specs:
+            return
+        for name, entry in dev_specs.items():
+            dev_path = entry["path"]
+            expanded_path = os.path.normpath(os.path.join(init_file_dir, entry["path"]))
+
+            # Skip if the expanded path is the same (e.g. when absolute)
+            if dev_path == expanded_path:
+                continue
+
+            tty.debug("Expanding develop path for {0} to {1}".format(name, expanded_path))
+
+            dev_specs[name]["path"] = expanded_path
+
+        spack.config.set("develop", dev_specs, scope=env.env_file_config_scope_name())
+
+        env._dev_specs = None
+        # If we changed the environment's spack.yaml scope, that will not be reflected
+        # in the manifest that we read
+        env._re_read()
 
 
 def environment_dir_from_name(name: str, exists_ok: bool = True) -> str:
@@ -753,18 +790,17 @@ class Environment:
 
         #: Specs from "spack.yaml"
         self.spec_lists: Dict[str, SpecList] = {user_speclist_name: SpecList()}
-        #: Dev-build specs from "spack.yaml"
-        self.dev_specs: Dict[str, Any] = {}
         #: User specs from the last concretization
         self.concretized_user_specs: List[Spec] = []
         #: Roots associated with the last concretization, in order
-        self.concretized_order: List[Spec] = []
+        self.concretized_order: List[str] = []
         #: Concretized specs by hash
         self.specs_by_hash: Dict[str, Spec] = {}
         #: Repository for this environment (memoized)
         self._repo = None
         #: Previously active environment
         self._previous_active = None
+        self._dev_specs = None
 
         with lk.ReadTransaction(self.txlock):
             self.manifest = EnvironmentManifestFile(manifest_dir)
@@ -858,18 +894,28 @@ class Environment:
         else:
             self.views = {}
 
-        # Retrieve dev-build packages:
-        self.dev_specs = copy.deepcopy(env_configuration.get("develop", {}))
-        for name, entry in self.dev_specs.items():
-            # spec must include a concrete version
-            assert Spec(entry["spec"]).versions.concrete_range_as_version
-            # default path is the spec name
-            if "path" not in entry:
-                self.dev_specs[name]["path"] = name
-
     @property
     def user_specs(self):
         return self.spec_lists[user_speclist_name]
+
+    @property
+    def dev_specs(self):
+        if not self._dev_specs:
+            self._dev_specs = self._read_dev_specs()
+        return self._dev_specs
+
+    def _read_dev_specs(self):
+        dev_specs = {}
+        dev_config = spack.config.get("develop", {})
+        for name, entry in dev_config.items():
+            local_entry = {"spec": str(entry["spec"])}
+            # default path is the spec name
+            if "path" not in entry:
+                local_entry["path"] = name
+            else:
+                local_entry["path"] = entry["path"]
+            dev_specs[name] = local_entry
+        return dev_specs
 
     def clear(self, re_read=False):
         """Clear the contents of the environment
@@ -883,7 +929,7 @@ class Environment:
         self.spec_lists = collections.OrderedDict()
         self.spec_lists[user_speclist_name] = SpecList()
 
-        self.dev_specs = {}  # dev-build specs from yaml
+        self._dev_specs = {}
         self.concretized_user_specs = []  # user specs from last concretize
         self.concretized_order = []  # roots of last concretize, in order
         self.specs_by_hash = {}  # concretized specs by hash
@@ -946,10 +992,6 @@ class Environment:
     @property
     def repos_path(self):
         return os.path.join(self.path, env_subdir_name, "repos")
-
-    @property
-    def log_path(self):
-        return os.path.join(self.path, env_subdir_name, "logs")
 
     @property
     def config_stage_dir(self):
@@ -1250,82 +1292,6 @@ class Environment:
                 dag_hash = self.concretized_order[i]
                 del self.concretized_order[i]
                 del self.specs_by_hash[dag_hash]
-
-    def develop(self, spec: Spec, path: str, clone: bool = False) -> bool:
-        """Add dev-build info for package
-
-        Args:
-            spec: Set constraints on development specs. Must include a
-                concrete version.
-            path: Path to find code for developer builds. Relative
-                paths will be resolved relative to the environment.
-            clone: Clone the package code to the path.
-                If clone is False Spack will assume the code is already present
-                at ``path``.
-
-        Return:
-            (bool): True iff the environment was changed.
-        """
-        spec = spec.copy()  # defensive copy since we access cached attributes
-
-        if not spec.versions.concrete:
-            raise SpackEnvironmentError("Cannot develop spec %s without a concrete version" % spec)
-
-        for name, entry in self.dev_specs.items():
-            if name == spec.name:
-                e_spec = Spec(entry["spec"])
-                e_path = entry["path"]
-
-                if e_spec == spec:
-                    if path == e_path:
-                        tty.msg("Spec %s already configured for development" % spec)
-                        return False
-                    else:
-                        tty.msg("Updating development path for spec %s" % spec)
-                        break
-                else:
-                    msg = "Updating development spec for package "
-                    msg += "%s with path %s" % (spec.name, path)
-                    tty.msg(msg)
-                    break
-        else:
-            tty.msg("Configuring spec %s for development at path %s" % (spec, path))
-
-        if clone:
-            # "steal" the source code via staging API. We ask for a stage
-            # to be created, then copy it afterwards somewhere else. It would be
-            # better if we can create the `source_path` directly into its final
-            # destination.
-            abspath = spack.util.path.canonicalize_path(path, default_wd=self.path)
-            pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
-            # We construct a package class ourselves, rather than asking for
-            # Spec.package, since Spec only allows this when it is concrete
-            package = pkg_cls(spec)
-            if isinstance(package.fetcher, spack.fetch_strategy.GitFetchStrategy):
-                package.fetcher.get_full_repo = True
-                # If we retrieved this version before and cached it, we may have
-                # done so without cloning the full git repo; likewise, any
-                # mirror might store an instance with truncated history.
-                package.stage.disable_mirrors()
-
-            package.stage.steal_source(abspath)
-
-        # If it wasn't already in the list, append it
-        entry = {"path": path, "spec": str(spec)}
-        self.dev_specs[spec.name] = entry
-        self.manifest.add_develop_spec(spec.name, entry=entry.copy())
-        return True
-
-    def undevelop(self, spec):
-        """Remove develop info for abstract spec ``spec``.
-
-        returns True on success, False if no entry existed."""
-        spec = Spec(spec)  # In case it's a spec object
-        if spec.name in self.dev_specs:
-            del self.dev_specs[spec.name]
-            self.manifest.remove_develop_spec(spec.name)
-            return True
-        return False
 
     def is_develop(self, spec):
         """Returns true when the spec is built from local sources"""
@@ -1837,8 +1803,8 @@ class Environment:
         self.concretized_order.append(h)
         self.specs_by_hash[h] = concrete
 
-    def _get_overwrite_specs(self):
-        # Find all dev specs that were modified.
+    def _dev_specs_that_need_overwrite(self):
+        """Return the hashes of all specs that need to be reinstalled due to source code change."""
         changed_dev_specs = [
             s
             for s in traverse.traverse_nodes(
@@ -1862,21 +1828,6 @@ class Environment:
             )
             if depth == 0 or spec.installed
         ]
-
-    def _install_log_links(self, spec):
-        if not spec.external:
-            # Make sure log directory exists
-            log_path = self.log_path
-            fs.mkdirp(log_path)
-
-            with fs.working_dir(self.path):
-                # Link the resulting log file into logs dir
-                build_log_link = os.path.join(
-                    log_path, "%s-%s.log" % (spec.name, spec.dag_hash(7))
-                )
-                if os.path.lexists(build_log_link):
-                    os.remove(build_log_link)
-                symlink(spec.package.build_log_path, build_log_link)
 
     def _partition_roots_by_install_status(self):
         """Partition root specs into those that do not have to be passed to the
@@ -1911,58 +1862,21 @@ class Environment:
         """
         self.install_specs(None, **install_args)
 
-    def install_specs(self, specs=None, **install_args):
-        tty.debug("Assessing installation status of environment packages")
-        # If "spack install" is invoked repeatedly for a large environment
-        # where all specs are already installed, the operation can take
-        # a large amount of time due to repeatedly acquiring and releasing
-        # locks. As a small optimization, drop already installed root specs.
-        installed_roots, uninstalled_roots = self._partition_roots_by_install_status()
-        if specs:
-            specs_to_install = [s for s in specs if s not in installed_roots]
-            specs_dropped = [s for s in specs if s in installed_roots]
-        else:
-            specs_to_install = uninstalled_roots
-            specs_dropped = installed_roots
+    def install_specs(self, specs: Optional[List[Spec]] = None, **install_args):
+        roots = self.concrete_roots()
+        specs = specs if specs is not None else roots
 
-        # We need to repeat the work of the installer thanks to the above optimization:
-        # Already installed root specs should be marked explicitly installed in the
-        # database.
-        if specs_dropped:
-            with spack.store.STORE.db.write_transaction():  # do all in one transaction
-                for spec in specs_dropped:
-                    spack.store.STORE.db.update_explicit(spec, True)
+        # Extend the set of specs to overwrite with modified dev specs and their parents
+        install_args["overwrite"] = (
+            install_args.get("overwrite", []) + self._dev_specs_that_need_overwrite()
+        )
 
-        if not specs_to_install:
-            tty.msg("All of the packages are already installed")
-        else:
-            tty.debug("Processing {0} uninstalled specs".format(len(specs_to_install)))
-
-        specs_to_overwrite = self._get_overwrite_specs()
-        tty.debug("{0} specs need to be overwritten".format(len(specs_to_overwrite)))
-
-        install_args["overwrite"] = install_args.get("overwrite", []) + specs_to_overwrite
-
-        installs = []
-        for spec in specs_to_install:
-            pkg_install_args = install_args.copy()
-            pkg_install_args["explicit"] = spec in self.roots()
-            installs.append((spec.package, pkg_install_args))
+        installs = [(spec.package, {**install_args, "explicit": spec in roots}) for spec in specs]
 
         try:
-            builder = PackageInstaller(installs)
-            builder.install()
+            PackageInstaller(installs).install()
         finally:
-            # Ensure links are set appropriately
-            for spec in specs_to_install:
-                if spec.installed:
-                    self.new_installs.append(spec)
-                    try:
-                        self._install_log_links(spec)
-                    except OSError as e:
-                        tty.warn(
-                            "Could not install log links for {0}: {1}".format(spec.name, str(e))
-                        )
+            self.new_installs.extend(s for s in specs if s.installed)
 
     def all_specs_generator(self) -> Iterable[Spec]:
         """Returns a generator for all concrete specs"""
@@ -2900,57 +2814,6 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             return
 
         self.set_default_view(view=False)
-
-    def add_develop_spec(self, pkg_name: str, entry: Dict[str, str]) -> None:
-        """Adds a develop spec to the manifest file
-
-        Args:
-            pkg_name: name of the package to be developed
-            entry: spec and path of the developed package
-        """
-        # The environment sets the path to pkg_name is that is implicit
-        if entry["path"] == pkg_name:
-            entry.pop("path")
-
-        self.pristine_configuration.setdefault("develop", {}).setdefault(pkg_name, {}).update(
-            entry
-        )
-        self.configuration.setdefault("develop", {}).setdefault(pkg_name, {}).update(entry)
-        self.changed = True
-
-    def remove_develop_spec(self, pkg_name: str) -> None:
-        """Removes a develop spec from the manifest file
-
-        Args:
-            pkg_name: package to be removed from development
-
-        Raises:
-            SpackEnvironmentError: if there is nothing to remove
-        """
-        try:
-            del self.pristine_configuration["develop"][pkg_name]
-        except KeyError as e:
-            msg = f"cannot remove '{pkg_name}' from develop specs in {self}, entry does not exist"
-            raise SpackEnvironmentError(msg) from e
-        del self.configuration["develop"][pkg_name]
-        self.changed = True
-
-    def absolutify_dev_paths(self, init_file_dir: Union[str, pathlib.Path]) -> None:
-        """Normalizes the dev paths in the environment with respect to the directory where the
-        initialization file resides.
-
-        Args:
-            init_file_dir: directory with the "spack.yaml" used to initialize the environment.
-        """
-        init_file_dir = pathlib.Path(init_file_dir).absolute()
-        for _, entry in self.pristine_configuration.get("develop", {}).items():
-            expanded_path = os.path.normpath(str(init_file_dir / entry["path"]))
-            entry["path"] = str(expanded_path)
-
-        for _, entry in self.configuration.get("develop", {}).items():
-            expanded_path = os.path.normpath(str(init_file_dir / entry["path"]))
-            entry["path"] = str(expanded_path)
-        self.changed = True
 
     def flush(self) -> None:
         """Synchronizes the object with the manifest file on disk."""

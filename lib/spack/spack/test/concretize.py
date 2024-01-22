@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -132,6 +132,19 @@ def current_host(request, monkeypatch):
             yield target
 
 
+@pytest.fixture(scope="function", params=[True, False])
+def fuzz_dep_order(request, monkeypatch):
+    """Meta-function that tweaks the order of iteration over dependencies in a package."""
+
+    def reverser(pkg_name):
+        if request.param:
+            pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+            reversed_dict = dict(reversed(list(pkg_cls.dependencies.items())))
+            monkeypatch.setattr(pkg_cls, "dependencies", reversed_dict)
+
+    return reverser
+
+
 @pytest.fixture()
 def repo_with_changing_recipe(tmpdir_factory, mutable_mock_repo):
     repo_namespace = "changing"
@@ -203,7 +216,9 @@ class Changing(Package):
                 # TODO: in case tests using this fixture start failing.
                 if sys.modules.get("spack.pkg.changing.changing"):
                     del sys.modules["spack.pkg.changing.changing"]
+                if sys.modules.get("spack.pkg.changing.root"):
                     del sys.modules["spack.pkg.changing.root"]
+                if sys.modules.get("spack.pkg.changing"):
                     del sys.modules["spack.pkg.changing"]
 
                 # Change the recipe
@@ -893,7 +908,15 @@ class TestConcretize:
             ("py-extension3@1.0 ^python@3.5.1", ["patchelf@0.10"], []),
         ],
     )
-    def test_conditional_dependencies(self, spec_str, expected, unexpected):
+    def test_conditional_dependencies(self, spec_str, expected, unexpected, fuzz_dep_order):
+        """Tests that conditional dependencies are correctly attached.
+
+        The original concretizer can be sensitive to the iteration order over the dependencies of
+        a package, so we use a fuzzer function to test concretization with dependencies iterated
+        forwards and backwards.
+        """
+        fuzz_dep_order("py-extension3")  # test forwards and backwards
+
         s = Spec(spec_str).concretized()
 
         for dep in expected:
@@ -1604,7 +1627,9 @@ class TestConcretize:
         assert not new_root["changing"].satisfies("@1.0")
 
     @pytest.mark.regression("28259")
-    def test_reuse_with_unknown_namespace_dont_raise(self, mock_custom_repository):
+    def test_reuse_with_unknown_namespace_dont_raise(
+        self, temporary_store, mock_custom_repository
+    ):
         with spack.repo.use_repositories(mock_custom_repository, override=False):
             s = Spec("c").concretized()
             assert s.namespace != "builtin.mock"
@@ -1615,8 +1640,8 @@ class TestConcretize:
         assert s.namespace == "builtin.mock"
 
     @pytest.mark.regression("28259")
-    def test_reuse_with_unknown_package_dont_raise(self, tmpdir, monkeypatch):
-        builder = spack.repo.MockRepositoryBuilder(tmpdir, namespace="myrepo")
+    def test_reuse_with_unknown_package_dont_raise(self, tmpdir, temporary_store, monkeypatch):
+        builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"), namespace="myrepo")
         builder.add_package("c")
         with spack.repo.use_repositories(builder.root, override=False):
             s = Spec("c").concretized()
@@ -1813,12 +1838,14 @@ class TestConcretize:
 
     @pytest.mark.regression("31484")
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
-    def test_installed_externals_are_reused(self, mutable_database, repo_with_changing_recipe):
+    def test_installed_externals_are_reused(
+        self, mutable_database, repo_with_changing_recipe, tmp_path
+    ):
         """Test that external specs that are in the DB can be reused."""
         external_conf = {
             "changing": {
                 "buildable": False,
-                "externals": [{"spec": "changing@1.0", "prefix": "/usr"}],
+                "externals": [{"spec": "changing@1.0", "prefix": str(tmp_path)}],
             }
         }
         spack.config.set("packages", external_conf)
@@ -1843,12 +1870,12 @@ class TestConcretize:
 
     @pytest.mark.regression("31484")
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
-    def test_user_can_select_externals_with_require(self, mutable_database):
+    def test_user_can_select_externals_with_require(self, mutable_database, tmp_path):
         """Test that users have means to select an external even in presence of reusable specs."""
         external_conf = {
             "mpi": {"buildable": False},
             "multi-provider-mpi": {
-                "externals": [{"spec": "multi-provider-mpi@2.0.0", "prefix": "/usr"}]
+                "externals": [{"spec": "multi-provider-mpi@2.0.0", "prefix": str(tmp_path)}]
             },
         }
         spack.config.set("packages", external_conf)
@@ -1878,7 +1905,7 @@ class TestConcretize:
         """
         # Add a conflict to "mpich" that match an already installed "mpich~debug"
         pkg_cls = spack.repo.PATH.get_pkg_class("mpich")
-        monkeypatch.setitem(pkg_cls.conflicts, "~debug", [(Spec(), None)])
+        monkeypatch.setitem(pkg_cls.conflicts, Spec(), [("~debug", None)])
 
         # If we concretize with --fresh the conflict is taken into account
         with spack.config.override("concretizer:reuse", False):
@@ -2180,6 +2207,33 @@ class TestConcretize:
 
         assert with_reuse.dag_hash() == without_reuse.dag_hash()
 
+    @pytest.mark.regression("35536")
+    @pytest.mark.parametrize(
+        "spec_str,expected_namespaces",
+        [
+            # Single node with fully qualified namespace
+            ("builtin.mock.gmake", {"gmake": "builtin.mock"}),
+            # Dependency with fully qualified namespace
+            ("hdf5 ^builtin.mock.gmake", {"gmake": "builtin.mock", "hdf5": "duplicates.test"}),
+            ("hdf5 ^gmake", {"gmake": "duplicates.test", "hdf5": "duplicates.test"}),
+        ],
+    )
+    @pytest.mark.only_clingo("Uses specs requiring multiple gmake specs")
+    def test_select_lower_priority_package_from_repository_stack(
+        self, spec_str, expected_namespaces
+    ):
+        """Tests that a user can explicitly select a lower priority, fully qualified dependency
+        from cli.
+        """
+        # 'builtin.mock" and "duplicates.test" share a 'gmake' package
+        additional_repo = os.path.join(spack.paths.repos_path, "duplicates.test")
+        with spack.repo.use_repositories(additional_repo, override=False):
+            s = Spec(spec_str).concretized()
+
+        for name, namespace in expected_namespaces.items():
+            assert s[name].concrete
+            assert s[name].namespace == namespace
+
 
 @pytest.fixture()
 def duplicates_test_repository():
@@ -2423,3 +2477,87 @@ class TestConcretizeEdges:
         s = Spec("blas-only-client ^openblas").concretized()
         assert s.satisfies("^[virtuals=blas] openblas")
         assert not s.satisfies("^[virtuals=blas,lapack] openblas")
+
+
+def test_reusable_externals_match(mock_packages, tmpdir):
+    spec = Spec("mpich@4.1%gcc@13.1.0~debug build_system=generic arch=linux-ubuntu23.04-zen2")
+    spec.external_path = tmpdir.strpath
+    spec.external_modules = ["mpich/4.1"]
+    spec._mark_concrete()
+    assert spack.solver.asp._is_reusable(
+        spec,
+        {
+            "mpich": {
+                "externals": [
+                    {"spec": "mpich@4.1", "prefix": tmpdir.strpath, "modules": ["mpich/4.1"]}
+                ]
+            }
+        },
+        local=False,
+    )
+
+
+def test_reusable_externals_match_virtual(mock_packages, tmpdir):
+    spec = Spec("mpich@4.1%gcc@13.1.0~debug build_system=generic arch=linux-ubuntu23.04-zen2")
+    spec.external_path = tmpdir.strpath
+    spec.external_modules = ["mpich/4.1"]
+    spec._mark_concrete()
+    assert spack.solver.asp._is_reusable(
+        spec,
+        {
+            "mpi": {
+                "externals": [
+                    {"spec": "mpich@4.1", "prefix": tmpdir.strpath, "modules": ["mpich/4.1"]}
+                ]
+            }
+        },
+        local=False,
+    )
+
+
+def test_reusable_externals_different_prefix(mock_packages, tmpdir):
+    spec = Spec("mpich@4.1%gcc@13.1.0~debug build_system=generic arch=linux-ubuntu23.04-zen2")
+    spec.external_path = "/other/path"
+    spec.external_modules = ["mpich/4.1"]
+    spec._mark_concrete()
+    assert not spack.solver.asp._is_reusable(
+        spec,
+        {
+            "mpich": {
+                "externals": [
+                    {"spec": "mpich@4.1", "prefix": tmpdir.strpath, "modules": ["mpich/4.1"]}
+                ]
+            }
+        },
+        local=False,
+    )
+
+
+@pytest.mark.parametrize("modules", [None, ["mpich/4.1", "libfabric/1.19"]])
+def test_reusable_externals_different_modules(mock_packages, tmpdir, modules):
+    spec = Spec("mpich@4.1%gcc@13.1.0~debug build_system=generic arch=linux-ubuntu23.04-zen2")
+    spec.external_path = tmpdir.strpath
+    spec.external_modules = modules
+    spec._mark_concrete()
+    assert not spack.solver.asp._is_reusable(
+        spec,
+        {
+            "mpich": {
+                "externals": [
+                    {"spec": "mpich@4.1", "prefix": tmpdir.strpath, "modules": ["mpich/4.1"]}
+                ]
+            }
+        },
+        local=False,
+    )
+
+
+def test_reusable_externals_different_spec(mock_packages, tmpdir):
+    spec = Spec("mpich@4.1%gcc@13.1.0~debug build_system=generic arch=linux-ubuntu23.04-zen2")
+    spec.external_path = tmpdir.strpath
+    spec._mark_concrete()
+    assert not spack.solver.asp._is_reusable(
+        spec,
+        {"mpich": {"externals": [{"spec": "mpich@4.1 +debug", "prefix": tmpdir.strpath}]}},
+        local=False,
+    )

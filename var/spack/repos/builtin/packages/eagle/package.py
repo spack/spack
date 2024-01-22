@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Eagle(MakefilePackage):
     homepage = "https://github.com/tony-kuo/eagle"
     url = "https://github.com/tony-kuo/eagle/archive/v1.1.2.tar.gz"
     maintainers("snehring")
+
+    license("GPL-3.0-only")
 
     version("1.1.3", sha256="bd510b8eef2de14898cbf417e1c7a30b97ddaba24e5e2834da7b02767362fe3c")
     version("1.1.2", sha256="afe967560d1f8fdbd0caf4b93b5f2a86830e9e4d399fee4a526140431343045e")

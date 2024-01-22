@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Astral(Package):
 
     homepage = "https://github.com/smirarab/ASTRAL"
     url = "https://github.com/smirarab/ASTRAL/archive/v4.10.7.tar.gz"
+
+    license("Apache-2.0")
 
     version("5.7.1", sha256="8aa6fd4324efca325d3dde432517090fac314bea95f407b1dd59977181fec77e")
     version(

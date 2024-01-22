@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Citcoms(AutotoolsPackage):
     git = "https://github.com/geodynamics/citcoms.git"
 
     maintainers("adamjstewart")
+
+    license("GPL-2.0-or-later")
 
     version("master", branch="master", submodules=True)
     version("3.3.1", sha256="e3520e0a933e4699d31e86fe309b8c154ea6ecb0f42a1cf6f25e8d13d825a4b3")

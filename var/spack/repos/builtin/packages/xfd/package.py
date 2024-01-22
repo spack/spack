@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Xfd(AutotoolsPackage, XorgPackage):
 
     homepage = "https://cgit.freedesktop.org/xorg/app/xfd"
     xorg_mirror_path = "app/xfd-1.1.2.tar.gz"
+
+    license("X11")
 
     version("1.1.4", sha256="58d3c4e1395a1d901529b1d80331d810836cb56b2db950c15444ea71d2af21fd")
     version("1.1.3", sha256="4a1bd18f324c239b1a807ed4ccaeb172ba771d65a7307fb492d8dd8d27f01527")

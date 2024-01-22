@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Libxfont2(AutotoolsPackage, XorgPackage):
 
     homepage = "https://cgit.freedesktop.org/xorg/lib/libXfont"
     xorg_mirror_path = "lib/libXfont2-2.0.1.tar.gz"
+
+    license("MIT")
 
     version("2.0.6", sha256="a944df7b6837c8fa2067f6a5fc25d89b0acc4011cd0bc085106a03557fb502fc")
     version("2.0.1", sha256="381b6b385a69343df48a082523c856aed9042fbbc8ee0a6342fb502e4321230a")

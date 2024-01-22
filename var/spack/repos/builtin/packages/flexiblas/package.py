@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Flexiblas(CMakePackage):
     homepage = "https://www.mpi-magdeburg.mpg.de/projects/flexiblas"
     url = "https://csc.mpi-magdeburg.mpg.de/mpcsc/software/flexiblas/flexiblas-3.0.3.tar.gz"
 
+    license("GPL-3.0-or-later")
+
     version("3.3.0", sha256="2696cd63d69b9a007f40f1f4a1ed83ad2fc46f6a930a22753bd221758c503ea2")
     version("3.2.1", sha256="5be7e508e2dbb751b3bf372639d8e82a11f79e9ef6cbf243b64981c24a5703cf")
     version("3.2.0", sha256="a3f4d66a30b6fa6473e492de86d34abc5f9d4e69d4d91ba23618388e8df05904")
@@ -22,3 +24,6 @@ class Flexiblas(CMakePackage):
     # virtual dependency
     provides("blas")
     provides("lapack")
+
+    def cmake_args(self):
+        return [self.define("SYSCONFDIR", self.prefix.etc)]

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class Recola(CMakePackage):
     maintainers("vvolkl")
 
     variant("python", default=True, description="Build py-recola python bindings.")
+
+    license("GPL-3.0-or-later")
 
     version("2.2.4", sha256="212ae6141bc5de38c50be3e0c6947a3b0752aeb463cf850c22cfed5e61b1a64b")
     version("2.2.3", sha256="8dc25798960c272434fcde93817ed92aad82b2a7cf07438bb4deb5688d301086")

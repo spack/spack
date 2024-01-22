@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class LibuvJulia(AutotoolsPackage):
     homepage = "https://libuv.org"
     url = "https://github.com/JuliaLang/libuv/archive/refs/heads/julia-uv2-1.44.2.tar.gz"
     git = "https://github.com/JuliaLang/libuv.git"
+
+    license("CC-BY-4.0")
 
     # julia's libuv fork doesn't tag (all?) releases, so we fix commits.
     version("1.44.3", commit="2723e256e952be0b015b3c0086f717c3d365d97e")

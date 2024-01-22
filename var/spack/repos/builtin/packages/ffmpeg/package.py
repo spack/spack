@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,14 +15,20 @@ class Ffmpeg(AutotoolsPackage):
 
     maintainers("xjrc")
 
+    license("GPL-2.0-or-later AND LGPL-2.1-or-later")
+
     version("6.0", sha256="47d062731c9f66a78380e35a19aac77cebceccd1c7cc309b9c82343ffc430c3d")
+    version("5.1.3", sha256="5d5bef6a11f0c500588f9870ec965a30acc0d54d8b1e535da6554a32902d236d")
     version("5.1.2", sha256="39a0bcc8d98549f16c570624678246a6ac736c066cebdb409f9502e915b22f2b")
     version("4.4.1", sha256="8fc9f20ac5ed95115a9e285647add0eedd5cc1a98a039ada14c132452f98ac42")
     version("4.3.2", sha256="ab3a6d6a70358ba0a5f67f37f91f6656b7302b02e98e5b8c846c16763c99913a")
     version("4.2.2", sha256="b620d187c26f76ca19e74210a0336c3b8380b97730df5cdf45f3e69e89000e5c")
     version("4.1.1", sha256="0cb40e3b8acaccd0ecb38aa863f66f0c6e02406246556c2992f67bf650fab058")
     version("4.1", sha256="b684fb43244a5c4caae652af9022ed5d85ce15210835bce054a33fb26033a1a5")
+    version("3.4.12", sha256="08e400330c70b567116addebd1a70279e0d41b0f8742085e32527f2a4eef9ca3")
+    version("3.2.19", sha256="87a61fa3b20819b71633aa90b55ee6411614e4a0ff7908cf35236b465de5e602")
     version("3.2.4", sha256="c0fa3593a2e9e96ace3c1757900094437ad96d1d6ca19f057c378b5f394496a4")
+    version("2.8.21", sha256="782c3af1a1ee8945be0800edc39b1d1199ee6a8f31c74b65230795f11911b0d8")
     version("2.8.15", sha256="35647f6c1f6d4a1719bc20b76bf4c26e4ccd665f46b5676c0e91c5a04622ee21")
     version("1.0.10", sha256="1dbde434c3b5c573d3b2ffc1babe3814f781c10c4bc66193a4132a44c9715176")
 
@@ -50,6 +56,7 @@ class Ffmpeg(AutotoolsPackage):
 
     # options
     variant("bzlib", default=True, description="bzip2 support")
+    variant("doc", default=False, description="build documentation")
     variant("libaom", default=False, when="@4.0:", description="AV1 video encoding/decoding")
     variant("libmp3lame", default=False, description="MP3 encoding")
     variant("libopenjpeg", default=False, description="JPEG 2000 de/encoding")
@@ -73,6 +80,8 @@ class Ffmpeg(AutotoolsPackage):
     variant("sdl2", default=False, when="@3.2:", description="sdl2 support")
     variant("shared", default=True, description="build shared libraries")
     variant("libx264", default=False, description="H.264 encoding")
+
+    conflicts("@1", when="platform=darwin target=aarch64:", msg="requires gas-preprocessor")
 
     depends_on("alsa-lib", when="platform=linux")
     depends_on("iconv")
@@ -101,6 +110,8 @@ class Ffmpeg(AutotoolsPackage):
     depends_on("speex", when="+libspeex")
     depends_on("xz", when="+lzma")
     depends_on("x264", when="+libx264")
+    depends_on("texinfo", when="+doc")
+    depends_on("texinfo@:6", when="+doc @:4")
 
     conflicts("%nvhpc")
 
@@ -115,7 +126,14 @@ class Ffmpeg(AutotoolsPackage):
     patch(
         "https://git.ffmpeg.org/gitweb/ffmpeg.git/commitdiff_plain/effadce6c756247ea8bae32dc13bb3e6f464f0eb",
         sha256="d1ea47c29968507fee772234bc734d29958b62ab92400801ef28559b538a9168",
-        when="@6.0",
+        when="@:6.0",
+    )
+
+    # fix incompatibility with texinfo@7, especially @7.1:
+    patch(
+        "https://git.ffmpeg.org/gitweb/ffmpeg.git/commitdiff_plain/f01fdedb69e4accb1d1555106d8f682ff1f1ddc7",
+        sha256="416751f41cfbf086c28b4bbf01ace4c08e5651e59911dca6240292bb1b5c6b53",
+        when="@5:6.0",
     )
 
     @property
@@ -165,6 +183,7 @@ class Ffmpeg(AutotoolsPackage):
 
         variant_opts = [
             "bzlib",
+            "doc",
             "gpl",
             "libmp3lame",
             "libopenjpeg",
@@ -185,8 +204,10 @@ class Ffmpeg(AutotoolsPackage):
             "libsnappy",
             "sdl2",
             "libaom",
-            "libxml2",
         ]
+
+        if spec.satisfies("@4:"):
+            variant_opts.append("libxml2")
 
         for variant_opt in variant_opts:
             config_args += self.enable_or_disable(variant_opt)

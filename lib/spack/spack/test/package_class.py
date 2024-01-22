@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -71,7 +71,8 @@ def test_possible_direct_dependencies(mock_packages, mpileaks_possible_deps):
 
 def test_possible_dependencies_virtual(mock_packages, mpi_names):
     expected = dict(
-        (name, set(spack.repo.PATH.get_pkg_class(name).dependencies)) for name in mpi_names
+        (name, set(dep for dep in spack.repo.PATH.get_pkg_class(name).dependencies_by_name()))
+        for name in mpi_names
     )
 
     # only one mock MPI has a dependency
@@ -266,12 +267,6 @@ def test_package_fetcher_fails():
     pkg = BaseTestPackage(s)
     with pytest.raises(ValueError, match="without concrete version"):
         pkg.fetcher
-
-
-def test_package_no_extendees():
-    s = spack.spec.Spec("a")
-    pkg = BaseTestPackage(s)
-    assert pkg.extendee_args is None
 
 
 def test_package_test_no_compilers(mock_packages, monkeypatch, capfd):

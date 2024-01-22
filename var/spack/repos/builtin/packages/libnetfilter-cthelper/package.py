@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class LibnetfilterCthelper(AutotoolsPackage):
 
     homepage = "https://github.com/vyos/libnetfilter-cthelper/"
     url = "https://github.com/vyos/libnetfilter-cthelper/archive/VyOS_1.2-2019Q4.tar.gz"
+
+    license("GPL-2.0-or-later")
 
     version(
         "1.2-2019Q4", sha256="15a7b13999d1428d75e720c8116318cd51bec1d365852ae1778d3c85b93a9777"

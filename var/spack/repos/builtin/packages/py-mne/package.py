@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyMne(PythonPackage):
     homepage = "http://mne.tools/"
     pypi = "mne/mne-0.23.4.tar.gz"
     git = "https://github.com/mne-tools/mne-python.git"
+
+    license("BSD-3-Clause")
 
     version("1.4.2", sha256="dd2bf35a90d951bef15ff3a651045b0373eff26018a821667109c727d55c7d63")
     version("1.4.0", sha256="7834f5b79c2c9885ca601bbddd8db3c2b2f37c34443fc0caf0447751f6c37a2a")

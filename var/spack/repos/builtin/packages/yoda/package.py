@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Yoda(AutotoolsPackage):
     url = "https://yoda.hepforge.org/downloads/?f=YODA-1.8.3.tar.bz2"
 
     tags = ["hep"]
+
+    license("GPL-3.0-or-later")
 
     version("1.9.8", sha256="7bc3062468abba50aff3ecb8b22ce677196036009890688ef4533aaa7f92e6e4")
     version("1.9.7", sha256="8d07bb04dcb79364858718a18203452d8d9fa00029fa94239eafa8529032b8ff")

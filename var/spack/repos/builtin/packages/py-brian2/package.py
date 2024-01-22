@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyBrian2(PythonPackage):
 
     homepage = "https://www.briansimulator.org"
     pypi = "Brian2/Brian2-2.2.2.1.tar.gz"
+
+    license("BSD-2-Clause")
 
     version("2.5.0.2", sha256="70e6f88fb26f04ccafb91e0a29999774e45899771357aff7043951c853919a0f")
     version("2.5.0.1", sha256="1f719b563ae38658c4c59bac5aeb06b41970c6eedc52021ddf6d9254913733d3")

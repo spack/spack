@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Mrbayes(AutotoolsPackage):
 
     homepage = "http://mrbayes.sourceforge.net"
     url = "https://github.com/NBISweden/MrBayes/releases/download/v3.2.7a/mrbayes-3.2.7a.tar.gz"
+
+    license("GPL-3.0-or-later")
 
     version("3.2.7a", sha256="1a4670be84e6b968d59382328294db4c8ceb73e0c19c702265deec6f2177815c")
     version("3.2.7", sha256="39d9eb269969b501268d5c27f77687c6eaa2c71ccf15c724e6f330fc405f24b9")

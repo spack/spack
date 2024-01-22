@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,9 +17,25 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("sethrj")
 
+    license("Apache-2.0")
+
+    version("0.4.1", sha256="24e5c15eb9eec45f52d94a6719ae3505388b49d409cb7e26c875c70ac409bd2c")
+    version(
+        "0.4.0",
+        sha256="8b8eaef84641eeca0fc40321d358205fc9d51e3c6dc7bd1bf03218c1919c774e",
+        deprecated=True,
+    )
     version("0.3.2", sha256="65a33de2518716638375df259d9dfc4d68b821ba1110f56b24c823ef5c5df249")
-    version("0.3.1", sha256="0f1effab306856d66f5079e8cadcb63e8c1f8a79245b94bf44b89251b3fb0cf0")
-    version("0.3.0", sha256="f9620b6bcd8c9b5324ef215f8e44461f915c3fff47bf85ae442c9dafacaa79ac")
+    version(
+        "0.3.1",
+        sha256="0f1effab306856d66f5079e8cadcb63e8c1f8a79245b94bf44b89251b3fb0cf0",
+        deprecated=True,
+    )
+    version(
+        "0.3.0",
+        sha256="f9620b6bcd8c9b5324ef215f8e44461f915c3fff47bf85ae442c9dafacaa79ac",
+        deprecated=True,
+    )
     version("0.2.2", sha256="ba5e341d636e00e3d7dbac13a2016b97014917489f46b8b387a2adf9d9563872")
     version(
         "0.2.1",
@@ -89,7 +105,7 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("geant4@10.7:11.0", when="@:0.2.0 +geant4")
     depends_on("hepmc3", when="+hepmc3")
     depends_on("root", when="+root")
-    depends_on("swig", when="+swig")
+    depends_on("swig@4.1:", when="+swig")
     depends_on("vecgeom", when="+vecgeom")
 
     depends_on("python", type="build")
@@ -102,7 +118,8 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("root cxxstd=" + _std, when="+root cxxstd=" + _std)
         depends_on("vecgeom cxxstd=" + _std, when="+vecgeom cxxstd=" + _std)
 
-    depends_on("vecgeom +gdml@1.1.17:", when="+vecgeom")
+    depends_on("vecgeom@1.2.5:", when="+vecgeom @0.4:")
+    depends_on("vecgeom +gdml@1.1.17:1", when="+vecgeom @:0.3")
     depends_on("vecgeom +cuda", when="+vecgeom +cuda")
 
     conflicts("cxxstd=14", when="@0.3:")

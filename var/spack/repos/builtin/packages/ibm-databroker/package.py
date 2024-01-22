@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class IbmDatabroker(CMakePackage, PythonExtension):
 
     # IBM dev team should take over
     maintainers("bhatiaharsh")
+
+    license("Apache-2.0")
 
     version("master", branch="master")
     version("0.7.0", sha256="5460fa1c5c05ad25c759b2ee4cecee92980d4dde5bc7c5f6da9242806cf22bb8")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,6 +7,7 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/packages.py
    :lines: 13-
 """
+import spack.schema.environment
 
 permissions = {
     "type": "object",
@@ -53,6 +54,24 @@ requirements = {
     ]
 }
 
+prefer_and_conflict = {
+    "type": "array",
+    "items": {
+        "oneOf": [
+            {
+                "type": "object",
+                "additionalProperties": False,
+                "properties": {
+                    "spec": {"type": "string"},
+                    "message": {"type": "string"},
+                    "when": {"type": "string"},
+                },
+            },
+            {"type": "string"},
+        ]
+    },
+}
+
 permissions = {
     "type": "object",
     "additionalProperties": False,
@@ -69,6 +88,8 @@ package_attributes = {
     "patternProperties": {r"\w+": {}},
 }
 
+REQUIREMENT_URL = "https://spack.readthedocs.io/en/latest/packages_yaml.html#package-requirements"
+
 #: Properties for inclusion in other schemas
 properties = {
     "packages": {
@@ -82,6 +103,8 @@ properties = {
                 "additionalProperties": False,
                 "properties": {
                     "require": requirements,
+                    "prefer": prefer_and_conflict,
+                    "conflict": prefer_and_conflict,
                     "version": {},  # Here only to warn users on ignored properties
                     "target": {
                         "type": "array",
@@ -117,7 +140,7 @@ properties = {
                     "properties": ["version"],
                     "message": "setting version preferences in the 'all' section of packages.yaml "
                     "is deprecated and will be removed in v0.22\n\n\tThese preferences "
-                    "will be ignored by Spack. You can set them only in package specific sections "
+                    "will be ignored by Spack. You can set them only in package-specific sections "
                     "of the same file.\n",
                     "error": False,
                 },
@@ -130,6 +153,8 @@ properties = {
                 "additionalProperties": False,
                 "properties": {
                     "require": requirements,
+                    "prefer": prefer_and_conflict,
+                    "conflict": prefer_and_conflict,
                     "version": {
                         "type": "array",
                         "default": [],
@@ -153,7 +178,13 @@ properties = {
                                 "spec": {"type": "string"},
                                 "prefix": {"type": "string"},
                                 "modules": {"type": "array", "items": {"type": "string"}},
-                                "extra_attributes": {"type": "object"},
+                                "extra_attributes": {
+                                    "type": "object",
+                                    "additionalProperties": True,
+                                    "properties": {
+                                        "environment": spack.schema.environment.definition
+                                    },
+                                },
                             },
                             "additionalProperties": True,
                             "required": ["spec"],
@@ -162,17 +193,20 @@ properties = {
                 },
                 "deprecatedProperties": {
                     "properties": ["target", "compiler", "providers"],
-                    "message": "setting compiler, target or provider preferences in a package "
-                    "specific section of packages.yaml is deprecated, and will be removed in "
-                    "v0.22.\n\n\tThese preferences will be ignored by Spack. You "
-                    "can set them only in the 'all' section of the same file.\n",
+                    "message": "setting 'compiler:', 'target:' or 'provider:' preferences in "
+                    "a package-specific section of packages.yaml is deprecated, and will be "
+                    "removed in v0.22.\n\n\tThese preferences will be ignored by Spack, and "
+                    "can be set only in the 'all' section of the same file. "
+                    "You can run:\n\n\t\t$ spack audit configs\n\n\tto get better diagnostics, "
+                    "including files:lines where the deprecated attributes are used.\n\n"
+                    "\tUse requirements to enforce conditions on specific packages: "
+                    f"{REQUIREMENT_URL}\n",
                     "error": False,
                 },
             }
         },
     }
 }
-
 
 #: Full schema with metadata
 schema = {

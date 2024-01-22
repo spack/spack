@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyAzureCore(PythonPackage):
 
     homepage = "https://github.com/Azure/azure-sdk-for-python/tree/master/sdk/core/azure-core"
     pypi = "azure-core/azure-core-1.7.0.zip"
+
+    license("MIT")
 
     version("1.26.1", sha256="223b0e90cbdd1f03c41b195b03239899843f20d00964dbb85e64386873414a2d")
     version("1.21.1", sha256="88d2db5cf9a135a7287dc45fdde6b96f9ca62c9567512a3bb3e20e322ce7deb2")

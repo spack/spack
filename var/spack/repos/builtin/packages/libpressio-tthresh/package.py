@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class LibpressioTthresh(CMakePackage):
     git = homepage
 
     maintainers("robertu94")
+
+    license("LGPL-3.0-or-later")
 
     version("main", branch="main")
     version("0.0.7", sha256="5e364ef72dd1ed1cf786d2b7aef89624fdcf1a0ca845777ce54c365b35a75be2")

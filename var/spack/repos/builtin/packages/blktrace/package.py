@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Blktrace(MakefilePackage):
 
     homepage = "https://brick.kernel.dk"
     url = "https://brick.kernel.dk/snaps/blktrace-1.2.0.tar.gz"
+
+    license("GPL-2.0-only")
 
     version("1.3.0", sha256="88c25b3bb3254ab029d4c62df5a9ab863a5c70918a604040da8fe39873c6bacb")
     version("1.2.0", sha256="d14029bc096026dacb206bf115c912dcdb795320b5aba6dff3e46d7f94c5242d")

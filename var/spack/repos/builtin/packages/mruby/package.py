@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Mruby(Package):
     git = "https://github.com/mruby/mruby.git"
 
     maintainers = ["mdorier"]
+
+    license("MIT")
 
     version("master", branch="master")
     version("3.2.0", sha256="3c198e4a31d31fe8524013066fac84a67fe6cd6067d92c25a1c79089744cb608")

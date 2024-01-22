@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Mxml(AutotoolsPackage):
 
     homepage = "https://michaelrsweet.github.io/mxml/"
     url = "https://github.com/michaelrsweet/mxml/releases/download/release-2.10/mxml-2.10.tar.gz"
+
+    license("Apache-2.0")
 
     version("2.10", sha256="267ff58b64ddc767170d71dab0c729c06f45e1df9a9b6f75180b564f09767891")
     version("2.9", sha256="cded54653c584b24c4a78a7fa1b3b4377d49ac4f451ddf170ebbc8161d85ff92")

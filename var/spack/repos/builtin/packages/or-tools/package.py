@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class OrTools(CMakePackage):
     homepage = "https://developers.google.com/optimization/"
     url = "https://github.com/google/or-tools/archive/v7.8.tar.gz"
     maintainers("hyoklee")
+
+    license("Apache-2.0")
 
     version("7.8", sha256="d93a9502b18af51902abd130ff5f23768fcf47e266e6d1f34b3586387aa2de68")
     variant("coin", default=False, description="Enable COIN-OR solvers.")

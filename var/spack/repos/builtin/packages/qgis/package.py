@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Qgis(CMakePackage):
     url = "https://qgis.org/downloads/qgis-3.8.1.tar.bz2"
 
     maintainers("adamjstewart", "Sinan81")
+
+    license("GPL-2.0-or-later")
 
     version("3.34.0", sha256="348a2df4c4520813a319b7f72546b3823e044cacd28646ba189b56a49c7d1b5f")
     # Prefer latest long term release

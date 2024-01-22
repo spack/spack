@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Timemory(CMakePackage, PythonExtension):
     homepage = "https://timemory.readthedocs.io/en/latest/"
     git = "https://github.com/NERSC/timemory.git"
     maintainers("jrmadsen")
+
+    license("MIT")
 
     version("master", branch="master", submodules=True)
     version("develop", branch="develop", submodules=True)
@@ -319,11 +321,6 @@ class Timemory(CMakePackage, PythonExtension):
             self.define_from_variant("TIMEMORY_USE_STATISTICS", "statistics"),
             self.define_from_variant("TIMEMORY_USE_ALLINEA_MAP", "allinea_map"),
         ]
-
-        if "+python" in spec:
-            pyexe = spec["python"].command.path
-            args.append(self.define("PYTHON_EXECUTABLE=", pyexe))
-            args.append(self.define("Python3_EXECUTABLE", pyexe))
 
         if "+mpi" in spec:
             args.append(self.define("MPI_C_COMPILER", spec["mpi"].mpicc))

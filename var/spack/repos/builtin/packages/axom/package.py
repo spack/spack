@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,6 +37,8 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://github.com/LLNL/axom"
     git = "https://github.com/LLNL/axom.git"
     tags = ["radiuss"]
+
+    license("BSD-3-Clause")
 
     version("main", branch="main")
     version("develop", branch="develop")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class GdkPixbuf(Package):
     url = "https://ftp.acc.umu.se/pub/gnome/sources/gdk-pixbuf/2.40/gdk-pixbuf-2.40.0.tar.xz"
     list_url = "https://ftp.acc.umu.se/pub/gnome/sources/gdk-pixbuf/"
     list_depth = 1
+
+    license("LGPL-2.1-or-later")
 
     version("2.42.10", sha256="ee9b6c75d13ba096907a2e3c6b27b61bcd17f5c7ebeab5a5b439d2f2e39fe44b")
     version("2.42.9", sha256="28f7958e7bf29a32d4e963556d241d0a41a6786582ff6a5ad11665e0347fc962")

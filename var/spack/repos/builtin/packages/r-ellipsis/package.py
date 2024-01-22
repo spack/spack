@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class REllipsis(RPackage):
     and alert the user."""
 
     cran = "ellipsis"
+
+    license("MIT")
 
     version("0.3.2", sha256="a90266e5eb59c7f419774d5c6d6bd5e09701a26c9218c5933c9bce6765aa1558")
     version("0.3.1", sha256="4f8a15158dfc27cdc0f7554c7a61e92b02e4d70bfc3d968f01a99da2189b75db")

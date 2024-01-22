@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -2000,7 +2000,7 @@ spack:
 
             install_script = os.path.join(working_dir.strpath, "install.sh")
             with open(install_script, "w") as fd:
-                fd.write("#!/bin/bash\n\n#fake install\nspack install blah\n")
+                fd.write("#!/bin/sh\n\n#fake install\nspack install blah\n")
 
             spack_info_file = os.path.join(working_dir.strpath, "spack_info.txt")
             with open(spack_info_file, "w") as fd:

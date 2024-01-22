@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class RFilehash(RPackage):
     parties for use in the 'filehash' framework."""
 
     cran = "filehash"
+
+    license("GPL-2.0-or-later")
 
     version("2.4-5", sha256="3b1ee2794dd61e525ee44db16611c65957691d77bb26ae481eba988bb55da22c")
     version("2.4-3", sha256="f394e2c93233e8ad1c104562ea9349855dc8e303131f559cd59834f9aa3e41bd")

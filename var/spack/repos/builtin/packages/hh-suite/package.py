@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class HhSuite(CMakePackage):
 
     homepage = "https://github.com/soedinglab/hh-suite"
     url = "https://github.com/soedinglab/hh-suite/archive/refs/tags/v3.3.0.tar.gz"
+
+    license("GPL-3.0-or-later")
 
     version("3.3.0", sha256="dd67f7f3bf601e48c9c0bc4cf1fbe3b946f787a808bde765e9436a48d27b0964")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class GuacamoleServer(AutotoolsPackage):
 
     homepage = "https://guacamole.apache.org/"
     url = "https://github.com/apache/guacamole-server/archive/1.1.0.tar.gz"
+
+    license("GPL-3.0-or-later")
 
     version("1.1.0", sha256="d0f0c66ebfa7a4fd6689ae5240f21797b5177945a042388b691b15b8bd5c81a8")
 

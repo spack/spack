@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class Vtk(CMakePackage):
     list_url = "https://www.vtk.org/download/"
 
     maintainers("chuckatkins", "danlipsa")
+
+    license("BSD-3-Clause")
 
     version("9.2.6", sha256="06fc8d49c4e56f498c40fcb38a563ed8d4ec31358d0101e8988f0bb4d539dd12")
     version("9.2.2", sha256="1c5b0a2be71fac96ff4831af69e350f7a0ea3168981f790c000709dcf9121075")
@@ -54,6 +56,7 @@ class Vtk(CMakePackage):
     variant("xdmf", default=False, description="Build XDMF file support")
     variant("ffmpeg", default=False, description="Build with FFMPEG support")
     variant("mpi", default=True, description="Enable MPI support")
+    variant("examples", default=False, description="Enable building & installing the VTK examples")
 
     patch("gcc.patch", when="@6.1.0")
     # patch to fix some missing stl includes
@@ -67,7 +70,8 @@ class Vtk(CMakePackage):
 
     # Patch for paraview 5.10: +hdf5 ^hdf5@1.13.2:
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/9690
-    patch("xdmf2-hdf51.13.2.patch", when="@9:9.2 +xdmf")
+    # patch seems to effectively been added to vtk@9.2.3 (e81a2fe)
+    patch("xdmf2-hdf51.13.2.patch", when="@9:9.2.2 +xdmf")
 
     # We cannot build with both osmesa and qt in spack
     conflicts("+osmesa", when="+qt")
@@ -150,7 +154,7 @@ class Vtk(CMakePackage):
     depends_on("lz4")
     depends_on("netcdf-c~mpi", when="~mpi")
     depends_on("netcdf-c+mpi", when="+mpi")
-    depends_on("netcdf-cxx")
+    depends_on("netcdf-cxx4", when="@:8.1.2")
     depends_on("libpng")
     depends_on("libtiff")
     depends_on("zlib-api")
@@ -306,8 +310,6 @@ class Vtk(CMakePackage):
         # Enable/Disable wrappers for Python.
         if "+python" in spec:
             cmake_args.append("-DVTK_WRAP_PYTHON=ON")
-            if spec.satisfies("@:8"):
-                cmake_args.append("-DPYTHON_EXECUTABLE={0}".format(spec["python"].command.path))
             if "+mpi" in spec and spec.satisfies("@:8"):
                 cmake_args.append("-DVTK_USE_SYSTEM_MPI4PY:BOOL=ON")
             if spec.satisfies("@9.0.0: ^python@3:"):
@@ -470,5 +472,7 @@ class Vtk(CMakePackage):
                     "-DCMAKE_CXX_FLAGS={0}".format(compile_flags),
                 ]
             )
+
+        cmake_args.append(self.define_from_variant("VTK_BUILD_EXAMPLES", "examples"))
 
         return cmake_args

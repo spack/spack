@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class RFftwtools(RPackage):
     complex conjugate when the input is real data."""
 
     cran = "fftwtools"
+
+    license("GPL-2.0-or-later")
 
     version("0.9-11", sha256="f1f0c9a9086c7b2f72c5fb0334717cc917213a004eaef8448eab4940c9852c7f")
     version("0.9-9", sha256="a9273b7e495d228d740ab4525467e4bbefe8614bd2d97e7234017f1305f51441")

@@ -1,4 +1,4 @@
-.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -118,7 +118,7 @@ so ``PerlPackage`` contains:
 
 .. code-block:: python
 
-   extends('perl')
+   extends("perl")
 
 
 If your package requires a specific version of Perl, you should
@@ -132,14 +132,14 @@ properly. If your package uses ``Makefile.PL`` to build, add:
 
 .. code-block:: python
 
-   depends_on('perl-extutils-makemaker', type='build')
+   depends_on("perl-extutils-makemaker", type="build")
 
 
 If your package uses ``Build.PL`` to build, add:
 
 .. code-block:: python
 
-   depends_on('perl-module-build', type='build')
+   depends_on("perl-module-build", type="build")
 
 
 ^^^^^^^^^^^^^^^^^
@@ -165,11 +165,11 @@ arguments to ``Makefile.PL`` or ``Build.PL`` by overriding
 .. code-block:: python
 
    def configure_args(self):
-       expat = self.spec['expat'].prefix
+       expat = self.spec["expat"].prefix
 
        return [
-           'EXPATLIBPATH={0}'.format(expat.lib),
-           'EXPATINCPATH={0}'.format(expat.include),
+           "EXPATLIBPATH={0}".format(expat.lib),
+           "EXPATINCPATH={0}".format(expat.include),
        ]
 
 

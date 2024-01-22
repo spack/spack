@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,13 +11,13 @@ import llnl.util.tty as tty
 import llnl.util.tty.color as color
 from llnl.util.tty.colify import colify
 
-import spack.cmd.common.arguments as arguments
 import spack.deptypes as dt
 import spack.fetch_strategy as fs
 import spack.install_test
 import spack.repo
 import spack.spec
 import spack.version
+from spack.cmd.common import arguments
 from spack.package_base import preferred_version
 
 description = "get detailed information on a particular package"
@@ -139,7 +139,7 @@ class VariantFormatter:
                     yield "    " + self.fmt % t
 
 
-def print_dependencies(pkg):
+def print_dependencies(pkg, args):
     """output build, link, and run package dependencies"""
 
     for deptype in ("build", "link", "run"):
@@ -152,7 +152,7 @@ def print_dependencies(pkg):
             color.cprint("    None")
 
 
-def print_detectable(pkg):
+def print_detectable(pkg, args):
     """output information on external detection"""
 
     color.cprint("")
@@ -180,7 +180,7 @@ def print_detectable(pkg):
         color.cprint("    False")
 
 
-def print_maintainers(pkg):
+def print_maintainers(pkg, args):
     """output package maintainers"""
 
     if len(pkg.maintainers) > 0:
@@ -189,7 +189,7 @@ def print_maintainers(pkg):
         color.cprint(section_title("Maintainers: ") + mnt)
 
 
-def print_phases(pkg):
+def print_phases(pkg, args):
     """output installation phases"""
 
     if hasattr(pkg.builder, "phases") and pkg.builder.phases:
@@ -201,7 +201,7 @@ def print_phases(pkg):
         color.cprint(phase_str)
 
 
-def print_tags(pkg):
+def print_tags(pkg, args):
     """output package tags"""
 
     color.cprint("")
@@ -213,7 +213,7 @@ def print_tags(pkg):
         color.cprint("    None")
 
 
-def print_tests(pkg):
+def print_tests(pkg, args):
     """output relevant build-time and stand-alone tests"""
 
     # Some built-in base packages (e.g., Autotools) define callback (e.g.,
@@ -327,7 +327,7 @@ def _variants_by_name_when(pkg):
     """Adaptor to get variants keyed by { name: { when: { [Variant...] } }."""
     # TODO: replace with pkg.variants_by_name(when=True) when unified directive dicts are merged.
     variants = {}
-    for name, (variant, whens) in pkg.variants.items():
+    for name, (variant, whens) in sorted(pkg.variants.items()):
         for when in whens:
             variants.setdefault(name, {}).setdefault(when, []).append(variant)
     return variants
@@ -407,12 +407,15 @@ def print_variants_by_name(pkg):
                 sys.stdout.write("\n")
 
 
-def print_variants(pkg):
+def print_variants(pkg, args):
     """output variants"""
-    print_variants_grouped_by_when(pkg)
+    if args.variants_by_name:
+        print_variants_by_name(pkg)
+    else:
+        print_variants_grouped_by_when(pkg)
 
 
-def print_versions(pkg):
+def print_versions(pkg, args):
     """output versions"""
 
     color.cprint("")
@@ -465,19 +468,13 @@ def print_versions(pkg):
                 color.cprint(line)
 
 
-def print_virtuals(pkg):
+def print_virtuals(pkg, args):
     """output virtual packages"""
 
     color.cprint("")
     color.cprint(section_title("Virtual Packages: "))
     if pkg.provided:
-        inverse_map = {}
-        for spec, whens in pkg.provided.items():
-            for when in whens:
-                if when not in inverse_map:
-                    inverse_map[when] = set()
-                inverse_map[when].add(spec)
-        for when, specs in reversed(sorted(inverse_map.items())):
+        for when, specs in reversed(sorted(pkg.provided.items())):
             line = "    %s provides %s" % (
                 when.colorized(),
                 ", ".join(s.colorized() for s in specs),
@@ -488,7 +485,7 @@ def print_virtuals(pkg):
         color.cprint("    None")
 
 
-def print_licenses(pkg):
+def print_licenses(pkg, args):
     """Output the licenses of the project."""
 
     color.cprint("")
@@ -523,17 +520,13 @@ def info(parser, args):
     if getattr(pkg, "homepage"):
         color.cprint(section_title("Homepage: ") + pkg.homepage)
 
-    _print_variants = (
-        print_variants_by_name if args.variants_by_name else print_variants_grouped_by_when
-    )
-
     # Now output optional information in expected order
     sections = [
         (args.all or args.maintainers, print_maintainers),
         (args.all or args.detectable, print_detectable),
         (args.all or args.tags, print_tags),
         (args.all or not args.no_versions, print_versions),
-        (args.all or not args.no_variants, _print_variants),
+        (args.all or not args.no_variants, print_variants),
         (args.all or args.phases, print_phases),
         (args.all or not args.no_dependencies, print_dependencies),
         (args.all or args.virtuals, print_virtuals),
@@ -542,6 +535,6 @@ def info(parser, args):
     ]
     for print_it, func in sections:
         if print_it:
-            func(pkg)
+            func(pkg, args)
 
     color.cprint("")

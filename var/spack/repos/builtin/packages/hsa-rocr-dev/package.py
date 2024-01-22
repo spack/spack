@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,15 +15,18 @@ class HsaRocrDev(CMakePackage):
     HSA ROCm kernel agents.AMD Heterogeneous System Architecture HSA -
     Linux HSA Runtime for Boltzmann (ROCm) platforms."""
 
-    homepage = "https://github.com/RadeonOpenCompute/ROCR-Runtime"
-    git = "https://github.com/RadeonOpenCompute/ROCR-Runtime.git"
-    url = "https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/ROCR-Runtime"
+    git = "https://github.com/ROCm/ROCR-Runtime.git"
+    url = "https://github.com/ROCm/ROCR-Runtime/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")
     libraries = ["libhsa-runtime64"]
 
     version("master", branch="master")
+    version("6.0.0", sha256="99e8fa1af52d0bf382f28468e1a345af1ff3452c35914a6a7b5eeaf69fc568db")
+    version("5.7.1", sha256="655e9bfef4b0b6ad3f9b89c934dc0a8377273bb0bccbda6c399ac5d5d2c1c04c")
+    version("5.7.0", sha256="2c56ec5c78a36f2b847afd4632cb25dbf6ecc58661eb2ae038c2552342e6ce23")
     version("5.6.1", sha256="4de9a57c2092edf9398d671c8a2c60626eb7daf358caf710da70d9c105490221")
     version("5.6.0", sha256="30875d440df9d8481ffb24d87755eae20a0efc1114849a72619ea954f1e9206c")
     version("5.5.1", sha256="53d84ad5ba5086ed4ad67ad892c52c0e4eba8ddfa85c2dd341bf825f4d5fe4ee")
@@ -110,6 +113,7 @@ class HsaRocrDev(CMakePackage):
 
     variant("shared", default=True, description="Build shared or static library")
     variant("image", default=True, description="build with or without image support")
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
     depends_on("cmake@3:", type="build")
     depends_on("pkgconfig", type="build", when="@5.3.0:")
@@ -149,6 +153,9 @@ class HsaRocrDev(CMakePackage):
         "5.5.1",
         "5.6.0",
         "5.6.1",
+        "5.7.0",
+        "5.7.1",
+        "6.0.0",
         "master",
     ]:
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
@@ -157,7 +164,8 @@ class HsaRocrDev(CMakePackage):
         depends_on(
             "rocm-device-libs@" + ver, when="@{0} ^llvm-amdgpu ~rocm-device-libs".format(ver)
         )
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
+
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
 
     # Both 3.5.0 and 3.7.0 force INSTALL_RPATH in different ways
@@ -204,4 +212,7 @@ class HsaRocrDev(CMakePackage):
 
         if self.spec.satisfies("@5.6:"):
             args.append("-DCMAKE_INSTALL_LIBDIR=lib")
+        if self.spec.satisfies("@6.0:"):
+            args.append(self.define("ROCM_PATCH_VERSION", "60000"))
+
         return args

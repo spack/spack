@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class Gmsh(CMakePackage):
     homepage = "https://gmsh.info"
     url = "https://gmsh.info/src/gmsh-4.4.1-source.tgz"
     git = "https://gitlab.onelab.info/gmsh/gmsh.git"
+
+    license("GPL-2.0-or-later")
 
     version("master", branch="master")
     version("4.10.3", sha256="a87d59ccea596d493d375b0d6bc380079a5e5a4baebf0d3383018b0cd6bd8e33")

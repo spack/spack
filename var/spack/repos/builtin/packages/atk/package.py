@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Atk(Package):
     url = "https://ftp.gnome.org/pub/gnome/sources/atk/2.30/atk-2.30.0.tar.xz"
     list_url = "https://ftp.gnome.org/pub/gnome/sources/atk"
     list_depth = 1
+
+    license("LGPL-2.0-or-later")
 
     version("2.38.0", sha256="ac4de2a4ef4bd5665052952fe169657e65e895c5057dffb3c2a810f6191a0c36")
     version("2.36.0", sha256="fb76247e369402be23f1f5c65d38a9639c1164d934e40f6a9cf3c9e96b652788")

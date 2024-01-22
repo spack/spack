@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Pthreadpool(CMakePackage):
 
     homepage = "https://github.com/Maratyszcza/pthreadpool"
     git = "https://github.com/Maratyszcza/pthreadpool.git"
+
+    license("BSD-2-Clause")
 
     version("master", branch="master")
     version("2021-04-13", commit="a134dd5d4cee80cce15db81a72e7f929d71dd413")  # py-torch@1.9

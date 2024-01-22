@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -67,12 +67,13 @@ class ConstraintAction(argparse.Action):
 
     def __call__(self, parser, namespace, values, option_string=None):
         # Query specs from command line
-        self.values = values
-        namespace.constraint = values
+        self.constraint = namespace.constraint = values
+        self.constraint_specs = namespace.constraint_specs = []
         namespace.specs = self._specs
 
     def _specs(self, **kwargs):
-        qspecs = spack.cmd.parse_specs(self.values)
+        # store parsed specs in spec.constraint after a call to specs()
+        self.constraint_specs[:] = spack.cmd.parse_specs(self.constraint)
 
         # If an environment is provided, we'll restrict the search to
         # only its installed packages.
@@ -81,12 +82,12 @@ class ConstraintAction(argparse.Action):
             kwargs["hashes"] = set(env.all_hashes())
 
         # return everything for an empty query.
-        if not qspecs:
+        if not self.constraint_specs:
             return spack.store.STORE.db.query(**kwargs)
 
         # Return only matching stuff otherwise.
         specs = {}
-        for spec in qspecs:
+        for spec in self.constraint_specs:
             for s in spack.store.STORE.db.query(spec, **kwargs):
                 # This is fast for already-concrete specs
                 specs[s.dag_hash()] = s
@@ -122,6 +123,33 @@ class DeptypeAction(argparse.Action):
         else:
             deptype = dt.canonicalize(values.split(","))
         setattr(namespace, self.dest, deptype)
+
+
+class ConfigScope(argparse.Action):
+    """Pick the currently configured config scopes."""
+
+    def __init__(self, *args, **kwargs) -> None:
+        kwargs.setdefault("metavar", spack.config.SCOPES_METAVAR)
+        super().__init__(*args, **kwargs)
+
+    @property
+    def default(self):
+        return self._default() if callable(self._default) else self._default
+
+    @default.setter
+    def default(self, value):
+        self._default = value
+
+    @property
+    def choices(self):
+        return spack.config.scopes().keys()
+
+    @choices.setter
+    def choices(self, value):
+        pass
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, values)
 
 
 def _cdash_reporter(namespace):
@@ -357,10 +385,11 @@ def install_status():
         "--install-status",
         action="store_true",
         default=True,
-        help="show install status of packages\n\npackages can be: "
-        "installed [+], missing and needed by an installed package [-], "
-        "installed in an upstream instance [^], "
-        "or not installed (no annotation)",
+        help=(
+            "show install status of packages\n"
+            "[+] installed       [^] installed in an upstream\n"
+            " -  not installed   [-] missing dep of installed package\n"
+        ),
     )
 
 

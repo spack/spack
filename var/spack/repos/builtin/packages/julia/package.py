@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -60,6 +60,7 @@ class Julia(MakefilePackage):
     depends_on("libuv", when="@:1.7")
     depends_on("libuv-julia@1.42.0", when="@1.8.0:1.8.1")
     depends_on("libuv-julia@1.44.2", when="@1.8.2:")
+    depends_on("suite-sparse@5.4:5.10", when="@1.6:1.9")
 
     with when("@1.9.0:1.9"):
         # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.14, mbedcrypto.so.7, mbedx509.so.1
@@ -124,24 +125,24 @@ class Julia(MakefilePackage):
         "llvm",
         when="^llvm@12.0.1",
         patches=patch(
-            "https://github.com/JuliaLang/llvm-project/compare/fed41342a82f5a3a9201819a82bf7a48313e296b...980d2f60a8524c5546397db9e8bbb7d6ea56c1b7.patch",
-            sha256="37f2f6193e1205ea49b9a56100a70b038b64abf402115f263c6132cdf0df80c3",
+            "https://raw.githubusercontent.com/spack/patches/master/julia/10cb42f80c2eaad3e9c87cb818b6676f1be26737bdf972c77392d71707386aa4.patch",
+            sha256="10cb42f80c2eaad3e9c87cb818b6676f1be26737bdf972c77392d71707386aa4",
         ),
     )
     depends_on(
         "llvm",
         when="^llvm@13.0.1",
         patches=patch(
-            "https://github.com/JuliaLang/llvm-project/compare/75e33f71c2dae584b13a7d1186ae0a038ba98838...2f4460bd46aa80d4fe0d80c3dabcb10379e8d61b.patch",
-            sha256="d9e7f0befeddddcba40eaed3895c4f4734980432b156c39d7a251bc44abb13ca",
+            "https://raw.githubusercontent.com/spack/patches/master/julia/45f72c59ae5cf45461e9cd8b224ca49b739d885c79b3786026433c6c22f83b5f.patch",
+            sha256="45f72c59ae5cf45461e9cd8b224ca49b739d885c79b3786026433c6c22f83b5f",
         ),
     )
     depends_on(
         "llvm",
         when="^llvm@14.0.6",
         patches=patch(
-            "https://github.com/JuliaLang/llvm-project/compare/f28c006a5895fc0e329fe15fead81e37457cb1d1...381043941d2c7a5157a011510b6d0386c171aae7.diff",
-            sha256="f3fd1803459bdaac0e26d0f3b1874b0e3f97e9411a9e98043d36f788ab4fd00e",
+            "https://raw.githubusercontent.com/spack/patches/master/julia/f3def26930832532bbcd861d41b31ae03db993bc2b3510f89ef831a30bd3e099.patch",
+            sha256="f3def26930832532bbcd861d41b31ae03db993bc2b3510f89ef831a30bd3e099",
         ),
     )
 

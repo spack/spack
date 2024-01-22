@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,12 @@ class FluxSched(CMakePackage, AutotoolsPackage):
 
     maintainers("grondo")
 
+    license("LGPL-3.0-only")
+
     version("master", branch="master")
+    version("0.32.0", sha256="f0b88881f0154057de3dd5485a3e1cfc0b9b64c98052bda7d5fed7c05b5e02f3")
+    version("0.31.0", sha256="4440156b7f2d43e3db2cbfa0dbc43671074c397525f6b97e3748c3d96a035cdb")
+    version("0.30.0", sha256="1ccb2e53f4caede0233f19b2707e868f0cee9d2c957a06f97c22936ba9a43552")
     version("0.29.0", sha256="b93b18788e677535aa8ef945cdbeeced6d1408a4d16cb4a816ead53f31dd78d2")
     version("0.28.0", sha256="9431c671bed5d76fd95b4a4a7f36224d4bf76f416a2a1a5c4908f3ca790d434d")
     version("0.27.0", sha256="1e131924440c904fa0c925b7aa14c47b97f4e67b43af7efd2ebc0ef7ce90eb7c")

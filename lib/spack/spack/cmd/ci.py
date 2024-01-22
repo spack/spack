@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,7 @@ import spack.ci as spack_ci
 import spack.cmd.buildcache as buildcache
 import spack.config as cfg
 import spack.environment as ev
+import spack.environment.depfile
 import spack.hash_types as ht
 import spack.mirror
 import spack.util.gpg as gpg_util
@@ -606,7 +607,9 @@ def ci_rebuild(args):
             "SPACK_INSTALL_FLAGS={}".format(args_to_string(deps_install_args)),
             "-j$(nproc)",
             "install-deps/{}".format(
-                ev.depfile.MakefileSpec(job_spec).safe_format("{name}-{version}-{hash}")
+                spack.environment.depfile.MakefileSpec(job_spec).safe_format(
+                    "{name}-{version}-{hash}"
+                )
             ),
         ],
         spack_cmd + ["install"] + root_install_args,

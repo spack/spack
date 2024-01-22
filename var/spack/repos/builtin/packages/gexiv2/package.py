@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Gexiv2(MesonPackage):
     url = "https://download.gnome.org/sources/gexiv2/0.12/gexiv2-0.12.3.tar.xz"
 
     maintainers("benkirk")
+
+    license("GPL-2.0-or-later")
 
     version("0.12.3", sha256="d23b7972a2fc6f840150bad1ed79c1cbec672951e180c1e1ec33ca6c730c59f3")
     version("0.12.2", sha256="2322b552aca330eef79724a699c51a302345d5e074738578b398b7f2ff97944c")

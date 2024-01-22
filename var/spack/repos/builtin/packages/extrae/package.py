@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,6 +39,8 @@ class Extrae(AutotoolsPackage):
 
     homepage = "https://tools.bsc.es/extrae"
     url = "https://ftp.tools.bsc.es/extrae/extrae-3.4.1-src.tar.bz2"
+
+    license("LGPL-2.1-or-later")
 
     version("4.0.6", sha256="b5060336cac57f1345faa09009b1940edf1e6991aae05cc10d0b714d31360a92")
     version("4.0.5", sha256="8f5eefa95f2e94a3b5f9b7f7cbaaed523862f190575ee797113b1e97deff1586")

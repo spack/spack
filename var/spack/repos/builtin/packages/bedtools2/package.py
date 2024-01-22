@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Bedtools2(Package):
 
     homepage = "https://github.com/arq5x/bedtools2"
     url = "https://github.com/arq5x/bedtools2/archive/v2.30.0.tar.gz"
+
+    license("MIT")
 
     version("2.31.0", sha256="183cf9a96aabc50ef4bd557a53fd01557a123c05a0dc87651371878f357439ec")
     version("2.30.0", sha256="c575861ec746322961cd15d8c0b532bb2a19333f1cf167bbff73230a7d67302f")

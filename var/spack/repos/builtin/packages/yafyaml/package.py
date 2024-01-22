@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,8 +26,11 @@ class Yafyaml(CMakePackage):
 
     maintainers("mathomp4", "tclune")
 
+    license("Apache-2.0")
+
     version("main", branch="main")
 
+    version("1.2.0", sha256="912a4248bbf2e2e84cf3e36f2ae8483bee6b32d2eaa4406dd2100ad660c9bfc6")
     version("1.1.0", sha256="f0be81afe643adc2452055e5485f09cdb509a8fdd5a4ec5547b0c31dd22b4830")
     version("1.0.7", sha256="54f5c87e86c12e872e615fbc9540610ae38053f844f1e75d1e753724fea85c64")
     version("1.0.6", sha256="8075e1349d900985f5b5a81159561568720f21c5f011c43557c46f5bbedd0661")

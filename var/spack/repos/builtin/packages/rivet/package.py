@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Rivet(AutotoolsPackage):
     git = "https://gitlab.com/hepcedar/rivet.git"
 
     tags = ["hep"]
+
+    license("GPL-3.0-or-later")
 
     version("3.1.8", sha256="75b3f3d419ca6388d1fd2ec0eda7e1f90f324b996ccf0591f48a5d2e28dccc13")
     version("3.1.7", sha256="27c7dbbcb5fd7ee81caf136daf4e960bca0ec255d9fa1abe602f4d430861b27a")

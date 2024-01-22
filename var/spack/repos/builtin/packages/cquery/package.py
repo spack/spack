@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Cquery(CMakePackage):
 
     homepage = "https://github.com/cquery-project/cquery"
     git = "https://github.com/cquery-project/cquery.git"
+
+    license("MIT")
 
     version("2018-08-23", commit="70c755b2e390d3edfb594a84a7531beb26b2bc07", submodules=True)
 

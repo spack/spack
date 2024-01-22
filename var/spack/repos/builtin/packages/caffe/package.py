@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Caffe(CMakePackage, CudaPackage):
 
     homepage = "https://caffe.berkeleyvision.org"
     url = "https://github.com/BVLC/caffe/archive/1.0.tar.gz"
+
+    license("BSD-2-Clause")
 
     version("1.0", sha256="71d3c9eb8a183150f965a465824d01fe82826c22505f7aa314f700ace03fa77f")
     version("rc5", sha256="06592aa8f5254335df3e244dafacc15765e2c60479b4bf2e7c887e8e023802fb")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -398,3 +398,12 @@ def test_mirror_set_2(mutable_config):
         "url": "http://example.com",
         "push": {"url": "http://example2.com", "access_pair": ["username", "password"]},
     }
+
+
+def test_mirror_add_set_signed(mutable_config):
+    mirror("add", "--signed", "example", "http://example.com")
+    assert spack.config.get("mirrors:example") == {"url": "http://example.com", "signed": True}
+    mirror("set", "--unsigned", "example")
+    assert spack.config.get("mirrors:example") == {"url": "http://example.com", "signed": False}
+    mirror("set", "--signed", "example")
+    assert spack.config.get("mirrors:example") == {"url": "http://example.com", "signed": True}

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,8 @@ class Tau(Package):
     git = "https://github.com/UO-OACISS/tau2"
 
     tags = ["e4s"]
+
+    license("MIT")
 
     version("master", branch="master")
     version("2.33", sha256="04d9d67adb495bc1ea56561f33c5ce5ba44f51cc7f64996f65bd446fac5483d9")
@@ -107,7 +109,8 @@ class Tau(Package):
     depends_on("zlib-api", type="link")
     depends_on("pdt", when="+pdt")  # Required for TAU instrumentation
     depends_on("scorep", when="+scorep")
-    depends_on("otf2@2.1:2.3", when="+otf2")
+    depends_on("otf2@2.1:2.3", when="@:2.33.0 +otf2")
+    depends_on("otf2@3:", when="@2.33.1: +otf2")
     depends_on("likwid", when="+likwid")
     depends_on("papi", when="+papi")
     depends_on("libdwarf", when="+libdwarf")
