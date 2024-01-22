@@ -49,6 +49,9 @@ class Charmpp(Package):
     patch("charm_6.7.1_aocc.patch", when="@6.7.1 %aocc", level=1)
     patch("charm_6.8.2_aocc.patch", when="@6.8.2 %aocc", level=3)
 
+    # Patch for oneapi compilers
+    patch("charm_7.0.0_oneapi.patch", when="@7.0.0 %oneapi")
+
     # support Fujitsu compiler
     patch("fj.patch", when="%fj")
 

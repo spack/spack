@@ -1,0 +1,165 @@
+From 8e5d0a06c991e8a9c331e4f5a592905e88939544 Mon Sep 17 00:00:00 2001
+From: Robert Cohn <robert.s.cohn@intel.com>
+Date: Thu, 9 Mar 2023 05:33:26 -0600
+Subject: [PATCH] backport icx/ifx support to 7.0.0
+
+---
+ CMakeLists.txt            | 10 +++++++-
+ buildcmake                |  9 +++++++
+ buildold                  |  3 ++-
+ src/arch/common/cc-icx.h  |  6 +++++
+ src/arch/common/cc-icx.sh | 49 +++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 75 insertions(+), 2 deletions(-)
+ create mode 100644 src/arch/common/cc-icx.h
+ create mode 100644 src/arch/common/cc-icx.sh
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index f6e450b05..209e0856e 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -42,11 +42,17 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+     string(REGEX REPLACE ".*(-.*)" "\\1" CMK_COMPILER_SUFFIX ${mytmp})
+   endif()
+ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+-  set(CMK_COMPILER clang)
++  if(CMAKE_CXX_COMPILER MATCHES "(icpx)$")
++    set(CMK_COMPILER icx)
++  else()
++    set(CMK_COMPILER clang)
++  endif()
+   get_filename_component(mytmp ${CMAKE_CXX_COMPILER} NAME)
+   if(mytmp MATCHES "-")
+     string(REGEX REPLACE ".*(-.*)" "\\1" CMK_COMPILER_SUFFIX ${mytmp})
+   endif()
++elseif(CMAKE_CXX_COMPILER_ID STREQUAL "IntelLLVM")
++  set(CMK_COMPILER icx)
+ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+   set(CMK_COMPILER icc)
+ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Cray")
+@@ -584,6 +590,8 @@ endif()
+ configure_file(src/arch/common/cc-bluegene.sh                include/ COPYONLY)
+ configure_file(src/arch/common/cc-clang.sh                   include/ COPYONLY)
+ configure_file(src/arch/common/cc-clang.h                    include/ COPYONLY)
++configure_file(src/arch/common/cc-icx.sh                     include/ COPYONLY)
++configure_file(src/arch/common/cc-icx.h                      include/ COPYONLY)
+ configure_file(src/arch/common/cc-craycc.h                   include/ COPYONLY)
+ configure_file(src/arch/common/cc-craycc.sh                  include/ COPYONLY)
+ configure_file(src/arch/common/cc-msvc.h                     include/ COPYONLY)
+diff --git a/buildcmake b/buildcmake
+index 8bbf4d68e..8d1206c16 100755
+--- a/buildcmake
++++ b/buildcmake
+@@ -221,6 +221,11 @@ function parse_platform_compilers() {
+       opt_FC=flang
+       opt_compiler+="$arg "
+       ;;
++    icx)
++      opt_CC=icx
++      opt_CXX=icpx
++      opt_compiler+=("$arg")
++      ;;
+     icc|iccstatic)
+       opt_CC=icc
+       opt_CXX=icpc
+@@ -230,6 +235,10 @@ function parse_platform_compilers() {
+       opt_FC=ifort
+       opt_compiler+="$arg "
+       ;;
++    ifx)
++      opt_FC=ifx
++      opt_compiler+="$arg "
++      ;;
+     xlc|xlc64)
+       opt_CC=xlc_r
+       opt_CXX=xlC_r
+diff --git a/buildold b/buildold
+index bc593ce17..9dcae4ef5 100755
+--- a/buildold
++++ b/buildold
+@@ -36,7 +36,7 @@ syntax() {
+   ( cd $src ; ls -1 | egrep -v '(^mpi$)|(^netlrts?$)|(^multicore$)|(^util$)|(^common$)|(^win$)|(^gni$)|(^pami(lrts)?$)|(^verbs$)|(^ofi$)|(^ucx$)|(^template$)|(^cuda$)' | pr -3 -t )
+   echo ''
+   echo '<options>: compiler and platform specific options'
+-  echo 'icc iccstatic xlc xlc64 gcc clang pgcc cc mpicxx'
++  echo 'icc iccstatic xlc xlc64 gcc clang icx pgcc cc mpicxx'
+   echo 'help smp omp tcp ooc syncft papi pthreads'
+   echo '--incdir --libdir --basedir --build-shared --destination --suffix -j'
+   if test $more = 1
+@@ -50,6 +50,7 @@ syntax() {
+   echo '  xlc, xlc64      IBM XL compilers (with 64-bit option on architectures with 32-bit modes)'
+   echo '  gcc             GNU compiler collection (on platforms where the default differs)'
+   echo '  clang           Clang C/C++ compiler (including bgclang)'
++  echo '  icx             Intel oneAPI DPC++/C++ compiler'
+   echo '  pgcc            Portland Group compilers'
+   echo ''
+   echo 'Choose an alternative fortran compiler (only one option is allowed from this section):'
+diff --git a/src/arch/common/cc-icx.h b/src/arch/common/cc-icx.h
+new file mode 100644
+index 000000000..f25b2250a
+--- /dev/null
++++ b/src/arch/common/cc-icx.h
+@@ -0,0 +1,6 @@
++#undef CMK_DLL_CC
++
++#undef  CMK_COMPILEMODE_ORIG
++#undef  CMK_COMPILEMODE_ANSI
++#define CMK_COMPILEMODE_ORIG                               1
++#define CMK_COMPILEMODE_ANSI                               0
+diff --git a/src/arch/common/cc-icx.sh b/src/arch/common/cc-icx.sh
+new file mode 100644
+index 000000000..07b642e47
+--- /dev/null
++++ b/src/arch/common/cc-icx.sh
+@@ -0,0 +1,49 @@
++CMK_CPP_CHARM="cpp -P"
++CMK_CPP_C="icx$CMK_COMPILER_SUFFIX"
++CMK_CC="icx$CMK_COMPILER_SUFFIX"
++CMK_LD="icx$CMK_COMPILER_SUFFIX"
++CMK_CXX="icpx$CMK_COMPILER_SUFFIX"
++CMK_LDXX="icpx$CMK_COMPILER_SUFFIX"
++
++CMK_CPP_C_FLAGS="-E"
++
++if [ "$CMK_COMPILER" = "msvc" ]; then
++  CMK_AR='ar q'
++  CMK_LIBS='-lws2_32 -lpsapi -lkernel32'
++  CMK_SEQ_LIBS="$CMK_LIBS"
++
++  CMK_NATIVE_CC="$CMK_CC"
++  CMK_NATIVE_LD="$CMK_LD"
++  CMK_NATIVE_CXX="$CMK_CXX"
++  CMK_NATIVE_LDXX="$CMK_LDXX"
++fi
++
++CMK_PIC='' # empty string: will be reset to default by conv-config.sh
++CMK_PIE='-fPIE'
++
++CMK_COMPILER='icx'
++CMK_WARNINGS_ARE_ERRORS="-Werror"CMK_CPP_CHARM="cpp -P"
++CMK_CPP_C="icx$CMK_COMPILER_SUFFIX"
++CMK_CC="icx$CMK_COMPILER_SUFFIX"
++CMK_LD="icx$CMK_COMPILER_SUFFIX"
++CMK_CXX="icpx$CMK_COMPILER_SUFFIX"
++CMK_LDXX="icpx$CMK_COMPILER_SUFFIX"
++
++CMK_CPP_C_FLAGS="-E"
++
++if [ "$CMK_COMPILER" = "msvc" ]; then
++  CMK_AR='ar q'
++  CMK_LIBS='-lws2_32 -lpsapi -lkernel32'
++  CMK_SEQ_LIBS="$CMK_LIBS"
++
++  CMK_NATIVE_CC="$CMK_CC"
++  CMK_NATIVE_LD="$CMK_LD"
++  CMK_NATIVE_CXX="$CMK_CXX"
++  CMK_NATIVE_LDXX="$CMK_LDXX"
++fi
++
++CMK_PIC='' # empty string: will be reset to default by conv-config.sh
++CMK_PIE='-fPIE'
++
++CMK_COMPILER='icx'
++CMK_WARNINGS_ARE_ERRORS="-Werror"
+-- 
+2.34.1
+
