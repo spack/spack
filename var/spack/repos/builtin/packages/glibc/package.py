@@ -181,6 +181,9 @@ class Glibc(AutotoolsPackageNoDep, GNUMirrorPackageNoDep):
         # before that it's a test dependency.
         depends_on("python@3.4:", type="build", when="@2.29:")
 
+    # NOTE(trws): switched to build because glibc now copies the headers in. This is
+    # mainly to avoid any issues with handling header directory ordering, with them in
+    # separate roots it becomes very, very tricky.
     depends_on("linux-headers", type="build")
 
     with when("@master"):
