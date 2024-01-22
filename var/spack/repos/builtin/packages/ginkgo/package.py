@@ -98,6 +98,9 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
         "+sycl", when="@:1.4.0", msg="For SYCL support, please use Ginkgo version 1.4.0 and newer."
     )
 
+    # https://github.com/ginkgo-project/ginkgo/pull/1524
+    patch("ginkgo-sycl-pr1524.patch", when="@1.7.0 +sycl %oneapi@2024:")
+
     # Skip smoke tests if compatible hardware isn't found
     patch("1.4.0_skip_invalid_smoke_tests.patch", when="@1.4.0")
 

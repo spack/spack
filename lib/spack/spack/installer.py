@@ -36,6 +36,7 @@ import shutil
 import sys
 import time
 from collections import defaultdict
+from gzip import GzipFile
 from typing import Dict, Iterator, List, Optional, Set, Tuple
 
 import llnl.util.filesystem as fs
@@ -638,13 +639,12 @@ def archive_install_logs(pkg: "spack.package_base.PackageBase", phase_log_dir: s
         pkg: the package that was built and installed
         phase_log_dir: path to the archive directory
     """
-    # Archive the whole stdout + stderr for the package
-    fs.install(pkg.log_path, pkg.install_log_path)
-
-    # Archive all phase log paths
-    for phase_log in pkg.phase_log_files:
-        log_file = os.path.basename(phase_log)
-        fs.install(phase_log, os.path.join(phase_log_dir, log_file))
+    # Copy a compressed version of the install log
+    with open(pkg.log_path, "rb") as f, open(pkg.install_log_path, "wb") as g:
+        # Use GzipFile directly so we can omit filename / mtime in header
+        gzip_file = GzipFile(filename="", mode="wb", compresslevel=6, mtime=0, fileobj=g)
+        shutil.copyfileobj(f, gzip_file)
+        gzip_file.close()
 
     # Archive the install-phase test log, if present
     pkg.archive_install_test_log()
@@ -1326,7 +1326,6 @@ class PackageInstaller:
         """
         install_args = task.request.install_args
         keep_prefix = install_args.get("keep_prefix")
-        restage = install_args.get("restage")
 
         # Make sure the package is ready to be locally installed.
         self._ensure_install_ready(task.pkg)
@@ -1357,10 +1356,6 @@ class PackageInstaller:
                     task.pkg.remove_prefix()
                 else:
                     tty.debug(f"{task.pkg_id} is partially installed")
-
-            # Destroy the stage for a locally installed, non-DIYStage, package
-            if restage and task.pkg.stage.managed_by_spack:
-                task.pkg.stage.destroy()
 
         if (
             rec
@@ -1686,6 +1681,10 @@ class PackageInstaller:
 
         try:
             self._setup_install_dir(pkg)
+
+            # Create stage object now and let it be serialized for the child process. That
+            # way monkeypatch in tests works correctly.
+            pkg.stage
 
             # Create a child process to do the actual installation.
             # Preserve verbosity settings across installs.
@@ -2221,11 +2220,6 @@ class PackageInstaller:
                 if not keep_prefix and not action == InstallAction.OVERWRITE:
                     pkg.remove_prefix()
 
-                # The subprocess *may* have removed the build stage. Mark it
-                # not created so that the next time pkg.stage is invoked, we
-                # check the filesystem for it.
-                pkg.stage.created = False
-
             # Perform basic task cleanup for the installed spec to
             # include downgrading the write to a read lock
             self._cleanup_task(pkg)
@@ -2295,6 +2289,9 @@ class BuildProcessInstaller:
         # whether to keep the build stage after installation
         self.keep_stage = install_args.get("keep_stage", False)
 
+        # whether to restage
+        self.restage = install_args.get("restage", False)
+
         # whether to skip the patch phase
         self.skip_patch = install_args.get("skip_patch", False)
 
@@ -2325,9 +2322,13 @@ class BuildProcessInstaller:
     def run(self) -> bool:
         """Main entry point from ``build_process`` to kick off install in child."""
 
-        self.pkg.stage.keep = self.keep_stage
+        stage = self.pkg.stage
+        stage.keep = self.keep_stage
 
-        with self.pkg.stage:
+        if self.restage:
+            stage.destroy()
+
+        with stage:
             self.timer.start("stage")
 
             if not self.fake:

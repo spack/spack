@@ -1905,7 +1905,7 @@ class TestConcretize:
         """
         # Add a conflict to "mpich" that match an already installed "mpich~debug"
         pkg_cls = spack.repo.PATH.get_pkg_class("mpich")
-        monkeypatch.setitem(pkg_cls.conflicts, "~debug", [(Spec(), None)])
+        monkeypatch.setitem(pkg_cls.conflicts, Spec(), [("~debug", None)])
 
         # If we concretize with --fresh the conflict is taken into account
         with spack.config.override("concretizer:reuse", False):
@@ -2206,6 +2206,33 @@ class TestConcretize:
             without_reuse = Spec("py-extension2").concretized()
 
         assert with_reuse.dag_hash() == without_reuse.dag_hash()
+
+    @pytest.mark.regression("35536")
+    @pytest.mark.parametrize(
+        "spec_str,expected_namespaces",
+        [
+            # Single node with fully qualified namespace
+            ("builtin.mock.gmake", {"gmake": "builtin.mock"}),
+            # Dependency with fully qualified namespace
+            ("hdf5 ^builtin.mock.gmake", {"gmake": "builtin.mock", "hdf5": "duplicates.test"}),
+            ("hdf5 ^gmake", {"gmake": "duplicates.test", "hdf5": "duplicates.test"}),
+        ],
+    )
+    @pytest.mark.only_clingo("Uses specs requiring multiple gmake specs")
+    def test_select_lower_priority_package_from_repository_stack(
+        self, spec_str, expected_namespaces
+    ):
+        """Tests that a user can explicitly select a lower priority, fully qualified dependency
+        from cli.
+        """
+        # 'builtin.mock" and "duplicates.test" share a 'gmake' package
+        additional_repo = os.path.join(spack.paths.repos_path, "duplicates.test")
+        with spack.repo.use_repositories(additional_repo, override=False):
+            s = Spec(spec_str).concretized()
+
+        for name, namespace in expected_namespaces.items():
+            assert s[name].concrete
+            assert s[name].namespace == namespace
 
 
 @pytest.fixture()
