@@ -63,45 +63,9 @@ class Glibc(AutotoolsPackageNoDep, GNUMirrorPackageNoDep):
     version("2.6.1", sha256="6be7639ccad715d25eef560ce9d1637ef206fb9a162714f6ab8167fc0d971cae")
     version("2.5", sha256="16d3ac4e86eed75d85d80f1f214a6bd58d27f13590966b5ad0cc181df85a3493")
 
-    versions = [
-        "2.38",
-        "2.37",
-        "2.36",
-        "2.35",
-        "2.34",
-        "2.33",
-        "2.32",
-        "2.31",
-        "2.30",
-        "2.29",
-        "2.28",
-        "2.27",
-        "2.26",
-        "2.25",
-        "2.24",
-        "2.23",
-        "2.22",
-        "2.21",
-        "2.20",
-        "2.19",
-        "2.18",
-        "2.17",
-        "2.16.0",
-        "2.15",
-        "2.14.1",
-        "2.13",
-        "2.12.2",
-        "2.11.3",
-        "2.10.1",
-        "2.9",
-        "2.8",
-        "2.7",
-        "2.6.1", 
-        "2.5",
-    ]
 
     variant("stage1", default=False)
-    #TODO, true but circular depends_on(f"gcc", when=f"+stage1")
+    provides("iconv", when="+stage1")
 
     # Fix for newer GCC, related to -fno-common
     patch("locs.patch", when="@2.23:2.25")
