@@ -39,6 +39,7 @@ class Krb5(AutotoolsPackage):
     depends_on("perl", type="build")
     depends_on("findutils", type="build")
     depends_on("pkgconfig", type="build", when="^openssl~shared")
+    depends_on("libedit", type=("build", "link"))
 
     variant(
         "shared", default=True, description="install shared libraries if True, static if false"
