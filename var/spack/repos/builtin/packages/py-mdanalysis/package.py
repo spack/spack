@@ -56,27 +56,28 @@ class PyMdanalysis(PythonPackage):
     depends_on("py-threadpoolctl", type=("build", "run"))
     depends_on("py-packaging", type=("build", "run"))
     depends_on("py-fasteners", type=("build", "run"))
+    depends_on("py-mda-xdrlib", when="@2.7.0:", type=("build", "run"))
 
     # extra_format (extras_require)
     depends_on("py-netcdf4@1.0:", when="+extra_formats", type=("build", "run"))
     depends_on("py-h5py@2.10:", when="+extra_formats", type=("build", "run"))
-    depends_on("py-pytng@0.2.3:", when="+extra_formats", type=("build", "run"))
     depends_on("py-chemfiles@0.10:", when="+extra_formats", type=("build", "run"))
+    depends_on("py-parmed", when="+extra_formats @2.6.0:", type=("build", "run"))
     depends_on("py-pyedr@0.7.0:", when="+extra_formats", type=("build", "run"))
+    depends_on("py-pytng@0.2.3:", when="+extra_formats", type=("build", "run"))
     depends_on("py-gsd@3.0.1:", when="+extra_formats @2.6.0:", type=("build", "run"))
     depends_on(
         "rdkit@2020.03.1: +python ~coordgen ~maeparser ~yaehmop ~descriptors3d",
         when="+extra_formats @2.6.0:",
         type=("build", "run"),
     )
-    depends_on("py-parmed", when="+extra_formats @2.6.0:", type=("build", "run"))
 
     # analysis (extras_require)
     depends_on("py-biopython@1.80:", when="@2.7.0: +analysis", type=("build", "run"))
-    depends_on("py-networkx@2.0:", when="@2.7.0 +analysis", type=("build", "run"))
     depends_on("py-seaborn", when="+analysis", type=("build", "run"))
     depends_on("py-scikit-learn", when="+analysis", type=("build", "run"))
     depends_on("py-tidynamics@1:", when="+analysis", type=("build", "run"))
+    depends_on("py-networkx@2.0:", when="@2.7.0 +analysis", type=("build", "run"))
 
     # historical dependencies
     depends_on("py-gsd@1.9.3:", when="@:2.5.0", type=("build", "run"))
