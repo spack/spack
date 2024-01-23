@@ -2819,7 +2819,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
                         config_path = os.path.join(config_path, basename)
                 else:
                     staged_path = spack.config.fetch_remote_configs(
-                        config_path, self.config_stage_dir, skip_existing=True
+                        config_path, str(self.config_stage_dir), skip_existing=True
                     )
                     if not staged_path:
                         raise SpackEnvironmentError(
