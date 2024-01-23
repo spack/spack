@@ -108,6 +108,12 @@ def test_env_change_spec_in_definition(tmp_path, mock_packages, config, mutable_
     e.change_existing_spec(spack.spec.Spec("mpileaks@2.2"), list_name="desired_specs")
     e.write()
 
+    # Ensure changed specs are in memory
+    assert any(x.intersects("mpileaks@2.2%gcc") for x in e.user_specs)
+    assert not any(x.intersects("mpileaks@2.1%gcc") for x in e.user_specs)
+
+    # Now make sure the changes can be read from the modified config
+    e = ev.read("test")
     assert any(x.intersects("mpileaks@2.2%gcc") for x in e.user_specs)
     assert not any(x.intersects("mpileaks@2.1%gcc") for x in e.user_specs)
 

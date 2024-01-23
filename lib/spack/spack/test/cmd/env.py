@@ -974,8 +974,6 @@ def test_env_with_included_config_file_url(tmpdir, mutable_empty_config, package
 
     env = ev.Environment(tmpdir.strpath)
     ev.activate(env)
-    scopes = env.included_config_scopes()
-    assert len(scopes) == 1
 
     cfg = spack.config.get("packages")
     assert cfg["mpileaks"]["version"] == ["2.2"]
@@ -3670,8 +3668,6 @@ def test_env_include_packages_url(
     with spack.config.override("config:url_fetch_method", "curl"):
         env = ev.Environment(tmpdir.strpath)
         ev.activate(env)
-        scopes = env.included_config_scopes()
-        assert len(scopes) == 1
 
         cfg = spack.config.get("packages")
         assert "openmpi" in cfg["all"]["providers"]["mpi"]

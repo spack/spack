@@ -122,7 +122,7 @@ def _get_scope_and_section(args):
     if not section and not scope:
         env = ev.active_environment()
         if env:
-            scope = env.env_file_config_scope_name()
+            scope = env.scope_name
 
     # set scope defaults
     elif not scope:
