@@ -13,6 +13,12 @@ log = SpackCommand("log")
 
 
 def test_dump_logs(install_mockery, mock_fetch, mock_archive, mock_packages):
+    """Test that ``spack log`` can find (and print) the logs for partial
+    builds and completed installs.
+
+    Also make sure that for compressed logs, that we automatically
+    decompress them.
+    """
     spec = spack.spec.Spec("libelf").concretized()
 
     # Sanity check, make sure this test is checking what we want: to
