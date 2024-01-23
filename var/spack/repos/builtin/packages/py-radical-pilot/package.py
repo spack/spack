@@ -21,12 +21,13 @@ class PyRadicalPilot(PythonPackage):
 
     version("develop", branch="devel")
     version("1.46.1", sha256="4fcb58e9a1dfabade5aa85e76bf46a1d3b8394787423d943d47dfa0b5627188f")
-    version("1.42.0", sha256="ed03f0174dd18b7f761cba526bbd4e07e051ea02d56b650dacf505bc1f0c74ca")
     version("1.39.0", sha256="7ba0bfa3258b861db71e73d52f0915bfb8b3ac1099badacf69628307cab3b913")
-    version("1.34.0", sha256="2827f5405de37dc71616ec4fbe310bd6c32567316d5cb5023631d56aaa15c28a")
-    version("1.21.0", sha256="8d70f6869b85c6d258a14b27466c3495821f52cd25340216425bd2eccde7c6fa")
-    version("1.20.0", sha256="a0747e573a01a856dc330797dbee158f7e1cf8652001dc26f06a1d6c5e553bc6")
 
+    version(
+        "1.20.0",
+        sha256="a0747e573a01a856dc330797dbee158f7e1cf8652001dc26f06a1d6c5e553bc6",
+        deprecated=True,
+    )
     version(
         "1.18.1",
         sha256="fd6a0ffaa727b6b9bab35d8f2dc300bf4d9c4ff3541136d83560aa7b853d6100",
@@ -98,20 +99,14 @@ class PyRadicalPilot(PythonPackage):
         deprecated=True,
     )
 
-    depends_on("py-radical-utils@1.43:", type=("build", "run"), when="@1.42:")
+    depends_on("py-radical-gtod", type=("build", "run"))
+    depends_on("py-radical-saga", type=("build", "run"))
 
-    depends_on("py-radical-saga@1.40:", type=("build", "run"), when="@1.40:")
-    depends_on("py-radical-gtod@1.40:", type=("build", "run"), when="@1.40:")
+    depends_on("py-radical-utils@1.46:", type=("build", "run"), when="@1.46:")
 
     depends_on("py-radical-utils@1.39", type=("build", "run"), when="@1.39")
-    depends_on("py-radical-saga@1.39", type=("build", "run"), when="@1.39")
-    depends_on("py-radical-gtod@1.39", type=("build", "run"), when="@1.39")
 
-    depends_on("py-radical-utils@:1.33", type=("build", "run"), when="@:1.34")
-    depends_on("py-radical-saga@:1.34", type=("build", "run"), when="@:1.34")
-    depends_on("py-radical-gtod@1.20.1", type=("build", "run"), when="@:1.34")
-
-    depends_on("py-pymongo@:3", type=("build", "run"), when="@:1.39")
+    depends_on("py-pymongo@:3", type=("build", "run"), when="@1.39")
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-dill", type=("build", "run"))

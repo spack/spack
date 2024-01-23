@@ -20,11 +20,13 @@ class PyRadicalEntk(PythonPackage):
 
     version("develop", branch="devel")
     version("1.46.0", sha256="1f2cede29eb76592483be8d088fdd9d62e8646e7471041ea7c3099cc7c426f27")
-    version("1.42.0", sha256="7bc9566897ea7fb46b65971c194f01724aa710edc1817d6fcd973cea7f6a061b")
     version("1.39.0", sha256="72d64b25df9f3cb1dcbc32323a669d86d947cf07d15bed91cfedca2a99fb3ef1")
-    version("1.34.0", sha256="b0951c31e95ac1efaa6c733f2182830506243735e2fa6ffd48be7bfb2f222c84")
-    version("1.20.0", sha256="1b9fc470b926a93528fd2a898636bdcd1c565bd58ba47608f9bead811d8a46d7")
 
+    version(
+        "1.20.0",
+        sha256="1b9fc470b926a93528fd2a898636bdcd1c565bd58ba47608f9bead811d8a46d7",
+        deprecated=True,
+    )
     version(
         "1.18.0",
         sha256="049f70ec7e95819ec0ea706ee6275db04799ceff119dd7b675ef0d36d814de6f",
@@ -76,20 +78,11 @@ class PyRadicalEntk(PythonPackage):
         deprecated=True,
     )
 
-    depends_on("py-radical-utils@1.40:", type=("build", "run"), when="@1.40:")
-    depends_on("py-radical-pilot@1.40:", type=("build", "run"), when="@1.40:")
+    depends_on("py-radical-utils@1.46:", type=("build", "run"), when="@1.46:")
+    depends_on("py-radical-pilot@1.46:", type=("build", "run"), when="@1.46:")
 
     depends_on("py-radical-utils@1.39", type=("build", "run"), when="@1.39")
     depends_on("py-radical-pilot@1.39", type=("build", "run"), when="@1.39")
-
-    depends_on("py-radical-utils@:1.33", type=("build", "run"), when="@:1.34")
-    depends_on("py-radical-pilot@1.34", type=("build", "run"), when="@1.34")
-
-    depends_on("py-radical-pilot@:1.21", type=("build", "run"), when="@1.20")
-
-    depends_on("py-packaging", type=("build", "run"), when="@1.20")
-    depends_on("py-pika@0.13.0", type=("build", "run"), when="@1.20")
-    depends_on("py-requests", type=("build", "run"), when="@1.20")
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")

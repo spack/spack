@@ -20,13 +20,13 @@ class PyRadicalUtils(PythonPackage):
 
     version("develop", branch="devel")
     version("1.46.0", sha256="aca199f91cd70a2c6a7c2e258969ee0db6c3451889a957fbb8c73f69c59245c4")
-    version("1.43.0", sha256="9248d5a2f5b8e183eef79deb4968cd80c3bfbeff4996a2016c8e04a021928cd9")
-    version("1.42.0", sha256="92e1f5a18aedd032e5e49c2b2db9cf8b94e0dd9c1ae9e87fa4e03b48a685150c")
     version("1.39.0", sha256="fade87ee4c6ccf335d5e26d5158ce22ee891e4d4c576464274999ddf36dc4977")
-    version("1.33.0", sha256="1a46b4b523154c0b59d6e65c2c482fc2ca4a4fa87a3527b32691693540f06e7a")
-    version("1.23.0", sha256="abd40169e27c9fef1471e85c8a9aa5be3048b71d88978776615e85fef449e5b3")
-    version("1.20.0", sha256="9b39dd616d70c387fb3f97d3510a506bac92c159b6482c3aebd3d11eeaeebcc9")
 
+    version(
+        "1.20.0",
+        sha256="9b39dd616d70c387fb3f97d3510a506bac92c159b6482c3aebd3d11eeaeebcc9",
+        deprecated=True,
+    )
     version(
         "1.18.1",
         sha256="5b3ab15417a1ef82f63f8a77763a177d6bc59b61a80823be0df8c0f7502d9b3e",
@@ -93,7 +93,7 @@ class PyRadicalUtils(PythonPackage):
         deprecated=True,
     )
 
-    depends_on("py-pymongo@:3", type=("build", "run"), when="@:1.39")
+    depends_on("py-pymongo@:3", type=("build", "run"), when="@1.39")
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-colorama", type=("build", "run"))

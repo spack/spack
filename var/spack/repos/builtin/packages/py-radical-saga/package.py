@@ -22,12 +22,13 @@ class PyRadicalSaga(PythonPackage):
 
     version("develop", branch="devel")
     version("1.46.0", sha256="71288c592a32b080a797abea98de6dbb71da5a8032b4dc7021b0813584a02344")
-    version("1.42.0", sha256="5681a590a058313356e2b8ad9cd6759cb3e08e1a8b04ced55d97a3325ddef996")
     version("1.39.0", sha256="0fea8103d3f96c821c977bcb55ff1c6a9844de727539b182dda4cbc2570df791")
-    version("1.34.0", sha256="28e1e8bc089c4d6c27a6d7b73d34c5c6f52b188c8432bff31fab4c1fcdd212b7")
-    version("1.22.0", sha256="890bfea5b324dd0180a6ed007e7f40b63437cb20f258923465ffa926c87a7b1b")
-    version("1.20.0", sha256="d85f3ed564d9eaf3ead2aa349c854e944ca459492ebf88542404106fce4204ab")
 
+    version(
+        "1.20.0",
+        sha256="d85f3ed564d9eaf3ead2aa349c854e944ca459492ebf88542404106fce4204ab",
+        deprecated=True,
+    )
     version(
         "1.18.0",
         sha256="544d4ffafc0b311151724db371ee11e27744103068748962866351ce31ccb810",
@@ -79,11 +80,9 @@ class PyRadicalSaga(PythonPackage):
         deprecated=True,
     )
 
-    depends_on("py-radical-utils@1.40:", type=("build", "run"), when="@1.40:")
+    depends_on("py-radical-utils@1.46:", type=("build", "run"), when="@1.46:")
 
     depends_on("py-radical-utils@1.39", type=("build", "run"), when="@1.39")
-
-    depends_on("py-radical-utils@:1.34", type=("build", "run"), when="@:1.34")
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-apache-libcloud", type=("build", "run"))
