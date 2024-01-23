@@ -49,6 +49,8 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant("openmp", default=True, description="Activates OpenMP support")
     variant("mpi", default=True, description="Activates MPI support")
 
+    patch("fujitsu.patch", when="%fj")
+
     depends_on("autoconf", type="build", when="@master")
     depends_on("automake", type="build", when="@master")
 
@@ -125,7 +127,7 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
         if spec.target.family != "x86_64":
             options.append("--disable-sse-assembly")
 
-        if "%aocc" in spec:
+        if "%aocc" in spec or "%fj" in spec:
             options.append("--disable-shared")
             options.append("--enable-static")
 
@@ -138,6 +140,12 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         if "%aocc" in spec:
             options.extend(["FCFLAGS=-O3", "CFLAGS=-O3"])
+
+        if "%fj" in spec:
+            options.append("--disable-Fortran2008-features")
+            options.append("--enable-FUGAKU")
+            if "+openmp" in spec:
+                options.extend(["FCFLAGS=-Kparallel"])
 
         cuda_flag = "nvidia-gpu"
         if "+cuda" in spec:
