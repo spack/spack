@@ -741,8 +741,8 @@ class BaseContext(tengine.Context):
             dep.package.setup_dependent_run_environment(env, self.spec)
         self.spec.package.setup_run_environment(env)
 
-        # Apply projections if any
-        if view:
+        # Project the environment variables from prefix to view if needed
+        if view and self.spec in view:
             spack.user_environment.project_env_mods(
                 *self.spec.traverse(deptype=dt.LINK | dt.RUN), view=view, env=env
             )

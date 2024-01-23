@@ -2064,7 +2064,7 @@ class Environment:
             self.regenerate_views()
             spack.hooks.post_env_write(self)
 
-        self.new_specs = []
+        self.new_specs.clear()
 
     def update_lockfile(self) -> None:
         with fs.write_tmp_and_move(self.lock_path) as f:
