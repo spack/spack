@@ -4,6 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import tempfile
+
+import llnl.util.filesystem as fs
+import llnl.util.tty as tty
 
 import spack.cmd
 import spack.environment as ev
@@ -37,7 +41,7 @@ def log(parser, args):
 
     if spec.installed:
         log_path = spec.package.install_log_path
-    elif os.path.exists(pkg.stage.path):
+    elif os.path.exists(spec.package.stage.path):
         log_path = spec.package.log_path
     else:
         tty.die(f"{specs[0]} is not installed or staged")
@@ -53,14 +57,18 @@ def log(parser, args):
         else:
             decompressor = compression.decompressor_for(log_path, extension=compression_ext)
             with tempfile.TemporaryDirectory() as temp_dir:
-                decompressor(log_path)
-                result = os.listdir(".")
-                if len(result) < 1:
-                    tty.die(f"Detected compressed log for {specs[0]}, but could not decompress {log_path}")
-                elif len(result) > 1:
-                    tty.die(f"Compressed log {log_path} expanded to more than 1 file")
-                else:
-                    fstream = open(result[0], "r")
+                with fs.working_dir(temp_dir):
+                    decompressor(log_path)
+                    result = os.listdir(".")
+                    if len(result) < 1:
+                        tty.die(
+                            f"Detected compressed log for {specs[0]},"
+                            f" but could not decompress {log_path}"
+                        )
+                    elif len(result) > 1:
+                        tty.die(f"Compressed log {log_path} expanded to more than 1 file")
+                    else:
+                        fstream = open(result[0], "r")
 
         line = fstream.readline()
         while line:
