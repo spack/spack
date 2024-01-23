@@ -2767,7 +2767,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
 
         Raises:
             SpackEnvironmentError: if the manifest includes a remote file but
-            no configuration stage directory has been identified
+                no configuration stage directory has been identified
         """
         scopes = []
 
