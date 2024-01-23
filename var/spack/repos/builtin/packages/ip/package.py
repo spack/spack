@@ -104,6 +104,7 @@ class Ip(CMakePackage):
             env.set("IP_LIB" + suffix, lib[0])
             env.set("IP_INC" + suffix, join_path(self.prefix, "include_" + suffix))
 
+    @when("@4:")
     def check(self):
         with working_dir(self.builder.build_directory):
             make("test")
