@@ -2064,9 +2064,6 @@ class Environment:
             self.regenerate_views()
             spack.hooks.post_env_write(self)
 
-        self._reset_new_specs()
-
-    def _reset_new_specs(self) -> None:
         self.new_specs = []
 
     def update_lockfile(self) -> None:
