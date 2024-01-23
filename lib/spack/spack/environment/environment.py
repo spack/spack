@@ -2763,9 +2763,11 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         This routine returns them in the order they should be pushed onto
         the internal scope stack (so, in reverse, from lowest to highest).
 
-        Returns:  Configuration scopes associated with the environment manifest
+        Returns: Configuration scopes associated with the environment manifest
 
-        Raises: SpackEnvironmentError: if no configuration stage dir when needed
+        Raises:
+            SpackEnvironmentError: if the manifest includes a remote file but
+                no configuration stage directory has been identified
         """
         scopes = []
 
@@ -2788,7 +2790,8 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             elif include_url.scheme in ("http", "https", "ftp"):
                 if self.config_stage_dir is None:
                     raise SpackEnvironmentError(
-                        "Unable to fetch remote configuration file(s) since the stage directory for the environment is not known."
+                        "Unable to fetch remote configuration file(s) since "
+                        "the stage directory for the environment is not known."
                     )
 
                 # Stage any remote configuration file(s)
