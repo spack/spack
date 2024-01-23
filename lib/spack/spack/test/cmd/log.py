@@ -35,6 +35,12 @@ here to test multiple lines
 
     install = SpackCommand("install")
     install("libelf")
+
+    # Sanity check: make sure a path is recorded, regardless of whether
+    # it exists (if it does exist, we will overwrite it with content
+    # in this test)
+    assert spec.package.install_log_path
+
     with tempfile.NamedTemporaryFile() as temp_file:
         with open(temp_file.name, "w") as decompressed:
             decompressed.write(installed_log_content)
