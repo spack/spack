@@ -496,7 +496,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
         with self.make_briefly_writable(config_dot_pm):
             match = "cc *=>.*"
-            substitute = "cc => '{cc}',".format(cc=self.compiler.cc)
+            substitute = "cc => '{cc}',".format(cc=os.path.basename(self.compiler.cc))
             filter_file(match, substitute, config_dot_pm, **kwargs)
 
         # And the path Config_heavy.pl
@@ -505,11 +505,11 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
         with self.make_briefly_writable(config_heavy):
             match = "^cc=.*"
-            substitute = "cc='{cc}'".format(cc=self.compiler.cc)
+            substitute = "cc='{cc}'".format(cc=os.path.basename(self.compiler.cc))
             filter_file(match, substitute, config_heavy, **kwargs)
 
             match = "^ld=.*"
-            substitute = "ld='{ld}'".format(ld=self.compiler.cc)
+            substitute = "ld='{ld}'".format(ld=os.path.basename(self.compiler.cc))
             filter_file(match, substitute, config_heavy, **kwargs)
 
             match = "^ccflags='"
