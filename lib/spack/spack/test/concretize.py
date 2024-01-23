@@ -1522,6 +1522,21 @@ class TestConcretize:
         s = Spec("sticky-variant %clang").concretized()
         assert s.satisfies("%clang") and s.satisfies("~allow-gcc")
 
+    @pytest.mark.only_clingo("Original concretizer cannot use sticky variants")
+    def test_sticky_variant_in_external(self):
+        # setup external for sticky-variant+allow-gcc
+        config = {
+            "externals": [{
+                "spec": "sticky-variant@1.0+allow-gcc",
+                "prefix": "/fake/path",
+            }],
+            "buildable": False
+        }
+        spack.config.set("packages:sticky-variant", config)
+
+        s = Spec("sticky-variant%gcc").concretized()
+        assert s.satisfies("%gcc") and s.satisfies("+allow-gcc") and s.external
+
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
     def test_do_not_invent_new_concrete_versions_unless_necessary(self):
         # ensure we select a known satisfying version rather than creating
