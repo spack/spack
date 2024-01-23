@@ -35,6 +35,8 @@ class NvplLapack(Package):
         multi=False,
     )
 
+    requires("target=armv8.2a:", msg="Any CPU with Arm-v8.2a+ microarch")
+
     conflicts("%gcc@:7")
     conflicts("%clang@:13")
 
