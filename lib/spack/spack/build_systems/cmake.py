@@ -318,15 +318,28 @@ class CMakeBuilder(BaseBuilder):
                 [define("CMAKE_FIND_FRAMEWORK", "LAST"), define("CMAKE_FIND_APPBUNDLE", "LAST")]
             )
 
-        _maybe_set_python_hints(pkg, args)
-
         # Disable CMake User Package Registry
+        # Do not populate CMake User Package Registry
         if pkg.spec.satisfies("^cmake@3.15:"):
             # see https://cmake.org/cmake/help/latest/policy/CMP0090.html
             args.append(define("CMAKE_POLICY_DEFAULT_CMP0090", "NEW"))
         elif pkg.spec.satisfies("^cmake@3.1:3.14"):
             # see https://cmake.org/cmake/help/latest/variable/CMAKE_EXPORT_NO_PACKAGE_REGISTRY.html
             args.append(define("CMAKE_EXPORT_NO_PACKAGE_REGISTRY", True))
+
+        # Do not use CMake User/System Package Registry
+        # https://cmake.org/cmake/help/latest/manual/cmake-packages.7.html#disabling-the-package-registry
+        if pkg.spec.satisfies("^cmake@3.16:"):
+            args.append(define("CMAKE_FIND_USE_PACKAGE_REGISTRY", False))
+        elif pkg.spec.satisfies("^cmake@3.1:3.15"):
+            args.extend(
+                [
+                    define("CMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY", False),
+                    define("CMAKE_FIND_PACKAGE_NO_SYSTEM_PACKAGE_REGISTRY", False),
+                ]
+            )
+
+        _maybe_set_python_hints(pkg, args)
 
         # Set up CMake rpath
         args.extend(
