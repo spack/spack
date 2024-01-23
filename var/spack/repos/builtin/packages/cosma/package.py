@@ -41,7 +41,7 @@ class Cosma(CMakePackage):
     variant("cuda", default=False, description="Build with cuBLAS support")
     variant("rocm", default=False, description="Build with rocBLAS support")
     variant("scalapack", default=False, description="Build with ScaLAPACK API")
-    variant("shared", default=False, description="Build the shared library version")
+    variant("shared", default=True, description="Build the shared library version")
     variant("tests", default=False, description="Build tests")
     variant("apps", default=False, description="Build miniapp")
     variant("profiling", default=False, description="Enable profiling")
