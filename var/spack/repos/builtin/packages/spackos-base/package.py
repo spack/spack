@@ -3,19 +3,17 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.build_systems.generic import PackageNoDep
-from spack.build_systems.gnu import GNUMirrorPackageNoDep
+from spack.build_systems.bundle import BundlePackageNoDep
 from spack.package import *
 
 
-class SpackosBase(PackageNoDep, GNUMirrorPackageNoDep):
+class SpackosBase(BundlePackageNoDep):
     homepage = "https://github.com/spack/spack"
-    gnu_mirror_path = "libc/glibc-2.33.tar.gz"
     # NOTE: this refers to glibc's 2.38 tarball to shut up the URL fetcher
-    version("2.38", sha256="16e51e0455e288f03380b436e41d5927c60945abd86d0c9852b84be57dd6ed5e", expand=False)
+    version("0")
 
-    depends_on("glibc+stage1")
-    depends_on("libxcrypt+stage1")
+    depends_on("glibc+stage2")
+    depends_on("libxcrypt+stage2")
 
     def install(self, spec, prefix):
         with open(prefix.see_i_installed_something, "w+") as f:

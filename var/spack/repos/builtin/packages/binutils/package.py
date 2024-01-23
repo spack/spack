@@ -88,7 +88,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     )
 
     variant(
-        "stage0",
+        "stage1",
         default=False,
         description="build a spack sysroot bootstrap compiler, DO NOT USE unless you know what this means"
         )
@@ -136,7 +136,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     # pkg-config is used to find zstd in gas/configure
     depends_on("pkgconfig", type="build")
     depends_on("zstd@1.4.0:", when="@2.40:")
-    depends_on("zlib-api", when="~stage0")
+    depends_on("zlib-api", when="~stage1")
 
     depends_on("diffutils", type="build")
     depends_on("gettext", when="+nls")
@@ -272,7 +272,7 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
         args.append(
             f"--program-prefix={target_prefix}{extra}",
         )
-        if '~stage0' in self.spec:
+        if '~stage1' in self.spec:
             args.append("--with-system-zlib")
         else:
             # todo, if we want to support other kernels here

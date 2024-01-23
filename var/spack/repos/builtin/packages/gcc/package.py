@@ -154,12 +154,12 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         when="+bootstrap %gcc",
     )
     variant(
-        "stage0",
+        "stage1",
         default=False,
         description="build a spackos cross bootstrap compiler, DO NOT USE unless you know what this means"
         )
     variant(
-        "stage1",
+        "stage2",
         default=False,
         description="build a spack bootstrap compiler, DO NOT USE unless you know what this means"
         )
@@ -170,33 +170,13 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     )
     # PGO runs tests, which requires `runtest` from dejagnu
     depends_on("dejagnu", when="+pgo", type="build")
-    # with when("+stage1"):
-    #     # use in-tree gmp to avoid needing gettext, mpc and mpfr need gmp too
-    #     resource(
-    #         name="gmp",
-    #         url="https://ftp.gnu.org/gnu/gmp/gmp-6.1.2.tar.bz2",
-    #         sha256="5275bb04f4863a13516b2f39392ac5e272f5e1bb8057b18aec1c9b79d73d8fb2",
-    #         destination="gmp-base",
-    #     )
-    #     resource(
-    #         name="mpc",
-    #         url="https://ftp.gnu.org/gnu/mpc/mpc-1.3.1.tar.gz",
-    #         sha256="ab642492f5cf882b74aa0cb730cd410a81edcdbec895183ce930e706c1c759b8",
-    #         destination="mpc-base",
-    #     )
-    #     resource(
-    #         name="mpfr",
-    #         url="https://ftp.gnu.org/gnu/mpfr/mpfr-4.2.0.tar.bz2",
-    #         sha256="691db39178e36fc460c046591e4b0f2a52c8f2b3ee6d750cc2eab25f1eaa999d",
-    #         destination="mpfr-base",
-    #     )
 
-    conflicts("~binutils", when="+stage1")
+    conflicts("~binutils", when="+stage2")
     depends_on("flex", type="build", when="@master")
 
     # https://gcc.gnu.org/install/prerequisites.html
     depends_on("gmp@4.3.2:")
-    depends_on("gmp ~stage1", when="~stage1")
+    depends_on("gmp ~stage2", when="~stage2")
     # mawk is not sufficient for go support
     depends_on("gawk@3.1.5:", type="build")
     depends_on("texinfo@4.7:", type="build")
@@ -211,9 +191,13 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     # GCC 7.3 does not compile with newer releases on some platforms, see
     #   https://github.com/spack/spack/issues/6902#issuecomment-433030376
-    depends_on("mpfr@2.4.2:3.1.6")
-    depends_on("mpfr@3.1.0:")
-    depends_on("mpc@1.0.1:")
+    depends_on("mpfr@2.4.2:3.1.6", when="@:9.9")
+    depends_on("mpfr@3.1.0:", when="@10:")
+    depends_on("mpc@1.0.1:", when="@4.5:")
+    # newer versions somehow result in a link problem during gcc configure in spackos
+    # bootstrap during stage1
+    depends_on("mpfr@2.4.2:3.1.6", when="+stage1")
+    depends_on("mpfr@2.4.2:3.1.6", when="+stage2")
     # Already released GCC versions do not support any newer version of ISL
     #   GCC 5.4 https://github.com/spack/spack/issues/6902#issuecomment-433072097
     #   GCC 7.3 https://github.com/spack/spack/issues/6902#issuecomment-433030376
@@ -740,7 +724,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                     r"m64=\1lib",
                     "gcc/config/i386/t-linux64",
                 )
-            if '~stage1' in self.spec:
+            if '~stage2' in self.spec:
                 for f in ("libgcc/Makefile.in", "libstdc++-v3/include/Makefile.in"):
                     filter_file(
                         r"@thread_header@",
@@ -900,9 +884,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 f"FLAGS_FOR_TARGET={common_flags} {ldflags}",
                 f"LDFLAGS_FOR_TARGET={common_flags} {ldflags}",
             ])
-        if "+stage0" in self.spec or '+stage1' in self.spec:
+        if "+stage1" in self.spec or '+stage2' in self.spec:
             # set up links to binutils, required for gcc to build this way
-            if '+stage1' in self.spec:
+            if '+stage2' in self.spec:
                 options.extend([
                     '--build=' + self.spec.host_triple,
                     f'--target={self.spec.target_triple}',
@@ -942,7 +926,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                         "--enable-languages=c,c++",
                         ]
                     )
-            if '+stage1' not in self.spec:
+            if '+stage2' not in self.spec:
                 return options
 
         # Avoid excessive realpath/stat calls for every system header
@@ -1027,7 +1011,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
 
     def my_flag_handler(self, name, flags):
-        if self.spec.satisfies("+stage1"):
+        if self.spec.satisfies("+stage2"):
             if name == "cxxflags":
                 cxx_inc_base = self.spec.prefix.include.join("c++").join(str(self.spec.version))
                 flags.append('-I')
@@ -1046,7 +1030,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         return (flags, None, None)
 
     flag_handler = my_flag_handler
-    @run_before("configure", when="+stage1")
+    @run_before("configure", when="+stage2")
     def bootstrap_libstdcxx(self):
         args = self.configure_args()
         lib_build_dir = join_path(self.build_directory, "libstdc++-v3")
@@ -1136,8 +1120,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     @run_after("install")
     def generate_limits(self):
-        if '+stage0' in self.spec:
-            # in stage0 we're building without glibc existing, need to create limits.h manually
+        if '+stage1' in self.spec:
+            # in stage1 we're building without glibc existing, need to create limits.h manually
             limits = ""
             files = ["limitx.h", "glimits.h", "limity.h"]
             for f in files:
@@ -1207,7 +1191,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         # Find which directories have shared libraries
         rpath_libdirs = []
         prefixes = [self.prefix]
-        if '+stage1' in self.spec:
+        if '+stage2' in self.spec:
             prefixes.append(self.spec['glibc'].prefix)
         for pfx in prefixes:
             for dir in ["lib", "lib64"]:

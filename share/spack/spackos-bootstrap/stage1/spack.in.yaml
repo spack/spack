@@ -6,8 +6,8 @@ spack:
   include:
     - compilers.yaml
   specs:
-  - binutils +stage0
-  - gcc @13.2.0 +stage0 +binutils ~bootstrap languages=c,c++
+  - binutils +stage1
+  - gcc @13.2.0 +stage1 +binutils ~bootstrap languages=c,c++
   - gawk
   - bison
   view: true

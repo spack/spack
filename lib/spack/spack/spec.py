@@ -1748,7 +1748,7 @@ class Spec:
         p = self.platform
         # TODO: actually get the libc
         libc = "gnu"
-        if '+stage0' in self or '+stage1' in self:
+        if '+stage1' in self or '+stage2' in self:
             # we are bootstrapping spack, it's the target
             o = "spack"
         else:

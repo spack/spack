@@ -25,8 +25,8 @@ spack:
       require:
         - 'os=spack'
         - 'target=x86_64_v3,aarch64'
-        - '~stage0'
-        - '+stage1'
+        - '~stage1'
+        - '+stage2'
         - '%gcc@=13.2.0'
     linux-headers:
       require:

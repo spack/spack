@@ -12,7 +12,7 @@ class Libxcrypt(AutotoolsPackageNoDep):
 
     homepage = "https://github.com/besser82/libxcrypt"
     url = "https://github.com/besser82/libxcrypt/releases/download/v4.4.30/libxcrypt-4.4.30.tar.xz"
-    tags = ["build-tools"]
+    tags = ["build-tools", "runtime"]
     maintainers("haampie")
 
     def url_for_version(self, version):
@@ -40,14 +40,14 @@ class Libxcrypt(AutotoolsPackageNoDep):
         description="Enable all compatibility interfaces",
         when="@4.4.30:",
     )
-    variant("stage1", default=False)
-    depends_on("glibc+stage1", when="+stage1")
-    depends_on("glibc~stage1", when="~stage1")
+    variant("stage2", default=False)
+    depends_on("glibc+stage2", when="+stage2")
+    depends_on("glibc~stage2", when="~stage2")
     depends_on("glibc", when="os=spack")
 
     patch("truncating-conversion.patch", when="@4.4.30")
 
-    with when("~stage1"):
+    with when("~stage2"):
         with when("@:4.4.17"):
             depends_on("autoconf", type="build")
             depends_on("automake@1.14:", type="build")

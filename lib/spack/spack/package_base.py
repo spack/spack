@@ -686,9 +686,6 @@ class PackageBaseNoDep(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     #: TestSuite instance used to manage stand-alone tests for 1+ specs.
     test_suite: Optional["TestSuite"] = None
 
-    # spack.directives.variant("spackos", default=False)
-    # spack.directives.depends_on("glibc", when="+spackos os=spack")
-
     def __init__(self, spec):
         # this determines how the package should be built.
         self.spec: "spack.spec.Spec" = spec

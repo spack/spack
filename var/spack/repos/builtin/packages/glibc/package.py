@@ -20,6 +20,7 @@ class Glibc(AutotoolsPackageNoDep, GNUMirrorPackageNoDep):
     homepage = "https://www.gnu.org/software/libc/"
     gnu_mirror_path = "libc/glibc-2.33.tar.gz"
     git = "https://sourceware.org/git/glibc.git"
+    tags = ["build-tools", "runtime"]
 
     maintainers("haampie")
 
@@ -64,8 +65,8 @@ class Glibc(AutotoolsPackageNoDep, GNUMirrorPackageNoDep):
     version("2.5", sha256="16d3ac4e86eed75d85d80f1f214a6bd58d27f13590966b5ad0cc181df85a3493")
 
 
-    variant("stage1", default=False)
-    provides("iconv", when="+stage1")
+    variant("stage2", default=False)
+    provides("iconv", when="+stage2")
 
     # Fix for newer GCC, related to -fno-common
     patch("locs.patch", when="@2.23:2.25")
@@ -165,10 +166,10 @@ class Glibc(AutotoolsPackageNoDep, GNUMirrorPackageNoDep):
 
     # This is an absolutely wretched hack to allow building a glibc that doesn't pollute
     # the new environment.  It should go away as soon as we have a way.
-    with when("~stage1"):
+    with when("~stage2"):
         depends_on("bison", type="build")
         depends_on("texinfo", type="build")
-        depends_on("gettext", type="build", when="~stage1")
+        depends_on("gettext", type="build", when="~stage2")
         depends_on("perl", type="build")
         depends_on("gawk", type="build")
         depends_on("sed", type="build")

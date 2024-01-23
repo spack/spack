@@ -30,7 +30,7 @@ class Gmp(AutotoolsPackage, GNUMirrorPackage):
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
     # only required when developing
-    depends_on("gettext", when="~stage1")
+    depends_on("gettext", when="~stage2")
 
     variant(
         "libs",
@@ -41,12 +41,11 @@ class Gmp(AutotoolsPackage, GNUMirrorPackage):
     )
     variant("cxx", default=True, description="Enable C++ support")
     variant(
-        "stage1",
+        "stage2",
         default=False,
         description="build a spack bootstrap compiler, DO NOT USE unless you know what this means"
         )
-    # depends_on("libstdcxx+stage1", when="+stage1")
-    conflicts("+cxx", when="+stage1")
+    conflicts("+cxx", when="+stage2")
 
 
     # avoid using register x18 on aarch64 machines to prevent segfaults
@@ -72,22 +71,4 @@ class Gmp(AutotoolsPackage, GNUMirrorPackage):
         args += self.enable_or_disable("libs")
         if "libs=static" in self.spec:
             args.append("--with-pic")
-        if '+stage1' in self.spec:
-            glibc = self.spec['glibc']
-            common_flags=(" ".join([
-                '-isystem ' ,
-                glibc.prefix.include,
-                '--sysroot=/',
-                '-B ', glibc.prefix,
-                "-B", glibc.prefix.lib,
-            ]))
-            args.extend(
-                [
-                    'CFLAGS=' + common_flags,
-                    'LDFLAGS=' + (" ".join([
-                        common_flags,
-                        glibc.package.dynamic_linker_flag,
-                    ])),
-                ]
-            )
         return args
