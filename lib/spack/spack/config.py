@@ -35,7 +35,7 @@ import functools
 import os
 import re
 import sys
-from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Type, Union
+from typing import Any, Callable, Dict, Generator, List, Mapping, Optional, Tuple, Type, Union
 
 from llnl.util import filesystem, lang, tty
 
@@ -113,7 +113,7 @@ SCOPES_METAVAR = "{defaults,system,site,user}[/PLATFORM] or env:ENVIRONMENT"
 _OVERRIDES_BASE_NAME = "overrides-"
 
 #: Type used for raw YAML configuration
-YamlConfigDict = Dict[str, Any]
+YamlConfigDict = Mapping[str, Any]
 
 
 class ConfigScope:
