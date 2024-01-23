@@ -2305,12 +2305,6 @@ class SpackSolverSetup:
         node_counter = _create_counter(specs, tests=self.tests)
         self.possible_virtuals = node_counter.possible_virtuals()
         self.pkgs = node_counter.possible_dependencies()
-
-        # TODO: unify this under an abstract operation
-        self.possible_virtuals.add("gfortran")
-        self.possible_virtuals.add("ifcore")
-        self.possible_virtuals.add("fortran-rt")
-
         self.pkgs.update(spack.repo.PATH.packages_with_tags("runtime"))
 
         # Fail if we already know an unreachable node is requested
@@ -2326,6 +2320,7 @@ class SpackSolverSetup:
                 self.explicitly_required_namespaces[node.name] = node.namespace
 
         self.gen = ProblemInstanceBuilder()
+        self.add_runtime_virtuals()
 
         if not allow_deprecated:
             self.gen.fact(fn.deprecated_versions_not_allowed())
@@ -2451,6 +2446,12 @@ class SpackSolverSetup:
 
         path = os.path.join(parent_dir, "concretize.lp")
         parse_files([path], visit)
+
+    def add_runtime_virtuals(self):
+        """Explicitly add the virtuals that might be attached dynamically by runtimes"""
+        for vpkg in ("fortran-rt", "ifcore", "gfortran"):
+            self.possible_virtuals.add(vpkg)
+            self.gen.fact(fn.possible_in_link_run(vpkg))
 
     def define_runtime_constraints(self):
         """Define the constraints to be imposed on the runtimes"""
