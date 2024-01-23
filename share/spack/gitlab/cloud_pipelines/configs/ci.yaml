@@ -11,6 +11,8 @@ ci:
   pipeline-gen:
   - build-job:
       before_script-:
+      - - cat /proc/loadavg || true
+        - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
       - - spack list --count  # ensure that spack's cache is populated
       - - spack env activate --without-view ${SPACK_CONCRETE_ENV_DIR}
         - spack compiler list
@@ -30,6 +32,7 @@ ci:
           ${SPACK_ARTIFACTS_ROOT}/user_data/install_times.json
       after_script:
       - - cat /proc/loadavg || true
+        - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
       variables:
         CI_JOB_SIZE: "default"
         CI_GPG_KEY_ROOT: /mnt/key
