@@ -781,17 +781,6 @@ def _create_environment(path):
     return Environment(path)
 
 
-def env_subdir_path(manifest_dir: Union[str, pathlib.Path]) -> str:
-    """Path to where the environment stores repos, logs, views, configs.
-
-    Args:
-        manifest_dir:  directory containing the environment manifest file
-
-    Returns:  directory the environment uses to manage its files
-    """
-    return os.path.join(str(manifest_dir), env_subdir_name)
-
-
 class Environment:
     """A Spack environment, which bundles together configuration and a list of specs."""
 
@@ -832,7 +821,7 @@ class Environment:
     def _load_manifest_file(self):
         """Instantiate and load the manifest file contents into memory."""
         with lk.ReadTransaction(self.txlock):
-            self.manifest = EnvironmentManifestFile(self.path)
+            self.manifest = EnvironmentManifestFile(self.path, self.config_stage_dir)
             with self.manifest.use_config():
                 self._read()
 
@@ -972,7 +961,7 @@ class Environment:
         """The location of the lock file used to synchronize multiple
         processes updating the same environment.
         """
-        return os.path.join(env_subdir_path(self.path), "transaction_lock")
+        return os.path.join(self.env_subdir_path, "transaction_lock")
 
     @property
     def lock_path(self):
@@ -985,13 +974,23 @@ class Environment:
         return self.lock_path + ".backup.v1"
 
     @property
+    def env_subdir_path(self):
+        """Directory where the environment stores repos, views, and configs."""
+        return os.path.join(str(self.path), env_subdir_name)
+
+    @property
     def repos_path(self):
-        return os.path.join(self.path, env_subdir_name, "repos")
+        return os.path.join(self.env_subdir_path, "repos")
+
+    @property
+    def config_stage_dir(self):
+        """Directory for any staged configuration file(s)."""
+        return os.path.join(self.env_subdir_path, "config")
 
     @property
     def view_path_default(self):
         # default path for environment views
-        return os.path.join(env_subdir_path(self.path), "view")
+        return os.path.join(self.env_subdir_path, "view")
 
     @property
     def repo(self):
@@ -2125,7 +2124,7 @@ class Environment:
         """
         fs.mkdirp(self.path)
         if dot_env:
-            fs.mkdirp(env_subdir_path(self.path))
+            fs.mkdirp(self.env_subdir_path)
 
     def update_environment_repository(self) -> None:
         """Updates the repository associated with the environment."""
@@ -2479,7 +2478,10 @@ class EnvironmentManifestFile(collections.abc.Mapping):
     """
 
     @staticmethod
-    def from_lockfile(manifest_dir: Union[pathlib.Path, str]) -> "EnvironmentManifestFile":
+    def from_lockfile(
+        manifest_dir: Union[pathlib.Path, str],
+        config_stage_dir: Optional[Union[pathlib.Path, str]] = None,
+    ) -> "EnvironmentManifestFile":
         """Returns an environment manifest file compatible with the lockfile already present in
         the environment directory.
 
@@ -2488,6 +2490,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
 
         Args:
              manifest_dir: directory containing the manifest and lockfile
+             config_stage_dir: directory for staging configuration files
         """
         # TBD: Should this be the abspath?
         manifest_dir = pathlib.Path(manifest_dir)
@@ -2498,15 +2501,20 @@ class EnvironmentManifestFile(collections.abc.Mapping):
 
         default_content = manifest_dir / manifest_name
         default_content.write_text(default_manifest_yaml())
-        manifest = EnvironmentManifestFile(manifest_dir)
+        manifest = EnvironmentManifestFile(manifest_dir, config_stage_dir)
         for item in user_specs:
             manifest.add_user_spec(item["spec"])
         manifest.flush()
         return manifest
 
-    def __init__(self, manifest_dir: Union[pathlib.Path, str]) -> None:
+    def __init__(
+        self,
+        manifest_dir: Union[pathlib.Path, str],
+        config_stage_dir: Optional[Union[pathlib.Path, str]] = None,
+    ) -> None:
         self.manifest_dir = pathlib.Path(manifest_dir)
         self.manifest_file = self.manifest_dir / manifest_name
+        self.config_stage_dir = config_stage_dir
         self.scope_name = f"env:{environment_name(self.manifest_dir)}"
 
         if not self.manifest_file.exists():
@@ -2745,15 +2753,6 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         return str(self.manifest_file)
 
     @property
-    def config_stage_dir(self) -> str:
-        """Path to locally staged environment configuration files as determined
-        by the location of the manifest file.
-
-        Returns:  directory for any staged environment configuration files.
-        """
-        return os.path.join(env_subdir_path(self.manifest_dir), "config")
-
-    @property
     def included_config_scopes(self) -> List[spack.config.ConfigScope]:
         """List of included configuration scopes from the manifest.
 
@@ -2765,12 +2764,15 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         the internal scope stack (so, in reverse, from lowest to highest).
 
         Returns:  Configuration scopes associated with the environment manifest
+
+        Raises:
+            SpackEnvironmentError: if the manifest includes a remote file but
+            no configuration stage directory has been identified
         """
         scopes = []
 
         # load config scopes added via 'include:', in reverse so that
         # highest-precedence scopes are last.
-        stage_dir = self.config_stage_dir
         includes = self[TOP_LEVEL_KEY].get("include", [])
         env_name = environment_name(self.manifest_dir)
         missing = []
@@ -2786,8 +2788,17 @@ class EnvironmentManifestFile(collections.abc.Mapping):
 
             # Any other URL should be fetched.
             elif include_url.scheme in ("http", "https", "ftp"):
+                if self.config_stage_dir is None:
+                    raise SpackEnvironmentError(
+                        "Unable to fetch remote configuration file(s) since the stage directory for the environment is not known."
+                    )
+
                 # Stage any remote configuration file(s)
-                staged_configs = os.listdir(stage_dir) if os.path.exists(stage_dir) else []
+                staged_configs = (
+                    os.listdir(self.config_stage_dir)
+                    if os.path.exists(self.config_stage_dir)
+                    else []
+                )
                 remote_path = urllib.request.url2pathname(include_url.path)
                 basename = os.path.basename(remote_path)
                 if basename in staged_configs:
@@ -2803,12 +2814,12 @@ class EnvironmentManifestFile(collections.abc.Mapping):
                     # Recognize the configuration stage directory
                     # is flattened to ensure a single copy of each
                     # configuration file.
-                    config_path = stage_dir
+                    config_path = self.config_stage_dir
                     if basename.endswith(".yaml"):
                         config_path = os.path.join(config_path, basename)
                 else:
                     staged_path = spack.config.fetch_remote_configs(
-                        config_path, stage_dir, skip_existing=True
+                        config_path, self.config_stage_dir, skip_existing=True
                     )
                     if not staged_path:
                         raise SpackEnvironmentError(
