@@ -11,14 +11,15 @@ class RoctracerDevApi(Package):
     package, mainly to avoid circular dependencies in the ROCm ecosystem.
     For the ROC-tracer library, please check out roctracer-dev."""
 
-    homepage = "https://github.com/ROCm-Developer-Tools/roctracer"
-    git = "https://github.com/ROCm-Developer-Tools/roctracer.git"
-    url = "https://github.com/ROCm-Developer-Tools/roctracer/archive/refs/tags/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/roctracer"
+    git = "https://github.com/ROCm/roctracer.git"
+    url = "https://github.com/ROCm/roctracer/archive/refs/tags/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     license("MIT")
 
     maintainers("srekolam", "renjithravindrankannath")
+    version("6.0.0", sha256="941166a0363c5689bfec118d54e986c43fb1ec8cbf18d95721d9a824bd52c0f8")
     version("5.7.1", sha256="ec0453adac7e62b142eb0df1e1e2506863aac4c3f2ce9d117c3184c08c0c6b48")
     version("5.7.0", sha256="40bb757920488466e29df90bb80a975cc340bf7f8771fb1d754dfbb6b688d78e")
     version("5.6.1", sha256="007c498be25b067ad9a7631a2b0892f9129150ee9714e471a921225875d45e69")

@@ -13,9 +13,9 @@ class Atmi(CMakePackage):
     consistent, declarative API to create task graphs on CPUs and GPUs
     (integrated and discrete)."""
 
-    homepage = "https://github.com/RadeonOpenCompute/atmi"
-    git = "https://github.com/RadeonOpenCompute/atmi.git"
-    url = "https://github.com/RadeonOpenCompute/atmi/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/atmi"
+    git = "https://github.com/ROCm/atmi.git"
+    url = "https://github.com/ROCm/atmi/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     license("MIT")
