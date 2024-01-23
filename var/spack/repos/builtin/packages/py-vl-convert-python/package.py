@@ -20,4 +20,3 @@ class PyVlConvertPython(PythonPackage):
     depends_on("py-maturin@1.1:1", type="build")
 
     depends_on("cmake", type="build")  # some rust dependencies need this
-
