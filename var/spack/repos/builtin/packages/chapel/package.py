@@ -288,8 +288,8 @@ class Chapel(AutotoolsPackage):
 
     def setup_chpl_comm(self, env, spec):
         env.set("CHPL_COMM", spec.variants["comm"].value)
-        if spec.variants["substrate"].value != "none":
-            env.set("CHPL_COMM_SUBSTRATE", spec.variants["substrate"].value)
+        if spec.variants["comm_substrate"].value != "none":
+            env.set("CHPL_COMM_SUBSTRATE", spec.variants["comm_substrate"].value)
 
     def setup_chpl_llvm(self, env):
         # Setup LLVM environment variables based on spec
@@ -301,7 +301,15 @@ class Chapel(AutotoolsPackage):
         else:
             env.set("CHPL_LLVM", self.spec.variants["llvm"].value)
 
+    def setup_if_not_unset(self, env, var, value):
+        if value != "unset":
+            if value == "spack":
+                value = "system"
+            env.set(var, value)
+
     def setup_env_vars(self, env):
+        for v in self.spec.variants.keys():
+            self.setup_if_not_unset(env, "CHPL_" + v.upper(), self.spec.variants[v].value)
         self.setup_chpl_llvm(env)
         # env.set("CHPL_AUX_FILESYSTEM", self.spec.variants["aux_filesys"].value)
         if self.spec.variants["developer"].value:
