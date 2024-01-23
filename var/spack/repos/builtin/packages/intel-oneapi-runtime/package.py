@@ -39,9 +39,6 @@ class IntelOneapiRuntime(Package):
     def install(self, spec, prefix):
         if spec.platform in ["linux", "cray", "freebsd"]:
             libraries = get_elf_libraries(compiler=self.compiler, libraries=self.LIBRARIES)
-        # TODO: check darwin
-        # elif spec.platform == "darwin":
-        #    libraries = self._get_libraries_macho()
         else:
             raise RuntimeError("Unsupported platform")
 
@@ -52,4 +49,4 @@ class IntelOneapiRuntime(Package):
             return
 
         for path, name in libraries:
-            install(path, os.path.join(prefix.lib, name))
+            os.symlink(path, os.path.join(prefix.lib, name))
