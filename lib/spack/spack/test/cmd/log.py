@@ -7,7 +7,7 @@ import gzip
 import tempfile
 
 import spack
-from spack.main import SpackCommand, SpackCommandError
+from spack.main import SpackCommand
 
 log = SpackCommand("log")
 
@@ -28,7 +28,7 @@ test_log install output
 here to test multiple lines
 """
 
-    with spec.package.stage as stage:
+    with spec.package.stage:
         with open(spec.package.log_path, "w") as f:
             f.write(stage_log_content)
         assert log("libelf") == stage_log_content
@@ -39,13 +39,13 @@ here to test multiple lines
         with open(temp_file.name, "w") as decompressed:
             decompressed.write(installed_log_content)
 
-        with open(temp_file.name, 'rb') as input_file:
-            with gzip.open(spec.package.install_log_path, 'wb') as compressed_file:
+        with open(temp_file.name, "rb") as input_file:
+            with gzip.open(spec.package.install_log_path, "wb") as compressed_file:
                 compressed_file.writelines(input_file)
 
     assert log("libelf") == installed_log_content
 
-    with spec.package.stage as stage:
+    with spec.package.stage:
         with open(spec.package.log_path, "w") as f:
             f.write(stage_log_content)
         # We re-create the stage, but "spack log" should ignore that
