@@ -9,7 +9,7 @@ from spack.package import *
 class Spglib(CMakePackage):
     """C library for finding and handling crystal symmetries."""
 
-    homepage = "https://atztogo.github.io/spglib/"
+    homepage = "https://spglib.readthedocs.io/"
     url = "https://github.com/spglib/spglib/archive/v2.0.2.tar.gz"
 
     maintainers("RMeli")
