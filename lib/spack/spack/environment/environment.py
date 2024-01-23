@@ -897,8 +897,6 @@ class Environment:
                     self.views[name] = ViewDescriptor.from_dict(self.path, values)
                 else:
                     tty.error(f"Cannot add view named {name} for {type(values)} values {values}")
-            else:
-                tty.debug(f"Already have '{name}' view ({self.views[name]}), skipping {values}")
 
         # If the configuration specifies 'view: False' then we are done
         # processing views. If this is called with the environment's view
@@ -920,7 +918,7 @@ class Environment:
             for name, values in env_view.items():
                 add_view(name, values)
 
-        # If we reach this point without an explicit view setting then we
+        # If we reach this point without an explicit view option then we
         # provide the default view.
         if self.views == dict():
             self.views[default_view_name] = ViewDescriptor(self.path, self.view_path_default)
@@ -940,9 +938,7 @@ class Environment:
         )
         self.spec_lists[user_speclist_name] = user_specs
 
-        # Process views, starting with the one in the environment since it
-        # takes precedence.
-        self._process_view(spack.config.get("view"))
+        self._process_view(spack.config.get("view", True))
 
     @property
     def user_specs(self):
