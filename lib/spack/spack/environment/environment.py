@@ -2765,9 +2765,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
 
         Returns:  Configuration scopes associated with the environment manifest
 
-        Raises:
-            SpackEnvironmentError: if the manifest includes a remote file but
-                no configuration stage directory has been identified
+        Raises: SpackEnvironmentError: if no configuration stage dir when needed
         """
         scopes = []
 
