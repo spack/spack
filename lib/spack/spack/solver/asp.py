@@ -1864,14 +1864,11 @@ class SpackSolverSetup:
                 msg = "%s available as external when satisfying %s" % (spec.name, spec)
 
                 def external_imposition(input_spec, requirements):
-                    return requirements + [fn.attr("external_conditions_hold", input_spec.name, local_idx)]
+                    return requirements + [
+                        fn.attr("external_conditions_hold", input_spec.name, local_idx)
+                    ]
 
-                self.condition(
-                    spec,
-                    spec,
-                    msg=msg,
-                    transform_imposed=external_imposition,
-                )
+                self.condition(spec, spec, msg=msg, transform_imposed=external_imposition)
                 self.possible_versions[spec.name].add(spec.version)
                 self.gen.newline()
 

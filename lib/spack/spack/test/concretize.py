@@ -1526,11 +1526,8 @@ class TestConcretize:
     def test_sticky_variant_in_external(self):
         # setup external for sticky-variant+allow-gcc
         config = {
-            "externals": [{
-                "spec": "sticky-variant@1.0+allow-gcc",
-                "prefix": "/fake/path",
-            }],
-            "buildable": False
+            "externals": [{"spec": "sticky-variant@1.0+allow-gcc", "prefix": "/fake/path"}],
+            "buildable": False,
         }
         spack.config.set("packages:sticky-variant", config)
 
