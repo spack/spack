@@ -15,6 +15,7 @@ class Pigz(MakefilePackage):
 
     license("Zlib")
 
+    version("2.8", sha256="2f7f6a6986996d21cb8658535fff95f1c7107ddce22b5324f4b41890e2904706")
     version("2.7", sha256="d2045087dae5e9482158f1f1c0f21c7d3de6f7cdc7cc5848bdabda544e69aa58")
     version("2.6", sha256="577673676cd5c7219f94b236075451220bae3e1ca451cf849947a2998fbf5820")
     version("2.4", sha256="e228e7d18b34c4ece8d596eb6eee97bde533c6beedbb728d07d3abe90b4b1b52")
