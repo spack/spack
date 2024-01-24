@@ -48,7 +48,7 @@ here to test multiple lines
     assert spec.package.install_log_path
 
     with gzip.open(spec.package.install_log_path, "wb") as compressed_file:
-        bstream = BytesIO(installed_log_content.encode('utf-8'))
+        bstream = BytesIO(installed_log_content.encode("utf-8"))
         compressed_file.writelines(bstream)
 
     assert log("libelf") == installed_log_content
