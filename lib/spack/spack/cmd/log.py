@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import shutil
 import tempfile
 import time
 
@@ -70,30 +71,26 @@ def log(parser, args):
 
     compression_ext = compression.extension_from_file(log_path)
     fstream = None
+    temp_dir = None
     try:
         if not compression_ext:
             fstream = open(log_path, "r")
         else:
             decompressor = compression.decompressor_for(log_path, extension=compression_ext)
-            with tempfile.TemporaryDirectory() as temp_dir:
-                with fs.working_dir(temp_dir):
-                    decompressor(log_path)
-                    result = os.listdir(".")
-                    if len(result) < 1:
-                        tty.die(
-                            f"Detected compressed log for {specs[0]},"
-                            f" but could not decompress {log_path}"
-                        )
-                    elif len(result) > 1:
-                        tty.die(f"Compressed log {log_path} expanded to more than 1 file")
-                    else:
-                        try:
-                            fstream = open(result[0], "r")
-                        except Exception:
-                            import traceback
+            temp_dir = tempfile.mkdtemp(suffix=f"decompress-spack-log-{spec.name}")
 
-                            print(traceback.format_exc())
-                            raise
+            with fs.working_dir(temp_dir):
+                decompressor(log_path)
+                result = os.listdir(".")
+                if len(result) < 1:
+                    tty.die(
+                        f"Detected compressed log for {specs[0]},"
+                        f" but could not decompress {log_path}"
+                    )
+                elif len(result) > 1:
+                    tty.die(f"Compressed log {log_path} expanded to more than 1 file")
+                else:
+                    fstream = open(result[0], "r")
 
         line = fstream.readline()
         while line:
@@ -102,3 +99,5 @@ def log(parser, args):
     finally:
         if fstream:
             fstream.close()
+        if temp_dir:
+            shutil.rmtree(temp_dir)
