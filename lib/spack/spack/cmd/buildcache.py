@@ -1157,18 +1157,20 @@ def update_index(mirror: spack.mirror.Mirror, update_keys=False):
 
     # Otherwise, assume a normal mirror.
     url = mirror.push_url
-    try:
-        bindist.generate_package_index(url_util.join(url, bindist.build_cache_relative_path()))
 
-        if update_keys:
-            keys_url = url_util.join(
-                url, bindist.build_cache_relative_path(), bindist.build_cache_keys_relative_path()
-            )
+    bindist.generate_package_index(url_util.join(url, bindist.build_cache_relative_path()))
 
+    if update_keys:
+        keys_url = url_util.join(
+            url, bindist.build_cache_relative_path(), bindist.build_cache_keys_relative_path()
+        )
+
+        try:
             bindist.generate_key_index(keys_url)
-    except bindist.GenerateIndexError as e:
-        tty.error(str(e))
-        return 1
+        except bindist.CannotListKeys as e:
+            # Do not error out if listing keys went wrong. This usually means that the _gpg path
+            # does not exist. TODO: distinguish between this and other errors.
+            tty.warn(f"did not update the key index: {e}")
 
 
 def update_index_fn(args):

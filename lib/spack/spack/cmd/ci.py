@@ -14,6 +14,7 @@ import llnl.util.tty.color as clr
 
 import spack.binary_distribution as bindist
 import spack.ci as spack_ci
+import spack.cmd
 import spack.cmd.buildcache as buildcache
 import spack.config as cfg
 import spack.environment as ev
