@@ -21,17 +21,19 @@ class PyLocalcolabfold(PythonPackage, CudaPackage):
 
     depends_on("python@3.10", type=("build", "run"))
 
-    depends_on("cuda@11.6.0", type=("build", "run"))
+    depends_on("cuda@11.3.0", type=("build", "run"))
     depends_on("cudnn@8.2.1.32", type=("build", "run"))
     depends_on("openmm@7.7.0", type=("build", "run"))
-    depends_on("py-pdbfixer@1.7", type=("build", "run"))
+    depends_on("py-pdbfixer", type=("build", "run"))
     depends_on("py-colabfold@1.5.3 ~jax", type=("build", "run"))
-    depends_on("kalign2@2.0.3", type=("build", "run"))
+    depends_on("kalign2@2.04", type=("build", "run"))
     depends_on("hh-suite@3.3.0", type=("build", "run"))
     depends_on("mmseqs2@14.7e284", type=("build", "run"))
     depends_on("py-colabfold@1.5.3", type=("build", "run"))
     depends_on("py-alphafold-colabfold@2.3.5", type=("build", "run"))
+    depends_on("py-tensorflow@2.12.0", type=("build", "run"))
     depends_on("py-jax@0.3.25", type=("build", "run"))
+    depends_on("py-jaxlib@0.3.25", type=("build", "run"))
     depends_on("py-chex@0.1.6", type=("build", "run"))
     depends_on("py-biopython@1.79", type=("build", "run"))
 
