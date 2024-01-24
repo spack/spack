@@ -5,6 +5,7 @@
 
 import os
 import tempfile
+import time
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -20,7 +21,24 @@ level = "long"
 
 
 def setup_parser(subparser):
+    subparser.add_argument(
+        "--continuous", action="store_true", help="for stage logs, poll for new content"
+    )
+
     arguments.add_common_arguments(subparser, ["spec"])
+
+
+def dump_build_log(path, continuous):
+    with open(path, 'r') as fstream:
+        line = fstream.readline()
+        while True:
+            if line:
+                print(line.strip())
+            elif continuous:
+                time.sleep(.2)
+            else:
+                break
+            line = fstream.readline()
 
 
 def log(parser, args):
@@ -42,7 +60,8 @@ def log(parser, args):
     if spec.installed:
         log_path = spec.package.install_log_path
     elif os.path.exists(spec.package.stage.path):
-        log_path = spec.package.log_path
+        dump_build_log(spec.package.log_path, args.continuous)
+        return
     else:
         tty.die(f"{specs[0]} is not installed or staged")
 
