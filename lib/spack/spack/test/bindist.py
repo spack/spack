@@ -501,7 +501,6 @@ def test_generate_package_index_failure(monkeypatch, capfd):
 
 def test_generate_indices_exception(monkeypatch, capfd):
     def mock_list_url(url, recursive=False):
-        print("mocked list_url({0}, {1})".format(url, recursive))
         raise Exception("Test Exception handling")
 
     monkeypatch.setattr(web_util, "list_url", mock_list_url)
@@ -509,11 +508,9 @@ def test_generate_indices_exception(monkeypatch, capfd):
     url = "file:///fake/keys/dir"
 
     with pytest.raises(GenerateIndexError, match=f"Encountered problem listing keys at {url}"):
-        # Make sure generate_key_index handles the Exception
         bindist.generate_key_index(url)
 
     with pytest.raises(GenerateIndexError, match="Unable to generate package index"):
-        # Make sure generate_package_index handles the Exception
         bindist.generate_package_index(url)
 
     assert f"Encountered problem listing packages at {url}" in capfd.readouterr().err
