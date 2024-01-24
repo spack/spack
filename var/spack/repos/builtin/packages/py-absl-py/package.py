@@ -16,6 +16,7 @@ class PyAbslPy(PythonPackage):
 
     pypi = "absl-py/absl-py-0.7.0.tar.gz"
 
+    version("2.0.0", sha256="d9690211c5fcfefcdd1a45470ac2b5c5acd45241c3af71eed96bc5441746c0d5")
     version("1.4.0", sha256="d2c244d01048ba476e7c080bd2c6df5e141d211de80223460d5b3b8a2a58433d")
     version("1.2.0", sha256="f568809938c49abbda89826223c992b630afd23c638160ad7840cfe347710d97")
     version("1.1.0", sha256="3aa39f898329c2156ff525dfa69ce709e42d77aab18bf4917719d6f260aa6a08")
@@ -27,6 +28,7 @@ class PyAbslPy(PythonPackage):
     version("0.7.0", sha256="8718189e4bd6013bf79910b9d1cb0a76aecad8ce664f78e1144980fabdd2cd23")
     version("0.1.6", sha256="02c577d618a8bc0a2a5d1a51f160d3649745d7a2516d87025322f46ac1391a22")
 
+    depends_on("python@3.7:", type=("build", "run"), when="@2:")
     depends_on("python@3.6:", type=("build", "run"), when="@1:")
     depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
