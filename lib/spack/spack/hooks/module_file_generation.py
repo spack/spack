@@ -34,21 +34,8 @@ def _for_each_enabled(
 
 
 def post_install(spec, explicit: bool):
-    import spack.environment as ev  # break import cycle
-
-    if ev.active_environment():
-        # If the installed through an environment, we skip post_install
-        # module generation and generate the modules on env_write so Spack
-        # can manage interactions between env views and modules
-        return
-
     _for_each_enabled(spec, "write", explicit)
 
 
 def post_uninstall(spec):
     _for_each_enabled(spec, "remove")
-
-
-def post_env_write(env):
-    for spec in env.new_installs:
-        _for_each_enabled(spec, "write")

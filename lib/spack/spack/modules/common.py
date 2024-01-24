@@ -43,6 +43,7 @@ from llnl.util.lang import dedupe, memoized
 
 import spack.build_environment
 import spack.config
+import spack.deptypes as dt
 import spack.environment
 import spack.error
 import spack.modules.common
@@ -53,6 +54,7 @@ import spack.schema.environment
 import spack.spec
 import spack.store
 import spack.tengine as tengine
+import spack.user_environment
 import spack.util.environment
 import spack.util.file_permissions as fp
 import spack.util.path
@@ -695,28 +697,33 @@ class BaseContext(tengine.Context):
         )
         spack.config.merge_yaml(
             prefix_inspections,
-            spack.config.get("modules:%s:prefix_inspections" % self.conf.name, {}),
+            spack.config.get(f"modules:{self.conf.name}:prefix_inspections", {}),
         )
 
-        use_view = spack.config.get("modules:%s:use_view" % self.conf.name, False)
+        use_view = spack.config.get(f"modules:{self.conf.name}:use_view", False)
 
-        spec = self.spec.copy()  # defensive copy before setting prefix
+        assert isinstance(use_view, (bool, str))
+
         if use_view:
-            if use_view is True:
-                use_view = spack.environment.default_view_name
-
             env = spack.environment.active_environment()
             if not env:
                 raise spack.environment.SpackEnvironmentViewError(
                     "Module generation with views requires active environment"
                 )
 
-            view = env.views[use_view]
+            view_name = spack.environment.default_view_name if use_view is True else use_view
 
-            spec.prefix = view.get_projection_for_spec(spec)
+            if not env.has_view(view_name):
+                raise spack.environment.SpackEnvironmentViewError(
+                    f"View {view_name} not found in environment {env.name} when generating modules"
+                )
+
+            view = env.views[view_name]
+        else:
+            view = None
 
         env = spack.util.environment.inspect_path(
-            spec.prefix, prefix_inspections, exclude=spack.util.environment.is_system_path
+            self.spec.prefix, prefix_inspections, exclude=spack.util.environment.is_system_path
         )
 
         # Let the extendee/dependency modify their extensions/dependencies
@@ -726,13 +733,19 @@ class BaseContext(tengine.Context):
         # whole chain of setup_dependent_package has to be followed from leaf to spec.
         # So: just run it here, but don't collect env mods.
         spack.build_environment.SetupContext(
-            spec, context=Context.RUN
+            self.spec, context=Context.RUN
         ).set_all_package_py_globals()
 
         # Then run setup_dependent_run_environment before setup_run_environment.
-        for dep in spec.dependencies(deptype=("link", "run")):
-            dep.package.setup_dependent_run_environment(env, spec)
-        spec.package.setup_run_environment(env)
+        for dep in self.spec.dependencies(deptype=("link", "run")):
+            dep.package.setup_dependent_run_environment(env, self.spec)
+        self.spec.package.setup_run_environment(env)
+
+        # Project the environment variables from prefix to view if needed
+        if view and self.spec in view:
+            spack.user_environment.project_env_mods(
+                *self.spec.traverse(deptype=dt.LINK | dt.RUN), view=view, env=env
+            )
 
         # Modifications required from modules.yaml
         env.extend(self.conf.env)
@@ -754,11 +767,11 @@ class BaseContext(tengine.Context):
             msg = "some tokens cannot be expanded in an environment variable name"
             _check_tokens_are_valid(x.name, message=msg)
             # Transform them
-            x.name = spec.format(x.name, transform=transform)
+            x.name = self.spec.format(x.name, transform=transform)
             if self.modification_needs_formatting(x):
                 try:
                     # Not every command has a value
-                    x.value = spec.format(x.value)
+                    x.value = self.spec.format(x.value)
                 except AttributeError:
                     pass
             x.name = str(x.name).replace("-", "_")

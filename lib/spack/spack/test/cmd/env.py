@@ -2970,51 +2970,51 @@ spack:
     assert spec.prefix not in contents
 
 
-def test_multiple_modules_post_env_hook(environment_from_manifest, install_mockery, mock_fetch):
+def test_modules_exist_after_env_install(
+    environment_from_manifest, install_mockery, mock_fetch, monkeypatch
+):
+    # Some caching issue
+    monkeypatch.setattr(spack.modules.tcl, "configuration_registry", {})
     environment_from_manifest(
         """
 spack:
   specs:
-  - trivial-install-test-package
+  - mpileaks
   modules:
     default:
       enable:: [tcl]
       use_view: true
       roots:
-        tcl: modules
+        tcl: uses_view
     full:
       enable:: [tcl]
       roots:
-        tcl: full_modules
+        tcl: without_view
 """
     )
 
     with ev.read("test") as e:
         install()
+        specs = e.all_specs()
 
-        spec = e.specs_by_hash[e.concretized_order[0]]
-        view_prefix = e.default_view.get_projection_for_spec(spec)
-        modules_glob = "%s/modules/**/*/*" % e.path
-        modules = glob.glob(modules_glob)
-        assert len(modules) == 1
-        module = modules[0]
+        for module_set in ("uses_view", "without_view"):
+            modules = glob.glob(f"{e.path}/{module_set}/**/*/*")
+            assert len(modules) == len(specs), "Not all modules were generated"
+            for spec in specs:
+                module = next((m for m in modules if os.path.dirname(m).endswith(spec.name)), None)
+                assert module, f"Module for {spec} not found"
 
-        full_modules_glob = "%s/full_modules/**/*/*" % e.path
-        full_modules = glob.glob(full_modules_glob)
-        assert len(full_modules) == 1
-        full_module = full_modules[0]
+                # Now verify that modules have paths pointing into the view instead of the package
+                # prefix if and only if they set use_view to true.
+                with open(module, "r") as f:
+                    contents = f.read()
 
-    with open(module, "r") as f:
-        contents = f.read()
-
-    with open(full_module, "r") as f:
-        full_contents = f.read()
-
-    assert view_prefix in contents
-    assert spec.prefix not in contents
-
-    assert view_prefix not in full_contents
-    assert spec.prefix in full_contents
+                if module_set == "uses_view":
+                    assert e.default_view.get_projection_for_spec(spec) in contents
+                    assert spec.prefix not in contents
+                else:
+                    assert e.default_view.get_projection_for_spec(spec) not in contents
+                    assert spec.prefix in contents
 
 
 @pytest.mark.regression("24148")
