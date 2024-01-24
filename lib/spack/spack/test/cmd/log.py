@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import gzip
-import tempfile
+from io import BytesIO
 
 import spack
 from spack.main import SpackCommand
@@ -47,13 +47,9 @@ here to test multiple lines
     # in this test)
     assert spec.package.install_log_path
 
-    with tempfile.NamedTemporaryFile() as temp_file:
-        with open(temp_file.name, "w") as decompressed:
-            decompressed.write(installed_log_content)
-
-        with open(temp_file.name, "rb") as input_file:
-            with gzip.open(spec.package.install_log_path, "wb") as compressed_file:
-                compressed_file.writelines(input_file)
+    with gzip.open(spec.package.install_log_path, "wb") as compressed_file:
+        bstream = BytesIO(installed_log_content.encode('utf-8'))
+        compressed_file.writelines(bstream)
 
     assert log("libelf") == installed_log_content
 
