@@ -40,3 +40,10 @@ class Sfcgal(CMakePackage):
         # https://github.com/Oslandia/SFCGAL/releases/tag/v1.3.0
         # Also, see https://github.com/Oslandia/SFCGAL-viewer
         return [self.define("BUILD_SHARED_LIBS", True), self.define("SFCGAL_BUILD_VIEWER", False)]
+
+    @property
+    def libs(self):
+        # Override because libs have different case than Spack package name
+        name = "libSFCGAL*"
+        return find_libraries(name, root=self.prefix, shared=True, recursive=True)
+~ 
