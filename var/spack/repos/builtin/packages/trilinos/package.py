@@ -812,6 +812,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             ("HDF5", "hdf5", "hdf5"),
             ("HYPRE", "hypre", "hypre"),
             ("MUMPS", "mumps", "mumps"),
+            ("AMD", "suite-sparse", "suite-sparse"),
             ("UMFPACK", "suite-sparse", "suite-sparse"),
             ("SuperLU", "superlu", "superlu"),
             ("SuperLUDist", "superlu-dist", "superlu-dist"),
