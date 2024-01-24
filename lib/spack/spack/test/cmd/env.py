@@ -3835,19 +3835,17 @@ def test_stack_view_multiple_views_same_name(
 
     view_filename = tmp_path / "view.yaml"
     default_dir = tmp_path / "default-view"
-    include_projection = "      'all': '{name}/{version}-{compiler.name}'"
     default_view = f"""\
 view:
   default:
     root: {default_dir}
     select: ['%gcc']
     projections:
-{include_projection}
+      all: '{{name}}/{{version}}-{{compiler.name}}'
 """
     view_filename.write_text(default_view)
 
     view_dir = tmp_path / "view"
-    env_projection = "        'all': '{name}/{compiler.name}-{version}'"
     content = f"""\
 spack:
   include:
@@ -3865,7 +3863,7 @@ spack:
       root: {view_dir}
       exclude: ['cmake']
       projections:
-{env_projection}
+        all: '{{name}}/{{compiler.name}}-{{version}}'
 """
 
     filename = tmp_path / ev.manifest_name
