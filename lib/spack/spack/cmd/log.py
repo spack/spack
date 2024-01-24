@@ -87,7 +87,13 @@ def log(parser, args):
                     elif len(result) > 1:
                         tty.die(f"Compressed log {log_path} expanded to more than 1 file")
                     else:
-                        fstream = open(result[0], "r")
+                        try:
+                            fstream = open(result[0], "r")
+                        except Exception:
+                            import traceback
+
+                            print(traceback.format_exc())
+                            raise
 
         line = fstream.readline()
         while line:
