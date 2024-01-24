@@ -18,3 +18,9 @@ class Qb3(CMakePackage):
 
     depends_on("cmake@3.5:", type="build")
     depends_on("libicd")
+
+    @property
+    def libs(self):
+        # Override because libs have different case than Spack package name
+        name = "libQB3*"
+        return find_libraries(name, root=self.prefix, shared=True, recursive=True)
