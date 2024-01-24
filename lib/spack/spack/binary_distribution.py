@@ -998,13 +998,8 @@ def generate_key_index(key_prefix, tmpdir=None):
             for entry in web_util.list_url(key_prefix, recursive=False)
             if entry.endswith(".pub")
         )
-    except KeyError as e:
-        raise GenerateIndexError(f"No keys at {key_prefix}: {e}") from e
     except Exception as e:
-        # If we got some kind of S3 (access denied or other connection
-        # error), the first non boto-specific class in the exception
-        # hierarchy is Exception.
-        raise GenerateIndexError(f"Encountered problem listing keys at {key_prefix}: {e}") from e
+        raise CannotListKeys(f"Encountered problem listing keys at {key_prefix}: {e}") from e
 
     remove_tmpdir = False
 
@@ -2679,6 +2674,10 @@ class ListMirrorSpecsError(spack.error.SpackError):
 
 class GenerateIndexError(spack.error.SpackError):
     """Raised when unable to generate key or package index for mirror"""
+
+
+class CannotListKeys(GenerateIndexError):
+    """Raised when unable to list keys when generating key index"""
 
 
 class PushToBuildCacheError(spack.error.SpackError):

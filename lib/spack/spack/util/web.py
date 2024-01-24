@@ -533,7 +533,7 @@ def list_url(url, recursive=False):
     if local_path:
         if recursive:
             # convert backslash to forward slash as required for URLs
-            return [str(PurePosixPath(Path(p))) for p in list(_iter_local_prefix(local_path))]
+            return [str(PurePosixPath(Path(p))) for p in _iter_local_prefix(local_path)]
         return [
             subpath
             for subpath in os.listdir(local_path)
