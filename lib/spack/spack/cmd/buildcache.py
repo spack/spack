@@ -1164,5 +1164,4 @@ def update_index_fn(args):
 
 
 def buildcache(parser, args):
-    if args.func:
-        return args.func(args)
+    return args.func(args)

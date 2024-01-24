@@ -1000,14 +1000,11 @@ def _specs_from_cache_fallback(cache_prefix):
         ]
         read_fn = url_read_method
     except KeyError as inst:
-        msg = "No packages at {0}: {1}".format(cache_prefix, inst)
-        tty.warn(msg)
+        tty.warn(f"No packages at {cache_prefix}: {inst}")
     except Exception as err:
-        # If we got some kind of S3 (access denied or other connection
-        # error), the first non boto-specific class in the exception
-        # hierarchy is Exception.  Just print a warning and return
-        msg = "Encountered problem listing packages at {0}: {1}".format(cache_prefix, err)
-        tty.warn(msg)
+        # If we got some kind of S3 (access denied or other connection error), the first non
+        # boto-specific class in the exception is Exception.  Just print a warning and return
+        tty.warn(f"Encountered problem listing packages at {cache_prefix}: {err}")
 
     return file_list, read_fn
 
@@ -1054,10 +1051,10 @@ def generate_package_index(cache_prefix, concurrency=32):
     """
     try:
         file_list, read_fn = _spec_files_from_cache(cache_prefix)
-    except ListMirrorSpecsError as err:
-        raise GenerateIndexError("Unable to generate package index") from err
+    except ListMirrorSpecsError as e:
+        raise GenerateIndexError(f"Unable to generate package index: {e}") from e
 
-    tty.debug("Retrieving spec descriptor files from {0} to build index".format(cache_prefix))
+    tty.debug(f"Retrieving spec descriptor files from {cache_prefix} to build index")
 
     tmpdir = tempfile.mkdtemp()
 
@@ -1067,26 +1064,22 @@ def generate_package_index(cache_prefix, concurrency=32):
 
     try:
         _read_specs_and_push_index(file_list, read_fn, cache_prefix, db, db_root_dir, concurrency)
-    except Exception as err:
-        msg = f"Encountered problem pushing package index to {cache_prefix}"
-        raise GenerateIndexError(msg) from err
+    except Exception as e:
+        raise GenerateIndexError(
+            f"Encountered problem pushing package index to {cache_prefix}: {e}"
+        ) from e
     finally:
-        shutil.rmtree(tmpdir)
+        shutil.rmtree(tmpdir, ignore_errors=True)
 
 
 def generate_key_index(key_prefix, tmpdir=None):
     """Create the key index page.
 
-    Creates (or replaces) the "index.json" page at the location given in
-    key_prefix.  This page contains an entry for each key (.pub) under
-    key_prefix.
+    Creates (or replaces) the "index.json" page at the location given in key_prefix.  This page
+    contains an entry for each key (.pub) under key_prefix.
     """
 
-    tty.debug(
-        " ".join(
-            ("Retrieving key.pub files from", url_util.format(key_prefix), "to build key index")
-        )
-    )
+    tty.debug(f"Retrieving key.pub files from {url_util.format(key_prefix)} to build key index")
 
     try:
         fingerprints = (
@@ -1094,15 +1087,13 @@ def generate_key_index(key_prefix, tmpdir=None):
             for entry in web_util.list_url(key_prefix, recursive=False)
             if entry.endswith(".pub")
         )
-    except KeyError as inst:
-        msg = f"No keys at {key_prefix}"
-        raise GenerateIndexError(msg) from inst
-    except Exception as err:
+    except KeyError as e:
+        raise GenerateIndexError(f"No keys at {key_prefix}: {e}") from e
+    except Exception as e:
         # If we got some kind of S3 (access denied or other connection
         # error), the first non boto-specific class in the exception
         # hierarchy is Exception.
-        msg = f"Encountered problem listing keys at {key_prefix}"
-        raise GenerateIndexError(msg) from err
+        raise GenerateIndexError(f"Encountered problem listing keys at {key_prefix}: {e}") from e
 
     remove_tmpdir = False
 
@@ -1127,12 +1118,13 @@ def generate_key_index(key_prefix, tmpdir=None):
                 keep_original=False,
                 extra_args={"ContentType": "application/json"},
             )
-        except Exception as err:
-            msg = f"Encountered problem pushing key index to {key_prefix}"
-            raise GenerateIndexError(msg) from err
+        except Exception as e:
+            raise GenerateIndexError(
+                f"Encountered problem pushing key index to {key_prefix}: {e}"
+            ) from e
         finally:
             if remove_tmpdir:
-                shutil.rmtree(tmpdir)
+                shutil.rmtree(tmpdir, ignore_errors=True)
 
 
 def tarfile_of_spec_prefix(tar: tarfile.TarFile, prefix: str) -> None:
@@ -1289,9 +1281,10 @@ def _build_tarball_in_stage_dir(spec: Spec, out_url: str, stage_dir: str, option
             remote_signed_specfile_path if not options.unsigned else remote_specfile_path,
             keep_original=False,
         )
-    except Exception as err:
-        msg = f"Encountered problem pushing binary {remote_spackfile_path}"
-        raise PushToBuildCacheError(msg) from err
+    except Exception as e:
+        raise PushToBuildCacheError(
+            f"Encountered problem pushing binary {remote_spackfile_path}: {e}"
+        ) from e
 
     # push the key to the build cache's _pgp directory so it can be
     # imported

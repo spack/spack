@@ -206,9 +206,7 @@ def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=Non
             os.remove(local_file_path)
 
     else:
-        raise NotImplementedError(
-            "Unrecognized URL scheme: {SCHEME}".format(SCHEME=remote_url.scheme)
-        )
+        raise NotImplementedError(f"Unrecognized URL scheme: {remote_url.scheme}")
 
 
 def base_curl_fetch_args(url, timeout=0):
