@@ -113,7 +113,7 @@ SCOPES_METAVAR = "{defaults,system,site,user}[/PLATFORM] or env:ENVIRONMENT"
 _OVERRIDES_BASE_NAME = "overrides-"
 
 #: Type used for raw YAML configuration
-YamlConfigDict = Union[Dict[str, Any], object]
+YamlConfigDict = Union[Dict[str, Any], Any]
 
 
 class ConfigScope:

@@ -888,15 +888,13 @@ class Environment:
         """
 
         def add_view(name, values):
-            """Add the view with the name and the string or dict values IF
-            there is not already a view with that name."""
-            if name not in self.views:
-                if isinstance(values, str):
-                    self.views[name] = ViewDescriptor(self.path, values)
-                elif isinstance(values, dict):
-                    self.views[name] = ViewDescriptor.from_dict(self.path, values)
-                else:
-                    tty.error(f"Cannot add view named {name} for {type(values)} values {values}")
+            """Add the view with the name and the string or dict values."""
+            if isinstance(values, str):
+                self.views[name] = ViewDescriptor(self.path, values)
+            elif isinstance(values, dict):
+                self.views[name] = ViewDescriptor.from_dict(self.path, values)
+            else:
+                tty.error(f"Cannot add view named {name} for {type(values)} values {values}")
 
         # If the configuration specifies 'view: False' then we are done
         # processing views. If this is called with the environment's view
