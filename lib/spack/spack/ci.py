@@ -1500,8 +1500,8 @@ def push_mirror_contents(input_spec: spack.spec.Spec, mirror_url, sign_binaries)
             tty.msg(f"Permission problem writing to {mirror_url}")
             tty.msg(err_msg)
             return False
-        else:
-            raise inst
+
+        raise
 
 
 def remove_other_mirrors(mirrors_to_keep, scope=None):

@@ -472,19 +472,15 @@ def test_generate_indices_key_error(monkeypatch, capfd):
 
     test_url = "file:///fake/keys/dir"
 
-    expect = f"No keys at {test_url}"
-    with pytest.raises(GenerateIndexError, match=expect):
+    with pytest.raises(GenerateIndexError, match=f"No keys at {test_url}"):
         # Make sure generate_key_index handles the KeyError
         bindist.generate_key_index(test_url)
 
-    expect = "Unable to generate package index"
-    with pytest.raises(GenerateIndexError, match=expect):
+    with pytest.raises(GenerateIndexError, match="Unable to generate package index"):
         # Make sure generate_package_index handles the KeyError
         bindist.generate_package_index(test_url)
 
-    outerr = capfd.readouterr()[1]
-    expect = f"Warning: No packages at {test_url}"
-    assert expect in outerr
+    assert f"Warning: No packages at {test_url}" in capfd.readouterr().err
 
 
 def test_generate_indices_exception(monkeypatch, capfd):
@@ -494,21 +490,17 @@ def test_generate_indices_exception(monkeypatch, capfd):
 
     monkeypatch.setattr(web_util, "list_url", mock_list_url)
 
-    test_url = "file:///fake/keys/dir"
+    url = "file:///fake/keys/dir"
 
-    expect = f"Encountered problem listing keys at {test_url}"
-    with pytest.raises(GenerateIndexError, match=expect):
+    with pytest.raises(GenerateIndexError, match=f"Encountered problem listing keys at {url}"):
         # Make sure generate_key_index handles the Exception
-        bindist.generate_key_index(test_url)
+        bindist.generate_key_index(url)
 
-    expect = "Unable to generate package index"
-    with pytest.raises(GenerateIndexError, match=expect):
+    with pytest.raises(GenerateIndexError, match="Unable to generate package index"):
         # Make sure generate_package_index handles the Exception
-        bindist.generate_package_index(test_url)
+        bindist.generate_package_index(url)
 
-    outerr = capfd.readouterr()[1]
-    expect = "Encountered problem listing packages at {0}".format(test_url)
-    assert expect in outerr
+    assert f"Encountered problem listing packages at {url}" in capfd.readouterr().err
 
 
 @pytest.mark.usefixtures("mock_fetch", "install_mockery")
