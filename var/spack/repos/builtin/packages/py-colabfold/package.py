@@ -42,20 +42,11 @@ class PyColabfold(PythonPackage, CudaPackage):
 
     depends_on("py-absl-py@1.4:", type=("build", "run"))
     depends_on("py-jax@0.4.14", when="+jax", type=("build", "run"))
-    depends_on(
-        f"py-jaxlib@0.4.14 +cuda",
-        when="+jax +cuda",
-        type=("build", "run")
-    )
     depends_on("py-jaxlib@0.4.14", when="+jax", type=("build", "run"))
-    depends_on("py-alphafold-colabfold@2.3.5 +cuda",
-        when="+alphafold_colabfold +cuda",
-        type=("build", "run")
-    )
     depends_on("py-alphafold-colabfold@2.3.5", when="+alphafold_colabfold", type=("build", "run"))
     depends_on("py-matplotlib@3.2.2:3", type=("build", "run"))
     # Tensorflow is always without cuda
-    depends_on("py-tensorflow@2.12.1 ~cuda", type=("build", "run"))
+    depends_on("py-tensorflow@2.12", type=("build", "run"))
     depends_on("py-numpy@1.21.6:", type=("build", "run"))
     depends_on("py-pandas@1.3.4:", type=("build", "run"))
     depends_on("py-requests@2.26.0:", type=("build", "run"))
