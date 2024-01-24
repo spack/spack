@@ -1063,7 +1063,7 @@ spack:
 
 
 @pytest.mark.disable_clean_stage_check
-def test_push_mirror_contents(
+def test_push_to_build_cache(
     tmpdir,
     mutable_mock_env_path,
     install_mockery_mutable_config,
@@ -1124,7 +1124,7 @@ spack:
             install_cmd("--add", "--keep-stage", json_path)
 
             for s in concrete_spec.traverse():
-                ci.push_mirror_contents(s, mirror_url, True)
+                ci.push_to_build_cache(s, mirror_url, True)
 
             buildcache_path = os.path.join(mirror_dir.strpath, "build_cache")
 
@@ -1217,21 +1217,16 @@ spack:
             assert len(dl_dir_list) == 2
 
 
-def test_push_mirror_contents_exceptions(monkeypatch, capsys):
-    def failing_access(*args, **kwargs):
+def test_push_to_build_cache_exceptions(monkeypatch, tmp_path, capsys):
+    def _push_to_build_cache(spec, sign_binaries, mirror_url):
         raise Exception("Error: Access Denied")
 
-    monkeypatch.setattr(spack.ci, "_push_mirror_contents", failing_access)
+    monkeypatch.setattr(spack.ci, "_push_to_build_cache", _push_to_build_cache)
 
-    # Input doesn't matter, as wwe are faking exceptional output
-    url = "fakejunk"
-    ci.push_mirror_contents(None, url, None)
-
-    captured = capsys.readouterr()
-    std_out = captured[0]
-    expect_msg = "Permission problem writing to {0}".format(url)
-
-    assert expect_msg in std_out
+    # Input doesn't matter, as we are faking exceptional output
+    url = tmp_path.as_uri()
+    ci.push_to_build_cache(None, url, None)
+    assert f"Permission problem writing to {url}" in capsys.readouterr().err
 
 
 @pytest.mark.parametrize("match_behavior", ["first", "merge"])

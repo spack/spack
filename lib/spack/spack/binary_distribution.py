@@ -1262,31 +1262,6 @@ def specs_to_be_packaged(
     return [s for s in itertools.chain(roots, deps) if not s.external]
 
 
-def push(spec: Spec, mirror_url: str, options: PushOptions):
-    """Create and push binary package for a single spec to the specified
-    mirror url.
-
-    Args:
-        spec: Spec to package and push
-        mirror_url: Desired destination url for binary package
-        options:
-
-    Returns:
-        True if package was pushed, False otherwise.
-
-    """
-    try:
-        push_or_raise(spec, mirror_url, options)
-    except NoOverwriteException as e:
-        warnings.warn(str(e))
-        return False
-    except PushToBuildCacheError as e:
-        tty.error(str(e))
-        return False
-
-    return True
-
-
 def try_verify(specfile_path):
     """Utility function to attempt to verify a local file.  Assumes the
     file is a clearsigned signature file.
