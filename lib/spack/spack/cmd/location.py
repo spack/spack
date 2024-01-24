@@ -74,8 +74,6 @@ def setup_parser(subparser):
         help="location of the named or current environment",
     )
 
-    directories.add_argument("--logs", action="store_true", help="Location of logs for a spec")
-
     subparser.add_argument(
         "--first",
         action="store_true",
@@ -126,36 +124,24 @@ def location(parser, args):
     if len(specs) != 1:
         tty.die("Too many specs.  Supply only one.")
 
-    # Package dir just needs the spec name
-    if args.package_dir:
-        print(spack.repo.PATH.dirname_for_package_name(specs[0].name))
-        return
-
-    env = ev.active_environment()
-
     # install_dir command matches against installed specs.
     if args.install_dir:
+        env = ev.active_environment()
         spec = spack.cmd.disambiguate_spec(specs[0], env, first=args.find_first)
         print(spec.prefix)
         return
 
-    # Either concretize or filter from already concretized environment
-    if env:
-        spec = spack.cmd.matching_spec_from_env(specs[0])
-    else:
-        spec = specs[0].concretized()
+    spec = specs[0]
 
+    # Package dir just needs the spec name
+    if args.package_dir:
+        print(spack.repo.PATH.dirname_for_package_name(spec.name))
+        return
+
+    # Either concretize or filter from already concretized environment
+    spec = spack.cmd.matching_spec_from_env(spec)
     pkg = spec.package
     builder = spack.builder.create(pkg)
-
-    if args.logs:
-        if spec.installed:
-            print(pkg.install_log_path)
-        elif os.path.exists(pkg.stage.path):
-            print(pkg.log_path)
-        else:
-            tty.die(f"{specs[0]} is not installed or staged")
-        return
 
     if args.stage_dir:
         print(pkg.stage.path)

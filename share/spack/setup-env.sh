@@ -101,8 +101,6 @@ _spack_shell_wrapper() {
                 LOC="$(SPACK_COLOR="${SPACK_COLOR:-always}" spack location $_sp_arg "$@")"
                 if [ -d "$LOC" ] ; then
                     cd "$LOC"
-                elif [ -f "$LOC" ]; then
-                    cd "$(dirname ${LOC})"
                 else
                     return 1
                 fi

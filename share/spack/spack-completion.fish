@@ -878,7 +878,7 @@ complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s k 
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s k -l keys -d 'if provided, key index will be updated as well as package index'
 
 # spack cd
-set -g __fish_spack_optspecs_spack_cd h/help m/module-dir r/spack-root i/install-dir p/package-dir P/packages s/stage-dir S/stages source-dir b/build-dir e/env= logs first
+set -g __fish_spack_optspecs_spack_cd h/help m/module-dir r/spack-root i/install-dir p/package-dir P/packages s/stage-dir S/stages source-dir b/build-dir e/env= first
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 cd' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command cd' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command cd' -s h -l help -d 'show this help message and exit'
@@ -902,8 +902,6 @@ complete -c spack -n '__fish_spack_using_command cd' -s b -l build-dir -f -a bui
 complete -c spack -n '__fish_spack_using_command cd' -s b -l build-dir -d 'build directory for a spec (requires it to be staged first)'
 complete -c spack -n '__fish_spack_using_command cd' -s e -l env -r -f -a location_env
 complete -c spack -n '__fish_spack_using_command cd' -s e -l env -r -d 'location of the named or current environment'
-complete -c spack -n '__fish_spack_using_command cd' -l logs -f -a logs
-complete -c spack -n '__fish_spack_using_command cd' -l logs -d 'Location of logs for a spec'
 complete -c spack -n '__fish_spack_using_command cd' -l first -f -a find_first
 complete -c spack -n '__fish_spack_using_command cd' -l first -d 'use the first match if multiple packages match the spec'
 
@@ -2077,7 +2075,7 @@ complete -c spack -n '__fish_spack_using_command load' -l list -f -a list
 complete -c spack -n '__fish_spack_using_command load' -l list -d 'show loaded packages: same as `spack find --loaded`'
 
 # spack location
-set -g __fish_spack_optspecs_spack_location h/help m/module-dir r/spack-root i/install-dir p/package-dir P/packages s/stage-dir S/stages source-dir b/build-dir e/env= logs first
+set -g __fish_spack_optspecs_spack_location h/help m/module-dir r/spack-root i/install-dir p/package-dir P/packages s/stage-dir S/stages source-dir b/build-dir e/env= first
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 location' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command location' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command location' -s h -l help -d 'show this help message and exit'
@@ -2101,8 +2099,6 @@ complete -c spack -n '__fish_spack_using_command location' -s b -l build-dir -f 
 complete -c spack -n '__fish_spack_using_command location' -s b -l build-dir -d 'build directory for a spec (requires it to be staged first)'
 complete -c spack -n '__fish_spack_using_command location' -s e -l env -r -f -a location_env
 complete -c spack -n '__fish_spack_using_command location' -s e -l env -r -d 'location of the named or current environment'
-complete -c spack -n '__fish_spack_using_command location' -l logs -f -a logs
-complete -c spack -n '__fish_spack_using_command location' -l logs -d 'Location of logs for a spec'
 complete -c spack -n '__fish_spack_using_command location' -l first -f -a find_first
 complete -c spack -n '__fish_spack_using_command location' -l first -d 'use the first match if multiple packages match the spec'
 

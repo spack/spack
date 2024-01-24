@@ -51,32 +51,6 @@ def test_location_build_dir(mock_spec):
     assert location("--build-dir", spec.name).strip() == pkg.stage.source_path
 
 
-def test_location_logs(install_mockery, mock_fetch, mock_archive, mock_packages):
-    spec = spack.spec.Spec("libelf").concretized()
-
-    # Sanity check, make sure this test is checking what we want: to
-    # start with
-    assert not spec.installed
-
-    with spec.package.stage as stage:
-        # This is kind of a hack, but "spack location" doesn't consider
-        # the stage ready until it is .expanded, which is only true if
-        # .source_path exists.
-        mkdirp(stage.source_path)
-
-        assert location("--logs", "libelf").strip() == spec.package.log_path
-
-    install = SpackCommand("install")
-    install("libelf")
-    assert location("--logs", "libelf").strip() == spec.package.install_log_path
-
-    with spec.package.stage as stage:
-        mkdirp(stage.source_path)
-        # We re-create the stage, but --logs should ignore that
-        # if the package is installed
-        assert location("--logs", "libelf").strip() == spec.package.install_log_path
-
-
 @pytest.mark.regression("22738")
 def test_location_source_dir(mock_spec):
     """Tests spack location --source-dir."""
