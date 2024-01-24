@@ -17,6 +17,11 @@ class PySetuptools(Package, PythonExtension):
     tags = ["build-tools"]
 
     version(
+        "68.2.2",
+        sha256="b454a35605876da60632df1a60f736524eb73cc47bbc9f3f1ef1b644de74fd2a",
+        expand=False,
+    )
+    version(
         "68.0.0",
         sha256="11e52c67415a381d10d6b462ced9cfb97066179f0e871399e006c4ab101fc85f",
         expand=False,
@@ -77,6 +82,11 @@ class PySetuptools(Package, PythonExtension):
         expand=False,
     )
     version(
+        "58.0.4",
+        sha256="69cc739bc2662098a68a9bc575cd974a57969e70c1d58ade89d104ab73d79770",
+        expand=False,
+    )
+    version(
         "57.4.0",
         sha256="a49230977aa6cfb9d933614d2f7b79036e9945c4cdd7583163f4e920b83418d6",
         expand=False,
@@ -84,6 +94,11 @@ class PySetuptools(Package, PythonExtension):
     version(
         "57.1.0",
         sha256="ddae4c1b9220daf1e32ba9d4e3714df6019c5b583755559be84ff8199f7e1fe3",
+        expand=False,
+    )
+    version(
+        "52.0.0",
+        sha256="0a6f1f18249f78cffdad842efadf1ed7b039fa3355d93f3890f56bd66a48cf27",
         expand=False,
     )
     version(
@@ -113,11 +128,11 @@ class PySetuptools(Package, PythonExtension):
     )
     version(
         "46.1.3",
-        sha256="4fe404eec2738c20ab5841fa2d791902d2a645f32318a7850ef26f8d7215a8ee",
+        sha256="272c7f48f5cddc5af5901f4265274c421c7eede5c8bc454ac2903d3f8fc365e9",
         expand=False,
     )
     version(
-        "44.1.1",
+        "46.1.3",
         sha256="27a714c09253134e60a6fa68130f78c7037e5562c4f21f8f318f2ae900d152d5",
         expand=False,
     )
