@@ -29,13 +29,13 @@ def setup_parser(subparser):
 
 
 def dump_build_log(path, continuous):
-    with open(path, 'r') as fstream:
+    with open(path, "r") as fstream:
         line = fstream.readline()
         while True:
             if line:
                 print(line.strip())
             elif continuous:
-                time.sleep(.2)
+                time.sleep(0.2)
             else:
                 break
             line = fstream.readline()
