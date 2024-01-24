@@ -110,18 +110,6 @@ class FetchCacheError(Exception):
         super().__init__(self.message)
 
 
-class ListMirrorSpecsError(spack.error.SpackError):
-    """Raised when unable to retrieve list of specs from the mirror"""
-
-
-class GenerateIndexError(spack.error.SpackError):
-    """Raised when unable to generate key or package index for mirror"""
-
-
-class PushToBuildCacheError(spack.error.SpackError):
-    """Raised when unable to push objects to binary mirror"""
-
-
 class BinaryCacheIndex:
     """
     The BinaryCacheIndex tracks what specs are available on (usually remote)
@@ -546,83 +534,6 @@ def binary_index_location():
 
 #: Default binary cache index instance
 BINARY_INDEX: BinaryCacheIndex = llnl.util.lang.Singleton(BinaryCacheIndex)  # type: ignore
-
-
-class NoOverwriteException(spack.error.SpackError):
-    """Raised when a file would be overwritten"""
-
-    def __init__(self, file_path):
-        super().__init__(f"Refusing to overwrite the following file: {file_path}")
-
-
-class NoGpgException(spack.error.SpackError):
-    """
-    Raised when gpg2 is not in PATH
-    """
-
-    def __init__(self, msg):
-        super().__init__(msg)
-
-
-class NoKeyException(spack.error.SpackError):
-    """
-    Raised when gpg has no default key added.
-    """
-
-    def __init__(self, msg):
-        super().__init__(msg)
-
-
-class PickKeyException(spack.error.SpackError):
-    """
-    Raised when multiple keys can be used to sign.
-    """
-
-    def __init__(self, keys):
-        err_msg = "Multiple keys available for signing\n%s\n" % keys
-        err_msg += "Use spack buildcache create -k <key hash> to pick a key."
-        super().__init__(err_msg)
-
-
-class NoVerifyException(spack.error.SpackError):
-    """
-    Raised if file fails signature verification.
-    """
-
-    pass
-
-
-class NoChecksumException(spack.error.SpackError):
-    """
-    Raised if file fails checksum verification.
-    """
-
-    def __init__(self, path, size, contents, algorithm, expected, computed):
-        super().__init__(
-            f"{algorithm} checksum failed for {path}",
-            f"Expected {expected} but got {computed}. "
-            f"File size = {size} bytes. Contents = {contents!r}",
-        )
-
-
-class NewLayoutException(spack.error.SpackError):
-    """
-    Raised if directory layout is different from buildcache.
-    """
-
-    def __init__(self, msg):
-        super().__init__(msg)
-
-
-class InvalidMetadataFile(spack.error.SpackError):
-    pass
-
-
-class UnsignedPackageException(spack.error.SpackError):
-    """
-    Raised if installation of unsigned package is attempted without
-    the use of ``--no-check-signature``.
-    """
 
 
 def compute_hash(data):
@@ -1195,7 +1106,8 @@ def push_or_raise(spec: Spec, out_url: str, options: PushOptions):
     used at the mirror (following <tarball_directory_name>).
 
     This method raises :py:class:`NoOverwriteException` when ``force=False`` and the tarball or
-    spec.json file already exist in the buildcache.
+    spec.json file already exist in the buildcache. It raises :py:class:`PushToBuildCacheError`
+    when the tarball or spec.json file cannot be pushed to the buildcache.
     """
     if not spec.concrete:
         raise ValueError("spec must be concrete to build tarball")
@@ -2707,3 +2619,92 @@ class OCIIndexFetcher:
             raise FetchIndexError(f"Remote index {url_manifest} is invalid")
 
         return FetchIndexResult(etag=None, hash=index_digest.digest, data=result, fresh=False)
+
+
+class NoOverwriteException(spack.error.SpackError):
+    """Raised when a file would be overwritten"""
+
+    def __init__(self, file_path):
+        super().__init__(f"Refusing to overwrite the following file: {file_path}")
+
+
+class NoGpgException(spack.error.SpackError):
+    """
+    Raised when gpg2 is not in PATH
+    """
+
+    def __init__(self, msg):
+        super().__init__(msg)
+
+
+class NoKeyException(spack.error.SpackError):
+    """
+    Raised when gpg has no default key added.
+    """
+
+    def __init__(self, msg):
+        super().__init__(msg)
+
+
+class PickKeyException(spack.error.SpackError):
+    """
+    Raised when multiple keys can be used to sign.
+    """
+
+    def __init__(self, keys):
+        err_msg = "Multiple keys available for signing\n%s\n" % keys
+        err_msg += "Use spack buildcache create -k <key hash> to pick a key."
+        super().__init__(err_msg)
+
+
+class NoVerifyException(spack.error.SpackError):
+    """
+    Raised if file fails signature verification.
+    """
+
+    pass
+
+
+class NoChecksumException(spack.error.SpackError):
+    """
+    Raised if file fails checksum verification.
+    """
+
+    def __init__(self, path, size, contents, algorithm, expected, computed):
+        super().__init__(
+            f"{algorithm} checksum failed for {path}",
+            f"Expected {expected} but got {computed}. "
+            f"File size = {size} bytes. Contents = {contents!r}",
+        )
+
+
+class NewLayoutException(spack.error.SpackError):
+    """
+    Raised if directory layout is different from buildcache.
+    """
+
+    def __init__(self, msg):
+        super().__init__(msg)
+
+
+class InvalidMetadataFile(spack.error.SpackError):
+    pass
+
+
+class UnsignedPackageException(spack.error.SpackError):
+    """
+    Raised if installation of unsigned package is attempted without
+    the use of ``--no-check-signature``.
+    """
+
+
+class ListMirrorSpecsError(spack.error.SpackError):
+    """Raised when unable to retrieve list of specs from the mirror"""
+
+
+class GenerateIndexError(spack.error.SpackError):
+    """Raised when unable to generate key or package index for mirror"""
+
+
+class PushToBuildCacheError(spack.error.SpackError):
+    """Raised when unable to push objects to binary mirror"""
