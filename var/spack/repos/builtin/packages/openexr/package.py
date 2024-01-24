@@ -85,6 +85,11 @@ class Openexr(CMakePackage, AutotoolsPackage):
     with when("build_system=cmake"):
         depends_on("cmake@3.12:", type="build")
 
+    @property
+    def libs(self):
+        # Override because libs have different case than Spack package name
+        name = "libOpenEXR*"
+        return find_libraries(name, root=self.prefix, shared=True, recursive=True)
 
 class CMakeBuilder(CMakeBuilder):
     def cmake_args(self):
