@@ -910,8 +910,6 @@ def _specs_from_cache_fallback(cache_prefix):
             if entry.endswith("spec.json") or entry.endswith("spec.json.sig")
         ]
         read_fn = url_read_method
-    except KeyError as inst:
-        tty.warn(f"No packages at {cache_prefix}: {inst}")
     except Exception as err:
         # If we got some kind of S3 (access denied or other connection error), the first non
         # boto-specific class in the exception is Exception.  Just print a warning and return
