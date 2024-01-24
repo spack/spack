@@ -10,6 +10,7 @@ from os.path import join as pjoin
 from spack.package import *
 from spack.util.executable import which_string
 
+
 def get_spec_path(spec, package_name, path_replacements={}, use_bin=False):
     """Extracts the prefix path for the given spack package
     path_replacements is a dictionary with string replacements for the path.
@@ -230,7 +231,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
                 flags = ""
                 for _libpath in [libdir, libdir + "64"]:
                     if os.path.exists(_libpath):
-                        if spec.satisfies('^cuda'):
+                        if spec.satisfies("^cuda"):
                             flags += " -Xlinker -rpath -Xlinker {0}".format(_libpath)
                         else:
                             flags += " -Wl,-rpath,{0}".format(_libpath)
@@ -247,8 +248,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
         # cray compiler or newer HIP
         if "+rocm" in spec:
             if "crayCC" in self.compiler.cxx or spec.satisfies("%clang@16"):
-                entries.append(cmake_cache_string("CMAKE_CXX_FLAGS_DEBUG","-O1 -g -DNDEBUG"))
-
+                entries.append(cmake_cache_string("CMAKE_CXX_FLAGS_DEBUG", "-O1 -g -DNDEBUG"))
 
         return entries
 
@@ -266,8 +266,8 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
             cudaflags = "-restrict --expt-extended-lambda "
 
             # Pass through any cxxflags to the host compiler via nvcc's Xcompiler flag
-            host_cxx_flags = spec.compiler_flags['cxxflags']
-            cudaflags += ' '.join(['-Xcompiler=%s ' % flag for flag in host_cxx_flags])
+            host_cxx_flags = spec.compiler_flags["cxxflags"]
+            cudaflags += " ".join(["-Xcompiler=%s " % flag for flag in host_cxx_flags])
 
             if not spec.satisfies("cuda_arch=none"):
                 cuda_arch = spec.variants["cuda_arch"].value[0]
@@ -297,12 +297,18 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
             rocm_root = hip_root + "/.."
 
             # Fix blt_hip getting HIP_CLANG_INCLUDE_PATH-NOTFOUND bad include directory
-            if (self.spec.satisfies('%cce') or self.spec.satisfies('%clang')) and 'toss_4' in self._get_sys_type(spec):
+            if (
+                self.spec.satisfies("%cce") or self.spec.satisfies("%clang")
+            ) and "toss_4" in self._get_sys_type(spec):
                 # Set the patch version to 0 if not already
-                clang_version= str(self.compiler.version)[:-1] + "0"
-                hip_clang_include_path = rocm_root + "/llvm/lib/clang/" + clang_version + "/include"
+                clang_version = str(self.compiler.version)[:-1] + "0"
+                hip_clang_include_path = (
+                    rocm_root + "/llvm/lib/clang/" + clang_version + "/include"
+                )
                 if os.path.isdir(hip_clang_include_path):
-                    entries.append(cmake_cache_path("HIP_CLANG_INCLUDE_PATH", hip_clang_include_path))
+                    entries.append(
+                        cmake_cache_path("HIP_CLANG_INCLUDE_PATH", hip_clang_include_path)
+                    )
 
             # Fixes for mpi for rocm until wrapper paths are fixed
             # These flags are already part of the wrapped compilers on TOSS4 systems
@@ -315,8 +321,9 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
 
             # Remove extra link library for crayftn
             if "+fortran" in spec and self.is_fortran_compiler("crayftn"):
-                entries.append(cmake_cache_string("BLT_CMAKE_IMPLICIT_LINK_LIBRARIES_EXCLUDE",
-                                                  "unwind"))
+                entries.append(
+                    cmake_cache_string("BLT_CMAKE_IMPLICIT_LINK_LIBRARIES_EXCLUDE", "unwind")
+                )
 
             # Additional libraries for TOSS4
             hip_link_flags += " -L{0}/../lib64 -Wl,-rpath,{0}/../lib64 ".format(hip_root)
@@ -363,18 +370,22 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
                 )
             )
 
-        if "+openmp" in spec and \
-           "clang" in self.compiler.cxx and \
-           "+fortran" in spec and self.is_fortran_compiler("xlf"):
-            openmp_gen_exp = ( "$<$<NOT:$<COMPILE_LANGUAGE:Fortran>>:"
-                               "-fopenmp=libomp>;$<$<COMPILE_LANGUAGE:"
-                               "Fortran>:-qsmp=omp>")
+        if (
+            "+openmp" in spec
+            and "clang" in self.compiler.cxx
+            and "+fortran" in spec
+            and self.is_fortran_compiler("xlf")
+        ):
+            openmp_gen_exp = (
+                "$<$<NOT:$<COMPILE_LANGUAGE:Fortran>>:"
+                "-fopenmp=libomp>;$<$<COMPILE_LANGUAGE:"
+                "Fortran>:-qsmp=omp>"
+            )
 
             description = "Different OpenMP linker flag between CXX and Fortran"
-            entries.append(cmake_cache_string(
-                "BLT_OPENMP_LINK_FLAGS",
-                openmp_gen_exp,
-                description))
+            entries.append(
+                cmake_cache_string("BLT_OPENMP_LINK_FLAGS", openmp_gen_exp, description)
+            )
 
         if spec.satisfies("target=ppc64le:"):
             # Fix for working around CMake adding implicit link directories
@@ -409,10 +420,11 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append(cmake_cache_option("ENABLE_MPI", False))
 
         # Replace /usr/bin/srun path with srun flux wrapper path on TOSS 4
-        if 'toss_4' in self._get_sys_type(spec):
+        if "toss_4" in self._get_sys_type(spec):
             srun_wrapper = which_string("srun")
-            mpi_exec_index = [index for index,entry in enumerate(entries)
-                                                  if "MPIEXEC_EXECUTABLE" in entry]
+            mpi_exec_index = [
+                index for index, entry in enumerate(entries) if "MPIEXEC_EXECUTABLE" in entry
+            ]
             del entries[mpi_exec_index[0]]
             entries.append(cmake_cache_path("MPIEXEC_EXECUTABLE", srun_wrapper))
 
@@ -421,7 +433,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
     def find_path_replacement(self, path1, path2, path_replacements, name, entries):
         root = os.path.commonprefix([path1, path2])
         if root.endswith(os.path.sep):
-            root = root[:-len(os.path.sep)]
+            root = root[: -len(os.path.sep)]
         if root:
             path_replacements[root] = "${" + name + "}"
             entries.append(cmake_cache_path(name, root))
@@ -436,7 +448,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append("# TPLs")
         entries.append("#------------------{0}\n".format("-" * 60))
 
-        # Try to find the common prefix of the TPL directory. 
+        # Try to find the common prefix of the TPL directory.
         # If found, we will use this in the TPL paths
         path1 = os.path.realpath(spec["conduit"].prefix)
         path2 = os.path.realpath(self.prefix)
@@ -512,7 +524,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         if spec.satisfies("^py-jsonschema"):
             jsonschema_dir = get_spec_path(spec, "py-jsonschema", path_replacements, use_bin=True)
-            jsonschema_path = os.path.join(jsonschema_dir, 'jsonschema')
+            jsonschema_path = os.path.join(jsonschema_dir, "jsonschema")
             entries.append(cmake_cache_path("JSONSCHEMA_EXECUTABLE", jsonschema_path))
 
         enable_docs = spec.satisfies("^doxygen") or spec.satisfies("^py-sphinx")
