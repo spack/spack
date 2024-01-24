@@ -302,11 +302,6 @@ class Wrf(Package):
             flags.extend(["-fallow-argument-mismatch", "-fallow-invalid-boz"])
         return (flags, None, None)
 
-    def flag_handler(self, name, flags):
-        if name in ["fcflags", "fflags"] and self.spec.satisfies("%gcc@10:"):
-            flags.append("-w -O2 -fallow-argument-mismatch -fallow-invalid-boz")
-        return (flags, None, None)
-
     def patch(self):
         # Let's not assume csh is intalled in bin
         files = glob.glob("*.csh")
