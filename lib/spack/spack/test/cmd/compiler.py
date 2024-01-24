@@ -314,13 +314,15 @@ def test_compilers_shows_packages_yaml_minimal(no_compilers_yaml, working_env, c
     out = compiler("list")
     assert out.count("gcc@7.7.7") == 1
 
+    suffix = ".bat" if sys.platform == "win32" else ""
+
     out = compiler("info", "gcc@7.7.7")
     expected = f"""gcc@7.7.7:
 \tpaths:
-\t\tcc = {compilers_dir}/gcc-8
-\t\tcxx = {compilers_dir}/g++-8
-\t\tf77 = {compilers_dir}/gfortran-8
-\t\tfc = {compilers_dir}/gfortran-8
+\t\tcc = {compilers_dir}/gcc-8{suffix}
+\t\tcxx = {compilers_dir}/g++-8{suffix}
+\t\tf77 = {compilers_dir}/gfortran-8{suffix}
+\t\tfc = {compilers_dir}/gfortran-8{suffix}
 \tflags:
 \t\tfflags = ['-ffree-form']
 \tmodules  = ['gcc/7.7.7', 'foobar']
