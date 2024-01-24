@@ -70,9 +70,9 @@ SHARED_PR_MIRROR_URL = "s3://spack-binaries-prs/shared_pr_mirror"
 JOB_NAME_FORMAT = (
     "{name}{@version} {/hash:7} {%compiler.name}{@compiler.version}{arch=architecture}"
 )
-CI_TARGET_FORMATTERS = {
-    "gitlab": format_gitlab_yaml,
-}
+# CI_TARGET_FORMATTERS = {
+#     "gitlab": format_gitlab_yaml,
+# }
 
 spack_gpg = spack.main.SpackCommand("gpg")
 spack_compiler = spack.main.SpackCommand("compiler")
@@ -143,32 +143,40 @@ class PipelineDag:
         if top_down:
             # Yields the roots first, followed by direct children of roots, followed
             # by their children and so on.
-            next_level = [
+            node_list = [
                 (key, node) for key, node in self.nodes.items() if len(node.parents) == 0
             ]
-            while next_level:
-                for key, node in next_level:
+            while node_list:
+                for key, node in node_list:
                     if key not in visited:
                         visited.add(key)
                         yield (level, (key, node))
                 level += 1
-                next_level = [(k, self.nodes[k]) for _, n in next_level for k in n.children]
+                node_list = [(k, self.nodes[k]) for _, n in node_list for k in n.children]
         else:
             # Yields the leaves first, followed by nodes whose only children were
             # leaves, and so on.
-            next_level = [
+            node_list = [
                 (key, node) for key, node in self.nodes.items() if len(node.children) == 0
             ]
-            while next_level:
-                for key, node in next_level:
+            while node_list:
+                for key, node in node_list:
                     if key not in visited:
                         visited.add(key)
                         yield (level, (key, node))
                 level += 1
-                next_level = [
-                    (key, node) for key, node in self.nodes.items()
-                    if not key in visited and all([c in visited for c in node.children])
+                node_list = [
+                    (k, self.nodes[k]) for _, n in node_list for k in n.parents
+                    if not k in visited and all([c in visited for c in self.nodes[k].children])
                 ]
+
+    def get_dependencies(self, node: PipelineNode, transitive: bool=False):
+        # TODO: handle transitive=True case
+        return [n for n in node.children]
+
+    def get_dependents(self, node: PipelineNode, transitive: bool=False):
+        # TODO: handle transitive=True case
+        return [n for n in node.parents]
 
 
 def get_job_name(spec: spack.spec.Spec, build_group: str = ""):
@@ -413,7 +421,7 @@ class SpackCI:
     used by the CI generator(s).
     """
 
-    def __init__(self, ci_config, spec_labels, stages):
+    def __init__(self, ci_config, pipeline):
         """Given the information from the ci section of the config
         and the staged jobs, set up meta data needed for generating Spack
         CI IR.
@@ -439,6 +447,10 @@ class SpackCI:
 
         for spec, dag_hash in _build_jobs(spec_labels, stages):
             jobs[dag_hash] = self.__init_job(spec)
+
+        for _, (key, node) in pipeline.traverse():
+            dag_hash = node.spec.dag_hash()
+            jobs[dag_hash] = self.__init_job(node.spec)
 
         for name in self.named_jobs:
             # Skip the special named jobs
@@ -728,10 +740,10 @@ def generate_gitlab_ci_yaml(
 
     # Default target is gitlab...and only target is gitlab
     ci_target = ci_config.get("target", "gitlab")
-    if ci_target not in CI_TARGET_FORMATTERS:
-        tty.die('Spack CI module only generates target "gitlab"')
+    # if ci_target not in CI_TARGET_FORMATTERS:
+    #     tty.die('Spack CI module only generates target "gitlab"')
 
-    target_formatter = CI_TARGET_FORMATTERS[ci_target]
+    # target_formatter = CI_TARGET_FORMATTERS[ci_target]
 
     cdash_config = cfg.get("cdash")
     cdash_handler = CDashHandler(cdash_config) if "build-group" in cdash_config else None
@@ -997,7 +1009,9 @@ def generate_gitlab_ci_yaml(
     spack_ci = SpackCI(ci_config, pipeline)
     spack_ci_ir = spack_ci.generate_ir()
 
-    target_formatter(pipeline, spack_ci_ir)
+    # TODO: Create a library of formatters keyed by the "target" in ci.yaml
+    # TODO: and use it here.
+    format_gitlab_yaml(pipeline, spack_ci_ir, output_file)
 
     # Clean up remote mirror override if enabled
     # TODO: Remove this block in Spack 0.23
@@ -1038,149 +1052,150 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, output_file:
     max_length_needs = 0
     max_needs_job = ""
 
-    for stage_jobs in stages:
-        stage_name = "stage-{0}".format(stage_id)
-        stage_names.append(stage_name)
-        stage_id += 1
+    for level, (spec_label, node) in pipeline.traverse(top_down=False):
+        stage_id = level
+        stage_name = f"stage-{level}"
 
-        for spec_label in stage_jobs:
-            release_spec = spec_labels[spec_label]
-            release_spec_dag_hash = release_spec.dag_hash()
+        if stage_name not in stage_names:
+            stage_names.append(stage_name)
 
-            job_object = spack_ci_ir["jobs"][release_spec_dag_hash]["attributes"]
+        release_spec = node.spec
+        release_spec_dag_hash = release_spec.dag_hash()
 
-            if not job_object:
-                tty.warn("No match found for {0}, skipping it".format(release_spec))
-                continue
+        job_object = spack_ci_ir["jobs"][release_spec_dag_hash]["attributes"]
 
-            if spack_pipeline_type is not None:
-                # For spack pipelines "public" and "protected" are reserved tags
-                job_object["tags"] = _remove_reserved_tags(job_object.get("tags", []))
-                if spack_pipeline_type == "spack_protected_branch":
-                    job_object["tags"].extend(["protected"])
-                elif spack_pipeline_type == "spack_pull_request":
-                    job_object["tags"].extend(["public"])
+        if not job_object:
+            tty.warn("No match found for {0}, skipping it".format(release_spec))
+            continue
 
-            if "script" not in job_object:
-                raise AttributeError
+        if spack_pipeline_type is not None:
+            # For spack pipelines "public" and "protected" are reserved tags
+            job_object["tags"] = _remove_reserved_tags(job_object.get("tags", []))
+            if spack_pipeline_type == "spack_protected_branch":
+                job_object["tags"].extend(["protected"])
+            elif spack_pipeline_type == "spack_pull_request":
+                job_object["tags"].extend(["public"])
 
-            def main_script_replacements(cmd):
-                return cmd.replace("{env_dir}", rel_concrete_env_dir)
+        if "script" not in job_object:
+            raise AttributeError
 
-            job_object["script"] = _unpack_script(
-                job_object["script"], op=main_script_replacements
-            )
+        def main_script_replacements(cmd):
+            return cmd.replace("{env_dir}", rel_concrete_env_dir)
 
-            if "before_script" in job_object:
-                job_object["before_script"] = _unpack_script(job_object["before_script"])
+        job_object["script"] = _unpack_script(
+            job_object["script"], op=main_script_replacements
+        )
 
-            if "after_script" in job_object:
-                job_object["after_script"] = _unpack_script(job_object["after_script"])
+        if "before_script" in job_object:
+            job_object["before_script"] = _unpack_script(job_object["before_script"])
 
-            job_name = get_job_name(release_spec, build_group)
+        if "after_script" in job_object:
+            job_object["after_script"] = _unpack_script(job_object["after_script"])
 
-            job_vars = job_object.setdefault("variables", {})
-            job_vars["SPACK_JOB_SPEC_DAG_HASH"] = release_spec_dag_hash
-            job_vars["SPACK_JOB_SPEC_PKG_NAME"] = release_spec.name
-            job_vars["SPACK_JOB_SPEC_PKG_VERSION"] = release_spec.format("{version}")
-            job_vars["SPACK_JOB_SPEC_COMPILER_NAME"] = release_spec.format("{compiler.name}")
-            job_vars["SPACK_JOB_SPEC_COMPILER_VERSION"] = release_spec.format("{compiler.version}")
-            job_vars["SPACK_JOB_SPEC_ARCH"] = release_spec.format("{architecture}")
-            job_vars["SPACK_JOB_SPEC_VARIANTS"] = release_spec.format("{variants}")
+        job_name = get_job_name(release_spec, build_group)
 
-            job_object["needs"] = []
-            if spec_label in dependencies:
-                if enable_artifacts_buildcache:
-                    # Get dependencies transitively, so they're all
-                    # available in the artifacts buildcache.
-                    dep_jobs = [d for d in release_spec.traverse(deptype="all", root=False)]
-                else:
-                    # In this case, "needs" is only used for scheduling
-                    # purposes, so we only get the direct dependencies.
-                    dep_jobs = []
-                    for dep_label in dependencies[spec_label]:
-                        dep_jobs.append(spec_labels[dep_label])
+        job_vars = job_object.setdefault("variables", {})
+        job_vars["SPACK_JOB_SPEC_DAG_HASH"] = release_spec_dag_hash
+        job_vars["SPACK_JOB_SPEC_PKG_NAME"] = release_spec.name
+        job_vars["SPACK_JOB_SPEC_PKG_VERSION"] = release_spec.format("{version}")
+        job_vars["SPACK_JOB_SPEC_COMPILER_NAME"] = release_spec.format("{compiler.name}")
+        job_vars["SPACK_JOB_SPEC_COMPILER_VERSION"] = release_spec.format("{compiler.version}")
+        job_vars["SPACK_JOB_SPEC_ARCH"] = release_spec.format("{architecture}")
+        job_vars["SPACK_JOB_SPEC_VARIANTS"] = release_spec.format("{variants}")
 
-                job_object["needs"].extend(
-                    _format_job_needs(
-                        dep_jobs,
-                        build_group,
-                        prune_dag,
-                        rebuild_decisions,
-                        enable_artifacts_buildcache,
-                    )
-                )
-
-            rebuild_spec = spec_record.rebuild
-
-            if not rebuild_spec and not copy_only_pipeline:
-                if prune_dag:
-                    spec_record.reason = "Pruned, up-to-date"
-                    continue
-                else:
-                    # DAG pruning is disabled, force the spec to rebuild. The
-                    # record still contains any mirrors on which the spec
-                    # may have been found, so we can print them in the staging
-                    # summary.
-                    spec_record.rebuild = True
-                    spec_record.reason = "Scheduled, DAG pruning disabled"
-
-            if artifacts_root:
-                job_object["needs"].append(
-                    {"job": generate_job_name, "pipeline": "{0}".format(parent_pipeline_id)}
-                )
-
-            # Let downstream jobs know whether the spec needed rebuilding, regardless
-            # whether DAG pruning was enabled or not.
-            job_vars["SPACK_SPEC_NEEDS_REBUILD"] = str(rebuild_spec)
-
-            if cdash_handler:
-                cdash_handler.current_spec = release_spec
-                build_name = cdash_handler.build_name
-                all_job_names.append(build_name)
-                job_vars["SPACK_CDASH_BUILD_NAME"] = build_name
-
-                build_stamp = cdash_handler.build_stamp
-                job_vars["SPACK_CDASH_BUILD_STAMP"] = build_stamp
-
-            job_object["artifacts"] = spack.config.merge_yaml(
-                job_object.get("artifacts", {}),
-                {
-                    "when": "always",
-                    "paths": [
-                        rel_job_log_dir,
-                        rel_job_repro_dir,
-                        rel_job_test_dir,
-                        rel_user_artifacts_dir,
-                    ],
-                },
-            )
-
-            # TODO: Remove this block in Spack 0.23
+        job_object["needs"] = []
+        if spec_label in dependencies:
             if enable_artifacts_buildcache:
-                bc_root = os.path.join(local_mirror_dir, "build_cache")
-                job_object["artifacts"]["paths"].extend(
-                    [
-                        os.path.join(bc_root, p)
-                        for p in [
-                            bindist.tarball_name(release_spec, ".spec.json"),
-                            bindist.tarball_directory_name(release_spec),
-                        ]
-                    ]
+                # Get dependencies transitively, so they're all
+                # available in the artifacts buildcache.
+                dep_jobs = [d for d in release_spec.traverse(deptype="all", root=False)]
+            else:
+                # In this case, "needs" is only used for scheduling
+                # purposes, so we only get the direct dependencies.
+                dep_jobs = []
+                for dep_label in dependencies[spec_label]:
+                    dep_jobs.append(spec_labels[dep_label])
+
+            job_object["needs"].extend(
+                _format_job_needs(
+                    dep_jobs,
+                    build_group,
+                    prune_dag,
+                    rebuild_decisions,
+                    enable_artifacts_buildcache,
                 )
+            )
 
-            job_object["stage"] = stage_name
-            job_object["retry"] = {"max": 2, "when": JOB_RETRY_CONDITIONS}
-            job_object["interruptible"] = True
+        rebuild_spec = spec_record.rebuild
 
-            length_needs = len(job_object["needs"])
-            if length_needs > max_length_needs:
-                max_length_needs = length_needs
-                max_needs_job = job_name
+        if not rebuild_spec and not copy_only_pipeline:
+            if prune_dag:
+                spec_record.reason = "Pruned, up-to-date"
+                continue
+            else:
+                # DAG pruning is disabled, force the spec to rebuild. The
+                # record still contains any mirrors on which the spec
+                # may have been found, so we can print them in the staging
+                # summary.
+                spec_record.rebuild = True
+                spec_record.reason = "Scheduled, DAG pruning disabled"
 
-            if not copy_only_pipeline:
-                output_object[job_name] = job_object
-                job_id += 1
+        if artifacts_root:
+            job_object["needs"].append(
+                {"job": generate_job_name, "pipeline": "{0}".format(parent_pipeline_id)}
+            )
+
+        # Let downstream jobs know whether the spec needed rebuilding, regardless
+        # whether DAG pruning was enabled or not.
+        job_vars["SPACK_SPEC_NEEDS_REBUILD"] = str(rebuild_spec)
+
+        if cdash_handler:
+            cdash_handler.current_spec = release_spec
+            build_name = cdash_handler.build_name
+            all_job_names.append(build_name)
+            job_vars["SPACK_CDASH_BUILD_NAME"] = build_name
+
+            build_stamp = cdash_handler.build_stamp
+            job_vars["SPACK_CDASH_BUILD_STAMP"] = build_stamp
+
+        job_object["artifacts"] = spack.config.merge_yaml(
+            job_object.get("artifacts", {}),
+            {
+                "when": "always",
+                "paths": [
+                    rel_job_log_dir,
+                    rel_job_repro_dir,
+                    rel_job_test_dir,
+                    rel_user_artifacts_dir,
+                ],
+            },
+        )
+
+        # TODO: Remove this block in Spack 0.23
+        if enable_artifacts_buildcache:
+            bc_root = os.path.join(local_mirror_dir, "build_cache")
+            job_object["artifacts"]["paths"].extend(
+                [
+                    os.path.join(bc_root, p)
+                    for p in [
+                        bindist.tarball_name(release_spec, ".spec.json"),
+                        bindist.tarball_directory_name(release_spec),
+                    ]
+                ]
+            )
+
+        job_object["stage"] = stage_name
+        job_object["retry"] = {"max": 2, "when": JOB_RETRY_CONDITIONS}
+        job_object["interruptible"] = True
+
+        length_needs = len(job_object["needs"])
+        if length_needs > max_length_needs:
+            max_length_needs = length_needs
+            max_needs_job = job_name
+
+        if not copy_only_pipeline:
+            output_object[job_name] = job_object
+            job_id += 1
 
     if print_summary:
         _print_staging_summary(spec_labels, stages, mirrors_to_check, rebuild_decisions)
