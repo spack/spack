@@ -2107,10 +2107,12 @@ complete -c spack -n '__fish_spack_using_command location' -l first -f -a find_f
 complete -c spack -n '__fish_spack_using_command location' -l first -d 'use the first match if multiple packages match the spec'
 
 # spack log
-set -g __fish_spack_optspecs_spack_log h/help
+set -g __fish_spack_optspecs_spack_log h/help continuous
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 log' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command log' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command log' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command log' -l continuous -f -a continuous
+complete -c spack -n '__fish_spack_using_command log' -l continuous -d 'for stage logs, poll for new content'
 
 # spack log-parse
 set -g __fish_spack_optspecs_spack_log_parse h/help show= c/context= p/profile w/width= j/jobs=
