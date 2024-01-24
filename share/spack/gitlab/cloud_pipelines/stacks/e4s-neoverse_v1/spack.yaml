@@ -346,6 +346,15 @@ spack:
   # - tasmanian +cuda cuda_arch=90  # tasmanian: conflicts with cuda@12
   # - upcxx +cuda cuda_arch=90      # upcxx: needs NVIDIA driver
 
+  - py-torch ~rocm ~cuda 
+  - py-torch ~rocm +cuda cuda_arch=75
+  - py-torch ~rocm +cuda cuda_arch=80
+  - py-torch ~rocm +cuda cuda_arch=90
+  - py-tensorflow ~rocm ~cuda
+  - py-tensorflow ~rocm +cuda cuda_arch=75
+  - py-tensorflow ~rocm +cuda cuda_arch=80
+  - py-tensorflow ~rocm +cuda cuda_arch=90
+
   ci:
     pipeline-gen:
     - build-job:

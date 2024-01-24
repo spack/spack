@@ -397,6 +397,19 @@ spack:
   # - lbann ~cuda +rocm amdgpu_target=gfx90a    # aluminum: https://github.com/spack/spack/issues/38807
   # - papi +rocm amdgpu_target=gfx90a           # papi: https://github.com/spack/spack/issues/27898
 
+  - py-torch ~rocm ~cuda 
+  - py-torch ~rocm +cuda cuda_arch=75
+  - py-torch ~rocm +cuda cuda_arch=80
+  - py-torch ~rocm +cuda cuda_arch=90
+  - py-torch ~cuda +rocm amdgpu_target=gfx908
+  - py-torch ~cuda +rocm amdgpu_target=gfx90a
+  - py-tensorflow ~rocm ~cuda
+  - py-tensorflow ~rocm +cuda cuda_arch=75
+  - py-tensorflow ~rocm +cuda cuda_arch=80
+  - py-tensorflow ~rocm +cuda cuda_arch=90
+  - py-tensorflow ~cuda +rocm amdgpu_target=gfx908
+  - py-tensorflow ~cuda +rocm amdgpu_target=gfx90a
+
   ci:
     pipeline-gen:
     - build-job:
