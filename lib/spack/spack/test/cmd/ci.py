@@ -1456,26 +1456,24 @@ def test_ci_rebuild_index(
     working_dir = tmpdir.join("working_dir")
 
     mirror_dir = working_dir.join("mirror")
-    mirror_url = "file://{0}".format(mirror_dir.strpath)
+    mirror_url = url_util.path_to_file_url(str(mirror_dir))
 
-    spack_yaml_contents = """
+    spack_yaml_contents = f"""
 spack:
- specs:
-   - callpath
- mirrors:
-   test-mirror: {0}
- ci:
-   pipeline-gen:
-   - submapping:
-     - match:
-         - patchelf
-       build-job:
-         tags:
-           - donotcare
-         image: donotcare
-""".format(
-        mirror_url
-    )
+  specs:
+  - callpath
+  mirrors:
+    test-mirror: {mirror_url}
+  ci:
+    pipeline-gen:
+    - submapping:
+      - match:
+        - patchelf
+        build-job:
+          tags:
+          - donotcare
+          image: donotcare
+"""
 
     filename = str(tmpdir.join("spack.yaml"))
     with open(filename, "w") as f:
