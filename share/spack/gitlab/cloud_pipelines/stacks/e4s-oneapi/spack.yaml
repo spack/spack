@@ -98,6 +98,7 @@ spack:
   - gmp
   - gotcha
   - gptune ~mpispawn
+  - gromacs
   - h5bench
   - hdf5-vol-async
   - hdf5-vol-cache
