@@ -275,8 +275,12 @@ class Tau(Package):
             if "+fortran" in spec:
                 env["F77"] = spec["mpi"].mpif77
                 env["FC"] = spec["mpi"].mpifc
-            options.append("-mpiinc=%s" % spec["mpi"].prefix.include)
-            options.append("-mpilib=%s" % spec["mpi"].prefix.lib)
+            if spec["mpi"].name == "intel-oneapi-mpi":
+                options.append("-mpiinc=%s" % spec["mpi"].package.component_prefix)
+                options.append("-mpilib=%s" % spec["mpi"].package.component_prefix)
+            else:
+                options.append("-mpiinc=%s" % spec["mpi"].prefix.include)
+                options.append("-mpilib=%s" % spec["mpi"].prefix.lib)
 
             options.append("-mpi")
             if "+comm" in spec:
