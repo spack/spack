@@ -149,7 +149,7 @@ class MesonBuilder(BaseBuilder):
         else:
             default_library = "shared"
 
-        args = [
+        return [
             "-Dprefix={0}".format(pkg.prefix),
             # If we do not specify libdir explicitly, Meson chooses something
             # like lib/x86_64-linux-gnu, which causes problems when trying to
@@ -162,8 +162,6 @@ class MesonBuilder(BaseBuilder):
             # Do not automatically download and install dependencies
             "-Dwrap_mode=nodownload",
         ]
-
-        return args
 
     @property
     def build_dirname(self):
