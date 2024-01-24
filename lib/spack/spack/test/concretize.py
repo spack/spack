@@ -1524,17 +1524,17 @@ class TestConcretize:
 
     @pytest.mark.regression("42172")
     @pytest.mark.only_clingo("Original concretizer cannot use sticky variants")
-    @pytest.mark.parametrize("spec,allow_gcc", [
-        ("sticky-variant@1.0+allow-gcc", True),
-        ("sticky-variant@1.0~allow-gcc", False),
-        ("sticky-variant@1.0", False),
-    ])
+    @pytest.mark.parametrize(
+        "spec,allow_gcc",
+        [
+            ("sticky-variant@1.0+allow-gcc", True),
+            ("sticky-variant@1.0~allow-gcc", False),
+            ("sticky-variant@1.0", False),
+        ],
+    )
     def test_sticky_variant_in_external(self, spec, allow_gcc):
         # setup external for sticky-variant+allow-gcc
-        config = {
-            "externals": [{"spec": spec, "prefix": "/fake/path"}],
-            "buildable": False,
-        }
+        config = {"externals": [{"spec": spec, "prefix": "/fake/path"}], "buildable": False}
         spack.config.set("packages:sticky-variant", config)
 
         maybe = llnl.util.lang.nullcontext if allow_gcc else pytest.raises
