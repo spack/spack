@@ -25,11 +25,28 @@ def setup_parser(subparser):
 
 
 def _dump_byte_stream_to_stdout(stream):
-    with open(sys.stdout.fileno(), "wb") as outstream:
+    try:
+        needs_closing = True
+        needs_flushing = False
+
+        if sys.platform == "win32":
+            try:
+                outstream = sys.stdout.buffer
+            except AttributeError:
+                outstream, needs_flushing = io.BufferedWriter(sys.stdout), True
+            needs_closing = False
+        else:
+            outstream = open(sys.stdout.fileno(), "wb")
+
         line = stream.readline()
         while line:
             outstream.write(line)
             line = stream.readline()
+    finally:
+        if needs_flushing:
+            outstream.flush()
+        if needs_closing:
+            outstream.close()
 
 
 def dump_build_log(package):
