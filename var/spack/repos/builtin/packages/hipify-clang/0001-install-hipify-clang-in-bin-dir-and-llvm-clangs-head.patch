@@ -1,0 +1,38 @@
+From 5af7f4a3dcb24d935208b3d598ea7e864b729fb7 Mon Sep 17 00:00:00 2001
+From: sreenivasa murthy kolam <sreenivasamurthy.kolam@amd.com>
+Date: Sat, 13 Aug 2022 04:51:21 +0000
+Subject: [PATCH] install hipify-clang in bin dir and llvm-clangs headers in
+ the include headers this will fix the issue
+ https://github.com/spack/spack/issues/30711
+
+---
+ CMakeLists.txt | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 6ba9a54..b624f81 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -101,16 +101,16 @@ endif()
+ 
+ set(HIPIFY_INSTALL_PATH ${CMAKE_INSTALL_PREFIX})
+ 
+-install(TARGETS hipify-clang DESTINATION ${CMAKE_INSTALL_PREFIX})
++install(TARGETS hipify-clang DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+ install(
+     DIRECTORY ${CMAKE_SOURCE_DIR}/bin/
+-    DESTINATION ${CMAKE_INSTALL_PREFIX}
++    DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+     USE_SOURCE_PERMISSIONS
+     PATTERN "hipify-perl"
+     PATTERN "*.sh")
+ install(
+     DIRECTORY ${LLVM_DIR}/../../clang/${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}.${LLVM_VERSION_PATCH}/
+-    DESTINATION ${CMAKE_INSTALL_PREFIX}
++    DESTINATION ${CMAKE_INSTALL_PREFIX}/include
+     COMPONENT clang-resource-headers
+     FILES_MATCHING
+     PATTERN "*.h"
+-- 
+2.18.4
+

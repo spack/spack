@@ -1,0 +1,24 @@
+diff -u -r -N a/src/exe/rbcavity.cxx b/src/exe/rbcavity.cxx
+--- a/src/exe/rbcavity.cxx	2016-12-28 17:16:27.000000000 +0900
++++ b/src/exe/rbcavity.cxx	2021-02-01 20:14:47.508975264 +0900
+@@ -50,7 +50,7 @@
+ 
+ int main(int argc,const char* argv[])
+ {
+-	char 			c;					// for argument parsing
++	int 			c;					// for argument parsing
+ 	poptContext		optCon;				// ditto
+ 	char 			*prmFile=NULL;		// will be strReceptorPrmFile
+ 	char 			*listDist=NULL;		// will be 'dist' 
+diff -u -r -N a/src/exe/rbdock.cxx b/src/exe/rbdock.cxx
+--- a/src/exe/rbdock.cxx	2018-04-06 20:14:32.000000000 +0900
++++ b/src/exe/rbdock.cxx	2021-02-01 20:17:20.359974443 +0900
+@@ -401,7 +401,7 @@
+ 	RbtInt		iTrace(0);//Trace level, for debugging
+ 
+ 	// variables for popt command-line parsing
+-	char 			c;						// for argument parsing
++	int 			c;						// for argument parsing
+ 	
+ #ifdef _VISUAL_STUDIO
+ #else

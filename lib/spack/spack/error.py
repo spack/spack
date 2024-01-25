@@ -1,27 +1,25 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from __future__ import print_function
 
 import inspect
 import sys
 
 import llnl.util.tty as tty
 
-#: whether we should write stack traces or short error messages
+#: at what level we should write stack traces or short error messages
 #: this is module-scoped because it needs to be set very early
-debug = False
+debug = 0
 
 
 class SpackError(Exception):
     """This is the superclass for all Spack errors.
-       Subclasses can be found in the modules they have to do with.
+    Subclasses can be found in the modules they have to do with.
     """
 
     def __init__(self, message, long_message=None):
-        super(SpackError, self).__init__()
+        super().__init__()
         self.message = message
         self._long_message = long_message
 
@@ -54,7 +52,7 @@ class SpackError(Exception):
         tty.error(self.message)
         if self.long_message:
             sys.stderr.write(self.long_message)
-            sys.stderr.write('\n')
+            sys.stderr.write("\n")
 
         # stack trace, etc. in debug mode.
         if debug:
@@ -81,10 +79,9 @@ class SpackError(Exception):
 
     def __repr__(self):
         args = [repr(self.message), repr(self.long_message)]
-        args = ','.join(args)
-        qualified_name = inspect.getmodule(
-            self).__name__ + '.' + type(self).__name__
-        return qualified_name + '(' + args + ')'
+        args = ",".join(args)
+        qualified_name = inspect.getmodule(self).__name__ + "." + type(self).__name__
+        return qualified_name + "(" + args + ")"
 
     def __reduce__(self):
         return type(self), (self.message, self.long_message)
@@ -94,17 +91,17 @@ class UnsupportedPlatformError(SpackError):
     """Raised by packages when a platform is not supported"""
 
     def __init__(self, message):
-        super(UnsupportedPlatformError, self).__init__(message)
+        super().__init__(message)
 
 
 class NoLibrariesError(SpackError):
     """Raised when package libraries are requested but cannot be found"""
 
     def __init__(self, message_or_name, prefix=None):
-        super(NoLibrariesError, self).__init__(
-            message_or_name if prefix is None else
-            'Unable to locate {0} libraries in {1}'.format(
-                message_or_name, prefix)
+        super().__init__(
+            message_or_name
+            if prefix is None
+            else "Unable to locate {0} libraries in {1}".format(message_or_name, prefix)
         )
 
 
@@ -123,11 +120,15 @@ class UnsatisfiableSpecError(SpecError):
     For original concretizer, provide the requirement that was violated when
     raising.
     """
+
     def __init__(self, provided, required, constraint_type):
         # This is only the entrypoint for old concretizer errors
-        super(UnsatisfiableSpecError, self).__init__(
-            "%s does not satisfy %s" % (provided, required))
+        super().__init__("%s does not satisfy %s" % (provided, required))
 
         self.provided = provided
         self.required = required
         self.constraint_type = constraint_type
+
+
+class FetchError(SpackError):
+    """Superclass for fetch-related errors."""

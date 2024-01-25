@@ -1,0 +1,14 @@
+# patch method from debian repo
+# https://salsa.debian.org/med-team/mash/-/blob/master/debian/patches/gcc-11.patch
+diff -Naur spack-src/src/mash/robin_hood.h spack-src.patched/src/mash/robin_hood.h 
+--- spack-src/src/mash/robin_hood.h	2021-02-26 17:13:33.000000000 -0600
++++ spack-src.patched/src/mash/robin_hood.h	2023-01-27 09:37:40.418855844 -0600
+@@ -45,6 +45,7 @@
+ #include <memory> // only to support hash of smart pointers
+ #include <stdexcept>
+ #include <string>
++#include <limits>
+ #include <type_traits>
+ #include <utility>
+ #if __cplusplus >= 201703L
+

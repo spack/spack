@@ -1,0 +1,21 @@
+diff -u -r -N a/src/lib/RbtBaseMolecularFileSource.cxx b/src/lib/RbtBaseMolecularFileSource.cxx
+--- a/src/lib/RbtBaseMolecularFileSource.cxx	2018-03-28 16:38:36.000000000 +0900
++++ b/src/lib/RbtBaseMolecularFileSource.cxx	2021-02-01 20:20:04.688973560 +0900
+@@ -420,7 +420,7 @@
+ #ifdef _VISUAL_STUDIO
+ 	but_iterator = std::remove(atList.begin(), atList.end(), _MANDATORY);
+ #else
+-	std::remove(atList.begin(), atList.end(), _MANDATORY);
++	atList.erase(std::remove(atList.begin(), atList.end(), _MANDATORY), atList.end());
+ #endif
+ 
+   }
+@@ -440,7 +440,7 @@
+ #ifdef _VISUAL_STUDIO
+ 	but_iterator = std::remove(atList.begin(), atList.end(), _FORBIDDEN);
+ #else
+-	std::remove(atList.begin(), atList.end(), _FORBIDDEN);
++	atList.erase(std::remove(atList.begin(), atList.end(), _FORBIDDEN), atList.end());
+ #endif
+ 
+   }

@@ -1,0 +1,8 @@
+# This method is just Spack bootstrapping the software it needs from sources.
+# It has been added here so that users can selectively disable bootstrapping
+# from sources by "untrusting" it.
+type: install
+description: |
+  Specs built from sources downloaded from the Spack public mirror.
+info:
+  url: https://mirror.spack.io

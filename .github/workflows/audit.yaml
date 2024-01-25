@@ -1,0 +1,49 @@
+name: audit
+
+on:
+  workflow_call:
+    inputs:
+      with_coverage:
+        required: true
+        type: string
+      python_version:
+        required: true
+        type: string
+
+concurrency:
+  group: audit-${{inputs.python_version}}-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
+  cancel-in-progress: true
+
+jobs:
+  # Run audits on all the packages in the built-in repository
+  package-audits:
+    runs-on: ${{ matrix.operating_system }}
+    strategy:
+      matrix:
+        operating_system: ["ubuntu-latest", "macos-latest"]
+    steps:
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # @v2
+    - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # @v2
+      with:
+        python-version: ${{inputs.python_version}}
+    - name: Install Python packages
+      run: |
+        pip install --upgrade pip setuptools pytest coverage[toml]
+    - name: Package audits (with coverage)
+      if: ${{ inputs.with_coverage == 'true' }}
+      run: |
+          . share/spack/setup-env.sh
+          coverage run $(which spack) audit packages
+          coverage run $(which spack) audit externals        
+          coverage combine
+          coverage xml
+    - name: Package audits (without coverage)
+      if: ${{ inputs.with_coverage == 'false' }}
+      run: |
+          . share/spack/setup-env.sh
+          $(which spack) audit packages
+          $(which spack) audit externals
+    - uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d # @v2.1.0
+      if: ${{ inputs.with_coverage == 'true' }}
+      with:
+        flags: unittests,audits

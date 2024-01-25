@@ -1,12 +1,11 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import io
 import sys
 
-import six
-
+import llnl.string
 import llnl.util.tty as tty
 import llnl.util.tty.colify as colify
 
@@ -14,19 +13,19 @@ import spack.repo
 import spack.store
 import spack.tag
 
-description = "Show package tags and associated packages"
+description = "show package tags and associated packages"
 section = "basic"
 level = "long"
 
 
 def report_tags(category, tags):
-    buffer = six.StringIO()
+    buffer = io.StringIO()
     isatty = sys.stdout.isatty()
 
     if isatty:
         num = len(tags)
-        fmt = '{0} package tag'.format(category)
-        buffer.write("{0}:\n".format(spack.util.string.plural(num, fmt)))
+        fmt = "{0} package tag".format(category)
+        buffer.write("{0}:\n".format(llnl.string.plural(num, fmt)))
 
     if tags:
         colify.colify(tags, output=buffer, tty=isatty, indent=4)
@@ -43,18 +42,20 @@ def setup_parser(subparser):
         "'--all' at the same time."
     )
     subparser.add_argument(
-        '-i', '--installed', action='store_true', default=False,
-        help="show information for installed packages only"
+        "-i",
+        "--installed",
+        action="store_true",
+        default=False,
+        help="show information for installed packages only",
     )
     subparser.add_argument(
-        '-a', '--all', action='store_true', default=False,
-        help="show packages for all available tags"
+        "-a",
+        "--all",
+        action="store_true",
+        default=False,
+        help="show packages for all available tags",
     )
-    subparser.add_argument(
-        'tag',
-        nargs='*',
-        help="show packages with the specified tag"
-    )
+    subparser.add_argument("tag", nargs="*", help="show packages with the specified tag")
 
 
 def tags(parser, args):
@@ -68,7 +69,7 @@ def tags(parser, args):
         return
 
     # unique list of available tags
-    available_tags = sorted(spack.repo.path.tag_index.keys())
+    available_tags = sorted(spack.repo.PATH.tag_index.keys())
     if not available_tags:
         tty.msg("No tagged packages")
         return
@@ -86,12 +87,12 @@ def tags(parser, args):
         return
 
     # Report packages associated with tags
-    buffer = six.StringIO()
+    buffer = io.StringIO()
     isatty = sys.stdout.isatty()
 
     tags = args.tag if args.tag else available_tags
     tag_pkgs = spack.tag.packages_with_tags(tags, args.installed, False)
-    missing = 'No installed packages' if args.installed else 'None'
+    missing = "No installed packages" if args.installed else "None"
     for tag in sorted(tag_pkgs):
         # TODO: Remove the sorting once we're sure noone has an old
         # TODO: tag cache since it can accumulate duplicates.

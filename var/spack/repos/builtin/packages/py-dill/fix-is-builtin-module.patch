@@ -1,0 +1,25 @@
+--- a/dill/_dill.py
++++ b/dill/_dill.py
+@@ -1588,10 +1588,18 @@ def _is_builtin_module(module):
+     # If a module file name starts with prefix, it should be a builtin
+     # module, so should always be pickled as a reference.
+     names = ["base_prefix", "base_exec_prefix", "exec_prefix", "prefix", "real_prefix"]
+-    return any(os.path.realpath(module.__file__).startswith(os.path.realpath(getattr(sys, name)))
+-               for name in names if hasattr(sys, name)) or \
+-            module.__file__.endswith(EXTENSION_SUFFIXES) or \
+-            'site-packages' in module.__file__
++    rp = os.path.realpath
++    # See https://github.com/uqfoundation/dill/issues/566
++    return (
++        any(
++            module.__file__.startswith(getattr(sys, name))
++            or rp(module.__file__).startswith(rp(getattr(sys, name)))
++            for name in names
++            if hasattr(sys, name)
++        )
++        or module.__file__.endswith(EXTENSION_SUFFIXES)
++        or 'site-packages' in module.__file__
++    )
+ 
+ def _is_imported_module(module):
+     return getattr(module, '__loader__', None) is not None or module in sys.modules.values()

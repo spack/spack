@@ -1,0 +1,12 @@
+balay@compute-386-07:/scratch/balay/spack-xsdk$ cat var/spack/repos/builtin/packages/adol-c/colpack.patch
+--- adol-c/configure.orig       2022-04-28 17:56:45.132919100 -0500
++++ adol-c/configure    2022-04-28 17:55:07.802506649 -0500
+@@ -18910,7 +18910,7 @@
+ else
+ 
+ COLPACK_CFLAGS=""
+-COLPACK_LIBS="-lColPack"
++COLPACK_LIBS="-lColPack_break"
+ D[0]=""
+ 
+ fi

@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RBmp(RPackage):
@@ -15,4 +15,6 @@ class RBmp(RPackage):
 
     cran = "bmp"
 
-    version('0.3', sha256='bdf790249b932e80bc3a188a288fef079d218856cf64ffb88428d915423ea649')
+    license("GPL-2.0-or-later")
+
+    version("0.3", sha256="bdf790249b932e80bc3a188a288fef079d218856cf64ffb88428d915423ea649")

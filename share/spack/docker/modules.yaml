@@ -1,6 +1,6 @@
 modules:
-  enable:
-    - lmod
-  lmod:
-    core_compilers:
+  default:
+    enable: []
+    lmod:
+      core_compilers:
       - gcc

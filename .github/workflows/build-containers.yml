@@ -13,9 +13,15 @@ on:
     paths:
       - '.github/workflows/build-containers.yml'
       - 'share/spack/docker/*'
+      - 'share/spack/templates/container/*'
+      - 'lib/spack/spack/container/*'
   # Let's also build & tag Spack containers on releases.
   release:
     types: [published]
+
+concurrency:
+  group: build_containers-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
+  cancel-in-progress: true
 
 jobs:
   deploy-images:
@@ -29,65 +35,90 @@ jobs:
       # A matrix of Dockerfile paths, associated tags, and which architectures
       # they support.
       matrix:
-        dockerfile: [[amazon-linux, amazonlinux-2.dockerfile, 'linux/amd64,linux/arm64'],
-                     [centos7, centos-7.dockerfile, 'linux/amd64,linux/arm64,linux/ppc64le'],
-                     [leap15, leap-15.dockerfile, 'linux/amd64,linux/arm64,linux/ppc64le'],
-                     [ubuntu-xenial, ubuntu-1604.dockerfile, 'linux/amd64,linux/arm64,linux/ppc64le'],
-                     [ubuntu-bionic, ubuntu-1804.dockerfile, 'linux/amd64,linux/arm64,linux/ppc64le']]
+        # Meaning of the various items in the matrix list
+        # 0: Container name (e.g. ubuntu-bionic)
+        # 1: Platforms to build for
+        # 2: Base image (e.g. ubuntu:22.04)
+        dockerfile: [[amazon-linux, 'linux/amd64,linux/arm64', 'amazonlinux:2'],
+                     [centos7, 'linux/amd64,linux/arm64,linux/ppc64le', 'centos:7'],
+                     [centos-stream, 'linux/amd64,linux/arm64,linux/ppc64le', 'centos:stream'],
+                     [leap15, 'linux/amd64,linux/arm64,linux/ppc64le', 'opensuse/leap:15'],
+                     [ubuntu-focal, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:20.04'],
+                     [ubuntu-jammy, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:22.04'],
+                     [almalinux8, 'linux/amd64,linux/arm64,linux/ppc64le', 'almalinux:8'],
+                     [almalinux9, 'linux/amd64,linux/arm64,linux/ppc64le', 'almalinux:9'],
+                     [rockylinux8, 'linux/amd64,linux/arm64', 'rockylinux:8'],
+                     [rockylinux9, 'linux/amd64,linux/arm64', 'rockylinux:9'],
+                     [fedora37, 'linux/amd64,linux/arm64,linux/ppc64le', 'fedora:37'],
+                     [fedora38, 'linux/amd64,linux/arm64,linux/ppc64le', 'fedora:38']]
     name: Build ${{ matrix.dockerfile[0] }}
+    if: github.repository == 'spack/spack'
     steps:
       - name: Checkout
-        uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # @v2
 
-      - name: Set Container Tag Normal (Nightly)
-        run: |
-          container="${{ matrix.dockerfile[0] }}:latest"
-          echo "container=${container}" >> $GITHUB_ENV
-          echo "versioned=${container}" >> $GITHUB_ENV
+      - uses: docker/metadata-action@dbef88086f6cef02e264edb7dbf63250c17cef6c
+        id: docker_meta
+        with:
+          images: |
+              ghcr.io/${{ github.repository_owner }}/${{ matrix.dockerfile[0] }}
+              ${{ github.repository_owner }}/${{ matrix.dockerfile[0] }}
+          tags: |
+              type=schedule,pattern=nightly
+              type=schedule,pattern=develop
+              type=semver,pattern={{version}}
+              type=semver,pattern={{major}}.{{minor}}
+              type=semver,pattern={{major}}
+              type=ref,event=branch
+              type=ref,event=pr
 
-        # On a new release create a container with the same tag as the release.
-      - name: Set Container Tag on Release
-        if: github.event_name == 'release'
+      - name: Generate the Dockerfile
+        env:
+          SPACK_YAML_OS: "${{ matrix.dockerfile[2] }}"
         run: |
-          versioned="${{matrix.dockerfile[0]}}:${GITHUB_REF##*/}"
-          echo "versioned=${versioned}" >> $GITHUB_ENV
-
-      - name: Check ${{ matrix.dockerfile[1] }} Exists
-        run: |
-          printf "Preparing to build ${{ env.container }} from ${{ matrix.dockerfile[1] }}"
-          if [ ! -f "share/spack/docker/${{ matrix.dockerfile[1]}}" ]; then
-              printf "Dockerfile ${{ matrix.dockerfile[0]}} does not exist"
+          .github/workflows/generate_spack_yaml_containerize.sh
+          . share/spack/setup-env.sh
+          mkdir -p dockerfiles/${{ matrix.dockerfile[0] }}
+          spack containerize --last-stage=bootstrap | tee dockerfiles/${{ matrix.dockerfile[0] }}/Dockerfile
+          printf "Preparing to build ${{ env.container }} from dockerfiles/${{ matrix.dockerfile[0] }}/Dockerfile"
+          if [ ! -f "dockerfiles/${{ matrix.dockerfile[0] }}/Dockerfile" ]; then
+              printf "dockerfiles/${{ matrix.dockerfile[0] }}/Dockerfile does not exist"
               exit 1;
           fi
 
+      - name: Upload Dockerfile
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32
+        with:
+          name: dockerfiles
+          path: dockerfiles
+
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@27d0a4f181a40b142cce983c5393082c365d1480 # @v1
+        uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@94ab11c41e45d028884a99163086648e898eed25 # @v1
+        uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226
 
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@dd4fa0671be5250ee6f50aedf4cb05514abda2c7 # @v1
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Log in to DockerHub
-        if: ${{ github.event_name != 'pull_request' }}
-        uses: docker/login-action@dd4fa0671be5250ee6f50aedf4cb05514abda2c7 # @v1
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build & Deploy ${{ matrix.dockerfile[1] }}
-        uses: docker/build-push-action@ac9327eae2b366085ac7f6a2d02df8aa8ead720a # @v2
+      - name: Build & Deploy ${{ matrix.dockerfile[0] }}
+        uses: docker/build-push-action@4a13e500e55cf31b7a5d59a38ab2040ab0f42f56
         with:
-          file: share/spack/docker/${{matrix.dockerfile[1]}}
-          platforms: ${{ matrix.dockerfile[2] }}
+          context: dockerfiles/${{ matrix.dockerfile[0] }}
+          platforms: ${{ matrix.dockerfile[1] }}
           push: ${{ github.event_name != 'pull_request' }}
-          tags: |
-            spack/${{ env.container }}
-            spack/${{ env.versioned }}
-            ghcr.io/spack/${{ env.container }}
-            ghcr.io/spack/${{ env.versioned }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: ${{ steps.docker_meta.outputs.tags }}
+          labels: ${{ steps.docker_meta.outputs.labels }}

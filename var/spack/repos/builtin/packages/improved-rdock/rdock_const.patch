@@ -1,0 +1,21 @@
+diff -u -r -N e/src/lib/RbtToken.cxx f/src/lib/RbtToken.cxx
+--- e/src/lib/RbtToken.cxx	2020-10-14 13:45:40.000000000 +0900
++++ f/src/lib/RbtToken.cxx	2020-10-14 13:46:34.000000000 +0900
+@@ -15,7 +15,7 @@
+ #include "RbtDebug.h"
+ 
+ RbtString RbtToken::_CT("RbtToken");
+-
++const RbtVble& _ff = RbtVble();
+     ///////////////////
+     // Constructors
+     ///////////////////
+@@ -24,7 +24,7 @@
+     _RBTOBJECTCOUNTER_CONSTR_(_CT);
+ }
+ 
+-RbtToken::RbtToken(RbtCommands c) : isvble(false), comm(c), vble(RbtVble()) 
++RbtToken::RbtToken(RbtCommands c) : isvble(false), comm(c), vble(_ff) 
+ {
+     _RBTOBJECTCOUNTER_CONSTR_(_CT);
+ }

@@ -1,0 +1,18 @@
+diff --git a/cmake/Modules/GTest.cmake b/cmake/Modules/GTest1.cmake
+index 0c62291..e42137b 100644
+--- a/cmake/Modules/GTest.cmake
++++ b/cmake/Modules/GTest1.cmake
+@@ -7,11 +7,11 @@ else()
+ endif()
+ 
+ include(ExternalProject)
+-set(GTEST_URL "https://github.com/google/googletest/archive/release-1.10.0.tar.gz" CACHE STRING "URL for GTest tarball")
++set(GTEST_URL "https://github.com/google/googletest/archive/release-1.11.0.tar.gz" CACHE STRING "URL for GTest tarball")
+ mark_as_advanced(GTEST_URL)
+ ExternalProject_Add(googletest
+                     URL ${GTEST_URL}
+-                    URL_MD5         ecd1fa65e7de707cd5c00bdac56022cd
++                    URL_MD5         e8a8df240b6938bb6384155d4c37d937
+                     SOURCE_DIR      "${CMAKE_BINARY_DIR}/gtest-src"
+                     BINARY_DIR      "${CMAKE_BINARY_DIR}/gtest-build"
+                     CMAKE_ARGS      ${CMAKE_REQUEST_PIC} ${CMAKE_EXTRA_GTEST_OPTS}

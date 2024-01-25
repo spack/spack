@@ -13,14 +13,16 @@ RUN yum update -y \
         git \
         gnupg2 \
         hostname \
+        hg \
         iproute \
         make \
         patch \
-        python \
-        python-pip \
-        python-setuptools \
+        python3 \
+        python3-pip \
+        python3-setuptools \
         unzip \
- && pip install boto3 \
+        zstd \
+ && pip3 install boto3 \
  && rm -rf /var/cache/yum \
  && yum clean all
 {% endblock %}

@@ -1,0 +1,21 @@
+--- etsf-io/tests/group_level/tests_module.f90.orig	2022-06-13 21:28:19.013027453 +0200
++++ etsf-io/tests/group_level/tests_module.f90	2022-06-13 21:34:27.062699770 +0200
+@@ -85,7 +85,7 @@
+     character(len = *), parameter :: me = "check_read_nD"
+     integer, allocatable :: int_array(:)
+     double precision, allocatable :: dbl_array(:)
+-    character(len = 256), allocatable :: strings(:)
++    character(len = dims(1)), allocatable :: strings(:)
+ 
+     ! Allocate temporary read space
+     if (type == "integer") then
+@@ -370,8 +370,8 @@
+   end subroutine allocate_str_1D
+ 
+   subroutine check_mem_str_0D(string, length, varname, lstat, error_data)
+-    character(len = length), intent(in) :: string
+     integer, intent(in) :: length
++    character(len = length), intent(in) :: string
+     character(len = *), intent(in) :: varname
+     logical, intent(out) :: lstat
+     type(etsf_io_low_error), intent(inout) :: error_data
