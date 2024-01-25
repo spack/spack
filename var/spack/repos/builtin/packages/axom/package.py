@@ -297,6 +297,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
             rocm_root = hip_root + "/.."
 
             # Fix blt_hip getting HIP_CLANG_INCLUDE_PATH-NOTFOUND bad include directory
+            # TODO: verify that this is still needed and is indeed specific to LC
             if (
                 self.spec.satisfies("%cce") or self.spec.satisfies("%clang")
             ) and "toss_4" in self._get_sys_type(spec):
@@ -420,6 +421,9 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append(cmake_cache_option("ENABLE_MPI", False))
 
         # Replace /usr/bin/srun path with srun flux wrapper path on TOSS 4
+        # TODO: Remove this logic by adding `using_flux` case in 
+        #  spack/lib/spack/spack/build_systems/cached_cmake.py:196 and remove hard-coded
+        #  path to srun in same file.
         if "toss_4" in self._get_sys_type(spec):
             srun_wrapper = which_string("srun")
             mpi_exec_index = [
