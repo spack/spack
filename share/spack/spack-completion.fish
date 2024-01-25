@@ -395,8 +395,8 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a license -d 'list 
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a list -d 'list and search available packages'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a load -d 'add package to the user environment'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a location -d 'print out locations of packages and spack directories'
-complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a log -d 'print out logs for packages'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a log-parse -d 'filter errors and warnings from build logs'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a logs -d 'print out logs for packages'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a maintainers -d 'get information about package maintainers'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a make-installer -d 'generate Windows installer'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a mark -d 'mark packages as explicitly or implicitly installed'
@@ -2102,12 +2102,6 @@ complete -c spack -n '__fish_spack_using_command location' -s e -l env -r -d 'lo
 complete -c spack -n '__fish_spack_using_command location' -l first -f -a find_first
 complete -c spack -n '__fish_spack_using_command location' -l first -d 'use the first match if multiple packages match the spec'
 
-# spack log
-set -g __fish_spack_optspecs_spack_log h/help
-complete -c spack -n '__fish_spack_using_command_pos_remainder 0 log' -f -k -a '(__fish_spack_specs)'
-complete -c spack -n '__fish_spack_using_command log' -s h -l help -f -a help
-complete -c spack -n '__fish_spack_using_command log' -s h -l help -d 'show this help message and exit'
-
 # spack log-parse
 set -g __fish_spack_optspecs_spack_log_parse h/help show= c/context= p/profile w/width= j/jobs=
 
@@ -2123,6 +2117,12 @@ complete -c spack -n '__fish_spack_using_command log-parse' -s w -l width -r -f 
 complete -c spack -n '__fish_spack_using_command log-parse' -s w -l width -r -d 'wrap width: auto-size to terminal by default; 0 for no wrap'
 complete -c spack -n '__fish_spack_using_command log-parse' -s j -l jobs -r -f -a jobs
 complete -c spack -n '__fish_spack_using_command log-parse' -s j -l jobs -r -d 'number of jobs to parse log file (default: 1 for short logs, ncpus for long logs)'
+
+# spack logs
+set -g __fish_spack_optspecs_spack_logs h/help
+complete -c spack -n '__fish_spack_using_command_pos_remainder 0 logs' -f -k -a '(__fish_spack_specs)'
+complete -c spack -n '__fish_spack_using_command logs' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command logs' -s h -l help -d 'show this help message and exit'
 
 # spack maintainers
 set -g __fish_spack_optspecs_spack_maintainers h/help maintained unmaintained a/all by-user

@@ -37,7 +37,7 @@ def dump_build_log(package):
         _dump_byte_stream_to_stdout(f)
 
 
-def log(parser, args):
+def logs(parser, args):
     specs = spack.cmd.parse_specs(args.spec)
 
     if not specs:

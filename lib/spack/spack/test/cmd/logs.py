@@ -9,7 +9,7 @@ from io import BytesIO
 import spack
 from spack.main import SpackCommand
 
-log = SpackCommand("log")
+logs = SpackCommand("logs")
 
 
 def test_dump_logs(install_mockery, mock_fetch, mock_archive, mock_packages):
@@ -37,7 +37,7 @@ here to test multiple lines
     with spec.package.stage:
         with open(spec.package.log_path, "w") as f:
             f.write(stage_log_content)
-        assert log("libelf") == stage_log_content
+        assert logs("libelf") == stage_log_content
 
     install = SpackCommand("install")
     install("libelf")
@@ -51,11 +51,11 @@ here to test multiple lines
         bstream = BytesIO(installed_log_content.encode("utf-8"))
         compressed_file.writelines(bstream)
 
-    assert log("libelf") == installed_log_content
+    assert logs("libelf") == installed_log_content
 
     with spec.package.stage:
         with open(spec.package.log_path, "w") as f:
             f.write(stage_log_content)
         # We re-create the stage, but "spack log" should ignore that
         # if the package is installed
-        assert log("libelf") == installed_log_content
+        assert logs("libelf") == installed_log_content
