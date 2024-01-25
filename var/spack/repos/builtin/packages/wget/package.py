@@ -34,6 +34,8 @@ class Wget(AutotoolsPackage, GNUMirrorPackage):
     variant("pcre", default=False, description="Enable PCRE style regular expressions")
     variant("python", default=False, description="Enable Python support")
 
+    depends_on("pcre2", type="build")
+
     depends_on("gnutls", when="ssl=gnutls")
     depends_on("openssl", when="ssl=openssl")
 
