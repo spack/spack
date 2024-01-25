@@ -40,7 +40,7 @@ class Pflogger(CMakePackage):
         values=("Debug", "Release"),
     )
 
-    variant("mpi", default=True, description="Enable MPI")
+    variant("mpi", default=False, description="Enable MPI")
 
     # pFlogger needs careful versioning to build
     depends_on("gftl@:1.5", when="@:1.6")
