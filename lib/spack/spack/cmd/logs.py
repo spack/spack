@@ -26,26 +26,33 @@ def setup_parser(subparser):
 
 
 def _dump_byte_stream_to_stdout(stream):
+    def write_as_is(byte_str, stream):
+        stream.write(byte_str)
+
+    def write_decoded(byte_str, stream):
+        stream.write(byte_str.decode("utf-8"))
+
+    write_to_stream = write_as_is
+
     try:
         needs_closing = True
-        needs_flushing = False
 
         if sys.platform == "win32":
             try:
                 outstream = sys.stdout.buffer
             except AttributeError:
-                outstream, needs_flushing = io.BufferedWriter(sys.stdout), True
+                # e.g. a StringIO for unit tests
+                outstream = sys.stdout
+                write_to_stream = write_decoded
             needs_closing = False
         else:
             outstream = open(sys.stdout.fileno(), "wb")
 
         line = stream.readline()
         while line:
-            outstream.write(line)
+            write_to_stream(line, outstream)
             line = stream.readline()
     finally:
-        if needs_flushing:
-            outstream.flush()
         if needs_closing:
             outstream.close()
 
