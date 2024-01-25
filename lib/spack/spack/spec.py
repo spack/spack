@@ -1501,7 +1501,9 @@ class Spec:
         result = f"{deptypes_str} {virtuals_str}".strip()
         return f"[{result}]"
 
-    def dependencies(self, name=None, deptype: Union[dt.DepTypes, dt.DepFlag] = dt.ALL):
+    def dependencies(
+        self, name=None, deptype: Union[dt.DepTypes, dt.DepFlag] = dt.ALL
+    ) -> List["Spec"]:
         """Return a list of direct dependencies (nodes in the DAG).
 
         Args:
@@ -1512,7 +1514,9 @@ class Spec:
             deptype = dt.canonicalize(deptype)
         return [d.spec for d in self.edges_to_dependencies(name, depflag=deptype)]
 
-    def dependents(self, name=None, deptype: Union[dt.DepTypes, dt.DepFlag] = dt.ALL):
+    def dependents(
+        self, name=None, deptype: Union[dt.DepTypes, dt.DepFlag] = dt.ALL
+    ) -> List["Spec"]:
         """Return a list of direct dependents (nodes in the DAG).
 
         Args:
