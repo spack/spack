@@ -72,7 +72,7 @@ class Pflogger(CMakePackage):
         # From version 1.12 on, there is an `ENABLE_MPI` option that
         # defaults to `ON`. If we don't want MPI, we need to set it to
         # `OFF`
-        if spec.satisfies("~mpi"):
+        if spec.satisfies("@1.12: ~mpi"):
             args.append("-DENABLE_MPI=OFF")
 
         return args
