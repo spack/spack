@@ -200,9 +200,9 @@ class Julia(MakefilePackage):
 
     # Fix the path to Spack llvm's lld and dsymutil
     patch(
-        "https://github.com/JuliaLang/julia/commit/8d895555c2ace186ff2c44a19ec47248a94ec589.patch?full_index=1",
-        sha256="77b8fea1a470e26c0615ed61e2fad79d45695cb093278054b9e8b1b6b4e02072",
-        when="@1.9:",
+        "https://github.com/JuliaLang/julia/commit/55c13d234c1523861b278f7989b1af105ef0e88f.patch?full_index=1",
+        sha256="00569f40e1845329060a714813e509677949e633a0e833c40a3c70dcf9269cc1",
+        when="@1.9:1.10.0",
     )
 
     # Fix libstdc++ not being found (https://github.com/JuliaLang/julia/issues/47987)
