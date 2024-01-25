@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
 import os
 import shutil
 import tempfile
@@ -23,23 +24,29 @@ level = "long"
 
 def setup_parser(subparser):
     subparser.add_argument(
-        "--continuous", action="store_true", help="for stage logs, poll for new content"
+        "-f", "--follow", action="store_true", help="for stage logs, poll for new content"
     )
 
     arguments.add_common_arguments(subparser, ["spec"])
 
 
-def dump_build_log(path, continuous):
-    with open(path, "r") as fstream:
-        line = fstream.readline()
-        while True:
-            if line:
-                print(line.strip())
-            elif continuous:
-                time.sleep(0.2)
-            else:
-                break
-            line = fstream.readline()
+def _readbytes_attempt_decode(line):
+    try:
+        return line.decode("utf-8")
+    except UnicodeDecodeError:
+        return f"(Non-UTF-8) {str(line)}"
+
+
+def _dump_byte_stream(stream):
+    line = stream.readline()
+    while line:
+        print(_readbytes_attempt_decode(line), end="")
+        line = stream.readline()
+
+
+def dump_build_log(package, continuous):
+    with open(package.log_path, 'rb') as f:
+        _dump_byte_stream(f)
 
 
 def log(parser, args):
@@ -61,7 +68,7 @@ def log(parser, args):
     if spec.installed:
         log_path = spec.package.install_log_path
     elif os.path.exists(spec.package.stage.path):
-        dump_build_log(spec.package.log_path, args.continuous)
+        dump_build_log(spec.package, args.follow)
         return
     else:
         tty.die(f"{specs[0]} is not installed or staged")
@@ -74,7 +81,7 @@ def log(parser, args):
     temp_dir = None
     try:
         if not compression_ext:
-            fstream = open(log_path, "r")
+            fstream = open(log_path, "rb")
         else:
             decompressor = compression.decompressor_for(log_path, extension=compression_ext)
             temp_dir = tempfile.mkdtemp(suffix=f"decompress-spack-log-{spec.name}")
@@ -90,12 +97,9 @@ def log(parser, args):
                 elif len(result) > 1:
                     tty.die(f"Compressed log {log_path} expanded to more than 1 file")
                 else:
-                    fstream = open(result[0], "r")
+                    fstream = open(result[0], "rb")
 
-        line = fstream.readline()
-        while line:
-            print(line.strip())
-            line = fstream.readline()
+        _dump_byte_stream(fstream)
     finally:
         if fstream:
             fstream.close()
