@@ -320,10 +320,10 @@ def test_compilers_shows_packages_yaml_minimal(no_compilers_yaml, working_env, c
     out = compiler("info", "gcc@7.7.7")
     expected = f"""gcc@7.7.7:
 \tpaths:
-\t\tcc = {compilers_dir}/gcc-8{suffix}
-\t\tcxx = {compilers_dir}/g++-8{suffix}
-\t\tf77 = {compilers_dir}/gfortran-8{suffix}
-\t\tfc = {compilers_dir}/gfortran-8{suffix}
+\t\tcc = {compilers_dir}{os.sep}gcc-8{suffix}
+\t\tcxx = {compilers_dir}{os.sep}g++-8{suffix}
+\t\tf77 = {compilers_dir}{os.sep}gfortran-8{suffix}
+\t\tfc = {compilers_dir}{os.sep}gfortran-8{suffix}
 \tflags:
 \t\tfflags = ['-ffree-form']
 \tmodules  = ['gcc/7.7.7', 'foobar']
