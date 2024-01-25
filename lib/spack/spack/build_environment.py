@@ -197,25 +197,30 @@ def clean_environment():
     # unlike the other functions so it doesn't overwrite what the modules load.
     env = EnvironmentModifications()
 
-    env_name_whitelist = list(map(re.compile, (
-        r"SPACK",
-        r'^SPACK_.*',  # keep SPACK_ROOT and company
-        r'EDITOR',
-        r'PATH',
-        r'PATHEXT',
-    )))
+    env_name_whitelist = list(
+        map(
+            re.compile,
+            (
+                r"SPACK",
+                r"^SPACK_.*",  # keep SPACK_ROOT and company
+                r"EDITOR",
+                r"PATH",
+                r"PATHEXT",
+            ),
+        )
+    )
 
-    if sys.platform == 'win32':
+    if sys.platform == "win32":
         env_name_whitelist.extend(
             map(
                 re.compile,
                 (
-                    r'SPACKINSTDIR',  # One random windows one
-                    r'TMP',
-                    r'TEMP',
-                    r'SYSTEMDRIVE',
-                    r'SYSTEMROOT',  # Required for cl.exe
-                )
+                    r"SPACKINSTDIR",  # One random windows one
+                    r"TMP",
+                    r"TEMP",
+                    r"SYSTEMDRIVE",
+                    r"SYSTEMROOT",  # Required for cl.exe
+                ),
             )
         )
 
