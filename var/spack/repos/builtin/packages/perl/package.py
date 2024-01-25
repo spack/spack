@@ -13,6 +13,7 @@
 #
 import os
 import re
+import stat
 import sys
 from contextlib import contextmanager
 
@@ -415,6 +416,12 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
                 perl("Makefile.PL")
                 maker()
                 maker("install")
+                if sys.platform != "win32":
+                    # make writable by owner, avoids permission denied in sbang on virtio
+                    # guest mounts
+                    saved_mode = os.stat(self.prefix.bin.cpanm).st_mode
+                    os.chmod(self.prefix.bin.cpanm, saved_mode | stat.S_IWUSR)
+
 
     def _setup_dependent_env(self, env, dependent_spec):
         """Set PATH and PERL5LIB to include the extension and
