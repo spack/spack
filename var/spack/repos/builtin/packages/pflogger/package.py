@@ -56,7 +56,7 @@ class Pflogger(CMakePackage):
     depends_on("yafyaml@1.0.4:", when="@1.9:")
 
     depends_on("mpi", when="+mpi")
-    
+
     # Using pFlogger with MPICH 4 is only supported from version 1.11
     conflicts("^mpich@4:", when="@:1.10")
 
