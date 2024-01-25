@@ -11,7 +11,6 @@ import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
 import spack.cmd
-import spack.environment as ev
 import spack.util.compression as compression
 from spack.cmd.common import arguments
 
@@ -56,12 +55,7 @@ def log(parser, args):
     if len(specs) != 1:
         tty.die("Too many specs.  Supply only one.")
 
-    env = ev.active_environment()
-
-    if env:
-        spec = spack.cmd.matching_spec_from_env(specs[0])
-    else:
-        spec = specs[0].concretized()
+    spec = spack.cmd.matching_spec_from_env(specs[0])
 
     if spec.installed:
         log_path = spec.package.install_log_path
