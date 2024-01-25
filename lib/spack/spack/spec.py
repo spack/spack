@@ -1640,15 +1640,21 @@ class Spec:
         # multiple times. Currently, we only allow identical edge types.
         orig = self._dependencies[spec.name]
         try:
-            dspec = next(dspec for dspec in orig if depflag == dspec.depflag)
-        except StopIteration:
-            current_deps = ", ".join(
-                dt.flag_to_chars(x.depflag) + " " + x.spec.short_spec for x in orig
+            dspec = next(
+                dspec for dspec in orig if depflag == dspec.depflag and virtuals == dspec.virtuals
             )
+        except StopIteration:
+            edge_attrs = []
+            required_deps = dt.flag_to_chars(depflag).strip()
+            if required_deps:
+                edge_attrs.append(f"deptypes={required_deps}")
+            if virtuals:
+                edge_attrs.append(f"virtuals={','.join(virtuals)}")
+            required_dep_str = f"^[{' '.join(edge_attrs)}] {str(spec)}"
+
             raise DuplicateDependencyError(
-                f"{self.short_spec} cannot depend on '{spec.short_spec}' multiple times.\n"
-                f"\tRequired: {dt.flag_to_chars(depflag)}\n"
-                f"\tDependency: {current_deps}"
+                f"{spec.name} is a duplicate dependency, with conflicting edge properties\n"
+                f"\t'{str(self)}' cannot depend on '{required_dep_str}'"
             )
 
         try:
