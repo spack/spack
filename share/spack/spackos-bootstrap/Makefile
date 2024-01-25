@@ -1,6 +1,7 @@
 # Make sure user config is not picked up.
 export SPACK_USER_CONFIG_PATH=$(CURDIR)/.spack
 export SPACK_USER_CACHE_PATH=$(CURDIR)/.spack
+export PATH:=$(CURDIR)/stage1/.spack-env/view/bin:$(PATH)
 
 .SUFFIXES:
 
@@ -49,10 +50,13 @@ stage2/spack.yaml: stage1/generated/env
 stage3/spack.yaml: stage2/generated/env
 stage4/spack.yaml: stage3/generated/env
 
+HOST_COMPILER_PATH=
 %/compilers.yaml:
-	[ "$(STAGE)" = "stage1" ] || env $(ENV) $(SPACK) compiler find --scope=user $$(spack -e $(PREV) find --format '{prefix}' gcc)
+	# was what follows, but then need path modifications, now using compiler path addition to get bison and gawk $$(spack -e $(PREV) find --format '{prefix}' gcc)
+	echo $(CURDIR)/$(PREV)/.spack-env/view/bin
+	[ "$(STAGE)" = "stage1" ] || env $(ENV) $(SPACK) compiler find --scope=user $(CURDIR)/$(PREV)/.spack-env/view/bin
 	# [ "$(STAGE)" = "stage1" ] || sed -i'' -e '/spec:/s/\(@=.*\)/\1.$(PREV)/' $(STAGE)/compilers.yaml
-	env $(ENV) $(SPACK) compiler find --scope=user
+	env $(ENV) $(SPACK) compiler find --scope=user $(HOST_COMPILER_PATH)
 
 %/spack.yaml: %/spack.in.yaml
 	if [ $(STAGENUM) -lt 3 ] ; then \
