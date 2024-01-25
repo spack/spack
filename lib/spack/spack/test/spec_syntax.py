@@ -523,6 +523,23 @@ def specfile_for(default_mock_concretization):
             ],
             "^[virtuals=mpi] openmpi",
         ),
+        # Allow merging attributes, if deptypes match
+        (
+            "^[virtuals=mpi] openmpi+foo ^[virtuals=lapack] openmpi+bar",
+            [
+                Token(TokenType.START_EDGE_PROPERTIES, value="^["),
+                Token(TokenType.KEY_VALUE_PAIR, value="virtuals=mpi"),
+                Token(TokenType.END_EDGE_PROPERTIES, value="]"),
+                Token(TokenType.UNQUALIFIED_PACKAGE_NAME, value="openmpi"),
+                Token(TokenType.BOOL_VARIANT, value="+foo"),
+                Token(TokenType.START_EDGE_PROPERTIES, value="^["),
+                Token(TokenType.KEY_VALUE_PAIR, value="virtuals=lapack"),
+                Token(TokenType.END_EDGE_PROPERTIES, value="]"),
+                Token(TokenType.UNQUALIFIED_PACKAGE_NAME, value="openmpi"),
+                Token(TokenType.BOOL_VARIANT, value="+bar"),
+            ],
+            "^[virtuals=lapack,mpi] openmpi+bar+foo",
+        ),
         (
             "^[deptypes=link,build] zlib",
             [
@@ -1252,13 +1269,3 @@ def test_git_ref_spec_equivalences(mock_packages, lhs_str, rhs_str, expected):
 def test_platform_is_none_if_not_present(spec_str):
     s = SpecParser(spec_str).next_spec()
     assert s.architecture.platform is None, s
-
-
-def test_cannot_add_same_package_multiple_times_with_different_edges_properties():
-    """Tests that we don't allow specifying multiple times the same package, with different
-    edge properties.
-
-    This might change in the future, if we get an edge-based syntax to construct DAGs.
-    """
-    with pytest.raises(spack.spec.DuplicateDependencyError):
-        SpecParser("foo ^[virtuals=a] bar ^[virtuals=b] bar").next_spec()
