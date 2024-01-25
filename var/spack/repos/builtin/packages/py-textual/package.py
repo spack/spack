@@ -17,5 +17,6 @@ class PyTextual(PythonPackage):
 
     depends_on("py-poetry-core@1.2.0:", type="build")
     depends_on("py-rich@13.3.3:", type=("build", "run"))
-    depends_on("py-markdown-it-py+plugins+linkify@2.1.0:", type=("build", "run"))
+    depends_on("py-markdown-it-py+linkify@2.1.0:", type=("build", "run"))
+    depends_on("py-mdit-py-plugins", type=("build", "run"))
     depends_on("py-typing-extensions@4.4.0:4", type=("build", "run"))
