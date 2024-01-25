@@ -285,6 +285,23 @@ class NMakeBuilder(spack.build_systems.nmake.NMakeBuilder):
     def makefile_name(self):
         return "Makefile.msc"
 
+    def nmake_args(self):
+        return [
+                "USE_NATIVE_LIBPATHS=1",
+                "DYNAMIC_SHELL=1",
+                "OPTS="\
+                "-DSQLITE_ENABLE_FTS3=1 "\
+                "-DSQLITE_ENABLE_FTS4=1 "\
+                "-DSQLITE_ENABLE_FTS5=1 "\
+                "-DSQLITE_ENABLE_RTREE=1 "\
+                "-DSQLITE_ENABLE_JSON1=1 "\
+                "-DSQLITE_ENABLE_GEOPOLY=1 "\
+                "-DSQLITE_ENABLE_SESSION=1 "\
+                "-DSQLITE_ENABLE_PREUPDATE_HOOK=1 "\
+                "-DSQLITE_ENABLE_SERIALIZE=1 "\
+                "-DSQLITE_ENABLE_MATH_FUNCTIONS=1",
+            ]
+
     def install(self, pkg, spec, prefix):
         with working_dir(self.build_directory):
             mkdirp(prefix.include)
