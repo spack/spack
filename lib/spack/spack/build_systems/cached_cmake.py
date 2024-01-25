@@ -199,6 +199,8 @@ class CachedCMakeBuilder(CMakeBuilder):
                 mpiexec = "/usr/bin/srun"
             else:
                 mpiexec = os.path.join(spec["slurm"].prefix.bin, "srun")
+        elif hasattr(spec["mpi"].package, "mpiexec"):
+            mpiexec = spec["mpi"].package.mpiexec
         else:
             mpiexec = os.path.join(spec["mpi"].prefix.bin, "mpirun")
             if not os.path.exists(mpiexec):
