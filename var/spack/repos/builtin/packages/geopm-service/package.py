@@ -35,11 +35,7 @@ class GeopmService(AutotoolsPackage):
 
     variant("debug", default=False, description="Enable debug")
     variant("docs", default=True, description="Create man pages with Sphinx")
-    variant(
-        "systemd",
-        default=False,
-        description="Enable use of systemd (systemd development libraries required)",
-    )
+    variant("systemd", default=True, description="Enable use of systemd/DBus")
     variant("liburing", default=True, description="Enables the use of liburing for batch I/O")
     variant(
         "libcap", default=True, description="Enables the use of libcap to do capabilities checks"
@@ -95,6 +91,7 @@ class GeopmService(AutotoolsPackage):
     # Other dependencies
     depends_on("bash-completion")
     depends_on("unzip")
+    depends_on("systemd", when="+systemd")
     depends_on("libcap", when="+libcap")
     depends_on("liburing", when="+liburing")
     depends_on("oneapi-level-zero", when="+levelzero")
