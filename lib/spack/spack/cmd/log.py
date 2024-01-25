@@ -3,11 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import glob
 import os
 import shutil
 import tempfile
-import time
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -45,7 +43,7 @@ def _dump_byte_stream(stream):
 
 
 def dump_build_log(package, continuous):
-    with open(package.log_path, 'rb') as f:
+    with open(package.log_path, "rb") as f:
         _dump_byte_stream(f)
 
 
