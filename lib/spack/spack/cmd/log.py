@@ -21,10 +21,6 @@ level = "long"
 
 
 def setup_parser(subparser):
-    subparser.add_argument(
-        "-f", "--follow", action="store_true", help="for stage logs, poll for new content"
-    )
-
     arguments.add_common_arguments(subparser, ["spec"])
 
 
@@ -36,7 +32,7 @@ def _dump_byte_stream_to_stdout(stream):
             line = stream.readline()
 
 
-def dump_build_log(package, continuous):
+def dump_build_log(package):
     with open(package.log_path, "rb") as f:
         _dump_byte_stream_to_stdout(f)
 
@@ -55,7 +51,7 @@ def log(parser, args):
     if spec.installed:
         log_path = spec.package.install_log_path
     elif os.path.exists(spec.package.stage.path):
-        dump_build_log(spec.package, args.follow)
+        dump_build_log(spec.package)
         return
     else:
         tty.die(f"{specs[0]} is not installed or staged")

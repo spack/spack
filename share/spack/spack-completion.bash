@@ -1356,7 +1356,7 @@ _spack_location() {
 _spack_log() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --continuous"
+        SPACK_COMPREPLY="-h --help"
     else
         _all_packages
     fi
