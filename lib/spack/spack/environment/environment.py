@@ -611,39 +611,33 @@ class ViewDescriptor:
         return spack.util.hash.b32_hash(contents)
 
     def get_projection_for_spec(self, spec):
-        """Get projection for spec relative to view root
+        """Get projection for spec. This function does not require the view
+        to exist on the filesystem."""
+        return self._view(self.root).get_projection_for_spec(spec)
 
-        Getting the projection from the underlying root will get the temporary
-        projection. This gives the permanent projection relative to the root
-        symlink.
+    def view(self, new: Optional[str] = None) -> SimpleFilesystemView:
         """
-        view = self.view()
-        view_path = view.get_projection_for_spec(spec)
-        rel_path = os.path.relpath(view_path, self._current_root)
-        return os.path.join(self.root, rel_path)
-
-    def view(self, new=None):
-        """
-        Generate the FilesystemView object for this ViewDescriptor
-
-        By default, this method returns a FilesystemView object rooted at the
-        current underlying root of this ViewDescriptor (self._current_root)
+        Returns a view object for the *underlying* view directory. This means that the
+        self.root symlink is followed, and that the view has to exist on the filesystem
+        (unless ``new``). This function is useful when writing to the view.
 
         Raise if new is None and there is no current view
 
         Arguments:
-            new (str or None): If a string, create a FilesystemView
-                rooted at that path. Default None. This should only be used to
-                regenerate the view, and cannot be used to access specs.
+            new: If a string, create a FilesystemView rooted at that path. Default None. This
+                should only be used to regenerate the view, and cannot be used to access specs.
         """
         root = new if new else self._current_root
         if not root:
             # This can only be hit if we write a future bug
-            msg = (
+            raise SpackEnvironmentViewError(
                 "Attempting to get nonexistent view from environment. "
-                "View root is at %s" % self.root
+                f"View root is at {self.root}"
             )
-            raise SpackEnvironmentViewError(msg)
+        return self._view(root)
+
+    def _view(self, root: str) -> SimpleFilesystemView:
+        """Returns a view object for a given root dir."""
         return SimpleFilesystemView(
             root,
             spack.store.STORE.layout,
@@ -810,7 +804,6 @@ class Environment:
 
         self._unify = None
         self.new_specs: List[Spec] = []
-        self.new_installs: List[Spec] = []
         self.views: Dict[str, ViewDescriptor] = {}
 
         #: Specs from "spack.yaml"
@@ -939,10 +932,8 @@ class Environment:
         """Clear the contents of the environment
 
         Arguments:
-            re_read (bool): If ``True``, do not clear ``new_specs`` nor
-                ``new_installs`` values. These values cannot be read from
-                yaml, and need to be maintained when re-reading an existing
-                environment.
+            re_read: If ``True``, do not clear ``new_specs``. This value cannot be read from yaml,
+                and needs to be maintained when re-reading an existing environment.
         """
         self.spec_lists = collections.OrderedDict()
         self.spec_lists[user_speclist_name] = SpecList()
@@ -956,7 +947,6 @@ class Environment:
         if not re_read:
             # things that cannot be recreated from file
             self.new_specs = []  # write packages for these on write()
-            self.new_installs = []  # write modules for these on write()
 
     @property
     def active(self):
@@ -1751,10 +1741,7 @@ class Environment:
 
         installs = [(spec.package, {**install_args, "explicit": spec in roots}) for spec in specs]
 
-        try:
-            PackageInstaller(installs).install()
-        finally:
-            self.new_installs.extend(s for s in specs if s.installed)
+        PackageInstaller(installs).install()
 
     def all_specs_generator(self) -> Iterable[Spec]:
         """Returns a generator for all concrete specs"""
@@ -2077,11 +2064,7 @@ class Environment:
             self.regenerate_views()
             spack.hooks.post_env_write(self)
 
-        self._reset_new_specs_and_installs()
-
-    def _reset_new_specs_and_installs(self) -> None:
-        self.new_specs = []
-        self.new_installs = []
+        self.new_specs.clear()
 
     def update_lockfile(self) -> None:
         with fs.write_tmp_and_move(self.lock_path) as f:
