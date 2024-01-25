@@ -38,7 +38,7 @@ spack:
   # if building outside of spackos, python somehow grabs something out of the
   # local include paths, build like this:
   # $ bwrap --dev-bind / / --tmpfs /usr/local --tmpfs /usr/include/x86_64-linux-gnu spack install -v python
-  - python
+  - python +optimized
   - texinfo
   - util-linux
   # spack bootstrap, base requirements
