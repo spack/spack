@@ -247,7 +247,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
         # Add optimization flag workaround for Debug builds with
         # cray compiler or newer HIP
         if "+rocm" in spec:
-            if "crayCC" in self.compiler.cxx or spec.satisfies("%clang@16"):
+            if spec.satisfies("%cce") or spec.satisfies("%clang@16"):
                 entries.append(cmake_cache_string("CMAKE_CXX_FLAGS_DEBUG", "-O1 -g -DNDEBUG"))
 
         return entries
