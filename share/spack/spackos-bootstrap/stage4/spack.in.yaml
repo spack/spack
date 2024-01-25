@@ -48,7 +48,7 @@ spack:
   - gnupg
   - patchelf
   - clingo
-  - clingo-bootstrap
+  - clingo-bootstrap +optimized
   config:
     install_root:
       padded_length: 256
