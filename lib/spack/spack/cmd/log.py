@@ -5,6 +5,7 @@
 
 import os
 import shutil
+import sys
 import tempfile
 
 import llnl.util.filesystem as fs
@@ -27,23 +28,17 @@ def setup_parser(subparser):
     arguments.add_common_arguments(subparser, ["spec"])
 
 
-def _readbytes_attempt_decode(line):
-    try:
-        return line.decode("utf-8")
-    except UnicodeDecodeError:
-        return f"(Non-UTF-8) {str(line)}"
-
-
-def _dump_byte_stream(stream):
-    line = stream.readline()
-    while line:
-        print(_readbytes_attempt_decode(line), end="")
+def _dump_byte_stream_to_stdout(stream):
+    with open(sys.stdout.fileno(), "wb") as outstream:
         line = stream.readline()
+        while line:
+            outstream.write(line)
+            line = stream.readline()
 
 
 def dump_build_log(package, continuous):
     with open(package.log_path, "rb") as f:
-        _dump_byte_stream(f)
+        _dump_byte_stream_to_stdout(f)
 
 
 def log(parser, args):
@@ -91,7 +86,7 @@ def log(parser, args):
                 else:
                     fstream = open(result[0], "rb")
 
-        _dump_byte_stream(fstream)
+        _dump_byte_stream_to_stdout(fstream)
     finally:
         if fstream:
             fstream.close()
