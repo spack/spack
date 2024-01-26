@@ -33,27 +33,20 @@ def _dump_byte_stream_to_stdout(instream):
 
     write_to_stream = write_as_is
 
-    try:
-        needs_closing = True
+    if sys.platform == "win32":
+        try:
+            outstream = sys.stdout.buffer
+        except AttributeError:
+            # e.g. a StringIO for unit tests
+            outstream = sys.stdout
+            write_to_stream = write_decoded
+    else:
+        outstream = os.fdopen(sys.stdout.fileno(), "wb", closefd=False)
 
-        if sys.platform == "win32":
-            try:
-                outstream = sys.stdout.buffer
-            except AttributeError:
-                # e.g. a StringIO for unit tests
-                outstream = sys.stdout
-                write_to_stream = write_decoded
-            needs_closing = False
-        else:
-            outstream = open(sys.stdout.fileno(), "wb")
-
+    line = instream.readline()
+    while line:
+        write_to_stream(line, outstream)
         line = instream.readline()
-        while line:
-            write_to_stream(line, outstream)
-            line = instream.readline()
-    finally:
-        if needs_closing:
-            outstream.close()
 
 
 def dump_build_log(package):
