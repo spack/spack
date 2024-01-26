@@ -23,6 +23,3 @@ class PyPytestAiohttp(PythonPackage):
     depends_on("py-pytest@6.1.0:", type=("build", "run"))
     depends_on("py-aiohttp@3.8.1:", type=("build", "run"))
     depends_on("py-pytest-asyncio@0.17.2:", type=("build", "run"))
-
-
-
