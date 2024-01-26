@@ -9,7 +9,7 @@ spack:
   specs:
   # glibc from stage3, must match the gcc built there or we get two mixed
   # together, use hash
-  - glibc @GLIBC_HASH@
+  - glibc +stage2
   - binutils +gold +lto
   - gcc@13.2.0 +binutils +piclibs ~bootstrap languages=c,c++,fortran,lto
   # base system
@@ -38,7 +38,7 @@ spack:
   # if building outside of spackos, python somehow grabs something out of the
   # local include paths, build like this:
   # $ bwrap --dev-bind / / --tmpfs /usr/local --tmpfs /usr/include/x86_64-linux-gnu spack install -v python
-  - python +optimized
+  - python +optimizations
   - texinfo
   - util-linux
   # spack bootstrap, base requirements
@@ -47,8 +47,7 @@ spack:
   # spack bootstrap doesn't work, install manually
   - gnupg
   - patchelf
-  - clingo
-  - clingo-bootstrap +optimized
+  - clingo-bootstrap
   config:
     install_root:
       padded_length: 256

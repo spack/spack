@@ -7,7 +7,7 @@ spack:
     - compilers.yaml
   # add package specs to the `specs` list
   specs:
-  - glibc @GLIBC_HASH@
+  - glibc +stage2
   - binutils +gold +lto
   - gcc@13.2.0 +binutils +piclibs languages=c,c++,fortran,lto ~bootstrap
   config:
