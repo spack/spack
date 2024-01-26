@@ -6,15 +6,16 @@
 """Schema for view
 
 .. literalinclude:: _spack_root/lib/spack/spack/schema/view.py
-   :lines: 14-
+   :lines: 15-
 """
+from typing import Any, Dict
 
 import spack.schema
 
 projections_scheme = spack.schema.projections.properties["projections"]
 
 #: Properties for inclusion in other schemas
-properties = {
+properties: Dict[str, Any] = {
     "view": {
         "anyOf": [
             {"type": "boolean"},

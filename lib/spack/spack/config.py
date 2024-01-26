@@ -63,7 +63,7 @@ from spack.error import SpackError
 from spack.util.cpus import cpus_available
 
 #: Dict from section names -> schema for that section
-SECTION_SCHEMAS = {
+SECTION_SCHEMAS: Dict[str, Any] = {
     "compilers": spack.schema.compilers.schema,
     "concretizer": spack.schema.concretizer.schema,
     "definitions": spack.schema.definitions.schema,
@@ -82,7 +82,7 @@ SECTION_SCHEMAS = {
 
 # Same as above, but including keys for environments
 # this allows us to unify config reading between configs and environments
-_ALL_SCHEMAS = copy.deepcopy(SECTION_SCHEMAS)
+_ALL_SCHEMAS: Dict[str, Any] = copy.deepcopy(SECTION_SCHEMAS)
 _ALL_SCHEMAS.update({spack.schema.env.TOP_LEVEL_KEY: spack.schema.env.schema})
 
 #: Path to the default configuration
@@ -113,7 +113,7 @@ SCOPES_METAVAR = "{defaults,system,site,user}[/PLATFORM] or env:ENVIRONMENT"
 _OVERRIDES_BASE_NAME = "overrides-"
 
 #: Type used for raw YAML configuration
-YamlConfigDict = Union[Dict[str, Any], Any]
+YamlConfigDict = Dict[str, Any]
 
 
 class ConfigScope:
@@ -1097,7 +1097,7 @@ def read_config_file(
             data = syaml.load_config(f)
 
         if data:
-            if not schema:
+            if schema is None:
                 key = next(iter(data))
                 schema = _ALL_SCHEMAS[key]
             validate(data, schema)
