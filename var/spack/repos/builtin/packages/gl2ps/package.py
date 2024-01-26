@@ -39,7 +39,7 @@ class Gl2ps(CMakePackage):
     # and fixes a few additional places that solution misses.
     with when("platform=windows"):
         variant("shared", default=True, description="Enable building shared libraries")
-        patch("prevent-ninja-target-clash.patch", when="generator=ninja")
+        patch("prevent-ninja-target-clash.patch")
 
     def cmake_args(self):
         spec = self.spec
