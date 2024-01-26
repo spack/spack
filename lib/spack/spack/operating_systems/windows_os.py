@@ -101,9 +101,9 @@ class WindowsOs(OperatingSystem):
                 if tries == 2:
                     tty.debug(
                         'Windows registry query on "SOFTWARE\\WOW6432Node\\Microsoft"'
-                        f'under HKEY_LOCAL_MACHINE: {str(e)}'
+                        f"under HKEY_LOCAL_MACHINE: {str(e)}"
                     )
-                tries+=1
+                tries += 1
         vs_paths = []
 
         def clean_vs_path(path):

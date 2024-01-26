@@ -356,7 +356,8 @@ class WindowsRegistryView:
         For more details, see the WindowsRegistryView._find_subkey_s method docstring
         """
         return self._traverse_subkeys(
-            WindowsRegistryView.KeyMatchConditions.name_matcher(subkey_name), depth_search=recursive
+            WindowsRegistryView.KeyMatchConditions.name_matcher(subkey_name),
+            depth_search=recursive,
         )
 
     def find_matching_subkey(self, subkey_name, recursive=True):
@@ -372,7 +373,8 @@ class WindowsRegistryView:
         For more details, see the WindowsRegistryView._find_subkey_s method docstring
         """
         return self._traverse_subkeys(
-            WindowsRegistryView.KeyMatchConditions.regex_matcher(subkey_name), depth_search=recursive
+            WindowsRegistryView.KeyMatchConditions.regex_matcher(subkey_name),
+            depth_search=recursive,
         )
 
     def find_subkeys(self, subkey_name, depth=True):
@@ -430,8 +432,10 @@ class InvalidRegistryOperation(RegistryError):
     a non deterministic reason"""
 
     def __init__(self, name, e, *args, **kwargs):
-        message = f"Windows registry operations: {name} encountered error: {str(e)}"\
-"\nMethod invoked with parameters:\n"
+        message = (
+            f"Windows registry operations: {name} encountered error: {str(e)}"
+            "\nMethod invoked with parameters:\n"
+        )
         message += "\n\t".join([f"{k}:{v}" for k, v in kwargs.items()])
         message += "\n"
         message += "\n\t".join(args)
