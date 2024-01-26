@@ -10,6 +10,8 @@ import subprocess
 import sys
 from typing import Dict, List, Set
 
+import llnl.util.filesystem as fs
+
 import spack.compiler
 import spack.operating_systems.windows_os
 import spack.platforms
@@ -17,8 +19,6 @@ import spack.util.executable
 from spack.compiler import Compiler
 from spack.error import SpackError
 from spack.version import Version, VersionRange
-
-import llnl.util.filesystem as fs
 
 avail_fc_version: Set[str] = set()
 fc_path: Dict[str, str] = dict()
@@ -298,7 +298,9 @@ class Msvc(Compiler):
         # certain versions of ifx (2021.3.0:2023.1.0) do not play well with env:TMP
         # that has a "." character in the path
         # Work around by pointing tmp to the stage for the duration of the build
-        if self.fc and Version(self.fc_version(self.fc)).satisfies(VersionRange("2021.3.0", "2023.1.0")):
+        if self.fc and Version(self.fc_version(self.fc)).satisfies(
+            VersionRange("2021.3.0", "2023.1.0")
+        ):
             new_tmp = pathlib.Path(pkg.stage.path) / "MSVCTMP"
             fs.safe_make_new_dir(new_tmp)
             env.set("TMP", str(new_tmp))
