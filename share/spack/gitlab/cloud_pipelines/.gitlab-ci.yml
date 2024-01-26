@@ -91,8 +91,6 @@ default:
         SPACK_PIPELINE_TYPE: "spack_protected_branch"
         SPACK_COPY_BUILDCACHE: "${PROTECTED_MIRROR_PUSH_DOMAIN}/${CI_COMMIT_REF_NAME}"
         SPACK_REQUIRE_SIGNING: "True"
-        AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
-        AWS_SECRET_ACCESS_KEY: ${PROTECTED_MIRRORS_AWS_SECRET_ACCESS_KEY}
         OIDC_TOKEN_AUDIENCE: "protected_binary_mirror"
     - if: $CI_COMMIT_REF_NAME =~ /^releases\/v.*/
       # Pipelines on release branches always rebuild everything
@@ -103,8 +101,6 @@ default:
         SPACK_PRUNE_UNTOUCHED: "False"
         SPACK_PRUNE_UP_TO_DATE: "False"
         SPACK_REQUIRE_SIGNING: "True"
-        AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
-        AWS_SECRET_ACCESS_KEY: ${PROTECTED_MIRRORS_AWS_SECRET_ACCESS_KEY}
         OIDC_TOKEN_AUDIENCE: "protected_binary_mirror"
     - if: $CI_COMMIT_TAG =~ /^develop-[\d]{4}-[\d]{2}-[\d]{2}$/ || $CI_COMMIT_TAG =~ /^v.*/
       # Pipelines on tags (release or dev snapshots) only copy binaries from one mirror to another
@@ -113,8 +109,6 @@ default:
         SPACK_PIPELINE_TYPE: "spack_copy_only"
         SPACK_COPY_BUILDCACHE: "${PROTECTED_MIRROR_PUSH_DOMAIN}/${CI_COMMIT_REF_NAME}"
         PIPELINE_MIRROR_TEMPLATE: "copy-only-protected-mirrors.yaml.in"
-        AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
-        AWS_SECRET_ACCESS_KEY: ${PROTECTED_MIRRORS_AWS_SECRET_ACCESS_KEY}
         OIDC_TOKEN_AUDIENCE: "protected_binary_mirror"
     - if: $CI_COMMIT_REF_NAME =~ /^pr[\d]+_.*$/
       # Pipelines on PR branches rebuild only what's missing, and do extra pruning
@@ -131,8 +125,6 @@ default:
         # TODO: far gitlab doesn't support that.
         PR_TARGET_REF_NAME: "develop"
         PIPELINE_MIRROR_TEMPLATE: "multi-src-mirrors.yaml.in"
-        AWS_ACCESS_KEY_ID: ${PR_MIRRORS_AWS_ACCESS_KEY_ID}
-        AWS_SECRET_ACCESS_KEY: ${PR_MIRRORS_AWS_SECRET_ACCESS_KEY}
         OIDC_TOKEN_AUDIENCE: "pr_binary_mirror"
 
 .generate-common:
@@ -272,8 +264,6 @@ protected-publish:
   variables:
     SPACK_COPY_BUILDCACHE: "${PROTECTED_MIRROR_PUSH_DOMAIN}/${CI_COMMIT_REF_NAME}"
     SPACK_PIPELINE_TYPE: "spack_protected_branch"
-    AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
-    AWS_SECRET_ACCESS_KEY: ${PROTECTED_MIRRORS_AWS_SECRET_ACCESS_KEY}
     KUBERNETES_CPU_REQUEST: 4000m
     KUBERNETES_MEMORY_REQUEST: 16G
   script:
