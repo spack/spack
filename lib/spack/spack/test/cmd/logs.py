@@ -19,6 +19,14 @@ logs = SpackCommand("logs")
 
 @contextmanager
 def stdout_as_buffered_text_stream():
+    """Attempt to simulate "typical" interface for stdout when user is
+    running Spack/Python from terminal. "spack log" should not be run
+    for all possible cases of what stdout might look like, in
+    particular some programmatic redirections of stdout like StringIO
+    are not meant to be supported by this command; more-generally,
+    mechanisms that depend on decoding binary output prior to write
+    are not supported for "spack log".
+    """
     original_stdout = sys.stdout
 
     with tempfile.TemporaryFile(mode="w+b") as tf:
