@@ -45,8 +45,12 @@ class Star(MakefilePackage):
             env["CXXFLAGS_SIMD"] = ""
 
     def build(self, spec, prefix):
+        # different make targets if we're compiling for Mac M1/2
         with working_dir(self.build_directory):
-            make("STAR", "STARlong")
+            if spec.satisfies("target=aarch64:"):
+                make("STARforMacStatic")
+            else:
+                make("STAR", "STARlong")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
