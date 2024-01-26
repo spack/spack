@@ -61,7 +61,6 @@ def _logs(cmdline_spec, concrete_spec):
 
     compression_ext = compression.extension_from_file(log_path)
     fstream = None
-    temp_dir = None
     try:
         if not compression_ext:
             fstream = open(log_path, "rb")
@@ -76,8 +75,6 @@ def _logs(cmdline_spec, concrete_spec):
     finally:
         if fstream:
             fstream.close()
-        if temp_dir:
-            shutil.rmtree(temp_dir)
 
 
 def logs(parser, args):
