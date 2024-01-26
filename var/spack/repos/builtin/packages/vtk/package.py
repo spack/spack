@@ -492,4 +492,3 @@ class Vtk(CMakePackage):
             examples = glob.glob("bin\\*.exe")
             for example in examples:
                 install(example, prefix.bin)
-
