@@ -47,7 +47,7 @@ class Star(MakefilePackage):
     def build(self, spec, prefix):
         # different make targets if we're compiling for Mac M1/2
         with working_dir(self.build_directory):
-            if spec.satisfies("target=aarch64:"):
+            if spec.satisfies("platform=darwin target=aarch64: "):
                 make("STARforMacStatic")
             else:
                 make("STAR", "STARlong")
