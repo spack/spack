@@ -47,6 +47,8 @@ from spack.error import SpackError
 from spack.reporters import CDash, CDashConfiguration
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
 
+from .formatters import get_formatter, UnknownFormatterException
+
 # See https://docs.gitlab.com/ee/ci/yaml/#retry for descriptions of conditions
 JOB_RETRY_CONDITIONS = [
     # "always",
@@ -94,9 +96,9 @@ class TemporaryDirectory:
 
 
 class PipelineType(Enum):
-    SPACK_COPY_ONLY = auto()
-    SPACK_PROTECTED_BRANCH = auto()
-    SPACK_PULL_REQUEST = auto()
+    COPY_ONLY = auto()
+    PROTECTED_BRANCH = auto()
+    PULL_REQUEST = auto()
 
 
 class PipelineOptions():
@@ -111,7 +113,7 @@ class PipelineOptions():
             use_dependencies: bool = False,
             broken_specs_url: Optional[str] = None,
             enable_artifacts_buildcache: bool = False,
-            rebuild_index: bool = False,
+            rebuild_index: bool = True,
             temporary_storage_url_prefix: Optional[str] = None,
             untouched_pruning_dependent_depth: Optional[int] = None,
             pruned_untouched: bool = False,
@@ -123,6 +125,7 @@ class PipelineOptions():
             require_signing: bool = False,
             artifacts_root: Optional[str] = None,
             remote_mirror_override: Optional[str] = None,
+            cdash_handler: Optional["CDashHandler"] = None,
     ):
         """
         Args:
@@ -145,6 +148,7 @@ class PipelineOptions():
             require_signing: Require buildcache to be signed (fail w/out signing key)
             artifacts_root: Path to location where artifacts should be stored
             remote_mirror_override: Override the mirror in the spack environment (deprecated)
+            cdash_handler: Object for communicating build information with CDash
         """
         self.print_summary = print_summary
         self.output_file = output_file
@@ -165,6 +169,7 @@ class PipelineOptions():
         self.require_signing = require_signing
         self.artifacts_root = artifacts_root
         self.remote_mirror_override = remote_mirror_override
+        self.cdash_handler = cdash_handler
 
 
 class PipelineNode:
@@ -267,11 +272,6 @@ def get_job_name(spec: spack.spec.Spec, build_group: str = ""):
         job_name = "{0} {1}".format(job_name, build_group)
 
     return job_name[:255]
-
-
-def _remove_reserved_tags(tags):
-    """Convenience function to strip reserved tags from jobs"""
-    return [tag for tag in tags if tag not in SPACK_RESERVED_TAGS]
 
 
 def _print_staging_summary(spec_labels, stages, mirrors_to_check, rebuild_decisions):
@@ -463,19 +463,11 @@ def prune_built_specs(pipeline, mirrors_to_check=None, check_index_only=True):
         tty.msg("There were no already built specs.")
 
 
-def _build_jobs(spec_labels, stages):
-    for stage_jobs in stages:
-        for spec_label in stage_jobs:
-            release_spec = spec_labels[spec_label]
-            release_spec_dag_hash = release_spec.dag_hash()
-            yield release_spec, release_spec_dag_hash
-
-
 def _noop(x):
     return x
 
 
-def _unpack_script(script_section, op=_noop):
+def unpack_script(script_section, op=_noop):
     script = []
     for cmd in script_section:
         if isinstance(cmd, list):
@@ -515,9 +507,6 @@ class SpackCI:
             "target": self.ci_config.get("target", "gitlab"),
         }
         jobs = self.ir["jobs"]
-
-        for spec, dag_hash in _build_jobs(spec_labels, stages):
-            jobs[dag_hash] = self.__init_job(spec)
 
         for _, (key, node) in pipeline.traverse():
             dag_hash = node.spec.dag_hash()
@@ -742,79 +731,34 @@ def check_for_broken_specs(pipeline_specs, broken_specs_url):
             return True
 
 
-def generate_gitlab_ci_yaml(
-    env,
-    print_summary,
-    output_file,
-    prune_dag=False,
-    check_index_only=False,
-    run_optimizer=False,
-    use_dependencies=False,
-    artifacts_root=None,
-    remote_mirror_override=None,
-):
-    """Generate a gitlab yaml file to run a dynamic child pipeline from
-        the spec matrix in the active environment.
+def collect_pipeline_options(
+        args: spack.main.SpackArgumentParser,
+        env_yaml: spack.environment.EnvironmentManifestFile,
+    ) -> PipelineOptions:
+    """Gather pipeline options from cli args, spack environment, and
+    os environment variables """
+    options = PipelineOptions()
 
-    Arguments:
-        env (spack.environment.Environment): Activated environment object
-            which must contain a gitlab-ci section describing how to map
-            specs to runners
-        print_summary (bool): Should we print a summary of all the jobs in
-            the stages in which they were placed.
-        output_file (str): File path where generated file should be written
-        prune_dag (bool): If True, do not generate jobs for specs already
-            exist built on the mirror.
-        check_index_only (bool): If True, attempt to fetch the mirror index
-            and only use that to determine whether built specs on the mirror
-            this mode results in faster yaml generation time). Otherwise, also
-            check each spec directly by url (useful if there is no index or it
-            might be out of date).
-        run_optimizer (bool): If True, post-process the generated yaml to try
-            try to reduce the size (attempts to collect repeated configuration
-            and replace with definitions).)
-        use_dependencies (bool): If true, use "dependencies" rather than "needs"
-            ("needs" allows DAG scheduling).  Useful if gitlab instance cannot
-            be configured to handle more than a few "needs" per job.
-        artifacts_root (str): Path where artifacts like logs, environment
-            files (spack.yaml, spack.lock), etc should be written.  GitLab
-            requires this to be within the project directory.
-        remote_mirror_override (str): Typically only needed when one spack.yaml
-            is used to populate several mirrors with binaries, based on some
-            criteria.  Spack protected pipelines populate different mirrors based
-            on branch name, facilitated by this option.  DEPRECATED
     """
-    with spack.concretize.disable_compiler_existence_check():
-        with env.write_transaction():
-            env.concretize()
-            env.write()
+    output_file = args.output_file
+    copy_yaml_to = args.copy_to
+    run_optimizer = args.optimize
+    use_dependencies = args.dependencies
+    prune_dag = args.prune_dag
+    index_only = args.index_only
+    artifacts_root = args.artifacts_root
+    buildcache_destination = args.buildcache_destination
+    """
 
-    yaml_root = env.manifest[ev.TOP_LEVEL_KEY]
+    options.output_file = args.output_file
+    options.run_optimizer = args.optimize
+    options.use_dependencies = args.dependencies
+    options.prune_up_to_date = args.prune_dag
+    options.check_index_only = args.index_only
+    options.artifacts_root = args.artifacts_root
+    options.remote_mirror_override = args.buildcache_destination
 
-    # Get the joined "ci" config with all of the current scopes resolved
     ci_config = cfg.get("ci")
-
-    config_deprecated = False
-    if not ci_config:
-        tty.warn("Environment does not have `ci` a configuration")
-        gitlabci_config = yaml_root.get("gitlab-ci")
-        if not gitlabci_config:
-            tty.die("Environment yaml does not have `gitlab-ci` config section. Cannot recover.")
-
-        tty.warn(
-            "The `gitlab-ci` configuration is deprecated in favor of `ci`.\n",
-            "To update run \n\t$ spack env update /path/to/ci/spack.yaml",
-        )
-        translate_deprecated_config(gitlabci_config)
-        ci_config = gitlabci_config
-        config_deprecated = True
-
-    # Default target is gitlab...and only target is gitlab
-    ci_target = ci_config.get("target", "gitlab")
-    # if ci_target not in CI_TARGET_FORMATTERS:
-    #     tty.die('Spack CI module only generates target "gitlab"')
-
-    # target_formatter = CI_TARGET_FORMATTERS[ci_target]
 
     cdash_config = cfg.get("cdash")
     cdash_handler = CDashHandler(cdash_config) if "build-group" in cdash_config else None
@@ -823,70 +767,130 @@ def generate_gitlab_ci_yaml(
     dependent_depth = os.environ.get("SPACK_PRUNE_UNTOUCHED_DEPENDENT_DEPTH", None)
     if dependent_depth is not None:
         try:
-            dependent_depth = int(dependent_depth)
+            options.untouched_pruning_dependent_depth = int(dependent_depth)
         except (TypeError, ValueError):
             tty.warn(
                 f"Unrecognized value ({dependent_depth}) "
                 "provided for SPACK_PRUNE_UNTOUCHED_DEPENDENT_DEPTH, "
                 "ignoring it."
             )
-            dependent_depth = None
 
-    prune_untouched_packages = False
     spack_prune_untouched = os.environ.get("SPACK_PRUNE_UNTOUCHED", None)
-    if spack_prune_untouched is not None and spack_prune_untouched.lower() == "true":
-        # Requested to prune untouched packages, but assume we won't do that
-        # unless we're actually in a git repo.
+    prune_untouched_packages = spack_prune_untouched is not None and spack_prune_untouched.lower() == "true"
+
+    # Allow overriding --prune-dag cli opt with environment variable
+    prune_dag_override = os.environ.get("SPACK_PRUNE_UP_TO_DATE", None)
+    if prune_dag_override is not None:
+        options.prune_up_to_date = True if prune_dag_override.lower() == "true" else False
+
+    # Get the type of pipeline, which is optional
+    spack_pipeline_type = os.environ.get("SPACK_PIPELINE_TYPE", None)
+    if spack_pipeline_type:
+        try:
+            options.pipeline_type = PipelineType[spack_pipeline_type]
+        except KeyError:
+            options.pipeline_type = None
+
+    if "broken-specs-url" in ci_config:
+        options.broken_specs_url = ci_config["broken-specs-url"]
+
+    if "enable-artifacts-buildcache" in ci_config:
+        tty.warn("Support for enable-artifacts-buildcache will be removed in Spack 0.23")
+        options.enable_artifacts_buildcache = ci_config["enable-artifacts-buildcache"]
+
+    if "rebuild-index" in ci_config and ci_config["rebuild-index"] is False:
+        options.rebuild_index = False
+
+    if "temporary-storage-url-prefix" in ci_config:
+        tty.warn("Support for temporary-storage-url-prefix will be removed in Spack 0.23")
+        options.temporary_storage_url_prefix = ci_config["temporary-storage-url-prefix"]
+
+    """
+        True,
+        output_file,
+        prune_dag=prune_dag,
+        check_index_only=index_only,
+        run_optimizer=run_optimizer,
+        use_dependencies=use_dependencies,
+        artifacts_root=artifacts_root,
+        remote_mirror_override=buildcache_destination,
+
+    print_summary,
+    output_file,
+    prune_dag=False,
+    check_index_only=False,
+    run_optimizer=False,
+    use_dependencies=False,
+    artifacts_root=None,
+    remote_mirror_override=None,
+
+    """
+
+    return options
+
+
+def generate_pipeline(env: ev.Environment, args: spack.main.SpackArgumentParser) -> None:
+    """Generate a gitlab yaml file to run a dynamic child pipeline from
+        the spec matrix in the active environment.
+
+    Arguments:
+        env (spack.environment.Environment): Activated environment object
+            which must contain a gitlab-ci section describing attributes for
+            all jobs
+        args: (spack.main.SpackArgumentParser): Parsed arguments from the command
+            line.
+    """
+    with spack.concretize.disable_compiler_existence_check():
+        with env.write_transaction():
+            env.concretize()
+            env.write()
+
+    yaml_root = env.manifest[ev.TOP_LEVEL_KEY]
+
+    options = collect_pipeline_options(args, yaml_root)
+
+    # Get the joined "ci" config with all of the current scopes resolved
+    ci_config = cfg.get("ci")
+    if not ci_config:
+        tty.die("Environment yaml must have `ci` config section in order to generate a pipeline.")
+
+    # Get the target platform we should generate a pipeline for
+    ci_target = ci_config.get("target", "gitlab")
+    try:
+        target_formatter = get_formatter(ci_target)
+    except UnknownFormatterException:
+        tty.die(f"Spack CI module cannot generate a pipeline for format {ci_target}")
+
+    # We were requested to prune untouched packages.  If we're actually in a git repo,
+    # then here we'll generate a list of all possibly affected environment specs, based
+    # on the names of packages touched in the history between rev1 and rev2.
+    if options.prune_untouched_packages:
         rev1, rev2 = get_change_revisions()
         tty.debug("Got following revisions: rev1={0}, rev2={1}".format(rev1, rev2))
         if rev1 and rev2:
             # If the stack file itself did not change, proceed with pruning
             if not get_stack_changed(env.manifest_path, rev1, rev2):
-                prune_untouched_packages = True
                 affected_pkgs = compute_affected_packages(rev1, rev2)
                 tty.debug("affected pkgs:")
                 for p in affected_pkgs:
                     tty.debug("  {0}".format(p))
                 affected_specs = get_spec_filter_list(
-                    env, affected_pkgs, dependent_traverse_depth=dependent_depth
+                    env, affected_pkgs, dependent_traverse_depth=options.untouched_pruning_dependent_depth
                 )
-                tty.msg(f"dependent_traverse_depth={dependent_depth}, affected specs:")
+                tty.msg(f"dependent_traverse_depth={options.untouched_pruning_dependent_depth}, affected specs:")
                 for s in affected_specs:
                     tty.msg(f"  {PipelineDag.key(s)}")
-
-    # Allow overriding --prune-dag cli opt with environment variable
-    prune_dag_override = os.environ.get("SPACK_PRUNE_UP_TO_DATE", None)
-    if prune_dag_override is not None:
-        prune_dag = True if prune_dag_override.lower() == "true" else False
+            else:
+                options.prune_untouched_packages = False
 
     # If we are not doing any kind of pruning, we are rebuilding everything
-    rebuild_everything = not prune_dag and not prune_untouched_packages
-
-    # Downstream jobs will "need" (depend on, for both scheduling and
-    # artifacts, which include spack.lock file) this pipeline generation
-    # job by both name and pipeline id.  If those environment variables
-    # do not exist, then maybe this is just running in a shell, in which
-    # case, there is no expectation gitlab will ever run the generated
-    # pipeline and those environment variables do not matter.
-    generate_job_name = os.environ.get("CI_JOB_NAME", "job-does-not-exist")
-    parent_pipeline_id = os.environ.get("CI_PIPELINE_ID", "pipeline-does-not-exist")
-
-    # Values: "spack_pull_request", "spack_protected_branch", or not set
-    spack_pipeline_type = os.environ.get("SPACK_PIPELINE_TYPE", None)
-
-    copy_only_pipeline = spack_pipeline_type == "spack_copy_only"
-    if copy_only_pipeline and config_deprecated:
-        tty.warn(
-            "SPACK_PIPELINE_TYPE=spack_copy_only is not supported when using\n",
-            "deprecated ci configuration, a no-op pipeline will be generated\n",
-            "instead.",
-        )
+    rebuild_everything = not options.prune_up_to_date and not options.pruned_untouched
 
     pipeline_mirrors = spack.mirror.MirrorCollection(binary=True)
     deprecated_mirror_config = False
     buildcache_destination = None
     if "buildcache-destination" in pipeline_mirrors:
-        if remote_mirror_override:
+        if options.remote_mirror_override:
             tty.die(
                 "Using the deprecated --buildcache-destination cli option and "
                 "having a mirror named 'buildcache-destination' at the same time "
@@ -907,33 +911,13 @@ def generate_gitlab_ci_yaml(
         mirror_urls = [url for url in ci_mirrors.values()]
         remote_mirror_url = mirror_urls[0]
 
-    # Check for a list of "known broken" specs that we should not bother
-    # trying to build.
-    broken_specs_url = ""
-    if "broken-specs-url" in ci_config:
-        broken_specs_url = ci_config["broken-specs-url"]
-
-    enable_artifacts_buildcache = False
-    if "enable-artifacts-buildcache" in ci_config:
-        tty.warn("Support for enable-artifacts-buildcache will be removed in Spack 0.23")
-        enable_artifacts_buildcache = ci_config["enable-artifacts-buildcache"]
-
-    rebuild_index_enabled = True
-    if "rebuild-index" in ci_config and ci_config["rebuild-index"] is False:
-        rebuild_index_enabled = False
-
-    temp_storage_url_prefix = None
-    if "temporary-storage-url-prefix" in ci_config:
-        tty.warn("Support for temporary-storage-url-prefix will be removed in Spack 0.23")
-        temp_storage_url_prefix = ci_config["temporary-storage-url-prefix"]
-
     # If a remote mirror override (alternate buildcache destination) was
     # specified, add it here in case it has already built hashes we might
     # generate.
     # TODO: Remove this block in Spack 0.23
     mirrors_to_check = None
-    if deprecated_mirror_config and remote_mirror_override:
-        if spack_pipeline_type == "spack_protected_branch":
+    if deprecated_mirror_config and options.remote_mirror_override:
+        if options.pipeline_type == PipelineType.PROTECTED_BRANCH:
             # Overriding the main mirror in this case might result
             # in skipping jobs on a release pipeline because specs are
             # up to date in develop.  Eventually we want to notice and take
@@ -941,20 +925,20 @@ def generate_gitlab_ci_yaml(
             # develop to the release, but until we have that, this makes
             # sure we schedule a rebuild job if the spec isn't already in
             # override mirror.
-            mirrors_to_check = {"override": remote_mirror_override}
+            mirrors_to_check = {"override": options.remote_mirror_override}
 
         # If we have a remote override and we want generate pipeline using
         # --check-index-only, then the override mirror needs to be added to
         # the configured mirrors when bindist.update() is run, or else we
         # won't fetch its index and include in our local cache.
         spack.mirror.add(
-            spack.mirror.Mirror(remote_mirror_override, name="ci_pr_mirror"),
+            spack.mirror.Mirror(options.remote_mirror_override, name="ci_pr_mirror"),
             cfg.default_modify_scope(),
         )
 
     # TODO: Remove this block in Spack 0.23
     shared_pr_mirror = None
-    if deprecated_mirror_config and spack_pipeline_type == "spack_pull_request":
+    if deprecated_mirror_config and options.pipeline_type == PipelineType.PULL_REQUEST:
         stack_name = os.environ.get("SPACK_CI_STACK_NAME", "")
         shared_pr_mirror = url_util.join(SHARED_PR_MIRROR_URL, stack_name)
         spack.mirror.add(
@@ -962,7 +946,7 @@ def generate_gitlab_ci_yaml(
             cfg.default_modify_scope(),
         )
 
-    pipeline_artifacts_dir = artifacts_root
+    pipeline_artifacts_dir = options.artifacts_root
     if not pipeline_artifacts_dir:
         proj_dir = os.environ.get("CI_PROJECT_DIR", os.getcwd())
         pipeline_artifacts_dir = os.path.join(proj_dir, "jobs_scratch_dir")
@@ -1057,7 +1041,7 @@ def generate_gitlab_ci_yaml(
             else remote_mirror_override or remote_mirror_url
         )
 
-        if copy_only_pipeline:
+        if options.pipeline_type == PipelineType.COPY_ONLY:
             manifest_specs = [s for _, s in env.concretized_specs()]
         else:
             manifest_specs = pipeline_specs
@@ -1072,7 +1056,7 @@ def generate_gitlab_ci_yaml(
 
     # If this is configured, spack will fail "spack ci generate" if it
     # generates any hash which exists under the broken specs url.
-    if broken_specs_url and not copy_only_pipeline:
+    if broken_specs_url and not options.pipeline_type == PipelineType.COPY_ONLY:
         broken = check_for_broken_specs(pipeline_specs, broken_specs_url)
         if broken and not rebuild_everything:
             sys.exit(1)
@@ -1080,9 +1064,8 @@ def generate_gitlab_ci_yaml(
     spack_ci = SpackCI(ci_config, pipeline)
     spack_ci_ir = spack_ci.generate_ir()
 
-    # TODO: Create a library of formatters keyed by the "target" in ci.yaml
-    # TODO: and use it here.
-    format_gitlab_yaml(pipeline, spack_ci_ir, output_file)
+    # Format the pipeline using the formatter specified in the environment
+    target_formatter(pipeline, spack_ci_ir, output_file)
 
     # Clean up remote mirror override if enabled
     # TODO: Remove this block in Spack 0.23

@@ -2,9 +2,17 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
 
-from ..ci import PipelineDag, PipelineOptions, SpackCI
+import llnl.util.tty as tty
+
+from ..ci import PipelineDag, PipelineOptions, PipelineType, SpackCI, unpack_script
 from . import formatter
+
+
+def _remove_reserved_tags(tags):
+    """Convenience function to strip reserved tags from jobs"""
+    return [tag for tag in tags if tag not in SPACK_RESERVED_TAGS]
 
 
 @formatter("gitlab")
@@ -20,6 +28,24 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
         output_file (str): Path to output file to be written
     """
     output_file = options.output_file
+
+    if not output_file:
+        output_file = os.path.abspath(".gitlab-ci.yml")
+    else:
+        output_file_path = os.path.abspath(output_file)
+        gen_ci_dir = os.path.dirname(output_file_path)
+        if not os.path.exists(gen_ci_dir):
+            os.makedirs(gen_ci_dir)
+
+    # Downstream jobs will "need" (depend on, for both scheduling and
+    # artifacts, which include spack.lock file) this pipeline generation
+    # job by both name and pipeline id.  If those environment variables
+    # do not exist, then maybe this is just running in a shell, in which
+    # case, there is no expectation gitlab will ever run the generated
+    # pipeline and those environment variables do not matter.
+    generate_job_name = os.environ.get("CI_JOB_NAME", "job-does-not-exist")
+    parent_pipeline_id = os.environ.get("CI_PIPELINE_ID", "pipeline-does-not-exist")
+
     all_job_names = []
     output_object = {}
     job_id = 0
@@ -46,12 +72,12 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
             tty.warn("No match found for {0}, skipping it".format(release_spec))
             continue
 
-        if spack_pipeline_type is not None:
+        if options.pipeline_type is not None:
             # For spack pipelines "public" and "protected" are reserved tags
             job_object["tags"] = _remove_reserved_tags(job_object.get("tags", []))
-            if spack_pipeline_type == "spack_protected_branch":
+            if options.pipeline_type == PipelineType.PROTECTED_BRANCH:
                 job_object["tags"].extend(["protected"])
-            elif spack_pipeline_type == "spack_pull_request":
+            elif options.pipeline_type == PipelineType.PULL_REQUEST:
                 job_object["tags"].extend(["public"])
 
         if "script" not in job_object:
@@ -60,15 +86,15 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
         def main_script_replacements(cmd):
             return cmd.replace("{env_dir}", rel_concrete_env_dir)
 
-        job_object["script"] = _unpack_script(
+        job_object["script"] = unpack_script(
             job_object["script"], op=main_script_replacements
         )
 
         if "before_script" in job_object:
-            job_object["before_script"] = _unpack_script(job_object["before_script"])
+            job_object["before_script"] = unpack_script(job_object["before_script"])
 
         if "after_script" in job_object:
-            job_object["after_script"] = _unpack_script(job_object["after_script"])
+            job_object["after_script"] = unpack_script(job_object["after_script"])
 
         job_name = get_job_name(release_spec, build_group)
 
@@ -106,7 +132,7 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
 
         rebuild_spec = spec_record.rebuild
 
-        if not rebuild_spec and not copy_only_pipeline:
+        if not rebuild_spec and not options.pipeline_type == PipelineType.COPY_ONLY:
             if prune_dag:
                 spec_record.reason = "Pruned, up-to-date"
                 continue
@@ -171,7 +197,7 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
             max_length_needs = length_needs
             max_needs_job = job_name
 
-        if not copy_only_pipeline:
+        if not options.pipeline_type == PipelineType.COPY_ONLY:
             output_object[job_name] = job_object
             job_id += 1
 
@@ -190,7 +216,7 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
         "when": ["runner_system_failure", "stuck_or_timeout_failure", "script_failure"],
     }
 
-    if copy_only_pipeline and not config_deprecated:
+    if options.pipeline_type == PipelineType.COPY_ONLY:
         stage_names.append("copy")
         sync_job = copy.deepcopy(spack_ci_ir["jobs"]["copy"]["attributes"])
         sync_job["stage"] = "copy"
@@ -220,7 +246,7 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
 
     if job_id > 0:
         # TODO: Remove this block in Spack 0.23
-        if temp_storage_url_prefix:
+        if options.temporary_storage_url_prefix:
             # There were some rebuild jobs scheduled, so we will need to
             # schedule a job to clean up the temporary storage location
             # associated with this pipeline.
@@ -232,7 +258,7 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
             cleanup_job["retry"] = service_job_retries
             cleanup_job["interruptible"] = True
 
-            cleanup_job["script"] = _unpack_script(
+            cleanup_job["script"] = unpack_script(
                 cleanup_job["script"],
                 op=lambda cmd: cmd.replace("mirror_prefix", temp_storage_url_prefix),
             )
@@ -248,7 +274,7 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
             stage_names.append("stage-sign-pkgs")
             signing_job = spack_ci_ir["jobs"]["signing"]["attributes"]
 
-            signing_job["script"] = _unpack_script(signing_job["script"])
+            signing_job["script"] = unpack_script(signing_job["script"])
 
             signing_job["stage"] = "stage-sign-pkgs"
             signing_job["when"] = "always"
@@ -265,7 +291,7 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
 
             output_object["sign-pkgs"] = signing_job
 
-        if rebuild_index_enabled:
+        if options.rebuild_index:
             # Add a final job to regenerate the index
             stage_names.append("stage-rebuild-index")
             final_job = spack_ci_ir["jobs"]["reindex"]["attributes"]
@@ -274,7 +300,7 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
             target_mirror = remote_mirror_override or remote_mirror_url
             if buildcache_destination:
                 target_mirror = buildcache_destination.push_url
-            final_job["script"] = _unpack_script(
+            final_job["script"] = unpack_script(
                 final_job["script"],
                 op=lambda cmd: cmd.replace("{index_target_mirror}", target_mirror),
             )
@@ -338,16 +364,8 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
         # No jobs were generated
         noop_job = spack_ci_ir["jobs"]["noop"]["attributes"]
         noop_job["retry"] = service_job_retries
-
-        if copy_only_pipeline and config_deprecated:
-            tty.debug("Generating no-op job as copy-only is unsupported here.")
-            noop_job["script"] = [
-                'echo "copy-only pipelines are not supported with deprecated ci configs"'
-            ]
-            output_object = {"unsupported-copy": noop_job}
-        else:
-            tty.debug("No specs to rebuild, generating no-op job")
-            output_object = {"no-specs-to-rebuild": noop_job}
+        tty.debug("No specs to rebuild, generating no-op job")
+        output_object = {"no-specs-to-rebuild": noop_job}
 
     # Ensure the child pipeline always runs
     output_object["workflow"] = {"rules": [{"when": "always"}]}

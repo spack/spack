@@ -3,6 +3,16 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 # Holds all known formatters
+"""Formatters that support writing out pipelines for various CI platforms,
+using a common pipeline graph definition.
+"""
+import spack.error
+
+# __all__ = [
+#     "formatter",
+#     "get_formatter",
+#     "UnknownFormatterException",
+# ]
 
 _formatters = {}
 
@@ -19,3 +29,20 @@ def formatter(name):
         return fmt_method
 
     return _decorator
+
+
+def get_formatter(name):
+    try:
+        return _formatters[name]
+    except KeyError as err:
+        raise UnknownFormatterException(name)
+
+
+class UnknownFormatterException(spack.error.SpackError):
+    def __init__(self, formatter_name):
+        super().__init__(f"No registered formatter for {formatter_name}")
+
+
+# Import after function definition all the modules in this package,
+# so that registration of formatters will happen automatically
+import spack.ci.formatters.gitlab  # noqa: E402
