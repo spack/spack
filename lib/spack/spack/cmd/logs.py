@@ -24,7 +24,7 @@ def setup_parser(subparser):
     arguments.add_common_arguments(subparser, ["spec"])
 
 
-def _dump_byte_stream_to_stdout(stream):
+def _dump_byte_stream_to_stdout(instream):
     def write_as_is(byte_str, stream):
         stream.write(byte_str)
 
@@ -47,10 +47,10 @@ def _dump_byte_stream_to_stdout(stream):
         else:
             outstream = open(sys.stdout.fileno(), "wb")
 
-        line = stream.readline()
+        line = instream.readline()
         while line:
             write_to_stream(line, outstream)
-            line = stream.readline()
+            line = instream.readline()
     finally:
         if needs_closing:
             outstream.close()
