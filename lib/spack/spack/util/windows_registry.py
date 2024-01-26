@@ -59,6 +59,18 @@ class RegistryKey:
     def hkey(self):
         return self._handle
 
+    def _handle_winreg_errors(self, err, name, *args, **kwargs):
+        # Expected errors that occur on occasion, these are easily
+        # debug-able and have sufficiently verbose reporting and obvious cause
+        # [WinError 2]: the system cannot find the file specified - lookup item does
+        # not exist
+        # [WinError 5]: Access is denied - user does not have access to key
+        if hasattr(err, "winerror") and err.winerror in (5, 2):
+            raise err
+        # Other OS errors are more difficult to diagnose, so we wrap them in some extra
+        # reporting
+        raise InvalidRegistryOperation(name, err, self.path, *args, **kwargs) from err
+
     def OpenKeyEx(self, subname, **kwargs):
         """Convenience wrapper around winreg.OpenKeyEx"""
         tty.debug(
@@ -68,13 +80,7 @@ class RegistryKey:
         try:
             return winreg.OpenKeyEx(self.hkey, subname, **kwargs)
         except OSError as e:
-            # Expected errors that occur on occasion, these are easily
-            # debug-able and have sufficiently verbose reporting and obvious cause
-            if hasattr(e, "winerror") and e.winerror in (5, 2):
-                raise e
-            # Other OS errors are more difficult to diagnose, so we wrap them in some extra
-            # reporting
-            raise InvalidRegistryOperation("OpenKeyEx", e, self.path, subname, **kwargs) from e
+            self._handle_winreg_errors(e, "OpenKeyEx", subname, **kwargs)
 
     def QueryInfoKey(self):
         """Convenience wrapper around winreg.QueryInfoKey"""
@@ -82,7 +88,7 @@ class RegistryKey:
         try:
             return winreg.QueryInfoKey(self.hkey)
         except OSError as e:
-            raise InvalidRegistryOperation("QueryInfoKey", e, self.path) from e
+            self._handle_winreg_errors(e, "QueryInfoKey")
 
     def EnumKey(self, index):
         """Convenience wrapper around winreg.EnumKey"""
@@ -93,13 +99,7 @@ class RegistryKey:
         try:
             return winreg.EnumKey(self.hkey, index)
         except OSError as e:
-            # Expected errors that occur on occasion, these are easily
-            # debug-able and have sufficiently verbose reporting and obvious cause
-            if hasattr(e, "winerror") and e.winerror in (5, 2):
-                raise e
-            # Other OS errors are more difficult to diagnose, so we wrap them in some extra
-            # reporting
-            raise InvalidRegistryOperation("EnumKey", e, self.path, index) from e
+            self._handle_winreg_errors(e, "EnumKey", index)
 
     def EnumValue(self, index):
         """Convenience wrapper around winreg.EnumValue"""
@@ -109,13 +109,7 @@ class RegistryKey:
         try:
             return winreg.EnumValue(self.hkey, index)
         except OSError as e:
-            # Expected errors that occur on occasion, these are easily
-            # debug-able and have sufficiently verbose reporting and obvious cause
-            if hasattr(e, "winerror") and e.winerror in (5, 2):
-                raise e
-            # Other OS errors are more difficult to diagnose, so we wrap them in some extra
-            # reporting
-            raise InvalidRegistryOperation("EnumValue", e, self.path, index) from e
+            self._handle_winreg_errors(e, "EnumValue", index)
 
     def QueryValueEx(self, name, **kwargs):
         """Convenience wrapper around winreg.QueryValueEx"""
@@ -129,7 +123,7 @@ class RegistryKey:
                 raise e
             # Other OS errors are more difficult to diagnose, so we wrap them in some extra
             # reporting
-            raise InvalidRegistryOperation("QueryValueEx", e, self.path, name, **kwargs) from e
+            self._handle_winreg_errors(e, "QueryValueEx", name, **kwargs)
 
     def __str__(self):
         return self.name
@@ -145,13 +139,10 @@ class RegistryKey:
                 sub_handle = self.OpenKeyEx(sub_name, access=winreg.KEY_READ)
                 self._keys.append(RegistryKey(os.path.join(self.path, sub_name), sub_handle))
             except OSError as e:
-                if hasattr(e, "winerror"):
-                    if e.winerror == 5:
-                        # This is a permission error, we can't read this key
-                        # move on
-                        pass
-                    else:
-                        raise
+                if hasattr(e, "winerror") and e.winerror == 5:
+                    # This is a permission error, we can't read this key
+                    # move on
+                    pass
                 else:
                     raise
 
@@ -352,34 +343,36 @@ class WindowsRegistryView:
                     queue.extend(key.subkeys)
             return collection if collection else None
 
-    def find_subkey(self, subkey_name, depth=True):
+    def find_subkey(self, subkey_name, recursive=True):
         """Perform a BFS of subkeys until desired key is found
         Returns None or RegistryKey object corresponding to requested key name
 
         Args:
-            subkey_name (str)
+            subkey_name (str): subkey to be searched for
+            recursive (bool):  perform a recursive search
         Return:
             the desired subkey as a RegistryKey object, or none
 
         For more details, see the WindowsRegistryView._find_subkey_s method docstring
         """
         return self._traverse_subkeys(
-            WindowsRegistryView.KeyMatchConditions.name_matcher(subkey_name), depth_search=depth
+            WindowsRegistryView.KeyMatchConditions.name_matcher(subkey_name), depth_search=recursive
         )
 
-    def find_matching_subkey(self, subkey_name, depth=True):
+    def find_matching_subkey(self, subkey_name, recursive=True):
         """Perform a BFS of subkeys until a key matching subkey name regex is found
         Returns None or the first RegistryKey object corresponding to requested key name
 
         Args:
-            subkey_name (str)
+            subkey_name (str): subkey to be searched for
+            recursive (bool):  perform a recursive search
         Return:
             the desired subkey as a RegistryKey object, or none
 
         For more details, see the WindowsRegistryView._find_subkey_s method docstring
         """
         return self._traverse_subkeys(
-            WindowsRegistryView.KeyMatchConditions.regex_matcher(subkey_name), depth_search=depth
+            WindowsRegistryView.KeyMatchConditions.regex_matcher(subkey_name), depth_search=recursive
         )
 
     def find_subkeys(self, subkey_name, depth=True):
