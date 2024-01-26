@@ -45,9 +45,13 @@ class Python(Package):
     version("3.12.1", sha256="d01ec6a33bc10009b09c17da95cc2759af5a580a7316b3a446eb4190e13f97b2")
     version("3.12.0", sha256="51412956d24a1ef7c97f1cb5f70e185c13e3de1f50d131c0aac6338080687afb")
     version(
+        "3.11.7",
+        sha256="068c05f82262e57641bd93458dfa883128858f5f4997aad7a36fd25b13b29209",
+        preferred=True,
+    )
+    version(
         "3.11.6",
         sha256="c049bf317e877cbf9fce8c3af902436774ecef5249a29d10984ca3a37f7f4736",
-        preferred=True,
     )
     version("3.11.5", sha256="a12a0a013a30b846c786c010f2c19dd36b7298d888f7c4bd1581d90ce18b5e58")
     version("3.11.4", sha256="85c37a265e5c9dd9f75b35f954e31fbfc10383162417285e30ad25cc073a0d63")
