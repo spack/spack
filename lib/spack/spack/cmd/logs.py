@@ -25,28 +25,19 @@ def setup_parser(subparser):
 
 
 def _dump_byte_stream_to_stdout(instream):
-    def write_as_is(byte_str, stream):
-        stream.write(byte_str)
-
-    def write_decoded(byte_str, stream):
-        stream.write(byte_str.decode("utf-8"))
-
-    write_to_stream = write_as_is
-
     if sys.platform == "win32":
         try:
             outstream = sys.stdout.buffer
         except AttributeError:
-            # e.g. a StringIO for unit tests
-            outstream = sys.stdout
-            write_to_stream = write_decoded
+            raise spack.cmd.SpackCommandError(
+                "This command cannot be invoked in a"
+                " context where stdout is not accessible"
+                f" as a binary stream (stdout = {type(sys.stdout)})"
+            )
     else:
         outstream = os.fdopen(sys.stdout.fileno(), "wb", closefd=False)
 
-    line = instream.readline()
-    while line:
-        write_to_stream(line, outstream)
-        line = instream.readline()
+    shutil.copyfileobj(instream, outstream)
 
 
 def dump_build_log(package):
