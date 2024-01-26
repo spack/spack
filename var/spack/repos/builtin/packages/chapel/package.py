@@ -286,11 +286,7 @@ class Chapel(AutotoolsPackage):
         "CHPL_GPU",
     ]
 
-    conflicts(
-        "locale_model=gpu",
-        when="llvm=none",
-        msg="GPU support requires building with LLVM",
-    )
+    conflicts("locale_model=gpu", when="llvm=none", msg="GPU support requires building with LLVM")
 
     # Add dependencies
     depends_on("llvm@14:16", when="llvm=spack")
