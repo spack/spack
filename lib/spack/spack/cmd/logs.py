@@ -9,7 +9,6 @@ import sys
 import tempfile
 
 import llnl.util.filesystem as fs
-import llnl.util.tty as tty
 
 import spack.cmd
 import spack.util.compression as compression
@@ -81,7 +80,9 @@ def _logs(cmdline_spec, concrete_spec):
                         f" but could not decompress {log_path}"
                     )
                 elif len(result) > 1:
-                    raise spack.main.SpackCommandError(f"Compressed log {log_path} expanded to more than 1 file")
+                    raise spack.main.SpackCommandError(
+                        f"Compressed log {log_path} expanded to more than 1 file"
+                    )
                 else:
                     fstream = open(result[0], "rb")
 
