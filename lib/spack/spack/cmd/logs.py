@@ -54,27 +54,17 @@ def dump_build_log(package):
         _dump_byte_stream_to_stdout(f)
 
 
-def logs(parser, args):
-    specs = spack.cmd.parse_specs(args.spec)
-
-    if not specs:
-        tty.die("You must supply a spec.")
-
-    if len(specs) != 1:
-        tty.die("Too many specs.  Supply only one.")
-
-    spec = spack.cmd.matching_spec_from_env(specs[0])
-
-    if spec.installed:
-        log_path = spec.package.install_log_path
-    elif os.path.exists(spec.package.stage.path):
-        dump_build_log(spec.package)
+def _logs(cmdline_spec, concrete_spec):
+    if concrete_spec.installed:
+        log_path = concrete_spec.package.install_log_path
+    elif os.path.exists(concrete_spec.package.stage.path):
+        dump_build_log(concrete_spec.package)
         return
     else:
-        tty.die(f"{specs[0]} is not installed or staged")
+        tty.die(f"{cmdline_spec} is not installed or staged")
 
     if not os.path.exists(log_path):
-        tty.die(f"No logs are available for {specs[0]}")
+        tty.die(f"No logs are available for {cmdline_spec}")
 
     compression_ext = compression.extension_from_file(log_path)
     fstream = None
@@ -84,14 +74,14 @@ def logs(parser, args):
             fstream = open(log_path, "rb")
         else:
             decompressor = compression.decompressor_for(log_path, extension=compression_ext)
-            temp_dir = tempfile.mkdtemp(suffix=f"decompress-spack-log-{spec.name}")
+            temp_dir = tempfile.mkdtemp(suffix=f"decompress-spack-log-{concrete_spec.name}")
 
             with fs.working_dir(temp_dir):
                 decompressor(log_path)
                 result = os.listdir(".")
                 if len(result) < 1:
                     tty.die(
-                        f"Detected compressed log for {specs[0]},"
+                        f"Detected compressed log for {cmdline_spec},"
                         f" but could not decompress {log_path}"
                     )
                 elif len(result) > 1:
@@ -105,3 +95,17 @@ def logs(parser, args):
             fstream.close()
         if temp_dir:
             shutil.rmtree(temp_dir)
+
+
+def logs(parser, args):
+    specs = spack.cmd.parse_specs(args.spec)
+
+    if not specs:
+        tty.die("You must supply a spec.")
+
+    if len(specs) != 1:
+        tty.die("Too many specs. Supply only one.")
+
+    concrete_spec = spack.cmd.matching_spec_from_env(specs[0])
+
+    _logs(specs[0], concrete_spec)
