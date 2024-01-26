@@ -172,7 +172,7 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
     depends_on("opencl-c-headers", when="+opencl")
 
     depends_on("intel-xed+pic", when="target=x86_64:")
-    depends_on("memkind", type=("build", "run"), when="@2021.05.01:")
+    depends_on("memkind", type=("build", "run"), when="@2021.05.01:2023.08")
     depends_on("papi", when="+papi")
     depends_on("libpfm4", when="~papi")
     depends_on("mpi", when="+cray")
@@ -285,7 +285,7 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
         if spec.satisfies("@:2022.03"):
             args.append("--with-mbedtls=%s" % spec["mbedtls"].prefix)
 
-        if spec.satisfies("@2021.05.01:"):
+        if spec.satisfies("@2021.05.01:2023.08"):
             args.append("--with-memkind=%s" % spec["memkind"].prefix)
 
         if spec.satisfies("+papi"):
@@ -395,8 +395,6 @@ class MesonBuilder(spack.build_systems.meson.MesonBuilder):
 
         if spec.target.family == "x86_64":
             cfg["properties"]["prefix_xed"] = f"'''{spec['intel-xed'].prefix}'''"
-
-        cfg["properties"]["prefix_memkind"] = f"'''{spec['memkind'].prefix}'''"
 
         if spec.satisfies("+papi"):
             cfg["properties"]["prefix_papi"] = f"'''{spec['papi'].prefix}'''"
