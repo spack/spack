@@ -114,6 +114,7 @@ unification_set(SetID, VirtualNode)
 
 % Node attributes that have multiple node arguments (usually, only the first argument is a node)
 multiple_nodes_attribute("node_flag_source").
+multiple_nodes_attribute("node_flag_propagation_candidate").
 multiple_nodes_attribute("depends_on").
 multiple_nodes_attribute("virtual_on_edge").
 multiple_nodes_attribute("provider_set").
