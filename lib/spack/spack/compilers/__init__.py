@@ -157,8 +157,9 @@ def _compiler_config_from_package_config(config):
 
 def _compiler_config_from_external(config):
     spec = spack.spec.Spec(config["spec"])
+    # use str(spec.versions) to allow `@x.y.z` instead of `@=x.y.z`
     compiler_spec = spack.spec.CompilerSpec(
-        package_name_to_compiler_name.get(spec.name, spec.name), spec.version
+        package_name_to_compiler_name.get(spec.name, spec.name), str(spec.versions)
     )
 
     extra_attributes = config.get("extra_attributes", {})

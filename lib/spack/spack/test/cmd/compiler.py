@@ -300,7 +300,7 @@ def test_compilers_shows_packages_yaml_minimal(no_compilers_yaml, working_env, c
     gcc_entry = {
         "externals": [
             {
-                "spec": "gcc@=7.7.7",
+                "spec": "gcc@7.7.7",
                 "prefix": str(compilers_dir),
                 "modules": ["gcc/7.7.7", "foobar"],
                 "extra_attributes": {"flags": {"fflags": "-ffree-form"}},
