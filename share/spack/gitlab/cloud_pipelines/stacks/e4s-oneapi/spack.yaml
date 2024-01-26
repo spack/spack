@@ -17,7 +17,7 @@ spack:
         tbb: [intel-tbb]
       variants: +mpi
     elfutils:
-      variants: +bzip2 ~nls +xz
+      variants: ~nls
     gcc-runtime:
       require: "%gcc"
     hdf5:
