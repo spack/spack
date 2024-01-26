@@ -299,8 +299,8 @@ class Msvc(Compiler):
         # that has a "." character in the path
         # Work around by pointing tmp to the stage for the duration of the build
         if self.fc and Version(self.fc_version(self.fc)).satisfies(VersionRange("2021.3.0", "2023.1.0")):
-            new_tmp = pathlib.Path(pkg.stage.path) / "tmp"
-            fs.mkdirp(str(new_tmp))
+            new_tmp = pathlib.Path(pkg.stage.path) / "MSVCTMP"
+            fs.safe_make_new_dir(new_tmp)
             env.set("TMP", str(new_tmp))
 
         env.set("CC", self.cc)
