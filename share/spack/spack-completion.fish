@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1165,6 +1165,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 config' -f -a blame -d 'p
 complete -c spack -n '__fish_spack_using_command_pos 0 config' -f -a edit -d 'edit configuration file'
 complete -c spack -n '__fish_spack_using_command_pos 0 config' -f -a list -d 'list configuration sections'
 complete -c spack -n '__fish_spack_using_command_pos 0 config' -f -a add -d 'add configuration parameters'
+complete -c spack -n '__fish_spack_using_command_pos 0 config' -f -a change -d 'swap variants etc. on specs in config'
 complete -c spack -n '__fish_spack_using_command_pos 0 config' -f -a prefer-upstream -d 'set package preferences from upstream'
 complete -c spack -n '__fish_spack_using_command_pos 0 config' -f -a remove -d 'remove configuration parameters'
 complete -c spack -n '__fish_spack_using_command_pos 0 config' -f -a rm -d 'remove configuration parameters'
@@ -1207,6 +1208,14 @@ complete -c spack -n '__fish_spack_using_command config add' -s h -l help -f -a 
 complete -c spack -n '__fish_spack_using_command config add' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command config add' -s f -l file -r -f -a file
 complete -c spack -n '__fish_spack_using_command config add' -s f -l file -r -d 'file from which to set all config values'
+
+# spack config change
+set -g __fish_spack_optspecs_spack_config_change h/help match-spec=
+complete -c spack -n '__fish_spack_using_command_pos 0 config change' -f -a '(__fish_spack_colon_path)'
+complete -c spack -n '__fish_spack_using_command config change' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command config change' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command config change' -l match-spec -r -f -a match_spec
+complete -c spack -n '__fish_spack_using_command config change' -l match-spec -r -d 'only change constraints that match this'
 
 # spack config prefer-upstream
 set -g __fish_spack_optspecs_spack_config_prefer_upstream h/help local
@@ -1467,7 +1476,7 @@ complete -c spack -n '__fish_spack_using_command env' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env' -s h -l help -d 'show this help message and exit'
 
 # spack env activate
-set -g __fish_spack_optspecs_spack_env_activate h/help sh csh fish bat pwsh v/with-view= V/without-view p/prompt temp d/dir=
+set -g __fish_spack_optspecs_spack_env_activate h/help sh csh fish bat pwsh v/with-view= V/without-view p/prompt temp create envfile= keep-relative d/dir
 complete -c spack -n '__fish_spack_using_command_pos 0 env activate' -f -a '(__fish_spack_environments)'
 complete -c spack -n '__fish_spack_using_command env activate' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env activate' -s h -l help -d 'show this help message and exit'
@@ -1489,8 +1498,14 @@ complete -c spack -n '__fish_spack_using_command env activate' -s p -l prompt -f
 complete -c spack -n '__fish_spack_using_command env activate' -s p -l prompt -d 'decorate the command line prompt when activating'
 complete -c spack -n '__fish_spack_using_command env activate' -l temp -f -a temp
 complete -c spack -n '__fish_spack_using_command env activate' -l temp -d 'create and activate an environment in a temporary directory'
-complete -c spack -n '__fish_spack_using_command env activate' -s d -l dir -r -f -a dir
-complete -c spack -n '__fish_spack_using_command env activate' -s d -l dir -r -d 'activate the environment in this directory'
+complete -c spack -n '__fish_spack_using_command env activate' -l create -f -a create
+complete -c spack -n '__fish_spack_using_command env activate' -l create -d 'create and activate the environment if it doesn\'t exist'
+complete -c spack -n '__fish_spack_using_command env activate' -l envfile -r -f -a envfile
+complete -c spack -n '__fish_spack_using_command env activate' -l envfile -r -d 'either a lockfile (must end with \'.json\' or \'.lock\') or a manifest file'
+complete -c spack -n '__fish_spack_using_command env activate' -l keep-relative -f -a keep_relative
+complete -c spack -n '__fish_spack_using_command env activate' -l keep-relative -d 'copy relative develop paths verbatim into the new environment when initializing from envfile'
+complete -c spack -n '__fish_spack_using_command env activate' -s d -l dir -f -a dir
+complete -c spack -n '__fish_spack_using_command env activate' -s d -l dir -d 'activate environment based on the directory supplied'
 
 # spack env deactivate
 set -g __fish_spack_optspecs_spack_env_deactivate h/help sh csh fish bat pwsh
@@ -1747,9 +1762,15 @@ complete -c spack -n '__fish_spack_using_command find' -l end-date -r -f -a end_
 complete -c spack -n '__fish_spack_using_command find' -l end-date -r -d 'latest date of installation [YYYY-MM-DD]'
 
 # spack gc
-set -g __fish_spack_optspecs_spack_gc h/help y/yes-to-all
+set -g __fish_spack_optspecs_spack_gc h/help E/except-any-environment e/except-environment= b/keep-build-dependencies y/yes-to-all
 complete -c spack -n '__fish_spack_using_command gc' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command gc' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command gc' -s E -l except-any-environment -f -a except_any_environment
+complete -c spack -n '__fish_spack_using_command gc' -s E -l except-any-environment -d 'remove everything unless needed by an environment'
+complete -c spack -n '__fish_spack_using_command gc' -s e -l except-environment -r -f -a except_environment
+complete -c spack -n '__fish_spack_using_command gc' -s e -l except-environment -r -d 'remove everything unless needed by specified environment'
+complete -c spack -n '__fish_spack_using_command gc' -s b -l keep-build-dependencies -f -a keep_build_dependencies
+complete -c spack -n '__fish_spack_using_command gc' -s b -l keep-build-dependencies -d 'do not remove installed build-only dependencies of roots'
 complete -c spack -n '__fish_spack_using_command gc' -s y -l yes-to-all -f -a yes_to_all
 complete -c spack -n '__fish_spack_using_command gc' -s y -l yes-to-all -d 'assume "yes" is the answer to every confirmation request'
 
@@ -1864,7 +1885,7 @@ complete -c spack -n '__fish_spack_using_command graph' -s s -l static -d 'graph
 complete -c spack -n '__fish_spack_using_command graph' -s c -l color -f -a color
 complete -c spack -n '__fish_spack_using_command graph' -s c -l color -d 'use different colors for different dependency types'
 complete -c spack -n '__fish_spack_using_command graph' -s i -l installed -f -a installed
-complete -c spack -n '__fish_spack_using_command graph' -s i -l installed -d 'graph installed specs, or specs in the active env (implies --dot)'
+complete -c spack -n '__fish_spack_using_command graph' -s i -l installed -d 'graph specs from the DB'
 complete -c spack -n '__fish_spack_using_command graph' -l deptype -r -f -a deptype
 complete -c spack -n '__fish_spack_using_command graph' -l deptype -r -d 'comma-separated list of deptypes to traverse (default=build,link,run,test)'
 
@@ -2011,10 +2032,12 @@ complete -c spack -n '__fish_spack_using_command license update-copyright-year' 
 complete -c spack -n '__fish_spack_using_command license update-copyright-year' -s h -l help -d 'show this help message and exit'
 
 # spack list
-set -g __fish_spack_optspecs_spack_list h/help d/search-description format= v/virtuals t/tag= count update=
+set -g __fish_spack_optspecs_spack_list h/help r/repo= d/search-description format= v/virtuals t/tag= count update=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 list' -f -a '(__fish_spack_packages)'
 complete -c spack -n '__fish_spack_using_command list' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command list' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command list' -s r -l repo -s N -l namespace -r -f -a repos
+complete -c spack -n '__fish_spack_using_command list' -s r -l repo -s N -l namespace -r -d 'only list packages from the specified repo/namespace'
 complete -c spack -n '__fish_spack_using_command list' -s d -l search-description -f -a search_description
 complete -c spack -n '__fish_spack_using_command list' -s d -l search-description -d 'filtering will also search the description for a match'
 complete -c spack -n '__fish_spack_using_command list' -l format -r -f -a 'name_only version_json html'

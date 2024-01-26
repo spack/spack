@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyKeyring(PythonPackage):
 
     homepage = "https://github.com/jaraco/keyring"
     pypi = "keyring/keyring-23.0.1.tar.gz"
+
+    license("MIT")
 
     version("24.3.0", sha256="e730ecffd309658a08ee82535a3b5ec4b4c8669a9be11efb66249d8e0aeb9a25")
     version("23.13.1", sha256="ba2e15a9b35e21908d0aaf4e0a47acc52d6ae33444df0da2b49d41a46ef6d678")

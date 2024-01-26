@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class PyAnsible(PythonPackage):
 
     homepage = "https://github.com/ansible"
     url = "https://github.com/ansible/ansible/archive/v2.9.1.tar.gz"
+
+    license("GPL-3.0-or-later")
 
     version("2.9.2", sha256="27673726435e8773ef031ef6ffb121b8ec75b85b07b7684454b430c3c9a848a9")
     version("2.9.1", sha256="087a7644890e27c26171b0d24fc5d64024f12201ffb81d222aaa5704987e4c12")

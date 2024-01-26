@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,8 @@ class Gromacs(CMakePackage, CudaPackage):
     list_url = "https://ftp.gromacs.org/gromacs"
     git = "https://gitlab.com/gromacs/gromacs.git"
     maintainers("danielahlin", "eirrgang", "junghans")
+
+    license("BSD-2-Clause")
 
     version("main", branch="main")
     version("master", branch="main", deprecated=True)
@@ -270,6 +272,8 @@ class Gromacs(CMakePackage, CudaPackage):
     depends_on("cmake@3.16.3:3", type="build", when="@2022:")
     depends_on("cmake@3.18.4:3", type="build", when="@main")
     depends_on("cmake@3.16.0:3", type="build", when="%fj")
+    depends_on("pkgconfig", type="build")
+
     depends_on("cuda", when="+cuda")
     depends_on("sycl", when="+sycl")
     depends_on("lapack")

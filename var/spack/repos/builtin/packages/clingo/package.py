@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,8 @@ class Clingo(CMakePackage):
     git = "https://github.com/potassco/clingo.git"
     tags = ["windows"]
     maintainers("tgamblin", "alalazo")
+
+    license("MIT")
 
     version("master", branch="master", submodules=True)
     version("spack", commit="2a025667090d71b2c9dce60fe924feb6bde8f667", submodules=True)
@@ -90,22 +92,6 @@ class Clingo(CMakePackage):
             )
 
     @property
-    def cmake_python_hints(self):
-        """Return standard CMake defines to ensure that the
-        current spec is the one found by CMake find_package(Python, ...)
-        """
-        python = self.spec["python"]
-        return [
-            self.define("Python_EXECUTABLE", python.command.path),
-            self.define("Python_INCLUDE_DIR", python.headers.directories[0]),
-            self.define("Python_LIBRARIES", python.libs[0]),
-            # XCode command line tools on macOS has no python-config executable, and
-            # CMake assumes you have python 2 if it does not find a python-config,
-            # so we set the version explicitly so that it's passed to FindPython.
-            self.define("CLINGO_PYTHON_VERSION", python.version.up_to(2)),
-        ]
-
-    @property
     def cmake_py_shared(self):
         return self.define("CLINGO_BUILD_PY_SHARED", "ON")
 
@@ -125,8 +111,6 @@ class Clingo(CMakePackage):
                 "-DPYCLINGO_USE_INSTALL_PREFIX=ON",
                 self.cmake_py_shared,
             ]
-            if self.spec["cmake"].satisfies("@3.16.0:"):
-                args += self.cmake_python_hints
         else:
             args += ["-DCLINGO_BUILD_WITH_PYTHON=OFF"]
 

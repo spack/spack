@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -49,6 +49,8 @@ class Ascent(CMakePackage, CudaPackage):
     tags = ["radiuss", "e4s"]
 
     maintainers("cyrush")
+
+    license("BSD-3-Clause")
 
     version("develop", branch="develop", submodules=True)
 
@@ -195,7 +197,10 @@ class Ascent(CMakePackage, CudaPackage):
     # VTK-m
     #######################
     depends_on("vtk-m@2.0:", when="@0.9.2: +vtkh")
-    depends_on("vtk-m@1.9:1.9", when="@0.9.0: +vtkh")
+    # 2.1 support needs commit e52b7bb8c9fd131f2fd49edf58037cc5ef77a166
+    depends_on("vtk-m@:2.0", when="@:0.9.2 +vtkh")
+    depends_on("vtk-m@1.9", when="@0.9.0:0.9.1 +vtkh")
+    depends_on("vtk-m +doubleprecision ~64bitids", when="+vtkh ^vtk-m")
 
     depends_on("vtk-m~tbb", when="@0.9.0: +vtkh")
     depends_on("vtk-m+openmp", when="@0.9.0: +vtkh+openmp")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,8 @@ class Gnuplot(AutotoolsPackage):
     # There is a conflict in term.h between gnuplot and ncurses, which is a
     # dependency of readline. Fix it with a small patch
     patch("term_include.patch")
+
+    license("MIT")
 
     version("5.4.3", sha256="51f89bbab90f96d3543f95235368d188eb1e26eda296912256abcd3535bd4d84")
     version("5.4.2", sha256="e57c75e1318133951d32a83bcdc4aff17fed28722c4e71f2305cfc2ae1cae7ba")
@@ -160,7 +162,7 @@ class Gnuplot(AutotoolsPackage):
         # TODO: --with-aquaterm  depends_on('aquaterm')
         options.append("--without-aquaterm")
 
-        if spec.satisfies("%gcc@11:"):
+        if spec.satisfies("%gcc@8:"):
             os.environ["LDFLAGS"] = "-Wl,--copy-dt-needed-entries"
 
         return options

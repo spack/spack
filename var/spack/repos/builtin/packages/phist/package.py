@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,8 @@ class Phist(CMakePackage):
     # phist is a required part of spack GitLab CI pipelines. In them, mpich is requested
     # to provide 'mpi' like this: spack install phist ^mpich %gcc@7.5.0
     # Failure of this command to succeed breaks spack's gitlab CI pipelines!
+
+    license("BSD-3-Clause")
 
     version("develop", branch="devel")
     version("master", branch="master")

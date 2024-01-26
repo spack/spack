@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Easi(CMakePackage):
     git = "https://github.com/SeisSol/easi.git"
 
     maintainers("ravil-mobile", "Thomas-Ulrich", "krenzland", "ThrudPrimrose", "davschneller")
+
+    license("BSD-3-Clause")
 
     version("develop", branch="master")
     version("1.2.0", tag="v1.2.0", commit="305a119338116a0ceac6b68b36841a50250d05b1")

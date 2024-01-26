@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1066,14 +1066,14 @@ def interactive_version_filter(
 
 
 def get_checksums_for_versions(
-    url_by_version: Dict[str, str],
+    url_by_version: Dict[StandardVersion, str],
     package_name: str,
     *,
     first_stage_function: Optional[Callable[[Stage, str], None]] = None,
     keep_stage: bool = False,
     concurrency: Optional[int] = None,
     fetch_options: Optional[Dict[str, str]] = None,
-) -> Dict[str, str]:
+) -> Dict[StandardVersion, str]:
     """Computes the checksums for each version passed in input, and returns the results.
 
     Archives are fetched according to the usl dictionary passed as input.

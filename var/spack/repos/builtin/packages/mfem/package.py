@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -44,6 +44,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     #
     # If this quick verification procedure fails, additional discussion
     # will be required to verify the new version.
+
+    license("BSD-3-Clause")
 
     # 'develop' is a special version that is always larger (or newer) than any
     # other version.
@@ -478,6 +480,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         when="@4.6.0 +gslib+shared+miniapps",
         sha256="2a31682d876626529e2778a216d403648b83b90997873659a505d982d0e65beb",
     )
+    patch("mfem-hip.patch", when="+rocm ^hip@6.0:")
 
     phases = ["configure", "build", "install"]
 
@@ -952,6 +955,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             options += ["HIP_CXX=%s" % spec["hip"].hipcc, "HIP_ARCH=%s" % amdgpu_target]
             hip_headers = HeaderList([])
             hip_libs = LibraryList([])
+            hip_libs += find_libraries("libamdhip64", spec["hip"].prefix.lib)
             # To use a C++ compiler that supports -xhip flag one can use
             # something like this:
             #   options += [

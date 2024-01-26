@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Ctre(CMakePackage):
     homepage = "https://compile-time.re/"
     url = "https://github.com/hanickadot/compile-time-regular-expressions/archive/v2.8.3.tar.gz"
     git = "https://github.com/hanickadot/compile-time-regular-expressions.git"
+
+    license("Apache-2.0")
 
     version("master", branch="master")
     version("2.8.4", sha256="99b981857f1b66cab5e71161ae74deca268ed39a96ec6507def92d4f445cadd6")

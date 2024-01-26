@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,8 @@ class Abinit(AutotoolsPackage):
 
     homepage = "https://www.abinit.org/"
     url = "https://www.abinit.org/sites/default/files/packages/abinit-8.6.3.tar.gz"
+
+    license("Apache-2.0")
 
     maintainers("downloadico")
     version("9.10.3", sha256="3f2a9aebbf1fee9855a09dd687f88d2317b8b8e04f97b2628ab96fb898dce49b")
@@ -162,7 +164,7 @@ class Abinit(AutotoolsPackage):
                 options.extend(
                     [
                         f"WANNIER90_CPPFLAGS=-I{spec['wannier90'].prefix.modules}",
-                        f"WANNIER90_LIBS=-L{spec['wannier90'].prefix.lib}"
+                        f"WANNIER90_LIBS=-L{spec['wannier90'].prefix.lib}",
                         "WANNIER90_LDFLAGS=-lwannier",
                     ]
                 )

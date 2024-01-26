@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -91,7 +91,6 @@ class Ecflow(CMakePackage):
             self.define_from_variant("ENABLE_SSL", "ssl"),
             # https://jira.ecmwf.int/browse/SUP-2641#comment-208943
             self.define_from_variant("ENABLE_STATIC_BOOST_LIBS", "static_boost"),
-            self.define("Python3_EXECUTABLE", spec["python"].package.command),
             self.define("BOOST_ROOT", spec["boost"].prefix),
             self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
         ]

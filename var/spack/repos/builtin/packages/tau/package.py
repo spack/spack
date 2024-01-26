@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,8 @@ class Tau(Package):
     git = "https://github.com/UO-OACISS/tau2"
 
     tags = ["e4s"]
+
+    license("MIT")
 
     version("master", branch="master")
     version("2.33", sha256="04d9d67adb495bc1ea56561f33c5ce5ba44f51cc7f64996f65bd446fac5483d9")
@@ -273,8 +275,12 @@ class Tau(Package):
             if "+fortran" in spec:
                 env["F77"] = spec["mpi"].mpif77
                 env["FC"] = spec["mpi"].mpifc
-            options.append("-mpiinc=%s" % spec["mpi"].prefix.include)
-            options.append("-mpilib=%s" % spec["mpi"].prefix.lib)
+            if spec["mpi"].name == "intel-oneapi-mpi":
+                options.append("-mpiinc=%s" % spec["mpi"].package.component_prefix)
+                options.append("-mpilib=%s" % spec["mpi"].package.component_prefix)
+            else:
+                options.append("-mpiinc=%s" % spec["mpi"].prefix.include)
+                options.append("-mpilib=%s" % spec["mpi"].prefix.lib)
 
             options.append("-mpi")
             if "+comm" in spec:

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,8 +7,8 @@ import re
 
 from spack.package import *
 
-tools_url = "https://github.com/ROCm-Developer-Tools"
-compute_url = "https://github.com/RadeonOpenCompute"
+tools_url = "https://github.com/ROCm"
+compute_url = "https://github.com/ROCm"
 
 
 aomp = [
@@ -368,7 +368,7 @@ class Aomp(Package):
             "-DCMAKE_C_COMPILER={0}".format(self.compiler.cc),
             "-DCMAKE_CXX_COMPILER={0}".format(self.compiler.cxx),
             "-DCMAKE_ASM_COMPILER={0}".format(self.compiler.cc),
-            "-DBUG_REPORT_URL=https://github.com/ROCm-Developer-Tools/aomp",
+            "-DBUG_REPORT_URL=https://github.com/ROCm/aomp",
             "-DLLVM_ENABLE_BINDINGS=OFF",
             "-DLLVM_INCLUDE_BENCHMARKS=OFF",
             "-DLLVM_BUILD_TESTS=OFF",

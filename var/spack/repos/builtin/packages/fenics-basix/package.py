@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class FenicsBasix(CMakePackage):
     url = "https://github.com/FEniCS/basix/archive/v0.1.0.tar.gz"
     git = "https://github.com/FEniCS/basix.git"
     maintainers("mscroggs", "chrisrichardson", "garth-wells", "jhale")
+
+    license("MIT")
 
     version("main", branch="main")
     version("0.7.0", sha256="9bee81b396ee452eec8d9735f278cb44cb6994c6bc30aec8ed9bb4b12d83fa7f")

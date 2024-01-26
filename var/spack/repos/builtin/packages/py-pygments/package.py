@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyPygments(PythonPackage):
     homepage = "https://pygments.org/"
     pypi = "Pygments/Pygments-2.4.2.tar.gz"
     git = "https://github.com/pygments/pygments.git"
+
+    license("BSD-2-Clause")
 
     version("2.16.1", sha256="1daff0494820c69bc8941e407aa20f577374ee88364ee10a98fdbe0aece96e29")
     version("2.16.0", sha256="4f6df32f21dca07a54a0a130bda9a25d2241e9e0a206841d061c85a60cc96145")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -152,7 +152,6 @@ class Pfunit(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         args = [
-            self.define("Python_EXECUTABLE", spec["python"].command),
             self.define("BUILD_SHARED_LIBS", False),
             self.define("CMAKE_Fortran_MODULE_DIRECTORY", spec.prefix.include),
             self.define_from_variant("ENABLE_BUILD_DOXYGEN", "docs"),

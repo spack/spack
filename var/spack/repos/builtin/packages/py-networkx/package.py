@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyNetworkx(PythonPackage):
     homepage = "https://networkx.github.io/"
     pypi = "networkx/networkx-2.4.tar.gz"
     git = "https://github.com/networkx/networkx.git"
+
+    license("BSD-3-Clause")
 
     version("3.1", sha256="de346335408f84de0eada6ff9fafafff9bcda11f0a0dfaa931133debb146ab61")
     version("2.8.6", sha256="bd2b7730300860cbd2dafe8e5af89ff5c9a65c3975b352799d87a6238b4301a6")

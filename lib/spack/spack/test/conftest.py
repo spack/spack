@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -568,8 +568,8 @@ def mock_repo_path():
 def _pkg_install_fn(pkg, spec, prefix):
     # sanity_check_prefix requires something in the install directory
     mkdirp(prefix.bin)
-    if not os.path.exists(spec.package.build_log_path):
-        touchp(spec.package.build_log_path)
+    if not os.path.exists(spec.package.install_log_path):
+        touchp(spec.package.install_log_path)
 
 
 @pytest.fixture
@@ -801,13 +801,13 @@ def mock_low_high_config(tmpdir):
 def _populate(mock_db):
     r"""Populate a mock database with packages.
 
-    Here is what the mock DB looks like:
+    Here is what the mock DB looks like (explicit roots at top):
 
-    o  mpileaks     o  mpileaks'    o  mpileaks''
-    |\              |\              |\
-    | o  callpath   | o  callpath'  | o  callpath''
-    |/|             |/|             |/|
-    o |  mpich      o |  mpich2     o |  zmpi
+    o  mpileaks     o  mpileaks'    o  mpileaks''     o externaltest     o trivial-smoke-test
+    |\              |\              |\                |
+    | o  callpath   | o  callpath'  | o  callpath''   o externaltool
+    |/|             |/|             |/|               |
+    o |  mpich      o |  mpich2     o |  zmpi         o externalvirtual
       |               |             o |  fake
       |               |               |
       |               |______________/
@@ -1950,23 +1950,10 @@ def pytest_runtest_setup(item):
         pytest.skip(*not_on_windows_marker.args)
 
 
-class MockPool:
-    def map(self, func, args):
-        return [func(a) for a in args]
-
-    def starmap(self, func, args):
-        return [func(*a) for a in args]
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args):
-        pass
-
-
 @pytest.fixture(scope="function")
 def disable_parallel_buildcache_push(monkeypatch):
-    monkeypatch.setattr(spack.cmd.buildcache, "_make_pool", MockPool)
+    """Disable process pools in tests."""
+    monkeypatch.setattr(spack.cmd.buildcache, "_make_pool", spack.cmd.buildcache.NoPool)
 
 
 def _root_path(x, y, *, path):

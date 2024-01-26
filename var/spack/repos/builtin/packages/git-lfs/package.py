@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,8 @@ class GitLfs(MakefilePackage):
     executables = ["^git-lfs$"]
 
     maintainers("sethrj")
+
+    license("MIT")
 
     version("3.3.0", sha256="d5eeb9ee33188d3dd6a391f8a39b96d271f10295129789e5b3a1ac0e9f5114f5")
     version("3.1.2", sha256="5c9bc449068d0104ea124c25f596af16da85e7b5bf256bc544d8ce5f4fe231f2")

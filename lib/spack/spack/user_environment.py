@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -66,6 +66,20 @@ def unconditional_environment_modifications(view):
     return env
 
 
+def project_env_mods(
+    *specs: spack.spec.Spec, view, env: environment.EnvironmentModifications
+) -> None:
+    """Given a list of environment modifications, project paths changes to the view."""
+    prefix_to_prefix = {s.prefix: view.get_projection_for_spec(s) for s in specs if not s.external}
+    # Avoid empty regex if all external
+    if not prefix_to_prefix:
+        return
+    prefix_regex = re.compile("|".join(re.escape(p) for p in prefix_to_prefix.keys()))
+    for mod in env.env_modifications:
+        if isinstance(mod, environment.NameValueModifier):
+            mod.value = prefix_regex.sub(lambda m: prefix_to_prefix[m.group(0)], mod.value)
+
+
 def environment_modifications_for_specs(
     *specs: spack.spec.Spec, view=None, set_package_py_globals: bool = True
 ):
@@ -101,17 +115,6 @@ def environment_modifications_for_specs(
 
     # Apply view projections if any.
     if view:
-        prefix_to_prefix = {
-            s.prefix: view.get_projection_for_spec(s)
-            for s in reversed(topo_ordered)
-            if not s.external
-        }
-        # Avoid empty regex if all external
-        if not prefix_to_prefix:
-            return env
-        prefix_regex = re.compile("|".join(re.escape(p) for p in prefix_to_prefix.keys()))
-        for mod in env.env_modifications:
-            if isinstance(mod, environment.NameValueModifier):
-                mod.value = prefix_regex.sub(lambda m: prefix_to_prefix[m.group(0)], mod.value)
+        project_env_mods(*topo_ordered, view=view, env=env)
 
     return env

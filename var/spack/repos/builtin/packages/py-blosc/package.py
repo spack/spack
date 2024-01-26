@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyBlosc(PythonPackage):
     homepage = "http://python-blosc.blosc.org"
     url = "https://github.com/Blosc/python-blosc/archive/v1.9.1.tar.gz"
     git = "https://github.com/Blosc/python-blosc.git"
+
+    license("BSD-3-Clause")
 
     version("1.9.1", sha256="ffc884439a12409aa4e8945e21dc920d6bc21807357c51d24c7f0a27ae4f79b9")
 

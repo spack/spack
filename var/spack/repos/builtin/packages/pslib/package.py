@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Pslib(AutotoolsPackage):
 
     homepage = "http://pslib.sourceforge.net/"
     url = "https://sourceforge.net/projects/pslib/files/pslib/0.4.5/pslib-0.4.5.tar.gz"
+
+    license("GPL-2.0-only")
 
     version("0.4.5", sha256="7a33928982b281660206bb3749a4a563e3ac987eea64f41696f212df345212be")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Cracklib(AutotoolsPackage):
 
     homepage = "https://github.com/cracklib/cracklib"
     url = "https://github.com/cracklib/cracklib/archive/v2.9.7.tar.gz"
+
+    license("LGPL-2.1-or-later")
 
     version("2.9.9", sha256="0a3fd72163512088c6f2add0f6cd6e34954ca0fa3f333ff9cced478b04e73ce1")
     version("2.9.7", sha256="ff4e6c3f86494c93719f5e4186e2c3ea9e265f41972ec21f7b87852aced704e6")

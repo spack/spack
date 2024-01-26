@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Neovim(CMakePackage):
     url = "https://github.com/neovim/neovim/archive/v0.4.3.tar.gz"
 
     maintainers("albestro", "trws")
+
+    license("Apache-2.0 AND Vim")
 
     version("master", branch="master")
     version("stable", tag="stable", commit="d772f697a281ce9c58bf933997b87c7f27428a60")
