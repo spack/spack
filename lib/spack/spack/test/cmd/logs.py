@@ -59,6 +59,12 @@ def test_logs_cmd_errors(install_mockery, mock_packages):
         logs("libelf mpi")
 
 
+def _write_string_to_path(string, path):
+    """Write a string to a file, preserving newline format in the string."""
+    with open(path, "wb") as f:
+        f.write(string.encode("utf-8"))
+
+
 def test_dump_logs(install_mockery, mock_fetch, mock_archive, mock_packages, disable_capture):
     """Test that ``spack log`` can find (and print) the logs for partial
     builds and completed installs.
@@ -73,18 +79,11 @@ def test_dump_logs(install_mockery, mock_fetch, mock_archive, mock_packages, dis
     # start with
     assert not concrete_spec.installed
 
-    stage_log_content = """\
-test_log stage output
-another line
-"""
-    installed_log_content = """\
-test_log install output
-here to test multiple lines
-"""
+    stage_log_content = "test_log stage output\nanother line"
+    installed_log_content = "test_log install output\nhere to test multiple lines"
 
     with concrete_spec.package.stage:
-        with open(concrete_spec.package.log_path, "w") as f:
-            f.write(stage_log_content)
+        _write_string_to_path(stage_log_content, concrete_spec.package.log_path)
         with stdout_as_buffered_text_stream() as redirected_stdout:
             spack.cmd.logs._logs(cmdline_spec, concrete_spec)
             assert _rewind_collect_and_decode(redirected_stdout) == stage_log_content
@@ -106,8 +105,7 @@ here to test multiple lines
         assert _rewind_collect_and_decode(redirected_stdout) == installed_log_content
 
     with concrete_spec.package.stage:
-        with open(concrete_spec.package.log_path, "w") as f:
-            f.write(stage_log_content)
+        _write_string_to_path(stage_log_content, concrete_spec.package.log_path)
         # We re-create the stage, but "spack log" should ignore that
         # if the package is installed
         with stdout_as_buffered_text_stream() as redirected_stdout:
