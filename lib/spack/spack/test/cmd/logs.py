@@ -3,12 +3,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from contextlib import contextmanager
 import gzip
-from io import BytesIO
-import pytest
 import sys
 import tempfile
+from contextlib import contextmanager
+from io import BytesIO
+
+import pytest
 
 import spack
 from spack.main import SpackCommand
