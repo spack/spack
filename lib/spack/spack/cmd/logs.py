@@ -57,10 +57,10 @@ def _logs(cmdline_spec, concrete_spec):
         dump_build_log(concrete_spec.package)
         return
     else:
-        tty.die(f"{cmdline_spec} is not installed or staged")
+        raise spack.main.SpackCommandError(f"{cmdline_spec} is not installed or staged")
 
     if not os.path.exists(log_path):
-        tty.die(f"No logs are available for {cmdline_spec}")
+        raise spack.main.SpackCommandError(f"No logs are available for {cmdline_spec}")
 
     compression_ext = compression.extension_from_file(log_path)
     fstream = None
@@ -76,12 +76,12 @@ def _logs(cmdline_spec, concrete_spec):
                 decompressor(log_path)
                 result = os.listdir(".")
                 if len(result) < 1:
-                    tty.die(
+                    raise spack.main.SpackCommandError(
                         f"Detected compressed log for {cmdline_spec},"
                         f" but could not decompress {log_path}"
                     )
                 elif len(result) > 1:
-                    tty.die(f"Compressed log {log_path} expanded to more than 1 file")
+                    raise spack.main.SpackCommandError(f"Compressed log {log_path} expanded to more than 1 file")
                 else:
                     fstream = open(result[0], "rb")
 
@@ -97,10 +97,10 @@ def logs(parser, args):
     specs = spack.cmd.parse_specs(args.spec)
 
     if not specs:
-        tty.die("You must supply a spec.")
+        raise spack.main.SpackCommandError("You must supply a spec.")
 
     if len(specs) != 1:
-        tty.die("Too many specs. Supply only one.")
+        raise spack.main.SpackCommandError("Too many specs. Supply only one.")
 
     concrete_spec = spack.cmd.matching_spec_from_env(specs[0])
 

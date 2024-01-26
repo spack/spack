@@ -40,6 +40,17 @@ def disable_capture(capfd):
         yield
 
 
+def test_logs_cmd_errors(install_mockery, mock_packages):
+    spec = spack.spec.Spec("libelf").concretized()
+    assert not spec.installed
+
+    with pytest.raises(spack.main.SpackCommandError, match="is not installed or staged"):
+        logs("libelf")
+
+    with pytest.raises(spack.main.SpackCommandError, match="Too many specs"):
+        logs("libelf mpi")
+
+
 def test_dump_logs(install_mockery, mock_fetch, mock_archive, mock_packages, disable_capture):
     """Test that ``spack log`` can find (and print) the logs for partial
     builds and completed installs.
