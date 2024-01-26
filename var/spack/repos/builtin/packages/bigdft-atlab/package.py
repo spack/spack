@@ -34,7 +34,7 @@ class BigdftAtlab(AutotoolsPackage):
     depends_on("mpi", when="+mpi")
     depends_on("openbabel", when="+openbabel")
 
-    for vers in ["1.9.0", "1.9.1", "1.9.2", "develop"]:
+    for vers in ["1.9.0", "1.9.1", "1.9.2", "1.9.3", "1.9.4", "develop"]:
         depends_on(f"bigdft-futile@{vers}", when=f"@{vers}")
 
     configure_directory = "atlab"
