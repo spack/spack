@@ -31,6 +31,7 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
     license("BSD-3-Clause")
 
     version("develop", branch="develop")
+    version("2024.01.stable", branch="release/2024.01")
     version("2023.08.stable", branch="release/2023.08")
     version("2023.08.1", tag="2023.08.1", commit="753a72affd584a5e72fe153d1e8c47a394a3886e")
     version("2023.03.stable", branch="release/2023.03")
@@ -119,20 +120,30 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
         "python", default=False, description="Support unwinding Python source.", when="@2023.03:"
     )
 
-    build_system(conditional("meson", when="@develop"), "autotools", default="autotools")
+    build_system(
+        conditional("meson", when="@2024.01:"),
+        conditional("autotools", when="@:2024.01"),
+        default="autotools",
+    )
 
-    with when("@develop build_system=autotools"):
+    with when("@2024.01: build_system=autotools"):
         depends_on("autoconf", type="build")
         depends_on("automake", type="build")
         depends_on("libtool", type="build")
 
     with when("build_system=meson"):
         depends_on("meson@1.1.0:", type="build")
-        depends_on("gmake", type="build")
-        depends_on("m4", type="build")
-        depends_on("autoconf", type="build")
-        depends_on("automake", type="build")
-        depends_on("libtool", type="build")
+
+        with when("@:2024.01"):
+            depends_on("gmake", type="build")
+            depends_on("m4", type="build")
+            depends_on("autoconf", type="build")
+            depends_on("automake", type="build")
+            depends_on("libtool", type="build")
+
+        with when("@2024.02:"):
+            depends_on("pkgconf", type="build")
+            depends_on("cmake", type="build")
 
     boost_libs = (
         "+atomic +chrono +date_time +filesystem +system +thread +timer"
@@ -374,8 +385,10 @@ class MesonBuilder(spack.build_systems.meson.MesonBuilder):
             "-Drocm=" + ("enabled" if "+rocm" in spec else "disabled"),
             "-Dlevel0=" + ("enabled" if "+level_zero" in spec else "disabled"),
             "-Dgtpin=" + ("enabled" if "+gtpin" in spec else "disabled"),
-            f"--native-file={self.gen_prefix_file()}",
         ]
+
+        if "@:2024.01" in spec:
+            args.append(f"--native-file={self.gen_prefix_file()}")
 
         return args
 
