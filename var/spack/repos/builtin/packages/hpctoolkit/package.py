@@ -374,9 +374,15 @@ class MesonBuilder(spack.build_systems.meson.MesonBuilder):
             "-Drocm=" + ("enabled" if "+rocm" in spec else "disabled"),
             "-Dlevel0=" + ("enabled" if "+level_zero" in spec else "disabled"),
             "-Dgtpin=" + ("enabled" if "+gtpin" in spec else "disabled"),
+            f"--native-file={self.gen_prefix_file()}",
         ]
 
-        # We use a native file to provide paths to all the dependencies.
+        return args
+
+    def gen_prefix_file(self):
+        """Generate a native file specifying install prefixes for dependencies"""
+        spec = self.spec
+
         cfg = configparser.ConfigParser()
         cfg["properties"] = {}
         cfg["binaries"] = {}
@@ -434,4 +440,4 @@ class MesonBuilder(spack.build_systems.meson.MesonBuilder):
         with os.fdopen(native_fd, "w") as native_f:
             cfg.write(native_f)
 
-        return ["--native-file", native_path] + args
+        return native_path
