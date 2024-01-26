@@ -37,9 +37,9 @@ class Gl2ps(CMakePackage):
     # and renames all lib target refs
     # Patch derived from https://gitlab.onelab.info/gl2ps/gl2ps/-/issues/30
     # and fixes a few additional places that solution misses.
-    with when("generator=ninja"):
+    with when("platform=windows"):
         variant("shared", default=True, description="Enable building shared libraries")
-        patch("prevent-ninja-target-clash.patch")
+        patch("prevent-ninja-target-clash.patch", when="generator=ninja")
 
     def cmake_args(self):
         spec = self.spec
