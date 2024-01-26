@@ -7,9 +7,6 @@ import gzip
 import os
 import shutil
 import sys
-import tempfile
-
-import llnl.util.filesystem as fs
 
 import spack.cmd
 import spack.util.compression as compression
