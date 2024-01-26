@@ -234,7 +234,7 @@ def test_dev_build_env_with_vars(tmpdir, install_mockery, mutable_mock_env_path,
     with envdir.as_cwd():
         with open("spack.yaml", "w") as f:
             f.write(
-                f"""\
+                """\
 spack:
   specs:
   - dev-build-test-install@0.0.0
