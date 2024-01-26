@@ -7,7 +7,7 @@ import bisect
 import re
 import struct
 from struct import calcsize, unpack, unpack_from
-from typing import BinaryIO, Dict, List, NamedTuple, Optional, Tuple
+from typing import BinaryIO, Dict, List, NamedTuple, Optional, Pattern, Tuple
 
 
 class ElfHeader(NamedTuple):
@@ -457,21 +457,23 @@ def parse_elf(
 
 
 def get_rpaths(path: str) -> Optional[List[str]]:
-    """Returns list of rpaths of the given file as UTF-8 strings, or None if the file
-    does not have any rpaths."""
+    """Returns list of rpaths of the given file as UTF-8 strings, or None if not set."""
     try:
         with open(path, "rb") as f:
             elf = parse_elf(f, interpreter=False, dynamic_section=True)
+            return elf.dt_rpath_str.decode("utf-8").split(":") if elf.has_rpath else None
     except ElfParsingError:
         return None
 
-    if not elf.has_rpath:
-        return None
 
-    # If it does, split the string in components
-    rpath = elf.dt_rpath_str
-    rpath = rpath.decode("utf-8")
-    return rpath.split(":")
+def get_interpreter(path: str) -> Optional[str]:
+    """Returns the interpreter of the given file as UTF-8 string, or None if not set."""
+    try:
+        with open(path, "rb") as f:
+            elf = parse_elf(f, interpreter=True, dynamic_section=False)
+            return elf.pt_interp_str.decode("utf-8") if elf.has_pt_interp else None
+    except ElfParsingError:
+        return None
 
 
 def delete_rpath(path: str) -> None:
@@ -515,71 +517,149 @@ def delete_rpath(path: str) -> None:
             old_offset += dynamic_array_size
 
 
-def replace_rpath_in_place_or_raise(path: str, substitutions: Dict[bytes, bytes]) -> bool:
+class CStringType:
+    PT_INTERP = 1
+    RPATH = 2
+
+
+class UpdateCStringAction:
+    def __init__(self, cstring_type: int, old_value: bytes, new_value: bytes, offset: int):
+        self.type = cstring_type
+        self.old_value = old_value
+        self.new_value = new_value
+        self.offset = offset
+
+    @property
+    def inplace(self) -> bool:
+        return len(self.new_value) <= len(self.old_value)
+
+    @property
+    def name(self) -> str:
+        return "rpath" if self.type == CStringType.RPATH else "interpreter"
+
+    def apply(self, f: BinaryIO) -> None:
+        assert self.inplace
+
+        f.seek(self.offset)
+        f.write(self.new_value)
+
+        # We zero out the bits we shortened because (a) it should be a
+        # C-string and (b) it's nice not to have spurious parts of old
+        # paths in the output of `strings file`. Note that we're all
+        # good when pad == 0; the original terminating null is used.
+        f.write(b"\x00" * (len(self.old_value) - len(self.new_value)))
+
+
+def _get_rpath_substitution(
+    elf: ElfFile, regex: Pattern, substitutions: Dict[bytes, bytes]
+) -> Optional[UpdateCStringAction]:
+    """Make rpath substitutions in-place."""
+    # If there's no RPATH, then there's no need to replace anything.
+    if not elf.has_rpath:
+        return None
+
+    # Get the non-empty rpaths. Sometimes there's a bunch of trailing
+    # colons ::::: used for padding, we don't add them back to make it
+    # more likely that the string doesn't grow.
+    rpaths = list(filter(len, elf.dt_rpath_str.split(b":")))
+
+    num_rpaths = len(rpaths)
+
+    if num_rpaths == 0:
+        return None
+
+    changed = False
+    for i in range(num_rpaths):
+        old_rpath = rpaths[i]
+        match = regex.match(old_rpath)
+        if match:
+            changed = True
+            rpaths[i] = substitutions[match.group()] + old_rpath[match.end() :]
+
+    # Nothing to replace!
+    if not changed:
+        return None
+
+    return UpdateCStringAction(
+        cstring_type=CStringType.RPATH,
+        old_value=elf.dt_rpath_str,
+        new_value=b":".join(rpaths),
+        # The rpath is at a given offset in the string table used by the dynamic section.
+        offset=elf.pt_dynamic_strtab_offset + elf.rpath_strtab_offset,
+    )
+
+
+def _get_pt_interp_substitution(
+    elf: ElfFile, regex: Pattern, substitutions: Dict[bytes, bytes]
+) -> Optional[UpdateCStringAction]:
+    """Make interpreter substitutions in-place."""
+    if not elf.has_pt_interp:
+        return None
+
+    match = regex.match(elf.pt_interp_str)
+    if not match:
+        return None
+
+    return UpdateCStringAction(
+        cstring_type=CStringType.PT_INTERP,
+        old_value=elf.pt_interp_str,
+        new_value=substitutions[match.group()] + elf.pt_interp_str[match.end() :],
+        offset=elf.pt_interp_p_offset,
+    )
+
+
+def substitute_rpath_and_pt_interp_in_place_or_raise(
+    path: str, substitutions: Dict[bytes, bytes]
+) -> bool:
+    """Returns true if the rpath and interpreter were modified, false if there was nothing to do.
+    Raises ElfCStringUpdatesFailed if the ELF file cannot be updated in-place. This exception
+    contains a list of actions to perform with other tools. The file is left untouched in this
+    case."""
     regex = re.compile(b"|".join(re.escape(p) for p in substitutions.keys()))
 
     try:
         with open(path, "rb+") as f:
-            elf = parse_elf(f, interpreter=False, dynamic_section=True)
+            elf = parse_elf(f, interpreter=True, dynamic_section=True)
 
-            # If there's no RPATH, then there's no need to replace anything.
-            if not elf.has_rpath:
+            # Get the actions to perform, if any.
+            actions = [
+                action
+                for action in (
+                    _get_rpath_substitution(elf, regex, substitutions),
+                    _get_pt_interp_substitution(elf, regex, substitutions),
+                )
+                if action
+            ]
+
+            if not actions:
                 return False
 
-            # Get the non-empty rpaths. Sometimes there's a bunch of trailing
-            # colons ::::: used for padding, we don't add them back to make it
-            # more likely that the string doesn't grow.
-            rpaths = list(filter(len, elf.dt_rpath_str.split(b":")))
+            # If we can't update in-place, leave it to other tools, don't do partial updates.
+            if any(not action.inplace for action in actions):
+                raise ElfCStringUpdatesFailed(actions)
 
-            num_rpaths = len(rpaths)
+            # Otherwise, apply all actions.
+            for action in actions:
+                action.apply(f)
 
-            if num_rpaths == 0:
-                return False
-
-            changed = False
-            for i in range(num_rpaths):
-                old_rpath = rpaths[i]
-                match = regex.match(old_rpath)
-                if match:
-                    changed = True
-                    rpaths[i] = substitutions[match.group()] + old_rpath[match.end() :]
-
-            # Nothing to replace!
-            if not changed:
-                return False
-
-            new_rpath_string = b":".join(rpaths)
-
-            pad = len(elf.dt_rpath_str) - len(new_rpath_string)
-
-            if pad < 0:
-                raise ElfDynamicSectionUpdateFailed(elf.dt_rpath_str, new_rpath_string)
-
-            # We zero out the bits we shortened because (a) it should be a
-            # C-string and (b) it's nice not to have spurious parts of old
-            # paths in the output of `strings file`. Note that we're all
-            # good when pad == 0; the original terminating null is used.
-            new_rpath_string += b"\x00" * pad
-
-            # The rpath is at a given offset in the string table used by the
-            # dynamic section.
-            rpath_offset = elf.pt_dynamic_strtab_offset + elf.rpath_strtab_offset
-
-            f.seek(rpath_offset)
-            f.write(new_rpath_string)
             return True
 
     except ElfParsingError:
-        # This just means the file wasnt an elf file, so there's no point
+        # This just means the file wasn't an elf file, so there's no point
         # in updating its rpath anyways; ignore this problem.
         return False
 
 
-class ElfDynamicSectionUpdateFailed(Exception):
-    def __init__(self, old: bytes, new: bytes):
-        self.old = old
-        self.new = new
-        super().__init__(f"New rpath {new!r} is longer than old rpath {old!r}")
+class ElfCStringUpdatesFailed(Exception):
+    def __init__(self, actions: List[UpdateCStringAction]):
+        self.actions = actions
+
+    def __str__(self) -> str:
+        return "\n".join(
+            f"New {action.name} {action.new_value!r} is longer than {action.old_value!r}"
+            for action in self.actions
+            if not action.inplace
+        )
 
 
 class ElfParsingError(Exception):

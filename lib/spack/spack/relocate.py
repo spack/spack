@@ -367,6 +367,17 @@ def _set_elf_rpaths(target, rpaths):
     return output
 
 
+def _set_elf_interpreter(target: str, interpreter: str):
+    """Similar to _set_elf_rpaths, but for the interpreter."""
+    patchelf, output = executable.Executable(_patchelf()), None
+    try:
+        patchelf_args = ["--set-interpreter", interpreter, target]
+        output = patchelf(*patchelf_args, output=str, error=str)
+    except executable.ProcessError as e:
+        tty.warn(f"patchelf --set-interpreter {target} failed with: {e}")
+    return output
+
+
 def needs_binary_relocation(m_type, m_subtype):
     """Returns True if the file with MIME type/subtype passed as arguments
     needs binary relocation, False otherwise.
@@ -501,10 +512,14 @@ def new_relocate_elf_binaries(binaries, prefix_to_prefix):
 
     for path in binaries:
         try:
-            elf.replace_rpath_in_place_or_raise(path, prefix_to_prefix)
-        except elf.ElfDynamicSectionUpdateFailed as e:
-            # Fall back to the old `patchelf --set-rpath` method.
-            _set_elf_rpaths(path, e.new.decode("utf-8").split(":"))
+            elf.substitute_rpath_and_pt_interp_in_place_or_raise(path, prefix_to_prefix)
+        except elf.ElfCStringUpdatesFailed as e:
+            # Fall back to `patchelf [--set-rpath|--set-interpreter]`
+            for action in e.actions:
+                if action.type == elf.CStringType.PT_INTERP:
+                    _set_elf_interpreter(path, action.new_value.decode("utf-8"))
+                elif action.type == elf.CStringType.RPATH:
+                    _set_elf_rpaths(path, action.new_value.decode("utf-8").split(":"))
 
 
 def relocate_elf_binaries(
