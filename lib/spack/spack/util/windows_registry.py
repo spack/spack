@@ -62,7 +62,8 @@ class RegistryKey:
     def OpenKeyEx(self, subname, **kwargs):
         """Convenience wrapper around winreg.OpenKeyEx"""
         tty.debug(
-            f"[WINREG ACCESS] Accessing Reg Key {self.path}/{subname} with {kwargs.get('access', 'default')} access"
+            f"[WINREG ACCESS] Accessing Reg Key {self.path}/{subname} with"
+            f" {kwargs.get('access', 'default')} access"
         )
         try:
             return winreg.OpenKeyEx(self.hkey, subname, **kwargs)
@@ -86,7 +87,8 @@ class RegistryKey:
     def EnumKey(self, index):
         """Convenience wrapper around winreg.EnumKey"""
         tty.debug(
-            f"[WINREG ACCESS] Obtaining name of subkey at index {index} from registry key {self.path}"
+            "[WINREG ACCESS] Obtaining name of subkey at index "
+            f"{index} from registry key {self.path}"
         )
         try:
             return winreg.EnumKey(self.hkey, index)
@@ -431,10 +433,12 @@ class InvalidKeyError(RegistryError):
 
 
 class InvalidRegistryOperation(RegistryError):
-    """A Runtime Error ecountered when a registry operation is invalid for a non deterministic reason"""
+    """A Runtime Error ecountered when a registry operation is invalid for
+    a non deterministic reason"""
 
     def __init__(self, name, e, *args, **kwargs):
-        message = f"Windows registry operations: {name} encountered error: {str(e)}\nMethod invoked with parameters:\n"
+        message = f"Windows registry operations: {name} encountered error: {str(e)}"\
+"\nMethod invoked with parameters:\n"
         message += "\n\t".join([f"{k}:{v}" for k, v in kwargs.items()])
         message += "\n"
         message += "\n\t".join(args)
