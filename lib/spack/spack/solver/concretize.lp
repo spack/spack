@@ -346,9 +346,11 @@ trigger_condition_holds(ID, RequestorNode) :-
   attr(Name, node(X, A1))             : condition_requirement(ID, Name, A1),             condition_nodes(ID, PackageNode, node(X, A1));
   attr(Name, node(X, A1), A2)         : condition_requirement(ID, Name, A1, A2),         condition_nodes(ID, PackageNode, node(X, A1));
   attr(Name, node(X, A1), A2, A3)     : condition_requirement(ID, Name, A1, A2, A3),     condition_nodes(ID, PackageNode, node(X, A1)), not multiple_nodes_attribute(Name);
-  attr(Name, node(X, A1), A2, A3, A4) : condition_requirement(ID, Name, A1, A2, A3, A4), condition_nodes(ID, PackageNode, node(X, A1));
+  attr(Name, node(X, A1), A2, A3, A4) : condition_requirement(ID, Name, A1, A2, A3, A4), condition_nodes(ID, PackageNode, node(X, A1)), not multiple_nodes_attribute(Name);
   % Special cases
   attr("node_flag_source", node(X, A1), A2, node(Y, A3)) : condition_requirement(ID, "node_flag_source", A1, A2, A3), condition_nodes(ID, PackageNode, node(X, A1)), condition_nodes(ID, PackageNode, node(Y, A3));
+  attr("node_flag_propagation_candidate", node(X, A1), A2, A3, node(Y, A4)) : condition_reuqirement(ID, "node_flag_propagation_candidate", A1, A2, A3, A4), condition_nodes(ID, PackageNode, node(X, A1)), condition_nodes(ID, PackageNode, node(Y, A4));
+  % if the structure of the program ever could change so that node_flag_source can be in a condition, we will need a case for it here.
   not cannot_hold(ID, PackageNode).
 
 condition_holds(ConditionID, node(X, Package))
@@ -400,6 +402,15 @@ attr("node_flag_source", node(X, A1), A2, node(Y, A3))
   :- impose(ID, node(X, A1)),
      imposed_constraint(ID, "node_flag_source", A1, A2, A3),
      condition_set(node(Y, A3), node(X, A1)).
+
+% For node flag propagation, we need to look at the condition_set of the source, since it is the ancestor
+% of the package on which we want to impose the constraint
+attr("node_flag_propagation_candidate", node(X, A1), A2, A3, node(Y, A4))
+  :- impose(ID, node(X, A1)),
+     imposed_constraint(ID, "node_flag_propagation_candidate", A1, A2, A3, A4),
+     condition_set(node(Y, A4), node(X, A1)).
+
+% if the structure of the program ever could change so that node_flag_source can be in a condition, we will need a case for it here.
 
 % Provider set is relevant only for literals, since it's the only place where `^[virtuals=foo] bar`
 % might appear in the HEAD of a rule
