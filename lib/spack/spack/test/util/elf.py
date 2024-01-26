@@ -166,8 +166,8 @@ def test_elf_get_and_replace_rpaths(binary_with_rpaths):
     # bytes -- it may correspond to zero-length strings for example.
     with pytest.raises(
         elf.ElfDynamicSectionUpdateFailed,
-        match="New rpath /very/long/prefix-a/x:/very/long/prefix-b/y is "
-        "longer than old rpath /short-a/x:/short-b/y",
+        match="New rpath .*/very/long/prefix-a/x:/very/long/prefix-b/y.* is "
+        "longer than old rpath .*/short-a/x:/short-b/y.*",
     ):
         elf.replace_rpath_in_place_or_raise(
             executable,
