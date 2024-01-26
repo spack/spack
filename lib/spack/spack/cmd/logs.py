@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import gzip
 import os
 import shutil
 import sys
@@ -67,24 +68,12 @@ def _logs(cmdline_spec, concrete_spec):
     try:
         if not compression_ext:
             fstream = open(log_path, "rb")
+        elif compression_ext == "gz":
+            fstream = gzip.open(log_path, "rb")
         else:
-            decompressor = compression.decompressor_for(log_path, extension=compression_ext)
-            temp_dir = tempfile.mkdtemp(suffix=f"decompress-spack-log-{concrete_spec.name}")
-
-            with fs.working_dir(temp_dir):
-                decompressor(log_path)
-                result = os.listdir(".")
-                if len(result) < 1:
-                    raise spack.main.SpackCommandError(
-                        f"Detected compressed log for {cmdline_spec},"
-                        f" but could not decompress {log_path}"
-                    )
-                elif len(result) > 1:
-                    raise spack.main.SpackCommandError(
-                        f"Compressed log {log_path} expanded to more than 1 file"
-                    )
-                else:
-                    fstream = open(result[0], "rb")
+            raise spack.main.SpackCommandError(
+                f"Unsupported storage format for {log_path}: {compression_ext}"
+            )
 
         _dump_byte_stream_to_stdout(fstream)
     finally:
