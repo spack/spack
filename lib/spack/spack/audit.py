@@ -244,7 +244,7 @@ def _search_duplicate_specs_in_externals(error_cls):
                 + lines
                 + ["as they might result in non-deterministic hashes"]
             )
-        except TypeError:
+        except (TypeError, AttributeError):
             details = []
 
         errors.append(error_cls(summary=error_msg, details=details))
