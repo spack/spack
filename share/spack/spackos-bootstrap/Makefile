@@ -12,8 +12,14 @@ stage4/push: stage4/generated/env
 	mkdir -p buildcache
 	spack -e stage4 buildcache push --unsigned --update-index ./buildcache
 push: stage4/push
+# use this target to build the container if you built the packages by running
+# this makefile in docker and pushing to a directory, but want to build the
+# container from the host rather than mount docker into a container
+container_nodep:
+	docker buildx build -t spackos-experimental --load -f Dockerfile --target=spackos ../../..
 container: stage4/push
 	docker buildx build -t spackos-experimental --load -f Dockerfile --target=spackos ../../..
+
 
 TGT_FILES:=spack.mk spack.lock compilers.yaml generated .spack-env spack.yaml
 STAGES:=1 2 3 4
