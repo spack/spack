@@ -127,27 +127,26 @@ def get_compiler_config(scope=None, init_config=True):
 
 def get_compiler_config_from_packages(scope=None):
     """Return the compiler configuration from packages.yaml"""
-    packages = []
     config = spack.config.get("packages", scope=scope)
-
     if not config:
-        return packages
+        return []
 
+    packages = []
+    compiler_package_names = supported_compilers() + list(package_name_to_compiler_name.keys())
     for name, entry in config.items():
-        if name not in supported_compilers() and name not in package_name_to_compiler_name.keys():
+        if name not in compiler_package_names:
             continue
-        packages.extend(_compiler_config_from_package_config(entry))
+        externals_config = entry.get("externals", None)
+        if not externals_config:
+            continue
+        packages.extend(_compiler_config_from_package_config(externals_config))
 
     return packages
 
 
 def _compiler_config_from_package_config(config):
-    externals = config.get("externals", None)
-    if not externals:
-        return []
-
     compilers = []
-    for entry in externals:
+    for entry in config:
         compiler = _compiler_config_from_external(entry)
         if compiler:
             compilers.append(compiler)
@@ -169,7 +168,7 @@ def _compiler_config_from_external(config):
     paths = extra_attributes.get("paths", {})
     compiler_langs = ["cc", "cxx", "fc", "f77"]
     for compiler in compiler_langs:
-        if compiler in paths:
+        if paths.setdefault(compiler, None):
             continue
 
         if not prefix:
@@ -187,11 +186,7 @@ def _compiler_config_from_external(config):
             if match:
                 paths[compiler] = os.path.join(bindir, file)
 
-    for compiler in compiler_langs:
-        if compiler not in paths:
-            paths[compiler] = None
-
-    if not any(paths.get(compiler, None) for compiler in compiler_langs):
+    if all(v is None for v in paths.values()):
         return None
 
     if not spec.architecture:
