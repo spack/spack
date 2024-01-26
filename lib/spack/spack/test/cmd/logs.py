@@ -7,7 +7,7 @@ import gzip
 import sys
 import tempfile
 from contextlib import contextmanager
-from io import BytesIO
+from io import BytesIO, TextIOWrapper
 
 import pytest
 
@@ -18,20 +18,20 @@ logs = SpackCommand("logs")
 
 
 @contextmanager
-def stdout_as_binary_stream():
+def stdout_as_buffered_text_stream():
     original_stdout = sys.stdout
 
     with tempfile.TemporaryFile(mode="w+b") as tf:
-        sys.stdout = tf
+        sys.stdout = TextIOWrapper(tf)
         try:
             yield tf
         finally:
             sys.stdout = original_stdout
 
 
-def _rewind_collect_and_decode(binary_rw_stream):
-    binary_rw_stream.seek(0)
-    return binary_rw_stream.read().decode("utf-8")
+def _rewind_collect_and_decode(rw_stream):
+    rw_stream.seek(0)
+    return rw_stream.read().decode("utf-8")
 
 
 @pytest.fixture
@@ -77,7 +77,7 @@ here to test multiple lines
     with concrete_spec.package.stage:
         with open(concrete_spec.package.log_path, "w") as f:
             f.write(stage_log_content)
-        with stdout_as_binary_stream() as redirected_stdout:
+        with stdout_as_buffered_text_stream() as redirected_stdout:
             spack.cmd.logs._logs(cmdline_spec, concrete_spec)
             assert _rewind_collect_and_decode(redirected_stdout) == stage_log_content
 
@@ -93,7 +93,7 @@ here to test multiple lines
         bstream = BytesIO(installed_log_content.encode("utf-8"))
         compressed_file.writelines(bstream)
 
-    with stdout_as_binary_stream() as redirected_stdout:
+    with stdout_as_buffered_text_stream() as redirected_stdout:
         spack.cmd.logs._logs(cmdline_spec, concrete_spec)
         assert _rewind_collect_and_decode(redirected_stdout) == installed_log_content
 
@@ -102,6 +102,6 @@ here to test multiple lines
             f.write(stage_log_content)
         # We re-create the stage, but "spack log" should ignore that
         # if the package is installed
-        with stdout_as_binary_stream() as redirected_stdout:
+        with stdout_as_buffered_text_stream() as redirected_stdout:
             spack.cmd.logs._logs(cmdline_spec, concrete_spec)
             assert _rewind_collect_and_decode(redirected_stdout) == installed_log_content
