@@ -32,8 +32,8 @@ def _dump_byte_stream_to_stdout(instream):
             outstream = sys.stdout.buffer
         except AttributeError:
             raise spack.main.SpackCommandError(
-                "This command cannot be invoked in a"
-                " context where stdout is not accessible"
+                "This command must be invoked in a"
+                " context where stdout is accessible"
                 f" as a binary stream (stdout = {type(sys.stdout)})"
             )
     else:
