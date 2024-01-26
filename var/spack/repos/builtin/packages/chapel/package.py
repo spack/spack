@@ -143,6 +143,22 @@ class Chapel(AutotoolsPackage):
         multi=False,
     )
 
+    variant(
+        "gpu",
+        description="GPU vendor support",
+        values=("unset", "nvidia", "amd"),
+        default="unset",
+        multi=False,
+    )
+
+    variant(
+        "gpu_mem_strategy",
+        description="The memory allocation strategy for GPU data",
+        values=("array_on_device", "unified_memory"),
+        default="array_on_device",
+        multi=False,
+    )
+
     # Deprecated as of (?)
     # variant(
     #     "aux_filesys",
@@ -212,8 +228,8 @@ class Chapel(AutotoolsPackage):
 
     variant(
         "host_jemalloc",
-        values=("none", "bundled", "system"),
-        default="none",
+        values=("unset", "none", "bundled", "system"),
+        default="unset",
         multi=False,
         description="Selects between no jemalloc, bundled jemalloc, or system jemalloc",
     )
@@ -267,12 +283,34 @@ class Chapel(AutotoolsPackage):
         "CHPL_LIB_PIC",
         "CHPL_SANITIZE",
         "CHPL_SANITIZE_EXE",
+        "CHPL_GPU",
     ]
+
+    conflicts(
+        "locale_model=gpu",
+        when="llvm=none",
+        msg="GPU support requires building with LLVM",
+    )
 
     # Add dependencies
     depends_on("llvm@14:16", when="llvm=spack")
+
+    # TODO: this version isn't strictly necessary unless using CUDA 12+,
+    # but we don't know which CUDA version we're going to get
+    depends_on("llvm@15", when="locale_model=gpu llvm=spack")
+
     depends_on("m4")
+
+    depends_on("flex", when="developer=True")
+    depends_on("bison", when="developer=True")
+    depends_on("tmux", when="developer=True")
+
+    # why do I need to add to CPATH to find gmp.h
+    # why do I need to add to LIBRARY_PATH to find lgmp
     depends_on("gmp", when="gmp=spack", type=("build", "link", "run"))
+
+    # why do I need to add to LD_LIBRARY_PATH to find libcudart?
+    depends_on("cuda", when="gpu=nvidia", type=("build", "link", "run"))
 
     # TODO: Spack needs both of these, so do we even need to specify them?
     depends_on("python@3.7:3.10")
@@ -292,10 +330,9 @@ class Chapel(AutotoolsPackage):
             env.set("CHPL_COMM_SUBSTRATE", spec.variants["comm_substrate"].value)
 
     def setup_chpl_llvm(self, env):
-        # Setup LLVM environment variables based on spec
         if self.spec.variants["llvm"].value == "spack":
             env.set(
-                "CHPL_LLVM_CONFIG", "{0}/{1}".format(self.spec["llvm"].prefix, "/bin/llvm-config")
+                "CHPL_LLVM_CONFIG", "{0}/{1}".format(self.spec["llvm"].prefix, "bin/llvm-config")
             )
             env.set("CHPL_LLVM", "system")
         else:
@@ -311,31 +348,16 @@ class Chapel(AutotoolsPackage):
         for v in self.spec.variants.keys():
             self.setup_if_not_unset(env, "CHPL_" + v.upper(), self.spec.variants[v].value)
         self.setup_chpl_llvm(env)
-        # env.set("CHPL_AUX_FILESYSTEM", self.spec.variants["aux_filesys"].value)
-        if self.spec.variants["developer"].value:
-            env.set("CHPL_DEVELOPER", "1")
-        env.set("CHPL_RE2", self.spec.variants["re2"].value)
-        env.set("CHPL_HWLOC", self.spec.variants["hwloc"].value)
-        if self.spec.variants["host_platform"].value != "unset":
-            env.set("CHPL_HOST_PLATFORM", self.spec.variants["host_platform"].value)
-        if self.spec.variants["target_platform"].value != "unset":
-            env.set("CHPL_TARGET_PLATFORM", self.spec.variants["target_platform"].value)
-        if self.spec.variants["gmp"].value != "unset":
-            env.set("CHPL_GMP", self.spec.variants["gmp"].value)
-        if self.spec.variants["host_compiler"].value != "unset":
-            env.set("CHPL_HOST_COMPILER", self.spec.variants["host_compiler"].value)
-        if self.spec.variants["target_compiler"].value != "unset":
-            env.set("CHPL_TARGET_COMPILER", self.spec.variants["target_compiler"].value)
-        env.prepend_path(
-            "PATH", join_path(self.prefix.share, "chapel", self._output_version_short, "util")
-        )
+
         if self.spec.variants["gmp"].value == "spack":
             env.set("CHPL_GMP", "system")
             env.prepend_path("CPATH", self.spec["gmp"].prefix.include)
-            env.prepend_path("LD_LIBRARY_PATH", self.spec["gmp"].prefix.lib)
+            env.prepend_path("LIBRARY_PATH", self.spec["gmp"].prefix.lib)
         else:
             env.set("CHPL_GMP", self.spec.variants["gmp"].value)
 
+        if self.spec.variants["gpu"].value == "nvidia":
+            env.prepend_path("LD_LIBRARY_PATH", self.spec["cuda"].prefix.lib64)
         self.setup_chpl_comm(env, self.spec)
 
     def setup_build_environment(self, env):
@@ -344,6 +366,9 @@ class Chapel(AutotoolsPackage):
 
     def setup_run_environment(self, env):
         self.setup_env_vars(env)
+        env.prepend_path(
+            "PATH", join_path(self.prefix.share, "chapel", self._output_version_short, "util")
+        )
 
     @property
     @llnl.util.lang.memoized
@@ -382,6 +407,26 @@ class Chapel(AutotoolsPackage):
                     output = prog("--version", output=str.split, error=str.split)
                     assert expected in output
 
+    def run_local_make_check_with_gasnet(self):
+        """Setup env to run self-test after installing the package with gasnet"""
+        with set_env(
+            GASNET_SPAWNFN="L",
+            GASNET_QUIET="yes",
+            GASNET_ROUTE_OUTPUT="0",
+            QT_AFFINITY="no",
+            CHPL_QTHREAD_ENABLE_OVERSUBSCRIPTION="1",
+            CHPL_RT_MASTERIP="127.0.0.1",
+            CHPL_RT_WORKERIP="127.0.0.0",
+            CHPL_LAUNCHER="",
+        ):
+            make("check")
+
+    def run_local_make_check(self):
+        if self.spec.variants["comm"].value != "none":
+            self.run_local_make_check_with_gasnet()
+        else:
+            make("check")
+
     @run_after("install")
     def self_check(self):
         """Run the self-check after installing the package"""
@@ -390,19 +435,9 @@ class Chapel(AutotoolsPackage):
         self.test_version()
         with set_env(CHPL_HOME=self.stage.source_path):
             with working_dir(self.stage.source_path):
-                if self.spec.variants["comm"].value != "none":
-                    with set_env(
-                        GASNET_SPAWNFN="L",
-                        GASNET_QUIET="yes",
-                        GASNET_ROUTE_OUTPUT="0",
-                        QT_AFFINITY="no",
-                        CHPL_QTHREAD_ENABLE_OVERSUBSCRIPTION="1",
-                        CHPL_RT_MASTERIP="127.0.0.1",
-                        CHPL_RT_WORKERIP="127.0.0.0",
-                        CHPL_LAUNCHER="",
-                    ):
-                        make("check")
-                        make("check-chpldoc")
-                else:
-                    make("check")
-                    make("check-chpldoc")
+                if self.spec.variants["locale_model"].value == "gpu":
+                    with set_env(COMP_FLAGS="--no-checks"):
+                        self.run_local_make_check()
+                else:  # Not GPU
+                    self.run_local_make_check()
+                make("check-chpldoc")
