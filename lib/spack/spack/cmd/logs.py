@@ -26,6 +26,11 @@ def setup_parser(subparser):
 
 def _dump_byte_stream_to_stdout(instream):
     if sys.platform == "win32":
+        # https://docs.python.org/3/library/sys.html#sys.stdout unconditionally
+        # recommends using .buffer to write binary data, but
+        # https://docs.python.org/3/library/io.html#io.TextIOBase.buffer claims
+        # it is not available in all implementations, so only try accessing it
+        # on Windows, where stdout.fileno() is not useful
         try:
             outstream = sys.stdout.buffer
         except AttributeError:
