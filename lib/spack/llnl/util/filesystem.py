@@ -1077,6 +1077,7 @@ def safe_make_new_dir(path):
         except FileExistsError:
             pass
 
+
 class CouldNotRestoreDirectoryBackup(RuntimeError):
     def __init__(self, inner_exception, outer_exception):
         self.inner_exception = inner_exception
