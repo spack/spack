@@ -2212,7 +2212,7 @@ def display_specs(concretized_specs):
         return spec.tree(
             recurse_dependencies=True,
             format=spack.spec.DISPLAY_FORMAT,
-            status_fn=spack.spec.Spec.install_status,
+            install_status=True,
             hashlen=7,
             hashes=True,
         )

@@ -115,7 +115,7 @@ def emulate_env_utility(cmd_name, context: Context, args):
             f"Not all dependencies of {spec.name} are installed. "
             f"Cannot setup {context} environment:",
             spec.tree(
-                status_fn=spack.spec.Spec.install_status,
+                install_status=True,
                 hashlen=7,
                 hashes=True,
                 # This shows more than necessary, but we cannot dynamically change deptypes

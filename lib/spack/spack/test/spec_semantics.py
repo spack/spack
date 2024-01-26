@@ -703,6 +703,13 @@ class TestSpecSemantics:
             actual = spec.format(named_str)
             assert expected == actual
 
+    def test_spec_format_instalL_status(self, database):
+        installed = database.query_one("mpileaks^zmpi")
+        assert installed.format("{install_status}") == "[+]"
+
+        not_installed = Spec("foo")
+        assert not_installed.format("{install_status}") == " - "
+
     def test_spec_formatting_escapes(self, default_mock_concretization):
         spec = default_mock_concretization("multivalue-variant cflags=-O2")
 
