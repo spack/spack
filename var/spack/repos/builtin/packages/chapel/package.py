@@ -152,6 +152,15 @@ class Chapel(AutotoolsPackage):
     )
 
     variant(
+        "gpu_arch",
+        description="AMD GPU architecture must be set at Chapel build time, "
+        "but this is not required for NVIDIA",
+        values=("unset", "gfx942", "gfx90a", "gfx908", "gfx906"),
+        default="unset",
+        multi=False,
+    )
+
+    variant(
         "gpu_mem_strategy",
         description="The memory allocation strategy for GPU data",
         values=("array_on_device", "unified_memory"),
@@ -288,6 +297,8 @@ class Chapel(AutotoolsPackage):
 
     conflicts("locale_model=gpu", when="llvm=none", msg="GPU support requires building with LLVM")
 
+    conflicts("gpu=amd", when="gpu_arch=unset", msg="AMD GPU support requires specifying gpu_arch")
+
     # Add dependencies
     depends_on("llvm@14:16", when="llvm=spack")
 
@@ -306,7 +317,13 @@ class Chapel(AutotoolsPackage):
     depends_on("gmp", when="gmp=spack", type=("build", "link", "run"))
 
     # why do I need to add to LD_LIBRARY_PATH to find libcudart?
-    depends_on("cuda", when="gpu=nvidia", type=("build", "link", "run"))
+    depends_on("cuda@11:12", when="gpu=nvidia", type=("build", "link", "run"))
+
+    depends_on("hsa-rocr-dev@4:5.4", when="gpu=amd", type=("build", "link", "run"))
+    depends_on("hip@4:5.4", when="gpu=amd", type=("build", "link", "run"))
+
+    # Based on docs https://chapel-lang.org/docs/technotes/gpu.html#requirements
+    requires("llvm=bundled", when="cuda@12:")
 
     # TODO: Spack needs both of these, so do we even need to specify them?
     depends_on("python@3.7:3.10")
