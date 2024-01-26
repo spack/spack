@@ -85,19 +85,25 @@ class WindowsOs(OperatingSystem):
                     os.path.join(str(os.getenv("ONEAPI_ROOT")), "compiler", "*", "windows", "bin")
                 )
             )
-        try:
-            # Second strategy: Find MSVC via the registry
-            # Registry interactions are subject to race conditions, etc and can generally
-            # be flakey, do this in a catch block to prevent reg issues from interfering
-            # with compiler detection
-            msft = winreg.WindowsRegistryView(
-                "SOFTWARE\\WOW6432Node\\Microsoft", winreg.HKEY.HKEY_LOCAL_MACHINE
-            )
-            vs_entries = msft.find_subkeys(r"VisualStudio_.*", depth=False)
-        except OSError as e:
-            tty.debug(
-                f'Windows registry query on "SOFTWARE\\WOW6432Node\\Microsoft" under HKEY_LOCAL_MACHINE: {str(e)}'
-            )
+        tries = 0
+        while tries < 3:
+            try:
+                # Second strategy: Find MSVC via the registry
+                # Registry interactions are subject to race conditions, etc and can generally
+                # be flakey, do this in a catch block to prevent reg issues from interfering
+                # with compiler detection
+                msft = winreg.WindowsRegistryView(
+                    "SOFTWARE\\WOW6432Node\\Microsoft", winreg.HKEY.HKEY_LOCAL_MACHINE
+                )
+                vs_entries = msft.find_subkeys(r"VisualStudio_.*", depth=False)
+                break
+            except OSError as e:
+                if tries == 2:
+                    tty.debug(
+                        'Windows registry query on "SOFTWARE\\WOW6432Node\\Microsoft"'
+                        f'under HKEY_LOCAL_MACHINE: {str(e)}'
+                    )
+                tries+=1
         vs_paths = []
 
         def clean_vs_path(path):
