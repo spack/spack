@@ -5,9 +5,9 @@ RUN --mount=type=bind,target=/source,readonly,source=. \
   git clone file:///source /spack ; \
   mkdir -p /spack/base ; \
   cd /spack ; git checkout bootstrap-test ; \
-  cp -r /source/bootstraps/stage4/spack.* /source/bootstraps/stage4/compilers.yaml /spack/base ; \
-  sed -i.orig -e 's|bootstraps/stage3|base|' /spack/base/spack.yaml ; \
-  python3 /spack/bin/spack mirror add source file:///source/bootstraps/buildcache ; \
+  cp -r /source/share/spack/spackos-bootstrap/stage4/spack.* /source/share/spack/spackos-bootstrap/stage4/compilers.yaml /spack/base ; \
+  sed -i.orig -e 's|share/spack/spackos-bootstrap/stage3|base|' /spack/base/spack.yaml ; \
+  python3 /spack/bin/spack mirror add source file:///source/share/spack/spackos-bootstrap/buildcache ; \
   python3 /spack/bin/spack bootstrap disable github-actions-v0.4 ; \
   python3 /spack/bin/spack bootstrap disable github-actions-v0.5 ; \
   python3 /spack/bin/spack -e /spack/base install --use-buildcache only --no-check-signature
