@@ -42,7 +42,7 @@ class Star(MakefilePackage):
 
     def edit(self, spec, prefix):
         if "avx2" not in spec.target:
-            env["CXXFLAGS_SIMD"] = ""
+            env["CXXFLAGS_SIMD"] = "sse"
 
     def build(self, spec, prefix):
         # different make targets if we're compiling for Mac M1/2
