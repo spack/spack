@@ -9,7 +9,6 @@ from spack.package import *
 
 
 class Bricks(CMakePackage):
-
     """Bricks is a data layout and code generation framework,
     enabling performance-portable stencil computations across
     a multitude of architectures."""

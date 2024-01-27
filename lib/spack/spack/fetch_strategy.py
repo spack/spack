@@ -697,7 +697,6 @@ class GoFetchStrategy(VCSFetchStrategy):
 
 @fetcher
 class GitFetchStrategy(VCSFetchStrategy):
-
     """
     Fetch strategy that gets source code from a git repository.
     Use like this in a package:
@@ -1089,7 +1088,6 @@ class CvsFetchStrategy(VCSFetchStrategy):
 
 @fetcher
 class SvnFetchStrategy(VCSFetchStrategy):
-
     """Fetch strategy that gets source code from a subversion repository.
        Use like this in a package:
 
@@ -1184,7 +1182,6 @@ class SvnFetchStrategy(VCSFetchStrategy):
 
 @fetcher
 class HgFetchStrategy(VCSFetchStrategy):
-
     """
     Fetch strategy that gets source code from a Mercurial repository.
     Use like this in a package:

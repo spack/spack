@@ -826,7 +826,6 @@ class NoValidVersionError(spack.error.SpackError):
 
 
 class InsufficientArchitectureInfoError(spack.error.SpackError):
-
     """Raised when details on architecture cannot be collected from the
     system"""
 

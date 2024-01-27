@@ -146,7 +146,7 @@ def mypy_root_spec() -> str:
 
 def black_root_spec() -> str:
     """Return the root spec used to bootstrap black"""
-    return _root_spec("py-black@:23.1.0")
+    return _root_spec("py-black@:24.1.0")
 
 
 def flake8_root_spec() -> str:

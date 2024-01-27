@@ -169,9 +169,11 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
                 ]
             elif mkl_provider == "intel-mkl":
                 args += [
-                    self.define("DLAF_WITH_MKL", True)
-                    if spec.version <= Version("0.3")
-                    else self.define("DLAF_WITH_MKL_LEGACY", True),
+                    (
+                        self.define("DLAF_WITH_MKL", True)
+                        if spec.version <= Version("0.3")
+                        else self.define("DLAF_WITH_MKL_LEGACY", True)
+                    ),
                     self.define("MKL_LAPACK_TARGET", f"mkl::mkl_intel_32bit_{mkl_threads}_dyn"),
                 ]
 

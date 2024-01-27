@@ -292,9 +292,11 @@ def html(pkg_names, out):
                 out.write("<dd>\n")
                 out.write(
                     ", ".join(
-                        d
-                        if d not in pkg_names
-                        else '<a class="reference internal" href="#%s">%s</a>' % (d, d)
+                        (
+                            d
+                            if d not in pkg_names
+                            else '<a class="reference internal" href="#%s">%s</a>' % (d, d)
+                        )
                         for d in deps
                     )
                 )

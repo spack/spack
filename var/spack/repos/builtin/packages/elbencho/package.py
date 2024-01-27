@@ -9,7 +9,6 @@ from spack.package import *
 
 
 class Elbencho(MakefilePackage):
-
     """
     Elbencho storage benchmark
     """

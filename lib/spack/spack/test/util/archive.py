@@ -50,8 +50,8 @@ def test_gzip_compressed_tarball_is_reproducible(tmpdir):
 
         # Expected mode for non-dirs is 644 if not executable, 755 if executable. Better to compute
         # that as we don't know the umask of the user running the test.
-        expected_mode = (
-            lambda name: 0o755 if Path(*name.split("/")).lstat().st_mode & 0o100 else 0o644
+        expected_mode = lambda name: (
+            0o755 if Path(*name.split("/")).lstat().st_mode & 0o100 else 0o644
         )
 
         # Verify the tarball contents
