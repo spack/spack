@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import base64
 import contextlib
-import enum
 import hashlib
 import inspect
 import io
@@ -27,6 +26,7 @@ import spack.util.spack_json as sjson
 from spack.installer import InstallError
 from spack.spec import Spec
 from spack.util.prefix import Prefix
+from spack.test_status import TestStatus
 
 #: Stand-alone test failure info type
 TestFailureType = Tuple[BaseException, str]
@@ -46,22 +46,6 @@ LogType = Union["tty.log.nixlog", "tty.log.winlog"]
 
 Pb = TypeVar("Pb", bound="spack.package_base.PackageBase")
 PackageObjectOrClass = Union[Pb, Type[Pb]]
-
-
-class TestStatus(enum.Enum):
-    """Names of different stand-alone test states."""
-
-    NO_TESTS = -1
-    SKIPPED = 0
-    FAILED = 1
-    PASSED = 2
-
-    def __str__(self):
-        return f"{self.name}"
-
-    def lower(self):
-        name = f"{self.name}"
-        return name.lower()
 
 
 def get_escaped_text_output(filename: str) -> List[str]:

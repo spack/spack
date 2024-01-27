@@ -39,8 +39,7 @@ import spack.util.crypto
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack import traverse
-from spack.build_environment import determine_number_of_jobs
-from spack.cmd import display_specs
+from spack.util.cpus import determine_number_of_jobs
 from spack.cmd.common import arguments
 from spack.oci.image import (
     Digest,
@@ -915,7 +914,7 @@ def list_fn(args):
                 "You can query all available architectures with:",
                 "spack buildcache list --allarch",
             )
-    display_specs(specs, args, all_headers=True)
+    spack.cmd.display_specs(specs, args, all_headers=True)
 
 
 def keys_fn(args):
