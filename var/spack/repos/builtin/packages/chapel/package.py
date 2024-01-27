@@ -323,7 +323,7 @@ class Chapel(AutotoolsPackage):
     depends_on("hip@4:5.4", when="gpu=amd", type=("build", "link", "run"))
 
     # Based on docs https://chapel-lang.org/docs/technotes/gpu.html#requirements
-    requires("llvm=bundled", when="cuda@12:")
+    requires("llvm=bundled", when="^cuda@12:")
 
     # TODO: Spack needs both of these, so do we even need to specify them?
     depends_on("python@3.7:3.10")
