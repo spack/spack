@@ -823,7 +823,7 @@ def test_env_defs_as_globals(mutable_mock_env_path, mock_packages):
 
     spack_yaml = env_path / ev.manifest_name
     spack_yaml.write_text(
-        f"""spack:
+        """spack:
   definitions:
   - core_specs: [libdwarf, libelf]
   - my_packages: [zlib]
