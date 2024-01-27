@@ -133,7 +133,7 @@ class Neuron(CMakePackage):
             options.append(self.define("CORENRN_NMODL_FLAGS", nmodl_options))
 
             if spec.satisfies("+gpu"):
-                nvcc = which("nvcc")
+                nvcc = spec["cuda"].prefix.bin.nvcc
                 options.append(self.define("CMAKE_CUDA_COMPILER", nvcc))
                 options.append(self.define("CORENRN_ENABLE_GPU", True))
 
