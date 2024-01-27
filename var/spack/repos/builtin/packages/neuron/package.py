@@ -82,9 +82,9 @@ class Neuron(CMakePackage):
     depends_on("py-pytest-cov", when="+tests")
 
     # next two needed after neuronsimulator/nrn#2235.
-    depends_on("py-pip", type=("build"))
-    depends_on("py-setuptools", type=("build"))
-    depends_on("py-packaging", type=("run"))
+    depends_on("py-pip", type="build")
+    depends_on("py-setuptools", type="build")
+    depends_on("py-packaging", type="run")
 
     depends_on("boost", when="+coreneuron+tests")
     depends_on("cuda", when="+coreneuron+gpu")
@@ -92,11 +92,8 @@ class Neuron(CMakePackage):
 
     depends_on("caliper", when="+caliper")
 
-    gpu_compiler_message = "neuron: for gpu build use %nvhpc"
-    conflicts("%gcc", when="+gpu", msg=gpu_compiler_message)
-    conflicts("%intel", when="+gpu", msg=gpu_compiler_message)
-    conflicts("%aocc", when="+gpu", msg=gpu_compiler_message)
-    conflicts("%clang", when="+gpu", msg=gpu_compiler_message)
+    gpu_compiler_message = "neuron+gpu needs %nvhpc"
+    requires("%nvhpc", when="+gpu", msg=gpu_compiler_message)
 
     patch("patch-v782-git-cmake-avx512.patch", when="@7.8.2")
 
@@ -143,7 +140,7 @@ class Neuron(CMakePackage):
             args.extend(options)
 
         # Enable math optimisations to enable SIMD/vectorisation in release modes
-        if spec.variants["build_type"].value in ["Release", "RelWithDebInfo"]:
+        if spec.satisfies("build_type=Release") or spec.satisfies("build_type=RelWithDebInfo"):
             args.append(self.define("NRN_ENABLE_MATH_OPT", "ON"))
 
         # add cpu arch specific optimisation flags to CMake so that they are passed
