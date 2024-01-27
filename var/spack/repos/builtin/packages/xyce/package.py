@@ -138,8 +138,8 @@ class Xyce(CMakePackage):
 
         depends_on("armpl-gcc~shared", when="^armpl-gcc")
         depends_on("atlas~shared", when="^atlas")
-        depends_on("blis libs=static", when="^blis+cblas")
-        depends_on("blis libs=static", when="^blis+blas")
+        depends_on("blis libs=static", when="^[virtuals=blas] blis+cblas")
+        depends_on("blis libs=static", when="^[virtuals=blas] blis+blas")
         depends_on("clblast~shared", when="^clblast+netlib")
         depends_on("intel-mkl~shared", when="^intel-mkl")
         depends_on("intel-oneapi-mkl~shared", when="^intel-oneapi-mkl")
