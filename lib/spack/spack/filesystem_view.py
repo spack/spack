@@ -91,9 +91,9 @@ def view_copy(src: str, dst: str, view, spec: Optional[spack.spec.Spec] = None):
         prefix_to_projection[spack.store.STORE.layout.root] = view._root
 
         # This is vestigial code for the *old* location of sbang.
-        prefix_to_projection[
-            "#!/bin/bash {0}/bin/sbang".format(spack.paths.spack_root)
-        ] = sbang.sbang_shebang_line()
+        prefix_to_projection["#!/bin/bash {0}/bin/sbang".format(spack.paths.spack_root)] = (
+            sbang.sbang_shebang_line()
+        )
 
         spack.relocate.relocate_text(files=[dst], prefixes=prefix_to_projection)
 

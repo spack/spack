@@ -199,9 +199,11 @@ def get_stage_root():
 def _mirror_roots():
     mirrors = spack.config.get("mirrors")
     return [
-        sup.substitute_path_variables(root)
-        if root.endswith(os.sep)
-        else sup.substitute_path_variables(root) + os.sep
+        (
+            sup.substitute_path_variables(root)
+            if root.endswith(os.sep)
+            else sup.substitute_path_variables(root) + os.sep
+        )
         for root in mirrors.values()
     ]
 
