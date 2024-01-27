@@ -130,6 +130,10 @@ class Hydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("llvm-openmp", when="%apple-clang +openmp")
 
+    # Fixes https://github.com/spack/spack/issues/42286
+    # https://github.com/LLNL/Elemental/pull/177
+    patch("cmake-intel-mpi-escape-quotes-pr177.patch", when="@1.5.3")
+
     @property
     def libs(self):
         shared = True if "+shared" in self.spec else False

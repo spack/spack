@@ -169,6 +169,7 @@ class Julia(MakefilePackage):
     depends_on("patchelf@0.13:0.17", type="build")
     depends_on("perl", type="build")
     depends_on("libwhich", type="build")
+    depends_on("which", type="build")  # for detecting 7z, lld, dsymutil
     depends_on("python", type="build")
 
     depends_on("blas")  # note: for now openblas is fixed...
@@ -196,6 +197,13 @@ class Julia(MakefilePackage):
     patch("julia-1.6-system-libwhich-and-p7zip-symlink.patch", when="@1.6.0:1.6")
     patch("use-add-rpath.patch", when="@:1.8.0")
     patch("use-add-rpath-2.patch", when="@1.8.1:1.8")
+
+    # Fix the path to Spack llvm's lld and dsymutil
+    patch(
+        "https://github.com/JuliaLang/julia/commit/55c13d234c1523861b278f7989b1af105ef0e88f.patch?full_index=1",
+        sha256="00569f40e1845329060a714813e509677949e633a0e833c40a3c70dcf9269cc1",
+        when="@1.9:1.10",
+    )
 
     # Fix libstdc++ not being found (https://github.com/JuliaLang/julia/issues/47987)
     patch(

@@ -170,13 +170,16 @@ class Visit(CMakePackage):
     depends_on("mfem+shared+exceptions+fms+conduit", when="+mfem")
     depends_on("libfms@0.2:", when="+mfem")
 
-    depends_on("adios2@2.7.1", when="+adios2")
-    depends_on("adios2+hdf5", when="+adios2+hdf5")
-    depends_on("adios2~hdf5", when="+adios2~hdf5")
-    depends_on("adios2+mpi", when="+adios2+mpi")
-    depends_on("adios2~mpi", when="+adios2~mpi")
-    depends_on("adios2+python", when="+adios2+python")
-    depends_on("adios2~python", when="+adios2~python")
+    with when("+adios2"):
+        depends_on("adios2")
+        # adios 2.8 removed adios2_taustubs (https://github.com/visit-dav/visit/issues/19209)
+        depends_on("adios2@:2.7.1")
+        depends_on("adios2+hdf5", when="+hdf5")
+        depends_on("adios2~hdf5", when="~hdf5")
+        depends_on("adios2+mpi", when="+mpi")
+        depends_on("adios2~mpi", when="~mpi")
+        depends_on("adios2+python", when="+python")
+        depends_on("adios2~python", when="~python")
 
     # For version 3.3.0 through 3.3.2, we used vtk-h to utilize vtk-m.
     # For version starting with 3.3.3 we use vtk-m directly.

@@ -41,9 +41,16 @@ class Go(Package):
 
     license("BSD-3-Clause")
 
-    version("1.21.3", sha256="186f2b6f8c8b704e696821b09ab2041a5c1ee13dcbc3156a13adcf75931ee488")
+    version("1.21.6", sha256="124926a62e45f78daabbaedb9c011d97633186a33c238ffc1e25320c02046248")
+    version("1.21.5", sha256="285cbbdf4b6e6e62ed58f370f3f6d8c30825d6e56c5853c66d3c23bcdb09db19")
 
     # Deprecated Versions
+    # https://nvd.nist.gov/vuln/detail/CVE-2023-44487
+    version(
+        "1.21.3",
+        sha256="186f2b6f8c8b704e696821b09ab2041a5c1ee13dcbc3156a13adcf75931ee488",
+        deprecated=True,
+    )
     # https://nvd.nist.gov/vuln/detail/CVE-2023-39533
     version(
         "1.20.6",

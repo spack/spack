@@ -61,10 +61,7 @@ class Gnuradio(CMakePackage):
     extends("python")
 
     def cmake_args(self):
-        args = []
-        args.append("-DPYTHON_EXECUTABLE={0}".format(self.spec["python"].command.path))
-        args.append("-DENABLE_INTERNAL_VOLK=OFF")
-        return args
+        return ["-DENABLE_INTERNAL_VOLK=OFF"]
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)

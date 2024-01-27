@@ -56,6 +56,7 @@ class Vtk(CMakePackage):
     variant("xdmf", default=False, description="Build XDMF file support")
     variant("ffmpeg", default=False, description="Build with FFMPEG support")
     variant("mpi", default=True, description="Enable MPI support")
+    variant("examples", default=False, description="Enable building & installing the VTK examples")
 
     patch("gcc.patch", when="@6.1.0")
     # patch to fix some missing stl includes
@@ -153,7 +154,7 @@ class Vtk(CMakePackage):
     depends_on("lz4")
     depends_on("netcdf-c~mpi", when="~mpi")
     depends_on("netcdf-c+mpi", when="+mpi")
-    depends_on("netcdf-cxx")
+    depends_on("netcdf-cxx4", when="@:8.1.2")
     depends_on("libpng")
     depends_on("libtiff")
     depends_on("zlib-api")
@@ -309,8 +310,6 @@ class Vtk(CMakePackage):
         # Enable/Disable wrappers for Python.
         if "+python" in spec:
             cmake_args.append("-DVTK_WRAP_PYTHON=ON")
-            if spec.satisfies("@:8"):
-                cmake_args.append("-DPYTHON_EXECUTABLE={0}".format(spec["python"].command.path))
             if "+mpi" in spec and spec.satisfies("@:8"):
                 cmake_args.append("-DVTK_USE_SYSTEM_MPI4PY:BOOL=ON")
             if spec.satisfies("@9.0.0: ^python@3:"):
@@ -473,5 +472,7 @@ class Vtk(CMakePackage):
                     "-DCMAKE_CXX_FLAGS={0}".format(compile_flags),
                 ]
             )
+
+        cmake_args.append(self.define_from_variant("VTK_BUILD_EXAMPLES", "examples"))
 
         return cmake_args

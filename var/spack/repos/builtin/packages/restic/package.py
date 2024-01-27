@@ -16,6 +16,7 @@ class Restic(Package):
 
     license("BSD-2-Clause")
 
+    version("0.16.3", sha256="a94d6c1feb0034fcff3e8b4f2d65c0678f906fc21a1cf2d435341f69e7e7af52")
     version("0.16.2", sha256="88165b5b89b6064df37a9964d660f40ac62db51d6536e459db9aaea6f2b2fc11")
     version("0.16.0", sha256="b91f5ef6203a5c50a72943c21aaef336e1344f19a3afd35406c00f065db8a8b9")
     version("0.15.2", sha256="52aca841486eaf4fe6422b059aa05bbf20db94b957de1d3fca019ed2af8192b7")

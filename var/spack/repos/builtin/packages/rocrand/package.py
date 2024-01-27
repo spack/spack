@@ -14,9 +14,9 @@ class Rocrand(CMakePackage):
     """The rocRAND project provides functions that generate
     pseudo-random and quasi-random numbers."""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/rocRAND"
-    git = "https://github.com/ROCmSoftwarePlatform/rocRAND.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocRAND/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/rocRAND"
+    git = "https://github.com/ROCm/rocRAND.git"
+    url = "https://github.com/ROCm/rocRAND/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath")
@@ -26,6 +26,7 @@ class Rocrand(CMakePackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("6.0.0", sha256="cee93231c088be524bb2cb0e6093ec47e62e61a55153486bebbc2ca5b3d49360")
     version("5.7.1", sha256="885cd905bbd23d02ba8f3f87d5c0b79bc44bd020ea9af190f3959cf5aa33d07d")
     version("5.7.0", sha256="d6053d986821e5cbc6cfec0778476efb1411ef943f11e7a8b973b1814a259dcf")
     version("5.6.1", sha256="6bf71e687ffa0fcc1b00e3567dd43da4147a82390f1b2db5e6f1f594dee6066d")
@@ -149,7 +150,7 @@ class Rocrand(CMakePackage):
     ]:
         resource(
             name="hipRAND",
-            git="https://github.com/ROCmSoftwarePlatform/hipRAND.git",
+            git="https://github.com/ROCm/hipRAND.git",
             commit=d_commit,
             destination="",
             placement="hiprand",
@@ -157,7 +158,7 @@ class Rocrand(CMakePackage):
         )
     resource(
         name="hipRAND",
-        git="https://github.com/ROCmSoftwarePlatform/hipRAND.git",
+        git="https://github.com/ROCm/hipRAND.git",
         branch="master",
         destination="",
         placement="hiprand",
@@ -165,7 +166,7 @@ class Rocrand(CMakePackage):
     )
     resource(
         name="hipRAND",
-        git="https://github.com/ROCmSoftwarePlatform/hipRAND.git",
+        git="https://github.com/ROCm/hipRAND.git",
         branch="develop",
         destination="",
         placement="hiprand",
@@ -202,6 +203,7 @@ class Rocrand(CMakePackage):
         "5.6.1",
         "5.7.0",
         "5.7.1",
+        "6.0.0",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
