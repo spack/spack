@@ -813,3 +813,37 @@ def test_deconcretize_then_concretize_does_not_error(mutable_mock_env_path, mock
     assert len(e.concrete_roots()) == 3
     all_root_hashes = set(x.dag_hash() for x in e.concrete_roots())
     assert len(all_root_hashes) == 2
+
+
+@pytest.mark.regression("33960,42058")
+def test_env_defs_as_globals(mutable_mock_env_path, mock_packages):
+    """Check that env definitions are available in the global scope after activation."""
+    env_path = mutable_mock_env_path
+    env_path.mkdir()
+
+    spack_yaml = env_path / ev.manifest_name
+    spack_yaml.write_text(
+        f"""spack:
+  definitions:
+  - core_specs: [libdwarf, libelf]
+  - my_packages: [zlib]
+
+  specs:
+  - $core_specs
+  - $my_packages
+"""
+    )
+
+    e = ev.Environment(env_path)
+    env_defs = e.manifest[ev.TOP_LEVEL_KEY].get("definitions")
+    assert len(env_defs) == 2
+
+    # Instantiating an environment should not populate the global config scope
+    defs = spack.config.get("definitions")
+    assert len(defs) == 0
+
+    # Activating the environment populates the global config in the same order.
+    ev.activate(e)
+    config_defs = spack.config.get("definitions")
+    for cdefs, edefs in zip(config_defs, env_defs):
+        assert cdefs == edefs
