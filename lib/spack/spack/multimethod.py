@@ -279,6 +279,25 @@ def default_args(**kwargs):
     spack.directives.DirectiveMeta.pop_default_args()
 
 
+every_plat_but_windows = ["cray", "darwin", "freebsd", "linux"]
+
+
+def everywhere_but_windows(directive, *args, **kwargs):
+    """Abstraction around making directives non Windows
+    Invokes directive with arguments given every platform
+    scope but Windows
+
+    Args:
+        directive (function): function pointer for the
+            directive to be invoked
+        args (list): positional arguments given to directive
+        kwargs (dict): keyword args for directive
+    """
+    for plat in every_plat_but_windows:
+        with when(f"platform={plat}"):
+            directive(*args, **kwargs)
+
+
 class MultiMethodError(spack.error.SpackError):
     """Superclass for multimethod dispatch errors"""
 

@@ -98,7 +98,7 @@ class Vtk(CMakePackage):
     patch("vtkm-findmpi-downstream.patch", when="@9.0.0")
 
     # use internal FindHDF5
-    patch("internal_findHDF5.patch", when="@:8")
+    everywhere_but_windows(patch, "internal_findHDF5.patch", when="@:8")
 
     # Fix IOADIOS2 module to work with kits
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8653

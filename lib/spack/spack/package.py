@@ -90,7 +90,7 @@ from spack.installer import (
     UpstreamPackageError,
 )
 from spack.mixins import filter_compiler_wrappers
-from spack.multimethod import default_args, when
+from spack.multimethod import default_args, everywhere_but_windows, when
 from spack.package_base import (
     DependencyConflictError,
     build_system_flags,
