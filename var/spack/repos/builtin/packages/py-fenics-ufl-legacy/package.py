@@ -22,7 +22,7 @@ class PyFenicsUflLegacy(PythonPackage):
 
     version("main", branch="main")
     version("2022.3.0", sha256="2d0f4c88fe151d631e1d389faf61f58bbbe649fd08106e756fd5d6c53213660a")
-    
+
     depends_on("py-setuptools@58:", type="build")
     depends_on("py-numpy", type=("build", "run"))
 
