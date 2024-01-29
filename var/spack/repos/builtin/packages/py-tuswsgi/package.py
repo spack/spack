@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyTuswsgi(PythonPackage):
 
     homepage = "https://github.com/mvdbeek/tusfilter"
     url = "https://pypi.io/packages/py2.py3/t/tuswsgi/tuswsgi-0.5.4-py2.py3-none-any.whl"
+
+    license("MIT")
 
     version(
         "0.5.4",

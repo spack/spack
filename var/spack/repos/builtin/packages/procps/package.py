@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Procps(AutotoolsPackage):
     homepage = "https://gitlab.com/procps-ng/procps"
     git = "https://gitlab.com/procps-ng/procps.git"
     url = "https://gitlab.com/procps-ng/procps/-/archive/v4.0.3/procps-v4.0.3.tar.gz"
+
+    license("GPL-2.0-or-later")
 
     version("master", branch="master")
     version("4.0.4", sha256="3214fab0f817d169f2c117842ba635bafb1cd6090273e311a8b5c6fc393ddb9d")

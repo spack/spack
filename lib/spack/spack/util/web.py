@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ import traceback
 import urllib.parse
 from html.parser import HTMLParser
 from pathlib import Path, PurePosixPath
-from typing import IO, Dict, List, Optional, Set, Union
+from typing import IO, Dict, Iterable, List, Optional, Set, Union
 from urllib.error import HTTPError, URLError
 from urllib.request import HTTPSHandler, Request, build_opener
 
@@ -554,7 +554,9 @@ def list_url(url, recursive=False):
         return gcs.get_all_blobs(recursive=recursive)
 
 
-def spider(root_urls: Union[str, List[str]], depth: int = 0, concurrency: Optional[int] = None):
+def spider(
+    root_urls: Union[str, Iterable[str]], depth: int = 0, concurrency: Optional[int] = None
+):
     """Get web pages from root URLs.
 
     If depth is specified (e.g., depth=2), then this will also follow up to <depth> levels

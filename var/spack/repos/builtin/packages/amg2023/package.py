@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Amg2023(CMakePackage, CudaPackage, ROCmPackage):
     tags = ["benchmark"]
     homepage = "https://github.com/LLNL/AMG2023"
     git = "https://github.com/LLNL/AMG2023.git"
+
+    license("Apache-2.0")
 
     version("develop", branch="main")
 

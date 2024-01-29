@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,14 +14,17 @@ class HsakmtRoct(CMakePackage):
     Thunk Interface is a user-mode API interfaces used to interact
     with the ROCk driver."""
 
-    homepage = "https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface"
-    git = "https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface.git"
-    url = "https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/ROCT-Thunk-Interface"
+    git = "https://github.com/ROCm/ROCT-Thunk-Interface.git"
+    url = "https://github.com/ROCm/ROCT-Thunk-Interface/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
 
     version("master", branch="master")
+    version("6.0.0", sha256="9f4e80bd0a714ce45326941b906a62298c62025eff186dc6c48282ce84c787c7")
+    version("5.7.1", sha256="38bc3732886a52ca9cd477ec6fcde3ab17a0ba5dc8e2f7ac34c4de597bd00e8b")
+    version("5.7.0", sha256="52293e40c4ba0c653d796e2f6109f5fb4c79f5fb82310ecbfd9a5432acf9da43")
     version("5.6.1", sha256="d60b355bfd21a08e0e36270fd56f98d052c3c6edca47da887fa32bf32759c29b")
     version("5.6.0", sha256="cd009c5c09f664f046c428ba9843582ab468f7b88d560747eb949d8d7f8c5567")
     version("5.5.1", sha256="4ffde3fc1f91f24cdbf09263fd8e012a3995ad10854f4c1d866beab7b9f36bf4")
@@ -107,6 +110,7 @@ class HsakmtRoct(CMakePackage):
     )
 
     variant("shared", default=True, description="Build shared or static library")
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
     depends_on("pkgconfig", type="build", when="@4.5.0:")
     depends_on("cmake@3:", type="build")
@@ -116,11 +120,11 @@ class HsakmtRoct(CMakePackage):
     for ver in ["5.3.0", "5.4.0", "5.4.3"]:
         depends_on("llvm-amdgpu@" + ver, type="test", when="@" + ver)
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, type="test", when="@" + ver)
 
-    # See https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface/issues/72
+    # See https://github.com/ROCm/ROCT-Thunk-Interface/issues/72
     # and https://github.com/spack/spack/issues/28398
     patch("0001-Remove-compiler-support-libraries-and-libudev-as-req.patch", when="@4.5.0:5.2")
     patch("0002-Remove-compiler-support-libraries-and-libudev-as-req-5.3.patch", when="@5.3.0:5.4")
@@ -140,6 +144,9 @@ class HsakmtRoct(CMakePackage):
             args.append(self.define("BUILD_SHARED_LIBS", False))
         if self.spec.satisfies("@5.4.3:"):
             args.append("-DCMAKE_INSTALL_LIBDIR=lib")
+        if self.spec.satisfies("@5.7.0:"):
+            args.append(self.define_from_variant("ADDRESS_SANITIZER", "asan"))
+
         return args
 
     @run_after("install")

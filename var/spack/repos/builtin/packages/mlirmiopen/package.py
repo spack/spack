@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,9 +10,9 @@ from spack.package import *
 class Mlirmiopen(CMakePackage):
     """Multi-Level Intermediate Representation for rocm miopen project."""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/llvm-project-mlir"
-    url = "https://github.com/ROCmSoftwarePlatform/llvm-project-mlir/archive/refs/tags/rocm-5.4.0.tar.gz"
-    git = "https://github.com/ROCmSoftwarePlatform/llvm-project-mlir.git"
+    homepage = "https://github.com/ROCm/llvm-project-mlir"
+    url = "https://github.com/ROCm/llvm-project-mlir/archive/refs/tags/rocm-5.4.0.tar.gz"
+    git = "https://github.com/ROCm/llvm-project-mlir.git"
     tags = ["rocm"]
 
     maintainers("srekolam")

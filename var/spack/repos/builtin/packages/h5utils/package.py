@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class H5utils(AutotoolsPackage):
 
     homepage = "http://ab-initio.mit.edu/wiki/index.php/H5utils"
     url = "https://github.com/NanoComp/h5utils/releases/download/1.13.1/h5utils-1.13.1.tar.gz"
+
+    license("GPL-2.0-only")
 
     version("1.13.1", sha256="c5a76f064d6daa3e65583dce2b61202510e67cf6590f076af9a8aa72511d7d65")
     version(

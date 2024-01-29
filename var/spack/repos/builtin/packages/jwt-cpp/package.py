@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class JwtCpp(CMakePackage):
     url = "https://github.com/Thalhammer/jwt-cpp/archive/refs/tags/v0.4.0.tar.gz"
 
     maintainers("gartung", "greenc-FNAL", "marcmengel", "vitodb")
+
+    license("MIT")
 
     version("0.6.0", sha256="0227bd6e0356b211341075c7997c837f0b388c01379bd256aa525566a5553f03")
     version("0.5.2", sha256="d3188f9611597eb1bb285169879e1d87202bf10a08e4e7734c9f2097bfd4a850")

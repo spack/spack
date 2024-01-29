@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Fpchecker(CMakePackage):
     git = "https://github.com/LLNL/FPChecker.git"
 
     maintainers("ilagunap")
+
+    license("Apache-2.0")
 
     version("master", branch="master")
     version("0.4.0", sha256="59d18a3fb5211645bb1cfde1502ba78a9cca4234604dfd879534d7f13ae5d5b9")

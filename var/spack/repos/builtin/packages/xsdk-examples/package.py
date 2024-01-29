@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,14 +39,20 @@ class XsdkExamples(CMakePackage, CudaPackage, ROCmPackage):
     # Use ^dealii~hdf5 because of HDF5 linking issue in deal.II 9.4.0.
     # Disable 'arborx' to remove the 'kokkos' dependency which conflicts with
     # the internal Kokkos used by 'trilinos':
-    depends_on("xsdk@0.8.0 ~arborx ^mfem+pumi ^dealii~hdf5", when="@0.4.0")
-    depends_on("xsdk@0.8.0 ^mfem+strumpack", when="@0.4.0 ^xsdk+strumpack")
-    depends_on("xsdk@0.8.0 ^mfem+ginkgo", when="@0.4.0 ^xsdk+ginkgo")
-    depends_on("xsdk@0.8.0 ^mfem+hiop", when="@0.4.0 ^xsdk+hiop")
-    depends_on("xsdk@0.8.0 ^sundials+magma", when="@0.4.0 +cuda")
-    depends_on("xsdk@0.7.0", when="@0.3.0")
-    depends_on("xsdk@0.7.0 ^mfem+strumpack", when="@0.3.0 ^xsdk+strumpack")
-    depends_on("xsdk@0.7.0 ^sundials+magma", when="@0.3.0 +cuda")
+    with when("@0.4.0"):
+        depends_on("xsdk@0.8.0 ~arborx")
+        depends_on("mfem+pumi")
+        depends_on("dealii~hdf5")
+        depends_on("mfem+strumpack", when="^xsdk+strumpack")
+        depends_on("mfem+ginkgo", when="^xsdk+ginkgo")
+        depends_on("mfem+hiop", when="^xsdk+hiop")
+        depends_on("sundials+magma", when="+cuda")
+
+    with when("@0.3.0"):
+        depends_on("xsdk@0.7.0")
+        depends_on("mfem+strumpack", when="^xsdk+strumpack")
+        depends_on("sundials+magma", when="+cuda")
+
     depends_on("mpi")
     depends_on("cmake@3.21:", type="build", when="@0.3.0:")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyBreathe(PythonPackage):
 
     homepage = "https://github.com/michaeljones/breathe"
     url = "https://github.com/michaeljones/breathe/archive/v4.11.1.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("4.35.0", sha256="55b54723752fc04b892a0f868782b1df65e69db6ca94fb32cf04be495bfd7841")
     version("4.34.0", sha256="b22e70eb4000492508d687d71f258c8f9678398e277bcee0daf34cd438a46e25")

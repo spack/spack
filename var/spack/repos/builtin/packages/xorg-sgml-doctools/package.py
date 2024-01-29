@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class XorgSgmlDoctools(AutotoolsPackage, XorgPackage):
     xorg_mirror_path = "doc/xorg-sgml-doctools-1.11.tar.gz"
 
     maintainers("wdconinc")
+
+    license("MIT")
 
     version("1.12", sha256="985a0329e6a6dadd6ad517f8d54f8766ab4b52bb8da7b07d02ec466bec444bdb")
     version("1.11", sha256="986326d7b4dd2ad298f61d8d41fe3929ac6191c6000d6d7e47a8ffc0c34e7426")

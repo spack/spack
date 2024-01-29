@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class PyTfdlpack(CMakePackage, PythonExtension):
     git = "https://github.com/VoVAllen/tf-dlpack.git"
 
     maintainers("adamjstewart")
+
+    license("Apache-2.0")
 
     version("master", branch="master", submodules=True)
     version(
@@ -31,14 +33,7 @@ class PyTfdlpack(CMakePackage, PythonExtension):
     depends_on("py-tensorflow", type=("build", "run"))
 
     def cmake_args(self):
-        args = ["-DPYTHON_EXECUTABLE=" + self.spec["python"].command.path]
-
-        if "+cuda" in self.spec:
-            args.append("-DUSE_CUDA=ON")
-        else:
-            args.append("-DUSE_CUDA=OFF")
-
-        return args
+        return [self.define_from_variant("USE_CUDA", "cuda")]
 
     def install(self, spec, prefix):
         with working_dir("python"):

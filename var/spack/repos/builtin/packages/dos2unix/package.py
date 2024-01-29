@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Dos2unix(MakefilePackage):
     url = "https://waterlan.home.xs4all.nl/dos2unix/dos2unix-7.3.4.tar.gz"
 
     maintainers("cessenat")
+
+    license("BSD-2-Clause")
 
     version("7.4.4", sha256="28a841db0bd5827d645caba9d8015e3a71983dc6e398070b5287ee137ae4436e")
     version("7.4.2", sha256="6035c58df6ea2832e868b599dfa0d60ad41ca3ecc8aa27822c4b7a9789d3ae01")

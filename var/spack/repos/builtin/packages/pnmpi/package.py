@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Pnmpi(CMakePackage):
 
     homepage = "https://github.com/LLNL/PnMPI"
     url = "https://github.com/LLNL/PnMPI/releases/download/v1.7/PnMPI-v1.7-full.tar.gz"
+
+    license("LGPL-2.1-or-later")
 
     version("1.7", sha256="523228bdc220ae417d6812c0766bba698a240d71c69981cb0cb2b09a75ef4a9e")
 

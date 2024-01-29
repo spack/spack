@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Ligra(MakefilePackage):
 
     homepage = "https://jshun.github.io/ligra/"
     url = "https://github.com/jshun/ligra/archive/v.1.5.tar.gz"
+
+    license("MIT")
 
     version("1.5", sha256="74113a5a3c19a0e319a5b9ebefc8a67c5d18d4d2a9670363092a966f4163f6b7")
     version("1.4", sha256="bb70a1428c71cf2f7e1512cdedcd8330c754f5a2c8309ab9d9666591cff6a4e1")

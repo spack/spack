@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,9 +12,9 @@ class MiopenTensile(CMakePackage):
     """MIOpenTensile provides host-callable interfaces to Tensile library.
     MIOpenTensile supports one programming model: HIP"""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/MIOpenTensile"
-    git = "https://github.com/ROCmSoftwarePlatform/MIOpenTensile.git"
-    url = "https://github.com/ROCmSoftwarePlatform/MIOpentensile/archive/rocm-5.0.0.tar.gz"
+    homepage = "https://github.com/ROCm/MIOpenTensile"
+    git = "https://github.com/ROCm/MIOpenTensile.git"
+    url = "https://github.com/ROCm/MIOpentensile/archive/rocm-5.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam")
@@ -72,7 +72,7 @@ class MiopenTensile(CMakePackage):
 
     resource(
         name="Tensile",
-        git="https://github.com/ROCmSoftwarePlatform/Tensile.git",
+        git="https://github.com/ROCm/Tensile.git",
         commit="9cbabb07f81e932b9c98bf5ae48fbd7fcef615cf",
         when="@4.5.0:",
     )

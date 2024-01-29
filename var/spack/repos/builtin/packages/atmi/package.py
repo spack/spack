@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,10 +13,12 @@ class Atmi(CMakePackage):
     consistent, declarative API to create task graphs on CPUs and GPUs
     (integrated and discrete)."""
 
-    homepage = "https://github.com/RadeonOpenCompute/atmi"
-    git = "https://github.com/RadeonOpenCompute/atmi.git"
-    url = "https://github.com/RadeonOpenCompute/atmi/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/atmi"
+    git = "https://github.com/ROCm/atmi.git"
+    url = "https://github.com/ROCm/atmi/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
+
+    license("MIT")
 
     maintainers("srekolam", "renjithravindrankannath")
     version("5.5.1", sha256="6b3ee68433506315b55d093a4b47463916874fb6f3f602098eaff2ec283e69ab")

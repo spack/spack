@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class PyDatasets(PythonPackage):
     pypi = "datasets/datasets-1.8.0.tar.gz"
 
     maintainers("thomas-bouvier")
+
+    license("Apache-2.0")
 
     version("2.8.0", sha256="a843b69593914071f921fc1086fde939f30a63415a34cdda5db3c0acdd58aff2")
     version("1.8.0", sha256="d57c32bb29e453ee7f3eb0bbca3660ab4dd2d0e4648efcfa987432624cab29d3")

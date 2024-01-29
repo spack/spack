@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Glpk(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org/software/glpk"
     gnu_mirror_path = "glpk/glpk-4.65.tar.gz"
+
+    license("GPL-3.0-only")
 
     version("5.0", sha256="4a1013eebb50f728fc601bdd833b0b2870333c3b3e5a816eeba921d95bec6f15")
     version("4.65", sha256="4281e29b628864dfe48d393a7bedd781e5b475387c20d8b0158f329994721a10")

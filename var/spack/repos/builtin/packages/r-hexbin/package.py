@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class RHexbin(RPackage):
     grid graphics and formal (S4) classes and methods."""
 
     cran = "hexbin"
+
+    license("GPL-2.0-only")
 
     version("1.28.3", sha256="0eb33511c1a4ff29dda8b89fee420ea7041033f981c7f16484c9f504d749de5f")
     version("1.28.2", sha256="6241f8d3a6c6be2c1c693c3ddb99554bc103e3c6cf602d0c2787c0ce6fd1702d")

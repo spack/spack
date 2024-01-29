@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyDatrie(PythonPackage):
 
     pypi = "datrie/datrie-0.8.2.tar.gz"
     maintainers("marcusboden")
+
+    license("LGPL-2.1-or-later")
 
     version("0.8.2", sha256="525b08f638d5cf6115df6ccd818e5a01298cd230b2dac91c8ff2e6499d18765d")
 

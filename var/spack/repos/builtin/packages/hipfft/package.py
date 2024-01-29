@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,14 +14,19 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
     It sits between the application and the backend FFT library, marshalling
     inputs into the backend and results back to the application."""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/hipFFT"
-    git = "https://github.com/ROCmSoftwarePlatform/hipFFT.git"
-    url = "https://github.com/ROCmSoftwarePlatform/hipfft/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/hipFFT"
+    git = "https://github.com/ROCm/hipFFT.git"
+    url = "https://github.com/ROCm/hipfft/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("renjithravindrankannath", "srekolam")
 
+    license("MIT")
+
     version("master", branch="master")
+    version("6.0.0", sha256="44f328b7862c066459089dfe62833cb7d626c6ceb71c57d8c7d6bba45dad491e")
+    version("5.7.1", sha256="33452576649df479f084076c47d0b30f6f1da34864094bce767dd9bf609f04aa")
+    version("5.7.0", sha256="daa5dc44580145e85ff8ffa7eb40a3d1ef41f3217549c01281715ff696a31588")
     version("5.6.1", sha256="d2ae36b8eacd39b865e8a7972b8eb86bcea2de4ac90711bba7e29b39b01eaa74")
     version("5.6.0", sha256="c7f425b693caf9371b42226d86392335d993a117d23219b6ba1fd13523cb8261")
     version("5.5.1", sha256="3addd15a459752ad657e84c2a7b6b6289600d1d0a5f90d6e0946ba11e8148fc0")
@@ -119,6 +124,9 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
         "5.5.1",
         "5.6.0",
         "5.6.1",
+        "5.7.0",
+        "5.7.1",
+        "6.0.0",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("rocfft@" + ver, when="+rocm @" + ver)
@@ -127,6 +135,8 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
         depends_on(
             "rocfft amdgpu_target={0}".format(tgt), when="+rocm amdgpu_target={0}".format(tgt)
         )
+    # https://github.com/ROCm/rocFFT/pull/85)
+    patch("001-remove-submodule-and-sync-shared-files-from-rocFFT.patch", when="@6.0.0")
 
     def cmake_args(self):
         args = [self.define("BUILD_CLIENTS_SAMPLES", "OFF")]

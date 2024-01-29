@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,7 @@ class G4radioactivedecay(Package):
     version("5.3", sha256="5c8992ac57ae56e66b064d3f5cdfe7c2fee76567520ad34a625bfb187119f8c1")
     version("5.2", sha256="99c038d89d70281316be15c3c98a66c5d0ca01ef575127b6a094063003e2af5d")
     version("5.1.1", sha256="f7a9a0cc998f0d946359f2cb18d30dff1eabb7f3c578891111fc3641833870ae")
+    version("4.0", sha256="ed2053bddee507920a29a27db4364fbef255b951597686b0410d5458e9b38cb5")
 
     def install(self, spec, prefix):
         mkdirp(join_path(prefix.share, "data"))

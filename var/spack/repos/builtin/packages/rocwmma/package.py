@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,12 +19,17 @@ class Rocwmma(CMakePackage):
     generation of kernel assembly, and does not incur additional overhead costs of
     linking to external runtime libraries or having to launch separate kernels."""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/rocWMMA"
-    git = "https://github.com/ROCmSoftwarePlatform/rocWMMA.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocWMMA/archive/refs/tags/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/rocWMMA"
+    git = "https://github.com/ROCm/rocWMMA.git"
+    url = "https://github.com/ROCm/rocWMMA/archive/refs/tags/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
+    license("MIT")
+
     maintainers("srekolam", "renjithravindrankannath")
+    version("6.0.0", sha256="f9e97e7c6c552d43ef8c7348e4402bead2cd978d0f81a9657d6a0f6c83a6139b")
+    version("5.7.1", sha256="a998a1385e6ad7062707ddb9ff82bef727ca48c39a10b4d861667024e3ffd2a3")
+    version("5.7.0", sha256="a8f1b090e9e504a149a924c80cfb6aca817359b43833a6512ba32e178245526f")
     version("5.6.1", sha256="41a5159ee1ad5fc411fe6220f37bd754e26d3883c24c0f2378f50ef628bc1b8f")
     version("5.6.0", sha256="78b6ab10fce71d10a9d762b2eaab3390eb13b05c764f47a3b0a303ec3d37acf8")
     version("5.5.1", sha256="ada30d5e52df5da0d3f4e212a25efb492dbedc129628f4db4ef4ed77667da228")
@@ -72,6 +77,9 @@ class Rocwmma(CMakePackage):
         "5.5.1",
         "5.6.0",
         "5.6.1",
+        "5.7.0",
+        "5.7.1",
+        "6.0.0",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, type="build", when="@" + ver)
@@ -79,7 +87,7 @@ class Rocwmma(CMakePackage):
         depends_on("rocblas@" + ver, type="build", when="@" + ver)
         depends_on("rocm-openmp-extras@" + ver, type="build", when="@" + ver)
 
-    for ver in ["5.6.0", "5.6.1"]:
+    for ver in ["5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0"]:
         depends_on("rocm-smi-lib@" + ver, when="@" + ver)
 
     for tgt in itertools.chain(["auto"], amdgpu_targets):

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -48,6 +48,8 @@ class GitAnnex(Package):
     #     -> gives web url
 
     skip_version_audit = ["platform=darwin"]
+
+    license("AGPL-3.0-or-later")
 
     if platform.system() == "Linux" and platform.machine() == "aarch64":
         # git-annex-standalone-arm64.tar.gz

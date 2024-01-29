@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class DocbookXml(Package):
     url = "https://www.oasis-open.org/docbook/xml/4.5/docbook-xml-4.5.zip"
     list_url = "https://www.oasis-open.org/docbook/xml/"
     list_depth = 1
+
+    license("MIT")
 
     version("4.5", sha256="4e4e037a2b83c98c6c94818390d4bdd3f6e10f6ec62dd79188594e26190dc7b4")
     version("4.4", sha256="02f159eb88c4254d95e831c51c144b1863b216d909b5ff45743a1ce6f5273090")

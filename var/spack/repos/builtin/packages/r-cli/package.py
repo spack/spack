@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class RCli(RPackage):
     'ANSI' terminal colors."""
 
     cran = "cli"
+
+    license("MIT")
 
     version("3.6.1", sha256="be3006cec7e67f9ae25e21b4658c4bec680038c2ef7467df5f14da3311a05e36")
     version("3.4.1", sha256="1c585efbfd8b8685c66fac34bcb60f28c351691bb4b9931df214e6e47fd9744e")

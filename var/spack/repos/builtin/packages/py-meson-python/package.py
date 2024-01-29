@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,13 +14,9 @@ class PyMesonPython(PythonPackage):
 
     maintainers("eli-schwartz", "adamjstewart", "rgommers")
 
-    # Needed for py-scikit-image, deprecate and remove once 0.13.0 is officially released
+    license("MIT")
+
     version("0.13.1", sha256="63b3170001425c42fa4cfedadb9051cbd28925ff8eed7c40d36ba0099e3c7618")
-    version(
-        "0.13.0.pre0",
-        sha256="8d537a0304709c31c11ffa34872a62a4c06a6a6c24fc862b7fb4306f3e881b95",
-        deprecated=True,
-    )
     version("0.12.0", sha256="8cb159a8093a2e73cfa897f8092ec93b74e3842f94dff7fde381c6fe0e0b064d")
     version("0.11.0", sha256="110258837c2ffe762f5f855c7ea5385f1edd44074e93a0f317ffefc7aab42b09")
     version("0.10.0", sha256="08dd122c1074dbd5c55b53993a719cca73dd8216372c91217f7a550260f9e7e1")

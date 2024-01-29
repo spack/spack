@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -65,10 +65,7 @@ class HoomdBlue(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        cmake_args = [
-            "-DPYTHON_EXECUTABLE={0}".format(spec["python"].command.path),
-            "-DCMAKE_INSTALL_PREFIX={0}".format(python_platlib),
-        ]
+        cmake_args = ["-DCMAKE_INSTALL_PREFIX={0}".format(python_platlib)]
 
         # MPI support
         if "+mpi" in spec:

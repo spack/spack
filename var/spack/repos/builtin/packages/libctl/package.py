@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Libctl(AutotoolsPackage):
     homepage = "http://ab-initio.mit.edu/wiki/index.php/Libctl"
     git = "https://github.com/NanoComp/libctl.git"
     url = "https://github.com/NanoComp/libctl/releases/download/v4.2.0/libctl-4.2.0.tar.gz"
+
+    license("GPL-2.0-or-later AND LGPL-2.1-or-later")
 
     version("4.5.1", sha256="fcfeb2f13dda05b560f0ec6872757d9318fdfe8f4bc587eb2053a29ba328ae25")
     version("4.5.0", sha256="621e46a238c4d5e8ce0866183f8e04abac6e1a94d90932af0d56ee61370ea153")

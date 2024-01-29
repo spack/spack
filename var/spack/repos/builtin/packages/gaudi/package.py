@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ class Gaudi(CMakePackage):
     tags = ["hep"]
 
     version("master", branch="master")
+    version("37.2", sha256="9b866caab46e182de98b59eddbde80d6fa0e670fe4a35906f1518b04bd99b2d2")
     version("37.1", sha256="1d7038fd5dfb5f2517ce57623cf8090549ffe2ea8f0171d534e5c1ca20bd009a")
     version("37.0", sha256="823f3821a4f498ddd2dd123fbb8a3787b361ddfd818f4ab13572076fc9afdfe4")
     version("36.14", sha256="b11e0afcb797d61a305856dfe8079d48d74c6b6867ceccc0a83aab5978c9ba5f")
@@ -35,11 +36,6 @@ class Gaudi(CMakePackage):
     version("36.1", sha256="9f718c832313676249e5c3ac76ba4346978ee2328f8cdcb29176498b080402e9")
     version("36.0", sha256="8a0458cef5b616532f9db7cca9fa0e892e602b64c9e93dc0cc6d972e03034830")
     version("35.0", sha256="c01b822f9592a7bf875b9997cbeb3c94dea97cb13d523c12649dbbf5d69b5fa6")
-    version("34.0", sha256="28fc4abb5a6b08da5a6b1300451c7e8487f918b055939877219d454abf7668ae")
-    version("33.2", sha256="26aaf9c4ff237a60ec79af9bd18ad249fc91c16e297ba77e28e4a256123db6e5")
-    version("33.1", sha256="7eb6b2af64aeb965228d4b6ea66c7f9f57f832f93d5b8ad55c9105235af5b042")
-    version("33.0", sha256="76a967c41f579acc432593d498875dd4dc1f8afd5061e692741a355a9cf233c8")
-    version("32.2", sha256="e9ef3eb57fd9ac7b9d5647e278a84b2e6263f29f0b14dbe1321667d44d969d2e")
 
     maintainers("drbenmorgan", "vvolkl", "jmcarcell")
 
@@ -60,6 +56,12 @@ class Gaudi(CMakePackage):
     patch("link_target_fixes.patch", when="@33.0:34")
     patch("link_target_fixes32.patch", when="@:32.2")
     patch("fmt_fix.patch", when="@36.6:36.12 ^fmt@10:")
+    # fix issues with catch2 3.1 and above
+    patch(
+        "https://gitlab.cern.ch/gaudi/Gaudi/-/commit/110f2189f386c3a23150ccdfdc47c1858fc7098e.diff",
+        sha256="b05f6b7c1efb8c3af291c8d81fd1627e58af7c5f9a78a0098c6e3bfd7ec80c15",
+        when="@37.1 ^catch2@3.1:",
+    )
 
     # These dependencies are needed for a minimal Gaudi build
     depends_on("aida")
@@ -72,17 +74,15 @@ class Gaudi(CMakePackage):
     depends_on("clhep")
     depends_on("cmake", type="build")
     depends_on("cppgsl")
-    depends_on("fmt", when="@33.2:")
+    depends_on("fmt")
     depends_on("fmt@:8", when="@:36.9")
     depends_on("intel-tbb@:2020.3", when="@:37.0")
     depends_on("tbb", when="@37.1:")
     depends_on("uuid")
-    depends_on("nlohmann-json", when="@35.0:")
+    depends_on("nlohmann-json")
     depends_on("python", type=("build", "run"))
-    depends_on("python@:3.7", when="@32.2:34", type=("build", "run"))
     depends_on("py-networkx", type=("build", "run"))
     depends_on("py-six", type=("build", "run"))
-    depends_on("py-xenv@1:", when="@:34.9", type=("build", "run"))
     depends_on("range-v3")
     depends_on("root +python +root7 +ssl +tbb +threads")
     depends_on("zlib-api")
@@ -99,13 +99,9 @@ class Gaudi(CMakePackage):
     depends_on("doxygen +graphviz", when="+docs")
     depends_on("gperftools", when="+gperftools")
     depends_on("gdb")
-    depends_on("gsl", when="@:31 +examples")
-    depends_on("heppdt", when="@:34 +examples")
     depends_on("heppdt", when="+heppdt")
     depends_on("jemalloc", when="+jemalloc")
-    depends_on("libpng", when="@:34 +examples")
     depends_on("libunwind", when="+unwind")
-    depends_on("relax", when="@:34 +examples")
     depends_on("xerces-c", when="+xercesc")
     # NOTE: pocl cannot be added as a minimal OpenCL implementation because
     #       ROOT does not like being exposed to LLVM symbols.
@@ -131,9 +127,6 @@ class Gaudi(CMakePackage):
             # todo:
             self.define("GAUDI_USE_INTELAMPLIFIER", False),
         ]
-        # this is not really used in spack builds, but needs to be set
-        if self.spec.version < Version("34"):
-            args.append("-DHOST_BINARY_TAG=x86_64-linux-gcc9-opt")
         return args
 
     def setup_run_environment(self, env):

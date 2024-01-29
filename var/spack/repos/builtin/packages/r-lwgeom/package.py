@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class RLwgeom(RPackage):
     light-weight geometry library used by 'PostGIS' <https://postgis.net/>."""
 
     cran = "lwgeom"
+
+    license("GPL-2.0-only")
 
     version("0.2-11", sha256="7fd73cf58981f9566d946bf63ed6575ea0c70634abeaf4e60ef9615040d63419")
     version("0.2-9", sha256="69b2a2efdafb0b32c801932eee7cd2c4b8402cede6487f4dfea4e14873091aa8")

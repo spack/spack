@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,8 @@ class Aml(AutotoolsPackage):
 
     url = "https://github.com/anlsys/aml/releases/download/v0.2.0/aml-0.2.0.tar.gz"
     git = "https://github.com/anlsys/aml.git"
+
+    license("ISC")
 
     # version string is generated from git tags, requires entire repo
     version("master", branch="master", submodules=True, get_full_repo=True)

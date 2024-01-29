@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,8 @@ class Tcsh(AutotoolsPackage):
     homepage = "https://www.tcsh.org/"
     url = "http://ftp.funet.fi/pub/mirrors/ftp.astron.com/pub/tcsh/tcsh-6.20.00.tar.gz"
     list_url = "https://ftp.funet.fi/pub/mirrors/ftp.astron.com/pub/tcsh/old/"
+
+    license("BSD-3-Clause")
 
     version("6.24.00", sha256="60be2c504bd8f1fa6e424b1956495d7e7ced52a2ac94db5fd27f4b6bfc8f74f0")
     version("6.22.02", sha256="ed287158ca1b00ba477e8ea57bac53609838ebcfd05fcb05ca95021b7ebe885b")

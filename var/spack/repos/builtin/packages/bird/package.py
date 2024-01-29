@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Bird(AutotoolsPackage):
 
     homepage = "https://bird.network.cz/"
     url = "https://github.com/BIRD/bird/archive/v2.0.2.tar.gz"
+
+    license("GPL-2.0-or-later")
 
     version("2.0.2", sha256="bd42d48fbcc2c0046d544f1183cd98193ff15b792d332ff45f386b0180b09335")
     version("2.0.1", sha256="cd6ea4a39ca97ad16d364bf80f919f0e75eba02dd7fe46be40f55d78d022244a")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Helics(CMakePackage):
     git = "https://github.com/GMLC-TDC/HELICS.git"
 
     maintainers("nightlark")
+
+    license("BSD-3-Clause")
 
     version("develop", branch="develop", submodules=True)
     version("main", branch="main", submodules=True)

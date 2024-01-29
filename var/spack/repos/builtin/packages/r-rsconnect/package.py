@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class RRsconnect(RPackage):
     applications, Plumber APIs, plots, and static web content."""
 
     cran = "rsconnect"
+
+    license("GPL-2.0-only")
 
     version("0.8.29", sha256="852899d2aaf90bcedf4d191a9e00c770e8ee4233235169fc97e6aa636de01c43")
     version("0.8.28", sha256="25b9a947772ada9593da5c48297b7a7dd0e11aa73fbb9a282631c75ec49616e0")

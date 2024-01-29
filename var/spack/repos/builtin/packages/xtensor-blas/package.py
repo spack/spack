@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class XtensorBlas(CMakePackage):
     homepage = "https://xtensor-stack.github.io"
     url = "https://github.com/xtensor-stack/xtensor-blas/archive/refs/tags/0.20.0.tar.gz"
     git = "git://github.com/xtensor-stack/xtensor-blas.git"
+
+    license("BSD-3-Clause")
 
     version("develop", branch="master")
     version("0.20.0", sha256="272f5d99bb7511a616bfe41b13a000e63de46420f0b32a25fa4fb935b462c7ff")

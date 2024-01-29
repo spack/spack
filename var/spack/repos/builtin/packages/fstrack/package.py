@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Fstrack(MakefilePackage):
 
     homepage = "http://www-udc.ig.utexas.edu/external/becker/data.html#fstrack"
     url = "http://www-udc.ig.utexas.edu/external/becker/software/fstrack-0.5.3.092918.tgz"
+
+    license("Unlicense")
 
     version(
         "0.5.3.092918", sha256="34b31687fdfa207b9659425238b805eaacf0b0209e7e3343c1a3cb4c9e62345d"

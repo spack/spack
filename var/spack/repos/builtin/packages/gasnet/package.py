@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,15 +37,36 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
     version("main", branch="stable")
     version("master", branch="master")
 
+    version("2023.9.0", sha256="2d9f15a794e10683579ce494cd458b0dd97e2d3327c4d17e1fea79bd95576ce6")
     version("2023.3.0", sha256="e1fa783d38a503cf2efa7662be591ca5c2bb98d19ac72a9bc6da457329a9a14f")
     version("2022.9.2", sha256="2352d52f395a9aa14cc57d82957d9f1ebd928d0a0021fd26c5f1382a06cd6f1d")
     version("2022.9.0", sha256="6873ff4ad8ebee49da4378f2d78095a6ccc31333d6ae4cd739b9f772af11f936")
     version("2022.3.0", sha256="91b59aa84c0680c807e00d3d1d8fa7c33c1aed50b86d1616f93e499620a9ba09")
-    version("2021.9.0", sha256="1b6ff6cdad5ecf76b92032ef9507e8a0876c9fc3ee0ab008de847c1fad0359ee")
-    version("2021.3.0", sha256="8a40fb3fa8bacc3922cd4d45217816fcb60100357ab97fb622a245567ea31747")
-    version("2020.10.0", sha256="ed17baf7fce90499b539857ee37b3eea961aa475cffbde77e4c607a34ece06a0")
-    version("2020.3.0", sha256="019eb2d2284856e6fabe6c8c0061c874f10e95fa0265245f227fd3497f1bb274")
-    version("2019.9.0", sha256="117f5fdb16e53d0fa8a47a1e28cccab1d8020ed4f6e50163d985dc90226aaa2c")
+    version(
+        "2021.9.0",
+        deprecated=True,
+        sha256="1b6ff6cdad5ecf76b92032ef9507e8a0876c9fc3ee0ab008de847c1fad0359ee",
+    )
+    version(
+        "2021.3.0",
+        deprecated=True,
+        sha256="8a40fb3fa8bacc3922cd4d45217816fcb60100357ab97fb622a245567ea31747",
+    )
+    version(
+        "2020.10.0",
+        deprecated=True,
+        sha256="ed17baf7fce90499b539857ee37b3eea961aa475cffbde77e4c607a34ece06a0",
+    )
+    version(
+        "2020.3.0",
+        deprecated=True,
+        sha256="019eb2d2284856e6fabe6c8c0061c874f10e95fa0265245f227fd3497f1bb274",
+    )
+    version(
+        "2019.9.0",
+        deprecated=True,
+        sha256="117f5fdb16e53d0fa8a47a1e28cccab1d8020ed4f6e50163d985dc90226aaa2c",
+    )
     # Do NOT add older versions here.
     # GASNet-EX releases over 2 years old are not supported.
 
@@ -70,12 +91,30 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
         default=False,
         description="Enables support for the CUDA memory kind in some conduits.\n"
         + "NOTE: Requires CUDA Driver library be present on the build system",
+        when="@2020.11:",
+    )
+    conflicts(
+        "+cuda",
+        when="@:2020.10",
+        msg="GASNet version 2020.11.0 or newer required for CUDA support",
     )
 
     variant(
         "rocm",
         default=False,
         description="Enables support for the ROCm/HIP memory kind in some conduits",
+        when="@2021.9:",
+    )
+    conflicts(
+        "+rocm", when="@:2021.8", msg="GASNet version 2021.9.0 or newer required for ROCm support"
+    )
+
+    variant(
+        "level_zero",
+        default=False,
+        description="Enables *experimental* support for the Level Zero "
+        + "memory kind on Intel GPUs in some conduits",
+        when="@2023.9.0:",
     )
 
     depends_on("mpi", when="conduits=mpi")
@@ -84,6 +123,8 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
     depends_on("automake@1.16:", type="build", when="@master:")
 
     conflicts("^hip@:4.4.0", when="+rocm")
+
+    depends_on("oneapi-level-zero@1.8.0:", when="+level_zero")
 
     def install(self, spec, prefix):
         if spec.satisfies("@master:"):
@@ -119,6 +160,10 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
 
             if "+rocm" in spec:
                 options.append("--enable-kind-hip")
+
+            if "+level_zero" in spec:
+                options.append("--enable-kind-ze")
+                options.append("--with-ze-home=" + spec["oneapi-level-zero"].prefix)
 
             if "conduits=mpi" in spec:
                 options.append("--enable-mpi-compat")

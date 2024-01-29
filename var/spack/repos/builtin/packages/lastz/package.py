@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Lastz(MakefilePackage):
 
     homepage = "https://lastz.github.io/lastz"
     url = "https://github.com/lastz/lastz/archive/1.04.00.tar.gz"
+
+    license("MIT")
 
     version("1.04.22", sha256="4c829603ba4aed7ddf64255b528cd88850e4557382fca29580d3576c25c5054a")
     version("1.04.15", sha256="46a5cfb1fd41911a36fce5d3a2721ebfec9146952943b302e78b0dfffddd77f8")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class RSourcetools(RPackage):
     helpers for interacting with the tokenized representation of R code."""
 
     cran = "sourcetools"
+
+    license("MIT")
 
     version("0.1.7-1", sha256="96812bdb7a0dd99690d84e4b0a3def91389e4290f53f01919ef28a50554e31d1")
     version("0.1.7", sha256="47984406efb3b3face133979ccbae9fefb7360b9a6ca1a1c11473681418ed2ca")

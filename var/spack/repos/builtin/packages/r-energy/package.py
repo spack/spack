@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class REnergy(RPackage):
     statistics/methods are implemented."""
 
     cran = "energy"
+
+    license("GPL-2.0-or-later")
 
     version("1.7-11", sha256="c29f8fb000c979d2504f6f6d3a99c773004f77d58793e7e2a5766155272b6511")
     version("1.7-10", sha256="543de4875c46cc90e711e71c45b082d962fbb5158a094f9f10d37d3f57e1bea7")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Libmicrohttpd(AutotoolsPackage):
     url = "https://ftp.gnu.org/gnu/libmicrohttpd/libmicrohttpd-0.9.71.tar.gz"
 
     maintainers("hainest")
+
+    license("LGPL-2.1-or-later")
 
     version("0.9.76", sha256="f0b1547b5a42a6c0f724e8e1c1cb5ce9c4c35fb495e7d780b9930d35011ceb4c")
     version("0.9.75", sha256="9278907a6f571b391aab9644fd646a5108ed97311ec66f6359cebbedb0a4e3bb")

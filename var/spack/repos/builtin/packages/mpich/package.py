@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,8 @@ class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
     executables = ["^mpichversion$"]
 
     keep_werror = "specific"
+
+    license("Unlicense")
 
     version("develop", submodules=True)
     version("4.1.2", sha256="3492e98adab62b597ef0d292fb2459b6123bc80070a8aa0a30be6962075a12f0")
@@ -181,6 +183,26 @@ supported, and netmod is ignored if device is ch3:sock.""",
         "https://github.com/pmodels/mpich/commit/b324d2de860a7a2848dc38aefb8c7627a72d2003.patch?full_index=1",
         sha256="5f48d2dd8cc9f681cf710b864f0d9b00c599f573a75b1e1391de0a3d697eba2d",
         when="@=3.3",
+    )
+
+    # Fix SLURM hostlist_t usage
+    # See https://github.com/pmodels/mpich/issues/6806
+    # and https://github.com/pmodels/mpich/pull/6820
+    patch(
+        "https://github.com/pmodels/mpich/commit/7a28682a805acfe84a4ea7b41cea079696407398.patch?full_index=1",
+        sha256="8cc80a8ffc3f1c907b1d8176129a0c1d01794a95adbed5b5357f50c13f6560e4",
+        when="@4.1:4.1.2 +slurm ^slurm@23-11-1-1:",
+    )
+    # backports of fix down to v3.3
+    patch(
+        "mpich40_slurm_hostlist.patch",
+        sha256="39aa1353305b7b03bc5c645c87d5299bd5d2ff676750898ba925f6cb9b716bdb",
+        when="@4.0 +slurm ^slurm@23-11-1-1:",
+    )
+    patch(
+        "mpich33_slurm_hostlist.patch",
+        sha256="d6ec26adcf2d08d0739be44ab65b928a7a88e9ff1375138a0593678eedd420ab",
+        when="@3.3:3.4 +slurm ^slurm@23-11-1-1:",
     )
 
     # Fix reduce operations for unsigned integers

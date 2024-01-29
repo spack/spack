@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Memcached(AutotoolsPackage):
 
     homepage = "https://github.com/memcached/memcached"
     url = "https://github.com/memcached/memcached/archive/1.5.20.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("1.5.20", sha256="ee93aff47123e0b464e9f007b651b14c89c19e0c20352d8d1c399febbb038cb6")
     version("1.5.19", sha256="7af7a2e9b1f468d7f6056f23ce21c04936ce6891f8cb8cd54e133f489a8226e8")

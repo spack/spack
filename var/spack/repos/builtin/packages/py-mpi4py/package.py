@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class PyMpi4py(PythonPackage):
 
     pypi = "mpi4py/mpi4py-3.0.3.tar.gz"
     git = "https://github.com/mpi4py/mpi4py.git"
+
+    license("BSD-2-Clause")
 
     version("master", branch="master")
     version("3.1.5", sha256="a706e76db9255135c2fb5d1ef54cb4f7b0e4ad9e33cbada7de27626205f2a153")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyAiobotocore(PythonPackage):
 
     homepage = "https://aiobotocore.readthedocs.io/en/latest/"
     pypi = "aiobotocore/aiobotocore-1.2.1.tar.gz"
+
+    license("Apache-2.0")
 
     version("2.5.0", sha256="6a5b397cddd4f81026aa91a14c7dd2650727425740a5af8ba75127ff663faf67")
     version("2.4.2", sha256="0603b74a582dffa7511ce7548d07dc9b10ec87bc5fb657eb0b34f9bd490958bf")

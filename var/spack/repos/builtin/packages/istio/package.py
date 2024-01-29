@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,6 +34,8 @@ class Istio(Package):
     url = "https://github.com/istio/istio/releases/download/1.6.5/istio-1.6.5-linux-arm64.tar.gz"
     list_url = "https://github.com/istio/istio/releases/download"
     list_depth = 1
+
+    license("Apache-2.0")
 
     for ver, packages in _versions.items():
         key = "{0}-{1}".format(platform.system(), platform.machine())

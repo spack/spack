@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,12 @@ class Resolve(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("cameronrutherford", "pelesh", "ryandanehy", "kswirydo")
 
-    # version("1.0.0", submodules=False, branch="develop")
+    version(
+        "0.99.1",
+        submodules=False,
+        tag="v0.99.1",
+        commit="e10dd417e836f47b3dc7c8b123a81bfbb654ee82",
+    )
     version("develop", submodules=False, branch="develop")
 
     variant("klu", default=True, description="Use KLU, AMD and COLAMD Libraries from SuiteSparse")

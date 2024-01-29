@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,12 +18,6 @@ class PyItk(PythonPackage):
     if sys.platform == "darwin":
         # version 5.1.1
         version(
-            "5.1.1-cp37",
-            url="https://pypi.io/packages/cp35/i/itk/itk-5.1.1-cp37-cp37m-macosx_10_9_x86_64.whl",
-            sha256="f112515483a073fae96d5cfce4eb9f95cbf57a145bbd196b2369a3194e27febf",
-            expand=False,
-        )
-        version(
             "5.1.1-cp38",
             url="https://pypi.io/packages/cp35/i/itk/itk-5.1.1-cp38-cp38-macosx_10_9_x86_64.whl",
             sha256="94b09ab9dd59ceaecc456ede2b719a44b8f0d54d92409eede372c6004395ae7b",
@@ -31,12 +25,6 @@ class PyItk(PythonPackage):
         )
 
         # version 5.1.2
-        version(
-            "5.1.2-cp37",
-            url="https://pypi.io/packages/cp37/i/itk/itk-5.1.2-cp37-cp37m-macosx_10_9_x86_64.whl",
-            sha256="0b494485d05306240eaa5ab1a5e00895fcce8fe684c632c02a2373f36d123902",
-            expand=False,
-        )
         version(
             "5.1.2-cp38",
             url="https://pypi.io/packages/cp38/i/itk/itk-5.1.2-cp38-cp38-macosx_10_9_x86_64.whl",
@@ -51,12 +39,6 @@ class PyItk(PythonPackage):
         )
 
         # version 5.3.0
-        version(
-            "5.3.0-cp37",
-            url="https://pypi.io/packages/cp37/i/itk/itk-5.3.0-cp37-cp37m-macosx_10_9_x86_64.whl",
-            sha256="493e28a3c9f38502f82613fa6ab9855fb19bff671095c287100a441830a921d0",
-            expand=False,
-        )
         version(
             "5.3.0-cp38",
             url="https://pypi.io/packages/cp38/i/itk/itk-5.3.0-cp38-cp38-macosx_10_9_x86_64.whl",
@@ -84,12 +66,6 @@ class PyItk(PythonPackage):
     elif sys.platform.startswith("linux"):
         # version 5.1.1
         version(
-            "5.1.1-cp37",
-            url="https://pypi.io/packages/cp37/i/itk/itk-5.1.1-cp37-cp37m-manylinux1_x86_64.whl",
-            sha256="7c313d2e3a3e37b8e78d0b2d70be2d478c87fde6f27912c714c855a05584b8ee",
-            expand=False,
-        )
-        version(
             "5.1.1-cp38",
             url="https://pypi.io/packages/cp38/i/itk/itk-5.1.1-cp38-cp38-manylinux1_x86_64.whl",
             sha256="14cd6c3a25f0d69f45eda74b006eceeaf8e2b2fcbe7c343e49683edf97e0fb14",
@@ -97,12 +73,6 @@ class PyItk(PythonPackage):
         )
 
         # version 5.1.2
-        version(
-            "5.1.2-cp37",
-            url="https://pypi.io/packages/cp37/i/itk/itk-5.1.2-cp37-cp37m-manylinux1_x86_64.whl",
-            sha256="064d9cfdd9547ae3ed850c35b989e0141c4bd434672bc2dd124248aab7bdf09a",
-            expand=False,
-        )
         version(
             "5.1.2-cp38",
             url="https://pypi.io/packages/cp38/i/itk/itk-5.1.2-cp38-cp38-manylinux1_x86_64.whl",
@@ -117,12 +87,6 @@ class PyItk(PythonPackage):
         )
 
         # version 5.3.0
-        version(
-            "5.3.0-cp37",
-            url="https://pypi.io/packages/cp37/i/itk/itk-5.3.0-cp37-cp37m-manylinux_2_28_x86_64.whl",
-            sha256="265c8b28469164a45fd9d94c211b2ed017acc7cda7a9e74bbb20b38c49c1af61",
-            expand=False,
-        )
         version(
             "5.3.0-cp38",
             url="https://pypi.io/packages/cp38/i/itk/itk-5.3.0-cp38-cp38-manylinux_2_28_x86_64.whl",
@@ -148,7 +112,6 @@ class PyItk(PythonPackage):
             expand=False,
         )
 
-    depends_on("python@3.7.0:3.7", when="@5.1.1-cp37,5.1.2-cp37,5.3.0-cp37", type=("build", "run"))
     depends_on("python@3.8.0:3.8", when="@5.1.1-cp38,5.1.2-cp38,5.3.0-cp38", type=("build", "run"))
     depends_on("python@3.9.0:3.9", when="@5.1.2-cp39,5.3.0-cp39", type=("build", "run"))
     depends_on("python@3.10.0:3.10", when="@5.3.0-cp310", type=("build", "run"))

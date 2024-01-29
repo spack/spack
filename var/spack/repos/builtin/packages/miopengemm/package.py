@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,9 +12,9 @@ class Miopengemm(CMakePackage):
     """An OpenCL general matrix multiplication (GEMM) API
     and kernel generator"""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/MIOpenGEMM"
-    git = "https://github.com/ROCmSoftwarePlatform/MIOpenGEMM.git"
-    url = "https://github.com/ROCmSoftwarePlatform/MIOpenGEMM/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/MIOpenGEMM"
+    git = "https://github.com/ROCm/MIOpenGEMM.git"
+    url = "https://github.com/ROCm/MIOpenGEMM/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
@@ -22,9 +22,11 @@ class Miopengemm(CMakePackage):
 
     def url_for_version(self, version):
         if version == Version("1.1.6"):
-            return "https://github.com/ROCmSoftwarePlatform/MIOpenGEMM/archive/1.1.6.tar.gz"
-        url = "https://github.com/ROCmSoftwarePlatform/MIOpenGEMM/archive/rocm-{0}.tar.gz"
+            return "https://github.com/ROCm/MIOpenGEMM/archive/1.1.6.tar.gz"
+        url = "https://github.com/ROCm/MIOpenGEMM/archive/rocm-{0}.tar.gz"
         return url.format(version)
+
+    license("MIT")
 
     version("5.5.1", sha256="a997b560521641e7173613cf547ecde5d15ac6fac1786d392b0f133c91f99a40")
     version("5.5.0", sha256="ffd9775129564662b338952588057a088f7e9723b4a9a766b2dd96fdc0992c26")

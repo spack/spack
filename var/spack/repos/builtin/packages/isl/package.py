@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Isl(AutotoolsPackage):
 
     homepage = "https://libisl.sourceforge.io/"
     url = "https://libisl.sourceforge.io/isl-0.21.tar.bz2"
+
+    license("MIT")
 
     version("0.25", sha256="4305c54d4eebc4bf3ce365af85f04984ef5aa97a52e01128445e26da5b1f467a")
     version("0.24", sha256="fcf78dd9656c10eb8cf9fbd5f59a0b6b01386205fe1934b3b287a0a1898145c0")

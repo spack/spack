@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyF90wrap(PythonPackage):
 
     homepage = "https://github.com/jameskermode/f90wrap"
     pypi = "f90wrap/f90wrap-0.2.3.tar.gz"
+
+    license("LGPL-3.0-only")
 
     version("0.2.6", sha256="e0748eb5e288be7f47829a272fc230373469fb40afccddf91e9973c56da43dd4")
     version("0.2.3", sha256="5577ea92934c5aad378df21fb0805b5fb433d6f2b8b9c1bf1a9ec1e3bf842cff")

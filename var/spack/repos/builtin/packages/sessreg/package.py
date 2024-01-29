@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Sessreg(AutotoolsPackage, XorgPackage):
 
     homepage = "https://cgit.freedesktop.org/xorg/app/sessreg"
     xorg_mirror_path = "app/sessreg-1.1.0.tar.gz"
+
+    license("ICU")
 
     version("1.1.3", sha256="6e3e917e881132a7a9ccb181ddd83fe08a99668892455d808c911ad38beea215")
     version("1.1.2", sha256="dbfe74c9af90696b2c6800bd58799e937a6a10eb48a49cc22053e3538fbe361a")

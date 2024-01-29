@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class XercesC(AutotoolsPackage):
 
     homepage = "https://xerces.apache.org/xerces-c"
     url = "https://archive.apache.org/dist/xerces/c/3/sources/xerces-c-3.2.1.tar.bz2"
+
+    license("Apache-2.0")
 
     version("3.2.4", sha256="74aa626fc71e729ee227602870dd29a5a01cd8c9c1c7330837a51da2eb5722cc")
     version("3.2.3", sha256="45c2329e684405f2b8854ecbddfb8d5b055cdf0fe4d35736cc352c504989bbb6")

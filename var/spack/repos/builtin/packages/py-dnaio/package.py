@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyDnaio(PythonPackage):
     homepage = "https://github.com/marcelm/dnaio"
     pypi = "dnaio/dnaio-0.3.tar.gz"
     git = "https://github.com/marcelm/dnaio.git"
+
+    license("MIT")
 
     version("0.10.0", sha256="de51a50948f00b864297d74eddb588fbee5ac229855754e77564d18b24619d18")
     version("0.9.1", sha256="a1a14181995b27197b7e2b8897994a3107c649b9fc2dfe263caff3c455b0d0c4")

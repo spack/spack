@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -91,9 +91,9 @@ def view_copy(src: str, dst: str, view, spec: Optional[spack.spec.Spec] = None):
         prefix_to_projection[spack.store.STORE.layout.root] = view._root
 
         # This is vestigial code for the *old* location of sbang.
-        prefix_to_projection[
-            "#!/bin/bash {0}/bin/sbang".format(spack.paths.spack_root)
-        ] = sbang.sbang_shebang_line()
+        prefix_to_projection["#!/bin/bash {0}/bin/sbang".format(spack.paths.spack_root)] = (
+            sbang.sbang_shebang_line()
+        )
 
         spack.relocate.relocate_text(files=[dst], prefixes=prefix_to_projection)
 

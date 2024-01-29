@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,9 @@ class Halide(CMakePackage, PythonExtension):
     homepage = "https://halide-lang.org/"
     url = "https://github.com/halide/Halide/archive/refs/tags/v14.0.0.tar.gz"
     git = "https://github.com/halide/Halide.git"
+
+    license("MIT")
+
     maintainers("wraith1995")
     version("main", branch="main")
     version("15.0.0", sha256="6680424f80c5731a85d977c06327096afe5af31da3667e91d4d36a25fabdda15")
@@ -105,7 +108,6 @@ class Halide(CMakePackage, PythonExtension):
 
         if "+python" in spec:
             args += [
-                self.define("Python3_EXECUTABLE", spec["python"].command.path),
                 self.define("PYBIND11_USE_FETCHCONTENT", False),
                 self.define("Halide_INSTALL_PYTHONDIR", python_platlib),
             ]

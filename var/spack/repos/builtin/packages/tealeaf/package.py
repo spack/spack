@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class Tealeaf(MakefilePackage):
     url = "https://downloads.mantevo.org/releaseTarballs/miniapps/TeaLeaf/TeaLeaf-1.0.tar.gz"
 
     tags = ["proxy-app"]
+
+    license("LGPL-3.0-only")
 
     version("1.0", sha256="e11799d1a3fbe76041333ba98858043b225c5d65221df8c600479bc55e7197ce")
 

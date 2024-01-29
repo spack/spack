@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Benchmark(CMakePackage):
     homepage = "https://github.com/google/benchmark"
     url = "https://github.com/google/benchmark/archive/v1.6.0.tar.gz"
     git = "https://github.com/google/benchmark.git"
+
+    license("Apache-2.0")
 
     # first properly installed CMake config packages in
     # 1.2.0 release: https://github.com/google/benchmark/issues/363

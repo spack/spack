@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,8 @@ class Clingo(CMakePackage):
     git = "https://github.com/potassco/clingo.git"
     tags = ["windows"]
     maintainers("tgamblin", "alalazo")
+
+    license("MIT")
 
     version("master", branch="master", submodules=True)
     version("spack", commit="2a025667090d71b2c9dce60fe924feb6bde8f667", submodules=True)
@@ -70,6 +72,7 @@ class Clingo(CMakePackage):
     patch("python38.patch", when="@5.3:5.4.0")
     patch("size-t.patch", when="%msvc")
     patch("vs2022.patch", when="%msvc@19.30:")
+    patch("clingo_msc_1938_native_handle.patch", when="%msvc@19.38:")
 
     # TODO: Simplify this after Spack 0.21 release. The old concretizer has problems with
     # py-setuptools ^python@3.6, so we only apply the distutils -> setuptools patch for Python 3.12
@@ -87,22 +90,6 @@ class Clingo(CMakePackage):
                 "clasp/CMakeLists.txt",
                 "clasp/libpotassco/CMakeLists.txt",
             )
-
-    @property
-    def cmake_python_hints(self):
-        """Return standard CMake defines to ensure that the
-        current spec is the one found by CMake find_package(Python, ...)
-        """
-        python = self.spec["python"]
-        return [
-            self.define("Python_EXECUTABLE", python.command.path),
-            self.define("Python_INCLUDE_DIR", python.headers.directories[0]),
-            self.define("Python_LIBRARIES", python.libs[0]),
-            # XCode command line tools on macOS has no python-config executable, and
-            # CMake assumes you have python 2 if it does not find a python-config,
-            # so we set the version explicitly so that it's passed to FindPython.
-            self.define("CLINGO_PYTHON_VERSION", python.version.up_to(2)),
-        ]
 
     @property
     def cmake_py_shared(self):
@@ -124,8 +111,6 @@ class Clingo(CMakePackage):
                 "-DPYCLINGO_USE_INSTALL_PREFIX=ON",
                 self.cmake_py_shared,
             ]
-            if self.spec["cmake"].satisfies("@3.16.0:"):
-                args += self.cmake_python_hints
         else:
             args += ["-DCLINGO_BUILD_WITH_PYTHON=OFF"]
 

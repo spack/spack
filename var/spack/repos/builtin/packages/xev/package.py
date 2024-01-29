@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Xev(AutotoolsPackage, XorgPackage):
 
     homepage = "https://cgit.freedesktop.org/xorg/app/xev"
     xorg_mirror_path = "app/xev-1.2.2.tar.gz"
+
+    license("MIT")
 
     version("1.2.5", sha256="a948974ede621a8402ed9ea64f1ec83992285aa4fbb9d40b52985156c61a358a")
     version("1.2.4", sha256="6b1f94813f008a4ba45e0a2d4e1b64deaab1def56fabd7fac3621106cbaa3383")

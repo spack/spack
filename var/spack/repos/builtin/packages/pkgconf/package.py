@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,9 @@ class Pkgconf(AutotoolsPackage):
     homepage = "http://pkgconf.org/"
     # URL must remain http:// so Spack can bootstrap curl
     url = "https://distfiles.ariadne.space/pkgconf/pkgconf-1.6.3.tar.xz"
+    tags = ["build-tools"]
+
+    license("ISC")
 
     version("1.9.5", sha256="1ac1656debb27497563036f7bffc281490f83f9b8457c0d60bcfb638fb6b6171")
     version("1.8.0", sha256="ef9c7e61822b7cb8356e6e9e1dca58d9556f3200d78acab35e4347e9d4c2bbaf")

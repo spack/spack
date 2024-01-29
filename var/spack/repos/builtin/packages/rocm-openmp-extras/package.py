@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,8 +8,8 @@ import re
 
 from spack.package import *
 
-tools_url = "https://github.com/ROCm-Developer-Tools"
-compute_url = "https://github.com/RadeonOpenCompute"
+tools_url = "https://github.com/ROCm"
+compute_url = "https://github.com/ROCm"
 
 # Arrays of hashes are in order of the versions array below
 # For example array[0] = 3.9.0, array[1] = 3.10.0, etc.
@@ -39,6 +39,9 @@ aomp = [
     "9ec03a69cc462ada43e1fd4ca905a765b08c10e0911fb7a202c893cc577855e6",
     "0673820a81986c9e2f28f15bbb45ad18934bca56a9d08aae6c49ec3895b38487",
     "6c051bf7625f682ba3d2ea80b46a38ca2cbcd20f5d89ae3433602d3e7ef0403a",
+    "4f34fa02db410808c5e629f30f8804210b42c4ff7d31aa80606deaed43054c3c",
+    "ed7bbf92230b6535a353ed032a39a9f16e9987397798100392fc25e40c8a1a4e",
+    "1b2c0934ef16e17b2377944fae8c9b3db6dc64b7e43932ddfe2eeefdf6821410",
 ]
 
 devlib = [
@@ -66,6 +69,9 @@ devlib = [
     "3b5f6dd85f0e3371f6078da7b59bf77d5b210e30f1cc66ef1e2de6bbcb775833",
     "efb5dcdca9b3a9fbe408d494fb4a23e0b78417eb5fa8eebd4a5d226088f28921",
     "f0dfab272ff936225bfa1e9dabeb3c5d12ce08b812bf53ffbddd2ddfac49761c",
+    "0f8780b9098573f1c456bdc84358de924dcf00604330770a383983e1775bf61e",
+    "703de8403c0bd0d80f37c970a698f10f148daf144d34f982e4484d04f7c7bbef",
+    "198df4550d4560537ba60ac7af9bde31d59779c8ec5d6309627f77a43ab6ef6f",
 ]
 
 llvm = [
@@ -93,6 +99,9 @@ llvm = [
     "7d7181f20f89cb0715191aa32914186c67a34258c13457055570d47e15296553",
     "e922bd492b54d99e56ed88c81e2009ed6472059a180b10cc56ce1f9bd2d7b6ed",
     "045e43c0c4a3f4f2f1db9fb603a4f1ea3d56e128147e19ba17909eb57d7f08e5",
+    "4abdf00b297a77c5886cedb37e63acda2ba11cb9f4c0a64e133b05800aadfcf0",
+    "6b54c422e45ad19c9bf5ab090ec21753e7f7d854ca78132c30eb146657b168eb",
+    "c673708d413d60ca8606ee75c77e9871b6953c59029c987b92f2f6e85f683626",
 ]
 
 flang = [
@@ -120,6 +129,9 @@ flang = [
     "7c3b4eb3e95b9e2f91234f202a76034628d230a92e57b7c5ee9dcca1097bec46",
     "fcefebddca0b373da81ff84f0f5469a1ef77a05430a5195d0f2e6399d3af31c3",
     "5ebcbca2e03bd0686e677f44ea551e97bd9395c6b119f832fa784818733aa652",
+    "cc4f1973b1b8e7bcc4f09e3381bae4e1a2e51ea4e2598fc1b520ccb8bf24d28c",
+    "8fd618d81af092416b267c4d00c801731f7a00c0f8d4aedb795e52a4ec1bf183",
+    "fcb319ddb2aa3004a6ae60370ab4425f529336b1cee50f29200e697e61b53586",
 ]
 
 extras = [
@@ -147,6 +159,9 @@ extras = [
     "8955aa9d039fd6c1ff2e26d7298f0bf09bbcf03f09c6df92c91a9ab2510df9da",
     "017bfed52fbe08185d8dbde79377918454215683562519a9e47acf403d9a1c29",
     "437e2017cfe2ab73b15ada0fc1ea88f794f0b108cc5410f457268ae7e4e8985a",
+    "be59433dd85d4b8f0eaff87e0cc424a814152c67f3a682d1343c4bd61dd49a0f",
+    "8060c6879708faf5f7d417b19a479dec9b7b9583a1b885f12d247faf831f7f0b",
+    "f37e1107e4da5b083e794244f3d0c9fd073ccb6fd6015e635349d8f0d679c4b8",
 ]
 
 versions = [
@@ -174,6 +189,9 @@ versions = [
     "5.5.1",
     "5.6.0",
     "5.6.1",
+    "5.7.0",
+    "5.7.1",
+    "6.0.0",
 ]
 versions_dict = dict()  # type: Dict[str,Dict[str,str]]
 components = ["aomp", "devlib", "llvm", "flang", "extras"]
@@ -191,10 +209,15 @@ class RocmOpenmpExtras(Package):
     """OpenMP support for ROCm LLVM."""
 
     homepage = tools_url + "/aomp"
-    url = tools_url + "/aomp/archive/rocm-5.5.0.tar.gz"
+    url = tools_url + "/aomp/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
+    license("Apache-2.0")
+
     maintainers("srekolam", "renjithravindrankannath", "estewart08")
+    version("6.0.0", sha256=versions_dict["6.0.0"]["aomp"])
+    version("5.7.1", sha256=versions_dict["5.7.1"]["aomp"])
+    version("5.7.0", sha256=versions_dict["5.7.0"]["aomp"])
     version("5.6.1", sha256=versions_dict["5.6.1"]["aomp"])
     version("5.6.0", sha256=versions_dict["5.6.0"]["aomp"])
     version("5.5.1", sha256=versions_dict["5.5.1"]["aomp"])
@@ -227,6 +250,8 @@ class RocmOpenmpExtras(Package):
     depends_on("awk", type="build")
     depends_on("elfutils", type=("build", "link"))
     depends_on("libffi", type=("build", "link"))
+    depends_on("libdrm", when="@5.7:6.0")
+    depends_on("numactl", when="@5.7:6.0")
 
     for ver in [
         "3.9.0",
@@ -253,13 +278,16 @@ class RocmOpenmpExtras(Package):
         "5.5.1",
         "5.6.0",
         "5.6.1",
+        "5.7.0",
+        "5.7.1",
+        "6.0.0",
     ]:
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
         depends_on("comgr@" + ver, when="@" + ver)
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@{0} ~openmp".format(ver), when="@" + ver)
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
 
         # tag changed to 'rocm-' in 4.0.0
@@ -307,6 +335,7 @@ class RocmOpenmpExtras(Package):
             placement="llvm-project",
             when="@" + ver,
         )
+    patch("0001-Linking-hsakmt-libdrm-and-numactl-libraries.patch", when="@5.7:6.0")
 
     def setup_run_environment(self, env):
         devlibs_prefix = self.spec["llvm-amdgpu"].prefix
@@ -476,6 +505,9 @@ class RocmOpenmpExtras(Package):
         devlibs_src = "{0}/rocm-openmp-extras/rocm-device-libs".format(src)
         hsa_prefix = self.spec["hsa-rocr-dev"].prefix
         hsakmt_prefix = self.spec["hsakmt-roct"].prefix
+        if self.spec.satisfies("@5.7:6.0"):
+            libdrm_prefix = self.spec["libdrm"].prefix
+            numactl_prefix = self.spec["numactl"].prefix
         comgr_prefix = self.spec["comgr"].prefix
         llvm_inc = "/rocm-openmp-extras/llvm-project/llvm/include"
         llvm_prefix = self.spec["llvm-amdgpu"].prefix
@@ -552,7 +584,12 @@ class RocmOpenmpExtras(Package):
             "-DCMAKE_CXX_FLAGS=-isystem{0} -I{1}".format(elfutils_inc, ffi_inc),
             "-DNEW_BC_PATH=1",
         ]
-
+        if self.spec.satisfies("@5.7:6.0"):
+            openmp_common_args += [
+                "-DLIBDRM_LIB={0}/lib".format(libdrm_prefix),
+                "-DHSAKMT_INC_PATH={0}/include".format(hsakmt_prefix),
+                "-DNUMACTL_DIR={0}".format(numactl_prefix),
+            ]
         if self.spec.version < Version("4.1.0"):
             openmp_common_args += ["-DHSA_INCLUDE={0}".format(hsa_prefix)]
         else:

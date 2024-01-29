@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Keyutils(MakefilePackage):
 
     homepage = "https://git.kernel.org/pub/scm/linux/kernel/git/dhowells/keyutils.git/"
     url = "https://git.kernel.org/pub/scm/linux/kernel/git/dhowells/keyutils.git/snapshot/keyutils-1.6.1.tar.gz"
+
+    license("GPL-2.0-or-later AND LGPL-2.0-or-later")
 
     version("1.6.1", sha256="3c71dcfc6900d07b02f4e061d8fb218a4ae6519c1d283d6a57b8e27718e2f557")
     version("1.6", sha256="c6a27b4e3d0122d921f3dcea4b1f02a8616ca844535960d6af76ef67d015b5cf")

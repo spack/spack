@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyModin(PythonPackage):
 
     homepage = "https://github.com/modin-project/modin"
     pypi = "modin/modin-0.16.2.tar.gz"
+
+    license("Apache-2.0")
 
     version("0.16.2", sha256="8e3f4cb478ae08dcc71b5a345781d57f29d6b95bc6ce1dc5c14d597a382f1354")
 

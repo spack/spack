@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Libnet(AutotoolsPackage):
 
     homepage = "https://github.com/libnet/libnet"
     url = "https://github.com/libnet/libnet/archive/v1.2.tar.gz"
+
+    license("BSD-2-Clause")
 
     version("1.2", sha256="b7a371a337d242c017f3471d70bea2963596bec5bd3bd0e33e8517550e2311ef")
 

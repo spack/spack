@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyPoyo(PythonPackage):
 
     homepage = "https://github.com/hackebrot/poyo"
     url = "https://github.com/hackebrot/poyo/archive/0.4.1.tar.gz"
+
+    license("MIT")
 
     version("0.4.1", sha256="9f069dc9c8ee359abc8ef9e7304cb1b1c23556d1f4ae64f4247c1e45de43c1f1")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Libpulsar(CMakePackage):
     url = "https://github.com/apache/pulsar/archive/v2.7.0.tar.gz"
 
     maintainers("aahmed-se")
+
+    license("Apache-2.0")
 
     version("2.7.0", sha256="5bf8e5115075e12c848a9e4474cd47067c3200f7ff13c45f624f7383287e8e5e")
 

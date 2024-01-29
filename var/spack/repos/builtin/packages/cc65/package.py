@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Cc65(MakefilePackage):
 
     homepage = "https://cc65.github.io/"
     url = "https://github.com/cc65/cc65/archive/V2.18.tar.gz"
+
+    license("Zlib")
 
     version("2.18", sha256="d14a22fb87c7bcbecd8a83d5362d5d317b19c6ce2433421f2512f28293a6eaab")
     version("2.17", sha256="73b89634655bfc6cef9aa0b8950f19657a902ee5ef0c045886e418bb116d2eac")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Wxparaver(AutotoolsPackage):
 
     homepage = "https://tools.bsc.es/paraver"
     url = "https://ftp.tools.bsc.es/wxparaver/wxparaver-4.9.2-src.tar.bz2"
+
+    license("LGPL-2.1-or-later")
 
     version("4.9.2", sha256="83289584040bcedf8cab1b2ae3545191c8bdef0e11ab62b06e54cbf111f2127a")
     version("4.9.1", sha256="e89fdf563d1fc73ed0018cf0e25b458b6617ec33325ed3fdbf06397c556f3a8e")

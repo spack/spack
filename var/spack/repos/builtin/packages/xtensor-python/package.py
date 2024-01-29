@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class XtensorPython(CMakePackage):
     git = "https://github.com/QuantStack/xtensor-python.git"
 
     maintainers("ax3l")
+
+    license("BSD-3-Clause")
 
     version("develop", branch="master")
     version("0.23.1", sha256="450b25f5c739df174b2a50774b89e68b23535fdc37cb55bd542ffdb7c78991ab")
@@ -31,11 +33,3 @@ class XtensorPython(CMakePackage):
     depends_on("python", type=("build", "link", "run"))
 
     extends("python")
-
-    def cmake_args(self):
-        spec = self.spec
-
-        python_exe = spec["python"].command.path
-
-        args = ["-DPYTHON_EXECUTABLE={0}".format(python_exe)]
-        return args

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class Cans(MakefilePackage):
     url = "https://github.com/p-costa/CaNS/archive/refs/tags/v1.1.4.tar.gz"
 
     maintainers("lhxone", "p-costa", "nscapin", "GabrieleBoga")
+
+    license("MIT")
 
     version("1.1.4", sha256="8334c67810472edc18d5403a0bcb27fd57a620722c1e8c317518db4506867b81")
     version("1.1.3", sha256="01fa42e51ddcf6161fb63a124a0f2218c67f85ff4cc5236b995a5650d85e7615")

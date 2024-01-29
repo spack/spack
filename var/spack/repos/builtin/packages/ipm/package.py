@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Ipm(AutotoolsPackage):
     git = "https://github.com/nerscadmin/IPM.git"
 
     maintainers("Christoph-TU")
+
+    license("LGPL-2.1-or-later")
 
     version("master", branch="master", preferred=True)
     version("2.0.6", tag="2.0.6", commit="b008141ee16d39b33e20bffde615564afa107575")

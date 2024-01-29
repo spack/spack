@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class PyTorchgeo(PythonPackage):
     git = "https://github.com/microsoft/torchgeo.git"
 
     maintainers("adamjstewart", "calebrob6")
+
+    license("MIT")
 
     version("main", branch="main")
     version("0.5.1", sha256="5f86a34d18fe36eeb9146b057b21e5356252ef8ab6a9db33feebb120a01feff8")
@@ -65,7 +67,15 @@ class PyTorchgeo(PythonPackage):
     depends_on("pil@8:", when="@0.5:", type=("build", "run"))
     depends_on("pil@6.2:", type=("build", "run"))
     # JPEG, TIFF, and compressed PNG support required for file I/O in several datasets.
-    depends_on("pil+jpeg+tiff+zlib", type=("build", "run"))
+    depends_on(
+        "py-pillow +jpeg+tiff+zlib", type=("build", "run"), when="^[virtuals=pil] py-pillow"
+    )
+    depends_on(
+        "py-pillow-simd +jpeg+tiff+zlib",
+        type=("build", "run"),
+        when="^[virtuals=pil] py-pillow-simd",
+    )
+
     depends_on("py-pyproj@3:", when="@0.5:", type=("build", "run"))
     depends_on("py-pyproj@2.2:", type=("build", "run"))
     depends_on("py-rasterio@1.2:", when="@0.5:", type=("build", "run"))

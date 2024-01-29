@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,9 @@ class Hepmc3(CMakePackage):
 
     maintainers("vvolkl")
 
+    license("LGPL-3.0-or-later")
+
+    version("3.2.7", sha256="587faa6556cc54ccd89ad35421461b4761d7809bc17a2e72f5034daea142232b")
     version("3.2.6", sha256="248f3b5b36dd773844cbe73d51f60891458334b986b259754c59dbf4bbf1d525")
     version("3.2.5", sha256="cd0f75c80f75549c59cc2a829ece7601c77de97cb2a5ab75790cac8e1d585032")
     version("3.2.4", sha256="e088fccfd1a6c2f8e1089f457101bee1e5c7a9777e9d51c6419c8a288a49e1bb")
@@ -63,8 +66,8 @@ class Hepmc3(CMakePackage):
             py_ver = spec["python"].version.up_to(2)
             args.extend(
                 [
-                    from_variant("HEPMC3_PYTHON_VERSIONS", str(py_ver)),
-                    from_variant("HEPMC3_Python_SITEARCH" + py_ver.joined, python_platlib),
+                    self.define("HEPMC3_PYTHON_VERSIONS", str(py_ver)),
+                    self.define("HEPMC3_Python_SITEARCH" + str(py_ver.joined), python_platlib),
                 ]
             )
 

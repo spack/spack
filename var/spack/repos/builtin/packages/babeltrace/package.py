@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Babeltrace(AutotoolsPackage):
 
     homepage = "https://www.efficios.com/babeltrace"
     url = "https://www.efficios.com/files/babeltrace/babeltrace-1.2.4.tar.bz2"
+
+    license("MIT")
 
     version("1.2.4", sha256="666e3a1ad2dc7d5703059963056e7800f0eab59c8eeb6be2efe4f3acc5209eb1")
 

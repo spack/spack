@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Clp(AutotoolsPackage):
     depends_on("coinutils")
     depends_on("osi")
     depends_on("pkgconfig", type="build")
+
+    license("EPL-2.0")
 
     version("1.17.7", sha256="c4c2c0e014220ce8b6294f3be0f3a595a37bef58a14bf9bac406016e9e73b0f5")
     version("1.17.6", sha256="afff465b1620cfcbb7b7c17b5d331d412039650ff471c4160c7eb24ae01284c9")
