@@ -49,6 +49,8 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant("openmp", default=True, description="Activates OpenMP support")
     variant("mpi", default=True, description="Activates MPI support")
 
+    patch("fujitsu.patch", when="%fj")
+
     depends_on("autoconf", type="build", when="@master")
     depends_on("automake", type="build", when="@master")
 
@@ -125,7 +127,7 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
         if spec.target.family != "x86_64":
             options.append("--disable-sse-assembly")
 
-        if "%aocc" in spec:
+        if "%aocc" in spec or "%fj" in spec:
             options.append("--disable-shared")
             options.append("--enable-static")
 
@@ -138,6 +140,12 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         if "%aocc" in spec:
             options.extend(["FCFLAGS=-O3", "CFLAGS=-O3"])
+
+        if "%fj" in spec:
+            options.append("--disable-Fortran2008-features")
+            options.append("--enable-FUGAKU")
+            if "+openmp" in spec:
+                options.extend(["FCFLAGS=-Kparallel"])
 
         cuda_flag = "nvidia-gpu"
         if "+cuda" in spec:
@@ -163,8 +171,14 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         options += self.enable_or_disable("openmp")
 
+        # if using mkl with openmp support, link with openmp
+        mkl_openmp_flag = (
+            self.compiler.openmp_flag
+            if self.spec.satisfies("^intel-oneapi-mkl threads=openmp")
+            else ""
+        )
         options += [
-            "LDFLAGS={0}".format(spec["lapack"].libs.search_flags),
+            "LDFLAGS={0} {1}".format(mkl_openmp_flag, spec["lapack"].libs.search_flags),
             "LIBS={0} {1}".format(spec["lapack"].libs.link_flags, spec["blas"].libs.link_flags),
         ]
 

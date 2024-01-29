@@ -841,6 +841,12 @@ class Llvm(CMakePackage, CudaPackage):
 
         cmake_args.append(from_variant("LIBOMPTARGET_ENABLE_DEBUG", "libomptarget_debug"))
 
+        if spec.satisfies("@14:"):
+            # The hsa-rocr-dev package may be pulled in through hwloc, which can lead to cmake
+            # finding libhsa and enabling the AMDGPU plugin. Since we don't support this yet,
+            # disable explicitly. See commit a05a0c3c2f8eefc80d84b7a87a23a4452d4a3087.
+            cmake_args.append(define("LIBOMPTARGET_BUILD_AMDGPU_PLUGIN", False))
+
         if "+lldb" in spec:
             projects.append("lldb")
             cmake_args.extend(
@@ -961,9 +967,9 @@ class Llvm(CMakePackage, CudaPackage):
                     "openmp",
                 ]
                 runtimes.sort(
-                    key=lambda x: runtimes_order.index(x)
-                    if x in runtimes_order
-                    else len(runtimes_order)
+                    key=lambda x: (
+                        runtimes_order.index(x) if x in runtimes_order else len(runtimes_order)
+                    )
                 )
             cmake_args.extend(
                 [

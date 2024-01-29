@@ -9,7 +9,7 @@ from spack.package import *
 class Spglib(CMakePackage):
     """C library for finding and handling crystal symmetries."""
 
-    homepage = "https://atztogo.github.io/spglib/"
+    homepage = "https://spglib.readthedocs.io/"
     url = "https://github.com/spglib/spglib/archive/v2.0.2.tar.gz"
 
     maintainers("RMeli")
@@ -52,6 +52,10 @@ class Spglib(CMakePackage):
 
     variant("openmp", default=True, description="Build with OpenMP support", when="@1.16.2:")
     variant("fortran", default=True, description="Build Fortran interface", when="@1.16.4:")
+    variant("tests", default=False, description="Build with tests", when="@2.1.0:")
+
+    depends_on("cmake@3.15:", type="build", when="@2.1.0:")
+    depends_on("cmake@3.24:", type="build", when="+tests")
 
     @property
     def libs(self):
@@ -62,4 +66,5 @@ class Spglib(CMakePackage):
         return [
             self.define_from_variant(pfx + "USE_OMP", "openmp"),
             self.define_from_variant(pfx + "WITH_Fortran", "fortran"),
+            self.define_from_variant(pfx + "WITH_TESTS", "tests"),
         ]

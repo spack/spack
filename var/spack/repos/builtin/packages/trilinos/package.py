@@ -649,9 +649,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             options.append(
                 define(
                     "Trilinos_CXX11_FLAGS",
-                    self.compiler.cxx14_flag
-                    if spec.variants["cxxstd"].value == "14"
-                    else self.compiler.cxx11_flag,
+                    (
+                        self.compiler.cxx14_flag
+                        if spec.variants["cxxstd"].value == "14"
+                        else self.compiler.cxx11_flag
+                    ),
                 )
             )
 
@@ -812,6 +814,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             ("HDF5", "hdf5", "hdf5"),
             ("HYPRE", "hypre", "hypre"),
             ("MUMPS", "mumps", "mumps"),
+            ("AMD", "suite-sparse", "suite-sparse"),
             ("UMFPACK", "suite-sparse", "suite-sparse"),
             ("SuperLU", "superlu", "superlu"),
             ("SuperLUDist", "superlu-dist", "superlu-dist"),
