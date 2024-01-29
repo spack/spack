@@ -523,8 +523,7 @@ class CStringType:
 
 
 class UpdateCStringAction:
-    def __init__(self, cstring_type: int, old_value: bytes, new_value: bytes, offset: int):
-        self.type = cstring_type
+    def __init__(self, old_value: bytes, new_value: bytes, offset: int):
         self.old_value = old_value
         self.new_value = new_value
         self.offset = offset
@@ -532,10 +531,6 @@ class UpdateCStringAction:
     @property
     def inplace(self) -> bool:
         return len(self.new_value) <= len(self.old_value)
-
-    @property
-    def name(self) -> str:
-        return "rpath" if self.type == CStringType.RPATH else "interpreter"
 
     def apply(self, f: BinaryIO) -> None:
         assert self.inplace
@@ -581,7 +576,6 @@ def _get_rpath_substitution(
         return None
 
     return UpdateCStringAction(
-        cstring_type=CStringType.RPATH,
         old_value=elf.dt_rpath_str,
         new_value=b":".join(rpaths),
         # The rpath is at a given offset in the string table used by the dynamic section.
@@ -601,7 +595,6 @@ def _get_pt_interp_substitution(
         return None
 
     return UpdateCStringAction(
-        cstring_type=CStringType.PT_INTERP,
         old_value=elf.pt_interp_str,
         new_value=substitutions[match.group()] + elf.pt_interp_str[match.end() :],
         offset=elf.pt_interp_p_offset,
@@ -621,26 +614,24 @@ def substitute_rpath_and_pt_interp_in_place_or_raise(
         with open(path, "rb+") as f:
             elf = parse_elf(f, interpreter=True, dynamic_section=True)
 
-            # Get the actions to perform, if any.
-            actions = [
-                action
-                for action in (
-                    _get_rpath_substitution(elf, regex, substitutions),
-                    _get_pt_interp_substitution(elf, regex, substitutions),
-                )
-                if action
-            ]
+            # Get the actions to perform.
+            rpath = _get_rpath_substitution(elf, regex, substitutions)
+            pt_interp = _get_pt_interp_substitution(elf, regex, substitutions)
 
-            if not actions:
+            # Nothing to do.
+            if not rpath and not pt_interp:
                 return False
 
             # If we can't update in-place, leave it to other tools, don't do partial updates.
-            if any(not action.inplace for action in actions):
-                raise ElfCStringUpdatesFailed(actions)
+            if rpath and not rpath.inplace or pt_interp and not pt_interp.inplace:
+                raise ElfCStringUpdatesFailed(rpath, pt_interp)
 
-            # Otherwise, apply all actions.
-            for action in actions:
-                action.apply(f)
+            # Otherwise, apply the updates.
+            if rpath:
+                rpath.apply(f)
+
+            if pt_interp:
+                pt_interp.apply(f)
 
             return True
 
@@ -651,15 +642,11 @@ def substitute_rpath_and_pt_interp_in_place_or_raise(
 
 
 class ElfCStringUpdatesFailed(Exception):
-    def __init__(self, actions: List[UpdateCStringAction]):
-        self.actions = actions
-
-    def __str__(self) -> str:
-        return "\n".join(
-            f"New {action.name} {action.new_value!r} is longer than {action.old_value!r}"
-            for action in self.actions
-            if not action.inplace
-        )
+    def __init__(
+        self, rpath: Optional[UpdateCStringAction], pt_interp: Optional[UpdateCStringAction]
+    ):
+        self.rpath = rpath
+        self.pt_interp = pt_interp
 
 
 class ElfParsingError(Exception):

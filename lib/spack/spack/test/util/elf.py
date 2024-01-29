@@ -168,31 +168,13 @@ def test_elf_get_and_replace_rpaths_and_pt_interp(binary_with_rpaths):
         elf.substitute_rpath_and_pt_interp_in_place_or_raise(
             executable, {b"/short-a": b"/very/long/prefix-a", b"/short-b": b"/very/long/prefix-b"}
         )
-    assert info.match(
-        "New rpath .*/very/long/prefix-a/x:/very/long/prefix-b/y.* is "
-        "longer than .*/short-a/x:/short-b/y.*"
-    )
-    assert info.match(
-        "New interpreter .*/very/long/prefix-b/lib/ld.so.* is longer than .*/short-b/lib/ld.so*"
-    )
 
-    # Check that there are two actions in there.
-    assert len(info.value.actions) == 2
-
-    # Extract them
-    fst, snd = info.value.actions
-
-    if fst.type == elf.CStringType.RPATH and snd.type == elf.CStringType.PT_INTERP:
-        rpath_action, pt_interp_action = fst, snd
-    elif snd.type == elf.CStringType.RPATH and fst.type == elf.CStringType.PT_INTERP:
-        rpath_action, pt_interp_action = snd, fst
-    else:
-        assert False, "Expected one action to be RPATH and the other to be PT_INTERP"
-
-    assert rpath_action.old_value == b"/short-a/x:/short-b/y"
-    assert rpath_action.new_value == b"/very/long/prefix-a/x:/very/long/prefix-b/y"
-    assert pt_interp_action.old_value == b"/short-b/lib/ld.so"
-    assert pt_interp_action.new_value == b"/very/long/prefix-b/lib/ld.so"
+    assert info.value.rpath is not None
+    assert info.value.pt_interp is not None
+    assert info.value.rpath.old_value == b"/short-a/x:/short-b/y"
+    assert info.value.rpath.new_value == b"/very/long/prefix-a/x:/very/long/prefix-b/y"
+    assert info.value.pt_interp.old_value == b"/short-b/lib/ld.so"
+    assert info.value.pt_interp.new_value == b"/very/long/prefix-b/lib/ld.so"
 
 
 @pytest.mark.requires_executables("gcc")
