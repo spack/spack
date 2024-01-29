@@ -219,7 +219,7 @@ def test_dev_build_env_with_vars(tmpdir, install_mockery, mutable_mock_env_path,
     """Test Spack does dev builds for packages in develop section of env (path with variables)."""
     # setup dev-build-test-install package for dev build
     build_dir = tmpdir.mkdir("build")
-    spec = spack.spec.Spec("dev-build-test-install@0.0.0 dev_path=%s" % build_dir)
+    spec = spack.spec.Spec(f"dev-build-test-install@0.0.0 dev_path={build_dir}")
     spec.concretize()
 
     # store the build path in an environment variable that will be used in the environment
