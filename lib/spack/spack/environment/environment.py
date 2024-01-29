@@ -21,7 +21,6 @@ from typing import Dict, Iterable, List, Optional, Set, Tuple, Union
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 import llnl.util.tty.color as clr
-from llnl.util.lang import dedupe
 from llnl.util.link_tree import ConflictingSpecsError
 from llnl.util.symlink import symlink
 
@@ -663,27 +662,23 @@ class ViewDescriptor:
 
         return True
 
-    def specs_for_view(self, concretized_root_specs):
+    def specs_for_view(self, concrete_roots: List[Spec]) -> List[Spec]:
         """
         From the list of concretized user specs in the environment, flatten
         the dags, and filter selected, installed specs, remove duplicates on dag hash.
         """
-        # With deps, requires traversal
-        if self.link == "all" or self.link == "run":
-            deptype = ("run") if self.link == "run" else ("link", "run")
-            specs = list(
-                traverse.traverse_nodes(
-                    concretized_root_specs, deptype=deptype, key=traverse.by_dag_hash
-                )
-            )
+        if self.link == "all":
+            deptype = dt.LINK | dt.RUN
+        elif self.link == "run":
+            deptype = dt.RUN
         else:
-            specs = list(dedupe(concretized_root_specs, key=traverse.by_dag_hash))
+            deptype = dt.NONE
+
+        specs = traverse.traverse_nodes(concrete_roots, deptype=deptype, key=traverse.by_dag_hash)
 
         # Filter selected, installed specs
         with spack.store.STORE.db.read_transaction():
-            specs = [s for s in specs if s in self and s.installed]
-
-        return specs
+            return [s for s in specs if s in self and s.installed]
 
     def regenerate(self, concretized_root_specs):
         specs = self.specs_for_view(concretized_root_specs)
