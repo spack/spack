@@ -15,6 +15,8 @@ class PyTextual(PythonPackage):
 
     version("0.47.1", sha256="4b82e317884bb1092f693f474c319ceb068b5a0b128b121f1aa53a2d48b4b80c")
 
+    depends_on("python@3.8:3", type=("build", "run"))
+    
     depends_on("py-poetry-core@1.2.0:", type="build")
     depends_on("py-rich@13.3.3:", type=("build", "run"))
     depends_on("py-markdown-it-py+linkify@2.1.0:", type=("build", "run"))
