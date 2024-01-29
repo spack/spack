@@ -10,7 +10,6 @@ ci:
     - match:
       - llvm
       - llvm-amdgpu
-      - pango
       - paraview
       - py-tensorflow
       - py-torch
