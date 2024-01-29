@@ -95,6 +95,10 @@ def _conditional_cmake_defaults(pkg: spack.package_base.PackageBase, args: List[
         args.append(CMakeBuilder.define("CMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY", False))
         args.append(CMakeBuilder.define("CMAKE_FIND_PACKAGE_NO_SYSTEM_PACKAGE_REGISTRY", False))
 
+    # CMAKE_EXPORT_COMPILE_COMMANDS only exists for CMake >= 3.5
+    if cmake.satisfies("@3.5:"):
+        args.append(CMakeBuilder.define("CMAKE_EXPORT_COMPILE_COMMANDS", True))
+
 
 def generator(*names: str, default: Optional[str] = None):
     """The build system generator to use.
@@ -340,7 +344,6 @@ class CMakeBuilder(BaseBuilder):
             generator,
             define("CMAKE_INSTALL_PREFIX", pathlib.Path(pkg.prefix).as_posix()),
             define("CMAKE_BUILD_TYPE", build_type),
-            define("CMAKE_EXPORT_COMPILE_COMMANDS", True),
         ]
 
         if primary_generator == "Unix Makefiles":
