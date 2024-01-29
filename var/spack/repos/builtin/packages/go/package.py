@@ -6,7 +6,7 @@
 import os
 import re
 
-import llnl.util.tty as tty
+from llnl.util import tty
 
 from spack.package import *
 
@@ -97,7 +97,7 @@ class Go(Package):
 
     provides("golang")
 
-    depends_on("git", type=("build", "link", "run"))
+    depends_on("git", type="run")
     depends_on("go-or-gccgo-bootstrap", type="build")
     depends_on("go-or-gccgo-bootstrap@1.17.13:", type="build", when="@1.20:")
 

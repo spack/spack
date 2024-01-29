@@ -119,8 +119,6 @@ class Bohrium(CMakePackage, CudaPackage):
         # different hosts.
 
         args = [
-            # Choose a particular python version
-            "-DPYTHON_EXECUTABLE:FILEPATH=" + spec["python"].command.path,
             #
             # Hard-disable Jupyter, since this would override a config
             # file in the user's home directory in some cases during
