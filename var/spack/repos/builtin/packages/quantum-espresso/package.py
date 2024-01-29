@@ -130,7 +130,7 @@ class QuantumEspresso(CMakePackage, Package):
         # CMake builds only support elpa without openmp
         depends_on("elpa~openmp", when="build_system=cmake")
         with when("build_system=generic"):
-            depends_on("elpa+openmp", when="+openmp")
+            depends_on("elpa", when="+openmp")
             depends_on("elpa~openmp", when="~openmp")
         # Elpa is formally supported by @:5.4.0, but QE configure searches
         # for it in the wrong folders (or tries to download it within
