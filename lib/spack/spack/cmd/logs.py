@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import errno
 import gzip
 import os
 import shutil
@@ -42,24 +43,25 @@ def _logs(cmdline_spec, concrete_spec):
     else:
         raise SpackCommandError(f"{cmdline_spec} is not installed or staged")
 
-    if not os.path.exists(log_path):
-        # E.g. the package might be staged, but no logs have been generated
-        # for it yet. It's also possible that the package was uninstalled
-        # since we checked if Spec.installed
-        raise SpackCommandError(f"No logs are available for {cmdline_spec}")
+    try:
+        compression_ext = compression.extension_from_file(log_path)
+        with open(log_path, "rb") as fstream:
+            if compression_ext == "gz":
+                # If the log file is compressed, wrap it with a decompressor
+                fstream = gzip.open(log_path, "rb")
+            elif compression_ext:
+                raise SpackCommandError(
+                    f"Unsupported storage format for {log_path}: {compression_ext}"
+                )
 
-    compression_ext = compression.extension_from_file(log_path)
-    fstream = None
-    with open(log_path, "rb") as fstream:
-        if compression_ext == "gz":
-            # If the log file is compressed, wrap it with a decompressor
-            fstream = gzip.open(log_path, "rb")
-        elif compression_ext:
-            raise SpackCommandError(
-                f"Unsupported storage format for {log_path}: {compression_ext}"
-            )
-
-        _dump_byte_stream_to_stdout(fstream)
+            _dump_byte_stream_to_stdout(fstream)
+    except OSError as e:
+        if e.errno == errno.ENOENT:
+            raise SpackCommandError(f"No logs are available for {cmdline_spec}") from e
+        elif e.errno == errno.EPERM:
+            raise SpackCommandError(f"Permission error accessing {log_path}") from e
+        else:
+            raise
 
 
 def logs(parser, args):

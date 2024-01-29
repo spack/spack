@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import gzip
+import os
 import sys
 import tempfile
 from contextlib import contextmanager
@@ -15,6 +16,7 @@ import spack
 from spack.main import SpackCommand
 
 logs = SpackCommand("logs")
+install = SpackCommand("install")
 
 
 @contextmanager
@@ -48,7 +50,7 @@ def disable_capture(capfd):
         yield
 
 
-def test_logs_cmd_errors(install_mockery, mock_packages):
+def test_logs_cmd_errors(install_mockery, mock_fetch, mock_archive, mock_packages):
     spec = spack.spec.Spec("libelf").concretized()
     assert not spec.installed
 
@@ -57,6 +59,11 @@ def test_logs_cmd_errors(install_mockery, mock_packages):
 
     with pytest.raises(spack.main.SpackCommandError, match="Too many specs"):
         logs("libelf mpi")
+
+    install("libelf")
+    os.remove(spec.package.install_log_path)
+    with pytest.raises(spack.main.SpackCommandError, match="No logs are available"):
+        logs("libelf")
 
 
 def _write_string_to_path(string, path):
@@ -88,7 +95,6 @@ def test_dump_logs(install_mockery, mock_fetch, mock_archive, mock_packages, dis
             spack.cmd.logs._logs(cmdline_spec, concrete_spec)
             assert _rewind_collect_and_decode(redirected_stdout) == stage_log_content
 
-    install = SpackCommand("install")
     install("libelf")
 
     # Sanity check: make sure a path is recorded, regardless of whether
