@@ -23,4 +23,4 @@ class PyTextual(PythonPackage):
     depends_on("py-mdit-py-plugins", type=("build", "run"))
     # Depending on py-mdit-py-plugins rather than on py-markdown-it-py+plugins,
     # because py-markdown-it-py+plugins would cause a circular dependency
-    depends_on("py-typing-extensions@4.4.0:4", type=("build", "run")) 
+    depends_on("py-typing-extensions@4.4.0:4", type=("build", "run"))
