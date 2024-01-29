@@ -401,13 +401,13 @@ that git clone if ``foo`` is in the environment.
 Further development on ``foo`` can be tested by reinstalling the environment,
 and eventually committed and pushed to the upstream git repo.
 
-Spack attempts to minimize rebuilds by checking the for the last time a file
+Spack attempts to minimize rebuilds by checking the source directory for the last time a file
 was changed and comparing it to the installation time.
 On some filesystems, such as lustre or a NFS, this check can be quite expensive.
 Users can set the configuration option ``config:dev_specs_always_rebuild:true`` to
 disable this check.
 ``config:dev_specs_always_rebuild:true`` makes it so all develop specs will perform 
-**incremental rebuilds** each time ``spack install`` is called and not *complete rebuilds*.
+**incremental rebuilds** each time ``spack install`` is called.  Please note these are not *complete rebuilds* and will still be much quicker than a fresh installation.
 
 Adding the ``--always-rebuild`` flag to the ``spack develop`` command will automatically
 set this flag inside the active environment.
