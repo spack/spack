@@ -31,6 +31,7 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
     license("BSD-3-Clause")
 
     version("develop", branch="develop")
+    version("2024.01.stable", branch="release/2024.01")
     version("2023.08.stable", branch="release/2023.08")
     version("2023.08.1", tag="2023.08.1", commit="753a72affd584a5e72fe153d1e8c47a394a3886e")
     version("2023.03.stable", branch="release/2023.03")
@@ -119,20 +120,30 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
         "python", default=False, description="Support unwinding Python source.", when="@2023.03:"
     )
 
-    build_system(conditional("meson", when="@develop"), "autotools", default="autotools")
+    build_system(
+        conditional("meson", when="@2024.01:"),
+        conditional("autotools", when="@:2024.01"),
+        default="autotools",
+    )
 
-    with when("@develop build_system=autotools"):
+    with when("@2024.01: build_system=autotools"):
         depends_on("autoconf", type="build")
         depends_on("automake", type="build")
         depends_on("libtool", type="build")
 
     with when("build_system=meson"):
         depends_on("meson@1.1.0:", type="build")
-        depends_on("gmake", type="build")
-        depends_on("m4", type="build")
-        depends_on("autoconf", type="build")
-        depends_on("automake", type="build")
-        depends_on("libtool", type="build")
+
+        with when("@:2024.01"):
+            depends_on("gmake", type="build")
+            depends_on("m4", type="build")
+            depends_on("autoconf", type="build")
+            depends_on("automake", type="build")
+            depends_on("libtool", type="build")
+
+        with when("@2024.02:"):
+            depends_on("pkgconf", type="build")
+            depends_on("cmake", type="build")
 
     boost_libs = (
         "+atomic +chrono +date_time +filesystem +system +thread +timer"
@@ -172,7 +183,7 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
     depends_on("opencl-c-headers", when="+opencl")
 
     depends_on("intel-xed+pic", when="target=x86_64:")
-    depends_on("memkind", type=("build", "run"), when="@2021.05.01:")
+    depends_on("memkind", type=("build", "run"), when="@2021.05.01:2023.08")
     depends_on("papi", when="+papi")
     depends_on("libpfm4", when="~papi")
     depends_on("mpi", when="+cray")
@@ -285,7 +296,7 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
         if spec.satisfies("@:2022.03"):
             args.append("--with-mbedtls=%s" % spec["mbedtls"].prefix)
 
-        if spec.satisfies("@2021.05.01:"):
+        if spec.satisfies("@2021.05.01:2023.08"):
             args.append("--with-memkind=%s" % spec["memkind"].prefix)
 
         if spec.satisfies("+papi"):
@@ -376,7 +387,15 @@ class MesonBuilder(spack.build_systems.meson.MesonBuilder):
             "-Dgtpin=" + ("enabled" if "+gtpin" in spec else "disabled"),
         ]
 
-        # We use a native file to provide paths to all the dependencies.
+        if "@:2024.01" in spec:
+            args.append(f"--native-file={self.gen_prefix_file()}")
+
+        return args
+
+    def gen_prefix_file(self):
+        """Generate a native file specifying install prefixes for dependencies"""
+        spec = self.spec
+
         cfg = configparser.ConfigParser()
         cfg["properties"] = {}
         cfg["binaries"] = {}
@@ -395,8 +414,6 @@ class MesonBuilder(spack.build_systems.meson.MesonBuilder):
 
         if spec.target.family == "x86_64":
             cfg["properties"]["prefix_xed"] = f"'''{spec['intel-xed'].prefix}'''"
-
-        cfg["properties"]["prefix_memkind"] = f"'''{spec['memkind'].prefix}'''"
 
         if spec.satisfies("+papi"):
             cfg["properties"]["prefix_papi"] = f"'''{spec['papi'].prefix}'''"
@@ -436,4 +453,4 @@ class MesonBuilder(spack.build_systems.meson.MesonBuilder):
         with os.fdopen(native_fd, "w") as native_f:
             cfg.write(native_f)
 
-        return ["--native-file", native_path] + args
+        return native_path
