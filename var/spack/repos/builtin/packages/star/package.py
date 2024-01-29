@@ -37,6 +37,8 @@ class Star(MakefilePackage):
     )
 
     depends_on("zlib-api")
+    # required for certain steps in the makefile
+    depends_on("xxd", type="build")
 
     build_directory = "source"
 
