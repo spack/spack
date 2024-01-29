@@ -58,7 +58,7 @@ class Gl2ps(CMakePackage):
         if spec.satisfies("platform=darwin"):
             options.append(self.define("CMAKE_MACOSX_RPATH", True))
 
-        if spec.satisfies("generator=ninja"):
+        if spec.satisfies("platform=windows"):
             options.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
 
         if "~doc" in spec:
