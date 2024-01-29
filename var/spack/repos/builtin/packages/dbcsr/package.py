@@ -116,9 +116,9 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
 
     generator("ninja")
     depends_on("ninja@1.10:", type="build")
-    
-    build_directory = 'spack-build'
-    
+
+    build_directory = "spack-build"
+
     patch("fjfrt_mod.patch", when="%fj")
 
     def cmake_args(self):
@@ -142,15 +142,14 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("WITH_EXAMPLES", "examples"),
         ]
-    
+
         # C API needs MPI
         with_c_api = self.define_from_variant("WITH_C_API", "mpi")
-        # skip building C API since fujitsu compiler do not support 
+        # skip building C API since fujitsu compiler do not support
         # calling Fortran subroutines with optional arguments in bind(C)
         if self.spec.satisfies("%fj"):
             with_c_api = "-DWITH_C_API=false"
         args += [with_c_api]
-     
 
         # Switch necessary as a result of a bug.
         if "@2.1:2.2" in spec:
@@ -196,7 +195,7 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     @run_after("install")
     def install_modfiles(self):
         if self.spec.satisfies("%fj"):
-            for mod in glob.iglob(self.build_directory+"/src/*.mod"):
+            for mod in glob.iglob(self.build_directory + "/src/*.mod"):
                 install(mod, self.prefix.include)
 
     def flag_handler(self, name, flags):
