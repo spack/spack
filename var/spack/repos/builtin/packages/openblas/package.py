@@ -333,6 +333,16 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         # Get our build microarchitecture
         microarch = self.spec.target
 
+        # We need to detect whether the target supports SVE before the magic for
+        # loop below which would change the value of `microarch`.
+        has_sve = (
+            self.spec.satisfies("@0.3.19:")
+            and microarch.family == "aarch64"
+            and "sve" in microarch
+            # Exclude A64FX, which has its own special handling in OpenBLAS.
+            and microarch.name != "a64fx"
+        )
+
         # List of arguments returned by this function
         args = []
 
@@ -368,7 +378,14 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
                 arch_name = openblas_arch_map.get(arch_name, arch_name)
                 args.append("ARCH=" + arch_name)
 
-        if microarch.vendor == "generic" and microarch.name != "riscv64":
+        if has_sve:
+            # Check this before testing the value of `microarch`, which may have
+            # been altered by the magic for loop above.  If SVE is available
+            # (but target isn't A64FX which is treated specially below), use the
+            # `ARMV8SVE` OpenBLAS target.
+            args.append("TARGET=ARMV8SVE")
+
+        elif microarch.vendor == "generic" and microarch.name != "riscv64":
             # User requested a generic platform, or we couldn't find a good
             # match for the requested one. Allow OpenBLAS to determine
             # an optimized kernel at run time, including older CPUs, while
