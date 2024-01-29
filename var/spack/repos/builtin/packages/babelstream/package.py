@@ -56,7 +56,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
     # Some models need to have the programming model abstraction downloaded -
     # this variant enables a path to be provided.
     variant("dir", values=str, default="none", description="Enable Directory support")
-    variant("submodel", values=str, default="none", description="SYCL2020 -> choose between usm and acc methods")
+    variant("submodel", values=("usm", "acc"), when="+sycl2020", default="usm", description="SYCL2020 -> choose between usm and acc methods")
     variant("option", values=str, default="none", description="For SYCL/SYCL2020 choose compiler implementation option, for THRUST which THRUST implementation to use [CUDA/ROCM]")
     conflicts(
             "submodel=none",
@@ -105,7 +105,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
     # Raja Conflict
     variant(
         "offload",
-        values=str,
+        values=("cpu", "nvidia"),
         default="none",
         description="Enable RAJA Target [CPU or NVIDIA] / Offload with custom settings for OpenMP",
     )
