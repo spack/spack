@@ -50,20 +50,16 @@ def _logs(cmdline_spec, concrete_spec):
 
     compression_ext = compression.extension_from_file(log_path)
     fstream = None
-    try:
-        if not compression_ext:
-            fstream = open(log_path, "rb")
-        elif compression_ext == "gz":
+    with open(log_path, "rb") as fstream:
+        if compression_ext == "gz":
+            # If the log file is compressed, wrap it with a decompressor
             fstream = gzip.open(log_path, "rb")
-        else:
+        elif compression_ext:
             raise SpackCommandError(
                 f"Unsupported storage format for {log_path}: {compression_ext}"
             )
 
         _dump_byte_stream_to_stdout(fstream)
-    finally:
-        if fstream:
-            fstream.close()
 
 
 def logs(parser, args):
