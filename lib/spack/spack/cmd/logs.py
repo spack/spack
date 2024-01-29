@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import errno
 import gzip
 import os
 import shutil
@@ -11,6 +12,7 @@ import sys
 import spack.cmd
 import spack.util.compression as compression
 from spack.cmd.common import arguments
+from spack.main import SpackCommandError
 
 description = "print out logs for packages"
 section = "basic"
@@ -31,7 +33,7 @@ def _dump_byte_stream_to_stdout(instream):
         try:
             outstream = sys.stdout.buffer
         except AttributeError:
-            raise spack.main.SpackCommandError(
+            raise SpackCommandError(
                 "This command must be invoked in a"
                 " context where stdout is accessible"
                 f" as a binary stream (stdout = {type(sys.stdout)})"
@@ -54,10 +56,7 @@ def _logs(cmdline_spec, concrete_spec):
         dump_build_log(concrete_spec.package)
         return
     else:
-        raise spack.main.SpackCommandError(f"{cmdline_spec} is not installed or staged")
-
-    if not os.path.exists(log_path):
-        raise spack.main.SpackCommandError(f"No logs are available for {cmdline_spec}")
+        raise SpackCommandError(f"{cmdline_spec} is not installed or staged")
 
     compression_ext = compression.extension_from_file(log_path)
     fstream = None
@@ -67,11 +66,16 @@ def _logs(cmdline_spec, concrete_spec):
         elif compression_ext == "gz":
             fstream = gzip.open(log_path, "rb")
         else:
-            raise spack.main.SpackCommandError(
+            raise SpackCommandError(
                 f"Unsupported storage format for {log_path}: {compression_ext}"
             )
 
         _dump_byte_stream_to_stdout(fstream)
+    except OSError as e:
+        if e.errno == errno.ENOENT:
+            raise SpackCommandError(f"No logs are available for {cmdline_spec}") from e
+        else:
+            raise
     finally:
         if fstream:
             fstream.close()
@@ -81,10 +85,10 @@ def logs(parser, args):
     specs = spack.cmd.parse_specs(args.spec)
 
     if not specs:
-        raise spack.main.SpackCommandError("You must supply a spec.")
+        raise SpackCommandError("You must supply a spec.")
 
     if len(specs) != 1:
-        raise spack.main.SpackCommandError("Too many specs. Supply only one.")
+        raise SpackCommandError("Too many specs. Supply only one.")
 
     concrete_spec = spack.cmd.matching_spec_from_env(specs[0])
 
