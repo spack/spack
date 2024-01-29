@@ -98,8 +98,9 @@ class Vtk(CMakePackage):
     # Broken downstream FindMPI
     patch("vtkm-findmpi-downstream.patch", when="@9.0.0")
 
-    # use internal FindHDF5
-    patch("internal_findHDF5.patch", when="@:8 ^cmake@:3.22")
+    for plat in ["linux", "darwin", "freebsd", "cray"]:
+        # use internal FindHDF5
+        patch("internal_findHDF5.patch", when=f"@:8 platform={plat}")
 
     # Fix IOADIOS2 module to work with kits
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8653
