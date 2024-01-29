@@ -17,7 +17,7 @@ class PyPytestAiohttp(PythonPackage):
     version("1.0.5", sha256="880262bc5951e934463b15e3af8bb298f11f7d4d3ebac970aab425aff10a780a")
 
     depends_on("py-setuptools@51.0:", type="build")
-    depends_on("py-setuptools@6.2:", type="build")
+    depends_on("py-setuptools-scm@6.2:", type="build")
     depends_on("py-wheel@0.36:", type="build")
 
     depends_on("py-pytest@6.1.0:", type=("build", "run"))
