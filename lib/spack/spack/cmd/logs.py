@@ -24,22 +24,7 @@ def setup_parser(subparser):
 
 
 def _dump_byte_stream_to_stdout(instream):
-    if sys.platform == "win32":
-        # https://docs.python.org/3/library/sys.html#sys.stdout unconditionally
-        # recommends using .buffer to write binary data to sys.stdout, but
-        # https://docs.python.org/3/library/io.html#io.TextIOBase.buffer claims
-        # it is not available in all implementations, so only try accessing it
-        # on Windows, where stdout.fileno() is not useful
-        try:
-            outstream = sys.stdout.buffer
-        except AttributeError:
-            raise SpackCommandError(
-                "This command must be invoked in a"
-                " context where stdout is accessible"
-                f" as a binary stream (stdout = {type(sys.stdout)})"
-            )
-    else:
-        outstream = os.fdopen(sys.stdout.fileno(), "wb", closefd=False)
+    outstream = os.fdopen(sys.stdout.fileno(), "wb", closefd=False)
 
     shutil.copyfileobj(instream, outstream)
 
