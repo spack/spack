@@ -35,16 +35,13 @@ class PyFenicsFfc(PythonPackage):
         if ver in ["2019.1.0.post0", "2017.2.0.post0"]:
             ver = ver[: ver.rfind(".post")]
         wver = "@" + ver
-        if ver == "master":
-            depends_on("py-fenics-fiat@2019.1.0", type=("build", "run"), when=wver)
-        else:
-            depends_on("py-fenics-fiat{0}".format(wver), type=("build", "run"), when=wver)
+        depends_on("py-fenics-fiat{0}".format(wver), type=("build", "run"), when=wver)
         if Version(ver) < Version("2017.2.0"):
             depends_on("py-fenics-instant{0}".format(wver), type=("build", "run"), when=wver)
         else:
             depends_on("py-fenics-dijitso{0}".format(wver), type=("build", "run"), when=wver)
-        if ver == "master":
-            depends_on("py-fenics-ufl-legacy@main", type=("build", "run"), when=wver)
+        depends_on("py-fenics-ufl{0}".format(wver), type=("build", "run"), when=wver)
 
-        else:
-            depends_on("py-fenics-ufl{0}".format(wver), type=("build", "run"), when=wver)
+    depends_on("py-fenics-fiat@2019.1.0", type=("build", "run"), when="@master")
+    depends_on("py-fenics-dijitso@master", type=("build", "run"), when="@master")
+    depends_on("py-fenics-ufl-legacy@main", type=("build", "run"), when="@master")
