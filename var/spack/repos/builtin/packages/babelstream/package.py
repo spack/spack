@@ -49,15 +49,13 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
     variant("hip", default=False, description="Enable HIP support")
     variant("thrust", default=False, description="Enable THRUST support")
     variant("raja", default=False, description="Enable RAJA support")
-    variant("stddata", default=False, description="Enable STD-data support")
-    variant("stdindices", default=False, description="Enable STD-indices support")
-    variant("stdranges", default=False, description="Enable STD-ranges support")
+    variant("std", default=False, description="Enable STD support")
 
     # Some models need to have the programming model abstraction downloaded -
     # this variant enables a path to be provided.
     variant("dir", values=str, default="none", description="Enable Directory support") 
-    variant("submodel", values=("usm", "acc"), when="+sycl2020", default="usm", description="SYCL2020 -> choose between usm and acc methods")
-
+    variant("sycl_submodel", values=("usm", "acc"), when="+sycl2020", default="usm", description="SYCL2020 -> choose between usm and acc methods")
+    variant("std_submodel", values=("data", "indices","ranges"), when="+std", default="data", description="STD -> choose between data, indices and ranges models")
 
     sycl_compiler_implementations = ["oneapi-icpx","oneapi-clang","dpcpp","hipsycl","computecpp"]  # list them here, with the default first
     sycl_compiler_implementations_description = "Compile using the specified SYCL compiler implementation\
@@ -83,11 +81,9 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
 
     # ACC conflict
     variant("cpu_arch", values=str, default="none", description="Enable CPU Target for ACC")
-    
+
     # STD conflicts
-    conflicts("+stddata", when="%gcc@:10.1.0", msg="STD-data requires newer version of GCC")
-    conflicts("+stdindices", when="%gcc@:10.1.0", msg="STD-indices requires newer version of GCC")
-    conflicts("+stdranges", when="%gcc@:10.1.0", msg="STD-ranges requires newer version of GCC")
+    conflicts("+std", when="%gcc@:10.1.0", msg="STD requires newer version of GCC")
 
     # CUDA conflict
     conflicts(
@@ -98,11 +94,26 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
     variant("mem", values=str, default="DEFAULT", description="Enable MEM Target for CUDA")
     # Raja offload
     variant(
-        "offload",
+        "raja_offload",
         values=("cpu", "nvidia"),
         default="cpu",
         when="+raja",
         description="Enable RAJA Target [CPU or NVIDIA] / Offload with custom settings for OpenMP",
+    )
+    #std-* offload
+    variant(
+        "std_offload",
+        values=("nvhpc","none"),
+        default="none",
+        when="+std",
+        description="Enable RAJA Target [CPU or NVIDIA] / Offload with custom settings for OpenMP",
+    )
+    variant(
+        "std_use_tbb",
+        values=("on","off"),
+        default="off",
+        when="+std",
+        description="No-op if ONE_TBB_DIR is set. Link against an in-tree oneTBB via FetchContent_Declare, see top level CMakeLists.txt for details"
     )
 
     # download raja from https://github.com/LLNL/RAJA
@@ -118,8 +129,8 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
     depends_on("cuda", when="+thrust")
     depends_on("hip", when="+hip")
     depends_on("rocthrust", when="+thrust thrust_backend=rocm")
-    depends_on("intel-oneapi-tbb", when="+stddata")
-    depends_on("intel-tbb", when="+stdindices")
+    depends_on("intel-oneapi-tbb", when="+std std_submodel=data")
+    depends_on("intel-tbb", when="+std std_submodel=indices")
     # TBB Dependency
     depends_on("intel-tbb", when="+tbb")
     partitioner_vals = ["auto", "affinity", "static", "simple"]
@@ -223,9 +234,9 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             # as std-data to the CMake compiler
             # do some alterations here
             if "std" in model_list[0]:
-                args = ["-DMODEL=" + "std-" + model_list[0].split("d", 1)[1]]
+                args = ["-DMODEL=" + "std-" + self.spec.variants["std_submodel"].value]
             elif "sycl2020" in model_list[0]:
-                args = ["-DMODEL=" + "sycl2020-" + self.spec.variants["submodel"].value]
+                args = ["-DMODEL=" + "sycl2020-" + self.spec.variants["sycl_submodel"].value]
                 print(args)
             elif "rocm" in model_list[0]:
                 args = ["-DMODEL=hip"]
@@ -303,37 +314,16 @@ register_flag_optional(TARGET_PROCESSOR
         #    STDdata,STDindices,STDranges
         # ===================================
 
-        if "+stddata" in self.spec:
+        if "+std" in self.spec:
             args.append("-DCMAKE_CXX_COMPILER=" + spack_cxx)
-            args.append("-DUSE_TBB=OFF")
-            args.append("-DLINK_FLAGS=TBB::tbb")
-            args.append("-DSPACK_TBB=" + self.spec["intel-oneapi-tbb"].prefix + "/tbb/latest/")
-            if self.spec.variants["offload"].value != "none":
+            args.append("-DUSE_TBB=" + self.spec.variants["std_use_tbb"].value.upper())
+            if self.spec.variants["std_offload"].value != "none":
                 cuda_arch_list = self.spec.variants["offload"].value
                 # the architecture value is only number so append sm_ to the name
                 cuda_arch = "cc" + cuda_arch_list[0]
                 args.append("-DNVHPC_OFFLOAD=" + cuda_arch)
-        if "+stdindices" in self.spec:
-            args.append("-DCMAKE_CXX_COMPILER=" + spack_cxx)
-            args.append("-DUSE_TBB=ON")
-            if self.spec.variants["offload"].value != "none":
-                cuda_arch_list = self.spec.variants["offload"].value
-                # the architecture value is only number so append sm_ to the name
-                cuda_arch = "cc" + cuda_arch_list[0]
-                args.append("-DNVHPC_OFFLOAD=" + cuda_arch)
-                # cuda_dir = self.spec["cuda"].prefix
-                # cuda_comp = cuda_dir + "/bin/nvcc"
-                # args.append("-DCMAKE_CUDA_COMPILER=" + cuda_comp)
-        if "+stdranges" in self.spec:
-            args.append("-DCMAKE_CXX_COMPILER=" + spack_cxx)
-            if self.spec.variants["offload"].value != "none":
-                cuda_arch_list = self.spec.variants["offload"].value
-                # the architecture value is only number so append sm_ to the name
-                cuda_arch = "cc" + cuda_arch_list[0]
-                args.append("-DNVHPC_OFFLOAD=" + cuda_arch)
-                # cuda_dir = self.spec["cuda"].prefix
-                # cuda_comp = cuda_dir + "/bin/nvcc"
-                # args.append("-DCMAKE_CUDA_COMPILER=" + cuda_comp)
+
+
         # ===================================
         #             CUDA
         # ===================================
