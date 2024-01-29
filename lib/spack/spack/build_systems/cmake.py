@@ -284,7 +284,10 @@ class CMakeBuilder(BaseBuilder):
     @property
     def archive_files(self):
         """Files to archive for packages based on CMake"""
-        return [os.path.join(self.build_directory, "CMakeCache.txt")]
+        return [
+            os.path.join(self.build_directory, "CMakeCache.txt"),
+            os.path.join(self.build_directory, "compile_commands.json"),
+        ]
 
     @property
     def root_cmakelists_dir(self):
@@ -337,6 +340,7 @@ class CMakeBuilder(BaseBuilder):
             generator,
             define("CMAKE_INSTALL_PREFIX", pathlib.Path(pkg.prefix).as_posix()),
             define("CMAKE_BUILD_TYPE", build_type),
+            define("CMAKE_EXPORT_COMPILE_COMMANDS", True),
         ]
 
         if primary_generator == "Unix Makefiles":
