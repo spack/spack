@@ -4,11 +4,13 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import re
+import sys
 from tempfile import NamedTemporaryFile
 
 import spack.platforms
 from spack.package import *
 
+is_windows = sys.platform == "win32"
 
 class Sqlite(AutotoolsPackage, NMakePackage):
     """SQLite is a C-language library that implements a small, fast,
@@ -53,19 +55,6 @@ class Sqlite(AutotoolsPackage, NMakePackage):
     # no hard readline dep on Windows + no variant support, makefile has minimal to no options
     for plat in ["linux", "darwin", "cray", "freebsd"]:
         variant(
-            "functions",
-            default=False,
-            description="Provide mathematical and string extension functions for SQL "
-            "queries using the loadable extensions mechanism",
-            when=f"+dynamic_extensions platform={plat}",
-        )
-        variant(
-            "fts",
-            default=True,
-            description="Include fts4 and fts5 support",
-            when=f"platform={plat}",
-        )
-        variant(
             "column_metadata",
             default=True,
             description="Build with COLUMN_METADATA",
@@ -77,11 +66,25 @@ class Sqlite(AutotoolsPackage, NMakePackage):
             description="Support loadable extensions",
             when=f"platform={plat}",
         )
-        variant(
-            "rtree", default=True, description="Build with Rtree module", when=f"platform={plat}"
-        )
+
         depends_on("readline", when=f"platform={plat}")
 
+    function_condition = "platform=windows" if is_windows else "+dynamic_extensions"
+    variant(
+            "fts",
+            default=True,
+            description="Include fts4 and fts5 support"
+        )
+    variant(
+            "functions",
+            default=is_windows,
+            description="Provide mathematical and string extension functions for SQL "
+            "queries using the loadable extensions mechanism",
+            when=f"{function_condition}",
+        )
+    variant(
+            "rtree", default=True, description="Build with Rtree module"
+        )
     depends_on("zlib-api")
     depends_on("tcl", when="platform=windows")
 
@@ -286,21 +289,27 @@ class NMakeBuilder(spack.build_systems.nmake.NMakeBuilder):
         return "Makefile.msc"
 
     def nmake_args(self):
+        enable_fts = "1" if "+fts" in self.spec else "0"
+        enable_rtree = "1" if "+rtree" in self.spec else "0"
+        enable_functions = "1" if "+functions" in self.spec else "0"
+
+        opts = "OPTS="\
+                f"-DSQLITE_ENABLE_FTS3={enable_fts} "\
+                f"-DSQLITE_ENABLE_FTS4={enable_fts} "\
+                f"-DSQLITE_ENABLE_FTS5={enable_fts} "\
+                f"-DSQLITE_ENABLE_RTREE={enable_rtree} "\
+                "-DSQLITE_ENABLE_JSON1=1 "\
+                "-DSQLITE_ENABLE_GEOPOLY=1 "\
+                "-DSQLITE_ENABLE_SESSION=1 "\
+                "-DSQLITE_ENABLE_PREUPDATE_HOOK=1 "\
+                "-DSQLITE_ENABLE_SERIALIZE=1 "\
+                f"-DSQLITE_ENABLE_MATH_FUNCTIONS={enable_functions}"
+
         return [
-            "USE_NATIVE_LIBPATHS=1",
-            "DYNAMIC_SHELL=1",
-            "OPTS="
-            "-DSQLITE_ENABLE_FTS3=1 "
-            "-DSQLITE_ENABLE_FTS4=1 "
-            "-DSQLITE_ENABLE_FTS5=1 "
-            "-DSQLITE_ENABLE_RTREE=1 "
-            "-DSQLITE_ENABLE_JSON1=1 "
-            "-DSQLITE_ENABLE_GEOPOLY=1 "
-            "-DSQLITE_ENABLE_SESSION=1 "
-            "-DSQLITE_ENABLE_PREUPDATE_HOOK=1 "
-            "-DSQLITE_ENABLE_SERIALIZE=1 "
-            "-DSQLITE_ENABLE_MATH_FUNCTIONS=1",
-        ]
+                "USE_NATIVE_LIBPATHS=1",
+                "DYNAMIC_SHELL=1",
+                opts
+            ]
 
     def install(self, pkg, spec, prefix):
         with working_dir(self.build_directory):
