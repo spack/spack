@@ -8,16 +8,13 @@ ci:
   - match_behavior: first
     submapping:
     - match:
-      - hipblas
       - llvm
       - llvm-amdgpu
       - pango
       - paraview
       - py-tensorflow
       - py-torch
-      - qt
       - rocblas
-      - visit
       build-job:
         tags: [ "spack", "huge" ]
         variables:
@@ -41,6 +38,7 @@ ci:
       - gcc
       - ginkgo
       - hdf5
+      - hipblas
       - hpx
       - kokkos-kernels
       - kokkos-nvcc-wrapper
@@ -58,6 +56,7 @@ ci:
       - parallelio
       - plumed
       - precice
+      - qt
       - raja
       - relion
       - rocfft
@@ -69,6 +68,7 @@ ci:
       - sundials
       - trilinos
       - umpire
+      - visit
       - vtk
       - vtk-h
       - vtk-m
