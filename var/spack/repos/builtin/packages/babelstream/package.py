@@ -55,31 +55,26 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
 
     # Some models need to have the programming model abstraction downloaded -
     # this variant enables a path to be provided.
-    variant("dir", values=str, default="none", description="Enable Directory support")
+    variant("dir", values=str, default="none", description="Enable Directory support") 
     variant("submodel", values=("usm", "acc"), when="+sycl2020", default="usm", description="SYCL2020 -> choose between usm and acc methods")
-    variant("option", values=str, default="none", description="For SYCL/SYCL2020 choose compiler implementation option, for THRUST which THRUST implementation to use [CUDA/ROCM]")
-    conflicts(
-            "submodel=none",
-            when="+sycl2020",
-            msg="SYCL2020 requires memory model to be specified by submodel=",
-    )
-    conflicts(
-            "option=none",
-            when="+sycl",
-            msg="SYCL requires compiler implementation to be specified by option=",
-    )
-    conflicts(
-            "option=none",
-            when="+sycl2020",
-            msg="SYCL2020 requires compiler implementation to be specified by option=",
-    )
-    conflicts(
-            "option=none",
-            when="+thrust",
-            msg="Which Thrust implementation to use, supported options include option= \
+
+
+    sycl_compiler_implementations = ["oneapi-icpx","oneapi-clang","dpcpp","hipsycl","computecpp"]  # list them here, with the default first
+    sycl_compiler_implementations_description = "Compile using the specified SYCL compiler implementation\
+           Supported values are \
+           ONEAPI-ICPX  - icpx as a standalone compiler \
+           ONEAPI-Clang - oneAPI's Clang driver (enabled via `source /opt/intel/oneapi/setvars.sh  --include-intel-llvm`)\
+           DPCPP        - dpc++ as a standalone compiler (https://github.com/intel/llvm)\
+           HIPSYCL      - hipSYCL compiler (https://github.com/illuhad/hipSYCL)s\
+           COMPUTECPP   - ComputeCpp compiler (https://developer.codeplay.com/products/computecpp/ce/home)"
+    variant("sycl_compiler_implementation", values=sycl_compiler_implementations, default=sycl_compiler_implementations[0], when="+sycl", description=sycl_compiler_implementations_description)
+    variant("sycl_compiler_implementation", values=sycl_compiler_implementations, default=sycl_compiler_implementations[0], when="+sycl2020", description=sycl_compiler_implementations_description)
+    
+    
+    variant("thrust_backend", values=("cuda", "rocm"), default="cuda", when="+thrust", description="Which THRUST implementation to use, supported options include option= \
             - CUDA (via https://github.com/NVIDIA/thrust)\
-            - ROCM (via https://github.com/ROCmSoftwarePlatform/rocThrust)",
-    )
+            - ROCM (via https://github.com/ROCmSoftwarePlatform/rocThrust)")
+
     # Kokkos conflict and variant
     conflicts(
         "dir=none", when="+kokkos", msg="KOKKKOS requires architecture to be specfied by dir="
@@ -88,8 +83,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
 
     # ACC conflict
     variant("cpu_arch", values=str, default="none", description="Enable CPU Target for ACC")
-
-
+    
     # STD conflicts
     conflicts("+stddata", when="%gcc@:10.1.0", msg="STD-data requires newer version of GCC")
     conflicts("+stdindices", when="%gcc@:10.1.0", msg="STD-indices requires newer version of GCC")
@@ -102,17 +96,13 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
         msg="CUDA requires architecture to be specfied by cuda_arch=",
     )
     variant("mem", values=str, default="DEFAULT", description="Enable MEM Target for CUDA")
-    # Raja Conflict
+    # Raja offload
     variant(
         "offload",
         values=("cpu", "nvidia"),
-        default="none",
-        description="Enable RAJA Target [CPU or NVIDIA] / Offload with custom settings for OpenMP",
-    )
-    conflicts(
-        "offload=none",
+        default="cpu",
         when="+raja",
-        msg="RAJA requires architecture to be specfied by target=[CPU,NVIDIA]",
+        description="Enable RAJA Target [CPU or NVIDIA] / Offload with custom settings for OpenMP",
     )
 
     # download raja from https://github.com/LLNL/RAJA
@@ -127,7 +117,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
     depends_on("thrust", when="+thrust")
     depends_on("cuda", when="+thrust")
     depends_on("hip", when="+hip")
-    depends_on("rocthrust", when="+thrust option=rocm")
+    depends_on("rocthrust", when="+thrust thrust_backend=rocm")
     depends_on("intel-oneapi-tbb", when="+stddata")
     depends_on("intel-tbb", when="+stdindices")
     # TBB Dependency
@@ -415,14 +405,14 @@ register_flag_optional(TARGET_PROCESSOR
         if "+sycl" in self.spec:
             args.append("-DCMAKE_CXX_COMPILER=" + spack_cxx)
             args.append("-DCXX_EXTRA_FLAGS=" + "-fsycl")
-            args.append("-DSYCL_COMPILER=" + self.spec.variants["option"].value.upper())
-            if self.spec.variants["option"].value.upper() == "none":
+            args.append("-DSYCL_COMPILER=" + self.spec.variants["sycl_compiler_implementation"].value.upper())
+            if self.spec.variants["sycl_compiler_implementation"].value.upper() == "none":
                 args.append("-DSYCL_COMPILER_DIR=" + self.spec.variants["dir"].value)
-            if self.spec.variants["option"].value.upper() != "ONEAPI-DPCPP":
+            if self.spec.variants["sycl_compiler_implementation"].value.upper() != "ONEAPI-DPCPP":
                 args.append(
-                    "-DSYCL_COMPILER_DIR=" + self.spec.variants["option"].value.upper()
+                    "-DSYCL_COMPILER_DIR=" + self.spec.variants["sycl_compiler_implementation"].value.upper()
                 )
-            if self.spec.variants["option"].value.upper() == "COMPUTECPP":
+            if self.spec.variants["sycl_compiler_implementation"].value.upper() == "COMPUTECPP":
                 args.append("-DOpenCL_LIBRARY=")
 
         # ===================================
@@ -439,13 +429,13 @@ register_flag_optional(TARGET_PROCESSOR
                 args.append("-DSYCL_COMPILER=ONEAPI-ICPX")
             else:
                 args.append(
-                    "-DSYCL_COMPILER=" + self.spec.variants["option"].value.upper()
+                    "-DSYCL_COMPILER=" + self.spec.variants["sycl_compiler_implementation"].value.upper()
                 )
-                if self.spec.variants["option"].value.upper() != "ONEAPI-DPCPP":
+                if self.spec.variants["sycl_compiler_implementation"].value.upper() != "ONEAPI-DPCPP":
                     args.append(
-                        "-DSYCL_COMPILER_DIR=" + self.spec.variants["option"].value.upper()
+                        "-DSYCL_COMPILER_DIR=" + self.spec.variants["sycl_compiler_implementation"].value.upper()
                     )
-                    if self.spec.variants["option"].value.upper() == "COMPUTE-CPP":
+                    if self.spec.variants["sycl_compiler_implementation"].value.upper() == "COMPUTE-CPP":
                         args.append("-DOpenCL_LIBRARY=")
 
         # ===================================
@@ -531,8 +521,8 @@ register_flag_optional(TARGET_PROCESSOR
         #             THRUST
         # ===================================
         if "+thrust" in self.spec:
-            if "cuda" in self.spec.variants["option"].value:
-                args.append("-DTHRUST_IMPL=" + self.spec.variants["option"].value.upper())
+            if "cuda" in self.spec.variants["thrust_backend"].value:
+                args.append("-DTHRUST_IMPL=" + self.spec.variants["thrust_backend"].value.upper())
                 args.append("-SDK_DIR=" + self.spec["thrust"].prefix + "/include")
                 cuda_arch_list = self.spec.variants["cuda_arch"].value
                 # the architecture value is only number so append sm_ to the name
@@ -550,9 +540,9 @@ register_flag_optional(TARGET_PROCESSOR
                 # args.append("-DCXX_EXTRA_FLAGS=-MP;-march=skylake-avx512;-Ofast")
 
 
-            if "rocm" in self.spec.variants["option"].value:
+            if "rocm" in self.spec.variants["thrust_backend"].value:
                 env["SPACK_CXX"] = self.spec["hip"].hipcc
-                args.append("-DTHRUST_IMPL=" + self.spec.variants["option"].value.upper())
+                args.append("-DTHRUST_IMPL=" + self.spec.variants["thrust_backend"].value.upper())
                 args.append("-SDK_DIR=" + self.spec["rocthrust"].prefix)
                 args.append("-DBACKEND=" + self.spec.variants["backend"].value.upper())
 
