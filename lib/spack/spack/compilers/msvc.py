@@ -4,14 +4,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import pathlib
 import re
 import subprocess
 import sys
 import tempfile
 from typing import Dict, List, Set
-
-import llnl.util.filesystem as fs
 
 import spack.compiler
 import spack.operating_systems.windows_os
