@@ -251,6 +251,8 @@ class Libint(AutotoolsPackage):
         if "+fortran" in self.spec:
             if not self.spec.satisfies("%fj"):
                 filter_file(
-                    "$(CXX) $(CXXFLAGS)", "$(FC) $(FCFLAGS)", "export/fortran/Makefile", string=True
+                    "$(CXX) $(CXXFLAGS)",
+                    "$(FC) $(FCFLAGS)",
+                    "export/fortran/Makefile",
+                    string=True,
                 )
-
