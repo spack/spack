@@ -54,6 +54,24 @@ requirements = {
     ]
 }
 
+prefer_and_conflict = {
+    "type": "array",
+    "items": {
+        "oneOf": [
+            {
+                "type": "object",
+                "additionalProperties": False,
+                "properties": {
+                    "spec": {"type": "string"},
+                    "message": {"type": "string"},
+                    "when": {"type": "string"},
+                },
+            },
+            {"type": "string"},
+        ]
+    },
+}
+
 permissions = {
     "type": "object",
     "additionalProperties": False,
@@ -85,6 +103,8 @@ properties = {
                 "additionalProperties": False,
                 "properties": {
                     "require": requirements,
+                    "prefer": prefer_and_conflict,
+                    "conflict": prefer_and_conflict,
                     "version": {},  # Here only to warn users on ignored properties
                     "target": {
                         "type": "array",
@@ -133,6 +153,8 @@ properties = {
                 "additionalProperties": False,
                 "properties": {
                     "require": requirements,
+                    "prefer": prefer_and_conflict,
+                    "conflict": prefer_and_conflict,
                     "version": {
                         "type": "array",
                         "default": [],
@@ -185,7 +207,6 @@ properties = {
         },
     }
 }
-
 
 #: Full schema with metadata
 schema = {

@@ -180,6 +180,8 @@ class Tfel(CMakePackage):
             args.append("-Denable-python-bindings=OFF")
 
         if ("+python" in self.spec) or ("+python_bindings" in self.spec):
+            # Note: calls find_package(PythonLibs) before find_package(PythonInterp), so these
+            # variables are required.
             python = self.spec["python"]
             args.append("-DPYTHON_LIBRARY={0}".format(python.libs[0]))
             args.append("-DPYTHON_INCLUDE_DIR={0}".format(python.headers.directories[0]))

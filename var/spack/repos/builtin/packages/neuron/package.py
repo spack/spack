@@ -86,9 +86,6 @@ class Neuron(CMakePackage):
         if "~mpi" in spec and "+coreneuron" in spec:
             args.append("-DCORENRN_ENABLE_MPI=OFF")
 
-        if "+python" in spec:
-            args.append("-DPYTHON_EXECUTABLE:FILEPATH=" + spec["python"].command.path)
-
         if spec.variants["build_type"].value == "Debug":
             args.append("-DCMAKE_C_FLAGS=-g -O0")
             args.append("-DCMAKE_CXX_FLAGS=-g -O0")

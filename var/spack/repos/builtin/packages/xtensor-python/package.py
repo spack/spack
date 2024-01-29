@@ -33,11 +33,3 @@ class XtensorPython(CMakePackage):
     depends_on("python", type=("build", "link", "run"))
 
     extends("python")
-
-    def cmake_args(self):
-        spec = self.spec
-
-        python_exe = spec["python"].command.path
-
-        args = ["-DPYTHON_EXECUTABLE={0}".format(python_exe)]
-        return args
