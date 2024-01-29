@@ -106,6 +106,7 @@ class Gmsh(CMakePackage):
     conflicts("+slepc", when="~petsc")
     conflicts("+oce", when="+opencascade")
     conflicts("+oce", when="^gmsh@4.10:4.10.3")
+    conflicts("+oce", when="@4.10.3:")
     conflicts("+metis", when="+external", msg="External Metis cannot build with GMSH")
 
     def flag_handler(self, name, flags):
