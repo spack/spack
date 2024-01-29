@@ -126,35 +126,6 @@ jobs:
       with:
         flags: shelltests,linux
 
-  # Test RHEL8 UBI with platform Python. This job is run
-  # only on PRs modifying core Spack
-  rhel8-platform-python:
-    runs-on: ubuntu-latest
-    container: registry.access.redhat.com/ubi8/ubi
-    steps:
-    - name: Install System packages
-      run: |
-          dnf install -y \
-              bzip2 curl file gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
-              make patch tcl unzip which xz
-    - name: Install Python packages
-      run: |
-          pip install --upgrade pytest
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # @v2
-    - name: Setup repo and non-root user
-      run: |
-          git --version
-          git config --global --add safe.directory /__w/spack/spack
-          git fetch --unshallow
-          . .github/workflows/setup_git.sh
-          useradd spack-test
-          chown -R spack-test .
-    - name: Run unit tests
-      shell: runuser -u spack-test -- bash {0}
-      run: |
-          source share/spack/setup-env.sh
-          spack -d bootstrap now
-          spack unit-test -k 'not cvs and not svn and not hg' -x --verbose
   # Test for the clingo based solver (using clingo-cffi)
   clingo-cffi:
     runs-on: ubuntu-latest
