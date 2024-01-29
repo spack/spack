@@ -30,7 +30,7 @@ class Gmp(AutotoolsPackage, GNUMirrorPackage):
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
     # only required when developing
-    depends_on("gettext", when="~stage2")
+    depends_on("gettext", when="+dev")
 
     variant(
         "libs",
@@ -40,6 +40,11 @@ class Gmp(AutotoolsPackage, GNUMirrorPackage):
         description="Build shared libs, static libs or both",
     )
     variant("cxx", default=True, description="Enable C++ support")
+    variant(
+        "dev",
+        default=False,
+        description="Require development dependencies"
+        )
     variant(
         "stage2",
         default=False,

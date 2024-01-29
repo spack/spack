@@ -37,7 +37,7 @@ class Mpfr(AutotoolsPackage, GNUMirrorPackage):
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
     depends_on("autoconf-archive", when="@4.0.2:", type="build")
-    depends_on("texinfo", when="@4.1.0:", type="build")
+    depends_on("texinfo", when="@4.1.0: +docs", type="build")
 
     variant(
         "libs",
@@ -45,6 +45,11 @@ class Mpfr(AutotoolsPackage, GNUMirrorPackage):
         values=("shared", "static"),
         multi=True,
         description="Build shared libs, static libs or both",
+    )
+    variant(
+        "docs",
+        default=False,
+        description="Build documentation",
     )
 
     # force_autoreconf = True

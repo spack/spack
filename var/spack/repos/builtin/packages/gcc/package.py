@@ -133,6 +133,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     variant(
         "piclibs", default=False, description="Build PIC versions of libgfortran.a and libstdc++.a"
     )
+    variant("docs", default=False, description="Build documentation")
+    variant("auto_rpath", default=True, description="Write a specfile that automatically adds rpaths to runtime libraries to things compiled by this gcc")
     variant("strip", default=False, description="Strip executables to reduce installation size")
     variant("nvptx", default=False, description="Target nvptx offloading to NVIDIA GPUs")
     variant("bootstrap", default=True, description="Enable 3-stage bootstrap")
@@ -179,7 +181,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on("gmp ~stage2", when="~stage2")
     # mawk is not sufficient for go support
     depends_on("gawk@3.1.5:", type="build")
-    depends_on("texinfo@4.7:", type="build")
+    depends_on("texinfo@4.7:", when="+docs", type="build")
     depends_on("libtool", type="build")
     # dependencies required for git versions
     depends_on("m4@1.4.6:", when="@master", type="build")
@@ -1141,7 +1143,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             if not os.path.exists(tgt):
                 symlink(f, tgt)
 
-    @run_after("install")
+    @run_after("install", when="+auto_rpath")
     def write_rpath_specs(self):
         """Generate a spec file so the linker adds a rpath to the libs
         the compiler used to build the executable.
