@@ -31,7 +31,7 @@ class PyFenicsFfc(PythonPackage):
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
 
-    for ver in ["master", "2019.1.0.post0", "2018.1.0", "2017.2.0.post0", "2016.2.0"]:
+    for ver in ["2019.1.0.post0", "2018.1.0", "2017.2.0.post0", "2016.2.0"]:
         if ver in ["2019.1.0.post0", "2017.2.0.post0"]:
             ver = ver[: ver.rfind(".post")]
         wver = "@" + ver
