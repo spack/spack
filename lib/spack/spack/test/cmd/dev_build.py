@@ -225,9 +225,8 @@ def test_dev_build_env_with_vars(tmpdir, install_mockery, mutable_mock_env_path,
     # store the build path in an environment variable that will be used in the environment
     monkeypatch.setenv("CUSTOM_BUILD_PATH", build_dir)
 
-    with build_dir.as_cwd():
-        with open(spec.package.filename, "w") as f:
-            f.write(spec.package.original_string)
+    with build_dir.as_cwd(), open(spec.package.filename, "w") as f:
+        f.write(spec.package.original_string)
 
     # setup environment
     envdir = tmpdir.mkdir("env")
