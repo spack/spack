@@ -8,6 +8,7 @@ import pathlib
 import re
 import subprocess
 import sys
+import tempfile
 from typing import Dict, List, Set
 
 import llnl.util.filesystem as fs
@@ -301,9 +302,8 @@ class Msvc(Compiler):
         if self.fc and Version(self.fc_version(self.fc)).satisfies(
             VersionRange("2021.3.0", "2023.1.0")
         ):
-            new_tmp = pathlib.Path(pkg.stage.path) / "MSVCTMP"
-            fs.safe_make_new_dir(new_tmp)
-            env.set("TMP", str(new_tmp))
+            new_tmp = tempfile.mkdtemp(dir=pkg.stage.path)
+            env.set("TMP", new_tmp)
 
         env.set("CC", self.cc)
         env.set("CXX", self.cxx)

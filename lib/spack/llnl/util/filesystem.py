@@ -1068,16 +1068,6 @@ def working_dir(dirname: str, *, create: bool = False):
         os.chdir(orig_dir)
 
 
-@system_path_filter
-def safe_make_new_dir(path):
-    while True:
-        try:
-            os.mkdir(path)
-            break
-        except FileExistsError:
-            pass
-
-
 class CouldNotRestoreDirectoryBackup(RuntimeError):
     def __init__(self, inner_exception, outer_exception):
         self.inner_exception = inner_exception
