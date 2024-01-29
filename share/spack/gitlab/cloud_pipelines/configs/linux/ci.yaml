@@ -58,11 +58,8 @@ ci:
       - parallelio
       - plumed
       - precice
-      #- py-tensorflow
-      #- qt
       - raja
       - relion
-      #- rocblas
       - rocfft
       - rocsolver
       - rocsparse
@@ -72,7 +69,6 @@ ci:
       - sundials
       - trilinos
       - umpire
-      #- visit
       - vtk
       - vtk-h
       - vtk-m
