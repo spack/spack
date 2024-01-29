@@ -15,10 +15,13 @@ class PyPandas(PythonPackage):
     homepage = "https://pandas.pydata.org/"
     pypi = "pandas/pandas-1.2.0.tar.gz"
 
+    skip_modules = ["pandas.tests", "pandas.plotting._matplotlib", "pandas.core._numba.kernels"]
+
     maintainers("adamjstewart")
 
     license("Apache-2.0")
 
+    version("2.2.0", sha256="30b83f7c3eb217fb4d1b494a57a2fda5444f17834f5df2de6b2ffff68dc3c8e2")
     version("2.1.4", sha256="fcb68203c833cc735321512e13861358079a96c174a61f5116a1de89c58c0ef7")
     version("2.1.3", sha256="22929f84bca106921917eb73c1521317ddd0a4c71b395bcf767a106e3494209f")
     version("2.1.2", sha256="52897edc2774d2779fbeb6880d2cfb305daa0b1a29c16b91f531a18918a6e0f3")
@@ -64,10 +67,10 @@ class PyPandas(PythonPackage):
     version("0.25.3", sha256="52da74df8a9c9a103af0a72c9d5fdc8e0183a90884278db7f386b5692a2220a4")
     version("0.25.2", sha256="ca91a19d1f0a280874a24dca44aadce42da7f3a7edb7e9ab7c7baad8febee2be")
 
+    variant("performance", default=True, description="Build recommended performance dependencies")
     variant("excel", when="@1.4:", default=False, description="Build with support for Excel")
 
-    # Required dependencies
-    # https://pandas.pydata.org/pandas-docs/stable/getting_started/install.html#python-version-support
+    # Based on PyPI wheel versions
     depends_on("python@3.9:3.12", when="@2.1.1:", type=("build", "run"))
     depends_on("python@3.9:3.11", when="@2.1.0", type=("build", "run"))
     depends_on("python@3.8:3.11", when="@1.5:2.0", type=("build", "run"))
@@ -76,20 +79,19 @@ class PyPandas(PythonPackage):
     depends_on("python@:3.9", when="@1.1.3:1.3.2", type=("build", "run"))
     depends_on("python@:3.8", when="@0.25.2:1.1.2", type=("build", "run"))
 
-    # pyproject.toml
     depends_on("py-meson-python@0.13.1", when="@2.1:", type="build")
     depends_on("meson@1.2.1", when="@2.1.1:", type="build")
     depends_on("meson@1.0.1", when="@2.1.0", type="build")
-    depends_on("py-cython@0.29.33:2", when="@2:", type="build")
-    depends_on("py-cython@0.29.32:2", when="@1.4.4:", type="build")
-    depends_on("py-cython@0.29.30:2", when="@1.4.3:", type="build")
-    depends_on("py-cython@0.29.24:2", when="@1.3.4:", type="build")
-    depends_on("py-cython@0.29.21:2", when="@1.1.3:", type="build")
-    depends_on("py-cython@0.29.16:2", when="@1.1:", type="build")
-    depends_on("py-cython@0.29.13:2", when="@1:", type="build")
+    depends_on("py-cython@3.0.5", when="@2.2:", type="build")
+    depends_on("py-cython@0.29.33:2", when="@2.0:2.1", type="build")
+    depends_on("py-cython@0.29.32:2", when="@1.4.4:1", type="build")
+    depends_on("py-cython@0.29.30:2", when="@1.4.3", type="build")
+    depends_on("py-cython@0.29.24:2", when="@1.3.4:1.4.2", type="build")
+    depends_on("py-cython@0.29.21:2", when="@1.1.3:1.3.3", type="build")
+    depends_on("py-cython@0.29.16:2", when="@1.1.0:1.1.2", type="build")
+    depends_on("py-cython@0.29.13:2", when="@1.0", type="build")
     depends_on("py-versioneer+toml", when="@2:", type="build")
 
-    # https://pandas.pydata.org/pandas-docs/stable/getting_started/install.html#dependencies
     depends_on("py-numpy@1.22.4:2", when="@2.1.2:", type=("build", "run"))
     depends_on("py-numpy@1.22.4:", when="@2.1:", type=("build", "run"))
     depends_on("py-numpy@1.20.3:", when="@1.5:", type=("build", "run"))
@@ -110,42 +112,42 @@ class PyPandas(PythonPackage):
     depends_on("py-pytz@2017.2:", type=("build", "run"))
     depends_on("py-tzdata@2022.1:", when="@2:", type=("build", "run"))
 
-    # Recommended dependencies
-    # https://pandas.pydata.org/pandas-docs/stable/getting_started/install.html#performance-dependencies-recommended
-    depends_on("py-numexpr@2.8.0:", when="@2.1:", type=("build", "run"))
-    depends_on("py-numexpr@2.7.3:", when="@1.5:", type=("build", "run"))
-    depends_on("py-numexpr@2.7.1:", when="@1.4:", type=("build", "run"))
-    depends_on("py-numexpr@2.7.0:", when="@1.3:", type=("build", "run"))
-    depends_on("py-numexpr@2.6.8:", when="@1.2:", type=("build", "run"))
-    depends_on("py-numexpr@2.6.2:", when="@0.25:", type=("build", "run"))
-    depends_on("py-bottleneck@1.3.4:", when="@2.1:", type=("build", "run"))
-    depends_on("py-bottleneck@1.3.2:", when="@1.5:", type=("build", "run"))
-    depends_on("py-bottleneck@1.3.1:", when="@1.4:", type=("build", "run"))
-    depends_on("py-bottleneck@1.2.1:", when="@0.25:", type=("build", "run"))
-    depends_on("py-numba@0.55.2:", when="@2.1:", type=("build", "run"))
-    depends_on("py-numba@0.53.1:", when="@2.0:", type=("build", "run"))
+    with when("+performance"):
+        depends_on("py-bottleneck@1.3.4:", when="@2.1:", type="run")
+        depends_on("py-bottleneck@1.3.2:", when="@1.5:", type="run")
+        depends_on("py-bottleneck@1.3.1:", when="@1.4:", type="run")
+        depends_on("py-bottleneck@1.2.1:", when="@0.25:", type="run")
+        depends_on("py-numba@0.55.2:", when="@2.1:", type="run")
+        depends_on("py-numba@0.53.1:", when="@2.0:", type="run")
+        depends_on("py-numexpr@2.8.0:", when="@2.1:", type="run")
+        depends_on("py-numexpr@2.7.3:", when="@1.5:", type="run")
+        depends_on("py-numexpr@2.7.1:", when="@1.4:", type="run")
+        depends_on("py-numexpr@2.7.0:", when="@1.3:", type="run")
+        depends_on("py-numexpr@2.6.8:", when="@1.2:", type="run")
+        depends_on("py-numexpr@2.6.2:", when="@0.25:", type="run")
 
-    # Optional dependencies
-    # https://pandas.pydata.org/pandas-docs/stable/getting_started/install.html#optional-dependencies
-
-    # Excel dependencies for 1.4+ (not coded up for earlier versions)
-    depends_on("py-odfpy@1.4.1:", type=("run"), when="@2.0: +excel")
-    depends_on("py-openpyxl@3.0.10:", type=("run"), when="@2.1: +excel")
-    depends_on("py-openpyxl@3.0.7:", type=("run"), when="@1.5: +excel")
-    depends_on("py-openpyxl@3.0.3:", type=("run"), when="@1.4: +excel")
-    depends_on("py-pyxlsb@1.0.9:", type=("run"), when="@2.1: +excel")
-    depends_on("py-pyxlsb@1.0.8:", type=("run"), when="@1.5: +excel")
-    depends_on("py-pyxlsb@1.0.6:", type=("run"), when="@1.4: +excel")
-    depends_on("py-xlrd@2.0.1:", type=("run"), when="@1.4: +excel")
-    depends_on("py-xlwt@1.3.0:", type=("run"), when="@1.4:1.5 +excel")
-    depends_on("py-xlsxwriter@3.0.3:", type=("run"), when="@2.1: +excel")
-    depends_on("py-xlsxwriter@1.4.3:", type=("run"), when="@1.5: +excel")
-    depends_on("py-xlsxwriter@1.2.2:", type=("run"), when="@1.4: +excel")
+    with when("+excel"):
+        # Excel dependencies for 1.4+ (not coded up for earlier versions)
+        depends_on("py-odfpy@1.4.1:", type="run", when="@2.0:")
+        depends_on("py-openpyxl@3.1:", type="run", when="@2.2:")
+        depends_on("py-openpyxl@3.0.10:", type="run", when="@2.1:")
+        depends_on("py-openpyxl@3.0.7:", type="run", when="@1.5:")
+        depends_on("py-openpyxl@3.0.3:", type="run", when="@1.4:")
+        depends_on("py-python-calamine@0.1.7:", type="run", when="@2.2:")
+        depends_on("py-pyxlsb@1.0.10:", type="run", when="@2.2:")
+        depends_on("py-pyxlsb@1.0.9:", type="run", when="@2.1:")
+        depends_on("py-pyxlsb@1.0.8:", type="run", when="@1.5:")
+        depends_on("py-pyxlsb@1.0.6:", type="run", when="@1.4:")
+        depends_on("py-xlrd@2.0.1:", type="run", when="@2.2:")
+        depends_on("py-xlrd@2.0.1:", type="run", when="@1.4:")
+        depends_on("py-xlwt@1.3.0:", type="run", when="@1.4:1.5")
+        depends_on("py-xlsxwriter@3.0.5:", type="run", when="@2.2:")
+        depends_on("py-xlsxwriter@3.0.3:", type="run", when="@2.1:")
+        depends_on("py-xlsxwriter@1.4.3:", type="run", when="@1.5:")
+        depends_on("py-xlsxwriter@1.2.2:", type="run", when="@1.4:")
 
     # Historical dependencies
     depends_on("py-setuptools@61:", when="@2.0", type="build")
     depends_on("py-setuptools@51:", when="@1.3.2:1", type="build")
     depends_on("py-setuptools@38.6:", when="@1.3.0:1.3.1", type="build")
     depends_on("py-setuptools@24.2:", when="@:1.2", type="build")
-
-    skip_modules = ["pandas.tests", "pandas.plotting._matplotlib", "pandas.core._numba.kernels"]
