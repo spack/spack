@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -68,7 +68,7 @@ def syaml_type(obj):
     """
     for syaml_t, t in syaml_types.items():
         if type(obj) is not bool and isinstance(obj, t):
-            return syaml_t(obj) if type(obj) != syaml_t else obj
+            return syaml_t(obj) if type(obj) is not syaml_t else obj
     return obj
 
 

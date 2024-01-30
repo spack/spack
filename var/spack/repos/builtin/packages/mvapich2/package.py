@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -84,6 +84,15 @@ class Mvapich2(AutotoolsPackage):
     )
 
     variant(
+        "pmi_version",
+        description=("The pmi version to be used with slurm"),
+        when="process_managers=slurm",
+        default="pmi2",
+        values=("pmi1", "pmi2", "pmix"),
+        multi=False,
+    )
+
+    variant(
         "fabrics",
         description="Select the fabric to be enabled for this build."
         "If you have verbs (either from OFED or MOFED), PSM or PSM2 "
@@ -117,10 +126,11 @@ class Mvapich2(AutotoolsPackage):
         values=auto_or_any_combination_of("lustre", "gpfs", "nfs", "ufs"),
     )
 
+    depends_on("automake@1.15", type="build")  # needed for torque patch
     depends_on("findutils", type="build")
     depends_on("bison", type="build")
     depends_on("pkgconfig", type="build")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libpciaccess", when=(sys.platform != "darwin"))
     depends_on("libxml2")
     depends_on("cuda", when="+cuda")
@@ -132,8 +142,15 @@ class Mvapich2(AutotoolsPackage):
     depends_on("rdma-core", when="fabrics=nemesisibtcp")
     depends_on("libfabric", when="fabrics=nemesisofi")
     depends_on("slurm", when="process_managers=slurm")
+    depends_on("pmix", when="pmi_version=pmix")
+
+    # Fix segmentation fault in `MPIR_Attr_delete_list`:
+    # <https://lists.osu.edu/pipermail/mvapich-discuss/2023-January/010695.html>.
+    patch("mpir_attr_delete_list_segfault.patch", when="@2.3.7")
 
     conflicts("fabrics=psm2", when="@:2.1")  # psm2 support was added at version 2.2
+
+    patch("fix-torque.patch", when="@2.3.7-1")
 
     filter_compiler_wrappers("mpicc", "mpicxx", "mpif77", "mpif90", "mpifort", relative_root="bin")
 
@@ -270,11 +287,14 @@ class Mvapich2(AutotoolsPackage):
 
         # See: http://slurm.schedmd.com/mpi_guide.html#mvapich2
         if "process_managers=slurm" in spec:
-            opts = [
-                "--with-pmi=pmi2",
-                "--with-pm=slurm",
-                "--with-slurm={0}".format(spec["slurm"].prefix),
-            ]
+            opts = ["--with-pm=slurm", "--with-slurm={0}".format(spec["slurm"].prefix)]
+            if "pmi_version=pmi1" in spec:
+                opts.append("--with-pmi=pmi1")
+            elif "pmi_version=pmi2" in spec:
+                opts.append("--with-pmi=pmi2")
+            elif "pmi_version=pmix" in spec:
+                opts.append("--with-pmi=pmix")
+                opts.append("--with-pmix={0}".format(spec["pmix"].prefix))
 
         return opts
 
@@ -340,7 +360,12 @@ class Mvapich2(AutotoolsPackage):
 
     def setup_run_environment(self, env):
         if "process_managers=slurm" in self.spec:
-            env.set("SLURM_MPI_TYPE", "pmi2")
+            if "pmi_version=pmi1" in self.spec:
+                env.set("SLURM_MPI_TYPE", "pmi1")
+            elif "pmi_version=pmi2" in self.spec:
+                env.set("SLURM_MPI_TYPE", "pmi2")
+            elif "pmi_version=pmix" in self.spec:
+                env.set("SLURM_MPI_TYPE", "pmix")
 
         env.set("MPI_ROOT", self.prefix)
 

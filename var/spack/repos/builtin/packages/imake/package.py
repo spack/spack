@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Imake(AutotoolsPackage, XorgPackage):
 
     homepage = "http://www.snake.net/software/imake-stuff/"
     xorg_mirror_path = "util/imake-1.0.7.tar.gz"
+
+    license("custom")
 
     version("1.0.9", sha256="ca53ad18c683091490596d72fee8dbee4c6ddb7693709e25f26da140d29687c1")
     version("1.0.7", sha256="6bda266a07eb33445d513f1e3c82a61e4822ccb94d420643d58e1be5f881e5cb")

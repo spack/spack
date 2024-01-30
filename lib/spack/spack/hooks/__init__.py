@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,7 +33,7 @@ from llnl.util.lang import ensure_last, list_modules
 import spack.paths
 
 
-class _HookRunner(object):
+class _HookRunner:
     #: Stores all hooks on first call, shared among
     #: all HookRunner objects
     _hooks = None

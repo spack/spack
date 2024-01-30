@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class RTigris(RPackage):
     load into R as 'SpatialDataFrame' or 'sf' objects."""
 
     cran = "tigris"
+
+    license("MIT")
 
     version("2.0.1", sha256="d87c6b0c11ffb967699d345c6bfcfa82581a0753e1130bf0c927b2960b074d8c")
     version("1.6.1", sha256="927e8da3f7120bcc10f0b4ded95687512693e069f082eea7aea6302a2f1b2db2")

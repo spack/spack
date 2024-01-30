@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Texstudio(QMakePackage):
     homepage = "https://www.texstudio.org"
     url = "https://github.com/texstudio-org/texstudio/archive/2.12.16.tar.gz"
     git = "https://github.com/texstudio-org/texstudio.git"
+
+    license("GPL-3.0-or-later")
 
     version("master", branch="master")
     version("3.0.1", sha256="0a2a7d266fecdfa3ea4a454fd66833a54590e610f880c6a97644cdcfc2116191")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,3 +22,5 @@ class PyPycocotools(PythonPackage):
     depends_on("py-setuptools@18.0:", when="@:2.0.3", type=("build", "run"))
     depends_on("py-matplotlib@2.1.0:", type=("build", "run"))
     depends_on("py-numpy", type=("build", "link", "run"))
+
+    conflicts("^py-cython@3:", when="@:2.0.4")

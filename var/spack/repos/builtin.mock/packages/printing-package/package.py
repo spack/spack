@@ -1,7 +1,9 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import os
 
 from spack.package import *
 
@@ -20,9 +22,8 @@ class PrintingPackage(Package):
     def install(self, spec, prefix):
         print("BEFORE INSTALL")
 
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")
+        mkdirp(prefix)
+        touch(os.path.join(prefix, "dummyfile"))
 
         print("AFTER INSTALL")
 

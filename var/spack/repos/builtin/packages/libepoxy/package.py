@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Libepoxy(AutotoolsPackage):
     homepage = "https://github.com/anholt/libepoxy"
     url = "https://github.com/anholt/libepoxy/releases/download/1.4.3/libepoxy-1.4.3.tar.xz"
     list_url = "https://github.com/anholt/libepoxy/releases"
+
+    license("MIT")
 
     version("1.4.3", sha256="0b808a06c9685a62fca34b680abb8bc7fb2fda074478e329b063c1f872b826f6")
 

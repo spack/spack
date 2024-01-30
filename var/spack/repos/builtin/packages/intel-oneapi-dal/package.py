@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,18 @@ class IntelOneapiDal(IntelOneApiLibraryPackage):
         "https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onedal.html"
     )
 
+    version(
+        "2024.0.0",
+        url="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/37364086-b3cd-4a54-8736-7893732c1a86/l_daal_oneapi_p_2024.0.0.49569_offline.sh",
+        sha256="45e71c7cbf38b04a34c47e36e2d86a48847f2f0485bafbc3445077a9ba3fa73c",
+        expand=False,
+    )
+    version(
+        "2023.2.0",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/fa218373-4b06-451f-8f4c-66b7d14b8e8b/l_daal_oneapi_p_2023.2.0.49574_offline.sh",
+        sha256="643c6b5a9d06bc82b610257645cde116dc0473935a3b969850fa72c6cb952eaf",
+        expand=False,
+    )
     version(
         "2023.1.0",
         url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/c209d29f-3d06-45fb-8f04-7b2f47b93a7c/l_daal_oneapi_p_2023.1.0.46349_offline.sh",
@@ -97,6 +109,10 @@ class IntelOneapiDal(IntelOneApiLibraryPackage):
 
     provides("daal")
     provides("onedal")
+
+    @property
+    def v2_layout_versions(self):
+        return "@2024:"
 
     @property
     def component_dir(self):

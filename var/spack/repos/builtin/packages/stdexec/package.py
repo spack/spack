@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Stdexec(CMakePackage):
     url = "https://github.com/NVIDIA/stdexec/archive/nvhpc-0.0.tar.gz"
     git = "https://github.com/NVIDIA/stdexec.git"
     maintainers("msimberg", "aurianer")
+
+    license("Apache-2.0")
 
     version("23.03", sha256="2c9dfb6e56a190543049d2300ccccd1b626f4bb82af5b607869c626886fadd15")
     version("main", branch="main")

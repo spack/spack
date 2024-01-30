@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -53,4 +53,4 @@ class RShortread(RPackage):
     depends_on("r-latticeextra", type=("build", "run"))
     depends_on("r-xvector", type=("build", "run"))
     depends_on("r-rhtslib", type=("build", "run"), when="@1.48.0:")
-    depends_on("zlib")
+    depends_on("zlib-api")

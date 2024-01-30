@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -71,7 +71,7 @@ def mock_patch_stage(tmpdir_factory, monkeypatch):
 data_path = os.path.join(spack.paths.test_path, "data", "patch")
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Line ending conflict on Windows")
+@pytest.mark.not_on_windows("Line ending conflict on Windows")
 @pytest.mark.parametrize(
     "filename, sha256, archive_sha256",
     [
@@ -115,9 +115,11 @@ third line
 """
                 )
         # apply the patch and compare files
-        patch.fetch()
-        patch.apply(stage)
-        patch.clean()
+        with patch.stage:
+            patch.stage.create()
+            patch.stage.fetch()
+            patch.stage.expand_archive()
+            patch.apply(stage)
 
         with working_dir(stage.source_path):
             assert filecmp.cmp("foo.txt", "foo-expected.txt")
@@ -189,26 +191,28 @@ def test_nested_directives(mock_packages):
     """Ensure pkg data structures are set up properly by nested directives."""
     # this ensures that the patch() directive results were removed
     # properly from the DirectiveMeta._directives_to_be_executed list
-    patcher = spack.repo.path.get_pkg_class("patch-several-dependencies")
+    patcher = spack.repo.PATH.get_pkg_class("patch-several-dependencies")
     assert len(patcher.patches) == 0
 
     # this ensures that results of dependency patches were properly added
     # to Dependency objects.
-    libelf_dep = next(iter(patcher.dependencies["libelf"].values()))
+    deps_by_name = patcher.dependencies_by_name()
+
+    libelf_dep = deps_by_name["libelf"][0]
     assert len(libelf_dep.patches) == 1
     assert len(libelf_dep.patches[Spec()]) == 1
 
-    libdwarf_dep = next(iter(patcher.dependencies["libdwarf"].values()))
+    libdwarf_dep = deps_by_name["libdwarf"][0]
     assert len(libdwarf_dep.patches) == 2
     assert len(libdwarf_dep.patches[Spec()]) == 1
     assert len(libdwarf_dep.patches[Spec("@20111030")]) == 1
 
-    fake_dep = next(iter(patcher.dependencies["fake"].values()))
+    fake_dep = deps_by_name["fake"][0]
     assert len(fake_dep.patches) == 1
     assert len(fake_dep.patches[Spec()]) == 2
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Test requires Autotools")
+@pytest.mark.not_on_windows("Test requires Autotools")
 def test_patched_dependency(mock_packages, config, install_mockery, mock_fetch):
     """Test whether patched dependencies work."""
     spec = Spec("patch-a-dependency")

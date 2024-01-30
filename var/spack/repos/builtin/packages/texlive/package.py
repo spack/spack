@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,8 @@ class Texlive(AutotoolsPackage):
     base_url = "http://ftp.math.utah.edu/pub/tex/historic/systems/texlive/{year}/texlive-{version}-{dist}.tar.xz"
     list_url = "http://ftp.math.utah.edu/pub/tex/historic/systems/texlive"
     list_depth = 1
+
+    license("GPL-2.0-or-later AND GPL-3.0-or-later", checked_by="tgamblin")
 
     # Below is the url for a binary distribution. This was originally how this
     # was distributed in Spack, but should be considered deprecated. Note that
@@ -116,7 +118,7 @@ class Texlive(AutotoolsPackage):
     depends_on("pixman", when="@2019:")
     depends_on("poppler@:0.84", when="@2019:")
     depends_on("teckit", when="@2019:")
-    depends_on("zlib", when="@2019:")
+    depends_on("zlib-api", when="@2019:")
     depends_on("zziplib", when="@2019:")
 
     build_directory = "spack-build"

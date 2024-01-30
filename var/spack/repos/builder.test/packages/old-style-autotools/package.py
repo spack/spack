@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,7 +31,7 @@ class OldStyleAutotools(AutotoolsPackage):
         """This override a function in the builder and construct the result using a method
         defined in this class and a super method defined in the builder.
         """
-        return [self.foo()] + super(OldStyleAutotools, self).configure_args()
+        return [self.foo()] + super().configure_args()
 
     def foo(self):
         return "--with-foo"

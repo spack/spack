@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Freeglut(CMakePackage, SourceforgePackage):
     homepage = "http://freeglut.sourceforge.net/"
     sourceforge_mirror_path = "freeglut/freeglut-3.2.1.tar.gz"
 
+    license("MIT")
+
     version("3.2.2", sha256="c5944a082df0bba96b5756dddb1f75d0cd72ce27b5395c6c1dde85c2ff297a50")
     version("3.2.1", sha256="d4000e02102acaf259998c870e25214739d1f16f67f99cb35e4f46841399da68")
     version("3.0.0", sha256="2a43be8515b01ea82bcfa17d29ae0d40bd128342f0930cd1f375f1ff999f76a2")
@@ -23,7 +25,7 @@ class Freeglut(CMakePackage, SourceforgePackage):
     depends_on("glu")
 
     # FreeGLUT does not support OSMesa
-    conflicts("osmesa")
+    conflicts("^osmesa")
 
     # FreeGLUT only works with GLX on linux (cray is also linux)
     with when("platform=linux"):
@@ -71,3 +73,7 @@ class Freeglut(CMakePackage, SourceforgePackage):
         ]
 
         return args
+
+    @property
+    def libs(self):
+        return find_libraries(["libglut"], root=self.prefix, recursive=True)

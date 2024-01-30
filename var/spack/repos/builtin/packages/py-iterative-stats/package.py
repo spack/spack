@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,11 +9,14 @@ from spack.package import *
 class PyIterativeStats(PythonPackage):
     """Bacis iterative statistics implementation."""
 
-    pypi = "iterative-stats/iterative_stats-0.0.4.tar.gz"
+    pypi = "iterative-stats/iterative_stats-0.1.0.tar.gz"
     git = "https://github.com/IterativeStatistics/BasicIterativeStatistics.git"
-    maintainers("frobinou")
+    maintainers("robcaulk")
+
+    license("BSD-3-Clause")
 
     version("main", branch="main")
+    version("0.1.0", sha256="bb4f378a8fa117d1f24e9ea5ac0f1bd13c04b1ab3693a148ba936ffb237f2fba")
     version("0.0.4", sha256="7e838aa79de867b0e312be8cdf9319bb70824b624c684e968636cc8d4c9d5712")
 
     # main dependencies

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class RParallelly(RPackage):
     the firewall to do port-forwarding to your local computer."""
 
     cran = "parallelly"
+
+    license("LGPL-2.1-or-later")
 
     version("1.35.0", sha256="3f5e9b6507196aab052c5e67f8b524b75aa356731c5eaffbadde76c967ad5dcd")
     version("1.32.1", sha256="31c685f59ac7ff702fe2720910780378113adf0df0baf048a62eef94524cca90")

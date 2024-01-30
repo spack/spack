@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -59,7 +59,7 @@ class Cray(Platform):
           configuration file "targets.yaml" with keys 'front_end', 'back_end'
           scanning /etc/bash/bashrc.local for back_end only
         """
-        super(Cray, self).__init__("cray")
+        super().__init__("cray")
 
         # Make all craype targets available.
         for target in self._avail_targets():
@@ -139,6 +139,8 @@ class Cray(Platform):
         # If no default version, sort available versions and return latest
         versions_available = [spack.version.Version(v) for v in os.listdir(craype_dir)]
         versions_available.sort(reverse=True)
+        if not versions_available:
+            return (craype_type, None)
         return (craype_type, versions_available[0])
 
     @classmethod

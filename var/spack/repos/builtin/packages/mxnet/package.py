@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,8 +16,9 @@ class Mxnet(CMakePackage, CudaPackage, PythonExtension):
 
     maintainers("adamjstewart")
 
+    license("Apache-2.0")
+
     version("master", branch="master", submodules=True)
-    version("1.master", branch="v1.x", submodules=True, deprecated=True)
     version("1.9.1", sha256="11ea61328174d8c29b96f341977e03deb0bf4b0c37ace658f93e38d9eb8c9322")
     version("1.9.0", sha256="a2a99cf604d57094269cacdfc4066492b2dc886593ee02b862e034f6180f712d")
     version("1.8.0", sha256="95aff985895aba409c08d5514510ae38b88490cfb6281ab3a5ff0f5826c8db54")
@@ -58,16 +59,14 @@ class Mxnet(CMakePackage, CudaPackage, PythonExtension):
     depends_on("py-cython", when="+python", type="build")
     depends_on("py-numpy@1.17:", when="@2.0.0:+python", type=("build", "run"))
     depends_on("py-numpy@1.16.1:1", when="@1.6:1.8.0+python", type=("build", "run"))
-    depends_on("py-numpy@1.8.2:1.15.0", when="@1.3.0+python", type=("build", "run"))
     depends_on("py-requests@2.20.0:2", when="@1.6:+python", type=("build", "run"))
-    depends_on("py-requests@2.18.4:2.18", when="@1.3.0+python", type=("build", "run"))
     depends_on("py-graphviz@0.8.1:0.8", when="+python", type=("build", "run"))
 
     conflicts("+cudnn", when="~cuda")
     conflicts("+nccl", when="~cuda")
     conflicts("platform=darwin target=aarch64:", when="@:1")
 
-    patch("openblas-1.7.0.patch", when="@1.7.0:1.master")
+    patch("openblas-1.7.0.patch", when="@1.7.0:1")
     patch("openblas-1.6.0.patch", when="@1.6.0")
     patch("cmake_cuda_flags.patch", when="@1.6:1.7")
     patch("parallell_shuffle.patch", when="@1.6.0")
