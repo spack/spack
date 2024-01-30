@@ -405,7 +405,6 @@ class Tau(Package):
     makefile_test = join_path("examples", "Makefile")
     makefile_inc_test = join_path("include", "Makefile")
 
-
     @run_after("install")
     def setup_build_tests(self):
         """Copy the build test files after the package is installed to an
@@ -452,10 +451,9 @@ class Tau(Package):
 
     def _run_dyninst_test(self, test_dir):
         dyn_dir = join_path( test_dir, self.dyninst_test)
-        print(dyn_dir)
-        flags = "-T serial"
+        flags = "serial"
         if "+mpi" in self.spec:
-            flags = "-T mpi"
+            flags = "mpi"
         self.run_test(
             "make",
             ["all"],
@@ -468,7 +466,7 @@ class Tau(Package):
         )
         self.run_test(
             "tau_run",
-            ["-T", "serial","./klargest", "-v","-o","./klargest.i"],
+            ["-T", flags,"./klargest", "-v","-o","./klargest.i"],
             [],
             0,
             False,
@@ -496,8 +494,6 @@ class Tau(Package):
             False,
             dyn_dir,
         )
-
-
 
     def test(self):
         test_dir = self.test_suite.current_test_cache_dir
