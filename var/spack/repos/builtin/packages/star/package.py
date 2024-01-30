@@ -44,13 +44,13 @@ class Star(MakefilePackage):
 
     def edit(self, spec, prefix):
         if "avx2" not in spec.target:
-            env["CXXFLAGS_SIMD"] = "sse"
+            env["CXXFLAGS_SIMD"] = ""
 
     def build(self, spec, prefix):
         # different make targets if we're compiling for Mac M1/2
         with working_dir(self.build_directory):
-            if spec.satisfies("platform=darwin target=aarch64: "):
-                make("STARforMacStatic")
+            if spec.satisfies("platform=darwin target=aarch64:"):
+                make("STARforMacStatic", "STARlongForMacStatic")
             else:
                 make("STAR", "STARlong")
 
