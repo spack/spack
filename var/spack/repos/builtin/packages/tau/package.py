@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,7 +25,11 @@ class Tau(Package):
 
     tags = ["e4s"]
 
+    license("MIT")
+
     version("master", branch="master")
+    version("2.33.1", sha256="13cc5138e110932f34f02ddf548db91d8219ccb7ff9a84187f0790e40a502403")
+    version("2.33", sha256="04d9d67adb495bc1ea56561f33c5ce5ba44f51cc7f64996f65bd446fac5483d9")
     version("2.32.1", sha256="0eec3de46b0873846dfc639270c5e30a226b463dd6cb41aa12e975b7563f0eeb")
     version("2.32", sha256="ee774a06e30ce0ef0f053635a52229152c39aba4f4933bed92da55e5e13466f3")
     version("2.31.1", sha256="bf445b9d4fe40a5672a7b175044d2133791c4dfb36a214c1a55a931aebc06b9d")
@@ -85,6 +89,7 @@ class Tau(Package):
     variant("io", default=True, description="Activates POSIX I/O support")
     variant("adios2", default=False, description="Activates ADIOS2 output support")
     variant("sqlite", default=False, description="Activates SQLite3 output support")
+    variant("syscall", default=False, description="Activates syscall wrapper")
     variant(
         "profileparam",
         default=False,
@@ -99,12 +104,14 @@ class Tau(Package):
     variant(
         "x86_64", default=False, description="Force build for x86 Linux instead of auto-detect"
     )
+    variant("dyninst", default=False, description="Activates dyninst support")
 
     depends_on("cmake@3.14:", type="build", when="%clang")
     depends_on("zlib-api", type="link")
     depends_on("pdt", when="+pdt")  # Required for TAU instrumentation
     depends_on("scorep", when="+scorep")
-    depends_on("otf2@2.1:2.3", when="+otf2")
+    depends_on("otf2@2.1:2.3", when="@:2.33.0 +otf2")
+    depends_on("otf2@3:", when="@2.33.1: +otf2")
     depends_on("likwid", when="+likwid")
     depends_on("papi", when="+papi")
     depends_on("libdwarf", when="+libdwarf")
@@ -128,6 +135,7 @@ class Tau(Package):
     depends_on("rocm-smi-lib", when="@2.32.1: +rocm")
     depends_on("java", type="run")  # for paraprof
     depends_on("oneapi-level-zero", when="+level_zero")
+    depends_on("dyninst@12.3.0:", when="+dyninst")
 
     # Elf only required from 2.28.1 on
     conflicts("+elf", when="@:2.28.0")
@@ -136,6 +144,7 @@ class Tau(Package):
     # ADIOS2, SQLite only available from 2.29.1 on
     conflicts("+adios2", when="@:2.29.1")
     conflicts("+sqlite", when="@:2.29.1")
+    conflicts("+dyninst", when="@:2.32.1")
 
     patch("unwind.patch", when="@2.29.0")
 
@@ -243,6 +252,9 @@ class Tau(Package):
         if "+io" in spec:
             options.append("-iowrapper")
 
+        if "+syscall" in spec:
+            options.append("-syscall")
+
         if "+binutils" in spec:
             options.append("-bfd=%s" % spec["binutils"].prefix)
 
@@ -264,8 +276,12 @@ class Tau(Package):
             if "+fortran" in spec:
                 env["F77"] = spec["mpi"].mpif77
                 env["FC"] = spec["mpi"].mpifc
-            options.append("-mpiinc=%s" % spec["mpi"].prefix.include)
-            options.append("-mpilib=%s" % spec["mpi"].prefix.lib)
+            if spec["mpi"].name == "intel-oneapi-mpi":
+                options.append("-mpiinc=%s" % spec["mpi"].package.component_prefix)
+                options.append("-mpilib=%s" % spec["mpi"].package.component_prefix)
+            else:
+                options.append("-mpiinc=%s" % spec["mpi"].prefix.include)
+                options.append("-mpilib=%s" % spec["mpi"].prefix.lib)
 
             options.append("-mpi")
             if "+comm" in spec:
@@ -337,6 +353,15 @@ class Tau(Package):
                     break
             options.append("-pythonlib=%s" % lib_path)
 
+        if "+dyninst" in spec:
+            options.append("-dyninst=%s" % spec["dyninst"].prefix)
+            if "+tbb" not in spec:
+                options.append("-tbb=%s" % spec["intel-tbb"].prefix)
+            if "+boost" not in spec:
+                options.append("-boost=%s" % spec["boost"].prefix)
+            if "+elf" not in spec:
+                options.append("-elf=%s" % spec["elfutils"].prefix)
+
         compiler_specific_options = self.set_compiler_options(spec)
         options.extend(compiler_specific_options)
         configure(*options)
@@ -368,17 +393,27 @@ class Tau(Package):
         # in the latter case.
         if files:
             env.set("TAU_MAKEFILE", files[0])
+            dyninst_apirt = join_path(path_to_dyn_lib, "libdyninstAPI_RT.so")
+            env.set("DYNINSTAPI_RT_LIB", dyninst_apirt)
+            env.append_path("LD_LIBRARY_PATH", path_to_dyn_lib)
+            env.append_path("LD_LIBRARY_PATH", self.prefix.lib)
 
     matmult_test = join_path("examples", "mm")
+    dyninst_test = join_path("examples", "dyninst")
+    makefile_test = join_path("examples", "Makefile")
+    makefile_inc_test = join_path("include", "Makefile")
 
     @run_after("install")
     def setup_build_tests(self):
         """Copy the build test files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources(self.matmult_test)
+        self.cache_extra_test_sources(self.dyninst_test)
+        self.cache_extra_test_sources(self.makefile_test)
+        self.cache_extra_test_sources(self.makefile_inc_test)
 
-    def _run_matmult_test(self):
-        mm_dir = join_path(self.test_suite.current_test_cache_dir, self.matmult_test)
+    def _run_matmult_test(self, test_dir):
+        mm_dir = join_path(test_dir, self.matmult_test)
         self.run_test(
             "make",
             ["all"],
@@ -412,6 +447,39 @@ class Tau(Package):
             mm_dir,
         )
 
+    def _run_dyninst_test(self, test_dir):
+        dyn_dir = join_path(test_dir, self.dyninst_test)
+        flags = "serial"
+        if "+mpi" in self.spec:
+            flags = "mpi"
+        self.run_test("make", ["all"], [], 0, False, "Build example code", False, dyn_dir)
+        self.run_test(
+            "tau_run",
+            ["-T", flags, "./klargest", "-v", "-o", "./klargest.i"],
+            [],
+            0,
+            False,
+            "Instrument code with dyninst",
+            False,
+            dyn_dir,
+        )
+        self.run_test(
+            "./klargest.i", [], [], 0, False, "Execute instrumented code", False, dyn_dir
+        )
+        self.run_test(
+            "pprof",
+            [],
+            [],
+            0,
+            False,
+            "Run pprof profile analysis tool on profile output",
+            False,
+            dyn_dir,
+        )
+
     def test(self):
+        test_dir = self.test_suite.current_test_cache_dir
         # Run mm test program pulled from the build
-        self._run_matmult_test()
+        self._run_matmult_test(test_dir)
+        if "+dyninst" in self.spec:
+            self._run_dyninst_test(test_dir)
