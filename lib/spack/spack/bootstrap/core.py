@@ -541,7 +541,7 @@ def verify_patchelf(patchelf: "llnl.syscmd.Executable") -> bool:
     return version >= spack.version.Version("0.13.1")
 
 
-def ensure_patchelf_in_path_or_raise() -> spack.util.executable.Executable:
+def ensure_patchelf_in_path_or_raise() -> llnl.syscmd.Executable:
     """Ensure patchelf is in the PATH or raise."""
     # The old concretizer is not smart and we're doing its job: if the latest patchelf
     # does not concretize because the compiler doesn't support C++17, we try to

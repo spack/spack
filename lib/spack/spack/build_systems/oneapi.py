@@ -9,15 +9,14 @@ import platform
 import shutil
 from os.path import basename, isdir
 
-from llnl.util import tty
 from llnl.syscmd import Executable, from_sourcing_file
-from llnl.util.filesystem import HeaderList, find_libraries, join_path, mkdirp
+from llnl.util import tty
+from llnl.util.filesystem import HeaderList, LibraryList, find_libraries, join_path, mkdirp
 from llnl.util.link_tree import LinkTree
 
 from spack.build_environment import dso_suffix
 from spack.directives import conflicts, variant
 from spack.package_base import InstallError
-from spack.util.sourcing import from_sourcing_file
 
 from .generic import Package
 
