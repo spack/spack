@@ -10,11 +10,12 @@ class PyBluecellulab(PythonPackage):
     """Pythonic Blue Brain simulator access, former BGLibPy"""
 
     homepage = "https://github.com/BlueBrain/BlueCelluLab"
-    pypi = "bluecellulab/bluecellulab-1.5.2.tar.gz"
+    pypi = "bluecellulab/bluecellulab-1.7.6.tar.gz"
 
-    version("1.5.2", sha256="22e45b921ad9cd282d53b57ac90fcec69731cb718ed8098c8eb52039bf7a49e5")
+    version("1.7.6", sha256="a60ec17c44e759b6726c399d764e4220f6641bf3d845fc3fbfe56d07dba9e6d5")
 
     depends_on("py-setuptools", type=("build", "run"))
+    depends_on("py-setuptools-scm", type="build")
 
     depends_on("neuron+python@8:", type=("build", "run"))
     depends_on("py-numpy@1.8:", type=("build", "run"))
