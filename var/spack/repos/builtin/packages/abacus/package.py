@@ -9,13 +9,15 @@ import re
 from spack.package import *
 
 
-class Abacus(MakefilePackage):
+class Abacus(MakefilePackage,CMakePackage):
     """ABACUS (Atomic-orbital Based Ab-initio Computation at UStc)
     is an open-source computer code package aiming
     for large-scale electronic-structure simulations
     from first principles"""
 
-    maintainers("bitllion", )
+    maintainers("bitllion", "yizeyi18", )
+
+    build_system("cmake", "makefile", default="cmake")
 
     homepage = "http://abacus.ustc.edu.cn/"
     git = "https://github.com/deepmodeling/abacus-develop.git"
@@ -67,16 +69,60 @@ class Abacus(MakefilePackage):
     version("2.2.1", sha256="14feca1d8d1ce025d3f263b85ebfbebc1a1efff704b6490e95b07603c55c1d63",deprecated=True)
     version("2.2.0", sha256="09d4a2508d903121d29813a85791eeb3a905acbe1c5664b8a88903f8eda64b8f",deprecated=True)
 
+    variant("mpi", default=True, description="Enable MPI support")
     variant("openmp", default=True, description="Enable OpenMP support")
+    variant(
+        "lcao",
+        default=True,
+        description="Enable Linear Combinition of Atomic Orbital calculation",
+        when="+mpi"
+    )
+    variant("libxc", default=True, description="Support additional functionals via libxc")
+    variant(
+        "elpa",
+        default=True,
+        description="Enable optimised diagonalisation routines from ELPA",
+        when="+mpi +lcao",
+    )
+    variant("mathlib", default=True, description="Enable ABACUS's builtin libm")
+    variant(
+        "tests", 
+        default=False, 
+        description="Enable ABACUS's builtin unit tests"
+        when="build_system=cmake"
+    )
+    variant(
+        "benchmarks", 
+        default=False, 
+        description="Enable ABACUS's builtin benchmark tests",
+        when="+tests"
+    )
+    # TODO: Add support for
+    # LibRI(https://github.com/abacusmodeling/LibRI), 
+    # LibComm(https://github.com/abacusmodeling/LibComm), 
+    # Libnpy(https://github.com/llohse/libnpy/), 
+    # DeePKS(https://github.com/deepmodeling/deepks-kit), 
+    # DeePMD(https://github.com/deepmodeling/deepmd-kit).
+    # At 2024-1-30, none of above have a spack package.
 
-    depends_on("elpa+openmp", when="+openmp")
-    depends_on("elpa~openmp", when="~openmp")
-    depends_on("cereal")
-    depends_on("libxc")
-    depends_on("fftw")
-    # MPI is a necessary dependency
-    depends_on("mpi", type=("build", "link", "run"))
-    depends_on("mkl")
+    depends_on("fftw-api@3")
+    depends_on("blas")
+    depends_on("lapack")
+
+    with when("+mpi"):
+        depends_on("mpi", type=("build", "link", "run"))
+    with when("+libxc"):
+        depends_on("libxc")
+    with when("+lcao"):
+        depends_on("cereal")
+        depends_on("scalapack")
+    with when("+elpa"):
+        depends_on("elpa+openmp", when="+openmp")
+        depends_on("elpa~openmp", when="~openmp")
+    with when("+tests"):
+        depends_on("googletest")
+    with when("+benchmarks"):
+        depends_on("benchmark")
 
     build_directory = "source"
 
