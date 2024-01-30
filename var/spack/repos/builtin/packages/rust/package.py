@@ -50,6 +50,7 @@ class Rust(Package):
     )
     variant("docs", default=False, description="Build Rust core documentation.")
     variant("src", default=True, description="Include standard library source files.")
+    variant("vendor", default=False, description="Use vendored resources to perform offline build.")
 
     # Core dependencies
     depends_on("cmake@3.13.4:", type="build")
@@ -77,8 +78,6 @@ class Rust(Package):
     depends_on("rust-bootstrap@1.72:1.73", type="build", when="@1.73")
     depends_on("rust-bootstrap@1.73:1.74", type="build", when="@1.74")
     depends_on("rust-bootstrap@1.74:1.75", type="build", when="@1.75")
-
-    variant("vendor", default=False, description="Enable vendor")
 
     extendable = True
     executables = ["^rustc$", "^cargo$"]
