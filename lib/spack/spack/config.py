@@ -32,6 +32,7 @@ import collections
 import contextlib
 import copy
 import functools
+import importlib.metadata
 import os
 import re
 import sys
@@ -764,6 +765,20 @@ def _add_platform_scope(
     cfg.push_scope(scope_type(plat_name, plat_path))
 
 
+def _add_configuration_paths_from_entry_points(configuration_paths):
+    try:
+        entry_points = importlib.metadata.entry_points(group="spack.config")
+    except TypeError:
+        entry_points = importlib.metadata.entry_points().get("spack.config")
+    if not entry_points:
+        return
+    for entry_point in entry_points:
+        get_plugin_dir = entry_point.load()
+        plugin_dir = get_plugin_dir()
+        if plugin_dir and os.path.exists(plugin_dir):
+            configuration_paths.append(("plugin-%s" % entry_point.name, plugin_dir))
+
+
 def _add_command_line_scopes(
     cfg: Union[Configuration, lang.Singleton], command_line_scopes: List[str]
 ) -> None:
@@ -815,6 +830,8 @@ def create() -> Configuration:
     # Site configuration is per spack instance, for sites or projects
     # No site-level configs should be checked into spack by default.
     configuration_paths.append(("site", os.path.join(spack.paths.etc_path)))
+
+    _add_configuration_paths_from_entry_points(configuration_paths)
 
     # User configuration can override both spack defaults and site config
     # This is disabled if user asks for no local configuration.

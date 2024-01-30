@@ -140,11 +140,17 @@ def get_extension_paths():
 
 def get_extension_paths_from_entry_points():
     """Return the list of canonicalized extension paths from a project's
-    [project.entry-points.spack]
+    [project.entry-points."spack.extensions"]
 
     """
     extension_paths = []
-    for entry_point in importlib.metadata.entry_points(group="spack.extensions"):
+    try:
+        entry_points = importlib.metadata.entry_points(group="spack.extensions")
+    except TypeError:
+        entry_points = importlib.metadata.entry_points().get("spack.extensions")
+    if not entry_points:
+        return extension_paths
+    for entry_point in entry_points:
         get_paths = entry_point.load()
         extension_paths.extend(get_paths())
     return extension_paths
