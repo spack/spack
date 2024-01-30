@@ -50,7 +50,9 @@ class Rust(Package):
     )
     variant("docs", default=False, description="Build Rust core documentation.")
     variant("src", default=True, description="Include standard library source files.")
-    variant("vendor", default=False, description="Use vendored resources to perform offline build.")
+    variant(
+        "vendor", default=False, description="Use vendored resources to perform offline build."
+    )
 
     # Core dependencies
     depends_on("cmake@3.13.4:", type="build")
