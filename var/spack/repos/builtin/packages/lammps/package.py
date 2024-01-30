@@ -33,9 +33,14 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
     version("develop", branch="develop")
     version("20231121", sha256="704d8a990874a425bcdfe0245faf13d712231ba23f014a3ebc27bc14398856f1")
     version(
+        "20230802.2",
+        sha256="3bcecabc9cad08d0a4e4d989b52d29c58505f7ead8ebacf43c9db8d9fd3d564a",
+        preferred=True,
+    )
+    version(
         "20230802.1",
         sha256="0e5568485e5ee080412dba44a1b7a93f864f1b5c75121f11d528854269953ed0",
-        preferred=True,
+        deprecated=True,
     )
     version(
         "20230802",
@@ -352,6 +357,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
     )
 
     stable_versions = {
+        "20230802.2",
         "20230802.1",
         "20230802",
         "20220623.4",
@@ -853,9 +859,6 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
 
         if "+rocm" in spec:
             args.append(self.define("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
-
-        if "+python" in spec:
-            args.append(self.define("Python_EXECUTABLE", spec["python"].command.path))
 
         return args
 
