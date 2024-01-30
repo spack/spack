@@ -61,8 +61,3 @@ class Motioncor2(Package):
             "MotionCor2_{0}_Cuda{1}_*".format(spec.version, cuda_version),
             join_path(prefix.bin, "MotionCor2"),
         )
-        #with working_dir("MotionCor2_{0}".format(spec.version)):
-        #    install(
-        #        "MotionCor2_{0}_Cuda{1}_*".format(spec.version, cuda_version),
-        #        join_path(prefix.bin, "MotionCor2"),
-        #    )
