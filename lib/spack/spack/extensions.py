@@ -8,6 +8,7 @@ for Spack's command extensions.
 import difflib
 import glob
 import importlib
+import importlib.metadata
 import os
 import re
 import sys
@@ -132,8 +133,21 @@ def load_extension(name: str) -> str:
 def get_extension_paths():
     """Return the list of canonicalized extension paths from config:extensions."""
     extension_paths = spack.config.get("config:extensions") or []
+    extension_paths.extend(get_extension_paths_from_entry_points())
     paths = [spack.util.path.canonicalize_path(p) for p in extension_paths]
     return paths
+
+
+def get_extension_paths_from_entry_points():
+    """Return the list of canonicalized extension paths from a project's
+    [project.entry-points.spack]
+
+    """
+    extension_paths = []
+    for entry_point in importlib.metadata.entry_points(group="spack.extensions"):
+        get_paths = entry_point.load()
+        extension_paths.extend(get_paths())
+    return extension_paths
 
 
 def get_command_paths():
