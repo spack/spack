@@ -4,8 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+import io
 import os
 import shutil
+import tarfile
 from itertools import product
 
 import pytest
@@ -14,7 +16,7 @@ import llnl.url
 from llnl.util.filesystem import working_dir
 
 from spack.paths import spack_root
-from spack.util import compression as scomp
+from spack.util import compression
 from spack.util.executable import CommandNotFoundError
 
 datadir = os.path.join(spack_root, "lib", "spack", "spack", "test", "data", "compression")
@@ -36,9 +38,9 @@ def support_stub():
 
 @pytest.fixture
 def compr_support_check(monkeypatch):
-    monkeypatch.setattr(scomp, "is_lzma_supported", support_stub)
-    monkeypatch.setattr(scomp, "is_gzip_supported", support_stub)
-    monkeypatch.setattr(scomp, "is_bz2_supported", support_stub)
+    monkeypatch.setattr(compression, "is_lzma_supported", support_stub)
+    monkeypatch.setattr(compression, "is_gzip_supported", support_stub)
+    monkeypatch.setattr(compression, "is_bz2_supported", support_stub)
 
 
 @pytest.fixture
@@ -59,7 +61,7 @@ def archive_file_and_extension(tmpdir_factory, request):
 )
 def test_native_unpacking(tmpdir_factory, archive_file_and_extension):
     archive_file, extension = archive_file_and_extension
-    util = scomp.decompressor_for(archive_file, extension)
+    util = compression.decompressor_for(archive_file, extension)
     tmpdir = tmpdir_factory.mktemp("comp_test")
     with working_dir(str(tmpdir)):
         assert not os.listdir(os.getcwd())
@@ -78,7 +80,7 @@ def test_native_unpacking(tmpdir_factory, archive_file_and_extension):
 def test_system_unpacking(tmpdir_factory, archive_file_and_extension, compr_support_check):
     # actually run test
     archive_file, _ = archive_file_and_extension
-    util = scomp.decompressor_for(archive_file)
+    util = compression.decompressor_for(archive_file)
     tmpdir = tmpdir_factory.mktemp("system_comp_test")
     with working_dir(str(tmpdir)):
         assert not os.listdir(os.getcwd())
@@ -95,4 +97,18 @@ def test_unallowed_extension():
     # are picked up by the linter and break style checks
     bad_ext_archive = "Foo.cxx"
     with pytest.raises(CommandNotFoundError):
-        scomp.decompressor_for(bad_ext_archive)
+        compression.decompressor_for(bad_ext_archive)
+
+
+def test_file_type_check_does_not_advance_stream(tmp_path):
+    # Create a compressed tarbal.
+    path = str(tmp_path / "compressed_tarball")
+
+    with tarfile.open(path, "w:gz") as tar:
+        tar.addfile(tarfile.TarInfo("test.txt"), fileobj=io.BytesIO(b"test"))
+
+    with open(path, "rb") as f:
+        assert compression.extension_from_magic_numbers_by_stream(f, decompress=False) == "gz"
+        assert f.tell() == 0
+        assert compression.extension_from_magic_numbers_by_stream(f, decompress=True) == "tar.gz"
+        assert f.tell() == 0

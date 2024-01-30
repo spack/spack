@@ -44,7 +44,7 @@ def _logs(cmdline_spec, concrete_spec):
         raise SpackCommandError(f"{cmdline_spec} is not installed or staged")
 
     try:
-        compression_ext = compression.extension_from_file(log_path)
+        compression_ext = compression.extension_from_magic_numbers(log_path)
         with open(log_path, "rb") as fstream:
             if compression_ext == "gz":
                 # If the log file is compressed, wrap it with a decompressor
