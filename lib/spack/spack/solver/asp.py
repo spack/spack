@@ -96,6 +96,7 @@ GitOrStandardVersion = Union[spack.version.GitVersion, spack.version.StandardVer
 # these are from clingo.ast and bootstrapped later
 ASTType = None
 parse_files = None
+parse_term = None
 
 #: Enable the addition of a runtime node
 WITH_RUNTIME = sys.platform != "win32"
@@ -663,7 +664,7 @@ def _spec_with_default_name(spec_str, name):
 
 
 def bootstrap_clingo():
-    global clingo, ASTType, parse_files
+    global clingo, ASTType, parse_files, parse_term
 
     if not clingo:
         import spack.bootstrap
@@ -676,9 +677,10 @@ def bootstrap_clingo():
 
     try:
         from clingo.ast import parse_files
+        from clingo.symbol import parse_term
     except ImportError:
         # older versions of clingo have this one namespace up
-        from clingo import parse_files
+        from clingo import parse_files, parse_term
 
 
 class NodeArgument(NamedTuple):
@@ -945,7 +947,11 @@ class PyclingoDriver:
         def on_model(model):
             models.append((model.cost, model.symbols(shown=True, terms=True)))
 
-        solve_kwargs = {"on_model": on_model, "on_core": cores.append}
+        solve_kwargs = {
+            "assumptions": setup.assumptions,
+            "on_model": on_model,
+            "on_core": cores.append,
+        }
 
         if clingo_cffi:
             solve_kwargs["on_unsat"] = cores.append
@@ -1068,6 +1074,7 @@ class SpackSolverSetup:
     def __init__(self, tests=False):
         self.gen = None  # set by setup()
 
+        self.assumptions = []
         self.declared_versions = collections.defaultdict(list)
         self.possible_versions = collections.defaultdict(set)
         self.deprecated_versions = collections.defaultdict(set)
@@ -2557,7 +2564,9 @@ class SpackSolverSetup:
                             name = ast_sym(term.atom).name
                             if name == "internal_error":
                                 arg = ast_sym(ast_sym(term.atom).arguments[0])
-                                self.gen.fact(AspFunction(name)(arg.string))
+                                symbol = AspFunction(name)(arg.string)
+                                self.assumptions.append((parse_term(str(symbol)), True))
+                                self.gen.asp_problem.append(f"{{ {symbol} }}.\n")
 
         path = os.path.join(parent_dir, "concretize.lp")
         parse_files([path], visit)
