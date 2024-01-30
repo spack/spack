@@ -1811,7 +1811,7 @@ class SpackSolverSetup:
         """
         clauses = []
 
-        f = Body if body else Head
+        f = _Body if body else _Head
 
         if spec.name:
             clauses.append(f.node(spec.name) if not spec.virtual else f.virtual_node(spec.name))
@@ -2701,7 +2701,7 @@ class SpackSolverSetup:
         return spack.repo.PATH.get_pkg_class(request)
 
 
-class Head:
+class _Head:
     """ASP functions used to express spec clauses in the HEAD of a rule"""
 
     node = fn.attr("node")
@@ -2718,7 +2718,7 @@ class Head:
     variant_propagation_candidate = fn.attr("variant_propagation_candidate")
 
 
-class Body:
+class _Body:
     """ASP functions used to express spec clauses in the BODY of a rule"""
 
     node = fn.attr("node")
