@@ -33,7 +33,7 @@ import collections.abc
 import functools
 import os.path
 import re
-from typing import Any, Callable, List, Optional, Set, Tuple, Union
+from typing import Any, Callable, List, Optional, Set, Tuple, TYPE_CHECKING, Union
 
 import llnl.util.lang
 import llnl.util.tty.color
@@ -55,6 +55,9 @@ from spack.version import (
     VersionError,
     VersionLookupError,
 )
+
+if TYPE_CHECKING:
+    import spack.package_base
 
 __all__ = [
     "DirectiveError",
