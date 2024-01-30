@@ -35,7 +35,7 @@ runner_attributes_schema_items = {
 
 runner_selector_schema = {
     "type": "object",
-    "additionalProperties": False,
+    "additionalProperties": True,
     "required": ["tags"],
     "properties": runner_attributes_schema_items,
 }
