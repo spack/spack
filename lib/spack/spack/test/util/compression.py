@@ -32,15 +32,11 @@ ext_archive = {}
 native_archive_list = [key for key in ext_archive.keys() if "tar" not in key and "zip" not in key]
 
 
-def support_stub():
-    return False
-
-
 @pytest.fixture
 def compr_support_check(monkeypatch):
-    monkeypatch.setattr(compression, "is_lzma_supported", support_stub)
-    monkeypatch.setattr(compression, "is_gzip_supported", support_stub)
-    monkeypatch.setattr(compression, "is_bz2_supported", support_stub)
+    monkeypatch.setattr(compression, "LZMA_SUPPORTED", False)
+    monkeypatch.setattr(compression, "GZIP_SUPPORTED", False)
+    monkeypatch.setattr(compression, "BZ2_SUPPORTED", False)
 
 
 @pytest.fixture

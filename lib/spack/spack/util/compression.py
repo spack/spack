@@ -7,7 +7,6 @@ import errno
 import inspect
 import io
 import os
-import re
 import shutil
 import sys
 from typing import BinaryIO, Callable, Dict, List, Optional
@@ -21,37 +20,25 @@ from spack.util.executable import CommandNotFoundError, which
 try:
     import bz2  # noqa
 
-    _bz2_support = True
+    BZ2_SUPPORTED = True
 except ImportError:
-    _bz2_support = False
+    BZ2_SUPPORTED = False
 
 
 try:
     import gzip  # noqa
 
-    _gzip_support = True
+    GZIP_SUPPORTED = True
 except ImportError:
-    _gzip_support = False
+    GZIP_SUPPORTED = False
 
 
 try:
     import lzma  # noqa # novermin
 
-    _lzma_support = True
+    LZMA_SUPPORTED = True
 except ImportError:
-    _lzma_support = False
-
-
-def is_lzma_supported():
-    return _lzma_support
-
-
-def is_gzip_supported():
-    return _gzip_support
-
-
-def is_bz2_supported():
-    return _bz2_support
+    LZMA_SUPPORTED = False
 
 
 def _system_untar(archive_file: str, remove_archive_file: bool = False) -> str:
@@ -93,7 +80,7 @@ def _bunzip2(archive_file: str) -> str:
     Args:
         archive_file: absolute path to the bz2 archive to be decompressed
     """
-    if is_bz2_supported():
+    if BZ2_SUPPORTED:
         return _py_bunzip(archive_file)
     else:
         return _system_bunzip(archive_file)
@@ -135,7 +122,7 @@ def _gunzip(archive_file: str) -> str:
     Args:
         archive_file: absolute path of the file to be decompressed
     """
-    return _py_gunzip(archive_file) if is_gzip_supported() else _system_gunzip(archive_file)
+    return _py_gunzip(archive_file) if GZIP_SUPPORTED else _system_gunzip(archive_file)
 
 
 def _py_gunzip(archive_file: str) -> str:
@@ -198,10 +185,10 @@ def _system_unZ(archive_file: str) -> str:
 def _lzma_decomp(archive_file):
     """Returns path to decompressed xz file. Decompress lzma compressed files. Prefer Python native
     lzma module, but fall back on command line xz tooling to find available Python support."""
-    return _py_lzma(archive_file) if is_lzma_supported() else _xz(archive_file)
+    return _py_lzma(archive_file) if LZMA_SUPPORTED else _xz(archive_file)
 
 
-def _win_compressed_tarball_handler(decompressor):
+def _win_compressed_tarball_handler(decompressor: Callable[[str], str]) -> Callable[[str], str]:
     """Returns function pointer to two stage decompression
     and extraction method
     Decompress and extract compressed tarballs on Windows.
@@ -215,7 +202,7 @@ def _win_compressed_tarball_handler(decompressor):
     can be installed manually or via spack
     """
 
-    def unarchive(archive_file):
+    def unarchive(archive_file: str):
         # perform intermediate extraction step
         # record name of new archive so we can extract
         decomped_tarball = decompressor(archive_file)
@@ -226,9 +213,9 @@ def _win_compressed_tarball_handler(decompressor):
     return unarchive
 
 
-def _py_lzma(archive_file):
-    """Returns path to decompressed .xz files
-    Decompress lzma compressed .xz files via python lzma module"""
+def _py_lzma(archive_file: str) -> str:
+    """Returns path to decompressed .xz files. Decompress lzma compressed .xz files via Python
+    lzma module."""
     decompressed_file = os.path.basename(llnl.url.strip_compression_extension(archive_file, "xz"))
     archive_out = os.path.join(os.getcwd(), decompressed_file)
     with open(archive_out, "wb") as ar:
@@ -238,10 +225,8 @@ def _py_lzma(archive_file):
 
 
 def _xz(archive_file):
-    """Returns path to decompressed xz files
-    Decompress lzma compressed .xz files via xz command line
-    tool.
-    """
+    """Returns path to decompressed xz files. Decompress lzma compressed .xz files via xz command
+    line tool."""
     decompressed_file = os.path.basename(llnl.url.strip_extension(archive_file, extension="xz"))
     working_dir = os.getcwd()
     destination_abspath = os.path.join(working_dir, decompressed_file)
@@ -280,7 +265,7 @@ unable to extract %s files. 7z can be installed via Spack"
     return outfile
 
 
-def decompressor_for(path, extension=None):
+def decompressor_for(path: str, extension: Optional[str] = None):
     """Returns appropriate decompression/extraction algorithm function pointer
     for provided extension. If extension is none, it is computed
     from the `path` and the decompression function is derived
@@ -288,11 +273,9 @@ def decompressor_for(path, extension=None):
     if not extension:
         extension = extension_from_magic_numbers(path, decompress=True)
 
-    if not llnl.url.allowed_archive(extension):
+    if not extension or not llnl.url.allowed_archive(extension):
         raise CommandNotFoundError(
-            "Cannot extract archive, \
-unrecognized file extension: '%s'"
-            % extension
+            f"Cannot extract {path}, unrecognized file extension: '{extension}'"
         )
     if sys.platform == "win32":
         return decompressor_for_win(extension)
@@ -319,25 +302,18 @@ def decompressor_for_nix(extension: str) -> Callable[[str], str]:
     return extension_to_decompressor.get(extension, _system_untar)
 
 
-def _determine_py_decomp_archive_strategy(extension):
+def _determine_py_decomp_archive_strategy(extension: str) -> Optional[Callable[[str], str]]:
     """Returns appropriate python based decompression strategy
     based on extension type"""
-    # Only rely on Python decompression support for gz
-    if re.match(r"gz$", extension):
-        return _py_gunzip
-
-    # Only rely on Python decompression support for bzip2
-    if re.match(r"bz2$", extension):
-        return _py_bunzip
-
-    # Only rely on Python decompression support for xz
-    if re.match(r"xz$", extension):
-        return _py_lzma
-
-    return None
+    extension_to_decompressor: Dict[str, Callable[[str], str]] = {
+        "gz": _py_gunzip,
+        "bz2": _py_bunzip,
+        "xz": _py_lzma,
+    }
+    return extension_to_decompressor.get(extension, None)
 
 
-def decompressor_for_win(extension):
+def decompressor_for_win(extension: str) -> Callable[[str], str]:
     """Returns a function pointer to appropriate decompression
     algorithm based on extension type and Windows specific considerations
 
@@ -345,34 +321,32 @@ def decompressor_for_win(extension):
     So we must rely exclusively on Python module support for all compression
     operations, tar for tarballs and zip files, and 7zip for Z compressed archives
     and files as Python does not provide support for the UNIX compress algorithm
-
-    Args:
-        path (str): path of the archive file requiring decompression
-        extension (str): extension
     """
     extension = llnl.url.expand_contracted_extension(extension)
-    # Windows native tar can handle .zip extensions, use standard
-    # unzip method
-    if re.match(r"zip$", extension):
-        return _unzip
+    extension_to_decompressor: Dict[str, Callable[[str], str]] = {
+        # Windows native tar can handle .zip extensions, use standard unzip method
+        "zip": _unzip,
+        # if extension is standard tarball, invoke Windows native tar
+        "tar": _system_untar,
+        # Python does not have native support of any kind for .Z files. In these cases, we rely on
+        # 7zip, which must be installed outside of Spack and added to the PATH or externally
+        # detected
+        "Z": _system_unZ,
+        "xz": _lzma_decomp,
+    }
 
-    # if extension is standard tarball, invoke Windows native tar
-    if re.match(r"tar$", extension):
-        return _system_untar
+    decompressor = extension_to_decompressor.get(extension)
+    if decompressor:
+        return decompressor
 
-    # Python does not have native support
-    # of any kind for .Z files. In these cases,
-    # we rely on 7zip, which must be installed outside
-    # of spack and added to the PATH or externally detected
-    if re.match(r"Z$", extension):
-        return _system_unZ
-
-    # Windows vendors no native decompression tools, attempt to derive
-    # python based decompression strategy
-    # Expand extension from contracted extension i.e. tar.gz from .tgz
-    # no-op on non contracted extensions
+    # Windows vendors no native decompression tools, attempt to derive Python based decompression
+    # strategy. Expand extension from abbreviated ones, i.e. tar.gz from .tgz
     compression_extension = llnl.url.compression_ext_from_compressed_archive(extension)
-    decompressor = _determine_py_decomp_archive_strategy(compression_extension)
+    decompressor = (
+        _determine_py_decomp_archive_strategy(compression_extension)
+        if compression_extension
+        else None
+    )
     if not decompressor:
         raise SpackError(
             "Spack was unable to determine a proper decompression strategy for"
@@ -387,7 +361,7 @@ def decompressor_for_win(extension):
 
 class FileTypeInterface:
     """Base interface class for describing and querying file type information. FileType describes
-    information about a single file type such as normalized extension and byte header properties,
+    information about a single file type such as typical extension and byte header properties,
     and provides an interface to check a given file against said type based on magic number.
 
     This class should be subclassed each time a new type is to be described.
@@ -453,7 +427,7 @@ class BZipFileType(CompressedFileTypeInterface):
     name = "bzip2 compressed data"
 
     def peek(self, stream: BinaryIO, num_bytes: int) -> Optional[io.BytesIO]:
-        if is_bz2_supported():
+        if BZ2_SUPPORTED:
             return _decompressed_peek(bz2.BZ2File(stream), stream, num_bytes)
         return None
 
@@ -471,7 +445,7 @@ class GZipFileType(CompressedFileTypeInterface):
     name = "gzip compressed data"
 
     def peek(self, stream: BinaryIO, num_bytes: int) -> Optional[io.BytesIO]:
-        if is_gzip_supported():
+        if GZIP_SUPPORTED:
             return _decompressed_peek(gzip.GzipFile(fileobj=stream), stream, num_bytes)
         return None
 
@@ -482,7 +456,7 @@ class LzmaFileType(CompressedFileTypeInterface):
     name = "xz compressed data"
 
     def peek(self, stream: BinaryIO, num_bytes: int) -> Optional[io.BytesIO]:
-        if is_lzma_supported():
+        if LZMA_SUPPORTED:
             return _decompressed_peek(lzma.LZMAFile(stream), stream, num_bytes)
         return None
 
@@ -504,8 +478,7 @@ class ZipFleType(FileTypeInterface):
 #: Maximum number of bytes to read from a file to determine any archive type. Tar is the largest.
 MAX_BYTES_ARCHIVE_HEADER = TarFileType.OFFSET + TarFileType.header_size()
 
-# collection of valid Spack recognized archive and compression
-# file type identifier classes.
+#: Collection of supported archive and compression file type identifier classes.
 SUPPORTED_FILETYPES: List[FileTypeInterface] = [
     BZipFileType(),
     ZCompressedFileType(),
@@ -533,22 +506,16 @@ def _extension_of_compressed_file(
 def extension_from_magic_numbers_by_stream(
     stream: BinaryIO, decompress: bool = False
 ) -> Optional[str]:
-    """Return normalized extension for a file based on its magic numbers.
+    """Returns the typical extension for the opened file, without leading ``.``, based on its magic
+    numbers.
 
-    If the stream does not represent an archive type recongized by Spack
-    (see `spack.util.compression.ALLOWED_ARCHIVE_TYPES`) method will return None
-
-    Extension type is derived by searching for identifying bytes
-    in file stream.
+    If the stream does not represent file type recongized by Spack (see
+    :py:data:`SUPPORTED_FILETYPES`), the method will return None
 
     Args:
         stream: stream representing a file on system
         decompress: if True, compressed files are checked for archive types beneath compression.
-            For example tar.gz if True versus only gz if False.
-
-    Return: A string representing corresponding archive extension or None as relevant.
-
-    """
+            For example tar.gz if True versus only gz if False."""
     for file_type in SUPPORTED_FILETYPES:
         if not file_type.matches_magic(stream):
             continue
@@ -567,20 +534,31 @@ def extension_from_magic_numbers_by_stream(
     return None
 
 
+def _maybe_abbreviate_extension(path: str, extension: str) -> str:
+    """If the file is a compressed tar archive, return the abbreviated extension t[xz|gz|bz2|bz]
+    instead of tar.[xz|gz|bz2|bz] if the file's original name also has an abbreviated extension."""
+    if not extension.startswith("tar."):
+        return extension
+    abbr = f"t{extension[4:]}"
+    return abbr if llnl.url.has_extension(path, abbr) else extension
+
+
 def extension_from_magic_numbers(path: str, decompress: bool = False) -> Optional[str]:
-    """Return normalized extension without leading `.` of a compressed file or archive, based on
-    its magic numbers, similar to the `file` utility. Attempts to return abbreviated file
-    extensions whenever a file has an abbreviated extension such as `tgz` or `txz`.
+    """Return typical extension without leading ``.`` of a compressed file or archive at the given
+    path, based on its magic numbers, similar to the `file` utility. Notice that the extension
+    returned from this function may not coincide with the file's given extension.
 
     Args:
         path: file to determine extension of
         decompress: If True, method will peek into decompressed file to check for archive file
-            types. If False, the method will return only the top-level extension `gz`, not
-            `tar.gz`.
+            types. If False, the method will return only the top-level extension (for example
+            ``gz`` and not ``tar.gz``).
     Returns:
         Spack recognized archive file extension as determined by file's magic number and file name.
         If file is not on system or is of a type not recognized by Spack as an archive or
-        compression type, None is returned.
+        compression type, None is returned. If the file is classified as a compressed tarball, the
+        extension is abbreviated (for instance ``tgz`` not ``tar.gz``) if that matches the file's
+        given extension.
     """
     try:
         with open(path, "rb") as f:
@@ -589,16 +567,10 @@ def extension_from_magic_numbers(path: str, decompress: bool = False) -> Optiona
         if e.errno == errno.ENOENT:
             return None
         raise
-    # based on magic number, file is compressed
-    # tar archive. Check to see if file is abbreviated as
-    # t[xz|gz|bz2|bz]
-    if ext and ext.startswith("tar."):
-        suf = ext.split(".")[1]
-        abbr = "t" + suf
-        if llnl.url.has_extension(path, abbr):
-            return abbr
-    if not ext:
-        # If unable to parse extension from stream,
-        # attempt to fall back to string parsing
-        ext = llnl.url.extension_from_path(path)
-    return ext
+
+    # Return the extension derived from the magic number if possible.
+    if ext:
+        return _maybe_abbreviate_extension(path, ext)
+
+    # Otherwise, use the extension from the file name.
+    return llnl.url.extension_from_path(path)
