@@ -414,8 +414,8 @@ class Tau(Package):
         self.cache_extra_test_sources(self.makefile_test)
         self.cache_extra_test_sources(self.makefile_inc_test)
 
-    def _run_matmult_test(self):
-        mm_dir = join_path(self.test_suite.current_test_cache_dir, self.matmult_test)
+    def _run_matmult_test(self, test_dir):
+        mm_dir = join_path(test_dir, self.matmult_test)
         self.run_test(
             "make",
             ["all"],
