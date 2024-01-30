@@ -8,7 +8,10 @@ for Spack's command extensions.
 import difflib
 import glob
 import importlib
-import importlib.metadata
+try:
+    import importlib.metadata as importlib_metadata
+except ImportError:
+    importlib_metadata = None
 import os
 import re
 import sys
@@ -144,10 +147,12 @@ def get_extension_paths_from_entry_points():
 
     """
     extension_paths = []
+    if importlib_metadata is None:
+        return extension_paths
     try:
-        entry_points = importlib.metadata.entry_points(group="spack.extensions")
+        entry_points = importlib_metadata.entry_points(group="spack.extensions")
     except TypeError:
-        entry_points = importlib.metadata.entry_points().get("spack.extensions")
+        entry_points = importlib_metadata.entry_points().get("spack.extensions")
     if not entry_points:
         return extension_paths
     for entry_point in entry_points:

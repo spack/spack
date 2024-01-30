@@ -32,7 +32,10 @@ import collections
 import contextlib
 import copy
 import functools
-import importlib.metadata
+try:
+    import importlib.metadata as importlib_metadata
+except ImportError:
+    importlib_metadata = None
 import os
 import re
 import sys
@@ -766,10 +769,12 @@ def _add_platform_scope(
 
 
 def _add_configuration_paths_from_entry_points(configuration_paths):
+    if importlib_metadata is None:
+        return
     try:
-        entry_points = importlib.metadata.entry_points(group="spack.config")
+        entry_points = importlib_metadata.entry_points(group="spack.config")
     except TypeError:
-        entry_points = importlib.metadata.entry_points().get("spack.config")
+        entry_points = importlib_metadata.entry_points().get("spack.config")
     if not entry_points:
         return
     for entry_point in entry_points:
