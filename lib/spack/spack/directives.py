@@ -33,7 +33,7 @@ import collections.abc
 import functools
 import os.path
 import re
-from typing import Any, Callable, List, Optional, Set, Tuple, TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Any, Callable, List, Optional, Set, Tuple, Union
 
 import llnl.util.lang
 import llnl.util.tty.color
