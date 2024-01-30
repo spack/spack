@@ -6,6 +6,7 @@
 
 import re
 
+from spack.build_systems import cmake, makefile
 from spack.package import *
 
 
@@ -17,7 +18,7 @@ class Abacus(MakefilePackage,CMakePackage):
 
     maintainers("bitllion", "yizeyi18", )
 
-    build_system("cmake", "makefile", default="cmake")
+    build_system("cmake", conditional("makefile", when="@:2.3.4"), default="cmake")
 
     homepage = "http://abacus.ustc.edu.cn/"
     git = "https://github.com/deepmodeling/abacus-develop.git"
@@ -82,13 +83,13 @@ class Abacus(MakefilePackage,CMakePackage):
         "elpa",
         default=True,
         description="Enable optimised diagonalisation routines from ELPA",
-        when="+mpi +lcao",
+        when="+lcao",
     )
     variant("mathlib", default=True, description="Enable ABACUS's builtin libm")
     variant(
         "tests", 
         default=False, 
-        description="Enable ABACUS's builtin unit tests"
+        description="Build ABACUS unit tests",
         when="build_system=cmake"
     )
     variant(
@@ -117,12 +118,17 @@ class Abacus(MakefilePackage,CMakePackage):
         depends_on("cereal")
         depends_on("scalapack")
     with when("+elpa"):
-        depends_on("elpa+openmp", when="+openmp")
-        depends_on("elpa~openmp", when="~openmp")
+        depends_on("elpa")
     with when("+tests"):
         depends_on("googletest")
     with when("+benchmarks"):
         depends_on("benchmark")
+    with when("+openmp"):
+        depends_on("fftw+openmp", when="^fftw")
+        depends_on("elpa+openmp", when="+elpa")
+        depends_on("openblas threads=openmp", when="^openblas")
+
+
 
     build_directory = "source"
 
@@ -182,3 +188,34 @@ NP      = 14\n"
 
     def install(self, spec, prefix):
         install_tree("bin", prefix.bin)
+
+class CMakeBuilder(cmake.CMakeBuilder):
+    def cmake_args(self):
+        spec = self.spec
+        args = []
+        args += [
+            self.define_from_variant("ENABLE_MPI"        , "mpi" ),
+            self.define_from_variant("USE_OPENMP"        , "openmp"),
+            self.define_from_variant("USE_ELPA"          , "elpa"),
+            self.define_from_variant("USE_ABACUS_LIBM"   , "mathlib"),
+            self.define_from_variant("ENABLE_LCAO"       , "lcao"),
+            self.define_from_variant("ENABLE_LIBXC"      , "libxc"),
+            self.define_from_variant("ENABLE_GOOGLEBENCH", "benchmarks"),
+            self.define_from_variant("BUILD_TESTING"     , "tests"),
+        ]
+
+        blas = spec["blas"]
+        lapack= spec["lapack"]
+        fftw = spec["fftw-api"]
+        scalapack = spec["scalapack"] if spec.satisfies("+lcao") else ""
+        if blas.name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
+            args += [self.define("MKLROOT", spec["mkl"].prefix),]
+        else:
+            args.extend(
+                [
+                    self.define("LAPACK_FOUND", True),
+                    self.define("LAPACK_LIBRARY", lapack.libs+blas.libs),# not wrong here, abacus mixs blas/lapack libs
+                ]
+            )
+
+        return args
