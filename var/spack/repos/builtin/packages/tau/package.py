@@ -28,7 +28,6 @@ class Tau(Package):
     license("MIT")
 
     version("master", branch="master")
-    version("2.33.1", sha256="13cc5138e110932f34f02ddf548db91d8219ccb7ff9a84187f0790e40a502403")
     version("2.33", sha256="04d9d67adb495bc1ea56561f33c5ce5ba44f51cc7f64996f65bd446fac5483d9")
     version("2.32.1", sha256="0eec3de46b0873846dfc639270c5e30a226b463dd6cb41aa12e975b7563f0eeb")
     version("2.32", sha256="ee774a06e30ce0ef0f053635a52229152c39aba4f4933bed92da55e5e13466f3")
@@ -276,12 +275,8 @@ class Tau(Package):
             if "+fortran" in spec:
                 env["F77"] = spec["mpi"].mpif77
                 env["FC"] = spec["mpi"].mpifc
-            if spec["mpi"].name == "intel-oneapi-mpi":
-                options.append("-mpiinc=%s" % spec["mpi"].package.component_prefix)
-                options.append("-mpilib=%s" % spec["mpi"].package.component_prefix)
-            else:
-                options.append("-mpiinc=%s" % spec["mpi"].prefix.include)
-                options.append("-mpilib=%s" % spec["mpi"].prefix.lib)
+            options.append("-mpiinc=%s" % spec["mpi"].prefix.include)
+            options.append("-mpilib=%s" % spec["mpi"].prefix.lib)
 
             options.append("-mpi")
             if "+comm" in spec:
@@ -400,6 +395,7 @@ class Tau(Package):
             env.append_path("LD_LIBRARY_PATH", path_to_dyn_lib)
             env.append_path("LD_LIBRARY_PATH", self.prefix.lib)
 
+
     matmult_test = join_path("examples", "mm")
     dyninst_test = join_path("examples", "dyninst")
     makefile_test = join_path("examples", "Makefile")
@@ -415,7 +411,7 @@ class Tau(Package):
         self.cache_extra_test_sources(self.makefile_inc_test)
 
     def _run_matmult_test(self, test_dir):
-        mm_dir = join_path(test_dir, self.matmult_test)
+        mm_dir = join_path( test_dir, self.matmult_test)
         self.run_test(
             "make",
             ["all"],
@@ -450,10 +446,11 @@ class Tau(Package):
         )
 
     def _run_dyninst_test(self, test_dir):
-        dyn_dir = join_path(test_dir, self.dyninst_test)
-        flags = "serial"
+        dyn_dir = join_path( test_dir, self.dyninst_test)
+        print(dyn_dir)
+        flags = "-T serial"
         if "+mpi" in self.spec:
-            flags = "mpi"
+            flags = "-T mpi"
         self.run_test(
             "make",
             ["all"],
@@ -466,7 +463,7 @@ class Tau(Package):
         )
         self.run_test(
             "tau_run",
-            ["-T", flags, "./klargest", "-v", "-o", "./klargest.i"],
+            ["-T", "serial","./klargest", "-v","-o","./klargest.i"],
             [],
             0,
             False,
@@ -494,6 +491,8 @@ class Tau(Package):
             False,
             dyn_dir,
         )
+
+
 
     def test(self):
         test_dir = self.test_suite.current_test_cache_dir
