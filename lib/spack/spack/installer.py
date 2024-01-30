@@ -26,6 +26,7 @@ This module supports the coordination of local and distributed concurrent
 installations of packages in a Spack instance.
 """
 
+import argparse
 import copy
 import glob
 import heapq
@@ -48,6 +49,7 @@ from llnl.util.tty.log import log_output
 
 import spack.binary_distribution as binary_distribution
 import spack.build_environment
+from spack.cmd import buildcache as bc
 import spack.compilers
 import spack.config
 import spack.database
@@ -1702,6 +1704,29 @@ class PackageInstaller:
             # If a compiler, ensure it is added to the configuration
             if task.compiler:
                 self._add_compiler_package_to_config(pkg)
+
+            # Iterate over all mirrors with autopush==True
+            all_mirrors = spack.mirror.MirrorCollection(binary=True)
+            autopush_mirrors = [mirror for mirror in all_mirrors.values() if mirror.get_autopush()]
+            for mirror in autopush_mirrors:
+                # Create and execute buildcache push command
+                bc_parser = argparse.ArgumentParser()
+                bc.setup_parser(bc_parser)
+                bc_flags = []
+                # The dependencies should already be in the buildcache
+                # No need to add them again (especially with --force)
+                bc_flags.append("--only=package")
+                # We want the pushed packages to be available right away
+                bc_flags.append("--update-index")
+                # We always want to push the package to the buildcache
+                # If it is already in the buildcache it must be corrupted,
+                # otherwise it would not have been compiled from source
+                bc_flags.append("--force")
+                if install_args["fail_fast"]:
+                    bc_flags.append("--fail-fast")
+                bc_args = ["push"] + bc_flags + [mirror.name, pkg.name]
+                push_args = bc_parser.parse_args(bc_args)
+                bc.push_fn(push_args)
         except spack.build_environment.StopPhase as e:
             # A StopPhase exception means that do_install was asked to
             # stop early from clients, and is not an error at this point
