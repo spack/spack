@@ -30,8 +30,8 @@ clean: stage1/cleanstage stage2/cleanstage stage3/cleanstage stage4/cleanstage
 	for file in $(TGT_FILES) ; do\
 					rm -rf $(STAGE)/$${file} ; \
 	done
-
-SPACK=SPACK_USER_CONFIG_PATH=$(STAGE) spack
+SPACK_FLAGS ?=
+SPACK=SPACK_USER_CONFIG_PATH=$(STAGE) spack $(SPACK_FLAGS)
 stage1/%: STAGE=stage1
 stage2/%: STAGE=stage2
 stage3/%: STAGE=stage3
@@ -61,7 +61,7 @@ HOST_COMPILER_PATH=
 	# was what follows, but then need path modifications, now using compiler path addition to get bison and gawk $$(spack -e $(PREV) find --format '{prefix}' gcc)
 	echo $(CURDIR)/$(PREV)/.spack-env/view/bin
 	[ "$(STAGE)" = "stage1" ] || env $(ENV) $(SPACK) compiler find --scope=user $(CURDIR)/$(PREV)/.spack-env/view/bin
-	# [ "$(STAGE)" = "stage1" ] || sed -i'' -e '/spec:/s/\(@=.*\)/\1.$(PREV)/' $(STAGE)/compilers.yaml
+	[ "$(STAGE)" = "stage1" ] || sed -i'' -e '/spec:/s/\(@=.*\)/\1.$(PREV)/' $(STAGE)/compilers.yaml
 	env $(ENV) $(SPACK) compiler find --scope=user $(HOST_COMPILER_PATH)
 
 %/spack.yaml: %/spack.in.yaml

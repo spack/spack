@@ -7,7 +7,7 @@ spack:
     - compilers.yaml
   specs:
   - binutils +stage1
-  - gcc @13.2.0 +stage1 +binutils ~bootstrap languages=c,c++
+  - gcc @13.2.0 +stage1 +binutils ~bootstrap languages=c,c++ ~auto_rpath
   - gawk
   - bison
   view: true

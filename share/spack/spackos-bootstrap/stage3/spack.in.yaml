@@ -9,7 +9,7 @@ spack:
   specs:
   - glibc +stage2
   - binutils +gold +lto
-  - gcc@13.2.0 +binutils +piclibs languages=c,c++,fortran,lto ~bootstrap
+  - gcc@13.2.0 +binutils +piclibs languages=c,c++,fortran,lto ~bootstrap ~auto_rpath
   config:
     install_root:
       padded_length: 256
@@ -23,7 +23,7 @@ spack:
         - 'target=x86_64_v3,aarch64'
         - '~stage1'
         - '~stage2'
-        - '%gcc@=13.2.0'
+        - '%gcc@=13.2.0.stage2'
     glibc:
       require:
         - +stage2

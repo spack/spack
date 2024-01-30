@@ -9,7 +9,7 @@ spack:
   specs:
   - glibc
   - binutils
-  - gcc@13.2.0 ~bootstrap ~graphite +binutils
+  - gcc@13.2.0 ~bootstrap ~graphite +binutils ~auto_rpath
   - gmp
   # we have no C++ right now, disable
   - berkeley-db ~cxx ~stl
@@ -27,7 +27,7 @@ spack:
         - 'target=x86_64_v3,aarch64'
         - '~stage1'
         - '+stage2'
-        - '%gcc@=13.2.0'
+        - '%gcc@=13.2.0.stage1'
     linux-headers:
       require:
         # Still not fond of this, better though

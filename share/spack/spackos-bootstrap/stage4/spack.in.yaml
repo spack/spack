@@ -11,7 +11,7 @@ spack:
   # together, use hash
   - glibc +stage2
   - binutils +gold +lto
-  - gcc@13.2.0 +binutils +piclibs ~bootstrap languages=c,c++,fortran,lto
+  - gcc@13.2.0 +binutils +piclibs ~bootstrap languages=c,c++,fortran,lto +auto_rpath
   # base system
   - m4
   - ncurses
@@ -61,7 +61,7 @@ spack:
         - 'target=x86_64_v3,aarch64'
         - '~stage1'
         - '~stage2'
-        - '%gcc@=13.2.0'
+        - '%gcc@=13.2.0.stage3'
     glibc:
       require:
         - +stage2
