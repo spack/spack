@@ -809,7 +809,7 @@ deprecated-ci-build:
 ########################################
 
 .aws-pcluster-generate-image:
-  image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:v2023-07-01", "entrypoint": [""] }
+  image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:v2024-01-29", "entrypoint": [""] }
 
 .aws-pcluster-generate:
   before_script:
