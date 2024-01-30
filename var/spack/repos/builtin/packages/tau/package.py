@@ -410,7 +410,7 @@ class Tau(Package):
         self.cache_extra_test_sources(self.makefile_inc_test)
 
     def _run_matmult_test(self, test_dir):
-        mm_dir = join_path( test_dir, self.matmult_test)
+        mm_dir = join_path(test_dir, self.matmult_test)
         self.run_test(
             "make",
             ["all"],
@@ -462,7 +462,7 @@ class Tau(Package):
         )
         self.run_test(
             "tau_run",
-            ["-T", flag, "./klargest", "-v", "-o", "./klargest.i"],
+            ["-T", flags, "./klargest", "-v", "-o", "./klargest.i"],
             [],
             0,
             False,
