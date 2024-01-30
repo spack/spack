@@ -358,7 +358,7 @@ def version(
     tag: Optional[str] = None,
     branch: Optional[str] = None,
     get_full_repo: Optional[bool] = None,
-    submodules: Union[SubmoduleCallback, Optional[bool]] = False,
+    submodules: Union[SubmoduleCallback, Optional[bool]] = None,
     submodules_delete: Optional[bool] = None,
     # other version control
     svn: Optional[str] = None,
