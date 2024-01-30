@@ -450,7 +450,7 @@ class Tau(Package):
         )
 
     def _run_dyninst_test(self, test_dir):
-        dyn_dir = join_path( test_dir, self.dyninst_test)
+        dyn_dir = join_path(test_dir, self.dyninst_test)
         flags = "serial"
         if "+mpi" in self.spec:
             flags = "mpi"
@@ -466,7 +466,7 @@ class Tau(Package):
         )
         self.run_test(
             "tau_run",
-            ["-T", flags,"./klargest", "-v","-o","./klargest.i"],
+            ["-T", flags, "./klargest", "-v", "-o", "./klargest.i"],
             [],
             0,
             False,
