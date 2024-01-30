@@ -39,6 +39,18 @@ class IntelGtpin(Package):
     license("MIT")
 
     version(
+        "3.7",
+        sha256="366edb46369a67bdbaea3c11ad5bf9a9ead5a7234efb780a27dffd70d1150c39",
+        url="https://downloadmirror.intel.com/793592/external-release-gtpin-3.7-linux.tar.xz",
+    )
+
+    version(
+        "3.4",
+        sha256="c96d08a2729c255e3bc67372fc1271ba60ca8d7bd913f92c2bd951d7d348f553",
+        url="https://downloadmirror.intel.com/777295/external-release-gtpin-3.4-linux.tar.xz",
+    )
+
+    version(
         "3.2.2",
         sha256="6c51b08451935ed8c86778d197e2ff36d4b91883f41292968ff413b53ac8910a",
         url="https://downloadmirror.intel.com/762747/external-release-gtpin-3.2.2-linux.tar.xz",
