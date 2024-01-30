@@ -8,6 +8,7 @@ for Spack's command extensions.
 import difflib
 import glob
 import importlib
+
 try:
     import importlib.metadata as importlib_metadata
 except ImportError:
