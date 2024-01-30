@@ -78,6 +78,8 @@ class Rust(Package):
     depends_on("rust-bootstrap@1.73:1.74", type="build", when="@1.74")
     depends_on("rust-bootstrap@1.74:1.75", type="build", when="@1.75")
 
+    variant("vendor", default=False, description="Enable vendor")
+
     extendable = True
     executables = ["^rustc$", "^cargo$"]
 
@@ -164,6 +166,9 @@ class Rust(Package):
 
         # Compile tools into flag for configure.
         flags.append(f"--tools={','.join(tools)}")
+
+        if spec.satifisfies("+vendor"):
+            flags.append("--enable-vendor")
 
         configure(*flags)
 
