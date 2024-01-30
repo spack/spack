@@ -172,15 +172,13 @@ class Bazel(Package):
         args = "--color=no --define=ABSOLUTE_JAVABASE={0} --verbose_failures --jobs={1}".format(
             self.spec["java"].prefix, make_jobs
         )
-        for resource_name in self.resource_dictionary.keys():
-            if resource_name:
-                if self.spec.satisfies(self.resource_dictionary[resource_name]["when"]):
-                    archive_path = self.stage.source_path
-                    archive_path = archive_path.replace(
-                        "spack-stage-bazel-{0}".format(self.version),
-                        "resource-{0}".format(resource_name),
-                    )
-                    args += " --distdir={0}".format(archive_path)
+
+        resource_stages = self.stage[1:]
+        for _resource in resource_stages:
+            resource_name = _resource.resource.name
+            if self.spec.satisfies(self.resource_dictionary[resource_name]["when"]):
+                archive_path = _resource.source_path
+                args += " --distdir={0}".format(archive_path)
 
         env.set("EXTRA_BAZEL_ARGS", args)
 
