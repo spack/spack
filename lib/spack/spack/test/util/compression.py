@@ -101,12 +101,13 @@ def test_unallowed_extension():
 
 
 def test_file_type_check_does_not_advance_stream(tmp_path):
-    # Create a compressed tarbal.
+    # Create a compressed tarball (without .tar.gz extension)
     path = str(tmp_path / "compressed_tarball")
 
     with tarfile.open(path, "w:gz") as tar:
         tar.addfile(tarfile.TarInfo("test.txt"), fileobj=io.BytesIO(b"test"))
 
+    # Classify the file from its magic bytes, and check that the stream is not advanced
     with open(path, "rb") as f:
         assert compression.extension_from_magic_numbers_by_stream(f, decompress=False) == "gz"
         assert f.tell() == 0
