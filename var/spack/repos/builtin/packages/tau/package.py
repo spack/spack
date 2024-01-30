@@ -446,20 +446,10 @@ class Tau(Package):
 
     def _run_dyninst_test(self, test_dir):
         dyn_dir = join_path(test_dir, self.dyninst_test)
-        print(dyn_dir)
         flags = "serial"
         if "+mpi" in self.spec:
             flags = "mpi"
-        self.run_test(
-            "make",
-            ["all"],
-            [],
-            0,
-            False,
-            "Build example code",
-            False,
-            dyn_dir,
-        )
+        self.run_test("make", ["all"], [], 0, False, "Build example code", False, dyn_dir)
         self.run_test(
             "tau_run",
             ["-T", flags, "./klargest", "-v", "-o", "./klargest.i"],
@@ -471,14 +461,7 @@ class Tau(Package):
             dyn_dir,
         )
         self.run_test(
-            "./klargest.i",
-            [],
-            [],
-            0,
-            False,
-            "Execute instrumented code",
-            False,
-            dyn_dir
+            "./klargest.i", [], [], 0, False, "Execute instrumented code", False, dyn_dir
         )
         self.run_test(
             "pprof",
