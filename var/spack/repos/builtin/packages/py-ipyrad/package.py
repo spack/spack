@@ -33,8 +33,10 @@ class PyIpyrad(PythonPackage):
     depends_on("py-notebook", type=("build", "run"))
     depends_on("samtools", type=("build", "run"))
     depends_on("vsearch", type=("build", "run"))
-    depends_on("py-numpy@:1.19", when="@:0.9.90", type=("build", "run"))
-    depends_on("py-numpy@1.20:", when="@0.9.91:", type=("build", "run"))
+    depends_on("py-numpy@:1.23", when="@:0.9.90", type=("build", "run"))
+    # https://github.com/spack/spack/pull/42098 indicates 0.9.90 and below use
+    # np.int and related functions, deprecated in 1.20 and expired in 1.24.
+    depends_on("py-numpy", when="@0.9.91:", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-pandas", type=("build", "run"))
     depends_on("py-h5py", type=("build", "run"))
