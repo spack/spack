@@ -12,9 +12,9 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
     """hipBLAS is a BLAS marshalling library, with multiple
     supported backends"""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/hipBLAS"
-    git = "https://github.com/ROCmSoftwarePlatform/hipBLAS.git"
-    url = "https://github.com/ROCmSoftwarePlatform/hipBLAS/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/hipBLAS"
+    git = "https://github.com/ROCm/hipBLAS.git"
+    url = "https://github.com/ROCm/hipBLAS/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath", "haampie")
@@ -24,6 +24,7 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("6.0.0", sha256="8fbd0c244fe82eded866e06d2399b1d91ab5d43d2ebcb73382c7ce1ae48d9cb3")
     version("5.7.1", sha256="794e9298f48ffbe3bd1c1ab87a5c2c2b953713500155fdec9ef8cbb11f81fc8a")
     version("5.7.0", sha256="8c6cd2ffa4ce6ab03e05feffe074685b5525610870aebe9d78f817b3037f33a4")
     version("5.6.1", sha256="f9da82fbefc68b84081ea0ed0139b91d2a540357fcf505c7f1d57eab01eb327c")
@@ -136,11 +137,14 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
     patch("link-clients-blas.patch", when="@4.3.0:4.3.2")
     patch("link-clients-blas-4.5.0.patch", when="@4.5.0:4.5.2")
     patch("hipblas-link-clients-blas-5.0.0.patch", when="@5.0.0:5.0.2")
-    patch("remove-hipblas-clients-file-installation.patch", when="@5.5:")
+    patch("remove-hipblas-clients-file-installation.patch", when="@5.5:5.7.1")
+    patch("remove-hipblas-clients-file-installation-6.0.patch", when="@6.0:")
 
-    depends_on("rocm-cmake@5.2.0:", type="build", when="@5.2.0:")
+    depends_on("rocm-cmake@5.2.0:", type="build", when="@5.2.0:5.7")
     depends_on("rocm-cmake@4.5.0:", type="build", when="@4.5.0:")
     depends_on("rocm-cmake@3.5.0:", type="build")
+    for ver in ["6.0.0"]:
+        depends_on("rocm-cmake@" + ver, when="+rocm @" + ver)
 
     depends_on("hip +cuda", when="+cuda")
 
@@ -174,12 +178,12 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
         "5.6.1",
         "5.7.0",
         "5.7.1",
+        "6.0.0",
         "master",
         "develop",
     ]:
         depends_on("rocsolver@" + ver, when="+rocm @" + ver)
         depends_on("rocblas@" + ver, when="+rocm @" + ver)
-
     for tgt in ROCmPackage.amdgpu_targets:
         depends_on(
             "rocblas amdgpu_target={0}".format(tgt), when="+rocm amdgpu_target={0}".format(tgt)

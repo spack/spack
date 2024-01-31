@@ -26,6 +26,7 @@ class Dd4hep(CMakePackage):
     license("LGPL-3.0-or-later")
 
     version("master", branch="master")
+    version("1.27.2", sha256="09d8acd743d010274562b856d39e2a88aeaf89cf287a4148f52223b0cd960ab2")
     version("1.27.1", sha256="e66ae726c0a9a55e5603024a7f8a48ffbc5613ea36e5f892e9a90d87833f92e0")
     version("1.27", sha256="51fbd0f91f2511261d9b01e4b3528c658bea1ea1b5d67b25b6812615e782a902")
     version("1.26", sha256="de2cc8d8e99217e23fdf0a55b879d3fd3a864690d6660e7808f1ff99eb47f384")
@@ -232,7 +233,6 @@ class Dd4hep(CMakePackage):
             "-DBUILD_TESTING={0}".format(self.run_tests),
             "-DBOOST_ROOT={0}".format(spec["boost"].prefix),
             "-DBoost_NO_BOOST_CMAKE=ON",
-            "-DPYTHON_EXECUTABLE={0}".format(spec["python"].command.path),
         ]
         subpackages = []
         if spec.satisfies("+ddg4"):
