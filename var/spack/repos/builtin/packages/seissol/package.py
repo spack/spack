@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@
 from spack.package import *
 
 
-class Seissol(CMakePackage, CudaPackage):
+class Seissol(CMakePackage, CudaPackage, ROCmPackage):
     """Seissol - A scientific software for the numerical simulation
     of seismic wave phenomena and earthquake dynamics.
     """
@@ -20,14 +20,14 @@ class Seissol(CMakePackage, CudaPackage):
         "1.1.2", tag="v1.1.2", commit="71002c1c1498ebd6f50a954731da68fa4f9d436b", submodules=True
     )
 
-    maintainers("Thomas-Ulrich", "ravil-mobile", "davschnellerkrenzland")
+    maintainers("Thomas-Ulrich", "ravil-mobile", "davschneller", "krenzland")
 
-    variant("asagi", default=True, description="installs asagi for material input")
+    variant("asagi", default=True, description="Use ASAGI for material input")
     variant(
         "convergence_order",
         default="4",
         description="polynomial degree plus one",
-        values=(str(v) for v in range(2, 9)),
+        values=(str(v) for v in range(2, 8)),
         multi=False,
     )
     variant(
@@ -45,6 +45,13 @@ class Seissol(CMakePackage, CudaPackage):
         multi=False,
     )
     variant(
+        "plasticity_method",
+        default="nb",
+        description="Plasticity method",
+        values=("nb", "ib"),
+        multi=False,
+    )
+    variant(
         "equations",
         default="elastic",
         description="equation set used",
@@ -55,39 +62,75 @@ class Seissol(CMakePackage, CudaPackage):
         "number_of_mechanisms", default="3", description="number of mechanisms for viscoelasticity"
     )
     variant(
-        "device_backend",
-        default="none",
-        description="type of gpu backend",
-        values=("none", "cuda", "hip", "hipsycl", "oneapi"),
-        multi=False,
+        "netcdf", default=True,
+        description="Enable Netcdf"
     )
-    # minus are used because coma would be interpreted as multiple values
     variant(
-        "gemm_tools",
-        default="auto",
-        description="gemm tool(s) for the code generator",
-        values=(
-            "auto",
-            "LIBXSMM-PSpaMM",
-            "LIBXSMM",
-            "MKL",
-            "OpenBLAS",
-            "BLIS",
-            "PSpaMM",
-            "Eigen",
-            "LIBXSMM-PSpaMM-GemmForge",
-            "Eigen-GemmForge",
-            "LIBXSMM_JIT-PSpaMM",
-            "LIBXSMM_JIT",
-            "LIBXSMM_JIT-PSpaMM-GemmForge",
-        ),
-        multi=False,
+        "graph_partitioning_libs",
+        default="parmetis",
+        values=("none", "parmetis", "ptscotch", "parhip"),
+        multi=True
     )
 
-    variant("mpi", default=True, description="installs an MPI implementation")
-    variant("libxsmm", default=True, description="installs libxsmm-generator")
-    variant("memkind", default=True, description="Use memkind library for hbw memory support")
+    # GPU options
+    variant('intel_gpu', default=False, description="Compile for Intel GPUs")
+    variant(
+        "intel_gpu_arch",
+        default="none",
+        values=("none", "bdw", "skl", "pvc"),
+        description="The Intel GPU to compile for",
+        when='+intel_gpu'
+    )
+    variant(
+        "sycl_backend",
+        default="acpp",
+        description="SYCL backend to use for DR and point sources",
+        values=("acpp", "dpcpp", "oneapi"),
+        when="+cuda"
+    )
+    variant(
+        "sycl_gemm",
+        default=False,
+        description="Use SYCL also for the wave propagation part (default for Intel GPUs)",
+        when="+cuda"
+    )
+    variant(
+        "sycl_backend",
+        default="acpp",
+        description="SYCL backend to use for DR and point sources",
+        values=("acpp", "dpcpp", "oneapi"),
+        when="+rocm"
+    )
+    variant(
+        "sycl_gemm",
+        default=False,
+        description="Use SYCL also for the wave propagation part (default for Intel GPUs)",
+        when="+rocm"
+    )
+    variant(
+        "sycl_backend",
+        default="acpp",
+        description="SYCL backend to use for DR and point sources",
+        values=("acpp", "dpcpp", "oneapi"),
+        when="+intel_gpu"
+    )
+    requires("-cuda -rocm -intel_gpu", "+cuda", "+rocm", "+intel_gpu",
+            policy="one_of", msg="You may either compile for one GPU backend, or for CPU.")
 
+    requires("%oneapi", when="sycl_backend=oneapi")
+    requires("%dpcpp", when="sycl_backend=dpcpp")
+
+    depends_on("hipsycl@0.9.3: +cuda", when="+cuda sycl_backend=acpp")
+
+    # TODO: this one needs to be +rocm as well--but that's not implemented yet
+    depends_on("hipsycl@develop", when="+rocm sycl_backend=acpp")
+
+    # TODO: extend as soon as level zero is available
+    depends_on("hipsycl@develop", when="+intel_gpu sycl_backend=acpp")
+
+    # TODO: once adaptivecpp supports NVHPC, forward that (SYCL_USE_NVHPC)
+
+    # GPU architecture requirements
     conflicts(
         "cuda_arch=none",
         when="+cuda",
@@ -95,12 +138,35 @@ class Seissol(CMakePackage, CudaPackage):
     )
 
     conflicts(
-        "device_backend=none",
-        when="+cuda",
-        msg="A value for device_backend must be specified. Add device_backend=XX",
+        "amdgpu_target=none",
+        when="+rocm",
+        msg="A value for amdgpu_arch must be specified. Add amdgpu_arch=XX",
     )
 
-    variant("python", default=False, description="installs python, pip, numpy and scipy")
+    conflicts(
+        "intel_gpu_arch=none",
+        when="+intel_gpu",
+        msg="A value for intel_gpu_arch must be specified. Add intel_gpu_arch=XX",
+    )
+
+    variant(
+        "gemm_tools",
+        default="LIBXSMM,PSpaMM",
+        description="gemm toolkit(s) for the (CPU) code generator",
+        values=(
+            "LIBXSMM",
+            "MKL",
+            "OpenBLAS",
+            "BLIS",
+            "PSpaMM",
+            "Eigen",
+            "LIBXSMM_JIT",
+        ),
+        multi=True,
+    )
+
+    variant("mpi", default=True, description="installs an MPI implementation")
+    variant("memkind", default=True, description="Use memkind library for hbw memory support")
 
     depends_on("mpi", when="+mpi")
     # with cuda 12 and llvm 14:15, we have the issue: "error: no template named 'texture"
@@ -113,19 +179,20 @@ class Seissol(CMakePackage, CudaPackage):
     # cuda_hardware_manager: Attempt to access invalid device detected.
     # Therefore the cuda version is set to 11 now, but this constrain could be released
     # in the future
-    depends_on("cuda@11", when="+cuda")
+    depends_on("cuda@11:", when="+cuda")
+    depends_on("hip", when="+rocm")
 
-    depends_on("hipsycl@develop +cuda", when="+cuda")
-
-    depends_on("parmetis +int64 +shared", when="+mpi")
-    depends_on("metis +int64 +shared", when="+mpi")
-    depends_on("libxsmm@1.17 +generator", when="+libxsmm target=x86_64:")
+    # graph partitioning
+    depends_on("parmetis +int64 +shared", when="+mpi graph_partitioning_libs=parmetis")
+    depends_on("metis +int64 +shared", when="+mpi graph_partitioning_libs=parmetis")
+    depends_on("scotch +mpi +mpi_thread +shared +threads +int64", when="+mpi graph_partitioning_libs=ptscotch")
+    depends_on("kahip", when="+mpi graph_partitioning_libs=parhip")
 
     depends_on("hdf5@1.10:1.12.2 +shared +threadsafe ~mpi", when="~mpi")
     depends_on("hdf5@1.10:1.12.2 +shared +threadsafe +mpi", when="+mpi")
 
-    depends_on("netcdf-c@4.6:4.7.4 +shared ~mpi", when="~mpi")
-    depends_on("netcdf-c@4.6:4.7.4 +shared +mpi", when="+mpi")
+    depends_on("netcdf-c@4.6:4.7.4 +shared ~mpi", when="~mpi +netcdf")
+    depends_on("netcdf-c@4.6:4.7.4 +shared +mpi", when="+mpi +netcdf")
 
     depends_on("asagi ~mpi ~mpi3 ~fortran", when="+asagi ~mpi")
     depends_on("asagi +mpi +mpi3", when="+asagi +mpi")
@@ -136,73 +203,127 @@ class Seissol(CMakePackage, CudaPackage):
     depends_on("intel-mkl threads=none", when="gemm_tools=MKL")
     depends_on("blis threads=none", when="gemm_tools=BLIS")
     depends_on("openblas threads=none", when="gemm_tools=OpenBLAS")
+    depends_on("libxsmm@latest", when="gemm_tools=LIBXSMM_JIT")
+
+    conflicts('gemm_tools=LIBXSMM', when='gemm_tools=LIBXSMM_JIT')
+
     depends_on("memkind", when="+memkind target=x86_64:")
 
-    depends_on("py-pspamm")
     depends_on("yaml-cpp@0.6.2")
-    depends_on("cxxtest")
     depends_on("eigen@3.4.0")
 
-    """
-    depends_on("py-numpy", when="+python")
-    depends_on("py-scipy", when="+python")
-    depends_on("py-matplotlib", when="+python")
-    depends_on("py-pyopenssl", when="+python")
-    """
+    # build dependencies (code generation)
+    depends_on("python@3", type="build")
+    depends_on("py-numpy", type="build")
+    depends_on("py-scipy", type="build")
 
-    depends_on("python@3")
+    depends_on("py-pspamm", when="gemm_tools=PSpaMM", type="build")
+    depends_on("libxsmm@1.17 +generator", when="gemm_tools=LIBXSMM target=x86_64:", type="build")
+
+    # TODO: gemmforge
+    # TODO: chainforge
+
+    def setup_build_environment(self):
+        pass
 
     def cmake_args(self):
         args = [
             self.define_from_variant("ASAGI", "asagi"),
             self.define_from_variant("PRECISION", "precision"),
+            self.define_from_variant("PLASTICITY_METHOD", "plasticity_method"),
             self.define_from_variant("DR_QUAD_RULE", "dr_quad_rule"),
             self.define_from_variant("ORDER", "convergence_order"),
             self.define_from_variant("EQUATIONS", "equations"),
+            self.define_from_variant("USE_MPI", "mpi"),
+            self.define_from_variant("USE_NETCDF", "netcdf"),
         ]
-        gemm_tools = self.spec.variants["gemm_tools"].value.replace("-", ",")
+
+        gemm_tools = ','.join(self.spec.variants["gemm_tools"].value)
         args.append(f"-DGEMM_TOOLS={gemm_tools}")
+
+        if self.spec.satisfies("+mpi"):
+            graph_partitioning_libs = ','.join(self.spec.variants["graph_partitioning_libs"].value)
+            args.append(f"-DGRAPH_PARTITIONG_LIBS={graph_partitioning_libs}")
+        else:
+            # if no MPI, then no graph partitioning is needed
+            args.append("-DGRAPH_PARTITIONG_LIBS=none")
 
         if self.spec.variants["equations"].value != "viscoelastic2":
             args.append("-DNUMBER_OF_MECHANISMS=0")
         else:
             args.append(self.define_from_variant("NUMBER_OF_MECHANISMS", "number_of_mechanisms"))
 
-        if "+cuda" in self.spec:
-            cuda_arch = self.spec.variants["cuda_arch"].value[0]
-            args.append(f"-DDEVICE_ARCH=sm_{cuda_arch}")
-            args.append(self.define_from_variant("DEVICE_BACKEND", "device_backend"))
+        with_gpu = self.spec.satisfies("+cuda") or self.spec.satisfies("+rocm") or self.spec.satisfies("+intel_gpu")
 
-        # TODO: fill the gaps based on
-        # https://spack.readthedocs.io/en/latest/basic_usage.html#support-for-specific-microarchitectures
-        arch_dic = {}
-        arch_dic["westmere"] = "wsm"
-        arch_dic["sandybridge"] = "snb"
-        arch_dic["haswell"] = "hsw"
-        # arch_dic[""] = "knc"
-        # arch_dic[""] = "knl"
-        arch_dic["skylake_avx512"] = "skx"
-        arch_dic["zen"] = "naples"
-        arch_dic["zen2"] = "rome"
-        arch_dic["zen3"] = "milan"
-        arch_dic["zen4"] = "bergamo"
-        arch_dic["thunderx2"] = "thunderx2t99"
-        arch_dic["power9"] = "power9"
-        arch_dic["a64fx"] = "a64fx"
-        # arch_dic[""] = "neon"
-        # arch_dic[""] = "sve128"
-        # arch_dic[""] = "sve256"
-        # arch_dic[""] = "sve512"
-        # arch_dic[""] = "sve1024"
-        # arch_dic[""] = "sve2048"
-        arch_dic["m1"] = "apple-m1"
-        arch_dic["m2"] = "apple-m2"
-        target = str(self.spec.target)
-        if target in arch_dic:
-            args.append("-DHOST_ARCH=" + arch_dic[target])
-        else:
-            print(target, "not in arch list of tandem, using noarch")
-            args.append("-DARCH=noarch")
+        if with_gpu:
+            # Nvidia GPUs
+            if self.spec.satisfies("+cuda"):
+                cuda_arch = self.spec.variants["cuda_arch"].value[0]
+                args.append(f"-DDEVICE_ARCH=sm_{cuda_arch}")
+                args.append('-DUSE_GRAPH_COMPUTING=ON -DENABLE_PROFILING_MARKERS=ON')
+                if not self.spec.variants["sycl_gemm"].value:
+                    args.append("-DDEVICE_BACKEND=cuda")
+
+            # ROCm/AMD GPUs
+            if self.spec.satisfies("+rocm"):
+                hip_arch = self.spec.variants["amdgpu_target"].value[0]
+                args.append(f"-DDEVICE_ARCH={amdgpu_target}")
+                args.append('-DUSE_GRAPH_COMPUTING=ON -DENABLE_PROFILING_MARKERS=ON')
+                if not self.spec.variants["sycl_gemm"].value:
+                    args.append("-DDEVICE_BACKEND=hip")
+
+            # Intel GPUs
+            if self.spec.variants["intel_gpu_arch"].value != "none":
+                intel_gpu_arch = self.spec.variants["intel_gpu_arch"].value
+                args.append('-DUSE_GRAPH_COMPUTING=ON')
+                args.append(f"-DDEVICE_ARCH={intel_gpu_arch}")
+
+            # SYCL
+            sycl_backends = {
+                "acpp": "hipsycl",
+                "dpcpp": "oneapi",
+                "oneapi": "oneapi"
+            }
+            syclcc_backends = {
+                "acpp": "hipsycl",
+                "dpcpp": "dpcpp",
+                "oneapi": "dpcpp"
+            }
+
+            sycl_backend = self.spec.variants["sycl_backend"].value
+            args.append(f"-DSYCLCC={syclcc_backends[sycl_backends]}")
+            if self.spec.variants["sycl_gemm"].value:
+                args.append(f"-DDEVICE_BACKEND={sycl_backends[sycl_backends]}")
+
+        # CPU arch
+
+        # cf. https://spack.readthedocs.io/en/latest/basic_usage.html#support-for-specific-microarchitectures
+
+        # basic family matching
+        hostarch = 'noarch'
+        if self.spec.target.family == 'aarch64': hostarch = 'neon'
+        if self.spec.target.family == 'x86_64': hostarch = 'wsm'
+        if self.spec.target.family == 'x86_64_v2': hostarch = 'snb'
+        if self.spec.target.family == 'x86_64_v3': hostarch = 'hsw'
+        if self.spec.target.family == 'x86_64_v4': hostarch = 'skx'
+
+        # specific architecture matching
+        if self.spec.target >= 'westmere': hostarch = 'wsm'
+        if self.spec.target >= 'sandybridge': hostarch = 'snb'
+        if self.spec.target >= 'haswell': hostarch = 'hsw'
+        if self.spec.target >= 'mic_knl': hostarch = 'knl'
+        if self.spec.target >= 'skylake_avx512': hostarch = 'skx'
+        if self.spec.target >= 'zen': hostarch = 'naples'
+        if self.spec.target >= 'zen2': hostarch = 'rome'
+        if self.spec.target >= 'zen3': hostarch = 'milan'
+        if self.spec.target >= 'zen4': hostarch = 'bergamo'
+        if self.spec.target >= 'thunderx2': hostarch = 'thunderx2t99'
+        if self.spec.target >= 'power9': hostarch = 'power9'
+        if self.spec.target >= 'm1': hostarch = 'apple-m1'
+        if self.spec.target >= 'm2': hostarch = 'apple-m2'
+        if self.spec.target >= 'a64fx': hostarch = 'a64fx'
+
+        args.append(f"-DHOST_ARCH={hostarch}")
 
         return args
 
