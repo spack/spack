@@ -434,6 +434,7 @@ class TestConcretize:
     def test_concretize_non_root_compiler_flag_propagate(self):
         spec = Spec("callpath ^dyninst cflags=='-g'")
         spec.concretize()
+        print(spec)
 
         assert spec.satisfies("^libdwarf cflags='-g'")
         assert spec.satisfies("^libelf cflags='-g'")
@@ -441,7 +442,7 @@ class TestConcretize:
     @pytest.mark.only_clingo(
         "Optional compiler propagation isn't deprecated for original concretizer"
     )
-    def test_concretize_compiler_flag_does_not_propagate(self):
+    def test_concretize_not_compiler_flag_propagate(self):
         spec = Spec("hypre cflags='-g' ^openblas")
         spec.concretize()
 
@@ -451,7 +452,7 @@ class TestConcretize:
     @pytest.mark.only_clingo(
         "Optional compiler propagation isn't deprecated for original concretizer"
     )
-    def test_concretize_propagate_compiler_flag_not_passed_to_dependent(self):
+    def test_concretize_compiler_flag_propagate_not_passed_to_dependent(self):
         spec = Spec("callpath cflags=='-g' ^dyninst cflags='-O3'")
         spec.concretize()
 
@@ -462,7 +463,7 @@ class TestConcretize:
     @pytest.mark.only_clingo(
         "Optional compiler propagation isn't deprecated for original concretizer"
     )
-    def test_concretize_propagate_specified_compiler_flag(self):
+    def test_concretize_specified_compiler_flag_propagate(self):
         spec = Spec("callpath cflags=='-g' cxxflags='-O3'")
         spec.concretize()
 

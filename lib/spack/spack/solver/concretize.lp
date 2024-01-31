@@ -1283,6 +1283,7 @@ attr("node_flag_compiler_default", PackageNode)
 
 % if a flag is set to something or inherited, it's included
 attr("node_flag", PackageNode, FlagType, Flag) :- attr("node_flag_set", PackageNode, FlagType, Flag).
+%attr("node_flag", PackageNode, FlagType, Flag) :- attr("node_flag_propagate", PackageNode, FlagType, Flag, _).
 
 attr("node_flag_propagate", PackageNode, FlagType, Flag, Source) :-
   attr("node_flag_propagation_candidate", PackageNode, FlagType, Flag, Source),
