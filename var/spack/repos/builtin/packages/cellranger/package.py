@@ -18,7 +18,7 @@ class Cellranger(Package):
     directory. For instructions on making a manual mirror, see
     https://spack.readthedocs.io/en/latest/mirrors.html"""
 
-    homepage = "https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger"
+    homepage = "https://www.10xgenomics.com/support/software/cell-ranger/latest"
     manual_download = True
 
     version("7.2.0", sha256="b092bd4e3ab585ad051a231fbdd8f3f0f5cbcd10f657eeab86bec98cd594502c")
