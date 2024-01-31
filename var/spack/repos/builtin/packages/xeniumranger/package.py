@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,7 @@ class Xeniumranger(Package):
 
     homepage = "https://www.10xgenomics.com/support/software/xenium-ranger/latest"
     manual_download = True
+    license_url = "support.10xgenomics.com/license"
 
     version("1.7.1", sha256="3bfa85de75ef473b54a5a6d853649999e446f2f00cc202750bb22af5078965a1")
 
