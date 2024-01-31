@@ -68,6 +68,7 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
     variant(
         "graph_partitioning_libs",
         default="parmetis",
+        description="graph partitioning library for mesh partitioning",
         values=("none", "parmetis", "ptscotch", "parhip"),
         multi=True,
     )
@@ -189,7 +190,7 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("intel-mkl threads=none", when="gemm_tools=MKL")
     depends_on("blis threads=none", when="gemm_tools=BLIS")
     depends_on("openblas threads=none", when="gemm_tools=OpenBLAS")
-    depends_on("libxsmm@latest", when="gemm_tools=LIBXSMM_JIT")
+    depends_on("libxsmm@main", when="gemm_tools=LIBXSMM_JIT")
 
     conflicts("gemm_tools=LIBXSMM", when="gemm_tools=LIBXSMM_JIT")
 
@@ -253,7 +254,7 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
 
             # ROCm/AMD GPUs
             if self.spec.satisfies("+rocm"):
-                hip_arch = self.spec.variants["amdgpu_target"].value[0]
+                amdgpu_target = self.spec.variants["amdgpu_target"].value[0]
                 args.append(f"-DDEVICE_ARCH={amdgpu_target}")
                 args.append("-DUSE_GRAPH_COMPUTING=ON -DENABLE_PROFILING_MARKERS=ON")
                 if not self.spec.variants["sycl_gemm"].value:
