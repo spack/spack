@@ -183,7 +183,7 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("eigen@3.4.0:", when="@7.3.2: +tests")
 
-    depends_on("costa+shared", when="@7.3.2:")
+    depends_on("costa", when="@7.3.2:")
 
     with when("@7.5: +memory_pool"):
         depends_on("umpire~cuda~rocm", when="~cuda~rocm")

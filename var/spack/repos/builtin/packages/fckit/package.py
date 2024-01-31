@@ -62,7 +62,6 @@ class Fckit(CMakePackage):
         args = [
             self.define_from_variant("ENABLE_ECKIT", "eckit"),
             self.define_from_variant("ENABLE_OMP", "openmp"),
-            "-DPYTHON_EXECUTABLE:FILEPATH=" + self.spec["python"].command.path,
             "-DFYPP_NO_LINE_NUMBERING=ON",
         ]
 

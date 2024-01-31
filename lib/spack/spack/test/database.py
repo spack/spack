@@ -60,13 +60,9 @@ def test_spec_installed_upstream(
     upstream_and_downstream_db, mock_custom_repository, config, monkeypatch
 ):
     """Test whether Spec.installed_upstream() works."""
-    (
-        upstream_write_db,
-        upstream_db,
-        upstream_layout,
-        downstream_db,
-        downstream_layout,
-    ) = upstream_and_downstream_db
+    (upstream_write_db, upstream_db, upstream_layout, downstream_db, downstream_layout) = (
+        upstream_and_downstream_db
+    )
 
     # a known installed spec should say that it's installed
     with spack.repo.use_repositories(mock_custom_repository):
@@ -90,13 +86,9 @@ def test_spec_installed_upstream(
 
 @pytest.mark.usefixtures("config")
 def test_installed_upstream(upstream_and_downstream_db, tmpdir):
-    (
-        upstream_write_db,
-        upstream_db,
-        upstream_layout,
-        downstream_db,
-        downstream_layout,
-    ) = upstream_and_downstream_db
+    (upstream_write_db, upstream_db, upstream_layout, downstream_db, downstream_layout) = (
+        upstream_and_downstream_db
+    )
 
     builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"))
     builder.add_package("x")
@@ -132,13 +124,9 @@ def test_installed_upstream(upstream_and_downstream_db, tmpdir):
 
 @pytest.mark.usefixtures("config")
 def test_removed_upstream_dep(upstream_and_downstream_db, tmpdir):
-    (
-        upstream_write_db,
-        upstream_db,
-        upstream_layout,
-        downstream_db,
-        downstream_layout,
-    ) = upstream_and_downstream_db
+    (upstream_write_db, upstream_db, upstream_layout, downstream_db, downstream_layout) = (
+        upstream_and_downstream_db
+    )
 
     builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"))
     builder.add_package("z")
@@ -168,13 +156,9 @@ def test_add_to_upstream_after_downstream(upstream_and_downstream_db, tmpdir):
     DB. When a package is recorded as installed in both, the results should
     refer to the downstream DB.
     """
-    (
-        upstream_write_db,
-        upstream_db,
-        upstream_layout,
-        downstream_db,
-        downstream_layout,
-    ) = upstream_and_downstream_db
+    (upstream_write_db, upstream_db, upstream_layout, downstream_db, downstream_layout) = (
+        upstream_and_downstream_db
+    )
 
     builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"))
     builder.add_package("x")
