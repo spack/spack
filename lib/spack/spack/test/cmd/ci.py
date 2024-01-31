@@ -16,6 +16,7 @@ from llnl.util.filesystem import mkdirp, working_dir
 import spack
 import spack.binary_distribution
 import spack.ci as ci
+import spack.cmd.ci
 import spack.config
 import spack.environment as ev
 import spack.hash_types as ht
@@ -2026,6 +2027,43 @@ spack:
     # Make sure we tell the suer where it is when not in interactive mode
     expect_out = "$ {0}/start.sh".format(os.path.realpath(working_dir.strpath))
     assert expect_out in rep_out
+
+
+@pytest.mark.parametrize(
+    "url_in,url_out",
+    [
+        (
+            "https://example.com/api/v4/projects/1/jobs/2/artifacts",
+            "https://example.com/api/v4/projects/1/jobs/2/artifacts",
+        ),
+        (
+            "https://example.com/spack/spack/-/jobs/123456/artifacts/download",
+            "https://example.com/spack/spack/-/jobs/123456/artifacts/download",
+        ),
+        (
+            "https://example.com/spack/spack/-/jobs/123456",
+            "https://example.com/spack/spack/-/jobs/123456/artifacts/download",
+        ),
+        (
+            "https://example.com/spack/spack/-/jobs/////123456////?x=y#z",
+            "https://example.com/spack/spack/-/jobs/123456/artifacts/download",
+        ),
+    ],
+)
+def test_reproduce_build_url_validation(url_in, url_out):
+    assert spack.cmd.ci._gitlab_artifacts_url(url_in) == url_out
+
+
+def test_reproduce_build_url_validation_fails():
+    """Wrong URLs should cause an exception"""
+    with pytest.raises(SystemExit):
+        ci_cmd("reproduce-build", "example.com/spack/spack/-/jobs/123456/artifacts/download")
+
+    with pytest.raises(SystemExit):
+        ci_cmd("reproduce-build", "https://example.com/spack/spack/-/issues")
+
+    with pytest.raises(SystemExit):
+        ci_cmd("reproduce-build", "https://example.com/spack/spack/-")
 
 
 @pytest.mark.parametrize(
