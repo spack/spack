@@ -82,11 +82,11 @@ install_compilers() {
     # packages will reference a wrong compiler path once the path changes.
 
     # `gcc@12.3.0%gcc@7.3.1` is created as part of building the pipeline containers.
-    # https://github.com/spack/gitlab-runners/pkgs/container/pcluster-amazonlinux-2/106126845?tag=v2023-07-01 produced the following hashes.
+    # `ghcr.io/spack/pcluster-amazonlinux-2:v2024-01-29` produced the following hashes.
     if [ "x86_64" == "$(arch)" ]; then
-        gcc_hash="yyvkvlgimaaxjhy32oa5x5eexqekrevc"
+        gcc_hash="vxlibl3ubl5ptwzb3zydgksfa5osdea6"
     else
-        gcc_hash="jttj24nibqy5jsqf34as5m63umywfa3d"
+        gcc_hash="bikooik6f3fyrkroarulsadbii43ggz5"
     fi
 
     spack install --no-check-signature /${gcc_hash}
