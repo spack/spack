@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -47,9 +47,6 @@ os.environ["PATH"] += "%s%s" % (os.pathsep, os.path.abspath("_spack_root/bin"))
 # a terminal.
 os.environ["COLIFY_SIZE"] = "25x120"
 os.environ["COLUMNS"] = "120"
-
-# Generate full package list if needed
-subprocess.call(["spack", "list", "--format=html", "--update=package_list.html"])
 
 # Generate a command index if an update is needed
 subprocess.call(
@@ -202,11 +199,13 @@ nitpick_ignore = [
     ("py:class", "contextlib.contextmanager"),
     ("py:class", "module"),
     ("py:class", "_io.BufferedReader"),
+    ("py:class", "_io.BytesIO"),
     ("py:class", "unittest.case.TestCase"),
     ("py:class", "_frozen_importlib_external.SourceFileLoader"),
     ("py:class", "clingo.Control"),
     ("py:class", "six.moves.urllib.parse.ParseResult"),
     ("py:class", "TextIO"),
+    ("py:class", "hashlib._Hash"),
     # Spack classes that are private and we don't want to expose
     ("py:class", "spack.provider_index._IndexBase"),
     ("py:class", "spack.repo._PrependFileLoader"),
@@ -214,8 +213,10 @@ nitpick_ignore = [
     # Spack classes that intersphinx is unable to resolve
     ("py:class", "spack.version.StandardVersion"),
     ("py:class", "spack.spec.DependencySpec"),
+    ("py:class", "spack.spec.InstallStatus"),
     ("py:class", "spack.spec.SpecfileReaderBase"),
     ("py:class", "spack.install_test.Pb"),
+    ("py:class", "spack.filesystem_view.SimpleFilesystemView"),
 ]
 
 # The reST default role (used for this markup: `text`) to use for all documents.

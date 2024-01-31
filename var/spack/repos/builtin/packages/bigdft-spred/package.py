@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,9 @@ class BigdftSpred(AutotoolsPackage):
     variant("mpi", default=True, description="Enable MPI support")
     variant("openmp", default=True, description="Enable OpenMP support")
     variant("scalapack", default=True, description="Enable SCALAPACK support")
+    variant(
+        "shared", default=True, description="Build shared libraries"
+    )  # Not default in bigdft, but is typically the default expectation
 
     depends_on("python@3.0:", type=("build", "run"))
 
@@ -36,9 +39,9 @@ class BigdftSpred(AutotoolsPackage):
     depends_on("scalapack", when="+scalapack")
 
     for vers in ["1.9.0", "1.9.1", "1.9.2", "develop"]:
-        depends_on("bigdft-futile@{0}".format(vers), when="@{0}".format(vers))
-        depends_on("bigdft-psolver@{0}".format(vers), when="@{0}".format(vers))
-        depends_on("bigdft-core@{0}".format(vers), when="@{0}".format(vers))
+        depends_on(f"bigdft-futile@{vers}", when=f"@{vers}")
+        depends_on(f"bigdft-psolver@{vers}", when=f"@{vers}")
+        depends_on(f"bigdft-core@{vers}", when=f"@{vers}")
 
     configure_directory = "spred"
 
@@ -47,7 +50,7 @@ class BigdftSpred(AutotoolsPackage):
         prefix = self.prefix
 
         python_version = spec["python"].version.up_to(2)
-        pyyaml = join_path(spec["py-pyyaml"].prefix.lib, "python{0}".format(python_version))
+        pyyaml = join_path(spec["py-pyyaml"].prefix.lib, f"python{python_version}")
 
         openmp_flag = []
         if "+openmp" in spec:
@@ -60,25 +63,27 @@ class BigdftSpred(AutotoolsPackage):
         linalg.append(spec["blas"].libs.ld_flags)
 
         args = [
-            "FCFLAGS=%s" % " ".join(openmp_flag),
-            "--with-ext-linalg=%s" % " ".join(linalg),
-            "--with-pyyaml-path=%s" % pyyaml,
-            "--with-futile-libs=%s" % spec["bigdft-futile"].libs.ld_flags,
-            "--with-futile-incs=%s" % spec["bigdft-futile"].headers.include_flags,
-            "--with-psolver-libs=%s" % spec["bigdft-psolver"].prefix.lib,
-            "--with-psolver-incs=%s" % spec["bigdft-psolver"].headers.include_flags,
-            "--with-core-libs=%s" % spec["bigdft-core"].prefix.lib,
-            "--with-core-incs=%s" % spec["bigdft-core"].headers.include_flags,
-            "--with-moduledir=%s" % prefix.include,
-            "--prefix=%s" % prefix,
+            f"FCFLAGS={' '.join(openmp_flag)}",
+            f"--with-ext-linalg={' '.join(linalg)}",
+            f"--with-pyyaml-path={pyyaml}",
+            f"--with-futile-libs={spec['bigdft-futile'].libs.ld_flags}",
+            f"--with-futile-incs={spec['bigdft-futile'].headers.include_flags}",
+            f"--with-psolver-libs={spec['bigdft-psolver'].prefix.lib}",
+            f"--with-psolver-incs={spec['bigdft-psolver'].headers.include_flags}",
+            f"--with-core-libs={spec['bigdft-core'].prefix.lib}",
+            f"--with-core-incs={spec['bigdft-core'].headers.include_flags}",
+            f"--with-moduledir={prefix.include}",
+            f"--prefix={prefix}",
         ]
+        if spec.satisfies("+shared"):
+            args.append("--enable-dynamic-libraries")
 
         if "+mpi" in spec:
-            args.append("CC=%s" % spec["mpi"].mpicc)
-            args.append("CXX=%s" % spec["mpi"].mpicxx)
-            args.append("FC=%s" % spec["mpi"].mpifc)
-            args.append("F90=%s" % spec["mpi"].mpifc)
-            args.append("F77=%s" % spec["mpi"].mpif77)
+            args.append(f"CC={spec['mpi'].mpicc}")
+            args.append(f"CXX={spec['mpi'].mpicxx}")
+            args.append(f"FC={spec['mpi'].mpifc}")
+            args.append(f"F90={spec['mpi'].mpifc}")
+            args.append(f"F77={spec['mpi'].mpif77}")
         else:
             args.append("--disable-mpi")
 

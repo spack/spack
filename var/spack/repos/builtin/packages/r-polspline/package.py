@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class RPolspline(RPackage):
     polymars, by C. Kooperberg and co-authors."""
 
     cran = "polspline"
+
+    license("GPL-2.0-or-later")
 
     version("1.1.22", sha256="b2f2198f020d7d492a87bad2b58a6cc9ae91d95b7330dd12b9b1145c72d7457b")
     version("1.1.20", sha256="6992484e9e41036debef1e705e26959f8f5c7a68d3e1fda58273d2a72297a1b5")

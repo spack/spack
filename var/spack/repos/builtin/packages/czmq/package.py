@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Czmq(AutotoolsPackage):
 
     homepage = "http://czmq.zeromq.org"
     url = "https://github.com/zeromq/czmq/archive/v4.0.2.tar.gz"
+
+    license("MPL-2.0")
 
     version("4.1.1", sha256="b7623433547aa4b6e79722796c27ebc7c0470fea4204e920fd05e717c648f889")
     version("4.0.2", sha256="794f80af7392ec8d361ad69646fc20aaa284d23fef92951334009771a732c810")

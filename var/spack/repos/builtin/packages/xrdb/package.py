@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Xrdb(AutotoolsPackage, XorgPackage):
 
     homepage = "https://cgit.freedesktop.org/xorg/app/xrdb"
     xorg_mirror_path = "app/xrdb-1.1.0.tar.gz"
+
+    license("MIT")
 
     version("1.2.1", sha256="e674f5fb081a023e54878c0aac728dc30feb821207c989cff17a60f0c4a80ced")
     version("1.2.0", sha256="7dec50e243d55c6a0623ff828355259b6a110de74a0c65c40529514324ef7938")

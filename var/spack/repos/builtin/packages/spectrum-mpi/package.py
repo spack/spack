@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -56,6 +56,14 @@ class SpectrumMpi(BundlePackage):
                     break
             return actual_compiler.spec if actual_compiler else None
 
+        def get_opal_prefix(exe):
+            output = Executable(exe)(output=str, error=str)
+            match = re.search(r"Prefix: (\S+)", output)
+            if not match:
+                return None
+            opal_prefix = match.group(1)
+            return opal_prefix
+
         results = []
         for exe in exes:
             dirname = os.path.dirname(exe)
@@ -83,9 +91,14 @@ class SpectrumMpi(BundlePackage):
                 # results.append((variant, {'compilers': compilers_found}))
                 #
                 # Otherwise, use this simpler attribute
-                results.append(variant)
             else:
-                results.append("")
+                variant = ""
+            opal_prefix = get_opal_prefix(exe)
+            if opal_prefix:
+                extra_attributes = {"opal_prefix": opal_prefix}
+                results.append((variant, extra_attributes))
+            else:
+                results.append(variant)
         return results
 
     def setup_dependent_package(self, module, dependent_spec):
@@ -148,3 +161,6 @@ class SpectrumMpi(BundlePackage):
             env.set("MPICXX", os.path.join(self.prefix.bin, "mpic++"))
             env.set("MPIF77", os.path.join(self.prefix.bin, "mpif77"))
             env.set("MPIF90", os.path.join(self.prefix.bin, "mpif90"))
+
+        env.set("OPAL_PREFIX", self.spec.extra_attributes.get("opal_prefix", self.prefix))
+        env.set("MPI_ROOT", self.spec.extra_attributes.get("opal_prefix", self.prefix))

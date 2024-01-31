@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class RPosterior(RPackage):
     diagnostics. References: Vehtari et al. (2021) <doi:10.1214/20-BA1221>."""
 
     cran = "posterior"
+
+    license("BSD-3-Clause")
 
     version("1.4.1", sha256="2b8953fa8d6890a105521023c431ddea725465eb95cf9454a88852e43ebb58d3")
     version("1.3.1", sha256="7000780290a24be86dbc406dd4338aec622d8dee1e471b68b55abb4872934d7a")

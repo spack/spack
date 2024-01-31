@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Gunrock(CMakePackage, CudaPackage):
 
     homepage = "https://gunrock.github.io/docs/"
     git = "https://github.com/gunrock/gunrock.git"
+
+    license("Apache-2.0")
 
     version("master", submodules=True)
     version("1.2", submodules=True, tag="v1.2", commit="5ee3df50c45f702eb247ef1abcea7a490b60b2ea")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class PyPyfr(PythonPackage, CudaPackage, ROCmPackage):
     pypi = "pyfr/pyfr-1.13.0.tar.gz"
     git = "https://github.com/PyFR/PyFR/"
     maintainers("MichaelLaufer")
+
+    license("BSD-3-Clause")
 
     # git branches
     version("develop", branch="develop")
@@ -41,7 +43,7 @@ class PyPyfr(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("py-h5py@2.10:", type=("build", "run"))
     depends_on("py-mako@1.0.0:", type=("build", "run"))
     depends_on("py-mpi4py@3.1.0:", type=("build", "run"))
-    depends_on("py-numpy@1.20:+blas", type=("build", "run"))
+    depends_on("py-numpy@1.20:", type=("build", "run"))
     depends_on("py-platformdirs@2.2.0:", type=("build", "run"))
     depends_on("py-pytools@2016.2.1:", type=("build", "run"))
 

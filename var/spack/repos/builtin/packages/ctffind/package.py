@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Ctffind(AutotoolsPackage):
 
     homepage = "https://grigoriefflab.umassmed.edu/ctffind4"
     url = "https://grigoriefflab.umassmed.edu/system/tdf?path=ctffind-4.1.8.tar.gz&file=1&type=node&id=26"
+
+    license("BSD-3-Clause")
 
     version(
         "4.1.14",
@@ -40,7 +42,7 @@ class Ctffind(AutotoolsPackage):
     def configure_args(self):
         config_args = []
 
-        if "^mkl" in self.spec:
+        if self.spec["fftw-api"].name in INTEL_MATH_LIBRARIES:
             config_args.extend(
                 [
                     "--enable-mkl",

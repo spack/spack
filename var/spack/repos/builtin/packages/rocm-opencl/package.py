@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,8 +12,8 @@ from spack.package import *
 class RocmOpencl(CMakePackage):
     """OpenCL: Open Computing Language on ROCclr"""
 
-    homepage = "https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime"
-    git = "https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime.git"
+    homepage = "https://github.com/ROCm/ROCm-OpenCL-Runtime"
+    git = "https://github.com/ROCm/ROCm-OpenCL-Runtime.git"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
@@ -24,11 +24,21 @@ class RocmOpencl(CMakePackage):
             return (
                 "https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime/archive/roc-3.5.0.tar.gz"
             )
-
-        url = "https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime/archive/rocm-{0}.tar.gz"
+        elif version <= Version("5.6.1"):
+            url = (
+                "https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime/archive/rocm-{0}.tar.gz"
+            )
+        else:
+            url = "https://github.com/ROCm/clr/archive/refs/tags/rocm-{0}.tar.gz"
         return url.format(version)
 
+    license("MIT")
+
     version("master", branch="main")
+    version("5.7.1", sha256="c78490335233a11b4d8a5426ace7417c555f5e2325de10422df06c0f0f00f7eb")
+    version("5.7.0", sha256="bc2447cb6fd86dff6a333b04e77ce85755104d9011a14a044af53caf02449573")
+    version("5.6.1", sha256="ec26049f7d93c95050c27ba65472736665ec7a40f25920a868616b2970f6b845")
+    version("5.6.0", sha256="52ab260d00d279c2a86c353901ffd88ee61b934ad89e9eb480f210656705f04e")
     version("5.5.1", sha256="a8a62a7c6fc5398406d2203b8cb75621a24944688e545d917033d87de2724498")
     version("5.5.0", sha256="0df9fa0b8aa0c8e6711d34eec0fdf1ed356adcd9625bc8f1ce9b3e72090f3e4f")
     version("5.4.3", sha256="b0f8339c844a2e62773bd85cd1e7c5ecddfe71d7c8e8d604e1a1d60900c30873")
@@ -116,6 +126,8 @@ class RocmOpencl(CMakePackage):
     depends_on("numactl", type="link", when="@3.7.0:")
 
     for d_version, d_shasum in [
+        ("5.6.1", "cc9a99c7e4de3d9360c0a471b27d626e84a39c9e60e0aff1e8e1500d82391819"),
+        ("5.6.0", "864f87323e793e60b16905284fba381a7182b960dd4a37fb67420c174442c03c"),
         ("5.5.1", "1375fc7723cfaa0ae22a78682186d4804188b0a54990bfd9c0b8eb421b85e37e"),
         ("5.5.0", "efbae9a1ef2ab3de5ca44091e9bb78522e76759c43524c1349114f9596cc61d1"),
         ("5.4.3", "71d9668619ab57ec8a4564d11860438c5aad5bd161a3e58fbc49555fbd59182d"),
@@ -134,9 +146,7 @@ class RocmOpencl(CMakePackage):
     ]:
         resource(
             name="rocclr",
-            url="https://github.com/ROCm-Developer-Tools/ROCclr/archive/rocm-{0}.tar.gz".format(
-                d_version
-            ),
+            url="https://github.com/ROCm/ROCclr/archive/rocm-{0}.tar.gz".format(d_version),
             sha256=d_shasum,
             expand=True,
             destination="",
@@ -186,12 +196,16 @@ class RocmOpencl(CMakePackage):
         "5.4.3",
         "5.5.0",
         "5.5.1",
+        "5.6.0",
+        "5.6.1",
+        "5.7.0",
+        "5.7.1",
         "master",
     ]:
         depends_on("comgr@" + ver, type="build", when="@" + ver)
         depends_on("hsa-rocr-dev@" + ver, type="link", when="@" + ver)
 
-    for ver in ["5.5.0", "5.5.1"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
 
     @classmethod
@@ -236,9 +250,13 @@ class RocmOpencl(CMakePackage):
             "-DROCclr_DIR={0}".format(self.spec["hip-rocclr"].prefix),
             "-DLIBROCclr_STATIC_DIR={0}/lib".format
             (self.spec["hip-rocclr"].prefix)
-        if "@4.5.0:" in self.spec:
+        if self.spec.satisfies("@4.5:5.6"):
             args.append(self.define("ROCCLR_PATH", self.stage.source_path + "/rocclr"))
             args.append(self.define("AMD_OPENCL_PATH", self.stage.source_path))
+        if self.spec.satisfies("@5.7:"):
+            args.append(self.define("CLR_BUILD_HIP", False))
+            args.append(self.define("CLR_BUILD_OCL", True))
+
         return args
 
     def setup_run_environment(self, env):

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Expect(AutotoolsPackage):
     url = (
         "https://sourceforge.net/projects/expect/files/Expect/5.45.4/expect5.45.4.tar.gz/download"
     )
+
+    license("NIST-PD")
 
     version("5.45.4", sha256="49a7da83b0bdd9f46d04a04deec19c7767bb9a323e40c4781f89caf760b92c34")
     version("5.45.3", sha256="c520717b7195944a69ce1492ec82ca0ac3f3baf060804e6c5ee6d505ea512be9")

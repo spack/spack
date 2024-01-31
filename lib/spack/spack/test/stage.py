@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,7 @@ import pytest
 
 from llnl.util.filesystem import getuid, mkdirp, partition_path, touch, working_dir
 
+import spack.error
 import spack.paths
 import spack.stage
 import spack.util.executable
@@ -23,7 +24,6 @@ import spack.util.url as url_util
 from spack.resource import Resource
 from spack.stage import DIYStage, ResourceStage, Stage, StageComposite
 from spack.util.path import canonicalize_path
-from spack.util.web import FetchError
 
 # The following values are used for common fetch and stage mocking fixtures:
 _archive_base = "test-files"
@@ -444,12 +444,9 @@ class TestStage:
 
     @pytest.mark.disable_clean_stage_check
     def test_composite_stage_with_expand_resource(self, composite_stage_with_expanding_resource):
-        (
-            composite_stage,
-            root_stage,
-            resource_stage,
-            mock_resource,
-        ) = composite_stage_with_expanding_resource
+        (composite_stage, root_stage, resource_stage, mock_resource) = (
+            composite_stage_with_expanding_resource
+        )
 
         composite_stage.create()
         composite_stage.fetch()
@@ -474,12 +471,9 @@ class TestStage:
         directory.
         """
 
-        (
-            composite_stage,
-            root_stage,
-            resource_stage,
-            mock_resource,
-        ) = composite_stage_with_expanding_resource
+        (composite_stage, root_stage, resource_stage, mock_resource) = (
+            composite_stage_with_expanding_resource
+        )
 
         resource_stage.resource.placement = None
 
@@ -522,7 +516,7 @@ class TestStage:
         with stage:
             try:
                 stage.fetch(mirror_only=True)
-            except FetchError:
+            except spack.error.FetchError:
                 pass
         check_destroy(stage, self.stage_name)
 
@@ -537,7 +531,7 @@ class TestStage:
         stage = Stage(failing_fetch_strategy, name=self.stage_name, search_fn=search_fn)
 
         with stage:
-            with pytest.raises(FetchError, match=expected):
+            with pytest.raises(spack.error.FetchError, match=expected):
                 stage.fetch(mirror_only=False, err_msg=err_msg)
 
         check_destroy(stage, self.stage_name)

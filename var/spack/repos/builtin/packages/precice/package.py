@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,10 @@ class Precice(CMakePackage):
 
     tags = ["e4s"]
 
+    license("LGPL-3.0-or-later")
+
     version("develop", branch="develop")
+    version("2.5.1", sha256="a5a37d3430eac395e885eb9cbbed9d0980a15e96c3e44763a3769fa7301e3b3a")
     version("2.5.0", sha256="76ec6ee0d1a66f6f3d3d2d11f03cfc5aa7ef4d9e5deb9b7a4b4455ec7f796c00")
     version("2.4.0", sha256="762e603fbcaa96c4fb0b378b7cb6789d09da0cf6193325603e5eeb13e4c7601c")
     version("2.3.0", sha256="57bab08e8b986f5faa364689d470940dbd9c138e5cfa7b861793e7db56b89da3")
@@ -170,7 +173,8 @@ class Precice(CMakePackage):
             cmake_args.extend(["-DPETSC_DIR=%s" % spec["petsc"].prefix, "-DPETSC_ARCH=."])
 
         # Python
-        if "+python" in spec:
+        if "@:2.3 +python" in spec:
+            # 2.4.0 and higher use find_package(Python3).
             python_library = spec["python"].libs[0]
             python_include = spec["python"].headers.directories[0]
             numpy_include = join_path(

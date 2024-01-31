@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,10 @@ class Fenics(CMakePackage):
     homepage = "https://fenicsproject.org/"
     git = "https://bitbucket.org/fenics-project/dolfin.git"
     url = "https://bitbucket.org/fenics-project/dolfin/downloads/dolfin-2019.1.0.post0.tar.gz"
+    maintainers("chrisrichardson", "garth-wells", "jhale")
 
+    license("LGPL-3.0-only")
+    version("master", branch="master")
     version(
         "2019.1.0.post0", sha256="61abdcdb13684ba2a3ba4afb7ea6c7907aa0896a46439d3af7e8848483d4392f"
     )
@@ -88,7 +91,9 @@ class Fenics(CMakePackage):
     # fenics python package dependencies
     for ver in dolfin_versions:
         wver = "@" + ver
+
         depends_on("py-fenics-fiat{0}".format(wver), type=("build", "run"), when=wver + "+python")
+
         if Version(ver) < Version("2018.1.0"):
             depends_on(
                 "py-fenics-instant{0}".format(wver), type=("build", "run"), when=wver + "+python"
@@ -97,10 +102,17 @@ class Fenics(CMakePackage):
             depends_on(
                 "py-fenics-dijitso{0}".format(wver), type=("build", "run"), when=wver + "+python"
             )
+
         depends_on("py-fenics-ufl{0}".format(wver), type=("build", "run"), when=wver + "+python")
         if ver in ["2019.1.0", "2017.2.0"]:
             wver = "@" + ver + ".post0"
         depends_on("py-fenics-ffc{0}".format(wver), type=("build", "run"), when=wver + "+python")
+
+    # Adding special case for master
+    depends_on("py-fenics-fiat@2019.1.0", type=("build", "run"), when="@master+python")
+    depends_on("py-fenics-dijitso@master", type=("build", "run"), when="@master+python")
+    depends_on("py-fenics-ufl-legacy@main", type=("build", "run"), when="@master+python")
+    depends_on("py-fenics-ffc@master", type=("build", "run"), when="@master+python")
 
     # package dependencies
     depends_on("python@3.5:", type=("build", "run"), when="+python")

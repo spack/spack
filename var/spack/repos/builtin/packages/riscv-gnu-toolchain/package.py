@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,48 @@ class RiscvGnuToolchain(AutotoolsPackage):
     maintainers("wanlinwang")
 
     version("develop", branch="master", submodules=True)
+    version(
+        "2023.10.18",
+        tag="2023.10.18",
+        commit="b86b2b37d0acc607156ff56ff17ee105a9b48897",
+        submodules=True,
+    )
+    version(
+        "2023.10.17",
+        tag="2023.10.17",
+        commit="c11f0748276c58df4f9d9602cdc2de5f17cbae8c",
+        submodules=True,
+    )
+    version(
+        "2023.10.12",
+        tag="2023.10.12",
+        commit="e65e7fc58543c821baf4f1fb6d0ef700177b9d89",
+        submodules=True,
+    )
+    version(
+        "2023.10.06",
+        tag="2023.10.06",
+        commit="6e7190e8c95e09d541e69f6f6e39163f808570d5",
+        submodules=True,
+    )
+    version(
+        "2023.09.27",
+        tag="2023.09.27",
+        commit="5afde2de23c6597aaa5069f36574c61bcb39b007",
+        submodules=True,
+    )
+    version(
+        "2023.09.26",
+        tag="2023.09.26",
+        commit="ffb5968884630c7baebba7b2af493f6b5f74ad80",
+        submodules=True,
+    )
+    version(
+        "2023.09.13",
+        tag="2023.09.13",
+        commit="5437780994b830e9eabf467f85f22ed24b5fade1",
+        submodules=True,
+    )
     version(
         "2022.08.08",
         tag="2022.08.08",

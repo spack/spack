@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class PyMsal(PythonPackage):
 
     homepage = "https://github.com/AzureAD/microsoft-authentication-library-for-python"
     pypi = "msal/msal-1.3.0.tar.gz"
+
+    license("MIT")
 
     # If you get diamond dependency problems on py-pyjwt,
     # consider using v1.20.0, which has looser constraints

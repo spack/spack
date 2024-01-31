@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,13 +12,15 @@ from spack.pkg.builtin.boost import Boost
 class MiopenOpencl(CMakePackage):
     """AMD's library for high performance machine learning primitives."""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/MIOpen"
-    git = "https://github.com/ROCmSoftwarePlatform/MIOpen.git"
-    url = "https://github.com/ROCmSoftwarePlatform/MIOpen/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/MIOpen"
+    git = "https://github.com/ROCm/MIOpen.git"
+    url = "https://github.com/ROCm/MIOpen/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["libMIOpen"]
+
+    license("MIT")
 
     version("5.5.1", sha256="2cd75071b8ee876c69a94f028b6c8a9346d6d2fde7d4b64e6d635f3b6c994262")
     version("5.5.0", sha256="791087242551669e546225e36123c21663f0dad14dbcfd6d0ce0e7bad0ab0de1")
