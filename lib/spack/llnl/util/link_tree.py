@@ -58,9 +58,10 @@ class SourceMergeVisitor(BaseDirectoryVisitor):
         # bit to the relative path in the destination dir.
         self.projection: str = ""
 
-        # When a file blocks another file, the conflict can sometimes be resolved / ignored
-        # (e.g. <prefix>/LICENSE or <site-packages>/<namespace>/__init__.py conflicts can be
-        # ignored).
+        # Two files f and g conflict if they are not os.path.samefile(f, g) and they are both
+        # projected to the same destination file. These conflicts are not necessarily fatal, and
+        # can be resolved or ignored. For example <prefix>/LICENSE or
+        # <site-packages>/<namespace>/__init__.py conflicts can be ignored).
         self.file_conflicts: List[MergeConflict] = []
 
         # When we have to create a dir where a file is, or a file where a dir is, we have fatal
@@ -150,15 +151,27 @@ class SourceMergeVisitor(BaseDirectoryVisitor):
                 )
             )
         elif proj_rel_path in self.files:
-            # In some cases we can resolve file-file conflicts
+            # Resolve file-file conflicts when two files are identical: this deals with cases of
+            # of symlink to symlink, symlink to regular file and hardlinked files, where in
+            # principle the file we pick is arbitrary. However, for environment views that copy,
+            # we want the file to be copied, not the symlink, so we pick the underlying file, which
+            # should be the current, assuming proper ordering.
+            # NOTE: in principle filecmp could be used too as a more generic solution, but that is
+            # relatively slow, and so far this visitor has only used file metadata, not contents.
             src_a_root, src_a_relpath = self.files[proj_rel_path]
-            self.file_conflicts.append(
-                MergeConflict(
-                    dst=proj_rel_path,
-                    src_a=os.path.join(src_a_root, src_a_relpath),
-                    src_b=os.path.join(root, rel_path),
+
+            src_a = os.path.join(src_a_root, src_a_relpath)
+            src_b = os.path.join(root, rel_path)
+
+            if os.path.samefile(src_a, src_b):
+                # Delete and re-insert to retain correct self.files ordering.
+                del self.files[proj_rel_path]
+                self.files[proj_rel_path] = (root, rel_path)
+            else:
+                # Otherwise register a file conflict. It could be resolved elsewhere.
+                self.file_conflicts.append(
+                    MergeConflict(dst=proj_rel_path, src_a=src_a, src_b=src_b)
                 )
-            )
         else:
             # Otherwise register this file to be linked.
             self.files[proj_rel_path] = (root, rel_path)
