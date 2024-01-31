@@ -47,12 +47,13 @@ class Astyle(CMakePackage, MakefilePackage):
             url = "{0}/astyle%20{1}/astyle_{2}_linux.tar.gz"
         return url.format(root, version.up_to(2), version)
 
+
 class CMakeBuilder(CMakeBuilder):
 
     def cmake_args(self):
-        spec = self.spec
         args = []
         return args
+
 
 class MakefileBuilder(MakefileBuilder):
 
