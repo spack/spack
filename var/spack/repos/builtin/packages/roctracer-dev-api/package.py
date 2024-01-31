@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,12 +11,17 @@ class RoctracerDevApi(Package):
     package, mainly to avoid circular dependencies in the ROCm ecosystem.
     For the ROC-tracer library, please check out roctracer-dev."""
 
-    homepage = "https://github.com/ROCm-Developer-Tools/roctracer"
-    git = "https://github.com/ROCm-Developer-Tools/roctracer.git"
-    url = "https://github.com/ROCm-Developer-Tools/roctracer/archive/refs/tags/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/roctracer"
+    git = "https://github.com/ROCm/roctracer.git"
+    url = "https://github.com/ROCm/roctracer/archive/refs/tags/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
+    license("MIT")
+
     maintainers("srekolam", "renjithravindrankannath")
+    version("6.0.0", sha256="941166a0363c5689bfec118d54e986c43fb1ec8cbf18d95721d9a824bd52c0f8")
+    version("5.7.1", sha256="ec0453adac7e62b142eb0df1e1e2506863aac4c3f2ce9d117c3184c08c0c6b48")
+    version("5.7.0", sha256="40bb757920488466e29df90bb80a975cc340bf7f8771fb1d754dfbb6b688d78e")
     version("5.6.1", sha256="007c498be25b067ad9a7631a2b0892f9129150ee9714e471a921225875d45e69")
     version("5.6.0", sha256="cbcfe4fa2e8b627006b320a93992fb3078696d8ef2ef049b4b880b6b7d57e13e")
     version("5.5.1", sha256="3afc31ebfdb14b0365185ca6b9326a83b1503a94a51d910f5ce7ced192d8c133")

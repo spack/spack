@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,6 +38,8 @@ class Amdfftw(FftwBase):
     git = "https://github.com/amd/amd-fftw.git"
 
     maintainers("amd-toolchain-support")
+
+    license("GPL-2.0-only")
 
     version("4.1", sha256="f1cfecfcc0729f96a5bd61c6b26f3fa43bb0662d3fff370d4f73490c60cf4e59")
     version("4.0", sha256="5f02cb05f224bd86bd88ec6272b294c26dba3b1d22c7fb298745fd7b9d2271c0")
@@ -144,6 +146,8 @@ class Amdfftw(FftwBase):
             "precision=long_double", msg="long_double precision is not supported with amd-app-opt"
         )
         conflicts("precision=quad", msg="Quad precision is not supported with amd-app-opt")
+
+    requires("target=x86_64:", msg="AMD FFTW available only on x86_64")
 
     def configure(self, spec, prefix):
         """Configure function"""

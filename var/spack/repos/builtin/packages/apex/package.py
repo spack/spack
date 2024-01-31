@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -115,6 +115,9 @@ class Apex(CMakePackage):
     # Conflicts
     conflicts("+jemalloc", when="+gperftools")
     conflicts("+plugins", when="~activeharmony")
+    # Compatibility fixed in 2.6.0 with
+    # https://github.com/UO-OACISS/apex/commit/4a7bdbb93367c3b1172ccb978825c67316f8bf4a
+    conflicts("^otf2@3:", when="@:2.5")
 
     # https://github.com/UO-OACISS/apex/pull/177#issuecomment-1726322959
     conflicts("+openmp", when="%gcc")

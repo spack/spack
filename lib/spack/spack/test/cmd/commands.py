@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -56,6 +56,24 @@ def test_subcommands():
     assert "spack view symlink" in out2
     assert "spack rm" in out2
     assert "spack compiler add" in out2
+
+
+@pytest.mark.not_on_windows("subprocess not supported on Windows")
+def test_override_alias():
+    """Test that spack commands cannot be overriden by aliases."""
+
+    install = spack.main.SpackCommand("install", subprocess=True)
+    instal = spack.main.SpackCommand("instal", subprocess=True)
+
+    out = install(fail_on_error=False, global_args=["-c", "config:aliases:install:find"])
+    assert "install requires a package argument or active environment" in out
+    assert "Alias 'install' (mapping to 'find') attempts to override built-in command" in out
+
+    out = install(fail_on_error=False, global_args=["-c", "config:aliases:foo bar:find"])
+    assert "Alias 'foo bar' (mapping to 'find') contains a space, which is not supported" in out
+
+    out = instal(fail_on_error=False, global_args=["-c", "config:aliases:instal:find"])
+    assert "install requires a package argument or active environment" not in out
 
 
 def test_rst():

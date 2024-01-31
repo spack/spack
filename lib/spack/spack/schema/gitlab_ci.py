@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,7 +35,7 @@ runner_attributes_schema_items = {
 
 runner_selector_schema = {
     "type": "object",
-    "additionalProperties": False,
+    "additionalProperties": True,
     "required": ["tags"],
     "properties": runner_attributes_schema_items,
 }

@@ -1,4 +1,4 @@
-.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1525,6 +1525,30 @@ any MPI implementation will do.  If another package depends on
 (e.g., one that provides only ``mpi@:1``), then Spack will raise an
 error.  Likewise, if you try to plug in some package that doesn't
 provide MPI, Spack will raise an error.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Explicit binding of virtual dependencies
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+There are packages that provide more than just one virtual dependency. When interacting with them, users
+might want to utilize just a subset of what they could provide, and use other providers for virtuals they
+need.
+
+It is possible to be more explicit and tell Spack which dependency should provide which virtual, using a
+special syntax:
+
+.. code-block:: console
+
+   $ spack spec strumpack ^[virtuals=mpi] intel-parallel-studio+mkl ^[virtuals=lapack] openblas
+
+Concretizing the spec above produces the following DAG:
+
+.. figure:: images/strumpack_virtuals.svg
+   :scale: 60 %
+   :align: center
+
+where ``intel-parallel-studio`` *could* provide ``mpi``, ``lapack``, and ``blas`` but is used only for the former. The ``lapack``
+and ``blas`` dependencies are satisfied by ``openblas``.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^
 Specifying Specs by Hash

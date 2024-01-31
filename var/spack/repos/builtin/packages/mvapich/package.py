@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,8 @@ class Mvapich(AutotoolsPackage):
     maintainers("natshineman", "harisubramoni", "MatthewLieber")
 
     executables = ["^mpiname$", "^mpichversion$"]
+
+    license("Unlicense")
 
     # Prefer the latest stable release
     version("3.0b", sha256="52d8a742e16eef69e944754fea7ebf8ba4ac572dac67dbda528443d9f32547cc")

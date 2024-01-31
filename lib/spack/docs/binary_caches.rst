@@ -1,4 +1,4 @@
-.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -153,8 +153,72 @@ keyring, and trusting all downloaded keys.
 List of popular build caches
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* `Extreme-scale Scientific Software Stack (E4S) <https://e4s-project.github.io/>`_: `build cache <https://oaciss.uoregon.edu/e4s/inventory.html>`_
+* `Extreme-scale Scientific Software Stack (E4S) <https://e4s-project.github.io/>`_: `build cache <https://oaciss.uoregon.edu/e4s/inventory.html>`_'
 
+-------------------
+Build cache signing
+-------------------
+
+By default, Spack will add a cryptographic signature to each package pushed to
+a build cache, and verifies the signature when installing from a build cache.
+
+Keys for signing can be managed with the :ref:`spack gpg <cmd-spack-gpg>` command,
+as well as ``spack buildcache keys`` as mentioned above.
+
+You can disable signing when pushing with ``spack buildcache push --unsigned``,
+and disable verification when installing from any build cache with
+``spack install --no-check-signature``.
+
+Alternatively, signing and verification can be enabled or disabled on a per build cache
+basis:
+
+.. code-block:: console
+
+    $ spack mirror add --signed <name> <url>  # enable signing and verification
+    $ spack mirror add --unsigned <name> <url>  # disable signing and verification
+
+    $ spack mirror set --signed <name>  # enable signing and verification for an existing mirror
+    $ spack mirror set --unsigned <name>  # disable signing and verification for an existing mirror
+
+Or you can directly edit the ``mirrors.yaml`` configuration file:
+
+.. code-block:: yaml
+
+    mirrors:
+      <name>:
+        url: <url>
+        signed: false # disable signing and verification
+
+See also :ref:`mirrors`.
+
+----------
+Relocation
+----------
+
+When using buildcaches across different machines, it is likely that the install
+root will be different from the one used to build the binaries.
+
+To address this issue, Spack automatically relocates all paths encoded in binaries
+and scripts to their new location upon install.
+
+Note that there are some cases where this is not possible: if binaries are built in
+a relatively short path, and then installed to a longer path, there may not be enough
+space in the binary to encode the new path. In this case, Spack will fail to install
+the package from the build cache, and a source build is required.
+
+To reduce the likelihood of this happening, it is highly recommended to add padding to
+the install root during the build, as specified in the :ref:`config <config-yaml>`
+section of the configuration:
+
+.. code-block:: yaml
+
+   config:
+     install_tree:
+       root: /opt/spack
+       padded_length: 128
+
+
+.. _binary_caches_oci:
 
 -----------------------------------------
 OCI / Docker V2 registries as build cache
@@ -216,80 +280,20 @@ other system dependencies. However, they are still compatible with tools like
     are `alternative drivers <https://docs.docker.com/storage/storagedriver/>`_.
 
 ------------------------------------
-Using a buildcache in GitHub Actions
+Spack build cache for GitHub Actions
 ------------------------------------
 
-GitHub Actions is a popular CI/CD platform for building and testing software,
-but each CI job has limited resources, making from source builds too slow for
-many applications. Spack build caches can be used to share binaries between CI
-runs, speeding up CI significantly.
+To significantly speed up Spack in GitHub Actions, binaries can be cached in
+GitHub Packages. This service is an OCI registry that can be linked to a GitHub
+repository.
 
-A typical workflow is to include a ``spack.yaml`` environment in your repository
-that specifies the packages to install:
+Spack offers a public build cache for GitHub Actions with a set of common packages,
+which lets you get started quickly. See the following resources for more information:
 
-.. code-block:: yaml
-
-    spack:
-      specs: [pkg-x, pkg-y]
-    packages:
-      all:
-        require: target=x86_64_v2
-    mirrors:
-      github_packages: oci://ghcr.io/<user>/<repo>
-
-And a GitHub action that sets up Spack, installs packages from the build cache
-or from sources, and pushes newly built binaries to the build cache:
-
-.. code-block:: yaml
-
-    name: Install Spack packages
-
-    on: push
-
-    env:
-      SPACK_COLOR: always
-
-    jobs:
-      example:
-        runs-on: ubuntu-22.04
-        steps:
-        - name: Checkout
-          uses: actions/checkout@v3
-
-        - name: Install Spack
-          run: |
-            git clone --depth=1 https://github.com/spack/spack.git
-            echo "$PWD/spack/bin/" >> "$GITHUB_PATH"
-
-        - name: Concretize
-          run: spack -e . concretize
-
-        - name: Install
-          run: spack -e . install --no-check-signature --fail-fast
-
-        - name: Push to buildcache
-          run: |
-            spack -e . mirror set --oci-username <user> --oci-password "${{ secrets.GITHUB_TOKEN }}" github_packages
-            spack -e . buildcache push --base-image ubuntu:22.04 --unsigned --update-index github_packages
-            if: always()
-
-The first time this action runs, it will build the packages from source and
-push them to the build cache. Subsequent runs will pull the binaries from the
-build cache. The concretizer will ensure that prebuilt binaries are favored
-over source builds.
-
-The build cache entries appear in the GitHub Packages section of your repository,
-and contain instructions for pulling and running them with ``docker`` or ``podman``.
-
-----------
-Relocation
-----------
-
-Initial build and later installation do not necessarily happen at the same
-location. Spack provides a relocation capability and corrects for RPATHs and
-non-relocatable scripts. However, many packages compile paths into binary
-artifacts directly. In such cases, the build instructions of this package would
-need to be adjusted for better re-locatability.
+* `spack/setup-spack <https://github.com/spack/setup-spack>`_ for setting up Spack in GitHub
+  Actions
+* `spack/github-actions-buildcache <https://github.com/spack/github-actions-buildcache>`_ for
+  more details on the public build cache
 
 .. _cmd-spack-buildcache:
 

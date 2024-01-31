@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,7 +30,7 @@ class Python(Package):
     url = "https://www.python.org/ftp/python/3.8.0/Python-3.8.0.tgz"
     list_url = "https://www.python.org/ftp/python/"
     list_depth = 1
-    tags = ["windows"]
+    tags = ["windows", "build-tools"]
 
     maintainers("adamjstewart", "skosukhin", "scheibelp")
 
@@ -39,6 +39,8 @@ class Python(Package):
     #: phase
     install_targets = ["install"]
     build_targets: List[str] = []
+
+    license("0BSD")
 
     version("3.12.0", sha256="51412956d24a1ef7c97f1cb5f70e185c13e3de1f50d131c0aac6338080687afb")
     version(
@@ -237,6 +239,7 @@ class Python(Package):
     variant("crypt", default=True, description="Build crypt module", when="@:3.12 platform=cray")
 
     if sys.platform != "win32":
+        depends_on("gmake", type="build")
         depends_on("pkgconfig@0.9.0:", type="build")
         depends_on("gettext +libxml2", when="+libxml2")
         depends_on("gettext ~libxml2", when="~libxml2")
@@ -1258,11 +1261,6 @@ print(json.dumps(config))
         module.python_include = join_path(dependent_spec.prefix, self.include)
         module.python_platlib = join_path(dependent_spec.prefix, self.platlib)
         module.python_purelib = join_path(dependent_spec.prefix, self.purelib)
-
-        # Make the site packages directory for extensions
-        if dependent_spec.package.is_extension:
-            mkdirp(module.python_platlib)
-            mkdirp(module.python_purelib)
 
     def add_files_to_view(self, view, merge_map, skip_if_exists=True):
         bin_dir = self.spec.prefix.bin if sys.platform != "win32" else self.spec.prefix

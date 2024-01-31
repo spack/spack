@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class NlohmannJsonSchemaValidator(CMakePackage):
     homepage = "https://github.com/pboettch/json-schema-validator"
     url = "https://github.com/pboettch/json-schema-validator/archive/2.1.0.tar.gz"
     git = "https://github.com/pboettch/json-schema-validator.git"
+
+    license("MIT")
 
     version("master", branch="master")
     version("2.1.0", sha256="83f61d8112f485e0d3f1e72d51610ba3924b179926a8376aef3c038770faf202")

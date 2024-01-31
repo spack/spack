@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,18 +9,21 @@ from spack.package import *
 
 
 class PyKeras(PythonPackage):
-    """Deep Learning for humans.
+    """Multi-backend Keras.
 
-    Keras is a deep learning API written in Python, running on top of the machine
-    learning platform TensorFlow. It was developed with a focus on enabling fast
-    experimentation. Being able to go from idea to result as fast as possible is
-    key to doing good research.
+    Keras 3 is a new multi-backend implementation of the Keras API,
+    with support for TensorFlow, JAX, and PyTorch.
     """
 
     homepage = "https://keras.io"
     git = "https://github.com/keras-team/keras.git"
-    url = "https://github.com/keras-team/keras/archive/refs/tags/v2.7.0.tar.gz"
+    pypi = "keras/keras-3.0.0.tar.gz"
 
+    version("3.0.4", sha256="ff2204792582e3889c51c77722cc6e8258dbb1ece7db192f5a9bcd1887cf3385")
+    version("3.0.3", sha256="1e455a82be63b7fb4f699e26bd1e04b7dbcbf66fa3a799117afca9ab067b5d61")
+    version("3.0.2", sha256="526b6c053cdd880a33467c5bfd5c460a5bdc0c58869c2683171c2dec2ad3c2d0")
+    version("3.0.1", sha256="d993721510fa654582132192193f69b1b3165418a6e00a73c3edce615b3cc672")
+    version("3.0.0", sha256="82a9fa4b32a049b38151d11188ed15d74f21f853f163e78da0950dce1f244ccc")
     version("2.14.0", sha256="a845d446b6ae626f61dde5ab2fa952530b6c17b4f9ed03e9362bd20172d00cca")
     version("2.13.1", sha256="b3591493cce75a69adef7b192cec6be222e76e2386d132cd4e34aa190b0ecbd5")
     version("2.12.0", sha256="6336cebb6b2b0a91f7efd3ff3a9db3a94f2abccf07a40323138afb80826aec62")
@@ -43,25 +46,55 @@ class PyKeras(PythonPackage):
     version("2.2.1", sha256="0d3cb14260a3fa2f4a5c4c9efa72226ffac3b4c50135ba6edaf2b3d1d23b11ee")
     version("2.2.0", sha256="5b8499d157af217f1a5ee33589e774127ebc3e266c833c22cb5afbb0ed1734bf")
 
-    # Supported Python versions listed in multiple places:
-    # * keras/tools/pip_package/setup.py
-    # * CONTRIBUTING.md
-    # * PKG-INFO
+    variant(
+        "backend",
+        default="tensorflow",
+        description="backend library",
+        values=["tensorflow", "jax", "torch"],
+        multi=False,
+        when="@3:",
+    )
+
+    # setup.py
+    depends_on("python@3.9:", type=("build", "run"), when="@3:")
     depends_on("python@3.8:", type=("build", "run"), when="@2.12:")
     depends_on("py-setuptools", type="build")
-
-    # Required dependencies listed in multiple places:
-    # * BUILD
-    # * WORKSPACE
     depends_on("py-absl-py", type=("build", "run"), when="@2.6:")
-    depends_on("py-h5py", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-pandas", type=("build", "run"))
-    depends_on("pil", type=("build", "run"))
-    depends_on("py-portpicker", type=("build", "run"), when="@2.10:")
-    depends_on("py-pydot", type=("build", "run"))
+    depends_on("py-rich", type=("build", "run"), when="@3:")
+    depends_on("py-namex", type=("build", "run"), when="@3:")
+    depends_on("py-h5py", type=("build", "run"))
+    depends_on("py-dm-tree", type=("build", "run"), when="@3:")
+
+    # requirements-common.txt
     depends_on("py-scipy", type=("build", "run"))
-    depends_on("py-six", type=("build", "run"))
+    depends_on("py-pandas", type=("build", "run"))
+    depends_on("py-requests", type=("build", "run"), when="@3:")
+    depends_on("py-protobuf", type=("build", "run"), when="@3:")
+
+    # requirements-tensorflow-cuda.txt
+    conflicts("backend=tensorflow", msg="Requires TensorFlow 2.16, not yet released")
+    # depends_on("py-tensorflow@2.16.0", type=("build", "run"), when="@3.0 backend=tensorflow")
+
+    # requirements-jax-cuda.txt
+    depends_on("py-jax", type=("build", "run"), when="@3: backend=jax")
+
+    # requirements-torch-cuda.txt
+    depends_on("py-torch@2.1.2", type=("build", "run"), when="@3.0.3: backend=torch")
+    depends_on("py-torch@2.1.1", type=("build", "run"), when="@3.0.1:3.0.2 backend=torch")
+    depends_on("py-torch@2.1.0", type=("build", "run"), when="@3.0.0 backend=torch")
+    depends_on("py-torchvision@0.16.2", type=("build", "run"), when="@3.0.3: backend=torch")
+    depends_on("py-torchvision@0.16.1", type=("build", "run"), when="@3.0.1:3.0.2 backend=torch")
+    depends_on("py-torchvision@0.16.0", type=("build", "run"), when="@3.0.0 backend=torch")
+
+    # Historical dependencies
+    depends_on("bazel", type="build", when="@2.5:2")
+    depends_on("protobuf", type="build", when="@2.5:2")
+    depends_on("pil", type=("build", "run"), when="@:2")
+    depends_on("py-portpicker", type=("build", "run"), when="@2.10:2")
+    depends_on("py-pydot", type=("build", "run"), when="@:2")
+    depends_on("py-pyyaml", type=("build", "run"), when="@:2")
+    depends_on("py-six", type=("build", "run"), when="@:2")
     for minor_ver in range(6, 15):
         depends_on(
             "py-tensorflow@2.{}".format(minor_ver),
@@ -73,18 +106,21 @@ class PyKeras(PythonPackage):
             type=("build", "run"),
             when="@2.{}".format(minor_ver),
         )
-    depends_on("py-pyyaml", type=("build", "run"))
-    depends_on("bazel", type="build", when="@2.5:")
-    depends_on("protobuf", type="build", when="@2.5:")
 
     def url_for_version(self, version):
-        if version >= Version("2.6"):
-            return super().url_for_version(version)
+        if version >= Version("3"):
+            url = "https://files.pythonhosted.org/packages/source/k/keras/keras-{}.tar.gz"
+        elif version >= Version("2.6"):
+            url = "https://github.com/keras-team/keras/archive/refs/tags/v{}.tar.gz"
         else:
-            url = "https://pypi.io/packages/source/K/Keras/Keras-{0}.tar.gz"
-            return url.format(version.dotted)
+            url = "https://files.pythonhosted.org/packages/source/k/keras/Keras-{}.tar.gz"
+        return url.format(version)
 
-    @when("@2.5:")
+    def setup_run_environment(self, env):
+        if self.spec.satisfies("@3:"):
+            env.set("KERAS_BACKEND", self.spec.variants["backend"].value)
+
+    @when("@2.5:2")
     def patch(self):
         infile = join_path(self.package_dir, "protobuf_build.patch")
         with open(infile, "r") as source_file:
@@ -99,7 +135,7 @@ class PyKeras(PythonPackage):
             string=True,
         )
 
-    @when("@2.5:")
+    @when("@2.5:2")
     def install(self, spec, prefix):
         self.tmp_path = tempfile.mkdtemp(prefix="spack")
         env["HOME"] = self.tmp_path

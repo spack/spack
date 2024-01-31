@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -528,10 +528,15 @@ class DAGWithDependencyTypes(DotGraphBuilder):
 
     def edge_entry(self, edge):
         colormap = {"build": "dodgerblue", "link": "crimson", "run": "goldenrod"}
+        label = ""
+        if edge.virtuals:
+            label = f" xlabel=\"virtuals={','.join(edge.virtuals)}\""
         return (
             edge.parent.dag_hash(),
             edge.spec.dag_hash(),
-            f"[color=\"{':'.join(colormap[x] for x in dt.flag_to_tuple(edge.depflag))}\"]",
+            f"[color=\"{':'.join(colormap[x] for x in dt.flag_to_tuple(edge.depflag))}\""
+            + label
+            + "]",
         )
 
 

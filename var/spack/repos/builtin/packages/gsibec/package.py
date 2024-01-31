@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Gsibec(CMakePackage):
     url = "https://github.com/GEOS-ESM/gsibec/archive/refs/tags/1.0.2.tar.gz"
 
     maintainers("mathomp4", "danholdaway")
+
+    license("Apache-2.0")
 
     version("develop", branch="develop")
     version("1.1.3", sha256="9cac000562250487c16608e8245d97457cc1663b1793b3833be5a76ebccb4b47")

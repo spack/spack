@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Xeus(CMakePackage):
     git = "https://github.com/QuantStack/xeus.git"
 
     maintainers("tomstitt")
+
+    license("BSD-3-Clause")
 
     version("develop", branch="master")
     version("1.0.4", sha256="7324ff013eb97d579fd3b6f9770a13f8863d6046c8bbcdbe2fc7d2ac02f0161f")

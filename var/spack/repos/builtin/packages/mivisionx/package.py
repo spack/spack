@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Mivisionx(CMakePackage):
 
     homepage = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX"
     git = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX.git"
-    url = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/archive/rocm-5.5.0.tar.gz"
+    url = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/archive/rocm-6.0.0.tar.gz"
 
     maintainers("srekolam", "renjithravindrankannath")
     tags = ["rocm"]
@@ -25,6 +25,11 @@ class Mivisionx(CMakePackage):
         url = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/archive/rocm-{0}.tar.gz"
         return url.format(version)
 
+    license("MIT")
+
+    version("6.0.0", sha256="01324a12f21ea0e29a4d7d7c60498ba9231723569fedcdd90f28ddffb5e0570e")
+    version("5.7.1", sha256="bfc074bc32ebe84c72149ee6abb30b5b6499023d5b98269232de82e35d0505a8")
+    version("5.7.0", sha256="07e4ec8a8c06a9a8bb6394a043c9c3e7176acd3b462a16de91ef9518a64df9ba")
     version("5.6.1", sha256="b2ff95c1488e244f379482631dae4f9ab92d94a513d180e03607aa1e184b5b0a")
     version("5.6.0", sha256="34c184e202b1a6da2398b66e33c384d5bafd8f8291089c18539715c5cb73eb1f")
     version("5.5.1", sha256="e8209f87a57c4222003a936240e7152bbfa496862113358f29d4c3e80d4cdf56")
@@ -116,8 +121,19 @@ class Mivisionx(CMakePackage):
 
     variant("opencl", default=False, description="Use OPENCL as the backend")
     variant("hip", default=True, description="Use HIP as backend")
+    variant("add_tests", default=False, description="add tests and samples folder")
+    patch("0001-add-half-include-path.patch", when="@5.5")
+    patch("0001-add-half-include-path-5.6.patch", when="@5.6:")
+    patch("0002-add-half-include-path-for-tests.patch", when="@5.5: +add_tests")
+
+    patch(
+        "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/commit/da24882438b91a0ae1feee23206b75c1a1256887.patch?full_index=1",
+        sha256="41caff199224f904ef5dc2cd9c5602d6cfa41eba6af0fcc782942a09dd202ab4",
+        when="@5.6",
+    )
 
     conflicts("+opencl", when="@5.6.0:")
+    conflicts("+add_tests", when="@:5.4")
 
     def patch(self):
         if self.spec.satisfies("@4.2.0"):
@@ -179,6 +195,86 @@ class Mivisionx(CMakePackage):
                 "amd_openvx_extensions/amd_nn/nn_hip/CMakeLists.txt",
                 string=True,
             )
+        if self.spec.satisfies("@5.5.0: + hip"):
+            filter_file(
+                "${ROCM_PATH}/llvm/bin/clang++",
+                "{0}/bin/clang++".format(self.spec["llvm-amdgpu"].prefix),
+                "rocAL/rocAL/rocAL_hip/CMakeLists.txt",
+                string=True,
+            )
+        if self.spec.satisfies("+add_tests"):
+            filter_file(
+                "${ROCM_PATH}/include/mivisionx",
+                "{0}/include/mivisionx".format(self.spec.prefix),
+                "tests/amd_migraphx_tests/mnist/CMakeLists.txt",
+                string=True,
+            )
+            filter_file(
+                "${ROCM_PATH}/lib",
+                "{0}/lib".format(self.spec.prefix),
+                "tests/amd_migraphx_tests/mnist/CMakeLists.txt",
+                string=True,
+            )
+            filter_file(
+                "${ROCM_PATH}/include/mivisionx",
+                "{0}/include/mivisionx".format(self.spec.prefix),
+                "tests/amd_migraphx_tests/resnet50/CMakeLists.txt",
+                string=True,
+            )
+            filter_file(
+                "${ROCM_PATH}/lib",
+                "{0}/lib".format(self.spec.prefix),
+                "tests/amd_migraphx_tests/resnet50/CMakeLists.txt",
+                string=True,
+            )
+            filter_file(
+                "${ROCM_PATH}/include/mivisionx",
+                "{0}/include/mivisionx".format(self.spec.prefix),
+                "samples/inference/mv_objdetect/CMakeLists.txt",
+                string=True,
+            )
+            filter_file(
+                "${ROCM_PATH}/lib",
+                "{0}/lib".format(self.spec.prefix),
+                "samples/inference/mv_objdetect/CMakeLists.txt",
+                string=True,
+            )
+            filter_file(
+                "${ROCM_PATH}/include/mivisionx",
+                "{0}/include/mivisionx".format(self.spec.prefix),
+                "model_compiler/python/nnir_to_clib.py",
+                string=True,
+            )
+            filter_file(
+                "/opt/rocm",
+                "{0}".format(self.spec.prefix),
+                "model_compiler/python/nnir_to_clib.py",
+                string=True,
+            )
+            filter_file(
+                "${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR}/mivisionx/rocal",
+                "{0}/include/mivisionx/rocal".format(self.spec.prefix),
+                "utilities/rocAL/rocAL_unittests/CMakeLists.txt",
+                string=True,
+            )
+            filter_file(
+                "${ROCM_PATH}/lib",
+                "{0}/lib".format(self.spec.prefix),
+                "utilities/rocAL/rocAL_unittests/CMakeLists.txt",
+                string=True,
+            )
+            filter_file(
+                "${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR}/mivisionx/rocal",
+                "{0}/include/mivisionx/rocal".format(self.spec.prefix),
+                "utilities/rocAL/rocAL_video_unittests/CMakeLists.txt",
+                string=True,
+            )
+            filter_file(
+                "${ROCM_PATH}/lib",
+                "{0}/lib".format(self.spec.prefix),
+                "utilities/rocAL/rocAL_video_unittests/CMakeLists.txt",
+                string=True,
+            )
 
     depends_on("cmake@3.5:", type="build")
     depends_on("ffmpeg@:4", type="build", when="@:5.3")
@@ -194,7 +290,7 @@ class Mivisionx(CMakePackage):
     depends_on(
         "opencv@4.5:"
         "+calib3d+features2d+highgui+imgcodecs+imgproc"
-        "+video+videoio+flann+photo+objdetect",
+        "+video+videoio+flann+photo+objdetect+png+jpeg",
         type="build",
         when="@5.3:",
     )
@@ -203,7 +299,18 @@ class Mivisionx(CMakePackage):
     depends_on("miopen-opencl@3.5.0", when="@1.7+opencl")
     depends_on("miopengemm@1.1.6", when="@1.7+opencl")
     depends_on("openssl", when="@4.0.0:")
-    depends_on("libjpeg-turbo", type="build")
+    depends_on("libjpeg-turbo@2.0.6+partial_decoder", type="build")
+    depends_on("rpp", when="@5.5:")
+    depends_on("lmdb", when="@5.5:")
+    depends_on("py-setuptools", when="@5.6:")
+    depends_on("py-wheel", when="@5.6:")
+    depends_on("py-pybind11", when="@5.6:")
+    depends_on("py-google-api-python-client", when="+add_tests")
+    depends_on("py-protobuf@3.20.3", type=("build", "run"), when="+add_tests")
+    depends_on("py-future", when="+add_tests")
+    depends_on("py-numpy", when="+add_tests")
+    depends_on("py-pytz", when="+add_tests")
+    depends_on("rapidjson", when="@5.7:")
 
     conflicts("^cmake@3.22:", when="@:5.0.0")
     # need to choose atleast one backend and both cannot be set
@@ -261,14 +368,32 @@ class Mivisionx(CMakePackage):
             "5.5.1",
             "5.6.0",
             "5.6.1",
+            "5.7.0",
+            "5.7.1",
+            "6.0.0",
         ]:
             depends_on("miopen-hip@" + ver, when="@" + ver)
-        for ver in ["5.3.3", "5.4.0", "5.4.3", "5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
+        for ver in [
+            "5.3.3",
+            "5.4.0",
+            "5.4.3",
+            "5.5.0",
+            "5.5.1",
+            "5.6.0",
+            "5.6.1",
+            "5.7.0",
+            "5.7.1",
+            "6.0.0",
+        ]:
             depends_on("migraphx@" + ver, when="@" + ver)
+            depends_on("hip@" + ver, when="@" + ver)
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
         depends_on("python@3.5:", type="build")
+
+    def setup_run_environment(self, env):
+        env.set("MIVISIONX_MODEL_COMPILER_PATH", self.spec.prefix.libexec.mivisionx.model_compiler)
 
     def flag_handler(self, name, flags):
         spec = self.spec
@@ -290,4 +415,24 @@ class Mivisionx(CMakePackage):
             args.append(self.define("HIP_PATH", spec["hip"].prefix))
         if self.spec.satisfies("~hip~opencl"):
             args.append(self.define("BACKEND", "CPU"))
+        if self.spec.satisfies("@5.5:"):
+            args.append(
+                self.define("AMDRPP_LIBRARIES", "{0}/lib/librpp.so".format(spec["rpp"].prefix))
+            )
+            args.append(
+                self.define("AMDRPP_INCLUDE_DIRS", "{0}/include/rpp".format(spec["rpp"].prefix))
+            )
+            args.append(
+                self.define(
+                    "TurboJpeg_LIBRARIES_DIRS", "{0}/lib64".format(spec["libjpeg-turbo"].prefix)
+                )
+            )
+            args.append(self.define("CMAKE_INSTALL_PREFIX_PYTHON", spec.prefix))
         return args
+
+    @run_after("install")
+    def add_tests(self):
+        if self.spec.satisfies("+add_tests"):
+            install_tree("tests", self.spec.prefix.tests)
+            install_tree("samples", self.spec.prefix.samples)
+            install_tree("utilities", self.spec.prefix.utilities)

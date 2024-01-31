@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class Bohrium(CMakePackage, CudaPackage):
     git = "https://github.com/bh107/bohrium.git"
 
     maintainers("mfherbst")
+
+    license("LGPL-3.0-only")
 
     #
     # Versions
@@ -117,8 +119,6 @@ class Bohrium(CMakePackage, CudaPackage):
         # different hosts.
 
         args = [
-            # Choose a particular python version
-            "-DPYTHON_EXECUTABLE:FILEPATH=" + spec["python"].command.path,
             #
             # Hard-disable Jupyter, since this would override a config
             # file in the user's home directory in some cases during

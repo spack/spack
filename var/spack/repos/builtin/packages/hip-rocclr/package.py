@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,8 +12,8 @@ class HipRocclr(CMakePackage):
     with to different backends such as ROCr or PAL This abstraction allows
     runtimes to work on Windows as well as on Linux without much effort."""
 
-    homepage = "https://github.com/ROCm-Developer-Tools/ROCclr"
-    git = "https://github.com/ROCm-Developer-Tools/ROCclr.git"
+    homepage = "https://github.com/ROCm/ROCclr"
+    git = "https://github.com/ROCm/ROCclr.git"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
@@ -21,10 +21,12 @@ class HipRocclr(CMakePackage):
     def url_for_version(self, version):
         # Fix up a typo in the 3.5.0 release.
         if version == Version("3.5.0"):
-            return "https://github.com/ROCm-Developer-Tools/ROCclr/archive/roc-3.5.0.tar.gz"
+            return "https://github.com/ROCm/ROCclr/archive/roc-3.5.0.tar.gz"
 
-        url = "https://github.com/ROCm-Developer-Tools/ROCclr/archive/rocm-{0}.tar.gz"
+        url = "https://github.com/ROCm/ROCclr/archive/rocm-{0}.tar.gz"
         return url.format(version)
+
+    license("MIT")
 
     version("master", branch="main")
     version("5.6.1", sha256="cc9a99c7e4de3d9360c0a471b27d626e84a39c9e60e0aff1e8e1500d82391819")
@@ -150,13 +152,13 @@ class HipRocclr(CMakePackage):
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
         depends_on("comgr@" + ver, when="@" + ver)
 
-    # See: https://github.com/ROCm-Developer-Tools/ROCclr/pull/16
+    # See: https://github.com/ROCm/ROCclr/pull/16
     # In 3.7.0 the find opengl things have changed slightly.
     patch("opengl.patch", when="@3.5.0")
 
     resource(
         name="opencl-on-vdi",
-        url="https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime/archive/roc-3.5.0.tar.gz",
+        url="https://github.com/ROCm/ROCm-OpenCL-Runtime/archive/roc-3.5.0.tar.gz",
         sha256="511b617d5192f2d4893603c1a02402b2ac9556e9806ff09dd2a91d398abf39a0",
         expand=True,
         destination="",
@@ -195,7 +197,7 @@ class HipRocclr(CMakePackage):
     ]:
         resource(
             name="opencl-on-vdi",
-            url="https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime/archive/rocm-{0}.tar.gz".format(
+            url="https://github.com/ROCm/ROCm-OpenCL-Runtime/archive/rocm-{0}.tar.gz".format(
                 d_version
             ),
             sha256=d_shasum,
@@ -207,7 +209,7 @@ class HipRocclr(CMakePackage):
 
     resource(
         name="opencl-on-vdi",
-        git="https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime.git",
+        git="https://github.com/ROCm/ROCm-OpenCL-Runtime.git",
         destination="",
         placement="opencl-on-vdi",
         branch="main",

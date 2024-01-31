@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Serenity(CMakePackage):
     homepage = "https://www.uni-muenster.de/Chemie.oc/neugebauer/softwareAKN.html"
     url = "https://github.com/qcserenity/serenity/archive/refs/tags/1.4.0.tar.gz"
     git = "https://github.com/qcserenity/serenity.git"
+
+    license("LGPL-3.0-only")
 
     version("master", branch="master")
     version("1.4.0", sha256="c7a87fc8e6f8ca21685a27e08d09d49824d9a1e9947fc6abb40d20fbba0cc6e8")
@@ -113,7 +115,7 @@ class Serenity(CMakePackage):
         )
 
     def cmake_args(self):
-        args = [
+        return [
             self.define("SERENITY_BUILD_TESTS", self.run_tests),
             self.define_from_variant("SERENITY_BUILD_PYTHON_BINDINGS", "python"),
             self.define("SERENITY_MARCH", ""),
@@ -135,6 +137,3 @@ class Serenity(CMakePackage):
             self.define("BOOST_NO_SYSTEM_PATHS", True),
             self.define("Boost_NO_BOOST_CMAKE", True),
         ]
-        if "+python" in self.spec:
-            args.append(self.define("PYTHON_EXECUTABLE", self.spec["python"].command.path))
-        return args

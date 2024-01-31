@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class RScatterpie(RPackage):
     Creates scatterpie plots, especially useful for plotting pies on a map."""
 
     cran = "scatterpie"
+
+    license("Artistic-2.0")
 
     version("0.1.9", sha256="517fd6cc297aa33f0fbb2643e35ca41dc971166ea2e8ed78460bd4ef7a77a687")
     version("0.1.8", sha256="a6ccc63a8be63fa113704cf5d4893c1ec1b75d3081ab971bd70e650e708872a0")
