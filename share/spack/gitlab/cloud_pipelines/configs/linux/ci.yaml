@@ -88,11 +88,9 @@ ci:
 
     - match:
       - ascent
-      - atk
       - axom
       - cistem
       - cmake
-      - ctffind
       - cuda
       - dray
       - dyninst
@@ -134,7 +132,6 @@ ci:
       - vtk-m
       - warpx
       - wrf
-      - wxwidgets
       build-job:
         tags: [ "spack", "large" ]
         variables:
@@ -336,7 +333,6 @@ ci:
       - tar
       - tcl
       - texinfo
-      - tut
       - unzip
       - util-linux-uuid
       - util-macros
