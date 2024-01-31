@@ -378,8 +378,8 @@ def _rewrite_relative_dev_paths_on_relocation(env, init_file_dir):
         if not dev_specs:
             return
         for name, entry in dev_specs.items():
-            dev_path = entry["path"]
-            expanded_path = os.path.normpath(os.path.join(init_file_dir, entry["path"]))
+            dev_path = substitute_path_variables(entry["path"])
+            expanded_path = spack.util.path.canonicalize_path(dev_path, default_wd=init_file_dir)
 
             # Skip if the expanded path is the same (e.g. when absolute)
             if dev_path == expanded_path:
