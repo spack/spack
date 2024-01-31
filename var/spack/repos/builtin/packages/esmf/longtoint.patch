@@ -1,0 +1,22 @@
+--- old/src/Infrastructure/Mesh/src/Legacy/ESMCI_MeshPNC.C
++++ new/src/Infrastructure/Mesh/src/Legacy/ESMCI_MeshPNC.C
+@@ -122,7 +122,7 @@ void LoadNCDualMeshPar(Mesh &mesh, const std::string fname) {
+       local_grid_start = my_start*grid_dims[0];
+     }
+
+-    int local_grid_dims[2] = {grid_dims[0], my_num > 0 ? my_num+1 : 0};
++    int local_grid_dims[2] = {grid_dims[0], (int) my_num > 0 ? (int) my_num+1 : 0};
+
+     Par::Out() << "min_row=" << min_row << ", max_row=" << max_row << std::endl;
+     Par::Out() << "local_grid_start=" << local_grid_start << ", local_grid_size:" << local_grid_size << std::endl;
+--- old/src/Infrastructure/Mesh/src/Legacy/ESMCI_WriteWeightsPar.C
++++ new/src/Infrastructure/Mesh/src/Legacy/ESMCI_WriteWeightsPar.C
+@@ -229,7 +229,7 @@ static void get_nc_grid_file1(nc_grid_file1 &ncf, const std::string &ncfile, boo
+   ncf.local_grid_size = local_grid_size;
+   ncf.local_grid_start = local_grid_start;
+
+-  int local_grid_dims[2] = {grid_dims[0], my_num > 0 ? my_num+1 : 0};
++  int local_grid_dims[2] = {grid_dims[0], (int) my_num > 0 ? (int) my_num+1 : 0};
+
+   Par::Out() << "min_row=" << min_row << ", max_row=" << max_row << std::endl;
+   Par::Out() << "local_grid_start=" << local_grid_start << ", local_grid_size:" << local_grid_size << std::endl;

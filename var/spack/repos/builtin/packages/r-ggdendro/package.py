@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,9 +19,11 @@ class RGgdendro(RPackage):
 
     cran = "ggdendro"
 
-    version('0.1.23', sha256='3a33e988c4fe12eec540876ad8ba09bda998773b2d2a90e043ebae4a69fa8eb8')
-    version('0.1.22', sha256='f0a65f3498c1abc3076df0fb56364b63bdf5d212d8931f85bcc6997510916b6a')
-    version('0.1-20', sha256='125cae904fa5d426cccaf32ebe9c6297e9ef0c6fd3f19f61513834d03a0cf8ff')
+    license("GPL-2.0-only OR GPL-3.0-only")
 
-    depends_on('r-mass', type=('build', 'run'))
-    depends_on('r-ggplot2@0.9.2:', type=('build', 'run'))
+    version("0.1.23", sha256="3a33e988c4fe12eec540876ad8ba09bda998773b2d2a90e043ebae4a69fa8eb8")
+    version("0.1.22", sha256="f0a65f3498c1abc3076df0fb56364b63bdf5d212d8931f85bcc6997510916b6a")
+    version("0.1-20", sha256="125cae904fa5d426cccaf32ebe9c6297e9ef0c6fd3f19f61513834d03a0cf8ff")
+
+    depends_on("r-mass", type=("build", "run"))
+    depends_on("r-ggplot2@0.9.2:", type=("build", "run"))

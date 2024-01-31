@@ -1,0 +1,68 @@
+From 78fa4d272974963712f8272b0182f8d997432492 Mon Sep 17 00:00:00 2001
+From: Renjith Ravindran <Renjith.RavindranKannath@amd.com>
+Date: Thu, 20 Oct 2022 22:11:36 -0700
+Subject: [PATCH] Rocprofiler-dev path for the test
+
+---
+ test/CMakeLists.txt | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/test/CMakeLists.txt b/test/CMakeLists.txt
+index 65d1fbd..8e553b6 100644
+--- a/test/CMakeLists.txt
++++ b/test/CMakeLists.txt
+@@ -41,7 +41,7 @@ add_custom_target(check COMMAND ${PROJECT_BINARY_DIR}/run.sh DEPENDS mytest)
+ ## Build MatrixTranspose
+ set_source_files_properties(hip/MatrixTranspose.cpp PROPERTIES HIP_SOURCE_PROPERTY_FORMAT 1)
+ hip_add_executable(MatrixTranspose hip/MatrixTranspose.cpp)
+-target_include_directories(MatrixTranspose PRIVATE ${PROJECT_SOURCE_DIR}/inc)
++target_include_directories(MatrixTranspose PRIVATE ${PROJECT_SOURCE_DIR}/inc ${ROCPROFILER_PATH}/include)
+ target_link_libraries(MatrixTranspose PRIVATE roctracer roctx)
+ add_dependencies(mytest MatrixTranspose)
+ 
+@@ -50,7 +50,7 @@ set_source_files_properties(app/MatrixTranspose_test.cpp PROPERTIES HIP_SOURCE_P
+ function(build_matrix_transpose_test OUTPUT_FILE DEFINITIONS)
+   hip_add_executable(${OUTPUT_FILE} app/MatrixTranspose_test.cpp)
+   target_compile_definitions(${OUTPUT_FILE} PRIVATE ITERATIONS=100 HIP_TEST=1 ${DEFINITIONS})
+-  target_include_directories(${OUTPUT_FILE} PRIVATE ${PROJECT_SOURCE_DIR}/inc)
++  target_include_directories(${OUTPUT_FILE} PRIVATE ${PROJECT_SOURCE_DIR}/inc ${ROCPROFILER_PATH}/include)
+   target_link_libraries(${OUTPUT_FILE} PRIVATE roctracer roctx)
+   add_dependencies(mytest ${OUTPUT_FILE})
+ endfunction(build_matrix_transpose_test)
+@@ -64,7 +64,7 @@ add_custom_command(OUTPUT MatrixTranspose.c
+   COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_CURRENT_SOURCE_DIR}/app/MatrixTranspose_test.cpp MatrixTranspose.c)
+ hip_add_executable(MatrixTranspose_ctest MatrixTranspose.c)
+ target_compile_definitions(MatrixTranspose_ctest PRIVATE HIP_TEST=0 __HIP_PLATFORM_HCC__)
+-target_include_directories(MatrixTranspose_ctest PRIVATE ${PROJECT_SOURCE_DIR}/inc)
++target_include_directories(MatrixTranspose_ctest PRIVATE ${PROJECT_SOURCE_DIR}/inc ${ROCPROFILER_PATH}/include)
+ target_link_libraries(MatrixTranspose_ctest PRIVATE roctracer roctx)
+ add_dependencies(mytest MatrixTranspose_ctest)
+ 
+@@ -76,7 +76,7 @@ add_dependencies(mytest hsaco_test)
+ 
+ ## Build codeobj event test
+ add_library(codeobj_test SHARED app/codeobj_test.cpp)
+-target_include_directories(codeobj_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/inc)
++target_include_directories(codeobj_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/inc ${ROCPROFILER_PATH}/include)
+ target_link_libraries(codeobj_test roctracer)
+ add_dependencies(mytest codeobj_test)
+ 
+@@ -123,13 +123,13 @@ add_dependencies(mytest load_unload_reload_test)
+ 
+ ## Build the trace_buffer test
+ add_executable(trace_buffer directed/trace_buffer.cpp)
+-target_include_directories(trace_buffer PRIVATE ${PROJECT_SOURCE_DIR}/src/tracer_tool)
++target_include_directories(trace_buffer PRIVATE ${PROJECT_SOURCE_DIR}/src/tracer_tool ${ROCPROFILER_PATH}/include)
+ target_link_libraries(trace_buffer Threads::Threads atomic)
+ add_dependencies(mytest trace_buffer)
+ 
+ ## Build the memory_pool test
+ add_executable(memory_pool directed/memory_pool.cpp)
+-target_include_directories(memory_pool PRIVATE ${PROJECT_SOURCE_DIR}/src/roctracer ${PROJECT_SOURCE_DIR}/inc)
++target_include_directories(memory_pool PRIVATE ${PROJECT_SOURCE_DIR}/src/roctracer ${PROJECT_SOURCE_DIR}/inc ${ROCPROFILER_PATH}/include)
+ target_link_libraries(memory_pool Threads::Threads atomic)
+ add_dependencies(mytest memory_pool)
+ 
+-- 
+2.25.1
+

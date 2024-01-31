@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,8 +15,10 @@ class RIsva(RPackage):
 
     cran = "isva"
 
-    version('1.9', sha256='9fd016e0b34034d271d45f8a0d0db62780bf0187112e45f610aa9237014e1d17')
+    license("GPL-2.0-only")
 
-    depends_on('r-qvalue', type=('build', 'run'))
-    depends_on('r-fastica', type=('build', 'run'))
-    depends_on('r-jade', type=('build', 'run'))
+    version("1.9", sha256="9fd016e0b34034d271d45f8a0d0db62780bf0187112e45f610aa9237014e1d17")
+
+    depends_on("r-qvalue", type=("build", "run"))
+    depends_on("r-fastica", type=("build", "run"))
+    depends_on("r-jade", type=("build", "run"))

@@ -1,0 +1,36 @@
+diff --git a/src/avt/Queries/CMakeLists.txt b/src/avt/Queries/CMakeLists.txt
+index 162ed1c439..7ddd0a7144 100644
+--- a/src/avt/Queries/CMakeLists.txt
++++ b/src/avt/Queries/CMakeLists.txt
+@@ -210,6 +210,9 @@ ENDIF(VISIT_PYTHON_FILTERS)
+ #********************************* SERIAL ************************************
+ ADD_LIBRARY(avtquery_ser ${AVTQUERY_SOURCES})
+ TARGET_LINK_LIBRARIES(avtquery_ser visitcommon avtmath avtshapelets avtexpressions_ser avtfilters_ser visit_vtk)
++IF(CMAKE_SYSTEM_NAME MATCHES Linux)
++    TARGET_LINK_LIBRARIES(avtquery_ser rt)
++ENDIF(CMAKE_SYSTEM_NAME MATCHES Linux)
+ IF(VISIT_PYTHON_FILTERS)
+     TARGET_LINK_LIBRARIES(avtquery_ser avtpythonfilters_ser)
+ ENDIF(VISIT_PYTHON_FILTERS)
+@@ -219,6 +222,9 @@ VISIT_INSTALL_TARGETS(avtquery_ser)
+ IF(VISIT_PARALLEL)
+     ADD_PARALLEL_LIBRARY(avtquery_par ${AVTQUERY_SOURCES})
+     TARGET_LINK_LIBRARIES(avtquery_par visitcommon avtmath avtshapelets avtexpressions_par avtfilters_par visit_vtk)
++    IF(CMAKE_SYSTEM_NAME MATCHES Linux)
++        TARGET_LINK_LIBRARIES(avtquery_par rt)
++    ENDIF(CMAKE_SYSTEM_NAME MATCHES Linux)
+     IF(VISIT_PYTHON_FILTERS)
+         TARGET_LINK_LIBRARIES(avtquery_par avtpythonfilters_par)
+     ENDIF(VISIT_PYTHON_FILTERS)
+diff --git a/src/visitpy/CMakeLists.txt b/src/visitpy/CMakeLists.txt
+index 06f31ce1da..e5083d8087 100644
+--- a/src/visitpy/CMakeLists.txt
++++ b/src/visitpy/CMakeLists.txt
+@@ -385,6 +385,7 @@ avtdbatts
+ viewerrpc
+ visitcommon
+ ${PYTHON_LIBRARIES}
++${CMAKE_THREAD_LIBS}
+ )
+ 
+ # Create the CLI

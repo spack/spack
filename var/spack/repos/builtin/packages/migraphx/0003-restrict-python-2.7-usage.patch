@@ -1,0 +1,25 @@
+From ceba794da2c056817f34b8fe73f17423ffb670e6 Mon Sep 17 00:00:00 2001
+From: Renjith Ravindran <Renjith.RavindranKannath@amd.com>
+Date: Mon, 8 Aug 2022 22:02:19 +0000
+Subject: [PATCH] Restrict python 2.7 usage for Spack
+
+---
+ cmake/PythonModules.cmake | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/cmake/PythonModules.cmake b/cmake/PythonModules.cmake
+index 2a64801..95aa02a 100755
+--- a/cmake/PythonModules.cmake
++++ b/cmake/PythonModules.cmake
+@@ -53,7 +53,7 @@ function(py_add_module NAME)
+     )
+ 
+ endfunction()
+-set(PYTHON_SEARCH_VERSIONS 2.7 3.5 3.6 3.7 3.8 3.9)
++set(PYTHON_SEARCH_VERSIONS 3.5 3.6 3.7 3.8 3.9)
+ set(PYTHON_DISABLE_VERSIONS "" CACHE STRING "")
+ foreach(PYTHON_DISABLE_VERSION ${PYTHON_DISABLE_VERSIONS})
+     list(REMOVE_ITEM PYTHON_SEARCH_VERSIONS ${PYTHON_DISABLE_VERSION})
+-- 
+2.25.1
+

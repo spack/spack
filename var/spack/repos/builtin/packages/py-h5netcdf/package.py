@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,10 +12,12 @@ class PyH5netcdf(PythonPackage):
     library."""
 
     homepage = "https://github.com/h5netcdf/h5netcdf"
-    pypi     = "h5netcdf/h5netcdf-0.10.0.tar.gz"
+    pypi = "h5netcdf/h5netcdf-0.10.0.tar.gz"
 
-    version('0.10.0', sha256='fc1cfec33bb9f730c412f87fcbc259167fd7620635679ccfc6e31971730dbd60')
+    license("BSD-3-Clause")
 
-    depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-h5py', type=('build', 'run'))
+    version("0.10.0", sha256="fc1cfec33bb9f730c412f87fcbc259167fd7620635679ccfc6e31971730dbd60")
+
+    depends_on("python@3.6:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-h5py", type=("build", "run"))

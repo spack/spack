@@ -1,0 +1,31 @@
+--- a/src/CMake/FindVTKh.cmake	2022-07-21 15:39:17.991222000 -0700
++++ b/src/CMake/FindVTKh.cmake	2022-07-21 15:42:12.326207000 -0700
+@@ -15,6 +15,10 @@
+ #   Kathleen Biagas, Tue Jan 21 10:46:31 PST 2020
+ #   Set VTKm_INCLUDE_DIRS.
+ #
++#   Eric Brugger, Thu 21 Jul 2022 06:39:36 PM EDT
++#   Modified the logic to handle the case where a RELWITHDEBINFO build of
++#   VTKh was created. Modified the logic not to install static libraries.
++#
+ #****************************************************************************/
+ 
+ IF (DEFINED VISIT_VTKH_DIR)
+@@ -47,13 +51,16 @@
+    # all interface link dependencies
+    function(get_lib_loc_and_install _lib)
+        get_target_property(ttype ${_lib} TYPE)
+-       if (ttype STREQUAL "INTERFACE_LIBRARY")
++       if (ttype STREQUAL "INTERFACE_LIBRARY" OR ttype STREQUAL "STATIC_LIBRARY")
+            return()
+        endif()
+        get_target_property(i_loc ${_lib} IMPORTED_LOCATION)
+        if (NOT i_loc)
+          get_target_property(i_loc ${_lib} IMPORTED_LOCATION_RELEASE)
+        endif()
++       if (NOT i_loc)
++         get_target_property(i_loc ${_lib} IMPORTED_LOCATION_RELWITHDEBINFO)
++       endif()
+        if(i_loc)
+            THIRD_PARTY_INSTALL_LIBRARY(${i_loc})
+        endif()

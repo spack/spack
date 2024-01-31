@@ -1,0 +1,31 @@
+diff -ruN spack-src/f_check spack-src-new/f_check
+--- spack-src/f_check	2022-02-20 13:35:05.000000000 -0800
++++ spack-src-new/f_check	2022-07-25 14:41:31.877584474 -0700
+@@ -34,7 +34,7 @@
+ 	      "pathf90", "pathf95",
+ 	      "pgf95", "pgf90", "pgf77", "pgfortran", "nvfortran",
+ 	      "flang", "egfortran",
+-              "ifort", "nagfor");
++              "ifort", "nagfor", "ifx");
+ 
+ OUTER:
+     foreach $lists (@lists) {
+@@ -90,6 +90,9 @@
+ 		if ($compiler =~ /flang/) {
+ 		    $vendor = FLANG;
+ 		    $openmp = "-fopenmp";
++	    } elsif ($compiler =~ /ifx/) {
++		    $vendor = INTEL;
++		    $openmp = "-fopenmp";
+ 	    } elsif ($compiler =~ /pgf/ || $compiler =~ /nvf/) {
+ 		    $vendor = PGI;
+ 		    $openmp = "-mp";
+@@ -176,7 +179,7 @@
+ 	    $openmp = "-fopenmp";
+ 	}
+ 
+-	if ($compiler =~ /ifort/) {
++	if ($compiler =~ /ifort/ || $compiler =~ /ifx/) {
+ 	    $vendor = INTEL;
+ 	    $bu       = "_";
+ 	    $openmp = "-fopenmp";

@@ -1,0 +1,54 @@
+# This patch is applicable starting version 2.3.1
+--- a/src/serialbox-fortran/m_serialize.f90
++++ b/src/serialbox-fortran/m_serialize.f90
+@@ -634,11 +634,14 @@ SUBROUTINE fs_get_serializer_metainfo_b(serializer, key, val)
+        USE, INTRINSIC :: iso_c_binding
+        TYPE(C_PTR), INTENT(IN), VALUE                   :: serializer
+        CHARACTER(KIND=C_CHAR), DIMENSION(*), INTENT(IN) :: key
+-       LOGICAL, INTENT(OUT)                             :: val
++       INTEGER(KIND=C_INT), INTENT(OUT)                 :: val
+      END SUBROUTINE fs_get_serializer_metainfo_b_
+   END INTERFACE
+ 
+-  CALL fs_get_serializer_metainfo_b_(serializer%serializer_ptr, TRIM(key)//C_NULL_CHAR, val)
++  INTEGER(KIND=C_INT) :: c_val
++  CALL fs_get_serializer_metainfo_b_(serializer%serializer_ptr, TRIM(key)//C_NULL_CHAR, c_val)
++
++  val = c_val /= 0
+ END SUBROUTINE fs_get_serializer_metainfo_b
+ 
+ SUBROUTINE fs_get_serializer_metainfo_i(serializer, key, val)
+@@ -950,11 +953,14 @@ SUBROUTINE fs_get_field_metainfo_b(serializer, fieldname, key, val)
+        USE, INTRINSIC :: iso_c_binding
+        TYPE(C_PTR), INTENT(IN), VALUE                   :: serializer
+        CHARACTER(KIND=C_CHAR), DIMENSION(*), INTENT(IN) :: fieldname, key
+-       LOGICAL, INTENT(OUT)                             :: val
++       INTEGER(KIND=C_INT), INTENT(OUT)                 :: val
+      END SUBROUTINE fs_get_field_metainfo_b_
+   END INTERFACE
+ 
+-  CALL fs_get_field_metainfo_b_(serializer%serializer_ptr, TRIM(fieldname)//C_NULL_CHAR, TRIM(key)//C_NULL_CHAR, val)
++  INTEGER(KIND=C_INT) :: c_val
++  CALL fs_get_field_metainfo_b_(serializer%serializer_ptr, TRIM(fieldname)//C_NULL_CHAR, TRIM(key)//C_NULL_CHAR, c_val)
++
++  val = c_val /= 0
+ END SUBROUTINE fs_get_field_metainfo_b
+ 
+ SUBROUTINE fs_get_field_metainfo_i(serializer, fieldname, key, val)
+@@ -1466,11 +1472,14 @@ SUBROUTINE fs_get_savepoint_metainfo_b(savepoint, key, val)
+        USE, INTRINSIC :: iso_c_binding
+        TYPE(C_PTR), INTENT(IN), VALUE                   :: savepoint
+        CHARACTER(KIND=C_CHAR), DIMENSION(*), INTENT(IN) :: key
+-       LOGICAL, INTENT(OUT)                             :: val
++       INTEGER(KIND=C_INT), INTENT(OUT)                 :: val
+      END SUBROUTINE fs_get_savepoint_metainfo_b_
+   END INTERFACE
+ 
+-  CALL fs_get_savepoint_metainfo_b_(savepoint%savepoint_ptr, TRIM(key)//C_NULL_CHAR, val)
++  INTEGER(KIND=C_INT) :: c_val
++  CALL fs_get_savepoint_metainfo_b_(savepoint%savepoint_ptr, TRIM(key)//C_NULL_CHAR, c_val)
++
++  val = c_val /= 0
+ END SUBROUTINE fs_get_savepoint_metainfo_b
+ 
+ SUBROUTINE fs_get_savepoint_metainfo_i(savepoint, key, val)

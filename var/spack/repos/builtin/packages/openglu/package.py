@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,14 +8,14 @@ from spack.package import *
 
 class Openglu(Package):
     """Placeholder for external OpenGL utility library (GLU) from hardware
-       vendors"""
+    vendors"""
 
     homepage = "https://www.opengl.org/resources/libraries"
 
-    provides('glu@:1.3', when='@1.3:')
-    provides('glu@:1.2', when='@1.2:')
-    provides('glu@:1.1', when='@1.1:')
-    provides('glu@:1.0', when='@1.0:')
+    provides("glu@:1.3", when="@1.3:")
+    provides("glu@:1.2", when="@1.2:")
+    provides("glu@:1.1", when="@1.1:")
+    provides("glu@:1.0", when="@1.0:")
 
     # Override the fetcher method to throw a useful error message;
     # fixes an issue similar to Github issue (#7061), in which the
@@ -65,5 +65,4 @@ class Openglu(Package):
 
     @property
     def libs(self):
-        return find_libraries(
-            'libGLU', self.prefix, shared=True, recursive=True)
+        return find_libraries("libGLU", self.prefix, shared=True, recursive=True)

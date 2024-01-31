@@ -1,0 +1,79 @@
+From 9bdff9b0897360a60d21a686f7b988f924aea825 Mon Sep 17 00:00:00 2001
+From: DorianRudolph <dorianrudo97@googlemail.com>
+Date: Fri, 9 Sep 2022 07:09:25 +0200
+Subject: [PATCH] fix compilation for gfx1031 (#150)
+
+* fix compilation for gfx1031
+
+* Improve guards for arch-specific instructions
+
+Default to using the fallback implementation and only use
+__hip_move_dpp on platforms known that are known to support the
+necessary intrinsics.
+
+rocALUTION can also be compiled with CXXFLAGS=-DROCALUTION_USE_MOVE_DPP=0
+to force the use of the fallback implementation (or with the value 1 to
+force the use of the __hip_move_dpp implementation).
+
+This change fixes the compilation error:
+
+    Illegal instruction detected: Invalid dpp_ctrl value: broadcasts are not supported on GFX10+
+
+when building for unsupported Navi 1x and Navi 2x GPUs.
+
+Co-authored-by: Cordell Bloor <Cordell.Bloor@amd.com>
+---
+ src/base/hip/hip_utils.hpp | 18 +++++++++++++++---
+ 1 file changed, 15 insertions(+), 3 deletions(-)
+
+diff --git a/src/base/hip/hip_utils.hpp b/src/base/hip/hip_utils.hpp
+index 830f9a5d..5ec4cd00 100644
+--- a/src/base/hip/hip_utils.hpp
++++ b/src/base/hip/hip_utils.hpp
+@@ -37,6 +37,18 @@
+ #include <hip/hip_complex.h>
+ #endif
+ 
++#ifndef ROCALUTION_USE_MOVE_DPP
++#if defined(__gfx803__) || \
++    defined(__gfx900__) || \
++    defined(__gfx906__) || \
++    defined(__gfx908__) || \
++    defined(__gfx90a__)
++#define ROCALUTION_USE_MOVE_DPP 1
++#else
++#define ROCALUTION_USE_MOVE_DPP 0
++#endif
++#endif
++
+ #define ROCBLAS_HANDLE(handle) *static_cast<rocblas_handle*>(handle)
+ #define ROCSPARSE_HANDLE(handle) *static_cast<rocsparse_handle*>(handle)
+ 
+@@ -206,7 +218,7 @@ namespace rocalution
+ 
+     __device__ int __llvm_amdgcn_readlane(int index, int offset) __asm("llvm.amdgcn.readlane");
+ 
+-#ifndef __gfx1030__
++#if ROCALUTION_USE_MOVE_DPP
+     template <unsigned int WFSIZE>
+     static __device__ __forceinline__ void wf_reduce_sum(int* sum)
+     {
+@@ -223,7 +235,7 @@ namespace rocalution
+         if(WFSIZE > 32)
+             *sum += __hip_move_dpp(*sum, 0x143, 0xc, 0xf, 0);
+     }
+-#else
++#else /* ROCALUTION_USE_MOVE_DPP */
+     template <unsigned int WFSIZE>
+     static __device__ __forceinline__ void wf_reduce_sum(int* sum)
+     {
+@@ -232,7 +244,7 @@ namespace rocalution
+             *sum += __shfl_xor(*sum, i);
+         }
+     }
+-#endif
++#endif /* ROCALUTION_USE_MOVE_DPP */
+ 
+     template <unsigned int WF_SIZE>
+     static __device__ __forceinline__ void wf_reduce_sum(float* sum)
+

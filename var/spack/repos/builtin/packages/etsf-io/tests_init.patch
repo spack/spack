@@ -1,0 +1,14 @@
+--- etsf-io/tests/group_level/tests_init.f90.orig	2022-06-13 21:38:17.550243223 +0200
++++ etsf-io/tests/group_level/tests_init.f90	2022-06-13 21:35:32.735709916 +0200
+@@ -20,9 +20,9 @@
+     type(etsf_io_low_error), intent(in) :: error
+     
+     if (lstat) then
+-      write(*, "(A,A,A,A)") "== ", name, repeat(" ", 68 - len(name)), "OK     =="
++      write(*, "(A,A,A,A)") "== ", name, repeat(" ", 88 - len(name)), "OK     =="
+     else
+-      write(*, "(A,A,A,A)") "== ", name, repeat(" ", 68 - len(name)), "Failed =="
++      write(*, "(A,A,A,A)") "== ", name, repeat(" ", 88 - len(name)), "Failed =="
+       call etsf_io_low_error_handle(error)
+     end if
+   end subroutine tests_write_status

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Phoenix(MavenPackage):
     JDBC driver targeting low latency queries over HBase data."""
 
     homepage = "https://github.com"
-    git      = "https://github.com/apache/phoenix.git"
+    git = "https://github.com/apache/phoenix.git"
 
-    version('master', branch='master')
+    license("Apache-2.0")
+
+    version("master", branch="master")

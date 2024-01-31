@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,20 +18,11 @@ class FujitsuSsl2(Package):
 
     variant("parallel", default=True, description="Build with thread-parallel versions")
 
-    conflicts("%arm")
-    conflicts("%cce")
-    conflicts("%apple-clang")
-    conflicts("%clang")
-    conflicts("%gcc")
-    conflicts("%intel")
-    conflicts("%nag")
-    conflicts("%pgi")
-    conflicts("%xl")
-    conflicts("%xl_r")
-
     provides("blas")
     provides("lapack")
     provides("scalapack")
+
+    requires("%fj")
 
     def install(self, spec, prefix):
         raise InstallError(
@@ -104,9 +95,7 @@ class FujitsuSsl2(Package):
                 libslist.append("libfjlapack.so")
             libslist.append("libscalapack.a")
 
-        libslist.extend(
-            ["libmpi_usempi_ignore_tkr.so", "libmpi_mpifh.so"]
-        )
+        libslist.extend(["libmpi_usempi_ignore_tkr.so", "libmpi_mpifh.so"])
 
         if "+parallel" in spec:  # parallel
             libslist.extend(["libfjomphk.so", "libfjomp.so"])
@@ -136,17 +125,11 @@ class FujitsuSsl2(Package):
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         path = self.prefix.include
-        env.append_flags(
-            "fcc_ENV", "-idirafter " + path
-        )
-        env.append_flags(
-            "FCC_ENV", "-idirafter " + path
-        )
+        env.append_flags("fcc_ENV", "-idirafter " + path)
+        env.append_flags("FCC_ENV", "-idirafter " + path)
 
     @property
     def headers(self):
-        path = join_path(
-            self.spec.prefix, "clang-comp"
-        )
-        headers = find_headers('cssl', path, recursive=True)
+        path = join_path(self.spec.prefix, "clang-comp")
+        headers = find_headers("cssl", path, recursive=True)
         return headers

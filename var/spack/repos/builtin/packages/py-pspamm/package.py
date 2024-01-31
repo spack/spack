@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,19 +13,21 @@ class PyPspamm(PythonPackage):
     homepage = "https://github.com/SeisSol/PSpaMM/blob/master/README.md"
     git = "https://github.com/SeisSol/PSpaMM.git"
 
-    maintainers = ['ravil-mobile']
+    maintainers("ravil-mobile")
 
-    version('develop', branch='master')
+    license("BSD-3-Clause")
 
-    variant('numpy', default=False, description="installs numpy")
-    variant('scipy', default=False, description="installs scipy")
+    version("develop", branch="master")
 
-    depends_on('py-numpy', when='+numpy')
-    depends_on('py-scipy', when='+scipy')
+    variant("numpy", default=False, description="installs numpy")
+    variant("scipy", default=False, description="installs scipy")
+
+    depends_on("py-numpy", when="+numpy")
+    depends_on("py-scipy", when="+scipy")
 
     def install(self, spec, prefix):
-        install_tree('.', prefix)
+        install_tree(".", prefix)
 
     def setup_run_environment(self, env):
-        env.prepend_path('PATH', self.spec.prefix)
-        env.prepend_path('PYTHONPATH', self.spec.prefix)
+        env.prepend_path("PATH", self.spec.prefix)
+        env.prepend_path("PYTHONPATH", self.spec.prefix)

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,17 +11,16 @@ class PyExtension1(PythonPackage):
     """A package which extends python"""
 
     homepage = "http://www.example.com"
-    url      = "http://www.example.com/extension1-1.0.tar.gz"
+    url = "http://www.example.com/extension1-1.0.tar.gz"
 
-    # Override settings in base class
-    maintainers = []
+    maintainers("user1", "user2")
 
-    version('1.0', '00000000000000000000000000000110')
-    version('2.0', '00000000000000000000000000000120')
+    version("1.0", md5="00000000000000000000000000000110")
+    version("2.0", md5="00000000000000000000000000000120")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        with open(os.path.join(prefix.bin, 'py-extension1'), 'w+') as fout:
+        with open(os.path.join(prefix.bin, "py-extension1"), "w+") as fout:
             fout.write(str(spec.version))
 
-    extends('python')
+    extends("python")

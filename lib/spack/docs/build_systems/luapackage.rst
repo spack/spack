@@ -1,15 +1,15 @@
-.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _luapackage:
 
-------------
-LuaPackage
-------------
+---
+Lua
+---
 
-LuaPackage is a helper for the common case of Lua packages that provide
+The ``Lua`` build-system is a helper for the common case of Lua packages that provide
 a rockspec file.  This is not meant to take a rock archive, but to build
 a source archive or repository that provides a rockspec, which should cover
 most lua packages. In the case a Lua package builds by Make rather than
@@ -19,7 +19,7 @@ luarocks, prefer MakefilePackage.
 Phases
 ^^^^^^
 
-The ``LuaPackage`` base class comes with the following phases:
+The ``LuaBuilder`` and `LuaPackage`` base classes come with the following phases:
 
 #. ``unpack`` - if using a rock, unpacks the rock and moves into the source directory
 #. ``preprocess`` - adjust sources or rockspec to fix build
@@ -88,7 +88,7 @@ override the ``luarocks_args`` method like so:
 .. code-block:: python
 
     def luarocks_args(self):
-        return ['flag1', 'flag2']
+        return ["flag1", "flag2"]
 
 One common use of this is to override warnings or flags for newer compilers, as in:
 

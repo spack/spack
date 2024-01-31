@@ -1,0 +1,29 @@
+Index: lldb/bindings/python/get-python-config.py
+===================================================================
+--- lldb/bindings/python/get-python-config.py
++++ lldb/bindings/python/get-python-config.py
+@@ -44,15 +44,21 @@
+     elif args.variable_name == "LLDB_PYTHON_EXE_RELATIVE_PATH":
+         tried = list()
+         exe = sys.executable
+-        prefix = os.path.realpath(sys.prefix)
++        prefix = sys.prefix
+         while True:
+             try:
+                 print(relpath_nodots(exe, prefix))
+                 break
+             except ValueError:
+                 tried.append(exe)
+-                if os.path.islink(exe):
+-                    exe = os.path.join(os.path.realpath(os.path.dirname(exe)), os.readlink(exe))
++                real_exe_dirname = os.path.realpath(os.path.dirname(exe))
++                real_prefix = os.path.realpath(prefix)
++                if prefix != real_prefix:
++                    prefix = real_prefix
++                    exe = os.path.join(real_exe_dirname, os.path.basename(exe))
++                    continue
++                elif os.path.islink(exe):
++                    exe = os.path.join(real_exe_dirname, os.readlink(exe))
+                     continue
+                 else:
+                     print("Could not find a relative path to sys.executable under sys.prefix", file=sys.stderr)

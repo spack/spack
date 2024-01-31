@@ -1,0 +1,56 @@
+From f66855d5a337f3aa4e9be44fd639855fd301c9c0 Mon Sep 17 00:00:00 2001
+From: Cory Bloor <Cordell.Bloor@amd.com>
+Date: Thu, 26 Jan 2023 16:27:12 -0700
+Subject: [PATCH] Fix missing sqlite include paths (#1001)
+
+rtc_cache.h includes sqlite3.h, so anything that uses rocfft-rtc-cache
+needs to have the sqlite3 include directories. That is typically best
+accomplished with a target_link_libraries declaration, as the include
+path for the library will automatically be propagated to the dependent
+library.
+
+In modern CMake, it's very rare to have to add the include directories
+of a library that your code is using. For any properly specified
+library, you should be able to use target_link_libraries and the
+required include paths for the library will be added to the target's
+build options.
+---
+ library/src/CMakeLists.txt | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/library/src/CMakeLists.txt b/library/src/CMakeLists.txt
+index 71d7926f..9016ae24 100644
+--- a/library/src/CMakeLists.txt
++++ b/library/src/CMakeLists.txt
+@@ -199,6 +199,7 @@ else()
+   )
+   FetchContent_MakeAvailable(sqlite_local)
+   add_library( sqlite3 OBJECT ${sqlite_local_SOURCE_DIR}/sqlite3.c )
++  target_include_directories( sqlite3 PUBLIC ${sqlite_local_SOURCE_DIR} )
+   set_target_properties( sqlite3 PROPERTIES
+     C_VISIBILITY_PRESET "hidden"
+     VISIBILITY_INLINES_HIDDEN ON
+@@ -242,6 +243,7 @@ add_library( rocfft-rtc-gen OBJECT
+ add_library( rocfft-rtc-cache OBJECT
+   rtc_cache.cpp
+ )
++target_link_libraries( rocfft-rtc-cache PUBLIC ${ROCFFT_SQLITE_LIB} )
+ # generating kernels from TreeNodes and launching them
+ add_library( rocfft-rtc-launch OBJECT
+   rtc_kernel.cpp
+@@ -250,6 +252,7 @@ add_library( rocfft-rtc-launch OBJECT
+   rtc_stockham_kernel.cpp
+   rtc_transpose_kernel.cpp
+ )
++target_link_libraries( rocfft-rtc-launch PRIVATE rocfft-rtc-cache )
+ 
+ foreach( target
+   rocfft-rtc-common
+@@ -263,7 +266,6 @@ foreach( target
+     PRIVATE
+     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/library/src/include>
+     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/library/include>
+-    ${sqlite_local_SOURCE_DIR}
+   )
+   set_target_properties( ${target} PROPERTIES
+     CXX_VISIBILITY_PRESET "hidden"

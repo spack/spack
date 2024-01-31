@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,8 +15,10 @@ class Dnstracer(MakefilePackage):
     homepage = "https://github.com/Orc/dnstracer"
     git = "https://github.com/Orc/dnstracer.git"
 
-    version('master', branch='master')
+    license("BSD-2-Clause")
+
+    version("master", branch="master")
 
     def edit(self, spec, prefix):
-        configure = Executable('./configure.sh')
-        configure('--prefix={0}'.format(prefix))
+        configure = Executable("./configure.sh")
+        configure("--prefix={0}".format(prefix))

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class RMiniui(RPackage):
 
     cran = "miniUI"
 
-    version('0.1.1.1', sha256='452b41133289f630d8026507263744e385908ca025e9a7976925c1539816b0c0')
+    version("0.1.1.1", sha256="452b41133289f630d8026507263744e385908ca025e9a7976925c1539816b0c0")
 
-    depends_on('r-shiny@0.13:', type=('build', 'run'))
-    depends_on('r-htmltools@0.3:', type=('build', 'run'))
+    depends_on("r-shiny@0.13:", type=("build", "run"))
+    depends_on("r-htmltools@0.3:", type=("build", "run"))

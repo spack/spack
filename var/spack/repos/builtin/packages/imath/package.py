@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,8 +13,12 @@ class Imath(CMakePackage):
     16-bit floating-point type."""
 
     homepage = "https://github.com/AcademySoftwareFoundation/Imath"
-    url      = "https://github.com/AcademySoftwareFoundation/Imath/archive/refs/tags/v3.1.5.tar.gz"
+    url = "https://github.com/AcademySoftwareFoundation/Imath/archive/refs/tags/v3.1.5.tar.gz"
 
-    version('3.1.5', sha256='1e9c7c94797cf7b7e61908aed1f80a331088cc7d8873318f70376e4aed5f25fb')
+    license("BSD-3-Clause")
 
-    depends_on('cmake@3.12:', type='build')
+    version("3.1.9", sha256="f1d8aacd46afed958babfced3190d2d3c8209b66da451f556abd6da94c165cf3")
+    version("3.1.7", sha256="bff1fa140f4af0e7f02c6cb78d41b9a7d5508e6bcdfda3a583e35460eb6d4b47")
+    version("3.1.5", sha256="1e9c7c94797cf7b7e61908aed1f80a331088cc7d8873318f70376e4aed5f25fb")
+
+    depends_on("cmake@3.12:", type="build")
