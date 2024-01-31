@@ -214,7 +214,7 @@ class CMakeBuilder(cmake.CMakeBuilder):
             args.extend(
                 [
                     self.define("LAPACK_FOUND", True),
-                    self.define("LAPACK_LIBRARY", lapack.libs+blas.libs),# not wrong here, abacus mixs blas/lapack libs
+                    self.define("LAPACK_LIBRARY", lapack.libs),# blas implementation other than openblas not supported
                 ]
             )
 
