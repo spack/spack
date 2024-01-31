@@ -394,6 +394,7 @@ class Tau(Package):
         if files:
             env.set("TAU_MAKEFILE", files[0])
         if "+dyninst" in self.spec:
+            path_to_dyn_lib = self.spec["dyninst"].prefix.lib
             dyninst_apirt = join_path(path_to_dyn_lib, "libdyninstAPI_RT.so")
             env.set("DYNINSTAPI_RT_LIB", dyninst_apirt)
             env.append_path("LD_LIBRARY_PATH", path_to_dyn_lib)
