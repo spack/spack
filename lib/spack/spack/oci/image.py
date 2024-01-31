@@ -86,10 +86,16 @@ class ImageReference:
     The digest is optional, and domain and tag are automatically
     filled out with defaults when parsed from string."""
 
-    __slots__ = ["domain", "name", "tag", "digest","scheme"]
+    __slots__ = ["domain", "name", "tag", "digest", "scheme"]
 
     def __init__(
-        self, *, domain: str, name: str, tag: str = "latest", digest: Optional[Digest] = None, scheme: str = "https"
+        self,
+        *,
+        domain: str,
+        name: str,
+        tag: str = "latest",
+        digest: Optional[Digest] = None,
+        scheme: str = "https",
     ):
         self.domain = domain
         self.name = name
@@ -145,10 +151,10 @@ class ImageReference:
         if not tag:
             tag = "latest"
 
-        scheme="https"
+        scheme = "https"
         if options is not None:
             if "insecure-registry=1" in options:
-                scheme="http"
+                scheme = "http"
 
         # sha256 is currently the only algorithm that
         # we implement, even though the spec allows for more
@@ -164,16 +170,20 @@ class ImageReference:
     def blob_url(self, digest: Union[str, Digest]) -> str:
         if isinstance(digest, str):
             digest = Digest.from_string(digest)
-        print( f"blob_url {self.scheme}://{self.domain}/v2/{self.name}/blobs/{digest}")
+        print(f"blob_url {self.scheme}://{self.domain}/v2/{self.name}/blobs/{digest}")
         return f"{self.scheme}://{self.domain}/v2/{self.name}/blobs/{digest}"
 
     def with_digest(self, digest: Union[str, Digest]) -> "ImageReference":
         if isinstance(digest, str):
             digest = Digest.from_string(digest)
-        return ImageReference(domain=self.domain, name=self.name, tag=self.tag, digest=digest, scheme=self.scheme)
+        return ImageReference(
+            domain=self.domain, name=self.name, tag=self.tag, digest=digest, scheme=self.scheme
+        )
 
     def with_tag(self, tag: str) -> "ImageReference":
-        return ImageReference(domain=self.domain, name=self.name, tag=tag, digest=self.digest, scheme=self.scheme)
+        return ImageReference(
+            domain=self.domain, name=self.name, tag=tag, digest=self.digest, scheme=self.scheme
+        )
 
     def uploads_url(self, digest: Optional[Digest] = None) -> str:
         url = f"{self.scheme}://{self.domain}/v2/{self.name}/blobs/uploads/"
