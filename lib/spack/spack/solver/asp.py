@@ -875,10 +875,6 @@ class RequirementRule(NamedTuple):
     not_build: bool
 
 
-#: Requirements apply to build dependencies and externals by default
-RequirementRule.__new__.__defaults__ = (False, False)
-
-
 class PyclingoDriver:
     def __init__(self, cores=True):
         """Driver for the Python clingo interface.
@@ -2815,6 +2811,8 @@ class RequirementParser:
                         kind=RequirementKind.PACKAGE,
                         condition=when_spec,
                         message=message,
+                        not_build=False,
+                        not_externals=False,
                     )
                 )
         return rules
@@ -2846,6 +2844,8 @@ class RequirementParser:
                     kind=kind,
                     message=message,
                     condition=condition,
+                    not_build=False,
+                    not_externals=False,
                 )
             )
         return result
@@ -2867,6 +2867,8 @@ class RequirementParser:
                     kind=kind,
                     message=message,
                     condition=condition,
+                    not_build=False,
+                    not_externals=False,
                 )
             )
         return result
