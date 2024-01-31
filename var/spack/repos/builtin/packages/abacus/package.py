@@ -218,4 +218,10 @@ class CMakeBuilder(cmake.CMakeBuilder):
                 ]
             )
 
+        # avoid misdirecting to global visible elpa from apt, dnf, etc.
+        if spec.satisfies("+elpa"):
+            elpa=spec["elpa"]
+            elpa_include = elpa.headers.directories[0]
+            args += [self.define("ELPA_INCLUDE_DIRS", elpa_include),]
+
         return args
