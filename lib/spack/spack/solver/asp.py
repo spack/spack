@@ -2844,6 +2844,8 @@ class RequirementParser:
                     kind=kind,
                     message=message,
                     condition=condition,
+                    not_build=False,
+                    not_externals=False,
                 )
             )
         return result
@@ -2865,6 +2867,8 @@ class RequirementParser:
                     kind=kind,
                     message=message,
                     condition=condition,
+                    not_build=False,
+                    not_externals=False,
                 )
             )
         return result
