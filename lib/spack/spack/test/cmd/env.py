@@ -3891,3 +3891,27 @@ spack:
                 assert not os.path.exists(env_spec_dir)
             else:
                 assert os.path.exists(env_spec_dir)
+
+
+def test_env_view_resolves_identical_file_conflicts(tmp_path, install_mockery, mock_fetch):
+    """Test that the dependency's file is linked into a view when the parent has a symlink under
+    the same relative path, pointing to the dependency at the same relative path. When two files
+    are identical, we want to link the actual file, not the symlink -- this is important for copy
+    type views."""
+    with ev.create("env", with_view=tmp_path / "view") as e:
+        add("view-dir-file-resolvable-conflict")
+        install()
+        prefix_dependency = e.matching_spec("view-dir-file").prefix
+    # The dependency's file is linked into the view
+    assert os.readlink(tmp_path / "view" / "bin" / "x") == prefix_dependency.bin.x
+
+
+def test_env_view_ignores_different_file_conflicts(tmp_path, install_mockery, mock_fetch):
+    """Test that file-file conflicts for two unique files in environment views are ignored, and
+    that the dependent's file is linked into the view, not the dependency's file."""
+    with ev.create("env", with_view=tmp_path / "view") as e:
+        add("view-dir-file-ignored-conflict")
+        install()
+        prefix_dependent = e.matching_spec("view-dir-file-ignored-conflict").prefix
+    # The dependent's file is linked into the view
+    assert os.readlink(tmp_path / "view" / "bin" / "x") == prefix_dependent.bin.x
