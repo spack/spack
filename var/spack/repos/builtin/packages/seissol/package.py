@@ -83,7 +83,7 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
         when="+intel_gpu",
     )
 
-    forwarded_variants = ["cuda", "rocm", "intel_gpu"]
+    forwarded_variants = ["cuda", "intel_gpu", "rocm"]
     for v in forwarded_variants:
         variant(
             "sycl_backend",
@@ -94,7 +94,7 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
         )
         variant(
             "sycl_gemm",
-            default=True if v == "intel_gpu" else False,
+            default=False,
             description="Use SYCL also for the wave propagation part (default for Intel GPUs)",
             when=f"+{v}",
         )
@@ -249,7 +249,7 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
                 cuda_arch = self.spec.variants["cuda_arch"].value[0]
                 args.append(f"-DDEVICE_ARCH=sm_{cuda_arch}")
                 args.append("-DUSE_GRAPH_COMPUTING=ON -DENABLE_PROFILING_MARKERS=ON")
-                if not self.spec.variants["sycl_gemm"].value:
+                if self.spec.satisfies("~sycl_gemm"):
                     args.append("-DDEVICE_BACKEND=cuda")
 
             # ROCm/AMD GPUs
@@ -257,7 +257,7 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
                 amdgpu_target = self.spec.variants["amdgpu_target"].value[0]
                 args.append(f"-DDEVICE_ARCH={amdgpu_target}")
                 args.append("-DUSE_GRAPH_COMPUTING=ON -DENABLE_PROFILING_MARKERS=ON")
-                if not self.spec.variants["sycl_gemm"].value:
+                if self.spec.satisfies("~sycl_gemm"):
                     args.append("-DDEVICE_BACKEND=hip")
 
             # Intel GPUs
@@ -273,7 +273,7 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
 
             sycl_backend = self.spec.variants["sycl_backend"].value
             args.append(f"-DSYCLCC={syclcc_backends[sycl_backend]}")
-            if self.spec.variants["sycl_gemm"].value:
+            if self.spec.satisfies("+sycl_gemm"):
                 args.append(f"-DDEVICE_BACKEND={sycl_backends[sycl_backend]}")
 
         # CPU arch
