@@ -22,4 +22,3 @@ class PyPyqtgraph(PythonPackage):
 
     depends_on("py-numpy@1.22:", type=("build", "run"))
     depends_on("py-pyqt5", type=("build", "run"))
-
