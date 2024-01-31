@@ -22,7 +22,7 @@ class LinuxPerf(Package):
 
     maintainers("Jordan474")
 
-    version("6.6.9", sha256="8ebc65af0cfc891ba63dce0546583da728434db0f5f6a54d979f25ec47f548b3")
+    version("6.7.2", sha256="c34de41baa29c475c0834e88a3171e255ff86cd32d83c6bffc2b797e60bfa671")
     version("6.1.70", sha256="ed1365266456c07696a7499581aec5d851ca2296f4f6f90f23d189ea5a56afef")
     version("5.15.145", sha256="b2a49d87605f3a9491581150315e22337c1afb599efc1e2737481be3a2d6d620")
 
