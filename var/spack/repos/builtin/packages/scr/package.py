@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -66,7 +66,7 @@ class Scr(CMakePackage):
     )
 
     depends_on("mpi")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     # Use latest iteration of dtcmp and  components when installing scr@develop
     cmpnts = ["axl", "dtcmp", "er", "kvtree", "rankstr", "redset", "shuffile", "spath"]

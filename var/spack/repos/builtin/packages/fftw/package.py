@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -62,6 +62,13 @@ class FftwBase(AutotoolsPackage):
             libraries.append("libfftw3" + sfx)
 
         return find_libraries(libraries, root=self.prefix, recursive=True)
+
+    def flag_handler(self, name, flags):
+        if name == "cflags":
+            if self.spec.satisfies("%clang@15:"):
+                flags.append("-Wno-error=int-conversion")
+
+        return flags, None, None
 
     def patch(self):
         # If fftw/config.h exists in the source tree, it will take precedence
@@ -208,6 +215,8 @@ class Fftw(FftwBase):
     homepage = "https://www.fftw.org"
     url = "https://www.fftw.org/fftw-3.3.4.tar.gz"
     list_url = "https://www.fftw.org/download.html"
+
+    license("GPL-2.0-or-later")
 
     version("3.3.10", sha256="56c932549852cddcfafdab3820b0200c7742675be92179e59e6215b340e26467")
     version("3.3.9", sha256="bf2c7ce40b04ae811af714deb512510cc2c17b9ab9d6ddcf49fe4487eea7af3d")

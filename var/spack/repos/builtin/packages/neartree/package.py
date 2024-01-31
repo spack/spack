@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Neartree(MakefilePackage):
 
     homepage = "http://neartree.sourceforge.net/"
     url = "https://downloads.sourceforge.net/project/neartree/neartree/NearTree-3.1/NearTree-3.1.tar.gz"
+
+    license("LGPL-2.1-or-later")
 
     version("3.1", sha256="07b668516f15a7c13c219fd005b14e73bced5dc6b23857edcc24d3e5cf0d3be3")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -41,5 +41,7 @@ def test_bootstrap_phase(minimal_configuration, config_dumper, capsys):
         with fs.working_dir(spack_yaml_dir):
             output = containerize()
 
-    # Check for the presence of the clone command
-    assert "git clone" in output
+    # Check for the presence of the Git commands
+    assert "git init" in output
+    assert "git fetch" in output
+    assert "git checkout" in output

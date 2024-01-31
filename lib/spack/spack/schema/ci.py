@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -134,23 +134,6 @@ pipeline_gen_schema = {
 core_shared_properties = union_dicts(
     {
         "pipeline-gen": pipeline_gen_schema,
-        "bootstrap": {
-            "type": "array",
-            "items": {
-                "anyOf": [
-                    {"type": "string"},
-                    {
-                        "type": "object",
-                        "additionalProperties": False,
-                        "required": ["name"],
-                        "properties": {
-                            "name": {"type": "string"},
-                            "compiler-agnostic": {"type": "boolean", "default": False},
-                        },
-                    },
-                ]
-            },
-        },
         "rebuild-index": {"type": "boolean"},
         "broken-specs-url": {"type": "string"},
         "broken-tests-packages": {"type": "array", "items": {"type": "string"}},
@@ -158,6 +141,7 @@ core_shared_properties = union_dicts(
     }
 )
 
+# TODO: Remove in Spack 0.23
 ci_properties = {
     "anyOf": [
         {
@@ -183,6 +167,7 @@ ci_properties = {
 properties = {
     "ci": {
         "oneOf": [
+            # TODO: Replace with core-shared-properties in Spack 0.23
             ci_properties,
             # Allow legacy format under `ci` for `config update ci`
             spack.schema.gitlab_ci.gitlab_ci_properties,

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ _versions = {
             ),
         },
         "darwin": {
-            "aarch64": (
+            "arm64": (
                 "https://download2.gluonhq.com/openjfx/20.0.1/openjfx-20.0.1_osx-aarch64_bin-sdk.zip",
                 "baebdbbe283c17df62fc4c0bdc2bde4415f2253f99ba41437f9336e2272c255e",
             ),

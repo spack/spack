@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,19 +40,19 @@ class PyPillowBase(PythonPackage):
     variant("raqm", when="@8.2:", default=False, description="RAQM support")
 
     # Required dependencies
-    # https://pillow.readthedocs.io/en/latest/installation.html#notes
-    depends_on("python@3.7:3.11", when="@9.3:", type=("build", "run"))
-    depends_on("python@3.7:3.10", when="@9.0:9.2", type=("build", "run"))
-    depends_on("python@3.6:3.10", when="@8.3.2:8.4", type=("build", "run"))
-    depends_on("python@3.6:3.9", when="@8:8.3.1", type=("build", "run"))
-    depends_on("python@3.5:3.8", when="@7.0:7.2", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.5:3.8", when="@6.2.1:6.2.2", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.5:3.7", when="@6.0:6.2.0", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.4:3.7", when="@5.2:5.4", type=("build", "run"))
+    # https://pillow.readthedocs.io/en/latest/installation.html#python-support
+    depends_on("python@3.8:3.11", when="@10:", type=("build", "link", "run"))
+    depends_on("python@3.7:3.11", when="@9.3:9.5", type=("build", "link", "run"))
+    depends_on("python@3.7:3.10", when="@9.0:9.2", type=("build", "link", "run"))
+    depends_on("python@3.6:3.10", when="@8.3.2:8.4", type=("build", "link", "run"))
+    depends_on("python@3.6:3.9", when="@8:8.3.1", type=("build", "link", "run"))
+    depends_on("python@3.5:3.8", when="@7.0:7.2", type=("build", "link", "run"))
+    depends_on("python@2.7:2.8,3.5:3.8", when="@6.2.1:6.2.2", type=("build", "link", "run"))
     depends_on("py-setuptools", type="build")
 
     # Optional dependencies
-    depends_on("zlib", when="+zlib")
+    # https://pillow.readthedocs.io/en/latest/installation.html#external-libraries
+    depends_on("zlib-api", when="+zlib")
     depends_on("jpeg", when="+jpeg")
     depends_on("libtiff", when="+tiff")
     depends_on("freetype", when="+freetype")
@@ -107,6 +107,9 @@ class PyPillow(PyPillowBase):
     homepage = "https://python-pillow.org/"
     pypi = "Pillow/Pillow-7.2.0.tar.gz"
 
+    license("HPND")
+
+    version("10.0.0", sha256="9c82b5b3e043c7af0d95792d0d20ccf68f61a1fec6b3530e718b688422727396")
     version("9.5.0", sha256="bf548479d336726d7a0eceb6e767e179fbde37833ae42794602631a070d630f1")
     version("9.4.0", sha256="a1c2d7780448eb93fbcc3789bf3916aa5720d942e37945f4056680317f1cd23e")
     version("9.3.0", sha256="c935a22a557a560108d780f9a0fc426dd7459940dc54faa49d83249c8d3e760f")
@@ -121,11 +124,9 @@ class PyPillow(PyPillowBase):
     version("7.0.0", sha256="4d9ed9a64095e031435af120d3c910148067087541131e82b3e8db302f4c8946")
     version("6.2.2", sha256="db9ff0c251ed066d367f53b64827cc9e18ccea001b986d08c265e53625dab950")
     version("6.2.1", sha256="bf4e972a88f8841d8fdc6db1a75e0f8d763e66e3754b03006cbc3854d89f1cb1")
-    version("6.2.0", sha256="4548236844327a718ce3bb182ab32a16fa2050c61e334e959f554cac052fb0df")
-    version("6.0.0", sha256="809c0a2ce9032cbcd7b5313f71af4bdc5c8c771cb86eb7559afd954cab82ebb5")
-    version("5.4.1", sha256="5233664eadfa342c639b9b9977190d64ad7aca4edc51a966394d7e08e7f38a9f")
 
     for ver in [
+        "10.0.0",
         "9.5.0",
         "9.4.0",
         "9.3.0",
@@ -140,8 +141,5 @@ class PyPillow(PyPillowBase):
         "7.0.0",
         "6.2.2",
         "6.2.1",
-        "6.2.0",
-        "6.0.0",
-        "5.4.1",
     ]:
         provides("pil@" + ver, when="@" + ver)

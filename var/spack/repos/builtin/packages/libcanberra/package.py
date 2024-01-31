@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Libcanberra(AutotoolsPackage):
 
     homepage = "https://0pointer.de/lennart/projects/libcanberra/"
     url = "https://0pointer.de/lennart/projects/libcanberra/libcanberra-0.30.tar.xz"
+
+    license("LGPL-2.1-or-later")
 
     version("0.30", sha256="c2b671e67e0c288a69fc33dc1b6f1b534d07882c2aceed37004bf48c601afa72")
 

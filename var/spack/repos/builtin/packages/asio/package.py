@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Asio(AutotoolsPackage):
     url = "https://github.com/chriskohlhoff/asio/archive/asio-1-18-2.tar.gz"
     git = "https://github.com/chriskohlhoff/asio.git"
     maintainers("msimberg", "pauleonix")
+
+    license("BSL-1.0")
 
     # As uneven minor versions of asio are not considered stable, they wont be added anymore
     version("1.28.0", sha256="226438b0798099ad2a202563a83571ce06dd13b570d8fded4840dbc1f97fa328")

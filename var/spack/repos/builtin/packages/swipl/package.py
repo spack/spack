@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -45,7 +45,7 @@ class Swipl(CMakePackage):
     depends_on("unwind", when="+unwind")
     depends_on("unixodbc", when="+odbc")
     depends_on("openssl", when="+ssl")
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
 
     depends_on("libxt", when="+xpce")
     depends_on("libx11", when="+xpce")

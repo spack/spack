@@ -1,9 +1,7 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from __future__ import unicode_literals
 
 import contextlib
 import io
@@ -14,6 +12,7 @@ import textwrap
 import traceback
 from datetime import datetime
 from sys import platform as _platform
+from typing import NoReturn
 
 if _platform != "win32":
     import fcntl
@@ -212,6 +211,7 @@ def info(message, *args, **kwargs):
                 stream.write(line + "\n")
         else:
             stream.write(indent + _output_filter(str(arg)) + "\n")
+    stream.flush()
 
 
 def verbose(message, *args, **kwargs):
@@ -246,7 +246,7 @@ def warn(message, *args, **kwargs):
     info("Warning: " + str(message), *args, **kwargs)
 
 
-def die(message, *args, **kwargs):
+def die(message, *args, **kwargs) -> NoReturn:
     kwargs.setdefault("countback", 4)
     error(message, *args, **kwargs)
     sys.exit(1)

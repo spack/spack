@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyMultiecho(PythonPackage):
 
     homepage = "https://github.com/Donders-Institute/multiecho"
     pypi = "multiecho/multiecho-0.28.tar.gz"
+
+    license("MIT")
 
     version("0.28", sha256="d0459bd03398547116d8e989b2d2b7922af0ae7ae77e233794dd7253a2abced3")
 

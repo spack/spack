@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,7 +26,7 @@ class EaUtils(MakefilePackage):
     )
 
     depends_on("sparsehash")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("gsl")
     depends_on("bamtools")
     depends_on("perl", type=["build", "run"])
