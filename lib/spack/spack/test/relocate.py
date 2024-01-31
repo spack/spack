@@ -47,14 +47,6 @@ def text_in_bin(text, binary):
 
 
 @pytest.fixture()
-def mock_patchelf(tmpdir, mock_executable):
-    def _factory(output):
-        return mock_executable("patchelf", output=output)
-
-    return _factory
-
-
-@pytest.fixture()
 def make_dylib(tmpdir_factory):
     """Create a shared library with unfriendly qualities.
 
