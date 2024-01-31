@@ -36,6 +36,7 @@ import shutil
 import sys
 import time
 from collections import defaultdict
+from gzip import GzipFile
 from typing import Dict, Iterator, List, Optional, Set, Tuple
 
 import llnl.util.filesystem as fs
@@ -638,13 +639,12 @@ def archive_install_logs(pkg: "spack.package_base.PackageBase", phase_log_dir: s
         pkg: the package that was built and installed
         phase_log_dir: path to the archive directory
     """
-    # Archive the whole stdout + stderr for the package
-    fs.install(pkg.log_path, pkg.install_log_path)
-
-    # Archive all phase log paths
-    for phase_log in pkg.phase_log_files:
-        log_file = os.path.basename(phase_log)
-        fs.install(phase_log, os.path.join(phase_log_dir, log_file))
+    # Copy a compressed version of the install log
+    with open(pkg.log_path, "rb") as f, open(pkg.install_log_path, "wb") as g:
+        # Use GzipFile directly so we can omit filename / mtime in header
+        gzip_file = GzipFile(filename="", mode="wb", compresslevel=6, mtime=0, fileobj=g)
+        shutil.copyfileobj(f, gzip_file)
+        gzip_file.close()
 
     # Archive the install-phase test log, if present
     pkg.archive_install_test_log()

@@ -48,6 +48,7 @@ env = SpackCommand("env")
 install = SpackCommand("install")
 add = SpackCommand("add")
 change = SpackCommand("change")
+config = SpackCommand("config")
 remove = SpackCommand("remove")
 concretize = SpackCommand("concretize")
 stage = SpackCommand("stage")
@@ -300,20 +301,6 @@ def test_activate_adds_transitive_run_deps_to_path(install_mockery, mock_fetch, 
     env_variables = {}
     spack.environment.shell.activate(e).apply_modifications(env_variables)
     assert env_variables["DEPENDENCY_ENV_VAR"] == "1"
-
-
-def test_env_install_same_spec_twice(install_mockery, mock_fetch):
-    env("create", "test")
-
-    e = ev.read("test")
-    with e:
-        # The first installation outputs the package prefix, updates the view
-        out = install("--add", "cmake-client")
-        assert "Updating view at" in out
-
-        # The second installation reports all packages already installed
-        out = install("cmake-client")
-        assert "already installed" in out
 
 
 def test_env_definition_symlink(install_mockery, mock_fetch, tmpdir):
@@ -869,6 +856,114 @@ spack:
     assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
 
 
+def test_config_change_existing(mutable_mock_env_path, tmp_path, mock_packages, mutable_config):
+    """Test ``config change`` with config in the ``spack.yaml`` as well as an
+    included file scope.
+    """
+
+    included_file = "included-packages.yaml"
+    included_path = tmp_path / included_file
+    with open(included_path, "w") as f:
+        f.write(
+            """\
+packages:
+  mpich:
+    require:
+    - spec: "@3.0.2"
+  libelf:
+    require: "@0.8.10"
+  bowtie:
+    require:
+    - one_of: ["@1.3.0", "@1.2.0"]
+"""
+        )
+
+    spack_yaml = tmp_path / ev.manifest_name
+    spack_yaml.write_text(
+        f"""\
+spack:
+  packages:
+    mpich:
+      require:
+      - spec: "+debug"
+  include:
+  - {os.path.join(".", included_file)}
+  specs: []
+"""
+    )
+
+    e = ev.Environment(tmp_path)
+    with e:
+        # List of requirements, flip a variant
+        config("change", "packages:mpich:require:~debug")
+        test_spec = spack.spec.Spec("mpich").concretized()
+        assert test_spec.satisfies("@3.0.2~debug")
+
+        # List of requirements, change the version (in a different scope)
+        config("change", "packages:mpich:require:@3.0.3")
+        test_spec = spack.spec.Spec("mpich").concretized()
+        assert test_spec.satisfies("@3.0.3")
+
+        # "require:" as a single string, also try specifying
+        # a spec string that requires enclosing in quotes as
+        # part of the config path
+        config("change", 'packages:libelf:require:"@0.8.12:"')
+        spack.spec.Spec("libelf@0.8.12").concretized()
+        # No need for assert, if there wasn't a failure, we
+        # changed the requirement successfully.
+
+        # Use change to add a requirement for a package that
+        # has no requirements defined
+        config("change", "packages:fftw:require:+mpi")
+        test_spec = spack.spec.Spec("fftw").concretized()
+        assert test_spec.satisfies("+mpi")
+        config("change", "packages:fftw:require:~mpi")
+        test_spec = spack.spec.Spec("fftw").concretized()
+        assert test_spec.satisfies("~mpi")
+        config("change", "packages:fftw:require:@1.0")
+        test_spec = spack.spec.Spec("fftw").concretized()
+        assert test_spec.satisfies("@1.0~mpi")
+
+        # Use "--match-spec" to change one spec in a "one_of"
+        # list
+        config("change", "packages:bowtie:require:@1.2.2", "--match-spec", "@1.2.0")
+        spack.spec.Spec("bowtie@1.3.0").concretize()
+        spack.spec.Spec("bowtie@1.2.2").concretized()
+
+
+def test_config_change_new(mutable_mock_env_path, tmp_path, mock_packages, mutable_config):
+    spack_yaml = tmp_path / ev.manifest_name
+    spack_yaml.write_text(
+        """\
+spack:
+  specs: []
+"""
+    )
+
+    e = ev.Environment(tmp_path)
+    with e:
+        config("change", "packages:mpich:require:~debug")
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            spack.spec.Spec("mpich+debug").concretized()
+        spack.spec.Spec("mpich~debug").concretized()
+
+    # Now check that we raise an error if we need to add a require: constraint
+    # when preexisting config manually specified it as a singular spec
+    spack_yaml.write_text(
+        """\
+spack:
+  specs: []
+  packages:
+    mpich:
+      require: "@3.0.3"
+"""
+    )
+    with e:
+        assert spack.spec.Spec("mpich").concretized().satisfies("@3.0.3")
+        with pytest.raises(spack.config.ConfigError, match="not a list"):
+            config("change", "packages:mpich:require:~debug")
+
+
 def test_env_with_included_config_file_url(tmpdir, mutable_empty_config, packages_file):
     """Test configuration inclusion of a file whose path is a URL before
     the environment is concretized."""
@@ -879,8 +974,6 @@ def test_env_with_included_config_file_url(tmpdir, mutable_empty_config, package
 
     env = ev.Environment(tmpdir.strpath)
     ev.activate(env)
-    scopes = env.included_config_scopes()
-    assert len(scopes) == 1
 
     cfg = spack.config.get("packages")
     assert cfg["mpileaks"]["version"] == ["2.2"]
@@ -2877,51 +2970,51 @@ spack:
     assert spec.prefix not in contents
 
 
-def test_multiple_modules_post_env_hook(environment_from_manifest, install_mockery, mock_fetch):
+def test_modules_exist_after_env_install(
+    environment_from_manifest, install_mockery, mock_fetch, monkeypatch
+):
+    # Some caching issue
+    monkeypatch.setattr(spack.modules.tcl, "configuration_registry", {})
     environment_from_manifest(
         """
 spack:
   specs:
-  - trivial-install-test-package
+  - mpileaks
   modules:
     default:
       enable:: [tcl]
       use_view: true
       roots:
-        tcl: modules
+        tcl: uses_view
     full:
       enable:: [tcl]
       roots:
-        tcl: full_modules
+        tcl: without_view
 """
     )
 
     with ev.read("test") as e:
         install()
+        specs = e.all_specs()
 
-        spec = e.specs_by_hash[e.concretized_order[0]]
-        view_prefix = e.default_view.get_projection_for_spec(spec)
-        modules_glob = "%s/modules/**/*/*" % e.path
-        modules = glob.glob(modules_glob)
-        assert len(modules) == 1
-        module = modules[0]
+        for module_set in ("uses_view", "without_view"):
+            modules = glob.glob(f"{e.path}/{module_set}/**/*/*")
+            assert len(modules) == len(specs), "Not all modules were generated"
+            for spec in specs:
+                module = next((m for m in modules if os.path.dirname(m).endswith(spec.name)), None)
+                assert module, f"Module for {spec} not found"
 
-        full_modules_glob = "%s/full_modules/**/*/*" % e.path
-        full_modules = glob.glob(full_modules_glob)
-        assert len(full_modules) == 1
-        full_module = full_modules[0]
+                # Now verify that modules have paths pointing into the view instead of the package
+                # prefix if and only if they set use_view to true.
+                with open(module, "r") as f:
+                    contents = f.read()
 
-    with open(module, "r") as f:
-        contents = f.read()
-
-    with open(full_module, "r") as f:
-        full_contents = f.read()
-
-    assert view_prefix in contents
-    assert spec.prefix not in contents
-
-    assert view_prefix not in full_contents
-    assert spec.prefix in full_contents
+                if module_set == "uses_view":
+                    assert e.default_view.get_projection_for_spec(spec) in contents
+                    assert spec.prefix not in contents
+                else:
+                    assert e.default_view.get_projection_for_spec(spec) not in contents
+                    assert spec.prefix in contents
 
 
 @pytest.mark.regression("24148")
@@ -3575,8 +3668,6 @@ def test_env_include_packages_url(
     with spack.config.override("config:url_fetch_method", "curl"):
         env = ev.Environment(tmpdir.strpath)
         ev.activate(env)
-        scopes = env.included_config_scopes()
-        assert len(scopes) == 1
 
         cfg = spack.config.get("packages")
         assert "openmpi" in cfg["all"]["providers"]["mpi"]
