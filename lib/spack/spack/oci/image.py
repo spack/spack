@@ -32,7 +32,7 @@ remoteName = rf"{pathComponent}(?:\/{pathComponent})*"
 namePat = rf"(?:{domainAndPort}\/)?{remoteName}"
 
 # options
-optionsPat = rf"insecure-registry=1"
+optionsPat = "insecure-registry=1"
 
 # Regex for a full image reference, with 3 groups: name, tag, digest
 referencePat = re.compile(rf"^({namePat})(?::({tag}))?(?:@({digestPat}))?(?:\?({optionsPat}))?$")
