@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,7 @@ class Spaceranger(Package):
 
     homepage = "https://www.10xgenomics.com/support/software/space-ranger/latest"
     manual_download = True
+    license_url = "support.10xgenomics.com/license"
 
     version("2.1.1", sha256="e3c2982ae91afc4031f7b29e4b27ea012243e1c61ca8fa246b8c1f6ef7c7c241")
 
@@ -35,4 +36,3 @@ class Spaceranger(Package):
 
     def install(self, spec, prefix):
         install_tree(".", prefix)
-
