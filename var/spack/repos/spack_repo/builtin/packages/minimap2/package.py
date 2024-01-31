@@ -45,7 +45,6 @@ class Minimap2(PythonPackage):
 
     depends_on("gmake", type="build")
 
-    conflicts("js_engine=k8", when="target=aarch64: +jstools")
     depends_on("k8", type="run", when="js_engine=k8 +jstools")
     depends_on("node-js", type="run", when="js_engine=node-js +jstools")
 
