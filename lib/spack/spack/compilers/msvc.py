@@ -7,6 +7,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 from typing import Dict, List, Set
 
 import spack.compiler
@@ -15,7 +16,7 @@ import spack.platforms
 import spack.util.executable
 from spack.compiler import Compiler
 from spack.error import SpackError
-from spack.version import Version
+from spack.version import Version, VersionRange
 
 avail_fc_version: Set[str] = set()
 fc_path: Dict[str, str] = dict()
@@ -291,6 +292,15 @@ class Msvc(Compiler):
                 env.set(env_var, int_env[env_var])
             else:
                 env.set_path(env_var, int_env[env_var].split(os.pathsep))
+
+        # certain versions of ifx (2021.3.0:2023.1.0) do not play well with env:TMP
+        # that has a "." character in the path
+        # Work around by pointing tmp to the stage for the duration of the build
+        if self.fc and Version(self.fc_version(self.fc)).satisfies(
+            VersionRange("2021.3.0", "2023.1.0")
+        ):
+            new_tmp = tempfile.mkdtemp(dir=pkg.stage.path)
+            env.set("TMP", new_tmp)
 
         env.set("CC", self.cc)
         env.set("CXX", self.cxx)

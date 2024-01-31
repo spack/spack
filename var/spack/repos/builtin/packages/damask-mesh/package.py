@@ -18,6 +18,9 @@ class DamaskMesh(CMakePackage):
     license("AGPL-3.0-or-later")
 
     version(
+        "3.0.0-beta", sha256="1e25e409ac559fc437d1887c6ca930677a732db89a3a32499d545dd75e93925c"
+    )
+    version(
         "3.0.0-alpha8", sha256="f62c38123213d1c1fe2eb8910b0ffbdc1cac56273c2520f3b64a553363190b9d"
     )
     version(
@@ -33,6 +36,7 @@ class DamaskMesh(CMakePackage):
         "3.0.0-alpha4", sha256="0bb8bde43b27d852b1fb6e359a7157354544557ad83d87987b03f5d629ce5493"
     )
 
+    depends_on("petsc@3.20.3:3.21", when="@3.0.0-beta")
     depends_on("petsc@3.20.2:3.21", when="@3.0.0-alpha8")
     depends_on("petsc@3.17.1:3.18", when="@3.0.0-alpha7")
     depends_on("petsc@3.16.5:3.16", when="@3.0.0-alpha6")

@@ -18,7 +18,7 @@ class PyFenicsFfc(PythonPackage):
     maintainers("emai-imcs")
 
     license("LGPL-3.0-or-later")
-
+    version("master", branch="master")
     version(
         "2019.1.0.post0", sha256="306e1179630200a34202975a5369194939b3482eebfc34bc44ad74dab1f109e8"
     )
@@ -27,8 +27,6 @@ class PyFenicsFfc(PythonPackage):
         "2017.2.0.post0", sha256="1969a5460cb866c478df64874ce213f81cb5c893b89f991a578e258b1a64fee5"
     )
     version("2016.2.0", sha256="097c284780447ea7bb47d4d51956648a1efb2cb9047eb1382944421dde351ecb")
-
-    depends_on("python@3.5:", type=("build", "run"))
 
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
@@ -43,3 +41,7 @@ class PyFenicsFfc(PythonPackage):
         else:
             depends_on("py-fenics-dijitso{0}".format(wver), type=("build", "run"), when=wver)
         depends_on("py-fenics-ufl{0}".format(wver), type=("build", "run"), when=wver)
+
+    depends_on("py-fenics-fiat@2019.1.0", type=("build", "run"), when="@master")
+    depends_on("py-fenics-dijitso@master", type=("build", "run"), when="@master")
+    depends_on("py-fenics-ufl-legacy@main", type=("build", "run"), when="@master")
