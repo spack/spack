@@ -49,7 +49,7 @@ class G2c(CMakePackage):
         when="@develop",
     )
     variant(
-        "build_g2c",
+        "build_v2_api",
         default=False,
         description="Build new g2c API, experimental until 2.0.0 release",
         when="@develop",
@@ -59,7 +59,7 @@ class G2c(CMakePackage):
     depends_on("libpng", when="+png")
     depends_on("jasper", when="+jasper")
     depends_on("openjpeg", when="+openjpeg")
-    depends_on("libxml2@2.9:", when="+build_g2c")
+    depends_on("libxml2@2.9:", when="+build_v2_api")
 
     conflicts("+jasper +openjpeg", msg="Either Jasper or OpenJPEG should be used, not both")
 
@@ -74,7 +74,7 @@ class G2c(CMakePackage):
             self.define_from_variant("USE_OpenJPEG", "openjpeg"),
             self.define_from_variant("PTHREADS", "pthreads"),
             self.define_from_variant("UTILS", "utils"),
-            self.define_from_variant("BUILD_G2C", "build_g2c"),
+            self.define_from_variant("BUILD_G2C", "build_v2_api"),
             self.define("BUILD_TESTING", self.run_tests),
         ]
 
