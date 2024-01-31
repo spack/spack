@@ -52,6 +52,6 @@ class KimApi(CMakePackage):
 
     def cmake_args(self):
         args = [
-            '-DCMAKE_INSTALL_SYSCONFDIR={0}/etc'.format(self.prefix)
+            self.define("CMAKE_INSTALL_SYSCONFDIR", self.prefix.etc)
         ]
         return args
