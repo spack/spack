@@ -5,11 +5,13 @@
 
 import errno
 import gzip
+import io
 import os
 import shutil
 import sys
 
 import spack.cmd
+import spack.spec
 import spack.util.compression as compression
 from spack.cmd.common import arguments
 from spack.main import SpackCommandError
@@ -23,45 +25,36 @@ def setup_parser(subparser):
     arguments.add_common_arguments(subparser, ["spec"])
 
 
-def _dump_byte_stream_to_stdout(instream):
+def _dump_byte_stream_to_stdout(instream: io.BufferedIOBase) -> None:
+    # Reopen stdout in binary mode so we don't have to worry about encoding
     outstream = os.fdopen(sys.stdout.fileno(), "wb", closefd=False)
-
     shutil.copyfileobj(instream, outstream)
 
 
-def dump_build_log(package):
-    with open(package.log_path, "rb") as f:
-        _dump_byte_stream_to_stdout(f)
-
-
-def _logs(cmdline_spec, concrete_spec):
+def _logs(cmdline_spec: spack.spec.Spec, concrete_spec: spack.spec.Spec):
     if concrete_spec.installed:
         log_path = concrete_spec.package.install_log_path
     elif os.path.exists(concrete_spec.package.stage.path):
-        dump_build_log(concrete_spec.package)
-        return
+        # TODO: `spack logs` can currently not show the logs while a package is being built, as the
+        # combined log file is only written after the build is finished.
+        log_path = concrete_spec.package.log_path
     else:
         raise SpackCommandError(f"{cmdline_spec} is not installed or staged")
 
     try:
-        compression_ext = compression.extension_from_file(log_path)
-        with open(log_path, "rb") as fstream:
-            if compression_ext == "gz":
-                # If the log file is compressed, wrap it with a decompressor
-                fstream = gzip.open(log_path, "rb")
-            elif compression_ext:
-                raise SpackCommandError(
-                    f"Unsupported storage format for {log_path}: {compression_ext}"
-                )
-
-            _dump_byte_stream_to_stdout(fstream)
+        stream = open(log_path, "rb")
     except OSError as e:
         if e.errno == errno.ENOENT:
             raise SpackCommandError(f"No logs are available for {cmdline_spec}") from e
-        elif e.errno == errno.EPERM:
-            raise SpackCommandError(f"Permission error accessing {log_path}") from e
-        else:
-            raise
+        raise SpackCommandError(f"Error reading logs for {cmdline_spec}: {e}") from e
+
+    with stream as f:
+        ext = compression.extension_from_magic_numbers_by_stream(f, decompress=False)
+        if ext and ext != "gz":
+            raise SpackCommandError(f"Unsupported storage format for {log_path}: {ext}")
+
+        # If the log file is gzip compressed, wrap it with a decompressor
+        _dump_byte_stream_to_stdout(gzip.GzipFile(fileobj=f) if ext == "gz" else f)
 
 
 def logs(parser, args):
