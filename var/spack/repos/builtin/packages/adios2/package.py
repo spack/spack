@@ -292,10 +292,6 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
         if "%fj" in spec:
             args.extend(["-DCMAKE_Fortran_SUBMODULE_EXT=.smod", "-DCMAKE_Fortran_SUBMODULE_SEP=."])
 
-        if "+python" in spec or self.run_tests:
-            args.append(f"-DPYTHON_EXECUTABLE:FILEPATH={spec['python'].command.path}")
-            args.append(f"-DPython_EXECUTABLE:FILEPATH={spec['python'].command.path}")
-
         # hip support
         if "+cuda" in spec:
             args.append(self.builder.define_cuda_architectures(self))

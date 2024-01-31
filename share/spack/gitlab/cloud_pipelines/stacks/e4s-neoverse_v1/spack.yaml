@@ -15,7 +15,7 @@ spack:
     binutils:
       variants: +ld +gold +headers +libiberty ~nls
     elfutils:
-      variants: +bzip2 ~nls +xz
+      variants: ~nls
     hdf5:
       variants: +fortran +hl +shared
     libfabric:
@@ -197,6 +197,7 @@ spack:
   - chai ~benchmarks ~tests +cuda cuda_arch=75 ^umpire ~shared
   - flecsi +cuda cuda_arch=75
   - ginkgo +cuda cuda_arch=75
+  - gromacs +cuda cuda_arch=75
   - heffte +cuda cuda_arch=75
   - hpx +cuda cuda_arch=75
   - hypre +cuda cuda_arch=75
@@ -242,6 +243,7 @@ spack:
   - chai ~benchmarks ~tests +cuda cuda_arch=80 ^umpire ~shared
   - flecsi +cuda cuda_arch=80
   - ginkgo +cuda cuda_arch=80
+  - gromacs +cuda cuda_arch=80
   - heffte +cuda cuda_arch=80
   - hpx +cuda cuda_arch=80
   - hypre +cuda cuda_arch=80
@@ -287,6 +289,7 @@ spack:
   - chai ~benchmarks ~tests +cuda cuda_arch=90 ^umpire ~shared
   - flecsi +cuda cuda_arch=90
   - ginkgo +cuda cuda_arch=90
+  - gromacs +cuda cuda_arch=90
   - heffte +cuda cuda_arch=90
   - hpx +cuda cuda_arch=90
   - kokkos +wrapper +cuda cuda_arch=90

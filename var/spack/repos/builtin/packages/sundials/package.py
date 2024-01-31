@@ -285,6 +285,10 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     # https://github.com/spack/spack/issues/29526
     patch("nvector-pic.patch", when="@6.1.0:6.2.0 +rocm")
 
+    # Backward compatibility is stopped from ROCm 6.0
+    # Need to follow the changes similar to PR https://github.com/LLNL/RAJA/pull/1568
+    patch("Change-HIP_PLATFORM-from-HCC-to-AMD-and-NVCC-to-NVIDIA.patch", when="^hip@6.0.0 +rocm")
+
     # remove OpenMP header file and function from hypre vector test code
     patch("test_nvector_parhyp.patch", when="@2.7.0:3.0.0")
     patch("FindPackageMultipass.cmake.patch", when="@5.0.0")

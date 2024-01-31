@@ -70,7 +70,7 @@ class Open3d(CMakePackage, CudaPackage):
         )
 
     def cmake_args(self):
-        args = [
+        return [
             self.define("BUILD_UNIT_TESTS", self.run_tests),
             self.define_from_variant("BUILD_PYTHON_MODULE", "python"),
             self.define_from_variant("BUILD_CUDA_MODULE", "cuda"),
@@ -94,11 +94,6 @@ class Open3d(CMakePackage, CudaPackage):
             # self.define('USE_SYSTEM_TINYGLTF', True),
             # self.define('USE_SYSTEM_TINYOBJLOADER', True),
         ]
-
-        if "+python" in self.spec:
-            args.append(self.define("PYTHON_EXECUTABLE", self.spec["python"].command.path))
-
-        return args
 
     def check(self):
         with working_dir(self.build_directory):

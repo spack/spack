@@ -67,7 +67,7 @@ from spack.installer import InstallError, PackageInstaller
 from spack.stage import DIYStage, ResourceStage, Stage, StageComposite, compute_stage_name
 from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
-from spack.version import GitVersion, StandardVersion, Version
+from spack.version import GitVersion, StandardVersion
 
 FLAG_HANDLER_RETURN_TYPE = Tuple[
     Optional[Iterable[str]], Optional[Iterable[str]], Optional[Iterable[str]]
@@ -94,29 +94,26 @@ _spack_configure_argsfile = "spack-configure-args.txt"
 spack_times_log = "install_times.json"
 
 
-def deprecated_version(pkg, version):
-    """Return True if the version is deprecated, False otherwise.
+def deprecated_version(pkg: "PackageBase", version: Union[str, StandardVersion]) -> bool:
+    """Return True iff the version is deprecated.
 
     Arguments:
-        pkg (PackageBase): The package whose version is to be checked.
-        version (str or spack.version.StandardVersion): The version being checked
+        pkg: The package whose version is to be checked.
+        version: The version being checked
     """
     if not isinstance(version, StandardVersion):
-        version = Version(version)
+        version = StandardVersion.from_string(version)
 
-    for k, v in pkg.versions.items():
-        if version == k and v.get("deprecated", False):
-            return True
-
-    return False
+    details = pkg.versions.get(version)
+    return details is not None and details.get("deprecated", False)
 
 
-def preferred_version(pkg):
+def preferred_version(pkg: "PackageBase"):
     """
     Returns a sorted list of the preferred versions of the package.
 
     Arguments:
-        pkg (PackageBase): The package whose versions are to be assessed.
+        pkg: The package whose versions are to be assessed.
     """
     # Here we sort first on the fact that a version is marked
     # as preferred in the package, then on the fact that the
@@ -903,22 +900,16 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     @classmethod
     @memoized
-    def version_urls(cls):
-        """OrderedDict of explicitly defined URLs for versions of this package.
+    def version_urls(cls) -> Dict[StandardVersion, str]:
+        """Dict of explicitly defined URLs for versions of this package.
 
         Return:
-           An OrderedDict (version -> URL) different versions of this
-           package, sorted by version.
+           An dict mapping version to url, ordered by version.
 
-        A version's URL only appears in the result if it has an an
-        explicitly defined ``url`` argument. So, this list may be empty
-        if a package only defines ``url`` at the top level.
+        A version's URL only appears in the result if it has an an explicitly defined ``url``
+        argument. So, this list may be empty if a package only defines ``url`` at the top level.
         """
-        version_urls = collections.OrderedDict()
-        for v, args in sorted(cls.versions.items()):
-            if "url" in args:
-                version_urls[v] = args["url"]
-        return version_urls
+        return {v: args["url"] for v, args in sorted(cls.versions.items()) if "url" in args}
 
     def nearest_url(self, version):
         """Finds the URL with the "closest" version to ``version``.
@@ -961,36 +952,39 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """
         pass
 
-    def all_urls_for_version(self, version):
+    def all_urls_for_version(self, version: StandardVersion) -> List[str]:
         """Return all URLs derived from version_urls(), url, urls, and
         list_url (if it contains a version) in a package in that order.
 
         Args:
-            version (spack.version.Version): the version for which a URL is sought
+            version: the version for which a URL is sought
         """
         uf = None
         if type(self).url_for_version != PackageBase.url_for_version:
             uf = self.url_for_version
         return self._implement_all_urls_for_version(version, uf)
 
-    def _implement_all_urls_for_version(self, version, custom_url_for_version=None):
-        if not isinstance(version, StandardVersion):
-            version = Version(version)
+    def _implement_all_urls_for_version(
+        self,
+        version: Union[str, StandardVersion],
+        custom_url_for_version: Optional[Callable[[StandardVersion], Optional[str]]] = None,
+    ) -> List[str]:
+        version = StandardVersion.from_string(version) if isinstance(version, str) else version
 
-        urls = []
+        urls: List[str] = []
 
         # If we have a specific URL for this version, don't extrapolate.
-        version_urls = self.version_urls()
-        if version in version_urls:
-            urls.append(version_urls[version])
+        url = self.version_urls().get(version)
+        if url:
+            urls.append(url)
 
         # if there is a custom url_for_version, use it
         if custom_url_for_version is not None:
             u = custom_url_for_version(version)
-            if u not in urls and u is not None:
+            if u is not None and u not in urls:
                 urls.append(u)
 
-        def sub_and_add(u):
+        def sub_and_add(u: Optional[str]) -> None:
             if u is None:
                 return
             # skip the url if there is no version to replace
@@ -998,9 +992,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 spack.url.parse_version(u)
             except spack.url.UndetectableVersionError:
                 return
-            nu = spack.url.substitute_version(u, self.url_version(version))
-
-            urls.append(nu)
+            urls.append(spack.url.substitute_version(u, self.url_version(version)))
 
         # If no specific URL, use the default, class-level URL
         sub_and_add(getattr(self, "url", None))
@@ -1131,13 +1123,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     @property
     def env_path(self):
         """Return the build environment file path associated with staging."""
-        # Backward compatibility: Return the name of an existing log path;
-        # otherwise, return the current install env path name.
-        old_filename = os.path.join(self.stage.path, "spack-build.env")
-        if os.path.exists(old_filename):
-            return old_filename
-        else:
-            return os.path.join(self.stage.path, _spack_build_envfile)
+        return os.path.join(self.stage.path, _spack_build_envfile)
 
     @property
     def env_mods_path(self):
@@ -1168,13 +1154,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     @property
     def log_path(self):
         """Return the build log file path associated with staging."""
-        # Backward compatibility: Return the name of an existing log path.
-        for filename in ["spack-build.out", "spack-build.txt"]:
-            old_log = os.path.join(self.stage.path, filename)
-            if os.path.exists(old_log):
-                return old_log
-
-        # Otherwise, return the current log path name.
         return os.path.join(self.stage.path, _spack_build_logfile)
 
     @property
@@ -1187,15 +1166,15 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     @property
     def install_log_path(self):
-        """Return the build log file path on successful installation."""
+        """Return the (compressed) build log file path on successful installation"""
         # Backward compatibility: Return the name of an existing install log.
-        for filename in ["build.out", "build.txt"]:
+        for filename in [_spack_build_logfile, "build.out", "build.txt"]:
             old_log = os.path.join(self.metadata_dir, filename)
             if os.path.exists(old_log):
                 return old_log
 
         # Otherwise, return the current install log path name.
-        return os.path.join(self.metadata_dir, _spack_build_logfile)
+        return os.path.join(self.metadata_dir, _spack_build_logfile + ".gz")
 
     @property
     def configure_args_path(self):
@@ -2088,15 +2067,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """
         return True
 
-    @property
-    def build_log_path(self):
-        """
-        Return the expected (or current) build log file path.  The path points
-        to the staging build file until the software is successfully installed,
-        when it points to the file in the installation directory.
-        """
-        return self.install_log_path if self.spec.installed else self.log_path
-
     @classmethod
     def inject_flags(cls: Type[Pb], name: str, flags: Iterable[str]) -> FLAG_HANDLER_RETURN_TYPE:
         """
@@ -2380,15 +2350,14 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         return results.getvalue()
 
     @property
-    def all_urls(self):
+    def all_urls(self) -> List[str]:
         """A list of all URLs in a package.
 
         Check both class-level and version-specific URLs.
 
-        Returns:
-            list: a list of URLs
+        Returns a list of URLs
         """
-        urls = []
+        urls: List[str] = []
         if hasattr(self, "url") and self.url:
             urls.append(self.url)
 
@@ -2401,7 +2370,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 urls.append(args["url"])
         return urls
 
-    def fetch_remote_versions(self, concurrency=None):
+    def fetch_remote_versions(
+        self, concurrency: Optional[int] = None
+    ) -> Dict[StandardVersion, str]:
         """Find remote versions of this package.
 
         Uses ``list_url`` and any other URLs listed in the package file.
