@@ -666,9 +666,6 @@ class SimpleFilesystemView(FilesystemView):
                 tty.warn("Skipping external package: " + s.short_spec)
         specs = [s for s in specs if not s.external]
 
-        if kwargs.get("exclude", None):
-            specs = set(filter_exclude(specs, kwargs["exclude"]))
-
         self._sanity_check_view_projection(specs)
 
         # Ignore spack meta data folder.

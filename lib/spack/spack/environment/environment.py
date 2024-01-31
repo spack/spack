@@ -680,8 +680,8 @@ class ViewDescriptor:
         with spack.store.STORE.db.read_transaction():
             return [s for s in specs if s in self and s.installed]
 
-    def regenerate(self, concretized_root_specs):
-        specs = self.specs_for_view(concretized_root_specs)
+    def regenerate(self, concrete_roots: List[Spec]) -> None:
+        specs = self.specs_for_view(concrete_roots)
 
         # To ensure there are no conflicts with packages being installed
         # that cannot be resolved or have repos that have been removed
@@ -698,14 +698,14 @@ class ViewDescriptor:
         old_root = self._current_root
 
         if new_root == old_root:
-            tty.debug("View at %s does not need regeneration." % self.root)
+            tty.debug(f"View at {self.root} does not need regeneration.")
             return
 
         _error_on_nonempty_view_dir(new_root)
 
         # construct view at new_root
         if specs:
-            tty.msg("Updating view at {0}".format(self.root))
+            tty.msg(f"Updating view at {self.root}")
 
         view = self.view(new=new_root)
 
@@ -715,7 +715,7 @@ class ViewDescriptor:
         # Create a new view
         try:
             fs.mkdirp(new_root)
-            view.add_specs(*specs, with_dependencies=False)
+            view.add_specs(*specs)
 
             # create symlink from tmp_symlink_name to new_root
             if os.path.exists(tmp_symlink_name):
@@ -729,7 +729,7 @@ class ViewDescriptor:
             try:
                 shutil.rmtree(new_root, ignore_errors=True)
                 os.unlink(tmp_symlink_name)
-            except (IOError, OSError):
+            except OSError:
                 pass
 
             # Give an informative error message for the typical error case: two specs, same package
