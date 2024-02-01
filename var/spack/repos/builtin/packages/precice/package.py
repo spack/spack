@@ -87,6 +87,7 @@ class Precice(CMakePackage):
     depends_on("eigen@3.2:")
     depends_on("eigen@:3.3.7", type="build", when="@:1.5")  # bug in prettyprint
     depends_on("libxml2")
+    depends_on("libxml2@:2.11.99", type="build", when="@:2.5.0")
     depends_on("mpi", when="+mpi")
     depends_on("petsc@3.6:", when="+petsc")
     depends_on("petsc@3.12:", when="+petsc@2.1.0:")
