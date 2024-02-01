@@ -168,7 +168,7 @@ class Rust(Package):
         # Compile tools into flag for configure.
         flags.append(f"--tools={','.join(tools)}")
 
-        if spec.satifisfies("+vendor"):
+        if spec.satisfies("+vendor"):
             flags.append("--enable-vendor")
 
         configure(*flags)
