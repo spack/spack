@@ -15,7 +15,7 @@ import sys
 import types
 import typing
 import warnings
-from typing import Dict, List, NamedTuple, Optional, Sequence, Set, Tuple, Union
+from typing import Callable, Dict, List, NamedTuple, Optional, Sequence, Set, Tuple, Union
 
 import archspec.cpu
 
@@ -50,7 +50,6 @@ from spack import traverse
 from .core import (
     AspFunction,
     NodeArgument,
-    TransformFunction,
     ast_sym,
     ast_type,
     clingo,
@@ -63,6 +62,8 @@ from .core import (
 from .counter import FullDuplicatesCounter, MinimalDuplicatesCounter, NoDuplicatesCounter
 
 GitOrStandardVersion = Union[spack.version.GitVersion, spack.version.StandardVersion]
+
+TransformFunction = Callable[["spack.spec.Spec", List[AspFunction]], List[AspFunction]]
 
 #: Enable the addition of a runtime node
 WITH_RUNTIME = sys.platform != "win32"

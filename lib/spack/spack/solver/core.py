@@ -5,36 +5,34 @@
 """Low-level wrappers around clingo API."""
 import importlib
 import pathlib
-from typing import Callable, List, NamedTuple
+from types import ModuleType
+from typing import Any, Callable, NamedTuple, Optional, Tuple, Union
 
 from llnl.util import lang
 
-import spack.config
-import spack.paths as sp
-import spack.util.path as sup
 
+def _ast_getter(*names: str) -> Callable[[Any], Any]:
+    """Helper to retrieve AST attributes from different versions of the clingo API"""
 
-# backward compatibility functions for clingo ASTs
-def ast_getter(*names):
     def getter(node):
         for name in names:
             result = getattr(node, name, None)
             if result:
                 return result
-        raise KeyError("node has no such keys: %s" % names)
+        raise KeyError(f"node has no such keys: {names}")
 
     return getter
 
 
-ast_type = ast_getter("ast_type", "type")
-ast_sym = ast_getter("symbol", "term")
+ast_type = _ast_getter("ast_type", "type")
+ast_sym = _ast_getter("symbol", "term")
 
 
 class AspObject:
     """Object representing a piece of ASP code."""
 
 
-def _id(thing):
+def _id(thing: Any) -> Union[str, AspObject]:
     """Quote string if needed for it to be a valid identifier."""
     if isinstance(thing, AspObject):
         return thing
@@ -48,16 +46,18 @@ def _id(thing):
 
 @lang.key_ordering
 class AspFunction(AspObject):
+    """A term in the ASP logic program"""
+
     __slots__ = ["name", "args"]
 
-    def __init__(self, name, args=None):
+    def __init__(self, name: str, args: Optional[Tuple[Any, ...]] = None) -> None:
         self.name = name
         self.args = () if args is None else tuple(args)
 
-    def _cmp_key(self):
+    def _cmp_key(self) -> Tuple[str, Optional[Tuple[Any, ...]]]:
         return self.name, self.args
 
-    def __call__(self, *args):
+    def __call__(self, *args: Any) -> "AspFunction":
         """Return a new instance of this function with added arguments.
 
         Note that calls are additive, so you can do things like::
@@ -80,45 +80,82 @@ class AspFunction(AspObject):
         """
         return AspFunction(self.name, self.args + args)
 
-    def argify(self, arg):
+    def _argify(self, arg: Any) -> Any:
+        """Turn the argument into an appropriate clingo symbol"""
         if isinstance(arg, bool):
             return clingo().String(str(arg))
         elif isinstance(arg, int):
             return clingo().Number(arg)
         elif isinstance(arg, AspFunction):
-            return clingo().Function(arg.name, [self.argify(x) for x in arg.args], positive=True)
+            return clingo().Function(arg.name, [self._argify(x) for x in arg.args], positive=True)
         return clingo().String(str(arg))
 
     def symbol(self):
-        return clingo().Function(self.name, [self.argify(arg) for arg in self.args], positive=True)
+        """Return a clingo symbol for this function"""
+        return clingo().Function(
+            self.name, [self._argify(arg) for arg in self.args], positive=True
+        )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.name}({', '.join(str(_id(arg)) for arg in self.args)})"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self)
 
 
-class AspFunctionBuilder:
+class _AspFunctionBuilder:
     def __getattr__(self, name):
         return AspFunction(name)
 
 
-fn = AspFunctionBuilder()
+#: Global AspFunction builder
+fn = _AspFunctionBuilder()
 
-TransformFunction = Callable[["spack.spec.Spec", List[AspFunction]], List[AspFunction]]
+_CLINGO_MODULE: Optional[ModuleType] = None
 
 
-def clingo():
+def clingo() -> ModuleType:
+    """Lazy imports the Python module for clingo, and returns it."""
+    if _CLINGO_MODULE is not None:
+        return _CLINGO_MODULE
+
     try:
         clingo_mod = importlib.import_module("clingo")
+        # Make sure we didn't import an empty module
+        _ensure_clingo_or_raise(clingo_mod)
     except ImportError:
-        clingo_mod = None  # type: ignore
+        clingo_mod = None
+
+    if clingo_mod is not None:
+        return _set_clingo_module_cache(clingo_mod)
+
+    clingo_mod = _bootstrap_clingo()
+    return _set_clingo_module_cache(clingo_mod)
+
+
+def _set_clingo_module_cache(clingo_mod: ModuleType) -> ModuleType:
+    """Sets the global cache to the lazy imported clingo module"""
+    global _CLINGO_MODULE
+    importlib.import_module("clingo.ast")
+    _CLINGO_MODULE = clingo_mod
+    return clingo_mod
+
+
+def _ensure_clingo_or_raise(clingo_mod: ModuleType) -> None:
+    """Ensures the clingo module can access expected attributes, otherwise raises an error."""
+    # These are imports that may be problematic at top level (circular imports). They are used
+    # only to provide exhaustive details when erroring due to a broken clingo module.
+    import spack.config
+    import spack.paths as sp
+    import spack.util.path as sup
+
+    try:
+        clingo_mod.Symbol
     except AttributeError:
+        assert clingo_mod.__file__ is not None, "clingo installation is incomplete or invalid"
         # Reaching this point indicates a broken clingo installation
         # If Spack derived clingo, suggest user re-run bootstrap
         # if non-spack, suggest user investigate installation
-
         # assume Spack is not responsible for broken clingo
         msg = (
             f"Clingo installation at {clingo_mod.__file__} is incomplete or invalid."
@@ -147,20 +184,14 @@ def clingo():
             f"{msg}"
         )
 
-    if clingo_mod:
-        importlib.import_module("clingo.ast")
-        return clingo_mod
 
-    clingo_mod = _bootstrap_clingo()
-    importlib.import_module("clingo.ast")
-    return clingo_mod
-
-
-def clingo_cffi():
+def clingo_cffi() -> bool:
+    """Returns True if clingo uses the CFFI interface"""
     return hasattr(clingo(), "_rep")
 
 
-def _bootstrap_clingo():
+def _bootstrap_clingo() -> ModuleType:
+    """Bootstraps the clingo module and returns it"""
     import spack.bootstrap
 
     with spack.bootstrap.ensure_bootstrap_configuration():
@@ -171,6 +202,9 @@ def _bootstrap_clingo():
 
 
 def parse_files(*args, **kwargs):
+    """Wrapper around clingo parse_files, that dispatches the function according
+    to clingo API version.
+    """
     clingo()
     try:
         return importlib.import_module("clingo.ast").parse_files(*args, **kwargs)
@@ -179,25 +213,19 @@ def parse_files(*args, **kwargs):
 
 
 def parse_term(*args, **kwargs):
+    """Wrapper around clingo parse_term, that dispatches the function according
+    to clingo API version.
+    """
     clingo()
     try:
         return importlib.import_module("clingo.symbol").parse_term(*args, **kwargs)
     except (ImportError, AttributeError):
         return clingo().parse_term(*args, **kwargs)
 
-    #     from clingo.ast import ASTType
-    #
-    #     try:
-    #         from clingo.ast import parse_files
-    #         from clingo.symbol import parse_term
-    #     except ImportError:
-    #         # older versions of clingo have this one namespace up
-    #         from clingo import parse_files, parse_term
-    #
-    # return clingo
-
 
 class NodeArgument(NamedTuple):
+    """Represents a node in the DAG"""
+
     id: str
     pkg: str
 
