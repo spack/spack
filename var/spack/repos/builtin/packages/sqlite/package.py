@@ -70,8 +70,11 @@ class Sqlite(AutotoolsPackage, NMakePackage):
 
         depends_on("readline", when=f"platform={plat}")
 
-    function_condition = "platform=windows" if is_windows else "+dynamic_extensions"
     variant("fts", default=True, description="Include fts4 and fts5 support")
+
+    # functions variant is always available on Windows platform, otherwise is tied
+    # to +dynamic_extensions
+    function_condition = "platform=windows" if is_windows else "+dynamic_extensions"
     variant(
         "functions",
         default=is_windows,
