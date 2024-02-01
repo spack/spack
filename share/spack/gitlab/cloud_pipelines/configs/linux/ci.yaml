@@ -8,6 +8,16 @@ ci:
   - match_behavior: first
     submapping:
     - match:
+      - py-torch
+      build-job:
+        tags: [ "spack", "huge" ]
+        variables:
+          CI_JOB_SIZE: huge
+          SPACK_BUILD_JOBS: "12"
+          KUBERNETES_CPU_REQUEST: 12000m
+          KUBERNETES_MEMORY_REQUEST: 46G
+
+    - match:
       - rust
       build-job:
         tags: [ "spack", "huge" ]
@@ -19,6 +29,7 @@ ci:
 
     - match:
       - py-tensorflow
+      - py-torchaudio
       build-job:
         tags: [ "spack", "huge" ]
         variables:
@@ -50,7 +61,6 @@ ci:
 
     - match:
       - llvm
-      - py-torch
       build-job:
         tags: [ "spack", "huge" ]
         variables:
@@ -62,7 +72,6 @@ ci:
     - match:
       - dealii
       - mxnet
-      - py-torchaudio
       - rocblas
       build-job:
         tags: [ "spack", "huge" ]
