@@ -6,8 +6,9 @@
 """Schema for gitlab-ci.yaml configuration file.
 
 .. literalinclude:: ../spack/schema/gitlab_ci.py
-   :lines: 13-
+   :lines: 15-
 """
+from typing import Any, Dict
 
 from llnl.util.lang import union_dicts
 
@@ -112,7 +113,7 @@ gitlab_ci_properties = {
 }
 
 #: Properties for inclusion in other schemas
-properties = {"gitlab-ci": gitlab_ci_properties}
+properties: Dict[str, Any] = {"gitlab-ci": gitlab_ci_properties}
 
 #: Full schema with metadata
 schema = {

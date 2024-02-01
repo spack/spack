@@ -2,14 +2,14 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """Schema for concretizer.yaml configuration file.
 
 .. literalinclude:: _spack_root/lib/spack/spack/schema/concretizer.py
-   :lines: 13-
+   :lines: 12-
 """
+from typing import Any, Dict
 
-properties = {
+properties: Dict[str, Any] = {
     "concretizer": {
         "type": "object",
         "additionalProperties": False,

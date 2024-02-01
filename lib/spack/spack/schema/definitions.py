@@ -6,13 +6,14 @@
 """Schema for definitions
 
 .. literalinclude:: _spack_root/lib/spack/spack/schema/definitions.py
-   :lines: 13-
+   :lines: 16-
 """
+from typing import Any, Dict
 
 import spack.schema
 
 #: Properties for inclusion in other schemas
-properties = {
+properties: Dict[str, Any] = {
     "definitions": {
         "type": "array",
         "default": [],

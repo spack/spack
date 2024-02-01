@@ -63,10 +63,11 @@ from spack.error import SpackError
 from spack.util.cpus import cpus_available
 
 #: Dict from section names -> schema for that section
-SECTION_SCHEMAS = {
+SECTION_SCHEMAS: Dict[str, Any] = {
     "compilers": spack.schema.compilers.schema,
     "concretizer": spack.schema.concretizer.schema,
     "definitions": spack.schema.definitions.schema,
+    "view": spack.schema.view.schema,
     "develop": spack.schema.develop.schema,
     "mirrors": spack.schema.mirrors.schema,
     "repos": spack.schema.repos.schema,
@@ -81,7 +82,7 @@ SECTION_SCHEMAS = {
 
 # Same as above, but including keys for environments
 # this allows us to unify config reading between configs and environments
-_ALL_SCHEMAS = copy.deepcopy(SECTION_SCHEMAS)
+_ALL_SCHEMAS: Dict[str, Any] = copy.deepcopy(SECTION_SCHEMAS)
 _ALL_SCHEMAS.update({spack.schema.env.TOP_LEVEL_KEY: spack.schema.env.schema})
 
 #: Path to the default configuration
@@ -1096,7 +1097,7 @@ def read_config_file(
             data = syaml.load_config(f)
 
         if data:
-            if not schema:
+            if schema is None:
                 key = next(iter(data))
                 schema = _ALL_SCHEMAS[key]
             validate(data, schema)

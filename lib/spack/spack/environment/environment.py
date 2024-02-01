@@ -871,9 +871,55 @@ class Environment:
             else:
                 self.spec_lists[name] = user_specs
 
+    def _process_view(self, env_view: Optional[Union[bool, str, Dict]]):
+        """Process view option(s), which can be boolean, string, or None.
+
+        A boolean environment view option takes precedence over any that may
+        be included. So ``view: True`` results in the default view only. And
+        ``view: False`` means the environment will have no view.
+
+        Args:
+            env_view: view option provided in the manifest or configuration
+        """
+
+        def add_view(name, values):
+            """Add the view with the name and the string or dict values."""
+            if isinstance(values, str):
+                self.views[name] = ViewDescriptor(self.path, values)
+            elif isinstance(values, dict):
+                self.views[name] = ViewDescriptor.from_dict(self.path, values)
+            else:
+                tty.error(f"Cannot add view named {name} for {type(values)} values {values}")
+
+        # If the configuration specifies 'view: False' then we are done
+        # processing views. If this is called with the environment's view
+        # view (versus an included view), then there are to be NO views.
+        if env_view is False:
+            return
+
+        # If the configuration specifies 'view: True' then only the default
+        # view will be created for the environment and we are done processing
+        # views.
+        if env_view is True:
+            add_view(default_view_name, self.view_path_default)
+            return
+
+        # Otherwise, the configuration has a subdirectory or dictionary.
+        if isinstance(env_view, str):
+            add_view(default_view_name, env_view)
+        elif env_view:
+            for name, values in env_view.items():
+                add_view(name, values)
+
+        # If we reach this point without an explicit view option then we
+        # provide the default view.
+        if self.views == dict():
+            self.views[default_view_name] = ViewDescriptor(self.path, self.view_path_default)
+
     def _construct_state_from_manifest(self):
         """Set up user specs and views from the manifest file."""
         self.spec_lists = collections.OrderedDict()
+        self.views = {}
 
         for item in spack.config.get("definitions", []):
             self._process_definition(item)
@@ -885,20 +931,7 @@ class Environment:
         )
         self.spec_lists[user_speclist_name] = user_specs
 
-        enable_view = env_configuration.get("view")
-        # enable_view can be boolean, string, or None
-        if enable_view is True or enable_view is None:
-            self.views = {default_view_name: ViewDescriptor(self.path, self.view_path_default)}
-        elif isinstance(enable_view, str):
-            self.views = {default_view_name: ViewDescriptor(self.path, enable_view)}
-        elif enable_view:
-            path = self.path
-            self.views = dict(
-                (name, ViewDescriptor.from_dict(path, values))
-                for name, values in enable_view.items()
-            )
-        else:
-            self.views = {}
+        self._process_view(spack.config.get("view", True))
 
     @property
     def user_specs(self):
