@@ -78,8 +78,8 @@ class PyRadicalEntk(PythonPackage):
         deprecated=True,
     )
 
-    depends_on("py-radical-utils@1.46:", type=("build", "run"), when="@1.46:")
-    depends_on("py-radical-pilot@1.46:", type=("build", "run"), when="@1.46:")
+    depends_on("py-radical-utils@1.40:", type=("build", "run"), when="@1.46:")
+    depends_on("py-radical-pilot@1.40:", type=("build", "run"), when="@1.46:")
 
     depends_on("py-radical-utils@1.39", type=("build", "run"), when="@1.39")
     depends_on("py-radical-pilot@1.39", type=("build", "run"), when="@1.39")
