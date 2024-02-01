@@ -226,10 +226,8 @@ class Warpx(CMakePackage):
             args.append(self.define("SENSEI_DIR", spec["sensei"].prefix.lib.cmake))
 
         # WarpX uses CCache by default, interfering with Spack wrappers
-        if spec.satisfies("@:24.01"):
-            args.append("-DCCACHE_PROGRAM=NO")
-        else:
-            args.append("-DWarpX_CCACHE=OFF")
+        ccache_var = "CCACHE_PROGRAM" if spec.satisfies("@:24.01") else "WarpX_CCACHE"
+        args.append(self.define(ccache_var, False))
 
         return args
 
