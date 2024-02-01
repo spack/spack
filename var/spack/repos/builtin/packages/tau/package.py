@@ -408,6 +408,7 @@ class Tau(Package):
     makefile_test = join_path("examples", "Makefile")
     makefile_inc_test = join_path("include", "Makefile")
     cuda_test = join_path("examples", "gpu", "cuda", "dataElem_um")
+    level_zero_test = join_path("examples", "gpu", "oneapi", "complex_mult")
 
     @run_after("install")
     def setup_build_tests(self):
@@ -420,6 +421,8 @@ class Tau(Package):
             self.cache_extra_test_sources(self.dyninst_test)
         if "+cuda" in self.spec:
             self.cache_extra_test_sources(self.cuda_test)
+        if "+level_zero" in self.spec:
+            self.cache_extra_test_sources(self.level_zero_test)
 
     def _run_dyninst_test(self, test_dir):
         dyn_dir = join_path(test_dir, self.dyninst_test)
@@ -505,8 +508,18 @@ class Tau(Package):
             self._run_tau_test(
                 test_dir,
                 self.cuda_test,
-                "CUDA test",
+                "CUDA example",
                 "dataElem_um",
+                tau_exec_flags,
+                use_tau_exec=True,
+            )
+        if "+level_zero" in self.spec:
+            tau_exec_flags = ["-l0"]
+            self._run_tau_test(
+                test_dir,
+                self.level_zero_test,
+                "Level Zero example",
+                "complex_mult.exe",
                 tau_exec_flags,
                 use_tau_exec=True,
             )
