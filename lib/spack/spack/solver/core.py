@@ -187,7 +187,7 @@ def _ensure_clingo_or_raise(clingo_mod: ModuleType) -> None:
 
 def clingo_cffi() -> bool:
     """Returns True if clingo uses the CFFI interface"""
-    return hasattr(clingo(), "_rep")
+    return hasattr(clingo().Symbol, "_rep")
 
 
 def _bootstrap_clingo() -> ModuleType:
