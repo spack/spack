@@ -30,11 +30,13 @@ class IntelOneapiRuntime(Package):
         "ifcore",  # Fortran
         "ifcoremt",  # Fortran
         "ifport",  # Fortran
+        "iomp5",
         "sycl",
     ]
 
     # libifcore ABI
     provides("fortran-rt", "ifcore@5", when="%oneapi@2021:")
+    provides("sycl")
 
     def install(self, spec, prefix):
         if spec.platform in ["linux", "cray", "freebsd"]:
@@ -49,4 +51,4 @@ class IntelOneapiRuntime(Package):
             return
 
         for path, name in libraries:
-            os.symlink(path, os.path.join(prefix.lib, name))
+            install(path, os.path.join(prefix.lib, name))
