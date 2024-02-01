@@ -175,7 +175,9 @@ class Rocfft(CMakePackage):
     patch("0003-Fix-clients-fftw3-include-dirs-rocm-4.5.patch", when="@4.5.0:5.1")
     # Patch to add install prefix header location for sqlite for 5.4
     patch("0004-fix-missing-sqlite-include-paths.patch", when="@5.4.0:5.5")
-    patch("0005-Fix-clients-tests-include-rocrand-fftw-include-dir-rocm-6.0.0.patch", when="@6.0.0:")
+    patch(
+        "0005-Fix-clients-tests-include-rocrand-fftw-include-dir-rocm-6.0.0.patch", when="@6.0.0:"
+    )
 
     # Set LD_LIBRARY_PATH for executing the binaries from build directoryfix missing type
     # https://github.com/ROCm/rocFFT/pull/449)
