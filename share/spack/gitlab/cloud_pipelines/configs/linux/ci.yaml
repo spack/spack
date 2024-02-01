@@ -99,48 +99,30 @@ ci:
       - ascent
       - axom
       - cistem
-      - cmake
       - cuda
       - dray
-      - dyninst
       - ecp-data-vis-sdk
       - gcc
       - ginkgo
       - hdf5
-      - hipblas
-      - hpx
       - kokkos-kernels
-      - kokkos-nvcc-wrapper
-      - lbann
-      - magma
-      - mesa
       - mfem
       - mpich
       - netlib-lapack
-      - oce
       - openblas
       - openfoam
       - openturns
-      - parallelio
-      - plumed
-      - precice
-      - qt
       - raja
       - relion
-      - rocfft
       - rocsolver
       - rocsparse
-      - slate
       - strumpack
       - sundials
       - trilinos
-      - umpire
       - visit
       - vtk
       - vtk-h
       - vtk-m
-      - warpx
-      - wrf
       build-job:
         tags: [ "spack", "large" ]
         variables:
@@ -150,14 +132,72 @@ ci:
           KUBERNETES_MEMORY_REQUEST: 12G
 
     - match:
+      - hpx
+      - slate
+      - warpx
+      build-job:
+        tags: [ "spack", "large" ]
+        variables:
+          CI_JOB_SIZE: "large"
+          SPACK_BUILD_JOBS: "8"
+          KUBERNETES_CPU_REQUEST: "8000m"
+          KUBERNETES_MEMORY_REQUEST: "9G"
+
+    - match:
+      - hipblas
+      - rocfft
+      - umpire
+      build-job:
+        tags: [ "spack", "large" ]
+        variables:
+          CI_JOB_SIZE: "large"
+          SPACK_BUILD_JOBS: "8"
+          KUBERNETES_CPU_REQUEST: "8000m"
+          KUBERNETES_MEMORY_REQUEST: "8G"
+
+    - match:
+      - lbann
+      - magma
+      - mesa
+      - qt
+      build-job:
+        tags: [ "spack", "large" ]
+        variables:
+          CI_JOB_SIZE: "large"
+          SPACK_BUILD_JOBS: "8"
+          KUBERNETES_CPU_REQUEST: "8000m"
+          KUBERNETES_MEMORY_REQUEST: "7G"
+
+    - match:
+      - dyninst
+      - precice
+      build-job:
+        tags: [ "spack", "medium" ]
+        variables:
+          CI_JOB_SIZE: "medium"
+          SPACK_BUILD_JOBS: "4"
+          KUBERNETES_CPU_REQUEST: "4000m"
+          KUBERNETES_MEMORY_REQUEST: "6G"
+
+    - match:
+      - cmake
+      - plumed
+      - wrf
+      build-job:
+        tags: [ "spack", "medium" ]
+        variables:
+          CI_JOB_SIZE: "medium"
+          SPACK_BUILD_JOBS: "4"
+          KUBERNETES_CPU_REQUEST: "4000m"
+          KUBERNETES_MEMORY_REQUEST: "5G"
+
+    - match:
       - adios2
       - amrex
       - archer
       - ascent
       - autoconf-archive
       - axom
-      - binutils
-      - blaspp
       - blt
       - boost
       - butterflypack
@@ -168,15 +208,10 @@ ci:
       - conduit
       - curl
       - datatransferkit
-      - double-conversion
       - dray
-      - eigen
       - faodel
-      - ffmpeg
-      - fftw
       - fortrilinos
       - gettext
-      - gperftools
       - gptune
       - hdf5
       - heffte
@@ -188,7 +223,6 @@ ci:
       - lammps
       - lapackpp
       - legion
-      - libtool
       - libxml2
       - libzmq
       - llvm-openmp-ompt
@@ -196,7 +230,6 @@ ci:
       - mfem
       - mpich
       - mvapich2
-      - nasm
       - netlib-scalapack
       - omega-h
       - openblas
@@ -205,9 +238,8 @@ ci:
       - openpmd-api
       - pagmo2
       - papyrus
+      - parallelio
       - parsec
-      - pdt
-      - pegtl
       - petsc
       - pumi
       - py-beniget
@@ -221,7 +253,6 @@ ci:
       - py-warlock
       - py-warpx
       - raja
-      - samrai
       - slepc
       - slurm
       - sqlite
@@ -242,6 +273,47 @@ ci:
           SPACK_BUILD_JOBS: "2"
           KUBERNETES_CPU_REQUEST: "2000m"
           KUBERNETES_MEMORY_REQUEST: "4G"
+
+    - match:
+      - oce
+      build-job:
+        tags: [ "spack", "medium" ]
+        variables:
+          CI_JOB_SIZE: "medium"
+          SPACK_BUILD_JOBS: "2"
+          KUBERNETES_CPU_REQUEST: "2000m"
+          KUBERNETES_MEMORY_REQUEST: "3G"
+
+    - match:
+      - binutils
+      - blaspp
+      - double-conversion
+      - eigen
+      - fftw
+      - libtool
+      - nasm
+      - pegtl
+      - pdt
+      build-job:
+        tags: [ "spack", "medium" ]
+        variables:
+          CI_JOB_SIZE: "medium"
+          SPACK_BUILD_JOBS: "2"
+          KUBERNETES_CPU_REQUEST: "2000m"
+          KUBERNETES_MEMORY_REQUEST: "2G"
+
+    - match:
+      - ffmpeg
+      - gperftools
+      - kokkos-nvcc-wrapper
+      - samrai
+      build-job:
+        tags: [ "spack", "medium" ]
+        variables:
+          CI_JOB_SIZE: "medium"
+          SPACK_BUILD_JOBS: "2"
+          KUBERNETES_CPU_REQUEST: "2000m"
+          KUBERNETES_MEMORY_REQUEST: "1G"
 
     - match:
       - alsa-lib
