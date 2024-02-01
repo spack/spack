@@ -27,7 +27,11 @@ class SiestaRelmax3(MakefilePackage):
         url="https://gitlab.com/siesta-project/siesta/-/archive/rel-MaX-3/siesta-rel-MaX-3.tar.gz",
     )
 
-    patch("fj_mod.patch")
+    # Fix dbscr and libgridxc link error and add missing object files
+    patch("fix_linkerror.patch")
+
+    # Fix ncdf_parallel link error when using Fujitsu compiler
+    patch("fj_fix_use_netcdf_parallel.patch", when="%fj")
 
     depends_on("mpi")
     depends_on("blas")
