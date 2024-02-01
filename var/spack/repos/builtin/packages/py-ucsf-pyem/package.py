@@ -15,9 +15,10 @@ class PyUcsfPyem(PythonPackage):
 
     maintainers("dorton21")
 
-    license("GPL-3.0-or-later")
+    license("GPL-3.0-only", checked_by="A-N-Other")
 
-    # Using commit since releases haven't been updated in 2 years
+    # Using commits since releases haven't been updated in since 2019
+    version("2024-02-01", commit="e92cd4d")
     version("2021-04-07", commit="ed0527f98657d21d887357426b74e5240d477fae")
 
     depends_on("py-setuptools", type="build")
