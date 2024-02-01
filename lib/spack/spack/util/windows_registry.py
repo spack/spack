@@ -59,17 +59,21 @@ class RegistryKey:
     def hkey(self):
         return self._handle
 
-    def _handle_winreg_errors(self, err, name, *args, **kwargs):
-        # Expected errors that occur on occasion, these are easily
-        # debug-able and have sufficiently verbose reporting and obvious cause
-        # [WinError 2]: the system cannot find the file specified - lookup item does
-        # not exist
-        # [WinError 5]: Access is denied - user does not have access to key
-        if hasattr(err, "winerror") and err.winerror in (5, 2):
-            raise err
-        # Other OS errors are more difficult to diagnose, so we wrap them in some extra
-        # reporting
-        raise InvalidRegistryOperation(name, err, self.path, *args, **kwargs) from err
+    @contextmanager
+    def winreg_error_handler(self, name, *args, **kwargs):
+        try:
+            yield
+        except OSError as err:
+            # Expected errors that occur on occasion, these are easily
+            # debug-able and have sufficiently verbose reporting and obvious cause
+            # [WinError 2]: the system cannot find the file specified - lookup item does
+            # not exist
+            # [WinError 5]: Access is denied - user does not have access to key
+            if hasattr(err, "winerror") and err.winerror in (5, 2):
+                raise err
+            # Other OS errors are more difficult to diagnose, so we wrap them in some extra
+            # reporting
+            raise InvalidRegistryOperation(name, err, *args, **kwargs) from err
 
     def OpenKeyEx(self, subname, **kwargs):
         """Convenience wrapper around winreg.OpenKeyEx"""
@@ -77,18 +81,14 @@ class RegistryKey:
             f"[WINREG ACCESS] Accessing Reg Key {self.path}/{subname} with"
             f" {kwargs.get('access', 'default')} access"
         )
-        try:
+        with self.winreg_error_handler("OpenKeyEx", subname, **kwargs):
             return winreg.OpenKeyEx(self.hkey, subname, **kwargs)
-        except OSError as e:
-            self._handle_winreg_errors(e, "OpenKeyEx", subname, **kwargs)
 
     def QueryInfoKey(self):
         """Convenience wrapper around winreg.QueryInfoKey"""
         tty.debug(f"[WINREG ACCESS] Obtaining key,value information from key {self.path}")
-        try:
+        with self.winreg_error_handler("QueryInfoKey"):
             return winreg.QueryInfoKey(self.hkey)
-        except OSError as e:
-            self._handle_winreg_errors(e, "QueryInfoKey")
 
     def EnumKey(self, index):
         """Convenience wrapper around winreg.EnumKey"""
@@ -96,34 +96,22 @@ class RegistryKey:
             "[WINREG ACCESS] Obtaining name of subkey at index "
             f"{index} from registry key {self.path}"
         )
-        try:
+        with self.winreg_error_handler("EnumKey", index):
             return winreg.EnumKey(self.hkey, index)
-        except OSError as e:
-            self._handle_winreg_errors(e, "EnumKey", index)
 
     def EnumValue(self, index):
         """Convenience wrapper around winreg.EnumValue"""
         tty.debug(
             f"[WINREG ACCESS] Obtaining value at index {index} from registry key {self.path}"
         )
-        try:
+        with self.winreg_error_handler("EnumValue", index):
             return winreg.EnumValue(self.hkey, index)
-        except OSError as e:
-            self._handle_winreg_errors(e, "EnumValue", index)
 
     def QueryValueEx(self, name, **kwargs):
         """Convenience wrapper around winreg.QueryValueEx"""
         tty.debug(f"[WINREG ACCESS] Obtaining value {name} from registry key {self.path}")
-        try:
+        with self.winreg_error_handler("QueryValueEx", name, **kwargs):
             return winreg.QueryValueEx(self.hkey, name, **kwargs)
-        except OSError as e:
-            # Expected errors that occur on occasion, these are easily
-            # debug-able and have sufficiently verbose reporting and obvious cause
-            if hasattr(e, "winerror") and e.winerror in (5, 2):
-                raise e
-            # Other OS errors are more difficult to diagnose, so we wrap them in some extra
-            # reporting
-            self._handle_winreg_errors(e, "QueryValueEx", name, **kwargs)
 
     def __str__(self):
         return self.name
