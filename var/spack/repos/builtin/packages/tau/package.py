@@ -393,17 +393,29 @@ class Tau(Package):
         # in the latter case.
         if files:
             env.set("TAU_MAKEFILE", files[0])
+        if "+dyninst" in self.spec:
+            path_to_dyn_lib = self.spec["dyninst"].prefix.lib
+            dyninst_apirt = join_path(path_to_dyn_lib, "libdyninstAPI_RT.so")
+            env.set("DYNINSTAPI_RT_LIB", dyninst_apirt)
+            env.append_path("LD_LIBRARY_PATH", path_to_dyn_lib)
+            env.append_path("LD_LIBRARY_PATH", self.prefix.lib)
 
     matmult_test = join_path("examples", "mm")
+    dyninst_test = join_path("examples", "dyninst")
+    makefile_test = join_path("examples", "Makefile")
+    makefile_inc_test = join_path("include", "Makefile")
 
     @run_after("install")
     def setup_build_tests(self):
         """Copy the build test files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources(self.matmult_test)
+        self.cache_extra_test_sources(self.dyninst_test)
+        self.cache_extra_test_sources(self.makefile_test)
+        self.cache_extra_test_sources(self.makefile_inc_test)
 
-    def _run_matmult_test(self):
-        mm_dir = join_path(self.test_suite.current_test_cache_dir, self.matmult_test)
+    def _run_matmult_test(self, test_dir):
+        mm_dir = join_path(test_dir, self.matmult_test)
         self.run_test(
             "make",
             ["all"],
@@ -437,6 +449,39 @@ class Tau(Package):
             mm_dir,
         )
 
+    def _run_dyninst_test(self, test_dir):
+        dyn_dir = join_path(test_dir, self.dyninst_test)
+        flags = "serial"
+        if "+mpi" in self.spec:
+            flags = "mpi"
+        self.run_test("make", ["all"], [], 0, False, "Build example code", False, dyn_dir)
+        self.run_test(
+            "tau_run",
+            ["-T", flags, "./klargest", "-v", "-o", "./klargest.i"],
+            [],
+            0,
+            False,
+            "Instrument code with dyninst",
+            False,
+            dyn_dir,
+        )
+        self.run_test(
+            "./klargest.i", [], [], 0, False, "Execute instrumented code", False, dyn_dir
+        )
+        self.run_test(
+            "pprof",
+            [],
+            [],
+            0,
+            False,
+            "Run pprof profile analysis tool on profile output",
+            False,
+            dyn_dir,
+        )
+
     def test(self):
+        test_dir = self.test_suite.current_test_cache_dir
         # Run mm test program pulled from the build
-        self._run_matmult_test()
+        self._run_matmult_test(test_dir)
+        if "+dyninst" in self.spec:
+            self._run_dyninst_test(test_dir)

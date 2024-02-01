@@ -1130,6 +1130,10 @@ A version specifier can also be a list of ranges and specific versions,
 separated by commas.  For example, ``@1.0:1.5,=1.7.1`` matches any version
 in the range ``1.0:1.5`` and the specific version ``1.7.1``.
 
+^^^^^^^^^^^^
+Git versions
+^^^^^^^^^^^^
+
 For packages with a ``git`` attribute, ``git`` references
 may be specified instead of a numerical version i.e. branches, tags
 and commits. Spack will stage and build based off the ``git``

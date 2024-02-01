@@ -23,9 +23,10 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     # core libraries to ensure that the package was successfully installed.
     import_modules = ["torch", "torch.autograd", "torch.nn", "torch.utils"]
 
-    license("Intel")
+    license("BSD-3-Clause")
 
     version("main", branch="main")
+    version("2.2.0", tag="v2.2.0", commit="8ac9b20d4b090c213799e81acf48a55ea8d437d6")
     version("2.1.2", tag="v2.1.2", commit="a8e7c98cb95ff97bb30a728c6b2a1ce6bff946eb")
     version("2.1.1", tag="v2.1.1", commit="4c55dc50355d5e923642c59ad2a23d6ad54711e7")
     version("2.1.0", tag="v2.1.0", commit="7bcf7da3a268b435777fe87c7794c382f444e86d")
@@ -129,9 +130,9 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     )
 
     # Required dependencies
-    # See python_min_version in setup.py
-    # Upper bounds come from wheel availability on PyPI
-    depends_on("python@3.8:3.11", when="@2:", type=("build", "link", "run"))
+    # Based on PyPI wheel availability
+    depends_on("python@3.8:3.12", when="@2.2:", type=("build", "link", "run"))
+    depends_on("python@3.8:3.11", when="@2.0:2.1", type=("build", "link", "run"))
     depends_on("python@:3.10", when="@1.11:1", type=("build", "link", "run"))
     depends_on("python@:3.9", when="@1.7.1:1.10", type=("build", "link", "run"))
     depends_on("python@:3.8", when="@1.4:1.7.0", type=("build", "link", "run"))
@@ -155,6 +156,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
 
     # setup.py
     depends_on("py-filelock", when="@2:", type=("build", "run"))
+    depends_on("py-typing-extensions@4.8:", when="@2.2:", type=("build", "run"))
     depends_on("py-typing-extensions@3.6.2.1:", when="@1.7:", type=("build", "run"))
     depends_on("py-sympy", when="@2:", type=("build", "run"))
     depends_on("py-networkx", when="@2:", type=("build", "run"))
@@ -190,7 +192,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     # depends_on("sleef@3.5.1_2020-12-22", when="@1.8:")
     # depends_on("sleef@3.4.0_2019-07-30", when="@1.6:1.7")
     depends_on("fp16@2020-05-14", when="@1.6:")
-    depends_on("pthreadpool@2021-04-13", when="@1.9:")
+    depends_on("pthreadpool@2023-08-29", when="@2.2:")
+    depends_on("pthreadpool@2021-04-13", when="@1.9:2.1")
     depends_on("pthreadpool@2020-10-05", when="@1.8")
     depends_on("pthreadpool@2020-06-15", when="@1.6:1.7")
     depends_on("psimd@2020-05-17", when="@1.6:")
@@ -198,13 +201,15 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("benchmark", when="@1.6:+test")
 
     # Optional dependencies
-    # https://github.com/pytorch/pytorch#prerequisites
+    # cmake/public/cuda.cmake
     depends_on("cuda@11:", when="@2:+cuda", type=("build", "link", "run"))
     depends_on("cuda@10.2:", when="@1.11:1+cuda", type=("build", "link", "run"))
     # https://discuss.pytorch.org/t/compiling-1-10-1-from-source-with-gcc-11-and-cuda-11-5/140971
     depends_on("cuda@10.2:11.4", when="@1.10+cuda", type=("build", "link", "run"))
     depends_on("cuda@9.2:11.4", when="@1.6:1.9+cuda", type=("build", "link", "run"))
     depends_on("cuda@9:11.4", when="@:1.5+cuda", type=("build", "link", "run"))
+    # https://github.com/pytorch/pytorch#prerequisites
+    depends_on("cudnn@8.5:", when="@2.3:+cudnn")
     depends_on("cudnn@7:", when="@1.6:+cudnn")
     depends_on("cudnn@7", when="@:1.5+cudnn")
     depends_on("magma+cuda", when="+magma+cuda")
@@ -244,7 +249,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("gloo@2020-03-17", when="@1.6+gloo")
     depends_on("gloo+cuda", when="@1.6:+gloo+cuda")
     # https://github.com/pytorch/pytorch/issues/60331
-    # depends_on("onnx@1.14.1", when="@2.1:+onnx_ml")
+    # depends_on("onnx@1.15.0", when="@2.2:+onnx_ml")
+    # depends_on("onnx@1.14.1", when="@2.1+onnx_ml")
     # depends_on("onnx@1.13.1", when="@2.0+onnx_ml")
     # depends_on("onnx@1.12.0", when="@1.13:1+onnx_ml")
     # depends_on("onnx@1.11.0", when="@1.12+onnx_ml")
@@ -258,6 +264,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("py-hypothesis", type="test")
     depends_on("py-six", type="test")
     depends_on("py-psutil", type="test")
+
+    conflicts("%gcc@:9.3", when="@2.2:", msg="C++17 support required")
 
     # https://github.com/pytorch/pytorch/issues/90448
     patch(
@@ -424,6 +432,13 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         "https://patch-diff.githubusercontent.com/raw/pytorch/pytorch/pull/110063.patch?full_index=1",
         sha256="23fb4009f7337051fc5303927ff977186a5af960245e7212895406477d8b2f66",
         when="@:2.1",
+    )
+
+    patch(
+        "https://github.com/pytorch/FBGEMM/commit/da01a59556fec9776733bf20aea8fe8fb29cdd3d.patch?full_index=1",
+        sha256="97d8bd43f8cd8bb203dab3480d609c08499224acaca9915f2bdeb23c62350fb1",
+        when="@2.0.1 +fbgemm",
+        working_dir="third_party/fbgemm",
     )
 
     @when("@1.5.0:")
