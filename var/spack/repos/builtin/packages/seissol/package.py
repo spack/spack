@@ -23,7 +23,7 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
         "1.1.2", tag="v1.1.2", commit="71002c1c1498ebd6f50a954731da68fa4f9d436b", submodules=True
     )
 
-    maintainers("Thomas-Ulrich", "davschneller")
+    maintainers("Thomas-Ulrich", "davschneller", "vikaskurapati")
 
     variant("asagi", default=True, description="Use ASAGI for material input")
     variant(
