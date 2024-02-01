@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack.package import *
 
 
@@ -17,7 +19,7 @@ class PyUcsfPyem(PythonPackage):
 
     license("GPL-3.0-only", checked_by="A-N-Other")
 
-    # Using commits since releases haven't been updated in since 2019
+    # Using commits as releases haven't been updated in since 2019
     version("2024-02-01", commit="e92cd4d")
     version("2021-04-07", commit="ed0527f98657d21d887357426b74e5240d477fae")
 
@@ -34,8 +36,35 @@ class PyUcsfPyem(PythonPackage):
     depends_on("py-healpy@1.11:", type=("build", "run"))
     depends_on("py-natsort@6.0:", type=("build", "run"))
 
-    # Extracts files into bin for proper useage
+    script_list = [
+        "angdist.py",
+        "cfsc.py",
+        "csparc2star.py",
+        "ctf2star.py",
+        "disparticle.py",
+        "emcalc.py",
+        "map.py",
+        "mask.py",
+        "mcstar.py",
+        "par2star.py",
+        "pose.py",
+        "projection_subtraction.py",
+        "project.py",
+        "recenter.py",
+        "reconstruct.py",
+        "sort.py",
+        "stack.py",
+        "star2bild.py",
+        "star.py",
+        "subparticles.py",
+        "subset.py",
+        "varmap.py",
+    ]
+
+    # Extracts scripts into bin for proper usage, ensures +x where not set
     @run_after("install")
-    def extraction(self):
+    def install_scripts(self):
         mkdir(self.prefix.bin)
-        install("*.py", self.prefix.bin)
+        for script in self.script_list:
+            os.chmod(script, 0o755)
+            install(script, self.prefix.bin)
