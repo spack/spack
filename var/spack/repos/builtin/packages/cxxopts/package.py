@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,8 +11,9 @@ class Cxxopts(CMakePackage):
 
     homepage = "https://github.com/jarro2783/cxxopts"
     url = "https://github.com/jarro2783/cxxopts/archive/v2.2.0.tar.gz"
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
+    version("3.1.1", sha256="523175f792eb0ff04f9e653c90746c12655f10cb70f1d5e6d6d9491420298a08")
     version("3.0.0", sha256="36f41fa2a46b3c1466613b63f3fa73dc24d912bc90d667147f1e43215a8c6d00")
     version("2.2.1", sha256="984aa3c8917d649b14d7f6277104ce38dd142ce378a9198ec926f03302399681")
     version("2.2.0", sha256="447dbfc2361fce9742c5d1c9cfb25731c977b405f9085a738fbd608626da8a4d")

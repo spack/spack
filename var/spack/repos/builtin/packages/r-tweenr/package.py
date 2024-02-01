@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,5 +27,4 @@ class RTweenr(RPackage):
     depends_on("r-rlang", type=("build", "run"))
     depends_on("r-cpp11@0.4.2:", type=("build", "run"), when="@2.0.2:")
     depends_on("r-vctrs", type=("build", "run"), when="@2.0.2:")
-    depends_on("r-rcpp@0.12.3:", type=("build", "run"))
-    depends_on("r-rcpp", when="@:1.0.2")
+    depends_on("r-rcpp@0.12.3:", type=("build", "run"), when="@:1.0.2")

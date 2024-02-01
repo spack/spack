@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,13 +12,17 @@ class PyLibensemble(PythonPackage):
     """Library for managing ensemble-like collections of computations."""
 
     homepage = "https://libensemble.readthedocs.io"
-    pypi = "libensemble/libensemble-0.9.3.tar.gz"
+    pypi = "libensemble/libensemble-1.0.0.tar.gz"
     git = "https://github.com/Libensemble/libensemble.git"
-    maintainers = ["shuds13", "jlnav"]
+    maintainers("shuds13", "jlnav")
 
     tags = ["e4s"]
 
     version("develop", branch="develop")
+    version("1.0.0", sha256="b164e044f16f15b68fd565684ad8ce876c93aaeb84e5078f4ea2a29684b110ca")
+    version("0.10.2", sha256="ef8dfe5d233dcae2636a3d6aa38f3c2ad0f42c65bd38f664e99b3e63b9f86622")
+    version("0.10.1", sha256="56ae42ec9a28d3df8f46bdf7d016db9526200e9df2a28d849902e3c44fe5c1ba")
+    version("0.10.0", sha256="f800f38d02def526f1d2a325710d01fdd3637cd1e33a9a083a3cf4a7f419a726")
     version("0.9.3", sha256="00e5a65d6891feee6a686c048d8de72097b8bff164431f163be96ec130a9c390")
     version("0.9.2", sha256="e46598e5696f770cbff4cb90507b52867faad5654f1b80de35405a95228c909f")
     version("0.9.1", sha256="684e52b0ea64f5ec610e7868b7e4c9fa5fd2316a370a726870aa5fd5fb1b0ede")
@@ -37,30 +41,38 @@ class PyLibensemble(PythonPackage):
     version("0.2.0", sha256="ecac7275d4d0f4a5e497e5c9ef2cd998da82b2c020a0fb87546eeea262f495ff")
     version("0.1.0", sha256="0b27c59ae80f7af8b1bee92fcf2eb6c9a8fd3494bf2eb6b3ea17a7c03d3726bb")
 
-    variant("mpi", default=False, description="Install with MPI")
+    variant("mpi", default=True, description="Install with MPI")  # Optional communications method
+
+    # The following variants are for optional built-in generators
     variant("scipy", default=False, description="Install with scipy")
     variant("petsc4py", default=False, description="Install with petsc4py")
     variant("nlopt", default=False, description="Install with nlopt")
     variant("mpmath", default=False, description="Install with mpmath")
     variant("deap", default=False, description="Install with DEAP")
     variant("tasmanian", default=False, description="Install with tasmanian")
-    variant("pyyaml", default=False, description="Install with pyyaml")
 
-    depends_on("py-setuptools", type="build")
+    depends_on("py-numpy@1.21:", when="@1:", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-psutil", type=("build", "run"), when="@0.7.1:")
+    depends_on("py-psutil@5.9.4:", when="@1:", type=("build", "run"))
+    depends_on("py-psutil", when="@0.7.1:", type=("build", "run"))
+    depends_on("py-setuptools", when="@0.10.2:", type="build")
+    depends_on("py-setuptools", when="@:0.10.1", type=("build", "run"))
+    depends_on("py-pydantic@:1", when="@0.10:", type=("build", "run"))
+    depends_on("py-tomli@1.2.1:", when="@1:", type=("build", "run"))
+    depends_on("py-tomli", when="@0.10:", type=("build", "run"))
+    depends_on("py-pyyaml@6.0:", when="@1:", type=("build", "run"))
+    depends_on("py-pyyaml", when="@0.10:", type=("build", "run"))
     depends_on("mpi", when="@:0.4.1")
     depends_on("mpi", when="+mpi")
-    depends_on("py-mpi4py@2.0:", type=("build", "run"), when="@:0.4.1")
-    depends_on("py-mpi4py@2.0:", type=("build", "run"), when="+mpi")
-    depends_on("py-scipy", type=("build", "run"), when="+scipy")
-    depends_on("py-petsc4py", type=("build", "run"), when="+petsc4py")
-    depends_on("py-petsc4py@main", type=("build", "run"), when="@develop+petsc4py")
-    depends_on("nlopt", type=("build", "run"), when="+nlopt")
-    depends_on("py-mpmath", type=("build", "run"), when="+mpmath")
-    depends_on("py-deap", type=("build", "run"), when="+deap")
-    depends_on("tasmanian+python", type=("build", "run"), when="+tasmanian")
-    depends_on("py-pyyaml", type=("build", "run"), when="+pyyaml")
+    depends_on("py-mpi4py@2.0:", when="@:0.4.1", type=("build", "run"))
+    depends_on("py-mpi4py@2.0:", when="+mpi", type=("build", "run"))
+    depends_on("py-scipy", when="+scipy", type=("build", "run"))
+    depends_on("py-petsc4py", when="+petsc4py", type=("build", "run"))
+    depends_on("py-petsc4py@main", when="@develop+petsc4py", type=("build", "run"))
+    depends_on("nlopt", when="+nlopt", type=("build", "run"))
+    depends_on("py-mpmath", when="+mpmath", type=("build", "run"))
+    depends_on("py-deap", when="+deap", type=("build", "run"))
+    depends_on("tasmanian+python", when="+tasmanian", type=("build", "run"))
     conflicts("~mpi", when="@:0.4.1")
 
     @run_after("install")
@@ -69,26 +81,24 @@ class PyLibensemble(PythonPackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources(join_path("examples", "calling_scripts", "regression_tests"))
 
-    def run_tutorial_tests(self, exe):
-        """Run example stand alone test"""
+    def run_tutorial_script(self, script):
+        """run the tutorial example regression test"""
 
-        test_dir = join_path(
-            self.test_suite.current_test_cache_dir,
-            "examples",
-            "calling_scripts",
-            "regression_tests",
+        exe = (
+            self.test_suite.current_test_cache_dir.examples.calling_scripts.regression_tests.join(
+                script
+            )
         )
+        if not os.path.isfile(exe):
+            raise SkipTest(f"{script} is missing")
 
-        if not os.path.isfile(join_path(test_dir, exe)):
-            print("Skipping {0} test".format(exe))
-            return
+        python = self.spec["python"].command
+        python(exe, "--comms", "local", "--nworkers", "2")
 
-        self.run_test(
-            self.spec["python"].command.path,
-            options=[exe, "--comms", "local", "--nworkers", "2"],
-            purpose="test: run {0} example".format(exe),
-            work_dir=test_dir,
-        )
+    def test_uniform_sampling(self):
+        """run test_uniform_sampling.py"""
+        self.run_tutorial_script("test_uniform_sampling.py")
 
-    def test(self):
-        self.run_tutorial_tests("test_uniform_sampling.py")
+    def test_1d_sampling(self):
+        """run test_1d_sampling.py"""
+        self.run_tutorial_script("test_1d_sampling.py")

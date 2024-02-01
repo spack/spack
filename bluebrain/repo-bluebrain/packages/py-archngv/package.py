@@ -13,11 +13,11 @@ class PyArchngv(PythonPackage):
     git = "ssh://git@bbpgitlab.epfl.ch/nse/ArchNGV.git"
 
     version("develop", branch="main")
-    version("3.0.2", tag="ArchNGV-v3.0.2")
+    version("3.1.0", tag="ArchNGV-v3.1.0")
 
     depends_on("py-setuptools@42:", type="build")
 
-    depends_on("py-numpy@1.19.5:1.22", type=("build", "run"))
+    depends_on("py-numpy@1.22:", type=("build", "run"))
     depends_on("py-scipy@1.5.0:", type=("build", "run"))
     depends_on("py-h5py@3.1.0:", type=("build", "run"))
     depends_on("py-libsonata@0.1.21:", type=("build", "run"))
@@ -31,7 +31,7 @@ class PyArchngv(PythonPackage):
     depends_on("spatial-index@2.0.0:", type=("build", "run"))
     depends_on("py-bluepy-configfile@0.1.11:", type=("build", "run"))
     depends_on("py-click@7.0:", type=("build", "run"))
-    depends_on("py-numpy-stl@2.10:2.15.1", type=("build", "run"))
+    depends_on("py-numpy-stl@2.10", type=("build", "run"))
     depends_on("py-openmesh@1.1.2:", type=("build", "run"))
     depends_on("py-pyyaml@5.0:", type=("build", "run"))
     depends_on("py-pandas@1.1.0:", type=("build", "run"))
@@ -47,7 +47,7 @@ class PyArchngv(PythonPackage):
     # needed for trimesh marchingcubes
     depends_on("py-scikit-image", type=("build", "run"))
 
-    depends_on("py-dask+distributed@2.0:", type=("build", "run"))
+    depends_on("py-dask+distributed@2022.04.1:", type=("build", "run"))
     depends_on("py-distributed@2.0:", type=("build", "run"))
     depends_on("py-dask-mpi@2.0:", type=("build", "run"))
 

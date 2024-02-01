@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Pdt(AutotoolsPackage):
 
     """
 
-    maintainers = ["wspear", "eugeneswalker", "khuck", "sameershende"]
+    maintainers("wspear", "eugeneswalker", "khuck", "sameershende")
     homepage = "https://www.cs.uoregon.edu/research/pdt/home.php"
     url = "https://www.cs.uoregon.edu/research/paracomp/pdtoolkit/Download/pdtoolkit-3.25.1.tar.gz"
 
@@ -54,12 +54,12 @@ class Pdt(AutotoolsPackage):
             options.append("-pgCC")
         elif self.compiler.name == "gcc":
             options.append("-GNU")
-        elif self.compiler.name == "clang":
+        elif self.compiler.name == "clang" or self.compiler.name == "apple-clang":
             options.append("-clang")
         elif self.compiler.name == "cce":
             options.append("-CC")
         else:
-            raise InstallError("Unknown/unsupported compiler family")
+            raise InstallError("Unknown/unsupported compiler family: " + self.compiler.name)
 
         if "+pic" in spec:
             options.append("-useropt=" + self.compiler.cxx_pic_flag)

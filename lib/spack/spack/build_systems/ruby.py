@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ import inspect
 
 import spack.builder
 import spack.package_base
-from spack.directives import build_system, extends
+from spack.directives import build_system, extends, maintainers
 
 from ._checks import BaseBuilder
 
@@ -15,7 +15,7 @@ from ._checks import BaseBuilder
 class RubyPackage(spack.package_base.PackageBase):
     """Specialized class for building Ruby gems."""
 
-    maintainers = ["Kerilk"]
+    maintainers("Kerilk")
 
     #: This attribute is used in UI queries that need to know the build
     #: system base class

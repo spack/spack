@@ -20,6 +20,11 @@ class OmegaH(CMakePackage, CudaPackage):
     tags = ["e4s"]
     version("main", branch="main")
     version(
+        "scorec.10.7.0",
+        commit="0e5de8618c3370f702e08c1b1af476dbbc118892",
+        git="https://github.com/SCOREC/omega_h.git",
+    )
+    version(
         "scorec.10.6.0",
         commit="f376fad4741b55a4b2482218eb3437d719b7c72e",
         git="https://github.com/SCOREC/omega_h.git",
@@ -59,18 +64,18 @@ class OmegaH(CMakePackage, CudaPackage):
     depends_on("mpi", when="+mpi")
     depends_on("trilinos +kokkos", when="+trilinos")
     depends_on("kokkos", when="+kokkos")
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
     # Note: '+cuda' and 'cuda_arch' variants are added by the CudaPackage
     depends_on("cuda", when="+cuda")
     conflicts(
-        "cuda@11.2",
+        "^cuda@11.2",
         when="@scorec.10.1.0:",
         msg="Thrust is broken in CUDA = 11.2.* see https://github.com/sandialabs/omega_h/issues/366",
     )
     # the sandia repo has a fix for cuda > 11.2 support
     #  see github.com/sandialabs/omega_h/pull/373
     conflicts(
-        "cuda@11.2",
+        "^cuda@11.2",
         when="@:9.34.4",
         msg="Thrust is broken in CUDA = 11.2.* see https://github.com/sandialabs/omega_h/issues/366",
     )
@@ -126,7 +131,7 @@ class OmegaH(CMakePackage, CudaPackage):
             args.append("-DOmega_h_USE_Kokkos:BOOL=ON")
         if "+zlib" in self.spec:
             args.append("-DOmega_h_USE_ZLIB:BOOL=ON")
-            args.append("-DZLIB_ROOT:PATH={0}".format(self.spec["zlib"].prefix))
+            args.append("-DZLIB_ROOT:PATH={0}".format(self.spec["zlib-api"].prefix))
         else:
             args.append("-DOmega_h_USE_ZLIB:BOOL=OFF")
         if "+examples" in self.spec:

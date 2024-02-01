@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,8 +18,10 @@ class Scotch(CMakePackage, MakefilePackage):
     url = "https://gitlab.inria.fr/scotch/scotch/-/archive/v7.0.1/scotch-v7.0.1.tar.gz"
     list_url = "https://gforge.inria.fr/frs/?group_id=248"
 
-    maintainers = ["pghysels"]
+    maintainers("pghysels")
 
+    version("7.0.4", sha256="8ef4719d6a3356e9c4ca7fefd7e2ac40deb69779a5c116f44da75d13b3d2c2c3")
+    version("7.0.3", sha256="5b5351f0ffd6fcae9ae7eafeccaa5a25602845b9ffd1afb104db932dd4d4f3c5")
     version("7.0.1", sha256="0618e9bc33c02172ea7351600fce4fccd32fe00b3359c4aabb5e415f17c06fed")
     version("6.1.3", sha256="4e54f056199e6c23d46581d448fcfe2285987e5554a0aa527f7931684ef2809e")
     version("6.1.2", sha256="9c2c75c75f716914a2bd1c15dffac0e29a2f8069b2df1ad2b6207c984b699450")
@@ -36,6 +38,8 @@ class Scotch(CMakePackage, MakefilePackage):
     version("5.1.10b", sha256="54c9e7fafefd49d8b2017d179d4f11a655abe10365961583baaddc4eeb6a9add")
 
     build_system(conditional("cmake", when="@7:"), "makefile", default="cmake")
+    variant("threads", default=True, description="use POSIX Pthreads within Scotch and PT-Scotch")
+    variant("mpi_thread", default=False, description="use multi-threaded algorithms")
     variant("mpi", default=True, description="Compile parallel libraries")
     variant("compression", default=True, description="May use compressed files")
     variant("esmumps", default=False, description="Compile esmumps (needed by mumps)")
@@ -53,9 +57,9 @@ class Scotch(CMakePackage, MakefilePackage):
 
     # Does not build with flex 2.6.[23]
     depends_on("flex@:2.6.1,2.6.4:", type="build")
-    depends_on("bison", type="build")
+    depends_on("bison@3.4:", type="build")
     depends_on("mpi", when="+mpi")
-    depends_on("zlib", when="+compression")
+    depends_on("zlib-api", when="+compression")
 
     # Version-specific patches
     patch("nonthreaded-6.0.4.patch", when="@6.0.4")
@@ -67,8 +71,8 @@ class Scotch(CMakePackage, MakefilePackage):
 
     # Vendored dependency of METIS/ParMETIS conflicts with standard
     # installations
-    conflicts("^metis", when="+metis")
-    conflicts("^parmetis", when="+metis")
+    conflicts("metis", when="+metis")
+    conflicts("parmetis", when="+metis")
 
     parallel = False
 
@@ -85,7 +89,6 @@ class Scotch(CMakePackage, MakefilePackage):
 
     @property
     def libs(self):
-
         shared = "+shared" in self.spec
         libraries = ["libscotch", "libscotcherr"]
         zlibs = []
@@ -101,7 +104,7 @@ class Scotch(CMakePackage, MakefilePackage):
 
         scotchlibs = find_libraries(libraries, root=self.prefix, recursive=True, shared=shared)
         if "+compression" in self.spec:
-            zlibs = self.spec["zlib"].libs
+            zlibs = self.spec["zlib-api"].libs
 
         return scotchlibs + zlibs
 
@@ -115,9 +118,9 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define_from_variant("BUILD_LIBESMUMPS", "esmumps"),
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("BUILD_PTSCOTCH", "mpi"),
+            self.define_from_variant("THREADS", "threads"),
+            self.define_from_variant("MPI_THREAD_MULTIPLE", "mpi_thread"),
         ]
-
-        # TODO should we enable/disable THREADS?
 
         if "+int64" in spec:
             args.append("-DINTSIZE=64")
@@ -130,12 +133,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
     def edit(self, pkg, spec, prefix):
         makefile_inc = []
-        cflags = [
-            "-O3",
-            "-DCOMMON_RANDOM_FIXED_SEED",
-            "-DSCOTCH_DETERMINISTIC",
-            "-DSCOTCH_RENAME",
-        ]
+        cflags = ["-O3", "-DCOMMON_RANDOM_FIXED_SEED", "-DSCOTCH_DETERMINISTIC", "-DSCOTCH_RENAME"]
 
         if "+int64" in self.spec:
             # SCOTCH_Num typedef: size of integers in arguments
@@ -210,7 +208,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
         if "+compression" in self.spec:
             cflags.append("-DCOMMON_FILE_COMPRESS_GZ")
-            ldflags.append(" {0} ".format(self.spec["zlib"].libs.joined()))
+            ldflags.append(" {0} ".format(self.spec["zlib-api"].libs.joined()))
 
         cflags.append("-DCOMMON_PTHREAD")
 

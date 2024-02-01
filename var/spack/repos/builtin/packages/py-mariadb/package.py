@@ -12,8 +12,7 @@ class PyMariadb(PythonPackage):
     pypi = "mariadb/mariadb-1.1.5.post3.tar.gz"
 
     version(
-        "1.1.5.post3",
-        sha256="f9336dd4cb3207e621933bb5221f33fac0d7184db64dc44c70531430f4ecdcee",
+        "1.1.5.post3", sha256="f9336dd4cb3207e621933bb5221f33fac0d7184db64dc44c70531430f4ecdcee"
     )
     version(
         "1.0.10",

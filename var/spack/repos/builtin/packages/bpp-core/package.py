@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class BppCore(CMakePackage):
     homepage = "http://biopp.univ-montp2.fr/wiki/index.php/Installation"
     url = "https://github.com/BioPP/bpp-core/archive/refs/tags/v2.4.1.tar.gz"
 
-    maintainers = ["snehring"]
+    maintainers("snehring")
 
     version("2.4.1", sha256="1150b8ced22cff23dd4770d7c23fad11239070b44007740e77407f0d746c0af6")
     version(

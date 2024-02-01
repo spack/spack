@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ def test_build_task_errors(install_mockery):
         inst.BuildTask("abc", None, False, 0, 0, 0, [])
 
     spec = spack.spec.Spec("trivial-install-test-package")
-    pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
     with pytest.raises(ValueError, match="must have a concrete spec"):
         inst.BuildTask(pkg_cls(spec), None, False, 0, 0, 0, [])
 

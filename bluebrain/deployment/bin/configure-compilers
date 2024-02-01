@@ -75,7 +75,7 @@ while read -r line; do
     # Grab a list of compiler specs, e.g. gcc@11.3.0. Note that for compiler packages like
     # intel-oneapi-compilers@a.b.c this can be multiple specs (intel@d.e.f, oneapi@g.h.i,
     # dpcpp@j.k.l) with versions that are not all the same.
-    compiler_specs=$(echo "${output}" | grep -o '[a-z]\+@[0-9\.]\+')
+    compiler_specs=$(echo "${output}" | grep -o '[a-z]\+@=\?[0-9\.]\+')
 
     if [[ ${spec} = *"intel"* ]]; then
         # update intel modules to use newer gcc in .cfg files
@@ -113,19 +113,11 @@ while read -r line; do
 
     cmd=${cmd/unload/show/}
     full_module_path="$(${cmd}|&sed -ne '2{s/:$// p}')"
-    # Remove empty module definitions, as they may appear anywhere
-    # under the compiler key. Further, purge some garbage where clang's
-    # spec spans multiple lines with a quote in front.
-    #
-    # After removing all unnecessary stuff, re-add the appropriate
-    # module definition with a full path.
-    sed -i -e '
-        /modules: \[\]/ d;
-        /^\s*Target:.\s*$/ d;
-        /^\s*$/ d;
-        s#spec: .clang#spec: clang#' ${HOME}/.spack/compilers.yaml
+
+    # Spack replaces compiler@version with compiler@=version in the config
     for spec in ${compiler_specs}; do
-        sed -i -e 's#\( *\)spec: '"${spec}"'#&\n\1modules: ['"${full_module_path}"']#' \
+        # For every compiler, replace an empty module definition with the proper module
+        sed -i -e '/spec: '"${spec/@/@=\?}"'/,/modules:/{/modules:/ s#\[\]#['"${full_module_path}"']#}' \
           ${HOME}/.spack/compilers.yaml
     done
 done

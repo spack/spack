@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class PyCharm4py(PythonPackage):
 
     # Add a list of GitHub accounts to
     # notify when the package is updated.
-    maintainers = ["payerle"]
+    maintainers("payerle")
 
     version("1.0", sha256="8ddb9f021b7379fde94b28c31f4ab6a60ced2c2a207a2d75ce57cb91b6be92bc")
 
@@ -34,10 +34,15 @@ class PyCharm4py(PythonPackage):
     # Builds its own charm++, so no charmpp dependency
     depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
+    # in newer pip versions --install-option does not exist
+    depends_on("py-pip@:23.0", type="build")
     depends_on("py-cython", type="build")
     depends_on("py-cffi@1.7:", type="build")
     depends_on("py-numpy@1.10.0:", type=("build", "run"))
     depends_on("py-greenlet", type=("build", "run"))
+
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
     depends_on("cuda")
     depends_on("mpi", when="+mpi")
 

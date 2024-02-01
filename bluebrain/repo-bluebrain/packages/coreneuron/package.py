@@ -51,7 +51,7 @@ class Coreneuron(CMakePackage):
     variant("legacy-unit", default=False, description="Enable legacy units")
 
     # Build with `ninja` instead of `make`
-    generator = "Ninja"
+    generator("ninja")
     depends_on("ninja", type="build")
 
     depends_on("bison", type="build")

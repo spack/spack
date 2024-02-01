@@ -1,4 +1,4 @@
-.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,49 +13,47 @@ Some sites may encourage users to set up their own test environments
 before carrying out central installations, or some users may prefer to set
 up these environments on their own motivation. To reduce the load of
 recompiling otherwise identical package specs in different installations,
-installed packages can be put into build cache tarballs, uploaded to
+installed packages can be put into build cache tarballs, pushed to
 your Spack mirror and then downloaded and installed by others.
 
+Whenever a mirror provides prebuilt packages, Spack will take these packages
+into account during concretization and installation, making ``spack install``
+significantly faster.
 
---------------------------
-Creating build cache files
---------------------------
 
-A compressed tarball of an installed package is created. Tarballs are created
-for all of its link and run dependency packages as well. Compressed tarballs are
-signed with gpg and signature and tarball and put in a ``.spack`` file. Optionally,
-the rpaths (and ids and deps on macOS) can be changed to paths relative to
-the Spack install tree before the tarball is created.
+.. note::
+
+    We use the terms "build cache" and "mirror" often interchangeably. Mirrors
+    are used during installation both for sources and prebuilt packages. Build
+    caches refer to mirrors that provide prebuilt packages.
+
+
+----------------------
+Creating a build cache
+----------------------
 
 Build caches are created via:
 
 .. code-block:: console
 
-    $ spack buildcache create <spec>
+    $ spack buildcache push <path/url/mirror name> <spec>
 
+This command takes the locally installed spec and its dependencies, and
+creates tarballs of their install prefixes. It also generates metadata files,
+signed with GPG. These tarballs and metadata files are then pushed to the
+provided binary cache, which can be a local directory or a remote URL.
 
-If you wanted to create a build cache in a local directory, you would provide
-the ``-d`` argument to target that directory, again also specifying the spec.
-Here is an example creating a local directory, "spack-cache" and creating
-build cache files for the "ninja" spec:
+Here is an example where a build cache is created in a local directory named
+"spack-cache", to which we push the "ninja" spec:
 
 .. code-block:: console
 
-    $ mkdir -p ./spack-cache
-    $ spack buildcache create -d ./spack-cache ninja
-    ==> Buildcache files will be output to file:///home/spackuser/spack/spack-cache/build_cache
-    gpgconf: socketdir is '/run/user/1000/gnupg'
-    gpg: using "E6DF6A8BD43208E4D6F392F23777740B7DBD643D" as default secret key for signing
+    $ spack buildcache push ./spack-cache ninja
+    ==> Pushing binary packages to file:///home/spackuser/spack/spack-cache/build_cache
 
-Note that the targeted spec must already be installed. Once you have a build cache,
-you can add it as a mirror, discussed next.
+Note that ``ninja`` must be installed locally for this to work.
 
-.. warning::
-
-   Spack improved the format used for binary caches in v0.18. The entire v0.18 series
-   will be able to verify and install binary caches both in the new and in the old format.
-   Support for using the old format is expected to end in v0.19, so we advise users to
-   recreate relevant buildcaches using Spack v0.18 or higher.
+Once you have a build cache, you can add it as a mirror, discussed next.
 
 ---------------------------------------
 Finding or installing build cache files
@@ -66,10 +64,10 @@ with:
 
 .. code-block:: console
 
-    $ spack mirror add <name> <url>
+    $ spack mirror add <name> <url or path>
 
 
-Note that the url can be a web url _or_ a local filesystem location. In the previous
+Both web URLs and local paths on the filesystem can be specified. In the previous
 example, you might add the directory "spack-cache" and call it ``mymirror``:
 
 
@@ -94,7 +92,7 @@ this new build cache as follows:
 
 .. code-block:: console
 
-    $ spack buildcache update-index -d spack-cache/
+    $ spack buildcache update-index ./spack-cache
 
 Now you can use list:
 
@@ -105,46 +103,38 @@ Now you can use list:
     -- linux-ubuntu20.04-skylake / gcc@9.3.0 ------------------------
     ninja@1.10.2
 
-
-Great! So now let's say you have a different spack installation, or perhaps just
-a different environment for the same one, and you want to install a package from
-that build cache. Let's first uninstall the actual library "ninja" to see if we can
-re-install it from the cache.
+With ``mymirror`` configured and an index available, Spack will automatically
+use it during concretization and installation. That means that you can expect
+``spack install ninja`` to fetch prebuilt packages from the mirror. Let's
+verify by re-installing ninja:
 
 .. code-block:: console
 
     $ spack uninstall ninja
-
-
-And now reinstall from the buildcache
-
-.. code-block:: console
-
-    $ spack buildcache install ninja
-    ==> buildcache spec(s) matching ninja 
-    ==> Fetching file:///home/spackuser/spack/spack-cache/build_cache/linux-ubuntu20.04-skylake/gcc-9.3.0/ninja-1.10.2/linux-ubuntu20.04-skylake-gcc-9.3.0-ninja-1.10.2-i4e5luour7jxdpc3bkiykd4imke3mkym.spack
-    ####################################################################################################################################### 100.0%
-    ==> Installing buildcache for spec ninja@1.10.2%gcc@9.3.0 arch=linux-ubuntu20.04-skylake
-    gpgconf: socketdir is '/run/user/1000/gnupg'
-    gpg: Signature made Tue 23 Mar 2021 10:16:29 PM MDT
-    gpg:                using RSA key E6DF6A8BD43208E4D6F392F23777740B7DBD643D
-    gpg: Good signature from "spackuser (GPG created for Spack) <spackuser@noreply.users.github.com>" [ultimate]
+    $ spack install ninja
+    ==> Installing ninja-1.11.1-yxferyhmrjkosgta5ei6b4lqf6bxbscz
+    ==> Fetching file:///home/spackuser/spack/spack-cache/build_cache/linux-ubuntu20.04-skylake-gcc-9.3.0-ninja-1.10.2-yxferyhmrjkosgta5ei6b4lqf6bxbscz.spec.json.sig
+    gpg: Signature made Do 12 Jan 2023 16:01:04 CET
+    gpg:                using RSA key 61B82B2B2350E171BD17A1744E3A689061D57BF6
+    gpg: Good signature from "example (GPG created for Spack) <example@example.com>" [ultimate]
+    ==> Fetching file:///home/spackuser/spack/spack-cache/build_cache/linux-ubuntu20.04-skylake/gcc-9.3.0/ninja-1.10.2/linux-ubuntu20.04-skylake-gcc-9.3.0-ninja-1.10.2-yxferyhmrjkosgta5ei6b4lqf6bxbscz.spack
+    ==> Extracting ninja-1.10.2-yxferyhmrjkosgta5ei6b4lqf6bxbscz from binary cache
+    ==> ninja: Successfully installed ninja-1.11.1-yxferyhmrjkosgta5ei6b4lqf6bxbscz
+    Search: 0.00s.  Fetch: 0.17s.  Install: 0.12s.  Total: 0.29s
+    [+] /home/harmen/spack/opt/spack/linux-ubuntu20.04-skylake/gcc-9.3.0/ninja-1.11.1-yxferyhmrjkosgta5ei6b4lqf6bxbscz
 
 
 It worked! You've just completed a full example of creating a build cache with
-a spec of interest, adding it as a mirror, updating it's index, listing the contents,
+a spec of interest, adding it as a mirror, updating its index, listing the contents,
 and finally, installing from it.
 
-
-Note that the above command is intended to install a particular package to a
-build cache you have created, and not to install a package from a build cache.
-For the latter, once a mirror is added, by default when you do ``spack install`` the ``--use-cache``
-flag is set, and you will install a package from a build cache if it is available.
-If you want to always use the cache, you can do:
+By default Spack falls back to building from sources when the mirror is not available
+or when the package is simply not already available. To force Spack to only install
+prebuilt packages, you can use
 
 .. code-block:: console
 
-   $ spack install --cache-only <package>
+   $ spack install --use-buildcache only <package>
 
 For example, to combine all of the commands above to add the E4S build cache
 and then install from it exclusively, you would do:
@@ -153,7 +143,7 @@ and then install from it exclusively, you would do:
 
     $ spack mirror add E4S https://cache.e4s.io
     $ spack buildcache keys --install --trust
-    $ spack install --cache-only <package>
+    $ spack install --use-buildcache only <package>
 
 We use ``--install`` and ``--trust`` to say that we are installing keys to our
 keyring, and trusting all downloaded keys.
@@ -165,16 +155,182 @@ List of popular build caches
 
 * `Extreme-scale Scientific Software Stack (E4S) <https://e4s-project.github.io/>`_: `build cache <https://oaciss.uoregon.edu/e4s/inventory.html>`_
 
-
 ----------
 Relocation
 ----------
 
-Initial build and later installation do not necessarily happen at the same
-location. Spack provides a relocation capability and corrects for RPATHs and
-non-relocatable scripts. However, many packages compile paths into binary
-artifacts directly. In such cases, the build instructions of this package would
-need to be adjusted for better re-locatability.
+When using buildcaches across different machines, it is likely that the install
+root will be different from the one used to build the binaries.
+
+To address this issue, Spack automatically relocates all paths encoded in binaries
+and scripts to their new location upon install.
+
+Note that there are some cases where this is not possible: if binaries are built in
+a relatively short path, and then installed to a longer path, there may not be enough
+space in the binary to encode the new path. In this case, Spack will fail to install
+the package from the build cache, and a source build is required.
+
+To reduce the likelihood of this happening, it is highly recommended to add padding to
+the install root during the build, as specified in the :ref:`config <config-yaml>`
+section of the configuration:
+
+.. code-block:: yaml
+
+   config:
+     install_tree:
+       root: /opt/spack
+       padded_length: 128
+
+
+
+-----------------------------------------
+OCI / Docker V2 registries as build cache
+-----------------------------------------
+
+Spack can also use OCI or Docker V2 registries such as Dockerhub, Quay.io,
+Github Packages, GitLab Container Registry, JFrog Artifactory, and others
+as build caches. This is a convenient way to share binaries using public
+infrastructure, or to cache Spack built binaries in Github Actions and
+GitLab CI.
+
+To get started, configure an OCI mirror using ``oci://`` as the scheme,
+and optionally specify a username and password (or personal access token):
+
+.. code-block:: console
+
+    $ spack mirror add --oci-username username --oci-password password my_registry oci://example.com/my_image
+
+Spack follows the naming conventions of Docker, with Dockerhub as the default
+registry. To use Dockerhub, you can omit the registry domain:
+
+.. code-block:: console
+
+    $ spack mirror add --oci-username username --oci-password password my_registry oci://username/my_image
+
+From here, you can use the mirror as any other build cache:
+
+.. code-block:: console
+
+    $ spack buildcache push my_registry <specs...>  # push to the registry
+    $ spack install <specs...> # install from the registry
+
+A unique feature of buildcaches on top of OCI registries is that it's incredibly
+easy to generate get a runnable container image with the binaries installed. This
+is a great way to make applications available to users without requiring them to
+install Spack -- all you need is Docker, Podman or any other OCI-compatible container
+runtime.
+
+To produce container images, all you need to do is add the ``--base-image`` flag
+when pushing to the build cache:
+
+.. code-block:: console
+
+    $ spack buildcache push --base-image ubuntu:20.04 my_registry ninja
+    Pushed to example.com/my_image:ninja-1.11.1-yxferyhmrjkosgta5ei6b4lqf6bxbscz.spack
+
+    $ docker run -it example.com/my_image:ninja-1.11.1-yxferyhmrjkosgta5ei6b4lqf6bxbscz.spack
+    root@e4c2b6f6b3f4:/# ninja --version
+    1.11.1
+
+If ``--base-image`` is not specified, distroless images are produced. In practice,
+you won't be able to run these as containers, since they don't come with libc and
+other system dependencies. However, they are still compatible with tools like
+``skopeo``, ``podman``, and ``docker`` for pulling and pushing.
+
+.. note::
+    The docker ``overlayfs2`` storage driver is limited to 128 layers, above which a
+    ``max depth exceeded`` error may be produced when pulling the image. There
+    are `alternative drivers <https://docs.docker.com/storage/storagedriver/>`_.
+
+------------------------------------
+Spack build cache for GitHub Actions
+------------------------------------
+
+To significantly speed up Spack in GitHub Actions, binaries can be cached in
+GitHub Packages. This service is an OCI registry that can be linked to a GitHub
+repository.
+
+A typical workflow is to include a ``spack.yaml`` environment in your repository
+that specifies the packages to install, the target architecture, and the build
+cache to use under ``mirrors``:
+
+.. code-block:: yaml
+
+    spack:
+      specs:
+      - python@3.11
+      config:
+        install_tree:
+          root: /opt/spack
+          padded_length: 128
+      packages:
+        all:
+          require: target=x86_64_v2
+      mirrors:
+        local-buildcache: oci://ghcr.io/<organization>/<repository>
+
+A GitHub action can then be used to install the packages and push them to the
+build cache:
+
+.. code-block:: yaml
+
+    name: Install Spack packages
+
+    on: push
+
+    env:
+      SPACK_COLOR: always
+
+    jobs:
+      example:
+        runs-on: ubuntu-22.04
+        permissions:
+          packages: write
+        steps:
+        - name: Checkout
+          uses: actions/checkout@v3
+
+        - name: Checkout Spack
+          uses: actions/checkout@v3
+          with:
+            repository: spack/spack
+            path: spack
+
+        - name: Setup Spack
+          run: echo "$PWD/spack/bin" >> "$GITHUB_PATH"
+
+        - name: Concretize
+          run: spack -e . concretize
+
+        - name: Install
+          run: spack -e . install --no-check-signature
+
+        - name: Run tests
+            run: ./my_view/bin/python3 -c 'print("hello world")'
+
+        - name: Push to buildcache
+          run: |
+            spack -e . mirror set --oci-username ${{ github.actor }} --oci-password "${{ secrets.GITHUB_TOKEN }}" local-buildcache
+            spack -e . buildcache push --base-image ubuntu:22.04 --unsigned --update-index local-buildcache
+          if: ${{ !cancelled() }}
+
+The first time this action runs, it will build the packages from source and
+push them to the build cache. Subsequent runs will pull the binaries from the
+build cache. The concretizer will ensure that prebuilt binaries are favored
+over source builds.
+
+The build cache entries appear in the GitHub Packages section of your repository,
+and contain instructions for pulling and running them with ``docker`` or ``podman``.
+
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Using Spack's public build cache for GitHub Actions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Spack offers a public build cache for GitHub Actions with a set of common packages,
+which lets you get started quickly. See the following resources for more information:
+
+* `spack/github-actions-buildcache <https://github.com/spack/github-actions-buildcache>`_
 
 .. _cmd-spack-buildcache:
 
@@ -183,7 +339,7 @@ need to be adjusted for better re-locatability.
 --------------------
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-``spack buildcache create``
+``spack buildcache push``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Create tarball of installed Spack package and all dependencies.

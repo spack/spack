@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -68,10 +68,7 @@ class LuaBuilder(spack.builder.Builder):
 
     @staticmethod
     def _generate_tree_line(name, prefix):
-        return """{{ name = "{name}", root = "{prefix}" }};""".format(
-            name=name,
-            prefix=prefix,
-        )
+        return """{{ name = "{name}", root = "{prefix}" }};""".format(name=name, prefix=prefix)
 
     def generate_luarocks_config(self, pkg, spec, prefix):
         spec = self.pkg.spec

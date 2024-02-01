@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class PyOsloSerialization(PythonPackage):
     homepage = "https://docs.openstack.org/oslo.serialization/"
     pypi = "oslo.serialization/oslo.serialization-4.1.0.tar.gz"
 
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     version("4.1.0", sha256="cecc7794df806c85cb70dbd6c2b3af19bc68047ad29e3c6442be90a0a4de5379")
 

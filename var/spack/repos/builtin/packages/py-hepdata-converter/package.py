@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class PyHepdataConverter(PythonPackage):
     homepage = "https://github.com/HEPData/hepdata-converter"
     pypi = "hepdata-converter/hepdata-converter-0.2.3.tar.gz"
 
-    maintainers = ["haralmha"]
+    maintainers("haralmha")
 
     version("0.2.3", sha256="cbed0ffc512a794fae023650f10f415b687bb8c07fc67ac3321da70ce8846085")
 

@@ -1,4 +1,4 @@
-% Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+% Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 % Spack Project Developers. See the top-level COPYRIGHT file for details.
 %
 % SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,32 +9,13 @@
 % This section determines what parts of the model are printed at the end
 %==============================================================================
 
-% Spec-related functions.
-% Used to build the result of the solve.
-#show node/1.
-#show hash/2.
-#show depends_on/3.
-#show version/2.
-#show variant_value/3.
-#show node_platform/2.
-#show node_os/2.
-#show node_target/2.
-#show node_compiler/2.
-#show node_compiler_version/3.
-#show node_flag/3.
-#show node_flag_compiler_default/1.
-#show node_flag_source/3.
-#show no_flags/2.
-#show external_spec_selected/2.
-#show version_equivalent/3.
-
-#show build/1.
+% Spec attributes
+#show attr/2.
+#show attr/3.
+#show attr/4.
 
 % names of optimization criteria
 #show opt_criterion/2.
-
-% deprecated packages
-#show deprecated/2.
 
 % error types
 #show error/2.
@@ -42,6 +23,30 @@
 #show error/4.
 #show error/5.
 #show error/6.
-#show error/7.
+
+% for error causation
+#show condition_reason/2.
+
+% For error messages to use later
+#show pkg_fact/2.
+#show condition_holds/2.
+#show imposed_constraint/3.
+#show imposed_constraint/4.
+#show imposed_constraint/5.
+#show imposed_constraint/6.
+#show condition_requirement/3.
+#show condition_requirement/4.
+#show condition_requirement/5.
+#show condition_requirement/6.
+#show node_has_variant/2.
+#show build/1.
+#show external/1.
+#show external_version/3.
+#show trigger_and_effect/3.
+#show unification_set/2.
+#show provider/2.
+#show condition_nodes/3.
+#show trigger_node/3.
+#show imposed_nodes/3.
 
 % debug

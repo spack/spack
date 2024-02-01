@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Miniasm(MakefilePackage):
 
     version("2018-3-30", commit="55cf0189e2f7d5bda5868396cebe066eec0a9547")
 
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     def install(self, spec, prefix):
         install_tree(".", prefix.bin)

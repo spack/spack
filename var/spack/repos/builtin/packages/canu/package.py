@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,7 +30,7 @@ class Canu(MakefilePackage):
     depends_on("perl", type="run")
     # version guessed from include date of vendored boost
     depends_on("boost@1.60.0:+graph")
-    conflicts("boost@1.70.1:", when="@:2.0")
+    conflicts("^boost@1.70.1:", when="@:2.0")
 
     build_directory = "src"
     build_targets = ["clean"]

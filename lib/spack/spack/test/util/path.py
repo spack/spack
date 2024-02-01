@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,9 +12,6 @@ import llnl.util.tty as tty
 
 import spack.config
 import spack.util.path as sup
-
-is_windows = sys.platform == "win32"
-
 
 #: Some lines with lots of placeholders
 padded_lines = [
@@ -32,21 +29,19 @@ fixed_lines = [
 ]
 
 
-def test_sanitze_file_path(tmpdir):
-    """Test filtering illegal characters out of potential file paths"""
-    # *nix illegal files characters are '/' and none others
-    illegal_file_path = str(tmpdir) + "//" + "abcdefghi.txt"
-    if is_windows:
-        # Windows has a larger set of illegal characters
-        illegal_file_path = os.path.join(tmpdir, 'a<b>cd?e:f"g|h*i.txt')
-    real_path = sup.sanitize_file_path(illegal_file_path)
-    assert real_path == os.path.join(str(tmpdir), "abcdefghi.txt")
+def test_sanitize_filename():
+    """Test filtering illegal characters out of potential filenames"""
+    sanitized = sup.sanitize_filename("""a<b>cd/?e:f"g|h*i.\0txt""")
+    if sys.platform == "win32":
+        assert sanitized == "a_b_cd__e_f_g_h_i._txt"
+    else:
+        assert sanitized == """a<b>cd_?e:f"g|h*i._txt"""
 
 
 # This class pertains to path string padding manipulation specifically
 # which is used for binary caching. This functionality is not supported
 # on Windows as of yet.
-@pytest.mark.skipif(is_windows, reason="Padding funtionality unsupported on Windows")
+@pytest.mark.not_on_windows("Padding funtionality unsupported on Windows")
 class TestPathPadding:
     @pytest.mark.parametrize("padded,fixed", zip(padded_lines, fixed_lines))
     def test_padding_substitution(self, padded, fixed):
@@ -122,7 +117,7 @@ def test_path_debug_padded_filter(debug, monkeypatch):
     string = fmt.format(prefix, os.sep, os.sep.join([sup.SPACK_PATH_PADDING_CHARS] * 2), suffix)
     expected = (
         fmt.format(prefix, os.sep, "[padded-to-{0}-chars]".format(72), suffix)
-        if debug <= 1 and not is_windows
+        if debug <= 1 and sys.platform != "win32"
         else string
     )
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@ class Likwid(Package):
     homepage = "https://hpc.fau.de/research/tools/likwid/"
     url = "https://github.com/RRZE-HPC/likwid/archive/v5.0.0.tar.gz"
     git = "https://github.com/RRZE-HPC/likwid.git"
-    maintainers = ["TomTheBear"]
+    maintainers("TomTheBear")
 
     version("5.2.2", sha256="7dda6af722e04a6c40536fc9f89766ce10f595a8569b29e80563767a6a8f940e")
     version("5.2.1", sha256="1b8e668da117f24302a344596336eca2c69d2bc2f49fa228ca41ea0688f6cbc2")
@@ -188,12 +188,18 @@ class Likwid(Package):
                 "HWLOC_INCLUDE_DIR = {0}".format(spec["hwloc"].prefix.include),
                 "config.mk",
             )
-            filter_file(
-                "^#HWLOC_LIB_DIR.*",
-                "HWLOC_LIB_DIR = {0}".format(spec["hwloc"].prefix.lib),
-                "config.mk",
-            )
-            filter_file("^#HWLOC_LIB_NAME.*", "HWLOC_LIB_NAME = hwloc", "config.mk")
+            ll = spec["hwloc"].libs
+            if len(ll.directories) > 0 and len(ll.names) > 0:
+                filter_file(
+                    "^#HWLOC_LIB_DIR.*",
+                    "HWLOC_LIB_DIR = {0}".format(ll.directories[0]),
+                    "config.mk",
+                )
+                filter_file(
+                    "^#HWLOC_LIB_NAME.*", "HWLOC_LIB_NAME = {0}".format(ll.names[0]), "config.mk"
+                )
+            else:
+                raise InstallError("Failed to find library path and/or name of hwloc dependency")
 
         # https://github.com/RRZE-HPC/likwid/issues/287
         if self.spec.satisfies("@:5.0.2 %gcc@10:"):

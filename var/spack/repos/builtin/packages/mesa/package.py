@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,17 +13,24 @@ class Mesa(MesonPackage):
     - a system for rendering interactive 3D graphics."""
 
     homepage = "https://www.mesa3d.org"
-    maintainers = ["chuckatkins", "v-dobrev"]
+    maintainers("v-dobrev")
 
     git = "https://gitlab.freedesktop.org/mesa/mesa.git"
     url = "https://archive.mesa3d.org/mesa-20.2.1.tar.xz"
 
-    version("main", tag="main")
+    version("main", branch="main")
+
     version(
-        "22.1.2",
-        sha256="df4fa560dcce6680133067cd15b0505fc424ca703244ce9ab247c74d2fab6885",
+        "23.0.3",
+        sha256="386362a5d80df3b096636b67f340e1ce67b705b44767d5bdd11d2ed1037192d5",
         preferred=True,
     )
+    version("23.0.2", sha256="1b7d3399fc6f16f030361f925d33ebc7600cbf98094582f54775b6a1180529e7")
+    version("22.3.2", sha256="c15df758a8795f53e57f2a228eb4593c22b16dffd9b38f83901f76cd9533140b")
+    version("22.2.5", sha256="850f063146f8ebb262aec04f666c2c1e5623f2a1987dda24e4361b17b912c73b")
+    version("22.1.6", sha256="22ced061eb9adab8ea35368246c1995c09723f3f71653cd5050c5cec376e671a")
+    version("22.1.2", sha256="0971226b4a6a3d10cfc255736b33e4017e18c14c9db1e53863ac1f8ae0deb9ea")
+    version("22.0.5", sha256="5ee2dc06eff19e19b2867f12eb0db0905c9691c07974f6253f2f1443df4c7a35")
     version("22.0.2", sha256="df4fa560dcce6680133067cd15b0505fc424ca703244ce9ab247c74d2fab6885")
     version("21.3.8", sha256="e70d273bdc53a4e931871bb5550ba3900e6a3deab2fff64184107c33e92d9da7")
     version("21.3.7", sha256="b4fa9db7aa61bf209ef0b40bef83080999d86ad98df8b8b4fada7c128a1efc3d")
@@ -45,19 +52,12 @@ class Mesa(MesonPackage):
     depends_on("cmake", type="build")
     depends_on("flex", type="build")
     depends_on("gettext", type="build")
-    depends_on("python@3:", type="build")
+    # Upperbound on 3.11 because distutils is used for checking py-mako
+    depends_on("python@3:3.11", type="build")
     depends_on("py-mako@0.8.0:", type="build")
     depends_on("unwind")
     depends_on("expat")
-    depends_on("zlib@1.2.3:")
-
-    # Override the build type variant so we can default to release
-    variant(
-        "buildtype",
-        default="release",
-        description="Meson build type",
-        values=("plain", "debug", "debugoptimized", "release", "minsize"),
-    )
+    depends_on("zlib-api")
 
     # Internal options
     variant("llvm", default=True, description="Enable LLVM.")
@@ -69,14 +69,7 @@ class Mesa(MesonPackage):
     variant(
         "swr",
         values=spack.variant.DisjointSetsOfValues(
-            ("none",),
-            ("auto",),
-            (
-                "avx",
-                "avx2",
-                "knl",
-                "skx",
-            ),
+            ("none",), ("auto",), ("avx", "avx2", "knl", "skx")
         )
         .with_non_feature_values("auto")
         .with_non_feature_values("none")
@@ -114,6 +107,7 @@ class Mesa(MesonPackage):
         depends_on("libllvm@6:")
         depends_on("libllvm@:11", when="@:20")
         depends_on("libllvm@:12", when="@:21")
+
     depends_on("libx11", when="+glx")
     depends_on("libxcb", when="+glx")
     depends_on("libxext", when="+glx")
@@ -146,7 +140,14 @@ class Mesa(MesonPackage):
     # llvm::Module::setOverrideStackAlignment was added in LLVM 13.0.0, but forks based
     # on development versions of LLVM 13 may or may not have it. Use SFINAE to detect
     # the existence of the function and call it only if it is available.
-    patch("handle_missing_set_override_stack_alignment.patch", when="@21.2.3:")
+    patch("handle_missing_set_override_stack_alignment.patch", when="@21.2.3:22.3")
+
+    # ROCm 5.3.0 is providing llvm15. Gallivm coroutine is disabled in mesa upstream version
+    # for llvm-15. Until mesa release is available with this changes below patch is required
+    # in order to move on with ROCm 5.3.0 and ROCm 5.4.0.
+    # The revised patch was part of https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/17518/diffs.
+
+    patch("0001-disable-gallivm-coroutine-for-libllvm15.patch", when="@22.1.2:22.3 ^libllvm@15")
 
     # Explicitly use the llvm-config tool
     def patch(self):
@@ -156,7 +157,7 @@ class Mesa(MesonPackage):
         if self.spec.satisfies("%intel"):
             if name == "cflags":
                 flags.append("-std=c99")
-        return super(Mesa, self).flag_handler(name, flags)
+        return super().flag_handler(name, flags)
 
     @property
     def libglx_headers(self):
@@ -185,7 +186,6 @@ class MesonBuilder(spack.build_systems.meson.MesonBuilder):
         args = [
             "-Dvulkan-drivers=",
             "-Dgallium-vdpau=disabled",
-            "-Dgallium-xvmc=disabled",
             "-Dgallium-omx=disabled",
             "-Dgallium-va=disabled",
             "-Dgallium-xa=disabled",
@@ -194,6 +194,10 @@ class MesonBuilder(spack.build_systems.meson.MesonBuilder):
             "-Dbuild-tests=false",
             "-Dglvnd=false",
         ]
+        # gallium-xvmc was removed in @main and @2.23:
+        if self.spec.satisfies("@:22.2"):
+            args.append("-Dgallium-xvmc=disabled")
+
         args_platforms = []
         args_gallium_drivers = ["swrast"]
         args_dri_drivers = []

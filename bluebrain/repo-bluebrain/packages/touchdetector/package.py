@@ -13,7 +13,7 @@ class Touchdetector(CMakePackage):
     url = "ssh://git@bbpgitlab.epfl.ch/hpc/touchdetector.git"
     git = "ssh://git@bbpgitlab.epfl.ch/hpc/touchdetector.git"
 
-    generator = "Ninja"
+    generator("ninja")
     submodules = True
 
     version("develop", branch="main")
@@ -107,9 +107,7 @@ class Touchdetector(CMakePackage):
             ]
 
             if "+clang-tidy" in self.spec:
-                self.args.append(
-                    self.define("CMAKE_CXX_CLANG_TIDY", "clang-tidy"),
-                )
+                self.args.append(self.define("CMAKE_CXX_CLANG_TIDY", "clang-tidy"))
 
         return args
 

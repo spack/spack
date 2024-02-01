@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,10 +27,16 @@ class Seacas(CMakePackage):
     homepage = "https://sandialabs.github.io/seacas/"
     git = "https://github.com/sandialabs/seacas.git"
     url = "https://github.com/sandialabs/seacas/archive/v2019-08-20.tar.gz"
-    maintainers = ["gsjaardema"]
+    maintainers("gsjaardema")
 
     # ###################### Versions ##########################
     version("master", branch="master")
+    version(
+        "2023-10-24", sha256="f93bf0327329c302ed3feb6adf2e3968f01ec325084a457b2c2dbbf6c4f751a2"
+    )
+    version(
+        "2023-05-30", sha256="3dd982841854466820a3902163ad1cf1b3fbab65ed7542456d328f2d1a5373c1"
+    )
     version(
         "2022-10-14", sha256="cde91e7561d2352045d669a25bdf46a604d85ed1ea7f3f5028004455e4ce9d56"
     )
@@ -129,7 +135,8 @@ class Seacas(CMakePackage):
     variant("x11", default=True, description="Compile with X11")
 
     # ###################### Dependencies ##########################
-    depends_on("cmake@3.17:", type="build")
+    depends_on("cmake@3.22:", when="@2023-10-24:", type="build")
+    depends_on("cmake@3.17:", when="@:2023-05-30", type="build")
     depends_on("mpi", when="+mpi")
 
     # Always depends on netcdf-c
@@ -137,8 +144,10 @@ class Seacas(CMakePackage):
     depends_on("netcdf-c@4.8.0:~mpi", when="~mpi")
     depends_on("hdf5+hl~mpi", when="~mpi")
 
-    depends_on("fmt@8.1.0:", when="@2022-03-04:2022-05-16")
-    depends_on("fmt@9.1.0:", when="@2022-10-14")
+    depends_on("fmt@10.1.0", when="@2023-10-24:")
+    depends_on("fmt@9.1.0", when="@2022-10-14:2023-05-30")
+    depends_on("fmt@8.1.0:9", when="@2022-03-04:2022-05-16")
+
     depends_on("matio", when="+matio")
     depends_on("libx11", when="+x11")
 
@@ -191,6 +200,8 @@ class Seacas(CMakePackage):
                 from_variant("BUILD_SHARED_LIBS", "shared"),
                 from_variant("SEACASExodus_ENABLE_THREADSAFE", "thread_safe"),
                 from_variant("SEACASIoss_ENABLE_THREADSAFE", "thread_safe"),
+                # SEACASExodus_ENABLE_THREADSAFE=ON requires TPL_ENABLE_Pthread=ON
+                from_variant("TPL_ENABLE_Pthread", "thread_safe"),
                 from_variant("TPL_ENABLE_X11", "x11"),
                 from_variant(project_name_base + "_ENABLE_Fortran", "fortran"),
             ]
@@ -286,10 +297,7 @@ class Seacas(CMakePackage):
         # ##################### Dependencies ##########################
         # Always need NetCDF-C
         options.extend(
-            [
-                define("TPL_ENABLE_Netcdf", True),
-                define("NetCDF_ROOT", spec["netcdf-c"].prefix),
-            ]
+            [define("TPL_ENABLE_Netcdf", True), define("NetCDF_ROOT", spec["netcdf-c"].prefix)]
         )
 
         if "+parmetis" in spec:
@@ -323,10 +331,7 @@ class Seacas(CMakePackage):
             )
         else:
             options.extend(
-                [
-                    define("TPL_ENABLE_METIS", False),
-                    define("TPL_ENABLE_ParMETIS", False),
-                ]
+                [define("TPL_ENABLE_METIS", False), define("TPL_ENABLE_ParMETIS", False)]
             )
 
         options.append(from_variant("TPL_ENABLE_Matio", "matio"))

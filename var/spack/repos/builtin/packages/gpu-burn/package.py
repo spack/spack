@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class GpuBurn(MakefilePackage, CudaPackage):
     # This package uses CudaPackage to pick up the cuda_arch variant. A side
     # effect is that it also picks up the cuda variant, but cuda is required
     # for gpu-burn so is not really a variant.
-    variant("cuda", "True", description="Use CUDA; must be true")
+    variant("cuda", default=True, description="Use CUDA; must be true")
 
     conflicts("~cuda", msg="gpu-burn requires cuda")
     conflicts("cuda_arch=none", msg="must select a CUDA architecture")

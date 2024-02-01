@@ -3,8 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.build_systems.python import PythonPackage
-from spack.directives import depends_on, variant, version
+from spack.package import *
 
 
 class PyAtlinter(PythonPackage):
@@ -25,9 +24,8 @@ class PyAtlinter(PythonPackage):
 
     # opencv leads to problems:
     # fatal error: opencv2/opencv.hpp: No such file or directory
-    # mxnet is pinned because otherwise it tries to build @1.master.
-    depends_on("mxnet@1.8+cuda~opencv", when="+cuda", type=("build", "run"))
-    depends_on("mxnet@1.8~cuda~opencv", when="~cuda", type=("build", "run"))
+    depends_on("mxnet+cuda~opencv", when="+cuda", type=("build", "run"))
+    depends_on("mxnet~cuda~opencv", when="~cuda", type=("build", "run"))
     depends_on("py-atlannot", type=("build", "run"))
     depends_on("py-atldld@0.2.2", type=("build", "run"))
     depends_on("py-dvc+ssh", type=("build", "run"))

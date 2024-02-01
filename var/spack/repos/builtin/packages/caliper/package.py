@@ -1,12 +1,10 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 import sys
-
-from llnl.util import tty
 
 from spack.package import *
 
@@ -20,27 +18,60 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/LLNL/Caliper"
     git = "https://github.com/LLNL/Caliper.git"
-    url = "https://github.com/LLNL/Caliper/archive/v2.8.0.tar.gz"
+    url = "https://github.com/LLNL/Caliper/archive/v2.10.0.tar.gz"
     tags = ["e4s", "radiuss"]
 
-    maintainers = ["daboehme"]
+    maintainers("daboehme")
 
     test_requires_compiler = True
 
     version("master", branch="master")
+    version("2.10.0", sha256="14c4fb5edd5e67808d581523b4f8f05ace8549698c0e90d84b53171a77f58565")
+    version("2.9.1", sha256="4771d630de505eff9227e0ec498d0da33ae6f9c34df23cb201b56181b8759e9e")
+    version("2.9.0", sha256="507ea74be64a2dfd111b292c24c4f55f459257528ba51a5242313fa50978371f")
     version("2.8.0", sha256="17807b364b5ac4b05997ead41bd173e773f9a26ff573ff2fe61e0e70eab496e4")
-    version("2.7.0", sha256="b3bf290ec2692284c6b4f54cc0c507b5700c536571d3e1a66e56626618024b2b")
-    version("2.6.0", sha256="6efcd3e4845cc9a6169e0d934840766b12182c6d09aa3ceca4ae776e23b6360f")
-    version("2.5.0", sha256="d553e60697d61c53de369b9ca464eb30710bda90fba9671201543b64eeac943c")
-    version("2.4.0", tag="v2.4.0")
-    version("2.3.0", tag="v2.3.0")
-    version("2.2.0", tag="v2.2.0")
-    version("2.1.1", tag="v2.1.1")
-    version("2.0.1", tag="v2.0.1")
-    version("1.9.1", tag="v1.9.1")
-    version("1.9.0", tag="v1.9.0")
-    version("1.8.0", tag="v1.8.0")
-    version("1.7.0", tag="v1.7.0")
+    version(
+        "2.7.0",
+        sha256="b3bf290ec2692284c6b4f54cc0c507b5700c536571d3e1a66e56626618024b2b",
+        deprecated=True,
+    )
+    version(
+        "2.6.0",
+        sha256="6efcd3e4845cc9a6169e0d934840766b12182c6d09aa3ceca4ae776e23b6360f",
+        deprecated=True,
+    )
+    version(
+        "2.5.0",
+        sha256="d553e60697d61c53de369b9ca464eb30710bda90fba9671201543b64eeac943c",
+        deprecated=True,
+    )
+    version(
+        "2.4.0", tag="v2.4.0", commit="30577b4b8beae104b2b35ed487fec52590a99b3d", deprecated=True
+    )
+    version(
+        "2.3.0", tag="v2.3.0", commit="9fd89bb0120750d1f9dfe37bd963e24e478a2a20", deprecated=True
+    )
+    version(
+        "2.2.0", tag="v2.2.0", commit="c408e9b3642c7aa80eff37b0826d819c57e7bc04", deprecated=True
+    )
+    version(
+        "2.1.1", tag="v2.1.1", commit="0593b0e01c1d8d3e50c990399cc0fee403485599", deprecated=True
+    )
+    version(
+        "2.0.1", tag="v2.0.1", commit="4d7ff46381c53a461e62edd949e2d9dea9db7b08", deprecated=True
+    )
+    version(
+        "1.9.1", tag="v1.9.1", commit="cfc1defbbee20b50dd3e3477badd09a92b1df970", deprecated=True
+    )
+    version(
+        "1.9.0", tag="v1.9.0", commit="8356e747349b285aa621c5b74e71559f0babc4a1", deprecated=True
+    )
+    version(
+        "1.8.0", tag="v1.8.0", commit="117c1ef596b617dc71407b8b67eebef094a654f8", deprecated=True
+    )
+    version(
+        "1.7.0", tag="v1.7.0", commit="898277c93d884d4e7ca1ffcf3bbea81d22364f26", deprecated=True
+    )
 
     is_linux = sys.platform.startswith("linux")
     variant("shared", default=True, description="Build shared libraries")
@@ -59,6 +90,8 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
     variant("sampler", default=is_linux, description="Enable sampling support on Linux")
     variant("sosflow", default=False, description="Enable SOSflow support")
     variant("fortran", default=False, description="Enable Fortran support")
+    variant("variorum", default=False, description="Enable Variorum support")
+    variant("kokkos", default=True, when="@2.3.0:", description="Enable Kokkos profiling support")
 
     depends_on("adiak@0.1:0", when="@2.2: +adiak")
 
@@ -70,6 +103,7 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("mpi", when="+mpi")
     depends_on("unwind@1.2:1", when="+libunwind")
     depends_on("elfutils", when="+libdw")
+    depends_on("variorum", when="+variorum")
 
     depends_on("sosflow@spack", when="@1.0:1+sosflow")
 
@@ -77,13 +111,17 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("python", type="build")
 
     # sosflow support not yet in 2.0
-    conflicts("+sosflow", "@2.0.0:2.8")
+    conflicts("+sosflow", "@2.0.0:2.9")
     conflicts("+adiak", "@:2.1")
     conflicts("+libdw", "@:2.4")
     conflicts("+rocm", "@:2.7")
     conflicts("+rocm+cuda")
 
     patch("for_aarch64.patch", when="target=aarch64:")
+    patch(
+        "sampler-service-missing-libunwind-include-dir.patch",
+        when="@2.9.0:2.9.1 +libunwind +sampler",
+    )
 
     def cmake_args(self):
         spec = self.spec
@@ -106,6 +144,8 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("WITH_NVTX", "cuda"),
             self.define_from_variant("WITH_ROCTRACER", "rocm"),
             self.define_from_variant("WITH_ROCTX", "rocm"),
+            self.define_from_variant("WITH_VARIORUM", "variorum"),
+            self.define_from_variant("WITH_KOKKOS", "kokkos"),
         ]
 
         if "+papi" in spec:
@@ -116,6 +156,8 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
             args.append("-DLIBPFM_INSTALL=%s" % spec["libpfm4"].prefix)
         if "+sosflow" in spec:
             args.append("-DSOS_PREFIX=%s" % spec["sosflow"].prefix)
+        if "+variorum" in spec:
+            args.append("-DVARIORUM_PREFIX=%s" % spec["variorum"].prefix)
 
         # -DWITH_CALLPATH was renamed -DWITH_LIBUNWIND in 2.5
         callpath_flag = "LIBUNWIND" if spec.satisfies("@2.5:") else "CALLPATH"
@@ -136,6 +178,7 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
             args.append("-DCUPTI_PREFIX=%s" % spec["cuda"].prefix)
 
         if "+rocm" in spec:
+            args.append("-DCMAKE_CXX_COMPILER={0}".format(spec["hip"].hipcc))
             args.append("-DROCM_PREFIX=%s" % spec["hsa-rocr-dev"].prefix)
 
         return args
@@ -146,44 +189,31 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources([join_path("examples", "apps")])
 
-    def run_cxx_example_test(self):
-        """Run stand alone test: cxx_example"""
+    def test_cxx_example(self):
+        """build and run cxx-example"""
 
-        test_dir = self.test_suite.current_test_cache_dir.examples.apps
         exe = "cxx-example"
-        source_file = "cxx-example.cpp"
+        source_file = "{0}.cpp".format(exe)
 
-        if not os.path.isfile(join_path(test_dir, source_file)):
-            tty.warn("Skipping caliper test:" "{0} does not exist".format(source_file))
-            return
+        source_path = find_required_file(
+            self.test_suite.current_test_cache_dir, source_file, expected=1, recursive=True
+        )
 
-        if os.path.exists(self.prefix.lib):
-            lib_dir = self.prefix.lib
-        else:
-            lib_dir = self.prefix.lib64
+        lib_dir = self.prefix.lib if os.path.exists(self.prefix.lib) else self.prefix.lib64
 
-        options = [
-            "-L{0}".format(lib_dir),
-            "-I{0}".format(self.prefix.include),
-            "{0}".format(join_path(test_dir, source_file)),
-            "-o",
-            exe,
-            "-std=c++11",
-            "-lcaliper",
-            "-lstdc++",
-        ]
+        cxx = which(os.environ["CXX"])
+        test_dir = os.path.dirname(source_path)
+        with working_dir(test_dir):
+            cxx(
+                "-L{0}".format(lib_dir),
+                "-I{0}".format(self.prefix.include),
+                source_path,
+                "-o",
+                exe,
+                "-std=c++11",
+                "-lcaliper",
+                "-lstdc++",
+            )
 
-        if not self.run_test(
-            exe=os.environ["CXX"],
-            options=options,
-            purpose="test: compile {0} example".format(exe),
-            work_dir=test_dir,
-        ):
-            tty.warn("Skipping caliper test: failed to compile example")
-            return
-
-        if not self.run_test(exe, purpose="test: run {0} example".format(exe), work_dir=test_dir):
-            tty.warn("Skipping caliper test: failed to run example")
-
-    def test(self):
-        self.run_cxx_example_test()
+            cxx_example = which(exe)
+            cxx_example()

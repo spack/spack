@@ -13,7 +13,6 @@ class Brion(CMakePackage):
 
     homepage = "https://github.com/BlueBrain/Brion"
     git = "https://github.com/BlueBrain/Brion.git"
-    generator = "Ninja"
 
     submodules = True
 
@@ -50,6 +49,8 @@ class Brion(CMakePackage):
     depends_on("mvdtool")
     depends_on("glm@:0.9.9.5")
 
+    generator("ninja")
+
     extends("python", when="+python")
 
     patch(
@@ -60,11 +61,7 @@ class Brion(CMakePackage):
 
     def patch(self):
         if self.spec.satisfies("%gcc@12:") and not self.spec.satisfies("@develop"):
-            filter_file(
-                r"-Werror",
-                "",
-                "CMake/CompileOptions.cmake",
-            )
+            filter_file(r"-Werror", "", "CMake/CompileOptions.cmake")
 
     def cmake_args(self):
         args = [

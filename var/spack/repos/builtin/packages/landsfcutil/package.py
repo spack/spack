@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,9 +14,11 @@ class Landsfcutil(CMakePackage):
 
     homepage = "https://github.com/NOAA-EMC/NCEPLIBS-landsfcutil"
     url = "https://github.com/NOAA-EMC/NCEPLIBS-landsfcutil/archive/refs/tags/v2.4.1.tar.gz"
+    git = "https://github.com/NOAA-EMC/NCEPLIBS-landsfcutil"
 
-    maintainers = ["edwardhartnett", "AlexanderRichert-NOAA", "Hang-Lei-NOAA"]
+    maintainers("edwardhartnett", "AlexanderRichert-NOAA", "Hang-Lei-NOAA")
 
+    version("develop", branch="develop")
     version("2.4.1", sha256="831c5005a480eabe9a8542b4deec838c2650f6966863ea2711cc0cc5db51ca14")
 
     def setup_run_environment(self, env):

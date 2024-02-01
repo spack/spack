@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Grabix(MakefilePackage):
     homepage = "https://github.com/arq5x/grabix"
     url = "https://github.com/arq5x/grabix/archive/v0.1.7.tar.gz"
 
-    maintainers = ["robqiao"]
+    maintainers("robqiao")
 
     version("0.1.7", sha256="d90735c55c0985a4d751858d7ce9e36ad534fff4103257e8e981e34d5c915b28")
 

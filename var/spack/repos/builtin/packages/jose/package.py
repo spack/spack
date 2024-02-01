@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,5 +18,5 @@ class Jose(AutotoolsPackage):
 
     depends_on("pkgconfig", type="build")
     depends_on("jansson@2.10:")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("openssl@1.0.2:")

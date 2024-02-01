@@ -1,14 +1,16 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 
+import llnl.util.filesystem as fs
+
 from spack.package import *
 
 
-class Gromacs(CMakePackage):
+class Gromacs(CMakePackage, CudaPackage):
     """GROMACS is a molecular dynamics package primarily designed for simulations
     of proteins, lipids and nucleic acids. It was originally developed in
     the Biophysical Chemistry department of University of Groningen, and is now
@@ -24,14 +26,22 @@ class Gromacs(CMakePackage):
     url = "https://ftp.gromacs.org/gromacs/gromacs-2022.2.tar.gz"
     list_url = "https://ftp.gromacs.org/gromacs"
     git = "https://gitlab.com/gromacs/gromacs.git"
-    maintainers = ["junghans", "marvinbernhardt"]
+    maintainers("danielahlin", "eirrgang", "junghans")
 
     version("main", branch="main")
     version("master", branch="main", deprecated=True)
+    version("2023.3", sha256="4ec8f8d0c7af76b13f8fd16db8e2c120e749de439ae9554d9f653f812d78d1cb")
+    version("2023.2", sha256="bce1480727e4b2bb900413b75d99a3266f3507877da4f5b2d491df798f9fcdae")
+    version("2023.1", sha256="eef2bb4a6cb6314cf9da47f26df2a0d27af4bf7b3099723d43601073ab0a42f4")
+    version("2023", sha256="ac92c6da72fbbcca414fd8a8d979e56ecf17c4c1cdabed2da5cfb4e7277b7ba8")
+    version("2022.6", sha256="75d277138475679dd3e334e384a71516570cde767310476687f2a5b72333ea41")
+    version("2022.5", sha256="083cc3c424bb93ffe86c12f952e3e5b4e6c9f6520de5338761f24b75e018c223")
+    version("2022.4", sha256="c511be602ff29402065b50906841def98752639b92a95f1b0a1060d9b5e27297")
     version("2022.3", sha256="14cfb130ddaf8f759a3af643c04f5a0d0d32b09bc3448b16afa5b617f5e35dae")
     version("2022.2", sha256="656404f884d2fa2244c97d2a5b92af148d0dbea94ad13004724b3fcbf45e01bf")
     version("2022.1", sha256="85ddab5197d79524a702c4959c2c43be875e0fc471df3a35224939dce8512450")
     version("2022", sha256="fad60d606c02e6164018692c6c9f2c159a9130c2bf32e8c5f4f1b6ba2dda2b68")
+    version("2021.7", sha256="4db7bbbfe5424de48373686ec0e8c5bfa7175d5cd74290ef1c1e840e6df67f06")
     version("2021.6", sha256="52df2c1d7586fd028d9397985c68bd6dd26e6e905ead382b7e6c473d087902c3")
     version("2021.5", sha256="eba63fe6106812f72711ef7f76447b12dd1ee6c81b3d8d4d0e3098cd9ea009b6")
     version("2021.4", sha256="cb708a3e3e83abef5ba475fdb62ef8d42ce8868d68f52dafdb6702dc9742ba1d")
@@ -80,14 +90,13 @@ class Gromacs(CMakePackage):
         default=False,
         description="Produces a double precision version of the executables",
     )
-    variant("plumed", default=False, description="Enable PLUMED support")
-    variant("cuda", default=False, description="Enable CUDA support")
+    variant("cufftmp", default=False, when="+cuda+mpi", description="Enable Multi GPU FFT support")
     variant("opencl", default=False, description="Enable OpenCL support")
     variant("sycl", default=False, description="Enable SYCL support")
     variant("nosuffix", default=False, description="Disable default suffixes")
     variant(
         "build_type",
-        default="RelWithDebInfo",
+        default="Release",
         description="The build type to build",
         values=(
             "Debug",
@@ -109,6 +118,19 @@ class Gromacs(CMakePackage):
         "+mdrun_only", when="@2021:", msg="mdrun-only build option was removed for GROMACS 2021."
     )
     variant("openmp", default=True, description="Enables OpenMP at configure time")
+    variant("openmp_max_threads", default="none", description="Max number of OpenMP threads")
+    conflicts(
+        "+openmp_max_threads", when="~openmp", msg="OpenMP is off but OpenMP Max threads is set"
+    )
+    variant(
+        "sve",
+        default=True,
+        description="Enable SVE on aarch64 if available",
+        when="target=neoverse_v1",
+    )
+    variant(
+        "sve", default=True, description="Enable SVE on aarch64 if available", when="target=a64fx"
+    )
     variant(
         "relaxed_double_precision",
         default=False,
@@ -120,8 +142,6 @@ class Gromacs(CMakePackage):
         msg="GMX_RELAXED_DOUBLE_PRECISION option removed for GROMACS 2021.",
     )
     variant("hwloc", default=True, description="Use the hwloc portable hardware locality library")
-    variant("lapack", default=False, description="Enables an external LAPACK library")
-    variant("blas", default=False, description="Enables an external BLAS library")
     variant("cycle_subcounters", default=False, description="Enables cycle subcounters")
 
     variant("cp2k", default=False, description="CP2K QM/MM interface integration")
@@ -129,75 +149,89 @@ class Gromacs(CMakePackage):
         "+cp2k", when="@:2021", msg="CP2K QM/MM support have been introduced in GROMACS 2022"
     )
     conflicts("+shared", when="+cp2k", msg="Enabling CP2K requires static build")
+    conflicts("%intel", when="@2022:", msg="GROMACS %intel support was removed in version 2022")
+    conflicts("%gcc@:8", when="@2023:", msg="GROMACS requires GCC 9 or later since version 2023")
     conflicts(
-        "~lapack",
-        when="+cp2k",
-        msg="GROMACS and CP2K should use the same lapack, please disable bundled lapack",
-    )
-    conflicts(
-        "~blas",
-        when="+cp2k",
-        msg="GROMACS and CP2K should use the same blas, please disable bundled blas",
+        "^intel-oneapi-mkl@:2021.2",
+        when="@2023:",
+        msg="GROMACS requires oneMKL 2021.3 or later since version 2023",
     )
 
     depends_on("mpi", when="+mpi")
 
-    # Plumed 2.8.0 needs Gromacs 2021.4, 2020.6, 2019.6
-    # Plumed 2.7.4 needs Gromacs 2021.4, 2020.6, 2019.6
-    # Plumed 2.7.3 needs Gromacs 2021.4, 2020.6, 2019.6
-    # Plumed 2.7.2 needs Gromacs 2021,   2020.6, 2019.6
-    # Plumed 2.7.1 needs Gromacs 2021,   2020.5, 2019.6
-    # Plumed 2.7.0 needs Gromacs         2020.4, 2019.6
-    # Plumed 2.6.6 needs Gromacs         2020.4, 2019.6, 2018.8
-    # Plumed 2.6.5 needs Gromacs         2020.4, 2019.6, 2018.8
-    # Plumed 2.6.4 needs Gromacs         2020.4, 2019.6, 2018.8
-    # Plumed 2.6.3 needs Gromacs         2020.4, 2019.6, 2018.8
-    # Plumed 2.6.2 needs Gromacs         2020.4, 2019.6, 2018.8
-    # Plumed 2.6.1 needs Gromacs         2020.2, 2019.6, 2018.8
-    # Plumed 2.6.0 needs Gromacs                 2019.4, 2018.8
-    # Plumed 2.5.7 needs Gromacs                 2019.4, 2018.8, 2016.6
-    # Plumed 2.5.6 needs Gromacs                 2019.4, 2018.8, 2016.6
-    # Plumed 2.5.5 needs Gromacs                 2019.4, 2018.8, 2016.6
-    # Plumed 2.5.4 needs Gromacs                 2019.4, 2018.8, 2016.6
-    # Plumed 2.5.3 needs Gromacs                 2019.4, 2018.8, 2016.6
-    # Plumed 2.5.2 needs Gromacs                 2019.2, 2018.6, 2016.6
-    # Plumed 2.5.1 needs Gromacs                         2018.6, 2016.6
-    # Plumed 2.5.0 needs Gromacs                         2018.4, 2016.5
+    # Plumed 2.9.0 needs Gromacs 2023,  2022.5, 2021.7, 2020.7
+    # Plumed 2.8.3 needs Gromacs        2022.5, 2021.7, 2020.7, 2019.6
+    # Plumed 2.8.2 needs Gromacs        2022.5, 2021.7, 2020.7, 2019.6
+    # Plumed 2.8.1 needs Gromacs        2022.3, 2021.6, 2020.7, 2019.6
+    # Plumed 2.8.0 needs Gromacs                2021.4, 2020.6, 2019.6
+    # Plumed 2.7.6 needs Gromacs                2021.5, 2020.6, 2019.6
+    # Plumed 2.7.5 needs Gromacs                2021.5, 2020.6, 2019.6
+    # Plumed 2.7.4 needs Gromacs                2021.4, 2020.6, 2019.6
+    # Plumed 2.7.3 needs Gromacs                2021.4, 2020.6, 2019.6
+    # Plumed 2.7.2 needs Gromacs                2021,   2020.6, 2019.6
+    # Plumed 2.7.1 needs Gromacs                2021,   2020.5, 2019.6
+    # Plumed 2.7.0 needs Gromacs                        2020.4, 2019.6
+    # Plumed 2.6.6 needs Gromacs                        2020.4, 2019.6, 2018.8
+    # Plumed 2.6.5 needs Gromacs                        2020.4, 2019.6, 2018.8
+    # Plumed 2.6.4 needs Gromacs                        2020.4, 2019.6, 2018.8
+    # Plumed 2.6.3 needs Gromacs                        2020.4, 2019.6, 2018.8
+    # Plumed 2.6.2 needs Gromacs                        2020.4, 2019.6, 2018.8
+    # Plumed 2.6.1 needs Gromacs                        2020.2, 2019.6, 2018.8
+    # Plumed 2.6.0 needs Gromacs                                2019.4, 2018.8
+    # Plumed 2.5.7 needs Gromacs                                2019.4, 2018.8, 2016.6
+    # Plumed 2.5.6 needs Gromacs                                2019.4, 2018.8, 2016.6
+    # Plumed 2.5.5 needs Gromacs                                2019.4, 2018.8, 2016.6
+    # Plumed 2.5.4 needs Gromacs                                2019.4, 2018.8, 2016.6
+    # Plumed 2.5.3 needs Gromacs                                2019.4, 2018.8, 2016.6
+    # Plumed 2.5.2 needs Gromacs                                2019.2, 2018.6, 2016.6
+    # Plumed 2.5.1 needs Gromacs                                        2018.6, 2016.6
+    # Plumed 2.5.0 needs Gromacs                                        2018.4, 2016.5
 
     # Above dependencies can be verified, and new versions added, by going to
-    # https://github.com/plumed/plumed2/tree/v2.7.1/patches
+    # https://github.com/plumed/plumed2/tree/v2.9.0/patches
     # and switching tags.
+    plumed_patches = {
+        "2023": "2.9.0",
+        "2022.5": "2.8.2:2.9.0",
+        "2022.3": "2.8.1",
+        "2021.7": "2.8.2:2.9.0",
+        "2021.6": "2.8.1",
+        "2021.5": "2.7.5:2.7.6",
+        "2021.4": "2.7.3:2.8.0",
+        "2021": "2.7.1:2.7.2",
+        "2020.7": "2.8.1:2.9.0",
+        "2020.6": "2.7.2:2.8.0",
+        "2020.5": "2.7.1",
+        "2020.4": "2.6.2:2.7.0",
+        "2020.2": "2.6.1",
+        "2019.6": "2.6.1:2.8.3",
+        "2019.4": "2.5.3:2.6.0",
+        "2019.2": "2.5.2",
+        "2018.8": "2.5.3:2.6",
+        "2018.6": "2.5.1:2.5.2",
+        "2018.4": "2.5.0",
+        "2016.6": "2.5.1:2.5",
+        "2016.5": "2.5.0",
+    }
 
-    depends_on("plumed+mpi", when="+plumed+mpi")
-    depends_on("plumed~mpi", when="+plumed~mpi")
-    depends_on("plumed@2.7.3:2.8.0+mpi", when="@2021.4+plumed+mpi")
-    depends_on("plumed@2.7.3:2.8.0~mpi", when="@2021.4+plumed~mpi")
-    depends_on("plumed@2.7.1:2.7.2+mpi", when="@2021+plumed+mpi")
-    depends_on("plumed@2.7.1:2.7.2~mpi", when="@2021+plumed~mpi")
-    depends_on("plumed@2.7.2:2.8+mpi", when="@2020.6+plumed+mpi")
-    depends_on("plumed@2.7.2:2.8~mpi", when="@2020.6+plumed~mpi")
-    depends_on("plumed@2.7.1+mpi", when="@2020.5+plumed+mpi")
-    depends_on("plumed@2.7.1~mpi", when="@2020.5+plumed~mpi")
-    depends_on("plumed@2.6.2:2.7.0+mpi", when="@2020.4+plumed+mpi")
-    depends_on("plumed@2.6.2:2.7.0~mpi", when="@2020.4+plumed~mpi")
-    depends_on("plumed@2.6.1+mpi", when="@2020.2+plumed+mpi")
-    depends_on("plumed@2.6.1~mpi", when="@2020.2+plumed~mpi")
-    depends_on("plumed@2.6.1:2.8.0+mpi", when="@2019.6+plumed+mpi")
-    depends_on("plumed@2.6.1:2.8.0~mpi", when="@2019.6+plumed~mpi")
-    depends_on("plumed@2.5.3:2.6.0+mpi", when="@2019.4+plumed+mpi")
-    depends_on("plumed@2.5.3:2.6.0~mpi", when="@2019.4+plumed~mpi")
-    depends_on("plumed@2.5.2+mpi", when="@2019.2+plumed+mpi")
-    depends_on("plumed@2.5.2~mpi", when="@2019.2+plumed~mpi")
-    depends_on("plumed@2.5.3:2.6+mpi", when="@2018.8+plumed+mpi")
-    depends_on("plumed@2.5.3:2.6~mpi", when="@2018.8+plumed~mpi")
-    depends_on("plumed@2.5.1:2.5.2+mpi", when="@2018.6+plumed+mpi")
-    depends_on("plumed@2.5.1:2.5.2~mpi", when="@2018.6+plumed~mpi")
-    depends_on("plumed@2.5.0+mpi", when="@2018.4+plumed+mpi")
-    depends_on("plumed@2.5.0~mpi", when="@2018.4+plumed~mpi")
-    depends_on("plumed@2.5.1:2.5+mpi", when="@2016.6+plumed+mpi")
-    depends_on("plumed@2.5.1:2.5~mpi", when="@2016.6+plumed~mpi")
-    depends_on("plumed@2.5.0+mpi", when="@2016.5+plumed+mpi")
-    depends_on("plumed@2.5.0~mpi", when="@2016.5+plumed~mpi")
+    variant(
+        "plumed",
+        default=False,
+        description="Enable PLUMED support",
+        when="@{0}".format(",".join(plumed_patches.keys())),
+    )
+    with when("+plumed"):
+        depends_on("plumed+mpi", when="+mpi")
+        depends_on("plumed~mpi", when="~mpi")
+        for gmx_ver, plumed_vers in plumed_patches.items():
+            depends_on("plumed@{0}".format(plumed_vers), when="@{0}+plumed".format(gmx_ver))
+
+    variant(
+        "intel_provided_gcc",
+        default=False,
+        description="Use this if Intel compiler is installed through spack."
+        + "The g++ location is written to icp{c,x}.cfg",
+    )
 
     depends_on("fftw-api@3")
     depends_on("cmake@2.8.8:3", type="build")
@@ -209,17 +243,39 @@ class Gromacs(CMakePackage):
     depends_on("cmake@3.16.0:3", type="build", when="%fj")
     depends_on("cuda", when="+cuda")
     depends_on("sycl", when="+sycl")
-    depends_on("lapack", when="+lapack")
-    depends_on("blas", when="+blas")
+    depends_on("lapack")
+    depends_on("blas")
+    depends_on("gcc", when="%oneapi ~intel_provided_gcc")
+    depends_on("gcc", when="%intel ~intel_provided_gcc")
 
     depends_on("hwloc@1.0:1", when="+hwloc@2016:2018")
     depends_on("hwloc", when="+hwloc@2019:")
 
     depends_on("cp2k@8.1:", when="+cp2k")
-    depends_on("dbcsr", when="+cp2k")
+
+    depends_on("nvhpc", when="+cufftmp")
+
+    requires(
+        "%intel",
+        "%oneapi",
+        policy="one_of",
+        when="+intel_provided_gcc",
+        msg="Only attempt to find gcc libs for Intel compiler if Intel compiler is used.",
+    )
+
+    # If the Intel suite is used for Lapack, it must be used for fftw and vice-versa
+    for _intel_pkg in INTEL_MATH_LIBRARIES:
+        requires(f"^[virtuals=fftw-api] {_intel_pkg}", when=f"^[virtuals=lapack]   {_intel_pkg}")
+        requires(f"^[virtuals=lapack]   {_intel_pkg}", when=f"^[virtuals=fftw-api] {_intel_pkg}")
 
     patch("gmxDetectCpu-cmake-3.14.patch", when="@2018:2019.3^cmake@3.14.0:")
     patch("gmxDetectSimd-cmake-3.14.patch", when="@5.0:2017^cmake@3.14.0:")
+    # 2021.2 will always try to build tests (see https://gromacs.bioexcel.eu/t/compilation-failure-for-gromacs-2021-1-and-2021-2-with-cmake-3-20-2/2129)
+    patch(
+        "https://gitlab.com/gromacs/gromacs/-/commit/10262892e11a87fda0f59e633c89ed5ab1100509.diff",
+        sha256="2c30d00404b76421c13866cc42afa5e63276f7926c862838751b158df8727b1b",
+        when="@2021.1:2021.2",
+    )
 
     filter_compiler_wrappers(
         "*.cmake", relative_root=os.path.join("share", "cmake", "gromacs_mpi")
@@ -251,6 +307,15 @@ class Gromacs(CMakePackage):
                 "#include <queue>",
                 "#include <queue>\n#include <limits>",
                 "src/gromacs/modularsimulator/modularsimulator.h",
+            )
+        # Ref: https://gitlab.com/gromacs/gromacs/-/merge_requests/3504
+        if self.spec.satisfies("@2023"):
+            filter_file(
+                "        if (std::filesystem::equivalent(searchPath, buildBinPath))",
+                "        if (std::error_code c; std::filesystem::equivalent(searchPath,"
+                " buildBinPath, c))",
+                "src/gromacs/commandline/cmdlineprogramcontext.cpp",
+                string=True,
             )
 
         if "+plumed" in self.spec:
@@ -296,13 +361,54 @@ class Gromacs(CMakePackage):
                     r"-gencode;arch=compute_20,code=sm_21;?", "", "cmake/gmxManageNvccConfig.cmake"
                 )
 
-    def cmake_args(self):
 
+class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+    @run_after("build")
+    def build_test_binaries(self):
+        """Build the test binaries.
+
+        GROMACS usually excludes tests from the default build target, but building
+        the tests during spack's ``check`` phase takes a long time while producing
+        no visible output, even with ``--verbose``.
+
+        Here, we make sure the test binaries are built during the build phase
+        (as would normally be expected when configured with BUILD_TESTING)
+        when the ``--test`` flag is used.
+
+        Note: the GMX_DEVELOPER_BUILD option disables the EXCLUDE_FROM_ALL on the
+        test binaries, but the option incurs additional side effects that may
+        not be intended with ``--test``.
+        """
+        if self.pkg.run_tests:
+            with fs.working_dir(self.build_directory):
+                make("tests")
+
+    def check(self):
+        """Run the ``check`` target (skipping the ``test`` target).
+
+        Override the standard CMakeBuilder behavior. GROMACS has both `test`
+        and `check` targets, but we are only interested in the latter.
+        """
+        with fs.working_dir(self.build_directory):
+            if self.generator == "Unix Makefiles":
+                make("check")
+            elif self.generator == "Ninja":
+                ninja("check")
+
+    def cmake_args(self):
         options = []
+        # Warning: Use `define_from_variant()` with caution.
+        # GROMACS may use unexpected conventions for CMake variable values.
+        # For example: variables that accept boolean values like "OFF"
+        # may actually be STRING type, and undefined variables may trigger
+        # different defaults for dependent options than explicitly defined variables.
+        # `-DGMX_VAR=OFF` may not have the same meaning as `-DGMX_VAR=`.
+        # In other words, the mapping between package variants and the
+        # GMX CMake variables is often non-trivial.
 
         if "+mpi" in self.spec:
             options.append("-DGMX_MPI:BOOL=ON")
-            if self.version < Version("2020"):
+            if self.pkg.version < Version("2020"):
                 # Ensures gmxapi builds properly
                 options.extend(
                     [
@@ -311,7 +417,7 @@ class Gromacs(CMakePackage):
                         "-DCMAKE_Fortran_COMPILER=%s" % self.spec["mpi"].mpifc,
                     ]
                 )
-            elif self.version == Version("2021"):
+            elif self.pkg.version == Version("2021"):
                 # Work around https://gitlab.com/gromacs/gromacs/-/issues/3896
                 # Ensures gmxapi builds properly
                 options.extend(
@@ -339,8 +445,22 @@ class Gromacs(CMakePackage):
                 ]
             )
 
+        if self.spec.satisfies("%aocc"):
+            options.append("-DCMAKE_CXX_FLAGS=--stdlib=libc++")
+
         if self.spec.satisfies("@2020:"):
             options.append("-DGMX_INSTALL_LEGACY_API=ON")
+
+        if self.spec.satisfies("%oneapi") or self.spec.satisfies("%intel"):
+            # If intel-oneapi-compilers was installed through spack the gcc is added to the
+            # configuration file.
+            if self.spec.satisfies("+intel_provided_gcc") and os.path.exists(
+                ".".join([os.environ["SPACK_CXX"], "cfg"])
+            ):
+                with open(".".join([os.environ["SPACK_CXX"], "cfg"]), "r") as f:
+                    options.append("-DCMAKE_CXX_FLAGS={}".format(f.read()))
+            else:
+                options.append("-DGMX_GPLUSPLUS_PATH=%s/g++" % self.spec["gcc"].prefix.bin)
 
         if "+double" in self.spec:
             options.append("-DGMX_DOUBLE:BOOL=ON")
@@ -357,7 +477,7 @@ class Gromacs(CMakePackage):
         else:
             options.append("-DGMX_HWLOC:BOOL=OFF")
 
-        if self.version >= Version("2021"):
+        if self.pkg.version >= Version("2021"):
             if "+cuda" in self.spec:
                 options.append("-DGMX_GPU:STRING=CUDA")
             elif "+opencl" in self.spec:
@@ -377,29 +497,31 @@ class Gromacs(CMakePackage):
         if "+cuda" in self.spec:
             options.append("-DCUDA_TOOLKIT_ROOT_DIR:STRING=" + self.spec["cuda"].prefix)
 
-        if "+lapack" in self.spec:
-            options.append("-DGMX_EXTERNAL_LAPACK:BOOL=ON")
-            if self.spec["lapack"].libs:
-                options.append(
-                    "-DGMX_LAPACK_USER={0}".format(self.spec["lapack"].libs.joined(";"))
-                )
-        else:
-            options.append("-DGMX_EXTERNAL_LAPACK:BOOL=OFF")
+        options.append("-DGMX_EXTERNAL_LAPACK:BOOL=ON")
+        if self.spec["lapack"].libs:
+            options.append("-DGMX_LAPACK_USER={0}".format(self.spec["lapack"].libs.joined(";")))
 
-        if "+blas" in self.spec:
-            options.append("-DGMX_EXTERNAL_BLAS:BOOL=ON")
-            if self.spec["blas"].libs:
-                options.append("-DGMX_BLAS_USER={0}".format(self.spec["blas"].libs.joined(";")))
-        else:
-            options.append("-DGMX_EXTERNAL_BLAS:BOOL=OFF")
+        options.append("-DGMX_EXTERNAL_BLAS:BOOL=ON")
+        if self.spec["blas"].libs:
+            options.append("-DGMX_BLAS_USER={0}".format(self.spec["blas"].libs.joined(";")))
 
         if "+cp2k" in self.spec:
             options.append("-DGMX_CP2K:BOOL=ON")
             options.append("-DCP2K_DIR:STRING={0}".format(self.spec["cp2k"].prefix))
 
+        if "+cufftmp" in self.spec:
+            options.append("-DGMX_USE_CUFFTMP=ON")
+            options.append(
+                f'-DcuFFTMp_ROOT={self.spec["nvhpc"].prefix}/Linux_{self.spec.target.family}'
+                + f'/{self.spec["nvhpc"].version}/math_libs'
+            )
+
         # Activate SIMD based on properties of the target
         target = self.spec.target
-        if target >= "zen2":
+        if target >= "zen4":
+            # AMD Family 17h (EPYC Genoa)
+            options.append("-DGMX_SIMD=AVX_512")
+        elif target >= "zen2":
             # AMD Family 17h (EPYC Rome)
             options.append("-DGMX_SIMD=AVX2_256")
         elif target >= "zen":
@@ -418,6 +540,8 @@ class Gromacs(CMakePackage):
             # ARMv8
             if self.spec.satisfies("%nvhpc"):
                 options.append("-DGMX_SIMD=None")
+            elif "sve" in target.features and "+sve" in self.spec:
+                options.append("-DGMX_SIMD=ARM_SVE")
             else:
                 options.append("-DGMX_SIMD=ARM_NEON_ASIMD")
         elif target == "mic_knl":
@@ -470,14 +594,22 @@ class Gromacs(CMakePackage):
         else:
             options.append("-DGMX_CYCLE_SUBCOUNTERS:BOOL=OFF")
 
-        if "^mkl" in self.spec:
+        if "+openmp" in self.spec and self.spec.variants["openmp_max_threads"].value != "none":
+            options.append(
+                "-DGMX_OPENMP_MAX_THREADS=%s" % self.spec.variants["openmp_max_threads"].value
+            )
+
+        if self.spec["lapack"].name in INTEL_MATH_LIBRARIES:
             # fftw-api@3 is provided by intel-mkl or intel-parllel-studio
             # we use the mkl interface of gromacs
             options.append("-DGMX_FFT_LIBRARY=mkl")
-            options.append("-DMKL_INCLUDE_DIR={0}".format(self.spec["mkl"].headers.directories[0]))
-            # The 'blas' property provides a minimal set of libraries
-            # that is sufficient for fft. Using full mkl fails the cmake test
-            options.append("-DMKL_LIBRARIES={0}".format(self.spec["blas"].libs.joined(";")))
+            if self.spec.satisfies("@:2022"):
+                options.append(
+                    "-DMKL_INCLUDE_DIR={0}".format(self.spec["mkl"].headers.directories[0])
+                )
+                # The 'blas' property provides a minimal set of libraries
+                # that is sufficient for fft. Using full mkl fails the cmake test
+                options.append("-DMKL_LIBRARIES={0}".format(self.spec["blas"].libs.joined(";")))
         else:
             # we rely on the fftw-api@3
             options.append("-DGMX_FFT_LIBRARY=fftw3")
@@ -496,6 +628,11 @@ class Gromacs(CMakePackage):
                 options.append(
                     "-DFFTWF_LIBRARY={0}".format(self.spec["armpl-gcc"].libs.joined(";"))
                 )
+            elif "^acfl" in self.spec:
+                options.append(
+                    "-DFFTWF_INCLUDE_DIR={0}".format(self.spec["acfl"].headers.directories[0])
+                )
+                options.append("-DFFTWF_LIBRARY={0}".format(self.spec["acfl"].libs.joined(";")))
 
         # Ensure that the GROMACS log files report how the code was patched
         # during the build, so that any problems are easier to diagnose.

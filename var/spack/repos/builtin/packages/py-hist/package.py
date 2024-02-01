@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class PyHist(PythonPackage):
     version("2.6.1", sha256="ee9034795fd2feefed923461aaccaf76f87c1f8d5414b1e704faa293ceb4fc27")
     version("2.5.2", sha256="0bafb8b956cc041f1b26e8f5663fb8d3b8f7673f56336facb84d8cfdc30ae2cf")
 
-    variant("plot", default="False", description="Add support for drawing histograms")
+    variant("plot", default=False, description="Add support for drawing histograms")
 
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools@45:", type="build")

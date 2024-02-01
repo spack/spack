@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Kassiopeia(CMakePackage):
 
     tags = ["hep"]
 
-    maintainers = ["wdconinc"]
+    maintainers("wdconinc")
 
     version("main", branch="main")
     version("3.8.2", sha256="9da59697365540a8b0d66e9a63f57aff6d868f7c5b39dfec28bb11ec83f31527")
@@ -41,7 +41,7 @@ class Kassiopeia(CMakePackage):
     variant("boost", default=False, description="Build Boost dependent modules")
 
     depends_on("cmake@3.13:", type="build")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("root@6.0.0:", when="+root")
     depends_on("vtk@6.1:", when="+vtk")
     depends_on("mpi", when="+mpi")

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,13 +11,20 @@ class PyCython(PythonPackage):
 
     homepage = "https://github.com/cython/cython"
     pypi = "cython/Cython-0.29.21.tar.gz"
+    tags = ["build-tools"]
 
-    version("3.0.0a9", sha256="23931c45877432097cef9de2db2dc66322cbc4fc3ebbb42c476bb2c768cecff0")
+    version("3.0.4", sha256="2e379b491ee985d31e5faaf050f79f4a8f59f482835906efe4477b33b4fbe9ff")
+    version("3.0.0", sha256="350b18f9673e63101dbbfcf774ee2f57c20ac4636d255741d76ca79016b1bd82")
     version(
-        "0.29.32",
-        sha256="8733cf4758b79304f2a4e39ebfac5e92341bce47bcceb26c1254398b2f8c1af7",
-        preferred=True,
+        "3.0.0a9",
+        sha256="23931c45877432097cef9de2db2dc66322cbc4fc3ebbb42c476bb2c768cecff0",
+        deprecated=True,
     )
+    version("0.29.36", sha256="41c0cfd2d754e383c9eeb95effc9aa4ab847d0c9747077ddd7c0dcb68c3bc01f")
+    version("0.29.35", sha256="6e381fa0bf08b3c26ec2f616b19ae852c06f5750f4290118bf986b6f85c8c527")
+    version("0.29.34", sha256="1909688f5d7b521a60c396d20bba9e47a1b2d2784bfb085401e1e1e7d29a29a8")
+    version("0.29.33", sha256="5040764c4a4d2ce964a395da24f0d1ae58144995dab92c6b96f44c3f4d72286a")
+    version("0.29.32", sha256="8733cf4758b79304f2a4e39ebfac5e92341bce47bcceb26c1254398b2f8c1af7")
     version("0.29.30", sha256="2235b62da8fe6fa8b99422c8e583f2fb95e143867d337b5c75e4b9a1a865f9e3")
     version("0.29.24", sha256="cdf04d07c3600860e8c2ebaad4e8f52ac3feb212453c1764a49ac08c827e8443")
     version("0.29.23", sha256="6a0d31452f0245daacb14c979c77e093eb1a546c760816b5eed0047686baad8e")
@@ -38,18 +45,43 @@ class PyCython(PythonPackage):
     version("0.25.2", sha256="f141d1f9c27a07b5a93f7dc5339472067e2d7140d1c5a9e20112a5665ca60306")
     version("0.23.5", sha256="0ae5a5451a190e03ee36922c4189ca2c88d1df40a89b4f224bc842d388a0d1b6")
     version("0.23.4", sha256="fec42fecee35d6cc02887f1eef4e4952c97402ed2800bfe41bbd9ed1a0730d8e")
-    version("0.21.2", sha256="b01af23102143515e6138a4d5e185c2cfa588e0df61c0827de4257bac3393679")
 
-    depends_on("python@2.7:2,3.4:", when="@3:", type=("build", "link", "run"))
-    depends_on("python@2.6:2,3.3:", when="@0.23:", type=("build", "link", "run"))
-    depends_on("python@:2", when="@:0.22", type=("build", "link", "run"))
+    # https://github.com/cython/cython/issues/5751 (distutils not yet dropped)
+    depends_on("python@:3.11", type=("build", "link", "run"))
+
+    # https://github.com/cython/cython/commit/1cd24026e9cf6d63d539b359f8ba5155fd48ae21
+    # collections.Iterable was removed in Python 3.10
+    depends_on("python@:3.9", when="@:0.29.14", type=("build", "link", "run"))
+
+    # https://github.com/cython/cython/commit/430e2ca220c8fed49604daf578df98aadb33a87d
+    depends_on("python@:3.8", when="@:0.29.13", type=("build", "link", "run"))
+
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("gdb@7.2:", type="test")
+
+    # Backports CYTHON_FORCE_REGEN environment variable
+    patch("5307.patch", when="@0.29:0.29.33")
+    patch("5712.patch", when="@0.29")
 
     @property
     def command(self):
         """Returns the Cython command"""
         return Executable(self.prefix.bin.cython)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        # If cython is used as a dep, ensure it's used even when pre-generated
+        # C files are distributed in the tarball. Cython is a small build dep, and
+        # the time generating C-files is typically less than compiling them. So it's
+        # fine. It solves an issue where distributed C-sources were generated with
+        # an old, buggy Cython. In particular Cython regularly depends on cpython
+        # internals, which can change even in Python patch releases. It looks like
+        # the Cython folks are coming back from their recommendation to *include*
+        # pre-generated C-sources in tarballs, see also
+        # https://github.com/cython/cython/issues/5089
+
+        # Support for this was backported to 0.29.34, but we patch any 0.29 release
+        if self.spec.version >= Version("0.29"):
+            env.set("CYTHON_FORCE_REGEN", "1")
 
     @run_after("install")
     @on_package_attributes(run_tests=True)

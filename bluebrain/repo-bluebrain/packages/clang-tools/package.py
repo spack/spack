@@ -5,9 +5,8 @@
 from llnl.util.filesystem import install, mkdirp
 
 from spack.directives import depends_on, version
-from spack.package import Package
+from spack.package import *
 from spack.pkg.builtin.llvm import Llvm as LLVM
-from spack.version import Version
 
 
 class ClangTools(Package):
@@ -18,10 +17,11 @@ class ClangTools(Package):
     homepage = LLVM.homepage
 
     # Add a clang-format version for every LLVM version
-    for llvm_ver in LLVM.versions:
-        clang_tools_ver = Version(str(llvm_ver))
+    for clang_tools_ver in [str(v) for v in LLVM.versions if str(v) != "main"]:
         version(clang_tools_ver)
-        depends_on("llvm@{}".format(llvm_ver), when="@{}".format(clang_tools_ver), type="build")
+        depends_on(
+            "llvm@{}".format(clang_tools_ver), when="@{}".format(clang_tools_ver), type="build"
+        )
 
     def install(self, spec, prefix):
         for utility in (

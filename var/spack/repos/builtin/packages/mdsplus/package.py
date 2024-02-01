@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,11 +13,16 @@ class Mdsplus(AutotoolsPackage):
     homepage = "https://mdsplus.org"
     git = "https://github.com/MDSplus/mdsplus.git"
 
-    maintainers = ["wmvanvliet"]
+    maintainers("wmvanvliet")
 
     parallel = False
 
-    version("stable_release-7-96-17", tag="stable_release-7-96-17", submodules=True)
+    version(
+        "stable_release-7-96-17",
+        tag="stable_release-7-96-17",
+        commit="83928a157ee0a5875135aeee0996634ecb802523",
+        submodules=True,
+    )
 
     variant("java", default=True, description="Build java libraries and applications")
     variant("python", default=True, description="Install python module")

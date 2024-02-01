@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,8 +37,7 @@ if (!$null -eq $py_path)
 
 if (!$null -eq $py_exe)
 {
-    Invoke-Expression "$py_exe $Env:SPACK_ROOT\bin\haspywin.py"
-    Invoke-Expression "$py_exe $Env:SPACK_ROOT\bin\spack external find python" | Out-Null
+    & "$py_exe" "$Env:SPACK_ROOT\bin\haspywin.py"
 }
 
 $Env:Path = "$Env:SPACK_ROOT\bin;$Env:Path"
@@ -47,6 +46,10 @@ if ($null -eq $Env:EDITOR)
     $Env:EDITOR = "notepad"
 }
 
+# Set spack shell so we can detect powershell context
+$Env:SPACK_SHELL="pwsh"
+
+doskey /exename=powershell.exe spack=$Env:SPACK_ROOT\bin\spack.ps1 $args
 
 Write-Output "*****************************************************************"
 Write-Output "**************** Spack Package Manager **************************"

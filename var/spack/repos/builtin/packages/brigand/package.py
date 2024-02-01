@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Brigand(CMakePackage):
     url = "https://github.com/edouarda/brigand/archive/1.0.0.tar.gz"
     git = "https://github.com/edouarda/brigand.git"
 
-    maintainers = ["nilsvu"]
+    maintainers("nilsvu")
 
     version("master", branch="master")
     version("1.3.0", sha256="2468107c5b9ab0b56d84797dfc6636d0aae0507ae9cd6cb1acc1de85e5787acd")

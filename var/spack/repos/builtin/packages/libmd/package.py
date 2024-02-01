@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Libmd(AutotoolsPackage):
     homepage = "https://www.hadrons.org/software/libmd/"
     url = "https://archive.hadrons.org/software/libmd/libmd-1.0.3.tar.xz"
 
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     version("1.0.4", sha256="f51c921042e34beddeded4b75557656559cf5b1f2448033b4c1eec11c07e530f")
     version("1.0.3", sha256="5a02097f95cc250a3f1001865e4dbba5f1d15554120f95693c0541923c52af4a")

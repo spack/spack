@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,9 +13,15 @@ class PySlepc4py(PythonPackage):
     url = "https://slepc.upv.es/download/distrib/slepc4py-3.17.1.tar.gz"
     git = "https://gitlab.com/slepc/slepc.git"
 
-    maintainers = ["joseeroman", "balay"]
+    maintainers("joseeroman", "balay")
 
     version("main", branch="main")
+    version("3.20.0", sha256="56cbea1f56746136e5a934bf4a481e566f35e475cb950c0a5bce7d5c3cc7690a")
+    version("3.19.2", sha256="da8b6a7aaaf5e4497b896b2e478c42dd9de4fb31da93eb294181bea3bb60c767")
+    version("3.19.1", sha256="68303f4acef8efc0542ab288a19159d0e6cdf313726f573e0bea2edb3d2c9595")
+    version("3.19.0", sha256="ae84d33cce259c1d6ff64308b2f819d1c0f7b018e048f9049ec6d5be15614ba5")
+    version("3.18.3", sha256="93c978f115683900a575026111ff2abe6f3ce4de8c21eec53c07dfd97ea43c85")
+    version("3.18.2", sha256="402297fd8e583ed2618d2cba05e5cae8e9d0a2c3943812a1a138f431ef3479b3")
     version("3.18.1", sha256="4c2bc0947d6a9cdb209e3174b7f54fe7b029220e2c90106f52844e8f8795f8f0")
     version("3.18.0", sha256="aa83f46f942aca05ffcbc8be29b496f56837f564e0396f5b39cec4946654ee78")
     version("3.17.2", sha256="e5b235486b6901cd4ff0d94083f0e5eeacaef3a2893e1714769717ad488a3885")
@@ -31,42 +37,23 @@ class PySlepc4py(PythonPackage):
     version("3.13.0", sha256="780eff0eea1a5217642d23cd563786ef22df27e1d772a1b0bb4ccc5701df5ea5")
     version("3.12.0", sha256="d8c06953b7d00f529a9a7fd016dfa8efdf1d05995baeea7688d1d59611f424f7")
     version("3.11.0", sha256="1e591056beee209f585cd781e5fe88174cd2a61215716a71d9eaaf9411b6a775")
-    version("3.10.0", sha256="6494959f44280d3b80e73978d7a6bf656c9bb04bb3aa395c668c7a58948db1c6")
-    version("3.9.0", sha256="84cab4216268c2cb7d01e7cdbb1204a3c3e13cdfcd7a78ea057095f96f68c3c0")
-    version("3.8.0", sha256="988815b3650b69373be9abbf2355df512dfd200aa74b1785b50a484d6dfee971")
-    version("3.7.0", sha256="139f8bb325dad00a0e8dbe5b3e054050c82547936c1b6e7812fb1a3171c9ad0b")
 
-    patch("ldshared.patch", when="@:99")
-    patch("ldshared-dev.patch", when="@main")
+    patch("ldshared.patch", when="@:3.18")
 
-    depends_on("py-cython", type="build", when="@main")
+    depends_on("py-cython@0.29.32:", when="^python@3.11:", type="build")
+    depends_on("py-cython@0.24:", type="build")
     depends_on("py-setuptools", type="build")
+    depends_on("py-numpy", type=("build", "run"))
 
     depends_on("py-petsc4py", type=("build", "run"))
-    depends_on("py-petsc4py@3.18.0:3.18", when="@3.18.0:3.18", type=("build", "run"))
-    depends_on("py-petsc4py@3.17.0:3.17", when="@3.17.0:3.17", type=("build", "run"))
-    depends_on("py-petsc4py@3.16.0:3.16", when="@3.16.0:3.16", type=("build", "run"))
-    depends_on("py-petsc4py@3.15.0:3.15", when="@3.15.0:3.15", type=("build", "run"))
-    depends_on("py-petsc4py@3.13.0:3.13", when="@3.13.0:3.13", type=("build", "run"))
-    depends_on("py-petsc4py@3.12.0:3.12", when="@3.12.0:3.12", type=("build", "run"))
-    depends_on("py-petsc4py@3.11.0:3.11", when="@3.11.0:3.11", type=("build", "run"))
-    depends_on("py-petsc4py@3.10.0:3.10", when="@3.10.0:3.10", type=("build", "run"))
-    depends_on("py-petsc4py@3.9.0:3.9", when="@3.9.0:3.9", type=("build", "run"))
-    depends_on("py-petsc4py@3.8.0:3.8", when="@3.8.0:3.8", type=("build", "run"))
-    depends_on("py-petsc4py@3.7.0:3.7", when="@3.7.0:3.7", type=("build", "run"))
+    depends_on("py-petsc4py@main", when="@main", type=("build", "run"))
+    for ver in ["3.20", "3.19", "3.18", "3.17", "3.16", "3.15", "3.13", "3.12", "3.11"]:
+        depends_on(f"py-petsc4py@{ver}", when=f"@{ver}", type=("build", "run"))
 
     depends_on("slepc")
-    depends_on("slepc@3.18.0:3.18", when="@3.18.0:3.18")
-    depends_on("slepc@3.17.0:3.17", when="@3.17.0:3.17")
-    depends_on("slepc@3.16.0:3.16", when="@3.16.0:3.16")
-    depends_on("slepc@3.15.0:3.15", when="@3.15.0:3.15")
-    depends_on("slepc@3.13.0:3.13", when="@3.13.0:3.13")
-    depends_on("slepc@3.12.0:3.12", when="@3.12.0:3.12")
-    depends_on("slepc@3.11.0:3.11", when="@3.11.0:3.11")
-    depends_on("slepc@3.10.0:3.10", when="@3.10.0:3.10")
-    depends_on("slepc@3.9.0:3.9", when="@3.9.0:3.9")
-    depends_on("slepc@3.8.0:3.8", when="@3.8.0:3.8")
-    depends_on("slepc@3.7.0:3.7", when="@3.7.0:3.7")
+    depends_on("slepc@main", when="@main")
+    for ver in ["3.20", "3.19", "3.18", "3.17", "3.16", "3.15", "3.13", "3.12", "3.11"]:
+        depends_on(f"slepc@{ver}", when=f"@{ver}")
 
     @property
     def build_directory(self):
@@ -76,3 +63,8 @@ class PySlepc4py(PythonPackage):
             return os.path.join(self.stage.source_path, "src", "binding", "slepc4py")
         else:
             return self.stage.source_path
+
+    @run_before("install")
+    def cythonize(self):
+        with working_dir(self.build_directory):
+            python(join_path("conf", "cythonize.py"))

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,8 +13,6 @@ import spack.cmd
 import spack.config
 import spack.extensions
 import spack.main
-
-is_windows = sys.platform == "win32"
 
 
 class Extension:
@@ -274,7 +272,7 @@ def test_variable_in_extension_path(config, working_env):
     os.environ["_MY_VAR"] = os.path.join("my", "var")
     ext_paths = [os.path.join("~", "${_MY_VAR}", "spack-extension-1")]
     # Home env variable is USERPROFILE on Windows
-    home_env = "USERPROFILE" if is_windows else "HOME"
+    home_env = "USERPROFILE" if sys.platform == "win32" else "HOME"
     expected_ext_paths = [
         os.path.join(os.environ[home_env], os.environ["_MY_VAR"], "spack-extension-1")
     ]

@@ -56,7 +56,7 @@ class Steps(CMakePackage):
     variant("vesicle", default=True, when="@5:", description="Add vesicle model")
 
     # Build with `Ninja` instead of `Unix Makefiles`
-    generator = "Ninja"
+    generator("ninja")
 
     conflicts("+distmesh~mpi", msg="steps+distmesh requires +mpi")
     depends_on("benchmark", type=("build", "test"))

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,9 +38,4 @@ class Libszip(AutotoolsPackage):
         return libs
 
     def configure_args(self):
-        return [
-            "--enable-production",
-            "--enable-shared",
-            "--enable-static",
-            "--enable-encoding",
-        ]
+        return ["--enable-production", "--enable-shared", "--enable-static", "--enable-encoding"]

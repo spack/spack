@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,8 +17,10 @@ class Ncl(Package):
     Numerous analysis functions are built-in."""
 
     homepage = "https://www.ncl.ucar.edu"
-
+    git = "https://github.com/NCAR/ncl.git"
     url = "https://github.com/NCAR/ncl/archive/6.4.0.tar.gz"
+
+    maintainers("vanderwb")
 
     version("6.6.2", sha256="cad4ee47fbb744269146e64298f9efa206bc03e7b86671e9729d8986bb4bc30e")
     version("6.5.0", sha256="133446f3302eddf237db56bf349e1ebf228240a7320699acc339a3d7ee414591")
@@ -47,6 +49,8 @@ class Ncl(Package):
         when="%gcc@10:",
         sha256="64f3502c9deab48615a4cbc26073173081c0774faf75778b044d251e45d238f7",
     )
+    # g2clib does not have a ymakefile. This patch avoids a benign ymake error.
+    patch("ymake-grib.patch", when="+grib")
 
     # This installation script is implemented according to this manual:
     # http://www.ncl.ucar.edu/Download/build_from_src.shtml
@@ -56,6 +60,7 @@ class Ncl(Package):
     variant("triangle", default=True, description="Enable Triangle support.")
     variant("udunits2", default=True, description="Enable UDUNITS-2 support.")
     variant("openmp", default=True, description="Enable OpenMP support.")
+    variant("grib", default=True, description="Enable GRIB support.")
 
     # Non-optional dependencies according to the manual:
     depends_on("jpeg")
@@ -102,6 +107,7 @@ class Ncl(Package):
     depends_on("hdf", when="+hdf4")
     depends_on("gdal@:2.4", when="+gdal")
     depends_on("udunits", when="+udunits2")
+    depends_on("jasper@2.0.32", when="+grib")
 
     # We need src files of triangle to appear in ncl's src tree if we want
     # triangle's features.
@@ -133,7 +139,6 @@ class Ncl(Package):
         filter_file("^#!/bin/csh", "#!{0}".format(csh), *files)
 
     def install(self, spec, prefix):
-
         if (self.compiler.fc is None) or (self.compiler.cc is None):
             raise InstallError("NCL package requires both " "C and Fortran compilers.")
 
@@ -141,6 +146,11 @@ class Ncl(Package):
         self.prepare_install_config()
         self.prepare_src_tree()
         make("Everything", parallel=False)
+
+        # Build system may fail without errors, so check for main program.
+        exes = os.listdir(self.spec.prefix.bin)
+        if "ncl" not in exes:
+            raise RuntimeError("Installation failed (ncl executable was not created)")
 
     def setup_run_environment(self, env):
         env.set("NCARG_ROOT", self.spec.prefix)
@@ -172,6 +182,14 @@ class Ncl(Package):
             fc_flags.append("-fallow-argument-mismatch")
             cc_flags.append("-fcommon")
 
+        if self.spec.satisfies("+grib"):
+            gribline = (
+                "#define GRIB2lib %s/external/g2clib-1.6.0/libgrib2c.a -ljasper -lpng -lz -ljpeg\n"
+                % self.stage.source_path
+            )
+        else:
+            gribline = ""
+
         with open("./config/Spack", "w") as f:
             f.writelines(
                 [
@@ -199,7 +217,8 @@ class Ncl(Package):
                         if len(fc_flags) > 0
                         else ""
                     ),
-                    "#define BuildShared NO",
+                    "#define BuildShared NO\n",
+                    gribline,
                 ]
             )
 
@@ -243,6 +262,11 @@ class Ncl(Package):
                 ]
             )
 
+        gribinc = (
+            " " + self.stage.source_path + "/external/g2clib-1.6.0/"
+            if self.spec.satisfies("+grib")
+            else ""
+        )
         config_answers.extend(
             [
                 # Build Triangle support (optional) into NCL
@@ -256,7 +280,7 @@ class Ncl(Package):
                 # Build EEMD support (optional) into NCL?
                 "n\n",
                 # Build Udunits-2 support (optional) into NCL?
-                "y\n" if "+uduints2" in self.spec else "n\n",
+                "y\n" if "+udunits2" in self.spec else "n\n",
                 # Build Vis5d+ support (optional) into NCL?
                 "n\n",
                 # Build HDF-EOS2 support (optional) into NCL?
@@ -266,17 +290,22 @@ class Ncl(Package):
                 # Build HDF-EOS5 support (optional) into NCL?
                 "n\n",
                 # Build GRIB2 support (optional) into NCL?
-                "n\n",
+                "y\n" if self.spec.satisfies("+grib") else "n\n",
                 # Enter local library search path(s) :
                 self.spec["fontconfig"].prefix.lib
                 + " "
                 + self.spec["pixman"].prefix.lib
                 + " "
                 + self.spec["bzip2"].prefix.lib
+                + (
+                    (" " + self.spec["jasper"].prefix.lib64)
+                    if self.spec.satisfies("+grib")
+                    else ""
+                )
                 + "\n",
                 # Enter local include search path(s) :
                 # All other paths will be passed by the Spack wrapper.
-                self.spec["freetype"].headers.directories[0] + "\n",
+                self.spec["freetype"].headers.directories[0] + gribinc + "\n",
                 # Go back and make more changes or review?
                 "n\n",
                 # Save current configuration?
@@ -293,6 +322,15 @@ class Ncl(Package):
         with open(config_answers_filename, "r") as f:
             config_script(input=f)
 
+        if self.spec.satisfies("^hdf+external-xdr") and not self.spec["hdf"].satisfies("^libc"):
+            hdf4 = self.spec["hdf"]
+
+            filter_file(
+                "(#define HDFlib.*)",
+                r"\1 {}".format(hdf4["rpc"].libs.link_flags),
+                "config/Site.local",
+            )
+
     def prepare_src_tree(self):
         if "+triangle" in self.spec:
             triangle_src = join_path(self.stage.source_path, "triangle_src")
@@ -308,3 +346,13 @@ class Ncl(Package):
                     os.remove(filename)
                 except OSError as e:
                     raise InstallError("Failed to delete file %s: %s" % (e.filename, e.strerror))
+
+    @when("+grib")
+    def patch(self):
+        filter_file("image.inmem_=1;", "", "external/g2clib-1.6.0/enc_jpeg2000.c")
+        filter_file("SUBDIRS = ", "SUBDIRS = g2clib-1.6.0 ", "external/yMakefile")
+        filter_file(
+            "INC=.*",
+            "INC=%s" % self.spec["jasper"].prefix.include,
+            "external/g2clib-1.6.0/makefile",
+        )

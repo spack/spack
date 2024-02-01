@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,7 @@ class Cmor(AutotoolsPackage):
     homepage = "https://cmor.llnl.gov"
     url = "https://github.com/PCMDI/cmor/archive/3.6.1.tar.gz"
 
+    version("3.7.2", sha256="5e19a9be8e6a8bd18a2035772732c34b87b3448319bf0b8fa12ccd4a351b8e86")
     version("3.6.1", sha256="991035a41424f72ea6f0f85653fc13730eb035e63c7dff6ca740aa7a70976fb4")
     version("3.6.0", sha256="1608904a35106e83d365f27522209c325bd4bfc19d022b1a8abfb12cdf85fe20")
     version("3.5.0", sha256="37ce11332f9adfd4fa7560dfb358d14b300315221614c4a44c7407297103c62a")
@@ -24,7 +25,7 @@ class Cmor(AutotoolsPackage):
     version("3.1.2", sha256="ee58b6d405f081e4e0633af931b7992f1a570953b71ece17c01ab9e15889211a")
 
     variant("fortran", default=True, description="Enable Fortran API")
-    variant("python", default=False, description="Enable PYTHON support")
+    variant("python", default=False, description="Enable PYTHON support", when="@3.4:")
 
     # older releases require another implementation providing uuid_create()
     # 3.6.1 requires libuuid(only the lib) or util-linux-uuid providing uuid_generate()
@@ -37,7 +38,6 @@ class Cmor(AutotoolsPackage):
     depends_on("udunits")
 
     extends("python", when="+python")
-    depends_on("python@:2", when="@:3.3 +python", type=("build", "run"))
     depends_on("py-pip", when="+python", type="build")
     depends_on("py-wheel", when="+python", type="build")
     depends_on("py-numpy", type=("build", "run"), when="+python")

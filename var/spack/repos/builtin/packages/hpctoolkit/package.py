@@ -1,7 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import os
 
 import llnl.util.tty as tty
 
@@ -18,13 +20,17 @@ class Hpctoolkit(AutotoolsPackage):
 
     homepage = "http://hpctoolkit.org"
     git = "https://gitlab.com/hpctoolkit/hpctoolkit.git"
-    maintainers = ["mwkrentel"]
+    maintainers("mwkrentel")
 
     tags = ["e4s"]
 
     test_requires_compiler = True
 
     version("develop", branch="develop")
+    version("2023.08.stable", branch="release/2023.08")
+    version("2023.08.1", tag="2023.08.1", commit="753a72affd584a5e72fe153d1e8c47a394a3886e")
+    version("2023.03.stable", branch="release/2023.03")
+    version("2023.03.01", commit="9e0daf2ad169f6c7f6c60408475b3c2f71baebbf")
     version("2022.10.01", commit="e8a5cc87e8f5ddfd14338459a4106f8e0d162c83")
     version("2022.05.15", commit="8ac72d9963c4ed7b7f56acb65feb02fbce353479")
     version("2022.04.15", commit="a92fdad29fc180cc522a9087bba9554a829ee002")
@@ -43,13 +49,19 @@ class Hpctoolkit(AutotoolsPackage):
 
     # Options for MPI and hpcprof-mpi.  We always support profiling
     # MPI applications.  These options add hpcprof-mpi, the MPI
-    # version of hpcprof.  Cray and Blue Gene need separate options
-    # because an MPI module in packages.yaml doesn't work on these
-    # systems.
+    # version of hpcprof.  Cray is a separate option for old systems
+    # where an external MPI module doesn't work.
     variant(
         "cray",
         default=False,
-        description="Build for Cray compute nodes, including hpcprof-mpi.",
+        description="Build hpcprof-mpi for Cray systems (may require --dirty).",
+    )
+
+    variant(
+        "cray-static",
+        default=False,
+        description="Build old rev of hpcprof-mpi statically on Cray systems.",
+        when="@:2022.09+cray",
     )
 
     variant(
@@ -87,13 +99,15 @@ class Hpctoolkit(AutotoolsPackage):
     )
 
     variant("opencl", default=False, description="Support offloading with OpenCL.")
-
     variant("rocm", default=False, description="Support ROCM on AMD GPUs.", when="@2022.04:")
 
     # Other variants.
     variant("debug", default=False, description="Build in debug (develop) mode.")
-
     variant("viewer", default=True, description="Include hpcviewer.")
+
+    variant(
+        "python", default=False, description="Support unwinding Python source.", when="@2023.03:"
+    )
 
     boost_libs = (
         "+atomic +chrono +date_time +filesystem +system +thread +timer"
@@ -108,20 +122,21 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on("dyninst@12.1.0:", when="@2022.0:")
     depends_on("dyninst@10.2.0:", when="@2021.0:2021.12")
     depends_on("dyninst@9.3.2:", when="@:2020")
-    depends_on("elfutils+bzip2+xz~nls", type="link")
+    depends_on("elfutils~nls", type="link")
     depends_on("gotcha@1.0.3:", when="@:2020.09")
     depends_on("intel-tbb+shared")
     depends_on("libdwarf", when="@:2022.06")
     depends_on("libiberty+pic", when="@2022.10:")
     depends_on("libmonitor+hpctoolkit~dlopen", when="@2021.00:")
     depends_on("libmonitor+hpctoolkit+dlopen", when="@:2020")
+    depends_on("libmonitor@2023.02.13:", when="@2023.01:")
     depends_on("libmonitor@2021.11.08:", when="@2022.01:")
     depends_on("libunwind@1.4: +xz+pic")
     depends_on("mbedtls+pic", when="@:2022.03")
     depends_on("xerces-c transcoder=iconv")
-    depends_on("xz+pic@:5.2.6", type="link")
-    depends_on("yaml-cpp@0.7.0:", when="@2022.10:")
-    depends_on("zlib+shared")
+    depends_on("xz+pic libs=static", type="link")
+    depends_on("yaml-cpp@0.7.0: +shared", when="@2022.10:")
+    depends_on("zlib-api+shared")
 
     depends_on("cuda", when="+cuda")
     depends_on("oneapi-level-zero", when="+level_zero")
@@ -133,9 +148,11 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on("memkind", type=("build", "run"), when="@2021.05.01:")
     depends_on("papi", when="+papi")
     depends_on("libpfm4", when="~papi")
+    depends_on("mpi", when="+cray")
     depends_on("mpi", when="+mpi")
     depends_on("hpcviewer@2022.10:", type="run", when="@2022.10: +viewer")
     depends_on("hpcviewer", type="run", when="+viewer")
+    depends_on("python@3.10:", type=("build", "run"), when="+python")
 
     # Avoid 'link' dep, we don't actually link, and that adds rpath
     # that conflicts with app.
@@ -149,20 +166,30 @@ class Hpctoolkit(AutotoolsPackage):
     conflicts("%gcc@:4", when="@:2020", msg="hpctoolkit requires gnu gcc 5.x or later")
 
     conflicts("^binutils@2.35:2.35.1", msg="avoid binutils 2.35 and 2.35.1 (spews errors)")
+    conflicts("^xz@5.2.7:5.2.8", msg="avoid xz 5.2.7:5.2.8 (broken symbol versions)")
 
-    # Fix the build for old revs with gcc 10.x.
-    patch("gcc10-enum.patch", when="@2020.01.01:2020.08 %gcc@10.0:")
+    conflicts("+cray", when="@2022.10.01", msg="hpcprof-mpi is not available in 2022.10.01")
+    conflicts("+mpi", when="@2022.10.01", msg="hpcprof-mpi is not available in 2022.10.01")
 
-    patch(
-        "https://github.com/HPCToolkit/hpctoolkit/commit/511afd95b01d743edc5940c84e0079f462b2c23e.patch?full_index=1",
-        sha256="c8371b929f45dafae37d2ef17880fcfb86de893beebaec501a282bc04b61ef64",
-        when="@2019.08.01:2021.03 %gcc@11.0:",
+    conflicts(
+        "^hip@5.3:", when="@:2022.12", msg="rocm 5.3 requires hpctoolkit 2023.03.01 or later"
     )
+
+    # Fix the build for old revs with gcc 10.x and 11.x.
+    patch("gcc10-enum.patch", when="@2020.01.01:2020.08 %gcc@10.0:")
+    patch("511afd95b01d743edc5940c84e0079f462b2c23e.patch", when="@2019.08.01:2021.03 %gcc@11.0:")
 
     # Change python to python3 for some old revs that use a script
     # with /usr/bin/env python.
     depends_on("python@3.4:", type="build", when="@2020.03:2020.08")
     patch("python3.patch", when="@2020.03:2020.08")
+
+    # Fix a bug where make would mistakenly overwrite hpcrun-fmt.h.
+    # https://gitlab.com/hpctoolkit/hpctoolkit/-/merge_requests/751
+    def patch(self):
+        with working_dir(join_path("src", "lib", "prof-lean")):
+            if os.access("hpcrun-fmt.txt", os.F_OK):
+                os.rename("hpcrun-fmt.txt", "hpcrun-fmt.readme")
 
     flag_handler = AutotoolsPackage.build_system_flags
 
@@ -179,7 +206,7 @@ class Hpctoolkit(AutotoolsPackage):
             "--with-libunwind=%s" % spec["libunwind"].prefix,
             "--with-xerces=%s" % spec["xerces-c"].prefix,
             "--with-lzma=%s" % spec["xz"].prefix,
-            "--with-zlib=%s" % spec["zlib"].prefix,
+            "--with-zlib=%s" % spec["zlib-api"].prefix,
         ]
 
         if spec.satisfies("@2022.10:"):
@@ -232,18 +259,20 @@ class Hpctoolkit(AutotoolsPackage):
                 ]
             )
 
-        # MPI options for hpcprof-mpi.
-        if "+cray" in spec:
-            args.append("--enable-mpi-search=cray")
-            args.append("--enable-all-static")
+        if spec.satisfies("+python"):
+            p3config = join_path(spec["python"].prefix, "bin", "python3-config")
+            args.append("--with-python=%s" % p3config)
 
-        elif "+mpi" in spec:
-            if spec.satisfies("@2022.10.01"):
-                # temporary hack to disable +mpi for one rev
-                tty.warn("hpcprof-mpi is not available in version 2022.10.01")
-                args.append("MPICXX=")
+        # MPI options for hpcprof-mpi. +cray supersedes +mpi.
+        if spec.satisfies("+cray"):
+            args.append("--enable-mpi-search=cray")
+            if spec.satisfies("@:2022.09 +cray-static"):
+                args.append("--enable-all-static")
             else:
-                args.append("MPICXX=%s" % spec["mpi"].mpicxx)
+                args.append("HPCPROFMPI_LT_LDFLAGS=-dynamic")
+
+        elif spec.satisfies("+mpi"):
+            args.append("MPICXX=%s" % spec["mpi"].mpicxx)
 
         # Make sure MPICXX is not picked up through the environment.
         else:
@@ -278,11 +307,12 @@ class Hpctoolkit(AutotoolsPackage):
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def check_install(self):
-        if self.spec.satisfies("@2022:"):
-            with working_dir("tests"):
-                make("check")
-        else:
-            tty.warn("spack test for hpctoolkit requires 2022.01.15 or later")
+        if not self.spec.satisfies("@2022:"):
+            tty.warn("requires 2022.01.15 or later")
+            return
+
+        with working_dir("tests"):
+            make("check")
 
     # Post-Install tests (spack test run).  These are the same tests
     # but with a different Makefile that works outside the build
@@ -292,13 +322,17 @@ class Hpctoolkit(AutotoolsPackage):
         if self.spec.satisfies("@2022:"):
             self.cache_extra_test_sources(["tests"])
 
-    def test(self):
-        test_dir = join_path(self.test_suite.current_test_cache_dir, "tests")
-        if self.spec.satisfies("@2022:"):
-            with working_dir(test_dir):
-                make("-f", "Makefile.spack", "all")
-                self.run_test(
-                    "./run-sort", status=[0], installed=False, purpose="selection sort unit test"
-                )
-        else:
-            tty.warn("spack test for hpctoolkit requires 2022.01.15 or later")
+    def test_run_sort(self):
+        """build and run selection sort unit test"""
+        if not self.spec.satisfies("@2022:"):
+            raise SkipTest("No tests exist for versions prior to 2022.01.15")
+
+        test_dir = self.test_suite.current_test_cache_dir.tests
+        with working_dir(test_dir):
+            make = which("make")
+            make("-f", "Makefile.spack", "all")
+
+            run_sort = which(join_path(".", "run-sort"))
+            assert run_sort, "run-sort is missing"
+
+            run_sort()

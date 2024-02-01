@@ -1,4 +1,4 @@
-.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,8 +21,9 @@ be present on the machine where Spack is run:
    :header-rows: 1
 
 These requirements can be easily installed on most modern Linux systems;
-on macOS, XCode is required.  Spack is designed to run on HPC
-platforms like Cray.  Not all packages should be expected
+on macOS, the Command Line Tools package is required, and a full XCode suite
+may be necessary for some packages such as Qt and apple-gl. Spack is designed
+to run on HPC platforms like Cray.  Not all packages should be expected
 to work on all platforms.
 
 A build matrix showing which packages are working on which systems is shown below.
@@ -40,12 +41,9 @@ A build matrix showing which packages are working on which systems is shown belo
 
       .. code-block:: console
 
-         yum update -y
-         yum install -y epel-release
-         yum update -y
-         yum --enablerepo epel groupinstall -y "Development Tools"
-         yum --enablerepo epel install -y curl findutils gcc-c++ gcc gcc-gfortran git gnupg2 hostname iproute redhat-lsb-core make patch python3 python3-pip python3-setuptools unzip
-         python3 -m pip install boto3
+         dnf install epel-release
+         dnf group install "Development Tools"
+         dnf install curl findutils gcc-gfortran gnupg2 hostname iproute redhat-lsb-core python3 python3-pip python3-setuptools unzip python3-boto3
 
    .. tab-item:: macOS Brew
 
@@ -366,7 +364,7 @@ installed, but you know that new compilers have been added to your
 
 .. code-block:: console
 
-   $ module load gcc-4.9.0
+   $ module load gcc/4.9.0
    $ spack compiler find
    ==> Added 1 new compiler to ~/.spack/linux/compilers.yaml
        gcc@4.9.0
@@ -414,7 +412,8 @@ Manual compiler configuration
 
 If auto-detection fails, you can manually configure a compiler by
 editing your ``~/.spack/<platform>/compilers.yaml`` file.  You can do this by running
-``spack config edit compilers``, which will open the file in your ``$EDITOR``.
+``spack config edit compilers``, which will open the file in
+:ref:`your favorite editor <controlling-the-editor>`.
 
 Each compiler configuration in the file looks like this:
 
@@ -1552,7 +1551,7 @@ Spack On Windows
 
 Windows support for Spack is currently under development. While this work is still in an early stage,
 it is currently possible to set up Spack and perform a few operations on Windows.  This section will guide
-you through the steps needed to install Spack and start running it on a fresh Windows machine. 
+you through the steps needed to install Spack and start running it on a fresh Windows machine.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Step 1: Install prerequisites
@@ -1562,7 +1561,7 @@ To use Spack on Windows, you will need the following packages:
 
 Required:
 * Microsoft Visual Studio
-* Python 
+* Python
 * Git
 
 Optional:
@@ -1593,8 +1592,8 @@ Intel Fortran
 """""""""""""
 
 For Fortran-based packages on Windows, we strongly recommend Intel's oneAPI Fortran compilers.
-The suite is free to download from Intel's website, located at 
-https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/fortran-compiler.html#gs.70t5tw.
+The suite is free to download from Intel's website, located at
+https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/fortran-compiler.html.
 The executable of choice for Spack will be Intel's Beta Compiler, ifx, which supports the classic
 compiler's (ifort's) frontend and runtime libraries by using LLVM.
 
@@ -1643,8 +1642,8 @@ in a Windows CMD prompt.
 
 .. note::
    If you chose to install Spack into a directory on Windows that is set up to require Administrative
-   Privleges, Spack will require elevated privleges to run.
-   Administrative Privleges can be denoted either by default such as
+   Privileges, Spack will require elevated privileges to run.
+   Administrative Privileges can be denoted either by default such as
    ``C:\Program Files``, or aministrator applied administrative restrictions
    on a directory that spack installs files to such as ``C:\Users``
 
@@ -1740,33 +1739,21 @@ Spack console via:
 
    spack install cpuinfo
 
-If in the previous step, you did not have CMake or Ninja installed, running the command above should boostrap both packages
+If in the previous step, you did not have CMake or Ninja installed, running the command above should bootstrap both packages
 
 """""""""""""""""""""""""""
 Windows Compatible Packages
 """""""""""""""""""""""""""
 
-Many Spack packages are not currently compatible with Windows, due to Unix
-dependencies or incompatible build tools like autoconf. Here are several
-packages known to work on Windows:
-
-* abseil-cpp
-* clingo
-* cpuinfo
-* cmake
-* glm
-* nasm
-* netlib-lapack (requires Intel Fortran)
-* ninja
-* openssl
-* perl
-* python
-* ruby
-* wrf
-* zlib
+Not all spack packages currently have Windows support. Some are inherently incompatible with the
+platform, and others simply have yet to be ported. To view the current set of packages with Windows
+support, the list command should be used via `spack list -t windows`. If there's a package you'd like
+to install on Windows but is not in that list, feel free to reach out to request the port or contribute
+the port yourself.
 
 .. note::
-   This is by no means a comprehensive list
+   This is by no means a comprehensive list, some packages may have ports that were not tagged
+   while others may just work out of the box on Windows and have not been tagged as such.
 
 ^^^^^^^^^^^^^^
 For developers
@@ -1778,3 +1765,4 @@ Instructions for creating the installer are at
 https://github.com/spack/spack/blob/develop/lib/spack/spack/cmd/installer/README.md
 
 Alternatively a pre-built copy of the Windows installer is available as an artifact of Spack's Windows CI
+available at each run of the CI on develop or any PR.

@@ -1,23 +1,18 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-
 import re
 import shutil
-import sys
 
 import pytest
 
 from llnl.util.filesystem import mkdirp, working_dir
 
+import spack.cmd.pkg
 import spack.main
 import spack.repo
-from spack.util.executable import which
-
-pytestmark = pytest.mark.skipif(not which("git"), reason="spack pkg tests require git")
 
 #: new fake package template
 pkg_template = """\
@@ -27,7 +22,7 @@ class {name}(Package):
     homepage = "http://www.example.com"
     url      = "http://www.example.com/test-1.0.tar.gz"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
+    version("1.0", md5="0123456789abcdef0123456789abcdef")
 
     def install(self, spec, prefix):
         pass
@@ -39,7 +34,7 @@ abd = set(("pkg-a", "pkg-b", "pkg-d"))
 
 # Force all tests to use a git repository *in* the mock packages repo.
 @pytest.fixture(scope="module")
-def mock_pkg_git_repo(tmpdir_factory):
+def mock_pkg_git_repo(git, tmpdir_factory):
     """Copy the builtin.mock repo and make a mutable git repo inside it."""
     tmproot = tmpdir_factory.mktemp("mock_pkg_git_repo")
     repo_path = tmproot.join("builtin.mock")
@@ -48,7 +43,6 @@ def mock_pkg_git_repo(tmpdir_factory):
     mock_repo = spack.repo.RepoPath(str(repo_path))
     mock_repo_packages = mock_repo.repos[0].packages_path
 
-    git = which("git", required=True)
     with working_dir(mock_repo_packages):
         git("init")
 
@@ -87,8 +81,16 @@ def mock_pkg_git_repo(tmpdir_factory):
 
 @pytest.fixture(scope="module")
 def mock_pkg_names():
-    repo = spack.repo.path.get_repo("builtin.mock")
-    names = set(name for name in repo.all_package_names() if not name.startswith("pkg-"))
+    repo = spack.repo.PATH.get_repo("builtin.mock")
+
+    # Be sure to include virtual packages since packages with stand-alone
+    # tests may inherit additional tests from the virtuals they provide,
+    # such as packages that implement `mpi`.
+    names = set(
+        name
+        for name in repo.all_package_names(include_virtuals=True)
+        if not name.startswith("pkg-")
+    )
     return names
 
 
@@ -102,14 +104,14 @@ pkg = spack.main.SpackCommand("pkg")
 
 
 def test_packages_path():
-    assert spack.repo.packages_path() == spack.repo.path.get_repo("builtin").packages_path
+    assert spack.repo.packages_path() == spack.repo.PATH.get_repo("builtin").packages_path
 
 
 def test_mock_packages_path(mock_packages):
-    assert spack.repo.packages_path() == spack.repo.path.get_repo("builtin.mock").packages_path
+    assert spack.repo.packages_path() == spack.repo.PATH.get_repo("builtin.mock").packages_path
 
 
-def test_pkg_add(mock_pkg_git_repo):
+def test_pkg_add(git, mock_pkg_git_repo):
     with working_dir(mock_pkg_git_repo):
         mkdirp("pkg-e")
         with open("pkg-e/package.py", "w") as f:
@@ -117,21 +119,20 @@ def test_pkg_add(mock_pkg_git_repo):
 
     pkg("add", "pkg-e")
 
-    git = which("git", required=True)
     with working_dir(mock_pkg_git_repo):
         try:
             assert "A  pkg-e/package.py" in git("status", "--short", output=str)
         finally:
             shutil.rmtree("pkg-e")
             # Removing a package mid-run disrupts Spack's caching
-            if spack.repo.path.repos[0]._fast_package_checker:
-                spack.repo.path.repos[0]._fast_package_checker.invalidate()
+            if spack.repo.PATH.repos[0]._fast_package_checker:
+                spack.repo.PATH.repos[0]._fast_package_checker.invalidate()
 
     with pytest.raises(spack.main.SpackCommandError):
         pkg("add", "does-not-exist")
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="stdout format conflict")
+@pytest.mark.not_on_windows("stdout format conflict")
 def test_pkg_list(mock_pkg_git_repo, mock_pkg_names):
     out = split(pkg("list", "HEAD^^"))
     assert sorted(mock_pkg_names) == sorted(out)
@@ -147,7 +148,7 @@ def test_pkg_list(mock_pkg_git_repo, mock_pkg_names):
     assert sorted(mock_pkg_names) == sorted(out)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="stdout format conflict")
+@pytest.mark.not_on_windows("stdout format conflict")
 def test_pkg_diff(mock_pkg_git_repo, mock_pkg_names):
     out = split(pkg("diff", "HEAD^^", "HEAD^"))
     assert out == ["HEAD^:", "pkg-a", "pkg-b", "pkg-c"]
@@ -159,7 +160,7 @@ def test_pkg_diff(mock_pkg_git_repo, mock_pkg_names):
     assert out == ["HEAD^:", "pkg-c", "HEAD:", "pkg-d"]
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="stdout format conflict")
+@pytest.mark.not_on_windows("stdout format conflict")
 def test_pkg_added(mock_pkg_git_repo):
     out = split(pkg("added", "HEAD^^", "HEAD^"))
     assert ["pkg-a", "pkg-b", "pkg-c"] == out
@@ -174,7 +175,7 @@ def test_pkg_added(mock_pkg_git_repo):
     assert out == []
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="stdout format conflict")
+@pytest.mark.not_on_windows("stdout format conflict")
 def test_pkg_removed(mock_pkg_git_repo):
     out = split(pkg("removed", "HEAD^^", "HEAD^"))
     assert out == []
@@ -186,7 +187,7 @@ def test_pkg_removed(mock_pkg_git_repo):
     assert out == ["pkg-c"]
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="stdout format conflict")
+@pytest.mark.not_on_windows("stdout format conflict")
 def test_pkg_changed(mock_pkg_git_repo):
     out = split(pkg("changed", "HEAD^^", "HEAD^"))
     assert out == []
@@ -246,7 +247,7 @@ def test_pkg_source_requires_one_arg(mock_packages):
 def test_pkg_source(mock_packages):
     fake_source = pkg("source", "fake")
 
-    fake_file = spack.repo.path.filename_for_package_name("fake")
+    fake_file = spack.repo.PATH.filename_for_package_name("fake")
     with open(fake_file) as f:
         contents = f.read()
         assert fake_source == contents
@@ -293,3 +294,24 @@ def test_pkg_hash(mock_packages):
 
     output = pkg("hash", "multimethod").strip().split()
     assert len(output) == 1 and all(len(elt) == 32 for elt in output)
+
+
+@pytest.mark.skipif(not spack.cmd.pkg.get_grep(), reason="grep is not installed")
+def test_pkg_grep(mock_packages, capfd):
+    # only splice-* mock packages have the string "splice" in them
+    pkg("grep", "-l", "splice", output=str)
+    output, _ = capfd.readouterr()
+    assert output.strip() == "\n".join(
+        spack.repo.PATH.get_pkg_class(name).module.__file__
+        for name in ["splice-a", "splice-h", "splice-t", "splice-vh", "splice-z"]
+    )
+
+    # ensure that this string isn't fouhnd
+    pkg("grep", "abcdefghijklmnopqrstuvwxyz", output=str, fail_on_error=False)
+    assert pkg.returncode == 1
+    output, _ = capfd.readouterr()
+    assert output.strip() == ""
+
+    # ensure that we return > 1 for an error
+    pkg("grep", "--foobarbaz-not-an-option", output=str, fail_on_error=False)
+    assert pkg.returncode == 2

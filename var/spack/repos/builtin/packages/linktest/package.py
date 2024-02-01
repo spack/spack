@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Linktest(MakefilePackage):
     )
     url = "https://apps.fz-juelich.de/jsc/linktest/download.php?version=1.2p1"
 
-    maintainers = ["pramodk"]
+    maintainers("pramodk")
 
     version(
         "1.2p1",

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,11 +11,13 @@ class Libcint(CMakePackage):
 
     homepage = "https://github.com/sunqm/libcint"
     url = "https://github.com/sunqm/libcint/archive/v3.0.4.tar.gz"
-    maintainers = ["mfherbst"]
+    maintainers("mfherbst")
 
     #
     # Versions
     #
+    version("5.3.0", sha256="9d4fae074b53a8ce0335e2672d423deca2bda6df8020352e59d23c17a0c1239d")
+    version("5.2.0", sha256="f9dba1040c445ee81ae5a2a59d9f1291fc0406edad0fb5ea37fceb66c2ef7799")
     version("5.1.3", sha256="a239275a0464360c904fd06e67d2e76ef1147e04bc634befb40c67d3e79b3638")
     version("3.0.13", sha256="ee64f0bc7fb6073063ac3c9bbef8951feada141e197b1a5cc389c8cccf8dc360")
     version("3.0.12", sha256="7409ef41f1465cf4c1ae9834dfc0b0585c0fdc63b55d8ee8b8a7a6d5e31f309d")
@@ -33,6 +35,11 @@ class Libcint(CMakePackage):
     variant("f12", default=True, description="Enable explicitly correlated f12 integrals.")
     variant(
         "coulomb_erf", default=True, description="Enable attenuated coulomb operator integrals."
+    )
+    variant(
+        "pypzpx",
+        default=False,
+        description="Enforce PYPZPX ordering of p-orbitals " "instead of PXPYPZ.",
     )
     variant("test", default=False, description="Build test programs")
     variant("shared", default=True, description="Build the shared library")
@@ -54,7 +61,8 @@ class Libcint(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         args = [
-            "-DWITH_COULOMB_ERF=" + str("+coulomb_erf" in spec),
+            "-DWITH_RANGE_COULOMB=" + str("+coulomb_erf" in spec),
+            "-DPYPZPX=" + str("+pypzpx" in spec),
             "-DWITH_F12=" + str("+f12" in spec),
             "-DBUILD_SHARED_LIBS=" + str("+shared" in spec),
             "-DENABLE_TEST=" + str("+test" in spec),

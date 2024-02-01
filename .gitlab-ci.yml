@@ -23,15 +23,15 @@ setup_environment:
     #
     # Global default, as long as we have a 9.x.x, environment-modules picks
     # the wrong one as default :(
-    DEFAULT_GCC_VERSION: "12.2.0"
-    # Used by the Intel compilers
-    LEGACY_GCC_VERSION: "11.3.0"
+    DEFAULT_GCC_VERSION: "12.3.0"
+    # As with GCC, provide a default Python to override string sorting of modules
+    DEFAULT_PYTHON_VERSION: "3.11.6"
     # Used for cloning Spack
     DEPLOYMENT_BRANCH: "$DEPLOYMENT_DEFAULT_BRANCH"
     # Proprietary sources
     DEPLOYMENT_DATA: "/gpfs/bbp.cscs.ch/ssd/apps/hpc/download"
     # This date should increment for new deployments — about once a year
-    DEPLOYMENT_DATE: "2023-02-23"
+    DEPLOYMENT_DATE: "2024-02-01"
     # Global base directory
     DEPLOYMENT_BASE: "/gpfs/bbp.cscs.ch/ssd/apps/bsd"
     # Global module archive
@@ -66,7 +66,7 @@ setup_environment:
     # The `rules` keyword seems to not inherit variables specified via a
     # dotenv ⇒ do things manually once more
     - echo "DEFAULT_GCC_VERSION=$DEFAULT_GCC_VERSION" > deployment.env
-    - echo "LEGACY_GCC_VERSION=$LEGACY_GCC_VERSION" >> deployment.env
+    - echo "DEFAULT_PYTHON_VERSION=$DEFAULT_PYTHON_VERSION" >> deployment.env
     - echo "DEPLOYMENT_ARTIFACTS=$DEPLOYMENT_ARTIFACTS" >> deployment.env
     - echo "DEPLOYMENT_BASE=$DEPLOYMENT_BASE" >> deployment.env
     - echo "DEPLOYMENT_BRANCH=$DEPLOYMENT_BRANCH" >> deployment.env
@@ -126,44 +126,6 @@ forward_tests:
       - spack_tests
     reports:
       junit: spack_tests/*/*.xml
-
-# Trigger basic container builds
-update_spacktainerizer:
-  needs: []
-  # Really only want to run this when builds are active: exclude running
-  # on PRs, just merges and schedules.
-  rules:
-    - if: $CI_EXTERNAL_PULL_REQUEST_IID
-      when: never
-    - when: always
-  trigger:
-    project: hpc/spacktainerizer
-    strategy: depend
-
-# Trigger build cache population
-update_build_cache:
-  needs: [update_spacktainerizer]
-  # Really only want to run this when builds are active: exclude running
-  # on PRs, just merges and schedules.
-  rules:
-    - if: $CI_EXTERNAL_PULL_REQUEST_IID
-      when: never
-    - when: always
-  trigger:
-    project: hpc/spack-cacher
-    strategy: depend
-
-# Trigger building containers equivalent to modules
-update_containers:
-  needs: [update_build_cache]
-  # Really only want to run this when builds are active: exclude running
-  # on PRs, just merges and schedules.
-  rules:
-    - if: $CI_EXTERNAL_PULL_REQUEST_IID
-      when: never
-    - when: always
-  trigger:
-    project: hpc/spackah
 
 # PRs run as a different user, after merging on `develop`, we need to trigger the cleanup
 # project that always runs with the PR builder user

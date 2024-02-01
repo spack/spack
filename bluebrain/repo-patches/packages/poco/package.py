@@ -14,14 +14,14 @@ class Poco(CMakePackage):
 
     homepage = "https://pocoproject.org/"
     git = "https://github.com/pocoproject/poco.git"
-    generator = "Ninja"
+    generator("ninja")
 
     version("1.12.4", tag="poco-1.12.4-release")
     version("1.11.1", tag="poco-1.11.1-release")
 
     depends_on("cmake@3.5:", type="build")
     depends_on("ninja", type="build")
-    depends_on("openssl")
+    depends_on("openssl@3:")
 
     def cmake_args(self):
         return [

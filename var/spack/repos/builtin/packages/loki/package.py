@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,14 @@ class Loki(MakefilePackage):
     version("0.1.7", sha256="07553754f6be2738559947db69b0718512665bf4a34015fa3a875b6eb1111198")
 
     variant("shared", default=True, description="Build shared libraries")
+
+    def flag_handler(self, name, flags):
+        if name == "cxxflags":
+            if self.spec.satisfies("%oneapi@2023.0.0:"):
+                flags.append("-Wno-error=dynamic-exception-spec")
+            if self.spec.satisfies("@0.1.7 %gcc@11:"):
+                flags.append("-std=c++14")
+        return (flags, None, None)
 
     def build(self, spec, prefix):
         if "+shared" in spec:

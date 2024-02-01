@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PyGooey(PythonPackage):
     homepage = "https://pypi.org/project/Gooey/"
     pypi = "Gooey/Gooey-1.0.8.1.tar.gz"
 
-    maintainers = ["dorton21"]
+    maintainers("dorton21")
 
     version("1.0.8.1", sha256="08d6bf534f4d50d50dafba5cfc68dcf31a6e9eeef13a94cbe3ea17c4e45c4671")
 

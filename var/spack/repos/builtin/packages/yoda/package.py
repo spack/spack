@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,7 @@ class Yoda(AutotoolsPackage):
 
     tags = ["hep"]
 
+    version("1.9.8", sha256="7bc3062468abba50aff3ecb8b22ce677196036009890688ef4533aaa7f92e6e4")
     version("1.9.7", sha256="8d07bb04dcb79364858718a18203452d8d9fa00029fa94239eafa8529032b8ff")
     version("1.9.6", sha256="21523fa2f6b6c8f3348959f3a948734a930ca25951d3c9190b4424e13735f2a4")
     version("1.9.5", sha256="59191a0e9afa8db53ffaa2079f8532e5b13de1be622703d6f7060d3610528b6b")
@@ -67,7 +68,7 @@ class Yoda(AutotoolsPackage):
 
     depends_on("python", type=("build", "link", "run"))
     depends_on("py-future", type=("build", "run"))
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("boost", when="@:1.6.0", type=("build", "run"))
 
     # TODO: replace this with an explicit list of components of Boost,

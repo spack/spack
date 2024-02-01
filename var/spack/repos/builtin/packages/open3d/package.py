@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,9 @@ class Open3d(CMakePackage, CudaPackage):
     url = "https://github.com/isl-org/Open3D/archive/refs/tags/v0.13.0.tar.gz"
     git = "https://github.com/isl-org/Open3D.git"
 
-    version("0.13.0", tag="v0.13.0", submodules=True)
+    version(
+        "0.13.0", tag="v0.13.0", commit="c3f9de224e13838a72da0e5565a7ba51038b0f11", submodules=True
+    )
 
     variant("python", default=False, description="Build the Python module")
 
@@ -24,7 +26,7 @@ class Open3d(CMakePackage, CudaPackage):
     depends_on("cmake@3.19:", type="build")
     # https://github.com/isl-org/Open3D/issues/3762
     # https://github.com/isl-org/Open3D/issues/4570
-    depends_on("llvm@7:+clang+libcxx")
+    depends_on("llvm@7:+clang")
     depends_on("eigen")
     depends_on("flann")
     # https://github.com/isl-org/Open3D/issues/4360
@@ -53,6 +55,9 @@ class Open3d(CMakePackage, CudaPackage):
     # C++14 compiler required
     conflicts("%gcc@:4")
     conflicts("%clang@:6")
+
+    # LLVM must be built with the C++ library
+    conflicts("^llvm libcxx=none")
 
     def patch(self):
         # Force Python libraries to be installed to self.prefix

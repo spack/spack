@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,20 +14,44 @@ class Rocthrust(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocThrust"
     git = "https://github.com/ROCmSoftwarePlatform/rocThrust.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocThrust/archive/rocm-5.2.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rocThrust/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["cgmb", "srekolam", "renjithravindrankannath"]
+    maintainers("cgmb", "srekolam", "renjithravindrankannath")
 
+    version("5.6.1", sha256="63df61d5ab46d4cfda6066d748274bacecc77151692e372e6f7df5e91852bdc2")
+    version("5.6.0", sha256="e52a27bcb4add38a5f0f3a5c7e409c230bf4ba9afae19bd2e06c2be00d39db59")
+    version("5.5.1", sha256="66f126e5ea46ca761533411f81e83402773f95d3184cb7645ca73df227413023")
+    version("5.5.0", sha256="c031f71cd4b6eaf98664fd2ad50fc18f7ccbfa67be415dca425169d2d1c81e9e")
+    version("5.4.3", sha256="d133e14ea6d27d358d1bd4d31b79fb1562d1aea7c400e5a2d28d0f159cb6c8a8")
+    version("5.4.0", sha256="a4799fb1086da3f70c9b95effb1f5f9033c861685e960a8759278463cc55a971")
+    version("5.3.3", sha256="0c2fc8d437efaf5c4c859d97adb049d4025025d0be0e0908f59a8112508234e5")
+    version("5.3.0", sha256="0e11b12f208d2751e3e507e3a32403c9bd45da4e191671d765d33abd727d9b96")
     version("5.2.3", sha256="0f5ef39c5faab31eb34b48391d58096463969c133ca7ed09ab4e43caa5461b29")
     version("5.2.1", sha256="5df35ff0970b83d68b69a07ae9ebb62955faac7401c91daa7929664fdd09d69b")
     version("5.2.0", sha256="afa126218485586682c78e97df8025ae4efd32f3751c340e84c436e08868c326")
     version("5.1.3", sha256="8d92de1e69815d92a423b7657f2f37c90f1d427f5bc92915c202d4c266254dad")
     version("5.1.0", sha256="fee779ae3d55b97327d87beca784fc090fa02bc95238d9c3bf3021e266e73979")
-    version("5.0.2", sha256="60f0cf1848cc7cd8663f15307bd695eee3c5b20d3ad3baa4bc696189ffdcfd53")
-    version("5.0.0", sha256="10b7b1be919881904d64f8084c2afe22aa00c560f8493a75dbf5df8386443ab4")
-    version("4.5.2", sha256="9171a05dd7438aebd4f6a939b1b33b7e87be1a0bd52d90a171b74539885cf591")
-    version("4.5.0", sha256="86cf897b01a6f5df668d978ce42d44a6ae9df9f8adc92d0a1a49a7c3bbead259")
+    version(
+        "5.0.2",
+        sha256="60f0cf1848cc7cd8663f15307bd695eee3c5b20d3ad3baa4bc696189ffdcfd53",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="10b7b1be919881904d64f8084c2afe22aa00c560f8493a75dbf5df8386443ab4",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="9171a05dd7438aebd4f6a939b1b33b7e87be1a0bd52d90a171b74539885cf591",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="86cf897b01a6f5df668d978ce42d44a6ae9df9f8adc92d0a1a49a7c3bbead259",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="86fcd3bc275efe9a485aed48afdc6d3351804c076caee43e3fb8bd69752865e9",
@@ -83,12 +107,11 @@ class Rocthrust(CMakePackage):
 
     # the rocthrust library itself is header-only, but the build_type and amdgpu_target
     # are relevant to the test client
-    variant("amdgpu_target", values=auto_or_any_combination_of(*amdgpu_targets))
     variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
+        "amdgpu_target",
+        description="AMD GPU architecture",
+        values=auto_or_any_combination_of(*amdgpu_targets),
+        sticky=True,
     )
     depends_on("cmake@3.10.2:", type="build", when="@4.2.0:")
     depends_on("cmake@3.5.1:", type="build")
@@ -115,6 +138,14 @@ class Rocthrust(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
+        "5.3.3",
+        "5.4.0",
+        "5.4.3",
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocprim@" + ver, when="@" + ver)

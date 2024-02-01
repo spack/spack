@@ -4,7 +4,7 @@ spack:
     default:
       tcl:
         include:
-          - py-amici  # BSD-276
+          # - py-amici  # BSD-276
           - py-atlannot
           - py-atldld
           - py-atlinter
@@ -25,19 +25,13 @@ spack:
       variants: ~mpi
     libsonata:
       variants: ~mpi
-    proj:
-      variants: ~curl
     py-h5py:
       variants: ~mpi
     py-ipyparallel:
       # otherwise, 6.3 is picked (cheaper setuptools penalty), and things break
       require: "@8:"
-    py-torch:
-      require: "@1.13.1"
-    vtk:
-      require: "@:9.0.3"
   specs:
-    - py-amici  # BSD-276
+    # - py-amici  # BSD-276
     - py-atlannot
     - py-atldld
     - py-atlinter

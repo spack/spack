@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PyDamask(PythonPackage):
     homepage = "https://damask.mpie.de"
     url = "https://damask.mpie.de/download/damask-3.0.0.tar.xz"
 
-    maintainers = ["MarDiehl"]
+    maintainers("MarDiehl")
 
     version(
         "3.0.0-alpha7", sha256="442b06b824441293e72ff91b211a555c5d497aedf62be1c4332c426558b848a4"

@@ -6,7 +6,7 @@
 import os
 import sys
 
-import ruamel.yaml as yaml
+import ruamel.yaml
 
 import llnl.util.tty as tty
 
@@ -20,25 +20,32 @@ description = "create a package.yaml from installed packages"
 section = "administration"
 level = "long"
 
+# Spack v0.21 started to not pick up externals when ipo was present in packages.yaml
+VARIANTS_TO_SKIP = set(["ipo", "patches"])
 
-class PackagesDumper(syaml.OrderedLineDumper):
+
+class PackagesRepresenter(syaml.OrderedLineRepresenter):
     """Customization to match common packages.yaml style"""
 
     def represent_list(self, seq, flow_style=None):
         """Impose an arbitrary length limit up to flow lists"""
-        res = super(PackagesDumper, self).represent_list(seq)
+        res = super().represent_list(seq)
         tot_len = sum(len(e.value) for e in res.value)
         res.flow_style = tot_len < 60
         return res
 
 
-PackagesDumper.add_representer(syaml_list, PackagesDumper.represent_list)
+PackagesRepresenter.add_representer(syaml_list, PackagesRepresenter.represent_list)
 
 
 def setup_parser(sp):
     scopes = spack.config.scopes()
     sp.add_argument(
-        "-f", "--format", help="specify format for path/module keys", metavar="FMT", default="$_$@"
+        "-f",
+        "--format",
+        help="specify format for path/module keys",
+        metavar="FMT",
+        default="{name}@{version}",
     )
     sp.add_argument(
         "-d", "--dependencies", help="add selected dependencies to the specs", action="store_true"
@@ -91,13 +98,13 @@ def _to_key(spec, fmt, variants):
     bflags = []
     for k, v in spec.variants.items():
         default = None
+        if k in VARIANTS_TO_SKIP:
+            continue
         if k in spec.package.variants:
             default = spec.package.variants[k][0].default
         if v.value != default or variants == "all":
             if v.value in (True, False):
                 bflags.append(v)
-            elif v.name != "patches":
-                sflags.append(v)
 
     sflags = " ".join(str(f) for f in sorted(sflags))
     bflags = "".join(str(f) for f in sorted(bflags))
@@ -150,7 +157,7 @@ def export(parser, args):
                 externality["modules"] = [str(mod.layout.use_name)]
             else:
                 msg = "module not present for {0}"
-                msg = msg.format(spec.format("$_$@"))
+                msg = msg.format(spec.format("{name}@{version}"))
                 tty.warn(msg)
 
         version = str(spec.version)
@@ -166,6 +173,6 @@ def export(parser, args):
         packages.setdefault(pkg, {})["buildable"] = False
     if "all" in packages:
         packages["all"] = packages.pop("all")
-    yaml.dump(
-        {"packages": packages}, stream=sys.stdout, default_flow_style=False, Dumper=PackagesDumper
-    )
+    yaml = ruamel.yaml.YAML(typ="rt", pure=True)
+    yaml.Representer = PackagesRepresenter
+    yaml.dump({"packages": packages}, stream=sys.stdout)

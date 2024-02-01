@@ -12,7 +12,7 @@ class Emsim(CMakePackage):
     homepage = "https://github.com/BlueBrain/EMSim"
     git = "https://github.com/BlueBrain/EMSim"
 
-    generator = "Ninja"
+    generator("ninja")
 
     version("develop", branch="master")
     version("1.0.2", tag="v1.0.2")

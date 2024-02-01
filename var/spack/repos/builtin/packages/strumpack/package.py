@@ -1,7 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from platform import machine
 
 from spack.package import *
 from spack.util.environment import set_env
@@ -19,16 +21,21 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     iterative solvers."""
 
     homepage = "http://portal.nersc.gov/project/sparse/strumpack"
-    url = "https://github.com/pghysels/STRUMPACK/archive/refs/tags/v6.3.1.tar.gz"
+    url = "https://github.com/pghysels/STRUMPACK/archive/refs/tags/v7.1.3.tar.gz"
     git = "https://github.com/pghysels/STRUMPACK.git"
 
     tags = ["e4s"]
 
-    maintainers = ["pghysels"]
+    maintainers("pghysels")
 
     test_requires_compiler = True
 
     version("master", branch="master")
+    version("7.2.0", sha256="6988c00c3213f13e53d75fb474102358f4fecf07a4b4304b7123d86fdc784639")
+    version("7.1.3", sha256="c951f38ee7af20da3ff46429e38fcebd57fb6f12619b2c56040d6da5096abcb0")
+    version("7.1.2", sha256="262a0193fa1682d0eaa90363f739e0be7a778d5deeb80e4d4ae12446082a39cc")
+    version("7.1.1", sha256="56481a22955c2eeb40932777233fc227347743c75683d996cb598617dd2a8635")
+    version("7.1.0", sha256="a3e80e0530ea1cc6b62c22699cfe5f02f81794321f225440f0e08bceed69c241")
     version("7.0.1", sha256="ddbf9c0509eaf0f8a4c70f59508787336a05eeacc8322f156117d8ce59a70a60")
     version("7.0.0", sha256="18f7a0d75cc5cfdb7bbb6112a2bdda7a50fbcaefa2d8bab001f902bdf62e69e3")
     version("6.3.1", sha256="3f1de435aeb850c06d841655c3bc426565eb0cc0a7314b76586c2c709b03fb61")
@@ -57,8 +64,10 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     variant("count_flops", default=False, description="Build with flop counters")
     variant("task_timers", default=False, description="Build with timers for internal routines")
     variant("slate", default=True, description="Build with SLATE support")
+    variant("magma", default=False, description="Build with MAGMA support")
 
-    depends_on("cmake@3.11:", type="build")
+    depends_on("cmake@3.11:", when="@:6.2.9", type="build")
+    depends_on("cmake@3.17:", when="@6.3.0:", type="build")
     depends_on("mpi", when="+mpi")
     depends_on("blas")
     depends_on("lapack")
@@ -72,11 +81,15 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("butterflypack@1.2.0:", when="@4.0.0: +butterflypack+mpi")
     depends_on("butterflypack@2.1.0:", when="@6.3.0: +butterflypack+mpi")
     depends_on("cuda", when="@4.0.0: +cuda")
-    depends_on("zfp", when="+zfp")
+    depends_on("zfp@0.5.5", when="@:7.0.1 +zfp")
+    depends_on("zfp", when="@7.0.2: +zfp")
     depends_on("hipblas", when="+rocm")
     depends_on("hipsparse", type="link", when="@7.0.1: +rocm")
     depends_on("rocsolver", when="+rocm")
+    depends_on("rocthrust", when="+rocm")
     depends_on("slate", when="+slate")
+    depends_on("magma+cuda", when="+magma+cuda")
+    depends_on("magma+rocm", when="+magma+rocm")
     depends_on("slate+cuda", when="+cuda+slate")
     depends_on("slate+rocm", when="+rocm+slate")
     for val in ROCmPackage.amdgpu_targets:
@@ -93,9 +106,13 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+rocm", when="+cuda")
     conflicts("+slate", when="@:5.1.1")
     conflicts("+slate", when="~mpi")
+    conflicts("+magma", when="~rocm~cuda")
 
     patch("intel-19-compile.patch", when="@3.1.1")
     patch("shared-rocm.patch", when="@5.1.1")
+
+    # https://github.com/pghysels/STRUMPACK/commit/e4b110b2d823c51a90575b77ec1531c699097a9f
+    patch("strumpack-7.0.1-mpich-hipcc.patch", when="@7.0.1 +rocm ^mpich")
 
     def cmake_args(self):
         spec = self.spec
@@ -108,6 +125,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("TPL_ENABLE_PARMETIS", "parmetis"),
             self.define_from_variant("TPL_ENABLE_SCOTCH", "scotch"),
             self.define_from_variant("TPL_ENABLE_BPACK", "butterflypack"),
+            self.define_from_variant("TPL_ENABLE_MAGMA", "magma"),
             self.define_from_variant("STRUMPACK_COUNT_FLOPS", "count_flops"),
             self.define_from_variant("STRUMPACK_TASK_TIMERS", "task_timers"),
             "-DTPL_BLAS_LIBRARIES=%s" % spec["blas"].libs.joined(";"),
@@ -127,11 +145,11 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
                         "-DCMAKE_Fortran_COMPILER=%s" % spec["mpi"].mpifc,
                     ]
                 )
-            args.extend(
-                [
-                    self.define_from_variant("STRUMPACK_C_INTERFACE", "c_interface"),
-                ]
-            )
+            args.extend([self.define_from_variant("STRUMPACK_C_INTERFACE", "c_interface")])
+
+        # Workaround for linking issue on Mac:
+        if spec.satisfies("%apple-clang +mpi"):
+            args.append("-DCMAKE_Fortran_COMPILER=%s" % spec["mpi"].mpifc)
 
         if "+cuda" in spec:
             args.extend(
@@ -145,6 +163,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
                 args.append("-DCUDA_NVCC_FLAGS={0}".format(" ".join(self.cuda_flags(cuda_archs))))
 
         if "+rocm" in spec:
+            args.append("-DCMAKE_CXX_COMPILER={0}".format(spec["hip"].hipcc))
             args.append("-DHIP_ROOT_DIR={0}".format(spec["hip"].prefix))
             rocm_archs = spec.variants["amdgpu_target"].value
             hipcc_flags = []
@@ -153,6 +172,12 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
             if "none" not in rocm_archs:
                 hipcc_flags.append("--amdgpu-target={0}".format(",".join(rocm_archs)))
             args.append("-DHIP_HIPCC_FLAGS={0}".format(" ".join(hipcc_flags)))
+
+        if "%cce" in spec:
+            # Assume the proper Cray CCE module (cce) is loaded:
+            craylibs_path = env["CRAYLIBS_" + machine().upper()]
+            env.setdefault("LDFLAGS", "")
+            env["LDFLAGS"] += " -Wl,-rpath," + craylibs_path
 
         return args
 

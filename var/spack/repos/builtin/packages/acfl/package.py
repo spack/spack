@@ -391,6 +391,7 @@ class Acfl(Package):
         env.append_path("LD_LIBRARY_PATH", join_path(armpl_dir, "lib"))
         env.prepend_path("LIBRARY_PATH", join_path(arm_dir, "lib"))
         env.prepend_path("MANPATH", join_path(arm_dir, "share", "man"))
+        env.prepend_path("PKG_CONFIG_PATH", join_path(armpl_dir, "lib", "pkgconfig"))
 
         env.set("GCC_DIR", gcc_dir)
         env.set("GCC_INCLUDES", join_path(gcc_dir, "include"))

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ class PyGrandalf(PythonPackage):
     version("0.6", sha256="928db4b90f7aff01e252a833951086b20d5958c00083411193c794de7bf59df2")
 
     depends_on("python@3:", type=("build", "run"))
+    depends_on("py-future", type=("build", "run"))
     depends_on("py-pyparsing", type=("build", "run"))
     depends_on("py-pytest-runner", type="build")
     depends_on("py-setuptools", type="build")

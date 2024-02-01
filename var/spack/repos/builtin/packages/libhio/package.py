@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Libhio(AutotoolsPackage):
     homepage = "https://github.com/hpc/libhio"
     url = "https://github.com/hpc/libhio/releases/download/hio.1.4.1.0/libhio-1.4.1.0.tar.bz2"
     git = "https://github.com/hpc/libhio.git"
-    maintainers = ["plamborn"]
+    maintainers("plamborn")
 
     #
     # We don't include older versions since they are missing features
@@ -25,7 +25,7 @@ class Libhio(AutotoolsPackage):
     #
     version("master", branch="master")
     version("1.4.1.6", sha256="863e7274f9e32d97bd5d9e6745ad9449735bdc8bd5623f152a32be45e6f3a212")
-    version("1.4.1.5", sha256="af5cb2a799a8470ed95847c3b07ea3ad61f8f7d5a2b79c52a46ca784846e8962")
+    version("1.4.1.5", sha256="76f5a0eb306e9596cdef558586ed2ba47bf50a9cc7782beb1a8b37115c00b1ee")
     version("1.4.1.4", sha256="6998a424cff97be9a207032b3addd19f292d8ebda72043be92a8f942ae3b4da1")
     version("1.4.1.3", sha256="b6ad2354f1bc597e7e55fc989ff50944835d64149f4925c2f45df950919e4d08")
     version("1.4.1.2", sha256="87a0f9b72b7aa69485c40d9bd36f02af653b70e8eed3eb0b50eaeb02ff0a9049")

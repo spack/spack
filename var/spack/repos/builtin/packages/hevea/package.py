@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Hevea(MakefilePackage):
     url = "https://github.com/maranget/hevea/archive/v2.35.tar.gz"
     git = "https://github.com/maranget/hevea.git"
 
-    maintainers = ["scemama", "cessenat"]
+    maintainers("scemama", "cessenat")
 
     version("develop", branch="master")
     version("2.35", sha256="78f834cc7a8112ec59d0b8acdfbed0c8ac7dbb85f964d0be1f4eed04f25cdf54")

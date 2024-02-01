@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Vmc(CMakePackage):
     git = "https://github.com/vmc-project/vmc.git"
     url = "https://github.com/vmc-project/vmc/archive/v1-0-p3.tar.gz"
 
-    maintainers = ["ChristianTackeGSI"]
+    maintainers("ChristianTackeGSI")
 
     version("2-0", sha256="9f4c31d93eeb0e10eca22d6450bb9a1070cbe25e99eaf7e74d4e191612102d9c")
     version("1-1-p1", sha256="dc0d4d16c81899c0167bcd13b97e39d9ff2817d20552f61e1c0bce357ac69ee5")

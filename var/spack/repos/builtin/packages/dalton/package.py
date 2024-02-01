@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,11 +15,15 @@ class Dalton(CMakePackage):
     homepage = "https://daltonprogram.org"
     git = "https://gitlab.com/dalton/dalton.git"
 
-    maintainers = ["foeroyingur"]
+    maintainers("foeroyingur")
 
     version("master", branch="master", submodules=True)
-    version("2020.0", tag="2020.0", submodules=True)
-    version("2018.2", tag="2018.2", submodules=True)
+    version(
+        "2020.0", tag="2020.0", commit="66052b3af5ea7225e31178bf9a8b031913c72190", submodules=True
+    )
+    version(
+        "2018.2", tag="2018.2", commit="4aa945ecd235fbf67ed0c1609617c553ef40be89", submodules=True
+    )
 
     variant(
         "build_type",

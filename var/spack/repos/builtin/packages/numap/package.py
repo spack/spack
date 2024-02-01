@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Numap(CMakePackage):
 
     homepage = "https://github.com/numap-library/numap"
     git = "https://github.com/numap-library/numap.git"
-    maintainers = ["trahay"]
+    maintainers("trahay")
 
     version("master", branch="master")
     version("2019-09-06", commit="ffcdb88c64b59b7a3220eb1077d2b237029ca96a")

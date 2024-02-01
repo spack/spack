@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,11 +21,17 @@ class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
     list_url = "https://www.mpich.org/static/downloads/"
     list_depth = 1
 
-    maintainers = ["raffenet", "yfguo"]
+    maintainers("raffenet", "yfguo")
     tags = ["e4s"]
     executables = ["^mpichversion$"]
 
+    keep_werror = "specific"
+
     version("develop", submodules=True)
+    version("4.1.2", sha256="3492e98adab62b597ef0d292fb2459b6123bc80070a8aa0a30be6962075a12f0")
+    version("4.1.1", sha256="ee30471b35ef87f4c88f871a5e2ad3811cd9c4df32fd4f138443072ff4284ca2")
+    version("4.1", sha256="8b1ec63bc44c7caa2afbb457bc5b3cd4a70dbe46baba700123d67c48dc5ab6a0")
+    version("4.0.3", sha256="17406ea90a6ed4ecd5be39c9ddcbfac9343e6ab4f77ac4e8c5ebe4a3e3b6c501")
     version("4.0.2", sha256="5a42f1a889d4a2d996c26e48cbf9c595cbf4316c6814f7c181e3320d21dedd42")
     version("4.0.1", sha256="66a1fe8052734af2eb52f47808c4dfef4010ceac461cb93c42b99acfb1a43687")
     version("4.0", sha256="df7419c96e2a943959f7ff4dc87e606844e736e30135716971aba58524fbff64")
@@ -90,15 +96,6 @@ spack package at this time.""",
     )
     variant("argobots", default=False, description="Enable Argobots support")
     variant("fortran", default=True, description="Enable Fortran support")
-
-    variant(
-        "two_level_namespace",
-        default=False,
-        description="""Build shared libraries and programs
-built with the mpicc/mpifort/etc. compiler wrappers
-with '-Wl,-commons,use_dylibs' and without
-'-Wl,-flat_namespace'.""",
-    )
 
     variant(
         "vci",
@@ -167,24 +164,22 @@ with '-Wl,-commons,use_dylibs' and without
     patch(
         "https://github.com/pmodels/mpich/commit/8a851b317ee57366cd15f4f28842063d8eff4483.patch?full_index=1",
         sha256="d2dafc020941d2d8cab82bc1047e4a6a6d97736b62b06e2831d536de1ac01fd0",
-        when="@3.3:3.3.99 +hwloc",
+        when="@3.3 +hwloc",
     )
 
     # fix MPI_Barrier segmentation fault
     # see https://lists.mpich.org/pipermail/discuss/2016-May/004764.html
     # and https://lists.mpich.org/pipermail/discuss/2016-June/004768.html
-    patch("mpich32_clang.patch", when="@3.2:3.2.0%clang")
-    patch("mpich32_clang.patch", when="@3.2:3.2.0%apple-clang")
+    patch("mpich32_clang.patch", when="@=3.2%clang")
+    patch("mpich32_clang.patch", when="@=3.2%apple-clang")
 
     # Fix SLURM node list parsing
     # See https://github.com/pmodels/mpich/issues/3572
     # and https://github.com/pmodels/mpich/pull/3578
-    # Even though there is no version 3.3.0, we need to specify 3.3:3.3.0 in
-    # the when clause, otherwise the patch will be applied to 3.3.1, too.
     patch(
         "https://github.com/pmodels/mpich/commit/b324d2de860a7a2848dc38aefb8c7627a72d2003.patch?full_index=1",
         sha256="5f48d2dd8cc9f681cf710b864f0d9b00c599f573a75b1e1391de0a3d697eba2d",
-        when="@3.3:3.3.0",
+        when="@=3.3",
     )
 
     # Fix reduce operations for unsigned integers
@@ -206,6 +201,18 @@ with '-Wl,-commons,use_dylibs' and without
         # Apply the patch only when yaksa is used:
         patch("mpich34_yaksa_hindexed.patch", when="datatype-engine=yaksa")
         patch("mpich34_yaksa_hindexed.patch", when="datatype-engine=auto device=ch4")
+
+    # Fix false positive result of the configure time check for CFI support
+    # https://github.com/pmodels/mpich/pull/6537
+    # https://github.com/pmodels/mpich/issues/6505
+    with when("@3.2.2:4.1.1"):
+        # Apply the patch from the upstream repo in case we have to run the autoreconf stage:
+        patch(
+            "https://github.com/pmodels/mpich/commit/d901a0b731035297dd6598888c49322e2a05a4e0.patch?full_index=1",
+            sha256="de0de41ec42ac5f259ea02f195eea56fba84d72b0b649a44c947eab6632995ab",
+        )
+        # Apply the changes to the configure script to skip the autoreconf stage if possible:
+        patch("mpich32_411_CFI_configure.patch")
 
     depends_on("findutils", type="build")
     depends_on("pkgconfig", type="build")
@@ -242,14 +249,14 @@ with '-Wl,-commons,use_dylibs' and without
     # building from git requires regenerating autotools files
     depends_on("automake@1.15:", when="@develop", type="build")
     depends_on("libtool@2.4.4:", when="@develop", type="build")
-    depends_on("m4", when="@develop", type="build"),
+    depends_on("m4", when="@develop", type="build")
     depends_on("autoconf@2.67:", when="@develop", type="build")
 
     # building with "+hwloc' also requires regenerating autotools files
-    depends_on("automake@1.15:", when="@3.3:3.3.99 +hwloc", type="build")
-    depends_on("libtool@2.4.4:", when="@3.3:3.3.99 +hwloc", type="build")
-    depends_on("m4", when="@3.3:3.3.99 +hwloc", type="build"),
-    depends_on("autoconf@2.67:", when="@3.3:3.3.99 +hwloc", type="build")
+    depends_on("automake@1.15:", when="@3.3 +hwloc", type="build")
+    depends_on("libtool@2.4.4:", when="@3.3 +hwloc", type="build")
+    depends_on("m4", when="@3.3 +hwloc", type="build")
+    depends_on("autoconf@2.67:", when="@3.3 +hwloc", type="build")
 
     # MPICH's Yaksa submodule requires python to configure
     depends_on("python@3.0:", when="@develop", type="build")
@@ -378,21 +385,23 @@ with '-Wl,-commons,use_dylibs' and without
             results.append(" ".join(variants))
         return results
 
+    def flag_handler(self, name, flags):
+        if name == "fflags":
+            # https://bugzilla.redhat.com/show_bug.cgi?id=1795817
+            # https://github.com/spack/spack/issues/17934
+            # TODO: we should add the flag depending on the real Fortran compiler spec and not the
+            #  toolchain spec, which might be mixed.
+            if any(self.spec.satisfies(s) for s in ["%gcc@10:", "%apple-clang@11:", "%clang@11:"]):
+                # Note that the flag is not needed to build the package starting version 4.1
+                # (see https://github.com/pmodels/mpich/pull/5840) but we keep adding the flag here
+                # to avoid its presence in the MPI compiler wrappers.
+                flags.append("-fallow-argument-mismatch")
+
+        return flags, None, None
+
     def setup_build_environment(self, env):
         env.unset("F90")
         env.unset("F90FLAGS")
-
-        # https://bugzilla.redhat.com/show_bug.cgi?id=1795817
-        if self.spec.satisfies("%gcc@10:"):
-            env.set("FFLAGS", "-fallow-argument-mismatch")
-            env.set("FCFLAGS", "-fallow-argument-mismatch")
-        # Same fix but for macOS - avoids issue #17934
-        if self.spec.satisfies("%apple-clang@11:"):
-            env.set("FFLAGS", "-fallow-argument-mismatch")
-            env.set("FCFLAGS", "-fallow-argument-mismatch")
-        if self.spec.satisfies("%clang@11:"):
-            env.set("FFLAGS", "-fallow-argument-mismatch")
-            env.set("FCFLAGS", "-fallow-argument-mismatch")
 
         if "pmi=cray" in self.spec:
             env.set("CRAY_PMI_INCLUDE_OPTS", "-I" + self.spec["cray-pmi"].headers.directories[0])
@@ -453,7 +462,7 @@ with '-Wl,-commons,use_dylibs' and without
     def autoreconf(self, spec, prefix):
         """Not needed usually, configure should be already there"""
         # If configure exists nothing needs to be done
-        if os.path.exists(self.configure_abs_path) and not spec.satisfies("@3.3:3.3.99 +hwloc"):
+        if os.path.exists(self.configure_abs_path) and not spec.satisfies("@3.3 +hwloc"):
             return
         # Else bootstrap with autotools
         bash = which("bash")
@@ -481,6 +490,7 @@ with '-Wl,-commons,use_dylibs' and without
     def configure_args(self):
         spec = self.spec
         config_args = [
+            "--disable-maintainer-mode",
             "--disable-silent-rules",
             "--enable-shared",
             "--with-pm={0}".format("hydra" if "+hydra" in spec else "no"),
@@ -489,6 +499,10 @@ with '-Wl,-commons,use_dylibs' and without
             "--enable-wrapper-rpath={0}".format("no" if "~wrapperrpath" in spec else "yes"),
             "--with-yaksa={0}".format(spec["yaksa"].prefix if "^yaksa" in spec else "embedded"),
         ]
+
+        # see https://github.com/pmodels/mpich/issues/5530
+        if spec.platform == "darwin":
+            config_args.append("--enable-two-level-namespace")
 
         # hwloc configure option changed in 4.0
         if spec.satisfies("@4.0:"):
@@ -572,9 +586,6 @@ with '-Wl,-commons,use_dylibs' and without
             config_args.append("--with-thread-package=argobots")
             config_args.append("--with-argobots=" + spec["argobots"].prefix)
 
-        if "+two_level_namespace" in spec:
-            config_args.append("--enable-two-level-namespace")
-
         if "+vci" in spec:
             config_args.append("--enable-thread-cs=per-vci")
             config_args.append("--with-ch4-max-vcis=default")
@@ -597,27 +608,47 @@ with '-Wl,-commons,use_dylibs' and without
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources(["examples", join_path("test", "mpi")])
 
-    def run_mpich_test(self, example_dir, exe):
-        """Run stand alone tests"""
+    def mpi_launcher(self):
+        """Determine the appropriate launcher."""
+        commands = [
+            join_path(self.spec.prefix.bin, "mpirun"),
+            join_path(self.spec.prefix.bin, "mpiexec"),
+        ]
+        if "+slurm" in self.spec:
+            commands.insert(0, join_path(self.spec["slurm"].prefix.bin))
+        return which(*commands)
 
-        test_dir = join_path(self.test_suite.current_test_cache_dir, example_dir)
-        exe_source = join_path(test_dir, "{0}.c".format(exe))
+    def run_mpich_test(self, subdir, exe, num_procs=1):
+        """Compile and run the test program."""
+        path = self.test_suite.current_test_cache_dir.join(subdir)
+        with working_dir(path):
+            src = f"{exe}.c"
+            if not os.path.isfile(src):
+                raise SkipTest(f"{src} is missing")
 
-        if not os.path.isfile(exe_source):
-            print("Skipping {0} test".format(exe))
-            return
+            mpicc = which(os.environ["MPICC"])
+            mpicc("-Wall", "-g", "-o", exe, src)
+            if num_procs > 1:
+                launcher = self.mpi_launcher()
+                if launcher is not None:
+                    launcher("-n", str(num_procs), exe)
+                    return
 
-        self.run_test(
-            self.prefix.bin.mpicc,
-            options=[exe_source, "-Wall", "-g", "-o", exe],
-            purpose="test: generate {0} file".format(exe),
-            work_dir=test_dir,
-        )
+            test_exe = which(exe)
+            test_exe()
 
-        self.run_test(exe, purpose="test: run {0} example".format(exe), work_dir=test_dir)
-
-    def test(self):
-        self.run_mpich_test(join_path("test", "mpi", "init"), "finalized")
-        self.run_mpich_test(join_path("test", "mpi", "basic"), "sendrecv")
-        self.run_mpich_test(join_path("test", "mpi", "perf"), "manyrma")
+    def test_cpi(self):
+        """build and run cpi"""
         self.run_mpich_test("examples", "cpi")
+
+    def test_finalized(self):
+        """build and run finalized"""
+        self.run_mpich_test(join_path("test", "mpi", "init"), "finalized")
+
+    def test_manyrma(self):
+        """build and run manyrma"""
+        self.run_mpich_test(join_path("test", "mpi", "perf"), "manyrma", 2)
+
+    def test_sendrecv(self):
+        """build and run sendrecv"""
+        self.run_mpich_test(join_path("test", "mpi", "basic"), "sendrecv", 2)

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,8 +17,11 @@ class Clhep(CMakePackage):
 
     tags = ["hep"]
 
-    maintainers = ["drbenmorgan"]
+    maintainers("drbenmorgan")
 
+    version("2.4.6.4", sha256="49c89330f1903ef707d3c5d79c16a7c5a6f2c90fc290e2034ee3834809489e57")
+    version("2.4.6.3", sha256="fcd007f11b10ba4af28d027222b63148d0eb44ff7a082eee353bdf921f9c684a")
+    version("2.4.6.2", sha256="aded73e49bac85a5b4e86f64a0ee3d6f3cfe5551b0f7731c78b6d8f9dac6e8dc")
     version("2.4.6.0", sha256="e8d16debb84ced28e40e9ae84789cf5a0adad45f9213fbac3ce7583e06caa7b1")
     version("2.4.5.4", sha256="983fb4ea1fe423217fe9debc709569495a62a3b4540eb790d557c5a34dffbbb6")
     version("2.4.5.3", sha256="45f63eeb097f02fe67b86a7dadbf10d409b401c28a1a3e172db36252c3097c13")
@@ -50,12 +53,15 @@ class Clhep(CMakePackage):
     variant(
         "cxxstd",
         default="11",
-        values=("11", "14", "17"),
+        values=(
+            "11",
+            "14",
+            conditional("17", when="@2.3.4.3:"),
+            conditional("20", when="@2.4.6.4:"),
+        ),
         multi=False,
         description="Use the specified C++ standard when building.",
     )
-
-    conflicts("cxxstd=17", when="@:2.3.4.2")
 
     depends_on("cmake@2.8.12.2:", when="@2.2.0.4:2.3.0.0", type="build")
     depends_on("cmake@3.2:", when="@2.3.0.1:", type="build")

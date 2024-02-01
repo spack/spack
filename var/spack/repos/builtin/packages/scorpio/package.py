@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Scorpio(CMakePackage):
     homepage = "https://gitlab.com/truchas/tpl-forks/scorpio"
     git = "https://gitlab.com/truchas/tpl-forks/scorpio.git"
 
-    maintainers = ["pbrady"]
+    maintainers("pbrady", "zjibben")
 
     version("develop", branch="truchas")
 
@@ -28,6 +28,6 @@ class Scorpio(CMakePackage):
 
     def cmake_args(self):
         opts = []
-        if self.spec.satisfies("%apple-clang@12:"):
+        if self.spec.satisfies("%apple-clang@12:") or self.spec.satisfies("%arm@23.04:"):
             opts.append(self.define("CMAKE_C_FLAGS", "-Wno-error=implicit-function-declaration"))
         return opts

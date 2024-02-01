@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,7 +24,7 @@ class RSpades(RPackage):
 
     cran = "SpaDES"
 
-    maintainers = ["dorton21"]
+    maintainers("dorton21")
 
     version("2.0.9", sha256="f68080318bc922c6d8c495e6d963acdbb24dc90a3e8013e3e2f894b40a584c85")
     version("2.0.8", sha256="2230704f700d07bda25a23ab5c6630a093c9ed2fe3c47ab6294eebaf1d86f03f")

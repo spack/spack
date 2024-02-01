@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,15 +10,21 @@ from spack.package import *
 
 
 def is_CrayXC():
-    return (spack.platforms.host().name == "cray") and (
+    return (spack.platforms.host().name in ["linux", "cray"]) and (
         os.environ.get("CRAYPE_NETWORK_TARGET") == "aries"
     )
 
 
 def is_CrayEX():
-    return (spack.platforms.host().name == "cray") and (
-        os.environ.get("CRAYPE_NETWORK_TARGET") in ["ofi", "ucx"]
-    )
+    if spack.platforms.host().name in ["linux", "cray"]:
+        target = os.environ.get("CRAYPE_NETWORK_TARGET")
+        if target in ["ofi", "ucx"]:  # normal case
+            return True
+        elif target is None:  # but some systems lack Cray PrgEnv
+            fi_info = which("fi_info")
+            if fi_info and fi_info("-l", output=str).find("cxi") >= 0:
+                return True
+    return False
 
 
 def cross_detect():
@@ -38,7 +44,7 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
     Access (RMA) and Remote Procedure Call (RPC)."""
 
     homepage = "https://upcxx.lbl.gov"
-    maintainers = ["bonachea"]
+    maintainers("bonachea")
     url = "https://bitbucket.org/berkeleylab/upcxx/downloads/upcxx-2021.3.0.tar.gz"
     git = "https://bitbucket.org/berkeleylab/upcxx.git"
 
@@ -47,6 +53,7 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
     version("develop", branch="develop")
     version("master", branch="master")
 
+    version("2023.3.0", sha256="382af3c093decdb51f0533e19efb4cc7536b6617067b2dd89431e323704a1009")
     version("2022.9.0", sha256="dbf15fd9ba38bfe2491f556b55640343d6303048a117c4e84877ceddb64e4c7c")
     version("2022.3.0", sha256="72bccfc9dfab5c2351ee964232b3754957ecfdbe6b4de640e1b1387d45019496")
     version("2021.9.0", sha256="9299e17602bcc8c05542cdc339897a9c2dba5b5c3838d6ef2df7a02250f42177")
@@ -67,12 +74,23 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
     variant(
         "cuda",
         default=False,
-        description="Enables UPC++ support for the CUDA memory kind.\n"
+        description="Enables UPC++ support for the CUDA memory kind on NVIDIA GPUs.\n"
         + "NOTE: Requires CUDA Driver library be present on the build system",
+        when="@2019.3.0:",
     )
 
     variant(
-        "rocm", default=False, description="Enables UPC++ support for the ROCm/HIP memory kind"
+        "rocm",
+        default=False,
+        description="Enables UPC++ support for the ROCm/HIP memory kind on AMD GPUs",
+        when="@2022.3.0:",
+    )
+
+    variant(
+        "level_zero",
+        default=False,
+        description="Enables UPC++ support for the Level Zero memory kind on Intel GPUs",
+        when="@2023.3.0:",
     )
 
     variant(
@@ -98,7 +116,9 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
     depends_on("mpi", when="+mpi")
     depends_on("python@2.7.5:", type=("build", "run"))
 
-    conflicts("hip@:4.4.0", when="+rocm")
+    conflicts("^hip@:4.4.0", when="+rocm")
+
+    depends_on("oneapi-level-zero@1.8.0:", when="+level_zero")
 
     # All flags should be passed to the build-env in autoconf-like vars
     flag_handler = env_flags
@@ -136,15 +156,7 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
         else:
             options.append("--with-cross=" + spec.variants["cross"].value)
 
-        if is_CrayXC():
-            # Spack loads the cray-libsci module incorrectly on ALCF theta,
-            # breaking the Cray compiler wrappers
-            # cray-libsci is irrelevant to our build, so disable it
-            for var in ["PE_PKGCONFIG_PRODUCTS", "PE_PKGCONFIG_LIBS"]:
-                env[var] = ":".join(
-                    filter(lambda x: "libsci" not in x.lower(), env[var].split(":"))
-                )
-        if is_CrayXC() or is_CrayEX():
+        if (is_CrayXC() or is_CrayEX()) and env.get("CRAYPE_DIR"):
             # Undo spack compiler wrappers:
             # the C/C++ compilers must work post-install
             real_cc = join_path(env["CRAYPE_DIR"], "bin", "cc")
@@ -174,7 +186,10 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
             # Append the recommended options for Cray Shasta
             # This list can be pruned once the floor version reaches 2022.9.0
             options.append("--with-pmi-version=cray")
-            options.append("--with-pmi-runcmd='srun -n %N -- %C'")
+            if which("srun"):
+                options.append("--with-pmi-runcmd=srun -n %N -- %C")
+            elif which("aprun"):
+                options.append("--with-pmi-runcmd=aprun -n %N %C")
             options.append("--disable-ibv")
             options.append("--enable-ofi")
             options.append("--with-default-network=ofi")
@@ -202,6 +217,10 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
                 "--with-ld-flags=" + self.compiler.cc_rpath_arg + spec["hip"].prefix.lib
             )
 
+        if "+level_zero" in spec:
+            options.append("--enable-ze")
+            options.append("--with-ze-home=" + spec["oneapi-level-zero"].prefix)
+
         env["GASNET_CONFIGURE_ARGS"] = "--enable-rpath " + env["GASNET_CONFIGURE_ARGS"]
 
         configure(*options)
@@ -214,7 +233,7 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
-    def test_install(self):
+    def check_install(self):
         # enable testing of unofficial conduits (mpi)
         test_networks = "NETWORKS=$(CONDUITS)"
         # build hello world against installed tree in all configurations
@@ -226,16 +245,12 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
             make("run-tests", "NETWORKS=smp")  # runs tests for smp backend
         make("tests-clean")  # cleanup
 
-    def test(self):
-        # run post-install smoke test:
+    def test_upcxx_install(self):
+        """checking UPC++ compile+link for all installed backends"""
         test_install = join_path(self.prefix.bin, "test-upcxx-install.sh")
-        self.run_test(
-            test_install,
-            expected=["SUCCESS"],
-            status=0,
-            installed=True,
-            purpose="Checking UPC++ compile+link " + "for all installed backends",
-        )
+        test_upcxx_install = which(test_install)
+        out = test_upcxx_install(output=str.split, error=str.split)
+        assert "SUCCESS" in out
 
     # `spack external find` support
     executables = ["^upcxx$"]
@@ -268,4 +283,8 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
             variants += "+rocm"
         else:
             variants += "~rocm"
+        if re.search(r"-DUPCXXI_ZE_ENABLED=1", output):
+            variants += "+level_zero"
+        else:
+            variants += "~level_zero"
         return variants

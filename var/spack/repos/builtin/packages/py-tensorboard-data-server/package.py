@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,16 +14,21 @@ class PyTensorboardDataServer(PythonPackage):
     homepage = "https://github.com/tensorflow/tensorboard/tree/master/tensorboard/data/server"
     git = "https://github.com/tensorflow/tensorboard"
 
+    version("0.7.0", commit="f1cb31c86d871e0258250248ab9488575410e784")
     version("0.6.1", commit="6acf0be88b5727e546dd64a8b9b12d790601d561")
 
-    depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("rust", type="build")
+    depends_on("rust+rustfmt", type="build")
 
     # https://github.com/tensorflow/tensorboard/issues/5713
     patch(
         "https://github.com/tensorflow/tensorboard/pull/5715.patch?full_index=1",
         sha256="878bbd60fd9c38216a372792f02a65c1b422b6c546050fdf335b264ab263cd8a",
+        when="@0.6.1",
+    )
+    patch(
+        "https://github.com/tensorflow/tensorboard/pull/6101.patch?full_index=1",
+        sha256="4b3bcc2ed656699e9faad7937d013b65fa65fed58fbe58d2ae38e0e7b8006ad8",
         when="@0.6.1",
     )
 

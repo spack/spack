@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,13 +16,13 @@ class Fms(CMakePackage):
     url = "https://github.com/NOAA-GFDL/FMS/archive/refs/tags/2022.04.tar.gz"
     git = "https://github.com/NOAA-GFDL/FMS.git"
 
-    maintainers = [
-        "AlexanderRichert-NOAA",
-        "Hang-Lei-NOAA",
-        "edwardhartnett",
-        "rem1776",
-    ]
+    maintainers("AlexanderRichert-NOAA", "Hang-Lei-NOAA", "edwardhartnett", "rem1776")
 
+    version("2023.02", sha256="dc029ffadfd82c334f104268bedd8635c77976485f202f0966ae4cf06d2374be")
+    version(
+        "2023.01.01", sha256="f83e2814a1e3ba439ab847ec8bb251f3889d5ca14fb20849507590adbbe8e899"
+    )
+    version("2023.01", sha256="6079ea885e9365513b453c77aadfc7c305bf413b840656bb333db1eabba0f18e")
     version("2022.04", sha256="f741479128afc2b93ca8291a4c5bcdb024a8cbeda1a26bf77a236c0f629e1b03")
     version("2022.03", sha256="42d2ac53d3c889a8177a6d7a132583364c0f6e5d5cbde0d980443b6797ad4838")
     version("2022.02", sha256="ad4978302b219e11b883b2f52519e1ee455137ad947474abb316c8654f72c874")
@@ -45,10 +45,18 @@ class Fms(CMakePackage):
     )
 
     variant(
-        "64bit",
-        default=True,
-        description="Build a version of the library with default 64 bit reals",
+        "precision",
+        values=("32", "64"),
+        description="Build a version of the library with default 32 or 64 bit reals or both",
+        default="32",
+        multi=True,
     )
+    conflicts(
+        "precision=32,64",
+        when="@:2022.03",
+        msg="FMS versions prior to 2022.04 do not support both 32 and 64 bit precision",
+    )
+
     variant("gfs_phys", default=True, description="Use GFS Physics")
     variant("openmp", default=True, description="Use OpenMP")
     variant("quad_precision", default=True, description="quad precision reals")
@@ -67,7 +75,13 @@ class Fms(CMakePackage):
         when="@2022.02:",
     )
     variant(
-        "fpic", default=False, description="Build with position independent code", when="@2022.02:"
+        "pic", default=False, description="Build with position independent code", when="@2022.02:"
+    )
+    variant(
+        "deprecated_io",
+        default=False,
+        description="Compiles with support for deprecated io modules fms_io and mpp_io",
+        when="@2023.02:",
     )
 
     depends_on("netcdf-c")
@@ -77,13 +91,15 @@ class Fms(CMakePackage):
 
     def cmake_args(self):
         args = [
-            self.define_from_variant("64BIT"),
             self.define_from_variant("GFS_PHYS"),
             self.define_from_variant("OPENMP"),
             self.define_from_variant("ENABLE_QUAD_PRECISION", "quad_precision"),
             self.define_from_variant("WITH_YAML", "yaml"),
             self.define_from_variant("CONSTANTS"),
-            self.define_from_variant("FPIC"),
+            self.define("32BIT", "precision=32" in self.spec),
+            self.define("64BIT", "precision=64" in self.spec),
+            self.define_from_variant("FPIC", "pic"),
+            self.define_from_variant("USE_DEPRECATED_IO", "deprecated_io"),
         ]
 
         args.append(self.define("CMAKE_C_COMPILER", self.spec["mpi"].mpicc))

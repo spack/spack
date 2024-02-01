@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Molden(MakefilePackage):
     homepage = "https://www.theochem.ru.nl/molden/"
     url = "https://ftp.science.ru.nl/Molden/molden6.5.tar.gz"
 
-    maintainers = ["dev-zero"]
+    maintainers("dev-zero")
 
     version("6.7", sha256="ebd73e8d95271eb82a1464a7eab28a042662483bbff6e6dcc7db0d1c9b2e4432")
     version("6.6", sha256="2a2a7a116a336b607b50e8135bc2cca764c50e4a6896013ee3c6f582b741ee72")

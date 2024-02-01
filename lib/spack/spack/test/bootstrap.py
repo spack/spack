@@ -1,12 +1,13 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import sys
 
 import pytest
 
 import spack.bootstrap
+import spack.bootstrap.config
+import spack.bootstrap.core
 import spack.compilers
 import spack.environment
 import spack.store
@@ -21,20 +22,48 @@ def active_mock_environment(mutable_config, mutable_mock_env_path):
 
 @pytest.mark.regression("22294")
 def test_store_is_restored_correctly_after_bootstrap(mutable_config, tmpdir):
-    # Prepare a custom store path. This should be in a writeable location
-    # since Spack needs to initialize the DB.
+    """Tests that the store is correctly swapped during bootstrapping, and restored afterward."""
     user_path = str(tmpdir.join("store"))
-    # Reassign global variables in spack.store to the value
-    # they would have at Spack startup.
-    spack.store.reinitialize()
-    # Set the custom user path
-    spack.config.set("config:install_tree:root", user_path)
+    with spack.store.use_store(user_path):
+        assert spack.store.STORE.root == user_path
+        assert spack.config.CONFIG.get("config:install_tree:root") == user_path
+        with spack.bootstrap.ensure_bootstrap_configuration():
+            assert spack.store.STORE.root == spack.bootstrap.config.store_path()
+        assert spack.store.STORE.root == user_path
+        assert spack.config.CONFIG.get("config:install_tree:root") == user_path
 
-    # Test that within the context manager we use the bootstrap store
-    # and that outside we restore the correct location
+
+@pytest.mark.regression("38963")
+def test_store_padding_length_is_zero_during_bootstrapping(mutable_config, tmpdir):
+    """Tests that, even though padded length is set in user config, the bootstrap store maintains
+    a padded length of zero.
+    """
+    user_path = str(tmpdir.join("store"))
+    with spack.store.use_store(user_path, extra_data={"padded_length": 512}):
+        assert spack.config.CONFIG.get("config:install_tree:padded_length") == 512
+        with spack.bootstrap.ensure_bootstrap_configuration():
+            assert spack.store.STORE.root == spack.bootstrap.config.store_path()
+            assert spack.config.CONFIG.get("config:install_tree:padded_length") == 0
+        assert spack.config.CONFIG.get("config:install_tree:padded_length") == 512
+
+
+@pytest.mark.regression("38963")
+def test_install_tree_customization_is_respected(mutable_config, tmp_path):
+    """Tests that a custom user store is respected when we exit the bootstrapping
+    environment.
+    """
+    spack.store.reinitialize()
+    store_dir = tmp_path / "store"
+    spack.config.CONFIG.set("config:install_tree:root", str(store_dir))
     with spack.bootstrap.ensure_bootstrap_configuration():
-        assert spack.store.root == spack.bootstrap.store_path()
-    assert spack.store.root == user_path
+        assert spack.store.STORE.root == spack.bootstrap.config.store_path()
+        assert (
+            spack.config.CONFIG.get("config:install_tree:root")
+            == spack.bootstrap.config.store_path()
+        )
+        assert spack.config.CONFIG.get("config:install_tree:padded_length") == 0
+    assert spack.config.CONFIG.get("config:install_tree:root") == str(store_dir)
+    assert spack.store.STORE.root == str(store_dir)
 
 
 @pytest.mark.parametrize(
@@ -51,7 +80,7 @@ def test_store_path_customization(config_value, expected, mutable_config):
     spack.config.set("bootstrap:root", config_value)
 
     # Check the store path
-    current = spack.bootstrap.store_path()
+    current = spack.bootstrap.config.store_path()
     assert current == spack.util.path.canonicalize_path(expected)
 
 
@@ -61,23 +90,17 @@ def test_raising_exception_if_bootstrap_disabled(mutable_config):
 
     # Check the correct exception is raised
     with pytest.raises(RuntimeError, match="bootstrapping is currently disabled"):
-        spack.bootstrap.store_path()
+        spack.bootstrap.config.store_path()
 
 
 def test_raising_exception_module_importable():
-    with pytest.raises(
-        ImportError,
-        match='cannot bootstrap the "asdf" Python module',
-    ):
-        spack.bootstrap.ensure_module_importable_or_raise("asdf")
+    with pytest.raises(ImportError, match='cannot bootstrap the "asdf" Python module'):
+        spack.bootstrap.core.ensure_module_importable_or_raise("asdf")
 
 
 def test_raising_exception_executables_in_path():
-    with pytest.raises(
-        RuntimeError,
-        match="cannot bootstrap any of the asdf, fdsa executables",
-    ):
-        spack.bootstrap.ensure_executables_in_path_or_raise(["asdf", "fdsa"], "python")
+    with pytest.raises(RuntimeError, match="cannot bootstrap any of the asdf, fdsa executables"):
+        spack.bootstrap.core.ensure_executables_in_path_or_raise(["asdf", "fdsa"], "python")
 
 
 @pytest.mark.regression("25603")
@@ -157,31 +180,32 @@ spack:
         # Don't trigger evaluation here
         with spack.bootstrap.ensure_bootstrap_configuration():
             pass
-        assert str(spack.store.root) == install_root
+        assert str(spack.store.STORE.root) == install_root
 
 
 def test_nested_use_of_context_manager(mutable_config):
     """Test nested use of the context manager"""
-    user_config = spack.config.config
+    user_config = spack.config.CONFIG
     with spack.bootstrap.ensure_bootstrap_configuration():
-        assert spack.config.config != user_config
+        assert spack.config.CONFIG != user_config
         with spack.bootstrap.ensure_bootstrap_configuration():
-            assert spack.config.config != user_config
-    assert spack.config.config == user_config
+            assert spack.config.CONFIG != user_config
+    assert spack.config.CONFIG == user_config
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize("expected_missing", [False, True])
 def test_status_function_find_files(
     mutable_config, mock_executable, tmpdir, monkeypatch, expected_missing
 ):
+    import spack.bootstrap.status
+
     if not expected_missing:
         mock_executable("foo", "echo Hello WWorld!")
 
     monkeypatch.setattr(
-        spack.bootstrap,
+        spack.bootstrap.status,
         "_optional_requirements",
-        lambda: [spack.bootstrap._required_system_executable("foo", "NOT FOUND")],
+        lambda: [spack.bootstrap.status._required_system_executable("foo", "NOT FOUND")],
     )
     monkeypatch.setenv("PATH", str(tmpdir.join("bin")))
 
@@ -192,15 +216,15 @@ def test_status_function_find_files(
 @pytest.mark.regression("31042")
 def test_source_is_disabled(mutable_config):
     # Get the configuration dictionary of the current bootstrapping source
-    conf = next(iter(spack.bootstrap.bootstrapping_sources()))
+    conf = next(iter(spack.bootstrap.core.bootstrapping_sources()))
 
     # The source is not explicitly enabled or disabled, so the following
     # call should raise to skip using it for bootstrapping
     with pytest.raises(ValueError):
-        spack.bootstrap.source_is_enabled_or_raise(conf)
+        spack.bootstrap.core.source_is_enabled_or_raise(conf)
 
     # Try to explicitly disable the source and verify that the behavior
     # is the same as above
     spack.config.add("bootstrap:trusted:{0}:{1}".format(conf["name"], False))
     with pytest.raises(ValueError):
-        spack.bootstrap.source_is_enabled_or_raise(conf)
+        spack.bootstrap.core.source_is_enabled_or_raise(conf)

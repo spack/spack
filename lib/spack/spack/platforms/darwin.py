@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Darwin(Platform):
     binary_formats = ["macho"]
 
     def __init__(self):
-        super(Darwin, self).__init__("darwin")
+        super().__init__("darwin")
 
         for name in archspec.cpu.TARGETS:
             self.add_target(name, spack.target.Target(name))

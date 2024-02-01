@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Ocamlbuild(MakefilePackage):
 
     # Add a list of GitHub accounts to
     # notify when the package is updated.
-    maintainers = ["scemama", "cessenat"]
+    maintainers("scemama", "cessenat")
 
     # Add proper versions here.
     version("master", branch="master")
@@ -29,11 +29,7 @@ class Ocamlbuild(MakefilePackage):
 
     # Installation : https://github.com/ocaml/ocamlbuild/
     def edit(self, spec, prefix):
-        makefile_inc = [
-            "BINDIR       = bin",
-            "LIBDIR       = lib",
-            "MANDIR       = man",
-        ]
+        makefile_inc = ["BINDIR       = bin", "LIBDIR       = lib", "MANDIR       = man"]
         makefile_inc.append("OCAML_PREFIX       = %s" % self.spec["ocaml"].prefix)
         makefile_inc.append("DESTDIR       = %s/" % self.spec.prefix)
         with open("Makefile.config", "a") as fh:

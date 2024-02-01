@@ -34,3 +34,9 @@ class PyCgalPybind(PythonPackage):
     @on_package_attributes(run_tests=True)
     def test_install(self):
         python("-m", "pytest", "tests")
+
+    def patch(self):
+        # Uses CMake targets, which are scoped _per subdirectory_: find_package has to be
+        # at the top-level
+        filter_file(r".*pybind11.*", "", "extlib/CMakeLists.txt")
+        filter_file(r"^(.*extlib.*)$", "\\1\nfind_package(pybind11)", "CMakeLists.txt")

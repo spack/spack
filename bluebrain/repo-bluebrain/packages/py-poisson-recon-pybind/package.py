@@ -24,3 +24,10 @@ class PyPoissonReconPybind(PythonPackage):
     depends_on("cmake", type="build")
     depends_on("eigen")
     depends_on("py-numpy@1.12:", type=("build", "run"))
+    depends_on("py-pybind11")
+
+    def patch(self):
+        # Uses CMake targets, which are scoped _per subdirectory_: find_package has to be
+        # at the top-level
+        filter_file(r".*pybind11.*", "", "extlib/CMakeLists.txt")
+        filter_file(r"^(.*extlib.*)$", "\\1\nfind_package(pybind11)", "CMakeLists.txt")

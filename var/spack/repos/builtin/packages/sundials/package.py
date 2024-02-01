@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,12 +21,16 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     tags = ["radiuss", "e4s"]
     test_requires_compiler = True
 
-    maintainers = ["balos1", "cswoodward", "gardner48"]
+    maintainers("balos1", "cswoodward", "gardner48")
 
     # ==========================================================================
     # Versions
     # ==========================================================================
     version("develop", branch="develop")
+    version("6.6.1", sha256="21f71e4aef95b18f954c8bbdc90b62877443950533d595c68051ab768b76984b")
+    version("6.6.0", sha256="f90029b8da846c8faff5530fd1fa4847079188d040554f55c1d5d1e04743d29d")
+    version("6.5.1", sha256="4252303805171e4dbdd19a01e52c1dcfe0dafc599c3cfedb0a5c2ffb045a8a75")
+    version("6.5.0", sha256="4e0b998dff292a2617e179609b539b511eb80836f5faacf800e688a886288502")
     version("6.4.1", sha256="7bf10a8d2920591af3fba2db92548e91ad60eb7241ab23350a9b1bc51e05e8d0")
     version("6.4.0", sha256="0aff803a12c6d298d05b56839197dd09858631864017e255ed89e28b49b652f1")
     version("6.3.0", sha256="89a22bea820ff250aa7239f634ab07fa34efe1d2dcfde29cc8d3af11455ba2a7")
@@ -288,6 +292,12 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     # fix issues with exported PETSc target(s) in SUNDIALSConfig.cmake
     patch("sundials-v5.8.0.patch", when="@5.8.0")
 
+    def flag_handler(self, name, flags):
+        if name == "cxxflags":
+            if self.spec.satisfies("+sycl"):
+                flags.append("-fsycl")
+        return (flags, None, None)
+
     # ==========================================================================
     # SUNDIALS Settings
     # ==========================================================================
@@ -452,9 +462,9 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         if "+magma" in spec:
             args.extend([define("ENABLE_MAGMA", True), define("MAGMA_DIR", spec["magma"].prefix)])
             if "+cuda" in spec:
-                define("SUNDIALS_MAGMA_BACKENDS", "CUDA")
+                args.extend([define("SUNDIALS_MAGMA_BACKENDS", "CUDA")])
             if "+rocm" in spec:
-                define("SUNDIALS_MAGMA_BACKENDS", "HIP")
+                args.extend([define("SUNDIALS_MAGMA_BACKENDS", "HIP")])
 
         # Building with PETSc
         if "+petsc" in spec:
@@ -479,10 +489,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         if "+superlu-mt" in spec:
             if spec.satisfies("@3:"):
                 args.extend(
-                    [
-                        define("BLAS_ENABLE", True),
-                        define("BLAS_LIBRARIES", spec["blas"].libs),
-                    ]
+                    [define("BLAS_ENABLE", True), define("BLAS_LIBRARIES", spec["blas"].libs)]
                 )
             args.extend(
                 [
@@ -743,7 +750,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
                     ("cvode/cuda/cvAdvDiff_kry_cuda", [], "Test CVODE with CUDA", True)
                 )
 
-        if "+hip" in self.spec:
+        if "+rocm" in self.spec:
             smoke_tests.append(
                 ("nvector/hip/test_nvector_hip", ["10", "0", "0"], "Test HIP N_Vector", True)
             )
@@ -775,6 +782,8 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         """(Hack) Set/get cmake dependency path."""
         filepath = join_path(self.install_test_root, "cmake_bin_path.txt")
         if set:
+            if not os.path.exists(self.install_test_root):
+                mkdirp(self.install_test_root)
             with open(filepath, "w") as out_file:
                 cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
                 out_file.write("{0}\n".format(cmake_bin))
@@ -784,7 +793,8 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
 
     @run_after("install")
     def setup_smoke_tests(self):
-        install_tree(self._smoke_tests_path, join_path(self.install_test_root, "testing"))
+        if "+examples-install" in self.spec:
+            install_tree(self._smoke_tests_path, join_path(self.install_test_root, "testing"))
         self.cmake_bin(set=True)
 
     def build_smoke_tests(self):
@@ -792,6 +802,10 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
 
         if not cmake_bin:
             tty.msg("Skipping sundials test: cmake_bin_path.txt not found")
+            return
+
+        if "~examples-install" in self.spec:
+            tty.msg("Skipping sundials test: examples were not installed")
             return
 
         for smoke_test in self._smoke_tests:
@@ -802,6 +816,9 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
                 self.run_test(exe="make")
 
     def run_smoke_tests(self):
+        if "~examples-install" in self.spec:
+            return
+
         for smoke_test in self._smoke_tests:
             self.run_test(
                 exe=join_path(self._smoke_tests_path, smoke_test[0]),
@@ -813,6 +830,9 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
             )
 
     def clean_smoke_tests(self):
+        if "~examples-install" in self.spec:
+            return
+
         for smoke_test in self._smoke_tests:
             work_dir = join_path(self._smoke_tests_path, os.path.dirname(smoke_test[0]))
             with working_dir(work_dir):

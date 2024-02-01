@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,8 +12,10 @@ class Diamond(CMakePackage):
 
     homepage = "https://ab.inf.uni-tuebingen.de/software/diamond"
     url = "https://github.com/bbuchfink/diamond/archive/v2.0.9.tar.gz"
-    maintainers = ["snehring"]
+    maintainers("snehring")
 
+    version("2.1.7", sha256="2dcaba0e79ecb02c3d2a6816d317e714767118a9a056721643abff4c586ca95b")
+    version("2.1.6", sha256="852d27c7535d53f1ce59db0625ff23ac3bf17e57f7a3b1c46c08718f77e19c54")
     version("2.0.15", sha256="cc8e1f3fd357d286cf6585b21321bd25af69aae16ae1a8f605ea603c1886ffa4")
     version("2.0.14", sha256="3eaef2b957e4ba845eac27a2ca3249aae4259ff1fe0ff5a21b094481328fdc53")
     version("2.0.11", sha256="41f3197aaafff9c42763fb7658b67f730ebc6dd3c0533c9c3d54bd3166e93f24")
@@ -30,7 +32,7 @@ class Diamond(CMakePackage):
     version("0.8.38", sha256="582a7932f3aa73b0eac2275dd773818665f0b067b32a79ff5a13b0e3ca375f60")
     version("0.8.26", sha256="00d2be32dad76511a767ab8e917962c0ecc572bc808080be60dec028df45439f")
 
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     conflicts("target=aarch64:", when="@:0.9.25")
 

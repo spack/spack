@@ -1,11 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
-
-import spack.util.web
+import spack.url
 from spack.package import *
 
 
@@ -14,13 +12,21 @@ class Protobuf(CMakePackage):
 
     homepage = "https://developers.google.com/protocol-buffers"
     url = "https://github.com/protocolbuffers/protobuf/archive/v3.18.0.tar.gz"
+    maintainers("hyoklee")
 
+    version("3.24.3", sha256="2c23dee0bdbc36bd43ee457083f8f5560265d0815cc1c56033de3932843262fe")
+    version("3.23.3", sha256="5e4b555f72a7e3f143a7aff7262292500bb02c49b174351684bb70fc7f2a6d33")
+    version("3.22.2", sha256="2118051b4fb3814d59d258533a4e35452934b1ddb41230261c9543384cbb4dfc")
+    version("3.21.12", sha256="930c2c3b5ecc6c9c12615cf5ad93f1cd6e12d0aba862b572e076259970ac3a53")
+    version("3.21.9", sha256="1add10f9bd92775b91f326da259f243881e904dd509367d5031d4c782ba82810")
     version("3.21.7", sha256="ce2fbea3c78147a41b2a922485d283137845303e5e1b6cbd7ece94b96ade7031")
     version("3.21.5", sha256="d7d204a59fd0d2d2387bd362c2155289d5060f32122c4d1d922041b61191d522")
     version("3.21.4", sha256="85d42d4485f36f8cec3e475a3b9e841d7d78523cd775de3a86dba77081f4ca25")
     version("3.21.3", sha256="c29d8b4b79389463c546f98b15aa4391d4ed7ec459340c47bffe15db63eb9126")
     version("3.21.2", sha256="66e1156ac78290db81335c79d1fc5a54123ebb62a43eb2e5b42a44ca23087517")
     version("3.21.1", sha256="a295dd3b9551d3e2749a9969583dea110c6cdcc39d02088f7c7bb1100077e081")
+    version("3.20.3", sha256="9c0fd39c7a08dff543c643f0f4baf081988129a411b977a07c46221793605638")
+    version("3.20.2", sha256="88231778cffebf93bc905e76ea757fae0f2ef497cc00f64973e41f1acd4fc781")
     version("3.20.1", sha256="8b28fdd45bab62d15db232ec404248901842e5340299a57765e48abe8a80d930")
     version("3.20.0", sha256="b07772d38ab07e55eca4d50f4b53da2d998bb221575c60a4f81100242d4b4889")
     version("3.19.4", sha256="3bd7828aa5af4b13b99c191e8b1e884ebfa9ad371b0ce264605d347f135d2568")
@@ -52,6 +58,7 @@ class Protobuf(CMakePackage):
     version("3.10.0", sha256="758249b537abba2f21ebc2d02555bf080917f0f2f88f4cbe2903e0e28c4187ed")
     version("3.9.2", sha256="1fbf1c2962af287607232b2eddeaec9b4f4a7a6f5934e1a9276e9af76952f7e0")
     version("3.9.1", sha256="98e615d592d237f94db8bf033fba78cd404d979b0b70351a9e5aaff725398357")
+    version("3.8.0", sha256="03d2e5ef101aee4c2f6ddcf145d2a04926b9c19e7086944df3842b1b8502b783")
     version("3.7.1", sha256="f1748989842b46fa208b2a6e4e2785133cfcc3e4d43c17fecb023733f0f5443f")
     version("3.7.0", sha256="a19dcfe9d156ae45d209b15e0faed5c7b5f109b6117bfc1974b6a7b98a850320")
     version("3.6.1", sha256="3d4e589d81b2006ca603c1ab712c9715a76227293032d05b26fca603f90b3f5b")
@@ -75,7 +82,10 @@ class Protobuf(CMakePackage):
         values=("Debug", "Release", "RelWithDebInfo"),
     )
 
-    depends_on("zlib")
+    depends_on("abseil-cpp@20230125.3:", when="@3.22.5:")
+    # https://github.com/protocolbuffers/protobuf/issues/11828#issuecomment-1433557509
+    depends_on("abseil-cpp@20230125:", when="@3.22:")
+    depends_on("zlib-api")
 
     conflicts("%gcc@:4.6", when="@3.6.0:")  # Requires c++11
     conflicts("%gcc@:4.6", when="@3.2.0:3.3.0")  # Breaks
@@ -95,6 +105,15 @@ class Protobuf(CMakePackage):
         sha256="fa1abf042eddc1b3b43875dc018c651c90cd1c0c5299975a818a1610bee54ab8",
     )
 
+    # fix build on Centos 8, see also https://github.com/protocolbuffers/protobuf/issues/5144
+    patch(
+        "https://github.com/protocolbuffers/protobuf/pull/11032/commits/3039f932aaf212bcf2f14a3f2fd00dbfb881e46b.patch?full_index=1",
+        when="@:3.21",
+        sha256="cefc4bf4aadf9ca33a336b2aa6d0d82006b6563e85122ae8cfb70345f85321dd",
+    )
+
+    patch("msvc-abseil-target-namespace.patch", when="@3.22 %msvc")
+
     def fetch_remote_versions(self, *args, **kwargs):
         """Ignore additional source artifacts uploaded with releases,
         only keep known versions
@@ -102,20 +121,29 @@ class Protobuf(CMakePackage):
         return dict(
             map(
                 lambda u: (u, self.url_for_version(u)),
-                spack.util.web.find_versions_of_archive(
-                    self.all_urls, self.list_url, self.list_depth
-                ),
+                spack.url.find_versions_of_archive(self.all_urls, self.list_url, self.list_depth),
             )
         )
 
     def cmake_args(self):
         args = [
-            "-DBUILD_SHARED_LIBS=%s" % int("+shared" in self.spec),
-            "-Dprotobuf_BUILD_TESTS:BOOL=OFF",
-            "-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON",
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define("protobuf_BUILD_TESTS", False),
+            self.define("CMAKE_POSITION_INDEPENDENT_CODE", True),
         ]
-        if sys.platform == "darwin":
-            args.extend(["-DCMAKE_MACOSX_RPATH=ON"])
+
+        if self.spec.satisfies("@3.22:"):
+            cxxstd = self.spec["abseil-cpp"].variants["cxxstd"].value
+            args.extend(
+                [
+                    self.define("protobuf_ABSL_PROVIDER", "package"),
+                    self.define("CMAKE_CXX_STANDARD", cxxstd),
+                ]
+            )
+
+        if self.spec.satisfies("platform=darwin"):
+            args.append(self.define("CMAKE_MACOSX_RPATH", True))
+
         return args
 
     @property

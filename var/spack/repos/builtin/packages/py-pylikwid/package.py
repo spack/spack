@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class PyPylikwid(PythonPackage):
     pypi = "pylikwid/pylikwid-0.4.0.tar.gz"
     git = "https://github.com/RRZE-HPC/pylikwid.git"
 
-    maintainers = ["TomTheBear"]
+    maintainers("TomTheBear")
 
     version("0.4.0", sha256="f7894a6d7ebcea7da133ef639599a314f850f55cd6c5ffdd630bb879bd2aa0b8")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,14 +25,13 @@ class LdcBootstrap(CMakePackage):
     version("0.17.4", sha256="48428afde380415640f3db4e38529345f3c8485b1913717995547f907534c1c3")
 
     depends_on("llvm@3.7:")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libconfig")
     depends_on("curl")
     depends_on("libedit")
     depends_on("binutils")
 
     def setup_dependent_build_environment(self, env, dep_spec):
-
         # The code below relies on this function being executed after the
         # environment has been sanitized (because LD_LIBRARY_PATH is among
         # the variables that get unset)

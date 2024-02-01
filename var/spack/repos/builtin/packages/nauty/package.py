@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -75,7 +75,7 @@ class Nauty(AutotoolsPackage):
     depends_on("libtool", type="build", when="@2.6r7")
     depends_on("pkgconfig", type="build")
     depends_on("help2man", type="build")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("gmp")
 
     @property

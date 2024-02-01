@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,22 +12,45 @@ class RocmDeviceLibs(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/ROCm-Device-Libs"
     git = "https://github.com/RadeonOpenCompute/ROCm-Device-Libs.git"
-    url = "https://github.com/RadeonOpenCompute/ROCm-Device-Libs/archive/rocm-5.2.3.tar.gz"
+    url = "https://github.com/RadeonOpenCompute/ROCm-Device-Libs/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "renjithravindrankannath", "haampie"]
+    maintainers("srekolam", "renjithravindrankannath", "haampie")
 
     version("master", branch="amd-stg-open")
-
+    version("5.6.1", sha256="f0dfab272ff936225bfa1e9dabeb3c5d12ce08b812bf53ffbddd2ddfac49761c")
+    version("5.6.0", sha256="efb5dcdca9b3a9fbe408d494fb4a23e0b78417eb5fa8eebd4a5d226088f28921")
+    version("5.5.1", sha256="3b5f6dd85f0e3371f6078da7b59bf77d5b210e30f1cc66ef1e2de6bbcb775833")
+    version("5.5.0", sha256="5ab95aeb9c8bed0514f96f7847e21e165ed901ed826cdc9382c14d199cbadbd3")
+    version("5.4.3", sha256="f4f7281f2cea6d268fcc3662b37410957d4f0bc23e0df9f60b12eb0fcdf9e26e")
+    version("5.4.0", sha256="d68813ded47179c39914c8d1b76af3dad8c714b10229d1e2246af67609473951")
+    version("5.3.3", sha256="963c9a0561111788b55a8c3b492e2a5737047914752376226c97a28122a4d768")
+    version("5.3.0", sha256="f7e1665a1650d3d0481bec68252e8a5e68adc2c867c63c570f6190a1d2fe735c")
     version("5.2.3", sha256="16b7fc7db4759bd6fb54852e9855fa16ead76c97871d7e1e9392e846381d611a")
     version("5.2.1", sha256="e5855387ce73ed483ed0d03dbfef31f297c6ca66cf816f6816fd5ee373fc8225")
     version("5.2.0", sha256="901674bc941115c72f82c5def61d42f2bebee687aefd30a460905996f838e16c")
     version("5.1.3", sha256="c41958560ec29c8bf91332b9f668793463904a2081c330c0d828bf2f91d4f04e")
     version("5.1.0", sha256="47dbcb41fb4739219cadc9f2b5f21358ed2f9895ce786d2f7a1b2c4fd044d30f")
-    version("5.0.2", sha256="49cfa8f8fc276ba27feef40546788a2aabe259a924a97af8bef24e295d19aa5e")
-    version("5.0.0", sha256="83ed7aa1c9322b4fc1f57c48a63fc7718eb4195ee6fde433009b4bc78cb363f0")
-    version("4.5.2", sha256="50e9e87ecd6b561cad0d471295d29f7220e195528e567fcabe2ec73838979f61")
-    version("4.5.0", sha256="78412fb10ceb215952b5cc722ed08fa82501b5848d599dc00744ae1bdc196f77")
+    version(
+        "5.0.2",
+        sha256="49cfa8f8fc276ba27feef40546788a2aabe259a924a97af8bef24e295d19aa5e",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="83ed7aa1c9322b4fc1f57c48a63fc7718eb4195ee6fde433009b4bc78cb363f0",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="50e9e87ecd6b561cad0d471295d29f7220e195528e567fcabe2ec73838979f61",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="78412fb10ceb215952b5cc722ed08fa82501b5848d599dc00744ae1bdc196f77",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="a7291813168e500bfa8aaa5d1dccf5250764ddfe27535def01b51eb5021d4592",
@@ -79,17 +102,10 @@ class RocmDeviceLibs(CMakePackage):
         deprecated=True,
     )
 
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
-
     depends_on("cmake@3.13.4:", type="build", when="@3.9.0:")
     depends_on("cmake@3.4.3:", type="build")
 
-    depends_on("zlib", type="link", when="@3.9.0:")
+    depends_on("zlib-api", type="link", when="@3.9.0:")
     depends_on("texinfo", type="link", when="@3.9.0:")
 
     depends_on("rocm-cmake@3.5.0:", type="build")
@@ -118,9 +134,20 @@ class RocmDeviceLibs(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
+        "5.3.3",
+        "5.4.0",
+        "5.4.3",
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
         "master",
     ]:
         depends_on("llvm-amdgpu@" + ver, when="@" + ver)
+
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
+        depends_on("rocm-core@" + ver, when="@" + ver)
 
     def cmake_args(self):
         spec = self.spec

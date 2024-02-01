@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,6 @@
 import bisect
 import re
 import struct
-import sys
 from collections import namedtuple
 from struct import calcsize, unpack, unpack_from
 
@@ -47,30 +46,12 @@ SectionHeader = namedtuple(
 
 ProgramHeader32 = namedtuple(
     "ProgramHeader32",
-    [
-        "p_type",
-        "p_offset",
-        "p_vaddr",
-        "p_paddr",
-        "p_filesz",
-        "p_memsz",
-        "p_flags",
-        "p_align",
-    ],
+    ["p_type", "p_offset", "p_vaddr", "p_paddr", "p_filesz", "p_memsz", "p_flags", "p_align"],
 )
 
 ProgramHeader64 = namedtuple(
     "ProgramHeader64",
-    [
-        "p_type",
-        "p_flags",
-        "p_offset",
-        "p_vaddr",
-        "p_paddr",
-        "p_filesz",
-        "p_memsz",
-        "p_align",
-    ],
+    ["p_type", "p_flags", "p_offset", "p_vaddr", "p_paddr", "p_filesz", "p_memsz", "p_align"],
 )
 
 
@@ -94,13 +75,7 @@ class ELF_CONSTANTS:
     SHT_STRTAB = 3
 
 
-def get_byte_at(byte_array, idx):
-    if sys.version_info[0] < 3:
-        return ord(byte_array[idx])
-    return byte_array[idx]
-
-
-class ElfFile(object):
+class ElfFile:
     """Parsed ELF file."""
 
     __slots__ = [
@@ -381,7 +356,7 @@ def parse_header(f, elf):
         raise ElfParsingError("Not an ELF file")
 
     # Defensively require a valid class and data.
-    e_ident_class, e_ident_data = get_byte_at(e_ident, 4), get_byte_at(e_ident, 5)
+    e_ident_class, e_ident_data = e_ident[4], e_ident[5]
 
     if e_ident_class not in (ELF_CONSTANTS.CLASS32, ELF_CONSTANTS.CLASS64):
         raise ElfParsingError("Invalid class found")
@@ -402,7 +377,7 @@ def parse_header(f, elf):
     elf.elf_hdr = ElfHeader._make(unpack(elf_header_fmt, data))
 
 
-def _do_parse_elf(f, interpreter=True, dynamic_section=True):
+def _do_parse_elf(f, interpreter=True, dynamic_section=True, only_header=False):
     # We don't (yet?) allow parsing ELF files at a nonzero offset, we just
     # jump to absolute offsets as they are specified in the ELF file.
     if f.tell() != 0:
@@ -410,6 +385,9 @@ def _do_parse_elf(f, interpreter=True, dynamic_section=True):
 
     elf = ElfFile()
     parse_header(f, elf)
+
+    if only_header:
+        return elf
 
     # We don't handle anything but executables and shared libraries now.
     if elf.elf_hdr.e_type not in (ELF_CONSTANTS.ET_EXEC, ELF_CONSTANTS.ET_DYN):
@@ -428,11 +406,11 @@ def _do_parse_elf(f, interpreter=True, dynamic_section=True):
     return elf
 
 
-def parse_elf(f, interpreter=False, dynamic_section=False):
+def parse_elf(f, interpreter=False, dynamic_section=False, only_header=False):
     """Given a file handle f for an ELF file opened in binary mode, return an ElfFile
     object that is stores data about rpaths"""
     try:
-        return _do_parse_elf(f, interpreter, dynamic_section)
+        return _do_parse_elf(f, interpreter, dynamic_section, only_header)
     except (DeprecationWarning, struct.error):
         # According to the docs old versions of Python can throw DeprecationWarning
         # instead of struct.error.
@@ -453,9 +431,49 @@ def get_rpaths(path):
 
     # If it does, split the string in components
     rpath = elf.dt_rpath_str
-    if sys.version_info[0] >= 3:
-        rpath = rpath.decode("utf-8")
+    rpath = rpath.decode("utf-8")
     return rpath.split(":")
+
+
+def delete_rpath(path):
+    """Modifies a binary to remove the rpath. It zeros out the rpath string
+    and also drops the DT_R(UN)PATH entry from the dynamic section, so it doesn't
+    show up in 'readelf -d file', nor in 'strings file'."""
+    with open(path, "rb+") as f:
+        elf = parse_elf(f, interpreter=False, dynamic_section=True)
+
+        if not elf.has_rpath:
+            return
+
+        # Zero out the rpath *string* in the binary
+        new_rpath_string = b"\x00" * len(elf.dt_rpath_str)
+        rpath_offset = elf.pt_dynamic_strtab_offset + elf.rpath_strtab_offset
+        f.seek(rpath_offset)
+        f.write(new_rpath_string)
+
+        # Next update the dynamic array
+        f.seek(elf.pt_dynamic_p_offset)
+        dynamic_array_fmt = elf.byte_order + ("qQ" if elf.is_64_bit else "lL")
+        dynamic_array_size = calcsize(dynamic_array_fmt)
+        new_offset = elf.pt_dynamic_p_offset  # points to the new dynamic array
+        old_offset = elf.pt_dynamic_p_offset  # points to the current dynamic array
+        for _ in range(elf.pt_dynamic_p_filesz // dynamic_array_size):
+            data = read_exactly(f, dynamic_array_size, "Malformed dynamic array entry")
+            tag, _ = unpack(dynamic_array_fmt, data)
+
+            # Overwrite any entry that is not DT_RPATH or DT_RUNPATH, including DT_NULL
+            if tag != ELF_CONSTANTS.DT_RPATH and tag != ELF_CONSTANTS.DT_RUNPATH:
+                if new_offset != old_offset:
+                    f.seek(new_offset)
+                    f.write(data)
+                    f.seek(old_offset + dynamic_array_size)
+                new_offset += dynamic_array_size
+
+            # End of the dynamic array
+            if tag == ELF_CONSTANTS.DT_NULL:
+                break
+
+            old_offset += dynamic_array_size
 
 
 def replace_rpath_in_place_or_raise(path, substitutions):
@@ -522,10 +540,9 @@ class ElfDynamicSectionUpdateFailed(Exception):
     def __init__(self, old, new):
         self.old = old
         self.new = new
-        super(ElfDynamicSectionUpdateFailed, self).__init__(
+        super().__init__(
             "New rpath {} is longer than old rpath {}".format(
-                new.decode("utf-8"),
-                old.decode("utf-8"),
+                new.decode("utf-8"), old.decode("utf-8")
             )
         )
 

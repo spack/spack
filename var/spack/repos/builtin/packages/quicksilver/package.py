@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Quicksilver(MakefilePackage):
     url = "https://github.com/LLNL/Quicksilver/tarball/V1.0"
     git = "https://github.com/LLNL/Quicksilver.git"
 
-    maintainers = ["richards12"]
+    maintainers("richards12")
 
     version("master", branch="master")
     version("1.0", sha256="83371603b169ec75e41fb358881b7bd498e83597cd251ff9e5c35769ef22c59a")

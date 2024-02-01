@@ -17,7 +17,7 @@ class PyBluecellulab(PythonPackage):
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-setuptools-scm", type="build")
 
-    depends_on("neuron+python@8", type=("build", "run"))
+    depends_on("neuron+python@8:", type=("build", "run"))
     depends_on("py-numpy@1.8:", type=("build", "run"))
     depends_on("py-matplotlib@3.0.0:", type=("build", "run"))
     depends_on("py-bluepysnap@1.0.7:1", type=("build", "run"))

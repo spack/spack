@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Nvdimmsim(MakefilePackage):
     git = "https://github.com/slunk/NVDIMMSim"
     url = "https://github.com/jimstevens2001/NVDIMMSim/archive/v2.0.0.tar.gz"
 
-    maintainers = ["jjwilke"]
+    maintainers("jjwilke")
 
     version("2.0.0", sha256="2a621ef10be5e52a1f543985d08354a2e6ee6532b5720e5f17ad6362cfd4adef")
 

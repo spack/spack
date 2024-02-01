@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,7 +25,7 @@ class Exasp2(MakefilePackage):
     url = "https://github.com/ECP-copa/ExaSP2/tarball/v1.0"
     git = "https://github.com/ECP-copa/ExaSP2.git"
 
-    maintainers = ["junghans"]
+    maintainers("junghans")
 
     tags = ["proxy-app", "ecp-proxy-app"]
 

@@ -1,9 +1,7 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from __future__ import print_function
 
 import os
 import platform
@@ -17,6 +15,7 @@ from llnl.util.filesystem import working_dir
 import spack.config
 import spack.paths
 import spack.platforms
+import spack.util.git
 from spack.main import get_version
 from spack.util.executable import which
 
@@ -35,7 +34,7 @@ def _debug_tarball_suffix():
     now = datetime.now()
     suffix = now.strftime("%Y-%m-%d-%H%M%S")
 
-    git = which("git")
+    git = spack.util.git.git()
     if not git:
         return "nobranch-nogit-%s" % suffix
 
@@ -61,16 +60,16 @@ def create_db_tarball(args):
     tarball_name = "spack-db.%s.tar.gz" % _debug_tarball_suffix()
     tarball_path = os.path.abspath(tarball_name)
 
-    base = os.path.basename(str(spack.store.root))
+    base = os.path.basename(str(spack.store.STORE.root))
     transform_args = []
     if "GNU" in tar("--version", output=str):
         transform_args = ["--transform", "s/^%s/%s/" % (base, tarball_name)]
     else:
         transform_args = ["-s", "/^%s/%s/" % (base, tarball_name)]
 
-    wd = os.path.dirname(str(spack.store.root))
+    wd = os.path.dirname(str(spack.store.STORE.root))
     with working_dir(wd):
-        files = [spack.store.db._index_path]
+        files = [spack.store.STORE.db._index_path]
         files += glob("%s/*/*/*/.spack/spec.json" % base)
         files += glob("%s/*/*/*/.spack/spec.yaml" % base)
         files = [os.path.relpath(f) for f in files]
@@ -95,8 +94,5 @@ def report(args):
 
 
 def debug(parser, args):
-    action = {
-        "create-db-tarball": create_db_tarball,
-        "report": report,
-    }
+    action = {"create-db-tarball": create_db_tarball, "report": report}
     action[args.debug_command](args)

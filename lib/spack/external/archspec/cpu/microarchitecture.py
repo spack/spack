@@ -5,13 +5,10 @@
 """Types and functions to manage information
 on CPU microarchitectures.
 """
-# pylint: disable=useless-object-inheritance
 import functools
 import platform
 import re
 import warnings
-
-import six
 
 import archspec
 import archspec.cpu.alias
@@ -27,7 +24,7 @@ def coerce_target_names(func):
 
     @functools.wraps(func)
     def _impl(self, other):
-        if isinstance(other, six.string_types):
+        if isinstance(other, str):
             if other not in TARGETS:
                 msg = '"{0}" is not a valid target name'
                 raise ValueError(msg.format(other))
@@ -38,7 +35,7 @@ def coerce_target_names(func):
     return _impl
 
 
-class Microarchitecture(object):
+class Microarchitecture:
     """Represents a specific CPU micro-architecture.
 
     Args:
@@ -82,14 +79,18 @@ class Microarchitecture(object):
         self.features = features
         self.compilers = compilers
         self.generation = generation
+        # Cache the ancestor computation
+        self._ancestors = None
 
     @property
     def ancestors(self):
         """All the ancestors of this microarchitecture."""
-        value = self.parents[:]
-        for parent in self.parents:
-            value.extend(a for a in parent.ancestors if a not in value)
-        return value
+        if self._ancestors is None:
+            value = self.parents[:]
+            for parent in self.parents:
+                value.extend(a for a in parent.ancestors if a not in value)
+            self._ancestors = value
+        return self._ancestors
 
     def _to_set(self):
         """Returns a set of the nodes in this microarchitecture DAG."""
@@ -150,7 +151,7 @@ class Microarchitecture(object):
 
     def __contains__(self, feature):
         # Feature must be of a string type, so be defensive about that
-        if not isinstance(feature, six.string_types):
+        if not isinstance(feature, str):
             msg = "only objects of string types are accepted [got {0}]"
             raise TypeError(msg.format(str(type(feature))))
 
@@ -168,7 +169,7 @@ class Microarchitecture(object):
         """Returns the architecture family a given target belongs to"""
         roots = [x for x in [self] + self.ancestors if not x.ancestors]
         msg = "a target is expected to belong to just one architecture family"
-        msg += "[found {0}]".format(", ".join(str(x) for x in roots))
+        msg += f"[found {', '.join(str(x) for x in roots)}]"
         assert len(roots) == 1, msg
 
         return roots.pop()
@@ -271,15 +272,14 @@ class Microarchitecture(object):
                 return flags
 
         msg = (
-            "cannot produce optimized binary for micro-architecture '{0}'"
-            " with {1}@{2} [supported compiler versions are {3}]"
+            "cannot produce optimized binary for micro-architecture '{0}' with {1}@{2}"
         )
-        msg = msg.format(
-            self.name,
-            compiler,
-            version,
-            ", ".join([x["versions"] for x in compiler_info]),
-        )
+        if compiler_info:
+            versions = [x["versions"] for x in compiler_info]
+            msg += f' [supported compiler versions are {", ".join(versions)}]'
+        else:
+            msg += " [no supported compiler versions]"
+        msg = msg.format(self.name, compiler, version)
         raise UnsupportedMicroarchitecture(msg)
 
 
@@ -318,9 +318,6 @@ def _known_microarchitectures():
     """Returns a dictionary of the known micro-architectures. If the
     current host platform is unknown adds it too as a generic target.
     """
-    # pylint: disable=fixme
-    # TODO: Simplify this logic using object_pairs_hook to OrderedDict
-    # TODO: when we stop supporting python2.6
 
     def fill_target_from_dict(name, data, targets):
         """Recursively fills targets by adding the micro-architecture

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Bamutil(MakefilePackage):
     homepage = "https://genome.sph.umich.edu/wiki/BamUtil"
     url = "https://github.com/statgen/bamUtil/archive/refs/tags/v1.0.15.tar.gz"
     git = "https://github.com/statgen/bamUtil.git"
-    maintainers = ["snehring"]
+    maintainers("snehring")
 
     version("1.0.15", sha256="24ac4bdb81eded6e33f60dba85ec3d32ebdb06d42f75df775c2632bbfbd8cce9")
     version(
@@ -24,7 +24,7 @@ class Bamutil(MakefilePackage):
         url="https://genome.sph.umich.edu/w/images/7/70/BamUtilLibStatGen.1.0.13.tgz",
     )
 
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("git", type="build", when="@1.0.15:")
 
     patch("libstatgen-issue-9.patch", when="@1.0.13")
@@ -37,7 +37,7 @@ class Bamutil(MakefilePackage):
 
     @when("@1.0.15")
     def edit(self, spec, prefix):
-        filter_file("git://", "https://", "Makefile.inc", String=True)
+        filter_file("git://", "https://", "Makefile.inc", string=True)
 
     @when("@1.0.15:")
     def build(self, spec, prefix):

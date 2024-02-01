@@ -22,27 +22,18 @@ chain() {
 EOF
 }
 
-header=""
-if [ -d ${DEPLOYMENT_UPSTREAM} ]
-then
-    header="upstreams:\n"
+# If upstream exists, and differs from our current directory, chain upstream and maybe
+# also compilers
+if [[ -d ${DEPLOYMENT_UPSTREAM} && "$DEPLOYMENT_ROOT" != "$DEPLOYMENT_UPSTREAM" ]]; then
+    echo -e "upstreams:"
     if [[ "$CI_JOB_STAGE" == "externals" ]]; then
-        echo -ne "$header"
-        header=""
-        chain compilers
+        chain compilers upstream
     fi
-
-    if [[ "$DEPLOYMENT_ROOT" != "$DEPLOYMENT_UPSTREAM" ]]; then
-        echo -ne "$header"
-        header=""
-        if [[ "$CI_JOB_STAGE" == "externals" ]]; then
-            chain compilers upstream
-        fi
-        chain "$CI_JOB_STAGE" upstream
-    fi
-fi
-
-# We didn't print anything, set empty upstreams.
-if [[ -n "$header" ]]; then
+    chain "$CI_JOB_STAGE" upstream
+# Otherwise, we always want to link compilers when we're in externals
+elif [[ "$CI_JOB_STAGE" == "externals" ]]; then
+    echo -e "upstreams:"
+    chain compilers
+else
     echo "upstreams: {}"
 fi

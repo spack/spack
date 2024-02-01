@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,30 +8,53 @@ import re
 from spack.package import *
 
 
-class Hipblas(CMakePackage):
+class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
     """hipBLAS is a BLAS marshalling library, with multiple
     supported backends"""
 
     homepage = "https://github.com/ROCmSoftwarePlatform/hipBLAS"
     git = "https://github.com/ROCmSoftwarePlatform/hipBLAS.git"
-    url = "https://github.com/ROCmSoftwarePlatform/hipBLAS/archive/rocm-5.2.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/hipBLAS/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["cgmb", "srekolam", "renjithravindrankannath", "haampie"]
+    maintainers("cgmb", "srekolam", "renjithravindrankannath", "haampie")
     libraries = ["libhipblas"]
 
     version("develop", branch="develop")
     version("master", branch="master")
-
+    version("5.6.1", sha256="f9da82fbefc68b84081ea0ed0139b91d2a540357fcf505c7f1d57eab01eb327c")
+    version("5.6.0", sha256="9453a31324e10ba528f8f4755d2c270d0ed9baa33e980d8f8383204d8e28a563")
+    version("5.5.1", sha256="5920c9a9c83cf7e2b42d1f99f5d5091cac7f6c0a040a737e869e57b92d7045a9")
+    version("5.5.0", sha256="b080c25cb61531228d26badcdca856c46c640035c058bfc1c9f63de65f418cd5")
+    version("5.4.3", sha256="5acac147aafc15c249c2f24c19459135ed68b506403aa92e602b67cfc10c38b7")
+    version("5.4.0", sha256="341d61adff8d08cbf70aa07bd11a088bcd0687fc6156870a1aee9eff74f3eb4f")
+    version("5.3.3", sha256="1ce093fc6bc021ad4fe0b0b93f9501038a7a5a16b0fd4fc485d65cbd220a195e")
+    version("5.3.0", sha256="873d55749479873994679840906c4257316dfb09a6200411204ad4a8c2480565")
     version("5.2.3", sha256="4d66db9b000b6207b5270d90556b724bfdb08ebbfcc675f014287e0be7ee6344")
     version("5.2.1", sha256="ccae36b118b7a1eb4b2f7d65fb163f54ab9c5cf774dbe2ec60971d4f78ae8308")
     version("5.2.0", sha256="5e9091dc4ef83896f5c3bc5ade1cb5db8e1a6afc451dbba4da19d8a7ec2b6f29")
     version("5.1.3", sha256="f0fdaa851971b41b48ec2e7d640746fbd6f9f433da2020c5fd95c91a7473d9e1")
     version("5.1.0", sha256="22faba3828e50a4c4e22f569a7d6441c797a11db1d472619c01d3515a3275e92")
-    version("5.0.2", sha256="201772bfc422ecb2c50e898dccd7d3d376cf34a2b795360e34bf71326aa37646")
-    version("5.0.0", sha256="63cffe748ed4a86fc80f408cb9e8a9c6c55c22a2b65c0eb9a76360b97bbb9d41")
-    version("4.5.2", sha256="82dd82a41bbadbb2a91a2a44a5d8e0d2e4f36d3078286ed4db3549b1fb6d6978")
-    version("4.5.0", sha256="187777ed49cc7c496c897e8ba80532d458c9afbc51a960e45f96923ad896c18e")
+    version(
+        "5.0.2",
+        sha256="201772bfc422ecb2c50e898dccd7d3d376cf34a2b795360e34bf71326aa37646",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="63cffe748ed4a86fc80f408cb9e8a9c6c55c22a2b65c0eb9a76360b97bbb9d41",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="82dd82a41bbadbb2a91a2a44a5d8e0d2e4f36d3078286ed4db3549b1fb6d6978",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="187777ed49cc7c496c897e8ba80532d458c9afbc51a960e45f96923ad896c18e",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="7b1f774774de5fa3d2b777e3a262328559d56165c32aa91b002505694362e7b2",
@@ -83,12 +106,22 @@ class Hipblas(CMakePackage):
         deprecated=True,
     )
 
+    # default to an 'auto' variant until amdgpu_targets can be given a better default than 'none'
+    amdgpu_targets = ROCmPackage.amdgpu_targets
     variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
+        "amdgpu_target",
+        description="AMD GPU architecture",
+        values=spack.variant.DisjointSetsOfValues(("auto",), ("none",), amdgpu_targets)
+        .with_default("auto")
+        .with_error(
+            "the values 'auto' and 'none' are mutually exclusive with any of the other values"
+        )
+        .with_non_feature_values("auto", "none"),
+        sticky=True,
     )
+    variant("rocm", default=True, description="Enable ROCm support")
+    conflicts("+cuda +rocm", msg="CUDA and ROCm support are mutually exclusive")
+    conflicts("~cuda ~rocm", msg="CUDA or ROCm support is required")
 
     depends_on("cmake@3.5:", type="build")
 
@@ -104,14 +137,11 @@ class Hipblas(CMakePackage):
         exe = join_path(self.build_directory, "clients", "staging", "hipblas-test")
         self.run_test(exe, options=["--gtest_filter=-*known_bug*"])
 
-    depends_on("hip@4.1.0:", when="@4.1.0:")
-    depends_on("rocm-cmake@master", type="build", when="@master:")
+    depends_on("rocm-cmake@5.2.0:", type="build", when="@5.2.0:")
     depends_on("rocm-cmake@4.5.0:", type="build", when="@4.5.0:")
     depends_on("rocm-cmake@3.5.0:", type="build")
 
-    for ver in ["master", "develop"]:
-        depends_on("rocblas@" + ver, when="@" + ver)
-        depends_on("rocsolver@" + ver, when="@" + ver)
+    depends_on("hip +cuda", when="+cuda")
 
     for ver in [
         "3.5.0",
@@ -133,10 +163,27 @@ class Hipblas(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
+        "5.3.3",
+        "5.4.0",
+        "5.4.3",
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
+        "master",
+        "develop",
     ]:
-        depends_on("hip@" + ver, when="@" + ver)
-        depends_on("rocsolver@" + ver, when="@" + ver)
-        depends_on("rocblas@" + ver, when="@" + ver)
+        depends_on("rocsolver@" + ver, when="+rocm @" + ver)
+        depends_on("rocblas@" + ver, when="+rocm @" + ver)
+
+    for tgt in ROCmPackage.amdgpu_targets:
+        depends_on(
+            "rocblas amdgpu_target={0}".format(tgt), when="+rocm amdgpu_target={0}".format(tgt)
+        )
+        depends_on(
+            "rocsolver amdgpu_target={0}".format(tgt), when="+rocm amdgpu_target={0}".format(tgt)
+        )
 
     @classmethod
     def determine_version(cls, lib):
@@ -151,26 +198,27 @@ class Hipblas(CMakePackage):
 
     def cmake_args(self):
         args = [
-            # Make sure find_package(HIP) finds the module.
             self.define("BUILD_CLIENTS_SAMPLES", "OFF"),
             self.define("BUILD_CLIENTS_TESTS", self.run_tests),
         ]
 
-        # hipblas actually prefers CUDA over AMD GPUs when you have it
-        # installed...
         if self.spec.satisfies("@:3.9.0"):
-            args.append(self.define("TRY_CUDA", "OFF"))
+            args.append(self.define_from_variant("TRY_CUDA", "cuda"))
         else:
-            args.append(self.define("USE_CUDA", "OFF"))
+            args.append(self.define_from_variant("USE_CUDA", "cuda"))
 
-        if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
-            args.append(self.define("__skip_rocmclang", "ON"))
-        if self.spec.satisfies("@:5.1"):
-            args.append(self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.cmake))
-        elif self.spec.satisfies("@5.2.0:"):
+        # FindHIP.cmake was used for +rocm until 4.1.0 and is still used for +cuda
+        if self.spec.satisfies("@:4.0") or self.spec.satisfies("+cuda"):
+            if self.spec["hip"].satisfies("@:5.1"):
+                args.append(self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.cmake))
+            else:
+                args.append(
+                    self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.lib.cmake.hip)
+                )
+
+        if self.spec.satisfies("@5.2.0:"):
             args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
+        if self.spec.satisfies("@5.3.0:"):
+            args.append("-DCMAKE_INSTALL_LIBDIR=lib")
 
         return args
-
-    def setup_build_environment(self, env):
-        env.set("CXX", self.spec["hip"].hipcc)

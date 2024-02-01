@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,9 +10,28 @@ class PySphinx(PythonPackage):
     """Sphinx Documentation Generator."""
 
     homepage = "https://www.sphinx-doc.org/en/master/"
-    pypi = "Sphinx/Sphinx-3.2.0.tar.gz"
+    pypi = "Sphinx/sphinx-7.1.0.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
+
+    version("7.2.3", sha256="ece68bb4d77b7dc090573825db45a6f9183e74098d1c21573485de250b1d1e3f")
+    version("7.2.2", sha256="1c0abe6d4de7a6b2c2b109a2e18387bf27b240742e1b34ea42ac3ed2ac99978c")
+    version("7.2.1", sha256="dad5e865dcdeb1486f70d8963cc9140561836bb243c311868cf11eb0f741497a")
+    version("7.2.0", sha256="da9a84f7456885622bb30ebac42467168396ac2e494182c60dd864aa27405ba3")
+    version("7.1.2", sha256="780f4d32f1d7d1126576e0e5ecc19dc32ab76cd24e950228dcf7b1f6d3d9e22f")
+    version("7.1.1", sha256="59b8e391f0768a96cd233e8300fe7f0a8dc2f64f83dc2a54336a9a84f428ff4e")
+    version("7.1.0", sha256="8f336d0221c3beb23006b3164ed1d46db9cebcce9cb41cdb9c5ecd4bcc509be0")
+    version("7.0.1", sha256="61e025f788c5977d9412587e733733a289e2b9fdc2fef8868ddfbfc4ccfe881d")
+    version("7.0.0", sha256="283c44aa28922bb4223777b44ac0d59af50a279ac7690dfe945bb2b9575dc41b")
+
+    version("6.2.1", sha256="6d56a34697bb749ffa0152feafc4b19836c755d90a7c59b72bc7dfd371b9cc6b")
+    version("6.2.0", sha256="9ef22c2941bc3d0ff080d25a797f7521fc317e857395c712ddde97a19d5bb440")
+    version("6.1.3", sha256="0dac3b698538ffef41716cf97ba26c1c7788dba73ce6f150c1ff5b4720786dd2")
+    version("6.1.2", sha256="19678b91c1f4e2025cfe3bfcbf473ffa3b086651bbdd43d6816e16e4cc58a8b4")
+    version("6.1.1", sha256="6a8e43b5030b9870d7402fb56f5efeebb83b76d65bf1c567a89b555340e127b2")
+    version("6.1.0", sha256="b0fd0a1993733492572bbd429b5ec081e17c082b5b5168ffae50524c3a90fd3c")
+    version("6.0.1", sha256="6217d768c3c865769c1561ea31c2f27d3bea413c9b0e1fd4722811ea148a4a46")
+    version("6.0.0", sha256="58c140ecd9aa0abbc8ff6da48a266648eac9e5bfc8e49576efd2979bf46f5961")
 
     version("5.3.0", sha256="51026de0a9ff9fc13c05d74913ad66047e104f56a129ff73e174eb5c3ee794b5")
     version("5.2.3", sha256="5b10cb1022dac8c035f75767799c39217a05fc0fe2d6fe5597560d38e44f0363")
@@ -57,32 +76,31 @@ class PySphinx(PythonPackage):
     version("1.4.5", sha256="c5df65d97a58365cbf4ea10212186a9a45d89c61ed2c071de6090cdf9ddb4028")
     version("1.3.1", sha256="1a6e5130c2b42d2de301693c299f78cc4bd3501e78b610c08e45efc70e2b5114")
 
-    extends("python", ignore="bin/(pybabel|pygmentize)")
-
     depends_on("py-flit-core@3.7:", when="@5.2:", type="build")
-    depends_on("py-setuptools", when="@4.4:5.1", type="build")
-    depends_on("py-setuptools", when="@:4.3", type=("build", "run"))
 
-    depends_on("python@3.7:", when="@6:", type=("build", "run"))
-    depends_on("python@3.6:", when="@4.3:5", type=("build", "run"))
-    depends_on("python@3.6:3.9", when="@4:4.2", type=("build", "run"))
-    depends_on("python@3.5:3.9", when="@2:3", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.4:3.9", when="@:1", type=("build", "run"))
+    depends_on("python@3.9:", when="@7.2:", type=("build", "run"))
+    depends_on("python@3.8:", when="@6:", type=("build", "run"))
 
     depends_on("py-sphinxcontrib-applehelp", when="@2:", type=("build", "run"))
     depends_on("py-sphinxcontrib-devhelp", when="@2:", type=("build", "run"))
     depends_on("py-sphinxcontrib-jsmath", when="@2:", type=("build", "run"))
-    depends_on("py-sphinxcontrib-htmlhelp@2.0.0:", when="@4.1.1:", type=("build", "run"))
+    depends_on("py-sphinxcontrib-htmlhelp@2:", when="@4.1.1:", type=("build", "run"))
     depends_on("py-sphinxcontrib-htmlhelp", when="@2:", type=("build", "run"))
+    depends_on("py-sphinxcontrib-serializinghtml@1.1.9:", when="@7.2.3:", type=("build", "run"))
     depends_on("py-sphinxcontrib-serializinghtml@1.1.5:", when="@4.1.1:", type=("build", "run"))
     depends_on("py-sphinxcontrib-serializinghtml", when="@2:", type=("build", "run"))
     depends_on("py-sphinxcontrib-qthelp", when="@2:", type=("build", "run"))
     depends_on("py-jinja2@3:", when="@5.2:", type=("build", "run"))
     depends_on("py-jinja2@2.3:2", when="@:4.0.1", type=("build", "run"))
     depends_on("py-jinja2@2.3:", type=("build", "run"))
+    depends_on("py-pygments@2.14:", when="@7.2:", type=("build", "run"))
+    depends_on("py-pygments@2.13:", when="@6.0.1:", type=("build", "run"))
     depends_on("py-pygments@2.12:", when="@5.2:", type=("build", "run"))
     depends_on("py-pygments@2:", type=("build", "run"))
-    depends_on("py-docutils@0.14:0.19", when="@5.1:", type=("build", "run"))
+    depends_on("py-docutils@0.18.1:0.20", when="@7.0.1:", type=("build", "run"))
+    depends_on("py-docutils@0.18.1:0.19", when="@6.2:7.0.0", type=("build", "run"))
+    depends_on("py-docutils@0.18:0.19", when="@6.0:6.1", type=("build", "run"))
+    depends_on("py-docutils@0.14:0.19", when="@5.1:5", type=("build", "run"))
     depends_on("py-docutils@0.14:0.18", when="@5.0", type=("build", "run"))
     depends_on("py-docutils@0.14:0.17", when="@4", type=("build", "run"))
     depends_on("py-docutils@0.12:0.16", when="@:3", type=("build", "run"))
@@ -93,7 +111,9 @@ class PySphinx(PythonPackage):
     depends_on("py-alabaster@0.7", type=("build", "run"))
     depends_on("py-imagesize@1.3:", when="@5.2:", type=("build", "run"))
     depends_on("py-imagesize", when="@1.4:", type=("build", "run"))
-    depends_on("py-requests@2.5.0:", type=("build", "run"))
+    depends_on("py-requests@2.25:", when="@6:", type=("build", "run"))
+    depends_on("py-requests@2.5:", when="@2:", type=("build", "run"))
+    depends_on("py-requests@2.4:", when="@1.5.2:", type=("build", "run"))
     depends_on("py-packaging@21:", when="@5.2:", type=("build", "run"))
     depends_on("py-packaging", when="@1.7:", type=("build", "run"))
     depends_on("py-importlib-metadata@4.8:", when="@5.2: ^python@:3.9", type=("build", "run"))
@@ -101,8 +121,17 @@ class PySphinx(PythonPackage):
     depends_on("py-colorama@0.4.5:", when="@5.2: platform=windows", type=("build", "run"))
     depends_on("py-colorama@0.3.5:", when="platform=windows", type=("build", "run"))
 
+    # Historical dependencies
+    depends_on("py-setuptools", when="@4.4:5.1", type="build")
+    depends_on("py-setuptools", when="@:4.3", type=("build", "run"))
     depends_on("py-sphinxcontrib-websupport", when="@1.6:1", type=("build", "run"))
     depends_on("py-six@1.5:", when="@:1", type=("build", "run"))
     depends_on("py-sphinx-rtd-theme@0.1:", when="@:1.3", type=("build", "run"))
-    depends_on("py-typing", when="@1.6.2:^python@2.7:3.4", type=("build", "run"))
-    depends_on("py-typing", when="@1.6.1", type=("build", "run"))
+
+    def url_for_version(self, version):
+        url = "https://files.pythonhosted.org/packages/source/S/Sphinx/{}-{}.tar.gz"
+        if version >= Version("7.1"):
+            name = "sphinx"
+        else:
+            name = "Sphinx"
+        return url.format(name, version)

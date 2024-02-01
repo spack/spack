@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,9 +15,10 @@ class Gptune(CMakePackage):
     homepage = "https://gptune.lbl.gov/"
     url = "https://github.com/gptune/GPTune/archive/refs/tags/3.0.0.tar.gz"
     git = "https://github.com/gptune/GPTune.git"
-    maintainers = ["liuyangzhuan"]
+    maintainers("liuyangzhuan")
 
     version("master", branch="master")
+    version("4.0.0", sha256="4f954a810d83b73f5abe5b15b79e3ed5b7ebf7bc0ae7335d27b68111bd078102")
     version("3.0.0", sha256="e19bfc3033fff11ff8c20cae65b88b7ca005d2c4e4db047f9f23226126ec92fa")
     version("2.1.0", sha256="737e0a1d83f66531098beafa73dd479f12def576be83b1c7b8ea5f1615d60a53")
 
@@ -33,13 +34,14 @@ class Gptune(CMakePackage):
     depends_on("scalapack", type="link")
     depends_on("py-setuptools", type="build")
     depends_on("py-ipyparallel", type=("build", "run"))
-    depends_on("py-numpy@:1.21.5", type=("build", "run"))
+    depends_on("py-numpy@:1.24", type=("build", "run"), when="@:4.0.0")
+    depends_on("py-numpy@:1.21.5", type=("build", "run"), when="@:2.1.0")
     depends_on("py-pandas", type=("build", "run"))
     depends_on("py-joblib", type=("build", "run"))
     depends_on("py-scikit-learn", type=("build", "run"))
     depends_on("py-matplotlib", type=("build", "run"))
     depends_on("py-pyyaml", type=("build", "run"))
-    depends_on("py-scikit-optimize@master+gptune", type=("build", "run"))
+    depends_on("py-scikit-optimize@0.9.0", patches=[patch("space.patch")], type=("build", "run"))
     depends_on("py-gpy", type=("build", "run"))
     depends_on("py-lhsmdu", type=("build", "run"))
     depends_on("py-hpbandster", type=("build", "run"))
@@ -47,10 +49,10 @@ class Gptune(CMakePackage):
     depends_on("py-ytopt-autotune@1.1.0", type=("build", "run"))
     depends_on("py-filelock", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"))
-    depends_on("py-cython", type=("build", "run"))
     depends_on("py-pyaml", type=("build", "run"))
     depends_on("py-statsmodels@0.13.0:", type=("build", "run"))
     depends_on("py-mpi4py@3.0.3:", type=("build", "run"))
+    depends_on("python", type=("build", "run"))
     depends_on("pygmo", type=("build", "run"))
     depends_on("openturns", type=("build", "run"))
     depends_on("py-pymoo", type=("build", "run"), when="@3.0.0:")
@@ -59,10 +61,10 @@ class Gptune(CMakePackage):
     depends_on("hypre+gptune@2.19.0", when="+hypre", type=("build", "run"))
 
     depends_on("openmpi@4:", when="+mpispawn", type=("build", "run"))
-    conflicts("mpich", when="+mpispawn")
-    conflicts("spectrum-mpi", when="+mpispawn")
-    conflicts("cray-mpich", when="+mpispawn")
-    conflicts("gcc@:7")
+    conflicts("^mpich", when="+mpispawn")
+    conflicts("^spectrum-mpi", when="+mpispawn")
+    conflicts("^cray-mpich", when="+mpispawn")
+    conflicts("%gcc@:7")
 
     def cmake_args(self):
         spec = self.spec

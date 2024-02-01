@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class OneapiIgc(Package):
     homepage = "https://github.com/intel/intel-graphics-compiler"
     has_code = False
 
-    maintainers = ["rscohn2"]
+    maintainers("rscohn2")
 
     version("1.0.10409")
     version("1.0.8744")

@@ -1,4 +1,4 @@
-.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -94,9 +94,9 @@ an Environment, the ``.spack-env`` directory also contains:
   * ``logs/``: A directory containing the build logs for the packages
     in this Environment.
 
-Spack Environments can also be created from either a ``spack.yaml``
-manifest or a ``spack.lock`` lockfile. To create an Environment from a
-``spack.yaml`` manifest:
+Spack Environments can also be created from either a manifest file
+(usually but not necessarily named, ``spack.yaml``) or a lockfile.
+To create an Environment from a manifest:
 
 .. code-block:: console
 
@@ -174,7 +174,7 @@ Anonymous specs can be created in place using the command:
 
    $ spack env create -d .
 
-In this case Spack simply creates a spack.yaml file in the requested
+In this case Spack simply creates a ``spack.yaml`` file in the requested
 directory.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -347,7 +347,7 @@ the Environment and then install the concretized specs.
    (see :ref:`build-jobs`). To speed up environment builds further, independent
    packages can be installed in parallel by launching more Spack instances. For
    example, the following will build at most four packages in parallel using
-   three background jobs: 
+   three background jobs:
 
    .. code-block:: console
 
@@ -395,7 +395,7 @@ version (and other constraints) passed as the spec argument to the
 
 For packages with ``git`` attributes, git branches, tags, and commits can
 also be used as valid concrete versions (see :ref:`version-specifier`).
-This means that for a package ``foo``, ``spack develop foo@git.main`` will clone 
+This means that for a package ``foo``, ``spack develop foo@git.main`` will clone
 the ``main`` branch of the package, and ``spack install`` will install from
 that git clone if ``foo`` is in the environment.
 Further development on ``foo`` can be tested by reinstalling the environment,
@@ -589,10 +589,11 @@ user support groups providing a large software stack for their HPC center.
 
 .. admonition:: Re-concretization of user specs
 
-   When using *unified* concretization (when possible), the entire set of specs will be
-   re-concretized after any addition of new user specs, to ensure that
-   the environment remains consistent / minimal. When instead unified concretization is
-   disabled, only the new specs will be concretized after any addition.
+   The ``spack concretize`` command without additional arguments will *not* change any
+   previously concretized specs. This may prevent it from finding a solution when using
+   ``unify: true``, and it may prevent it from finding a minimal solution when using
+   ``unify: when_possible``. You can force Spack to ignore the existing concrete environment
+   with ``spack concretize -f``.
 
 ^^^^^^^^^^^^^
 Spec Matrices
@@ -915,9 +916,9 @@ function, as shown in the example below:
 .. code-block:: yaml
 
    projections:
-     zlib: {name}-{version}
-     ^mpi: {name}-{version}/{^mpi.name}-{^mpi.version}-{compiler.name}-{compiler.version}
-     all: {name}-{version}/{compiler.name}-{compiler.version}
+     zlib: "{name}-{version}"
+     ^mpi: "{name}-{version}/{^mpi.name}-{^mpi.version}-{compiler.name}-{compiler.version}"
+     all: "{name}-{version}/{compiler.name}-{compiler.version}"
 
 The entries in the projections configuration file must all be either
 specs or the keyword ``all``. For each spec, the projection used will
@@ -1040,7 +1041,7 @@ gets installed and is available for use in the ``env`` target.
    	$(SPACK) -e . concretize -f
 
    env.mk: spack.lock
-   	$(SPACK) -e . env depfile -o $@ --make-target-prefix spack
+   	$(SPACK) -e . env depfile -o $@ --make-prefix spack
 
    env: spack/env
    	$(info Environment installed!)
@@ -1063,27 +1064,79 @@ the include is conditional.
 .. note::
 
    When including generated ``Makefile``\s, it is important to use
-   the ``--make-target-prefix`` flag and use the non-phony target
-   ``<target-prefix>/env`` as prerequisite, instead of the phony target
-   ``<target-prefix>/all``.
+   the ``--make-prefix`` flag and use the non-phony target
+   ``<prefix>/env`` as prerequisite, instead of the phony target
+   ``<prefix>/all``.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Building a subset of the environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The generated ``Makefile``\s contain install targets for each spec. Given the hash
-of a particular spec, you can use the ``.install/<hash>`` target to install the
-spec with its dependencies. There is also ``.install-deps/<hash>`` to *only* install
+The generated ``Makefile``\s contain install targets for each spec, identified
+by ``<name>-<version>-<hash>``. This allows you to install only a subset of the
+packages in the environment. When packages are unique in the environment, it's
+enough to know the name and let tab-completion fill out the version and hash.
+
+The following phony targets are available: ``install/<spec>`` to install the
+spec with its dependencies, and ``install-deps/<spec>`` to *only* install
 its dependencies. This can be useful when certain flags should only apply to
 dependencies. Below we show a use case where a spec is installed with verbose
 output (``spack install --verbose``) while its dependencies are installed silently:
 
 .. code:: console
 
-   $ spack env depfile -o Makefile --make-target-prefix my_env
+   $ spack env depfile -o Makefile
 
    # Install dependencies in parallel, only show a log on error.
-   $ make -j16 my_env/.install-deps/<hash> SPACK_INSTALL_FLAGS=--show-log-on-error
+   $ make -j16 install-deps/python-3.11.0-<hash> SPACK_INSTALL_FLAGS=--show-log-on-error
 
    # Install the root spec with verbose output.
-   $ make -j16 my_env/.install/<hash> SPACK_INSTALL_FLAGS=--verbose
+   $ make -j16 install/python-3.11.0-<hash> SPACK_INSTALL_FLAGS=--verbose
+
+^^^^^^^^^^^^^^^^^^^^^^^^^
+Adding post-install hooks
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Another advanced use-case of generated ``Makefile``\s is running a post-install
+command for each package. These "hooks" could be anything from printing a
+post-install message, running tests, or pushing just-built binaries to a buildcache.
+
+This can be accomplished through the generated ``[<prefix>/]SPACK_PACKAGE_IDS``
+variable. Assuming we have an active and concrete environment, we generate the
+associated ``Makefile`` with a prefix ``example``:
+
+.. code:: console
+
+   $ spack env depfile -o env.mk --make-prefix example
+
+And we now include it in a different ``Makefile``, in which we create a target
+``example/push/%`` with ``%`` referring to a package identifier. This target
+depends on the particular package installation. In this target we automatically
+have the target-specific ``HASH`` and ``SPEC`` variables at our disposal. They
+are respectively the spec hash (excluding leading ``/``), and a human-readable spec.
+Finally, we have an entrypoint target ``push`` that will update the buildcache
+index once every package is pushed. Note how this target uses the generated
+``example/SPACK_PACKAGE_IDS`` variable to define its prerequisites.
+
+.. code:: Makefile
+
+   SPACK ?= spack
+   BUILDCACHE_DIR = $(CURDIR)/tarballs
+
+   .PHONY: all
+
+   all: push
+
+   include env.mk
+
+   example/push/%: example/install/%
+   	@mkdir -p $(dir $@)
+   	$(info About to push $(SPEC) to a buildcache)
+   	$(SPACK) -e . buildcache push --allow-root --only=package $(BUILDCACHE_DIR) /$(HASH)
+   	@touch $@
+
+   push: $(addprefix example/push/,$(example/SPACK_PACKAGE_IDS))
+   	$(info Updating the buildcache index)
+   	$(SPACK) -e . buildcache update-index $(BUILDCACHE_DIR)
+   	$(info Done!)
+   	@touch $@

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,9 +16,10 @@ class Sensei(CMakePackage):
     homepage = "https://sensei-insitu.org"
     url = "https://github.com/SENSEI-insitu/SENSEI/releases/download/v3.2.1/SENSEI-3.2.1.tar.gz"
     git = "https://github.com/SENSEI-insitu/SENSEI.git"
-    maintainers = ["sshudler", "kwryankrattiger"]
+    maintainers("sshudler", "kwryankrattiger")
 
     version("develop", branch="develop")
+    version("4.1.0", sha256="e1154240c022069fee454c747d7c60e065d36b4d1dc71852b3cd527c22b531c1")
     version("4.0.0", sha256="fc1538aa1051789dbdefbe18b7f251bc46e7a6ae1db3a940c123552e0318db8b")
     version("3.2.2", sha256="d554b654880e899d97d572f02de87b0202faadaf899420ef871093b5bce320c0")
     version("3.2.1", sha256="7438fb4b148e4d1eb888c619366d0d8639122ecbbf1767e19549d6ca0c8698ca")
@@ -44,7 +45,7 @@ class Sensei(CMakePackage):
         description="Enable VTKm adaptors and endpoints",
         when="@4: +catalyst",
     )
-    variant("python", default=False, description="Enable Python bindings")
+    variant("python", default=False, description="Enable Python bindings", when="@3:")
     variant(
         "miniapps", default=False, description="Enable the parallel 3D and oscillators miniapps"
     )
@@ -54,13 +55,12 @@ class Sensei(CMakePackage):
     # version 3, SENSEI supports Python 3.
     depends_on("paraview+mpi", when="+catalyst")
     depends_on("paraview+hdf5", when="+catalyst+hdf5")
-    depends_on("paraview+python", when="@:2 +catalyst+python")
-    depends_on("paraview+python3", when="@3: +catalyst+python")
+    depends_on("paraview+python", when="+catalyst+python")
 
     depends_on("paraview@5.5.0:5.5.2", when="@:2.1.1 +catalyst")
     depends_on("paraview@5.6:5.7", when="@3:3.2.1 +catalyst")
     depends_on("paraview@5.7:5.9", when="@3.2.2 +catalyst")
-    depends_on("paraview@5.7:5.10", when="@4: +catalyst")
+    depends_on("paraview@5.7:5.10", when="@4:4 +catalyst")
 
     # Visit Dep
     depends_on("visit", when="+libsim")
@@ -82,9 +82,7 @@ class Sensei(CMakePackage):
     # HDF5
     depends_on("hdf5", when="+hdf5")
 
-    # SENSEI 3 supports Python 3, earlier versions upport only Python 2
-    depends_on("python@:2.7.16", when="@:2.1.1 +python", type=("build", "run"))
-    depends_on("python@3:", when="@3: +python", type=("build", "run"))
+    depends_on("python@3:", when="+python", type=("build", "run"))
     extends("python", when="+python")
     depends_on("py-numpy", when="+python", type=("build", "run"))
     depends_on("py-mpi4py", when="+python", type=("build", "run"))
@@ -93,16 +91,25 @@ class Sensei(CMakePackage):
     depends_on("pugixml")
     depends_on("mpi")
 
+    depends_on("paraview use_vtkm=off", when="+catalyst+ascent ^ascent+vtkh")
+    depends_on("paraview use_vtkm=off", when="+catalyst+ascent ^ascent+fides")
+
     # Can have either LibSim or Catalyst or Ascent, but not a combination
     conflicts("+libsim", when="+catalyst")
-    conflicts("+ascent", when="+catalyst")
     conflicts("+ascent", when="+libsim")
 
     # Patches
+    # https://github.com/SENSEI-insitu/SENSEI/pull/114
+    patch("adios2-remove-deprecated-functions.patch", when="@4:4.1 ^adios2@2.9:")
     patch("libsim-add-missing-symbol-visibility-pr67.patch", when="@4.0.0")
     patch("sensei-find-mpi-component-cxx-pr68.patch", when="@4.0.0")
     patch("sensei-install-external-pugixml-pr69.patch", when="@4.0.0")
     patch("sensei-version-detection-pr75.patch", when="@4.0.0")
+    patch(
+        "https://patch-diff.githubusercontent.com/raw/SENSEI-insitu/SENSEI/pull/88.patch?full_index=1",
+        sha256="6e5a190d4d3275c248b11b9258b79ddf2e5f0dc1b028b23dcdbdc13f9ea46813",
+        when="@4.0.0 +python ^swig@4.1:",
+    )
 
     def cmake_args(self):
         spec = self.spec
@@ -142,6 +149,8 @@ class Sensei(CMakePackage):
 
         if "+python" in spec:
             args.append(self.define("PYTHON_EXECUTABLE", spec["python"].command.path))
+            args.append(self.define("Python_EXECUTABLE", spec["python"].command.path))
+            args.append(self.define("Python3_EXECUTABLE", spec["python"].command.path))
             if spec.satisfies("@3:"):
                 args.append(self.define("SENSEI_PYTHON_VERSION", 3))
             args.append(self.define_from_variant("ENABLE_CATALYST_PYTHON", "catalyst"))

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Wtdbg2(MakefilePackage):
 
     version("2.3", sha256="fb61d38a4c60a39b3b194e63b855141c05ddcbe71cf244ae613766a9b0a56621")
 
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("sse2neon", when="target=aarch64:")
 
     patch("for_aarch64.patch", when="target=aarch64:")

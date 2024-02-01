@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,4 +27,3 @@ class PyOwslib(PythonPackage):
     depends_on("py-pyproj", type=("build", "run"))
     depends_on("py-pyproj@2:", when="@0.19.2:", type=("build", "run"))
     depends_on("py-pyyaml", when="@0.19.2:", type=("build", "run"))
-    depends_on("py-dataclasses", when="@0.25: ^python@:3.6", type=("build", "run"))

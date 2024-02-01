@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -62,11 +62,10 @@ import llnl.util.lock as lk
 import llnl.util.multiproc as mp
 from llnl.util.filesystem import getuid, touch
 
-is_windows = sys.platform == "win32"
-if not is_windows:
+if sys.platform != "win32":
     import fcntl
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 #
@@ -127,7 +126,7 @@ def make_readable(*paths):
     # stat.S_IREAD constants or a corresponding integer value). All other
     # bits are ignored."
     for path in paths:
-        if not is_windows:
+        if sys.platform != "win32":
             mode = 0o555 if os.path.isdir(path) else 0o444
         else:
             mode = stat.S_IREAD
@@ -136,7 +135,7 @@ def make_readable(*paths):
 
 def make_writable(*paths):
     for path in paths:
-        if not is_windows:
+        if sys.platform != "win32":
             mode = 0o755 if os.path.isdir(path) else 0o744
         else:
             mode = stat.S_IWRITE
@@ -267,7 +266,7 @@ def mpi_multiproc_test(*functions):
     include = comm.rank < len(functions)
     subcomm = comm.Split(include)
 
-    class subcomm_barrier(object):
+    class subcomm_barrier:
         """Stand-in for multiproc barrier for MPI-parallel jobs."""
 
         def wait(self):
@@ -297,7 +296,7 @@ multiproc_test = mpi_multiproc_test if mpi else local_multiproc_test
 #
 # Process snippets below can be composed into tests.
 #
-class AcquireWrite(object):
+class AcquireWrite:
     def __init__(self, lock_path, start=0, length=0):
         self.lock_path = lock_path
         self.start = start
@@ -308,13 +307,13 @@ class AcquireWrite(object):
         return self.__class__.__name__
 
     def __call__(self, barrier):
-        lock = lk.Lock(self.lock_path, self.start, self.length)
+        lock = lk.Lock(self.lock_path, start=self.start, length=self.length)
         lock.acquire_write()  # grab exclusive lock
         barrier.wait()
         barrier.wait()  # hold the lock until timeout in other procs.
 
 
-class AcquireRead(object):
+class AcquireRead:
     def __init__(self, lock_path, start=0, length=0):
         self.lock_path = lock_path
         self.start = start
@@ -325,13 +324,13 @@ class AcquireRead(object):
         return self.__class__.__name__
 
     def __call__(self, barrier):
-        lock = lk.Lock(self.lock_path, self.start, self.length)
+        lock = lk.Lock(self.lock_path, start=self.start, length=self.length)
         lock.acquire_read()  # grab shared lock
         barrier.wait()
         barrier.wait()  # hold the lock until timeout in other procs.
 
 
-class TimeoutWrite(object):
+class TimeoutWrite:
     def __init__(self, lock_path, start=0, length=0):
         self.lock_path = lock_path
         self.start = start
@@ -342,14 +341,14 @@ class TimeoutWrite(object):
         return self.__class__.__name__
 
     def __call__(self, barrier):
-        lock = lk.Lock(self.lock_path, self.start, self.length)
+        lock = lk.Lock(self.lock_path, start=self.start, length=self.length)
         barrier.wait()  # wait for lock acquire in first process
         with pytest.raises(lk.LockTimeoutError):
             lock.acquire_write(lock_fail_timeout)
         barrier.wait()
 
 
-class TimeoutRead(object):
+class TimeoutRead:
     def __init__(self, lock_path, start=0, length=0):
         self.lock_path = lock_path
         self.start = start
@@ -360,7 +359,7 @@ class TimeoutRead(object):
         return self.__class__.__name__
 
     def __call__(self, barrier):
-        lock = lk.Lock(self.lock_path, self.start, self.length)
+        lock = lk.Lock(self.lock_path, start=self.start, length=self.length)
         barrier.wait()  # wait for lock acquire in first process
         with pytest.raises(lk.LockTimeoutError):
             lock.acquire_read(lock_fail_timeout)
@@ -616,7 +615,7 @@ def test_read_lock_read_only_dir_writable_lockfile(lock_dir, lock_path):
             pass
 
 
-@pytest.mark.skipif(False if is_windows else getuid() == 0, reason="user is root")
+@pytest.mark.skipif(False if sys.platform == "win32" else getuid() == 0, reason="user is root")
 def test_read_lock_no_lockfile(lock_dir, lock_path):
     """read-only directory, no lockfile (so can't create)."""
     with read_only(lock_dir):
@@ -687,10 +686,12 @@ def test_upgrade_read_to_write_fails_with_readonly_file(private_lock_path):
         # upgrade to write here
         with pytest.raises(lk.LockROFileError):
             lock.acquire_write()
-        lk.file_tracker.release_fh(lock.path)
+
+        # TODO: lk.FILE_TRACKER does not release private_lock_path
+        lk.FILE_TRACKER.release_by_stat(os.stat(private_lock_path))
 
 
-class ComplexAcquireAndRelease(object):
+class ComplexAcquireAndRelease:
     def __init__(self, lock_path):
         self.lock_path = lock_path
 
@@ -829,7 +830,7 @@ class AssertLock(lk.Lock):
     """Test lock class that marks acquire/release events."""
 
     def __init__(self, lock_path, vals):
-        super(AssertLock, self).__init__(lock_path)
+        super().__init__(lock_path)
         self.vals = vals
 
     # assert hooks for subclasses
@@ -840,25 +841,25 @@ class AssertLock(lk.Lock):
 
     def acquire_read(self, timeout=None):
         self.assert_acquire_read()
-        result = super(AssertLock, self).acquire_read(timeout)
+        result = super().acquire_read(timeout)
         self.vals["acquired_read"] = True
         return result
 
     def acquire_write(self, timeout=None):
         self.assert_acquire_write()
-        result = super(AssertLock, self).acquire_write(timeout)
+        result = super().acquire_write(timeout)
         self.vals["acquired_write"] = True
         return result
 
     def release_read(self, release_fn=None):
         self.assert_release_read()
-        result = super(AssertLock, self).release_read(release_fn)
+        result = super().release_read(release_fn)
         self.vals["released_read"] = True
         return result
 
     def release_write(self, release_fn=None):
         self.assert_release_write()
-        result = super(AssertLock, self).release_write(release_fn)
+        result = super().release_write(release_fn)
         self.vals["released_write"] = True
         return result
 
@@ -986,7 +987,7 @@ def test_transaction_with_context_manager(lock_path, transaction, type):
             assert vals["entered_ctx"]
             assert vals["exited_ctx"]
 
-    class TestContextManager(object):
+    class TestContextManager:
         def __enter__(self):
             vals["entered_ctx"] = True
 
@@ -1187,7 +1188,7 @@ def test_nested_reads(lock_path):
                     assert vals["read"] == 1
 
 
-class LockDebugOutput(object):
+class LockDebugOutput:
     def __init__(self, lock_path):
         self.lock_path = lock_path
         self.host = socket.gethostname()
@@ -1313,6 +1314,7 @@ def test_downgrade_write_okay(tmpdir):
         lock.downgrade_write_to_read()
         assert lock._reads == 1
         assert lock._writes == 0
+        lock.release_read()
 
 
 def test_downgrade_write_fails(tmpdir):
@@ -1323,6 +1325,7 @@ def test_downgrade_write_fails(tmpdir):
         msg = "Cannot downgrade lock from write to read on file: lockfile"
         with pytest.raises(lk.LockDowngradeError, match=msg):
             lock.downgrade_write_to_read()
+        lock.release_read()
 
 
 @pytest.mark.parametrize(
@@ -1342,8 +1345,7 @@ def test_poll_lock_exception(tmpdir, monkeypatch, err_num, err_msg):
     with tmpdir.as_cwd():
         lockfile = "lockfile"
         lock = lk.Lock(lockfile)
-
-        touch(lockfile)
+        lock.acquire_read()
 
         monkeypatch.setattr(fcntl, "lockf", _lockf)
 
@@ -1352,6 +1354,9 @@ def test_poll_lock_exception(tmpdir, monkeypatch, err_num, err_msg):
         else:
             with pytest.raises(IOError, match=err_msg):
                 lock._poll_lock(fcntl.LOCK_EX)
+
+        monkeypatch.undo()
+        lock.release_read()
 
 
 def test_upgrade_read_okay(tmpdir):
@@ -1362,6 +1367,7 @@ def test_upgrade_read_okay(tmpdir):
         lock.upgrade_read_to_write()
         assert lock._reads == 0
         assert lock._writes == 1
+        lock.release_write()
 
 
 def test_upgrade_read_fails(tmpdir):
@@ -1372,3 +1378,4 @@ def test_upgrade_read_fails(tmpdir):
         msg = "Cannot upgrade lock from read to write on file: lockfile"
         with pytest.raises(lk.LockUpgradeError, match=msg):
             lock.upgrade_read_to_write()
+        lock.release_write()

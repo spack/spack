@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,7 +29,7 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
     url = "https://gasnet.lbl.gov/EX/GASNet-2021.3.0.tar.gz"
     git = "https://bitbucket.org/berkeleylab/gasnet.git"
 
-    maintainers = ["PHHargrove", "bonachea"]
+    maintainers("PHHargrove", "bonachea")
 
     tags = ["e4s", "ecp"]
 
@@ -37,6 +37,8 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
     version("main", branch="stable")
     version("master", branch="master")
 
+    version("2023.3.0", sha256="e1fa783d38a503cf2efa7662be591ca5c2bb98d19ac72a9bc6da457329a9a14f")
+    version("2022.9.2", sha256="2352d52f395a9aa14cc57d82957d9f1ebd928d0a0021fd26c5f1382a06cd6f1d")
     version("2022.9.0", sha256="6873ff4ad8ebee49da4378f2d78095a6ccc31333d6ae4cd739b9f772af11f936")
     version("2022.3.0", sha256="91b59aa84c0680c807e00d3d1d8fa7c33c1aed50b86d1616f93e499620a9ba09")
     version("2021.9.0", sha256="1b6ff6cdad5ecf76b92032ef9507e8a0876c9fc3ee0ab008de847c1fad0359ee")
@@ -81,12 +83,18 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
     depends_on("autoconf@2.69", type="build", when="@master:")
     depends_on("automake@1.16:", type="build", when="@master:")
 
-    conflicts("hip@:4.4.0", when="+rocm")
+    conflicts("^hip@:4.4.0", when="+rocm")
 
     def install(self, spec, prefix):
         if spec.satisfies("@master:"):
             bootstrapsh = Executable("./Bootstrap")
             bootstrapsh()
+            # Record git-describe when fetched from git:
+            try:
+                git = which("git")
+                git("describe", "--long", "--always", output="version.git")
+            except spack.util.executable.ProcessError:
+                spack.main.send_warning_to_tty("Omitting version stamp due to git error")
 
         # The GASNet-EX library has a highly multi-dimensional configure space,
         # to accomodate the varying behavioral requirements of each client runtime.
@@ -137,23 +145,39 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
-    def test_install(self):
+    def check_install(self):
         if "conduits=smp" in self.spec:
             make("-C", "smp-conduit", "run-tests")
-        if "conduits=none" not in self.spec:
-            self.run_test(
-                join_path(self.prefix.tests, "testtools"),
-                expected=["Done."],
-                status=0,
-                installed=True,
-                purpose="Running testtools",
-            )
+        self.test_testtools()
 
-    def test(self):
+    def _setup_test_env(self):
+        """Set up key stand-alone test environment variables."""
+        os.environ["GASNET_VERBOSEENV"] = "1"  # include diagnostic info
+
+        # The following are not technically relevant to test_testtools
+        os.environ["GASNET_SPAWN_VERBOSE"] = "1"  # include spawning diagnostics
+        if "GASNET_SSH_SERVERS" not in os.environ:
+            os.environ["GASNET_SSH_SERVERS"] = "localhost " * 4
+
+    def test_testtools(self):
+        """run testtools and check output"""
         if "conduits=none" in self.spec:
-            spack.main.send_warning_to_tty("No conduit libraries built -- SKIPPED")
-            return
+            raise SkipTest("Test requires conduit libraries")
 
+        testtools_path = join_path(self.prefix.tests, "testtools")
+        assert os.path.exists(testtools_path), "Test requires testtools"
+
+        self._setup_test_env()
+        testtools = which(testtools_path, required=True)
+        out = testtools(output=str.split, error=str.split)
+        assert "Done." in out
+
+    def test_testgasnet(self):
+        """run testgasnet and check output"""
+        if "conduits=none" in self.spec:
+            raise SkipTest("Test requires conduit libraries")
+
+        self._setup_test_env()
         ranks = "4"
         spawner = {
             "smp": ["env", "GASNET_PSHM_NODES=" + ranks],
@@ -164,27 +188,18 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
             "udp": [join_path(self.prefix.bin, "amudprun"), "-spawn", "L", "-np", ranks],
         }
 
-        os.environ["GASNET_VERBOSEENV"] = "1"  # include diagnostic info
-        os.environ["GASNET_SPAWN_VERBOSE"] = "1"  # include spawning diagnostics
-        if "GASNET_SSH_SERVERS" not in os.environ:
-            os.environ["GASNET_SSH_SERVERS"] = "localhost " * 4
-
-        self.run_test(
-            join_path(self.prefix.tests, "testtools"),
-            expected=["Done."],
-            status=0,
-            installed=True,
-            purpose="Running testtools",
-        )
-
+        expected = "done."
         for c in self.spec.variants["conduits"].value:
             os.environ["GASNET_SUPERNODE_MAXSIZE"] = "0" if (c == "smp") else "1"
             test = join_path(self.prefix.tests, c, "testgasnet")
-            self.run_test(
-                spawner[c][0],
-                spawner[c][1:] + [test],
-                expected=["done."],
-                status=0,
-                installed=(c != "smp"),
-                purpose="Running %s-conduit/testgasnet" % c,
-            )
+
+            with test_part(
+                self,
+                "test_testgasnet_{0}".format(c),
+                purpose="run {0}-conduit/testgasnet".format(c),
+            ):
+                exe = which(spawner[c][0], required=True)
+
+                args = spawner[c][1:] + [test]
+                out = exe(*args, output=str.split, error=str.split)
+                assert expected in out

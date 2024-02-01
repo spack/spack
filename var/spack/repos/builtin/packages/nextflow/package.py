@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,8 +12,33 @@ class Nextflow(Package):
     homepage = "https://www.nextflow.io"
     url = "https://github.com/nextflow-io/nextflow/releases/download/v21.04.3/nextflow"
 
-    maintainers = ["dialvarezs"]
+    maintainers("dialvarezs", "marcodelapierre")
 
+    version(
+        "23.10.0",
+        sha256="4b7fba61ecc6d53a6850390bb435455a54ae4d0c3108199f88b16b49e555afdd",
+        expand=False,
+    )
+    version(
+        "23.04.3",
+        sha256="258714c0772db3cab567267e8441c5b72102381f6bd58fc6957c2972235be7e0",
+        expand=False,
+    )
+    version(
+        "23.04.1",
+        sha256="5de3e09117ca648b2b50778d3209feb249b35de0f97cdbcf52c7d92c7a96415c",
+        expand=False,
+    )
+    version(
+        "22.10.4",
+        sha256="612a085e183546688e0733ebf342fb73865f560ad1315d999354048fbca5954d",
+        expand=False,
+    )
+    version(
+        "22.10.3",
+        sha256="8d67046ca3b645fab2642d90848550a425c9905fd7dfc2b4753b8bcaccaa70dd",
+        expand=False,
+    )
     version(
         "22.10.1",
         sha256="fa6b6faa8b213860212da413e77141a56a5e128662d21ea6603aeb9717817c4c",
@@ -48,41 +73,49 @@ class Nextflow(Package):
         "21.10.6",
         sha256="104c0352c592924233ea7897cbfb2ece41795be348f97d6dfbc8d66e6271e4ad",
         expand=False,
+        deprecated=True,
     )
     version(
         "21.10.1",
         sha256="05c8b9f3d2f5eded737fdd0a13b84e3bc442cc6355ba95e21118cb624f8176da",
         expand=False,
+        deprecated=True,
     )
     version(
         "21.10.0",
         sha256="e938e53f43f0f00c8d5adf2dc104c4ce0c6d834aa84a4a3918ac8bec6eee6b9c",
         expand=False,
+        deprecated=True,
     )
     version(
         "21.04.3",
         sha256="80c7ecd94b55da8eb0e17040dbd0c43ee80e252cd999374e16c00d54d3d3abf3",
         expand=False,
+        deprecated=True,
     )
     version(
         "20.10.0",
         sha256="54f76c83cbabe8ec68d6a878dcf921e647284499f4ae917356e594d873cb78dd",
         expand=False,
+        deprecated=True,
     )
     version(
         "20.07.1",
         sha256="de4db5747a801af645d9b021c7b36f4a25c3ce1a8fda7705a5f37e8f9357443a",
         expand=False,
+        deprecated=True,
     )
     version(
         "20.04.1",
         sha256="b46833ad75b9b7db72668235b53d5c295a9ab02b50d36506bbbe53f383239bde",
         expand=False,
+        deprecated=True,
     )
     version(
         "20.01.0",
         sha256="fe1900284fd658c0781e6d8048839541afe5818d0b53f6ee8ae81f59d47ad662",
         expand=False,
+        deprecated=True,
     )
     version(
         "19.10.0",

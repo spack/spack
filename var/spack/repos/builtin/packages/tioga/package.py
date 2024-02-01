@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Tioga(CMakePackage):
     homepage = "https://github.com/jsitaraman/tioga"
     git = "https://github.com/jsitaraman/tioga.git"
 
-    maintainers = ["jrood-nrel"]
+    maintainers("jrood-nrel")
 
     # The original TIOGA repo has possibly been abandoned,
     # so work on TIOGA has continued in the Exawind project

@@ -71,6 +71,7 @@ class Neuron(CMakePackage):
 
     # next two needed after neuronsimulator/nrn#2235.
     depends_on("py-pip", type=("build"))
+    depends_on("py-setuptools", type=("build"))
     depends_on("py-packaging", type=("run"))
 
     depends_on("boost", when="+coreneuron+tests")
@@ -90,15 +91,7 @@ class Neuron(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         args = []
-        for variant in [
-            "backtrace",
-            "coreneuron",
-            "interviews",
-            "mpi",
-            "python",
-            "rx3d",
-            "tests",
-        ]:
+        for variant in ["backtrace", "coreneuron", "interviews", "mpi", "python", "rx3d", "tests"]:
             args.append(self.define_from_variant("NRN_ENABLE_" + variant.upper(), variant))
 
         args.append(self.define_from_variant("CORENRN_ENABLE_SHARED", "shared"))

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,8 +24,6 @@ env = SpackCommand("env")
 install = SpackCommand("install")
 
 base32_alphabet = "abcdefghijklmnopqrstuvwxyz234567"
-
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 
 
 @pytest.fixture(scope="module")
@@ -92,7 +90,6 @@ def test_query_arguments():
 @pytest.mark.db
 @pytest.mark.usefixtures("database", "mock_display")
 def test_tag1(parser, specs):
-
     args = parser.parse_args(["--tag", "tag1"])
     spack.cmd.find.find(parser, args)
 
@@ -120,26 +117,39 @@ def test_tag2_tag3(parser, specs):
     assert len(specs) == 0
 
 
+@pytest.mark.parametrize(
+    "args,with_namespace", [([], False), (["--namespace"], True), (["--namespaces"], True)]
+)
 @pytest.mark.db
-def test_namespaces_shown_correctly(database):
-    out = find()
-    assert "builtin.mock.zmpi" not in out
-
-    out = find("--namespace")
-    assert "builtin.mock.zmpi" in out
+def test_namespaces_shown_correctly(args, with_namespace, database):
+    """Test that --namespace(s) works. Old syntax is --namespace"""
+    assert ("builtin.mock.zmpi" in find(*args)) == with_namespace
 
 
 @pytest.mark.db
 def test_find_cli_output_format(database, mock_tty_stdout):
+    # Currently logging on Windows detaches stdout
+    # from the terminal so we miss some output during tests
+    # TODO: (johnwparent): Once logging is amended on Windows,
+    # restore this test
     out = find("zmpi")
-    assert out.endswith(
-        dedent(
-            """\
-    zmpi@1.0
-    ==> 1 installed package
-    """
+    if not sys.platform == "win32":
+        assert out.endswith(
+            dedent(
+                """\
+      zmpi@1.0
+      ==> 1 installed package
+      """
+            )
         )
-    )
+    else:
+        assert out.endswith(
+            dedent(
+                """\
+      zmpi@1.0
+      """
+            )
+        )
 
 
 def _check_json_output(spec_list):
@@ -185,12 +195,7 @@ def test_find_json_deps(database):
 @pytest.mark.db
 def test_display_json(database, capsys):
     specs = [
-        Spec(s).concretized()
-        for s in [
-            "mpileaks ^zmpi",
-            "mpileaks ^mpich",
-            "mpileaks ^mpich2",
-        ]
+        Spec(s).concretized() for s in ["mpileaks ^zmpi", "mpileaks ^mpich", "mpileaks ^mpich2"]
     ]
 
     cmd.display_specs_as_json(specs)
@@ -205,12 +210,7 @@ def test_display_json(database, capsys):
 @pytest.mark.db
 def test_display_json_deps(database, capsys):
     specs = [
-        Spec(s).concretized()
-        for s in [
-            "mpileaks ^zmpi",
-            "mpileaks ^mpich",
-            "mpileaks ^mpich2",
-        ]
+        Spec(s).concretized() for s in ["mpileaks ^zmpi", "mpileaks ^mpich", "mpileaks ^mpich2"]
     ]
 
     cmd.display_specs_as_json(specs, deps=True)
@@ -226,31 +226,19 @@ def test_display_json_deps(database, capsys):
 def test_find_format(database, config):
     output = find("--format", "{name}-{^mpi.name}", "mpileaks")
     assert set(output.strip().split("\n")) == set(
-        [
-            "mpileaks-zmpi",
-            "mpileaks-mpich",
-            "mpileaks-mpich2",
-        ]
+        ["mpileaks-zmpi", "mpileaks-mpich", "mpileaks-mpich2"]
     )
 
     output = find("--format", "{name}-{version}-{compiler.name}-{^mpi.name}", "mpileaks")
     assert "installed package" not in output
     assert set(output.strip().split("\n")) == set(
-        [
-            "mpileaks-2.3-gcc-zmpi",
-            "mpileaks-2.3-gcc-mpich",
-            "mpileaks-2.3-gcc-mpich2",
-        ]
+        ["mpileaks-2.3-gcc-zmpi", "mpileaks-2.3-gcc-mpich", "mpileaks-2.3-gcc-mpich2"]
     )
 
     output = find("--format", "{name}-{^mpi.name}-{hash:7}", "mpileaks")
     elements = output.strip().split("\n")
     assert set(e[:-7] for e in elements) == set(
-        [
-            "mpileaks-zmpi-",
-            "mpileaks-mpich-",
-            "mpileaks-mpich2-",
-        ]
+        ["mpileaks-zmpi-", "mpileaks-mpich-", "mpileaks-mpich2-"]
     )
 
     # hashes are in base32
@@ -306,12 +294,7 @@ def test_find_very_long(database, config):
     output = find("-L", "--no-groups", "mpileaks")
 
     specs = [
-        Spec(s).concretized()
-        for s in [
-            "mpileaks ^zmpi",
-            "mpileaks ^mpich",
-            "mpileaks ^mpich2",
-        ]
+        Spec(s).concretized() for s in ["mpileaks ^zmpi", "mpileaks ^mpich", "mpileaks ^mpich2"]
     ]
 
     assert set(output.strip().split("\n")) == set(
@@ -349,6 +332,7 @@ def test_find_command_basic_usage(database):
     assert "mpileaks" in output
 
 
+@pytest.mark.not_on_windows("envirnment is not yet supported on windows")
 @pytest.mark.regression("9875")
 def test_find_prefix_in_env(
     mutable_mock_env_path, install_mockery, mock_fetch, mock_packages, mock_archive, config
@@ -368,13 +352,23 @@ def test_find_loaded(database, working_env):
     assert output == ""
 
     os.environ[uenv.spack_loaded_hashes_var] = ":".join(
-        [x.dag_hash() for x in spack.store.db.query()]
+        [x.dag_hash() for x in spack.store.STORE.db.query()]
     )
     output = find("--loaded")
     expected = find()
     assert output == expected
 
 
-def test_bootstrap_deprecated():
-    output = find("--bootstrap")
-    assert "`spack find --bootstrap` is deprecated" in output
+@pytest.mark.regression("37712")
+def test_environment_with_version_range_in_compiler_doesnt_fail(tmp_path):
+    """Tests that having an active environment with a root spec containing a compiler constrained
+    by a version range (i.e. @X.Y rather the single version than @=X.Y) doesn't result in an error
+    when invoking "spack find".
+    """
+    test_environment = ev.create_in_dir(tmp_path)
+    test_environment.add("zlib %gcc@12.1.0")
+    test_environment.write()
+
+    with test_environment:
+        output = find()
+    assert "zlib%gcc@12.1.0" in output

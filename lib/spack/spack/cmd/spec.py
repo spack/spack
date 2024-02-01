@@ -1,9 +1,7 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from __future__ import print_function
 
 import sys
 
@@ -31,7 +29,11 @@ specs are used instead
 for further documentation regarding the spec syntax, see:
     spack help --spec
 """
-    arguments.add_common_arguments(subparser, ["long", "very_long", "install_status"])
+    arguments.add_common_arguments(subparser, ["long", "very_long", "namespaces"])
+
+    install_status_group = subparser.add_mutually_exclusive_group()
+    arguments.add_common_arguments(install_status_group, ["install_status", "no_install_status"])
+
     format_group = subparser.add_mutually_exclusive_group()
     format_group.add_argument(
         "-y",
@@ -66,13 +68,6 @@ for further documentation regarding the spec syntax, see:
         help="how extensively to traverse the DAG (default: nodes)",
     )
     subparser.add_argument(
-        "-N",
-        "--namespaces",
-        action="store_true",
-        default=False,
-        help="show fully qualified package names",
-    )
-    subparser.add_argument(
         "-t", "--types", action="store_true", default=False, help="show dependency types"
     )
     arguments.add_common_arguments(subparser, ["specs"])
@@ -80,12 +75,15 @@ for further documentation regarding the spec syntax, see:
 
 
 def spec(parser, args):
-    name_fmt = "{namespace}.{name}" if args.namespaces else "{name}"
-    fmt = "{@version}{%compiler}{compiler_flags}{variants}{arch=architecture}"
     install_status_fn = spack.spec.Spec.install_status
+
+    fmt = spack.spec.DISPLAY_FORMAT
+    if args.namespaces:
+        fmt = "{namespace}." + fmt
+
     tree_kwargs = {
         "cover": args.cover,
-        "format": name_fmt + fmt,
+        "format": fmt,
         "hashlen": None if args.very_long else 7,
         "show_types": args.types,
         "status_fn": install_status_fn if args.install_status else None,
@@ -95,7 +93,7 @@ def spec(parser, args):
     # spec in the DAG.  This avoids repeatedly querying the DB.
     tree_context = lang.nullcontext
     if args.install_status:
-        tree_context = spack.store.db.read_transaction
+        tree_context = spack.store.STORE.db.read_transaction
 
     # Use command line specified specs, otherwise try to use environment specs.
     if args.specs:
@@ -110,7 +108,7 @@ def spec(parser, args):
         else:
             tty.die("spack spec requires at least one spec or an active environment")
 
-    for (input, output) in specs:
+    for input, output in specs:
         # With -y, just print YAML to output.
         if args.format:
             if args.format == "yaml":

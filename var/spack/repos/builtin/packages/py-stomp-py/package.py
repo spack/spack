@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class PyStompPy(PythonPackage):
     homepage = "https://github.com/jasonrbriggs/stomp.py"
     pypi = "stomp.py/stomp.py-8.0.0.tar.gz"
 
-    maintainers = ["haralmha"]
+    maintainers("haralmha")
 
     version("8.0.0", sha256="7085935293bfcc4a112a9830513275b2e0f3b040c5aad5ff8907e78f285b8b57")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,11 +19,13 @@ class Plasma(CMakePackage):
     homepage = "https://github.com/icl-utk-edu/plasma/"
     url = "https://github.com/icl-utk-edu/plasma/releases/download/21.8.29/plasma-21.8.29.tar.gz"
     git = "https://github.com/icl-utk-edu/plasma"
-    maintainers = ["luszczek"]
+
+    maintainers("luszczek")
 
     tags = ["e4s"]
 
     version("develop", git=git)
+    version("23.8.2", sha256="2db34de0575f3e3d16531bdcf1caddef146f68e71335977a3e8ec193003ab943")
     version("22.9.29", sha256="78827898b7e3830eee2e388823b9180858279f77c5eda5aa1be173765c53ade5")
     version("21.8.29", sha256="e0bb4d9143c8540f9f46cbccac9ed0cbea12500a864e6954fce2fe94ea057a10")
     version("20.9.20", sha256="2144a77b739f8dd2f0dbe5b64d94cde0e916f55c4eb170facd168c0db7fc7970")
@@ -62,9 +64,6 @@ class Plasma(CMakePackage):
     conflicts("^netlib-lapack@:3.5")
 
     # clashes with OpenBLAS declarations and has a problem compiling on its own
-    conflicts("^cblas")
-
-    conflicts("^openblas-with-lapack")  # incomplete LAPACK implementation
     conflicts("^veclibfort")
 
     # only GCC 4.9+ and higher have sufficient support for OpenMP 4+ tasks+deps
@@ -84,6 +83,14 @@ class Plasma(CMakePackage):
     patch("remove_absolute_mkl_include.patch", when="@17.1")
     patch("protect_cmake_version.patch", when="@19.8.0:19.8.9")
     patch("fix_cmake_include.patch", when="@19.8.0:19.8.9")
+
+    @when("@22.9.29")
+    def patch(self):
+        filter_file(
+            "^(#define PLASMA_CORE_LAPACK_H)$",
+            '\\1\n\n#include "plasma_config.h"',
+            "include/core_lapack.h",
+        )
 
     @when("@develop:")
     def patch(self):
@@ -107,6 +114,17 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             if package in self.spec:
                 for lib in ("CBLAS", "LAPACKE"):
                     options.append(self.define("{}_PROVIDER".format(lib), provider))
+        if "cray-libsci" in self.spec:
+            for lib in ("CBLAS", "LAPACKE"):
+                libsci_prefix = self.spec["cray-libsci"].package.external_prefix
+                options.append(self.define("{}_PROVIDER".format(lib), "generic"))
+                options.append(
+                    self.define("{}_INCLUDE_DIRS".format(lib), join_path(libsci_prefix, "include"))
+                )
+                options.append(
+                    self.define("{}_LIBRARIES".format(lib), self.spec["blas"].libs.joined(";"))
+                )
+            options.append(self.define("CBLAS_ADD_TYPEDEF", True))
 
         return options
 

@@ -1,17 +1,16 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import itertools
-
-from six import string_types
+from typing import List
 
 import spack.variant
 from spack.error import SpackError
 from spack.spec import Spec
 
 
-class SpecList(object):
+class SpecList:
     def __init__(self, name="specs", yaml_list=None, reference=None):
         # Normalize input arguments
         yaml_list = yaml_list or []
@@ -21,7 +20,7 @@ class SpecList(object):
         self._reference = reference  # TODO: Do we need defensive copy here?
 
         # Validate yaml_list before assigning
-        if not all(isinstance(s, string_types) or isinstance(s, (list, dict)) for s in yaml_list):
+        if not all(isinstance(s, str) or isinstance(s, (list, dict)) for s in yaml_list):
             raise ValueError(
                 "yaml_list can contain only valid YAML types!  Found:\n  %s"
                 % [type(s) for s in yaml_list]
@@ -61,7 +60,7 @@ class SpecList(object):
         return self._constraints
 
     @property
-    def specs(self):
+    def specs(self) -> List[Spec]:
         if self._specs is None:
             specs = []
             # This could be slightly faster done directly from yaml_list,
@@ -91,15 +90,17 @@ class SpecList(object):
         remove = [
             s
             for s in self.yaml_list
-            if (isinstance(s, string_types) and not s.startswith("$")) and Spec(s) == Spec(spec)
+            if (isinstance(s, str) and not s.startswith("$")) and Spec(s) == Spec(spec)
         ]
         if not remove:
-            msg = "Cannot remove %s from SpecList %s\n" % (spec, self.name)
-            msg += "Either %s is not in %s or %s is " % (spec, self.name, spec)
+            msg = f"Cannot remove {spec} from SpecList {self.name}.\n"
+            msg += f"Either {spec} is not in {self.name} or {spec} is "
             msg += "expanded from a matrix and cannot be removed directly."
             raise SpecListError(msg)
-        assert len(remove) == 1
-        self.yaml_list.remove(remove[0])
+
+        # Remove may contain more than one string representation of the same spec
+        for item in remove:
+            self.yaml_list.remove(item)
 
         # invalidate cache variables when we change the list
         self._expanded_list = None
@@ -132,9 +133,8 @@ class SpecList(object):
 
         # Make sure the reference is valid
         if name not in self._reference:
-            msg = "SpecList %s refers to " % self.name
-            msg += "named list %s " % name
-            msg += "which does not appear in its reference dict"
+            msg = f"SpecList '{self.name}' refers to named list '{name}'"
+            msg += " which does not appear in its reference dict."
             raise UndefinedReferenceError(msg)
 
         return (name, sigil)
@@ -145,7 +145,7 @@ class SpecList(object):
 
             for item in yaml:
                 # if it's a reference, expand it
-                if isinstance(item, string_types) and item.startswith("$"):
+                if isinstance(item, str) and item.startswith("$"):
                     # replace the reference and apply the sigil if needed
                     name, sigil = self._parse_reference(item)
                     referent = [
@@ -168,6 +168,9 @@ class SpecList(object):
 
     def __getitem__(self, key):
         return self.specs[key]
+
+    def __iter__(self):
+        return iter(self.specs)
 
 
 def _expand_matrix_constraints(matrix_config):
@@ -195,7 +198,9 @@ def _expand_matrix_constraints(matrix_config):
     for combo in itertools.product(*expanded_rows):
         # Construct a combined spec to test against excludes
         flat_combo = [constraint for constraint_list in combo for constraint in constraint_list]
-        flat_combo = [Spec(x) for x in flat_combo]
+
+        # Resolve abstract hashes so we can exclude by their concrete properties
+        flat_combo = [Spec(x).lookup_hash() for x in flat_combo]
 
         test_spec = flat_combo[0].copy()
         for constraint in flat_combo[1:]:

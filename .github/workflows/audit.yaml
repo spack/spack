@@ -17,20 +17,24 @@ concurrency:
 jobs:
   # Run audits on all the packages in the built-in repository
   package-audits:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.operating_system }}
+    strategy:
+      matrix:
+        operating_system: ["ubuntu-latest", "macos-latest"]
     steps:
-    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # @v2
-    - uses: actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984 # @v2
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # @v2
+    - uses: actions/setup-python@65d7f2d534ac1bc67fcd62888c5f4f3d2cb2b236 # @v2
       with:
         python-version: ${{inputs.python_version}}
     - name: Install Python packages
       run: |
-        pip install --upgrade pip six setuptools pytest coverage[toml]
+        pip install --upgrade pip setuptools pytest coverage[toml]
     - name: Package audits (with coverage)
       if: ${{ inputs.with_coverage == 'true' }}
       run: |
           . share/spack/setup-env.sh
           coverage run $(which spack) audit packages
+          coverage run $(which spack) audit externals        
           coverage combine
           coverage xml
     - name: Package audits (without coverage)
@@ -38,7 +42,8 @@ jobs:
       run: |
           . share/spack/setup-env.sh
           $(which spack) audit packages
-    - uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70 # @v2.1.0
+          $(which spack) audit externals
+    - uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d # @v2.1.0
       if: ${{ inputs.with_coverage == 'true' }}
       with:
-        flags: unittests,linux,audits
+        flags: unittests,audits

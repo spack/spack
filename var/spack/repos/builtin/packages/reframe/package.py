@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,20 +21,30 @@ class Reframe(Package):
     git = "https://github.com/eth-cscs/reframe.git"
 
     # notify when the package is updated.
-    maintainers = ["victorusu", "vkarak"]
+    maintainers("victorusu", "vkarak")
 
-    version("master", branch="master")
+    version("develop", branch="develop")
+    version("4.0.4", sha256="a9fb10bf2dc01f721142453297e348084683acfc0b8caa38ad1daa1b5c66456e")
+    version("4.0.3", sha256="ae216b0ccfda9f5f5c09f0be46cf8ab04183a0c30edf581917767dc3bb8de010")
+    version("4.0.2", sha256="48ec55645256d8686e077c7a9d4d2aa7d327eec27ff2ae2c78dd1db818b76ec7")
+    version("4.0.1", sha256="1680b8f0dd405dcf98be23473570595a424cbee830b2dbb665459e2974723f6f")
+    version("4.0.0", sha256="50fc0462747b8b1f504912cd8072c49c46c1744567f4f1884e753abbe8d7c6e1")
+    version(
+        "4.0.0-dev.4", sha256="35d37ee2747807b539b2c5b75073619870371d1e0fed9778f2a33a8abd37b8a1"
+    )
+    version(
+        "4.0.0-dev.3", sha256="830f00bcf27f693e7c0288e53a7b7fcf5aa5721ba8d451e693da018cf4af9bf4"
+    )
+    version(
+        "4.0.0-dev.2", sha256="a02ed4077965e38a2897984b79d938a229b7e52095cd9d803e6121448efbde11"
+    )
     version(
         "4.0.0-dev.1", sha256="6db55c20b79764fc1f0e0a13de062850007425fa2c7f54a113b96adee50741ed"
     )
     version(
         "4.0.0-dev.0", sha256="a96162a88a36ea0793836c492a39470010f6e63b8d9bd324c033614d27304fa6"
     )
-    version(
-        "3.12.0",
-        sha256="425cc546e24edd5b2dbfcdcb61dbbf723ca1a2a2977948e359e893514f5eb10f",
-        preferred=True,
-    )
+    version("3.12.0", sha256="425cc546e24edd5b2dbfcdcb61dbbf723ca1a2a2977948e359e893514f5eb10f")
     version("3.11.2", sha256="d6f36071df316d6a5ef5ce6f0477b3385d9dac5c1b82e54ae6954dc9b68f9440")
     version("3.11.1", sha256="7f591cd8f4fbb2c6255cc8ea02e3814393355a8931ac883e9f57490fde699b63")
     version("3.11.0", sha256="3ddfef5482f0c304286a6c8f1ad0b3d75c4c61d0b9f9f8429b6157c189f2bb64")
@@ -106,15 +116,7 @@ class Reframe(Package):
 
     # sanity check
     sanity_check_is_file = ["bin/reframe"]
-    sanity_check_is_dir = [
-        "bin",
-        "config",
-        "docs",
-        "reframe",
-        "tutorials",
-        "unittests",
-        "cscs-checks",
-    ]
+    sanity_check_is_dir = ["bin", "config", "docs", "reframe", "tutorials", "unittests"]
 
     # check if we can run reframe
     @run_after("install")
@@ -124,8 +126,15 @@ class Reframe(Package):
             reframe = Executable(self.prefix + "/bin/reframe")
             reframe("-l")
 
+    @run_after("install")
+    @on_package_attributes(run_tests=True)
+    def check_hpctestlib(self):
+        if self.spec.satisfies("@3.9.0:"):
+            if not can_access("hpctestlib"):
+                tty.warn("the test library was not installed")
+
     def install(self, spec, prefix):
-        if spec.version >= Version("3.0"):
+        if spec.satisfies("@3.0:"):
             if "+docs" in spec:
                 with working_dir("docs"):
                     make("man")
@@ -139,6 +148,6 @@ class Reframe(Package):
 
     def setup_run_environment(self, env):
         env.prepend_path("PYTHONPATH", self.prefix)
-        if self.spec.version >= Version("3.0"):
+        if self.spec.satisfies("@3.0:"):
             if "+docs" in self.spec:
                 env.prepend_path("MANPATH", self.prefix.docs.man)

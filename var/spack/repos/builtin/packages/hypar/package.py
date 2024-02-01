@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class Hypar(AutotoolsPackage):
     url = "https://bitbucket.org/deboghosh/hypar/get/v4.1.tar.gz"
     git = "https://bitbucket.org/deboghosh/hypar.git"
 
-    maintainers = ["debog"]
+    maintainers("debog")
 
     tags = ["proxy-app", "ecp-proxy-app"]
 

@@ -1,8 +1,12 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+import re
+
+import spack.platforms.cray
 from spack.package import *
 
 
@@ -13,10 +17,20 @@ class Libfabric(AutotoolsPackage):
     homepage = "https://libfabric.org/"
     url = "https://github.com/ofiwg/libfabric/releases/download/v1.8.0/libfabric-1.8.0.tar.bz2"
     git = "https://github.com/ofiwg/libfabric.git"
-    maintainers = ["rajachan"]
+    maintainers("rajachan")
+
+    executables = ["^fi_info$"]
 
     version("main", branch="main")
+    version("1.19.0", sha256="f14c764be9103e80c46223bde66e530e5954cb28b3835b57c8e728479603ef9e")
+    version("1.18.2", sha256="64d7837853ca84d2a413fdd96534b6a81e6e777cc13866e28cf86cd0ccf1b93e")
+    version("1.18.1", sha256="4615ae1e22009e59c72ae03c20adbdbd4a3dce95aeefbc86cc2bf1acc81c9e38")
+    version("1.18.0", sha256="912fb7c7b3cf2a91140520962b004a1c5d2f39184adbbd98ae5919b0178afd43")
+    version("1.17.1", sha256="8b372ddb3f46784c53fdad50a701a6eb0e661239aee45a42169afbedf3644035")
+    version("1.17.0", sha256="579c0f5ef636c0c72f4d3d6bd4da91a5aed9ac3ac4ea387404c45dbbdee4745d")
     version("1.16.1", sha256="53f992d33f9afe94b8a4ea3d105504887f4311cf4b68cea99a24a85fcc39193f")
+    version("1.16.0", sha256="ac104b9d6e3ce8bda6116329e3f440b621d85602257b3015116ca590f65267d2")
+    version("1.15.2", sha256="8d050b88bee62e8512a88f5aa25f532f46bef587bc3f91022ecdb9b3b2676c7e")
     version("1.15.1", sha256="cafa3005a9dc86064de179b0af4798ad30b46b2f862fe0268db03d13943e10cd")
     version("1.15.0", sha256="70982c58eadeeb5b1ddb28413fd645e40b206618b56fbb2b18ab1e7f607c9bea")
     version("1.14.1", sha256="6cfabb94bca8e419d9015212506f5a367d077c5b11e94b9f57997ec6ca3d8aed")
@@ -44,6 +58,7 @@ class Libfabric(AutotoolsPackage):
     version("1.4.2", sha256="5d027d7e4e34cb62508803e51d6bd2f477932ad68948996429df2bfff37ca2a5")
 
     fabrics = (
+        conditional("cxi", when=spack.platforms.cray.slingshot_network()),
         "efa",
         "gni",
         "mlx",
@@ -62,6 +77,9 @@ class Libfabric(AutotoolsPackage):
         "verbs",
         "xpmem",
     )
+
+    # CXI is a closed source package and only exists when an external.
+    conflicts("fabrics=cxi")
 
     variant(
         "fabrics",
@@ -97,6 +115,7 @@ class Libfabric(AutotoolsPackage):
     depends_on("psm", when="fabrics=psm")
     depends_on("ucx", when="fabrics=mlx")
     depends_on("uuid", when="fabrics=opx")
+    depends_on("numactl", when="fabrics=opx")
 
     depends_on("m4", when="@main", type="build")
     depends_on("autoconf", when="@main", type="build")
@@ -106,9 +125,47 @@ class Libfabric(AutotoolsPackage):
     conflicts("@1.9.0", when="platform=darwin", msg="This distribution is missing critical files")
     conflicts("fabrics=opx", when="@:1.14.99")
 
+    flag_handler = build_system_flags
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)("--version", output=str, error=str)
+        match = re.search(r"libfabric: (\d+\.\d+\.\d+)(\D*\S*)", output)
+        return match.group(1) if match else None
+
+    @classmethod
+    def determine_variants(cls, exes, version):
+        results = []
+        for exe in exes:
+            variants = []
+            output = Executable(exe)("--list", output=str, error=os.devnull)
+            # fabrics
+            fabrics = get_options_from_variant(cls, "fabrics")
+            used_fabrics = []
+            for fabric in fabrics:
+                match = re.search(r"^%s:.*\n.*version: (\S+)" % fabric, output, re.MULTILINE)
+                if match:
+                    used_fabrics.append(fabric)
+            if used_fabrics:
+                variants.append("fabrics=" + ",".join(used_fabrics))
+            results.append(" ".join(variants))
+        return results
+
     def setup_build_environment(self, env):
         if self.run_tests:
             env.prepend_path("PATH", self.prefix.bin)
+
+    # To enable this package add it to the LD_LIBRARY_PATH
+    def setup_run_environment(self, env):
+        libfabric_home = self.spec["libfabric"].prefix
+        env.prepend_path("LD_LIBRARY_PATH", libfabric_home.lib)
+        env.prepend_path("LD_LIBRARY_PATH", libfabric_home.lib64)
+
+    # To enable this package add it to the LD_LIBRARY_PATH
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        libfabric_home = self.spec["libfabric"].prefix
+        env.prepend_path("LD_LIBRARY_PATH", libfabric_home.lib)
+        env.prepend_path("LD_LIBRARY_PATH", libfabric_home.lib64)
 
     @when("@main")
     def autoreconf(self, spec, prefix):
@@ -125,7 +182,7 @@ class Libfabric(AutotoolsPackage):
         else:
             args.append("--with-kdreg=no")
 
-        for fabric in self.fabrics:
+        for fabric in [f if isinstance(f, str) else f[0].value for f in self.fabrics]:
             if "fabrics=" + fabric in self.spec:
                 args.append("--enable-{0}=yes".format(fabric))
             else:
@@ -136,3 +193,20 @@ class Libfabric(AutotoolsPackage):
     def installcheck(self):
         fi_info = Executable(self.prefix.bin.fi_info)
         fi_info()
+
+
+# This code gets all the fabric names from the variants list
+# Idea taken from the AutotoolsPackage source.
+def get_options_from_variant(self, name):
+    values = self.variants[name][0].values
+    explicit_values = []
+    if getattr(values, "feature_values", None):
+        values = values.feature_values
+    for value in sorted(values):
+        if hasattr(value, "when"):
+            if value.when is True:
+                # Explicitly extract the True value for downstream use
+                explicit_values.append("{0}".format(value))
+        else:
+            explicit_values.append(value)
+    return explicit_values

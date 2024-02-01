@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Windows(Platform):
     priority = 101
 
     def __init__(self):
-        super(Windows, self).__init__("windows")
+        super().__init__("windows")
 
         for name in archspec.cpu.TARGETS:
             self.add_target(name, spack.target.Target(name))

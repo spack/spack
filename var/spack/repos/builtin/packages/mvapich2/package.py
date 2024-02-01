@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,12 +19,13 @@ class Mvapich2(AutotoolsPackage):
     url = "https://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.3.7.tar.gz"
     list_url = "https://mvapich.cse.ohio-state.edu/downloads/"
 
-    maintainers = ["natshineman", "harisubramoni", "ndcontini"]
+    maintainers("natshineman", "harisubramoni", "ndcontini")
 
     executables = ["^mpiname$", "^mpichversion$"]
 
     # Prefer the latest stable release
-    version("2.3.7", sha256="4b6ad2c8c270e1fabcd073c49edb6bf95af93780f4a487bc48404a8ca384f34e")
+    version("2.3.7-1", sha256="fdd971cf36d6476d007b5d63d19414546ca8a2937b66886f24a1d9ca154634e4")
+    version("2.3.7", sha256="c39a4492f4be50df6100785748ba2894e23ce450a94128181d516da5757751ae")
     version("2.3.6", sha256="b3a62f2a05407191b856485f99da05f5e769d6381cd63e2fcb83ee98fc46a249")
     version("2.3.5", sha256="f9f467fec5fc981a89a7beee0374347b10c683023c76880f92a1a0ad4b961a8c")
     version("2.3.4", sha256="7226a45c7c98333c8e5d2888119cce186199b430c13b7b1dca1769909e68ea7a")
@@ -108,16 +109,19 @@ class Mvapich2(AutotoolsPackage):
         "alloca", default=False, description="Use alloca to allocate temporary memory if available"
     )
 
+    variant("hwlocv2", default=False, description="Builds mvapich2 with hwloc v2")
+    variant("hwloc_graphics", default=False, description="Enables hwloc graphics")
     variant(
         "file_systems",
         description="List of the ROMIO file systems to activate",
         values=auto_or_any_combination_of("lustre", "gpfs", "nfs", "ufs"),
     )
 
+    depends_on("automake@1.15", type="build")  # needed for torque patch
     depends_on("findutils", type="build")
     depends_on("bison", type="build")
     depends_on("pkgconfig", type="build")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libpciaccess", when=(sys.platform != "darwin"))
     depends_on("libxml2")
     depends_on("cuda", when="+cuda")
@@ -130,7 +134,13 @@ class Mvapich2(AutotoolsPackage):
     depends_on("libfabric", when="fabrics=nemesisofi")
     depends_on("slurm", when="process_managers=slurm")
 
+    # Fix segmentation fault in `MPIR_Attr_delete_list`:
+    # <https://lists.osu.edu/pipermail/mvapich-discuss/2023-January/010695.html>.
+    patch("mpir_attr_delete_list_segfault.patch", when="@2.3.7")
+
     conflicts("fabrics=psm2", when="@:2.1")  # psm2 support was added at version 2.2
+
+    patch("fix-torque.patch", when="@2.3.7-1")
 
     filter_compiler_wrappers("mpicc", "mpicxx", "mpif77", "mpif90", "mpifort", relative_root="bin")
 
@@ -429,7 +439,12 @@ class Mvapich2(AutotoolsPackage):
             args.extend(["--enable-cuda", "--with-cuda={0}".format(spec["cuda"].prefix)])
         else:
             args.append("--disable-cuda")
-
+        if "~hwloc_graphics" in self.spec:
+            args.append("--disable-opencl")
+            args.append("--disable-gl")
+            args.append("--disable-nvml")
+        if "+hwlocv2" in self.spec:
+            args.append("--with-hwloc=v2")
         if "+regcache" in self.spec:
             args.append("--enable-registration-cache")
         else:

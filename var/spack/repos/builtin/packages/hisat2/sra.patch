@@ -1,0 +1,11 @@
+--- a/Makefile	2020-07-24 10:46:16.000000000 -0500
++++ b/Makefile	2023-01-12 20:28:08.919588735 -0600
+@@ -94,7 +94,7 @@
+ SERACH_INC = 
+ ifeq (1,$(USE_SRA))
+ 	SRA_DEF = -DUSE_SRA
+-	SRA_LIB = -lncbi-ngs-c++-static -lngs-c++-static -lncbi-vdb-static -ldl
++	SRA_LIB = -lncbi-ngs-c++-static -lngs-c++-static -lncbi-ngs-static -lncbi-vdb-static -ldl
+ 	SEARCH_INC += -I$(NCBI_NGS_DIR)/include -I$(NCBI_VDB_DIR)/include
+ 	SEARCH_LIBS += -L$(NCBI_NGS_DIR)/lib64 -L$(NCBI_VDB_DIR)/lib64
+ endif

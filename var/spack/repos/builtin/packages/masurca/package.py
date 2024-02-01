@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,7 @@ class Masurca(Package):
     homepage = "http://www.genome.umd.edu/masurca.html"
     url = "https://github.com/alekseyzimin/masurca/releases/download/v3.3.1/MaSuRCA-3.3.1.tar.gz"
 
+    version("4.1.0", sha256="15078e24c79fe5aabe42748d64f95d15f3fbd7708e84d88fc07c4b7f2e4b0902")
     version("4.0.9", sha256="a31c2f786452f207c0b0b20e646b6c85b7357dcfd522b697c1009d902d3ed4cf")
     version("4.0.5", sha256="db525c26f2b09d6b359a2830fcbd4a3fdc65068e9a116c91076240fd1f5924ed")
     version("4.0.1", sha256="68628acaf3681d09288b48a35fec7909b347b84494fb26c84051942256299870")
@@ -23,7 +24,7 @@ class Masurca(Package):
 
     depends_on("perl", type=("build", "run"))
     depends_on(Boost.with_default_variants)
-    depends_on("zlib")
+    depends_on("zlib-api")
     patch("arm.patch", when="target=aarch64:")
 
     def patch(self):

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Nsimd(CMakePackage):
     homepage = "https://agenium-scale.github.io/nsimd/"
     url = "https://github.com/agenium-scale/nsimd/archive/v1.0.tar.gz"
 
-    maintainers = ["eschnett"]
+    maintainers("eschnett")
 
     version("3.0.1", sha256="6a90d7ce5f9da5cfac872463951f3374bb0e0824d92f714db0fd4901b32497fd")
     version("3.0", sha256="5cab09020ce3a6819ddb3b3b8cafa6bc1377821b596c0f2954f52c852d092d5c")
@@ -57,9 +57,13 @@ class Nsimd(CMakePackage):
     # The C++ interface requires a C++11 compiler to use.
     depends_on("cmake@2.8.7:", type="build")
     depends_on("cmake@3.0.2:", type="build", when="@2:")
-    depends_on("python@3:", type="build")
+    # We need `collections.MutableMapping`, which was removed in
+    # Python 3.10; see
+    # <https://docs.python.org/3.9/library/collections.html>
+    depends_on("python@3.0:3.9", type="build")
     depends_on("py-chardet", type="build", when="@3:")
     depends_on("py-requests", type="build", when="@3:")
+    depends_on("py-urllib3", type="build", when="@3:")
 
     @run_before("cmake")
     def generate_code(self):

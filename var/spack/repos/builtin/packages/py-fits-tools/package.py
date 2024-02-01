@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@ class PyFitsTools(PythonPackage):
     version(
         "0.2",
         sha256="04c4b6eeb09298bca79b228175fcd209d4ca895ce5675f6684120e75928d2d97",
-        default=True,
+        preferred=True,
     )
     version("0.1", sha256="d128e49ff4ecc6a9bf9a050f8605bc457e028e10e48bb8d6fda4ca358298ec17")
 

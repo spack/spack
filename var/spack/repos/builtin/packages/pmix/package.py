@@ -1,8 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import platform
 
 from spack.package import *
 
@@ -32,9 +33,18 @@ class Pmix(AutotoolsPackage):
     homepage = "https://pmix.org"
     url = "https://github.com/pmix/pmix/releases/download/v3.1.3/pmix-3.1.3.tar.bz2"
     git = "https://github.com/openpmix/openpmix.git"
-    maintainers = ["rhc54"]
+    maintainers("rhc54")
 
-    version("master", branch="master")
+    # Branches 4.2 & 5.0 will also need submodules
+    version("master", branch="master", submodules=True)
+    version("5.0.1", sha256="d4371792d4ba4c791e1010100b4bf9a65500ababaf5ff25d681f938527a67d4a")
+    version("5.0.0", sha256="92a85c4946346816c297ac244fbaf4f723bba87fb7e4424a057c2dabd569928d")
+    version("4.2.6", sha256="10b0d5a7fca70272e9427c677557578ac452cea02aeb00e30dec2116d20c3cd0")
+    version("4.2.5", sha256="a89c2c5dc69715a4df1e76fdc4318299386c184623a1d0d5eb1fb062e14b0d2b")
+    version("4.2.4", sha256="c4699543f2278d3a78bdac72b4b2da9cd92d11d18478d66522b8991764b021c8")
+    version("4.2.3", sha256="c3d9d6885ae39c15627a86dc4718e050baf604acda71b8b9e2ee3b12ad5c2d2a")
+    version("4.2.2", sha256="935b2f492e4bc409017f1425a83366aa72a7039605ea187c9fac7bb1371cd73c")
+    version("4.2.1", sha256="3c992fa0d653b56e0e409bbaec9de8fc1b82c948364dbb28545442315ed2a179")
     version("4.1.2", sha256="670d3a02b39fb2126fe8084174cf03c484e027b5921b5c98a851108134e2597a")
     version("4.1.1", sha256="0527a15d616637b95975d238bbc100b244894518fbba822cd8f46589ca61ccec")
     version("4.1.0", sha256="145f05a6c621bfb3fc434776b615d7e6d53260cc9ba340a01f55b383e07c842e")
@@ -69,6 +79,8 @@ class Pmix(AutotoolsPackage):
         description="allow a PMIx server to request services from " "a system-level REST server",
     )
 
+    variant("python", default=False, when="@4.1.2:", description="Enable python bindigs")
+
     variant("docs", default=False, description="Build manpages")
 
     depends_on("m4", type="build", when="@master")
@@ -77,12 +89,15 @@ class Pmix(AutotoolsPackage):
     depends_on("libtool", type="build", when="@master")
     depends_on("perl", type="build", when="@master")
     depends_on("pandoc", type="build", when="+docs")
+    depends_on("pkgconfig", type="build")
 
     depends_on("libevent@2.0.20:")
     depends_on("hwloc@1.0:1", when="@:2")
     depends_on("hwloc@1.11:1,2:", when="@3:")
     depends_on("curl", when="+restful")
     depends_on("jansson@2.11:", when="+restful")
+    depends_on("python", when="+python")
+    depends_on("py-cython", when="+python")
 
     def autoreconf(self, spec, prefix):
         """Only needed when building from git checkout"""
@@ -93,13 +108,40 @@ class Pmix(AutotoolsPackage):
         perl = which("perl")
         perl("./autogen.pl")
 
+    def find_external_lib_path(self, pkg_name, path_match_str=""):
+        spec = self.spec
+        tgt_libpath = ""
+        dir_list = spec[pkg_name].libs
+        for entry in dir_list:
+            if path_match_str == "" or (path_match_str != "" and path_match_str in entry):
+                tgt_libpath = entry
+                break
+        path_list = tgt_libpath.split(os.sep)
+        del path_list[-1]
+        return (os.sep).join(path_list)
+
     def configure_args(self):
         spec = self.spec
 
-        config_args = ["--enable-shared", "--enable-static"]
+        config_args = ["--enable-shared", "--enable-static", "--disable-sphinx", "--without-munge"]
 
         config_args.append("--with-libevent=" + spec["libevent"].prefix)
         config_args.append("--with-hwloc=" + spec["hwloc"].prefix)
+
+        # As of 09/22/22 pmix build does not detect the hwloc version
+        # for 32-bit architecture correctly. Since, we have only been
+        # able to test on 64-bit architecture, we are keeping this
+        # check for "64" in place. We will need to re-visit this when we
+        # have the fix in Pmix for 32-bit library version detection
+        if "64" in platform.machine():
+            if spec["libevent"].external_path:
+                dep_libpath = self.find_external_lib_path("libevent", "64")
+                config_args.append("--with-libevent-libdir=" + dep_libpath)
+            if spec["hwloc"].external_path:
+                dep_libpath = self.find_external_lib_path("hwloc", "64")
+                config_args.append("--with-hwloc-libdir=" + dep_libpath)
+
+        config_args.extend(self.enable_or_disable("python-bindings", variant="python"))
 
         config_args.extend(
             self.enable_or_disable(

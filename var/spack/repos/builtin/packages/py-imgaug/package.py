@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,5 +27,4 @@ class PyImgaug(PythonPackage):
     depends_on("py-six", type=("build", "run"))
     depends_on("py-scikit-image@0.14.2:", type=("build", "run"))
     depends_on("pil", type=("build", "run"))
-    depends_on("opencv+python2", when="^python@2.0:2", type=("build", "run"))
-    depends_on("opencv+python3", when="^python@3:", type=("build", "run"))
+    depends_on("opencv+python3", type=("build", "run"))

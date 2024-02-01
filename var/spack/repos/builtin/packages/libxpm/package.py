@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,9 +26,7 @@ class Libxpm(AutotoolsPackage, XorgPackage):
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")
 
-    def setup_build_environment(self, env):
-        # If libxpm is installed as an external package, gettext won't
-        # be available in the spec. See
-        # https://github.com/spack/spack/issues/9149 for details.
-        if "gettext" in self.spec:
-            env.append_flags("LDFLAGS", "-L{0} -lintl".format(self.spec["gettext"].prefix.lib))
+    def flag_handler(self, name, flags):
+        if name == "ldflags" and "intl" in self.spec["gettext"].libs.names:
+            flags.append("-lintl")
+        return env_flags(name, flags)

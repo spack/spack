@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Bueno(PythonPackage):
     url = "https://github.com/lanl/bueno/archive/refs/tags/v0.0.1.tar.gz"
     git = "https://github.com/lanl/bueno.git"
 
-    maintainers = ["rbberger"]
+    maintainers("rbberger")
 
     version("master", branch="master")
 

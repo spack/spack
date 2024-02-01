@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,7 +32,8 @@ class Libkml(CMakePackage):
     depends_on("expat@2.1.0:")
     depends_on("minizip@1.2.8:")
     depends_on("uriparser")
-    depends_on("zlib@1.2.8:")
+    depends_on("zlib-api")
+    conflicts("^zlib@:1.2.7")
     depends_on("googletest@1.7.0:", type="link")
     depends_on("swig", when="+java", type="build")
     depends_on("swig", when="+python", type="build")

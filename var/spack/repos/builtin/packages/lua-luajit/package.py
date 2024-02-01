@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,9 +33,7 @@ class LuaLuajit(LuaImplPackage):
         description="add symlinks to make lua-luajit a drop-in lua replacement",
     )
 
-    provides("lua-lang@5.1", when="+lualinks")
-    conflicts("lua", when="+lualinks")
-    provides("luajit")
+    provides("luajit", "lua-lang@5.1", when="+lualinks")
     lua_version_override = "5.1"
     conflicts("platform=darwin", msg="luajit not supported on MacOS, see lua-luajit-openresty")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,9 +14,10 @@ class Redset(CMakePackage):
     git = "https://github.com/ecp-veloc/redset.git"
     tags = ["ecp"]
 
-    maintainers = ["CamStan", "gonsie"]
+    maintainers("CamStan", "gonsie")
 
     version("main", branch="main")
+    version("0.3.0", sha256="007ca5e7e5f4400e22ad7bca82e366cd51c73f28067c955cc16d7d0ff0c06a1b")
     version("0.2.0", sha256="0438b0ba56dafcd5694a8fceeb5a932901307353e056ab29817d30b8387f787f")
     version("0.1.0", sha256="baa75de0d0d6de64ade50cff3d38ee89fd136ce69869182bdaefccf5be5d286d")
     version("0.0.5", sha256="4db4ae59ab9d333a6d1d80678dedf917d23ad461c88b6d39466fc4bf6467d1ee")
@@ -26,7 +27,12 @@ class Redset(CMakePackage):
     depends_on("mpi")
     depends_on("kvtree+mpi")
     depends_on("rankstr")
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
+
+    depends_on("kvtree@:1.3.0", when="@:0.2.0")
+    depends_on("kvtree@1.4.0:", when="@0.3.0:")
+    depends_on("rankstr@:0.2.0", when="@:0.2.0")
+    depends_on("rankstr@0.3.0:", when="@0.3.0:")
 
     variant("shared", default=True, description="Build with shared libraries")
     depends_on("kvtree+shared", when="@0.1: +shared")

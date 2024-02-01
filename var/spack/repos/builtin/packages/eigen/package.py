@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Eigen(CMakePackage):
 
     homepage = "https://eigen.tuxfamily.org/"
     url = "https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.gz"
-    maintainers = ["HaoZeke"]
+    maintainers("HaoZeke")
 
     version("3.4.0", sha256="8586084f71f9bde545ee7fa6d00288b264a2b7ac3607b974e54d13e7162c1c72")
     version("3.3.9", sha256="7985975b787340124786f092b3a07d594b2e9cd53bbfe5f3d9b1daee7d55f56f")
@@ -43,9 +43,9 @@ class Eigen(CMakePackage):
 
     # there is a bug in 3.3.8 that provokes a compile error in dependent packages, see https://gitlab.com/libeigen/eigen/-/issues/2011
     patch(
-        "https://gitlab.com/libeigen/eigen/-/commit/6d822a1052fc665f06dc51b4729f6a38e0da0546.diff",
+        "https://gitlab.com/libeigen/eigen/-/commit/ef3cc72cb65e2d500459c178c63e349bacfa834f.diff",
         when="@3.3.8",
-        sha256="62590e9b33a8f72b608a72b87147a306e7cb20766ea53c6b8e0a183fa6cb7635",
+        sha256="b8877a84c4338f08ab8a6bb8b274c768e93d36ac05b733b078745198919a74bf",
     )
 
     # there is a bug in 3.3.4 that provokes a compile error with the xl compiler

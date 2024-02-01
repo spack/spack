@@ -11,7 +11,7 @@ class Brayns(CMakePackage):
 
     homepage = "https://github.com/BlueBrain/Brayns"
     git = "https://github.com/BlueBrain/Brayns.git"
-    generator = "Ninja"
+    generator("ninja")
     submodules = False
 
     version("develop", branch="develop")
@@ -30,7 +30,7 @@ class Brayns(CMakePackage):
     depends_on("rkcommon@1.10.0")
     depends_on("ospray@2.10.6")
 
-    depends_on("spdlog@1.9.2")
+    depends_on("spdlog@1.9.2:")
     depends_on("poco@1.12.4")
     depends_on("glm")
     depends_on("zlib")

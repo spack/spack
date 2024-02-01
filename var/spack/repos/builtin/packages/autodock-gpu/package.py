@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class AutodockGpu(MakefilePackage):
     homepage = "https://ccsb.scripps.edu/autodock"
     git = "https://github.com/ccsb-scripps/AutoDock-GPU.git"
 
-    maintainers = ["RemiLacroix-IDRIS"]
+    maintainers("RemiLacroix-IDRIS")
 
     version("develop", branch="develop")
 

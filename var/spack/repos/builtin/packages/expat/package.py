@@ -1,34 +1,42 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
 
+from spack.build_systems import autotools, cmake
 from spack.package import *
 
 
-class Expat(AutotoolsPackage):
+class Expat(AutotoolsPackage, CMakePackage):
     """Expat is an XML parser library written in C."""
 
     homepage = "https://libexpat.github.io/"
     url = "https://github.com/libexpat/libexpat/releases/download/R_2_2_9/expat-2.2.9.tar.bz2"
 
-    version("2.4.8", sha256="a247a7f6bbb21cf2ca81ea4cbb916bfb9717ca523631675f99b3d4a5678dcd16")
-    version("2.4.7", sha256="e149bdd8b90254c62b3d195da53a09bd531a4d63a963b0d8a5268d48dd2f6a65")
-    # deprecate release 2.4.6 because of a (severe) regression
+    version("2.5.0", sha256="6f0e6e01f7b30025fa05c85fdad1e5d0ec7fd35d9f61b22f34998de11969ff67")
+    # deprecate all releases before 2.5.0 because of security issues
+    version(
+        "2.4.8",
+        sha256="a247a7f6bbb21cf2ca81ea4cbb916bfb9717ca523631675f99b3d4a5678dcd16",
+        deprecated=True,
+    )
+    version(
+        "2.4.7",
+        sha256="e149bdd8b90254c62b3d195da53a09bd531a4d63a963b0d8a5268d48dd2f6a65",
+        deprecated=True,
+    )
     version(
         "2.4.6",
         sha256="ce317706b07cae150f90cddd4253f5b4fba929607488af5ac47bf2bc08e31f09",
         deprecated=True,
     )
-    # deprecate release 2.4.5 because of a (severe) regression
     version(
         "2.4.5",
         sha256="fbb430f964c7a2db2626452b6769e6a8d5d23593a453ccbc21701b74deabedff",
         deprecated=True,
     )
-    # deprecate all releases before 2.4.5 because of security issues
     version(
         "2.4.4",
         sha256="14c58c2a0b5b8b31836514dfab41bd191836db7aa7b84ae5c47bc0327a20d64a",
@@ -85,6 +93,8 @@ class Expat(AutotoolsPackage):
         deprecated=True,
     )
 
+    build_system("autotools", "cmake", default="autotools")
+
     # Version 2.2.2 introduced a requirement for a high quality
     # entropy source.  "Older" linux systems (aka CentOS 7) do not
     # support get_random so we'll provide a high quality source via
@@ -95,8 +105,15 @@ class Expat(AutotoolsPackage):
     # `~libbsd`.
     variant(
         "libbsd",
-        default=sys.platform != "darwin",
+        default=sys.platform != "darwin" and sys.platform != "win32",
         description="Use libbsd (for high quality randomness)",
+    )
+
+    variant(
+        "shared",
+        default=True,
+        description="Build expat as shared if true, static if false",
+        when="build_system=cmake",
     )
 
     depends_on("libbsd", when="@2.2.1:+libbsd")
@@ -105,12 +122,24 @@ class Expat(AutotoolsPackage):
         url = "https://github.com/libexpat/libexpat/releases/download/R_{0}/expat-{1}.tar.bz2"
         return url.format(version.underscored, version.dotted)
 
+
+class AutotoolsBuilder(autotools.AutotoolsBuilder):
     def configure_args(self):
         spec = self.spec
-        args = [
-            "--without-docbook",
-            "--enable-static",
-        ]
+        args = ["--without-docbook", "--enable-static"]
         if "+libbsd" in spec and "@2.2.1:" in spec:
             args.append("--with-libbsd")
+        return args
+
+
+class CMakeBuilder(cmake.CMakeBuilder):
+    def cmake_args(self):
+        args = [
+            self.define("EXPAT_BUILD_DOCS", False),
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+        ]
+
+        if "+libbsd" in self.spec and "@2.2.1:" in self.spec:
+            args.append(self.define_from_variant("EXPAT_WITH_LIBBSD", "libbsd"))
+
         return args
