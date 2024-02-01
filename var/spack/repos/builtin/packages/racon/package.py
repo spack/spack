@@ -32,14 +32,46 @@ class Racon(CMakePackage):
     version("1.4.9", sha256="ae0bef208271166dd6325440131e408386408c12a9497d8d743504908ecb45e8")
     version("1.4.7", sha256="75e39395ced636dd0f5ef1abe431d8f9f6404eb0a806c530cff8e4fa4f57fab7")
     version("1.4.6", sha256="6514e89e4e6eea1d14fc1b760c4ccd02a833443284259d52628eeea0eb5f70db")
-    version("1.4.3", sha256="dfce0bae8234c414ef72b690247701b4299e39a2593bcda548a7a864f51de7f2", deprecated=True)
-    version("1.4.2", sha256="b36d8b767e0fc9acdd3e9d34c99a8bbc02a3aae7a953c57923d935ebdf332700", deprecated=True)
-    version("1.4.0", sha256="3e1e97388f428326342dead3f8500e72b1986f292bdfd4d1be4a0d2a21f4cc61", deprecated=True)
-    version("1.3.3", sha256="174afde420ed2e187e57c1a6e9fc6a414aa26723b4ae83c3904640fc84941e66", deprecated=True)
-    version("1.3.2", sha256="7c99380a0f1091f5ee138b559e318d7e9463d3145eac026bf236751c2c4b92c7", deprecated=True)
-    version("1.3.1", sha256="7ce3b1ce6abdb6c6a63d50755b1fc55d5a4d2ab8f86a1df81890d4a7842d9b75", deprecated=True)
-    version("1.3.0", sha256="f2331fb88eae5c54227dc16651607af6f045ae1ccccc1d117011762927d4606a", deprecated=True)
-    version("1.2.1", sha256="6e4b752b7cb6ab13b5e8cb9db58188cf1a3a61c4dcc565c8849bf4868b891bf8", deprecated=True)
+    version(
+        "1.4.3",
+        sha256="dfce0bae8234c414ef72b690247701b4299e39a2593bcda548a7a864f51de7f2",
+        deprecated=True,
+    )
+    version(
+        "1.4.2",
+        sha256="b36d8b767e0fc9acdd3e9d34c99a8bbc02a3aae7a953c57923d935ebdf332700",
+        deprecated=True,
+    )
+    version(
+        "1.4.0",
+        sha256="3e1e97388f428326342dead3f8500e72b1986f292bdfd4d1be4a0d2a21f4cc61",
+        deprecated=True,
+    )
+    version(
+        "1.3.3",
+        sha256="174afde420ed2e187e57c1a6e9fc6a414aa26723b4ae83c3904640fc84941e66",
+        deprecated=True,
+    )
+    version(
+        "1.3.2",
+        sha256="7c99380a0f1091f5ee138b559e318d7e9463d3145eac026bf236751c2c4b92c7",
+        deprecated=True,
+    )
+    version(
+        "1.3.1",
+        sha256="7ce3b1ce6abdb6c6a63d50755b1fc55d5a4d2ab8f86a1df81890d4a7842d9b75",
+        deprecated=True,
+    )
+    version(
+        "1.3.0",
+        sha256="f2331fb88eae5c54227dc16651607af6f045ae1ccccc1d117011762927d4606a",
+        deprecated=True,
+    )
+    version(
+        "1.2.1",
+        sha256="6e4b752b7cb6ab13b5e8cb9db58188cf1a3a61c4dcc565c8849bf4868b891bf8",
+        deprecated=True,
+    )
 
     depends_on("cmake@3.2:", type="build")
     depends_on("python", type="build")
