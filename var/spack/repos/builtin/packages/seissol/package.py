@@ -153,6 +153,9 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
     variant("memkind", default=True, description="Use memkind library for hbw memory support")
 
     depends_on("mpi", when="+mpi")
+    depends_on("mpi +cuda", when="+mpi +cuda")
+    depends_on("mpi +rocm", when="+mpi +rocm")
+    depends_on("mpi +intel_gpu", when="+mpi +intel_gpu")
     # with cuda 12 and llvm 14:15, we have the issue: "error: no template named 'texture"
     # https://github.com/llvm/llvm-project/issues/61340
     conflicts("cuda@12", when="+cuda ^llvm@14:15")
@@ -161,8 +164,7 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
     # cuda_hardware_manager: Could not obtain number of devices (error code = CUDA:35)
     # [hipSYCL Error] from (...)/cuda_hardware_manager.cpp:74 @ get_device():
     # cuda_hardware_manager: Attempt to access invalid device detected.
-    # Therefore the cuda version is set to 11 now, but this constrain could be released
-    # in the future
+    conflicts("cuda@12", when="+cuda cuda_arch=86")
     depends_on("cuda@11:", when="+cuda")
     depends_on("hip", when="+rocm")
 
