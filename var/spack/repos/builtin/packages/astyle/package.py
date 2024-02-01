@@ -41,11 +41,10 @@ class Astyle(CMakePackage, MakefilePackage):
 
     def url_for_version(self, version):
         root = self.url.rsplit("/", 2)[0]
-        if version >= Version("3.2.0"):
-            url = "{0}/astyle%20{1}/astyle-{2}.tar.bz2"
-        else:
-            url = "{0}/astyle%20{1}/astyle_{2}_linux.tar.gz"
-        return url.format(root, version.up_to(2), version)
+        url = f"{root}/astyle%20{version.up_to(2)}/astyle-{version}.tar.bz2"
+        if version < Version("3.2.0"):
+            url = f"{root}/astyle%20{version.up_to(2)}/astyle_{version}_linux.tar.gz"
+        return url
 
 
 class CMakeBuilder(CMakeBuilder):
