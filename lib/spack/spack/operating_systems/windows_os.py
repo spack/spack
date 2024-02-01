@@ -85,6 +85,7 @@ class WindowsOs(OperatingSystem):
                     os.path.join(str(os.getenv("ONEAPI_ROOT")), "compiler", "*", "windows", "bin")
                 )
             )
+
             def try_query_registry(retry=False):
                 try:
                     # Second strategy: Find MSVC via the registry
@@ -119,6 +120,7 @@ class WindowsOs(OperatingSystem):
                             'Windows registry query on "SOFTWARE\\WOW6432Node\\Microsoft"'
                             f"under HKEY_LOCAL_MACHINE: {str(e)}"
                         )
+
             vs_entries = try_query_registry()
             if not vs_entries:
                 vs_entries = try_query_registry(retry=True)
