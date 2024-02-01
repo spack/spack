@@ -1,5 +1,6 @@
 import enum
 
+
 class TestStatus(enum.Enum):
     """Names of different stand-alone test states."""
 

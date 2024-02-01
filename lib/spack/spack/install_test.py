@@ -25,8 +25,8 @@ import spack.paths
 import spack.util.spack_json as sjson
 from spack.installer import InstallError
 from spack.spec import Spec
-from spack.util.prefix import Prefix
 from spack.test_status import TestStatus
+from spack.util.prefix import Prefix
 
 #: Stand-alone test failure info type
 TestFailureType = Tuple[BaseException, str]

@@ -110,9 +110,7 @@ def setup_parser(subparser):
     add_parser.add_argument(
         "--autopush",
         action="store_true",
-        help=(
-            "set mirror to push automatically after installation"
-        ),
+        help=("set mirror to push automatically after installation"),
     )
     add_parser_signed = add_parser.add_mutually_exclusive_group(required=False)
     add_parser_signed.add_argument(

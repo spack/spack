@@ -39,7 +39,6 @@ import spack.util.crypto
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack import traverse
-from spack.util.cpus import determine_number_of_jobs
 from spack.cmd.common import arguments
 from spack.oci.image import (
     Digest,
@@ -57,6 +56,7 @@ from spack.oci.oci import (
     upload_manifest_with_retry,
 )
 from spack.spec import Spec, save_dependency_specfiles
+from spack.util.cpus import determine_number_of_jobs
 
 description = "create, download and install binary packages"
 section = "packaging"

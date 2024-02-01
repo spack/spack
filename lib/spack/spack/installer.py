@@ -49,7 +49,6 @@ from llnl.util.tty.log import log_output
 
 import spack.binary_distribution as binary_distribution
 import spack.build_environment
-from spack.cmd import buildcache as bc
 import spack.compilers
 import spack.config
 import spack.database
@@ -65,6 +64,7 @@ import spack.store
 import spack.util.executable
 import spack.util.path
 import spack.util.timer as timer
+from spack.cmd import buildcache as bc
 from spack.util.environment import EnvironmentModifications, dump_environment
 from spack.util.executable import which
 
