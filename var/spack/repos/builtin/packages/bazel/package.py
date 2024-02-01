@@ -175,10 +175,13 @@ class Bazel(Package):
 
         resource_stages = self.stage[1:]
         for _resource in resource_stages:
-            resource_name = _resource.resource.name
-            if self.spec.satisfies(self.resource_dictionary[resource_name]["when"]):
-                archive_path = _resource.source_path
-                args += " --distdir={0}".format(archive_path)
+            try:
+                resource_name = _resource.resource.name
+                if self.spec.satisfies(self.resource_dictionary[resource_name]["when"]):
+                    archive_path = _resource.source_path
+                    args += " --distdir={0}".format(archive_path)
+            except AttributeError:
+                continue
 
         env.set("EXTRA_BAZEL_ARGS", args)
 
