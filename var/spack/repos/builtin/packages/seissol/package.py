@@ -153,9 +153,6 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
     variant("memkind", default=True, description="Use memkind library for hbw memory support")
 
     depends_on("mpi", when="+mpi")
-    depends_on("mpi +cuda", when="+mpi +cuda")
-    depends_on("mpi +rocm", when="+mpi +rocm")
-    depends_on("mpi +intel_gpu", when="+mpi +intel_gpu")
     # with cuda 12 and llvm 14:15, we have the issue: "error: no template named 'texture"
     # https://github.com/llvm/llvm-project/issues/61340
     conflicts("cuda@12", when="+cuda ^llvm@14:15")
