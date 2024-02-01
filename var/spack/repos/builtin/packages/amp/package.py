@@ -138,9 +138,13 @@ class Amp(CMakePackage, CudaPackage, ROCmPackage):
 
         tpl_list = ["LAPACK"]
         blas, lapack = spec["blas"].libs, spec["lapack"].libs
+        if "^intel-mkl" in self.spec:
+            options.append(self.define("TPL_LAPACK_INSTALL_DIR", spec["lapack"].prefix.mkl))
+        else:
+            options.append(self.define("TPL_LAPACK_INSTALL_DIR", spec["lapack"].prefix))
+
         options.extend(
             [
-                self.define("TPL_LAPACK_INSTALL_DIR", spec["lapack"].prefix.mkl),
                 self.define("TPL_BLAS_LIBRARY_NAMES", ";".join(blas.names)),
                 self.define("TPL_BLAS_LIBRARY_DIRS", ";".join(blas.directories)),
                 self.define("TPL_LAPACK_LIBRARY_NAMES", ";".join(lapack.names)),
