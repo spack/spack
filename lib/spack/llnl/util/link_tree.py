@@ -163,7 +163,12 @@ class SourceMergeVisitor(BaseDirectoryVisitor):
             src_a = os.path.join(src_a_root, src_a_relpath)
             src_b = os.path.join(root, rel_path)
 
-            if os.path.samefile(src_a, src_b):
+            try:
+                samefile = os.path.samefile(src_a, src_b)
+            except OSError:
+                samefile = False
+
+            if samefile:
                 # Delete and re-insert to retain correct self.files ordering.
                 del self.files[proj_rel_path]
                 self.files[proj_rel_path] = (root, rel_path)
