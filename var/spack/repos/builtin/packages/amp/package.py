@@ -78,7 +78,7 @@ class Amp(CMakePackage, CudaPackage, ROCmPackage):
         git="https://bitbucket.org/AdvancedMultiPhysics/tpl-builder.git",
         tag="1.0.0",
         commit="b68100657186dcfd236e955eb6c2079a88aa4854",
-        destination="downloads",
+        destination=".",
         when="@2.0.0:",
     )
 
@@ -93,7 +93,7 @@ class Amp(CMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
 
         options = [
-            self.define("TPL_URL", join_path(self.stage.source_path, "downloads", "tpl-builder")),
+            self.define("TPL_SOURCE_DIR", join_path(self.stage.source_path, "tpl-builder")),
             self.define("AMP_ENABLE_TESTS", False),
             self.define("AMP_ENABLE_EXAMPLES", "OFF"),
             self.define("CXX_STD", "17"),
@@ -106,12 +106,16 @@ class Amp(CMakePackage, CudaPackage, ROCmPackage):
             cuda_arch = self.spec.variants["cuda_arch"].value
             if cuda_arch[0] != "none":
                 options.extend(
-                  [
-                    self.define("USE_CUDA", True),
-                    self.define("CMAKE_CUDA_COMPILER", join_path(spec["cuda"].prefix.bin, "nvcc")),
-                    self.define("CMAKE_CUDA_ARCHITECTURES", cuda_arch),
-                    self.define("CMAKE_CUDA_FLAGS", "-extended-lambda --expt-relaxed-constexpr")
-                  ]
+                    [
+                        self.define("USE_CUDA", True),
+                        self.define(
+                            "CMAKE_CUDA_COMPILER", join_path(spec["cuda"].prefix.bin, "nvcc")
+                        ),
+                        self.define("CMAKE_CUDA_ARCHITECTURES", cuda_arch),
+                        self.define(
+                            "CMAKE_CUDA_FLAGS", "-extended-lambda --expt-relaxed-constexpr"
+                        ),
+                    ]
                 )
 
         if "+mpi" in spec:
