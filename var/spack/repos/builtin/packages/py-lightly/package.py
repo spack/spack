@@ -18,6 +18,7 @@ class PyLightly(PythonPackage):
     license("MIT")
 
     version("1.4.26", sha256="7bbcf0a358f23659eb4089043c559c4584ef339266b1c0a9a2598c3100f2f3b8")
+    version("1.4.25", sha256="c16449ee5788a7ac98dd78c1fa32702a426c718519d79522d726469d6ca119a0")
     version("1.4.18", sha256="41794f6815db178b031236793b379e5573e074fdf730506872b73766396a6bdf")
     version("1.4.17", sha256="1533ddf28c8a08b3eafd404964d03f9a62fe76405fcf8dc7206ca4093725285e")
     version("1.4.16", sha256="9bd2af53e144e4f9823409cd33b39651f579ed671ff242a1445640c9df504d92")
@@ -65,3 +66,7 @@ class PyLightly(PythonPackage):
 
     # https://github.com/lightly-ai/lightly/issues/1153
     depends_on("py-torch+distributed", when="@:1.4.4", type=("build", "run"))
+
+    # https://github.com/microsoft/torchgeo/issues/1824
+    # FIXME: this conflict doesn't actually work because lightly does not have a dep on timm
+    conflicts("^py-timm@:0.9.8", when="@1.4.26")
