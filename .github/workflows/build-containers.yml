@@ -118,7 +118,5 @@ jobs:
           context: dockerfiles/${{ matrix.dockerfile[0] }}
           platforms: ${{ matrix.dockerfile[1] }}
           push: ${{ github.event_name != 'pull_request' }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
           tags: ${{ steps.docker_meta.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}
