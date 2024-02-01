@@ -56,8 +56,7 @@ class PyTorchgeo(PythonPackage):
     depends_on("py-kornia@0.6.4:0.6.9", when="@0.3", type=("build", "run"))
     depends_on("py-kornia@0.5.11:0.6.9", when="@0.2", type=("build", "run"))
     depends_on("py-kornia@0.5.4:0.6.9", when="@0.1", type=("build", "run"))
-    # https://github.com/microsoft/torchgeo/issues/1824
-    depends_on("py-lightly@1.4.4:1.4.25", when="@0.5:", type=("build", "run"))
+    depends_on("py-lightly@1.4.4:", when="@0.5:", type=("build", "run"))
     depends_on("py-lightning@2:", when="@0.5:", type=("build", "run"))
     depends_on("py-lightning@1.8:", when="@0.4.1:", type=("build", "run"))
     depends_on("py-matplotlib@3.3.3:", when="@0.5:", type=("build", "run"))
@@ -167,3 +166,6 @@ class PyTorchgeo(PythonPackage):
     depends_on("py-pandas@0.19.1:2.0", when="@0.2+datasets", type="run")
     depends_on("py-omegaconf@2.1:", when="@0.4.1+tests", type="run")
     depends_on("py-tensorboard@2.9.1:", when="@0.4.1+tests", type="run")
+
+    # https://github.com/microsoft/torchgeo/issues/1824
+    conflicts("^py-lightly@1.4.26")
