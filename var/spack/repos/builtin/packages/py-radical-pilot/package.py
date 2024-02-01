@@ -102,7 +102,7 @@ class PyRadicalPilot(PythonPackage):
     depends_on("py-radical-gtod", type=("build", "run"))
     depends_on("py-radical-saga", type=("build", "run"))
 
-    depends_on("py-radical-utils@1.46:", type=("build", "run"), when="@1.46:")
+    depends_on("py-radical-utils@1.43:", type=("build", "run"), when="@1.46:")
 
     depends_on("py-radical-utils@1.39", type=("build", "run"), when="@1.39")
 
