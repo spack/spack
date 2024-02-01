@@ -68,7 +68,7 @@ class RegistryKey:
             # debug-able and have sufficiently verbose reporting and obvious cause
             # [WinError 2]: the system cannot find the file specified - lookup item does
             # not exist
-            # [WinError 5]: Access is denied - user does not have access to key
+            # [WinError 5]: Access is denied - user not in key's ACL
             if hasattr(err, "winerror") and err.winerror in (5, 2):
                 raise err
             # Other OS errors are more difficult to diagnose, so we wrap them in some extra
