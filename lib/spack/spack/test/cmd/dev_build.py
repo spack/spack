@@ -215,6 +215,44 @@ spack:
         assert f.read() == spec.package.replacement_string
 
 
+def test_dev_build_env_with_vars(tmpdir, install_mockery, mutable_mock_env_path, monkeypatch):
+    """Test Spack does dev builds for packages in develop section of env (path with variables)."""
+    # setup dev-build-test-install package for dev build
+    build_dir = tmpdir.mkdir("build")
+    spec = spack.spec.Spec(f"dev-build-test-install@0.0.0 dev_path={build_dir}")
+    spec.concretize()
+
+    # store the build path in an environment variable that will be used in the environment
+    monkeypatch.setenv("CUSTOM_BUILD_PATH", build_dir)
+
+    with build_dir.as_cwd(), open(spec.package.filename, "w") as f:
+        f.write(spec.package.original_string)
+
+    # setup environment
+    envdir = tmpdir.mkdir("env")
+    with envdir.as_cwd():
+        with open("spack.yaml", "w") as f:
+            f.write(
+                """\
+spack:
+  specs:
+  - dev-build-test-install@0.0.0
+
+  develop:
+    dev-build-test-install:
+      spec: dev-build-test-install@0.0.0
+      path: $CUSTOM_BUILD_PATH
+"""
+            )
+        env("create", "test", "./spack.yaml")
+        with ev.read("test"):
+            install()
+
+    assert spec.package.filename in os.listdir(spec.prefix)
+    with open(os.path.join(spec.prefix, spec.package.filename), "r") as f:
+        assert f.read() == spec.package.replacement_string
+
+
 def test_dev_build_env_version_mismatch(tmpdir, install_mockery, mutable_mock_env_path):
     """Test Spack constraints concretization by develop specs."""
     # setup dev-build-test-install package for dev build

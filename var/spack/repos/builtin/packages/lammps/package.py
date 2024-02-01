@@ -860,9 +860,6 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
         if "+rocm" in spec:
             args.append(self.define("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
 
-        if "+python" in spec:
-            args.append(self.define("Python_EXECUTABLE", spec["python"].command.path))
-
         return args
 
     def setup_build_environment(self, env):

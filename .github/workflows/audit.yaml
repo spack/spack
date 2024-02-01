@@ -43,7 +43,7 @@ jobs:
           . share/spack/setup-env.sh
           $(which spack) audit packages
           $(which spack) audit externals
-    - uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d # @v2.1.0
+    - uses: codecov/codecov-action@ab904c41d6ece82784817410c45d8b8c02684457 # @v2.1.0
       if: ${{ inputs.with_coverage == 'true' }}
       with:
         flags: unittests,audits

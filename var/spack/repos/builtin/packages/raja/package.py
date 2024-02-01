@@ -133,6 +133,14 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         when="@:0.13.0 ^blt@0.4:",
     )
 
+    # Backward compatibility is stopped from ROCm 6.0
+    # Future relase will have the change from PR https://github.com/LLNL/RAJA/pull/1568
+    patch(
+        "https://github.com/LLNL/RAJA/commit/406eb8dee05a41eb32c421c375688a4863b60642.patch?full_index=1",
+        sha256="d9ce5ef038555cbccb330a9016b7be77e56ae0660583cba955dab9d0297a4b07",
+        when="^hip@6.0.0",
+    )
+
     variant("openmp", default=True, description="Build OpenMP backend")
     variant("shared", default=True, description="Build shared libs")
     variant("desul", default=False, description="Build desul atomics backend")
@@ -158,6 +166,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     )
 
     depends_on("blt", type="build")
+    depends_on("blt@0.6.0:", type="build", when="@develop")
     depends_on("blt@0.5.3:", type="build", when="@2023.06.0:")
     depends_on("blt@0.5.2:", type="build", when="@2022.10.0:")
     depends_on("blt@0.5.0:", type="build", when="@0.14.1:")

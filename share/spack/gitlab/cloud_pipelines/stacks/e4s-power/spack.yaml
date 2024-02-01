@@ -16,7 +16,7 @@ spack:
     binutils:
       variants: +ld +gold +headers +libiberty ~nls
     elfutils:
-      variants: +bzip2 ~nls +xz
+      variants: ~nls
     hdf5:
       variants: +fortran +hl +shared
     libfabric:
@@ -202,6 +202,7 @@ spack:
   - exago +mpi +python +raja +hiop ~rocm +cuda cuda_arch=70 ~ipopt ^hiop@1.0.0 ~sparse +mpi +raja ~rocm +cuda cuda_arch=70 #^raja@0.14.0
   - flecsi +cuda cuda_arch=70
   - ginkgo +cuda cuda_arch=70
+  - gromacs +cuda cuda_arch=70
   - heffte +cuda cuda_arch=70
   - hpx +cuda cuda_arch=70
   - hypre +cuda cuda_arch=70

@@ -8,15 +8,16 @@ spack:
   packages:
     all:
       require:
-      - any_of: ["%oneapi", "@:"]  # oneapi as a strong preference; not all packages support it
       - "target=x86_64_v3"
+      prefer:
+      - "%oneapi"
       providers:
         blas: [openblas]
         mpi: [mpich]
         tbb: [intel-tbb]
       variants: +mpi
     elfutils:
-      variants: +bzip2 ~nls +xz
+      variants: ~nls
     gcc-runtime:
       require: "%gcc"
     hdf5:
@@ -97,6 +98,7 @@ spack:
   - gmp
   - gotcha
   - gptune ~mpispawn
+  - gromacs
   - h5bench
   - hdf5-vol-async
   - hdf5-vol-cache
@@ -220,7 +222,7 @@ spack:
   ci:
     pipeline-gen:
     - build-job:
-        image: ecpe4s/ubuntu22.04-runner-amd64-oneapi-2024.0.0:2024.01.16b
+        image: ghcr.io/spack/ubuntu22.04-runner-amd64-oneapi-2024.0.0:2024.01.16b
 
   cdash:
     build-group: E4S OneAPI
