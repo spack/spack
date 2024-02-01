@@ -19,6 +19,7 @@ class PyTorchtext(PythonPackage):
     license("BSD-3-Clause")
 
     version("main", branch="main")
+    version("0.17.0", tag="v0.17.0", commit="400da5c61bab4abaaeaeca91744ca031ad9b2edf")
     version("0.16.2", tag="v0.16.2", commit="299b90e908c1b492139a4cf9da3912660e79a06b")
     version("0.16.1", tag="v0.16.1", commit="66671007c84e07386da3c04e5ca403b8a417c8e5")
     version("0.16.0", tag="v0.16.0", commit="4e255c95c76b1ccde4f6650391c0bc30650d6dbe")
@@ -38,7 +39,7 @@ class PyTorchtext(PythonPackage):
     version("0.6.0", tag="0.6.0", commit="3a54c7f52584f201c17ca7489b52b812152612dc")
     version("0.5.0", tag="0.5.0", commit="0169cde2f1d446ae886ef0be07e9a673585ed256")
 
-    # https://github.com/pytorch/text#installation
+    # Based on PyPI wheel availability
     depends_on("python@3.8:3.11", when="@0.15:", type=("build", "link", "run"))
     depends_on("python@:3.10", when="@0.13:0.14", type=("build", "link", "run"))
     depends_on("python@:3.9", when="@0.8.1:0.12", type=("build", "link", "run"))
@@ -62,6 +63,7 @@ class PyTorchtext(PythonPackage):
 
     # https://github.com/pytorch/text#installation
     depends_on("py-torch@main", when="@main", type=("build", "link", "run"))
+    depends_on("py-torch@2.2.0", when="@0.17.0", type=("build", "link", "run"))
     depends_on("py-torch@2.1.2", when="@0.16.2", type=("build", "link", "run"))
     depends_on("py-torch@2.1.1", when="@0.16.1", type=("build", "link", "run"))
     depends_on("py-torch@2.1.0", when="@0.16.0", type=("build", "link", "run"))

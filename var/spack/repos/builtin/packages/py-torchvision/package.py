@@ -19,6 +19,7 @@ class PyTorchvision(PythonPackage):
     license("BSD-3-Clause")
 
     version("main", branch="main")
+    version("0.17.0", sha256="55e395d5c7d9bf7658c82ac633cac2224aa168e1bfe8bb5b2b2a296c792a3500")
     version("0.16.2", sha256="8c1f2951e98d8ada6e5a468f179af4be9f56d2ebc3ab057af873da61669806d7")
     version("0.16.1", sha256="d31fe52e4540750c8d372b0f38f1bfa81d8261193f2c2c06577332831d203c50")
     version("0.16.0", sha256="79b30b082237e3ead21e74587cedf4a4d832f977cf7dfeccfb65f67988b12ceb")
@@ -53,14 +54,16 @@ class PyTorchvision(PythonPackage):
     variant("ffmpeg", default=False, description=desc.format("FFMPEG"))
     variant("video_codec", default=False, description=desc.format("video_codec"))
 
-    # https://github.com/pytorch/vision#installation
-    depends_on("python@3.8:3.11", when="@0.15:", type=("build", "link", "run"))
+    # Based on PyPI wheel availability
+    depends_on("python@3.8:3.12", when="@0.17:", type=("build", "link", "run"))
+    depends_on("python@3.8:3.11", when="@0.15:0.16", type=("build", "link", "run"))
     depends_on("python@:3.10", when="@0.12:0.14", type=("build", "link", "run"))
     depends_on("python@:3.9", when="@0.8.2:0.11", type=("build", "link", "run"))
     depends_on("python@:3.8", when="@0.5:0.8.1", type=("build", "link", "run"))
 
     # https://github.com/pytorch/vision#installation
     depends_on("py-torch@main", when="@main", type=("build", "link", "run"))
+    depends_on("py-torch@2.2.0", when="@0.17.0", type=("build", "link", "run"))
     depends_on("py-torch@2.1.2", when="@0.16.2", type=("build", "link", "run"))
     depends_on("py-torch@2.1.1", when="@0.16.1", type=("build", "link", "run"))
     depends_on("py-torch@2.1.0", when="@0.16.0", type=("build", "link", "run"))
