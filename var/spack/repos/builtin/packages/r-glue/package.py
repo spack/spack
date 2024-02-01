@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class RGlue(RPackage):
     manual/strings/#triple-quoted-string-literals>."""
 
     cran = "glue"
+
+    license("MIT")
 
     version("1.6.2", sha256="9da518f12be584c90e75fe8e07f711ee3f6fc0d03d817f72c25dc0f66499fdbf")
     version("1.6.1", sha256="318c2f9544f1204216009f512793c44d6bbe178ff2012f56fa5ffb5e1da978db")

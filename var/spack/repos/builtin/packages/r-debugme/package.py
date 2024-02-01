@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class RDebugme(RPackage):
     of packages via environment variables."""
 
     cran = "debugme"
+
+    license("MIT")
 
     version("1.1.0", sha256="4dae0e2450d6689a6eab560e36f8a7c63853abbab64994028220b8fd4b793ab1")
 

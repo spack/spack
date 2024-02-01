@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyDistlib(PythonPackage):
 
     homepage = "https://bitbucket.org/pypa/distlib"
     pypi = "distlib/distlib-0.3.6.tar.gz"
+
+    license("PSF-2.0")
 
     version("0.3.7", sha256="9dafe54b34a028eafd95039d5e5d4851a13734540f1331060d31c9916e7147a8")
     version("0.3.6", sha256="14bad2d9b04d3a36127ac97f30b12a19268f211063d8f8ee4f47108896e11b46")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyStorm(PythonPackage):
 
     homepage = "https://storm.canonical.com/"
     pypi = "storm/storm-0.25.tar.gz"
+
+    license("LGPL-2.1-or-later")
 
     version("0.25", sha256="ec7cc8897638f94f6b75c6a2af74aa9b31f5492d7a2f9482c08a8dd7b46adb14")
     version(

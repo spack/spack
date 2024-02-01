@@ -1,4 +1,4 @@
-.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1129,6 +1129,10 @@ scheme that omits the zero patch version number: ``3.2``, ``3.2.1``,
 A version specifier can also be a list of ranges and specific versions,
 separated by commas.  For example, ``@1.0:1.5,=1.7.1`` matches any version
 in the range ``1.0:1.5`` and the specific version ``1.7.1``.
+
+^^^^^^^^^^^^
+Git versions
+^^^^^^^^^^^^
 
 For packages with a ``git`` attribute, ``git`` references
 may be specified instead of a numerical version i.e. branches, tags

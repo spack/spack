@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Log4cplus(CMakePackage):
 
     homepage = "https://sourceforge.net/projects/log4cplus/"
     url = "https://download.sourceforge.net/project/log4cplus/log4cplus-stable/2.0.1/log4cplus-2.0.1.tar.bz2"
+
+    license("Apache-2.0 AND BSD-2-Clause")
 
     version("2.0.7", sha256="8fadbafee2ba4e558a0f78842613c9fb239c775d83f23340d091084c0e1b12ab")
     version("2.0.1", sha256="43baa7dec3db1ecc97dd9ecf3b50220439d2c7041d15860c36aa1d48dcf480b5")

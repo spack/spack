@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Libcatalyst(CMakePackage):
     homepage = "https://gitlab.kitware.com/paraview/catalyst"
     git = "https://gitlab.kitware.com/paraview/catalyst.git"
     url = "https://gitlab.kitware.com/api/v4/projects/paraview%2Fcatalyst/packages/generic/catalyst/v2.0.0/catalyst-v2.0.0.tar.gz"
+
+    license("BSD-3-Clause")
 
     maintainers("mathstuf", "ayenpure")
     version("master", branch="master")

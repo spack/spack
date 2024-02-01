@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Faust(MakefilePackage):
 
     homepage = "https://faust.grame.fr/"
     url = "https://github.com/grame-cncm/faust/archive/2.27.2.tar.gz"
+
+    license("GPL-2.0-or-later")
 
     version("2.54.9", sha256="14648f020d77874e6f7411d7ff605820015645bbd4b891b24bee3d3a898e48d2")
     version("2.27.2", sha256="3367a868a93b63582bae29ab8783f1df7a10f4084a2bc1d2258ebf3d6a8c31d7")

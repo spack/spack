@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class RDupradar(RPackage):
     maintainers("pabloaledo")
 
     bioc = "dupRadar"
+
+    license("GPL-3.0-only")
 
     version("1.32.0", commit="7e07fc3a3901f8cae0203759fc24dd7df430a07f")
     version("1.30.3", commit="19e3b13a148c47e69686cd1e872182c564fd4dcd")

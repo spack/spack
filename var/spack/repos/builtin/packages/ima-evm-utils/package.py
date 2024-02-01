@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class ImaEvmUtils(AutotoolsPackage):
     url = (
         "https://sourceforge.net/projects/linux-ima/files/ima-evm-utils/ima-evm-utils-1.3.2.tar.gz"
     )
+
+    license("LGPL-2.1-or-later")
 
     version("1.3.2", sha256="c2b206e7f9fbe62a938b7ae59e31906fefae4d5351fe01db739bd8346b75d4a7")
     version("1.3.1", sha256="5304271f31a3601a2af5984942d9bd6c7532597c5a97250c9a4524074fc39925")

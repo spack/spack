@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PerlDatetimeLocale(PerlPackage):
     url = "https://cpan.metacpan.org/authors/id/D/DR/DROLSKY/DateTime-Locale-1.40.tar.gz"
 
     maintainers("EbiArnie")
+
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
 
     version("1.40", sha256="7490b4194b5d23a4e144976dedb3bdbcc6d3364b5d139cc922a86d41fdb87afb")
 

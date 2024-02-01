@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Openresty(AutotoolsPackage):
 
     homepage = "https://github.com/openresty"
     url = "https://github.com/openresty/openresty/releases/download/v1.15.8.2/openresty-1.15.8.2.tar.gz"
+
+    license("BSD-2-Clause")
 
     version("1.15.8.2", sha256="bf92af41d3ad22880047a8b283fc213d59c7c1b83f8dae82e50d14b64d73ac38")
     version("1.15.8.1", sha256="89a1238ca177692d6903c0adbea5bdf2a0b82c383662a73c03ebf5ef9f570842")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -135,16 +135,18 @@ class Mumps(Package):
                 [
                     "IMETIS = -I%s" % self.spec["parmetis"].prefix.include,
                     (
-                        "LMETIS = -L%s -l%s -L%s -l%s"
-                        % (
-                            self.spec["parmetis"].prefix.lib,
-                            "parmetis",
-                            self.spec["metis"].prefix.lib,
-                            "metis",
+                        (
+                            "LMETIS = -L%s -l%s -L%s -l%s"
+                            % (
+                                self.spec["parmetis"].prefix.lib,
+                                "parmetis",
+                                self.spec["metis"].prefix.lib,
+                                "metis",
+                            )
                         )
-                    )
-                    if not shared
-                    else "LMETIS =",
+                        if not shared
+                        else "LMETIS ="
+                    ),
                 ]
             )
 
@@ -153,9 +155,11 @@ class Mumps(Package):
             makefile_conf.extend(
                 [
                     "IMETIS = -I%s" % self.spec["metis"].prefix.include,
-                    ("LMETIS = -L%s -l%s" % (self.spec["metis"].prefix.lib, "metis"))
-                    if not shared
-                    else "LMETIS =",
+                    (
+                        ("LMETIS = -L%s -l%s" % (self.spec["metis"].prefix.lib, "metis"))
+                        if not shared
+                        else "LMETIS ="
+                    ),
                 ]
             )
 

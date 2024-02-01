@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyBigfloat(PythonPackage):
 
     homepage = "https://github.com/mdickinson/bigfloat"
     pypi = "bigfloat/bigfloat-0.4.0.tar.gz"
+
+    license("LGPL-3.0-or-later")
 
     version("0.4.0", sha256="58b96bde872aca5989d13d82eba3acf2aa1b94e22117dd72a16ba5911b0c0cb8")
 

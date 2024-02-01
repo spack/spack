@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Sqlite(AutotoolsPackage, NMakePackage):
 
     homepage = "https://www.sqlite.org"
     tags = ["windows"]
+
+    license("blessing")
 
     version("3.43.2", sha256="6d422b6f62c4de2ca80d61860e3a3fb693554d2f75bb1aaca743ccc4d6f609f0")
     version("3.42.0", sha256="7abcfd161c6e2742ca5c6c0895d1f853c940f203304a0b49da4e1eca5d088ca6")
@@ -107,6 +109,8 @@ class Sqlite(AutotoolsPackage, NMakePackage):
     # Starting version 3.21.0 SQLite doesn't use the built-ins if Intel
     # compiler is used.
     patch("remove_overflow_builtins.patch", when="@3.17.0:3.20%intel")
+
+    patch("quote_compiler_in_makefile.patch", when="platform=windows")
 
     build_system("autotools", "nmake")
 
@@ -207,10 +211,6 @@ class Sqlite(AutotoolsPackage, NMakePackage):
     def libs(self):
         return find_libraries("libsqlite3", root=self.prefix.lib)
 
-    def get_arch(self):
-        host_platform = spack.platforms.host()
-        return str(host_platform.target("default_target"))
-
     def test_example(self):
         """check example table dump"""
 
@@ -260,6 +260,10 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
 
         return args
 
+    def get_arch(self):
+        host_platform = spack.platforms.host()
+        return str(host_platform.target("default_target"))
+
     @run_after("install")
     def build_libsqlitefunctions(self):
         if "+functions" in self.spec:
@@ -281,6 +285,12 @@ class NMakeBuilder(spack.build_systems.nmake.NMakeBuilder):
     def makefile_name(self):
         return "Makefile.msc"
 
-    def nmake_args(self):
-        args = [self.define("TCLDIR", self.spec["tcl"].prefix)]
-        return args
+    def install(self, pkg, spec, prefix):
+        with working_dir(self.build_directory):
+            mkdirp(prefix.include)
+            mkdirp(prefix.lib)
+            mkdirp(prefix.bin)
+            install(f"{self.build_directory}\\*.exe", prefix.bin)
+            install(f"{self.build_directory}\\*.dll", prefix.bin)
+            install(f"{self.build_directory}\\*.lib", prefix.lib)
+            install(f"{self.build_directory}\\*.h", prefix.include)

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Libxstream(Package):
 
     homepage = "https://github.com/hfp/libxstream"
     url = "https://github.com/hfp/libxstream/archive/0.9.0.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("0.9.0", sha256="03365f23b337533b8e5a049a24bc5a91c0f1539dd042ca5312abccc8f713b473")
 

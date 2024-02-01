@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class Flann(CMakePackage):
 
     homepage = "https://github.com/mariusmuja/flann"
     url = "https://github.com/mariusmuja/flann/archive/1.9.1.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("1.9.2", sha256="e26829bb0017f317d9cc45ab83ddcb8b16d75ada1ae07157006c1e7d601c8824")
     version("1.9.1", sha256="b23b5f4e71139faa3bcb39e6bbcc76967fbaf308c4ee9d4f5bfbeceaa76cc5d3")
@@ -120,9 +122,5 @@ class Flann(CMakePackage):
 
         use_mpi = "ON" if "+mpi" in spec else "OFF"
         args.append("-DUSE_MPI:BOOL={0}".format(use_mpi))
-
-        # Configure the proper python executable
-        if "+python" in spec:
-            args.append("-DPYTHON_EXECUTABLE={0}".format(spec["python"].command.path))
 
         return args

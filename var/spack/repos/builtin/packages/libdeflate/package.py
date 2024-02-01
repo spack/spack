@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Libdeflate(MakefilePackage, CMakePackage):
     url = "https://github.com/ebiggers/libdeflate/archive/v1.7.tar.gz"
 
     maintainers("dorton21")
+
+    license("MIT")
 
     version("1.18", sha256="225d982bcaf553221c76726358d2ea139bb34913180b20823c782cede060affd")
     version("1.14", sha256="89e7df898c37c3427b0f39aadcf733731321a278771d20fc553f92da8d4808ac")

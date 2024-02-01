@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -47,6 +47,8 @@ class RSpatstat(RPackage):
     residuals, and added variable plots."""
 
     cran = "spatstat"
+
+    license("GPL-2.0-or-later")
 
     version("3.0-5", sha256="b926ed55dfeb95b09fb441f44d85204277eee00e42ac258c0a08baa1ce263bb1")
     version("2.3-4", sha256="4ea0f8d70b926b92bf4a06521f985a0bb6d573619f5d526957c87860ccb999da")

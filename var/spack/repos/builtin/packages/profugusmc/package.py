@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Profugusmc(CMakePackage, CudaPackage):
     homepage = "https://code.ornl.gov/ProfugusMC/ProfugusMC"
     git = "https://code.ornl.gov/ProfugusMC/ProfugusMC.git"
     url = "https://code.ornl.gov/ProfugusMC/ProfugusMC/-/archive/master/ProfugusMC-master.tar.gz"
+
+    license("BSD-2-Clause")
 
     version("master", branch="master")
 

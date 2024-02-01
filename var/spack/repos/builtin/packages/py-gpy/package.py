@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyGpy(PythonPackage):
     homepage = "https://sheffieldml.github.io/GPy/"
     pypi = "gpy/GPy-1.9.9.tar.gz"
     maintainers("liuyangzhuan")
+
+    license("BSD-3-Clause")
 
     version("1.10.0", sha256="a2b793ef8d0ac71739e7ba1c203bc8a5afa191058b42caa617e0e29aa52aa6fb")
     version("1.9.9", sha256="04faf0c24eacc4dea60727c50a48a07ddf9b5751a3b73c382105e2a31657c7ed")

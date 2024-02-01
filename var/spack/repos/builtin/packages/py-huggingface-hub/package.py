@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyHuggingfaceHub(PythonPackage):
 
     homepage = "https://github.com/huggingface/huggingface_hub"
     pypi = "huggingface_hub/huggingface_hub-0.0.10.tar.gz"
+
+    license("Apache-2.0")
 
     version("0.19.4", sha256="176a4fc355a851c17550e7619488f383189727eab209534d7cef2114dae77b22")
     version("0.14.1", sha256="9ab899af8e10922eac65e290d60ab956882ab0bf643e3d990b1394b6b47b7fbc")

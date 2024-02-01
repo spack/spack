@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Parallelio(CMakePackage):
     git = "https://github.com/NCAR/ParallelIO.git"
 
     maintainers("jedwards4b")
+
+    license("Apache-2.0")
 
     version("2.6.2", sha256="c318894f0230197458917e932ec66301b4407a744df481e9c6a6d9d85f7e5ab1")
     version("2.6.1", sha256="83d3108d2b9db8219aa6b6ee333cfc12b2a588bcfc781587df5f8b24a716a6eb")

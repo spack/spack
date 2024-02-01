@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,6 +10,8 @@ class PyMariadb(PythonPackage):
 
     homepage = "https://github.com/mariadb-corporation/mariadb-connector-python"
     pypi = "mariadb/mariadb-1.1.5.post3.tar.gz"
+
+    license("LGPL-2.1")
 
     version(
         "1.1.5.post3", sha256="f9336dd4cb3207e621933bb5221f33fac0d7184db64dc44c70531430f4ecdcee"

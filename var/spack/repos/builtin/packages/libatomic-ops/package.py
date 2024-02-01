@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class LibatomicOps(AutotoolsPackage):
 
     homepage = "https://www.hboehm.info/gc/"
     url = "https://github.com/ivmai/libatomic_ops/releases/download/v7.8.0/libatomic_ops-7.8.0.tar.gz"
+
+    license("GPL-2.0-only")
 
     version("7.8.0", sha256="15676e7674e11bda5a7e50a73f4d9e7d60452271b8acf6fd39a71fefdf89fa31")
     version("7.6.14", sha256="390f244d424714735b7050d056567615b3b8f29008a663c262fb548f1802d292")

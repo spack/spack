@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Libexif(AutotoolsPackage, SourceforgePackage):
     sourceforge_mirror_path = "libexif/libexif-0.6.21.tar.bz2"
 
     maintainers("TheQueasle")
+
+    license("LGPL-2.0-or-later")
 
     version("0.6.21", sha256="16cdaeb62eb3e6dfab2435f7d7bccd2f37438d21c5218ec4e58efa9157d4d41a")
     depends_on("glib")

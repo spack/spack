@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class RSvglite(RPackage):
     is a fork of the older 'RSvgDevice' package."""
 
     cran = "svglite"
+
+    license("GPL-2.0-or-later")
 
     version("2.1.1", sha256="48700169eec1b05dbee9e2bae000aa84c544617b018cb3ac431a128cfd8dac56")
     version("2.1.0", sha256="ad40f590c7e80ae83001a3826b6e8394ba733446ed51fd55faeda974ab839c9b")

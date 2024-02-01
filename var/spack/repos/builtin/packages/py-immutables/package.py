@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyImmutables(PythonPackage):
 
     homepage = "https://github.com/MagicStack/immutables"
     pypi = "immutables/immutables-0.14.tar.gz"
+
+    license("Apache-2.0")
 
     version("0.18", sha256="5336c7974084cce62f7e29aaff81a3c3f75e0fd0a23a2faeb986ae0ea08d8cf4")
     version("0.16", sha256="d67e86859598eed0d926562da33325dac7767b7b1eff84e232c22abea19f4360")

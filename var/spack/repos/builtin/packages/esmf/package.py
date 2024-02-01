@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -397,6 +397,11 @@ class Esmf(MakefilePackage):
         # Static-only option:
         if "~shared" in spec:
             env.set("ESMF_SHARED_LIB_BUILD", "OFF")
+
+        # https://github.com/JCSDA/spack-stack/issues/956
+        if "+shared" in spec:
+            if sys.platform == "darwin":
+                env.set("ESMF_TRACE_LIB_BUILD", "OFF")
 
     @run_after("install")
     def post_install(self):

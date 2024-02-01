@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,8 @@ class Reframe(Package):
 
     # notify when the package is updated.
     maintainers("victorusu", "vkarak")
+
+    license("BSD-3-Clause")
 
     version("develop", branch="develop")
     version("4.0.4", sha256="a9fb10bf2dc01f721142453297e348084683acfc0b8caa38ad1daa1b5c66456e")

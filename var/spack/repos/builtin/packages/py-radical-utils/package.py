@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class PyRadicalUtils(PythonPackage):
     pypi = "radical.utils/radical.utils-1.20.0.tar.gz"
 
     maintainers("andre-merzky")
+
+    license("MIT")
 
     version("develop", branch="devel")
     version("1.20.0", sha256="9b39dd616d70c387fb3f97d3510a506bac92c159b6482c3aebd3d11eeaeebcc9")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,8 @@ class Faiss(AutotoolsPackage, CMakePackage, CudaPackage):
     build_system(
         conditional("cmake", when="@1.7:"), conditional("autotools", when="@:1.6"), default="cmake"
     )
+
+    license("MIT")
 
     version("1.7.4", sha256="d9a7b31bf7fd6eb32c10b7ea7ff918160eed5be04fe63bb7b4b4b5f2bbde01ad")
     version("1.7.2", sha256="d49b4afd6a7a5b64f260a236ee9b2efb760edb08c33d5ea5610c2f078a5995ec")
@@ -94,9 +96,6 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define_from_variant("BUILD_TESTING", "tests"),
             self.define("FAISS_OPT_LEVEL", "generic"),
         ]
-        if "+python" in spec:
-            pyexe = spec["python"].command.path
-            args.append(self.define("Python_EXECUTABLE", pyexe))
 
         if "+cuda" in spec:
             key = "CMAKE_CUDA_ARCHITECTURES"

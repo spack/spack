@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,8 @@ class Kahip(CMakePackage):
     url = "https://github.com/KaHIP/KaHIP/archive/v3.14.tar.gz"
     git = "https://github.com/KaHIP/KaHIP.git"
     maintainers("ma595")
+
+    license("MIT")
 
     version("develop", branch="master")
     version("3.14", sha256="9da04f3b0ea53b50eae670d6014ff54c0df2cb40f6679b2f6a96840c1217f242")

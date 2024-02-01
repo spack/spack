@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class RTextshaping(RPackage):
     the font tool-set provided by the 'systemfonts' package."""
 
     cran = "textshaping"
+
+    license("MIT")
 
     version("0.3.6", sha256="80e2c087962f55ce2811fbc798b09f5638c06c6b28c10cd3cb3827005b902ada")
 

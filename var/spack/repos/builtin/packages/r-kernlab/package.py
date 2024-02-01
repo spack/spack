@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class RKernlab(RPackage):
     Spectral Clustering, Kernel PCA, Gaussian Processes and a QP solver."""
 
     cran = "kernlab"
+
+    license("GPL-2.0-only")
 
     version("0.9-32", sha256="654ef34e343deb4d2c4c139a44e5397d6e38876088ce1c53c7deb087935d6fdc")
     version("0.9-31", sha256="7359c665c1c5e6780e1ce44b143347c8eec839301c3079d7f19e29159873278a")

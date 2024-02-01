@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,6 +28,8 @@ class Kealib(CMakePackage):
     git = "https://github.com/ubarsc/kealib"
 
     maintainers("gillins", "neilflood", "petebunting")
+
+    license("MIT")
 
     version("develop", git=git)
     version("1.5.3", sha256="32b2e3c90553a03cf1e8d03781c3710500ca919bca674bc370e86f15338ee93e")

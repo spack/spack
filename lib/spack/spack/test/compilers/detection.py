@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -422,7 +422,7 @@ def test_xl_version_detection(version_str, expected_version):
         ("pgi", "19.1"),
         ("pgi", "19.1a"),
         ("intel", "9.0.0"),
-        ("intel", "0.0.0-foobar")
+        ("intel", "0.0.0-foobar"),
         # ('oneapi', '2021.1'),
         # ('oneapi', '2021.1-foobar')
     ],

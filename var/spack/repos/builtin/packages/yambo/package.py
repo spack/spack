@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class Yambo(AutotoolsPackage):
 
     homepage = "http://www.yambo-code.org/index.php"
     url = "https://github.com/yambo-code/yambo/archive/4.2.2.tar.gz"
+
+    license("GPL-2.0-or-later")
 
     version("5.1.1", sha256="c85036ca60507e627c47b6c6aee8241830349e88110e1ce9132ef03ab2c4e9f6")
     version("4.2.2", sha256="86b4ebe679387233266aba49948246c85a32b1e6840d024f162962bd0112448c")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class Coreutils(AutotoolsPackage, GNUMirrorPackage):
     tags = ["core-packages"]
 
     executables = [r"^md5sum$"]
+
+    license("GPL-3.0-or-later")
 
     version("9.3", sha256="adbcfcfe899235b71e8768dcf07cd532520b7f54f9a8064843f8d199a904bbaa")
     version("9.2", sha256="6885ff47b9cdb211de47d368c17853f406daaf98b148aaecdf10de29cc04b0b3")

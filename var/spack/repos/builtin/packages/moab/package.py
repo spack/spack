@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class Moab(AutotoolsPackage):
     url = "https://web.cels.anl.gov/projects/sigma/downloads/moab/moab-5.5.1.tar.gz"
 
     maintainers("vijaysm", "iulian787")
+
+    license("LGPL-3.0-only")
 
     version("develop", branch="develop")
     version("master", branch="master")

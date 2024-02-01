@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class OneapiLevelZero(CMakePackage):
     url = "https://github.com/oneapi-src/level-zero/archive/refs/tags/v1.7.15.tar.gz"
 
     maintainers("rscohn2")
+
+    license("MIT")
 
     version("1.9.9", sha256="3d1784e790bbaae5f160b920c07e7dc2941640d9c631aaa668ccfd57aafc7b56")
     version("1.9.4", sha256="7f91ed993be1e643c752cf95a319a0fc64113d91ec481fbb8a2f478f433d3380")

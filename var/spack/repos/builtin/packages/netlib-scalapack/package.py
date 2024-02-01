@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -110,6 +110,8 @@ class NetlibScalapack(ScalapackBase):
     url = "https://www.netlib.org/scalapack/scalapack-2.0.2.tgz"
     git = "https://github.com/Reference-ScaLAPACK/scalapack"
     tags = ["e4s"]
+
+    license("BSD-3-Clause-Open-MPI")
 
     version("2.2.0", sha256="40b9406c20735a9a3009d863318cb8d3e496fb073d201c5463df810e01ab2a57")
     version("2.1.0", sha256="61d9216cf81d246944720cfce96255878a3f85dec13b9351f1fa0fd6768220a6")

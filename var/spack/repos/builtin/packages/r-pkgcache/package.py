@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class RPkgcache(RPackage):
     of caching."""
 
     cran = "pkgcache"
+
+    license("MIT")
 
     version("2.1.0", sha256="cfc03c2060028097972c32c3f2d922d7a598dfd963e5e5250d85a3dfa2f2e206")
     version("2.0.3", sha256="80deafd60f15dda029536d4ce13c37ef91c49cb6636323daadbf3d64a67da028")

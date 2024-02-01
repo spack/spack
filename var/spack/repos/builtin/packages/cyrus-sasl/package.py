@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class CyrusSasl(AutotoolsPackage):
 
     homepage = "https://github.com/cyrusimap/cyrus-sasl"
     url = "https://github.com/cyrusimap/cyrus-sasl/archive/cyrus-sasl-2.1.27.tar.gz"
+
+    license("custom")
 
     version("2.1.28", sha256="3e38933a30b9ce183a5488b4f6a5937a702549cde0d3287903d80968ad4ec341")
     version("2.1.27", sha256="b564d773803dc4cff42d2bdc04c80f2b105897a724c247817d4e4a99dd6b9976")

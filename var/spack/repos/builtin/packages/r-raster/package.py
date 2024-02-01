@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class RRaster(RPackage):
     on <https://rspatial.org/> to get started."""
 
     cran = "raster"
+
+    license("GPL-3.0-or-later")
 
     version("3.6-20", sha256="7e5be49f4e37a2c14a3b87661b252956643b959146cbdb08e983660c1d59a813")
     version("3.6-3", sha256="9f06e0f7c36258790a97421b3a26d98c9b6a2cb702f941e58ab0b18f21b0c3c6")

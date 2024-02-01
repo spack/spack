@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,6 +35,9 @@ ALL: DepFlag = BUILD | LINK | RUN | TEST
 
 #: Default dependency type if none is specified
 DEFAULT: DepFlag = BUILD | LINK
+
+#: A flag with no dependency types set
+NONE: DepFlag = 0
 
 #: An iterator of all flag components
 ALL_FLAGS: Tuple[DepFlag, DepFlag, DepFlag, DepFlag] = (BUILD, LINK, RUN, TEST)

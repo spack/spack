@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -60,6 +60,8 @@ class GoBootstrap(Package):
     # determine system os and architecture/target
     os = platform.system().lower()
     target = go_targets.get(platform.machine().lower(), platform.machine().lower())
+
+    license("BSD-3-Clause")
 
     # construct releases for current system configuration
     for release in go_releases:

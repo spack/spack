@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,12 +12,14 @@ class Amdsmi(CMakePackage):
     is a C library for Linux that provides a user space interface for
     applications to monitor and control AMD device."""
 
-    homepage = "https://github.com/RadeonOpenCompute/amdsmi"
-    url = "https://github.com/RadeonOpenCompute/amdsmi/archive/refs/tags/rocm-5.6.0.tar.gz"
+    homepage = "https://github.com/ROCm/amdsmi"
+    url = "https://github.com/ROCm/amdsmi/archive/refs/tags/rocm-5.6.0.tar.gz"
 
     tags = ["rocm"]
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["libamd_smi"]
+
+    license("MIT")
 
     version("5.7.0", sha256="144391d537710dafa9ef69571dd76203e56db6142ab61a1375346b5733137e23")
     version("5.6.0", sha256="595c9d6d79d9071290b2f19ab4ef9222c8d2983b4322b3143fcd9d0b1ce0f6d8")

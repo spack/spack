@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,8 @@ class Hydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
     tags = ["ecp", "radiuss"]
 
     maintainers("bvanessen")
+
+    license("GPL-2.0-or-later")
 
     version("develop", branch="hydrogen")
     version("1.5.3", sha256="faefbe738bd364d0e26ce9ad079a11c93a18c6f075719a365fd4fa5f1f7a989a")
@@ -127,6 +129,10 @@ class Hydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("half", when="+half")
 
     depends_on("llvm-openmp", when="%apple-clang +openmp")
+
+    # Fixes https://github.com/spack/spack/issues/42286
+    # https://github.com/LLNL/Elemental/pull/177
+    patch("cmake-intel-mpi-escape-quotes-pr177.patch", when="@1.5.3")
 
     @property
     def libs(self):

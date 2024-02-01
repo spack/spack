@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,8 @@ class Verrou(AutotoolsPackage):
     git = "https://github.com/edf-hpc/verrou.git"
 
     maintainers("HadrienG2")
+
+    license("GPL-2.0-only")
 
     version("develop", branch="master")
     version("2.2.0", sha256="d4ea3d19f0c61329723907b5b145d85776bb702643c1605a31f584484d2c5efc")

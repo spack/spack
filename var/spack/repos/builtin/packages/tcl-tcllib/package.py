@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class TclTcllib(AutotoolsPackage):
     url = "https://sourceforge.net/projects/tcllib/files/tcllib/1.19/tcllib-1.19.tar.gz"
     list_url = "https://sourceforge.net/projects/tcllib/files/tcllib/"
     list_depth = 1
+
+    license("TCL")
 
     version("1.19", sha256="01fe87cf1855b96866cf5394b6a786fd40b314022714b34110aeb6af545f6a9c")
     version("1.18", sha256="72667ecbbd41af740157ee346db77734d1245b41dffc13ac80ca678dd3ccb515")

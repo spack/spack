@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Keepassxc(CMakePackage):
     git = "https://github.com/keepassxreboot/keepassxc.git"
 
     maintainers("cessenat")
+
+    license("GPL-2.0-only OR GPL-3.0-only")
 
     version("master", branch="master")
     version("2.7.1", sha256="6001ba626c35c316dbda6de35736f012a2264f95139fcb4a094b8eb49b15d3e7")

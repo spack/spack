@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Bwa(Package):
 
     homepage = "https://github.com/lh3/bwa"
     url = "https://github.com/lh3/bwa/releases/download/v0.7.15/bwa-0.7.15.tar.bz2"
+
+    license("GPL-3.0-only")
 
     version("0.7.17", sha256="de1b4d4e745c0b7fc3e107b5155a51ac063011d33a5d82696331ecf4bed8d0fd")
     version("0.7.15", sha256="2f56afefa49acc9bf45f12edb58e412565086cc20be098b8bf15ec07de8c0515")

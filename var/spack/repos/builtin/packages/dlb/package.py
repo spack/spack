@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Dlb(AutotoolsPackage):
     git = "https://github.com/bsc-pm/dlb.git"
 
     maintainers("vlopezh")
+
+    license("LGPL-3.0-or-later")
 
     version("main", branch="main")
     version("3.3.1", sha256="1b245acad80b03eb83e815fd59dcfc598cfddd899de4504cf6a9572fe5359f40")

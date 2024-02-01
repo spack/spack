@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Dcm2niix(CMakePackage):
 
     homepage = "https://github.com/rordenlab/dcm2niix"
     url = "https://github.com/rordenlab/dcm2niix/archive/refs/tags/v1.0.20220720.tar.gz"
+
+    license("Zlib")
 
     version(
         "1.0.20220720", sha256="a095545d6d70c5ce2efd90dcd58aebe536f135410c12165a9f231532ddab8991"

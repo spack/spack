@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyMsgpack(PythonPackage):
     homepage = "https://msgpack.org/"
     pypi = "msgpack/msgpack-1.0.0.tar.gz"
     git = "https://github.com/msgpack/msgpack-python"
+
+    license("Apache-2.0")
 
     version("1.0.5", sha256="c075544284eadc5cddc70f4757331d99dcbc16b2bbd4849d15f8aae4cf36d31c")
     version("1.0.4", sha256="f5d869c18f030202eb412f08b28d2afeea553d6613aee89e200d7aca7ef01f5f")

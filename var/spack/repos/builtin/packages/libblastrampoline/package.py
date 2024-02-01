@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Libblastrampoline(MakefilePackage):
     url = "https://github.com/JuliaLinearAlgebra/libblastrampoline/archive/refs/tags/v3.1.0.tar.gz"
 
     maintainers("haampie", "giordano")
+
+    license("MIT")
 
     version("5.8.0", sha256="aeceb01ebebdd1068a1147b636451c46c16d64f9e22694075abda4dddfffe13d")
     version("5.4.0", sha256="e1a2258b0ad31cc41e6e9b8ba36f5c239fd1a267f2657ef3d3f669cc5b811f6a")

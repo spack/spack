@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyPyasn1(PythonPackage):
 
     homepage = "https://github.com/etingof/pyasn1"
     pypi = "pyasn1/pyasn1-0.4.6.tar.gz"
+
+    license("BSD-2-Clause")
 
     version("0.4.8", sha256="aef77c9fb94a3ac588e87841208bdec464471d9871bd5050a287cc9a475cd0ba")
     version("0.4.6", sha256="b773d5c9196ffbc3a1e13bdf909d446cad80a039aa3340bcad72f395b76ebc86")

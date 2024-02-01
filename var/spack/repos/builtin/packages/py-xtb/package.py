@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class PyXtb(PythonPackage):
     git = "https://github.com/grimme-lab/xtb-python.git"
 
     maintainers("awvwgk")
+
+    license("LGPL-3.0-or-later")
 
     version("22.1", sha256="7a59e7b783fc6e8b7328f55211de681e535a83991b07c4bab73494063f5e9018")
 

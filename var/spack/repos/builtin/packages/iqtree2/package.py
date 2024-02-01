@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Iqtree2(CMakePackage):
 
     homepage = "http://www.iqtree.org"
     url = "https://github.com/iqtree/iqtree2/archive/refs/tags/v2.1.2.tar.gz"
+
+    license("GPL-2.0-or-later")
 
     version("2.2.2.7", sha256="407a1a56d352ba9c2152a1d708cd29db872a41c252fbdc7acd8e0de0da8af008")
     version("2.2.2", sha256="2e9ce79427b140bca5f48b31fb098f394a21a7c5116bbbada1e3eabdd6efe982")

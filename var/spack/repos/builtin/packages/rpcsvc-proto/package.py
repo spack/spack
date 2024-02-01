@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class RpcsvcProto(AutotoolsPackage):
 
     homepage = "https://github.com/thkukuk/rpcsvc-proto"
     url = "https://github.com/thkukuk/rpcsvc-proto/releases/download/v1.4.3/rpcsvc-proto-1.4.3.tar.xz"
+
+    license("BSD-3-Clause")
 
     version("1.4.3", sha256="69315e94430f4e79c74d43422f4a36e6259e97e67e2677b2c7d7060436bd99b1")
     version("1.4.2", sha256="678851b9f7ddf4410d2859c12016b65a6dd1a0728d478f18aeb54d165352f17c")

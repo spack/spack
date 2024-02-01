@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -259,7 +259,6 @@ class Sollve(CMakePackage):
             "-DLLVM_ENABLE_RTTI:BOOL=ON",
             "-DLLVM_ENABLE_EH:BOOL=ON",
             "-DCLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp",
-            "-DPYTHON_EXECUTABLE:PATH={0}".format(spec["python"].command.path),
         ]
 
         # TODO: Instead of unconditionally disabling CUDA, add a "cuda" variant

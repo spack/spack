@@ -1,6 +1,5 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
-# Copyright 2023 EMBL-European Bioinformatics Institute
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -14,6 +13,8 @@ class PerlDatetimeFormatStrptime(PerlPackage):
     url = "https://cpan.metacpan.org/authors/id/D/DR/DROLSKY/DateTime-Format-Strptime-1.79.tar.gz"
 
     maintainers("EbiArnie")
+
+    license("Artistic-2.0")
 
     version("1.79", sha256="701e46802c86ed4d88695c1a6dacbbe90b3390beeb794f387e7c792300037579")
 

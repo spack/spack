@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyS3fs(PythonPackage):
 
     homepage = "https://s3fs.readthedocs.io/en/latest/"
     pypi = "s3fs/s3fs-0.5.2.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("2022.11.0", sha256="10c5ac283a4f5b67ffad6d1f25ff7ee026142750c5c5dc868746cd904f617c33")
     version("0.5.2", sha256="87e5210415db17b9de18c77bcfc4a301570cc9030ee112b77dc47ab82426bae1")

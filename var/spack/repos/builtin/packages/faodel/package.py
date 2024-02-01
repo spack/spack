@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Faodel(CMakePackage):
     maintainers("tkordenbrock", "craigulmer")
 
     tags = ["e4s"]
+
+    license("MIT")
 
     version("master", branch="master")
     version("1.2108.1", sha256="66c53daa510b28f906faac7c67d944a034900da2e296159a2879c3c0b0080ffd")

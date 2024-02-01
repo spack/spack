@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class PyAzureIdentity(PythonPackage):
     # 'azure.identity.aio' import doesn't work for some reason, leave out of
     # 'import_modules' list to ensure that tests still pass for other imports.
     import_modules = ["azure.identity", "azure.identity._internal", "azure.identity._credentials"]
+
+    license("MIT")
 
     version("1.12.0", sha256="7f9b1ae7d97ea7af3f38dd09305e19ab81a1e16ab66ea186b6579d85c1ca2347")
     version("1.3.1", sha256="5a59c36b4b05bdaec455c390feda71b6495fc828246593404351b9a41c2e877a")

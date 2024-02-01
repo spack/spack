@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Liblouis(AutotoolsPackage):
 
     homepage = "http://liblouis.org/"
     url = "https://github.com/liblouis/liblouis/releases/download/v3.15.0/liblouis-3.15.0.tar.gz"
+
+    license("GPL-3.0-or-later")
 
     version("3.25.0", sha256="d720aa5fcd51de925a28ae801b8b2ca76ee67e2360b40055c679bce8e565f251")
     version("3.17.0", sha256="78c71476467850935d145010c8fcb26b513df1843505b3eb4c41888541a0113d")

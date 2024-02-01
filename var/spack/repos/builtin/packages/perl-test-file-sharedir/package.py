@@ -1,6 +1,5 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
-# Copyright 2023 EMBL-European Bioinformatics Institute
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -14,6 +13,8 @@ class PerlTestFileSharedir(PerlPackage):
     url = "https://cpan.metacpan.org/authors/id/K/KE/KENTNL/Test-File-ShareDir-1.001002.tar.gz"
 
     maintainers("EbiArnie")
+
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
 
     version("1.001002", sha256="b33647cbb4b2f2fcfbde4f8bb4383d0ac95c2f89c4c5770eb691f1643a337aad")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Cppgsl(CMakePackage):
     homepage = "https://github.com/Microsoft/GSL"
     url = "https://github.com/Microsoft/GSL/archive/v2.0.0.tar.gz"
     git = "https://github.com/Microsoft/GSL.git"
+
+    license("MIT")
 
     version("main", branch="main")
     version("4.0.0", sha256="f0e32cb10654fea91ad56bde89170d78cfbf4363ee0b01d8f097de2ba49f6ce9")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class PyPyproj(PythonPackage):
     git = "https://github.com/pyproj4/pyproj.git"
 
     maintainers("citibeth", "adamjstewart")
+
+    license("MIT")
 
     version("3.6.1", sha256="44aa7c704c2b7d8fb3d483bbf75af6cb2350d30a63b144279a09b75fead501bf")
     version("3.6.0", sha256="a5b111865b3f0f8b77b3983f2fbe4dd6248fc09d3730295949977c8dcd988062")

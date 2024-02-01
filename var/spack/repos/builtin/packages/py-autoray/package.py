@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyAutoray(PythonPackage):
 
     homepage = "https://github.com/jcmgray/autoray"
     pypi = "autoray/autoray-0.5.3.tar.gz"
+
+    license("Apache-2.0")
 
     version("0.5.3", sha256="ecbecbc1ab65dd704234b3307fa7c7a511a36f6b9339a0ffcdaa4e5a7aab826b")
 

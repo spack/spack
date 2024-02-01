@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class PyRdflib(PythonPackage):
 
     homepage = "https://github.com/RDFLib/rdflib"
     pypi = "rdflib/rdflib-5.0.0.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("6.3.2", sha256="72af591ff704f4caacea7ecc0c5a9056b8553e0489dd4f35a9bc52dbd41522e0")
     version("6.2.0", sha256="62dc3c86d1712db0f55785baf8047f63731fa59b2682be03219cb89262065942")

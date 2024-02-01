@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Libwhich(Package):
     git = "https://github.com/vtjnash/libwhich.git"
 
     maintainers("dmageeLANL")
+
+    license("MIT")
 
     version("master", branch="master")
     version("1.1.0", sha256="f1c30bf7396859ad437a5db74e9e328fb4b4e1379457121e28a3524b1e3a0b3f")

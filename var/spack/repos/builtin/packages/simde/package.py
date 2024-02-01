@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Simde(MesonPackage):
     homepage = "https://github.com/simd-everywhere/simde"
     url = "https://github.com/simd-everywhere/simde/archive/v0.6.0.tar.gz"
     git = "https://github.com/simd-everywhere/simde.git"
+
+    license("MIT")
 
     version("0.7.6", sha256="c63e6c61392e324728da1c7e5de308cb31410908993a769594f5e21ff8de962b")
     version("0.7.2", sha256="366d5e9a342c30f1e40d1234656fb49af5ee35590aaf53b3c79b2afb906ed4c8")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Predixy(MakefilePackage):
 
     homepage = "https://github.com/joyieldInc/predixy"
     url = "https://github.com/joyieldInc/predixy/archive/1.0.5.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("1.0.5", sha256="0670d0b80f991b415a6dc6df107e5f223e3b41dc5d6b18bf73e26578178dd9e0")
     version("1.0.4", sha256="30a7dd44ce507a7a2f8a570c59c9133df239a7f8bad14ef1b97df92b2ee96d40")

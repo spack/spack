@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Libpsml(AutotoolsPackage):
     homepage = "https://gitlab.com/siesta-project/libraries/libpsml"
     git = "https://gitlab.com/siesta-project/libraries/libpsml.git"
     url = "https://gitlab.com/siesta-project/libraries/libpsml/-/archive/libpsml-1.1.10/libpsml-libpsml-1.1.10.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("1.1.10", sha256="ba87ece7d443a42a5db3a119c555a29a391a060dd6f3f5039a2c6ea248b7fe84")
     version("1.1.9", sha256="04b8de33c555ae94a790116cd3cf7b6c9e8ec9a018562edff544a2e04876cf0c")

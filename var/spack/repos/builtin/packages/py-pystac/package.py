@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyPystac(PythonPackage):
 
     homepage = "https://github.com/azavea/pystac.git"
     pypi = "pystac/pystac-0.5.4.tar.gz"
+
+    license("Apache-2.0")
 
     version("1.4.0", sha256="6ec43e1c6bec50fbfbdede49c3ccb83ecd112072a938001b5c9c581fc2945e83")
     version("1.3.0", sha256="b0244641ef2a29a7b7929266b0d1eda2b0a0ef826dadb1aed93404a14e6e313b")

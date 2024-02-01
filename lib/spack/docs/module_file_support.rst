@@ -1,4 +1,4 @@
-.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -198,7 +198,7 @@ set by changing the ``roots`` key of the configuration.
      my_custom_lmod_modules:
        roots:
          lmod: /path/to/install/custom/lmod/modules
-         ...
+         # ...
 
 This configuration will create two module sets. The default module set
 will install its ``tcl`` modules to ``/path/to/install/tcl/modules``

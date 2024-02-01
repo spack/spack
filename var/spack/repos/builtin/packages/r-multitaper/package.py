@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class RMultitaper(RPackage):
     estimation and harmonic analysis" <doi:10.1109/PROC.1982.12433>."""
 
     cran = "multitaper"
+
+    license("GPL-2.0-or-later")
 
     version("1.0-15", sha256="837d71f3b46fbce2bea210449cf75e609f5363ff23b7808f5f115fdc51e6a3be")
     version("1.0-14", sha256="c84c122541dc2874131446e23b212259b3b00590d701efee49e6740fd74a8d13")

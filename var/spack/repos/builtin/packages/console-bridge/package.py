@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class ConsoleBridge(CMakePackage):
 
     homepage = "https://github.com/ros/console_bridge/"
     url = "https://github.com/ros/console_bridge/archive/1.0.1.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("1.0.2", sha256="303a619c01a9e14a3c82eb9762b8a428ef5311a6d46353872ab9a904358be4a4")
     version("1.0.1", sha256="2ff175a9bb2b1849f12a6bf972ce7e4313d543a2bbc83b60fdae7db6e0ba353f")

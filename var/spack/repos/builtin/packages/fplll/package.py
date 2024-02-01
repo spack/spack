@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Fplll(AutotoolsPackage):
 
     homepage = "https://github.com/fplll/fplll"
     url = "https://github.com/fplll/fplll/releases/download/5.4.0/fplll-5.4.0.tar.gz"
+
+    license("LGPL-2.1-or-later")
 
     version("5.4.4", sha256="0fd9d378f04ff886d8864728baf5d90b8b0b82c1e541e92550644fb54f75691d")
     version("5.4.1", sha256="7bd887957173aa592091772c1c36f6aa606b3b2ace0d14e2c26c7463dcf2deb7")

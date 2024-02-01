@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Ectrans(CMakePackage):
     url = "https://github.com/ecmwf-ifs/ectrans/archive/1.1.0.tar.gz"
 
     maintainers("climbfuji")
+
+    license("Apache-2.0")
 
     version("develop", branch="develop", no_cache=True)
     version("main", branch="main", no_cache=True)

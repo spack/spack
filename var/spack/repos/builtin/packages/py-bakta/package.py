@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class PyBakta(PythonPackage):
     pypi = "bakta/bakta-1.5.1.tar.gz"
 
     maintainers("oschwengers")
+
+    license("GPL-3.0-only")
 
     version("1.5.1", sha256="36781612c4eaa99e6e24a00e8ab5b27dadf21c98ae6d16432f3e78c96a4adb5d")
 

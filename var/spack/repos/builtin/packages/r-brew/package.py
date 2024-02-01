@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class RBrew(RPackage):
     module, Java Server Pages, and Python's psp module."""
 
     cran = "brew"
+
+    license("GPL-2.0-only")
 
     version("1.0-8", sha256="11652d5a7042d645cc5be5f9f97ff4d46083cea7d3ad2dd6ad1570b52c097826")
     version("1.0-7", sha256="38b859c1dca63479f6937c593da8f806f2b3279585bb6e20ecff1b898469e76e")

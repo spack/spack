@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class RPspline(RPackage):
     Smoothing splines with penalties on order m derivatives."""
 
     cran = "pspline"
+
+    license("custom")
 
     version("1.0-19", sha256="ba55bf193f1df9785a0e13b7ef727d5fd2415b318cd6a26b48a2db490c4dfe40")
     version("1.0-18", sha256="f71cf293bd5462e510ac5ad16c4a96eda18891a0bfa6447dd881c65845e19ac7")

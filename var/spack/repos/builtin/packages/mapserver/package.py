@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Mapserver(CMakePackage):
 
     homepage = "https://www.mapserver.org/"
     url = "https://download.osgeo.org/mapserver/mapserver-7.2.1.tar.gz"
+
+    license("MIT")
 
     version("8.0.1", sha256="79d23595ef95d61d3d728ae5e60850a3dbfbf58a46953b4fdc8e6e0ffe5748ba")
     version("7.2.1", sha256="9459a7057d5a85be66a41096a5d804f74665381186c37077c94b56e784db6102")

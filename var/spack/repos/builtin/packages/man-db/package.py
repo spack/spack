@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class ManDb(AutotoolsPackage):
     homepage = "https://www.nongnu.org/man-db/"
     git = "https://gitlab.com/cjwatson/man-db"
     url = "https://download.savannah.nongnu.org/releases/man-db/man-db-2.10.1.tar.xz"
+
+    license("GPL-2.0-or-later")
 
     version("2.11.2", sha256="cffa1ee4e974be78646c46508e6dd2f37e7c589aaab2938cc1064f058fef9f8d")
     version("2.10.2", sha256="ee97954d492a13731903c9d0727b9b01e5089edbd695f0cdb58d405a5af5514d")

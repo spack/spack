@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Stow(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org/software/stow/"
     gnu_mirror_path = "stow/stow-2.2.2.tar.bz2"
+
+    license("GPL-3.0-or-later")
 
     version("2.3.1", sha256="26a6cfdfdaca0eea742db5487798c15fcd01889dc86bc5aa62614ec9415a422f")
     version("2.2.2", sha256="a0022034960e47a8d23dffb822689f061f7a2d9101c9835cf11bf251597aa6fd")

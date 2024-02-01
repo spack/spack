@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Spot(AutotoolsPackage):
 
     homepage = "https://spot.lrde.epita.fr/"
     url = "https://www.lrde.epita.fr/dload/spot/spot-1.99.3.tar.gz"
+
+    license("MIT")
 
     version("2.11.5", sha256="3acfd5cd112d00576ac234baeb34e1c6adf8c03155d4cda973e6317ac8bd1774")
     version("2.11.4", sha256="91ecac6202819ea1de4534902ce457ec6eec0573d730584d6494d06b0bcaa0b4")

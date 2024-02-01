@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class PyPyqt5(SIPPackage):
     homepage = "https://www.riverbankcomputing.com/software/pyqt/intro"
     url = "https://files.pythonhosted.org/packages/source/P/PyQt5/PyQt5-5.15.9.tar.gz"
     list_url = "https://pypi.org/simple/PyQt5/"
+
+    license("GPL-3.0-only")
 
     version("5.15.9", sha256="dc41e8401a90dc3e2b692b411bd5492ab559ae27a27424eed4bd3915564ec4c0")
 

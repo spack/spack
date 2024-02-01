@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class RSom(RPackage):
     Self-Organizing Map (with application in gene clustering)."""
 
     cran = "som"
+
+    license("GPL-3.0-or-later")
 
     version("0.3-5.1", sha256="a6f4c0e5b36656b7a8ea144b057e3d7642a8b71972da387a7133f3dd65507fb9")
     version("0.3-5", sha256="f7672afaaffcf41a8b2dd50e4c76b3a640ea2ad099f18b5dfcf00389abf6ba07")

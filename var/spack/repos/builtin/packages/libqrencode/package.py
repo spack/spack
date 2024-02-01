@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Libqrencode(AutotoolsPackage):
     git = "https://github.com/fukuchi/libqrencode.git"
 
     maintainers("cessenat")
+
+    license("LGPL-2.1-or-later")
 
     version("master", branch="master")
     version("4.1.1", sha256="5385bc1b8c2f20f3b91d258bf8ccc8cf62023935df2d2676b5b67049f31a049c")

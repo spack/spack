@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Openimagedenoise(CMakePackage):
     url = "https://github.com/OpenImageDenoise/oidn/releases/download/v1.4.3/oidn-1.4.3.src.tar.gz"
 
     # maintainers("github_user1", "github_user2")
+
+    license("Apache-2.0")
 
     version("2.1.0", sha256="ce144ba582ff36563d9442ee07fa2a4d249bc85aa93e5b25fc527ff4ee755ed6")
     version("2.0.1", sha256="328eeb9809d18e835dca7203224af3748578794784c026940c02eea09c695b90")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Xfontsel(AutotoolsPackage, XorgPackage):
 
     homepage = "https://cgit.freedesktop.org/xorg/app/xfontsel"
     xorg_mirror_path = "app/xfontsel-1.0.5.tar.gz"
+
+    license("MIT")
 
     version("1.1.0", sha256="32938f671c706dc15644ceebf5daebbf0f2f1fe45afa2d06d2b905cc7d6c7de2")
     version("1.0.6", sha256="a7b025cb96b678f03caeb61a2770890359bdab34dc37e09d447b30c54c4df35e")

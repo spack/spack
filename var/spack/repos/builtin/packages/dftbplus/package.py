@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,8 @@ class Dftbplus(CMakePackage, MakefilePackage):
         conditional("makefile", when="@:19.1"),
         default="cmake",
     )
+
+    license("CC-BY-SA-4.0")
 
     version("main", branch="main")
     version("22.1", sha256="02daca6f4c6372656598f3ba0311110c8e473c87c8d934d7bb276feaa4cc1c82")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Gh(Package):
     url = "https://github.com/cli/cli/archive/refs/tags/v2.0.0.tar.gz"
 
     maintainers("lcnzg")
+
+    license("MIT")
 
     version("2.32.1", sha256="1d569dc82eb6520e6a8959568c2db84fea3bbaab2604c8dd5901849d320e1eae")
     version("2.28.0", sha256="cf3c0fb7f601d717d8b5177707a197c49fd426f5dc3c9aa52a932e96ba7166af")

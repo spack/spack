@@ -15,7 +15,7 @@ spack:
     binutils:
       variants: +ld +gold +headers +libiberty ~nls
     elfutils:
-      variants: +bzip2 ~nls +xz
+      variants: ~nls
     hdf5:
       variants: +fortran +hl +shared
     libfabric:
@@ -91,7 +91,7 @@ spack:
     miopen-hip:
       buildable: false
       externals:
-      - spec: hip-rocclr@5.4.3
+      - spec: miopen-hip@5.4.3
         prefix: /opt/rocm-5.4.3/
     miopengemm:
       buildable: false

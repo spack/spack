@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -46,6 +46,8 @@ class Amdlibflame(LibflameBase):
     git = "https://github.com/amd/amdlibflame"
 
     maintainers("amd-toolchain-support")
+
+    license("BSD-3-Clause")
 
     version("4.1", sha256="8aed69c60d11cc17e058cabcb8a931cee4f343064ade3e73d3392b7214624b61")
     version("4.0", sha256="bcb05763aa1df1e88f0da5e43ff86d956826cbea1d9c5ff591d78a3e091c66a4")

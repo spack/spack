@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Xsetroot(AutotoolsPackage, XorgPackage):
 
     homepage = "https://cgit.freedesktop.org/xorg/app/xsetroot"
     xorg_mirror_path = "app/xsetroot-1.1.1.tar.gz"
+
+    license("MIT")
 
     version("1.1.3", sha256="80dbb0d02807e89294a042298b8a62f9aa0c3a94d89244ccbc35e4cf80fcaaba")
     version("1.1.2", sha256="9d007f5119be09924ac3a5d2bd506f32e6c164b82633c88d2aff26311e1a2a2b")

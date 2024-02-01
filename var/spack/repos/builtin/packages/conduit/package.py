@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,6 +37,8 @@ class Conduit(CMakePackage):
     url = "https://github.com/LLNL/conduit/releases/download/v0.3.0/conduit-v0.3.0-src-with-blt.tar.gz"
     git = "https://github.com/LLNL/conduit.git"
     tags = ["radiuss", "e4s"]
+
+    license("Apache-2.0")
 
     version("develop", branch="develop", submodules=True)
     # note: the main branch in conduit was renamed to develop, this next entry

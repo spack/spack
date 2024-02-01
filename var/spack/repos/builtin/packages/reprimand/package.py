@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class Reprimand(MesonPackage):
     url = "https://github.com/wokast/RePrimAnd/archive/refs/tags/v1.3.tar.gz"
 
     maintainers("eschnett")
+
+    license("CC-BY-NC-SA-4.0")
 
     version("develop", git="https://github.com/wokast/RePrimAnd", branch="public")
     version("1.5", sha256="bc71030c1ae337c3631cfc7e46270260b0663e4ad73129148bf443c9220afb86")

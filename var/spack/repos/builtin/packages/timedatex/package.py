@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Timedatex(MakefilePackage):
 
     homepage = "https://github.com/mlichvar/timedatex"
     url = "https://github.com/mlichvar/timedatex/archive/v0.6.tar.gz"
+
+    license("GPL-2.0-or-later")
 
     version("0.6", sha256="6e24c015769ee49a92bde3b1f167e25119068a00e377f9e4187a425c262ce964")
     version("0.5", sha256="bc54960bb9554bb2b34985ba2b8a78480db568c3c6a9d26f2ab34de1bc0aab11")

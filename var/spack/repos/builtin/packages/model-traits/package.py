@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class ModelTraits(CMakePackage):
     git = "https://github.com/jacobmerson/model-traits.git"
 
     maintainers("jacobmerson")
+
+    license("BSD-3-Clause")
 
     version("0.2.1", sha256="241ce5738ea72182a570ae474aedff58751e6ea448bd174005c5520c8b5a95d1")
     version("0.2.0", sha256="f367cf96a4c1c19f6e2dcf92af6bf69b39217a01fe6f1942d4825258eca8d4bc")

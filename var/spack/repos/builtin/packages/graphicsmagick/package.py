@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Graphicsmagick(AutotoolsPackage):
 
     homepage = "http://www.graphicsmagick.org/"
     url = "https://sourceforge.net/projects/graphicsmagick/files/graphicsmagick/1.3.29/GraphicsMagick-1.3.29.tar.xz/download"
+
+    license("MIT")
 
     version("1.3.34", sha256="df009d5173ed0d6a0c6457234256c5a8aeaace782afa1cbab015d5a12bd4f7a4")
     version("1.3.33", sha256="130cb330a633580b5124eba5c125bbcbc484298423a97b9bed37ccd50d6dc778")

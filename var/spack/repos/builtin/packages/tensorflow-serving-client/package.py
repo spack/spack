@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class TensorflowServingClient(CMakePackage):
 
     homepage = "https://github.com/figroc/tensorflow-serving-client"
     url = "https://github.com/figroc/tensorflow-serving-client/archive/v2.3.0.tar.gz"
+
+    license("Apache-2.0")
 
     version("2.3.0", sha256="621b1df1da521fe1ba873b4b5546c1b794cfa8a13bca91608783acc4c8748fb1")
     version("2.2.0", sha256="010b464b3b09c3c33c5dc2aebbc85447c4d5f775b9cd45d90a9035ca015c1c08")

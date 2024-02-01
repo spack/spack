@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Latte(CMakePackage):
     git = "https://github.com/lanl/latte.git"
 
     tags = ["ecp", "ecp-apps"]
+
+    license("LGPL-2.0-or-later")
 
     version("master", branch="master")
     version("1.2.2", sha256="ab1346939dbd70ffd89c5e5bf8d24946cb3655dc25b203bec7fc59c6c63e4c79")

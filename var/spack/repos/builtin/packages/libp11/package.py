@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Libp11(AutotoolsPackage):
 
     homepage = "https://github.com/OpenSC/libp11/wiki"
     url = "https://github.com/OpenSC/libp11/archive/libp11-0.4.10.tar.gz"
+
+    license("LGPL-2.1-or-later")
 
     version("0.4.11", sha256="56d6149879bda379613d89adfd3486ce5a3c20af6c1e3f9e83d15d900ab9e4bc")
     version("0.4.10", sha256="123c1525fa7ce7a34060f9a4148a30717482c517a378f428b704459820c1bf35")
