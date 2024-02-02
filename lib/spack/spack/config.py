@@ -54,6 +54,7 @@ import spack.schema.mirrors
 import spack.schema.modules
 import spack.schema.packages
 import spack.schema.repos
+import spack.schema.spack  # TLD
 import spack.schema.upstreams
 
 # Hacked yaml for configuration files preserves line numbers.
@@ -78,12 +79,15 @@ SECTION_SCHEMAS: Dict[str, Any] = {
     "bootstrap": spack.schema.bootstrap.schema,
     "ci": spack.schema.ci.schema,
     "cdash": spack.schema.cdash.schema,
+    "spack": spack.schema.spack.schema,
+    # TLD: "spack": spack.schema.env.schema,
 }
 
 # Same as above, but including keys for environments
 # this allows us to unify config reading between configs and environments
 _ALL_SCHEMAS: Dict[str, Any] = copy.deepcopy(SECTION_SCHEMAS)
-_ALL_SCHEMAS.update({spack.schema.env.TOP_LEVEL_KEY: spack.schema.env.schema})
+# _ALL_SCHEMAS.update({spack.schema.env.TOP_LEVEL_KEY: spack.schema.env.schema})
+_ALL_SCHEMAS.update({spack.schema.env.TOP_LEVEL_KEY: spack.schema.spack.schema})
 
 #: Path to the default configuration
 CONFIGURATION_DEFAULTS_PATH = ("defaults", os.path.join(spack.paths.etc_path, "defaults"))
@@ -298,7 +302,8 @@ class SingleFileScope(ConfigScope):
             raise ConfigFileError(f"cannot write to config file {str(e)}") from e
 
     def __repr__(self) -> str:
-        return f"<SingleFileScope: {self.name}: {self.path}>"
+        # TLD return f"<SingleFileScope: {self.name}: {self.path}>"
+        return f"<SingleFileScope: {self.name}: {self.path}:\n\tsections={self.sections}>"
 
 
 class ImmutableConfigScope(ConfigScope):
@@ -1553,6 +1558,7 @@ def ensure_latest_format_fn(section: str) -> Callable[[YamlConfigDict], bool]:
     """
     # The line below is based on the fact that every module we need
     # is already imported at the top level
+    # TLD: section_module = getattr(spack.schema, section) if section != spack.schema.env.TOP_LEVEL_KEY else spack.schema.env
     section_module = getattr(spack.schema, section)
     update_fn = getattr(section_module, "update", lambda x: False)
     return update_fn

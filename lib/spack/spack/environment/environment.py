@@ -536,14 +536,16 @@ def _read_yaml(str_or_file):
         )
 
     filename = getattr(str_or_file, "name", None)
-    default_data = spack.config.validate(data, spack.schema.env.schema, filename)
+    # TLD default_data = spack.config.validate(data, spack.schema.env.schema, filename)
+    default_data = spack.config.validate(data, spack.schema.spack.schema, filename)
     return data, default_data
 
 
 def _write_yaml(data, str_or_file):
     """Write YAML to a file preserving comments and dict order."""
     filename = getattr(str_or_file, "name", None)
-    spack.config.validate(data, spack.schema.env.schema, filename)
+    # TLD spack.config.validate(data, spack.schema.env.schema, filename)
+    spack.config.validate(data, spack.schema.spack.schema, filename)
     syaml.dump_config(data, str_or_file, default_flow_style=False)
 
 
@@ -3110,7 +3112,10 @@ class EnvironmentManifestFile(collections.abc.Mapping):
                     "Creating SingleFileScope {0} for '{1}'".format(config_name, config_path)
                 )
                 scope = spack.config.SingleFileScope(
-                    config_name, config_path, spack.schema.merged.schema
+                    # TLD config_name, config_path, spack.schema.merged.schema
+                    config_name,
+                    config_path,
+                    spack.schema.spack.schema,
                 )
             else:
                 missing.append(config_path)
