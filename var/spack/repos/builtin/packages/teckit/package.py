@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class Teckit(AutotoolsPackage):
     maintainers("rountree")
     homepage = "https://scripts.sil.org/cms/scripts/page.php?cat_id=TECkit"
     git = "https://github.com/silnrsi/teckit.git"
+
+    license("CPL-1.0")
 
     version("2.5.11", commit="fea17dbf17266387c96f74fd9c0ce44d065f0f50")
     version("2.5.10", commit="1c510d4de7ff844207b1273e856fd27a15b3486d")

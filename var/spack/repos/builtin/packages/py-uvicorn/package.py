@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyUvicorn(PythonPackage):
 
     homepage = "https://www.uvicorn.org/"
     pypi = "uvicorn/uvicorn-0.20.0.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("0.20.0", sha256="a4e12017b940247f836bc90b72e725d7dfd0c8ed1c51eb365f5ba30d9f5127d8")
 

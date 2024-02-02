@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,8 @@ class Valgrind(AutotoolsPackage, SourcewarePackage):
     homepage = "https://valgrind.org/"
     sourceware_mirror_path = "valgrind/valgrind-3.13.0.tar.bz2"
     git = "git://sourceware.org/git/valgrind.git"
+
+    license("GPL-2.0-or-later")
 
     version("develop", branch="master")
     version("3.20.0", sha256="8536c031dbe078d342f121fa881a9ecd205cb5a78e639005ad570011bdb9f3c6")

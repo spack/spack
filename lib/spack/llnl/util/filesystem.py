@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,7 +28,8 @@ from llnl.util.lang import dedupe, memoized
 from llnl.util.symlink import islink, readlink, resolve_link_target_relative_to_the_link, symlink
 
 from spack.util.executable import Executable, which
-from spack.util.path import path_to_os_path, system_path_filter
+
+from ..path import path_to_os_path, system_path_filter
 
 if sys.platform != "win32":
     import grp
@@ -153,6 +154,37 @@ if sys.version_info < (3, 7, 4):
                     raise
 
     shutil.copystat = copystat
+
+
+def polite_path(components: Iterable[str]):
+    """
+    Given a list of strings which are intended to be path components,
+    generate a path, and format each component to avoid generating extra
+    path entries.
+
+    For example all "/", "\", and ":" characters will be replaced with
+    "_". Other characters like "=" will also be replaced.
+    """
+    return os.path.join(*[polite_filename(x) for x in components])
+
+
+@memoized
+def _polite_antipattern():
+    # A regex of all the characters we don't want in a filename
+    return re.compile(r"[^A-Za-z0-9_.-]")
+
+
+def polite_filename(filename: str) -> str:
+    """
+    Replace generally problematic filename characters with underscores.
+
+    This differs from sanitize_filename in that it is more aggressive in
+    changing characters in the name. For example it removes "=" which can
+    confuse path parsing in external tools.
+    """
+    # This character set applies for both Windows and Linux. It does not
+    # account for reserved filenames in Windows.
+    return _polite_antipattern().sub("_", filename)
 
 
 def getuid():
@@ -336,8 +368,7 @@ def filter_file(
 
     if string:
         regex = re.escape(regex)
-    filenames = path_to_os_path(*filenames)
-    for filename in filenames:
+    for filename in path_to_os_path(*filenames):
         msg = 'FILTER FILE: {0} [replacing "{1}"]'
         tty.debug(msg.format(filename, regex))
 
@@ -1346,120 +1377,89 @@ def traverse_tree(
         yield (source_path, dest_path)
 
 
-def lexists_islink_isdir(path):
-    """Computes the tuple (lexists(path), islink(path), isdir(path)) in a minimal
-    number of stat calls on unix. Use os.path and symlink.islink methods for windows."""
-    if sys.platform == "win32":
-        if not os.path.lexists(path):
-            return False, False, False
-        return os.path.lexists(path), islink(path), os.path.isdir(path)
-    # First try to lstat, so we know if it's a link or not.
-    try:
-        lst = os.lstat(path)
-    except (IOError, OSError):
-        return False, False, False
-
-    is_link = stat.S_ISLNK(lst.st_mode)
-
-    # Check whether file is a dir.
-    if not is_link:
-        is_dir = stat.S_ISDIR(lst.st_mode)
-        return True, is_link, is_dir
-
-    # Check whether symlink points to a dir.
-    try:
-        st = os.stat(path)
-        is_dir = stat.S_ISDIR(st.st_mode)
-    except (IOError, OSError):
-        # Dangling symlink (i.e. it lexists but not exists)
-        is_dir = False
-
-    return True, is_link, is_dir
-
-
 class BaseDirectoryVisitor:
     """Base class and interface for :py:func:`visit_directory_tree`."""
 
-    def visit_file(self, root, rel_path, depth):
+    def visit_file(self, root: str, rel_path: str, depth: int) -> None:
         """Handle the non-symlink file at ``os.path.join(root, rel_path)``
 
         Parameters:
-            root (str): root directory
-            rel_path (str): relative path to current file from ``root``
+            root: root directory
+            rel_path: relative path to current file from ``root``
             depth (int): depth of current file from the ``root`` directory"""
         pass
 
-    def visit_symlinked_file(self, root, rel_path, depth):
-        """Handle the symlink to a file at ``os.path.join(root, rel_path)``.
-        Note: ``rel_path`` is the location of the symlink, not to what it is
-        pointing to. The symlink may be dangling.
+    def visit_symlinked_file(self, root: str, rel_path: str, depth) -> None:
+        """Handle the symlink to a file at ``os.path.join(root, rel_path)``. Note: ``rel_path`` is
+        the location of the symlink, not to what it is pointing to. The symlink may be dangling.
 
         Parameters:
-            root (str): root directory
-            rel_path (str): relative path to current symlink from ``root``
-            depth (int): depth of current symlink from the ``root`` directory"""
+            root: root directory
+            rel_path: relative path to current symlink from ``root``
+            depth: depth of current symlink from the ``root`` directory"""
         pass
 
-    def before_visit_dir(self, root, rel_path, depth):
+    def before_visit_dir(self, root: str, rel_path: str, depth: int) -> bool:
         """Return True from this function to recurse into the directory at
         os.path.join(root, rel_path). Return False in order not to recurse further.
 
         Parameters:
-            root (str): root directory
-            rel_path (str): relative path to current directory from ``root``
-            depth (int): depth of current directory from the ``root`` directory
+            root: root directory
+            rel_path: relative path to current directory from ``root``
+            depth: depth of current directory from the ``root`` directory
 
         Returns:
             bool: ``True`` when the directory should be recursed into. ``False`` when
             not"""
         return False
 
-    def before_visit_symlinked_dir(self, root, rel_path, depth):
-        """Return ``True`` to recurse into the symlinked directory and ``False`` in
-        order not to. Note: ``rel_path`` is the path to the symlink itself.
-        Following symlinked directories blindly can cause infinite recursion due to
-        cycles.
+    def before_visit_symlinked_dir(self, root: str, rel_path: str, depth: int) -> bool:
+        """Return ``True`` to recurse into the symlinked directory and ``False`` in order not to.
+        Note: ``rel_path`` is the path to the symlink itself. Following symlinked directories
+        blindly can cause infinite recursion due to cycles.
 
         Parameters:
-            root (str): root directory
-            rel_path (str): relative path to current symlink from ``root``
-            depth (int): depth of current symlink from the ``root`` directory
+            root: root directory
+            rel_path: relative path to current symlink from ``root``
+            depth: depth of current symlink from the ``root`` directory
 
         Returns:
             bool: ``True`` when the directory should be recursed into. ``False`` when
             not"""
         return False
 
-    def after_visit_dir(self, root, rel_path, depth):
-        """Called after recursion into ``rel_path`` finished. This function is not
-        called when ``rel_path`` was not recursed into.
+    def after_visit_dir(self, root: str, rel_path: str, depth: int) -> None:
+        """Called after recursion into ``rel_path`` finished. This function is not called when
+        ``rel_path`` was not recursed into.
 
         Parameters:
-            root (str): root directory
-            rel_path (str): relative path to current directory from ``root``
-            depth (int): depth of current directory from the ``root`` directory"""
+            root: root directory
+            rel_path: relative path to current directory from ``root``
+            depth: depth of current directory from the ``root`` directory"""
         pass
 
-    def after_visit_symlinked_dir(self, root, rel_path, depth):
-        """Called after recursion into ``rel_path`` finished. This function is not
-        called when ``rel_path`` was not recursed into.
+    def after_visit_symlinked_dir(self, root: str, rel_path: str, depth: int) -> None:
+        """Called after recursion into ``rel_path`` finished. This function is not called when
+        ``rel_path`` was not recursed into.
 
         Parameters:
-            root (str): root directory
-            rel_path (str): relative path to current symlink from ``root``
-            depth (int): depth of current symlink from the ``root`` directory"""
+            root: root directory
+            rel_path: relative path to current symlink from ``root``
+            depth: depth of current symlink from the ``root`` directory"""
         pass
 
 
-def visit_directory_tree(root, visitor, rel_path="", depth=0):
-    """Recurses the directory root depth-first through a visitor pattern using the
-    interface from :py:class:`BaseDirectoryVisitor`
+def visit_directory_tree(
+    root: str, visitor: BaseDirectoryVisitor, rel_path: str = "", depth: int = 0
+):
+    """Recurses the directory root depth-first through a visitor pattern using the interface from
+    :py:class:`BaseDirectoryVisitor`
 
     Parameters:
-        root (str): path of directory to recurse into
-        visitor (BaseDirectoryVisitor): what visitor to use
-        rel_path (str): current relative path from the root
-        depth (str): current depth from the root
+        root: path of directory to recurse into
+        visitor: what visitor to use
+        rel_path: current relative path from the root
+        depth: current depth from the root
     """
     dir = os.path.join(root, rel_path)
     dir_entries = sorted(os.scandir(dir), key=lambda d: d.name)
@@ -1467,26 +1467,19 @@ def visit_directory_tree(root, visitor, rel_path="", depth=0):
     for f in dir_entries:
         rel_child = os.path.join(rel_path, f.name)
         islink = f.is_symlink()
-        # On Windows, symlinks to directories are distinct from
-        # symlinks to files, and it is possible to create a
-        # broken symlink to a directory (e.g. using os.symlink
-        # without `target_is_directory=True`), invoking `isdir`
-        # on a symlink on Windows that is broken in this manner
-        # will result in an error. In this case we can work around
-        # the issue by reading the target and resolving the
-        # directory ourselves
+        # On Windows, symlinks to directories are distinct from symlinks to files, and it is
+        # possible to create a broken symlink to a directory (e.g. using os.symlink without
+        # `target_is_directory=True`), invoking `isdir` on a symlink on Windows that is broken in
+        # this manner will result in an error. In this case we can work around the issue by reading
+        # the target and resolving the directory ourselves
         try:
             isdir = f.is_dir()
         except OSError as e:
             if sys.platform == "win32" and hasattr(e, "winerror") and e.winerror == 5 and islink:
-                # if path is a symlink, determine destination and
-                # evaluate file vs directory
+                # if path is a symlink, determine destination and evaluate file vs directory
                 link_target = resolve_link_target_relative_to_the_link(f)
-                # link_target might be relative but
-                # resolve_link_target_relative_to_the_link
-                # will ensure that if so, that it is relative
-                # to the CWD and therefore
-                # makes sense
+                # link_target might be relative but resolve_link_target_relative_to_the_link
+                # will ensure that if so, that it is relative to the CWD and therefore makes sense
                 isdir = os.path.isdir(link_target)
             else:
                 raise e

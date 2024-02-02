@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,10 +15,15 @@ class Opencv(CMakePackage, CudaPackage):
     homepage = "https://opencv.org/"
     url = "https://github.com/opencv/opencv/archive/4.5.0.tar.gz"
     git = "https://github.com/opencv/opencv.git"
+    find_python_hints = False  # opencv uses custom OpenCVDetectPython.cmake
 
     maintainers("bvanessen", "adamjstewart")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
+    version("4.8.0", sha256="cbf47ecc336d2bff36b0dcd7d6c179a9bb59e805136af6b9670ca944aef889bd")
+    version("4.7.0", sha256="8df0079cdbe179748a18d44731af62a245a45ebf5085223dc03133954c662973")
     version("4.6.0", sha256="1ec1cba65f9f20fe5a41fda1586e01c70ea0c9a6d7b67c9e13edf0cfe2239277")
     version("4.5.5", sha256="a1cfdcf6619387ca9e232687504da996aaa9f7b5689986b8331ec02cb61d28ad")
     version("4.5.4", sha256="c20bb83dd790fc69df9f105477e24267706715a9d3c705ca1e7f613c7b3bad3d")
@@ -63,6 +68,8 @@ class Opencv(CMakePackage, CudaPackage):
         "4.5.4",
         "4.5.5",
         "4.6.0",
+        "4.7.0",
+        "4.8.0",
     ]
     for cv in contrib_vers:
         resource(
@@ -691,6 +698,7 @@ class Opencv(CMakePackage, CudaPackage):
         "mfx",
         "ngraph",
         "nvcuvid",  # disabled, details: https://github.com/opencv/opencv/issues/14850
+        "nvcuvenc",  # disabled, depends on nvcuvid being enabled
         "opencl_svm",
         "openclamdblas",
         "openclamdfft",
@@ -740,8 +748,9 @@ class Opencv(CMakePackage, CudaPackage):
     depends_on("cudnn@:7.3", when="@3.3.1:3.4+cudnn")
     depends_on("cudnn@:6", when="@:3.3.0+cudnn")
     depends_on("eigen", when="+eigen")
-    depends_on("ffmpeg+avresample", when="+ffmpeg")
-    depends_on("ffmpeg@:4+avresample", when="@:4.5+ffmpeg")
+    depends_on("ffmpeg", when="+ffmpeg")
+    depends_on("ffmpeg@:5", when="@:4.7+ffmpeg")
+    depends_on("ffmpeg@:4+avresample", when="@:4.6+ffmpeg")
     depends_on("gdal", when="+gdal")
     depends_on("gtkplus", when="+gtk")
     depends_on("hpx", when="+hpx")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,8 +23,11 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("janciesko", "crtrott")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("develop", branch="develop")
+    version("4.2.00", sha256="ac08765848a0a6ac584a0a46cd12803f66dd2a2c2db99bb17c06ffc589bf5be8")
     version("4.1.00", sha256="cf725ea34ba766fdaf29c884cfe2daacfdc6dc2d6af84042d1c78d0f16866275")
     version("4.0.01", sha256="bb942de8afdd519fd6d5d3974706bfc22b6585a62dd565c12e53bdb82cd154f0")
     version("4.0.00", sha256="1829a423883d4b44223c7c3a53d3c51671145aad57d7d23e6a1a4bebf710dcf6")
@@ -155,6 +158,8 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         "gfx906": "vega906",
         "gfx908": "vega908",
         "gfx90a": "vega90A",
+        "gfx940": "amd_gfx940",
+        "gfx942": "amd_gfx942",
         "gfx1030": "navi1030",
         "gfx1100": "navi1100",
     }
@@ -189,6 +194,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     for dev, (dflt, desc) in devices_variants.items():
         variant(dev, default=dflt, description=desc)
     conflicts("+cuda", when="+rocm", msg="CUDA and ROCm are not compatible in Kokkos.")
+    depends_on("intel-oneapi-dpl", when="+sycl")
 
     for opt, (dflt, desc) in options_variants.items():
         variant(opt, default=dflt, description=desc, when=("+cuda" if "cuda" in opt else None))
@@ -234,6 +240,13 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     # Patches
     patch("hpx_profiling_fences.patch", when="@3.5.00 +hpx")
+    patch("sycl_bhalft_test.patch", when="@4.2.00 +sycl")
+    # adds amd_gfx940 support to Kokkos 4.2.00 (upstreamed in https://github.com/kokkos/kokkos/pull/6671)
+    patch(
+        "https://github.com/rbberger/kokkos/commit/293319c5844f4d8eea51eb9cd1457115a5016d3f.patch?full_index=1",
+        sha256="145619e87dbf26b66ea23e76906576e2a854a3b09f2a2dd70363e61419fa6a6e",
+        when="@4.2.00",
+    )
 
     variant("shared", default=True, description="Build shared libraries")
 

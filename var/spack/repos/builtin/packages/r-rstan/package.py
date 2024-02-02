@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class RRstan(RPackage):
     the need to derive the partial derivatives."""
 
     cran = "rstan"
+
+    license("GPL-3.0-or-later")
 
     version("2.21.8", sha256="b2d4edc315419037970c9fa2e8740b934966d88d40548152811f3d4a28475075")
     version("2.21.7", sha256="4495221310d390925b665c32e05ffabd3ae8857225bda65131a7ed2be41d6d45")

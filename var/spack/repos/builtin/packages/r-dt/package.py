@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class RDt(RPackage):
     abbreviation of 'DataTables'."""
 
     cran = "DT"
+
+    license("Apache-2.0")
 
     version("0.27", sha256="e32fdccd2be430933cff88a9ce79045bfdbe3e08e0cd8d15037445808613289a")
     version("0.26", sha256="c412932be126d44f415559258e1d65adc0e84c3dfb9a70ce3196a2f877f7030c")

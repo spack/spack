@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyOptEinsum(PythonPackage):
 
     homepage = "https://github.com/dgasmith/opt_einsum"
     pypi = "opt_einsum/opt_einsum-3.1.0.tar.gz"
+
+    license("MIT")
 
     version("3.3.0", sha256="59f6475f77bbc37dcf7cd748519c0ec60722e91e63ca114e68821c0c54a46549")
     version("3.2.1", sha256="83b76a98d18ae6a5cc7a0d88955a7f74881f0e567a0f4c949d24c942753eb998")

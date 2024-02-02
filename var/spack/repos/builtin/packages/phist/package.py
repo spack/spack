@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,8 @@ class Phist(CMakePackage):
     # phist is a required part of spack GitLab CI pipelines. In them, mpich is requested
     # to provide 'mpi' like this: spack install phist ^mpich %gcc@7.5.0
     # Failure of this command to succeed breaks spack's gitlab CI pipelines!
+
+    license("BSD-3-Clause")
 
     version("develop", branch="devel")
     version("master", branch="master")
@@ -138,6 +140,8 @@ class Phist(CMakePackage):
     conflicts("^trilinos@14:", when="@:1.11.2")
     # Build error with cray-libsci because they define macro 'I', workaround in phist-1.11.2
     conflicts("^cray-libsci", when="@:1.11.1")
+    # phist@1.11.2 got rid of some deprecated python code + a patch below
+    conflicts("^python@3.11:", when="@:1.11.1")
     # The builtin kernels switched from the 'mpi' to the 'mpi_f08' module in
     # phist 1.9.6, which causes compile-time errors with mpich and older
     # GCC versions.
@@ -175,8 +179,7 @@ class Phist(CMakePackage):
     # Python 3 or later is required for generating the Fortran 2003 bindings
     # since version 1.7, you can get rid of the dependency by switching off
     # the feature (e.g. use the '~fortran' variant)
-    # For the upperbound see https://bitbucket.org/essex/phist/issues/246/does-not-build-with-python-311
-    depends_on("python@3:3.10", when="@1.7: +fortran", type="build")
+    depends_on("python@3:", when="@1.7: +fortran", type="build")
     depends_on("mpi", when="+mpi")
     depends_on("trilinos@12:+tpetra gotype=long_long", when="kernel_lib=tpetra +int64")
     depends_on("trilinos@12:+tpetra gotype=int", when="kernel_lib=tpetra ~int64")
@@ -234,6 +237,13 @@ class Phist(CMakePackage):
         test.filter("1 2 3 12", "1 2 3")
         test.filter("12/", "6/")
         test.filter("TEST_DRIVERS_NUM_THREADS 6", "TEST_DRIVERS_NUM_THREADS 3")
+        # Avoid finding external modules like:
+        #    /opt/rocm/llvm/include/iso_fortran_env.mod
+        filter_file(
+            "use iso_fortran_env",
+            "use, intrinsic :: iso_fortran_env",
+            "drivers/matfuncs/matpde3d.F90",
+        )
 
     def setup_build_environment(self, env):
         env.set("SPACK_SBANG", sbang.sbang_install_path())

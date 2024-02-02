@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Lshw(MakefilePackage):
 
     homepage = "https://github.com/lyonel/lshw"
     url = "https://github.com/lyonel/lshw/archive/B.02.18.tar.gz"
+
+    license("GPL-3.0-or-later")
 
     version("02.18", sha256="aa8cb2eebf36e9e46dfc227f24784aa8c87181ec96e57ee6c455da8a0ce4fa77")
     version("02.17", sha256="0bb76c7df7733dc9b80d5d35f9d9752409ddb506e190453a2cc960461de5ddeb")

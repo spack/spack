@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Libvpx(AutotoolsPackage):
 
     homepage = "https://chromium.googlesource.com/webm/libvpx"
     url = "https://github.com/webmproject/libvpx/archive/refs/tags/v1.10.0.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("1.10.0", sha256="85803ccbdbdd7a3b03d930187cb055f1353596969c1f92ebec2db839fa4f834a")
 

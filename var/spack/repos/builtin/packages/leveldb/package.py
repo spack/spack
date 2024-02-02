@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Leveldb(CMakePackage):
     homepage = "https://github.com/google/leveldb"
     url = "https://github.com/google/leveldb/archive/1.22.tar.gz"
     git = "https://github.com/google/leveldb.git"
+
+    license("BSD-3-Clause")
 
     version("master", branch="master")
     version("1.23", sha256="9a37f8a6174f09bd622bc723b55881dc541cd50747cbd08831c2a82d620f6d76")
@@ -70,10 +72,11 @@ class Leveldb(CMakePackage):
         else:
             args.append("-DBUILD_SHARED_LIBS=OFF")
 
-        # The tarball is missing the benchmark and test submodules
-        if self.spec.satisfies("@1.23:"):
-            args.append("-DLEVELDB_BUILD_BENCHMARKS=OFF")
-            args.append("-DLEVELDB_BUILD_TESTS=OFF")
+        # 1.23 tarball is missing the benchmark and test submodules
+        # and for older versions, some compilers fail to compile the
+        # benchmarks
+        args.append("-DLEVELDB_BUILD_BENCHMARKS=OFF")
+        args.append("-DLEVELDB_BUILD_TESTS=OFF")
 
         return args
 

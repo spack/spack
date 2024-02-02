@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,6 +10,8 @@ class Memaxes(Package):
     """MemAxes is a visualizer for sampled memory trace data."""
 
     homepage = "https://github.com/llnl/MemAxes"
+
+    license("LGPL-2.1-or-later")
 
     version(
         "0.5",
