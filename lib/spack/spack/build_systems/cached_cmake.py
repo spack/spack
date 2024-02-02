@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections.abc
 import os
+import re
 from typing import Tuple
 
 import llnl.util.filesystem as fs
@@ -13,6 +14,12 @@ import spack.build_environment
 import spack.builder
 
 from .cmake import CMakeBuilder, CMakePackage
+
+
+def spec_uses_toolchain(spec):
+    gcc_toolchain_regex = re.compile(".*gcc-toolchain.*")
+    using_toolchain = list(filter(gcc_toolchain_regex.match, spec.compiler_flags["cxxflags"]))
+    return using_toolchain
 
 
 def cmake_cache_path(name, value, comment="", force=False):
@@ -253,6 +260,7 @@ class CachedCMakeBuilder(CMakeBuilder):
             # Include the deprecated CUDA_TOOLKIT_ROOT_DIR for supporting BLT packages
             entries.append(cmake_cache_path("CUDA_TOOLKIT_ROOT_DIR", cudatoolkitdir))
 
+            cuda_flags = []
             archs = spec.variants["cuda_arch"].value
             if archs[0] != "none":
                 arch_str = ";".join(archs)
@@ -263,9 +271,11 @@ class CachedCMakeBuilder(CMakeBuilder):
                 # This is an imperfect merge of the radiuss way and the "spack"
                 # way: radiuss used to define only the first arch in the list,
                 # even for CMAKE_CUDA_ARCHITECTURE. What do we want?
+                cuda_flags.append("-arch sm_{0}".format(archs[0]))
                 entries.append(cmake_cache_string("CUDA_ARCH", "sm_{0}".format(archs[0])))
-                flag = "-arch sm_{0}".format(archs[0])
-                entries.append(cmake_cache_string("CMAKE_CUDA_FLAGS", "{0}".format(flag)))
+            if spec_uses_toolchain(spec):
+                cuda_flags.append("-Xcompiler {}".format(spec_uses_toolchain(spec)[0]))
+            entries.append(cmake_cache_string("CMAKE_CUDA_FLAGS", " ".join(cuda_flags)))
 
         if "+rocm" in spec:
             entries.append("#------------------{0}".format("-" * 30))
