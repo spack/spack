@@ -12,7 +12,10 @@ class Kentutils(MakefilePackage):
     homepage = "https://genome.cse.ucsc.edu/"
     url = "https://hgdownload.cse.ucsc.edu/admin/exe/userApps.archive/userApps.v453.src.tgz"
 
-    version("453", sha256="f48fc1aa370bc3f0b874effd3087f97ecd0c65c8e3fd5ec9d9300d897006f72e")
+    version("459", sha256="0b6e89a183e6385c713cf010a7aeead9da6626d8d2f78c363a4f1bc56ccccebb")
+    # The above archive only goes back to v305. v302 is left for now but deprecated. Suggest
+    # this is dropped next time the package is updated (v302 is from 2014!) and the list of
+    # conflicts removed.
     version(
         "302.1",
         commit="d8376c5d52a161f2267346ed3dc94b5dce74c2f9",
@@ -24,10 +27,9 @@ class Kentutils(MakefilePackage):
     depends_on("openssl")
     depends_on("libuuid")
     depends_on("mariadb")
-    depends_on("zlib-ng")
+    depends_on("zlib-api")
     depends_on("freetype")
-    depends_on("iconv")
-    # depends_on("util-linux")
+    depends_on("libiconv")
 
     conflicts("%cce", when="@302.1")
     conflicts("%apple-clang", when="@302.1")
@@ -39,7 +41,8 @@ class Kentutils(MakefilePackage):
     conflicts("%xl_r", when="@302.1")
 
     def setup_build_environment(self, env):
-        env.append_flags("CFLAGS", "-I{}".format(self.spec["iconv"].prefix.lib))
+        # Builds fall over without this being manually specified
+        env.append_flags("LDFLAGS", f'{self.spec["libiconv"].libs.ld_flags}')
 
     def install(self, spec, prefix):
         install_tree("bin", prefix.bin)
