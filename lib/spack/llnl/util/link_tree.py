@@ -152,9 +152,9 @@ class SourceMergeVisitor(BaseDirectoryVisitor):
             )
         elif proj_rel_path in self.files:
             # When two files project to the same path, they conflict iff they are distinct.
-            # If they are the same (i.e. one links to the other), prefer linking regular files
-            # rather than symlinks. The reason is that in copy-type views, we need a copy of the
-            # actual file, not the symlink.
+            # If they are the same (i.e. one links to the other), register regular files rather
+            # than symlinks. The reason is that in copy-type views, we need a copy of the actual
+            # file, not the symlink.
 
             src_a = os.path.join(*self.files[proj_rel_path])
             src_b = os.path.join(root, rel_path)
