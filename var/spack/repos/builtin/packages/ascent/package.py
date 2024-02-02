@@ -196,40 +196,42 @@ class Ascent(CMakePackage, CudaPackage):
     #######################
     # VTK-m
     #######################
-    depends_on("vtk-m@2.0:", when="@0.9.2: +vtkh")
-    # 2.1 support needs commit e52b7bb8c9fd131f2fd49edf58037cc5ef77a166
-    depends_on("vtk-m@:2.0", when="@:0.9.2 +vtkh")
-    depends_on("vtk-m@1.9", when="@0.9.0:0.9.1 +vtkh")
-    depends_on("vtk-m +doubleprecision ~64bitids", when="+vtkh ^vtk-m")
+    with when("+vtkh"):
+        depends_on("vtk-m +doubleprecision ~64bitids")
+        depends_on("vtk-m@2.0:", when="@0.9.2:")
+        # 2.1 support needs commit e52b7bb8c9fd131f2fd49edf58037cc5ef77a166
+        depends_on("vtk-m@:2.0", when="@:0.9.2")
+        depends_on("vtk-m@1.9", when="@0.9.0:0.9.1")
 
-    depends_on("vtk-m~tbb", when="@0.9.0: +vtkh")
-    depends_on("vtk-m+openmp", when="@0.9.0: +vtkh+openmp")
-    depends_on("vtk-m~openmp", when="@0.9.0: +vtkh~openmp")
-    depends_on("vtk-m~cuda", when="@0.9.0: +vtkh~cuda")
-    depends_on("vtk-m+cuda", when="@0.9.0: +vtkh+cuda")
-    depends_on("vtk-m+fpic", when="@0.8.0: +vtkh")
-    depends_on("vtk-m~shared+fpic", when="@0.8.0: +vtkh~shared")
-    # Ascent defaults to C++11
-    depends_on("kokkos cxxstd=11", when="+vtkh ^vtk-m +kokkos")
+        depends_on("vtk-m~tbb", when="@0.9.0:")
+        depends_on("vtk-m+openmp", when="@0.9.0: +openmp")
+        depends_on("vtk-m~openmp", when="@0.9.0: ~openmp")
+        depends_on("vtk-m~cuda", when="@0.9.0: ~cuda")
+        depends_on("vtk-m+cuda", when="@0.9.0: +cuda")
+        depends_on("vtk-m+fpic", when="@0.8.0:")
+        depends_on("vtk-m~shared+fpic", when="@0.8.0: ~shared")
+        # Ascent defaults to C++11
+        depends_on("kokkos cxxstd=11", when="+vtkh ^vtk-m +kokkos")
 
-    #######################
-    # VTK-h
-    #######################
-    # Ascent 0.9.0 includes VTK-h, prior to 0.9.0
-    # VTK-h was developed externally
-    depends_on("vtk-h@:0.7", when="@:0.7 +vtkh")
-    depends_on("vtk-h@0.8.1:", when="@0.8:0.8 +vtkh")
-    # propagate relevent variants to vtk-h
-    depends_on("vtk-h+openmp", when="@:0.8.0 +vtkh+openmp")
-    depends_on("vtk-h~openmp", when="@:0.8.0 +vtkh~openmp")
-    depends_on("vtk-h+cuda", when="@:0.8.0 +vtkh+cuda")
-    depends_on("vtk-h~cuda", when="@:0.8.0 +vtkh~cuda")
+        #######################
+        # VTK-h
+        #######################
+        # Ascent 0.9.0 includes VTK-h, prior to 0.9.0
+        # VTK-h was developed externally
+        depends_on("vtk-h@:0.7", when="@:0.7")
+        depends_on("vtk-h@0.8.1:", when="@0.8:0.8")
+        # propagate relevant variants to vtk-h
+        depends_on("vtk-h+openmp", when="@:0.8.0 +openmp")
+        depends_on("vtk-h~openmp", when="@:0.8.0 ~openmp")
+        depends_on("vtk-h+cuda", when="@:0.8.0 +cuda")
+        depends_on("vtk-h~cuda", when="@:0.8.0 ~cuda")
+        depends_on("vtk-h+shared", when="@:0.8.0 +shared")
+        depends_on("vtk-h~shared", when="@:0.8.0 ~shared")
+        # When using VTK-h ascent also needs VTK-m
+        depends_on("vtk-m@:1.7", when="@:0.8.0")
+        depends_on("vtk-m+testlib", when="@:0.8.0 +test")
+
     propagate_cuda_arch("vtk-h", "@:0.8.0 +vtkh")
-    depends_on("vtk-h+shared", when="@:0.8.0 +vtkh+shared")
-    depends_on("vtk-h~shared", when="@:0.8.0 +vtkh~shared")
-    # When using VTK-h ascent also needs VTK-m
-    depends_on("vtk-m@:1.7", when="@:0.8.0 +vtkh")
-    depends_on("vtk-m+testlib", when="@:0.8.0 +vtkh+test^vtk-m")
 
     # mfem
     depends_on("mfem~threadsafe~openmp+conduit", when="+mfem")
