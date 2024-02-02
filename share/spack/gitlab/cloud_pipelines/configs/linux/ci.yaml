@@ -15,7 +15,7 @@ ci:
           CI_JOB_SIZE: huge
           SPACK_BUILD_JOBS: "12"
           KUBERNETES_CPU_REQUEST: 12000m
-          KUBERNETES_MEMORY_REQUEST: 46G
+          KUBERNETES_MEMORY_REQUEST: 48G
 
     - match:
       - rust
