@@ -102,7 +102,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("llvm", when="+flecstan @:1")
     depends_on("pfunit@3.0:3", when="@:1")
     depends_on("py-gcovr", when="+coverage @:1")
-    depends_on("openmpi+legacylaunchers", when="+unit_tests ^openmpi")
+    depends_on("openmpi+legacylaunchers", when="+unit_tests ^[virtuals=mpi] openmpi")
 
     # FleCSI@2.x
     depends_on("cmake@3.15:", when="@2.0:")
