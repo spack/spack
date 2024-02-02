@@ -46,12 +46,6 @@ class Astyle(CMakePackage, MakefilePackage):
         return url
 
 
-class CMakeBuilder(CMakeBuilder):
-    def cmake_args(self):
-        args = []
-        return args
-
-
 class MakefileBuilder(MakefileBuilder):
     @property
     def build_directory(self):
