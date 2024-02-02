@@ -3894,28 +3894,33 @@ spack:
 
 
 def test_env_view_resolves_identical_file_conflicts(tmp_path, install_mockery, mock_fetch):
-    """When files clash in a view, but refer to the same file on disk, Spack links the one from the
-    dependency. This is important for copy type views where we need the underlying file to be
-    copied instead of the symlink (which when implemented incorrectly, can produce a
-    self-referencing symlinks after relocation). The test uses a symlink type view though, since
+    """When files clash in a view, but refer to the same file on disk (for example, the dependent
+    symlinks to a file in the dependency at the same relative path), Spack links the first regular
+    file instead of symlinks. This is important for copy type views where we need the underlying
+    file to be copied instead of the symlink (when a symlink would be copied, it would become a
+    self-referencing symlink after relocation). The test uses a symlink type view though, since
     that keeps track of the original file path."""
     with ev.create("env", with_view=tmp_path / "view") as e:
         add("view-resolve-conflict-top")
         install()
-        middle = e.matching_spec("view-resolve-conflict-middle").prefix
+        top = e.matching_spec("view-resolve-conflict-top").prefix
         bottom = e.matching_spec("view-file").prefix
+
+    # In this example we have `./bin/x` in 3 prefixes, two links, one regular file. We expect the
+    # regular file to be linked into the view. There are also 2 links at `./bin/y`, but no regular
+    # file, so we expect standard behavior: first entry is linked into the view.
 
     #   view-resolve-conflict-top/bin/
     #     x -> view-file/bin/x
-    #     y -> view-resolve-conflict-middle/bin/y
+    #     y -> view-resolve-conflict-middle/bin/y    # expect this y to be linked
     #   view-resolve-conflict-middle/bin/
     #     x -> view-file/bin/x
-    #     y -> view-file/bin/x                       # expect this y to be linked
+    #     y -> view-file/bin/x
     #   view-file/bin/
     #     x                                          # expect this x to be linked
 
     assert os.readlink(tmp_path / "view" / "bin" / "x") == bottom.bin.x
-    assert os.readlink(tmp_path / "view" / "bin" / "y") == middle.bin.y
+    assert os.readlink(tmp_path / "view" / "bin" / "y") == top.bin.y
 
 
 def test_env_view_ignores_different_file_conflicts(tmp_path, install_mockery, mock_fetch):

@@ -72,7 +72,8 @@ class SourceMergeVisitor(BaseDirectoryVisitor):
         # and can run mkdir in order.
         self.directories: Dict[str, Tuple[str, str]] = {}
 
-        # Files to link. Maps dst_rel to (src_root, src_rel)
+        # Files to link. Maps dst_rel to (src_root, src_rel). This is an ordered dict, where files
+        # are guaranteed to be grouped by src_root in the order they were visited.
         self.files: Dict[str, Tuple[str, str]] = {}
 
     def before_visit_dir(self, root: str, rel_path: str, depth: int) -> bool:
@@ -135,32 +136,27 @@ class SourceMergeVisitor(BaseDirectoryVisitor):
         self.visit_file(root, rel_path, depth)
         return False
 
-    def visit_file(self, root: str, rel_path: str, depth: int) -> None:
+    def visit_file(self, root: str, rel_path: str, depth: int, *, symlink: bool = False) -> None:
         proj_rel_path = os.path.join(self.projection, rel_path)
 
         if self.ignore(rel_path):
             pass
         elif proj_rel_path in self.directories:
             # Can't create a file where a dir is; fatal error
-            src_a_root, src_a_relpath = self.directories[proj_rel_path]
             self.fatal_conflicts.append(
                 MergeConflict(
                     dst=proj_rel_path,
-                    src_a=os.path.join(src_a_root, src_a_relpath),
+                    src_a=os.path.join(*self.directories[proj_rel_path]),
                     src_b=os.path.join(root, rel_path),
                 )
             )
         elif proj_rel_path in self.files:
-            # Resolve file-file conflicts when two files are identical: this deals with cases of
-            # of symlink to symlink, symlink to regular file and hardlinked files, where in
-            # principle the file we pick is arbitrary. However, for environment views that copy,
-            # we want the file to be copied, not the symlink, so we pick the underlying file, which
-            # should be the current, assuming proper ordering.
-            # NOTE: in principle filecmp could be used too as a more generic solution, but that is
-            # relatively slow, and so far this visitor has only used file metadata, not contents.
-            src_a_root, src_a_relpath = self.files[proj_rel_path]
+            # When two files project to the same path, they conflict iff they are distinct.
+            # If they are the same (i.e. one links to the other), prefer linking regular files
+            # rather than symlinks. The reason is that in copy-type views, we need a copy of the
+            # actual file, not the symlink.
 
-            src_a = os.path.join(src_a_root, src_a_relpath)
+            src_a = os.path.join(*self.files[proj_rel_path])
             src_b = os.path.join(root, rel_path)
 
             try:
@@ -168,22 +164,26 @@ class SourceMergeVisitor(BaseDirectoryVisitor):
             except OSError:
                 samefile = False
 
-            if samefile:
-                # Delete and re-insert to retain correct self.files ordering.
-                del self.files[proj_rel_path]
-                self.files[proj_rel_path] = (root, rel_path)
-            else:
-                # Otherwise register a file conflict. It could be resolved elsewhere.
+            if not samefile:
+                # Distinct files produce a conflict.
                 self.file_conflicts.append(
                     MergeConflict(dst=proj_rel_path, src_a=src_a, src_b=src_b)
                 )
+                return
+
+            if not symlink:
+                # Remove the link in favor of the actual file. The del is necessary to maintain the
+                # order of the files dict, which is grouped by root.
+                del self.files[proj_rel_path]
+                self.files[proj_rel_path] = (root, rel_path)
+
         else:
             # Otherwise register this file to be linked.
             self.files[proj_rel_path] = (root, rel_path)
 
     def visit_symlinked_file(self, root: str, rel_path: str, depth: int) -> None:
         # Treat symlinked files as ordinary files (without "dereferencing")
-        self.visit_file(root, rel_path, depth)
+        self.visit_file(root, rel_path, depth, symlink=True)
 
     def set_projection(self, projection: str) -> None:
         self.projection = os.path.normpath(projection)
