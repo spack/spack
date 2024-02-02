@@ -73,6 +73,7 @@ spack:
   - cabana
   - chai ~benchmarks ~tests
   - conduit
+  - cp2k +mpi
   - datatransferkit
   - flecsi
   - fortrilinos
