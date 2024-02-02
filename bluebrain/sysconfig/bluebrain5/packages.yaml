@@ -104,11 +104,6 @@ packages:
     externals:
     - spec: openssh@9.1p1
       prefix: /usr
-  openssl:
-    # Rebuilding this messes with certificates. Don't do that.
-    externals:
-    - spec: openssl@1.0.2k-fips
-      prefix: /usr
   opengl:
     buildable: false
     version: [4.5]
