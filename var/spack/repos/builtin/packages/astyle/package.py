@@ -46,7 +46,7 @@ class Astyle(CMakePackage, MakefilePackage):
         return url
 
 
-class MakefileBuilder(MakefileBuilder):
+class MakefileBuilder(makefile.MakefileBuilder):
     @property
     def build_directory(self):
         return join_path(self.stage.source_path, "build", self.pkg.compiler.name)
