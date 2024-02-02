@@ -86,9 +86,13 @@ class WindowsOs(OperatingSystem):
                 )
             )
 
+        # Second strategy: Find MSVC via the registry
         def try_query_registry(retry=False):
+            winreg_report_error = lambda e: tty.debug(
+                'Windows registry query on "SOFTWARE\\WOW6432Node\\Microsoft"'
+                f"under HKEY_LOCAL_MACHINE: {str(e)}"
+            )
             try:
-                # Second strategy: Find MSVC via the registry
                 # Registry interactions are subject to race conditions, etc and can generally
                 # be flakey, do this in a catch block to prevent reg issues from interfering
                 # with compiler detection
@@ -97,14 +101,11 @@ class WindowsOs(OperatingSystem):
                 )
                 return msft.find_subkeys(r"VisualStudio_.*", depth=False)
             except OSError as e:
-                # OSErrors propegated into caller by Spack's registry module are expected
+                # OSErrors propagated into caller by Spack's registry module are expected
                 # and indicate a known issue with the registry query
                 # i.e. user does not have permissions or the key/value
                 # doesn't exist
-                tty.debug(
-                    'Windows registry query on "SOFTWARE\\WOW6432Node\\Microsoft"'
-                    f"under HKEY_LOCAL_MACHINE: {str(e)}"
-                )
+                winreg_report_error(e)
             except winreg.InvalidRegistryOperation as e:
                 # Other errors raised by the Spack's reg module indicate
                 # an unexpected error type, and are handled specifically
@@ -116,13 +117,14 @@ class WindowsOs(OperatingSystem):
                 # but the registry raises the same exception for all types of
                 # atypical errors
                 if retry:
-                    tty.debug(
-                        'Windows registry query on "SOFTWARE\\WOW6432Node\\Microsoft"'
-                        f"under HKEY_LOCAL_MACHINE: {str(e)}"
-                    )
+                    winreg_report_error(e)
 
         vs_entries = try_query_registry()
         if not vs_entries:
+            # Occasional spurious race conditions can arise when reading the MS reg
+            # typically these race conditions resolve immediately and we can safely
+            # retry the reg query without waiting
+            # Note: Winreg does not support locking
             vs_entries = try_query_registry(retry=True)
 
         vs_paths = []

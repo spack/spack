@@ -340,8 +340,6 @@ class WindowsRegistryView:
             recursive (bool):  perform a recursive search
         Return:
             the desired subkey as a RegistryKey object, or none
-
-        For more details, see the WindowsRegistryView._find_subkey_s method docstring
         """
         return self._traverse_subkeys(
             WindowsRegistryView.KeyMatchConditions.name_matcher(subkey_name),
@@ -357,8 +355,6 @@ class WindowsRegistryView:
             recursive (bool):  perform a recursive search
         Return:
             the desired subkey as a RegistryKey object, or none
-
-        For more details, see the WindowsRegistryView._find_subkey_s method docstring
         """
         return self._traverse_subkeys(
             WindowsRegistryView.KeyMatchConditions.regex_matcher(subkey_name),
@@ -373,8 +369,6 @@ class WindowsRegistryView:
             subkey_name (str)
         Return:
             the desired subkeys as a list of RegistryKey object, or none
-
-        For more details, see the WindowsRegistryView._find_subkey_s method docstring
         """
         kwargs = {"collect_all_matching": True, "depth_search": depth}
         return self._traverse_subkeys(
@@ -417,7 +411,7 @@ class InvalidKeyError(RegistryError):
 
 class InvalidRegistryOperation(RegistryError):
     """A Runtime Error ecountered when a registry operation is invalid for
-    a non deterministic reason"""
+    an indeterminate reason"""
 
     def __init__(self, name, e, *args, **kwargs):
         message = (
