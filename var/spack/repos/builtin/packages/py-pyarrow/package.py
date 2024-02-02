@@ -42,9 +42,9 @@ class PyPyarrow(PythonPackage, CudaPackage):
     depends_on("py-setuptools@38.6.0:", type="build", when="@7.0.0:")
     depends_on("py-setuptools@40.1.0:", type="build", when="@10.0.1:")
     depends_on("py-setuptools-scm", type="build", when="@0.15.0:")
-    depends_on("py-cython", type="build")
-    depends_on("py-cython@0.29:", type="build", when="@0.15.0:")
-    depends_on("py-cython@0.29.22:", type="build", when="@8.0.0:")
+    depends_on("py-cython@0", type="build")
+    depends_on("py-cython@0.29:0", type="build", when="@0.15.0:")
+    depends_on("py-cython@0.29.22:0", type="build", when="@8.0.0:")
     # in newer pip versions --install-option does not exist
     depends_on("py-pip@:23.0", type="build")
 

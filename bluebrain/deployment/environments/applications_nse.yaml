@@ -46,10 +46,10 @@ spack:
     - emsim
     - placement-algorithm
     - psp-validation
-    # - py-archngv
+    - py-archngv
     - py-atlas-building-tools
     - py-bbp-analysis-framework
-    # - py-bbp-workflow
+    - py-bbp-workflow
     - py-bbp-workflow-cli
     - py-bluepy
     - py-bluepysnap

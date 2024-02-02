@@ -16,7 +16,7 @@ class PyNgvCtools(PythonPackage):
     version("1.0.1", tag="ngv-ctools-v1.0.1")
 
     depends_on("py-setuptools@42.0:", type="build")
-    depends_on("py-pybind11@2.6.1", type=("build", "link"))
+    depends_on("py-pybind11", type=("build", "link"))
 
     depends_on("py-numpy", type="test")
     depends_on("py-mock", type="test")

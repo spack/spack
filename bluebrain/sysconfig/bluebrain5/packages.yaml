@@ -122,6 +122,9 @@ packages:
   py-tables:
     # older versions fail to compile without lzo
     require: "@3.9:"
+  py-urllib3:
+    # newer versions fail when used in conjunction with requests-toolbelt
+    require: "@1"
   qt:
     variants: ~ssl~sql~tools
   range-v3:
