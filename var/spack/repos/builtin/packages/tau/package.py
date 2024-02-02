@@ -22,7 +22,6 @@ class Tau(Package):
     homepage = "https://www.cs.uoregon.edu/research/tau"
     url = "https://www.cs.uoregon.edu/research/tau/tau_releases/tau-2.30.tar.gz"
     git = "https://github.com/UO-OACISS/tau2"
-    # test_requires_compiler = True
 
     tags = ["e4s"]
 
