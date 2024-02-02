@@ -57,7 +57,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # @v2
 
-      - uses: docker/metadata-action@dbef88086f6cef02e264edb7dbf63250c17cef6c
+      - uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81
         id: docker_meta
         with:
           images: |
@@ -118,7 +118,5 @@ jobs:
           context: dockerfiles/${{ matrix.dockerfile[0] }}
           platforms: ${{ matrix.dockerfile[1] }}
           push: ${{ github.event_name != 'pull_request' }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
           tags: ${{ steps.docker_meta.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}

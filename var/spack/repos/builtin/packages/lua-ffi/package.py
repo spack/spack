@@ -23,4 +23,4 @@ class LuaFfi(LuaPackage):
         commit="a1cb731b08c91643b0665935eb5622b3d621211b",
     )
 
-    depends_on("lua@5.1:5.1.99")
+    depends_on("lua-lang@5.1")

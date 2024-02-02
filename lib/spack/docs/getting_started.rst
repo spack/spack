@@ -623,7 +623,7 @@ Fortran.
 
       compilers:
       - compiler:
-        ...
+        # ...
         paths:
           cc: /usr/bin/clang
           cxx: /usr/bin/clang++

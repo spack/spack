@@ -337,8 +337,11 @@ class Acts(CMakePackage, CudaPackage):
     conflicts("+onnx", when="@23.3:", msg="py-onnxruntime@1.12: required but not yet available")
     depends_on("py-pybind11 @2.6.2:", when="+python @18:")
     depends_on("py-pytest", when="+python +unit_tests")
-    depends_on("root @6.10:", when="+tgeo @:0.8.0")
-    depends_on("root @6.20:", when="+tgeo @0.8.1:")
+
+    with when("+tgeo"):
+        depends_on("root @6.10:")
+        depends_on("root @6.20:", when="@0.8.1:")
+
     depends_on("sycl", when="+sycl")
     depends_on("vecmem@0.4: +sycl", when="+sycl")
 
@@ -347,12 +350,18 @@ class Acts(CMakePackage, CudaPackage):
         if isinstance(_cxxstd, _ConditionalVariantValues):
             for _v in _cxxstd:
                 depends_on(
-                    f"geant4 cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} ^geant4"
+                    f"geant4 cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} +geant4"
                 )
-                depends_on(f"root cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} ^root")
+                depends_on(
+                    f"geant4 cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} +fatras_geant4"
+                )
+                depends_on(f"root cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} +tgeo")
         else:
-            depends_on(f"geant4 cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} ^geant4")
-            depends_on(f"root cxxstd={_cxxstd}", when=f"cxxstd={_cxxstd} ^root")
+            depends_on(f"geant4 cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} +geant4")
+            depends_on(
+                f"geant4 cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} +fatras_geant4"
+            )
+            depends_on(f"root cxxstd={_cxxstd}", when=f"cxxstd={_cxxstd} +tgeo")
 
     # ACTS has been using C++17 for a while, which precludes use of old GCC
     conflicts("%gcc@:7", when="@0.23:")

@@ -2537,58 +2537,88 @@ spack:
         assert viewdir not in shell
 
 
+@pytest.mark.parametrize("include_views", [True, False, "split"])
 def test_stack_view_multiple_views(
-    tmpdir, mock_fetch, mock_packages, mock_archive, install_mockery
+    tmp_path,
+    mock_fetch,
+    mock_packages,
+    mock_archive,
+    install_mockery,
+    mutable_config,
+    include_views,
 ):
-    filename = str(tmpdir.join("spack.yaml"))
-    default_viewdir = str(tmpdir.join("default-view"))
-    combin_viewdir = str(tmpdir.join("combinatorial-view"))
-    with open(filename, "w") as f:
-        f.write(
-            """\
-spack:
+    """Test multiple views as both included views (True), as both environment
+    views (False), or as one included and the other in the environment."""
+    # Write the view configuration and or manifest file
+    view_filename = tmp_path / "view.yaml"
+    base_content = """\
   definitions:
     - packages: [mpileaks, cmake]
-    - compilers: ['%%gcc', '%%clang']
+    - compilers: ['%gcc', '%clang']
   specs:
     - matrix:
         - [$packages]
         - [$compilers]
+"""
 
-  view:
-    default:
-      root: %s
-      select: ['%%gcc']
-    combinatorial:
-      root: %s
-      exclude: [callpath %%gcc]
-      projections:
-        'all': '{name}/{version}-{compiler.name}'"""
-            % (default_viewdir, combin_viewdir)
-        )
-    with tmpdir.as_cwd():
-        env("create", "test", "./spack.yaml")
-        with ev.read("test"):
-            install()
+    include_content = f"  include:\n    - {view_filename}\n"
+    view_line = "  view:\n"
 
-        shell = env("activate", "--sh", "test")
-        assert "PATH" in shell
-        assert os.path.join(default_viewdir, "bin") in shell
+    comb_dir = tmp_path / "combinatorial-view"
+    comb_view = """\
+{0}combinatorial:
+{0}  root: {1}
+{0}  exclude: [callpath%gcc]
+{0}  projections:
+"""
 
-        test = ev.read("test")
-        for spec in test._get_environment_specs():
+    projection = "    'all': '{name}/{version}-{compiler.name}'"
+
+    default_dir = tmp_path / "default-view"
+    default_view = """\
+{0}default:
+{0}  root: {1}
+{0}  select: ['%gcc']
+"""
+
+    content = "spack:\n"
+    indent = "  "
+    if include_views is True:
+        # Include both the gcc and combinatorial views
+        view = "view:\n" + default_view.format(indent, str(default_dir))
+        view += comb_view.format(indent, str(comb_dir)) + indent + projection
+        view_filename.write_text(view)
+        content += include_content + base_content
+    elif include_views == "split":
+        # Include the gcc view and inline the combinatorial view
+        view = "view:\n" + default_view.format(indent, str(default_dir))
+        view_filename.write_text(view)
+        content += include_content + base_content + view_line
+        indent += "  "
+        content += comb_view.format(indent, str(comb_dir)) + indent + projection
+    else:
+        # Inline both the gcc and combinatorial views in the environment.
+        indent += "  "
+        content += base_content + view_line
+        content += default_view.format(indent, str(default_dir))
+        content += comb_view.format(indent, str(comb_dir)) + indent + projection
+
+    filename = tmp_path / ev.manifest_name
+    filename.write_text(content)
+
+    env("create", "test", str(filename))
+    with ev.read("test"):
+        install()
+
+    with ev.read("test") as e:
+        assert os.path.exists(str(default_dir / "bin"))
+        for spec in e._get_environment_specs():
+            spec_subdir = f"{spec.version}-{spec.compiler.name}"
+            comb_spec_dir = str(comb_dir / spec.name / spec_subdir)
             if not spec.satisfies("callpath%gcc"):
-                assert os.path.exists(
-                    os.path.join(
-                        combin_viewdir, spec.name, "%s-%s" % (spec.version, spec.compiler.name)
-                    )
-                )
+                assert os.path.exists(comb_spec_dir)
             else:
-                assert not os.path.exists(
-                    os.path.join(
-                        combin_viewdir, spec.name, "%s-%s" % (spec.version, spec.compiler.name)
-                    )
-                )
+                assert not os.path.exists(comb_spec_dir)
 
 
 def test_env_activate_sh_prints_shell_output(tmpdir, mock_stage, mock_fetch, install_mockery):
@@ -3714,3 +3744,150 @@ def test_environment_created_from_lockfile_has_view(mock_packages, temporary_sto
     # Make sure the view was created
     with ev.Environment(env_b) as e:
         assert os.path.isdir(e.view_path_default)
+
+
+def test_env_view_disabled(tmp_path, mutable_mock_env_path):
+    """Ensure an inlined view being disabled means not even the default view
+    is created (since the case doesn't appear to be covered in this module)."""
+    spack_yaml = tmp_path / ev.manifest_name
+    spack_yaml.write_text(
+        """\
+spack:
+  specs:
+  - mpileaks
+  view: false
+"""
+    )
+    env("create", "disabled", str(spack_yaml))
+    with ev.read("disabled") as e:
+        e.concretize()
+
+    assert len(e.views) == 0
+    assert not os.path.exists(e.view_path_default)
+
+
+@pytest.mark.parametrize("first", ["false", "true", "custom"])
+def test_env_include_mixed_views(tmp_path, mutable_mock_env_path, mutable_config, first):
+    """Ensure including path and boolean views in different combinations result
+    in the creation of only the first view if it is not disabled."""
+    false_yaml = tmp_path / "false-view.yaml"
+    false_yaml.write_text("view: false\n")
+
+    true_yaml = tmp_path / "true-view.yaml"
+    true_yaml.write_text("view: true\n")
+
+    custom_name = "my-test-view"
+    custom_view = tmp_path / custom_name
+    custom_yaml = tmp_path / "custom-view.yaml"
+    custom_yaml.write_text(
+        f"""
+view:
+  {custom_name}:
+    root: {custom_view}
+"""
+    )
+
+    if first == "false":
+        order = [false_yaml, true_yaml, custom_yaml]
+    elif first == "true":
+        order = [true_yaml, custom_yaml, false_yaml]
+    else:
+        order = [custom_yaml, false_yaml, true_yaml]
+    includes = [f"  - {yaml}\n" for yaml in order]
+
+    spack_yaml = tmp_path / ev.manifest_name
+    spack_yaml.write_text(
+        f"""\
+spack:
+  include:
+{''.join(includes)}
+  specs:
+  - mpileaks
+  packages:
+    mpileaks:
+      compiler: [gcc]
+"""
+    )
+
+    env("create", "test", str(spack_yaml))
+    with ev.read("test") as e:
+        concretize()
+
+    # Only the first included view should be created if view not disabled by it
+    assert len(e.views) == 0 if first == "false" else 1
+    if first == "true":
+        assert os.path.exists(e.view_path_default)
+    else:
+        assert not os.path.exists(e.view_path_default)
+
+    if first == "custom":
+        assert os.path.exists(custom_view)
+    else:
+        assert not os.path.exists(custom_view)
+
+
+def test_stack_view_multiple_views_same_name(
+    tmp_path, mock_fetch, mock_packages, mock_archive, install_mockery, mutable_config
+):
+    """Test multiple views with the same name combine settings with precedence
+    given to the options in spack.yaml."""
+    # Write the view configuration and or manifest file
+
+    view_filename = tmp_path / "view.yaml"
+    default_dir = tmp_path / "default-view"
+    default_view = f"""\
+view:
+  default:
+    root: {default_dir}
+    select: ['%gcc']
+    projections:
+      all: '{{name}}/{{version}}-{{compiler.name}}'
+"""
+    view_filename.write_text(default_view)
+
+    view_dir = tmp_path / "view"
+    content = f"""\
+spack:
+  include:
+  - {view_filename}
+  definitions:
+    - packages: [mpileaks, cmake]
+    - compilers: ['%gcc', '%clang']
+  specs:
+    - matrix:
+        - [$packages]
+        - [$compilers]
+
+  view:
+    default:
+      root: {view_dir}
+      exclude: ['cmake']
+      projections:
+        all: '{{name}}/{{compiler.name}}-{{version}}'
+"""
+
+    filename = tmp_path / ev.manifest_name
+    filename.write_text(content)
+
+    env("create", "test", str(filename))
+    with ev.read("test"):
+        install()
+
+    with ev.read("test") as e:
+        # the view root in the included view should NOT exist
+        assert not os.path.exists(str(default_dir))
+
+        for spec in e._get_environment_specs():
+            # no specs will exist in the included view projection
+            included_spec_subdir = f"{spec.version}-{spec.compiler.name}"
+            included_spec_dir = str(view_dir / spec.name / included_spec_subdir)
+            assert not os.path.exists(included_spec_dir)
+
+            # only specs compiled with %gcc (selected in the included view) that
+            # are also not cmake (excluded in the environment view) should exist
+            env_spec_subdir = f"{spec.compiler.name}-{spec.version}"
+            env_spec_dir = str(view_dir / spec.name / env_spec_subdir)
+            if spec.satisfies("cmake") or spec.satisfies("%clang"):
+                assert not os.path.exists(env_spec_dir)
+            else:
+                assert os.path.exists(env_spec_dir)
