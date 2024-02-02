@@ -49,30 +49,21 @@ from spack.reporters.cdash import build_stamp as cdash_build_stamp
 
 from .formatters import get_formatter, UnknownFormatterException
 
-# See https://docs.gitlab.com/ee/ci/yaml/#retry for descriptions of conditions
-JOB_RETRY_CONDITIONS = [
-    # "always",
-    "unknown_failure",
-    "script_failure",
-    "api_failure",
-    "stuck_or_timeout_failure",
-    "runner_system_failure",
-    "runner_unsupported",
-    "stale_schedule",
-    # "job_execution_timeout",
-    "archived_failure",
-    "unmet_prerequisites",
-    "scheduler_failure",
-    "data_integrity_failure",
+__all__ = [
+    "PipelineDag",
+    "PipelineOptions",
+    "PipelineType",
+    "SpackCI",
+    "unpack_script",
 ]
+
+
 
 TEMP_STORAGE_MIRROR_NAME = "ci_temporary_mirror"
 SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
 # TODO: Remove this in Spack 0.23
 SHARED_PR_MIRROR_URL = "s3://spack-binaries-prs/shared_pr_mirror"
-JOB_NAME_FORMAT = (
-    "{name}{@version} {/hash:7} {%compiler.name}{@compiler.version}{arch=architecture}"
-)
+
 
 
 
@@ -255,74 +246,8 @@ class PipelineDag:
         return [n for n in node.children]
 
 
-def get_job_name(spec: spack.spec.Spec, build_group: str = ""):
-    """Given a spec and possibly a build group, return the job name. If the
-    resulting name is longer than 255 characters, it will be truncated.
-
-    Arguments:
-        spec (spack.spec.Spec): Spec job will build
-        build_group (str): Name of build group this job belongs to (a CDash
-        notion)
-
-    Returns: The job name
-    """
-    job_name = spec.format(JOB_NAME_FORMAT)
-
-    if build_group:
-        job_name = "{0} {1}".format(job_name, build_group)
-
-    return job_name[:255]
-
-
-def _print_staging_summary(spec_labels, stages, mirrors_to_check, rebuild_decisions):
-    if not stages:
-        return
-
-    mirrors = spack.mirror.MirrorCollection(mirrors=mirrors_to_check, binary=True)
-    tty.msg("Checked the following mirrors for binaries:")
-    for m in mirrors.values():
-        tty.msg("  {0}".format(m.fetch_url))
-
-    tty.msg("Staging summary ([x] means a job needs rebuilding):")
-    for stage_index, stage in enumerate(stages):
-        tty.msg(f"  stage {stage_index} ({len(stage)} jobs):")
-
-        for job in sorted(stage, key=lambda j: (not rebuild_decisions[j].rebuild, j)):
-            s = spec_labels[job]
-            reason = rebuild_decisions[job].reason
-            reason_msg = f" ({reason})" if reason else ""
-            spec_fmt = "{name}{@version}{%compiler}{/hash:7}"
-            if rebuild_decisions[job].rebuild:
-                status = colorize("@*g{[x]}  ")
-                msg = f"  {status}{s.cformat(spec_fmt)}{reason_msg}"
-            else:
-                msg = f"{s.format(spec_fmt)}{reason_msg}"
-                if rebuild_decisions[job].mirrors:
-                    msg += f" [{', '.join(rebuild_decisions[job].mirrors)}]"
-                msg = colorize(f"  @K -   {cescape(msg)}@.")
-            tty.msg(msg)
-
-
 def _spec_matches(spec, match_string):
     return spec.intersects(match_string)
-
-
-def _format_job_needs(
-    dep_jobs, build_group, prune_dag, rebuild_decisions, enable_artifacts_buildcache
-):
-    needs_list = []
-    for dep_job in dep_jobs:
-        dep_spec_key = _spec_deps_key(dep_job)
-        rebuild = rebuild_decisions[dep_spec_key].rebuild
-
-        if not prune_dag or rebuild:
-            needs_list.append(
-                {
-                    "job": get_job_name(dep_job, build_group),
-                    "artifacts": enable_artifacts_buildcache,
-                }
-            )
-    return needs_list
 
 
 def get_change_revisions():
@@ -418,7 +343,7 @@ def get_spec_filter_list(env, affected_pkgs, dependent_traverse_depth=None):
     return affected_specs
 
 
-def prune_unaffected_specs(pipeline, affected_specs):
+def prune_unaffected_specs(pipeline: PipelineDag, affected_specs: List[spack.spec.Spec]):
     """Prune any unaffected specs from the pipeline"""
     to_prune = set()
     for _, (key, node) in pipeline.traverse(top_down=True):
@@ -739,17 +664,6 @@ def collect_pipeline_options(
     os environment variables """
     options = PipelineOptions()
 
-    """
-    output_file = args.output_file
-    copy_yaml_to = args.copy_to
-    run_optimizer = args.optimize
-    use_dependencies = args.dependencies
-    prune_dag = args.prune_dag
-    index_only = args.index_only
-    artifacts_root = args.artifacts_root
-    buildcache_destination = args.buildcache_destination
-    """
-
     options.output_file = args.output_file
     options.run_optimizer = args.optimize
     options.use_dependencies = args.dependencies
@@ -762,7 +676,6 @@ def collect_pipeline_options(
 
     cdash_config = cfg.get("cdash")
     cdash_handler = CDashHandler(cdash_config) if "build-group" in cdash_config else None
-    build_group = cdash_handler.build_group if cdash_handler else None
 
     dependent_depth = os.environ.get("SPACK_PRUNE_UNTOUCHED_DEPENDENT_DEPTH", None)
     if dependent_depth is not None:
@@ -805,28 +718,28 @@ def collect_pipeline_options(
         tty.warn("Support for temporary-storage-url-prefix will be removed in Spack 0.23")
         options.temporary_storage_url_prefix = ci_config["temporary-storage-url-prefix"]
 
-    """
-        True,
-        output_file,
-        prune_dag=prune_dag,
-        check_index_only=index_only,
-        run_optimizer=run_optimizer,
-        use_dependencies=use_dependencies,
-        artifacts_root=artifacts_root,
-        remote_mirror_override=buildcache_destination,
-
-    print_summary,
-    output_file,
-    prune_dag=False,
-    check_index_only=False,
-    run_optimizer=False,
-    use_dependencies=False,
-    artifacts_root=None,
-    remote_mirror_override=None,
-
-    """
-
     return options
+
+
+def update_env_scopes(env_manifest_path: str, cli_scopes: List[str]) -> None:
+    """Add any config scopes from cli_scopes which aren't already included in the
+    environment, by reading the yaml, adding the missing includes, and writing the
+    updated yaml back to the same location.
+    """
+    with open(env_manifest_path, "r") as env_fd:
+        env_yaml_root = syaml.load(env_fd)
+
+    # Add config scopes to environment
+    env_includes = env_yaml_root["spack"].get("include", [])
+    include_scopes = []
+    for scope in cli_scopes:
+        if scope not in include_scopes and scope not in env_includes:
+            include_scopes.insert(0, scope)
+    env_includes.extend(include_scopes)
+    env_yaml_root["spack"]["include"] = env_includes
+
+    with open(env_manifest_path, "w") as fd:
+        fd.write(syaml.dump_config(env_yaml_root, default_flow_style=False))
 
 
 def generate_pipeline(env: ev.Environment, args: spack.main.SpackArgumentParser) -> None:
@@ -861,27 +774,7 @@ def generate_pipeline(env: ev.Environment, args: spack.main.SpackArgumentParser)
     except UnknownFormatterException:
         tty.die(f"Spack CI module cannot generate a pipeline for format {ci_target}")
 
-    # We were requested to prune untouched packages.  If we're actually in a git repo,
-    # then here we'll generate a list of all possibly affected environment specs, based
-    # on the names of packages touched in the history between rev1 and rev2.
-    if options.prune_untouched_packages:
-        rev1, rev2 = get_change_revisions()
-        tty.debug("Got following revisions: rev1={0}, rev2={1}".format(rev1, rev2))
-        if rev1 and rev2:
-            # If the stack file itself did not change, proceed with pruning
-            if not get_stack_changed(env.manifest_path, rev1, rev2):
-                affected_pkgs = compute_affected_packages(rev1, rev2)
-                tty.debug("affected pkgs:")
-                for p in affected_pkgs:
-                    tty.debug("  {0}".format(p))
-                affected_specs = get_spec_filter_list(
-                    env, affected_pkgs, dependent_traverse_depth=options.untouched_pruning_dependent_depth
-                )
-                tty.msg(f"dependent_traverse_depth={options.untouched_pruning_dependent_depth}, affected specs:")
-                for s in affected_specs:
-                    tty.msg(f"  {PipelineDag.key(s)}")
-            else:
-                options.prune_untouched_packages = False
+
 
     # If we are not doing any kind of pruning, we are rebuilding everything
     rebuild_everything = not options.prune_up_to_date and not options.pruned_untouched
@@ -946,69 +839,6 @@ def generate_pipeline(env: ev.Environment, args: spack.main.SpackArgumentParser)
             cfg.default_modify_scope(),
         )
 
-    pipeline_artifacts_dir = options.artifacts_root
-    if not pipeline_artifacts_dir:
-        proj_dir = os.environ.get("CI_PROJECT_DIR", os.getcwd())
-        pipeline_artifacts_dir = os.path.join(proj_dir, "jobs_scratch_dir")
-
-    pipeline_artifacts_dir = os.path.abspath(pipeline_artifacts_dir)
-    concrete_env_dir = os.path.join(pipeline_artifacts_dir, "concrete_environment")
-
-    # Now that we've added the mirrors we know about, they should be properly
-    # reflected in the environment manifest file, so copy that into the
-    # concrete environment directory, along with the spack.lock file.
-    if not os.path.exists(concrete_env_dir):
-        os.makedirs(concrete_env_dir)
-    shutil.copyfile(env.manifest_path, os.path.join(concrete_env_dir, "spack.yaml"))
-    shutil.copyfile(env.lock_path, os.path.join(concrete_env_dir, "spack.lock"))
-
-    with open(env.manifest_path, "r") as env_fd:
-        env_yaml_root = syaml.load(env_fd)
-        # Add config scopes to environment
-        env_includes = env_yaml_root["spack"].get("include", [])
-        cli_scopes = [
-            os.path.relpath(s.path, concrete_env_dir)
-            for s in cfg.scopes().values()
-            if isinstance(s, cfg.ImmutableConfigScope)
-            and s.path not in env_includes
-            and os.path.exists(s.path)
-        ]
-        include_scopes = []
-        for scope in cli_scopes:
-            if scope not in include_scopes and scope not in env_includes:
-                include_scopes.insert(0, scope)
-        env_includes.extend(include_scopes)
-        env_yaml_root["spack"]["include"] = env_includes
-
-        if "gitlab-ci" in env_yaml_root["spack"] and "ci" not in env_yaml_root["spack"]:
-            env_yaml_root["spack"]["ci"] = env_yaml_root["spack"].pop("gitlab-ci")
-            translate_deprecated_config(env_yaml_root["spack"]["ci"])
-
-        with open(os.path.join(concrete_env_dir, "spack.yaml"), "w") as fd:
-            fd.write(syaml.dump_config(env_yaml_root, default_flow_style=False))
-
-    job_log_dir = os.path.join(pipeline_artifacts_dir, "logs")
-    job_repro_dir = os.path.join(pipeline_artifacts_dir, "reproduction")
-    job_test_dir = os.path.join(pipeline_artifacts_dir, "tests")
-    # TODO: Remove this line in Spack 0.23
-    local_mirror_dir = os.path.join(pipeline_artifacts_dir, "mirror")
-    user_artifacts_dir = os.path.join(pipeline_artifacts_dir, "user_data")
-
-    # We communicate relative paths to the downstream jobs to avoid issues in
-    # situations where the CI_PROJECT_DIR varies between the pipeline
-    # generation job and the rebuild jobs.  This can happen when gitlab
-    # checks out the project into a runner-specific directory, for example,
-    # and different runners are picked for generate and rebuild jobs.
-    ci_project_dir = os.environ.get("CI_PROJECT_DIR", os.getcwd())
-    rel_artifacts_root = os.path.relpath(pipeline_artifacts_dir, ci_project_dir)
-    rel_concrete_env_dir = os.path.relpath(concrete_env_dir, ci_project_dir)
-    rel_job_log_dir = os.path.relpath(job_log_dir, ci_project_dir)
-    rel_job_repro_dir = os.path.relpath(job_repro_dir, ci_project_dir)
-    rel_job_test_dir = os.path.relpath(job_test_dir, ci_project_dir)
-    # TODO: Remove this line in Spack 0.23
-    rel_local_mirror_dir = os.path.join(local_mirror_dir, ci_project_dir)
-    rel_user_artifacts_dir = os.path.relpath(user_artifacts_dir, ci_project_dir)
-
     # Build a pipeline from the specs in the concrete environment
     pipeline = PipelineDag(
         [
@@ -1019,26 +849,50 @@ def generate_pipeline(env: ev.Environment, args: spack.main.SpackArgumentParser)
     )
 
     # Possibly prune specs that were unaffected by the change
-    if prune_untouched_packages:
-        prune_unaffected_specs(pipeline, affected_specs)
-    else:
-        tty.msg("Untouched spec pruning disabled")
+    if options.prune_untouched:
+        # If we don't have two revisions to compare, or if either the spack.yaml
+        # associated with the active env or the .gitlab-ci.yml files changed
+        # between the provided revisions, then don't do any "untouched spec"
+        # pruning.  Otherwise, list the names of all packages touched between
+        # rev1 and rev2, and prune from the pipeline any node whose spec has a
+        # packagen name not in that list.
+        rev1, rev2 = get_change_revisions()
+        tty.debug("Got following revisions: rev1={0}, rev2={1}".format(rev1, rev2))
+        if rev1 and rev2:
+            # If the stack file itself did not change, proceed with pruning
+            if not get_stack_changed(env.manifest_path, rev1, rev2):
+                affected_pkgs = compute_affected_packages(rev1, rev2)
+                tty.debug("affected pkgs:")
+                for p in affected_pkgs:
+                    tty.debug("  {0}".format(p))
+                affected_specs = get_spec_filter_list(
+                    env, affected_pkgs, dependent_traverse_depth=options.untouched_pruning_dependent_depth
+                )
+                tty.msg(f"dependent_traverse_depth={options.untouched_pruning_dependent_depth}, affected specs:")
+                for s in affected_specs:
+                    tty.msg(f"  {PipelineDag.key(s)}")
 
-    # Possibly prune specs that are already built on some con
-    if prune_dag:
-        prune_built_specs(pipeline, mirrors_to_check, check_index_only)
-    else:
-        tty.msg("DAG (already built) pruning disabled")
+                prune_unaffected_specs(pipeline, affected_specs)
 
+    # Possibly prune specs that are already built on some configured mirror
+    if options.prune_up_to_date:
+        prune_built_specs(pipeline, mirrors_to_check, options.check_index_only)
+
+    # List all specs remaining after any pruning
     pipeline_specs = [n.spec for _, (k, n) in pipeline.traverse(top_down=True)]
 
+    # FIXME: This block needs detangling, these bits are all involved:
+    #     - here we write manifest file for stack pipeline
+    #     - gitlab passes manifest files from multiple stack pipelines
+    #           as artifacts to a single job, so files names can collide
+    #     - in protected-publish, where "spack buildcache sync --manifest" happens
     spack_buildcache_copy = os.environ.get("SPACK_COPY_BUILDCACHE", None)
     if spack_buildcache_copy:
         buildcache_copy_dest_prefix = spack_buildcache_copy
         buildcache_copy_src_prefix = (
             buildcache_destination.fetch_url
             if buildcache_destination
-            else remote_mirror_override or remote_mirror_url
+            else options.remote_mirror_override or remote_mirror_url
         )
 
         if options.pipeline_type == PipelineType.COPY_ONLY:
@@ -1046,18 +900,19 @@ def generate_pipeline(env: ev.Environment, args: spack.main.SpackArgumentParser)
         else:
             manifest_specs = pipeline_specs
 
+        pipeline_artifacts_dir = os.path.abspath(options.artifacts_root)
         copy_specs_dir = os.path.join(pipeline_artifacts_dir, "specs_to_copy")
         copy_specs_file = os.path.join(
             copy_specs_dir,
-            "copy_{}_specs.json".format(spack_stack_name if spack_stack_name else "rebuilt"),
+            "copy_{}_specs.json".format(options.stack_name if options.stack_name else "rebuilt"),
         )
 
         write_pipeline_manifest(manifest_specs, buildcache_copy_src_prefix, buildcache_copy_dest_prefix, copy_specs_file)
 
     # If this is configured, spack will fail "spack ci generate" if it
     # generates any hash which exists under the broken specs url.
-    if broken_specs_url and not options.pipeline_type == PipelineType.COPY_ONLY:
-        broken = check_for_broken_specs(pipeline_specs, broken_specs_url)
+    if options.broken_specs_url and not options.pipeline_type == PipelineType.COPY_ONLY:
+        broken = check_for_broken_specs(pipeline_specs, options.broken_specs_url)
         if broken and not rebuild_everything:
             sys.exit(1)
 
@@ -1065,34 +920,26 @@ def generate_pipeline(env: ev.Environment, args: spack.main.SpackArgumentParser)
     spack_ci_ir = spack_ci.generate_ir()
 
     # Format the pipeline using the formatter specified in the environment
-    target_formatter(pipeline, spack_ci_ir, output_file)
+    target_formatter(pipeline, spack_ci_ir, options.output_file)
 
     # Clean up remote mirror override if enabled
     # TODO: Remove this block in Spack 0.23
     if deprecated_mirror_config:
-        if remote_mirror_override:
+        if options.remote_mirror_override:
             spack.mirror.remove("ci_pr_mirror", cfg.default_modify_scope())
-        if spack_pipeline_type == "spack_pull_request":
+        if options.pipeline_type == PipelineType.PULL_REQUEST:
             spack.mirror.remove("ci_shared_pr_mirror", cfg.default_modify_scope())
 
-    # Use "all_job_names" to populate the build group for this set
-    if cdash_handler and cdash_handler.auth_token:
+    # Use all unpruned specs to populate the build group for this set
+    if options.cdash_handler and options.cdash_handler.auth_token:
         try:
-            cdash_handler.populate_buildgroup(all_job_names)
+            options.cdash_handler.populate_buildgroup([
+                options.cdash_handler.build_name(s) for s in pipeline_specs
+            ])
         except (SpackError, HTTPError, URLError) as err:
             tty.warn("Problem populating buildgroup: {0}".format(err))
     else:
         tty.warn("Unable to populate buildgroup without CDash credentials")
-
-
-
-
-
-def _url_encode_string(input_string):
-    encoded_keyval = urlencode({"donotcare": input_string})
-    eq_idx = encoded_keyval.find("=") + 1
-    encoded_value = encoded_keyval[eq_idx:]
-    return encoded_value
 
 
 def import_signing_key(base64_signing_key):
@@ -1924,9 +1771,6 @@ class CDashHandler:
         if runner:
             self.site += " ({0})".format(runner)
 
-        # track current spec, if any
-        self.current_spec = None
-
     def args(self):
         return [
             "--cdash-upload-url",
@@ -1939,16 +1783,14 @@ class CDashHandler:
             self.build_stamp,
         ]
 
-    @property  # type: ignore
-    def build_name(self):
+    def build_name(self, spec: spack.spec.Spec = None) -> str:
         """Returns the CDash build name.
 
-        A name will be generated if the `current_spec` property is set;
+        A name will be generated if the `spec` is provided,
         otherwise, the value will be retrieved from the environment
         through the `SPACK_CDASH_BUILD_NAME` variable.
 
         Returns: (str) current spec's CDash build name."""
-        spec = self.current_spec
         if spec:
             build_name = "{0}@{1}%{2} hash={3} arch={4} ({5})".format(
                 spec.name,
@@ -2083,85 +1925,3 @@ class CDashHandler:
         )
         reporter = CDash(configuration=configuration)
         reporter.test_skipped_report(report_dir, spec, reason)
-
-
-def translate_deprecated_config(config):
-    # Remove all deprecated keys from config
-    mappings = config.pop("mappings", [])
-    match_behavior = config.pop("match_behavior", "first")
-
-    build_job = {}
-    if "image" in config:
-        build_job["image"] = config.pop("image")
-    if "tags" in config:
-        build_job["tags"] = config.pop("tags")
-    if "variables" in config:
-        build_job["variables"] = config.pop("variables")
-
-    # Scripts always override in old CI
-    if "before_script" in config:
-        build_job["before_script:"] = config.pop("before_script")
-    if "script" in config:
-        build_job["script:"] = config.pop("script")
-    if "after_script" in config:
-        build_job["after_script:"] = config.pop("after_script")
-
-    signing_job = None
-    if "signing-job-attributes" in config:
-        signing_job = {"signing-job": config.pop("signing-job-attributes")}
-
-    service_job_attributes = None
-    if "service-job-attributes" in config:
-        service_job_attributes = config.pop("service-job-attributes")
-
-    # If this config already has pipeline-gen do not more
-    if "pipeline-gen" in config:
-        return True if mappings or build_job or signing_job or service_job_attributes else False
-
-    config["target"] = "gitlab"
-
-    config["pipeline-gen"] = []
-    pipeline_gen = config["pipeline-gen"]
-
-    # Build Job
-    submapping = []
-    for section in mappings:
-        submapping_section = {"match": section["match"]}
-        if "runner-attributes" in section:
-            remapped_attributes = {}
-            if match_behavior == "first":
-                for key, value in section["runner-attributes"].items():
-                    # Scripts always override in old CI
-                    if key == "script":
-                        remapped_attributes["script:"] = value
-                    elif key == "before_script":
-                        remapped_attributes["before_script:"] = value
-                    elif key == "after_script":
-                        remapped_attributes["after_script:"] = value
-                    else:
-                        remapped_attributes[key] = value
-            else:
-                # Handle "merge" behavior be allowing scripts to merge in submapping section
-                remapped_attributes = section["runner-attributes"]
-            submapping_section["build-job"] = remapped_attributes
-
-        if "remove-attributes" in section:
-            # Old format only allowed tags in this section, so no extra checks are needed
-            submapping_section["build-job-remove"] = section["remove-attributes"]
-        submapping.append(submapping_section)
-    pipeline_gen.append({"submapping": submapping, "match_behavior": match_behavior})
-
-    if build_job:
-        pipeline_gen.append({"build-job": build_job})
-
-    # Signing Job
-    if signing_job:
-        pipeline_gen.append(signing_job)
-
-    # Service Jobs
-    if service_job_attributes:
-        pipeline_gen.append({"reindex-job": service_job_attributes})
-        pipeline_gen.append({"noop-job": service_job_attributes})
-        pipeline_gen.append({"cleanup-job": service_job_attributes})
-
-    return True

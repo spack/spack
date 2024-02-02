@@ -2,17 +2,107 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import copy
 import os
+import shutil
 
 import llnl.util.tty as tty
 
-from ..ci import PipelineDag, PipelineOptions, PipelineType, SpackCI, unpack_script
+from ..ci import *
 from . import formatter
+
+
+# See https://docs.gitlab.com/ee/ci/yaml/#retry for descriptions of conditions
+JOB_RETRY_CONDITIONS = [
+    # "always",
+    "unknown_failure",
+    "script_failure",
+    "api_failure",
+    "stuck_or_timeout_failure",
+    "runner_system_failure",
+    "runner_unsupported",
+    "stale_schedule",
+    # "job_execution_timeout",
+    "archived_failure",
+    "unmet_prerequisites",
+    "scheduler_failure",
+    "data_integrity_failure",
+]
+JOB_NAME_FORMAT = (
+    "{name}{@version} {/hash:7} {%compiler.name}{@compiler.version}{arch=architecture}"
+)
 
 
 def _remove_reserved_tags(tags):
     """Convenience function to strip reserved tags from jobs"""
     return [tag for tag in tags if tag not in SPACK_RESERVED_TAGS]
+
+
+def _format_job_needs(
+    dep_jobs, build_group, prune_dag, rebuild_decisions, enable_artifacts_buildcache
+):
+    needs_list = []
+    for dep_job in dep_jobs:
+        dep_spec_key = _spec_deps_key(dep_job)
+        rebuild = rebuild_decisions[dep_spec_key].rebuild
+
+        if not prune_dag or rebuild:
+            needs_list.append(
+                {
+                    "job": get_job_name(dep_job, build_group),
+                    "artifacts": enable_artifacts_buildcache,
+                }
+            )
+    return needs_list
+
+
+def get_job_name(spec: spack.spec.Spec, build_group: str = ""):
+    """Given a spec and possibly a build group, return the job name. If the
+    resulting name is longer than 255 characters, it will be truncated.
+
+    Arguments:
+        spec (spack.spec.Spec): Spec job will build
+        build_group (str): Name of build group this job belongs to (a CDash
+        notion)
+
+    Returns: The job name
+    """
+    job_name = spec.format(JOB_NAME_FORMAT)
+
+    if build_group:
+        job_name = "{0} {1}".format(job_name, build_group)
+
+    return job_name[:255]
+
+
+def _print_staging_summary(spec_labels, stages, mirrors_to_check, rebuild_decisions):
+    if not stages:
+        return
+
+    mirrors = spack.mirror.MirrorCollection(mirrors=mirrors_to_check, binary=True)
+    tty.msg("Checked the following mirrors for binaries:")
+    for m in mirrors.values():
+        tty.msg("  {0}".format(m.fetch_url))
+
+    tty.msg("Staging summary ([x] means a job needs rebuilding):")
+    for stage_index, stage in enumerate(stages):
+        tty.msg(f"  stage {stage_index} ({len(stage)} jobs):")
+
+        for job in sorted(stage, key=lambda j: (not rebuild_decisions[j].rebuild, j)):
+            s = spec_labels[job]
+            reason = rebuild_decisions[job].reason
+            reason_msg = f" ({reason})" if reason else ""
+            spec_fmt = "{name}{@version}{%compiler}{/hash:7}"
+            if rebuild_decisions[job].rebuild:
+                status = colorize("@*g{[x]}  ")
+                msg = f"  {status}{s.cformat(spec_fmt)}{reason_msg}"
+            else:
+                msg = f"{s.format(spec_fmt)}{reason_msg}"
+                if rebuild_decisions[job].mirrors:
+                    msg += f" [{', '.join(rebuild_decisions[job].mirrors)}]"
+                msg = colorize(f"  @K -   {cescape(msg)}@.")
+            tty.msg(msg)
 
 
 @formatter("gitlab")
@@ -27,6 +117,10 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
             all jobs in the pipeline
         output_file (str): Path to output file to be written
     """
+    ci_project_dir = os.environ.get("CI_PROJECT_DIR", os.getcwd())
+    pipeline_artifacts_dir = os.path.abspath(options.artifacts_root)
+    if not pipeline_artifacts_dir:
+        pipeline_artifacts_dir = os.path.join(ci_project_dir, "jobs_scratch_dir")
     output_file = options.output_file
 
     if not output_file:
@@ -36,6 +130,45 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
         gen_ci_dir = os.path.dirname(output_file_path)
         if not os.path.exists(gen_ci_dir):
             os.makedirs(gen_ci_dir)
+
+    concrete_env_dir = os.path.join(pipeline_artifacts_dir, "concrete_environment")
+
+    # Now that we've added the mirrors we know about, they should be properly
+    # reflected in the environment manifest file, so copy that into the
+    # concrete environment directory, along with the spack.lock file.
+    if not os.path.exists(concrete_env_dir):
+        os.makedirs(concrete_env_dir)
+    shutil.copyfile(env.manifest_path, os.path.join(concrete_env_dir, "spack.yaml"))
+    shutil.copyfile(env.lock_path, os.path.join(concrete_env_dir, "spack.lock"))
+
+    update_env_scopes(env.manifest_path, [
+        os.path.relpath(s.path, concrete_env_dir)
+        for s in cfg.scopes().values()
+        if isinstance(s, cfg.ImmutableConfigScope)
+        and os.path.exists(s.path)
+    ])
+
+    job_log_dir = os.path.join(pipeline_artifacts_dir, "logs")
+    job_repro_dir = os.path.join(pipeline_artifacts_dir, "reproduction")
+    job_test_dir = os.path.join(pipeline_artifacts_dir, "tests")
+    # TODO: Remove this line in Spack 0.23
+    local_mirror_dir = os.path.join(pipeline_artifacts_dir, "mirror")
+    user_artifacts_dir = os.path.join(pipeline_artifacts_dir, "user_data")
+
+    # We communicate relative paths to the downstream jobs to avoid issues in
+    # situations where the CI_PROJECT_DIR varies between the pipeline
+    # generation job and the rebuild jobs.  This can happen when gitlab
+    # checks out the project into a runner-specific directory, for example,
+    # and different runners are picked for generate and rebuild jobs.
+
+    rel_artifacts_root = os.path.relpath(pipeline_artifacts_dir, ci_project_dir)
+    rel_concrete_env_dir = os.path.relpath(concrete_env_dir, ci_project_dir)
+    rel_job_log_dir = os.path.relpath(job_log_dir, ci_project_dir)
+    rel_job_repro_dir = os.path.relpath(job_repro_dir, ci_project_dir)
+    rel_job_test_dir = os.path.relpath(job_test_dir, ci_project_dir)
+    # TODO: Remove this line in Spack 0.23
+    rel_local_mirror_dir = os.path.join(local_mirror_dir, ci_project_dir)
+    rel_user_artifacts_dir = os.path.relpath(user_artifacts_dir, ci_project_dir)
 
     # Downstream jobs will "need" (depend on, for both scheduling and
     # artifacts, which include spack.lock file) this pipeline generation
@@ -96,6 +229,7 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
         if "after_script" in job_object:
             job_object["after_script"] = unpack_script(job_object["after_script"])
 
+        build_group = options.cdash_handler.build_group if options.cdash_handler else None
         job_name = get_job_name(release_spec, build_group)
 
         job_vars = job_object.setdefault("variables", {})
@@ -153,13 +287,10 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
         # whether DAG pruning was enabled or not.
         job_vars["SPACK_SPEC_NEEDS_REBUILD"] = str(rebuild_spec)
 
-        if cdash_handler:
-            cdash_handler.current_spec = release_spec
-            build_name = cdash_handler.build_name
-            all_job_names.append(build_name)
+        if options.cdash_handler:
+            build_name = options.cdash_handler.build_name(release_spec)
             job_vars["SPACK_CDASH_BUILD_NAME"] = build_name
-
-            build_stamp = cdash_handler.build_stamp
+            build_stamp = options.cdash_handler.build_stamp
             job_vars["SPACK_CDASH_BUILD_STAMP"] = build_stamp
 
         job_object["artifacts"] = spack.config.merge_yaml(
@@ -345,9 +476,8 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
         if deprecated_mirror_config and remote_mirror_override:
             (output_object["variables"]["SPACK_REMOTE_MIRROR_OVERRIDE"]) = remote_mirror_override
 
-        spack_stack_name = os.environ.get("SPACK_CI_STACK_NAME", None)
-        if spack_stack_name:
-            output_object["variables"]["SPACK_CI_STACK_NAME"] = spack_stack_name
+        if options.stack_name:
+            output_object["variables"]["SPACK_CI_STACK_NAME"] = options.stack_name
 
         # TODO(opadron): remove this or refactor
         if run_optimizer:
