@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class RVioplot(RPackage):
     This package allows extensive customisation of violin plots."""
 
     cran = "vioplot"
+
+    license("BSD-3-Clause")
 
     version("0.4.0", sha256="5729b483e3a4f7c81d2cc22c8bc5211b64e289734e9da5b5696c4974067867b5")
     version("0.3.7", sha256="06475d9a47644245ec91598e9aaef7db1c393802d9fc314420ac5139ae56adb6")

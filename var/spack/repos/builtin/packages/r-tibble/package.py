@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class RTibble(RPackage):
     and better formatting than the traditional data frame."""
 
     cran = "tibble"
+
+    license("MIT")
 
     version("3.2.1", sha256="65a72d0c557fd6e7c510d150c935ed6ced5db7d05fc20236b370f11428372131")
     version("3.1.8", sha256="acf30e075d18d2f61de53ca20a13c502bb32abb8083089b0bb9172a0cb5cedea")

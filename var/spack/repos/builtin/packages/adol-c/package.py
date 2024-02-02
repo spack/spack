@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class AdolC(AutotoolsPackage):
     url = "https://github.com/coin-or/ADOL-C/archive/releases/2.7.2.tar.gz"
     git = "https://github.com/coin-or/ADOL-C.git"
     maintainers("jppelteret")
+
+    license("EPL-1.0")
 
     version("master", branch="master")
     version("2.7.2", sha256="701e0856baae91b98397960d5e0a87a549988de9d4002d0e9a56fa08f5455f6e")
@@ -83,12 +85,12 @@ class AdolC(AutotoolsPackage):
         configure_args = []
 
         if "+boost" in spec:
-            configure_args.append("--with-boost={0}".format(spec["boost"].prefix))
+            configure_args.append(f"--with-boost={spec['boost'].prefix}")
         else:
             configure_args.append("--with-boost=no")
 
         if "+openmp" in spec:
-            configure_args.append("--with-openmp-flag={0}".format(self.compiler.openmp_flag))
+            configure_args.append(f"--with-openmp-flag={self.compiler.openmp_flag}")
 
         configure_args.extend(
             self.enable_or_disable("advanced-branching", variant="advanced_branching")

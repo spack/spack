@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,8 +12,11 @@ class Pthreadpool(CMakePackage):
     homepage = "https://github.com/Maratyszcza/pthreadpool"
     git = "https://github.com/Maratyszcza/pthreadpool.git"
 
+    license("BSD-2-Clause")
+
     version("master", branch="master")
-    version("2021-04-13", commit="a134dd5d4cee80cce15db81a72e7f929d71dd413")  # py-torch@1.9
+    version("2023-08-29", commit="4fe0e1e183925bf8cfa6aae24237e724a96479b8")  # py-torch@2.2
+    version("2021-04-13", commit="a134dd5d4cee80cce15db81a72e7f929d71dd413")  # py-torch@1.9:2.1
     version("2020-10-05", commit="fa75e65a58a5c70c09c30d17a1fe1c1dff1093ae")  # py-torch@1.8
     version("2020-06-15", commit="029c88620802e1361ccf41d1970bd5b07fd6b7bb")  # py-torch@1.6:1.7
     version("2019-10-29", commit="d465747660ecf9ebbaddf8c3db37e4a13d0c9103")  # py-torch@1.5
@@ -33,8 +36,8 @@ class Pthreadpool(CMakePackage):
     )
     resource(
         name="googletest",
-        url="https://github.com/google/googletest/archive/release-1.10.0.zip",
-        sha256="94c634d499558a76fa649edb13721dce6e98fb1e7018dfaeba3cd7a083945e91",
+        url="https://github.com/google/googletest/archive/release-1.12.0.zip",
+        sha256="ce7366fe57eb49928311189cb0e40e0a8bf3d3682fca89af30d884c25e983786",
         destination="deps",
         placement="googletest",
     )

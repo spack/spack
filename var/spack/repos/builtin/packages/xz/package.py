@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,11 @@ class Xz(MSBuildPackage, AutotoolsPackage, SourceforgePackage):
     sourceforge_mirror_path = "lzmautils/files/xz-5.2.5.tar.bz2"
     list_url = "https://tukaani.org/xz/old.html"
 
+    maintainers("AlexanderRichert-NOAA")
+
     executables = [r"^xz$"]
+
+    license("GPL-2.0-or-later AND Public-Domain AND LGPL-2.1-or-later", checked_by="tgamblin")
 
     version("5.4.1", sha256="dd172acb53867a68012f94c17389401b2f274a1aa5ae8f84cbfb8b7e383ea8d3")
     version("5.2.10", sha256="01b71df61521d9da698ce3c33148bff06a131628ff037398c09482f3a26e5408")
@@ -61,7 +65,12 @@ class Xz(MSBuildPackage, AutotoolsPackage, SourceforgePackage):
 
     @property
     def libs(self):
-        return find_libraries(["liblzma"], root=self.prefix, recursive=True)
+        return find_libraries(
+            ["liblzma"],
+            root=self.prefix,
+            recursive=True,
+            shared=self.spec.satisfies("libs=shared"),
+        )
 
     @classmethod
     def determine_version(cls, exe):

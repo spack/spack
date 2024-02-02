@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class QESirius(CMakePackage):
     git = "https://github.com/electronic-structure/q-e-sirius.git"
 
     maintainers("simonpintarelli")
+
+    license("GPL-2.0-or-later")
 
     version("develop-ristretto", branch="ristretto", preferred=True, submodules=True)
     version(
@@ -93,7 +95,7 @@ class QESirius(CMakePackage):
         # Work around spack issue #19970 where spack sets
         # rpaths for MKL just during make, but cmake removes
         # them during make install.
-        if "^mkl" in self.spec:
+        if self.spec["lapack"].name in INTEL_MATH_LIBRARIES:
             args.append("-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=ON")
         spec = self.spec
         args.append(self.define("BLAS_LIBRARIES", spec["blas"].libs.joined(";")))

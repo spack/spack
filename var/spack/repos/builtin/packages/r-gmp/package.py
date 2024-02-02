@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class RGmp(RPackage):
     library GMP (GNU Multiple Precision Arithmetic)."""
 
     cran = "gmp"
+
+    license("GPL-2.0-or-later")
 
     version("0.7-1", sha256="a6873dc65218905cb7615cb8e2522258f3740e29c0632473d58a1cb409835db6")
     version("0.6-7", sha256="6333fe691f267aa29f8078f7f738dda50c496f660357276fd33e28d607363f85")

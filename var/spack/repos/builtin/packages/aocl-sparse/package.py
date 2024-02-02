@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,6 +29,8 @@ class AoclSparse(CMakePackage):
     git = "https://github.com/amd/aocl-sparse"
 
     maintainers("amd-toolchain-support")
+
+    license("MIT")
 
     version("4.1", sha256="35ef437210bc25fdd802b462eaca830bfd928f962569b91b592f2866033ef2bb")
     version("4.0", sha256="68524e441fdc7bb923333b98151005bed39154d9f4b5e8310b5c37de1d69c2c3")
@@ -98,13 +100,11 @@ class AoclSparse(CMakePackage):
             args.append(self.define_from_variant("BUILD_ILP64", "ilp64"))
 
         if self.spec.satisfies("@4.0:"):
-            args.append("-DAOCL_BLIS_LIB={0}/libblis.so".format(self.spec["amdblis"].prefix.lib))
+            args.append("-DAOCL_BLIS_LIB=" + str(self.spec["amdblis"].libs))
             args.append(
                 "-DAOCL_BLIS_INCLUDE_DIR={0}/blis".format(self.spec["amdblis"].prefix.include)
             )
-            args.append(
-                "-DAOCL_LIBFLAME={0}/libflame.so".format(self.spec["amdlibflame"].prefix.lib)
-            )
+            args.append("-DAOCL_LIBFLAME=" + str(self.spec["amdlibflame"].libs))
             args.append(
                 "-DAOCL_LIBFLAME_INCLUDE_DIR={0}".format(self.spec["amdlibflame"].prefix.include)
             )

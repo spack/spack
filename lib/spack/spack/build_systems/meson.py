@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ import llnl.util.filesystem as fs
 
 import spack.builder
 import spack.package_base
-from spack.directives import build_system, depends_on, variant
+from spack.directives import build_system, conflicts, depends_on, variant
 from spack.multimethod import when
 
 from ._checks import BaseBuilder, execute_build_time_tests
@@ -47,6 +47,13 @@ class MesonPackage(spack.package_base.PackageBase):
         variant("strip", default=False, description="Strip targets on install")
         depends_on("meson", type="build")
         depends_on("ninja", type="build")
+        # Python detection in meson requires distutils to be importable, but distutils no longer
+        # exists in Python 3.12. In Spack, we can't use setuptools as distutils replacement,
+        # because the distutils-precedence.pth startup file that setuptools ships with is not run
+        # when setuptools is in PYTHONPATH; it has to be in system site-packages. In a future meson
+        # release, the distutils requirement will be dropped, so this conflict can be relaxed.
+        # We have patches to make it work with meson 1.1 and above.
+        conflicts("^python@3.12:", when="^meson@:1.0")
 
     def flags_to_build_system_args(self, flags):
         """Produces a list of all command line arguments to pass the specified
@@ -142,7 +149,7 @@ class MesonBuilder(BaseBuilder):
         else:
             default_library = "shared"
 
-        args = [
+        return [
             "-Dprefix={0}".format(pkg.prefix),
             # If we do not specify libdir explicitly, Meson chooses something
             # like lib/x86_64-linux-gnu, which causes problems when trying to
@@ -155,8 +162,6 @@ class MesonBuilder(BaseBuilder):
             # Do not automatically download and install dependencies
             "-Dwrap_mode=nodownload",
         ]
-
-        return args
 
     @property
     def build_dirname(self):

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,7 +30,7 @@ class Alglib(MakefilePackage):
         filter_file(r"so", dso_suffix, make_file)
 
     def install(self, spec, prefix):
-        name = "libalglib.{0}".format(dso_suffix)
+        name = f"libalglib.{dso_suffix}"
         with working_dir("src"):
             mkdirp(prefix.lib)
             install(name, prefix.lib)

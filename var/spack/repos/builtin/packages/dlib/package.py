@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Dlib(CMakePackage):
     git = "https://github.com/davisking/dlib"
 
     maintainer = ["robertu94"]
+
+    license("BSL-1.0")
 
     version("master", branch="master")
     version("19.22", sha256="5f44b67f762691b92f3e41dcf9c95dd0f4525b59cacb478094e511fdacb5c096")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyEmailValidator(PythonPackage):
 
     homepage = "https://github.com/JoshData/python-email-validator"
     pypi = "email_validator/email_validator-1.3.1.tar.gz"
+
+    license("CC0-1.0")
 
     version("1.3.1", sha256="d178c5c6fa6c6824e9b04f199cf23e79ac15756786573c190d2ad13089411ad2")
 
