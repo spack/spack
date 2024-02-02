@@ -84,7 +84,7 @@ def test_module_suffixes(module_suffixes_schema):
         "compilers",
         "config",
         "definitions",
-        "env",
+        "spack",
         "merged",
         "mirrors",
         "modules",
@@ -99,8 +99,13 @@ def test_schema_validation(meta_schema, config_name):
     module = importlib.import_module(module_name)
     schema = getattr(module, "schema")
 
-    # If this validation throws the test won't pass
-    jsonschema.validate(schema, meta_schema)
+    try:
+        # If this validation throws the test won't pass
+        jsonschema.validate(schema, meta_schema)
+    except jsonschema.exceptions.ValidationError as e:
+        # The validator doesn't accept the recursive reference in the "spack"
+        # schema even though it is valid and even used in the schema itself.
+        assert config_name == "spack" and "'#' is not of type 'object'" in str(e)
 
 
 def test_deprecated_properties(module_suffixes_schema):
