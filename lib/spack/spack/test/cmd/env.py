@@ -3891,3 +3891,57 @@ spack:
                 assert not os.path.exists(env_spec_dir)
             else:
                 assert os.path.exists(env_spec_dir)
+
+
+def test_env_include_env(
+    tmp_path,
+    mock_fetch,
+    mock_packages,
+    mock_archive,
+    install_mockery,
+    mutable_config,
+    environment_from_manifest,
+):
+    includes_dir = tmp_path / "includes"
+    included_env = includes_dir / ev.manifest_name
+    fs.mkdirp(includes_dir)
+    packages_yaml = includes_dir / "packages.yaml"
+    packages_yaml.write_text(
+        f"""\
+packages:
+  libelf:
+    version: ["0.8.10"]
+"""
+    )
+
+    included_env.write_text(
+        f"""\
+spack:
+  include:
+  -  {packages_yaml}
+
+  specs:
+  - libdwarf
+  - libelf
+  - mpileaks
+"""
+    )
+
+    e = environment_from_manifest(
+        f"""\
+spack:
+  include:
+  - {included_env}
+"""
+    )
+
+    with e:
+        e.concretize()
+
+    user_specs = e.user_specs.specs
+    concretized_order = e.concretized_order
+    environment_specs = e._get_environment_specs(False)
+
+    for spec in ["libelf@0.8.10", "libdwarf", "mpileaks"]:
+        assert spec in environment_specs
+    assert False

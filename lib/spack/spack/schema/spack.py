@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""Schema for spack environment
+"""Schema for spack environment configuration file
 
 .. literalinclude:: _spack_root/lib/spack/spack/schema/spack.py
    :lines: 20-
@@ -13,8 +13,14 @@ from typing import Any, Dict
 from llnl.util.lang import union_dicts
 
 import spack.schema
-import spack.schema.gitlab_ci as ci_schema  # DEPRECATED
-import spack.schema.merged as merged_schema
+import spack.schema.gitlab_ci  # Deprecated
+import spack.schema.merged
+
+include_properties: Dict[str, Any] = {
+    "include": {"type": "array", "default": [], "items": {"type": "string"}}
+}
+
+spec_properties: Dict[str, Any] = {"specs": spack.schema.spec_list_schema}
 
 #: Properties for inclusion in other schemas
 properties: Dict[str, Any] = {
@@ -23,15 +29,15 @@ properties: Dict[str, Any] = {
         "default": {},
         "additionalProperties": False,
         "properties": union_dicts(
-            # Include deprecated "gitlab-ci" section
-            ci_schema.properties,
+            # deprecated "gitlab-ci" section
+            spack.schema.gitlab_ci.properties,
             # merged configuration scope schemas
-            merged_schema.properties,
+            spack.schema.merged.properties,
             # extra environment schema properties
-            {
-                "include": {"type": "array", "default": [], "items": {"type": "string"}},
-                "specs": spack.schema.spec_list_schema,
-            },
+            include_properties,
+            spec_properties,
+            # environments themselves
+            {"$ref": "#"},
         ),
     }
 }

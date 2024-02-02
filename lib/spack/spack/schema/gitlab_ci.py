@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""Schema for gitlab-ci.yaml configuration file.
+"""Schema for gitlab-ci.yaml configuration file. (DEPRECATED)
 
 .. literalinclude:: ../spack/schema/gitlab_ci.py
    :lines: 15-
