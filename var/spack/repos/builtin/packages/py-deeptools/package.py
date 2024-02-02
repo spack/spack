@@ -10,7 +10,6 @@ class PyDeeptools(PythonPackage):
     """deepTools addresses the challenge of handling the large amounts of data
     that are now routinely generated from DNA sequencing centers."""
 
-    # The test suite and associated test data is missing in the pypi tarball.
     homepage = "https://pypi.python.org/pypi/deepTools/"
     pypi = "deepTools/deepTools-3.5.3.tar.gz"
 
@@ -21,6 +20,7 @@ class PyDeeptools(PythonPackage):
     version("2.5.2", sha256="305d0b85d75bd8af19dbe8947bb76c399fd5aaebd02f441455f4ba9e6c66ad9b")
 
     depends_on("py-setuptools", type="build")
+
     depends_on("py-numpy@1.9.0:", type=("build", "run"))
     depends_on("py-scipy@0.17.0:", type=("build", "run"))
     depends_on("py-matplotlib@3.3.0:", when="@3.5.1:", type=("build", "run"))
@@ -32,16 +32,4 @@ class PyDeeptools(PythonPackage):
     depends_on("py-plotly@4.9:", when="@3.5.1:", type=("build", "run"))
     depends_on("py-plotly@2.0.0:", when="@:3.5.0", type=("build", "run"))
     depends_on("py-deeptoolsintervals@0.1.8:", type=("build", "run"))
-    depends_on("py-importlib-metadata", when="^python@:3.7", type=("build", "run"))
-
-    def patch(self):
-        # Add nosetest hook for "python setup.py test" argument.
-        # @3.5.3 switches to using pytest instead.
-        if self.spec.satisfies("@:3.5.2"):
-            filter_file(
-                r"^setup\(",
-                r"""setup(
-        tests_require='nose',
-        test_suite='nose.collector',""",
-                "setup.py",
-            )
+    depends_on("py-importlib-metadata", when="@3.5.3", type=("build", "run"))
