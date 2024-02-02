@@ -7,7 +7,8 @@ from spack.package import *
 
 
 class PySimpletraj(PythonPackage):
-    """Lightweight coordinate-only trajectory reader based on code from GROMACS, MDAnalysis and VMD."""
+    """Lightweight coordinate-only trajectory reader based on code 
+    from GROMACS, MDAnalysis and VMD."""
 
     pypi = "simpletraj/simpletraj-0.5.tar.gz"
 
