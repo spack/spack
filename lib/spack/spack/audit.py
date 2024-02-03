@@ -809,7 +809,7 @@ def _issues_in_depends_on_directive(pkgs, error_cls):
                 problematic_edges = [
                     x for x in when.edges_to_dependencies(dep_name) if not x.virtuals
                 ]
-                if problematic_edges:
+                if problematic_edges and not dep.patches:
                     summary = (
                         f"{pkg_name}: dependency on '{dep.spec}' when '{when}' is self-referential"
                     )
