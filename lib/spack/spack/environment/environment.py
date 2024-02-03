@@ -663,10 +663,8 @@ class ViewDescriptor:
         return True
 
     def specs_for_view(self, concrete_roots: List[Spec]) -> List[Spec]:
-        """
-        From the list of concretized user specs in the environment, flatten
-        the dags, and filter selected, installed specs, remove duplicates on dag hash.
-        """
+        """Flatten the DAGs of the concrete roots, keep only unique, selected, and installed specs
+        in topological order from root to leaf."""
         if self.link == "all":
             deptype = dt.LINK | dt.RUN
         elif self.link == "run":
@@ -674,7 +672,9 @@ class ViewDescriptor:
         else:
             deptype = dt.NONE
 
-        specs = traverse.traverse_nodes(concrete_roots, deptype=deptype, key=traverse.by_dag_hash)
+        specs = traverse.traverse_nodes(
+            concrete_roots, order="topo", deptype=deptype, key=traverse.by_dag_hash
+        )
 
         # Filter selected, installed specs
         with spack.store.STORE.db.read_transaction():
