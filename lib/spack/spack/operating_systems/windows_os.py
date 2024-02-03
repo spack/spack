@@ -106,6 +106,7 @@ class WindowsOs(OperatingSystem):
                 # i.e. user does not have permissions or the key/value
                 # doesn't exist
                 winreg_report_error(e)
+                return []
             except winreg.InvalidRegistryOperation as e:
                 # Other errors raised by the Spack's reg module indicate
                 # an unexpected error type, and are handled specifically
@@ -118,6 +119,7 @@ class WindowsOs(OperatingSystem):
                 # atypical errors
                 if retry:
                     winreg_report_error(e)
+                return []
 
         vs_entries = try_query_registry()
         if not vs_entries:
