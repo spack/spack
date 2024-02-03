@@ -8,12 +8,10 @@ import os
 from spack.package import *
 
 
-class ViewDirSymlinkedDir(Package):
+class ViewSymlinkedDir(Package):
     """Installs <prefix>/bin/x/file_in_symlinked_dir where x -> y is a symlinked dir.
-    This should be mergeable with view-dir-dir, but not with view-dir-file."""
+    This should be mergeable with view-dir, but not with view-file."""
 
-    homepage = "http://www.spack.org"
-    url = "http://www.spack.org/downloads/aml-1.0.tar.gz"
     has_code = False
 
     version("0.1.0")
