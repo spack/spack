@@ -303,7 +303,7 @@ class WindowsRegistryView:
         with self.invalid_reg_ref_error_handler():
             return self.reg.values
 
-    def _traverse_subkeys(self, stop_condition, collect_all_matching=False, depth_search=True):
+    def _traverse_subkeys(self, stop_condition, collect_all_matching=False, recursive=True):
         """Perform simple BFS of subkeys, returning the key
         that successfully triggers the stop condition.
         Args:
@@ -313,6 +313,7 @@ class WindowsRegistryView:
                             all keys meeting stop condition. If false, once stop
                             condition is met, the key that triggered the condition '
                             is returned.
+            recusrive: boolean value, if True perform a recursive search of subkeys
         Return:
             the key if stop_condition is triggered, or None if not
         """
@@ -327,7 +328,7 @@ class WindowsRegistryView:
                         collection.append(key)
                     else:
                         return key
-                if depth_search:
+                if recursive:
                     queue.extend(key.subkeys)
             return collection if collection else None
 
@@ -361,7 +362,7 @@ class WindowsRegistryView:
             depth_search=recursive,
         )
 
-    def find_subkeys(self, subkey_name, depth=True):
+    def find_subkeys(self, subkey_name, recursive=True):
         """Exactly the same as find_subkey, except this function tries to match
         a regex to multiple keys
 
@@ -370,7 +371,7 @@ class WindowsRegistryView:
         Return:
             the desired subkeys as a list of RegistryKey object, or none
         """
-        kwargs = {"collect_all_matching": True, "depth_search": depth}
+        kwargs = {"collect_all_matching": True, "depth_search": recursive}
         return self._traverse_subkeys(
             WindowsRegistryView.KeyMatchConditions.regex_matcher(subkey_name), **kwargs
         )
