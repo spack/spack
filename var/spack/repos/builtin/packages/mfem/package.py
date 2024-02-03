@@ -267,16 +267,12 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     # Propagate 'cuda_arch' to 'hypre' without propagating the '+cuda'
     # variant because we want to allow 'mfem+cuda ^hypre~cuda':
     for sm_ in CudaPackage.cuda_arch_values:
-        depends_on(
-            "hypre@2.22.1:+cuda cuda_arch={0}".format(sm_),
-            when="+mpi+cuda cuda_arch={0} ^hypre+cuda".format(sm_),
-        )
+        depends_on(f"hypre@2.22.1:+cuda cuda_arch={sm_}", when=f"+mpi+cuda cuda_arch={sm_}")
     # Propagate 'amdgpu_target' to 'hypre' without propagating the '+rocm'
     # variant because we want to allow 'mfem+rocm ^hypre~rocm':
     for gfx in ROCmPackage.amdgpu_targets:
         depends_on(
-            "hypre@2.23.0:+rocm amdgpu_target={0}".format(gfx),
-            when="+mpi+rocm amdgpu_target={0} ^hypre+rocm".format(gfx),
+            f"hypre@2.23.0:+rocm amdgpu_target={gfx}", when=f"+mpi+rocm amdgpu_target={gfx}"
         )
 
     depends_on("metis", when="+metis")
@@ -315,15 +311,14 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     # variant so we can build 'mfem+cuda+superlu-dist ^superlu-dist~cuda':
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on(
-            "superlu-dist+cuda cuda_arch={0}".format(sm_),
-            when="+superlu-dist+cuda cuda_arch={0} ^superlu-dist+cuda".format(sm_),
+            f"superlu-dist+cuda cuda_arch={sm_}", when=f"+superlu-dist+cuda cuda_arch={sm_}"
         )
     # Propagate 'amdgpu_target' to 'superlu-dist' without propagating the '+rocm'
     # variant so we can build 'mfem+rocm+superlu-dist ^superlu-dist~rocm':
     for gfx in ROCmPackage.amdgpu_targets:
         depends_on(
-            "superlu-dist+rocm amdgpu_target={0}".format(gfx),
-            when="+superlu-dist+rocm amdgpu_target={0} ^superlu-dist+rocm".format(gfx),
+            f"superlu-dist+rocm amdgpu_target={gfx}",
+            when=f"+superlu-dist+rocm amdgpu_target={gfx}",
         )
     depends_on("strumpack@3.0.0:", when="+strumpack~shared")
     depends_on("strumpack@3.0.0:+shared", when="+strumpack+shared")
@@ -345,24 +340,14 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     # Propagate  'cuda_arch' to 'petsc'/'slepc' without propagating the '+cuda'
     # variant because we want to allow 'mfem+cuda+petsc ^petsc~cuda':
     for sm_ in CudaPackage.cuda_arch_values:
-        depends_on(
-            "petsc+cuda cuda_arch={0}".format(sm_),
-            when="+cuda+petsc cuda_arch={0} ^petsc+cuda".format(sm_),
-        )
-        depends_on(
-            "slepc+cuda cuda_arch={0}".format(sm_),
-            when="+cuda+slepc cuda_arch={0} ^petsc+cuda".format(sm_),
-        )
+        depends_on(f"petsc+cuda cuda_arch={sm_}", when=f"+cuda+petsc cuda_arch={sm_}")
+        depends_on(f"slepc+cuda cuda_arch={sm_}", when=f"+cuda+slepc cuda_arch={sm_} ^petsc+cuda")
     # Propagate 'amdgpu_target' to 'petsc'/'slepc' without propagating the
     # '+rocm' variant because we want to allow 'mfem+rocm+petsc ^petsc~rocm':
     for gfx in ROCmPackage.amdgpu_targets:
+        depends_on(f"petsc+rocm amdgpu_target={gfx}", when=f"+rocm+petsc amdgpu_target={gfx}")
         depends_on(
-            "petsc+rocm amdgpu_target={0}".format(gfx),
-            when="+rocm+petsc amdgpu_target={0} ^petsc+rocm".format(gfx),
-        )
-        depends_on(
-            "slepc+rocm amdgpu_target={0}".format(gfx),
-            when="+rocm+slepc amdgpu_target={0} ^petsc+rocm".format(gfx),
+            f"slepc+rocm amdgpu_target={gfx}", when=f"+rocm+slepc amdgpu_target={gfx} ^petsc+rocm"
         )
     depends_on("mpfr", when="+mpfr")
     depends_on("netcdf-c@4.1.3:", when="+netcdf")
