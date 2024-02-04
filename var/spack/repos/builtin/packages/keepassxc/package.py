@@ -66,6 +66,7 @@ class Keepassxc(CMakePackage):
             "-DCMAKE_INSTALL_DATADIR=%s" % join_path(spec.prefix, "share"),
         ]
         args.append(self.define_from_variant("WITH_XC_ALL", "autotype"))
+        args.append(self.define_from_variant("WITH_XC_AUTOTYPE", "autotype"))
         args.append(self.define_from_variant("WITH_XC_DOCS", "docs"))
 
         if spec.satisfies("platform=darwin"):
