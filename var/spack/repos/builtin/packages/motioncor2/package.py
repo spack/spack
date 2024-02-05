@@ -63,7 +63,5 @@ class Motioncor2(Package):
     def ensure_rpaths(self):
         patchelf = which("patchelf")
         patchelf(
-           "--set-rpath",
-           self.spec["cuda"].prefix.lib64,
-           join_path(self.prefix.bin, "MotionCor2"),
+           "--set-rpath", self.spec["cuda"].prefix.lib64, join_path(self.prefix.bin, "MotionCor2")
         )
