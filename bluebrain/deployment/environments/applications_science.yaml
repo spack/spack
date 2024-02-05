@@ -18,6 +18,7 @@ spack:
           - py-efel
           - py-synthesis-workflow
           - py-visual-cortex-analysis
+          - py-emodel-generalisation
   packages:
     hdf5:
       variants: ~mpi+hl
