@@ -42,16 +42,13 @@ class Motioncor2(Package):
         deprecated=True,
     )
 
+    depends_on("patchelf", type="build")
+
     depends_on("cuda@10.2,11.1:11.8,12.1", type="run")
     depends_on("libtiff", type="run")
 
     def url_for_version(self, version):
         return "file://{0}/MotionCor2_{1}.zip".format(os.getcwd(), version)
-
-    def setup_run_environment(self, env):
-        # As this is downloaded precompiled, we can't set library paths when building and
-        # have to manually specify the location of the CUDA libs (requires libcufft.so)
-        env.prepend_path("LD_LIBRARY_PATH", self.spec["cuda"].prefix.lib64)
 
     def install(self, spec, prefix):
         cuda_version = spec["cuda"].version.up_to(2).joined
@@ -60,4 +57,13 @@ class Motioncor2(Package):
         install(
             "MotionCor2_{0}_Cuda{1}_*".format(spec.version, cuda_version),
             join_path(prefix.bin, "MotionCor2"),
+        )
+
+    @run_after("install")
+    def ensure_rpaths(self):
+        patchelf = which("patchelf")
+        patchelf(
+           "--set-rpath",
+           self.spec["cuda"].prefix.lib64,
+           join_path(self.prefix.bin, "MotionCor2"),
         )
