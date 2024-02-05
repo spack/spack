@@ -14,8 +14,7 @@ class Kentutils(MakefilePackage):
 
     version("459", sha256="0b6e89a183e6385c713cf010a7aeead9da6626d8d2f78c363a4f1bc56ccccebb")
     # The above archive only goes back to v305. v302 is left for now but deprecated. Suggest
-    # this is dropped next time the package is updated (v302 is from 2014!) and the list of
-    # conflicts removed.
+    # this is dropped on next update (v302 is from 2014!) and the `requires()` removed.
     version(
         "302.1",
         commit="d8376c5d52a161f2267346ed3dc94b5dce74c2f9",
@@ -33,9 +32,10 @@ class Kentutils(MakefilePackage):
 
     requires("%gcc", when="@302.1")
 
-    def setup_build_environment(self, env):
-        # Builds fall over without this being manually specified
-        env.append_flags("LDFLAGS", f'{self.spec["libiconv"].libs.ld_flags}')
+    def flag_handler(self, name, flags):
+        if name == "ldflags":
+            flags.append(f'{self.spec["libiconv"].libs.ld_flags}')
+        return (flags, None, None)
 
     def install(self, spec, prefix):
         install_tree("bin", prefix.bin)
