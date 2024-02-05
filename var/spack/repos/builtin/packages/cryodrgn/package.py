@@ -33,7 +33,6 @@ class Cryodrgn(PythonPackage):
     depends_on("py-seaborn@:0.11", type=("build", "run"))
     depends_on("py-cufflinks", type=("build", "run"))
     depends_on("py-jupyterlab", type=("build", "run"))
-    depends_on("py-notebook@:7", type=("build", "run"))
     depends_on("py-umap-learn", type=("build", "run"))
     depends_on("py-ipywidgets@:7", type=("build", "run"))
     depends_on("py-healpy", type=("build", "run"))
