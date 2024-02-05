@@ -15,6 +15,6 @@ class PreferredTest(Package):
     version("develop", git="https://github.com/LLNL/mpileaks.git")
     version(
         "1.0",
-        sha256="2e34cc4505556d1c1f085758e26f2f8eea0972db9382f051b2dcfb1d7d9e1825",
+        sha256="abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
         preferred=True,
     )

@@ -198,7 +198,7 @@ set by changing the ``roots`` key of the configuration.
      my_custom_lmod_modules:
        roots:
          lmod: /path/to/install/custom/lmod/modules
-         ...
+         # ...
 
 This configuration will create two module sets. The default module set
 will install its ``tcl`` modules to ``/path/to/install/tcl/modules``

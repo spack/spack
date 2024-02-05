@@ -30,6 +30,8 @@ class Gnuplot(AutotoolsPackage):
 
     license("MIT")
 
+    version("6.0.0", sha256="635a28f0993f6ab0d1179e072ad39b8139d07f51237f841d93c6c2ff4b1758ec")
+    version("5.4.10", sha256="975d8c1cc2c41c7cedc4e323aff035d977feb9a97f0296dd2a8a66d197a5b27c")
     version("5.4.3", sha256="51f89bbab90f96d3543f95235368d188eb1e26eda296912256abcd3535bd4d84")
     version("5.4.2", sha256="e57c75e1318133951d32a83bcdc4aff17fed28722c4e71f2305cfc2ae1cae7ba")
     version("5.2.8", sha256="60a6764ccf404a1668c140f11cc1f699290ab70daa1151bb58fed6139a28ac37")

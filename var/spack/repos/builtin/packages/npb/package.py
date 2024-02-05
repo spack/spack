@@ -58,7 +58,7 @@ class Npb(MakefilePackage):
         # ~4X size increase going from one class to the next
         "D",
         "E",
-        "F"  # large test problems
+        "F",  # large test problems
         # ~16X size increase from each of the previous classes
     )
 
