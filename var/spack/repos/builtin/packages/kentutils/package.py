@@ -31,14 +31,7 @@ class Kentutils(MakefilePackage):
     depends_on("freetype")
     depends_on("libiconv")
 
-    conflicts("%cce", when="@302.1")
-    conflicts("%apple-clang", when="@302.1")
-    conflicts("%clang", when="@302.1")
-    conflicts("%intel", when="@302.1")
-    conflicts("%nag", when="@302.1")
-    conflicts("%pgi", when="@302.1")
-    conflicts("%xl", when="@302.1")
-    conflicts("%xl_r", when="@302.1")
+    requires("%gcc", when="@302.1")
 
     def setup_build_environment(self, env):
         # Builds fall over without this being manually specified
