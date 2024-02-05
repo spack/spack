@@ -20,7 +20,7 @@ class PySuperqt(PythonPackage):
     depends_on("py-hatchling", type="build")
     depends_on("py-hatch-vcs", type="build")
 
-    depends_on("packaging", type=("build", "run"))
+    depends_on("py-packaging", type=("build", "run"))
     depends_on("py-pygments@2.4:", type=("build", "run"))
     depends_on("py-qtpy@1.1:", type=("build", "run"))
     depends_on("py-typing-extensions@3.7.4.3:", type=("build", "run"))
