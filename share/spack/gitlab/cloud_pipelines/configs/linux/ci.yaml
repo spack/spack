@@ -8,23 +8,83 @@ ci:
   - match_behavior: first
     submapping:
     - match:
-      - hipblas
-      - llvm
-      - llvm-amdgpu
-      - pango
-      - paraview
-      - py-tensorflow
-      - py-torch
-      - qt
-      - rocblas
-      - visit
+      - rust
       build-job:
         tags: [ "spack", "huge" ]
         variables:
           CI_JOB_SIZE: huge
           SPACK_BUILD_JOBS: "12"
           KUBERNETES_CPU_REQUEST: 12000m
-          KUBERNETES_MEMORY_REQUEST: 42G
+          KUBERNETES_MEMORY_REQUEST: 35G
+
+    - match:
+      - py-tensorflow
+      build-job:
+        tags: [ "spack", "huge" ]
+        variables:
+          CI_JOB_SIZE: huge
+          SPACK_BUILD_JOBS: "12"
+          KUBERNETES_CPU_REQUEST: 12000m
+          KUBERNETES_MEMORY_REQUEST: 32G
+
+    - match:
+      - py-jaxlib
+      build-job:
+        tags: [ "spack", "huge" ]
+        variables:
+          CI_JOB_SIZE: huge
+          SPACK_BUILD_JOBS: "12"
+          KUBERNETES_CPU_REQUEST: 12000m
+          KUBERNETES_MEMORY_REQUEST: 29G
+
+    - match:
+      - nvhpc
+      - paraview
+      build-job:
+        tags: [ "spack", "huge" ]
+        variables:
+          CI_JOB_SIZE: huge
+          SPACK_BUILD_JOBS: "12"
+          KUBERNETES_CPU_REQUEST: 12000m
+          KUBERNETES_MEMORY_REQUEST: 24G
+
+    - match:
+      - llvm
+      - py-torch
+      build-job:
+        tags: [ "spack", "huge" ]
+        variables:
+          CI_JOB_SIZE: huge
+          SPACK_BUILD_JOBS: "12"
+          KUBERNETES_CPU_REQUEST: 12000m
+          KUBERNETES_MEMORY_REQUEST: 21G
+
+    - match:
+      - dealii
+      - mxnet
+      - py-torchaudio
+      - rocblas
+      build-job:
+        tags: [ "spack", "huge" ]
+        variables:
+          CI_JOB_SIZE: huge
+          SPACK_BUILD_JOBS: "12"
+          KUBERNETES_CPU_REQUEST: 12000m
+          KUBERNETES_MEMORY_REQUEST: 19G
+
+    - match:
+      - ecp-data-vis-sdk
+      - intel-tbb
+      - llvm-amdgpu
+      - salmon
+      - trilinos
+      build-job:
+        tags: [ "spack", "large" ]
+        variables:
+          CI_JOB_SIZE: large
+          SPACK_BUILD_JOBS: "8"
+          KUBERNETES_CPU_REQUEST: 8000m
+          KUBERNETES_MEMORY_REQUEST: 15G
 
     - match:
       - ascent
@@ -34,13 +94,13 @@ ci:
       - cmake
       - ctffind
       - cuda
-      - dealii
       - dray
       - dyninst
       - ecp-data-vis-sdk
       - gcc
       - ginkgo
       - hdf5
+      - hipblas
       - hpx
       - kokkos-kernels
       - kokkos-nvcc-wrapper
@@ -50,7 +110,6 @@ ci:
       - mfem
       - mpich
       - netlib-lapack
-      - nvhpc
       - oce
       - openblas
       - openfoam
@@ -58,21 +117,18 @@ ci:
       - parallelio
       - plumed
       - precice
-      #- py-tensorflow
-      #- qt
+      - qt
       - raja
       - relion
-      #- rocblas
       - rocfft
       - rocsolver
       - rocsparse
-      - rust
       - slate
       - strumpack
       - sundials
       - trilinos
       - umpire
-      #- visit
+      - visit
       - vtk
       - vtk-h
       - vtk-m

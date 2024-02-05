@@ -122,7 +122,7 @@ def _get_scope_and_section(args):
     if not section and not scope:
         env = ev.active_environment()
         if env:
-            scope = env.env_file_config_scope_name()
+            scope = env.scope_name
 
     # set scope defaults
     elif not scope:
@@ -304,6 +304,10 @@ def _config_change_requires_scope(path, spec, scope, match_spec=None):
                 item["any_of"] = [override_cfg_spec(x) for x in item["any_of"]]
             elif "spec" in item:
                 item["spec"] = override_cfg_spec(item["spec"])
+            elif isinstance(item, str):
+                item = override_cfg_spec(item)
+            else:
+                raise ValueError(f"Unexpected requirement: ({type(item)}) {str(item)}")
             new_require.append(item)
 
     spack.config.set(path, new_require, scope=scope)
