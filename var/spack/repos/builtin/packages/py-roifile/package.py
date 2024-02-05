@@ -18,7 +18,7 @@ class PyRoifile(PythonPackage):
 
     variant("all", default=True, description="Enable TIFF support")
 
-    depends_on("python@3.9:")
+    depends_on("python@3.9:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
     depends_on("py-numpy", type=("build", "run"))
