@@ -26,12 +26,12 @@ class Pdc(CMakePackage):
     version(
         "0.2",
         sha256="2829e74da227913a1a8e3e4f64e8f422ab9c0a049f8d73ff7b6ca12463959f8b",
-        deprecated=True
+        deprecated=True,
     )
     version(
         "0.1",
         sha256="01b4207ecf71594a7f339c315f2869b3fa8fbd34b085963dc4c1bdc5b66bb93e",
-        deprecated=True
+        deprecated=True,
     )
 
     version("stable", branch="stable")
