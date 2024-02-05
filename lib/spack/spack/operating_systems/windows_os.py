@@ -99,7 +99,7 @@ class WindowsOs(OperatingSystem):
                 msft = winreg.WindowsRegistryView(
                     "SOFTWARE\\WOW6432Node\\Microsoft", winreg.HKEY.HKEY_LOCAL_MACHINE
                 )
-                return msft.find_subkeys(r"VisualStudio_.*", depth=False)
+                return msft.find_subkeys(r"VisualStudio_.*", recursive=False)
             except OSError as e:
                 # OSErrors propagated into caller by Spack's registry module are expected
                 # and indicate a known issue with the registry query
