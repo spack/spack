@@ -58,6 +58,13 @@ class PyPythran(PythonPackage):
     # https://github.com/serge-sans-paille/pythran/pull/1856
     patch("omp.patch", when="@0.9.10:0.9.12")
 
+    # https://github.com/serge-sans-paille/pythran/pull/2029
+    patch(
+        "https://github.com/serge-sans-paille/pythran/commit/00a454a9c33ff05852c8d36a73cc1aadb9690c9a.patch?full_index=1",
+        sha256="5ccf989a259e33e942b7dde39f8e90917e12afd7fda16ec90e9adad8ccf444fb",
+        when="@:0.12.0",
+    )
+
     # https://github.com/serge-sans-paille/pythran/issues/1937
     conflicts("%apple-clang@13:", when="@:0.10")
 

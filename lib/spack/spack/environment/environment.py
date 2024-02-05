@@ -21,7 +21,6 @@ from typing import Dict, Iterable, List, Optional, Set, Tuple, Union
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 import llnl.util.tty.color as clr
-from llnl.util.lang import dedupe
 from llnl.util.link_tree import ConflictingSpecsError
 from llnl.util.symlink import symlink
 
@@ -379,8 +378,8 @@ def _rewrite_relative_dev_paths_on_relocation(env, init_file_dir):
         if not dev_specs:
             return
         for name, entry in dev_specs.items():
-            dev_path = entry["path"]
-            expanded_path = os.path.normpath(os.path.join(init_file_dir, entry["path"]))
+            dev_path = substitute_path_variables(entry["path"])
+            expanded_path = spack.util.path.canonicalize_path(dev_path, default_wd=init_file_dir)
 
             # Skip if the expanded path is the same (e.g. when absolute)
             if dev_path == expanded_path:
@@ -663,30 +662,26 @@ class ViewDescriptor:
 
         return True
 
-    def specs_for_view(self, concretized_root_specs):
-        """
-        From the list of concretized user specs in the environment, flatten
-        the dags, and filter selected, installed specs, remove duplicates on dag hash.
-        """
-        # With deps, requires traversal
-        if self.link == "all" or self.link == "run":
-            deptype = ("run") if self.link == "run" else ("link", "run")
-            specs = list(
-                traverse.traverse_nodes(
-                    concretized_root_specs, deptype=deptype, key=traverse.by_dag_hash
-                )
-            )
+    def specs_for_view(self, concrete_roots: List[Spec]) -> List[Spec]:
+        """Flatten the DAGs of the concrete roots, keep only unique, selected, and installed specs
+        in topological order from root to leaf."""
+        if self.link == "all":
+            deptype = dt.LINK | dt.RUN
+        elif self.link == "run":
+            deptype = dt.RUN
         else:
-            specs = list(dedupe(concretized_root_specs, key=traverse.by_dag_hash))
+            deptype = dt.NONE
+
+        specs = traverse.traverse_nodes(
+            concrete_roots, order="topo", deptype=deptype, key=traverse.by_dag_hash
+        )
 
         # Filter selected, installed specs
         with spack.store.STORE.db.read_transaction():
-            specs = [s for s in specs if s in self and s.installed]
+            return [s for s in specs if s in self and s.installed]
 
-        return specs
-
-    def regenerate(self, concretized_root_specs):
-        specs = self.specs_for_view(concretized_root_specs)
+    def regenerate(self, concrete_roots: List[Spec]) -> None:
+        specs = self.specs_for_view(concrete_roots)
 
         # To ensure there are no conflicts with packages being installed
         # that cannot be resolved or have repos that have been removed
@@ -703,14 +698,14 @@ class ViewDescriptor:
         old_root = self._current_root
 
         if new_root == old_root:
-            tty.debug("View at %s does not need regeneration." % self.root)
+            tty.debug(f"View at {self.root} does not need regeneration.")
             return
 
         _error_on_nonempty_view_dir(new_root)
 
         # construct view at new_root
         if specs:
-            tty.msg("Updating view at {0}".format(self.root))
+            tty.msg(f"Updating view at {self.root}")
 
         view = self.view(new=new_root)
 
@@ -720,7 +715,7 @@ class ViewDescriptor:
         # Create a new view
         try:
             fs.mkdirp(new_root)
-            view.add_specs(*specs, with_dependencies=False)
+            view.add_specs(*specs)
 
             # create symlink from tmp_symlink_name to new_root
             if os.path.exists(tmp_symlink_name):
@@ -734,7 +729,7 @@ class ViewDescriptor:
             try:
                 shutil.rmtree(new_root, ignore_errors=True)
                 os.unlink(tmp_symlink_name)
-            except (IOError, OSError):
+            except OSError:
                 pass
 
             # Give an informative error message for the typical error case: two specs, same package
@@ -876,9 +871,55 @@ class Environment:
             else:
                 self.spec_lists[name] = user_specs
 
+    def _process_view(self, env_view: Optional[Union[bool, str, Dict]]):
+        """Process view option(s), which can be boolean, string, or None.
+
+        A boolean environment view option takes precedence over any that may
+        be included. So ``view: True`` results in the default view only. And
+        ``view: False`` means the environment will have no view.
+
+        Args:
+            env_view: view option provided in the manifest or configuration
+        """
+
+        def add_view(name, values):
+            """Add the view with the name and the string or dict values."""
+            if isinstance(values, str):
+                self.views[name] = ViewDescriptor(self.path, values)
+            elif isinstance(values, dict):
+                self.views[name] = ViewDescriptor.from_dict(self.path, values)
+            else:
+                tty.error(f"Cannot add view named {name} for {type(values)} values {values}")
+
+        # If the configuration specifies 'view: False' then we are done
+        # processing views. If this is called with the environment's view
+        # view (versus an included view), then there are to be NO views.
+        if env_view is False:
+            return
+
+        # If the configuration specifies 'view: True' then only the default
+        # view will be created for the environment and we are done processing
+        # views.
+        if env_view is True:
+            add_view(default_view_name, self.view_path_default)
+            return
+
+        # Otherwise, the configuration has a subdirectory or dictionary.
+        if isinstance(env_view, str):
+            add_view(default_view_name, env_view)
+        elif env_view:
+            for name, values in env_view.items():
+                add_view(name, values)
+
+        # If we reach this point without an explicit view option then we
+        # provide the default view.
+        if self.views == dict():
+            self.views[default_view_name] = ViewDescriptor(self.path, self.view_path_default)
+
     def _construct_state_from_manifest(self):
         """Set up user specs and views from the manifest file."""
         self.spec_lists = collections.OrderedDict()
+        self.views = {}
 
         for item in spack.config.get("definitions", []):
             self._process_definition(item)
@@ -890,20 +931,7 @@ class Environment:
         )
         self.spec_lists[user_speclist_name] = user_specs
 
-        enable_view = env_configuration.get("view")
-        # enable_view can be boolean, string, or None
-        if enable_view is True or enable_view is None:
-            self.views = {default_view_name: ViewDescriptor(self.path, self.view_path_default)}
-        elif isinstance(enable_view, str):
-            self.views = {default_view_name: ViewDescriptor(self.path, enable_view)}
-        elif enable_view:
-            path = self.path
-            self.views = dict(
-                (name, ViewDescriptor.from_dict(path, values))
-                for name, values in enable_view.items()
-            )
-        else:
-            self.views = {}
+        self._process_view(spack.config.get("view", True))
 
     @property
     def user_specs(self):

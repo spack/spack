@@ -967,9 +967,9 @@ class Llvm(CMakePackage, CudaPackage):
                     "openmp",
                 ]
                 runtimes.sort(
-                    key=lambda x: runtimes_order.index(x)
-                    if x in runtimes_order
-                    else len(runtimes_order)
+                    key=lambda x: (
+                        runtimes_order.index(x) if x in runtimes_order else len(runtimes_order)
+                    )
                 )
             cmake_args.extend(
                 [

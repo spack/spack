@@ -1640,23 +1640,23 @@ class Spec:
             self.add_dependency_edge(spec, depflag=depflag, virtuals=virtuals)
             return
 
-        # Keep the intersection of constraints when a dependency is added
-        # multiple times. Currently, we only allow identical edge types.
+        # Keep the intersection of constraints when a dependency is added multiple times.
+        # The only restriction, currently, is keeping the same dependency type
         orig = self._dependencies[spec.name]
         try:
             dspec = next(dspec for dspec in orig if depflag == dspec.depflag)
         except StopIteration:
-            current_deps = ", ".join(
-                dt.flag_to_chars(x.depflag) + " " + x.spec.short_spec for x in orig
-            )
+            edge_attrs = f"deptypes={dt.flag_to_chars(depflag).strip()}"
+            required_dep_str = f"^[{edge_attrs}] {str(spec)}"
+
             raise DuplicateDependencyError(
-                f"{self.short_spec} cannot depend on '{spec.short_spec}' multiple times.\n"
-                f"\tRequired: {dt.flag_to_chars(depflag)}\n"
-                f"\tDependency: {current_deps}"
+                f"{spec.name} is a duplicate dependency, with conflicting dependency types\n"
+                f"\t'{str(self)}' cannot depend on '{required_dep_str}'"
             )
 
         try:
             dspec.spec.constrain(spec)
+            dspec.update_virtuals(virtuals=virtuals)
         except spack.error.UnsatisfiableSpecError:
             raise DuplicateDependencyError(
                 f"Cannot depend on incompatible specs '{dspec.spec}' and '{spec}'"

@@ -21,6 +21,8 @@ class VisitFfp(CMakePackage):
 
     maintainers("cyrush", "cessenat")
 
+    license("BSD-3-Clause")
+
     # Here we provide a local file that contains only the plugin in a flat directory
     version("local", url="file://{0}/visit-ffp.tgz".format(os.getcwd()))
     # Below we copy the VisIt paths, ffp first shipment is with VisIt 3
