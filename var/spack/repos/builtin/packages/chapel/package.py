@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import subprocess
 
 from spack.package import *
 from spack.util.environment import path_put_first, set_env
@@ -17,6 +18,10 @@ class Chapel(AutotoolsPackage):
 
     url = "https://github.com/chapel-lang/chapel/archive/refs/tags/1.33.0.tar.gz"
     git = "https://github.com/chapel-lang/chapel.git"
+
+    test_requires_compiler = True
+
+    executables = ["^chpl$", "^chpldoc$"]
 
     # A list of GitHub accounts to notify when the package is updated.
     maintainers("arezaii")
@@ -56,28 +61,37 @@ class Chapel(AutotoolsPackage):
         multi=False,
     )
 
-    package_module_opts = ("zmq", "libevent", "protobuf", "ssl", "hdf5", "yaml")
+    variant(
+        "libfabric",
+        default="unset",
+        description="When building with ofi support, specify libfabric option",
+        values=("unset", "system", "bundled"),
+        multi=False,
+    )
+
+    # TODO: add other package dependencies
     package_module_dict = {
         "zmq": "libzmq",
         "libevent": "libevent",
-        "protobuf": "protobuf",
+        "protobuf": "py-protobuf",
         "ssl": "openssl",
         "hdf5": "hdf5+hl~mpi",
-        "yaml": "libyaml",
+        "yaml": "libyaml@0.1",
+        "curl": "curl",
     }
 
     variant(
         "package_modules",
         description="Include package module dependencies with spack",
-        values=disjoint_sets(("none",), ("all",), package_module_opts)
+        values=disjoint_sets(("none",), ("all",), package_module_dict.keys())
         .with_error("'none' or 'all' cannot be activated along with other package_modules")
         .with_default("none")
         .with_non_feature_values("none", "all"),
     )
 
     for opt, dep in package_module_dict.items():
-        depends_on(dep, when="package_modules={0}".format(opt), type="run")
-        depends_on(dep, when="package_modules=all", type="run")
+        depends_on(dep, when="package_modules={0}".format(opt), type=("run", "build", "link"))
+        depends_on(dep, when="package_modules=all", type=("run", "build", "link"))
 
     platform_opts = (
         "unset",
@@ -173,7 +187,7 @@ class Chapel(AutotoolsPackage):
     #     "aux_filesys",
     #     description="Build with runtime support for certain filesystems",
     #     default="none",
-    #     values=("none", "lustre"),
+    #     values=("none", "lustre", "hdfs"),
     #     multi=False,
     # )
 
@@ -226,6 +240,32 @@ class Chapel(AutotoolsPackage):
     #     description="Memory management layer",
     #     multi=False,
     # )
+
+    launcher_names = (
+        "amudprun",
+        "aprun",
+        "gasnetrun_ibv",
+        "gasnetrun_mpi",
+        "mpirun4ofi",
+        "lsf-gasnetrun_ibv",
+        "pals",
+        "pbs-aprun",
+        "pbs-gasnetrun_ibv",
+        "slurm‑gasnetrun_ibv",
+        "slurm‑gasnetrun_mpi",
+        "slurm‑gasnetrun_ofi",
+        "slurm-srun",
+        "smp",
+        "none",
+    )
+
+    variant(
+        "launcher",
+        values=launcher_names,
+        default="none",
+        description="Launcher to use for running Chapel programs",
+        multi=False,
+    )
 
     variant(
         "host_mem",
@@ -304,13 +344,14 @@ class Chapel(AutotoolsPackage):
 
     # TODO: this version isn't strictly necessary unless using CUDA 12+,
     # but we don't know which CUDA version we're going to get
-    depends_on("llvm@15", when="locale_model=gpu llvm=spack")
+    depends_on("llvm@15", when="locale_model=gpu llvm=spack gpu=nvidia ^cuda@12:")
 
     depends_on("m4")
 
-    depends_on("flex", when="developer=True")
-    depends_on("bison", when="developer=True")
-    depends_on("tmux", when="developer=True")
+    with when("developer=True"):
+        depends_on("flex")
+        depends_on("bison")
+        depends_on("tmux")
 
     # why do I need to add to CPATH to find gmp.h
     # why do I need to add to LIBRARY_PATH to find lgmp
@@ -319,8 +360,11 @@ class Chapel(AutotoolsPackage):
     # why do I need to add to LD_LIBRARY_PATH to find libcudart?
     depends_on("cuda@11:12", when="gpu=nvidia", type=("build", "link", "run"))
 
-    depends_on("hsa-rocr-dev@4:5.4", when="gpu=amd", type=("build", "link", "run"))
-    depends_on("hip@4:5.4", when="gpu=amd", type=("build", "link", "run"))
+    with when("gpu=amd"):
+        depends_on("hsa-rocr-dev@4:5.4", type=("build", "link", "run"))
+        depends_on("hip@4:5.4", type=("build", "link", "run"))
+        # depends_on("rocm-device-libs@4:5.4", type=("build", "link", "run"))
+        # depends_on("llvm-amdgpu@4:5.4", type=("build", "link", "run"))
 
     # Based on docs https://chapel-lang.org/docs/technotes/gpu.html#requirements
     requires("llvm=bundled", when="^cuda@12:")
@@ -369,8 +413,32 @@ class Chapel(AutotoolsPackage):
         else:
             env.set("CHPL_GMP", self.spec.variants["gmp"].value)
 
+        if "yaml" in self.spec.variants["package_modules"].value:
+            env.prepend_path("PKG_CONFIG_PATH", self.spec["libyaml"].prefix.lib.pkgconfig)
+            env.prepend_path("CPATH", self.spec["libyaml"].prefix.include)
+
+        if "zmq" in self.spec.variants["package_modules"].value:
+            env.prepend_path("CPATH", self.spec["libzmq"].prefix.include)
+            env.prepend_path("LD_LIBRARY_PATH", self.spec["libzmq"].prefix.lib)
+            env.prepend_path("PKG_CONFIG_PATH", self.spec["libzmq"].prefix.lib.pkgconfig)
+            env.prepend_path("PKG_CONFIG_PATH", self.spec["libsodium"].prefix.lib.pkgconfig)
+
+        if "curl" in self.spec.variants["package_modules"].value:
+            env.prepend_path("CPATH", self.spec["curl"].prefix.include)
+            env.prepend_path("LD_LIBRARY_PATH", self.spec["curl"].prefix.lib)
+            env.prepend_path("PKG_CONFIG_PATH", self.spec["curl"].prefix.lib.pkgconfig)
+
         if self.spec.variants["gpu"].value == "nvidia":
             env.prepend_path("LD_LIBRARY_PATH", self.spec["cuda"].prefix.lib64)
+        if self.spec.variants["gpu"].value == "amd":
+            if self.spec.variants["rocm"].value:
+                env.set(
+                    "CHPL_LLVM_CONFIG",
+                    "{0}/{1}".format(self.spec["llvm-amdgpu"].prefix, "bin/llvm-config"),
+                )
+                env.prepend_path("CPATH", self.spec["hip"].prefix.include)
+                env.set("CHPL_ROCM_PATH", self.spec["hip"].prefix.bin)
+
         self.setup_chpl_comm(env, self.spec)
 
     def setup_build_environment(self, env):
@@ -440,17 +508,65 @@ class Chapel(AutotoolsPackage):
         else:
             make("check")
 
+    def test_package_modules(self):
+        """Test that the package modules are available"""
+        with working_dir(self.stage.source_path):
+            with set_env(CHPL_HOME=self.stage.source_path):
+                with test_part(self, "test_package_modules", purpose="test package modules"):
+                    if "yaml" in self.spec.variants["package_modules"].value:
+                        print("Running package module test for package 'yaml'")
+                        res = subprocess.run(
+                            ["util/start_test", "test/library/packages/Yaml/writeAndParse.chpl"]
+                        )
+                        assert res.returncode == 0
+                    if "zmq" in self.spec.variants["package_modules"].value:
+                        print("Running package module test for package 'zmq'")
+                        res = subprocess.run(
+                            ["util/start_test", "test/library/packages/ZMQ/weather.chpl"]
+                        )
+                        assert res.returncode == 0
+                    if "ssl" in self.spec.variants["package_modules"].value:
+                        print("Running package module test for package 'ssl'")
+                        res = subprocess.run(["util/start_test", "test/library/packages/Crypto/"])
+                        assert res.returncode == 0
+                    # TODO: These tests fail with llvm, unable to find C variable CURLPAUSE_CONT
+                    if (
+                        "curl" in self.spec.variants["package_modules"].value
+                        and self.spec.variants["llvm"].value == "none"
+                    ):
+                        with set_env(CHPL_NIGHTLY_TEST_CONFIG_NAME="networking-packages"):
+                            print("Running package module test for package 'curl'")
+                            res = subprocess.run(
+                                ["util/start_test", "test/library/packages/Curl/"]
+                            )
+                            assert res.returncode == 0
+                            print("Running package module test for package 'url'")
+                            res = subprocess.run(["util/start_test", "test/library/packages/URL/"])
+                            assert res.returncode == 0
+                    if "hdf5" in self.spec.variants["package_modules"].value:
+                        print("Running package module test for package 'hdf5'")
+                        res = subprocess.run(["util/start_test", "test/library/packages/HDF5/"])
+                        assert res.returncode == 0
+                    if "protobuf" in self.spec.variants["package_modules"].value:
+                        print("Running package module test for package 'protobuf'")
+                        res = subprocess.run(
+                            ["util/start_test", "test/library/packages/ProtobufProtocolSupport/"]
+                        )
+                        assert res.returncode == 0
+
     @run_after("install")
     def self_check(self):
         """Run the self-check after installing the package"""
         print("Running self-check")
+        self.copy_test_files()
         path_put_first("PATH", [self.prefix.bin])
         self.test_version()
         with set_env(CHPL_HOME=self.stage.source_path):
             with working_dir(self.stage.source_path):
                 if self.spec.variants["locale_model"].value == "gpu":
-                    with set_env(COMP_FLAGS="--no-checks"):
+                    with set_env(COMP_FLAGS="--no-checks --no-compiler-driver"):
                         self.run_local_make_check()
                 else:  # Not GPU
                     self.run_local_make_check()
                 make("check-chpldoc")
+        self.test_package_modules()
