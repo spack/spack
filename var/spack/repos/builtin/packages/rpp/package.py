@@ -29,6 +29,7 @@ class Rpp(CMakePackage):
 
     license("MIT")
 
+    version("6.0.0", sha256="3626a648bc773520f5cd5ca15f494de6e74b422baf32491750ce0737c3367f15")
     version("5.7.1", sha256="36fff5f1c52d969c3e2e0c75b879471f731770f193c9644aa6ab993fb8fa4bbf")
     version("5.7.0", sha256="1c612cde3c3d3840ae75ee5c1ee59bd8d61b1fdbf84421ae535cda863470fc06")
     version("1.2.0", sha256="660a11e1bd8706967835597b26daa874fd1507459bfebe22818149444bec540c")
@@ -54,8 +55,9 @@ class Rpp(CMakePackage):
         description="add utilities folder which contains rpp unit tests",
     )
 
-    patch("0001-include-half-openmp-through-spack-package.patch")
+    patch("0001-include-half-openmp-through-spack-package.patch", when="@:5.7")
     patch("0002-declare-handle-in-header.patch")
+    patch("0003-include-half-through-spack-package.patch", when="@6.0:")
 
     # adds half.hpp include directory and modifies how the libjpegturbo
     # library is linked for the rpp unit test
@@ -118,7 +120,11 @@ class Rpp(CMakePackage):
     conflicts("+opencl+hip")
 
     with when("+hip"):
-        depends_on("hip@5:")
+        with when("@5.7:"):
+            for ver in ["5.7.0", "5.7.1", "6.0.0"]:
+                depends_on("hip@" + ver, when="@" + ver)
+        with when("@:1.2"):
+            depends_on("hip@5:")
     with when("~hip"):
         depends_on("rocm-opencl@5:")
 

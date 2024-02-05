@@ -11,9 +11,9 @@ class RocmCmake(CMakePackage):
     """rocm-cmake provides CMake modules for common build tasks
     in the ROCm software stack"""
 
-    homepage = "https://github.com/RadeonOpenCompute/rocm-cmake"
-    git = "https://github.com/RadeonOpenCompute/rocm-cmake.git"
-    url = "https://github.com/RadeonOpenCompute/rocm-cmake/archive/rocm-5.6.0.tar.gz"
+    homepage = "https://github.com/ROCm/rocm-cmake"
+    git = "https://github.com/ROCm/rocm-cmake.git"
+    url = "https://github.com/ROCm/rocm-cmake/archive/rocm-5.6.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
@@ -21,6 +21,7 @@ class RocmCmake(CMakePackage):
     license("MIT")
 
     version("master", branch="master")
+    version("6.0.0", sha256="82bd97ba23d1883ef38bb667e92f7367fedc50d6c11c82f54cced4ab04b0412d")
     version("5.7.1", sha256="4a4c6aa09576ccb834f869bdcb49e98cc0f0bac3678b802358065d1179a9d6f1")
     version("5.7.0", sha256="93b98144201a1143eeca32744a9927d063f4685189f132ba52a6f3bba158a86b")
     version("5.6.1", sha256="98bf5fe2e6e12f55d122807d0060f1bb19c80d63d2c2f6fee579c40bfd244fa6")
@@ -110,7 +111,7 @@ class RocmCmake(CMakePackage):
     depends_on("cmake@3:", type="build")
     depends_on("cmake@3.6:", type="build", when="@4.1.0:")
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
 
     test_src_dir = "test"

@@ -28,6 +28,7 @@ class Tau(Package):
     license("MIT")
 
     version("master", branch="master")
+    version("2.33.1", sha256="13cc5138e110932f34f02ddf548db91d8219ccb7ff9a84187f0790e40a502403")
     version("2.33", sha256="04d9d67adb495bc1ea56561f33c5ce5ba44f51cc7f64996f65bd446fac5483d9")
     version("2.32.1", sha256="0eec3de46b0873846dfc639270c5e30a226b463dd6cb41aa12e975b7563f0eeb")
     version("2.32", sha256="ee774a06e30ce0ef0f053635a52229152c39aba4f4933bed92da55e5e13466f3")
@@ -275,8 +276,12 @@ class Tau(Package):
             if "+fortran" in spec:
                 env["F77"] = spec["mpi"].mpif77
                 env["FC"] = spec["mpi"].mpifc
-            options.append("-mpiinc=%s" % spec["mpi"].prefix.include)
-            options.append("-mpilib=%s" % spec["mpi"].prefix.lib)
+            if spec["mpi"].name == "intel-oneapi-mpi":
+                options.append("-mpiinc=%s" % spec["mpi"].package.component_prefix)
+                options.append("-mpilib=%s" % spec["mpi"].package.component_prefix)
+            else:
+                options.append("-mpiinc=%s" % spec["mpi"].prefix.include)
+                options.append("-mpilib=%s" % spec["mpi"].prefix.lib)
 
             options.append("-mpi")
             if "+comm" in spec:
@@ -388,39 +393,55 @@ class Tau(Package):
         # in the latter case.
         if files:
             env.set("TAU_MAKEFILE", files[0])
+        if "+dyninst" in self.spec:
+            path_to_dyn_lib = self.spec["dyninst"].prefix.lib
+            dyninst_apirt = join_path(path_to_dyn_lib, "libdyninstAPI_RT.so")
+            env.set("DYNINSTAPI_RT_LIB", dyninst_apirt)
+            env.append_path("LD_LIBRARY_PATH", path_to_dyn_lib)
+            env.append_path("LD_LIBRARY_PATH", self.prefix.lib)
+        if "+cuda" in self.spec:
+            env.append_path("PATH", self.spec["cuda"].prefix.bin)
 
     matmult_test = join_path("examples", "mm")
+    dyninst_test = join_path("examples", "dyninst")
+    makefile_test = join_path("examples", "Makefile")
+    makefile_inc_test = join_path("include", "Makefile")
+    cuda_test = join_path("examples", "gpu", "cuda", "dataElem_um")
+    level_zero_test = join_path("examples", "gpu", "oneapi", "complex_mult")
 
     @run_after("install")
     def setup_build_tests(self):
         """Copy the build test files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources(self.matmult_test)
+        self.cache_extra_test_sources(self.makefile_test)
+        self.cache_extra_test_sources(self.makefile_inc_test)
+        if "+dyninst" in self.spec:
+            self.cache_extra_test_sources(self.dyninst_test)
+        if "+cuda" in self.spec:
+            self.cache_extra_test_sources(self.cuda_test)
+        if "+level_zero" in self.spec:
+            self.cache_extra_test_sources(self.level_zero_test)
 
-    def _run_matmult_test(self):
-        mm_dir = join_path(self.test_suite.current_test_cache_dir, self.matmult_test)
+    def _run_dyninst_test(self, test_dir):
+        dyn_dir = join_path(test_dir, self.dyninst_test)
+        flags = "serial"
+        if "+mpi" in self.spec:
+            flags = "mpi"
+        self.run_test("make", ["all"], [], 0, False, "Build example code", False, dyn_dir)
         self.run_test(
-            "make",
-            ["all"],
+            "tau_run",
+            ["-T", flags, "./klargest", "-v", "-o", "./klargest.i"],
             [],
             0,
             False,
-            "Instrument and build matrix multiplication test code",
+            "Instrument code with dyninst",
             False,
-            mm_dir,
+            dyn_dir,
         )
-        test_exe = "matmult"
-        if "+mpi" in self.spec:
-            test_args = ["-n", "4", test_exe]
-            mpiexe_list = ["mpirun", "mpiexec", "srun"]
-            for mpiexe in mpiexe_list:
-                if which(mpiexe) is not None:
-                    self.run_test(
-                        mpiexe, test_args, [], 0, False, "Run matmult test with mpi", False, mm_dir
-                    )
-                    break
-        else:
-            self.run_test(test_exe, [], [], 0, False, "Run sequential matmult test", False, mm_dir)
+        self.run_test(
+            "./klargest.i", [], [], 0, False, "Execute instrumented code", False, dyn_dir
+        )
         self.run_test(
             "pprof",
             [],
@@ -429,9 +450,75 @@ class Tau(Package):
             False,
             "Run pprof profile analysis tool on profile output",
             False,
-            mm_dir,
+            dyn_dir,
+        )
+
+    def _run_tau_test(
+        self, main_test_dir, test_dir, test_name, test_exe, tau_exec_flags=[], use_tau_exec=False
+    ):
+        inst_test_dir = join_path(main_test_dir, test_dir)
+        test_description = "Build {} test code".format(test_name)
+        self.run_test("make", ["all"], [], 0, False, test_description, False, inst_test_dir)
+        if "+mpi" in self.spec:
+            if use_tau_exec:
+                test_args = ["-n", "4", "tau_exec", "-T", "mpi"] + tau_exec_flags
+            else:
+                test_args = ["-n", "4"] + tau_exec_flags
+            test_args.append(test_exe)
+            mpiexe_list = ["mpirun", "mpiexec", "srun"]
+            for mpiexe in mpiexe_list:
+                if which(mpiexe) is not None:
+                    test_description = "Run {} test with mpi".format(test_name)
+                    self.run_test(
+                        mpiexe, test_args, [], 0, False, test_description, False, inst_test_dir
+                    )
+                    break
+        else:
+            if use_tau_exec:
+                test_app = "tau_exec"
+                test_args = ["-T", "serial"] + tau_exec_flags
+                test_args.append(test_exe)
+            else:
+                test_app = test_exe
+                test_args = []
+            test_description = "Run sequential {} test".format(test_name)
+            self.run_test(
+                test_app, test_args, [], 0, False, test_description, False, inst_test_dir
+            )
+        self.run_test(
+            "pprof",
+            [],
+            [],
+            0,
+            False,
+            "Run pprof profile analysis tool on profile output",
+            False,
+            inst_test_dir,
         )
 
     def test(self):
+        test_dir = self.test_suite.current_test_cache_dir
         # Run mm test program pulled from the build
-        self._run_matmult_test()
+        self._run_tau_test(test_dir, self.matmult_test, "matrix multiplication", "matmult")
+        if "+dyninst" in self.spec:
+            self._run_dyninst_test(test_dir)
+        if "+cuda" in self.spec:
+            tau_exec_flags = ["-cupti"]
+            self._run_tau_test(
+                test_dir,
+                self.cuda_test,
+                "CUDA example",
+                "dataElem_um",
+                tau_exec_flags,
+                use_tau_exec=True,
+            )
+        if "+level_zero" in self.spec:
+            tau_exec_flags = ["-l0"]
+            self._run_tau_test(
+                test_dir,
+                self.level_zero_test,
+                "Level Zero example",
+                "complex_mult.exe",
+                tau_exec_flags,
+                use_tau_exec=True,
+            )

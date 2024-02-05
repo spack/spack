@@ -35,9 +35,4 @@ class Libmolgrid(CMakePackage):
         ob_incl = os.path.join(self.spec["openbabel"].prefix.include, "openbabel3")
         ob_libs = self.spec["openbabel"].libs.joined(";")
 
-        args = [
-            "-DOPENBABEL3_INCLUDE_DIR=" + ob_incl,
-            "-DOPENBABEL3_LIBRARIES=" + ob_libs,
-            f"-DPYTHON_EXECUTABLE={self.spec['python'].command.path}",
-        ]
-        return args
+        return ["-DOPENBABEL3_INCLUDE_DIR=" + ob_incl, "-DOPENBABEL3_LIBRARIES=" + ob_libs]
