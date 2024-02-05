@@ -18,15 +18,13 @@ class Khmer(PythonPackage):
     version("2.1.1", sha256="a709606910bb8679bd8525e9d2bf6d1421996272e343b54cc18090feb2fdbe24")
 
     # https://github.com/dib-lab/khmer/pull/1922 ...
-    conflicts("python@3.12:")
+    conflicts("^python@3.12:")
 
     depends_on("py-setuptools@18:", type="build")
     depends_on("py-screed@1:", type=("build", "run"))
-    # abandoned `bz2file` dependency dropped in favour of the edits below
+    # abandoned `bz2file` dependency dropped in favour of the patch below
 
     depends_on("openmpi")
 
-    @run_before("install")
-    def patcher(self):
-        patchf = FileFilter(join_path("khmer", "kfile.py"))
-        patchf.filter("bz2file", "bz2")
+    def patch(self):
+        filter_file("bz2file", "bz2", join_path("khmer", "kfile.py"))
