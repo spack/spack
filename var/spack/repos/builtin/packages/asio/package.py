@@ -83,13 +83,11 @@ class Asio(AutotoolsPackage):
     variant("separate_compilation", default=False, description="Compile Asio sources separately")
 
     variant("boost_coroutine", default=False, description="Enable support for Boost.Coroutine.")
-    depends_on("boost +context +coroutine", when="+boost_coroutine")
-
     variant("boost_regex", default=False, description="Enable support for Boost.Regex.")
-    depends_on("boost +regex", when="+boost_regex")
 
     for std in stds:
-        depends_on("boost cxxstd=" + std, when="cxxstd={0} ^boost".format(std))
+        depends_on(f"boost +regex cxxstd={std}", when=f"cxxstd={std} +boost_regex")
+        depends_on(f"boost +context+coroutine cxxstd={std}", when=f"cxxstd={std} +boost_coroutine")
 
     def configure_args(self):
         variants = self.spec.variants
