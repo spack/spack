@@ -11,7 +11,7 @@ class PyFastremap(PythonPackage):
     Numpy arrays between C and Fortran order using an in-place transposition"""
 
     homepage = "https://github.com/seung-lab/fastremap/"
-    pypi = "fastremap/fastremap-1.2.1.tar.gz"
+    pypi = "fastremap/fastremap-1.14.1.tar.gz"
 
     license("LGPL-3.0", checked_by="A-N-Other")
 
