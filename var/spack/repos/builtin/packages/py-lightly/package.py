@@ -68,5 +68,4 @@ class PyLightly(PythonPackage):
     depends_on("py-torch+distributed", when="@:1.4.4", type=("build", "run"))
 
     # https://github.com/microsoft/torchgeo/issues/1824
-    # FIXME: this conflict doesn't actually work because lightly does not have a dep on timm
-    conflicts("^py-timm@:0.9.8", when="@1.4.26")
+    conflicts("py-timm@:0.9.8", when="@1.4.26")
