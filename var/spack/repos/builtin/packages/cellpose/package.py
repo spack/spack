@@ -17,7 +17,6 @@ class Cellpose(PythonPackage):
 
     version("2.2.3", sha256="7ff63cb60a154ce3c0a17ff05ed27d2aaaa1a24a4c7a8160c0a4c15443366618")
 
-    variant("cuda", default=True, description="Require py-torch built with CUDA support")
     variant("gui", default=False, description="Build the GUI")
 
     depends_on("py-setuptools", type="build")
@@ -35,13 +34,11 @@ class Cellpose(PythonPackage):
     depends_on("py-fastremap", type=("build", "run"))
     depends_on("py-imagecodecs", type=("build", "run"))
     depends_on("py-roifile", type=("build", "run"))
+    depends_on("py-torch@1.6:", type=("build", "run"))
 
     # provides `cv2` in place of opencv-python-headless specified in setup.py
     # +ximgproc is required from the contrib modules
     depends_on("opencv +python3+ximgproc", type=("build", "run"))
-
-    depends_on("py-torch@1.6: +cuda", type=("build", "run"), when="+cuda")
-    depends_on("py-torch@1.6:", type=("build", "run"), when="~cuda")
 
     depends_on("py-pyqtgraph@0.11.0:", type=("build", "run"), when="+gui")
     depends_on("py-pyqt5", type=("build", "run"), when="+gui")
