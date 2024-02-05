@@ -53,6 +53,10 @@ class PyClangFormat(PythonPackage):
     version("10.0.1.1", sha256="016480cc99ff8fa9342672608b2e68f9eca9310407d248b1e7d8679c22dc6344")
     version("10.0.1", sha256="beab968d1857e2cb4c2907e8cc6dcd7fb0ee6e9a37bbfaa014fc008b2bb268cc")
 
+    patch("use_local_llvm.patch")
+
+    depends_on("llvm +clang", type="build")
+    # From pyproject.toml
     depends_on("py-setuptools@42:", type="build")
     depends_on("py-scikit-build", type="build")
     depends_on("cmake@3.16:", type="build")
