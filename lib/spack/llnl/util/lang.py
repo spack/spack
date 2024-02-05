@@ -1,9 +1,7 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from __future__ import division
 
 import collections.abc
 import contextlib
@@ -768,10 +766,10 @@ def pretty_seconds(seconds):
 
 class RequiredAttributeError(ValueError):
     def __init__(self, message):
-        super(RequiredAttributeError, self).__init__(message)
+        super().__init__(message)
 
 
-class ObjectWrapper(object):
+class ObjectWrapper:
     """Base class that wraps an object. Derived classes can add new behavior
     while staying undercover.
 
@@ -798,7 +796,7 @@ class ObjectWrapper(object):
         self.__dict__ = wrapped_object.__dict__
 
 
-class Singleton(object):
+class Singleton:
     """Simple wrapper for lazily initialized singleton objects."""
 
     def __init__(self, factory):
@@ -823,7 +821,7 @@ class Singleton(object):
         # 'instance'/'_instance' to be defined or it will enter an infinite
         # loop, so protect against that here.
         if name in ["_instance", "instance"]:
-            raise AttributeError()
+            raise AttributeError(f"cannot create {name}")
         return getattr(self.instance, name)
 
     def __getitem__(self, name):
@@ -843,27 +841,6 @@ class Singleton(object):
 
     def __repr__(self):
         return repr(self.instance)
-
-
-class LazyReference(object):
-    """Lazily evaluated reference to part of a singleton."""
-
-    def __init__(self, ref_function):
-        self.ref_function = ref_function
-
-    def __getattr__(self, name):
-        if name == "ref_function":
-            raise AttributeError()
-        return getattr(self.ref_function(), name)
-
-    def __getitem__(self, name):
-        return self.ref_function()[name]
-
-    def __str__(self):
-        return str(self.ref_function())
-
-    def __repr__(self):
-        return repr(self.ref_function())
 
 
 def load_module_from_file(module_name, module_path):
@@ -943,7 +920,7 @@ def star(func):
     return _wrapper
 
 
-class Devnull(object):
+class Devnull:
     """Null stream with less overhead than ``os.devnull``.
 
     See https://stackoverflow.com/a/2929954.
@@ -1060,7 +1037,7 @@ class TypedMutableSequence(collections.abc.MutableSequence):
         return str(self.data)
 
 
-class GroupedExceptionHandler(object):
+class GroupedExceptionHandler:
     """A generic mechanism to coalesce multiple exceptions and preserve tracebacks."""
 
     def __init__(self):
@@ -1070,9 +1047,9 @@ class GroupedExceptionHandler(object):
         """Whether any exceptions were handled."""
         return bool(self.exceptions)
 
-    def forward(self, context: str) -> "GroupedExceptionForwarder":
+    def forward(self, context: str, base: type = BaseException) -> "GroupedExceptionForwarder":
         """Return a contextmanager which extracts tracebacks and prefixes a message."""
-        return GroupedExceptionForwarder(context, self)
+        return GroupedExceptionForwarder(context, self, base)
 
     def _receive_forwarded(self, context: str, exc: Exception, tb: List[str]):
         self.exceptions.append((context, exc, tb))
@@ -1091,19 +1068,22 @@ class GroupedExceptionHandler(object):
         return "due to the following failures:\n{0}".format("\n".join(each_exception_message))
 
 
-class GroupedExceptionForwarder(object):
+class GroupedExceptionForwarder:
     """A contextmanager to capture exceptions and forward them to a
     GroupedExceptionHandler."""
 
-    def __init__(self, context: str, handler: GroupedExceptionHandler):
+    def __init__(self, context: str, handler: GroupedExceptionHandler, base: type):
         self._context = context
         self._handler = handler
+        self._base = base
 
     def __enter__(self):
         return None
 
     def __exit__(self, exc_type, exc_value, tb):
         if exc_value is not None:
+            if not issubclass(exc_type, self._base):
+                return False
             self._handler._receive_forwarded(self._context, exc_value, traceback.format_tb(tb))
 
         # Suppress any exception from being re-raised:
@@ -1111,7 +1091,7 @@ class GroupedExceptionForwarder(object):
         return True
 
 
-class classproperty(object):
+class classproperty:
     """Non-data descriptor to evaluate a class-level property. The function that performs
     the evaluation is injected at creation time and take an instance (could be None) and
     an owner (i.e. the class that originated the instance)

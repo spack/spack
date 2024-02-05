@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,10 @@ class Libmonitor(AutotoolsPackage):
     git = "https://github.com/HPCToolkit/libmonitor.git"
     maintainers("mwkrentel")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
+    version("2023.03.15", commit="48520940b915352748950ea718fadc82f87f659d")
     version("2023.02.13", commit="6db182b25202552f75a087116ab57193652d150f")
     version("2022.09.02", commit="4ae16dab0ba5fbda0ffe28df523613ea22cb85ae")
     version("2021.11.08", commit="22aa52c621534f12d401fa37f6963bfca7441e20")

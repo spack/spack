@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,17 +22,51 @@ class Geopm(AutotoolsPackage):
 
     tags = ["e4s"]
 
+    license("BSD-3-Clause")
+
     # Add additional proper versions and checksums here. "spack checksum geopm"
-    version("develop", branch="dev")
-    version("master", branch="master")
-    version("1.1.0", sha256="5f9a4df37ef0d64c53d64829d46736803c9fe614afd8d2c70fe7a5ebea09f88e")
-    version("1.0.0", sha256="24fe72265a7e44d62bdfe49467c49f0b7a649131ddda402d763c00a49765e1cb")
-    version("0.6.1", sha256="0ca42853f90885bf213df190c3462b8675c143cc843aee0d8b8a0e30802b55a9")
-    version("0.6.0", sha256="95ccf256c2b7cb35838978152479569d154347c3065af1639ed17be1399182d3")
-    version("0.5.1", sha256="db247af55f7000b6e4628af099956349b68a637500b9d4fe8d8fb13687124d53")
-    version("0.5.0", sha256="cdc123ea68b6d918dcc578a39a7a38275a5d711104364eb889abed15029f4060")
-    version("0.4.0", sha256="7d165f5a5fe0f19ca586bd81a4631202effb542e9d762cc9cc86ad6ef7afcad9")
-    version("0.3.0", sha256="73b45d36e7d2431d308038fc8c50a521a1d214c5ce105a17fba440f28509d907")
+    version("develop", branch="dev", deprecated=True)
+    version("master", branch="master", deprecated=True)
+    version(
+        "1.1.0",
+        sha256="5f9a4df37ef0d64c53d64829d46736803c9fe614afd8d2c70fe7a5ebea09f88e",
+        deprecated=True,
+    )
+    version(
+        "1.0.0",
+        sha256="24fe72265a7e44d62bdfe49467c49f0b7a649131ddda402d763c00a49765e1cb",
+        deprecated=True,
+    )
+    version(
+        "0.6.1",
+        sha256="0ca42853f90885bf213df190c3462b8675c143cc843aee0d8b8a0e30802b55a9",
+        deprecated=True,
+    )
+    version(
+        "0.6.0",
+        sha256="95ccf256c2b7cb35838978152479569d154347c3065af1639ed17be1399182d3",
+        deprecated=True,
+    )
+    version(
+        "0.5.1",
+        sha256="db247af55f7000b6e4628af099956349b68a637500b9d4fe8d8fb13687124d53",
+        deprecated=True,
+    )
+    version(
+        "0.5.0",
+        sha256="cdc123ea68b6d918dcc578a39a7a38275a5d711104364eb889abed15029f4060",
+        deprecated=True,
+    )
+    version(
+        "0.4.0",
+        sha256="7d165f5a5fe0f19ca586bd81a4631202effb542e9d762cc9cc86ad6ef7afcad9",
+        deprecated=True,
+    )
+    version(
+        "0.3.0",
+        sha256="73b45d36e7d2431d308038fc8c50a521a1d214c5ce105a17fba440f28509d907",
+        deprecated=True,
+    )
 
     # Variants reflecting most ./configure --help options
     variant("debug", default=False, description="Enable debug.")

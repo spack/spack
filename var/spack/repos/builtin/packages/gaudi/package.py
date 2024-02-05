@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,13 @@ class Gaudi(CMakePackage):
     tags = ["hep"]
 
     version("master", branch="master")
+    version("37.2", sha256="9b866caab46e182de98b59eddbde80d6fa0e670fe4a35906f1518b04bd99b2d2")
+    version("37.1", sha256="1d7038fd5dfb5f2517ce57623cf8090549ffe2ea8f0171d534e5c1ca20bd009a")
+    version("37.0", sha256="823f3821a4f498ddd2dd123fbb8a3787b361ddfd818f4ab13572076fc9afdfe4")
+    version("36.14", sha256="b11e0afcb797d61a305856dfe8079d48d74c6b6867ceccc0a83aab5978c9ba5f")
+    version("36.13", sha256="41e711c83428663996c825044b268ce515bef85dad74b4a9453f2207b4b1be7b")
+    version("36.12", sha256="dfce9156cedfa0a7234f880a3c395e592a5f3dc79070d5d196fdb94b83ae203e")
+    version("36.11", sha256="81664d033b0aa8598a0e4cb7e455e697baeb063a11bbde2390164776238ba9f7")
     version("36.10", sha256="2c1f181c54a76b493b913aeecbd6595236afc08e41d7f1d80be6fe65ac95adb3")
     version("36.9", sha256="b4e080094771f111bd0bcdf744bcab7b028c7e2af7c5dfaa4a977ebbf0160a8f")
     version("36.8", sha256="64b4300a57335af7c1f74c736d7610041a1ef0c1f976e3342a22385b60519afc")
@@ -29,13 +36,8 @@ class Gaudi(CMakePackage):
     version("36.1", sha256="9f718c832313676249e5c3ac76ba4346978ee2328f8cdcb29176498b080402e9")
     version("36.0", sha256="8a0458cef5b616532f9db7cca9fa0e892e602b64c9e93dc0cc6d972e03034830")
     version("35.0", sha256="c01b822f9592a7bf875b9997cbeb3c94dea97cb13d523c12649dbbf5d69b5fa6")
-    version("34.0", sha256="28fc4abb5a6b08da5a6b1300451c7e8487f918b055939877219d454abf7668ae")
-    version("33.2", sha256="26aaf9c4ff237a60ec79af9bd18ad249fc91c16e297ba77e28e4a256123db6e5")
-    version("33.1", sha256="7eb6b2af64aeb965228d4b6ea66c7f9f57f832f93d5b8ad55c9105235af5b042")
-    version("33.0", sha256="76a967c41f579acc432593d498875dd4dc1f8afd5061e692741a355a9cf233c8")
-    version("32.2", sha256="e9ef3eb57fd9ac7b9d5647e278a84b2e6263f29f0b14dbe1321667d44d969d2e")
 
-    maintainers("drbenmorgan", "vvolkl")
+    maintainers("drbenmorgan", "vvolkl", "jmcarcell")
 
     variant("aida", default=False, description="Build AIDA interfaces support")
     variant("cppunit", default=False, description="Build with CppUnit unit testing")
@@ -53,6 +55,13 @@ class Gaudi(CMakePackage):
     # fixes for the cmake config which could not find newer boost versions
     patch("link_target_fixes.patch", when="@33.0:34")
     patch("link_target_fixes32.patch", when="@:32.2")
+    patch("fmt_fix.patch", when="@36.6:36.12 ^fmt@10:")
+    # fix issues with catch2 3.1 and above
+    patch(
+        "https://gitlab.cern.ch/gaudi/Gaudi/-/commit/110f2189f386c3a23150ccdfdc47c1858fc7098e.diff",
+        sha256="b05f6b7c1efb8c3af291c8d81fd1627e58af7c5f9a78a0098c6e3bfd7ec80c15",
+        when="@37.1 ^catch2@3.1:",
+    )
 
     # These dependencies are needed for a minimal Gaudi build
     depends_on("aida")
@@ -65,28 +74,22 @@ class Gaudi(CMakePackage):
     depends_on("clhep")
     depends_on("cmake", type="build")
     depends_on("cppgsl")
-    depends_on("fmt", when="@33.2:")
+    depends_on("fmt")
     depends_on("fmt@:8", when="@:36.9")
-    depends_on("intel-tbb")
+    depends_on("intel-tbb@:2020.3", when="@:37.0")
+    depends_on("tbb", when="@37.1:")
     depends_on("uuid")
-    depends_on("nlohmann-json", when="@35.0:")
+    depends_on("nlohmann-json")
     depends_on("python", type=("build", "run"))
-    depends_on("python@:3.7", when="@32.2:34", type=("build", "run"))
     depends_on("py-networkx", type=("build", "run"))
     depends_on("py-six", type=("build", "run"))
-    depends_on("py-xenv@1:", when="@:34.9", type=("build", "run"))
     depends_on("range-v3")
     depends_on("root +python +root7 +ssl +tbb +threads")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     # Testing dependencies
     # Note: gaudi only builds examples when testing enabled
-    for pv in (
-        ["catch2", "@36.8:"],
-        ["py-nose", "@35:"],
-        ["py-pytest", "@36.2:"],
-        ["py-qmtest", "@35:"],
-    ):
+    for pv in (["catch2", "@36.8:"], ["py-nose", "@35:"], ["py-pytest", "@36.2:"]):
         depends_on(pv[0], when=pv[1], type="test")
         depends_on(pv[0], when=pv[1] + " +examples")
 
@@ -96,13 +99,9 @@ class Gaudi(CMakePackage):
     depends_on("doxygen +graphviz", when="+docs")
     depends_on("gperftools", when="+gperftools")
     depends_on("gdb")
-    depends_on("gsl", when="@:31 +examples")
-    depends_on("heppdt", when="@:34 +examples")
     depends_on("heppdt", when="+heppdt")
     depends_on("jemalloc", when="+jemalloc")
-    depends_on("libpng", when="@:34 +examples")
     depends_on("libunwind", when="+unwind")
-    depends_on("relax", when="@:34 +examples")
     depends_on("xerces-c", when="+xercesc")
     # NOTE: pocl cannot be added as a minimal OpenCL implementation because
     #       ROOT does not like being exposed to LLVM symbols.
@@ -128,15 +127,14 @@ class Gaudi(CMakePackage):
             # todo:
             self.define("GAUDI_USE_INTELAMPLIFIER", False),
         ]
-        # this is not really used in spack builds, but needs to be set
-        if self.spec.version < Version("34"):
-            args.append("-DHOST_BINARY_TAG=x86_64-linux-gcc9-opt")
         return args
 
     def setup_run_environment(self, env):
         # environment as in Gaudi.xenv
         env.prepend_path("PATH", self.prefix.scripts)
         env.prepend_path("PYTHONPATH", self.prefix.python)
+        env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
+        env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib64)
 
     def url_for_version(self, version):
         major = str(version[0])

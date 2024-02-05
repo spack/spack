@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,7 +31,7 @@ class Test(Platform):
 
     def __init__(self, name=None):
         name = name or "test"
-        super(Test, self).__init__(name)
+        super().__init__(name)
         self.add_target(self.default, spack.target.Target(self.default))
         self.add_target(self.front_end, spack.target.Target(self.front_end))
 

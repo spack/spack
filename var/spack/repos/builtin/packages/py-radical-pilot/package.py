@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class PyRadicalPilot(PythonPackage):
     pypi = "radical.pilot/radical.pilot-1.20.0.tar.gz"
 
     maintainers("andre-merzky")
+
+    license("MIT")
 
     version("develop", branch="devel")
     version("1.20.0", sha256="a0747e573a01a856dc330797dbee158f7e1cf8652001dc26f06a1d6c5e553bc6")

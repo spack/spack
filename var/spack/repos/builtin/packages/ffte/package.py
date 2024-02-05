@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,12 +32,7 @@ class Ffte(Package):
 
     depends_on("mpi", when="+mpi")
 
-    conflicts("%cce", when="+cuda", msg="Must use NVHPC compiler")
-    conflicts("%clang", when="+cuda", msg="Must use NVHPC compiler")
-    conflicts("%gcc", when="+cuda", msg="Must use NVHPC compiler")
-    conflicts("%llvm", when="+cuda", msg="Must use NVHPC compiler")
-    conflicts("%nag", when="+cuda", msg="Must use NVHPC compiler")
-    conflicts("%intel", when="+cuda", msg="Must use NVHPC compiler")
+    requires("%nvhpc", when="+cuda", msg="ffte+cuda must use NVHPC compiler")
 
     def edit(self, spec, prefix):
         "No make-file, must create one from scratch."

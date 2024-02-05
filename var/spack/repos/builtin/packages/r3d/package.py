@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,6 +34,10 @@ class R3d(CMakePackage):
         "test",
         default=False,
         description="Build R3D regression tests (versions 2019-04-24 or earlier)",
+    )
+
+    variant(
+        "pic", default=False, description="Produce position-independent code (for shared libs)"
     )
 
     @when("@:2019-04-24")
@@ -79,5 +83,7 @@ class R3d(CMakePackage):
             options.append("-DENABLE_UNIT_TESTS=ON")
         else:
             options.append("-DENABLE_UNIT_TESTS=OFF")
+
+        options.append(self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"))
 
         return options

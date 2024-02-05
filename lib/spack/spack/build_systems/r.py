@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from typing import Optional, Tuple
 
 import llnl.util.lang as lang
 
-from spack.directives import extends, maintainers
+from spack.directives import extends
 
 from .generic import GenericBuilder, Package
 
@@ -70,8 +70,6 @@ class RPackage(Package):
     bioc: Optional[str] = None
 
     GenericBuilder = RBuilder
-
-    maintainers("glennpj")
 
     #: This attribute is used in UI queries that need to know the build
     #: system base class

@@ -1,9 +1,10 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+from spack.util.environment import is_system_path
 
 
 class Mono(AutotoolsPackage):
@@ -30,6 +31,8 @@ class Mono(AutotoolsPackage):
     depends_on("iconv")
     depends_on("perl", type=("build"))
     depends_on("python", type=("build"))
+
+    license("MIT")
 
     version(
         "6.12.0.122",
@@ -74,6 +77,8 @@ class Mono(AutotoolsPackage):
 
     def configure_args(self):
         args = []
-        li = self.spec["iconv"].prefix
-        args.append("--with-libiconv-prefix={p}".format(p=li))
+        if self.spec["iconv"].name == "libc":
+            args.append("--without-libiconv-prefix")
+        elif not is_system_path(self.spec["iconv"].prefix):
+            args.append("--with-libiconv-prefix={p}".format(p=self.spec["iconv"].prefix))
         return args

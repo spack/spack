@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,25 +9,27 @@ import os
 import pathlib
 import sys
 import warnings
+from typing import List
 
 import archspec.cpu
 
 from llnl.util import tty
 
-import spack.build_environment
 import spack.environment
 import spack.tengine
+import spack.util.cpus
 import spack.util.executable
 
 from ._common import _root_spec
 from .config import root_path, spec_for_current_python, store_path
+from .core import _add_externals_if_missing
 
 
 class BootstrapEnvironment(spack.environment.Environment):
     """Environment to install dependencies of Spack for a given interpreter and architecture"""
 
     @classmethod
-    def spack_dev_requirements(cls):
+    def spack_dev_requirements(cls) -> List[str]:
         """Spack development requirements"""
         return [
             isort_root_spec(),
@@ -38,7 +40,7 @@ class BootstrapEnvironment(spack.environment.Environment):
         ]
 
     @classmethod
-    def environment_root(cls):
+    def environment_root(cls) -> pathlib.Path:
         """Environment root directory"""
         bootstrap_root_path = root_path()
         python_part = spec_for_current_python().replace("@", "")
@@ -52,12 +54,12 @@ class BootstrapEnvironment(spack.environment.Environment):
         )
 
     @classmethod
-    def view_root(cls):
+    def view_root(cls) -> pathlib.Path:
         """Location of the view"""
         return cls.environment_root().joinpath("view")
 
     @classmethod
-    def pythonpaths(cls):
+    def pythonpaths(cls) -> List[str]:
         """Paths to be added to sys.path or PYTHONPATH"""
         python_dir_part = f"python{'.'.join(str(x) for x in sys.version_info[:2])}"
         glob_expr = str(cls.view_root().joinpath("**", python_dir_part, "**"))
@@ -68,27 +70,24 @@ class BootstrapEnvironment(spack.environment.Environment):
         return result
 
     @classmethod
-    def bin_dirs(cls):
+    def bin_dirs(cls) -> List[pathlib.Path]:
         """Paths to be added to PATH"""
         return [cls.view_root().joinpath("bin")]
 
     @classmethod
-    def spack_yaml(cls):
+    def spack_yaml(cls) -> pathlib.Path:
         """Environment spack.yaml file"""
         return cls.environment_root().joinpath("spack.yaml")
 
-    def __init__(self):
+    def __init__(self) -> None:
         if not self.spack_yaml().exists():
             self._write_spack_yaml_file()
         super().__init__(self.environment_root())
 
-    def update_installations(self):
-        """Update the installations of this environment.
-
-        The update is done using a depfile on Linux and macOS, and using the ``install_all``
-        method of environments on Windows.
-        """
-        with tty.SuppressOutput(msg_enabled=False, warn_enabled=False):
+    def update_installations(self) -> None:
+        """Update the installations of this environment."""
+        log_enabled = tty.is_debug() or tty.is_verbose()
+        with tty.SuppressOutput(msg_enabled=log_enabled, warn_enabled=log_enabled):
             specs = self.concretize()
         if specs:
             colorized_specs = [
@@ -97,13 +96,11 @@ class BootstrapEnvironment(spack.environment.Environment):
             ]
             tty.msg(f"[BOOTSTRAPPING] Installing dependencies ({', '.join(colorized_specs)})")
             self.write(regenerate=False)
-            if sys.platform == "win32":
+            with tty.SuppressOutput(msg_enabled=log_enabled, warn_enabled=log_enabled):
                 self.install_all()
-            else:
-                self._install_with_depfile()
-            self.write(regenerate=True)
+                self.write(regenerate=True)
 
-    def update_syspath_and_environ(self):
+    def update_syspath_and_environ(self) -> None:
         """Update ``sys.path`` and the PATH, PYTHONPATH environment variables to point to
         the environment view.
         """
@@ -119,29 +116,7 @@ class BootstrapEnvironment(spack.environment.Environment):
             + [str(x) for x in self.pythonpaths()]
         )
 
-    def _install_with_depfile(self):
-        spackcmd = spack.util.executable.which("spack")
-        spackcmd(
-            "-e",
-            str(self.environment_root()),
-            "env",
-            "depfile",
-            "-o",
-            str(self.environment_root().joinpath("Makefile")),
-        )
-        make = spack.util.executable.which("make")
-        kwargs = {}
-        if not tty.is_debug():
-            kwargs = {"output": os.devnull, "error": os.devnull}
-        make(
-            "-C",
-            str(self.environment_root()),
-            "-j",
-            str(spack.build_environment.determine_number_of_jobs(parallel=True)),
-            **kwargs,
-        )
-
-    def _write_spack_yaml_file(self):
+    def _write_spack_yaml_file(self) -> None:
         tty.msg(
             "[BOOTSTRAPPING] Spack has missing dependencies, creating a bootstrapping environment"
         )
@@ -159,33 +134,34 @@ class BootstrapEnvironment(spack.environment.Environment):
         self.spack_yaml().write_text(template.render(context), encoding="utf-8")
 
 
-def isort_root_spec():
+def isort_root_spec() -> str:
     """Return the root spec used to bootstrap isort"""
-    return _root_spec("py-isort@4.3.5:")
+    return _root_spec("py-isort@5")
 
 
-def mypy_root_spec():
+def mypy_root_spec() -> str:
     """Return the root spec used to bootstrap mypy"""
     return _root_spec("py-mypy@0.900:")
 
 
-def black_root_spec():
+def black_root_spec() -> str:
     """Return the root spec used to bootstrap black"""
-    return _root_spec("py-black@:23.1.0")
+    return _root_spec("py-black@:24.1.0")
 
 
-def flake8_root_spec():
+def flake8_root_spec() -> str:
     """Return the root spec used to bootstrap flake8"""
-    return _root_spec("py-flake8")
+    return _root_spec("py-flake8@3.8.2:")
 
 
-def pytest_root_spec():
+def pytest_root_spec() -> str:
     """Return the root spec used to bootstrap flake8"""
-    return _root_spec("py-pytest")
+    return _root_spec("py-pytest@6.2.4:")
 
 
-def ensure_environment_dependencies():
+def ensure_environment_dependencies() -> None:
     """Ensure Spack dependencies from the bootstrap environment are installed and ready to use"""
+    _add_externals_if_missing()
     with BootstrapEnvironment() as env:
         env.update_installations()
         env.update_syspath_and_environ()

@@ -1,10 +1,9 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import platform
 import re
 import sys
 
@@ -58,7 +57,7 @@ class GenericBuilder(GenericBuilder):
         env.set("SPACK_IFORT", ifort_root)
 
     def is_64bit(self):
-        return platform.machine().endswith("64")
+        return "64" in str(self.pkg.spec.target.family)
 
     def build_command_line(self):
         args = ["-noLogo"]

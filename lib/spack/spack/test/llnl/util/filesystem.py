@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -150,7 +150,6 @@ class TestInstall:
                 fs.install("source/a/*/*", "dest/1")
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Skip test on Windows")
 class TestCopyTree:
     """Tests for ``filesystem.copy_tree``"""
 
@@ -189,7 +188,7 @@ class TestCopyTree:
     def test_symlinks_true_ignore(self, stage):
         """Test copying when specifying relative paths that should be ignored"""
         with fs.working_dir(str(stage)):
-            ignore = lambda p: p in ["c/d/e", "a"]
+            ignore = lambda p: p in [os.path.join("c", "d", "e"), "a"]
             fs.copy_tree("source", "dest", symlinks=True, ignore=ignore)
             assert not os.path.exists("dest/a")
             assert os.path.exists("dest/c/d")
@@ -231,7 +230,6 @@ class TestCopyTree:
                 fs.copy_tree("source", "source/sub/directory")
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Skip test on Windows")
 class TestInstallTree:
     """Tests for ``filesystem.install_tree``"""
 
@@ -274,6 +272,15 @@ class TestInstallTree:
             if sys.platform != "win32":
                 assert not os.path.islink("dest/2")
             check_added_exe_permissions("source/2", "dest/2")
+
+    @pytest.mark.skipif(sys.platform == "win32", reason="Broken symlinks not allowed on Windows")
+    def test_allow_broken_symlinks(self, stage):
+        """Test installing with a broken symlink."""
+        with fs.working_dir(str(stage)):
+            symlink("nonexistant.txt", "source/broken", allow_broken_symlinks=True)
+            fs.install_tree("source", "dest", symlinks=True, allow_broken_symlinks=True)
+            assert os.path.islink("dest/broken")
+            assert not os.path.exists(os.readlink("dest/broken"))
 
     def test_glob_src(self, stage):
         """Test using a glob as the source."""
@@ -502,6 +509,40 @@ def test_filter_files_with_different_encodings(regex, replacement, filename, tmp
         assert replacement in f.read()
 
 
+@pytest.mark.not_on_windows("chgrp isn't used on Windows")
+def test_chgrp_dont_set_group_if_already_set(tmpdir, monkeypatch):
+    with fs.working_dir(tmpdir):
+        os.mkdir("test-dir_chgrp_dont_set_group_if_already_set")
+
+    def _fail(*args, **kwargs):
+        raise Exception("chrgrp should not be called")
+
+    class FakeStat(object):
+        def __init__(self, gid):
+            self.st_gid = gid
+
+    original_stat = os.stat
+
+    def _stat(*args, **kwargs):
+        path = args[0]
+        if path == "test-dir_chgrp_dont_set_group_if_already_set":
+            return FakeStat(gid=1001)
+        else:
+            # Monkeypatching stat can interfere with post-test cleanup, so for
+            # paths that aren't part of the test, we want the original behavior
+            # of stat
+            return original_stat(*args, **kwargs)
+
+    monkeypatch.setattr(os, "chown", _fail)
+    monkeypatch.setattr(os, "lchown", _fail)
+    monkeypatch.setattr(os, "stat", _stat)
+
+    with fs.working_dir(tmpdir):
+        with pytest.raises(Exception):
+            fs.chgrp("test-dir_chgrp_dont_set_group_if_already_set", 1002)
+        fs.chgrp("test-dir_chgrp_dont_set_group_if_already_set", 1001)
+
+
 def test_filter_files_multiple(tmpdir):
     # All files given as input to this test must satisfy the pre-requisite
     # that the 'replacement' string is not present in the file initially and
@@ -688,7 +729,7 @@ def test_temporary_dir_context_manager():
         assert os.path.realpath(str(tmp_dir)) == os.path.realpath(os.getcwd())
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="No shebang on Windows")
+@pytest.mark.not_on_windows("No shebang on Windows")
 def test_is_nonsymlink_exe_with_shebang(tmpdir):
     with tmpdir.as_cwd():
         # Create an executable with shebang.
@@ -710,41 +751,6 @@ def test_is_nonsymlink_exe_with_shebang(tmpdir):
         assert not fs.is_nonsymlink_exe_with_shebang("executable_but_not_script")
         assert not fs.is_nonsymlink_exe_with_shebang("not_executable_with_shebang")
         assert not fs.is_nonsymlink_exe_with_shebang("symlink_to_executable_script")
-
-
-def test_lexists_islink_isdir(tmpdir):
-    root = str(tmpdir)
-
-    # Create a directory and a file, an a bunch of symlinks.
-    dir = os.path.join(root, "dir")
-    file = os.path.join(root, "file")
-    nonexistent = os.path.join(root, "does_not_exist")
-    symlink_to_dir = os.path.join(root, "symlink_to_dir")
-    symlink_to_file = os.path.join(root, "symlink_to_file")
-    dangling_symlink = os.path.join(root, "dangling_symlink")
-    symlink_to_dangling_symlink = os.path.join(root, "symlink_to_dangling_symlink")
-    symlink_to_symlink_to_dir = os.path.join(root, "symlink_to_symlink_to_dir")
-    symlink_to_symlink_to_file = os.path.join(root, "symlink_to_symlink_to_file")
-
-    os.mkdir(dir)
-    with open(file, "wb") as f:
-        f.write(b"file")
-
-    os.symlink("dir", symlink_to_dir)
-    os.symlink("file", symlink_to_file)
-    os.symlink("does_not_exist", dangling_symlink)
-    os.symlink("dangling_symlink", symlink_to_dangling_symlink)
-    os.symlink("symlink_to_dir", symlink_to_symlink_to_dir)
-    os.symlink("symlink_to_file", symlink_to_symlink_to_file)
-
-    assert fs.lexists_islink_isdir(dir) == (True, False, True)
-    assert fs.lexists_islink_isdir(file) == (True, False, False)
-    assert fs.lexists_islink_isdir(nonexistent) == (False, False, False)
-    assert fs.lexists_islink_isdir(symlink_to_dir) == (True, True, True)
-    assert fs.lexists_islink_isdir(symlink_to_file) == (True, True, False)
-    assert fs.lexists_islink_isdir(symlink_to_dangling_symlink) == (True, True, False)
-    assert fs.lexists_islink_isdir(symlink_to_symlink_to_dir) == (True, True, True)
-    assert fs.lexists_islink_isdir(symlink_to_symlink_to_file) == (True, True, False)
 
 
 class RegisterVisitor(fs.BaseDirectoryVisitor):
@@ -791,7 +797,7 @@ class RegisterVisitor(fs.BaseDirectoryVisitor):
         self.symlinked_dirs_after.append(rel_path)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Requires symlinks")
+@pytest.mark.not_on_windows("Requires symlinks")
 def test_visit_directory_tree_follow_all(noncyclical_dir_structure):
     root = str(noncyclical_dir_structure)
     visitor = RegisterVisitor(root, follow_dirs=True, follow_symlink_dirs=True)
@@ -816,7 +822,7 @@ def test_visit_directory_tree_follow_all(noncyclical_dir_structure):
     assert visitor.symlinked_dirs_after == [j("a", "to_c"), j("b", "to_c"), j("b")]
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Requires symlinks")
+@pytest.mark.not_on_windows("Requires symlinks")
 def test_visit_directory_tree_follow_dirs(noncyclical_dir_structure):
     root = str(noncyclical_dir_structure)
     visitor = RegisterVisitor(root, follow_dirs=True, follow_symlink_dirs=False)
@@ -835,7 +841,7 @@ def test_visit_directory_tree_follow_dirs(noncyclical_dir_structure):
     assert not visitor.symlinked_dirs_after
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Requires symlinks")
+@pytest.mark.not_on_windows("Requires symlinks")
 def test_visit_directory_tree_follow_none(noncyclical_dir_structure):
     root = str(noncyclical_dir_structure)
     visitor = RegisterVisitor(root, follow_dirs=False, follow_symlink_dirs=False)
@@ -850,7 +856,7 @@ def test_visit_directory_tree_follow_none(noncyclical_dir_structure):
 
 @pytest.mark.regression("29687")
 @pytest.mark.parametrize("initial_mode", [stat.S_IRUSR | stat.S_IXUSR, stat.S_IWGRP])
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows might change permissions")
+@pytest.mark.not_on_windows("Windows might change permissions")
 def test_remove_linked_tree_doesnt_change_file_permission(tmpdir, initial_mode):
     # Here we test that a failed call to remove_linked_tree, due to passing a file
     # as an argument instead of a directory, doesn't leave the file with different
@@ -871,3 +877,34 @@ def test_filesummary(tmpdir):
     assert fs.filesummary(p, print_bytes=8) == (26, b"abcdefgh...stuvwxyz")
     assert fs.filesummary(p, print_bytes=13) == (26, b"abcdefghijklmnopqrstuvwxyz")
     assert fs.filesummary(p, print_bytes=100) == (26, b"abcdefghijklmnopqrstuvwxyz")
+
+
+@pytest.mark.parametrize("bfs_depth", [1, 2, 10])
+def test_find_first_file(tmpdir, bfs_depth):
+    # Create a structure: a/a/a/{file1,file2}, b/a, c/a, d/{a,file1}
+    tmpdir.join("a", "a", "a").ensure(dir=True)
+    tmpdir.join("b", "a").ensure(dir=True)
+    tmpdir.join("c", "a").ensure(dir=True)
+    tmpdir.join("d", "a").ensure(dir=True)
+    tmpdir.join("e").ensure(dir=True)
+
+    fs.touch(tmpdir.join("a", "a", "a", "file1"))
+    fs.touch(tmpdir.join("a", "a", "a", "file2"))
+    fs.touch(tmpdir.join("d", "file1"))
+
+    root = str(tmpdir)
+
+    # Iterative deepening: should find low-depth file1.
+    assert os.path.samefile(
+        fs.find_first(root, "file*", bfs_depth=bfs_depth), os.path.join(root, "d", "file1")
+    )
+
+    assert fs.find_first(root, "nonexisting", bfs_depth=bfs_depth) is None
+
+    assert os.path.samefile(
+        fs.find_first(root, ["nonexisting", "file2"], bfs_depth=bfs_depth),
+        os.path.join(root, "a", "a", "a", "file2"),
+    )
+
+    # Should find first dir
+    assert os.path.samefile(fs.find_first(root, "a", bfs_depth=bfs_depth), os.path.join(root, "a"))

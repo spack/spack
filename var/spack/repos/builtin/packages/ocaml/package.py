@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -70,7 +70,7 @@ class Ocaml(Package):
                     string=True,
                 )
 
-        configure(*(base_args))
+        configure(*(base_args), f"CC={self.compiler.cc}")
 
         make("world.opt")
         make("install", "PREFIX={0}".format(prefix))

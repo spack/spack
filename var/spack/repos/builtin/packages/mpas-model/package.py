@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -163,6 +163,8 @@ class MpasModel(MakefilePackage):
         make(*self.target("init_atmosphere", "all"), parallel=True)
         mkdir("bin")
         copy("init_atmosphere_model", "bin")
+        copy("namelist.init_atmosphere", "bin")
+        copy("streams.init_atmosphere", "bin")
         make(*self.target("init_atmosphere", "clean"))
         make(*self.target("atmosphere", "all"), parallel=True)
         copy("atmosphere_model", "bin")

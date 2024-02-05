@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,19 +39,14 @@ spec expression syntax:
     compiler flags:
       @g{cflags="flags"}                cppflags, cflags, cxxflags,
                                     fflags, ldflags, ldlibs
-      @g{cflags=="flags"}               propagate flags to package dependencies
-                                    cppflags, cflags, cxxflags, fflags,
-                                    ldflags, ldlibs
+      @g{==}                            propagate flags to package dependencies
 
     variants:
       @B{+variant}                      enable <variant>
-      @B{++variant}                     propagate enable <variant>
       @r{-variant} or @r{~variant}          disable <variant>
-      @r{--variant} or @r{~~variant}        propagate disable <variant>
       @B{variant=value}                 set non-boolean <variant> to <value>
-      @B{variant==value}                propagate non-boolean <variant> to <value>
       @B{variant=value1,value2,value3}  set multi-value <variant> values
-      @B{variant==value1,value2,value3} propagate multi-value <variant> values
+      @B{++}, @r{--}, @r{~~}, @B{==}                propagate variants to package dependencies
 
     architecture variants:
       @m{platform=platform}             linux, darwin, cray, etc.

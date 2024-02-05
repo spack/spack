@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class SuiteSparse(Package):
     homepage = "https://people.engr.tamu.edu/davis/suitesparse.html"
     url = "https://github.com/DrTimothyAldenDavis/SuiteSparse/archive/v4.5.3.tar.gz"
     git = "https://github.com/DrTimothyAldenDavis/SuiteSparse.git"
+
+    license("Apache-2.0")
 
     version("5.13.0", sha256="59c6ca2959623f0c69226cf9afb9a018d12a37fab3a8869db5f6d7f83b6b147d")
     version("5.12.0", sha256="5fb0064a3398111976f30c5908a8c0b40df44c6dd8f0cc4bfa7b9e45d8c647de")
@@ -94,6 +96,12 @@ class SuiteSparse(Package):
     conflicts(
         "%gcc@:4.8", when="@5.2.0:", msg="gcc version must be at least 4.9 for suite-sparse@5.2.0:"
     )
+
+    def flag_handler(self, name, flags):
+        if name in ("cflags", "cxxflags"):
+            if self.spec.satisfies("^openblas ~shared threads=openmp"):
+                flags.append(self.compiler.openmp_flag)
+        return (flags, None, None)
 
     def symbol_suffix_blas(self, spec, args):
         """When using BLAS with a special symbol suffix we use defines to
@@ -222,6 +230,9 @@ class SuiteSparse(Package):
                 + " -DCMAKE_LIBRARY_PATH=%s" % prefix.lib
             ]
 
+        if spec.satisfies("%gcc platform=darwin"):
+            make_args += ["LDLIBS=-lm"]
+
         make_args.append("INSTALL=%s" % prefix)
 
         # Filter the targets we're interested in
@@ -238,7 +249,6 @@ class SuiteSparse(Package):
             "KLU",
             "UMFPACK",
             "RBio",
-            "SPQR",
         ]
         if spec.satisfies("+cuda"):
             targets.extend(["SuiteSparse_GPURuntime", "GPUQREngine"])
@@ -249,7 +259,7 @@ class SuiteSparse(Package):
             targets.append("SLIP_LU")
 
         # Finally make and install
-        make("-C", "SuiteSparse_config", "library", "config")
+        make("-C", "SuiteSparse_config", "config", *make_args)
         for target in targets:
             make("-C", target, "library", *make_args)
             make("-C", target, "install", *make_args)

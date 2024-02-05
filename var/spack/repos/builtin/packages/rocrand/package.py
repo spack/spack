@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,16 +14,25 @@ class Rocrand(CMakePackage):
     """The rocRAND project provides functions that generate
     pseudo-random and quasi-random numbers."""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/rocRAND"
-    git = "https://github.com/ROCmSoftwarePlatform/rocRAND.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocRAND/archive/rocm-5.4.3.tar.gz"
+    homepage = "https://github.com/ROCm/rocRAND"
+    git = "https://github.com/ROCm/rocRAND.git"
+    url = "https://github.com/ROCm/rocRAND/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath")
     libraries = ["librocrand"]
 
+    license("MIT")
+
     version("develop", branch="develop")
     version("master", branch="master")
+    version("6.0.0", sha256="cee93231c088be524bb2cb0e6093ec47e62e61a55153486bebbc2ca5b3d49360")
+    version("5.7.1", sha256="885cd905bbd23d02ba8f3f87d5c0b79bc44bd020ea9af190f3959cf5aa33d07d")
+    version("5.7.0", sha256="d6053d986821e5cbc6cfec0778476efb1411ef943f11e7a8b973b1814a259dcf")
+    version("5.6.1", sha256="6bf71e687ffa0fcc1b00e3567dd43da4147a82390f1b2db5e6f1f594dee6066d")
+    version("5.6.0", sha256="cc894d2f1af55e16b62c179062063946609c656043556189c656a115fd7d6f5f")
+    version("5.5.1", sha256="e8bed3741b19e296bd698fc55b43686206f42f4deea6ace71513e0c48258cc6e")
+    version("5.5.0", sha256="0481e7ef74c181026487a532d1c17e62dd468e508106edde0279ca1adeee6f9a")
     version("5.4.3", sha256="463aa760e9f74e45b326765040bb8a8a4fa27aaeaa5e5df16f8289125f88a619")
     version("5.4.0", sha256="0f6a0279b8b5a6dfbe32b45e1598218fe804fee36170d5c1f7b161c600544ef2")
     version("5.3.3", sha256="b0aae79dce7f6f9ef76ad2594745fe1f589a7b675b22f35b4d2369e7d5e1985a")
@@ -106,13 +115,13 @@ class Rocrand(CMakePackage):
 
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
-    variant("amdgpu_target", values=auto_or_any_combination_of(*amdgpu_targets), sticky=True)
     variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
+        "amdgpu_target",
+        description="AMD GPU architecture",
+        values=auto_or_any_combination_of(*amdgpu_targets),
+        sticky=True,
     )
+    variant("hiprand", default=True, when="@5.1.0:", description="Build the hiprand library")
 
     depends_on("cmake@3.10.2:", type="build", when="@4.5.0:")
     depends_on("cmake@3.5.1:", type="build")
@@ -123,7 +132,9 @@ class Rocrand(CMakePackage):
     # own directory first thanks to the $ORIGIN RPATH setting. Otherwise,
     # libhiprand.so cannot find dependency librocrand.so despite being in the
     # same directory.
-    patch("hiprand_prefer_samedir_rocrand.patch", working_dir="hiprand", when="@5.2.0:")
+    patch(
+        "hiprand_prefer_samedir_rocrand.patch", working_dir="hiprand", when="@5.2.0:5.4 +hiprand"
+    )
 
     # Add hiprand sources thru the below
     for d_version, d_commit in [
@@ -139,27 +150,27 @@ class Rocrand(CMakePackage):
     ]:
         resource(
             name="hipRAND",
-            git="https://github.com/ROCmSoftwarePlatform/hipRAND.git",
+            git="https://github.com/ROCm/hipRAND.git",
             commit=d_commit,
             destination="",
             placement="hiprand",
-            when="@{0}".format(d_version),
+            when="@{0} +hiprand".format(d_version),
         )
     resource(
         name="hipRAND",
-        git="https://github.com/ROCmSoftwarePlatform/hipRAND.git",
+        git="https://github.com/ROCm/hipRAND.git",
         branch="master",
         destination="",
         placement="hiprand",
-        when="@master",
+        when="@master +hiprand",
     )
     resource(
         name="hipRAND",
-        git="https://github.com/ROCmSoftwarePlatform/hipRAND.git",
+        git="https://github.com/ROCm/hipRAND.git",
         branch="develop",
         destination="",
         placement="hiprand",
-        when="@develop",
+        when="@develop +hiprand",
     )
 
     for ver in [
@@ -186,12 +197,19 @@ class Rocrand(CMakePackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
+        "5.7.0",
+        "5.7.1",
+        "6.0.0",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
 
     def patch(self):
-        if self.spec.satisfies("@5.1.0:"):
+        if self.spec.satisfies("@5.1.0:5.4 +hiprand"):
             os.rmdir("hipRAND")
             os.rename("hiprand", "hipRAND")
 
@@ -200,6 +218,8 @@ class Rocrand(CMakePackage):
 
     @run_after("install")
     def fix_library_locations(self):
+        if self.spec.satisfies("~hiprand"):
+            return
         """Fix the rocRAND and hipRAND libraries location"""
         # rocRAND installs librocrand.so* and libhiprand.so* to rocrand/lib and
         # hiprand/lib, respectively. This confuses spack's RPATH management. We
@@ -267,7 +287,9 @@ class Rocrand(CMakePackage):
         if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
             args.append(self.define("__skip_rocmclang", "ON"))
 
-        if "@5.1.0:" in self.spec:
-            args.append(self.define("BUILD_HIPRAND", "ON"))
+        if self.spec.satisfies("@5.1.0:5.4"):
+            args.append(self.define_from_variant("BUILD_HIPRAND", "hiprand"))
+        else:
+            args.append(self.define("BUILD_HIPRAND", "OFF"))
 
         return args

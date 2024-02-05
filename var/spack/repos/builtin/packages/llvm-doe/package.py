@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,7 +26,7 @@ class LlvmDoe(CMakePackage, CudaPackage):
 
     tags = ["e4s"]
 
-    generator = "Ninja"
+    generator("ninja")
 
     family = "compiler"  # Used by lmod
 
@@ -89,12 +89,6 @@ class LlvmDoe(CMakePackage, CudaPackage):
         description="Build all supported targets, default targets "
         "<current arch>,NVPTX,AMDGPU,CppBackend",
     )
-    variant(
-        "build_type",
-        default="Release",
-        description="CMake build type",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-    )
     variant("omp_tsan", default=False, description="Build with OpenMP capable thread sanitizer")
     variant(
         "omp_as_runtime",
@@ -117,7 +111,6 @@ class LlvmDoe(CMakePackage, CudaPackage):
     # Build dependency
     depends_on("cmake@3.4.3:", type="build")
     depends_on("cmake@3.13.4:", type="build", when="@12:")
-    depends_on("ninja", type="build")
     depends_on("python", when="~python", type="build")
     depends_on("pkgconfig", type="build")
 
@@ -258,6 +251,8 @@ class LlvmDoe(CMakePackage, CudaPackage):
             compiler = Executable(exe)
             output = compiler("--version", output=str, error=str)
             if "Apple" in output:
+                return None
+            if "AMD" in output:
                 return None
             match = version_regex.search(output)
             if match:
@@ -410,13 +405,11 @@ class LlvmDoe(CMakePackage, CudaPackage):
         define = self.define
         from_variant = self.define_from_variant
 
-        python = spec["python"]
         cmake_args = [
             define("LLVM_REQUIRES_RTTI", True),
             define("LLVM_ENABLE_RTTI", True),
             define("LLVM_ENABLE_EH", True),
             define("CLANG_DEFAULT_OPENMP_RUNTIME", "libomp"),
-            define("PYTHON_EXECUTABLE", python.command.path),
             define("LIBOMP_USE_HWLOC", True),
             define("LIBOMP_HWLOC_INSTALL_DIR", spec["hwloc"].prefix),
         ]
@@ -424,11 +417,6 @@ class LlvmDoe(CMakePackage, CudaPackage):
         version_suffix = spec.variants["version_suffix"].value
         if version_suffix != "none":
             cmake_args.append(define("LLVM_VERSION_SUFFIX", version_suffix))
-
-        if python.version >= Version("3"):
-            cmake_args.append(define("Python3_EXECUTABLE", python.command.path))
-        else:
-            cmake_args.append(define("Python2_EXECUTABLE", python.command.path))
 
         projects = []
         runtimes = []

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,9 @@ class Vecmem(CMakePackage, CudaPackage):
 
     maintainers("wdconinc", "HadrienG2")
 
+    license("MPL-2.0-no-copyleft-exception")
+
+    version("0.24.0", sha256="b395c013fba4e01f02939fefac14b357dbfd8e572b5c8f4ee5a1414adbd2ea93")
     version("0.22.0", sha256="b8811723bee60b0ea289d4c8b73363883e7c856859baf4cb6276b38816b0b258")
     version("0.21.0", sha256="97df3beb9a59b89b65c51ceb7e7c9b09172b3875b25f2d8fc070e4f9b061b631")
     version("0.20.0", sha256="1361aa180255d38a15b9d674cbb9411f8565c660f918a536479a21f3856b1fd8")
