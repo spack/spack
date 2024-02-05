@@ -632,9 +632,10 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
     depends_on("py-numpy", when="+python", type=("build", "run"))
     depends_on("py-mpi4py", when="+python+mpi", type=("build", "run"))
     depends_on("py-setuptools@42:", when="@20220217:+python", type=("build", "run"))
-    depends_on("n2p2@2.1.4:", when="+user-hdnnp")
-    depends_on("n2p2@2.1.4:", when="+ml-hdnnp")
-    depends_on("n2p2+shared", when="+lib ^n2p2")
+    for _n2p2_cond in ("+user-hdnnp", "+ml-hdnnp"):
+        with when(_n2p2_cond):
+            depends_on("n2p2@2.1.4:")
+            depends_on("n2p2+shared", when="+lib")
     depends_on("vtk", when="+user-vtk")
     depends_on("vtk", when="+vtk")
     depends_on("hipcub", when="~kokkos +rocm")
