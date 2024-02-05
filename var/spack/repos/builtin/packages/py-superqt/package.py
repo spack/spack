@@ -16,7 +16,7 @@ class PySuperqt(PythonPackage):
 
     version("0.6.1", sha256="f1a9e0499c4bbcef34b6f895eb57cd41301b3799242cd030029238124184dade")
 
-    depends_on("python@3.8:")
+    depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-hatchling", type="build")
     depends_on("py-hatch-vcs", type="build")
 
