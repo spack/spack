@@ -27,10 +27,10 @@ class PyPyfftw(PythonPackage):
     depends_on("py-cython@0.29.18:1", type="build", when="@0.13:")
     depends_on("py-cython@0.29:1", type="build", when="@:0.13")
 
-    depends_on("py-numpy@1.20:2", type=("build", "run"), when="@0.13.1:")
-    depends_on("py-numpy@1.16:2", type=("build", "run"), when="@0.13")
-    depends_on("py-numpy@1.10:2", type=("build", "run"), when="@0.11:0.13")
-    depends_on("py-numpy@1.6:2", type=("build", "run"), when="@:0.10.4")
+    depends_on("py-numpy@1.20:1", type=("build", "run"), when="@0.13.1:")
+    depends_on("py-numpy@1.16:1", type=("build", "run"), when="@0.13")
+    depends_on("py-numpy@1.10:1", type=("build", "run"), when="@0.11:0.13")
+    depends_on("py-numpy@1.6:1", type=("build", "run"), when="@:0.10.4")
 
     depends_on("fftw")
 
