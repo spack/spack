@@ -1,0 +1,10 @@
+--- old/src/addon/ESMPy/setup.py	2023-03-20 13:16:31.735670768 +1100
++++ new/src/addon/ESMPy/setup.py	2023-03-20 13:17:02.563922021 +1100
+@@ -88,6 +88,7 @@
+         self.build_base = 'build'
+         self.build_lib = None
+         self.plat_name = None
++        self.build_scripts = []
+ 
+     def finalize_options(self):
+         self.cwd = os.getcwd()
