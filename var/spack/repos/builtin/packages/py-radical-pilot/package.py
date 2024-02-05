@@ -99,16 +99,26 @@ class PyRadicalPilot(PythonPackage):
         deprecated=True,
     )
 
-    depends_on("py-radical-gtod", type=("build", "run"))
-    depends_on("py-radical-saga", type=("build", "run"))
-
-    depends_on("py-radical-utils@1.43:", type=("build", "run"), when="@1.46:")
+    depends_on("py-radical-utils@1.43:", type=("build", "run"), when="@1.42:")
+    depends_on("py-radical-saga@1.37:", type=("build", "run"), when="@1.40:")
+    depends_on("py-radical-gtod", type=("build", "run"), when="@1.14:")
 
     depends_on("py-radical-utils@1.39", type=("build", "run"), when="@1.39")
+    depends_on("py-radical-saga@1.39", type=("build", "run"), when="@1.39")
+    depends_on("py-radical-gtod@1.39", type=("build", "run"), when="@1.39")
 
-    depends_on("py-pymongo@:3", type=("build", "run"), when="@1.39")
+    depends_on("py-radical-utils@1.12:1.20", type=("build", "run"), when="@1.12:1.20")
+    depends_on("py-radical-saga@1.12:1.20", type=("build", "run"), when="@1.12:1.20")
+
+    depends_on("py-radical-utils@1.8.4:1.11", type=("build", "run"), when="@1.11")
+    depends_on("py-radical-saga@1.8:1.11", type=("build", "run"), when="@1.11")
+
+    depends_on("py-radical-utils@:1.8.3", type=("build", "run"), when="@:1.10")
+    depends_on("py-radical-saga@:1.7", type=("build", "run"), when="@:1.10")
+
+    depends_on("py-pymongo@:3", type=("build", "run"), when="@:1.39")
 
     depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-dill", type=("build", "run"))
+    depends_on("py-dill", type=("build", "run"), when="@1.14:")
     depends_on("py-setproctitle", type=("build", "run"))
     depends_on("py-setuptools", type="build")

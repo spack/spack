@@ -93,7 +93,9 @@ class PyRadicalUtils(PythonPackage):
         deprecated=True,
     )
 
-    depends_on("py-pymongo@:3", type=("build", "run"), when="@1.39")
+    depends_on("py-radical-gtod", type=("build", "run"), when="@:1.13")
+
+    depends_on("py-pymongo@:3", type=("build", "run"), when="@:1.39")
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-colorama", type=("build", "run"))

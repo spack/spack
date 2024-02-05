@@ -78,11 +78,23 @@ class PyRadicalEntk(PythonPackage):
         deprecated=True,
     )
 
-    depends_on("py-radical-utils@1.40:", type=("build", "run"), when="@1.46:")
-    depends_on("py-radical-pilot@1.40:", type=("build", "run"), when="@1.46:")
+    depends_on("py-radical-utils@1.40:", type=("build", "run"), when="@1.40:")
+    depends_on("py-radical-pilot@1.40:", type=("build", "run"), when="@1.40:")
 
     depends_on("py-radical-utils@1.39", type=("build", "run"), when="@1.39")
     depends_on("py-radical-pilot@1.39", type=("build", "run"), when="@1.39")
+
+    depends_on("py-radical-pilot@1.18:1.20", type=("build", "run"), when="@1.20")
+
+    depends_on("py-radical-utils@1.12:1.20", type=("build", "run"), when="@1.12:1.20")
+    depends_on("py-radical-pilot@1.12:1.17", type=("build", "run"), when="@1.12:1.19")
+
+    depends_on("py-radical-utils@:1.11", type=("build", "run"), when="@:1.11")
+    depends_on("py-radical-pilot@:1.11", type=("build", "run"), when="@:1.11")
+
+    depends_on("py-packaging", type=("build", "run"), when="@:1.20")
+    depends_on("py-pika@0.13.0", type=("build", "run"), when="@:1.20")
+    depends_on("py-requests", type=("build", "run"), when="@:1.20")
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")

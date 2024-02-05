@@ -45,7 +45,7 @@ class PyRadicalGtod(PythonPackage):
         deprecated=True,
     )
 
-    depends_on("py-radical-utils", type=("build", "run"))
+    depends_on("py-radical-utils", type=("build", "run"), when="@1.13:")
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
