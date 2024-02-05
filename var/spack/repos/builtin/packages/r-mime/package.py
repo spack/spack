@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class RMime(RPackage):
     /etc/mime.types in UNIX-type systems."""
 
     cran = "mime"
+
+    license("GPL-2.0-or-later")
 
     version("0.12", sha256="a9001051d6c1e556e881910b1816b42872a1ee41ab76d0040ce66a27135e3849")
     version("0.11", sha256="215427a49f0d0b0e3ab38d419c515a35d57e3bc32535805306275d8b33f8eec0")

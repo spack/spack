@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Delphes(CMakePackage):
     tags = ["hep"]
 
     maintainers("drbenmorgan", "vvolkl", "selvaggi")
+
+    license("CC-BY-SA-4.0")
 
     version("master", branch="master")
     version("3.5.0", sha256="37685b945ef43aab09217d70b0ac7f9c5d3c2c27cf3b3f8d64c4e6eb5c5fd9aa")

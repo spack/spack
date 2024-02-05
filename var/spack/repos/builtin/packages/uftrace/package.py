@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Uftrace(AutotoolsPackage):
     executables = ["^uftrace$"]
     maintainers("bernhardkaindl")
     tags = ["trace-tools"]
+
+    license("GPL-2.0-or-later")
 
     # The build process uses 'git describe --tags' to get the package version
     version("master", branch="master", get_full_repo=True)

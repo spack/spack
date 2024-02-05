@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,9 +19,12 @@ class Adiak(CMakePackage):
     variant("mpi", default=True, description="Build with MPI support")
     variant("shared", default=True, description="Build dynamic libraries")
 
+    license("MIT")
+
     version(
-        "0.2.2", commit="3aedd494c81c01df1183af28bc09bade2fabfcd3", submodules=True, preferred=True
+        "0.4.0", commit="7e8b7233f8a148b402128ed46b2f0c643e3b397e", submodules=True, preferred=True
     )
+    version("0.2.2", commit="3aedd494c81c01df1183af28bc09bade2fabfcd3", submodules=True)
     version(
         "0.3.0-alpha",
         commit="054d2693a977ed0e1f16c665b4966bb90924779e",

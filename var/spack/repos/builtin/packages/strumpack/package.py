@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,6 +29,8 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     maintainers("pghysels")
 
     test_requires_compiler = True
+
+    license("BSD-3-Clause-LBNL")
 
     version("master", branch="master")
     version("7.2.0", sha256="6988c00c3213f13e53d75fb474102358f4fecf07a4b4304b7123d86fdc784639")

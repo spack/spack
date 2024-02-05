@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,12 @@ class PyTorchaudio(PythonPackage):
     git = "https://github.com/pytorch/audio.git"
     submodules = True
 
+    license("BSD-2-Clause")
+
     version("main", branch="main")
+    version("2.2.0", tag="v2.2.0", commit="08901ade5d17d3e3cf6fc039cbd601cbd2853686")
+    version("2.1.2", tag="v2.1.2", commit="c4c1957d24b423200fd83591d46066135979a5a8")
+    version("2.1.1", tag="v2.1.1", commit="db624844f5c95bb7618fe5a5f532bf9b68efeb45")
     version("2.1.0", tag="v2.1.0", commit="6ea1133706801ec6e81bb29142da2e21a8583a0a")
     version("2.0.2", tag="v2.0.2", commit="31de77dad5c89274451b3f5c4bcb630be12787c4")
     version("2.0.1", tag="v2.0.1", commit="3b40834aca41957002dfe074175e900cf8906237")
@@ -38,8 +43,9 @@ class PyTorchaudio(PythonPackage):
     version("0.5.0", tag="v0.5.0", commit="09494ea545738538f9db2dceeffe10d421060ee5")
     version("0.4.0", tag="v0.4.0", commit="8afed303af3de41f3586007079c0534543c8f663")
 
-    # https://pytorch.org/audio/main/installation.html#dependencies
-    depends_on("python@3.8:3.11", when="@2:", type=("build", "link", "run"))
+    # Based on PyPI wheel availability
+    depends_on("python@3.8:3.12", when="@2.2:", type=("build", "link", "run"))
+    depends_on("python@3.8:3.11", when="@2.0:2.1", type=("build", "link", "run"))
     depends_on("python@:3.10", when="@0.12:0", type=("build", "link", "run"))
     depends_on("python@:3.9", when="@0.7.2:0.11", type=("build", "link", "run"))
     depends_on("python@:3.8", when="@:0.7.0", type=("build", "link", "run"))
@@ -56,6 +62,9 @@ class PyTorchaudio(PythonPackage):
     depends_on("sox")
 
     depends_on("py-torch@main", when="@main", type=("build", "link", "run"))
+    depends_on("py-torch@2.2.0", when="@2.2.0", type=("build", "link", "run"))
+    depends_on("py-torch@2.1.2", when="@2.1.2", type=("build", "link", "run"))
+    depends_on("py-torch@2.1.1", when="@2.1.1", type=("build", "link", "run"))
     depends_on("py-torch@2.1.0", when="@2.1.0", type=("build", "link", "run"))
     depends_on("py-torch@2.0.1", when="@2.0.2", type=("build", "link", "run"))
     depends_on("py-torch@2.0.0", when="@2.0.1", type=("build", "link", "run"))

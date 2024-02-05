@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,6 +31,8 @@ class Hdf5(CMakePackage):
 
     test_requires_compiler = True
 
+    license("custom")
+
     # The 'develop' version is renamed so that we could uninstall (or patch) it
     # without affecting other develop version.
     version("develop-1.15", branch="develop")
@@ -46,167 +48,49 @@ class Hdf5(CMakePackage):
         sha256="09cdb287aa7a89148c1638dd20891fdbae08102cf433ef128fd345338aa237c7",
         preferred=True,
     )
+    version("1.14.2", sha256="1c342e634008284a8c2794c8e7608e2eaf26d01d445fb3dfd7f33cb2fb51ac53")
+    version("1.14.1-2", sha256="cbe93f275d5231df28ced9549253793e40cd2b555e3d288df09d7b89a9967b07")
+    version("1.14.0", sha256="a571cc83efda62e1a51a0a912dd916d01895801c5025af91669484a1575a6ef4")
+    version("1.12.3", sha256="c15adf34647918dd48150ea1bd9dffd3b32a3aec5298991d56048cc3d39b4f6f")
+    version("1.12.2", sha256="2a89af03d56ce7502dcae18232c241281ad1773561ec00c0f0e8ee2463910f14")
+    version("1.12.1", sha256="79c66ff67e666665369396e9c90b32e238e501f345afd2234186bfb8331081ca")
+    version("1.12.0", sha256="a62dcb276658cb78e6795dd29bf926ed7a9bc4edf6e77025cd2c689a8f97c17a")
+    version("1.10.11", sha256="341684c5c0976b8c7e6951735a400275a90693604464cac73e9f323c696fc79c")
+    version("1.10.10", sha256="a6877ab7bd5d769d2d68618fdb54beb50263dcc2a8c157fe7e2186925cdb02db")
+    version("1.10.9", sha256="f5b77f59b705a755a5a223372d0222c7bc408fe8db6fa8d9d7ecf8bce291b8dd")
+    version("1.10.8", sha256="d341b80d380dd763753a0ebe22915e11e87aac4e44a084a850646ff934d19c80")
+    version("1.10.7", sha256="7a1a0a54371275ce2dfc5cd093775bb025c365846512961e7e5ceaecb437ef15")
+    version("1.10.6", sha256="5f9a3ee85db4ea1d3b1fa9159352aebc2af72732fc2f58c96a3f0768dba0e9aa")
+    version("1.10.5", sha256="6d4ce8bf902a97b050f6f491f4268634e252a63dadd6656a1a9be5b7b7726fa8")
+    version("1.10.4", sha256="8f60dc4dd6ab5fcd23c750d1dc5bca3d0453bdce5c8cdaf0a4a61a9d1122adb2")
+    version("1.10.3", sha256="b600d7c914cfa80ae127cd1a1539981213fee9994ac22ebec9e3845e951d9b39")
+    version("1.10.2", sha256="bfec1be8c366965a99812cf02ddc97e4b708c1754fccba5414d4adccdc073866")
+    version("1.10.1", sha256="048a9d149fb99aaa1680a712963f5a78e9c43b588d0e79d55e06760ec377c172")
     version(
-        "1.14.2",
-        sha256="1c342e634008284a8c2794c8e7608e2eaf26d01d445fb3dfd7f33cb2fb51ac53",
-        preferred=True,
+        "1.10.0-patch1", sha256="6e78cfe32a10e6e0629393cdfddf6cfa536571efdaf85f08e35326e1b4e9eff0"
     )
-    version(
-        "1.14.1-2",
-        sha256="cbe93f275d5231df28ced9549253793e40cd2b555e3d288df09d7b89a9967b07",
-        preferred=True,
-    )
-    version(
-        "1.14.0",
-        sha256="a571cc83efda62e1a51a0a912dd916d01895801c5025af91669484a1575a6ef4",
-        preferred=True,
-    )
-    version(
-        "1.12.2",
-        sha256="2a89af03d56ce7502dcae18232c241281ad1773561ec00c0f0e8ee2463910f14",
-        preferred=True,
-    )
-    version(
-        "1.12.1",
-        sha256="79c66ff67e666665369396e9c90b32e238e501f345afd2234186bfb8331081ca",
-        preferred=True,
-    )
-    version(
-        "1.12.0",
-        sha256="a62dcb276658cb78e6795dd29bf926ed7a9bc4edf6e77025cd2c689a8f97c17a",
-        preferred=True,
-    )
-    version(
-        "1.10.11",
-        sha256="341684c5c0976b8c7e6951735a400275a90693604464cac73e9f323c696fc79c",
-        preferred=True,
-    )
-    version(
-        "1.10.10",
-        sha256="a6877ab7bd5d769d2d68618fdb54beb50263dcc2a8c157fe7e2186925cdb02db",
-        preferred=True,
-    )
-    version(
-        "1.10.9",
-        sha256="f5b77f59b705a755a5a223372d0222c7bc408fe8db6fa8d9d7ecf8bce291b8dd",
-        preferred=True,
-    )
-    version(
-        "1.10.8",
-        sha256="d341b80d380dd763753a0ebe22915e11e87aac4e44a084a850646ff934d19c80",
-        preferred=True,
-    )
-    version(
-        "1.10.7",
-        sha256="7a1a0a54371275ce2dfc5cd093775bb025c365846512961e7e5ceaecb437ef15",
-        preferred=True,
-    )
-    version(
-        "1.10.6",
-        sha256="5f9a3ee85db4ea1d3b1fa9159352aebc2af72732fc2f58c96a3f0768dba0e9aa",
-        preferred=True,
-    )
-    version(
-        "1.10.5",
-        sha256="6d4ce8bf902a97b050f6f491f4268634e252a63dadd6656a1a9be5b7b7726fa8",
-        preferred=True,
-    )
-    version(
-        "1.10.4",
-        sha256="8f60dc4dd6ab5fcd23c750d1dc5bca3d0453bdce5c8cdaf0a4a61a9d1122adb2",
-        preferred=True,
-    )
-    version(
-        "1.10.3",
-        sha256="b600d7c914cfa80ae127cd1a1539981213fee9994ac22ebec9e3845e951d9b39",
-        preferred=True,
-    )
-    version(
-        "1.10.2",
-        sha256="bfec1be8c366965a99812cf02ddc97e4b708c1754fccba5414d4adccdc073866",
-        preferred=True,
-    )
-    version(
-        "1.10.1",
-        sha256="048a9d149fb99aaa1680a712963f5a78e9c43b588d0e79d55e06760ec377c172",
-        preferred=True,
-    )
-    version(
-        "1.10.0-patch1",
-        sha256="6e78cfe32a10e6e0629393cdfddf6cfa536571efdaf85f08e35326e1b4e9eff0",
-        preferred=True,
-    )
-    version(
-        "1.10.0",
-        sha256="81f6201aba5c30dced5dcd62f5d5477a2790fd5850e02ac514ca8bf3e2bb375a",
-        preferred=True,
-    )
-    version(
-        "1.8.23",
-        sha256="37fa4eb6cd0e181eb49a10d54611cb00700e9537f805d03e6853503afe5abc27",
-        preferred=True,
-    )
-    version(
-        "1.8.22",
-        sha256="8406d96d9355ef8961d2739fb8fd5474ad4cdf52f3cfac657733defd9709bfaa",
-        preferred=True,
-    )
-    version(
-        "1.8.21",
-        sha256="87d8c82eba5cf766d97cd06c054f4639c1049c4adeaa3a79f77f8bd374f80f37",
-        preferred=True,
-    )
-    version(
-        "1.8.19",
-        sha256="a4335849f19fae88c264fd0df046bc321a78c536b2548fc508627a790564dc38",
-        preferred=True,
-    )
-    version(
-        "1.8.18",
-        sha256="cdb195ad8d9e6782acf24b2488061289f615628c2ccda8457b0a0c3fb7a8a063",
-        preferred=True,
-    )
-    version(
-        "1.8.17",
-        sha256="d9cda297ee76ade9881c4208987939250d397bae6252d0ccb66fa7d24d67e263",
-        preferred=True,
-    )
-    version(
-        "1.8.16",
-        sha256="ed17178abd9928a7237f30370189ba767b9e39e0db45917c2ac4665eb9cb4771",
-        preferred=True,
-    )
-    version(
-        "1.8.15",
-        sha256="4e963216b7d32469596bc1321a8c3f6e0c278dcbbdb7be6414c63c081b34c275",
-        preferred=True,
-    )
-    version(
-        "1.8.14",
-        sha256="1dbefeeef7f591897c632b2b090db96bb8d35ad035beaa36bc39cb2bc67e0639",
-        preferred=True,
-    )
-    version(
-        "1.8.13",
-        sha256="82f6b38eec103b4fccfbf14892786e0c27a8135d3252d8601cf5bf20066d38c1",
-        preferred=True,
-    )
-    version(
-        "1.8.12",
-        sha256="b5cccea850096962b5fd9e96f22c4f47d2379224bb41130d9bc038bb6c37dfcb",
-        preferred=True,
-    )
-    version(
-        "1.8.10",
-        sha256="4813b79c5fb8701a625b9924b8203bc7154a77f9b826ad4e034144b4056a160a",
-        preferred=True,
-    )
+    version("1.10.0", sha256="81f6201aba5c30dced5dcd62f5d5477a2790fd5850e02ac514ca8bf3e2bb375a")
+    version("1.8.23", sha256="37fa4eb6cd0e181eb49a10d54611cb00700e9537f805d03e6853503afe5abc27")
+    version("1.8.22", sha256="8406d96d9355ef8961d2739fb8fd5474ad4cdf52f3cfac657733defd9709bfaa")
+    version("1.8.21", sha256="87d8c82eba5cf766d97cd06c054f4639c1049c4adeaa3a79f77f8bd374f80f37")
+    version("1.8.19", sha256="a4335849f19fae88c264fd0df046bc321a78c536b2548fc508627a790564dc38")
+    version("1.8.18", sha256="cdb195ad8d9e6782acf24b2488061289f615628c2ccda8457b0a0c3fb7a8a063")
+    version("1.8.17", sha256="d9cda297ee76ade9881c4208987939250d397bae6252d0ccb66fa7d24d67e263")
+    version("1.8.16", sha256="ed17178abd9928a7237f30370189ba767b9e39e0db45917c2ac4665eb9cb4771")
+    version("1.8.15", sha256="4e963216b7d32469596bc1321a8c3f6e0c278dcbbdb7be6414c63c081b34c275")
+    version("1.8.14", sha256="1dbefeeef7f591897c632b2b090db96bb8d35ad035beaa36bc39cb2bc67e0639")
+    version("1.8.13", sha256="82f6b38eec103b4fccfbf14892786e0c27a8135d3252d8601cf5bf20066d38c1")
+    version("1.8.12", sha256="b5cccea850096962b5fd9e96f22c4f47d2379224bb41130d9bc038bb6c37dfcb")
+    version("1.8.10", sha256="4813b79c5fb8701a625b9924b8203bc7154a77f9b826ad4e034144b4056a160a")
 
     variant("shared", default=True, description="Builds a shared version of the library")
 
     variant("hl", default=False, description="Enable the high-level library")
     variant("cxx", default=False, description="Enable C++ support")
     variant("map", when="@1.14:", default=False, description="Enable MAP API support")
+    variant(
+        "subfiling", when="@1.14: +mpi", default=False, description="Enable Subfiling VFD support"
+    )
     variant("fortran", default=False, description="Enable Fortran support")
     variant("java", when="@1.10:", default=False, description="Enable Java support")
     variant("threadsafe", default=False, description="Enable thread-safe capabilities")
@@ -329,7 +213,7 @@ class Hdf5(CMakePackage):
 
     patch("fortran-kinds.patch", when="@1.10.7")
 
-    # This patch may only be needed with GCC11.2 on macOS, but it's valid for
+    # This patch may only be needed with GCC 11.2 on macOS, but it's valid for
     # any of the head HDF5 versions as of 12/2021. Since it's impossible to
     # tell what Fortran version is part of a mixed apple-clang toolchain on
     # macOS (which is the norm), and this might be an issue for other compilers
@@ -411,9 +295,13 @@ class Hdf5(CMakePackage):
                 cmake_flags.append(self.compiler.cc_pic_flag)
             if spec.satisfies("@1.8.21 %oneapi@2023.0.0"):
                 cmake_flags.append("-Wno-error=int-conversion")
+            if spec.satisfies("%apple-clang@15:"):
+                cmake_flags.append("-Wl,-ld_classic")
         elif name == "cxxflags":
             if spec.satisfies("@:1.8.12+cxx~shared"):
                 cmake_flags.append(self.compiler.cxx_pic_flag)
+            if spec.satisfies("%apple-clang@15:"):
+                cmake_flags.append("-Wl,-ld_classic")
         elif name == "fflags":
             if spec.satisfies("%cce+fortran"):
                 # Cray compiler generates module files with uppercase names by
@@ -607,6 +495,7 @@ class Hdf5(CMakePackage):
                 # are enabled but the tests are disabled.
                 spec.satisfies("@1.8.22+shared+tools"),
             ),
+            self.define_from_variant("HDF5_ENABLE_SUBFILING_VFD", "subfiling"),
             self.define_from_variant("HDF5_ENABLE_MAP_API", "map"),
             self.define("HDF5_ENABLE_Z_LIB_SUPPORT", True),
             self.define_from_variant("HDF5_ENABLE_SZIP_SUPPORT", "szip"),
@@ -667,7 +556,7 @@ class Hdf5(CMakePackage):
         # 1.10.6 and 1.12.0. The current develop versions do not produce 'h5pfc'
         # at all. Here, we make sure that 'h5pfc' is available when Fortran and
         # MPI support are enabled (only for versions that generate 'h5fc').
-        if self.spec.satisfies("@1.8.22:1.8," "1.10.6:1.10.9," "1.12.0:1.12" "+fortran+mpi"):
+        if self.spec.satisfies("@1.8.22:1.8," "1.10.6:1.10.9," "1.12.0:1.12.2" "+fortran+mpi"):
             with working_dir(self.prefix.bin):
                 # No try/except here, fix the condition above instead:
                 symlink("h5fc", "h5pfc")
@@ -710,6 +599,17 @@ class Hdf5(CMakePackage):
                     tgt_filename = src_filename[:version_sep_idx] + ".pc"
                     if not os.path.exists(tgt_filename):
                         symlink(src_filename, tgt_filename)
+
+    @run_after("install")
+    def link_debug_libs(self):
+        # When build_type is Debug, the hdf5 build appends _debug to all library names.
+        # Dependents of hdf5 (netcdf-c etc.) can't handle those, thus make symlinks.
+        if "build_type=Debug" in self.spec:
+            libs = find(self.prefix.lib, "libhdf5*_debug.*", recursive=False)
+            with working_dir(self.prefix.lib):
+                for lib in libs:
+                    libname = os.path.split(lib)[1]
+                    os.symlink(libname, libname.replace("_debug", ""))
 
     @property
     @llnl.util.lang.memoized

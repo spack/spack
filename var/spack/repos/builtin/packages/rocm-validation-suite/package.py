@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,12 +15,16 @@ class RocmValidationSuite(CMakePackage):
     computing environment, enabled using the ROCm software stack on a
     compatible platform."""
 
-    homepage = "https://github.com/ROCm-Developer-Tools/ROCmValidationSuite"
-    url = "https://github.com/ROCm-Developer-Tools/ROCmValidationSuite/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/ROCmValidationSuite"
+    url = "https://github.com/ROCm/ROCmValidationSuite/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers("srekolam", "renjithravindrankannath")
+    license("MIT")
 
+    maintainers("srekolam", "renjithravindrankannath")
+    version("6.0.0", sha256="a84e36b5e50e70ba033fb6bc6fa99da2e32bf7eaef2098df3164365a77a8f14c")
+    version("5.7.1", sha256="202f2b6e014bbbeec40af5d3ec630c042f09a61087a77bd70715d81044ea4d65")
+    version("5.7.0", sha256="f049b7786a220e9b6dfe099f17727dd0d9e41be9e680fe8309eae400cc5536ea")
     version("5.6.1", sha256="d5e4100e2d07311dfa101563c15d026a8130442cdee8af9ef861832cd7866c0d")
     version("5.6.0", sha256="54cc5167055870570c97ee7114f48d24d5415f984e0c9d7b58b83467e0cf18fb")
     version("5.5.1", sha256="0fbfaa9f68642b590ef04f9778013925bbf3f17bdcd35d4c85a8ffd091169a6e")
@@ -117,9 +121,10 @@ class RocmValidationSuite(CMakePackage):
     )
     patch(
         "007-cleanup-path-reference-donot-download-googletest-yaml-library-path_5.6.patch",
-        when="@5.6:",
+        when="@5.6",
     )
-
+    patch("008-correcting-library-and-include-path-WITHOUT-RVS-BUILD-TESTS.patch", when="@5.7")
+    patch("009-replacing-rocm-path-with-package-path.patch", when="@6.0")
     depends_on("cmake@3.5:", type="build")
     depends_on("zlib-api", type="link")
     depends_on("yaml-cpp~shared")
@@ -158,6 +163,9 @@ class RocmValidationSuite(CMakePackage):
         "5.5.1",
         "5.6.0",
         "5.6.1",
+        "5.7.0",
+        "5.7.1",
+        "6.0.0",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocminfo@" + ver, when="@" + ver)
@@ -194,12 +202,13 @@ class RocmValidationSuite(CMakePackage):
 
     def cmake_args(self):
         args = [
+            self.define("RVS_BUILD_TESTS", False),
             self.define("HIP_PATH", self.spec["hip"].prefix),
             self.define("HSA_PATH", self.spec["hsa-rocr-dev"].prefix),
             self.define("ROCM_SMI_DIR", self.spec["rocm-smi-lib"].prefix),
             self.define("ROCBLAS_DIR", self.spec["rocblas"].prefix),
             self.define("YAML_INC_DIR", self.spec["yaml-cpp"].prefix.include),
-            self.define("YAML_LIB_DIR", self.spec["yaml-cpp"].libs.directories[0]),
+            self.define("YAML_LIB_DIR", self.spec["yaml-cpp"].prefix.lib64),
         ]
         if self.spec.satisfies("@4.5.0:"):
             args.append(self.define("UT_INC", self.spec["googletest"].prefix.include))

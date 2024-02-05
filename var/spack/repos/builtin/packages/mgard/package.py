@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class Mgard(CMakePackage, CudaPackage):
     maintainers("robertu94")
 
     tags = ["e4s"]
+
+    license("Apache-2.0")
 
     version("2023-03-31", commit="a8a04a86ff30f91d0b430a7c52960a12fa119589", preferred=True)
     version("2023-01-10", commit="3808bd8889a0f8e6647fc0251a3189bc4dfc920f")

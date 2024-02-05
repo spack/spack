@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,6 +38,8 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("trws")
 
+    license("BSD-3-Clause")
+
     version("main", branch="main", submodules="True")
     version("2022.10.1", sha256="2d12f1a46f5a6d01880fc075cfbd332e2cf296816a7c1aa12d4ee5644d386f02")
     version("2022.03.2", sha256="bc4aaeacfe8f2912e28f7a36fc731ab9e481bee15f2c6daf0cb208eed3f201eb")
@@ -54,6 +56,9 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cub", when="+cuda")
 
     depends_on("blt", type="build")
+    depends_on("blt@0.5.0:0.5.3", type="build", when="@2022.03.0:")
+
+    patch("gcc-13-missing-header.patch", when="@:2022.10 %gcc@13:")
 
     conflicts("^blt@:0.3.6", when="+rocm")
 

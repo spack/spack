@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,7 +30,7 @@ class Python(Package):
     url = "https://www.python.org/ftp/python/3.8.0/Python-3.8.0.tgz"
     list_url = "https://www.python.org/ftp/python/"
     list_depth = 1
-    tags = ["windows"]
+    tags = ["windows", "build-tools"]
 
     maintainers("adamjstewart", "skosukhin", "scheibelp")
 
@@ -40,12 +40,16 @@ class Python(Package):
     install_targets = ["install"]
     build_targets: List[str] = []
 
+    license("0BSD")
+
+    version("3.12.1", sha256="d01ec6a33bc10009b09c17da95cc2759af5a580a7316b3a446eb4190e13f97b2")
     version("3.12.0", sha256="51412956d24a1ef7c97f1cb5f70e185c13e3de1f50d131c0aac6338080687afb")
     version(
-        "3.11.6",
-        sha256="c049bf317e877cbf9fce8c3af902436774ecef5249a29d10984ca3a37f7f4736",
+        "3.11.7",
+        sha256="068c05f82262e57641bd93458dfa883128858f5f4997aad7a36fd25b13b29209",
         preferred=True,
     )
+    version("3.11.6", sha256="c049bf317e877cbf9fce8c3af902436774ecef5249a29d10984ca3a37f7f4736")
     version("3.11.5", sha256="a12a0a013a30b846c786c010f2c19dd36b7298d888f7c4bd1581d90ce18b5e58")
     version("3.11.4", sha256="85c37a265e5c9dd9f75b35f954e31fbfc10383162417285e30ad25cc073a0d63")
     version("3.11.3", sha256="1a79f3df32265d9e6625f1a0b31c28eb1594df911403d11f3320ee1da1b3e048")
@@ -237,6 +241,7 @@ class Python(Package):
     variant("crypt", default=True, description="Build crypt module", when="@:3.12 platform=cray")
 
     if sys.platform != "win32":
+        depends_on("gmake", type="build")
         depends_on("pkgconfig@0.9.0:", type="build")
         depends_on("gettext +libxml2", when="+libxml2")
         depends_on("gettext ~libxml2", when="~libxml2")
@@ -1258,11 +1263,6 @@ print(json.dumps(config))
         module.python_include = join_path(dependent_spec.prefix, self.include)
         module.python_platlib = join_path(dependent_spec.prefix, self.platlib)
         module.python_purelib = join_path(dependent_spec.prefix, self.purelib)
-
-        # Make the site packages directory for extensions
-        if dependent_spec.package.is_extension:
-            mkdirp(module.python_platlib)
-            mkdirp(module.python_purelib)
 
     def add_files_to_view(self, view, merge_map, skip_if_exists=True):
         bin_dir = self.spec.prefix.bin if sys.platform != "win32" else self.spec.prefix

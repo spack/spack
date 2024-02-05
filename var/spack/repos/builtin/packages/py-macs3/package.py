@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class PyMacs3(PythonPackage):
 
     maintainers("snehring")
 
+    license("BSD-3-Clause")
+
     version("3.0.0b3", sha256="caa794d4cfcd7368447eae15878505315dac44c21546e8fecebb3561e9cee362")
 
     depends_on("python@3.9:", type=("build", "run"))
@@ -24,3 +26,5 @@ class PyMacs3(PythonPackage):
     depends_on("py-numpy@1.19:", type=("build", "run"))
     depends_on("py-cykhash@2", type=("build", "run"))
     depends_on("py-hmmlearn@0.3:", type=("build", "run"))
+
+    depends_on("zlib-api")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyCryptography(PythonPackage):
     homepage = "https://github.com/pyca/cryptography"
     pypi = "cryptography/cryptography-1.8.1.tar.gz"
 
+    license("Apache-2.0")
+
     version("41.0.3", sha256="6d192741113ef5e30d89dcb5b956ef4e1578f304708701b8b73d38e3e1461f34")
     version("40.0.2", sha256="c33c0d32b8594fa647d2e01dbccc303478e16fdd7cf98652d5b3ed11aa5e5c99")
     version("38.0.1", sha256="1db3d807a14931fa317f96435695d9ec386be7b84b618cc61cfa5d08b0ae33d7")
@@ -23,6 +25,7 @@ class PyCryptography(PythonPackage):
     version("3.4.7", sha256="3d10de8116d25649631977cb37da6cbdd2d6fa0e0281d014a5b7d337255ca713")
     version("3.3.2", sha256="5a60d3780149e13b7a6ff7ad6526b38846354d11a15e21068e57073e29e19bed")
     version("3.2.1", sha256="d3d5e10be0cf2a12214ddee45c6bd203dab435e3d83b4560c03066eda600bfe3")
+    version("2.8", sha256="3cda1f0ed8747339bbdf71b9f38ca74c7b592f24f65cdb3ab3765e4b02871651")
     version("2.7", sha256="e6347742ac8f35ded4a46ff835c60e68c22a536a8ae5c4422966d06946b6d4c6")
     version("2.3.1", sha256="8d10113ca826a4c29d5b85b2c4e045ffa8bad74fb525ee0eceb1d38d4c70dfd6")
     version("1.8.1", sha256="323524312bb467565ebca7e50c8ae5e9674e544951d28a2904a50012a8828190")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,13 +11,16 @@ from spack.package import *
 class RocmDebugAgent(CMakePackage):
     """Radeon Open Compute (ROCm) debug agent"""
 
-    homepage = "https://github.com/ROCm-Developer-Tools/rocr_debug_agent"
-    git = "https://github.com/ROCm-Developer-Tools/rocr_debug_agent.git"
-    url = "https://github.com/ROCm-Developer-Tools/rocr_debug_agent/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/rocr_debug_agent"
+    git = "https://github.com/ROCm/rocr_debug_agent.git"
+    url = "https://github.com/ROCm/rocr_debug_agent/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["librocm-debug-agent"]
+    version("6.0.0", sha256="705be2c2bd0f5c7d1e286eb9b94045b2bd017ff323f07bca9aa7c81f2d168524")
+    version("5.7.1", sha256="3b8d2835935da98f41e7cfc5b808c596ac06dd705b9a07bb70283e002f8dea6a")
+    version("5.7.0", sha256="d9344ed02e82a01140f2162e901e6a519e5fee6b498e2f49417730ee2660c5c1")
     version("5.6.1", sha256="d3b1d5d757489ed3cc66d351cec56b7b850aaa7ecf6a55b0350b89c3dee3153a")
     version("5.6.0", sha256="0bed788f07906afeb9092d0bec184a7963233ac9d8ccd20b4afeb624a1d20698")
     version("5.5.1", sha256="1bb66734f11bb57df6efa507f0217651446653bf28b3ca36acfcf94511a7c2bc")
@@ -103,7 +106,7 @@ class RocmDebugAgent(CMakePackage):
     )
 
     def url_for_version(self, version):
-        url = "https://github.com/ROCm-Developer-Tools/rocr_debug_agent/archive/"
+        url = "https://github.com/ROCm/rocr_debug_agent/archive/"
         if version <= Version("3.7.0"):
             url += "roc-{0}.tar.gz".format(version)
         else:
@@ -142,6 +145,9 @@ class RocmDebugAgent(CMakePackage):
         "5.5.1",
         "5.6.0",
         "5.6.1",
+        "5.7.0",
+        "5.7.1",
+        "6.0.0",
     ]:
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
@@ -173,14 +179,17 @@ class RocmDebugAgent(CMakePackage):
         "5.5.1",
         "5.6.0",
         "5.6.1",
+        "5.7.0",
+        "5.7.1",
+        "6.0.0",
     ]:
         depends_on("rocm-dbgapi@" + ver, when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
 
-    # https://github.com/ROCm-Developer-Tools/rocr_debug_agent/pull/4
+    # https://github.com/ROCm/rocr_debug_agent/pull/4
     patch("0001-Drop-overly-strict-Werror-flag.patch", when="@3.7.0:")
     patch("0002-add-hip-architecture.patch", when="@3.9.0:")
 

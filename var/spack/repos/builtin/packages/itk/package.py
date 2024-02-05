@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class Itk(CMakePackage):
 
     homepage = "https://itk.org/"
     url = "https://github.com/InsightSoftwareConsortium/ITK/releases/download/v5.1.1/InsightToolkit-5.1.1.tar.gz"
+
+    license("Apache-2.0")
 
     version("5.3.0", sha256="57a4471133dc8f76bde3d6eb45285c440bd40d113428884a1487472b7b71e383")
     version("5.3rc02", sha256="163aaf4a6cecd5b70ff718c1a986c746581797212fd1b629fa81f12ae4756d14")
@@ -71,7 +73,7 @@ class Itk(CMakePackage):
     )
 
     def cmake_args(self):
-        use_mkl = "^mkl" in self.spec
+        use_mkl = self.spec["fftw-api"].name in INTEL_MATH_LIBRARIES
         args = [
             self.define("BUILD_SHARED_LIBS", True),
             self.define("ITK_USE_SYSTEM_LIBRARIES", True),

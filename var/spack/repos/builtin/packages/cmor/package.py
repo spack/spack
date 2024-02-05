@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Cmor(AutotoolsPackage):
 
     homepage = "https://cmor.llnl.gov"
     url = "https://github.com/PCMDI/cmor/archive/3.6.1.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("3.7.2", sha256="5e19a9be8e6a8bd18a2035772732c34b87b3448319bf0b8fa12ccd4a351b8e86")
     version("3.6.1", sha256="991035a41424f72ea6f0f85653fc13730eb035e63c7dff6ca740aa7a70976fb4")

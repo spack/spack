@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,15 +12,20 @@ class Comgr(CMakePackage):
     """This provides various Lightning Compiler related services. It currently
     contains one library, the Code Object Manager (Comgr)"""
 
-    homepage = "https://github.com/RadeonOpenCompute/ROCm-CompilerSupport"
-    git = "https://github.com/RadeonOpenCompute/ROCm-CompilerSupport.git"
-    url = "https://github.com/RadeonOpenCompute/ROCm-CompilerSupport/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/ROCm-CompilerSupport"
+    git = "https://github.com/ROCm/ROCm-CompilerSupport.git"
+    url = "https://github.com/ROCm/ROCm-CompilerSupport/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")
     libraries = ["libamd_comgr"]
 
+    license("NCSA")
+
     version("master", branch="amd-stg-open")
+    version("6.0.0", sha256="04353d27a512642a5e5339532a39d0aabe44e0964985de37b150a2550385800a")
+    version("5.7.1", sha256="3b9433b4a0527167c3e9dfc37a3c54e0550744b8d4a8e1be298c8d4bcedfee7c")
+    version("5.7.0", sha256="e234bcb93d602377cfaaacb59aeac5796edcd842a618162867b7e670c3a2c42c")
     version("5.6.1", sha256="0a85d84619f98be26ca7a32c71f94ed3c4e9866133789eabb451be64ce739300")
     version("5.6.0", sha256="9396a7238b547ee68146c669b10b9d5de8f1d76527c649133c75d8076a185a72")
     version("5.5.1", sha256="0fbb15fe5a95c2e141ccd360bc413e1feda283334781540a6e5095ab27fd8019")
@@ -146,6 +151,9 @@ class Comgr(CMakePackage):
         "5.5.1",
         "5.6.0",
         "5.6.1",
+        "5.7.0",
+        "5.7.1",
+        "6.0.0",
         "master",
     ]:
         # llvm libs are linked statically, so this *could* be a build dep
@@ -157,7 +165,7 @@ class Comgr(CMakePackage):
             "rocm-device-libs@" + ver, when="@{0} ^llvm-amdgpu ~rocm-device-libs".format(ver)
         )
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
 
     root_cmakelists_dir = join_path("lib", "comgr")

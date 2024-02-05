@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,11 +11,16 @@ class RocmGdb(AutotoolsPackage):
     """This is ROCmgdb, the ROCm source-level debugger for Linux,
     based on GDB, the GNU source-level debugger."""
 
-    homepage = "https://github.com/ROCm-Developer-Tools/ROCgdb/"
-    url = "https://github.com/ROCm-Developer-Tools/ROCgdb/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/ROCgdb"
+    url = "https://github.com/ROCm/ROCgdb/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
+    license("LGPL-2.0-or-later")
+
     maintainers("srekolam", "renjithravindrankannath")
+    version("6.0.0", sha256="0db4ab32ca729e69688cdb238df274ce5cf58b5cb2538584662cca4358708c2b")
+    version("5.7.1", sha256="5cd150b5796aea9d77efd43b89d30a34fa4125338179eb87c6053abcac9f3c62")
+    version("5.7.0", sha256="94fba57b2f17b593de61f7593b404fabc00b054d38567be57d12cf7654b7969a")
     version("5.6.1", sha256="d2b40d4c5aa41a6ce2a84307627b30d16a458672e03e13f9d27c12f2dc3f21d6")
     version("5.6.0", sha256="997ef1883aac2769552bc7082c70b837f4e98b57d24c133cea52b9c92fb0dee1")
     version("5.5.1", sha256="359258548bc7e6abff16bb13c301339fb96560b2b961433c9e0712e4aaf2d9e1")
@@ -139,11 +144,14 @@ class RocmGdb(AutotoolsPackage):
         "5.5.1",
         "5.6.0",
         "5.6.1",
+        "5.7.0",
+        "5.7.1",
+        "6.0.0",
     ]:
         depends_on("rocm-dbgapi@" + ver, type="link", when="@" + ver)
         depends_on("comgr@" + ver, type="link", when="@" + ver)
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
 
     build_directory = "spack-build"
@@ -154,7 +162,7 @@ class RocmGdb(AutotoolsPackage):
             # Distributor options
             "--program-prefix=roc",
             "--enable-64-bit-bfd",
-            "--with-bugurl=https://github.com/ROCm-Developer-Tools/ROCgdb/issues",
+            "--with-bugurl=https://github.com/ROCm/ROCgdb/issues",
             "--with-pkgversion=-ROCm",
             "--enable-targets=x86_64-linux-gnu,amdgcn-amd-amdhsa",
             "--disable-ld",

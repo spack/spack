@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,7 @@
 import abc
 import collections.abc
 import contextlib
+import difflib
 import errno
 import functools
 import importlib
@@ -489,7 +490,7 @@ class TagIndexer(Indexer):
         self.index = spack.tag.TagIndex.from_json(stream, self.repository)
 
     def update(self, pkg_fullname):
-        self.index.update_package(pkg_fullname)
+        self.index.update_package(pkg_fullname.split(".")[-1])
 
     def write(self, stream):
         self.index.to_json(stream)
@@ -1516,7 +1517,18 @@ class UnknownPackageError(UnknownEntityError):
                 long_msg = "Did you mean to specify a filename with './{0}'?"
                 long_msg = long_msg.format(name)
             else:
-                long_msg = "You may need to run 'spack clean -m'."
+                long_msg = "Use 'spack create' to create a new package."
+
+                if not repo:
+                    repo = spack.repo.PATH
+
+                # We need to compare the base package name
+                pkg_name = name.rsplit(".", 1)[-1]
+                similar = difflib.get_close_matches(pkg_name, repo.all_package_names())
+
+                if 1 <= len(similar) <= 5:
+                    long_msg += "\n\nDid you mean one of the following packages?\n  "
+                    long_msg += "\n  ".join(similar)
 
         super().__init__(msg, long_msg)
         self.name = name

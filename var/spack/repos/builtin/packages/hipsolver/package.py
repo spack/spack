@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,16 +16,21 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
     regardless of the chosen backend. Currently, hipSOLVER supports rocSOLVER
     and cuSOLVER as backends."""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/hipSOLVER"
-    git = "https://github.com/ROCmSoftwarePlatform/hipSOLVER.git"
-    url = "https://github.com/ROCmSoftwarePlatform/hipSOLVER/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/hipSOLVER"
+    git = "https://github.com/ROCm/hipSOLVER.git"
+    url = "https://github.com/ROCm/hipSOLVER/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath")
     libraries = ["libhipsolver"]
 
+    license("MIT")
+
     version("develop", branch="develop")
     version("master", branch="master")
+    version("6.0.0", sha256="385849db02189d5e62096457e52ae899ae5c1ae7d409dc1da61f904d8861b48c")
+    version("5.7.1", sha256="5592e965c0dc5722931302289643d1ece370220af2c7afc58af97b3395295658")
+    version("5.7.0", sha256="0e35795bfbcb57ed8e8437471209fb7d230babcc31d9a4a0b3640c3ee639f4a7")
     version("5.6.1", sha256="2e546bc7771f7bf0aa7892b69cded725941573e8b70614759c3d03c21eb78dde")
     version("5.6.0", sha256="11fa51d210853d93d24d55b20367738e49711793412f58e8d7689710b92ae16c")
     version("5.5.1", sha256="826bd64a4887176595bb7319d9a3612e7327602efe1f42aa3f2ad0e783d1a180")
@@ -109,6 +114,9 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
         "5.5.1",
         "5.6.0",
         "5.6.1",
+        "5.7.0",
+        "5.7.1",
+        "6.0.0",
         "master",
         "develop",
     ]:

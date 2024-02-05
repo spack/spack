@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -84,10 +84,7 @@ class PyPybind11(CMakePackage, PythonExtension):
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
-        return [
-            self.define("PYTHON_EXECUTABLE:FILEPATH", self.spec["python"].command.path),
-            self.define("PYBIND11_TEST", self.pkg.run_tests),
-        ]
+        return [self.define("PYBIND11_TEST", self.pkg.run_tests)]
 
     def install(self, pkg, spec, prefix):
         super().install(pkg, spec, prefix)

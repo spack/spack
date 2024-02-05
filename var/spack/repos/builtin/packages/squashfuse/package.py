@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,9 +10,12 @@ class Squashfuse(AutotoolsPackage):
     """squashfuse - Mount SquashFS archives using FUSE"""
 
     homepage = "https://github.com/vasi/squashfuse"
+    url = "https://github.com/vasi/squashfuse/releases/download/0.1.104/squashfuse-0.1.104.tar.gz"
     git = "https://github.com/vasi/squashfuse.git"
 
     maintainers("haampie")
+
+    license("BSD-2-Clause")
 
     version("master", branch="master")
     version("0.5.0", sha256="d7602c7a3b1d0512764547d27cb8cc99d1b21181e1c9819e76461ee96c2ab4d9")
@@ -50,14 +53,6 @@ class Squashfuse(AutotoolsPackage):
     depends_on("autoconf", type="build", when="@master")
     depends_on("automake", type="build", when="@master")
     depends_on("libtool", type="build", when="@master")
-
-    def url_for_version(self, version):
-        url = "https://github.com/vasi/squashfuse/releases/download/"
-        if version == Version("0.5.0"):
-            url += "v{}/squashfuse-{}.tar.gz"
-        else:
-            url += "{}/squashfuse-{}.tar.gz"
-        return url.format(version, version)
 
     def flag_handler(self, name, flags):
         if name == "cflags" and "+min_size" in self.spec:

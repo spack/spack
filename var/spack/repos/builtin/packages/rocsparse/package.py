@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,9 +15,9 @@ class Rocsparse(CMakePackage):
     and toolchains. rocSPARSE is created using the HIP programming
     language and optimized for AMD's latest discrete GPUs."""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/rocSPARSE"
-    git = "https://github.com/ROCmSoftwarePlatform/rocSPARSE.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocSPARSE/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/rocSPARSE"
+    git = "https://github.com/ROCm/rocSPARSE.git"
+    url = "https://github.com/ROCm/rocSPARSE/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath")
@@ -33,6 +33,10 @@ class Rocsparse(CMakePackage):
     )
     variant("test", default=False, description="Build rocsparse-test client")
 
+    license("MIT")
+    version("6.0.0", sha256="bdc618677ec78830c6af315d61194d6ab8532345b8daeeb115aca96f274d4ca4")
+    version("5.7.1", sha256="4c09b182b371124675d4057246021b5ed45e2833fdbf265b37a9b06b668baf0a")
+    version("5.7.0", sha256="a42f0eb531b015b719e2bdcdff0cfb214e9894f73107966260f26931f982ecbc")
     version("5.6.1", sha256="6a50a64354507f1374e1a86aa7f5c07d1aaa96ac193ac292c279153087bb5d54")
     version("5.6.0", sha256="5797db3deb4a532e691447e3e8c923b93bd9fe4c468f3a88f00cecd80bebcae4")
     version("5.5.1", sha256="1dd2d18898dfebdf898e8fe7d1c1198e8f8451fd70ff12a1990ec1419cf359e1")
@@ -147,6 +151,9 @@ class Rocsparse(CMakePackage):
         "5.5.1",
         "5.6.0",
         "5.6.1",
+        "5.7.0",
+        "5.7.1",
+        "6.0.0",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocprim@" + ver, when="@" + ver)
@@ -311,10 +318,13 @@ class Rocsparse(CMakePackage):
             destination="mtx",
         )
 
-    def check(self):
+    @run_after("build")
+    def check_build(self):
         if self.spec.satisfies("+test"):
-            exe = join_path(self.build_directory, "clients", "staging", "rocsparse-test")
-            self.run_test(exe, options=["--gtest_filter=*quick*:*pre_checkin*-*known_bug*"])
+            exe = Executable(
+                join_path(self.build_directory, "clients", "staging", "rocsparse-test")
+            )
+            exe("--gtest_filter=*quick*:*pre_checkin*-*known_bug*")
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
