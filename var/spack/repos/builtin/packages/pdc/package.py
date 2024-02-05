@@ -23,8 +23,16 @@ class Pdc(CMakePackage):
 
     version("0.4", sha256="eb2c2b69e5cdbca3210b8d72a646c16a2aa004ca08792f28cc6290a9a3ad6c8a")
     version("0.3", sha256="14a3abd5e1e604f9527105709fca545bcdebe51abd2b89884db74d48a38b5443")
-    version("0.2", sha256="2829e74da227913a1a8e3e4f64e8f422ab9c0a049f8d73ff7b6ca12463959f8b", deprecated=True)
-    version("0.1", sha256="01b4207ecf71594a7f339c315f2869b3fa8fbd34b085963dc4c1bdc5b66bb93e", deprecated=True)
+    version(
+        "0.2",
+        sha256="2829e74da227913a1a8e3e4f64e8f422ab9c0a049f8d73ff7b6ca12463959f8b",
+        deprecated=True
+    )
+    version(
+        "0.1",
+        sha256="01b4207ecf71594a7f339c315f2869b3fa8fbd34b085963dc4c1bdc5b66bb93e",
+        deprecated=True
+    )
 
     version("stable", branch="stable")
     version("develop", branch="develop")
@@ -38,10 +46,10 @@ class Pdc(CMakePackage):
 
     @property
     def root_cmakelists_dir(self):
-        if '@0.4:' in self.spec:
+        if "@0.4:" in self.spec:
             return self.stage.source_path
         else:
-            return 'src'
+            return "src"
 
     def cmake_args(self):
         args = [
