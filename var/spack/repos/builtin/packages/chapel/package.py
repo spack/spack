@@ -59,6 +59,7 @@ class Chapel(AutotoolsPackage):
         description="Build Chapel with multi-locale support",
         values=("none", "gasnet", "ofi"),
     )
+
     variant(
         "comm_substrate",
         default="none",
@@ -237,7 +238,7 @@ class Chapel(AutotoolsPackage):
         default="unset",
     )
 
-    # This variant is superceded by the host_mem variant below,
+    # This variant is superseded by the host_mem variant below,
     # TODO: determine what version introduced the host_mem variant and
     # remove this one if it is old enough that all supported versions have host_mem
     # variant(
@@ -349,8 +350,6 @@ class Chapel(AutotoolsPackage):
     # Add dependencies
     depends_on("llvm@14:16", when="llvm=spack")
 
-    # TODO: this version isn't strictly necessary unless using CUDA 12+,
-    # but we don't know which CUDA version we're going to get
     depends_on("llvm@15", when="locale_model=gpu llvm=spack gpu=nvidia ^cuda@12:")
 
     depends_on("m4")
@@ -367,6 +366,7 @@ class Chapel(AutotoolsPackage):
     # why do I need to add to LD_LIBRARY_PATH to find libcudart?
     depends_on("cuda@11:12", when="gpu=nvidia", type=("build", "link", "run"))
 
+    # TODO: AMD support is not yet working
     with when("gpu=amd"):
         depends_on("hsa-rocr-dev@4:5.4", type=("build", "link", "run"))
         depends_on("hip@4:5.4", type=("build", "link", "run"))
@@ -376,7 +376,6 @@ class Chapel(AutotoolsPackage):
     # Based on docs https://chapel-lang.org/docs/technotes/gpu.html#requirements
     requires("llvm=bundled", when="^cuda@12:")
 
-    # TODO: Spack needs both of these, so do we even need to specify them?
     depends_on("python@3.7:3.10")
     depends_on("cmake@3.16:")
 
