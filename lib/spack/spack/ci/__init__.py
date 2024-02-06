@@ -682,10 +682,11 @@ def check_for_broken_specs(pipeline_specs, broken_specs_url):
 
 def collect_pipeline_options(
         args: spack.main.SpackArgumentParser,
+        env: ev.Environment,
     ) -> PipelineOptions:
     """Gather pipeline options from cli args, spack environment, and
     os environment variables """
-    options = PipelineOptions()
+    options = PipelineOptions(env)
 
     """
             env: ev.Environment,
@@ -816,7 +817,7 @@ def generate_pipeline(env: ev.Environment, args: spack.main.SpackArgumentParser)
 
     yaml_root = env.manifest[ev.TOP_LEVEL_KEY]
 
-    options = collect_pipeline_options(args)
+    options = collect_pipeline_options(args, env)
     options.environment = env
 
     # Get the joined "ci" config with all of the current scopes resolved
