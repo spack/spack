@@ -175,8 +175,8 @@ ci:
         tags: [ "spack", "medium" ]
         variables:
           CI_JOB_SIZE: "medium"
-          SPACK_BUILD_JOBS: "4"
-          KUBERNETES_CPU_REQUEST: "4000m"
+          SPACK_BUILD_JOBS: "8"
+          KUBERNETES_CPU_REQUEST: "8000m"
           KUBERNETES_MEMORY_REQUEST: "6G"
 
     - match:
@@ -187,9 +187,19 @@ ci:
         tags: [ "spack", "medium" ]
         variables:
           CI_JOB_SIZE: "medium"
-          SPACK_BUILD_JOBS: "4"
-          KUBERNETES_CPU_REQUEST: "4000m"
+          SPACK_BUILD_JOBS: "8"
+          KUBERNETES_CPU_REQUEST: "8000m"
           KUBERNETES_MEMORY_REQUEST: "5G"
+
+    - match:
+      - parallelio
+      build-job:
+        tags: [ "spack", "medium" ]
+        variables:
+          CI_JOB_SIZE: "medium"
+          SPACK_BUILD_JOBS: "8"
+          KUBERNETES_CPU_REQUEST: "8000m"
+          KUBERNETES_MEMORY_REQUEST: "3G"
 
     - match:
       - adios2
@@ -238,7 +248,6 @@ ci:
       - openpmd-api
       - pagmo2
       - papyrus
-      - parallelio
       - parsec
       - petsc
       - pumi
@@ -280,8 +289,8 @@ ci:
         tags: [ "spack", "medium" ]
         variables:
           CI_JOB_SIZE: "medium"
-          SPACK_BUILD_JOBS: "2"
-          KUBERNETES_CPU_REQUEST: "2000m"
+          SPACK_BUILD_JOBS: "8"
+          KUBERNETES_CPU_REQUEST: "8000m"
           KUBERNETES_MEMORY_REQUEST: "3G"
 
     - match:
@@ -303,9 +312,18 @@ ci:
           KUBERNETES_MEMORY_REQUEST: "2G"
 
     - match:
+      - kokkos-nvcc-wrapper
+      build-job:
+        tags: [ "spack", "medium" ]
+        variables:
+          CI_JOB_SIZE: "medium"
+          SPACK_BUILD_JOBS: "8"
+          KUBERNETES_CPU_REQUEST: "8000m"
+          KUBERNETES_MEMORY_REQUEST: "1G"
+
+    - match:
       - ffmpeg
       - gperftools
-      - kokkos-nvcc-wrapper
       - samrai
       build-job:
         tags: [ "spack", "medium" ]
