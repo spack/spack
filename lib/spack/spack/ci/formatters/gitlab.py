@@ -73,7 +73,7 @@ def _print_staging_summary(stages):
     for stage_index, stage in enumerate(stages):
         tty.msg(f"  stage {stage_index} ({len(stage)} jobs):")
         for s in sorted(stage, key=lambda j: j.cformat(spec_fmt)):
-            tty.msg(f"  {s.cformat(spec_fmt)}")
+            tty.msg(f"    {s.cformat(spec_fmt)}")
 
 
 @formatter("gitlab")
