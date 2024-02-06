@@ -4,7 +4,6 @@ spack:
     default:
       tcl:
         include:
-          - arm-forge
           # - apptainer
           - bison
           - blender
@@ -29,6 +28,7 @@ spack:
           - ispc
           - julia
           - likwid
+          - linaro-forge
           - llvm
           - mvapich2
           - ninja
@@ -54,6 +54,15 @@ spack:
           environment:
             prepend_path:
               LD_LIBRARY_PATH: '{prefix}/lib'
+        linaro-forge:
+          environment:
+            set:
+              ALLINEA_USE_SSH_STARTUP: "1"
+            unset:
+              - HTTP_PROXY
+              - HTTPS_PROXY
+              - http_proxy
+              - https_proxy
   packages:
     all:
       providers:
@@ -74,7 +83,6 @@ spack:
     - clang-tools@17.0.4
     # last known version of NVHPC to work with modern Neuron code
     - nvhpc@23.1
-    - arm-forge+accept-eula
     # - apptainer
     - bison
     - blender
@@ -105,6 +113,7 @@ spack:
     - ispc
     - julia@1.9^[virtuals=blas,lapack] openblas
     - likwid
+    - linaro-forge+accept-eula
     - mvapich2
     - ninja
     - node-js
