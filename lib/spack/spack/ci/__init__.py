@@ -255,7 +255,7 @@ class PipelineDag:
 
     def get_dependencies(self, node: PipelineNode, transitive: bool = False):
         # TODO: handle transitive=True case
-        dep_list = [n.spec for n in node.children]
+        dep_list = [self.nodes[k].spec for k in node.children]
 
         if not transitive:
             return dep_list
