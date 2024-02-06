@@ -42,6 +42,6 @@ class Possvm(Package):
         sed = Executable("sed")
         targets = ("possvm.py", join_path("scripts", "possvm_reconstruction.py"))
         for script in targets:
-            sed("-i", f'1 i\#! {self.spec["python"].command.path}\n', script)
+            sed("-i", rf'1 i\#! {self.spec["python"].command.path}\n', script)
             os.chmod(script, 0o755)
             install(script, prefix.bin)
