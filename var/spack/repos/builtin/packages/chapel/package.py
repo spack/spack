@@ -39,6 +39,13 @@ class Chapel(AutotoolsPackage):
     depends_on("doxygen@1.8.17:")
 
     variant(
+        "module_tests",
+        default=False,
+        description="Run self-tests on selected modules after installing the package "
+        "(may add several minutes to install time)",
+    )
+
+    variant(
         "llvm",
         default="spack",
         description="LLVM backend type. Use value 'spack' to have spack "
@@ -413,17 +420,17 @@ class Chapel(AutotoolsPackage):
         else:
             env.set("CHPL_GMP", self.spec.variants["gmp"].value)
 
-        if "yaml" in self.spec.variants["package_modules"].value:
+        if "yaml" in self.get_package_modules:
             env.prepend_path("PKG_CONFIG_PATH", self.spec["libyaml"].prefix.lib.pkgconfig)
             env.prepend_path("CPATH", self.spec["libyaml"].prefix.include)
 
-        if "zmq" in self.spec.variants["package_modules"].value:
+        if "zmq" in self.get_package_modules:
             env.prepend_path("CPATH", self.spec["libzmq"].prefix.include)
             env.prepend_path("LD_LIBRARY_PATH", self.spec["libzmq"].prefix.lib)
             env.prepend_path("PKG_CONFIG_PATH", self.spec["libzmq"].prefix.lib.pkgconfig)
             env.prepend_path("PKG_CONFIG_PATH", self.spec["libsodium"].prefix.lib.pkgconfig)
 
-        if "curl" in self.spec.variants["package_modules"].value:
+        if "curl" in self.get_package_modules:
             env.prepend_path("CPATH", self.spec["curl"].prefix.include)
             env.prepend_path("LD_LIBRARY_PATH", self.spec["curl"].prefix.lib)
             env.prepend_path("PKG_CONFIG_PATH", self.spec["curl"].prefix.lib.pkgconfig)
@@ -450,6 +457,18 @@ class Chapel(AutotoolsPackage):
         env.prepend_path(
             "PATH", join_path(self.prefix.share, "chapel", self._output_version_short, "util")
         )
+
+    @property
+    @llnl.util.lang.memoized
+    def get_package_modules(self):
+        test_modules = set()
+        for module in self.spec.variants["package_modules"].value:
+            if module == "all":
+                for m in self.package_module_dict.keys():
+                    test_modules.add(m)
+            elif module != "none":
+                test_modules.add(module)
+        return test_modules
 
     @property
     @llnl.util.lang.memoized
@@ -510,28 +529,22 @@ class Chapel(AutotoolsPackage):
 
     def test_package_modules(self):
         """Test that the package modules are available"""
+        if not self.spec.variants["module_tests"].value:
+            print("Skipping module tests as module_tests variant is not set")
+            return
+        tests_to_run = []
         with working_dir(self.stage.source_path):
             with set_env(CHPL_HOME=self.stage.source_path):
                 with test_part(self, "test_package_modules", purpose="test package modules"):
-                    if "yaml" in self.spec.variants["package_modules"].value:
-                        print("Running package module test for package 'yaml'")
-                        res = subprocess.run(
-                            ["util/start_test", "test/library/packages/Yaml/writeAndParse.chpl"]
-                        )
-                        assert res.returncode == 0
-                    if "zmq" in self.spec.variants["package_modules"].value:
-                        print("Running package module test for package 'zmq'")
-                        res = subprocess.run(
-                            ["util/start_test", "test/library/packages/ZMQ/weather.chpl"]
-                        )
-                        assert res.returncode == 0
-                    if "ssl" in self.spec.variants["package_modules"].value:
-                        print("Running package module test for package 'ssl'")
-                        res = subprocess.run(["util/start_test", "test/library/packages/Crypto/"])
-                        assert res.returncode == 0
+                    if "yaml" in self.get_package_modules:
+                        tests_to_run.append("test/library/packages/Yaml/writeAndParse.chpl")
+                    if "zmq" in self.get_package_modules:
+                        tests_to_run.append("test/library/packages/ZMQ/weather.chpl")
+                    if "ssl" in self.get_package_modules:
+                        tests_to_run.append("test/library/packages/Crypto/")
                     # TODO: These tests fail with llvm, unable to find C variable CURLPAUSE_CONT
                     if (
-                        "curl" in self.spec.variants["package_modules"].value
+                        "curl" in self.get_package_modules
                         and self.spec.variants["llvm"].value == "none"
                     ):
                         with set_env(CHPL_NIGHTLY_TEST_CONFIG_NAME="networking-packages"):
@@ -543,22 +556,19 @@ class Chapel(AutotoolsPackage):
                             print("Running package module test for package 'url'")
                             res = subprocess.run(["util/start_test", "test/library/packages/URL/"])
                             assert res.returncode == 0
-                    if "hdf5" in self.spec.variants["package_modules"].value:
-                        print("Running package module test for package 'hdf5'")
-                        res = subprocess.run(["util/start_test", "test/library/packages/HDF5/"])
-                        assert res.returncode == 0
-                    if "protobuf" in self.spec.variants["package_modules"].value:
-                        print("Running package module test for package 'protobuf'")
-                        res = subprocess.run(
-                            ["util/start_test", "test/library/packages/ProtobufProtocolSupport/"]
-                        )
-                        assert res.returncode == 0
+                    if "hdf5" in self.get_package_modules:
+                        tests_to_run.append("test/library/packages/HDF5/")
+                    if "protobuf" in self.get_package_modules:
+                        tests_to_run.append("test/library/packages/ProtobufProtocolSupport/")
+                    print("Running package module tests for packages...")
+                    tests_to_run.insert(0, "util/start_test")
+                    res = subprocess.run([t for t in tests_to_run])
+                    assert res.returncode == 0
 
     @run_after("install")
     def self_check(self):
         """Run the self-check after installing the package"""
         print("Running self-check")
-        self.copy_test_files()
         path_put_first("PATH", [self.prefix.bin])
         self.test_version()
         with set_env(CHPL_HOME=self.stage.source_path):
