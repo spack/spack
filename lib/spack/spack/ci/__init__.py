@@ -108,7 +108,7 @@ class PipelineOptions():
             rebuild_index: bool = True,
             temporary_storage_url_prefix: Optional[str] = None,
             untouched_pruning_dependent_depth: Optional[int] = None,
-            pruned_untouched: bool = False,
+            prune_untouched: bool = False,
             prune_up_to_date: bool = True,
             stack_name: Optional[str] = None,
             job_name: Optional[str] = None,
@@ -135,7 +135,7 @@ class PipelineOptions():
             rebuild_index: Generate a job to rebuild mirror index after rebuilds
             temporary_storage_url_prefix: URL where binaries can be stored temporarily (deprecated)
             untouched_pruning_dependent_depth: How many parents to traverse from changed pkg specs
-            pruned_untouched: Prune jobs for specs that were unchanged in git history
+            prune_untouched: Prune jobs for specs that were unchanged in git history
             prune_up_to_date: Prune specs from pipeline if binary exists on the mirror
             stack_name: Name of spack stack
             job_name: Name of job running pipeline generation in CI
@@ -160,7 +160,7 @@ class PipelineOptions():
         self.rebuild_index = rebuild_index
         self.temporary_storage_url_prefix = temporary_storage_url_prefix
         self.untouched_pruning_dependent_depth = untouched_pruning_dependent_depth
-        self.pruned_untouched = pruned_untouched
+        self.prune_untouched = prune_untouched
         self.prune_up_to_date = prune_up_to_date
         self.stack_name = stack_name
         self.job_name = job_name
@@ -700,7 +700,7 @@ def collect_pipeline_options(
             rebuild_index: bool = True,
             temporary_storage_url_prefix: Optional[str] = None,
             untouched_pruning_dependent_depth: Optional[int] = None,
-            pruned_untouched: bool = False,
+            prune_untouched: bool = False,
             prune_up_to_date: bool = True,
             stack_name: Optional[str] = None,
             job_name: Optional[str] = None,
@@ -741,7 +741,7 @@ def collect_pipeline_options(
             )
 
     spack_prune_untouched = os.environ.get("SPACK_PRUNE_UNTOUCHED", None)
-    options.pruned_untouched = spack_prune_untouched is not None and spack_prune_untouched.lower() == "true"
+    options.prune_untouched = spack_prune_untouched is not None and spack_prune_untouched.lower() == "true"
 
     # Allow overriding --prune-dag cli opt with environment variable
     prune_dag_override = os.environ.get("SPACK_PRUNE_UP_TO_DATE", None)
@@ -833,7 +833,7 @@ def generate_pipeline(env: ev.Environment, args: spack.main.SpackArgumentParser)
         tty.die(f"Spack CI module cannot generate a pipeline for format {ci_target}")
 
     # If we are not doing any kind of pruning, we are rebuilding everything
-    rebuild_everything = not options.prune_up_to_date and not options.pruned_untouched
+    rebuild_everything = not options.prune_up_to_date and not options.prune_untouched
 
     pipeline_mirrors = spack.mirror.MirrorCollection(binary=True)
     deprecated_mirror_config = False

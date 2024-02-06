@@ -391,7 +391,7 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
         spack_version = spack.main.get_version()
         version_to_clone = spack.main.get_spack_commit() or f"v{spack.spack_version}"
 
-        rebuild_everything = not options.prune_up_to_date and not options.pruned_untouched
+        rebuild_everything = not options.prune_up_to_date and not options.prune_untouched
 
         output_object["variables"] = {
             "SPACK_ARTIFACTS_ROOT": rel_artifacts_root,
