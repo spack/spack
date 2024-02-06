@@ -23,6 +23,7 @@ spack:
           - py-notebook
           - py-numpy
           - py-petsc4py
+          - py-pytest
           - py-slepc4py
           - py-pip
           - py-poisson-recon-pybind
@@ -57,6 +58,7 @@ spack:
     - py-numpy
     - py-petsc4py ^petsc+int64+mpi
     - py-slepc4py ^slepc~arpack ^petsc+int64+mpi
+    - py-pytest  # BSD-433
     - py-pip
     - py-poisson-recon-pybind
     - py-rtree
