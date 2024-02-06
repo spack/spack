@@ -42,6 +42,4 @@ class S4pred(Package):
         os.chmod("run_model.py", 0o755)
         # install files and make convenience symlink
         install("*.py", prefix.bin)
-        os.symlink(
-            join_path(prefix.bin, "run_model.py"),
-            join_path(prefix.bin, "s4pred"))
+        os.symlink(join_path(prefix.bin, "run_model.py"), join_path(prefix.bin, "s4pred"))
