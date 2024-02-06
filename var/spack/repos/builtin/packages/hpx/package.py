@@ -105,11 +105,10 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("boost +context", when="+generic_coroutines")
     for cxxstd in cxxstds:
         depends_on("boost cxxstd={0}".format(map_cxxstd(cxxstd)), when="cxxstd={0}".format(cxxstd))
-    depends_on("asio", when="@1.7:")
-    for cxxstd in cxxstds:
-        depends_on(
-            "asio cxxstd={0}".format(map_cxxstd(cxxstd)), when="cxxstd={0} ^asio".format(cxxstd)
-        )
+
+    with when("@1.7:"):
+        for cxxstd in cxxstds:
+            depends_on(f"asio cxxstd={map_cxxstd(cxxstd)}", when=f"cxxstd={cxxstd}")
 
     depends_on("gperftools", when="malloc=tcmalloc")
     depends_on("jemalloc", when="malloc=jemalloc")
