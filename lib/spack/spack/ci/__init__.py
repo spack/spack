@@ -682,7 +682,7 @@ def check_for_broken_specs(pipeline_specs, broken_specs_url):
 
 def collect_pipeline_options(
         args: spack.main.SpackArgumentParser,
-        env_yaml: spack.environment.EnvironmentManifestFile,
+        env_yaml: ev.EnvironmentManifestFile,
     ) -> PipelineOptions:
     """Gather pipeline options from cli args, spack environment, and
     os environment variables """
