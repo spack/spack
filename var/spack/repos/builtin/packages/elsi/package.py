@@ -75,6 +75,8 @@ class Elsi(CMakePackage):
             elpa_module = find(self.spec["elpa"].prefix, "elpa.mod")
             args.append(self.define("INC_PATHS", os.path.dirname(elpa_module[0])))
 
+        # CMAKE_Fortran_FLAGS_RELEASE is set to -O3 by default, but
+        # the optimization level is lowered because the gcc compiler(8.5.0) stops abnormally
         if "%gcc" in self.spec:
             args.append("-DCMAKE_Fortran_FLAGS_RELEASE=-O2 -DNDEBUG")
 
