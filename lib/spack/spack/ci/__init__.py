@@ -42,6 +42,7 @@ import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack import traverse
+from spack.environment import EnvironmentManifestFile
 from spack.error import SpackError
 from spack.reporters import CDash, CDashConfiguration
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
@@ -682,7 +683,7 @@ def check_for_broken_specs(pipeline_specs, broken_specs_url):
 
 def collect_pipeline_options(
         args: spack.main.SpackArgumentParser,
-        env_yaml: ev.EnvironmentManifestFile,
+        env_yaml: spack.environment.EnvironmentManifestFile,
     ) -> PipelineOptions:
     """Gather pipeline options from cli args, spack environment, and
     os environment variables """
