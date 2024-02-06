@@ -54,6 +54,11 @@ spack:
           environment:
             prepend_path:
               LD_LIBRARY_PATH: '{prefix}/lib'
+        # until darshan-hpc/darshan/issues/920 is fixed
+        darshan-runtime:
+          environment:
+            set:
+              DARSHAN_LOGHINTS: 'romio_no_indep_rw=false'
         linaro-forge:
           environment:
             set:
