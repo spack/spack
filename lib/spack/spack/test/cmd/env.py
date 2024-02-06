@@ -1471,8 +1471,8 @@ def test_env_view_fails_dir_file(tmpdir, mock_packages, mock_stage, mock_fetch, 
     view_dir = tmpdir.join("view")
     env("create", "--with-view=%s" % view_dir, "test")
     with ev.read("test"):
-        add("view-dir-file")
-        add("view-dir-dir")
+        add("view-file")
+        add("view-dir")
         with pytest.raises(
             llnl.util.link_tree.MergeConflictSummary, match=os.path.join("bin", "x")
         ):
@@ -1486,8 +1486,8 @@ def test_env_view_succeeds_symlinked_dir_file(
     view_dir = tmpdir.join("view")
     env("create", "--with-view=%s" % view_dir, "test")
     with ev.read("test"):
-        add("view-dir-symlinked-dir")
-        add("view-dir-dir")
+        add("view-symlinked-dir")
+        add("view-dir")
         install()
         x_dir = os.path.join(str(view_dir), "bin", "x")
         assert os.path.exists(os.path.join(x_dir, "file_in_dir"))
@@ -3891,3 +3891,44 @@ spack:
                 assert not os.path.exists(env_spec_dir)
             else:
                 assert os.path.exists(env_spec_dir)
+
+
+def test_env_view_resolves_identical_file_conflicts(tmp_path, install_mockery, mock_fetch):
+    """When files clash in a view, but refer to the same file on disk (for example, the dependent
+    symlinks to a file in the dependency at the same relative path), Spack links the first regular
+    file instead of symlinks. This is important for copy type views where we need the underlying
+    file to be copied instead of the symlink (when a symlink would be copied, it would become a
+    self-referencing symlink after relocation). The test uses a symlink type view though, since
+    that keeps track of the original file path."""
+    with ev.create("env", with_view=tmp_path / "view") as e:
+        add("view-resolve-conflict-top")
+        install()
+        top = e.matching_spec("view-resolve-conflict-top").prefix
+        bottom = e.matching_spec("view-file").prefix
+
+    # In this example we have `./bin/x` in 3 prefixes, two links, one regular file. We expect the
+    # regular file to be linked into the view. There are also 2 links at `./bin/y`, but no regular
+    # file, so we expect standard behavior: first entry is linked into the view.
+
+    #   view-resolve-conflict-top/bin/
+    #     x -> view-file/bin/x
+    #     y -> view-resolve-conflict-middle/bin/y    # expect this y to be linked
+    #   view-resolve-conflict-middle/bin/
+    #     x -> view-file/bin/x
+    #     y -> view-file/bin/x
+    #   view-file/bin/
+    #     x                                          # expect this x to be linked
+
+    assert os.readlink(tmp_path / "view" / "bin" / "x") == bottom.bin.x
+    assert os.readlink(tmp_path / "view" / "bin" / "y") == top.bin.y
+
+
+def test_env_view_ignores_different_file_conflicts(tmp_path, install_mockery, mock_fetch):
+    """Test that file-file conflicts for two unique files in environment views are ignored, and
+    that the dependent's file is linked into the view, not the dependency's file."""
+    with ev.create("env", with_view=tmp_path / "view") as e:
+        add("view-ignore-conflict")
+        install()
+        prefix_dependent = e.matching_spec("view-ignore-conflict").prefix
+    # The dependent's file is linked into the view
+    assert os.readlink(tmp_path / "view" / "bin" / "x") == prefix_dependent.bin.x
