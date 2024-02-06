@@ -42,7 +42,6 @@ import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack import traverse
-from spack.environment import EnvironmentManifestFile
 from spack.error import SpackError
 from spack.reporters import CDash, CDashConfiguration
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
@@ -683,7 +682,6 @@ def check_for_broken_specs(pipeline_specs, broken_specs_url):
 
 def collect_pipeline_options(
         args: spack.main.SpackArgumentParser,
-        env_yaml: spack.environment.EnvironmentManifestFile,
     ) -> PipelineOptions:
     """Gather pipeline options from cli args, spack environment, and
     os environment variables """
@@ -818,7 +816,7 @@ def generate_pipeline(env: ev.Environment, args: spack.main.SpackArgumentParser)
 
     yaml_root = env.manifest[ev.TOP_LEVEL_KEY]
 
-    options = collect_pipeline_options(args, yaml_root)
+    options = collect_pipeline_options(args)
     options.environment = env
 
     # Get the joined "ci" config with all of the current scopes resolved
