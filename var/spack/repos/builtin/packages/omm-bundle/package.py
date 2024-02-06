@@ -7,9 +7,10 @@ import shutil
 
 from spack.package import *
 
+
 class OmmBundle(MakefilePackage):
-    """Omm-bundle is a library implementing the orbital minimization method for 
-    solving the Kohn-Sham equation as a generalized eigenvalue problem and 
+    """Omm-bundle is a library implementing the orbital minimization method for
+    solving the Kohn-Sham equation as a generalized eigenvalue problem and
     a bundle of four separate libraries: pspBLAS, MatrixSwitch, libOMM, tomato."""
 
     homepage = "https://esl.cecam.org/"
@@ -24,27 +25,30 @@ class OmmBundle(MakefilePackage):
     depends_on("scalapack")
     depends_on("dbcsr")
 
+    # Avoid duplicate include error in mpi.h in Fujitsu compiler
     patch("fjmpi_pspBasicTool.patch", when="@: %fj")
-    
+
     def edit(self, spec, prefix):
         # edit make.inc
         shutil.copy("make.inc.example", "make.inc")
         makeinc = FileFilter("make.inc")
         makeinc.filter("FORTRAN   =.*", "FORTRAN   = {0}".format(spec["mpi"].mpifc))
-        linalg_libs = self.spec["lapack"].libs + self.spec["blas"].libs + self.spec["scalapack"].libs
+        linalg_libs = (
+            self.spec["lapack"].libs + self.spec["blas"].libs + self.spec["scalapack"].libs
+        )
         makeinc.filter("LINALG_LIBS =.*", "LINALG_LIBS = {0}".format(linalg_libs.ld_flags))
         makeinc.filter("#FPPFLAGS ", "FPPFLAGS ")
         makeinc.filter("#DBCSR     =.*", "DBCSR = {0}".format(spec["dbcsr"].prefix))
         makeinc.filter("#DBCSRINC ", "DBCSRINC ")
         makeinc.filter("#DBCSRLIB  =.*", "DBCSRLIB = -L$(DBCSR)/lib64 -ldbcsr")
-        
+
         # fix Makefile of tomato to avoid error(cp: cannot stat '*.mod': No such file or directory)
         tomato_makefile = FileFilter("tomato/src/Makefile.manual")
-        tomato_makefile.filter("	cp *.mod $(BUILDPATH)/include; \\\n","")
+        tomato_makefile.filter("	cp *.mod $(BUILDPATH)/include; \\\n", "")
 
     def build(self, spec, prefix):
         make("-f", "Makefile.manual", "all", parallel=False)
 
     def install(self, spec, prefix):
-        for d in ["pspBLAS","MatrixSwitch","libOMM","tomato"]:
-            shutil.copytree("build_"+d,prefix+"/build_"+d)
+        for d in ["pspBLAS", "MatrixSwitch", "libOMM", "tomato"]:
+            shutil.copytree("build_" + d, prefix + "/build_" + d)
