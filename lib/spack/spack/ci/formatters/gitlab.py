@@ -8,11 +8,11 @@ import os
 import shutil
 
 import llnl.util.tty as tty
-from llnl.util.tty.color import cescape, colorize
 
 import spack
 import spack.binary_distribution as bindist
 import spack.config as cfg
+import spack.util.spack_yaml as syaml
 
 from ..ci import *
 from . import formatter
@@ -44,24 +44,6 @@ def _remove_reserved_tags(tags):
     return [tag for tag in tags if tag not in SPACK_RESERVED_TAGS]
 
 
-def _format_job_needs(
-    dep_jobs, build_group, prune_dag, rebuild_decisions, enable_artifacts_buildcache
-):
-    needs_list = []
-    for dep_job in dep_jobs:
-        dep_spec_key = _spec_deps_key(dep_job)
-        rebuild = rebuild_decisions[dep_spec_key].rebuild
-
-        if not prune_dag or rebuild:
-            needs_list.append(
-                {
-                    "job": get_job_name(dep_job, build_group),
-                    "artifacts": enable_artifacts_buildcache,
-                }
-            )
-    return needs_list
-
-
 def get_job_name(spec: spack.spec.Spec, build_group: str = ""):
     """Given a spec and possibly a build group, return the job name. If the
     resulting name is longer than 255 characters, it will be truncated.
@@ -85,24 +67,13 @@ def _print_staging_summary(stages):
     if not stages:
         return
 
+    spec_fmt = "{name}{@version}{%compiler}{/hash:7}"
+
     tty.msg("Staging summary:")
     for stage_index, stage in enumerate(stages):
         tty.msg(f"  stage {stage_index} ({len(stage)} jobs):")
-
-        for job in sorted(stage, key=lambda j: (not rebuild_decisions[j].rebuild, j)):
-            s = spec_labels[job]
-            reason = rebuild_decisions[job].reason
-            reason_msg = f" ({reason})" if reason else ""
-            spec_fmt = "{name}{@version}{%compiler}{/hash:7}"
-            if rebuild_decisions[job].rebuild:
-                status = colorize("@*g{[x]}  ")
-                msg = f"  {status}{s.cformat(spec_fmt)}{reason_msg}"
-            else:
-                msg = f"{s.format(spec_fmt)}{reason_msg}"
-                if rebuild_decisions[job].mirrors:
-                    msg += f" [{', '.join(rebuild_decisions[job].mirrors)}]"
-                msg = colorize(f"  @K -   {cescape(msg)}@.")
-            tty.msg(msg)
+        for s in sorted(stage, key=lambda j: j.cformat(spec_fmt)):
+            tty.msg(f"  {s.cformat(spec_fmt)}")
 
 
 @formatter("gitlab")
@@ -172,15 +143,6 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
     # TODO: Remove this line in Spack 0.23
     rel_local_mirror_dir = os.path.join(local_mirror_dir, ci_project_dir)
     rel_user_artifacts_dir = os.path.relpath(user_artifacts_dir, ci_project_dir)
-
-    # Downstream jobs will "need" (depend on, for both scheduling and
-    # artifacts, which include spack.lock file) this pipeline generation
-    # job by both name and pipeline id.  If those environment variables
-    # do not exist, then maybe this is just running in a shell, in which
-    # case, there is no expectation gitlab will ever run the generated
-    # pipeline and those environment variables do not matter.
-    generate_job_name = os.environ.get("CI_JOB_NAME", "job-does-not-exist")
-    parent_pipeline_id = os.environ.get("CI_PIPELINE_ID", "pipeline-does-not-exist")
 
     output_object = {}
     job_id = 0
@@ -256,7 +218,7 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
 
         if options.artifacts_root:
             job_object["needs"].append(
-                {"job": generate_job_name, "pipeline": "{0}".format(parent_pipeline_id)}
+                {"job": options.job_name, "pipeline": "{0}".format(options.pipeline_id)}
             )
 
         # Let downstream jobs know whether the spec needed rebuilding, regardless
@@ -331,16 +293,16 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
         sync_job["stage"] = "copy"
         if options.artifacts_root:
             sync_job["needs"] = [
-                {"job": generate_job_name, "pipeline": "{0}".format(parent_pipeline_id)}
+                {"job": options.job_name, "pipeline": "{0}".format(options.pipeline_id)}
             ]
 
         if "variables" not in sync_job:
             sync_job["variables"] = {}
 
         sync_job["variables"]["SPACK_COPY_ONLY_DESTINATION"] = (
-            buildcache_destination.fetch_url
-            if buildcache_destination
-            else remote_mirror_override or remote_mirror_url
+            options.buildcache_destination.fetch_url
+            if options.buildcache_destination
+            else options.remote_mirror_override or options.remote_mirror_url
         )
 
         if "buildcache-source" in pipeline_mirrors:
@@ -369,7 +331,7 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
 
             cleanup_job["script"] = unpack_script(
                 cleanup_job["script"],
-                op=lambda cmd: cmd.replace("mirror_prefix", temp_storage_url_prefix),
+                op=lambda cmd: cmd.replace("mirror_prefix", options.temporary_storage_url_prefix),
             )
 
             cleanup_job["dependencies"] = []
@@ -392,9 +354,9 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
             if "variables" not in signing_job:
                 signing_job["variables"] = {}
             signing_job["variables"]["SPACK_BUILDCACHE_DESTINATION"] = (
-                buildcache_destination.push_url  # need the s3 url for aws s3 sync
-                if buildcache_destination
-                else remote_mirror_override or remote_mirror_url
+                options.buildcache_destination.push_url  # need the s3 url for aws s3 sync
+                if options.buildcache_destination
+                else options.remote_mirror_override or options.remote_mirror_url
             )
             signing_job["dependencies"] = []
 
@@ -406,9 +368,9 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
             final_job = spack_ci_ir["jobs"]["reindex"]["attributes"]
 
             final_job["stage"] = "stage-rebuild-index"
-            target_mirror = remote_mirror_override or remote_mirror_url
-            if buildcache_destination:
-                target_mirror = buildcache_destination.push_url
+            target_mirror = options.remote_mirror_override or options.remote_mirror_url
+            if options.buildcache_destination:
+                target_mirror = options.buildcache_destination.push_url
             final_job["script"] = unpack_script(
                 final_job["script"],
                 op=lambda cmd: cmd.replace("{index_target_mirror}", target_mirror),
@@ -429,30 +391,32 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
         spack_version = spack.main.get_version()
         version_to_clone = spack.main.get_spack_commit() or f"v{spack.spack_version}"
 
+        rebuild_everything = not options.prune_up_to_date and not options.pruned_untouched
+
         output_object["variables"] = {
             "SPACK_ARTIFACTS_ROOT": rel_artifacts_root,
             "SPACK_CONCRETE_ENV_DIR": rel_concrete_env_dir,
             "SPACK_VERSION": spack_version,
             "SPACK_CHECKOUT_VERSION": version_to_clone,
             # TODO: Remove this line in Spack 0.23
-            "SPACK_REMOTE_MIRROR_URL": remote_mirror_url,
+            "SPACK_REMOTE_MIRROR_URL": options.remote_mirror_url,
             "SPACK_JOB_LOG_DIR": rel_job_log_dir,
             "SPACK_JOB_REPRO_DIR": rel_job_repro_dir,
             "SPACK_JOB_TEST_DIR": rel_job_test_dir,
             # TODO: Remove this line in Spack 0.23
             "SPACK_LOCAL_MIRROR_DIR": rel_local_mirror_dir,
-            "SPACK_PIPELINE_TYPE": str(spack_pipeline_type),
+            "SPACK_PIPELINE_TYPE": options.pipeline_type.name,
             "SPACK_CI_STACK_NAME": os.environ.get("SPACK_CI_STACK_NAME", "None"),
             # TODO: Remove this line in Spack 0.23
-            "SPACK_CI_SHARED_PR_MIRROR_URL": shared_pr_mirror or "None",
-            "SPACK_REBUILD_CHECK_UP_TO_DATE": str(prune_dag),
+            "SPACK_CI_SHARED_PR_MIRROR_URL": options.shared_pr_mirror or "None",
+            "SPACK_REBUILD_CHECK_UP_TO_DATE": str(options.prune_up_to_date),
             "SPACK_REBUILD_EVERYTHING": str(rebuild_everything),
-            "SPACK_REQUIRE_SIGNING": os.environ.get("SPACK_REQUIRE_SIGNING", "False"),
+            "SPACK_REQUIRE_SIGNING": str(options.require_signing),
         }
 
         # TODO: Remove this block in Spack 0.23
-        if deprecated_mirror_config and remote_mirror_override:
-            (output_object["variables"]["SPACK_REMOTE_MIRROR_OVERRIDE"]) = remote_mirror_override
+        if deprecated_mirror_config and options.remote_mirror_override:
+            (output_object["variables"]["SPACK_REMOTE_MIRROR_OVERRIDE"]) = options.remote_mirror_override
 
         if options.stack_name:
             output_object["variables"]["SPACK_CI_STACK_NAME"] = options.stack_name

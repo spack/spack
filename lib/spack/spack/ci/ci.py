@@ -18,7 +18,7 @@ import time
 import zipfile
 from collections import namedtuple
 from enum import Enum
-from typing import List, NamedTuple, Optional
+from typing import List, Optional
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import HTTPHandler, Request, build_opener
@@ -98,7 +98,7 @@ class PipelineOptions():
     def __init__(
             self,
             env: ev.Environment,
-            print_summary: bool = False,
+            print_summary: bool = True,
             output_file: Optional[str] = None,
             check_index_only: bool = False,
             run_optimizer: bool = False,
@@ -116,7 +116,10 @@ class PipelineOptions():
             pipeline_type: Optional[PipelineType] = None,
             require_signing: bool = False,
             artifacts_root: Optional[str] = None,
-            remote_mirror_override: Optional[str] = None,
+            remote_mirror: Optional[str] = None,
+            shared_pr_mirror: Optional[str] = None,
+            remote_mirror_override: Optional[str] = None,  # deprecated, remove in Spack 0.23
+            buildcache_destination: Optional[spack.mirror.Mirror] = None,
             cdash_handler: Optional["CDashHandler"] = None,
     ):
         """
@@ -140,7 +143,10 @@ class PipelineOptions():
             pipeline_type: Type of pipeline running (optional)
             require_signing: Require buildcache to be signed (fail w/out signing key)
             artifacts_root: Path to location where artifacts should be stored
+            remote_mirror: Mirror from spack.yaml (deprecated)
+            shared_pr_mirror: Shared pr mirror url (deprecated)
             remote_mirror_override: Override the mirror in the spack environment (deprecated)
+            buildcache_destination: The mirror where built binaries should be pushed
             cdash_handler: Object for communicating build information with CDash
         """
         self.env = env
@@ -162,7 +168,10 @@ class PipelineOptions():
         self.pipeline_type = pipeline_type
         self.require_signing = require_signing
         self.artifacts_root = artifacts_root
+        self.remote_mirror = remote_mirror
+        self.shared_pr_mirror = shared_pr_mirror
         self.remote_mirror_override = remote_mirror_override
+        self.buildcache_destination = buildcache_destination
         self.cdash_handler = cdash_handler
 
 
@@ -679,6 +688,33 @@ def collect_pipeline_options(
     os environment variables """
     options = PipelineOptions()
 
+    """
+            env: ev.Environment,
+            print_summary: bool = False,
+            output_file: Optional[str] = None,
+            check_index_only: bool = False,
+            run_optimizer: bool = False,
+            use_dependencies: bool = False,
+            broken_specs_url: Optional[str] = None,
+            enable_artifacts_buildcache: bool = False,
+            rebuild_index: bool = True,
+            temporary_storage_url_prefix: Optional[str] = None,
+            untouched_pruning_dependent_depth: Optional[int] = None,
+            pruned_untouched: bool = False,
+            prune_up_to_date: bool = True,
+            stack_name: Optional[str] = None,
+            job_name: Optional[str] = None,
+            pipeline_id: Optional[str] = None,
+            pipeline_type: Optional[PipelineType] = None,
+            require_signing: bool = False,
+            artifacts_root: Optional[str] = None,
+            remote_mirror: Optional[str] = None,
+            shared_pr_mirror: Optional[str] = None,
+            remote_mirror_override: Optional[str] = None,  # deprecated, remove in Spack 0.23
+            buildcache_destination: Optional[spack.mirror.Mirror] = None,
+            cdash_handler: Optional["CDashHandler"] = None,
+    """
+
     options.output_file = args.output_file
     options.run_optimizer = args.optimize
     options.use_dependencies = args.dependencies
@@ -690,7 +726,8 @@ def collect_pipeline_options(
     ci_config = cfg.get("ci")
 
     cdash_config = cfg.get("cdash")
-    cdash_handler = CDashHandler(cdash_config) if "build-group" in cdash_config else None
+    if "build-group" in cdash_config:
+        options.cdash_handler = CDashHandler(cdash_config)
 
     dependent_depth = os.environ.get("SPACK_PRUNE_UNTOUCHED_DEPENDENT_DEPTH", None)
     if dependent_depth is not None:
@@ -704,12 +741,17 @@ def collect_pipeline_options(
             )
 
     spack_prune_untouched = os.environ.get("SPACK_PRUNE_UNTOUCHED", None)
-    prune_untouched_packages = spack_prune_untouched is not None and spack_prune_untouched.lower() == "true"
+    options.pruned_untouched = spack_prune_untouched is not None and spack_prune_untouched.lower() == "true"
 
     # Allow overriding --prune-dag cli opt with environment variable
     prune_dag_override = os.environ.get("SPACK_PRUNE_UP_TO_DATE", None)
     if prune_dag_override is not None:
         options.prune_up_to_date = True if prune_dag_override.lower() == "true" else False
+
+    options.stack_name = os.environ.get("SPACK_CI_STACK_NAME", None)
+    options.require_signing = os.environ.get("SPACK_REQUIRE_SIGNING", False)
+    options.job_name = os.environ.get("CI_JOB_NAME", "job-does-not-exist")
+    options.pipeline_id = os.environ.get("CI_PIPELINE_ID", "pipeline-does-not-exist")
 
     # Get the type of pipeline, which is optional
     spack_pipeline_type = os.environ.get("SPACK_PIPELINE_TYPE", None)
@@ -795,7 +837,6 @@ def generate_pipeline(env: ev.Environment, args: spack.main.SpackArgumentParser)
 
     pipeline_mirrors = spack.mirror.MirrorCollection(binary=True)
     deprecated_mirror_config = False
-    buildcache_destination = None
     if "buildcache-destination" in pipeline_mirrors:
         if options.remote_mirror_override:
             tty.die(
@@ -803,20 +844,19 @@ def generate_pipeline(env: ev.Environment, args: spack.main.SpackArgumentParser)
                 "having a mirror named 'buildcache-destination' at the same time "
                 "is not allowed"
             )
-        buildcache_destination = pipeline_mirrors["buildcache-destination"]
+        options.buildcache_destination = pipeline_mirrors["buildcache-destination"]
     else:
         deprecated_mirror_config = True
         # TODO: This will be an error in Spack 0.23
 
     # TODO: Remove this block in spack 0.23
-    remote_mirror_url = None
     if deprecated_mirror_config:
         if "mirrors" not in yaml_root or len(yaml_root["mirrors"].values()) < 1:
             tty.die("spack ci generate requires an env containing a mirror")
 
         ci_mirrors = yaml_root["mirrors"]
         mirror_urls = [url for url in ci_mirrors.values()]
-        remote_mirror_url = mirror_urls[0]
+        options.remote_mirror_url = mirror_urls[0]
 
     # If a remote mirror override (alternate buildcache destination) was
     # specified, add it here in case it has already built hashes we might
@@ -844,12 +884,11 @@ def generate_pipeline(env: ev.Environment, args: spack.main.SpackArgumentParser)
         )
 
     # TODO: Remove this block in Spack 0.23
-    shared_pr_mirror = None
     if deprecated_mirror_config and options.pipeline_type == PipelineType.PULL_REQUEST:
-        stack_name = os.environ.get("SPACK_CI_STACK_NAME", "")
-        shared_pr_mirror = url_util.join(SHARED_PR_MIRROR_URL, stack_name)
+        stack_name = options.stack_name if options.stack_name else ""
+        options.shared_pr_mirror = url_util.join(SHARED_PR_MIRROR_URL, stack_name)
         spack.mirror.add(
-            spack.mirror.Mirror(shared_pr_mirror, name="ci_shared_pr_mirror"),
+            spack.mirror.Mirror(options.shared_pr_mirror, name="ci_shared_pr_mirror"),
             cfg.default_modify_scope(),
         )
 
@@ -904,9 +943,9 @@ def generate_pipeline(env: ev.Environment, args: spack.main.SpackArgumentParser)
     if spack_buildcache_copy:
         buildcache_copy_dest_prefix = spack_buildcache_copy
         buildcache_copy_src_prefix = (
-            buildcache_destination.fetch_url
-            if buildcache_destination
-            else options.remote_mirror_override or remote_mirror_url
+            options.buildcache_destination.fetch_url
+            if options.buildcache_destination
+            else options.remote_mirror_override or options.remote_mirror_url
         )
 
         if options.pipeline_type == PipelineType.COPY_ONLY:
