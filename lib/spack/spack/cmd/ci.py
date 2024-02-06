@@ -205,11 +205,11 @@ def ci_generate(args):
 
     spack_ci.generate_pipeline(env, args)
 
-    if copy_yaml_to:
-        copy_to_dir = os.path.dirname(copy_yaml_to)
+    if args.copy_to:
+        copy_to_dir = os.path.dirname(args.copy_to)
         if not os.path.exists(copy_to_dir):
             os.makedirs(copy_to_dir)
-        shutil.copyfile(output_file, copy_yaml_to)
+        shutil.copyfile(args.output_file, args.copy_to)
 
 
 def ci_reindex(args):
