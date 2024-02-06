@@ -18,7 +18,7 @@ class Libgridxc(AutotoolsPackage):
     url = "https://gitlab.com/siesta-project/libraries/libgridxc/-/archive/libgridxc-0.9.6/libgridxc-libgridxc-0.9.6.tar.gz"
 
     variant("mpi", default=False, description="Build with MPI support")
-    
+
     version("master", branch="master")
     version("2.0.0", tag="2.0.0")
     version("1.1.2", tag="1.1.2")
@@ -54,7 +54,7 @@ class Libgridxc(AutotoolsPackage):
         if self.spec.satisfies("@0.8.0:"):
             args += ["WITH_LIBXC=1", "LIBXC_ROOT={0}".format(self.spec["libxc"].prefix)]
         if self.spec.satisfies("+mpi"):
-            args += ["--enable-multiconfig","--with-mpi"]
+            args += ["--enable-multiconfig", "--with-mpi"]
             args += ["CC={0}".format(self.spec["mpi"].mpicc)]
             args += ["FC={0}".format(self.spec["mpi"].mpifc)]
         else:
