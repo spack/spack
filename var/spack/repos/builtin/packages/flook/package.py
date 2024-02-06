@@ -3,10 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 import glob
+import os
 
 from spack.package import *
+
 
 class Flook(MakefilePackage):
     """Flook is a fortran-Lua-hook library."""
@@ -18,7 +19,7 @@ class Flook(MakefilePackage):
 
     def edit(self, spec, prefix):
         # Use the Spack compiler wrappers
-        os.rename(".setup.make","setup.make")
+        os.rename(".setup.make", "setup.make")
         setup_make = FileFilter("setup.make")
         setup_make.filter("CC = .*", "CC = {0}".format(spack_cc))
         setup_make.filter("FC = .*", "FC = {0}".format(spack_f77))
