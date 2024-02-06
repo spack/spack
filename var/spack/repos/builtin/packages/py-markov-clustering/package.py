@@ -14,7 +14,9 @@ class PyMarkovClustering(PythonPackage):
 
     license("MIT", checked_by="A-N-Other")
 
-    version("0.0.6.dev0", sha256="8f72eee0ee5d9bfbab1b28bbfa95eaa020b2bba64b528ce45030b8b4300ecf33")
+    version(
+        "0.0.6.dev0", sha256="8f72eee0ee5d9bfbab1b28bbfa95eaa020b2bba64b528ce45030b8b4300ecf33"
+    )
 
     depends_on("py-setuptools", type="build")
 
