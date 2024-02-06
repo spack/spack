@@ -130,6 +130,7 @@ class Conduit(CMakePackage):
     extends("python", when="+python")
     depends_on("py-numpy", when="+python", type=("build", "run"))
     depends_on("py-mpi4py", when="+python+mpi", type=("build", "run"))
+    depends_on("py-pip", when="+python", type="build")
 
     #######################
     # I/O Packages
