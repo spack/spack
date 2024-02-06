@@ -16,6 +16,7 @@ class PyNeptuneClient(PythonPackage):
     pypi = "neptune-client/neptune-client-0.16.7.tar.gz"
 
     version("0.16.7", sha256="9b8bf2f59cb6b7ed6d96ea221b68ea20d9d481a1a4672d8173648ef998134454")
+    version("0.16.1", sha256="821238f510486feacd87c745f4646916259a416545ab678b47195729c071f249")
 
     depends_on("python@3.7.0:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
