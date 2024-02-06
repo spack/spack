@@ -34,7 +34,7 @@ class PyConnectomeManipulator(PythonPackage):
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-scikit-learn", type=("build", "run"))
     depends_on("py-voxcell", type=("build", "run"))
-    depends_on("py-pyarrow+parquet@3.0.0:", type=("build", "run"))
+    depends_on("py-pyarrow+parquet+dataset@3.0.0:", type=("build", "run"))
     depends_on("py-jsonpickle", type=("build", "run"))
     depends_on("py-distributed", type=("build", "run"), when="@0.0.6:")
     depends_on("py-dask-mpi", type=("build", "run"), when="@0.0.6:")
