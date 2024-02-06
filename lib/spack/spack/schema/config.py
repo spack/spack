@@ -5,15 +5,16 @@
 """Schema for config.yaml configuration file.
 
 .. literalinclude:: _spack_root/lib/spack/spack/schema/config.py
-   :lines: 13-
+   :lines: 17-
 """
+from typing import Any, Dict
 
 from llnl.util.lang import union_dicts
 
 import spack.schema.projections
 
 #: Properties for inclusion in other schemas
-properties = {
+properties: Dict[str, Any] = {
     "config": {
         "type": "object",
         "default": {},

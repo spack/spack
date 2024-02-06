@@ -6,8 +6,9 @@
 """Schema for mirrors.yaml configuration file.
 
 .. literalinclude:: _spack_root/lib/spack/spack/schema/mirrors.py
-   :lines: 12-69
+   :lines: 13-
 """
+from typing import Any, Dict
 
 #: Common properties for connection specification
 connection = {
@@ -50,7 +51,7 @@ mirror_entry = {
 }
 
 #: Properties for inclusion in other schemas
-properties = {
+properties: Dict[str, Any] = {
     "mirrors": {
         "type": "object",
         "default": {},

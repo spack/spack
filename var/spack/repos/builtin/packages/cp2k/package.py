@@ -158,15 +158,15 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
 
     # Force openmp propagation on some providers of blas / fftw-api
     with when("+openmp"):
-        depends_on("fftw+openmp", when="^fftw")
-        depends_on("amdfftw+openmp", when="^amdfftw")
-        depends_on("cray-fftw+openmp", when="^cray-fftw")
-        depends_on("armpl-gcc threads=openmp", when="^armpl-gcc")
-        depends_on("openblas threads=openmp", when="^openblas")
+        depends_on("fftw+openmp", when="^[virtuals=fftw-api] fftw")
+        depends_on("amdfftw+openmp", when="^[virtuals=fftw-api] amdfftw")
+        depends_on("cray-fftw+openmp", when="^[virtuals=fftw-api] cray-fftw")
+        depends_on("armpl-gcc threads=openmp", when="^[virtuals=blas] armpl-gcc")
+        depends_on("openblas threads=openmp", when="^[virtuals=blas] openblas")
         # The Cray compiler wrappers will automatically add libsci_mp with
         # -fopenmp. Since CP2K unconditionally links blas/lapack/scalapack
         # we have to be consistent.
-        depends_on("cray-libsci+openmp", when="^cray-libsci")
+        depends_on("cray-libsci+openmp", when="^[virtuals=blas] cray-libsci")
 
     with when("smm=libxsmm"):
         depends_on("libxsmm@1.17:~header-only", when="@9.1:")
@@ -202,8 +202,7 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         depends_on("mpi@2:")
         depends_on("mpi@3:", when="@2023.1:")
         depends_on("scalapack")
-        depends_on("mpich+fortran", when="^mpich")
-
+        depends_on("mpich+fortran", when="^[virtuals=mpi] mpich")
         conflicts("~mpi_f08", when="^mpich@4.1:")
 
     with when("+cosma"):
