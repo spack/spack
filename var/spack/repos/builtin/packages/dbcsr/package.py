@@ -106,7 +106,7 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
         # to INTEGER(8)
         conflicts("^mpich@4.1:", when="@:2.5")
         conflicts("~mpi_f08", when="^mpich@4.1:")
-        depends_on("mpich+fortran", when="^mpich")
+        depends_on("mpich+fortran", when="^[virtuals=mpi] mpich")
 
     generator("ninja")
     depends_on("ninja@1.10:", type="build")
