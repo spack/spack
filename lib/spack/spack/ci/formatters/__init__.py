@@ -32,6 +32,10 @@ def formatter(name):
 
 
 def get_formatter(name):
+    # Import formatters here, so that registration of formatters will happen
+    # automatically and without any circular import.
+    import spack.ci.formatters.gitlab  # noqa: E402
+
     try:
         return _formatters[name]
     except KeyError as err:
@@ -41,8 +45,3 @@ def get_formatter(name):
 class UnknownFormatterException(spack.error.SpackError):
     def __init__(self, formatter_name):
         super().__init__(f"No registered formatter for {formatter_name}")
-
-
-# Import after function definition all the modules in this package,
-# so that registration of formatters will happen automatically
-import spack.ci.formatters.gitlab  # noqa: E402
