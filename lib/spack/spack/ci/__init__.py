@@ -116,7 +116,7 @@ class PipelineOptions():
             pipeline_type: Optional[PipelineType] = None,
             require_signing: bool = False,
             artifacts_root: Optional[str] = None,
-            remote_mirror: Optional[str] = None,
+            remote_mirror_url: Optional[str] = None,
             shared_pr_mirror: Optional[str] = None,
             remote_mirror_override: Optional[str] = None,  # deprecated, remove in Spack 0.23
             buildcache_destination: Optional[spack.mirror.Mirror] = None,
@@ -143,7 +143,7 @@ class PipelineOptions():
             pipeline_type: Type of pipeline running (optional)
             require_signing: Require buildcache to be signed (fail w/out signing key)
             artifacts_root: Path to location where artifacts should be stored
-            remote_mirror: Mirror from spack.yaml (deprecated)
+            remote_mirror_url: Mirror from spack.yaml (deprecated)
             shared_pr_mirror: Shared pr mirror url (deprecated)
             remote_mirror_override: Override the mirror in the spack environment (deprecated)
             buildcache_destination: The mirror where built binaries should be pushed
@@ -168,7 +168,7 @@ class PipelineOptions():
         self.pipeline_type = pipeline_type
         self.require_signing = require_signing
         self.artifacts_root = artifacts_root
-        self.remote_mirror = remote_mirror
+        self.remote_mirror_url = remote_mirror_url
         self.shared_pr_mirror = shared_pr_mirror
         self.remote_mirror_override = remote_mirror_override
         self.buildcache_destination = buildcache_destination
