@@ -167,24 +167,18 @@ def _compiler_config_from_external(config):
     compiler_class = class_for_compiler_name(compiler_spec.name)
     paths = extra_attributes.get("paths", {})
     compiler_langs = ["cc", "cxx", "fc", "f77"]
-    for compiler in compiler_langs:
-        if paths.setdefault(compiler, None):
+    for lang in compiler_langs:
+        if paths.setdefault(lang, None):
             continue
 
         if not prefix:
             continue
 
-        bindir = prefix
-        if os.path.basename(prefix) != "bin":
-            bindir = os.path.join(prefix, "bin")
-
         # Check for files that satisfy the naming scheme for this compiler
-        for file, regexp in itertools.product(
-            os.listdir(bindir), compiler_class.search_regexps(compiler)
-        ):
-            match = regexp.match(file)
-            if match:
-                paths[compiler] = os.path.join(bindir, file)
+        bindir = os.path.join(prefix, "bin")
+        for f, regex in itertools.product(os.listdir(bindir), compiler_class.search_regexps(lang)):
+            if regex.match(f):
+                paths[lang] = os.path.join(bindir, f)
 
     if all(v is None for v in paths.values()):
         return None
@@ -209,7 +203,7 @@ def _compiler_config_from_external(config):
             "spec": str(compiler_spec),
             "paths": paths,
             "flags": extra_attributes.get("flags", {}),
-            "operating_system": operating_system,
+            "operating_system": str(operating_system),
             "target": str(target.family),
             "modules": config.get("modules", []),
             "environment": extra_attributes.get("environment", {}),
