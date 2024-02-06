@@ -17,7 +17,7 @@ import tempfile
 import time
 import zipfile
 from collections import namedtuple
-from enum import Enum, auto
+from enum import Enum
 from typing import List, NamedTuple, Optional
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
@@ -26,7 +26,6 @@ from urllib.request import HTTPHandler, Request, build_opener
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.lang import memoized
-from llnl.util.tty.color import cescape, colorize
 
 import spack
 import spack.binary_distribution as bindist
@@ -51,22 +50,20 @@ from .formatters import get_formatter, UnknownFormatterException
 
 __all__ = [
     "PipelineDag",
+    "PipelineNode",
     "PipelineOptions",
     "PipelineType",
     "SpackCI",
+    "SPACK_RESERVED_TAGS",
     "unpack_script",
+    "update_env_scopes",
 ]
-
 
 
 TEMP_STORAGE_MIRROR_NAME = "ci_temporary_mirror"
 SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
 # TODO: Remove this in Spack 0.23
 SHARED_PR_MIRROR_URL = "s3://spack-binaries-prs/shared_pr_mirror"
-
-
-
-
 
 spack_gpg = spack.main.SpackCommand("gpg")
 spack_compiler = spack.main.SpackCommand("compiler")
@@ -87,9 +84,12 @@ class TemporaryDirectory:
 
 
 class PipelineType(Enum):
-    COPY_ONLY = auto()
-    PROTECTED_BRANCH = auto()
-    PULL_REQUEST = auto()
+    COPY_ONLY = 1
+    spack_copy_only = 1
+    PROTECTED_BRANCH = 2
+    spack_protected_branch = 2
+    PULL_REQUEST = 3
+    spack_pull_request = 3
 
 
 class PipelineOptions():
@@ -97,6 +97,7 @@ class PipelineOptions():
     via cli, config/yaml, or environment variables)"""
     def __init__(
             self,
+            env: ev.Environment,
             print_summary: bool = False,
             output_file: Optional[str] = None,
             check_index_only: bool = False,
@@ -120,6 +121,7 @@ class PipelineOptions():
     ):
         """
         Args:
+            env: Active spack environment
             print_summary: Print a summary of the scheduled pipeline
             output_file: Path where output file should be written
             check_index_only: Only fetch the index or fetch all spec files
@@ -141,6 +143,7 @@ class PipelineOptions():
             remote_mirror_override: Override the mirror in the spack environment (deprecated)
             cdash_handler: Object for communicating build information with CDash
         """
+        self.env = env
         self.print_summary = print_summary
         self.output_file = output_file
         self.check_index_only = check_index_only
@@ -243,7 +246,19 @@ class PipelineDag:
 
     def get_dependencies(self, node: PipelineNode, transitive: bool = False):
         # TODO: handle transitive=True case
-        return [n for n in node.children]
+        dep_list = [n.spec for n in node.children]
+
+        if not transitive:
+            return dep_list
+
+        all_deps = set()
+
+        while dep_list:
+            dep = dep_list.pop(0)
+            all_deps.add(dep)
+            dep_list.extend([n for n in dep.children])
+
+        return [n.spec for n in all_deps]
 
 
 def _spec_matches(spec, match_string):
@@ -761,6 +776,7 @@ def generate_pipeline(env: ev.Environment, args: spack.main.SpackArgumentParser)
     yaml_root = env.manifest[ev.TOP_LEVEL_KEY]
 
     options = collect_pipeline_options(args, yaml_root)
+    options.environment = env
 
     # Get the joined "ci" config with all of the current scopes resolved
     ci_config = cfg.get("ci")
@@ -773,8 +789,6 @@ def generate_pipeline(env: ev.Environment, args: spack.main.SpackArgumentParser)
         target_formatter = get_formatter(ci_target)
     except UnknownFormatterException:
         tty.die(f"Spack CI module cannot generate a pipeline for format {ci_target}")
-
-
 
     # If we are not doing any kind of pruning, we are rebuilding everything
     rebuild_everything = not options.prune_up_to_date and not options.pruned_untouched
@@ -920,7 +934,7 @@ def generate_pipeline(env: ev.Environment, args: spack.main.SpackArgumentParser)
     spack_ci_ir = spack_ci.generate_ir()
 
     # Format the pipeline using the formatter specified in the environment
-    target_formatter(pipeline, spack_ci_ir, options.output_file)
+    target_formatter(pipeline, spack_ci_ir, options)
 
     # Clean up remote mirror override if enabled
     # TODO: Remove this block in Spack 0.23

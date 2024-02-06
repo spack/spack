@@ -8,6 +8,11 @@ import os
 import shutil
 
 import llnl.util.tty as tty
+from llnl.util.tty.color import cescape, colorize
+
+import spack
+import spack.binary_distribution as bindist
+import spack.config as cfg
 
 from ..ci import *
 from . import formatter
@@ -76,16 +81,11 @@ def get_job_name(spec: spack.spec.Spec, build_group: str = ""):
     return job_name[:255]
 
 
-def _print_staging_summary(spec_labels, stages, mirrors_to_check, rebuild_decisions):
+def _print_staging_summary(stages):
     if not stages:
         return
 
-    mirrors = spack.mirror.MirrorCollection(mirrors=mirrors_to_check, binary=True)
-    tty.msg("Checked the following mirrors for binaries:")
-    for m in mirrors.values():
-        tty.msg("  {0}".format(m.fetch_url))
-
-    tty.msg("Staging summary ([x] means a job needs rebuilding):")
+    tty.msg("Staging summary:")
     for stage_index, stage in enumerate(stages):
         tty.msg(f"  stage {stage_index} ({len(stage)} jobs):")
 
@@ -131,6 +131,9 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
         if not os.path.exists(gen_ci_dir):
             os.makedirs(gen_ci_dir)
 
+    pipeline_mirrors = spack.mirror.MirrorCollection(binary=True)
+    deprecated_mirror_config = "buildcache-destination" not in pipeline_mirrors
+
     concrete_env_dir = os.path.join(pipeline_artifacts_dir, "concrete_environment")
 
     # Now that we've added the mirrors we know about, they should be properly
@@ -138,10 +141,10 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
     # concrete environment directory, along with the spack.lock file.
     if not os.path.exists(concrete_env_dir):
         os.makedirs(concrete_env_dir)
-    shutil.copyfile(env.manifest_path, os.path.join(concrete_env_dir, "spack.yaml"))
-    shutil.copyfile(env.lock_path, os.path.join(concrete_env_dir, "spack.lock"))
+    shutil.copyfile(options.env.manifest_path, os.path.join(concrete_env_dir, "spack.yaml"))
+    shutil.copyfile(options.env.lock_path, os.path.join(concrete_env_dir, "spack.lock"))
 
-    update_env_scopes(env.manifest_path, [
+    update_env_scopes(options.env.manifest_path, [
         os.path.relpath(s.path, concrete_env_dir)
         for s in cfg.scopes().values()
         if isinstance(s, cfg.ImmutableConfigScope)
@@ -179,11 +182,10 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
     generate_job_name = os.environ.get("CI_JOB_NAME", "job-does-not-exist")
     parent_pipeline_id = os.environ.get("CI_PIPELINE_ID", "pipeline-does-not-exist")
 
-    all_job_names = []
     output_object = {}
     job_id = 0
     stage_id = 0
-
+    stages = []
     stage_names = []
 
     max_length_needs = 0
@@ -191,6 +193,9 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
 
     for level, (spec_label, node) in pipeline.traverse(top_down=False):
         stage_id = level
+        if len(stages) == stage_id:
+            stages.append([])
+        stages[stage_id].append(node.spec)
         stage_name = f"stage-{level}"
 
         if stage_name not in stage_names:
@@ -241,51 +246,24 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
         job_vars["SPACK_JOB_SPEC_ARCH"] = release_spec.format("{architecture}")
         job_vars["SPACK_JOB_SPEC_VARIANTS"] = release_spec.format("{variants}")
 
-        job_object["needs"] = []
-        if spec_label in dependencies:
-            if enable_artifacts_buildcache:
-                # Get dependencies transitively, so they're all
-                # available in the artifacts buildcache.
-                dep_jobs = [d for d in release_spec.traverse(deptype="all", root=False)]
-            else:
-                # In this case, "needs" is only used for scheduling
-                # purposes, so we only get the direct dependencies.
-                dep_jobs = []
-                for dep_label in dependencies[spec_label]:
-                    dep_jobs.append(spec_labels[dep_label])
+        dep_jobs = pipeline.get_dependencies(node, transitive=options.enable_artifacts_buildcache)
+        job_object["needs"] = [
+            {
+                "job": get_job_name(dep_job, build_group),
+                "artifacts": options.enable_artifacts_buildcache,
+            } for dep_job in dep_jobs
+        ]
 
-            job_object["needs"].extend(
-                _format_job_needs(
-                    dep_jobs,
-                    build_group,
-                    prune_dag,
-                    rebuild_decisions,
-                    enable_artifacts_buildcache,
-                )
-            )
-
-        rebuild_spec = spec_record.rebuild
-
-        if not rebuild_spec and not options.pipeline_type == PipelineType.COPY_ONLY:
-            if prune_dag:
-                spec_record.reason = "Pruned, up-to-date"
-                continue
-            else:
-                # DAG pruning is disabled, force the spec to rebuild. The
-                # record still contains any mirrors on which the spec
-                # may have been found, so we can print them in the staging
-                # summary.
-                spec_record.rebuild = True
-                spec_record.reason = "Scheduled, DAG pruning disabled"
-
-        if artifacts_root:
+        if options.artifacts_root:
             job_object["needs"].append(
                 {"job": generate_job_name, "pipeline": "{0}".format(parent_pipeline_id)}
             )
 
         # Let downstream jobs know whether the spec needed rebuilding, regardless
         # whether DAG pruning was enabled or not.
-        job_vars["SPACK_SPEC_NEEDS_REBUILD"] = str(rebuild_spec)
+        # TODO: This seems of questionable use, can we just remove it?
+        already_built = bindist.get_mirrors_for_spec(spec=release_spec, mirrors_to_check=None, index_only=True)
+        job_vars["SPACK_SPEC_NEEDS_REBUILD"] = "True" if already_built else "False"
 
         if options.cdash_handler:
             build_name = options.cdash_handler.build_name(release_spec)
@@ -307,7 +285,7 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
         )
 
         # TODO: Remove this block in Spack 0.23
-        if enable_artifacts_buildcache:
+        if options.enable_artifacts_buildcache:
             bc_root = os.path.join(local_mirror_dir, "build_cache")
             job_object["artifacts"]["paths"].extend(
                 [
@@ -332,8 +310,8 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
             output_object[job_name] = job_object
             job_id += 1
 
-    if print_summary:
-        _print_staging_summary(spec_labels, stages, mirrors_to_check, rebuild_decisions)
+    if options.print_summary:
+        _print_staging_summary(stages)
 
     tty.debug("{0} build jobs generated in {1} stages".format(job_id, stage_id))
 
@@ -351,7 +329,7 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
         stage_names.append("copy")
         sync_job = copy.deepcopy(spack_ci_ir["jobs"]["copy"]["attributes"])
         sync_job["stage"] = "copy"
-        if artifacts_root:
+        if options.artifacts_root:
             sync_job["needs"] = [
                 {"job": generate_job_name, "pipeline": "{0}".format(parent_pipeline_id)}
             ]
@@ -399,7 +377,7 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
 
         if (
             "script" in spack_ci_ir["jobs"]["signing"]["attributes"]
-            and spack_pipeline_type == "spack_protected_branch"
+            and options.pipeline_type == PipelineType.PROTECTED_BRANCH
         ):
             # External signing: generate a job to check and sign binary pkgs
             stage_names.append("stage-sign-pkgs")
@@ -480,13 +458,13 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
             output_object["variables"]["SPACK_CI_STACK_NAME"] = options.stack_name
 
         # TODO(opadron): remove this or refactor
-        if run_optimizer:
+        if options.run_optimizer:
             import spack.ci_optimization as ci_opt
 
             output_object = ci_opt.optimizer(output_object)
 
         # TODO(opadron): remove this or refactor
-        if use_dependencies:
+        if options.use_dependencies:
             import spack.ci_needs_workaround as cinw
 
             output_object = cinw.needs_to_dependencies(output_object)
