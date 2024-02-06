@@ -14,7 +14,7 @@ import spack.binary_distribution as bindist
 import spack.config as cfg
 import spack.util.spack_yaml as syaml
 
-from ... import *
+from .. import PipelineDag
 from . import formatter
 
 
