@@ -1,0 +1,92 @@
+diff -ruN proda_raw/AlignedFragment.cc proda/AlignedFragment.cc
+--- proda_raw/AlignedFragment.cc	2005-10-10 06:16:49.000000000 +0200
++++ proda/AlignedFragment.cc	2019-04-26 18:52:31.075383078 +0200
+@@ -2,10 +2,14 @@
+ //
+ //////////////////////////////////////////////////////////////////////
+ 
++#include<stdio.h>
++#include<cstdio>
++#include<cstring>
+ #include "AlignedFragment.h"
+ #include "Assert.h"
+ #include "Utilities.h"
+ 
++
+ //////////////////////////////////////////////////////////////////////
+ // Construction/Destruction
+ //////////////////////////////////////////////////////////////////////
+diff -ruN proda_raw/AlignedFragment.h proda/AlignedFragment.h
+--- proda_raw/AlignedFragment.h	2005-10-08 11:31:05.000000000 +0200
++++ proda/AlignedFragment.h	2019-04-26 18:52:56.432383249 +0200
+@@ -7,8 +7,12 @@
+ #ifndef ALIGNFRAGMENT_H
+ #define ALIGNFRAGMENT_H
+ 
++#include<stdio.h>
++#include<cstdio>
++#include<cstring>
+ #include <vector>
+ 
++
+ class Fragment;
+ class AlignedFragment;
+ 
+diff -ruN proda_raw/Block.cc proda/Block.cc
+--- proda_raw/Block.cc	2005-10-08 12:33:14.000000000 +0200
++++ proda/Block.cc	2019-04-26 16:13:30.872944305 +0200
+@@ -8,7 +8,7 @@
+ #include "MultiSequence.h"
+ #include "Utilities.h"
+ #include "Types.h"
+-
++#include <stdlib.h>
+ extern int MINLENGTH;
+ //////////////////////////////////////////////////////////////////////
+ // Construction/Destruction
+diff -ruN proda_raw/Main.cc proda/Main.cc
+--- proda_raw/Main.cc	2006-02-02 14:23:41.000000000 +0100
++++ proda/Main.cc	2019-04-29 10:30:02.990515178 +0200
+@@ -21,7 +21,8 @@
+ #include "Consistency.h"
+ #include "PairAligner.h"
+ #include "Types.h"
+-
++#include <climits>
++#include <cerrno>
+ bool verbose = true;
+ int MINLENGTH = 30; // shortest local alignment
+ bool enableViterbi = true;
+@@ -116,7 +117,7 @@
+   char *endPtr;
+   long int retVal;
+ 
+-  int errno = 0;
++  extern int errno;
+   retVal = strtol (data, &endPtr, 0);
+   if (retVal == 0 && (errno != 0 || data == endPtr)) return false;
+   if (errno != 0 && (retVal == LONG_MAX || retVal == LONG_MIN)) return false;
+diff -ruN proda_raw/PairAligner.cc proda/PairAligner.cc
+--- proda_raw/PairAligner.cc	2005-10-08 12:33:45.000000000 +0200
++++ proda/PairAligner.cc	2019-04-26 16:16:00.842824480 +0200
+@@ -7,7 +7,8 @@
+ #include "PairAligner.h"
+ #include "Utilities.h"
+ #include "LocalAlign.h"
+-
++#include <cstring>
++#include <stdlib.h>
+ extern bool verbose;
+ extern int MINLENGTH;
+ extern bool enableViterbi;
+diff -ruN proda_raw/ProbModel.cc proda/ProbModel.cc
+--- proda_raw/ProbModel.cc	2005-10-08 12:14:20.000000000 +0200
++++ proda/ProbModel.cc	2019-04-26 16:16:48.056543721 +0200
+@@ -6,6 +6,7 @@
+ #include <ctype.h>
+ #include "ProbModel.h"
+ #include "Utilities.h"
++#include <cstring>
+ 
+ int EMISSIONS[NUM_STATES][2] = { 
+   {1, 0},
