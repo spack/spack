@@ -343,8 +343,7 @@ class WindowsRegistryView:
             the desired subkey as a RegistryKey object, or none
         """
         return self._traverse_subkeys(
-            WindowsRegistryView.KeyMatchConditions.name_matcher(subkey_name),
-            recursive=recursive,
+            WindowsRegistryView.KeyMatchConditions.name_matcher(subkey_name), recursive=recursive
         )
 
     def find_matching_subkey(self, subkey_name, recursive=True):
@@ -358,8 +357,7 @@ class WindowsRegistryView:
             the desired subkey as a RegistryKey object, or none
         """
         return self._traverse_subkeys(
-            WindowsRegistryView.KeyMatchConditions.regex_matcher(subkey_name),
-            recursive=recursive,
+            WindowsRegistryView.KeyMatchConditions.regex_matcher(subkey_name), recursive=recursive
         )
 
     def find_subkeys(self, subkey_name, recursive=True):
