@@ -22,6 +22,10 @@ class Lwgrp(AutotoolsPackage):
 
     depends_on("mpi")
 
+    depends_on("autoconf", type="build", when="@main build_system=autotools")
+    depends_on("automake", type="build", when="@main build_system=autotools")
+    depends_on("libtool", type="build", when="@main build_system=autotools")
+
     variant("shared", default=True, description="Build with shared libraries")
 
     def configure_args(self):
