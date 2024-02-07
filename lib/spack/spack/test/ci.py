@@ -567,6 +567,7 @@ def test_ci_skipped_report(tmpdir, mock_packages, config):
                 have[1] += 1
         assert all(count == 1 for count in have)
 
+
 def test_pipeline_dag(mutable_mock_env_path, config, mutable_mock_repo):
     """Test building and traversal of pipeline dags"""
     e1 = ev.create("test")
@@ -602,17 +603,5 @@ def test_pipeline_dag(mutable_mock_env_path, config, mutable_mock_repo):
     for level, (key, node) in pipeline.traverse(top_down=False):
         nodes.append(node)
         print(f"{level}: {key}")
-
-    # print("\ntop-down traversal of individual nodes")
-    # for n in nodes:
-    #     print(f"\n  traversing {ci.PipelineDag.key(n.spec)}")
-    #     for level, (k, n) in pipeline.traverse([(ci.PipelineDag.key(n.spec), n)], top_down=True):
-    #         print(f"    {level}: {k}")
-
-    # print("\nbottom-up traversal of individual nodes")
-    # for n in nodes:
-    #     print(f"\n  traversing {ci.PipelineDag.key(n.spec)}")
-    #     for level, (k, n) in pipeline.traverse([(ci.PipelineDag.key(n.spec), n)], top_down=False):
-    #         print(f"    {level}: {k}")
 
     assert False

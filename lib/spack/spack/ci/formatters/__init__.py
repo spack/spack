@@ -34,11 +34,11 @@ def formatter(name):
 def get_formatter(name):
     # Import formatters here, so that registration of formatters will happen
     # automatically and without any circular import.
-    import spack.ci.formatters.gitlab  # noqa: E402
+    import spack.ci.formatters.gitlab  # noqa: E402 F401
 
     try:
         return _formatters[name]
-    except KeyError as err:
+    except KeyError:
         raise UnknownFormatterException(name)
 
 

@@ -18,7 +18,7 @@ import time
 import zipfile
 from collections import namedtuple
 from enum import Enum
-from typing import List, Optional
+from typing import Dict, List, Optional
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import HTTPHandler, Request, build_opener
@@ -30,6 +30,7 @@ from llnl.util.lang import memoized
 import spack
 import spack.binary_distribution as bindist
 import spack.config as cfg
+import spack.deptypes as dt
 import spack.environment as ev
 import spack.main
 import spack.mirror
@@ -46,18 +47,18 @@ from spack.error import SpackError
 from spack.reporters import CDash, CDashConfiguration
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
 
-from .formatters import get_formatter, UnknownFormatterException
+from .formatters import UnknownFormatterException, get_formatter
 
-__all__ = [
-    "PipelineDag",
-    "PipelineNode",
-    "PipelineOptions",
-    "PipelineType",
-    "SpackCI",
-    "SPACK_RESERVED_TAGS",
-    "unpack_script",
-    "update_env_scopes",
-]
+# __all__ = [
+#     "PipelineDag",
+#     "PipelineNode",
+#     "PipelineOptions",
+#     "PipelineType",
+#     "SpackCI",
+#     "SPACK_RESERVED_TAGS",
+#     "unpack_script",
+#     "update_env_scopes",
+# ]
 
 
 TEMP_STORAGE_MIRROR_NAME = "ci_temporary_mirror"
@@ -92,35 +93,36 @@ class PipelineType(Enum):
     spack_pull_request = 3
 
 
-class PipelineOptions():
+class PipelineOptions:
     """A container for all pipeline options that can be specified (whether
     via cli, config/yaml, or environment variables)"""
+
     def __init__(
-            self,
-            env: ev.Environment,
-            print_summary: bool = True,
-            output_file: Optional[str] = None,
-            check_index_only: bool = False,
-            run_optimizer: bool = False,
-            use_dependencies: bool = False,
-            broken_specs_url: Optional[str] = None,
-            enable_artifacts_buildcache: bool = False,
-            rebuild_index: bool = True,
-            temporary_storage_url_prefix: Optional[str] = None,
-            untouched_pruning_dependent_depth: Optional[int] = None,
-            prune_untouched: bool = False,
-            prune_up_to_date: bool = True,
-            stack_name: Optional[str] = None,
-            job_name: Optional[str] = None,
-            pipeline_id: Optional[str] = None,
-            pipeline_type: Optional[PipelineType] = None,
-            require_signing: bool = False,
-            artifacts_root: Optional[str] = None,
-            remote_mirror_url: Optional[str] = None,
-            shared_pr_mirror: Optional[str] = None,
-            remote_mirror_override: Optional[str] = None,  # deprecated, remove in Spack 0.23
-            buildcache_destination: Optional[spack.mirror.Mirror] = None,
-            cdash_handler: Optional["CDashHandler"] = None,
+        self,
+        env: ev.Environment,
+        print_summary: bool = True,
+        output_file: Optional[str] = None,
+        check_index_only: bool = False,
+        run_optimizer: bool = False,
+        use_dependencies: bool = False,
+        broken_specs_url: Optional[str] = None,
+        enable_artifacts_buildcache: bool = False,
+        rebuild_index: bool = True,
+        temporary_storage_url_prefix: Optional[str] = None,
+        untouched_pruning_dependent_depth: Optional[int] = None,
+        prune_untouched: bool = False,
+        prune_up_to_date: bool = True,
+        stack_name: Optional[str] = None,
+        job_name: Optional[str] = None,
+        pipeline_id: Optional[str] = None,
+        pipeline_type: Optional[PipelineType] = None,
+        require_signing: bool = False,
+        artifacts_root: Optional[str] = None,
+        remote_mirror_url: Optional[str] = None,
+        shared_pr_mirror: Optional[str] = None,
+        remote_mirror_override: Optional[str] = None,  # deprecated, remove in Spack 0.23
+        buildcache_destination: Optional[spack.mirror.Mirror] = None,
+        cdash_handler: Optional["CDashHandler"] = None,
     ):
         """
         Args:
@@ -197,11 +199,14 @@ class PipelineDag:
     def __init__(self, specs: List[spack.spec.Spec]) -> None:
         # Build dictionary of nodes
         self.nodes: Dict[str, PipelineNode] = {
-            PipelineDag.key(s): PipelineNode(s) for s in spack.traverse.traverse_nodes(specs, deptype=all, root=True)
+            PipelineDag.key(s): PipelineNode(s)
+            for s in spack.traverse.traverse_nodes(specs, deptype=dt.ALL_TYPES, root=True)
         }
 
         # Create edges
-        for edge in spack.traverse.traverse_edges(specs, deptype=all, root=False, cover="edges"):
+        for edge in spack.traverse.traverse_edges(
+            specs, deptype=dt.ALL_TYPES, root=False, cover="edges"
+        ):
             parent_key = PipelineDag.key(edge.parent)
             child_key = PipelineDag.key(edge.spec)
 
@@ -219,16 +224,14 @@ class PipelineDag:
             self.nodes[child].parents.extend(node.parents)
         del self.nodes[node_key]
 
-    def traverse(self, top_down: bool=True):
+    def traverse(self, top_down: bool = True):
         visited = set()
         level = 0
 
         if top_down:
             # Yields the roots first, followed by direct children of roots, followed
             # by their children and so on.
-            node_list = [
-                (key, node) for key, node in self.nodes.items() if len(node.parents) == 0
-            ]
+            node_list = [(key, node) for key, node in self.nodes.items() if len(node.parents) == 0]
             while node_list:
                 for key, node in node_list:
                     if key not in visited:
@@ -249,25 +252,26 @@ class PipelineDag:
                         yield (level, (key, node))
                 level += 1
                 node_list = [
-                    (k, self.nodes[k]) for _, n in node_list for k in n.parents
-                    if not k in visited and all([c in visited for c in self.nodes[k].children])
+                    (k, self.nodes[k])
+                    for _, n in node_list
+                    for k in n.parents
+                    if k not in visited and all([c in visited for c in self.nodes[k].children])
                 ]
 
     def get_dependencies(self, node: PipelineNode, transitive: bool = False):
-        # TODO: handle transitive=True case
-        dep_list = [self.nodes[k].spec for k in node.children]
+        dep_list = [self.nodes[k] for k in node.children]
 
         if not transitive:
-            return dep_list
+            return [d.spec for d in dep_list]
 
         all_deps = set()
 
         while dep_list:
-            dep = dep_list.pop(0)
-            all_deps.add(dep)
-            dep_list.extend([n for n in dep.children])
+            dep_node = dep_list.pop(0)
+            all_deps.add(dep_node.spec)
+            dep_list.extend([self.nodes[k] for k in dep_node.children])
 
-        return [n.spec for n in all_deps]
+        return all_deps
 
 
 def _spec_matches(spec, match_string):
@@ -656,7 +660,7 @@ def write_pipeline_manifest(specs, src_prefix, dest_prefix, output_file):
 
 def check_for_broken_specs(pipeline_specs, broken_specs_url):
     """Check the pipeline specs against the list of known broken specs and return
-        True if there were any matches, False otherwise."""
+    True if there were any matches, False otherwise."""
     if broken_specs_url.startswith("http"):
         # To make checking each spec against the list faster, we require
         # a url protocol that allows us to iterate the url in advance.
@@ -681,11 +685,10 @@ def check_for_broken_specs(pipeline_specs, broken_specs_url):
 
 
 def collect_pipeline_options(
-        args: spack.main.SpackArgumentParser,
-        env: ev.Environment,
-    ) -> PipelineOptions:
+    args: spack.main.SpackArgumentParser, env: ev.Environment
+) -> PipelineOptions:
     """Gather pipeline options from cli args, spack environment, and
-    os environment variables """
+    os environment variables"""
     options = PipelineOptions(env)
 
     """
@@ -741,7 +744,9 @@ def collect_pipeline_options(
             )
 
     spack_prune_untouched = os.environ.get("SPACK_PRUNE_UNTOUCHED", None)
-    options.prune_untouched = spack_prune_untouched is not None and spack_prune_untouched.lower() == "true"
+    options.prune_untouched = (
+        spack_prune_untouched is not None and spack_prune_untouched.lower() == "true"
+    )
 
     # Allow overriding --prune-dag cli opt with environment variable
     prune_dag_override = os.environ.get("SPACK_PRUNE_UP_TO_DATE", None)
@@ -919,9 +924,14 @@ def generate_pipeline(env: ev.Environment, args: spack.main.SpackArgumentParser)
                 for p in affected_pkgs:
                     tty.debug("  {0}".format(p))
                 affected_specs = get_spec_filter_list(
-                    env, affected_pkgs, dependent_traverse_depth=options.untouched_pruning_dependent_depth
+                    env,
+                    affected_pkgs,
+                    dependent_traverse_depth=options.untouched_pruning_dependent_depth,
                 )
-                tty.msg(f"dependent_traverse_depth={options.untouched_pruning_dependent_depth}, affected specs:")
+                tty.msg(
+                    "dependent_traverse_depth="
+                    f"{options.untouched_pruning_dependent_depth}, affected specs:"
+                )
                 for s in affected_specs:
                     tty.msg(f"  {PipelineDag.key(s)}")
 
@@ -960,7 +970,12 @@ def generate_pipeline(env: ev.Environment, args: spack.main.SpackArgumentParser)
             "copy_{}_specs.json".format(options.stack_name if options.stack_name else "rebuilt"),
         )
 
-        write_pipeline_manifest(manifest_specs, buildcache_copy_src_prefix, buildcache_copy_dest_prefix, copy_specs_file)
+        write_pipeline_manifest(
+            manifest_specs,
+            buildcache_copy_src_prefix,
+            buildcache_copy_dest_prefix,
+            copy_specs_file,
+        )
 
     # If this is configured, spack will fail "spack ci generate" if it
     # generates any hash which exists under the broken specs url.
@@ -986,9 +1001,9 @@ def generate_pipeline(env: ev.Environment, args: spack.main.SpackArgumentParser)
     # Use all unpruned specs to populate the build group for this set
     if options.cdash_handler and options.cdash_handler.auth_token:
         try:
-            options.cdash_handler.populate_buildgroup([
-                options.cdash_handler.build_name(s) for s in pipeline_specs
-            ])
+            options.cdash_handler.populate_buildgroup(
+                [options.cdash_handler.build_name(s) for s in pipeline_specs]
+            )
         except (SpackError, HTTPError, URLError) as err:
             tty.warn("Problem populating buildgroup: {0}".format(err))
     else:

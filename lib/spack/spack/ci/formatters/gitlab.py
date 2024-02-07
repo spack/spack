@@ -14,9 +14,16 @@ import spack.binary_distribution as bindist
 import spack.config as cfg
 import spack.util.spack_yaml as syaml
 
-from .. import *
+from .. import (
+    SPACK_RESERVED_TAGS,
+    PipelineDag,
+    PipelineOptions,
+    PipelineType,
+    SpackCI,
+    unpack_script,
+    update_env_scopes,
+)
 from . import formatter
-
 
 # See https://docs.gitlab.com/ee/ci/yaml/#retry for descriptions of conditions
 JOB_RETRY_CONDITIONS = [
@@ -115,12 +122,14 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
     shutil.copyfile(options.env.manifest_path, os.path.join(concrete_env_dir, "spack.yaml"))
     shutil.copyfile(options.env.lock_path, os.path.join(concrete_env_dir, "spack.lock"))
 
-    update_env_scopes(options.env.manifest_path, [
-        os.path.relpath(s.path, concrete_env_dir)
-        for s in cfg.scopes().values()
-        if isinstance(s, cfg.ImmutableConfigScope)
-        and os.path.exists(s.path)
-    ])
+    update_env_scopes(
+        options.env.manifest_path,
+        [
+            os.path.relpath(s.path, concrete_env_dir)
+            for s in cfg.scopes().values()
+            if isinstance(s, cfg.ImmutableConfigScope) and os.path.exists(s.path)
+        ],
+    )
 
     job_log_dir = os.path.join(pipeline_artifacts_dir, "logs")
     job_repro_dir = os.path.join(pipeline_artifacts_dir, "reproduction")
@@ -186,9 +195,7 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
         def main_script_replacements(cmd):
             return cmd.replace("{env_dir}", rel_concrete_env_dir)
 
-        job_object["script"] = unpack_script(
-            job_object["script"], op=main_script_replacements
-        )
+        job_object["script"] = unpack_script(job_object["script"], op=main_script_replacements)
 
         if "before_script" in job_object:
             job_object["before_script"] = unpack_script(job_object["before_script"])
@@ -213,7 +220,8 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
             {
                 "job": get_job_name(dep_job, build_group),
                 "artifacts": options.enable_artifacts_buildcache,
-            } for dep_job in dep_jobs
+            }
+            for dep_job in dep_jobs
         ]
 
         if options.artifacts_root:
@@ -224,7 +232,9 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
         # Let downstream jobs know whether the spec needed rebuilding, regardless
         # whether DAG pruning was enabled or not.
         # TODO: This seems of questionable use, can we just remove it?
-        already_built = bindist.get_mirrors_for_spec(spec=release_spec, mirrors_to_check=None, index_only=True)
+        already_built = bindist.get_mirrors_for_spec(
+            spec=release_spec, mirrors_to_check=None, index_only=True
+        )
         job_vars["SPACK_SPEC_NEEDS_REBUILD"] = "True" if already_built else "False"
 
         if options.cdash_handler:
@@ -416,7 +426,9 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
 
         # TODO: Remove this block in Spack 0.23
         if deprecated_mirror_config and options.remote_mirror_override:
-            (output_object["variables"]["SPACK_REMOTE_MIRROR_OVERRIDE"]) = options.remote_mirror_override
+            (
+                output_object["variables"]["SPACK_REMOTE_MIRROR_OVERRIDE"]
+            ) = options.remote_mirror_override
 
         if options.stack_name:
             output_object["variables"]["SPACK_CI_STACK_NAME"] = options.stack_name
