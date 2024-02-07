@@ -13,7 +13,7 @@ class ComposableKernel(CMakePackage):
 
     homepage = "https://github.com/ROCm/composable_kernel"
     git = "https://github.com/ROCm/composable_kernel.git"
-    url = "https://github.com/ROCm/composable_kernel/archive/refs/tags/rocm-5.7.1.tar.gz"
+    url = "https://github.com/ROCm/composable_kernel/archive/refs/tags/rocm-6.0.2.tar.gz"
     maintainers("srekolam", "afzpatel")
 
     license("MIT")
