@@ -50,7 +50,7 @@ class Samtools(Package):
     depends_on("python", type="run")
 
     # htslib became standalone @1.3.1, must use corresponding version
-    depends_on("htslib@1.19.2", when="@1.19.1")
+    depends_on("htslib@1.19.1", when="@1.19.2")
     depends_on("htslib@1.19", when="@1.19")
     depends_on("htslib@1.18", when="@1.18")
     depends_on("htslib@1.17", when="@1.17")
