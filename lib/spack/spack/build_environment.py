@@ -1075,6 +1075,9 @@ class SetupContext:
             if os.path.isdir(bin_dir):
                 env.prepend_path("PATH", bin_dir)
 
+        for cp_dir in spack.build_systems.cmake.get_cmake_prefix_path(dep.package):
+            env.prepend_path("CMAKE_PREFIX_PATH", cp_dir)
+
 
 def load_external_modules(context: SetupContext) -> None:
     """Traverse a package's spec DAG and load any external modules.
