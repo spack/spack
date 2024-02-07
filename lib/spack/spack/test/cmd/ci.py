@@ -914,7 +914,7 @@ def test_ci_rebuild_mock_failure_to_push(
     with rebuild_env.env_dir.as_cwd():
         activate_rebuild_env(tmpdir, pkg_name, rebuild_env)
 
-        expect = ""  # f"Command exited with code {spack.cmd.ci.FAILED_CREATE_BUILDCACHE_CODE}"
+        expect = f"Command exited with code {spack.cmd.ci.FAILED_CREATE_BUILDCACHE_CODE}"
         with pytest.raises(spack.main.SpackCommandError, match=expect):
             ci_cmd("rebuild", fail_on_error=True)
 
