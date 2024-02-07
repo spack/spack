@@ -38,6 +38,8 @@ class Chapel(AutotoolsPackage):
 
     depends_on("doxygen@1.8.17:")
 
+    variant("check", default=False, description="Run make check after installing the package")
+
     variant(
         "module_tests",
         default=False,
@@ -567,15 +569,15 @@ class Chapel(AutotoolsPackage):
     @run_after("install")
     def self_check(self):
         """Run the self-check after installing the package"""
-        print("Running self-check")
         path_put_first("PATH", [self.prefix.bin])
         self.test_version()
-        with set_env(CHPL_HOME=self.stage.source_path):
-            with working_dir(self.stage.source_path):
-                if self.spec.variants["locale_model"].value == "gpu":
-                    with set_env(COMP_FLAGS="--no-checks --no-compiler-driver"):
+        if self.spec.variants["check"].value:
+            with set_env(CHPL_HOME=self.stage.source_path):
+                with working_dir(self.stage.source_path):
+                    if self.spec.variants["locale_model"].value == "gpu":
+                        with set_env(COMP_FLAGS="--no-checks --no-compiler-driver"):
+                            self.run_local_make_check()
+                    else:  # Not GPU
                         self.run_local_make_check()
-                else:  # Not GPU
-                    self.run_local_make_check()
-                make("check-chpldoc")
+                    make("check-chpldoc")
         self.test_package_modules()
