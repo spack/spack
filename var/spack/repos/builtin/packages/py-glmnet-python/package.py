@@ -22,9 +22,8 @@ class PyGlmnetPython(PythonPackage):
 
     version("1.0.2", sha256="cc80020dcebc5366dcc061aec59318efac69d23578066326d925bfc27a23cb27")
 
-    depends_on("gcc", type="build") # For gfortran
+    depends_on("gcc", type="build")  # For gfortran
     depends_on("py-joblib@0.10.3:", type=("build", "run"))
     # Not in setup.py, but imported and used:
-    depends_on("py-numpy", type=("build", "run")) 
+    depends_on("py-numpy", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
-    
