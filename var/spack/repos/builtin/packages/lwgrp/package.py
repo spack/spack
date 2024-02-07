@@ -14,6 +14,8 @@ class Lwgrp(AutotoolsPackage):
     url = "https://github.com/LLNL/lwgrp/releases/download/v1.0.2/lwgrp-1.0.2.tar.gz"
     git = "https://github.com/LLNL/lwgrp.git"
 
+    maintainers("CamStan", "gonsie", "adammoody")
+
     version("main", branch="main")
     version("1.0.5", sha256="16b579e13b8a5218f4fe1b8715f6aafb09133a0cefbcd6b2eaf73802955dee6b")
     version("1.0.4", sha256="0c933df7658660a0225f8e3a940eb2621efa4421397859417c8d90d906d4e90a")
