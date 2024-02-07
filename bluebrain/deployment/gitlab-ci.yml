@@ -244,7 +244,7 @@ github_information:
     # move afterwards
     -     spack -d config --scope=user update -y packages
     -     spack config --scope=user add "packages:python:require:'@$DEFAULT_PYTHON_VERSION'"
-    -     spack export --scope=user --module tcl --explicit --unbuildable cuda intel-oneapi-mkl likwid llvm openscenegraph optix --exclude 'neuron|hdf5|nvhpc|openjdk' ${shas} > "spack_config/packages.yaml.tmp"
+    -     spack export --scope=user --module tcl --unbuildable cuda intel-oneapi-mkl likwid llvm openscenegraph optix --exclude 'neuron|hdf5|nvhpc|openjdk' ${shas} > "spack_config/packages.yaml.tmp"
     -     sed -e "/:':/{s/'//g}" "spack_config/packages.yaml.tmp" > "spack_config/packages.yaml"
     -     spack config blame packages
     - fi
