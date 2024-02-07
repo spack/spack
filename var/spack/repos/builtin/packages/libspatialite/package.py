@@ -18,6 +18,7 @@ class Libspatialite(AutotoolsPackage):
 
     license("MPL-1.1")
 
+    version("5.1.0", sha256="43be2dd349daffe016dd1400c5d11285828c22fea35ca5109f21f3ed50605080")
     version("5.0.1", sha256="eecbc94311c78012d059ebc0fae86ea5ef6eecb13303e6e82b3753c1b3409e98")
     version("5.0.0", sha256="7b7fd70243f5a0b175696d87c46dde0ace030eacc27f39241c24bac5dfac6dac")
     # Must download manually from:
@@ -48,3 +49,5 @@ class Libspatialite(AutotoolsPackage):
     depends_on("libxml2")
     depends_on("minizip", when="@5.0.0:")
     depends_on("librttopo", when="@5.0.1:")
+
+    conflicts("geos@3.10:", when="@:5.0.0")
