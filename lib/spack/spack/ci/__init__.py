@@ -684,39 +684,10 @@ def check_for_broken_specs(pipeline_specs, broken_specs_url):
             return True
 
 
-def collect_pipeline_options(
-    args: spack.main.SpackArgumentParser, env: ev.Environment
-) -> PipelineOptions:
+def collect_pipeline_options(env: ev.Environment, args) -> PipelineOptions:
     """Gather pipeline options from cli args, spack environment, and
     os environment variables"""
     options = PipelineOptions(env)
-
-    """
-            env: ev.Environment,
-            print_summary: bool = False,
-            output_file: Optional[str] = None,
-            check_index_only: bool = False,
-            run_optimizer: bool = False,
-            use_dependencies: bool = False,
-            broken_specs_url: Optional[str] = None,
-            enable_artifacts_buildcache: bool = False,
-            rebuild_index: bool = True,
-            temporary_storage_url_prefix: Optional[str] = None,
-            untouched_pruning_dependent_depth: Optional[int] = None,
-            prune_untouched: bool = False,
-            prune_up_to_date: bool = True,
-            stack_name: Optional[str] = None,
-            job_name: Optional[str] = None,
-            pipeline_id: Optional[str] = None,
-            pipeline_type: Optional[PipelineType] = None,
-            require_signing: bool = False,
-            artifacts_root: Optional[str] = None,
-            remote_mirror: Optional[str] = None,
-            shared_pr_mirror: Optional[str] = None,
-            remote_mirror_override: Optional[str] = None,  # deprecated, remove in Spack 0.23
-            buildcache_destination: Optional[spack.mirror.Mirror] = None,
-            cdash_handler: Optional["CDashHandler"] = None,
-    """
 
     options.output_file = args.output_file
     options.run_optimizer = args.optimize
@@ -754,7 +725,10 @@ def collect_pipeline_options(
         options.prune_up_to_date = True if prune_dag_override.lower() == "true" else False
 
     options.stack_name = os.environ.get("SPACK_CI_STACK_NAME", None)
-    options.require_signing = os.environ.get("SPACK_REQUIRE_SIGNING", False)
+    require_signing = os.environ.get("SPACK_REQUIRE_SIGNING", None)
+    options.require_signing = (
+        True if require_signing and require_signing.lower() == "true" else False
+    )
     options.job_name = os.environ.get("CI_JOB_NAME", "job-does-not-exist")
     options.pipeline_id = os.environ.get("CI_PIPELINE_ID", "pipeline-does-not-exist")
 
@@ -793,7 +767,7 @@ def update_env_scopes(env_manifest_path: str, cli_scopes: List[str]) -> None:
 
     # Add config scopes to environment
     env_includes = env_yaml_root["spack"].get("include", [])
-    include_scopes = []
+    include_scopes: List[str] = []
     for scope in cli_scopes:
         if scope not in include_scopes and scope not in env_includes:
             include_scopes.insert(0, scope)
@@ -804,7 +778,7 @@ def update_env_scopes(env_manifest_path: str, cli_scopes: List[str]) -> None:
         fd.write(syaml.dump_config(env_yaml_root, default_flow_style=False))
 
 
-def generate_pipeline(env: ev.Environment, args: spack.main.SpackArgumentParser) -> None:
+def generate_pipeline(env: ev.Environment, args) -> None:
     """Generate a gitlab yaml file to run a dynamic child pipeline from
         the spec matrix in the active environment.
 
@@ -822,8 +796,8 @@ def generate_pipeline(env: ev.Environment, args: spack.main.SpackArgumentParser)
 
     yaml_root = env.manifest[ev.TOP_LEVEL_KEY]
 
-    options = collect_pipeline_options(args, env)
-    options.environment = env
+    options = collect_pipeline_options(env, args)
+    options.env = env
 
     # Get the joined "ci" config with all of the current scopes resolved
     ci_config = cfg.get("ci")
@@ -891,9 +865,10 @@ def generate_pipeline(env: ev.Environment, args: spack.main.SpackArgumentParser)
     # TODO: Remove this block in Spack 0.23
     if deprecated_mirror_config and options.pipeline_type == PipelineType.PULL_REQUEST:
         stack_name = options.stack_name if options.stack_name else ""
-        options.shared_pr_mirror = url_util.join(SHARED_PR_MIRROR_URL, stack_name)
+        shared_pr_mirror_url = url_util.join(SHARED_PR_MIRROR_URL, stack_name)
+        options.shared_pr_mirror = shared_pr_mirror_url
         spack.mirror.add(
-            spack.mirror.Mirror(options.shared_pr_mirror, name="ci_shared_pr_mirror"),
+            spack.mirror.Mirror(shared_pr_mirror_url, name="ci_shared_pr_mirror"),
             cfg.default_modify_scope(),
         )
 
