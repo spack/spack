@@ -273,6 +273,7 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         # DBCSR as external dependency
         depends_on("dbcsr@2.6:")
         depends_on("dbcsr+openmp", when="+openmp")
+        depends_on("dbcsr+mpi", when="+mpi")
         depends_on("dbcsr+cuda", when="+cuda")
         depends_on("dbcsr+rocm", when="+rocm")
 
