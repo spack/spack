@@ -171,7 +171,7 @@ class MiopenHip(CMakePackage):
     for ver in ["5.1.0", "5.1.3", "5.2.0", "5.2.1", "5.2.3", "5.3.0", "5.3.3"]:
         depends_on("mlirmiopen@" + ver, when="@" + ver)
 
-    for ver in ["5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0","6.0.2"]:
+    for ver in ["5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2"]:
         depends_on("nlohmann-json", type="link")
         depends_on("composable-kernel@" + ver, when="@" + ver)
     for ver in ["5.4.0", "5.4.3", "5.5.0"]:
