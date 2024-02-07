@@ -147,7 +147,7 @@ packages:
   timemory:
     variants: +mpi~cuda+cupti+caliper~gperftools~python@3.0.0a
   util-linux:
-    # 2.39 and later fails with macros that our ancient linux headers don't define! 🙀
+    # 2.39 and later fails with macros that our ancient linux headers don't define!
     require: "@:2.38"
   all:
     require: "%gcc@12.3.0 target=skylake"
