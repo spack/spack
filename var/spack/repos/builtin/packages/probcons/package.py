@@ -23,13 +23,12 @@ class Probcons(MakefilePackage):
         return f"http://probcons.stanford.edu/probcons_v{version.underscored}.tar.gz"
 
     def edit(self, spec, prefix):
-        makefile = FileFilter("Makefile")
-        makefile.filter("CXX = .*", f"CXX = {spack_cxx}")
+        filter_file("CXX = .*", f"CXX = {spack_cxx}", "Makefile")
 
     def build(self, spec, prefix):
-        make("probcons", "compare")
+        make("probcons", "compare", "project")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install("probcons", prefix.bin)
-        install("compare", prefix.bin)
+        for f in ("probcons", "compare", "project"):
+            install(f, prefix.bin)
