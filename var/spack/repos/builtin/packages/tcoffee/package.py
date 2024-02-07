@@ -29,9 +29,21 @@ class Tcoffee(MakefilePackage):
     depends_on("perl-soap-lite", type="run")
     depends_on("perl-xml-simple", type="run")
 
+    variant("t_coffee", default=True, description="Regular MSA")
+    variant("rcoffee", default=False, description="RNA MSA")
+    variant("psicoffee", default=False, description="Homology extended MSA")
+    variant("expresso", default=False, description="Very accurate structure-based MSA")
+    variant("3dcoffee", default=False, description="Multiple structure alignments")
+    variant("mcoffee", default=False, description="Meta-alignment with multiple MSA programs")
+
     # Dependencies taken from ./install script
     # TODO: lots of missing dependencies!
-    # TODO: make variants for these as per the ./install script
+    # TODO: context managers as below to specify these per variant
+
+    # with when("@3: +trilinos"):
+    #    depends_on("trilinos@12.6:")
+
+
 
     # depends_on("clustalo", type="run")
     # depends_on("strike", type="run")
