@@ -82,6 +82,7 @@ spack:
     mvapich2:
       variants: fabrics=mrail process_managers=slurm file_systems=gpfs
   specs:
+    - llvm@14.0.6  # Thanks, 🐼 and Numba!
     - llvm@17.0.4
     # keep the x.y.z versions in sync with the llvm versions that we install
     # and the pN version in sync with the clang-tools recipe
