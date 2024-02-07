@@ -44,9 +44,129 @@ buildcache_cmd = spack.main.SpackCommand("buildcache")
 pytestmark = [pytest.mark.not_on_windows("does not run on windows"), pytest.mark.maybeslow]
 
 
+# class CIEnvMock:
+#     """Mock environment for CI
+#     """
+#
+#     CDASH = {
+#         "cdash": {
+#             "build-group": "Not important",
+#             "url": "https://my.fake.cdash",
+#             "project": "Not used",
+#             "site": "Nothing",
+#         }
+#     }
+#
+#     def __init__(self, *args, **kwargs):
+#         """
+#             args:
+#                 0: CI project root directory, mocks ``CI_PROJECT_DIR`` (default: tmpdir)
+#                 1: Environment directory, mocks stack dir (default: ``CI_PROJECT_DIR/stack/)
+#
+#             kwargs:
+#                 Spack CI Config:
+#                     env_dir: directory containing environment
+#                     log_dir: directory containing CI logs
+#                     mirror_dir: directory of target mirror
+#
+#                 GitLab mock
+#                     gl_url: Mock URL for gitlab (default: https://some.domain/group)
+#                     gl_project: Mock project name (default: group)
+#                     gl_pipeline_id: Mock pipeline ID (default: 42)
+#                     gl_job_id: Mock job id (default: 1729)
+#         """
+#
+#         # CI Config
+#         broken_spec_file = os.path.join(broken_specs_path, root_spec_dag_hash)
+#         env_dir = args[0]
+#         log_dir = log_di,
+#         mirror_dir = mirror_dir
+#         mirror_url = mirror_url
+#         repro_dir = repro_dir
+#         root_spec_dag_hash = root_spec_dag_hash
+#         test_dir = test_dir
+#         working_dir = working_dir
+#
+#         self.mirror_url = kwargs.get("mirror_url", "https://my.fake.mirror")
+#         self.rebuild_index = kwargs.get("rebuild_index", True)
+#
+#         # GitLab Bits
+#         self.gitlab_url = kwargs.get("gl_url", "https://some.domain/group")
+#         self.gitlab_project = kwargs.get("gl_project", "group")
+#         self.pipeline_id = kwargs.get("gl_pipeline_id", "42")
+#         self.job_id = kwargs.get("gl_job_id", "1729")
+#
+#
+#     def configure(self):
+#         # Delete the test environment if it exists
+#         if "test" in ev.all_environment_names():
+#             if ev.active("test"):
+#                 ev.deactivate()
+#             env_cmd("rm", "-y", "test")
+#
+#
+#         # Write the spack environment file
+#         env_config_dir = os.environ["CI_PROJECT_DIR"]
+#         config = {
+#             "spack": {
+#                 "mirrors": {
+#                     "buildcache-destination": self.mirror_url,
+#                 },
+#                 "ci": {
+#                     "pipeline-gen": [
+#                         {
+#                             "build-job": {
+#                                 "image": "dontcare"
+#                             }
+#                         }
+#                     ],
+#                     "rebuild_index" = self.rebulid_index,
+#                 }
+#             }
+#         }
+#
+#         with open(os.path.join(env_config_dir, "spack.yaml"), "w") as fd:
+#             syaml.dump(config, stream=fd)
+#
+#         return mock_config
+#
+#
+#     def activate(spec=None):
+#         env_cmd("activate", "--without-view", "--sh", "-d", ".")
+#
+#         # Create environment variables as gitlab would do it
+#         os.environ.update(
+#             {
+#                 "SPACK_ARTIFACTS_ROOT": rebuild_env.working_dir.strpath,
+#                 "SPACK_JOB_LOG_DIR": rebuild_env.log_dir,
+#                 "SPACK_JOB_REPRO_DIR": rebuild_env.repro_dir,
+#                 "SPACK_JOB_TEST_DIR": rebuild_env.test_dir,
+#                 "SPACK_LOCAL_MIRROR_DIR": rebuild_env.mirror_dir.strpath,
+#                 "SPACK_CONCRETE_ENV_DIR": rebuild_env.env_dir.strpath,
+#                 "SPACK_SIGNING_KEY": _signing_key(),
+#                 "SPACK_JOB_SPEC_DAG_HASH": rebuild_env.root_spec_dag_hash,
+#                 "SPACK_JOB_SPEC_PKG_NAME": pkg_name,
+#                 "SPACK_COMPILER_ACTION": "NONE",
+#                 "SPACK_CDASH_BUILD_NAME": pkg_name,
+#                 "SPACK_REMOTE_MIRROR_URL": rebuild_env.mirror_url,
+#                 "SPACK_PIPELINE_TYPE": "spack_protected_branch",
+#                 "CI_JOB_URL": rebuild_env.ci_job_url,
+#                 "CI_PIPELINE_URL": rebuild_env.ci_pipeline_url,
+#                 "CI_PROJECT_DIR": tmpdir.join("ci-project").strpath,
+#             }
+#         )
+#
+#
+# @pytest.fixture()
+# def ci_rebuild_env(ci_base_environment):
+#     return RebuildEnvMock()
+
+
 @pytest.fixture()
 def ci_base_environment(working_env, tmpdir):
     os.environ["CI_PROJECT_DIR"] = tmpdir.strpath
+    os.environ["CI_PIPELINE_ID"] = "7192"
+    os.environ["CI_JOB_NAME"] = "mock"
 
 
 @pytest.fixture(scope="function")
@@ -774,6 +894,29 @@ def test_ci_rebuild_mock_success(
         else:
             # No installation means no package to test and no test log to copy
             assert "Cannot copy test logs" in out
+
+
+def test_ci_rebuild_mock_failure_to_push(
+    tmpdir,
+    working_env,
+    mutable_mock_env_path,
+    install_mockery_mutable_config,
+    mock_gnupghome,
+    mock_stage,
+    mock_fetch,
+    mock_binary_index,
+    ci_base_environment,
+    monkeypatch,
+):
+    pkg_name = "trivial-install-test-package"
+    rebuild_env = create_rebuild_env(tmpdir, pkg_name)
+
+    with rebuild_env.env_dir.as_cwd():
+        activate_rebuild_env(tmpdir, pkg_name, rebuild_env)
+
+        expect = ""  # f"Command exited with code {spack.cmd.ci.FAILED_CREATE_BUILDCACHE_CODE}"
+        with pytest.raises(spack.main.SpackCommandError, match=expect):
+            ci_cmd("rebuild", fail_on_error=True)
 
 
 @pytest.mark.skip(reason="fails intermittently and covered by gitlab ci")
