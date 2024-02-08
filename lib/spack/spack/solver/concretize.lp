@@ -350,7 +350,7 @@ trigger_condition_holds(ID, RequestorNode) :-
   attr(Name, node(X, A1), A2, A3, A4) : condition_requirement(ID, Name, A1, A2, A3, A4), condition_nodes(ID, PackageNode, node(X, A1)), not multiple_nodes_attribute(Name);
   % Special cases
   attr("node_flag_source", node(X, A1), A2, node(Y, A3)) : condition_requirement(ID, "node_flag_source", A1, A2, A3), condition_nodes(ID, PackageNode, node(X, A1)), condition_nodes(ID, PackageNode, node(Y, A3));
-  attr("node_flag_propagation_candidate", node(X, A1), A2, A3, node(Y, A4)) : condition_reuqirement(ID, "node_flag_propagation_candidate", A1, A2, A3, A4), condition_nodes(ID, PackageNode, node(X, A1)), condition_nodes(ID, PackageNode, node(Y, A4));
+  attr("node_flag_propagation_candidate", node(X, A1), A2, A3, node(Y, A4)) : condition_requirement(ID, "node_flag_propagation_candidate", A1, A2, A3, A4), condition_nodes(ID, PackageNode, node(X, A1)), condition_nodes(ID, PackageNode, node(Y, A4));
   % if the structure of the program ever could change so that node_flag_source can be in a condition, we will need a case for it here.
   not cannot_hold(ID, PackageNode).
 
