@@ -303,14 +303,16 @@ Environment Modules requires version 4.7 or higher.
 
 .. _anonymous_specs:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Selection by anonymous specs
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Setting environment variables for selected packages in config
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In the configuration file you can use *anonymous specs* (i.e. specs
-that **are not required to have a root package** and are thus used just
-to express constraints) to apply certain modifications on a selected set
-of the installed software. For instance, in the snippet below:
+In the configuration file you can filter particular specs, and make further changes to the
+environment variables that go into their module files. This is very powerful when you want to avoid
+:ref:`modifying the package itself <overide-api-calls-in-package-py>`, or when you want to set
+certain variables on multiple selected packages at once.
+
+For instance, in the snippet below:
 
 .. code-block:: yaml
 
@@ -353,9 +355,24 @@ the variable ``FOOBAR`` will be unset.
 .. note::
    Order does matter
      The modifications associated with the ``all`` keyword are always evaluated
-     first, no matter where they appear in the configuration file. All the other
-     spec constraints are instead evaluated top to bottom.
+     first, no matter where they appear in the configuration file. All the other changes to
+     environment variables for matching specs are evaluated from top to bottom.
 
+.. warning::
+
+     As general advice, it's often better to set as few unnecessary variables as possible. For
+     example, the following seemingly innocent and potentially useful configuration
+
+     .. code-block:: yaml
+
+        all:
+          environment:
+            set:
+              "{name}_ROOT": "{prefix}"
+
+     sets ``BINUTILS_ROOT`` to its prefix in modules for ``binutils``, which happens to break
+     the ``gcc`` compiler: it uses this variable as its default search path for certain object
+     files and libraries, and by merely setting it, everything fails to link.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Exclude or include specific module files
