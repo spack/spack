@@ -114,7 +114,7 @@ def setup_parser(subparser):
     )
     generate.add_argument(
         "--artifacts-root",
-        default=os.path.join(os.path.getcwd(), "jobs_scratch_dir"),
+        default=os.path.join(os.getcwd(), "jobs_scratch_dir"),
         help="path to the root of the artifacts directory",
     )
     generate.set_defaults(func=ci_generate)

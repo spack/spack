@@ -8,12 +8,6 @@ using a common pipeline graph definition.
 """
 import spack.error
 
-# __all__ = [
-#     "formatter",
-#     "get_formatter",
-#     "UnknownFormatterException",
-# ]
-
 _formatters = {}
 
 
@@ -32,10 +26,6 @@ def formatter(name):
 
 
 def get_formatter(name):
-    # Import formatters here, so that registration of formatters will happen
-    # automatically and without any circular import.
-    import spack.ci.formatters.gitlab  # noqa: E402 F401
-
     try:
         return _formatters[name]
     except KeyError:
@@ -45,3 +35,9 @@ def get_formatter(name):
 class UnknownFormatterException(spack.error.SpackError):
     def __init__(self, formatter_name):
         super().__init__(f"No registered formatter for {formatter_name}")
+
+
+# Import specific formatters after all the function definitions so that
+# each one has access to the registration function, and registration of
+# formatters will happen automatically.
+import spack.ci.formatters.gitlab  # noqa: E402
