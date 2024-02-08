@@ -23,7 +23,8 @@ class Charliecloud(AutotoolsPackage):
     version(
         "0.35",
         deprecated=True,
-        sha256="042f5be5ed8eda95f45230b4647510780142a50adb4e748be57e8dd8926b310e")
+        sha256="042f5be5ed8eda95f45230b4647510780142a50adb4e748be57e8dd8926b310e"
+    )
     version(
         "0.34",
         deprecated=True,
