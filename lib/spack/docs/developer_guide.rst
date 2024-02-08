@@ -357,23 +357,23 @@ If there is a hook that you would like and is missing, you can propose to add a 
 ``pre_install(spec)``
 """""""""""""""""""""
 
-A ``pre_install`` hook is run within an install subprocess, directly before
-the install starts. It expects a single argument of a spec, and is run in
-a multiprocessing subprocess. Note that if you see ``pre_install`` functions associated with packages these are not hooks
-as we have defined them here, but rather callback functions associated with
-a package install.
+A ``pre_install`` hook is run within the install subprocess, directly before the install starts.
+It expects a single argument of a spec.
 
 
-""""""""""""""""""""""
-``post_install(spec)``
-""""""""""""""""""""""
+"""""""""""""""""""""""""""""""""""""
+``post_install(spec, explicit=None)``
+"""""""""""""""""""""""""""""""""""""
 
-A ``post_install`` hook is run within an install subprocess, directly after
-the install finishes, but before the build stage is removed. If you
-write one of these hooks, you should expect it to accept a spec as the only
-argument. This is run in a multiprocessing subprocess. This ``post_install`` is
-also seen in packages, but in this context not related to the hooks described
-here.
+A ``post_install`` hook is run within the install subprocess, directly after the install finishes,
+but before the build stage is removed and the spec is registered in the database. It expects two
+arguments: spec and an optional boolean indicating whether this spec is being installed explicitly.
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""
+``pre_uninstall(spec)`` and ``post_uninstall(spec)``
+""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+These hooks are currently used for cleaning up module files after uninstall.
 
 
 ^^^^^^^^^^^^^^^^^^^^^^
