@@ -21,6 +21,7 @@ class Gor(MakefilePackage):
     def edit(self, spec, prefix):
         with working_dir(self.build_directory):
             filter_file("cc", spack_cc, "Makefile")
+            filter_file("DATABASE", prefix.DATABASE, "gor.c")
 
     def build(self, spec, prefix):
         with working_dir(self.build_directory):
@@ -30,3 +31,4 @@ class Gor(MakefilePackage):
         mkdirp(prefix.bin)
         with working_dir(self.build_directory):
             install("gorIV", prefix.bin)
+        install_tree("DATABASE", prefix.DATABASE)
