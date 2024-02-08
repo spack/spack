@@ -847,7 +847,7 @@ class PyclingoDriver:
             self.control.load(os.path.join(parent_dir, "when_possible.lp"))
 
         for spec in specs:
-            if self._compiler_flags_has_propagation(spec.compiler_flags):
+            if self._compiler_flags_has_propagation(spec):
                 self.control.load(os.path.join(parent_dir, "propagation.lp"))
                 break
 
@@ -940,10 +940,11 @@ class PyclingoDriver:
 
         return result, timer, self.control.statistics
 
-    def _compiler_flags_has_propagation(self, flags):
-        for _, flag_vals in flags.items():
-            if any(val.propagate for val in flag_vals):
-                return True
+    def _compiler_flags_has_propagation(self, spec):
+        for dep in spec.traverse():
+            for _, flag_vals in dep.compiler_flags.items():
+                if any(val.propagate for val in flag_vals):
+                    return True
         return False
 
 
