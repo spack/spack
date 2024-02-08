@@ -395,7 +395,7 @@ imposed_nodes(ConditionID, PackageNode, node(X, A1))
 attr(Name, node(X, A1))             :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1),             imposed_nodes(ID, PackageNode, node(X, A1)).
 attr(Name, node(X, A1), A2)         :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2),         imposed_nodes(ID, PackageNode, node(X, A1)), not multiple_nodes_attribute(Name).
 attr(Name, node(X, A1), A2, A3)     :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2, A3),     imposed_nodes(ID, PackageNode, node(X, A1)), not multiple_nodes_attribute(Name).
-attr(Name, node(X, A1), A2, A3, A4) :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2, A3, A4), imposed_nodes(ID, PackageNode, node(X, A1)).
+attr(Name, node(X, A1), A2, A3, A4) :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2, A3, A4), imposed_nodes(ID, PackageNode, node(X, A1)), not multiple_nodes_attribute(Name).
 
 % For node flag sources we need to look at the condition_set of the source, since it is the dependent
 % of the package on which I want to impose the constraint
@@ -407,8 +407,10 @@ attr("node_flag_source", node(X, A1), A2, node(Y, A3))
 % For node flag propagation, we need to look at the condition_set of the source, since it is the ancestor
 % of the package on which we want to impose the constraint
 attr("node_flag_propagation_candidate", node(X, A1), A2, A3, node(Y, A4))
-  :- impose(ID, node(X, A1)),
+  :- impose(ID, node(X, TriggerPkg)),
      imposed_constraint(ID, "node_flag_propagation_candidate", A1, A2, A3, A4),
+     condition_set(node(X, TriggerPkg), node(X, A1)),
+     condition_set(node(X, TriggerPkg), node(Y, A4)),
      condition_set(node(Y, A4), node(X, A1)).
 
 % if the structure of the program ever could change so that node_flag_source can be in a condition, we will need a case for it here.
