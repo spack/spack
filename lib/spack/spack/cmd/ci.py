@@ -114,11 +114,8 @@ def setup_parser(subparser):
     )
     generate.add_argument(
         "--artifacts-root",
-        default=None,
-        help="path to the root of the artifacts directory\n\n"
-        "if provided, concrete environment files (spack.yaml, spack.lock) will be generated under "
-        "this directory. their location will be passed to generated child jobs through the "
-        "SPACK_CONCRETE_ENVIRONMENT_PATH variable",
+        default=os.path.join(os.path.getcwd(), "jobs_scratch_dir"),
+        help="path to the root of the artifacts directory",
     )
     generate.set_defaults(func=ci_generate)
 

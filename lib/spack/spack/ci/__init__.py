@@ -18,7 +18,7 @@ import time
 import zipfile
 from collections import namedtuple
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import HTTPHandler, Request, build_opener
@@ -100,6 +100,7 @@ class PipelineOptions:
     def __init__(
         self,
         env: ev.Environment,
+        artifacts_root: str,
         print_summary: bool = True,
         output_file: Optional[str] = None,
         check_index_only: bool = False,
@@ -113,11 +114,8 @@ class PipelineOptions:
         prune_untouched: bool = False,
         prune_up_to_date: bool = True,
         stack_name: Optional[str] = None,
-        job_name: Optional[str] = None,
-        pipeline_id: Optional[str] = None,
         pipeline_type: Optional[PipelineType] = None,
         require_signing: bool = False,
-        artifacts_root: Optional[str] = None,
         remote_mirror_url: Optional[str] = None,
         shared_pr_mirror: Optional[str] = None,
         remote_mirror_override: Optional[str] = None,  # deprecated, remove in Spack 0.23
@@ -127,6 +125,7 @@ class PipelineOptions:
         """
         Args:
             env: Active spack environment
+            artifacts_root: Path to location where artifacts should be stored
             print_summary: Print a summary of the scheduled pipeline
             output_file: Path where output file should be written
             check_index_only: Only fetch the index or fetch all spec files
@@ -140,11 +139,8 @@ class PipelineOptions:
             prune_untouched: Prune jobs for specs that were unchanged in git history
             prune_up_to_date: Prune specs from pipeline if binary exists on the mirror
             stack_name: Name of spack stack
-            job_name: Name of job running pipeline generation in CI
-            pipeline_id: ID of pipeline running generation in CI
             pipeline_type: Type of pipeline running (optional)
             require_signing: Require buildcache to be signed (fail w/out signing key)
-            artifacts_root: Path to location where artifacts should be stored
             remote_mirror_url: Mirror from spack.yaml (deprecated)
             shared_pr_mirror: Shared pr mirror url (deprecated)
             remote_mirror_override: Override the mirror in the spack environment (deprecated)
@@ -152,6 +148,7 @@ class PipelineOptions:
             cdash_handler: Object for communicating build information with CDash
         """
         self.env = env
+        self.artifacts_root = artifacts_root
         self.print_summary = print_summary
         self.output_file = output_file
         self.check_index_only = check_index_only
@@ -165,11 +162,8 @@ class PipelineOptions:
         self.prune_untouched = prune_untouched
         self.prune_up_to_date = prune_up_to_date
         self.stack_name = stack_name
-        self.job_name = job_name
-        self.pipeline_id = pipeline_id
         self.pipeline_type = pipeline_type
         self.require_signing = require_signing
-        self.artifacts_root = artifacts_root
         self.remote_mirror_url = remote_mirror_url
         self.shared_pr_mirror = shared_pr_mirror
         self.remote_mirror_override = remote_mirror_override
@@ -521,7 +515,7 @@ class SpackCI:
         return dest
 
     # Generate IR from the configs
-    def generate_ir(self):
+    def generate_ir(self) -> Dict[Any, Any]:
         """Generate the IR from the Spack CI configurations."""
 
         jobs = self.ir["jobs"]
@@ -687,14 +681,13 @@ def check_for_broken_specs(pipeline_specs, broken_specs_url):
 def collect_pipeline_options(env: ev.Environment, args) -> PipelineOptions:
     """Gather pipeline options from cli args, spack environment, and
     os environment variables"""
-    options = PipelineOptions(env)
+    options = PipelineOptions(env, args.artifacts_root)
 
     options.output_file = args.output_file
     options.run_optimizer = args.optimize
     options.use_dependencies = args.dependencies
     options.prune_up_to_date = args.prune_dag
     options.check_index_only = args.index_only
-    options.artifacts_root = args.artifacts_root
     options.remote_mirror_override = args.buildcache_destination
 
     ci_config = cfg.get("ci")
@@ -729,8 +722,6 @@ def collect_pipeline_options(env: ev.Environment, args) -> PipelineOptions:
     options.require_signing = (
         True if require_signing and require_signing.lower() == "true" else False
     )
-    options.job_name = os.environ.get("CI_JOB_NAME", "job-does-not-exist")
-    options.pipeline_id = os.environ.get("CI_PIPELINE_ID", "pipeline-does-not-exist")
 
     # Get the type of pipeline, which is optional
     spack_pipeline_type = os.environ.get("SPACK_PIPELINE_TYPE", None)
@@ -923,7 +914,9 @@ def generate_pipeline(env: ev.Environment, args) -> None:
     #     - here we write manifest file for stack pipeline
     #     - gitlab passes manifest files from multiple stack pipelines
     #           as artifacts to a single job, so files names can collide
-    #     - in protected-publish, where "spack buildcache sync --manifest" happens
+    #           unless we deliberately avoid it.
+    #     - in protected-publish, "spack buildcache sync --manifest" consumes
+    #           all these manifest files
     spack_buildcache_copy = os.environ.get("SPACK_COPY_BUILDCACHE", None)
     if spack_buildcache_copy:
         buildcache_copy_dest_prefix = spack_buildcache_copy
@@ -960,10 +953,9 @@ def generate_pipeline(env: ev.Environment, args) -> None:
             sys.exit(1)
 
     spack_ci = SpackCI(ci_config, pipeline)
-    spack_ci_ir = spack_ci.generate_ir()
 
     # Format the pipeline using the formatter specified in the environment
-    target_formatter(pipeline, spack_ci_ir, options)
+    target_formatter(pipeline, spack_ci, options)
 
     # Clean up remote mirror override if enabled
     # TODO: Remove this block in Spack 0.23
@@ -1826,14 +1818,14 @@ class CDashHandler:
             self.build_stamp,
         ]
 
-    def build_name(self, spec: spack.spec.Spec = None) -> str:
+    def build_name(self, spec: Optional[spack.spec.Spec] = None) -> str:
         """Returns the CDash build name.
 
         A name will be generated if the `spec` is provided,
         otherwise, the value will be retrieved from the environment
         through the `SPACK_CDASH_BUILD_NAME` variable.
 
-        Returns: (str) current spec's CDash build name."""
+        Returns: (str) given spec's CDash build name."""
         if spec:
             build_name = "{0}@{1}%{2} hash={3} arch={4} ({5})".format(
                 spec.name,
@@ -1848,7 +1840,7 @@ class CDashHandler:
             )
             return build_name
 
-        build_name = os.environ.get("SPACK_CDASH_BUILD_NAME")
+        build_name = os.environ.get("SPACK_CDASH_BUILD_NAME", "None")
         tty.debug("Using CDash build name ({0}) from the environment".format(build_name))
         return build_name
 
@@ -1860,8 +1852,8 @@ class CDashHandler:
         is preferred due to the representation of timestamps; otherwise,
         one will be built.
 
-        Returns: (str) current CDash build stamp"""
-        build_stamp = os.environ.get("SPACK_CDASH_BUILD_STAMP")
+        Returns: (str) CDash build stamp from env or newly generated one"""
+        build_stamp = os.environ.get("SPACK_CDASH_BUILD_STAMP", None)
         if build_stamp:
             tty.debug("Using build stamp ({0}) from the environment".format(build_stamp))
             return build_stamp

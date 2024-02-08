@@ -6,6 +6,7 @@
 import copy
 import os
 import shutil
+from typing import List
 
 import llnl.util.tty as tty
 
@@ -84,7 +85,7 @@ def _print_staging_summary(stages):
 
 
 @formatter("gitlab")
-def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: PipelineOptions):
+def format_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCI, options: PipelineOptions):
     """Given a pipeline graph, job attributes, and pipeline options,
     write a pipeline that can be consumed by GitLab to the given output file.
 
@@ -96,6 +97,8 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
         output_file (str): Path to output file to be written
     """
     ci_project_dir = os.environ.get("CI_PROJECT_DIR", os.getcwd())
+    generate_job_name = os.environ.get("CI_JOB_NAME", "job-does-not-exist")
+    generate_pipeline_id = os.environ.get("CI_PIPELINE_ID", "pipeline-does-not-exist")
     pipeline_artifacts_dir = os.path.abspath(options.artifacts_root)
     if not pipeline_artifacts_dir:
         pipeline_artifacts_dir = os.path.join(ci_project_dir, "jobs_scratch_dir")
@@ -111,6 +114,8 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
 
     pipeline_mirrors = spack.mirror.MirrorCollection(binary=True)
     deprecated_mirror_config = "buildcache-destination" not in pipeline_mirrors
+
+    spack_ci_ir = spack_ci.generate_ir()
 
     concrete_env_dir = os.path.join(pipeline_artifacts_dir, "concrete_environment")
 
@@ -156,7 +161,7 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
     output_object = {}
     job_id = 0
     stage_id = 0
-    stages = []
+    stages: List[List] = []
     stage_names = []
 
     max_length_needs = 0
@@ -224,10 +229,9 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
             for dep_job in dep_jobs
         ]
 
-        if options.artifacts_root:
-            job_object["needs"].append(
-                {"job": options.job_name, "pipeline": "{0}".format(options.pipeline_id)}
-            )
+        job_object["needs"].append(
+            {"job": generate_job_name, "pipeline": "{0}".format(generate_pipeline_id)}
+        )
 
         # Let downstream jobs know whether the spec needed rebuilding, regardless
         # whether DAG pruning was enabled or not.
@@ -301,10 +305,9 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
         stage_names.append("copy")
         sync_job = copy.deepcopy(spack_ci_ir["jobs"]["copy"]["attributes"])
         sync_job["stage"] = "copy"
-        if options.artifacts_root:
-            sync_job["needs"] = [
-                {"job": options.job_name, "pipeline": "{0}".format(options.pipeline_id)}
-            ]
+        sync_job["needs"] = [
+            {"job": generate_job_name, "pipeline": "{0}".format(generate_pipeline_id)}
+        ]
 
         if "variables" not in sync_job:
             sync_job["variables"] = {}
@@ -415,7 +418,7 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci_ir: SpackCI, options: Pip
             "SPACK_JOB_TEST_DIR": rel_job_test_dir,
             # TODO: Remove this line in Spack 0.23
             "SPACK_LOCAL_MIRROR_DIR": rel_local_mirror_dir,
-            "SPACK_PIPELINE_TYPE": options.pipeline_type.name,
+            "SPACK_PIPELINE_TYPE": options.pipeline_type.name if options.pipeline_type else "None",
             "SPACK_CI_STACK_NAME": os.environ.get("SPACK_CI_STACK_NAME", "None"),
             # TODO: Remove this line in Spack 0.23
             "SPACK_CI_SHARED_PR_MIRROR_URL": options.shared_pr_mirror or "None",
