@@ -138,7 +138,7 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
             "rocfft amdgpu_target={0}".format(tgt), when="+rocm amdgpu_target={0}".format(tgt)
         )
     # https://github.com/ROCm/rocFFT/pull/85)
-    patch("001-remove-submodule-and-sync-shared-files-from-rocFFT.patch", when="@6.0")
+    patch("001-remove-submodule-and-sync-shared-files-from-rocFFT.patch", when="@6.0.0")
 
     def cmake_args(self):
         args = [self.define("BUILD_CLIENTS_SAMPLES", "OFF")]
