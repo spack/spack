@@ -406,15 +406,14 @@ Stack Configuration
 The stack configuration is a spack environment file with two additional sections added.
 Stack configurations should be located in ``share/spack/gitlab/cloud_pipelines/stacks/<stack_name>/spack.yaml``.
 
-The first section is optional depending on whether or not the stack will run on runners
-using a docker image or in the runners' native shell, or there are other stack specific
-CI modifications required. For more information on what goes in the ``ci`` section refer to
-the docs on pipelines.
+The ``ci`` section is generally used to define stack specific mappings such as image or tags.
+For more information on what can go into the ``ci`` section refer to the docs on pipelines.
 
-The second section is for CDash. Spack configures most of the details for posting pipeline
-results to `cdash.spack.io <https://cdash.spack.io/index.php?project=Spack+Testing>`_. The only
-requirement in the stack configuration is to define a ``build-group`` that is unique, usually
-this can be a long name of the stack.
+The ``cdash`` section is used for defining where to upload the results of builds. Spack configures
+most of the details for posting pipeline results to
+`cdash.spack.io <https://cdash.spack.io/index.php?project=Spack+Testing>`_. The only
+requirement in the stack configuration is to define a ``build-group`` that is unique,
+this is usually the long name of the stack.
 
 An example stack that builds ``zlib``.
 
@@ -436,6 +435,11 @@ An example stack that builds ``zlib``.
       cdash:
         build-group: My Super Cool Stack
 
+.. note::
+
+    The ``image`` used in the ``*-generate`` job must match exactly the ``image`` used in the ``build-job``.
+    When the images do not match the build job may fail.
+
 
 """""""""""""""""""
 Registering Runners
@@ -445,14 +449,49 @@ Contributing computational resources to Spack's CI build farm is one way to help
 capabilities and offerings of the public Spack build caches. Currently, Spack utilizes linux runners
 from AWS, Google, and the University of Oregon (UO).
 
+Runners require three key peices:
 * Runner Registration Token
-* OIDC Authentication
+* Accurate tags
+* OIDC Authentication script
+* GPG keys
 
+
+Minimum GitLab Runner Version: ``16.1.0``
+`Intallation instructions <https://docs.gitlab.com/runner/install/>`_
+
+Registration Token
+~~~~~~~~~~~~~~~~~~
+
+The first step to contribute new runners is to open an issue in the `spack infrastructure <https://github.com/spack/spack-infrastructure/issues/new?assignees=&labels=runner-registration&projects=&template=runner_registration.yml>`_
+project. This will be reported to the spack infrastructure team who will guide users through the process
+of registering new runners for Spack CI.
+
+The information needed to register a runner is the motivation for the new resources, a semi-detailed description of
+the runner, and finallly the point of contact for maintaining the software on the runner.
+
+The point of contact will then work with the infrastruture team to obtain runner registration token(s) for interacting with
+with Spack's GitLab instance. Once the runner is active, this point of contact will also be responsible for updating the
+GitLab runner software to keep pace with Spack's Gitlab.
+
+Tagging
+~~~~~~~
+
+In the initial stages of runner registration it is important to **exclude** the special tag ``spack``. This will prevent
+the new runner(s) from being picked up for production CI jobs while it is configured and evaluated. Once it is determined
+that the runner is ready for production use the ``spack`` tag will be added.
+
+Because gitlab has no concept of tag exclustion, runners that provide specialized resource also require specialized tags.
+For example, a basic CPU only x86_64 runner may have a tag ``x86_64`` associated with it. However, a runner containing an
+CUDA capable GPU may have the tag ``x86_64-cuda`` to denote that it should only be used for packages that will benefit from
+a CUDA capable resource.
+
+OIDC
+~~~~
 
 Spack runners use OIDC authentication for connecting to the appropriate AWS bucket
 which is used for coordinating the communication of binaries between build jobs. In
-order to configure OIDC authentication, Spack CI runners use a script with minimal
-dependencies. This script can be configured for runners as seen here.
+order to configure OIDC authentication, Spack CI runners use a python script with minimal
+dependencies. This script can be configured for runners as seen here using the ``pre_build_script``.
 
 .. code-block:: toml
 
@@ -479,6 +518,12 @@ dependencies. This script can be configured for runners as seen here.
       rm -f envvars
       unset GITLAB_OIDC_TOKEN
       """
+
+GPG Keys
+~~~~~~~~
+
+Runners that may be utilized for ``protected`` CI require the registration of an intermediate signing key that
+can be used to sign packages. For more information on package signing read :ref:`key_architecture`.
 
 --------
 Coverage
