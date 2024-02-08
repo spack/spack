@@ -30,6 +30,7 @@ spec expression syntax:
       @c{@min:max}                      version range (inclusive)
       @c{@min:}                         version <min> or higher
       @c{@:max}                         up to version <max> (inclusive)
+      @c{@=version}                     exact version
 
     compilers:
       @g{%compiler}                     build with <compiler>
