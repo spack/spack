@@ -46,7 +46,7 @@ class Pastix(CMakePackage, CudaPackage):
     depends_on("hwloc")
     depends_on("lapack")
     # ensure openblas use threads=openmp to be thread-safe
-    depends_on("openblas threads=openmp", when="^openblas")
+    depends_on("openblas threads=openmp", when="^[virtuals=lapack] openblas")
     with when("+metis"):
         depends_on("metis@5.1:")
         depends_on("metis@5.1:+int64", when="+int64")
