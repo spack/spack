@@ -1465,7 +1465,6 @@ def can_verify_binaries():
 
 def _push_to_build_cache(spec: spack.spec.Spec, sign_binaries: bool, mirror_url: str) -> None:
     """Unchecked version of the public API, for easier mocking"""
-    tty.debug(f"Creating buildcache ({'signed' if sign_binaries else 'unsigned'})")
     bindist.push_or_raise(
         spec,
         spack.mirror.Mirror.from_url(mirror_url).push_url,
@@ -1493,7 +1492,7 @@ def push_to_build_cache(spec: spack.spec.Spec, mirror_url: str, sign_binaries: b
         # TODO (zackgalbreath): write an adapter for boto3 exceptions so we can catch a specific
         # exception instead of parsing str(e)...
         msg = str(e)
-        if any(x in err_msg for x in ["Access Denied", "InvalidAccessKeyId"]):
+        if any(x in msg for x in ["Access Denied", "InvalidAccessKeyId"]):
             tty.error(f"Permission problem writing to {mirror_url}: {msg}")
             return False
         raise
