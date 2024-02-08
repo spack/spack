@@ -36,181 +36,7 @@ class Chapel(AutotoolsPackage):
     version("1.31.0", sha256="bf9a63f7e5d1f247e8680c9a07aeb330cbbf199777a282408100a87dda95918f")
     version("1.30.0", sha256="d7d82f64f405b8c03e2ce6353d16aba5a261d3f0c63dc3bb64ea3841cfa597b9")
 
-    depends_on("doxygen@1.8.17:")
-
-    variant("check", default=False, description="Run make check after installing the package")
-
-    variant(
-        "module_tests",
-        default=False,
-        description="Run self-tests on selected modules after installing the package "
-        "(may add several minutes to install time)",
-    )
-
-    variant(
-        "llvm",
-        default="spack",
-        description="LLVM backend type. Use value 'spack' to have spack "
-        "handle the LLVM package",
-        values=("none", "system", "bundled", "spack"),
-    )
-
-    variant(
-        "comm",
-        default="none",
-        description="Build Chapel with multi-locale support",
-        values=("none", "gasnet", "ofi"),
-    )
-
-    variant(
-        "comm_substrate",
-        default="none",
-        description="Build Chapel with mulit-locale support using the "
-        "supplied CHPL_COMM_SUBSTRATE",
-        values=("none", "udp", "ibv", "ofi"),
-        multi=False,
-    )
-
-    variant(
-        "libfabric",
-        default="unset",
-        description="When building with ofi support, specify libfabric option",
-        values=("unset", "system", "bundled"),
-        multi=False,
-    )
-
-    # TODO: add other package dependencies
-    package_module_dict = {
-        "zmq": "libzmq",
-        "libevent": "libevent",
-        "protobuf": "py-protobuf",
-        "ssl": "openssl",
-        "hdf5": "hdf5+hl~mpi",
-        "yaml": "libyaml@0.1",
-        "curl": "curl",
-    }
-
-    variant(
-        "package_modules",
-        description="Include package module dependencies with spack",
-        values=disjoint_sets(("none",), ("all",), package_module_dict.keys())
-        .with_error("'none' or 'all' cannot be activated along with other package_modules")
-        .with_default("none")
-        .with_non_feature_values("none", "all"),
-    )
-
-    for opt, dep in package_module_dict.items():
-        depends_on(dep, when="package_modules={0}".format(opt), type=("run", "build", "link"))
-        depends_on(dep, when="package_modules=all", type=("run", "build", "link"))
-
-    platform_opts = (
-        "unset",
-        "cygwin32",
-        "cygwin64",
-        "darwin",
-        "linux32",
-        "linux64",
-        "netbsd32",
-        "netbsd64",
-        "pwr6",
-        "cray-cs",
-        "cray-xc",
-        "hpe-apollo",
-        "hpe-cray-ex",
-    )
-
-    variant(
-        "host_platform",
-        description="Host platform",
-        default="unset",
-        values=platform_opts,
-        multi=False,
-    )
-
-    variant(
-        "target_platform",
-        description="Target platform for cross compilation",
-        default="unset",
-        values=platform_opts,
-        multi=False,
-    )
-
-    variant(
-        "tasks",
-        description="Select tasking layer for intra-locale parallelism",
-        default="qthreads",
-        values=("qthreads", "fifo"),
-        multi=False,
-    )
-
-    variant(
-        "re2",
-        description="Build with re2 support",
-        default="bundled",
-        values=("none", "bundled"),
-        multi=False,
-    )
-
-    variant(
-        "gmp",
-        description="Build with gmp support",
-        default="spack",
-        values=("system", "none", "bundled", "spack"),
-        multi=False,
-    )
-
-    variant(
-        "hwloc",
-        description="Build with hwloc support",
-        default="bundled",
-        values=("none", "bundled"),
-        multi=False,
-    )
-
-    variant(
-        "gpu",
-        description="GPU vendor support",
-        values=("unset", "nvidia", "amd"),
-        default="unset",
-        multi=False,
-    )
-
-    variant(
-        "gpu_arch",
-        description="AMD GPU architecture must be set at Chapel build time, "
-        "but this is not required for NVIDIA",
-        values=("unset", "gfx942", "gfx90a", "gfx908", "gfx906"),
-        default="unset",
-        multi=False,
-    )
-
-    variant(
-        "gpu_mem_strategy",
-        description="The memory allocation strategy for GPU data",
-        values=("array_on_device", "unified_memory"),
-        default="array_on_device",
-        multi=False,
-    )
-
-    # Deprecated as of (?)
-    # variant(
-    #     "aux_filesys",
-    #     description="Build with runtime support for certain filesystems",
-    #     default="none",
-    #     values=("none", "lustre", "hdfs"),
-    #     multi=False,
-    # )
-
-    variant(
-        "locale_model",
-        values=("flat", "gpu"),
-        default="flat",
-        description="Locale model to use",
-        multi=False,
-    )
-
     compilers = (
-        "unset",
         "allinea",
         "clang",
         "cray-prgenv-allinea",
@@ -223,33 +49,8 @@ class Chapel(AutotoolsPackage):
         "intel",
         "llvm",
         "pgi",
+        "unset",
     )
-
-    variant(
-        "host_compiler",
-        values=compilers,
-        description="Compiler suite for building the Chapel compiler on CHPL_HOST_PLATFORM",
-        default="unset",
-    )
-
-    variant(
-        "target_compiler",
-        values=compilers,
-        description="Compiler suite for building runtime libraries and "
-        "generated code on CHPL_TARGET_PLATFORM",
-        default="unset",
-    )
-
-    # This variant is superseded by the host_mem variant below,
-    # TODO: determine what version introduced the host_mem variant and
-    # remove this one if it is old enough that all supported versions have host_mem
-    # variant(
-    #     "mem",
-    #     values=("cstdlib", "jemalloc"),
-    #     default="jemalloc",
-    #     description="Memory management layer",
-    #     multi=False,
-    # )
 
     launcher_names = (
         "amudprun",
@@ -267,14 +68,116 @@ class Chapel(AutotoolsPackage):
         "slurm-srun",
         "smp",
         "none",
+        "unset",
+    )
+
+    # TODO: add other package dependencies
+    package_module_dict = {
+        "curl": "curl",
+        "hdf5": "hdf5+hl~mpi",
+        "libevent": "libevent",
+        "protobuf": "py-protobuf",
+        "ssl": "openssl",
+        "yaml": "libyaml@0.1",
+        "zmq": "libzmq",
+    }
+
+    platform_opts = (
+        "cray-cs",
+        "cray-xc",
+        "cygwin32",
+        "cygwin64",
+        "darwin",
+        "hpe-apollo",
+        "hpe-cray-ex",
+        "linux32",
+        "linux64",
+        "netbsd32",
+        "netbsd64",
+        "pwr6",
+        "unset",
+    )
+
+    variant("check", default=False, description="Run make check after installing the package")
+
+    variant(
+        "comm",
+        default="none",
+        description="Build Chapel with multi-locale support",
+        values=("gasnet", "none", "ofi"),
     )
 
     variant(
-        "launcher",
-        values=launcher_names,
-        default="none",
-        description="Launcher to use for running Chapel programs",
+        "comm_segment",
+        default="unset",
+        description="Build Chapel with multi-locale support using the "
+        "supplied CHPL_COMM_SEGMENT",
+        values=("everything", "fast", "large", "unset"),
         multi=False,
+    )
+
+    variant(
+        "comm_substrate",
+        default="unset",
+        description="Build Chapel with mulit-locale support using the "
+        "supplied CHPL_COMM_SUBSTRATE",
+        values=("ibv", "ofi", "udp", "unset"),
+        multi=False,
+    )
+
+    variant(
+        "developer",
+        values=(True, False),
+        default=False,
+        description="Build with developer flag to enable assertions and other checks",
+    )
+
+    variant(
+        "gmp",
+        description="Build with gmp support",
+        default="spack",
+        values=("bundled", "none", "spack", "system"),
+        multi=False,
+    )
+
+    variant(
+        "gpu",
+        description="GPU vendor support",
+        values=("amd", "nvidia", "unset"),
+        default="unset",
+        multi=False,
+    )
+
+    variant(
+        "gpu_arch",
+        description="AMD GPU architecture must be set at Chapel build time, "
+        "but this is not required for NVIDIA",
+        values=("gfx942", "gfx90a", "gfx908", "gfx906", "unset"),
+        default="unset",
+        multi=False,
+    )
+
+    variant(
+        "gpu_mem_strategy",
+        description="The memory allocation strategy for GPU data",
+        values=("array_on_device", "unified_memory"),
+        default="array_on_device",
+        multi=False,
+    )
+
+    variant(
+        "host_compiler",
+        values=compilers,
+        description="Compiler suite for building the Chapel compiler on CHPL_HOST_PLATFORM",
+        default="unset",
+    )
+
+    variant(
+        "host_jemalloc",
+        values=("bundled", "none", "system", "unset"),
+        default="unset",
+        multi=False,
+        description="Selects between no jemalloc, bundled jemalloc, or system jemalloc",
     )
 
     variant(
@@ -286,70 +189,182 @@ class Chapel(AutotoolsPackage):
     )
 
     variant(
-        "host_jemalloc",
-        values=("unset", "none", "bundled", "system"),
+        "host_platform",
+        description="Host platform",
         default="unset",
+        values=platform_opts,
         multi=False,
-        description="Selects between no jemalloc, bundled jemalloc, or system jemalloc",
+    )
+
+    variant(
+        "hwloc",
+        description="Build with hwloc support",
+        default="bundled",
+        values=("bundled", "none"),
+        multi=False,
+    )
+
+    variant(
+        "launcher",
+        values=launcher_names,
+        default="unset",
+        description="Launcher to use for running Chapel programs",
+        multi=False,
     )
 
     variant(
         "lib_pic",
-        values=("pic", "none"),
+        values=("none", "pic"),
         default="none",
         description="Build position-independent code suitable for shared libraries",
     )
 
     variant(
-        "developer",
-        values=(True, False),
-        default=False,
-        description="Build with developer flag to enable assertions and other checks",
+        "libfabric",
+        default="unset",
+        description="When building with ofi support, specify libfabric option",
+        values=("bundled", "system", "unset"),
+        multi=False,
     )
 
+    variant(
+        "llvm",
+        default="spack",
+        description="LLVM backend type. Use value 'spack' to have spack "
+        "handle the LLVM package",
+        values=("bundled", "none", "spack", "system"),
+    )
+
+    variant(
+        "locale_model",
+        values=("flat", "gpu"),
+        default="flat",
+        description="Locale model to use",
+        multi=False,
+    )
+
+    variant(
+        "module_tests",
+        default=False,
+        description="Run self-tests on selected modules after installing the package "
+        "(may add several minutes to install time)",
+    )
+
+    variant(
+        "package_modules",
+        description="Include package module dependencies with spack",
+        values=disjoint_sets(("none",), ("all",), package_module_dict.keys())
+        .with_error("'none' or 'all' cannot be activated along with other package_modules")
+        .with_default("none")
+        .with_non_feature_values("none", "all"),
+    )
+
+    variant(
+        "re2",
+        description="Build with re2 support",
+        default="bundled",
+        values=("bundled", "none"),
+        multi=False,
+    )
+
+    variant(
+        "target_compiler",
+        values=compilers,
+        description="Compiler suite for building runtime libraries and "
+        "generated code on CHPL_TARGET_PLATFORM",
+        default="unset",
+    )
+
+    variant(
+        "target_platform",
+        description="Target platform for cross compilation",
+        default="unset",
+        values=platform_opts,
+        multi=False,
+    )
+
+    variant(
+        "tasks",
+        description="Select tasking layer for intra-locale parallelism",
+        default="qthreads",
+        values=("fifo", "qthreads"),
+        multi=False,
+    )
+
+    # Deprecated as of (?)
+    # variant(
+    #     "aux_filesys",
+    #     description="Build with runtime support for certain filesystems",
+    #     default="none",
+    #     values=("none", "lustre", "hdfs"),
+    #     multi=False,
+    # )
+
+    # This variant is superseded by the host_mem variant
+    # TODO: determine what version introduced the host_mem variant and
+    # remove this one if it is old enough that all supported versions have host_mem
+    # variant(
+    #     "mem",
+    #     values=("cstdlib", "jemalloc"),
+    #     default="jemalloc",
+    #     description="Memory management layer",
+    #     multi=False,
+    # )
+
     chpl_env_vars = [
-        "CHPL_HOME",
-        "CHPL_DEVELOPER",
-        "CHPL_HOST_PLATFORM",
-        "CHPL_HOST_COMPILER",
-        "CHPL_HOST_CC",
-        "CHPL_HOST_CXX",
-        "CHPL_HOST_ARCH",
-        "CHPL_TARGET_PLATFORM",
-        "CHPL_TARGET_COMPILER",
-        "CHPL_TARGET_CC",
-        "CHPL_TARGET_CXX",
-        "CHPL_TARGET_LD",
-        "CHPL_TARGET_ARCH",
-        "CHPL_TARGET_CPU",
-        "CHPL_LOCALE_MODEL",
-        "CHPL_COMM",
-        "CHPL_TASKS",
-        "CHPL_LAUNCHER",
-        "CHPL_TIMERS",
-        "CHPL_UNWIND",
-        "CHPL_HOST_MEM",
-        "CHPL_MEM",
         "CHPL_ATOMICS",
-        "CHPL_GMP",
-        "CHPL_HWLOC",
-        "CHPL_RE2",
-        "CHPL_LLVM",
-        "CHPL_LLVM_SUPPORT",
-        "CHPL_LLVM_CONFIG",
-        "CHPL_LLVM_VERSION",
         "CHPL_AUX_FILESYS",
+        "CHPL_COMM",
+        "CHPL_COMM_SUBSTRATE",
+        "CHPL_DEVELOPER",
+        "CHPL_GASNET_SEGMENT",
+        "CHPL_GPU",
+        "CHPL_GMP",
+        "CHPL_HOST_ARCH",
+        "CHPL_HOST_CC",
+        "CHPL_HOST_COMPILER",
+        "CHPL_HOST_CXX",
+        "CHPL_HOST_MEM",
+        "CHPL_HOST_PLATFORM",
+        "CHPL_HWLOC",
+        "CHPL_LAUNCHER",
         "CHPL_LIB_PIC",
+        "CHPL_LLVM",
+        "CHPL_LLVM_CONFIG",
+        "CHPL_LLVM_SUPPORT",
+        "CHPL_LLVM_VERSION",
+        "CHPL_LOCALE_MODEL",
+        "CHPL_MEM",
+        "CHPL_RE2",
         "CHPL_SANITIZE",
         "CHPL_SANITIZE_EXE",
-        "CHPL_GPU",
+        "CHPL_TARGET_ARCH",
+        "CHPL_TARGET_CC",
+        "CHPL_TARGET_COMPILER",
+        "CHPL_TARGET_CPU",
+        "CHPL_TARGET_CXX",
+        "CHPL_TARGET_LD",
+        "CHPL_TARGET_PLATFORM",
+        "CHPL_TASKS",
+        "CHPL_TIMERS",
+        "CHPL_UNWIND",
     ]
 
     conflicts("locale_model=gpu", when="llvm=none", msg="GPU support requires building with LLVM")
 
     conflicts("gpu=amd", when="gpu_arch=unset", msg="AMD GPU support requires specifying gpu_arch")
 
+    # Based on docs https://chapel-lang.org/docs/technotes/gpu.html#requirements
+    requires("llvm=bundled", when="^cuda@12:")
+
     # Add dependencies
+
+    depends_on("doxygen@1.8.17:")
+
+    for opt, dep in package_module_dict.items():
+        depends_on(dep, when="package_modules={0}".format(opt), type=("run", "build", "link"))
+        depends_on(dep, when="package_modules=all", type=("run", "build", "link"))
+
     depends_on("llvm@14:16", when="llvm=spack")
 
     depends_on("llvm@15", when="locale_model=gpu llvm=spack gpu=nvidia ^cuda@12:")
@@ -374,9 +389,6 @@ class Chapel(AutotoolsPackage):
         depends_on("hip@4:5.4", type=("build", "link", "run"))
         # depends_on("rocm-device-libs@4:5.4", type=("build", "link", "run"))
         # depends_on("llvm-amdgpu@4:5.4", type=("build", "link", "run"))
-
-    # Based on docs https://chapel-lang.org/docs/technotes/gpu.html#requirements
-    requires("llvm=bundled", when="^cuda@12:")
 
     depends_on("python@3.7:3.10")
     depends_on("cmake@3.16:")
