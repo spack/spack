@@ -98,6 +98,14 @@ class Chapel(AutotoolsPackage):
         "unset",
     )
 
+    variant(
+        "atomics",
+        values=("unset", "cstdlib", "intrinsics", "locks"),
+        default="unset",
+        description="Select atomics implementation",
+        multi=False,
+    )
+
     variant("check", default=False, description="Run make check after installing the package")
 
     variant(
@@ -105,15 +113,6 @@ class Chapel(AutotoolsPackage):
         default="none",
         description="Build Chapel with multi-locale support",
         values=("gasnet", "none", "ofi"),
-    )
-
-    variant(
-        "comm_segment",
-        default="unset",
-        description="Build Chapel with multi-locale support using the "
-        "supplied CHPL_COMM_SEGMENT",
-        values=("everything", "fast", "large", "unset"),
-        multi=False,
     )
 
     variant(
@@ -130,6 +129,15 @@ class Chapel(AutotoolsPackage):
         values=(True, False),
         default=False,
         description="Build with developer flag to enable assertions and other checks",
+    )
+
+    variant(
+        "gasnet_segment",
+        default="unset",
+        description="Build Chapel with multi-locale support using the "
+        "supplied CHPL_GASNET_SEGMENT",
+        values=("everything", "fast", "large", "unset"),
+        multi=False,
     )
 
     variant(
@@ -162,6 +170,14 @@ class Chapel(AutotoolsPackage):
         description="The memory allocation strategy for GPU data",
         values=("array_on_device", "unified_memory"),
         default="array_on_device",
+        multi=False,
+    )
+
+    variant(
+        "host_arch",
+        description="Host architecture of the build machine",
+        values=("x86_64", "aarch64", "arm64", "unset"),
+        default="unset",
         multi=False,
     )
 
@@ -268,6 +284,14 @@ class Chapel(AutotoolsPackage):
     )
 
     variant(
+        "target_arch",
+        description="Target architecture for cross compilation",
+        default="unset",
+        values=("x86_64", "aarch64", "arm64", "unset"),
+        multi=False,
+    )
+
+    variant(
         "target_compiler",
         values=compilers,
         description="Compiler suite for building runtime libraries and "
@@ -291,6 +315,21 @@ class Chapel(AutotoolsPackage):
         multi=False,
     )
 
+    variant(
+        "timers",
+        description="Select timers implementation",
+        default="unset",
+        values=("generic", "unset"),
+        multi=False,
+    )
+
+    variant(
+        "unwind",
+        description="Build with unwind library for stack tracing",
+        default="none",
+        values=("bundled", "none", "system"),
+    )
+
     # Deprecated as of (?)
     # variant(
     #     "aux_filesys",
@@ -311,6 +350,8 @@ class Chapel(AutotoolsPackage):
     #     multi=False,
     # )
 
+    # TODO: for CHPL_X_CC and CHPL_X_CXX, can we capture an arbitrary path, possibly
+    # with arguments?
     chpl_env_vars = [
         "CHPL_ATOMICS",
         "CHPL_AUX_FILESYS",
@@ -318,17 +359,21 @@ class Chapel(AutotoolsPackage):
         "CHPL_COMM_SUBSTRATE",
         "CHPL_DEVELOPER",
         "CHPL_GASNET_SEGMENT",
-        "CHPL_GPU",
         "CHPL_GMP",
+        "CHPL_GPU",
+        "CHPL_GPU_ARCH",
+        "CHPL_GPU_MEM_STRATEGY",
         "CHPL_HOST_ARCH",
-        "CHPL_HOST_CC",
+        # "CHPL_HOST_CC",
         "CHPL_HOST_COMPILER",
-        "CHPL_HOST_CXX",
+        # "CHPL_HOST_CXX",
+        "CHPL_HOST_JEMALLOC",
         "CHPL_HOST_MEM",
         "CHPL_HOST_PLATFORM",
         "CHPL_HWLOC",
         "CHPL_LAUNCHER",
         "CHPL_LIB_PIC",
+        "CHPL_LIBFABRIC",
         "CHPL_LLVM",
         "CHPL_LLVM_CONFIG",
         "CHPL_LLVM_SUPPORT",
@@ -339,16 +384,16 @@ class Chapel(AutotoolsPackage):
         "CHPL_SANITIZE",
         "CHPL_SANITIZE_EXE",
         "CHPL_TARGET_ARCH",
-        "CHPL_TARGET_CC",
+        # "CHPL_TARGET_CC",
         "CHPL_TARGET_COMPILER",
         "CHPL_TARGET_CPU",
-        "CHPL_TARGET_CXX",
-        "CHPL_TARGET_LD",
+        # "CHPL_TARGET_CXX",
         "CHPL_TARGET_PLATFORM",
         "CHPL_TASKS",
         "CHPL_TIMERS",
         "CHPL_UNWIND",
     ]
+    conflicts("platform=windows")  # Support for windows is through WSL only
 
     conflicts("locale_model=gpu", when="llvm=none", msg="GPU support requires building with LLVM")
 
@@ -376,11 +421,8 @@ class Chapel(AutotoolsPackage):
         depends_on("bison")
         depends_on("tmux")
 
-    # why do I need to add to CPATH to find gmp.h
-    # why do I need to add to LIBRARY_PATH to find lgmp
     depends_on("gmp", when="gmp=spack", type=("build", "link", "run"))
 
-    # why do I need to add to LD_LIBRARY_PATH to find libcudart?
     depends_on("cuda@11:12", when="gpu=nvidia", type=("build", "link", "run"))
 
     # TODO: AMD support is not yet working
@@ -428,6 +470,8 @@ class Chapel(AutotoolsPackage):
 
         if self.spec.variants["gmp"].value == "spack":
             env.set("CHPL_GMP", "system")
+            # TODO: why must we add to CPATH to find gmp.h
+            # TODO: why must we add to LIBRARY_PATH to find lgmp
             env.prepend_path("CPATH", self.spec["gmp"].prefix.include)
             env.prepend_path("LIBRARY_PATH", self.spec["gmp"].prefix.lib)
         else:
@@ -449,6 +493,7 @@ class Chapel(AutotoolsPackage):
             env.prepend_path("PKG_CONFIG_PATH", self.spec["curl"].prefix.lib.pkgconfig)
 
         if self.spec.variants["gpu"].value == "nvidia":
+            # TODO: why must we add to LD_LIBRARY_PATH to find libcudart?
             env.prepend_path("LD_LIBRARY_PATH", self.spec["cuda"].prefix.lib64)
         if self.spec.variants["gpu"].value == "amd":
             if self.spec.variants["rocm"].value:
