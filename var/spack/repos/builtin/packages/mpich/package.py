@@ -116,10 +116,15 @@ supported, and netmod is ignored if device is ch3:sock.""",
         when="@3.4:",
         multi=False,
     )
-    depends_on("yaksa", when="@4.0: device=ch4 datatype-engine=auto")
-    depends_on("yaksa", when="@4.0: device=ch4 datatype-engine=yaksa")
-    depends_on("yaksa+cuda", when="+cuda ^yaksa")
-    depends_on("yaksa+rocm", when="+rocm ^yaksa")
+    for _yaksa_cond in (
+        "@4.0: device=ch4 datatype-engine=auto",
+        "@4.0: device=ch4 datatype-engine=yaksa",
+    ):
+        with when(_yaksa_cond):
+            depends_on("yaksa")
+            depends_on("yaksa+cuda", when="+cuda")
+            depends_on("yaksa+rocm", when="+rocm")
+
     conflicts("datatype-engine=yaksa", when="device=ch3")
     conflicts("datatype-engine=yaksa", when="device=ch3:sock")
 
