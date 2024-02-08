@@ -9,7 +9,7 @@ from spack.package import *
 class Charliecloud(AutotoolsPackage):
     """Lightweight user-defined software stacks for HPC."""
 
-    maintainers("j-ogas", "reidpr")
+    maintainers = ["j-ogas", "reidpr"]
     homepage = "https://hpc.github.io/charliecloud"
     url = "https://github.com/hpc/charliecloud/releases/download/v0.18/charliecloud-0.18.tar.gz"
     git = "https://github.com/hpc/charliecloud.git"
@@ -19,7 +19,11 @@ class Charliecloud(AutotoolsPackage):
     license("Apache-2.0")
 
     version("master", branch="master")
-    version("0.35", sha256="042f5be5ed8eda95f45230b4647510780142a50adb4e748be57e8dd8926b310e")
+    version("0.36", sha256="b6b1a085d8ff82abc6d625ab990af3925c84fa08ec837828b383f329bd0b8e72")
+    version(
+        "0.35",
+        deprecated=True,
+        sha256="042f5be5ed8eda95f45230b4647510780142a50adb4e748be57e8dd8926b310e")
     version(
         "0.34",
         deprecated=True,
@@ -101,13 +105,13 @@ class Charliecloud(AutotoolsPackage):
         sha256="15ce63353afe1fc6bcc10979496a54fcd5628f997cb13c827c9fc7afb795bdc5",
     )
     variant("docs", default=False, description="Build man pages and html docs")
-    variant("squashfuse", default=False, description="Build with squashfuse support")
+    variant("squashfuse", default=False, description="Build with squashfuse support", when="@0.32:")
 
     # Autoconf.
-    depends_on("m4", type="build")
-    depends_on("autoconf", type="build")
-    depends_on("automake", type="build")
-    depends_on("libtool", type="build")
+    depends_on("m4", type="build", when="@master")
+    depends_on("autoconf", type="build", when="@master")
+    depends_on("automake", type="build", when="@master")
+    depends_on("libtool", type="build", when="@master")
 
     # Image manipulation.
     depends_on("python@3.6:", type="run")
@@ -131,8 +135,11 @@ class Charliecloud(AutotoolsPackage):
     conflicts("platform=darwin", msg="This package does not build on macOS")
 
     # Squashfuse support
-    depends_on("squashfuse@0.1.105:", when="+squashfuse")
-    depends_on("squashfs", type="run", when="+squashfuse")
+    with when("+squashfuse"):
+        depends_on("libfuse@3:", type=("build","run","link"))
+        depends_on("squashfuse@0.1.105:0.2.0,0.4.0:", type="build", when="@0.36:")
+        depends_on("squashfuse@0.1.105:0.2.0,0.4.0", type="build", when="@0.35")
+        depends_on("squashfuse@0.1.105", type="build", when="@0.32:0.34")
 
     def autoreconf(self, spec, prefix):
         which("bash")("autogen.sh")
