@@ -40,9 +40,6 @@ class Sleef(CMakePackage):
     )  # py-torch@0.4.1:1.0
     version("3.2", sha256="3130c5966e204e6d6a3ace81e543d12b5b21f60897f1c185bfa587c1bd77bee2")
 
-    # https://github.com/shibatch/sleef/issues/474
-    conflicts("%apple-clang@15:")
-
     generator("ninja")
     depends_on("cmake@3.4.3:", type="build")
 
@@ -54,10 +51,22 @@ class Sleef(CMakePackage):
     # # https://github.com/shibatch/sleef/issues/458
     # conflicts("^mpfr@4.2:")
 
+    def sleef_define(self, cmake_var, value):
+        # https://github.com/shibatch/sleef/pull/509
+        if self.spec.satisfies("@3.5.1_2024-02-07:"):
+            cmake_var = "SLEEF_" + cmake_var
+
+        return self.define(cmake_var, value)
+
     def cmake_args(self):
         # https://salsa.debian.org/science-team/sleef/-/blob/master/debian/rules
-        return [
-            self.define("BUILD_DFT", False),
-            self.define("SLEEF_TEST_ALL_IUT", True),
-            self.define("BUILD_TESTS", False),
+        args = [
+            self.sleef_define("BUILD_DFT", False),
+            self.sleef_define("BUILD_TESTS", False),
         ]
+
+        # https://github.com/shibatch/sleef/issues/474
+        if self.spec.satisfies("platform=darwin"):
+            args.append(self.sleef_define("DISABLE_SVE", True))
+
+        return args
