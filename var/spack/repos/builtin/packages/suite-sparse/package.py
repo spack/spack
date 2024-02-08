@@ -74,7 +74,7 @@ class SuiteSparse(Package):
         # related stuff (which have long been deprecated).  This appears to be
         # rather problematic for suite-sparse (see e.g.
         # https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/master/SPQR/Source/spqr_parallel.cpp)
-        depends_on("intel-tbb@:2020 build_system=makefile", when="^intel-tbb")
+        depends_on("intel-tbb@:2020 build_system=makefile", when="^[virtuals=tbb] intel-tbb")
         conflicts(
             "^intel-oneapi-tbb@2021:",
             msg="suite-sparse needs task_scheduler_init.h dropped in recent tbb libs",
