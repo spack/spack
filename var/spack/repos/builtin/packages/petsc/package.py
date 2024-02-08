@@ -174,7 +174,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         patch("hip-5.6.0-for-3.18.diff", when="@3.18:3.19 ^hipsparse@5.6.0")
         patch("hip-5.7-plus-for-3.18.diff", when="@3.18:3.19 ^hipsparse@5.7:")
         patch(
-            "0001-Handle-the-hipsparse-api-changes-for-rocm-6.0.patch", when="@3.20.2:3.20.4 ^hipsparse@6.0"
+            "0001-Handle-the-hipsparse-api-changes-for-rocm-6.0.patch",
+            when="@3.20.2:3.20.4 ^hipsparse@6.0",
         )
 
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
