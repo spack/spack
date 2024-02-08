@@ -277,16 +277,6 @@ The ``autoload`` key accepts the values ``none``, ``direct``, and ``all``. To di
 ``none``, and to enable, it's best to stick to ``direct``, which only autoloads the direct link and
 run type dependencies, relying on recursive autoloading to load the rest.
 
-.. note::
-  Tcl prerequisites
-     In the ``tcl`` section of the configuration file it is possible to use
-     the ``prerequisites`` directive that accepts the same values as
-     ``autoload``. It will produce module files that have a ``prereq``
-     statement, which autoloads dependencies on Environment Modules when its
-     ``auto_handling`` configuration option is enabled. If Environment Modules
-     is installed with Spack, ``auto_handling`` is enabled by default starting
-     version 4.2. Otherwise it is enabled by default since version 5.0.
-
 A common complaint about autoloading is the large number of modules that are visible to the user.
 Spack has a solution for this as well: ``hide_implicits: true``. This ensures that only those
 packages you've explicitly installed are exposed by ``module avail``, but still allows for
