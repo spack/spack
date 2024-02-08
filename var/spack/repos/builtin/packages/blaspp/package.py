@@ -80,7 +80,7 @@ class Blaspp(CMakePackage, CudaPackage, ROCmPackage):
     requires("%oneapi", when="+sycl", msg="blaspp+sycl must be compiled with %oneapi")
 
     patch(
-        "0001-fix-blaspp-build-error-with-rocm-6.0.0.patch", when="@2023.06.00: ^hip@6.0.0 +rocm"
+        "0001-fix-blaspp-build-error-with-rocm-6.0.0.patch", when="@2023.06.00: ^hip@6.0 +rocm"
     )
 
     def cmake_args(self):
