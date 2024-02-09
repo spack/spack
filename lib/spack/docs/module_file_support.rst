@@ -295,11 +295,13 @@ Environment Modules requires version 4.7 or higher.
         modules:
           default:
             tcl:
-              autoload: direct
               hide_implicits: true
+              all:
+                autoload: direct
             lmod:
-              autoload: direct
               hide_implicits: true
+              all:
+                autoload: direct
 
 .. _anonymous_specs:
 
