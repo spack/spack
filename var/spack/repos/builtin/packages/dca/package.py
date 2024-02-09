@@ -21,7 +21,7 @@ class Dca(MakefilePackage):
     def edit(self, spec, prefix):
         filter_file("CC = .*", f"CC = {spack_cc}", "Makefile")
 
-    def edit(self, spec, prefix):
+    def build(self, spec, prefix):
         make()
 
     def install(self, spec, prefix):

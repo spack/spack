@@ -123,7 +123,7 @@ class Tcoffee(MakefilePackage):
         try:
             with open("/proc/sys/kernel/pid_max") as f:
                 return f.read().strip()
-        except (FileNotFoundError, IOError) as e:
+        except (FileNotFoundError, IOError):
             return 4194304  # 64-bit default
 
     def edit(self, spec, prefix):
