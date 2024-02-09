@@ -60,10 +60,7 @@ class Sleef(CMakePackage):
 
     def cmake_args(self):
         # https://salsa.debian.org/science-team/sleef/-/blob/master/debian/rules
-        args = [
-            self.sleef_define("BUILD_DFT", False),
-            self.sleef_define("BUILD_TESTS", False),
-        ]
+        args = [self.sleef_define("BUILD_DFT", False), self.sleef_define("BUILD_TESTS", False)]
 
         # https://github.com/shibatch/sleef/issues/474
         if self.spec.satisfies("@:3.5.1_2024-02-08 platform=darwin"):
