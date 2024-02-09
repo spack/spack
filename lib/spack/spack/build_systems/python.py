@@ -356,7 +356,7 @@ class PythonPackage(PythonExtension):
 
         find_all_headers = functools.partial(fs.find_all_headers, recursive=True)
         headers_list = map(find_all_headers, [include, platlib, purelib])
-        headers = functools.reduce(headers_list, operator.add)
+        headers = functools.reduce(operator.add, headers_list)
 
         if headers:
             return headers
@@ -377,7 +377,7 @@ class PythonPackage(PythonExtension):
 
         find_all_libraries = functools.partial(fs.find_all_libraries, recursive=True)
         libs_list = map(find_all_libraries, [platlib, purelib])
-        libs = functools.reduce(libs_list, operator.add)
+        libs = functools.reduce(operator.add, libs_list)
 
         if libs:
             return libs
