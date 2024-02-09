@@ -23,8 +23,8 @@ class Unzip(MakefilePackage):
     # The Cray cc wrapper doesn't handle the '-s' flag (strip) cleanly.
     @when("platform=cray")
     def patch(self):
-       filter_file(r"^LFLAGS2=.*", "LFLAGS2=", join_path("unix", "configure"))
-    
+        filter_file(r"^LFLAGS2=.*", "LFLAGS2=", join_path("unix", "configure"))
+
     def get_make_args(self):
         make_args = ["-f", join_path("unix", "Makefile")]
 
