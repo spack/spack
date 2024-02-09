@@ -14,6 +14,7 @@ class Viennarna(AutotoolsPackage):
 
     homepage = "https://www.tbi.univie.ac.at/RNA/"
     url = "https://www.tbi.univie.ac.at/RNA/download/sourcecode/2_4_x/ViennaRNA-2.4.3.tar.gz"
+    maintainers("snehring")
 
     version("2.6.4", sha256="d1259ce5809601a12b0dc9b724ea2c55806fece80d8d83ad417ea8a2dd574982")
     version("2.5.0", sha256="b85544650ee316743173ec9b30497cc4c559f1bfb8f66d16c563f780afd8c0c5")
