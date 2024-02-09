@@ -28,6 +28,16 @@ class Sepp(Package):
 
     extends("python")
 
+    phases = ["edit", "install"]
+
+    def edit(self, spec, prefix):
+        if spec.satisfies("^python@3.10:"):
+            filter_file(
+                "from collections import Mapping",
+                "from collections.abc import Mapping",
+                join_path("sepp", "alignment.py"),
+            )
+
     def install(self, spec, prefix):
         dirs = ["sepp", "tools"]
         for d in dirs:
