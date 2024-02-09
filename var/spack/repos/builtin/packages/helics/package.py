@@ -163,6 +163,11 @@ class Helics(CMakePackage):
             # Python interface was removed from the main HELICS build in v3
             args.append(from_variant("BUILD_PYTHON_INTERFACE", "python"))
 
+        # GCC >=13
+        if spec.satisfies("%gcc@13:"):
+            # C++20 required when building with GCC>=13
+            args.append("-DCMAKE_CXX_STANDARD=20")
+
         return args
 
     def setup_run_environment(self, env):
