@@ -15,7 +15,7 @@ class Msa(MakefilePackage):
     version(
         "2.1",
         sha256="b162b206bb6f47971cb6f1b6b7093eac19d96f45ed1d6268bf57fe983ce61976",
-        url="https://ftp.ncbi.nih.gov/pub/msa/msa.tar.Z"
+        url="https://ftp.ncbi.nih.gov/pub/msa/msa.tar.Z",
     )
 
     def edit(self, spec, prefix):

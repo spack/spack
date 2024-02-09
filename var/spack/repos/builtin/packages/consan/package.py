@@ -19,17 +19,20 @@ class Consan(MakefilePackage):
 
     def edit(self, spec, prefix):
         # multiple individual Makefiles to edit
-        filter_file("^CC\s+=.*", f"CC = {spack_cc}", join_path("src", "Makefile"))
-        filter_file("^CC\s+=.*", f"CC = {spack_cc}", join_path("src", "squid", "Makefile"))
-        filter_file("^CC\s+=.*", f"CC = {spack_cc}", join_path("src", "utilities", "Makefile"))
-        filter_file("^CC\s+=.*", f"CC = {spack_cc}", join_path("src", "boot", "Makefile"))
-        filter_file("^CC\s+=.*", f"CC = {spack_cc}", join_path("src", "conus-1.1", "Makefile"))
+        filter_file(r"^CC\s+=.*", f"CC = {spack_cc}", join_path("src", "Makefile"))
+        filter_file(r"^CC\s+=.*", f"CC = {spack_cc}", join_path("src", "squid", "Makefile"))
+        filter_file(r"^CC\s+=.*", f"CC = {spack_cc}", join_path("src", "utilities", "Makefile"))
+        filter_file(r"^CC\s+=.*", f"CC = {spack_cc}", join_path("src", "boot", "Makefile"))
+        filter_file(r"^CC\s+=.*", f"CC = {spack_cc}", join_path("src", "conus-1.1", "Makefile"))
 
     def flag_handler(self, name, flags):
         # need to set -fcommon to prevent complaints about multiple definitions
         if name == "cflags":
             comp_spec = self.spec.compiler
-            if any(comp_spec.satisfies(c) for c in ["gcc@10:", "clang@11:", "cce@11:", "aocc@3:", "oneapi"]):
+            if any(
+                comp_spec.satisfies(c)
+                for c in ["gcc@10:", "clang@11:", "cce@11:", "aocc@3:", "oneapi"]
+            ):
                 flags.append("-fcommon")
         return flags, None, None
 

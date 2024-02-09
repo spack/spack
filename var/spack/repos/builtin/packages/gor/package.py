@@ -10,7 +10,9 @@ class Gor(MakefilePackage):
     """The GOR (Garnier–Osguthorpe–Robson) method is an information theory-based method
     for the prediction of secondary structures in proteins"""
 
-    homepage = "https://npsa-prabi.ibcp.fr/cgi-bin/npsa_automat.pl?page=/NPSAHLP/npsahlp_secpredgor4.html"
+    homepage = (
+        "https://npsa-prabi.ibcp.fr/cgi-bin/npsa_automat.pl?page=/NPSAHLP/npsahlp_secpredgor4.html"
+    )
     # This mirror is the only extant download of GOR that I can find
     url = "https://s3.eu-central-1.amazonaws.com/tcoffee-packages/mirrors/source/GOR_IV.tar.gz"
 

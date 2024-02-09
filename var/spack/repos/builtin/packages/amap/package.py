@@ -26,7 +26,7 @@ class Amap(MakefilePackage):
         with working_dir(self.build_directory):
             filter_file("CXX = .*", f"CXX = {spack_cxx}", "Makefile")
 
-    def edit(self, spec, prefix):
+    def build(self, spec, prefix):
         with working_dir(self.build_directory):
             make()
 

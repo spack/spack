@@ -1,9 +1,7 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from datetime import date
-import os
 
 from spack.package import *
 
@@ -125,7 +123,7 @@ class Tcoffee(MakefilePackage):
         try:
             with open("/proc/sys/kernel/pid_max") as f:
                 return f.read().strip()
-        except:
+        except (FileNotFoundError, IOError) as e:
             return 4194304  # 64-bit default
 
     def edit(self, spec, prefix):
