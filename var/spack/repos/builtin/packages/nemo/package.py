@@ -7,10 +7,10 @@ from spack.package import *
 
 
 class Nemo(Package):
-    """The "Nucleus for European Modelling of the Ocean" (NEMO) is a 
-    state-of-the-art modelling framework. It is used for research 
-    activities and forecasting services in ocean and climate sciences. 
-    NEMO is developed by a European consortium with the 
+    """The "Nucleus for European Modelling of the Ocean" (NEMO) is a
+    state-of-the-art modelling framework. It is used for research
+    activities and forecasting services in ocean and climate sciences.
+    NEMO is developed by a European consortium with the
     objective of ensuring long term reliability and sustainability."""
 
     homepage = "https://www.nemo-ocean.eu/"
@@ -18,7 +18,6 @@ class Nemo(Package):
 
     version("4.2.1", tag="v4.2.1", commit="9c0f2d511690c30aec45516361e032c5b46a94f5")
     version("4.2.0", tag="v4.2.0", commit="5cf0c3d61b751a102fe9de9c8ffe61a7216946cc")
-
 
     depends_on("mpi")
     depends_on("xios@develop")
@@ -51,7 +50,9 @@ class Nemo(Package):
         else:
             param["LD"] = spec["mpi"].mpicxx
             param["LIBCXX"] = ""
-            param["FFLAGS"] = "-fdefault-real-8 -O3 -funroll-all-loops -fcray-pointer -ffree-line-length-none"
+            param["FFLAGS"] = (
+                "-fdefault-real-8 -O3 -funroll-all-loops -fcray-pointer -ffree-line-length-none"
+            )
         text = r"""
 %NCDF_INC            -I{NCDF_F_INC} -I{NCDF_C_INC} -I{HDF5_INC}
 %NCDF_LIB            -L{NCDF_F_LIB} -lnetcdff -L{NCDF_C_LIB} -lnetcdf \
@@ -75,8 +76,8 @@ class Nemo(Package):
 %CC                  cc
 %CFLAGS              -O0
 """.format(
-                **param
-            )
+            **param
+        )
 
         with open(file, "w") as f:
             f.write(text)
@@ -88,4 +89,3 @@ class Nemo(Package):
     def install(self, spec, prefix):
         self.nemo_fcm()
         install_tree(".", prefix)
-
