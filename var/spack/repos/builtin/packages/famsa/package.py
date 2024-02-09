@@ -16,6 +16,9 @@ class Famsa(MakefilePackage):
 
     version("2.2.2", sha256="9e1d96b80ff0010852dcab24f8691bf2deb7415838c001f0362ec72fd0ac2d44")
 
+    # patching to correct barrier implementation
+    patch("famsa.patch")
+
     def build(self, spec, prefix):
         if spec.satisfies("target=m1:"):
             arch = "m1"

@@ -1,0 +1,13 @@
+diff --git a/makefile b/makefile
+index 99fd138..cad0eae 100644
+--- a/makefile
++++ b/makefile
+@@ -50,7 +50,7 @@ $(info *** Detecting g++ version 11 ***)
+ 		DEFINE_FLAGS = -DOLD_ATOMIC_FLAG
+ 	else
+ 		CPP_STD=c++20
+-		DEFINE_FLAGS = 
++		DEFINE_FLAGS = -DUSE_NATIVE_BARRIERS
+ 	endif
+ else
+ $(info *** Detecting g++ version 12 or higher ***)
