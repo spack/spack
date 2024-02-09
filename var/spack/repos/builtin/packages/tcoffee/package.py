@@ -24,11 +24,7 @@ class Tcoffee(MakefilePackage):
     license("GPL-2.0-only", checked_by="A-N-Other")
 
     version("13.46.0.919e8c6b", tag="Version_13.46.0.919e8c6b")
-    version(
-        "11.0",
-        commit="f389b558e91d0f82e7db934d9a79ce285f853a71",
-        deprecated=True,
-    )
+    version("11.0", commit="f389b558e91d0f82e7db934d9a79ce285f853a71", deprecated=True)
 
     depends_on("perl", type=("build", "link", "run"))
     depends_on("perl-xml-simple", type="run")
@@ -67,10 +63,12 @@ class Tcoffee(MakefilePackage):
     variant("rcoffee", default=False, description="RNA MSA")
     variant("saracoffee", default=False, description="Structure-based multiple RNA alignment")
     variant("trmsd", default=False, description="RMSD-based structural clustering of proteins")
-    variant("seq_reformat", default=False, description="Clean, reformat, and compare MSAs and trees")
+    variant(
+        "seq_reformat", default=False, description="Clean, reformat, and compare MSAs and trees"
+    )
 
     with when("+all") or when("+mcoffee"):
-        depends_on("clustalw", type="run") # this is clustalw2
+        depends_on("clustalw", type="run")  # this is clustalw2
         depends_on("dialign-tx", type="run")
         depends_on("poamsa", type="run")
         depends_on("probcons", type="run")
@@ -100,7 +98,7 @@ class Tcoffee(MakefilePackage):
         pass
 
     with when("+all") or when("+rcoffee"):
-        depends_on("clustalw", type="run") # this is clustalw2
+        depends_on("clustalw", type="run")  # this is clustalw2
         depends_on("famsa", type="run")
         depends_on("muscle", type="run")
         depends_on("probconsrna", type="run")
@@ -128,17 +126,15 @@ class Tcoffee(MakefilePackage):
             with open("/proc/sys/kernel/pid_max") as f:
                 return f.read().strip()
         except:
-            return 4194304 # 64-bit default
+            return 4194304  # 64-bit default
 
     def edit(self, spec, prefix):
-        filter_file(
-            "CC =.*",
-            f"CC = {spack_cxx}",
-            join_path(self.build_directory, "makefile"))
+        filter_file("CC =.*", f"CC = {spack_cxx}", join_path(self.build_directory, "makefile"))
         filter_file(
             "#define MAX_N_PID.*",
             f"#define MAX_N_PID {self.sys_max_pid}",
-            join_path("lib", "coffee_defines.h"))
+            join_path("lib", "coffee_defines.h"),
+        )
 
     def build(self, spec, prefix):
         with working_dir(self.build_directory):
