@@ -15,16 +15,9 @@ class ForwardMultiValue(Package):
     version("1.0", md5="0123456789abcdef0123456789abcdef")
 
     variant("cuda", default=False, description="Build with CUDA")
-    variant(
-        "cuda_arch",
-        values=any_combination_of("10", "11"),
-        description="Build shared libs, static libs or both",
-        when="+cuda",
-    )
+    variant("cuda_arch", values=any_combination_of("10", "11"), when="+cuda")
 
     depends_on("dependency-mv")
 
-    for _val in ("10", "11"):
-        requires(
-            f"^dependency-mv cuda_arch={_val}", when=f"+cuda cuda_arch={_val} ^dependency-mv+cuda"
-        )
+    requires("^dependency-mv cuda_arch=10", when="+cuda cuda_arch=10 ^dependency-mv+cuda")
+    requires("^dependency-mv cuda_arch=11", when="+cuda cuda_arch=11 ^dependency-mv+cuda")

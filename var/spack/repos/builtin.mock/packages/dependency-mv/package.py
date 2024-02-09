@@ -15,9 +15,4 @@ class DependencyMv(Package):
     version("1.0", md5="0123456789abcdef0123456789abcdef")
 
     variant("cuda", default=False, description="Build with CUDA")
-    variant(
-        "cuda_arch",
-        values=any_combination_of("10", "11"),
-        description="Build shared libs, static libs or both",
-        when="+cuda",
-    )
+    variant("cuda_arch", values=any_combination_of("10", "11"), when="+cuda")
