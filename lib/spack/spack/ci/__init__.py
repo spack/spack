@@ -211,49 +211,6 @@ def prune_any(
     return pruning_decisions
 
 
-def write_pipeline_manifest(specs, src_prefix, dest_prefix, output_file):
-    """Write out the file describing specs that should be copied"""
-    buildcache_copies = {}
-
-    for release_spec in specs:
-        release_spec_dag_hash = release_spec.dag_hash()
-        # TODO: This assumes signed version of the spec
-        buildcache_copies[release_spec_dag_hash] = [
-            {
-                "src": url_util.join(
-                    src_prefix,
-                    bindist.build_cache_relative_path(),
-                    bindist.tarball_name(release_spec, ".spec.json.sig"),
-                ),
-                "dest": url_util.join(
-                    dest_prefix,
-                    bindist.build_cache_relative_path(),
-                    bindist.tarball_name(release_spec, ".spec.json.sig"),
-                ),
-            },
-            {
-                "src": url_util.join(
-                    src_prefix,
-                    bindist.build_cache_relative_path(),
-                    bindist.tarball_path_name(release_spec, ".spack"),
-                ),
-                "dest": url_util.join(
-                    dest_prefix,
-                    bindist.build_cache_relative_path(),
-                    bindist.tarball_path_name(release_spec, ".spack"),
-                ),
-            },
-        ]
-
-    target_dir = os.path.dirname(output_file)
-
-    if not os.path.exists(target_dir):
-        os.makedirs(target_dir)
-
-    with open(output_file, "w") as fd:
-        fd.write(json.dumps(buildcache_copies))
-
-
 def check_for_broken_specs(pipeline_specs, broken_specs_url):
     """Check the pipeline specs against the list of known broken specs and return
     True if there were any matches, False otherwise."""
@@ -283,8 +240,9 @@ def check_for_broken_specs(pipeline_specs, broken_specs_url):
 def collect_pipeline_options(env: ev.Environment, args) -> PipelineOptions:
     """Gather pipeline options from cli args, spack environment, and
     os environment variables"""
-    options = PipelineOptions(env, args.artifacts_root)
+    options = PipelineOptions(env)
 
+    options.artifacts_root = args.artifacts_root
     options.output_file = args.output_file
     options.run_optimizer = args.optimize
     options.use_dependencies = args.dependencies
@@ -513,41 +471,6 @@ def generate_pipeline(env: ev.Environment, args) -> None:
 
     # List all specs remaining after any pruning
     pipeline_specs = [n.spec for _, (k, n) in pipeline.traverse(top_down=True)]
-
-    # FIXME: This block needs detangling, these bits are all involved:
-    #     - here we write manifest file for stack pipeline
-    #     - gitlab passes manifest files from multiple stack pipelines
-    #           as artifacts to a single job, so files names can collide
-    #           unless we deliberately avoid it.
-    #     - in protected-publish, "spack buildcache sync --manifest" consumes
-    #           all these manifest files
-    spack_buildcache_copy = os.environ.get("SPACK_COPY_BUILDCACHE", None)
-    if spack_buildcache_copy:
-        buildcache_copy_dest_prefix = spack_buildcache_copy
-        buildcache_copy_src_prefix = (
-            options.buildcache_destination.fetch_url
-            if options.buildcache_destination
-            else options.remote_mirror_override or options.remote_mirror_url
-        )
-
-        if options.pipeline_type == PipelineType.COPY_ONLY:
-            manifest_specs = [s for _, s in env.concretized_specs()]
-        else:
-            manifest_specs = pipeline_specs
-
-        pipeline_artifacts_dir = os.path.abspath(options.artifacts_root)
-        copy_specs_dir = os.path.join(pipeline_artifacts_dir, "specs_to_copy")
-        copy_specs_file = os.path.join(
-            copy_specs_dir,
-            "copy_{}_specs.json".format(options.stack_name if options.stack_name else "rebuilt"),
-        )
-
-        write_pipeline_manifest(
-            manifest_specs,
-            buildcache_copy_src_prefix,
-            buildcache_copy_dest_prefix,
-            copy_specs_file,
-        )
 
     # If this is configured, spack will fail "spack ci generate" if it
     # generates any hash which exists under the broken specs url.

@@ -16,11 +16,13 @@ import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.lang import memoized
 
+import spack.binary_distribution as bindist
 import spack.config as cfg
 import spack.deptypes as dt
 import spack.environment as ev
 import spack.spec
 import spack.util.spack_yaml as syaml
+import spack.util.url as url_util
 from spack.reporters import CDash, CDashConfiguration
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
 
@@ -83,6 +85,49 @@ def update_env_scopes(env_manifest_path: str, cli_scopes: List[str]) -> None:
 
     with open(env_manifest_path, "w") as fd:
         fd.write(syaml.dump_config(env_yaml_root, default_flow_style=False))
+
+
+def write_pipeline_manifest(specs, src_prefix, dest_prefix, output_file):
+    """Write out the file describing specs that should be copied"""
+    buildcache_copies = {}
+
+    for release_spec in specs:
+        release_spec_dag_hash = release_spec.dag_hash()
+        # TODO: This assumes signed version of the spec
+        buildcache_copies[release_spec_dag_hash] = [
+            {
+                "src": url_util.join(
+                    src_prefix,
+                    bindist.build_cache_relative_path(),
+                    bindist.tarball_name(release_spec, ".spec.json.sig"),
+                ),
+                "dest": url_util.join(
+                    dest_prefix,
+                    bindist.build_cache_relative_path(),
+                    bindist.tarball_name(release_spec, ".spec.json.sig"),
+                ),
+            },
+            {
+                "src": url_util.join(
+                    src_prefix,
+                    bindist.build_cache_relative_path(),
+                    bindist.tarball_path_name(release_spec, ".spack"),
+                ),
+                "dest": url_util.join(
+                    dest_prefix,
+                    bindist.build_cache_relative_path(),
+                    bindist.tarball_path_name(release_spec, ".spack"),
+                ),
+            },
+        ]
+
+    target_dir = os.path.dirname(output_file)
+
+    if not os.path.exists(target_dir):
+        os.makedirs(target_dir)
+
+    with open(output_file, "w") as fd:
+        fd.write(json.dumps(buildcache_copies))
 
 
 class CDashHandler:
@@ -279,7 +324,7 @@ class PipelineOptions:
     def __init__(
         self,
         env: ev.Environment,
-        artifacts_root: str,
+        artifacts_root: str = "jobs_scratch_dir",
         print_summary: bool = True,
         output_file: Optional[str] = None,
         check_index_only: bool = False,

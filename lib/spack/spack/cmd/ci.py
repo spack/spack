@@ -121,8 +121,12 @@ def setup_parser(subparser):
     )
     generate.add_argument(
         "--artifacts-root",
-        default=os.path.join(os.getcwd(), "jobs_scratch_dir"),
-        help="path to the root of the artifacts directory",
+        default="jobs_scratch_dir",
+        help="path to the root of the artifacts directory\n\n"
+        "The spack ci module assumes it will normally be run from within your project "
+        "directory, wherever that is checked to run your ci.  The artifacts root directory "
+        "should specifiy a name that can safely be used for artifacts within your project "
+        "directory.",
     )
     generate.set_defaults(func=ci_generate)
 

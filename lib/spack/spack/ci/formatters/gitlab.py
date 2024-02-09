@@ -24,6 +24,7 @@ from ..common import (
     SpackCI,
     unpack_script,
     update_env_scopes,
+    write_pipeline_manifest,
 )
 from . import formatter
 
@@ -97,6 +98,33 @@ def _print_staging_summary(stages: List[List[spack.spec.Spec]], pruning_results:
             tty.msg(f"  {s.cformat(spec_fmt)} ({reasons})")
 
 
+def maybe_generate_manifest(pipeline: PipelineDag, options: PipelineOptions, manifest_path):
+    # FIXME: This block needs detangling, these bits are all involved:
+    #     - here we write manifest file for stack pipeline
+    #     - gitlab passes manifest files from multiple stack pipelines
+    #           as artifacts to a single job, so files names can collide
+    #           unless we deliberately avoid it.
+    #     - in protected-publish, "spack buildcache sync --manifest" consumes
+    #           all these manifest files
+    spack_buildcache_copy = os.environ.get("SPACK_COPY_BUILDCACHE", None)
+    if spack_buildcache_copy:
+        buildcache_copy_dest_prefix = spack_buildcache_copy
+        buildcache_copy_src_prefix = (
+            options.buildcache_destination.fetch_url
+            if options.buildcache_destination
+            else options.remote_mirror_override or options.remote_mirror_url
+        )
+
+        if options.pipeline_type == PipelineType.COPY_ONLY:
+            manifest_specs = [s for _, s in options.env.concretized_specs()]
+        else:
+            manifest_specs = [n.spec for _, (k, n) in pipeline.traverse(top_down=True)]
+
+        write_pipeline_manifest(
+            manifest_specs, buildcache_copy_src_prefix, buildcache_copy_dest_prefix, manifest_path
+        )
+
+
 @formatter("gitlab")
 def format_gitlab_yaml(
     pipeline: PipelineDag,
@@ -117,9 +145,7 @@ def format_gitlab_yaml(
     ci_project_dir = os.environ.get("CI_PROJECT_DIR", os.getcwd())
     generate_job_name = os.environ.get("CI_JOB_NAME", "job-does-not-exist")
     generate_pipeline_id = os.environ.get("CI_PIPELINE_ID", "pipeline-does-not-exist")
-    pipeline_artifacts_dir = os.path.abspath(options.artifacts_root)
-    if not pipeline_artifacts_dir:
-        pipeline_artifacts_dir = os.path.join(ci_project_dir, "jobs_scratch_dir")
+    pipeline_artifacts_dir = os.path.join(ci_project_dir, options.artifacts_root)
     output_file = options.output_file
 
     if not output_file:
@@ -167,7 +193,6 @@ def format_gitlab_yaml(
     # checks out the project into a runner-specific directory, for example,
     # and different runners are picked for generate and rebuild jobs.
 
-    rel_artifacts_root = os.path.relpath(pipeline_artifacts_dir, ci_project_dir)
     rel_concrete_env_dir = os.path.relpath(concrete_env_dir, ci_project_dir)
     rel_job_log_dir = os.path.relpath(job_log_dir, ci_project_dir)
     rel_job_repro_dir = os.path.relpath(job_repro_dir, ci_project_dir)
@@ -319,6 +344,15 @@ def format_gitlab_yaml(
         "when": ["runner_system_failure", "stuck_or_timeout_failure", "script_failure"],
     }
 
+    # In some cases, pipeline generation should write a manifest.  Currently
+    # the only purpose is to specify a list of sources and destinations for
+    # everything that should be copied.
+    distinguish_stack = options.stack_name if options.stack_name else "rebuilt"
+    manifest_path = os.path.join(
+        pipeline_artifacts_dir, "specs_to_copy", f"copy_{distinguish_stack}_specs.json"
+    )
+    maybe_generate_manifest(pipeline, options, manifest_path)
+
     if options.pipeline_type == PipelineType.COPY_ONLY:
         stage_names.append("copy")
         sync_job = copy.deepcopy(spack_ci_ir["jobs"]["copy"]["attributes"])
@@ -425,7 +459,7 @@ def format_gitlab_yaml(
         rebuild_everything = not options.prune_up_to_date and not options.prune_untouched
 
         output_object["variables"] = {
-            "SPACK_ARTIFACTS_ROOT": rel_artifacts_root,
+            "SPACK_ARTIFACTS_ROOT": options.artifacts_root,
             "SPACK_CONCRETE_ENV_DIR": rel_concrete_env_dir,
             "SPACK_VERSION": spack_version,
             "SPACK_CHECKOUT_VERSION": version_to_clone,
