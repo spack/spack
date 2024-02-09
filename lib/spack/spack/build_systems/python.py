@@ -361,8 +361,8 @@ class PythonPackage(PythonExtension):
         if headers:
             return headers
 
-        msg = "Unable to locate {} headers in {} or {}"
-        raise NoHeadersError(msg.format(self.spec.name, include, platlib))
+        msg = "Unable to locate {} headers in {}, {}, or {}"
+        raise NoHeadersError(msg.format(self.spec.name, include, platlib, purelib))
 
     @property
     def libs(self) -> LibraryList:
@@ -382,8 +382,8 @@ class PythonPackage(PythonExtension):
         if libs:
             return libs
 
-        msg = "Unable to recursively locate {} libraries in {}"
-        raise NoLibrariesError(msg.format(self.spec.name, root))
+        msg = "Unable to recursively locate {} libraries in {} or {}"
+        raise NoLibrariesError(msg.format(self.spec.name, platlib, purelib))
 
 
 @spack.builder.builder("python_pip")
