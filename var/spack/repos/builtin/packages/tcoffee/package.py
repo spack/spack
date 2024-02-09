@@ -116,6 +116,8 @@ class Tcoffee(MakefilePackage):
 
     build_directory = "t_coffee/src"
 
+    parallel = False
+
     @property
     def sys_max_pid(self):
         if self.spec.satisfies("platform=darwin"):
