@@ -1,17 +1,17 @@
-% Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+% Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 % Spack Project Developers. See the top-level COPYRIGHT file for details.
 %
 % SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 %=============================================================================
-% TODO: Later
+% Propagation for compiler flags to speed-up solves
 %=============================================================================
 
-% propagate flags when compiler match
 attr("node_flag_propagate", PackageNode, FlagType, Flag, Source) :- % source is a node() attribute
   attr("node_flag_propagation_candidate", PackageNode, FlagType, Flag, Source),
   not attr("node_flag_set", PackageNode, FlagType, _).
 
+% propagate flags when compiler match
 attr("node_flag_propagation_candidate", PackageNode, FlagType, Flag, Source) :- % source is a node() attribute
   same_compiler(ParentNode, PackageNode),
   attr("node_flag_propagation_candidate", ParentNode, FlagType, _, Source),
