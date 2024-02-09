@@ -296,10 +296,10 @@ class PipelineOptions:
         stack_name: Optional[str] = None,
         pipeline_type: Optional[PipelineType] = None,
         require_signing: bool = False,
-        remote_mirror_url: Optional[str] = None,       # remove n Spack 0.23
-        shared_pr_mirror: Optional[str] = None,        # remove in Spack 0.23
+        remote_mirror_url: Optional[str] = None,  # remove n Spack 0.23
+        shared_pr_mirror: Optional[str] = None,  # remove in Spack 0.23
         remote_mirror_override: Optional[str] = None,  # deprecated, remove in Spack 0.23
-        copy_yaml_to: Optional[str] = None,            # deprecated, remove in Spack 0.23
+        copy_yaml_to: Optional[str] = None,  # deprecated, remove in Spack 0.23
         buildcache_destination: Optional[spack.mirror.Mirror] = None,
         cdash_handler: Optional["CDashHandler"] = None,
     ):
@@ -368,15 +368,15 @@ class PipelineNode:
 
 
 class PruningResults:
-    filterDescriptions: Tuple[str]
+    filterDescriptions: Tuple[str, ...]
     filterResults: Dict[str, List[bool]]
 
-    def __init__(self, descriptions: Tuple[str], results: Dict[str, List[bool]]):
+    def __init__(self, descriptions: Tuple[str, ...], results: Dict[str, List[bool]]):
         self.filterDescriptions = descriptions
         self.filterResults = results
 
     def get_filter_result_for_description(self, key: str, description: str) -> bool:
-        filterIndex = self.filterDescriptions.indexof(description)
+        filterIndex = self.filterDescriptions.index(description)
         return self.filterResults[key][filterIndex]
 
 

@@ -43,8 +43,8 @@ from .common import (
     CDashHandler,
     PipelineDag,
     PipelineOptions,
-    PruningResults,
     PipelineType,
+    PruningResults,
     SpackCI,
     copy_files_to_artifacts,
 )
@@ -193,8 +193,10 @@ def external_pruner():
     return keepFilter
 
 
-def prune_any(pipeline: PipelineDag, keepFilters: List[Callable[[spack.spec.Spec], bool]]) -> Dict[str, List[bool]]:
-    pruning_decisions : Dict[str, List[bool]] = {}
+def prune_any(
+    pipeline: PipelineDag, keepFilters: List[Callable[[spack.spec.Spec], bool]]
+) -> Dict[str, List[bool]]:
+    pruning_decisions: Dict[str, List[bool]] = {}
     keys_to_prune = set()
 
     for _, (key, node) in pipeline.traverse(top_down=True):
@@ -486,14 +488,18 @@ def generate_pipeline(env: ev.Environment, args) -> None:
                 for s in affected_specs:
                     tty.msg(f"  {PipelineDag.key(s)}")
 
-                pruning_filters.append(("unaffected", unaffected_pruner(affected_specs))),
+                pruning_filters.append(("unaffected", unaffected_pruner(affected_specs)))
 
     # Possibly prune specs that are already built on some configured mirror
     if options.prune_up_to_date:
-        pruning_filters.append((
-            "already built",
-            already_built_pruner(mirrors_to_check=mirrors_to_check, check_index_only=options.check_index_only),
-        ))
+        pruning_filters.append(
+            (
+                "already built",
+                already_built_pruner(
+                    mirrors_to_check=mirrors_to_check, check_index_only=options.check_index_only
+                ),
+            )
+        )
 
     # Possibly prune specs that are external
     if options.prune_external:

@@ -30,10 +30,6 @@ def repro_dir(tmp_path):
         yield result
 
 
-def test_urlencode_string():
-    assert ci._url_encode_string("Spack Test Project") == "Spack+Test+Project"
-
-
 @pytest.mark.not_on_windows("Not supported on Windows (yet)")
 def test_import_signing_key(mock_gnupghome):
     signing_key_dir = spack_paths.mock_gpg_keys_path
@@ -566,42 +562,3 @@ def test_ci_skipped_report(tmpdir, mock_packages, config):
             elif reason in line:
                 have[1] += 1
         assert all(count == 1 for count in have)
-
-
-def test_pipeline_dag(mutable_mock_env_path, config, mutable_mock_repo):
-    """Test building and traversal of pipeline dags"""
-    e1 = ev.create("test")
-    e1.add("mpileaks")
-    e1.add("hypre")
-    e1.concretize()
-
-    env_roots = [
-        concrete
-        for abstract, concrete in e1.concretized_specs()
-        if abstract in e1.spec_lists["specs"]
-    ]
-
-    print("dep trees of root specs")
-    for root in env_roots:
-        print(root.tree(color=True))
-
-    pipeline = ci.PipelineDag(env_roots)
-
-    print("\nAll env specs:")
-    for s in e1.all_specs():
-        print(ci.PipelineDag.key(s))
-
-    # downward traversal from roots
-    print("\ntop-down traverse")
-    for level, (key, node) in pipeline.traverse(top_down=True):
-        print(f"{level}: {key}")
-
-    nodes = []
-
-    # upward traversal from leaves
-    print("\nbottom-up traverse")
-    for level, (key, node) in pipeline.traverse(top_down=False):
-        nodes.append(node)
-        print(f"{level}: {key}")
-
-    assert False

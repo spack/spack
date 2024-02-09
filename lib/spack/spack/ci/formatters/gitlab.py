@@ -98,7 +98,12 @@ def _print_staging_summary(stages: List[List[spack.spec.Spec]], pruning_results:
 
 
 @formatter("gitlab")
-def format_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCI, options: PipelineOptions, pruning_results: PruningResults):
+def format_gitlab_yaml(
+    pipeline: PipelineDag,
+    spack_ci: SpackCI,
+    options: PipelineOptions,
+    pruning_results: PruningResults,
+):
     """Given a pipeline graph, job attributes, and pipeline options,
     write a pipeline that can be consumed by GitLab to the given output file.
 
