@@ -142,11 +142,10 @@ class PythonExtension(spack.package_base.PackageBase):
         bin_dir = self.spec.prefix.bin
         python_prefix = self.extendee_spec.prefix
         python_is_external = self.extendee_spec.external
-        global_view = fs.same_path(python_prefix, view.get_projection_for_spec(self.spec))
         for src, dst in merge_map.items():
             if os.path.exists(dst):
                 continue
-            elif global_view or not fs.path_contains_subdirectory(src, bin_dir):
+            elif not fs.path_contains_subdirectory(src, bin_dir):
                 view.link(src, dst)
             elif not os.path.islink(src):
                 shutil.copy2(src, dst)
