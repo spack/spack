@@ -2,7 +2,10 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import functools
 import inspect
+import operator
 import os
 import re
 import shutil
@@ -346,10 +349,14 @@ class PythonPackage(PythonExtension):
         # Remove py- prefix in package name
         name = self.spec.name[3:]
 
-        # Headers may be in either location
+        # Headers should only be in include or platlib, but no harm in checking purelib too
         include = self.prefix.join(self.spec["python"].package.include).join(name)
         platlib = self.prefix.join(self.spec["python"].package.platlib).join(name)
-        headers = fs.find_all_headers(include) + fs.find_all_headers(platlib)
+        purelib = self.prefix.join(self.spec["python"].package.purelib).join(name)
+
+        find_all_headers = functools.partial(fs.find_all_headers, recursive=True)
+        headers_list = map(find_all_headers, [include, platlib, purelib])
+        headers = functools.reduce(headers_list, operator.add)
 
         if headers:
             return headers
@@ -364,9 +371,13 @@ class PythonPackage(PythonExtension):
         # Remove py- prefix in package name
         name = self.spec.name[3:]
 
-        root = self.prefix.join(self.spec["python"].package.platlib).join(name)
+        # Libraries should only be in platlib, but no harm in checking purelib too
+        platlib = self.prefix.join(self.spec["python"].package.platlib).join(name)
+        purelib = self.prefix.join(self.spec["python"].package.purelib).join(name)
 
-        libs = fs.find_all_libraries(root, recursive=True)
+        find_all_libraries = functools.partial(fs.find_all_libraries, recursive=True)
+        libs_list = map(find_all_libraries, [platlib, purelib])
+        libs = functools.reduce(libs_list, operator.add)
 
         if libs:
             return libs
