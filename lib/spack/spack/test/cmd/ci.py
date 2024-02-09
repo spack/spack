@@ -1139,7 +1139,9 @@ spack:
                 assert yaml_contents["workflow"]["rules"] == [{"when": "always"}]
 
             outputfile_not_pruned = str(tmpdir.join("unpruned_pipeline.yml"))
-            ci_cmd("generate", "--no-prune-dag", "--output-file", outputfile_not_pruned)
+            genout = ci_cmd("generate", "--no-prune-dag", "--output-file", outputfile_not_pruned, output=str)
+            print("spack ci generate --no-prune-dag ...:")
+            print(genout)
 
             # Test the --no-prune-dag option of spack ci generate
             with open(outputfile_not_pruned) as f:

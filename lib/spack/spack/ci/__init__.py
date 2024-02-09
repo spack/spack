@@ -165,56 +165,11 @@ def get_spec_filter_list(env, affected_pkgs, dependent_traverse_depth=None):
     return affected_specs
 
 
-def prune_unaffected_specs(pipeline: PipelineDag, affected_specs: List[spack.spec.Spec]):
-    """Prune any unaffected specs from the pipeline"""
-    to_prune = set()
-    for _, (key, node) in pipeline.traverse(top_down=True):
-        if node.spec not in affected_specs:
-            to_prune.add(key)
-
-    if to_prune:
-        tty.msg("Pruned the following unaffected specs:")
-        for key in to_prune:
-            tty.msg(f"  {key}")
-            pipeline.prune(key)
-    else:
-        tty.msg("There were no unaffected specs.")
-
-
 def unaffected_pruner(affected_specs: List[spack.spec.Spec]):
     def keepFilter(s: spack.spec.Spec) -> bool:
         return s in affected_specs
 
     return keepFilter
-
-
-def prune_built_specs(pipeline: PipelineDag, mirrors_to_check=None, check_index_only=True):
-    """Prune already built specs from the pipeline"""
-    # Speed up checking by first fetching binary indices from all mirrors
-    try:
-        bindist.BINARY_INDEX.update()
-    except bindist.FetchCacheError as e:
-        tty.warn(e)
-
-    keys_to_prune = set()
-    found_on_mirrors = {}
-    for _, (key, node) in pipeline.traverse(top_down=True):
-        release_spec = node.spec
-        up_to_date_mirrors = bindist.get_mirrors_for_spec(
-            spec=release_spec, mirrors_to_check=mirrors_to_check, index_only=check_index_only
-        )
-        if up_to_date_mirrors:
-            keys_to_prune.add(key)
-            found_on_mirrors[key] = [m["mirror_url"] for m in up_to_date_mirrors]
-
-    if keys_to_prune:
-        tty.msg("Pruned the following already built specs:")
-        for key in keys_to_prune:
-            spec_mirrors = found_on_mirrors[key]
-            tty.msg(f"  {key} [{', '.join(spec_mirrors)}]")
-            pipeline.prune(key)
-    else:
-        tty.msg("There were no already built specs.")
 
 
 def already_built_pruner(mirrors_to_check=None, check_index_only=True):
@@ -229,17 +184,6 @@ def already_built_pruner(mirrors_to_check=None, check_index_only=True):
         )
 
     return keepFilter
-
-
-def prune_external_specs(pipeline: PipelineDag):
-    keys_to_prune = set()
-
-    for _, (key, node) in pipeline.traverse(top_down=True):
-        if node.spec.external:
-            keys_to_prune.add(key)
-
-    for key in keys_to_prune:
-        pipeline.prune(key)
 
 
 def external_pruner():
@@ -511,10 +455,7 @@ def generate_pipeline(env: ev.Environment, args) -> None:
 
     # A filter is a 2-tuple containg a short description and a function
     # taking a spec and returning whether or not to keep that spec.
-    pruning_filters = [
-        ("external", external_pruner()),
-        ("already built", already_built_pruner(mirrors_to_check=mirrors_to_check, check_index_only=options.check_index_only)),
-    ]
+    pruning_filters = []
 
     # Possibly prune specs that were unaffected by the change
     if options.prune_untouched:
@@ -545,17 +486,20 @@ def generate_pipeline(env: ev.Environment, args) -> None:
                 for s in affected_specs:
                     tty.msg(f"  {PipelineDag.key(s)}")
 
-                # prune_unaffected_specs(pipeline, affected_specs)
                 pruning_filters.append(("unaffected", unaffected_pruner(affected_specs))),
 
-    # # Possibly prune specs that are already built on some configured mirror
-    # if options.prune_up_to_date:
-    #     prune_built_specs(pipeline, mirrors_to_check, options.check_index_only)
+    # Possibly prune specs that are already built on some configured mirror
+    if options.prune_up_to_date:
+        pruning_filters.append((
+            "already built",
+            already_built_pruner(mirrors_to_check=mirrors_to_check, check_index_only=options.check_index_only),
+        ))
 
-    # # Possibly prune specs that are external
-    # if options.prune_external:
-    #     prune_external_specs(pipeline)
+    # Possibly prune specs that are external
+    if options.prune_external:
+        pruning_filters.append(("external", external_pruner()))
 
+    # Do all the pruning
     pruning_results = PruningResults(
         descriptions=tuple([description for (description, _) in pruning_filters]),
         results=prune_any(pipeline, [fn for (_, fn) in pruning_filters]),
