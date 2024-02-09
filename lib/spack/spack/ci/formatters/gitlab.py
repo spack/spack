@@ -447,9 +447,9 @@ def format_gitlab_yaml(
 
         # TODO: Remove this block in Spack 0.23
         if deprecated_mirror_config and options.remote_mirror_override:
-            (
-                output_object["variables"]["SPACK_REMOTE_MIRROR_OVERRIDE"]
-            ) = options.remote_mirror_override
+            (output_object["variables"]["SPACK_REMOTE_MIRROR_OVERRIDE"]) = (
+                options.remote_mirror_override
+            )
 
         if options.stack_name:
             output_object["variables"]["SPACK_CI_STACK_NAME"] = options.stack_name
