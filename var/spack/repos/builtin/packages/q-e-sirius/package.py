@@ -72,9 +72,9 @@ class QESirius(CMakePackage):
     depends_on("hdf5@1.8.16:+fortran+hl~mpi", when="hdf5=serial")
 
     with when("+openmp"):
-        depends_on("fftw+openmp", when="^fftw")
-        depends_on("openblas threads=openmp", when="^openblas")
-        depends_on("intel-mkl threads=openmp", when="^intel-mkl")
+        depends_on("fftw+openmp", when="^[virtuals=fftw-api] fftw")
+        depends_on("openblas threads=openmp", when="^[virtuals=blas] openblas")
+        depends_on("intel-mkl threads=openmp", when="^[virtuals=blas] intel-mkl")
 
     def cmake_args(self):
         args = [
