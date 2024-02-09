@@ -89,7 +89,7 @@ def _print_staging_summary(stages: List[List[spack.spec.Spec]], pruning_results:
 
     filter_descriptions = pruning_results.filterDescriptions
     tty.msg("Pruning list:")
-    for (key, filterResults) in pruning_results.filterResults.items():
+    for key, filterResults in pruning_results.filterResults.items():
         if key not in generated_job_node_keys:
             reasons = [
                 filter_descriptions[i] for i, result in enumerate(filterResults) if not result
