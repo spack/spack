@@ -19,19 +19,18 @@ class DialignTx(MakefilePackage):
 
     build_directory = "source"
 
-    conflicts("%gcc@6:")
+    # patches assembled from gentoo builds
+    # https://ftp.dimensiondata.com/mirror/gentoo-portage/sci-biology/dialign-tx/files/
+    patch("dialign-tx.patch")
 
     def edit(self, spec, prefix):
         with working_dir(self.build_directory):
             makefile = FileFilter("Makefile")
-            makefile.filter(" -march=i686 ", " ")
-            makefile.filter("CC=gcc", "CC=%s" % spack_cc)
-            if spec.target.family == "aarch64":
-                makefile.filter("-mfpmath=sse -msse  -mmmx", " ")
+            makefile.filter("^CC=.*", "")
+            makefile.filter("^CPPFLAGS=.*", "")
+            makefile.filter(r"$\(CC\)", "$(CC) $(LDFLAGS)")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         with working_dir(self.build_directory):
             install("dialign-tx", prefix.bin)
-            # t-coffee recognizes as dialign-t
-            install("dialign-tx", join_path(prefix.bin, "dialign-t"))
