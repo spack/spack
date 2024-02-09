@@ -22,10 +22,8 @@ class Blitz(AutotoolsPackage):
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
 
+    # Fix makefile and include to build with Fujitsu compiler
     patch("fujitsu_compiler_specfic_header.patch", when="%fj")
-
-    def autoreconf(self, spec, prefix):
-        autoreconf("--install", "--verbose", "--force")
 
     build_targets = ["lib"]
 
