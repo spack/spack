@@ -24,6 +24,7 @@ class Bfs(MakefilePackage):
     depends_on("acl", when="platform=linux")
     depends_on("attr", when="platform=linux")
     depends_on("libcap", when="platform=linux")
+    depends_on("liburing", when="platform=linux @3.1:")
     depends_on("oniguruma")
 
     def install(self, spec, prefix):
