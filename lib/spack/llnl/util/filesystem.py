@@ -920,6 +920,14 @@ def get_filetype(path_name):
     return output.strip()
 
 
+def has_shebang(path):
+    try:
+        with open(path, "rb") as f:
+            return f.read(2) == b"#!"
+    except OSError:
+        return False
+
+
 @system_path_filter
 def is_nonsymlink_exe_with_shebang(path):
     """
@@ -937,9 +945,8 @@ def is_nonsymlink_exe_with_shebang(path):
             return False
 
         # Should start with a shebang
-        with open(path, "rb") as f:
-            return f.read(2) == b"#!"
-    except (IOError, OSError):
+        return has_shebang(path)
+    except OSError:
         return False
 
 
