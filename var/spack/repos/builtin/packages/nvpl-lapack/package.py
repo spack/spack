@@ -28,7 +28,7 @@ class NvplLapack(Package):
 
     variant("ilp64", default=False, description="Force 64-bit Fortran native integers")
 
-    threadings = ("openmp", "none", )
+    threadings = ("openmp", "none")
     variant(
         "threads",
         default="none",
