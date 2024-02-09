@@ -197,6 +197,10 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     patch("mpi_datatypes.patch", when="@:7.2.6")
     patch("fj.patch", when="@7.3.2: %fj")
 
+    # Apply patch to fix segmentation fault caused by a bug in Fujitsu compiler
+    # when using auto parameters in C++ lambda expressions with OpenMP
+    patch("fj_lambda_fix.patch", when="@7.3.2: %fj")
+
     def cmake_args(self):
         spec = self.spec
 
