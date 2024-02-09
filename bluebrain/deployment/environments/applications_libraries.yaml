@@ -9,6 +9,7 @@ spack:
           - gmsh
           - hdf5+mpi
           - highfive+mpi
+          - libsonata-report
           - neuron+mpi
           - omega-h
           - petsc
