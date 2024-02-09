@@ -114,32 +114,20 @@ and then 'd', 'b', and 'a' to be put in the next three stages, respectively.
     with repo.use_repositories(builder.root):
         spec_a = Spec("a").concretized()
 
-        spec_a_label = ci._spec_deps_key(spec_a)
-        spec_b_label = ci._spec_deps_key(spec_a["b"])
-        spec_c_label = ci._spec_deps_key(spec_a["c"])
-        spec_d_label = ci._spec_deps_key(spec_a["d"])
-        spec_e_label = ci._spec_deps_key(spec_a["e"])
-        spec_f_label = ci._spec_deps_key(spec_a["f"])
-        spec_g_label = ci._spec_deps_key(spec_a["g"])
+        expected_staging = {
+            ci.common.PipelineDag.key(spec_a): 3,
+            ci.common.PipelineDag.key(spec_a["b"]): 2,
+            ci.common.PipelineDag.key(spec_a["c"]): 0,
+            ci.common.PipelineDag.key(spec_a["d"]): 1,
+            ci.common.PipelineDag.key(spec_a["e"]): 0,
+            ci.common.PipelineDag.key(spec_a["f"]): 0,
+            ci.common.PipelineDag.key(spec_a["g"]): 0,
+        }
 
-        spec_labels, dependencies, stages = ci.stage_spec_jobs([spec_a])
+        pipeline = ci.common.PipelineDag([spec_a])
 
-        assert len(stages) == 4
-
-        assert len(stages[0]) == 4
-        assert spec_c_label in stages[0]
-        assert spec_e_label in stages[0]
-        assert spec_f_label in stages[0]
-        assert spec_g_label in stages[0]
-
-        assert len(stages[1]) == 1
-        assert spec_d_label in stages[1]
-
-        assert len(stages[2]) == 1
-        assert spec_b_label in stages[2]
-
-        assert len(stages[3]) == 1
-        assert spec_a_label in stages[3]
+        for stage, (key, _) in pipeline.traverse(top_down=False):
+            assert expected_staging[key] == stage
 
 
 def test_ci_generate_with_env(
@@ -255,7 +243,7 @@ spack:
 """
         )
 
-    expect_out = "Environment does not have `ci` a configuration"
+    expect_out = "Environment yaml must have `ci` config section in order to generate a pipeline"
 
     with tmpdir.as_cwd():
         env_cmd("create", "test", "./spack.yaml")
@@ -546,7 +534,7 @@ spack:
             assert "variables" in yaml_contents
             pipeline_vars = yaml_contents["variables"]
             assert "SPACK_PIPELINE_TYPE" in pipeline_vars
-            assert pipeline_vars["SPACK_PIPELINE_TYPE"] == "spack_pull_request"
+            assert ci.common.PipelineType[pipeline_vars["SPACK_PIPELINE_TYPE"]] == ci.common.PipelineType.PULL_REQUEST
 
 
 def test_ci_generate_with_external_pkg(

@@ -8,7 +8,7 @@ import json
 import os
 import time
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlencode
 from urllib.request import HTTPHandler, Request, build_opener
 
@@ -292,12 +292,14 @@ class PipelineOptions:
         untouched_pruning_dependent_depth: Optional[int] = None,
         prune_untouched: bool = False,
         prune_up_to_date: bool = True,
+        prune_external: bool = True,
         stack_name: Optional[str] = None,
         pipeline_type: Optional[PipelineType] = None,
         require_signing: bool = False,
-        remote_mirror_url: Optional[str] = None,
-        shared_pr_mirror: Optional[str] = None,
+        remote_mirror_url: Optional[str] = None,       # remove n Spack 0.23
+        shared_pr_mirror: Optional[str] = None,        # remove in Spack 0.23
         remote_mirror_override: Optional[str] = None,  # deprecated, remove in Spack 0.23
+        copy_yaml_to: Optional[str] = None,            # deprecated, remove in Spack 0.23
         buildcache_destination: Optional[spack.mirror.Mirror] = None,
         cdash_handler: Optional["CDashHandler"] = None,
     ):
@@ -317,12 +319,14 @@ class PipelineOptions:
             untouched_pruning_dependent_depth: How many parents to traverse from changed pkg specs
             prune_untouched: Prune jobs for specs that were unchanged in git history
             prune_up_to_date: Prune specs from pipeline if binary exists on the mirror
+            prune_external: Prune specs from pipeline if they are external
             stack_name: Name of spack stack
             pipeline_type: Type of pipeline running (optional)
             require_signing: Require buildcache to be signed (fail w/out signing key)
             remote_mirror_url: Mirror from spack.yaml (deprecated)
             shared_pr_mirror: Shared pr mirror url (deprecated)
             remote_mirror_override: Override the mirror in the spack environment (deprecated)
+            copy_yaml_to: Path where generated yaml should be copied to
             buildcache_destination: The mirror where built binaries should be pushed
             cdash_handler: Object for communicating build information with CDash
         """
@@ -340,12 +344,14 @@ class PipelineOptions:
         self.untouched_pruning_dependent_depth = untouched_pruning_dependent_depth
         self.prune_untouched = prune_untouched
         self.prune_up_to_date = prune_up_to_date
+        self.prune_external = prune_external
         self.stack_name = stack_name
         self.pipeline_type = pipeline_type
         self.require_signing = require_signing
         self.remote_mirror_url = remote_mirror_url
         self.shared_pr_mirror = shared_pr_mirror
         self.remote_mirror_override = remote_mirror_override
+        self.copy_yaml_to = copy_yaml_to
         self.buildcache_destination = buildcache_destination
         self.cdash_handler = cdash_handler
 
@@ -359,6 +365,19 @@ class PipelineNode:
         self.spec = spec
         self.parents = []
         self.children = []
+
+
+class PruningResults:
+    filterDescriptions: Tuple[str]
+    filterResults: Dict[str, List[bool]]
+
+    def __init__(self, descriptions: Tuple[str], results: Dict[str, List[bool]]):
+        self.filterDescriptions = descriptions
+        self.filterResults = results
+
+    def get_filter_result_for_description(self, key: str, description: str) -> bool:
+        filterIndex = self.filterDescriptions.indexof(description)
+        return self.filterResults[key][filterIndex]
 
 
 class PipelineDag:

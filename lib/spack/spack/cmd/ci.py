@@ -100,6 +100,13 @@ def setup_parser(subparser):
         "generate jobs for specs even when they are up-to-date on the mirror",
     )
     generate.add_argument(
+        "--prune-externals",
+        action="store_false",
+        default=True,
+        help="prune external specs from the pipeline\n\n"
+        "do not generate jobs for specs that are marked as external",
+    )
+    generate.add_argument(
         "--check-index-only",
         action="store_true",
         dest="index_only",
@@ -201,12 +208,6 @@ def ci_generate(args):
         )
 
     spack_ci.generate_pipeline(env, args)
-
-    if args.copy_to:
-        copy_to_dir = os.path.dirname(args.copy_to)
-        if not os.path.exists(copy_to_dir):
-            os.makedirs(copy_to_dir)
-        shutil.copyfile(args.output_file, args.copy_to)
 
 
 def ci_reindex(args):

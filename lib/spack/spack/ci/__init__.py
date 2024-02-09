@@ -15,7 +15,7 @@ import sys
 import tempfile
 import zipfile
 from collections import namedtuple
-from typing import List
+from typing import Callable, Dict, List
 from urllib.error import HTTPError, URLError
 from urllib.request import HTTPHandler, Request, build_opener
 
@@ -43,6 +43,7 @@ from .common import (
     CDashHandler,
     PipelineDag,
     PipelineOptions,
+    PruningResults,
     PipelineType,
     SpackCI,
     copy_files_to_artifacts,
@@ -180,7 +181,14 @@ def prune_unaffected_specs(pipeline: PipelineDag, affected_specs: List[spack.spe
         tty.msg("There were no unaffected specs.")
 
 
-def prune_built_specs(pipeline, mirrors_to_check=None, check_index_only=True):
+def unaffected_pruner(affected_specs: List[spack.spec.Spec]):
+    def keepFilter(s: spack.spec.Spec) -> bool:
+        return s in affected_specs
+
+    return keepFilter
+
+
+def prune_built_specs(pipeline: PipelineDag, mirrors_to_check=None, check_index_only=True):
     """Prune already built specs from the pipeline"""
     # Speed up checking by first fetching binary indices from all mirrors
     try:
@@ -188,7 +196,7 @@ def prune_built_specs(pipeline, mirrors_to_check=None, check_index_only=True):
     except bindist.FetchCacheError as e:
         tty.warn(e)
 
-    to_prune = set()
+    keys_to_prune = set()
     found_on_mirrors = {}
     for _, (key, node) in pipeline.traverse(top_down=True):
         release_spec = node.spec
@@ -196,17 +204,65 @@ def prune_built_specs(pipeline, mirrors_to_check=None, check_index_only=True):
             spec=release_spec, mirrors_to_check=mirrors_to_check, index_only=check_index_only
         )
         if up_to_date_mirrors:
-            to_prune.add(key)
+            keys_to_prune.add(key)
             found_on_mirrors[key] = [m["mirror_url"] for m in up_to_date_mirrors]
 
-    if to_prune:
+    if keys_to_prune:
         tty.msg("Pruned the following already built specs:")
-        for key in to_prune:
+        for key in keys_to_prune:
             spec_mirrors = found_on_mirrors[key]
             tty.msg(f"  {key} [{', '.join(spec_mirrors)}]")
             pipeline.prune(key)
     else:
         tty.msg("There were no already built specs.")
+
+
+def already_built_pruner(mirrors_to_check=None, check_index_only=True):
+    try:
+        bindist.BINARY_INDEX.update()
+    except bindist.FetchCacheError as e:
+        tty.warn(e)
+
+    def keepFilter(s: spack.spec.Spec) -> bool:
+        return not bindist.get_mirrors_for_spec(
+            spec=s, mirrors_to_check=mirrors_to_check, index_only=check_index_only
+        )
+
+    return keepFilter
+
+
+def prune_external_specs(pipeline: PipelineDag):
+    keys_to_prune = set()
+
+    for _, (key, node) in pipeline.traverse(top_down=True):
+        if node.spec.external:
+            keys_to_prune.add(key)
+
+    for key in keys_to_prune:
+        pipeline.prune(key)
+
+
+def external_pruner():
+    def keepFilter(s: spack.spec.Spec) -> bool:
+        return not s.external
+
+    return keepFilter
+
+
+def prune_any(pipeline: PipelineDag, keepFilters: List[Callable[[spack.spec.Spec], bool]]) -> Dict[str, List[bool]]:
+    pruning_decisions : Dict[str, List[bool]] = {}
+    keys_to_prune = set()
+
+    for _, (key, node) in pipeline.traverse(top_down=True):
+        filterResults = [keepSpec(node.spec) for keepSpec in keepFilters]
+        pruning_decisions[key] = filterResults
+        if not all(filterResults):
+            keys_to_prune.add(key)
+
+    for key in keys_to_prune:
+        pipeline.prune(key)
+
+    return pruning_decisions
 
 
 def write_pipeline_manifest(specs, src_prefix, dest_prefix, output_file):
@@ -287,7 +343,9 @@ def collect_pipeline_options(env: ev.Environment, args) -> PipelineOptions:
     options.run_optimizer = args.optimize
     options.use_dependencies = args.dependencies
     options.prune_up_to_date = args.prune_dag
+    options.prune_external = args.prune_externals
     options.check_index_only = args.index_only
+    options.copy_yaml_to = args.copy_to
     options.remote_mirror_override = args.buildcache_destination
 
     ci_config = cfg.get("ci")
@@ -451,6 +509,13 @@ def generate_pipeline(env: ev.Environment, args) -> None:
         ]
     )
 
+    # A filter is a 2-tuple containg a short description and a function
+    # taking a spec and returning whether or not to keep that spec.
+    pruning_filters = [
+        ("external", external_pruner()),
+        ("already built", already_built_pruner(mirrors_to_check=mirrors_to_check, check_index_only=options.check_index_only)),
+    ]
+
     # Possibly prune specs that were unaffected by the change
     if options.prune_untouched:
         # If we don't have two revisions to compare, or if either the spack.yaml
@@ -480,11 +545,21 @@ def generate_pipeline(env: ev.Environment, args) -> None:
                 for s in affected_specs:
                     tty.msg(f"  {PipelineDag.key(s)}")
 
-                prune_unaffected_specs(pipeline, affected_specs)
+                # prune_unaffected_specs(pipeline, affected_specs)
+                pruning_filters.append(("unaffected", unaffected_pruner(affected_specs))),
 
-    # Possibly prune specs that are already built on some configured mirror
-    if options.prune_up_to_date:
-        prune_built_specs(pipeline, mirrors_to_check, options.check_index_only)
+    # # Possibly prune specs that are already built on some configured mirror
+    # if options.prune_up_to_date:
+    #     prune_built_specs(pipeline, mirrors_to_check, options.check_index_only)
+
+    # # Possibly prune specs that are external
+    # if options.prune_external:
+    #     prune_external_specs(pipeline)
+
+    pruning_results = PruningResults(
+        descriptions=tuple([description for (description, _) in pruning_filters]),
+        results=prune_any(pipeline, [fn for (_, fn) in pruning_filters]),
+    )
 
     # List all specs remaining after any pruning
     pipeline_specs = [n.spec for _, (k, n) in pipeline.traverse(top_down=True)]
@@ -534,7 +609,7 @@ def generate_pipeline(env: ev.Environment, args) -> None:
     spack_ci = SpackCI(ci_config, pipeline)
 
     # Format the pipeline using the formatter specified in the environment
-    target_formatter(pipeline, spack_ci, options)
+    target_formatter(pipeline, spack_ci, options, pruning_results)
 
     # Clean up remote mirror override if enabled
     # TODO: Remove this block in Spack 0.23

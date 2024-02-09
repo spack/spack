@@ -20,6 +20,7 @@ from ..common import (
     PipelineDag,
     PipelineOptions,
     PipelineType,
+    PruningResults,
     SpackCI,
     unpack_script,
     update_env_scopes,
@@ -71,21 +72,33 @@ def get_job_name(spec: spack.spec.Spec, build_group: str = ""):
     return job_name[:255]
 
 
-def _print_staging_summary(stages):
+def _print_staging_summary(stages: List[List[spack.spec.Spec]], pruning_results: PruningResults):
     if not stages:
         return
 
     spec_fmt = "{name}{@version}{%compiler}{/hash:7}"
+
+    generated_job_node_keys = []
 
     tty.msg("Staging summary:")
     for stage_index, stage in enumerate(stages):
         tty.msg(f"  stage {stage_index} ({len(stage)} jobs):")
         for s in sorted(stage, key=lambda j: j.cformat(spec_fmt)):
             tty.msg(f"    {s.cformat(spec_fmt)}")
+            generated_job_node_keys.append(PipelineDag.key(s))
+
+    filter_descriptions = pruning_results.filterDescriptions
+    tty.msg("Pruning list:")
+    for (key, filterResults) in pruning_results.filterResults.items():
+        if key not in generated_job_node_keys:
+            reasons = [
+                filter_descriptions[i] for i, result in enumerate(filterResults) if not result
+            ]
+            tty.msg(f"  {s.cformat(spec_fmt)} ({reasons})")
 
 
 @formatter("gitlab")
-def format_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCI, options: PipelineOptions):
+def format_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCI, options: PipelineOptions, pruning_results: PruningResults):
     """Given a pipeline graph, job attributes, and pipeline options,
     write a pipeline that can be consumed by GitLab to the given output file.
 
@@ -239,7 +252,7 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCI, options: Pipeli
         already_built = bindist.get_mirrors_for_spec(
             spec=release_spec, mirrors_to_check=None, index_only=True
         )
-        job_vars["SPACK_SPEC_NEEDS_REBUILD"] = "True" if already_built else "False"
+        job_vars["SPACK_SPEC_NEEDS_REBUILD"] = "False" if already_built else "True"
 
         if options.cdash_handler:
             build_name = options.cdash_handler.build_name(release_spec)
@@ -287,7 +300,7 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCI, options: Pipeli
             job_id += 1
 
     if options.print_summary:
-        _print_staging_summary(stages)
+        _print_staging_summary(stages, pruning_results)
 
     tty.debug("{0} build jobs generated in {1} stages".format(job_id, stage_id))
 
@@ -463,3 +476,11 @@ def format_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCI, options: Pipeli
 
     with open(output_file, "w") as outf:
         outf.write(syaml.dump(sorted_output, default_flow_style=True))
+
+    # TODO: Remove this block in Spack 0.23
+    if options.copy_yaml_to:
+        copy_to_dir = os.path.dirname(options.copy_yaml_to)
+        if not os.path.exists(copy_to_dir):
+            os.makedirs(copy_to_dir)
+        tty.msg(f"src: {output_file}, dst: {options.copy_yaml_to}")
+        shutil.copyfile(output_file, options.copy_yaml_to)
