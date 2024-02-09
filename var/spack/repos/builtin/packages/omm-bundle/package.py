@@ -51,4 +51,4 @@ class OmmBundle(MakefilePackage):
 
     def install(self, spec, prefix):
         for d in ["pspBLAS", "MatrixSwitch", "libOMM", "tomato"]:
-            shutil.copytree("build_" + d, prefix + "/build_" + d)
+            install_tree("build_" + d, prefix + "/build_" + d)
