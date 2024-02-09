@@ -275,24 +275,37 @@ def setup_parser(subparser: argparse.ArgumentParser):
 
     # Sync buildcache entries from one mirror to another
     sync = subparsers.add_parser("sync", help=sync_fn.__doc__)
-    sync_source = sync.add_mutually_exclusive_group(required=True)
-    sync_source.add_argument(
+
+    sync_manifest_source = sync.add_argument_group(
+        "Manifest Source",
+        "Specify a list of build cache objects to sync using manifest file(s)."
+        'This option takes the place of the "source mirror" for synchronization'
+        'and optionally takes a "destination mirror" ',
+    )
+    sync_manifest_source.add_argument(
         "--manifest-glob", help="a quoted glob pattern identifying CI rebuild manifest files"
     )
-    sync_source.add_argument(
+    sync_source_mirror = sync.add_argument_group(
+        "Named Source",
+        "Specify a single registered source mirror to synchronize from. This option requires"
+        "the specification of a destination mirror.",
+    )
+    sync_source_mirror.add_argument(
         "src_mirror",
         metavar="source mirror",
-        type=arguments.mirror_name_or_url,
         nargs="?",
+        type=arguments.mirror_name_or_url,
         help="source mirror name, path, or URL",
     )
+
     sync.add_argument(
         "dest_mirror",
         metavar="destination mirror",
-        type=arguments.mirror_name_or_url,
         nargs="?",
+        type=arguments.mirror_name_or_url,
         help="destination mirror name, path, or URL",
     )
+
     sync.set_defaults(func=sync_fn)
 
     # Update buildcache index without copying any additional packages
@@ -1071,7 +1084,17 @@ def sync_fn(args):
     requires an active environment in order to know which specs to sync
     """
     if args.manifest_glob:
-        manifest_copy(glob.glob(args.manifest_glob), args.dest_mirror)
+        # Passing the args.src_mirror here because it is not possible to
+        # have the destination be required when specifying a named source
+        # mirror and optional for the --manifest-glob argument. In the case
+        # of manifest glob sync, the source mirror positional argument is the
+        # destination mirror if it is specified. If there are two mirrors
+        # specified, the second is ignored and the first is the override
+        # destination.
+        if args.dest_mirror:
+            tty.warn(f"Ignoring unused arguemnt: {args.dest_mirror.name}")
+
+        manifest_copy(glob.glob(args.manifest_glob), args.src_mirror)
         return 0
 
     if args.src_mirror is None or args.dest_mirror is None:

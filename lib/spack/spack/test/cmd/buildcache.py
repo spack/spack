@@ -281,7 +281,6 @@ def test_buildcache_sync(
         buildcache("sync", "--manifest-glob", manifest_file)
 
         verify_mirror_contents()
-        return
         shutil.rmtree(dest_mirror_dir)
 
         manifest_file = os.path.join(tmpdir.strpath, "manifest_bad_dest.json")
