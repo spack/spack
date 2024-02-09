@@ -176,7 +176,7 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         depends_on("pkgconfig", type="build")
         # please set variants: smm=blas by configuring packages.yaml or install
         # cp2k with option smm=blas on aarch64
-        conflicts("libxsmm@:1.7", when="target=aarch64", msg="libxsmm is not available on arm")
+        conflicts("libxsmm@:1.17", when="target=aarch64", msg="old libxsmm is not available on arm")
 
     with when("+libint"):
         depends_on("pkgconfig", type="build", when="@7.0:")
@@ -346,6 +346,8 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     # after NDEBUG support was dropped in https://github.com/cp2k/cp2k/pull/3172
     # The patch applies https://github.com/cp2k/cp2k/pull/3251 to version 2024.1
     patch("cmake-relwithdebinfo-2024.1.patch", when="@2024.1 build_system=cmake")
+    # Fix to build with Fujitsu compiler
+    patch("fj_2023.1.patch", when="@2023.1 %fj")
 
     # Patch for an undefined constant due to incompatible changes in ELPA
     @when("@9.1:2022.2 +elpa")
