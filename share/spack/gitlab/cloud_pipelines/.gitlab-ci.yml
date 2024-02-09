@@ -794,27 +794,6 @@ ml-darwin-aarch64-mps-build:
       job: ml-darwin-aarch64-mps-generate
 
 ########################################
-# Deprecated CI testing
-########################################
-.deprecated-ci:
-  variables:
-    SPACK_CI_STACK_NAME: deprecated
-
-deprecated-ci-generate:
-  extends: [ ".generate-deprecated", ".deprecated-ci" ]
-
-deprecated-ci-build:
-  extends: [ ".build", ".deprecated-ci" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: deprecated-ci-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: deprecated-ci-generate
-
-########################################
 # AWS PCLUSTER
 ########################################
 
