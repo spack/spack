@@ -136,12 +136,12 @@ class PythonExtension(spack.package_base.PackageBase):
         return conflicts
 
     def add_files_to_view(self, view, merge_map, skip_if_exists=True):
-        if not self.extendee_spec:
+        # Patch up shebangs to the python linked in the view only if python is built by Spack.
+        if not self.extendee_spec or self.extendee_spec.external:
             return super().add_files_to_view(view, merge_map, skip_if_exists)
 
         bin_dir = self.spec.prefix.bin
         python_prefix = self.extendee_spec.prefix
-        python_is_external = self.extendee_spec.external
         for src, dst in merge_map.items():
             if os.path.exists(dst):
                 continue
@@ -149,8 +149,7 @@ class PythonExtension(spack.package_base.PackageBase):
                 view.link(src, dst)
             elif not os.path.islink(src):
                 shutil.copy2(src, dst)
-                is_script = fs.is_nonsymlink_exe_with_shebang(src)
-                if is_script and not python_is_external:
+                if fs.is_nonsymlink_exe_with_shebang(src):
                     fs.filter_file(
                         python_prefix,
                         os.path.abspath(view.get_projection_for_spec(self.spec)),
