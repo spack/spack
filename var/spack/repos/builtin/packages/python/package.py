@@ -1294,14 +1294,6 @@ print(json.dumps(config))
                 new_link_target = os.path.abspath(merge_map[orig_link_target])
                 view.link(new_link_target, dst, spec=self.spec)
 
-    def remove_files_from_view(self, view, merge_map):
-        bin_dir = self.spec.prefix.bin if sys.platform != "win32" else self.spec.prefix
-        for src, dst in merge_map.items():
-            if not path_contains_subdirectory(src, bin_dir):
-                view.remove_file(src, dst)
-            else:
-                os.remove(dst)
-
     def test_hello_world(self):
         """run simple hello world program"""
         # do not use self.command because we are also testing the run env
