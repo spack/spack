@@ -54,8 +54,6 @@ class Fzf(MakefilePackage):
         mkdirp(prefix.share.fzf.shell)
         install_tree("shell", prefix.share.fzf.shell)
 
-    @run_after("install")
-    def post_install(self):
-        if "+vim" in self.spec:
-            mkdir(self.prefix.plugin)
-            install("plugin/fzf.vim", self.prefix.plugin)
+        if spec.satisfies("+vim"):
+            mkdirp(prefix.share.fzf.plugins)
+            install("plugin/fzf.vim", prefix.share.fzf.plugins)
