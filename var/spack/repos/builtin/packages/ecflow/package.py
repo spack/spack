@@ -77,6 +77,9 @@ class Ecflow(CMakePackage):
             "Pyext/CMakeLists.txt",
         )
 
+    # https://github.com/JCSDA/spack-stack/issues/1001
+    patch("ctsapi_cassert.patch", when="@5.11.4 %intel@2021")
+
     @when("+ssl ^openssl~shared")
     def setup_build_environment(self, env):
         env.set("LIBS", self.spec["zlib"].libs.search_flags)
