@@ -188,7 +188,8 @@ class IntelOneApiLibraryPackage(IntelOneApiPackage):
         # trilinos passes the directories to cmake, and cmake requires
         # that the directory exists
         for dir in dirs:
-            RuntimeError(f"{dir} does not exist")
+            if not isdir(dir):
+                raise RuntimeError(f"{dir} does not exist")
         return h
 
     @property
