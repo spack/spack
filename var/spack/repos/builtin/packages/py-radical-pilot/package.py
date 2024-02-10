@@ -13,14 +13,14 @@ class PyRadicalPilot(PythonPackage):
 
     homepage = "https://radical-cybertools.github.io"
     git = "https://github.com/radical-cybertools/radical.pilot.git"
-    pypi = "radical.pilot/radical.pilot-1.46.2.tar.gz"
+    pypi = "radical.pilot/radical.pilot-1.47.0.tar.gz"
 
     maintainers("andre-merzky")
 
     license("MIT")
 
     version("develop", branch="devel")
-    version("1.46.2", sha256="7a424d646e645f542b39f8eeb33646c20aa9494f1e361700bce5f0df408f08ba")
+    version("1.47.0", sha256="58f41a0c42fe61381f15263a63424294732606ab7cee717540c0b730308f7908")
     version("1.39.0", sha256="7ba0bfa3258b861db71e73d52f0915bfb8b3ac1099badacf69628307cab3b913")
 
     version(
@@ -99,8 +99,8 @@ class PyRadicalPilot(PythonPackage):
         deprecated=True,
     )
 
-    depends_on("py-radical-utils@1.43:", type=("build", "run"), when="@1.42:")
-    depends_on("py-radical-saga@1.37:", type=("build", "run"), when="@1.40:")
+    depends_on("py-radical-utils@1.44:", type=("build", "run"), when="@1.47:")
+    depends_on("py-radical-saga@1.40:", type=("build", "run"), when="@1.47:")
     depends_on("py-radical-gtod", type=("build", "run"), when="@1.14:")
 
     depends_on("py-radical-utils@1.39", type=("build", "run"), when="@1.39")

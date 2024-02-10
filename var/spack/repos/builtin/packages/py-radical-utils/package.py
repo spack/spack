@@ -12,14 +12,14 @@ class PyRadicalUtils(PythonPackage):
 
     homepage = "https://radical-cybertools.github.io"
     git = "https://github.com/radical-cybertools/radical.utils.git"
-    pypi = "radical.utils/radical.utils-1.46.0.tar.gz"
+    pypi = "radical.utils/radical.utils-1.47.0.tar.gz"
 
     maintainers("andre-merzky")
 
     license("MIT")
 
     version("develop", branch="devel")
-    version("1.46.0", sha256="aca199f91cd70a2c6a7c2e258969ee0db6c3451889a957fbb8c73f69c59245c4")
+    version("1.47.0", sha256="f85a4a452561dd018217f1ed38d97c9be96fa448437cfeb1b879121174fd5311")
     version("1.39.0", sha256="fade87ee4c6ccf335d5e26d5158ce22ee891e4d4c576464274999ddf36dc4977")
 
     version(

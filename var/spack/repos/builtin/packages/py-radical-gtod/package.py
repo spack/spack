@@ -14,14 +14,14 @@ class PyRadicalGtod(PythonPackage):
 
     homepage = "https://radical-cybertools.github.io"
     git = "https://github.com/radical-cybertools/radical.gtod.git"
-    pypi = "radical.gtod/radical.gtod-1.46.0.tar.gz"
+    pypi = "radical.gtod/radical.gtod-1.47.0.tar.gz"
 
     maintainers("andre-merzky")
 
     license("LGPL-3.0-or-later")
 
     version("develop", branch="devel")
-    version("1.46.0", sha256="fd0336846335993a432d00501dd58cc2a0dba89270094cbd83f065728b76dad8")
+    version("1.47.0", sha256="52e75bf14faf352165ffa0d9e32ca472bd63f479020cd78f832baa34f8acfe6d")
     version("1.39.0", sha256="254f1e805b58a33b93c6180f018904db25538710ec9e75b3a3a9969d7206ecf6")
 
     version(

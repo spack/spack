@@ -12,14 +12,14 @@ class PyRadicalEntk(PythonPackage):
 
     homepage = "https://radical-cybertools.github.io"
     git = "https://github.com/radical-cybertools/radical.entk.git"
-    pypi = "radical.entk/radical.entk-1.46.0.tar.gz"
+    pypi = "radical.entk/radical.entk-1.47.0.tar.gz"
 
     maintainers("andre-merzky")
 
     license("MIT")
 
     version("develop", branch="devel")
-    version("1.46.0", sha256="1f2cede29eb76592483be8d088fdd9d62e8646e7471041ea7c3099cc7c426f27")
+    version("1.47.0", sha256="a4338e3a87147c032fb3a16a03990155742cc64c6625cfb4e1588ae0e51aafda")
     version("1.39.0", sha256="72d64b25df9f3cb1dcbc32323a669d86d947cf07d15bed91cfedca2a99fb3ef1")
 
     version(
