@@ -38,7 +38,7 @@ class GoBootstrap(Package):
             "darwin": {
                 "amd64": "98a09c085b4c385abae7d35b9155195d5e584d14988347ac7f18e4cbe3b5ef3d",
                 "arm64": "1163be1998835a13f00dfc869a8e3cdebf86984ad41ff2fff43e35ac2a0d8344",
-             },
+            },
             "linux": {
                 "amd64": "b945ae2bb5db01a0fb4786afde64e6fbab50b67f6fa0eb6cfa4924f16a7ff1eb",
                 "arm64": "4e15ab37556e979181a1a1cc60f6d796932223a0f5351d7c83768b356f84429b",
@@ -55,7 +55,7 @@ class GoBootstrap(Package):
                 "arm64": "914daad3f011cc2014dea799bb7490442677e4ad6de0b2ac3ded6cee7e3f493d",
                 "ppc64le": "bd0763fb130f8412672ffe1e4a8e65888ebe2419e5caa9a67ac21e8c298aa254",
             },
-        }
+        },
     }
 
     # Normalize architectures returned by platform to those used by the
