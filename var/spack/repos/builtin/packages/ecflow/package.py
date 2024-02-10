@@ -68,6 +68,9 @@ class Ecflow(CMakePackage):
     # Requirement to use the Python3_EXECUTABLE variable
     depends_on("cmake@3.16:", type="build")
 
+    # https://github.com/JCSDA/spack-stack/issues/1001
+    patch("ctsapi_cassert.patch", when="@5.11.4 %intel@2021")
+
     @when("@:4.13.0")
     def patch(self):
         version = str(self.spec["python"].version[:2])
@@ -76,9 +79,6 @@ class Ecflow(CMakePackage):
             rf"REQUIRED COMPONENTS python{version}",
             "Pyext/CMakeLists.txt",
         )
-
-    # https://github.com/JCSDA/spack-stack/issues/1001
-    patch("ctsapi_cassert.patch", when="@5.11.4 %intel@2021")
 
     @when("+ssl ^openssl~shared")
     def setup_build_environment(self, env):
