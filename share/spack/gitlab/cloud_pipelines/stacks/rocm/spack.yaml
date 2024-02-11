@@ -1,0 +1,172 @@
+spack:
+  view: false
+
+  concretizer:
+    reuse: false
+    unify: true
+
+  config:
+    install_tree:
+      root: /home/software/spack
+      padded_length: 512
+      projections:
+        all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
+
+  definitions:
+    - default_specs:
+      - hip
+      - hipblas
+      - hipcub
+      - hipfft
+      - hipfort
+      - hipify-clang
+      # - hip-rocclr # Needs fix for install
+      - hipsolver
+      - hipsparse
+      # - hipsycl # Needs fixes for to use llvm-amdgpu clang
+      - hsa-rocr-dev
+      - mesa +llvm
+      - miopen-hip
+      - rocalution
+      - rocblas amdgpu_target=gfx1030
+      - rocfft amdgpu_target=gfx1030
+      - rocm-clang-ocl
+      - rocm-cmake
+      - rocm-dbgapi
+      - rocm-debug-agent
+      # - rocm-device-libs # built by llvm-amdgpu
+      - rocm-gdb
+      - rocminfo
+      - rocm-opencl
+      - rocm-openmp-extras
+      # - rocm-smi # Deprecated after 4.1.0 in favor of rocm-smi-lib
+      - rocm-smi-lib
+      # - rocm-tensile # Build issues
+      # - rocm-validation-suite # Needs hip-rocclr
+      - rocprim amdgpu_target=gfx1030
+      - rocprofiler-dev
+      - rocrand amdgpu_target=gfx1030
+      - rocsolver ~optimal amdgpu_target=gfx1030 # Disabling optimal to improve build time
+      - rocsparse amdgpu_target=gfx1030
+      - rocthrust
+      - roctracer-dev
+      - roctracer-dev-api
+      - llvm-amdgpu +rocm-device-libs+llvm_dylib+link_llvm_dylib
+    - arch:
+      - '%gcc target=x86_64'
+
+  specs:
+    - matrix:
+        - - $default_specs
+        - - $arch
+
+  mirrors: { "mirror": "s3://spack-binaries/develop/rocm" }
+
+  gitlab-ci:
+    script:
+      - . "./share/spack/setup-env.sh"
+      - spack --version
+      - cd ${SPACK_CONCRETE_ENV_DIR}
+      - spack env activate --without-view .
+      - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
+      - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /mnt/key/intermediate_ci_signing_key.gpg; fi
+      - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
+      - spack -d ci rebuild
+
+    image:
+      name: "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18"
+      entrypoint: [ "" ]
+
+    mappings:
+      - match:
+          - llvm-amdgpu
+          - mesa
+          - miopen-hip
+          - mlirmiopen
+
+        runner-attributes:
+          tags: [ "spack", "huge", "x86_64" ]
+          variables:
+            CI_JOB_SIZE: huge
+            KUBERNETES_CPU_REQUEST: 11000m
+            KUBERNETES_MEMORY_REQUEST: 42G
+
+      - match:
+          - cmake
+          - rocblas
+          - rocfft
+          - meson
+
+        runner-attributes:
+          tags: [ "spack", "large", "x86_64"]
+          variables:
+            CI_JOB_SIZE: large
+            KUBERNETES_CPU_REQUEST: 8000m
+            KUBERNETES_MEMORY_REQUEST: 12G
+
+      - match:
+          - curl
+          - gettext
+          - mpich
+          - openjpeg
+          - sqlite
+        runner-attributes:
+          tags: [ "spack", "medium", "x86_64" ]
+          variables:
+            CI_JOB_SIZE: "medium"
+            KUBERNETES_CPU_REQUEST: "2000m"
+            KUBERNETES_MEMORY_REQUEST: "4G"
+
+      - match:
+          - bzip2
+          - diffutils
+          - findutils
+          - libffi
+          - libidn2
+          - libmd
+          - libsigsegv
+          - libxml2
+          - lz4
+          - openssl
+          - pkgconf
+          - tut
+          - util-linux-uuid
+          - util-macros
+          - xz
+          - zlib
+        runner-attributes:
+          tags: [ "spack", "medium", "x86_64" ]
+          variables:
+            CI_JOB_SIZE: "small"
+            KUBERNETES_CPU_REQUEST: "500m"
+            KUBERNETES_MEMORY_REQUEST: "500M"
+
+      - match:
+          - 'os=ubuntu18.04'
+        runner-attributes:
+          tags: ["spack", "x86_64"]
+          variables:
+            CI_JOB_SIZE: "default"
+
+    broken-specs-url: "s3://spack-binaries/broken-specs"
+
+    service-job-attributes:
+      before_script:
+        - . "./share/spack/setup-env.sh"
+        - spack --version
+      image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
+      tags: ["spack", "public", "x86_64"]
+
+    signing-job-attributes:
+      image: { "name": "ghcr.io/spack/notary:latest", "entrypoint": [""] }
+      tags: ["spack", "aws"]
+      script:
+        - aws s3 sync --exclude "*" --include "*spec.json*" ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache /tmp
+        - /sign.sh
+        - aws s3 sync --exclude "*" --include "*spec.json.sig*" /tmp ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache
+
+  cdash:
+    build-group: Build tests for ROCm stack
+    url: https://cdash.spack.io
+    project: Spack Testing
+    site: Cloud Gitlab Infrastructure
