@@ -46,6 +46,4 @@ class FenicsBasix(CMakePackage):
         msg="fenics-basix requires Clang-10 or newer for C++20 support",
     )
 
-    @property
-    def root_cmakelists_dir(self):
-        return "cpp"
+    root_cmakelists_dir = "cpp"
