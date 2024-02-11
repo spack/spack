@@ -24,6 +24,7 @@ class PyImmutables(PythonPackage):
     depends_on("python@3.5:", type=("build", "run"))
     depends_on("python@3.6:", type=("build", "run"), when="@0.16:")
     depends_on("py-setuptools", type="build")
+    # setuptools 68 is more strict about format of pyproject.toml and fails to install older versions of the package
     depends_on("py-setuptools@:67", type="build", when="@:0.18")
     depends_on("py-setuptools@42:", type="build", when="@0.16:")
     depends_on("py-typing-extensions@3.7.4.3:", when="@0.16: ^python@:3.7", type=("build", "run"))
