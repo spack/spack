@@ -27,5 +27,4 @@ class PyConfigargparse(PythonPackage):
     version("1.5.5", sha256="5b8316f11985aa169e51126086d3d6d24d7ba976585266311491015ddffbd717")
     version("1.2.3", sha256="0f1144a204e3b896d6ac900e151c1d13bde3103d6b7d541e3bb57514a94083bf")
 
-    depends_on("python@2.2:2,3.5:", type=("build", "run"), when="@:1.5.5")
     depends_on("py-setuptools", type="build")
