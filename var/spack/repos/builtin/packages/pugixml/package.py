@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Pugixml(CMakePackage):
 
     homepage = "https://pugixml.org/"
     url = "https://github.com/zeux/pugixml/releases/download/v1.10/pugixml-1.10.tar.gz"
+
+    license("MIT")
 
     version("1.13", sha256="40c0b3914ec131485640fa57e55bf1136446026b41db91c1bef678186a12abbe")
     version("1.11.4", sha256="8ddf57b65fb860416979a3f0640c2ad45ddddbbafa82508ef0a0af3ce7061716")

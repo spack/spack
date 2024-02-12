@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class Mesa18(AutotoolsPackage):
     # whatever version of LLVM you're using.
     git = "https://gitlab.freedesktop.org/mesa/mesa.git"
 
-    version("18.3.6", tag="mesa-18.3.6")
+    version("18.3.6", tag="mesa-18.3.6", commit="11049bcff86da8013a4f63bd68daf637e3af22f3")
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")

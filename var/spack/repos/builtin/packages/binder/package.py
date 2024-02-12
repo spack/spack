@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,11 +21,13 @@ class Binder(CMakePackage):
 
     maintainers("lyskov", "kliegeois")
 
+    license("MIT")
+
     version("master", branch="master")
-    version("1.3.0", tag="v1.3.0")
-    version("1.2.0", tag="v1.2.0")
-    version("1.1.0", tag="v1.0.0")
-    version("1.0.0", tag="v1.0.0")
+    version("1.3.0", tag="v1.3.0", commit="e9b55985af297ca161d615058e4a5da07c22bc77")
+    version("1.2.0", tag="v1.2.0", commit="90cf5b31b6f4ecad3fe87518ca2b949dc9e8ed1a")
+    version("1.1.0", tag="v1.0.0", commit="3de7949343197295250f988716d511a264b21324")
+    version("1.0.0", tag="v1.0.0", commit="3de7949343197295250f988716d511a264b21324")
 
     # Add dependencies
     depends_on("llvm+clang+llvm_dylib@7.0:9")
@@ -49,6 +51,6 @@ class Binder(CMakePackage):
     def setup_dependent_package(self, module, dependent_spec):
         llvm_dir = self.spec["llvm"].prefix
         self.spec.clang_include_dirs = llvm_dir.include
-        self.spec.LibClang_include_dir = llvm_dir.lib.clang.join(
+        self.spec.libclang_include_dir = llvm_dir.lib.clang.join(
             format(self.spec["llvm"].version)
         ).include

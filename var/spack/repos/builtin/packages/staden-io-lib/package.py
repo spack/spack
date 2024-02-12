@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class StadenIoLib(AutotoolsPackage):
     url = (
         "https://sourceforge.net/projects/staden/files/io_lib/1.14.8/io_lib-1.14.8.tar.gz/download"
     )
+
+    license("BSD-3-Clause")
 
     version("1.14.8", sha256="3bd560309fd6d70b14bbb8230e1baf8706b804eb6201220bb6c3d6db72003d1b")
 

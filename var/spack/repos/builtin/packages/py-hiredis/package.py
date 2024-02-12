@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyHiredis(PythonPackage):
 
     homepage = "https://github.com/redis/hiredis-py"
     pypi = "hiredis/hiredis-1.1.0.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("1.1.0", sha256="996021ef33e0f50b97ff2d6b5f422a0fe5577de21a8873b58a779a5ddd1c3132")
 

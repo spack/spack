@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -196,6 +196,10 @@ class Hdf(AutotoolsPackage):
             make("check", parallel=False)
 
     extra_install_tests = join_path("hdf", "util", "testfiles")
+
+    # Filter h4cc compiler wrapper to substitute the Spack compiler
+    # wrappers with the path of the underlying compilers.
+    filter_compiler_wrappers("h4cc", relative_root="bin")
 
     @property
     def cached_tests_work_dir(self):

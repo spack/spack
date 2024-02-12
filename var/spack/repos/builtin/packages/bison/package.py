@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class Bison(AutotoolsPackage, GNUMirrorPackage):
     tags = ["build-tools"]
 
     executables = ["^bison$"]
+
+    license("GPL-3.0-or-later")
 
     version("3.8.2", sha256="06c9e13bdf7eb24d4ceb6b59205a4f67c2c7e7213119644430fe82fbd14a0abb")
     version("3.8.1", sha256="ce318a47196155fb7c26912b513102f3d0e14757c2e495e34608757b61339c5c")
@@ -65,6 +67,13 @@ class Bison(AutotoolsPackage, GNUMirrorPackage):
     patch("nvhpc-3.7.patch", when="@3.7.0:3.7 %nvhpc")
 
     conflicts("%intel@:14", when="@3.4.2:", msg="Intel 14 has immature C11 support")
+    conflicts(
+        "%oneapi",
+        msg=(
+            "bison is likely miscompiled by oneapi compilers, "
+            "see https://github.com/spack/spack/issues/37172"
+        ),
+    )
 
     if sys.platform == "darwin" and macos_version() >= Version("10.13"):
         patch("secure_snprintf.patch", level=0, when="@3.0.4")

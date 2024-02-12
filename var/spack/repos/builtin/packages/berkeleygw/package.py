@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,21 +17,27 @@ class Berkeleygw(MakefilePackage):
     maintainers("migueldiascosta")
 
     version(
+        "3.1.0",
+        sha256="7e890a5faa5a6bb601aa665c73903b3af30df7bdd13ee09362b69793bbefa6d2",
+        url="https://app.box.com/shared/static/2bik75lrs85zt281ydbup2xa7i5594gy.gz",
+        expand=False,
+    )
+    version(
         "3.0.1",
         sha256="7d8c2cc1ee679afb48efbdd676689d4d537226b50e13a049dbcb052aaaf3654f",
-        url="https://berkeley.box.com/shared/static/m1dgnhiemo47lhxczrn6si71bwxoxor8.gz",
+        url="https://app.box.com/shared/static/m1dgnhiemo47lhxczrn6si71bwxoxor8.gz",
         expand=False,
     )
     version(
         "3.0",
         sha256="ab411acead5e979fd42b8d298dbb0a12ce152e7be9eee0bb87e9e5a06a638e2a",
-        url="https://berkeley.box.com/shared/static/lp6hj4kxr459l5a6t05qfuzl2ucyo03q.gz",
+        url="https://app.box.com/shared/static/lp6hj4kxr459l5a6t05qfuzl2ucyo03q.gz",
         expand=False,
     )
     version(
         "2.1",
         sha256="31f3b643dd937350c3866338321d675d4a1b1f54c730b43ad74ae67e75a9e6f2",
-        url="https://berkeley.box.com/shared/static/ze3azi5vlyw7hpwvl9i5f82kaiid6g0x.gz",
+        url="https://app.box.com/shared/static/ze3azi5vlyw7hpwvl9i5f82kaiid6g0x.gz",
         expand=False,
     )
 
@@ -54,8 +60,34 @@ class Berkeleygw(MakefilePackage):
     depends_on("hdf5+fortran+hl+mpi", when="+hdf5+mpi")
     depends_on("elpa+openmp", when="+elpa+openmp")
     depends_on("elpa~openmp", when="+elpa~openmp")
-    depends_on("fftw-api@3+openmp", when="+openmp")
-    depends_on("fftw-api@3~openmp", when="~openmp")
+
+    depends_on("fftw-api@3")
+    with when("+openmp"):
+        depends_on("acfl threads=openmp", when="^[virtuals=fftw-api] acfl")
+        depends_on("amdfftw+openmp", when="^[virtuals=fftw-api] amdfftw")
+        depends_on("armpl-gcc threads=openmp", when="^[virtuals=fftw-api] armpl-gcc")
+        depends_on("cray-fftw+openmp", when="^[virtuals=fftw-api] cray-fftw")
+        depends_on("fftw+openmp", when="^[virtuals=fftw-api] fftw")
+        depends_on("fujitsu-fftw+openmp", when="^[virtuals=fftw-api] fujitsu-fftw")
+        depends_on("intel-mkl threads=openmp", when="^[virtuals=fftw-api] intel-mkl")
+        depends_on("intel-oneapi-mkl threads=openmp", when="^[virtuals=fftw-api] intel-oneapi-mkl")
+        depends_on(
+            "intel-parallel-studio threads=openmp",
+            when="^[virtuals=fftw-api] intel-parallel-studio",
+        )
+
+    with when("~openmp"):
+        depends_on("acfl threads=none", when="^[virtuals=fftw-api] acfl")
+        depends_on("amdfftw~openmp", when="^[virtuals=fftw-api] amdfftw")
+        depends_on("armpl-gcc threads=none", when="^[virtuals=fftw-api] armpl-gcc")
+        depends_on("cray-fftw~openmp", when="^[virtuals=fftw-api] cray-fftw")
+        depends_on("fftw~openmp", when="^[virtuals=fftw-api] fftw")
+        depends_on("fujitsu-fftw~openmp", when="^[virtuals=fftw-api] fujitsu-fftw")
+        depends_on("intel-mkl threads=none", when="^[virtuals=fftw-api] intel-mkl")
+        depends_on("intel-oneapi-mkl threads=none", when="^[virtuals=fftw-api] intel-oneapi-mkl")
+        depends_on(
+            "intel-parallel-studio threads=none", when="^[virtuals=fftw-api] intel-parallel-studio"
+        )
 
     # in order to run the installed python scripts
     depends_on("python", type=("build", "run"), when="+python")
@@ -69,10 +101,8 @@ class Berkeleygw(MakefilePackage):
 
     # Force openmp propagation on some providers of blas / fftw-api
     with when("+openmp"):
-        depends_on("fftw+openmp", when="^fftw")
-        depends_on("amdfftw+openmp", when="^amdfftw")
-        depends_on("openblas threads=openmp", when="^openblas")
-        depends_on("amdblis threads=openmp", when="^amdblis")
+        depends_on("openblas threads=openmp", when="^[virtuals=blas] openblas")
+        depends_on("amdblis threads=openmp", when="^[virtuals=blas] amdblis")
 
     parallel = False
 

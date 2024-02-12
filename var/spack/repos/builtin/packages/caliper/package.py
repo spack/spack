@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,8 +25,11 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
 
     test_requires_compiler = True
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("2.10.0", sha256="14c4fb5edd5e67808d581523b4f8f05ace8549698c0e90d84b53171a77f58565")
+    version("2.9.1", sha256="4771d630de505eff9227e0ec498d0da33ae6f9c34df23cb201b56181b8759e9e")
     version("2.9.0", sha256="507ea74be64a2dfd111b292c24c4f55f459257528ba51a5242313fa50978371f")
     version("2.8.0", sha256="17807b364b5ac4b05997ead41bd173e773f9a26ff573ff2fe61e0e70eab496e4")
     version(
@@ -44,15 +47,33 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
         sha256="d553e60697d61c53de369b9ca464eb30710bda90fba9671201543b64eeac943c",
         deprecated=True,
     )
-    version("2.4.0", tag="v2.4.0", deprecated=True)
-    version("2.3.0", tag="v2.3.0", deprecated=True)
-    version("2.2.0", tag="v2.2.0", deprecated=True)
-    version("2.1.1", tag="v2.1.1", deprecated=True)
-    version("2.0.1", tag="v2.0.1", deprecated=True)
-    version("1.9.1", tag="v1.9.1", deprecated=True)
-    version("1.9.0", tag="v1.9.0", deprecated=True)
-    version("1.8.0", tag="v1.8.0", deprecated=True)
-    version("1.7.0", tag="v1.7.0", deprecated=True)
+    version(
+        "2.4.0", tag="v2.4.0", commit="30577b4b8beae104b2b35ed487fec52590a99b3d", deprecated=True
+    )
+    version(
+        "2.3.0", tag="v2.3.0", commit="9fd89bb0120750d1f9dfe37bd963e24e478a2a20", deprecated=True
+    )
+    version(
+        "2.2.0", tag="v2.2.0", commit="c408e9b3642c7aa80eff37b0826d819c57e7bc04", deprecated=True
+    )
+    version(
+        "2.1.1", tag="v2.1.1", commit="0593b0e01c1d8d3e50c990399cc0fee403485599", deprecated=True
+    )
+    version(
+        "2.0.1", tag="v2.0.1", commit="4d7ff46381c53a461e62edd949e2d9dea9db7b08", deprecated=True
+    )
+    version(
+        "1.9.1", tag="v1.9.1", commit="cfc1defbbee20b50dd3e3477badd09a92b1df970", deprecated=True
+    )
+    version(
+        "1.9.0", tag="v1.9.0", commit="8356e747349b285aa621c5b74e71559f0babc4a1", deprecated=True
+    )
+    version(
+        "1.8.0", tag="v1.8.0", commit="117c1ef596b617dc71407b8b67eebef094a654f8", deprecated=True
+    )
+    version(
+        "1.7.0", tag="v1.7.0", commit="898277c93d884d4e7ca1ffcf3bbea81d22364f26", deprecated=True
+    )
 
     is_linux = sys.platform.startswith("linux")
     variant("shared", default=True, description="Build shared libraries")
@@ -77,7 +98,7 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("adiak@0.1:0", when="@2.2: +adiak")
 
     depends_on("papi@5.3:5", when="@:2.2 +papi")
-    depends_on("papi@5.3:6", when="@2.3: +papi")
+    depends_on("papi@5.3:", when="@2.3: +papi")
 
     depends_on("libpfm4@4.8:4", when="+libpfm")
 
@@ -99,13 +120,15 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+rocm+cuda")
 
     patch("for_aarch64.patch", when="target=aarch64:")
-    patch("sampler-service-missing-libunwind-include-dir.patch", when="@2.9.0 +libunwind +sampler")
+    patch(
+        "sampler-service-missing-libunwind-include-dir.patch",
+        when="@2.9.0:2.9.1 +libunwind +sampler",
+    )
 
     def cmake_args(self):
         spec = self.spec
 
         args = [
-            ("-DPYTHON_EXECUTABLE=%s" % spec["python"].command.path),
             "-DBUILD_TESTING=Off",
             "-DBUILD_DOCS=Off",
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,10 +15,13 @@ class Tandem(CMakePackage):
 
     homepage = "https://tandem.readthedocs.io/en/latest/"
     git = "https://github.com/TEAR-ERC/tandem.git"
+
+    license("BSD-3-Clause")
+
     version("main", branch="main", submodules=True)
 
     # we cannot use the tar.gz file because it does not contains submodules
-    version("1.0", tag="v1.0", submodules=True)
+    version("1.0", tag="v1.0", commit="eccab10cbdf5842ed9903fac7a023be5e2779f36", submodules=True)
     patch("fix_v1.0_compilation.diff", when="@1.0")
 
     maintainers("dmay23", "Thomas-Ulrich")
@@ -43,9 +46,9 @@ class Tandem(CMakePackage):
     depends_on("libxsmm@1.17 +generator", when="+libxsmm target=x86_64:")
     depends_on("lua@5.3.2:5.4.4")
     depends_on("eigen@3.4.0")
+
     depends_on("zlib-api")
-    depends_on("zlib@1.2.8:1.2.13", when="^zlib")
-    depends_on("petsc@3.14.6:3.18.5 +int64 +mumps +scalapack")
+    depends_on("petsc@3.14.6:3.18.5 +int64 +mumps +scalapack memalign=32")
     depends_on("petsc@3.14.6:3.18.5 +int64 +mumps +scalapack +knl", when="target=skylake:")
     # see https://github.com/TEAR-ERC/tandem/issues/45
     conflicts("%intel")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,14 @@ class PyPip(Package, PythonExtension):
     url = "https://files.pythonhosted.org/packages/py3/p/pip/pip-20.2-py3-none-any.whl"
     list_url = "https://pypi.org/simple/pip/"
 
+    # Requires railroad
+    skip_modules = ["pip._vendor"]
+
+    tags = ["build-tools"]
+
     maintainers("adamjstewart", "pradyunsg")
+
+    license("MIT")
 
     version(
         "23.1.2",
@@ -86,6 +93,9 @@ class PyPip(Package, PythonExtension):
     extends("python")
     depends_on("python@3.7:", when="@22:", type=("build", "run"))
 
+    # Uses collections.MutableMapping
+    depends_on("python@:3.9", when="@:19.1", type=("build", "run"))
+
     def url_for_version(self, version):
         url = "https://files.pythonhosted.org/packages/{0}/p/pip/pip-{1}-{0}-none-any.whl"
         if version >= Version("21"):
@@ -105,6 +115,5 @@ class PyPip(Package, PythonExtension):
 
     def setup_dependent_package(self, module, dependent_spec):
         pip = dependent_spec["python"].command
-        pip.add_default_arg("-m")
-        pip.add_default_arg("pip")
+        pip.add_default_arg("-m", "pip")
         setattr(module, "pip", pip)

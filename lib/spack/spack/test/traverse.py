@@ -1,10 +1,11 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import pytest
 
+import spack.deptypes as dt
 import spack.traverse as traverse
 from spack.spec import Spec
 
@@ -19,7 +20,9 @@ def create_dag(nodes, edges):
     """
     specs = {name: Spec(name) for name in nodes}
     for parent, child, deptypes in edges:
-        specs[parent].add_dependency_edge(specs[child], deptypes=deptypes, virtuals=())
+        specs[parent].add_dependency_edge(
+            specs[child], depflag=dt.canonicalize(deptypes), virtuals=()
+        )
     return specs
 
 
@@ -392,3 +395,16 @@ def test_traverse_edges_topo(abstract_specs_toposort):
         out_edge_indices = [i for (i, (parent, child)) in enumerate(edges) if node == parent]
         if in_edge_indices and out_edge_indices:
             assert max(in_edge_indices) < min(out_edge_indices)
+
+
+def test_traverse_nodes_no_deps(abstract_specs_dtuse):
+    """Traversing nodes without deps should be the same as deduplicating the input specs. This may
+    not look useful, but can be used to avoid a branch on the call site in which it's otherwise
+    easy to forget to deduplicate input specs."""
+    inputs = [
+        abstract_specs_dtuse["dtuse"],
+        abstract_specs_dtuse["dtlink5"],
+        abstract_specs_dtuse["dtuse"],  # <- duplicate
+    ]
+    outputs = [x for x in traverse.traverse_nodes(inputs, deptype=dt.NONE)]
+    assert outputs == [abstract_specs_dtuse["dtuse"], abstract_specs_dtuse["dtlink5"]]

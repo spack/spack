@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,22 +19,54 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("davidbeckingsale")
 
+    license("BSD-3-Clause")
+
     version("develop", branch="develop", submodules=False)
     version("main", branch="main", submodules=False)
-    version("2022.03.0", tag="v2022.03.0", submodules=False)
-    version("2.4.0", tag="v2.4.0", submodules=True)
-    version("2.3.0", tag="v2.3.0", submodules=True)
-    version("2.2.2", tag="v2.2.2", submodules=True)
-    version("2.2.1", tag="v2.2.1", submodules=True)
-    version("2.2.0", tag="v2.2.0", submodules=True)
-    version("2.1.1", tag="v2.1.1", submodules=True)
-    version("2.1.0", tag="v2.1.0", submodules=True)
-    version("2.0.0", tag="v2.0.0", submodules=True)
-    version("1.2.0", tag="v1.2.0", submodules=True)
-    version("1.1.0", tag="v1.1.0", submodules=True)
-    version("1.0", tag="v1.0", submodules=True)
+    version(
+        "2022.03.0",
+        tag="v2022.03.0",
+        commit="f0b809de1ac194376866b3ac0f5933d4146ec09e",
+        submodules=False,
+    )
+    version(
+        "2.4.0", tag="v2.4.0", commit="77d22da28187245a2c5454cf471c0c352bd98ad7", submodules=True
+    )
+    version(
+        "2.3.0", tag="v2.3.0", commit="42f3fbcc0b966227b40b4467dc919a4c24f07196", submodules=True
+    )
+    version(
+        "2.2.2", tag="v2.2.2", commit="56e75fc0f805b2746f3992af0c00c474513e3b24", submodules=True
+    )
+    version(
+        "2.2.1", tag="v2.2.1", commit="c912f583828ea5963850816e3e232cc45608ccf7", submodules=True
+    )
+    version(
+        "2.2.0", tag="v2.2.0", commit="18536c61a4817db6b3b3025f35e2dd3ae532330c", submodules=True
+    )
+    version(
+        "2.1.1", tag="v2.1.1", commit="496911e00d15c350560860f7964cd5fb5ab7f515", submodules=True
+    )
+    version(
+        "2.1.0", tag="v2.1.0", commit="fff02768068a64970b34760a1041585319edee87", submodules=True
+    )
+    version(
+        "2.0.0", tag="v2.0.0", commit="63139cf45443b1266950826b165e042c7679b557", submodules=True
+    )
+    version(
+        "1.2.0", tag="v1.2.0", commit="7bb5bc12e4508db45910d8e2b98444687da7ebf6", submodules=True
+    )
+    version(
+        "1.1.0", tag="v1.1.0", commit="907d5f40d653a73955387067799913397807adf3", submodules=True
+    )
+    version("1.0", tag="v1.0", commit="501a098ad879dc8deb4a74fcfe8c08c283a10627", submodules=True)
 
     variant("enable_pick", default=False, description="Enable pick method")
+    variant(
+        "separable_compilation",
+        default=True,
+        description="Build with CUDA_SEPARABLE_COMPILATION flag on ",
+    )
     variant("shared", default=True, description="Build Shared Libs")
     variant("raja", default=False, description="Build plugin for RAJA")
     variant("benchmarks", default=False, description="Build benchmarks.")
@@ -128,8 +160,9 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         if "+cuda" in spec:
             entries.append(cmake_cache_option("ENABLE_CUDA", True))
-            entries.append(cmake_cache_option("CMAKE_CUDA_SEPARABLE_COMPILATION", True))
-            entries.append(cmake_cache_option("CUDA_SEPARABLE_COMPILATION", True))
+            if "+separable_compilation" in spec:
+                entries.append(cmake_cache_option("CMAKE_CUDA_SEPARABLE_COMPILATION", True))
+                entries.append(cmake_cache_option("CUDA_SEPARABLE_COMPILATION", True))
 
             if not spec.satisfies("cuda_arch=none"):
                 cuda_arch = spec.variants["cuda_arch"].value

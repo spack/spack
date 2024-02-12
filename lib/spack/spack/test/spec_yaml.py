@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -198,7 +198,7 @@ def test_ordered_read_not_required_for_consistent_dag_hash(config, mock_packages
         round_trip_reversed_json_spec = Spec.from_yaml(reversed_json_string)
 
         # Strip spec if we stripped the yaml
-        spec = spec.copy(deps=ht.dag_hash.deptype)
+        spec = spec.copy(deps=ht.dag_hash.depflag)
 
         # specs are equal to the original
         assert spec == round_trip_yaml_spec
@@ -500,3 +500,8 @@ def test_load_json_specfiles(specfile, expected_hash, reader_cls):
 
     openmpi_edges = s2.edges_to_dependencies(name="openmpi")
     assert len(openmpi_edges) == 1
+
+    # The virtuals attribute must be a tuple, when read from a
+    # JSON or YAML file, not a list
+    for edge in s2.traverse_edges():
+        assert isinstance(edge.virtuals, tuple), edge

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Libefence(MakefilePackage):
     url = "https://deb.debian.org/debian/pool/main/e/electric-fence/electric-fence_2.2.6.tar.gz"
 
     maintainers("cessenat")
+
+    license("GPL-2.0-or-later")
 
     version("2.2.6", sha256="a949e0dedb06cbcd444566cce1457223f2c41abd3513f21663f30f19ccc48e24")
 

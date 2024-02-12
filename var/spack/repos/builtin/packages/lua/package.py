@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -53,7 +53,7 @@ class LuaImplPackage(MakefilePackage):
         return os.path.join("share", self.lua_dir_name, self.__verdir())
 
     # luarocks needs unzip for some packages (e.g. lua-luaposix)
-    depends_on("unzip", type="run")
+    depends_on("unzip", type=("build", "run"))
 
     # luarocks needs a fetcher (curl/wget), unfortunately I have not found
     # how to force a choice for curl or wget, but curl seems the default.

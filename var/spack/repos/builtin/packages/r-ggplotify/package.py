@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class RGgplotify(RPackage):
     'magick', 'pheatmap', 'vcd' etc. by converting them to 'ggplot' objects."""
 
     cran = "ggplotify"
+
+    license("Artistic-2.0")
 
     version("0.1.0", sha256="178f73d6d3dc391c3efb1a62c95fe38587044f9e3288dffb915d3687941bb38a")
     version("0.0.5", sha256="035ea6a70023c4819c8a486d0fd94c2765aa4d6df318747e104eeb9829b9d65d")

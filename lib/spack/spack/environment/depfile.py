@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,7 @@ import re
 from enum import Enum
 from typing import List, Optional
 
+import spack.deptypes as dt
 import spack.environment.environment as ev
 import spack.spec
 import spack.traverse as traverse
@@ -36,7 +37,9 @@ class UseBuildCache(Enum):
 def _deptypes(use_buildcache: UseBuildCache):
     """What edges should we follow for a given node? If it's a cache-only
     node, then we can drop build type deps."""
-    return ("link", "run") if use_buildcache == UseBuildCache.ONLY else ("build", "link", "run")
+    return (
+        dt.LINK | dt.RUN if use_buildcache == UseBuildCache.ONLY else dt.BUILD | dt.LINK | dt.RUN
+    )
 
 
 class DepfileNode:
@@ -69,13 +72,13 @@ class DepfileSpecVisitor:
         self.adjacency_list: List[DepfileNode] = []
         self.pkg_buildcache = pkg_buildcache
         self.deps_buildcache = deps_buildcache
-        self.deptypes_root = _deptypes(pkg_buildcache)
-        self.deptypes_deps = _deptypes(deps_buildcache)
+        self.depflag_root = _deptypes(pkg_buildcache)
+        self.depflag_deps = _deptypes(deps_buildcache)
 
     def neighbors(self, node):
         """Produce a list of spec to follow from node"""
-        deptypes = self.deptypes_root if node.depth == 0 else self.deptypes_deps
-        return traverse.sort_edges(node.edge.spec.edges_to_dependencies(deptype=deptypes))
+        depflag = self.depflag_root if node.depth == 0 else self.depflag_deps
+        return traverse.sort_edges(node.edge.spec.edges_to_dependencies(depflag=depflag))
 
     def accept(self, node):
         self.adjacency_list.append(
@@ -229,6 +232,10 @@ class MakefileModel:
             "pkg_ids": " ".join(self.all_pkg_identifiers),
         }
 
+    @property
+    def empty(self):
+        return len(self.roots) == 0
+
     @staticmethod
     def from_env(
         env: ev.Environment,
@@ -251,15 +258,10 @@ class MakefileModel:
             jobserver: when enabled, make will invoke Spack with jobserver support. For
                 dry-run this should be disabled.
         """
-        # If no specs are provided as a filter, build all the specs in the environment.
-        if filter_specs:
-            entrypoints = [env.matching_spec(s) for s in filter_specs]
-        else:
-            entrypoints = [s for _, s in env.concretized_specs()]
-
+        roots = env.all_matching_specs(*filter_specs) if filter_specs else env.concrete_roots()
         visitor = DepfileSpecVisitor(pkg_buildcache, dep_buildcache)
         traverse.traverse_breadth_first_with_visitor(
-            entrypoints, traverse.CoverNodesVisitor(visitor, key=lambda s: s.dag_hash())
+            roots, traverse.CoverNodesVisitor(visitor, key=lambda s: s.dag_hash())
         )
 
-        return MakefileModel(env, entrypoints, visitor.adjacency_list, make_prefix, jobserver)
+        return MakefileModel(env, roots, visitor.adjacency_list, make_prefix, jobserver)

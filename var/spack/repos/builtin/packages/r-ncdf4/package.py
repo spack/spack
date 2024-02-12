@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,8 @@ class RNcdf4(RPackage):
     package does not provide an interface for netcdf version 4 files."""
 
     cran = "ncdf4"
+
+    license("GPL-3.0-or-later")
 
     version("1.21", sha256="2f5ae7def382c595c66b6ed0ea0529f8337108eb73de39939f9762f3fb21b30d")
     version("1.19", sha256="cb8d139211fc7475c435ce9f6a43e47710603409dc523b053c8b7de9848dfb63")

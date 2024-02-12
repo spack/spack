@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class Bcl2fastq2(Package):
     files."""
 
     homepage = "https://support.illumina.com/downloads/bcl2fastq-conversion-software-v2-20.html"
+
+    license("BSD-3-Clause")
 
     version(
         "2.20.0.422", sha256="8dd3044767d044aa4ce46de0de562b111c44e5b8b7348e04e665eb1b4f101fe3"
@@ -49,6 +51,8 @@ class Bcl2fastq2(Package):
     # After finding the libxslt bits, cmake still needs to wire in the
     # libexslt bits.
     patch("cxxConfigure-cmake.patch")
+    # -msse2 isn't valid for arm
+    patch("cxxConfigure-aarch64.patch", when="target=aarch64:")
 
     root_cmakelists_dir = "src"
 
