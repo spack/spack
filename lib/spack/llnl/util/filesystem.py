@@ -171,7 +171,7 @@ def polite_path(components: Iterable[str]):
 @memoized
 def _polite_antipattern():
     # A regex of all the characters we don't want in a filename
-    return re.compile(r"[^A-Za-z0-9_.-]")
+    return re.compile(r"[^A-Za-z0-9_+.-]")
 
 
 def polite_filename(filename: str) -> str:

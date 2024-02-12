@@ -8,11 +8,9 @@ import os
 from spack.package import *
 
 
-class ViewDirDir(Package):
-    """Installs a <prefix>/bin/x where x is a dir, in contrast to view-dir-file."""
+class ViewDir(Package):
+    """Installs a <prefix>/bin/x where x is a dir, in contrast to view-file."""
 
-    homepage = "http://www.spack.org"
-    url = "http://www.spack.org/downloads/aml-1.0.tar.gz"
     has_code = False
 
     version("0.1.0")

@@ -21,6 +21,11 @@ class Libice(AutotoolsPackage, XorgPackage):
     version("1.0.10", sha256="1116bc64c772fd127a0d0c0ffa2833479905e3d3d8197740b3abd5f292f22d2d")
     version("1.0.9", sha256="7812a824a66dd654c830d21982749b3b563d9c2dfe0b88b203cefc14a891edc0")
 
+    # technically libbsd is only required when glibc < 2.36 which provides arc4random_buf,
+    # but spack doesn't currently have a good way to model this so we depend on it unconditionally
+    depends_on("libbsd", when="platform=linux")
+    depends_on("libbsd", when="platform=cray")
+
     depends_on("xproto")
     depends_on("xtrans")
     depends_on("pkgconfig", type="build")

@@ -84,6 +84,10 @@ default:
     PUSH_BUILDCACHE_DEPRECATED: "${PROTECTED_MIRROR_PUSH_DOMAIN}/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
 
   rules:
+    - if: $SPACK_CI_DISABLE_STACKS =~ /.+/ && $SPACK_CI_STACK_NAME =~ $SPACK_CI_DISABLE_STACKS
+      when: never
+    - if: $SPACK_CI_ENABLE_STACKS =~ /.+/ && $SPACK_CI_STACK_NAME !~ $SPACK_CI_ENABLE_STACKS
+      when: never
     - if: $CI_COMMIT_REF_NAME == "develop"
       # Pipelines on develop only rebuild what is missing from the mirror
       when: always

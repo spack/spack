@@ -13,15 +13,22 @@ class H5hut(AutotoolsPackage):
 
     homepage = "https://amas.psi.ch/H5hut/"
     url = "https://amas.web.psi.ch/Downloads/H5hut/H5hut-2.0.0rc3.tar.gz"
+    git = "https://gitlab.psi.ch/H5hut/src.git"
 
     version("2.0.0rc3", sha256="1ca9a9478a99e1811ecbca3c02cc49258050d339ffb1a170006eab4ab2a01790")
+
+    version("master", branch="master")
 
     variant("fortran", default=True, description="Enable Fortran support")
     variant("mpi", default=True, description="Enable MPI support")
 
+    depends_on("autoconf", type="build", when="build_system=autotools")
+    depends_on("automake", type="build", when="build_system=autotools")
+    depends_on("libtool", type="build", when="build_system=autotools")
+
     depends_on("mpi", when="+mpi")
     # h5hut +mpi uses the obsolete function H5Pset_fapl_mpiposix:
-    depends_on("hdf5@1.8:1.8.12+mpi", when="+mpi")
+    depends_on("hdf5@1.8:+mpi", when="+mpi")
     depends_on("hdf5@1.8:", when="~mpi")
 
     # If built in parallel, the following error message occurs:
@@ -34,6 +41,15 @@ class H5hut(AutotoolsPackage):
 
         if "+fortran" in self.spec and not self.compiler.fc:
             raise RuntimeError("Cannot build Fortran variant without a Fortran compiler.")
+
+    def flag_handler(self, name, flags):
+        build_system_flags = []
+        if name == "cflags" and self.spec["hdf5"].satisfies("@1.12:"):
+            build_system_flags = ["-DH5_USE_110_API"]
+        return flags, None, build_system_flags
+
+    def autoreconf(self, spec, prefix):
+        which("bash")("autogen.sh")
 
     def configure_args(self):
         spec = self.spec

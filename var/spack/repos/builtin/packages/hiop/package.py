@@ -141,6 +141,9 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         msg="umpire+cuda exports device code and requires static libs",
     )
 
+    # We rely on RAJA / Umpire utilities when supporting CUDA backend
+    conflicts("~raja", when="+cuda", msg="RAJA is required for CUDA support")
+
     depends_on("hip", when="+rocm")
     depends_on("hipblas", when="+rocm")
     depends_on("hipsparse", when="+rocm")

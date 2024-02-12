@@ -44,10 +44,13 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
     # Current
     version(
-        "5.0.1", sha256="e357043e65fd1b956a47d0dae6156a90cf0e378df759364936c1781f1a25ef80"
-    )  # libmpi.so.40.40.1
+        "5.0.2", sha256="ee46ad8eeee2c3ff70772160bff877cbf38c330a0bc3b3ddc811648b3396698f"
+    )  # libmpi.so.40.40.2
 
     # Still supported
+    version(
+        "5.0.1", sha256="e357043e65fd1b956a47d0dae6156a90cf0e378df759364936c1781f1a25ef80"
+    )  # libmpi.so.40.40.1
     version(
         "5.0.0", sha256="9d845ca94bc1aeb445f83d98d238cd08f6ec7ad0f73b0f79ec1668dbfdacd613"
     )  # libmpi.so.40.40.0
@@ -411,6 +414,13 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     # To fix performance regressions introduced while fixing a bug in older
     # gcc versions on x86_64, Refs. open-mpi/ompi#8603
     patch("opal_assembly_arch.patch", when="@4.0.0:4.0.5,4.1.0")
+    # Fix reduce operations for unsigned long integers
+    # See https://github.com/open-mpi/ompi/issues/10648
+    patch(
+        "https://github.com/open-mpi/ompi/commit/8e6d9ba8058a0c128438dbc0cd6476f1abb1d4f1.patch?full_index=1",
+        sha256="12f3aabbcdb02f28138e250273c2f62591db4b1f9f8aa3dcc3ef9ed551f4f587",
+        when="@4.0.7,4.1.2:4.1.4",
+    )
     # To fix an error in Open MPI configury related to findng dl lib.
     # This is specific to the 5.0.0 release.
     patch("fix-for-dlopen-missing-symbol-problem.patch", when="@5.0.0")

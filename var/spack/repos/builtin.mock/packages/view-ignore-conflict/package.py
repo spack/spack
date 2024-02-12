@@ -8,14 +8,14 @@ import os
 from spack.package import *
 
 
-class ViewDirFile(Package):
-    """Installs a <prefix>/bin/x where x is a file, in contrast to view-dir-dir"""
+class ViewIgnoreConflict(Package):
+    """Installs a file in <prefix>/bin/x, conflicting with the file <dep>/bin/x in a view. In
+    a view, we should find this package's file, not the dependency's file."""
 
-    homepage = "http://www.spack.org"
-    url = "http://www.spack.org/downloads/aml-1.0.tar.gz"
     has_code = False
 
     version("0.1.0")
+    depends_on("view-file")
 
     def install(self, spec, prefix):
         os.mkdir(os.path.join(prefix, "bin"))
