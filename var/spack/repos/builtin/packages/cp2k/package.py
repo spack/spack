@@ -158,15 +158,15 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
 
     # Force openmp propagation on some providers of blas / fftw-api
     with when("+openmp"):
-        depends_on("fftw+openmp", when="^fftw")
-        depends_on("amdfftw+openmp", when="^amdfftw")
-        depends_on("cray-fftw+openmp", when="^cray-fftw")
-        depends_on("armpl-gcc threads=openmp", when="^armpl-gcc")
-        depends_on("openblas threads=openmp", when="^openblas")
+        depends_on("fftw+openmp", when="^[virtuals=fftw-api] fftw")
+        depends_on("amdfftw+openmp", when="^[virtuals=fftw-api] amdfftw")
+        depends_on("cray-fftw+openmp", when="^[virtuals=fftw-api] cray-fftw")
+        depends_on("armpl-gcc threads=openmp", when="^[virtuals=blas] armpl-gcc")
+        depends_on("openblas threads=openmp", when="^[virtuals=blas] openblas")
         # The Cray compiler wrappers will automatically add libsci_mp with
         # -fopenmp. Since CP2K unconditionally links blas/lapack/scalapack
         # we have to be consistent.
-        depends_on("cray-libsci+openmp", when="^cray-libsci")
+        depends_on("cray-libsci+openmp", when="^[virtuals=blas] cray-libsci")
 
     with when("smm=libxsmm"):
         depends_on("libxsmm@1.17:~header-only", when="@9.1:")
@@ -202,8 +202,7 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         depends_on("mpi@2:")
         depends_on("mpi@3:", when="@2023.1:")
         depends_on("scalapack")
-        depends_on("mpich+fortran", when="^mpich")
-
+        depends_on("mpich+fortran", when="^[virtuals=mpi] mpich")
         conflicts("~mpi_f08", when="^mpich@4.1:")
 
     with when("+cosma"):
@@ -272,8 +271,9 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         depends_on("cmake@3.22:", type="build")
 
         # DBCSR as external dependency
-        depends_on("dbcsr@2.6:")
+        depends_on("dbcsr@2.6: ~examples")
         depends_on("dbcsr+openmp", when="+openmp")
+        depends_on("dbcsr+mpi", when="+mpi")
         depends_on("dbcsr+cuda", when="+cuda")
         depends_on("dbcsr+rocm", when="+rocm")
 
@@ -339,6 +339,11 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     patch("backport_avoid_null_2022.x.patch", when="@2022.1:2022.2 %aocc@:4.0")
     patch("backport_avoid_null_9.1.patch", when="@9.1 %aocc@:4.0")
     patch("cmake-fixes-2023.2.patch", when="@2023.2 build_system=cmake")
+
+    # Allow compilation with build_type=RelWithDebInfo and build_type=MinSizeRel
+    # after NDEBUG support was dropped in https://github.com/cp2k/cp2k/pull/3172
+    # The patch applies https://github.com/cp2k/cp2k/pull/3251 to version 2024.1
+    patch("cmake-relwithdebinfo-2024.1.patch", when="@2024.1 build_system=cmake")
 
     # Patch for an undefined constant due to incompatible changes in ELPA
     @when("@9.1:2022.2 +elpa")
