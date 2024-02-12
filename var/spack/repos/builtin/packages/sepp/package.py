@@ -31,6 +31,7 @@ class Sepp(Package):
     phases = ["edit", "install"]
 
     def edit(self, spec, prefix):
+       # will need editing next update, as it's fixed upstream but not in this version
         if spec.satisfies("^python@3.10:"):
             filter_file(
                 "from collections import Mapping",
