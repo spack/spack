@@ -620,7 +620,6 @@ supported, and netmod is ignored if device is ch3:sock.""",
 
         if "+vci" in spec:
             config_args.append("--enable-thread-cs=per-vci")
-            config_args.append("--with-ch4-max-vcis=default")
 
         if "datatype-engine=yaksa" in spec:
             config_args.append("--with-datatype-engine=yaksa")
