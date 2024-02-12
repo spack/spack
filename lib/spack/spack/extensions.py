@@ -9,10 +9,6 @@ import difflib
 import glob
 import importlib
 
-try:
-    import importlib.metadata as importlib_metadata
-except ImportError:
-    importlib_metadata = None
 import os
 import re
 import sys
@@ -137,28 +133,34 @@ def load_extension(name: str) -> str:
 def get_extension_paths():
     """Return the list of canonicalized extension paths from config:extensions."""
     extension_paths = spack.config.get("config:extensions") or []
-    extension_paths.extend(get_extension_paths_from_entry_points())
+    extension_paths.extend(extension_paths_from_entry_points())
     paths = [spack.util.path.canonicalize_path(p) for p in extension_paths]
     return paths
 
 
-def get_extension_paths_from_entry_points():
-    """Return the list of canonicalized extension paths from a project's
-    [project.entry-points."spack.extensions"]
+def extension_paths_from_entry_points() -> List[str]:
+    """Load extensions from a Python package's entry points.
+
+    A python package can register entry point metadata so that Spack can find
+    its extensions by adding the following to the project's pyproject.toml:
+
+    .. code-block:: toml
+
+       [project.entry-points."spack.extensions"]
+       baz = "baz:get_spack_extensions"
+
+    The function ``get_spack_extensions`` returns paths to the package's
+    spack extensions
 
     """
-    extension_paths = []
-    if importlib_metadata is None:
-        return extension_paths
-    try:
-        entry_points = importlib_metadata.entry_points(group="spack.extensions")
-    except TypeError:
-        entry_points = importlib_metadata.entry_points().get("spack.extensions")
-    if not entry_points:
-        return extension_paths
-    for entry_point in entry_points:
+    extension_paths: List[str] = []
+    for entry_point in llnl.util.lang.get_entry_points(group="spack.extensions"):
         get_paths = entry_point.load()
-        extension_paths.extend(get_paths())
+        paths = get_paths() or []
+        if isinstance(paths, str):
+            extension_paths.append(paths)
+        else:
+            extension_paths.extend(paths)
     return extension_paths
 
 

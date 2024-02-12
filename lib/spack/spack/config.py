@@ -33,10 +33,6 @@ import contextlib
 import copy
 import functools
 
-try:
-    import importlib.metadata as importlib_metadata
-except ImportError:
-    importlib_metadata = None
 import os
 import re
 import sys
@@ -769,20 +765,28 @@ def _add_platform_scope(
     cfg.push_scope(scope_type(plat_name, plat_path))
 
 
-def _add_configuration_paths_from_entry_points(configuration_paths):
-    if importlib_metadata is None:
-        return
-    try:
-        entry_points = importlib_metadata.entry_points(group="spack.config")
-    except TypeError:
-        entry_points = importlib_metadata.entry_points().get("spack.config")
-    if not entry_points:
-        return
-    for entry_point in entry_points:
-        get_plugin_dir = entry_point.load()
-        plugin_dir = get_plugin_dir()
-        if plugin_dir and os.path.exists(plugin_dir):
-            configuration_paths.append(("plugin-%s" % entry_point.name, plugin_dir))
+def config_paths_from_entry_points() -> List[Tuple[str, str]]:
+    """Load configuration paths from entry points
+
+    A python package can register entry point metadata so that Spack can find
+    its configuration by adding the following to the project's pyproject.toml:
+
+    .. code-block:: toml
+
+       [project.entry-points."spack.config"]
+       baz = "baz:get_spack_config_path"
+
+    The function ``get_spack_config_path`` returns the path to the package's
+    spack configuration scope
+
+    """
+    config_paths: List[Tuple[str, str]] = []
+    for entry_point in lang.get_entry_points(group="spack.config"):
+        get_config_path = entry_point.load()
+        config_path = get_config_path()
+        if config_path and os.path.exists(config_path):
+            config_paths.append(("plugin-%s" % entry_point.name, config_path))
+    return config_paths
 
 
 def _add_command_line_scopes(
@@ -837,7 +841,8 @@ def create() -> Configuration:
     # No site-level configs should be checked into spack by default.
     configuration_paths.append(("site", os.path.join(spack.paths.etc_path)))
 
-    _add_configuration_paths_from_entry_points(configuration_paths)
+    # Python package's can register configuration scopes via entry_points
+    configuration_paths.extend(config_paths_from_entry_points())
 
     # User configuration can override both spack defaults and site config
     # This is disabled if user asks for no local configuration.
