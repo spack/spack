@@ -8,7 +8,6 @@ for Spack's command extensions.
 import difflib
 import glob
 import importlib
-
 import os
 import re
 import sys

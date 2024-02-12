@@ -14,7 +14,7 @@ import sys
 import traceback
 import warnings
 from datetime import datetime, timedelta
-from typing import Any, Callable, Iterable, List, Optional, Tuple
+from typing import Any, Callable, Iterable, List, Tuple
 
 # Ignore emacs backups when listing modules
 ignore_modules = [r"^\.#", "~$"]
