@@ -23,4 +23,4 @@ class PyBiobbStructureChecking(PythonPackage):
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-psutil", type=("run"))
     depends_on("py-numpy", type=("run"))
-    depends_on("py-biopython", type=("run"))
+    depends_on("py-biopython@1.79:", type=("build", "run"))
