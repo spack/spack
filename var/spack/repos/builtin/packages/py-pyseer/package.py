@@ -17,6 +17,7 @@ class PyPyseer(PythonPackage):
 
     version("1.3.11", sha256="384313a3a14b92f873eaad53f77a319d90b584b9253785a7ca1dfc7d9220c91e")
 
+    depends_on("py-setuptools", type="build")
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-pandas", type=("build", "run"))
