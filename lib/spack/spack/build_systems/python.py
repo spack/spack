@@ -6,7 +6,8 @@ import inspect
 import os
 import re
 import shutil
-from typing import Iterable, List, Mapping, Optional
+import stat
+from typing import Dict, Iterable, List, Mapping, Optional, Tuple
 
 import archspec
 
@@ -136,31 +137,50 @@ class PythonExtension(spack.package_base.PackageBase):
         return conflicts
 
     def add_files_to_view(self, view, merge_map, skip_if_exists=True):
-        if not self.extendee_spec:
+        # Patch up shebangs to the python linked in the view only if python is built by Spack.
+        if not self.extendee_spec or self.extendee_spec.external:
             return super().add_files_to_view(view, merge_map, skip_if_exists)
+
+        # We only patch shebangs in the bin directory.
+        copied_files: Dict[Tuple[int, int], str] = {}  # File identifier -> source
+        delayed_links: List[Tuple[str, str]] = []  # List of symlinks from merge map
 
         bin_dir = self.spec.prefix.bin
         python_prefix = self.extendee_spec.prefix
-        python_is_external = self.extendee_spec.external
-        global_view = fs.same_path(python_prefix, view.get_projection_for_spec(self.spec))
         for src, dst in merge_map.items():
-            if os.path.exists(dst):
+            if skip_if_exists and os.path.lexists(dst):
                 continue
-            elif global_view or not fs.path_contains_subdirectory(src, bin_dir):
+
+            if not fs.path_contains_subdirectory(src, bin_dir):
                 view.link(src, dst)
-            elif not os.path.islink(src):
+                continue
+
+            s = os.lstat(src)
+
+            # Symlink is delayed because we may need to re-target if its target is copied in view
+            if stat.S_ISLNK(s.st_mode):
+                delayed_links.append((src, dst))
+                continue
+
+            # If it's executable and has a shebang, copy and patch it.
+            if (s.st_mode & 0b111) and fs.has_shebang(src):
+                copied_files[(s.st_dev, s.st_ino)] = dst
                 shutil.copy2(src, dst)
-                is_script = fs.is_nonsymlink_exe_with_shebang(src)
-                if is_script and not python_is_external:
-                    fs.filter_file(
-                        python_prefix,
-                        os.path.abspath(view.get_projection_for_spec(self.spec)),
-                        dst,
-                    )
+                fs.filter_file(
+                    python_prefix, os.path.abspath(view.get_projection_for_spec(self.spec)), dst
+                )
+
+        # Finally re-target the symlinks that point to copied files.
+        for src, dst in delayed_links:
+            try:
+                s = os.stat(src)
+                target = copied_files[(s.st_dev, s.st_ino)]
+            except (OSError, KeyError):
+                target = None
+            if target:
+                os.symlink(target, dst)
             else:
-                orig_link_target = os.path.realpath(src)
-                new_link_target = os.path.abspath(merge_map[orig_link_target])
-                view.link(new_link_target, dst)
+                view.link(src, dst, spec=self.spec)
 
     def remove_files_from_view(self, view, merge_map):
         ignore_namespace = False
