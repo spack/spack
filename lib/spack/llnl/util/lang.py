@@ -847,7 +847,11 @@ class Singleton:
 def get_entry_points(*, group: str):
     """Wrapper for ``importlib.metadata.entry_points``
 
-    :return: EntryPoints for all installed packages.
+    Adapted from https://github.com/HypothesisWorks/hypothesis/blob/0a90ed6edf56319149956c7321d4110078a5c228/hypothesis-python/src/hypothesis/entry_points.py
+
+    Returns:
+        EntryPoints for all installed packages.
+
     """
 
     try:
