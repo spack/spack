@@ -21,4 +21,5 @@ class PyPyqtgraph(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     depends_on("py-numpy@1.20:", type=("build", "run"))
-    depends_on("py-pyqt5", type=("build", "run"))
+    # This dependency listed in README.md ...
+    depends_on("py-pyqt6", type=("build", "run"))
