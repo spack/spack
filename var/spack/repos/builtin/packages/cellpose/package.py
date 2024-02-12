@@ -30,19 +30,17 @@ class Cellpose(PythonPackage):
     depends_on("py-tqdm", type=("build", "run"))
     depends_on("py-numba@0.53.0:", type=("build", "run"))
     depends_on("py-llvmlite", type=("build", "run"))
-    depends_on("py-numpy@1.20.0:", type=("build", "run"))
+    depends_on("py-torch@1.6:", type=("build", "run"))
+    # `copencv` provides `cv2` in place of opencv-python-headless specified in setup.py
+    # +ximgproc is required from the contrib modules
+    depends_on("opencv +python3+ximgproc", type=("build", "run"))
     depends_on("py-fastremap", type=("build", "run"))
     depends_on("py-imagecodecs", type=("build", "run"))
     depends_on("py-roifile", type=("build", "run"))
-    depends_on("py-torch@1.6:", type=("build", "run"))
-
-    # provides `cv2` in place of opencv-python-headless specified in setup.py
-    # +ximgproc is required from the contrib modules
-    depends_on("opencv +python3+ximgproc", type=("build", "run"))
 
     depends_on("py-pyqtgraph@0.11.0:", type=("build", "run"), when="+gui")
-    depends_on("py-pyqt5", type=("build", "run"), when="+gui")
-    depends_on("py-pyqt5-sip", type=("build", "run"), when="+gui")
+    depends_on("py-pyqt6", type=("build", "run"), when="+gui")
+    depends_on("py-pyqt6-sip", type=("build", "run"), when="+gui")
     depends_on("py-qtpy", type=("build", "run"), when="+gui")
     depends_on("py-superqt", type=("build", "run"), when="+gui")
     depends_on("py-google-cloud-storage", type=("build", "run"), when="+gui")
