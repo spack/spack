@@ -136,9 +136,9 @@ def format_gitlab_yaml(
     write a pipeline that can be consumed by GitLab to the given output file.
 
     Arguments:
-        pipeline (PipelineDAG): An already pruned graph of jobs representing all
+        pipeline (spack.ci.common.PipelineDag): An already pruned graph of jobs representing all
             the specs to build
-        spack_ci_ir (SpackCI): An object containing the configured attributes of
+        spack_ci_ir (spack.ci.common.SpackCI): An object containing the configured attributes of
             all jobs in the pipeline
         output_file (str): Path to output file to be written
     """
