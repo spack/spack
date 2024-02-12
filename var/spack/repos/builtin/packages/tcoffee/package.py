@@ -43,7 +43,6 @@ class Tcoffee(MakefilePackage):
     # - `x3dna`, `hmmtop`, and `fugue` are distributed manually / under manual license
     #   agreement. These have been removed here to allow simpler install of the package.
     #   - `saracoffee` variant is a stub due to dependency on `x3dna`.
-    #   - `psicoffee` variant is a stub due to dependency on `hmmtop`.
     # - `lsqman` and `align_pdb` are extremely old. I can't find extant / reputable sources
     #   for these programs.
     # - `dialign-t` has disappeared in favour of its successor `dialign-tx`. I can't find an
@@ -59,11 +58,15 @@ class Tcoffee(MakefilePackage):
     variant("expresso", default=False, description="Very accurate structure-based MSA")
     variant("3dcoffee", default=False, description="Multiple structure alignments")
     variant("rcoffee", default=False, description="RNA MSA")
-    variant("saracoffee", default=False, description="Structure-based multiple RNA alignment")
+    # variant("saracoffee", default=False, description="Structure-based multiple RNA alignment")
     variant("trmsd", default=False, description="RMSD-based structural clustering of proteins")
     variant(
         "seq_reformat", default=False, description="Clean, reformat, and compare MSAs and trees"
     )
+
+    # ensure ~all is explicit when +variants are declared
+    for v in ("mcoffee", "psicoffee", "expresso", "3dcoffee", "rcoffee", "trmsd", "seq_reformat"):
+        conflicts(f"+{v}", when="+all")
 
     with when("+all") or when("+mcoffee"):
         depends_on("clustalw", type="run")  # this is clustalw2
@@ -102,10 +105,6 @@ class Tcoffee(MakefilePackage):
         depends_on("probconsrna", type="run")
         depends_on("consan", type="run")
         depends_on("viennarna", type="run")
-
-    with when("+all") or when("+saracoffee"):
-        # depends_on("x3dna", type="run")
-        pass
 
     with when("+all") or when("+trmsd"):
         depends_on("phylip", type="run")
