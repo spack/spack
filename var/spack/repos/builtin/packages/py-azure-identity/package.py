@@ -21,18 +21,23 @@ class PyAzureIdentity(PythonPackage):
 
     license("MIT")
 
+    version("1.14.1", sha256="48e2a9dbdc59b4f095f841d867d9a8cbe4c1cdbbad8251e055561afd47b4a9b8")
+    version("1.13.0", sha256="c931c27301ffa86b07b4dcf574e29da73e3deba9ab5d1fe4f445bb6a3117e260")
     version("1.12.0", sha256="7f9b1ae7d97ea7af3f38dd09305e19ab81a1e16ab66ea186b6579d85c1ca2347")
     version("1.3.1", sha256="5a59c36b4b05bdaec455c390feda71b6495fc828246593404351b9a41c2e877a")
     version("1.2.0", sha256="b32acd1cdb6202bfe10d9a0858dc463d8960295da70ae18097eb3b85ab12cb91")
 
-    # https://github.com/Azure/azure-sdk-for-python/blob/azure-identity_1.12.0/sdk/identity/azure-identity/setup.py
+    # https://github.com/Azure/azure-sdk-for-python/blob/azure-identity_1.14.1/sdk/identity/azure-identity/setup.py
+
     depends_on("py-setuptools", type="build")
+
     with when("@1.12:"):
         depends_on("py-azure-core@1.11:1", type=("build", "run"))
         depends_on("py-cryptography@2.5:", type=("build", "run"))
+        depends_on("py-msal@1.20:1", type=("build", "run"), when="@1.13:")
         depends_on("py-msal@1.12:1", type=("build", "run"))
         depends_on("py-msal-extensions@0.3:1", type=("build", "run"))
-        depends_on("py-six@1.12:", type=("build", "run"))
+        depends_on("py-six@1.12:", type=("build", "run"), when="@1.12")
 
     with when("@:1.11"):
         depends_on("py-azure-core@1", type=("build", "run"))
