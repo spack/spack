@@ -120,6 +120,7 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cuda", when="+cuda ~kokkos")
 
     # Kokkos support
+    depends_on("kokkos@3.7:", when="+kokkos ~cuda ~rocm ~sycl")
     depends_on("kokkos@3.7: +cuda +wrapper", when="+kokkos +cuda")
     depends_on("kokkos@3.7: +rocm", when="+kokkos +rocm")
     depends_on("kokkos@3.7: +sycl", when="+kokkos +sycl")
