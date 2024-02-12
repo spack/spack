@@ -921,6 +921,7 @@ def get_filetype(path_name):
 
 
 def has_shebang(path):
+    """Returns whether a path has a shebang line. Returns False if the file cannot be opened."""
     try:
         with open(path, "rb") as f:
             return f.read(2) == b"#!"
@@ -932,7 +933,7 @@ def has_shebang(path):
 def is_nonsymlink_exe_with_shebang(path):
     """
     Returns whether the path is an executable script with a shebang.
-    Return False when the path is a *symlink* to an executable script.
+    Return False too when the path is a *symlink* to an executable script.
     """
     try:
         st = os.lstat(path)
@@ -943,11 +944,10 @@ def is_nonsymlink_exe_with_shebang(path):
         # Should be executable
         if not st.st_mode & (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH):
             return False
-
-        # Should start with a shebang
-        return has_shebang(path)
     except OSError:
         return False
+
+    return has_shebang(path)
 
 
 @system_path_filter(arg_slice=slice(1))
