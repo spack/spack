@@ -21,6 +21,7 @@ import re
 import sys
 from typing import Dict, List, NamedTuple, Optional, Set, Tuple, Union
 
+import llnl.util.filesystem
 import llnl.util.tty
 
 import spack.config
@@ -252,16 +253,6 @@ def update_configuration(
     return all_new_specs
 
 
-def _windows_drive() -> str:
-    """Return Windows drive string extracted from the PROGRAMFILES environment variable,
-    which is guaranteed to be defined for all logins.
-    """
-    match = re.match(r"([a-zA-Z]:)", os.environ["PROGRAMFILES"])
-    if match is None:
-        raise RuntimeError("cannot read the PROGRAMFILES environment variable")
-    return match.group(1)
-
-
 class WindowsCompilerExternalPaths:
     @staticmethod
     def find_windows_compiler_root_paths() -> List[str]:
@@ -385,7 +376,7 @@ def find_win32_additional_install_paths() -> List[str]:
     """Not all programs on Windows live on the PATH
     Return a list of other potential install locations.
     """
-    drive_letter = _windows_drive()
+    drive_letter = llnl.util.filesystem.windows_drive()
     windows_search_ext = []
     cuda_re = r"CUDA_PATH[a-zA-Z1-9_]*"
     # The list below should be expanded with other
@@ -420,7 +411,7 @@ def compute_windows_program_path_for_package(pkg: "spack.package_base.PackageBas
     # note windows paths are fine here as this method should only ever be invoked
     # to interact with Windows
     program_files = "{}\\Program Files{}\\{}"
-    drive_letter = _windows_drive()
+    drive_letter = llnl.util.filesystem.windows_drive()
 
     return [
         program_files.format(drive_letter, arch, name)
