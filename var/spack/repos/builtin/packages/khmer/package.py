@@ -21,6 +21,7 @@ class Khmer(PythonPackage):
     conflicts("^python@3.12:")
 
     depends_on("py-setuptools@18:", type="build")
+    depends_on("pytest-runner@2", type="build")
     depends_on("py-screed@1:", type=("build", "run"))
     # abandoned `bz2file` dependency dropped in favour of the patch below
 
@@ -28,3 +29,4 @@ class Khmer(PythonPackage):
 
     def patch(self):
         filter_file("bz2file", "bz2", join_path("khmer", "kfile.py"))
+        filter_file("'bz2file', ", "", "setup.py")
