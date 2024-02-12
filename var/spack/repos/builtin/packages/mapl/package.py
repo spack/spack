@@ -38,6 +38,9 @@ class Mapl(CMakePackage):
     version("develop", branch="develop")
     version("main", branch="main")
 
+    version("2.44.0", sha256="e95e89bdb999f023b262741903919d9da90c76032b16c9ee55aded16c9310591")
+    version("2.43.2", sha256="966130931153a9a3974ad6ae011d1df194e057cb82301c8703ef69669b9f27ba")
+    version("2.43.1", sha256="62b7a8c438c960e47b83d9835cb37c7ce25f617d648f2affe9961b4a6e638abc")
     version("2.43.0", sha256="1be99d64ca46001ac94f7db3607c345e144976dc34fe184e734e212bf3955d01")
     version("2.42.4", sha256="f6b643cc45f2dc55df96a316c84d84ace341bb6e06f81f83b5de258d9978b3d4")
     version("2.42.3", sha256="4ccac684dcbbca36cd7b30cb1515b52f05d7c06ca93399e60ccf42726d147018")
@@ -131,6 +134,12 @@ class Mapl(CMakePackage):
     resource(
         name="esma_cmake",
         git="https://github.com/GEOS-ESM/ESMA_cmake.git",
+        tag="v3.40.0",
+        when="@2.44.0:",
+    )
+    resource(
+        name="esma_cmake",
+        git="https://github.com/GEOS-ESM/ESMA_cmake.git",
         tag="v3.36.0",
         when="@2.42.0:",
     )
@@ -204,19 +213,22 @@ class Mapl(CMakePackage):
     depends_on("hdf5")
     depends_on("netcdf-c")
     depends_on("netcdf-fortran")
-    depends_on("esmf@8.5:", when="@2.40:")
+    depends_on("esmf@8.6:", when="@2.44:")
+    depends_on("esmf@8.5:", when="@2.40:2.43")
     depends_on("esmf@8.4", when="@2.34:2.39")
     depends_on("esmf@8.3", when="@2.22:2.33")
     depends_on("esmf", when="@:2.12.99")
     depends_on("esmf~debug", when="~debug")
     depends_on("esmf+debug", when="+debug")
 
-    depends_on("gftl@1.10.0:", when="@2.40:")
+    depends_on("gftl@1.11.0:", when="@2.44:")
+    depends_on("gftl@1.10.0:", when="@2.40:2.43")
     depends_on("gftl@1.5.5:1.9", when="@:2.39")
 
     # There was an interface change in gftl-shared, so we need to control versions
     # MAPL 2.39 and older can use up to 1.6.0 but MAPL 2.40+ needs 1.6.1 or higher
-    depends_on("gftl-shared@1.6.1:", when="@2.40:")
+    depends_on("gftl-shared@1.7.0:", when="@2.44:")
+    depends_on("gftl-shared@1.6.1:", when="@2.40:2.43")
     depends_on("gftl-shared@1.3.1:1.6.0", when="@:2.39")
 
     # There was an interface change in yaFyaml, so we need to control versions
@@ -230,11 +242,13 @@ class Mapl(CMakePackage):
     # yaFyaml so we need to use old pFlogger, but MAPL 2.23+ uses new yaFyaml
     depends_on("pflogger@:1.6 +mpi", when="@:2.22+pflogger")
     depends_on("pflogger@1.9.1: +mpi", when="@2.23:2.39+pflogger")
-    depends_on("pflogger@1.9.5: +mpi", when="@2.40:+pflogger")
+    depends_on("pflogger@1.9.5: +mpi", when="@2.40:2.43+pflogger")
+    depends_on("pflogger@1.11.0: +mpi", when="@2.44:+pflogger")
 
     # fArgParse v1.4.1 is the first usable version with MAPL
     # we now require 1.5.0 with MAPL 2.40+
-    depends_on("fargparse@1.5.0:", when="@2.40:+fargparse")
+    depends_on("fargparse@1.6.0:", when="@2.44:+fargparse")
+    depends_on("fargparse@1.5.0:", when="@2.40:43+fargparse")
     depends_on("fargparse@1.4.1:1.4", when="@:2.39+fargparse")
 
     depends_on("pfunit@4.2: +mpi +fhamcrest", when="+pfunit")
