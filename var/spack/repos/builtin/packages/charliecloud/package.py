@@ -136,7 +136,12 @@ class Charliecloud(AutotoolsPackage):
     # See https://github.com/spack/spack/pull/16049.
     conflicts("platform=darwin", msg="This package does not build on macOS")
 
-    # Squashfuse support. FIXME: the current variant and dependencies reflect
+    # Squashfuse support. For why this is so messy, see:
+    # https://github.com/hpc/charliecloud/issues/1696
+    # https://github.com/hpc/charliecloud/pull/1697
+    # https://github.com/hpc/charliecloud/pull/1784
+    #
+    # FIXME: the current variant and dependencies reflect
     # Charliecloud's automatic mount/un-mounting requirements. A more manual
     # approach with squashfuse could implemented in a different variant.
     with when("+squashfuse"):
