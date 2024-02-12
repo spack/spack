@@ -60,6 +60,39 @@ jobs:
     - uses: codecov/codecov-action@e0b68c6749509c5f83f984dd99a76a1c1a231044
       with:
         flags: unittests,windows
+  unit-tests-spaced-path:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: "spack on windows"
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c
+        with:
+          python-version: 3.9
+      - name: Install Python packages
+        run: |
+            python -m pip install --upgrade pip pywin32 setuptools coverage pytest-cov clingo
+      - name: Create local develop
+        run: |
+          ./.github/workflows/setup_git.ps1
+      - name: Unit Tests
+        run: |
+          spack unit-test -x --verbose --cov --cov-config=pyproject.toml --ignore=lib/spack/spack/test/cmd
+          ./share/spack/qa/validate_last_exit.ps1
+          coverage combine -a
+          coverage xml
+      - name: Command Unit Test
+        run: |
+          spack unit-test -x --verbose --cov --cov-config=pyproject.toml lib/spack/spack/test/cmd
+          ./share/spack/qa/validate_last_exit.ps1
+          coverage combine -a
+          coverage xml
+      - uses: codecov/codecov-action@e0b68c6749509c5f83f984dd99a76a1c1a231044
+        with:
+          flags: unittests,windows
   build-abseil:
     runs-on: windows-latest
     steps:
