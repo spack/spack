@@ -30,10 +30,10 @@ import llnl.util.lang
 import llnl.util.tty as tty
 import llnl.util.tty.colify
 import llnl.util.tty.color as color
-from llnl.util.tty.log import log_output
 
 import spack.cmd
 import spack.config
+import spack.debug
 import spack.environment as ev
 import spack.modules
 import spack.paths
@@ -455,7 +455,12 @@ def make_argument_parser(**kwargs):
         help="write out debug messages\n\n(more d's for more verbosity: -d, -dd, -ddd, etc.)",
     )
     parser.add_argument("--timestamp", action="store_true", help="add a timestamp to tty output")
-    parser.add_argument("--pdb", action="store_true", help="run spack under the pdb debugger")
+    parser.add_argument(
+        "--interactive-pdb",
+        action="store_true",
+        dest="interactive_pdb",
+        help="required if you set_trace() inside of a phase",
+    )
 
     env_group = parser.add_mutually_exclusive_group()
     env_group.add_argument(
@@ -717,9 +722,8 @@ class SpackCommand:
 
             out = io.StringIO()
             try:
-                with log_output(out, echo=True):
+                with spack.debug.log_output(out, echo=True):
                     self.returncode = _invoke_command(command, self.parser, args, unknown)
-
             except SystemExit as e:
                 self.returncode = e.code
 
@@ -1037,14 +1041,12 @@ def finish_parse_and_run(parser, cmd_name, main_args, env_format_error):
     # many operations will fail without a working directory.
     set_working_dir()
 
+    if args.interactive_pdb:
+        spack.debug._pdb = True
+
     # now we can actually execute the command.
     if args.spack_profile or args.sorted_profile:
         _profile_wrapper(command, parser, args, unknown)
-    elif args.pdb:
-        import pdb
-
-        pdb.runctx("_invoke_command(command, parser, args, unknown)", globals(), locals())
-        return 0
     else:
         return _invoke_command(command, parser, args, unknown)
 

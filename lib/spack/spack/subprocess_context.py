@@ -74,6 +74,7 @@ class PackageInstallContext:
             self.env = spack.environment.active_environment()
         self.spack_working_dir = spack.main.spack_working_dir
         self.test_state = TestState()
+        self.pdb = spack.debug._pdb
 
     def restore(self):
         self.test_state.restore()
@@ -82,6 +83,7 @@ class PackageInstallContext:
         pkg = pickle.load(self.serialized_pkg) if _SERIALIZE else self.pkg
         if env:
             spack.environment.activate(env)
+        spack.debug._pdb = self.pdb
         return pkg
 
 
