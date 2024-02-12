@@ -224,7 +224,7 @@ adding the following to ``my_package``'s ``pyproject.toml`` will make ``my_packa
    [project.entry_points:"spack.config"]
    my_package = "my_package.get_config_path"
 
-The function ``my_package.get_extension_path`` in ``scripting/__init__.py`` might look like
+The function ``my_package.get_extension_path`` in ``my_package/__init__.py`` might look like
 
 .. code-block:: python
 
