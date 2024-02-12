@@ -41,7 +41,7 @@ class Libdap4(AutotoolsPackage):
         # during configure tests. This can cause a failure with libtirpc if the following variable
         # is not set.
         if self.spec.satisfies("^libtirpc"):
-            env.set("TIRPC_LIBS", self.spec["rpc"].libs)
+            env.set("TIRPC_LIBS", self.spec["rpc"].libs.link_flags)
 
     def configure_args(self):
         # libxml2 exports ./include/libxml2/ instead of ./include/, which we
