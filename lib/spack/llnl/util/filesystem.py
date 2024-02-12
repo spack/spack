@@ -931,10 +931,8 @@ def has_shebang(path):
 
 @system_path_filter
 def is_nonsymlink_exe_with_shebang(path):
-    """
-    Returns whether the path is an executable script with a shebang.
-    Return False too when the path is a *symlink* to an executable script.
-    """
+    """Returns whether the path is an executable script with a shebang. Returns False when the path
+    is a *symlink* to an executable script, or when the file cannot be opened."""
     try:
         st = os.lstat(path)
     except OSError:
