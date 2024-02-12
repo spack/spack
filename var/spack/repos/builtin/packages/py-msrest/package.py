@@ -16,7 +16,7 @@ class PyMsrest(PythonPackage):
     version(
         "0.7.1",
         sha256="6e7661f46f3afd88b75667b7187a92829924446c7ea1d169be8c4bb7eeb788b9",
-        url="https://pypi.io/packages/source/m/msrest/msrest-0.7.1.zip"
+        url="https://pypi.io/packages/source/m/msrest/msrest-0.7.1.zip",
     )
 
     version("0.6.21", sha256="72661bc7bedc2dc2040e8f170b6e9ef226ee6d3892e01affd4d26b06474d68d8")
