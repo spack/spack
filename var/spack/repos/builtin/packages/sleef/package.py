@@ -29,35 +29,46 @@ class Sleef(CMakePackage):
         "3.4.0_2019-05-13",
         commit="9b249c53a80343cc1a394ca961d7d5696ea76409",  # py-torch@1.2
         git="https://github.com/zdevito/sleef.git",
+        deprecated=True,
     )
     version(
         "3.3.1_2018-12-09",
         commit="191f655caa25526ae226cf88dd2529265176014a",  # py-torch@1.1
         git="https://github.com/zdevito/sleef.git",
+        deprecated=True,
     )
     version(
-        "3.2_2018-05-09", commit="6ff7a135a1e31979d1e1844a2e7171dfbd34f54f"
+        "3.2_2018-05-09", commit="6ff7a135a1e31979d1e1844a2e7171dfbd34f54f", deprecated=True
     )  # py-torch@0.4.1:1.0
-    version("3.2", sha256="3130c5966e204e6d6a3ace81e543d12b5b21f60897f1c185bfa587c1bd77bee2")
-
-    # https://github.com/shibatch/sleef/issues/474
-    conflicts("%apple-clang@15:")
+    version(
+        "3.2",
+        sha256="3130c5966e204e6d6a3ace81e543d12b5b21f60897f1c185bfa587c1bd77bee2",
+        deprecated=True,
+    )
 
     generator("ninja")
-    depends_on("cmake@3.4.3:", type="build")
+    depends_on("cmake@3.18:", type="build")
 
-    # # https://github.com/shibatch/sleef/issues/475
-    # depends_on("fftw-api")
-    # depends_on("mpfr")
-    # depends_on("openssl")
+    depends_on("fftw-api", type="test")
+    depends_on("mpfr", type="test")
+    depends_on("openssl", type="test")
 
-    # # https://github.com/shibatch/sleef/issues/458
-    # conflicts("^mpfr@4.2:")
+    # https://github.com/shibatch/sleef/issues/458
+    # https://github.com/shibatch/sleef/pull/471
+    conflicts("^mpfr@4.2:", when="@:3.5.1_2023-11-20")
+
+    def sleef_define(self, cmake_var, value):
+        # https://github.com/shibatch/sleef/pull/509
+        if self.spec.satisfies("@3.5.1_2024-02-07:"):
+            cmake_var = "SLEEF_" + cmake_var
+
+        return self.define(cmake_var, value)
 
     def cmake_args(self):
-        # https://salsa.debian.org/science-team/sleef/-/blob/master/debian/rules
-        return [
-            self.define("BUILD_DFT", False),
-            self.define("SLEEF_TEST_ALL_IUT", True),
-            self.define("BUILD_TESTS", False),
-        ]
+        args = [self.sleef_define("BUILD_TESTS", self.run_tests)]
+
+        # https://github.com/shibatch/sleef/issues/474
+        if self.spec.satisfies("@:3.5.1_2024-02-08 platform=darwin"):
+            args.append(self.sleef_define("DISABLE_SVE", True))
+
+        return args
