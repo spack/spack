@@ -13,7 +13,8 @@ class Gor(MakefilePackage):
     homepage = (
         "https://npsa-prabi.ibcp.fr/cgi-bin/npsa_automat.pl?page=/NPSAHLP/npsahlp_secpredgor4.html"
     )
-    # This mirror is the only extant download of GOR that I can find
+    # This mirror is the only extant download of GOR that I can find, as per
+    #   https://github.com/cbcrg/tcoffee/blob/master/lib/data_headers/tclinkdb.txt
     url = "https://s3.eu-central-1.amazonaws.com/tcoffee-packages/mirrors/source/GOR_IV.tar.gz"
 
     version("4", sha256="3c2707195e39bc682d8fb9d7d1ee39d07a43588209fff54487ff2a2d0bf2f18e")
