@@ -937,14 +937,15 @@ def is_nonsymlink_exe_with_shebang(path):
     """
     try:
         st = os.lstat(path)
-        # Should not be a symlink
-        if stat.S_ISLNK(st.st_mode):
-            return False
-
-        # Should be executable
-        if not st.st_mode & (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH):
-            return False
     except OSError:
+        return False
+
+    # Should not be a symlink
+    if stat.S_ISLNK(st.st_mode):
+        return False
+
+    # Should be executable
+    if not st.st_mode & (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH):
         return False
 
     return has_shebang(path)
