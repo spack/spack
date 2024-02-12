@@ -55,7 +55,6 @@ unify(SetID, PackageName) :- unification_set(SetID, node(_, PackageName)).
 unification_set("root", PackageNode) :- attr("root", PackageNode).
 unification_set(SetID, ChildNode) :- attr("depends_on", ParentNode, ChildNode, Type), Type != "build", unification_set(SetID, ParentNode).
 
-% What does this mean?
 unification_set(("build", node(X, Child)), node(X, Child))
   :- attr("depends_on", ParentNode, node(X, Child), Type),
      Type == "build",
@@ -292,13 +291,6 @@ condition_set(PackageNode, VirtualNode, direct_link_run) :- provider(PackageNode
 
 condition_set(PackageNode, DependencyNode, direct_build) :- condition_set(PackageNode, PackageNode, direct_link_run), attr("depends_on", PackageNode, DependencyNode, "build").
 condition_set(PackageNode, DependencyNode, direct_link_run) :- condition_set(PackageNode, PackageNode, direct_link_run), attr("depends_on", PackageNode, DependencyNode, Type), Type != "build".
-
-% If I want to apply different semantics to direct build deps, then the
-% condition set "direct_link_run" is not what I want to use
-root_link_run_set(PackageNode) :- attr("root", PackageNode).
-root_link_run_set(DependencyNode):- attr("depends_on", PackageNode, DependencyNode, Type),
-  Type != "build",
-  root_link_run_set(PackageNode).
 
 condition_set(ID, VirtualNode, Type) :- condition_set(ID, PackageNode, Type), provider(PackageNode, VirtualNode).
 
@@ -697,26 +689,8 @@ deactivate_requirements(node(ID, Package), X) :-
 deactivate_requirements(node(ID, Package), X) :-
   requirement_group(Package, X),
   exclude_requirement_for_build(Package, X),
-  not root_link_run_set(node(ID, Package)),
+  not unification_set("root", node(ID, Package)),
   attr("node", node(ID, Package)).
-
-%When first writing this, I wanted to deactivate requirements
-%based on whether the package was part of a unification set
-%but this seems (a) too broad (some link deps are included in it)
-%and (b) unnecessary (regardless of what unification set
-%it resides in, I just want to apply it to build-only dependencies)
-
-%deactivate_requirements(node(ID, Package), X) :-
-%  requirement_group(Package, X),
-%  exclude_requirement_for_build(Package, X),
-%  unification_set("generic_build", node(ID, Package)),
-%  attr("node", node(ID, Package)).
-
-%deactivate_requirements(node(ID, Package), X) :-
-%  requirement_group(Package, X),
-%  exclude_requirement_for_build(Package, X),
-%  unification_set("build", node(ID, Package)),
-%  attr("node", node(ID, Package)).
 
 #defined exclude_requirement_for_build/2.
 #defined exclude_requirement_for_externals/2.
