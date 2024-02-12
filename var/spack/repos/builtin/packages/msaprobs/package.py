@@ -17,7 +17,7 @@ class Msaprobs(MakefilePackage):
 
     version("0.9.7", sha256="a14c59d714a5020c091ba9dd64d57d4d4aa5e39fefec06ba2f3d29e9ab38dad0")
 
-    depends_on("openmpi")
+    depends_on("mpi")
 
     build_directory = "MSAProbs"
 
