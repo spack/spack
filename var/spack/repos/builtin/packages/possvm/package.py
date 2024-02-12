@@ -22,7 +22,7 @@ class Possvm(Package):
     license("GPL-3.0-only", checked_by="A-N-Other")
 
     # version number is taken from -v/--version argparse info in possvm.py
-    version("1.2", commit="8e97f27806095b9368836e7630188f9b8d473b55")
+    version("1.2", commit="3158757423edafc29aa29bf3ae0cc63a93a56df9")
 
     depends_on("python@3.10:", type="run")
 
