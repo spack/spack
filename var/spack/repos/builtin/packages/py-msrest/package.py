@@ -13,6 +13,10 @@ class PyMsrest(PythonPackage):
     homepage = "https://github.com/Azure/msrest-for-python"
     pypi = "msrest/msrest-0.6.16.tar.gz"
 
+    # There is some issue with recent Azure packages. They are not downloaded successfully
+    # by Spack if URL is not provided. Maybe due to `.zip` format of the archive.
+    # `spack checksum` command also no longer sees new packages.
+
     version(
         "0.7.1",
         sha256="6e7661f46f3afd88b75667b7187a92829924446c7ea1d169be8c4bb7eeb788b9",
