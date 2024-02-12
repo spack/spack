@@ -42,9 +42,11 @@ class H5hut(AutotoolsPackage):
         if "+fortran" in self.spec and not self.compiler.fc:
             raise RuntimeError("Cannot build Fortran variant without a Fortran compiler.")
 
-    def setup_build_environment(self, env):
-        if self.spec["hdf5"].satisfies("@1.12:"):
-            env.append_flags("CFLAGS", "-DH5_USE_110_API")
+    def flag_handler(self, name, flags):
+        build_system_flags = []
+        if name == "cflags" and self.spec["hdf5"].satisfies("@1.12:"):
+            build_system_flags = ["-DH5_USE_110_API"]
+        return flags, None, build_system_flags
 
     def autoreconf(self, spec, prefix):
         which("bash")("autogen.sh")
