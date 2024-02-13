@@ -24,7 +24,7 @@ class PyAzureMgmtBatch(PythonPackage):
 
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-isodate", type=("build", "run"), when="@0.6.1:0")
+    depends_on("py-isodate@0.6.1:0", type=("build", "run"), when="@17.1:")
     depends_on("py-azure-common@1.1:1", type=("build", "run"))
     depends_on("py-azure-mgmt-core@1.2:1", type=("build", "run"), when="@14:")
     depends_on("py-azure-mgmt-core@1.3:1", type=("build", "run"), when="@16.1:")
