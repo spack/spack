@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,10 +12,12 @@ class Semiprof(CMakePackage):
     homepage = "https://github.com/bcumming/semiprof"
     url = "https://github.com/bcumming/semiprof/archive/refs/tags/v0.1.tar.gz"
 
-    maintainers = ["simonpintarelli"]
+    maintainers("simonpintarelli")
 
-    variant("examples", default=False)
-    variant("shared", default=True)
+    variant("examples", default=False, description="Enable examples")
+    variant("shared", default=True, description="Build shared libraries")
+
+    license("BSD-3-Clause")
 
     version("0.1", sha256="4fb3823c65a4f5dfbe05e8cbe1911dfd25cd7740597f82c7b3a84472de26f0dc")
 

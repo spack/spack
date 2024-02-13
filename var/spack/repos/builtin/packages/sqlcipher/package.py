@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Sqlcipher(AutotoolsPackage):
 
     maintainers("rmsds")
 
+    license("BSD-3-Clause")
+
     version("4.4.1", sha256="a36ed7c879a5e9af1054942201c75fc56f1db22e46bf6c2bbae3975dfeb6782d")
     version("4.4.0", sha256="0924b2ae1079717954498bda78a30de20ce2a6083076b16214a711567821d148")
     version("4.3.0", sha256="fccb37e440ada898902b294d02cde7af9e8706b185d77ed9f6f4d5b18b4c305f")
@@ -27,7 +29,7 @@ class Sqlcipher(AutotoolsPackage):
 
     depends_on("openssl")
     depends_on("tcl", type=["build"])
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     def configure_args(self):
         args = []

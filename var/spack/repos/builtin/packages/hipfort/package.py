@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,13 +9,20 @@ from spack.package import *
 class Hipfort(CMakePackage):
     """Radeon Open Compute Parallel Primitives Library"""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/hipfort"
-    git = "https://github.com/ROCmSoftwarePlatform/hipfort.git"
-    url = "https://github.com/ROCmSoftwarePlatform/hipfort/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/hipfort"
+    git = "https://github.com/ROCm/hipfort.git"
+    url = "https://github.com/ROCm/hipfort/archive/rocm-6.0.2.tar.gz"
     tags = ["rocm"]
 
-    maintainers("cgmb", "srekolam", "renjithravindrankannath")
+    license("MIT")
 
+    maintainers("cgmb", "srekolam", "renjithravindrankannath")
+    version("6.0.2", sha256="b60ada7474b71c1d82c700b0159bc0756dbb2808375054903710280b1677f199")
+    version("6.0.0", sha256="151cf11648885db799aade0d00a7882589e7195643b02beaa251f1b2a43aceed")
+    version("5.7.1", sha256="859fac509e195f3ab97c555b5f63afea325a61aae0f281cb19a970a1b533dead")
+    version("5.7.0", sha256="57b04d59f61683a1b141d6d831d10c9fdecea483991ec02d14c14e441e935c05")
+    version("5.6.1", sha256="a55345cc9ccaf0cd69d306b8eb9ec2a02c220a57e9c396443cc7273aa3377adc")
+    version("5.6.0", sha256="03176a099bc81e212ad1bf9d86f35561f8f2d21a2f126732d7620e1ea59888d5")
     version("5.5.1", sha256="abc59f7b81cbefbe3555cbf1bf0d80e8aa65901c70799748c40870fe6f3fea60")
     version("5.5.0", sha256="cae75ffeac129639cabebfe2f95f254c83d6c0a6cffd98142ea3537a132e42bb")
     version("5.4.3", sha256="1954a1cba351d566872ced5549b2ced7ab6332221e2b98dba3c07180dce8f173")
@@ -118,6 +125,12 @@ class Hipfort(CMakePackage):
         "5.4.3",
         "5.5.0",
         "5.5.1",
+        "5.6.0",
+        "5.6.1",
+        "5.7.0",
+        "5.7.1",
+        "6.0.0",
+        "6.0.2",
     ]:
         depends_on("hip@" + ver, type="build", when="@" + ver)
 

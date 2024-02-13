@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,11 @@ class Stripack(MakefilePackage):
     """
 
     homepage = "https://people.sc.fsu.edu/~jburkardt/f_src/stripack/stripack.html"
+
+    maintainers("cessenat")
+
+    license("MIT")
+
     version(
         "develop",
         sha256="26c074bc46fb8549d7a42ec713636798297d7327c8f3ce0ba2d3348a501ffa7c",

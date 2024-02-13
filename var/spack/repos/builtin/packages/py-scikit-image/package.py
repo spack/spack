@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,13 @@ class PyScikitImage(PythonPackage):
     homepage = "https://scikit-image.org/"
     pypi = "scikit-image/scikit_image-0.17.2.tar.gz"
     git = "https://github.com/scikit-image/scikit-image.git"
+
+    skip_modules = [
+        # Requires pytest
+        "skimage.filters.rank.tests",
+        # skimage.future.graph moved to skimage.graph
+        "skimage.future.graph",
+    ]
 
     version("0.20.0", sha256="2cd784fce18bd31d71ade62c6221440199ead03acf7544086261ee032264cf61")
     version("0.19.3", sha256="24b5367de1762da6ee126dd8f30cc4e7efda474e0d7d70685433f0e3aa2ec450")

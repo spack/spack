@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -89,6 +89,13 @@ class QtBase(QtPackage):
     url = QtPackage.get_url(__qualname__)
     list_url = QtPackage.get_list_url(__qualname__)
 
+    provides("qmake")
+
+    license("BSD-3-Clause")
+
+    version("6.6.1", sha256="eb091c56e8c572d35d3da36f94f9e228892d43aecb559fa4728a19f0e44914c4")
+    version("6.6.0", sha256="882f39ea3a40a0894cd64e515ce51711a4fab79b8c47bc0fe0279e99493a62cf")
+    version("6.5.3", sha256="174021c4a630df2e7e912c2e523844ad3cb5f90967614628fd8aa15ddbab8bc5")
     version("6.5.2", sha256="221cafd400c0a992a42746b43ea879d23869232e56d9afe72cb191363267c674")
     version("6.5.1", sha256="fdde60cdc5c899ab7165f1c3f7b93bc727c2484c348f367d155604f5d901bfb6")
     version("6.5.0", sha256="7b0de20e177335927c55c58a3e1a7e269e32b044936e97e9a82564f0f3e69f99")
@@ -127,7 +134,7 @@ class QtBase(QtPackage):
     depends_on("icu4c")
     depends_on("libxml2")
     depends_on("pcre2+multibyte")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("zstd")
     with when("platform=linux"):
         depends_on("libdrm")
@@ -146,6 +153,13 @@ class QtBase(QtPackage):
             depends_on("libxkbcommon")
             depends_on("libxcb@1.13:")  # requires xinput
             depends_on("libxrender")
+            depends_on("libx11")
+            depends_on("xcb-util")
+            depends_on("xcb-util-cursor")
+            depends_on("xcb-util-image")
+            depends_on("xcb-util-keysyms")
+            depends_on("xcb-util-renderutil")
+            depends_on("xcb-util-wm")
 
     with when("+network"):
         depends_on("openssl")
@@ -154,6 +168,9 @@ class QtBase(QtPackage):
 
     # Qt6 requires newer compilers: see https://github.com/spack/spack/issues/34418
     conflicts("%gcc@:7")
+    # The oldest compiler for Qt 6.5 is GCC 9: https://doc.qt.io/qt-6.5/supported-platforms.html
+    with when("@6.5:"):
+        conflicts("%gcc@:8")
 
     # ensure that Qt links against GSS framework on macOS: https://bugreports.qt.io/browse/QTBUG-114537
     with when("@6.3.2:6.5.1"):
@@ -229,6 +246,9 @@ class QtBase(QtPackage):
                 features.append("libproxy")
         for k in features:
             define("FEATURE_" + k, True)
+
+        if "~opengl" in spec:
+            args.append(self.define("INPUT_opengl", "no"))
 
         # INPUT_* arguments: undefined/no/qt/system
         sys_inputs = ["doubleconversion"]

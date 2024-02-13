@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyJupyter(PythonPackage):
 
     homepage = "https://jupyter.org/"
     pypi = "jupyter/jupyter-1.0.0.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("1.0.0", sha256="d9dc4b3318f310e34c82951ea5d6683f67bed7def4b259fafbfe4f1beb1d8e5f")
 

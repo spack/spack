@@ -4,7 +4,7 @@
 ## {{ spec.short_spec }}
 ##
 {% if configure_options %}
-## Configure options: {{ configure_options }}
+## Configure options: {{ configure_options | wordwrap(8192 - 23, True, "\n##                    ", 0) }}
 ##
 {% endif %}
 
@@ -54,11 +54,23 @@ conflict {{ name }}
 {% block environment %}
 {% for command_name, cmd in environment_modifications %}
 {% if command_name == 'PrependPath' %}
+{% if cmd.separator == ':' %}
+prepend-path {{ cmd.name }} {{ '{' }}{{ cmd.value }}{{ '}' }}
+{% else %}
 prepend-path --delim {{ '{' }}{{ cmd.separator }}{{ '}' }} {{ cmd.name }} {{ '{' }}{{ cmd.value }}{{ '}' }}
+{% endif %}
 {% elif command_name in ('AppendPath', 'AppendFlagsEnv') %}
+{% if cmd.separator == ':' %}
+append-path {{ cmd.name }} {{ '{' }}{{ cmd.value }}{{ '}' }}
+{% else %}
 append-path --delim {{ '{' }}{{ cmd.separator }}{{ '}' }} {{ cmd.name }} {{ '{' }}{{ cmd.value }}{{ '}' }}
+{% endif %}
 {% elif command_name in ('RemovePath', 'RemoveFlagsEnv') %}
+{% if cmd.separator == ':' %}
+remove-path {{ cmd.name }} {{ '{' }}{{ cmd.value }}{{ '}' }}
+{% else %}
 remove-path --delim {{ '{' }}{{ cmd.separator }}{{ '}' }} {{ cmd.name }} {{ '{' }}{{ cmd.value }}{{ '}' }}
+{% endif %}
 {% elif command_name == 'SetEnv' %}
 setenv {{ cmd.name }} {{ '{' }}{{ cmd.value }}{{ '}' }}
 {% elif command_name == 'UnsetEnv' %}
@@ -68,7 +80,7 @@ unsetenv {{ cmd.name }}
 {% endfor %}
 {# Make sure system man pages are enabled by appending trailing delimiter to MANPATH #}
 {% if has_manpath_modifications %}
-append-path --delim {{ '{' }}:{{ '}' }} MANPATH {{ '{' }}{{ '}' }}
+append-path MANPATH {{ '{' }}{{ '}' }}
 {% endif %}
 {% endblock %}
 

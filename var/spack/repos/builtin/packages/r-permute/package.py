@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class RPermute(RPackage):
     Cajo ter Braak."""
 
     cran = "permute"
+
+    license("GPL-2.0-only")
 
     version("0.9-7", sha256="eff88ffb579aaeb994e9f8609b776b2d9d9d56bc2879ddf180e3a2ad19f48dc0")
     version("0.9-5", sha256="d2885384a07497e8df273689d6713fc7c57a7c161f6935f3572015e16ab94865")

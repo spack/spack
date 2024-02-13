@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Serf(SConsPackage):
 
     maintainers("cosmicexplorer")
 
+    license("Apache-2.0")
+
     version("1.3.10", sha256="be81ef08baa2516ecda76a77adf7def7bc3227eeb578b9a33b45f7b41dc064e6")
     version("1.3.9", sha256="549c2d21c577a8a9c0450facb5cca809f26591f048e466552240947bdf7a87cc")
     version("1.3.8", sha256="e0500be065dbbce490449837bb2ab624e46d64fc0b090474d9acaa87c82b2590")
@@ -29,7 +31,7 @@ class Serf(SConsPackage):
     depends_on("python+pythoncmd", type="build")
     depends_on("scons@2.3.0:", type="build")
     depends_on("uuid")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     patch("py3syntax.patch", when="@:1.3.9")
     patch("py3-hashbang.patch")
@@ -40,7 +42,7 @@ class Serf(SConsPackage):
             "APR": spec["apr"].prefix,
             "APU": spec["apr-util"].prefix,
             "OPENSSL": spec["openssl"].prefix,
-            "ZLIB": spec["zlib"].prefix,
+            "ZLIB": spec["zlib-api"].prefix,
             "DEBUG": "yes" if "+debug" in spec else "no",
         }
 

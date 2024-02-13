@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,8 @@ class Fastjet(AutotoolsPackage):
     tags = ["hep"]
 
     maintainers("drbenmorgan", "vvolkl")
+
+    license("GPL-2.0-only")
 
     version("3.4.1", sha256="05608c6ff213f06dd9de723813d6b4dccd51e661ac13098f74bfc9eeaf1cb5aa")
     version("3.4.0", sha256="ee07c8747c8ead86d88de4a9e4e8d1e9e7d7614973f5631ba8297f7a02478b91")
@@ -59,6 +61,14 @@ class Fastjet(AutotoolsPackage):
 
     variant("shared", default=True, description="Builds a shared version of the library")
     variant("auto-ptr", default=False, description="Use auto_ptr")
+    variant(
+        "thread-safety",
+        default="limited",
+        values=("none", "limited", "full"),
+        multi=False,
+        when="@3.4.0:",
+        description="Enables thread safety",
+    )
     variant("atlas", default=False, description="Patch to make random generator thread_local")
 
     patch("atlas.patch", when="@:3.3 +atlas", level=0)
@@ -73,5 +83,9 @@ class Fastjet(AutotoolsPackage):
         extra_args = ["--enable-allplugins"]
         extra_args += self.enable_or_disable("shared")
         extra_args += self.enable_or_disable("auto-ptr")
+        if self.spec.variants["thread-safety"].value == "limited":
+            extra_args += ["--enable-limited-thread-safety"]
+        if self.spec.variants["thread-safety"].value == "full":
+            extra_args += ["--enable-thread-safety"]
 
         return extra_args

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,6 @@ import filecmp
 import json
 import os
 import shutil
-import sys
 
 import jsonschema
 import pytest
@@ -17,6 +16,7 @@ from llnl.util.filesystem import mkdirp, working_dir
 import spack
 import spack.binary_distribution
 import spack.ci as ci
+import spack.cmd.ci
 import spack.config
 import spack.environment as ev
 import spack.hash_types as ht
@@ -41,10 +41,7 @@ install_cmd = spack.main.SpackCommand("install")
 uninstall_cmd = spack.main.SpackCommand("uninstall")
 buildcache_cmd = spack.main.SpackCommand("buildcache")
 
-pytestmark = [
-    pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows"),
-    pytest.mark.maybeslow,
-]
+pytestmark = [pytest.mark.not_on_windows("does not run on windows"), pytest.mark.maybeslow]
 
 
 @pytest.fixture()
@@ -1084,14 +1081,17 @@ def test_push_mirror_contents(
 
     ci.import_signing_key(_signing_key())
 
-    spack_yaml_contents = """
+    with tmpdir.as_cwd():
+        with open("spack.yaml", "w") as f:
+            f.write(
+                f"""\
 spack:
  definitions:
    - packages: [patchelf]
  specs:
    - $packages
  mirrors:
-   test-mirror: {0}
+   test-mirror: {mirror_url}
  ci:
    enable-artifacts-buildcache: True
    pipeline-gen:
@@ -1111,15 +1111,8 @@ spack:
          - nonbuildtag
        image: basicimage
        custom_attribute: custom!
-""".format(
-        mirror_url
-    )
-
-    filename = str(tmpdir.join("spack.yaml"))
-    with open(filename, "w") as f:
-        f.write(spack_yaml_contents)
-
-    with tmpdir.as_cwd():
+"""
+            )
         env_cmd("create", "test", "./spack.yaml")
         with ev.read("test"):
             concrete_spec = Spec("patchelf").concretized()
@@ -1130,7 +1123,8 @@ spack:
 
             install_cmd("--add", "--keep-stage", json_path)
 
-            ci.push_mirror_contents(concrete_spec, mirror_url, True)
+            for s in concrete_spec.traverse():
+                ci.push_mirror_contents(s, mirror_url, True)
 
             buildcache_path = os.path.join(mirror_dir.strpath, "build_cache")
 
@@ -1994,8 +1988,7 @@ spack:
 
             ci_cmd("generate", "--output-file", pipeline_path, "--artifacts-root", artifacts_root)
 
-            target_name = spack.platforms.test.Test.default
-            job_name = ci.get_job_name(job_spec, "test-debian6-%s" % target_name, None)
+            job_name = ci.get_job_name(job_spec)
 
             repro_file = os.path.join(working_dir.strpath, "repro.json")
             repro_details = {
@@ -2008,7 +2001,7 @@ spack:
 
             install_script = os.path.join(working_dir.strpath, "install.sh")
             with open(install_script, "w") as fd:
-                fd.write("#!/bin/bash\n\n#fake install\nspack install blah\n")
+                fd.write("#!/bin/sh\n\n#fake install\nspack install blah\n")
 
             spack_info_file = os.path.join(working_dir.strpath, "spack_info.txt")
             with open(spack_info_file, "w") as fd:
@@ -2029,11 +2022,48 @@ spack:
         working_dir.strpath,
         output=str,
     )
-    expect_out = "docker run --rm --name spack_reproducer -v {0}:{0}:Z -ti {1}".format(
-        os.path.realpath(working_dir.strpath), image_name
-    )
-
+    # Make sure the script was generated
+    assert os.path.exists(os.path.join(os.path.realpath(working_dir.strpath), "start.sh"))
+    # Make sure we tell the suer where it is when not in interactive mode
+    expect_out = "$ {0}/start.sh".format(os.path.realpath(working_dir.strpath))
     assert expect_out in rep_out
+
+
+@pytest.mark.parametrize(
+    "url_in,url_out",
+    [
+        (
+            "https://example.com/api/v4/projects/1/jobs/2/artifacts",
+            "https://example.com/api/v4/projects/1/jobs/2/artifacts",
+        ),
+        (
+            "https://example.com/spack/spack/-/jobs/123456/artifacts/download",
+            "https://example.com/spack/spack/-/jobs/123456/artifacts/download",
+        ),
+        (
+            "https://example.com/spack/spack/-/jobs/123456",
+            "https://example.com/spack/spack/-/jobs/123456/artifacts/download",
+        ),
+        (
+            "https://example.com/spack/spack/-/jobs/////123456////?x=y#z",
+            "https://example.com/spack/spack/-/jobs/123456/artifacts/download",
+        ),
+    ],
+)
+def test_reproduce_build_url_validation(url_in, url_out):
+    assert spack.cmd.ci._gitlab_artifacts_url(url_in) == url_out
+
+
+def test_reproduce_build_url_validation_fails():
+    """Wrong URLs should cause an exception"""
+    with pytest.raises(SystemExit):
+        ci_cmd("reproduce-build", "example.com/spack/spack/-/jobs/123456/artifacts/download")
+
+    with pytest.raises(SystemExit):
+        ci_cmd("reproduce-build", "https://example.com/spack/spack/-/issues")
+
+    with pytest.raises(SystemExit):
+        ci_cmd("reproduce-build", "https://example.com/spack/spack/-")
 
 
 @pytest.mark.parametrize(
@@ -2217,3 +2247,50 @@ spack:
             assert all([t in rebuild_tags for t in ["spack", "service"]])
             expected_vars = ["CI_JOB_SIZE", "KUBERNETES_CPU_REQUEST", "KUBERNETES_MEMORY_REQUEST"]
             assert all([v in rebuild_vars for v in expected_vars])
+
+
+def test_ci_generate_mirror_config(
+    tmpdir,
+    mutable_mock_env_path,
+    install_mockery,
+    mock_packages,
+    monkeypatch,
+    ci_base_environment,
+    mock_binary_index,
+):
+    """Make sure the correct mirror gets used as the buildcache destination"""
+    filename = str(tmpdir.join("spack.yaml"))
+    with open(filename, "w") as f:
+        f.write(
+            """\
+spack:
+  specs:
+    - archive-files
+  mirrors:
+    some-mirror: file:///this/is/a/source/mirror
+    buildcache-destination: file:///push/binaries/here
+  ci:
+    pipeline-gen:
+    - submapping:
+      - match:
+          - archive-files
+        build-job:
+          tags:
+            - donotcare
+          image: donotcare
+"""
+        )
+
+    with tmpdir.as_cwd():
+        env_cmd("create", "test", "./spack.yaml")
+        outputfile = str(tmpdir.join(".gitlab-ci.yml"))
+
+        with ev.read("test"):
+            ci_cmd("generate", "--output-file", outputfile)
+            with open(outputfile) as of:
+                pipeline_doc = syaml.load(of.read())
+                assert "rebuild-index" in pipeline_doc
+                reindex_job = pipeline_doc["rebuild-index"]
+                assert "script" in reindex_job
+                reindex_step = reindex_job["script"][0]
+                assert "file:///push/binaries/here" in reindex_step

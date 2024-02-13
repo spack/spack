@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and otherargs
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and otherargs
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,8 @@ class Gimp(AutotoolsPackage):
 
     conflicts("platform=darwin", msg="spack/GIMP currently requires Linux")
     conflicts("platform=windows", msg="spack/GIMP currently requires Linux")
+
+    license("GPL-3.0-or-later")
 
     version("2.10.32", sha256="3f15c70554af5dcc1b46e6dc68f3d8f0a6cc9fe56b6d78ac08c0fd859ab89a25")
     version("2.10.30", sha256="88815daa76ed7d4277eeb353358bafa116cd2fcd2c861d95b95135c1d52b67dc")
@@ -81,7 +83,7 @@ class Gimp(AutotoolsPackage):
     depends_on("pango@1.29.4:")
     depends_on("poppler+glib")
     depends_on("poppler-data@0.4.7:")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     def url_for_version(self, version):
         # ref: https://download.gimp.org/gimp/v2.10/gimp-2.10.32.tar.bz2"

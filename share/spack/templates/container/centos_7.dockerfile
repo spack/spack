@@ -13,6 +13,7 @@ RUN yum update -y \
         git \
         gnupg2 \
         hostname \
+        hg \
         iproute \
         make \
         patch \
@@ -20,6 +21,7 @@ RUN yum update -y \
         python3-pip \
         python3-setuptools \
         unzip \
+        zstd \
  && pip3 install boto3 \
  && rm -rf /var/cache/yum \
  && yum clean all

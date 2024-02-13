@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,8 +22,10 @@ class Vacuumms(CMakePackage):
 
     maintainers("frankwillmore")
 
+    license("Unlicense")
+
     version("master", branch="master")
-    version("1.1.1", tag="v1.1.1")
+    version("1.1.1", tag="v1.1.1", commit="a395930c87f5b52ab0ab8db278bd2bde592e8f12")
     version(
         "1.0.0",
         sha256="c18fe52f5041880da7f50d3808d37afb3e9c936a56f80f67838d045bf7af372f",

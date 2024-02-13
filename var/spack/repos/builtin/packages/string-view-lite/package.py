@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class StringViewLite(CMakePackage):
 
     homepage = "https://github.com/martinmoene/string-view-lite"
     url = "https://github.com/martinmoene/string-view-lite/archive/v1.0.0.tar.gz"
+
+    license("BSL-1.0")
 
     version("1.7.0", sha256="265eaec08c4555259b46f5b03004dbc0f7206384edfac1cd5a837efaa642e01c")
     version("1.2.0", sha256="de5c8be782831bac7e7f9656b7fa185b015ae39fac8123195aeba7cbde019da4")

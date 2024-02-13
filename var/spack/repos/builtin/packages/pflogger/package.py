@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,9 +17,13 @@ class Pflogger(CMakePackage):
 
     maintainers("mathomp4", "tclune")
 
+    license("Apache-2.0")
+
     version("develop", branch="develop")
     version("main", branch="main")
 
+    version("1.12.0", sha256="ff29b0ce4baf50675edb69c3c7493be5410839b5f81e3ce5405f04925503fb0d")
+    version("1.11.0", sha256="bf197b6f223a75c7d3eee23888cdde204b5aea053c308852a3f8f677784b8899")
     version("1.10.0", sha256="8e25564699c0adcbe9a23fded6637668ce659480b39420be5a4c8181cd44ad53")
     version("1.9.5", sha256="baa3ebb83962f1b6c8c5b0413fe9d02411d3e379c76b8c190112e158c10ac0ac")
     version("1.9.3", sha256="f300fab515a25b728889ef6c2ab64aa90e7f94c98fd8190dd11a9b1ebd38117a")
@@ -53,6 +57,9 @@ class Pflogger(CMakePackage):
 
     depends_on("mpi", when="+mpi")
 
+    # Using pFlogger with MPICH 4 is only supported from version 1.11
+    conflicts("^mpich@4:", when="@:1.10")
+
     depends_on("cmake@3.12:", type="build")
 
     def cmake_args(self):
@@ -61,5 +68,11 @@ class Pflogger(CMakePackage):
 
         if spec.satisfies("+mpi"):
             args.extend(["-DCMAKE_Fortran_COMPILER=%s" % spec["mpi"].mpifc])
+
+        # From version 1.12 on, there is an `ENABLE_MPI` option that
+        # defaults to `ON`. If we don't want MPI, we need to set it to
+        # `OFF`
+        if spec.satisfies("@1.12: ~mpi"):
+            args.append("-DENABLE_MPI=OFF")
 
         return args
