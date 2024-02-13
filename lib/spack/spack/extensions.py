@@ -154,12 +154,13 @@ def extension_paths_from_entry_points() -> List[str]:
     """
     extension_paths: List[str] = []
     for entry_point in llnl.util.lang.get_entry_points(group="spack.extensions"):
-        get_paths = entry_point.load()
-        paths = get_paths() or []
-        if isinstance(paths, str):
-            extension_paths.append(paths)
-        else:
-            extension_paths.extend(paths)
+        hook = entry_point.load()
+        if callable(hook):
+            paths = hook() or []
+            if isinstance(paths, str):
+                extension_paths.append(paths)
+            else:
+                extension_paths.extend(paths)
     return extension_paths
 
 

@@ -781,10 +781,11 @@ def config_paths_from_entry_points() -> List[Tuple[str, str]]:
     """
     config_paths: List[Tuple[str, str]] = []
     for entry_point in lang.get_entry_points(group="spack.config"):
-        get_config_path = entry_point.load()
-        config_path = get_config_path()
-        if config_path and os.path.exists(config_path):
-            config_paths.append(("plugin-%s" % entry_point.name, config_path))
+        hook = entry_point.load()
+        if callable(hook):
+            config_path = hook()
+            if config_path and os.path.exists(config_path):
+                config_paths.append(("plugin-%s" % entry_point.name, config_path))
     return config_paths
 
 

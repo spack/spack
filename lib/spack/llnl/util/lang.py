@@ -849,8 +849,11 @@ def get_entry_points(*, group: str):
 
     Adapted from https://github.com/HypothesisWorks/hypothesis/blob/0a90ed6edf56319149956c7321d4110078a5c228/hypothesis-python/src/hypothesis/entry_points.py
 
+    Args:
+        group (str): the group of entry points to select
+
     Returns:
-        EntryPoints for all installed packages.
+        EntryPoints for ``group``
 
     """
 
