@@ -20,7 +20,7 @@ class Khmer(PythonPackage):
     # https://github.com/dib-lab/khmer/pull/1922 ...
     conflicts("^python@3.12:")
 
-    depends_on("py-setuptools@18:", type="build")
+    depends_on("py-setuptools@3.4.1:", type="build")
     depends_on("py-pytest-runner@2", type="build")
     depends_on("py-screed@1:", type=("build", "run"))
     # abandoned `bz2file` dependency dropped in favour of the patch below
