@@ -95,7 +95,7 @@ def _print_staging_summary(stages: List[List[spack.spec.Spec]], pruning_results:
             reasons = [
                 filter_descriptions[i] for i, result in enumerate(filterResults) if not result
             ]
-            tty.msg(f"  {s.cformat(spec_fmt)} ({reasons})")
+            tty.msg(f"  {key} ({reasons})")
 
 
 def maybe_generate_manifest(pipeline: PipelineDag, options: PipelineOptions, manifest_path):
