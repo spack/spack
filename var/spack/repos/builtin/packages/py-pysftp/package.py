@@ -10,7 +10,7 @@ from spack.package import *
 class PyPysftp(PythonPackage):
     """A simple interface to SFTP."""
 
-    pypi = "pysftp/pysftp-0.20.tar.gz"
+    pypi = "pysftp/pysftp-0.2.9.tar.gz"
 
     version("0.2.9", sha256="fbf55a802e74d663673400acd92d5373c1c7ee94d765b428d9f977567ac4854a")
 
