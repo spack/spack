@@ -169,6 +169,8 @@ class PythonExtension(spack.package_base.PackageBase):
                 fs.filter_file(
                     python_prefix, os.path.abspath(view.get_projection_for_spec(self.spec)), dst
                 )
+            else:
+                view.link(src, dst)
 
         # Finally re-target the symlinks that point to copied files.
         for src, dst in delayed_links:
