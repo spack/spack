@@ -2034,11 +2034,15 @@ def global_except_hook(exctype, value, traceback):
         sys.__excepthook__(exctype, value, traceback)
 sys.excepthook = global_except_hook
 """
-    fail_on_bad_return = """
+    fail_on_bad_return = (
+        """
     if retcode != 0:
-        raise RuntimeError(f"Command exited with failure: \{retcode\}")
+        raise RuntimeError(f"Command exited with failure: {retcode}")
 
-""" if exit_on_failure else ""
+"""
+        if exit_on_failure
+        else ""
+    )
 
     # On windows, the "shebang" below actually constructs a mixed language batch script
     # that wraps batch startup commands in a python multiline comment so batch
@@ -2046,14 +2050,20 @@ sys.excepthook = global_except_hook
     # the if 0==1:0 is just a stanza that is valid in both batch and python
     # and is sufficient to hide the python mulitline comment """ from the batch
     # interpreter which will throw an error it a line is just quotes
-    shebang = "#!/usr/bin/env python3" if not is_windows else '''if 0==1: 0 ;"""
+    shebang = (
+        "#!/usr/bin/env python3"
+        if not is_windows
+        else '''if 0==1: 0 ;"""
 python %0
 exit """
 '''
+    )
     imports = "import os; import sys"
     # Create a string [command 1] \n [command 2] \n ... \n [command n] with
     # commands composed into os.system("command arg1 arg2 ... argn") calls
-    args_to_string = lambda args: f'retcode = os.system("{" ".join(args)}")\n{fail_on_bad_return}\n'
+    args_to_string = (
+        lambda args: f'retcode = os.system("{" ".join(args)}")\n{fail_on_bad_return}\n'
+    )
     full_command = "\n".join(map(args_to_string, commands))
     # unfortunately Windows cannot arbitrarily directly execute python files
     # so we wrap it in a mixed language batch file
