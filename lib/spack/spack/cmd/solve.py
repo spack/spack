@@ -126,12 +126,6 @@ def _process_result(result, show, required_format, kwargs):
                 sys.stdout.write(spec.tree(color=sys.stdout.isatty(), **kwargs))
         print()
 
-    if result.unsolved_specs and "solutions" in show:
-        tty.msg("Unsolved specs")
-        for spec in result.unsolved_specs:
-            print(spec)
-        print()
-
 
 def solve(parser, args):
     # these are the same options as `spack spec`

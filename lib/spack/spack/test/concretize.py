@@ -2093,7 +2093,6 @@ class TestConcretize:
         result, _, _ = solver.driver.solve(setup, specs, reuse=[])
 
         assert result.specs
-        assert not result.unsolved_specs
 
     @pytest.mark.regression("36339")
     def test_compiler_match_constraints_when_selected(self):
