@@ -502,3 +502,12 @@ class NMakeBuilder(BuildEnvironment, NMakeBuilder):
         with working_dir(os.path.join(self.stage.source_path, "builds")):
             install_dir = glob.glob("libcurl-**")[0]
             install_tree(install_dir, self.prefix)
+        if "~shared" in spec:
+            # curl is named libcurl_a when static on Windows
+            # Consumers look for just libcurl
+            # make a symlink to make consumers happy
+            libcurl_a = os.path.join(prefix.lib, "libcurl_a.lib")
+            libcurl = os.path.join(self.prefix.lib, "libcurl.lib")
+            # safeguard against future curl releases that do this for us
+            if os.path.exists(libcurl_a) and not os.path.exists(libcurl):
+                symlink(libcurl_a, libcurl)
