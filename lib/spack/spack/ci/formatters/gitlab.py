@@ -172,12 +172,13 @@ def format_gitlab_yaml(
     shutil.copyfile(options.env.lock_path, os.path.join(concrete_env_dir, "spack.lock"))
 
     update_env_scopes(
-        options.env.manifest_path,
+        options.env,
         [
             os.path.relpath(s.path, concrete_env_dir)
             for s in cfg.scopes().values()
             if isinstance(s, cfg.ImmutableConfigScope) and os.path.exists(s.path)
         ],
+        os.path.join(concrete_env_dir, "spack.yaml"),
     )
 
     job_log_dir = os.path.join(pipeline_artifacts_dir, "logs")

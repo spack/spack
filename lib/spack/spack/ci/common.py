@@ -66,12 +66,14 @@ def unpack_script(script_section, op=_noop):
     return script
 
 
-def update_env_scopes(env_manifest_path: str, cli_scopes: List[str]) -> None:
+def update_env_scopes(
+    env: spack.environment.Environment, cli_scopes: List[str], output_file: str
+) -> None:
     """Add any config scopes from cli_scopes which aren't already included in the
     environment, by reading the yaml, adding the missing includes, and writing the
     updated yaml back to the same location.
     """
-    with open(env_manifest_path, "r") as env_fd:
+    with open(env.manifest_path, "r") as env_fd:
         env_yaml_root = syaml.load(env_fd)
 
     # Add config scopes to environment
@@ -83,7 +85,7 @@ def update_env_scopes(env_manifest_path: str, cli_scopes: List[str]) -> None:
     env_includes.extend(include_scopes)
     env_yaml_root["spack"]["include"] = env_includes
 
-    with open(env_manifest_path, "w") as fd:
+    with open(output_file, "w") as fd:
         fd.write(syaml.dump_config(env_yaml_root, default_flow_style=False))
 
 
