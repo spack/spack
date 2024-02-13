@@ -85,7 +85,6 @@ class Steps(CMakePackage):
     def cmake_args(self):
         args = [
             self.define("BLAS_LIBRARIES", self.spec["blas"].libs.joined(";")),
-            self.define("PYTHON_EXECUTABLE", self.spec["python"].command),
             self.define("STEPS_INSTALL_PYTHON_DEPS", False),
             self.define_from_variant("BUILD_STOCHASTIC_TESTS", "stochtests"),
             self.define_from_variant("BUILD_TESTING", "codechecks"),

@@ -79,4 +79,7 @@ class Dependency:
 
     def __repr__(self) -> str:
         types = dt.flag_to_chars(self.depflag)
-        return f"<Dependency: {self.pkg.name} -> {self.spec} [{types}]>"
+        if self.patches:
+            return f"<Dependency: {self.pkg.name} -> {self.spec} [{types}, {self.patches}]>"
+        else:
+            return f"<Dependency: {self.pkg.name} -> {self.spec} [{types}]>"

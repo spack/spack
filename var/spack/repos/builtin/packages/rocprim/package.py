@@ -9,14 +9,16 @@ from spack.package import *
 class Rocprim(CMakePackage):
     """Radeon Open Compute Parallel Primitives Library"""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/rocPRIM"
-    git = "https://github.com/ROCmSoftwarePlatform/rocPRIM.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocPRIM/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/rocPRIM"
+    git = "https://github.com/ROCm/rocPRIM.git"
+    url = "https://github.com/ROCm/rocPRIM/archive/rocm-6.0.2.tar.gz"
     tags = ["rocm"]
 
     license("MIT")
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath")
+    version("6.0.2", sha256="d3998720d3206965335902f8f67ca497b320a33b810cd19b2a2264505cb38779")
+    version("6.0.0", sha256="51f26c9f891a64c8db8df51d75d86d404d682092fd9d243e966ac6b2a6de381a")
     version("5.7.1", sha256="15d820a0f61aed60efbba88b6efe6942878b02d912f523f9cf8f33a4583d6cd7")
     version("5.7.0", sha256="a1bf94bbad13a0410b49476771270606d8a9d257188ee3ec3a37eee80540fe9b")
     version("5.6.1", sha256="e9ec1b0039c07cf3096653a04224fe5fe755afc6ba000f6838b3a8bc84df27de")
@@ -147,6 +149,8 @@ class Rocprim(CMakePackage):
         "5.6.1",
         "5.7.0",
         "5.7.1",
+        "6.0.0",
+        "6.0.2",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("comgr@" + ver, when="@" + ver)
