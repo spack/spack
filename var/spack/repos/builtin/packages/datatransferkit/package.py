@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import pathlib
-
 from spack.package import *
 
 
@@ -62,7 +60,7 @@ class Datatransferkit(CMakePackage):
             "-DCMAKE_C_COMPILER=" + spec["mpi"].mpicc,
             "-DCMAKE_CXX_COMPILER=" + spec["mpi"].mpicxx,
             "-DCMAKE_Fortran_COMPILER=" + spec["mpi"].mpifc,
-            "-DMPI_BASE_DIR=" + str(pathlib.PurePosixPath(spec["mpi"].prefix)),
+            "-DMPI_BASE_DIR=" + spec["mpi"].prefix,
         ]
 
         if "+openmp" in spec:
