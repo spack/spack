@@ -160,8 +160,7 @@ class FluxCore(AutotoolsPackage):
     depends_on("pkgconfig")
     depends_on("lz4")
     depends_on("sqlite")
-    
-    # Before this version, czmq brings it in 
+    # Before this version, czmq brings it in
     depends_on("uuid", when="@0.55.0:")
     depends_on("asciidoc", type="build", when="+docs")
     depends_on("py-docutils", type="build", when="@0.32.0: +docs")
