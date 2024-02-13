@@ -21,3 +21,4 @@ class PyPyTes(PythonPackage):
     depends_on("py-requests@2.18.1:", type=("build", "run"))
 
     depends_on("py-setuptools", type="build")
+    depends_on("python@3", type=("build", "run"))
