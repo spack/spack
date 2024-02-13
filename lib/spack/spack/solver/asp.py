@@ -414,12 +414,6 @@ class Result:
         The error is an InternalConcretizerError, and includes the minimized cores
         resulting from the solve, formatted to be human readable.
         """
-        if self._unsolved_specs:
-            raise UnsatisfiableSpecError(
-                "Internal spack error: the solver completed but produced specs"
-                " that do not satisfy the request. Rerun with 'spack -d'"
-            )
-
         if self.satisfiable:
             return
 
@@ -787,6 +781,12 @@ class PyclingoDriver:
             # first check for errors
             error_handler = ErrorHandler(best_model)
             error_handler.raise_if_errors()
+
+            if result._unsolved_specs:
+                raise UnsatisfiableSpecError(
+                    "Internal spack error: the solver completed but produced specs"
+                    " that do not satisfy the request. Rerun with 'spack -d'"
+                )
 
             # build specs from spec attributes in the model
             spec_attrs = [(name, tuple(rest)) for name, *rest in extract_args(best_model, "attr")]
