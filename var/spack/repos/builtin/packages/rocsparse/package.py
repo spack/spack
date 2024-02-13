@@ -17,7 +17,7 @@ class Rocsparse(CMakePackage):
 
     homepage = "https://github.com/ROCm/rocSPARSE"
     git = "https://github.com/ROCm/rocSPARSE.git"
-    url = "https://github.com/ROCm/rocSPARSE/archive/rocm-6.0.0.tar.gz"
+    url = "https://github.com/ROCm/rocSPARSE/archive/rocm-6.0.2.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath")
@@ -34,6 +34,7 @@ class Rocsparse(CMakePackage):
     variant("test", default=False, description="Build rocsparse-test client")
 
     license("MIT")
+    version("6.0.2", sha256="00292eb7efe5719a65960bdbe391ba8e0ce610487eea11397aad6a14b11e12cd")
     version("6.0.0", sha256="bdc618677ec78830c6af315d61194d6ab8532345b8daeeb115aca96f274d4ca4")
     version("5.7.1", sha256="4c09b182b371124675d4057246021b5ed45e2833fdbf265b37a9b06b668baf0a")
     version("5.7.0", sha256="a42f0eb531b015b719e2bdcdff0cfb214e9894f73107966260f26931f982ecbc")
@@ -154,6 +155,7 @@ class Rocsparse(CMakePackage):
         "5.7.0",
         "5.7.1",
         "6.0.0",
+        "6.0.2",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocprim@" + ver, when="@" + ver)
