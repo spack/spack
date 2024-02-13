@@ -20,6 +20,7 @@ class PyMetricLearn(PythonPackage):
 
     version("0.7.0", sha256="2b35246a1098d74163b16cc7779e0abfcbf9036050f4caa258e4fee55eb299cc")
 
+    depends_on("py-setuptools", type="build")
     depends_on("py-numpy@1.11.0:", type=("build", "run"))
     depends_on("py-scipy@0.17.0:", type=("build", "run"))
     depends_on("py-scikit-learn@0.21.3:", type=("build", "run"))
