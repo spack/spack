@@ -145,7 +145,10 @@ def format_gitlab_yaml(
     ci_project_dir = os.environ.get("CI_PROJECT_DIR", os.getcwd())
     generate_job_name = os.environ.get("CI_JOB_NAME", "job-does-not-exist")
     generate_pipeline_id = os.environ.get("CI_PIPELINE_ID", "pipeline-does-not-exist")
-    pipeline_artifacts_dir = os.path.join(ci_project_dir, options.artifacts_root)
+    artifacts_root = options.artifacts_root
+    if artifacts_root.startswith(ci_project_dir):
+        artifacts_root = os.path.relpath(artifacts_root, ci_project_dir)
+    pipeline_artifacts_dir = os.path.join(ci_project_dir, artifacts_root)
     output_file = options.output_file
 
     if not output_file:
@@ -460,7 +463,7 @@ def format_gitlab_yaml(
         rebuild_everything = not options.prune_up_to_date and not options.prune_untouched
 
         output_object["variables"] = {
-            "SPACK_ARTIFACTS_ROOT": options.artifacts_root,
+            "SPACK_ARTIFACTS_ROOT": artifacts_root,
             "SPACK_CONCRETE_ENV_DIR": rel_concrete_env_dir,
             "SPACK_VERSION": spack_version,
             "SPACK_CHECKOUT_VERSION": version_to_clone,
