@@ -207,7 +207,8 @@ github_information:
     - installed-hashes -m|tee missing.txt
     - if [[ -n "$(<missing.txt)" ]]; then
     -     spack fetch -m
-    -     spack env depfile > Makefile
+    -     missing_shas="$(cut -d" " -f1 missing.txt)"
+    -     spack env depfile ${missing_shas} > Makefile
           # This should store all test results in unique XML files.
           #
           # If SPACK_INSTALL_FLAGS is passed directly to `make`, other `make` processes

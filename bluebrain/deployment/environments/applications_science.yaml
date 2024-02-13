@@ -16,6 +16,7 @@ spack:
           - py-connectome-manipulator
           - py-multiscale-run
           - py-efel
+          - py-emodel-generalisation
           - py-synthesis-workflow
           - py-visual-cortex-analysis
   packages:
@@ -27,9 +28,6 @@ spack:
       variants: ~mpi
     py-h5py:
       variants: ~mpi
-    py-ipyparallel:
-      # otherwise, 6.3 is picked (cheaper setuptools penalty), and things break
-      require: "@8:"
   specs:
     # - py-amici  # BSD-276
     - py-atlannot
@@ -42,6 +40,7 @@ spack:
     - py-bluepyparallel
     - py-connectome-manipulator+convert
     - py-efel
+    - py-emodel-generalisation
     - py-multiscale-run
     - py-synthesis-workflow
     - py-visual-cortex-analysis
