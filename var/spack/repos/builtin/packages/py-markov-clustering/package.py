@@ -18,7 +18,7 @@ class PyMarkovClustering(PythonPackage):
         "0.0.6.dev0", sha256="8f72eee0ee5d9bfbab1b28bbfa95eaa020b2bba64b528ce45030b8b4300ecf33"
     )
 
-    variant("graphing", default=False, description="Include graphing capabilities")
+    variant("drawing", default=False, description="Include graphing capabilities")
 
     depends_on("python@3", type=("build", "run"))
     depends_on("py-setuptools", type="build")
