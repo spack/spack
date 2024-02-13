@@ -127,7 +127,8 @@ class Charliecloud(AutotoolsPackage):
     depends_on("py-sphinx-rtd-theme", type="build", when="+docs")
 
     # Bash automated testing harness (bats).
-    depends_on("bats@0.4.0", type="test")
+    depends_on("bats@0.4.0", when="@:0.32")
+    depends_on("bats@1.10.0:", when="@0.33:")
 
     # Require pip and wheel for git checkout builds (master).
     depends_on("py-pip@21.1.2:", type="build", when="@master")
