@@ -27,5 +27,5 @@ class PyMarkovClustering(PythonPackage):
     depends_on("py-scipy@0.19.0:", type=("build", "run"))
     depends_on("py-scikit-learn", type=("build", "run"))
 
-    depends_on("py-networkx", type=("build", "run"), when="+graphing")
-    depends_on("py-matplotlib", type=("build", "run"), when="+graphing")
+    depends_on("py-networkx", type=("build", "run"), when="+drawing")
+    depends_on("py-matplotlib", type=("build", "run"), when="+drawing")
