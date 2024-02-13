@@ -470,7 +470,19 @@ class Result:
                 self._concrete_specs.append(answer[node])
                 self._concrete_specs_by_input[input_spec] = answer[node]
             else:
+                msg = f"Unsatisfied input spec: {str(input_spec)}"
+                if candidate:
+                    msg += f"\n\tCandidate spec: {str(candidate)}"
+                else:
+                    msg += "\n\t(No candidate specs from solver)"
+                tty.debug(msg)
                 self._unsolved_specs.append(input_spec)
+
+        if self._unsolved_specs:
+            raise UnsatisfiableSpecError(
+                "Internal spack error: the solver completed but produced specs"
+                " that do not satisfy the request. Rerun with 'spack -d'"
+            )
 
 
 def _normalize_packages_yaml(packages_yaml):
