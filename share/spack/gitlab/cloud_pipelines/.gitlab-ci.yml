@@ -119,7 +119,6 @@ default:
 .generate-common:
   stage: generate
   script:
-    - . "./share/spack/setup-env.sh"
     - spack --version
     - spack env activate --without-view share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
     - export SPACK_CI_CONFIG_ROOT="${SPACK_ROOT}/share/spack/gitlab/cloud_pipelines/configs"
@@ -182,6 +181,7 @@ default:
     - nproc || true
     - cat /proc/loadavg || true
     - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
+    - . "./share/spack/setup-env.sh"
   after_script:
     - cat /proc/loadavg || true
     - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
@@ -204,6 +204,8 @@ default:
 
 .generate-win64:
   extends: [ ".generate-common" ]
+  before_script:
+    - .\bin\spack_pwsh.ps1
   tags: ["spack", "public", "medium", "x86_64-win"]
 
 .generate-deprecated:

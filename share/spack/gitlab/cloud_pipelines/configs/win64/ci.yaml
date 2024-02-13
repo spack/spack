@@ -1,7 +1,6 @@
 ci:
   pipeline-gen:
   - build-job:
-      tags: [win64,kitware]
       after_script::
       - Write-Output "Done"
       before_script::
