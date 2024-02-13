@@ -17,6 +17,6 @@ class PySysrsync(PythonPackage):
     version("1.1.1", sha256="435f9eb620e68ffb18ca5cbad32b113396a432361c7722038eab65c97dd83bd5")
 
     depends_on("py-toml@0.10.0:0.10", type=("build", "run"))
-    depends_on("rsync")
+    depends_on("rsync", type="run")
 
     depends_on("py-setuptools", type="build")
