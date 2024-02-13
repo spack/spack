@@ -110,10 +110,10 @@ class Charliecloud(AutotoolsPackage):
         "squashfuse", default=False, description="Build with squashfuse support", when="@0.32:"
     )
     # Autoconf.
-    depends_on("m4", type="build", when="@master")
-    depends_on("autoconf", type="build", when="@master")
-    depends_on("automake", type="build", when="@master")
-    depends_on("libtool", type="build", when="@master")
+    depends_on("m4", type="build")
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
 
     # Image manipulation.
     depends_on("python@3.6:", type="run")
