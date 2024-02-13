@@ -82,7 +82,8 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
     depends_on("lapack")
     # Octave does not configure with sed from darwin:
     depends_on("sed", when=sys.platform == "darwin", type="build")
-    depends_on("pcre")
+    depends_on("pcre", when="@:7")
+    depends_on("pcre2", when="@8:")
     depends_on("pkgconfig", type="build")
     depends_on("texinfo", type="build")
 
