@@ -477,7 +477,12 @@ class PipelineDag:
                         visited.add(key)
                         yield (level, (key, node))
                 level += 1
-                node_list = [(k, self.nodes[k]) for _, n in node_list for k in n.children]
+                node_list = [
+                    (k, self.nodes[k])
+                    for _, n in node_list
+                    for k in n.children
+                    if k not in visited
+                ]
         else:
             # Yields the leaves first, followed by nodes whose only children were
             # leaves, and so on.
