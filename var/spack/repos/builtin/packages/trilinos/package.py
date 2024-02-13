@@ -328,12 +328,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     # see https://trilinos.org/pipermail/trilinos-users/2015-March/004731.html
     # and https://trilinos.org/pipermail/trilinos-users/2015-March/004802.html
     conflicts("+superlu-dist", when="+complex+amesos2")
-    # https://github.com/trilinos/Trilinos/issues/2994
-    conflicts(
-        "+shared",
-        when="+stk platform=darwin",
-        msg="Cannot build Trilinos with STK as a shared library on Darwin.",
-    )
     conflicts("+adios2", when="@:12.14.1")
     conflicts("cxxstd=11", when="@13.2:")
     conflicts("cxxstd=14", when="@14:")
@@ -406,10 +400,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("binder@1.3:", when="@15: +python", type="build")
     depends_on("blas")
     depends_on("boost+graph+math+exception+stacktrace", when="+boost")
-    # Need to revisit the requirement of STK
-    depends_on("boost+graph+math+exception+stacktrace", when="+stk")
-
-    #
+    depends_on("boost+graph+math+exception+stacktrace", when="@:14.0.0 +stk")
     depends_on("cgns", when="+exodus")
     depends_on("cmake@3.23:", type="build", when="@14.0.0:")
     depends_on("hdf5+hl", when="+hdf5")
