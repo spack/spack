@@ -19,4 +19,4 @@ class PyPynpm(PythonPackage):
     version("0.2.0", sha256="212a1e5f86fe8b790945dd856682c6dcd8eddc6f8803a51e7046fe427d7f801b")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-babel@:2.9", type=("build", "run"))
+    depends_on("py-babel@2.9:", type="build")
