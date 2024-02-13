@@ -17,13 +17,14 @@ class HsaRocrDev(CMakePackage):
 
     homepage = "https://github.com/ROCm/ROCR-Runtime"
     git = "https://github.com/ROCm/ROCR-Runtime.git"
-    url = "https://github.com/ROCm/ROCR-Runtime/archive/rocm-6.0.0.tar.gz"
+    url = "https://github.com/ROCm/ROCR-Runtime/archive/rocm-6.0.2.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")
     libraries = ["libhsa-runtime64"]
 
     version("master", branch="master")
+    version("6.0.2", sha256="e7ff4d7ac35a2dd8aad1cb40b96511a77a9c23fe4d1607902328e53728e05c28")
     version("6.0.0", sha256="99e8fa1af52d0bf382f28468e1a345af1ff3452c35914a6a7b5eeaf69fc568db")
     version("5.7.1", sha256="655e9bfef4b0b6ad3f9b89c934dc0a8377273bb0bccbda6c399ac5d5d2c1c04c")
     version("5.7.0", sha256="2c56ec5c78a36f2b847afd4632cb25dbf6ecc58661eb2ae038c2552342e6ce23")
@@ -156,6 +157,7 @@ class HsaRocrDev(CMakePackage):
         "5.7.0",
         "5.7.1",
         "6.0.0",
+        "6.0.2",
         "master",
     ]:
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
@@ -165,7 +167,7 @@ class HsaRocrDev(CMakePackage):
             "rocm-device-libs@" + ver, when="@{0} ^llvm-amdgpu ~rocm-device-libs".format(ver)
         )
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
 
     # Both 3.5.0 and 3.7.0 force INSTALL_RPATH in different ways
