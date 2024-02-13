@@ -162,8 +162,8 @@ class Dd4hep(CMakePackage):
     depends_on("root @6.08: +gdml +math +python")
     with when("+ddeve"):
         depends_on("root @6.08: +x +opengl")
-        depends_on("root +webgui", when="^root@6.28:")
         depends_on("root @:6.27", when="@:1.23")
+        conflicts("^root ~webgui", when="^root@6.28:")
     depends_on("root @6.08: +gdml +math +python +x +opengl", when="+utilityapps")
 
     extends("python")
