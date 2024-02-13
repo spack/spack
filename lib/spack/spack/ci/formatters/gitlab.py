@@ -77,25 +77,20 @@ def _print_staging_summary(stages: List[List[spack.spec.Spec]], pruning_results:
     if not stages:
         return
 
-    spec_fmt = "{name}{@version}{%compiler}{/hash:7}"
+    filter_descriptions = pruning_results.filterDescriptions
+    tty.msg("Pruning list:")
+    for key, filterResults in pruning_results.filterResults.items():
+        reasons = [filter_descriptions[i] for i, result in enumerate(filterResults) if not result]
+        if any(reasons):
+            tty.msg(f"  {key} ({reasons})")
 
-    generated_job_node_keys = []
+    spec_fmt = "{name}{@version}{%compiler}{/hash:7}"
 
     tty.msg("Staging summary:")
     for stage_index, stage in enumerate(stages):
         tty.msg(f"  stage {stage_index} ({len(stage)} jobs):")
         for s in sorted(stage, key=lambda j: j.cformat(spec_fmt)):
             tty.msg(f"    {s.cformat(spec_fmt)}")
-            generated_job_node_keys.append(PipelineDag.key(s))
-
-    filter_descriptions = pruning_results.filterDescriptions
-    tty.msg("Pruning list:")
-    for key, filterResults in pruning_results.filterResults.items():
-        if key not in generated_job_node_keys:
-            reasons = [
-                filter_descriptions[i] for i, result in enumerate(filterResults) if not result
-            ]
-            tty.msg(f"  {key} ({reasons})")
 
 
 def maybe_generate_manifest(pipeline: PipelineDag, options: PipelineOptions, manifest_path):
