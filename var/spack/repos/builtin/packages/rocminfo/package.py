@@ -12,12 +12,13 @@ class Rocminfo(CMakePackage):
 
     homepage = "https://github.com/ROCm/rocminfo"
     git = "https://github.com/ROCm/rocminfo.git"
-    url = "https://github.com/ROCm/rocminfo/archive/rocm-6.0.0.tar.gz"
+    url = "https://github.com/ROCm/rocminfo/archive/rocm-6.0.2.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")
 
     version("master", branch="master")
+    version("6.0.2", sha256="e616d364a48de18eaee661bdce999d095086905f49777663ca99312f40a63da1")
     version("6.0.0", sha256="bc29f1798644b6dea73895353dffada9db7366d0058274e587ebd3291a4d3844")
     version("5.7.1", sha256="642dc2ec4254b3c30c43064e6690861486db820b25f4906ec78bdb47e68dcd0b")
     version("5.7.0", sha256="a5a3c19513bf26f17f163a03ba5288c5c761619ef55f0cb9e15472771748b93e")
@@ -138,12 +139,13 @@ class Rocminfo(CMakePackage):
         "5.7.0",
         "5.7.1",
         "6.0.0",
+        "6.0.2",
         "master",
     ]:
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
 
     def cmake_args(self):

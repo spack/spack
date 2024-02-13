@@ -13,12 +13,13 @@ class RocmTensile(CMakePackage):
 
     homepage = "https://github.com/ROCm/Tensile/"
     git = "https://github.com/ROCm/Tensile.git"
-    url = "https://github.com/ROCm/Tensile/archive/rocm-6.0.0.tar.gz"
+    url = "https://github.com/ROCm/Tensile/archive/rocm-6.0.2.tar.gz"
     tags = ["rocm"]
 
     license("MIT")
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")
+    version("6.0.2", sha256="1d8a92422560c1e908fa25fd97a4aa07a96659528a543f77618408ffcfe1f307")
     version("6.0.0", sha256="5d90add62d1439b7daf0527316e950e454e5d8beefb4f723865fe9ab26c7aa42")
     version("5.7.1", sha256="9211a51b23c22b7a79e4e494e8ff3c31e90bf21adb8cce260acc57891fb2c917")
     version("5.7.0", sha256="fe2ae067c1c579f33d7a1e26da3fe6b4ed44befa08f9dfce2ceae586f184b816")
@@ -168,6 +169,7 @@ class RocmTensile(CMakePackage):
         "5.7.0",
         "5.7.1",
         "6.0.0",
+        "6.0.2",
     ]:
         depends_on("rocm-cmake@" + ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
@@ -190,6 +192,7 @@ class RocmTensile(CMakePackage):
         "5.7.0",
         "5.7.1",
         "6.0.0",
+        "6.0.2",
     ]:
         depends_on("rocm-openmp-extras@" + ver, when="@" + ver)
 
@@ -222,6 +225,7 @@ class RocmTensile(CMakePackage):
         "5.7.0",
         "5.7.1",
         "6.0.0",
+        "6.0.2",
     ]:
         depends_on("rocm-smi-lib@" + ver, type="build", when="@" + ver)
 

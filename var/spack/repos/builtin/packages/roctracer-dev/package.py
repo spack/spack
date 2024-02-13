@@ -15,13 +15,14 @@ class RoctracerDev(CMakePackage, ROCmPackage):
 
     homepage = "https://github.com/ROCm/roctracer"
     git = "https://github.com/ROCm/roctracer.git"
-    url = "https://github.com/ROCm/roctracer/archive/rocm-6.0.0.tar.gz"
+    url = "https://github.com/ROCm/roctracer/archive/rocm-6.0.2.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["libroctracer64"]
 
     license("MIT")
+    version("6.0.2", sha256="1e0105b32fdd9c010aab304bb2ca1a5a38ba323cea610afe1135657edda8f26e")
     version("6.0.0", sha256="941166a0363c5689bfec118d54e986c43fb1ec8cbf18d95721d9a824bd52c0f8")
     version("5.7.1", sha256="ec0453adac7e62b142eb0df1e1e2506863aac4c3f2ce9d117c3184c08c0c6b48")
     version("5.7.0", sha256="40bb757920488466e29df90bb80a975cc340bf7f8771fb1d754dfbb6b688d78e")
@@ -84,6 +85,7 @@ class RoctracerDev(CMakePackage, ROCmPackage):
         "5.7.0",
         "5.7.1",
         "6.0.0",
+        "6.0.2",
     ]:
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
@@ -106,7 +108,7 @@ class RoctracerDev(CMakePackage, ROCmPackage):
     ]:
         depends_on("rocprofiler-dev@" + ver, when="@" + ver)
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
 
     patch("0001-include-rocprofiler-dev-path.patch", when="@5.3:5.4")

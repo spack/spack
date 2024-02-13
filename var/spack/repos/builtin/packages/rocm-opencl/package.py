@@ -35,6 +35,8 @@ class RocmOpencl(CMakePackage):
     license("MIT")
 
     version("master", branch="main")
+    version("6.0.2", sha256="cb8ac610c8d4041b74fb3129c084f1e7b817ce1a5a9943feca1fa7531dc7bdcc")
+    version("6.0.0", sha256="798b55b5b5fb90dd19db54f136d8d8e1da9ae1e408d5b12b896101d635f97e50")
     version("5.7.1", sha256="c78490335233a11b4d8a5426ace7417c555f5e2325de10422df06c0f0f00f7eb")
     version("5.7.0", sha256="bc2447cb6fd86dff6a333b04e77ce85755104d9011a14a044af53caf02449573")
     version("5.6.1", sha256="ec26049f7d93c95050c27ba65472736665ec7a40f25920a868616b2970f6b845")
@@ -200,12 +202,14 @@ class RocmOpencl(CMakePackage):
         "5.6.1",
         "5.7.0",
         "5.7.1",
+        "6.0.0",
+        "6.0.2",
         "master",
     ]:
         depends_on("comgr@" + ver, type="build", when="@" + ver)
         depends_on("hsa-rocr-dev@" + ver, type="link", when="@" + ver)
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
 
     @classmethod

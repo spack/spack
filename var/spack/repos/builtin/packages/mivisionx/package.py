@@ -13,7 +13,7 @@ class Mivisionx(CMakePackage):
 
     homepage = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX"
     git = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX.git"
-    url = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/archive/rocm-6.0.0.tar.gz"
+    url = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/archive/rocm-6.0.2.tar.gz"
 
     maintainers("srekolam", "renjithravindrankannath")
     tags = ["rocm"]
@@ -26,7 +26,7 @@ class Mivisionx(CMakePackage):
         return url.format(version)
 
     license("MIT")
-
+    version("6.0.2", sha256="e39521b3109aa0900f652ae95a4421df0fa29fd57e816268cc6602d243c50779")
     version("6.0.0", sha256="01324a12f21ea0e29a4d7d7c60498ba9231723569fedcdd90f28ddffb5e0570e")
     version("5.7.1", sha256="bfc074bc32ebe84c72149ee6abb30b5b6499023d5b98269232de82e35d0505a8")
     version("5.7.0", sha256="07e4ec8a8c06a9a8bb6394a043c9c3e7176acd3b462a16de91ef9518a64df9ba")
@@ -371,6 +371,7 @@ class Mivisionx(CMakePackage):
             "5.7.0",
             "5.7.1",
             "6.0.0",
+            "6.0.2",
         ]:
             depends_on("miopen-hip@" + ver, when="@" + ver)
         for ver in [
@@ -384,11 +385,12 @@ class Mivisionx(CMakePackage):
             "5.7.0",
             "5.7.1",
             "6.0.0",
+            "6.0.2",
         ]:
             depends_on("migraphx@" + ver, when="@" + ver)
             depends_on("hip@" + ver, when="@" + ver)
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
         depends_on("python@3.5:", type="build")
 

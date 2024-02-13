@@ -15,7 +15,7 @@ class Rocsolver(CMakePackage):
 
     homepage = "https://github.com/ROCm/rocSOLVER"
     git = "https://github.com/ROCm/rocSOLVER.git"
-    url = "https://github.com/ROCm/rocSOLVER/archive/rocm-6.0.0.tar.gz"
+    url = "https://github.com/ROCm/rocSOLVER/archive/rocm-6.0.2.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath", "haampie")
@@ -41,6 +41,7 @@ class Rocsolver(CMakePackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("6.0.2", sha256="781d5df2886ab0d5087a215a33ac390dd27653b2a9b4a620c7d51b0ae56f63d2")
     version("6.0.0", sha256="5fcaba96f3efafc2ecc3f4ec104095d96545c16e1b9f95410bd571cb0fc643ae")
     version("5.7.1", sha256="83e0c137b8690dbeb2e85d9e25415d96bd06979f09f2b10b2aff8e4c9f833fa4")
     version("5.7.0", sha256="bb16d360f14b34fe6e8a6b8ddc6e631672a5ffccbdcb25f0ce319edddd7f9682")
@@ -182,10 +183,11 @@ class Rocsolver(CMakePackage):
         "5.7.0",
         "5.7.1",
         "6.0.0",
+        "6.0.2",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocblas@" + ver, when="@" + ver)
-    for ver in ["5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0"]:
+    for ver in ["5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2"]:
         depends_on("rocsparse@5.2:", when="@5.6:")
 
     for tgt in itertools.chain(["auto"], amdgpu_targets):

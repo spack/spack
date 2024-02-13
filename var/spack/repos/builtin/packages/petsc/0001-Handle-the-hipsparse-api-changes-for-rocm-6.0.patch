@@ -1,6 +1,6 @@
-From 3c9aaca12a1ae6000ff3cfd0564f7b2ab45396d2 Mon Sep 17 00:00:00 2001
-From: Renjith Ravindran <Renjith.RavindranKannath@amd.com>
-Date: Thu, 18 Jan 2024 07:38:25 +0000
+From 039f025988871b36b46867db67ea82c52a645409 Mon Sep 17 00:00:00 2001
+From: sreenivasa murthy kolam <sreenivasamurthy.kolam@amd.com>
+Date: Thu, 8 Feb 2024 09:35:38 +0000
 Subject: [PATCH] Handle the hipsparse api changes for rocm 6.0
 
 ---
@@ -8,7 +8,7 @@ Subject: [PATCH] Handle the hipsparse api changes for rocm 6.0
  1 file changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/src/mat/impls/aij/seq/seqhipsparse/aijhipsparse.hip.cpp b/src/mat/impls/aij/seq/seqhipsparse/aijhipsparse.hip.cpp
-index e6f878f..4bf52cd 100644
+index e6f878f..411b24e 100644
 --- a/src/mat/impls/aij/seq/seqhipsparse/aijhipsparse.hip.cpp
 +++ b/src/mat/impls/aij/seq/seqhipsparse/aijhipsparse.hip.cpp
 @@ -1258,7 +1258,7 @@ static PetscErrorCode MatSolve_SeqAIJHIPSPARSE_ILU0(Mat fact, Vec b, Vec x)
@@ -16,7 +16,7 @@ index e6f878f..4bf52cd 100644
    PetscCallHIPSPARSE(hipsparseDnVecSetValues(fs->dnVecDescr_X, (void *)barray));
    PetscCallHIPSPARSE(hipsparseDnVecSetValues(fs->dnVecDescr_Y, fs->Y));
 -  #if PETSC_PKG_HIP_VERSION_EQ(5, 6, 31061)                                                                                                       // i.e., 5.6.0
-+  #if (PETSC_PKG_HIP_VERSION_EQ(5, 6, 31061)||PETSC_PKG_HIP_VERSION_EQ(6, 0, 32830))                                                // i.e., 5.6.0
++  #if (PETSC_PKG_HIP_VERSION_EQ(5, 6, 31061)||PETSC_PKG_HIP_VERSION_EQ(6, 0, 32830)||PETSC_PKG_HIP_VERSION_EQ(6, 0, 32831))
    PetscCallHIPSPARSE(hipsparseSpSV_solve(fs->handle, HIPSPARSE_OPERATION_NON_TRANSPOSE, &PETSC_HIPSPARSE_ONE, fs->spMatDescr_L,                   /* L Y = X */
                                           fs->dnVecDescr_X, fs->dnVecDescr_Y, hipsparse_scalartype, HIPSPARSE_SPSV_ALG_DEFAULT, fs->spsvDescr_L)); // hipsparseSpSV_solve() secretely uses the external buffer used in hipsparseSpSV_analysis()!
    #else
@@ -25,7 +25,7 @@ index e6f878f..4bf52cd 100644
    /* Solve U*x = y */
    PetscCallHIPSPARSE(hipsparseDnVecSetValues(fs->dnVecDescr_X, xarray));
 -  #if PETSC_PKG_HIP_VERSION_EQ(5, 6, 31061)                                                                                     // i.e., 5.6.0
-+  #if (PETSC_PKG_HIP_VERSION_EQ(5, 6, 31061)||PETSC_PKG_HIP_VERSION_EQ(6, 0, 32830))                                                // i.e., 5.6.0
++  #if (PETSC_PKG_HIP_VERSION_EQ(5, 6, 31061)||PETSC_PKG_HIP_VERSION_EQ(6, 0, 32830)||PETSC_PKG_HIP_VERSION_EQ(6, 0, 32831))
    PetscCallHIPSPARSE(hipsparseSpSV_solve(fs->handle, HIPSPARSE_OPERATION_NON_TRANSPOSE, &PETSC_HIPSPARSE_ONE, fs->spMatDescr_U, /* U X = Y */
                                           fs->dnVecDescr_Y, fs->dnVecDescr_X, hipsparse_scalartype, HIPSPARSE_SPSV_ALG_DEFAULT, fs->spsvDescr_U));
    #else
@@ -34,7 +34,7 @@ index e6f878f..4bf52cd 100644
    PetscCallHIPSPARSE(hipsparseDnVecSetValues(fs->dnVecDescr_X, (void *)barray));
    PetscCallHIPSPARSE(hipsparseDnVecSetValues(fs->dnVecDescr_Y, fs->Y));
 -  #if PETSC_PKG_HIP_VERSION_EQ(5, 6, 31061)                                                                                 // i.e., 5.6.0
-+  #if (PETSC_PKG_HIP_VERSION_EQ(5, 6, 31061)||PETSC_PKG_HIP_VERSION_EQ(6, 0, 32830))                                                // i.e., 5.6.0
++  #if (PETSC_PKG_HIP_VERSION_EQ(5, 6, 31061)||PETSC_PKG_HIP_VERSION_EQ(6, 0, 32830)||PETSC_PKG_HIP_VERSION_EQ(6, 0, 32831))
    PetscCallHIPSPARSE(hipsparseSpSV_solve(fs->handle, HIPSPARSE_OPERATION_TRANSPOSE, &PETSC_HIPSPARSE_ONE, fs->spMatDescr_U, /* Ut Y = X */
                                           fs->dnVecDescr_X, fs->dnVecDescr_Y, hipsparse_scalartype, HIPSPARSE_SPSV_ALG_DEFAULT, fs->spsvDescr_Ut));
    #else
@@ -43,7 +43,7 @@ index e6f878f..4bf52cd 100644
    /* Solve Lt*x = y */
    PetscCallHIPSPARSE(hipsparseDnVecSetValues(fs->dnVecDescr_X, xarray));
 -  #if PETSC_PKG_HIP_VERSION_EQ(5, 6, 31061)                                                                                 // i.e., 5.6.0
-+  #if (PETSC_PKG_HIP_VERSION_EQ(5, 6, 31061)||PETSC_PKG_HIP_VERSION_EQ(6, 0, 32830))                                                // i.e., 5.6.0
++  #if (PETSC_PKG_HIP_VERSION_EQ(5, 6, 31061)||PETSC_PKG_HIP_VERSION_EQ(6, 0, 32830)||PETSC_PKG_HIP_VERSION_EQ(6, 0, 32831))
    PetscCallHIPSPARSE(hipsparseSpSV_solve(fs->handle, HIPSPARSE_OPERATION_TRANSPOSE, &PETSC_HIPSPARSE_ONE, fs->spMatDescr_L, /* Lt X = Y */
                                           fs->dnVecDescr_Y, fs->dnVecDescr_X, hipsparse_scalartype, HIPSPARSE_SPSV_ALG_DEFAULT, fs->spsvDescr_Lt));
    #else
@@ -52,7 +52,7 @@ index e6f878f..4bf52cd 100644
    PetscCallHIPSPARSE(hipsparseDnVecSetValues(fs->dnVecDescr_X, (void *)barray));
    PetscCallHIPSPARSE(hipsparseDnVecSetValues(fs->dnVecDescr_Y, fs->Y));
 -  #if PETSC_PKG_HIP_VERSION_EQ(5, 6, 31061)                                                                                     // i.e., 5.6.0
-+  #if (PETSC_PKG_HIP_VERSION_EQ(5, 6, 31061)||PETSC_PKG_HIP_VERSION_EQ(6, 0, 32830))                                                // i.e., 5.6.0
++  #if (PETSC_PKG_HIP_VERSION_EQ(5, 6, 31061)||PETSC_PKG_HIP_VERSION_EQ(6, 0, 32830)||PETSC_PKG_HIP_VERSION_EQ(6, 0, 32831))
    PetscCallHIPSPARSE(hipsparseSpSV_solve(fs->handle, HIPSPARSE_OPERATION_NON_TRANSPOSE, &PETSC_HIPSPARSE_ONE, fs->spMatDescr_L, /* L Y = X */
                                           fs->dnVecDescr_X, fs->dnVecDescr_Y, hipsparse_scalartype, HIPSPARSE_SPSV_ALG_DEFAULT, fs->spsvDescr_L));
    #else
@@ -61,7 +61,7 @@ index e6f878f..4bf52cd 100644
    /* Solve Lt*x = y */
    PetscCallHIPSPARSE(hipsparseDnVecSetValues(fs->dnVecDescr_X, xarray));
 -  #if PETSC_PKG_HIP_VERSION_EQ(5, 6, 31061)                                                                                 // i.e., 5.6.0
-+  #if (PETSC_PKG_HIP_VERSION_EQ(5, 6, 31061)||PETSC_PKG_HIP_VERSION_EQ(6, 0, 32830))                                                // i.e., 5.6.0
++  #if (PETSC_PKG_HIP_VERSION_EQ(5, 6, 31061)||PETSC_PKG_HIP_VERSION_EQ(6, 0, 32830)||PETSC_PKG_HIP_VERSION_EQ(6, 0, 32831))
    PetscCallHIPSPARSE(hipsparseSpSV_solve(fs->handle, HIPSPARSE_OPERATION_TRANSPOSE, &PETSC_HIPSPARSE_ONE, fs->spMatDescr_L, /* Lt X = Y */
                                           fs->dnVecDescr_Y, fs->dnVecDescr_X, hipsparse_scalartype, HIPSPARSE_SPSV_ALG_DEFAULT, fs->spsvDescr_Lt));
    #else

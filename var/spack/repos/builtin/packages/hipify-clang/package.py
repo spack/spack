@@ -12,7 +12,7 @@ class HipifyClang(CMakePackage):
 
     homepage = "https://github.com/ROCm/HIPIFY"
     git = "https://github.com/ROCm/HIPIFY.git"
-    url = "https://github.com/ROCm/HIPIFY/archive/rocm-6.0.0.tar.gz"
+    url = "https://github.com/ROCm/HIPIFY/archive/rocm-6.0.2.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
@@ -20,6 +20,7 @@ class HipifyClang(CMakePackage):
     license("MIT")
 
     version("master", branch="master")
+    version("6.0.2", sha256="21e46276677ec8c00e61c0cbf5fa42185517f6af0d4845ea877fd40eb35198c4")
     version("6.0.0", sha256="91bed2b72a6684a04e078e50b12b36b93f64ff96523283f4e5d9a33c11e6b967")
     version("5.7.1", sha256="43121e62233dab010ab686d6805bc2d3163f0dc5e89cc503d50c4bcd59eeb394")
     version("5.7.0", sha256="10e4386727e102fba166f012147120a6ec776e8d95fbcac3af93e243205d80a6")
@@ -145,11 +146,12 @@ class HipifyClang(CMakePackage):
         "5.7.0",
         "5.7.1",
         "6.0.0",
+        "6.0.2",
         "master",
     ]:
         depends_on("llvm-amdgpu@" + ver, when="@" + ver)
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
 
     def setup_run_environment(self, env):

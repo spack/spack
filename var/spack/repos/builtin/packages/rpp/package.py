@@ -15,7 +15,7 @@ class Rpp(CMakePackage):
 
     homepage = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp"
     git = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git"
-    url = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/archive/refs/tags/rocm-5.7.0.tar.gz"
+    url = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/archive/refs/tags/rocm-6.0.2.tar.gz"
 
     def url_for_version(self, version):
         if version >= Version("5.7.0"):
@@ -28,7 +28,7 @@ class Rpp(CMakePackage):
     tags = ["rocm"]
 
     license("MIT")
-
+    version("6.0.2", sha256="2686eb4099233db4444fcd2f77af9b00d38d829f05de2403bed37b1b28f2653c")
     version("6.0.0", sha256="3626a648bc773520f5cd5ca15f494de6e74b422baf32491750ce0737c3367f15")
     version("5.7.1", sha256="36fff5f1c52d969c3e2e0c75b879471f731770f193c9644aa6ab993fb8fa4bbf")
     version("5.7.0", sha256="1c612cde3c3d3840ae75ee5c1ee59bd8d61b1fdbf84421ae535cda863470fc06")
@@ -121,7 +121,7 @@ class Rpp(CMakePackage):
 
     with when("+hip"):
         with when("@5.7:"):
-            for ver in ["5.7.0", "5.7.1", "6.0.0"]:
+            for ver in ["5.7.0", "5.7.1", "6.0.0", "6.0.2"]:
                 depends_on("hip@" + ver, when="@" + ver)
         with when("@:1.2"):
             depends_on("hip@5:")

@@ -13,7 +13,7 @@ class Rocblas(CMakePackage):
 
     homepage = "https://github.com/ROCm/rocBLAS/"
     git = "https://github.com/ROCm/rocBLAS.git"
-    url = "https://github.com/ROCm/rocBLAS/archive/rocm-6.0.0.tar.gz"
+    url = "https://github.com/ROCm/rocBLAS/archive/rocm-6.0.2.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath", "haampie")
@@ -23,6 +23,7 @@ class Rocblas(CMakePackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("6.0.2", sha256="d1bf31063a2d349797b88c994c91d05f94e681bafb5550ad9b53529703d89dbb")
     version("6.0.0", sha256="befa4a75f1de0ea37f2358d4c2de5406d7bce671ca9936e2294b64d3b3bafb60")
     version("5.7.1", sha256="2984a5ed0ea5a05d40996ee3fddecb24399cbe8ea3e4921fc254e54d8f52fe4f")
     version("5.7.0", sha256="024edd98de9687ee5394badc4dd4c543eef4eb3f71c96ff64100705d851e1744")
@@ -143,7 +144,7 @@ class Rocblas(CMakePackage):
     depends_on("googletest@1.10.0:", type="test")
     depends_on("amdblis", type="test")
 
-    for ver in ["5.6.0", "5.6.1", "5.7.0", "5.7.1"]:
+    for ver in ["5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2"]:
         depends_on("rocm-openmp-extras@" + ver, type="test", when="@" + ver)
 
     depends_on("hip@4.1.0:", when="@4.1.0:")
@@ -184,6 +185,7 @@ class Rocblas(CMakePackage):
         "5.7.0",
         "5.7.1",
         "6.0.0",
+        "6.0.2",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, type="build", when="@" + ver)
@@ -235,6 +237,7 @@ class Rocblas(CMakePackage):
         ("@5.7.0", "97e0cfc2c8cb87a1e38901d99c39090dc4181652"),
         ("@5.7.1", "97e0cfc2c8cb87a1e38901d99c39090dc4181652"),
         ("@6.0.0", "17df881bde80fc20f997dfb290f4bb4b0e05a7e9"),
+        ("@6.0.2", "17df881bde80fc20f997dfb290f4bb4b0e05a7e9"),
     ]:
         resource(
             name="Tensile",
