@@ -161,7 +161,7 @@ def develop(parser, args):
                 ),
                 scope,
             )
-            tty.warn("Setting the build directory for package: {}.".format(spec.name)
+            tty.warn("Setting the build directory for package: {}."
                     "Spack does not check for out-of-source-build package compatibility." 
-                    "Use at your own risk")
+                    "Use at your own risk".format(spec.name))
         _update_config(spec, path)
