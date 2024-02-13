@@ -8,7 +8,7 @@ import json
 import os
 import time
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 from urllib.parse import urlencode
 from urllib.request import HTTPHandler, Request, build_opener
 
@@ -405,13 +405,13 @@ class PipelineOptions:
 
 class PipelineNode:
     spec: spack.spec.Spec
-    parents: List[str]
-    children: List[str]
+    parents: Set[str]
+    children: Set[str]
 
     def __init__(self, spec: spack.spec.Spec):
         self.spec = spec
-        self.parents = []
-        self.children = []
+        self.parents = set()
+        self.children = set()
 
 
 class PruningResults:
@@ -449,18 +449,18 @@ class PipelineDag:
             parent_key = PipelineDag.key(edge.parent)
             child_key = PipelineDag.key(edge.spec)
 
-            self.nodes[parent_key].children.append(child_key)
-            self.nodes[child_key].parents.append(parent_key)
+            self.nodes[parent_key].children.add(child_key)
+            self.nodes[child_key].parents.add(parent_key)
 
     def prune(self, node_key: str):
         """Remove a node from the graph, and reconnect its parents and children"""
         node = self.nodes[node_key]
         for parent in node.parents:
             self.nodes[parent].children.remove(node_key)
-            self.nodes[parent].children.extend(node.children)
+            self.nodes[parent].children |= node.children
         for child in node.children:
             self.nodes[child].parents.remove(node_key)
-            self.nodes[child].parents.extend(node.parents)
+            self.nodes[child].parents |= node.parents
         del self.nodes[node_key]
 
     def traverse(self, top_down: bool = True):
