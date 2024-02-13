@@ -19,6 +19,13 @@ class Squashfuse(AutotoolsPackage):
 
     version("master", branch="master")
     version("0.5.0", sha256="d7602c7a3b1d0512764547d27cb8cc99d1b21181e1c9819e76461ee96c2ab4d9")
+    version("0.4.0", sha256="646e31449b7914d2404933aea88f8d5f72c5d135d7deae3370ccb394c40d114a")
+    version("0.2.0", sha256="e8eea1b013b41d0a320e5a07b131bc70df14e6b3f2d3a849bdee66d100186f4f")
+    version(
+        "0.1.105",
+        sha256="3f776892ab2044ecca417be348e482fee2839db75e35d165b53737cb8153ab1e",
+        url="https://github.com/vasi/squashfuse/archive/refs/tags/0.1.105.tar.gz",
+    )
     version("0.1.104", sha256="aa52460559e0d0b1753f6b1af5c68cfb777ca5a13913285e93f4f9b7aa894b3a")
     version("0.1.103", sha256="42d4dfd17ed186745117cfd427023eb81effff3832bab09067823492b6b982e7")
 
@@ -49,10 +56,10 @@ class Squashfuse(AutotoolsPackage):
     depends_on("xz", when="+xz")
     depends_on("zstd", when="+zstd")
 
-    depends_on("m4", type="build", when="@master")
-    depends_on("autoconf", type="build", when="@master")
-    depends_on("automake", type="build", when="@master")
-    depends_on("libtool", type="build", when="@master")
+    depends_on("m4", type="build", when="@0.1.105,master")
+    depends_on("autoconf", type="build", when="@0.1.105,master")
+    depends_on("automake", type="build", when="@0.1.105,master")
+    depends_on("libtool", type="build", when="@0.1.105,master")
 
     def flag_handler(self, name, flags):
         if name == "cflags" and "+min_size" in self.spec:
