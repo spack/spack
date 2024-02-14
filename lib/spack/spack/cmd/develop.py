@@ -94,8 +94,7 @@ def develop(parser, args):
     env = spack.cmd.require_active_env(cmd_name="develop")
     if args.always_rebuild:
         with env.write_transaction():
-            scope = env.scope_name()
-            spack.config.add("config:dev_specs_always_rebuild:true", scope)
+            spack.config.add("config:dev_specs_always_rebuild:true", env.scope_name)
 
     if not args.spec:
         if args.clone is False:
