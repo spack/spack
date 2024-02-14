@@ -450,11 +450,11 @@ class Result:
         if not self.satisfiable:
             self._concrete_specs = []
             self._unsolved_specs = self.abstract_specs
-            self._concrete_specs_by_input = []
+            self._concrete_specs_by_input = {}
             return
 
         self._concrete_specs, self._unsolved_specs = [], []
-        self._concrete_specs_by_input = []
+        self._concrete_specs_by_input = {}
         best = min(self.answers)
         opt, _, answer = best
         for input_spec in self.abstract_specs:
@@ -468,7 +468,7 @@ class Result:
 
             if candidate and candidate.satisfies(input_spec):
                 self._concrete_specs.append(answer[node])
-                self._concrete_specs_by_input.append((input_spec, answer[node]))
+                self._concrete_specs_by_input[input_spec] = answer[node]
             else:
                 msg = f"Unsatisfied input spec: {str(input_spec)}"
                 if candidate:

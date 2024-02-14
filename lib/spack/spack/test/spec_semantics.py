@@ -1303,7 +1303,7 @@ def test_spec_trim(mock_packages, config):
 def test_concretize_partial_old_dag_hash_spec(mock_packages, config):
     # create an "old" spec with no package hash
     bottom = Spec("dt-diamond-bottom").concretized()
-    delattr(bottom, "_package_hash")
+    bottom._package_hash = None
 
     dummy_hash = "zd4m26eis2wwbvtyfiliar27wkcv3ehk"
     bottom._hash = dummy_hash
