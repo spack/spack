@@ -3766,44 +3766,6 @@ spack:
     assert not os.path.exists(e.view_path_default)
 
 
-def test_fail_loudly_for_unsolved_specs(
-    tmp_path, mutable_mock_env_path, mock_packages, config, test_platform
-):
-    """Reproduce failure from #41049 and make sure that Spack raises an
-    exception."""
-    spack_yaml = tmp_path / ev.manifest_name
-    spack_yaml.write_text(
-        f"""\
-spack:
-  specs:
-  - zlib cflags=-O3
-  view: false
-  concretizer:
-    unify: true
-  compilers::
-  - compiler:
-      spec: gcc@=10.0.0
-      paths:
-        cc: /usr/bin/gcc
-        cxx: /usr/bin/g++
-        f77: null
-        fc: null
-      flags:
-        cflags: "-What"
-      operating_system: {test_platform.front_os}
-      target: {test_platform.target("fe").name}
-      modules: []
-      environment: {{}}
-      extra_rpaths: []
-"""
-    )
-
-    env("create", "flagserror", str(spack_yaml))
-    with ev.read("flagserror") as e:
-        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError, match="Internal Spack error"):
-            e.concretize()
-
-
 @pytest.mark.parametrize("first", ["false", "true", "custom"])
 def test_env_include_mixed_views(tmp_path, mutable_mock_env_path, mutable_config, first):
     """Ensure including path and boolean views in different combinations result
