@@ -128,6 +128,8 @@ class Seacas(CMakePackage):
 
     # Build options
     variant("fortran", default=not is_windows, description="Compile with Fortran support")
+    # Enable this on Windows at your own risk, SEACAS exports no symbols and so cannot be meaningfully
+    # linked against as a shared library
     variant("shared", default=not is_windows, description="Enables the build of shared libraries")
     variant("mpi", default=True, description="Enables MPI parallelism.")
 
@@ -222,8 +224,6 @@ class Seacas(CMakePackage):
                 define(project_name_base + "_ENABLE_SEACAS", True)
             ]
         )
-        if "platform=windows" in spec:
-            options.append(define("SEACAS_ENABLE_TESTS", False))
 
         options.append(from_variant("TPL_ENABLE_MPI", "mpi"))
         if "+mpi" in spec and not is_windows:
