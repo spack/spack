@@ -39,9 +39,10 @@ class Rocwmma(CMakePackage):
     version("5.4.0", sha256="a18724c3b45d171e54ef9f85c269124ce8d29b6a2f9dbd76a4806bda2933f7a7")
     version("5.3.3", sha256="cd9bc09f98fb78e53ba4bde1dcfe1817c34c2822234a82b1128d36d92b97ae79")
     version("5.3.0", sha256="04bac641ba18059118d3faa5f21fe3bf3e285055d40930489ebf27ffc8e5d16e")
-    version("5.2.3", sha256="7f42e9742eff258f7c09c518c5ea9c71a224574e1c075d7e1c4e464192fc4920")
-    version("5.2.1", sha256="73adb6a0ae99051493459a9902ad718b0452d6d819583a58d713ce52fa813f21")
-    version("5.2.0", sha256="257ccd1cf2bc1d8064e72e78d276ef7446b2cb7e2dec05ff8331bb44eff2b7cb")
+    with default_args(deprecated=True):
+        version("5.2.3", sha256="7f42e9742eff258f7c09c518c5ea9c71a224574e1c075d7e1c4e464192fc4920")
+        version("5.2.1", sha256="73adb6a0ae99051493459a9902ad718b0452d6d819583a58d713ce52fa813f21")
+        version("5.2.0", sha256="257ccd1cf2bc1d8064e72e78d276ef7446b2cb7e2dec05ff8331bb44eff2b7cb")
 
     # gfx908:xnack-;gfx90a:xnack-;gfx90a:xnack+
     # are only targets currently supported for @5.2.0
