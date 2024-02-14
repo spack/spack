@@ -2107,7 +2107,10 @@ class TestConcretize:
 
         monkeypatch.setattr(spack.solver.asp.Result, "unsolved_specs", simulate_unsolved)
 
-        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError, match="the solver completed but produced specs"):
+        with pytest.raises(
+            spack.solver.asp.UnsatisfiableSpecError,
+            match="the solver completed but produced specs",
+        ):
             solver.driver.solve(setup, specs, reuse=[])
 
     @pytest.mark.regression("36339")
