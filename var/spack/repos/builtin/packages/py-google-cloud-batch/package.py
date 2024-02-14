@@ -9,7 +9,10 @@ from spack.package import *
 class PyGoogleCloudBatch(PythonPackage):
     """Google Cloud Batch API client library."""
 
-    homepage = "https://github.com/googleapis/google-cloud-python/tree/main/packages/google-cloud-batch"
+    homepage = (
+        "https://github.com/googleapis/google-cloud-python/tree/main/packages/google-cloud-batch"
+    )
+
     pypi = "google-cloud-batch/google-cloud-batch-0.17.11.tar.gz"
 
     license("Apache-2.0")

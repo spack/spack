@@ -20,7 +20,11 @@ class PyGoogleapisCommonProtos(PythonPackage):
 
     # https://github.com/googleapis/python-api-common-protos/blob/v1.58.0/setup.py
 
-    variant("grpc", default=False, description="Enable support for gRPC Remote Procedure Call framework.")
+    variant(
+        "grpc",
+        default=False,
+        description="Enable support for gRPC Remote Procedure Call framework.",
+    )
 
     with when("+grpc"):
         depends_on("py-grpcio@1.44:1", when="@1.57:")
