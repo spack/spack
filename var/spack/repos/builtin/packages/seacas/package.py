@@ -222,7 +222,7 @@ class Seacas(CMakePackage):
                 from_variant("TPL_ENABLE_Pthread", "thread_safe"),
                 from_variant("TPL_ENABLE_X11", "x11"),
                 from_variant(project_name_base + "_ENABLE_Fortran", "fortran"),
-                define(project_name_base + "_ENABLE_SEACAS", True)
+                define(project_name_base + "_ENABLE_SEACAS", True),
             ]
         )
 
