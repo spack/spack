@@ -29,11 +29,12 @@ class Hipcub(CMakePackage, CudaPackage, ROCmPackage):
     version("5.4.0", sha256="78db2c2ea466a4c5d84beedc000ae934f6d0ff1793eae90bb8d02b2dbff8932c")
     version("5.3.3", sha256="b4fc3c05892729873dc098f111c31f83af7d33da572bdb7d87de100d4c238e6d")
     version("5.3.0", sha256="4016cfc240b3cc1a97b549ecc4a5b76369610d46247661834630846391e5fad2")
-    version("5.2.3", sha256="cab929f10c649f8fd76df989a16d0cd9301bc6aaad91cd2f84498c831378d559")
-    version("5.2.1", sha256="07b34d8cdf885838dde264c2a70044505e7b9632cb6efbdb52e2569f95112970")
-    version("5.2.0", sha256="ac4dc2310f0eb657e1337c93d8cc4a5d8396f9544a7336eeceb455678a1f9139")
-    version("5.1.3", sha256="dc75640689b6a5e15dd3acea643266bdf114ea63efc60be8272f484cf8f04494")
-    version("5.1.0", sha256="b30d51fc5fca2584f0c9a6fa8dafc9fbdda96a3acff30288e49b397f8842f705")
+    with default_args(deprecated=True):
+        version("5.2.3", sha256="cab929f10c649f8fd76df989a16d0cd9301bc6aaad91cd2f84498c831378d559")
+        version("5.2.1", sha256="07b34d8cdf885838dde264c2a70044505e7b9632cb6efbdb52e2569f95112970")
+        version("5.2.0", sha256="ac4dc2310f0eb657e1337c93d8cc4a5d8396f9544a7336eeceb455678a1f9139")
+        version("5.1.3", sha256="dc75640689b6a5e15dd3acea643266bdf114ea63efc60be8272f484cf8f04494")
+        version("5.1.0", sha256="b30d51fc5fca2584f0c9a6fa8dafc9fbdda96a3acff30288e49b397f8842f705")
     version(
         "5.0.2",
         sha256="22effb18f2c38d76fa379f14c9f9ee7a11987a5d1ae4a7e837af87232c8c9183",
