@@ -45,7 +45,7 @@ class PyAnvio(PythonPackage):
     depends_on("py-pyani", type=("build", "run"))
     depends_on("py-psutil", type=("build", "run"))
     depends_on("py-pandas@1.4.4", type=("build", "run"))
-    depends_on("py-snakemake", type=("build", "run"))
+    depends_on("snakemake", type=("build", "run"))
     depends_on("py-multiprocess", type=("build", "run"))
     depends_on("py-plotext", type=("build", "run"))
     depends_on("py-networkx", type=("build", "run"))
