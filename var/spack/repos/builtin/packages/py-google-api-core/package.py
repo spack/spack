@@ -18,6 +18,13 @@ class PyGoogleApiCore(PythonPackage):
 
     license("Apache-2.0")
 
+    version("2.17.0", sha256="de7ef0450faec7c75e0aea313f29ac870fdc44cfaec9d6499a9a17305980ef66")
+    version("2.16.2", sha256="032d37b45d1d6bdaf68fb11ff621e2593263a239fa9246e2e94325f9c47876d2")
+    version("2.15.0", sha256="abc978a72658f14a2df1e5e12532effe40f94f868f6e23d95133bd6abcca35ca")
+    version("2.14.0", sha256="5368a4502b793d9bbf812a5912e13e4e69f9bd87f6efb508460c43f5bbd1ce41")
+    version("2.13.1", sha256="f2bcb43c98329f558dd13b3cd745cef04f07a107446f4f2bfc69adf09b02b994")
+    version("2.12.0", sha256="c22e01b1e3c4dcd90998494879612c38d0a3411d1f7b679eb89e2abe3ce1f553")
+    version("2.11.1", sha256="25d29e05a0058ed5f19c61c0a78b1b53adea4d9364b464d014fbda941f6d1c9a")
     version("2.11.0", sha256="4b9bb5d5a380a0befa0573b302651b8a9a89262c1730e37bf423cec511804c22")
     version("1.14.2", sha256="2c23fbc81c76b941ffb71301bb975ed66a610e9b03f918feacd1ed59cf43a6ec")
 
