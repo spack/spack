@@ -29,11 +29,12 @@ class Rocprim(CMakePackage):
     version("5.4.0", sha256="1740dca11c70ed350995331c292f7e3cb86273614e4a5ce9f0ea64dea5364318")
     version("5.3.3", sha256="21a6b352ad3f5b2b7d05a5ed55e612feb3c5c19d34fdb8f80260b6d25af18b2d")
     version("5.3.0", sha256="4885bd662b038c6e9f058a756fd838203dbd00227bfef6adaf31496010b100e4")
-    version("5.2.3", sha256="502f49cf3190f4ac20d0a6b19eb2d0786bb3c5661329940378081f1678aa8e82")
-    version("5.2.1", sha256="47f09536b0afbb7be4d6fb71cca9f0a4fa58dde29c83aee247d4b167f6f3acae")
-    version("5.2.0", sha256="f99eb7d2f6b1445742fba631a0dc8bb0d464a767a9c4fb79ac865d9570fe747b")
-    version("5.1.3", sha256="b5a08d2e76388bd1ffa6c946009928fe95de846ab6b65a6475998070c0cf6dc1")
-    version("5.1.0", sha256="dfe106c01155e00ed816f0231d1576ff8c08750cc8278fa453926f388dc6fe48")
+    with default_args(deprecated=True):
+        version("5.2.3", sha256="502f49cf3190f4ac20d0a6b19eb2d0786bb3c5661329940378081f1678aa8e82")
+        version("5.2.1", sha256="47f09536b0afbb7be4d6fb71cca9f0a4fa58dde29c83aee247d4b167f6f3acae")
+        version("5.2.0", sha256="f99eb7d2f6b1445742fba631a0dc8bb0d464a767a9c4fb79ac865d9570fe747b")
+        version("5.1.3", sha256="b5a08d2e76388bd1ffa6c946009928fe95de846ab6b65a6475998070c0cf6dc1")
+        version("5.1.0", sha256="dfe106c01155e00ed816f0231d1576ff8c08750cc8278fa453926f388dc6fe48")
     version(
         "5.0.2",
         sha256="a4280f15d470699a1c6a5f86bdd951c1387e0af227c6bee6f81cee658406f4b0",

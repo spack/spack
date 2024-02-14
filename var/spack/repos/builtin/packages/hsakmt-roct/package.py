@@ -34,11 +34,12 @@ class HsakmtRoct(CMakePackage):
     version("5.4.0", sha256="690a78a6e67ae2b3f518dbc4a1e267237d6a342e1063b31eef297f4a04d780f8")
     version("5.3.3", sha256="b5350de915997ed48072b37a21c2c44438028255f6cc147c25a196ad383c52e7")
     version("5.3.0", sha256="c150be3958fd46e57bfc9db187819ec34b1db8f0cf9b69f8c3f8915001800ab8")
-    version("5.2.3", sha256="8d313b8fd945a8d7248c00a2de9a2ee896fe77e464430a91b63400a986ec0bf0")
-    version("5.2.1", sha256="13c4a6748c4ae70f87869f10fda101d67c9dbaecf040687f7f5d9bb8b6d0506c")
-    version("5.2.0", sha256="3797cb0eafbec3fd3d4a2b53f789eb8cdbab30729f13dbcca0a10bc1bafd2187")
-    version("5.1.3", sha256="3c66b1aa7451571ce8bee10e601d34b93c9416b9be476610ee5685dbad81034a")
-    version("5.1.0", sha256="032717e80b1aefed59f11399e575564ee86ee7c125e889f7c79c2afdfab1eb93")
+    with default_args(deprecated=True):
+        version("5.2.3", sha256="8d313b8fd945a8d7248c00a2de9a2ee896fe77e464430a91b63400a986ec0bf0")
+        version("5.2.1", sha256="13c4a6748c4ae70f87869f10fda101d67c9dbaecf040687f7f5d9bb8b6d0506c")
+        version("5.2.0", sha256="3797cb0eafbec3fd3d4a2b53f789eb8cdbab30729f13dbcca0a10bc1bafd2187")
+        version("5.1.3", sha256="3c66b1aa7451571ce8bee10e601d34b93c9416b9be476610ee5685dbad81034a")
+        version("5.1.0", sha256="032717e80b1aefed59f11399e575564ee86ee7c125e889f7c79c2afdfab1eb93")
     version(
         "5.0.2",
         sha256="f2a27ac18aada1dc0dba6455beb7dd7d88a4457c1917024ea372fecb03356e97",

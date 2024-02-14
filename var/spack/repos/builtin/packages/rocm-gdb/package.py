@@ -29,11 +29,12 @@ class RocmGdb(AutotoolsPackage):
     version("5.4.0", sha256="7ee984d99818da04733030b140c1f0929639bc719a5e418d53cc2c2a8cbc9a79")
     version("5.3.3", sha256="9fc3ccd9378ad40f2f0c9577bc400cc9a202d0ae4656378813b67653b9023c46")
     version("5.3.0", sha256="402537baf0779cae586d608505e81173ba85f976fe993f1633e3afe81669350f")
-    version("5.2.3", sha256="c2df5cccd8bb07ea331b45091fb3141999a37a67696d273f3888b48f6d4281aa")
-    version("5.2.1", sha256="77169d88f24e6ccb6aef3945448b179edffe806a51a3e996236b08fb510f3979")
-    version("5.2.0", sha256="70c5b443292b9bb114844eb63b72cfab1b65f083511ee39d55db7a633c63bf5a")
-    version("5.1.3", sha256="81f5e368facdcc424a37cb5809f0b436bedb9a6d9af4d17785b3c446ab0a7821")
-    version("5.1.0", sha256="cf638149b269f838aaec59c5801098b9c0fc42f6c86a39309a8995b56978b424")
+    with default_args(deprecated=True):
+        version("5.2.3", sha256="c2df5cccd8bb07ea331b45091fb3141999a37a67696d273f3888b48f6d4281aa")
+        version("5.2.1", sha256="77169d88f24e6ccb6aef3945448b179edffe806a51a3e996236b08fb510f3979")
+        version("5.2.0", sha256="70c5b443292b9bb114844eb63b72cfab1b65f083511ee39d55db7a633c63bf5a")
+        version("5.1.3", sha256="81f5e368facdcc424a37cb5809f0b436bedb9a6d9af4d17785b3c446ab0a7821")
+        version("5.1.0", sha256="cf638149b269f838aaec59c5801098b9c0fc42f6c86a39309a8995b56978b424")
     version(
         "5.0.2",
         sha256="0eced8cd5a2996cb4bcf254f2bd9defe24112d21c2f750e98f784ecdf94ba5c9",

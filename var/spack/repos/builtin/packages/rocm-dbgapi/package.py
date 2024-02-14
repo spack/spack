@@ -37,11 +37,12 @@ class RocmDbgapi(CMakePackage):
     version("5.4.0", sha256="895eb7056864daada40c3f9cd37645b0bdf4b6dc408b5f8cc974fc4cd9ab7ccb")
     version("5.3.3", sha256="3c81cb23fe671d391557a63c13b6a13d4dc367db5cb5de55592a6758284d8a3f")
     version("5.3.0", sha256="afffec78e34fe70952cd41efc3d7ba8f64e43acb2ad20aa35c9b8b591bed48ca")
-    version("5.2.3", sha256="17925d23f614ecb2b40dffe5e14535cba380d4f489ea1a027762c356be9fbc2b")
-    version("5.2.1", sha256="169e3914ebd99d6a5c034c568964b7bad56611262e292f77c0c65a7708e02376")
-    version("5.2.0", sha256="44f0528a7583bc59b6585166d2289970b20115c4c70e3bcc218aff19fc242b3f")
-    version("5.1.3", sha256="880f80ebf741e3451676837f720551e02cffd0b9346ca4dfa6cf7f7043282f2b")
-    version("5.1.0", sha256="406db4b20bda12f6f32cbef88b03110aa001bf7bef6676f36e909b53c8354e43")
+    with default_args(deprecated=True):
+        version("5.2.3", sha256="17925d23f614ecb2b40dffe5e14535cba380d4f489ea1a027762c356be9fbc2b")
+        version("5.2.1", sha256="169e3914ebd99d6a5c034c568964b7bad56611262e292f77c0c65a7708e02376")
+        version("5.2.0", sha256="44f0528a7583bc59b6585166d2289970b20115c4c70e3bcc218aff19fc242b3f")
+        version("5.1.3", sha256="880f80ebf741e3451676837f720551e02cffd0b9346ca4dfa6cf7f7043282f2b")
+        version("5.1.0", sha256="406db4b20bda12f6f32cbef88b03110aa001bf7bef6676f36e909b53c8354e43")
     version(
         "5.0.2",
         sha256="b7554dfe96bda6c2ee762ad6e3e5f91f0f52b5a525e3fb29d5e1fe6f003652b5",

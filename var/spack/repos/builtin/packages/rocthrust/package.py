@@ -30,11 +30,12 @@ class Rocthrust(CMakePackage):
     version("5.4.0", sha256="a4799fb1086da3f70c9b95effb1f5f9033c861685e960a8759278463cc55a971")
     version("5.3.3", sha256="0c2fc8d437efaf5c4c859d97adb049d4025025d0be0e0908f59a8112508234e5")
     version("5.3.0", sha256="0e11b12f208d2751e3e507e3a32403c9bd45da4e191671d765d33abd727d9b96")
-    version("5.2.3", sha256="0f5ef39c5faab31eb34b48391d58096463969c133ca7ed09ab4e43caa5461b29")
-    version("5.2.1", sha256="5df35ff0970b83d68b69a07ae9ebb62955faac7401c91daa7929664fdd09d69b")
-    version("5.2.0", sha256="afa126218485586682c78e97df8025ae4efd32f3751c340e84c436e08868c326")
-    version("5.1.3", sha256="8d92de1e69815d92a423b7657f2f37c90f1d427f5bc92915c202d4c266254dad")
-    version("5.1.0", sha256="fee779ae3d55b97327d87beca784fc090fa02bc95238d9c3bf3021e266e73979")
+    with default_args(deprecated=True):
+        version("5.2.3", sha256="0f5ef39c5faab31eb34b48391d58096463969c133ca7ed09ab4e43caa5461b29")
+        version("5.2.1", sha256="5df35ff0970b83d68b69a07ae9ebb62955faac7401c91daa7929664fdd09d69b")
+        version("5.2.0", sha256="afa126218485586682c78e97df8025ae4efd32f3751c340e84c436e08868c326")
+        version("5.1.3", sha256="8d92de1e69815d92a423b7657f2f37c90f1d427f5bc92915c202d4c266254dad")
+        version("5.1.0", sha256="fee779ae3d55b97327d87beca784fc090fa02bc95238d9c3bf3021e266e73979")
     version(
         "5.0.2",
         sha256="60f0cf1848cc7cd8663f15307bd695eee3c5b20d3ad3baa4bc696189ffdcfd53",

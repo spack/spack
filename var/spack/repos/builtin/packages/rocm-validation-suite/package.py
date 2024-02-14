@@ -34,11 +34,12 @@ class RocmValidationSuite(CMakePackage):
     version("5.4.0", sha256="ca2abfa739c2853f71453e65787e318ab879be8a6a362c4cb4d27baa90f3cd5f")
     version("5.3.3", sha256="9acbc8de9b2e18659f51bd49f6e92ab6c93742e2ed0046322025f017fc12497f")
     version("5.3.0", sha256="d6afb8a5f4eaf860fd510bcfe65e735cbf96d4b8817c758ea7aee84d4c994382")
-    version("5.2.3", sha256="5dfbd41c694bf2eb4368edad8653dc60ec2927d174fc7aaa5fa416156c5f921f")
-    version("5.2.1", sha256="a0ea3ab9cbb8ac17bfa4537713a4d7075f869949bfdead4565a46f75864bd4a9")
-    version("5.2.0", sha256="2dfef5d66f544230957ac9aaf647b2f1dccf3cc7592cc322cae9fbdcf3321365")
-    version("5.1.3", sha256="0140a4128c31749c078d9e1dc863cbbd690efc65843c34a4b80f0056e5b8c7b6")
-    version("5.1.0", sha256="d9b9771b885bd94e5d0352290d3fe0fa12f94ce3f384c3844002cd7614880010")
+    with default_args(deprecated=True):
+        version("5.2.3", sha256="5dfbd41c694bf2eb4368edad8653dc60ec2927d174fc7aaa5fa416156c5f921f")
+        version("5.2.1", sha256="a0ea3ab9cbb8ac17bfa4537713a4d7075f869949bfdead4565a46f75864bd4a9")
+        version("5.2.0", sha256="2dfef5d66f544230957ac9aaf647b2f1dccf3cc7592cc322cae9fbdcf3321365")
+        version("5.1.3", sha256="0140a4128c31749c078d9e1dc863cbbd690efc65843c34a4b80f0056e5b8c7b6")
+        version("5.1.0", sha256="d9b9771b885bd94e5d0352290d3fe0fa12f94ce3f384c3844002cd7614880010")
     version(
         "5.0.2",
         sha256="f249fe700a5a96c6dabf12130a3e366ae6025fe1442a5d11d08801d6c0265af4",

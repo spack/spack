@@ -36,11 +36,12 @@ class HsaRocrDev(CMakePackage):
     version("5.4.0", sha256="476cd18500cc227d01f6b44c00c7adc8574eb8234b6b4daefc219650183fa090")
     version("5.3.3", sha256="aca88d90f169f35bd65ce3366b8670c7cdbe3abc0a2056eab805d0192cfd7130")
     version("5.3.0", sha256="b51dbedbe73390e0be748b92158839c82d7fa0e514fede60aa7696dc498facf0")
-    version("5.2.3", sha256="978de85d3455207bb82bef2254a4624e9116b1258a8c164d7a7e21a644eff12f")
-    version("5.2.1", sha256="448a7409bdc6618332a42b9503122996f26b91768140b710ba99bff8a8c03dd9")
-    version("5.2.0", sha256="529e49693dd9f6459586dd0a26f14dd77dbdf8c0b45fb54830b294eba7babd27")
-    version("5.1.3", sha256="479340ec34cdffbbdb1002c85a47d1fccd23e8394631a1f001ef6130be08287d")
-    version("5.1.0", sha256="a5f7245059c3d28dbc037e1e6fa3f09084e29147096dd61f7ce5560291ab330f")
+    with default_args(deprecated=True):
+        version("5.2.3", sha256="978de85d3455207bb82bef2254a4624e9116b1258a8c164d7a7e21a644eff12f")
+        version("5.2.1", sha256="448a7409bdc6618332a42b9503122996f26b91768140b710ba99bff8a8c03dd9")
+        version("5.2.0", sha256="529e49693dd9f6459586dd0a26f14dd77dbdf8c0b45fb54830b294eba7babd27")
+        version("5.1.3", sha256="479340ec34cdffbbdb1002c85a47d1fccd23e8394631a1f001ef6130be08287d")
+        version("5.1.0", sha256="a5f7245059c3d28dbc037e1e6fa3f09084e29147096dd61f7ce5560291ab330f")
     version(
         "5.0.2",
         sha256="94ce313f3b37e6571778dc6865d73dafa798cbaf4de63b5307382c4a2418e99f",

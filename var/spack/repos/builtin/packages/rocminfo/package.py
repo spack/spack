@@ -30,11 +30,12 @@ class Rocminfo(CMakePackage):
     version("5.4.0", sha256="79123b92992cce75ae679caf9a6bf57b16d24e96e54b36eb002511f3800e29c6")
     version("5.3.3", sha256="77e6adc81da6c1d153517e1d28db774205531a2ec188e6518f998328ef7897c6")
     version("5.3.0", sha256="c279da1d946771d120611b64974fde751534e787a394ceb6b8e0b743c143d782")
-    version("5.2.3", sha256="38fe8db21077100ee2242bd087371f6b8e0078d3a269e145d3a4ab314d0b8902")
-    version("5.2.1", sha256="e8a3b3228387d164e21de060e18ac018eecb5e9abe0ae45830c51ead4b7f1004")
-    version("5.2.0", sha256="e721eb81efd384abd22ff01cdcbb6245b11084dc11a867c74c8ad6b028aa0404")
-    version("5.1.3", sha256="7aecd7b189e129b77c8f2af70be2926a0f3a5ee89814879bc8477924a7e6f2ae")
-    version("5.1.0", sha256="76f6cc9e69d9fc7e692e5c7db35e89079d3b1d2d47632e4742d612e743c396d3")
+    with default_args(deprecated=True):
+        version("5.2.3", sha256="38fe8db21077100ee2242bd087371f6b8e0078d3a269e145d3a4ab314d0b8902")
+        version("5.2.1", sha256="e8a3b3228387d164e21de060e18ac018eecb5e9abe0ae45830c51ead4b7f1004")
+        version("5.2.0", sha256="e721eb81efd384abd22ff01cdcbb6245b11084dc11a867c74c8ad6b028aa0404")
+        version("5.1.3", sha256="7aecd7b189e129b77c8f2af70be2926a0f3a5ee89814879bc8477924a7e6f2ae")
+        version("5.1.0", sha256="76f6cc9e69d9fc7e692e5c7db35e89079d3b1d2d47632e4742d612e743c396d3")
     version(
         "5.0.2",
         sha256="5fd970f08c5d6591efe7379ece564ce5580cba87fb6237531dabbd5adcb6a899",
