@@ -10,7 +10,6 @@ import re
 
 import spack.util.error
 import spack.util.executable
-import spack.version
 
 #: Executable instance for "gpg", initialized lazily
 GPG = None
@@ -333,11 +332,11 @@ def _verify_exe_or_raise(exe):
         raise SpackGPGError(msg)
 
     output = exe("--version", output=str)
-    match = re.search(r"^gpg(conf)? \(GnuPG\) (.*)$", output, re.M)
+    match = re.search(r"^gpg(conf)? \(GnuPG\) (\d+).*$", output, re.M)
     if not match:
         raise SpackGPGError('Could not determine "{0}" version'.format(exe.name))
 
-    if spack.version.Version(match.group(2)) < spack.version.Version("2"):
+    if int(match.group(2)) < 2:
         raise SpackGPGError(msg)
 
 
