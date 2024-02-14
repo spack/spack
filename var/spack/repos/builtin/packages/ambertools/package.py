@@ -15,7 +15,7 @@ class Ambertools(CMakePackage):
     libpbsa libraries use the LGPL license."""
 
     homepage = "https://ambermd.org/AmberTools.php"
-    url      = "https://ambermd.org/downloads/AmberTools22jlmrcc.tar.bz2"
+    url = "https://ambermd.org/downloads/AmberTools22jlmrcc.tar.bz2"
 
     maintainers("d-beltran")
 
@@ -83,4 +83,5 @@ class Ambertools(CMakePackage):
     @run_before("cmake")
     def fix_check(self):
         cp = Executable("cp")
-        cp(self.spec["netcdf-c"].headers.directories[0]+"/netcdf.h", self.spec["netcdf-fortran"].headers.directories[0])
+        cp(self.spec["netcdf-c"].headers.directories[0]+"/netcdf.h",
+            self.spec["netcdf-fortran"].headers.directories[0])
