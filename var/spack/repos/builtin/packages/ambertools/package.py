@@ -84,6 +84,6 @@ class Ambertools(CMakePackage):
     def fix_check(self):
         cp = Executable("cp")
         cp(
-            self.spec["netcdf-c"].headers.directories[0]+"/netcdf.h",
-            self.spec["netcdf-fortran"].headers.directories[0]
+            self.spec["netcdf-c"].headers.directories[0] + "/netcdf.h",
+            self.spec["netcdf-fortran"].headers.directories[0],
         )
