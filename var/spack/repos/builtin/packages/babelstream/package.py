@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
-import platform
 import re  # To get the variant name after (+)
 
 import spack.build_systems.cmake
@@ -110,8 +108,8 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
     )
     variant(
         "std_use_tbb",
-        values=("on","off"),
-        default="off",
+        values=(True,False),
+        default=False,
         when="+std",
         description="No-op if ONE_TBB_DIR is set. Link against an in-tree oneTBB via FetchContent_Declare, see top level CMakeLists.txt for details"
     )
@@ -216,33 +214,35 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
             "test", values=str, default="none", description="Test Variant for debugging purposes"
         )
 
-
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
+        model_list = ["sycl","sycl2020","omp","ocl","tbb","acc","hip","thrust","raja","std"]
         # convert spec to string to work on it
         spec_string = str(self.spec)
         # take only the first portion of the spec until space
         spec_string_truncate = spec_string.split(" ", 1)[0]
-        model_list = find_model_flag(spec_string_truncate)  # Prints out ['cuda', 'thrust']
-        if len(model_list) > 1:
-            ignore_list = ["cuda"]  # if +acc is provided ignore the cuda model
-            model = list(set(model_list) - set(ignore_list))
-            # We choose 'thrust' from the list of ['cuda', 'thrust']
-            args = ["-DMODEL=" + model[0]]
+        truncated_model_list = find_model_flag(spec_string_truncate)  # Prints out ['cuda', 'thrust']
+        # Filter out elements from truncated_model_list list that are not in model_list list
+        filtered_model_list = [item for item in truncated_model_list if item in model_list]
+        # for +acc and +thrust the CudaPackage appends +cuda variant too so we need to filter cuda from list
+        # e.g. we choose 'thrust' from the list of ['cuda', 'thrust']
+        if len(filtered_model_list) > 1:
+            filtered_model_list = [elem for elem in filtered_model_list if elem != "cuda"]
+            args = ["-DMODEL=" + filtered_model_list[0]]
         else:
-            # if it is +stddata,indices etc. we need to pass it
-            # as std-data to the CMake compiler
-            # do some alterations here
-            if "std" in model_list[0]:
+            # do some alterations here to append sub models too
+            if "std" in filtered_model_list[0]:
                 args = ["-DMODEL=" + "std-" + self.spec.variants["std_submodel"].value]
-            elif "sycl2020" in model_list[0]:
+            elif "sycl2020" in filtered_model_list[0]:
                 args = ["-DMODEL=" + "sycl2020-" + self.spec.variants["sycl_submodel"].value]
                 print(args)
-            elif "rocm" in model_list[0]:
+            elif "rocm" in filtered_model_list[0]:
                 args = ["-DMODEL=hip"]
             else:
-                args = ["-DMODEL=" + model_list[0]]
-            print("last",args)
+                args = ["-DMODEL=" + filtered_model_list[0]]
+        if (filtered_model_list[0] != "tbb" and filtered_model_list[0] != "thrust"):
+            args.append("-DCMAKE_CXX_COMPILER=" + spack_cxx)
+        
 
         # ===================================
         #             ACC
@@ -286,9 +286,7 @@ register_flag_optional(TARGET_PROCESSOR
         Refer to `nvc++ --help` for the full list"
         "")
         """
-
-        if ("+acc" in self.spec) and ("~cuda" in self.spec):
-            args.append("-DCMAKE_CXX_COMPILER=" + spack_cxx)
+        if self.spec.satisfies("+acc~cuda"):
             if (self.spec.compiler.name == "nvhpc") or (self.spec.compiler.name == "pgi"):
                 if self.spec.variants["cpu_arch"].value != "none":
                     # get the cpu architecture value from user
@@ -304,7 +302,7 @@ register_flag_optional(TARGET_PROCESSOR
                 if "cuda_arch" in self.spec.variants:
                     target_device = "gpu" + ";"
                     cuda_arch_list = self.spec.variants["cuda_arch"].value
-                    # the architecture value is only number so append sm_ to the name
+                    # the architecture value is only number so append cc_ to the name
                     cuda_arch = "cc" + cuda_arch_list[0]
                     args.append(
                         "-DCXX_EXTRA_FLAGS=" + "-target=" + target_device + "-gpu=" + cuda_arch
@@ -315,11 +313,11 @@ register_flag_optional(TARGET_PROCESSOR
         # ===================================
 
         if "+std" in self.spec:
-            args.append("-DCMAKE_CXX_COMPILER=" + spack_cxx)
-            args.append("-DUSE_TBB=" + self.spec.variants["std_use_tbb"].value.upper())
+            args.append("-DUSE_TBB=" + ("ON" if (self.spec.variants["std_use_tbb"].value) else "OFF"))
+            print("KK", args)
             if self.spec.variants["std_offload"].value != "none":
                 cuda_arch_list = self.spec.variants["offload"].value
-                # the architecture value is only number so append sm_ to the name
+                # the architecture value is only number so append cc_ to the name
                 cuda_arch = "cc" + cuda_arch_list[0]
                 args.append("-DNVHPC_OFFLOAD=" + cuda_arch)
 
@@ -327,17 +325,10 @@ register_flag_optional(TARGET_PROCESSOR
         # ===================================
         #             CUDA
         # ===================================
-
-        if (
-            ("+cuda" in self.spec)
-            and ("~kokkos" in self.spec)
-            and ("~acc" in self.spec)
-            and ("~omp" in self.spec)
-            and ("~thrust" in self.spec)
-        ):
-            args.append("-DCMAKE_CXX_COMPILER=" + spack_cxx)
+        if self.spec.satisfies("+cuda~kokkos~acc~omp~thrust"):
             # Set up the cuda macros needed by the build
             cuda_arch_list = self.spec.variants["cuda_arch"].value
+            # "-DCUDA_ARCH" requires sm_ 
             # the architecture value is only number so append sm_ to the name
             cuda_arch = "sm_" + cuda_arch_list[0]
             args.append("-DCUDA_ARCH=" + cuda_arch)
@@ -355,25 +346,20 @@ register_flag_optional(TARGET_PROCESSOR
         # ===================================
         # `~kokkos` option is there to prevent +kokkos +omp setting to use omp directly from here
         # Same applies for raja
-        if ("+omp" in self.spec) and ("~kokkos" in self.spec) and ("~raja" in self.spec):
-            args.append("-DCMAKE_CXX_COMPILER=" + spack_cxx)
+        if self.spec.satisfies("+omp~kokkos~raja"):
             args.append("-DCMAKE_C_COMPILER=" + spack_cc)
             if "cuda_arch" in self.spec.variants:
                 cuda_arch_list = self.spec.variants["cuda_arch"].value
-                # the architecture value is only number so append sm_ to the name
+                # the architecture value is only number so append cc_ to the name
                 cuda_arch = "cc" + cuda_arch_list[0]
                 args.append("-DOFFLOAD=ON")
                 # args.append("-DOFFLOAD_FLAGS=-mp=gpu;-gpu=" + cuda_arch)
                 target_device = "gpu" + ";"
-                cuda_arch_list = self.spec.variants["cuda_arch"].value
-                # the architecture value is only number so append sm_ to the name
-                cuda_arch = "cc" + cuda_arch_list[0]
                 args.append("-DOFFLOAD_FLAGS=" + "-gpu=" + cuda_arch + " -mp=" + target_device)
             elif ("amdgpu_target" in self.spec.variants) and (
                 self.spec.variants["amdgpu_target"].value != "none"
             ):
                 rocm_arch = self.spec.variants["amdgpu_target"].value
-                # the architecture value is only number so append sm_ to the name
                 args.append("-DOFFLOAD=" + " AMD:" + rocm_arch)
             elif ("cpu_target" in self.spec.variants) and (
                 self.spec.variants["cpu_target"].value != "none"
@@ -393,7 +379,6 @@ register_flag_optional(TARGET_PROCESSOR
         # ===================================
 
         if "+sycl" in self.spec:
-            args.append("-DCMAKE_CXX_COMPILER=" + spack_cxx)
             args.append("-DCXX_EXTRA_FLAGS=" + "-fsycl")
             args.append("-DSYCL_COMPILER=" + self.spec.variants["sycl_compiler_implementation"].value.upper())
             if self.spec.variants["sycl_compiler_implementation"].value.upper() == "none":
@@ -410,7 +395,6 @@ register_flag_optional(TARGET_PROCESSOR
         # ===================================
 
         if "+sycl2020" in self.spec:
-            args.append("-DCMAKE_CXX_COMPILER=" + spack_cxx)
             if self.spec.satisfies("%oneapi"):
                 # -fsycl flag is required for setting up sycl/sycl.hpp seems like
                 #  it doesn't get it from the CMake file
@@ -433,8 +417,8 @@ register_flag_optional(TARGET_PROCESSOR
         # ===================================
 
         if "+hip" in self.spec:
-            hip_comp = self.spec["hip"].prefix + "/bin/hipcc"
-            args.append("-DCMAKE_CXX_COMPILER=" + hip_comp)
+            # hip_comp = self.spec["hip"].prefix + "/bin/hipcc"
+            # args.append("-DCMAKE_CXX_COMPILER=" + hip_comp)
             args.append(
                 "-DCXX_EXTRA_FLAGS= --offload-arch="
                 + str(self.spec.variants["amdgpu_target"].value[0])
@@ -475,16 +459,14 @@ register_flag_optional(TARGET_PROCESSOR
                     )
                     args.append("-DOpenCL_LIBRARY=" + intel_lib)
                 elif "pocl" in self.spec.variants["backend"].value:
-                    args.append("-DCMAKE_CXX_COMPILER=" + spack_cxx)
                     pocl_lib = self.spec["pocl"].prefix + "/lib64/libOpenCL.so"
                     args.append("-DOpenCL_LIBRARY=" + pocl_lib)
-                args.append("-DCMAKE_CXX_COMPILER=" + spack_cxx)
+
 
         # ===================================
         #             RAJA
         # ===================================
         if "+raja" in self.spec:
-            args.append("-DCMAKE_CXX_COMPILER=" + spack_cxx)
             args.append("-DRAJA_IN_TREE=" + self.spec.variants["dir"].value)
             if "offload" in self.spec.variants:
                 if "nvidia" in self.spec.variants["offload"].value:
@@ -515,7 +497,8 @@ register_flag_optional(TARGET_PROCESSOR
                 args.append("-DTHRUST_IMPL=" + self.spec.variants["thrust_backend"].value.upper())
                 args.append("-SDK_DIR=" + self.spec["thrust"].prefix + "/include")
                 cuda_arch_list = self.spec.variants["cuda_arch"].value
-                # the architecture value is only number so append sm_ to the name
+                # this model uses CMAKE_CUDA_ARCHITECTURES which only requires number of cuda_arch
+                # no need to append sm_ or cc_
                 cuda_arch = cuda_arch_list[0]
                 args.append("-DCUDA_ARCH=" + cuda_arch)
                 cuda_dir = self.spec["cuda"].prefix
@@ -542,7 +525,6 @@ register_flag_optional(TARGET_PROCESSOR
         # kokkos implementation is versatile and it could use cuda or omp architectures as backend
         # The usage should be spack install babelstream +kokkos backend=[cuda or omp or none]
         if "+kokkos" in self.spec:
-            args.append("-DCMAKE_CXX_COMPILER=" + spack_cxx)
             args.append("-DKOKKOS_IN_TREE=" + self.spec.variants["dir"].value)
             # args.append("-DKOKKOS_IN_PACKAGE=" + self.spec["kokkos"].prefix)
             if "backend" in self.spec.variants:
@@ -582,7 +564,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         config = {
             "FC": pkg.compiler.fc_names[0],
             "FCFLAGS": "",
-            "ARCH": platform.machine(),
+            "ARCH": spec.target.family,
             "DOCONCURRENT_FLAG": "",
             "ARRAY_FLAG": "",
             "OPENMP_FLAG": "",
@@ -590,33 +572,37 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             "CUDA_FLAG": "",
             "SEQUENTIAL_FLAG": "",
         }
+        # Dictionary mapping compiler names to unsupported options
+        unsupported_options = {
+            "arm": ["CUDA", "CUDAKernels", "OpenACC", "OpenACCArray"],
+            "aocc" : ["CUDA", "CUDAKernels"],
+            "cce" : ["CUDA", "CUDAKernels"],
+            "gcc" : ["CUDA"],
+            "nvhpc" :  ["OpenMPTaskloop"],
+            "oneapi": ["CUDA","CUDAKernels","OpenACC","OpenACCArray"],
+            "fj" : ["CUDA", "CUDAKernels", "OpenACC"]
+        }
 
+        # Check if spec.compiler.name is in the unsupported_options dictionary
+        unsupported_value = self.spec.variants["foption"].value
+        compiler_name = spec.compiler.name
+        unsupported = any(unsupported_value in options for options in unsupported_options.get(compiler_name, []))
+
+        if unsupported:
+            raise InstallError(f"{unsupported_value} is not supported by the {compiler_name} compiler")
         # ===================================
         #               ARM
         # ===================================
         if spec.compiler.name == "arm":
             flags = "-std=f2018 " + pkg.compiler.opt_flags[4] + " -Wall -Wno-unused-variable"
-
-            if platform.machine() == "aarch64":
-                # TODO: Add MCPU option here as in -mcpu=$(MCPU)
-                flags += "-mcpu=native"
-            else:
-                # TODO: Add MARCH option here as in -march=$(MARCH)
-                flags += "-march=native"
+            flags += "-march=" + str(spec.target)
 
             config["DOCONCURRENT_FLAG"] = pkg.compiler.openmp_flag  # libomp.so required
             config["ARRAY_FLAG"] = pkg.compiler.openmp_flag  # libomp.so required
             config["OPENMP_FLAG"] = pkg.compiler.openmp_flag  # libomp.so required
             config["OPENACC_FLAG"] = "-fopenacc"
 
-            # Error Messages
-            if self.spec.variants["foption"].value in [
-                "CUDA",
-                "CUDAKernels",
-                "OpenACC",
-                "OpenACCArray",
-            ]:
-                sys.exit(self.spec.variants["foption"].value + "is not supported by this compiler")
+
 
         # ===================================
         #               AMD
@@ -625,7 +611,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             flags = (
                 "-std=f2018 "
                 + pkg.compiler.opt_flags[3]
-                + " -Wall -Wno-unused-variable -march=native"
+                + " -Wall -Wno-unused-variable"
             )
 
             config["DOCONCURRENT_FLAG"] = pkg.compiler.openmp_flag  # libomp.so required
@@ -633,9 +619,6 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             config["OPENMP_FLAG"] = pkg.compiler.openmp_flag  # libomp.so required
             config["OPENACC_FLAG"] = "-fopenacc"
 
-            # Error Messages
-            if self.spec.variants["foption"].value in ["CUDA", "CUDAKernels"]:
-                sys.exit(self.spec.variants["foption"].value + "is not supported by this compiler")
 
         # ===================================
         #               CRAY
@@ -650,9 +633,6 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             ] = pkg.compiler.openmp_flag  # if clang based it will be -fopenmp else -h omp
             config["OPENACC_FLAG"] = "-h acc"  # for cpu only -h omp
 
-            # Error Messages
-            if self.spec.variants["foption"].value in ["CUDA", "CUDAKernels"]:
-                sys.exit(self.spec.variants["foption"].value + "is not supported by this compiler")
 
         # ===================================
         #               GCC
@@ -660,24 +640,13 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         if spec.compiler.name == "gcc":
             flags = "-std=f2018 -O3 "
             flags += "-Wall -Wno-unused-dummy-argument -Wno-unused-variable "
-
-            # config['MARCH'] = "neoverse-v1,neoverse-n1,icelake-server,znver3,cortex-a78ae"
-
-            if platform.machine() == "aarch64":
-                # TODO: Add MCPU option here as in -mcpu=$(MCPU)
-                flags += "-mcpu=native"
-            else:
-                # TODO: Add MARCH option here as in -march=$(MARCH)
-                flags += "-march=native"
+            flags += "-march=" + str(spec.target)
 
             config["FCFLAGS"] = flags
             config["DOCONCURRENT_FLAG"] = "-ftree-parallelize-loops=4"
             config["OPENMP_FLAG"] = pkg.compiler.openmp_flag
             config["OPENACC_FLAG"] = "-fopenacc"
 
-            # Error Messages
-            if "CUDA" in self.spec.variants["foption"].value:
-                sys.exit(self.spec.variants["foption"].value + "is not supported by this compiler")
 
         # ===================================
         #               NVHPC
@@ -693,21 +662,8 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
                 # the architecture value is only number so append sm_ to the name
                 cuda_arch = "cc" + cuda_arch_list[0]
             # config['MARCH'] = "neoverse-v1,neoverse-n1,icelake-server,znver3,cortex-a78ae"
-            GPUFLAG = " -gpu=" + cuda_arch
-            # march=neoverse-v1,neoverse-n1,zen3
-            march = "none"
-            if march != "none":
-                if platform.machine() == "aarch64":
-                    if march in ["neoverse-n1", "neoverse-v1"]:
-                        flags += "-tp=" + march
-                    else:
-                        flags += "-tp=native"
-                    # TODO: Add MCPU option here as in -mcpu=$(MCPU)
-                else:
-                    # TODO: Add MARCH option here as in -march=$(MARCH)
-                    flags += "-tp=" + march
-            else:
-                flags += "-tp=native"
+            GPUFLAG = " -gpu=" + cuda_arch        
+            flags += "-tp=" + str(spec.target)   
             # this is to allow apples-to-apples comparison with DC in non-DC GPU impls
             # set exactly one of these pairs!
             # MANAGED = "-DUSE_MANAGED -gpu=managed"
@@ -722,9 +678,6 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             config["OPENACC_FLAG"] = GPUFLAG + " -acc=" + TARGET + " " + MANAGED
             config["CUDA_FLAG"] = GPUFLAG + " -cuda -acc=gpu" + " " + MANAGED
 
-            # Error Messages
-            if self.spec.variants["foption"].value in ["OpenMPTaskloop"]:
-                sys.exit(self.spec.variants["foption"].value + "is not supported by this compiler")
         # ===================================
         #               ONEAPI
         # ===================================
@@ -741,14 +694,6 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
                 "-fopenmp-targets=spir64 -DUSE_FLOAT=1" if config["FC"] == "ifx" else ""
             )
 
-            # Error Messages
-            if self.spec.variants["foption"].value in [
-                "CUDA",
-                "CUDAKernels",
-                "OpenACC",
-                "OpenACCArray",
-            ]:
-                sys.exit(self.spec.variants["foption"].value + "is not supported by this compiler")
 
         # ===================================
         #               FJ
@@ -764,9 +709,6 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             config["ARRAY_FLAG"] = "-Kparallel,reduction"
             config["OPENMP_FLAG"] = pkg.compiler.openmp_flag
 
-            # Error Messages
-            if self.spec.variants["foption"].value in ["CUDA", "CUDAKernels", "OpenACC"]:
-                sys.exit(self.spec.variants["foption"].value + "is not supported by this compiler")
         with open(self.build_directory + "/make.inc." + spec.compiler.name, "w+") as inc:
             for key in config:
                 inc.write("{0} = {1}\n".format(key, config[key]))
