@@ -26,7 +26,7 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     version(
         "2023.11.001-patched",
-        sha256="9903f94a6fcb43e59d9e04f511c3da98fb4040c2728039932d15cac1a788a7f7",
+        sha256="62ee109afc06539507f459c08b958dc4db65b757dbd77f927678c77f7687415e",
         url="https://elpa.mpcdf.mpg.de/software/tarball-archive/Releases/2023.11.001/elpa-2023.11.001-patched.tar.gz",
     )
     version(
