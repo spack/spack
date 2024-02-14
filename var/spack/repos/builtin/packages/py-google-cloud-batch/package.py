@@ -20,8 +20,10 @@ class PyGoogleCloudBatch(PythonPackage):
 
     depends_on("py-google-api-core+grpc@1.34.0:2", type=("build", "run"))
     conflicts("py-google-api-core@2.0:2.10")
+
     depends_on("py-google-auth@2.14.1:2", type=("build", "run"))
     depends_on("py-proto-plus@1.22.3:1", type=("build", "run"))
+
     depends_on("py-protobuf@3.19.5:4", type=("build", "run"))
     conflicts("py-protobuf@3.20.0:3.20.1,4.21.0:4.21.5")
 

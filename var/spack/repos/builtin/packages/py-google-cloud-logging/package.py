@@ -18,12 +18,14 @@ class PyGoogleCloudLogging(PythonPackage):
 
     depends_on("py-google-api-core+grpc@1.33.2:2", type=("build", "run"))
     conflicts("py-google-api-core@2.0:2.7")
+
     depends_on("py-google-cloud-appengine-logging@0.1.0:1", type=("build", "run"))
     depends_on("py-google-cloud-audit-log@0.1.0:0", type=("build", "run"))
     depends_on("py-google-cloud-core@2", type=("build", "run"))
     depends_on("py-grpc-google-iam-v1@0.12.4:0", type=("build", "run"))
     depends_on("py-proto-plus@1.22.2:1", type=("build", "run"), when="^python@3.11:")
     depends_on("py-proto-plus@1.22:1", type=("build", "run"))
+
     depends_on("py-protobuf@3.19.5:4", type=("build", "run"))
     conflicts("py-protobuf@3.20.0:3.20.1,4.21.0:4.21.5")
 
