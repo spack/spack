@@ -185,6 +185,7 @@ class Seacas(CMakePackage):
     )
     # Remove one file in Exodus test suite that triggers MSVC c2057 C compiler
     # error
+    # See https://github.com/sandialabs/seacas/issues/438
     patch("seacas_remove_test_c2057_const_expr.patch", when="platform=windows")
 
     def setup_run_environment(self, env):
