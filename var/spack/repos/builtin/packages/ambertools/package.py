@@ -23,29 +23,29 @@ class Ambertools(CMakePackage):
     version("22jlmrcc", sha256="1571d4e0f7d45b2a71dce5999fa875aea8c90ee219eb218d7916bf30ea229121")
 
     # Dependencies
-    depends_on("flex",                      type="build")
-    depends_on("bison",                     type="build")
-    depends_on("tcsh",                      type="build")
-    depends_on("zlib",                      type=("build", "run"))
-    depends_on("bzip2",                     type=("build", "run"))
-    depends_on("blas",                      type=("build", "run"))
-    depends_on("lapack",                    type=("build", "run"))
-    depends_on("arpack-ng",                 type=("build", "run"))
-    depends_on("netcdf-c",                  type=("build", "run"))
-    depends_on("netcdf-fortran",            type=("build", "run"))
-    depends_on("fftw",                      type=("build", "run"))
-    depends_on("readline",                  type=("build", "run"))
-    depends_on("netlib-xblas~plain_blas",   type=("build", "run"))
+    depends_on("flex", type="build")
+    depends_on("bison", type="build")
+    depends_on("tcsh", type="build")
+    depends_on("zlib", type=("build", "run"))
+    depends_on("bzip2", type=("build", "run"))
+    depends_on("blas", type=("build", "run"))
+    depends_on("lapack", type=("build", "run"))
+    depends_on("arpack-ng", type=("build", "run"))
+    depends_on("netcdf-c", type=("build", "run"))
+    depends_on("netcdf-fortran", type=("build", "run"))
+    depends_on("fftw", type=("build", "run"))
+    depends_on("readline", type=("build", "run"))
+    depends_on("netlib-xblas~plain_blas", type=("build", "run"))
     # Specific variants needed for boost according to build logs
     depends_on(
         "boost+thread+system+program_options+iostreams+regex+timer+chrono+filesystem+graph",
-        type=("build", "run")
+        type=("build", "run"),
     )
     # Python dependencies
-    depends_on("python@3.8: +tkinter",      type=("build", "run"))
-    depends_on("py-numpy",                  type=("build", "run"))
-    depends_on("py-matplotlib",             type=("build", "run"))
-    depends_on("py-scipy",                  type=("build", "run"))
+    depends_on("python@3.8: +tkinter", type=("build", "run"))
+    depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-matplotlib", type=("build", "run"))
+    depends_on("py-scipy", type=("build", "run"))
 
     def cmake_args(self):
         # Translated from ambertools build/run_cmake script
@@ -61,7 +61,7 @@ class Ambertools(CMakePackage):
             # This is to avoid the x11 (X11_Xext_LIB) error
             # It is equivalent to the "-noX11" flag accoridng to the docs:
             # https://ambermd.org/pmwiki/pmwiki.php/Main/CMake-Common-Options
-            self.define("BUILD_GUI", False)
+            self.define("BUILD_GUI", False),
         ]
         return args
 
@@ -83,5 +83,7 @@ class Ambertools(CMakePackage):
     @run_before("cmake")
     def fix_check(self):
         cp = Executable("cp")
-        cp(self.spec["netcdf-c"].headers.directories[0]+"/netcdf.h",
-            self.spec["netcdf-fortran"].headers.directories[0])
+        cp(
+            self.spec["netcdf-c"].headers.directories[0]+"/netcdf.h",
+            self.spec["netcdf-fortran"].headers.directories[0]
+        )
