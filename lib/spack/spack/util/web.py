@@ -33,19 +33,6 @@ from .gcs import GCSBlob, GCSBucket, GCSHandler
 from .s3 import UrllibS3Handler, get_s3_session
 
 
-def build_web_keywords(config_object):
-    key_map = {
-        'verify_ssl': {'path': 'config:verify_ssl', 'default': True},
-        'timeout': {'path': 'config:connect_timeout', 'default': 10},
-    }
-    keywords = {}
-
-    for key, conf in key_map.items():
-        keywords.update({key: config_object.get(conf['path'], conf['default'])})
-
-    return keywords
-
-
 class DetailedHTTPError(HTTPError):
     def __init__(
         self, req: Request, code: int, msg: str, hdrs: email.message.Message, fp: Optional[IO]
