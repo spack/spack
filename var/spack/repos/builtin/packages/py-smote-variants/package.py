@@ -32,4 +32,4 @@ class PySmoteVariants(PythonPackage):
     depends_on("mkl")
     depends_on("py-metric-learn", type=("build", "run"))
     depends_on("py-seaborn", type=("build", "run"))
-    # Not including statistics, because is only needed for python 2 
+    # Not including statistics, because is only needed for python 2
