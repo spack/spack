@@ -10,7 +10,6 @@ class PyJacobi(PythonPackage):
     """Fast numerical derivatives for analytic functions
     with arbitrary round-off error and error propagation."""
 
-
     homepage = "https://github.com/hdembinski/jacobi"
     pypi = "jacobi/jacobi-0.9.2.tar.gz"
 
