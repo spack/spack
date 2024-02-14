@@ -2094,7 +2094,6 @@ class Spec:
         if (
             self._concrete
             and hash.package_hash
-            and hasattr(self, "_package_hash")
             and self._package_hash
         ):
             # We use the attribute here instead of `self.package_hash()` because this
