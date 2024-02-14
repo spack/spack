@@ -73,13 +73,13 @@ class QuantumEspresso(CMakePackage, Package):
     # Need OpenMP threaded FFTW and BLAS libraries when configured
     # with OpenMP support
     with when("+openmp"):
-        depends_on("fftw+openmp", when="^fftw")
-        depends_on("amdfftw+openmp", when="^amdfftw")
-        depends_on("openblas threads=openmp", when="^openblas")
-        depends_on("amdblis threads=openmp", when="^amdblis")
-        depends_on("intel-mkl threads=openmp", when="^intel-mkl")
-        depends_on("armpl-gcc threads=openmp", when="^armpl-gcc")
-        depends_on("acfl threads=openmp", when="^acfl")
+        depends_on("fftw+openmp", when="^[virtuals=fftw-api] fftw")
+        depends_on("amdfftw+openmp", when="^[virtuals=fftw-api] amdfftw")
+        depends_on("openblas threads=openmp", when="^[virtuals=blas] openblas")
+        depends_on("amdblis threads=openmp", when="^[virtuals=blas] amdblis")
+        depends_on("intel-mkl threads=openmp", when="^[virtuals=blas] intel-mkl")
+        depends_on("armpl-gcc threads=openmp", when="^[virtuals=blas] armpl-gcc")
+        depends_on("acfl threads=openmp", when="^[virtuals=blas] acfl")
 
     # Add Cuda Fortran support
     # depends on NVHPC compiler, not directly on CUDA toolkit
@@ -130,7 +130,7 @@ class QuantumEspresso(CMakePackage, Package):
         # CMake builds only support elpa without openmp
         depends_on("elpa~openmp", when="build_system=cmake")
         with when("build_system=generic"):
-            depends_on("elpa+openmp", when="+openmp")
+            depends_on("elpa", when="+openmp")
             depends_on("elpa~openmp", when="~openmp")
         # Elpa is formally supported by @:5.4.0, but QE configure searches
         # for it in the wrong folders (or tries to download it within
