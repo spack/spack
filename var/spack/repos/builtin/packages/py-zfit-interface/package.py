@@ -13,6 +13,9 @@ class PyZfitInterface(PythonPackage):
     homepage = "https://github.com/zfit/zfit-interface"
     pypi = "zfit_interface/zfit_interface-0.0.3.tar.gz"
 
+    maintainers("jonas-eschle")
+    license('BSD-3-Clause', checked_by='jonas-eschle')
+
     
     version('0.0.3', sha256='c41cf79f1da4150b9a60bb1e8cab15df895b6ff4b753e2306494a7abda4150d0', expand=False)
 
