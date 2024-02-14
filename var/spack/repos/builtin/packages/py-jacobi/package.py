@@ -16,10 +16,7 @@ class PyJacobi(PythonPackage):
     maintainers("jonas-eschle")
     license("MIT", checked_by="jonas-eschle")
 
-    version(
-        "0.9.2",
-        sha256="c11f481663246ef1c2da915b9f9ab4ef229051fb14e0afc232d4668301320828"
-    )
+    version("0.9.2", sha256="c11f481663246ef1c2da915b9f9ab4ef229051fb14e0afc232d4668301320828")
 
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
