@@ -22,3 +22,4 @@ class PyJacobi(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-toml", type=("build"))
     depends_on("py-setuptools", type="build")
+    depends_on("numpy", type="run")
