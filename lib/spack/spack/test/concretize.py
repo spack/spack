@@ -2094,6 +2094,22 @@ class TestConcretize:
 
         assert result.specs
 
+    def test_unsolved_specs_raises_error(self, monkeypatch, mock_packages, config):
+        """Check that the solver raises an exception when input specs are not
+        satisfied.
+        """
+        specs = [Spec("zlib")]
+        solver = spack.solver.asp.Solver()
+        setup = spack.solver.asp.SpackSolverSetup()
+
+        def simulate_unsolved(cls):
+            return specs
+
+        monkeypatch.setattr(spack.solver.asp.Result, "unsolved_specs", simulate_unsolved)
+
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError, match="the solver completed but produced specs"):
+            solver.driver.solve(setup, specs, reuse=[])
+
     @pytest.mark.regression("36339")
     def test_compiler_match_constraints_when_selected(self):
         """Test that, when multiple compilers with the same name are in the configuration
