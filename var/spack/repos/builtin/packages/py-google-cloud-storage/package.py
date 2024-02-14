@@ -21,7 +21,6 @@ class PyGoogleCloudStorage(PythonPackage):
     version("2.10.0", sha256="934b31ead5f3994e5360f9ff5750982c5b6b11604dc072bc452c25965e076dc7")
     version("2.9.0", sha256="9b6ae7b509fc294bdacb84d0f3ea8e20e2c54a8b4bbe39c5707635fec214eff3")
     version("2.8.0", sha256="4388da1ff5bda6d729f26dbcaf1bfa020a2a52a7b91f0a8123edbda51660802c")
-
     version("2.7.0", sha256="1ac2d58d2d693cb1341ebc48659a3527be778d9e2d8989697a2746025928ff17")
     version("1.18.0", sha256="9fb3dc68948f4c893c2b16f5a3db3daea2d2f3b8e9d5c2d505fe1523758009b6")
 
