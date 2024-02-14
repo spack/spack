@@ -21,7 +21,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     test_requires_compiler = True
 
-    maintainers("janciesko", "crtrott")
+    maintainers("cedricchevalier19", "nmm0")
 
     license("BSD-3-Clause")
 
