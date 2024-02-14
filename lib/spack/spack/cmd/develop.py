@@ -154,16 +154,10 @@ def develop(parser, args):
     tty.debug("Updating develop config for {0} transactionally".format(env.name))
     with env.write_transaction():
         if args.build_directory is not None:
-            scope = env.env_file_config_scope_name()
             spack.config.add(
                 "packages:{}:package_attributes:build_directory:{}".format(
                     spec.name, args.build_directory
                 ),
-                scope,
-            )
-            tty.warn(
-                "Setting the build directory for package: {}."
-                "Spack does not check for out-of-source-build package compatibility."
-                "Use at your own risk".format(spec.name)
+                env.scope_name,
             )
         _update_config(spec, path)
