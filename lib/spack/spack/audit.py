@@ -499,7 +499,7 @@ def _ensure_packages_are_pickeleable(pkgs, error_cls):
 @package_properties
 def _ensure_packages_are_unparseable(pkgs, error_cls):
     """Ensure that all packages can unparse and that unparsed code is valid Python"""
-    import spack.util.package_hash as ph
+    import spack.package_hash as ph
 
     errors = []
     for pkg_name in pkgs:
@@ -646,9 +646,11 @@ def _linting_package_file(pkgs, error_cls):
         if pkg_cls.homepage.startswith("http://"):
             https = re.sub("http", "https", pkg_cls.homepage, 1)
             try:
-                response = urlopen(https,
-                                   verify_ssl=spack.config.get("config:verify_ssl", True),
-                                   timeout=spack.config.get("config:connect_timeout", 10))
+                response = urlopen(
+                    https,
+                    verify_ssl=spack.config.get("config:verify_ssl", True),
+                    timeout=spack.config.get("config:connect_timeout", 10),
+                )
             except Exception as e:
                 msg = 'Error with attempting https for "{0}": '
                 errors.append(error_cls(msg.format(pkg_cls.name), [str(e)]))

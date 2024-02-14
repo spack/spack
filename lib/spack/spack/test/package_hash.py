@@ -9,9 +9,9 @@ import os
 import pytest
 
 import spack.directives
+import spack.package_hash as ph
 import spack.paths
 import spack.repo
-import spack.util.package_hash as ph
 from spack.spec import Spec
 from spack.util.unparse import unparse
 
