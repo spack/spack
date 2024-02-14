@@ -77,7 +77,7 @@ class NMakeBuilder(BaseBuilder):
     @property
     def build_directory(self):
         """Return the directory containing the makefile."""
-        return self.pkg.stage.source_path if not self.makefile_root else self.makefile_root
+        return fs.compute_sfn(self.pkg.stage.source_path) if not self.makefile_root else fs.compute_sfn(self.makefile_root)
 
     @property
     def std_nmake_args(self):

@@ -18,6 +18,7 @@ from contextlib import contextmanager
 
 from llnl.util.lang import match_predicate
 from llnl.util.symlink import symlink
+from llnl.util.filesystem import compute_sfn
 
 from spack.operating_systems.mac_os import macos_version
 from spack.package import *
@@ -368,6 +369,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     def build_test(self):
         if sys.platform == "win32":
             win32_dir = os.path.join(self.stage.source_path, "win32")
+            win32_dir = compute_sfn(win32_dir)
             with working_dir(win32_dir):
                 nmake("test", ignore_quotes=True)
         else:
@@ -376,6 +378,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     def install(self, spec, prefix):
         if sys.platform == "win32":
             win32_dir = os.path.join(self.stage.source_path, "win32")
+            win32_dir = compute_sfn(win32_dir)
             with working_dir(win32_dir):
                 nmake("install", *self.nmake_arguments(), ignore_quotes=True)
         else:
@@ -409,6 +412,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         if sys.platform == "win32":
             maker = nmake
             cpan_dir = join_path(self.stage.source_path, cpan_dir)
+            cpan_dir = compute_sfn(cpan_dir)
         if "+cpanm" in spec:
             with working_dir(cpan_dir):
                 perl = spec["perl"].command
