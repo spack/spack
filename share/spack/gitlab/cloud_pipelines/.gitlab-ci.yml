@@ -207,6 +207,7 @@ default:
   before_script:
     - .\bin\spack_pwsh.ps1
   tags: ["spack", "public", "medium", "x86_64-win"]
+  image: "mcr.microsoft.com/windows/servercore/iis"
 
 .generate-deprecated:
   extends: [ ".base-job" ]
