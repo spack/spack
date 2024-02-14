@@ -1,0 +1,12 @@
+diff --git a/packages/seacas/libraries/exodus/test/CMakeLists.txt b/packages/seacas/libraries/exodus/test/CMakeLists.txt
+index 1e8eea43c6..c753228c81 100644
+--- a/packages/seacas/libraries/exodus/test/CMakeLists.txt
++++ b/packages/seacas/libraries/exodus/test/CMakeLists.txt
+@@ -103,7 +103,6 @@ IF ( NETCDF_NCDUMP_BINARY )
+     testwt-compress
+     testwt-results
+     testwt-oned
+-    testwt-assembly
+     testrd-assembly
+     test-add-assembly
+     testwt-blob
