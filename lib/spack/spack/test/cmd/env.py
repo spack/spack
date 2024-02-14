@@ -3769,6 +3769,8 @@ spack:
 def test_fail_loudly_for_unsolved_specs(
     tmp_path, mutable_mock_env_path, mock_packages, config, test_platform
 ):
+    """Reproduce failure from #41049 and make sure that Spack raises an
+    exception."""
     spack_yaml = tmp_path / ev.manifest_name
     spack_yaml.write_text(
         f"""\
