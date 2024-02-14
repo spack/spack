@@ -15,7 +15,8 @@ class PyZfit(PythonPackage):
     homepage = "https://github.com/zfit/zfit"
     pypi = "zfit/zfit-0.18.0.tar.gz"
 
-    license("BSD-3-Clause")
+    maintainers("jonas-eschle")
+    license('BSD-3-Clause', checked_by='jonas-eschle')
 
     version("0.18.0", sha256="21d9479480f74945c67707b715780693bd4e94062c551bf41fe04a2eddb47fab")
     version("0.17.0", sha256="cd60dfc360c82666af4e8dddd78edb0ab95a095b9dd0868457f0981dc03afa5a")
