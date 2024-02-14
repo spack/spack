@@ -16,7 +16,7 @@ class Rocrand(CMakePackage):
 
     homepage = "https://github.com/ROCm/rocRAND"
     git = "https://github.com/ROCm/rocRAND.git"
-    url = "https://github.com/ROCm/rocRAND/archive/rocm-6.0.0.tar.gz"
+    url = "https://github.com/ROCm/rocRAND/archive/rocm-6.0.2.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath")
@@ -26,6 +26,7 @@ class Rocrand(CMakePackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("6.0.2", sha256="51d66c645987cbfb593aaa6be94109e87fe4cb7e9c70309eb3c159af0de292d7")
     version("6.0.0", sha256="cee93231c088be524bb2cb0e6093ec47e62e61a55153486bebbc2ca5b3d49360")
     version("5.7.1", sha256="885cd905bbd23d02ba8f3f87d5c0b79bc44bd020ea9af190f3959cf5aa33d07d")
     version("5.7.0", sha256="d6053d986821e5cbc6cfec0778476efb1411ef943f11e7a8b973b1814a259dcf")
@@ -37,11 +38,12 @@ class Rocrand(CMakePackage):
     version("5.4.0", sha256="0f6a0279b8b5a6dfbe32b45e1598218fe804fee36170d5c1f7b161c600544ef2")
     version("5.3.3", sha256="b0aae79dce7f6f9ef76ad2594745fe1f589a7b675b22f35b4d2369e7d5e1985a")
     version("5.3.0", sha256="be4c9f9433415bdfea50d9f47b8afb43ac315f205ed39674f863955a6c256dca")
-    version("5.2.3", sha256="01eda8022fab7bafb2c457fe26a9e9c99950ed1b772ae7bf8710b23a90b56e32")
-    version("5.2.1", sha256="4b2a7780f0112c12b5f307e1130e6b2c02ab984a0c1b94e9190dae38f0067600")
-    version("5.2.0", sha256="ab3057e7c17a9fbe584f89ef98ec92a74d638a98d333e7d0f64daf7bc9051e38")
-    version("5.1.3", sha256="4a19e1bcb60955a02a73ad64594c23886d6749afe06b0104e2b877dbe02c8d1c")
-    version("5.1.0", sha256="0c6f114a775d0b38be71f3f621a10bde2104a1f655d5d68c5fecb79b8b51a815")
+    with default_args(deprecated=True):
+        version("5.2.3", sha256="01eda8022fab7bafb2c457fe26a9e9c99950ed1b772ae7bf8710b23a90b56e32")
+        version("5.2.1", sha256="4b2a7780f0112c12b5f307e1130e6b2c02ab984a0c1b94e9190dae38f0067600")
+        version("5.2.0", sha256="ab3057e7c17a9fbe584f89ef98ec92a74d638a98d333e7d0f64daf7bc9051e38")
+        version("5.1.3", sha256="4a19e1bcb60955a02a73ad64594c23886d6749afe06b0104e2b877dbe02c8d1c")
+        version("5.1.0", sha256="0c6f114a775d0b38be71f3f621a10bde2104a1f655d5d68c5fecb79b8b51a815")
     version(
         "5.0.2",
         sha256="2dbce2a7fb273c2f9456c002adf3a510b9ec79f2ff32dfccdd59948f3ddb1505",
@@ -204,6 +206,7 @@ class Rocrand(CMakePackage):
         "5.7.0",
         "5.7.1",
         "6.0.0",
+        "6.0.2",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)

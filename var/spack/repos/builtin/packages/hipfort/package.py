@@ -11,12 +11,13 @@ class Hipfort(CMakePackage):
 
     homepage = "https://github.com/ROCm/hipfort"
     git = "https://github.com/ROCm/hipfort.git"
-    url = "https://github.com/ROCm/hipfort/archive/rocm-6.0.0.tar.gz"
+    url = "https://github.com/ROCm/hipfort/archive/rocm-6.0.2.tar.gz"
     tags = ["rocm"]
 
     license("MIT")
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath")
+    version("6.0.2", sha256="b60ada7474b71c1d82c700b0159bc0756dbb2808375054903710280b1677f199")
     version("6.0.0", sha256="151cf11648885db799aade0d00a7882589e7195643b02beaa251f1b2a43aceed")
     version("5.7.1", sha256="859fac509e195f3ab97c555b5f63afea325a61aae0f281cb19a970a1b533dead")
     version("5.7.0", sha256="57b04d59f61683a1b141d6d831d10c9fdecea483991ec02d14c14e441e935c05")
@@ -28,11 +29,12 @@ class Hipfort(CMakePackage):
     version("5.4.0", sha256="a781bc6d1dbb508a4bd6cc3df931696fac6c6361d4fd35efb12c9a04a72e112c")
     version("5.3.3", sha256="593be86502578b68215ffe767c26849fd27d4dbd92c8e76762275805f99e64f5")
     version("5.3.0", sha256="9e2aa142de45b2d2c29449d6f82293fb62844d511fbf51fa597845ba05c700fa")
-    version("5.2.3", sha256="6648350ca4edc8757f0ae51d73a05a9a536808f19ad45f5b5ab84d420c72c9ec")
-    version("5.2.1", sha256="ed53c9914d326124482751b81c4a353c6e64e87c1111124169a33513a3c49b42")
-    version("5.2.0", sha256="a0af1fe62757993600a41af6bb6c4b8c6cfdfba650389645ac1f995f7623785c")
-    version("5.1.3", sha256="8f8849d8d0972366bafa41be35cf6a7a59480ed584d1ddff39768cb14247e9d4")
-    version("5.1.0", sha256="1ddd46c00bb6bcd539a921d6a94d858f4e4408a35cb6910186c7517f375ae8ab")
+    with default_args(deprecated=True):
+        version("5.2.3", sha256="6648350ca4edc8757f0ae51d73a05a9a536808f19ad45f5b5ab84d420c72c9ec")
+        version("5.2.1", sha256="ed53c9914d326124482751b81c4a353c6e64e87c1111124169a33513a3c49b42")
+        version("5.2.0", sha256="a0af1fe62757993600a41af6bb6c4b8c6cfdfba650389645ac1f995f7623785c")
+        version("5.1.3", sha256="8f8849d8d0972366bafa41be35cf6a7a59480ed584d1ddff39768cb14247e9d4")
+        version("5.1.0", sha256="1ddd46c00bb6bcd539a921d6a94d858f4e4408a35cb6910186c7517f375ae8ab")
     version(
         "5.0.2",
         sha256="fcee6e62482ab15f365681dbc12bd9ae26b0fab2f2848a3c14de8ec63004a7aa",
@@ -129,6 +131,7 @@ class Hipfort(CMakePackage):
         "5.7.0",
         "5.7.1",
         "6.0.0",
+        "6.0.2",
     ]:
         depends_on("hip@" + ver, type="build", when="@" + ver)
 
