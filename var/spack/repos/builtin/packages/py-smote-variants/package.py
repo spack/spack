@@ -15,9 +15,11 @@ class PySmoteVariants(PythonPackage):
 
     version("0.7.3", sha256="69497c764f101a76e8a3d4a9c80176704375c7aa5e26914f19222b59fb03b890")
 
-    depends_on("py-wheel@0.33.4:", type=("build"))
+    depends_on("python@3.5:", type=("build", "run"))
 
-    depends_on("py-setuptools@41.0.1:", type=("build"))
+    depends_on("py-wheel@0.33.4:", type="build")
+    depends_on("py-setuptools@41.0.1:", type="build")
+    depends_on("py-pytest-runner", type="build")
 
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
@@ -30,3 +32,4 @@ class PySmoteVariants(PythonPackage):
     depends_on("mkl")
     depends_on("py-metric-learn", type=("build", "run"))
     depends_on("py-seaborn", type=("build", "run"))
+    # Not including statistics, because is only needed for python 2 
