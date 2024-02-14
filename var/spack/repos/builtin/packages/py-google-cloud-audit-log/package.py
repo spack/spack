@@ -19,7 +19,7 @@ class PyGoogleCloudAuditLog(PythonPackage):
     # https://github.com/googleapis/python-audit-log/blob/v0.2.5/setup.py
 
     depends_on("py-protobuf@3.19.5:4", type=("build", "run"))
-    conflicts("@3.20.0,3.20.1,4.21.1:4.21.5")
+    conflicts("py-protobuf@3.20.0,3.20.1,4.21.1:4.21.5")
 
     depends_on("py-googleapis-common-protos@1.56.2:1", type=("build", "run"))
 
