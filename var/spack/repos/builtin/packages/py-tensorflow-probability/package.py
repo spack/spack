@@ -72,7 +72,7 @@ class PyTensorflowProbability(Package):
     # depends_on("py-jax@0.4.8:0.4", when="@0.20", type=("build", "run"))
 
     depends_on("py-tensorflow@2.11", when="@0.19", type=("build", "run"))
-    depends_on("py-jax@0.3.25", when="@0.19", type=("build", "run"))
+    # depends_on("py-jax@0.3.25", when="@0.19", type=("build", "run"))
 
     depends_on("py-tensorflow@2.10:", when="@0.18", type=("build", "run"))
     depends_on("py-tensorflow@2.4:", when="@0.12:0.17", type=("build", "run"))
