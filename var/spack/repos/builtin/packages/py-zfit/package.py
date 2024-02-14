@@ -13,7 +13,7 @@ class PyZfit(PythonPackage):
     """
 
     homepage = "https://github.com/zfit/zfit"
-    pypi = "zfit/zfit-0.15.5.tar.gz"
+    pypi = "zfit/zfit-0.18.0.tar.gz"
 
     license("BSD-3-Clause")
 
