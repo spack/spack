@@ -48,7 +48,7 @@ from .common import (
     SpackCI,
     copy_files_to_artifacts,
 )
-from .formatters import UnknownFormatterException, get_formatter
+from .generators import UnknownGeneratorException, get_generator
 
 # TODO: Remove these next two lines in Spack 0.23
 TEMP_STORAGE_MIRROR_NAME = "ci_temporary_mirror"
@@ -339,8 +339,8 @@ def generate_pipeline(env: ev.Environment, args) -> None:
     # Get the target platform we should generate a pipeline for
     ci_target = ci_config.get("target", "gitlab")
     try:
-        target_formatter = get_formatter(ci_target)
-    except UnknownFormatterException:
+        generate_method = get_generator(ci_target)
+    except UnknownGeneratorException:
         tty.die(f"Spack CI module cannot generate a pipeline for format {ci_target}")
 
     # If we are not doing any kind of pruning, we are rebuilding everything
@@ -482,7 +482,7 @@ def generate_pipeline(env: ev.Environment, args) -> None:
     spack_ci = SpackCI(ci_config, pipeline)
 
     # Format the pipeline using the formatter specified in the environment
-    target_formatter(pipeline, spack_ci, options, pruning_results)
+    generate_method(pipeline, spack_ci, options, pruning_results)
 
     # Clean up remote mirror override if enabled
     # TODO: Remove this block in Spack 0.23

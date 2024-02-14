@@ -2020,7 +2020,7 @@ spack:
 
             ci_cmd("generate", "--output-file", pipeline_path, "--artifacts-root", artifacts_root)
 
-            job_name = ci.formatters.gitlab.get_job_name(job_spec)
+            job_name = ci.generators.gitlab.get_job_name(job_spec)
 
             repro_file = os.path.join(working_dir.strpath, "repro.json")
             repro_details = {
@@ -2216,3 +2216,39 @@ spack:
                 assert "script" in reindex_job
                 reindex_step = reindex_job["script"][0]
                 assert "file:///push/binaries/here" in reindex_step
+
+
+def test_ci_generate_unknown_generator(
+    tmpdir, mutable_mock_env_path, install_mockery, mock_packages, ci_base_environment
+):
+    """Ensure unrecognized ci targets are detected and the user
+    sees an intelligible and actionable message"""
+    filename = str(tmpdir.join("spack.yaml"))
+    with open(filename, "w") as f:
+        f.write(
+            """\
+spack:
+  specs:
+    - archive-files
+  mirrors:
+    some-mirror: file:///this/is/a/source/mirror
+    buildcache-destination: file:///push/binaries/here
+  ci:
+    target: unknown
+    pipeline-gen:
+    - submapping:
+      - match:
+          - archive-files
+        build-job:
+          tags:
+            - donotcare
+          image: donotcare
+"""
+        )
+
+    with tmpdir.as_cwd():
+        env_cmd("create", "test", "./spack.yaml")
+        with ev.read("test"):
+            out = ci_cmd("generate", fail_on_error=False)
+            expected = "Error: Spack CI module cannot generate a pipeline for format unknown"
+            assert expected in out

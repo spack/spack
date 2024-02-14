@@ -26,7 +26,7 @@ from ..common import (
     update_env_scopes,
     write_pipeline_manifest,
 )
-from . import formatter
+from . import generator
 
 # See https://docs.gitlab.com/ee/ci/yaml/#retry for descriptions of conditions
 JOB_RETRY_CONDITIONS = [
@@ -120,8 +120,8 @@ def maybe_generate_manifest(pipeline: PipelineDag, options: PipelineOptions, man
         )
 
 
-@formatter("gitlab")
-def format_gitlab_yaml(
+@generator("gitlab")
+def generate_gitlab_yaml(
     pipeline: PipelineDag,
     spack_ci: SpackCI,
     options: PipelineOptions,
