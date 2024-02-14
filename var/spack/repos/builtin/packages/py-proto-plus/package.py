@@ -16,4 +16,4 @@ class PyProtoPlus(PythonPackage):
 
     depends_on("py-protobuf@3.19:4", type=("build", "run"))
 
-    depends_on("py-setuptools", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
