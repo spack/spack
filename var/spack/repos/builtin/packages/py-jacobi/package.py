@@ -7,7 +7,9 @@ from spack.package import *
 
 
 class PyJacobi(PythonPackage):
-    """Fast numerical derivatives for analytic functions with arbitrary round-off error and error propagation."""
+    """Fast numerical derivatives for analytic functions
+    with arbitrary round-off error and error propagation."""
+
 
     homepage = "https://github.com/hdembinski/jacobi"
     pypi = "jacobi/jacobi-0.9.2.tar.gz"
@@ -15,8 +17,10 @@ class PyJacobi(PythonPackage):
     maintainers("jonas-eschle")
     license("MIT", checked_by="jonas-eschle")
 
-    version("0.9.2", sha256="c11f481663246ef1c2da915b9f9ab4ef229051fb14e0afc232d4668301320828")
-
+    version(
+        "0.9.2",
+        sha256="c11f481663246ef1c2da915b9f9ab4ef229051fb14e0afc232d4668301320828"
+    )
 
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
