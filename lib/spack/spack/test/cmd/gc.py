@@ -19,11 +19,8 @@ pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 @pytest.mark.db
 def test_gc_without_build_dependency(config, mutable_database):
-    output = gc("-yb")
-    assert "There are no unused specs." in output
-
-    output = gc("-y")
-    assert "There are no unused specs." in output
+    assert "There are no unused specs." in gc("-yb")
+    assert "There are no unused specs." in gc("-y")
 
 
 @pytest.mark.db
@@ -32,11 +29,9 @@ def test_gc_with_build_dependency(config, mutable_database):
     s.concretize()
     s.package.do_install(fake=True, explicit=True)
 
-    output = gc("-yb")
-    assert "There are no unused specs." in output
-
-    output = gc("-y")
-    assert "Successfully uninstalled cmake" in output
+    assert "There are no unused specs." in gc("-yb")
+    assert "Successfully uninstalled cmake" in gc("-y")
+    assert "There are no unused specs." in gc("-y")
 
 
 @pytest.mark.db
@@ -72,9 +67,12 @@ def test_gc_with_build_dependency_in_environment(config, mutable_database, mutab
 
     with e:
         assert mutable_database.query_local("simple-inheritance")
-        output = gc("-y")
-    assert "Restricting garbage collection" in output
-    assert "Successfully uninstalled cmake" in output
+        fst = gc("-y")
+        assert "Restricting garbage collection" in fst
+        assert "Successfully uninstalled cmake" in fst
+        snd = gc("-y")
+        assert "Restricting garbage collection" in snd
+        assert "There are no unused specs" in snd
 
 
 @pytest.mark.db
