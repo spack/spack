@@ -7,14 +7,15 @@ from spack.package import *
 
 
 class Snakemake(PythonPackage):
-    """Snakemake is an MIT-licensed workflow management system."""
+    """Workflow management system to create reproducible and scalable data analyses."""
 
-    homepage = "https://snakemake.readthedocs.io/en/stable/"
-    pypi = "snakemake/snakemake-7.32.4.tar.gz"
+    homepage = "https://snakemake.readthedocs.io/en"
+    pypi = "snakemake/snakemake-8.4.8.tar.gz"
     maintainers("marcusboden")
 
     license("MIT")
 
+    version("8.4.8", sha256="ab64a4f402f78ec252f211d9cc900344fdc2a000dadcec91833efb5fd0f275e7")
     version("7.32.4", sha256="fdc3f15dd7b06fabb7da30d460e0a3b1fba08e4ea91f9c32c47a83705cdc7b6e")
     version("7.31.1", sha256="6fadcc9a051737aa187dccf437879b3b83ddc917fff9bd7d400e056cf17a1788")
     version("7.30.2", sha256="0cb86cf9b43b9f2f45d5685cd932595131031c7087690f64c5bc7eaec88df029")
@@ -43,6 +44,7 @@ class Snakemake(PythonPackage):
     depends_on("py-tomli", type=("build"), when="@7.20.0: ^python@:3.10")
 
     depends_on("py-appdirs", type=("build", "run"))
+    depends_on("py-immutables", type=("build", "run"), when="@8:")
     depends_on("py-configargparse", type=("build", "run"))
     depends_on("py-connectionpool@0.0.3:", type=("build", "run"))
     depends_on("py-datrie", type=("build", "run"))
@@ -54,11 +56,15 @@ class Snakemake(PythonPackage):
     depends_on("py-nbformat", type=("build", "run"))
     depends_on("py-packaging", type=("build", "run"), when="@7.29.0:")
     depends_on("py-psutil", type=("build", "run"))
-    depends_on("py-pulp@2:", type=("build", "run"))
+    depends_on("py-pulp@2.3.1:2.8", type=("build", "run"), when="@8.1.2:")
+    depends_on("py-pulp@2:", type=("build", "run"), when="@:8.1.1")
     depends_on("py-pyyaml", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"))
     depends_on("py-reretry", type=("build", "run"), when="@7:")
     depends_on("py-smart-open@3:", type=("build", "run"))
+    depends_on("py-snakemake-interface-executor-plugins@8.1.3:8", type=("build", "run"), when="@8:")
+    depends_on("py-snakemake-interface-common@1.15.0:1", type=("build", "run"), when="@8:")
+    depends_on("py-snakemake-interface-storage-plugins@3.0.0:3", type=("build", "run"), when="@8:")
     depends_on("py-stopit", type=("build", "run"))
     depends_on("py-tabulate", type=("build", "run"))
     depends_on("py-throttler", type=("build", "run"), when="@7:")
@@ -67,50 +73,93 @@ class Snakemake(PythonPackage):
     depends_on("py-wrapt", type=("build", "run"))
     depends_on("py-yte@1.5.1:1", type=("build", "run"), when="@7.28.1:")
     depends_on("py-yte@1", type=("build", "run"), when="@7:7.28.0")
+    depends_on("py-dpath@2.1.6:2", type=("build", "run"), when="@8.3:")
+    depends_on("py-conda-inject@1.3.1:1", type=("build", "run"), when="@8:")
+
+    variant("cluster", default=True, description="Generic cluster execution", when="@8:")
+
+    with when("+cluster"):
+        depends_on("py-snakemake-executor-plugin-cluster-generic", type=("build", "run"))
+        depends_on("py-snakemake-executor-plugin-cluster-sync", type=("build", "run"))
+
+    variant("slurm", default=True, description="Job submission to SLURM", when="@8:")
+    depends_on("py-snakemake-executor-plugin-slurm", when="+slurm", type=("build", "run"))
 
     variant("reports", default=False, description="Generate self-contained HTML reports")
 
     with when("+reports"):
         depends_on("py-pygments", type=("build", "run"))
-        # Historical dependencies
+
         depends_on("py-jinja2", type=("build", "run"), when="@:7.19.1")
         depends_on("py-networkx", type=("build", "run"), when="@:7.1.1")
         depends_on("py-pygraphviz", type=("build", "run"), when="@:7.1.1")
 
-    variant("google-cloud", default=False, description="Enable Google Cloud execution")
+    variant("google-cloud", default=False, description="Enable Google Cloud storage and execution")
 
     with when("+google-cloud"):
-        depends_on("py-google-api-python-client", type=("build", "run"))
-        depends_on("py-google-cloud-storage", type=("build", "run"))
-        depends_on("py-google-crc32c", type=("build", "run"))
-        depends_on("py-oauth2client", type=("build", "run"))
+        depends_on("py-snakemake-executor-plugin-googlebatch", type=("build", "run"), when="@8:")
+        depends_on("py-snakemake-storage-plugin-gcs", type=("build", "run"), when="@8:")
 
-    variant("azure", default=False, description="Enable Azure execution", when="@7.28.0:")
+        depends_on("py-google-api-python-client", type=("build", "run"), when="@:7")
+        depends_on("py-google-cloud-storage", type=("build", "run"), when="@:7")
+        depends_on("py-google-crc32c", type=("build", "run"), when="@:7")
+        depends_on("py-oauth2client", type=("build", "run"), when="@:7")
+
+    variant("azure", default=False, description="Enable Azure storage and execution", when="@7.28.0:")
 
     with when("+azure"):
-        depends_on("py-azure-storage-blob", type=("build", "run"))
-        depends_on("py-azure-batch", type=("build", "run"))
-        depends_on("py-azure-core", type=("build", "run"))
-        depends_on("py-azure-identity", type=("build", "run"))
-        depends_on("py-azure-mgmt-batch", type=("build", "run"))
+        depends_on("py-snakemake-executor-plugin-azure-batch", type=("build", "run"), when="@8:")
+        depends_on("py-snakemake-storage-plugin-azure", type=("build", "run"), when="@8:")
 
-    # Historical dependencies
+        depends_on("py-azure-storage-blob", type=("build", "run"), when="@:7")
+        depends_on("py-azure-batch", type=("build", "run"), when="@:7")
+        depends_on("py-azure-core", type=("build", "run"), when="@:7")
+        depends_on("py-azure-identity", type=("build", "run"), when="@:7")
+        depends_on("py-azure-mgmt-batch", type=("build", "run"), when="@:7")
+
     depends_on("py-msrest", type=("build", "run"), when="@7.28.0")
     depends_on("py-filelock", type=("build", "run"), when="@:6")
     depends_on("py-ratelimiter", type=("build", "run"), when="@:6")
 
-    # These variants are not in PyPI/pip, but they are undocumented dependencies
-    # needed to make certain parts of Snakemake work.
+    variant("drmaa", default=False, description="Submission of jobs via DRMAA.", when="@8:")
+    depends_on("py-snakemake-executor-plugin-drmaa", when="+drmaa", type=("build", "run"))
 
-    variant("ftp", default=False, description="Enable snakemake.remote.FTP")
-    depends_on("py-ftputil", when="+ftp", type=("build", "run"))
+    variant("flux", default=False, description="Submission of jobs using Flux scheduler.", when="@8:")
+    depends_on("py-snakemake-executor-plugin-flux", when="+flux", type=("build", "run"))
 
-    variant("s3", default=False, description="Enable snakemake.remote.S3")
-    depends_on("py-boto3", when="+s3", type=("build", "run"))
-    depends_on("py-botocore", when="+s3", type=("build", "run"))
+    variant("kubernetes", default=False, description="Submission of jobs to Kubernetes", when="@8:")
+    depends_on("py-snakemake-executor-plugin-kubernetes", when="+kubernetes", type=("build", "run"))
 
-    variant("http", default=False, description="Enable snakemake.remote.HTTP")
-    depends_on("py-requests", when="+http", type=("build", "run"))
+    variant("tes", default=False, description="Submitting jobs via GA4GH TES", when="@8:")
+    depends_on("py-snakemake-executor-plugin-tes", when="+tes", type=("build", "run"))
+
+    variant("fs", default=False, description="Read and write from a locally mounted filesystem using rsync", when="@8:")
+    depends_on("py-snakemake-storage-plugin-fs", when="+fs", type=("build", "run"), when="@8:")
+
+    variant("ftp", default=False, description="Handling input and output via FTP.")
+
+    with when("+ftp"):
+        depends_on("py-snakemake-storage-plugin-ftp", when="@8:", type=("build", "run"))
+        depends_on("py-ftputil", when="@:7", type=("build", "run"))
+
+    variant("sftp", default=False, description="Storage on an SFTP server", when="@8:")
+    depends_on("py-snakemake-storage-plugin-sftp", when="+sftp", type=("build", "run"))
+
+    variant("s3", default=False, description="Amazon S3 API storage (AWS S3, MinIO, etc.)")
+
+    with when("+s3"):
+        depends_on("py-snakemake-storage-plugin-s3",  when="@8:", type=("build", "run"))
+        depends_on("py-boto3", when="@:7", type=("build", "run"))
+        depends_on("py-botocore", when="@:7", type=("build", "run"))
+
+    variant("http", default=False, description="Downloading of input files from HTTP(s)")
+
+    with when("+http"):
+        depends_on("py-snakemake-storage-plugin-http", when="@8:", type=("build", "run"))
+        depends_on("py-requests", when="@:7", type=("build", "run"))
+
+    variant("zenodo", default=False, description="...", when="@8:")
+    depends_on("py-snakemake-storage-plugin-zenodo", when="+zenodo", type=("build", "run"))
 
     def test(self):
         Executable("snakemake")("--version")
