@@ -514,9 +514,10 @@ def get_compilers(config, cspec=None, arch_spec=None):
     for items in config:
         items = items["compiler"]
 
-        # NOTE: in principle this should be equality not satisfies, but config can still
-        # be written in old format gcc@10.1.0 instead of gcc@=10.1.0.
-        if cspec and not cspec.satisfies(items["spec"]):
+        # We might use equality here.
+        if cspec and not spack.spec.parse_with_version_concrete(
+            items["spec"], compiler=True
+        ).satisfies(cspec):
             continue
 
         # If an arch spec is given, confirm that this compiler

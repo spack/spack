@@ -11,7 +11,7 @@ import pytest
 import llnl.util.filesystem as fs
 
 import spack.compiler
-import spack.compilers as compilers
+import spack.compilers
 import spack.spec
 import spack.util.environment
 from spack.compiler import Compiler
@@ -25,12 +25,14 @@ def make_args_for_version(monkeypatch):
             pass
 
         compiler_name = "gcc"
-        compiler_cls = compilers.class_for_compiler_name(compiler_name)
+        compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
         monkeypatch.setattr(compiler_cls, "cc_version", lambda x: version)
 
-        compiler_id = compilers.CompilerID(os=MockOs, compiler_name=compiler_name, version=None)
-        variation = compilers.NameVariation(prefix="", suffix="")
-        return compilers.DetectVersionArgs(
+        compiler_id = spack.compilers.CompilerID(
+            os=MockOs, compiler_name=compiler_name, version=None
+        )
+        variation = spack.compilers.NameVariation(prefix="", suffix="")
+        return spack.compilers.DetectVersionArgs(
             id=compiler_id, variation=variation, language="cc", path=path
         )
 
@@ -56,7 +58,7 @@ def test_multiple_conflicting_compiler_definitions(mutable_config):
     mutable_config.update_config("compilers", compiler_config)
 
     arch_spec = spack.spec.ArchSpec(("test", "test", "test"))
-    cmp = compilers.compiler_for_spec("clang@=0.0.0", arch_spec)
+    cmp = spack.compilers.compiler_for_spec("clang@=0.0.0", arch_spec)
     assert cmp.f77 == "f77"
 
 
@@ -64,7 +66,7 @@ def test_get_compiler_duplicates(config):
     # In this case there is only one instance of the specified compiler in
     # the test configuration (so it is not actually a duplicate), but the
     # method behaves the same.
-    cfg_file_to_duplicates = compilers.get_compiler_duplicates(
+    cfg_file_to_duplicates = spack.compilers.get_compiler_duplicates(
         "gcc@4.5.0", spack.spec.ArchSpec("cray-CNL-xeon")
     )
 
@@ -74,7 +76,7 @@ def test_get_compiler_duplicates(config):
 
 
 def test_all_compilers(config):
-    all_compilers = compilers.all_compilers()
+    all_compilers = spack.compilers.all_compilers()
     filtered = [x for x in all_compilers if str(x.spec) == "clang@=3.3"]
     filtered = [x for x in filtered if x.operating_system == "SuSE11"]
     assert len(filtered) == 1
@@ -88,7 +90,7 @@ def test_version_detection_is_empty(
     make_args_for_version, input_version, expected_version, expected_error
 ):
     args = make_args_for_version(version=input_version)
-    result, error = compilers.detect_version(args)
+    result, error = spack.compilers.detect_version(args)
     if not error:
         assert result.id.version == expected_version
 
@@ -104,7 +106,7 @@ def test_compiler_flags_from_config_are_grouped():
         "modules": None,
     }
 
-    compiler = compilers.compiler_from_dict(compiler_entry)
+    compiler = spack.compilers.compiler_from_dict(compiler_entry)
     assert any(x == "-foo-flag foo-val" for x in compiler.flags["cflags"])
 
 
@@ -288,7 +290,7 @@ def flag_value(flag, spec):
     else:
         compiler_entry = copy(default_compiler_entry)
         compiler_entry["spec"] = spec
-        compiler = compilers.compiler_from_dict(compiler_entry)
+        compiler = spack.compilers.compiler_from_dict(compiler_entry)
 
     return getattr(compiler, flag)
 
@@ -657,8 +659,8 @@ def test_xl_r_flags():
     [("gcc@4.7.2", False), ("clang@3.3", False), ("clang@8.0.0", True)],
 )
 def test_detecting_mixed_toolchains(compiler_spec, expected_result, config):
-    compiler = compilers.compilers_for_spec(compiler_spec).pop()
-    assert compilers.is_mixed_toolchain(compiler) is expected_result
+    compiler = spack.compilers.compilers_for_spec(compiler_spec).pop()
+    assert spack.compilers.is_mixed_toolchain(compiler) is expected_result
 
 
 @pytest.mark.regression("14798,13733")
@@ -735,6 +737,49 @@ fi
     compiler = compilers[0]
     version = compiler.get_real_version()
     assert version == test_version
+
+
+@pytest.mark.regression("42679")
+def test_get_compilers(config):
+    """Tests that we can select compilers whose versions differ only for a suffix."""
+    common = {
+        "flags": {},
+        "operating_system": "ubuntu23.10",
+        "target": "x86_64",
+        "modules": [],
+        "environment": {},
+        "extra_rpaths": [],
+    }
+    with_suffix = {
+        "spec": "gcc@13.2.0-suffix",
+        "paths": {
+            "cc": "/usr/bin/gcc-13.2.0-suffix",
+            "cxx": "/usr/bin/g++-13.2.0-suffix",
+            "f77": "/usr/bin/gfortran-13.2.0-suffix",
+            "fc": "/usr/bin/gfortran-13.2.0-suffix",
+        },
+        **common,
+    }
+    without_suffix = {
+        "spec": "gcc@13.2.0",
+        "paths": {
+            "cc": "/usr/bin/gcc-13.2.0",
+            "cxx": "/usr/bin/g++-13.2.0",
+            "f77": "/usr/bin/gfortran-13.2.0",
+            "fc": "/usr/bin/gfortran-13.2.0",
+        },
+        **common,
+    }
+
+    compilers = [{"compiler": without_suffix}, {"compiler": with_suffix}]
+
+    assert spack.compilers.get_compilers(
+        compilers, cspec=spack.spec.CompilerSpec("gcc@=13.2.0-suffix")
+    ) == [spack.compilers._compiler_from_config_entry(with_suffix)]
+
+    assert spack.compilers.get_compilers(
+        compilers, cspec=spack.spec.CompilerSpec("gcc@=13.2.0")
+    ) == [spack.compilers._compiler_from_config_entry(without_suffix)]
 
 
 def test_compiler_get_real_version_fails(working_env, monkeypatch, tmpdir):
