@@ -50,9 +50,9 @@ class Nemo(Package):
         else:
             param["LD"] = spec["mpi"].mpicxx
             param["LIBCXX"] = ""
-            param["FFLAGS"] = (
-                "-fdefault-real-8 -O3 -funroll-all-loops -fcray-pointer -ffree-line-length-none"
-            )
+            param[
+                "FFLAGS"
+            ] = "-fdefault-real-8 -O3 -funroll-all-loops -fcray-pointer -ffree-line-length-none"
         text = r"""
 %NCDF_INC            -I{NCDF_F_INC} -I{NCDF_C_INC} -I{HDF5_INC}
 %NCDF_LIB            -L{NCDF_F_LIB} -lnetcdff -L{NCDF_C_LIB} -lnetcdf \
