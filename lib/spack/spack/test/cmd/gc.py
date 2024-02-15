@@ -6,9 +6,11 @@
 
 import pytest
 
+import spack.deptypes as dt
 import spack.environment as ev
 import spack.main
 import spack.spec
+import spack.traverse
 
 gc = spack.main.SpackCommand("gc")
 add = spack.main.SpackCommand("add")
@@ -77,27 +79,29 @@ def test_gc_with_build_dependency_in_environment(config, mutable_database, mutab
 
 @pytest.mark.db
 def test_gc_except_any_environments(config, mutable_database, mutable_mock_env_path):
-    s = spack.spec.Spec("simple-inheritance")
-    s.concretize()
-    s.package.do_install(fake=True, explicit=True)
-
+    """Tests whether the garbage collector can remove all specs except those still needed in some
+    environment (needed in the sense of roots + link/run deps)."""
     assert mutable_database.query_local("zmpi")
 
     e = ev.create("test_gc")
-    with e:
-        add("simple-inheritance")
-        install()
-        assert mutable_database.query_local("simple-inheritance")
+    e.add("simple-inheritance")
+    e.concretize()
+    e.install_all(fake=True)
+    e.write()
+
+    assert mutable_database.query_local("simple-inheritance")
+    assert not e.all_matching_specs(spack.spec.Spec("zmpi"))
 
     output = gc("-yE")
     assert "Restricting garbage collection" not in output
     assert "Successfully uninstalled zmpi" in output
     assert not mutable_database.query_local("zmpi")
 
-    with e:
-        output = gc("-yE")
-    assert "Restricting garbage collection" not in output
-    assert "There are no unused specs" not in output
+    # All runtime specs in this env should still be installed.
+    assert all(
+        s.installed
+        for s in spack.traverse.traverse_nodes(e.concrete_roots(), deptype=dt.LINK | dt.RUN)
+    )
 
 
 @pytest.mark.db
