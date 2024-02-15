@@ -2036,52 +2036,38 @@ sys.excepthook = global_except_hook
 """
     fail_on_bad_return = (
         """
-    if retcode != 0:
-        raise RuntimeError(f"Command exited with failure: {retcode}")
+if retcode != 0:
+    raise RuntimeError(f"Command exited with failure: {retcode}")
 
 """
         if exit_on_failure
         else ""
     )
 
-    # On windows, the "shebang" below actually constructs a mixed language batch script
-    # that wraps batch startup commands in a python multiline comment so batch
-    # can drive the python execution of the script
-    # the if 0==1:0 is just a stanza that is valid in both batch and python
-    # and is sufficient to hide the python mulitline comment """ from the batch
-    # interpreter which will throw an error it a line is just quotes
-    shebang = (
-        "#!/usr/bin/env python3"
-        if not is_windows
-        else '''if 0==1: 0 ;"""
-python %0
-exit """
-'''
-    )
+    # No shebang on Windows, Python drives the script directly
+    shebang = "#!/usr/bin/env python3" if not is_windows else ""
     imports = "import os; import sys"
     # Create a string [command 1] \n [command 2] \n ... \n [command n] with
     # commands composed into os.system("command arg1 arg2 ... argn") calls
-    args_to_string = (
-        lambda args: f'retcode = os.system("{" ".join(args)}")\n{fail_on_bad_return}\n'
-    )
+    args_to_string = lambda args: f'retcode = os.system("{" ".join(args)}")\n{fail_on_bad_return}'
     full_command = "\n".join(map(args_to_string, commands))
     # unfortunately Windows cannot arbitrarily directly execute python files
     # so we wrap it in a mixed language batch file
-    ext = "bat" if is_windows else ".py"
+    ext = "py"
     # Write the command to a python script
     # or mixed language batch/python script if we're on Windows
     script = f"{name}.{ext}"
     with open(script, "w") as fd:
         fd.write(f"{shebang}\n\n")
         fd.write(f"\n# spack {name} command\n")
-        fd.write(imports)
+        fd.write(f"{imports}\n\n")
         if not exit_on_failure:
             fd.write(except_hook)
         if not os.environ.get("SPACK_VERBOSE_SCRIPT"):
             # Commands will by default be piped to script
             # interpeters stdout. To suppresss them,
             # turn off stdout
-            fd.write("sys.stdout=None")
+            fd.write("sys.stdout=None\n")
         fd.write(full_command)
         fd.write("\n")
 
@@ -2098,9 +2084,10 @@ exit """
     exit_code = None
     if run:
         try:
-            # on Windows the /Q is needed below to prevent batch from echoing
-            # every command to the interpreter
-            interpreter = "/bin/sh" if not is_windows else "cmd /Q /c"
+            # on Linux sh can drive the script thanks to the shebang
+            # On Windows we have no shebang, so we rely on "python"
+            # as an executor
+            interpreter = "/bin/sh" if not is_windows else sys.executable
             cmd_process = subprocess.Popen([interpreter, f"./{script}"])
             cmd_process.wait()
             exit_code = cmd_process.returncode
