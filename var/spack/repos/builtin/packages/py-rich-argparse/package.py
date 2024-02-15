@@ -18,6 +18,6 @@ class PyRichArgparse(PythonPackage):
 
     depends_on("python@3.7:", type=("build", "run"))
 
-    depends_on("py-hatchling@1foo.11.0:", type="build")
+    depends_on("py-hatchling@1.11.0:", type="build")
 
     depends_on("py-rich@11.0.0:", type=("build", "run"))
