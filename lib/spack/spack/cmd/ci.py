@@ -40,6 +40,10 @@ def deindent(desc):
     return desc.replace("    ", "")
 
 
+def encode_path(path: str) -> str:
+    return path.encode("unicode-escape".decode())
+
+
 def setup_parser(subparser):
     setup_parser.parser = subparser
     subparsers = subparser.add_subparsers(help="CI sub-commands")
@@ -585,7 +589,7 @@ def ci_rebuild(args):
 
     commands = [
         # apparently there's a race when spack bootstraps? do it up front once
-        [SPACK_COMMAND, "-e", env.path, "bootstrap", "now"],
+        [SPACK_COMMAND, "-e", encode_path(env.path), "bootstrap", "now"],
         spack_cmd + ["install"] + root_install_args,
     ]
 
