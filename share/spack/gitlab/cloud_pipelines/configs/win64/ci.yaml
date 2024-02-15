@@ -4,7 +4,7 @@ ci:
       after_script::
       - Write-Output "Done"
       before_script::
-      - .\bin\spack_pwsh.ps1
+      - . .\share\spack\spack-env.ps1
       - spack compiler find
       script::
       - spack env activate --without-view ${SPACK_CONCRETE_ENV_DIR}
