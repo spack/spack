@@ -29,7 +29,11 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     version("2.1.0", tag="v2.1.0", commit="533df139c267e2a93c268dfe68f9aec55de11cf0")
     version("2.0.0", tag="v2.0.0", commit="5ceebadf75d1c98999ea9e9446926722d061ec22")
     version(
-        "1.4.1", tag="v1.4.1", commit="ab974c3164056e6c406917c8ca771ffd43c5a031", submodules=True
+        "1.4.1",
+        tag="v1.4.1",
+        commit="ab974c3164056e6c406917c8ca771ffd43c5a031",
+        submodules=True,
+        deprecated=True,
     )
 
     variant(
@@ -98,7 +102,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("llvm", when="+flecstan @:1")
     depends_on("pfunit@3.0:3", when="@:1")
     depends_on("py-gcovr", when="+coverage @:1")
-    depends_on("openmpi+legacylaunchers", when="+unit_tests ^openmpi")
+    depends_on("openmpi+legacylaunchers", when="+unit_tests ^[virtuals=mpi] openmpi")
 
     # FleCSI@2.x
     depends_on("cmake@3.15:", when="@2.0:")
@@ -119,8 +123,8 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hdf5@1.10.7:", when="backend=legion +hdf5 @2.0:")
     depends_on("hpx@1.9.1: cxxstd=17 malloc=system", when="backend=hpx @2.0:")
     depends_on("mpi", when="@2.0:")
-    depends_on("mpich@3.4.1:", when="@2.0: ^mpich")
-    depends_on("openmpi@4.1.0:", when="@2.0: ^openmpi")
+    depends_on("mpich@3.4.1:", when="@2.0: ^[virtuals=mpi] mpich")
+    depends_on("openmpi@4.1.0:", when="@2.0: ^[virtuals=mpi] openmpi")
 
     # FleCSI 2.2+ documentation dependencies
     depends_on("py-sphinx", when="+doc")
@@ -173,9 +177,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
                 self.define_from_variant("CALIPER_DETAIL", "caliper_detail"),
                 self.define_from_variant("ENABLE_FLOG", "flog"),
                 self.define_from_variant("ENABLE_GRAPHVIZ", "graphviz"),
-                self.define(
-                    "ENABLE_HDF5", "+hdf5" in spec and spec.variants["backend"].value != "hpx"
-                ),
+                self.define_from_variant("ENABLE_HDF5", "hdf5"),
                 self.define_from_variant("ENABLE_KOKKOS", "kokkos"),
                 self.define_from_variant("ENABLE_OPENMP", "openmp"),
                 self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
@@ -208,9 +210,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
                 self.define_from_variant("ENABLE_FLECSTAN", "flecstan"),
                 self.define("ENABLE_MPI", spec.variants["backend"].value != "serial"),
                 self.define("ENABLE_UNIT_TESTS", self.run_tests or "+unit_tests" in spec),
-                self.define(
-                    "ENABLE_HDF5", "+hdf5" in spec and spec.variants["backend"].value != "hpx"
-                ),
+                self.define_from_variant("ENABLE_HDF5", "hdf5"),
             ]
 
             if "+external_cinch" in spec:

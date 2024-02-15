@@ -12,8 +12,8 @@ class HipRocclr(CMakePackage):
     with to different backends such as ROCr or PAL This abstraction allows
     runtimes to work on Windows as well as on Linux without much effort."""
 
-    homepage = "https://github.com/ROCm-Developer-Tools/ROCclr"
-    git = "https://github.com/ROCm-Developer-Tools/ROCclr.git"
+    homepage = "https://github.com/ROCm/ROCclr"
+    git = "https://github.com/ROCm/ROCclr.git"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
@@ -21,9 +21,9 @@ class HipRocclr(CMakePackage):
     def url_for_version(self, version):
         # Fix up a typo in the 3.5.0 release.
         if version == Version("3.5.0"):
-            return "https://github.com/ROCm-Developer-Tools/ROCclr/archive/roc-3.5.0.tar.gz"
+            return "https://github.com/ROCm/ROCclr/archive/roc-3.5.0.tar.gz"
 
-        url = "https://github.com/ROCm-Developer-Tools/ROCclr/archive/rocm-{0}.tar.gz"
+        url = "https://github.com/ROCm/ROCclr/archive/rocm-{0}.tar.gz"
         return url.format(version)
 
     license("MIT")
@@ -37,11 +37,12 @@ class HipRocclr(CMakePackage):
     version("5.4.0", sha256="46a1579310b3ab9dc8948d0fb5bed4c6b312f158ca76967af7ab69e328d43138")
     version("5.3.3", sha256="f8133a5934f9c53b253d324876d74f08a19e2f5b073bc94a62fe64b0d2183a18")
     version("5.3.0", sha256="2bf14116b5e2270928265f5d417b3d0f0f2e13cbc8ec5eb8c80d4d4a58ff7e94")
-    version("5.2.3", sha256="0493c414d4db1af8e1eb30a651d9512044644244488ebb13478c2138a7612998")
-    version("5.2.1", sha256="465ca9fa16869cd89dab8c2d66d9b9e3c14f744bbedaa1d215b0746d77a500ba")
-    version("5.2.0", sha256="37f5fce04348183bce2ece8bac1117f6ef7e710ca68371ff82ab08e93368bafb")
-    version("5.1.3", sha256="ddee63cdc6515c90bab89572b13e1627b145916cb8ede075ef8446cbb83f0a48")
-    version("5.1.0", sha256="f4f265604b534795a275af902b2c814f416434d9c9e16db81b3ed5d062187dfa")
+    with default_args(deprecated=True):
+        version("5.2.3", sha256="0493c414d4db1af8e1eb30a651d9512044644244488ebb13478c2138a7612998")
+        version("5.2.1", sha256="465ca9fa16869cd89dab8c2d66d9b9e3c14f744bbedaa1d215b0746d77a500ba")
+        version("5.2.0", sha256="37f5fce04348183bce2ece8bac1117f6ef7e710ca68371ff82ab08e93368bafb")
+        version("5.1.3", sha256="ddee63cdc6515c90bab89572b13e1627b145916cb8ede075ef8446cbb83f0a48")
+        version("5.1.0", sha256="f4f265604b534795a275af902b2c814f416434d9c9e16db81b3ed5d062187dfa")
     version(
         "5.0.2",
         sha256="34decd84652268dde865f38e66f8fb4750a08c2457fea52ad962bced82a03e5e",
@@ -152,13 +153,13 @@ class HipRocclr(CMakePackage):
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
         depends_on("comgr@" + ver, when="@" + ver)
 
-    # See: https://github.com/ROCm-Developer-Tools/ROCclr/pull/16
+    # See: https://github.com/ROCm/ROCclr/pull/16
     # In 3.7.0 the find opengl things have changed slightly.
     patch("opengl.patch", when="@3.5.0")
 
     resource(
         name="opencl-on-vdi",
-        url="https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime/archive/roc-3.5.0.tar.gz",
+        url="https://github.com/ROCm/ROCm-OpenCL-Runtime/archive/roc-3.5.0.tar.gz",
         sha256="511b617d5192f2d4893603c1a02402b2ac9556e9806ff09dd2a91d398abf39a0",
         expand=True,
         destination="",
@@ -197,7 +198,7 @@ class HipRocclr(CMakePackage):
     ]:
         resource(
             name="opencl-on-vdi",
-            url="https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime/archive/rocm-{0}.tar.gz".format(
+            url="https://github.com/ROCm/ROCm-OpenCL-Runtime/archive/rocm-{0}.tar.gz".format(
                 d_version
             ),
             sha256=d_shasum,
@@ -209,7 +210,7 @@ class HipRocclr(CMakePackage):
 
     resource(
         name="opencl-on-vdi",
-        git="https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime.git",
+        git="https://github.com/ROCm/ROCm-OpenCL-Runtime.git",
         destination="",
         placement="opencl-on-vdi",
         branch="main",

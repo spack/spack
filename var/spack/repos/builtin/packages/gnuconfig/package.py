@@ -16,6 +16,7 @@ class Gnuconfig(Package):
     homepage = "https://www.gnu.org/software/config/"
     git = "https://github.com/spack/gnuconfig.git"
     url = "https://github.com/spack/gnuconfig/releases/download/2021-08-14/gnuconfig-2021-08-14.tar.gz"
+    tags = ["build-tools"]
 
     maintainers("haampie")
 

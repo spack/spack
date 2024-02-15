@@ -7,13 +7,14 @@ import copy
 import glob
 import hashlib
 import json
+import multiprocessing
 import multiprocessing.pool
 import os
 import shutil
 import sys
 import tempfile
 import urllib.request
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 import llnl.util.tty as tty
 from llnl.string import plural
@@ -326,8 +327,30 @@ def _progress(i: int, total: int):
     return ""
 
 
-def _make_pool():
-    return multiprocessing.pool.Pool(determine_number_of_jobs(parallel=True))
+class NoPool:
+    def map(self, func, args):
+        return [func(a) for a in args]
+
+    def starmap(self, func, args):
+        return [func(*a) for a in args]
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        pass
+
+
+MaybePool = Union[multiprocessing.pool.Pool, NoPool]
+
+
+def _make_pool() -> MaybePool:
+    """Can't use threading because it's unsafe, and can't use spawned processes because of globals.
+    That leaves only forking"""
+    if multiprocessing.get_start_method() == "fork":
+        return multiprocessing.pool.Pool(determine_number_of_jobs(parallel=True))
+    else:
+        return NoPool()
 
 
 def push_fn(args):
@@ -663,7 +686,7 @@ def _push_oci(
     base_image: Optional[ImageReference],
     installed_specs_with_deps: List[Spec],
     tmpdir: str,
-    pool: multiprocessing.pool.Pool,
+    pool: MaybePool,
     force: bool = False,
 ) -> Tuple[List[str], Dict[str, Tuple[dict, dict]], Dict[str, spack.oci.oci.Blob]]:
     """Push specs to an OCI registry
@@ -779,11 +802,10 @@ def _config_from_tag(image_ref: ImageReference, tag: str) -> Optional[dict]:
     return config if "spec" in config else None
 
 
-def _update_index_oci(
-    image_ref: ImageReference, tmpdir: str, pool: multiprocessing.pool.Pool
-) -> None:
-    response = spack.oci.opener.urlopen(urllib.request.Request(url=image_ref.tags_url()))
-    spack.oci.opener.ensure_status(response, 200)
+def _update_index_oci(image_ref: ImageReference, tmpdir: str, pool: MaybePool) -> None:
+    request = urllib.request.Request(url=image_ref.tags_url())
+    response = spack.oci.opener.urlopen(request)
+    spack.oci.opener.ensure_status(request, response, 200)
     tags = json.load(response)["tags"]
 
     # Fetch all image config files in parallel

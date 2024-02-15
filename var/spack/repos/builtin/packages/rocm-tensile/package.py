@@ -11,14 +11,16 @@ from spack.pkg.builtin.boost import Boost
 class RocmTensile(CMakePackage):
     """Radeon Open Compute Tensile library"""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/Tensile/"
-    git = "https://github.com/ROCmSoftwarePlatform/Tensile.git"
-    url = "https://github.com/ROCmSoftwarePlatform/Tensile/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/Tensile/"
+    git = "https://github.com/ROCm/Tensile.git"
+    url = "https://github.com/ROCm/Tensile/archive/rocm-6.0.2.tar.gz"
     tags = ["rocm"]
 
     license("MIT")
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")
+    version("6.0.2", sha256="1d8a92422560c1e908fa25fd97a4aa07a96659528a543f77618408ffcfe1f307")
+    version("6.0.0", sha256="5d90add62d1439b7daf0527316e950e454e5d8beefb4f723865fe9ab26c7aa42")
     version("5.7.1", sha256="9211a51b23c22b7a79e4e494e8ff3c31e90bf21adb8cce260acc57891fb2c917")
     version("5.7.0", sha256="fe2ae067c1c579f33d7a1e26da3fe6b4ed44befa08f9dfce2ceae586f184b816")
     version("5.6.1", sha256="3e78c933563fade8781a1dca2079bff135af2f5d2c6eb0147797d2c1f24d006c")
@@ -29,11 +31,12 @@ class RocmTensile(CMakePackage):
     version("5.4.0", sha256="2da9c1df3c6d9b44afdad621ef59a03389fb1a38a61a8b8bad9c9991b97157eb")
     version("5.3.3", sha256="ecb99243edf1cd2bb5e953915a7dae7867c3cdb0cd8ed15b8618aaaeb2bd7b29")
     version("5.3.0", sha256="05c546986549154e6c7b4f57a0b3bfd5cb223d2393c206ff1702f89454c832f4")
-    version("5.2.3", sha256="840698bf2ac62e08ae76c3843f1dad5367ed098d42e6a5fa7953de70642fd2cf")
-    version("5.2.1", sha256="49582e28f7e14fed6a66c59482a41d3899c1eb8e7aa0ce40a7a2e806dadc536b")
-    version("5.2.0", sha256="aa6107944482ad278111d11d2e926393423fc70e7e1838574fe7ad9f553bdacf")
-    version("5.1.3", sha256="87020ca268e3a1ed8853f629839d6497764d862bd70b8775e98de439f6c89f1d")
-    version("5.1.0", sha256="0ac86a623597152c5b1d8bb5634aad3e55afa51959476aaa5e9869d259ddf375")
+    with default_args(deprecated=True):
+        version("5.2.3", sha256="840698bf2ac62e08ae76c3843f1dad5367ed098d42e6a5fa7953de70642fd2cf")
+        version("5.2.1", sha256="49582e28f7e14fed6a66c59482a41d3899c1eb8e7aa0ce40a7a2e806dadc536b")
+        version("5.2.0", sha256="aa6107944482ad278111d11d2e926393423fc70e7e1838574fe7ad9f553bdacf")
+        version("5.1.3", sha256="87020ca268e3a1ed8853f629839d6497764d862bd70b8775e98de439f6c89f1d")
+        version("5.1.0", sha256="0ac86a623597152c5b1d8bb5634aad3e55afa51959476aaa5e9869d259ddf375")
     version(
         "5.0.2",
         sha256="c6130de3b02f4f10635d18f913b3b88ea754fce2842c680e9caf5a6781da8f37",
@@ -166,6 +169,8 @@ class RocmTensile(CMakePackage):
         "5.6.1",
         "5.7.0",
         "5.7.1",
+        "6.0.0",
+        "6.0.2",
     ]:
         depends_on("rocm-cmake@" + ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
@@ -187,6 +192,8 @@ class RocmTensile(CMakePackage):
         "5.6.1",
         "5.7.0",
         "5.7.1",
+        "6.0.0",
+        "6.0.2",
     ]:
         depends_on("rocm-openmp-extras@" + ver, when="@" + ver)
 
@@ -218,11 +225,13 @@ class RocmTensile(CMakePackage):
         "5.6.1",
         "5.7.0",
         "5.7.1",
+        "6.0.0",
+        "6.0.2",
     ]:
         depends_on("rocm-smi-lib@" + ver, type="build", when="@" + ver)
 
     root_cmakelists_dir = "Tensile/Source"
-    # Status: https://github.com/ROCmSoftwarePlatform/Tensile/commit/a488f7dadba34f84b9658ba92ce9ec5a0615a087
+    # Status: https://github.com/ROCm/Tensile/commit/a488f7dadba34f84b9658ba92ce9ec5a0615a087
     # Not yet landed in 3.7.0, nor 3.8.0.
     patch("0001-fix-compile-error.patch", when="@3.7.0:3.8.0")
     patch("0002-require-openmp-when-tensile-use-openmp-is-on.patch", when="@3.9.0:4.0.0")
