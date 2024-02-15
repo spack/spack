@@ -1,5 +1,11 @@
 spack:
   view: false
+
+  include:
+  - $spack/share/spack/gitlab/cloud_pipelines/configs/linux/x86_64_v3
+  - $spack/share/spack/gitlab/cloud_pipelines/configs/linux
+  - $spack/share/spack/gitlab/cloud_pipelines/configs
+
   packages:
     all:
       require: target=x86_64_v3
