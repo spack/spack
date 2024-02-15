@@ -233,6 +233,8 @@ class Esmf(MakefilePackage):
             env.set("ESMF_COMPILER", "nvhpc")
         elif self.compiler.name == "cce":
             env.set("ESMF_COMPILER", "cce")
+        elif self.compiler.name == "aocc":
+            env.set("ESMF_COMPILER", "aocc")
         else:
             msg = "The compiler you are building with, "
             msg += '"{0}", is not supported by ESMF.'
