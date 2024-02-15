@@ -41,7 +41,7 @@ install_cmd = spack.main.SpackCommand("install")
 uninstall_cmd = spack.main.SpackCommand("uninstall")
 buildcache_cmd = spack.main.SpackCommand("buildcache")
 
-pytestmark = [pytest.mark.not_on_windows("does not run on windows"), pytest.mark.maybeslow]
+pytestmark = [pytest.mark.maybeslow]
 
 
 @pytest.fixture()
@@ -761,8 +761,8 @@ def test_ci_rebuild_mock_success(
 
     with rebuild_env.env_dir.as_cwd():
         activate_rebuild_env(tmpdir, pkg_name, rebuild_env)
-
-        out = ci_cmd("rebuild", "--tests", fail_on_error=False)
+        import pdb; pdb.set_trace()
+        out = ci_cmd("rebuild", "--tests", fail_on_error=True)
 
         # We didn"t really run the build so build output file(s) are missing
         assert "Unable to copy files" in out
