@@ -244,7 +244,7 @@ def _search_duplicate_specs_in_externals(error_cls):
                 + lines
                 + ["as they might result in non-deterministic hashes"]
             )
-        except TypeError:
+        except (TypeError, AttributeError):
             details = []
 
         errors.append(error_cls(summary=error_msg, details=details))
@@ -292,12 +292,6 @@ def _avoid_mismatched_variants(error_cls):
     errors = []
     packages_yaml = spack.config.CONFIG.get_config("packages")
 
-    def make_error(config_data, summary):
-        s = io.StringIO()
-        s.write("Occurring in the following file:\n")
-        syaml.dump_config(config_data, stream=s, blame=True)
-        return error_cls(summary=summary, details=[s.getvalue()])
-
     for pkg_name in packages_yaml:
         # 'all:' must be more forgiving, since it is setting defaults for everything
         if pkg_name == "all" or "variants" not in packages_yaml[pkg_name]:
@@ -317,7 +311,7 @@ def _avoid_mismatched_variants(error_cls):
                         f"Setting a preference for the '{pkg_name}' package to the "
                         f"non-existing variant '{variant.name}'"
                     )
-                    errors.append(make_error(preferences, summary))
+                    errors.append(_make_config_error(preferences, summary, error_cls=error_cls))
                     continue
 
                 # Variant cannot accept this value
@@ -329,9 +323,39 @@ def _avoid_mismatched_variants(error_cls):
                         f"Setting the variant '{variant.name}' of the '{pkg_name}' package "
                         f"to the invalid value '{str(variant)}'"
                     )
-                    errors.append(make_error(preferences, summary))
+                    errors.append(_make_config_error(preferences, summary, error_cls=error_cls))
 
     return errors
+
+
+@config_packages
+def _wrongly_named_spec(error_cls):
+    """Warns if the wrong name is used for an external spec"""
+    errors = []
+    packages_yaml = spack.config.CONFIG.get_config("packages")
+    for pkg_name in packages_yaml:
+        if pkg_name == "all":
+            continue
+
+        externals = packages_yaml[pkg_name].get("externals", [])
+        is_virtual = spack.repo.PATH.is_virtual(pkg_name)
+        for entry in externals:
+            spec = spack.spec.Spec(entry["spec"])
+            regular_pkg_is_wrong = not is_virtual and pkg_name != spec.name
+            virtual_pkg_is_wrong = is_virtual and not any(
+                p.name == spec.name for p in spack.repo.PATH.providers_for(pkg_name)
+            )
+            if regular_pkg_is_wrong or virtual_pkg_is_wrong:
+                summary = f"Wrong external spec detected for '{pkg_name}': {spec}"
+                errors.append(_make_config_error(entry, summary, error_cls=error_cls))
+    return errors
+
+
+def _make_config_error(config_data, summary, error_cls):
+    s = io.StringIO()
+    s.write("Occurring in the following file:\n")
+    syaml.dump_config(config_data, stream=s, blame=True)
+    return error_cls(summary=summary, details=[s.getvalue()])
 
 
 #: Sanity checks on package directives
@@ -772,10 +796,30 @@ def _issues_in_depends_on_directive(pkgs, error_cls):
                 except spack.repo.UnknownPackageError:
                     # This dependency is completely missing, so report
                     # and continue the analysis
-                    summary = (
-                        f"{pkg_name}: unknown package '{dep_name}' in " "'depends_on' directive"
-                    )
+                    summary = f"{pkg_name}: unknown package '{dep_name}' in 'depends_on' directive"
                     details = [f" in {filename}"]
+                    errors.append(error_cls(summary=summary, details=details))
+                    continue
+
+                # Check for self-referential specs similar to:
+                #
+                # depends_on("foo@X.Y", when="^foo+bar")
+                #
+                # That would allow clingo to choose whether to have foo@X.Y+bar in the graph.
+                problematic_edges = [
+                    x for x in when.edges_to_dependencies(dep_name) if not x.virtuals
+                ]
+                if problematic_edges and not dep.patches:
+                    summary = (
+                        f"{pkg_name}: dependency on '{dep.spec}' when '{when}' is self-referential"
+                    )
+                    details = [
+                        (
+                            f" please specify better using '^[virtuals=...] {dep_name}', or "
+                            f"substitute with an equivalent condition on '{pkg_name}'"
+                        ),
+                        f" in {filename}",
+                    ]
                     errors.append(error_cls(summary=summary, details=details))
                     continue
 

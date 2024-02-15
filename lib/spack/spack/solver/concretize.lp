@@ -698,6 +698,14 @@ requirement_group_satisfied(node(ID, Package), X) :-
   activate_requirement(node(ID, Package), X),
   requirement_group(Package, X).
 
+% Do not impose requirements, if the conditional requirement is not active
+do_not_impose(EffectID, node(ID, Package)) :-
+  trigger_condition_holds(TriggerID, node(ID, Package)),
+  pkg_fact(Package, condition_trigger(ConditionID, TriggerID)),
+  pkg_fact(Package, condition_effect(ConditionID, EffectID)),
+  requirement_group_member(ConditionID , Package, RequirementID),
+  not activate_requirement(node(ID, Package), RequirementID).
+
 % When we have a required provider, we need to ensure that the provider/2 facts respect
 % the requirement. This is particularly important for packages that could provide multiple
 % virtuals independently

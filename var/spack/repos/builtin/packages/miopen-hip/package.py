@@ -12,16 +12,17 @@ from spack.pkg.builtin.boost import Boost
 class MiopenHip(CMakePackage):
     """AMD's library for high performance machine learning primitives."""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/MIOpen"
-    git = "https://github.com/ROCmSoftwarePlatform/MIOpen.git"
-    url = "https://github.com/ROCmSoftwarePlatform/MIOpen/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/MIOpen"
+    git = "https://github.com/ROCm/MIOpen.git"
+    url = "https://github.com/ROCm/MIOpen/archive/rocm-6.0.2.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["libMIOpen"]
 
     license("MIT")
-
+    version("6.0.2", sha256="e6f671bd6af59f7470f42cda2ff9e77441d8f6c2105772bbf855d31da1085ffa")
+    version("6.0.0", sha256="a0718a48353be30ff98118ade511f0c1b454e394d8f934aefe7dd6946562b2e9")
     version("5.7.1", sha256="912a658fe21ce6f1982b0f2ff251c3f7bb618f2e7e9876d983bcb54e3cd7129e")
     version("5.7.0", sha256="5cd0b62254469e1c246d5890d2b78f8aedcf42cf8a327eabc1a391b83bcd14e1")
     version("5.6.1", sha256="ff627d68ed9e52433a3c808b5d3ff179a398b77ce81b00cfea7b2c4da5162c6c")
@@ -32,11 +33,12 @@ class MiopenHip(CMakePackage):
     version("5.4.0", sha256="b4153791f9eeee4cbc5534bc6ad8b32c0947bcd38e08b77ebe144065a4fa5456")
     version("5.3.3", sha256="7efc98215d23a2caaf212378c37e9a6484f54a4ed3e9660719286e4f287d3715")
     version("5.3.0", sha256="c5819f593d71beeda2eb24b89182912240cc40f83b2b8f9de695a8e230aa4ea6")
-    version("5.2.3", sha256="28747847446955b3bab24f7fc65c1a6b863a12f12ad3a35e0312072482d38122")
-    version("5.2.1", sha256="0977a8876d41bbd2fa268341c93892f35878d7efc1711194ad87582f877ff500")
-    version("5.2.0", sha256="5fda69426e81df9f8fb6658e579176b9c4fcce3516fc8488d3cfd2b6f6f2b3b4")
-    version("5.1.3", sha256="510461f5c5bdbcf8dc889099d1e5960b9f84bd845a9fc9154588a9898c701c1d")
-    version("5.1.0", sha256="bb50201334d68addf153b84b88ab803027c4913d71bdbda6f5ccde3f672f6fdd")
+    with default_args(deprecated=True):
+        version("5.2.3", sha256="28747847446955b3bab24f7fc65c1a6b863a12f12ad3a35e0312072482d38122")
+        version("5.2.1", sha256="0977a8876d41bbd2fa268341c93892f35878d7efc1711194ad87582f877ff500")
+        version("5.2.0", sha256="5fda69426e81df9f8fb6658e579176b9c4fcce3516fc8488d3cfd2b6f6f2b3b4")
+        version("5.1.3", sha256="510461f5c5bdbcf8dc889099d1e5960b9f84bd845a9fc9154588a9898c701c1d")
+        version("5.1.0", sha256="bb50201334d68addf153b84b88ab803027c4913d71bdbda6f5ccde3f672f6fdd")
     version(
         "5.0.2",
         sha256="e73c18c6e0791d6ca8958508d899072ce12fc6c27cf78792d0c2a5c7e34427be",
@@ -124,7 +126,7 @@ class MiopenHip(CMakePackage):
     patch("0001-Add-rocm-path-and-rocm-device-lib-path-flags.patch", when="@3.9.0:5.0.2")
     patch("miopen-hip-include-nlohmann-include-directory.patch", when="@5.4.0:")
     patch(
-        "https://github.com/ROCmSoftwarePlatform/MIOpen/pull/2276/commits/f60aa1ff89f8fb596b4a6a4c70aa7d557803db87.patch?full_index=1",
+        "https://github.com/ROCm/MIOpen/pull/2276/commits/f60aa1ff89f8fb596b4a6a4c70aa7d557803db87.patch?full_index=1",
         sha256="c777d9f4cd2bbfec632b38620c0f70bb0cce8da1",
         when="@5.7:",
     )
@@ -159,6 +161,8 @@ class MiopenHip(CMakePackage):
         "5.6.1",
         "5.7.0",
         "5.7.1",
+        "6.0.0",
+        "6.0.2",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
@@ -168,7 +172,7 @@ class MiopenHip(CMakePackage):
     for ver in ["5.1.0", "5.1.3", "5.2.0", "5.2.1", "5.2.3", "5.3.0", "5.3.3"]:
         depends_on("mlirmiopen@" + ver, when="@" + ver)
 
-    for ver in ["5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1"]:
+    for ver in ["5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2"]:
         depends_on("nlohmann-json", type="link")
         depends_on("composable-kernel@" + ver, when="@" + ver)
     for ver in ["5.4.0", "5.4.3", "5.5.0"]:

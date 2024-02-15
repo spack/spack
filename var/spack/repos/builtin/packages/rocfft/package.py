@@ -11,16 +11,17 @@ from spack.package import *
 class Rocfft(CMakePackage):
     """Radeon Open Compute FFT library"""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/rocFFT/"
-    git = "https://github.com/ROCmSoftwarePlatform/rocFFT.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocfft/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/rocFFT/"
+    git = "https://github.com/ROCm/rocFFT.git"
+    url = "https://github.com/ROCm/rocfft/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath", "haampie")
     libraries = ["librocfft"]
 
     license("MIT")
-
+    version("6.0.2", sha256="d3e1f7a4dc661f1e5ffce02e2e01ae6c3c339bac8e93deaf175e4c03ddfea459")
+    version("6.0.0", sha256="fb8ba56572702e77e4383d922cd1fee4ad3fa5f63a5ebdb3d9c354439a446992")
     version("5.7.1", sha256="202f11f60dc8738e29bbd1b397d419e032794f8bffb7f48f2b31f09cc5f08bc2")
     version("5.7.0", sha256="3c4a1537a6ec76dc9b622644fe3890647306bf9f28f61c5d2028259c31bb964f")
     version("5.6.1", sha256="a65861e453587c3e6393da75b0b1976508c61f968aecda77fbec920fea48489e")
@@ -31,11 +32,12 @@ class Rocfft(CMakePackage):
     version("5.4.0", sha256="d35a67332f4425fba1824eed78cf98d5c9a17a422614ff3f4cba2461df952336")
     version("5.3.3", sha256="678c18710578c1fb36a0009311bb79de7607c3468f9102cfba56a866ebb7ff78")
     version("5.3.0", sha256="d655c5541c4aff4267e80e36d002fc3a55c2f84a0ae8631197c12af3bf03fa7d")
-    version("5.2.3", sha256="0cee37886f01f1afb3ae5dad1164c819573c13c6675bff4eb668de334adbff27")
-    version("5.2.1", sha256="6302349b6cc610a9a939377e2c7ffba946656a8d43f2e438ff0b3088f0f963ad")
-    version("5.2.0", sha256="ebba280b7879fb4bc529a68072b98d4e815201f90d24144d672094bc241743d4")
-    version("5.1.3", sha256="b4fcd03c1b07d465bb307ec33cc7fb50036dff688e497c5e52b2dec37f4cb618")
-    version("5.1.0", sha256="dc11c9061753ae43a9d5db9c4674aa113a8adaf50818b2701cbb940894147f68")
+    with default_args(deprecated=True):
+        version("5.2.3", sha256="0cee37886f01f1afb3ae5dad1164c819573c13c6675bff4eb668de334adbff27")
+        version("5.2.1", sha256="6302349b6cc610a9a939377e2c7ffba946656a8d43f2e438ff0b3088f0f963ad")
+        version("5.2.0", sha256="ebba280b7879fb4bc529a68072b98d4e815201f90d24144d672094bc241743d4")
+        version("5.1.3", sha256="b4fcd03c1b07d465bb307ec33cc7fb50036dff688e497c5e52b2dec37f4cb618")
+        version("5.1.0", sha256="dc11c9061753ae43a9d5db9c4674aa113a8adaf50818b2701cbb940894147f68")
     version(
         "5.0.2",
         sha256="30d4bd5fa85185ddafc69fa6d284edd8033c9d77d1e351fa328267242995eb0a",
@@ -167,6 +169,8 @@ class Rocfft(CMakePackage):
         "5.6.1",
         "5.7.0",
         "5.7.1",
+        "6.0.0",
+        "6.0.2",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
@@ -177,6 +181,14 @@ class Rocfft(CMakePackage):
     patch("0003-Fix-clients-fftw3-include-dirs-rocm-4.5.patch", when="@4.5.0:5.1")
     # Patch to add install prefix header location for sqlite for 5.4
     patch("0004-fix-missing-sqlite-include-paths.patch", when="@5.4.0:5.5")
+
+    # Set LD_LIBRARY_PATH for executing the binaries from build directoryfix missing type
+    # https://github.com/ROCm/rocFFT/pull/449)
+    patch(
+        "https://github.com/ROCm/rocFFT/commit/0ec78f1daac2d7fa1415f4deff0d129252c1c9de.patch?full_index=1",
+        sha256="bac7873185ac60f2aaa50e278f0b8d52b4d79d586bf7f52db1da33559569ba54",
+        when="@6.0.0",
+    )
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
@@ -214,7 +226,7 @@ class Rocfft(CMakePackage):
                 self.define_from_variant("AMDGPU_TARGETS_SRAM_ECC", "amdgpu_target_sram_ecc")
             )
 
-        # See https://github.com/ROCmSoftwarePlatform/rocFFT/issues/322
+        # See https://github.com/ROCm/rocFFT/issues/322
         if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
             args.append(self.define("__skip_rocmclang", "ON"))
 

@@ -85,7 +85,7 @@ spack:
     pipeline-gen:
     - build-job:
         image:
-          name: ghcr.io/spack/linux-ubuntu22.04-x86_64_v2:v2023-07-01
+          name: ghcr.io/spack/linux-ubuntu22.04-x86_64_v2:v2024-01-29
           entrypoint: ['']
 
   cdash:
