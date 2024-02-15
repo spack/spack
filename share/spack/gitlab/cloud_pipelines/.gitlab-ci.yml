@@ -205,7 +205,7 @@ default:
 .generate-win64:
   extends: [ ".generate-common" ]
   before_script:
-    - .\bin\spack_pwsh.ps1
+    - . .\share\spack\spack-env.ps1
   tags: ["spack", "public", "medium", "x86_64-win"]
   image: "mcr.microsoft.com/windows/servercore/iis"
 
