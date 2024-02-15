@@ -38,7 +38,7 @@ if __name__ == "__main__":
     # Look in the list of prefixes for logs
     for prefix in prefixes:
         print(f"Walking {prefix}")
-        logs = [l for l in find_logs(prefix, args.log)]
+        logs = [log for log in find_logs(prefix, args.log)]
         print(f"  * found {len(logs)} logs")
         for log in logs:
             print(f"  * appending data for {log}")
