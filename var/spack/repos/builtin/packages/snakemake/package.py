@@ -134,9 +134,9 @@ class Snakemake(PythonPackage):
     depends_on("py-snakemake-executor-plugin-tes", when="+tes", type=("build", "run"))
 
     variant("fs", default=False, description="Read and write from a locally mounted filesystem using rsync", when="@8:")
-    depends_on("py-snakemake-storage-plugin-fs", when="+fs", type=("build", "run"), when="@8:")
+    depends_on("py-snakemake-storage-plugin-fs", when="+fs", type=("build", "run"))
 
-    variant("ftp", default=False, description="Handling input and output via FTP.")
+    variant("ftp", default=False, description="Handling input and output via FTP")
 
     with when("+ftp"):
         depends_on("py-snakemake-storage-plugin-ftp", when="@8:", type=("build", "run"))
@@ -158,7 +158,7 @@ class Snakemake(PythonPackage):
         depends_on("py-snakemake-storage-plugin-http", when="@8:", type=("build", "run"))
         depends_on("py-requests", when="@:7", type=("build", "run"))
 
-    variant("zenodo", default=False, description="...", when="@8:")
+    variant("zenodo", default=False, description="Reading from and writing to zenodo.org", when="@8:")
     depends_on("py-snakemake-storage-plugin-zenodo", when="+zenodo", type=("build", "run"))
 
     def test(self):
