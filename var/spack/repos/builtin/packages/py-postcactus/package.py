@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,8 +29,6 @@ class PyPostcactus(PythonPackage):
     depends_on("py-jupyter", type=("build", "run"))
     depends_on("py-sphinx", type=("build", "run"))
     depends_on("vtk", type=("build", "run"))
-    # in order to force a newer version of pside2
-    depends_on("py-pyqt5", type=("build", "run"))
 
     def patch(self):
         # comment out "setuptools.build_meta" because of pip error
