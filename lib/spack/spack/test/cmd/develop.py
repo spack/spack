@@ -43,7 +43,7 @@ class TestDevelop:
             assert yaml_entry["path"] == path
 
         if build_dir is not None:
-            scope = env.env_file_config_scope_name()
+            scope = env.config_scope
             assert build_dir == spack.config.get(
                 "packages:{}:package_attributes:build_directory".format(spec.name), scope
             )
