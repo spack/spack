@@ -114,6 +114,7 @@ class RocmSmiLib(CMakePackage):
     )
 
     variant("shared", default=True, description="Build shared or static library")
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
     depends_on("cmake@3:", type="build")
     depends_on("python@3:", type=("build", "run"), when="@3.9.0:")
@@ -127,6 +128,8 @@ class RocmSmiLib(CMakePackage):
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define("CMAKE_INSTALL_LIBDIR", "lib"),
         ]
+        if self.spec.satisfies("@5.7.0:"):
+            args.append(self.define_from_variant("ADDRESS_SANITIZER", "asan"))
         return args
 
     @classmethod

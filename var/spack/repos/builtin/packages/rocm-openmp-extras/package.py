@@ -250,6 +250,8 @@ class RocmOpenmpExtras(Package):
     version("3.10.0", sha256=versions_dict["3.10.0"]["aomp"], deprecated=True)
     version("3.9.0", sha256=versions_dict["3.9.0"]["aomp"], deprecated=True)
 
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
+
     depends_on("cmake@3:", type="build")
     depends_on("py-setuptools", type="build")
     depends_on("python@3:", type="build")
@@ -367,6 +369,13 @@ class RocmOpenmpExtras(Package):
         llvm_prefix = self.spec["llvm-amdgpu"].prefix
         env.set("AOMP", "{0}".format(llvm_prefix))
         env.set("FC", "{0}/bin/flang".format(openmp_extras_prefix))
+        if self.spec.satisfies("+asan"):
+            env.set("SANITIZER", 1)
+            env.set("VERBOSE", 1)
+            env.set(
+                "LDSHARED",
+                self.spec["llvm-amdgpu"].prefix.bin.clang + " -shared -Wl,-O1 -Wl,-Bsymbolic-functions -Wl,-z,relro -g -fwrapv -O2"
+            )
         gfx_list = "gfx700 gfx701 gfx801 gfx803 gfx900 gfx902 gfx906 gfx908"
 
         if self.spec.version >= Version("4.3.1"):
