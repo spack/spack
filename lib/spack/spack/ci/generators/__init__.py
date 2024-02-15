@@ -41,3 +41,4 @@ class UnknownGeneratorException(spack.error.SpackError):
 # each one has access to the registration function, and registration of
 # generators will happen automatically.
 import spack.ci.generators.gitlab  # noqa: E402
+import spack.ci.generators.snakemake  # noqa: E402

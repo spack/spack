@@ -133,9 +133,12 @@ def generate_gitlab_yaml(
     Arguments:
         pipeline (spack.ci.common.PipelineDag): An already pruned graph of jobs representing all
             the specs to build
-        spack_ci_ir (spack.ci.common.SpackCI): An object containing the configured attributes of
+        spack_ci (spack.ci.common.SpackCI): An object containing the configured attributes of
             all jobs in the pipeline
-        output_file (str): Path to output file to be written
+        options (spack.ci.common.PipelineOptions): An object containing all the pipeline
+            options gathered from yaml, env, etc...
+        prunning_results (spack.ci.common.PruningResults): Contains filter results and
+            descriptions for all specs in the environment.
     """
     ci_project_dir = os.environ.get("CI_PROJECT_DIR", os.getcwd())
     generate_job_name = os.environ.get("CI_JOB_NAME", "job-does-not-exist")
@@ -200,6 +203,9 @@ def generate_gitlab_yaml(
     rel_local_mirror_dir = os.path.join(local_mirror_dir, ci_project_dir)
     rel_user_artifacts_dir = os.path.relpath(user_artifacts_dir, ci_project_dir)
 
+    def main_script_replacements(cmd):
+        return cmd.replace("{env_dir}", rel_concrete_env_dir)
+
     output_object = {}
     job_id = 0
     stage_id = 0
@@ -238,9 +244,6 @@ def generate_gitlab_yaml(
 
         if "script" not in job_object:
             raise AttributeError
-
-        def main_script_replacements(cmd):
-            return cmd.replace("{env_dir}", rel_concrete_env_dir)
 
         job_object["script"] = unpack_script(job_object["script"], op=main_script_replacements)
 
