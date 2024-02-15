@@ -840,7 +840,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
         # MPI settings
         options.append(define_tpl_enable("MPI"))
-        if "+mpi" in spec and sys.platform != 'win32':
+        if "+mpi" in spec and sys.platform != "win32":
             # Force Trilinos to use the MPI wrappers instead of raw compilers
             # to propagate library link flags for linkers that require fully
             # resolved symbols in shared libs (such as macOS and some newer
