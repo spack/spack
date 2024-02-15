@@ -739,7 +739,9 @@ fi
     assert version == test_version
 
 
+@pytest.mark.regression("42679")
 def test_get_compilers(config):
+    """Tests that we can select compilers whose versions differ only for a suffix."""
     common = {
         "flags": {},
         "operating_system": "ubuntu23.10",
