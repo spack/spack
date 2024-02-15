@@ -75,10 +75,11 @@
 #    does not like its directory structure.
 #
 
+import os
+
 import spack.variant
 from spack.directives import conflicts, depends_on, variant
 from spack.package_base import PackageBase
-import os
 
 
 class ROCmPackage(PackageBase):
@@ -170,6 +171,7 @@ class ROCmPackage(PackageBase):
         try:
             # This will throw an error if imported on a non-Linux platform.
             import distro
+
             distname = distro.id()
         except ImportError:
             distname = "unknown"
@@ -179,6 +181,7 @@ class ROCmPackage(PackageBase):
         env.set("CFLAGS", "-fsanitize=address -shared-libasan -g " + SET_DWARF_VERSION_4)
         env.set("CXXFLAGS", "-fsanitize=address -shared-libasan -g " + SET_DWARF_VERSION_4)
         env.set("LDFLAGS", "-Wl,--enable-new-dtags -fuse-ld=lld  -fsanitize=address -g -Wl,")
+
     # HIP version vs Architecture
 
     # TODO: add a bunch of lines like:
