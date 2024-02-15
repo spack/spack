@@ -151,14 +151,14 @@ class TestDevelop:
         with ev.read("test") as e:
             develop("--always-rebuild", "mpich@1.0")
             self.check_develop(e, spack.spec.Spec("mpich@=1.0"))
-            scope = e.env_file_config_scope()
+            scope = e.config_scope
             assert spack.config.get("config:dev_specs_always_rebuild", scope)
 
     def test_develop_always_rebuild_no_spec(self):
         env("create", "test")
         with ev.read("test") as e:
             develop("--always-rebuild")
-            scope = e.env_file_config_scope()
+            scope = e.config_scope
             assert spack.config.get("config:dev_specs_always_rebuild", scope)
 
 
