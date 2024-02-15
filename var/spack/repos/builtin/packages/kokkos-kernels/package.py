@@ -19,7 +19,7 @@ class KokkosKernels(CMakePackage, CudaPackage):
 
     maintainers("lucbv", "srajama1", "brian-kelley")
 
-    license("BSD-3-Clause")
+    license("Apache-2.0 WITH LLVM-exception")
 
     # generate checksum for each release tarball with the following command
     # openssl sha256 kokkos-kernels-x.y.z.tar.gz
