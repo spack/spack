@@ -208,7 +208,70 @@ def _mirror_roots():
     ]
 
 
-class Stage:
+class StageBase:
+    def _get_lock(self):
+        if not self._lock:
+            sha1 = hashlib.sha1(self.name.encode("utf-8")).digest()
+            lock_id = prefix_bits(sha1, bit_length(sys.maxsize))
+            stage_lock_path = os.path.join(get_stage_root(), ".lock")
+            self._lock = spack.util.lock.Lock(
+                stage_lock_path, start=lock_id, length=1, desc=self.name
+            )
+        return self._lock
+
+    def __enter__(self):
+        """
+        Entering a stage context will create the stage directory
+
+        Returns:
+            self
+        """
+        if self._use_locks:
+            self._get_lock().acquire_write(timeout=60)
+        self.create()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """
+        Exiting from a stage context will delete the stage directory unless:
+        - it was explicitly requested not to do so
+        - an exception has been raised
+
+        Args:
+            exc_type: exception type
+            exc_val: exception value
+            exc_tb: exception traceback
+
+        Returns:
+            Boolean
+        """
+        # Delete when there are no exceptions, unless asked to keep.
+        if exc_type is None and not self.keep:
+            self.destroy()
+
+        if self._use_locks:
+            self._get_lock().release_write()
+
+    def create(self):
+        """
+        Ensures the top-level (config:build_stage) directory exists.
+        """
+        # User has full permissions and group has only read permissions
+        if not os.path.exists(self.path):
+            mkdirp(self.path, mode=stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP)
+        elif not os.path.isdir(self.path):
+            os.remove(self.path)
+            mkdirp(self.path, mode=stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP)
+
+        # Make sure we can actually do something with the stage we made.
+        ensure_access(self.path)
+        self.created = True
+
+    def destroy(self):
+        raise NotImplementedError(f"{self.__class__.__name__} is abstract")
+
+
+class Stage(StageBase):
     """Manages a temporary stage directory for building.
 
     A Stage object is a context manager that handles a directory where
@@ -341,49 +404,6 @@ class Stage:
         # When stages are reused, we need to know whether to re-create
         # it.  This marks whether it has been created/destroyed.
         self.created = False
-
-    def _get_lock(self):
-        if not self._lock:
-            sha1 = hashlib.sha1(self.name.encode("utf-8")).digest()
-            lock_id = prefix_bits(sha1, bit_length(sys.maxsize))
-            stage_lock_path = os.path.join(get_stage_root(), ".lock")
-            self._lock = spack.util.lock.Lock(
-                stage_lock_path, start=lock_id, length=1, desc=self.name
-            )
-        return self._lock
-
-    def __enter__(self):
-        """
-        Entering a stage context will create the stage directory
-
-        Returns:
-            self
-        """
-        if self._use_locks:
-            self._get_lock().acquire_write(timeout=60)
-        self.create()
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """
-        Exiting from a stage context will delete the stage directory unless:
-        - it was explicitly requested not to do so
-        - an exception has been raised
-
-        Args:
-            exc_type: exception type
-            exc_val: exception value
-            exc_tb: exception traceback
-
-        Returns:
-            Boolean
-        """
-        # Delete when there are no exceptions, unless asked to keep.
-        if exc_type is None and not self.keep:
-            self.destroy()
-
-        if self._use_locks:
-            self._get_lock().release_write()
 
     @property
     def expected_archive_files(self):
@@ -636,21 +656,6 @@ class Stage:
         """
         self.fetcher.reset()
 
-    def create(self):
-        """
-        Ensures the top-level (config:build_stage) directory exists.
-        """
-        # User has full permissions and group has only read permissions
-        if not os.path.exists(self.path):
-            mkdirp(self.path, mode=stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP)
-        elif not os.path.isdir(self.path):
-            os.remove(self.path)
-            mkdirp(self.path, mode=stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP)
-
-        # Make sure we can actually do something with the stage we made.
-        ensure_access(self.path)
-        self.created = True
-
     def destroy(self):
         """Removes this stage directory."""
         remove_linked_tree(self.path)
@@ -863,13 +868,14 @@ class DIYStage:
         tty.debug("Sources for DIY stages are not cached")
 
 
-class DevelopStage(Stage):
+class DevelopStage(StageBase):
     needs_fetching = False
     requires_patch_success = False
 
     def __init__(self, name, dev_path):
         self.name = name
         self.dev_path = dev_path
+        self.source_path = dev_path
         self.path = os.path.join(get_stage_root(), name)
 
         self._lock = None
@@ -896,16 +902,6 @@ class DevelopStage(Stage):
         """Returns True since the source_path must exist."""
         return True
 
-    def create(self):
-        if self.created:
-            return
-
-        super().create()
-
-        os.symlink(self.dev_path, self.source_path)
-        self.created = True
-        tty.debug(f"Develop stage in {self.path} using {self.dev_path}")
-
     def destroy(self):
         # Destroy all files, but do not follow symlinks
         try:
@@ -919,7 +915,7 @@ class DevelopStage(Stage):
         self.create()
 
     def cache_local(self):
-        tty.debug("Sources for DIY stages are not cached")
+        tty.debug("Sources for Develop stages are not cached")
 
 
 def ensure_access(file):

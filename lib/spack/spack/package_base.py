@@ -1479,9 +1479,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         if self.has_code:
             self.do_fetch(mirror_only)
             self.stage.expand_archive()
-
-            if not os.listdir(self.stage.path):
-                raise spack.error.FetchError("Archive was empty for %s" % self.name)
         else:
             # Support for post-install hooks requires a stage.source_path
             fsys.mkdirp(self.stage.source_path)
