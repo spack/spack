@@ -12,8 +12,8 @@ from spack.package import *
 class Rdc(CMakePackage):
     """ROCm Data Center Tool"""
 
-    homepage = "https://github.com/RadeonOpenCompute/rdc"
-    url = "https://github.com/RadeonOpenCompute/rdc/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/rdc"
+    url = "https://github.com/ROCm/rdc/archive/rocm-6.0.2.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
@@ -21,13 +21,15 @@ class Rdc(CMakePackage):
 
     def url_for_version(self, version):
         if version == Version("3.9.0"):
-            return "https://github.com/RadeonOpenCompute/rdc/archive/rdc_so_ver-0.3.tar.gz"
+            return "https://github.com/ROCm/rdc/archive/rdc_so_ver-0.3.tar.gz"
 
-        url = "https://github.com/RadeonOpenCompute/rdc/archive/rocm-{0}.tar.gz"
+        url = "https://github.com/ROCm/rdc/archive/rocm-{0}.tar.gz"
         return url.format(version)
 
     license("MIT")
 
+    version("6.0.2", sha256="00defa3b68c340d7f46b8cb06b37ab0602a7949bfddc884b01c163a1526502f8")
+    version("6.0.0", sha256="5e3847a919d5f7efe99d8d76c96e78401659eccd1fb234b1b8cb4304096d6e89")
     version("5.7.1", sha256="5251eb3085f2019246b332e9552dfae1572cf64ddf58306b81cbe7108019ffee")
     version("5.7.0", sha256="924e94f14f6390d7a6ff7863fb4e2085c1ff5f9c12b8bd46471eb31f001c4f14")
     version("5.6.1", sha256="9e9f57cebbc5ae386a405957ed2c17344cdb42db5e1a71285f2c9bc09eea6519")
@@ -38,11 +40,12 @@ class Rdc(CMakePackage):
     version("5.4.0", sha256="268aab43e31045443b08a21aee8750da4cf04750c6f419ec171ec704d377a4e4")
     version("5.3.3", sha256="1bf1a02f305e3a629801e62584116a34eafbd1b26627837a2a8c10550fcf611b")
     version("5.3.0", sha256="ce9c85dad8e0c0b21e8e5938bf16f86a62dc5f6ded5f453c61acd43666634d6b")
-    version("5.2.3", sha256="5ba060449bbf5e84979cb4c62eb1dac9b0e3eca45e930d2e20e7beaa87361b39")
-    version("5.2.1", sha256="84b3c3754b8c9732ee6d00d37881591d3d6876feb8f29746d9eb18faea7ad035")
-    version("5.2.0", sha256="2f35f74485e783f56ea724a7c69ce825f181fcdbe89de453d97ce6a3d3176ae0")
-    version("5.1.3", sha256="ac3e594d7b245c787d6d9b63f551ca898d4d9403fbec0e4502f9970575e031b8")
-    version("5.1.0", sha256="3cf58cb07ef241b3b73b23af83b6477194884feba642584a491e67deeceff038")
+    with default_args(deprecated=True):
+        version("5.2.3", sha256="5ba060449bbf5e84979cb4c62eb1dac9b0e3eca45e930d2e20e7beaa87361b39")
+        version("5.2.1", sha256="84b3c3754b8c9732ee6d00d37881591d3d6876feb8f29746d9eb18faea7ad035")
+        version("5.2.0", sha256="2f35f74485e783f56ea724a7c69ce825f181fcdbe89de453d97ce6a3d3176ae0")
+        version("5.1.3", sha256="ac3e594d7b245c787d6d9b63f551ca898d4d9403fbec0e4502f9970575e031b8")
+        version("5.1.0", sha256="3cf58cb07ef241b3b73b23af83b6477194884feba642584a491e67deeceff038")
     version(
         "5.0.2",
         sha256="9e21fe7e9dd02b69425dab6be22a85469fee072bcebd2d2957633dfad8b45574",
@@ -140,6 +143,8 @@ class Rdc(CMakePackage):
         "5.6.1",
         "5.7.0",
         "5.7.1",
+        "6.0.0",
+        "6.0.2",
     ]:
         depends_on("rocm-smi-lib@" + ver, type=("build", "link"), when="@" + ver)
 
@@ -161,10 +166,12 @@ class Rdc(CMakePackage):
         "5.6.1",
         "5.7.0",
         "5.7.1",
+        "6.0.0",
+        "6.0.2",
     ]:
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
 
     def patch(self):

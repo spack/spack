@@ -74,8 +74,7 @@ class Openscenegraph(CMakePackage):
     depends_on("poppler+glib", when="+pdf")
     depends_on("librsvg", when="+svg")
 
-    depends_on("ffmpeg@:4", when="+ffmpeg")
-    depends_on("ffmpeg+avresample", when="^ffmpeg@:4")
+    depends_on("ffmpeg@:4 +avresample", when="+ffmpeg")
     # https://github.com/openscenegraph/OpenSceneGraph/issues/167
     depends_on("ffmpeg@:2", when="@:3.4.0+ffmpeg")
 

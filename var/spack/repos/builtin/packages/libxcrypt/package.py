@@ -11,6 +11,7 @@ class Libxcrypt(AutotoolsPackage):
 
     homepage = "https://github.com/besser82/libxcrypt"
     url = "https://github.com/besser82/libxcrypt/releases/download/v4.4.30/libxcrypt-4.4.30.tar.xz"
+    tags = ["build-tools"]
     maintainers("haampie")
 
     def url_for_version(self, version):

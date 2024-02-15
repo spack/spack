@@ -398,6 +398,11 @@ class Esmf(MakefilePackage):
         if "~shared" in spec:
             env.set("ESMF_SHARED_LIB_BUILD", "OFF")
 
+        # https://github.com/JCSDA/spack-stack/issues/956
+        if "+shared" in spec:
+            if sys.platform == "darwin":
+                env.set("ESMF_TRACE_LIB_BUILD", "OFF")
+
     @run_after("install")
     def post_install(self):
         install_tree("cmake", self.prefix.cmake)

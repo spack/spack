@@ -19,6 +19,9 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     license("BSL-1.0")
 
+    version("0.22.2", sha256="eeffa8584336b239aca167f0056e815b1b6d911e46cbb3cd6b8b811d101c1052")
+    version("0.22.1", sha256="b0de0649bee336847622f97b59b34a80cb3cfd9a931bbdb38299bc4904f19b92")
+    version("0.22.0", sha256="75f8932f3a233958c69802b483335eeeb39032ea66f12442f6f77048e259bdea")
     version("0.21.0", sha256="0ab24966e6ae026b355147f02354af4bd2117c342915fe844addf8e493735a33")
     version("0.20.0", sha256="f338cceea66a0e3954806b2aca08f6560bba524ecea222f04bc18b483851c877")
     version("0.19.1", sha256="674675abf0dd4c6f5a0b2fa3db944b277ed65c62f654029d938a8cab608a9c1d")
@@ -94,9 +97,9 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("%clang@:8", when="@0.2:")
     conflicts("+stdexec", when="cxxstd=17")
     conflicts("cxxstd=23", when="^cmake@:3.20.2")
-    # CUDA version <= 11 does not support C++20 and newer
+    # nvcc version <= 11 does not support C++20 and newer
     for cxxstd in filter(lambda x: x != "17", cxxstds):
-        conflicts(f"cxxstd={cxxstd}", when="^cuda@:11")
+        requires("%nvhpc", when=f"cxxstd={cxxstd} ^cuda@:11")
 
     # Other dependencies
     depends_on("boost@1.71:")

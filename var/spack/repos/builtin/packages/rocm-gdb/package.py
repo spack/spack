@@ -11,13 +11,14 @@ class RocmGdb(AutotoolsPackage):
     """This is ROCmgdb, the ROCm source-level debugger for Linux,
     based on GDB, the GNU source-level debugger."""
 
-    homepage = "https://github.com/ROCm-Developer-Tools/ROCgdb/"
-    url = "https://github.com/ROCm-Developer-Tools/ROCgdb/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/ROCgdb"
+    url = "https://github.com/ROCm/ROCgdb/archive/rocm-6.0.0.tar.gz"
     tags = ["rocm"]
 
     license("LGPL-2.0-or-later")
 
     maintainers("srekolam", "renjithravindrankannath")
+    version("6.0.0", sha256="0db4ab32ca729e69688cdb238df274ce5cf58b5cb2538584662cca4358708c2b")
     version("5.7.1", sha256="5cd150b5796aea9d77efd43b89d30a34fa4125338179eb87c6053abcac9f3c62")
     version("5.7.0", sha256="94fba57b2f17b593de61f7593b404fabc00b054d38567be57d12cf7654b7969a")
     version("5.6.1", sha256="d2b40d4c5aa41a6ce2a84307627b30d16a458672e03e13f9d27c12f2dc3f21d6")
@@ -28,11 +29,12 @@ class RocmGdb(AutotoolsPackage):
     version("5.4.0", sha256="7ee984d99818da04733030b140c1f0929639bc719a5e418d53cc2c2a8cbc9a79")
     version("5.3.3", sha256="9fc3ccd9378ad40f2f0c9577bc400cc9a202d0ae4656378813b67653b9023c46")
     version("5.3.0", sha256="402537baf0779cae586d608505e81173ba85f976fe993f1633e3afe81669350f")
-    version("5.2.3", sha256="c2df5cccd8bb07ea331b45091fb3141999a37a67696d273f3888b48f6d4281aa")
-    version("5.2.1", sha256="77169d88f24e6ccb6aef3945448b179edffe806a51a3e996236b08fb510f3979")
-    version("5.2.0", sha256="70c5b443292b9bb114844eb63b72cfab1b65f083511ee39d55db7a633c63bf5a")
-    version("5.1.3", sha256="81f5e368facdcc424a37cb5809f0b436bedb9a6d9af4d17785b3c446ab0a7821")
-    version("5.1.0", sha256="cf638149b269f838aaec59c5801098b9c0fc42f6c86a39309a8995b56978b424")
+    with default_args(deprecated=True):
+        version("5.2.3", sha256="c2df5cccd8bb07ea331b45091fb3141999a37a67696d273f3888b48f6d4281aa")
+        version("5.2.1", sha256="77169d88f24e6ccb6aef3945448b179edffe806a51a3e996236b08fb510f3979")
+        version("5.2.0", sha256="70c5b443292b9bb114844eb63b72cfab1b65f083511ee39d55db7a633c63bf5a")
+        version("5.1.3", sha256="81f5e368facdcc424a37cb5809f0b436bedb9a6d9af4d17785b3c446ab0a7821")
+        version("5.1.0", sha256="cf638149b269f838aaec59c5801098b9c0fc42f6c86a39309a8995b56978b424")
     version(
         "5.0.2",
         sha256="0eced8cd5a2996cb4bcf254f2bd9defe24112d21c2f750e98f784ecdf94ba5c9",
@@ -145,11 +147,12 @@ class RocmGdb(AutotoolsPackage):
         "5.6.1",
         "5.7.0",
         "5.7.1",
+        "6.0.0",
     ]:
         depends_on("rocm-dbgapi@" + ver, type="link", when="@" + ver)
         depends_on("comgr@" + ver, type="link", when="@" + ver)
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
 
     build_directory = "spack-build"
@@ -160,7 +163,7 @@ class RocmGdb(AutotoolsPackage):
             # Distributor options
             "--program-prefix=roc",
             "--enable-64-bit-bfd",
-            "--with-bugurl=https://github.com/ROCm-Developer-Tools/ROCgdb/issues",
+            "--with-bugurl=https://github.com/ROCm/ROCgdb/issues",
             "--with-pkgversion=-ROCm",
             "--enable-targets=x86_64-linux-gnu,amdgcn-amd-amdhsa",
             "--disable-ld",

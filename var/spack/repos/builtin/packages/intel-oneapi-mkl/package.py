@@ -134,6 +134,20 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     provides("mkl")
     provides("lapack", "blas")
 
+    @run_after("install")
+    def fixup_installation(self):
+        # fixup missing path in mkl cmake files. This issue was new in
+        # 2024.0.0 and expected to be fixed in the next release.
+        if self.spec.satisfies("@2024.0.0"):
+            # cannot use spack patch because this is applied to the
+            # installed mkl, not sources
+            filter_file(
+                'PATH_SUFFIXES "lib"',
+                'PATH_SUFFIXES "lib" "../../compiler/latest/lib"',
+                self.component_prefix.lib.cmake.mkl.join("MKLConfig.cmake"),
+                backup=False,
+            )
+
     @property
     def v2_layout_versions(self):
         return "@2024:"
@@ -212,7 +226,10 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         )
         lib_path = lib_path if isdir(lib_path) else dirname(lib_path)
 
+        # resolved_libs is populated as follows
+        # MKL-related + MPI-related + threading-related
         resolved_libs = find_libraries(libs, lib_path, shared=shared)
+
         # Add MPI libraries for cluster support. If MPI is not in the
         # spec, then MKL is externally installed and application must
         # link with MPI libaries. If MPI is in spec, but there are no
@@ -223,6 +240,7 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
                 resolved_libs = resolved_libs + self.spec["mpi"].libs
         except spack.error.NoLibrariesError:
             pass
+
         return resolved_libs
 
     def _xlp64_lib(self, lib):
