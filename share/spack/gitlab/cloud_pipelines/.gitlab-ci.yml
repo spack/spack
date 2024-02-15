@@ -207,7 +207,7 @@ default:
   before_script:
     - . .\share\spack\spack-env.ps1
   tags: ["spack", "public", "medium", "x86_64-win"]
-  image: "mcr.microsoft.com/windows/servercore/iis"
+  image: "ghcr.io/jjnesbitt/windows-servercore21h2:sha-5c42cbb"
 
 .generate-deprecated:
   extends: [ ".base-job" ]
