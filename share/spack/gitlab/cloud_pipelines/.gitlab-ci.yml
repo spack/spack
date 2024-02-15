@@ -77,6 +77,7 @@ default:
     PIPELINE_MIRROR_TEMPLATE: "single-src-protected-mirrors.yaml.in"
     # TODO: We can remove this when we drop the "deprecated" stack
     PUSH_BUILDCACHE_DEPRECATED: "${PROTECTED_MIRROR_PUSH_DOMAIN}/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
+    SPACK_CI_CONFIG_ROOT: "${CI_PROJECT_DIR}/share/spack/gitlab/cloud_pipelines/configs"
 
   rules:
     - if: $SPACK_CI_DISABLE_STACKS =~ /.+/ && $SPACK_CI_STACK_NAME =~ $SPACK_CI_DISABLE_STACKS
@@ -121,7 +122,6 @@ default:
   script:
     - spack --version
     - spack env activate --without-view share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
-    - export SPACK_CI_CONFIG_ROOT="${SPACK_ROOT}/share/spack/gitlab/cloud_pipelines/configs"
     - spack
       --config-scope "${SPACK_CI_CONFIG_ROOT}"
       --config-scope "${SPACK_CI_CONFIG_ROOT}/${SPACK_TARGET_PLATFORM}"
