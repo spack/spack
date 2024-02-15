@@ -1187,7 +1187,7 @@ error(100, "{0} compiler '%{1}@{2}' incompatible with 'os={3}'", Package, Compil
      compiler_name(CompilerID, Compiler),
      compiler_version(CompilerID, Version),
      compiler_os(CompilerID, CompilerOS),
-     not os_compatible(CompilerOS, OS)
+     not os_compatible(CompilerOS, OS),
      not allow_compiler(Compiler, Version),
      build(node(X, Package)).
 
