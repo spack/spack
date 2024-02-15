@@ -21,7 +21,8 @@ class Rocmlir(CMakePackage):
     version("5.5.0", sha256="a5f62769d28a73e60bc8d61022820f050e97c977c8f6f6275488db31512e1f42")
     version("5.4.3", sha256="c0ba0f565e1c6614c9e6091a24cbef67b734a29e4a4ed7a8a57dc43f58ed8d53")
     version("5.4.0", sha256="3823f455ee392118c3281e27d45fa0e5381f3c4070eb4e06ba13bc6b34a90a60")
-    version("5.3.0", sha256="e8471a13cb39d33adff34730d3162adaa5d20f9544d61a6a94b39b9b5762ad6d")
+    with default_args(deprecated=True):
+        version("5.3.0", sha256="e8471a13cb39d33adff34730d3162adaa5d20f9544d61a6a94b39b9b5762ad6d")
     variant(
         "build_type",
         default="Release",

@@ -16,10 +16,13 @@ class Nlopt(CMakePackage):
     url = "https://github.com/stevengj/nlopt/archive/v2.5.0.tar.gz"
     git = "https://github.com/stevengj/nlopt.git"
 
+    maintainers("cessenat")
+
     license("LGPL-2.1-or-later")
 
     version("master", branch="master")
 
+    version("2.7.1", sha256="db88232fa5cef0ff6e39943fc63ab6074208831dc0031cf1545f6ecd31ae2a1a")
     version("2.7.0", sha256="b881cc2a5face5139f1c5a30caf26b7d3cb43d69d5e423c9d78392f99844499f")
     version("2.6.2", sha256="cfa5981736dd60d0109c534984c4e13c615314d3584cf1c392a155bfe1a3b17e")
     version("2.6.1", sha256="66d63a505187fb6f98642703bd0ef006fedcae2f9a6d1efa4f362ea919a02650")

@@ -45,7 +45,7 @@ class PyImagecodecs(PythonPackage):
     depends_on("openjpeg@2.4.0:")
     depends_on("snappy@1.1.9:")
     depends_on("zlib-api")
-    depends_on("zlib@1.2.11:", when="^zlib")
+    depends_on("zlib@1.2.11:", when="^[virtuals=zlib-api] zlib")
     depends_on("zopfli@1.0.3: +shared")
     depends_on("zstd@1.5.2:")
 

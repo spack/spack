@@ -35,6 +35,8 @@ class RocmOpencl(CMakePackage):
     license("MIT")
 
     version("master", branch="main")
+    version("6.0.2", sha256="cb8ac610c8d4041b74fb3129c084f1e7b817ce1a5a9943feca1fa7531dc7bdcc")
+    version("6.0.0", sha256="798b55b5b5fb90dd19db54f136d8d8e1da9ae1e408d5b12b896101d635f97e50")
     version("5.7.1", sha256="c78490335233a11b4d8a5426ace7417c555f5e2325de10422df06c0f0f00f7eb")
     version("5.7.0", sha256="bc2447cb6fd86dff6a333b04e77ce85755104d9011a14a044af53caf02449573")
     version("5.6.1", sha256="ec26049f7d93c95050c27ba65472736665ec7a40f25920a868616b2970f6b845")
@@ -45,11 +47,12 @@ class RocmOpencl(CMakePackage):
     version("5.4.0", sha256="a294639478e76c75dac0e094b418f9bd309309b07faf6af126cdfad9aab3c5c7")
     version("5.3.3", sha256="cab394e6ef16c35bab8de29a66b96a7dc0e7d1297aaacba3718fa1d369233c9f")
     version("5.3.0", sha256="d251e2efe95dc12f536ce119b2587bed64bbda013969fa72be58062788044a9e")
-    version("5.2.3", sha256="932ea3cd268410010c0830d977a30ef9c14b8c37617d3572a062b5d4595e2b94")
-    version("5.2.1", sha256="eb4ff433f8894ca659802f81792646034f8088b47aca6ad999292bcb8d6381d5")
-    version("5.2.0", sha256="80f73387effdcd987a150978775a87049a976aa74f5770d4420847b004dd59f0")
-    version("5.1.3", sha256="44a7fac721abcd93470e1a7e466bdea0c668c253dee93e4f1ea9a72dbce4ba31")
-    version("5.1.0", sha256="362d81303048cf7ed5d2f69fb65ed65425bc3da4734fff83e3b8fbdda51b0927")
+    with default_args(deprecated=True):
+        version("5.2.3", sha256="932ea3cd268410010c0830d977a30ef9c14b8c37617d3572a062b5d4595e2b94")
+        version("5.2.1", sha256="eb4ff433f8894ca659802f81792646034f8088b47aca6ad999292bcb8d6381d5")
+        version("5.2.0", sha256="80f73387effdcd987a150978775a87049a976aa74f5770d4420847b004dd59f0")
+        version("5.1.3", sha256="44a7fac721abcd93470e1a7e466bdea0c668c253dee93e4f1ea9a72dbce4ba31")
+        version("5.1.0", sha256="362d81303048cf7ed5d2f69fb65ed65425bc3da4734fff83e3b8fbdda51b0927")
     version(
         "5.0.2",
         sha256="3edb1992ba28b4a7f82dd66fbd121f62bd859c1afb7ceb47fa856bd68feedc95",
@@ -200,12 +203,14 @@ class RocmOpencl(CMakePackage):
         "5.6.1",
         "5.7.0",
         "5.7.1",
+        "6.0.0",
+        "6.0.2",
         "master",
     ]:
         depends_on("comgr@" + ver, type="build", when="@" + ver)
         depends_on("hsa-rocr-dev@" + ver, type="link", when="@" + ver)
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
 
     @classmethod

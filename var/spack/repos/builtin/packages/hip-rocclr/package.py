@@ -37,11 +37,12 @@ class HipRocclr(CMakePackage):
     version("5.4.0", sha256="46a1579310b3ab9dc8948d0fb5bed4c6b312f158ca76967af7ab69e328d43138")
     version("5.3.3", sha256="f8133a5934f9c53b253d324876d74f08a19e2f5b073bc94a62fe64b0d2183a18")
     version("5.3.0", sha256="2bf14116b5e2270928265f5d417b3d0f0f2e13cbc8ec5eb8c80d4d4a58ff7e94")
-    version("5.2.3", sha256="0493c414d4db1af8e1eb30a651d9512044644244488ebb13478c2138a7612998")
-    version("5.2.1", sha256="465ca9fa16869cd89dab8c2d66d9b9e3c14f744bbedaa1d215b0746d77a500ba")
-    version("5.2.0", sha256="37f5fce04348183bce2ece8bac1117f6ef7e710ca68371ff82ab08e93368bafb")
-    version("5.1.3", sha256="ddee63cdc6515c90bab89572b13e1627b145916cb8ede075ef8446cbb83f0a48")
-    version("5.1.0", sha256="f4f265604b534795a275af902b2c814f416434d9c9e16db81b3ed5d062187dfa")
+    with default_args(deprecated=True):
+        version("5.2.3", sha256="0493c414d4db1af8e1eb30a651d9512044644244488ebb13478c2138a7612998")
+        version("5.2.1", sha256="465ca9fa16869cd89dab8c2d66d9b9e3c14f744bbedaa1d215b0746d77a500ba")
+        version("5.2.0", sha256="37f5fce04348183bce2ece8bac1117f6ef7e710ca68371ff82ab08e93368bafb")
+        version("5.1.3", sha256="ddee63cdc6515c90bab89572b13e1627b145916cb8ede075ef8446cbb83f0a48")
+        version("5.1.0", sha256="f4f265604b534795a275af902b2c814f416434d9c9e16db81b3ed5d062187dfa")
     version(
         "5.0.2",
         sha256="34decd84652268dde865f38e66f8fb4750a08c2457fea52ad962bced82a03e5e",

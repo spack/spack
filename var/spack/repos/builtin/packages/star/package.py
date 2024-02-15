@@ -14,6 +14,7 @@ class Star(MakefilePackage):
 
     license("MIT")
 
+    version("2.7.11a", sha256="542457b1a4fee73f27a581b1776e9f73ad2b4d7e790388b6dc71147bd039f99a")
     version("2.7.10b", sha256="0d1b71de6c5be1c5d90b32130d2abcd5785a4fc7c1e9bf19cc391947f2dc46e5")
     version("2.7.10a", sha256="af0df8fdc0e7a539b3ec6665dce9ac55c33598dfbc74d24df9dae7a309b0426a")
     version("2.7.6a", sha256="9320797c604673debea0fe8f2e3762db364915cc59755de1a0d87c8018f97d51")
@@ -36,6 +37,8 @@ class Star(MakefilePackage):
     )
 
     depends_on("zlib-api")
+    # required for certain steps in the makefile
+    depends_on("xxd", type="build")
 
     build_directory = "source"
 
@@ -44,8 +47,12 @@ class Star(MakefilePackage):
             env["CXXFLAGS_SIMD"] = ""
 
     def build(self, spec, prefix):
+        # different make targets if we're compiling for Mac M1/2
         with working_dir(self.build_directory):
-            make("STAR", "STARlong")
+            if spec.satisfies("platform=darwin target=aarch64:"):
+                make("STARforMacStatic", "STARlongForMacStatic")
+            else:
+                make("STAR", "STARlong")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

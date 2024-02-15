@@ -14,7 +14,7 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/ROCm/hipBLAS"
     git = "https://github.com/ROCm/hipBLAS.git"
-    url = "https://github.com/ROCm/hipBLAS/archive/rocm-6.0.0.tar.gz"
+    url = "https://github.com/ROCm/hipBLAS/archive/rocm-6.0.2.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath", "haampie")
@@ -24,6 +24,7 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("6.0.2", sha256="10c1b6c1deb0f225c0fb6b2bb88398a32cd0d32d3ffce9b5c8df9db2cf88d25c")
     version("6.0.0", sha256="8fbd0c244fe82eded866e06d2399b1d91ab5d43d2ebcb73382c7ce1ae48d9cb3")
     version("5.7.1", sha256="794e9298f48ffbe3bd1c1ab87a5c2c2b953713500155fdec9ef8cbb11f81fc8a")
     version("5.7.0", sha256="8c6cd2ffa4ce6ab03e05feffe074685b5525610870aebe9d78f817b3037f33a4")
@@ -35,11 +36,12 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
     version("5.4.0", sha256="341d61adff8d08cbf70aa07bd11a088bcd0687fc6156870a1aee9eff74f3eb4f")
     version("5.3.3", sha256="1ce093fc6bc021ad4fe0b0b93f9501038a7a5a16b0fd4fc485d65cbd220a195e")
     version("5.3.0", sha256="873d55749479873994679840906c4257316dfb09a6200411204ad4a8c2480565")
-    version("5.2.3", sha256="4d66db9b000b6207b5270d90556b724bfdb08ebbfcc675f014287e0be7ee6344")
-    version("5.2.1", sha256="ccae36b118b7a1eb4b2f7d65fb163f54ab9c5cf774dbe2ec60971d4f78ae8308")
-    version("5.2.0", sha256="5e9091dc4ef83896f5c3bc5ade1cb5db8e1a6afc451dbba4da19d8a7ec2b6f29")
-    version("5.1.3", sha256="f0fdaa851971b41b48ec2e7d640746fbd6f9f433da2020c5fd95c91a7473d9e1")
-    version("5.1.0", sha256="22faba3828e50a4c4e22f569a7d6441c797a11db1d472619c01d3515a3275e92")
+    with default_args(deprecated=True):
+        version("5.2.3", sha256="4d66db9b000b6207b5270d90556b724bfdb08ebbfcc675f014287e0be7ee6344")
+        version("5.2.1", sha256="ccae36b118b7a1eb4b2f7d65fb163f54ab9c5cf774dbe2ec60971d4f78ae8308")
+        version("5.2.0", sha256="5e9091dc4ef83896f5c3bc5ade1cb5db8e1a6afc451dbba4da19d8a7ec2b6f29")
+        version("5.1.3", sha256="f0fdaa851971b41b48ec2e7d640746fbd6f9f433da2020c5fd95c91a7473d9e1")
+        version("5.1.0", sha256="22faba3828e50a4c4e22f569a7d6441c797a11db1d472619c01d3515a3275e92")
     version(
         "5.0.2",
         sha256="201772bfc422ecb2c50e898dccd7d3d376cf34a2b795360e34bf71326aa37646",
@@ -143,7 +145,7 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("rocm-cmake@5.2.0:", type="build", when="@5.2.0:5.7")
     depends_on("rocm-cmake@4.5.0:", type="build", when="@4.5.0:")
     depends_on("rocm-cmake@3.5.0:", type="build")
-    for ver in ["6.0.0"]:
+    for ver in ["6.0.0", "6.0.2"]:
         depends_on("rocm-cmake@" + ver, when="+rocm @" + ver)
 
     depends_on("hip +cuda", when="+cuda")
@@ -179,6 +181,7 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
         "5.7.0",
         "5.7.1",
         "6.0.0",
+        "6.0.2",
         "master",
         "develop",
     ]:

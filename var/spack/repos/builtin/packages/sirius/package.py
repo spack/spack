@@ -111,6 +111,7 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@3.23:", type="build")
     depends_on("mpi")
     depends_on("gsl")
+    depends_on("blas")
     depends_on("lapack")
     depends_on("fftw-api@3")
     depends_on("libxc@3.0.0:")
@@ -134,16 +135,18 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("magma", when="+magma")
 
-    depends_on("spfft@0.9.13:", when="@7.0.1:")
-    depends_on("spfft+single_precision", when="+single_precision ^spfft")
-    depends_on("spfft+cuda", when="+cuda ^spfft")
-    depends_on("spfft+rocm", when="+rocm ^spfft")
-    depends_on("spfft+openmp", when="+openmp ^spfft")
+    with when("@7.0.1:"):
+        depends_on("spfft@0.9.13:")
+        depends_on("spfft+single_precision", when="+single_precision")
+        depends_on("spfft+cuda", when="+cuda")
+        depends_on("spfft+rocm", when="+rocm")
+        depends_on("spfft+openmp", when="+openmp")
 
-    depends_on("spla@1.1.0:", when="@7.0.2:")
-    depends_on("spla+cuda", when="+cuda ^spla")
-    depends_on("spla+rocm", when="+rocm ^spla")
-    depends_on("spla+openmp", when="+openmp ^spla")
+    with when("@7.0.2:"):
+        depends_on("spla@1.1.0:")
+        depends_on("spla+cuda", when="+cuda")
+        depends_on("spla+rocm", when="+rocm")
+        depends_on("spla+openmp", when="+openmp")
 
     depends_on("nlcglib", when="+nlcglib")
     depends_on("nlcglib+rocm", when="+nlcglib+rocm")
@@ -170,10 +173,10 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+scalapack", when="^cray-libsci")
 
     # Propagate openmp to blas
-    depends_on("openblas threads=openmp", when="+openmp ^openblas")
-    depends_on("amdblis threads=openmp", when="+openmp ^amdblis")
-    depends_on("blis threads=openmp", when="+openmp ^blis")
-    depends_on("intel-mkl threads=openmp", when="+openmp ^intel-mkl")
+    depends_on("openblas threads=openmp", when="+openmp ^[virtuals=blas] openblas")
+    depends_on("amdblis threads=openmp", when="+openmp ^[virtuals=blas] amdblis")
+    depends_on("blis threads=openmp", when="+openmp ^[virtuals=blas] blis")
+    depends_on("intel-mkl threads=openmp", when="+openmp ^[virtuals=blas] intel-mkl")
 
     depends_on("wannier90", when="@7.5.0: +wannier90")
     depends_on("wannier90+shared", when="@7.5.0: +wannier90+shared")

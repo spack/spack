@@ -796,10 +796,30 @@ def _issues_in_depends_on_directive(pkgs, error_cls):
                 except spack.repo.UnknownPackageError:
                     # This dependency is completely missing, so report
                     # and continue the analysis
-                    summary = (
-                        f"{pkg_name}: unknown package '{dep_name}' in " "'depends_on' directive"
-                    )
+                    summary = f"{pkg_name}: unknown package '{dep_name}' in 'depends_on' directive"
                     details = [f" in {filename}"]
+                    errors.append(error_cls(summary=summary, details=details))
+                    continue
+
+                # Check for self-referential specs similar to:
+                #
+                # depends_on("foo@X.Y", when="^foo+bar")
+                #
+                # That would allow clingo to choose whether to have foo@X.Y+bar in the graph.
+                problematic_edges = [
+                    x for x in when.edges_to_dependencies(dep_name) if not x.virtuals
+                ]
+                if problematic_edges and not dep.patches:
+                    summary = (
+                        f"{pkg_name}: dependency on '{dep.spec}' when '{when}' is self-referential"
+                    )
+                    details = [
+                        (
+                            f" please specify better using '^[virtuals=...] {dep_name}', or "
+                            f"substitute with an equivalent condition on '{pkg_name}'"
+                        ),
+                        f" in {filename}",
+                    ]
                     errors.append(error_cls(summary=summary, details=details))
                     continue
 

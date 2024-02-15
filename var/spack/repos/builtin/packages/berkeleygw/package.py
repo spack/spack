@@ -101,10 +101,8 @@ class Berkeleygw(MakefilePackage):
 
     # Force openmp propagation on some providers of blas / fftw-api
     with when("+openmp"):
-        depends_on("fftw+openmp", when="^fftw")
-        depends_on("amdfftw+openmp", when="^amdfftw")
-        depends_on("openblas threads=openmp", when="^openblas")
-        depends_on("amdblis threads=openmp", when="^amdblis")
+        depends_on("openblas threads=openmp", when="^[virtuals=blas] openblas")
+        depends_on("amdblis threads=openmp", when="^[virtuals=blas] amdblis")
 
     parallel = False
 

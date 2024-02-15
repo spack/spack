@@ -84,6 +84,10 @@ default:
     PUSH_BUILDCACHE_DEPRECATED: "${PROTECTED_MIRROR_PUSH_DOMAIN}/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
 
   rules:
+    - if: $SPACK_CI_DISABLE_STACKS =~ /.+/ && $SPACK_CI_STACK_NAME =~ $SPACK_CI_DISABLE_STACKS
+      when: never
+    - if: $SPACK_CI_ENABLE_STACKS =~ /.+/ && $SPACK_CI_STACK_NAME !~ $SPACK_CI_ENABLE_STACKS
+      when: never
     - if: $CI_COMMIT_REF_NAME == "develop"
       # Pipelines on develop only rebuild what is missing from the mirror
       when: always
@@ -707,7 +711,7 @@ tutorial-build:
 
 ml-linux-x86_64-cpu-generate:
   extends: [ ".generate-x86_64", .ml-linux-x86_64-cpu, ".tags-x86_64_v4" ]
-  image: ghcr.io/spack/linux-ubuntu22.04-x86_64_v2:v2023-07-01
+  image: ghcr.io/spack/linux-ubuntu22.04-x86_64_v2:v2024-01-29
 
 ml-linux-x86_64-cpu-build:
   extends: [ ".build", ".ml-linux-x86_64-cpu" ]
@@ -730,7 +734,7 @@ ml-linux-x86_64-cpu-build:
 
 ml-linux-x86_64-cuda-generate:
   extends: [ ".generate-x86_64", .ml-linux-x86_64-cuda, ".tags-x86_64_v4" ]
-  image: ghcr.io/spack/linux-ubuntu22.04-x86_64_v2:v2023-07-01
+  image: ghcr.io/spack/linux-ubuntu22.04-x86_64_v2:v2024-01-29
 
 ml-linux-x86_64-cuda-build:
   extends: [ ".build", ".ml-linux-x86_64-cuda"  ]
@@ -753,7 +757,7 @@ ml-linux-x86_64-cuda-build:
 
 ml-linux-x86_64-rocm-generate:
   extends: [ ".generate-x86_64", .ml-linux-x86_64-rocm, ".tags-x86_64_v4" ]
-  image: ghcr.io/spack/linux-ubuntu22.04-x86_64_v2:v2023-07-01
+  image: ghcr.io/spack/linux-ubuntu22.04-x86_64_v2:v2024-01-29
 
 ml-linux-x86_64-rocm-build:
   extends: [ ".build", ".ml-linux-x86_64-rocm" ]

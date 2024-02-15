@@ -396,6 +396,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a list -d 'list and
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a load -d 'add package to the user environment'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a location -d 'print out locations of packages and spack directories'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a log-parse -d 'filter errors and warnings from build logs'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a logs -d 'print out logs for packages'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a maintainers -d 'get information about package maintainers'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a make-installer -d 'generate Windows installer'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a mark -d 'mark packages as explicitly or implicitly installed'
@@ -1178,19 +1179,19 @@ complete -c spack -n '__fish_spack_using_command config' -l scope -r -d 'configu
 
 # spack config get
 set -g __fish_spack_optspecs_spack_config_get h/help
-complete -c spack -n '__fish_spack_using_command_pos 0 config get' -f -a 'bootstrap cdash ci compilers concretizer config definitions develop mirrors modules packages repos upstreams'
+complete -c spack -n '__fish_spack_using_command_pos 0 config get' -f -a 'bootstrap cdash ci compilers concretizer config definitions develop mirrors modules packages repos upstreams view'
 complete -c spack -n '__fish_spack_using_command config get' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command config get' -s h -l help -d 'show this help message and exit'
 
 # spack config blame
 set -g __fish_spack_optspecs_spack_config_blame h/help
-complete -c spack -n '__fish_spack_using_command_pos 0 config blame' -f -a 'bootstrap cdash ci compilers concretizer config definitions develop mirrors modules packages repos upstreams'
+complete -c spack -n '__fish_spack_using_command_pos 0 config blame' -f -a 'bootstrap cdash ci compilers concretizer config definitions develop mirrors modules packages repos upstreams view'
 complete -c spack -n '__fish_spack_using_command config blame' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command config blame' -s h -l help -d 'show this help message and exit'
 
 # spack config edit
 set -g __fish_spack_optspecs_spack_config_edit h/help print-file
-complete -c spack -n '__fish_spack_using_command_pos 0 config edit' -f -a 'bootstrap cdash ci compilers concretizer config definitions develop mirrors modules packages repos upstreams'
+complete -c spack -n '__fish_spack_using_command_pos 0 config edit' -f -a 'bootstrap cdash ci compilers concretizer config definitions develop mirrors modules packages repos upstreams view'
 complete -c spack -n '__fish_spack_using_command config edit' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command config edit' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command config edit' -l print-file -f -a print_file
@@ -2116,6 +2117,12 @@ complete -c spack -n '__fish_spack_using_command log-parse' -s w -l width -r -f 
 complete -c spack -n '__fish_spack_using_command log-parse' -s w -l width -r -d 'wrap width: auto-size to terminal by default; 0 for no wrap'
 complete -c spack -n '__fish_spack_using_command log-parse' -s j -l jobs -r -f -a jobs
 complete -c spack -n '__fish_spack_using_command log-parse' -s j -l jobs -r -d 'number of jobs to parse log file (default: 1 for short logs, ncpus for long logs)'
+
+# spack logs
+set -g __fish_spack_optspecs_spack_logs h/help
+complete -c spack -n '__fish_spack_using_command_pos_remainder 0 logs' -f -k -a '(__fish_spack_specs)'
+complete -c spack -n '__fish_spack_using_command logs' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command logs' -s h -l help -d 'show this help message and exit'
 
 # spack maintainers
 set -g __fish_spack_optspecs_spack_maintainers h/help maintained unmaintained a/all by-user

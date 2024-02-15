@@ -73,13 +73,13 @@ class QuantumEspresso(CMakePackage, Package):
     # Need OpenMP threaded FFTW and BLAS libraries when configured
     # with OpenMP support
     with when("+openmp"):
-        depends_on("fftw+openmp", when="^fftw")
-        depends_on("amdfftw+openmp", when="^amdfftw")
-        depends_on("openblas threads=openmp", when="^openblas")
-        depends_on("amdblis threads=openmp", when="^amdblis")
-        depends_on("intel-mkl threads=openmp", when="^intel-mkl")
-        depends_on("armpl-gcc threads=openmp", when="^armpl-gcc")
-        depends_on("acfl threads=openmp", when="^acfl")
+        depends_on("fftw+openmp", when="^[virtuals=fftw-api] fftw")
+        depends_on("amdfftw+openmp", when="^[virtuals=fftw-api] amdfftw")
+        depends_on("openblas threads=openmp", when="^[virtuals=blas] openblas")
+        depends_on("amdblis threads=openmp", when="^[virtuals=blas] amdblis")
+        depends_on("intel-mkl threads=openmp", when="^[virtuals=blas] intel-mkl")
+        depends_on("armpl-gcc threads=openmp", when="^[virtuals=blas] armpl-gcc")
+        depends_on("acfl threads=openmp", when="^[virtuals=blas] acfl")
 
     # Add Cuda Fortran support
     # depends on NVHPC compiler, not directly on CUDA toolkit

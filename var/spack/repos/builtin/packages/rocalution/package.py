@@ -19,7 +19,7 @@ class Rocalution(CMakePackage):
 
     homepage = "https://github.com/ROCm/rocALUTION"
     git = "https://github.com/ROCm/rocALUTION.git"
-    url = "https://github.com/ROCm/rocALUTION/archive/rocm-6.0.0.tar.gz"
+    url = "https://github.com/ROCm/rocALUTION/archive/rocm-6.0.2.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath")
@@ -27,6 +27,7 @@ class Rocalution(CMakePackage):
 
     license("MIT")
 
+    version("6.0.2", sha256="453f889677728b510286d4c72952b343cac63c45e2cb8b801d8388a2ec599d2a")
     version("6.0.0", sha256="cabf37691b8db00c82bda49c7dcfaefd9b9067b7d097afa43b7a5f86c45bff99")
     version("5.7.1", sha256="b95afa1285759843c5fea1ad6e1c1edf283922e0d448db03a3e1f42b6942bc24")
     version("5.7.0", sha256="48232a0d1250debce89e39a233bd0b5d52324a2454c078b99c9d44965cbbc0e9")
@@ -38,11 +39,12 @@ class Rocalution(CMakePackage):
     version("5.4.0", sha256="dccf004434e0fee6d0c7bedd46827f5a2af0392bc4807a08403b130e461f55eb")
     version("5.3.3", sha256="3af022250bc25bebdee12bfb8fdbab4b60513b537b9fe15dfa82ded8850c5066")
     version("5.3.0", sha256="f623449789a5c9c9137ae51d4dbbee5c6940d8813826629cb4b7e84f07fab494")
-    version("5.2.3", sha256="8e0d77099bf7dc0d00505e1c936b072a59719102c75398dc1416cbef31902253")
-    version("5.2.1", sha256="f246bd5b5d1b5821c29b566610a1c1d5c5cc361e0e5c373b8b04168b05e9b26f")
-    version("5.2.0", sha256="a5aac471bbec87d019ad7c6db779c73327ad40ecdea09dc5ab2106e62cd6b7eb")
-    version("5.1.3", sha256="7febe8179f120cbe58ea255bc233ad5d1b4c106f3934eb8e670135a8b7bd09c7")
-    version("5.1.0", sha256="d9122189103ebafe7ec5aeb50e60f3e02af5c2747021f9071aab91e7f875c29e")
+    with default_args(deprecated=True):
+        version("5.2.3", sha256="8e0d77099bf7dc0d00505e1c936b072a59719102c75398dc1416cbef31902253")
+        version("5.2.1", sha256="f246bd5b5d1b5821c29b566610a1c1d5c5cc361e0e5c373b8b04168b05e9b26f")
+        version("5.2.0", sha256="a5aac471bbec87d019ad7c6db779c73327ad40ecdea09dc5ab2106e62cd6b7eb")
+        version("5.1.3", sha256="7febe8179f120cbe58ea255bc233ad5d1b4c106f3934eb8e670135a8b7bd09c7")
+        version("5.1.0", sha256="d9122189103ebafe7ec5aeb50e60f3e02af5c2747021f9071aab91e7f875c29e")
     version(
         "5.0.2",
         sha256="b01adaf858b9c3683523b087a55fafb655864f5db8e2a1acdbf588f53d6972e2",
@@ -167,6 +169,7 @@ class Rocalution(CMakePackage):
         "5.7.0",
         "5.7.1",
         "6.0.0",
+        "6.0.2",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocprim@" + ver, when="@" + ver)

@@ -110,6 +110,7 @@ class Mesa(MesonPackage):
         depends_on("libllvm@6:")
         depends_on("libllvm@:11", when="@:20")
         depends_on("libllvm@:12", when="@:21")
+        depends_on("libllvm@:17", when="@:23")
 
     depends_on("libx11", when="+glx")
     depends_on("libxcb", when="+glx")

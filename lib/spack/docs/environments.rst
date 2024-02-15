@@ -472,11 +472,11 @@ a ``packages.yaml`` file) could contain:
 .. code-block:: yaml
 
    spack:
-     ...
+     # ...
      packages:
        all:
          compiler: [intel]
-     ...
+     # ...
 
 This configuration sets the default compiler for all packages to
 ``intel``.
@@ -822,7 +822,7 @@ directories.
 .. code-block:: yaml
 
    spack:
-     ...
+     # ...
      view:
        mpis:
          root: /path/to/view
@@ -866,7 +866,7 @@ automatically named ``default``, so that
 .. code-block:: yaml
 
    spack:
-     ...
+     # ...
      view: True
 
 is equivalent to
@@ -874,7 +874,7 @@ is equivalent to
 .. code-block:: yaml
 
    spack:
-     ...
+     # ...
      view:
        default:
          root: .spack-env/view
@@ -884,7 +884,7 @@ and
 .. code-block:: yaml
 
    spack:
-     ...
+     # ...
      view: /path/to/view
 
 is equivalent to
@@ -892,7 +892,7 @@ is equivalent to
 .. code-block:: yaml
 
    spack:
-     ...
+     # ...
      view:
        default:
          root: /path/to/view

@@ -23,7 +23,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
 
     maintainers("rbberger")
 
-    license("GPL-2.0-or-later")
+    license("GPL-2.0-only")
 
     # rules for new versions and deprecation
     # * new stable versions should be added to stable_versions set
@@ -31,6 +31,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
     #   marked deprecated=True
     # * patch releases older than a stable release should be marked deprecated=True
     version("develop", branch="develop")
+    version("20240207", sha256="d518f32de4eb2681f2543be63926411e72072dd7d67c1670c090b5baabed98ac")
     version("20231121", sha256="704d8a990874a425bcdfe0245faf13d712231ba23f014a3ebc27bc14398856f1")
     version(
         "20230802.2",
@@ -632,9 +633,10 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
     depends_on("py-numpy", when="+python", type=("build", "run"))
     depends_on("py-mpi4py", when="+python+mpi", type=("build", "run"))
     depends_on("py-setuptools@42:", when="@20220217:+python", type=("build", "run"))
-    depends_on("n2p2@2.1.4:", when="+user-hdnnp")
-    depends_on("n2p2@2.1.4:", when="+ml-hdnnp")
-    depends_on("n2p2+shared", when="+lib ^n2p2")
+    for _n2p2_cond in ("+user-hdnnp", "+ml-hdnnp"):
+        with when(_n2p2_cond):
+            depends_on("n2p2@2.1.4:")
+            depends_on("n2p2+shared", when="+lib")
     depends_on("vtk", when="+user-vtk")
     depends_on("vtk", when="+vtk")
     depends_on("hipcub", when="~kokkos +rocm")

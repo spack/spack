@@ -179,16 +179,24 @@ class IntelOneApiLibraryPackage(IntelOneApiPackage):
 
     """
 
+    # find_headers uses heuristics to determine the include directory
+    # that does not work for oneapi packages. Use explicit directories
+    # instead.
     def header_directories(self, dirs):
         h = HeaderList([])
         h.directories = dirs
+        # trilinos passes the directories to cmake, and cmake requires
+        # that the directory exists
+        for dir in dirs:
+            if not isdir(dir):
+                raise RuntimeError(f"{dir} does not exist")
         return h
 
     @property
     def headers(self):
-        return self.header_directories(
-            [self.component_prefix.include, self.component_prefix.include.join(self.component_dir)]
-        )
+        # This should match the directories added to CPATH by
+        # env/vars.sh for the component
+        return self.header_directories([self.component_prefix.include])
 
     @property
     def libs(self):
