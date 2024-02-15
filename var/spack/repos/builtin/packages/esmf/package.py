@@ -110,6 +110,8 @@ class Esmf(MakefilePackage):
     # Testing dependencies
     depends_on("perl", type="test")
 
+    conflicts("%aocc", when="@:8.3")
+
     # Make esmf build with newer intel versions
     patch("intel.patch", when="@:7.0 %intel@17:")
     # Make esmf build with newer gcc versions
