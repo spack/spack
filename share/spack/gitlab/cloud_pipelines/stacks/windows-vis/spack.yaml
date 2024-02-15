@@ -6,6 +6,11 @@
 spack:
   view: false
 
+  include:
+  - $spack/share/spack/gitlab/cloud_pipelines/configs/win64/x86_64
+  - $spack/share/spack/gitlab/cloud_pipelines/configs/win64
+  - $spack/share/spack/gitlab/cloud_pipelines/configs
+
   specs:
   # VTK 8.2 is required to avoid link issues in newer versions on windows
   - vtk@8.2
