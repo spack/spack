@@ -374,7 +374,8 @@ class RocmOpenmpExtras(Package):
             env.set("VERBOSE", 1)
             env.set(
                 "LDSHARED",
-                self.spec["llvm-amdgpu"].prefix.bin.clang + " -shared -Wl,-O1 -Wl,-Bsymbolic-functions -Wl,-z,relro -g -fwrapv -O2"
+                self.spec["llvm-amdgpu"].prefix.bin.clang
+                + " -shared -Wl,-O1 -Wl,-Bsymbolic-functions -Wl,-z,relro -g -fwrapv -O2",
             )
         gfx_list = "gfx700 gfx701 gfx801 gfx803 gfx900 gfx902 gfx906 gfx908"
 
