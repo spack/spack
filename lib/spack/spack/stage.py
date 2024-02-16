@@ -208,7 +208,12 @@ def _mirror_roots():
     ]
 
 
-class StageBase:
+class LockableStagingDir:
+    """A directory whose lifetime can be managed with a context
+    manager (but persists if the user requests it). Instances can have
+    a specified name and if they do, then for all instances that have
+    the same name, only one can enter the context manager.
+    """
     def __init__(self, name, path, keep, lock):
         # TODO: This uses a protected member of tempfile, but seemed the only
         # TODO: way to get a temporary name.  It won't be the same as the
@@ -298,7 +303,7 @@ class StageBase:
         raise NotImplementedError(f"{self.__class__.__name__} is abstract")
 
 
-class Stage(StageBase):
+class Stage(LockableStagingDir):
     """Manages a temporary stage directory for building.
 
     A Stage object is a context manager that handles a directory where
@@ -872,7 +877,7 @@ class DIYStage:
         tty.debug("Sources for DIY stages are not cached")
 
 
-class DevelopStage(StageBase):
+class DevelopStage(LockableStagingDir):
     needs_fetching = False
     requires_patch_success = False
 
