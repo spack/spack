@@ -241,6 +241,8 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         except spack.error.NoLibrariesError:
             pass
 
+        if self.spec.satisfies("threads=openmp"):
+            resolved_libs += self.openmp_libs()
         return resolved_libs
 
     def _xlp64_lib(self, lib):

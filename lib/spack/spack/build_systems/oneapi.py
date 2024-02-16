@@ -9,14 +9,24 @@ import platform
 import shutil
 from os.path import basename, isdir
 
-from llnl.util.filesystem import HeaderList, find_libraries, join_path, mkdirp
+from llnl.util import tty
+from llnl.util.filesystem import HeaderList, LibraryList, find_libraries, join_path, mkdirp
 from llnl.util.link_tree import LinkTree
 
+from spack.build_environment import dso_suffix
 from spack.directives import conflicts, variant
+from spack.package_base import InstallError
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
 
 from .generic import Package
+
+
+def raise_lib_error(*args):
+    """Bails out with an error message. Shows args after the first as one per
+    line, tab-indented, useful for long paths to line up and stand out.
+    """
+    raise InstallError("\n\t".join(str(i) for i in args))
 
 
 class IntelOneApiPackage(Package):
@@ -178,6 +188,39 @@ class IntelOneApiLibraryPackage(IntelOneApiPackage):
     different is needed.
 
     """
+
+    def openmp_libs(self):
+        """Supply LibraryList for linking OpenMP"""
+
+        # NB: Hunting down explicit library files may be the Spack way of
+        # doing things, but it is better to add the compiler defined option
+        # e.g. -fopenmp
+
+        # If other packages use openmp, then all the packages need to
+        # support the same ABI. Spack usually uses the same compiler
+        # for all the packages, but you can force it if necessary:
+        #
+        # e.g. spack install blaspp%oneapi@2024 ^intel-oneapi-mkl%oneapi@2024
+        #
+        if self.spec.satisfies("%intel") or self.spec.satisfies("%oneapi"):
+            libname = "libiomp5"
+        elif self.spec.satisfies("%gcc"):
+            libname = "libgomp"
+        else:
+            raise_lib_error("MKL OMP requires one of %gcc, %oneapi,or %intel")
+
+        # query the compiler for the library path
+        with self.compiler.compiler_environment():
+            omp_lib_path = Executable(self.compiler.cc)(
+                "--print-file-name", f"{libname}.{dso_suffix}", output=str
+            ).strip()
+        # if the compiler cannot find the file, it returns the input path
+        if not os.path.exists(omp_lib_path):
+            raise_lib_error(f"Cannot locate OpenMP library: {omp_lib_path}")
+
+        omp_libs = LibraryList(omp_lib_path)
+        tty.info(f"mkl requires openmp library: {omp_libs}")
+        return omp_libs
 
     # find_headers uses heuristics to determine the include directory
     # that does not work for oneapi packages. Use explicit directories
