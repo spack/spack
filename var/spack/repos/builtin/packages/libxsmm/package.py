@@ -22,11 +22,12 @@ class Libxsmm(MakefilePackage):
 
     license("BSD-3-Clause")
 
+    version("develop", branch="main")
+
     # 2.0 release is planned for Jan / Feb 2024. This commit from main is added
     # as a stable version that supports other targets than x86. Remove this
     # after 2.0 release.
     version("main-2023-11", commit="0d9be905527ba575c14ca5d3b4c9673916c868b2")
-    version("main", branch="main")
 
     version("1.17", sha256="8b642127880e92e8a75400125307724635ecdf4020ca4481e5efe7640451bb92")
     version("1.16.3", sha256="e491ccadebc5cdcd1fc08b5b4509a0aba4e2c096f53d7880062a66b82a0baf84")
