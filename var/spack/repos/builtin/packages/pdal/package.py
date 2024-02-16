@@ -8,7 +8,7 @@ from spack.package import *
 
 class Pdal(CMakePackage):
     """PDAL is a C++ library for translating and manipulating point cloud data.
-       It is very much like the GDAL library which handles raster and vector data.
+    It is very much like the GDAL library which handles raster and vector data.
     """
 
     homepage = "https://pdal.io"
@@ -33,5 +33,5 @@ class Pdal(CMakePackage):
 
     def cmake_args(self):
         args = []
-        args.append("-DPROJ_INCLUDE_DIR="+self.spec['proj'].prefix.include)
+        args.append("-DPROJ_INCLUDE_DIR=" + self.spec['proj'].prefix.include)
         return args
