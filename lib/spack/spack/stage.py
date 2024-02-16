@@ -212,7 +212,7 @@ class LockableStagingDir:
     """A directory whose lifetime can be managed with a context
     manager (but persists if the user requests it). Instances can have
     a specified name and if they do, then for all instances that have
-    the same name, only one can enter the context manager.
+    the same name, only one can enter the context manager at a time.
     """
     def __init__(self, name, path, keep, lock):
         # TODO: This uses a protected member of tempfile, but seemed the only
