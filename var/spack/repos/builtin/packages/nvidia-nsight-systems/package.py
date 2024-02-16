@@ -24,7 +24,7 @@ from spack.package import *
 from glob import glob
 import shutil
 import os
-
+import platform
 
 class NvidiaNsightSystems(Package):
     """NVIDIA Nsight™ Systems is a system-wide performance analysis tool designed to visualize an application’s algorithms, identify the largest opportunities to optimize, and tune to scale efficiently across any quantity or size of CPUs and GPUs, from large servers to our smallest system on a chip (SoC)"""
@@ -34,8 +34,12 @@ class NvidiaNsightSystems(Package):
     maintainers("scothalverson")
     license("NVIDIA Software License Agreement")
 
+    arch = platform.uname()[-1]
     depends_on("libarchive programs='bsdtar'")
-    version('2024.1.1', sha256='b67168897c30b8f7a2c5c2ff1b2bc2bf1a544d4a220bf6eb0db6af9835aefe07', url='https://developer.download.nvidia.com/devtools/repos/rhel8/arm64/nsight-systems-cli-2024.1.1-2024.1.1.59_3380207-0.aarch64.rpm', expand=False)
+    if arch == "x86_64":
+        version('2024.1.1', sha256='890a585807a355b3d986443e5d27727f527d5ac83e901961a1e7761012f565c3', url='https://developer.download.nvidia.com/devtools/repos/rhel8/arm64/nsight-systems-cli-2024.1.1-2024.1.1.59_3380207-0.aarch64.rpm', expand=False)
+    if arch == "aarch64":
+        version('2024.1.1', sha256='b67168897c30b8f7a2c5c2ff1b2bc2bf1a544d4a220bf6eb0db6af9835aefe07', url='https://developer.download.nvidia.com/devtools/repos/rhel8/arm64/nsight-systems-2024.1.1-2024.1.1.59_3380207-0.aarch64.rpm', expand=False)
 
     def install(self, spec, prefix):
         bsdtar = which("bsdtar")
