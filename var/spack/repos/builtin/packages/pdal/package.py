@@ -34,8 +34,8 @@ class Pdal(CMakePackage):
 
     # https://github.com/PDAL/PDAL/issues/3826
     patch("stdcppfs.patch", when="@:2.6.1 %gcc@:8")
-    # a new patch is needed for 2.6.2 onwards
-    conflicts("%gcc@:8", when="@2.6.2:")
+    msg="a new stdc++fs patch is needed for 2.6.2 onwards with gcc@8 or older"
+    conflicts("%gcc@:8", when="@2.6.2:", msg=msg)
 
     def cmake_args(self):
         return [
