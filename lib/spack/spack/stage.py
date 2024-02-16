@@ -918,7 +918,7 @@ class DevelopStage(LockableStagingDir):
         super().create()
         try:
             llnl.util.symlink.symlink(self.path, self.reference_link)
-        except llnl.util.symlink.AlreadyExistsError:
+        except (llnl.util.symlink.AlreadyExistsError, FileExistsError):
             pass
 
     def destroy(self):
