@@ -129,7 +129,8 @@ default:
         SPACK_PIPELINE_TYPE: "spack_pull_request"
         # TODO: We can remove this when we drop the "deprecated" stack
         PUSH_BUILDCACHE_DEPRECATED: "${PR_MIRROR_PUSH_DOMAIN}/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
-        SPACK_PRUNE_UNTOUCHED: "True"
+        # SPACK_PRUNE_UNTOUCHED: "True"
+        SPACK_PRUNE_UNTOUCHED: "False"
         SPACK_PRUNE_UNTOUCHED_DEPENDENT_DEPTH: "1"
         # TODO: Change sync script to include target in branch name.  Then we could
         # TODO: have multiple types of "PR" pipeline here.  It would be better if we could
