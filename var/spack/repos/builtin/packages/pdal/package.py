@@ -34,6 +34,6 @@ class Pdal(CMakePackage):
     patch("stdcppfs.patch", when="@:2.6.1 %gcc@:8")
 
     def cmake_args(self):
-        args = []
-        args.append("-DPROJ_INCLUDE_DIR=" + self.spec["proj"].prefix.include)
-        return args
+        return [
+            self.define("PROJ_INCLUDE_DIR", self.spec["proj"].prefix.include),
+        ]
