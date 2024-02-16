@@ -188,7 +188,7 @@ default:
   tags: ["spack", "public", "medium", "neoverse_v2"]
 
 .generate-win64:
-  extends: [ ".generate-common" ]
+  extends: [ ".base-job", ".generate-common" ]
   before_script:
     - . .\share\spack\setup-env.ps1
   tags: ["spack", "public", "medium", "x86_64-win"]
