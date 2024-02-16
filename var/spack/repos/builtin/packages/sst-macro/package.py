@@ -42,10 +42,11 @@ class SstMacro(AutotoolsPackage):
     version("master", branch="master")
     version("develop", branch="devel")
 
-    depends_on("autoconf@1.68:", type="build", when="@master:")
-    depends_on("automake@1.11.1:", type="build", when="@master:")
-    depends_on("libtool@1.2.4:", type="build", when="@master:")
-    depends_on("m4", type="build", when="@master:")
+    for version_name in ("master", "develop"):
+        depends_on("autoconf@1.68:", type="build", when="@{}".format(version_name))
+        depends_on("automake@1.11.1:", type="build", when="@{}".format(version_name))
+        depends_on("libtool@1.2.4:", type="build", when="@{}".format(version_name))
+        depends_on("m4", type="build", when="@{}".format(version_name))
 
     depends_on("binutils", type="build")
     depends_on("zlib-api", type=("build", "link"))
@@ -75,6 +76,7 @@ class SstMacro(AutotoolsPackage):
     # force out-of-source builds
     build_directory = "spack-build"
 
+    @when("@develop,master")
     def autoreconf(self, spec, prefix):
         bash = which("bash")
         bash("./bootstrap.sh")
