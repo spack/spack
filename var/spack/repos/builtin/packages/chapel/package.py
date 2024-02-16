@@ -10,7 +10,7 @@ from spack.package import *
 from spack.util.environment import path_put_first, set_env
 
 
-class Chapel(AutotoolsPackage):
+class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     """Chapel is a modern programming language that is parallel, productive,
     portable, scalable and open-source."""
 
@@ -149,23 +149,6 @@ class Chapel(AutotoolsPackage):
     )
 
     variant(
-        "gpu",
-        description="GPU vendor support",
-        values=("amd", "nvidia", "unset"),
-        default="unset",
-        multi=False,
-    )
-
-    variant(
-        "gpu_arch",
-        description="AMD GPU architecture must be set at Chapel build time, "
-        "but this is not required for NVIDIA",
-        values=("gfx942", "gfx90a", "gfx908", "gfx906", "unset"),
-        default="unset",
-        multi=False,
-    )
-
-    variant(
         "gpu_mem_strategy",
         description="The memory allocation strategy for GPU data",
         values=("array_on_device", "unified_memory"),
@@ -249,14 +232,6 @@ class Chapel(AutotoolsPackage):
         description="LLVM backend type. Use value 'spack' to have spack "
         "handle the LLVM package",
         values=("bundled", "none", "spack", "system"),
-    )
-
-    variant(
-        "locale_model",
-        values=("flat", "gpu"),
-        default="flat",
-        description="Locale model to use",
-        multi=False,
     )
 
     variant(
@@ -393,26 +368,33 @@ class Chapel(AutotoolsPackage):
         "CHPL_TIMERS",
         "CHPL_UNWIND",
     ]
+
     conflicts("platform=windows")  # Support for windows is through WSL only
 
-    conflicts("locale_model=gpu", when="llvm=none", msg="GPU support requires building with LLVM")
+    conflicts("rocm", when="cuda", msg="Chapel must be built with either CUDA or ROCm, not both")
 
-    conflicts("gpu=amd", when="gpu_arch=unset", msg="AMD GPU support requires specifying gpu_arch")
+    with when("llvm=none"):
+        conflicts("cuda", msg="Cuda support requires building with LLVM")
+        conflicts("rocm", msg="ROCm support requires building with LLVM")
 
     # Based on docs https://chapel-lang.org/docs/technotes/gpu.html#requirements
     requires("llvm=bundled", when="^cuda@12:")
 
     # Add dependencies
 
+    # TODO: Make conditional on +chpldoc variant once removed from install target
     depends_on("doxygen@1.8.17:")
 
     for opt, dep in package_module_dict.items():
         depends_on(dep, when="package_modules={0}".format(opt), type=("run", "build", "link"))
         depends_on(dep, when="package_modules=all", type=("run", "build", "link"))
 
+    # TODO: llvm version requirements when llvm=system, these are conditional
+    # on the version of Chapel
+
     depends_on("llvm@14:16", when="llvm=spack")
 
-    depends_on("llvm@15", when="locale_model=gpu llvm=spack gpu=nvidia ^cuda@12:")
+    depends_on("llvm@15", when="llvm=spack ^cuda@12:")
 
     depends_on("m4")
 
@@ -423,16 +405,7 @@ class Chapel(AutotoolsPackage):
 
     depends_on("gmp", when="gmp=spack", type=("build", "link", "run"))
 
-    depends_on("cuda@11:12", when="gpu=nvidia", type=("build", "link", "run"))
-
-    # TODO: AMD support is not yet working
-    with when("gpu=amd"):
-        depends_on("hsa-rocr-dev@4:5.4", type=("build", "link", "run"))
-        depends_on("hip@4:5.4", type=("build", "link", "run"))
-        # depends_on("rocm-device-libs@4:5.4", type=("build", "link", "run"))
-        # depends_on("llvm-amdgpu@4:5.4", type=("build", "link", "run"))
-
-    depends_on("python@3.7:3.10")
+    depends_on("python@3.7:")
     depends_on("cmake@3.16:")
 
     def unset_chpl_env_vars(self, env):
@@ -467,6 +440,8 @@ class Chapel(AutotoolsPackage):
         for v in self.spec.variants.keys():
             self.setup_if_not_unset(env, "CHPL_" + v.upper(), self.spec.variants[v].value)
         self.setup_chpl_llvm(env)
+        # TODO: a function to set defaults for things where we removed variants
+        env.set("CHPL_LOCALE_MODEL", "flat")
 
         if self.spec.variants["gmp"].value == "spack":
             env.set("CHPL_GMP", "system")
@@ -492,17 +467,22 @@ class Chapel(AutotoolsPackage):
             env.prepend_path("LD_LIBRARY_PATH", self.spec["curl"].prefix.lib)
             env.prepend_path("PKG_CONFIG_PATH", self.spec["curl"].prefix.lib.pkgconfig)
 
-        if self.spec.variants["gpu"].value == "nvidia":
+        if self.spec.variants["cuda"].value:
             # TODO: why must we add to LD_LIBRARY_PATH to find libcudart?
             env.prepend_path("LD_LIBRARY_PATH", self.spec["cuda"].prefix.lib64)
-        if self.spec.variants["gpu"].value == "amd":
-            if self.spec.variants["rocm"].value:
-                env.set(
-                    "CHPL_LLVM_CONFIG",
-                    "{0}/{1}".format(self.spec["llvm-amdgpu"].prefix, "bin/llvm-config"),
-                )
-                env.prepend_path("CPATH", self.spec["hip"].prefix.include)
-                env.set("CHPL_ROCM_PATH", self.spec["hip"].prefix.bin)
+            env.set("CHPL_LOCALE_MODEL", "gpu")
+            env.set("CHPL_GPU", "nvidia")
+
+        if self.spec.variants["rocm"].value:
+            env.set("CHPL_LOCALE_MODEL", "gpu")
+            env.set("CHPL_GPU", "amd")
+            env.set("CHPL_GPU_ARCH", self.spec.variants["amdgpu_target"].value)
+            env.set(
+                "CHPL_LLVM_CONFIG",
+                "{0}/{1}".format(self.spec["llvm-amdgpu"].prefix, "bin/llvm-config"),
+            )
+            env.prepend_path("CPATH", self.spec["hip"].prefix.include)
+            env.set("CHPL_ROCM_PATH", self.spec["hip"].prefix.bin)
 
         self.setup_chpl_comm(env, self.spec)
 
@@ -544,7 +524,7 @@ class Chapel(AutotoolsPackage):
         spec_vers_str = str(self.spec.version.up_to(2))
         return spec_vers_str
 
-    def test_version(self):
+    def run_test_version(self):
         """Perform version checks on selected installed package binaries."""
         expected = f"version {self._output_version_long}"
 
@@ -585,7 +565,7 @@ class Chapel(AutotoolsPackage):
         else:
             make("check")
 
-    def test_package_modules(self):
+    def run_test_package_modules(self):
         """Test that the package modules are available"""
         if not self.spec.variants["module_tests"].value:
             print("Skipping module tests as module_tests variant is not set")
@@ -627,14 +607,14 @@ class Chapel(AutotoolsPackage):
     def self_check(self):
         """Run the self-check after installing the package"""
         path_put_first("PATH", [self.prefix.bin])
-        self.test_version()
+        self.run_test_version()
         if self.spec.variants["check"].value:
             with set_env(CHPL_HOME=self.stage.source_path):
                 with working_dir(self.stage.source_path):
-                    if self.spec.variants["locale_model"].value == "gpu":
+                    if self.spec.variants["cuda"].value or self.spec.variants["rocm"].value:
                         with set_env(COMP_FLAGS="--no-checks --no-compiler-driver"):
                             self.run_local_make_check()
                     else:  # Not GPU
                         self.run_local_make_check()
                     make("check-chpldoc")
-        self.test_package_modules()
+        self.run_test_package_modules()
