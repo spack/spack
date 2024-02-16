@@ -164,7 +164,7 @@ class Snakemake(PythonPackage):
 
     with when("+s3"):
         depends_on(
-            "py-snakemake-storage-plugin-s3",  when="@8:", type=("build", "run")
+            "py-snakemake-storage-plugin-s3", when="@8:", type=("build", "run")
         )
         depends_on("py-boto3", when="@:7", type=("build", "run"))
         depends_on("py-botocore", when="@:7", type=("build", "run"))
