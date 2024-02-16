@@ -206,6 +206,8 @@ class IntelOneApiLibraryPackage(IntelOneApiPackage):
             libname = "libiomp5"
         elif self.spec.satisfies("%gcc"):
             libname = "libgomp"
+        elif self.spec.satisfies("%clang"):
+            libname = "libomp"
         else:
             raise_lib_error("MKL OMP requires one of %gcc, %oneapi,or %intel")
 
