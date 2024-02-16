@@ -63,6 +63,16 @@ class SstCore(AutotoolsPackage):
     )
     variant("preview", default=False, description="Preview build with deprecated features removed")
     variant("profile", default=False, description="Enable performance profiling of core features")
+    # Starting with 0bc4832f3f87aa78d1efd3e15743eb059dc03250.  It should be
+    # optional, but ncurses appearing as a transitive dependency during
+    # concretization leads to a false positive header find during configure
+    # time that eventually leads to a linker failure.
+    variant(
+        "curses",
+        default=True,
+        when="@develop,master",
+        description="Build support for interactive sst-info",
+    )
 
     depends_on("python@:3.11", type=("build", "run", "link"))
     depends_on("mpi", when="+pdes_mpi")
@@ -70,6 +80,7 @@ class SstCore(AutotoolsPackage):
     depends_on("hdf5", when="+hdf5")
     depends_on("zlib-api", when="+zlib")
     depends_on("gettext")
+    depends_on("ncurses", when="+curses", type=("build", "link"))
 
     for version_name in ("master", "develop"):
         depends_on("autoconf@1.68:", type="build", when="@{}".format(version_name))
