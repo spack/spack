@@ -60,9 +60,9 @@ class GeopmService(AutotoolsPackage):
     conflicts("platform=darwin", msg="Darwin is not supported")
     conflicts("platform=windows", msg="Windows is not supported")
 
-    conflicts("target=aarch64:", msg="Only available on x86_64")
-    conflicts("target=ppc64:", msg="Only available on x86_64")
-    conflicts("target=ppc64le:", msg="Only available on x86_64")
+    conflicts("target=aarch64:", msg="Only available on x86_64", when="@3.0.1")
+    conflicts("target=ppc64:", msg="Only available on x86_64", when="@3.0.1")
+    conflicts("target=ppc64le:", msg="Only available on x86_64", when="@3.0.1")
 
     patch("0001-Support-NVML-via-CUDA-installation.patch", when="+nvml")
 
@@ -129,10 +129,16 @@ class GeopmService(AutotoolsPackage):
         args += self.enable_or_disable("nvml")
         if "+nvml" in self.spec:
             args += [
-                "--with-nvml=" + join_path(self.spec["cuda"].prefix, "targets", "x86_64-linux")
+                "--with-nvml="
+                + join_path(
+                    self.spec["cuda"].prefix, "targets", f"{self.spec.target.family}-linux"
+                )
             ]
 
         args += self.enable_or_disable("rawmsr")
+        with when("@develop"):
+            if self.spec.target.family != "x86_64":
+                args += ["--disable-cpuid"]
         return args
 
     def setup_run_environment(self, env):
