@@ -916,7 +916,7 @@ class DevelopStage(StageBase):
         try:
             os.symlink(self.path, self.reference_link)
         except FileExistsError:
-            pass 
+            pass
 
     def destroy(self):
         # Destroy all files, but do not follow symlinks
