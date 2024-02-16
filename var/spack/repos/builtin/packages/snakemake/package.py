@@ -147,7 +147,7 @@ class Snakemake(PythonPackage):
         "fs",
         default=False,
         description="Read and write from a locally mounted filesystem using rsync",
-        when="@8:"
+        when="@8:",
     )
     depends_on("py-snakemake-storage-plugin-fs", when="+fs", type=("build", "run"))
 
@@ -163,9 +163,7 @@ class Snakemake(PythonPackage):
     variant("s3", default=False, description="Amazon S3 API storage (AWS S3, MinIO, etc.)")
 
     with when("+s3"):
-        depends_on(
-            "py-snakemake-storage-plugin-s3", when="@8:", type=("build", "run")
-        )
+        depends_on("py-snakemake-storage-plugin-s3", when="@8:", type=("build", "run"))
         depends_on("py-boto3", when="@:7", type=("build", "run"))
         depends_on("py-botocore", when="@:7", type=("build", "run"))
 
