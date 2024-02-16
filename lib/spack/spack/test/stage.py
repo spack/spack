@@ -909,6 +909,10 @@ class TestDevelopStage:
         assert os.path.exists(os.path.join(srcdir, "a2"))
 
     def test_develop_stage(self, develop_path, tmp_build_stage_dir):
+        """Check that (a) develop stages update the given
+        `dev_path` with a symlink that points to the stage dir and
+        (b) that destroying the stage does not destroy `dev_path`
+        """
         devtree, srcdir = develop_path
         reference_link = os.path.join("link-to-stage")
         stage = DevelopStage("test-stage", srcdir, reference_link)
