@@ -8,7 +8,8 @@ from spack.package import *
 
 
 class PySnakemakeStoragePluginFs(PythonPackage):
-    """A Snakemake storage plugin that reads and writes from a locally mounted filesystem using rsync."""
+    """A Snakemake storage plugin that reads and writes from a locally mounted filesystem
+    using rsync."""
 
     homepage = "https://github.com/snakemake/snakemake-storage-plugin-fs"
     pypi = "snakemake_storage_plugin_fs/snakemake_storage_plugin_fs-0.1.5.tar.gz"

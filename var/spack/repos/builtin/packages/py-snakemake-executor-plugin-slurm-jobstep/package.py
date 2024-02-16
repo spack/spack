@@ -12,7 +12,10 @@ class PySnakemakeExecutorPluginSlurmJobstep(PythonPackage):
     (meant for internal use by snakemake-executor-plugin-slurm)."""
 
     homepage = "https://github.com/snakemake/snakemake-executor-plugin-slurm-jobstep"
-    pypi = "snakemake_executor_plugin_slurm_jobstep/snakemake_executor_plugin_slurm_jobstep-0.1.9.tar.gz"
+    pypi = (
+        "snakemake_executor_plugin_slurm_jobstep/"
+        "snakemake_executor_plugin_slurm_jobstep-0.1.9.tar.gz"
+    )
 
     license("MIT")
 

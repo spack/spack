@@ -11,7 +11,10 @@ class PySnakemakeExecutorPluginClusterSync(PythonPackage):
     """A Snakemake executor plugin for cluster jobs that are executed synchronously."""
 
     homepage = "https://github.com/snakemake/snakemake-executor-plugin-cluster-sync"
-    pypi = "snakemake_executor_plugin_cluster_sync/snakemake_executor_plugin_cluster_sync-0.1.3.tar.gz"
+    pypi = (
+        "snakemake_executor_plugin_cluster_sync/"
+        "snakemake_executor_plugin_cluster_sync-0.1.3.tar.gz"
+    )
 
     license("MIT")
 

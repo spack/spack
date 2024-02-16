@@ -11,7 +11,10 @@ class PySnakemakeExecutorPluginClusterGeneric(PythonPackage):
     """A Snakemake executor plugin for submitting jobs to a cluster."""
 
     homepage = "https://github.com/snakemake/snakemake-executor-plugin-cluster-generic"
-    pypi = "snakemake_executor_plugin_cluster_generic/snakemake_executor_plugin_cluster_generic-1.0.7.tar.gz"
+    pypi = (
+        "snakemake_executor_plugin_cluster_generic/"
+        "snakemake_executor_plugin_cluster_generic-1.0.7.tar.gz"
+    )
 
     license("MIT")
 
