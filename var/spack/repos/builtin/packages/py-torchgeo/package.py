@@ -48,7 +48,7 @@ class PyTorchgeo(PythonPackage):
     depends_on("py-fiona@1.8:", when="@0.3:", type=("build", "run"))
     depends_on("py-fiona@1.5:", type=("build", "run"))
     # Only part of lightning[pytorch-extra] we actually require.
-    depends_on("py-jsonargparse@4.18:+signatures", when="@0.5:", type=("build", "run"))
+    depends_on("py-jsonargparse@4.26.1:+signatures", when="@0.5:", type=("build", "run"))
     depends_on("py-kornia@0.6.9:", when="@0.5:", type=("build", "run"))
     depends_on("py-kornia@0.6.5:", when="@0.4.1:", type=("build", "run"))
     # https://github.com/microsoft/torchgeo/pull/1123
