@@ -11,6 +11,8 @@ class Pdal(CMakePackage):
     It is very much like the GDAL library which handles raster and vector data.
     """
 
+    license("BSD Open Source license.")
+
     homepage = "https://pdal.io"
     url = "https://github.com/PDAL/PDAL/archive/refs/tags/2.6.2.tar.gz"
 
