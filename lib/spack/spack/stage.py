@@ -917,7 +917,7 @@ class DevelopStage(LockableStagingDir):
     def create(self):
         super().create()
         try:
-            os.symlink(self.path, self.reference_link)
+            llnl.util.symlink.symlink(self.path, self.reference_link)
         except FileExistsError:
             pass
 
