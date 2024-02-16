@@ -7,4 +7,4 @@ parser.add_argument("out", type=argparse.FileType("w"))
 
 args = parser.parse_args()
 
-args.out.write(os.path.expandvars(args.intput.read()))
+args.out.write(os.path.expandvars(args.input.read()))
