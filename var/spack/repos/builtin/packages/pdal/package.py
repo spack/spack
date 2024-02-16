@@ -35,5 +35,5 @@ class Pdal(CMakePackage):
 
     def cmake_args(self):
         args = []
-        args.append("-DPROJ_INCLUDE_DIR=" + self.spec['proj'].prefix.include)
+        args.append("-DPROJ_INCLUDE_DIR=" + self.spec["proj"].prefix.include)
         return args
