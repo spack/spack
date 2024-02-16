@@ -622,9 +622,7 @@ def ci_rebuild(args):
         ],
         spack_cmd + ["install"] + root_install_args,
     ]
-    import pdb
 
-    pdb.set_trace()
     tty.debug("Installing {0} from source".format(job_spec.name))
     install_exit_code = spack_ci.process_command("install", commands, repro_dir)
 
