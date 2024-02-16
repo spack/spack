@@ -223,7 +223,7 @@ class IntelOneApiLibraryPackage(IntelOneApiPackage):
 
         # if the compiler cannot find the file, it returns the input path
         if not os.path.exists(omp_lib_path):
-            raise InstallError(f"Cannot locate OpenMP library: {omp_lib_path}")
+            raise InstallError(f"OneAPI package cannot locate OpenMP library: {omp_lib_path}")
 
         omp_libs = LibraryList(omp_lib_path)
         tty.info(f"OneAPI package requires OpenMP library: {omp_libs}")
