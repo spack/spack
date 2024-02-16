@@ -191,8 +191,9 @@ def getuid():
     if sys.platform == "win32":
         import ctypes
 
+        # If not admin, use the string name of the login as a unique ID
         if ctypes.windll.shell32.IsUserAnAdmin() == 0:
-            return 1
+            return os.getlogin()
         return 0
     else:
         return os.getuid()
