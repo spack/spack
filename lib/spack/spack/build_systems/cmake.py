@@ -565,13 +565,6 @@ class CMakeBuilder(BaseBuilder):
 
     spack.builder.run_after("build")(execute_build_time_tests)
 
-    @spack.builder.run_after("build")
-    def _symlink_build_to_src(self):
-        link_target = self.build_directory
-        link_name = self.spec.format("build-{arch}-{hash:7}")
-        link = os.path.join(self.pkg.stage.source_path, link_name)
-        os.symlink(link_target, link)
-
     def check(self):
         """Search the CMake-generated files for the targets ``test`` and ``check``,
         and runs them if found.

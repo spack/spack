@@ -1074,7 +1074,12 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # If it's a dev package (not transitively), use a DIY stage object
         dev_path_var = self.spec.variants.get("dev_path", None)
         if dev_path_var:
-            return DevelopStage(compute_stage_name(self.spec), dev_path_var.value)
+            dev_path = dev_path_var.value
+            link_format = spack.config.get("config:develop_stage_link")
+            if not link_format:
+                link_format = "build-{arch}-{hash:7}"
+            stage_link = self.spec.format_path(link_format)
+            return DevelopStage(compute_stage_name(self.spec), dev_path, stage_link)
 
         # To fetch the current version
         source_stage = self._make_root_stage(self.fetcher)

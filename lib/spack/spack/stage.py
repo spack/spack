@@ -872,11 +872,20 @@ class DevelopStage(StageBase):
     needs_fetching = False
     requires_patch_success = False
 
-    def __init__(self, name, dev_path):
+    def __init__(self, name, dev_path, reference_link):
         self.name = name
         self.dev_path = dev_path
         self.source_path = dev_path
         self.path = os.path.join(get_stage_root(), name)
+
+        # The path of a link that will point to this stage
+        if os.path.isabs(reference_link):
+            link_path = reference_link
+        else:
+            link_path = os.path.join(self.source_path, reference_link)
+        if not os.path.isdir(os.path.dirname(link_path)):
+            raise StageError(f"The directory containing {link_path} must exist")
+        self.reference_link = link_path
 
         self._lock = None
         self._use_locks = True
@@ -901,6 +910,13 @@ class DevelopStage(StageBase):
     def expanded(self):
         """Returns True since the source_path must exist."""
         return True
+
+    def create(self):
+        super().create()
+        try:
+            os.symlink(self.path, self.reference_link)
+        except FileExistsError:
+            pass 
 
     def destroy(self):
         # Destroy all files, but do not follow symlinks

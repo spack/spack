@@ -877,7 +877,9 @@ def _create_files_from_tree(base, tree):
 
 
 def _create_tree_from_dir_recursive(path):
-    if os.path.isdir(path):
+    if os.path.islink(path):
+        return os.readlink(path)
+    elif os.path.isdir(path):
         tree = {}
         for name in os.listdir(path):
             sub_path = os.path.join(path, name)
@@ -907,16 +909,22 @@ class TestDevelopStage:
         assert os.path.exists(os.path.join(srcdir, "a2"))
 
     def test_develop_stage(self, develop_path, tmp_build_stage_dir):
-        tree, srcdir = develop_path
-        stage = DevelopStage("test-stage", srcdir)
+        devtree, srcdir = develop_path
+        reference_link = os.path.join("link-to-stage")
+        stage = DevelopStage("test-stage", srcdir, reference_link)
         stage.create()
-        assert _create_tree_from_dir_recursive(stage.source_path) == tree
+        srctree1 = _create_tree_from_dir_recursive(stage.source_path)
+        assert srctree1["link-to-stage"] == stage.path
+        del srctree1["link-to-stage"]
+        assert srctree1 == devtree
 
         stage.destroy()
         # Make sure destroying the stage doesn't change anything
         # about the path
         assert not os.path.exists(stage.path)
-        assert _create_tree_from_dir_recursive(srcdir) == tree
+        srctree2 = _create_tree_from_dir_recursive(srcdir)
+        del srctree2["link-to-stage"]  # Note the symlink persists but is broken
+        assert srctree2 == devtree
 
 
 def test_stage_create_replace_path(tmp_build_stage_dir):
