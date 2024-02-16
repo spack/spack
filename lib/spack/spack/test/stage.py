@@ -911,7 +911,7 @@ class TestDevelopStage:
         stage = DevelopStage("test-stage", srcdir, reference_link="link-to-stage")
         stage.create()
         srctree1 = _create_tree_from_dir_recursive(stage.source_path)
-        assert os.path.normpath(srctree1["link-to-stage"]) == os.path.normpath(stage.path)
+        assert os.path.samefile(srctree1["link-to-stage"], stage.path)
         del srctree1["link-to-stage"]
         assert srctree1 == devtree
 
