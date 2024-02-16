@@ -184,7 +184,7 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
         if self.spec.satisfies("^intel-oneapi-mkl threads=openmp"):
             ldflags.append(self.compiler.openmp_flag)
 
-        options += [f'LDFLAGS={" ".join(ldflags)}', f'LIBS={" ".join(ldflags)}']
+        options += [f'LDFLAGS={" ".join(ldflags)}', f'LIBS={" ".join(libs)}']
 
         if "+mpi" in self.spec:
             options += [
