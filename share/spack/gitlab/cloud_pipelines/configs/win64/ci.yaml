@@ -13,4 +13,4 @@ ci:
       - spack --backtrace ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
       image: "ghcr.io/jjnesbitt/windows-servercore21h2:sha-5c42cbb"
   - signing-job-remove:
-      script:: no-signing-on-windows
+      script:: [no-signing-on-windows]
