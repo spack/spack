@@ -203,7 +203,8 @@ class IntelOneApiLibraryPackage(IntelOneApiPackage):
             libname = "libomp"
         else:
             raise InstallError(
-                "OneAPI package with OpenMP threading requires one of %clang, %gcc, %oneapi, or %intel"
+                "OneAPI package with OpenMP threading requires one of %clang, %gcc, %oneapi, "
+                "or %intel"
             )
 
         # query the compiler for the library path
