@@ -13,7 +13,7 @@ class PyEmodelGeneralisation(PythonPackage):
     git = "https://github.com/BlueBrain/emodel-generalisation.git"
     pypi = "emodel-generalisation/emodel-generalisation-0.2.5.tar.gz"
 
-    version("0.2.7", sha256="f3be563c22346388870e403ae97012e1be050e4ad51b66676d5099bd0d175165")
+    version("0.2.8", sha256="6ef5db9a1dca85f1f9982b922fc7f20526644155f69eb8c9a62f1fe54bf4a230")
 
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools-scm", type="build")
@@ -26,7 +26,7 @@ class PyEmodelGeneralisation(PythonPackage):
     depends_on("py-pyyaml", type=("build", "run"))
     depends_on("py-bluepyopt@1.13.86:", type=("build", "run"))
     depends_on("py-neurom@3.2.2:", type=("build", "run"))
-    depends_on("py-efel@3.1:", type=("build", "run"))
+    depends_on("py-efel@5.5.7:", type=("build", "run"))
     depends_on("py-morph-tool@2.9:", type=("build", "run"))
     depends_on("neuron+python@8.0:", type=("build", "run"))
     depends_on("py-matplotlib@3.6.2:", type=("build", "run"))

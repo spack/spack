@@ -18,7 +18,11 @@ class PyEfel(PythonPackage):
     homepage = "https://github.com/BlueBrain/eFEL"
     pypi = "efel/efel-3.0.80.tar.gz"
 
+    version("5.5.7", sha256="28fdd07ccb027c8a35823d3ff4c407b3704a7023754eec6110674825dc7b749d")
     version("5.2.0", sha256="ed2c5efe22a4c703a4d9e47775b939009e1456713ac896898ebabf177c60b1dc")
 
     depends_on("py-setuptools", type="build")
+
+    depends_on("py-neo@0.5.2:", type=("build", "run"))
+    depends_on("py-typing-extensions@4.8:", type=("build", "run"))
     depends_on("py-numpy@1.6:", type=("build", "run"))
