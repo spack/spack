@@ -209,6 +209,33 @@ def _mirror_roots():
 
 
 class StageBase:
+    def __init__(self, name, path, keep, lock):
+        # TODO: This uses a protected member of tempfile, but seemed the only
+        # TODO: way to get a temporary name.  It won't be the same as the
+        # TODO: temporary stage area in _stage_root.
+        self.name = name
+        if name is None:
+            self.name = stage_prefix + next(tempfile._get_candidate_names())
+
+        # Use the provided path or construct an optionally named stage path.
+        if path is not None:
+            self.path = path
+        else:
+            self.path = os.path.join(get_stage_root(), self.name)
+
+        # Flag to decide whether to delete the stage folder on exit or not
+        self.keep = keep
+
+        # File lock for the stage directory.  We use one file for all
+        # stage locks. See spack.database.Database.prefix_locker.lock for
+        # details on this approach.
+        self._lock = None
+        self._use_locks = lock
+
+        # When stages are reused, we need to know whether to re-create
+        # it.  This marks whether it has been created/destroyed.
+        self.created = False
+
     def _get_lock(self):
         if not self._lock:
             sha1 = hashlib.sha1(self.name.encode("utf-8")).digest()
@@ -361,6 +388,8 @@ class Stage(StageBase):
               The search function that provides the fetch strategy
               instance.
         """
+        super().__init__(name, path, keep, lock)
+
         # TODO: fetch/stage coupling needs to be reworked -- the logic
         # TODO: here is convoluted and not modular enough.
         if isinstance(url_or_fetch_strategy, str):
@@ -378,32 +407,7 @@ class Stage(StageBase):
 
         self.srcdir = None
 
-        # TODO: This uses a protected member of tempfile, but seemed the only
-        # TODO: way to get a temporary name.  It won't be the same as the
-        # TODO: temporary stage area in _stage_root.
-        self.name = name
-        if name is None:
-            self.name = stage_prefix + next(tempfile._get_candidate_names())
         self.mirror_paths = mirror_paths
-
-        # Use the provided path or construct an optionally named stage path.
-        if path is not None:
-            self.path = path
-        else:
-            self.path = os.path.join(get_stage_root(), self.name)
-
-        # Flag to decide whether to delete the stage folder on exit or not
-        self.keep = keep
-
-        # File lock for the stage directory.  We use one file for all
-        # stage locks. See spack.database.Database.prefix_locker.lock for
-        # details on this approach.
-        self._lock = None
-        self._use_locks = lock
-
-        # When stages are reused, we need to know whether to re-create
-        # it.  This marks whether it has been created/destroyed.
-        self.created = False
 
     @property
     def expected_archive_files(self):
@@ -873,10 +877,9 @@ class DevelopStage(StageBase):
     requires_patch_success = False
 
     def __init__(self, name, dev_path, reference_link):
-        self.name = name
+        super().__init__(name=name, path=None, keep=False, lock=True)
         self.dev_path = dev_path
         self.source_path = dev_path
-        self.path = os.path.join(get_stage_root(), name)
 
         # The path of a link that will point to this stage
         if os.path.isabs(reference_link):
@@ -886,12 +889,6 @@ class DevelopStage(StageBase):
         if not os.path.isdir(os.path.dirname(link_path)):
             raise StageError(f"The directory containing {link_path} must exist")
         self.reference_link = link_path
-
-        self._lock = None
-        self._use_locks = True
-        self.keep = False
-
-        self.created = False
 
     @property
     def archive_file(self):
