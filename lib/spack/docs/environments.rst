@@ -405,13 +405,18 @@ If the package being developed supports out-of-source builds then users can use 
 ``--build_directory`` flag to control the location and name of the build directory. 
 This is a shortcut to set the ``package_attributes:build_directory`` in the
 ``packages`` configuration (see :ref:`assigning-package-attributes`).
-Currently the onerous of making sure the package supports out-of-source builds is on
-the user.
-For example, most ``autotool`` and ``makefile`` packages do not support out-of-source builds
-while all ``CMake`` packages do.
-Understanding these nuances are on the software developers and we strongly encourage
-developers to only redirect the build directory if they understand their package's
-build-system.
+The supplied location will become the build-directory for that package in all future builds.
+
+.. warning::
+   Potential pitfalls of setting the build directory
+    Spack does not check for out-of-source build compatibility with the packages and
+    so the onerous of making sure the package supports out-of-source builds is on
+    the user.
+    For example, most ``autotool`` and ``makefile`` packages do not support out-of-source builds
+    while all ``CMake`` packages do.
+    Understanding these nuances are on the software developers and we strongly encourage
+    developers to only redirect the build directory if they understand their package's
+    build-system.
 
 ^^^^^^^
 Loading
