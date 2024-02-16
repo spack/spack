@@ -2049,9 +2049,7 @@ if retcode != 0:
     imports = "import os; import sys"
     # Create a string [command 1] \n [command 2] \n ... \n [command n] with
     # commands composed into os.system("command arg1 arg2 ... argn") calls
-    args_to_string = (
-        lambda args: f'retcode = os.system("{" ".join(args)}")\n{fail_on_bad_return}'
-    )
+    args_to_string = lambda args: f'retcode = os.system("{" ".join(args)}")\n{fail_on_bad_return}'
     full_command = "\n".join(map(args_to_string, commands))
     # unfortunately Windows cannot arbitrarily directly execute python files
     # so we wrap it in a mixed language batch file
