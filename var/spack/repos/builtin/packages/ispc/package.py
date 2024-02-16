@@ -75,6 +75,13 @@ class Ispc(CMakePackage):
         sha256="d3ccf547d3ba59779fd375e10417a436318f2200d160febb9f830a26f0daefdc",
     )
 
+    # Fix build with Apple clang 15
+    patch(
+        "https://github.com/ispc/ispc/pull/2785.patch?full_index=1",
+        when="@1.22:1.23.0",
+        sha256="f6a413bf86e49d520d23df7132004d1f09caa512187f369549a4a783859fbc41",
+    )
+
     # Fix library lookup for NCurses in CMake
     patch(
         "https://patch-diff.githubusercontent.com/raw/ispc/ispc/pull/2638.patch?full_index=1",
