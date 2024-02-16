@@ -27,7 +27,7 @@ class Pdal(CMakePackage):
     depends_on("gdal@3:")
     depends_on("gdal@3.4:", when="@2.6:")
     depends_on("gdal@:3.6", when="@:2.4")
-    depends_on("libgeotiff")
+    depends_on("libgeotiff@1.3.0:")
     depends_on("proj@4.9.3:")
 
     # https://github.com/PDAL/PDAL/issues/3826
