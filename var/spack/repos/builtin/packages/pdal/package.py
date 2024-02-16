@@ -14,7 +14,7 @@ class Pdal(CMakePackage):
     homepage = "https://pdal.io"
     url = "https://github.com/PDAL/PDAL/archive/refs/tags/2.6.2.tar.gz"
 
-    license("BSD Open Source license.")
+    license("BSD")
 
     version("2.6.2", sha256="ec4175cfe19dc6b70a0434850f837317f7202f84b63cd8dcc65ca83e04678f57")
     version("2.6.1", sha256="da6e615f01b6110414ef3e2250f112e49df129091abc91ba6866bb01dc68454e")
