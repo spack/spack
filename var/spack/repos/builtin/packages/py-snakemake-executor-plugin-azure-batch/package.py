@@ -11,7 +11,9 @@ class PySnakemakeExecutorPluginAzureBatch(PythonPackage):
     """A Snakemake executor plugin for submitting jobs to Microsoft Azure Batch."""
 
     homepage = "https://github.com/snakemake/snakemake-executor-plugin-azure-batch"
-    pypi = "snakemake_executor_plugin_azure_batch/snakemake_executor_plugin_azure_batch-0.1.3.tar.gz"
+    pypi = (
+        "snakemake_executor_plugin_azure_batch/snakemake_executor_plugin_azure_batch-0.1.3.tar.gz"
+    )
 
     license("MIT")
 

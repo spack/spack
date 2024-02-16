@@ -11,7 +11,9 @@ class PySnakemakeExecutorPluginGooglebatch(PythonPackage):
     """A Snakemake executor plugin."""
 
     homepage = "https://github.com/snakemake/snakemake-executor-plugin-googlebatch"
-    pypi = "snakemake_executor_plugin_googlebatch/snakemake_executor_plugin_googlebatch-0.3.0.tar.gz"
+    pypi = (
+        "snakemake_executor_plugin_googlebatch/snakemake_executor_plugin_googlebatch-0.3.0.tar.gz"
+    )
 
     license("MIT")
 

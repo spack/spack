@@ -62,7 +62,9 @@ class Snakemake(PythonPackage):
     depends_on("py-requests", type=("build", "run"))
     depends_on("py-reretry", type=("build", "run"), when="@7:")
     depends_on("py-smart-open@3:", type=("build", "run"))
-    depends_on("py-snakemake-interface-executor-plugins@8.1.3:8", type=("build", "run"), when="@8:")
+    depends_on(
+        "py-snakemake-interface-executor-plugins@8.1.3:8", type=("build", "run"), when="@8:"
+    )
     depends_on("py-snakemake-interface-common@1.15.0:1", type=("build", "run"), when="@8:")
     depends_on("py-snakemake-interface-storage-plugins@3.0.0:3", type=("build", "run"), when="@8:")
     depends_on("py-stopit", type=("build", "run"))
@@ -105,7 +107,9 @@ class Snakemake(PythonPackage):
         depends_on("py-google-crc32c", type=("build", "run"), when="@:7")
         depends_on("py-oauth2client", type=("build", "run"), when="@:7")
 
-    variant("azure", default=False, description="Enable Azure storage and execution", when="@7.28.0:")
+    variant(
+        "azure", default=False, description="Enable Azure storage and execution", when="@7.28.0:"
+    )
 
     with when("+azure"):
         depends_on("py-snakemake-executor-plugin-azure-batch", type=("build", "run"), when="@8:")
@@ -124,16 +128,27 @@ class Snakemake(PythonPackage):
     variant("drmaa", default=False, description="Submission of jobs via DRMAA.", when="@8:")
     depends_on("py-snakemake-executor-plugin-drmaa", when="+drmaa", type=("build", "run"))
 
-    variant("flux", default=False, description="Submission of jobs using Flux scheduler.", when="@8:")
+    variant(
+        "flux", default=False, description="Submission of jobs using Flux scheduler.", when="@8:"
+    )
     depends_on("py-snakemake-executor-plugin-flux", when="+flux", type=("build", "run"))
 
-    variant("kubernetes", default=False, description="Submission of jobs to Kubernetes", when="@8:")
-    depends_on("py-snakemake-executor-plugin-kubernetes", when="+kubernetes", type=("build", "run"))
+    variant(
+        "kubernetes", default=False, description="Submission of jobs to Kubernetes", when="@8:"
+    )
+    depends_on(
+        "py-snakemake-executor-plugin-kubernetes", when="+kubernetes", type=("build", "run")
+    )
 
     variant("tes", default=False, description="Submitting jobs via GA4GH TES", when="@8:")
     depends_on("py-snakemake-executor-plugin-tes", when="+tes", type=("build", "run"))
 
-    variant("fs", default=False, description="Read and write from a locally mounted filesystem using rsync", when="@8:")
+    variant(
+        "fs",
+        default=False,
+        description="Read and write from a locally mounted filesystem using rsync",
+        when="@8:"
+    )
     depends_on("py-snakemake-storage-plugin-fs", when="+fs", type=("build", "run"))
 
     variant("ftp", default=False, description="Handling input and output via FTP")
@@ -148,7 +163,9 @@ class Snakemake(PythonPackage):
     variant("s3", default=False, description="Amazon S3 API storage (AWS S3, MinIO, etc.)")
 
     with when("+s3"):
-        depends_on("py-snakemake-storage-plugin-s3",  when="@8:", type=("build", "run"))
+        depends_on(
+            "py-snakemake-storage-plugin-s3",  when="@8:", type=("build", "run")
+        )
         depends_on("py-boto3", when="@:7", type=("build", "run"))
         depends_on("py-botocore", when="@:7", type=("build", "run"))
 
@@ -158,7 +175,9 @@ class Snakemake(PythonPackage):
         depends_on("py-snakemake-storage-plugin-http", when="@8:", type=("build", "run"))
         depends_on("py-requests", when="@:7", type=("build", "run"))
 
-    variant("zenodo", default=False, description="Reading from and writing to zenodo.org", when="@8:")
+    variant(
+        "zenodo", default=False, description="Reading from and writing to zenodo.org", when="@8:"
+    )
     depends_on("py-snakemake-storage-plugin-zenodo", when="+zenodo", type=("build", "run"))
 
     def test(self):
