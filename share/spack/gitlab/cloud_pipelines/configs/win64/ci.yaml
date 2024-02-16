@@ -3,13 +3,17 @@ ci:
   - build-job:
       after_script::
       - Write-Output "Done"
+
       before_script::
+      - python -m pip install --user boto3
       - . .\share\spack\setup-env.ps1
       - spack compiler find
+      - spack external find --not-buildable cmake ninja win-wdk win-sdk wgl msmpi
+
       script::
       - spack env activate --without-view ${SPACK_CONCRETE_ENV_DIR}
       - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
-      - md ${SPACK_ARTIFACTS_ROOT}/user_data
+      - mkdir ${SPACK_ARTIFACTS_ROOT}/user_data
       - spack --backtrace ci rebuild | Tee-Object -FilePath "${env:SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt" 2>&1 | Tee-Object -FilePath "${env:SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt"
       image: "ghcr.io/jjnesbitt/windows-servercore21h2:sha-5c42cbb"
   - signing-job-remove:
