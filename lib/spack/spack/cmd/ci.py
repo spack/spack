@@ -586,37 +586,6 @@ def ci_rebuild(args):
     commands = [
         # apparently there's a race when spack bootstraps? do it up front once
         [SPACK_COMMAND, "-e", env.path, "bootstrap", "now"],
-        [
-            SPACK_COMMAND,
-            "-e",
-            env.path,
-            "env",
-            "depfile",
-            "-o",
-            "Makefile",
-            "--use-buildcache=package:never,dependencies:only",
-            slash_hash,  # limit to spec we're building
-        ],
-        [
-            # --output-sync requires GNU make 4.x.
-            # Old make errors when you pass it a flag it doesn't recognize,
-            # but it doesn't error or warn when you set unrecognized flags in
-            # this variable.
-            "export",
-            "GNUMAKEFLAGS=--output-sync=recurse",
-        ],
-        [
-            MAKE_COMMAND,
-            "SPACK={}".format(args_to_string(spack_cmd)),
-            "SPACK_COLOR=always",
-            "SPACK_INSTALL_FLAGS={}".format(args_to_string(deps_install_args)),
-            "-j$(nproc)",
-            "install-deps/{}".format(
-                spack.environment.depfile.MakefileSpec(job_spec).safe_format(
-                    "{name}-{version}-{hash}"
-                )
-            ),
-        ],
         spack_cmd + ["install"] + root_install_args,
     ]
 
