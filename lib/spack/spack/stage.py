@@ -214,6 +214,7 @@ class LockableStagingDir:
     a specified name and if they do, then for all instances that have
     the same name, only one can enter the context manager at a time.
     """
+
     def __init__(self, name, path, keep, lock):
         # TODO: This uses a protected member of tempfile, but seemed the only
         # TODO: way to get a temporary name.  It won't be the same as the
