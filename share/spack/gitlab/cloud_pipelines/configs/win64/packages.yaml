@@ -6,10 +6,10 @@ packages:
   cmake:
     externals:
     - spec: cmake@3.19
-      prefix: "c:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake"
+      prefix: "c:\Program Files (x86)\\Microsoft Visual Studio\\2019\\Professional\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake"
     buildable: False
   ninja:
     externals:
     - spec: ninja@1.8.2
-      prefix: "c:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja"
+      prefix: "c:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Professional\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\Ninja"
     buildable: False

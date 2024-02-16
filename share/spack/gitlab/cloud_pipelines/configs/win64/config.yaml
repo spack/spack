@@ -1,6 +1,6 @@
 config:
   install_tree:
-    root: "c:\Program Files\spack"
+    root: "c:\\Program Files\\spack"
     # Path lengths on windows doesn't support much padding
     padded_length: 0
     # Reduce the projections to only including the hash to avoid path length issues
