@@ -22,13 +22,6 @@ from spack.util.executable import Executable
 from .generic import Package
 
 
-def raise_lib_error(*args):
-    """Bails out with an error message. Shows args after the first as one per
-    line, tab-indented, useful for long paths to line up and stand out.
-    """
-    raise InstallError("\n\t".join(str(i) for i in args))
-
-
 class IntelOneApiPackage(Package):
     """Base class for Intel oneAPI packages."""
 
@@ -209,7 +202,7 @@ class IntelOneApiLibraryPackage(IntelOneApiPackage):
         elif self.spec.satisfies("%clang"):
             libname = "libomp"
         else:
-            raise_lib_error(
+            raise InstallError(
                 "OneAPI package with OpenMP threading requires one of %clang, %gcc, %oneapi, or %intel"
             )
 
@@ -230,7 +223,7 @@ class IntelOneApiLibraryPackage(IntelOneApiPackage):
 
         # if the compiler cannot find the file, it returns the input path
         if not os.path.exists(omp_lib_path):
-            raise_lib_error(f"Cannot locate OpenMP library: {omp_lib_path}")
+            raise InstallError(f"Cannot locate OpenMP library: {omp_lib_path}")
 
         omp_libs = LibraryList(omp_lib_path)
         tty.info(f"OneAPI package requires OpenMP library: {omp_libs}")
