@@ -176,7 +176,7 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         depends_on("pkgconfig", type="build")
         # please set variants: smm=blas by configuring packages.yaml or install
         # cp2k with option smm=blas on aarch64
-        conflicts("libxsmm@:1.17", when="target=aarch64", msg="old libxsmm is not available on arm")
+        conflicts("libxsmm@:1.17", when="target=aarch64:", msg="old libxsmm is not available on arm")
 
     with when("+libint"):
         depends_on("pkgconfig", type="build", when="@7.0:")
