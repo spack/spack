@@ -908,8 +908,7 @@ class TestDevelopStage:
         (b) that destroying the stage does not destroy `dev_path`
         """
         devtree, srcdir = develop_path
-        reference_link = os.path.join("link-to-stage")
-        stage = DevelopStage("test-stage", srcdir, reference_link)
+        stage = DevelopStage("test-stage", srcdir, reference_link="link-to-stage")
         stage.create()
         srctree1 = _create_tree_from_dir_recursive(stage.source_path)
         assert srctree1["link-to-stage"] == stage.path
