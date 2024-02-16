@@ -209,7 +209,9 @@ class IntelOneApiLibraryPackage(IntelOneApiPackage):
         elif self.spec.satisfies("%clang"):
             libname = "libomp"
         else:
-            raise_lib_error("MKL OMP requires one of %gcc, %oneapi,or %intel")
+            raise_lib_error(
+                "MKL with OpenMP threading requires one of %clang, %gcc, %oneapi, or %intel"
+            )
 
         # query the compiler for the library path
         with self.compiler.compiler_environment():
@@ -231,7 +233,7 @@ class IntelOneApiLibraryPackage(IntelOneApiPackage):
             raise_lib_error(f"Cannot locate OpenMP library: {omp_lib_path}")
 
         omp_libs = LibraryList(omp_lib_path)
-        tty.info(f"mkl requires openmp library: {omp_libs}")
+        tty.info(f"MKL requires OpenMP library: {omp_libs}")
         return omp_libs
 
     # find_headers uses heuristics to determine the include directory
