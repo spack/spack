@@ -233,7 +233,7 @@ class IntelOneApiLibraryPackage(IntelOneApiPackage):
             raise_lib_error(f"Cannot locate OpenMP library: {omp_lib_path}")
 
         omp_libs = LibraryList(omp_lib_path)
-        tty.info(f"MKL requires OpenMP library: {omp_libs}")
+        tty.info(f"OneAPI package requires OpenMP library: {omp_libs}")
         return omp_libs
 
     # find_headers uses heuristics to determine the include directory
