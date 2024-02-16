@@ -41,7 +41,7 @@ def deindent(desc):
 
 
 def encode_path(path: str) -> str:
-    return path.encode("unicode-escape".decode())
+    return path.encode("unicode-escape").decode()
 
 
 def setup_parser(subparser):
