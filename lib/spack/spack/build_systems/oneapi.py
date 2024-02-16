@@ -216,6 +216,16 @@ class IntelOneApiLibraryPackage(IntelOneApiPackage):
             omp_lib_path = Executable(self.compiler.cc)(
                 "--print-file-name", f"{libname}.{dso_suffix}", output=str
             ).strip()
+
+        # Newer versions of clang do not give the full path to libomp. If that's
+        # the case, look in a path relative to the compiler where libomp is
+        # typically found. If it's not found there, error out.
+        if not os.path.exists(omp_lib_path) and self.spec.satisfies("%clang"):
+            compiler_root = os.path.dirname(os.path.dirname(os.path.realpath(self.compiler.cc)))
+            omp_lib_path_compiler = os.path.join(compiler_root, "lib", f"{libname}.{dso_suffix}")
+            if os.path.exists(omp_lib_path_compiler):
+                omp_lib_path = omp_lib_path_compiler
+
         # if the compiler cannot find the file, it returns the input path
         if not os.path.exists(omp_lib_path):
             raise_lib_error(f"Cannot locate OpenMP library: {omp_lib_path}")
