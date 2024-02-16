@@ -6,6 +6,7 @@
 import json
 import os
 import shutil
+import sys
 from urllib.parse import urlparse, urlunparse
 
 import llnl.util.filesystem as fs
@@ -584,7 +585,7 @@ def ci_rebuild(args):
 
     # ["x", "y"] -> "'x' 'y'"
     args_to_string = lambda args: " ".join("'{}'".format(arg) for arg in args)
-
+    export_command = "set" if sys.platform == "win32" else "export"
     commands = [
         # apparently there's a race when spack bootstraps? do it up front once
         [SPACK_COMMAND, "-e", encode_path(env.path), "bootstrap", "now"],
@@ -604,7 +605,7 @@ def ci_rebuild(args):
             # Old make errors when you pass it a flag it doesn't recognize,
             # but it doesn't error or warn when you set unrecognized flags in
             # this variable.
-            "export",
+            export_command,
             "GNUMAKEFLAGS=--output-sync=recurse",
         ],
         [
