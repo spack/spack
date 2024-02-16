@@ -15,8 +15,6 @@ class Gnupg(AutotoolsPackage):
     homepage = "https://gnupg.org/index.html"
     url = "https://gnupg.org/ftp/gcrypt/gnupg/gnupg-2.3.4.tar.bz2"
 
-    executables = ["^gpg$", "^gpg-agent$"]
-
     maintainers("alalazo")
 
     license("GPL-3.0-or-later")
@@ -139,6 +137,8 @@ class Gnupg(AutotoolsPackage):
 
     # Getting some linking error.
     conflicts("%gcc@10:", when="@:1")
+
+    executables = ["^gpg$", "^gpg-agent$"]
 
     @classmethod
     def determine_version(cls, exe):
