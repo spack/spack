@@ -9,14 +9,8 @@ from spack.package import *
 
 
 class GeopmService(AutotoolsPackage):
-    """The Global Extensible Open Power Manager (GEOPM) is a framework for
-    exploring power and energy optimizations targeting heterogeneous platforms.
-    The GEOPM package provides many built-in features. A simple use case is
-    reading hardware counters and setting hardware controls with platform
-    independent syntax using a command line tool on a particular compute node.
-    An advanced use case is dynamically coordinating hardware settings across
-    all compute nodes used by a distributed application is response to the
-    application's behavior and requests from the resource manager.
+    """The Global Extensible Open Power Manager (GEOPM) Service provides a
+    user interface for accessing hardware telemetry and settings securely.
 
     Note: GEOPM interfaces with hardware using Model Specific Registers (MSRs).
     For proper usage make sure MSRs are made available via the msr or
