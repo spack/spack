@@ -176,16 +176,15 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         options += self.enable_or_disable("openmp")
 
+        # Additional linker search paths and link libs
+        ldflags = [spec["blas"].libs.search_flags, spec["lapack"].libs.search_flags]
+        libs = [spec["lapack"].libs.link_flags, spec["blas"].libs.link_flags]
+
         # if using mkl with openmp support, link with openmp
-        mkl_openmp_flag = (
-            self.compiler.openmp_flag
-            if self.spec.satisfies("^intel-oneapi-mkl threads=openmp")
-            else ""
-        )
-        options += [
-            "LDFLAGS={0} {1}".format(mkl_openmp_flag, spec["lapack"].libs.search_flags),
-            "LIBS={0} {1}".format(spec["lapack"].libs.link_flags, spec["blas"].libs.link_flags),
-        ]
+        if self.spec.satisfies("^intel-oneapi-mkl threads=openmp"):
+            ldflags.append(self.compiler.openmp_flag)
+
+        options += [f'LDFLAGS={" ".join(ldflags)}', f'LIBS={" ".join(ldflags)}']
 
         if "+mpi" in self.spec:
             options += [
