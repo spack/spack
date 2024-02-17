@@ -39,7 +39,7 @@ class NvidiaNsightSystems(Package):
     if arch == "x86_64":
         version('2024.1.1', sha256='890a585807a355b3d986443e5d27727f527d5ac83e901961a1e7761012f565c3', url='https://developer.download.nvidia.com/devtools/repos/rhel8/x86_64/nsight-systems-2024.1.1-2024.1.1.59_3380207-0.x86_64.rpm', expand=False)
     if arch == "aarch64":
-        version('2024.1.1', sha256='b67168897c30b8f7a2c5c2ff1b2bc2bf1a544d4a220bf6eb0db6af9835aefe07', url='https://developer.download.nvidia.com/devtools/repos/rhel8/arm64/nsight-systems-2024.1.1-2024.1.1.59_3380207-0.aarch64.rpm', expand=False)
+        version('2024.1.1', sha256='41dc15ae128ef1de8e582b66bb465ac6bd67b9d20ef77fc70528b735d80fb3ec', url='https://developer.download.nvidia.com/devtools/repos/rhel8/arm64/nsight-systems-2024.1.1-2024.1.1.59_3380207-0.aarch64.rpm', expand=False)
 
     def install(self, spec, prefix):
         bsdtar = which("bsdtar")
@@ -49,10 +49,16 @@ class NvidiaNsightSystems(Package):
         bsdtar(*params)
         #params = ['-x', '-f', 'data.tar.gz']
         #bsdtar(*params)
-        for sd in ["/bin", "/documentation", "/host-linux-armv8", "/target-linux-sbsa-armv8"]:
-            shutil.copytree("opt/nvidia/nsight-systems-cli/"+ver + sd, prefix + sd)
-        #os.mkdir(prefix + "/bin")
-        #os.symlink(prefix + "/host-linux-armv8/nsys-ui", prefix + "/bin/nsys-ui")
-        #os.symlink(prefix + "/target-linux-sbsa-armv8/nsys", prefix + "/bin/nsys")
+        base_path = ''
+        if os.path.exists('opt/nvidia/nsight-systems-cli/'):
+            base_path = 'opt/nvidia/nsight-systems-cli/'
+        elif os.path.exists('opt/nvidia/nsight-systems/'):
+            base_path = 'opt/nvidia/nsight-systems/'
+
+        for sd in [ "/documentation", "/host-linux-armv8", "/target-linux-sbsa-armv8"]:
+            shutil.copytree(base_path + ver + sd, prefix + sd)
+        os.mkdir(prefix + "/bin")
+        os.symlink(prefix + "/host-linux-armv8/nsys-ui", prefix + "/bin/nsys-ui")
+        os.symlink(prefix + "/target-linux-sbsa-armv8/nsys", prefix + "/bin/nsys")
 
         
