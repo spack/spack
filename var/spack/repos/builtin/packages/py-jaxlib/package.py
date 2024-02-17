@@ -99,12 +99,6 @@ build --local_cpu_resources={make_jobs}
             "build/build.py",
             string=True,
         )
-        filter_file(
-            "args = parser.parse_args()",
-            "args, junk = parser.parse_known_args()",
-            "build/build_wheel.py",
-            string=True,
-        )
 
     def install(self, spec, prefix):
         args = []
