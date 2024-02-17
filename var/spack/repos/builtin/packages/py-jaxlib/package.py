@@ -34,6 +34,9 @@ class PyJaxlib(PythonPackage, CudaPackage):
 
     variant("cuda", default=True, description="Build with CUDA")
 
+    # build/build.py
+    depends_on("py-build", when="@0.4.14:", type="build")
+
     # jaxlib/setup.py
     depends_on("python@3.9:", when="@0.4.14:", type=("build", "run"))
     depends_on("python@3.8:", when="@0.4:", type=("build", "run"))
