@@ -70,6 +70,7 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
     variant("jdk", default=False, description="Use JDK")
     variant("llvm", default=False, description="Use LLVM")
     variant("opengl", default=False, description="Use OpenGL")
+    variant("pcre2", default=True, when="@8:", description="Use PCRE2 instead of PCRE")
     variant("qhull", default=False, description="Use qhull")
     variant("qrupdate", default=False, description="Use qrupdate")
     variant("qscintilla", default=False, description="Use QScintill")
@@ -83,7 +84,8 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
     # Octave does not configure with sed from darwin:
     depends_on("sed", when=sys.platform == "darwin", type="build")
     depends_on("pcre", when="@:7")
-    depends_on("pcre2", when="@8:")
+    depends_on("pcre", when="~pcre2")
+    depends_on("pcre2", when="+pcre2")
     depends_on("pkgconfig", type="build")
     depends_on("texinfo", type="build")
 
@@ -348,6 +350,9 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
             )
         else:
             config_args.append("--without-z")
+
+        if "~pcre2" in spec:
+            config_args.append("--without-pcre2")
 
         # If 64-bit BLAS is used:
         if (
