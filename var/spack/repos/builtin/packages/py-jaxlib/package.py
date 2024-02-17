@@ -102,6 +102,15 @@ build --local_cpu_resources={make_jobs}
             "build/build.py",
             string=True,
         )
+        build_wheel = join_path("build", "build_wheel.py")
+        if self.spec.satisfies("@0.4.14:"):
+            build_wheel = join_path("jaxlib", "tools", "build_wheel.py")
+        filter_file(
+            "args = parser.parse_args()",
+            "args, junk = parser.parse_known_args()",
+            build_wheel,
+            string=True,
+        )
 
     def install(self, spec, prefix):
         args = []
