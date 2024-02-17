@@ -2176,13 +2176,13 @@ class CDashHandler:
     def args(self):
         return [
             "--cdash-upload-url",
-            self.upload_url,
+            f'"{self.upload_url}"',
             "--cdash-build",
-            self.build_name,
+            f'"{self.build_name}"',
             "--cdash-site",
-            self.site,
+            f'"{self.site}"',
             "--cdash-buildstamp",
-            self.build_stamp,
+            f'"{self.build_stamp}"',
         ]
 
     @property  # type: ignore

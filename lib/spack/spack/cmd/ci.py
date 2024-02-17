@@ -568,13 +568,13 @@ def ci_rebuild(args):
     if not verify_binaries:
         install_args.append("--no-check-signature")
 
-    slash_hash = "/{}".format(job_spec.dag_hash())
+    slash_hash = '"/{}"'.format(job_spec.dag_hash())
 
     # Arguments when installing the root from sources
     root_install_args = install_args + [
         "--keep-stage",
         "--only=package",
-        "--use-buildcache=package:never,dependencies:only",
+        '--use-buildcache="package:never,dependencies:only"',
     ]
     if cdash_handler:
         # Add additional arguments to `spack install` for CDash reporting.
