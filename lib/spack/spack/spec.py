@@ -121,6 +121,9 @@ __all__ = [
     "SpecDeprecatedError",
 ]
 
+
+SPEC_FORMAT_RE = re.compile(r"(?<!\\){([^}]+)(?<!\\)}")
+
 #: Valid pattern for an identifier in Spack
 
 IDENTIFIER_RE = r"\w[\w-]*"
@@ -213,7 +216,11 @@ def colorize_spec(spec):
     return clr.colorize(re.sub(_SEPARATORS, insert_color(), str(spec)) + "@.")
 
 
+# regexes used in spec formatting
 OLD_STYLE_FMT_RE = re.compile(r"\${[A-Z]+}")
+
+HASH_FMT_RE = re.compile(r"(abstract_)?hash(:\d+)?$")
+SHORT_HASH_FMT_RE = re.compile(r"hash(:\d)?")  # TODO: is this regex correct?
 
 
 def ensure_modern_format_string(fmt: str) -> None:
@@ -4373,16 +4380,14 @@ class Spec:
         color = kwargs.get("color", False)
         transform = kwargs.get("transform", {})
 
-        out = io.StringIO()
-
-        def write(s, c=None):
+        def safe_color(s, c=None):
             f = clr.cescape(s)
             if c is not None:
-                f = COLOR_FORMATS[c] + f + "@."
-            clr.cwrite(f, stream=out, color=color)
+                f = f"{COLOR_FORMATS[c]}{f}@."
+            return clr.colorize(f, color=color)
 
-        def write_attribute(spec, attribute, color):
-            attribute = attribute.lower()
+        def write_attribute(match_object):
+            attribute = match_object.group(1).lower()
 
             sig = ""
             if attribute.startswith(("@", "%", "/")):
@@ -4393,7 +4398,7 @@ class Spec:
                 sig = " arch="  # include space as separator
                 attribute = attribute[5:]
 
-            current = spec
+            current = self
             if attribute.startswith("^"):
                 attribute = attribute[1:]
                 dep, attribute = attribute.split(".", 1)
@@ -4410,7 +4415,7 @@ class Spec:
                 raise SpecFormatSigilError(sig, "versions", attribute)
             elif sig == "%" and attribute not in ("compiler", "compiler.name"):
                 raise SpecFormatSigilError(sig, "compilers", attribute)
-            elif sig == "/" and not re.match(r"(abstract_)?hash(:\d+)?$", attribute):
+            elif sig == "/" and not HASH_FMT_RE.match(attribute):
                 raise SpecFormatSigilError(sig, "DAG hashes", attribute)
             elif sig == " arch=" and attribute not in ("architecture", "arch"):
                 raise SpecFormatSigilError(sig, "the architecture", attribute)
@@ -4421,19 +4426,16 @@ class Spec:
             # Special cases for non-spec attributes and hashes.
             # These must be the only non-dep component of the format attribute
             if attribute == "spack_root":
-                write(morph(spec, spack.paths.spack_root))
-                return
+                return morph(self, spack.paths.spack_root)
             elif attribute == "spack_install":
-                write(morph(spec, spack.store.STORE.layout.root))
-                return
-            elif re.match(r"hash(:\d)?", attribute):
+                return morph(self, spack.store.STORE.layout.root)
+            elif SHORT_HASH_FMT_RE.match(attribute):
                 col = "#"
                 if ":" in attribute:
                     _, length = attribute.split(":")
-                    write(sig + morph(spec, current.dag_hash(int(length))), col)
+                    return safe_color(sig + morph(self, current.dag_hash(int(length))), col)
                 else:
-                    write(sig + morph(spec, current.dag_hash()), col)
-                return
+                    return safe_color(sig + morph(self, current.dag_hash()), col)
 
             # Iterate over components using getattr to get next element
             for idx, part in enumerate(parts):
@@ -4486,42 +4488,10 @@ class Spec:
             elif "version" in parts or "versions" in parts:
                 col = "@"
 
-            # Finally, write the output
-            write(sig + morph(spec, str(current)), col)
+            # return colored output
+            return safe_color(sig + morph(self, str(current)), col)
 
-        attribute = ""
-        in_attribute = False
-        escape = False
-
-        for c in format_string:
-            if escape:
-                out.write(c)
-                escape = False
-            elif c == "\\":
-                escape = True
-            elif in_attribute:
-                if c == "}":
-                    write_attribute(self, attribute, color)
-                    attribute = ""
-                    in_attribute = False
-                else:
-                    attribute += c
-            else:
-                if c == "}":
-                    raise SpecFormatStringError(
-                        "Encountered closing } before opening { in %s" % format_string
-                    )
-                elif c == "{":
-                    in_attribute = True
-                else:
-                    out.write(c)
-        if in_attribute:
-            raise SpecFormatStringError(
-                "Format string terminated while reading attribute." "Missing terminating }."
-            )
-
-        formatted_spec = out.getvalue()
-        return formatted_spec.strip()
+        return SPEC_FORMAT_RE.sub(write_attribute, format_string).strip()
 
     def cformat(self, *args, **kwargs):
         """Same as format, but color defaults to auto instead of False."""
