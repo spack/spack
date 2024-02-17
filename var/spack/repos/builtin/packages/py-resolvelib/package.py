@@ -16,4 +16,5 @@ class PyResolvelib(PythonPackage):
 
     version("1.0.1", sha256="04ce76cbd63fded2078ce224785da6ecd42b9564b1390793f64ddecbe997b309")
 
-    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@36.2.2:", type="build")
+    depends_on("py-wheel@0.28:", type="build")

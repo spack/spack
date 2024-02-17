@@ -36,4 +36,4 @@ class PyAnsible(PythonPackage):
     depends_on("py-pyyaml@5.1:", type=("build", "run"), when="^python@3.8:")
     depends_on("py-cryptography", type=("build", "run"))
     depends_on("py-packaging", type=("build", "run"), when="@2.10.0:")
-    depends_on("py-resolvelib", type=("build", "run"), when="@2.11.0:")
+    depends_on("py-resolvelib@0.5.3:1.0", type=("build", "run"), when="@2.11.0:")
