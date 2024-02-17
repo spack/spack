@@ -21,4 +21,5 @@ class PyBiobbModel(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-biobb-common@4.1.0", type=("build", "run"))
-    depends_on("py-biobb-structure-checking@3.13.4", type=("build", "run"))
+    depends_on("py-biobb-structure-checking@3.13.4:", type=("build", "run"))
+    depends_on("py-xmltodict", type=("build", "run"))
