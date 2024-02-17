@@ -27,11 +27,13 @@ class PyAnsible(PythonPackage):
     version("2.7.14", sha256="92f0be1de4f9d1c0a3a35963fb853a6d7831360fd1e734cb36d601495a71770c")
     version("2.6.20", sha256="55962e79e24a67a5534bf08aa0482d5f7322ad3f112a3ebffc4a58ae02b82277")
 
-    depends_on("python@3.8:", type=("build", "run"), when="@2.12:")
-    depends_on("python@3.9:", type=("build", "run"), when="@2.14:")
-    depends_on("python@3.10:", type=("build", "run"), when="@2.16:")
+    depends_on("python@3.8:", type=("build", "run"), when="@2.12.0:")
+    depends_on("python@3.9:", type=("build", "run"), when="@2.14.0:")
+    depends_on("python@3.10:", type=("build", "run"), when="@2.16.0:")
 
     depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@39.2.0:", type="build", when="@2.13.0:")
+    depends_on("py-setuptools@45.2.0:", type="build", when="@2.14.9:")
     depends_on("py-setuptools@66.1.0:", type="build", when="@2.16.0:")
 
     depends_on("py-jinja2", type=("build", "run"))
