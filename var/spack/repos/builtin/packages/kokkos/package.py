@@ -23,7 +23,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("cedricchevalier19", "nmm0", "lucbv")
 
-    license("BSD-3-Clause")
+    license("Apache-2.0 WITH LLVM-exception")
 
     version("master", branch="master")
     version("develop", branch="develop")
