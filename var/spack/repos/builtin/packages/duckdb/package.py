@@ -18,6 +18,8 @@ class Duckdb(MakefilePackage):
     license("MIT")
 
     version("master", branch="master")
+    version("0.10.0", sha256="5a925b8607d00a97c1a3ffe6df05c0a62a4df063abd022ada82ac1e917792013")
+    version("0.9.2", sha256="37a43188d9354ce3ca101b2b118d867f5f76d04c3b83c09d86fd7508351a631b")
     version("0.9.1", sha256="37a43188d9354ce3ca101b2b118d867f5f76d04c3b83c09d86fd7508351a631b")
     version("0.9.0", sha256="3dbf3326a831bf0797591572440e81a3d6d668f8e33a25ce04efae19afc3a23d")
     version("0.8.1", sha256="a0674f7e320dc7ebcf51990d7fc1c0e7f7b2c335c08f5953702b5285e6c30694")
