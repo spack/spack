@@ -2021,7 +2021,6 @@ def process_command(name, commands, repro_dir, run=True, exit_on_failure=True):
     Returns: the exit code from processing the command
     """
     tty.debug(f"spack {name} arguments: {commands}")
-    is_windows = sys.platform == "win32"
     if len(commands) == 0 or isinstance(commands[0], str):
         commands = [commands]
 
