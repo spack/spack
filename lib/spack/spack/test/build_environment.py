@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -285,6 +285,24 @@ def test_compiler_config_modifications(
         assert name not in os.environ
 
 
+def test_external_config_env(mock_packages, mutable_config, working_env):
+    cmake_config = {
+        "externals": [
+            {
+                "spec": "cmake@1.0",
+                "prefix": "/fake/path",
+                "extra_attributes": {"environment": {"set": {"TEST_ENV_VAR_SET": "yes it's set"}}},
+            }
+        ]
+    }
+    spack.config.set("packages:cmake", cmake_config)
+
+    cmake_client = spack.spec.Spec("cmake-client").concretized()
+    spack.build_environment.setup_package(cmake_client.package, False)
+
+    assert os.environ["TEST_ENV_VAR_SET"] == "yes it's set"
+
+
 @pytest.mark.regression("9107")
 def test_spack_paths_before_module_paths(config, mock_packages, monkeypatch, working_env):
     s = spack.spec.Spec("cmake")
@@ -439,10 +457,10 @@ def test_parallel_false_is_not_propagating(default_mock_concretization):
     # b (parallel =True)
     s = default_mock_concretization("a foobar=bar")
 
-    spack.build_environment.set_package_py_globals(s.package)
+    spack.build_environment.set_package_py_globals(s.package, context=Context.BUILD)
     assert s["a"].package.module.make_jobs == 1
 
-    spack.build_environment.set_package_py_globals(s["b"].package)
+    spack.build_environment.set_package_py_globals(s["b"].package, context=Context.BUILD)
     assert s["b"].package.module.make_jobs == spack.build_environment.determine_number_of_jobs(
         parallel=s["b"].package.parallel
     )
@@ -652,3 +670,48 @@ def test_monkey_patching_works_across_virtual(default_mock_concretization):
     s["mpich"].foo = "foo"
     assert s["mpich"].foo == "foo"
     assert s["mpi"].foo == "foo"
+
+
+def test_clear_compiler_related_runtime_variables_of_build_deps(default_mock_concretization):
+    """Verify that Spack drops CC, CXX, FC and F77 from the dependencies related build environment
+    variable changes if they are set in setup_run_environment. Spack manages those variables
+    elsewhere."""
+    s = default_mock_concretization("build-env-compiler-var-a")
+    ctx = spack.build_environment.SetupContext(s, context=Context.BUILD)
+    result = {}
+    ctx.get_env_modifications().apply_modifications(result)
+    assert "CC" not in result
+    assert "CXX" not in result
+    assert "FC" not in result
+    assert "F77" not in result
+    assert result["ANOTHER_VAR"] == "this-should-be-present"
+
+
+@pytest.mark.parametrize("context", [Context.BUILD, Context.RUN])
+def test_build_system_globals_only_set_on_root_during_build(default_mock_concretization, context):
+    """Test whether when setting up a build environment, the build related globals are set only
+    in the top level spec.
+
+    TODO: Since module instances are globals themselves, and Spack defines properties on them, they
+    persist across tests. In principle this is not terrible, cause the variables are mostly static.
+    But obviously it can lead to very hard to find bugs... We should get rid of those globals and
+    define them instead as a property on the package instance.
+    """
+    root = spack.spec.Spec("mpileaks").concretized()
+    build_variables = ("std_cmake_args", "std_meson_args", "std_pip_args")
+
+    # See todo above, we clear out any properties that may have been set by the previous test.
+    # Commenting this loop will make the test fail. I'm leaving it here as a reminder that those
+    # globals were always a bad idea, and we should pass them to the package instance.
+    for spec in root.traverse():
+        for variable in build_variables:
+            spec.package.module.__dict__.pop(variable, None)
+
+    spack.build_environment.SetupContext(root, context=context).set_all_package_py_globals()
+
+    # Excpect the globals to be set at the root in a build context only.
+    should_be_set = lambda depth: context == Context.BUILD and depth == 0
+
+    for depth, spec in root.traverse(depth=True, root=True):
+        for variable in build_variables:
+            assert hasattr(spec.package.module, variable) == should_be_set(depth)

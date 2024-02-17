@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Pflotran(AutotoolsPackage):
     git = "https://bitbucket.org/pflotran/pflotran.git"
 
     maintainers("ghammond86", "balay")
+
+    license("LGPL-3.0-only")
 
     version("develop")
     version("5.0.0", commit="f0fe931c72c03580e489724afeb8c5451406b942")  # tag v5.0.0
@@ -57,3 +59,9 @@ class Pflotran(AutotoolsPackage):
         if "%gcc@10:" in self.spec and name == "fflags":
             flags.append("-fallow-argument-mismatch")
         return flags, None, None
+
+    @when("@5.0.0")
+    def patch(self):
+        filter_file(
+            "use iso_[cC]_binding", "use, intrinsic :: iso_c_binding", "src/pflotran/hdf5_aux.F90"
+        )

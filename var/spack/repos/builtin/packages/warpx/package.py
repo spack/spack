@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,8 @@ class Warpx(CMakePackage):
 
     maintainers("ax3l", "dpgrote", "MaxThevenet", "RemiLehe")
     tags = ["e4s", "ecp"]
+
+    license("BSD-3-Clause-LBNL")
 
     # NOTE: if you update the versions here, also see py-warpx
     version("develop", branch="development")
@@ -222,6 +224,10 @@ class Warpx(CMakePackage):
         #   https://github.com/SENSEI-insitu/SENSEI/issues/79
         if "+sensei" in spec:
             args.append(self.define("SENSEI_DIR", spec["sensei"].prefix.lib.cmake))
+
+        # WarpX uses CCache by default, interfering with Spack wrappers
+        ccache_var = "CCACHE_PROGRAM" if spec.satisfies("@:24.01") else "WarpX_CCACHE"
+        args.append(self.define(ccache_var, False))
 
         return args
 

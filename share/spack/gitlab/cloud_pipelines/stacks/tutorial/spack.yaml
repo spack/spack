@@ -8,26 +8,27 @@ spack:
   definitions:
   - gcc_system_packages:
     - matrix:
-      - - gmake
-        - gmake@4.3
-        - gmake@4.3 cflags=-O3
+      - - zlib-ng
+        - zlib-ng@2.0.7
+        - zlib-ng@2.0.7 cflags=-O3
         - tcl
-        - tcl ^gmake@4.3 cflags=-O3
+        - tcl ^zlib-ng@2.0.7 cflags=-O3
         - hdf5
         - hdf5~mpi
         - hdf5+hl+mpi ^mpich
         - trilinos
         - trilinos +hdf5 ^hdf5+hl+mpi ^mpich
-        - gcc@12
+        - gcc@12.3.0
         - mpileaks
-        - lmod
+        - lmod@8.7.18
+        - environment-modules
         - macsio@1.1+scr ^scr@2.0.0~fortran ^silo~fortran ^hdf5~fortran
       - ['%gcc@11']
   - gcc_old_packages:
-    - gmake%gcc@10
+    - zlib-ng%gcc@10
   - clang_packages:
     - matrix:
-      - [gmake, tcl ^gmake@4.3]
+      - [zlib-ng, tcl ^zlib-ng@2.0.7]
       - ['%clang@14']
   - gcc_spack_built_packages:
     - matrix:

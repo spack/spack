@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,7 @@ from spack.environment.environment import (
     SpackEnvironmentViewError,
     _error_on_nonempty_view_dir,
 )
+from spack.spec_list import UndefinedReferenceError
 
 pytestmark = pytest.mark.not_on_windows("Envs are not supported on windows")
 
@@ -107,6 +108,12 @@ def test_env_change_spec_in_definition(tmp_path, mock_packages, config, mutable_
     e.change_existing_spec(spack.spec.Spec("mpileaks@2.2"), list_name="desired_specs")
     e.write()
 
+    # Ensure changed specs are in memory
+    assert any(x.intersects("mpileaks@2.2%gcc") for x in e.user_specs)
+    assert not any(x.intersects("mpileaks@2.1%gcc") for x in e.user_specs)
+
+    # Now make sure the changes can be read from the modified config
+    e = ev.read("test")
     assert any(x.intersects("mpileaks@2.2%gcc") for x in e.user_specs)
     assert not any(x.intersects("mpileaks@2.1%gcc") for x in e.user_specs)
 
@@ -694,7 +701,7 @@ def test_removing_spec_from_manifest_with_exact_duplicates(
 
 @pytest.mark.regression("35298")
 @pytest.mark.only_clingo("Propagation not supported in the original concretizer")
-def test_variant_propagation_with_unify_false(tmp_path, mock_packages):
+def test_variant_propagation_with_unify_false(tmp_path, mock_packages, config):
     """Spack distributes concretizations to different processes, when unify:false is selected and
     the number of roots is 2 or more. When that happens, the specs to be concretized need to be
     properly reconstructed on the worker process, if variant propagation was requested.
@@ -716,3 +723,93 @@ def test_variant_propagation_with_unify_false(tmp_path, mock_packages):
     root = env.matching_spec("parent-foo")
     for node in root.traverse():
         assert node.satisfies("+foo")
+
+
+def test_env_with_include_defs(mutable_mock_env_path, mock_packages):
+    """Test environment with included definitions file."""
+    env_path = mutable_mock_env_path
+    env_path.mkdir()
+    defs_file = env_path / "definitions.yaml"
+    defs_file.write_text(
+        """definitions:
+- core_specs: [libdwarf, libelf]
+- compilers: ['%gcc']
+"""
+    )
+
+    spack_yaml = env_path / ev.manifest_name
+    spack_yaml.write_text(
+        f"""spack:
+  include:
+  - file://{defs_file}
+
+  definitions:
+  - my_packages: [zlib]
+
+  specs:
+  - matrix:
+    - [$core_specs]
+    - [$compilers]
+  - $my_packages
+"""
+    )
+
+    e = ev.Environment(env_path)
+    with e:
+        e.concretize()
+
+
+def test_env_with_include_def_missing(mutable_mock_env_path, mock_packages):
+    """Test environment with included definitions file that is missing a definition."""
+    env_path = mutable_mock_env_path
+    env_path.mkdir()
+    filename = "missing-def.yaml"
+    defs_file = env_path / filename
+    defs_file.write_text("definitions:\n- my_compilers: ['%gcc']\n")
+
+    spack_yaml = env_path / ev.manifest_name
+    spack_yaml.write_text(
+        f"""spack:
+  include:
+  - file://{defs_file}
+
+  specs:
+  - matrix:
+    - [$core_specs]
+    - [$my_compilers]
+"""
+    )
+
+    e = ev.Environment(env_path)
+    with e:
+        with pytest.raises(UndefinedReferenceError, match=r"which does not appear"):
+            e.concretize()
+
+
+@pytest.mark.regression("41292")
+def test_deconcretize_then_concretize_does_not_error(mutable_mock_env_path, mock_packages):
+    """Tests that, after having deconcretized a spec, we can reconcretize an environment which
+    has 2 or more user specs mapping to the same concrete spec.
+    """
+    mutable_mock_env_path.mkdir()
+    spack_yaml = mutable_mock_env_path / ev.manifest_name
+    spack_yaml.write_text(
+        """spack:
+      specs:
+      # These two specs concretize to the same hash
+      - c
+      - c@1.0
+      # Spec used to trigger the bug
+      - a
+      concretizer:
+        unify: true
+    """
+    )
+    e = ev.Environment(mutable_mock_env_path)
+    with e:
+        e.concretize()
+        e.deconcretize(spack.spec.Spec("a"), concrete=False)
+        e.concretize()
+    assert len(e.concrete_roots()) == 3
+    all_root_hashes = set(x.dag_hash() for x in e.concrete_roots())
+    assert len(all_root_hashes) == 2

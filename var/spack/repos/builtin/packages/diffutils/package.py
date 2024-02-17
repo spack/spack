@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Diffutils(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org/software/diffutils/"
     gnu_mirror_path = "diffutils/diffutils-3.7.tar.xz"
+
+    license("GPL-3.0-or-later")
 
     version("3.9", sha256="d80d3be90a201868de83d78dad3413ad88160cc53bcc36eb9eaf7c20dbf023f1")
     version("3.8", sha256="a6bdd7d1b31266d11c4f4de6c1b748d4607ab0231af5188fc2533d0ae2438fec")

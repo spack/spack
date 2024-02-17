@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Cmockery(AutotoolsPackage):
 
     homepage = "https://github.com/google/cmockery"
     url = "https://github.com/google/cmockery/archive/v0.1.2.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("0.1.2", sha256="d40135ae9179201c01bde725fa64fc32d86b5899972e0ce4ad51668d261edbae")
     version("0.1.1", sha256="a801d17976f781fff6dc49042ff109e55ca4ebe8efb13757fa1a511ca52316be")

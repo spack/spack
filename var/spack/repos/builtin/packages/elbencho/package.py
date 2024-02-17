@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,16 +9,21 @@ from spack.package import *
 
 
 class Elbencho(MakefilePackage):
-
     """
     Elbencho storage benchmark
     """
 
     homepage = "https://github.com/breuner/elbencho"
     url = "https://github.com/breuner/elbencho/archive/refs/tags/v3.0-1.tar.gz"
+    git = "https://github.com/breuner/elbencho.git"
 
     maintainers("ethanjjjjjjj")
 
+    license("GPL-3.0-only")
+
+    version("master", branch="master")
+
+    version("3.0-3", sha256="5769abcdaebefe2984ac3053fb6e91a54e1863d5ea8f72daea830e10b27c0eaf")
     version("3.0-1", sha256="19dad85e1fc74419dcdf740f11a47d3f6d566770a06e40976755a3404566c11d")
     version("2.2-5", sha256="4b598639452665a8b79c4c9d8a22ae63fb9b04057635a45e686aa3939ee255b4")
     version("2.2-3", sha256="0ae2d495d2863b84f21f55b7c526674fab1be723d0697087017946647f79d0e6")

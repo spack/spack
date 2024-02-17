@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Tracy(MakefilePackage):
     homepage = "https://github.com/wolfpld/tracy"
     url = "https://github.com/wolfpld/tracy/archive/v0.0.0.tar.gz"
     maintainers("msimberg")
+
+    license("BSD-3-Clause")
 
     version("master", git="https://github.com/wolfpld/tracy.git", branch="master")
     version("0.10", sha256="a76017d928f3f2727540fb950edd3b736caa97b12dbb4e5edce66542cbea6600")

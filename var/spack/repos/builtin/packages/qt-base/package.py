@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,8 +32,6 @@ class QtPackage(CMakePackage):
         return _list_url.format(qualname.lower())
 
     maintainers("wdconinc", "sethrj")
-
-    provides("qmake")
 
     # Default dependencies for all qt-* components
     generator("ninja")
@@ -91,6 +89,11 @@ class QtBase(QtPackage):
     url = QtPackage.get_url(__qualname__)
     list_url = QtPackage.get_list_url(__qualname__)
 
+    provides("qmake")
+
+    license("BSD-3-Clause")
+
+    version("6.6.1", sha256="eb091c56e8c572d35d3da36f94f9e228892d43aecb559fa4728a19f0e44914c4")
     version("6.6.0", sha256="882f39ea3a40a0894cd64e515ce51711a4fab79b8c47bc0fe0279e99493a62cf")
     version("6.5.3", sha256="174021c4a630df2e7e912c2e523844ad3cb5f90967614628fd8aa15ddbab8bc5")
     version("6.5.2", sha256="221cafd400c0a992a42746b43ea879d23869232e56d9afe72cb191363267c674")
@@ -150,6 +153,13 @@ class QtBase(QtPackage):
             depends_on("libxkbcommon")
             depends_on("libxcb@1.13:")  # requires xinput
             depends_on("libxrender")
+            depends_on("libx11")
+            depends_on("xcb-util")
+            depends_on("xcb-util-cursor")
+            depends_on("xcb-util-image")
+            depends_on("xcb-util-keysyms")
+            depends_on("xcb-util-renderutil")
+            depends_on("xcb-util-wm")
 
     with when("+network"):
         depends_on("openssl")

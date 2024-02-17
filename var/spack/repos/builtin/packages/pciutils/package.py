@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Pciutils(MakefilePackage):
 
     homepage = "https://mj.ucw.cz/sw/pciutils/"
     url = "https://github.com/pciutils/pciutils/archive/v3.7.0.tar.gz"
+
+    license("GPL-2.0-only")
 
     version("3.7.0", sha256="ea768aa0187ba349391c6c157445ecc2b42e7d671fc1ce8c53ff5ef513f1e2ab")
     version("3.6.4", sha256="551d0ac33f030868b7e95c29e58dc2b1882455dbc9c15c15adf7086e664131f1")

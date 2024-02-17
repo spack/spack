@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,12 @@ class PyTorchvision(PythonPackage):
 
     maintainers("adamjstewart")
 
+    license("BSD-3-Clause")
+
     version("main", branch="main")
+    version("0.17.0", sha256="55e395d5c7d9bf7658c82ac633cac2224aa168e1bfe8bb5b2b2a296c792a3500")
+    version("0.16.2", sha256="8c1f2951e98d8ada6e5a468f179af4be9f56d2ebc3ab057af873da61669806d7")
+    version("0.16.1", sha256="d31fe52e4540750c8d372b0f38f1bfa81d8261193f2c2c06577332831d203c50")
     version("0.16.0", sha256="79b30b082237e3ead21e74587cedf4a4d832f977cf7dfeccfb65f67988b12ceb")
     version("0.15.2", sha256="1efcb80e0a6e42c54f07ee16167839b4d302aeeecc12839cc47c74b06a2c20d4")
     version("0.15.1", sha256="689d23d4ebb0c7e54e8651c89b17155b64341c14ae4444a04ca7dc6f2b6a0a43")
@@ -41,27 +46,26 @@ class PyTorchvision(PythonPackage):
     version("0.6.1", sha256="8173680a976c833640ecbd0d7e6f0a11047bf8833433e2147180efc905e48656")
     version("0.6.0", sha256="02de11b3abe6882de4032ce86dab9c7794cbc84369b44d04e667486580f0f1f7")
     version("0.5.0", sha256="eb9afc93df3d174d975ee0914057a9522f5272310b4d56c150b955c287a4d74d")
-    version("0.4.2", sha256="1184a27eab85c9e784bacc6f9d6fec99e168ab4eda6047ef9f709e7fdb22d8f9")
-    version("0.4.1", sha256="053689351272b3bd2ac3e6ba51efd284de0e4ca4a301f54674b949f1e62b7176")
-    version("0.4.0", sha256="c270d74e568bad4559fed4544f6dd1e22e2eb1c60b088e04a5bd5787c4150589")
-    version("0.3.0", sha256="c205f0618c268c6ed2f8abb869ef6eb83e5339c1336c243ad321a2f2a85195f0")
 
     desc = "Enable support for native encoding/decoding of {} formats in torchvision.io"
-    variant("png", default=False, description=desc.format("PNG"))
-    variant("jpeg", default=False, description=desc.format("JPEG"))
+    variant("png", default=True, description=desc.format("PNG"))
+    variant("jpeg", default=True, description=desc.format("JPEG"))
     variant("nvjpeg", default=False, description=desc.format("JPEG"))
     variant("ffmpeg", default=False, description=desc.format("FFMPEG"))
     variant("video_codec", default=False, description=desc.format("video_codec"))
 
-    # https://github.com/pytorch/vision#installation
-    depends_on("python@3.8:3.11", when="@0.15:", type=("build", "link", "run"))
+    # Based on PyPI wheel availability
+    depends_on("python@3.8:3.12", when="@0.17:", type=("build", "link", "run"))
+    depends_on("python@3.8:3.11", when="@0.15:0.16", type=("build", "link", "run"))
     depends_on("python@:3.10", when="@0.12:0.14", type=("build", "link", "run"))
     depends_on("python@:3.9", when="@0.8.2:0.11", type=("build", "link", "run"))
     depends_on("python@:3.8", when="@0.5:0.8.1", type=("build", "link", "run"))
-    depends_on("python@:3.7", when="@:0.4", type=("build", "link", "run"))
 
     # https://github.com/pytorch/vision#installation
     depends_on("py-torch@main", when="@main", type=("build", "link", "run"))
+    depends_on("py-torch@2.2.0", when="@0.17.0", type=("build", "link", "run"))
+    depends_on("py-torch@2.1.2", when="@0.16.2", type=("build", "link", "run"))
+    depends_on("py-torch@2.1.1", when="@0.16.1", type=("build", "link", "run"))
     depends_on("py-torch@2.1.0", when="@0.16.0", type=("build", "link", "run"))
     depends_on("py-torch@2.0.1", when="@0.15.2", type=("build", "link", "run"))
     depends_on("py-torch@2.0.0", when="@0.15.1", type=("build", "link", "run"))
@@ -86,11 +90,6 @@ class PyTorchvision(PythonPackage):
     depends_on("py-torch@1.5.1", when="@0.6.1", type=("build", "link", "run"))
     depends_on("py-torch@1.5.0", when="@0.6.0", type=("build", "link", "run"))
     depends_on("py-torch@1.4.1", when="@0.5.0", type=("build", "link", "run"))
-    depends_on("py-torch@1.3.1", when="@0.4.2", type=("build", "link", "run"))
-    depends_on("py-torch@1.3.0", when="@0.4.1", type=("build", "link", "run"))
-    depends_on("py-torch@1.2.0", when="@0.4.0", type=("build", "link", "run"))
-    depends_on("py-torch@1.1.0", when="@0.3.0", type=("build", "link", "run"))
-    depends_on("py-torch@:1.0.1", when="@0.2.2", type=("build", "link", "run"))
 
     depends_on("ninja", type="build")
 
@@ -114,8 +113,6 @@ class PyTorchvision(PythonPackage):
 
     # https://github.com/pytorch/vision/pull/5898
     conflicts("^pil@10:", when="@:0.12")
-    # https://github.com/pytorch/vision/issues/1712
-    conflicts("^pil@7:", when="@:0.4")
     # https://github.com/pytorch/vision/issues/4146
     # https://github.com/pytorch/vision/issues/4934
     conflicts("^pil@8.3")

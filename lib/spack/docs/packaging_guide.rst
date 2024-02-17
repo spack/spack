@@ -1,4 +1,4 @@
-.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -237,7 +237,7 @@ for details):
 .. code-block:: python
    :linenos:
 
-   # Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+   # Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    # Spack Project Developers. See the top-level COPYRIGHT file for details.
    #
    # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -2337,7 +2337,7 @@ window while a batch job is running ``spack install`` on the same or
 overlapping dependencies without any process trying to re-do the work of
 another.
 
-For example, if you are using SLURM, you could launch an installation
+For example, if you are using Slurm, you could launch an installation
 of ``mpich`` using the following command:
 
 .. code-block:: console
@@ -3503,6 +3503,56 @@ is equivalent to:
 Constraints from nested context managers are also combined together, but they are rarely
 needed or recommended.
 
+.. _default_args:
+
+------------------------
+Common default arguments
+------------------------
+
+Similarly, if directives have a common set of default arguments, you can
+group them together in a ``with default_args()`` block:
+
+.. code-block:: python
+
+   class PyExample(PythonPackage):
+
+       with default_args(type=("build", "run")):
+           depends_on("py-foo")
+           depends_on("py-foo@2:", when="@2:")
+           depends_on("py-bar")
+           depends_on("py-bz")
+
+The above is short for:
+
+.. code-block:: python
+
+   class PyExample(PythonPackage):
+
+       depends_on("py-foo", type=("build", "run"))
+       depends_on("py-foo@2:", when="@2:", type=("build", "run"))
+       depends_on("py-bar", type=("build", "run"))
+       depends_on("py-bz", type=("build", "run"))
+
+.. note::
+
+   The ``with when()`` context manager is composable, while ``with default_args()``
+   merely overrides the default. For example:
+
+   .. code-block:: python
+
+      with default_args(when="+feature"):
+          depends_on("foo")
+          depends_on("bar")
+          depends_on("baz", when="+baz")
+
+   is equivalent to:
+
+   .. code-block:: python
+
+      depends_on("foo", when="+feature")
+      depends_on("bar", when="+feature")
+      depends_on("baz", when="+baz")  # Note: not when="+feature+baz"
+
 .. _install-method:
 
 ------------------
@@ -4329,10 +4379,16 @@ implementation was selected for this build:
    elif "mvapich" in spec:
        configure_args.append("--with-mvapich")
 
-It's also a bit more concise than satisfies.  The difference between
-the two functions is that ``satisfies()`` tests whether spec
-constraints overlap at all, while ``in`` tests whether a spec or any
-of its dependencies satisfy the provided spec.
+It's also a bit more concise than satisfies.
+
+.. note::
+
+   The ``satisfies()`` method tests whether this spec has, at least, all the constraints of the argument spec,
+   while ``in`` tests whether a spec or any of its dependencies satisfy the provided spec.
+
+   If the provided spec is anonymous (e.g., ":1.2:", "+shared") or has the
+   same name as the spec being checked, then ``in`` works the same as
+   ``satisfies()``; however, use of ``satisfies()`` is more intuitive.
 
 ^^^^^^^^^^^^^^^^^^^^^^^
 Architecture specifiers
@@ -5234,7 +5290,7 @@ installed example.
            example = which(self.prefix.bin.example)
            example()
 
-Output showing the identification of each test part after runnig the tests
+Output showing the identification of each test part after running the tests
 is illustrated below.
 
 .. code-block:: console
@@ -5731,7 +5787,7 @@ with those implemented in the package itself.
    * - `Cxx
        <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/cxx>`_
      - Compiles and runs several ``hello`` programs
-   * - `Fortan
+   * - `Fortran
        <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/fortran>`_
      - Compiles and runs ``hello`` programs (``F`` and ``f90``)
    * - `Mpi
@@ -6923,3 +6979,18 @@ you probably care most about are:
 You may also care about `license exceptions
 <https://spdx.org/licenses/exceptions-index.html>`_ that use the ``WITH`` operator,
 e.g. ``Apache-2.0 WITH LLVM-exception``.
+
+Many of the licenses that are currently in the spack repositories have been
+automatically determined. While this is great for bulk adding license
+information and is most likely correct, there are sometimes edge cases that
+require manual intervention. To determine which licenses are validated and
+which are not, there is the `checked_by` parameter in the license directive:
+
+.. code-block:: python
+
+   license("<license>", when="<when>", checked_by="<github username>")
+
+When you have validated a github license, either when doing so explicitly or
+as part of packaging a new package, please set the `checked_by` parameter
+to your Github username to signal that the license has been manually
+verified.

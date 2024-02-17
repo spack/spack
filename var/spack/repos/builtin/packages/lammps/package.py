@@ -1,15 +1,16 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import datetime as dt
+import os
 
 import archspec
 
 from spack.package import *
 
 
-class Lammps(CMakePackage, CudaPackage, ROCmPackage):
+class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
     """LAMMPS stands for Large-scale Atomic/Molecular Massively
     Parallel Simulator.
     """
@@ -22,16 +23,30 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("rbberger")
 
+    license("GPL-2.0-only")
+
     # rules for new versions and deprecation
     # * new stable versions should be added to stable_versions set
     # * a stable version that has updates and any of its outdated update releases should be
     #   marked deprecated=True
     # * patch releases older than a stable release should be marked deprecated=True
     version("develop", branch="develop")
+    version("20240207", sha256="d518f32de4eb2681f2543be63926411e72072dd7d67c1670c090b5baabed98ac")
+    version("20231121", sha256="704d8a990874a425bcdfe0245faf13d712231ba23f014a3ebc27bc14398856f1")
+    version(
+        "20230802.2",
+        sha256="3bcecabc9cad08d0a4e4d989b52d29c58505f7ead8ebacf43c9db8d9fd3d564a",
+        preferred=True,
+    )
+    version(
+        "20230802.1",
+        sha256="0e5568485e5ee080412dba44a1b7a93f864f1b5c75121f11d528854269953ed0",
+        deprecated=True,
+    )
     version(
         "20230802",
         sha256="48dc8b0b0583689e80ea2052275acbc3e3fce89707ac557e120db5564257f7df",
-        preferred=True,
+        deprecated=True,
     )
     version(
         "20230615",
@@ -343,6 +358,8 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
     )
 
     stable_versions = {
+        "20230802.2",
+        "20230802.1",
         "20230802",
         "20220623.4",
         "20220623.3",
@@ -437,7 +454,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
         "mofff": {"when": "@20210702:"},
         "molecule": {"default": True},
         "molfile": {"when": "@20210702:"},
-        "mpiio": {},
+        "mpiio": {"when": "@:20230802.1"},
         "netcdf": {"when": "@20210702:"},
         "openmp-package": {},
         "opt": {},
@@ -530,7 +547,12 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
     variant("ffmpeg", default=False, description="Build with ffmpeg support")
     variant("openmp", default=True, description="Build with OpenMP")
     variant("opencl", default=False, description="Build with OpenCL")
-    variant("exceptions", default=False, description="Build with lammps exceptions")
+    variant(
+        "exceptions",
+        default=False,
+        description="Build with lammps exceptions",
+        when="@:20230802.1",
+    )
     variant(
         "cuda_mps",
         default=False,
@@ -563,6 +585,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
         multi=False,
     )
 
+    depends_on("cmake@3.16:", when="@20231121:")
     depends_on("mpi", when="+mpi")
     depends_on("mpi", when="+mpiio")
     depends_on("fftw-api@3", when="+kspace")
@@ -602,14 +625,18 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("plumed", when="+plumed")
     depends_on("eigen@3:", when="+user-smd")
     depends_on("eigen@3:", when="+machdyn")
-    depends_on("py-cython", when="+mliap+python")
-    depends_on("py-cython", when="+ml-iap+python")
-    depends_on("py-numpy", when="+python")
-    depends_on("py-mpi4py", when="+python+mpi")
-    depends_on("py-setuptools", when="@20220217:+python", type="build")
-    depends_on("n2p2@2.1.4:", when="+user-hdnnp")
-    depends_on("n2p2@2.1.4:", when="+ml-hdnnp")
-    depends_on("n2p2+shared", when="+lib ^n2p2")
+    depends_on("py-cython", when="+mliap+python", type="build")
+    depends_on("py-cython", when="+ml-iap+python", type="build")
+    depends_on("py-pip", when="+python", type="build")
+    depends_on("py-wheel", when="+python", type="build")
+    depends_on("py-build", when="+python", type="build")
+    depends_on("py-numpy", when="+python", type=("build", "run"))
+    depends_on("py-mpi4py", when="+python+mpi", type=("build", "run"))
+    depends_on("py-setuptools@42:", when="@20220217:+python", type=("build", "run"))
+    for _n2p2_cond in ("+user-hdnnp", "+ml-hdnnp"):
+        with when(_n2p2_cond):
+            depends_on("n2p2@2.1.4:")
+            depends_on("n2p2+shared", when="+lib")
     depends_on("vtk", when="+user-vtk")
     depends_on("vtk", when="+vtk")
     depends_on("hipcub", when="~kokkos +rocm")
@@ -686,8 +713,8 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
     # Older LAMMPS does not compile with Kokkos 4.x
     conflicts(
         "^kokkos@4:",
-        when="@:20230802",
-        msg="LAMMPS is incompatible with Kokkos 4.x until @20230802",
+        when="@:20230802.1",
+        msg="LAMMPS is incompatible with Kokkos 4.x until @20230802.1",
     )
 
     patch("lib.patch", when="@20170901")
@@ -706,6 +733,16 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
     )
     patch("hip_cmake.patch", when="@20220623:20221222 ~kokkos+rocm")
 
+    # Add large potential files
+    resource(
+        name="C_10_10.mesocnt",
+        url="https://download.lammps.org/potentials/C_10_10.mesocnt",
+        sha256="923f600a081d948eb8b4510f84aa96167b5a6c3e1aba16845d2364ae137dc346",
+        expand=False,
+        placement={"C_10_10.mesocnt": "potentials/C_10_10.mesocnt"},
+        when="+mesont",
+    )
+
     root_cmakelists_dir = "cmake"
 
     def cmake_args(self):
@@ -723,6 +760,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("{}_MPI".format(mpi_prefix), "mpi"),
             self.define_from_variant("BUILD_OMP", "openmp"),
             self.define("ENABLE_TESTING", self.run_tests),
+            self.define("DOWNLOAD_POTENTIALS", False),
         ]
         if "~kokkos" in spec:
             # LAMMPS can be build with the GPU package OR the KOKKOS package
@@ -791,7 +829,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
             # FFTW libraries are available and enable them by default.
             if "^fftw" in spec or "^cray-fftw" in spec or "^amdfftw" in spec:
                 args.append(self.define("FFT", "FFTW3"))
-            elif "^mkl" in spec:
+            elif spec["fftw-api"].name in INTEL_MATH_LIBRARIES:
                 args.append(self.define("FFT", "MKL"))
             elif "^armpl-gcc" in spec or "^acfl" in spec:
                 args.append(self.define("FFT", "FFTW3"))
@@ -833,5 +871,20 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
     def setup_run_environment(self, env):
         env.set("LAMMPS_POTENTIALS", self.prefix.share.lammps.potentials)
         if "+python" in self.spec:
-            env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
-            env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib64)
+            if self.spec.platform == "darwin":
+                env.prepend_path("DYLD_FALLBACK_LIBRARY_PATH", self.prefix.lib)
+                env.prepend_path("DYLD_FALLBACK_LIBRARY_PATH", self.prefix.lib64)
+            else:
+                env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
+                env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib64)
+
+    @run_after("install")
+    def install_python(self):
+        # do LAMMPS Python package installation using pip
+        if self.spec.satisfies("@20230328: +python"):
+            with working_dir("python"):
+                os.environ["LAMMPS_VERSION_FILE"] = join_path(
+                    self.stage.source_path, "src", "version.h"
+                )
+                args = std_pip_args + ["--prefix=" + self.prefix, "."]
+                pip(*args)

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,11 +22,14 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     maintainers("balos1", "cswoodward", "gardner48")
+    license("BSD-3-Clause")
 
     # ==========================================================================
     # Versions
     # ==========================================================================
     version("develop", branch="develop")
+    version("6.7.0", sha256="5f113a1564a9d2d98ff95249f4871a4c815a05dbb9b8866a82b13ab158c37adb")
+    version("6.6.2", sha256="08f8223a5561327e44c072e46faa7f665c0c0bc8cd7e45d23f486c3d24c65009")
     version("6.6.1", sha256="21f71e4aef95b18f954c8bbdc90b62877443950533d595c68051ab768b76984b")
     version("6.6.0", sha256="f90029b8da846c8faff5530fd1fa4847079188d040554f55c1d5d1e04743d29d")
     version("6.5.1", sha256="4252303805171e4dbdd19a01e52c1dcfe0dafc599c3cfedb0a5c2ffb045a8a75")
@@ -281,6 +284,10 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     # ==========================================================================
     # https://github.com/spack/spack/issues/29526
     patch("nvector-pic.patch", when="@6.1.0:6.2.0 +rocm")
+
+    # Backward compatibility is stopped from ROCm 6.0
+    # Need to follow the changes similar to PR https://github.com/LLNL/RAJA/pull/1568
+    patch("Change-HIP_PLATFORM-from-HCC-to-AMD-and-NVCC-to-NVIDIA.patch", when="^hip@6.0 +rocm")
 
     # remove OpenMP header file and function from hypre vector test code
     patch("test_nvector_parhyp.patch", when="@2.7.0:3.0.0")

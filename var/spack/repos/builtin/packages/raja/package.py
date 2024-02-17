@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     tags = ["radiuss", "e4s"]
 
     maintainers("davidbeckingsale")
+
+    license("BSD-3-Clause")
 
     version("develop", branch="develop", submodules=False)
     version("main", branch="main", submodules=False)
@@ -112,6 +114,14 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         when="@:0.13.0 ^blt@0.4:",
     )
 
+    # Backward compatibility is stopped from ROCm 6.0
+    # Future relase will have the change from PR https://github.com/LLNL/RAJA/pull/1568
+    patch(
+        "https://github.com/LLNL/RAJA/commit/406eb8dee05a41eb32c421c375688a4863b60642.patch?full_index=1",
+        sha256="d9ce5ef038555cbccb330a9016b7be77e56ae0660583cba955dab9d0297a4b07",
+        when="^hip@6.0",
+    )
+
     variant("openmp", default=True, description="Build OpenMP backend")
     variant("shared", default=True, description="Build Shared Libs")
     variant("plugins", default=False, description="Enable runtime plugins")
@@ -122,7 +132,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant("tests", default=False, description="Build tests")
 
     depends_on("blt", type="build")
-    depends_on("blt@0.5.0:", type="build", when="@0.14.1:")
+    depends_on("blt@0.5.0:0.5.3", type="build", when="@0.14.1:2022.10.4")
     depends_on("blt@0.4.1", type="build", when="@0.14.0")
     depends_on("blt@0.4.0:", type="build", when="@0.13.0")
     depends_on("blt@0.3.6:", type="build", when="@:0.12.0")
@@ -161,6 +171,11 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         if "SYS_TYPE" in env:
             sys_type = env["SYS_TYPE"]
         return sys_type
+
+    @property
+    def libs(self):
+        shared = "+shared" in self.spec
+        return find_libraries("libRAJA", root=self.prefix, shared=shared, recursive=True)
 
     @property
     def cache_name(self):

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,10 @@ class Abinit(AutotoolsPackage):
     homepage = "https://www.abinit.org/"
     url = "https://www.abinit.org/sites/default/files/packages/abinit-8.6.3.tar.gz"
 
+    license("Apache-2.0")
+
+    maintainers("downloadico")
+    version("9.10.3", sha256="3f2a9aebbf1fee9855a09dd687f88d2317b8b8e04f97b2628ab96fb898dce49b")
     version("9.8.4", sha256="a086d5045f0093b432e6a044d5f71f7edf5a41a62d67b3677cb0751d330c564a")
     version("9.8.3", sha256="de823878aea2c20098f177524fbb4b60de9b1b5971b2e835ec244dfa3724589b")
     version("9.6.1", sha256="b6a12760fd728eb4aacca431ae12150609565bedbaa89763f219fcd869f79ac6")
@@ -85,6 +89,11 @@ class Abinit(AutotoolsPackage):
     # libxml2
     depends_on("libxml2", when="@9:+libxml2")
 
+    # If the Intel suite is used for Lapack, it must be used for fftw and vice-versa
+    for _intel_pkg in INTEL_MATH_LIBRARIES:
+        requires(f"^[virtuals=fftw-api] {_intel_pkg}", when=f"^[virtuals=lapack]   {_intel_pkg}")
+        requires(f"^[virtuals=lapack]   {_intel_pkg}", when=f"^[virtuals=fftw-api] {_intel_pkg}")
+
     # Cannot ask for +scalapack if it does not depend on MPI
     conflicts("+scalapack", when="~mpi")
 
@@ -138,17 +147,25 @@ class Abinit(AutotoolsPackage):
             oapp(f"--with-optim-flavor={self.spec.variants['optimization-flavor'].value}")
 
         if "+wannier90" in spec:
-            if "@:8" in spec:
+            if spec.satisfies("@:8"):
                 oapp(f"--with-wannier90-libs=-L{spec['wannier90'].prefix.lib} -lwannier -lm")
                 oapp(f"--with-wannier90-incs=-I{spec['wannier90'].prefix.modules}")
                 oapp(f"--with-wannier90-bins={spec['wannier90'].prefix.bin}")
                 oapp("--enable-connectors")
                 oapp("--with-dft-flavor=atompaw+libxc+wannier90")
-            else:
+            elif spec.satisfies("@:9.8"):
                 options.extend(
                     [
                         f"WANNIER90_CPPFLAGS=-I{spec['wannier90'].prefix.modules}",
                         f"WANNIER90_LIBS=-L{spec['wannier90'].prefix.lib} -lwannier",
+                    ]
+                )
+            else:
+                options.extend(
+                    [
+                        f"WANNIER90_CPPFLAGS=-I{spec['wannier90'].prefix.modules}",
+                        f"WANNIER90_LIBS=-L{spec['wannier90'].prefix.lib}",
+                        "WANNIER90_LDFLAGS=-lwannier",
                     ]
                 )
         else:
@@ -164,7 +181,10 @@ class Abinit(AutotoolsPackage):
         if "+mpi" in spec:
             oapp(f"CC={spec['mpi'].mpicc}")
             oapp(f"CXX={spec['mpi'].mpicxx}")
-            oapp(f"FC={spec['mpi'].mpifc}")
+            if spec.satisfies("@9.8:"):
+                oapp(f"F90={spec['mpi'].mpifc}")
+            else:
+                oapp(f"FC={spec['mpi'].mpifc}")
 
             # MPI version:
             # let the configure script auto-detect MPI support from mpi_prefix
@@ -186,7 +206,8 @@ class Abinit(AutotoolsPackage):
 
         # BLAS/LAPACK/SCALAPACK-ELPA
         linalg = spec["lapack"].libs + spec["blas"].libs
-        if "^mkl" in spec:
+        is_using_intel_libraries = spec["lapack"].name in INTEL_MATH_LIBRARIES
+        if is_using_intel_libraries:
             linalg_flavor = "mkl"
         elif "@9:" in spec and "^openblas" in spec:
             linalg_flavor = "openblas"
@@ -207,7 +228,7 @@ class Abinit(AutotoolsPackage):
 
         oapp(f"--with-linalg-flavor={linalg_flavor}")
 
-        if "^mkl" in spec:
+        if is_using_intel_libraries:
             fftflavor = "dfti"
         else:
             if "+openmp" in spec:
@@ -218,7 +239,7 @@ class Abinit(AutotoolsPackage):
         oapp(f"--with-fft-flavor={fftflavor}")
 
         if "@:8" in spec:
-            if "^mkl" in spec:
+            if is_using_intel_libraries:
                 oapp(f"--with-fft-incs={spec['fftw-api'].headers.cpp_flags}")
                 oapp(f"--with-fft-libs={spec['fftw-api'].libs.ld_flags}")
             else:
@@ -229,7 +250,7 @@ class Abinit(AutotoolsPackage):
                     ]
                 )
         else:
-            if "^mkl" in spec:
+            if is_using_intel_libraries:
                 options.extend(
                     [
                         f"FFT_CPPFLAGS={spec['fftw-api'].headers.cpp_flags}",

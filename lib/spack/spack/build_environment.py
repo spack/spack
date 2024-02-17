@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -217,6 +217,9 @@ def clean_environment():
     env.unset("R_HOME")
     env.unset("R_ENVIRON")
 
+    env.unset("LUA_PATH")
+    env.unset("LUA_CPATH")
+
     # Affects GNU make, can e.g. indirectly inhibit enabling parallel build
     # env.unset('MAKEFLAGS')
 
@@ -324,19 +327,29 @@ def set_compiler_environment_variables(pkg, env):
     # ttyout, ttyerr, etc.
     link_dir = spack.paths.build_env_path
 
-    # Set SPACK compiler variables so that our wrapper knows what to call
+    # Set SPACK compiler variables so that our wrapper knows what to
+    # call.  If there is no compiler configured then use a default
+    # wrapper which will emit an error if it is used.
     if compiler.cc:
         env.set("SPACK_CC", compiler.cc)
         env.set("CC", os.path.join(link_dir, compiler.link_paths["cc"]))
+    else:
+        env.set("CC", os.path.join(link_dir, "cc"))
     if compiler.cxx:
         env.set("SPACK_CXX", compiler.cxx)
         env.set("CXX", os.path.join(link_dir, compiler.link_paths["cxx"]))
+    else:
+        env.set("CC", os.path.join(link_dir, "c++"))
     if compiler.f77:
         env.set("SPACK_F77", compiler.f77)
         env.set("F77", os.path.join(link_dir, compiler.link_paths["f77"]))
+    else:
+        env.set("F77", os.path.join(link_dir, "f77"))
     if compiler.fc:
         env.set("SPACK_FC", compiler.fc)
         env.set("FC", os.path.join(link_dir, compiler.link_paths["fc"]))
+    else:
+        env.set("FC", os.path.join(link_dir, "fc"))
 
     # Set SPACK compiler rpath flags so that our wrapper knows what to use
     env.set("SPACK_CC_RPATH_ARG", compiler.cc_rpath_arg)
@@ -542,58 +555,55 @@ def set_package_py_globals(pkg, context: Context = Context.BUILD):
     """
     module = ModuleChangePropagator(pkg)
 
-    m = module
-
     if context == Context.BUILD:
-        jobs = determine_number_of_jobs(parallel=pkg.parallel)
-        m.make_jobs = jobs
+        module.std_cmake_args = spack.build_systems.cmake.CMakeBuilder.std_args(pkg)
+        module.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
+        module.std_pip_args = spack.build_systems.python.PythonPipBuilder.std_args(pkg)
 
-        # TODO: make these build deps that can be installed if not found.
-        m.make = MakeExecutable("make", jobs)
-        m.gmake = MakeExecutable("gmake", jobs)
-        m.ninja = MakeExecutable("ninja", jobs, supports_jobserver=False)
-        # TODO: johnwparent: add package or builder support to define these build tools
-        # for now there is no entrypoint for builders to define these on their
-        # own
-        if sys.platform == "win32":
-            m.nmake = Executable("nmake")
-            m.msbuild = Executable("msbuild")
-            # analog to configure for win32
-            m.cscript = Executable("cscript")
+    jobs = determine_number_of_jobs(parallel=pkg.parallel)
+    module.make_jobs = jobs
 
-        # Find the configure script in the archive path
-        # Don't use which for this; we want to find it in the current dir.
-        m.configure = Executable("./configure")
+    # TODO: make these build deps that can be installed if not found.
+    module.make = MakeExecutable("make", jobs)
+    module.gmake = MakeExecutable("gmake", jobs)
+    module.ninja = MakeExecutable("ninja", jobs, supports_jobserver=False)
+    # TODO: johnwparent: add package or builder support to define these build tools
+    # for now there is no entrypoint for builders to define these on their
+    # own
+    if sys.platform == "win32":
+        module.nmake = Executable("nmake")
+        module.msbuild = Executable("msbuild")
+        # analog to configure for win32
+        module.cscript = Executable("cscript")
 
-        # Standard CMake arguments
-        m.std_cmake_args = spack.build_systems.cmake.CMakeBuilder.std_args(pkg)
-        m.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
-        m.std_pip_args = spack.build_systems.python.PythonPipBuilder.std_args(pkg)
+    # Find the configure script in the archive path
+    # Don't use which for this; we want to find it in the current dir.
+    module.configure = Executable("./configure")
 
     # Put spack compiler paths in module scope. (Some packages use it
     # in setup_run_environment etc, so don't put it context == build)
     link_dir = spack.paths.build_env_path
-    m.spack_cc = os.path.join(link_dir, pkg.compiler.link_paths["cc"])
-    m.spack_cxx = os.path.join(link_dir, pkg.compiler.link_paths["cxx"])
-    m.spack_f77 = os.path.join(link_dir, pkg.compiler.link_paths["f77"])
-    m.spack_fc = os.path.join(link_dir, pkg.compiler.link_paths["fc"])
+    module.spack_cc = os.path.join(link_dir, pkg.compiler.link_paths["cc"])
+    module.spack_cxx = os.path.join(link_dir, pkg.compiler.link_paths["cxx"])
+    module.spack_f77 = os.path.join(link_dir, pkg.compiler.link_paths["f77"])
+    module.spack_fc = os.path.join(link_dir, pkg.compiler.link_paths["fc"])
 
     # Useful directories within the prefix are encapsulated in
     # a Prefix object.
-    m.prefix = pkg.prefix
+    module.prefix = pkg.prefix
 
     # Platform-specific library suffix.
-    m.dso_suffix = dso_suffix
+    module.dso_suffix = dso_suffix
 
     def static_to_shared_library(static_lib, shared_lib=None, **kwargs):
-        compiler_path = kwargs.get("compiler", m.spack_cc)
+        compiler_path = kwargs.get("compiler", module.spack_cc)
         compiler = Executable(compiler_path)
 
         return _static_to_shared_library(
             pkg.spec.architecture, compiler, static_lib, shared_lib, **kwargs
         )
 
-    m.static_to_shared_library = static_to_shared_library
+    module.static_to_shared_library = static_to_shared_library
 
     module.propagate_changes_to_mro()
 
@@ -743,14 +753,15 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
         set_compiler_environment_variables(pkg, env_mods)
         set_wrapper_variables(pkg, env_mods)
 
-    tty.debug("setup_package: grabbing modifications from dependencies")
-    env_mods.extend(setup_context.get_env_modifications())
-    tty.debug("setup_package: collected all modifications from dependencies")
-
-    # architecture specific setup
+    # Platform specific setup goes before package specific setup. This is for setting
+    # defaults like MACOSX_DEPLOYMENT_TARGET on macOS.
     platform = spack.platforms.by_name(pkg.spec.architecture.platform)
     target = platform.target(pkg.spec.architecture.target)
     platform.setup_platform_environment(pkg, env_mods)
+
+    tty.debug("setup_package: grabbing modifications from dependencies")
+    env_mods.extend(setup_context.get_env_modifications())
+    tty.debug("setup_package: collected all modifications from dependencies")
 
     if context == Context.TEST:
         env_mods.prepend_path("PATH", ".")
@@ -961,8 +972,8 @@ class SetupContext:
         self.should_set_package_py_globals = (
             self.should_setup_dependent_build_env | self.should_setup_run_env | UseMode.ROOT
         )
-        # In a build context, the root and direct build deps need build-specific globals set.
-        self.needs_build_context = UseMode.ROOT | UseMode.BUILDTIME_DIRECT
+        # In a build context, the root needs build-specific globals set.
+        self.needs_build_context = UseMode.ROOT
 
     def set_all_package_py_globals(self):
         """Set the globals in modules of package.py files."""
@@ -1016,10 +1027,22 @@ class SetupContext:
                 self._make_runnable(dspec, env)
 
             if self.should_setup_run_env & flag:
+                run_env_mods = EnvironmentModifications()
                 for spec in dspec.dependents(deptype=dt.LINK | dt.RUN):
                     if id(spec) in self.nodes_in_subdag:
-                        pkg.setup_dependent_run_environment(env, spec)
-                pkg.setup_run_environment(env)
+                        pkg.setup_dependent_run_environment(run_env_mods, spec)
+                pkg.setup_run_environment(run_env_mods)
+
+                external_env = (dspec.extra_attributes or {}).get("environment", {})
+                if external_env:
+                    run_env_mods.extend(spack.schema.environment.parse(external_env))
+
+                if self.context == Context.BUILD:
+                    # Don't let the runtime environment of comiler like dependencies leak into the
+                    # build env
+                    run_env_mods.drop("CC", "CXX", "F77", "FC")
+                env.extend(run_env_mods)
+
         return env
 
     def _make_buildtime_detectable(self, dep: spack.spec.Spec, env: EnvironmentModifications):
@@ -1315,7 +1338,7 @@ def get_package_context(traceback, context=3):
             # don't provide context if the code is actually in the base classes.
             obj = frame.f_locals["self"]
             func = getattr(obj, tb.tb_frame.f_code.co_name, "")
-            if func:
+            if func and hasattr(func, "__qualname__"):
                 typename, *_ = func.__qualname__.partition(".")
                 if isinstance(obj, CONTEXT_BASES) and typename not in basenames:
                     break

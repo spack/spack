@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     tags = ["e4s", "ecp"]
 
     test_requires_compiler = True
+
+    license("BSD-3-Clause")
 
     version("develop", branch="master")
     version("2.4.0", sha256="02310fb4f9688df02f7181667e61c3adb7e38baf79611d80919d47452ff7881d")
@@ -38,6 +40,12 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
 
     variant("shared", default=True, description="Builds with shared libraries")
     variant("fftw", default=False, description="Builds with support for FFTW backend")
+    variant(
+        "sycl",
+        default=False,
+        when="%oneapi",
+        description="Builds with support for oneAPI SYCL+oneMKL backend",
+    )
     variant("mkl", default=False, description="Builds with support for MKL backend")
     variant("magma", default=False, description="Use helper methods from the UTK MAGMA library")
     variant("python", default=False, description="Install the Python bindings")
@@ -68,6 +76,8 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("rocsparse@3.8:", when="+magma+rocm", type=("build", "run"))
     depends_on("hipblas@3.8:", when="+magma+rocm", type=("build", "run"))
     depends_on("hipsparse@3.8:", when="+magma+rocm", type=("build", "run"))
+    depends_on("intel-oneapi-mkl@2023.2.0:", when="+sycl", type=("build", "run"))
+    depends_on("intel-oneapi-mpi@2021.10.0:", when="+sycl", type=("build", "run"))
 
     examples_src_dir = "examples"
 
@@ -78,6 +88,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("Heffte_ENABLE_CUDA", "cuda"),
             self.define_from_variant("Heffte_ENABLE_ROCM", "rocm"),
+            self.define_from_variant("Heffte_ENABLE_ONEAPI", "sycl"),
             self.define_from_variant("Heffte_ENABLE_FFTW", "fftw"),
             self.define_from_variant("Heffte_ENABLE_MKL", "mkl"),
             self.define_from_variant("Heffte_ENABLE_MAGMA", "magma"),
@@ -96,14 +107,14 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
                 archs = ";".join(cuda_arch)
                 args.append("-DCMAKE_CUDA_ARCHITECTURES=%s" % archs)
 
-        if "+rocm" in self.spec and self.spec.satisfies("@:2.3.0"):
+        if "+rocm" in self.spec:
             args.append("-DCMAKE_CXX_COMPILER={0}".format(self.spec["hip"].hipcc))
 
             rocm_arch = self.spec.variants["amdgpu_target"].value
             if "none" not in rocm_arch:
                 args.append("-DCMAKE_CXX_FLAGS={0}".format(self.hip_flags(rocm_arch)))
 
-            # See https://github.com/ROCmSoftwarePlatform/rocFFT/issues/322
+            # See https://github.com/ROCm/rocFFT/issues/322
             if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
                 args.append(self.define("__skip_rocmclang", "ON"))
 

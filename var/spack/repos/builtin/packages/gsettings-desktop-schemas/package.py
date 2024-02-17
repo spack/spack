@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class GsettingsDesktopSchemas(MesonPackage):
 
     homepage = "https://github.com/GNOME/gsettings-desktop-schemas/"
     url = "https://github.com/GNOME/gsettings-desktop-schemas/archive/3.38.0.tar.gz"
+
+    license("LGPL-2.0-or-later")
 
     version("3.38.0", sha256="b808bd285ac7176f2e9e3a8763c3913121ab9f109d2988c70e3f1f8e742a630d")
     version("3.37.92", sha256="5f5dd0421ed2f3746674b8bb6e0c652784915133c7f2d133339bf5e4140d8d1d")

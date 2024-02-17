@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Alquimia(CMakePackage):
     git = "https://github.com/LBL-EESA/alquimia-dev.git"
 
     maintainers("smolins", "balay")
+
+    license("BSD-3-Clause-LBNL")
 
     version("master")
     version("1.1.0", commit="211931c3e76b1ae7cdb48c46885b248412d6fe3d")  # tag v1.1.0
@@ -34,7 +36,7 @@ class Alquimia(CMakePackage):
     depends_on("pflotran@develop", when="@develop")
     depends_on("petsc@3.10:", when="@develop")
 
-    @when("@1.0.10")
+    @when("@1.0.10:1.1.0")
     def patch(self):
         filter_file(
             "use iso_[cC]_binding",

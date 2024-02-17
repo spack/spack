@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -126,8 +126,7 @@ _spack_shell_wrapper() {
                         # Space needed here to differentiate between `-h`
                         # argument and environments with "-h" in the name.
                         # Also see: https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html#Shell-Parameter-Expansion
-                        if [ -z ${1+x} ] || \
-                           [ "${_a#* --sh}" != "$_a" ] || \
+                        if [ "${_a#* --sh}" != "$_a" ] || \
                            [ "${_a#* --csh}" != "$_a" ] || \
                            [ "${_a#* -h}" != "$_a" ] || \
                            [ "${_a#* --help}" != "$_a" ];
@@ -215,9 +214,9 @@ _spack_pathadd() {
     # Do the actual prepending here.
     eval "_pa_oldvalue=\${${_pa_varname}:-}"
 
-    _pa_canonical=":$_pa_oldvalue:"
+    _pa_canonical="$_pa_oldvalue:"
     if [ -d "$_pa_new_path" ] && \
-       [ "${_pa_canonical#*:${_pa_new_path}:}" = "${_pa_canonical}" ];
+       [ "${_pa_canonical#$_pa_new_path:}" = "$_pa_canonical" ];
     then
         if [ -n "$_pa_oldvalue" ]; then
             eval "export $_pa_varname=\"$_pa_new_path:$_pa_oldvalue\""

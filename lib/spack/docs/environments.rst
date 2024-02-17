@@ -1,4 +1,4 @@
-.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -140,6 +140,21 @@ user's prompt to begin with the environment name in brackets.
 .. code-block:: console
 
    $ spack env activate -p myenv
+   [myenv] $ ...
+
+The ``activate`` command can also be used to create a new environment, if it is
+not already defined, by adding the ``--create`` flag. Managed and anonymous
+environments, anonymous environments are explained in the next section,
+can both be created using the same flags that `spack env create` accepts.
+If an environment already exists then spack will simply activate it and ignore the
+create specific flags.
+
+.. code-block:: console
+   
+   $ spack env activate --create -p myenv
+   # ...
+   # [creates if myenv does not exist yet]
+   # ...
    [myenv] $ ...
 
 To deactivate an environment, use the command:
@@ -401,6 +416,23 @@ that git clone if ``foo`` is in the environment.
 Further development on ``foo`` can be tested by reinstalling the environment,
 and eventually committed and pushed to the upstream git repo.
 
+If the package being developed supports out-of-source builds then users can use the
+``--build_directory`` flag to control the location and name of the build directory. 
+This is a shortcut to set the ``package_attributes:build_directory`` in the
+``packages`` configuration (see :ref:`assigning-package-attributes`).
+The supplied location will become the build-directory for that package in all future builds.
+
+.. warning::
+   Potential pitfalls of setting the build directory
+    Spack does not check for out-of-source build compatibility with the packages and
+    so the onerous of making sure the package supports out-of-source builds is on
+    the user.
+    For example, most ``autotool`` and ``makefile`` packages do not support out-of-source builds
+    while all ``CMake`` packages do.
+    Understanding these nuances are on the software developers and we strongly encourage
+    developers to only redirect the build directory if they understand their package's
+    build-system.
+
 ^^^^^^^
 Loading
 ^^^^^^^
@@ -457,11 +489,11 @@ a ``packages.yaml`` file) could contain:
 .. code-block:: yaml
 
    spack:
-     ...
+     # ...
      packages:
        all:
          compiler: [intel]
-     ...
+     # ...
 
 This configuration sets the default compiler for all packages to
 ``intel``.
@@ -807,7 +839,7 @@ directories.
 .. code-block:: yaml
 
    spack:
-     ...
+     # ...
      view:
        mpis:
          root: /path/to/view
@@ -851,7 +883,7 @@ automatically named ``default``, so that
 .. code-block:: yaml
 
    spack:
-     ...
+     # ...
      view: True
 
 is equivalent to
@@ -859,7 +891,7 @@ is equivalent to
 .. code-block:: yaml
 
    spack:
-     ...
+     # ...
      view:
        default:
          root: .spack-env/view
@@ -869,7 +901,7 @@ and
 .. code-block:: yaml
 
    spack:
-     ...
+     # ...
      view: /path/to/view
 
 is equivalent to
@@ -877,7 +909,7 @@ is equivalent to
 .. code-block:: yaml
 
    spack:
-     ...
+     # ...
      view:
        default:
          root: /path/to/view

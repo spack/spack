@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,7 +34,11 @@ class Llvm(CMakePackage, CudaPackage):
 
     family = "compiler"  # Used by lmod
 
+    license("Apache-2.0")
+
     version("main", branch="main")
+    version("17.0.6", sha256="81494d32e6f12ea6f73d6d25424dbd2364646011bb8f7e345ca870750aa27de1")
+    version("17.0.5", sha256="432c1eda3d1c9379cd52a9bee8e0ea6f7b204bff5075895f963fd8e575aa4fb8")
     version("17.0.4", sha256="46200b79f52a02fe26d0a43fd856ab6ceff49ab2a0b7c240ac4b700a6ada700c")
     version("17.0.3", sha256="1e3d9d04fb5fbd8d0080042ad72c7e2a5c68788b014b186647a604dbbdd625d2")
     version("17.0.2", sha256="dcba3eb486973dce45b6edfe618f3f29b703ae7e6ef9df65182fb50fb6fe4235")
@@ -246,6 +250,7 @@ class Llvm(CMakePackage, CudaPackage):
         description="Enable zstd support for static analyzer / lld",
     )
 
+    provides("libllvm@17", when="@17.0.0:17")
     provides("libllvm@16", when="@16.0.0:16")
     provides("libllvm@15", when="@15.0.0:15")
     provides("libllvm@14", when="@14.0.0:14")
@@ -308,14 +313,14 @@ class Llvm(CMakePackage, CudaPackage):
         depends_on("swig", when="+python")
         depends_on("xz")
 
-    # Use ^swig cause it's triggered by both python & lua scripting in lldb
-    with when("^swig"):
-        depends_on("swig@2:", when="@10:")
-        depends_on("swig@3:", when="@12:")
-        depends_on("swig@4:", when="@17:")
-        # Commits f0a25fe0b746f56295d5c02116ba28d2f965c175 and
-        # 81fc5f7909a4ef5a8d4b5da2a10f77f7cb01ba63 fixed swig 4.1 support
-        depends_on("swig@:4.0", when="@:15")
+    for _when_spec in ("+lldb+python", "+lldb+lua"):
+        with when(_when_spec):
+            depends_on("swig@2:", when="@10:")
+            depends_on("swig@3:", when="@12:")
+            depends_on("swig@4:", when="@17:")
+            # Commits f0a25fe0b746f56295d5c02116ba28d2f965c175 and
+            # 81fc5f7909a4ef5a8d4b5da2a10f77f7cb01ba63 fixed swig 4.1 support
+            depends_on("swig@:4.0", when="@:15")
 
     # gold support, required for some features
     depends_on("binutils+gold+ld+plugins+headers", when="+gold")
@@ -428,6 +433,12 @@ class Llvm(CMakePackage, CudaPackage):
         when="@14:15",
     )
 
+    # missing <cstdint> include
+    patch(
+        "https://github.com/llvm/llvm-project/commit/ff1681ddb303223973653f7f5f3f3435b48a1983.patch?full_index=1",
+        sha256="c6ca6b925f150e8644ce756023797b7f94c9619c62507231f979edab1c09af78",
+        when="@6:13",
+    )
     # fix building of older versions of llvm with newer versions of glibc
     for compiler_rt_as in ["project", "runtime"]:
         with when("compiler-rt={0}".format(compiler_rt_as)):
@@ -564,6 +575,8 @@ class Llvm(CMakePackage, CudaPackage):
 
     patch("add-include-for-libelf-llvm-12-14.patch", when="@12:14")
     patch("add-include-for-libelf-llvm-15.patch", when="@15")
+
+    patch("sanitizer-platform-limits-posix-xdr-macos.patch", when="@10:14 platform=darwin")
 
     @when("@14:17")
     def patch(self):
@@ -755,6 +768,14 @@ class Llvm(CMakePackage, CudaPackage):
                     os.symlink(bin, sym)
             env.prepend_path("PATH", self.stage.path)
 
+    def setup_run_environment(self, env):
+        if "+clang" in self.spec:
+            env.set("CC", join_path(self.spec.prefix.bin, "clang"))
+            env.set("CXX", join_path(self.spec.prefix.bin, "clang++"))
+        if "+flang" in self.spec:
+            env.set("FC", join_path(self.spec.prefix.bin, "flang"))
+            env.set("F77", join_path(self.spec.prefix.bin, "flang"))
+
     root_cmakelists_dir = "llvm"
 
     def cmake_args(self):
@@ -762,13 +783,11 @@ class Llvm(CMakePackage, CudaPackage):
         define = self.define
         from_variant = self.define_from_variant
 
-        python = spec["python"]
         cmake_args = [
             define("LLVM_REQUIRES_RTTI", True),
             define("LLVM_ENABLE_RTTI", True),
             define("LLVM_ENABLE_LIBXML2", False),
             define("CLANG_DEFAULT_OPENMP_RUNTIME", "libomp"),
-            define("PYTHON_EXECUTABLE", python.command.path),
             define("LIBOMP_USE_HWLOC", True),
             define("LIBOMP_HWLOC_INSTALL_DIR", spec["hwloc"].prefix),
             from_variant("LLVM_ENABLE_ZSTD", "zstd"),
@@ -791,11 +810,6 @@ class Llvm(CMakePackage, CudaPackage):
         shlib_symbol_version = spec.variants.get("shlib_symbol_version", None)
         if shlib_symbol_version is not None and shlib_symbol_version.value != "none":
             cmake_args.append(define("LLVM_SHLIB_SYMBOL_VERSION", shlib_symbol_version.value))
-
-        if python.version >= Version("3"):
-            cmake_args.append(define("Python3_EXECUTABLE", python.command.path))
-        else:
-            cmake_args.append(define("Python2_EXECUTABLE", python.command.path))
 
         projects = []
         runtimes = []
@@ -828,6 +842,12 @@ class Llvm(CMakePackage, CudaPackage):
             )
 
         cmake_args.append(from_variant("LIBOMPTARGET_ENABLE_DEBUG", "libomptarget_debug"))
+
+        if spec.satisfies("@14:"):
+            # The hsa-rocr-dev package may be pulled in through hwloc, which can lead to cmake
+            # finding libhsa and enabling the AMDGPU plugin. Since we don't support this yet,
+            # disable explicitly. See commit a05a0c3c2f8eefc80d84b7a87a23a4452d4a3087.
+            cmake_args.append(define("LIBOMPTARGET_BUILD_AMDGPU_PLUGIN", False))
 
         if "+lldb" in spec:
             projects.append("lldb")
@@ -933,6 +953,26 @@ class Llvm(CMakePackage, CudaPackage):
 
         # Semicolon seperated list of runtimes to enable
         if runtimes:
+            # The older versions are not careful enough with the order of the runtimes.
+            # Instead of applying
+            # https://github.com/llvm/llvm-project/commit/06400a0142af8297b5d39b8f34a7c59db6f9910c,
+            # which might be incompatible with the version that we install,
+            # we sort the runtimes here according to the same order as
+            # in the aforementioned commit:
+            if self.spec.satisfies("@:14"):
+                runtimes_order = [
+                    "libc",
+                    "libunwind",
+                    "libcxxabi",
+                    "libcxx",
+                    "compiler-rt",
+                    "openmp",
+                ]
+                runtimes.sort(
+                    key=lambda x: (
+                        runtimes_order.index(x) if x in runtimes_order else len(runtimes_order)
+                    )
+                )
             cmake_args.extend(
                 [
                     define("LLVM_ENABLE_RUNTIMES", runtimes),
@@ -977,7 +1017,10 @@ class Llvm(CMakePackage, CudaPackage):
                 ninja()
                 ninja("install")
         if "+python" in self.spec:
-            install_tree("llvm/bindings/python", python_platlib)
+            if spec.version < Version("17.0.0"):
+                # llvm bindings were removed in v17:
+                # https://releases.llvm.org/17.0.1/docs/ReleaseNotes.html#changes-to-the-python-bindings
+                install_tree("llvm/bindings/python", python_platlib)
 
             if "+clang" in self.spec:
                 install_tree("clang/bindings/python", python_platlib)

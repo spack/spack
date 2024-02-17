@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,12 @@ class Ams(CMakePackage, CudaPackage):
     maintainers("koparasy", "lpottier")
 
     version("develop", branch="develop", submodules=False)
+    version(
+        "11.08.23.alpha",
+        tag="11.08.23.alpha",
+        commit="1a42b29268bb916dae301654ca0b92fdfe288732",
+        submodules=False,
+    )
     version(
         "07.25.23-alpha",
         tag="07.25.23-alpha",

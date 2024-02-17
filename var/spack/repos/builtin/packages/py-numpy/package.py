@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,11 @@ class PyNumpy(PythonPackage):
 
     maintainers("adamjstewart", "rgommers")
 
+    license("BSD-3-Clause")
+
     version("main", branch="main")
+    version("1.26.3", sha256="697df43e2b6310ecc9d95f05d5ef20eacc09c7c4ecc9da3f235d39e71b7da1e4")
+    version("1.26.2", sha256="f65738447676ab5777f11e6bbbdb8ce11b785e105f690bc45966574816b6d3ea")
     version("1.26.1", sha256="c8c6c72d4a9f831f328efb1312642a1cafafaa88981d9ab76368d50d07d93cbe")
     version("1.26.0", sha256="f93fc78fe8bf15afe2b8d6b6499f1c73953169fad1e9a8dd086cdff3190e7fdf")
     version("1.25.2", sha256="fd608e19c8d7c55021dffd43bfe5492fab8cc105cc8986f813f8c3c048b38760")
@@ -67,24 +71,6 @@ class PyNumpy(PythonPackage):
     version("1.17.5", sha256="16507ba6617f62ae3c6ab1725ae6f550331025d4d9a369b83f6d5a470446c342")
     version("1.17.4", sha256="f58913e9227400f1395c7b800503ebfdb0772f1c33ff8cb4d6451c06cabdf316")
     version("1.17.3", sha256="a0678793096205a4d784bd99f32803ba8100f639cf3b932dc63b21621390ea7e")
-    version("1.17.2", sha256="73615d3edc84dd7c4aeb212fa3748fb83217e00d201875a47327f55363cef2df")
-    version("1.17.1", sha256="f11331530f0eff69a758d62c2461cd98cdc2eae0147279d8fc86e0464eb7e8ca")
-    version("1.17.0", sha256="951fefe2fb73f84c620bec4e001e80a80ddaa1b84dce244ded7f1e0cbe0ed34a")
-    version("1.16.6", sha256="e5cf3fdf13401885e8eea8170624ec96225e2174eb0c611c6f26dd33b489e3ff")
-    version("1.16.5", sha256="8bb452d94e964b312205b0de1238dd7209da452343653ab214b5d681780e7a0c")
-    version("1.16.4", sha256="7242be12a58fec245ee9734e625964b97cf7e3f2f7d016603f9e56660ce479c7")
-    version("1.16.3", sha256="78a6f89da87eeb48014ec652a65c4ffde370c036d780a995edaeb121d3625621")
-    version("1.16.2", sha256="6c692e3879dde0b67a9dc78f9bfb6f61c666b4562fd8619632d7043fb5b691b0")
-    version("1.16.1", sha256="31d3fe5b673e99d33d70cfee2ea8fe8dccd60f265c3ed990873a88647e3dd288")
-    version("1.16.0", sha256="cb189bd98b2e7ac02df389b6212846ab20661f4bafe16b5a70a6f1728c1cc7cb")
-    version("1.15.4", sha256="3d734559db35aa3697dadcea492a423118c5c55d176da2f3be9c98d4803fc2a7")
-    version("1.15.3", sha256="1c0c80e74759fa4942298044274f2c11b08c86230b25b8b819e55e644f5ff2b6")
-    version("1.15.2", sha256="27a0d018f608a3fe34ac5e2b876f4c23c47e38295c47dd0775cc294cd2614bc1")
-    version("1.15.2", sha256="27a0d018f608a3fe34ac5e2b876f4c23c47e38295c47dd0775cc294cd2614bc1")
-    version("1.15.1", sha256="7b9e37f194f8bcdca8e9e6af92e2cbad79e360542effc2dd6b98d63955d8d8a3")
-    version("1.15.0", sha256="f28e73cf18d37a413f7d5de35d024e6b98f14566a10d82100f9dc491a7d449f9")
-    version("1.14.6", sha256="1250edf6f6c43e1d7823f0967416bc18258bb271dc536298eb0ea00a9e45b80a")
-    version("1.14.5", sha256="a4a433b3a264dbc9aa9c7c241e87c0358a503ea6394f8737df1683c7c9a102ac")
 
     depends_on("python@3.9:3.12", when="@1.26:", type=("build", "link", "run"))
     depends_on("python@3.9:3.11", when="@1.25", type=("build", "link", "run"))
@@ -93,7 +79,6 @@ class PyNumpy(PythonPackage):
     depends_on("python@:3.10", when="@1.21.2:1.21", type=("build", "link", "run"))
     depends_on("python@:3.9", when="@1.19.3:1.21.1", type=("build", "link", "run"))
     depends_on("python@:3.8", when="@1.17.3:1.19.2", type=("build", "link", "run"))
-    depends_on("python@:3.7", when="@1.14.5:1.17.2", type=("build", "link", "run"))
 
     depends_on("py-cython@0.29.34:3", when="@1.26:", type="build")
     depends_on("py-cython@0.29.34:2", when="@1.25", type="build")
@@ -119,14 +104,9 @@ class PyNumpy(PythonPackage):
     depends_on("lapack")
 
     # test_requirements.txt
-    depends_on("py-nose@1.0.0:", when="@:1.14", type="test")
-    depends_on("py-pytest", when="@1.15:", type="test")
+    depends_on("py-pytest", type="test")
     depends_on("py-hypothesis", when="@1.19:", type="test")
     depends_on("py-typing-extensions@4.2:", when="@1.23:", type="test")
-
-    # Allows you to specify order of BLAS/LAPACK preference
-    # https://github.com/numpy/numpy/pull/13132
-    patch("blas-lapack-order.patch", when="@1.15:1.16")
 
     # Add Fujitsu Fortran compiler
     patch("add_fj_compiler.patch", when="@1.19.3:1.19.5%fj")
@@ -136,7 +116,6 @@ class PyNumpy(PythonPackage):
     patch("check_executables.patch", when="@1.20.0:")
     patch("check_executables2.patch", when="@1.19.0:1.19.5")
     patch("check_executables3.patch", when="@1.16.0:1.18.5")
-    patch("check_executables4.patch", when="@1.14.0:1.15.4")
 
     # Backport bug fix for f2py's define for threading when building with Mingw
     patch(

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,9 +15,9 @@ class Rocsparse(CMakePackage):
     and toolchains. rocSPARSE is created using the HIP programming
     language and optimized for AMD's latest discrete GPUs."""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/rocSPARSE"
-    git = "https://github.com/ROCmSoftwarePlatform/rocSPARSE.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocSPARSE/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/rocSPARSE"
+    git = "https://github.com/ROCm/rocSPARSE.git"
+    url = "https://github.com/ROCm/rocSPARSE/archive/rocm-6.0.2.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath")
@@ -33,6 +33,11 @@ class Rocsparse(CMakePackage):
     )
     variant("test", default=False, description="Build rocsparse-test client")
 
+    license("MIT")
+    version("6.0.2", sha256="00292eb7efe5719a65960bdbe391ba8e0ce610487eea11397aad6a14b11e12cd")
+    version("6.0.0", sha256="bdc618677ec78830c6af315d61194d6ab8532345b8daeeb115aca96f274d4ca4")
+    version("5.7.1", sha256="4c09b182b371124675d4057246021b5ed45e2833fdbf265b37a9b06b668baf0a")
+    version("5.7.0", sha256="a42f0eb531b015b719e2bdcdff0cfb214e9894f73107966260f26931f982ecbc")
     version("5.6.1", sha256="6a50a64354507f1374e1a86aa7f5c07d1aaa96ac193ac292c279153087bb5d54")
     version("5.6.0", sha256="5797db3deb4a532e691447e3e8c923b93bd9fe4c468f3a88f00cecd80bebcae4")
     version("5.5.1", sha256="1dd2d18898dfebdf898e8fe7d1c1198e8f8451fd70ff12a1990ec1419cf359e1")
@@ -41,11 +46,12 @@ class Rocsparse(CMakePackage):
     version("5.4.0", sha256="c8f0e920a8ec15b9ae40564c68191363356cc4d793c16247bb6e11ef5293ed11")
     version("5.3.3", sha256="4204035e952e20ada4526a94989e8e5c76c04574176fe63a021522862461c800")
     version("5.3.0", sha256="521ca0e7b52f26edbff8507eb1479dc26019f456756d884d7b8b192c3ea518e8")
-    version("5.2.3", sha256="6da3f3303a8ada94c4dbff4b42ee33a2e2883a908ee21c41cb2aa7180382026a")
-    version("5.2.1", sha256="01f3535442740221edad2cde0a20b2499c807f6733d5016b33c47f34a5a55c49")
-    version("5.2.0", sha256="7ed929af16d2502135024a6463997d9a95f03899b8a33aa95db7029575c89572")
-    version("5.1.3", sha256="ef9641045b36c9aacc87e4fe7717b41b1e29d97e21432678dce7aca633a8edc2")
-    version("5.1.0", sha256="a2f0f8cb02b95993480bd7264fc65e8b11464a90b86f2dcd0dd82a2e6d4bd704")
+    with default_args(deprecated=True):
+        version("5.2.3", sha256="6da3f3303a8ada94c4dbff4b42ee33a2e2883a908ee21c41cb2aa7180382026a")
+        version("5.2.1", sha256="01f3535442740221edad2cde0a20b2499c807f6733d5016b33c47f34a5a55c49")
+        version("5.2.0", sha256="7ed929af16d2502135024a6463997d9a95f03899b8a33aa95db7029575c89572")
+        version("5.1.3", sha256="ef9641045b36c9aacc87e4fe7717b41b1e29d97e21432678dce7aca633a8edc2")
+        version("5.1.0", sha256="a2f0f8cb02b95993480bd7264fc65e8b11464a90b86f2dcd0dd82a2e6d4bd704")
     version(
         "5.0.2",
         sha256="c9d9e1b7859e1c5aa5050f5dfdf86245cbd7c1296c0ce60d9ca5f3e22a9b748b",
@@ -147,6 +153,10 @@ class Rocsparse(CMakePackage):
         "5.5.1",
         "5.6.0",
         "5.6.1",
+        "5.7.0",
+        "5.7.1",
+        "6.0.0",
+        "6.0.2",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocprim@" + ver, when="@" + ver)
@@ -311,10 +321,13 @@ class Rocsparse(CMakePackage):
             destination="mtx",
         )
 
-    def check(self):
+    @run_after("build")
+    def check_build(self):
         if self.spec.satisfies("+test"):
-            exe = join_path(self.build_directory, "clients", "staging", "rocsparse-test")
-            self.run_test(exe, options=["--gtest_filter=*quick*:*pre_checkin*-*known_bug*"])
+            exe = Executable(
+                join_path(self.build_directory, "clients", "staging", "rocsparse-test")
+            )
+            exe("--gtest_filter=*quick*:*pre_checkin*-*known_bug*")
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
