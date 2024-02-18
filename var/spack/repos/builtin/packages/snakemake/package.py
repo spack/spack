@@ -15,7 +15,7 @@ class Snakemake(PythonPackage):
 
     license("MIT")
 
-    version("8.4.8", sha256="ab64a4f402f78ec252f211d9cc900344fdc2a000dadcec91833efb5fd0f275e7")
+    version("8.4.9", sha256="6bd24c39110a8d6744d09aab5ca71bde0c4559542ec7f58e52a6c4d360120171")
     version("7.32.4", sha256="fdc3f15dd7b06fabb7da30d460e0a3b1fba08e4ea91f9c32c47a83705cdc7b6e")
     version("7.31.1", sha256="6fadcc9a051737aa187dccf437879b3b83ddc917fff9bd7d400e056cf17a1788")
     version("7.30.2", sha256="0cb86cf9b43b9f2f45d5685cd932595131031c7087690f64c5bc7eaec88df029")
