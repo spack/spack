@@ -8,15 +8,7 @@ from spack.package import *
 
 
 class PyDotmap(PythonPackage):
-    """`DotMap` is a dot-access `dict` subclass that
-
-    -   has dynamic hierarchy creation (autovivification)
-    -   can be initialized with keys
-    -   easily initializes from `dict`
-    -   easily converts to `dict`
-    -   is ordered by insertion
-
-    The key feature is exactly what you want: dot-access"""
+    """`DotMap` is a dot-access `dict` subclass that allows dot access to items."""
 
     homepage = "https://github.com/drgrib/dotmap"
     pypi = "dotmap/dotmap-1.3.30.tar.gz"
