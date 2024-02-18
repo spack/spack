@@ -25,8 +25,8 @@ class PyClickOptionGroup(PythonPackage):
     version("0.4.0", sha256="7867689533ea52cb3494a2ea02d77c42494583d99746ff1dd24674f6ec208820")
     version("0.3.0", sha256="36c7f30ef1f3c0d3d378aa8805004d93dec6e97010e4dae4ec66bde4e906c2fa")
 
-    depends_on("python@3.6:", type=("build", "run"))
+    depends_on("python@3.6:3", type=("build", "run"))
 
     depends_on("py-setuptools", type=("build", "run"))
 
-    depends_on("py-click", type=("build", "run"))
+    depends_on("py-click@7:8", type=("build", "run"))
