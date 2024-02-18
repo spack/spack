@@ -27,9 +27,9 @@ class PyGoogleapisCommonProtos(PythonPackage):
     )
 
     with when("+grpc"):
-        depends_on("py-grpcio@1.44:1", when="@1.57:")
-        depends_on("py-grpcio@1", when="@1.56.2:")
-        depends_on("py-grpcio@1:")
+        depends_on("py-grpcio@1.44:1", when="@1.57:", type="run")
+        depends_on("py-grpcio@1", when="@1.56.2:", type="run")
+        depends_on("py-grpcio@1:", type="run")
 
     depends_on("py-setuptools", type="build")
     depends_on(

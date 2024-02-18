@@ -42,10 +42,10 @@ class PyGoogleApiCore(PythonPackage):
         depends_on("py-requests@2.18:2", type=("build", "run"))
 
         with when("+grpc"):
-            depends_on("py-grpcio-status@1.49.1:1", when="^python@3.11:")
-            depends_on("py-grpcio-status@1.33.2:1", when="@2.2.0:")
-            depends_on("py-grpcio@1.49.1:1", when="^python@3.11:")
-            depends_on("py-grpcio@1.33.2:1")
+            depends_on("py-grpcio-status@1.49.1:1", when="^python@3.11:", type="run")
+            depends_on("py-grpcio-status@1.33.2:1", when="@2.2.0:", type="run")
+            depends_on("py-grpcio@1.49.1:1", when="^python@3.11:", type="run")
+            depends_on("py-grpcio@1.33.2:1", type="run")
 
     with when("@:1"):
         depends_on("py-googleapis-common-protos@1.6:1", type=("build", "run"))
@@ -57,7 +57,7 @@ class PyGoogleApiCore(PythonPackage):
         depends_on("py-pytz", type=("build", "run"))
 
         with when("+grpc"):
-            depends_on("py-grpcio-status@1.33.2:1", when="@1.33:")
-            depends_on("py-grpcio@1.33.2:1", when="@1.33:")
-            depends_on("py-grpcio@1.29.0:1", when="@1.19.1")
-            depends_on("py-grpcio@1.8.2:1")
+            depends_on("py-grpcio-status@1.33.2:1", when="@1.33:", type="run")
+            depends_on("py-grpcio@1.33.2:1", when="@1.33:", type="run")
+            depends_on("py-grpcio@1.29.0:1", when="@1.19.1", type="run")
+            depends_on("py-grpcio@1.8.2:1", type="run")
