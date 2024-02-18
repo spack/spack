@@ -10,7 +10,7 @@ import llnl.util.filesystem as fs
 from spack.package import *
 
 
-class Gromacs(CMakePackage, CudaPackage):
+class Gromacs(CMakePackage, CudaPackage, ROCmPackage):
     """GROMACS is a molecular dynamics package primarily designed for simulations
     of proteins, lipids and nucleic acids. It was originally developed in
     the Biophysical Chemistry department of University of Groningen, and is now
@@ -290,6 +290,8 @@ class Gromacs(CMakePackage, CudaPackage):
     depends_on("nvhpc", when="+cufftmp")
     depends_on("heffte", when="+heffte")
 
+    conflicts("^hipsycl~rocm", when="+rocm")
+
     requires(
         "%intel",
         "%oneapi",
@@ -517,6 +519,16 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                 options.append("-DGMX_GPU:STRING=CUDA")
             elif "+opencl" in self.spec:
                 options.append("-DGMX_GPU:STRING=OpenCL")
+            elif "+rocm" in self.spec:
+                archs = self.spec.variants["amdgpu_target"].value
+                arch_str = ",".join(archs)
+                options.extend(
+                    [
+                        "-DGMX_GPU:STRING=SYCL",
+                        "-DGMX_SYCL_HIPSYCL=ON",
+                        f"-DHIPSYCL_TARGETS=hip:{arch_str}",
+                    ]
+                )
             elif "+sycl" in self.spec:
                 options.append("-DGMX_GPU:STRING=SYCL")
             else:
