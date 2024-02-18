@@ -165,6 +165,9 @@ class Rust(Package):
         # Compile tools into flag for configure.
         flags.append(f"--tools={','.join(tools)}")
 
+        # Use vendored resources to perform offline build.
+        flags.append("--enable-vendor")
+
         configure(*flags)
 
     def build(self, spec, prefix):
