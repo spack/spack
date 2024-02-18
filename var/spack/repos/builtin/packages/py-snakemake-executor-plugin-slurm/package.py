@@ -11,7 +11,7 @@ class PySnakemakeExecutorPluginSlurm(PythonPackage):
     """A Snakemake executor plugin for submitting jobs to a SLURM cluster."""
 
     homepage = "https://github.com/snakemake/snakemake-executor-plugin-slurm"
-    pypi = "snakemake_executor_plugin_slurm/snakemake_executor_plugin_slurm-0.3.0.tar.gz"
+    pypi = "snakemake_executor_plugin_slurm/snakemake_executor_plugin_slurm-0.3.1.tar.gz"
 
     license("MIT")
 

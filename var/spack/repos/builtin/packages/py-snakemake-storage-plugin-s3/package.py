@@ -15,7 +15,7 @@ class PySnakemakeStoragePluginS3(PythonPackage):
 
     license("MIT")
 
-    version("0.2.9", sha256="41cb23326f37dc576d4a1deac15b3f5a647e26ca957a69ae06b128c044ba2f32")
+    version("0.2.10", sha256="a4554d170b5621751aba20ee08e6357090471a0a68b173525b118580c287a12e")
 
     depends_on("py-boto3@1.33:1", type=("build", "run"))
     depends_on("py-botocore@1.33:1", type=("build", "run"))
