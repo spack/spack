@@ -19,7 +19,6 @@ class PyJacobi(PythonPackage):
     version("0.9.2", sha256="c11f481663246ef1c2da915b9f9ab4ef229051fb14e0afc232d4668301320828")
 
     depends_on("python@3.8:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-toml", type=("build"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy", type="run")
+    depends_on("py-setuptools@42:", type="build")
+    depends_on("py-setuptools-scm@3.4:+toml", type="build")
+    depends_on("py-numpy", type=("build", "run"))
