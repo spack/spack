@@ -10,7 +10,7 @@ class Snakemake(PythonPackage):
     """Workflow management system to create reproducible and scalable data analyses."""
 
     homepage = "https://snakemake.readthedocs.io/en"
-    pypi = "snakemake/snakemake-8.4.8.tar.gz"
+    pypi = "snakemake/snakemake-8.4.9.tar.gz"
     maintainers("marcusboden")
 
     license("MIT")
