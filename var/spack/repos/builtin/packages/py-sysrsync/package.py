@@ -19,4 +19,5 @@ class PySysrsync(PythonPackage):
     depends_on("py-toml@0.10.0:0.10", type=("build", "run"))
     depends_on("rsync", type="run")
 
+    depends_on("python@:3", type=("build", "run"))
     depends_on("py-setuptools", type="build")
