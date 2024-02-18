@@ -18,5 +18,5 @@ class PyCondaInject(PythonPackage):
 
     depends_on("py-pyyaml@6", type=("build", "run"))
 
-    depends_on("python@3.9:", type=("build", "run"))
+    depends_on("python@3.9:3", type=("build", "run"))
     depends_on("py-poetry-core", type="build")
