@@ -19,7 +19,7 @@ class PySnakemakeExecutorPluginGooglebatch(PythonPackage):
 
     version("0.3.0", sha256="b143fcaeffceec682bc0f7e3f13eece3596a5d6faaf41fab94977f4a93948c16")
 
-    depends_on("py-google-cloud-batch@0.17.1:0.18", type=("build", "run"))
+    depends_on("py-google-cloud-batch@0.17.1:0.17", type=("build", "run"))
     depends_on("py-requests@2.31:2", type=("build", "run"))
     depends_on("py-google-api-core@2.12:2", type=("build", "run"))
     depends_on("py-google-cloud-storage@2.12:2", type=("build", "run"))
