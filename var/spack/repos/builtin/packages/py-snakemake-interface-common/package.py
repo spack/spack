@@ -20,4 +20,5 @@ class PySnakemakeInterfaceCommon(PythonPackage):
     depends_on("py-argparse-dataclass@2", type=("build", "run"))
     depends_on("py-configargparse@1.7:1", type=("build", "run"))
 
+    depends_on("python@:3", type=("build", "run"))
     depends_on("py-poetry-core", type="build")

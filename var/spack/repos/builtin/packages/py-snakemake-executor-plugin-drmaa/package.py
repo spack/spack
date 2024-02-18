@@ -21,5 +21,5 @@ class PySnakemakeExecutorPluginDrmaa(PythonPackage):
     depends_on("py-snakemake-interface-executor-plugins@8.1:8", type=("build", "run"))
     depends_on("py-drmaa@0.7.9:0.7")
 
-    depends_on("python@3.11:", type=("build", "run"))
+    depends_on("python@3.11:3", type=("build", "run"))
     depends_on("py-poetry-core", type="build")

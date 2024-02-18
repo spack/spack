@@ -22,5 +22,5 @@ class PySnakemakeStoragePluginSftp(PythonPackage):
     depends_on("py-snakemake-interface-common@1.14.3:1", type=("build", "run"))
     depends_on("py-snakemake-interface-storage-plugins@3", type=("build", "run"))
 
-    depends_on("python@3.11:", type=("build", "run"))
+    depends_on("python@3.11:3", type=("build", "run"))
     depends_on("py-poetry-core", type="build")
