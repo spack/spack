@@ -23,7 +23,8 @@ class PyTensorflowProbability(Package):
 
     license("Apache-2.0")
 
-    version("0.23.0", sha256="a00769550da9284acbd69e32a005507153ad39b0c190feca2bbbf6373366cc14")
+    # TODO: reactivate once TF 2.15 is ready https://github.com/spack/spack/pull/41069
+    # version("0.23.0", sha256="a00769550da9284acbd69e32a005507153ad39b0c190feca2bbbf6373366cc14")
     version("0.22.1", sha256="9c1203b454aaeb48ac67dea862a411dba6b04f67c1e874e0e83bd1d7f13829a3")
     version("0.22.0", sha256="f9ce55b00c8069246d701c04eaafccde413355f6e76ccf9e549772ecfa0349a4")
     version("0.21.0", sha256="69b7510b38b2e48bcfb9ff570ef598d489e4f1bcbe13276f5dd91c878b8d56d1")
@@ -59,7 +60,8 @@ class PyTensorflowProbability(Package):
     # tensorflow_probability/python/__init__.py
     # TODO: reactivate the JAX versions once the JAX package is available with newer versions
     #  also add jaxlib as a dependency
-    depends_on("py-tensorflow@2.15", when="@0.23", type=("build", "run"))
+    # TODO: reactivate once TF 2.15 is ready https://github.com/spack/spack/pull/41069
+    # depends_on("py-tensorflow@2.15", when="@0.23", type=("build", "run"))
     # depends_on("py-jax@0.4.20:0.4", when="@0.23", type=("build", "run"))
 
     depends_on("py-tensorflow@2.14", when="@0.22", type=("build", "run"))
