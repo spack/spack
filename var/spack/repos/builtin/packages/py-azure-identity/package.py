@@ -23,7 +23,11 @@ class PyAzureIdentity(PythonPackage):
 
     def url_for_version(self, version):
         if version < Version("1.15"):
-            return "https://pypi.io/packages/source/a/azure-identity/azure-identity-{0}.zip".format(version)
+            return (
+                "https://pypi.io/packages/source/a/azure-identity/azure-identity-{0}.zip".format(
+                    version
+                )
+            )
 
         return super().url_for_version(version)
 

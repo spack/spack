@@ -18,7 +18,9 @@ class PyAzureStorageBlob(PythonPackage):
 
     def url_for_version(self, version):
         if version < Version("12.18"):
-            return "https://pypi.io/packages/source/a/azure-storage-blob/azure-storage-blob-{0}.zip".format(version)
+            return "https://pypi.io/packages/source/a/azure-storage-blob/azure-storage-blob-{0}.zip".format(
+                version
+            )
 
         return super().url_for_version(version)
 

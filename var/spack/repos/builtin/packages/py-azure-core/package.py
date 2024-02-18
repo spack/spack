@@ -17,7 +17,9 @@ class PyAzureCore(PythonPackage):
 
     def url_for_version(self, version):
         if version < Version("1.29.3"):
-            return "https://pypi.io/packages/source/a/azure-core/azure-core-{0}.zip".format(version)
+            return "https://pypi.io/packages/source/a/azure-core/azure-core-{0}.zip".format(
+                version
+            )
 
         return super().url_for_version(version)
 
