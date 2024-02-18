@@ -18,7 +18,8 @@ class PyZfit(PythonPackage):
     maintainers("jonas-eschle")
     license("BSD-3-Clause", checked_by="jonas-eschle")
 
-    version("0.18.0", sha256="21d9479480f74945c67707b715780693bd4e94062c551bf41fe04a2eddb47fab")
+    # TODO: reactivate once TF 2.15 is ready https://github.com/spack/spack/pull/41069
+    # version("0.18.0", sha256="21d9479480f74945c67707b715780693bd4e94062c551bf41fe04a2eddb47fab")
     version("0.17.0", sha256="cd60dfc360c82666af4e8dddd78edb0ab95a095b9dd0868457f0981dc03afa5a")
     version("0.16.0", sha256="b3b170af23b61d7e265d6fb1bab1d052003f3fb41b3c537527cc1e5a1066dc10")
     version("0.15.5", sha256="00a1138429e8a7f830c9e229b9c0bcd6071b95dadd8c87eb81191079fb679225")
@@ -27,8 +28,9 @@ class PyZfit(PythonPackage):
     depends_on("python@3.9:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-tensorflow@2.15", type=("run"), when="@0.18")
-    depends_on("py-tensorflow-probability@0.23", type=("run"), when="@0.18")
+    # TODO: reactivate once TF 2.15 is ready https://github.com/spack/spack/pull/41069
+    # depends_on("py-tensorflow@2.15", type=("run"), when="@0.18")
+    # depends_on("py-tensorflow-probability@0.23", type=("run"), when="@0.18")
 
     depends_on("py-tensorflow@2.13", type=("run"), when="@0.15:0.17")
     depends_on("py-tensorflow-probability@0.21", type=("run"), when="@0.15:0.17")
