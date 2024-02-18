@@ -34,7 +34,7 @@ class PyGoogleCloudStorage(PythonPackage):
         depends_on("py-google-resumable-media@2.6:", type=("build", "run"), when="@2.11:")
         depends_on("py-google-resumable-media@2.3.2:", type=("build", "run"))
         depends_on("py-requests@2.18:2", type=("build", "run"))
-        depends_on("py-google-crc32c", type=("build", "run"), when="@2.12:")
+        depends_on("py-google-crc32c@1", type=("build", "run"), when="@2.12:")
 
     with when("@:1"):
         depends_on("py-google-auth@1.2.0:", type=("build", "run"))
