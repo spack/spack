@@ -111,11 +111,15 @@ class Snakemake(PythonPackage):
     variant("ftp", default=False, description="Handling input and output via FTP", when="@:7")
     depends_on("py-ftputil", when="+ftp", type=("build", "run"))
 
-    variant("s3", default=False, description="Amazon S3 API storage (AWS S3, MinIO, etc.)", when="@:7")
+    variant(
+        "s3", default=False, description="Amazon S3 API storage (AWS S3, MinIO, etc.)", when="@:7"
+    )
     depends_on("py-boto3", when="+s3", type=("build", "run"))
     depends_on("py-botocore", when="+s3", type=("build", "run"))
 
-    variant("http", default=False, description="Downloading of input files from HTTP(s)", when="@:7")
+    variant(
+        "http", default=False, description="Downloading of input files from HTTP(s)", when="@:7"
+    )
     depends_on("py-requests", when="+http", type=("build", "run"))
 
     def test(self):
