@@ -87,7 +87,7 @@ class Snakemake(PythonPackage):
         depends_on("py-networkx", type=("build", "run"), when="@:7.1.1")
         depends_on("py-pygraphviz", type=("build", "run"), when="@:7.1.1")
 
-    variant("google-cloud", default=False, description="Enable Google Cloud storage and execution", when="@:7")
+    variant("google-cloud", default=False, description="Enable Google Cloud execution", when="@:7")
 
     with when("+google-cloud"):
         depends_on("py-google-api-python-client", type=("build", "run"))
@@ -95,9 +95,7 @@ class Snakemake(PythonPackage):
         depends_on("py-google-crc32c", type=("build", "run"))
         depends_on("py-oauth2client", type=("build", "run"))
 
-    variant(
-        "azure", default=False, description="Enable Azure storage and execution", when="@7.28.0:7"
-    )
+    variant("azure", default=False, description="Enable Azure execution", when="@7.28.0:7")
 
     with when("+azure"):
         depends_on("py-azure-storage-blob", type=("build", "run"))
@@ -109,9 +107,6 @@ class Snakemake(PythonPackage):
     depends_on("py-msrest", type=("build", "run"), when="@7.28.0")
     depends_on("py-filelock", type=("build", "run"), when="@:6")
     depends_on("py-ratelimiter", type=("build", "run"), when="@:6")
-
-    variant("tes", default=False, description="Submitting jobs via GA4GH TES", when="@8:")
-    depends_on("py-snakemake-executor-plugin-tes", when="+tes", type=("build", "run"))
 
     variant("ftp", default=False, description="Handling input and output via FTP", when="@:7")
     depends_on("py-ftputil", when="+ftp", type=("build", "run"))
