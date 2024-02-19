@@ -888,9 +888,8 @@ class MakefileBuilder(makefile.MakefileBuilder):
             content += " " + self.spec["lapack"].libs.ld_flags
             content += " " + self.spec["fftw-api"].libs.ld_flags
 
-            if (self.spec["fftw-api"].name in ["fftw", "amdfftw"]) and self.spec[
-                "fftw-api"
-            ].satisfies("+openmp"):
+            fftw = self.spec["fftw-api"]
+            if fftw.name in ["fftw", "amdfftw"] and fftw.satisfies("+openmp"):
                 content += " -lfftw3_omp"
 
             content += "\n"
