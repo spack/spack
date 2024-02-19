@@ -15,8 +15,8 @@ class PyCodespell(PythonPackage):
 
     license("GPL-2.0", checked_by="cmelone")
 
+    version("2.2.6", sha256="a8c65d8eb3faa03deabab6b3bbe798bea72e1799c7e9e955d57eca4096abcff9")
+
     depends_on("py-setuptools@64.0:", type="build")
     depends_on("py-setuptools-scm@6.2: +toml", type="build")
     conflicts("^py-setuptools-scm@8.0.0")
-
-    version("2.2.6", sha256="a8c65d8eb3faa03deabab6b3bbe798bea72e1799c7e9e955d57eca4096abcff9")
