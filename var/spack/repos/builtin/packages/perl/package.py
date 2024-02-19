@@ -16,9 +16,9 @@ import re
 import sys
 from contextlib import contextmanager
 
+from llnl.util.filesystem import compute_sfn
 from llnl.util.lang import match_predicate
 from llnl.util.symlink import symlink
-from llnl.util.filesystem import compute_sfn
 
 from spack.operating_systems.mac_os import macos_version
 from spack.package import *

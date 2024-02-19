@@ -7,6 +7,7 @@ import glob
 import os
 import re
 import sys
+
 from llnl.util.filesystem import compute_sfn
 
 from spack.build_systems.autotools import AutotoolsBuilder

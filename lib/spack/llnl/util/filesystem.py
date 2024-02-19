@@ -1269,6 +1269,7 @@ def compute_sfn(path: os.PathLike):
         return path
     path = str(path)
     import ctypes
+
     k32 = ctypes.WinDLL("kernel32", use_last_error=True)
     # stub Windows types TCHAR[LENGTH]
     TCHAR_arr = ctypes.c_wchar * len(path)
