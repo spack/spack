@@ -384,7 +384,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
         }
 
         dflags = ["-DNDEBUG"] if spec.satisfies("@:2023.2") else []
-        if spec["fftw-api"].name in ("intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"):
+        if fftw.name in ("intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"):
             cppflags = ["-D__FFTW3_MKL", "-I{0}".format(fftw_header_dir)]
         else:
             cppflags = ["-D__FFTW3", "-I{0}".format(fftw_header_dir)]
@@ -888,7 +888,8 @@ class MakefileBuilder(makefile.MakefileBuilder):
             content += " " + self.spec["lapack"].libs.ld_flags
             content += " " + self.spec["fftw-api"].libs.ld_flags
 
-            if (self.spec["fftw-api"].name == "fftw") and ("+openmp" in self.spec["fftw"]):
+            fftw = self.spec["fftw-api"]
+            if fftw.name in ["fftw", "amdfftw"] and fftw.satisfies("+openmp"):
                 content += " -lfftw3_omp"
 
             content += "\n"
