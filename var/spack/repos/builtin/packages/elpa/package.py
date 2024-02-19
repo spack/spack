@@ -180,8 +180,9 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
         ldflags = [spec["blas"].libs.search_flags, spec["lapack"].libs.search_flags]
         libs = [spec["lapack"].libs.link_flags, spec["blas"].libs.link_flags]
 
-        # if using mkl with openmp support, link with openmp
-        if self.spec.satisfies("^intel-oneapi-mkl threads=openmp"):
+        # If using blas with openmp support, link with openmp
+        # Needed for Spack-provided OneAPI MKL and for many externals
+        if self.spec["blas"].satisfies("threads=openmp"):
             ldflags.append(self.compiler.openmp_flag)
 
         options += [f'LDFLAGS={" ".join(ldflags)}', f'LIBS={" ".join(libs)}']
