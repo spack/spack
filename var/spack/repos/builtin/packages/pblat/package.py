@@ -25,7 +25,6 @@ class Pblat(MakefilePackage):
         makefile.filter("MACHTYPE=x86_64", "MACHTYPE?=x86_64")
         makefile.filter("CC=gcc", "")
 
-
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install("pblat", prefix.bin)
