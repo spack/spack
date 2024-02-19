@@ -356,6 +356,17 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         if self.spec.satisfies("%oneapi") or self.spec.satisfies("%intel"):
             options.append(self.define("CMAKE_CXX_FLAGS", "-fp-model=precise"))
 
+        # Kokkos 4.2.00+ changed the default to Kokkos_ENABLE_IMPL_CUDA_MALLOC_ASYNC=on
+        # which breaks GPU-aware with Cray-MPICH
+        # See https://github.com/kokkos/kokkos/pull/6402
+        # TODO: disable this once Cray-MPICH is fixed
+        if (
+            self.spec.satisfies("@4.2.00:")
+            and "mpi" in self.spec
+            and self.spec["mpi"].name == "cray-mpich"
+        ):
+            options.append(self.define("Kokkos_ENABLE_IMPL_CUDA_MALLOC_ASYNC", False))
+
         # Remove duplicate options
         return lang.dedupe(options)
 
