@@ -18,10 +18,6 @@ class Duckdb(CMakePackage):
     maintainers("glentner")
 
     version("master", branch="master")
-    version(
-        "0.9.2",
-        sha256="afff7bd925a98dc2af4039b8ab2159b0705cbf5e0ee05d97f7bb8dce5f880dc2",
-        preferred=True,
-    )
+    version("0.9.2", sha256="afff7bd925a98dc2af4039b8ab2159b0705cbf5e0ee05d97f7bb8dce5f880dc2")
     version("0.8.1", sha256="a0674f7e320dc7ebcf51990d7fc1c0e7f7b2c335c08f5953702b5285e6c30694")
     version("0.7.1", sha256="67f840f861e5ffbe137d65a8543642d016f900b89dd035492d562ad11acf0e1e")
