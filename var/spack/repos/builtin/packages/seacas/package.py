@@ -183,11 +183,11 @@ class Seacas(CMakePackage):
         when="@:2021-01-20",
         msg="The Faodel TPL is only compatible with @2021-04-05 and later.",
     )
-    # Remove one file in Exodus test suite that triggers MSVC c2057 C compiler
-    # error
+    # Remove use of variable in array assignment (triggers c2057 on MSVC)
     # See https://github.com/sandialabs/seacas/issues/438
-    patch("seacas_remove_test_c2057_const_expr.patch", when="platform=windows")
-
+    patch("https://github.com/sandialabs/seacas/commit/29a9ebeccb5a656b4b334fa6af904689da9ffddc.diff",
+          sha256="aedb1fe0af81686f9ed6d511d9b2a3bd52e574eb0ed6363d3f4851280cacde2c",
+          when="@:2023-10-24")
     def setup_run_environment(self, env):
         env.prepend_path("PYTHONPATH", self.prefix.lib)
 
