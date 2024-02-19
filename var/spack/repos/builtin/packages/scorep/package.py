@@ -201,7 +201,8 @@ class Scorep(AutotoolsPackage):
             config_args.append("--with-mpi=openmpi")
 
         if spec.satisfies("^binutils"):
-            config_args.append("--with-libbfd=%s" % spec["binutils"].prefix)
+            config_args.append("--with-libbfd-lib=%s" % spec["binutils"].prefix.lib)
+            config_args.append("--with-libbfd-include=%s" % spec["binutils"].prefix.include)
 
         config_args.extend(
             [
