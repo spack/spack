@@ -1224,11 +1224,6 @@ def _build_tarball_in_stage_dir(spec: Spec, out_url: str, stage_dir: str, option
         else:
             raise NoOverwriteException(url_util.format(remote_spackfile_path))
 
-    # need to copy the spec file so the build cache can be downloaded
-    # without concretizing with the current spack packages
-    # and preferences
-
-    spec_file = spack.store.STORE.layout.spec_file_path(spec)
     specfile_name = tarball_name(spec, ".spec.json")
     specfile_path = os.path.realpath(os.path.join(cache_prefix, specfile_name))
     signed_specfile_path = "{0}.sig".format(specfile_path)
@@ -1257,12 +1252,7 @@ def _build_tarball_in_stage_dir(spec: Spec, out_url: str, stage_dir: str, option
     checksum, _ = _do_create_tarball(tarfile_path, binaries_dir, buildinfo)
 
     # add sha256 checksum to spec.json
-    with open(spec_file, "r") as inputfile:
-        content = inputfile.read()
-        if spec_file.endswith(".json"):
-            spec_dict = sjson.load(content)
-        else:
-            raise ValueError("{0} not a valid spec file type".format(spec_file))
+    spec_dict = spec.to_dict()
     spec_dict["buildcache_layout_version"] = CURRENT_BUILD_CACHE_LAYOUT_VERSION
     spec_dict["binary_cache_checksum"] = {"hash_algorithm": "sha256", "hash": checksum}
 
