@@ -824,8 +824,6 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         env.set("MPIF90", join_path(self.prefix.bin, "mpif90"))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
-
         # Use the spack compiler wrappers under MPI
         env.set("OMPI_CC", spack_cc)
         env.set("OMPI_CXX", spack_cxx)

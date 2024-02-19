@@ -35,8 +35,6 @@ class Mpt(BundlePackage):
         return find_libraries(libraries, root=self.prefix, shared=True, recursive=True)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
-
         # use the Spack compiler wrappers under MPI
         env.set("MPICC_CC", spack_cc)
         env.set("MPICXX_CXX", spack_cxx)
