@@ -78,7 +78,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
     variant("kokkos", default=False, description="Enable KOKKOS support")
 
     # ACC conflict
-    variant("cpu_arch", values=str, default="none", description="Enable CPU Target for ACC")
+    variant("cpu_arch", values=str, default="none", description="Enable CPU Target for ACC and OMP")
 
     # STD conflicts
     conflicts("+std", when="%gcc@:10.1.0", msg="STD requires newer version of GCC")
@@ -104,7 +104,14 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
         values=("nvhpc","none"),
         default="none",
         when="+std",
-        description="Enable RAJA Target [CPU or NVIDIA] / Offload with custom settings for OpenMP",
+        description="Enable offloading support (via the non-standard `-stdpar`) for the new NVHPC SDK",
+    )
+    variant(
+        "std_onedpl_backend",
+        values=("openmp","tbb","dpcpp","none"),
+        default="none",
+        when="+std",
+        description="Implements policies using OpenMP,TBB or dpc++",
     )
     variant(
         "std_use_tbb",
@@ -113,6 +120,14 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
         when="+std",
         description="No-op if ONE_TBB_DIR is set. Link against an in-tree oneTBB via FetchContent_Declare, see top level CMakeLists.txt for details"
     )
+    variant(
+        "std_use_onedpl",
+        values=(True,False),
+        default=False,
+        when="+std",
+        description="Link oneDPL which implements C++17 executor policies (via execution_policy_tag) for different backends"
+    )
+
 
     # download raja from https://github.com/LLNL/RAJA
     conflicts(
@@ -127,8 +142,9 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
     depends_on("cuda", when="+thrust")
     depends_on("hip", when="+hip")
     depends_on("rocthrust", when="+thrust thrust_backend=rocm")
-    depends_on("intel-oneapi-tbb", when="+std std_submodel=data")
-    depends_on("intel-tbb", when="+std std_submodel=indices")
+    depends_on("intel-tbb", when="+std +std_use_tbb")
+    depends_on("intel-oneapi-dpl", when="+std +std_use_onedpl")
+    depends_on("intel-tbb", when="+std +std_use_onedpl")
     # TBB Dependency
     depends_on("intel-tbb", when="+tbb")
     partitioner_vals = ["auto", "affinity", "static", "simple"]
@@ -216,9 +232,10 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
-        model_list = ["sycl","sycl2020","omp","ocl","tbb","acc","hip","thrust","raja","std"]
+        model_list = ["sycl","sycl2020","omp","cuda","ocl","tbb","acc","hip","thrust","raja","std"]
         # convert spec to string to work on it
         spec_string = str(self.spec)
+        
         # take only the first portion of the spec until space
         spec_string_truncate = spec_string.split(" ", 1)[0]
         truncated_model_list = find_model_flag(spec_string_truncate)  # Prints out ['cuda', 'thrust']
@@ -227,8 +244,11 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         # for +acc and +thrust the CudaPackage appends +cuda variant too so we need to filter cuda from list
         # e.g. we choose 'thrust' from the list of ['cuda', 'thrust']
         if len(filtered_model_list) > 1:
-            filtered_model_list = [elem for elem in filtered_model_list if elem != "cuda"]
-            args = ["-DMODEL=" + filtered_model_list[0]]
+            filtered_model_list = [elem for elem in filtered_model_list if (elem != "cuda" and elem!="rocm")]
+            if "std" in filtered_model_list[0]:
+                args = ["-DMODEL=" + "std-" + self.spec.variants["std_submodel"].value]
+            else:
+                args = ["-DMODEL=" + filtered_model_list[0]]
         else:
             # do some alterations here to append sub models too
             if "std" in filtered_model_list[0]:
@@ -242,7 +262,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                 args = ["-DMODEL=" + filtered_model_list[0]]
         if (filtered_model_list[0] != "tbb" and filtered_model_list[0] != "thrust"):
             args.append("-DCMAKE_CXX_COMPILER=" + spack_cxx)
-        
+        print(spec_string)
 
         # ===================================
         #             ACC
@@ -286,39 +306,43 @@ register_flag_optional(TARGET_PROCESSOR
         Refer to `nvc++ --help` for the full list"
         "")
         """
-        if self.spec.satisfies("+acc~cuda"):
+        if self.spec.satisfies("+acc+cuda"):
             if (self.spec.compiler.name == "nvhpc") or (self.spec.compiler.name == "pgi"):
+                target_device = "multicore" if self.spec.variants["cpu_arch"].value != "none" else "gpu" if "cuda_arch" in self.spec.variants else None
                 if self.spec.variants["cpu_arch"].value != "none":
                     # get the cpu architecture value from user
-                    target_device = "multicore" + ";"
-                    target_processor = self.spec.variants["cpu_arch"].value + ";"
-                    args.append(
-                        "-DCXX_EXTRA_FLAGS="
-                        + "-target="
-                        + target_device
-                        + "-tp="
-                        + target_processor
-                    )
+                    target_processor = self.spec.variants["cpu_arch"].value[0]
+                    args.append("-DTARGET_PROCESSOR=" + target_processor)
+                    # args.append(
+                    #     "-DCXX_EXTRA_FLAGS="
+                    #     + "-target="
+                    #     + target_device
+                    #     + "-tp="
+                    #     + target_processor
+                    # )
                 if "cuda_arch" in self.spec.variants:
-                    target_device = "gpu" + ";"
                     cuda_arch_list = self.spec.variants["cuda_arch"].value
                     # the architecture value is only number so append cc_ to the name
                     cuda_arch = "cc" + cuda_arch_list[0]
-                    args.append(
-                        "-DCXX_EXTRA_FLAGS=" + "-target=" + target_device + "-gpu=" + cuda_arch
-                    )
-
+                    # args.append(
+                    #     "-DCXX_EXTRA_FLAGS=" + "-target=" + target_device + "-gpu=" + cuda_arch
+                    # )
+                    args.append("-DCUDA_ARCH=" + cuda_arch)
+                args.append("-DTARGET_DEVICE=" + target_device)
         # ===================================
         #    STDdata,STDindices,STDranges
         # ===================================
 
         if "+std" in self.spec:
-            args.append("-DUSE_TBB=" + ("ON" if (self.spec.variants["std_use_tbb"].value) else "OFF"))
-            print("KK", args)
+            if self.spec.satisfies("+std_use_tbb"):
+                args.append("-DCXX_EXTRA_FLAGS=-ltbb")
+            if self.spec.satisfies("+std_use_onedpl"):
+                # args.append("-DCXX_EXTRA_FLAGS=-ltbb")
+                # args.append("-DCXX_EXTRA_FLAGS=-loneDPL")
+                args.append("-DUSE_ONEDPL=" + self.spec.variants["std_onedpl_backend"].value.upper())
             if self.spec.variants["std_offload"].value != "none":
-                cuda_arch_list = self.spec.variants["offload"].value
                 # the architecture value is only number so append cc_ to the name
-                cuda_arch = "cc" + cuda_arch_list[0]
+                cuda_arch = "cc" + self.spec.variants["cuda_arch"].value[0]
                 args.append("-DNVHPC_OFFLOAD=" + cuda_arch)
 
 
@@ -335,7 +359,7 @@ register_flag_optional(TARGET_PROCESSOR
             cuda_dir = self.spec["cuda"].prefix
             cuda_comp = cuda_dir + "/bin/nvcc"
             args.append("-DCMAKE_CUDA_COMPILER=" + cuda_comp)
-            args.append("-DMEM=" + self.spec.variants["mem"].value)
+            args.append("-DMEM=" + self.spec.variants["mem"].value.upper())
             if self.spec.variants["flags"].value != "none":
                 # append_opts "-DCXX_EXTRA_FLAGS=-march=znver3"
                 # CSD3  A100s are hosted on a EPYC 7763
@@ -349,20 +373,17 @@ register_flag_optional(TARGET_PROCESSOR
         if self.spec.satisfies("+omp~kokkos~raja"):
             args.append("-DCMAKE_C_COMPILER=" + spack_cc)
             if "cuda_arch" in self.spec.variants:
-                cuda_arch_list = self.spec.variants["cuda_arch"].value
                 # the architecture value is only number so append cc_ to the name
-                cuda_arch = "cc" + cuda_arch_list[0]
+                cuda_arch = "cc" + self.spec.variants["cuda_arch"].value[0]
                 args.append("-DOFFLOAD=ON")
-                # args.append("-DOFFLOAD_FLAGS=-mp=gpu;-gpu=" + cuda_arch)
-                target_device = "gpu" + ";"
-                args.append("-DOFFLOAD_FLAGS=" + "-gpu=" + cuda_arch + " -mp=" + target_device)
+                args.append("-DOFFLOAD_FLAGS=" + " -mp=gpu;"  + "-gpu=" + cuda_arch)
             elif ("amdgpu_target" in self.spec.variants) and (
                 self.spec.variants["amdgpu_target"].value != "none"
             ):
-                rocm_arch = self.spec.variants["amdgpu_target"].value
-                args.append("-DOFFLOAD=" + " AMD:" + rocm_arch)
-            elif ("cpu_target" in self.spec.variants) and (
-                self.spec.variants["cpu_target"].value != "none"
+                args.append("-DOFFLOAD=ON")
+                args.append("-DOFFLOAD_FLAGS=" + "-fopenmp;--offload-arch=" + self.spec.variants["amdgpu_target"].value[0])
+            elif ("cpu_arch" in self.spec.variants) and (
+                self.spec.variants["cpu_arch"].value != "none"
             ):
                 args.append("-DOFFLOAD=" + "INTEL")
             elif "offload" in self.spec.variants and (
@@ -372,7 +393,7 @@ register_flag_optional(TARGET_PROCESSOR
                 args.append("-DOFFLOAD_FLAGS=" + self.spec.variants["offload"].value)
             else:
                 args.append("-DOFFLOAD=" + "OFF")
-                args.append("-DCXX_EXTRA_FLAGS=-MP;-march=skylake-avx512;-Ofast")
+                args.append("-DCXX_EXTRA_FLAGS=-MP;-march=" + str( self.spec.target) + ";-Ofast")
 
         # ===================================
         #            SYCL
