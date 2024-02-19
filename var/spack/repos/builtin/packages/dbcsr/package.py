@@ -117,8 +117,6 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     generator("ninja")
     depends_on("ninja@1.10:", type="build")
 
-    build_directory = "spack-build"
-
     patch("fjfrt_mod.patch", when="%fj")
 
     def cmake_args(self):
@@ -134,7 +132,6 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
             "-DUSE_SMM=%s" % ("libxsmm" if "smm=libxsmm" in spec else "blas"),
             self.define_from_variant("USE_MPI", "mpi"),
             self.define_from_variant("USE_OPENMP", "openmp"),
-            "-DWITH_C_API=false",
             "-DBLAS_FOUND=true",
             "-DBLAS_LIBRARIES=%s" % (spec["blas"].libs.joined(";")),
             "-DLAPACK_FOUND=true",
@@ -195,7 +192,7 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     @run_after("install")
     def install_modfiles(self):
         if self.spec.satisfies("%fj"):
-            for mod in glob.iglob(self.build_directory + "/src/*.mod"):
+            for mod in glob.iglob(join_path(self.build_directory, "src", "*.mod")):
                 install(mod, self.prefix.include)
 
     def flag_handler(self, name, flags):
