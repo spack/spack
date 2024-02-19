@@ -28,6 +28,10 @@ class PyFparser(PythonPackage):
     version("0.1.4", sha256="00d4f7e9bbd8a9024c3c2f308dd3be9b0eeff3cb852772c9f3cf0c4909dbafd4")
     version("0.1.3", sha256="10ba8b2803632846f6f011278e3810188a078d89afcb4a38bed0cbf10f775736")
     version("0.0.16", sha256="a06389b95a1b9ed12f8141b69c67343da5ba0a29277b2997b02573a93af14e13")
+    version("0.0.15", sha256="53a7f3e3a651b6d2a83c6cc8194d7de0abdc3bd54b2b83b0f379739b0dc74a9e")
+    version("0.0.14", sha256="ed8ffcd4aecb7e1f09d019c9663aa0effb44f489e96a60759e83e6a3834220eb")
+    version("0.0.13", sha256="3c7e939fcc6b010de717eb6bd5102750dea26f15b6f6346cb285652b6a55818a")
+    version("0.0.12", sha256="9ea2cf3cdf64e440ab9d5b526dda2dc3528fe5aa7a85634e81b0ee3c0c39886f")
     version("0.0.6", sha256="bf8a419cb528df1bfc24ddd26d63f2ebea6f1e103f1a259d8d3a6c9b1cd53012")
     version("0.0.5", sha256="f3b5b0ac56fd22abed558c0fb0ba4f28edb8de7ef24cfda8ca8996562215822f")
 
