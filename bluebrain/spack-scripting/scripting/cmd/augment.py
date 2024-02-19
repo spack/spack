@@ -5,7 +5,6 @@ from llnl.util.filesystem import mkdirp
 
 import spack.paths
 import spack.repo
-from spack.spec import Spec
 from spack.util.editor import editor
 from spack.util.naming import mod_to_class
 
@@ -30,10 +29,10 @@ def setup_parser(subparser):
 
 def augment(parser, args):
     name = args.package
-    target_repo = spack.repo.path.get_repo(args.namespace)
+    target_repo = spack.repo.PATH.get_repo(args.namespace)
     target_path = target_repo.filename_for_package_name(name)
 
-    repos = spack.repo.path.repos
+    repos = spack.repo.PATH.repos
     namespaces = [r.namespace for r in repos]
     target_index = namespaces.index(args.namespace)
     for repo in repos[target_index:]:
