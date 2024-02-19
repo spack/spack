@@ -176,7 +176,9 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         depends_on("pkgconfig", type="build")
         # please set variants: smm=blas by configuring packages.yaml or install
         # cp2k with option smm=blas on aarch64
-        conflicts("libxsmm@:1.17", when="target=aarch64:", msg="old libxsmm is not available on arm")
+        conflicts(
+            "libxsmm@:1.17", when="target=aarch64:", msg="old libxsmm is not available on arm"
+        )
 
     with when("+libint"):
         depends_on("pkgconfig", type="build", when="@7.0:")
@@ -385,7 +387,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
             "cce": ["-O2"],
             "xl": ["-O3"],
             "aocc": ["-O2"],
-            "fj": ["-Kfast"]
+            "fj": ["-Kfast"],
         }
 
         dflags = ["-DNDEBUG"] if spec.satisfies("@:2023.2") else []
@@ -534,9 +536,9 @@ class MakefileBuilder(makefile.MakefileBuilder):
 
             libs += scalapack
             libs += mpi
-            
+
             if not "%fj" in spec:
-              libs += (self.compiler.stdcxx_libs)
+                libs += self.compiler.stdcxx_libs
 
             if "+mpi_f08" in spec:
                 cppflags.append("-D__MPI_F08")
@@ -585,18 +587,14 @@ class MakefileBuilder(makefile.MakefileBuilder):
         if "+pexsi" in spec:
             cppflags.append("-D__LIBPEXSI")
             fcflags.append("-I" + join_path(spec["pexsi"].prefix, "fortran"))
-            libs += (
-                [
-                    join_path(spec["pexsi"].libs.directories[0], "libpexsi.a"),
-                    join_path(spec["superlu-dist"].libs.directories[0], "libsuperlu_dist.a"),
-                    join_path(
-                        spec["parmetis"].libs.directories[0], "libparmetis.{0}".format(dso_suffix)
-                    ),
-                    join_path(
-                        spec["metis"].libs.directories[0], "libmetis.{0}".format(dso_suffix)
-                    ),
-                ]
-            )
+            libs += [
+                join_path(spec["pexsi"].libs.directories[0], "libpexsi.a"),
+                join_path(spec["superlu-dist"].libs.directories[0], "libsuperlu_dist.a"),
+                join_path(
+                    spec["parmetis"].libs.directories[0], "libparmetis.{0}".format(dso_suffix)
+                ),
+                join_path(spec["metis"].libs.directories[0], "libmetis.{0}".format(dso_suffix)),
+            ]
 
         if "+elpa" in spec:
             elpa = spec["elpa"]
@@ -607,27 +605,23 @@ class MakefileBuilder(makefile.MakefileBuilder):
 
             # Currently AOCC and FJ support only static libraries of ELPA
             if "%aocc" or "%fj" in spec:
-                libs += (
-                    [
-                        join_path(
-                            elpa.prefix.lib, ("libelpa{elpa_suffix}.a".format(elpa_suffix=elpa_suffix))
-                        )
-                    ]
-                )
+                libs += [
+                    join_path(
+                        elpa.prefix.lib, ("libelpa{elpa_suffix}.a".format(elpa_suffix=elpa_suffix))
+                    )
+                ]
 
             else:
-                libs += (
-                    [
-                        join_path(
-                            elpa.libs.directories[0],
-                            (
-                                "libelpa{elpa_suffix}.{dso_suffix}".format(
-                                    elpa_suffix=elpa_suffix, dso_suffix=dso_suffix
-                                )
-                            ),
-                        )
-                    ]
-                )
+                libs += [
+                    join_path(
+                        elpa.libs.directories[0],
+                        (
+                            "libelpa{elpa_suffix}.{dso_suffix}".format(
+                                elpa_suffix=elpa_suffix, dso_suffix=dso_suffix
+                            )
+                        ),
+                    )
+                ]
 
             if spec.satisfies("@:4"):
                 if elpa.satisfies("@:2014.5"):
@@ -793,7 +787,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
                     join_path(spec["costa"].libs.directories[0], "libcosta.a"),
                 ]
             )
-            
+
         dflags.extend(cppflags)
         cflags.extend(cppflags)
         cxxflags.extend(cppflags)
@@ -811,12 +805,15 @@ class MakefileBuilder(makefile.MakefileBuilder):
             mkf.write("\n# COMPILER, LINKER, TOOLS\n\n")
             if "%fj" in spec:
                 mkf.write(
-                    "FC  = {0}\n" "CC  = {1}\n" "CXX = {2}\n" "LD  = {3}\n".format(fc, cc, cxx, cxx)
+                    "FC  = {0}\n"
+                    "CC  = {1}\n"
+                    "CXX = {2}\n"
+                    "LD  = {3}\n".format(fc, cc, cxx, cxx)
                 )
             else:
                 mkf.write(
-                "FC  = {0}\n" "CC  = {1}\n" "CXX = {2}\n" "LD  = {3}\n".format(fc, cc, cxx, fc)
-            )
+                    "FC  = {0}\n" "CC  = {1}\n" "CXX = {2}\n" "LD  = {3}\n".format(fc, cc, cxx, fc)
+                )
 
             if "%intel" in spec:
                 intel_bin_dir = ancestor(pkg.compiler.cc)
@@ -861,8 +858,10 @@ class MakefileBuilder(makefile.MakefileBuilder):
                 mkf.write("\n# the compiler runs out of memory when optimizing the following:\n")
                 mkf.write("mp2_eri.o: mp2_eri.F\n")
                 mkf.write("\t$(TOOLSRC)/build_utils/fypp $(FYPPFLAGS) $< $*.F90\n")
-                mkf.write("\t$(FC) -c $(FCFLAGS) -O0 -D__SHORT_FILE__=\"\\\"$(subst $(SRCDIR)/,,$<)\\\"\" -I'$(dir $<)' $(OBJEXTSINCL) $*.F90 $(FCLOGPIPE)\n")
-        
+                mkf.write(
+                    '\t$(FC) -c $(FCFLAGS) -O0 -D__SHORT_FILE__="\\"$(subst $(SRCDIR)/,,$<)\\"" -I\'$(dir $<)\' $(OBJEXTSINCL) $*.F90 $(FCLOGPIPE)\n'
+                )
+
             mkf.write("# CP2K-specific flags\n\n")
             mkf.write("GPUVER = {0}\n".format(gpuver))
             mkf.write("DATA_DIR = {0}\n".format(prefix.share.data))
