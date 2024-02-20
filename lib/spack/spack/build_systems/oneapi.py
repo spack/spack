@@ -22,13 +22,6 @@ from spack.util.executable import Executable
 from .generic import Package
 
 
-def raise_lib_error(*args):
-    """Bails out with an error message. Shows args after the first as one per
-    line, tab-indented, useful for long paths to line up and stand out.
-    """
-    raise InstallError("\n\t".join(str(i) for i in args))
-
-
 class IntelOneApiPackage(Package):
     """Base class for Intel oneAPI packages."""
 
@@ -206,20 +199,35 @@ class IntelOneApiLibraryPackage(IntelOneApiPackage):
             libname = "libiomp5"
         elif self.spec.satisfies("%gcc"):
             libname = "libgomp"
+        elif self.spec.satisfies("%clang"):
+            libname = "libomp"
         else:
-            raise_lib_error("MKL OMP requires one of %gcc, %oneapi,or %intel")
+            raise InstallError(
+                "OneAPI package with OpenMP threading requires one of %clang, %gcc, %oneapi, "
+                "or %intel"
+            )
 
         # query the compiler for the library path
         with self.compiler.compiler_environment():
             omp_lib_path = Executable(self.compiler.cc)(
                 "--print-file-name", f"{libname}.{dso_suffix}", output=str
             ).strip()
+
+        # Newer versions of clang do not give the full path to libomp. If that's
+        # the case, look in a path relative to the compiler where libomp is
+        # typically found. If it's not found there, error out.
+        if not os.path.exists(omp_lib_path) and self.spec.satisfies("%clang"):
+            compiler_root = os.path.dirname(os.path.dirname(os.path.realpath(self.compiler.cc)))
+            omp_lib_path_compiler = os.path.join(compiler_root, "lib", f"{libname}.{dso_suffix}")
+            if os.path.exists(omp_lib_path_compiler):
+                omp_lib_path = omp_lib_path_compiler
+
         # if the compiler cannot find the file, it returns the input path
         if not os.path.exists(omp_lib_path):
-            raise_lib_error(f"Cannot locate OpenMP library: {omp_lib_path}")
+            raise InstallError(f"OneAPI package cannot locate OpenMP library: {omp_lib_path}")
 
         omp_libs = LibraryList(omp_lib_path)
-        tty.info(f"mkl requires openmp library: {omp_libs}")
+        tty.info(f"OneAPI package requires OpenMP library: {omp_libs}")
         return omp_libs
 
     # find_headers uses heuristics to determine the include directory
