@@ -23,23 +23,23 @@ class NvidiaNsightSystems(Package):
     arch = platform.uname()[-1]
     if arch == "x86_64":
         version(
-            "2024.1.1", 
-            sha256="96f57548e0bd69cb02cd1fe8c70ed4a650636ecb3a5ea5ec490c8049adc2beb5", 
-            url="https://developer.download.nvidia.com/devtools/repos/rhel8/x86_64/nsight-systems-2024.1.1-2024.1.1.59_3380207-0.x86_64.rpm", 
+            "2024.1.1",
+            sha256="96f57548e0bd69cb02cd1fe8c70ed4a650636ecb3a5ea5ec490c8049adc2beb5",
+            url="https://developer.download.nvidia.com/devtools/repos/rhel8/x86_64/nsight-systems-2024.1.1-2024.1.1.59_3380207-0.x86_64.rpm",
             expand=False,
         )
     elif arch == "aarch64":
         version(
-            "2024.1.1", 
-            sha256="41dc15ae128ef1de8e582b66bb465ac6bd67b9d20ef77fc70528b735d80fb3ec", 
-            url="https://developer.download.nvidia.com/devtools/repos/rhel8/arm64/nsight-systems-2024.1.1-2024.1.1.59_3380207-0.aarch64.rpm", 
+            "2024.1.1",
+            sha256="41dc15ae128ef1de8e582b66bb465ac6bd67b9d20ef77fc70528b735d80fb3ec",
+            url="https://developer.download.nvidia.com/devtools/repos/rhel8/arm64/nsight-systems-2024.1.1-2024.1.1.59_3380207-0.aarch64.rpm",
             expand=False,
         )
     elif arch == "ppc64le":
         version(
-            "2024.1.1", 
-            sha256="8c98b511df1747c4c782430504ae6fa4b3fce6fa72623083a828fc0a1e11f1b8", 
-            url="https://developer.download.nvidia.com/devtools/repos/rhel8/ppc64le/nsight-systems-cli-2024.1.1-2024.1.1.59_3380207-0.ppc64le.rpm", 
+            "2024.1.1",
+            sha256="8c98b511df1747c4c782430504ae6fa4b3fce6fa72623083a828fc0a1e11f1b8",
+            url="https://developer.download.nvidia.com/devtools/repos/rhel8/ppc64le/nsight-systems-cli-2024.1.1-2024.1.1.59_3380207-0.ppc64le.rpm",
             expand=False,
         )
 
