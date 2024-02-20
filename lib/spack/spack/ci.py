@@ -2046,8 +2046,7 @@ if retcode != 0:
     # No shebang on Windows, Python drives the script directly
     imports = "import os; import sys"
 
-    # Handle escaping problematic characters for msdos
-    commands = map((lambda args: [fs.msdos_escape_parens(arg) for arg in args]), commands)
+    commands = map(lambda args: [fs.msdos_escape_parens(arg) for arg in args], commands)
 
     # Create a string [command 1] \n [command 2] \n ... \n [command n] with
     # commands composed into os.system("command arg1 arg2 ... argn") calls

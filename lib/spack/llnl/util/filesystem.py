@@ -199,13 +199,12 @@ def getuid():
         return os.getuid()
 
 
-@system_path_filter
-def msdos_escape_parens(path):
+def msdos_escape_parens(cmd):
     """MS-DOS interprets parens as grouping parameters even in a quoted string"""
     if sys.platform == "win32":
-        return path.replace("(", "^(").replace(")", "^)")
+        return cmd.replace("(", "^(").replace(")", "^)")
     else:
-        return path
+        return cmd
 
 
 @system_path_filter
