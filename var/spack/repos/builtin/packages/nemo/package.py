@@ -20,14 +20,16 @@ class Nemo(Package):
     version("4.2.0", tag="v4.2.0", commit="5cf0c3d61b751a102fe9de9c8ffe61a7216946cc")
 
     depends_on("mpi")
-    depends_on("xios@develop")
+    depends_on("xios@develop-2612")
     depends_on("perl")
     depends_on("netcdf-c+mpi")
     depends_on("netcdf-fortran")
     depends_on("hdf5+mpi")
 
-    patch("fj-v4.2.0.patch", when="@4.2.0%fj")
-    patch("fj-v4.2.1.patch", when="@4.2.1%fj")
+    # Avoided build errors that occur when reading internal files containing
+    # multiple namelists for Fujitsu compilers
+    patch("https://github.com/fujitsu/oss-patches-for-a64fx/blob/master/Nemo/fj-v4.2.0.patch", when="@4.2.0%fj")
+    patch("https://github.com/fujitsu/oss-patches-for-a64fx/blob/master/Nemo/fj-v4.2.1.patch", when="@4.2.1%fj")
 
     def nemo_fcm(self):
         file = join_path("arch", "arch-SPACK.fcm")
