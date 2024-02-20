@@ -103,7 +103,7 @@ class Charliecloud(AutotoolsPackage):
     )
     variant("docs", default=False, description="Build man pages and html docs")
     variant(
-        "squashfuse", default=False, description="Build with squashfuse support", when="@0.32:"
+        "squashfuse", default=True, description="Build with squashfuse support", when="@0.32:"
     )
     # Autoconf.
     depends_on("m4", type="build")
@@ -111,8 +111,8 @@ class Charliecloud(AutotoolsPackage):
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
 
-    # pkg-config for libfuse.
-    depends_on("pkg-config", type="build", when="+squashfuse")
+    # pkg-config is required for 0.36.
+    depends_on("pkg-config", type="build", when="@0.36")
 
     # Image manipulation.
     depends_on("python@3.6:", type="run")
