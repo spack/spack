@@ -13,7 +13,8 @@ spack:
 
   specs:
   # VTK 8.2 is required to avoid link issues in newer versions on windows
-  - vtk@8.2
+  #- vtk@8.2
+  - bzip2
 
   cdash:
     build-group: Windows Visualization (Kitware)
