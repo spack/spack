@@ -5,6 +5,7 @@
 
 from spack.package import *
 
+
 class NetcdfCxx4(CMakePackage):
     """NetCDF (network Common Data Form) is a set of software libraries and
     machine-independent data formats that support the creation, access, and
@@ -28,8 +29,8 @@ class NetcdfCxx4(CMakePackage):
     depends_on("netcdf-c")
     depends_on('hdf5') 
 
-    # if we link against an mpi-aware hdf5 then this needs to also be mpi aware 
-    depends_on('mpi', when='^hdf5+mpi')  
+    # if we link against an mpi-aware hdf5 then this needs to also be mpi aware
+    depends_on('mpi', when='^hdf5+mpi')
     depends_on("doxygen", when="+doc", type="build")
 
     filter_compiler_wrappers("ncxx4-config", relative_root="bin")
@@ -61,11 +62,10 @@ class NetcdfCxx4(CMakePackage):
         filter_file(
                r"HDF5_C_LIBRARY_hdf5",
                "HDF5_C_LIBRARIES",
-               join_path(self.stage.source_path,'cxx4', "CMakeLists.txt"))
+               join_path(self.stage.source_path, 'cxx4', "CMakeLists.txt"))
 
     def cmake_args(self):
-
-        args = [ 
+        args = [
                     self.define_from_variant('BUILD_SHARED_LIBS', "shared"),
                     self.define_from_variant('ENABLE_DOXYGEN', "doc"),
                     self.define_from_variant('NCXX_ENABLE_TESTS', "tests"),
