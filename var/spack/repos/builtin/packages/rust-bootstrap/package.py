@@ -109,6 +109,8 @@ class RustBootstrap(Package):
         if os in rust_releases[release] and target in rust_releases[release][os]:
             version(release, sha256=rust_releases[release][os][target])
 
+    variant("docs", default=True, description="Build docs")
+
     def url_for_version(self, version):
         # Allow maintainers to checksum multiple architectures via
         # `spack checksum rust-bootstrap@1.70.0-darwin-aarch64`.
@@ -126,4 +128,7 @@ class RustBootstrap(Package):
 
     def install(self, spec, prefix):
         install_script = Executable("./install.sh")
-        install_script(f"--prefix={prefix}")
+        install_args = [f"--prefix={prefix}"]
+        if self.spec.satisfies("~docs"):
+            install_args.append("--without=rust-docs")
+        install_script(" ".join(install_args))
