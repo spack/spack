@@ -124,6 +124,12 @@ class Root(CMakePackage):
         # Resolve circular dependency, _cf_
         # https://sft.its.cern.ch/jira/browse/ROOT-8226.
         patch("root6-60606-mathmore.patch", when="@6.06.06")
+        # Fix macOS build when cocoa is disabled:
+        patch(
+            "https://github.com/root-project/root/pull/14387.patch?full_index=1",
+            sha256="559495f7bdd6b7674d3b1019da9b76e8b374f6dca3dbe72fb1320b0be2b00e53",
+            when="@6.30:6.30.3 ~aqua",
+        )
 
     # ###################### Variants ##########################
     # See README.md for specific notes about what ROOT configuration
@@ -505,7 +511,6 @@ class Root(CMakePackage):
         return " ".join(v)
 
     def cmake_args(self):
-        spec = self.spec
         define = self.define
         define_from_variant = self.define_from_variant
         options = []
@@ -688,9 +693,6 @@ class Root(CMakePackage):
             ftgl_prefix = self.spec["ftgl"].prefix
             options.append(define("FTGL_ROOT_DIR", ftgl_prefix))
             options.append(define("FTGL_INCLUDE_DIR", ftgl_prefix.include))
-        if "+python" in self.spec:
-            # See https://github.com/spack/spack/pull/11579
-            options.append(define("PYTHON_EXECUTABLE", spec["python"].command.path))
 
         return options
 

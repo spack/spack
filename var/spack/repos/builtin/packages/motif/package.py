@@ -39,6 +39,8 @@ class Motif(AutotoolsPackage):
     depends_on("pkgconfig", type="build")
 
     patch("add_xbitmaps_dependency.patch")
+    # ensure tools/wml/wmluiltok.c has a main function
+    patch("add_wmluiltok_option_main.patch")
 
     def patch(self):
         # fix linking the simple_app demo program

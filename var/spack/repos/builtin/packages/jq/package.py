@@ -17,6 +17,7 @@ class Jq(AutotoolsPackage):
 
     license("MIT")
 
+    version("1.7.1", sha256="478c9ca129fd2e3443fe27314b455e211e0d8c60bc8ff7df703873deeee580c2")
     version("1.6", sha256="5de8c8e29aaa3fb9cc6b47bb27299f271354ebb72514e3accadc7d38b5bbaa72")
     version("1.5", sha256="c4d2bfec6436341113419debf479d833692cc5cdab7eb0326b5a4d4fbe9f493c")
 

@@ -12,6 +12,8 @@ class Ngspice(AutotoolsPackage):
 
     homepage = "http://ngspice.sourceforge.net/"
     url = "https://sourceforge.net/projects/ngspice/files/ngspice-33.tar.gz"
+    list_url = "https://sourceforge.net/projects/ngspice/files/ng-spice-rework"
+    list_depth = 1
     git = "git://git.code.sf.net/p/ngspice/ngspice"
 
     maintainers("aweits", "cessenat")
@@ -20,6 +22,7 @@ class Ngspice(AutotoolsPackage):
 
     # Master version by default adds the experimental adms feature
     version("master", branch="master")
+    version("42", sha256="737fe3846ab2333a250dfadf1ed6ebe1860af1d8a5ff5e7803c772cc4256e50a")
     version("41", sha256="1ce219395d2f50c33eb223a1403f8318b168f1e6d1015a7db9dbf439408de8c4")
     version("40", sha256="e303ca7bc0f594e2d6aa84f68785423e6bf0c8dad009bb20be4d5742588e890d")
     version("39", sha256="bf94e811eaad8aaf05821d036a9eb5f8a65d21d30e1cab12701885e09618d771")

@@ -244,7 +244,7 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     # later is required for netCDF-4 compression. However, zlib became a direct dependency only
     # starting NetCDF 4.9.0 (for the deflate plugin):
     depends_on("zlib-api", when="@4.9.0:+shared")
-    depends_on("zlib@1.2.5:", when="^zlib")
+    depends_on("zlib@1.2.5:", when="^[virtuals=zlib-api] zlib")
 
     # Use the vendored bzip2 on Windows:
     for __p in ["darwin", "cray", "linux"]:
@@ -300,7 +300,6 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
 
 class BaseBuilder(metaclass=spack.builder.PhaseCallbacksMeta):
     def setup_dependent_build_environment(self, env, dependent_spec):
-        self.pkg.setup_run_environment(env)
         # Some packages, e.g. ncview, refuse to build if the compiler path returned by nc-config
         # differs from the path to the compiler that the package should be built with. Therefore,
         # we have to shadow nc-config from self.prefix.bin, which references the real compiler,
