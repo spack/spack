@@ -2047,6 +2047,10 @@ if retcode != 0:
     # No shebang on Windows, Python drives the script directly
     shebang = "#!/usr/bin/env python3" if not is_windows else ""
     imports = "import os; import sys"
+
+    # Handle escaping problematic characters for msdos
+    commands = map((lambda args: [fs.msdos_escape_parens(arg) for arg in args]), commands)
+
     # Create a string [command 1] \n [command 2] \n ... \n [command n] with
     # commands composed into os.system("command arg1 arg2 ... argn") calls
     args_to_string = lambda args: f"retcode = os.system('{' '.join(args)}')\n{fail_on_bad_return}"
@@ -2272,10 +2276,14 @@ class CDashHandler:
 
     def args(self):
         return [
-            f'--cdash-upload-url="{self.upload_url}"',
-            f'--cdash-build="{self.build_name}"',
-            f'--cdash-site="{self.site}"',
-            f'--cdash-buildstamp="{self.build_stamp}"',
+            "--cdash-upload-url",
+            f'"{self.upload_url}"',
+            "--cdash-build",
+            f'"{self.build_name}"',
+            "--cdash-site",
+            f'"{self.site}"',
+            "--cdash-buildstamp",
+            f'"{self.build_stamp}"',
         ]
 
     @property  # type: ignore
