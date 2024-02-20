@@ -215,6 +215,15 @@ def _win_rename(src, dst):
 
 
 @system_path_filter
+def msdos_escape_parens(path):
+    """MS-DOS interprets parens as grouping parameters even in a quoted string"""
+    if sys.platform == "win32":
+        return path.replace("(", "^(").replace(")", "^)")
+    else:
+        return path
+
+
+@system_path_filter
 def rename(src, dst):
     # On Windows, os.rename will fail if the destination file already exists
     # os.replace is the same as os.rename on POSIX and is MoveFileExW w/
