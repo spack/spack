@@ -55,14 +55,14 @@ class NetcdfCxx4(CMakePackage):
     def libs(self):
         libraries = ["libnetcdf_c++4"]
 
-        libs = find_libraries(libraries, root=self.prefix, shared=self.shared, recursive=True)
+        libs = find_libraries(libraries, root=self.prefix, shared=True if "+debug" in spec else False, recursive=True)
 
         if libs:
             return libs
 
         msg = "Unable to recursively locate {0} {1} libraries in {2}"
         raise spack.error.NoLibrariesError(
-            msg.format("shared" if self.shared else "static", self.spec.name, self.spec.prefix)
+            msg.format("+shared" if self.spec else "static", self.spec.name, self.spec.prefix)
         )
 
 
@@ -79,9 +79,9 @@ class NetcdfCxx4(CMakePackage):
     def cmake_args(self):
 
         args = [ 
-                    self.define('BUILD_SHARED_LIBS', self.shared),
-                    self.define('ENABLE_DOXYGEN', self.doc), 
-                    self.define('NCXX_ENABLE_TESTS', self.tests),
+                    self.define_from_variant('BUILD_SHARED_LIBS', "shared"),
+                    self.define_from_variant('ENABLE_DOXYGEN', "doc"), 
+                    self.define_from_variant('NCXX_ENABLE_TESTS', "tests"),
             ]
 
         return args
