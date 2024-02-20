@@ -15,11 +15,17 @@ class Xios(Package):
     homepage = "https://forge.ipsl.jussieu.fr/ioserver/wiki"
 
     version("develop", svn="http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/trunk")
+
+    # The 'develop' version is renamed so that we could patch it
+    # without affecting future changes in develop branch.
     version(
-        "2.5", revision=2593, svn="http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/branchs/xios-2.5"
+        "develop-2612", revision=2612, svn="http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/trunk"
     )
     version(
-        "2.0", revision=2593, svn="http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/branchs/xios-2.0"
+        "2.5", revision=1860, svn="http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/branchs/xios-2.5"
+    )
+    version(
+        "2.0", revision=1627, svn="http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/branchs/xios-2.0"
     )
     version(
         "1.0", revision=910, svn="http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/branchs/xios-1.0"
@@ -43,7 +49,7 @@ class Xios(Package):
     patch("llvm_bug_17782.patch", when="@1.1: %clang")
 
     # This patch fixes a compilation error where 'FLT_MAX' and 'FLT_MIN' was not declared in scope.
-    patch("fix_float_error.patch", when="@develop")
+    patch("fix_float_error.patch", when="@develop-2612")
 
     depends_on("netcdf-c+mpi")
     depends_on("netcdf-fortran")
@@ -134,7 +140,6 @@ OASIS_LIB=""
             param["LIBCXX"] = "-lc++"
         else:
             param["LIBCXX"] = "-lstdc++"
-
 
         if any(map(spec.satisfies, ("%gcc", "%intel", "%apple-clang", "%clang"))):
             text = r"""
