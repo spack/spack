@@ -49,7 +49,7 @@ class NvidiaNsightSystems(Package):
         params = ["-x", "-f", rpm_file]
         ver = prefix.split("/")[-1].split("-")[-2]
         bsdtar(*params)
-    
+
         arch = platform.uname()[-1]
         if arch == "aarch64":
             folders = ["/documentation", "/host-linux-armv8a", "/target-linux-sbsa-armv8"]
