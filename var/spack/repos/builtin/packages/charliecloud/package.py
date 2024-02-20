@@ -115,6 +115,9 @@ class Charliecloud(AutotoolsPackage):
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
 
+    # pkg-config for 0.36.
+    depends_on("pkg-config", type="build", when="@0.36")
+
     # Image manipulation.
     depends_on("python@3.6:", type="run")
     depends_on("py-requests", type="run")
