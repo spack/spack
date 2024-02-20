@@ -6,6 +6,7 @@
 import json
 import os
 import shutil
+import sys
 from urllib.parse import urlparse, urlunparse
 
 import llnl.util.filesystem as fs

@@ -426,14 +426,12 @@ def test_affected_specs_on_first_concretization(mutable_mock_env_path, mock_pack
     assert len(mpileaks_specs) == 2, e.all_specs()
 
 
-@pytest.mark.not_on_windows("Reliance on bash script not supported on Windows")
 def test_ci_process_command(repro_dir):
     result = ci.process_command("help", commands=[], repro_dir=str(repro_dir))
-    help_sh = repro_dir / "help.sh"
+    help_sh = repro_dir / "help.py"
     assert help_sh.exists() and not result
 
 
-@pytest.mark.not_on_windows("Reliance on bash script not supported on Windows")
 def test_ci_process_command_fail(repro_dir, monkeypatch):
     msg = "subprocess wait exception"
 
@@ -482,7 +480,6 @@ def test_ci_run_standalone_tests_missing_requirements(
     assert "Reproduction directory is required" in err
 
 
-@pytest.mark.not_on_windows("Reliance on bash script not supported on Windows")
 def test_ci_run_standalone_tests_not_installed_junit(
     tmp_path, repro_dir, working_env, default_mock_concretization, mock_test_stage, capfd
 ):
@@ -500,7 +497,6 @@ def test_ci_run_standalone_tests_not_installed_junit(
     assert os.path.getsize(log_file) > 0
 
 
-@pytest.mark.not_on_windows("Reliance on bash script not supported on Windows")
 def test_ci_run_standalone_tests_not_installed_cdash(
     tmp_path, repro_dir, working_env, default_mock_concretization, mock_test_stage, capfd
 ):

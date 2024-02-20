@@ -2021,7 +2021,6 @@ def process_command(name, commands, repro_dir, run=True, exit_on_failure=True):
     Returns: the exit code from processing the command
     """
     tty.debug(f"spack {name} arguments: {commands}")
-    is_windows = sys.platform == "win32"
     if len(commands) == 0 or isinstance(commands[0], str):
         commands = [commands]
 
@@ -2045,7 +2044,6 @@ if retcode != 0:
     )
 
     # No shebang on Windows, Python drives the script directly
-    shebang = "#!/usr/bin/env python3" if not is_windows else ""
     imports = "import os; import sys"
 
     # Handle escaping problematic characters for msdos
@@ -2062,7 +2060,6 @@ if retcode != 0:
     # or mixed language batch/python script if we're on Windows
     script = f"{name}.{ext}"
     with open(script, "w") as fd:
-        fd.write(f"{shebang}\n\n")
         fd.write(f"\n# spack {name} command\n")
         fd.write(f"{imports}\n\n")
         if not exit_on_failure:
@@ -2091,7 +2088,7 @@ if retcode != 0:
             # on Linux sh can drive the script thanks to the shebang
             # On Windows we have no shebang, so we rely on "python"
             # as an executor
-            interpreter = "/bin/sh" if not is_windows else sys.executable
+            interpreter = sys.executable
             cmd_process = subprocess.Popen([interpreter, f"./{script}"])
             cmd_process.wait()
             exit_code = cmd_process.returncode
