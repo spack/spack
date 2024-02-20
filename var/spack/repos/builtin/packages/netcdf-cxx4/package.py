@@ -40,30 +40,20 @@ class NetcdfCxx4(CMakePackage):
             flags.append(self.compiler.cc_pic_flag)
         if name == "cxxflags" and "+pic" in self.spec:
             flags.append(self.compiler.cxx_pic_flag)
-        elif name == "ldlibs":
-            # Address the underlinking problem reported in
-            # https://github.com/Unidata/netcdf-cxx4/issues/86, which also
-            # results into a linking error on macOS:
-            flags.append(self.spec["netcdf-c"].libs.link_flags)
 
         # Note that cflags and cxxflags should be added by the compiler wrapper
         # and not on the command line to avoid overriding the default
         # compilation flags set by the configure script:
         return flags, None, None
 
+
     @property
     def libs(self):
         libraries = ["libnetcdf_c++4"]
 
-        libs = find_libraries(libraries, root=self.prefix, shared=True if "+debug" in spec else False, recursive=True)
+        shared = "+shared" in spec
 
-        if libs:
-            return libs
-
-        msg = "Unable to recursively locate {0} {1} libraries in {2}"
-        raise spack.error.NoLibrariesError(
-            msg.format("+shared" if self.spec else "static", self.spec.name, self.spec.prefix)
-        )
+        return find_libraries(libraries, root=self.prefix, shared=shared, recursive=True)
 
 
     def patch(self):
@@ -74,6 +64,11 @@ class NetcdfCxx4(CMakePackage):
                r"HDF5_C_LIBRARY_hdf5",
                "HDF5_C_LIBRARIES",
                join_path(self.stage.source_path,"CMakeLists.txt"))
+
+        filter_file(
+               r"HDF5_C_LIBRARY_hdf5",
+               "HDF5_C_LIBRARIES",
+               join_path(self.stage.source_path,'cxx4',"CMakeLists.txt"))
 
 
     def cmake_args(self):
