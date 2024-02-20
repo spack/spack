@@ -15,7 +15,22 @@ properties: Dict[str, Any] = {
         "additionalProperties": False,
         "properties": {
             "reuse": {
-                "oneOf": [{"type": "boolean"}, {"type": "string", "enum": ["dependencies"]}]
+                "oneOf": [
+                    {"type": "boolean"},
+                    {"type": "string", "enum": ["dependencies"]},
+                    {
+                        "type": "object",
+                        "properties": {
+                            "strategy": {
+                                "oneOf": [
+                                    {"type": "boolean"},
+                                    {"type": "string", "enum": ["dependencies"]},
+                                ]
+                            },
+                            "include": {"type": "string"},
+                        },
+                    },
+                ]
             },
             "enable_node_namespace": {"type": "boolean"},
             "targets": {
