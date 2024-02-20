@@ -10,7 +10,6 @@ import shutil
 
 from llnl.util.filesystem import mkdirp, rename
 
-from spack.error import SpackError
 from spack.util.lock import Lock, ReadTransaction, WriteTransaction
 
 
@@ -178,5 +177,5 @@ class FileCache:
             lock.release_write()
 
 
-class CacheError(SpackError):
+class CacheError(Exception):
     pass
