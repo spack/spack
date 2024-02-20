@@ -3583,6 +3583,9 @@ class Solver:
         # These properties are settable via spack configuration, and overridable
         # by setting them directly as properties.
         self.reuse = spack.config.get("concretizer:reuse", True)
+        self.reuse_filters = []
+        if isinstance(self.reuse, typing.Mapping):
+            self.reuse, self.reuse_filters = self.reuse["strategy"], self.reuse["include"]
 
     @staticmethod
     def _check_input_and_extract_concrete_specs(specs):
@@ -3625,6 +3628,11 @@ class Solver:
         if self.reuse == "dependencies":
             reusable_specs = [
                 spec for spec in reusable_specs if not any(root in spec for root in specs)
+            ]
+
+        if self.reuse_filters:
+            reusable_specs = [
+                x for x in reusable_specs if any(x.satisfies(c) for c in self.reuse_filters)
             ]
 
         return reusable_specs
