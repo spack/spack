@@ -2613,3 +2613,25 @@ def test_reusable_externals_different_spec(mock_packages, tmpdir):
         {"mpich": {"externals": [{"spec": "mpich@4.1 +debug", "prefix": tmpdir.strpath}]}},
         local=False,
     )
+
+
+@pytest.mark.only_clingo("Original concretizer cannot reuse specs")
+@pytest.mark.parametrize(
+    "roots,reuse_yaml,expected,not_expected",
+    [(["mpileaks"], {"strategy": True, "include": ["^mpich"]}, ["^mpich"], ["^mpich2", "^zmpi"])],
+)
+@pytest.mark.usefixtures("database", "mock_store")
+def test_selecting_reused_specs(
+    roots, reuse_yaml, expected, not_expected, mutable_config, database
+):
+    mutable_config.set("concretizer:reuse", reuse_yaml)
+    selector = spack.solver.asp.ReusableSpecsSelector(mutable_config)
+    specs = selector.reusable_specs(roots)
+
+    assert len(specs) > 0
+
+    for constraint in expected:
+        assert all(x.satisfies(constraint) for x in specs)
+
+    for constraint in not_expected:
+        assert all(not x.satisfies(constraint) for x in specs)

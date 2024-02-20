@@ -27,7 +27,7 @@ properties: Dict[str, Any] = {
                                     {"type": "string", "enum": ["dependencies"]},
                                 ]
                             },
-                            "include": {"type": "string"},
+                            "include": {"type": "array", "items": {"type": "string"}},
                         },
                     },
                 ]
