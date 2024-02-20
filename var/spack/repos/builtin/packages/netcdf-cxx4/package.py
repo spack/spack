@@ -24,10 +24,10 @@ class NetcdfCxx4(CMakePackage):
     variant("shared", default=True, description="Enable shared library")
     variant("pic", default=True, description="Produce position-independent code (for shared libs)")
     variant("doc", default=False, description="Enable doxygen docs")
-    variant("tests", default=False, description="Enable CTest-based tests, dashboards.")  
+    variant("tests", default=False, description="Enable CTest-based tests, dashboards.")
 
     depends_on("netcdf-c")
-    depends_on('hdf5') 
+    depends_on('hdf5')
 
     # if we link against an mpi-aware hdf5 then this needs to also be mpi aware
     depends_on('mpi', when='^hdf5+mpi')
