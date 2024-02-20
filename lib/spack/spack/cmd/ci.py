@@ -561,7 +561,7 @@ def ci_rebuild(args):
     if not config["verify_ssl"]:
         spack_cmd.append("-k")
 
-    install_args = []
+    install_args = ['--use-buildcache="package:never,dependencies:only"']
 
     can_verify = spack_ci.can_verify_binaries()
     verify_binaries = can_verify and spack_is_pr_pipeline is False
@@ -571,11 +571,8 @@ def ci_rebuild(args):
     slash_hash = '"/{}"'.format(job_spec.dag_hash())
 
     # Arguments when installing the root from sources
-    root_install_args = install_args + [
-        "--keep-stage",
-        "--only=package",
-        '--use-buildcache="package:never,dependencies:only"',
-    ]
+    deps_install_args = install_args + ["--only=dependencies"]
+    root_install_args = install_args + ["--keep-stage", "--only=package"]
     if cdash_handler:
         # Add additional arguments to `spack install` for CDash reporting.
         root_install_args.extend(cdash_handler.args())
@@ -584,6 +581,7 @@ def ci_rebuild(args):
     commands = [
         # apparently there's a race when spack bootstraps? do it up front once
         [SPACK_COMMAND, "-e", encode_path(env.path), "bootstrap", "now"],
+        spack_cmd + ["install"] + deps_install_args,
         spack_cmd + ["install"] + root_install_args,
     ]
     import pdb; pdb.set_trace()
