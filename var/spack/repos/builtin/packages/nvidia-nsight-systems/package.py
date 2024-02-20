@@ -3,12 +3,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from glob import glob
-import shutil
 import os
 import platform
+import shutil
+from glob import glob
 
 from spack.package import *
+
 
 class NvidiaNsightSystems(Package):
     """NVIDIA Nsight™ Systems is a system-wide performance analysis tool designed to visualize an application’s algorithms, identify the largest opportunities to optimize, and tune to scale efficiently across any quantity or size of CPUs and GPUs, from large servers to the smallest system on a chip"""
