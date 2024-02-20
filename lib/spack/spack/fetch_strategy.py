@@ -302,11 +302,11 @@ class URLFetchStrategy(FetchStrategy):
         errors = []
         for url in self.candidate_urls:
             if not web_util.url_exists(
-                    url,
-                    fetch_method=spack.config.get('config:url_fetch_method', 'urllib'),
-                    verify_ssl=spack.config.get('config:verify_ssl'),
-                    timeout=spack.config.get('config:connect_timeout', 10)
-                    ):
+                url,
+                fetch_method=spack.config.get("config:url_fetch_method", "urllib"),
+                verify_ssl=spack.config.get("config:verify_ssl"),
+                timeout=spack.config.get("config:connect_timeout", 10),
+            ):
                 tty.debug("URL does not exist: " + url)
                 continue
 
@@ -345,8 +345,8 @@ class URLFetchStrategy(FetchStrategy):
         try:
             url, headers, response = web_util.read_from_url(
                 url,
-                verify_ssl=spack.config.get('config:verify_ssl', True),
-                timeout=spack.config.get('config:connect_timeout', 10)
+                verify_ssl=spack.config.get("config:verify_ssl", True),
+                timeout=spack.config.get("config:connect_timeout", 10),
             )
         except web_util.WebError as e:
             # clean up archive on failure.
@@ -394,14 +394,15 @@ class URLFetchStrategy(FetchStrategy):
 
             timeout = self.extra_options.get("timeout")
 
-        connect_timeout = spack.config.get('config:connect_timeout', 10)
+        connect_timeout = spack.config.get("config:connect_timeout", 10)
         if timeout:
             timeout = max(int(timeout), int(connect_timeout))
         else:
             timeout = int(connect_timeout)
 
-        base_args = web_util.base_curl_fetch_args(url, timeout=timeout,
-                                                  verify_ssl=spack.config.get('config:verify_ssl'))
+        base_args = web_util.base_curl_fetch_args(
+            url, timeout=timeout, verify_ssl=spack.config.get("config:verify_ssl")
+        )
         curl_args = save_args + base_args + cookie_args
 
         # Run curl but grab the mime type from the http headers
@@ -479,7 +480,10 @@ class URLFetchStrategy(FetchStrategy):
             raise NoArchiveFileError("Cannot call archive() before fetching.")
 
         web_util.push_to_url(
-            self.archive_file, url_util.path_to_file_url(destination), keep_original=True
+            self.archive_file,
+            url_util.path_to_file_url(destination),
+            keep_original=True,
+            verify_ssl=spack.config.get("config:verify_ssl", True),
         )
 
     @_needs_stage
@@ -1348,8 +1352,8 @@ class S3FetchStrategy(URLFetchStrategy):
         with working_dir(self.stage.path):
             _, headers, stream = web_util.read_from_url(
                 self.url,
-                verify_ssl=spack.config.get('config:verify_ssl', True),
-                timeout=spack.config.get('config:connect_timeout', 10)
+                verify_ssl=spack.config.get("config:verify_ssl", True),
+                timeout=spack.config.get("config:connect_timeout", 10),
             )
 
             with open(basename, "wb") as f:
@@ -1399,8 +1403,8 @@ class GCSFetchStrategy(URLFetchStrategy):
         with working_dir(self.stage.path):
             _, headers, stream = web_util.read_from_url(
                 self.url,
-                verify_ssl=spack.config.get('config:verify_ssl', True),
-                timeout=spack.config.get('config:connect_timeout', 10)
+                verify_ssl=spack.config.get("config:verify_ssl", True),
+                timeout=spack.config.get("config:connect_timeout", 10),
             )
 
             with open(basename, "wb") as f:

@@ -495,7 +495,9 @@ def mirror_destroy(args):
     elif args.mirror_url:
         mirror_url = args.mirror_url
 
-    web_util.remove_url(mirror_url, recursive=True)
+    web_util.remove_url(
+        mirror_url, recursive=True, verify_ssl=spack.config.get("config:verify_ssl", True)
+    )
 
 
 def mirror(parser, args):

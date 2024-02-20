@@ -10,13 +10,11 @@ import urllib.response
 from io import BufferedReader, BytesIO, IOBase
 from typing import Any, Dict, Tuple
 
-import spack.config
-
 #: Map (mirror name, method) tuples to s3 client instances.
 s3_client_cache: Dict[Tuple[str, str], Any] = dict()
 
 
-def get_s3_session(url, method="fetch"):
+def get_s3_session(url, method="fetch", verify_ssl=True):
     # import boto and friends as late as possible.  We don't want to require boto as a
     # dependency unless the user actually wants to access S3 mirrors.
     from boto3 import Session
@@ -62,7 +60,7 @@ def get_s3_session(url, method="fetch"):
         return s3_client_cache[key]
 
     # Otherwise, create it.
-    s3_connection, s3_client_args = get_mirror_s3_connection_info(mirror, method)
+    s3_connection, s3_client_args = get_mirror_s3_connection_info(mirror, method, verify_ssl)
 
     session = Session(**s3_connection)
     # if no access credentials provided above, then access anonymously
@@ -84,13 +82,13 @@ def _parse_s3_endpoint_url(endpoint_url):
     return endpoint_url
 
 
-def get_mirror_s3_connection_info(mirror, method):
+def get_mirror_s3_connection_info(mirror, method, verify_ssl):
     """Create s3 config for session/client from a Mirror instance (or just set defaults
     when no mirror is given.)"""
     from spack.mirror import Mirror
 
     s3_connection = {}
-    s3_client_args = {"use_ssl": spack.config.get("config:verify_ssl")}
+    s3_client_args = {"use_ssl": verify_ssl}
 
     # access token
     if isinstance(mirror, Mirror):
@@ -150,9 +148,9 @@ class WrapStream(BufferedReader):
         return getattr(self.raw, key)
 
 
-def _s3_open(url, method="GET"):
+def _s3_open(url, method="GET", verify_ssl=True):
     parsed = urllib.parse.urlparse(url)
-    s3 = get_s3_session(url, method="fetch")
+    s3 = get_s3_session(url, method="fetch", verify_ssl=verify_ssl)
 
     bucket = parsed.netloc
     key = parsed.path
@@ -182,7 +180,13 @@ def _s3_open(url, method="GET"):
 
 
 class UrllibS3Handler(urllib.request.BaseHandler):
+    def __init__(self, verify_ssl=True):
+        super().__init__()
+        self.verify_ssl = verify_ssl
+
     def s3_open(self, req):
         orig_url = req.get_full_url()
-        url, headers, stream = _s3_open(orig_url, method=req.get_method())
+        url, headers, stream = _s3_open(
+            orig_url, method=req.get_method(), verify_ssl=self.verify_ssl
+        )
         return urllib.response.addinfourl(stream, headers, url)
