@@ -27,10 +27,10 @@ class NetcdfCxx4(CMakePackage):
     variant("tests", default=False, description="Enable CTest-based tests, dashboards.")
 
     depends_on("netcdf-c")
-    depends_on('hdf5')
+    depends_on("hdf5")
 
     # if we link against an mpi-aware hdf5 then this needs to also be mpi aware
-    depends_on('mpi', when='^hdf5+mpi')
+    depends_on("mpi", when="^hdf5+mpi")
     depends_on("doxygen", when="+doc", type="build")
 
     filter_compiler_wrappers("ncxx4-config", relative_root="bin")
@@ -55,21 +55,23 @@ class NetcdfCxx4(CMakePackage):
         # This looks to be resolved in master, but not any of the tag releases
         # https://github.com/Unidata/netcdf-cxx4/issues/88
         filter_file(
-               r"HDF5_C_LIBRARY_hdf5",
-               "HDF5_C_LIBRARIES",
-               join_path(self.stage.source_path, "CMakeLists.txt"))
+            r"HDF5_C_LIBRARY_hdf5",
+            "HDF5_C_LIBRARIES",
+            join_path(self.stage.source_path, "CMakeLists.txt"),
+        )
 
         filter_file(
-               r"HDF5_C_LIBRARY_hdf5",
-               "HDF5_C_LIBRARIES",
-               join_path(self.stage.source_path, 'cxx4', "CMakeLists.txt"))
+            r"HDF5_C_LIBRARY_hdf5",
+            "HDF5_C_LIBRARIES",
+            join_path(self.stage.source_path, "cxx4", "CMakeLists.txt"),
+        )
 
     def cmake_args(self):
         args = [
-                    self.define_from_variant('BUILD_SHARED_LIBS', "shared"),
-                    self.define_from_variant('ENABLE_DOXYGEN', "doc"),
-                    self.define_from_variant('NCXX_ENABLE_TESTS', "tests"),
-            ]
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant("ENABLE_DOXYGEN", "doc"),
+            self.define_from_variant("NCXX_ENABLE_TESTS", "tests"),
+        ]
 
         return args
 
