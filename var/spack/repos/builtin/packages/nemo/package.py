@@ -28,8 +28,14 @@ class Nemo(Package):
 
     # Avoided build errors that occur when reading internal files containing
     # multiple namelists for Fujitsu compilers
-    patch("https://github.com/fujitsu/oss-patches-for-a64fx/blob/master/Nemo/fj-v4.2.0.patch", when="@4.2.0%fj")
-    patch("https://github.com/fujitsu/oss-patches-for-a64fx/blob/master/Nemo/fj-v4.2.1.patch", when="@4.2.1%fj")
+    patch(
+        "https://github.com/fujitsu/oss-patches-for-a64fx/blob/master/Nemo/fj-v4.2.0.patch",
+        when="@4.2.0%fj",
+    )
+    patch(
+        "https://github.com/fujitsu/oss-patches-for-a64fx/blob/master/Nemo/fj-v4.2.1.patch",
+        when="@4.2.1%fj",
+    )
 
     def nemo_fcm(self):
         file = join_path("arch", "arch-SPACK.fcm")
@@ -52,22 +58,22 @@ class Nemo(Package):
         else:
             param["LD"] = spec["mpi"].mpicxx
             param["LIBCXX"] = ""
-            param[
-                "FFLAGS"
-            ] = "-fdefault-real-8 -O3 -funroll-all-loops -fcray-pointer -ffree-line-length-none"
+            param["FFLAGS"] = (
+                "-fdefault-real-8 -O3 -funroll-all-loops -fcray-pointer -ffree-line-length-none"
+            )
         text = r"""
 %NCDF_INC            -I{NCDF_F_INC} -I{NCDF_C_INC} -I{HDF5_INC}
 %NCDF_LIB            -L{NCDF_F_LIB} -lnetcdff -L{NCDF_C_LIB} -lnetcdf \
                      -L{HDF5_LIB} -lhdf5_hl -lhdf5 -lz
-%XIOS_INC            -I{XIOS_INC} 
-%XIOS_LIB            -L{XIOS_LIB} -lxios -lstdc++ 
+%XIOS_INC            -I{XIOS_INC}
+%XIOS_LIB            -L{XIOS_LIB} -lxios -lstdc++
 
-%CPP                 cpp -Dkey_nosignedzero 
+%CPP                 cpp -Dkey_nosignedzero
 %FC                  {MPIFC} -c -cpp
 %FCFLAGS             {FFLAGS}
 %FFLAGS              %FCFLAGS
 %LD                  {LD} {LIBCXX}
-%LDFLAGS             
+%LDFLAGS
 %FPPFLAGS            -P -C -traditional
 %AR                  ar
 %ARFLAGS             rs
