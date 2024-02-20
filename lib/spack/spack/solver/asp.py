@@ -3564,6 +3564,55 @@ def _has_runtime_dependencies(spec: spack.spec.Spec) -> bool:
     return True
 
 
+class ReusableSpecsSelector:
+    """Selects specs that can be reused during concretization."""
+
+    def __init__(self, configuration):
+        self.configuration = configuration
+        self.store = spack.store.create(configuration)
+
+        self.reuse = self.configuration.get("concretizer:reuse", False)
+        self.reuse_filters = []
+        if isinstance(self.reuse, typing.Mapping):
+            self.reuse, self.reuse_filters = self.reuse.get("strategy", True), self.reuse.get(
+                "include", []
+            )
+
+    def reusable_specs(self, specs):
+        if self.reuse is False:
+            return []
+
+        result = []
+        packages = self.configuration.get("packages")
+        with self.store.db.read_transaction():
+            result.extend(
+                s
+                for s in self.store.db.query(installed=True)
+                if _is_reusable(s, packages, local=True)
+            )
+
+        try:
+            result.extend(
+                s
+                for s in spack.binary_distribution.update_cache_and_get_specs()
+                if _is_reusable(s, packages, local=False)
+            )
+        except (spack.binary_distribution.FetchCacheError, IndexError):
+            # this is raised when no mirrors had indices.
+            # TODO: update mirror configuration so it can indicate that the
+            # TODO: source cache (or any mirror really) doesn't have binaries.
+            pass
+
+        # If we only want to reuse dependencies, remove the root specs
+        if self.reuse == "dependencies":
+            result = [spec for spec in result if not any(root in spec for root in specs)]
+
+        if self.reuse_filters:
+            result = [x for x in result if any(x.satisfies(c) for c in self.reuse_filters)]
+
+        return result
+
+
 class Solver:
     """This is the main external interface class for solving.
 
@@ -3579,13 +3628,7 @@ class Solver:
 
     def __init__(self):
         self.driver = PyclingoDriver()
-
-        # These properties are settable via spack configuration, and overridable
-        # by setting them directly as properties.
-        self.reuse = spack.config.get("concretizer:reuse", True)
-        self.reuse_filters = []
-        if isinstance(self.reuse, typing.Mapping):
-            self.reuse, self.reuse_filters = self.reuse["strategy"], self.reuse["include"]
+        self.selector = ReusableSpecsSelector(configuration=spack.config.CONFIG)
 
     @staticmethod
     def _check_input_and_extract_concrete_specs(specs):
@@ -3598,44 +3641,6 @@ class Solver:
                     reusable.append(s)
                 spack.spec.Spec.ensure_valid_variants(s)
         return reusable
-
-    def _reusable_specs(self, specs):
-        reusable_specs = []
-        if self.reuse:
-            packages = _external_config_with_implicit_externals(spack.config.CONFIG)
-            # Specs from the local Database
-            with spack.store.STORE.db.read_transaction():
-                reusable_specs.extend(
-                    s
-                    for s in spack.store.STORE.db.query(installed=True)
-                    if _is_reusable(s, packages, local=True)
-                )
-
-            # Specs from buildcaches
-            try:
-                reusable_specs.extend(
-                    s
-                    for s in spack.binary_distribution.update_cache_and_get_specs()
-                    if _is_reusable(s, packages, local=False)
-                )
-            except (spack.binary_distribution.FetchCacheError, IndexError):
-                # this is raised when no mirrors had indices.
-                # TODO: update mirror configuration so it can indicate that the
-                # TODO: source cache (or any mirror really) doesn't have binaries.
-                pass
-
-        # If we only want to reuse dependencies, remove the root specs
-        if self.reuse == "dependencies":
-            reusable_specs = [
-                spec for spec in reusable_specs if not any(root in spec for root in specs)
-            ]
-
-        if self.reuse_filters:
-            reusable_specs = [
-                x for x in reusable_specs if any(x.satisfies(c) for c in self.reuse_filters)
-            ]
-
-        return reusable_specs
 
     def solve(
         self,
@@ -3662,7 +3667,7 @@ class Solver:
         # Check upfront that the variants are admissible
         specs = [s.lookup_hash() for s in specs]
         reusable_specs = self._check_input_and_extract_concrete_specs(specs)
-        reusable_specs.extend(self._reusable_specs(specs))
+        reusable_specs.extend(self.selector.reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
         result, _, _ = self.driver.solve(
@@ -3691,7 +3696,7 @@ class Solver:
         """
         specs = [s.lookup_hash() for s in specs]
         reusable_specs = self._check_input_and_extract_concrete_specs(specs)
-        reusable_specs.extend(self._reusable_specs(specs))
+        reusable_specs.extend(self.selector.reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
 
         # Tell clingo that we don't have to solve all the inputs at once
