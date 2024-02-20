@@ -220,7 +220,7 @@ def msdos_escape_parens(path):
     if sys.platform == "win32":
         return path.replace("(", "^(").replace(")", "^)")
     else:
-        return path
+        return cmd
 
 
 @system_path_filter
