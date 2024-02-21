@@ -68,7 +68,7 @@ class GeopmService(AutotoolsPackage):
     # Docs dependencies
     depends_on("doxygen", type="build", when="+docs")
     depends_on("py-docstring-parser@0.13.0:", type="build", when="+docs")
-    depends_on("py-sphinx@4.5:", type="build", when="+docs")
+    depends_on("py-sphinx", type="build", when="+docs")
     depends_on("py-sphinx-rtd-theme@1:", type="build", when="+docs")
     depends_on("py-sphinxemoji@0.2.0:", type="build", when="+docs")
     depends_on("py-sphinx-tabs@3.3.1:", type="build", when="+docs")
