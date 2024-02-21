@@ -12,11 +12,11 @@ class PySnakemakeInterfaceStoragePlugins(PythonPackage):
     plugins."""
 
     homepage = "https://github.com/snakemake/snakemake-interface-storage-plugins"
-    pypi = "snakemake_interface_storage_plugins/snakemake_interface_storage_plugins-3.0.0.tar.gz"
+    pypi = "snakemake_interface_storage_plugins/snakemake_interface_storage_plugins-3.1.0.tar.gz"
 
     license("MIT")
 
-    version("3.0.0", sha256="f20d85ee7e86a1e2ffa3f72e2385dd5abb17fa7b58a26cba8ba59096872fe169")
+    version("3.1.0", sha256="26e95be235ef2a9716b890ea96c3a9a2e62061c5d72fbb89c2fad2afada87304")
 
     depends_on("py-wrapt@1.15:1", type=("build", "run"))
     depends_on("py-reretry@0.11.8:0.11", type=("build", "run"))
