@@ -3567,7 +3567,7 @@ def _has_runtime_dependencies(spec: spack.spec.Spec) -> bool:
 class ReusableSpecsSelector:
     """Selects specs that can be reused during concretization."""
 
-    def __init__(self, configuration):
+    def __init__(self, configuration: spack.config.Configuration) -> None:
         self.configuration = configuration
         self.store = spack.store.create(configuration)
 
@@ -3577,9 +3577,8 @@ class ReusableSpecsSelector:
         self.mirrors_enabled = True
         if isinstance(self.reuse, typing.Mapping):
             reuse_yaml = self.reuse
-            self.reuse, self.reuse_filters = reuse_yaml.get("strategy", True), reuse_yaml.get(
-                "include", []
-            )
+            self.reuse = reuse_yaml.get("strategy", True)
+            self.reuse_filters = reuse_yaml.get("include", [])
             self.local_store_enabled = any(
                 x["type"] == "local" for x in reuse_yaml.get("from", [{"type": "local"}])
             )
@@ -3587,13 +3586,13 @@ class ReusableSpecsSelector:
                 x["type"] == "mirror" for x in reuse_yaml.get("from", [{"type": "mirror"}])
             )
 
-    def is_selected(self, spec):
+    def is_selected(self, spec: spack.spec.Spec) -> bool:
         if not self.reuse_filters:
             return True
 
         return any(spec.satisfies(c) for c in self.reuse_filters)
 
-    def selected_from_local_store(self):
+    def selected_from_local_store(self) -> List[spack.spec.Spec]:
         if not self.local_store_enabled:
             return []
 
@@ -3605,7 +3604,7 @@ class ReusableSpecsSelector:
                 if _is_reusable(s, packages, local=True) and self.is_selected(s)
             ]
 
-    def selected_from_mirrors(self):
+    def selected_from_mirrors(self) -> List[spack.spec.Spec]:
         if not self.mirrors_enabled:
             return []
 
@@ -3622,7 +3621,7 @@ class ReusableSpecsSelector:
             # TODO: source cache (or any mirror really) doesn't have binaries.
             return []
 
-    def reusable_specs(self, specs):
+    def reusable_specs(self, specs: List[spack.spec.Spec]) -> List[spack.spec.Spec]:
         if self.reuse is False:
             return []
 
@@ -3640,12 +3639,6 @@ class Solver:
 
     It manages solver configuration and preferences in one place. It sets up the solve
     and passes the setup method to the driver, as well.
-
-    Properties of interest:
-
-      ``reuse (bool)``
-        Whether to try to reuse existing installs/binaries
-
     """
 
     def __init__(self):
