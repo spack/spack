@@ -19,6 +19,7 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
 
     license("Apache-2.0")
 
+    version("0.4.2", sha256="eeca9705413f5e16e0fb81154e042600c8df125af7049912757feb01d43730e2")
     version("0.4.1", sha256="24e5c15eb9eec45f52d94a6719ae3505388b49d409cb7e26c875c70ac409bd2c")
     version(
         "0.4.0",
@@ -86,7 +87,7 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
     )
     variant("debug", default=False, description="Enable runtime debug assertions")
     variant("doc", default=False, description="Build and install documentation")
-    variant("geant4", default=True, description="Use Geant4 data")
+    variant("geant4", default=True, description="Enable Geant4 integration")
     variant("hepmc3", default=True, description="Use HepMC3 I/O interfaces")
     variant("openmp", default=False, description="Use OpenMP multithreading")
     variant("root", default=False, description="Use ROOT I/O")
@@ -99,8 +100,9 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@3.22:", type="build", when="+rocm")
 
     depends_on("nlohmann-json")
-    depends_on("geant4@10.5:", when="@0.3.1: +geant4")
-    depends_on("geant4@10.6:", when="@0.3.0 +geant4")
+    depends_on("geant4@10.5:", when="@0.4.2: +geant4")
+    depends_on("geant4@10.5:11.1", when="@0.3.1:0.4.1 +geant4")
+    depends_on("geant4@10.6:11.1", when="@0.3.0 +geant4")
     depends_on("geant4@10.6:11.0", when="@0.2.1:0.2 +geant4")
     depends_on("geant4@10.7:11.0", when="@:0.2.0 +geant4")
     depends_on("hepmc3", when="+hepmc3")

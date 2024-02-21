@@ -21,26 +21,6 @@ class MiopenTensile(CMakePackage):
     libraries = ["libMIOpenTensile"]
 
     version("5.1.0", sha256="f1ae57bd4df8c154357b3f17caf0cfd5f80ba16ffff67bf6219a56f1eb5f897d")
-    version(
-        "5.0.2",
-        sha256="7b85a6a37d0905b0a3baa8361fd71a5a32ad90f3a562fd5e1af7e2ba68099fa6",
-        deprecated=True,
-    )
-    version(
-        "5.0.0",
-        sha256="276ada52e2e8431851296a60df538e0171f8a1c4e9894de8954ffa9306cda2d8",
-        deprecated=True,
-    )
-    version(
-        "4.5.2",
-        sha256="eae14b20aec5ad57815c85d0571b7aecc3704696147f3cdbe34287e88da0c9e9",
-        deprecated=True,
-    )
-    version(
-        "4.5.0",
-        sha256="5f181f536040c0612bf889600f75951e7ec031ae5c4cb9c2c44f6ac3b15b004b",
-        deprecated=True,
-    )
 
     tensile_architecture = ("all", "gfx906", "gfx908", "gfx803", "gfx900")
 
@@ -74,14 +54,13 @@ class MiopenTensile(CMakePackage):
         name="Tensile",
         git="https://github.com/ROCm/Tensile.git",
         commit="9cbabb07f81e932b9c98bf5ae48fbd7fcef615cf",
-        when="@4.5.0:",
     )
 
-    for ver in ["4.5.0", "4.5.2", "5.0.0", "5.0.2", "5.1.0"]:
-        depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
-        depends_on("hip@" + ver, when="@" + ver)
-        depends_on("llvm-amdgpu@" + ver, when="@" + ver)
-        depends_on("rocminfo@" + ver, when="@" + ver)
+    for ver in ["5.1.0"]:
+        depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
+        depends_on(f"hip@{ver}", when=f"@{ver}")
+        depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
+        depends_on(f"rocminfo@{ver}", when=f"@{ver}")
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
@@ -90,12 +69,10 @@ class MiopenTensile(CMakePackage):
     def determine_version(cls, lib):
         match = re.search(r"lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)", lib)
         if match:
-            ver = "{0}.{1}.{2}".format(
+            return "{0}.{1}.{2}".format(
                 int(match.group(1)), int(match.group(2)), int(match.group(3))
             )
-        else:
-            ver = None
-        return ver
+        return None
 
     def cmake_args(self):
         arch = self.spec.variants["tensile_architecture"].value

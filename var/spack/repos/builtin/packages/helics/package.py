@@ -23,6 +23,7 @@ class Helics(CMakePackage):
     version("develop", branch="develop", submodules=True)
     version("main", branch="main", submodules=True)
     version("master", branch="main", submodules=True)
+    version("3.5.0", sha256="0c02ebaecf3d4ead7911e13325b26706f1e4b316ca51ec609e969e18ec584b78")
     version("3.4.0", sha256="88877a3767de9aed9f1cddea7b6455a2be060a00b959bb7e94994d1fd20878f8")
     version("3.3.2", sha256="b04013969fc02dc36c697c328e6f50a0ac8dbdaf3d3e69870cd6e6ebeb374286")
     version("3.3.1", sha256="0f6357e6781157515230d14033afc8769a02971a1870909e5697415e1db2e03f")
@@ -161,6 +162,11 @@ class Helics(CMakePackage):
         if spec.satisfies("@:2"):
             # Python interface was removed from the main HELICS build in v3
             args.append(from_variant("BUILD_PYTHON_INTERFACE", "python"))
+
+        # GCC >=13
+        if spec.satisfies("%gcc@13:"):
+            # C++20 required when building with GCC>=13
+            args.append("-DCMAKE_CXX_STANDARD=20")
 
         return args
 

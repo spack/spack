@@ -30,6 +30,8 @@ class Veclibfort(Package):
     # https://github.com/scipy/scipy/wiki/Dropping-support-for-Accelerate
     provides("lapack@3.2.1")
 
+    requires("platform=darwin", msg="vecLibFort can be installed on macOS only")
+
     @property
     def libs(self):
         shared = True if "+shared" in self.spec else False

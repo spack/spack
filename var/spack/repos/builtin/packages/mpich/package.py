@@ -63,7 +63,7 @@ class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
         "pmi",
         default="pmi",
         description="""PMI interface.""",
-        values=("off", "pmi", "pmi2", "pmix", "cray"),
+        values=("pmi", "pmi2", "pmix", "cray"),
         multi=False,
     )
     variant(
@@ -385,8 +385,6 @@ supported, and netmod is ignored if device is ch3:sock.""",
             if re.search(r"--with-thread-package=argobots", output):
                 variants.append("+argobots")
 
-            if re.search(r"--with-pmi=no", output):
-                variants.append("pmi=off")
             elif re.search(r"--with-pmi=simple", output):
                 variants.append("pmi=pmi")
             elif re.search(r"--with-pmi=pmi2/simple", output):
@@ -457,8 +455,6 @@ supported, and netmod is ignored if device is ch3:sock.""",
             env.set("MPIF90", join_path(self.prefix.bin, "mpif90"))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
-
         env.set("MPICH_CC", spack_cc)
         env.set("MPICH_CXX", spack_cxx)
         env.set("MPICH_F77", spack_f77)

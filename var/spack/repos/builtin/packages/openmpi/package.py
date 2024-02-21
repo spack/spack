@@ -443,6 +443,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
                 "ofi",
                 "fca",
                 "hcoll",
+                "ucc",
                 "xpmem",
                 "cma",
                 "knem",
@@ -573,6 +574,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     depends_on("libfabric", when="fabrics=ofi")
     depends_on("fca", when="fabrics=fca")
     depends_on("hcoll", when="fabrics=hcoll")
+    depends_on("ucc", when="fabrics=ucc")
     depends_on("xpmem", when="fabrics=xpmem")
     depends_on("knem", when="fabrics=knem")
 
@@ -614,6 +616,8 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     conflicts("fabrics=fca", when="@:1.4,5:")
     # hcoll support was added in 1.7.3:
     conflicts("fabrics=hcoll", when="@:1.7.2")
+    # ucc support was added in 4.1.4:
+    conflicts("fabrics=ucc", when="@:4.1.3")
     # xpmem support was added in 1.7
     conflicts("fabrics=xpmem", when="@:1.6")
     # cma support was added in 1.7
@@ -820,8 +824,6 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         env.set("MPIF90", join_path(self.prefix.bin, "mpif90"))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
-
         # Use the spack compiler wrappers under MPI
         env.set("OMPI_CC", spack_cc)
         env.set("OMPI_CXX", spack_cxx)
@@ -906,6 +908,11 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         if not activated:
             return "--without-hcoll"
         return "--with-hcoll={0}".format(self.spec["hcoll"].prefix)
+
+    def with_or_without_ucc(self, activated):
+        if not activated:
+            return "--without-ucc"
+        return "--with-ucc={0}".format(self.spec["ucc"].prefix)
 
     def with_or_without_xpmem(self, activated):
         if not activated:

@@ -26,6 +26,8 @@ class Hipsycl(CMakePackage):
     license("BSD-2-Clause")
 
     version("stable", branch="stable", submodules=True)
+    version("23.10.0", commit="3952b468c9da89edad9dff953cdcab0a3c3bf78c", submodules=True)
+    version("0.9.4", commit="99d9e24d462b35e815e0e59c1b611936c70464ae", submodules=True)
     version("0.9.4", commit="99d9e24d462b35e815e0e59c1b611936c70464ae", submodules=True)
     version("0.9.3", commit="51507bad524c33afe8b124804091b10fa25618dc", submodules=True)
     version("0.9.2", commit="49fd02499841ae884c61c738610e58c27ab51fdb", submodules=True)
@@ -120,42 +122,65 @@ class Hipsycl(CMakePackage):
 
     @run_after("install")
     def filter_config_file(self):
-        config_file_paths = filesystem.find(self.prefix, "syclcc.json")
-        if len(config_file_paths) != 1:
-            raise InstallError(
-                "installed hipSYCL must provide a unique compiler driver "
-                "configuration file, found: {0}".format(config_file_paths)
+        def edit_config(filename, editor):
+            config_file_paths = filesystem.find(self.prefix, filename)
+            if len(config_file_paths) != 1:
+                raise InstallError(
+                    "installed hipSYCL must provide a unique compiler driver"
+                    "configuration file ({0}), found: {1}".format(filename, config_file_paths)
+                )
+            config_file_path = config_file_paths[0]
+            with open(config_file_path) as f:
+                config = json.load(f)
+
+            config_modified = editor(config)
+
+            with open(config_file_path, "w") as f:
+                json.dump(config_modified, f, indent=2)
+
+        if self.spec.satisfies("@:23.10.0"):
+            configfiles = {"core": "syclcc.json", "cuda": "syclcc.json"}
+        else:
+            configfiles = {"core": "acpp-core.json", "cuda": "acpp-cuda.json"}
+
+        def adjust_core_config(config):
+            config["default-cpu-cxx"] = self.compiler.cxx
+            return config
+
+        edit_config(configfiles["core"], adjust_core_config)
+
+        if self.spec.satisfies("+cuda"):
+            # 1. Fix compiler: use the real one in place of the Spack wrapper
+
+            # 2. Fix stdlib: we need to make sure cuda-enabled binaries find
+            #    the libc++.so and libc++abi.so dyn linked to the sycl
+            #    ptx backend
+            rpaths = set()
+            so_paths = filesystem.find_libraries(
+                "libc++", self.spec["llvm"].prefix, shared=True, recursive=True
             )
-        config_file_path = config_file_paths[0]
-        with open(config_file_path) as f:
-            config = json.load(f)
-        # 1. Fix compiler: use the real one in place of the Spack wrapper
-        config["default-cpu-cxx"] = self.compiler.cxx
-        # 2. Fix stdlib: we need to make sure cuda-enabled binaries find
-        #    the libc++.so and libc++abi.so dyn linked to the sycl
-        #    ptx backend
-        rpaths = set()
-        so_paths = filesystem.find_libraries(
-            "libc++", self.spec["llvm"].prefix, shared=True, recursive=True
-        )
-        if len(so_paths) != 1:
-            raise InstallError(
-                "concretized llvm dependency must provide a "
-                "unique directory containing libc++.so, "
-                "found: {0}".format(so_paths)
+            if len(so_paths) != 1:
+                raise InstallError(
+                    "concretized llvm dependency must provide a "
+                    "unique directory containing libc++.so, "
+                    "found: {0}".format(so_paths)
+                )
+            rpaths.add(path.dirname(so_paths[0]))
+            so_paths = filesystem.find_libraries(
+                "libc++abi", self.spec["llvm"].prefix, shared=True, recursive=True
             )
-        rpaths.add(path.dirname(so_paths[0]))
-        so_paths = filesystem.find_libraries(
-            "libc++abi", self.spec["llvm"].prefix, shared=True, recursive=True
-        )
-        if len(so_paths) != 1:
-            raise InstallError(
-                "concretized llvm dependency must provide a "
-                "unique directory containing libc++abi, "
-                "found: {0}".format(so_paths)
-            )
-        rpaths.add(path.dirname(so_paths[0]))
-        config["default-cuda-link-line"] += " " + " ".join("-rpath {0}".format(p) for p in rpaths)
-        # Replace the installed config file
-        with open(config_file_path, "w") as f:
-            json.dump(config, f, indent=2)
+            if len(so_paths) != 1:
+                raise InstallError(
+                    "concretized llvm dependency must provide a "
+                    "unique directory containing libc++abi, "
+                    "found: {0}".format(so_paths)
+                )
+            rpaths.add(path.dirname(so_paths[0]))
+
+            def adjust_cuda_config(config):
+                config["default-cuda-link-line"] += " " + " ".join(
+                    "-rpath {0}".format(p) for p in rpaths
+                )
+                return config
+
+            edit_config(configfiles["cuda"], adjust_cuda_config)

@@ -300,7 +300,6 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
 
 class BaseBuilder(metaclass=spack.builder.PhaseCallbacksMeta):
     def setup_dependent_build_environment(self, env, dependent_spec):
-        self.pkg.setup_run_environment(env)
         # Some packages, e.g. ncview, refuse to build if the compiler path returned by nc-config
         # differs from the path to the compiler that the package should be built with. Therefore,
         # we have to shadow nc-config from self.prefix.bin, which references the real compiler,

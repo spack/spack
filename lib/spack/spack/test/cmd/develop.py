@@ -9,6 +9,7 @@ import pytest
 
 import llnl.util.filesystem as fs
 
+import spack.config
 import spack.environment as ev
 import spack.spec
 from spack.main import SpackCommand
@@ -21,7 +22,7 @@ pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 @pytest.mark.usefixtures("mutable_mock_env_path", "mock_packages", "mock_fetch", "mutable_config")
 class TestDevelop:
-    def check_develop(self, env, spec, path=None):
+    def check_develop(self, env, spec, path=None, build_dir=None):
         path = path or spec.name
 
         # check in memory representation
@@ -40,6 +41,12 @@ class TestDevelop:
             assert "path" not in yaml_entry
         else:
             assert yaml_entry["path"] == path
+
+        if build_dir is not None:
+            scope = env.scope_name
+            assert build_dir == spack.config.get(
+                "packages:{}:package_attributes:build_directory".format(spec.name), scope
+            )
 
     def test_develop_no_path_no_clone(self):
         env("create", "test")
@@ -71,6 +78,12 @@ class TestDevelop:
             # test develop with no args
             develop()
             self.check_develop(e, spack.spec.Spec("mpich@=1.0"))
+
+    def test_develop_build_directory(self):
+        env("create", "test")
+        with ev.read("test") as e:
+            develop("-b", "test_build_dir", "mpich@1.0")
+            self.check_develop(e, spack.spec.Spec("mpich@=1.0"), None, "test_build_dir")
 
     def test_develop_twice(self):
         env("create", "test")

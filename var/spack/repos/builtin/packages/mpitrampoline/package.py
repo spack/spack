@@ -90,7 +90,6 @@ class Mpitrampoline(CMakePackage):
         env.set("MPIF90", join_path(self.prefix.bin, "mpifc"))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
         # Use the Spack compiler wrappers under MPI
         env.set("MPITRAMPOLINE_CC", spack_cc)
         env.set("MPITRAMPOLINE_CXX", spack_cxx)

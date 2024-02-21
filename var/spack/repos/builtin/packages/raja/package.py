@@ -119,7 +119,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     patch(
         "https://github.com/LLNL/RAJA/commit/406eb8dee05a41eb32c421c375688a4863b60642.patch?full_index=1",
         sha256="d9ce5ef038555cbccb330a9016b7be77e56ae0660583cba955dab9d0297a4b07",
-        when="^hip@6.0.0",
+        when="^hip@6.0",
     )
 
     variant("openmp", default=True, description="Build OpenMP backend")

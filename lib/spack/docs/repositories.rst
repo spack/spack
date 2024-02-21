@@ -17,7 +17,7 @@ experimental software separately from the built-in repository. Spack
 allows you to configure local repositories using either the
 ``repos.yaml`` or the ``spack repo`` command.
 
-A package repository a directory structured like this::
+A package repository is a directory structured like this::
 
   repo/
       repo.yaml
