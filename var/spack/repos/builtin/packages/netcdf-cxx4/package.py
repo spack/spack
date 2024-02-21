@@ -73,7 +73,6 @@ class NetcdfCxx4(CMakePackage):
             join_path(self.stage.source_path, "cxx4", "CMakeLists.txt"),
         )
 
-
     def cmake_args(self):
         args = [
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
