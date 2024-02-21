@@ -29,8 +29,8 @@ class NetcdfCxx4(CMakePackage):
     depends_on("netcdf-c")
     depends_on("hdf5")
 
-    # if we link against an mpi-aware hdf5 then this needs to also be mpi aware
-    depends_on("mpi", when="^hdf5+mpi")
+    # if we link against an mpi-aware hdf5 then this needs to also be mpi aware for tests
+    depends_on("mpi", when="+tests ^hdf5+mpi")
     depends_on("doxygen", when="+doc", type="build")
 
     filter_compiler_wrappers("ncxx4-config", relative_root="bin")
