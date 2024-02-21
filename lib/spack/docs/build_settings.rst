@@ -21,23 +21,52 @@ is the following:
 Reuse already installed packages
 --------------------------------
 
-The ``reuse`` attribute controls whether Spack will prefer to use installed packages (``true``), or
-whether it will do a "fresh" installation and prefer the latest settings from
-``package.py`` files and ``packages.yaml`` (``false``).
-You can use:
+The ``reuse`` attribute controls how aggressively Spack reuses binary packages during concretization. The
+attribute can either be a single value, or an object for more complex configurations.
+
+In the former case ("single value") it allows Spack to:
+
+1. Reuse installed packages and buildcaches for all the specs to be concretized, when ``true``
+2. Reuse installed packages and buildcaches only for the dependencies of the root specs, when ``dependencies``
+3. Disregard reusing installed packages and buildcaches, when ``false``
+
+In case a finer control over which specs are reused is needed, then the value of this attribute can be
+an object, with the following keys:
+
+1. ``strategy``: takes the same values as above (``true``, ``false``, and ``dependencies``)
+2. ``include``: list of specs. If present, reusable specs must match at least one of the constraint in the list
+3. ``from``: selects the sources from which reused specs are taken
+
+For instance, the following configuration:
+
+.. code-block:: yaml
+
+   concretizer:
+     reuse:
+       strategy: true
+       include:
+       - "%gcc"
+       - "%clang"
+       from:
+       - type: local
+
+tells the concretizer to reuse all specs compiled with either ``gcc`` or ``clang``, that are installed
+in the local store. Any spec from remote buildcaches is disregarded.
+
+For one-off concretizations, the are command line arguments for each of the simple "single value"
+configurations. This means a user can:
 
 .. code-block:: console
 
    % spack install --reuse <spec>
 
-to enable reuse for a single installation, and you can use:
+to enable reuse for a single installation, or:
 
 .. code-block:: console
 
    spack install --fresh <spec>
 
 to do a fresh install if ``reuse`` is enabled by default.
-``reuse: dependencies`` is the default.
 
 .. seealso::
 
