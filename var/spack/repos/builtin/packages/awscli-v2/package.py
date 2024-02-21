@@ -29,3 +29,12 @@ class AwscliV2(PythonPackage):
     depends_on("py-python-dateutil@2.1:2", type=("build", "run"))
     depends_on("py-jmespath@0.7.1:1.0", type=("build", "run"))
     depends_on("py-urllib3@1.25.4:1.26", type=("build", "run"))
+
+    variant("examples", default=True, description="Install code examples")
+
+    @run_after("install")
+    @when("~examples")
+    def post_install(self):
+        pyver = self.spec["python"].version.up_to(2)
+        examples_dir = join_path(self.spec.prefix.lib, f"python{pyver}/site-packages/awscli/examples/")
+        remove_directory_contents(examples_dir)
