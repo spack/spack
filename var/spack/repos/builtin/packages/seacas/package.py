@@ -186,7 +186,7 @@ class Seacas(CMakePackage):
     # Remove use of variable in array assignment (triggers c2057 on MSVC)
     # See https://github.com/sandialabs/seacas/issues/438
     patch(
-        "https://github.com/sandialabs/seacas/commit/29a9ebeccb5a656b4b334fa6af904689da9ffddc.diff",
+        "https://github.com/sandialabs/seacas/commit/29a9ebeccb5a656b4b334fa6af904689da9ffddc.diff?full_index=1",
         sha256="aedb1fe0af81686f9ed6d511d9b2a3bd52e574eb0ed6363d3f4851280cacde2c",
         when="@:2023-10-24",
     )
