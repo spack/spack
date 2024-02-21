@@ -126,4 +126,5 @@ class RustBootstrap(Package):
 
     def install(self, spec, prefix):
         install_script = Executable("./install.sh")
-        install_script(f"--prefix={prefix}")
+        install_args = [f"--prefix={prefix}", "--without=rust-docs"]
+        install_script(" ".join(install_args))
