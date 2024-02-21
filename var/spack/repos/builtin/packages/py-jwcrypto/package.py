@@ -8,7 +8,9 @@ from spack.package import *
 
 class PyJwcrypto(PythonPackage):
     """
-    JWCrypto is an implementation of the Javascript Object Signing and Encryption (JOSE) Web Standards as they are being developed in the JOSE IETF Working Group and related technology.
+    JWCrypto is an implementation of the Javascript Object Signing and Encryption (JOSE)
+    Web Standards as they are being developed in the JOSE IETF Working Group and related
+    technology.
 
     JWCrypto uses the Cryptography package for all the crypto functions.
     """
