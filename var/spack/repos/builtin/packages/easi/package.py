@@ -15,7 +15,7 @@ class Easi(CMakePackage):
     homepage = "https://easyinit.readthedocs.io"
     git = "https://github.com/SeisSol/easi.git"
 
-    maintainers("ravil-mobile", "Thomas-Ulrich", "krenzland", "ThrudPrimrose", "davschneller")
+    maintainers("Thomas-Ulrich", "davschneller", "vikaskurapati")
 
     license("BSD-3-Clause")
 
