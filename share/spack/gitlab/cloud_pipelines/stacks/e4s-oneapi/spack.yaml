@@ -197,6 +197,26 @@ spack:
   # - quantum-espresso                                        # quantum-espresso@7.2 /i3fqdx5: warning: <unknown>:0:0: loop not unroll-and-jammed: the optimizer was unable to perform the requested transformation; the transformation might be disabled or specified as part of an unsupported transformation ordering
   # - tau +mpi +python +syscall                               # pdt: pdbType.cc:193:21: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
 
+  # PYTHON PACKAGES
+  - opencv +python3
+  - py-horovod
+  - py-horovod
+  - py-jax
+  - py-jupyterlab
+  - py-matplotlib
+  - py-notebook
+  - py-numpy
+  - py-openai
+  - py-pandas
+  - py-plotly
+  - py-pooch
+  - py-pytest
+  - py-scikit-learn
+  - py-scipy
+  - py-seaborn
+  - py-tensorflow
+  - py-torch
+
   # GPU
   - amrex +sycl
   - tau +mpi +opencl +level_zero ~pdt +syscall                # requires libdrm.so to be installed
