@@ -185,8 +185,7 @@ spack:
 
   # PYTHON PACKAGES
   - opencv +python3
-  - py-horovod
-  - py-horovod
+  # - py-horovod # py-torch, py-tensorflow
   - py-jax
   - py-jupyterlab
   - py-matplotlib
@@ -200,8 +199,8 @@ spack:
   - py-scikit-learn
   - py-scipy
   - py-seaborn
-  - py-tensorflow
-  - py-torch
+  # - py-tensorflow # error
+  # - py-torch # error
 
   # CUDA NOARCH
   - bricks +cuda

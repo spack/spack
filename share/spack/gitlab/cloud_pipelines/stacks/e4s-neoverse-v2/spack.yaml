@@ -185,7 +185,6 @@ spack:
   # PYTHON PACKAGES
   - opencv +python3
   - py-horovod
-  - py-horovod
   - py-jax
   - py-jupyterlab
   - py-matplotlib
