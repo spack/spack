@@ -10,12 +10,12 @@ class Snakemake(PythonPackage):
     """Workflow management system to create reproducible and scalable data analyses."""
 
     homepage = "https://snakemake.readthedocs.io/en"
-    pypi = "snakemake/snakemake-8.4.9.tar.gz"
+    pypi = "snakemake/snakemake-8.4.12.tar.gz"
     maintainers("marcusboden")
 
     license("MIT")
 
-    version("8.4.9", sha256="6bd24c39110a8d6744d09aab5ca71bde0c4559542ec7f58e52a6c4d360120171")
+    version("8.4.12", sha256="1320590f24d3ef08d63ac91f1b3f634b27e4cfef21c7bbb3f267a79d75327621")
     version("7.32.4", sha256="fdc3f15dd7b06fabb7da30d460e0a3b1fba08e4ea91f9c32c47a83705cdc7b6e")
     version("7.31.1", sha256="6fadcc9a051737aa187dccf437879b3b83ddc917fff9bd7d400e056cf17a1788")
     version("7.30.2", sha256="0cb86cf9b43b9f2f45d5685cd932595131031c7087690f64c5bc7eaec88df029")
@@ -59,17 +59,22 @@ class Snakemake(PythonPackage):
     depends_on("py-pulp@2.3.1:2.8", type=("build", "run"), when="@8.1.2:")
     depends_on("py-pulp@2:", type=("build", "run"), when="@:8.1.1")
     depends_on("py-pyyaml", type=("build", "run"))
+    depends_on("py-requests@2.8.1:2", type=("build", "run"), when="@8.4.12")
     depends_on("py-requests", type=("build", "run"))
     depends_on("py-reretry", type=("build", "run"), when="@7:")
+    depends_on("py-smart-open@3:6", type=("build", "run"), when="@8.4.12:")
     depends_on("py-smart-open@3:", type=("build", "run"))
     depends_on(
         "py-snakemake-interface-executor-plugins@8.1.3:8", type=("build", "run"), when="@8:"
     )
-    depends_on("py-snakemake-interface-common@1.15.0:1", type=("build", "run"), when="@8:")
-    depends_on("py-snakemake-interface-storage-plugins@3.0.0:3", type=("build", "run"), when="@8:")
+    depends_on("py-snakemake-interface-common@1.17:1", type=("build", "run"), when="@8.4.10:")
+    depends_on("py-snakemake-interface-common@1.15:1", type=("build", "run"), when="@8:")
+    depends_on("py-snakemake-interface-storage-plugins@3.1:3", type=("build", "run"), when="@8.4.10:")
+    depends_on("py-snakemake-interface-storage-plugins@3:3", type=("build", "run"), when="@8:")
     depends_on("py-stopit", type=("build", "run"))
     depends_on("py-tabulate", type=("build", "run"))
     depends_on("py-throttler", type=("build", "run"), when="@7:")
+    depends_on("py-toposort@1.10:1", type=("build", "run"), when="@8.4.12:")
     depends_on("py-toposort@1.10:", type=("build", "run"), when="@7.24.0:")
     depends_on("py-toposort", type=("build", "run"), when="@:7.23")
     depends_on("py-wrapt", type=("build", "run"))
