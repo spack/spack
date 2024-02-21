@@ -1541,7 +1541,7 @@ def download_tarball(spec, unsigned: Optional[bool] = False, mirrors_for_spec=No
                     response = spack.oci.opener.urlopen(
                         urllib.request.Request(
                             url=ref.manifest_url(),
-                            headers={"Accept": "application/vnd.oci.image.manifest.v1+json"},
+                            headers={"Accept": ", ".join(spack.oci.oci.manifest_content_type)},
                         )
                     )
                 except Exception:
@@ -2668,7 +2668,7 @@ class OCIIndexFetcher:
             response = self.urlopen(
                 urllib.request.Request(
                     url=url_manifest,
-                    headers={"Accept": "application/vnd.oci.image.manifest.v1+json"},
+                    headers={"Accept": ", ".join(spack.oci.oci.manifest_content_type)},
                 )
             )
         except urllib.error.URLError as e:
