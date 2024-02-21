@@ -2668,7 +2668,7 @@ class OCIIndexFetcher:
             response = self.urlopen(
                 urllib.request.Request(
                     url=url_manifest,
-                    headers={"Accept": ", ".join(spack.oci.oci.manifest_content_type)},
+                    headers={"Accept": "application/vnd.oci.image.manifest.v1+json"},
                 )
             )
         except urllib.error.URLError as e:
