@@ -69,8 +69,10 @@ class Snakemake(PythonPackage):
     )
     depends_on("py-snakemake-interface-common@1.17:1", type=("build", "run"), when="@8.4.10:")
     depends_on("py-snakemake-interface-common@1.15:1", type=("build", "run"), when="@8:")
-    depends_on("py-snakemake-interface-storage-plugins@3.1:3", type=("build", "run"), when="@8.4.10:")
-    depends_on("py-snakemake-interface-storage-plugins@3:3", type=("build", "run"), when="@8:")
+    depends_on(
+        "py-snakemake-interface-storage-plugins@3.1:3", type=("build", "run"), when="@8.4.10:"
+    )
+    depends_on("py-snakemake-interface-storage-plugins@3", type=("build", "run"), when="@8:")
     depends_on("py-stopit", type=("build", "run"))
     depends_on("py-tabulate", type=("build", "run"))
     depends_on("py-throttler", type=("build", "run"), when="@7:")
