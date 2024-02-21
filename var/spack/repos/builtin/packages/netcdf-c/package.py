@@ -342,7 +342,7 @@ class CMakeBuilder(BaseBuilder, cmake.CMakeBuilder):
         if "platform=windows" in self.pkg.spec:
             # Enforce the usage of the vendored version of bzip2 on Windows:
             base_cmake_args.append(self.define("Bz2_INCLUDE_DIRS", ""))
-        if "platform=windows" in self.pkg.spec and "+shared" in self.pkg.spec["hdf5"]:
+        if "+shared" in self.pkg.spec["hdf5"]:
             base_cmake_args.append(self.define("NC_FIND_SHARED_LIBS", True))
         else:
             base_cmake_args.append(self.define("NC_FIND_SHARED_LIBS", False))
