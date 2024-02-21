@@ -48,7 +48,14 @@ class NetcdfCxx4(CMakePackage):
         libraries = ["libnetcdf_c++4"]
         shared = "+shared" in spec
 
-        return find_libraries(libraries, root=self.prefix, shared=shared, recursive=True)
+        libs = find_libraries(libraries, root=self.prefix, shared=shared, recursive=True)
+        if libs:
+            return libs
+
+        msg = "Unable to recursively locate {0} {1} libraries in {2}"
+        raise spack.error.NoLibrariesError(
+            msg.format("shared" if shared else "static", self.spec.name, self.spec.prefix)
+        )
 
     def patch(self):
         # An incorrect value is queried post find_package(HDF5)
