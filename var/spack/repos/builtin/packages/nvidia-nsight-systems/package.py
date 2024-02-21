@@ -12,7 +12,10 @@ from spack.package import *
 
 
 class NvidiaNsightSystems(Package):
-    """NVIDIA Nsight™ Systems is a system-wide performance analysis tool designed to visualize an application’s algorithms, identify the largest opportunities to optimize, and tune to scale efficiently across any quantity or size of CPUs and GPUs, from large servers to the smallest system on a chip"""
+    """NVIDIA Nsight™ Systems is a system-wide performance analysis tool designed
+    to visualize an application’s algorithms, identify the largest opportunities
+    to optimize, and tune to scale efficiently across any quantity or size of CPUs
+    and GPUs, from large servers to the smallest system on a chip"""
 
     homepage = "https://developer.nvidia.com/nsight-systems"
     url = "https://developer.download.nvidia.com/devtools/repos/"
