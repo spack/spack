@@ -40,36 +40,12 @@ class RoctracerDev(CMakePackage, ROCmPackage):
         version("5.2.0", sha256="9747356ce61c57d22c2e0a6c90b66a055e435d235ba3459dc3e3f62aabae6a03")
         version("5.1.3", sha256="45f19875c15eb609b993788b47fd9c773b4216074749d7744f3a671be17ef33c")
         version("5.1.0", sha256="58b535f5d6772258190e4adcc23f37c916f775057a91b960e1f2ee1f40ed5aac")
-    version(
-        "5.0.2",
-        sha256="5ee46f079e57dfe491678ffa4cdaf5f3b3d179cb3137948e4bcafca99ded47cc",
-        deprecated=True,
-    )
-    version(
-        "5.0.0",
-        sha256="a21f4fb093cee4a806d53cbc0645d615d89db12fbde305e9eceee7e4150acdf2",
-        deprecated=True,
-    )
-    version(
-        "4.5.2",
-        sha256="7012d18b79736dbe119161aab86f4976b78553ce0b2f4753a9386752d75d5074",
-        deprecated=True,
-    )
-    version(
-        "4.5.0",
-        sha256="83dcd8987e129b14da0fe74e24ce8d027333f8fedc9247a402d3683765983296",
-        deprecated=True,
-    )
 
     depends_on("cmake@3:", type="build")
     depends_on("python@3:", type="build")
     depends_on("py-cppheaderparser", type="build")
 
     for ver in [
-        "4.5.0",
-        "4.5.2",
-        "5.0.0",
-        "5.0.2",
         "5.1.0",
         "5.1.3",
         "5.2.0",
@@ -88,29 +64,15 @@ class RoctracerDev(CMakePackage, ROCmPackage):
         "6.0.0",
         "6.0.2",
     ]:
-        depends_on("hsakmt-roct@" + ver, when="@" + ver)
-        depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
-        depends_on("rocminfo@" + ver, when="@" + ver)
-        depends_on("hip@" + ver, when="@" + ver)
-    for ver in [
-        "4.5.0",
-        "4.5.2",
-        "5.0.0",
-        "5.0.2",
-        "5.1.0",
-        "5.1.3",
-        "5.2.0",
-        "5.2.1",
-        "5.2.3",
-        "5.3.0",
-        "5.3.3",
-        "5.4.0",
-        "5.4.3",
-    ]:
-        depends_on("rocprofiler-dev@" + ver, when="@" + ver)
+        depends_on(f"hsakmt-roct@{ver}", when=f"@{ver}")
+        depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
+        depends_on(f"rocminfo@{ver}", when=f"@{ver}")
+        depends_on(f"hip@{ver}", when=f"@{ver}")
+    for ver in ["5.1.0", "5.1.3", "5.2.0", "5.2.1", "5.2.3", "5.3.0", "5.3.3", "5.4.0", "5.4.3"]:
+        depends_on(f"rocprofiler-dev@{ver}", when=f"@{ver}")
 
     for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2"]:
-        depends_on("rocm-core@" + ver, when="@" + ver)
+        depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
     patch("0001-include-rocprofiler-dev-path.patch", when="@5.3:5.4")
 
@@ -118,35 +80,34 @@ class RoctracerDev(CMakePackage, ROCmPackage):
     def determine_version(cls, lib):
         match = re.search(r"rocm-(\d+)\.(\d+)\.(\d)/lib/lib\S*\.so\.\d+\.\d+\.\d+", lib)
         if match:
-            ver = "{0}.{1}.{2}".format(
+            return "{0}.{1}.{2}".format(
                 int(match.group(1)), int(match.group(2)), int(match.group(3))
             )
-        else:
-            ver = None
-        return ver
+        return None
 
     def patch(self):
         filter_file(
-            "${CMAKE_PREFIX_PATH}/hsa",
+            r"${CMAKE_PREFIX_PATH}/hsa",
             "${HSA_RUNTIME_INC_PATH}",
             "src/CMakeLists.txt",
             string=True,
         )
-        kwargs = {"ignore_absent": False, "backup": False, "string": False}
         with working_dir("script"):
-            match = "^#!/usr/bin/python[23]"
-            python = self.spec["python"].command.path
-            substitute = "#!{python}".format(python=python)
-            files = ["check_trace.py", "gen_ostream_ops.py", "hsaap.py"]
-            filter_file(match, substitute, *files, **kwargs)
+            filter_file(
+                "^#!/usr/bin/python[23]",
+                f"#!{self.spec['python'].command.path}",
+                "check_trace.py",
+                "gen_ostream_ops.py",
+                "hsaap.py",
+            )
 
     def cmake_args(self):
         args = [
-            "-DHIP_VDI=1",
-            "-DCMAKE_MODULE_PATH={0}/cmake_modules".format(self.stage.source_path),
-            "-DHSA_RUNTIME_HSA_INC_PATH={0}/include".format(self.spec["hsa-rocr-dev"].prefix),
-            "-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON",
+            self.define("HIP_VDI", "1"),
+            self.define("CMAKE_MODULE_PATH", f"{self.stage.source_path}/cmake_modules"),
+            self.define("HSA_RUNTIME_HSA_INC_PATH", self.spec["hsa-rocr-dev"].prefix.include),
+            self.define("CMAKE_POSITION_INDEPENDENT_CODE", True),
         ]
         if self.spec.satisfies("@:5.4.0"):
-            "-DROCPROFILER_PATH={0}".format(self.spec["rocprofiler-dev"].prefix)
+            args.append(self.define("ROCPROFILER_PATH", self.spec["rocprofiler-dev"].prefix))
         return args

@@ -53,14 +53,12 @@ class Spfft(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("cuda@:10", when="@:0.9.11 +cuda")
 
+    # Workaround for compiler bug in ROCm 4.5+ added in SpFFT 1.0.6
+    conflicts("+rocm", when="@:1.0.5")
+
     with when("+rocm"):
-        # FindHIP cmake script only works for < 4.1
-        depends_on("hip@:4.0", when="@:1.0.1")
-        # Workaround for compiler bug in ROCm 4.5 added in SpFFT 1.0.6
-        depends_on("hip@:4.3.1", when="@:1.0.5")
         depends_on("rocfft")
-        # rocFFT and hipFFT have split with latest versions
-        depends_on("hipfft", when="^rocfft@4.1.0:")
+        depends_on("hipfft")
 
     # Fix compilation error in some cases due to missing include statement
     # before version 1.0.3

@@ -35,76 +35,6 @@ class Hipcub(CMakePackage, CudaPackage, ROCmPackage):
         version("5.2.0", sha256="ac4dc2310f0eb657e1337c93d8cc4a5d8396f9544a7336eeceb455678a1f9139")
         version("5.1.3", sha256="dc75640689b6a5e15dd3acea643266bdf114ea63efc60be8272f484cf8f04494")
         version("5.1.0", sha256="b30d51fc5fca2584f0c9a6fa8dafc9fbdda96a3acff30288e49b397f8842f705")
-    version(
-        "5.0.2",
-        sha256="22effb18f2c38d76fa379f14c9f9ee7a11987a5d1ae4a7e837af87232c8c9183",
-        deprecated=True,
-    )
-    version(
-        "5.0.0",
-        sha256="09c4f1b88aa5f50f04043d379e4960dab556e0fbdf8e25ab03d02a07c1ff7b2f",
-        deprecated=True,
-    )
-    version(
-        "4.5.2",
-        sha256="bec9ba1a6aa0475475ee292e54807accc839ed001338275f48da13e3bfb77514",
-        deprecated=True,
-    )
-    version(
-        "4.5.0",
-        sha256="5902fae0485789f1d1cc6b8e81d9f1b39338170d3139844d5edf0d324f9694c9",
-        deprecated=True,
-    )
-    version(
-        "4.3.1",
-        sha256="20fcd34323c541c182655b7ff6dc6ff268c0127596f0d9993884621c2b14b67a",
-        deprecated=True,
-    )
-    version(
-        "4.3.0",
-        sha256="733499a8d55e2d73bf874d43a98ee7425e4325f77e03fb0c80debf36c740cb70",
-        deprecated=True,
-    )
-    version(
-        "4.2.0",
-        sha256="56b50e185b7cdf4615d2f56d3a4e86fe76f885e9ad04845f3d0671afcb315c69",
-        deprecated=True,
-    )
-    version(
-        "4.1.0",
-        sha256="6d33cc371b9a5ac9c0ab9853bac736f6cea0d2192f4dc9e6d8175d207ee4b4f2",
-        deprecated=True,
-    )
-    version(
-        "4.0.0",
-        sha256="656bd6ec547810fd74bcebba41453e6e729f3fdb7346f5564ab71fc0346c3fb5",
-        deprecated=True,
-    )
-    version(
-        "3.10.0",
-        sha256="759da5c6ef0cc1e4ecf2083659e78b8bbaa015f0bb360177674e0feb3032c5be",
-        deprecated=True,
-    )
-    version(
-        "3.9.0",
-        sha256="c46995f9f18733ec18e370c21d7c0d6ac719e8e9d3254c6303a20ba90831e12e",
-        deprecated=True,
-    )
-    version(
-        "3.8.0",
-        sha256="11d7d97268aeb953c34a80125c4577e27cb57cb6095606533105cecf2bd2ec9c",
-        deprecated=True,
-    )
-    version(
-        "3.7.0",
-        sha256="a2438632ea1606e83a8c0e1a8777aa5fdca66d77d90862642eb0ec2314b4978d",
-        deprecated=True,
-    )
-    version(
-        "3.5.0",
-        sha256="1eb2cb5f6e90ed1b7a9ac6dd86f09ec2ea27bceb5a92eeffa9c2123950c53b9d",
-        deprecated=True,
-    )
 
     # default to an 'auto' variant until amdgpu_targets can be given a better default than 'none'
     amdgpu_targets = ROCmPackage.amdgpu_targets
@@ -123,28 +53,13 @@ class Hipcub(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+cuda +rocm", msg="CUDA and ROCm support are mutually exclusive")
     conflicts("~cuda ~rocm", msg="CUDA or ROCm support is required")
 
-    depends_on("cmake@3.10.2:", type="build", when="@4.2.0:")
-    depends_on("cmake@3.5.1:", type="build")
+    depends_on("cmake@3.10.2:", type="build")
 
     depends_on("hip +cuda", when="+cuda")
 
     depends_on("googletest@1.10.0:", type="test")
 
     for ver in [
-        "3.5.0",
-        "3.7.0",
-        "3.8.0",
-        "3.9.0",
-        "3.10.0",
-        "4.0.0",
-        "4.1.0",
-        "4.2.0",
-        "4.3.0",
-        "4.3.1",
-        "4.5.0",
-        "4.5.2",
-        "5.0.0",
-        "5.0.2",
         "5.1.0",
         "5.1.3",
         "5.2.0",
@@ -163,8 +78,8 @@ class Hipcub(CMakePackage, CudaPackage, ROCmPackage):
         "6.0.0",
         "6.0.2",
     ]:
-        depends_on("rocprim@" + ver, when="+rocm @" + ver)
-        depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
+        depends_on(f"rocprim@{ver}", when=f"+rocm @{ver}")
+        depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
 
     # fix hardcoded search in /opt/rocm and broken config mode search
     patch("find-hip-cuda-rocm-5.1.patch", when="@5.1:5.2 +cuda")
@@ -180,8 +95,8 @@ class Hipcub(CMakePackage, CudaPackage, ROCmPackage):
         if self.spec.satisfies("+rocm ^cmake@3.21.0:3.21.2"):
             args.append(self.define("__skip_rocmclang", "ON"))
 
-        # FindHIP.cmake was used for +rocm until 3.7.0 and is still used for +cuda
-        if self.spec.satisfies("@:3.7.0") or self.spec.satisfies("+cuda"):
+        # FindHIP.cmake is still used for +cuda
+        if self.spec.satisfies("+cuda"):
             if self.spec["hip"].satisfies("@:5.1"):
                 args.append(self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.cmake))
             else:
