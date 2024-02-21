@@ -26,7 +26,7 @@ class NetcdfCxx4(CMakePackage):
     variant("doc", default=False, description="Enable doxygen docs")
     variant("tests", default=False, description="Enable CTest-based tests, dashboards.")
 
-    depends_on("netcdf-c")
+    depends_on("netcdf-c build_system=cmake")
     depends_on("hdf5")
 
     # if we link against an mpi-aware hdf5 then this needs to also be mpi aware for tests
@@ -73,12 +73,12 @@ class NetcdfCxx4(CMakePackage):
             join_path(self.stage.source_path, "cxx4", "CMakeLists.txt"),
         )
 
+
     def cmake_args(self):
         args = [
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("ENABLE_DOXYGEN", "doc"),
             self.define_from_variant("NCXX_ENABLE_TESTS", "tests"),
-
         ]
 
         return args
