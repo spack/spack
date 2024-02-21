@@ -26,6 +26,10 @@ class NetcdfCxx4(CMakePackage):
     variant("doc", default=False, description="Enable doxygen docs")
     variant("tests", default=False, description="Enable CTest-based tests, dashboards.")
 
+    # If another cmake-built netcdf-c exists outside of spack  e.g., homebrew's libnetcdf,
+    # then cmake will choose that external netcdf-c.
+    # This approach ensures the config.cmake exists, and thus ensures the spack version is
+    #  found before the system's
     depends_on("netcdf-c build_system=cmake")
     depends_on("hdf5")
 
