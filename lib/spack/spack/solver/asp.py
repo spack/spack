@@ -3573,42 +3573,64 @@ class ReusableSpecsSelector:
 
         self.reuse = self.configuration.get("concretizer:reuse", False)
         self.reuse_filters = []
+        self.local_store_enabled = True
+        self.mirrors_enabled = True
         if isinstance(self.reuse, typing.Mapping):
-            self.reuse, self.reuse_filters = self.reuse.get("strategy", True), self.reuse.get(
+            reuse_yaml = self.reuse
+            self.reuse, self.reuse_filters = reuse_yaml.get("strategy", True), reuse_yaml.get(
                 "include", []
             )
+            self.local_store_enabled = any(
+                x["type"] == "local" for x in reuse_yaml.get("from", [{"type": "local"}])
+            )
+            self.mirrors_enabled = any(
+                x["type"] == "mirror" for x in reuse_yaml.get("from", [{"type": "mirror"}])
+            )
+
+    def is_selected(self, spec):
+        if not self.reuse_filters:
+            return True
+
+        return any(spec.satisfies(c) for c in self.reuse_filters)
+
+    def selected_from_local_store(self):
+        if not self.local_store_enabled:
+            return []
+
+        packages = self.configuration.get("packages")
+        with self.store.db.read_transaction():
+            return [
+                s
+                for s in self.store.db.query(installed=True)
+                if _is_reusable(s, packages, local=True) and self.is_selected(s)
+            ]
+
+    def selected_from_mirrors(self):
+        if not self.mirrors_enabled:
+            return []
+
+        packages = self.configuration.get("packages")
+        try:
+            return [
+                s
+                for s in spack.binary_distribution.update_cache_and_get_specs()
+                if _is_reusable(s, packages, local=False) and self.is_selected(s)
+            ]
+        except (spack.binary_distribution.FetchCacheError, IndexError):
+            # this is raised when no mirrors had indices.
+            # TODO: update mirror configuration so it can indicate that the
+            # TODO: source cache (or any mirror really) doesn't have binaries.
+            return []
 
     def reusable_specs(self, specs):
         if self.reuse is False:
             return []
 
-        result = []
-        packages = self.configuration.get("packages")
-        with self.store.db.read_transaction():
-            result.extend(
-                s
-                for s in self.store.db.query(installed=True)
-                if _is_reusable(s, packages, local=True)
-            )
-
-        try:
-            result.extend(
-                s
-                for s in spack.binary_distribution.update_cache_and_get_specs()
-                if _is_reusable(s, packages, local=False)
-            )
-        except (spack.binary_distribution.FetchCacheError, IndexError):
-            # this is raised when no mirrors had indices.
-            # TODO: update mirror configuration so it can indicate that the
-            # TODO: source cache (or any mirror really) doesn't have binaries.
-            pass
+        result = self.selected_from_local_store() + self.selected_from_mirrors()
 
         # If we only want to reuse dependencies, remove the root specs
         if self.reuse == "dependencies":
             result = [spec for spec in result if not any(root in spec for root in specs)]
-
-        if self.reuse_filters:
-            result = [x for x in result if any(x.satisfies(c) for c in self.reuse_filters)]
 
         return result
 

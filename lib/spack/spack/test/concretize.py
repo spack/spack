@@ -2827,21 +2827,51 @@ def test_concretization_version_order():
 
 @pytest.mark.only_clingo("Original concretizer cannot reuse specs")
 @pytest.mark.parametrize(
-    "roots,reuse_yaml,expected,not_expected",
-    [(["mpileaks"], {"strategy": True, "include": ["^mpich"]}, ["^mpich"], ["^mpich2", "^zmpi"])],
+    "roots,reuse_yaml,expected,not_expected,expected_length",
+    [
+        (
+            ["mpileaks"],
+            {"strategy": True, "include": ["^mpich"]},
+            ["^mpich"],
+            ["^mpich2", "^zmpi"],
+            2,
+        ),
+        (
+            ["mpileaks"],
+            {"strategy": True, "include": ["externaltest"]},
+            ["externaltest"],
+            ["^mpich", "^mpich2", "^zmpi"],
+            1,
+        ),
+    ],
 )
 @pytest.mark.usefixtures("database", "mock_store")
-def test_selecting_reused_specs(
-    roots, reuse_yaml, expected, not_expected, mutable_config, database
+def test_filtering_reused_specs(
+    roots, reuse_yaml, expected, not_expected, expected_length, mutable_config
 ):
+    """Tests that we can select which specs are to be reused, using constraints as filters"""
     mutable_config.set("concretizer:reuse", reuse_yaml)
     selector = spack.solver.asp.ReusableSpecsSelector(mutable_config)
     specs = selector.reusable_specs(roots)
 
-    assert len(specs) > 0
+    assert len(specs) == expected_length
 
     for constraint in expected:
         assert all(x.satisfies(constraint) for x in specs)
 
     for constraint in not_expected:
         assert all(not x.satisfies(constraint) for x in specs)
+
+
+@pytest.mark.usefixtures("database", "mock_store")
+@pytest.mark.parametrize(
+    "reuse_yaml,expected_length",
+    [({"from": [{"type": "local"}]}, 17), ({"from": [{"type": "mirror"}]}, 0)],
+)
+def test_selecting_reused_sources(reuse_yaml, expected_length, mutable_config):
+    """Tests that we can turn on/off sources of reusable specs"""
+    mutable_config.set("concretizer:reuse", reuse_yaml)
+    selector = spack.solver.asp.ReusableSpecsSelector(mutable_config)
+    specs = selector.reusable_specs(["mpileaks"])
+
+    assert len(specs) == expected_length
