@@ -45,10 +45,13 @@ class Tandem(CMakePackage):
 
     depends_on("mpi")
 
-    for var in ["mpich", "mvapich2-gdr"]:
-        depends_on(f"{var} +rocm", when=f"+rocm ^{var}")
-    for var in ["openmpi", "mpich", "mvapich", "mvapich2", "mvapich2-gdr"]:
-        depends_on(f"{var} +cuda", when=f"+cuda ^{var}")
+    with when("+cuda"):
+        for var in ["openmpi", "mpich", "mvapich", "mvapich2", "mvapich2-gdr"]:
+            depends_on(f"{var} +cuda", when=f"^[virtuals=mpi] {var}")
+
+    with when("+rocm"):
+        for var in ["mpich", "mvapich2-gdr"]:
+            depends_on(f"{var} +rocm", when=f"^[virtuals=mpi] {var}")
 
     depends_on("parmetis +int64 +shared")
     depends_on("metis +int64 +shared")
