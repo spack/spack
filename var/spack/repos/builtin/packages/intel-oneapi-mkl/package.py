@@ -125,6 +125,16 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         multi=False,
     )
 
+    requires(
+        "%clang",
+        "%gcc",
+        "%intel",
+        "%oneapi",
+        policy="one_of",
+        when="threads=openmp",
+        msg="MKL with OpenMP threading requires GCC, clang, or Intel compilers",
+    )
+
     depends_on("tbb")
     # cluster libraries need mpi
     depends_on("mpi", when="+cluster")

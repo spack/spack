@@ -116,14 +116,8 @@ class Proj(CMakePackage, AutotoolsPackage):
         # * https://rasterio.readthedocs.io/en/latest/faq.html
         env.set("PROJ_LIB", self.prefix.share.proj)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
-
 
 class BaseBuilder(metaclass=spack.builder.PhaseCallbacksMeta):
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        self.pkg.setup_run_environment(env)
-
     def setup_build_environment(self, env):
         env.set("PROJ_LIB", join_path(self.pkg.stage.source_path, "nad"))
 
