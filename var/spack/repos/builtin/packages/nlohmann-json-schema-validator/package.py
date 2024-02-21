@@ -15,7 +15,7 @@ class NlohmannJsonSchemaValidator(CMakePackage):
 
     license("MIT")
 
-    version("master", branch="master")
+    version("main", branch="main")
     version("2.3.0", sha256="2c00b50023c7d557cdaa71c0777f5bcff996c4efd7a539e58beaa4219fa2a5e1")
     version("2.2.0", sha256="03897867bd757ecac1db7545babf0c6c128859655b496582a9cea4809c2260aa")
     version("2.1.0", sha256="83f61d8112f485e0d3f1e72d51610ba3924b179926a8376aef3c038770faf202")
