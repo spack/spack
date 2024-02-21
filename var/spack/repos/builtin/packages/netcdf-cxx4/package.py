@@ -78,10 +78,11 @@ class NetcdfCxx4(CMakePackage):
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("ENABLE_DOXYGEN", "doc"),
             self.define_from_variant("NCXX_ENABLE_TESTS", "tests"),
+
         ]
 
         return args
 
     def check(self):
         with working_dir(self.build_directory):
-            make("check", parallel=False)
+            make("test", parallel=False)
