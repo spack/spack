@@ -28,6 +28,15 @@ properties: Dict[str, Any] = {
                                 ]
                             },
                             "include": {"type": "array", "items": {"type": "string"}},
+                            "from": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "type": {"type": "string", "enum": ["local", "mirror"]}
+                                    },
+                                },
+                            },
                         },
                     },
                 ]
