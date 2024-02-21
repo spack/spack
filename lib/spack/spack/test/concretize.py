@@ -2846,6 +2846,7 @@ def test_concretization_version_order():
     ],
 )
 @pytest.mark.usefixtures("database", "mock_store")
+@pytest.mark.not_on_windows("Expected length is different on Windows")
 def test_filtering_reused_specs(
     roots, reuse_yaml, expected, not_expected, expected_length, mutable_config
 ):
@@ -2868,10 +2869,10 @@ def test_filtering_reused_specs(
     "reuse_yaml,expected_length",
     [({"from": [{"type": "local"}]}, 17), ({"from": [{"type": "mirror"}]}, 0)],
 )
+@pytest.mark.not_on_windows("Expected length is different on Windows")
 def test_selecting_reused_sources(reuse_yaml, expected_length, mutable_config):
     """Tests that we can turn on/off sources of reusable specs"""
     mutable_config.set("concretizer:reuse", reuse_yaml)
     selector = spack.solver.asp.ReusableSpecsSelector(mutable_config)
     specs = selector.reusable_specs(["mpileaks"])
-
     assert len(specs) == expected_length
