@@ -19,9 +19,21 @@ class FenicsDolfinx(CMakePackage):
     version("main", branch="main")
     version("0.7.2", sha256="7d9ce1338ce66580593b376327f23ac464a4ce89ef63c105efc1a38e5eae5c0b")
     version("0.6.0", sha256="eb8ac2bb2f032b0d393977993e1ab6b4101a84d54023a67206e3eac1a8d79b80")
-    version("0.5.1", sha256="a570e3f6ed8e7c570e7e61d0e6fd44fa9dad2c5f8f1f48a6dc9ad22bacfbc973")
-    version("0.5.0", sha256="503c70c01a44d1ffe48e052ca987693a49f8d201877652cabbe2a44eb3b7c040")
-    version("0.4.1", sha256="68dcf29a26c750fcea5e02d8d58411e3b054313c3bf6fcbc1d0f08dd2851117f")
+    version(
+        "0.5.1",
+        sha256="a570e3f6ed8e7c570e7e61d0e6fd44fa9dad2c5f8f1f48a6dc9ad22bacfbc973",
+        deprecated=True,
+    )
+    version(
+        "0.5.0",
+        sha256="503c70c01a44d1ffe48e052ca987693a49f8d201877652cabbe2a44eb3b7c040",
+        deprecated=True,
+    )
+    version(
+        "0.4.1",
+        sha256="68dcf29a26c750fcea5e02d8d58411e3b054313c3bf6fcbc1d0f08dd2851117f",
+        deprecated=True,
+    )
 
     conflicts(
         "%gcc@:9.10",

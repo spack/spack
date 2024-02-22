@@ -158,9 +158,6 @@ class Serialbox(CMakePackage):
         # enable the Python interface in a non-standard directory:
         env.prepend_path("PYTHONPATH", self.prefix.python)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
-
     def setup_dependent_package(self, module, dependent_spec):
         # Simplify the location of the preprocessor by dependent packages:
         self.spec.pp_ser = join_path(self.prefix.python.pp_ser, "pp_ser.py")
