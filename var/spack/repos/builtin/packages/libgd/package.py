@@ -43,7 +43,7 @@ class Libgd(AutotoolsPackage):
     patch(
         "https://github.com/libgd/libgd/commit/c9b601a658a79e6ea2aad29fbf60ca6e24ccef1e.patch?full_index=1",
         sha256="6ad03ef2e2c5940edf14ba3c145b0a6e8201a2e83d65a68fe7c903c9263852fc",
-        when="@2.2.4"
+        when="@2.2.4",
     )
 
     def patch(self):
