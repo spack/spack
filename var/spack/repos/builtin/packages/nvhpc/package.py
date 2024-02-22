@@ -387,6 +387,7 @@ class Nvhpc(Package):
             version(ver, sha256=pkg[0], url=pkg[1])
 
     variant("blas", default=True, description="Enable BLAS")
+    variant("ilp64", default=False, description="Force 64-bit native integers")
     variant(
         "install_type",
         default="single",
@@ -514,6 +515,24 @@ class Nvhpc(Package):
             self.spec.mpicxx = join_path(mpi_prefix.bin, "mpicxx")
             self.spec.mpif77 = join_path(mpi_prefix.bin, "mpif77")
             self.spec.mpifc = join_path(mpi_prefix.bin, "mpif90")
+
+    @property
+    def headers(self):
+        prefix = Prefix(
+            join_path(self.prefix, "Linux_%s" % self.spec.target.family, self.version, "compilers")
+        )
+        headers = []
+        if "+blas" in self.spec:
+            headers.append("cblas.h")
+        if "+lapack" in self.spec:
+            headers.append("lapacke.h")
+
+        if "+ilp64" in self.spec:
+            prefix = prefix.include.ilp64
+        else:
+            prefix = prefix.include.lp64
+
+        return find_headers(headers, prefix)
 
     @property
     def libs(self):
