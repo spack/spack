@@ -98,7 +98,7 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         # upstream sometimes adds tarball suffixes not part of the internal version
         elpa_version = str(self.spec.version)
-        for vsuffix in ("_bugfix",):
+        for vsuffix in ("_bugfix", "-patched"):
             if elpa_version.endswith(vsuffix):  # implementation of py3.9 removesuffix
                 elpa_version = elpa_version[: -len(vsuffix)]
 
