@@ -5,11 +5,6 @@
 
 from spack.package import *
 
-# Refs for building from source and recipes
-# https://alps.comp-phys.org/mediawiki/index.php/Building_ALPS_from_source
-# https://github.com/easybuilders/easybuild-easyconfigs/tree/master/easybuild/easyconfigs/a/ALPS
-# https://github.com/conda-forge/alps-feedstock/tree/master/recipe
-
 
 class Alps(CMakePackage):
     """Algorithms for Physics Simulations
@@ -40,6 +35,11 @@ class Alps(CMakePackage):
     depends_on("py-matplotlib", type=("build", "run"))
 
     extends("python")
+
+    # Refs for building from source and recipes
+    # https://alps.comp-phys.org/mediawiki/index.php/Building_ALPS_from_source
+    # https://github.com/easybuilders/easybuild-easyconfigs/tree/master/easybuild/easyconfigs/a/ALPS
+    # https://github.com/conda-forge/alps-feedstock/tree/master/recipe
 
     def url_for_version(self, version):
         if str(version) == "20220304_r7871":
