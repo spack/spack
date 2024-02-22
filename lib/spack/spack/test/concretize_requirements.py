@@ -1133,3 +1133,46 @@ def test_conflict_packages_yaml(packages_yaml, spec_str, concretize_scope, mock_
     update_packages_config(packages_yaml)
     with pytest.raises(UnsatisfiableSpecError):
         Spec(spec_str).concretized()
+
+
+@pytest.mark.parametrize(
+    "spec_str,expected,not_expected",
+    [
+        (
+            "forward-multi-value +cuda cuda_arch=10 ^dependency-mv~cuda",
+            ["cuda_arch=10", "^dependency-mv~cuda"],
+            ["cuda_arch=11", "^dependency-mv cuda_arch=10", "^dependency-mv cuda_arch=11"],
+        ),
+        (
+            "forward-multi-value +cuda cuda_arch=10 ^dependency-mv+cuda",
+            ["cuda_arch=10", "^dependency-mv cuda_arch=10"],
+            ["cuda_arch=11", "^dependency-mv cuda_arch=11"],
+        ),
+        (
+            "forward-multi-value +cuda cuda_arch=11 ^dependency-mv+cuda",
+            ["cuda_arch=11", "^dependency-mv cuda_arch=11"],
+            ["cuda_arch=10", "^dependency-mv cuda_arch=10"],
+        ),
+        (
+            "forward-multi-value +cuda cuda_arch=10,11 ^dependency-mv+cuda",
+            ["cuda_arch=10,11", "^dependency-mv cuda_arch=10,11"],
+            [],
+        ),
+    ],
+)
+def test_forward_multi_valued_variant_using_requires(
+    spec_str, expected, not_expected, config, mock_packages
+):
+    """Tests that a package can forward multivalue variants to dependencies, using
+    `requires` directives of the form:
+
+        for _val in ("shared", "static"):
+            requires(f"^some-virtual-mv libs={_val}", when=f"libs={_val} ^some-virtual-mv")
+    """
+    s = Spec(spec_str).concretized()
+
+    for constraint in expected:
+        assert s.satisfies(constraint)
+
+    for constraint in not_expected:
+        assert not s.satisfies(constraint)
