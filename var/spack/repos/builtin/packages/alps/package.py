@@ -15,6 +15,8 @@ class Alps(CMakePackage):
     homepage = "https://alps.comp-phys.org"
     url = "http://exa.phys.s.u-tokyo.ac.jp/archive/MateriApps/src/alps_20220304~r7871.orig.tar.gz"
 
+    license("ALPS")
+
     version(
         "20220304_r7871", sha256="74bcb9156701f81439af3c60ecf26afeb6458c48012729aea2e9f7aa34e87426"
     )
