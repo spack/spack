@@ -2090,7 +2090,6 @@ class Environment:
 
         if regenerate:
             self.regenerate_views()
-            spack.hooks.post_env_write(self)
 
         self.new_specs.clear()
 
