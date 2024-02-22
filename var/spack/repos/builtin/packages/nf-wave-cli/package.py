@@ -9,8 +9,7 @@ from spack.package import *
 
 
 class NfWaveCli(Package):
-    """Command line tool for Wave containers provisioning service.
-    """
+    """Command line tool for Wave containers provisioning service."""
 
     homepage = "https://github.com/seqeralabs/wave-cli"
     maintainers("marcodelapierre")
