@@ -18,7 +18,7 @@ class Alps(CMakePackage):
     """
 
     homepage = "https://alps.comp-phys.org"
-    url = "https://alps.comp-phys.org/static/software/releases/alps-2.3.0-src.tar.gz"
+    url = "http://exa.phys.s.u-tokyo.ac.jp/archive/MateriApps/src/alps_20220304~r7871.orig.tar.gz"
 
     version(
         "20220304_r7871", sha256="74bcb9156701f81439af3c60ecf26afeb6458c48012729aea2e9f7aa34e87426"
@@ -42,16 +42,13 @@ class Alps(CMakePackage):
     extends("python")
 
     def url_for_version(self, version):
-        if str(version) == "2.3.0":
-            url = "https://alps.comp-phys.org/static/software/releases/alps-2.3.0-src.tar.gz"
-        elif str(version) == "20220304_r7871":
+        if str(version) == "20220304_r7871":
             url = "http://exa.phys.s.u-tokyo.ac.jp/archive/MateriApps/src/alps_20220304~r7871.orig.tar.gz"
         return url
 
     def cmake_args(self):
-        args = []
-        args.append("Boost_ROOT_DIR=" + self.spec["boost"].prefix)
-        args.append("-DCMAKE_CXX_FLAGS={0}".format(self.compiler.cxx98_flag))
+        self.define("Boost_ROOT_DIR=" + self.spec["boost"].prefix)
+        self.define("CMAKE_CXX_FLAGS={0}".format(self.compiler.cxx98_flag))
         return args
 
     def _single_test(self, target, exename, dataname, opts=[]):
