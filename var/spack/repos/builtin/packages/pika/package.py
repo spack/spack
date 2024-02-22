@@ -79,6 +79,12 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     variant("apex", default=False, description="Enable APEX support", when="@0.2:")
     variant("tracy", default=False, description="Enable Tracy support", when="@0.7:")
     variant(
+        "sanitizers",
+        default=False,
+        description="Enable support for sanitizers. "
+        "Specific sanitizers must be explicitly enabled with -fsanitize=*.",
+    )
+    variant(
         "stdexec",
         default=False,
         description="Use stdexec for sender/receiver functionality",
@@ -185,6 +191,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("PIKA_WITH_MPI", "mpi"),
             self.define_from_variant("PIKA_WITH_APEX", "apex"),
             self.define_from_variant("PIKA_WITH_TRACY", "tracy"),
+            self.define_from_variant("PIKA_WITH_SANITIZERS", "sanitizers"),
             self.define("PIKA_WITH_TESTS", self.run_tests),
             self.define_from_variant("PIKA_WITH_GENERIC_CONTEXT_COROUTINES", "generic_coroutines"),
             self.define("BOOST_ROOT", spec["boost"].prefix),
