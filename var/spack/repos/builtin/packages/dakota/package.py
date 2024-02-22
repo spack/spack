@@ -64,12 +64,8 @@ class Dakota(CMakePackage):
 
     depends_on("python")
     depends_on("perl-data-dumper", type="build", when="@6.12:")
-    depends_on(
-        "boost@:1.68.0 +filesystem +program_options +regex +serialization +system", when="@:6.12"
-    )
-    depends_on(
-        "boost@1.69.0: +filesystem +program_options +regex +serialization +system", when="@6.18:"
-    )
+    depends_on("boost@:1.68.0", when="@:6.12")
+    depends_on("boost@1.69.0:", when="@6.18:")
     depends_on("boost +filesystem +program_options +regex +serialization +system")
 
     # TODO: replace this with an explicit list of components of Boost,
