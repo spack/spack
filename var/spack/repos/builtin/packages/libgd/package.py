@@ -42,7 +42,7 @@ class Libgd(AutotoolsPackage):
     # add missing '#include <limits.h>' in gd_gd2.c, which uses the constant 'INT_MAX'
     patch(
         "https://github.com/libgd/libgd/commit/c9b601a658a79e6ea2aad29fbf60ca6e24ccef1e.patch?full_index=1",
-        sha256="6ad03ef2e2c5940edf14ba3c145b0a6e8201a2e83d65a68fe7c903c9263852fc",
+        sha256="1dc3a72491427acbae2cd0c6d3b08c0814ffa2f9fee91269b8b46429cabb773d",
         when="@2.2.4",
     )
 
