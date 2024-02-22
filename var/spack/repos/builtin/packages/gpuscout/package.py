@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class Gpuscout(CMakePackage):
+class Gpuscout(CMakePackage, CudaPackage):
     """GPUscout: A tool for discovering data movement-related bottlenecks on NVidia GPUs."""
 
     homepage = "https://github.com/caps-tum/GPUscout"
@@ -26,7 +26,3 @@ class Gpuscout(CMakePackage):
 
     depends_on("cmake@3.27:", type="build")
     depends_on("cuda@12:")
-
-    def cmake_args(self):
-        args = []
-        return args
