@@ -58,8 +58,11 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
         #  with the following patch:
         patch("4.8.1-win-hdf5-with-zlib.patch", when="@4.8.1: platform=windows")
 
-        # TODO: fetch from the upstream repo once https://github.com/Unidata/netcdf-c/pull/2595
-        #  is accepted and the HDF5 interface patch is added
+        # TODO: https://github.com/Unidata/netcdf-c/pull/2595 contains some of the changes
+        # made in this patch but is not sufficent to replace the patch. There is currently
+        # no upstream PR (or set of PRs) covering all changes in this path.
+        # When #2595 lands, this patch should be updated to include only
+        # the changes not incorporated into that PR
         patch("netcdfc_correct_and_export_link_interface.patch", when="platform=windows")
 
     # Some of the patches touch configure.ac and, therefore, require forcing the autoreconf stage:
