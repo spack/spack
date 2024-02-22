@@ -50,6 +50,7 @@ class Alps(CMakePackage):
 
     def cmake_args(self):
         self.define("Boost_ROOT_DIR=" + self.spec["boost"].prefix)
+        self.define("Boost_INCLUDE_DIR=" + self.spec["boost"].prefix.include)
         self.define("CMAKE_CXX_FLAGS={0}".format(self.compiler.cxx98_flag))
         return args
 
