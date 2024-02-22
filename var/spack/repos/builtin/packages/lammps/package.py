@@ -23,7 +23,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
 
     maintainers("rbberger")
 
-    license("GPL-2.0-or-later")
+    license("GPL-2.0-only")
 
     # rules for new versions and deprecation
     # * new stable versions should be added to stable_versions set
@@ -31,6 +31,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
     #   marked deprecated=True
     # * patch releases older than a stable release should be marked deprecated=True
     version("develop", branch="develop")
+    version("20240207", sha256="d518f32de4eb2681f2543be63926411e72072dd7d67c1670c090b5baabed98ac")
     version("20231121", sha256="704d8a990874a425bcdfe0245faf13d712231ba23f014a3ebc27bc14398856f1")
     version(
         "20230802.2",

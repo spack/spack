@@ -190,6 +190,25 @@ spack:
   # - archer                          # submerged into llvm +libomp_tsan
   # - geopm                           # geopm: https://github.com/spack/spack/issues/38795
 
+  # PYTHON PACKAGES
+  - opencv +python3
+  - py-horovod
+  - py-jax
+  - py-jupyterlab
+  - py-matplotlib
+  - py-notebook
+  - py-numpy
+  - py-openai
+  - py-pandas
+  - py-plotly
+  - py-pooch
+  - py-pytest
+  - py-scikit-learn
+  - py-scipy
+  - py-seaborn
+  - py-tensorflow
+  - py-torch
+
   # CUDA NOARCH
   - bricks +cuda
   - flux-core +cuda

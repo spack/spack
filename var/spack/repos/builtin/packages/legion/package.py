@@ -74,7 +74,7 @@ class Legion(CMakePackage, ROCmPackage):
 
     # https://github.com/spack/spack/issues/37232#issuecomment-1553376552
     patch("hip-offload-arch.patch", when="@23.03.0 +rocm")
-    patch("update-hip-path-legion-23.06.0.patch", when="@23.06.0 ^hip@6.0.0 +rocm")
+    patch("update-hip-path-legion-23.06.0.patch", when="@23.06.0 ^hip@6.0 +rocm")
 
     def patch(self):
         if "network=gasnet conduit=ofi-slingshot11 ^cray-mpich+wrappers" in self.spec:

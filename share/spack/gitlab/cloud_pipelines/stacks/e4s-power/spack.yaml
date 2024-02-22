@@ -183,6 +183,25 @@ spack:
   # - phist +mpi                            # ghost@develop: gcc-9: error: unrecognized command line option '-march=native'; did you mean '-mcpu=native'?
   # - variorum                              # variorum: https://github.com/spack/spack/issues/38786
 
+  # PYTHON PACKAGES
+  - opencv +python3
+  # - py-horovod # py-torch, py-tensorflow
+  - py-jax
+  - py-jupyterlab
+  - py-matplotlib
+  - py-notebook
+  - py-numpy
+  - py-openai
+  - py-pandas
+  - py-plotly
+  - py-pooch
+  - py-pytest
+  - py-scikit-learn
+  - py-scipy
+  - py-seaborn
+  # - py-tensorflow # error
+  # - py-torch # error
+
   # CUDA NOARCH
   - bricks +cuda
   - cabana +cuda ^kokkos +wrapper +cuda_lambda +cuda cuda_arch=70

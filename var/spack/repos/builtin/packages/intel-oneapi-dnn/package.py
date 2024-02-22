@@ -123,7 +123,14 @@ class IntelOneapiDnn(IntelOneApiLibraryPackage):
 
     @property
     def headers(self):
-        return find_headers("dnnl", self.__target().include)
+        # This should match the directories added to CPATH by
+        # env/vars.sh for the component
+        if self.v2_layout:
+            dirs = [self.component_prefix.include]
+        else:
+            dirs = [self.component_prefix.cpu_dpcpp_gpu_dpcpp.include]
+
+        return self.header_directories(dirs)
 
     @property
     def libs(self):
