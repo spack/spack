@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,8 @@ class Libdwarf(Package):
     homepage = "https://www.prevanders.net/dwarf.html"
     url = "https://www.prevanders.net/libdwarf-20160507.tar.gz"
     list_url = homepage
+
+    license("LGPL-2.1-only")
 
     version("20180129", sha256="8bd91b57064b0c14ade5a009d3a1ce819f1b6ec0e189fc876eb8f42a8720d8a6")
     version("20160507", sha256="12ae39376e3915bf8fa92555989f3ad5f2f4f332b590a628541ce68987b337af")

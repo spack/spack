@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -59,6 +59,8 @@ class Zlib(MakefilePackage, Package):
     patch("configure-cc.patch", when="@1.2.12")
 
     provides("zlib-api")
+
+    license("Zlib")
 
     @property
     def libs(self):

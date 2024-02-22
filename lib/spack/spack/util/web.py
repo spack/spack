@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ import traceback
 import urllib.parse
 from html.parser import HTMLParser
 from pathlib import Path, PurePosixPath
-from typing import IO, Dict, List, Optional, Set, Union
+from typing import IO, Dict, Iterable, List, Optional, Set, Union
 from urllib.error import HTTPError, URLError
 from urllib.request import HTTPSHandler, Request, build_opener
 
@@ -110,19 +110,28 @@ class LinkParser(HTMLParser):
                     self.links.append(val)
 
 
-class IncludeFragmentParser(HTMLParser):
+class ExtractMetadataParser(HTMLParser):
     """This parser takes an HTML page and selects the include-fragments,
-    used on GitHub, https://github.github.io/include-fragment-element."""
+    used on GitHub, https://github.github.io/include-fragment-element,
+    as well as a possible base url."""
 
     def __init__(self):
         super().__init__()
-        self.links = []
+        self.fragments = []
+        self.base_url = None
 
     def handle_starttag(self, tag, attrs):
+        # <include-fragment src="..." />
         if tag == "include-fragment":
             for attr, val in attrs:
                 if attr == "src":
-                    self.links.append(val)
+                    self.fragments.append(val)
+
+        # <base href="..." />
+        elif tag == "base":
+            for attr, val in attrs:
+                if attr == "href":
+                    self.base_url = val
 
 
 def read_from_url(url, accept_content_type=None):
@@ -545,7 +554,9 @@ def list_url(url, recursive=False):
         return gcs.get_all_blobs(recursive=recursive)
 
 
-def spider(root_urls: Union[str, List[str]], depth: int = 0, concurrency: Optional[int] = None):
+def spider(
+    root_urls: Union[str, Iterable[str]], depth: int = 0, concurrency: Optional[int] = None
+):
     """Get web pages from root URLs.
 
     If depth is specified (e.g., depth=2), then this will also follow up to <depth> levels
@@ -625,12 +636,15 @@ def _spider(url: urllib.parse.ParseResult, collect_nested: bool, _visited: Set[s
 
         # Parse out the include-fragments in the page
         # https://github.github.io/include-fragment-element
-        include_fragment_parser = IncludeFragmentParser()
-        include_fragment_parser.feed(page)
+        metadata_parser = ExtractMetadataParser()
+        metadata_parser.feed(page)
+
+        # Change of base URL due to <base href="..." /> tag
+        response_url = metadata_parser.base_url or response_url
 
         fragments = set()
-        while include_fragment_parser.links:
-            raw_link = include_fragment_parser.links.pop()
+        while metadata_parser.fragments:
+            raw_link = metadata_parser.fragments.pop()
             abs_link = url_util.join(response_url, raw_link.strip(), resolve_href=True)
 
             try:

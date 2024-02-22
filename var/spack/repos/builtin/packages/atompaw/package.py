@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Atompaw(AutotoolsPackage):
 
     homepage = "https://users.wfu.edu/natalie/papers/pwpaw/man.html"
     url = "https://users.wfu.edu/natalie/papers/pwpaw/atompaw-4.0.0.13.tar.gz"
+
+    license("GPL-3.0-only")
 
     version("4.2.0.2", sha256="c16648611f5798b8e1781fb2229854c54fa63f085bd11440fdc4ecacbf0ad93e")
     version("4.2.0.1", sha256="d3476a5aa5f80f9430b81f28273c2c2a9b6e7d9c3d08c65544247bb76cd5a114")
@@ -49,8 +51,8 @@ class Atompaw(AutotoolsPackage):
         spec = self.spec
         linalg = spec["lapack"].libs + spec["blas"].libs
         return [
-            "--with-linalg-libs=%s" % linalg.ld_flags,
+            f"--with-linalg-libs={linalg.ld_flags}",
             "--enable-libxc",
-            "--with-libxc-incs=-I%s" % spec["libxc"].prefix.include,
-            "--with-libxc-libs=-L%s -lxcf90 -lxc" % spec["libxc"].prefix.lib,
+            f"--with-libxc-incs=-I{spec['libxc'].prefix.include}",
+            f"--with-libxc-libs=-L{spec['libxc'].prefix.lib} -lxcf90 -lxc",
         ]

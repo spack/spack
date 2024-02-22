@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Armadillo(CMakePackage):
 
     homepage = "http://arma.sourceforge.net/"
     url = "http://sourceforge.net/projects/arma/files/armadillo-8.100.1.tar.xz"
+
+    license("Apache-2.0")
 
     version("12.4.0", sha256="9905282781ced3f99769b0e45a705ecb50192ca1622300707b3302ea167dc883")
     version("12.2.0", sha256="b0dce042297e865add3351dad77f78c2c7638d6632f58357b015e50edcbd2186")
@@ -66,14 +68,14 @@ class Armadillo(CMakePackage):
 
         return [
             # ARPACK support
-            "-DARPACK_LIBRARY={0}".format(spec["arpack-ng"].libs.joined(";")),
+            self.define("ARPACK_LIBRARY", spec["arpack-ng"].libs.joined(";")),
             # BLAS support
-            "-DBLAS_LIBRARY={0}".format(spec["blas"].libs.joined(";")),
+            self.define("BLAS_LIBRARY", spec["blas"].libs.joined(";")),
             # LAPACK support
-            "-DLAPACK_LIBRARY={0}".format(spec["lapack"].libs.joined(";")),
+            self.define("LAPACK_LIBRARY", spec["lapack"].libs.joined(";")),
             # SuperLU support
-            "-DSuperLU_INCLUDE_DIR={0}".format(spec["superlu"].prefix.include),
-            "-DSuperLU_LIBRARY={0}".format(spec["superlu"].libs.joined(";")),
+            self.define("SuperLU_INCLUDE_DIR", spec["superlu"].prefix.include),
+            self.define("SuperLU_LIBRARY", spec["superlu"].libs.joined(";")),
             # HDF5 support
-            "-DDETECT_HDF5={0}".format("ON" if "+hdf5" in spec else "OFF"),
+            self.define("DETECT_HDF5", "ON" if spec.satisfies("+hdf5") else "OFF"),
         ]

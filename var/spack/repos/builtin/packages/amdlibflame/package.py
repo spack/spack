@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -47,6 +47,8 @@ class Amdlibflame(LibflameBase):
 
     maintainers("amd-toolchain-support")
 
+    license("BSD-3-Clause")
+
     version("4.1", sha256="8aed69c60d11cc17e058cabcb8a931cee4f343064ade3e73d3392b7214624b61")
     version("4.0", sha256="bcb05763aa1df1e88f0da5e43ff86d956826cbea1d9c5ff591d78a3e091c66a4")
     version("3.2", sha256="6b5337fb668b82d0ed0a4ab4b5af4e2f72e4cedbeeb4a8b6eb9a3ef057fb749a")
@@ -59,10 +61,12 @@ class Amdlibflame(LibflameBase):
 
     conflicts("+ilp64", when="@:3.0.0", msg="ILP64 is supported from 3.0.1 onwards")
     conflicts("threads=pthreads", msg="pthread is not supported")
-    conflicts("threads=openmp", msg="openmp is not supported")
+    conflicts("threads=openmp", when="@:3", msg="openmp is not supported by amdlibflame < 4.0")
+    requires("target=x86_64:", msg="AMD libflame available only on x86_64")
 
     patch("aocc-2.2.0.patch", when="@:2", level=1)
     patch("cray-compiler-wrapper.patch", when="@:3.0.0", level=1)
+    patch("supermat.patch", when="@4.0:4.1", level=1)
 
     provides("flame@5.2", when="@2:")
 
@@ -109,13 +113,13 @@ class Amdlibflame(LibflameBase):
             )
 
         # From 3.2 version, amd optimized flags are encapsulated under:
-        # enable-amd-flags for gcc compiler
-        # enable-amd-aocc-flags for aocc compiler
+        # enable-amd-aocc-flags for AOCC compiler
+        # enable-amd-flags for all other compilers
         if "@3.2:" in self.spec:
-            if "%gcc" in self.spec:
-                args.append("--enable-amd-flags")
             if "%aocc" in self.spec:
                 args.append("--enable-amd-aocc-flags")
+            else:
+                args.append("--enable-amd-flags")
 
         if "@:3.1" in self.spec:
             args.append("--enable-external-lapack-interfaces")

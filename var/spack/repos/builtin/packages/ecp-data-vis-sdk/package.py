@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -102,7 +102,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     amdgpu_target_variants = ["amdgpu_target={0}".format(x) for x in ROCmPackage.amdgpu_targets]
 
     dav_sdk_depends_on(
-        "adios2+shared+mpi+python+blosc+sst+ssc+dataman",
+        "adios2+shared+mpi+python+sst+dataman",
         when="+adios2",
         propagate=["cuda", "hdf5", "sz", "zfp", "fortran"] + cuda_arch_variants,
     )
@@ -187,7 +187,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     )
     # TODO: When Ascent is updated to use VTK-m >= 1.8 move examples to
     # the main spec.
-    depends_on("vtk-m+examples", when="+vtkm ^vtk-m@1.8:")
+    conflicts("^vtk-m~examples", when="+vtkm ^vtk-m@1.8:")
     depends_on("vtk-m+openmp", when="~rocm+vtkm")
     depends_on("vtk-m~openmp", when="+rocm+vtkm")
 

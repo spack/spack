@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Qmcpack(CMakePackage, CudaPackage):
     git = "https://github.com/QMCPACK/qmcpack.git"
     maintainers("ye-luo")
     tags = ["ecp", "ecp-apps"]
+
+    license("CC0-1.0")
 
     # This download method is untrusted, and is not recommended by the
     # Spack manual. However, it is easier to maintain because github hashes
@@ -376,7 +378,7 @@ class Qmcpack(CMakePackage, CudaPackage):
         # Next two environment variables were introduced in QMCPACK 3.5.0
         # Prior to v3.5.0, these lines should be benign but CMake
         # may issue a warning.
-        if "^mkl" in spec:
+        if spec["lapack"].name in INTEL_MATH_LIBRARIES:
             args.append("-DENABLE_MKL=1")
             args.append("-DMKL_ROOT=%s" % env["MKLROOT"])
         else:
@@ -389,7 +391,6 @@ class Qmcpack(CMakePackage, CudaPackage):
         else:
             args.append("-DBUILD_PPCONVERT=0")
 
-        args.append(self.define("Python3_EXECUTABLE", self.spec["python"].command.path))
         return args
 
     # QMCPACK needs custom install method for the following reason:

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -321,3 +321,18 @@ line xxx, in test_grouped_exception
     """
         ).format(__file__)
     )
+
+
+def test_grouped_exception_base_type():
+    h = llnl.util.lang.GroupedExceptionHandler()
+
+    with h.forward("catch-runtime-error", RuntimeError):
+        raise NotImplementedError()
+
+    with pytest.raises(NotImplementedError):
+        with h.forward("catch-value-error", ValueError):
+            raise NotImplementedError()
+
+    message = h.grouped_message(with_tracebacks=False)
+    assert "catch-runtime-error" in message
+    assert "catch-value-error" not in message

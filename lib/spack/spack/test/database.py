@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,7 @@ import llnl.util.lock as lk
 from llnl.util.tty.colify import colify
 
 import spack.database
+import spack.deptypes as dt
 import spack.package_base
 import spack.repo
 import spack.spec
@@ -59,13 +60,9 @@ def test_spec_installed_upstream(
     upstream_and_downstream_db, mock_custom_repository, config, monkeypatch
 ):
     """Test whether Spec.installed_upstream() works."""
-    (
-        upstream_write_db,
-        upstream_db,
-        upstream_layout,
-        downstream_db,
-        downstream_layout,
-    ) = upstream_and_downstream_db
+    (upstream_write_db, upstream_db, upstream_layout, downstream_db, downstream_layout) = (
+        upstream_and_downstream_db
+    )
 
     # a known installed spec should say that it's installed
     with spack.repo.use_repositories(mock_custom_repository):
@@ -89,13 +86,9 @@ def test_spec_installed_upstream(
 
 @pytest.mark.usefixtures("config")
 def test_installed_upstream(upstream_and_downstream_db, tmpdir):
-    (
-        upstream_write_db,
-        upstream_db,
-        upstream_layout,
-        downstream_db,
-        downstream_layout,
-    ) = upstream_and_downstream_db
+    (upstream_write_db, upstream_db, upstream_layout, downstream_db, downstream_layout) = (
+        upstream_and_downstream_db
+    )
 
     builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"))
     builder.add_package("x")
@@ -131,13 +124,9 @@ def test_installed_upstream(upstream_and_downstream_db, tmpdir):
 
 @pytest.mark.usefixtures("config")
 def test_removed_upstream_dep(upstream_and_downstream_db, tmpdir):
-    (
-        upstream_write_db,
-        upstream_db,
-        upstream_layout,
-        downstream_db,
-        downstream_layout,
-    ) = upstream_and_downstream_db
+    (upstream_write_db, upstream_db, upstream_layout, downstream_db, downstream_layout) = (
+        upstream_and_downstream_db
+    )
 
     builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"))
     builder.add_package("z")
@@ -167,13 +156,9 @@ def test_add_to_upstream_after_downstream(upstream_and_downstream_db, tmpdir):
     DB. When a package is recorded as installed in both, the results should
     refer to the downstream DB.
     """
-    (
-        upstream_write_db,
-        upstream_db,
-        upstream_layout,
-        downstream_db,
-        downstream_layout,
-    ) = upstream_and_downstream_db
+    (upstream_write_db, upstream_db, upstream_layout, downstream_db, downstream_layout) = (
+        upstream_and_downstream_db
+    )
 
     builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"))
     builder.add_package("x")
@@ -778,9 +763,39 @@ def test_query_unused_specs(mutable_database):
     s.concretize()
     s.package.do_install(fake=True, explicit=True)
 
-    unused = spack.store.STORE.db.unused_specs
-    assert len(unused) == 1
-    assert unused[0].name == "cmake"
+    si = s.dag_hash()
+    ml_mpich = spack.store.STORE.db.query_one("mpileaks ^mpich").dag_hash()
+    ml_mpich2 = spack.store.STORE.db.query_one("mpileaks ^mpich2").dag_hash()
+    ml_zmpi = spack.store.STORE.db.query_one("mpileaks ^zmpi").dag_hash()
+    externaltest = spack.store.STORE.db.query_one("externaltest").dag_hash()
+    trivial_smoke_test = spack.store.STORE.db.query_one("trivial-smoke-test").dag_hash()
+
+    def check_unused(roots, deptype, expected):
+        unused = spack.store.STORE.db.unused_specs(root_hashes=roots, deptype=deptype)
+        assert set(u.name for u in unused) == set(expected)
+
+    default_dt = dt.LINK | dt.RUN
+    check_unused(None, default_dt, ["cmake"])
+    check_unused(
+        [si, ml_mpich, ml_mpich2, ml_zmpi, externaltest],
+        default_dt,
+        ["trivial-smoke-test", "cmake"],
+    )
+    check_unused(
+        [si, ml_mpich, ml_mpich2, ml_zmpi, externaltest],
+        dt.LINK | dt.RUN | dt.BUILD,
+        ["trivial-smoke-test"],
+    )
+    check_unused(
+        [si, ml_mpich, ml_mpich2, externaltest, trivial_smoke_test],
+        dt.LINK | dt.RUN | dt.BUILD,
+        ["mpileaks", "callpath", "zmpi", "fake"],
+    )
+    check_unused(
+        [si, ml_mpich, ml_mpich2, ml_zmpi],
+        default_dt,
+        ["trivial-smoke-test", "cmake", "externaltest", "externaltool", "externalvirtual"],
+    )
 
 
 @pytest.mark.regression("10019")
@@ -801,6 +816,14 @@ def test_query_spec_with_non_conditional_virtual_dependency(database):
     # dependency that are not conditional on variants
     results = spack.store.STORE.db.query_local("mpileaks ^mpich")
     assert len(results) == 1
+
+
+def test_query_virtual_spec(database):
+    """Make sure we can query for virtuals in the DB"""
+    results = spack.store.STORE.db.query_local("mpi")
+    assert len(results) == 3
+    names = [s.name for s in results]
+    assert all(name in names for name in ["mpich", "mpich2", "zmpi"])
 
 
 def test_failed_spec_path_error(database):
@@ -998,6 +1021,16 @@ def test_check_parents(spec_str, parent_name, expected_nparents, database):
 
     edges = s.edges_from_dependents(name=parent_name)
     assert len(edges) == expected_nparents
+
+
+def test_db_all_hashes(database):
+    # ensure we get the right number of hashes without a read transaction
+    hashes = database.all_hashes()
+    assert len(hashes) == 17
+
+    # and make sure the hashes match
+    with database.read_transaction():
+        assert set(s.dag_hash() for s in database.query()) == set(hashes)
 
 
 def test_consistency_of_dependents_upon_remove(mutable_database):

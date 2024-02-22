@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,8 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
 
     tags = ["e4s"]
     test_requires_compiler = True
+
+    license("BSD-3-Clause")
 
     version("master", branch="master")
     version(
@@ -84,15 +86,7 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("scalapack", type="test")
     depends_on("hipify-clang", when="@:2021.05.02 +rocm ^hip@5:")
 
-    # TODO: +sycl requires use of the intel-oneapi compiler, but we cannot express that directly.
-    #       For now, add conflicts for other compilers instead.
-    for __compiler in spack.compilers.supported_compilers():
-        if __compiler != "oneapi":
-            conflicts(
-                "%{0}".format(__compiler),
-                when="+sycl",
-                msg="slate+sycl must be compiled with %oneapi",
-            )
+    requires("%oneapi", when="+sycl", msg="slate+sycl must be compiled with %oneapi")
 
     cpp_17_msg = "Requires C++17 compiler support"
     conflicts("%gcc@:5", msg=cpp_17_msg)

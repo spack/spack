@@ -29,7 +29,7 @@ spack:
     cuda:
       version: [11.7.0]
     elfutils:
-      variants: +bzip2 ~nls +xz
+      variants: ~nls
       require: "%gcc"
     hdf5:
       variants: +fortran +hl +shared
@@ -170,8 +170,6 @@ spack:
   # - upcxx
   # - variorum
   # - xyce +mpi +shared +pymi +pymi_static_tpls ^trilinos~shylu
-
-  mirrors: { "mirror": "s3://spack-binaries/develop/e4s-cray-sles" }
 
   cdash:
     build-group: E4S Cray SLES

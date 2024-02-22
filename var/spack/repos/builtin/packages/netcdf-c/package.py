@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,8 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     url = "https://github.com/Unidata/netcdf-c/archive/refs/tags/v4.8.1.tar.gz"
 
     maintainers("skosukhin", "WardF")
+
+    license("BSD-3-Clause")
 
     version("main", branch="main")
     version("4.9.2", sha256="bc104d101278c68b303359b3dc4192f81592ae8640f1aee486921138f7f88cb7")
@@ -242,7 +244,7 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     # later is required for netCDF-4 compression. However, zlib became a direct dependency only
     # starting NetCDF 4.9.0 (for the deflate plugin):
     depends_on("zlib-api", when="@4.9.0:+shared")
-    depends_on("zlib@1.2.5:", when="^zlib")
+    depends_on("zlib@1.2.5:", when="^[virtuals=zlib-api] zlib")
 
     # Use the vendored bzip2 on Windows:
     for __p in ["darwin", "cray", "linux"]:
@@ -298,7 +300,6 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
 
 class BaseBuilder(metaclass=spack.builder.PhaseCallbacksMeta):
     def setup_dependent_build_environment(self, env, dependent_spec):
-        self.pkg.setup_run_environment(env)
         # Some packages, e.g. ncview, refuse to build if the compiler path returned by nc-config
         # differs from the path to the compiler that the package should be built with. Therefore,
         # we have to shadow nc-config from self.prefix.bin, which references the real compiler,
@@ -441,7 +442,7 @@ class AutotoolsBuilder(BaseBuilder, autotools.AutotoolsBuilder):
         if "~shared" in hdf5:
             if "+szip" in hdf5:
                 extra_libs.append(hdf5["szip"].libs)
-            extra_libs.append(hdf5["zlib"].libs)
+            extra_libs.append(hdf5["zlib-api"].libs)
 
         if self.spec.satisfies("@4.9.0:+shared"):
             lib_search_dirs.extend(self.spec["zlib-api"].libs.directories)

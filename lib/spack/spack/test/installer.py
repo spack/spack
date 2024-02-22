@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -165,23 +165,19 @@ def test_install_msg(monkeypatch):
     assert inst.install_msg(name, pid, None) == expected
 
 
-def test_install_from_cache_errors(install_mockery, capsys):
-    """Test to ensure cover _install_from_cache errors."""
+def test_install_from_cache_errors(install_mockery):
+    """Test to ensure cover install from cache errors."""
     spec = spack.spec.Spec("trivial-install-test-package")
     spec.concretize()
     assert spec.concrete
 
     # Check with cache-only
-    with pytest.raises(SystemExit):
-        inst._install_from_cache(spec.package, True, True, False)
-
-    captured = str(capsys.readouterr())
-    assert "No binary" in captured
-    assert "found when cache-only specified" in captured
+    with pytest.raises(inst.InstallError, match="No binary found when cache-only was specified"):
+        spec.package.do_install(package_cache_only=True, dependencies_cache_only=True)
     assert not spec.package.installed_from_binary_cache
 
     # Check when don't expect to install only from binary cache
-    assert not inst._install_from_cache(spec.package, False, True, False)
+    assert not inst._install_from_cache(spec.package, explicit=True, unsigned=False)
     assert not spec.package.installed_from_binary_cache
 
 
@@ -192,7 +188,7 @@ def test_install_from_cache_ok(install_mockery, monkeypatch):
     monkeypatch.setattr(inst, "_try_install_from_binary_cache", _true)
     monkeypatch.setattr(spack.hooks, "post_install", _noop)
 
-    assert inst._install_from_cache(spec.package, True, True, False)
+    assert inst._install_from_cache(spec.package, explicit=True, unsigned=False)
 
 
 def test_process_external_package_module(install_mockery, monkeypatch, capfd):
@@ -719,13 +715,12 @@ def test_check_deps_status_external(install_mockery, monkeypatch):
     installer = create_installer(const_arg)
     request = installer.build_requests[0]
 
-    # Mock the known dependent, b, as external so assumed to be installed
+    # Mock the dependencies as external so assumed to be installed
     monkeypatch.setattr(spack.spec.Spec, "external", True)
     installer._check_deps_status(request)
 
-    # exotic architectures will add dependencies on gnuconfig, which we want to ignore
-    installed = [x for x in installer.installed if not x.startswith("gnuconfig")]
-    assert installed[0].startswith("b")
+    for dep in request.spec.traverse(root=False):
+        assert inst.package_id(dep.package) in installer.installed
 
 
 def test_check_deps_status_upstream(install_mockery, monkeypatch):
@@ -733,13 +728,12 @@ def test_check_deps_status_upstream(install_mockery, monkeypatch):
     installer = create_installer(const_arg)
     request = installer.build_requests[0]
 
-    # Mock the known dependent, b, as installed upstream
+    # Mock the known dependencies as installed upstream
     monkeypatch.setattr(spack.spec.Spec, "installed_upstream", True)
     installer._check_deps_status(request)
 
-    # exotic architectures will add dependencies on gnuconfig, which we want to ignore
-    installed = [x for x in installer.installed if not x.startswith("gnuconfig")]
-    assert installed[0].startswith("b")
+    for dep in request.spec.traverse(root=False):
+        assert inst.package_id(dep.package) in installer.installed
 
 
 def test_add_bootstrap_compilers(install_mockery, monkeypatch):

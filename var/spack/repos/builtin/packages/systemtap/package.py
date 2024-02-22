@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Systemtap(AutotoolsPackage):
 
     homepage = "https://sourceware.org/systemtap/"
     url = "https://sourceware.org/systemtap/ftp/releases/systemtap-4.3.tar.gz"
+
+    license("GPL-2.0-only")
 
     version("4.3", sha256="f8e206ed654c13a8b42245a342c1b5a4aafdf817c97bf3becbe3c8a43a4489ce")
     version("4.2", sha256="0984ebe3162274988252ec35074021dc1e8420d87a8b35f437578562fce08781")

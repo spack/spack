@@ -21,7 +21,7 @@ spack:
       version:
         - 1.8.20
     elfutils:
-      variants: +bzip2 ~nls +xz
+      variants: ~nls
     hdf5:
       variants: +fortran +hl +shared
     libfabric:
@@ -141,9 +141,6 @@ spack:
     - - $compiler_specs
     - - $compiler
     - - $target
-
-
-  mirrors: { "mirror": "s3://spack-binaries/develop/aws-isc" }
 
   ci:
     pipeline-gen:

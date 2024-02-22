@@ -5,21 +5,6 @@ spack:
     reuse: false
     unify: false
 
-  compilers:
-  - compiler:
-      spec: gcc@9.4.0
-      paths:
-        cc: /usr/bin/gcc
-        cxx: /usr/bin/g++
-        f77: /usr/bin/gfortran
-        fc: /usr/bin/gfortran
-      flags: {}
-      operating_system: ubuntu20.04
-      target: ppc64le
-      modules: []
-      environment: {}
-      extra_rpaths: []
-
   packages:
     all:
       require: "%gcc@9.4.0 target=ppc64le"
@@ -31,7 +16,7 @@ spack:
     binutils:
       variants: +ld +gold +headers +libiberty ~nls
     elfutils:
-      variants: +bzip2 ~nls +xz
+      variants: ~nls
     hdf5:
       variants: +fortran +hl +shared
     libfabric:
@@ -101,6 +86,7 @@ spack:
   - gmp
   - gotcha
   - gptune
+  - gromacs +cp2k ^cp2k build_system=cmake
   - h5bench
   - hdf5-vol-async
   - hdf5-vol-cache
@@ -164,7 +150,7 @@ spack:
   - swig@4.0.2-fortran
   - sz3
   - tasmanian
-  - tau +mpi +python                        # tau: has issue with `spack env depfile` build
+  - tau +mpi +python                       # +syscall fails: https://github.com/spack/spack/pull/40830#issuecomment-1790799772; tau: has issue with `spack env depfile` build
   - trilinos +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
   - turbine
   - umap
@@ -189,13 +175,32 @@ spack:
   # - visit                                 # libext, libxkbfile, libxrender, libxt, silo (https://github.com/spack/spack/issues/39538), cairo
   - vtk-m
   - zfp
-  # -- 
+  # --
   # - archer                                # part of llvm +omp_tsan
   # - dealii                                # fltk: https://github.com/spack/spack/issues/38791
   # - geopm                                 # geopm: https://github.com/spack/spack/issues/38798
   # - libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp # py-numcodecs: gcc: error: unrecognized command line option '-mno-sse2'; did you mean '-mno-isel'? gcc: error: unrecognized command line option '-mno-avx2'
   # - phist +mpi                            # ghost@develop: gcc-9: error: unrecognized command line option '-march=native'; did you mean '-mcpu=native'?
   # - variorum                              # variorum: https://github.com/spack/spack/issues/38786
+
+  # PYTHON PACKAGES
+  - opencv +python3
+  # - py-horovod # py-torch, py-tensorflow
+  - py-jax
+  - py-jupyterlab
+  - py-matplotlib
+  - py-notebook
+  - py-numpy
+  - py-openai
+  - py-pandas
+  - py-plotly
+  - py-pooch
+  - py-pytest
+  - py-scikit-learn
+  - py-scipy
+  - py-seaborn
+  # - py-tensorflow # error
+  # - py-torch # error
 
   # CUDA NOARCH
   - bricks +cuda
@@ -213,8 +218,10 @@ spack:
   - caliper +cuda cuda_arch=70
   - chai ~benchmarks ~tests +cuda cuda_arch=70 ^umpire ~shared
   - ecp-data-vis-sdk ~rocm +adios2 ~ascent +hdf5 +vtkm +zfp ~paraview +cuda cuda_arch=70
+  - exago +mpi +python +raja +hiop ~rocm +cuda cuda_arch=70 ~ipopt ^hiop@1.0.0 ~sparse +mpi +raja ~rocm +cuda cuda_arch=70 #^raja@0.14.0
   - flecsi +cuda cuda_arch=70
   - ginkgo +cuda cuda_arch=70
+  - gromacs +cuda cuda_arch=70
   - heffte +cuda cuda_arch=70
   - hpx +cuda cuda_arch=70
   - hypre +cuda cuda_arch=70
@@ -251,12 +258,10 @@ spack:
   # - trilinos +cuda cuda_arch=70           # trilinos: https://github.com/trilinos/Trilinos/issues/11630
   # - upcxx +cuda cuda_arch=70              # upcxx: needs NVIDIA driver
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/e4s-power" }
-
   ci:
     pipeline-gen:
     - build-job:
-        image: ecpe4s/ubuntu20.04-runner-ppc64-gcc-11.4:2023.08.01
+        image: ghcr.io/spack/ubuntu20.04-runner-ppc64-gcc-11.4:2023.08.01
 
   cdash:
     build-group: E4S Power

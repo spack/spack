@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,11 @@ class PyTorchmetrics(PythonPackage):
 
     maintainers("adamjstewart")
 
+    license("Apache-2.0")
+
+    version("1.3.1", sha256="8d371f7597a1a5eb02d5f2ed59642d6fef09093926997ce91e18b1147cc8defa")
+    version("1.3.0", sha256="e8ac3adcc61e7a847d0504b0a0e0a3b7f57796178b239c6fafb5d20c0c9460ac")
+    version("1.2.1", sha256="217387738f84939c39b534b20d4983e737cc448d27aaa5340e0327948d97ca3e")
     version("1.2.0", sha256="7eb28340bde45e13187a9ad54a4a7010a50417815d8181a5df6131f116ffe1b7")
     version("1.1.1", sha256="65ea34205c0506eecfd06b98f63f4d2a2c5c0e17367cf324e1747adc854c80a5")
     version("1.1.0", sha256="94b51aeb3d5ff55503fa47086bbc2af9e26efabb840e2d3c2381db9623dda5fd")
@@ -38,13 +43,15 @@ class PyTorchmetrics(PythonPackage):
     version("0.2.0", sha256="481a28759acd2d77cc088acba6bc7dc4a356c7cb767da2e1495e91e612e2d548")
 
     # setup.py
-    depends_on("python@3.8:", when="@1:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
-    # requirements.txt (upper bound is removed during processing)
+    # requirements/base.txt (upper bound is removed during processing)
     depends_on("py-numpy@1.20.1:", when="@1:", type=("build", "run"))
     depends_on("py-numpy@1.17.2:", when="@0.4:", type=("build", "run"))
     depends_on("py-numpy", when="@0.3:", type=("build", "run"))
+    depends_on("py-packaging@17.2:", when="@1.2.1:", type=("build", "run"))
+    depends_on("py-packaging", when="@0.3:1.1.0", type=("build", "run"))
+    depends_on("py-torch@1.10:", when="@1.3:", type=("build", "run"))
     depends_on("py-torch@1.8.1:", when="@0.11:", type=("build", "run"))
     depends_on("py-torch@1.3.1:", type=("build", "run"))
     depends_on("py-typing-extensions", when="@0.9: ^python@:3.8", type=("build", "run"))
@@ -52,5 +59,4 @@ class PyTorchmetrics(PythonPackage):
     depends_on("py-lightning-utilities@0.7:", when="@1:", type=("build", "run"))
 
     # Historical dependencies
-    depends_on("py-packaging", when="@0.3:1.1", type=("build", "run"))
     depends_on("py-pydeprecate@0.3", when="@0.7:0.8", type=("build", "run"))

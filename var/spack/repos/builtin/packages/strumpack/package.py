@@ -1,7 +1,9 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from platform import machine
 
 from spack.package import *
 from spack.util.environment import set_env
@@ -28,7 +30,10 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
 
     test_requires_compiler = True
 
+    license("BSD-3-Clause-LBNL")
+
     version("master", branch="master")
+    version("7.2.0", sha256="6988c00c3213f13e53d75fb474102358f4fecf07a4b4304b7123d86fdc784639")
     version("7.1.3", sha256="c951f38ee7af20da3ff46429e38fcebd57fb6f12619b2c56040d6da5096abcb0")
     version("7.1.2", sha256="262a0193fa1682d0eaa90363f739e0be7a778d5deeb80e4d4ae12446082a39cc")
     version("7.1.1", sha256="56481a22955c2eeb40932777233fc227347743c75683d996cb598617dd2a8635")
@@ -68,7 +73,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("mpi", when="+mpi")
     depends_on("blas")
     depends_on("lapack")
-    depends_on("openblas threads=openmp", when="^openblas")
+    depends_on("openblas threads=openmp", when="^[virtuals=blas] openblas")
     depends_on("scalapack", when="+mpi")
     depends_on("metis")
     depends_on("parmetis", when="+parmetis")
@@ -172,7 +177,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
 
         if "%cce" in spec:
             # Assume the proper Cray CCE module (cce) is loaded:
-            craylibs_path = env["CRAYLIBS_" + env["MACHTYPE"].capitalize()]
+            craylibs_path = env["CRAYLIBS_" + machine().upper()]
             env.setdefault("LDFLAGS", "")
             env["LDFLAGS"] += " -Wl,-rpath," + craylibs_path
 

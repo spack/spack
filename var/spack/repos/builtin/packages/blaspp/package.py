@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,12 @@ class Blaspp(CMakePackage, CudaPackage, ROCmPackage):
     url = "https://github.com/icl-utk-edu/blaspp/releases/download/v2023.01.00/blaspp-2023.01.00.tar.gz"
     maintainers("teonnik", "Sely85", "G-Ragghianti", "mgates3")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
+    version(
+        "2023.11.05", sha256="62dfc03ec07c0826e0466dc2c204b460caa929d53ad4f050cb132d92670be7ce"
+    )
     version(
         "2023.08.25", sha256="1d9c7227a6d8776944aa866592142b7b51c6e4ba5529d168eb8ae2b329c47401"
     )
@@ -72,15 +77,9 @@ class Blaspp(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+cuda", when="+sycl", msg=backend_msg)
     conflicts("+sycl", when="@:2023.06.00", msg="SYCL support requires BLAS++ version 2023.08.25")
 
-    # TODO: +sycl requires use of the intel-oneapi compiler, but we cannot express that directly.
-    #       For now, add conflicts for other compilers instead.
-    for __compiler in spack.compilers.supported_compilers():
-        if __compiler != "oneapi":
-            conflicts(
-                "%{0}".format(__compiler),
-                when="+sycl",
-                msg="blaspp+sycl must be compiled with %oneapi",
-            )
+    requires("%oneapi", when="+sycl", msg="blaspp+sycl must be compiled with %oneapi")
+
+    patch("0001-fix-blaspp-build-error-with-rocm-6.0.0.patch", when="@2023.06.00: ^hip@6.0 +rocm")
 
     def cmake_args(self):
         spec = self.spec

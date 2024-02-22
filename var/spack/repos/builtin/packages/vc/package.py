@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,9 @@ class Vc(CMakePackage):
     git = "https://github.com/VcDevel/Vc.git"
     url = "https://github.com/VcDevel/Vc/archive/refs/tags/1.3.3.tar.gz"
 
+    license("BSD-3-Clause")
+
+    version("1.4.4", sha256="5933108196be44c41613884cd56305df320263981fe6a49e648aebb3354d57f3")
     version("1.4.3", sha256="988ea0053f3fbf17544ca776a2749c097b3139089408b0286fa4e9e8513e037f")
     version("1.4.2", sha256="50d3f151e40b0718666935aa71d299d6370fafa67411f0a9e249fbce3e6e3952")
     version("1.4.1", sha256="7e8b57ed5ff9eb0835636203898c21302733973ff8eaede5134dd7cb87f915f6")

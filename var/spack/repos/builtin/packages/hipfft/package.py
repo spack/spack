@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,14 +14,20 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
     It sits between the application and the backend FFT library, marshalling
     inputs into the backend and results back to the application."""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/hipFFT"
-    git = "https://github.com/ROCmSoftwarePlatform/hipFFT.git"
-    url = "https://github.com/ROCmSoftwarePlatform/hipfft/archive/rocm-5.5.0.tar.gz"
+    homepage = "https://github.com/ROCm/hipFFT"
+    git = "https://github.com/ROCm/hipFFT.git"
+    url = "https://github.com/ROCm/hipfft/archive/rocm-6.0.2.tar.gz"
     tags = ["rocm"]
 
     maintainers("renjithravindrankannath", "srekolam")
 
+    license("MIT")
+
     version("master", branch="master")
+    version("6.0.2", sha256="c0a4bac5fa9a757a19a4995fa9571328b6ee0a71e93c66a880069794d65d284a")
+    version("6.0.0", sha256="44f328b7862c066459089dfe62833cb7d626c6ceb71c57d8c7d6bba45dad491e")
+    version("5.7.1", sha256="33452576649df479f084076c47d0b30f6f1da34864094bce767dd9bf609f04aa")
+    version("5.7.0", sha256="daa5dc44580145e85ff8ffa7eb40a3d1ef41f3217549c01281715ff696a31588")
     version("5.6.1", sha256="d2ae36b8eacd39b865e8a7972b8eb86bcea2de4ac90711bba7e29b39b01eaa74")
     version("5.6.0", sha256="c7f425b693caf9371b42226d86392335d993a117d23219b6ba1fd13523cb8261")
     version("5.5.1", sha256="3addd15a459752ad657e84c2a7b6b6289600d1d0a5f90d6e0946ba11e8148fc0")
@@ -30,51 +36,12 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
     version("5.4.0", sha256="d0a8e790182928b3d19774b8db1eece9b881a422f6a7055c051b12739fded624")
     version("5.3.3", sha256="fd1662cd5b1e1bce9db53b320c0fe614179cd196251efc2ef3365d38922b5cdc")
     version("5.3.0", sha256="ebbe2009b86b688809b6b4d5c3929fc589db455218d54a37790f21339147c5df")
-    version("5.2.3", sha256="10be731fe91ede5e9f254f6eb3bc00b4dbeab449477f3cac03de358a7d0a6fa1")
-    version("5.2.1", sha256="6c8fbace2864ca992b2fca9dc8d0bb4488aef62045acdfcf249d53dd005ebd35")
-    version("5.2.0", sha256="ec37edcd61837281c403802ccc1cb01ec3fa3ba135b5ab16617961b66d4cc3e2")
-    version("5.1.3", sha256="c26fa64499293b25d0686bed04feb61378c878a4bb4a6d559e6cb7be1f6bf2ec")
-    version("5.1.0", sha256="1bac7761c055355216cd262cdc0450aabb383addcb739b56ba849b2e6e013fa5")
-    version(
-        "5.0.2",
-        sha256="9ef64694f5def0d6fb98dc89e46d7a3f7d005a61348ac0b52184a3b8e84c2383",
-        deprecated=True,
-    )
-    version(
-        "5.0.0",
-        sha256="867d0bdc6c9769c6cebc0c4594b24d5f3504157cdcef97a6a1668dd493ca6a15",
-        deprecated=True,
-    )
-    version(
-        "4.5.2",
-        sha256="32ba6a5f50cfede3777a43794371ffb1363302131d8a0382d96df90ed7bc911a",
-        deprecated=True,
-    )
-    version(
-        "4.5.0",
-        sha256="96636713bc6cdafbd5a9c1e98e816895448960c86b380fc0c3c9ffa28f670844",
-        deprecated=True,
-    )
-    version(
-        "4.3.1",
-        sha256="429cfd40415856da8f5c2c321b612800d6826ee121df5a4e6d1596cad5b51727",
-        deprecated=True,
-    )
-    version(
-        "4.3.0",
-        sha256="6e52e0eb5b2a13adaf317fe5b20b3e059589aabf2af87e4c67cb1022b861ba84",
-        deprecated=True,
-    )
-    version(
-        "4.2.0",
-        sha256="74253b0d92feff55ebb39b3fe4a22a6454160a60bdad37384aa5340fd8843f8a",
-        deprecated=True,
-    )
-    version(
-        "4.1.0",
-        sha256="885ffd4813f2c271150f1b8b386f0af775b38fc82b96ce6fd94eb4ba0c0180be",
-        deprecated=True,
-    )
+    with default_args(deprecated=True):
+        version("5.2.3", sha256="10be731fe91ede5e9f254f6eb3bc00b4dbeab449477f3cac03de358a7d0a6fa1")
+        version("5.2.1", sha256="6c8fbace2864ca992b2fca9dc8d0bb4488aef62045acdfcf249d53dd005ebd35")
+        version("5.2.0", sha256="ec37edcd61837281c403802ccc1cb01ec3fa3ba135b5ab16617961b66d4cc3e2")
+        version("5.1.3", sha256="c26fa64499293b25d0686bed04feb61378c878a4bb4a6d559e6cb7be1f6bf2ec")
+        version("5.1.0", sha256="1bac7761c055355216cd262cdc0450aabb383addcb739b56ba849b2e6e013fa5")
 
     # default to an 'auto' variant until amdgpu_targets can be given a better default than 'none'
     amdgpu_targets = ROCmPackage.amdgpu_targets
@@ -98,14 +65,6 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hip +cuda", when="+cuda")
 
     for ver in [
-        "4.1.0",
-        "4.2.0",
-        "4.3.0",
-        "4.3.1",
-        "4.5.0",
-        "4.5.2",
-        "5.0.0",
-        "5.0.2",
         "5.1.0",
         "5.1.3",
         "5.2.0",
@@ -119,14 +78,18 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
         "5.5.1",
         "5.6.0",
         "5.6.1",
+        "5.7.0",
+        "5.7.1",
+        "6.0.0",
+        "6.0.2",
     ]:
-        depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
-        depends_on("rocfft@" + ver, when="+rocm @" + ver)
+        depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
+        depends_on(f"rocfft@{ver}", when=f"+rocm @{ver}")
 
     for tgt in ROCmPackage.amdgpu_targets:
-        depends_on(
-            "rocfft amdgpu_target={0}".format(tgt), when="+rocm amdgpu_target={0}".format(tgt)
-        )
+        depends_on(f"rocfft amdgpu_target={tgt}", when=f"+rocm amdgpu_target={tgt}")
+    # https://github.com/ROCm/rocFFT/pull/85)
+    patch("001-remove-submodule-and-sync-shared-files-from-rocFFT.patch", when="@6.0.0")
 
     def cmake_args(self):
         args = [self.define("BUILD_CLIENTS_SAMPLES", "OFF")]

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,8 +20,15 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
     url = "https://elpa.mpcdf.mpg.de/software/tarball-archive/Releases/2015.11.001/elpa-2015.11.001.tar.gz"
     git = "https://gitlab.mpcdf.mpg.de/elpa/elpa.git"
 
+    license("LGPL-3.0-only")
+
     version("master", branch="master")
 
+    version(
+        "2023.11.001-patched",
+        sha256="62ee109afc06539507f459c08b958dc4db65b757dbd77f927678c77f7687415e",
+        url="https://elpa.mpcdf.mpg.de/software/tarball-archive/Releases/2023.11.001/elpa-2023.11.001-patched.tar.gz",
+    )
     version(
         "2023.05.001", sha256="ec64be5d6522810d601a3b8e6a31720e3c3eb4af33a434d8a64570d76e6462b6"
     )
@@ -46,6 +53,8 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     variant("openmp", default=True, description="Activates OpenMP support")
     variant("mpi", default=True, description="Activates MPI support")
+
+    patch("fujitsu.patch", when="%fj")
 
     depends_on("autoconf", type="build", when="@master")
     depends_on("automake", type="build", when="@master")
@@ -89,7 +98,7 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         # upstream sometimes adds tarball suffixes not part of the internal version
         elpa_version = str(self.spec.version)
-        for vsuffix in ("_bugfix",):
+        for vsuffix in ("_bugfix", "-patched"):
             if elpa_version.endswith(vsuffix):  # implementation of py3.9 removesuffix
                 elpa_version = elpa_version[: -len(vsuffix)]
 
@@ -123,7 +132,7 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
         if spec.target.family != "x86_64":
             options.append("--disable-sse-assembly")
 
-        if "%aocc" in spec:
+        if "%aocc" in spec or "%fj" in spec:
             options.append("--disable-shared")
             options.append("--enable-static")
 
@@ -132,19 +141,16 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
             options.append("--enable-generic")
 
         if self.compiler.name == "gcc":
-            gcc_options = []
-            gfortran_options = ["-ffree-line-length-none"]
-
-            space_separator = " "
-            options.extend(
-                [
-                    "CFLAGS=" + space_separator.join(gcc_options),
-                    "FCFLAGS=" + space_separator.join(gfortran_options),
-                ]
-            )
+            options.extend(["CFLAGS=-O3", "FCFLAGS=-O3 -ffree-line-length-none"])
 
         if "%aocc" in spec:
             options.extend(["FCFLAGS=-O3", "CFLAGS=-O3"])
+
+        if "%fj" in spec:
+            options.append("--disable-Fortran2008-features")
+            options.append("--enable-FUGAKU")
+            if "+openmp" in spec:
+                options.extend(["FCFLAGS=-Kparallel"])
 
         cuda_flag = "nvidia-gpu"
         if "+cuda" in spec:
@@ -170,10 +176,16 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         options += self.enable_or_disable("openmp")
 
-        options += [
-            "LDFLAGS={0}".format(spec["lapack"].libs.search_flags),
-            "LIBS={0} {1}".format(spec["lapack"].libs.link_flags, spec["blas"].libs.link_flags),
-        ]
+        # Additional linker search paths and link libs
+        ldflags = [spec["blas"].libs.search_flags, spec["lapack"].libs.search_flags]
+        libs = [spec["lapack"].libs.link_flags, spec["blas"].libs.link_flags]
+
+        # If using blas with openmp support, link with openmp
+        # Needed for Spack-provided OneAPI MKL and for many externals
+        if self.spec["blas"].satisfies("threads=openmp"):
+            ldflags.append(self.compiler.openmp_flag)
+
+        options += [f'LDFLAGS={" ".join(ldflags)}', f'LIBS={" ".join(libs)}']
 
         if "+mpi" in self.spec:
             options += [
