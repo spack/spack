@@ -7,7 +7,7 @@
 from spack.package import *
 
 
-class Tandem(CMakePackage):
+class Tandem(CMakePackage, CudaPackage, ROCmPackage):
     """Tandem is a scientific software for SEAS modelling and for solving Poisson
     and linear elasticity problems. It implements the Symmetric Interior Penalty
     Galerkin (SIPG) method using unstructured simplicial meshes (triangle meshes
@@ -62,6 +62,7 @@ class Tandem(CMakePackage):
     depends_on("petsc@3.14.6:3.18.5 +int64 +mumps +scalapack +knl", when="target=skylake:")
     depends_on("petsc@3.14.6:3.18.5 +int64 +mumps +scalapack memalign=32 +cuda", when="+cuda")
     depends_on("petsc@3.14.6:3.18.5 +int64 +mumps +scalapack memalign=32 +rocm", when="+rocm")
+
     # see https://github.com/TEAR-ERC/tandem/issues/45
     conflicts("%intel")
 
