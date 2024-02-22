@@ -127,7 +127,7 @@ class Seacas(CMakePackage):
     )
 
     # Build options
-    variant("fortran", default=True, description="Compile with Fortran support")
+    variant("fortran", default=not is_windows, description="Compile with Fortran support")
     # Enable this on Windows at your own risk, SEACAS exports no symbols and so cannot be
     # meaningfully linked against as a shared library
     variant("shared", default=True, description="Enables the build of shared libraries")
@@ -143,7 +143,7 @@ class Seacas(CMakePackage):
     variant("faodel", default=False, description="Enable Faodel")
     variant("matio", default=True, description="Compile with matio (MatLab) support")
     variant("metis", default=False, description="Compile with METIS and ParMETIS")
-    variant("x11", default=not is_windows, description="Compile with X11")
+    variant("x11", default=True, description="Compile with X11")
 
     # ###################### Dependencies ##########################
     depends_on("cmake@3.22:", when="@2023-10-24:", type="build")
@@ -184,7 +184,7 @@ class Seacas(CMakePackage):
         msg="The Faodel TPL is only compatible with @2021-04-05 and later.",
     )
     conflicts("+shared", when="platform=windows")
-    conflicts("+fortran", when="platform=windows")
+    conflicts("+x11", when="platform=windows")
     # Remove use of variable in array assignment (triggers c2057 on MSVC)
     # See https://github.com/sandialabs/seacas/issues/438
     patch(
