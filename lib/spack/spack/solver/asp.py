@@ -812,7 +812,7 @@ class PyclingoDriver:
             pprint.pprint(self.control.statistics)
 
         if result.unsolved_specs and setup.concretize_everything:
-            raise UnsatisfiableSpecError(
+            raise InternalConcretizerError(
                 "Internal Spack error: the solver completed but produced specs"
                 " that do not satisfy the request. Rerun with 'spack -d'"
             )

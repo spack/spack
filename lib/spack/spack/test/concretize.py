@@ -2095,6 +2095,7 @@ class TestConcretize:
 
         assert result.specs
 
+    @pytest.mark.regression("38664")
     def test_unsolved_specs_raises_error(self, monkeypatch, mock_packages, config):
         """Check that the solver raises an exception when input specs are not
         satisfied.
