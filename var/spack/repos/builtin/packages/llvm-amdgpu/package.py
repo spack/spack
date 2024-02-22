@@ -53,7 +53,6 @@ class LlvmAmdgpu(CMakePackage):
             "standalone spack package."
         ),
     )
-    variant("openmp", default=False, description="Enable OpenMP")
     variant(
         "llvm_dylib",
         default=False,
@@ -77,11 +76,6 @@ class LlvmAmdgpu(CMakePackage):
     depends_on("zlib-api", type="link")
     depends_on("ncurses+termlib", type="link")
     depends_on("pkgconfig", type="build")
-
-    # openmp dependencies
-    depends_on("perl-data-dumper", type="build", when="+openmp")
-    depends_on("hwloc", when="+openmp")
-    depends_on("elf", type="link", when="+openmp")
 
     # OpenMP clang toolchain looks for bitcode files in llvm/bin/../lib
     # as per 5.2.0 llvm code. It used to be llvm/bin/../lib/libdevice.
@@ -189,8 +183,6 @@ class LlvmAmdgpu(CMakePackage):
 
     def cmake_args(self):
         llvm_projects = ["clang", "lld", "clang-tools-extra", "compiler-rt"]
-        if "+openmp" in self.spec:
-            llvm_projects.append("openmp")
         llvm_runtimes = ["libcxx", "libcxxabi"]
         args = [
             self.define("LLVM_ENABLE_Z3_SOLVER", "OFF"),
