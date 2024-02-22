@@ -25,6 +25,11 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
     version("master", branch="master")
 
     version(
+        "2023.11.001-patched",
+        sha256="62ee109afc06539507f459c08b958dc4db65b757dbd77f927678c77f7687415e",
+        url="https://elpa.mpcdf.mpg.de/software/tarball-archive/Releases/2023.11.001/elpa-2023.11.001-patched.tar.gz",
+    )
+    version(
         "2023.05.001", sha256="ec64be5d6522810d601a3b8e6a31720e3c3eb4af33a434d8a64570d76e6462b6"
     )
     version(
@@ -93,7 +98,7 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         # upstream sometimes adds tarball suffixes not part of the internal version
         elpa_version = str(self.spec.version)
-        for vsuffix in ("_bugfix",):
+        for vsuffix in ("_bugfix", "-patched"):
             if elpa_version.endswith(vsuffix):  # implementation of py3.9 removesuffix
                 elpa_version = elpa_version[: -len(vsuffix)]
 
@@ -171,16 +176,16 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         options += self.enable_or_disable("openmp")
 
-        # if using mkl with openmp support, link with openmp
-        mkl_openmp_flag = (
-            self.compiler.openmp_flag
-            if self.spec.satisfies("^intel-oneapi-mkl threads=openmp")
-            else ""
-        )
-        options += [
-            "LDFLAGS={0} {1}".format(mkl_openmp_flag, spec["lapack"].libs.search_flags),
-            "LIBS={0} {1}".format(spec["lapack"].libs.link_flags, spec["blas"].libs.link_flags),
-        ]
+        # Additional linker search paths and link libs
+        ldflags = [spec["blas"].libs.search_flags, spec["lapack"].libs.search_flags]
+        libs = [spec["lapack"].libs.link_flags, spec["blas"].libs.link_flags]
+
+        # If using blas with openmp support, link with openmp
+        # Needed for Spack-provided OneAPI MKL and for many externals
+        if self.spec["blas"].satisfies("threads=openmp"):
+            ldflags.append(self.compiler.openmp_flag)
+
+        options += [f'LDFLAGS={" ".join(ldflags)}', f'LIBS={" ".join(libs)}']
 
         if "+mpi" in self.spec:
             options += [
