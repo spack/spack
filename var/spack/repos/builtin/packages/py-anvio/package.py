@@ -8,7 +8,7 @@ from spack.package import *
 
 
 class PyAnvio(PythonPackage):
-    """"Anvi’o is a comprehensive platform that brings together many aspects of
+    """Anvi’o is a comprehensive platform that brings together many aspects of
     today’s cutting-edge computational strategies of data-enabled microbiology,
     including genomics, metagenomics, metatranscriptomics, pangenomics,
     metapangenomics, phylogenomics, and microbial population genetics in an
@@ -36,7 +36,9 @@ class PyAnvio(PythonPackage):
     depends_on("py-six", type=("build", "run"))
     depends_on("py-matplotlib", type=("build", "run"))
     depends_on("py-statsmodels", type=("build", "run"))
-    depends_on("py-colored", type=("build", "run"))
+    # Needs a version of py-colored newer than 1.4.2 (not listed in
+    # requirements.txt)
+    depends_on("py-colored@2:", type=("build", "run"))
     depends_on("py-illumina-utils", type=("build", "run"))
     depends_on("py-tabulate", type=("build", "run"))
     depends_on("py-rich-argparse", type=("build", "run"))
