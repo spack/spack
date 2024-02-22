@@ -8,7 +8,7 @@ import os
 import re
 import sys
 
-from llnl.util.filesystem import compute_sfn
+from llnl.util.filesystem import windows_sfn
 
 from spack.build_systems.autotools import AutotoolsBuilder
 from spack.build_systems.nmake import NMakeBuilder
@@ -473,7 +473,7 @@ class NMakeBuilder(NMakeBuilder):
         # otherwise cURLs build system will interpret the path as a file
         # and the install will fail with ambiguous errors
         inst_prefix = self.prefix + "\\"
-        args.append(f"WITH_PREFIX={compute_sfn(inst_prefix)}")
+        args.append(f"WITH_PREFIX={windows_sfn(inst_prefix)}")
         return args
 
     def install(self, pkg, spec, prefix):
@@ -488,7 +488,7 @@ class NMakeBuilder(NMakeBuilder):
         env["CC"] = ""
         env["CXX"] = ""
         winbuild_dir = os.path.join(self.stage.source_path, "winbuild")
-        winbuild_dir = compute_sfn(winbuild_dir)
+        winbuild_dir = windows_sfn(winbuild_dir)
         with working_dir(winbuild_dir):
             nmake("/f", "Makefile.vc", *self.nmake_args(), ignore_quotes=True)
         with working_dir(os.path.join(self.stage.source_path, "builds")):

@@ -1241,8 +1241,11 @@ def get_single_file(directory):
 
 
 @system_path_filter
-def compute_sfn(path: os.PathLike):
-    """8.3 Filenames (SFN or short filename) is a file
+def windows_sfn(path: os.PathLike):
+    """Returns 8.3 Filename (SFN) representation of
+    path
+
+    8.3 Filenames (SFN or short filename) is a file
     naming convention used prior to Win95 that Windows
     still (and will continue to) support. This convention
     caps filenames at 8 characters, and most importantly
