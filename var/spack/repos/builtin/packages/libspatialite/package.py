@@ -12,7 +12,6 @@ class Libspatialite(AutotoolsPackage):
 
     homepage = "https://www.gaia-gis.it"
     url = "https://www.gaia-gis.it/gaia-sins/libspatialite-sources/libspatialite-4.3.0a.tar.gz"
-    manual_download = True
 
     license("MPL-1.1")
 
