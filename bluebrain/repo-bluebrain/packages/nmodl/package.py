@@ -54,6 +54,7 @@ class Nmodl(CMakePackage):
     depends_on("py-sympy@1.3:", type=("build", "run"))
     depends_on("py-pyyaml@3.13:", type=("build", "run"))
     depends_on("spdlog")
+    depends_on("py-find-libpython", type=("run",))
 
     def cmake_args(self):
         # Do not use the cli11, fmt, pybind11 and spdlog submodule, use the one from
