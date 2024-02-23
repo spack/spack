@@ -35,8 +35,5 @@ class AwscliV2(PythonPackage):
     @run_after("install")
     @when("~examples")
     def post_install(self):
-        pyver = self.spec["python"].version.up_to(2)
-        examples_dir = join_path(
-            self.spec.prefix.lib, f"python{pyver}/site-packages/awscli/examples/"
-        )
+        examples_dir = join_path(python_purelib, "awscli", "examples")
         remove_directory_contents(examples_dir)
