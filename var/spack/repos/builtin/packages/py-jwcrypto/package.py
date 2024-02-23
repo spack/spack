@@ -27,5 +27,5 @@ class PyJwcrypto(PythonPackage):
 
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-cryptography", type=("build", "run"))
-    depends_on("py-typing-extensions", type=("build", "run"))
+    depends_on("py-cryptography@3.4:", type=("build", "run"))
+    depends_on("py-typing-extensions@4.5:", type=("build", "run"))
