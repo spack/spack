@@ -19,8 +19,7 @@ class PyZfitInterface(PythonPackage):
 
     version(
         "0.0.3",
-        sha256="c41cf79f1da4150b9a60bb1e8cab15df895b6ff4b753e2306494a7abda4150d0",
-        expand=False,
+        sha256="af7e8ed409f136187b2cd4def723504f9d619738668e963af388a79121239f74",
     )
 
     depends_on("python@3.9:", type=("build", "run"))
