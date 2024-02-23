@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Antlr(AutotoolsPackage):
     homepage = "https://www.antlr2.org/"
     url = "http://www.antlr2.org/download/antlr-2.7.7.tar.gz"
 
+    license("ANTLR-PD")
+
     version("2.7.7", sha256="853aeb021aef7586bda29e74a6b03006bcb565a755c86b66032d8ec31b67dbb9")
 
     # Fixes build with recent versions of GCC
@@ -24,16 +26,19 @@ class Antlr(AutotoolsPackage):
     variant("cxx", default=True, description="Enable ANTLR for C++")
     variant("java", default=False, description="Enable ANTLR for Java")
     variant("python", default=False, description="Enable ANTLR for Python")
+    variant("pic", default=False, description="Enable fPIC")
 
     extends("python", when="+python")
     depends_on("java", type=("build", "run"), when="+java")
 
-    def configure_args(self):
-        spec = self.spec
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("+pic"):
+            env.set("CXXFLAGS", "-fPIC")
 
-        return [
-            "--disable-csharp",
-            "--{0}-cxx".format("enable" if "+cxx" in spec else "disable"),
-            "--{0}-java".format("enable" if "+java" in spec else "disable"),
-            "--{0}-python".format("enable" if "+python" in spec else "disable"),
-        ]
+    def configure_args(self):
+        args = ["--disable-csharp"]
+        args.extend(self.enable_or_disable("cxx"))
+        args.extend(self.enable_or_disable("java"))
+        args.extend(self.enable_or_disable("python"))
+
+        return args

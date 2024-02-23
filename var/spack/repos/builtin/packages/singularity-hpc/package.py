@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,10 +12,12 @@ class SingularityHpc(PythonPackage):
     using Lmod or Environment Modules. Works for users and admins.
     """
 
-    maintainers = ["marcodelapierre", "vsoch"]
+    maintainers("marcodelapierre", "vsoch")
 
     homepage = "https://github.com/singularityhub/singularity-hpc"
     pypi = "singularity-hpc/singularity-hpc-0.1.16.tar.gz"
+
+    license("MPL-2.0")
 
     version("0.1.16", sha256="00aca234259b962914987ec725181dafc11096fa721d610485615585753d769f")
     version("0.1.12", sha256="760cbcae7b07b319ff6147938578648ce6f0af760701e62bf5f88649ef08f793")

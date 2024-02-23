@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,9 +29,11 @@ class GrOsmosdr(CMakePackage):
     homepage = "https://osmocom.org/projects/gr-osmosdr/wiki/GrOsmoSDR"
     url = "https://github.com/osmocom/gr-osmosdr/archive/v0.2.2.tar.gz"
 
-    maintainers = ["aweits"]
+    maintainers("aweits")
 
     variant("hackrf", default=True, description="Support HackRF Hardware")
+
+    license("GPL-3.0-only")
 
     version("0.2.2", sha256="5a7ce7afee38a56191b5d16cb4a91c92476729ff16ed09cbba5a3851ac619713")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,8 +25,20 @@ class IntelOneapiItac(IntelOneApiPackage):
 
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/trace-analyzer.html"
 
-    maintainers = ["rscohn2"]
+    maintainers("rscohn2")
 
+    version(
+        "2022.0.0",
+        url="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/e83526f5-7e0f-4708-9e0d-47f1e65f29aa/l_itac_oneapi_p_2022.0.0.49690_offline.sh",
+        sha256="6ab2888afcfc981273aed3df316463fbaf511faf83ee091ca79016459b03b79e",
+        expand=False,
+    )
+    version(
+        "2021.10.0",
+        url="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/226adf12-b7f6-407e-95a9-8e9ab76d7631/l_itac_oneapi_p_2021.10.0.14_offline.sh",
+        sha256="cfff2ee19c793b64074b5490a16acbe8c9767f41d391d7c71c0004fdcec501c7",
+        expand=False,
+    )
     version(
         "2021.8.0",
         url="https://registrationcenter-download.intel.com/akdlm/irc_nas/19129/l_itac_oneapi_p_2021.8.0.25341_offline.sh",
@@ -51,6 +63,10 @@ class IntelOneapiItac(IntelOneApiPackage):
         sha256="1ecc2735da960041b051e377cadb9f6ab2f44e8aa44d0f642529a56a3cbba436",
         expand=False,
     )
+
+    @property
+    def v2_layout_versions(self):
+        return "@2022:"
 
     @property
     def component_dir(self):

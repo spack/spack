@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,8 +17,11 @@ class _7zip(SourceforgePackage, Package):
 
     homepage = "https://sourceforge.net/projects/sevenzip"
     sourceforge_mirror_path = "sevenzip/files/7z2107-src.tar.xz"
+    tags = ["windows"]
 
     executables = ["7z"]
+
+    license("LGPL-2.0-only")
 
     version("21.07", sha256="213d594407cb8efcba36610b152ca4921eda14163310b43903d13e68313e1e39")
 
@@ -69,13 +72,13 @@ class _7zip(SourceforgePackage, Package):
         return arch
 
     def is_64bit(self):
-        return platform.machine().endswith("64")
+        return "64" in str(self.pkg.spec.target.family)
 
     def build(self, spec, prefix):
         link_type = "1" if "static" in spec.variants["link_type"].value else "0"
         nmake_args = [
-            "PLATFORM=%s" % self.plat_arch,
-            "MY_STATIC_LINK=%s" % link_type,
+            f"PLATFORM={self.plat_arch}",
+            f"MY_STATIC_LINK={link_type}",
             "NEW_COMPILER=1",
         ]
         # 7zips makefile is configured in such as way that if this value is set

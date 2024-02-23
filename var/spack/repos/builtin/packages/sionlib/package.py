@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,9 @@ class Sionlib(AutotoolsPackage):
     homepage = "https://www.fz-juelich.de/ias/jsc/EN/Expertise/Support/Software/SIONlib/_node.html"
     url = "https://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.6"
 
-    maintainers = ["pramodk"]
+    maintainers("pramodk")
+
+    license("BSD-3-Clause")
 
     version(
         "1.7.6",

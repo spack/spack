@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,9 @@ class Julea(MesonPackage):
     git = "https://github.com/wr-hamburg/julea.git"
 
     tags = ["HPC", "I/O", "storage"]
-    maintainers = ["michaelkuhn"]
+    maintainers("michaelkuhn")
+
+    license("LGPL-3.0-or-later")
 
     version("master", branch="master")
 

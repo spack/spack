@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ import llnl.util.filesystem as fs
 
 import spack.builder
 import spack.package_base
-from spack.directives import build_system, depends_on, variant
+from spack.directives import build_system, conflicts, depends_on, variant
 from spack.multimethod import when
 
 from ._checks import BaseBuilder, execute_build_time_tests
@@ -33,7 +33,7 @@ class MesonPackage(spack.package_base.PackageBase):
     with when("build_system=meson"):
         variant(
             "buildtype",
-            default="debugoptimized",
+            default="release",
             description="Meson build type",
             values=("plain", "debug", "debugoptimized", "release", "minsize"),
         )
@@ -47,6 +47,13 @@ class MesonPackage(spack.package_base.PackageBase):
         variant("strip", default=False, description="Strip targets on install")
         depends_on("meson", type="build")
         depends_on("ninja", type="build")
+        # Python detection in meson requires distutils to be importable, but distutils no longer
+        # exists in Python 3.12. In Spack, we can't use setuptools as distutils replacement,
+        # because the distutils-precedence.pth startup file that setuptools ships with is not run
+        # when setuptools is in PYTHONPATH; it has to be in system site-packages. In a future meson
+        # release, the distutils requirement will be dropped, so this conflict can be relaxed.
+        # We have patches to make it work with meson 1.1 and above.
+        conflicts("^python@3.12:", when="^meson@:1.0")
 
     def flags_to_build_system_args(self, flags):
         """Produces a list of all command line arguments to pass the specified
@@ -120,6 +127,7 @@ class MesonBuilder(BaseBuilder):
         of package writers.
         """
         # standard Meson arguments
+
         std_meson_args = MesonBuilder.std_args(self.pkg)
         std_meson_args += getattr(self, "meson_flag_args", [])
         return std_meson_args
@@ -141,7 +149,7 @@ class MesonBuilder(BaseBuilder):
         else:
             default_library = "shared"
 
-        args = [
+        return [
             "-Dprefix={0}".format(pkg.prefix),
             # If we do not specify libdir explicitly, Meson chooses something
             # like lib/x86_64-linux-gnu, which causes problems when trying to
@@ -154,8 +162,6 @@ class MesonBuilder(BaseBuilder):
             # Do not automatically download and install dependencies
             "-Dwrap_mode=nodownload",
         ]
-
-        return args
 
     @property
     def build_dirname(self):
@@ -182,7 +188,10 @@ class MesonBuilder(BaseBuilder):
 
     def meson(self, pkg, spec, prefix):
         """Run ``meson`` in the build directory"""
-        options = [os.path.abspath(self.root_mesonlists_dir)]
+        options = []
+        if self.spec["meson"].satisfies("@0.64:"):
+            options.append("setup")
+        options.append(os.path.abspath(self.root_mesonlists_dir))
         options += self.std_meson_args
         options += self.meson_args()
         with fs.working_dir(self.build_directory, create=True):
@@ -205,5 +214,5 @@ class MesonBuilder(BaseBuilder):
     def check(self):
         """Search Meson-generated files for the target ``test`` and run it if found."""
         with fs.working_dir(self.build_directory):
-            self._if_ninja_target_execute("test")
-            self._if_ninja_target_execute("check")
+            self.pkg._if_ninja_target_execute("test")
+            self.pkg._if_ninja_target_execute("check")

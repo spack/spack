@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,12 +18,17 @@ class Openturns(CMakePackage):
     homepage = "https://openturns.github.io/www/"
     url = "https://github.com/openturns/openturns/archive/refs/tags/v1.18.tar.gz"
     git = "https://github.com/openturns/openturns.git"
-    maintainers = ["liuyangzhuan"]
+    maintainers("liuyangzhuan")
 
-    version("1.18", sha256="1840d3fd8b38fd5967b1fa04e49d8f760c2c497400430e97623595ca48754ae0")
+    license("LGPL-3.0-or-later")
+
     version("master", branch="master")
+    version("1.20", sha256="2be5247f0266d153619b35dfb1eeeb46736c502dad993b40aff8857d6314f293")
+    version("1.19", sha256="1d61cb6ce8ec1121db9f1e9fb490aaa056d2ff250db26df05d2e3e30ceb32344")
+    version("1.18", sha256="1840d3fd8b38fd5967b1fa04e49d8f760c2c497400430e97623595ca48754ae0")
 
     variant("python", default=True, description="Build Python bindings")
+    variant("libxml2", default=False, description="Use LibXML2 for XML support")
 
     extends("python", when="+python")
 
@@ -38,6 +43,7 @@ class Openturns(CMakePackage):
     depends_on("intel-tbb", type=("build", "run"))
     depends_on("py-cloudpickle", type=("build", "run"))
     depends_on("py-urllib3", type=("build", "run"))
+    depends_on("libxml2", type=("build", "run"), when="+libxml2")
 
     def cmake_args(self):
         spec = self.spec
@@ -53,10 +59,8 @@ class Openturns(CMakePackage):
         if "+python" in spec:
             args.extend(
                 [
-                    # By default picks up the system python not the Spack build
-                    "-DPYTHON_EXECUTABLE={0}".format(spec["python"].command.path),
                     # By default installs to the python prefix
-                    "-DPYTHON_SITE_PACKAGES={0}".format(python_platlib),
+                    "-DPYTHON_SITE_PACKAGES={0}".format(python_platlib)
                 ]
             )
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Hisat2(MakefilePackage):
 
     homepage = "https://daehwankimlab.github.io/hisat2/"
     url = "ftp://ftp.ccb.jhu.edu/pub/infphilo/hisat2/downloads/hisat2-2.1.0-source.zip"
+
+    license("GPL-3.0-or-later")
 
     version(
         "2.2.1",
@@ -81,18 +83,13 @@ class Hisat2(MakefilePackage):
         with working_dir(self.prefix.bin):
             pattern = "^#!.*/usr/bin/env python"
             repl = "#!{0}".format(self.spec["python"].command.path)
-            files = [
-                "hisat2-build",
-                "hisat2-inspect",
-            ]
+            files = ["hisat2-build", "hisat2-inspect"]
             for file in files:
                 filter_file(pattern, repl, *files, backup=False)
 
             pattern = "^#!.*/usr/bin/env perl"
             repl = "#!{0}".format(self.spec["perl"].command.path)
-            files = [
-                "hisat2",
-            ]
+            files = ["hisat2"]
             for file in files:
                 filter_file(pattern, repl, *files, backup=False)
 

@@ -1,14 +1,13 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
 import itertools
-import multiprocessing.pool
 import os
 import re
-import shutil
 from collections import OrderedDict
+from typing import List, Optional
 
 import macholib.mach_o
 import macholib.MachO
@@ -27,6 +26,8 @@ import spack.store
 import spack.util.elf as elf
 import spack.util.executable as executable
 
+from .relocate_text import BinaryFilePrefixReplacer, TextFilePrefixReplacer
+
 is_macos = str(spack.platforms.real_host()) == "darwin"
 
 
@@ -39,58 +40,15 @@ class InstallRootStringError(spack.error.SpackError):
             file_path (str): path of the binary
             root_path (str): original Spack's store root string
         """
-        super(InstallRootStringError, self).__init__(
+        super().__init__(
             "\n %s \ncontains string\n %s \n"
             "after replacing it in rpaths.\n"
             "Package should not be relocated.\n Use -a to override." % (file_path, root_path)
         )
 
 
-class BinaryStringReplacementError(spack.error.SpackError):
-    def __init__(self, file_path, old_len, new_len):
-        """The size of the file changed after binary path substitution
-
-        Args:
-            file_path (str): file with changing size
-            old_len (str): original length of the file
-            new_len (str): length of the file after substitution
-        """
-        super(BinaryStringReplacementError, self).__init__(
-            "Doing a binary string replacement in %s failed.\n"
-            "The size of the file changed from %s to %s\n"
-            "when it should have remanined the same." % (file_path, old_len, new_len)
-        )
-
-
-class BinaryTextReplaceError(spack.error.SpackError):
-    def __init__(self, msg):
-        msg += (
-            " To fix this, compile with more padding "
-            "(config:install_tree:padded_length), or install to a shorter prefix."
-        )
-        super(BinaryTextReplaceError, self).__init__(msg)
-
-
-class CannotGrowString(BinaryTextReplaceError):
-    def __init__(self, old, new):
-        msg = "Cannot replace {!r} with {!r} because the new prefix is longer.".format(old, new)
-        super(CannotGrowString, self).__init__(msg)
-
-
-class CannotShrinkCString(BinaryTextReplaceError):
-    def __init__(self, old, new, full_old_string):
-        # Just interpolate binary string to not risk issues with invalid
-        # unicode, which would be really bad user experience: error in error.
-        # We have no clue if we actually deal with a real C-string nor what
-        # encoding it has.
-        msg = "Cannot replace {!r} with {!r} in the C-string {!r}.".format(
-            old, new, full_old_string
-        )
-        super(CannotShrinkCString, self).__init__(msg)
-
-
 @memoized
-def _patchelf():
+def _patchelf() -> Optional[executable.Executable]:
     """Return the full path to the patchelf binary, if available, else None."""
     import spack.bootstrap
 
@@ -98,9 +56,7 @@ def _patchelf():
         return None
 
     with spack.bootstrap.ensure_bootstrap_configuration():
-        patchelf = spack.bootstrap.ensure_patchelf_in_path_or_raise()
-
-    return patchelf.path
+        return spack.bootstrap.ensure_patchelf_in_path_or_raise()
 
 
 def _elf_rpaths_for(path):
@@ -179,11 +135,6 @@ def _normalize_relative_paths(start_path, relative_paths):
         normalized_paths.append(path)
 
     return normalized_paths
-
-
-def _placeholder(dirname):
-    """String of  of @'s with same length of the argument"""
-    return "@" * len(dirname)
 
 
 def _decode_macho_data(bytestring):
@@ -388,40 +339,34 @@ def macholib_get_paths(cur_path):
     return (rpaths, deps, ident)
 
 
-def _set_elf_rpaths(target, rpaths):
-    """Replace the original RPATH of the target with the paths passed
-    as arguments.
+def _set_elf_rpaths_and_interpreter(
+    target: str, rpaths: List[str], interpreter: Optional[str] = None
+) -> Optional[str]:
+    """Replace the original RPATH of the target with the paths passed as arguments.
 
     Args:
         target: target executable. Must be an ELF object.
         rpaths: paths to be set in the RPATH
+        interpreter: optionally set the interpreter
 
     Returns:
-        A string concatenating the stdout and stderr of the call
-        to ``patchelf`` if it was invoked
+        A string concatenating the stdout and stderr of the call to ``patchelf`` if it was invoked
     """
     # Join the paths using ':' as a separator
     rpaths_str = ":".join(rpaths)
 
-    # If we're relocating patchelf itself, make a copy and use it
-    bak_path = None
-    if target.endswith("/bin/patchelf"):
-        bak_path = target + ".bak"
-        shutil.copy(target, bak_path)
-
-    patchelf, output = executable.Executable(bak_path or _patchelf()), None
     try:
+        # TODO: error handling is not great here?
         # TODO: revisit the use of --force-rpath as it might be conditional
         # TODO: if we want to support setting RUNPATH from binary packages
-        patchelf_args = ["--force-rpath", "--set-rpath", rpaths_str, target]
-        output = patchelf(*patchelf_args, output=str, error=str)
+        args = ["--force-rpath", "--set-rpath", rpaths_str]
+        if interpreter:
+            args.extend(["--set-interpreter", interpreter])
+        args.append(target)
+        return _patchelf()(*args, output=str, error=str)
     except executable.ProcessError as e:
-        msg = "patchelf --force-rpath --set-rpath {0} failed with error {1}"
-        tty.warn(msg.format(target, e))
-    finally:
-        if bak_path and os.path.exists(bak_path):
-            os.remove(bak_path)
-    return output
+        tty.warn(str(e))
+        return None
 
 
 def needs_binary_relocation(m_type, m_subtype):
@@ -450,116 +395,8 @@ def needs_text_relocation(m_type, m_subtype):
     return m_type == "text"
 
 
-def apply_binary_replacements(f, prefix_to_prefix, suffix_safety_size=7):
-    """
-    Given a file opened in rb+ mode, apply the string replacements as
-    specified by an ordered dictionary of prefix to prefix mappings. This
-    method takes special care of null-terminated C-strings. C-string constants
-    are problematic because compilers and linkers optimize readonly strings for
-    space by aliasing those that share a common suffix (only suffix since all
-    of them are null terminated). See https://github.com/spack/spack/pull/31739
-    and https://github.com/spack/spack/pull/32253 for details. Our logic matches
-    the original prefix with a ``suffix_safety_size + 1`` lookahead for null bytes.
-    If no null terminator is found, we simply pad with leading /, assuming that
-    it's a long C-string; the full C-string after replacement has a large suffix
-    in common with its original value.
-    If there *is* a null terminator we can do the same as long as the replacement
-    has a sufficiently long common suffix with the original prefix.
-    As a last resort when the replacement does not have a long enough common suffix,
-    we can try to shorten the string, but this only works if the new length is
-    sufficiently short (typically the case when going from large padding -> normal path)
-    If the replacement string is longer, or all of the above fails, we error out.
-
-    Arguments:
-        f: file opened in rb+ mode
-        prefix_to_prefix (OrderedDict): OrderedDictionary where the keys are
-            bytes representing the old prefixes and the values are the new
-        suffix_safety_size (int): in case of null terminated strings, what size
-            of the suffix should remain to avoid aliasing issues?
-    """
-    assert suffix_safety_size >= 0
-    assert f.tell() == 0
-
-    # Look for exact matches of our paths, and also look if there's a null terminator
-    # soon after (this covers the case where we search for /abc but match /abc/ with
-    # a trailing dir seperator).
-    regex = re.compile(
-        b"("
-        + b"|".join(re.escape(p) for p in prefix_to_prefix.keys())
-        + b")([^\0]{0,%d}\0)?" % suffix_safety_size
-    )
-
-    # We *could* read binary data in chunks to avoid loading all in memory,
-    # but it's nasty to deal with matches across boundaries, so let's stick to
-    # something simple.
-
-    for match in regex.finditer(f.read()):
-        # The matching prefix (old) and its replacement (new)
-        old = match.group(1)
-        new = prefix_to_prefix[old]
-
-        # Did we find a trailing null within a N + 1 bytes window after the prefix?
-        null_terminated = match.end(0) > match.end(1)
-
-        # Suffix string length, excluding the null byte
-        # Only makes sense if null_terminated
-        suffix_strlen = match.end(0) - match.end(1) - 1
-
-        # How many bytes are we shrinking our string?
-        bytes_shorter = len(old) - len(new)
-
-        # We can't make strings larger.
-        if bytes_shorter < 0:
-            raise CannotGrowString(old, new)
-
-        # If we don't know whether this is a null terminated C-string (we're looking
-        # only N + 1 bytes ahead), or if it is and we have a common suffix, we can
-        # simply pad with leading dir separators.
-        elif (
-            not null_terminated
-            or suffix_strlen >= suffix_safety_size  # == is enough, but let's be defensive
-            or old[-suffix_safety_size + suffix_strlen :]
-            == new[-suffix_safety_size + suffix_strlen :]
-        ):
-            replacement = b"/" * bytes_shorter + new
-
-        # If it *was* null terminated, all that matters is that we can leave N bytes
-        # of old suffix in place. Note that > is required since we also insert an
-        # additional null terminator.
-        elif bytes_shorter > suffix_safety_size:
-            replacement = new + match.group(2)  # includes the trailing null
-
-        # Otherwise... we can't :(
-        else:
-            raise CannotShrinkCString(old, new, match.group()[:-1])
-
-        f.seek(match.start())
-        f.write(replacement)
-
-
-def _replace_prefix_bin(filename, prefix_to_prefix):
-    """Replace all the occurrences of the old prefix with a new prefix in binary
-    files. See :func:`~spack.relocate.apply_binary_replacements` for details.
-
-    Args:
-        filename (str): target binary file
-        byte_prefixes (OrderedDict): ordered dictionary where the keys are
-            bytes representing the old prefixes and the values are the new
-            prefixes (all bytes utf-8 encoded)
-    """
-
-    with open(filename, "rb+") as f:
-        apply_binary_replacements(f, prefix_to_prefix)
-
-
 def relocate_macho_binaries(
-    path_names,
-    old_layout_root,
-    new_layout_root,
-    prefix_to_prefix,
-    rel,
-    old_prefix,
-    new_prefix,
+    path_names, old_layout_root, new_layout_root, prefix_to_prefix, rel, old_prefix, new_prefix
 ):
     """
     Use macholib python package to get the rpaths, depedent libraries
@@ -666,10 +503,12 @@ def new_relocate_elf_binaries(binaries, prefix_to_prefix):
 
     for path in binaries:
         try:
-            elf.replace_rpath_in_place_or_raise(path, prefix_to_prefix)
-        except elf.ElfDynamicSectionUpdateFailed as e:
-            # Fall back to the old `patchelf --set-rpath` method.
-            _set_elf_rpaths(path, e.new.decode("utf-8").split(":"))
+            elf.substitute_rpath_and_pt_interp_in_place_or_raise(path, prefix_to_prefix)
+        except elf.ElfCStringUpdatesFailed as e:
+            # Fall back to `patchelf --set-rpath ... --set-interpreter ...`
+            rpaths = e.rpath.new_value.decode("utf-8").split(":") if e.rpath else []
+            interpreter = e.pt_interp.new_value.decode("utf-8") if e.pt_interp else None
+            _set_elf_rpaths_and_interpreter(path, rpaths=rpaths, interpreter=interpreter)
 
 
 def relocate_elf_binaries(
@@ -711,10 +550,10 @@ def relocate_elf_binaries(
             new_rpaths = _make_relative(new_binary, new_root, new_norm_rpaths)
             # check to see if relative rpaths are changed before rewriting
             if sorted(new_rpaths) != sorted(orig_rpaths):
-                _set_elf_rpaths(new_binary, new_rpaths)
+                _set_elf_rpaths_and_interpreter(new_binary, new_rpaths)
         else:
             new_rpaths = _transform_rpaths(orig_rpaths, orig_root, new_prefixes)
-            _set_elf_rpaths(new_binary, new_rpaths)
+            _set_elf_rpaths_and_interpreter(new_binary, new_rpaths)
 
 
 def make_link_relative(new_links, orig_links):
@@ -761,20 +600,7 @@ def make_elf_binaries_relative(new_binaries, orig_binaries, orig_layout_root):
         orig_rpaths = _elf_rpaths_for(new_binary)
         if orig_rpaths:
             new_rpaths = _make_relative(orig_binary, orig_layout_root, orig_rpaths)
-            _set_elf_rpaths(new_binary, new_rpaths)
-
-
-def ensure_binaries_are_relocatable(binaries):
-    """Raise an error if any binary in the list is not relocatable.
-
-    Args:
-        binaries (list): list of binaries to check
-
-    Raises:
-        InstallRootStringError: if the file is not relocatable
-    """
-    for binary in binaries:
-        ensure_binary_is_relocatable(binary)
+            _set_elf_rpaths_and_interpreter(new_binary, new_rpaths)
 
 
 def warn_if_link_cant_be_relocated(link, target):
@@ -800,197 +626,32 @@ def relocate_links(links, prefix_to_prefix):
         symlink(new_target, link)
 
 
-def utf8_path_to_binary_regex(prefix):
-    """Create a (binary) regex that matches the input path in utf8"""
-    prefix_bytes = re.escape(prefix).encode("utf-8")
-    return re.compile(b"(?<![\\w\\-_/])([\\w\\-_]*?)%s([\\w\\-_/]*)" % prefix_bytes)
-
-
-def byte_strings_to_single_binary_regex(prefixes):
-    all_prefixes = b"|".join(re.escape(p) for p in prefixes)
-    return re.compile(b"(?<![\\w\\-_/])([\\w\\-_]*?)(%s)([\\w\\-_/]*)" % all_prefixes)
-
-
-def utf8_paths_to_single_binary_regex(prefixes):
-    """Create a (binary) regex that matches any input path in utf8"""
-    return byte_strings_to_single_binary_regex(p.encode("utf-8") for p in prefixes)
-
-
-def _replace_prefix_text_file(file, regex, prefix_to_prefix):
-    """Given a text file opened in rb+, substitute all old with new prefixes and write
-    in-place (file size may grow or shrink)."""
-
-    def replacement(match):
-        return match.group(1) + prefix_to_prefix[match.group(2)] + match.group(3)
-
-    data = file.read()
-    file.seek(0)
-    file.write(re.sub(regex, replacement, data))
-    file.truncate()
-
-
-def _replace_prefix_text(filename, regex, prefix_to_prefix):
-    with open(filename, "rb+") as f:
-        _replace_prefix_text_file(f, regex, prefix_to_prefix)
-
-
-def unsafe_relocate_text(files, prefixes, concurrency=32):
+def relocate_text(files, prefixes):
     """Relocate text file from the original installation prefix to the
     new prefix.
 
     Relocation also affects the the path in Spack's sbang script.
 
-    Note: unsafe when files contains duplicates, such as repeated paths,
-    symlinks, hardlinks.
-
     Args:
         files (list): Text files to be relocated
         prefixes (OrderedDict): String prefixes which need to be changed
-        concurrency (int): Preferred degree of parallelism
     """
-
-    # This now needs to be handled by the caller in all cases
-    # orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(orig_spack)
-    # new_sbang = '#!/bin/bash {0}/bin/sbang'.format(new_spack)
-
-    # Transform to binary string
-    prefix_to_prefix = OrderedDict(
-        (k.encode("utf-8"), v.encode("utf-8")) for (k, v) in prefixes.items()
-    )
-
-    # Create a regex of the form (pre check)(prefix 1|prefix 2|prefix 3)(post check).
-    regex = byte_strings_to_single_binary_regex(prefix_to_prefix.keys())
-
-    args = [(filename, regex, prefix_to_prefix) for filename in files]
-    tp = multiprocessing.pool.ThreadPool(processes=concurrency)
-    try:
-        tp.map(llnl.util.lang.star(_replace_prefix_text), args)
-    finally:
-        tp.terminate()
-        tp.join()
+    TextFilePrefixReplacer.from_strings_or_bytes(prefixes).apply(files)
 
 
-def unsafe_relocate_text_bin(binaries, prefixes, concurrency=32):
-    """Replace null terminated path strings hard coded into binaries.
+def relocate_text_bin(binaries, prefixes):
+    """Replace null terminated path strings hard-coded into binaries.
 
     The new install prefix must be shorter than the original one.
-
-    Note: unsafe when files contains duplicates, such as repeated paths,
-    symlinks, hardlinks.
 
     Args:
         binaries (list): binaries to be relocated
         prefixes (OrderedDict): String prefixes which need to be changed.
-        concurrency (int): Desired degree of parallelism.
 
     Raises:
-      BinaryTextReplaceError: when the new path is longer than the old path
+      spack.relocate_text.BinaryTextReplaceError: when the new path is longer than the old path
     """
-    byte_prefixes = collections.OrderedDict({})
-
-    for orig_prefix, new_prefix in prefixes.items():
-        if orig_prefix != new_prefix:
-            if isinstance(orig_prefix, bytes):
-                orig_bytes = orig_prefix
-            else:
-                orig_bytes = orig_prefix.encode("utf-8")
-            if isinstance(new_prefix, bytes):
-                new_bytes = new_prefix
-            else:
-                new_bytes = new_prefix.encode("utf-8")
-            byte_prefixes[orig_bytes] = new_bytes
-
-    # Do relocations on text in binaries that refers to the install tree
-    # multiprocesing.ThreadPool.map requires single argument
-    args = []
-
-    for binary in binaries:
-        args.append((binary, byte_prefixes))
-
-    tp = multiprocessing.pool.ThreadPool(processes=concurrency)
-
-    try:
-        tp.map(llnl.util.lang.star(_replace_prefix_bin), args)
-    finally:
-        tp.terminate()
-        tp.join()
-
-
-def is_relocatable(spec):
-    """Returns True if an installed spec is relocatable.
-
-    Args:
-        spec (spack.spec.Spec): spec to be analyzed
-
-    Returns:
-        True if the binaries of an installed spec
-        are relocatable and False otherwise.
-
-    Raises:
-        ValueError: if the spec is not installed
-    """
-    if not spec.install_status():
-        raise ValueError("spec is not installed [{0}]".format(str(spec)))
-
-    if spec.external or spec.virtual:
-        tty.warn("external or virtual package %s is not relocatable" % spec.name)
-        return False
-
-    # Explore the installation prefix of the spec
-    for root, dirs, files in os.walk(spec.prefix, topdown=True):
-        dirs[:] = [d for d in dirs if d not in (".spack", "man")]
-        try:
-            abs_paths = (os.path.join(root, f) for f in files)
-            ensure_binaries_are_relocatable(filter(is_binary, abs_paths))
-        except InstallRootStringError:
-            return False
-
-    return True
-
-
-def ensure_binary_is_relocatable(filename, paths_to_relocate=None):
-    """Raises if any given or default absolute path is found in the
-    binary (apart from rpaths / load commands).
-
-    Args:
-        filename: absolute path of the file to be analyzed
-
-    Raises:
-        InstallRootStringError: if the binary contains an absolute path
-        ValueError: if the filename does not exist or the path is not absolute
-    """
-    paths_to_relocate = paths_to_relocate or [spack.store.layout.root, spack.paths.prefix]
-
-    if not os.path.exists(filename):
-        raise ValueError("{0} does not exist".format(filename))
-
-    if not os.path.isabs(filename):
-        raise ValueError("{0} is not an absolute path".format(filename))
-
-    strings = executable.Executable("strings")
-
-    # Remove the RPATHS from the strings in the executable
-    set_of_strings = set(strings(filename, output=str).split())
-
-    m_type, m_subtype = fs.mime_type(filename)
-    if m_type == "application":
-        tty.debug("{0},{1}".format(m_type, m_subtype), level=2)
-
-    if not is_macos:
-        if m_subtype == "x-executable" or m_subtype == "x-sharedlib":
-            rpaths = ":".join(_elf_rpaths_for(filename))
-            set_of_strings.discard(rpaths)
-    else:
-        if m_subtype == "x-mach-binary":
-            rpaths, deps, idpath = macholib_get_paths(filename)
-            set_of_strings.discard(set(rpaths))
-            set_of_strings.discard(set(deps))
-            if idpath is not None:
-                set_of_strings.discard(idpath)
-
-    for path_to_relocate in paths_to_relocate:
-        if any(path_to_relocate in x for x in set_of_strings):
-            raise InstallRootStringError(filename, path_to_relocate)
+    return BinaryFilePrefixReplacer.from_strings_or_bytes(prefixes).apply(binaries)
 
 
 def is_binary(filename):
@@ -1046,7 +707,7 @@ def fixup_macos_rpath(root, filename):
     args = []
 
     # Check dependencies for non-rpath entries
-    spack_root = spack.store.layout.root
+    spack_root = spack.store.STORE.layout.root
     for name in deps:
         if name.startswith(spack_root):
             tty.debug("Spack-installed dependency for {0}: {1}".format(abspath, name))
@@ -1061,7 +722,7 @@ def fixup_macos_rpath(root, filename):
 
     # Check for nonexistent rpaths (often added by spack linker overzealousness
     # with both lib/ and lib64/) and duplicate rpaths
-    for (rpath, count) in rpaths.items():
+    for rpath, count in rpaths.items():
         if rpath.startswith("@loader_path") or rpath.startswith("@executable_path"):
             # Allowable relative paths
             pass

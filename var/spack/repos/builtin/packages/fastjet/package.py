@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,8 +21,11 @@ class Fastjet(AutotoolsPackage):
 
     tags = ["hep"]
 
-    maintainers = ["drbenmorgan", "vvolkl"]
+    maintainers("drbenmorgan", "vvolkl")
 
+    license("GPL-2.0-only")
+
+    version("3.4.1", sha256="05608c6ff213f06dd9de723813d6b4dccd51e661ac13098f74bfc9eeaf1cb5aa")
     version("3.4.0", sha256="ee07c8747c8ead86d88de4a9e4e8d1e9e7d7614973f5631ba8297f7a02478b91")
     version("3.3.4", sha256="432b51401e1335697c9248519ce3737809808fc1f6d1644bfae948716dddfc03")
     version("3.3.3", sha256="30b0a0282ce5aeac9e45862314f5966f0be941ce118a83ee4805d39b827d732b")
@@ -58,13 +61,31 @@ class Fastjet(AutotoolsPackage):
 
     variant("shared", default=True, description="Builds a shared version of the library")
     variant("auto-ptr", default=False, description="Use auto_ptr")
+    variant(
+        "thread-safety",
+        default="limited",
+        values=("none", "limited", "full"),
+        multi=False,
+        when="@3.4.0:",
+        description="Enables thread safety",
+    )
     variant("atlas", default=False, description="Patch to make random generator thread_local")
 
-    patch("atlas.patch", when="+atlas", level=0)
+    patch("atlas.patch", when="@:3.3 +atlas", level=0)
+    patch(
+        "https://gitlab.cern.ch/sft/lcgcmake/-/raw/23c82f269b8e5df0190e20b7fbe06db16b24d667/externals/patches/fastjet-3.4.1.patch",
+        sha256="1c7eed1d825f2013116778366a2d27b850c46a2848389174f78829fa24cd1c45",
+        when="@3.4: +atlas",
+        level=0,
+    )
 
     def configure_args(self):
         extra_args = ["--enable-allplugins"]
         extra_args += self.enable_or_disable("shared")
         extra_args += self.enable_or_disable("auto-ptr")
+        if self.spec.variants["thread-safety"].value == "limited":
+            extra_args += ["--enable-limited-thread-safety"]
+        if self.spec.variants["thread-safety"].value == "full":
+            extra_args += ["--enable-thread-safety"]
 
         return extra_args

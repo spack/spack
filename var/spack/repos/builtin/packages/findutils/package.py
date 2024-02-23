@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,9 +22,11 @@ class Findutils(AutotoolsPackage, GNUMirrorPackage):
         if version < Version("4.7.0"):
             self.gnu_mirror_path = "findutils/findutils-{0}.tar.gz".format(version)
 
-        return super(Findutils, self).url_for_version(version)
+        return super().url_for_version(version)
 
     executables = ["^find$"]
+
+    license("GPL-3.0-or-later")
 
     version("4.9.0", sha256="a2bfb8c09d436770edc59f50fa483e785b161a3b7b9d547573cb08065fd462fe")
     version("4.8.0", sha256="57127b7e97d91282c6ace556378d5455a9509898297e46e10443016ea1387164")

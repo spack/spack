@@ -1,9 +1,7 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from __future__ import unicode_literals
 
 import contextlib
 import io
@@ -14,6 +12,7 @@ import textwrap
 import traceback
 from datetime import datetime
 from sys import platform as _platform
+from typing import NoReturn
 
 if _platform != "win32":
     import fcntl
@@ -108,7 +107,6 @@ class SuppressOutput:
     """Class for disabling output in a scope using 'with' keyword"""
 
     def __init__(self, msg_enabled=True, warn_enabled=True, error_enabled=True):
-
         self._msg_enabled_initial = _msg_enabled
         self._warn_enabled_initial = _warn_enabled
         self._error_enabled_initial = _error_enabled
@@ -213,6 +211,7 @@ def info(message, *args, **kwargs):
                 stream.write(line + "\n")
         else:
             stream.write(indent + _output_filter(str(arg)) + "\n")
+    stream.flush()
 
 
 def verbose(message, *args, **kwargs):
@@ -247,7 +246,7 @@ def warn(message, *args, **kwargs):
     info("Warning: " + str(message), *args, **kwargs)
 
 
-def die(message, *args, **kwargs):
+def die(message, *args, **kwargs) -> NoReturn:
     kwargs.setdefault("countback", 4)
     error(message, *args, **kwargs)
     sys.exit(1)

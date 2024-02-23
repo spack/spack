@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,9 +12,11 @@ class Exawind(CMakePackage):
     homepage = "https://github.com/Exawind/exawind-driver"
     git = "https://github.com/Exawind/exawind-driver.git"
 
-    maintainers = ["jrood-nrel", "psakievich"]
+    maintainers("jrood-nrel", "psakievich")
 
     tags = ["ecp", "ecp-apps"]
+
+    license("Apache-2.0")
 
     version("master", branch="main")
 

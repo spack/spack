@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,8 +19,10 @@ class Orca(Package):
 
     homepage = "https://cec.mpg.de"
     url = "file://{0}/orca_4_0_1_2_linux_x86-64_openmpi202.tar.zst".format(os.getcwd())
-    maintainers = ["snehring"]
+    maintainers("snehring")
     manual_download = True
+
+    license("LGPL-2.1-or-later")
 
     version(
         "5.0.3",
@@ -44,6 +46,8 @@ class Orca(Package):
     )
 
     depends_on("zstd", when="@:4.2.1", type="build")
+    depends_on("libevent", type="run")
+    depends_on("libpciaccess", type="run")
 
     # Map Orca version with the required OpenMPI version
     openmpi_versions = {"4.0.1.2": "2.0.2", "4.2.0": "3.1.4", "4.2.1": "3.1.4", "5.0.3": "4.1.2"}
@@ -82,3 +86,6 @@ class Orca(Package):
 
     def setup_run_environment(self, env):
         env.prepend_path("LD_LIBRARY_PATH", self.prefix.bin)
+        env.prepend_path("LD_LIBRARY_PATH", self.spec["libevent"].prefix.lib)
+        env.prepend_path("LD_LIBRARY_PATH", self.spec["libpciaccess"].prefix.lib)
+        env.prepend_path("LD_LIBRARY_PATH", self.spec["openmpi"].prefix.lib)

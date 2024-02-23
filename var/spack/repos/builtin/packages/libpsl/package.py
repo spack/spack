@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Libpsl(AutotoolsPackage):
     homepage = "https://github.com/rockdaboot/libpsl"
     url = "https://github.com/rockdaboot/libpsl/releases/download/0.21.2/libpsl-0.21.2.tar.gz"
     list_url = "https://github.com/rockdaboot/libpsl/tags"
+
+    license("MIT")
 
     version("0.21.2", sha256="e35991b6e17001afa2c0ca3b10c357650602b92596209b7492802f3768a6285f")
     version("0.20.2", sha256="7aa949fd3fdba61b0dc7b3f4c2520263b942c189746e157f48436386eca3398e")
@@ -29,7 +31,7 @@ class Libpsl(AutotoolsPackage):
 
     def url_for_version(self, version):
         if version >= Version("0.21.1"):
-            return super(Libpsl, self).url_for_version(version)
+            return super().url_for_version(version)
         url_fmt = (
             "https://github.com/rockdaboot/libpsl/releases/download/libpsl-{0}/libpsl-{0}.tar.gz"
         )
@@ -38,9 +40,7 @@ class Libpsl(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
 
-        args = [
-            "PYTHON={0}".format(spec["python"].command.path),
-        ]
+        args = ["PYTHON={0}".format(spec["python"].command.path)]
 
         if self.run_tests:
             args.append("--enable-valgrind-tests")

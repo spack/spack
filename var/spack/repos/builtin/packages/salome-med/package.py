@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,10 +13,12 @@ class SalomeMed(CMakePackage):
     """salome-med is the MED file format that is the SALOME platform standard
     file for meshes and fields and salome-med is based on HDF5 library."""
 
-    maintainers = ["franciskloss"]
+    maintainers("franciskloss")
 
     homepage = "https://docs.salome-platform.org/latest/dev/MEDCoupling/developer/med-file.html"
     url = "ftp://ftp.cea.fr/pub/salome/prerequisites/med-4.1.0.tar.gz"
+
+    license("LGPL-3.0-only")
 
     version("4.1.0", sha256="847db5d6fbc9ce6924cb4aea86362812c9a5ef6b9684377e4dd6879627651fce")
     version("4.0.0", sha256="a474e90b5882ce69c5e9f66f6359c53b8b73eb448c5f631fa96e8cd2c14df004")
@@ -46,6 +48,16 @@ class SalomeMed(CMakePackage):
     def check(self):
         with working_dir(self.build_directory):
             make("test", parallel=False)
+
+    def patch(self):
+        # resembles FindSalomeHDF5.patch as in salome-configuration
+        # see https://cmake.org/cmake/help/latest/prop_tgt/IMPORTED_LINK_INTERFACE_LIBRARIES.html
+        filter_file(
+            "GET_PROPERTY(_lib_lst TARGET hdf5 PROPERTY IMPORTED_LINK_INTERFACE_LIBRARIES_NOCONFIG)",  # noqa: E501
+            "#GET_PROPERTY(_lib_lst TARGET hdf5 PROPERTY IMPORTED_LINK_INTERFACE_LIBRARIES_NOCONFIG)",  # noqa: E501
+            "config/cmake_files/FindMedfileHDF5.cmake",
+            string=True,
+        )
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set("HDF5_ROOT_DIR", self.spec["hdf5"].prefix)

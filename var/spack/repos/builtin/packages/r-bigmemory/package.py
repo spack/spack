@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class RBigmemory(RPackage):
 
     cran = "bigmemory"
 
+    license("LGPL-3.0-only OR Apache-2.0")
+
     version("4.6.1", sha256="b56e157c87ed6c4fc69d4cb9c697ae9a2001726e776e41aa7c48b35327b65141")
     version("4.5.36", sha256="18c67fbe6344b2f8223456c4f19ceebcf6c1166255eab81311001fd67a45ef0e")
 
@@ -24,3 +26,4 @@ class RBigmemory(RPackage):
     depends_on("r-rcpp", type=("build", "run"))
     depends_on("r-uuid@1.0-2:", type=("build", "run"), when="@4.6.1:")
     depends_on("r-bh", type=("build", "run"))
+    depends_on("uuid", when="@4.6.1:")

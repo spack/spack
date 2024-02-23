@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,9 @@ class Omnitrace(CMakePackage):
 
     homepage = "https://amdresearch.github.io/omnitrace"
     git = "https://github.com/AMDResearch/omnitrace.git"
-    maintainers = ["jrmadsen"]
+    maintainers("jrmadsen")
+
+    license("MIT")
 
     version("main", branch="main", submodules=True)
     version("1.7.4", commit="12001d9633328f9f56210c7ebffce065bff06310", submodules=True)
@@ -28,14 +30,6 @@ class Omnitrace(CMakePackage):
     version("1.3.0", commit="4dd144a32c8b83c44e132ef53f2b44fe4b4d5569", submodules=True)
     version("1.2.0", commit="f82845388aab108ed1d1fc404f433a0def391bb3", submodules=True)
 
-    # override build_type to default to Release because this has a significant
-    # impact on build-time and the size of the build
-    variant(
-        "build_type",
-        default="Release",
-        description="CMake build type",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-    )
     variant(
         "rocm",
         default=True,
@@ -131,11 +125,6 @@ class Omnitrace(CMakePackage):
         if "+tau" in spec:
             tau_root = spec["tau"].prefix
             args.append(self.define("TAU_ROOT_DIR", tau_root))
-
-        if "+python" in spec:
-            pyexe = spec["python"].command.path
-            args.append(self.define("PYTHON_EXECUTABLE", pyexe))
-            args.append(self.define("Python3_EXECUTABLE", pyexe))
 
         if "+mpi" in spec:
             args.append(self.define("MPI_C_COMPILER", spec["mpi"].mpicc))

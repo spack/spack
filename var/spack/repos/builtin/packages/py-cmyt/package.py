@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,9 @@ class PyCmyt(PythonPackage):
     pypi = "cmyt/cmyt-1.0.4.tar.gz"
     git = "https://github.com/yt-project/cmyt.git"
 
-    maintainers = ["charmoniumq"]
+    maintainers("charmoniumq")
+
+    license("BSD-3-Clause")
 
     version("main", branch="main")
 

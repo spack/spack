@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -92,10 +92,10 @@ class NMakeBuilder(BaseBuilder):
         This path is relative to the root of the extracted tarball,
         not to the ``build_directory``. Defaults to the current directory.
         """
-        return self.stage.source_dir
+        return self.stage.source_path
 
     @property
-    def nmakefile_name(self):
+    def makefile_name(self):
         """Name of the current makefile. This is currently an empty value.
         If a project defines this value, it will be used with the /f argument
         to provide nmake an explicit makefile. This is usefule in scenarios where
@@ -126,8 +126,8 @@ class NMakeBuilder(BaseBuilder):
         """Run "nmake" on the build targets specified by the builder."""
         opts = self.std_nmake_args
         opts += self.nmake_args()
-        if self.nmakefile_name:
-            opts.append("/f {}".format(self.nmakefile_name))
+        if self.makefile_name:
+            opts.append("/F{}".format(self.makefile_name))
         with fs.working_dir(self.build_directory):
             inspect.getmodule(self.pkg).nmake(
                 *opts, *self.build_targets, ignore_quotes=self.ignore_quotes
@@ -139,8 +139,8 @@ class NMakeBuilder(BaseBuilder):
         opts = self.std_nmake_args
         opts += self.nmake_args()
         opts += self.nmake_install_args()
-        if self.nmakefile_name:
-            opts.append("/f {}".format(self.nmakefile_name))
+        if self.makefile_name:
+            opts.append("/F{}".format(self.makefile_name))
         opts.append(self.define("PREFIX", prefix))
         with fs.working_dir(self.build_directory):
             inspect.getmodule(self.pkg).nmake(

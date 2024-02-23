@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Tauola(AutotoolsPackage):
 
     tags = ["hep"]
 
+    license("GPL-3.0-or-later")
+
     version("1.1.8", sha256="3f734e8a967682869cca2c1ffebd3e055562613c40853cc81820d8b666805ed5")
 
     variant("hepmc", default=True, description="Enable hepmc 2.x support")
@@ -27,7 +29,7 @@ class Tauola(AutotoolsPackage):
         description="Use the specified C++ standard when building.",
     )
 
-    maintainers = ["vvolkl"]
+    maintainers("vvolkl")
 
     depends_on("hepmc", when="+hepmc")
     depends_on("hepmc3", when="+hepmc3")

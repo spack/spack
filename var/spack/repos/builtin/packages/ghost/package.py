@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,9 @@ class Ghost(CMakePackage, CudaPackage):
     homepage = "https://www.bitbucket.org/essex/ghost/"
     git = "https://bitbucket.org/essex/ghost/ghost.git"
 
-    maintainers = ["jthies"]
+    maintainers("jthies")
+
+    license("BSD-3-Clause")
 
     version("develop", branch="devel")
 

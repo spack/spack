@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,11 @@ class Relion(CMakePackage, CudaPackage):
     homepage = "http://www2.mrc-lmb.cam.ac.uk/relion"
     git = "https://github.com/3dem/relion.git"
     url = "https://github.com/3dem/relion/archive/4.0.0.zip"
+    maintainers("dacolombo")
 
+    license("GPL-2.0-only")
+
+    version("4.0.1", sha256="7e0d56fd4068c99f943dc309ae533131d33870392b53a7c7aae7f65774f667be")
     version("4.0.0", sha256="0987e684e9d2dfd630f1ad26a6847493fe9fcd829ec251d8bc471d11701d51dd")
 
     # 3.1.4 latest release in 3.1 branch
@@ -74,6 +78,7 @@ class Relion(CMakePackage, CudaPackage):
 
     depends_on("mpi")
     depends_on("cmake@3:", type="build")
+    depends_on("binutils@2.32:", type="build")
     depends_on("fftw precision=float,double", when="~mklfft")
 
     # use the +xft variant so the interface is not so horrible looking
@@ -94,6 +99,11 @@ class Relion(CMakePackage, CudaPackage):
     # - Gctf
     # - ResMap
     patch("0002-Simple-patch-to-fix-intel-mkl-linking.patch", when="@:3.1.1 os=ubuntu18.04")
+    patch(
+        "https://github.com/3dem/relion/commit/2daa7447c1c871be062cce99109b6041955ec5e9.patch?full_index=1",
+        sha256="4995b0d4bc24a1ec99042a4b73e9db84918eb6f622dacb308b718146bfb6a5ea",
+        when="@4.0.0",
+    )
 
     def cmake_args(self):
         args = [
@@ -114,11 +124,7 @@ class Relion(CMakePackage, CudaPackage):
             if carch == "none":
                 raise ValueError("Must select a value for cuda_arch")
             else:
-                args += [
-                    "-DCUDA=ON",
-                    "-DCudaTexture=ON",
-                    "-DCUDA_ARCH=%s" % (carch),
-                ]
+                args += ["-DCUDA=ON", "-DCudaTexture=ON", "-DCUDA_ARCH=%s" % (carch)]
 
         return args
 

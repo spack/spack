@@ -1,11 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Test basic behavior of compilers in Spack"""
 import os
-import shutil
-import sys
 from copy import copy
 
 import pytest
@@ -13,7 +11,7 @@ import pytest
 import llnl.util.filesystem as fs
 
 import spack.compiler
-import spack.compilers as compilers
+import spack.compilers
 import spack.spec
 import spack.util.environment
 from spack.compiler import Compiler
@@ -23,16 +21,18 @@ from spack.util.executable import ProcessError
 @pytest.fixture()
 def make_args_for_version(monkeypatch):
     def _factory(version, path="/usr/bin/gcc"):
-        class MockOs(object):
+        class MockOs:
             pass
 
         compiler_name = "gcc"
-        compiler_cls = compilers.class_for_compiler_name(compiler_name)
+        compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
         monkeypatch.setattr(compiler_cls, "cc_version", lambda x: version)
 
-        compiler_id = compilers.CompilerID(os=MockOs, compiler_name=compiler_name, version=None)
-        variation = compilers.NameVariation(prefix="", suffix="")
-        return compilers.DetectVersionArgs(
+        compiler_id = spack.compilers.CompilerID(
+            os=MockOs, compiler_name=compiler_name, version=None
+        )
+        variation = spack.compilers.NameVariation(prefix="", suffix="")
+        return spack.compilers.DetectVersionArgs(
             id=compiler_id, variation=variation, language="cc", path=path
         )
 
@@ -58,8 +58,7 @@ def test_multiple_conflicting_compiler_definitions(mutable_config):
     mutable_config.update_config("compilers", compiler_config)
 
     arch_spec = spack.spec.ArchSpec(("test", "test", "test"))
-    cspec = compiler_config[0]["compiler"]["spec"]
-    cmp = compilers.compiler_for_spec(cspec, arch_spec)
+    cmp = spack.compilers.compiler_for_spec("clang@=0.0.0", arch_spec)
     assert cmp.f77 == "f77"
 
 
@@ -67,7 +66,7 @@ def test_get_compiler_duplicates(config):
     # In this case there is only one instance of the specified compiler in
     # the test configuration (so it is not actually a duplicate), but the
     # method behaves the same.
-    cfg_file_to_duplicates = compilers.get_compiler_duplicates(
+    cfg_file_to_duplicates = spack.compilers.get_compiler_duplicates(
         "gcc@4.5.0", spack.spec.ArchSpec("cray-CNL-xeon")
     )
 
@@ -77,8 +76,8 @@ def test_get_compiler_duplicates(config):
 
 
 def test_all_compilers(config):
-    all_compilers = compilers.all_compilers()
-    filtered = [x for x in all_compilers if str(x.spec) == "clang@3.3"]
+    all_compilers = spack.compilers.all_compilers()
+    filtered = [x for x in all_compilers if str(x.spec) == "clang@=3.3"]
     filtered = [x for x in filtered if x.operating_system == "SuSE11"]
     assert len(filtered) == 1
 
@@ -91,7 +90,7 @@ def test_version_detection_is_empty(
     make_args_for_version, input_version, expected_version, expected_error
 ):
     args = make_args_for_version(version=input_version)
-    result, error = compilers.detect_version(args)
+    result, error = spack.compilers.detect_version(args)
     if not error:
         assert result.id.version == expected_version
 
@@ -107,7 +106,7 @@ def test_compiler_flags_from_config_are_grouped():
         "modules": None,
     }
 
-    compiler = compilers.compiler_from_dict(compiler_entry)
+    compiler = spack.compilers.compiler_from_dict(compiler_entry)
     assert any(x == "-foo-flag foo-val" for x in compiler.flags["cflags"])
 
 
@@ -126,7 +125,7 @@ default_compiler_entry = {
 # Fake up a mock compiler where everything is defaulted.
 class MockCompiler(Compiler):
     def __init__(self):
-        super(MockCompiler, self).__init__(
+        super().__init__(
             cspec="badcompiler@1.0.0",
             operating_system=default_compiler_entry["operating_system"],
             target=None,
@@ -143,7 +142,7 @@ class MockCompiler(Compiler):
         # Mock os.path.isdir so the link paths don't have to exist
         old_isdir = os.path.isdir
         os.path.isdir = lambda x: True
-        ret = super(MockCompiler, self)._get_compiler_link_paths(paths)
+        ret = super()._get_compiler_link_paths(paths)
         os.path.isdir = old_isdir
         return ret
 
@@ -194,7 +193,7 @@ def call_compiler(exe, *args, **kwargs):
     return no_flag_output
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     "exe,flagname",
     [
@@ -250,14 +249,14 @@ def test_get_compiler_link_paths_no_verbose_flag():
     assert dirs == []
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 @pytest.mark.enable_compiler_link_paths
 def test_get_compiler_link_paths_load_env(working_env, monkeypatch, tmpdir):
     gcc = str(tmpdir.join("gcc"))
     with open(gcc, "w") as f:
         f.write(
-            """#!/bin/bash
-if [[ $ENV_SET == "1" && $MODULE_LOADED == "1" ]]; then
+            """#!/bin/sh
+if [ "$ENV_SET" = "1" ] && [ "$MODULE_LOADED" = "1" ]; then
   echo '"""
             + no_flag_output
             + """'
@@ -291,7 +290,7 @@ def flag_value(flag, spec):
     else:
         compiler_entry = copy(default_compiler_entry)
         compiler_entry["spec"] = spec
-        compiler = compilers.compiler_from_dict(compiler_entry)
+        compiler = spack.compilers.compiler_from_dict(compiler_entry)
 
     return getattr(compiler, flag)
 
@@ -389,7 +388,7 @@ def test_apple_clang_flags():
     unsupported_flag_test("cxx17_flag", "apple-clang@6.0.0")
     supported_flag_test("cxx17_flag", "-std=c++1z", "apple-clang@6.1.0")
     supported_flag_test("c99_flag", "-std=c99", "apple-clang@6.1.0")
-    unsupported_flag_test("c11_flag", "apple-clang@6.0.0")
+    unsupported_flag_test("c11_flag", "apple-clang@3.0.0")
     supported_flag_test("c11_flag", "-std=c11", "apple-clang@6.1.0")
     supported_flag_test("cc_pic_flag", "-fPIC", "apple-clang@2.0.0")
     supported_flag_test("cxx_pic_flag", "-fPIC", "apple-clang@2.0.0")
@@ -409,7 +408,7 @@ def test_clang_flags():
     supported_flag_test("cxx17_flag", "-std=c++1z", "clang@3.5")
     supported_flag_test("cxx17_flag", "-std=c++17", "clang@5.0")
     supported_flag_test("c99_flag", "-std=c99", "clang@3.3")
-    unsupported_flag_test("c11_flag", "clang@6.0.0")
+    unsupported_flag_test("c11_flag", "clang@2.0")
     supported_flag_test("c11_flag", "-std=c11", "clang@6.1.0")
     supported_flag_test("cc_pic_flag", "-fPIC", "clang@3.3")
     supported_flag_test("cxx_pic_flag", "-fPIC", "clang@3.3")
@@ -425,7 +424,6 @@ def test_clang_flags():
             "-gdwarf-5",
             "-gline-tables-only",
             "-gmodules",
-            "-gz",
             "-g",
         ],
         "clang@3.3",
@@ -448,7 +446,6 @@ def test_aocc_flags():
             "-gdwarf-5",
             "-gline-tables-only",
             "-gmodules",
-            "-gz",
             "-g",
         ],
         "aocc@2.2.0",
@@ -525,135 +522,135 @@ def test_gcc_flags():
 
 
 def test_intel_flags():
-    supported_flag_test("openmp_flag", "-openmp", "intel@15.0")
-    supported_flag_test("openmp_flag", "-qopenmp", "intel@16.0")
-    unsupported_flag_test("cxx11_flag", "intel@11.0")
-    supported_flag_test("cxx11_flag", "-std=c++0x", "intel@12.0")
-    supported_flag_test("cxx11_flag", "-std=c++11", "intel@13")
-    unsupported_flag_test("cxx14_flag", "intel@14.0")
-    supported_flag_test("cxx14_flag", "-std=c++1y", "intel@15.0")
-    supported_flag_test("cxx14_flag", "-std=c++14", "intel@15.0.2")
-    unsupported_flag_test("c99_flag", "intel@11.0")
-    supported_flag_test("c99_flag", "-std=c99", "intel@12.0")
-    unsupported_flag_test("c11_flag", "intel@15.0")
-    supported_flag_test("c11_flag", "-std=c1x", "intel@16.0")
-    supported_flag_test("cc_pic_flag", "-fPIC", "intel@1.0")
-    supported_flag_test("cxx_pic_flag", "-fPIC", "intel@1.0")
-    supported_flag_test("f77_pic_flag", "-fPIC", "intel@1.0")
-    supported_flag_test("fc_pic_flag", "-fPIC", "intel@1.0")
-    supported_flag_test("stdcxx_libs", ("-cxxlib",), "intel@1.0")
-    supported_flag_test("debug_flags", ["-debug", "-g", "-g0", "-g1", "-g2", "-g3"], "intel@1.0")
+    supported_flag_test("openmp_flag", "-openmp", "intel@=15.0")
+    supported_flag_test("openmp_flag", "-qopenmp", "intel@=16.0")
+    unsupported_flag_test("cxx11_flag", "intel@=11.0")
+    supported_flag_test("cxx11_flag", "-std=c++0x", "intel@=12.0")
+    supported_flag_test("cxx11_flag", "-std=c++11", "intel@=13")
+    unsupported_flag_test("cxx14_flag", "intel@=14.0")
+    supported_flag_test("cxx14_flag", "-std=c++1y", "intel@=15.0")
+    supported_flag_test("cxx14_flag", "-std=c++14", "intel@=15.0.2")
+    unsupported_flag_test("c99_flag", "intel@=11.0")
+    supported_flag_test("c99_flag", "-std=c99", "intel@=12.0")
+    unsupported_flag_test("c11_flag", "intel@=15.0")
+    supported_flag_test("c11_flag", "-std=c1x", "intel@=16.0")
+    supported_flag_test("cc_pic_flag", "-fPIC", "intel@=1.0")
+    supported_flag_test("cxx_pic_flag", "-fPIC", "intel@=1.0")
+    supported_flag_test("f77_pic_flag", "-fPIC", "intel@=1.0")
+    supported_flag_test("fc_pic_flag", "-fPIC", "intel@=1.0")
+    supported_flag_test("stdcxx_libs", ("-cxxlib",), "intel@=1.0")
+    supported_flag_test("debug_flags", ["-debug", "-g", "-g0", "-g1", "-g2", "-g3"], "intel@=1.0")
     supported_flag_test(
-        "opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os"], "intel@1.0"
+        "opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os"], "intel@=1.0"
     )
 
 
 def test_oneapi_flags():
-    supported_flag_test("openmp_flag", "-fiopenmp", "oneapi@2020.8.0.0827")
-    supported_flag_test("cxx11_flag", "-std=c++11", "oneapi@2020.8.0.0827")
-    supported_flag_test("cxx14_flag", "-std=c++14", "oneapi@2020.8.0.0827")
-    supported_flag_test("c99_flag", "-std=c99", "oneapi@2020.8.0.0827")
-    supported_flag_test("c11_flag", "-std=c1x", "oneapi@2020.8.0.0827")
-    supported_flag_test("cc_pic_flag", "-fPIC", "oneapi@2020.8.0.0827")
-    supported_flag_test("cxx_pic_flag", "-fPIC", "oneapi@2020.8.0.0827")
-    supported_flag_test("f77_pic_flag", "-fPIC", "oneapi@2020.8.0.0827")
-    supported_flag_test("fc_pic_flag", "-fPIC", "oneapi@2020.8.0.0827")
-    supported_flag_test("stdcxx_libs", ("-cxxlib",), "oneapi@2020.8.0.0827")
+    supported_flag_test("openmp_flag", "-fiopenmp", "oneapi@=2020.8.0.0827")
+    supported_flag_test("cxx11_flag", "-std=c++11", "oneapi@=2020.8.0.0827")
+    supported_flag_test("cxx14_flag", "-std=c++14", "oneapi@=2020.8.0.0827")
+    supported_flag_test("c99_flag", "-std=c99", "oneapi@=2020.8.0.0827")
+    supported_flag_test("c11_flag", "-std=c1x", "oneapi@=2020.8.0.0827")
+    supported_flag_test("cc_pic_flag", "-fPIC", "oneapi@=2020.8.0.0827")
+    supported_flag_test("cxx_pic_flag", "-fPIC", "oneapi@=2020.8.0.0827")
+    supported_flag_test("f77_pic_flag", "-fPIC", "oneapi@=2020.8.0.0827")
+    supported_flag_test("fc_pic_flag", "-fPIC", "oneapi@=2020.8.0.0827")
+    supported_flag_test("stdcxx_libs", ("-cxxlib",), "oneapi@=2020.8.0.0827")
     supported_flag_test(
-        "debug_flags", ["-debug", "-g", "-g0", "-g1", "-g2", "-g3"], "oneapi@2020.8.0.0827"
+        "debug_flags", ["-debug", "-g", "-g0", "-g1", "-g2", "-g3"], "oneapi@=2020.8.0.0827"
     )
     supported_flag_test(
-        "opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os"], "oneapi@2020.8.0.0827"
+        "opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os"], "oneapi@=2020.8.0.0827"
     )
 
 
 def test_nag_flags():
-    supported_flag_test("openmp_flag", "-openmp", "nag@1.0")
-    supported_flag_test("cxx11_flag", "-std=c++11", "nag@1.0")
-    supported_flag_test("cc_pic_flag", "-fPIC", "nag@1.0")
-    supported_flag_test("cxx_pic_flag", "-fPIC", "nag@1.0")
-    supported_flag_test("f77_pic_flag", "-PIC", "nag@1.0")
-    supported_flag_test("fc_pic_flag", "-PIC", "nag@1.0")
-    supported_flag_test("cc_rpath_arg", "-Wl,-rpath,", "nag@1.0")
-    supported_flag_test("cxx_rpath_arg", "-Wl,-rpath,", "nag@1.0")
-    supported_flag_test("f77_rpath_arg", "-Wl,-Wl,,-rpath,,", "nag@1.0")
-    supported_flag_test("fc_rpath_arg", "-Wl,-Wl,,-rpath,,", "nag@1.0")
-    supported_flag_test("linker_arg", "-Wl,-Wl,,", "nag@1.0")
-    supported_flag_test("debug_flags", ["-g", "-gline", "-g90"], "nag@1.0")
-    supported_flag_test("opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-O4"], "nag@1.0")
+    supported_flag_test("openmp_flag", "-openmp", "nag@=1.0")
+    supported_flag_test("cxx11_flag", "-std=c++11", "nag@=1.0")
+    supported_flag_test("cc_pic_flag", "-fPIC", "nag@=1.0")
+    supported_flag_test("cxx_pic_flag", "-fPIC", "nag@=1.0")
+    supported_flag_test("f77_pic_flag", "-PIC", "nag@=1.0")
+    supported_flag_test("fc_pic_flag", "-PIC", "nag@=1.0")
+    supported_flag_test("cc_rpath_arg", "-Wl,-rpath,", "nag@=1.0")
+    supported_flag_test("cxx_rpath_arg", "-Wl,-rpath,", "nag@=1.0")
+    supported_flag_test("f77_rpath_arg", "-Wl,-Wl,,-rpath,,", "nag@=1.0")
+    supported_flag_test("fc_rpath_arg", "-Wl,-Wl,,-rpath,,", "nag@=1.0")
+    supported_flag_test("linker_arg", "-Wl,-Wl,,", "nag@=1.0")
+    supported_flag_test("debug_flags", ["-g", "-gline", "-g90"], "nag@=1.0")
+    supported_flag_test("opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-O4"], "nag@=1.0")
 
 
 def test_nvhpc_flags():
-    supported_flag_test("openmp_flag", "-mp", "nvhpc@20.9")
-    supported_flag_test("cxx11_flag", "--c++11", "nvhpc@20.9")
-    supported_flag_test("cxx14_flag", "--c++14", "nvhpc@20.9")
-    supported_flag_test("cxx17_flag", "--c++17", "nvhpc@20.9")
-    supported_flag_test("c99_flag", "-c99", "nvhpc@20.9")
-    supported_flag_test("c11_flag", "-c11", "nvhpc@20.9")
-    supported_flag_test("cc_pic_flag", "-fpic", "nvhpc@20.9")
-    supported_flag_test("cxx_pic_flag", "-fpic", "nvhpc@20.9")
-    supported_flag_test("f77_pic_flag", "-fpic", "nvhpc@20.9")
-    supported_flag_test("fc_pic_flag", "-fpic", "nvhpc@20.9")
-    supported_flag_test("debug_flags", ["-g", "-gopt"], "nvhpc@20.9")
-    supported_flag_test("opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-O4"], "nvhpc@20.9")
-    supported_flag_test("stdcxx_libs", ("-c++libs",), "nvhpc@20.9")
+    supported_flag_test("openmp_flag", "-mp", "nvhpc@=20.9")
+    supported_flag_test("cxx11_flag", "--c++11", "nvhpc@=20.9")
+    supported_flag_test("cxx14_flag", "--c++14", "nvhpc@=20.9")
+    supported_flag_test("cxx17_flag", "--c++17", "nvhpc@=20.9")
+    supported_flag_test("c99_flag", "-c99", "nvhpc@=20.9")
+    supported_flag_test("c11_flag", "-c11", "nvhpc@=20.9")
+    supported_flag_test("cc_pic_flag", "-fpic", "nvhpc@=20.9")
+    supported_flag_test("cxx_pic_flag", "-fpic", "nvhpc@=20.9")
+    supported_flag_test("f77_pic_flag", "-fpic", "nvhpc@=20.9")
+    supported_flag_test("fc_pic_flag", "-fpic", "nvhpc@=20.9")
+    supported_flag_test("debug_flags", ["-g", "-gopt"], "nvhpc@=20.9")
+    supported_flag_test("opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-O4"], "nvhpc@=20.9")
+    supported_flag_test("stdcxx_libs", ("-c++libs",), "nvhpc@=20.9")
 
 
 def test_pgi_flags():
-    supported_flag_test("openmp_flag", "-mp", "pgi@1.0")
-    supported_flag_test("cxx11_flag", "-std=c++11", "pgi@1.0")
-    unsupported_flag_test("c99_flag", "pgi@12.9")
-    supported_flag_test("c99_flag", "-c99", "pgi@12.10")
-    unsupported_flag_test("c11_flag", "pgi@15.2")
-    supported_flag_test("c11_flag", "-c11", "pgi@15.3")
-    supported_flag_test("cc_pic_flag", "-fpic", "pgi@1.0")
-    supported_flag_test("cxx_pic_flag", "-fpic", "pgi@1.0")
-    supported_flag_test("f77_pic_flag", "-fpic", "pgi@1.0")
-    supported_flag_test("fc_pic_flag", "-fpic", "pgi@1.0")
-    supported_flag_test("stdcxx_libs", ("-pgc++libs",), "pgi@1.0")
-    supported_flag_test("debug_flags", ["-g", "-gopt"], "pgi@1.0")
-    supported_flag_test("opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-O4"], "pgi@1.0")
+    supported_flag_test("openmp_flag", "-mp", "pgi@=1.0")
+    supported_flag_test("cxx11_flag", "-std=c++11", "pgi@=1.0")
+    unsupported_flag_test("c99_flag", "pgi@=12.9")
+    supported_flag_test("c99_flag", "-c99", "pgi@=12.10")
+    unsupported_flag_test("c11_flag", "pgi@=15.2")
+    supported_flag_test("c11_flag", "-c11", "pgi@=15.3")
+    supported_flag_test("cc_pic_flag", "-fpic", "pgi@=1.0")
+    supported_flag_test("cxx_pic_flag", "-fpic", "pgi@=1.0")
+    supported_flag_test("f77_pic_flag", "-fpic", "pgi@=1.0")
+    supported_flag_test("fc_pic_flag", "-fpic", "pgi@=1.0")
+    supported_flag_test("stdcxx_libs", ("-pgc++libs",), "pgi@=1.0")
+    supported_flag_test("debug_flags", ["-g", "-gopt"], "pgi@=1.0")
+    supported_flag_test("opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-O4"], "pgi@=1.0")
 
 
 def test_xl_flags():
-    supported_flag_test("openmp_flag", "-qsmp=omp", "xl@1.0")
-    unsupported_flag_test("cxx11_flag", "xl@13.0")
-    supported_flag_test("cxx11_flag", "-qlanglvl=extended0x", "xl@13.1")
-    unsupported_flag_test("c99_flag", "xl@10.0")
-    supported_flag_test("c99_flag", "-qlanglvl=extc99", "xl@10.1")
-    supported_flag_test("c99_flag", "-std=gnu99", "xl@13.1.1")
-    unsupported_flag_test("c11_flag", "xl@12.0")
-    supported_flag_test("c11_flag", "-qlanglvl=extc1x", "xl@12.1")
-    supported_flag_test("c11_flag", "-std=gnu11", "xl@13.1.2")
-    supported_flag_test("cc_pic_flag", "-qpic", "xl@1.0")
-    supported_flag_test("cxx_pic_flag", "-qpic", "xl@1.0")
-    supported_flag_test("f77_pic_flag", "-qpic", "xl@1.0")
-    supported_flag_test("fc_pic_flag", "-qpic", "xl@1.0")
-    supported_flag_test("fflags", "-qzerosize", "xl@1.0")
-    supported_flag_test("debug_flags", ["-g", "-g0", "-g1", "-g2", "-g8", "-g9"], "xl@1.0")
+    supported_flag_test("openmp_flag", "-qsmp=omp", "xl@=1.0")
+    unsupported_flag_test("cxx11_flag", "xl@=13.0")
+    supported_flag_test("cxx11_flag", "-qlanglvl=extended0x", "xl@=13.1")
+    unsupported_flag_test("c99_flag", "xl@=10.0")
+    supported_flag_test("c99_flag", "-qlanglvl=extc99", "xl@=10.1")
+    supported_flag_test("c99_flag", "-std=gnu99", "xl@=13.1.1")
+    unsupported_flag_test("c11_flag", "xl@=12.0")
+    supported_flag_test("c11_flag", "-qlanglvl=extc1x", "xl@=12.1")
+    supported_flag_test("c11_flag", "-std=gnu11", "xl@=13.1.2")
+    supported_flag_test("cc_pic_flag", "-qpic", "xl@=1.0")
+    supported_flag_test("cxx_pic_flag", "-qpic", "xl@=1.0")
+    supported_flag_test("f77_pic_flag", "-qpic", "xl@=1.0")
+    supported_flag_test("fc_pic_flag", "-qpic", "xl@=1.0")
+    supported_flag_test("fflags", "-qzerosize", "xl@=1.0")
+    supported_flag_test("debug_flags", ["-g", "-g0", "-g1", "-g2", "-g8", "-g9"], "xl@=1.0")
     supported_flag_test(
-        "opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-O4", "-O5", "-Ofast"], "xl@1.0"
+        "opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-O4", "-O5", "-Ofast"], "xl@=1.0"
     )
 
 
 def test_xl_r_flags():
-    supported_flag_test("openmp_flag", "-qsmp=omp", "xl_r@1.0")
-    unsupported_flag_test("cxx11_flag", "xl_r@13.0")
-    supported_flag_test("cxx11_flag", "-qlanglvl=extended0x", "xl_r@13.1")
-    unsupported_flag_test("c99_flag", "xl_r@10.0")
-    supported_flag_test("c99_flag", "-qlanglvl=extc99", "xl_r@10.1")
-    supported_flag_test("c99_flag", "-std=gnu99", "xl_r@13.1.1")
-    unsupported_flag_test("c11_flag", "xl_r@12.0")
-    supported_flag_test("c11_flag", "-qlanglvl=extc1x", "xl_r@12.1")
-    supported_flag_test("c11_flag", "-std=gnu11", "xl_r@13.1.2")
-    supported_flag_test("cc_pic_flag", "-qpic", "xl_r@1.0")
-    supported_flag_test("cxx_pic_flag", "-qpic", "xl_r@1.0")
-    supported_flag_test("f77_pic_flag", "-qpic", "xl_r@1.0")
-    supported_flag_test("fc_pic_flag", "-qpic", "xl_r@1.0")
-    supported_flag_test("fflags", "-qzerosize", "xl_r@1.0")
-    supported_flag_test("debug_flags", ["-g", "-g0", "-g1", "-g2", "-g8", "-g9"], "xl@1.0")
+    supported_flag_test("openmp_flag", "-qsmp=omp", "xl_r@=1.0")
+    unsupported_flag_test("cxx11_flag", "xl_r@=13.0")
+    supported_flag_test("cxx11_flag", "-qlanglvl=extended0x", "xl_r@=13.1")
+    unsupported_flag_test("c99_flag", "xl_r@=10.0")
+    supported_flag_test("c99_flag", "-qlanglvl=extc99", "xl_r@=10.1")
+    supported_flag_test("c99_flag", "-std=gnu99", "xl_r@=13.1.1")
+    unsupported_flag_test("c11_flag", "xl_r@=12.0")
+    supported_flag_test("c11_flag", "-qlanglvl=extc1x", "xl_r@=12.1")
+    supported_flag_test("c11_flag", "-std=gnu11", "xl_r@=13.1.2")
+    supported_flag_test("cc_pic_flag", "-qpic", "xl_r@=1.0")
+    supported_flag_test("cxx_pic_flag", "-qpic", "xl_r@=1.0")
+    supported_flag_test("f77_pic_flag", "-qpic", "xl_r@=1.0")
+    supported_flag_test("fc_pic_flag", "-qpic", "xl_r@=1.0")
+    supported_flag_test("fflags", "-qzerosize", "xl_r@=1.0")
+    supported_flag_test("debug_flags", ["-g", "-g0", "-g1", "-g2", "-g8", "-g9"], "xl@=1.0")
     supported_flag_test(
-        "opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-O4", "-O5", "-Ofast"], "xl@1.0"
+        "opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-O4", "-O5", "-Ofast"], "xl@=1.0"
     )
 
 
@@ -692,10 +689,10 @@ def test_raising_if_compiler_target_is_over_specific(config):
     with spack.config.override("compilers", compilers):
         cfg = spack.compilers.get_compiler_config()
         with pytest.raises(ValueError):
-            spack.compilers.get_compilers(cfg, "gcc@9.0.1", arch_spec)
+            spack.compilers.get_compilers(cfg, spack.spec.CompilerSpec("gcc@9.0.1"), arch_spec)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 def test_compiler_get_real_version(working_env, monkeypatch, tmpdir):
     # Test variables
     test_version = "2.2.2"
@@ -704,8 +701,8 @@ def test_compiler_get_real_version(working_env, monkeypatch, tmpdir):
     gcc = str(tmpdir.join("gcc"))
     with open(gcc, "w") as f:
         f.write(
-            """#!/bin/bash
-if [[ $CMP_ON == "1" ]]; then
+            """#!/bin/sh
+if [ "$CMP_ON" = "1" ]; then
     echo "$CMP_VER"
 fi
 """
@@ -715,19 +712,12 @@ fi
     # Add compiler to config
     compiler_info = {
         "spec": "gcc@foo",
-        "paths": {
-            "cc": gcc,
-            "cxx": None,
-            "f77": None,
-            "fc": None,
-        },
+        "paths": {"cc": gcc, "cxx": None, "f77": None, "fc": None},
         "flags": {},
         "operating_system": "fake",
         "target": "fake",
         "modules": ["turn_on"],
-        "environment": {
-            "set": {"CMP_VER": test_version},
-        },
+        "environment": {"set": {"CMP_VER": test_version}},
         "extra_rpaths": [],
     }
     compiler_dict = {"compiler": compiler_info}
@@ -749,6 +739,49 @@ fi
     assert version == test_version
 
 
+@pytest.mark.regression("42679")
+def test_get_compilers(config):
+    """Tests that we can select compilers whose versions differ only for a suffix."""
+    common = {
+        "flags": {},
+        "operating_system": "ubuntu23.10",
+        "target": "x86_64",
+        "modules": [],
+        "environment": {},
+        "extra_rpaths": [],
+    }
+    with_suffix = {
+        "spec": "gcc@13.2.0-suffix",
+        "paths": {
+            "cc": "/usr/bin/gcc-13.2.0-suffix",
+            "cxx": "/usr/bin/g++-13.2.0-suffix",
+            "f77": "/usr/bin/gfortran-13.2.0-suffix",
+            "fc": "/usr/bin/gfortran-13.2.0-suffix",
+        },
+        **common,
+    }
+    without_suffix = {
+        "spec": "gcc@13.2.0",
+        "paths": {
+            "cc": "/usr/bin/gcc-13.2.0",
+            "cxx": "/usr/bin/g++-13.2.0",
+            "f77": "/usr/bin/gfortran-13.2.0",
+            "fc": "/usr/bin/gfortran-13.2.0",
+        },
+        **common,
+    }
+
+    compilers = [{"compiler": without_suffix}, {"compiler": with_suffix}]
+
+    assert spack.compilers.get_compilers(
+        compilers, cspec=spack.spec.CompilerSpec("gcc@=13.2.0-suffix")
+    ) == [spack.compilers._compiler_from_config_entry(with_suffix)]
+
+    assert spack.compilers.get_compilers(
+        compilers, cspec=spack.spec.CompilerSpec("gcc@=13.2.0")
+    ) == [spack.compilers._compiler_from_config_entry(without_suffix)]
+
+
 def test_compiler_get_real_version_fails(working_env, monkeypatch, tmpdir):
     # Test variables
     test_version = "2.2.2"
@@ -757,8 +790,8 @@ def test_compiler_get_real_version_fails(working_env, monkeypatch, tmpdir):
     gcc = str(tmpdir.join("gcc"))
     with open(gcc, "w") as f:
         f.write(
-            """#!/bin/bash
-if [[ $CMP_ON == "1" ]]; then
+            """#!/bin/sh
+if [ "$CMP_ON" = "1" ]; then
     echo "$CMP_VER"
 fi
 """
@@ -768,19 +801,12 @@ fi
     # Add compiler to config
     compiler_info = {
         "spec": "gcc@foo",
-        "paths": {
-            "cc": gcc,
-            "cxx": None,
-            "f77": None,
-            "fc": None,
-        },
+        "paths": {"cc": gcc, "cxx": None, "f77": None, "fc": None},
         "flags": {},
         "operating_system": "fake",
         "target": "fake",
         "modules": ["turn_on"],
-        "environment": {
-            "set": {"CMP_VER": test_version},
-        },
+        "environment": {"set": {"CMP_VER": test_version}},
         "extra_rpaths": [],
     }
     compiler_dict = {"compiler": compiler_info}
@@ -812,15 +838,13 @@ fi
         assert "SPACK_TEST_CMP_ON" not in os.environ
 
 
-@pytest.mark.skipif(
-    sys.platform == "win32", reason="Bash scripting unsupported on Windows (for now)"
-)
+@pytest.mark.not_on_windows("Bash scripting unsupported on Windows (for now)")
 def test_compiler_flags_use_real_version(working_env, monkeypatch, tmpdir):
     # Create compiler
     gcc = str(tmpdir.join("gcc"))
     with open(gcc, "w") as f:
         f.write(
-            """#!/bin/bash
+            """#!/bin/sh
 echo "4.4.4"
 """
         )  # Version for which c++11 flag is -std=c++0x
@@ -829,12 +853,7 @@ echo "4.4.4"
     # Add compiler to config
     compiler_info = {
         "spec": "gcc@foo",
-        "paths": {
-            "cc": gcc,
-            "cxx": None,
-            "f77": None,
-            "fc": None,
-        },
+        "paths": {"cc": gcc, "cxx": None, "f77": None, "fc": None},
         "flags": {},
         "operating_system": "fake",
         "target": "fake",
@@ -850,119 +869,6 @@ echo "4.4.4"
     compiler = compilers[0]
     flag = compiler.cxx11_flag
     assert flag == "-std=c++0x"
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="Apple Clang and XCode unsupported on Windows")
-def test_apple_clang_setup_environment(mock_executable, monkeypatch):
-    """Test a code path that is taken only if the package uses
-    Xcode on MacOS.
-    """
-
-    class MockPackage(object):
-        use_xcode = False
-
-    apple_clang_cls = spack.compilers.class_for_compiler_name("apple-clang")
-    compiler = apple_clang_cls(
-        spack.spec.CompilerSpec("apple-clang@11.0.0"),
-        "catalina",
-        "x86_64",
-        ["/usr/bin/clang", "/usr/bin/clang++", None, None],
-    )
-    env = spack.util.environment.EnvironmentModifications()
-    # Check a package that doesn't use xcode and ensure we don't add changes
-    # to the environment
-    pkg = MockPackage()
-    compiler.setup_custom_environment(pkg, env)
-    assert not env
-
-    # Prepare mock executables to fake the Xcode environment
-    xcrun = mock_executable(
-        "xcrun",
-        """
-if [[ "$2" == "clang" ]] ; then
-  echo "/Library/Developer/CommandLineTools/usr/bin/clang"
-fi
-if [[ "$2" == "clang++" ]] ; then
-  echo "/Library/Developer/CommandLineTools/usr/bin/clang++"
-fi
-""",
-    )
-    mock_executable(
-        "xcode-select",
-        """
-echo "/Library/Developer"
-""",
-    )
-    bin_dir = os.path.dirname(xcrun)
-    monkeypatch.setenv("PATH", bin_dir, prepend=os.pathsep)
-
-    def noop(*args, **kwargs):
-        pass
-
-    real_listdir = os.listdir
-
-    def _listdir(path):
-        if not os.path.exists(path):
-            return []
-        return real_listdir(path)
-
-    # Set a few operations to noop
-    monkeypatch.setattr(shutil, "copytree", noop)
-    monkeypatch.setattr(os, "unlink", noop)
-    monkeypatch.setattr(os, "symlink", noop)
-    monkeypatch.setattr(os, "listdir", _listdir)
-
-    # Qt is so far the only package that uses this code path, change
-    # introduced in https://github.com/spack/spack/pull/1832
-    pkg.use_xcode = True
-    compiler.setup_custom_environment(pkg, env)
-    assert len(env) == 3
-    assert env.env_modifications[0].name == "SPACK_CC"
-    assert env.env_modifications[1].name == "SPACK_CXX"
-    assert env.env_modifications[2].name == "DEVELOPER_DIR"
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
-@pytest.mark.parametrize("xcode_select_output", ["", "/Library/Developer/CommandLineTools"])
-def test_xcode_not_available(xcode_select_output, mock_executable, monkeypatch):
-    # Prepare mock executables to fake the Xcode environment
-    xcrun = mock_executable(
-        "xcrun",
-        """
-    if [[ "$2" == "clang" ]] ; then
-      echo "/Library/Developer/CommandLineTools/usr/bin/clang"
-    fi
-    if [[ "$2" == "clang++" ]] ; then
-      echo "/Library/Developer/CommandLineTools/usr/bin/clang++"
-    fi
-    """,
-    )
-    mock_executable(
-        "xcode-select",
-        """
-    echo "{0}"
-    """.format(
-            xcode_select_output
-        ),
-    )
-    bin_dir = os.path.dirname(xcrun)
-    monkeypatch.setenv("PATH", bin_dir, prepend=os.pathsep)
-    # Prepare compiler
-    apple_clang_cls = spack.compilers.class_for_compiler_name("apple-clang")
-    compiler = apple_clang_cls(
-        spack.spec.CompilerSpec("apple-clang@11.0.0"),
-        "catalina",
-        "x86_64",
-        ["/usr/bin/clang", "/usr/bin/clang++", None, None],
-    )
-    env = spack.util.environment.EnvironmentModifications()
-
-    class MockPackage(object):
-        use_xcode = True
-
-    pkg = MockPackage()
-    with pytest.raises(OSError):
-        compiler.setup_custom_environment(pkg, env)
 
 
 @pytest.mark.enable_compiler_verification

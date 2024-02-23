@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -50,16 +50,7 @@ class FujitsuFftw(FftwBase):
         when="%fj",
         msg="ARM-SVE vector instructions only works in single or double precision",
     )
-    conflicts("%arm")
-    conflicts("%cce")
-    conflicts("%apple-clang")
-    conflicts("%clang")
-    conflicts("%gcc")
-    conflicts("%intel")
-    conflicts("%nag")
-    conflicts("%pgi")
-    conflicts("%xl")
-    conflicts("%xl_r")
+    requires("%fj")
 
     def autoreconf(self, spec, prefix):
         if spec.target != "a64fx":
@@ -117,7 +108,6 @@ class FujitsuFftw(FftwBase):
         # Different precisions must be configured and compiled one at a time
         configure = Executable("../configure")
         for precision in self.selected_precisions:
-
             opts = (enable_precision[precision] or []) + options[:]
             with working_dir(precision, create=True):
                 configure(*opts)

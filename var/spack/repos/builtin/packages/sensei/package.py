@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,9 +16,13 @@ class Sensei(CMakePackage):
     homepage = "https://sensei-insitu.org"
     url = "https://github.com/SENSEI-insitu/SENSEI/releases/download/v3.2.1/SENSEI-3.2.1.tar.gz"
     git = "https://github.com/SENSEI-insitu/SENSEI.git"
-    maintainers = ["sshudler", "kwryankrattiger"]
+    maintainers("sshudler", "kwryankrattiger")
+
+    license("BSD-3-Clause-LBNL")
 
     version("develop", branch="develop")
+    version("5.0.0", sha256="3ef948d753d37dfddbbc2c993c823487d4ce40543d35abc008e90c75dfbfa16e")
+    version("4.1.0", sha256="e1154240c022069fee454c747d7c60e065d36b4d1dc71852b3cd527c22b531c1")
     version("4.0.0", sha256="fc1538aa1051789dbdefbe18b7f251bc46e7a6ae1db3a940c123552e0318db8b")
     version("3.2.2", sha256="d554b654880e899d97d572f02de87b0202faadaf899420ef871093b5bce320c0")
     version("3.2.1", sha256="7438fb4b148e4d1eb888c619366d0d8639122ecbbf1767e19549d6ca0c8698ca")
@@ -59,7 +63,7 @@ class Sensei(CMakePackage):
     depends_on("paraview@5.5.0:5.5.2", when="@:2.1.1 +catalyst")
     depends_on("paraview@5.6:5.7", when="@3:3.2.1 +catalyst")
     depends_on("paraview@5.7:5.9", when="@3.2.2 +catalyst")
-    depends_on("paraview@5.7:5.10", when="@4: +catalyst")
+    depends_on("paraview@5.7:5.10", when="@4:4 +catalyst")
 
     # Visit Dep
     depends_on("visit", when="+libsim")
@@ -90,12 +94,16 @@ class Sensei(CMakePackage):
     depends_on("pugixml")
     depends_on("mpi")
 
+    depends_on("paraview use_vtkm=off", when="+catalyst+ascent ^ascent+vtkh")
+    depends_on("paraview use_vtkm=off", when="+catalyst+ascent ^ascent+fides")
+
     # Can have either LibSim or Catalyst or Ascent, but not a combination
     conflicts("+libsim", when="+catalyst")
-    conflicts("+ascent", when="+catalyst")
     conflicts("+ascent", when="+libsim")
 
     # Patches
+    # https://github.com/SENSEI-insitu/SENSEI/pull/114
+    patch("adios2-remove-deprecated-functions.patch", when="@4:4.1 ^adios2@2.9:")
     patch("libsim-add-missing-symbol-visibility-pr67.patch", when="@4.0.0")
     patch("sensei-find-mpi-component-cxx-pr68.patch", when="@4.0.0")
     patch("sensei-install-external-pugixml-pr69.patch", when="@4.0.0")
@@ -108,27 +116,30 @@ class Sensei(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
+        prefix = ""
+        if spec.satisfies("@5:"):
+            prefix = "SENSEI_"
 
         # -Ox flags are set by default in CMake based on the build type
         args = [
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define("SENSEI_USE_EXTERNAL_pugixml", True),
-            self.define("ENABLE_SENSEI", True),
+            self.define(f"{prefix}ENABLE_SENSEI", True),
             self.define("MPI_C_COMPILER", spec["mpi"].mpicc),
             self.define("MPI_CXX_COMPILER", spec["mpi"].mpicxx),
             # Don"t rely on MPI found in cray environment for cray systems.
             # On non-cray systems this should be a no-op
-            self.define("ENABLE_CRAY_MPICH", False),
-            self.define_from_variant("ENABLE_ASCENT", "ascent"),
-            self.define_from_variant("ENABLE_VTKM", "vtkm"),
-            self.define_from_variant("ENABLE_CATALYST", "catalyst"),
-            self.define_from_variant("ENABLE_LIBSIM", "libsim"),
-            self.define_from_variant("ENABLE_VTK_IO", "vtkio"),
-            self.define_from_variant("ENABLE_PYTHON", "python"),
-            self.define_from_variant("ENABLE_ADIOS2", "adios2"),
-            self.define_from_variant("ENABLE_HDF5", "hdf5"),
-            self.define_from_variant("ENABLE_PARALLEL3D", "miniapps"),
-            self.define_from_variant("ENABLE_OSCILLATORS", "miniapps"),
+            self.define(f"{prefix}ENABLE_CRAY_MPICH", False),
+            self.define_from_variant(f"{prefix}ENABLE_ASCENT", "ascent"),
+            self.define_from_variant(f"{prefix}ENABLE_VTKM", "vtkm"),
+            self.define_from_variant(f"{prefix}ENABLE_CATALYST", "catalyst"),
+            self.define_from_variant(f"{prefix}ENABLE_LIBSIM", "libsim"),
+            self.define_from_variant(f"{prefix}ENABLE_VTK_IO", "vtkio"),
+            self.define_from_variant(f"{prefix}ENABLE_PYTHON", "python"),
+            self.define_from_variant(f"{prefix}ENABLE_ADIOS2", "adios2"),
+            self.define_from_variant(f"{prefix}ENABLE_HDF5", "hdf5"),
+            self.define_from_variant(f"{prefix}ENABLE_PARALLEL3D", "miniapps"),
+            self.define_from_variant(f"{prefix}ENABLE_OSCILLATORS", "miniapps"),
         ]
 
         if "+adios2" in spec:
@@ -143,11 +154,8 @@ class Sensei(CMakePackage):
             args.append("-DVISIT_DIR:PATH={0}/current/linux-x86_64".format(spec["visit"].prefix))
 
         if "+python" in spec:
-            args.append(self.define("PYTHON_EXECUTABLE", spec["python"].command.path))
-            args.append(self.define("Python_EXECUTABLE", spec["python"].command.path))
-            args.append(self.define("Python3_EXECUTABLE", spec["python"].command.path))
             if spec.satisfies("@3:"):
                 args.append(self.define("SENSEI_PYTHON_VERSION", 3))
-            args.append(self.define_from_variant("ENABLE_CATALYST_PYTHON", "catalyst"))
+            args.append(self.define_from_variant(f"{prefix}ENABLE_CATALYST_PYTHON", "catalyst"))
 
         return args

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyOnnxmltools(PythonPackage):
 
     homepage = "https://github.com/onnx/onnxmltools"
     pypi = "onnxmltools/onnxmltools-1.10.0.tar.gz"
+
+    license("Apache-2.0")
 
     # Source tarball not available on PyPI
     version(
@@ -26,4 +28,4 @@ class PyOnnxmltools(PythonPackage):
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-onnx", type=("build", "run"))
     depends_on("py-skl2onnx", type=("build", "run"))
-    depends_on("py-onnx-runtime", type=("build", "run"))
+    depends_on("py-onnxruntime", type=("build", "run"))

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyEccodes(PythonPackage):
 
     homepage = "https://github.com/ecmwf/eccodes-python"
     pypi = "eccodes/eccodes-1.3.2.tar.gz"
+
+    license("Apache-2.0")
 
     version("1.5.0", sha256="e70c8f159140c343c215fd608ddf533be652ff05ad2ff17243c7b66cf92127fa")
     version("1.3.2", sha256="f282adfdc1bc658356163c9cef1857d4b2bae99399660d3d4fcb145a52d3b2a6")
@@ -38,12 +40,7 @@ class PyEccodes(PythonPackage):
     def setup_dependent_run_environment(self, env, dependent_spec):
         self.setup_build_environment(env)
 
-    def test(self):
-        super(PyEccodes, self).test()
-
-        self.run_test(
-            self.spec["python"].command.path,
-            ["-m", "eccodes", "selfcheck"],
-            purpose="checking system setup",
-            work_dir="spack-test",
-        )
+    def test_selfcheck(self):
+        """checking system setup"""
+        python = self.spec["python"].command
+        python("-m", "eccodes", "selfcheck")

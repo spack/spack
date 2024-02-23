@@ -1,4 +1,4 @@
-.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -58,9 +58,9 @@ Using Environments
 Here we follow a typical use case of creating, concretizing,
 installing and loading an environment.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Creating a named Environment
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Creating a managed Environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 An environment is created by:
 
@@ -72,7 +72,8 @@ Spack then creates the directory ``var/spack/environments/myenv``.
 
 .. note::
 
-   All named environments are stored in the ``var/spack/environments`` folder.
+   All managed environments by default are stored in the ``var/spack/environments`` folder.
+   This location can be changed by setting the ``environments_root`` variable in ``config.yaml``.
 
 In the ``var/spack/environments/myenv`` directory, Spack creates the
 file ``spack.yaml`` and the hidden directory ``.spack-env``.
@@ -93,9 +94,9 @@ an Environment, the ``.spack-env`` directory also contains:
   * ``logs/``: A directory containing the build logs for the packages
     in this Environment.
 
-Spack Environments can also be created from either a ``spack.yaml``
-manifest or a ``spack.lock`` lockfile. To create an Environment from a
-``spack.yaml`` manifest:
+Spack Environments can also be created from either a manifest file
+(usually but not necessarily named, ``spack.yaml``) or a lockfile.
+To create an Environment from a manifest:
 
 .. code-block:: console
 
@@ -141,6 +142,21 @@ user's prompt to begin with the environment name in brackets.
    $ spack env activate -p myenv
    [myenv] $ ...
 
+The ``activate`` command can also be used to create a new environment, if it is
+not already defined, by adding the ``--create`` flag. Managed and anonymous
+environments, anonymous environments are explained in the next section,
+can both be created using the same flags that `spack env create` accepts.
+If an environment already exists then spack will simply activate it and ignore the
+create specific flags.
+
+.. code-block:: console
+   
+   $ spack env activate --create -p myenv
+   # ...
+   # [creates if myenv does not exist yet]
+   # ...
+   [myenv] $ ...
+
 To deactivate an environment, use the command:
 
 .. code-block:: console
@@ -173,7 +189,7 @@ Anonymous specs can be created in place using the command:
 
    $ spack env create -d .
 
-In this case Spack simply creates a spack.yaml file in the requested
+In this case Spack simply creates a ``spack.yaml`` file in the requested
 directory.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -346,7 +362,7 @@ the Environment and then install the concretized specs.
    (see :ref:`build-jobs`). To speed up environment builds further, independent
    packages can be installed in parallel by launching more Spack instances. For
    example, the following will build at most four packages in parallel using
-   three background jobs: 
+   three background jobs:
 
    .. code-block:: console
 
@@ -394,11 +410,28 @@ version (and other constraints) passed as the spec argument to the
 
 For packages with ``git`` attributes, git branches, tags, and commits can
 also be used as valid concrete versions (see :ref:`version-specifier`).
-This means that for a package ``foo``, ``spack develop foo@git.main`` will clone 
+This means that for a package ``foo``, ``spack develop foo@git.main`` will clone
 the ``main`` branch of the package, and ``spack install`` will install from
 that git clone if ``foo`` is in the environment.
 Further development on ``foo`` can be tested by reinstalling the environment,
 and eventually committed and pushed to the upstream git repo.
+
+If the package being developed supports out-of-source builds then users can use the
+``--build_directory`` flag to control the location and name of the build directory. 
+This is a shortcut to set the ``package_attributes:build_directory`` in the
+``packages`` configuration (see :ref:`assigning-package-attributes`).
+The supplied location will become the build-directory for that package in all future builds.
+
+.. warning::
+   Potential pitfalls of setting the build directory
+    Spack does not check for out-of-source build compatibility with the packages and
+    so the onerous of making sure the package supports out-of-source builds is on
+    the user.
+    For example, most ``autotool`` and ``makefile`` packages do not support out-of-source builds
+    while all ``CMake`` packages do.
+    Understanding these nuances are on the software developers and we strongly encourage
+    developers to only redirect the build directory if they understand their package's
+    build-system.
 
 ^^^^^^^
 Loading
@@ -456,11 +489,11 @@ a ``packages.yaml`` file) could contain:
 .. code-block:: yaml
 
    spack:
-     ...
+     # ...
      packages:
        all:
          compiler: [intel]
-     ...
+     # ...
 
 This configuration sets the default compiler for all packages to
 ``intel``.
@@ -588,10 +621,11 @@ user support groups providing a large software stack for their HPC center.
 
 .. admonition:: Re-concretization of user specs
 
-   When using *unified* concretization (when possible), the entire set of specs will be
-   re-concretized after any addition of new user specs, to ensure that
-   the environment remains consistent / minimal. When instead unified concretization is
-   disabled, only the new specs will be concretized after any addition.
+   The ``spack concretize`` command without additional arguments will *not* change any
+   previously concretized specs. This may prevent it from finding a solution when using
+   ``unify: true``, and it may prevent it from finding a minimal solution when using
+   ``unify: when_possible``. You can force Spack to ignore the existing concrete environment
+   with ``spack concretize -f``.
 
 ^^^^^^^^^^^^^
 Spec Matrices
@@ -805,7 +839,7 @@ directories.
 .. code-block:: yaml
 
    spack:
-     ...
+     # ...
      view:
        mpis:
          root: /path/to/view
@@ -849,7 +883,7 @@ automatically named ``default``, so that
 .. code-block:: yaml
 
    spack:
-     ...
+     # ...
      view: True
 
 is equivalent to
@@ -857,7 +891,7 @@ is equivalent to
 .. code-block:: yaml
 
    spack:
-     ...
+     # ...
      view:
        default:
          root: .spack-env/view
@@ -867,7 +901,7 @@ and
 .. code-block:: yaml
 
    spack:
-     ...
+     # ...
      view: /path/to/view
 
 is equivalent to
@@ -875,7 +909,7 @@ is equivalent to
 .. code-block:: yaml
 
    spack:
-     ...
+     # ...
      view:
        default:
          root: /path/to/view
@@ -914,9 +948,9 @@ function, as shown in the example below:
 .. code-block:: yaml
 
    projections:
-     zlib: {name}-{version}
-     ^mpi: {name}-{version}/{^mpi.name}-{^mpi.version}-{compiler.name}-{compiler.version}
-     all: {name}-{version}/{compiler.name}-{compiler.version}
+     zlib: "{name}-{version}"
+     ^mpi: "{name}-{version}/{^mpi.name}-{^mpi.version}-{compiler.name}-{compiler.version}"
+     all: "{name}-{version}/{compiler.name}-{compiler.version}"
 
 The entries in the projections configuration file must all be either
 specs or the keyword ``all``. For each spec, the projection used will
@@ -1039,7 +1073,7 @@ gets installed and is available for use in the ``env`` target.
    	$(SPACK) -e . concretize -f
 
    env.mk: spack.lock
-   	$(SPACK) -e . env depfile -o $@ --make-target-prefix spack
+   	$(SPACK) -e . env depfile -o $@ --make-prefix spack
 
    env: spack/env
    	$(info Environment installed!)
@@ -1062,9 +1096,9 @@ the include is conditional.
 .. note::
 
    When including generated ``Makefile``\s, it is important to use
-   the ``--make-target-prefix`` flag and use the non-phony target
-   ``<target-prefix>/env`` as prerequisite, instead of the phony target
-   ``<target-prefix>/all``.
+   the ``--make-prefix`` flag and use the non-phony target
+   ``<prefix>/env`` as prerequisite, instead of the phony target
+   ``<prefix>/all``.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Building a subset of the environment
@@ -1105,7 +1139,7 @@ associated ``Makefile`` with a prefix ``example``:
 
 .. code:: console
 
-   $ spack env depfile -o env.mk --make-target-prefix example
+   $ spack env depfile -o env.mk --make-prefix example
 
 And we now include it in a different ``Makefile``, in which we create a target
 ``example/push/%`` with ``%`` referring to a package identifier. This target
@@ -1120,21 +1154,21 @@ index once every package is pushed. Note how this target uses the generated
 
    SPACK ?= spack
    BUILDCACHE_DIR = $(CURDIR)/tarballs
-   
+
    .PHONY: all
-   
+
    all: push
-   
+
    include env.mk
-   
+
    example/push/%: example/install/%
    	@mkdir -p $(dir $@)
    	$(info About to push $(SPEC) to a buildcache)
-   	$(SPACK) -e . buildcache create --allow-root --only=package --directory $(BUILDCACHE_DIR) /$(HASH)
+   	$(SPACK) -e . buildcache push --allow-root --only=package $(BUILDCACHE_DIR) /$(HASH)
    	@touch $@
-   
+
    push: $(addprefix example/push/,$(example/SPACK_PACKAGE_IDS))
    	$(info Updating the buildcache index)
-   	$(SPACK) -e . buildcache update-index --directory $(BUILDCACHE_DIR)
+   	$(SPACK) -e . buildcache update-index $(BUILDCACHE_DIR)
    	$(info Done!)
    	@touch $@

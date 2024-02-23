@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,7 @@ class RMsnbase(RPackage):
 
     bioc = "MSnbase"
 
+    version("2.26.0", commit="3e6268a86b93c474e37b21a9b8f564812202b2b6")
     version("2.24.0", commit="b96e0142c663c2cb01e92479816a503c46caa1a8")
     version("2.22.0", commit="4f6e5767eee91b2105781b494fcabcfed16eba2d")
     version("2.20.4", commit="c86ac8b341832f2b577f2153258c1abf064e6448")

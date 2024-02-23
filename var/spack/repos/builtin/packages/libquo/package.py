@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,9 +15,11 @@ class Libquo(AutotoolsPackage):
     url = "https://lanl.github.io/libquo/dists/libquo-1.3.1.tar.gz"
     git = "https://github.com/lanl/libquo.git"
 
-    maintainers = ["samuelkgutierrez"]
+    maintainers("samuelkgutierrez")
 
     tags = ["e4s"]
+
+    license("BSD-3-Clause")
 
     version("master", branch="master")
     version("1.3.1", sha256="407f7c61cc80aa934cf6086f3516a31dee3b803047713c297102452c3d7d6ed1")

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,11 +9,18 @@ from spack.package import *
 class PyPytorchLightning(PythonPackage):
     """PyTorch Lightning is the lightweight PyTorch wrapper for ML researchers."""
 
-    homepage = "https://github.com/PyTorchLightning/pytorch-lightning"
+    homepage = "https://github.com/Lightning-AI/lightning"
     pypi = "pytorch-lightning/pytorch-lightning-1.2.10.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
+    license("Apache-2.0")
+
+    version("2.0.0", sha256="632dec9af8036f726904e691c505d7650658ef0f4054a062c9e6a940ca09dfd8")
+    version("1.9.4", sha256="188a7f4468acf23512e7f4903253d86fc7929a49f0c09d699872e364162001e8")
+    version("1.9.3", sha256="479164caea190d49ee2a218eef7e001888be56db912b417639b047e8f9ca8a07")
+    version("1.9.2", sha256="e60303e258457ccf7ec37c46a616892691fe3fbb23ab12f5c02b8018f03bf223")
+    version("1.9.1", sha256="45b1031f1bdf68d9350fa42e5ec01ff8492d5badda9685a2ae48e5fd8598510a")
     version("1.9.0", sha256="5b75fe936d16ef86dae22ea1cb0a73db281605cade682c0ef44e6508a99a0b37")
     version("1.8.6", sha256="c4af783579a1528e07f40dd9bd0128c162bbbcf74fe1ce4292fec63fa7e76ada")
     version("1.8.5", sha256="1c6fbd86923e73877521cdd21927f4da1d460719bbca2e04aec3d6b88d60a783")
@@ -43,13 +50,13 @@ class PyPytorchLightning(PythonPackage):
     version("1.2.10", sha256="2d8365e30ded0c20e73ce6e5b6028478ae460b8fd33727df2275666df005a301")
 
     # src/pytorch_lightning/__setup__.py
-    depends_on("python@3.7:", when="@1.6:", type=("build", "run"))
-    depends_on("python@3.6:", when="@:1.5", type=("build", "run"))
+    depends_on("python@3.8:", when="@2:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
     # requirements/pytorch/base.txt
     depends_on("py-numpy@1.17.2:", when="@1.3:", type=("build", "run"))
     depends_on("py-numpy@1.16.6:", when="@:1.2", type=("build", "run"))
+    depends_on("py-torch@1.11:", when="@2:", type=("build", "run"))
     depends_on("py-torch@1.10:", when="@1.9:", type=("build", "run"))
     depends_on("py-torch@1.9:", when="@1.7:", type=("build", "run"))
     depends_on("py-torch@1.8:", when="@1.6:", type=("build", "run"))
@@ -74,7 +81,9 @@ class PyPytorchLightning(PythonPackage):
     depends_on("py-packaging", when="@:1.2", type=("build", "run"))
     depends_on("py-typing-extensions@4.0.0:", when="@1.6:", type=("build", "run"))
     depends_on("py-typing-extensions", when="@1.4:1.5", type=("build", "run"))
-    depends_on("py-lightning-utilities@0.4.2:", when="@1.9:", type=("build", "run"))
+    depends_on("py-lightning-utilities@0.7:", when="@2:", type=("build", "run"))
+    depends_on("py-lightning-utilities@0.6.0.post0:", when="@1.9.1:", type=("build", "run"))
+    depends_on("py-lightning-utilities@0.4.2:", when="@1.9.0", type=("build", "run"))
     depends_on("py-lightning-utilities@0.3,0.4.1:", when="@1.8.4:1.8", type=("build", "run"))
     depends_on("py-lightning-utilities@0.3:", when="@1.8.0:1.8.3", type=("build", "run"))
 
@@ -92,6 +101,8 @@ class PyPytorchLightning(PythonPackage):
     depends_on("py-tensorboard@2.2.0:", when="@1.5:1.6", type=("build", "run"))
     depends_on("py-tensorboard@2.2.0:2.4,2.5.1:", when="@:1.4", type=("build", "run"))
 
+    # https://github.com/Lightning-AI/lightning/issues/16637
+    conflicts("^py-torch~distributed", when="@1.9.0")
     # https://github.com/Lightning-AI/lightning/issues/15494
     conflicts("^py-torch~distributed", when="@1.8.0")
     # https://github.com/Lightning-AI/lightning/issues/10348

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Wireshark(CMakePackage):
 
     homepage = "https://www.wireshark.org"
     url = "https://www.wireshark.org/download/src/all-versions/wireshark-2.6.0.tar.xz"
+
+    license("GPL-2.0-or-later")
 
     version("3.2.1", sha256="589f640058d6408ebbd695a80ebbd6e7bd99d8db64ecda253d27100dfd27e85b")
     version("3.2.0", sha256="4cfd33a19a454ff4002243e9d04d6afd64280a109a21ae652a192f2be2b1b66c")
@@ -68,7 +70,7 @@ class Wireshark(CMakePackage):
         if self.spec.satisfies("+qt"):
             args.append("-DBUILD_wireshark=ON")
             args.append("-DENABLE_APPLICATION_BUNDLE=ON")
-            if self.spec["qt"].version >= Version(5):
+            if self.spec["qt"].version >= Version("5"):
                 args.append("-DENABLE_QT5=ON")
             else:
                 args.append("-DENABLE_QT5=OFF")

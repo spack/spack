@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,9 @@ class PyAmrex(PythonPackage, CudaPackage, ROCmPackage):
     homepage = "https://amrex-codes.github.io/amrex/"
     git = "https://github.com/AMReX-Codes/pyamrex.git"
 
-    maintainers = ["ax3l", "RTSandberg", "sayerhs", "WeiqunZhang"]
+    maintainers("ax3l", "RTSandberg", "sayerhs", "WeiqunZhang")
+
+    license("BSD-3-Clause-LBNL")
 
     version("develop", branch="development")
 

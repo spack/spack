@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,11 +13,15 @@ class PyLightgbm(PythonPackage):
     homepage = "https://github.com/microsoft/LightGBM"
     pypi = "lightgbm/lightgbm-3.1.1.tar.gz"
 
+    license("MIT")
+
     version("3.1.1", sha256="babece2e3613e97748a67ed45387bb0e984bdb1f4126e39f010fbfe7503c7b20")
 
     variant("mpi", default=False, description="Build with mpi support")
 
     depends_on("py-setuptools", type="build")
+    # in newer pip versions --install-option does not exist
+    depends_on("py-pip@:23.0", when="+mpi", type="build")
     depends_on("py-wheel", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))

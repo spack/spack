@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack.package import *
 
 
 @IntelOneApiPackage.update_description
-class IntelOneapiInspector(IntelOneApiPackage):
+class IntelOneapiInspector(IntelOneApiLibraryPackageWithSdk):
     """Intel Inspector is a dynamic memory and threading error debugger
     for C, C++, and Fortran applications that run on Windows and Linux
     operating systems.  Save money: locate the root cause of memory,
@@ -20,10 +20,28 @@ class IntelOneapiInspector(IntelOneApiPackage):
 
     """
 
-    maintainers = ["rscohn2"]
+    maintainers("rscohn2")
 
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/inspector.html"
 
+    version(
+        "2024.0.0",
+        url="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/44ae6846-719c-49bd-b196-b16ce5835a1e/l_inspector_oneapi_p_2024.0.0.49433_offline.sh",
+        sha256="2b281c3a704a242aa3372284960ea8ed5ed1ba293cc2f70c2f873db3300c80a3",
+        expand=False,
+    )
+    version(
+        "2023.2.0",
+        url="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/2a99eafd-5109-41a1-9762-aee0c7ecbeb7/l_inspector_oneapi_p_2023.2.0.49304_offline.sh",
+        sha256="36b2ca94e5a69b68cbf9cbfde0a8e1aa58d02fb03f4d81db69769c96c20d4130",
+        expand=False,
+    )
+    version(
+        "2023.1.0",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/5e922b71-d701-4a88-b447-eb88fcb630e2/l_inspector_oneapi_p_2023.1.0.43486_offline.sh",
+        sha256="e41b31978c445faeccc1b3820a987746f922bae0bbfcf6cbafe082beede4e712",
+        expand=False,
+    )
     version(
         "2023.0.0",
         url="https://registrationcenter-download.intel.com/akdlm/irc_nas/19125/l_inspector_oneapi_p_2023.0.0.25340_offline.sh",
@@ -66,6 +84,10 @@ class IntelOneapiInspector(IntelOneApiPackage):
         sha256="1371ca74be2a6d4b069cdb3f8f2d6109abbc3261a81f437f0fe5412a7b659b43",
         expand=False,
     )
+
+    @property
+    def v2_layout_versions(self):
+        return "@2024:"
 
     @property
     def component_dir(self):

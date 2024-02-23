@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,10 +17,12 @@ class ProcessInProcess(Package):
     homepage = "https://github.com/procinproc/procinproc.github.io"
     git = "https://github.com/procinproc/PiP.git"
 
-    maintainers = ["ahori"]
+    maintainers("ahori")
 
     conflicts("platform=darwin", msg="Darwin is not supported.")
     conflicts("platform=windows", msg="Windows is not supported.")
+
+    license("BSD-2-Clause-FreeBSD")
 
     # PiP version 1 is obsolete
     version("1", branch="pip-1", deprecated=True)

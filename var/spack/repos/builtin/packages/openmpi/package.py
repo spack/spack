@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,20 +32,37 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     list_url = "https://www.open-mpi.org/software/ompi/"
     git = "https://github.com/open-mpi/ompi.git"
 
-    maintainers = ["hppritcha", "naughtont3"]
+    maintainers("hppritcha", "naughtont3")
 
     executables = ["^ompi_info$"]
 
     tags = ["e4s"]
 
+    license("custom")
+
     version("main", branch="main", submodules=True)
 
     # Current
     version(
-        "4.1.4", sha256="92912e175fd1234368c8730c03f4996fe5942e7479bb1d10059405e7f2b3930d"
-    )  # libmpi.so.40.30.4
+        "5.0.2", sha256="ee46ad8eeee2c3ff70772160bff877cbf38c330a0bc3b3ddc811648b3396698f"
+    )  # libmpi.so.40.40.2
 
     # Still supported
+    version(
+        "5.0.1", sha256="e357043e65fd1b956a47d0dae6156a90cf0e378df759364936c1781f1a25ef80"
+    )  # libmpi.so.40.40.1
+    version(
+        "5.0.0", sha256="9d845ca94bc1aeb445f83d98d238cd08f6ec7ad0f73b0f79ec1668dbfdacd613"
+    )  # libmpi.so.40.40.0
+    version(
+        "4.1.6", sha256="f740994485516deb63b5311af122c265179f5328a0d857a567b85db00b11e415"
+    )  # libmpi.so.40.30.6
+    version(
+        "4.1.5", sha256="a640986bc257389dd379886fdae6264c8cfa56bc98b71ce3ae3dfbd8ce61dbe3"
+    )  # libmpi.so.40.30.5
+    version(
+        "4.1.4", sha256="92912e175fd1234368c8730c03f4996fe5942e7479bb1d10059405e7f2b3930d"
+    )  # libmpi.so.40.30.4
     version(
         "4.1.3", sha256="3d81d04c54efb55d3871a465ffb098d8d72c1f48ff1cbaf2580eb058567c0a3b"
     )  # libmpi.so.40.30.3
@@ -382,14 +399,6 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     patch("btl_vader.patch", when="@3.0.1:3.0.2")
     patch("btl_vader.patch", when="@3.1.0:3.1.2")
 
-    # Make NAG compiler pass the -pthread option to the linker:
-    # https://github.com/open-mpi/ompi/pull/6378
-    # We support only versions based on Libtool 2.4.6.
-    patch("nag_pthread/2.1.4_2.1.999_3.0.1_4.patch", when="@2.1.4:2.1,3.0.1:4%nag")
-    patch("nag_pthread/2.1.2_2.1.3_3.0.0.patch", when="@2.1.2:2.1.3,3.0.0%nag")
-    patch("nag_pthread/2.0.0_2.1.1.patch", when="@2.0.0:2.1.1%nag")
-    patch("nag_pthread/1.10.4_1.10.999.patch", when="@1.10.4:1.10%nag")
-
     # Fix MPI_Sizeof() in the "mpi" Fortran module for compilers that do not
     # support "IGNORE TKR" functionality (e.g. NAG).
     # The issue has been resolved upstream in two steps:
@@ -405,6 +414,21 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     # To fix performance regressions introduced while fixing a bug in older
     # gcc versions on x86_64, Refs. open-mpi/ompi#8603
     patch("opal_assembly_arch.patch", when="@4.0.0:4.0.5,4.1.0")
+    # Fix reduce operations for unsigned long integers
+    # See https://github.com/open-mpi/ompi/issues/10648
+    patch(
+        "https://github.com/open-mpi/ompi/commit/8e6d9ba8058a0c128438dbc0cd6476f1abb1d4f1.patch?full_index=1",
+        sha256="12f3aabbcdb02f28138e250273c2f62591db4b1f9f8aa3dcc3ef9ed551f4f587",
+        when="@4.0.7,4.1.2:4.1.4",
+    )
+    # To fix an error in Open MPI configury related to findng dl lib.
+    # This is specific to the 5.0.0 release.
+    patch("fix-for-dlopen-missing-symbol-problem.patch", when="@5.0.0")
+    # Patches to accelerator CUDA component to link in libcuda
+    # when in non-standard location
+    patch("accelerator-cuda-fix-bug-in-makefile.patch", when="@5.0.0")
+    patch("btlsmcuda-fix-problem-with-makefile.patch", when="@5.0.0")
+    patch("accelerator-build-components-as-dso-s-by-default.patch", when="@5.0.0:5.0.1")
 
     variant(
         "fabrics",
@@ -419,6 +443,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
                 "ofi",
                 "fca",
                 "hcoll",
+                "ucc",
                 "xpmem",
                 "cma",
                 "knem",
@@ -439,7 +464,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     # Additional support options
     variant("atomics", default=False, description="Enable built-in atomics")
     variant("java", default=False, when="@1.7.4:", description="Build Java support")
-    variant("static", default=True, description="Build static libraries")
+    variant("static", default=False, description="Build static libraries")
     variant("sqlite3", default=False, when="@1.7.3:1", description="Build SQLite3 support")
     variant("vt", default=True, description="Build VampirTrace support")
     variant(
@@ -472,7 +497,8 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         description="Build deprecated support for the Singularity container",
     )
     variant("lustre", default=False, description="Lustre filesystem library support")
-    variant("romio", default=True, description="Enable ROMIO support")
+    variant("romio", default=True, when="@:5", description="Enable ROMIO support")
+    variant("romio", default=False, when="@5:", description="Enable ROMIO support")
     variant("rsh", default=True, description="Enable rsh (openssh) process lifecycle management")
     variant(
         "orterunprefix",
@@ -489,6 +515,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         "memchecker",
         default=False,
         description="Memchecker support for debugging [degrades performance]",
+        sticky=True,
     )
 
     variant(
@@ -498,6 +525,9 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     )
     # Variants to use internal packages
     variant("internal-hwloc", default=False, description="Use internal hwloc")
+    variant("internal-pmix", default=False, description="Use internal pmix")
+    variant("internal-libevent", default=False, description="Use internal libevent")
+    variant("openshmem", default=False, description="Enable building OpenSHMEM")
 
     provides("mpi")
     provides("mpi@:2.2", when="@1.6.5")
@@ -507,10 +537,9 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     if sys.platform != "darwin":
         depends_on("numactl")
 
-    depends_on("autoconf @2.69:", type="build", when="@main")
-    depends_on("automake @1.13.4:", type="build", when="@main")
-    depends_on("libtool @2.4.2:", type="build", when="@main")
-    depends_on("m4", type="build", when="@main")
+    depends_on("autoconf @2.69:", type="build", when="@5.0.0:,main")
+    depends_on("automake @1.13.4:", type="build", when="@5.0.0:,main")
+    depends_on("libtool @2.4.2:", type="build", when="@5.0.0:,main")
 
     depends_on("perl", type="build")
     depends_on("pkgconfig", type="build")
@@ -525,7 +554,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     depends_on("hwloc +cuda", when="+cuda ~internal-hwloc")
     depends_on("java", when="+java")
     depends_on("sqlite", when="+sqlite3")
-    depends_on("zlib", when="@3:")
+    depends_on("zlib-api", when="@3:")
     depends_on("valgrind~mpi", when="+memchecker")
     # Singularity release 3 works better
     depends_on("singularity@3:", when="+singularity")
@@ -545,6 +574,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     depends_on("libfabric", when="fabrics=ofi")
     depends_on("fca", when="fabrics=fca")
     depends_on("hcoll", when="fabrics=hcoll")
+    depends_on("ucc", when="fabrics=ucc")
     depends_on("xpmem", when="fabrics=xpmem")
     depends_on("knem", when="fabrics=knem")
 
@@ -554,16 +584,21 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
     # PMIx is unavailable for @1, and required for @2:
     # OpenMPI @2: includes a vendored version:
-    # depends_on('pmix@1.1.2', when='@2.1.6')
-    # depends_on('pmix@3.2.3', when='@4.1.2')
-    depends_on("pmix@1.0:1", when="@2.0:2")
-    depends_on("pmix@3.2:", when="@4.0:4")
-    depends_on("pmix@5:", when="@5.0:5")
+    with when("~internal-pmix"):
+        depends_on("pmix@1", when="@2")
+        depends_on("pmix@3.2:", when="@4:")
+        depends_on("pmix@4.2:", when="@5:")
+
+        # pmix@4.2.3 contains a breaking change, compat fixed in openmpi@4.1.6
+        # See https://www.mail-archive.com/announce@lists.open-mpi.org//msg00158.html
+        depends_on("pmix@:4.2.2", when="@:4.1.5")
 
     # Libevent is required when *vendored* PMIx is used
-    depends_on("libevent@2:", when="@main")
+    depends_on("libevent@2:", when="~internal-libevent")
 
     depends_on("openssh", type="run", when="+rsh")
+
+    depends_on("cuda", type=("build", "link", "run"), when="@5: +cuda")
 
     conflicts("+cxx_exceptions", when="%nvhpc", msg="nvc does not ignore -fexceptions, but errors")
 
@@ -581,6 +616,8 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     conflicts("fabrics=fca", when="@:1.4,5:")
     # hcoll support was added in 1.7.3:
     conflicts("fabrics=hcoll", when="@:1.7.2")
+    # ucc support was added in 4.1.4:
+    conflicts("fabrics=ucc", when="@:4.1.3")
     # xpmem support was added in 1.7
     conflicts("fabrics=xpmem", when="@:1.6")
     # cma support was added in 1.7
@@ -591,7 +628,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     conflicts(
         "schedulers=slurm ~pmi",
         when="@1.5.4",
-        msg="+pmi is required for openmpi to work with SLURM.",
+        msg="+pmi is required for openmpi to work with Slurm.",
     )
     conflicts(
         "schedulers=loadleveler",
@@ -787,8 +824,6 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         env.set("MPIF90", join_path(self.prefix.bin, "mpif90"))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
-
         # Use the spack compiler wrappers under MPI
         env.set("OMPI_CC", spack_cc)
         env.set("OMPI_CXX", spack_cxx)
@@ -874,6 +909,11 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             return "--without-hcoll"
         return "--with-hcoll={0}".format(self.spec["hcoll"].prefix)
 
+    def with_or_without_ucc(self, activated):
+        if not activated:
+            return "--without-ucc"
+        return "--with-ucc={0}".format(self.spec["ucc"].prefix)
+
     def with_or_without_xpmem(self, activated):
         if not activated:
             return "--without-xpmem"
@@ -899,7 +939,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         # Until we can pass variants such as +fortran through virtual
         # dependencies depends_on('mpi'), require Fortran compiler to
         # avoid delayed build errors in dependents.
-        if (self.compiler.f77 is None) or (self.compiler.fc is None):
+        if (self.compiler.f77 is None) and (self.compiler.fc is None):
             raise InstallError("OpenMPI requires both C and Fortran compilers!")
 
     @when("@main")
@@ -907,9 +947,14 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         perl = which("perl")
         perl("autogen.pl")
 
+    @when("@5.0.0:5.0.1")
+    def autoreconf(self, spec, prefix):
+        perl = which("perl")
+        perl("autogen.pl", "--force")
+
     def configure_args(self):
         spec = self.spec
-        config_args = ["--enable-shared", "--disable-silent-rules"]
+        config_args = ["--enable-shared", "--disable-silent-rules", "--disable-sphinx"]
 
         # All rpath flags should be appended with self.compiler.cc_rpath_arg.
         # Later, we might need to update share/openmpi/mpic++-wrapper-data.txt
@@ -959,21 +1004,29 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             config_args.extend(self.with_or_without("schedulers"))
 
         config_args.extend(self.enable_or_disable("memchecker"))
-        if spec.satisfies("+memchecker", strict=True):
-            config_args.extend(
-                [
-                    "--enable-debug",
-                ]
-            )
+        if spec.satisfies("+memchecker"):
+            config_args.extend(["--enable-debug"])
 
         # Package dependencies
-        for dep in ["libevent", "lustre", "pmix", "singularity", "valgrind", "zlib"]:
+        for dep in ["libevent", "lustre", "singularity", "valgrind"]:
             if "^" + dep in spec:
                 config_args.append("--with-{0}={1}".format(dep, spec[dep].prefix))
 
+        # PMIx support
+        if spec.satisfies("+internal-pmix"):
+            config_args.append("--with-pmix=internal")
+        elif "^pmix" in spec:
+            config_args.append("--with-pmix={0}".format(spec["pmix"].prefix))
+
+        if "^zlib-api" in spec:
+            config_args.append("--with-zlib={0}".format(spec["zlib-api"].prefix))
+
         # Hwloc support
-        if "^hwloc" in spec:
+        if spec.satisfies("+internal-hwloc"):
+            config_args.append("--with-hwloc=internal")
+        elif "^hwloc" in spec:
             config_args.append("--with-hwloc=" + spec["hwloc"].prefix)
+
         # Java support
         if "+java" in spec:
             config_args.extend(
@@ -1015,6 +1068,11 @@ class Openmpi(AutotoolsPackage, CudaPackage):
                 config_args.append(
                     "--with-cuda-libdir={0}".format(spec["cuda"].libs.directories[0])
                 )
+            if spec.satisfies("@5.0:"):
+                # And then it returned
+                config_args.append(
+                    "--with-cuda-libdir={0}".format(spec["cuda"].libs.directories[0] + "/stubs")
+                )
             if spec.satisfies("@1.7.2"):
                 # There was a bug in 1.7.2 when --enable-static is used
                 config_args.append("--enable-mca-no-build=pml-bfo")
@@ -1031,6 +1089,9 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         if spec.satisfies("%nvhpc@:20.11"):
             # Workaround compiler issues
             config_args.append("CFLAGS=-O1")
+
+        if "+openshmem" in spec:
+            config_args.append("--enable-oshmem")
 
         if "+wrapper-rpath" in spec:
             config_args.append("--enable-wrapper-rpath")
@@ -1060,6 +1121,23 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
         if wrapper_ldflags:
             config_args.append("--with-wrapper-ldflags={0}".format(" ".join(wrapper_ldflags)))
+
+        #
+        # the Spack path padding feature causes issues with Open MPI's lex based parsing system
+        # used by the compiler wrappers.  Crank up lex buffer to 1MB to handle this.
+        # see https://spack.readthedocs.io/en/latest/binary_caches.html#relocation
+        #
+
+        if spec.satisfies("@5.0.0:"):
+            config_args.append("CFLAGS=-DYY_BUF_SIZE=1048576")
+
+        #
+        # disable romio for 5.0.0 or newer if using Intel OneAPI owing to a problem
+        # building ZE related components of the romio packaged with this release
+        #
+
+        #       if spec.satisfies("@5.0.0:") and spec.satisfies("%oneapi"):
+        #           config_args.append("--disable-io-romio")
 
         return config_args
 
@@ -1143,28 +1221,27 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         """
         self.cache_extra_test_sources(self.extra_install_tests)
 
-    def _test_bin_ops(self):
-        info = ([], ["Ident string: {0}".format(self.spec.version), "MCA"], 0)
+    def run_installed_binary(self, bin, options, expected):
+        """run and check outputs for the installed binary"""
+        exe_path = join_path(self.prefix.bin, bin)
+        if not os.path.exists(exe_path):
+            raise SkipTest(f"{bin} is not installed")
 
-        ls = (["-n", "1", "ls", ".."], ["openmpi-{0}".format(self.spec.version)], 0)
+        exe = which(exe_path)
+        out = exe(*options, output=str.split, error=str.split)
+        check_outputs(expected, out)
 
-        checks = {
-            "mpirun": ls,
-            "ompi_info": info,
-            "oshmem_info": info,
-            "oshrun": ls,
-            "shmemrun": ls,
-        }
+    def test_mpirun(self):
+        """test installed mpirun"""
+        options = ["-n", "1", "ls", ".."]
+        self.run_installed_binary("mpirun", options, [f"openmpi-{self.spec.version}"])
 
-        for binary in checks:
-            options, expected, status = checks[binary]
-            exe = join_path(self.prefix.bin, binary)
-            reason = "test: checking {0} output".format(binary)
-            self.run_test(
-                exe, options, expected, status, installed=True, purpose=reason, skip_missing=True
-            )
+    def test_opmpi_info(self):
+        """test installed mpirun"""
+        self.run_installed_binary("ompi_info", [], [f"Ident string: {self.spec.version}", "MCA"])
 
-    def _test_check_versions(self):
+    def test_version(self):
+        """check versions of installed software"""
         comp_vers = str(self.spec.compiler.version)
         spec_vers = str(self.spec.version)
         checks = {
@@ -1181,116 +1258,62 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             "ompi_info": spec_vers,
             "ortecc": comp_vers,
             "orterun": spec_vers,
-            # Binaries available in versions 2.0.0 through 2.1.6
-            "ompi-submit": spec_vers,
-            "orte-submit": spec_vers,
-            # Binaries available in versions 2.0.0 through 3.1.5
-            "ompi-dvm": spec_vers,
-            "orte-dvm": spec_vers,
-            "oshcc": comp_vers,
-            "oshfort": comp_vers,
-            "oshmem_info": spec_vers,
-            "oshrun": spec_vers,
-            "shmemcc": comp_vers,
-            "shmemfort": comp_vers,
-            "shmemrun": spec_vers,
-            # Binary available in version 3.1.0 through 3.1.5
-            "prun": spec_vers,
-            # Binaries available in versions 3.0.0 through 3.1.5
-            "oshCC": comp_vers,
-            "oshc++": comp_vers,
-            "oshcxx": comp_vers,
-            "shmemCC": comp_vers,
-            "shmemc++": comp_vers,
-            "shmemcxx": comp_vers,
         }
 
-        for binary in checks:
-            expected = checks[binary]
-            purpose = "test: ensuring version of {0} is {1}".format(binary, expected)
-            exe = join_path(self.prefix.bin, binary)
-            self.run_test(
-                exe, "--version", expected, installed=True, purpose=purpose, skip_missing=True
-            )
+        for bin in checks:
+            expected = checks[bin]
+            with test_part(
+                self, f"test_version_{bin}", purpose=f"ensure version of {bin} is {expected}"
+            ):
+                self.run_installed_binary(bin, ["--version"], [expected])
 
     @property
     def _cached_tests_work_dir(self):
         """The working directory for cached test sources."""
         return join_path(self.test_suite.current_test_cache_dir, self.extra_install_tests)
 
-    def _test_examples(self):
+    def test_example(self):
         """Run test examples copied from source at build-time."""
         # Build the copied, cached test examples
-        self.run_test(
-            "make",
-            ["all"],
-            [],
+        with test_part(
+            self,
+            "test_example_make",
             purpose="test: building cached test examples",
             work_dir=self._cached_tests_work_dir,
-        )
+        ):
+            make("all")
 
-        # Run examples with known, simple-to-verify results
-        have_spml = self.spec.satisfies("@2:2.1.6")
-
-        hello_world = (["Hello, world", "I am", "0 of", "1"], 0)
-
-        max_red = (["0/1 dst = 0 1 2"], 0)
-
-        missing_spml = (["No available spml components"], 1)
-
-        no_out = ([""], 0)
-
-        ring_out = (["1 processes in ring", "0 exiting"], 0)
-
-        strided = (["not in valid range"], 255)
+        # Run basic examples with known, simple-to-verify results
+        hello_world = ["Hello, world", "I am", "0 of", "1"]
+        ring_out = ["1 processes in ring", "0 exiting"]
 
         checks = {
             "hello_c": hello_world,
             "hello_cxx": hello_world,
             "hello_mpifh": hello_world,
-            "hello_oshmem": hello_world if have_spml else missing_spml,
-            "hello_oshmemcxx": hello_world if have_spml else missing_spml,
-            "hello_oshmemfh": hello_world if have_spml else missing_spml,
             "hello_usempi": hello_world,
             "hello_usempif08": hello_world,
-            "oshmem_circular_shift": ring_out if have_spml else missing_spml,
-            "oshmem_max_reduction": max_red if have_spml else missing_spml,
-            "oshmem_shmalloc": no_out if have_spml else missing_spml,
-            "oshmem_strided_puts": strided if have_spml else missing_spml,
-            "oshmem_symmetric_data": no_out if have_spml else missing_spml,
             "ring_c": ring_out,
             "ring_cxx": ring_out,
             "ring_mpifh": ring_out,
-            "ring_oshmem": ring_out if have_spml else missing_spml,
-            "ring_oshmemfh": ring_out if have_spml else missing_spml,
             "ring_usempi": ring_out,
             "ring_usempif08": ring_out,
         }
 
-        for exe in checks:
-            expected, status = checks[exe]
-            reason = "test: checking {0} example output and status ({1})".format(exe, status)
-            self.run_test(
-                exe,
-                [],
-                expected,
-                status,
-                installed=False,
-                purpose=reason,
-                skip_missing=True,
+        for binary in checks:
+            expected = checks[binary]
+            with test_part(
+                self,
+                f"test_example_{binary}",
+                purpose="run and check output",
                 work_dir=self._cached_tests_work_dir,
-            )
+            ):
+                exe = which(binary)
+                if not exe:
+                    raise SkipTest(f"{binary} is missing")
 
-    def test(self):
-        """Perform stand-alone/smoke tests on the installed package."""
-        # Simple version check tests on selected installed binaries
-        self._test_check_versions()
-
-        # Test the operation of selected executables
-        self._test_bin_ops()
-
-        # Test example programs pulled from the build
-        self._test_examples()
+                out = exe(output=str.split, error=str.split)
+                check_outputs(expected, out)
 
 
 def get_spack_compiler_spec(compiler):

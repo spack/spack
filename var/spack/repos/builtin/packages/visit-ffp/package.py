@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,9 @@ class VisitFfp(CMakePackage):
     git = "https://github.com/visit-dav/visit.git"
     url = "https://github.com/visit-dav/visit/releases/download/v3.1.1/visit3.1.1.tar.gz"
 
-    maintainers = ["cyrush", "cessenat"]
+    maintainers("cyrush", "cessenat")
+
+    license("BSD-3-Clause")
 
     # Here we provide a local file that contains only the plugin in a flat directory
     version("local", url="file://{0}/visit-ffp.tgz".format(os.getcwd()))
