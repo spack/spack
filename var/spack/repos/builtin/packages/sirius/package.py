@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,9 +18,13 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("simonpintarelli", "haampie", "dev-zero", "AdhocMan", "toxa81")
 
+    license("BSD-2-Clause")
+
     version("develop", branch="develop")
     version("master", branch="master")
 
+    version("7.5.2", sha256="9ae01935578532c84f1d0d673dbbcdd490e26be22efa6c4acf7129f9dc1a0c60")
+    version("7.5.1", sha256="aadfa7976e90a109aeb1677042454388a8d1a50d75834d59c86c8aef06bc12e4")
     version("7.5.0", sha256="c583f88ffc02e9acac24e786bc35c7c32066882d2f70a1e0c14b5780b510365d")
     version("7.4.3", sha256="015679a60a39fa750c5d1bd8fb1ce73945524bef561270d8a171ea2fd4687fec")
     version("7.4.0", sha256="f9360a695a1e786d8cb9d6702c82dd95144a530c4fa7e8115791c7d1e92b020b")
@@ -107,6 +111,7 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@3.23:", type="build")
     depends_on("mpi")
     depends_on("gsl")
+    depends_on("blas")
     depends_on("lapack")
     depends_on("fftw-api@3")
     depends_on("libxc@3.0.0:")
@@ -130,16 +135,18 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("magma", when="+magma")
 
-    depends_on("spfft@0.9.13:", when="@7.0.1:")
-    depends_on("spfft+single_precision", when="+single_precision ^spfft")
-    depends_on("spfft+cuda", when="+cuda ^spfft")
-    depends_on("spfft+rocm", when="+rocm ^spfft")
-    depends_on("spfft+openmp", when="+openmp ^spfft")
+    with when("@7.0.1:"):
+        depends_on("spfft@0.9.13:")
+        depends_on("spfft+single_precision", when="+single_precision")
+        depends_on("spfft+cuda", when="+cuda")
+        depends_on("spfft+rocm", when="+rocm")
+        depends_on("spfft+openmp", when="+openmp")
 
-    depends_on("spla@1.1.0:", when="@7.0.2:")
-    depends_on("spla+cuda", when="+cuda ^spla")
-    depends_on("spla+rocm", when="+rocm ^spla")
-    depends_on("spla+openmp", when="+openmp ^spla")
+    with when("@7.0.2:"):
+        depends_on("spla@1.1.0:")
+        depends_on("spla+cuda", when="+cuda")
+        depends_on("spla+rocm", when="+rocm")
+        depends_on("spla+openmp", when="+openmp")
 
     depends_on("nlcglib", when="+nlcglib")
     depends_on("nlcglib+rocm", when="+nlcglib+rocm")
@@ -158,18 +165,15 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("rocblas", when="+rocm")
     depends_on("rocsolver", when="@7.5.0: +rocm")
 
-    # FindHIP cmake script only works for < 4.1
-    depends_on("hip@:4.0", when="@:7.2.0 +rocm")
-
     conflicts("^libxc@5.0.0")  # known to produce incorrect results
     conflicts("+single_precision", when="@:7.2.4")
     conflicts("+scalapack", when="^cray-libsci")
 
     # Propagate openmp to blas
-    depends_on("openblas threads=openmp", when="+openmp ^openblas")
-    depends_on("amdblis threads=openmp", when="+openmp ^amdblis")
-    depends_on("blis threads=openmp", when="+openmp ^blis")
-    depends_on("intel-mkl threads=openmp", when="+openmp ^intel-mkl")
+    depends_on("openblas threads=openmp", when="+openmp ^[virtuals=blas] openblas")
+    depends_on("amdblis threads=openmp", when="+openmp ^[virtuals=blas] amdblis")
+    depends_on("blis threads=openmp", when="+openmp ^[virtuals=blas] blis")
+    depends_on("intel-mkl threads=openmp", when="+openmp ^[virtuals=blas] intel-mkl")
 
     depends_on("wannier90", when="@7.5.0: +wannier90")
     depends_on("wannier90+shared", when="@7.5.0: +wannier90+shared")
@@ -179,7 +183,7 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("eigen@3.4.0:", when="@7.3.2: +tests")
 
-    depends_on("costa+shared", when="@7.3.2:")
+    depends_on("costa", when="@7.3.2:")
 
     with when("@7.5: +memory_pool"):
         depends_on("umpire~cuda~rocm", when="~cuda~rocm")

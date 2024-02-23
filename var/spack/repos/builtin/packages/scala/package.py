@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Scala(Package):
 
     homepage = "https://www.scala-lang.org/"
     url = "https://downloads.lightbend.com/scala/2.12.1/scala-2.12.1.tgz"
+
+    license("Apache-2.0")
 
     version("2.13.1", sha256="6918ccc494e34810a7254ad2c4e6f0e1183784c22e7b4801b7dbc8d1994a04db")
     version("2.12.10", sha256="3b12bda3300fedd91f64fc7f9165fd45c58328b1b760af24ca6ffe92e3b0656a")

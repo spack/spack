@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class PyParticle(PythonPackage):
     maintainers("vvolkl")
 
     tags = ["hep"]
+
+    license("BSD-3-Clause")
 
     version("master", branch="master")
     version("0.23.0", sha256="d810f8fc27deb8e7fd64174017d9607d50522249c0973a0008e580f93db11750")

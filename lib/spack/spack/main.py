@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1038,9 +1038,9 @@ def finish_parse_and_run(parser, cmd_name, main_args, env_format_error):
     set_working_dir()
 
     # now we can actually execute the command.
-    if args.spack_profile or args.sorted_profile:
+    if main_args.spack_profile or main_args.sorted_profile:
         _profile_wrapper(command, parser, args, unknown)
-    elif args.pdb:
+    elif main_args.pdb:
         import pdb
 
         pdb.runctx("_invoke_command(command, parser, args, unknown)", globals(), locals())

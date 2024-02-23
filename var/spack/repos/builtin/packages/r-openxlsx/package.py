@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class ROpenxlsx(RPackage):
     packages with the added benefit of removing the dependency on Java."""
 
     cran = "openxlsx"
+
+    license("MIT")
 
     version("4.2.5.2", sha256="ee7089e7e5832ef22ee0d0eebf7cca5096ce23afb2bcdb58700be62526fc9b67")
     version("4.2.5.1", sha256="64d224380809d8d19788b02daf9d6dae45262594b81f5e013d37d34daf0945c8")

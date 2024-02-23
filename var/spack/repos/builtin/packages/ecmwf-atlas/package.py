@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class EcmwfAtlas(CMakePackage):
     url = "https://github.com/ecmwf/atlas/archive/0.22.1.tar.gz"
 
     maintainers("climbfuji", "srherbener")
+
+    license("Apache-2.0")
 
     version("master", branch="master")
     version("develop", branch="develop")
@@ -71,7 +73,6 @@ class EcmwfAtlas(CMakePackage):
             self.define_from_variant("ENABLE_TRANS", "trans"),
             self.define_from_variant("ENABLE_EIGEN", "eigen"),
             self.define_from_variant("ENABLE_FFTW", "fftw"),
-            "-DPYTHON_EXECUTABLE:FILEPATH=" + self.spec["python"].command.path,
         ]
         if "~shared" in self.spec:
             args.append("-DBUILD_SHARED_LIBS=OFF")

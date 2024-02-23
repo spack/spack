@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,6 +29,8 @@ class ScineSparrow(CMakePackage):
     git = "https://github.com/qcscine/sparrow.git"
 
     maintainers("frobnitzem")
+
+    license("BSD-3-Clause")
 
     version("master", branch="master")
     version("3.1.0", sha256="91412de0f2670a1735c4ca76406db5bea04236eeac0bc1f93ccfe18104aa7ce4")
@@ -74,7 +76,7 @@ class ScineSparrow(CMakePackage):
         )
 
     def cmake_args(self):
-        args = [
+        return [
             self.define("SCINE_BUILD_TESTS", self.run_tests),
             self.define("SCINE_BUILD_PYTHON_BINDINGS", "+python" in self.spec),
             self.define("SCINE_MARCH", ""),
@@ -84,9 +86,6 @@ class ScineSparrow(CMakePackage):
             self.define("BOOST_NO_SYSTEM_PATHS", True),
             self.define("Boost_NO_BOOST_CMAKE", True),
         ]
-        if "+python" in self.spec:
-            args.append(self.define("PYTHON_EXECUTABLE", self.spec["python"].command.path))
-        return args
 
     # Adapted from ddd in MacPorts: cmake will build the executable
     # "sparrow" right next to the copy of the source directory "Sparrow".

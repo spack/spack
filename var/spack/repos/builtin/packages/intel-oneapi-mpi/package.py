@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -114,6 +114,10 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
     provides("mpi@:3.1")
 
     @property
+    def mpiexec(self):
+        return self.component_prefix.bin.mpiexec
+
+    @property
     def v2_layout_versions(self):
         return "@2021.11:"
 
@@ -162,12 +166,6 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
             env.set("MPIFC", join_path(self.component_prefix.bin, "mpiifort"))
 
         env.set("I_MPI_ROOT", self.component_prefix)
-
-    @property
-    def headers(self):
-        return self.header_directories(
-            [self.component_prefix.include, self.component_prefix.include.ilp64]
-        )
 
     @property
     def libs(self):

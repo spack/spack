@@ -15,7 +15,7 @@ spack:
     binutils:
       variants: +ld +gold +headers +libiberty ~nls
     elfutils:
-      variants: +bzip2 ~nls +xz
+      variants: ~nls
     hdf5:
       variants: +fortran +hl +shared
     libfabric:
@@ -31,8 +31,6 @@ spack:
         +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
     xz:
       variants: +pic
-    mesa:
-      version: [21.3.8]
     mpi:
       require: mpich
     mpich:
@@ -86,7 +84,7 @@ spack:
   - gmp
   - gotcha
   - gptune ~mpispawn
-  - gromacs +cp2k ^cp2k build_system=cmake
+  - gromacs +cp2k ^cp2k+dlaf build_system=cmake
   - h5bench
   - hdf5-vol-async
   - hdf5-vol-cache
@@ -199,6 +197,7 @@ spack:
   - chai ~benchmarks ~tests +cuda cuda_arch=75 ^umpire ~shared
   - flecsi +cuda cuda_arch=75
   - ginkgo +cuda cuda_arch=75
+  - gromacs +cuda cuda_arch=75
   - heffte +cuda cuda_arch=75
   - hpx +cuda cuda_arch=75
   - hypre +cuda cuda_arch=75
@@ -244,6 +243,7 @@ spack:
   - chai ~benchmarks ~tests +cuda cuda_arch=80 ^umpire ~shared
   - flecsi +cuda cuda_arch=80
   - ginkgo +cuda cuda_arch=80
+  - gromacs +cuda cuda_arch=80
   - heffte +cuda cuda_arch=80
   - hpx +cuda cuda_arch=80
   - hypre +cuda cuda_arch=80
@@ -281,6 +281,25 @@ spack:
   # - slepc +cuda cuda_arch=80      # slepc: make[1]: *** internal error: invalid --jobserver-auth string 'fifo:/tmp/GMfifo1313'.
   # - upcxx +cuda cuda_arch=80      # upcxx: needs NVIDIA driver
 
+  # PYTHON PACKAGES
+  - opencv +python3
+  - py-horovod
+  - py-jax
+  - py-jupyterlab
+  - py-matplotlib
+  - py-notebook
+  - py-numpy
+  - py-openai
+  - py-pandas
+  - py-plotly
+  - py-pooch
+  - py-pytest
+  - py-scikit-learn
+  - py-scipy
+  - py-seaborn
+  - py-tensorflow
+  - py-torch
+
   # CUDA 90
   - amrex +cuda cuda_arch=90
   - arborx +cuda cuda_arch=90 ^kokkos +wrapper
@@ -289,6 +308,7 @@ spack:
   - chai ~benchmarks ~tests +cuda cuda_arch=90 ^umpire ~shared
   - flecsi +cuda cuda_arch=90
   - ginkgo +cuda cuda_arch=90
+  - gromacs +cuda cuda_arch=90
   - heffte +cuda cuda_arch=90
   - hpx +cuda cuda_arch=90
   - kokkos +wrapper +cuda cuda_arch=90

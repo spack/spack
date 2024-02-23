@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -113,11 +113,6 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
         if spec.satisfies("+blas"):
             args.append("-DBLAS_LIBRARIES={0}".format(spec["blas"].libs.joined(";")))
             args.append("-DLAPACK_LIBRARIES={0}".format(spec["lapack"].libs.joined(";")))
-
-        if spec.satisfies("+python"):
-            args.append(
-                "-DPYTHON_EXECUTABLE:FILEPATH={0}".format(self.spec["python"].command.path)
-            )
 
         return args
 

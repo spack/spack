@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Mesa(MesonPackage):
 
     git = "https://gitlab.freedesktop.org/mesa/mesa.git"
     url = "https://archive.mesa3d.org/mesa-20.2.1.tar.xz"
+
+    license("MIT AND SGI-B-2.0 AND BSL-1.0")
 
     version("main", branch="main")
     version(
@@ -108,6 +110,7 @@ class Mesa(MesonPackage):
         depends_on("libllvm@6:")
         depends_on("libllvm@:11", when="@:20")
         depends_on("libllvm@:12", when="@:21")
+        depends_on("libllvm@:17", when="@:23")
 
     depends_on("libx11", when="+glx")
     depends_on("libxcb", when="+glx")

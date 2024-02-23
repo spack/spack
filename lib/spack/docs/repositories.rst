@@ -1,4 +1,4 @@
-.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ experimental software separately from the built-in repository. Spack
 allows you to configure local repositories using either the
 ``repos.yaml`` or the ``spack repo`` command.
 
-A package repository a directory structured like this::
+A package repository is a directory structured like this::
 
   repo/
       repo.yaml
