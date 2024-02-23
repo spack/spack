@@ -127,7 +127,7 @@ def _process_result(result, show, required_format, kwargs):
         print()
 
     if result.unsolved_specs and "solutions" in show:
-        tty.msg(Result.format_unsolved(result.unsolved_specs))
+        tty.msg(asp.Result.format_unsolved(result.unsolved_specs))
 
 
 def solve(parser, args):

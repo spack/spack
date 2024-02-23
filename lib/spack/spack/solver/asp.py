@@ -3460,8 +3460,8 @@ class Solver:
 
 
 class UnsatisfiableSpecError(spack.error.UnsatisfiableSpecError):
-    """There was an issue with the spec that was requested (i.e. a user error).
-    """
+    """There was an issue with the spec that was requested (i.e. a user error)."""
+
     def __init__(self, msg):
         super(spack.error.UnsatisfiableSpecError, self).__init__(msg)
         self.provided = None
@@ -3470,8 +3470,8 @@ class UnsatisfiableSpecError(spack.error.UnsatisfiableSpecError):
 
 
 class InternalConcretizerError(spack.error.UnsatisfiableSpecError):
-    """Errors that indicate a bug in Spack.
-    """
+    """Errors that indicate a bug in Spack."""
+
     def __init__(self, msg):
         super(spack.error.UnsatisfiableSpecError, self).__init__(msg)
         self.provided = None
@@ -3486,6 +3486,7 @@ class SolverError(InternalConcretizerError):
     so for example user specs that are over-constrained should still
     get a solution.
     """
+
     def __init__(self, provided, conflicts):
         msg = (
             "Spack concretizer internal error. Please submit a bug report and include the "
