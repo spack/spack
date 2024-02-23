@@ -158,14 +158,12 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
         when="+raja",
         msg="RAJA implementation requires architecture to be specfied by dir=",
     )
-    # depends_on("cuda@12.3.0:", when="+thrust")
     # Thrust Conflict
-    # conflicts("~cuda", when="+thrust", msg="Thrust requires +cuda variant")
     depends_on("thrust", when="+thrust")
-    depends_on("cuda", when="+thrust")
-    depends_on("cuda", when="+raja")
+    depends_on("cuda", when="thrust_submodel=cuda")
+    depends_on("cuda", when="raja+cuda")
     depends_on("hip", when="+hip")
-    depends_on("rocthrust", when="+thrust thrust_submodel=rocm")
+    depends_on("rocthrust", when="thrust_submodel=rocm")
     depends_on("intel-tbb", when="+std +std_use_tbb")
     depends_on("intel-oneapi-dpl", when="+std +std_use_onedpl")
     depends_on("intel-tbb", when="+std +std_use_onedpl")
@@ -190,20 +188,6 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
     depends_on("kokkos@3.7.1", when="+kokkos")
 
     # OpenCL Dependency
-
-    backends = {
-        "ocl": [
-            ("amd", "rocm-opencl", "enable ROCM backend"),
-            ("cuda", "cuda", "enable Cuda backend"),
-            ("intel", "intel-oneapi-compilers", "enable Intel backend"),
-            ("pocl", "pocl@1.5", "enable POCL backend"),
-        ],
-        "kokkos": [
-            ("cuda", "cuda", "enable Cuda backend"),
-            ("omp", "none", "enable Cuda backend"),
-        ],
-    }
-
     variant(
         "ocl_backend",
         values=("amd","cuda","intel","pocl","none"),
@@ -223,34 +207,11 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
         when="+ocl",
         msg="OpenCL implementation requires backend to be specfied by ocl_backend=",
     )
-    variant(
-        "raja_backend",
-        values=("omp","cuda","none"),
-        default="none",
-        when="+raja",
-        description="Enable Backend Target for OpenCL",
-        )
     # depends_on("rocm-opencl@6.0.2", when="+ocl ocl_backend=amd")
     depends_on("cuda", when="+ocl ocl_backend=cuda")
     depends_on("intel-oneapi-compilers", when="+ocl ocl_backend=intel")
     depends_on("pocl@1.5", when="+ocl ocl_backend=pocl")
 
-
-
-    # backend_vals = ["none"]
-    # for lang in backends:
-    #     for item in backends[lang]:
-    #         backend, dpdncy, descr = item
-    #         backend_vals.append(backend.lower())
-
-    # variant("backend", values=backend_vals, default="none", description="Enable backend support")
-
-    # for lang in backends:
-    #     for item in backends[lang]:
-    #         backend, dpdncy, descr = item
-    #         if dpdncy.lower() != "none":
-    #             depends_on("%s" % dpdncy.lower(), when="backend=%s" % backend.lower())
-    # this flag could be used in all required languages
     variant("flags", values=str, default="none", description="Additional CXX flags to be provided")
 
     # CMake specific dependency
@@ -302,9 +263,6 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         filtered_model_list = [item for item in truncated_model_list if item in model_list]
         # for +acc and +thrust the CudaPackage appends +cuda variant too so we need to filter cuda from list
         # e.g. we choose 'thrust' from the list of ['cuda', 'thrust']
-        print(spec_string)
-        print(truncated_model_list)
-        print(filtered_model_list)
         if len(filtered_model_list) > 1:
             filtered_model_list = [elem for elem in filtered_model_list if (elem != "cuda" and elem!="rocm")]
             if "std" in filtered_model_list[0]:
@@ -368,7 +326,7 @@ register_flag_optional(TARGET_PROCESSOR
         Refer to `nvc++ --help` for the full list"
         "")
         """
-        if self.spec.satisfies("+acc+cuda~kokkos~raja"):
+        if self.spec.satisfies("+acc~kokkos~raja"):
             if (self.spec.compiler.name == "nvhpc") or (self.spec.compiler.name == "pgi"):
                 target_device = "multicore" if self.spec.variants["cpu_arch"].value != "none" else "gpu" if "cuda_arch" in self.spec.variants else None
                 if self.spec.variants["cpu_arch"].value != "none":
@@ -441,7 +399,7 @@ register_flag_optional(TARGET_PROCESSOR
                 self.spec.variants["amdgpu_target"].value != "none"
             ):
                 args.append("-DOFFLOAD=ON")
-                args.append("-DOFFLOAD_FLAGS=" + "-fopenmp;--offload-arch=" + self.spec.variants["amdgpu_target"].value[0])
+                args.append("-DOFFLOAD_FLAGS=" + self.pkg.compiler.openmp_flag +";--offload-arch=" + self.spec.variants["amdgpu_target"].value[0])
             elif ("cpu_arch" in self.spec.variants) and (
                 self.spec.variants["cpu_arch"].value != "none"
             ):
@@ -453,13 +411,11 @@ register_flag_optional(TARGET_PROCESSOR
                 args.append("-DOFFLOAD_FLAGS=" + self.spec.variants["offload"].value)
             else:
                 args.append("-DOFFLOAD=" + "OFF")
-                spec_target = "znver3" if str( self.spec.target) == "zen3" else str( self.spec.target)
-                args.append("-DCXX_EXTRA_FLAGS=-MP;-march=" + spec_target + ";-Ofast")
+                args.append("-DCMAKE_CXX_FLAGS="+self.pkg.compiler.openmp_flag)
 
         # ===================================
         #            SYCL
         # ===================================
-
         if "+sycl" in self.spec:
             args.append("-DCXX_EXTRA_FLAGS=" + "-fsycl")
             args.append("-DSYCL_COMPILER=" + self.spec.variants["sycl_compiler_implementation"].value.upper())
@@ -471,7 +427,6 @@ register_flag_optional(TARGET_PROCESSOR
         # ===================================
         #              SYCL 2020
         # ===================================
-
         if "+sycl2020" in self.spec:
             if self.spec.satisfies("%oneapi"):
                 # -fsycl flag is required for setting up sycl/sycl.hpp seems like
@@ -493,7 +448,6 @@ register_flag_optional(TARGET_PROCESSOR
         # ===================================
         #             HIP(ROCM)
         # ===================================
-
         if "+hip" in self.spec:
             hip_comp = self.spec["hip"].prefix + "/bin/hipcc"
             args.append("-DCMAKE_CXX_COMPILER=" + hip_comp)
@@ -504,7 +458,6 @@ register_flag_optional(TARGET_PROCESSOR
         # ===================================
         #             TBB
         # ===================================
-
         if "+tbb" in self.spec:
             args.append("-DONE_TBB_DIR=" + self.spec["intel-tbb"].prefix + "/tbb/latest/")
             args.append("-DCXX_EXTRA_FLAGS=-ltbb")
@@ -516,48 +469,39 @@ register_flag_optional(TARGET_PROCESSOR
         #             OpenCL (ocl)
         # ===================================
         if "+ocl" in self.spec:
-            if "ocl_backend" in self.spec.variants:
-                if "cuda" in self.spec.variants["ocl_backend"].value:
-                    cuda_dir = self.spec["cuda"].prefix
-                    args.append("-DOpenCL_LIBRARY=" + cuda_dir + "/lib64/libOpenCL.so")
-                elif "amd" in self.spec.variants["ocl_backend"].value:
-                    rocm_dir = self.spec["rocm-opencl"].prefix
-                    args.append("-DOpenCL_LIBRARY=" + rocm_dir + "/lib64/libOpenCL.so")
-                elif "intel" in self.spec.variants["ocl_backend"].value:
-                    intel_lib = (
-                        self.spec["intel-oneapi-compilers"].prefix
-                        + "/compiler/"
-                        + str(self.spec["intel-oneapi-compilers"].version)
-                        + "/linux/lib/libOpenCL.so"
-                    )
-                    args.append("-DOpenCL_LIBRARY=" + intel_lib)
-                elif "pocl" in self.spec.variants["ocl_backend"].value:
-                    pocl_lib = self.spec["pocl"].prefix + "/lib64/libOpenCL.so"
-                    args.append("-DOpenCL_LIBRARY=" + pocl_lib)
-
+            if "cuda" in self.spec.variants["ocl_backend"].value:
+                cuda_dir = self.spec["cuda"].prefix
+                args.append("-DOpenCL_LIBRARY=" + cuda_dir + "/lib64/libOpenCL.so")
+            elif "amd" in self.spec.variants["ocl_backend"].value:
+                rocm_dir = self.spec["rocm-opencl"].prefix
+                args.append("-DOpenCL_LIBRARY=" + rocm_dir + "/lib64/libOpenCL.so")
+            elif "intel" in self.spec.variants["ocl_backend"].value:
+                intel_lib = (
+                    self.spec["intel-oneapi-compilers"].prefix
+                    + "/compiler/"
+                    + str(self.spec["intel-oneapi-compilers"].version)
+                    + "/linux/lib/libOpenCL.so"
+                )
+                args.append("-DOpenCL_LIBRARY=" + intel_lib)
+            elif "pocl" in self.spec.variants["ocl_backend"].value:
+                pocl_lib = self.spec["pocl"].prefix + "/lib64/libOpenCL.so"
+                args.append("-DOpenCL_LIBRARY=" + pocl_lib)
 
         # ===================================
         #             RAJA
         # ===================================
         if "+raja" in self.spec:
             args.append("-DRAJA_IN_TREE=" + self.spec.variants["dir"].value)
-            if "raja_offload" in self.spec.variants:
-                if "nvidia" in self.spec.variants["raja_offload"].value:
-                    cuda_comp =  self.spec["cuda"].prefix + "/bin/nvcc"
-                    args.append("-DCMAKE_CUDA_COMPILER=" + cuda_comp)
-                    args.append("-DTARGET=NVIDIA")
-                    cuda_arch = "cc" + self.spec.variants["cuda_arch"].value[0]
-                    args.append("-DCUDA_ARCH=" + cuda_arch)
-                    args.append("-DENABLE_CUDA=ON")
-                    args.append("DCUDA_TOOLKIT_ROOT_DIR=" + self.spec["cuda"].prefix)
-                    if self.spec.variants["flags"].value != "none":
-                        args.append("-DCUDA_EXTRA_FLAGS=" + self.spec.variants["flags"].value)
-                # if("cpu" in self.spec.variants['offload'].value):
-            if "omp" in self.spec.variants["raja_backend"].value:
-                args.append("-DENABLE_OPENMP=ON")
-                args.append("ENABLE_TARGET_OPENMP=ON")
-
-                
+            if "nvidia" in self.spec.variants["raja_offload"].value:
+                cuda_comp =  self.spec["cuda"].prefix + "/bin/nvcc"
+                args.append("-DCMAKE_CUDA_COMPILER=" + cuda_comp)
+                args.append("-DTARGET=NVIDIA")
+                cuda_arch = "cc" + self.spec.variants["cuda_arch"].value[0]
+                args.append("-DCUDA_ARCH=" + cuda_arch)
+                args.append("-DENABLE_CUDA=ON")
+                args.append("DCUDA_TOOLKIT_ROOT_DIR=" + self.spec["cuda"].prefix)
+                if self.spec.variants["flags"].value != "none":
+                    args.append("-DCUDA_EXTRA_FLAGS=" + self.spec.variants["flags"].value)
 
         # ===================================
         #             THRUST
@@ -578,9 +522,6 @@ register_flag_optional(TARGET_PROCESSOR
                 args.append("-DBACKEND=" + self.spec.variants["thrust_backend"].value.upper())
                 if self.spec.variants["flags"].value != "none":
                     args.append("-DCUDA_EXTRA_FLAGS=" + self.spec.variants["flags"].value)
-                # args.append("-DCXX_EXTRA_FLAGS=-MP;-march=skylake-avx512;-Ofast")
-
-
             if "rocm" in self.spec.variants["thrust_submodel"].value:
                 args.append("-DCMAKE_CXX_COMPILER=" + self.spec["hip"].hipcc) 
                 args.append("-DTHRUST_IMPL=" + self.spec.variants["thrust_submodel"].value.upper())
@@ -594,32 +535,32 @@ register_flag_optional(TARGET_PROCESSOR
         # The usage should be spack install babelstream +kokkos backend=[cuda or omp or none]
         if "+kokkos" in self.spec:
             args.append("-DKOKKOS_IN_TREE=" + self.spec.variants["dir"].value)
+            # kokkos needs to be build from the directory
             # args.append("-DKOKKOS_IN_PACKAGE=" + self.spec["kokkos"].prefix)
-            if "kokkos_backend" in self.spec.variants:
-                if "cuda" in self.spec.variants["kokkos_backend"].value:
-                    args.append("-DKokkos_ENABLE_CUDA=ON")
-                    args.append("-DCMAKE_CUDA_COMPILER=" + spack_cc)
-                    args.append("-DCUDA_ARCH=sm_" + self.spec.variants["cuda_arch"].value[0])
-                    cuda_arch_list = self.spec.variants["cuda_arch"].value
-                    int_cuda_arch = int(cuda_arch_list[0])
-                    # arhitecture kepler optimisations
-                    if int_cuda_arch in (30, 32, 35, 37):
-                        args.append("-D" + "Kokkos_ARCH_KEPLER" + str(int_cuda_arch) + "=ON")
-                    # arhitecture maxwell optimisations
-                    if int_cuda_arch in (50, 52, 53):
-                        args.append("-D" + "Kokkos_ARCH_MAXWELL" + str(int_cuda_arch) + "=ON")
-                    # arhitecture pascal optimisations
-                    if int_cuda_arch in (60, 61):
-                        args.append("-D" + "Kokkos_ARCH_PASCAL" + str(int_cuda_arch) + "=ON")
-                    # architecture volta optimisations
-                    if int_cuda_arch in (70, 72):
-                        args.append("-D" + "Kokkos_ARCH_VOLTA" + str(int_cuda_arch) + "=ON")
-                    if int_cuda_arch == 75:
-                        args.append("-DKokkos_ARCH_TURING75=ON")
-                    if int_cuda_arch == 80:
-                        args.append("-DKokkos_ARCH_AMPERE80=ON")
-                if "omp" in self.spec.variants["kokkos_backend"].value:
-                    args.append("-DKokkos_ENABLE_OPENMP=ON")
+            if "cuda" in self.spec.variants["kokkos_backend"].value:
+                args.append("-DKokkos_ENABLE_CUDA=ON")
+                args.append("-DCMAKE_CUDA_COMPILER=" + spack_cc)
+                args.append("-DCUDA_ARCH=sm_" + self.spec.variants["cuda_arch"].value[0])
+                cuda_arch_list = self.spec.variants["cuda_arch"].value
+                int_cuda_arch = int(cuda_arch_list[0])
+                # arhitecture kepler optimisations
+                if int_cuda_arch in (30, 32, 35, 37):
+                    args.append("-D" + "Kokkos_ARCH_KEPLER" + str(int_cuda_arch) + "=ON")
+                # arhitecture maxwell optimisations
+                if int_cuda_arch in (50, 52, 53):
+                    args.append("-D" + "Kokkos_ARCH_MAXWELL" + str(int_cuda_arch) + "=ON")
+                # arhitecture pascal optimisations
+                if int_cuda_arch in (60, 61):
+                    args.append("-D" + "Kokkos_ARCH_PASCAL" + str(int_cuda_arch) + "=ON")
+                # architecture volta optimisations
+                if int_cuda_arch in (70, 72):
+                    args.append("-D" + "Kokkos_ARCH_VOLTA" + str(int_cuda_arch) + "=ON")
+                if int_cuda_arch == 75:
+                    args.append("-DKokkos_ARCH_TURING75=ON")
+                if int_cuda_arch == 80:
+                    args.append("-DKokkos_ARCH_AMPERE80=ON")
+            if "omp" in self.spec.variants["kokkos_backend"].value:
+                args.append("-DKokkos_ENABLE_OPENMP=ON")
 
         # not in ["kokkos", "raja", "acc", "hip"] then compiler forced true
         if set(model_list).intersection(["kokkos", "raja", "acc", "hip"]) is True:
