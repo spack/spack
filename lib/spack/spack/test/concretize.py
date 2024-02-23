@@ -2104,13 +2104,12 @@ class TestConcretize:
         solver = spack.solver.asp.Solver()
         setup = spack.solver.asp.SpackSolverSetup()
 
-        def simulate_unsolved(cls):
-            return specs
+        simulate_unsolved_property = list((x, None) for x in specs)
 
-        monkeypatch.setattr(spack.solver.asp.Result, "unsolved_specs", simulate_unsolved)
+        monkeypatch.setattr(spack.solver.asp.Result, "unsolved_specs", simulate_unsolved_property)
 
         with pytest.raises(
-            spack.solver.asp.UnsatisfiableSpecError,
+            spack.solver.asp.InternalConcretizerError,
             match="the solver completed but produced specs",
         ):
             solver.driver.solve(setup, specs, reuse=[])
