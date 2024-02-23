@@ -1485,44 +1485,6 @@ class Environment:
         ]
         return results
 
-    def concretize_and_add(self, user_spec, concrete_spec=None, tests=False):
-        """Concretize and add a single spec to the environment.
-
-        Concretize the provided ``user_spec`` and add it along with the
-        concretized result to the environment. If the given ``user_spec`` was
-        already present in the environment, this does not add a duplicate.
-        The concretized spec will be added unless the ``user_spec`` was
-        already present and an associated concrete spec was already present.
-
-        Args:
-            concrete_spec: if provided, then it is assumed that it is the
-                result of concretizing the provided ``user_spec``
-        """
-        if self.unify is True:
-            msg = (
-                "cannot install a single spec in an environment that is "
-                "configured to be concretized together. Run instead:\n\n"
-                "    $ spack add <spec>\n"
-                "    $ spack install\n"
-            )
-            raise SpackEnvironmentError(msg)
-
-        spec = Spec(user_spec)
-
-        if self.add(spec):
-            concrete = concrete_spec or spec.concretized(tests=tests)
-            self._add_concrete_spec(spec, concrete)
-        else:
-            # spec might be in the user_specs, but not installed.
-            # TODO: Redo name-based comparison for old style envs
-            spec = next(s for s in self.user_specs if s.satisfies(user_spec))
-            concrete = self.specs_by_hash.get(spec.dag_hash())
-            if not concrete:
-                concrete = spec.concretized(tests=tests)
-                self._add_concrete_spec(spec, concrete)
-
-        return concrete
-
     @property
     def default_view(self):
         if not self.has_view(default_view_name):
