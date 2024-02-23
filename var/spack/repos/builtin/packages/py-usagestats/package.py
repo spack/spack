@@ -24,3 +24,5 @@ class PyUsagestats(PythonPackage):
     version("1.0.1", sha256="d8887aa0f65769b1423b784e626ec6fb6ba6ed1432667e10d6115b783571be6d")
 
     depends_on("py-setuptools", type="build")
+    depends_on("py-requests", type=("build", "run"))
+    depends_on("py-distro", type=("build", "run"))

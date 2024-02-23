@@ -31,8 +31,8 @@ class PyReprozip(PythonPackage):
 
     version("1.2", md5="a98b7f04c52c60072e3c42da21997d3ad41161ff6cb1139e18cda8d3012120f9")
 
-    def global_options(self, spec, prefix):
-        return ["build_ext", "-I%s/include" % self.spec["sqlite"].prefix]
+    def setup_build_environment(self, env) -> None:
+        env.set("CFLAGS", " -I%s/include" % self.spec["sqlite"].prefix)
 
     # reprozip/tracer/trace.py imports pkg_resources, so we will need setuptools
     # at runtime too.

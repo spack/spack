@@ -34,6 +34,6 @@ class PyReprounzipVagrant(PythonPackage):
 
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-reprounzip", type=("build", "run"))
+    depends_on("py-reprounzip@1.1:", type=("build", "run"))
     depends_on("py-rpaths@0.8:", type=("build", "run"))
     depends_on("py-paramiko", type=("build", "run"))
