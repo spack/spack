@@ -84,7 +84,7 @@ class Proj(CMakePackage, AutotoolsPackage):
     patch(
         "https://github.com/OSGeo/PROJ/commit/3f38a67a354a3a1e5cca97793b9a43860c380d95.patch?full_index=1",
         sha256="dc620ff1bbcc0ef4130d53a40a8693a1e2e72ebf83bd6289f1139d0f1aad2a40",
-        when="@7:7.2.1",
+        when="@6.2:9.1",
     )
 
     patch("proj.cmakelists.5.0.patch", when="@5.0")
