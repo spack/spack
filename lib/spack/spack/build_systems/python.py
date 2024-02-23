@@ -376,8 +376,7 @@ class PythonPackage(PythonExtension):
         platlib = self.prefix.join(self.spec["python"].package.platlib).join(name)
         purelib = self.prefix.join(self.spec["python"].package.purelib).join(name)
 
-        find_all_headers = functools.partial(fs.find_all_headers, recursive=True)
-        headers_list = map(find_all_headers, [include, platlib, purelib])
+        headers_list = map(fs.find_all_headers, [include, platlib, purelib])
         headers = functools.reduce(operator.add, headers_list)
 
         if headers:
