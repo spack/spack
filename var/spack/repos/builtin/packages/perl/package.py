@@ -16,6 +16,7 @@ import re
 import sys
 from contextlib import contextmanager
 
+from llnl.util.filesystem import windows_sfn
 from llnl.util.lang import match_predicate
 from llnl.util.symlink import symlink
 
@@ -287,7 +288,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             args.append("CCTYPE=%s" % self.compiler.short_msvc_version)
         else:
             raise RuntimeError("Perl unsupported for non MSVC compilers on Windows")
-        args.append("INST_TOP=%s" % self.prefix.replace("/", "\\"))
+        args.append("INST_TOP=%s" % windows_sfn(self.prefix.replace("/", "\\")))
         args.append("INST_ARCH=\\$(ARCHNAME)")
         if self.spec.satisfies("~shared"):
             args.append("ALL_STATIC=%s" % "define")
@@ -368,6 +369,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     def build_test(self):
         if sys.platform == "win32":
             win32_dir = os.path.join(self.stage.source_path, "win32")
+            win32_dir = windows_sfn(win32_dir)
             with working_dir(win32_dir):
                 nmake("test", ignore_quotes=True)
         else:
@@ -376,6 +378,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     def install(self, spec, prefix):
         if sys.platform == "win32":
             win32_dir = os.path.join(self.stage.source_path, "win32")
+            win32_dir = windows_sfn(win32_dir)
             with working_dir(win32_dir):
                 nmake("install", *self.nmake_arguments(), ignore_quotes=True)
         else:
@@ -409,6 +412,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         if sys.platform == "win32":
             maker = nmake
             cpan_dir = join_path(self.stage.source_path, cpan_dir)
+            cpan_dir = windows_sfn(cpan_dir)
         if "+cpanm" in spec:
             with working_dir(cpan_dir):
                 perl = spec["perl"].command
