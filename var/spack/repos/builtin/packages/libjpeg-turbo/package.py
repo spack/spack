@@ -68,7 +68,7 @@ class LibjpegTurbo(CMakePackage, AutotoolsPackage):
         description="Build shared libs, static libs, or both",
     )
     variant("jpeg8", default=False, description="Emulate libjpeg v8 API/ABI")
-    variant("pic", default=True, description="Enable position independent code")
+    variant("pic", default=True, description="Enable position independent code", when="libs=static")
     variant(
         "partial_decoder",
         default=False,
