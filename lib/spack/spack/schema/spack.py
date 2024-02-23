@@ -12,9 +12,10 @@ from typing import Any, Dict
 
 from llnl.util.lang import union_dicts
 
-import spack.schema
 import spack.schema.gitlab_ci as ci_schema  # DEPRECATED
 import spack.schema.merged as merged_schema
+
+from .spec_list import spec_list_schema
 
 #: Properties for inclusion in other schemas
 properties: Dict[str, Any] = {
@@ -30,7 +31,7 @@ properties: Dict[str, Any] = {
             # extra environment schema properties
             {
                 "include": {"type": "array", "default": [], "items": {"type": "string"}},
-                "specs": spack.schema.spec_list_schema,
+                "specs": spec_list_schema,
             },
         ),
     }
