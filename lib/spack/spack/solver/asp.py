@@ -411,7 +411,7 @@ class Result:
         """
         Raise an appropriate error if the result is unsatisfiable.
 
-        The error is an InternalConcretizerError, and includes the minimized cores
+        The error is an SolverError, and includes the minimized cores
         resulting from the solve, formatted to be human readable.
         """
         if self.satisfiable:
@@ -422,7 +422,7 @@ class Result:
             constraints = constraints[0]
 
         conflicts = self.format_minimal_cores()
-        raise InternalConcretizerError(constraints, conflicts=conflicts)
+        raise SolverError(constraints, conflicts=conflicts)
 
     @property
     def specs(self):
@@ -435,7 +435,10 @@ class Result:
 
     @property
     def unsolved_specs(self):
-        """List of abstract input specs that were not solved."""
+        """List of tuples pairing abstract input specs that were not
+        solved with their associated candidate spec from the solver
+        (if the solve completed).
+        """
         if self._unsolved_specs is None:
             self._compute_specs_from_answer_set()
         return self._unsolved_specs
@@ -449,7 +452,7 @@ class Result:
     def _compute_specs_from_answer_set(self):
         if not self.satisfiable:
             self._concrete_specs = []
-            self._unsolved_specs = self.abstract_specs
+            self._unsolved_specs = list((x, None) for x in self.abstract_specs)
             self._concrete_specs_by_input = {}
             return
 
@@ -470,7 +473,22 @@ class Result:
                 self._concrete_specs.append(answer[node])
                 self._concrete_specs_by_input[input_spec] = answer[node]
             else:
-                self._unsolved_specs.append(input_spec)
+                self._unsolved_specs.append((input_spec, candidate))
+
+    @staticmethod
+    def format_unsolved(unsolved_specs):
+        """Create a message providing info on unsolved user specs and for
+        each one show the associated candidate spec from the solver (if
+        there is one).
+        """
+        msg = "Unsatisfied input specs:"
+        for input_spec, candidate in unsolved_specs:
+            msg += f"\n\tInput spec: {str(input_spec)}"
+            if candidate:
+                msg += f"\n\tCandidate spec: {str(candidate)}"
+            else:
+                msg += "\n\t(No candidate specs from solver)"
+        return msg
 
 
 def _normalize_packages_yaml(packages_yaml):
@@ -804,6 +822,13 @@ class PyclingoDriver:
         if output.stats:
             print("Statistics:")
             pprint.pprint(self.control.statistics)
+
+        if result.unsolved_specs and setup.concretize_everything:
+            unsolved_str = Result.format_unsolved(result.unsolved_specs)
+            raise InternalConcretizerError(
+                "Internal Spack error: the solver completed but produced specs"
+                f" that do not satisfy the request.\n\t{unsolved_str}"
+            )
 
         return result, timer, self.control.statistics
 
@@ -3429,15 +3454,13 @@ class Solver:
             if not result.satisfiable or not result.specs:
                 break
 
-            input_specs = result.unsolved_specs
+            input_specs = list(x for (x, y) in result.unsolved_specs)
             for spec in result.specs:
                 reusable_specs.extend(spec.traverse())
 
 
 class UnsatisfiableSpecError(spack.error.UnsatisfiableSpecError):
-    """
-    Subclass for new constructor signature for new concretizer
-    """
+    """There was an issue with the spec that was requested (i.e. a user error)."""
 
     def __init__(self, msg):
         super(spack.error.UnsatisfiableSpecError, self).__init__(msg)
@@ -3447,8 +3470,21 @@ class UnsatisfiableSpecError(spack.error.UnsatisfiableSpecError):
 
 
 class InternalConcretizerError(spack.error.UnsatisfiableSpecError):
-    """
-    Subclass for new constructor signature for new concretizer
+    """Errors that indicate a bug in Spack."""
+
+    def __init__(self, msg):
+        super(spack.error.UnsatisfiableSpecError, self).__init__(msg)
+        self.provided = None
+        self.required = None
+        self.constraint_type = None
+
+
+class SolverError(InternalConcretizerError):
+    """For cases where the solver is unable to produce a solution.
+
+    Such cases are unexpected because we allow for solutions with errors,
+    so for example user specs that are over-constrained should still
+    get a solution.
     """
 
     def __init__(self, provided, conflicts):
@@ -3461,7 +3497,7 @@ class InternalConcretizerError(spack.error.UnsatisfiableSpecError):
         if conflicts:
             msg += ", errors are:" + "".join([f"\n    {conflict}" for conflict in conflicts])
 
-        super(spack.error.UnsatisfiableSpecError, self).__init__(msg)
+        super().__init__(msg)
 
         self.provided = provided
 
