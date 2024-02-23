@@ -12,7 +12,7 @@ class PyVisualCortexAnalysis(PythonPackage):
     homepage = "https://bbpgitlab.epfl.ch/circuits/proj120/visual-cortex-analysis"
     git = "ssh://git@bbpgitlab.epfl.ch/circuits/proj120/visual-cortex-analysis.git"
 
-    version("0.1.0.dev0", tag="visual-cortex-analysis-v0.1.0.dev0")
+    version("0.2.2", tag="visual-cortex-analysis-v0.2.2")
 
     depends_on("py-setuptools", type="build")
 
@@ -24,3 +24,5 @@ class PyVisualCortexAnalysis(PythonPackage):
     depends_on("py-seaborn", type=("run"))
     depends_on("py-frozendict", type=("run"))
     depends_on("py-bmtk", type=("run"))
+    depends_on("py-mpi4py", type=("run"))
+    depends_on("py-bbp-workflow", type=("run"))
