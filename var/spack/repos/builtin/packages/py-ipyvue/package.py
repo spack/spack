@@ -22,4 +22,4 @@ class PyIpyvue(PythonPackage):
 
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-ipywidgets", type=("build", "run"))
+    depends_on("py-ipywidgets@7:", type=("build", "run"))
