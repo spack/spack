@@ -85,8 +85,8 @@ class Opencarp(CMakePackage):
 
     # The ginkgo integration relies on carputils features only in master,
     # or in release >oc14.0
-    depends_on("py-carputils@master", when="@13.0.ginkgo_integration+carputils")
-    depends_on("meshtool@oc13.0", when="@13.0.ginkgo_integration+meshtool")
+    depends_on("py-carputils@oc13.0.ginkgo", when="@13.0.ginkgo_integration+carputils+ginkgo")
+    depends_on("meshtool@oc13.0", when="@13.0.ginkgo_integration+meshtool+ginkgo")
 
     def cmake_args(self):
         args = [self.define("DLOPEN", True), self.define("SPACK_BUILD", True)]
