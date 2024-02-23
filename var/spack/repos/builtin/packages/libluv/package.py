@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Libluv(CMakePackage):
 
     homepage = "https://github.com/luvit/luv"
     url = "https://github.com/luvit/luv/releases/download/1.36.0-0/luv-1.36.0-0.tar.gz"
+
+    license("Apache-2.0")
 
     version("1.45.0-0", sha256="fa6c46fb09f88320afa7f88017efd7b0d2b3a0158c5ba5b6851340b0332a2b81")
     version("1.44.2-1", sha256="3eb5c7bc44f61fbc4148ea30e3221d410263e0ffa285672851fc19debf9e5c30")

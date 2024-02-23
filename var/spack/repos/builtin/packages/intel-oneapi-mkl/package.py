@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,12 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         "https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onemkl.html"
     )
 
+    version(
+        "2024.0.0",
+        url="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/86d6a4c1-c998-4c6b-9fff-ca004e9f7455/l_onemkl_p_2024.0.0.49673_offline.sh",
+        sha256="2a3be7d01d75ba8cc3059f9a32ae72e5bfc93e68e72e94e79d7fa6ea2f7814de",
+        expand=False,
+    )
     version(
         "2023.2.0",
         url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/adb8a02c-4ee7-4882-97d6-a524150da358/l_onemkl_p_2023.2.0.49497_offline.sh",
@@ -119,6 +125,16 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         multi=False,
     )
 
+    requires(
+        "%clang",
+        "%gcc",
+        "%intel",
+        "%oneapi",
+        policy="one_of",
+        when="threads=openmp",
+        msg="MKL with OpenMP threading requires GCC, clang, or Intel compilers",
+    )
+
     depends_on("tbb")
     # cluster libraries need mpi
     depends_on("mpi", when="+cluster")
@@ -126,16 +142,29 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     provides("fftw-api@3")
     provides("scalapack", when="+cluster")
     provides("mkl")
-    provides("lapack")
-    provides("blas")
+    provides("lapack", "blas")
+
+    @run_after("install")
+    def fixup_installation(self):
+        # fixup missing path in mkl cmake files. This issue was new in
+        # 2024.0.0 and expected to be fixed in the next release.
+        if self.spec.satisfies("@2024.0.0"):
+            # cannot use spack patch because this is applied to the
+            # installed mkl, not sources
+            filter_file(
+                'PATH_SUFFIXES "lib"',
+                'PATH_SUFFIXES "lib" "../../compiler/latest/lib"',
+                self.component_prefix.lib.cmake.mkl.join("MKLConfig.cmake"),
+                backup=False,
+            )
+
+    @property
+    def v2_layout_versions(self):
+        return "@2024:"
 
     @property
     def component_dir(self):
         return "mkl"
-
-    @property
-    def headers(self):
-        return find_headers("*", self.component_prefix.include)
 
     @property
     def libs(self):
@@ -149,26 +178,14 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         else:
             return IntelOneApiStaticLibraryList(libs, system_libs)
 
-    def setup_run_environment(self, env):
-        super().setup_run_environment(env)
-
-        # Support RPATH injection to the library directories when the '-mkl' or '-qmkl'
-        # flag of the Intel compilers are used outside the Spack build environment. We
-        # should not try to take care of other compilers because the users have to
-        # provide the linker flags anyway and are expected to take care of the RPATHs
-        # flags too. We prefer the __INTEL_POST_CFLAGS/__INTEL_POST_FFLAGS flags over
-        # the PRE ones so that any other RPATHs provided by the users on the command
-        # line come before and take precedence over the ones we inject here.
-        for d in self._find_mkl_libs(self.spec.satisfies("+shared")).directories:
-            flag = "-Wl,-rpath,{0}".format(d)
-            env.append_path("__INTEL_POST_CFLAGS", flag, separator=" ")
-            env.append_path("__INTEL_POST_FFLAGS", flag, separator=" ")
-
     def setup_dependent_build_environment(self, env, dependent_spec):
         # Only if environment modifications are desired (default is +envmods)
         if self.spec.satisfies("+envmods"):
             env.set("MKLROOT", self.component_prefix)
+            # 2023.1.0 has the pkgconfig files in lib/pkgconfig, 2021.3.0 has them in
+            # tools/pkgconfig, just including both in PKG_CONFIG_PATH
             env.append_path("PKG_CONFIG_PATH", self.component_prefix.lib.pkgconfig)
+            env.append_path("PKG_CONFIG_PATH", self.component_prefix.tools.pkgconfig)
 
     def _find_mkl_libs(self, shared):
         libs = []
@@ -214,10 +231,15 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
                     )
                 )
 
-        lib_path = self.component_prefix.lib.intel64
+        lib_path = (
+            self.component_prefix.lib if self.v2_layout else self.component_prefix.lib.intel64
+        )
         lib_path = lib_path if isdir(lib_path) else dirname(lib_path)
 
+        # resolved_libs is populated as follows
+        # MKL-related + MPI-related + threading-related
         resolved_libs = find_libraries(libs, lib_path, shared=shared)
+
         # Add MPI libraries for cluster support. If MPI is not in the
         # spec, then MKL is externally installed and application must
         # link with MPI libaries. If MPI is in spec, but there are no
@@ -228,6 +250,9 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
                 resolved_libs = resolved_libs + self.spec["mpi"].libs
         except spack.error.NoLibrariesError:
             pass
+
+        if self.spec.satisfies("threads=openmp"):
+            resolved_libs += self.openmp_libs()
         return resolved_libs
 
     def _xlp64_lib(self, lib):
@@ -235,5 +260,11 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
 
     @run_after("install")
     def fixup_prefix(self):
+        # The motivation was to provide a more standard layout so mkl
+        # would be more likely to work as a virtual dependence. I am
+        # not sure if this mechanism is useful and it became a problem
+        # for mpi so disabling for v2_layout.
+        if self.v2_layout:
+            return
         self.symlink_dir(self.component_prefix.include, self.prefix.include)
         self.symlink_dir(self.component_prefix.lib, self.prefix.lib)

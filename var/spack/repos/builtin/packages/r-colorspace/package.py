@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,8 @@ class RColorspace(RPackage):
     <doi:10.18637/jss.v096.i01>)."""
 
     cran = "colorspace"
+
+    license("BSD-3-Clause")
 
     version("2.1-0", sha256="04078abb6b54119c90dc7085d62916bf292ccb163e213f9ea70567d1be82614c")
     version("2.0-3", sha256="e75681cc4dd6e4b70303fd96a6d4597065dc6bffcaa4ae4244b73ff19016857f")

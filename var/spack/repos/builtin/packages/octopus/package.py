@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class Octopus(AutotoolsPackage, CudaPackage):
     git = "https://gitlab.com/octopus-code/octopus"
 
     maintainers("fangohr", "RemiLacroix-IDRIS")
+
+    license("Apache-2.0")
 
     version("13.0", sha256="b4d0fd496c31a9c4aa4677360e631765049373131e61f396b00048235057aeb1")
     version("12.2", sha256="e919e07703696eadb4ba59352d7a2678a9191b4586cb9da538661615e765a5a2")
@@ -96,7 +98,8 @@ class Octopus(AutotoolsPackage, CudaPackage):
     depends_on("netcdf-fortran", when="+netcdf")  # NetCDF fortran lib without mpi variant
     with when("+mpi"):  # list all the parallel dependencies
         depends_on("fftw@3:+mpi+openmp", when="@8:9")  # FFT library
-        depends_on("fftw-api@3:+mpi+openmp", when="@10:")
+        depends_on("fftw-api@3:", when="@10:")
+        depends_on("fftw+mpi+openmp", when="^[virtuals=fftw-api] fftw")
         depends_on("libvdwxc+mpi", when="+libvdwxc")
         depends_on("arpack-ng+mpi", when="+arpack")
         depends_on("elpa+mpi", when="+elpa")
@@ -105,7 +108,8 @@ class Octopus(AutotoolsPackage, CudaPackage):
 
     with when("~mpi"):  # list all the serial dependencies
         depends_on("fftw@3:+openmp~mpi", when="@8:9")  # FFT library
-        depends_on("fftw-api@3:+openmp~mpi", when="@10:")
+        depends_on("fftw-api@3:", when="@10:")
+        depends_on("fftw~mpi+openmp", when="^[virtuals=fftw-api] fftw")
         depends_on("libvdwxc~mpi", when="+libvdwxc")
         depends_on("arpack-ng~mpi", when="+arpack")
         depends_on("elpa~mpi", when="+elpa")
@@ -159,7 +163,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
 
         if "^fftw" in spec:
             args.append("--with-fftw-prefix=%s" % spec["fftw"].prefix)
-        elif "^mkl" in spec:
+        elif spec["fftw-api"].name in INTEL_MATH_LIBRARIES:
             # As of version 10.0, Octopus depends on fftw-api instead
             # of FFTW. If FFTW is not in the dependency tree, then
             # it ought to be MKL as it is currently the only providers

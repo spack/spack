@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,8 +6,10 @@
 """Schema for modules.yaml configuration file.
 
 .. literalinclude:: _spack_root/lib/spack/spack/schema/modules.py
-   :lines: 13-
+   :lines: 16-
 """
+from typing import Any, Dict
+
 import spack.schema.environment
 import spack.schema.projections
 
@@ -18,9 +20,7 @@ import spack.schema.projections
 #: IS ADDED IMMEDIATELY BELOW THE MODULE TYPE ATTRIBUTE
 spec_regex = (
     r"(?!hierarchy|core_specs|verbose|hash_length|defaults|filter_hierarchy_specs|hide|"
-    r"whitelist|blacklist|"  # DEPRECATED: remove in 0.20.
-    r"include|exclude|"  # use these more inclusive/consistent options
-    r"projections|naming_scheme|core_compilers|all)(^\w[\w-]*)"
+    r"include|exclude|projections|naming_scheme|core_compilers|all)(^\w[\w-]*)"
 )
 
 #: Matches a valid name for a module set
@@ -46,14 +46,7 @@ module_file_configuration = {
             "default": {},
             "additionalProperties": False,
             "properties": {
-                # DEPRECATED: remove in 0.20.
-                "environment_blacklist": {
-                    "type": "array",
-                    "default": [],
-                    "items": {"type": "string"},
-                },
-                # use exclude_env_vars instead
-                "exclude_env_vars": {"type": "array", "default": [], "items": {"type": "string"}},
+                "exclude_env_vars": {"type": "array", "default": [], "items": {"type": "string"}}
             },
         },
         "template": {"type": "string"},
@@ -80,11 +73,6 @@ module_type_configuration = {
             "properties": {
                 "verbose": {"type": "boolean", "default": False},
                 "hash_length": {"type": "integer", "minimum": 0, "default": 7},
-                # DEPRECATED: remove in 0.20.
-                "whitelist": array_of_strings,
-                "blacklist": array_of_strings,
-                "blacklist_implicits": {"type": "boolean", "default": False},
-                # whitelist/blacklist have been replaced with include/exclude
                 "include": array_of_strings,
                 "exclude": array_of_strings,
                 "exclude_implicits": {"type": "boolean", "default": False},
@@ -155,7 +143,7 @@ module_config_properties = {
 
 
 # Properties for inclusion into other schemas (requires definitions)
-properties = {
+properties: Dict[str, Any] = {
     "modules": {
         "type": "object",
         "additionalProperties": False,
@@ -188,52 +176,3 @@ schema = {
     "additionalProperties": False,
     "properties": properties,
 }
-
-
-# deprecated keys and their replacements
-old_to_new_key = {"exclude_implicits": "hide_implicits"}
-
-
-def update_keys(data, key_translations):
-    """Change blacklist/whitelist to exclude/include.
-
-    Arguments:
-        data (dict): data from a valid modules configuration.
-        key_translations (dict): A dictionary of keys to translate to
-            their respective values.
-
-    Return:
-        (bool) whether anything was changed in data
-    """
-    changed = False
-
-    if isinstance(data, dict):
-        keys = list(data.keys())
-        for key in keys:
-            value = data[key]
-
-            translation = key_translations.get(key)
-            if translation:
-                data[translation] = data.pop(key)
-                changed = True
-
-            changed |= update_keys(value, key_translations)
-
-    elif isinstance(data, list):
-        for elt in data:
-            changed |= update_keys(elt, key_translations)
-
-    return changed
-
-
-def update(data):
-    """Update the data in place to remove deprecated properties.
-
-    Args:
-        data (dict): dictionary to be updated
-
-    Returns:
-        True if data was changed, False otherwise
-    """
-    # translate blacklist/whitelist to exclude/include
-    return update_keys(data, old_to_new_key)

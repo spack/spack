@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,18 +32,24 @@ class Root(CMakePackage):
     version("master", branch="master")
 
     # Development version (when more recent than production).
+    version("develop", branch="master")
 
     # Production version
+    version("6.30.02", sha256="7965a456d1ad1ee0d5fe4769bf5a8fec291af684ed93db0f3080a9c362435183")
+    version("6.30.00", sha256="0592c066954cfed42312957c9cb251654456064fe2d8dabdcb8826f1c0099d71")
+    version("6.28.10", sha256="69d6fdeb607e6b20bd02c757fa6217024c0b6132c1e9b1dff4d85d9a2bb7e51e")
     version("6.28.06", sha256="af3b673b9aca393a5c9ae1bf86eab2672aaf1841b658c5c6e7a30ab93c586533")
     version("6.28.04", sha256="70f7f86a0cd5e3f2a0befdc59942dd50140d990ab264e8e56c7f17f6bfe9c965")
     version("6.28.02", sha256="6643c07710e68972b00227c68b20b1016fec16f3fba5f44a571fa1ce5bb42faa")
     version("6.28.00", sha256="afa1c5c06d0915411cb9492e474ea9ab12b09961a358e7e559013ed63b5d8084")
+    version("6.26.14", sha256="81045a35a1958906c3eadecd9b01127a6087dadc19385af8e92ae5c84f06ce35")
     version("6.26.10", sha256="8e56bec397104017aa54f9eb554de7a1a134474fe0b3bb0f43a70fc4fabd625f")
     version("6.26.08", sha256="4dda043e7918b40743ad0299ddd8d526b7078f0a3822fd06066df948af47940e")
     version("6.26.06", sha256="b1f73c976a580a5c56c8c8a0152582a1dfc560b4dd80e1b7545237b65e6c89cb")
     version("6.26.04", sha256="a271cf82782d6ed2c87ea5eef6681803f2e69e17b3036df9d863636e9358421e")
     version("6.26.02", sha256="7ba96772271a726079506c5bf629c3ceb21bf0682567ed6145be30606d7cd9bb")
     version("6.26.00", sha256="5fb9be71fdf0c0b5e5951f89c2f03fcb5e74291d043f6240fb86f5ca977d4b31")
+    version("6.24.08", sha256="882c41fe36e94456fb10443d08ef9152375a90d1f910a10add1793d6e838bc44")
     version("6.24.06", sha256="907f69f4baca1e4f30eeb4979598ca7599b6aa803ca046e80e25b6bbaa0ef522")
     version("6.24.02", sha256="0507e1095e279ccc7240f651d25966024325179fa85a1259b694b56723ad7c1c")
     version("6.24.00", sha256="9da30548a289211c3122d47dacb07e85d35e61067fac2be6c5a5ff7bda979989")
@@ -104,6 +110,12 @@ class Root(CMakePackage):
         sha256="397f2de7db95a445afdb311fc91c40725fcfad485d58b4d72e6c3cdd0d0c5de7",
         when="@6.26:6.26.06 +root7 ^nlohmann-json@3.11:",
     )
+    # Support recent versions of protobuf with their own CMake config
+    # (provided the CMake being used supports targets), _cf_
+    # https://github.com/root-project/root/commit/f6cfe3bdab544e5f7fd49514562147ebd5d67d7c
+    patch("protobuf-config.patch", level=0, when="@:6.30.02 ^protobuf ^cmake@3.9:")
+
+    patch("webgui.patch", level=0, when="@6.26.00:6.26.10,6.28.00:6.28.08,6.30.00 +webgui")
 
     if sys.platform == "darwin":
         # Resolve non-standard use of uint, _cf_
@@ -112,6 +124,12 @@ class Root(CMakePackage):
         # Resolve circular dependency, _cf_
         # https://sft.its.cern.ch/jira/browse/ROOT-8226.
         patch("root6-60606-mathmore.patch", when="@6.06.06")
+        # Fix macOS build when cocoa is disabled:
+        patch(
+            "https://github.com/root-project/root/pull/14387.patch?full_index=1",
+            sha256="559495f7bdd6b7674d3b1019da9b76e8b374f6dca3dbe72fb1320b0be2b00e53",
+            when="@6.30:6.30.3 ~aqua",
+        )
 
     # ###################### Variants ##########################
     # See README.md for specific notes about what ROOT configuration
@@ -119,6 +137,8 @@ class Root(CMakePackage):
 
     variant("aqua", default=False, description="Enable Aqua interface")
     variant("arrow", default=False, description="Enable Arrow interface")
+    variant("cuda", when="@6.08.00:", default=False, description="Enable CUDA support")
+    variant("cudnn", when="@6.20.02:", default=False, description="Enable cuDNN support")
     variant("davix", default=True, description="Compile with external Davix")
     variant("dcache", default=False, description="Enable support for dCache")
     variant("emacs", default=False, description="Enable Emacs support")
@@ -160,9 +180,11 @@ class Root(CMakePackage):
     )
     variant("mysql", default=False, description="Enable support for MySQL databases")
     variant("opengl", default=True, description="Enable OpenGL support")
-    variant("oracle", default=False, description="Enable support for Oracle databases")
+    variant(
+        "oracle", when="@:6.30", default=False, description="Enable support for Oracle databases"
+    )
     variant("postgres", default=False, description="Enable postgres support")
-    variant("pythia6", default=False, description="Enable pythia6 support")
+    variant("pythia6", when="@:6.30", default=False, description="Enable pythia6 support")
     variant("pythia8", default=False, description="Enable pythia8 support")
     variant("python", default=True, description="Enable Python ROOT bindings")
     variant("qt4", when="@:6.17", default=False, description="Enable Qt graphics backend")
@@ -178,6 +200,31 @@ class Root(CMakePackage):
     variant("tbb", default=True, description="TBB multi-threading support")
     variant("threads", default=True, description="Enable using thread library")
     variant("tmva", default=False, description="Build TMVA multi variate analysis library")
+    variant(
+        "tmva-cpu",
+        when="@6.15.02:",
+        default=True,
+        description="Build TMVA with CPU support for deep learning (requires BLAS)",
+    )
+    variant(
+        "tmva-gpu",
+        when="@6.15.02:",
+        default=False,
+        description="Build TMVA with GPU support for deep learning (requries CUDA)",
+    )
+    variant(
+        "tmva-pymva",
+        when="@6.17.02:",
+        default=False,
+        description="Enable support for Python in TMVA (requires numpy)",
+    )
+    variant(
+        "tmva-sofie",
+        when="@6.25.02:",
+        default=False,
+        description="Build TMVA with support for sofie - "
+        "fast inference code generation (requires protobuf 3)",
+    )
     variant("unuran", default=True, description="Use UNURAN for random number generation")
     variant("vc", default=False, description="Enable Vc for adding new types for SIMD programming")
     variant("vdt", default=True, description="Enable set of fast and vectorisable math functions")
@@ -212,7 +259,6 @@ class Root(CMakePackage):
     depends_on("cmake@3.19:", type="build", when="@6.28.00: platform=darwin")
     depends_on("pkgconfig", type="build")
 
-    depends_on("blas")
     depends_on("freetype")
     depends_on("jpeg")
     depends_on("libice")
@@ -233,6 +279,9 @@ class Root(CMakePackage):
     depends_on("libxft", when="+x")
     depends_on("libxpm", when="+x")
     depends_on("libsm", when="+x")
+    depends_on("fontconfig", when="+x", type="build")
+    depends_on("xproto", when="+x", type="build")
+    depends_on("xextproto", when="+x", type="build")
 
     # OpenGL
     depends_on("ftgl@2.4.0:", when="+opengl")
@@ -247,14 +296,20 @@ class Root(CMakePackage):
     # Python
     depends_on("python@2.7:", when="+python", type=("build", "run"))
     depends_on("python@2.7:3.10", when="@:6.26.09 +python", type=("build", "run"))
-    depends_on("py-numpy", type=("build", "run"), when="+tmva")
-    # This numpy dependency was not intended and will hopefully
-    # be fixed in 6.20.06.
+    depends_on("py-numpy", type=("build", "run"), when="+tmva-pymva")
     # See: https://sft.its.cern.ch/jira/browse/ROOT-10626
     depends_on("py-numpy", type=("build", "run"), when="@6.20.00:6.20.05 +python")
 
+    # TMVA
+    depends_on("blas", when="+tmva-cpu")
+    depends_on("cuda", when="+tmva-gpu")
+    depends_on("protobuf@3:", when="+tmva-sofie")
+
     # Optional dependencies
     depends_on("arrow", when="+arrow")
+    depends_on("cuda", when="+cuda")
+    depends_on("cuda", when="+cudnn")
+    depends_on("cudnn", when="+cudnn")
     depends_on("davix @0.7.1:", when="+davix")
     depends_on("dcap", when="+dcache")
     depends_on("cfitsio", when="+fits")
@@ -290,6 +345,7 @@ class Root(CMakePackage):
     depends_on("unuran", when="+unuran")
     depends_on("vc@1.0:", when="@6.07.04: +vc")
     depends_on("vc@1.3.0:", when="@6.09.02: +vc")
+    depends_on("vc@1.4.4:", when="@6.29.02: +vc")
     depends_on("vdt", when="+vdt")
     depends_on("veccore", when="+veccore")
     depends_on("libxml2", when="+xml")
@@ -318,8 +374,15 @@ class Root(CMakePackage):
     conflicts("+math", when="~gsl", msg="root+math requires GSL")
     conflicts("+tmva", when="~gsl", msg="root+tmva requires GSL")
     conflicts("+tmva", when="~mlp", msg="root+tmva requires MLP")
+    conflicts("+tmva-cpu", when="~tmva", msg="root+tmva-cpu requires TMVA")
+    conflicts("+tmva-gpu", when="~tmva", msg="root+tmva-gpu requires TMVA")
+    conflicts("+tmva-gpu", when="~cuda", msg="root+tmva-gpu requires CUDA")
+    conflicts("+tmva-pymva", when="~tmva", msg="root+tmva-pymva requires TMVA")
+    conflicts("+tmva-sofie", when="~tmva", msg="root+tmva-sofie requires TMVA")
+    conflicts("~http", when="@6.29.00: +webgui", msg="root+webgui requires HTTP")
     conflicts("cxxstd=11", when="+root7", msg="root7 requires at least C++14")
     conflicts("cxxstd=11", when="@6.25.02:", msg="This version of root requires at least C++14")
+    conflicts("cxxstd=14", when="@6.30.00:", msg="This version of root requires at least C++17")
     conflicts(
         "cxxstd=20", when="@:6.28.02", msg="C++20 support requires root version at least 6.28.04"
     )
@@ -337,6 +400,13 @@ class Root(CMakePackage):
     # ROOT does not support LTO builds
     # See https://github.com/root-project/root/issues/11135
     conflicts("+ipo", msg="LTO is not a supported configuration for building ROOT")
+
+    def patch(self):
+        filter_file(
+            r"#include <sstream>",
+            "#include <sstream>\n#include <cstdint>",
+            "graf3d/eve7/inc/ROOT/REveTypes.hxx",
+        )
 
     @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):
@@ -426,6 +496,10 @@ class Root(CMakePackage):
         _add_variant(v, f, "table", "+table")
         _add_variant(v, f, "thread", "+threads")
         _add_variant(v, f, "tmva", "+tmva")
+        _add_variant(v, f, "tmva-cpu", "+tmva-cpu")
+        _add_variant(v, f, "tmva-gpu", "+tmva-gpu")
+        _add_variant(v, f, "tmva-pymva", "+tmva-pymva")
+        _add_variant(v, f, "tmva-sofie", "+tmva-sofie")
         _add_variant(v, f, "unuran", "+unuran")
         _add_variant(v, f, "vc", "+vc")
         _add_variant(v, f, "vdt", "+vdt")
@@ -437,7 +511,6 @@ class Root(CMakePackage):
         return " ".join(v)
 
     def cmake_args(self):
-        spec = self.spec
         define = self.define
         define_from_variant = self.define_from_variant
         options = []
@@ -447,7 +520,6 @@ class Root(CMakePackage):
 
         # Options controlling gross build / config behavior.
         options += [
-            define("cxxmodules", False),
             define("exceptions", True),
             define("explicitlink", True),
             define("fail-on-missing", True),
@@ -467,6 +539,9 @@ class Root(CMakePackage):
             # it was compiled with at run time; see #17488, #18078 and #23886
             define("CLING_CXX_PATH", self.compiler.cxx),
         ]
+
+        if self.spec.satisfies("@:6.28.99"):
+            options.append(define("cxxmodules", False))
 
         # Options related to ROOT's ability to download and build its own
         # dependencies. Per Spack convention, this should generally be avoided.
@@ -575,6 +650,9 @@ class Root(CMakePackage):
             define_from_variant("xrootd"),
         ]
 
+        if self.spec.satisfies("@6.08.00:"):
+            options.append(define_from_variant("cuda"))
+
         # Necessary due to name change of variant (webui->webgui)
         # https://github.com/root-project/root/commit/d631c542909f2f793ca7b06abc622e292dfc4934
         if self.spec.satisfies("@:6.17.02"):
@@ -583,10 +661,21 @@ class Root(CMakePackage):
             options.append(define_from_variant("webgui", "webgui"))
 
         # Some special features
+        if self.spec.satisfies("@6.15.02:"):
+            options.append(define_from_variant("tmva-cpu"))
+            options.append(define_from_variant("tmva-gpu"))
+
+        if self.spec.satisfies("@6.17.02:"):
+            options.append(define_from_variant("tmva-pymva"))
+
         if self.spec.satisfies("@6.20.02:"):
+            options.append(define_from_variant("cudnn"))
             options.append(define_from_variant("pyroot", "python"))
         else:
             options.append(define_from_variant("python"))
+
+        if self.spec.satisfies("@6.25.02:"):
+            options.append(define_from_variant("tmva-sofie"))
 
         # #################### Compiler options ####################
 
@@ -604,9 +693,6 @@ class Root(CMakePackage):
             ftgl_prefix = self.spec["ftgl"].prefix
             options.append(define("FTGL_ROOT_DIR", ftgl_prefix))
             options.append(define("FTGL_INCLUDE_DIR", ftgl_prefix.include))
-        if "+python" in self.spec:
-            # See https://github.com/spack/spack/pull/11579
-            options.append(define("PYTHON_EXECUTABLE", spec["python"].command.path))
 
         return options
 

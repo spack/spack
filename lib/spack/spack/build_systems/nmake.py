@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -77,7 +77,11 @@ class NMakeBuilder(BaseBuilder):
     @property
     def build_directory(self):
         """Return the directory containing the makefile."""
-        return self.pkg.stage.source_path if not self.makefile_root else self.makefile_root
+        return (
+            fs.windows_sfn(self.pkg.stage.source_path)
+            if not self.makefile_root
+            else fs.windows_sfn(self.makefile_root)
+        )
 
     @property
     def std_nmake_args(self):

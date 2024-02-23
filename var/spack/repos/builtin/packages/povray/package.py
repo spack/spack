@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,6 +29,8 @@ class Povray(AutotoolsPackage):
     git = "https://github.com/POV-Ray/povray.git"
 
     # maintainers('payerle' )
+
+    license("AGPL-3.0-or-later")
 
     version("3.7.0.8", sha256="53d11ebd2972fc452af168a00eb83aefb61387662c10784e81b63e44aa575de4")
 

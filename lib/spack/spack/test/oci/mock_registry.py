@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ import uuid
 from typing import Callable, Dict, List, Optional, Pattern, Tuple
 from urllib.request import Request
 
+import spack.oci.oci
 from spack.oci.image import Digest
 from spack.oci.opener import OCIAuthHandler
 
@@ -171,7 +172,7 @@ class InMemoryOCIRegistry(DummyServer):
         self.blobs: Dict[str, bytes] = {}
 
         # Map from (name, tag) to manifest
-        self.manifests: Dict[Tuple[str, str], Dict] = {}
+        self.manifests: Dict[Tuple[str, str], dict] = {}
 
     def index(self, req: Request):
         return MockHTTPResponse.with_json(200, "OK", body={})
@@ -225,15 +226,12 @@ class InMemoryOCIRegistry(DummyServer):
     def put_manifest(self, req: Request, name: str, ref: str):
         # In requests, Python runs header.capitalize().
         content_type = req.get_header("Content-type")
-        assert content_type in (
-            "application/vnd.oci.image.manifest.v1+json",
-            "application/vnd.oci.image.index.v1+json",
-        )
+        assert content_type in spack.oci.oci.all_content_type
 
         index_or_manifest = json.loads(self._require_data(req))
 
         # Verify that we have all blobs (layers for manifest, manifests for index)
-        if content_type == "application/vnd.oci.image.manifest.v1+json":
+        if content_type in spack.oci.oci.manifest_content_type:
             for layer in index_or_manifest["layers"]:
                 assert layer["digest"] in self.blobs, "Missing blob while uploading manifest"
 

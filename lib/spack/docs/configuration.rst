@@ -1,4 +1,4 @@
-.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ case you want to skip directly to specific docs:
 * :ref:`config.yaml <config-yaml>`
 * :ref:`mirrors.yaml <mirrors>`
 * :ref:`modules.yaml <modules>`
-* :ref:`packages.yaml <build-settings>`
+* :ref:`packages.yaml <packages-config>`
 * :ref:`repos.yaml <repositories>`
 
 You can also add any of these as inline configuration in the YAML
@@ -243,9 +243,11 @@ lower-precedence settings. Completely ignoring higher-level configuration
 options is supported with the ``::`` notation for keys (see
 :ref:`config-overrides` below).
 
-There are also special notations for string concatenation and precendense override.
-Using the ``+:`` notation  can be used to force *prepending* strings or lists. For lists, this is identical
-to the default behavior. Using the ``-:`` works similarly, but for *appending* values.
+There are also special notations for string concatenation and precendense override:
+
+* ``+:`` will force *prepending* strings or lists. For lists, this is the default behavior.
+* ``-:`` works similarly, but for *appending* values.
+
 :ref:`config-prepend-append`
 
 ^^^^^^^^^^^

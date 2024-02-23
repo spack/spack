@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -143,7 +143,9 @@ def _bootstrap_config_scopes() -> Sequence["spack.config.ConfigScope"]:
 def _add_compilers_if_missing() -> None:
     arch = spack.spec.ArchSpec.frontend_arch()
     if not spack.compilers.compilers_for_arch(arch):
-        new_compilers = spack.compilers.find_new_compilers()
+        new_compilers = spack.compilers.find_new_compilers(
+            mixed_toolchain=sys.platform == "darwin"
+        )
         if new_compilers:
             spack.compilers.add_compilers_to_config(new_compilers, init_config=False)
 

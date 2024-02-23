@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,9 +12,9 @@ import llnl.util.tty.color as color
 
 import spack.bootstrap
 import spack.cmd as cmd
-import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 import spack.repo
+from spack.cmd.common import arguments
 from spack.database import InstallStatuses
 
 description = "list and search installed packages"
@@ -261,10 +261,8 @@ def find(parser, args):
 
     # Exit early with an error code if no package matches the constraint
     if not results and args.constraint:
-        msg = "No package matches the query: {0}"
-        msg = msg.format(" ".join(args.constraint))
-        tty.msg(msg)
-        raise SystemExit(1)
+        constraint_str = " ".join(str(s) for s in args.constraint_specs)
+        tty.die(f"No package matches the query: {constraint_str}")
 
     # If tags have been specified on the command line, filter by tags
     if args.tags:

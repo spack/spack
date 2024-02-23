@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Xterm(AutotoolsPackage):
 
     homepage = "https://invisible-island.net/xterm/"
     url = "ftp://ftp.invisible-island.net/xterm/xterm-327.tgz"
+
+    license("MIT")
 
     version("353", sha256="e521d3ee9def61f5d5c911afc74dd5c3a56ce147c7071c74023ea24cac9bb768")
     version("350", sha256="aefb59eefd310268080d1a90a447368fb97a9a6737bfecfc3800bf6cc304104d")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Prmon(CMakePackage):
     git = "https://github.com/HSF/prmon.git"
 
     maintainers("graeme-a-stewart", "amete", "vvolkl")
+
+    license("Apache-2.0")
 
     version("main", branch="main")
     version("3.0.2", sha256="ea9ff521689fecb8c395e35e9540be18c7ab37812354c4a5c0ba505e2ab467c1")

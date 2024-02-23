@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,15 +17,17 @@ class Mvapich(AutotoolsPackage):
     platforms (x86 (Intel and AMD), ARM and OpenPOWER)"""
 
     homepage = "https://mvapich.cse.ohio-state.edu/userguide/userguide_spack/"
-    url = "https://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich-3.0b.tar.gz"
+    url = "https://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich-3.0.tar.gz"
     list_url = "https://mvapich.cse.ohio-state.edu/downloads/"
 
     maintainers("natshineman", "harisubramoni", "MatthewLieber")
 
     executables = ["^mpiname$", "^mpichversion$"]
 
+    license("Unlicense")
+
     # Prefer the latest stable release
-    version("3.0b", sha256="52d8a742e16eef69e944754fea7ebf8ba4ac572dac67dbda528443d9f32547cc")
+    version("3.0", sha256="ee076c4e672d18d6bf8dd2250e4a91fa96aac1db2c788e4572b5513d86936efb")
 
     provides("mpi")
     provides("mpi@:3.1")

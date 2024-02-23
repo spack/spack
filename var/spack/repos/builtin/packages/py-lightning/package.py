@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,14 +7,21 @@ from spack.package import *
 
 
 class PyLightning(PythonPackage):
-    """The Deep Learning framework to train, deploy, and ship AI products Lightning fast."""
+    """The deep learning framework to pretrain, finetune and deploy AI models."""
 
-    homepage = "https://github.com/Lightning-AI/lightning"
+    homepage = "https://github.com/Lightning-AI/pytorch-lightning"
     pypi = "lightning/lightning-2.0.0.tar.gz"
     skip_modules = ["lightning.app", "lightning.data", "lightning.store"]
 
     maintainers("adamjstewart")
 
+    license("Apache-2.0")
+
+    version("2.2.0", sha256="acf47bebc924f443f90a860b84a3f5566933a930adde42e3021abb5cf466c45f")
+    version("2.1.4", sha256="0e45098c700fa28c604a11ae233ce181b44aeffce2404debebc2616118431d9f")
+    version("2.1.3", sha256="70867a59e6b67e7720958ceb14476a2a00f34c12ad03680faed3163ed70138e2")
+    version("2.1.2", sha256="3b2599a8a719916cb03526e6570356809729680c6cda09391232e2aba0a4ed4b")
+    version("2.1.1", sha256="865491940d20a9754eac7494aa18cab893e0c2b31e83743349eeeaf31dfb52db")
     version("2.1.0", sha256="1f78f5995ae7dcffa1edf34320db136902b73a0d1b304404c48ec8be165b3a93")
     version("2.0.9", sha256="2395ece6e29e12064718ff16b8edec5685df7f7095d4fee78edb0a654f5cd7eb")
     version("2.0.8", sha256="db914e211b5c3b079a821be6e4344e72d0a729163676a65c4e00aae98390ae7b")
@@ -34,7 +41,8 @@ class PyLightning(PythonPackage):
 
     # src/lightning.egg-info/requires.txt
     depends_on("py-pyyaml@5.4:7", type=("build", "run"))
-    depends_on("py-fsspec@2021.6.1:2024+http", when="@2.1:", type=("build", "run"))
+    depends_on("py-fsspec@2022.5:2024+http", when="@2.1.3:", type=("build", "run"))
+    depends_on("py-fsspec@2021.6.1:2024+http", when="@2.1.0:2.1.2", type=("build", "run"))
     depends_on("py-fsspec@2022.5:2024+http", when="@2.0.5:2.0", type=("build", "run"))
     depends_on("py-fsspec@2022.5:2023+http", when="@:2.0.4", type=("build", "run"))
     depends_on("py-lightning-utilities@0.8:1", when="@2.1:", type=("build", "run"))
@@ -43,12 +51,14 @@ class PyLightning(PythonPackage):
     depends_on("py-numpy@1.17.2:2", type=("build", "run"))
     depends_on("py-packaging@20:24", when="@2.1:", type=("build", "run"))
     depends_on("py-packaging@17.1:24", when="@:2.0", type=("build", "run"))
-    depends_on("py-torch@1.12:3", when="@2.1:", type=("build", "run"))
+    depends_on("py-torch@1.13:3", when="@2.2:", type=("build", "run"))
+    depends_on("py-torch@1.12:3", when="@2.1", type=("build", "run"))
     depends_on("py-torch@1.11:3", when="@2.0", type=("build", "run"))
     depends_on("py-torch@1.10:3", when="@:1", type=("build", "run"))
     depends_on("py-torchmetrics@0.7:2", when="@2.0.9:", type=("build", "run"))
     depends_on("py-torchmetrics@0.7:1", when="@:2.0.8", type=("build", "run"))
     depends_on("py-tqdm@4.57:5", type=("build", "run"))
+    depends_on("py-typing-extensions@4.4:5", when="@2.2:", type=("build", "run"))
     depends_on("py-typing-extensions@4:5", type=("build", "run"))
 
     # Only an alias, not actually used by the library

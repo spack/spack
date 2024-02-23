@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class RDtw(RPackage):
     as described in Giorgino (2009) <doi:10.18637/jss.v031.i07>."""
 
     cran = "dtw"
+
+    license("GPL-2.0-or-later")
 
     version("1.23-1", sha256="6ed6a3b52be673ce2617b8d48723c7c488c95aab88fe2912d7e00507838e826d")
     version("1.22-3", sha256="df7cf9adf613422ddb22a160597eb5f5475ab6c67c0d790092edb7f72ba98f00")

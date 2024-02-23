@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Nlcglib(CMakePackage, CudaPackage, ROCmPackage):
     url = "https://github.com/simonpintarelli/nlcglib/archive/v0.9.tar.gz"
 
     maintainers = ["simonpintarelli"]
+
+    license("BSD-3-Clause")
 
     version("develop", branch="develop")
     version("master", branch="master")
@@ -49,9 +51,12 @@ class Nlcglib(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("rocblas")
         depends_on("rocsolver")
 
-    with when("+cuda"):
-        depends_on("kokkos+cuda+cuda_lambda+wrapper", when="%gcc")
-        depends_on("kokkos+cuda")
+    for arch in CudaPackage.cuda_arch_values:
+        depends_on(
+            f"kokkos+cuda+cuda_lambda+wrapper cuda_arch={arch}",
+            when=f"%gcc +cuda cuda_arch={arch}",
+        )
+        depends_on(f"kokkos+cuda cuda_arch={arch}", when=f"+cuda cuda_arch={arch}")
 
     def cmake_args(self):
         options = [

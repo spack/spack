@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class RTidytree(RPackage):
     to manipulate tree data."""
 
     cran = "tidytree"
+
+    license("Artistic-2.0")
 
     version("0.4.2", sha256="cb831a66d8afa5e21f5072e4fbebcbd2228881090d0040f87605f5aeefda155e")
     version("0.4.1", sha256="fbc4364d17e1b1c26ed06af0cdf36c88a5bc562fdbd4731ab179e30bba4009eb")

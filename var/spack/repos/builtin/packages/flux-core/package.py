@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,13 @@ class FluxCore(AutotoolsPackage):
 
     maintainers("grondo")
 
+    license("LGPL-3.0-only")
+
     version("master", branch="master")
+    version("0.59.0", sha256="465d24294b92962d156ad49768ea804ff848d5c0b3470d80e07ebf24cd255f2d")
+    version("0.58.0", sha256="3125ace7d4d3c99b362290344f97db74c06c37b5510cfcb746e1bf48e1dc1389")
+    version("0.57.0", sha256="a412b8370b5236605a5261c892f48d65c1357a83c88446cd1723236f58a807ce")
+    version("0.56.0", sha256="dfce5aa21bcb1f990397343cdff8a60542b2d18cbd929e46bdb444d21a961efb")
     version("0.55.0", sha256="2925b8a084e9d1069a96de7689b515ad6f2051ecfb9fbbe4d2643507de7ccd30")
     version("0.54.0", sha256="721fc3fff64b3b167ae55d0e29379ff3211729248ef97e3b9855816219063b42")
     version("0.53.0", sha256="2f14d032a2d54f34e066c8a15c79917089e9f7f8558baa03dbfe63dbf56918b7")
@@ -129,7 +135,7 @@ class FluxCore(AutotoolsPackage):
     depends_on("libarchive+iconv", when="@0.38.0:")
     depends_on("ncurses@6.2:", when="@0.32.0:")
     depends_on("libzmq@4.0.4:")
-    depends_on("czmq@3.0.1:")
+    depends_on("czmq@3.0.1:", when="@:0.54.0")
     depends_on("hwloc@1.11.1:1", when="@:0.17.0")
     depends_on("hwloc@1.11.1:", when="@0.17.0:")
     depends_on("hwloc +cuda", when="+cuda")
@@ -147,14 +153,15 @@ class FluxCore(AutotoolsPackage):
     depends_on("py-cffi@1.1:", type=("build", "run"))
     depends_on("py-six@1.9:", when="@:0.24", type=("build", "run"))
     depends_on("py-pyyaml@3.10:", type=("build", "run"))
-    depends_on("py-jsonschema@2.3:", type=("build", "run"))
+    depends_on("py-jsonschema@2.3:", type=("build", "run"), when="@:0.58.0")
     depends_on("py-ply", type=("build", "run"), when="@0.46.1:")
     depends_on("jansson")
     depends_on("jansson@2.10:", when="@0.21.0:")
     depends_on("pkgconfig")
     depends_on("lz4")
     depends_on("sqlite")
-
+    # Before this version, czmq brings it in
+    depends_on("uuid", when="@0.55.0:")
     depends_on("asciidoc", type="build", when="+docs")
     depends_on("py-docutils", type="build", when="@0.32.0: +docs")
 

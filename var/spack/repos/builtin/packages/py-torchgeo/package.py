@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,10 @@ class PyTorchgeo(PythonPackage):
 
     maintainers("adamjstewart", "calebrob6")
 
+    license("MIT")
+
     version("main", branch="main")
+    version("0.5.1", sha256="5f86a34d18fe36eeb9146b057b21e5356252ef8ab6a9db33feebb120a01feff8")
     version("0.5.0", sha256="2bc2f9c4a19a569790cb3396499fdec17496632b0e52b86be390a2cc7a1a7033")
     version("0.4.1", sha256="a3692436bf63df8d2f9b76d16eea5ee309dd1bd74e0fde6e64456abfdb2a5b58")
     version("0.4.0", sha256="a0812487205aa2db7bc92119d896ae4bf4f1014e6fdc0ce0f75bcb24fada6613")
@@ -45,7 +48,7 @@ class PyTorchgeo(PythonPackage):
     depends_on("py-fiona@1.8:", when="@0.3:", type=("build", "run"))
     depends_on("py-fiona@1.5:", type=("build", "run"))
     # Only part of lightning[pytorch-extra] we actually require.
-    depends_on("py-jsonargparse@4.18:+signatures", when="@0.5:", type=("build", "run"))
+    depends_on("py-jsonargparse@4.26.1:+signatures", when="@0.5:", type=("build", "run"))
     depends_on("py-kornia@0.6.9:", when="@0.5:", type=("build", "run"))
     depends_on("py-kornia@0.6.5:", when="@0.4.1:", type=("build", "run"))
     # https://github.com/microsoft/torchgeo/pull/1123
@@ -64,7 +67,15 @@ class PyTorchgeo(PythonPackage):
     depends_on("pil@8:", when="@0.5:", type=("build", "run"))
     depends_on("pil@6.2:", type=("build", "run"))
     # JPEG, TIFF, and compressed PNG support required for file I/O in several datasets.
-    depends_on("pil+jpeg+tiff+zlib", type=("build", "run"))
+    depends_on(
+        "py-pillow +jpeg+tiff+zlib", type=("build", "run"), when="^[virtuals=pil] py-pillow"
+    )
+    depends_on(
+        "py-pillow-simd +jpeg+tiff+zlib",
+        type=("build", "run"),
+        when="^[virtuals=pil] py-pillow-simd",
+    )
+
     depends_on("py-pyproj@3:", when="@0.5:", type=("build", "run"))
     depends_on("py-pyproj@2.2:", type=("build", "run"))
     depends_on("py-rasterio@1.2:", when="@0.5:", type=("build", "run"))

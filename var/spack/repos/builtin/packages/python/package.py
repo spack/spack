@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,10 +8,11 @@ import json
 import os
 import platform
 import re
+import stat
 import subprocess
 import sys
 from shutil import copy
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import is_nonsymlink_exe_with_shebang, path_contains_subdirectory
@@ -30,7 +31,7 @@ class Python(Package):
     url = "https://www.python.org/ftp/python/3.8.0/Python-3.8.0.tgz"
     list_url = "https://www.python.org/ftp/python/"
     list_depth = 1
-    tags = ["windows"]
+    tags = ["windows", "build-tools"]
 
     maintainers("adamjstewart", "skosukhin", "scheibelp")
 
@@ -40,12 +41,16 @@ class Python(Package):
     install_targets = ["install"]
     build_targets: List[str] = []
 
+    license("0BSD")
+
+    version("3.12.1", sha256="d01ec6a33bc10009b09c17da95cc2759af5a580a7316b3a446eb4190e13f97b2")
     version("3.12.0", sha256="51412956d24a1ef7c97f1cb5f70e185c13e3de1f50d131c0aac6338080687afb")
     version(
-        "3.11.6",
-        sha256="c049bf317e877cbf9fce8c3af902436774ecef5249a29d10984ca3a37f7f4736",
+        "3.11.7",
+        sha256="068c05f82262e57641bd93458dfa883128858f5f4997aad7a36fd25b13b29209",
         preferred=True,
     )
+    version("3.11.6", sha256="c049bf317e877cbf9fce8c3af902436774ecef5249a29d10984ca3a37f7f4736")
     version("3.11.5", sha256="a12a0a013a30b846c786c010f2c19dd36b7298d888f7c4bd1581d90ce18b5e58")
     version("3.11.4", sha256="85c37a265e5c9dd9f75b35f954e31fbfc10383162417285e30ad25cc073a0d63")
     version("3.11.3", sha256="1a79f3df32265d9e6625f1a0b31c28eb1594df911403d11f3320ee1da1b3e048")
@@ -237,6 +242,7 @@ class Python(Package):
     variant("crypt", default=True, description="Build crypt module", when="@:3.12 platform=cray")
 
     if sys.platform != "win32":
+        depends_on("gmake", type="build")
         depends_on("pkgconfig@0.9.0:", type="build")
         depends_on("gettext +libxml2", when="+libxml2")
         depends_on("gettext ~libxml2", when="~libxml2")
@@ -1259,48 +1265,50 @@ print(json.dumps(config))
         module.python_platlib = join_path(dependent_spec.prefix, self.platlib)
         module.python_purelib = join_path(dependent_spec.prefix, self.purelib)
 
-        # Make the site packages directory for extensions
-        if dependent_spec.package.is_extension:
-            mkdirp(module.python_platlib)
-            mkdirp(module.python_purelib)
-
     def add_files_to_view(self, view, merge_map, skip_if_exists=True):
+        # The goal is to copy the `python` executable, so that its search paths are relative to the
+        # view instead of the install prefix. This is an obsolete way of creating something that
+        # resembles a virtual environnent. Also we copy scripts with shebang lines. Finally we need
+        # to re-target symlinks pointing to copied files.
         bin_dir = self.spec.prefix.bin if sys.platform != "win32" else self.spec.prefix
+        copied_files: Dict[Tuple[int, int], str] = {}  # File identifier -> source
+        delayed_links: List[Tuple[str, str]] = []  # List of symlinks from merge map
         for src, dst in merge_map.items():
+            if skip_if_exists and os.path.lexists(dst):
+                continue
+
+            # Files not in the bin dir are linked the default way.
             if not path_contains_subdirectory(src, bin_dir):
                 view.link(src, dst, spec=self.spec)
-            elif not os.path.islink(src):
-                copy(src, dst)
-                if is_nonsymlink_exe_with_shebang(src):
-                    filter_file(
-                        self.spec.prefix,
-                        os.path.abspath(view.get_projection_for_spec(self.spec)),
-                        dst,
-                        backup=False,
-                    )
-            else:
-                # orig_link_target = os.path.realpath(src) is insufficient when
-                # the spack install tree is located at a symlink or a
-                # descendent of a symlink. What we need here is the real
-                # relative path from the python prefix to src
-                # TODO: generalize this logic in the link_tree object
-                #    add a method to resolve a link relative to the link_tree
-                #    object root.
-                realpath_src = os.path.realpath(src)
-                realpath_prefix = os.path.realpath(self.spec.prefix)
-                realpath_rel = os.path.relpath(realpath_src, realpath_prefix)
-                orig_link_target = os.path.join(self.spec.prefix, realpath_rel)
+                continue
 
-                new_link_target = os.path.abspath(merge_map[orig_link_target])
-                view.link(new_link_target, dst, spec=self.spec)
+            s = os.lstat(src)
 
-    def remove_files_from_view(self, view, merge_map):
-        bin_dir = self.spec.prefix.bin if sys.platform != "win32" else self.spec.prefix
-        for src, dst in merge_map.items():
-            if not path_contains_subdirectory(src, bin_dir):
-                view.remove_file(src, dst)
+            # Symlink is delayed because we may need to re-target if its target is copied in view
+            if stat.S_ISLNK(s.st_mode):
+                delayed_links.append((src, dst))
+                continue
+
+            # Anything that's not a symlink gets copied. Scripts with shebangs are immediately
+            # updated when necessary.
+            copied_files[(s.st_dev, s.st_ino)] = dst
+            copy(src, dst)
+            if is_nonsymlink_exe_with_shebang(src):
+                filter_file(
+                    self.spec.prefix, os.path.abspath(view.get_projection_for_spec(self.spec)), dst
+                )
+
+        # Finally re-target the symlinks that point to copied files.
+        for src, dst in delayed_links:
+            try:
+                s = os.stat(src)
+                target = copied_files[(s.st_dev, s.st_ino)]
+            except (OSError, KeyError):
+                target = None
+            if target:
+                os.symlink(os.path.relpath(target, os.path.dirname(dst)), dst)
             else:
-                os.remove(dst)
+                view.link(src, dst, spec=self.spec)
 
     def test_hello_world(self):
         """run simple hello world program"""

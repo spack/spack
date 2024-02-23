@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Psrchive(AutotoolsPackage):
     homepage = "http://psrchive.sourceforge.net/"
     url = "https://sourceforge.net/projects/psrchive/files/psrchive/2022-05-14/psrchive-2022-05-14.tar.gz/download"
     git = "https://git.code.sf.net/p/psrchive/code.git"
+
+    license("AFL-2.1")
 
     version(
         "2022-05-14", sha256="4d25609837cba1be244fa8adc8f105afe31972f2650bc0b90438862cf35395e1"

@@ -1,4 +1,4 @@
-.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -304,3 +304,17 @@ To work properly, this requires your terminal to reset its title after
 Spack has finished its work, otherwise Spack's status information will
 remain in the terminal's title indefinitely. Most terminals should already
 be set up this way and clear Spack's status information.
+
+-----------
+``aliases``
+-----------
+
+Aliases can be used to define new Spack commands. They can be either shortcuts
+for longer commands or include specific arguments for convenience. For instance,
+if users want to use ``spack install``'s ``-v`` argument all the time, they can
+create a new alias called ``inst`` that will always call ``install -v``:
+
+.. code-block:: yaml
+
+   aliases:
+     inst: install -v

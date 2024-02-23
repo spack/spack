@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,13 +14,15 @@ class Stdexec(CMakePackage):
     git = "https://github.com/NVIDIA/stdexec.git"
     maintainers("msimberg", "aurianer")
 
+    license("Apache-2.0")
+
     version("23.03", sha256="2c9dfb6e56a190543049d2300ccccd1b626f4bb82af5b607869c626886fadd15")
     version("main", branch="main")
 
     depends_on("cmake@3.23.1:", type="build")
 
     conflicts("%gcc@:10")
-    conflicts("%clang@:13")
+    conflicts("%clang@:12")
 
     def build(self, spec, prefix):
         pass
