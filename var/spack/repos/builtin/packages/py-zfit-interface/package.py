@@ -26,5 +26,6 @@ class PyZfitInterface(PythonPackage):
     depends_on("python@3.9:", type=("build", "run"))
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-numpy", type="run")
-    depends_on("py-uhi", type="run")
+    depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-uhi", type=("build", "run"))
+    depends_on("py-typing-extensions", type=("build", "run"))
