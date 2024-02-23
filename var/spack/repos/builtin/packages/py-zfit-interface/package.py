@@ -17,10 +17,7 @@ class PyZfitInterface(PythonPackage):
     maintainers("jonas-eschle")
     license("BSD-3-Clause", checked_by="jonas-eschle")
 
-    version(
-        "0.0.3",
-        sha256="af7e8ed409f136187b2cd4def723504f9d619738668e963af388a79121239f74",
-    )
+    version("0.0.3", sha256="af7e8ed409f136187b2cd4def723504f9d619738668e963af388a79121239f74")
 
     depends_on("python@3.9:", type=("build", "run"))
 
