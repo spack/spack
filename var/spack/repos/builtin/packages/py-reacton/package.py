@@ -24,5 +24,5 @@ class PyReacton(PythonPackage):
 
     depends_on("py-hatchling", type="build")
 
-    depends_on("py-ipywidgets@8.0.2:", type=("build", "run"))
-    depends_on("py-typing-extensions@4.5.0:", type=("build", "run"))
+    depends_on("py-ipywidgets", type=("build", "run"))
+    depends_on("py-typing-extensions@4.1.1:", type=("build", "run"))
