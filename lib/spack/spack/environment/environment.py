@@ -16,7 +16,7 @@ import time
 import urllib.parse
 import urllib.request
 import warnings
-from typing import Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import Dict, List, Optional, Set, Tuple, Union
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -54,6 +54,7 @@ import spack.version
 from spack import traverse
 from spack.filesystem_view import SimpleFilesystemView, inverse_view_func_parser, view_func_parser
 from spack.installer import PackageInstaller
+from spack.mapping import ConcreteSpecsByHash
 from spack.schema.env import TOP_LEVEL_KEY
 from spack.spec import Spec
 from spack.spec_list import InvalidSpecConstraintError, SpecList
@@ -807,8 +808,10 @@ class Environment:
         self.concretized_user_specs: List[Spec] = []
         #: Roots associated with the last concretization, in order
         self.concretized_order: List[str] = []
-        #: Concretized specs by hash
-        self.specs_by_hash: Dict[str, Spec] = {}
+        #: All the specs in the environment, including transitive, by hash
+        self.all_specs_by_hash = ConcreteSpecsByHash()
+        #: Concretized root specs by hash
+        self.root_specs_by_hash: Dict[str, Spec] = {}
         #: Repository for this environment (memoized)
         self._repo = None
         #: Previously active environment
@@ -969,7 +972,7 @@ class Environment:
         self._dev_specs = {}
         self.concretized_user_specs = []  # user specs from last concretize
         self.concretized_order = []  # roots of last concretize, in order
-        self.specs_by_hash = {}  # concretized specs by hash
+        self.root_specs_by_hash = {}  # concretized specs by hash
         self.invalidate_repository_cache()
         self._previous_active = None  # previously active environment
         if not re_read:
@@ -1147,8 +1150,7 @@ class Environment:
             matches = [s for s in list_to_change if s.satisfies(query_spec)]
 
         else:
-            # concrete specs match against concrete specs in the env
-            # by dag hash.
+            # concrete specs match against concrete specs in the env by dag hash.
             specs_hashes = zip(self.concretized_user_specs, self.concretized_order)
             matches = [s for s, h in specs_hashes if query_spec.dag_hash() == h]
 
@@ -1179,15 +1181,24 @@ class Environment:
                 else:
                     self.manifest.remove_definition(str(spec), list_name=list_name)
 
+        if not force:
+            return
+
         # If force, update stale concretized specs
+        user_specs_to_remove = old_specs - new_specs
+        user_specs_to_keep = old_specs - user_specs_to_remove
+        concrete_specs_to_keep = [
+            c for abstract, c in self.concretized_specs() if abstract in user_specs_to_keep
+        ]
+        self.all_specs_by_hash.garbage_collect(keep=concrete_specs_to_keep)
         for spec in old_specs - new_specs:
-            if force and spec in self.concretized_user_specs:
+            if spec in self.concretized_user_specs:
                 i = self.concretized_user_specs.index(spec)
                 del self.concretized_user_specs[i]
 
                 dag_hash = self.concretized_order[i]
                 del self.concretized_order[i]
-                del self.specs_by_hash[dag_hash]
+                del self.root_specs_by_hash[dag_hash]
 
     def is_develop(self, spec):
         """Returns true when the spec is built from local sources"""
@@ -1213,10 +1224,7 @@ class Environment:
             the user spec and the corresponding concretized spec.
         """
         if force:
-            # Clear previously concretized specs
-            self.concretized_user_specs = []
-            self.concretized_order = []
-            self.specs_by_hash = {}
+            self._clear_specs()
 
         # Remove concrete specs that no longer correlate to a user spec
         for spec in set(self.concretized_user_specs) - set(self.user_specs):
@@ -1234,6 +1242,13 @@ class Environment:
 
         msg = "concretization strategy not implemented [{0}]"
         raise SpackEnvironmentError(msg.format(self.unify))
+
+    def _clear_specs(self) -> None:
+        """Clears the internal state associated with managing user specs"""
+        self.concretized_user_specs = []
+        self.concretized_order = []
+        self.all_specs_by_hash = ConcreteSpecsByHash()
+        self.root_specs_by_hash = {}
 
     def deconcretize(self, spec: spack.spec.Spec, concrete: bool = True):
         """
@@ -1263,8 +1278,12 @@ class Environment:
         if dag_hash not in self.concretized_order:
             # if we deconcretized a dependency that doesn't correspond to a root, it
             # won't be here.
-            if dag_hash in self.specs_by_hash:
-                del self.specs_by_hash[dag_hash]
+            if dag_hash in self.root_specs_by_hash:
+                del self.root_specs_by_hash[dag_hash]
+            try:
+                self.all_specs_by_hash.delete(spec, transitive=False)
+            except ValueError:
+                pass
 
     def _get_specs_to_concretize(
         self,
@@ -1307,9 +1326,7 @@ class Environment:
             concrete: abstract for (abstract, concrete) in self.concretized_specs()
         }
 
-        self.concretized_user_specs = []
-        self.concretized_order = []
-        self.specs_by_hash = {}
+        self._clear_specs()
 
         result_by_user_spec = {}
         solver = spack.solver.asp.Solver()
@@ -1333,17 +1350,13 @@ class Environment:
     def _concretize_together(
         self, tests: bool = False
     ) -> List[Tuple[spack.spec.Spec, spack.spec.Spec]]:
-        """Concretization strategy that concretizes all the specs
-        in the same DAG.
-        """
+        """Concretization strategy that concretizes all the specs in the same DAG."""
         # Exit early if the set of concretized specs is the set of user specs
         new_user_specs, kept_user_specs, specs_to_concretize = self._get_specs_to_concretize()
         if not new_user_specs:
             return []
 
-        self.concretized_user_specs = []
-        self.concretized_order = []
-        self.specs_by_hash = {}
+        self._clear_specs()
 
         try:
             concrete_specs: List[spack.spec.Spec] = spack.concretize.concretize_specs_together(
@@ -1383,11 +1396,9 @@ class Environment:
         # keep any concretized specs whose user specs are still in the manifest
         old_concretized_user_specs = self.concretized_user_specs
         old_concretized_order = self.concretized_order
-        old_specs_by_hash = self.specs_by_hash
+        old_specs_by_hash = self.root_specs_by_hash
 
-        self.concretized_user_specs = []
-        self.concretized_order = []
-        self.specs_by_hash = {}
+        self._clear_specs()
 
         for s, h in zip(old_concretized_user_specs, old_concretized_order):
             if s in self.user_specs:
@@ -1452,35 +1463,14 @@ class Environment:
 
         # Add specs in original order
         batch.sort(key=lambda x: x[0])
-        by_hash = {}  # for attaching information on test dependencies
         for root, (_, concrete) in zip(root_specs, batch):
             self._add_concrete_spec(root, concrete)
-            by_hash[concrete.dag_hash()] = concrete
 
         finish = time.time()
         tty.msg(f"Environment concretized in {finish - start:.2f} seconds")
 
-        # Unify the specs objects, so we get correct references to all parents
-        self._read_lockfile_dict(self._to_lockfile_dict())
-
-        # Re-attach information on test dependencies
-        if tests:
-            # This is slow, but the information on test dependency is lost
-            # after unification or when reading from a lockfile.
-            for h in self.specs_by_hash:
-                current_spec, computed_spec = self.specs_by_hash[h], by_hash[h]
-                for node in computed_spec.traverse():
-                    test_edges = node.edges_to_dependencies(depflag=dt.TEST)
-                    for current_edge in test_edges:
-                        test_dependency = current_edge.spec
-                        if test_dependency in current_spec[node.name]:
-                            continue
-                        current_spec[node.name].add_dependency_edge(
-                            test_dependency.copy(), depflag=dt.TEST, virtuals=current_edge.virtuals
-                        )
-
         results = [
-            (abstract, self.specs_by_hash[h])
+            (abstract, self.root_specs_by_hash[h])
             for abstract, h in zip(self.concretized_user_specs, self.concretized_order)
         ]
         return results
@@ -1644,22 +1634,23 @@ class Environment:
         Arguments:
             spec (Spec): user spec that resulted in the concrete spec
             concrete (Spec): spec concretized within this environment
-            new (bool): whether to write this spec's package to the env
-                repo on write()
+            new (bool): whether to write this spec's package to the env repo on write()
         """
         assert concrete.concrete
+
+        h = concrete.dag_hash()
+        self.all_specs_by_hash.add(concrete)
 
         # when a spec is newly concretized, we need to make a note so
         # that we can write its package to the env repo on write()
         if new:
-            self.new_specs.append(concrete)
+            self.new_specs.append(self.all_specs_by_hash[h])
 
         # update internal lists of specs
         self.concretized_user_specs.append(spec)
 
-        h = concrete.dag_hash()
         self.concretized_order.append(h)
-        self.specs_by_hash[h] = concrete
+        self.root_specs_by_hash[h] = self.all_specs_by_hash[h]
 
     def _dev_specs_that_need_overwrite(self):
         """Return the hashes of all specs that need to be reinstalled due to source code change."""
@@ -1695,7 +1686,7 @@ class Environment:
         installed, uninstalled = [], []
         with spack.store.STORE.db.read_transaction():
             for concretized_hash in self.concretized_order:
-                spec = self.specs_by_hash[concretized_hash]
+                spec = self.root_specs_by_hash[concretized_hash]
                 if not spec.installed or (
                     spec.satisfies("dev_path=*") or spec.satisfies("^dev_path=*")
                 ):
@@ -1733,17 +1724,13 @@ class Environment:
 
         PackageInstaller(installs).install()
 
-    def all_specs_generator(self) -> Iterable[Spec]:
-        """Returns a generator for all concrete specs"""
-        return traverse.traverse_nodes(self.concrete_roots(), key=traverse.by_dag_hash)
-
     def all_specs(self) -> List[Spec]:
         """Returns a list of all concrete specs"""
-        return list(self.all_specs_generator())
+        return list(self.all_specs_by_hash.values())
 
-    def all_hashes(self):
+    def all_hashes(self) -> List[str]:
         """Return hashes of all specs."""
-        return [s.dag_hash() for s in self.all_specs_generator()]
+        return [h for h in self.all_specs_by_hash]
 
     def roots(self):
         """Specs explicitly requested by the user *in this environment*.
@@ -1776,7 +1763,7 @@ class Environment:
     def concretized_specs(self):
         """Tuples of (user spec, concrete spec) for all concrete specs."""
         for s, h in zip(self.concretized_user_specs, self.concretized_order):
-            yield (s, self.specs_by_hash[h])
+            yield s, self.root_specs_by_hash[h]
 
     def concrete_roots(self):
         """Same as concretized_specs, except it returns the list of concrete
@@ -1787,11 +1774,9 @@ class Environment:
         # If it's not a partial hash prefix we can early exit
         early_exit = len(dag_hash) == 32
         matches = []
-        for spec in traverse.traverse_nodes(
-            self.concrete_roots(), key=traverse.by_dag_hash, order="breadth"
-        ):
-            if spec.dag_hash().startswith(dag_hash):
-                matches.append(spec)
+        for current_hash, current_node in self.all_specs_by_hash.items():
+            if current_hash.startswith(dag_hash):
+                matches.append(current_node)
                 if early_exit:
                     break
         return matches
@@ -1806,11 +1791,7 @@ class Environment:
 
     def all_matching_specs(self, *specs: spack.spec.Spec) -> List[Spec]:
         """Returns all concretized specs in the environment satisfying any of the input specs"""
-        return [
-            s
-            for s in traverse.traverse_nodes(self.concrete_roots(), key=traverse.by_dag_hash)
-            if any(s.satisfies(t) for t in specs)
-        ]
+        return [s for s in self.all_specs_by_hash.values() if any(s.satisfies(t) for t in specs)]
 
     @spack.repo.autospec
     def matching_spec(self, spec):
@@ -1833,11 +1814,7 @@ class Environment:
         env_root_to_user = {root.dag_hash(): user for user, root in self.concretized_specs()}
         root_matches, dep_matches = [], []
 
-        for env_spec in traverse.traverse_nodes(
-            specs=[root for _, root in self.concretized_specs()],
-            key=traverse.by_dag_hash,
-            order="breadth",
-        ):
+        for env_spec in self.all_specs_by_hash.values():
             if not env_spec.satisfies(spec):
                 continue
 
@@ -1905,7 +1882,7 @@ class Environment:
         If these specs appear under different user_specs, only one copy
         is added to the list returned.
         """
-        specs = [self.specs_by_hash[h] for h in self.concretized_order]
+        specs = [self.root_specs_by_hash[h] for h in self.concretized_order]
 
         if recurse_dependencies:
             specs.extend(
@@ -1919,7 +1896,9 @@ class Environment:
     def _to_lockfile_dict(self):
         """Create a dictionary to store a lockfile for this environment."""
         concrete_specs = {}
-        for s in traverse.traverse_nodes(self.specs_by_hash.values(), key=traverse.by_dag_hash):
+        for s in traverse.traverse_nodes(
+            self.root_specs_by_hash.values(), key=traverse.by_dag_hash
+        ):
             spec_dict = s.node_dict_with_hashes(hash=ht.dag_hash)
             # Assumes no legacy formats, since this was just created.
             spec_dict[ht.dag_hash.name] = s.dag_hash()
@@ -1961,11 +1940,9 @@ class Environment:
 
     def _read_lockfile_dict(self, d):
         """Read a lockfile dictionary into this environment."""
-        self.specs_by_hash = {}
+        self._clear_specs()
 
         roots = d["roots"]
-        self.concretized_user_specs = [Spec(r["spec"]) for r in roots]
-        self.concretized_order = [r["hash"] for r in roots]
         json_specs_by_hash = d["concrete_specs"]
 
         # Track specs by their lockfile key.  Currently spack uses the finest
@@ -1975,7 +1952,6 @@ class Environment:
         specs_by_hash = {}
 
         # Track specs by their DAG hash, allows handling DAG hash collisions
-        first_seen = {}
         current_lockfile_format = d["_meta"]["lockfile-version"]
         try:
             reader = READER_CLS[current_lockfile_format]
@@ -2005,25 +1981,12 @@ class Environment:
                     specs_by_hash[dep_hash], depflag=dt.canonicalize(deptypes), virtuals=virtuals
                 )
 
-        # Traverse the root specs one at a time in the order they appear.
-        # The first time we see each DAG hash, that's the one we want to
-        # keep.  This is only required as long as we support older lockfile
-        # formats where the mapping from DAG hash to lockfile key is possibly
-        # one-to-many.
-        for lockfile_key in self.concretized_order:
-            for s in specs_by_hash[lockfile_key].traverse():
-                if s.dag_hash() not in first_seen:
-                    first_seen[s.dag_hash()] = s
-
-        # Now make sure concretized_order and our internal specs dict
-        # contains the keys used by modern spack (i.e. the dag_hash
-        # that includes build deps and package hash).
-        self.concretized_order = [
-            specs_by_hash[h_key].dag_hash() for h_key in self.concretized_order
-        ]
-
-        for spec_dag_hash in self.concretized_order:
-            self.specs_by_hash[spec_dag_hash] = first_seen[spec_dag_hash]
+        # Add the specs to the environment. We traverse by lockfile_key (which depends on the
+        # lockfile version), but we store by dag hash.
+        concretized_user_specs = [Spec(r["spec"]) for r in roots]
+        concretized_order = [r["hash"] for r in roots]
+        for abstract_spec, lockfile_key in zip(concretized_user_specs, concretized_order):
+            self._add_concrete_spec(abstract_spec, specs_by_hash[lockfile_key], new=False)
 
     def write(self, regenerate: bool = True) -> None:
         """Writes an in-memory environment to its location on disk.
@@ -2036,7 +1999,7 @@ class Environment:
             regenerate: regenerate views and run post-write hooks as well as writing if True.
         """
         self.manifest_uptodate_or_warn()
-        if self.specs_by_hash:
+        if self.root_specs_by_hash:
             self.ensure_env_directory_exists(dot_env=True)
             self.update_environment_repository()
             self.manifest.flush()

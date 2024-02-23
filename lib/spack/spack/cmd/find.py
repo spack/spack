@@ -236,7 +236,7 @@ def display_env(env, args, decorator, results):
 
     if args.show_concretized:
         tty.msg("Concretized roots")
-        cmd.display_specs(env.specs_by_hash.values(), args, decorator=decorator)
+        cmd.display_specs(env.root_specs_by_hash.values(), args, decorator=decorator)
         print()
 
     # Display a header for the installed packages section IF there are installed

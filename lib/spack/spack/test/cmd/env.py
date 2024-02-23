@@ -129,7 +129,7 @@ def test_env_add_virtual():
 
     hashes = e.concretized_order
     assert len(hashes) == 1
-    spec = e.specs_by_hash[hashes[0]]
+    spec = e.root_specs_by_hash[hashes[0]]
     assert spec.intersects("mpi")
 
 
@@ -245,7 +245,7 @@ def test_env_install_single_spec(install_mockery, mock_fetch):
     e = ev.read("test")
     assert e.user_specs[0].name == "cmake-client"
     assert e.concretized_user_specs[0].name == "cmake-client"
-    assert e.specs_by_hash[e.concretized_order[0]].name == "cmake-client"
+    assert e.root_specs_by_hash[e.concretized_order[0]].name == "cmake-client"
 
 
 def test_env_roots_marked_explicit(install_mockery, mock_fetch):
@@ -509,7 +509,7 @@ def test_to_lockfile_dict():
     e_copy = ev.create("test_copy")
 
     e_copy._read_lockfile_dict(context_dict)
-    assert e.specs_by_hash == e_copy.specs_by_hash
+    assert e.root_specs_by_hash == e_copy.root_specs_by_hash
 
 
 def test_env_repo():
@@ -581,7 +581,7 @@ spack:
 
     for h1, h2 in zip(e1.concretized_order, e2.concretized_order):
         assert h1 == h2
-        assert e1.specs_by_hash[h1] == e2.specs_by_hash[h2]
+        assert e1.root_specs_by_hash[h1] == e2.root_specs_by_hash[h2]
 
     for s1, s2 in zip(e1.concretized_user_specs, e2.concretized_user_specs):
         assert s1 == s2
@@ -608,7 +608,7 @@ spack:
 
     assert not e2.concretized_order
     assert not e2.concretized_user_specs
-    assert not e2.specs_by_hash
+    assert not e2.root_specs_by_hash
 
 
 @pytest.mark.usefixtures("config")
@@ -1327,7 +1327,7 @@ def test_uninstall_keeps_in_env(mock_stage, mock_fetch, install_mockery):
 
     test = ev.read("test")
     # Save this spec to check later if it is still in the env
-    (mpileaks_hash,) = list(x for x, y in test.specs_by_hash.items() if y.name == "mpileaks")
+    (mpileaks_hash,) = list(x for x, y in test.root_specs_by_hash.items() if y.name == "mpileaks")
     orig_user_specs = test.user_specs
     orig_concretized_specs = test.concretized_order
 
@@ -1337,8 +1337,8 @@ def test_uninstall_keeps_in_env(mock_stage, mock_fetch, install_mockery):
     test = ev.read("test")
     assert test.concretized_order == orig_concretized_specs
     assert test.user_specs.specs == orig_user_specs.specs
-    assert mpileaks_hash in test.specs_by_hash
-    assert not test.specs_by_hash[mpileaks_hash].package.installed
+    assert mpileaks_hash in test.root_specs_by_hash
+    assert not test.root_specs_by_hash[mpileaks_hash].package.installed
 
 
 def test_uninstall_removes_from_env(mock_stage, mock_fetch, install_mockery):
@@ -1353,7 +1353,7 @@ def test_uninstall_removes_from_env(mock_stage, mock_fetch, install_mockery):
         uninstall("-y", "-a", "--remove")
 
     test = ev.read("test")
-    assert not test.specs_by_hash
+    assert not test.root_specs_by_hash
     assert not test.concretized_order
     assert not test.user_specs
 
@@ -1382,7 +1382,7 @@ def test_indirect_build_dep(tmp_path):
         e_read = ev.read("test")
         (x_env_hash,) = e_read.concretized_order
 
-        x_env_spec = e_read.specs_by_hash[x_env_hash]
+        x_env_spec = e_read.root_specs_by_hash[x_env_hash]
         assert x_env_spec == x_concretized
 
 
@@ -1426,8 +1426,8 @@ def test_store_different_build_deps(tmp_path):
         e_read = ev.read("test")
         y_env_hash, x_env_hash = e_read.concretized_order
 
-        y_read = e_read.specs_by_hash[y_env_hash]
-        x_read = e_read.specs_by_hash[x_env_hash]
+        y_read = e_read.root_specs_by_hash[y_env_hash]
+        x_read = e_read.root_specs_by_hash[x_env_hash]
 
         # make sure the DAG hashes and build deps are preserved after
         # a round trip to/from the lockfile
@@ -2832,7 +2832,7 @@ spack:
     abspath.write(spack_yaml)
 
     def extract_dag_hash(environment):
-        _, dyninst = next(iter(environment.specs_by_hash.items()))
+        _, dyninst = next(iter(environment.root_specs_by_hash.items()))
         return dyninst["libelf"].dag_hash()
 
     # Concretize a first time and create a lockfile
@@ -2977,7 +2977,7 @@ spack:
     with ev.read("test") as e:
         install()
 
-        spec = e.specs_by_hash[e.concretized_order[0]]
+        spec = e.root_specs_by_hash[e.concretized_order[0]]
         view_prefix = e.default_view.get_projection_for_spec(spec)
         modules_glob = "%s/modules/**/*/*" % e.path
         modules = glob.glob(modules_glob)
@@ -3353,9 +3353,9 @@ def test_read_legacy_lockfile_and_reconcretize(
 
     env("create", "test", str(legacy_lockfile_path))
     test = ev.read("test")
-    assert len(test.specs_by_hash) == 1
+    assert len(test.root_specs_by_hash) == 1
 
-    single_root = next(iter(test.specs_by_hash.values()))
+    single_root = next(iter(test.root_specs_by_hash.values()))
 
     # v1 only has version 1.0, because v1 was keyed by DAG hash, and v1.0 overwrote
     # v0.5 on lockfile creation. v2 only has v0.5, because we specifically prefer
@@ -3372,10 +3372,10 @@ def test_read_legacy_lockfile_and_reconcretize(
     # After reconcretizing, we should again see two roots, one depending on each
     # of the dtbuild1 versions specified in the roots of the original lockfile.
     test = ev.read("test")
-    assert len(test.specs_by_hash) == 2
+    assert len(test.root_specs_by_hash) == 2
 
     expected_versions = set([Version("0.5"), Version("1.0")])
-    current_versions = set(s["dtbuild1"].version for s in test.specs_by_hash.values())
+    current_versions = set(s["dtbuild1"].version for s in test.root_specs_by_hash.values())
     assert current_versions == expected_versions
 
 

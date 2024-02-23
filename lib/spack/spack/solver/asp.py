@@ -46,6 +46,7 @@ import spack.variant
 import spack.version as vn
 import spack.version.git_ref_lookup
 from spack import traverse
+from spack.mapping import ConcreteSpecsByHash
 
 from .core import (
     AspFunction,
@@ -806,70 +807,6 @@ class PyclingoDriver:
             pprint.pprint(self.control.statistics)
 
         return result, timer, self.control.statistics
-
-
-class ConcreteSpecsByHash(collections.abc.Mapping):
-    """Mapping containing concrete specs keyed by DAG hash.
-
-    The mapping is ensured to be consistent, i.e. if a spec in the mapping has a dependency with
-    hash X, it is ensured to be the same object in memory as the spec keyed by X.
-    """
-
-    def __init__(self) -> None:
-        self.data: Dict[str, spack.spec.Spec] = {}
-
-    def __getitem__(self, dag_hash: str) -> spack.spec.Spec:
-        return self.data[dag_hash]
-
-    def add(self, spec: spack.spec.Spec) -> bool:
-        """Adds a new concrete spec to the mapping. Returns True if the spec was just added,
-        False if the spec was already in the mapping.
-
-        Args:
-            spec: spec to be added
-
-        Raises:
-            ValueError: if the spec is not concrete
-        """
-        if not spec.concrete:
-            msg = (
-                f"trying to store the non-concrete spec '{spec}' in a container "
-                f"that only accepts concrete"
-            )
-            raise ValueError(msg)
-
-        dag_hash = spec.dag_hash()
-        if dag_hash in self.data:
-            return False
-
-        # Here we need to iterate on the input and rewire the copy.
-        self.data[spec.dag_hash()] = spec.copy(deps=False)
-        nodes_to_reconstruct = [spec]
-
-        while nodes_to_reconstruct:
-            input_parent = nodes_to_reconstruct.pop()
-            container_parent = self.data[input_parent.dag_hash()]
-
-            for edge in input_parent.edges_to_dependencies():
-                input_child = edge.spec
-                container_child = self.data.get(input_child.dag_hash())
-                # Copy children that don't exist yet
-                if container_child is None:
-                    container_child = input_child.copy(deps=False)
-                    self.data[input_child.dag_hash()] = container_child
-                    nodes_to_reconstruct.append(input_child)
-
-                # Rewire edges
-                container_parent.add_dependency_edge(
-                    dependency_spec=container_child, depflag=edge.depflag, virtuals=edge.virtuals
-                )
-        return True
-
-    def __len__(self) -> int:
-        return len(self.data)
-
-    def __iter__(self):
-        return iter(self.data)
 
 
 class SpackSolverSetup:

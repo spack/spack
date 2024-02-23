@@ -67,10 +67,10 @@ spack:
         env("create", "test", "./spack.yaml")
         with ev.read("test") as e:
             concretize()
-            before = e.specs_by_hash
+            before = e.root_specs_by_hash
             undevelop("package-not-in-develop")  # does nothing
             concretize("-f")
-            after = e.specs_by_hash
+            after = e.root_specs_by_hash
 
     # nothing should have changed
     assert before == after
