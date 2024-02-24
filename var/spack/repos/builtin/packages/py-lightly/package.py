@@ -17,6 +17,7 @@ class PyLightly(PythonPackage):
 
     license("MIT")
 
+    version("1.5.0", sha256="db49e2bafe3bc70df7f3248ad08bef4948e957c1bc5cde3769ec2b190b51eedb")
     version("1.4.26", sha256="7bbcf0a358f23659eb4089043c559c4584ef339266b1c0a9a2598c3100f2f3b8")
     version("1.4.25", sha256="c16449ee5788a7ac98dd78c1fa32702a426c718519d79522d726469d6ca119a0")
     version("1.4.18", sha256="41794f6815db178b031236793b379e5573e074fdf730506872b73766396a6bdf")
