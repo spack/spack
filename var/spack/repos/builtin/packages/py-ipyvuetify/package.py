@@ -21,6 +21,7 @@ class PyIpyvuetify(PythonPackage):
 
     version("1.9.0", sha256="9c537e218299de32194b1da949d6b96bffe6c00f36bb6035409f2485feb881e7")
 
+    depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
     depends_on("py-jupyter-packaging", type=("build", "run"))
