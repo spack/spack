@@ -262,7 +262,8 @@ class Hip(CMakePackage):
     patch("0014-Remove-compiler-rt-linkage-for-host-for-5.7.0.patch", when="@5.7.0:5.7")
     patch("0014-remove-compiler-rt-linkage-for-host.6.0.patch", when="@6.0:")
     patch("0015-reverting-operator-mixup-fix-for-slate.patch", when="@5.6:6.0")
-    patch("0017-Set-PARAMETERS_MIN_ALIGNMENT-to-the-native-alignment.patch", when="@5.7:6.0")
+    patch("0017-Set-PARAMETERS_MIN_ALIGNMENT-to-the-native-alignment.patch", when="@5.7")
+    patch("0017-Set-PARAMETERS_MIN_ALIGNMENT-to-the-native-alignment-6.0.patch", when="@6.0")
     patch("0018-reverting-hipMemoryType-with-memoryType.patch", when="@6.0")
 
     # See https://github.com/ROCm/HIP/pull/3206
