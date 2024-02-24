@@ -36,6 +36,7 @@ class PyAzureCore(PythonPackage):
 
     # https://github.com/Azure/azure-sdk-for-python/blob/azure-core_1.30.0/sdk/core/azure-core/setup.py
 
+    depends_on("py-setuptools", type="build")
     depends_on("py-anyio@3:4", when="@1.29.6", type=("build", "run"))
     depends_on("py-requests@2.21:", when="@1.29.6:", type=("build", "run"))
     depends_on("py-requests@2.18.4:", type=("build", "run"))
@@ -44,5 +45,3 @@ class PyAzureCore(PythonPackage):
     depends_on("py-typing-extensions@4.6:", when="@1.29.2:", type=("build", "run"))
     depends_on("py-typing-extensions@4.3:", when="@1.26.4:", type=("build", "run"))
     depends_on("py-typing-extensions@4.0.1:", when="@1.26:", type=("build", "run"))
-
-    depends_on("py-setuptools", type="build")

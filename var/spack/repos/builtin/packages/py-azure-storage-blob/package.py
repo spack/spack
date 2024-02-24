@@ -38,6 +38,7 @@ class PyAzureStorageBlob(PythonPackage):
 
     # https://github.com/Azure/azure-sdk-for-python/blob/azure-storage-blob_12.19.0/sdk/storage/azure-storage-blob/setup.py
 
+    depends_on("py-setuptools", type="build")
     depends_on("py-azure-core@1.28:1", type=("build", "run"), when="@12.17:")
     depends_on("py-azure-core@1.26:1", type=("build", "run"), when="@12.15:")
     depends_on("py-azure-core@1.24.2:1", type=("build", "run"), when="@12.14:")
@@ -50,5 +51,3 @@ class PyAzureStorageBlob(PythonPackage):
     depends_on("py-isodate@0.6.1:", type=("build", "run"), when="@12.15:")
     depends_on("py-msrest@0.7.1:", type=("build", "run"), when="@12.14")
     depends_on("py-msrest@0.6.21:", type=("build", "run"), when="@:12.13")
-
-    depends_on("py-setuptools", type="build")

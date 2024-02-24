@@ -40,6 +40,7 @@ class PyAzureIdentity(PythonPackage):
 
     # https://github.com/Azure/azure-sdk-for-python/blob/azure-identity_1.15.0/sdk/identity/azure-identity/setup.py
 
+    depends_on("py-setuptools", type="build")
     depends_on("py-azure-core@1.23:1", type=("build", "run"), when="@1.15:")
     depends_on("py-azure-core@1.11:1", type=("build", "run"), when="@1.12:")
     depends_on("py-azure-core@1", type=("build", "run"))
@@ -53,5 +54,3 @@ class PyAzureIdentity(PythonPackage):
     depends_on("py-msal-extensions@0.1.3:0.1", type=("build", "run"), when="@:1.11")
     depends_on("py-six@1.12:", type=("build", "run"), when="@1.12")
     depends_on("py-six@1.6:", type=("build", "run"), when="@:1.11")
-
-    depends_on("py-setuptools", type="build")
