@@ -49,6 +49,6 @@ class PyAzureStorageBlob(PythonPackage):
     depends_on("py-typing-extensions@4.0.1:", type=("build", "run"), when="@12.15:")
     depends_on("py-isodate@0.6.1:", type=("build", "run"), when="@12.15:")
     depends_on("py-msrest@0.7.1:", type=("build", "run"), when="@12.14")
-    depends_on("py-msrest@0.6.21:", type=("build", "run"), when="@:12.14")
+    depends_on("py-msrest@0.6.21:", type=("build", "run"), when="@:12.13")
 
     depends_on("py-setuptools", type="build")
