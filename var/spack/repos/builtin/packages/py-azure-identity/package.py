@@ -21,16 +21,6 @@ class PyAzureIdentity(PythonPackage):
 
     license("MIT")
 
-    def url_for_version(self, version):
-        if version < Version("1.15"):
-            return (
-                "https://pypi.io/packages/source/a/azure-identity/azure-identity-{0}.zip".format(
-                    version
-                )
-            )
-
-        return super().url_for_version(version)
-
     version("1.15.0", sha256="4c28fc246b7f9265610eb5261d65931183d019a23d4b0e99357facb2e6c227c8")
     version("1.14.1", sha256="48e2a9dbdc59b4f095f841d867d9a8cbe4c1cdbbad8251e055561afd47b4a9b8")
     version("1.13.0", sha256="c931c27301ffa86b07b4dcf574e29da73e3deba9ab5d1fe4f445bb6a3117e260")
@@ -54,3 +44,13 @@ class PyAzureIdentity(PythonPackage):
     depends_on("py-msal-extensions@0.1.3:0.1", type=("build", "run"), when="@:1.11")
     depends_on("py-six@1.12:", type=("build", "run"), when="@1.12")
     depends_on("py-six@1.6:", type=("build", "run"), when="@:1.11")
+
+    def url_for_version(self, version):
+        if version < Version("1.15"):
+            return (
+                "https://pypi.io/packages/source/a/azure-identity/azure-identity-{0}.zip".format(
+                    version
+                )
+            )
+
+        return super().url_for_version(version)

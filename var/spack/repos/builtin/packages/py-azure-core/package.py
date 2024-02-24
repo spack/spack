@@ -15,14 +15,6 @@ class PyAzureCore(PythonPackage):
 
     license("MIT")
 
-    def url_for_version(self, version):
-        if version < Version("1.29.3"):
-            return "https://pypi.io/packages/source/a/azure-core/azure-core-{0}.zip".format(
-                version
-            )
-
-        return super().url_for_version(version)
-
     version("1.30.0", sha256="6f3a7883ef184722f6bd997262eddaf80cfe7e5b3e0caaaf8db1695695893d35")
     version("1.29.7", sha256="2944faf1a7ff1558b1f457cabf60f279869cabaeef86b353bed8eb032c7d8c5e")
     version("1.29.2", sha256="beb0fe88d1043d8457318e8fb841d9caa648211092eda213c16b376401f3710d")
@@ -45,3 +37,11 @@ class PyAzureCore(PythonPackage):
     depends_on("py-typing-extensions@4.6:", when="@1.29.2:", type=("build", "run"))
     depends_on("py-typing-extensions@4.3:", when="@1.26.4:", type=("build", "run"))
     depends_on("py-typing-extensions@4.0.1:", when="@1.26:", type=("build", "run"))
+
+    def url_for_version(self, version):
+        if version < Version("1.29.3"):
+            return "https://pypi.io/packages/source/a/azure-core/azure-core-{0}.zip".format(
+                version
+            )
+
+        return super().url_for_version(version)

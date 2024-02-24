@@ -16,14 +16,6 @@ class PyAzureStorageBlob(PythonPackage):
 
     license("MIT")
 
-    def url_for_version(self, version):
-        if version < Version("12.18"):
-            return "https://pypi.io/packages/source/a/azure-storage-blob/azure-storage-blob-{0}.zip".format(
-                version
-            )
-
-        return super().url_for_version(version)
-
     version("12.19.0", sha256="26c0a4320a34a3c2a1b74528ba6812ebcb632a04cd67b1c7377232c4b01a5897")
     version("12.18.3", sha256="d8ced0deee3367fa3d4f3d1a03cd9edadf4440c0a371f503d623fa6c807554ee")
     version("12.17.0", sha256="c14b785a17050b30fc326a315bdae6bc4a078855f4f94a4c303ad74a48dc8c63")
@@ -51,3 +43,11 @@ class PyAzureStorageBlob(PythonPackage):
     depends_on("py-isodate@0.6.1:", type=("build", "run"), when="@12.15:")
     depends_on("py-msrest@0.7.1:", type=("build", "run"), when="@12.14")
     depends_on("py-msrest@0.6.21:", type=("build", "run"), when="@:12.13")
+
+    def url_for_version(self, version):
+        if version < Version("12.18"):
+            return "https://pypi.io/packages/source/a/azure-storage-blob/azure-storage-blob-{0}.zip".format(
+                version
+            )
+
+        return super().url_for_version(version)
