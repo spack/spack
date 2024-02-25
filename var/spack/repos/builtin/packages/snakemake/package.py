@@ -15,7 +15,7 @@ class Snakemake(PythonPackage):
 
     license("MIT")
 
-    version("8.4.12", sha256="1320590f24d3ef08d63ac91f1b3f634b27e4cfef21c7bbb3f267a79d75327621")
+    version("8.5.2", sha256="cc94876263182277e4a429e5d371c867400eeddc791c114dfd090d1bb3158975")
     version("7.32.4", sha256="fdc3f15dd7b06fabb7da30d460e0a3b1fba08e4ea91f9c32c47a83705cdc7b6e")
     version("7.31.1", sha256="6fadcc9a051737aa187dccf437879b3b83ddc917fff9bd7d400e056cf17a1788")
     version("7.30.2", sha256="0cb86cf9b43b9f2f45d5685cd932595131031c7087690f64c5bc7eaec88df029")
@@ -73,6 +73,7 @@ class Snakemake(PythonPackage):
         "py-snakemake-interface-storage-plugins@3.1:3", type=("build", "run"), when="@8.4.10:"
     )
     depends_on("py-snakemake-interface-storage-plugins@3", type=("build", "run"), when="@8:")
+    depends_on("py-snakemake-interface-report-plugins@1", type=("build", "run"), when="@8.5:")
     depends_on("py-stopit", type=("build", "run"))
     depends_on("py-tabulate", type=("build", "run"))
     depends_on("py-throttler", type=("build", "run"), when="@7:")

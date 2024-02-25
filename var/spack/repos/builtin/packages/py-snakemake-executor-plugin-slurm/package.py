@@ -15,7 +15,7 @@ class PySnakemakeExecutorPluginSlurm(PythonPackage):
 
     license("MIT")
 
-    version("0.3.1", sha256="3c45605515f73020d437872e6003de661ddd17a09e2e60780b2d19a5668f0eb5")
+    version("0.3.2", sha256="3912f2895eab1270d7a42959a2e221ce53428dfffb847e03ec6bc4eead88e30b")
 
     depends_on("py-throttler@1.2.2:1", type=("build", "run"))
 
