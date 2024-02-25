@@ -26,6 +26,7 @@ class Dd4hep(CMakePackage):
     license("LGPL-3.0-or-later")
 
     version("master", branch="master")
+    version("1.28", sha256="b28d671eda0154073873a044a384486e66f1f200065deca99537aa84f07328ad")
     version("1.27.2", sha256="09d8acd743d010274562b856d39e2a88aeaf89cf287a4148f52223b0cd960ab2")
     version("1.27.1", sha256="e66ae726c0a9a55e5603024a7f8a48ffbc5613ea36e5f892e9a90d87833f92e0")
     version("1.27", sha256="51fbd0f91f2511261d9b01e4b3528c658bea1ea1b5d67b25b6812615e782a902")
@@ -177,7 +178,9 @@ class Dd4hep(CMakePackage):
     depends_on("zlib-api", when="+hepmc3-gz")
     depends_on("tbb", when="+tbb")
     depends_on("intel-tbb@:2020.3", when="+tbb @:1.23")
-    depends_on("lcio", when="+lcio")
+    with when("+lcio"):
+        depends_on("lcio")
+        depends_on("lcio@2.20.1:", when="@1.28:")
     depends_on("edm4hep", when="+edm4hep")
     depends_on("podio", when="+edm4hep")
     depends_on("podio@:0.16.03", when="@:1.23 +edm4hep")
