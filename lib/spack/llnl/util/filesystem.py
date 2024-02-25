@@ -1240,6 +1240,47 @@ def get_single_file(directory):
     return fnames[0]
 
 
+@system_path_filter
+def windows_sfn(path: os.PathLike):
+    """Returns 8.3 Filename (SFN) representation of
+    path
+
+    8.3 Filenames (SFN or short filename) is a file
+    naming convention used prior to Win95 that Windows
+    still (and will continue to) support. This convention
+    caps filenames at 8 characters, and most importantly
+    does not allow for spaces in addition to other specifications.
+    The scheme is generally the same as a normal Windows
+    file scheme, but all spaces are removed and the filename
+    is capped at 6 characters. The remaining characters are
+    replaced with ~N where N is the number file in a directory
+    that a given file represents i.e. Program Files and Program Files (x86)
+    would be PROGRA~1 and PROGRA~2 respectively.
+    Further, all file/directory names are all caps (although modern Windows
+    is case insensitive in practice).
+    Conversion is accomplished by fileapi.h GetShortPathNameW
+
+    Returns paths in 8.3 Filename form
+
+    Note: this method is a no-op on Linux
+
+    Args:
+        path: Path to be transformed into SFN (8.3 filename) format
+    """
+    # This should not be run-able on linux/macos
+    if sys.platform != "win32":
+        return path
+    path = str(path)
+    import ctypes
+
+    k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    # stub Windows types TCHAR[LENGTH]
+    TCHAR_arr = ctypes.c_wchar * len(path)
+    ret_str = TCHAR_arr()
+    k32.GetShortPathNameW(path, ret_str, len(path))
+    return ret_str.value
+
+
 @contextmanager
 def temp_cwd():
     tmp_dir = tempfile.mkdtemp()
