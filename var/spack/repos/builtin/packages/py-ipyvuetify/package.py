@@ -25,7 +25,7 @@ class PyIpyvuetify(PythonPackage):
     depends_on("py-setuptools@40.8.0:", type="build")
     depends_on("py-wheel", type="build")
 
-    depends_on("py-ipyvue@1.7:2", type=("build", "run"))
+    depends_on("py-ipyvue@1.7:1", type=("build", "run"))
     depends_on("py-jupyter-packaging@0.7.9:0.7", type="build")
     depends_on("py-jupyterlab@3", type="build")
     depends_on("py-pynpm", type=("build", "run"))
