@@ -21,6 +21,7 @@ class PySnakemakeStoragePluginGcs(PythonPackage):
     depends_on("py-google-crc32c@1.1.2:1", type=("build", "run"))
 
     # This is not in the package definition, but I am pretty sure that it is needed
+    # https://github.com/snakemake/snakemake-storage-plugin-gcs/issues/19
     depends_on("py-snakemake-interface-common@1", type=("build", "run"))
     depends_on("py-snakemake-interface-storage-plugins@3", type=("build", "run"))
 
