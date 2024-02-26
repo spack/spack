@@ -85,7 +85,7 @@ class PyPyomo(PythonPackage):
     depends_on("py-pybind11", when="@6.1:+tests", type=("run"))
 
     # when docs is requested
-    depends_on("py-sphinx@3:", when=":@6.6+docs", type=("run"))
+    depends_on("py-sphinx@3:", when="@:6.6+docs", type=("run"))
     depends_on("py-sphinx@5:", when="@6.7:+docs", type=("run"))
     depends_on("py-sphinx-copybutton", when="@6.1:+docs", type=("run"))
     depends_on("py-sphinx-rtd-theme@0.6:", when="@6.1:+docs", type=("run"))
