@@ -31,8 +31,6 @@ spack:
         +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
     xz:
       variants: +pic
-    mesa:
-      version: [21.3.8]
     mpi:
       require: mpich
     mpich:
@@ -106,6 +104,7 @@ spack:
   - julia ^llvm ~clang ~gold ~polly targets=amdgpu,bpf,nvptx,webassembly
   - kokkos +openmp
   - kokkos-kernels +openmp
+  - laghos
   - lammps
   - lbann
   - legion
@@ -187,8 +186,8 @@ spack:
   - vtk-m
   - zfp
   # --
-  # - archer                          # submerged into llvm +libomp_tsan
   # - geopm                           # geopm: https://github.com/spack/spack/issues/38795
+  # - glvis                           # glvis: https://github.com/spack/spack/issues/42839
 
   # PYTHON PACKAGES
   - opencv +python3

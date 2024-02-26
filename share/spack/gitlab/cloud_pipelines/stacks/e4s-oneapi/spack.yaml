@@ -16,6 +16,8 @@ spack:
         mpi: [mpich]
         tbb: [intel-tbb]
       variants: +mpi
+    gl:
+      require: glx
     elfutils:
       variants: ~nls
     gcc-runtime:
@@ -38,8 +40,6 @@ spack:
         +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
     xz:
       variants: +pic
-    mesa:
-      version: [21.3.8]
     mpi:
       require: 'mpich@4:'
     mpich:
@@ -95,6 +95,7 @@ spack:
   - gasnet
   - ginkgo
   - globalarrays
+  - glvis
   - gmp
   - gotcha
   - gptune ~mpispawn
@@ -108,6 +109,7 @@ spack:
   - hypre
   - kokkos +openmp
   - kokkos-kernels +openmp
+  - laghos
   - lammps
   - lbann
   - legion
