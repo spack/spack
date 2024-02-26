@@ -60,6 +60,8 @@ class RoctracerDev(CMakePackage, ROCmPackage):
         deprecated=True,
     )
 
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
+
     depends_on("cmake@3:", type="build")
     depends_on("python@3:", type="build")
     depends_on("py-cppheaderparser", type="build")
@@ -138,6 +140,10 @@ class RoctracerDev(CMakePackage, ROCmPackage):
             substitute = "#!{python}".format(python=python)
             files = ["check_trace.py", "gen_ostream_ops.py", "hsaap.py"]
             filter_file(match, substitute, *files, **kwargs)
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("+asan"):
+            self.asan_on(env, self.spec["llvm-amdgpu"].prefix)
 
     def cmake_args(self):
         args = [
