@@ -102,7 +102,7 @@ class Target:
         if self.microarchitecture.vendor == "generic":
             return str(self)
 
-        return syaml.syaml_dict(self.microarchitecture.to_dict(return_list_of_items=True))
+        return syaml.syaml_dict(self.microarchitecture.to_dict().items())
 
     def __repr__(self):
         cls_name = self.__class__.__name__

@@ -13,6 +13,7 @@ import warnings
 import archspec
 import archspec.cpu.alias
 import archspec.cpu.schema
+
 from .alias import FEATURE_ALIASES
 from .schema import LazyDictionary
 
@@ -47,7 +48,7 @@ class Microarchitecture:
             which has "broadwell" as a parent, supports running binaries
             optimized for "broadwell".
         vendor (str): vendor of the micro-architecture
-        features (list of str): supported CPU flags. Note that the semantic
+        features (set of str): supported CPU flags. Note that the semantic
             of the flags in this field might vary among architectures, if
             at all present. For instance x86_64 processors will list all
             the flags supported by a given CPU while Arm processors will
@@ -180,24 +181,28 @@ class Microarchitecture:
         generics = [x for x in [self] + self.ancestors if x.vendor == "generic"]
         return max(generics, key=lambda x: len(x.ancestors))
 
-    def to_dict(self, return_list_of_items=False):
-        """Returns a dictionary representation of this object.
+    def to_dict(self):
+        """Returns a dictionary representation of this object."""
+        return {
+            "name": str(self.name),
+            "vendor": str(self.vendor),
+            "features": sorted(str(x) for x in self.features),
+            "generation": self.generation,
+            "parents": [str(x) for x in self.parents],
+            "compilers": self.compilers,
+        }
 
-        Args:
-            return_list_of_items (bool): if True returns an ordered list of
-                items instead of the dictionary
-        """
-        list_of_items = [
-            ("name", str(self.name)),
-            ("vendor", str(self.vendor)),
-            ("features", sorted(str(x) for x in self.features)),
-            ("generation", self.generation),
-            ("parents", [str(x) for x in self.parents]),
-        ]
-        if return_list_of_items:
-            return list_of_items
-
-        return dict(list_of_items)
+    @staticmethod
+    def from_dict(data) -> "Microarchitecture":
+        """Construct a microarchitecture from a dictionary representation."""
+        return Microarchitecture(
+            name=data["name"],
+            parents=[TARGETS[x] for x in data["parents"]],
+            vendor=data["vendor"],
+            features=set(data["features"]),
+            compilers=data.get("compilers", {}),
+            generation=data.get("generation", 0),
+        )
 
     def optimization_flags(self, compiler, version):
         """Returns a string containing the optimization flags that needs
@@ -271,9 +276,7 @@ class Microarchitecture:
                 flags = flags_fmt.format(**compiler_entry)
                 return flags
 
-        msg = (
-            "cannot produce optimized binary for micro-architecture '{0}' with {1}@{2}"
-        )
+        msg = "cannot produce optimized binary for micro-architecture '{0}' with {1}@{2}"
         if compiler_info:
             versions = [x["versions"] for x in compiler_info]
             msg += f' [supported compiler versions are {", ".join(versions)}]'
@@ -289,9 +292,7 @@ def generic_microarchitecture(name):
     Args:
         name (str): name of the micro-architecture
     """
-    return Microarchitecture(
-        name, parents=[], vendor="generic", features=[], compilers={}
-    )
+    return Microarchitecture(name, parents=[], vendor="generic", features=[], compilers={})
 
 
 def version_components(version):
@@ -345,9 +346,7 @@ def _known_microarchitectures():
         compilers = values.get("compilers", {})
         generation = values.get("generation", 0)
 
-        targets[name] = Microarchitecture(
-            name, parents, vendor, features, compilers, generation
-        )
+        targets[name] = Microarchitecture(name, parents, vendor, features, compilers, generation)
 
     known_targets = {}
     data = archspec.cpu.schema.TARGETS_JSON["microarchitectures"]
