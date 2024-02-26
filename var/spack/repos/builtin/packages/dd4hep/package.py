@@ -178,9 +178,7 @@ class Dd4hep(CMakePackage):
     depends_on("zlib-api", when="+hepmc3-gz")
     depends_on("tbb", when="+tbb")
     depends_on("intel-tbb@:2020.3", when="+tbb @:1.23")
-    with when("+lcio"):
-        depends_on("lcio")
-        depends_on("lcio@2.20.1:", when="@1.28:")
+    depends_on("lcio", when="+lcio")
     depends_on("edm4hep", when="+edm4hep")
     depends_on("podio", when="+edm4hep")
     depends_on("podio@:0.16.03", when="@:1.23 +edm4hep")
