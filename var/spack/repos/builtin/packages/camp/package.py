@@ -58,7 +58,7 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("blt", type="build")
     depends_on("blt@0.5.0:0.5.3", type="build", when="@2022.03.0:")
 
-    patch("gcc-13-missing-header.patch", when="@:2022.10 %gcc@13:")
+    patch("libstdc++-13-missing-header.patch", when="@:2022.10")
 
     conflicts("^blt@:0.3.6", when="+rocm")
 
