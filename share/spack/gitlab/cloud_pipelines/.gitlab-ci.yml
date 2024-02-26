@@ -399,7 +399,7 @@ e4s-neoverse_v1-build:
 
 e4s-rocm-external-generate:
   extends: [ ".e4s-rocm-external", ".generate-x86_64"]
-  image: ghcr.io/spack/ubuntu20.04-runner-amd64-gcc-11.4-rocm5.4.3:2023.08.01
+  image: ecpe4s/ubuntu22.04-runner-amd64-gcc-11.4-rocm5.7.1:2024.03.01
 
 e4s-rocm-external-build:
   extends: [ ".e4s-rocm-external", ".build" ]
