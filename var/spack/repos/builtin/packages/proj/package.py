@@ -101,7 +101,7 @@ class Proj(CMakePackage, AutotoolsPackage):
         depends_on("cmake@3.5:", when="@5", type="build")
         depends_on("cmake@2.6:", when="@:4", type="build")
         # tiff does not set TIFF_INCLUDE_DIR tested by proj
-        patch("tiff_target.patch", when="@8.1:+tiff")
+        patch("tiff_target.patch", when="@8.1:9.1.1+tiff")
 
     with when("build_system=autotools"):
         depends_on("pkgconfig@0.9:", when="@6:", type="build")
