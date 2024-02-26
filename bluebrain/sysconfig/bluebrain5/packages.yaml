@@ -45,7 +45,7 @@ packages:
   gmsh:
     variants: ~cgns~fltk~med~mmg+mpi+openmp+shared
   hdf5:
-    variants: +cxx+hl
+    variants: +cxx+hl+mpi
   icu4c:
     version: [64.1]
     # Drags in heavy PEARL dependencies
