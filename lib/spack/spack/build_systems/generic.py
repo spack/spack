@@ -11,7 +11,7 @@ import spack.package_base
 from ._checks import BaseBuilder, apply_macos_rpath_fixups, execute_install_time_tests
 
 
-class Package(spack.package_base.PackageBase):
+class PackageNoDep(spack.package_base.PackageBaseNoDep):
     """General purpose class with a single ``install`` phase that needs to be
     coded by packagers.
     """
@@ -23,6 +23,10 @@ class Package(spack.package_base.PackageBase):
     legacy_buildsystem = "generic"
 
     spack.directives.build_system("generic")
+
+
+class Package(PackageNoDep):
+    spack.package_base.add_base_deps()
 
 
 @spack.builder.builder("generic")

@@ -6,9 +6,10 @@
 import os
 
 from spack.package import *
+from spack.build_systems.generic import PackageNoDep
 
 
-class LinuxHeaders(Package):
+class LinuxHeaders(PackageNoDep):
     """The Linux kernel headers."""
 
     homepage = "https://www.kernel.org/"

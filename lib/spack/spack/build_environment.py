@@ -402,6 +402,21 @@ def set_compiler_environment_variables(pkg, env):
         env_flags[flag] = envf or []
         build_system_flags[flag] = bsf or []
 
+    if 'spack' in pkg.spec.os and '^glibc' in pkg.spec:
+        ldf = inject_flags.get('ldflags', [])
+        ldf.append(pkg.spec["glibc"].package.dynamic_linker_flag)
+        cxxf = inject_flags.get('cxxflags', [])
+        cppf = inject_flags.get('cppflags', [])
+        cppf.append("-B" + pkg.spec["glibc"].prefix.lib)
+        cppf.append("-idirafter")
+        cppf.append(pkg.spec["glibc"].prefix.include)
+        cppf.append("-idirafter")
+        cppf.append(pkg.spec["libxcrypt"].prefix.include)
+
+        inject_flags['ldflags'] = ldf
+        inject_flags['cppflags'] = cppf
+        inject_flags['cxxflags'] = cxxf
+
     # Place compiler flags as specified by flag_handler
     for flag in spack.spec.FlagMap.valid_compiler_flags():
         # Concreteness guarantees key safety here
@@ -543,6 +558,9 @@ def set_wrapper_variables(pkg, env):
     link_dirs = list(dedupe(filter_system_paths(link_dirs)))
     include_dirs = list(dedupe(filter_system_paths(include_dirs)))
     rpath_dirs = list(dedupe(filter_system_paths(rpath_dirs)))
+
+    # NOTE: these are handled by the idirafter above
+    include_dirs = [p for p in include_dirs if 'glibc' not in p and 'libxcrypt' not in p]
 
     env.set(SPACK_LINK_DIRS, ":".join(link_dirs))
     env.set(SPACK_INCLUDE_DIRS, ":".join(include_dirs))

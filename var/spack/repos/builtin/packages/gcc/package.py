@@ -12,6 +12,8 @@ from archspec.cpu import UnsupportedMicroarchitecture
 
 import llnl.util.tty as tty
 from llnl.util.lang import classproperty
+from llnl.util.link_tree import LinkTree
+from llnl.util.symlink import symlink
 
 import spack.platforms
 import spack.util.executable
@@ -131,6 +133,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     variant(
         "piclibs", default=False, description="Build PIC versions of libgfortran.a and libstdc++.a"
     )
+    variant("docs", default=False, description="Build documentation")
+    variant("auto_rpath", default=True, description="Write a specfile that automatically adds rpaths to runtime libraries to things compiled by this gcc")
     variant("strip", default=False, description="Strip executables to reduce installation size")
     variant("nvptx", default=False, description="Target nvptx offloading to NVIDIA GPUs")
     variant("bootstrap", default=True, description="Enable 3-stage bootstrap")
@@ -151,14 +155,33 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         description="Use Profile Guided Optimization",
         when="+bootstrap %gcc",
     )
+    variant(
+        "stage1",
+        default=False,
+        description="build a spackos cross bootstrap compiler, DO NOT USE unless you know what this means"
+        )
+    variant(
+        "stage2",
+        default=False,
+        description="build a spack bootstrap compiler, DO NOT USE unless you know what this means"
+        )
+    variant(
+        "pgo",
+        default=False,
+        description="Build with profile-guided optimization (slow)",
+    )
+    # PGO runs tests, which requires `runtest` from dejagnu
+    depends_on("dejagnu", when="+pgo", type="build")
 
+    conflicts("~binutils", when="+stage2")
     depends_on("flex", type="build", when="@master")
 
     # https://gcc.gnu.org/install/prerequisites.html
     depends_on("gmp@4.3.2:")
+    depends_on("gmp ~stage2", when="~stage2")
     # mawk is not sufficient for go support
     depends_on("gawk@3.1.5:", type="build")
-    depends_on("texinfo@4.7:", type="build")
+    depends_on("texinfo@4.7:", when="+docs", type="build")
     depends_on("libtool", type="build")
     # dependencies required for git versions
     depends_on("m4@1.4.6:", when="@master", type="build")
@@ -173,6 +196,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on("mpfr@2.4.2:3.1.6", when="@:9.9")
     depends_on("mpfr@3.1.0:", when="@10:")
     depends_on("mpc@1.0.1:", when="@4.5:")
+    # newer versions somehow result in a link problem during gcc configure in spackos
+    # bootstrap during stage1
+    depends_on("mpfr@2.4.2:3.1.6", when="+stage1")
+    depends_on("mpfr@2.4.2:3.1.6", when="+stage2")
     # Already released GCC versions do not support any newer version of ISL
     #   GCC 5.4 https://github.com/spack/spack/issues/6902#issuecomment-433072097
     #   GCC 7.3 https://github.com/spack/spack/issues/6902#issuecomment-433030376
@@ -363,6 +390,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     # https://github.com/iains/gcc-12-branch/issues/6
     conflicts("@:12", when="%apple-clang@14:14.0")
+
+    with when("os=spack"):
+        patch("./no-sys-dirs.patch", when="@:12")
+        patch("./gcc12-no-sys-dirs.patch", when="@12:")
 
     if sys.platform == "darwin":
         # Fix parallel build on APFS filesystem
@@ -687,6 +718,40 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 "gcc/config/nvptx/nvptx.opt",
                 string=True,
             )
+        if spec.satisfies("os=spack"):
+            if spec.satisfies("target=x86_64"):
+                # use <prefix>/lib rather than lib64
+                filter_file(
+                    r"m64=(.*)lib64",
+                    r"m64=\1lib",
+                    "gcc/config/i386/t-linux64",
+                )
+            if '~stage2' in self.spec:
+                for f in ("libgcc/Makefile.in", "libstdc++-v3/include/Makefile.in"):
+                    filter_file(
+                        r"@thread_header@",
+                        r"gthr-posix.h",
+                        f,
+                    )
+            # directly inject the -B flag we need to find libc and crt files, no other
+            # way in for target libs, otherwise the following disables are required
+            # "--disable-libssp",
+            # "--disable-libatomic",
+            # "--disable-libquadmath",
+            # "--disable-libsanitizer",
+            # "--disable-libitm",
+            filter_file(
+                "gcc/xgcc",
+                "gcc/xgcc -B" + self.spec['glibc'].prefix.lib + " ",
+                "configure"
+            )
+            # for +bootstrap the makefile overrides it, so we have to filter
+            # Makefile.in as well
+            filter_file(
+                r"(prev-gcc/xg..\$\(exeext\))",
+                r"\1 -B" + self.spec['glibc'].prefix.lib + " ",
+                "Makefile.in"
+            )
         self.build_optimization_config()
 
     def get_common_target_flags(self, spec):
@@ -745,6 +810,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     def configure_args(self):
         spec = self.spec
 
+        if self.spec.host_triple == self.spec.target_triple:
+            # Same, no need
+            target_prefix = ""
+        else:
+            target_prefix = self.spec.target_triple + "-"
         # Generic options to compile GCC
         options = [
             # Distributor options
@@ -753,30 +823,20 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             # Xcode 10 dropped 32-bit support
             "--disable-multilib",
             "--enable-languages={0}".format(",".join(spec.variants["languages"].value)),
-            # Drop gettext dependency
-            "--disable-nls",
+            # always add the program prefix then link to unprefixed so we don't have to
+            # deal with the semi-randomness of when they're added otherwise
+            f"--program-prefix={target_prefix}",
         ]
-
-        # Avoid excessive realpath/stat calls for every system header
-        # by making -fno-canonical-system-headers the default.
-        if self.version >= Version("4.8.0"):
-            options.append("--disable-canonical-system-headers")
-
-        # Use installed libz
-        if self.version >= Version("6"):
-            options.append("--with-system-zlib")
-
-        if "zstd" in spec:
-            options.append("--with-zstd-include={0}".format(spec["zstd"].headers.directories[0]))
-            options.append("--with-zstd-lib={0}".format(spec["zstd"].libs.directories[0]))
-
-        # Enabling language "jit" requires --enable-host-shared.
-        if "languages=jit" in spec:
-            options.append("--enable-host-shared")
+        if "+pgo" in self.spec:
+            options.append("--enable-pgo-build=lto")
+        else:
+            options.append("--disable-pgo-build")
 
         # Binutils
         if spec.satisfies("+binutils"):
             binutils = spec["binutils"].prefix.bin
+            if not os.path.isfile(binutils.ld):
+                binutils = spec["binutils"].prefix.join(self.spec.target_triple).bin
             options.extend(
                 [
                     "--with-gnu-ld",
@@ -796,6 +856,97 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             options.extend(["--enable-bootstrap"])
         else:
             options.extend(["--disable-bootstrap"])
+
+        if self.spec.satisfies("os=spack"):
+            # config.guess returns the host triple, e.g. "x86_64-pc-linux-gnu"
+            glibc = self.spec['glibc']
+            common_flags = (" ".join([
+                '-isystem ',
+                glibc.prefix.include,
+                '-isystem ' ,
+                self.spec["libxcrypt"].prefix.include,
+                "-B" + glibc.prefix.lib,
+            ]))
+            ldflags = " ".join([
+                "-L" + self.spec["libxcrypt"].prefix.lib,
+                glibc.package.dynamic_linker_flag,
+            ])
+            options.extend([
+                "--with-native-system-header-dir=" + glibc.prefix.include,
+                "--with-build-sysroot=/",
+                "--with-glibc-version=" + str(glibc.version),
+                "CFLAGS_FOR_BUILD=" + common_flags + " " + ldflags,
+                "CXXFLAGS_FOR_BUILD=" + common_flags + " " + ldflags,
+                "FLAGS_FOR_BUILD=" + common_flags + " " + ldflags,
+                "LDFLAGS_FOR_BUILD=" + common_flags + " " + ldflags,
+                # for libstdc++ configure
+                "CFLAGS_FOR_TARGET=" + common_flags + " " + ldflags,
+                "CXXFLAGS_FOR_TARGET=" + common_flags + " " + ldflags,
+                # for startfiles in target libs
+                f"FLAGS_FOR_TARGET={common_flags} {ldflags}",
+                f"LDFLAGS_FOR_TARGET={common_flags} {ldflags}",
+            ])
+        if "+stage1" in self.spec or '+stage2' in self.spec:
+            # set up links to binutils, required for gcc to build this way
+            if '+stage2' in self.spec:
+                options.extend([
+                    '--build=' + self.spec.host_triple,
+                    f'--target={self.spec.target_triple}',
+                    '--host=' + self.spec.target_triple,
+                    # NOTE(trws): without these two std::mutex will not exist in
+                    # libstdc++
+                    "--enable-long-long",
+                    "--enable-threads=posix",
+                    "--disable-lto",
+                    "--disable-plugin",
+                    "--disable-libsanitizer",
+                    "--disable-libitm",
+                ])
+            else:
+                options.extend([
+                        "--without-headers",
+                        "--with-newlib",
+                        "--with-build-sysroot=/some/nonexistent/path",
+                        "--disable-shared",
+                        "--disable-libstdcxx",
+                        "--with-glibc-version=2.38",  # TODO: figure out how to fix this cycle
+                        "--with-native-system-header-dir=/include",
+                                ])
+            options.extend(
+                    [
+                        f'--target={self.spec.target_triple}',
+                        "--enable-default-pie",
+                        "--enable-default-ssp",
+                        "--disable-nls",
+                        "--disable-multilib",
+                        "--disable-threads",
+                        "--disable-libatomic",
+                        "--disable-libgomp",
+                        "--disable-libquadmath",
+                        "--disable-libssp",
+                        "--disable-libvtv",
+                        "--enable-languages=c,c++",
+                        ]
+                    )
+            if '+stage2' not in self.spec:
+                return options
+
+        # Avoid excessive realpath/stat calls for every system header
+        # by making -fno-canonical-system-headers the default.
+        if self.version >= Version("4.8.0"):
+            options.append("--disable-canonical-system-headers")
+
+        # Use installed libz
+        if self.version >= Version("6"):
+            options.append("--with-system-zlib")
+
+        if "zstd" in spec:
+            options.append("--with-zstd-include={0}".format(spec["zstd"].headers.directories[0]))
+            options.append("--with-zstd-lib={0}".format(spec["zstd"].libs.directories[0]))
+
+        # Enabling language "jit" requires --enable-host-shared.
+        if "languages=jit" in spec:
+            options.append("--enable-host-shared")
 
         # Configure include and lib directories explicitly for these
         # dependencies since the short GCC option assumes that libraries
@@ -859,6 +1010,44 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 options.append("GDC={0}".format(self.detect_gdc()))
 
         return options
+
+
+    def my_flag_handler(self, name, flags):
+        if self.spec.satisfies("+stage2"):
+            if name == "cxxflags":
+                cxx_inc_base = self.spec.prefix.include.join("c++").join(str(self.spec.version))
+                flags.append('-I')
+                flags.append(cxx_inc_base)
+                flags.append('-I')
+                flags.append(join_path(cxx_inc_base, self.spec.target_triple))
+                flags.append('-I')
+                flags.append(join_path(cxx_inc_base, "backward"))
+            elif name == "ldflags":
+                flags.extend([
+                    '-L' + self.spec.prefix.lib,
+                    '-L' + self.spec.prefix.lib64,
+                    '-Wl,-rpath,' + self.spec.prefix.lib,
+                    '-Wl,-rpath,' + self.spec.prefix.lib64,
+                ])
+        return (flags, None, None)
+
+    flag_handler = my_flag_handler
+    @run_before("configure", when="+stage2")
+    def bootstrap_libstdcxx(self):
+        args = self.configure_args()
+        lib_build_dir = join_path(self.build_directory, "libstdc++-v3")
+        mkdirp(lib_build_dir)
+        with working_dir(lib_build_dir):
+            cfg = Executable(join_path(self.stage.source_path, "libstdc++-v3", "configure"))
+            cfg(
+                f"--prefix={self.spec.prefix}",
+                f"--with-gxx-include-dir={self.spec.prefix}/include/c++/{self.spec.version}",
+                *args,
+            )
+            make()
+            mkdirp(join_path(self.prefix,"lib"))
+            symlink(self.prefix.lib, self.prefix.lib64)
+            make("install")
 
     # run configure/make/make(install) for the nvptx-none target
     # before running the host compiler phases
@@ -932,6 +1121,29 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         return spec_dir[0] if spec_dir else None
 
     @run_after("install")
+    def generate_limits(self):
+        if '+stage1' in self.spec:
+            # in stage1 we're building without glibc existing, need to create limits.h manually
+            limits = ""
+            files = ["limitx.h", "glimits.h", "limity.h"]
+            for f in files:
+                with open(join_path(self.stage.source_path, "gcc", f)) as fo:
+                    limits += fo.read()
+            gcc = Executable(self.spec["gcc"].prefix.bin.join(self.spec.target_triple+'-gcc'))
+            out_path = os.path.dirname(gcc('-print-libgcc-file-name', output=str).strip())
+            with open(join_path(out_path, "include", "limits.h"), "+w") as fo:
+                fo.write(limits)
+
+    @run_after("install")
+    def link_arch_prefixes(self):
+        """ensure unprefixed versions of all tools exist after building them"""
+        prefix = f"{self.spec.target_triple}-"
+        for f in glob.glob(f"{self.spec.prefix.bin}/{prefix}*"):
+            tgt = join_path(self.spec.prefix.bin, "-".join(os.path.basename(f).split("-")[4:]))
+            if not os.path.exists(tgt):
+                symlink(f, tgt)
+
+    @run_after("install", when="+auto_rpath")
     def write_rpath_specs(self):
         """Generate a spec file so the linker adds a rpath to the libs
         the compiler used to build the executable.
@@ -963,7 +1175,14 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             )
             return
 
-        gcc = self.spec["gcc"].command
+
+        sysroot_target = '{}-spack-linux-gnu'.format(
+                self.spec.architecture.target.microarchitecture.family.name
+                )
+        try:
+            gcc = self.spec["gcc"].command
+        except Exception:
+            gcc = Executable(self.spec["gcc"].prefix.bin.join(sysroot_target+'-gcc'))
         lines = gcc("-dumpspecs", output=str).splitlines(True)
         specs_file = join_path(self.spec_dir, "specs")
 
@@ -973,29 +1192,62 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         # Find which directories have shared libraries
         rpath_libdirs = []
-        for dir in ["lib", "lib64"]:
-            libdir = join_path(self.prefix, dir)
-            if glob.glob(join_path(libdir, "*." + dso_suffix)):
-                rpath_libdirs.append(libdir)
+        prefixes = [self.prefix]
+        if '+stage2' in self.spec:
+            prefixes.append(self.spec['glibc'].prefix)
+        for pfx in prefixes:
+            for dir in ["lib", "lib64"]:
+                libdir = join_path(pfx, dir)
+                if glob.glob(join_path(libdir, "*." + dso_suffix)):
+                    rpath_libdirs.append(libdir)
 
         if not rpath_libdirs:
             # No shared libraries
             tty.warn("No dynamic libraries found in lib/lib64")
             return
 
-        # Overwrite the specs file
+        add_sysroot = self.spec.satisfies("os=spack")
         with open(specs_file, "w") as out:
+            loader = re.compile(':-dynamic-linker ')
+            next = False
+            name = None
             for line in lines:
+                if add_sysroot:
+                    if loader.search(line):
+                        line = loader.sub(':-dynamic-linker %(spack_glibc)', line)
+                        line = re.sub(r"/lib64/", "/lib/", line)
+                if next:
+                    next = False
+                    if name == "link_libgcc":
+                        # Insert at start of line following link_libgcc, which gets
+                        # inserted into every call to the linker
+                        out.write("%(link_libgcc_rpath) ")
+                    if add_sysroot:
+                        # rewrite all the crt object paths
+                        # instead of just build_environment to inject the appropriate stuff
+                        if name == "link":
+                            line = f'-L %(spack_glibc)/lib -rpath %(spack_glibc)/lib -L %(spack_libxcrypt)/lib -rpath %(spack_libxcrypt)/lib {line}'
+                        if name == "startfile":
+                            line = re.sub(r"(Mcrt1|Scrt1|grcrt1|gcrt1|rcrt1|crt1|crti)\.o", fr"%(spack_glibc)/lib/\1.o", line)
+                        if name == "endfile":
+                            line = re.sub(r"(crtn)\.o", fr"%(spack_glibc)/lib/\1.o", line)
+                if line.startswith("*") and line.endswith(":\n"):
+                    name = line[1:-2]
+                    next = True
                 out.write(line)
-                if line.startswith("*link_libgcc:"):
-                    # Insert at start of line following link_libgcc, which gets
-                    # inserted into every call to the linker
-                    out.write("%(link_libgcc_rpath) ")
 
             # Add easily-overridable rpath string at the end
             out.write("*link_libgcc_rpath:\n")
             out.write(" ".join("-rpath " + lib for lib in rpath_libdirs))
             out.write("\n")
+            out.write("\n")
+            if add_sysroot:
+                out.write("*spack_glibc:\n")
+                out.write(self.spec['glibc'].prefix)
+                out.write("\n")
+                out.write("\n")
+                out.write("*spack_libxcrypt:\n")
+                out.write(self.spec['libxcrypt'].prefix)
         set_install_permissions(specs_file)
         tty.info("Wrote new spec file to {0}".format(specs_file))
 

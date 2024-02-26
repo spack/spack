@@ -901,7 +901,7 @@ class SpackSolverSetup:
     """Class to set up and run a Spack concretization solve."""
 
     def __init__(self, tests=False):
-        self.gen = None  # set by setup()
+        self.gen: PyclingoDriver # set by setup()
 
         self.assumptions = []
         self.declared_versions = collections.defaultdict(list)
@@ -1914,6 +1914,9 @@ class SpackSolverSetup:
         # make directives for buildable OS's
         for build_os in sorted(buildable):
             self.gen.fact(fn.buildable_os(build_os))
+            if os.environ.get("SPACKOS_BOOTSTRAP"):
+                self.gen.fact(fn.os_compatible("spack0", build_os))
+
 
         def keyfun(os):
             return (

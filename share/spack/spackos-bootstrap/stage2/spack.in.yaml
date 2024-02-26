@@ -1,0 +1,34 @@
+# This is a Spack Environment file.
+#
+# It describes a set of packages to be installed, along with
+# configuration settings.
+spack:
+  # add package specs to the `specs` list
+  include:
+    - compilers.yaml
+  specs:
+  - glibc
+  - binutils
+  - gcc@13.2.0 ~bootstrap ~graphite +binutils ~auto_rpath
+  - gmp
+  # we have no C++ right now, disable
+  - berkeley-db ~cxx ~stl
+  - ncurses ~cxx
+  config:
+    install_root:
+      padded_length: 256
+  view: true
+  concretizer:
+    unify: true
+  packages:
+    all:
+      require:
+        - 'os=spack'
+        - 'target=x86_64_v3,aarch64'
+        - '~stage1'
+        - '+stage2'
+        - '%gcc@=13.2.0.stage1'
+    linux-headers:
+      require:
+        # Still not fond of this, better though
+        - '%gcc@:13.0.0'

@@ -30,7 +30,7 @@ from ._checks import (
 )
 
 
-class AutotoolsPackage(spack.package_base.PackageBase):
+class AutotoolsPackageNoDep(spack.package_base.PackageBaseNoDep):
     """Specialized class for packages built using GNU Autotools."""
 
     #: This attribute is used in UI queries that need to know the build
@@ -46,7 +46,6 @@ class AutotoolsPackage(spack.package_base.PackageBase):
         depends_on("gnuconfig", type="build", when="target=ppc64le:")
         depends_on("gnuconfig", type="build", when="target=aarch64:")
         depends_on("gnuconfig", type="build", when="target=riscv64:")
-        depends_on("gmake", type="build")
         conflicts("platform=windows")
 
     def flags_to_build_system_args(self, flags):
@@ -859,3 +858,10 @@ def _autoreconf_search_path_args(spec):
         flags = flags_external if dep.external else flags_spack
         flags.extend(["-I", path])
     return flags_spack + flags_external
+
+
+class AutotoolsPackage(AutotoolsPackageNoDep):
+    spack.package_base.add_base_deps()
+    # NOTE: this is here to avoid glibc depending on gmake
+    with when("build_system=autotools"):
+        depends_on("gmake", type="build")

@@ -29,6 +29,7 @@ class Mpfr(AutotoolsPackage, GNUMirrorPackage):
     version("3.1.4", sha256="d3103a80cdad2407ed581f3618c4bed04e0c92d1cf771a65ead662cc397f7775")
     version("3.1.3", sha256="f63bb459157cacd223caac545cb816bcdb5a0de28b809e7748b82e9eb89b0afd")
     version("3.1.2", sha256="79c73f60af010a30a5c27a955a1d2d01ba095b72537dab0ecaad57f5a7bb1b6b")
+    version("2.4.2", sha256="c7e75a08a8d49d2082e4caee1591a05d11b9d5627514e678f02d66a124bcf2ba")
 
     # mpir is a drop-in replacement for gmp
     depends_on("gmp@4.1:")  # 4.2.3 or higher is recommended
@@ -39,7 +40,7 @@ class Mpfr(AutotoolsPackage, GNUMirrorPackage):
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
     depends_on("autoconf-archive", when="@4.0.2:", type="build")
-    depends_on("texinfo", when="@4.1.0:", type="build")
+    depends_on("texinfo", when="@4.1.0: +docs", type="build")
 
     variant(
         "libs",
@@ -48,8 +49,13 @@ class Mpfr(AutotoolsPackage, GNUMirrorPackage):
         multi=True,
         description="Build shared libs, static libs or both",
     )
+    variant(
+        "docs",
+        default=False,
+        description="Build documentation",
+    )
 
-    force_autoreconf = True
+    # force_autoreconf = True
 
     # Check the Bugs section of old release pages for patches.
     # https://www.mpfr.org/mpfr-X.Y.Z/#bugs

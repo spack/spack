@@ -750,7 +750,7 @@ class BuildRequest:
             install_args: the install arguments associated with ``pkg``
         """
         # Ensure dealing with a package that has a concrete spec
-        if not isinstance(pkg, spack.package_base.PackageBase):
+        if not isinstance(pkg, spack.package_base.PackageBaseNoDep):
             raise ValueError(f"{str(pkg)} must be a package")
 
         self.pkg = pkg
@@ -820,7 +820,7 @@ class BuildRequest:
         ]:
             _ = self.install_args.setdefault(arg, default)
 
-    def get_depflags(self, pkg: "spack.package_base.PackageBase") -> int:
+    def get_depflags(self, pkg: "spack.package_base.PackageBaseNoDep") -> int:
         """Determine the required dependency types for the associated package.
 
         Args:
@@ -852,7 +852,7 @@ class BuildRequest:
         of the requested package, ``False`` otherwise."""
         return dep_id in self.dependencies
 
-    def run_tests(self, pkg: "spack.package_base.PackageBase") -> bool:
+    def run_tests(self, pkg: "spack.package_base.PackageBaseNoDep") -> bool:
         """Determine if the tests should be run for the provided packages
 
         Args:
@@ -895,7 +895,7 @@ class BuildTask:
 
     def __init__(
         self,
-        pkg: "spack.package_base.PackageBase",
+        pkg: "spack.package_base.PackageBaseNoDep",
         request: Optional[BuildRequest],
         compiler: bool,
         start: float,
@@ -919,7 +919,7 @@ class BuildTask:
         """
 
         # Ensure dealing with a package that has a concrete spec
-        if not isinstance(pkg, spack.package_base.PackageBase):
+        if not isinstance(pkg, spack.package_base.PackageBaseNoDep):
             raise ValueError(f"{str(pkg)} must be a package")
 
         self.pkg = pkg
@@ -1122,7 +1122,7 @@ class PackageInstaller:
     instance.
     """
 
-    def __init__(self, installs: List[Tuple["spack.package_base.PackageBase", dict]] = []) -> None:
+    def __init__(self, installs: List[Tuple["spack.package_base.PackageBaseNoDep", dict]] = []) -> None:
         """Initialize the installer.
 
         Args:
@@ -1177,7 +1177,7 @@ class PackageInstaller:
         self,
         compiler: "spack.spec.CompilerSpec",
         architecture: "spack.spec.ArchSpec",
-        pkgs: List["spack.package_base.PackageBase"],
+        pkgs: List["spack.package_base.PackageBaseNoDep"],
         request: BuildRequest,
         all_deps,
     ) -> None:
@@ -1222,7 +1222,7 @@ class PackageInstaller:
 
     def _add_init_task(
         self,
-        pkg: "spack.package_base.PackageBase",
+        pkg: "spack.package_base.PackageBaseNoDep",
         request: Optional[BuildRequest],
         is_compiler: bool,
         all_deps: Dict[str, Set[str]],
@@ -1402,7 +1402,7 @@ class PackageInstaller:
             except Exception as exc:
                 tty.warn(err.format(exc.__class__.__name__, pkg_id, str(exc)))
 
-    def _cleanup_task(self, pkg: "spack.package_base.PackageBase") -> None:
+    def _cleanup_task(self, pkg: "spack.package_base.PackageBaseNoDep") -> None:
         """
         Cleanup the build task for the spec
 
@@ -1415,7 +1415,7 @@ class PackageInstaller:
         # spec during our installation.
         self._ensure_locked("read", pkg)
 
-    def _ensure_install_ready(self, pkg: "spack.package_base.PackageBase") -> None:
+    def _ensure_install_ready(self, pkg: "spack.package_base.PackageBaseNoDep") -> None:
         """
         Ensure the package is ready to install locally, which includes
         already locked.
@@ -1439,7 +1439,7 @@ class PackageInstaller:
             raise InstallLockError(f"{pre} not locked")
 
     def _ensure_locked(
-        self, lock_type: str, pkg: "spack.package_base.PackageBase"
+        self, lock_type: str, pkg: "spack.package_base.PackageBaseNoDep"
     ) -> Tuple[str, Optional[lk.Lock]]:
         """
         Add a prefix lock of the specified type for the package spec
@@ -1567,7 +1567,7 @@ class PackageInstaller:
         if install_deps and install_compilers:
             packages_per_compiler: Dict[
                 "spack.spec.CompilerSpec",
-                Dict["spack.spec.ArchSpec", List["spack.package_base.PackageBase"]],
+                Dict["spack.spec.ArchSpec", List["spack.package_base.PackageBaseNoDep"]],
             ] = {}
 
             for dep in request.traverse_dependencies():
@@ -1627,7 +1627,7 @@ class PackageInstaller:
         fail_fast = bool(request.install_args.get("fail_fast"))
         self.fail_fast = self.fail_fast or fail_fast
 
-    def _add_compiler_package_to_config(self, pkg: "spack.package_base.PackageBase") -> None:
+    def _add_compiler_package_to_config(self, pkg: "spack.package_base.PackageBaseNoDep") -> None:
         compiler_search_prefix = getattr(pkg, "compiler_search_prefix", pkg.spec.prefix)
         spack.compilers.add_compilers_to_config(
             spack.compilers.find_compilers([compiler_search_prefix])
@@ -1826,7 +1826,7 @@ class PackageInstaller:
         new_task.status = STATUS_INSTALLING
         self._push_task(new_task)
 
-    def _setup_install_dir(self, pkg: "spack.package_base.PackageBase") -> None:
+    def _setup_install_dir(self, pkg: "spack.package_base.PackageBaseNoDep") -> None:
         """
         Create and ensure proper access controls for the install directory.
         Write a small metadata file with the current spack environment.
@@ -1902,7 +1902,7 @@ class PackageInstaller:
         self._flag_installed(task.pkg, task.dependents)
 
     def _flag_installed(
-        self, pkg: "spack.package_base.PackageBase", dependent_ids: Optional[Set[str]] = None
+        self, pkg: "spack.package_base.PackageBaseNoDep", dependent_ids: Optional[Set[str]] = None
     ) -> None:
         """
         Flag the package as installed and ensure known by all build tasks of
@@ -2255,7 +2255,7 @@ class PackageInstaller:
 class BuildProcessInstaller:
     """This class implements the part installation that happens in the child process."""
 
-    def __init__(self, pkg: "spack.package_base.PackageBase", install_args: dict):
+    def __init__(self, pkg: "spack.package_base.PackageBaseNoDep", install_args: dict):
         """Create a new BuildProcessInstaller.
 
         It is assumed that the lifecycle of this object is the same as the child
@@ -2333,8 +2333,8 @@ class BuildProcessInstaller:
 
             # get verbosity from do_install() parameter or saved value
             self.echo = self.verbose
-            if spack.package_base.PackageBase._verbose is not None:
-                self.echo = spack.package_base.PackageBase._verbose
+            if spack.package_base.PackageBaseNoDep._verbose is not None:
+                self.echo = spack.package_base.PackageBaseNoDep._verbose
 
             # Run the pre-install hook in the child process after
             # the directory is created.
@@ -2452,7 +2452,7 @@ class BuildProcessInstaller:
         log(pkg)
 
 
-def build_process(pkg: "spack.package_base.PackageBase", install_args: dict) -> bool:
+def build_process(pkg: "spack.package_base.PackageBaseNoDep", install_args: dict) -> bool:
     """Perform the installation/build of the package.
 
     This runs in a separate child process, and has its own process and

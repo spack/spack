@@ -1,0 +1,19 @@
+# This is a Spack Environment file.
+#
+# It describes a set of packages to be installed, along with
+# configuration settings.
+spack:
+  include:
+    - compilers.yaml
+  specs:
+  - binutils +stage1
+  - gcc @13.2.0 +stage1 +binutils ~bootstrap languages=c,c++ ~auto_rpath
+  - gawk
+  - bison
+  view: true
+  concretizer:
+    unify: true
+  packages:
+    all:
+      require:
+        - '%gcc'

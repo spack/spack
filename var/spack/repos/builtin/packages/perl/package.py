@@ -13,6 +13,7 @@
 #
 import os
 import re
+import stat
 import sys
 from contextlib import contextmanager
 
@@ -419,6 +420,12 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
                 perl("Makefile.PL")
                 maker()
                 maker("install")
+                if sys.platform != "win32":
+                    # make writable by owner, avoids permission denied in sbang on virtio
+                    # guest mounts
+                    saved_mode = os.stat(self.prefix.bin.cpanm).st_mode
+                    os.chmod(self.prefix.bin.cpanm, saved_mode | stat.S_IWUSR)
+
 
     def _setup_dependent_env(self, env, dependent_spec):
         """Set PATH and PERL5LIB to include the extension and
@@ -500,7 +507,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
         with self.make_briefly_writable(config_dot_pm):
             match = "cc *=>.*"
-            substitute = "cc => '{cc}',".format(cc=self.compiler.cc)
+            substitute = "cc => '{cc}',".format(cc=os.path.basename(self.compiler.cc))
             filter_file(match, substitute, config_dot_pm, **kwargs)
 
         # And the path Config_heavy.pl
@@ -509,11 +516,11 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
         with self.make_briefly_writable(config_heavy):
             match = "^cc=.*"
-            substitute = "cc='{cc}'".format(cc=self.compiler.cc)
+            substitute = "cc='{cc}'".format(cc=os.path.basename(self.compiler.cc))
             filter_file(match, substitute, config_heavy, **kwargs)
 
             match = "^ld=.*"
-            substitute = "ld='{ld}'".format(ld=self.compiler.cc)
+            substitute = "ld='{ld}'".format(ld=os.path.basename(self.compiler.cc))
             filter_file(match, substitute, config_heavy, **kwargs)
 
             match = "^ccflags='"

@@ -39,7 +39,13 @@ class Texinfo(AutotoolsPackage, GNUMirrorPackage):
 
     depends_on("perl")
     depends_on("ncurses")
-    depends_on("gettext")
+    depends_on("gettext", when="+dev")
+
+    variant(
+        "dev",
+        default=False,
+        description="Require development dependencies"
+        )
 
     # sanity check
     sanity_check_is_file = [join_path("bin", "info"), join_path("bin", "makeinfo")]

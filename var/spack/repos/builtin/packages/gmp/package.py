@@ -29,6 +29,8 @@ class Gmp(AutotoolsPackage, GNUMirrorPackage):
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
+    # only required when developing
+    depends_on("gettext", when="+dev")
 
     variant(
         "libs",
@@ -38,6 +40,18 @@ class Gmp(AutotoolsPackage, GNUMirrorPackage):
         description="Build shared libs, static libs or both",
     )
     variant("cxx", default=True, description="Enable C++ support")
+    variant(
+        "dev",
+        default=False,
+        description="Require development dependencies"
+        )
+    variant(
+        "stage2",
+        default=False,
+        description="build a spack bootstrap compiler, DO NOT USE unless you know what this means"
+        )
+    conflicts("+cxx", when="+stage2")
+
 
     # avoid using register x18 on aarch64 machines to prevent segfaults
     # https://gmplib.org/repo/gmp/raw-rev/5f32dbc41afc

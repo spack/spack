@@ -46,6 +46,11 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
         values=("none", "5", "6"),
         multi=False,
     )
+    variant(
+        "cxx",
+        default=True,
+        description="build c++ bindings",
+    )
 
     conflicts("abi=6", when="@:5.9", msg="6 is not compatible with this release")
 
@@ -122,12 +127,21 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
         opts = [
             "--disable-stripping",
             "--with-shared",
-            "--with-cxx-shared",
             "--enable-overwrite",
             "--without-ada",
             "--enable-pc-files",
             "--disable-overwrite",
         ]
+        if '+cxx' in self.spec:
+            opts.extend([
+                "--with-cxx-shared",
+                "--with-cxx-binding",
+            ])
+        else:
+            opts.extend([
+                "--without-cxx-shared",
+                "--without-cxx-binding",
+            ])
 
         if spec.satisfies("@:6.2"):
             opts.append("--with-pkg-config-libdir={0}/pkgconfig".format(prefix.lib))

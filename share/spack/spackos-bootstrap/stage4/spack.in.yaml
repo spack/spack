@@ -1,0 +1,74 @@
+# This is a Spack Environment file.
+#
+# It describes a set of packages to be installed, along with
+# configuration settings.
+spack:
+  include:
+    - compilers.yaml
+  # add package specs to the `specs` list
+  specs:
+  # glibc from stage3, must match the gcc built there or we get two mixed
+  # together, use hash
+  - glibc +stage2
+  - binutils +gold +lto
+  - gcc@13.2.0 +binutils +piclibs ~bootstrap languages=c,c++,fortran,lto +auto_rpath
+  # base system
+  - m4
+  - ncurses
+  - bash
+  - coreutils
+  - diffutils
+  - file
+  - findutils
+  - gawk
+  - grep
+  - bzip2
+  - gzip
+  - gmake
+  - patch
+  - sed
+  - tar
+  - xz
+  - gettext
+  - bison
+  - perl
+  - vim +python
+  - nano
+  - which
+  # if building outside of spackos, python somehow grabs something out of the
+  # local include paths, build like this:
+  # $ bwrap --dev-bind / / --tmpfs /usr/local --tmpfs /usr/include/x86_64-linux-gnu spack install -v python
+  - python +optimizations
+  - texinfo
+  - util-linux
+  # spack bootstrap, base requirements
+  - unzip
+  - git
+  # spack bootstrap doesn't work, install manually
+  - gnupg
+  - patchelf
+  - clingo-bootstrap
+  config:
+    install_root:
+      padded_length: 256
+  view: true
+  concretizer:
+    unify: true
+  packages:
+    all:
+      require:
+        - 'os=spack'
+        - 'target=x86_64_v3,aarch64'
+        - '~stage1'
+        - '~stage2'
+        - '%gcc@=13.2.0.stage3'
+    glibc:
+      require:
+        - +stage2
+    libxcrypt:
+      require:
+      - +stage2
+    linux-headers:
+      require:
+        # Still not fond of this, better though
+        - '%gcc@:13.0.0'
