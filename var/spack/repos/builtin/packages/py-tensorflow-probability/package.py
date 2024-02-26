@@ -36,6 +36,7 @@ class PyTensorflowProbability(Package):
         "0.8.0",
         sha256="f6049549f6d6b82962523a6bf61c40c1d0c7ac685f209c0084a6da81dd78181d",
         url="https://github.com/tensorflow/probability/archive/0.8.0.tar.gz",
+        deprecated=True,
     )
 
     extends("python@3.9:", when="@0.22:")
@@ -61,24 +62,27 @@ class PyTensorflowProbability(Package):
     # TODO: reactivate the JAX versions once the JAX package is available with newer versions
     #  also add jaxlib as a dependency
     # TODO: reactivate once TF 2.15 is ready https://github.com/spack/spack/pull/41069
-    # depends_on("py-tensorflow@2.15", when="@0.23", type=("build", "run"))
-    # depends_on("py-jax@0.4.20:0.4", when="@0.23", type=("build", "run"))
 
-    depends_on("py-tensorflow@2.14", when="@0.22", type=("build", "run"))
-    # depends_on("py-jax@0.4.16:0.4", when="@0.22", type=("build", "run"))
+    variant("py-tensorflow", default=False, description="Build with TensorFlow support")
+    with when("+py-tensorflow"):
+        # depends_on("py-tensorflow@2.15", when="@0.23", type=("build", "run"))
+        depends_on("py-tensorflow@2.14:2", when="@0.22", type=("build", "run"))
+        depends_on("py-tensorflow@2.13:2", when="@0.21", type=("build", "run"))
+        depends_on("py-tensorflow@2.12:2", when="@0.20", type=("build", "run"))
+        depends_on("py-tensorflow@2.11:2", when="@0.19", type=("build", "run"))
 
-    depends_on("py-tensorflow@2.13", when="@0.21", type=("build", "run"))
-    # depends_on("py-jax@0.4.14:0.4", when="@0.21", type=("build", "run"))
+    # jaxlib is not required, as it's already a dependency of py-jax
+    variant("py-jax", default=False, description="Build with JAX support")
+    with when("+py-jax"):  # TODO: reactivate once the JAX package is available with newer versions
+        # depends_on("py-jax@0.4.20:0.4", when="@0.23", type=("build", "run"))
+        # depends_on("py-jax@0.4.16:0.4", when="@0.22", type=("build", "run"))
+        # depends_on("py-jax@0.4.14:0.4", when="@0.21", type=("build", "run"))
+        # depends_on("py-jax@0.4.8:0.4", when="@0.20", type=("build", "run"))
+        depends_on("py-jax@0.3.25:3", when="@0.19", type=("build", "run"))
 
-    depends_on("py-tensorflow@2.12", when="@0.20", type=("build", "run"))
-    # depends_on("py-jax@0.4.8:0.4", when="@0.20", type=("build", "run"))
-
-    depends_on("py-tensorflow@2.11", when="@0.19", type=("build", "run"))
-    # depends_on("py-jax@0.3.25", when="@0.19", type=("build", "run"))
-
-    depends_on("py-tensorflow@2.10:", when="@0.18", type=("build", "run"))
+    depends_on("py-tensorflow@2.10:2", when="@0.18", type=("build", "run"))  # keep here for backwards compatibility
     depends_on("py-tensorflow@2.4:", when="@0.12:0.17", type=("build", "run"))
-    depends_on("py-tensorflow@1.14:", when="@0.8:0.11", type=("build", "run"))
+    depends_on("py-tensorflow@1.14:1", when="@0.8:0.11", type=("build", "run"))
 
     depends_on("bazel@3.2:", type="build")
 
@@ -106,7 +110,7 @@ class PyTensorflowProbability(Package):
             "--copt=-O3",
             "--copt=-march=native",
             ":pip_pkg",
-        ]
+            ]
 
         bazel(*args)
 
