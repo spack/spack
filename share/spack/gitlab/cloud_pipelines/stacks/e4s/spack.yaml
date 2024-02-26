@@ -196,7 +196,9 @@ spack:
   - py-jax
   - py-jupyterlab
   - py-matplotlib
+  - py-mpi4py
   - py-notebook
+  - py-numba
   - py-numpy
   - py-openai
   - py-pandas

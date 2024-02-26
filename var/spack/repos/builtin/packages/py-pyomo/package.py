@@ -15,9 +15,10 @@ class PyPyomo(PythonPackage):
     pypi = "Pyomo/Pyomo-5.6.6.tar.gz"
     git = "https://github.com/Pyomo/pyomo.git"
 
-    # Maintainer accurate as of 11/21/2023
+    # Maintainer accurate as of 2024-02-21
     maintainers("mrmundt")
 
+    version("6.7.1", sha256="735b66c45937f1caa43f073d8218a4918b6de658914a699397d38d5b8c219a40")
     version("6.7.0", sha256="a245ec609ef2fd907269f0b8e0923f74d5bf868b2ec0e62bf2a30b3f253bd17b")
     version("6.6.2", sha256="c8ad55213ff8b1a2c4e469110db8079722d5a6f364c6c46a42e2f750fc9e4d26")
     version("6.6.1", sha256="3fb0aba7b0f4120e6ce0f242502c0e61478d61e326bc90b7dc392bbefd114b34")
@@ -51,6 +52,10 @@ class PyPyomo(PythonPackage):
     )
     variant("optional", default=False, description="Install optional dependencies.", when="@6.1:")
 
+    ############################
+    # UPDATE THESE AS REQUIRED
+    ############################
+
     # python_requires
     depends_on("python@3.8:3.12", when="@6.7:", type=("build", "run"))
     depends_on("python@3.7:3.11", when="@6.4:6.6", type=("build", "run"))
@@ -80,18 +85,22 @@ class PyPyomo(PythonPackage):
     depends_on("py-pybind11", when="@6.1:+tests", type=("run"))
 
     # when docs is requested
-    depends_on("py-sphinx@4:", when="@6.1:+docs", type=("run"))
+    depends_on("py-sphinx@3:", when="@:6.6+docs", type=("run"))
+    depends_on("py-sphinx@5:", when="@6.7:+docs", type=("run"))
     depends_on("py-sphinx-copybutton", when="@6.1:+docs", type=("run"))
-    depends_on("py-sphinx-rtd-theme@0.5:", when="@6.1:+docs", type=("run"))
+    depends_on("py-sphinx-rtd-theme@0.6:", when="@6.1:+docs", type=("run"))
     depends_on("py-sphinxcontrib-jsmath", when="@6.1:+docs", type=("run"))
     depends_on("py-sphinxcontrib-napoleon", when="@6.1:+docs", type=("run"))
+    depends_on("py-sphinx-toolbox@2.16:", when="@6.7.1:+docs", type=("run"))
+    depends_on("py-sphinx-jinja2-compat@0.1.1:", when="@6.7.1:+docs", type=("run"))
+    depends_on("py-enum-tools", when="@6.7.1:+docs", type=("run"))
     depends_on("py-numpy", when="@6.1:+docs", type=("run"))
     depends_on("py-scipy", when="@6.4.2:+docs", type=("run"))
 
     # when optional is requested
     depends_on("py-dill", when="@6.1:+optional", type=("run"))
     depends_on("py-ipython", when="@6.1:+optional", type=("run"))
-    depends_on("py-matplotlib@3.6.2:", when="@6.1:+optional", type=("run"))
+    depends_on("py-matplotlib@:3.6.0,3.6.2:", when="@6.1:+optional", type=("run"))
     depends_on("py-networkx", when="@6.1:+optional", type=("run"))
     depends_on("py-numpy", when="@6.1:+optional", type=("run"))
     depends_on("py-openpyxl", when="@6.1:+optional", type=("run"))
@@ -99,6 +108,7 @@ class PyPyomo(PythonPackage):
     depends_on("py-plotly", when="@6.6:+optional", type=("run"))
     depends_on("py-python-louvain", when="@6.1:+optional", type=("run"))
     depends_on("py-pyyaml", when="@6.1:+optional", type=("run"))
+    depends_on("py-qtconsole", when="@6.7.1:+optional", type=("run"))
     depends_on("py-scipy", when="@6.1:+optional", type=("run"))
     depends_on("py-sympy", when="@6.1:+optional", type=("run"))
     depends_on("py-xlrd", when="@6.1:+optional", type=("run"))
