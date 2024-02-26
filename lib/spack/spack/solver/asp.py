@@ -906,53 +906,32 @@ ConditionSpecCache = Dict[str, Dict[ConditionSpecKey, ConditionIdFunctionPair]]
 class SpackSolverSetup:
     """Class to set up and run a Spack concretization solve."""
 
-    # these are all initialized in setup()
-    gen: PyclingoDriver
-    pkgs: Set[str]
-    possible_virtuals: Set[str]
-
-    # these are used to track values we've discovered during solver setup
-    declared_versions: Dict[str, List[DeclaredVersion]]
-    possible_versions: Dict[str, Set[GitOrStandardVersion]]
-    deprecated_versions: Dict[str, Set[GitOrStandardVersion]]
-
-    possible_compilers: List
-    possible_oses: Set
-    variant_values_from_specs: Set
-    version_constraints: Set
-    target_constraints: Set
-    default_targets: List
-    compiler_version_constraints: Set
-    post_facts: List
-    reusable_and_possible: ConcreteSpecsByHash
-
-    # caches for condition triggers and effects
-    _id_counter: Iterator[int]
-    _trigger_cache: ConditionSpecCache
-    _effect_cache: ConditionSpecCache
-
     def __init__(self, tests: bool = False):
-        self.gen = None  # set by setup()
+        # these are all initialized in setup()
+        self.gen: "ProblemInstanceBuilder" = ProblemInstanceBuilder()
+        self.possible_virtuals: Set[str] = set()
 
-        self.assumptions = []
-        self.declared_versions = collections.defaultdict(list)
-        self.possible_versions = collections.defaultdict(set)
-        self.deprecated_versions = collections.defaultdict(set)
+        self.assumptions: List[Tuple["clingo.Symbol", bool]] = []  # type: ignore[name-defined]
+        self.declared_versions: Dict[str, List[DeclaredVersion]] = collections.defaultdict(list)
+        self.possible_versions: Dict[str, Set[GitOrStandardVersion]] = collections.defaultdict(set)
+        self.deprecated_versions: Dict[str, Set[GitOrStandardVersion]] = collections.defaultdict(
+            set
+        )
 
-        self.possible_compilers = []
-        self.possible_oses = set()
-        self.variant_values_from_specs = set()
-        self.version_constraints = set()
-        self.target_constraints = set()
-        self.default_targets = []
-        self.compiler_version_constraints = set()
-        self.post_facts = []
+        self.possible_compilers: List = []
+        self.possible_oses: Set = set()
+        self.variant_values_from_specs: Set = set()
+        self.version_constraints: Set = set()
+        self.target_constraints: Set = set()
+        self.default_targets: List = []
+        self.compiler_version_constraints: Set = set()
+        self.post_facts: List = []
 
-        self.reusable_and_possible = ConcreteSpecsByHash()
+        self.reusable_and_possible: ConcreteSpecsByHash = ConcreteSpecsByHash()
 
-        self._id_counter = itertools.count()
-        self._trigger_cache = collections.defaultdict(dict)
-        self._effect_cache = collections.defaultdict(dict)
+        self._id_counter: Iterator[int] = itertools.count()
+        self._trigger_cache: ConditionSpecCache = collections.defaultdict(dict)
+        self._effect_cache: ConditionSpecCache = collections.defaultdict(dict)
 
         # Caches to optimize the setup phase of the solver
         self.target_specs_cache = None
@@ -964,8 +943,8 @@ class SpackSolverSetup:
         self.concretize_everything = True
 
         # Set during the call to setup
-        self.pkgs = None
-        self.explicitly_required_namespaces = {}
+        self.pkgs: Set[str] = set()
+        self.explicitly_required_namespaces: Dict[str, str] = {}
 
     def pkg_version_rules(self, pkg):
         """Output declared versions of a package.
@@ -1437,10 +1416,7 @@ class SpackSolverSetup:
 
     def provider_requirements(self):
         self.gen.h2("Requirements on virtual providers")
-
         parser = RequirementParser(spack.config.CONFIG)
-        assert self.possible_virtuals is not None, msg
-
         for virtual_str in sorted(self.possible_virtuals):
             rules = parser.rules_from_virtual(virtual_str)
             if rules:
@@ -2289,7 +2265,7 @@ class SpackSolverSetup:
 
     def setup(
         self,
-        specs: Sequence[spack.spec.Spec],
+        specs: List[spack.spec.Spec],
         *,
         reuse: Optional[List[spack.spec.Spec]] = None,
         allow_deprecated: bool = False,
