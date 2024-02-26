@@ -199,10 +199,7 @@ spack:
 
   # PYTHON PACKAGES
   - opencv +python3
-  # - py-horovod # error
-  # - py-jax # error
   - py-jupyterlab
-  # - py-matplotlib #  error
   - py-notebook
   - py-numpy
   - py-openai
@@ -213,8 +210,13 @@ spack:
   - py-scikit-learn
   - py-scipy
   - py-seaborn
-  # - py-tensorflow # error
-  # - py-torch # error
+  - py-mpi4py
+  - py-numba
+  # - py-horovod      # error
+  # - py-jax          # error
+  # - py-matplotlib   # error
+  # - py-tensorflow   # error
+  # - py-torch        # error
 
   # GPU
   - amrex +sycl

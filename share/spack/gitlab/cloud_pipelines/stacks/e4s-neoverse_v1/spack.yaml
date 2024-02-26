@@ -180,6 +180,27 @@ spack:
   # - libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp # py-numcodecs@0.7.3: gcc: error: unrecognized command-line option '-mno-sse2'
   # - variorum                      # variorum: https://github.com/spack/spack/issues/38786
 
+  # PYTHON PACKAGES
+  - opencv +python3
+  - py-horovod
+  - py-jax
+  - py-jupyterlab
+  - py-matplotlib
+  - py-mpi4py
+  - py-notebook
+  - py-numba
+  - py-numpy
+  - py-openai
+  - py-pandas
+  - py-plotly
+  - py-pooch
+  - py-pytest
+  - py-scikit-learn
+  - py-scipy
+  - py-seaborn
+  - py-tensorflow
+  - py-torch
+
   # CUDA NOARCH
   - flux-core +cuda
   - hpctoolkit +cuda
@@ -280,25 +301,6 @@ spack:
   # - py-torch +cuda cuda_arch=80   # skipped, installed by other means
   # - slepc +cuda cuda_arch=80      # slepc: make[1]: *** internal error: invalid --jobserver-auth string 'fifo:/tmp/GMfifo1313'.
   # - upcxx +cuda cuda_arch=80      # upcxx: needs NVIDIA driver
-
-  # PYTHON PACKAGES
-  - opencv +python3
-  - py-horovod
-  - py-jax
-  - py-jupyterlab
-  - py-matplotlib
-  - py-notebook
-  - py-numpy
-  - py-openai
-  - py-pandas
-  - py-plotly
-  - py-pooch
-  - py-pytest
-  - py-scikit-learn
-  - py-scipy
-  - py-seaborn
-  - py-tensorflow
-  - py-torch
 
   # CUDA 90
   - amrex +cuda cuda_arch=90
