@@ -2,8 +2,11 @@ spack:
   view: false
   packages:
     all:
-      require: target=x86_64_v3
-      variants: ~cuda+rocm amdgpu_target=gfx90a
+      require:
+      - target=x86_64_v3
+      - ~cuda
+      - +rocm
+      - amdgpu_target=gfx90a
     gl:
       require: "osmesa"
     py-torch:
