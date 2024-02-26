@@ -19,7 +19,7 @@ class PyZfitInterface(PythonPackage):
 
     version("0.0.3", sha256="af7e8ed409f136187b2cd4def723504f9d619738668e963af388a79121239f74")
 
-    depends_on("python@3.9:", type=("build", "run"))
+    depends_on("python@3.8:", type=("build", "run"))
 
     depends_on("py-setuptools@42:", type="build")
     depends_on("py-setuptools_scm@3.4:+toml", type="build")
