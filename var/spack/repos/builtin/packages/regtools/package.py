@@ -19,5 +19,4 @@ class Regtools(CMakePackage):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        with working_dir(self.build_directory):
-            install("regtools", prefix.bin)
+        install(join_path(self.build_directory, "regtools"), prefix.bin)
