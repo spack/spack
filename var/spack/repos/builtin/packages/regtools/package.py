@@ -17,8 +17,6 @@ class Regtools(CMakePackage):
 
     version("1.0.0", sha256="ed2b9db6b71b943924002653caee18511a22ed7cc3c88f428e7e9e0c2e4f431b")
 
-    depends_on("cmake@2.8.12:", type="build")
-
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         with working_dir(self.build_directory):
