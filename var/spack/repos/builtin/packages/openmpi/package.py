@@ -587,7 +587,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     with when("~internal-pmix"):
         depends_on("pmix@1", when="@2")
         depends_on("pmix@3.2:", when="@4:")
-        depends_on("pmix@4.2:", when="@5:")
+        depends_on("pmix@4.2.4:", when="@5:")
 
         # pmix@4.2.3 contains a breaking change, compat fixed in openmpi@4.1.6
         # See https://www.mail-archive.com/announce@lists.open-mpi.org//msg00158.html
@@ -824,8 +824,6 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         env.set("MPIF90", join_path(self.prefix.bin, "mpif90"))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
-
         # Use the spack compiler wrappers under MPI
         env.set("OMPI_CC", spack_cc)
         env.set("OMPI_CXX", spack_cxx)

@@ -1687,7 +1687,11 @@ class Database:
         with self.read_transaction():
             roots = [rec.spec for key, rec in self._data.items() if root(key, rec)]
             needed = set(id(spec) for spec in tr.traverse_nodes(roots, deptype=deptype))
-            return [rec.spec for rec in self._data.values() if id(rec.spec) not in needed]
+            return [
+                rec.spec
+                for rec in self._data.values()
+                if id(rec.spec) not in needed and rec.installed
+            ]
 
     def update_explicit(self, spec, explicit):
         """
