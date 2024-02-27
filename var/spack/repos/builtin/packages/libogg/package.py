@@ -5,8 +5,7 @@
 
 import os
 
-from spack.build_systems import cmake
-from spack.build_systems.generic import GenericBuilder
+from spack.build_systems import cmake, generic
 from spack.package import *
 
 
@@ -56,7 +55,7 @@ class CMakeBuilder(cmake.CMakeBuilder):
         return base_cmake_args
 
 
-class GenericBuilder(GenericBuilder):
+class GenericBuilder(generic.GenericBuilder):
     phases = ["build", "install"]
 
     def is_64bit(self):
