@@ -19,7 +19,8 @@ class PyCarputils(PythonPackage):
 
     version("master", branch="master")
     # Version to use with openCARP releases
-    version("oc13.0", commit="216c3802c2ac2d14c739164dcd57f2e59aa2ede3")
+    version("oc13.0.ginkgo", commit="88ea4ff29aa6ba7899c945c8daba856caacc4a87")
+    version("oc13.0", commit="216c3802c2ac2d14c739164dcd57f2e59aa2ede3", preferred=True)
     version("oc12.0", commit="4d7a1f0c604a2ad232e70cf9aa3a8daff5ffb195")
     version("oc11.0", commit="a02f9b846c6e852b7315b20e925d55c355f239b8")
     version("oc10.0", commit="a02f9b846c6e852b7315b20e925d55c355f239b8")
@@ -29,6 +30,10 @@ class PyCarputils(PythonPackage):
     version("oc7.0", commit="4c04db61744f2fb7665594d7c810699c5c55c77c")
 
     depends_on("git", type=("build", "run"))
+
+    # cusettings:11: DeprecationWarning:
+    # The distutils package is deprecated and slated for removal in Python 3.12.
+    conflicts("python@3.10:", when="@:oc13.0")
 
     depends_on("py-numpy@1.14.5:", type=("build", "run"))
     depends_on("py-setuptools@41.6.0:", type=("build", "run"))
