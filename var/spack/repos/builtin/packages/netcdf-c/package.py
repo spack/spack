@@ -65,6 +65,9 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
         # the changes not incorporated into that PR
         patch("netcdfc_correct_and_export_link_interface.patch", when="platform=windows")
 
+        # Incorrect hdf5 libraries names are put in the package config and config.cmake files
+        patch("4.9.2-fix-hdf5-pkgconfigcmake.patch", when="@4.9.2")
+
     # Some of the patches touch configure.ac and, therefore, require forcing the autoreconf stage:
     _force_autoreconf_when = []
     with when("build_system=autotools"):

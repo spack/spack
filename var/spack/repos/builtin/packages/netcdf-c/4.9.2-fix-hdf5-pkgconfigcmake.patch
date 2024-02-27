@@ -1,0 +1,28 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index de95010c..3593476b 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -2462,6 +2462,8 @@ IF(NC_LIBS)
+   STRING(REPLACE "-lhdf5::hdf5_hl-shared" "-lhdf5_hl" NC_LIBS ${NC_LIBS})
+   STRING(REPLACE "-lhdf5::hdf5-static" "-lhdf5" NC_LIBS ${NC_LIBS})
+   STRING(REPLACE "-lhdf5::hdf5_hl-static" "-lhdf5_hl" NC_LIBS ${NC_LIBS})
++  STRING(REPLACE "-lhdf5-shared" "-lhdf5" NC_LIBS ${NC_LIBS})
++  STRING(REPLACE "-lhdf5_hl-shared" "-lhdf5_hl" NC_LIBS ${NC_LIBS})
+ ENDIF()
+ 
+ STRING(REPLACE ";" " " LINKFLAGS "${LINKFLAGS}")
+diff --git a/liblib/CMakeLists.txt b/liblib/CMakeLists.txt
+index e3eddc0f..afffd741 100644
+--- a/liblib/CMakeLists.txt
++++ b/liblib/CMakeLists.txt
+@@ -120,6 +120,10 @@ IF(USE_HDF5)
+   ELSE() # Windows CMake defines HDF5_LIBRARIES.
+     SET(TLL_LIBS ${HDF5_LIBRARIES} ${TLL_LIBS} ${SZIP_LIBRARY})
+   ENDIF()
++ 
++  string(REPLACE "hdf5-shared" "hdf5" TLL_LIBS "${TLL_LIBS}")
++  string(REPLACE "hdf5_hl-shared" "hdf5_hl" TLL_LIBS "${TLL_LIBS}")
++
+ ENDIF()
+ 
+ IF(FOUND_CURL)
