@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,15 +7,18 @@ from spack.package import *
 
 
 class Amduprof(Package):
-    """AMD uProf is a software profiling analysis tool for x86 applications
-    and provides event information unique to the AMD "Zen"-based processors."""
+    """AMD uProf (“MICRO-prof”) is a software profiling analysis tool for
+    x86 applications running on Windows, Linux and FreeBSD operating systems
+    and provides event information unique to the AMD “Zen”-based processors
+    and AMD Instinct™ MI Series accelerators.
+    """
 
     homepage = "https://developer.amd.com/amd-uprof/"
-    url = "https://developer.amd.com/wordpress/media/files/AMDuProf_Linux_x64_3.5.671.tar.bz2"
+    url = "https://download.amd.com/developer/eula/uprof/AMDuProf_Linux_x64_4.2.850.tar.bz2"
 
-    version("3.5.671", sha256="a73066305228658a14af5ecd6cf45a1aa47ae94f7e9d14db31f43013d3ef1a43")
+    maintainers("zzzoom")
 
-    depends_on("binutils", type="run")
+    version("4.2.850", sha256="f2d7c4eb9ec9c32845ff8f19874c1e6bcb0fa8ab2c12e73addcbf23a6d1bd623")
 
     # TODO: build Power Profiling driver on Linux
     # TODO: ROCm for GPU tracing and profiling
