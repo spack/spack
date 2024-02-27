@@ -11,6 +11,7 @@ class Metkit(CMakePackage):
     implementing the MARS language and associated processing and semantics."""
 
     homepage = "https://github.com/ecmwf/metkit"
+    git = "https://github.com/ecmwf/metkit.git"
     url = "https://github.com/ecmwf/metkit/archive/refs/tags/1.7.0.tar.gz"
 
     maintainers("skosukhin", "victoria-cherkas", "dominichofer")
