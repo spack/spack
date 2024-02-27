@@ -45,23 +45,13 @@ class Delphes(CMakePackage):
 
     variant("pythia8", default=True, description="build with pythia8")
 
-    variant(
-        "cxxstd",
-        default="17",
-        values=("14", "17"),
-        multi=False,
-        description="Use the specified C++ standard when building.",
-    )
-
     depends_on("cmake", type="build")
-    depends_on("root cxxstd=14", when="cxxstd=14")
-    depends_on("root cxxstd=17", when="cxxstd=17")
+    depends_on("root")
     depends_on("pythia8", when="+pythia8")
 
     def cmake_args(self):
         args = []
-        # C++ Standard
-        args.append("-DCMAKE_CXX_STANDARD=%s" % self.spec.variants["cxxstd"].value)
+        args.append(f"-DCMAKE_CXX_STANDARD={self.spec['root'].variants['cxxstd'].value}")
         return args
 
     def setup_run_environment(self, env):
