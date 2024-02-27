@@ -9,6 +9,7 @@ import sys
 import urllib.parse
 
 import llnl.util.tty as tty
+from llnl.syscmd import ProcessError, which
 from llnl.util.filesystem import mkdirp
 
 import spack.repo
@@ -17,7 +18,6 @@ import spack.util.web
 from spack.spec import Spec
 from spack.url import UndetectableNameError, UndetectableVersionError, parse_name, parse_version
 from spack.util.editor import editor
-from spack.util.executable import ProcessError, which
 from spack.util.format import get_version_lines
 from spack.util.naming import mod_to_class, simplify_name, valid_fully_qualified_module_name
 

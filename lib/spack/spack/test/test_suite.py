@@ -7,12 +7,12 @@ import os
 
 import pytest
 
+import llnl.syscmd
 from llnl.util.filesystem import join_path, mkdirp, touch
 
 import spack.install_test
 import spack.spec
 from spack.install_test import TestStatus
-from spack.util.executable import which
 
 
 def _true(*args, **kwargs):
@@ -300,7 +300,7 @@ def test_test_part_fail(tmpdir, install_mockery_mutable_config, mock_fetch, mock
 
     name = "test_fail"
     with spack.install_test.test_part(pkg, name, "fake ProcessError"):
-        raise spack.util.executable.ProcessError("Mock failure")
+        raise llnl.syscmd.ProcessError("Mock failure")
 
     for part_name, status in pkg.tester.test_parts.items():
         assert part_name.endswith(name)
@@ -315,7 +315,7 @@ def test_test_part_pass(install_mockery_mutable_config, mock_fetch, mock_test_st
     name = "test_echo"
     msg = "nothing"
     with spack.install_test.test_part(pkg, name, "echo"):
-        echo = which("echo")
+        echo = llnl.syscmd.which("echo")
         echo(msg)
 
     for part_name, status in pkg.tester.test_parts.items():
@@ -350,7 +350,7 @@ def test_test_part_missing_exe_fail_fast(
     with spack.config.override("config:fail_fast", True):
         with pytest.raises(spack.install_test.TestFailure, match="object is not callable"):
             with spack.install_test.test_part(pkg, name, "fail fast"):
-                missing = which("no-possible-program")
+                missing = llnl.syscmd.which("no-possible-program")
                 missing()
 
     test_parts = pkg.tester.test_parts
@@ -371,7 +371,7 @@ def test_test_part_missing_exe(
 
     name = "test_missing_exe"
     with spack.install_test.test_part(pkg, name, "missing exe"):
-        missing = which("no-possible-program")
+        missing = llnl.syscmd.which("no-possible-program")
         missing()
 
     test_parts = pkg.tester.test_parts

@@ -9,7 +9,9 @@ import sys
 
 import pytest
 
+import llnl.syscmd
 import llnl.util.tty as tty
+from llnl.syscmd import which
 from llnl.util.filesystem import is_exe, working_dir
 
 import spack.config
@@ -17,11 +19,9 @@ import spack.error
 import spack.fetch_strategy as fs
 import spack.repo
 import spack.util.crypto as crypto
-import spack.util.executable
 import spack.util.web as web_util
 from spack.spec import Spec
 from spack.stage import Stage
-from spack.util.executable import which
 
 
 @pytest.fixture(params=list(crypto.hashes.keys()))
@@ -332,10 +332,10 @@ def test_missing_curl(tmpdir, monkeypatch):
 
     def _which(*args, **kwargs):
         err_msg = err_fmt.format(args[0])
-        raise spack.util.executable.CommandNotFoundError(err_msg)
+        raise llnl.syscmd.CommandNotFoundError(err_msg)
 
     # Patching the 'which' symbol imported by fetch_strategy needed due
-    # to 'from spack.util.executable import which' in this module.
+    # to 'from llnl.syscmd import which' in this module.
     monkeypatch.setattr(fs, "which", _which)
 
     testpath = str(tmpdir)
@@ -360,10 +360,10 @@ def test_url_fetch_text_curl_failures(tmpdir, monkeypatch):
 
     def _which(*args, **kwargs):
         err_msg = err_fmt.format(args[0])
-        raise spack.util.executable.CommandNotFoundError(err_msg)
+        raise llnl.syscmd.CommandNotFoundError(err_msg)
 
     # Patching the 'which' symbol imported by spack.util.web needed due
-    # to 'from spack.util.executable import which' in this module.
+    # to 'from llnl.syscmd import which' in this module.
     monkeypatch.setattr(spack.util.web, "which", _which)
 
     with spack.config.override("config:url_fetch_method", "curl"):
@@ -388,10 +388,10 @@ def test_url_missing_curl(tmpdir, monkeypatch):
 
     def _which(*args, **kwargs):
         err_msg = err_fmt.format(args[0])
-        raise spack.util.executable.CommandNotFoundError(err_msg)
+        raise llnl.syscmd.CommandNotFoundError(err_msg)
 
     # Patching the 'which' symbol imported by spack.util.web needed due
-    # to 'from spack.util.executable import which' in this module.
+    # to 'from llnl.syscmd import which' in this module.
     monkeypatch.setattr(spack.util.web, "which", _which)
 
     with spack.config.override("config:url_fetch_method", "curl"):

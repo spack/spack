@@ -7,7 +7,6 @@ import platform
 from os.path import split
 
 from spack.package import *
-from spack.util.environment import EnvironmentModifications
 
 
 class Anaconda3(Package):
@@ -224,4 +223,4 @@ class Anaconda3(Package):
 
     def setup_run_environment(self, env):
         filename = self.prefix.etc.join("profile.d").join("conda.sh")
-        env.extend(EnvironmentModifications.from_sourcing_file(filename))
+        env.extend(from_sourcing_file(filename))

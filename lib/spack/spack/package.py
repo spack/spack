@@ -19,11 +19,18 @@ pwd = getcwd
 # import most common types used in packages
 from typing import Dict, List, Optional
 
+# Backward compatibility from implicit imports before
+# https://github.com/spack/spack/pull/40262
 import llnl.util.filesystem
+from llnl.syscmd import *
 from llnl.util.filesystem import *
 from llnl.util.symlink import symlink
 
-import spack.util.executable
+import spack.compiler
+import spack.compilers
+import spack.error
+import spack.platforms
+import spack.variant
 
 # These props will be overridden when the build env is set up.
 from spack.build_environment import MakeExecutable
@@ -102,8 +109,8 @@ from spack.package_base import (
 )
 from spack.spec import InvalidSpecDetected, Spec
 from spack.util.cpus import determine_number_of_jobs
-from spack.util.executable import *
 from spack.variant import (
+    DisjointSetsOfValues,
     any_combination_of,
     auto_or_any_combination_of,
     conditional,

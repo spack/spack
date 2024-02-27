@@ -9,6 +9,8 @@ import shutil
 
 import pytest
 
+import llnl.syscmd
+
 import spack.concretize
 import spack.paths
 import spack.platforms
@@ -17,7 +19,6 @@ import spack.relocate_text as relocate_text
 import spack.spec
 import spack.store
 import spack.tengine
-import spack.util.executable
 
 pytestmark = pytest.mark.not_on_windows("Tests fail on Windows")
 
@@ -31,7 +32,7 @@ def skip_unless_linux(f):
 
 def rpaths_for(new_binary):
     """Return the RPATHs or RUNPATHs of a binary."""
-    patchelf = spack.util.executable.which("patchelf")
+    patchelf = llnl.syscmd.which("patchelf")
     output = patchelf("--print-rpath", str(new_binary), output=str)
     return output.strip()
 
@@ -53,7 +54,7 @@ def make_dylib(tmpdir_factory):
     - Writes the same rpath twice
     - Writes its install path as an absolute path
     """
-    cc = spack.util.executable.which("cc")
+    cc = llnl.syscmd.which("cc")
 
     def _factory(abs_install_name="abs", extra_rpaths=[]):
         assert all(extra_rpaths)
@@ -86,7 +87,7 @@ def make_dylib(tmpdir_factory):
 
 @pytest.fixture()
 def make_object_file(tmpdir):
-    cc = spack.util.executable.which("cc")
+    cc = llnl.syscmd.which("cc")
 
     def _factory():
         src = tmpdir.join("bar.c")

@@ -5,8 +5,9 @@
 
 import os.path
 
+import spack.builder
+from spack.build_systems import autotools, meson
 from spack.package import *
-from spack.util.environment import is_system_path
 
 
 class Glib(MesonPackage, AutotoolsPackage):
@@ -285,7 +286,7 @@ class BaseBuilder(metaclass=spack.builder.PhaseCallbacksMeta):
             filter_file(pattern, repl, myfile, backup=False)
 
 
-class MesonBuilder(BaseBuilder, spack.build_systems.meson.MesonBuilder):
+class MesonBuilder(BaseBuilder, meson.MesonBuilder):
     def meson_args(self):
         args = []
         if self.spec.satisfies("@2.63.5:"):
@@ -327,7 +328,7 @@ class MesonBuilder(BaseBuilder, spack.build_systems.meson.MesonBuilder):
         return args
 
 
-class AutotoolsBuilder(BaseBuilder, spack.build_systems.autotools.AutotoolsBuilder):
+class AutotoolsBuilder(BaseBuilder, autotools.AutotoolsBuilder):
     def configure_args(self):
         args = []
         if "+libmount" in self.spec:

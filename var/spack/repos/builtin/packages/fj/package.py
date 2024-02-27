@@ -7,7 +7,6 @@ import re
 import llnl.util.tty as tty
 
 import spack.compiler
-import spack.util.executable
 from spack.package import *
 
 
@@ -37,7 +36,7 @@ class Fj(Package):
             match = version_regex.search(output)
             if match:
                 return match.group(1)
-        except spack.util.executable.ProcessError:
+        except ProcessError:
             pass
         except Exception as e:
             tty.debug(e)

@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.build_systems import cmake, meson
 from spack.package import *
 
 
@@ -68,7 +69,7 @@ class Jsoncpp(CMakePackage, MesonPackage):
         )
 
 
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+class CMakeBuilder(cmake.CMakeBuilder):
     def cmake_args(self):
         args = [
             self.define("BUILD_SHARED_LIBS", True),
@@ -81,6 +82,6 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         return args
 
 
-class MesonBuilder(spack.build_systems.meson.MesonBuilder):
+class MesonBuilder(meson.MesonBuilder):
     def meson_args(self):
         return ["-Dtests={}".format("true" if self.pkg.run_tests else "false")]

@@ -25,6 +25,7 @@ import pytest
 import archspec.cpu.microarchitecture
 import archspec.cpu.schema
 
+import llnl.syscmd
 import llnl.util.lang
 import llnl.util.lock
 import llnl.util.tty as tty
@@ -49,7 +50,6 @@ import spack.stage
 import spack.store
 import spack.subprocess_context
 import spack.test.cray_manifest
-import spack.util.executable
 import spack.util.git
 import spack.util.gpg
 import spack.util.spack_yaml as syaml
@@ -514,7 +514,7 @@ def _skip_if_missing_executables(request):
 
     if marker:
         required_execs = marker.args
-        missing_execs = [x for x in required_execs if spack.util.executable.which(x) is None]
+        missing_execs = [x for x in required_execs if llnl.syscmd.which(x) is None]
         if missing_execs:
             msg = "could not find executables: {0}"
             pytest.skip(msg.format(", ".join(missing_execs)))
@@ -1101,7 +1101,7 @@ def mock_archive(request, tmpdir_factory):
     """Creates a very simple archive directory with a configure script and a
     makefile that installs to a prefix. Tars it up into an archive.
     """
-    tar = spack.util.executable.which("tar")
+    tar = llnl.syscmd.which("tar")
     if not tar:
         pytest.skip("requires tar to be installed")
 
@@ -1161,7 +1161,7 @@ def _parse_cvs_date(line):
 @pytest.fixture(scope="session")
 def mock_cvs_repository(tmpdir_factory):
     """Creates a very simple CVS repository with two commits and a branch."""
-    cvs = spack.util.executable.which("cvs", required=True)
+    cvs = llnl.syscmd.which("cvs", required=True)
 
     tmpdir = tmpdir_factory.mktemp("mock-cvs-repo-dir")
     tmpdir.ensure(spack.stage._source_path_subdir, dir=True)
@@ -1439,7 +1439,7 @@ def mock_git_repository(git, tmpdir_factory):
 @pytest.fixture(scope="session")
 def mock_hg_repository(tmpdir_factory):
     """Creates a very simple hg repository with two commits."""
-    hg = spack.util.executable.which("hg")
+    hg = llnl.syscmd.which("hg")
     if not hg:
         pytest.skip("requires mercurial to be installed")
 
@@ -1479,11 +1479,11 @@ def mock_hg_repository(tmpdir_factory):
 @pytest.fixture(scope="session")
 def mock_svn_repository(tmpdir_factory):
     """Creates a very simple svn repository with two commits."""
-    svn = spack.util.executable.which("svn")
+    svn = llnl.syscmd.which("svn")
     if not svn:
         pytest.skip("requires svn to be installed")
 
-    svnadmin = spack.util.executable.which("svnadmin", required=True)
+    svnadmin = llnl.syscmd.which("svnadmin", required=True)
 
     tmpdir = tmpdir_factory.mktemp("mock-svn-stage")
     tmpdir.ensure(spack.stage._source_path_subdir, dir=True)
@@ -1863,7 +1863,7 @@ def binary_with_rpaths(prefix_tmpdir):
                 message
             )
         )
-        gcc = spack.util.executable.which("gcc")
+        gcc = llnl.syscmd.which("gcc")
         executable = source.dirpath("main.x")
         # Encode relative RPATHs using `$ORIGIN` as the root prefix
         rpaths = [x if os.path.isabs(x) else os.path.join("$ORIGIN", x) for x in rpaths]

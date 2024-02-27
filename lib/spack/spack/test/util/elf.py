@@ -8,11 +8,11 @@ import io
 
 import pytest
 
+import llnl.syscmd
 import llnl.util.filesystem as fs
 
 import spack.platforms
 import spack.util.elf as elf
-import spack.util.executable
 from spack.hooks.drop_redundant_rpaths import drop_redundant_rpaths
 
 
@@ -32,7 +32,7 @@ def skip_unless_linux(f):
     [("-Wl,--disable-new-dtags", False), ("-Wl,--enable-new-dtags", True)],
 )
 def test_elf_parsing_shared_linking(linker_flag, is_runpath, tmpdir):
-    gcc = spack.util.executable.which("gcc")
+    gcc = llnl.syscmd.which("gcc")
 
     with fs.working_dir(str(tmpdir)):
         # Create a library to link to so we can force a dynamic section in an ELF file

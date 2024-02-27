@@ -9,6 +9,7 @@ import platform
 import shutil
 from os.path import basename, isdir
 
+from llnl.syscmd import Executable, from_sourcing_file
 from llnl.util import tty
 from llnl.util.filesystem import HeaderList, LibraryList, find_libraries, join_path, mkdirp
 from llnl.util.link_tree import LinkTree
@@ -16,8 +17,6 @@ from llnl.util.link_tree import LinkTree
 from spack.build_environment import dso_suffix
 from spack.directives import conflicts, variant
 from spack.package_base import InstallError
-from spack.util.environment import EnvironmentModifications
-from spack.util.executable import Executable
 
 from .generic import Package
 
@@ -142,7 +141,7 @@ class IntelOneApiPackage(Package):
         # Only if environment modifications are desired (default is +envmods)
         if "~envmods" not in self.spec:
             env.extend(
-                EnvironmentModifications.from_sourcing_file(
+                from_sourcing_file(
                     self.component_prefix.env.join("vars.sh"), *self.env_script_args
                 )
             )

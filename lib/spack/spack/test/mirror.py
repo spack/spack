@@ -8,16 +8,15 @@ import os
 
 import pytest
 
+from llnl.syscmd import which
 from llnl.util.symlink import resolve_link_target_relative_to_the_link
 
 import spack.mirror
 import spack.repo
-import spack.util.executable
 import spack.util.spack_json as sjson
 import spack.util.url as url_util
 from spack.spec import Spec
 from spack.stage import Stage
-from spack.util.executable import which
 from spack.util.spack_yaml import SpackYAMLError
 
 pytestmark = [

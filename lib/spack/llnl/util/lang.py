@@ -13,6 +13,8 @@ import re
 import sys
 import traceback
 from datetime import datetime, timedelta
+from importlib import import_module
+from types import ModuleType
 from typing import Any, Callable, Iterable, List, Tuple
 
 # Ignore emacs backups when listing modules
@@ -1102,3 +1104,23 @@ class classproperty:
 
     def __get__(self, instance, owner):
         return self.callback(owner)
+
+
+class ModuleDelegate(ModuleType):
+    """A module object that forwards each attribute lookup to substitute modules"""
+
+    def __init__(self, *, deprecated: str, substitutes: List[str]) -> None:
+        self.deprecated = deprecated
+        self.substitute = substitutes
+        self.substitute_modules = [import_module(s) for s in substitutes]
+
+    def __getattr__(self, name: str) -> Any:
+        for m in self.substitute_modules:
+            attr = getattr(m, name, None)
+            if attr is not None:
+                return attr
+        else:
+            raise AttributeError(
+                f"{self.deprecated} -> [substituted by "
+                f"{', '.join(str(x) for x in self.substitute)}] has no attribute {name}"
+            )

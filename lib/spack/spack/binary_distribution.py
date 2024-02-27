@@ -29,6 +29,7 @@ from urllib.error import HTTPError, URLError
 import llnl.util.filesystem as fsys
 import llnl.util.lang
 import llnl.util.tty as tty
+from llnl.syscmd import which
 from llnl.util.filesystem import BaseDirectoryVisitor, mkdirp, visit_directory_tree
 
 import spack.caches
@@ -63,7 +64,6 @@ from spack.package_prefs import get_package_dir_permissions, get_package_group
 from spack.relocate_text import utf8_paths_to_single_binary_regex
 from spack.spec import Spec
 from spack.stage import Stage
-from spack.util.executable import which
 
 BUILD_CACHE_RELATIVE_PATH = "build_cache"
 BUILD_CACHE_KEYS_RELATIVE_PATH = "_pgp"

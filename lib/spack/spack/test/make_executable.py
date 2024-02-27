@@ -13,8 +13,9 @@ import sys
 
 import pytest
 
+from llnl.syscmd import path_put_first
+
 from spack.build_environment import MakeExecutable
-from spack.util.environment import path_put_first
 
 pytestmark = pytest.mark.skipif(
     sys.platform == "win32", reason="MakeExecutable not supported on Windows"

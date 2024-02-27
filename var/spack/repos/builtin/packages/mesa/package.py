@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import sys
 
-import spack.build_systems.meson
+from spack.build_systems import meson
 from spack.package import *
 
 
@@ -71,9 +71,7 @@ class Mesa(MesonPackage):
     #   @:21  - swr was removed in 22.0
     variant(
         "swr",
-        values=spack.variant.DisjointSetsOfValues(
-            ("none",), ("auto",), ("avx", "avx2", "knl", "skx")
-        )
+        values=DisjointSetsOfValues(("none",), ("auto",), ("avx", "avx2", "knl", "skx"))
         .with_non_feature_values("auto")
         .with_non_feature_values("none")
         .with_default("auto"),
@@ -184,7 +182,7 @@ class Mesa(MesonPackage):
         return find_libraries(lib_name, root=self.spec.prefix, recursive=True)
 
 
-class MesonBuilder(spack.build_systems.meson.MesonBuilder):
+class MesonBuilder(meson.MesonBuilder):
     def meson_args(self):
         spec = self.spec
         args = [

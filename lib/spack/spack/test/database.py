@@ -22,6 +22,7 @@ except ImportError:
 import jsonschema
 
 import llnl.util.lock as lk
+from llnl.syscmd import Executable
 from llnl.util.tty.colify import colify
 
 import spack.database
@@ -32,7 +33,6 @@ import spack.spec
 import spack.store
 import spack.version as vn
 from spack.schema.database_index import schema
-from spack.util.executable import Executable
 
 pytestmark = pytest.mark.db
 

@@ -8,13 +8,13 @@ import itertools
 import os
 import sys
 
+import llnl.syscmd
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
 import spack.cmd
 import spack.paths
 import spack.repo
-import spack.util.executable as exe
 import spack.util.package_hash as ph
 from spack.cmd.common import arguments
 
@@ -169,7 +169,7 @@ def pkg_hash(args):
 
 def get_grep(required=False):
     """Get a grep command to use with ``spack pkg grep``."""
-    return exe.which(os.environ.get("SPACK_GREP") or "grep", required=required)
+    return llnl.syscmd.which(os.environ.get("SPACK_GREP") or "grep", required=required)
 
 
 def pkg_grep(args, unknown_args):

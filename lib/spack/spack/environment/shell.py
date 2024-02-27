@@ -7,12 +7,12 @@ import textwrap
 from typing import Optional
 
 import llnl.util.tty as tty
+from llnl.syscmd import EnvironmentModifications
 from llnl.util.tty.color import colorize
 
 import spack.environment as ev
 import spack.repo
 import spack.store
-from spack.util.environment import EnvironmentModifications
 
 
 def activate_header(env, shell, prompt=None, view: Optional[str] = None):
@@ -147,8 +147,9 @@ def activate(
         view: generate commands to add runtime environment variables for named view
 
     Returns:
-        spack.util.environment.EnvironmentModifications: Environment variables
-        modifications to activate environment."""
+        llnl.syscmd.EnvironmentModifications: Environment variables
+        modifications to activate environment.
+    """
     ev.activate(env, use_env_repo=use_env_repo)
 
     env_mods = EnvironmentModifications()

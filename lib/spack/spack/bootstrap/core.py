@@ -31,6 +31,7 @@ import sys
 import uuid
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
+import llnl.syscmd
 from llnl.util import tty
 from llnl.util.lang import GroupedExceptionHandler
 
@@ -46,8 +47,6 @@ import spack.repo
 import spack.spec
 import spack.store
 import spack.user_environment
-import spack.util.environment
-import spack.util.executable
 import spack.util.path
 import spack.util.spack_yaml
 import spack.util.url
@@ -410,7 +409,7 @@ def ensure_module_importable_or_raise(module: str, abstract_spec: Optional[str] 
 def ensure_executables_in_path_or_raise(
     executables: list,
     abstract_spec: str,
-    cmd_check: Optional[Callable[[spack.util.executable.Executable], bool]] = None,
+    cmd_check: Optional[Callable[[llnl.syscmd.Executable], bool]] = None,
 ):
     """Ensure that some executables are in path or raise.
 
@@ -419,7 +418,7 @@ def ensure_executables_in_path_or_raise(
             in order. The function exits on the first one found.
         abstract_spec (str): abstract spec that provides the executables
         cmd_check (object): callable predicate that takes a
-            ``spack.util.executable.Executable`` command and validate it. Should return
+            ``llnl.syscmd.Executable`` command and validate it. Should return
             ``True`` if the executable is acceptable, ``False`` otherwise.
             Can be used to, e.g., ensure a suitable version of the command before
             accepting for bootstrapping.
@@ -431,7 +430,7 @@ def ensure_executables_in_path_or_raise(
         Executable object
 
     """
-    cmd = spack.util.executable.which(*executables)
+    cmd = llnl.syscmd.which(*executables)
     if cmd:
         if not cmd_check or cmd_check(cmd):
             return cmd
@@ -521,7 +520,7 @@ def patchelf_root_spec() -> str:
     return _root_spec("patchelf@0.13.1:")
 
 
-def verify_patchelf(patchelf: "spack.util.executable.Executable") -> bool:
+def verify_patchelf(patchelf: "llnl.syscmd.Executable") -> bool:
     """Older patchelf versions can produce broken binaries, so we
     verify the version here.
 
@@ -542,7 +541,7 @@ def verify_patchelf(patchelf: "spack.util.executable.Executable") -> bool:
     return version >= spack.version.Version("0.13.1")
 
 
-def ensure_patchelf_in_path_or_raise() -> spack.util.executable.Executable:
+def ensure_patchelf_in_path_or_raise() -> llnl.syscmd.Executable:
     """Ensure patchelf is in the PATH or raise."""
     # The old concretizer is not smart and we're doing its job: if the latest patchelf
     # does not concretize because the compiler doesn't support C++17, we try to

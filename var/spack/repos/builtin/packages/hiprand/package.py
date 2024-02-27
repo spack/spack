@@ -48,7 +48,7 @@ class Hiprand(CMakePackage, CudaPackage, ROCmPackage):
     variant(
         "amdgpu_target",
         description="AMD GPU architecture",
-        values=spack.variant.DisjointSetsOfValues(("auto",), ("none",), amdgpu_targets)
+        values=DisjointSetsOfValues(("auto",), ("none",), amdgpu_targets)
         .with_default("auto")
         .with_error(
             "the values 'auto' and 'none' are mutually exclusive with any of the other values"

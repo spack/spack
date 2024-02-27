@@ -12,7 +12,6 @@ from llnl.util.lang import dedupe
 import spack.builder
 from spack.build_systems import autotools, cmake
 from spack.package import *
-from spack.util.environment import filter_system_paths
 
 
 class NetcdfC(CMakePackage, AutotoolsPackage):

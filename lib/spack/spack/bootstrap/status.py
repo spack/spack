@@ -6,7 +6,9 @@
 import platform
 from typing import List, Optional, Sequence, Tuple, Union
 
-import spack.util.executable
+import llnl.syscmd
+
+import spack.spec
 
 from ._common import _executables_in_store, _python_import, _try_import_from_store
 from .config import ensure_bootstrap_configuration
@@ -22,14 +24,14 @@ from .environment import (
 
 ExecutablesType = Union[str, Sequence[str]]
 RequiredResponseType = Tuple[bool, Optional[str]]
-SpecLike = Union["spack.spec.Spec", str]
+SpecLike = Union[spack.spec.Spec, str]
 
 
 def _required_system_executable(exes: ExecutablesType, msg: str) -> RequiredResponseType:
     """Search for an executable is the system path only."""
     if isinstance(exes, str):
         exes = (exes,)
-    if spack.util.executable.which_string(*exes):
+    if llnl.syscmd.which_string(*exes):
         return True, None
     return False, msg
 
@@ -40,7 +42,7 @@ def _required_executable(
     """Search for an executable in the system path or in the bootstrap store."""
     if isinstance(exes, str):
         exes = (exes,)
-    if spack.util.executable.which_string(*exes) or _executables_in_store(exes, query_spec):
+    if llnl.syscmd.which_string(*exes) or _executables_in_store(exes, query_spec):
         return True, None
     return False, msg
 

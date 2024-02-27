@@ -26,6 +26,7 @@ from typing import List, Tuple
 
 import archspec.cpu
 
+import llnl.syscmd
 import llnl.util.lang
 import llnl.util.tty as tty
 import llnl.util.tty.colify
@@ -43,7 +44,6 @@ import spack.solver.asp
 import spack.spec
 import spack.store
 import spack.util.debug
-import spack.util.environment
 import spack.util.git
 import spack.util.path
 from spack.error import SpackError
@@ -561,8 +561,11 @@ def make_argument_parser(**kwargs):
     return parser
 
 
-def send_warning_to_tty(message, *args):
+def send_warning_to_tty(message, category, filename, lineno, file=None, line=None):
     """Redirects messages to tty.warn."""
+    if category == FutureWarning:
+        tty.warn(f"{message}:\n\tfrom {filename}:{lineno}")
+        return
     tty.warn(message)
 
 
@@ -587,7 +590,7 @@ def setup_main_options(args):
     if args.debug:
         spack.util.debug.register_interrupt_handler()
         spack.config.set("config:debug", True, scope="command_line")
-        spack.util.environment.TRACING_ENABLED = True
+        llnl.syscmd.TRACING_ENABLED = True
 
     if args.timestamp:
         tty.set_timestamp(True)

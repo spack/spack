@@ -63,6 +63,7 @@ from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
 
 import llnl.path
 import llnl.string
+import llnl.syscmd
 import llnl.util.filesystem as fs
 import llnl.util.lang as lang
 import llnl.util.tty as tty
@@ -86,7 +87,6 @@ import spack.store
 import spack.target
 import spack.traverse as traverse
 import spack.util.crypto
-import spack.util.executable
 import spack.util.hash
 import spack.util.module_cmd as md
 import spack.util.prefix
@@ -1072,7 +1072,7 @@ def _command_default_handler(descriptor, spec, cls):
     path = os.path.join(home.bin, spec.name)
 
     if fs.is_exe(path):
-        return spack.util.executable.Executable(path)
+        return llnl.syscmd.Executable(path)
     else:
         msg = "Unable to locate {0} command in {1}"
         raise RuntimeError(msg.format(spec.name, home.bin))

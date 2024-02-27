@@ -8,7 +8,6 @@ import os
 import llnl.util.tty as tty
 
 from spack.package import *
-from spack.util.environment import EnvironmentModifications
 
 
 class Heasoft(AutotoolsPackage):
@@ -141,7 +140,7 @@ class Heasoft(AutotoolsPackage):
     def setup_run_environment(self, env):
         try:
             env.extend(
-                EnvironmentModifications.from_sourcing_file(
+                from_sourcing_file(
                     join_path(self.spec.prefix, "headas-config_spack.sh"), clean=True
                 )
             )

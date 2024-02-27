@@ -38,7 +38,7 @@ class Xlf(Package):
             match = version_regex.search(output)
             if match:
                 return match.group(1)
-        except spack.util.executable.ProcessError:
+        except ProcessError:
             pass
         except Exception as e:
             tty.debug(e)

@@ -28,6 +28,7 @@ import typing
 import warnings
 from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Type, TypeVar, Union
 
+import llnl.syscmd
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
 from llnl.util.lang import classproperty, memoized
@@ -51,7 +52,6 @@ import spack.repo
 import spack.spec
 import spack.store
 import spack.url
-import spack.util.environment
 import spack.util.path
 import spack.util.web
 from spack.filesystem_view import YamlFilesystemView
@@ -65,7 +65,6 @@ from spack.install_test import (
 )
 from spack.installer import InstallError, PackageInstaller
 from spack.stage import DIYStage, ResourceStage, Stage, StageComposite, compute_stage_name
-from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
 from spack.version import GitVersion, StandardVersion
 
@@ -1957,7 +1956,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         wdir = "." if work_dir is None else work_dir
         with fsys.working_dir(wdir, create=True):
             try:
-                runner = which(exe)
+                runner = llnl.syscmd.which(exe)
                 if runner is None and skip_missing:
                     self.tester.status(test_name, TestStatus.SKIPPED, f"{exe} is missing")
                     return
@@ -1998,7 +1997,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 for line in out:
                     print(line.rstrip("\n"))
 
-                if exc_type is spack.util.executable.ProcessError:
+                print(exc_type)
+                if exc_type is llnl.syscmd.ProcessError:
                     out = io.StringIO()
                     spack.build_environment.write_log_summary(
                         out, "test", self.tester.test_log_file, last=1
@@ -2039,7 +2039,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             output = runner(*options, output=str.split, error=str.split)
 
             assert 0 in status, f"Expected {runner.name} execution to fail"
-        except ProcessError as err:
+        except llnl.syscmd.ProcessError as err:
             output = str(err)
             match = re.search(r"exited with status ([0-9]+)", output)
             if not (match and int(match.group(1)) in status):
@@ -2099,7 +2099,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """Sets up the run environment for a package.
 
         Args:
-            env (spack.util.environment.EnvironmentModifications): environment
+            env (llnl.syscmd.EnvironmentModifications): environment
                 modifications to be applied when the package is run. Package authors
                 can call methods on it to alter the run environment.
         """
@@ -2116,7 +2116,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         for dependencies.
 
         Args:
-            env (spack.util.environment.EnvironmentModifications): environment
+            env (llnl.syscmd.EnvironmentModifications): environment
                 modifications to be applied when the dependent package is run.
                 Package authors can call methods on it to alter the build environment.
 

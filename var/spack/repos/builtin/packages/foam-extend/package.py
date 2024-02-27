@@ -42,7 +42,6 @@ from spack.pkg.builtin.openfoam import (
     rewrite_environ_files,
     write_environ,
 )
-from spack.util.environment import EnvironmentModifications
 
 
 class FoamExtend(Package):
@@ -128,7 +127,7 @@ class FoamExtend(Package):
         if os.path.isfile(bashrc):
             # post-install: source the installed bashrc
             try:
-                mods = EnvironmentModifications.from_sourcing_file(
+                mods = from_sourcing_file(
                     bashrc,
                     clean=True,  # Remove duplicate entries
                     blacklist=[  # Blacklist these

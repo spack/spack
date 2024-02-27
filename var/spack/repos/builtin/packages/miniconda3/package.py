@@ -7,7 +7,6 @@ import platform
 from os.path import split
 
 from spack.package import *
-from spack.util.environment import EnvironmentModifications
 
 _versions = {
     "22.11.1": {
@@ -103,4 +102,4 @@ class Miniconda3(Package):
 
     def setup_run_environment(self, env):
         filename = self.prefix.etc.join("profile.d").join("conda.sh")
-        env.extend(EnvironmentModifications.from_sourcing_file(filename))
+        env.extend(from_sourcing_file(filename))

@@ -7,7 +7,6 @@ import glob
 import os
 
 from spack.package import *
-from spack.util.environment import EnvironmentModifications
 
 
 class Fsl(Package, CudaPackage):
@@ -180,7 +179,7 @@ class Fsl(Package, CudaPackage):
         # the post install script does not get confused.
         vars_to_unset = ["PYTHONPATH", "PYTHONHOME"]
 
-        with spack.util.environment.preserve_environment(*vars_to_unset):
+        with preserve_environment(*vars_to_unset):
             for v in vars_to_unset:
                 del os.environ[v]
 
@@ -198,7 +197,7 @@ class Fsl(Package, CudaPackage):
         fslsetup = join_path(self.stage.source_path, "etc", "fslconf", "fsl.sh")
 
         if os.path.isfile(fslsetup):
-            env.extend(EnvironmentModifications.from_sourcing_file(fslsetup))
+            env.extend(from_sourcing_file(fslsetup))
 
     def setup_run_environment(self, env):
         # Set the environment variables after copying tree
@@ -206,4 +205,4 @@ class Fsl(Package, CudaPackage):
         fslsetup = join_path(self.prefix, "etc", "fslconf", "fsl.sh")
 
         if os.path.isfile(fslsetup):
-            env.extend(EnvironmentModifications.from_sourcing_file(fslsetup))
+            env.extend(from_sourcing_file(fslsetup))

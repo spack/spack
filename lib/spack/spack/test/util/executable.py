@@ -9,10 +9,10 @@ from pathlib import PurePath
 
 import pytest
 
+import llnl.syscmd as ex
 import llnl.util.filesystem as fs
 
 import spack
-import spack.util.executable as ex
 from spack.hooks.sbang import filter_shebangs_in_directory
 
 

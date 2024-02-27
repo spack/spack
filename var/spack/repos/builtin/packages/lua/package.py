@@ -8,7 +8,6 @@ import os
 
 import spack.build_environment
 from spack.package import *
-from spack.util.executable import Executable
 
 
 class LuaImplPackage(MakefilePackage):

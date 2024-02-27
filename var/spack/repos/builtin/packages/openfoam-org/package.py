@@ -49,7 +49,6 @@ from spack.pkg.builtin.openfoam import (
     rewrite_environ_files,
     write_environ,
 )
-from spack.util.environment import EnvironmentModifications
 
 
 class OpenfoamOrg(Package):
@@ -186,7 +185,7 @@ class OpenfoamOrg(Package):
     def setup_run_environment(self, env):
         bashrc = self.prefix.etc.bashrc
         try:
-            env.extend(EnvironmentModifications.from_sourcing_file(bashrc, clean=True))
+            env.extend(from_sourcing_file(bashrc, clean=True))
         except Exception as e:
             msg = "unexpected error when sourcing OpenFOAM bashrc [{0}]"
             tty.warn(msg.format(str(e)))

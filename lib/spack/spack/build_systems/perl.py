@@ -5,12 +5,12 @@
 import inspect
 import os
 
+from llnl.syscmd import Executable
 from llnl.util.filesystem import filter_file
 
 import spack.builder
 import spack.package_base
 from spack.directives import build_system, extends
-from spack.util.executable import Executable
 
 from ._checks import BaseBuilder, execute_build_time_tests
 

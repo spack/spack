@@ -286,7 +286,7 @@ class Acfl(Package):
                 if match.group(1).count(".") == 1:
                     return match.group(1) + ".0." + match.group(2)
                 return match.group(1) + "." + match.group(2)
-        except spack.util.executable.ProcessError:
+        except ProcessError:
             pass
         except Exception as e:
             tty.debug(e)
