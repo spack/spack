@@ -31,8 +31,11 @@ class PyTensorflowProbability(Package):
     version("0.20.0", sha256="f0fb9a1f88a36a8f57d4d9cce4f9bf8dfacb6fc7778751729fe3c3067e5a1363")
     version("0.19.0", sha256="b32d2ae211ec727df9791b501839619f5389134bd6d4fe951570f500b0e75f55")
     version("0.18.0", sha256="f4852c0fea9117333ccb868f7a2ca75aecf5dd765dc39fd4ee5f8ab6fe87e909")
-    version("0.12.1", sha256="1fe89e85fd053bf36e8645a5a1a53b729bc254cf1516bc224fcbd1e4ff50083a", deprecated=True)
-
+    version(
+        "0.12.1",
+        sha256="1fe89e85fd053bf36e8645a5a1a53b729bc254cf1516bc224fcbd1e4ff50083a",
+        deprecated=True,
+    )
 
     extends("python@3.9:", when="@0.22:")
     extends("python@3.8:", when="@0.20:0.21")
