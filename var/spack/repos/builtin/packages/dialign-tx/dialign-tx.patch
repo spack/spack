@@ -1,0 +1,182 @@
+--- a/source/parameters.c
++++ b/source/parameters.c
+@@ -26,6 +26,8 @@
+ 
+ extern char *optarg;
+ extern int optind, opterr, optopt;
++
++struct parameters* para;
+ /****************************
+ * PROTEIN DEFAULT VALUES!   *
+ ****************************/
+--- a/source/parameters.h
++++ b/source/parameters.h
+@@ -138,7 +138,7 @@
+     /*              global variable                 */
+     /*                                              */
+     /************************************************/
+-struct parameters* para;
++extern struct parameters* para;
+ 
+ 
+ 
+--- a/source/museq.c
++++ b/source/museq.c
+@@ -38,6 +38,7 @@
+ //extern void calc_weight(struct diag* dg, struct scr_matrix* smatrix, 
+ //		 struct prob_dist *pdist);
+ //extern struct diag_col *create_diag_col(int seq_amount);
++extern void free_diag(struct diag* dg);
+ extern void free_diag_col(struct diag_col* dcol);
+ extern struct diag_col *find_all_diags(struct scr_matrix *smatrix, 
+ 				struct prob_dist *pdist, 
+@@ -52,6 +53,7 @@
+ 
+ // alig.c
+ extern struct alignment* create_empty_alignment(struct seq_col *scol);
++extern void free_alignment(struct alignment *algn);
+ //extern char adapt_diag(struct alignment *algn, struct scr_matrix *smatrix, struct diag* dg);
+ extern int  simple_aligner(struct seq_col *scol, struct diag_col *dcol, 
+ 			    struct scr_matrix* smatrix, 
+--- a/source/alig.c
++++ b/source/alig.c
+@@ -10,9 +10,9 @@
+ 
+ extern void error(char *message);
+ extern void merror(char *msg1, char *msg2);
+-extern inline void calc_weight(struct diag* dg, struct scr_matrix* smatrix, 
++extern void calc_weight(struct diag* dg, struct scr_matrix* smatrix, 
+ 			struct prob_dist *pdist);
+-extern inline void calc_ov_weight(struct diag* dg, struct diag_col *dcol, struct scr_matrix* smatrix, 
++extern void calc_ov_weight(struct diag* dg, struct diag_col *dcol, struct scr_matrix* smatrix, 
+ 		    struct prob_dist *pdist);
+ //extern struct seq_part* create_seq_part(int num, struct seq* aSeq, unsigned int startpos);
+ extern struct diag* create_diag(struct seq_part* part1, struct seq_part* part2, 
+@@ -520,7 +520,7 @@ struct alignment* copy_alignment( struct alignment *o_algn, struct alignment *al
+  * datastructure (i.e. frontiers). The given diag must be consistent
+  * to the given alignment !
+  */
+-inline char align_diag(struct alignment *algn, struct scr_matrix *smatrix, struct diag* dg) {
++char align_diag(struct alignment *algn, struct scr_matrix *smatrix, struct diag* dg) {
+ 
+   char alignedSomething = 0;
+   int i,j,k;
+--- a/source/assemble.c
++++ b/source/assemble.c
+@@ -10,9 +10,9 @@
+ 
+ extern void error(char *message);
+ extern void merror(char *msg1, char *msg2);
+-extern inline void calc_weight(struct diag* dg, struct scr_matrix* smatrix, 
++extern void calc_weight(struct diag* dg, struct scr_matrix* smatrix, 
+ 			struct prob_dist *pdist);
+-extern inline void calc_ov_weight(struct diag* dg, struct diag_col *dcol, struct scr_matrix* smatrix, 
++extern void calc_ov_weight(struct diag* dg, struct diag_col *dcol, struct scr_matrix* smatrix, 
+ 		    struct prob_dist *pdist);
+ //extern struct seq_part* create_seq_part(int num, struct seq* aSeq, unsigned int startpos);
+ extern long double** create_tmp_pdist(struct prob_dist *pdist);
+@@ -22,7 +22,7 @@ extern struct diag* create_diag(int n1, struct seq* sq1, unsigned int sp1,
+                          int n2, struct seq* sq2, unsigned int sp2,
+                          int dlength);
+ extern void free_diag(struct diag* dg);
+-extern inline struct simple_diag_col* find_diags_guided(struct scr_matrix *smatrix,  
++extern struct simple_diag_col* find_diags_guided(struct scr_matrix *smatrix,  
+ 							struct prob_dist *pdist, 
+ 							struct gt_node* n1,  
+ 							struct gt_node* n2, 
+@@ -34,10 +34,10 @@ extern inline struct simple_diag_col* find_diags_guided(struct scr_matrix *smatr
+ 
+ extern struct alignment* create_empty_alignment(struct seq_col *scol);
+ extern void free_alignment(struct alignment *algn);
+-extern inline struct algn_pos *find_eqc(struct algn_pos **ap, int seqnum, int pos);
++extern struct algn_pos *find_eqc(struct algn_pos **ap, int seqnum, int pos);
+ extern struct alignment* copy_alignment( struct alignment *o_algn, struct alignment *algn, char doDgc);
+ //extern char adapt_diag(struct alignment *algn, struct scr_matrix *smatrix, struct diag* dg);
+-extern inline char align_diag(struct alignment *algn, struct scr_matrix *smatrix, struct diag* dg);
++extern char align_diag(struct alignment *algn, struct scr_matrix *smatrix, struct diag* dg);
+ //extern inline struct diag_cont* enter_sorted(struct diag_cont* backlog_diags, struct diag_cont *cand);
+ //extern inline char fit_fpos_diag(struct alignment *algn, struct diag* dg);
+ 
+@@ -57,7 +57,7 @@ extern inline char align_diag(struct alignment *algn, struct scr_matrix *smatrix
+ /**
+  * enters the candidate in a sorted way to the list and returns pointer to the first element
+  */
+-inline struct diag_cont* enter_sorted(struct diag_cont* backlog_diags, struct diag_cont *cand) {
++struct diag_cont* enter_sorted(struct diag_cont* backlog_diags, struct diag_cont *cand) {
+   if(backlog_diags==NULL) {
+     cand->next=NULL;
+     return cand;
+@@ -92,7 +92,7 @@ inline struct diag_cont* enter_sorted(struct diag_cont* backlog_diags, struct di
+ /**
+  * returns whether the given first position of the diag fits intho the given alignment
+  */
+-inline char fit_fpos_diag(struct alignment *algn, struct diag* dg) {
++char fit_fpos_diag(struct alignment *algn, struct diag* dg) {
+   unsigned int s1 = dg->seq_p1.num;
+   unsigned int s2 = dg->seq_p2.num;
+ 
+@@ -574,7 +574,7 @@ char simple_aligner(struct seq_col *scol, struct diag_col *dcol,
+  * returns a value <0 if there is an non-conflicting overlap
+  * returns 0 in all other non-conflicting cases
+  */
+-inline char confl_diag(struct alignment *algn, char *layer, struct diag *dg1, struct diag *dg2) {
++char confl_diag(struct alignment *algn, char *layer, struct diag *dg1, struct diag *dg2) {
+   //  if(dg1->multi_dg || dg2->multi_dg) error(" confl_diag(): cannot accept multi dgs!");
+   int s1_1 = dg1->seq_p1.num;
+   int s1_2 = dg1->seq_p2.num;
+--- a/source/diag.c
++++ b/source/diag.c
+@@ -183,7 +183,7 @@ void fill_tmp_pdist(struct prob_dist *pdist, long double **tmp_dist, int slen1,
+  * omitScore = 0:  normal 
+  * omitScore = 1:  no score calculation 
+  */ 
+-inline void real_calc_weight(struct diag* dg, struct scr_matrix* smatrix,  
++void real_calc_weight(struct diag* dg, struct scr_matrix* smatrix,  
+ 		 struct prob_dist *pdist, char omitScore, long double **tmp_dist, struct alignment *algn ) { 
+    
+   if(dg->multi_dg) {
+@@ -302,7 +302,7 @@ inline void real_calc_weight(struct diag* dg, struct scr_matrix* smatrix,
+   } 
+ } 
+  
+-inline void calc_weight(struct diag* dg, struct scr_matrix* smatrix,  
++void calc_weight(struct diag* dg, struct scr_matrix* smatrix,  
+ 		 struct prob_dist *pdist) { 
+   real_calc_weight(dg, smatrix, pdist, 0,NULL,NULL); 
+ } 
+@@ -312,7 +312,7 @@ inline void calc_weight(struct diag* dg, struct scr_matrix* smatrix,
+ /** 
+  * calculates the overlap weight for the given diag 
+  */ 
+-inline void calc_ov_weight(struct diag* dg, struct diag_col *dcol, struct scr_matrix* smatrix,  
++void calc_ov_weight(struct diag* dg, struct diag_col *dcol, struct scr_matrix* smatrix,  
+ 		    struct prob_dist *pdist) { 
+   int sn1 = dg->seq_p1.num; 
+   int sn2 = dg->seq_p2.num; 
+@@ -444,7 +444,7 @@ void free_diag_col(struct diag_col* dcol) {
+  * The pointer returned (and the ones included in the struct)  
+  * has to be deallocted explicitely from memory. 
+  */ 
+-inline struct simple_diag_col* find_diags_guided(struct scr_matrix *smatrix,  
++struct simple_diag_col* find_diags_guided(struct scr_matrix *smatrix,  
+ 				struct prob_dist *pdist, struct gt_node* n1,  
+ 				struct gt_node* n2, struct alignment *algn, 
+ 				double thres_weight,
+@@ -958,7 +958,7 @@ inline struct simple_diag_col* find_diags_guided(struct scr_matrix *smatrix,
+  * The pointer returned (and the ones included in the struct)  
+  * has to be deallocted explicitely from memory. 
+  */ 
+-inline struct simple_diag_col* find_diags_dialign(struct scr_matrix *smatrix,  
++struct simple_diag_col* find_diags_dialign(struct scr_matrix *smatrix,  
+ 				struct prob_dist *pdist, struct seq* seq1,  
+ 				struct seq* seq2, struct alignment *algn, 
+ 				 long double **tmp_dist, int round) { 
+@@ -1262,7 +1262,7 @@ inline struct simple_diag_col* find_diags_dialign(struct scr_matrix *smatrix,
+  * The pointer returned (and the ones included in the struct)  
+  * has to be deallocted explicitely from memory. 
+  */ 
+-inline struct simple_diag_col* find_diags_dyn(struct scr_matrix *smatrix,  
++struct simple_diag_col* find_diags_dyn(struct scr_matrix *smatrix,  
+ 				struct prob_dist *pdist, struct seq* seq1,  
+ 				struct seq* seq2, struct alignment *algn, 
+ 				 long double **tmp_dist) { 
