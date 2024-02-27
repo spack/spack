@@ -48,7 +48,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     variant("develtools", default=False, description="Compile with develtools enabled")
     variant("hwloc", default=False, description="Enable HWLOC support")
     variant("sde", default=False, description="Enable PAPI SDE support", when="@1.7.0:")
-    variant("mpi", default=False, description="Enable MPI support", when="@1.4.0:")
+    variant("mpi", default=False, description="Enable MPI support", when="@1.5.0:")
 
     depends_on("cmake@3.9:", type="build", when="@:1.3.0")
     depends_on("cmake@3.13:", type="build", when="@1.4.0:1.6.0")
