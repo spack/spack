@@ -58,9 +58,12 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
         #  with the following patch:
         patch("4.8.1-win-hdf5-with-zlib.patch", when="@4.8.1: platform=windows")
 
-        # TODO: fetch from the upstream repo once https://github.com/Unidata/netcdf-c/pull/2595
-        #  is accepted:
-        patch("netcdfc-mpi-win-support.patch", when="platform=windows")
+        # TODO: https://github.com/Unidata/netcdf-c/pull/2595 contains some of the changes
+        # made in this patch but is not sufficent to replace the patch. There is currently
+        # no upstream PR (or set of PRs) covering all changes in this path.
+        # When #2595 lands, this patch should be updated to include only
+        # the changes not incorporated into that PR
+        patch("netcdfc_correct_and_export_link_interface.patch", when="platform=windows")
 
     # Some of the patches touch configure.ac and, therefore, require forcing the autoreconf stage:
     _force_autoreconf_when = []
@@ -300,7 +303,6 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
 
 class BaseBuilder(metaclass=spack.builder.PhaseCallbacksMeta):
     def setup_dependent_build_environment(self, env, dependent_spec):
-        self.pkg.setup_run_environment(env)
         # Some packages, e.g. ncview, refuse to build if the compiler path returned by nc-config
         # differs from the path to the compiler that the package should be built with. Therefore,
         # we have to shadow nc-config from self.prefix.bin, which references the real compiler,
@@ -343,6 +345,10 @@ class CMakeBuilder(BaseBuilder, cmake.CMakeBuilder):
         if "platform=windows" in self.pkg.spec:
             # Enforce the usage of the vendored version of bzip2 on Windows:
             base_cmake_args.append(self.define("Bz2_INCLUDE_DIRS", ""))
+        if "+shared" in self.pkg.spec["hdf5"]:
+            base_cmake_args.append(self.define("NC_FIND_SHARED_LIBS", True))
+        else:
+            base_cmake_args.append(self.define("NC_FIND_SHARED_LIBS", False))
         return base_cmake_args
 
 

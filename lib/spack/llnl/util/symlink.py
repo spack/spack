@@ -189,6 +189,7 @@ def _windows_can_symlink() -> bool:
     import llnl.util.filesystem as fs
 
     fs.touchp(fpath)
+    fs.mkdirp(dpath)
 
     try:
         os.symlink(dpath, dlink)

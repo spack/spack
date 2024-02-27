@@ -2091,7 +2091,12 @@ class Spec:
             if hasattr(variant, "_patches_in_order_of_appearance"):
                 d["patches"] = variant._patches_in_order_of_appearance
 
-        if self._concrete and hash.package_hash and self._package_hash:
+        if (
+            self._concrete
+            and hash.package_hash
+            and hasattr(self, "_package_hash")
+            and self._package_hash
+        ):
             # We use the attribute here instead of `self.package_hash()` because this
             # should *always* be assignhed at concretization time. We don't want to try
             # to compute a package hash for concrete spec where a) the package might not
