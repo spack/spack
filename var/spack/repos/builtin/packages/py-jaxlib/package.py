@@ -62,12 +62,12 @@ class PyJaxlib(PythonPackage, CudaPackage):
     depends_on("py-scipy@1.5:", type=("build", "run"))
 
     # .bazelversion
-    depends_on("bazel@6.1.2:6.9", when="@0.4.11:", type="build")  # upper limit 6.9? too flexible? not sure
+    depends_on(
+        "bazel@6.1.2:6.9", when="@0.4.11:", type="build"
+    )  # upper limit 6.9? too flexible? not sure
     depends_on("bazel@5.1.1:5.9", when="@0.3:", type="build")
     # https://github.com/google/jax/issues/8440
     depends_on("bazel@4.1:4", when="@0.1", type="build")
-
-
 
     # README.md
     depends_on("cuda@12:", when="@0.4.11:+cuda12")
