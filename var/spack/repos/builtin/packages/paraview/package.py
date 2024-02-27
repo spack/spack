@@ -5,7 +5,10 @@
 
 import itertools
 import os
+import subprocess
 import sys
+
+import llnl.util.tty as tty
 
 from spack.package import *
 
@@ -682,3 +685,33 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         cmake_args.append(self.define_from_variant("VTKOSPRAY_ENABLE_DENOISER", "raytracing"))
 
         return cmake_args
+
+    @on_package_attributes(run_tests=True)
+    @run_after("install")
+    def build_test(self):
+        spec = self.spec
+        if "+python" not in spec:
+            tty.info("pvpython required to execute test is not built without python in spec")
+            return
+
+        spackdir = os.path.dirname(os.path.realpath(__file__))
+        pkgdir = join_path(spackdir, "test")
+        datatest = join_path(pkgdir, "test-pvpython-data.py")
+        rndrtest = join_path(pkgdir, "test-pvpython-render.py")
+        pvpy = join_path(str(self.spec.prefix), "bin/pvpython")
+        output = join_path(pkgdir, "test-pvpython.png")
+
+        # Run data test first
+        with working_dir(pkgdir, create=False):
+            res = subprocess.run([pvpy, "--force-offscreen-rendering", datatest])
+            assert res.returncode == 0
+
+        with working_dir(pkgdir, create=False):
+            res = subprocess.run([pvpy, "--force-offscreen-rendering", rndrtest])
+            if res.returncode == 0 and os.path.exists(output):
+                tty.info("ParaView rendering smoke test successful")
+            else:
+                tty.error(
+                    "ParaView smoke test did not complete successfully \
+                         This could happen when ParaView is built without rendering."
+                )
