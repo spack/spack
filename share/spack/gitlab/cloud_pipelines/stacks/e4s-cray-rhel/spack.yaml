@@ -151,7 +151,6 @@ spack:
 
   # - alquimia            # pflotran: petsc-3.19.4-c6pmpdtpzarytxo434zf76jqdkhdyn37/lib/petsc/conf/rules:169: material_aux.o] Error 1: fortran errors
   # - amrex               # disabled temporarily pending resolution of unreproducible CI failure
-  # - archer              # subsumed by llvm +omp_tsan
   # - axom                # axom: CMake Error at axom/sidre/cmake_install.cmake:154 (file): file INSTALL cannot find "/tmp/gitlab-runner-2/spack-stage/spack-stage-axom-0.8.1-jvol6riu34vuyqvrd5ft2gyhrxdqvf63/spack-build-jvol6ri/lib/fortran/axom_spio.mod": No such file or directory.
   # - bricks              # bricks: clang-15: error: clang frontend command failed with exit code 134 (use -v to see invocation)
   # - dealii              # llvm@14.0.6: ?; intel-tbb@2020.3: clang-15: error: unknown argument: '-flifetime-dse=1'; assimp@5.2.5: clang-15: error: clang frontend command failed with exit code 134 (use -v to see invocation)

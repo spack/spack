@@ -176,7 +176,6 @@ spack:
   - vtk-m
   - zfp
   # --
-  # - archer                                # part of llvm +omp_tsan
   # - dealii                                # fltk: https://github.com/spack/spack/issues/38791
   # - geopm                                 # geopm: https://github.com/spack/spack/issues/38798
   # - libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp # py-numcodecs: gcc: error: unrecognized command line option '-mno-sse2'; did you mean '-mno-isel'? gcc: error: unrecognized command line option '-mno-avx2'
