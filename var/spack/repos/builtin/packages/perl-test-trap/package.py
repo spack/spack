@@ -22,7 +22,9 @@ class PerlTestTrap(PerlPackage):
     depends_on("perl-data-dump", type=("build", "run", "test"))
 
     def url_for_version(self, version):
-        return f"https://cpan.metacpan.org/authors/id/E/EB/EBHANSSEN/Test-Trap-{str(version)}.tar.gz"
+        return (
+            f"https://cpan.metacpan.org/authors/id/E/EB/EBHANSSEN/Test-Trap-{str(version)}.tar.gz"
+        )
 
     def test_use(self):
         """Test 'use module'"""
