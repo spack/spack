@@ -96,6 +96,7 @@ class Openexr(CMakePackage, AutotoolsPackage):
                 break
         return liblist
 
+
 class CMakeBuilder(CMakeBuilder):
     def cmake_args(self):
         args = [self.define("BUILD_TESTING", self.pkg.run_tests)]
