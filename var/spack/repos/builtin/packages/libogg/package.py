@@ -30,6 +30,8 @@ class Libogg(CMakePackage, AutotoolsPackage, Package):
         when="build_system=cmake",
     )
 
+    requires("+pic", when="+shared")
+
     # Backport a patch that fixes an unsigned typedef problem on macOS:
     # https://github.com/xiph/ogg/pull/64
     patch(
