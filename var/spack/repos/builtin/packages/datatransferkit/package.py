@@ -35,6 +35,7 @@ class Datatransferkit(CMakePackage):
     variant("serial", default=True, description="enable Serial backend (default)")
     variant("shared", default=True, description="enable the build of shared lib")
 
+    depends_on("mpi")
     depends_on("arborx@1.0:", when="+external-arborx")
     depends_on("boost")
     depends_on("cmake", type="build")
@@ -56,6 +57,10 @@ class Datatransferkit(CMakePackage):
             "-DDataTransferKit_ENABLE_EXAMPLES=OFF",
             "-DCMAKE_CXX_EXTENSIONS=OFF",
             "-DCMAKE_CXX_STANDARD=14",
+            "-DCMAKE_C_COMPILER=" + spec["mpi"].mpicc,
+            "-DCMAKE_CXX_COMPILER=" + spec["mpi"].mpicxx,
+            "-DCMAKE_Fortran_COMPILER=" + spec["mpi"].mpifc,
+            "-DMPI_BASE_DIR=" + spec["mpi"].prefix,
         ]
 
         if "+openmp" in spec:
