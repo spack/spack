@@ -5,8 +5,8 @@
 
 import os
 
-from spack.build_systems.generic import GenericBuilder
 from spack.build_systems import cmake
+from spack.build_systems.generic import GenericBuilder
 from spack.package import *
 
 
@@ -24,7 +24,12 @@ class Libogg(CMakePackage, AutotoolsPackage, Package):
     version("1.3.2", sha256="e19ee34711d7af328cb26287f4137e70630e7261b17cbe3cd41011d73a654692")
 
     variant("shared", default=True, description="Build shared library", when="build_system=cmake")
-    variant("pic", default=True, description="Produce position-independent code (for shared libs)", when="build_system=cmake")
+    variant(
+        "pic",
+        default=True,
+        description="Produce position-independent code (for shared libs)",
+        when="build_system=cmake",
+    )
 
     # Backport a patch that fixes an unsigned typedef problem on macOS:
     # https://github.com/xiph/ogg/pull/64
@@ -42,7 +47,6 @@ class Libogg(CMakePackage, AutotoolsPackage, Package):
 
 
 class CMakeBuilder(cmake.CMakeBuilder):
-
     def cmake_args(self):
         base_cmake_args = [
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
