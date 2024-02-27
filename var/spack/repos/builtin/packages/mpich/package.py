@@ -61,9 +61,9 @@ class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant("wrapperrpath", default=True, description="Enable wrapper rpath")
     variant(
         "pmi",
-        default="pmi1",
+        default="default",
         description="""PMI interface.""",
-        values=("pmi1", "pmi2", "pmix", "cray"),
+        values=("default", "pmi1", "pmi2", "pmix", "cray"),
         multi=False,
     )
     variant(
@@ -385,9 +385,15 @@ supported, and netmod is ignored if device is ch3:sock.""",
             if re.search(r"--with-thread-package=argobots", output):
                 variants.append("+argobots")
 
-            if re.search(r"--with-pmi=simple", output):
+            if re.search(r"--with-pmi=default", output):
+                variants.append("pmi=default")
+            elif re.search(r"--with-pmi=simple", output):
                 variants.append("pmi=pmi1")
             elif re.search(r"--with-pmi=pmi2/simple", output):
+                variants.append("pmi=pmi2")
+            elif re.search(r"--with-pmi=pmi1", output):
+                variants.append("pmi=pmi1")
+            elif re.search(r"--with-pmi=pmi2", output):
                 variants.append("pmi=pmi2")
             elif re.search(r"--with-pmix", output):
                 variants.append("pmi=pmix")
@@ -551,14 +557,32 @@ supported, and netmod is ignored if device is ch3:sock.""",
         else:
             config_args.append("--with-slurm=no")
 
-        if "pmi=pmi1" in spec:
-            config_args.append("--with-pmi=simple")
-        elif "pmi=pmi2" in spec:
-            config_args.append("--with-pmi=pmi2/simple")
-        elif "pmi=pmix" in spec:
-            config_args.append("--with-pmix={0}".format(spec["pmix"].prefix))
-        elif "pmi=cray" in spec:
-            config_args.append("--with-pmi=cray")
+        # PMI options changed in 4.2.0
+        if spec.satisfies("@4.2:"):
+            # default (no option) is to build both PMIv1 and PMI2 client interfaces
+            if "pmi=pmi1" in spec:
+                # make PMI1 the default client interface
+                config_args.append("--with-pmi=pmi1")
+            elif "pmi=pmi2" in spec:
+                # make PMI2 the default client interface
+                config_args.append("--with-pmi=pmi2")
+            elif "pmi=pmix" in spec:
+                # use the PMIx client interface with an external PMIx library
+                config_args.append("--with-pmi=pmix --with-pmix={0}".format(spec["pmix"].prefix))
+            elif "pmi=cray" in spec:
+                # use PMI2 interface with Cray PMI library
+                config_args.append(
+                    "--with-pmi=pmi2 --with-pmi2={0}".format(spec["cray-pmi"].prefix)
+                )
+        else:
+            if "pmi=pmi1" in spec:
+                config_args.append("--with-pmi=simple")
+            elif "pmi=pmi2" in spec:
+                config_args.append("--with-pmi=pmi2/simple")
+            elif "pmi=pmix" in spec:
+                config_args.append("--with-pmix={0}".format(spec["pmix"].prefix))
+            elif "pmi=cray" in spec:
+                config_args.append("--with-pmi=cray")
 
         if "+cuda" in spec:
             config_args.append("--with-cuda={0}".format(spec["cuda"].prefix))
