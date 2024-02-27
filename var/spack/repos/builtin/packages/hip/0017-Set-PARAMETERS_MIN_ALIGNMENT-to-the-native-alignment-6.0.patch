@@ -1,3 +1,15 @@
+From 2dd7aa9496625f43f43e5a4b84288e8b26b02277 Mon Sep 17 00:00:00 2001
+From: Renjith Ravindran <Renjith.RavindranKannath@amd.com>
+Date: Tue, 27 Feb 2024 19:19:40 +0000
+Subject: [PATCH] For avx build,the start address of values_ buffer in
+ KernelParameters is not correct as it is computed based on 16-byte alignment.
+
+---
+ clr/rocclr/platform/kernel.hpp | 6 +++---
+ clr/rocclr/utils/flags.hpp     | 2 +-
+ clr/rocclr/utils/macros.hpp    | 8 ++++++++
+ 3 files changed, 12 insertions(+), 4 deletions(-)
+
 diff --git a/clr/rocclr/platform/kernel.hpp b/clr/rocclr/platform/kernel.hpp
 index 8cb3b7f..435bc23 100644
 --- a/clr/rocclr/platform/kernel.hpp
@@ -61,3 +73,6 @@ index aaf7e7b..8b65a2f 100644
  #define IF_LEFT_true(x) x
  #define IF_LEFT_false(x)
  #define IF_RIGHT_true(x)
+-- 
+2.39.3
+
