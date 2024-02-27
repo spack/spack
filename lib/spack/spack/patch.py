@@ -367,7 +367,7 @@ class PatchCache:
 
         # update the index with per-package patch indexes
         pkg_cls = self.repository.get_pkg_class(pkg_fullname)
-        partial_index = self._index_patches(pkg_cls, self.repository)
+        partial_index = self._index_patches(pkg_cls)
         for sha256, package_to_patch in partial_index.items():
             p2p = self.index.setdefault(sha256, {})
             p2p.update(package_to_patch)
@@ -379,7 +379,7 @@ class PatchCache:
             p2p.update(package_to_patch)
 
     @staticmethod
-    def _index_patches(pkg_class, repository):
+    def _index_patches(pkg_class):
         index = {}
 
         # Add patches from the class
@@ -393,7 +393,7 @@ class PatchCache:
             for dependency in deps_by_name.values():
                 for patch_list in dependency.patches.values():
                     for patch in patch_list:
-                        dspec_cls = repository.get_pkg_class(dependency.spec.name)
+                        dspec_cls = spack.repo.PATH.get_pkg_class(dependency.spec.fullname)
                         patch_dict = patch.to_dict()
                         patch_dict.pop("sha256")  # save some space
                         index[patch.sha256] = {dspec_cls.fullname: patch_dict}
