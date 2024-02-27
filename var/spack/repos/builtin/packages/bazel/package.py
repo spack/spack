@@ -16,12 +16,14 @@ class Bazel(Package):
     numbers of users."""
 
     homepage = "https://bazel.build/"
-    url = "https://github.com/bazelbuild/bazel/releases/download/3.1.0/bazel-3.1.0-dist.zip"
+    url = "https://github.com/bazelbuild/bazel/releases/download/6.4.0/bazel-6.4.0-dist.zip"
 
     tags = ["build-tools"]
 
     license("Apache-2.0")
 
+    version("6.4.0", sha256="bd88ff602c8bbb29ee82ba2a6b12ad092d51ec668c6577f9628f18e48ff4e51e")
+    version("6.1.2", sha256="6fb3ee22fe9fa86d82e173572d504c089f10825d749725592626e090b38c9679")
     version("6.1.1", sha256="6b900f26d676c7eca1d2e7dff9b71890dabd3ff59cab2a2d2178bc8a0395342a")
     version("6.1.0", sha256="c4b85675541cf66ee7cb71514097fdd6c5fc0e02527243617a4f20ca6b4f2932")
     version("6.0.0", sha256="7bc0c5145c19a56d82a08fce6908c5e1a0e75e4fbfb3b6f12b4deae7f4b38cbc")
