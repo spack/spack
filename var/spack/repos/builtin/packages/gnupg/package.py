@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
+
 from spack.package import *
 from spack.util.environment import is_system_path
 
@@ -17,6 +19,7 @@ class Gnupg(AutotoolsPackage):
 
     license("GPL-3.0-or-later")
 
+    version("2.4.4", sha256="67ebe016ca90fa7688ce67a387ebd82c6261e95897db7b23df24ff335be85bc6")
     version("2.4.3", sha256="a271ae6d732f6f4d80c258ad9ee88dd9c94c8fdc33c3e45328c4d7c126bd219d")
     version("2.4.2", sha256="97eb47df8ae5a3ff744f868005a090da5ab45cb48ee9836dbf5ee739a4e5cf49")
     version("2.4.1", sha256="76b71e5aeb443bfd910ce9cbc8281b617c8341687afb67bae455877972b59de8")
@@ -134,6 +137,14 @@ class Gnupg(AutotoolsPackage):
 
     # Getting some linking error.
     conflicts("%gcc@10:", when="@:1")
+
+    executables = ["^gpg$", "^gpg-agent$"]
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)("--version", output=str, error=str)
+        match = re.search(r"gpg \(GnuPG\) (\S+)", output)
+        return match.group(1) if match else None
 
     @run_after("install")
     def add_gpg2_symlink(self):

@@ -58,6 +58,62 @@ def _maybe_set_python_hints(pkg: spack.package_base.PackageBase, args: List[str]
     )
 
 
+def _supports_compilation_databases(pkg: spack.package_base.PackageBase) -> bool:
+    """Check if this package (and CMake) can support compilation databases."""
+
+    # CMAKE_EXPORT_COMPILE_COMMANDS only exists for CMake >= 3.5
+    if not pkg.spec.satisfies("^cmake@3.5:"):
+        return False
+
+    # CMAKE_EXPORT_COMPILE_COMMANDS is only implemented for Makefile and Ninja generators
+    if not (pkg.spec.satisfies("generator=make") or pkg.spec.satisfies("generator=ninja")):
+        return False
+
+    return True
+
+
+def _conditional_cmake_defaults(pkg: spack.package_base.PackageBase, args: List[str]) -> None:
+    """Set a few default defines for CMake, depending on its version."""
+    cmakes = pkg.spec.dependencies("cmake", dt.BUILD)
+
+    if len(cmakes) != 1:
+        return
+
+    cmake = cmakes[0]
+
+    # CMAKE_INTERPROCEDURAL_OPTIMIZATION only exists for CMake >= 3.9
+    try:
+        ipo = pkg.spec.variants["ipo"].value
+    except KeyError:
+        ipo = False
+
+    if cmake.satisfies("@3.9:"):
+        args.append(CMakeBuilder.define("CMAKE_INTERPROCEDURAL_OPTIMIZATION", ipo))
+
+    # Disable Package Registry: export(PACKAGE) may put files in the user's home directory, and
+    # find_package may search there. This is not what we want.
+
+    # Do not populate CMake User Package Registry
+    if cmake.satisfies("@3.15:"):
+        # see https://cmake.org/cmake/help/latest/policy/CMP0090.html
+        args.append(CMakeBuilder.define("CMAKE_POLICY_DEFAULT_CMP0090", "NEW"))
+    elif cmake.satisfies("@3.1:"):
+        # see https://cmake.org/cmake/help/latest/variable/CMAKE_EXPORT_NO_PACKAGE_REGISTRY.html
+        args.append(CMakeBuilder.define("CMAKE_EXPORT_NO_PACKAGE_REGISTRY", True))
+
+    # Do not use CMake User/System Package Registry
+    # https://cmake.org/cmake/help/latest/manual/cmake-packages.7.html#disabling-the-package-registry
+    if cmake.satisfies("@3.16:"):
+        args.append(CMakeBuilder.define("CMAKE_FIND_USE_PACKAGE_REGISTRY", False))
+    elif cmake.satisfies("@3.1:3.15"):
+        args.append(CMakeBuilder.define("CMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY", False))
+        args.append(CMakeBuilder.define("CMAKE_FIND_PACKAGE_NO_SYSTEM_PACKAGE_REGISTRY", False))
+
+    # Export a compilation database if supported.
+    if _supports_compilation_databases(pkg):
+        args.append(CMakeBuilder.define("CMAKE_EXPORT_COMPILE_COMMANDS", True))
+
+
 def generator(*names: str, default: Optional[str] = None):
     """The build system generator to use.
 
@@ -246,7 +302,10 @@ class CMakeBuilder(BaseBuilder):
     @property
     def archive_files(self):
         """Files to archive for packages based on CMake"""
-        return [os.path.join(self.build_directory, "CMakeCache.txt")]
+        files = [os.path.join(self.build_directory, "CMakeCache.txt")]
+        if _supports_compilation_databases(self):
+            files.append(os.path.join(self.build_directory, "compile_commands.json"))
+        return files
 
     @property
     def root_cmakelists_dir(self):
@@ -293,11 +352,6 @@ class CMakeBuilder(BaseBuilder):
         except KeyError:
             build_type = "RelWithDebInfo"
 
-        try:
-            ipo = pkg.spec.variants["ipo"].value
-        except KeyError:
-            ipo = False
-
         define = CMakeBuilder.define
         args = [
             "-G",
@@ -305,10 +359,6 @@ class CMakeBuilder(BaseBuilder):
             define("CMAKE_INSTALL_PREFIX", pathlib.Path(pkg.prefix).as_posix()),
             define("CMAKE_BUILD_TYPE", build_type),
         ]
-
-        # CMAKE_INTERPROCEDURAL_OPTIMIZATION only exists for CMake >= 3.9
-        if pkg.spec.satisfies("^cmake@3.9:"):
-            args.append(define("CMAKE_INTERPROCEDURAL_OPTIMIZATION", ipo))
 
         if primary_generator == "Unix Makefiles":
             args.append(define("CMAKE_VERBOSE_MAKEFILE", True))
@@ -318,6 +368,7 @@ class CMakeBuilder(BaseBuilder):
                 [define("CMAKE_FIND_FRAMEWORK", "LAST"), define("CMAKE_FIND_APPBUNDLE", "LAST")]
             )
 
+        _conditional_cmake_defaults(pkg, args)
         _maybe_set_python_hints(pkg, args)
 
         # Set up CMake rpath

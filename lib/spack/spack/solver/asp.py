@@ -15,54 +15,9 @@ import sys
 import types
 import typing
 import warnings
-from typing import Callable, Dict, List, NamedTuple, Optional, Sequence, Set, Tuple, Union
+from typing import Callable, Dict, Iterator, List, NamedTuple, Optional, Set, Tuple, Type, Union
 
 import archspec.cpu
-
-import spack.config as sc
-import spack.deptypes as dt
-import spack.parser
-import spack.paths as sp
-import spack.util.path as sup
-
-try:
-    import clingo  # type: ignore[import]
-
-    # There may be a better way to detect this
-    clingo_cffi = hasattr(clingo.Symbol, "_rep")
-except ImportError:
-    clingo = None  # type: ignore
-    clingo_cffi = False
-except AttributeError:
-    # Reaching this point indicates a broken clingo installation
-    # If Spack derived clingo, suggest user re-run bootstrap
-    # if non-spack, suggest user investigate installation
-
-    # assume Spack is not responsibe for broken clingo
-    msg = (
-        f"Clingo installation at {clingo.__file__} is incomplete or invalid."
-        "Please repair installation or re-install. "
-        "Alternatively, consider installing clingo via Spack."
-    )
-    # check whether Spack is responsible
-    if (
-        pathlib.Path(
-            sup.canonicalize_path(sc.get("bootstrap:root", sp.default_user_bootstrap_path))
-        )
-        in pathlib.Path(clingo.__file__).parents
-    ):
-        # Spack is responsible for the broken clingo
-        msg = (
-            "Spack bootstrapped copy of Clingo is broken, "
-            "please re-run the bootstrapping process via command `spack bootstrap now`."
-            " If this issue persists, please file a bug at: github.com/spack/spack"
-        )
-    raise RuntimeError(
-        "Clingo installation may be broken or incomplete, "
-        "please verify clingo has been installed correctly"
-        "\n\nClingo does not provide symbol clingo.Symbol"
-        f"{msg}"
-    )
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -72,11 +27,14 @@ import spack.binary_distribution
 import spack.cmd
 import spack.compilers
 import spack.config
+import spack.config as sc
+import spack.deptypes as dt
 import spack.directives
 import spack.environment as ev
 import spack.error
 import spack.package_base
 import spack.package_prefs
+import spack.parser
 import spack.platforms
 import spack.repo
 import spack.spec
@@ -89,13 +47,23 @@ import spack.version as vn
 import spack.version.git_ref_lookup
 from spack import traverse
 
+from .core import (
+    AspFunction,
+    NodeArgument,
+    ast_sym,
+    ast_type,
+    clingo,
+    clingo_cffi,
+    extract_args,
+    fn,
+    parse_files,
+    parse_term,
+)
 from .counter import FullDuplicatesCounter, MinimalDuplicatesCounter, NoDuplicatesCounter
 
 GitOrStandardVersion = Union[spack.version.GitVersion, spack.version.StandardVersion]
 
-# these are from clingo.ast and bootstrapped later
-ASTType = None
-parse_files = None
+TransformFunction = Callable[["spack.spec.Spec", List[AspFunction]], List[AspFunction]]
 
 #: Enable the addition of a runtime node
 WITH_RUNTIME = sys.platform != "win32"
@@ -120,27 +88,11 @@ DEFAULT_OUTPUT_CONFIGURATION = OutputConfiguration(
 
 def default_clingo_control():
     """Return a control object with the default settings used in Spack"""
-    control = clingo.Control()
+    control = clingo().Control()
     control.configuration.configuration = "tweety"
     control.configuration.solver.heuristic = "Domain"
     control.configuration.solver.opt_strategy = "usc,one"
     return control
-
-
-# backward compatibility functions for clingo ASTs
-def ast_getter(*names):
-    def getter(node):
-        for name in names:
-            result = getattr(node, name, None)
-            if result:
-                return result
-        raise KeyError("node has no such keys: %s" % names)
-
-    return getter
-
-
-ast_type = ast_getter("ast_type", "type")
-ast_sym = ast_getter("symbol", "term")
 
 
 class Provenance(enum.IntEnum):
@@ -301,92 +253,12 @@ def specify(spec):
     return spack.spec.Spec(spec)
 
 
-class AspObject:
-    """Object representing a piece of ASP code."""
-
-
-def _id(thing):
-    """Quote string if needed for it to be a valid identifier."""
-    if isinstance(thing, AspObject):
-        return thing
-    elif isinstance(thing, bool):
-        return '"%s"' % str(thing)
-    elif isinstance(thing, int):
-        return str(thing)
-    else:
-        return '"%s"' % str(thing)
-
-
-@llnl.util.lang.key_ordering
-class AspFunction(AspObject):
-    __slots__ = ["name", "args"]
-
-    def __init__(self, name, args=None):
-        self.name = name
-        self.args = () if args is None else tuple(args)
-
-    def _cmp_key(self):
-        return self.name, self.args
-
-    def __call__(self, *args):
-        """Return a new instance of this function with added arguments.
-
-        Note that calls are additive, so you can do things like::
-
-            >>> attr = AspFunction("attr")
-            attr()
-
-            >>> attr("version")
-            attr("version")
-
-            >>> attr("version")("foo")
-            attr("version", "foo")
-
-            >>> v = AspFunction("attr", "version")
-            attr("version")
-
-            >>> v("foo", "bar")
-            attr("version", "foo", "bar")
-
-        """
-        return AspFunction(self.name, self.args + args)
-
-    def symbol(self, positive=True):
-        def argify(arg):
-            if isinstance(arg, bool):
-                return clingo.String(str(arg))
-            elif isinstance(arg, int):
-                return clingo.Number(arg)
-            elif isinstance(arg, AspFunction):
-                return clingo.Function(arg.name, [argify(x) for x in arg.args], positive=positive)
-            else:
-                return clingo.String(str(arg))
-
-        return clingo.Function(self.name, [argify(arg) for arg in self.args], positive=positive)
-
-    def __str__(self):
-        return "%s(%s)" % (self.name, ", ".join(str(_id(arg)) for arg in self.args))
-
-    def __repr__(self):
-        return str(self)
-
-
-class AspFunctionBuilder:
-    def __getattr__(self, name):
-        return AspFunction(name)
-
-
-fn = AspFunctionBuilder()
-
-TransformFunction = Callable[[spack.spec.Spec, List[AspFunction]], List[AspFunction]]
-
-
 def remove_node(spec: spack.spec.Spec, facts: List[AspFunction]) -> List[AspFunction]:
     """Transformation that removes all "node" and "virtual_node" from the input list of facts."""
     return list(filter(lambda x: x.args[0] not in ("node", "virtual_node"), facts))
 
 
-def _create_counter(specs, tests):
+def _create_counter(specs: List[spack.spec.Spec], tests: bool):
     strategy = spack.config.CONFIG.get("concretizer:duplicates:strategy", "none")
     if strategy == "full":
         return FullDuplicatesCounter(specs, tests=tests)
@@ -539,7 +411,7 @@ class Result:
         """
         Raise an appropriate error if the result is unsatisfiable.
 
-        The error is an InternalConcretizerError, and includes the minimized cores
+        The error is an SolverError, and includes the minimized cores
         resulting from the solve, formatted to be human readable.
         """
         if self.satisfiable:
@@ -550,7 +422,7 @@ class Result:
             constraints = constraints[0]
 
         conflicts = self.format_minimal_cores()
-        raise InternalConcretizerError(constraints, conflicts=conflicts)
+        raise SolverError(constraints, conflicts=conflicts)
 
     @property
     def specs(self):
@@ -563,7 +435,10 @@ class Result:
 
     @property
     def unsolved_specs(self):
-        """List of abstract input specs that were not solved."""
+        """List of tuples pairing abstract input specs that were not
+        solved with their associated candidate spec from the solver
+        (if the solve completed).
+        """
         if self._unsolved_specs is None:
             self._compute_specs_from_answer_set()
         return self._unsolved_specs
@@ -577,7 +452,7 @@ class Result:
     def _compute_specs_from_answer_set(self):
         if not self.satisfiable:
             self._concrete_specs = []
-            self._unsolved_specs = self.abstract_specs
+            self._unsolved_specs = list((x, None) for x in self.abstract_specs)
             self._concrete_specs_by_input = {}
             return
 
@@ -598,7 +473,22 @@ class Result:
                 self._concrete_specs.append(answer[node])
                 self._concrete_specs_by_input[input_spec] = answer[node]
             else:
-                self._unsolved_specs.append(input_spec)
+                self._unsolved_specs.append((input_spec, candidate))
+
+    @staticmethod
+    def format_unsolved(unsolved_specs):
+        """Create a message providing info on unsolved user specs and for
+        each one show the associated candidate spec from the solver (if
+        there is one).
+        """
+        msg = "Unsatisfied input specs:"
+        for input_spec, candidate in unsolved_specs:
+            msg += f"\n\tInput spec: {str(input_spec)}"
+            if candidate:
+                msg += f"\n\tCandidate spec: {str(candidate)}"
+            else:
+                msg += "\n\t(No candidate specs from solver)"
+        return msg
 
 
 def _normalize_packages_yaml(packages_yaml):
@@ -661,72 +551,6 @@ def _spec_with_default_name(spec_str, name):
     if not spec.name:
         spec.name = name
     return spec
-
-
-def bootstrap_clingo():
-    global clingo, ASTType, parse_files
-
-    if not clingo:
-        import spack.bootstrap
-
-        with spack.bootstrap.ensure_bootstrap_configuration():
-            spack.bootstrap.ensure_core_dependencies()
-            import clingo
-
-    from clingo.ast import ASTType
-
-    try:
-        from clingo.ast import parse_files
-    except ImportError:
-        # older versions of clingo have this one namespace up
-        from clingo import parse_files
-
-
-class NodeArgument(NamedTuple):
-    id: str
-    pkg: str
-
-
-def intermediate_repr(sym):
-    """Returns an intermediate representation of clingo models for Spack's spec builder.
-
-    Currently, transforms symbols from clingo models either to strings or to NodeArgument objects.
-
-    Returns:
-        This will turn a ``clingo.Symbol`` into a string or NodeArgument, or a sequence of
-        ``clingo.Symbol`` objects into a tuple of those objects.
-    """
-    # TODO: simplify this when we no longer have to support older clingo versions.
-    if isinstance(sym, (list, tuple)):
-        return tuple(intermediate_repr(a) for a in sym)
-
-    try:
-        if sym.name == "node":
-            return NodeArgument(
-                id=intermediate_repr(sym.arguments[0]), pkg=intermediate_repr(sym.arguments[1])
-            )
-    except RuntimeError:
-        # This happens when using clingo w/ CFFI and trying to access ".name" for symbols
-        # that are not functions
-        pass
-
-    if clingo_cffi:
-        # Clingo w/ CFFI will throw an exception on failure
-        try:
-            return sym.string
-        except RuntimeError:
-            return str(sym)
-    else:
-        return sym.string or str(sym)
-
-
-def extract_args(model, predicate_name):
-    """Extract the arguments to predicates with the provided name from a model.
-
-    Pull out all the predicates with name ``predicate_name`` from the model, and
-    return their intermediate representation.
-    """
-    return [intermediate_repr(sym.arguments) for sym in model if sym.name == predicate_name]
 
 
 class ErrorHandler:
@@ -830,7 +654,7 @@ class ErrorHandler:
         if not initial_error_args:
             return
 
-        error_causation = clingo.Control()
+        error_causation = clingo().Control()
 
         parent_dir = pathlib.Path(__file__).parent
         errors_lp = parent_dir / "error_messages.lp"
@@ -881,54 +705,9 @@ class PyclingoDriver:
             cores (bool): whether to generate unsatisfiable cores for better
                 error reporting.
         """
-        bootstrap_clingo()
-
-        self.out = llnl.util.lang.Devnull()
         self.cores = cores
-
-        # These attributes are part of the object, but will be reset
-        # at each call to solve
+        # This attribute will be reset at each call to solve
         self.control = None
-        self.backend = None
-        self.assumptions = None
-
-    def title(self, name, char):
-        self.out.write("\n")
-        self.out.write("%" + (char * 76))
-        self.out.write("\n")
-        self.out.write("%% %s\n" % name)
-        self.out.write("%" + (char * 76))
-        self.out.write("\n")
-
-    def h1(self, name):
-        self.title(name, "=")
-
-    def h2(self, name):
-        self.title(name, "-")
-
-    def newline(self):
-        self.out.write("\n")
-
-    def fact(self, head):
-        """ASP fact (a rule without a body).
-
-        Arguments:
-            head (AspFunction): ASP function to generate as fact
-        """
-        symbol = head.symbol() if hasattr(head, "symbol") else head
-
-        # This is commented out to avoid evaluating str(symbol) when we have no stream
-        if not isinstance(self.out, llnl.util.lang.Devnull):
-            self.out.write(f"{str(symbol)}.\n")
-
-        atom = self.backend.add_atom(symbol)
-
-        # Only functions relevant for constructing bug reports for bad error messages
-        # are assumptions, and only when using cores.
-        choice = self.cores and symbol.name == "internal_error"
-        self.backend.add_rule([atom], [], choice=choice)
-        if choice:
-            self.assumptions.append(atom)
 
     def solve(self, setup, specs, reuse=None, output=None, control=None, allow_deprecated=False):
         """Set up the input and solve for dependencies of ``specs``.
@@ -948,49 +727,24 @@ class PyclingoDriver:
             solve, and the internal statistics from clingo.
         """
         output = output or DEFAULT_OUTPUT_CONFIGURATION
-        # allow solve method to override the output stream
-        if output.out is not None:
-            self.out = output.out
-
         timer = spack.util.timer.Timer()
 
         # Initialize the control object for the solver
         self.control = control or default_clingo_control()
-        # set up the problem -- this generates facts and rules
-        self.assumptions = []
+
         timer.start("setup")
-        with self.control.backend() as backend:
-            self.backend = backend
-            setup.setup(self, specs, reuse=reuse, allow_deprecated=allow_deprecated)
+        asp_problem = setup.setup(specs, reuse=reuse, allow_deprecated=allow_deprecated)
+        if output.out is not None:
+            output.out.write(asp_problem)
+        if output.setup_only:
+            return Result(specs), None, None
         timer.stop("setup")
 
         timer.start("load")
-        # read in the main ASP program and display logic -- these are
-        # handwritten, not generated, so we load them as resources
-        parent_dir = os.path.dirname(__file__)
-
-        # extract error messages from concretize.lp by inspecting its AST
-        with self.backend:
-
-            def visit(node):
-                if ast_type(node) == ASTType.Rule:
-                    for term in node.body:
-                        if ast_type(term) == ASTType.Literal:
-                            if ast_type(term.atom) == ASTType.SymbolicAtom:
-                                name = ast_sym(term.atom).name
-                                if name == "internal_error":
-                                    arg = ast_sym(ast_sym(term.atom).arguments[0])
-                                    self.fact(AspFunction(name)(arg.string))
-
-            self.h1("Error messages")
-            path = os.path.join(parent_dir, "concretize.lp")
-            parse_files([path], visit)
-
-        # If we're only doing setup, just return an empty solve result
-        if output.setup_only:
-            return Result(specs), None, None
-
+        # Add the problem instance
+        self.control.add("base", [], asp_problem)
         # Load the file itself
+        parent_dir = os.path.dirname(__file__)
         self.control.load(os.path.join(parent_dir, "concretize.lp"))
         self.control.load(os.path.join(parent_dir, "heuristic.lp"))
         if spack.config.CONFIG.get("concretizer:duplicates:strategy", "none") != "none":
@@ -1016,12 +770,12 @@ class PyclingoDriver:
             models.append((model.cost, model.symbols(shown=True, terms=True)))
 
         solve_kwargs = {
-            "assumptions": self.assumptions,
+            "assumptions": setup.assumptions,
             "on_model": on_model,
             "on_core": cores.append,
         }
 
-        if clingo_cffi:
+        if clingo_cffi():
             solve_kwargs["on_unsat"] = cores.append
 
         timer.start("solve")
@@ -1068,6 +822,13 @@ class PyclingoDriver:
         if output.stats:
             print("Statistics:")
             pprint.pprint(self.control.statistics)
+
+        if result.unsolved_specs and setup.concretize_everything:
+            unsolved_str = Result.format_unsolved(result.unsolved_specs)
+            raise InternalConcretizerError(
+                "Internal Spack error: the solver completed but produced specs"
+                f" that do not satisfy the request.\n\t{unsolved_str}"
+            )
 
         return result, timer, self.control.statistics
 
@@ -1136,34 +897,41 @@ class ConcreteSpecsByHash(collections.abc.Mapping):
         return iter(self.data)
 
 
+# types for condition caching in solver setup
+ConditionSpecKey = Tuple[str, Optional[TransformFunction]]
+ConditionIdFunctionPair = Tuple[int, List[AspFunction]]
+ConditionSpecCache = Dict[str, Dict[ConditionSpecKey, ConditionIdFunctionPair]]
+
+
 class SpackSolverSetup:
     """Class to set up and run a Spack concretization solve."""
 
-    def __init__(self, tests=False):
-        self.gen = None  # set by setup()
+    def __init__(self, tests: bool = False):
+        # these are all initialized in setup()
+        self.gen: "ProblemInstanceBuilder" = ProblemInstanceBuilder()
+        self.possible_virtuals: Set[str] = set()
 
-        self.declared_versions = collections.defaultdict(list)
-        self.possible_versions = collections.defaultdict(set)
-        self.deprecated_versions = collections.defaultdict(set)
+        self.assumptions: List[Tuple["clingo.Symbol", bool]] = []  # type: ignore[name-defined]
+        self.declared_versions: Dict[str, List[DeclaredVersion]] = collections.defaultdict(list)
+        self.possible_versions: Dict[str, Set[GitOrStandardVersion]] = collections.defaultdict(set)
+        self.deprecated_versions: Dict[str, Set[GitOrStandardVersion]] = collections.defaultdict(
+            set
+        )
 
-        self.possible_virtuals = None
-        self.possible_compilers = []
-        self.possible_oses = set()
-        self.variant_values_from_specs = set()
-        self.version_constraints = set()
-        self.target_constraints = set()
-        self.default_targets = []
-        self.compiler_version_constraints = set()
-        self.post_facts = []
+        self.possible_compilers: List = []
+        self.possible_oses: Set = set()
+        self.variant_values_from_specs: Set = set()
+        self.version_constraints: Set = set()
+        self.target_constraints: Set = set()
+        self.default_targets: List = []
+        self.compiler_version_constraints: Set = set()
+        self.post_facts: List = []
 
-        # (ID, CompilerSpec) -> dictionary of attributes
-        self.compiler_info = collections.defaultdict(dict)
+        self.reusable_and_possible: ConcreteSpecsByHash = ConcreteSpecsByHash()
 
-        self.reusable_and_possible = ConcreteSpecsByHash()
-
-        self._id_counter = itertools.count()
-        self._trigger_cache = collections.defaultdict(dict)
-        self._effect_cache = collections.defaultdict(dict)
+        self._id_counter: Iterator[int] = itertools.count()
+        self._trigger_cache: ConditionSpecCache = collections.defaultdict(dict)
+        self._effect_cache: ConditionSpecCache = collections.defaultdict(dict)
 
         # Caches to optimize the setup phase of the solver
         self.target_specs_cache = None
@@ -1175,8 +943,8 @@ class SpackSolverSetup:
         self.concretize_everything = True
 
         # Set during the call to setup
-        self.pkgs = None
-        self.explicitly_required_namespaces = {}
+        self.pkgs: Set[str] = set()
+        self.explicitly_required_namespaces: Dict[str, str] = {}
 
     def pkg_version_rules(self, pkg):
         """Output declared versions of a package.
@@ -1460,6 +1228,38 @@ class SpackSolverSetup:
 
             self.gen.newline()
 
+    def _get_condition_id(
+        self,
+        named_cond: spack.spec.Spec,
+        cache: ConditionSpecCache,
+        body: bool,
+        transform: Optional[TransformFunction] = None,
+    ) -> int:
+        """Get the id for one half of a condition (either a trigger or an imposed constraint).
+
+        Construct a key from the condition spec and any associated transformation, and
+        cache the ASP functions that they imply. The saved functions will be output
+        later in ``trigger_rules()`` and ``effect_rules()``.
+
+        Returns:
+            The id of the cached trigger or effect.
+
+        """
+        pkg_cache = cache[named_cond.name]
+
+        named_cond_key = (str(named_cond), transform)
+        result = pkg_cache.get(named_cond_key)
+        if result:
+            return result[0]
+
+        cond_id = next(self._id_counter)
+        requirements = self.spec_clauses(named_cond, body=body)
+        if transform:
+            requirements = transform(named_cond, requirements)
+        pkg_cache[named_cond_key] = (cond_id, requirements)
+
+        return cond_id
+
     def condition(
         self,
         required_spec: spack.spec.Spec,
@@ -1485,7 +1285,8 @@ class SpackSolverSetup:
         """
         named_cond = required_spec.copy()
         named_cond.name = named_cond.name or name
-        assert named_cond.name, "must provide name for anonymous conditions!"
+        if not named_cond.name:
+            raise ValueError(f"Must provide a name for anonymous condition: '{named_cond}'")
 
         # Check if we can emit the requirements before updating the condition ID counter.
         # In this way, if a condition can't be emitted but the exception is handled in the caller,
@@ -1495,35 +1296,19 @@ class SpackSolverSetup:
         self.gen.fact(fn.pkg_fact(named_cond.name, fn.condition(condition_id)))
         self.gen.fact(fn.condition_reason(condition_id, msg))
 
-        cache = self._trigger_cache[named_cond.name]
-
-        named_cond_key = (str(named_cond), transform_required)
-        if named_cond_key not in cache:
-            trigger_id = next(self._id_counter)
-            requirements = self.spec_clauses(named_cond, body=True, required_from=name)
-
-            if transform_required:
-                requirements = transform_required(named_cond, requirements)
-
-            cache[named_cond_key] = (trigger_id, requirements)
-        trigger_id, requirements = cache[named_cond_key]
+        trigger_id = self._get_condition_id(
+            named_cond, cache=self._trigger_cache, body=True, transform=transform_required
+        )
         self.gen.fact(fn.pkg_fact(named_cond.name, fn.condition_trigger(condition_id, trigger_id)))
 
         if not imposed_spec:
             return condition_id
 
-        cache = self._effect_cache[named_cond.name]
-        imposed_spec_key = (str(imposed_spec), transform_imposed)
-        if imposed_spec_key not in cache:
-            effect_id = next(self._id_counter)
-            requirements = self.spec_clauses(imposed_spec, body=False, required_from=name)
-
-            if transform_imposed:
-                requirements = transform_imposed(imposed_spec, requirements)
-
-            cache[imposed_spec_key] = (effect_id, requirements)
-        effect_id, requirements = cache[imposed_spec_key]
+        effect_id = self._get_condition_id(
+            imposed_spec, cache=self._effect_cache, body=False, transform=transform_imposed
+        )
         self.gen.fact(fn.pkg_fact(named_cond.name, fn.condition_effect(condition_id, effect_id)))
+
         return condition_id
 
     def impose(self, condition_id, imposed_spec, node=True, name=None, body=False):
@@ -1625,23 +1410,13 @@ class SpackSolverSetup:
 
     def provider_defaults(self):
         self.gen.h2("Default virtual providers")
-        msg = (
-            "Internal Error: possible_virtuals is not populated. Please report to the spack"
-            " maintainers"
-        )
-        assert self.possible_virtuals is not None, msg
         self.virtual_preferences(
             "all", lambda v, p, i: self.gen.fact(fn.default_provider_preference(v, p, i))
         )
 
     def provider_requirements(self):
         self.gen.h2("Requirements on virtual providers")
-        msg = (
-            "Internal Error: possible_virtuals is not populated. Please report to the spack"
-            " maintainers"
-        )
         parser = RequirementParser(spack.config.CONFIG)
-        assert self.possible_virtuals is not None, msg
         for virtual_str in sorted(self.possible_virtuals):
             rules = parser.rules_from_virtual(virtual_str)
             if rules:
@@ -1768,15 +1543,12 @@ class SpackSolverSetup:
             for local_idx, spec in enumerate(external_specs):
                 msg = "%s available as external when satisfying %s" % (spec.name, spec)
 
-                def external_imposition(input_spec, _):
-                    return [fn.attr("external_conditions_hold", input_spec.name, local_idx)]
+                def external_imposition(input_spec, requirements):
+                    return requirements + [
+                        fn.attr("external_conditions_hold", input_spec.name, local_idx)
+                    ]
 
-                self.condition(
-                    spec,
-                    spack.spec.Spec(spec.name),
-                    msg=msg,
-                    transform_imposed=external_imposition,
-                )
+                self.condition(spec, spec, msg=msg, transform_imposed=external_imposition)
                 self.possible_versions[spec.name].add(spec.version)
                 self.gen.newline()
 
@@ -1843,35 +1615,57 @@ class SpackSolverSetup:
                         fn.compiler_version_flag(compiler.name, compiler.version, name, flag)
                     )
 
-    def spec_clauses(self, *args, **kwargs):
-        """Wrap a call to `_spec_clauses()` into a try/except block that
-        raises a comprehensible error message in case of failure.
+    def spec_clauses(
+        self,
+        spec: spack.spec.Spec,
+        *,
+        body: bool = False,
+        transitive: bool = True,
+        expand_hashes: bool = False,
+        concrete_build_deps=False,
+        required_from: Optional[str] = None,
+    ) -> List[AspFunction]:
+        """Wrap a call to `_spec_clauses()` into a try/except block with better error handling.
+
+        Arguments are as for ``_spec_clauses()`` except ``required_from``.
+
+        Arguments:
+            required_from: name of package that caused this call.
         """
-        requestor = kwargs.pop("required_from", None)
         try:
-            clauses = self._spec_clauses(*args, **kwargs)
+            clauses = self._spec_clauses(
+                spec,
+                body=body,
+                transitive=transitive,
+                expand_hashes=expand_hashes,
+                concrete_build_deps=concrete_build_deps,
+            )
         except RuntimeError as exc:
             msg = str(exc)
-            if requestor:
-                msg += ' [required from package "{0}"]'.format(requestor)
+            if required_from:
+                msg += f" [required from package '{required_from}']"
             raise RuntimeError(msg)
         return clauses
 
     def _spec_clauses(
-        self, spec, body=False, transitive=True, expand_hashes=False, concrete_build_deps=False
-    ):
+        self,
+        spec: spack.spec.Spec,
+        *,
+        body: bool = False,
+        transitive: bool = True,
+        expand_hashes: bool = False,
+        concrete_build_deps: bool = False,
+    ) -> List[AspFunction]:
         """Return a list of clauses for a spec mandates are true.
 
         Arguments:
-            spec (spack.spec.Spec): the spec to analyze
-            body (bool): if True, generate clauses to be used in rule bodies
-                (final values) instead of rule heads (setters).
-            transitive (bool): if False, don't generate clauses from
-                dependencies (default True)
-            expand_hashes (bool): if True, descend into hashes of concrete specs
-                (default False)
-            concrete_build_deps (bool): if False, do not include pure build deps
-                of concrete specs (as they have no effect on runtime constraints)
+            spec: the spec to analyze
+            body: if True, generate clauses to be used in rule bodies (final values) instead
+                of rule heads (setters).
+            transitive: if False, don't generate clauses from dependencies (default True)
+            expand_hashes: if True, descend into hashes of concrete specs (default False)
+            concrete_build_deps: if False, do not include pure build deps of concrete specs
+                (as they have no effect on runtime constraints)
 
         Normally, if called with ``transitive=True``, ``spec_clauses()`` just generates
         hashes for the dependency requirements of concrete specs. If ``expand_hashes``
@@ -1881,36 +1675,7 @@ class SpackSolverSetup:
         """
         clauses = []
 
-        # TODO: do this with consistent suffixes.
-        class Head:
-            node = fn.attr("node")
-            virtual_node = fn.attr("virtual_node")
-            node_platform = fn.attr("node_platform_set")
-            node_os = fn.attr("node_os_set")
-            node_target = fn.attr("node_target_set")
-            variant_value = fn.attr("variant_set")
-            node_compiler = fn.attr("node_compiler_set")
-            node_compiler_version = fn.attr("node_compiler_version_set")
-            node_flag = fn.attr("node_flag_set")
-            node_flag_source = fn.attr("node_flag_source")
-            node_flag_propagate = fn.attr("node_flag_propagate")
-            variant_propagation_candidate = fn.attr("variant_propagation_candidate")
-
-        class Body:
-            node = fn.attr("node")
-            virtual_node = fn.attr("virtual_node")
-            node_platform = fn.attr("node_platform")
-            node_os = fn.attr("node_os")
-            node_target = fn.attr("node_target")
-            variant_value = fn.attr("variant_value")
-            node_compiler = fn.attr("node_compiler")
-            node_compiler_version = fn.attr("node_compiler_version")
-            node_flag = fn.attr("node_flag")
-            node_flag_source = fn.attr("node_flag_source")
-            node_flag_propagate = fn.attr("node_flag_propagate")
-            variant_propagation_candidate = fn.attr("variant_propagation_candidate")
-
-        f = Body if body else Head
+        f: Union[Type[_Head], Type[_Body]] = _Body if body else _Head
 
         if spec.name:
             clauses.append(f.node(spec.name) if not spec.virtual else f.virtual_node(spec.name))
@@ -1999,8 +1764,9 @@ class SpackSolverSetup:
         # dependencies
         if spec.concrete:
             # older specs do not have package hashes, so we have to do this carefully
-            if getattr(spec, "_package_hash", None):
-                clauses.append(fn.attr("package_hash", spec.name, spec._package_hash))
+            package_hash = getattr(spec, "_package_hash", None)
+            if package_hash:
+                clauses.append(fn.attr("package_hash", spec.name, package_hash))
             clauses.append(fn.attr("hash", spec.name, spec.dag_hash()))
 
         edges = spec.edges_from_dependents()
@@ -2059,7 +1825,7 @@ class SpackSolverSetup:
         return clauses
 
     def define_package_versions_and_validate_preferences(
-        self, possible_pkgs, *, require_checksum: bool, allow_deprecated: bool
+        self, possible_pkgs: Set[str], *, require_checksum: bool, allow_deprecated: bool
     ):
         """Declare any versions in specs not declared in packages."""
         packages_yaml = spack.config.get("packages")
@@ -2092,7 +1858,7 @@ class SpackSolverSetup:
             if pkg_name not in packages_yaml or "version" not in packages_yaml[pkg_name]:
                 continue
 
-            version_defs = []
+            version_defs: List[GitOrStandardVersion] = []
 
             for vstr in packages_yaml[pkg_name]["version"]:
                 v = vn.ver(vstr)
@@ -2303,13 +2069,6 @@ class SpackSolverSetup:
 
     def virtual_providers(self):
         self.gen.h2("Virtual providers")
-        msg = (
-            "Internal Error: possible_virtuals is not populated. Please report to the spack"
-            " maintainers"
-        )
-        assert self.possible_virtuals is not None, msg
-
-        # what provides what
         for vspec in sorted(self.possible_virtuals):
             self.gen.fact(fn.virtual(vspec))
         self.gen.newline()
@@ -2506,12 +2265,11 @@ class SpackSolverSetup:
 
     def setup(
         self,
-        driver: PyclingoDriver,
-        specs: Sequence[spack.spec.Spec],
+        specs: List[spack.spec.Spec],
         *,
         reuse: Optional[List[spack.spec.Spec]] = None,
         allow_deprecated: bool = False,
-    ):
+    ) -> str:
         """Generate an ASP program with relevant constraints for specs.
 
         This calls methods on the solve driver to set up the problem with
@@ -2519,7 +2277,6 @@ class SpackSolverSetup:
         specs, as well as constraints from the specs themselves.
 
         Arguments:
-            driver: driver instance of this solve
             specs: list of Specs to solve
             reuse: list of concrete specs that can be reused
             allow_deprecated: if True adds deprecated versions into the solve
@@ -2545,9 +2302,7 @@ class SpackSolverSetup:
             if node.namespace is not None:
                 self.explicitly_required_namespaces[node.name] = node.namespace
 
-        # driver is used by all the functions below to add facts and
-        # rules to generate an ASP program.
-        self.gen = driver
+        self.gen = ProblemInstanceBuilder()
 
         if not allow_deprecated:
             self.gen.fact(fn.deprecated_versions_not_allowed())
@@ -2650,6 +2405,29 @@ class SpackSolverSetup:
 
         self.gen.h1("Target Constraints")
         self.define_target_constraints()
+
+        self.gen.h1("Internal errors")
+        self.internal_errors()
+
+        return self.gen.value()
+
+    def internal_errors(self):
+        parent_dir = os.path.dirname(__file__)
+
+        def visit(node):
+            if ast_type(node) == clingo().ast.ASTType.Rule:
+                for term in node.body:
+                    if ast_type(term) == clingo().ast.ASTType.Literal:
+                        if ast_type(term.atom) == clingo().ast.ASTType.SymbolicAtom:
+                            name = ast_sym(term.atom).name
+                            if name == "internal_error":
+                                arg = ast_sym(ast_sym(term.atom).arguments[0])
+                                symbol = AspFunction(name)(arg.string)
+                                self.assumptions.append((parse_term(str(symbol)), True))
+                                self.gen.asp_problem.append(f"{{ {symbol} }}.\n")
+
+        path = os.path.join(parent_dir, "concretize.lp")
+        parse_files([path], visit)
 
     def define_runtime_constraints(self):
         """Define the constraints to be imposed on the runtimes"""
@@ -2779,6 +2557,83 @@ class SpackSolverSetup:
             namespace = self.explicitly_required_namespaces[pkg_name]
             request = f"{namespace}.{pkg_name}"
         return spack.repo.PATH.get_pkg_class(request)
+
+
+class _Head:
+    """ASP functions used to express spec clauses in the HEAD of a rule"""
+
+    node = fn.attr("node")
+    virtual_node = fn.attr("virtual_node")
+    node_platform = fn.attr("node_platform_set")
+    node_os = fn.attr("node_os_set")
+    node_target = fn.attr("node_target_set")
+    variant_value = fn.attr("variant_set")
+    node_compiler = fn.attr("node_compiler_set")
+    node_compiler_version = fn.attr("node_compiler_version_set")
+    node_flag = fn.attr("node_flag_set")
+    node_flag_source = fn.attr("node_flag_source")
+    node_flag_propagate = fn.attr("node_flag_propagate")
+    variant_propagation_candidate = fn.attr("variant_propagation_candidate")
+
+
+class _Body:
+    """ASP functions used to express spec clauses in the BODY of a rule"""
+
+    node = fn.attr("node")
+    virtual_node = fn.attr("virtual_node")
+    node_platform = fn.attr("node_platform")
+    node_os = fn.attr("node_os")
+    node_target = fn.attr("node_target")
+    variant_value = fn.attr("variant_value")
+    node_compiler = fn.attr("node_compiler")
+    node_compiler_version = fn.attr("node_compiler_version")
+    node_flag = fn.attr("node_flag")
+    node_flag_source = fn.attr("node_flag_source")
+    node_flag_propagate = fn.attr("node_flag_propagate")
+    variant_propagation_candidate = fn.attr("variant_propagation_candidate")
+
+
+class ProblemInstanceBuilder:
+    """Provides an interface to construct a problem instance.
+
+    Once all the facts and rules have been added, the problem instance can be retrieved with:
+
+    >>> builder = ProblemInstanceBuilder()
+    >>> ...
+    >>> problem_instance = builder.value()
+
+    The problem instance can be added directly to the "control" structure of clingo.
+    """
+
+    def __init__(self):
+        self.asp_problem = []
+
+    def fact(self, atom: AspFunction) -> None:
+        symbol = atom.symbol() if hasattr(atom, "symbol") else atom
+        self.asp_problem.append(f"{str(symbol)}.\n")
+
+    def append(self, rule: str) -> None:
+        self.asp_problem.append(rule)
+
+    def title(self, header: str, char: str) -> None:
+        self.asp_problem.append("\n")
+        self.asp_problem.append("%" + (char * 76))
+        self.asp_problem.append("\n")
+        self.asp_problem.append(f"% {header}\n")
+        self.asp_problem.append("%" + (char * 76))
+        self.asp_problem.append("\n")
+
+    def h1(self, header: str) -> None:
+        self.title(header, "=")
+
+    def h2(self, header: str) -> None:
+        self.title(header, "-")
+
+    def newline(self):
+        self.asp_problem.append("\n")
+
+    def value(self) -> str:
+        return "".join(self.asp_problem)
 
 
 class RequirementParser:
@@ -3088,9 +2943,7 @@ class RuntimePropertyRecorder:
         self._setup.gen.h2("Runtimes: rules")
         self._setup.gen.newline()
         for rule in self.rules:
-            if not isinstance(self._setup.gen.out, llnl.util.lang.Devnull):
-                self._setup.gen.out.write(rule)
-            self._setup.gen.control.add("base", [], rule)
+            self._setup.gen.append(rule)
 
         self._setup.gen.h2("Runtimes: conditions")
         for runtime_pkg in spack.repo.PATH.packages_with_tags("runtime"):
@@ -3630,15 +3483,13 @@ class Solver:
             if not result.satisfiable or not result.specs:
                 break
 
-            input_specs = result.unsolved_specs
+            input_specs = list(x for (x, y) in result.unsolved_specs)
             for spec in result.specs:
                 reusable_specs.extend(spec.traverse())
 
 
 class UnsatisfiableSpecError(spack.error.UnsatisfiableSpecError):
-    """
-    Subclass for new constructor signature for new concretizer
-    """
+    """There was an issue with the spec that was requested (i.e. a user error)."""
 
     def __init__(self, msg):
         super(spack.error.UnsatisfiableSpecError, self).__init__(msg)
@@ -3648,8 +3499,21 @@ class UnsatisfiableSpecError(spack.error.UnsatisfiableSpecError):
 
 
 class InternalConcretizerError(spack.error.UnsatisfiableSpecError):
-    """
-    Subclass for new constructor signature for new concretizer
+    """Errors that indicate a bug in Spack."""
+
+    def __init__(self, msg):
+        super(spack.error.UnsatisfiableSpecError, self).__init__(msg)
+        self.provided = None
+        self.required = None
+        self.constraint_type = None
+
+
+class SolverError(InternalConcretizerError):
+    """For cases where the solver is unable to produce a solution.
+
+    Such cases are unexpected because we allow for solutions with errors,
+    so for example user specs that are over-constrained should still
+    get a solution.
     """
 
     def __init__(self, provided, conflicts):
@@ -3662,7 +3526,7 @@ class InternalConcretizerError(spack.error.UnsatisfiableSpecError):
         if conflicts:
             msg += ", errors are:" + "".join([f"\n    {conflict}" for conflict in conflicts])
 
-        super(spack.error.UnsatisfiableSpecError, self).__init__(msg)
+        super().__init__(msg)
 
         self.provided = provided
 

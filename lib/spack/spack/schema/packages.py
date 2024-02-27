@@ -5,8 +5,10 @@
 """Schema for packages.yaml configuration files.
 
 .. literalinclude:: _spack_root/lib/spack/spack/schema/packages.py
-   :lines: 13-
+   :lines: 14-
 """
+from typing import Any, Dict
+
 import spack.schema.environment
 
 permissions = {
@@ -91,7 +93,7 @@ package_attributes = {
 REQUIREMENT_URL = "https://spack.readthedocs.io/en/latest/packages_yaml.html#package-requirements"
 
 #: Properties for inclusion in other schemas
-properties = {
+properties: Dict[str, Any] = {
     "packages": {
         "type": "object",
         "default": {},
