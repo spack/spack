@@ -17,7 +17,7 @@ spack:
         tbb: [intel-tbb]
       variants: +mpi
     gl:
-      require: glx
+      require: osmesa
     elfutils:
       variants: ~nls
     gcc-runtime:
