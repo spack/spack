@@ -51,4 +51,3 @@ class Sfcgal(CMakePackage):
             if liblist:
                 break
         return liblist
-~ 
