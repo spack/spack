@@ -23,6 +23,8 @@ class PyJax(PythonPackage):
 
     license("Apache-2.0")
 
+    maintainers("adamjstewart", "jonas-eschle")
+
     version("0.4.25", sha256="a8ee189c782de2b7b2ffb64a8916da380b882a617e2769aa429b71d79747b982")
     version("0.4.24", sha256="4a6b6fd026ddd22653c7fa2fac1904c3de2dbe845b61ede08af9a5cc709662ae")
     version("0.4.23", sha256="2a229a5a758d1b803891b2eaed329723f6b15b4258b14dc0ccb1498c84963685")
