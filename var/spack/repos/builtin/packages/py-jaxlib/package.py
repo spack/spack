@@ -56,7 +56,8 @@ class PyJaxlib(PythonPackage, CudaPackage):
     depends_on("py-numpy@1.20:", when="@0.3:", type=("build", "run"))
     depends_on("py-numpy@1.18:", type=("build", "run"))
 
-    # depends_on("py-scipy@1.11.1:", when="python@3.12:", type=("build", "run"))  # not sure how to encode this, but also not really needed now
+    # not sure how to encode this, but also not really needed now
+    # depends_on("py-scipy@1.11.1:", when="python@3.12:", type=("build", "run"))
     depends_on("py-scipy@1.9:", when="@0.4.19:", type=("build", "run"))
     depends_on("py-scipy@1.7:", when="@0.4.7:", type=("build", "run"))
     depends_on("py-scipy@1.5:", type=("build", "run"))
