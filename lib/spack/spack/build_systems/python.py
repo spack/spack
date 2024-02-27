@@ -2,7 +2,10 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import functools
 import inspect
+import operator
 import os
 import re
 import shutil
@@ -169,6 +172,8 @@ class PythonExtension(spack.package_base.PackageBase):
                 fs.filter_file(
                     python_prefix, os.path.abspath(view.get_projection_for_spec(self.spec)), dst
                 )
+            else:
+                view.link(src, dst)
 
         # Finally re-target the symlinks that point to copied files.
         for src, dst in delayed_links:
@@ -178,7 +183,7 @@ class PythonExtension(spack.package_base.PackageBase):
             except (OSError, KeyError):
                 target = None
             if target:
-                os.symlink(target, dst)
+                os.symlink(os.path.relpath(target, os.path.dirname(dst)), dst)
             else:
                 view.link(src, dst, spec=self.spec)
 
@@ -366,16 +371,19 @@ class PythonPackage(PythonExtension):
         # Remove py- prefix in package name
         name = self.spec.name[3:]
 
-        # Headers may be in either location
+        # Headers should only be in include or platlib, but no harm in checking purelib too
         include = self.prefix.join(self.spec["python"].package.include).join(name)
         platlib = self.prefix.join(self.spec["python"].package.platlib).join(name)
-        headers = fs.find_all_headers(include) + fs.find_all_headers(platlib)
+        purelib = self.prefix.join(self.spec["python"].package.purelib).join(name)
+
+        headers_list = map(fs.find_all_headers, [include, platlib, purelib])
+        headers = functools.reduce(operator.add, headers_list)
 
         if headers:
             return headers
 
-        msg = "Unable to locate {} headers in {} or {}"
-        raise NoHeadersError(msg.format(self.spec.name, include, platlib))
+        msg = "Unable to locate {} headers in {}, {}, or {}"
+        raise NoHeadersError(msg.format(self.spec.name, include, platlib, purelib))
 
     @property
     def libs(self) -> LibraryList:
@@ -384,15 +392,19 @@ class PythonPackage(PythonExtension):
         # Remove py- prefix in package name
         name = self.spec.name[3:]
 
-        root = self.prefix.join(self.spec["python"].package.platlib).join(name)
+        # Libraries should only be in platlib, but no harm in checking purelib too
+        platlib = self.prefix.join(self.spec["python"].package.platlib).join(name)
+        purelib = self.prefix.join(self.spec["python"].package.purelib).join(name)
 
-        libs = fs.find_all_libraries(root, recursive=True)
+        find_all_libraries = functools.partial(fs.find_all_libraries, recursive=True)
+        libs_list = map(find_all_libraries, [platlib, purelib])
+        libs = functools.reduce(operator.add, libs_list)
 
         if libs:
             return libs
 
-        msg = "Unable to recursively locate {} libraries in {}"
-        raise NoLibrariesError(msg.format(self.spec.name, root))
+        msg = "Unable to recursively locate {} libraries in {} or {}"
+        raise NoLibrariesError(msg.format(self.spec.name, platlib, purelib))
 
 
 @spack.builder.builder("python_pip")

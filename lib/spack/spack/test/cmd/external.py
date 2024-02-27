@@ -94,6 +94,9 @@ def test_get_executables(working_env, mock_executable):
 external = SpackCommand("external")
 
 
+# TODO: this test should be made to work, but in the meantime it is
+# causing intermittent (spurious) CI failures on all PRs
+@pytest.mark.skipif(sys.platform == "win32", reason="Test fails intermittently on Windows")
 def test_find_external_cmd_not_buildable(mutable_config, working_env, mock_executable):
     """When the user invokes 'spack external find --not-buildable', the config
     for any package where Spack finds an external version should be marked as

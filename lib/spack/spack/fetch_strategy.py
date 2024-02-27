@@ -929,9 +929,12 @@ class GitFetchStrategy(VCSFetchStrategy):
         git_commands = []
         submodules = self.submodules
         if callable(submodules):
-            submodules = list(submodules(self.package))
-            git_commands.append(["submodule", "init", "--"] + submodules)
-            git_commands.append(["submodule", "update", "--recursive"])
+            submodules = submodules(self.package)
+            if submodules:
+                if isinstance(submodules, str):
+                    submodules = [submodules]
+                git_commands.append(["submodule", "init", "--"] + submodules)
+                git_commands.append(["submodule", "update", "--recursive"])
         elif submodules:
             git_commands.append(["submodule", "update", "--init", "--recursive"])
 
