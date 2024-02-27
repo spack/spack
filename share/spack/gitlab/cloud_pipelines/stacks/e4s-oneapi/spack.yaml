@@ -13,7 +13,6 @@ spack:
       - "%oneapi"
       providers:
         blas: [openblas]
-        mpi: [mpich]
         tbb: [intel-tbb]
       variants: +mpi
     elfutils:
@@ -38,14 +37,10 @@ spack:
         +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
     xz:
       variants: +pic
-    mesa:
-      version: [21.3.8]
     mpi:
       require: 'mpich@4:'
     mpich:
       require: '~wrapperrpath ~hwloc'
-    py-cryptography:
-      require: '@38.0.1'
     unzip:
       require: '%gcc'
     binutils:
@@ -63,8 +58,6 @@ spack:
       require: '%gcc'
     openssh:
       require: '%gcc'
-    libffi:
-      require: "@3.4.4"
     dyninst:
       require: "%gcc"
     bison:
