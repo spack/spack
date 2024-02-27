@@ -7,7 +7,7 @@ spack:
 
   packages:
     all:
-      require: '%gcc@11.4.0 target=neoverse_v1'
+      require: '%gcc target=neoverse_v1'
       providers:
         blas: [openblas]
         mpi: [mpich]
@@ -35,12 +35,9 @@ spack:
       require: mpich
     mpich:
       require: '~wrapperrpath ~hwloc'
-    ncurses:
-      require: '@6.3 +termlib'
     tbb:
       require: intel-tbb
     boost:
-      version: [1.79.0]
       variants: +atomic +chrono +container +date_time +exception +filesystem +graph
         +iostreams +locale +log +math +mpi +multithreaded +program_options +random
         +regex +serialization +shared +signals +stacktrace +system +test +thread +timer
@@ -173,7 +170,6 @@ spack:
   - vtk-m
   - zfp
   # --
-  # - archer                        # part of llvm +omp_tsan
   # - bricks ~cuda                  # not respecting target=aarch64?
   # - dealii                        # slepc: make[1]: *** internal error: invalid --jobserver-auth string 'fifo:/tmp/GMfifo1313'.
   # - geopm                         # geopm: https://github.com/spack/spack/issues/38795
@@ -351,7 +347,7 @@ spack:
   ci:
     pipeline-gen:
     - build-job:
-        image: "ghcr.io/spack/ubuntu20.04-runner-arm64-gcc-11.4:2023.08.01"
+        image: ecpe4s/ubuntu22.04-runner-arm64-gcc-11.4:2024.03.01
 
   cdash:
     build-group: E4S ARM Neoverse V1
