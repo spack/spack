@@ -6,14 +6,14 @@ import subprocess
 import sys
 
 
-def getpywin():
+def ensure_pywin32_installed():
     try:
         import win32con  # noqa: F401
     except ImportError:
-        print("pyWin32 not installed but is required...\nInstalling via pip:")
-        subprocess.check_call([sys.executable, "-m", "pip", "-q", "install", "--upgrade", "pip"])
-        subprocess.check_call([sys.executable, "-m", "pip", "-q", "install", "pywin32"])
+        print("pyWin32 not installed but is required.\nInstalling via pip:")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "pywin32"])
 
 
 if __name__ == "__main__":
-    getpywin()
+    ensure_pywin32_installed()
