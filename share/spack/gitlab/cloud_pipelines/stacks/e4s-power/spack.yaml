@@ -32,8 +32,6 @@ spack:
         +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
     xz:
       variants: +pic
-    mesa:
-      version: [21.3.8]
     mpi:
       require: mpich
     mpich:
@@ -74,7 +72,6 @@ spack:
   - drishti
   - dxt-explorer
   - dyninst
-  # - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 ~paraview +pnetcdf +sz +unifyfs +veloc ~visit +vtkm +zfp # +visit: libext, libxkbfile, libxrender, libxt, silo (https://github.com/spack/spack/issues/39538), cairo
   - exaworks
   - flecsi
   - flit
@@ -97,6 +94,7 @@ spack:
   - hypre
   - kokkos +openmp
   - kokkos-kernels +openmp
+  - laghos
   - lammps
   - lbann
   - legion
@@ -158,6 +156,7 @@ spack:
   - upcxx
   - wannier90
   - xyce +mpi +shared +pymi +pymi_static_tpls
+  # - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 ~paraview +pnetcdf +sz +unifyfs +veloc ~visit +vtkm +zfp # +visit: libext, libxkbfile, libxrender, libxt, silo (https://github.com/spack/spack/issues/39538), cairo
   # INCLUDED IN ECP DAV CPU
   - adios2
   - ascent
@@ -178,6 +177,7 @@ spack:
   # --
   # - dealii                                # fltk: https://github.com/spack/spack/issues/38791
   # - geopm                                 # geopm: https://github.com/spack/spack/issues/38798
+  # - glvis                                 # glvis: https://github.com/spack/spack/issues/42839
   # - libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp # py-numcodecs: gcc: error: unrecognized command line option '-mno-sse2'; did you mean '-mno-isel'? gcc: error: unrecognized command line option '-mno-avx2'
   # - phist +mpi                            # ghost@develop: gcc-9: error: unrecognized command line option '-march=native'; did you mean '-mcpu=native'?
   # - variorum                              # variorum: https://github.com/spack/spack/issues/38786
