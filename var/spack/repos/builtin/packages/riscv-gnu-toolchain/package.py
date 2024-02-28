@@ -142,8 +142,8 @@ class RiscvGnuToolchain(AutotoolsPackage):
     )
 
     variant('multilib', default=False, description="Enable multilib support")
-    variant('cmodel', default='medlow', values=('medlow', 'medany'), description="The name of the 
-    cmodel")
+    variant('cmodel', default='medlow', values=('medlow', 'medany'),
+            description="The name of the cmodel")
 
     def configure_args(self):
         args = super(RiscvGnuToolchain, self).configure_args()
