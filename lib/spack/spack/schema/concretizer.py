@@ -36,7 +36,10 @@ properties: Dict[str, Any] = {
                                 "items": {
                                     "type": "object",
                                     "properties": {
-                                        "type": {"type": "string", "enum": ["local", "mirror"]},
+                                        "type": {
+                                            "type": "string",
+                                            "enum": ["local", "mirror", "external"],
+                                        },
                                         "include": LIST_OF_SPECS,
                                         "exclude": LIST_OF_SPECS,
                                     },
