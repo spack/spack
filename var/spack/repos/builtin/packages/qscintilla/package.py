@@ -103,6 +103,7 @@ class Qscintilla(QMakePackage):
             )
 
             with open("pyproject.toml", "a") as tomlfile:
+                # https://pyqt-builder.readthedocs.io/en/latest/pyproject_toml.html
                 tomlfile.write(f'\n[tool.sip.project]\nsip-include-dirs = ["{sip_inc_dir}"]\n')
                 tomlfile.write(f'\n[tool.sip.builder]\nqmake-settings = ["QT += widgets", "QT += printsupport"]\n')
 
