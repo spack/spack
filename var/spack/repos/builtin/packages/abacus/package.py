@@ -10,7 +10,7 @@ from spack.build_systems import cmake, makefile
 from spack.package import *
 
 
-class Abacus(MakefilePackage,CMakePackage):
+class Abacus(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     """ABACUS (Atomic-orbital Based Ab-initio Computation at UStc)
     is an open-source computer code package aiming
     for large-scale electronic-structure simulations
@@ -28,6 +28,7 @@ class Abacus(MakefilePackage,CMakePackage):
 
     version("develop", branch="develop")
 
+    version("3.5.3", sha256="f56066473dbd562f170f40809738076c0862321499ae7fcbd71508581f9ba7bf")
     version("3.5.2", sha256="b4823db244bc68cfa2cff0b4d33140051f56925b19c411f136ce27fb8e1ed3be")
     version("3.5.1", sha256="0867b74ef866033d0120f8b1040fdae8f1dc72a113ffdac6b472b2c8bf1eaf0e")
     version("3.5.0", sha256="0bc43af9bdb5b6a7bc30a72d680bb5054932ecedeb6fd3f4cdd3c4be0651c251")
@@ -85,7 +86,7 @@ class Abacus(MakefilePackage,CMakePackage):
         description="Enable optimised diagonalisation routines from ELPA",
         when="+lcao",
     )
-    variant("mathlib", default=True, description="Enable ABACUS's builtin libm")
+    variant("mathlib", default=False, description="Enable ABACUS's builtin libm")
     variant(
         "tests", 
         default=False, 
@@ -98,6 +99,12 @@ class Abacus(MakefilePackage,CMakePackage):
         description="Enable ABACUS's builtin benchmark tests",
         when="+tests"
     )
+    variant(
+        "paw", 
+        default=False, 
+        description="(Experimental)Enable plane augumented wave module"
+    )
+    variant("rocm", default=False, description="(Experimental)Enable rocm support")
     # TODO: Add support for
     # LibRI(https://github.com/abacusmodeling/LibRI), 
     # LibComm(https://github.com/abacusmodeling/LibComm), 
@@ -202,6 +209,9 @@ class CMakeBuilder(cmake.CMakeBuilder):
             self.define_from_variant("ENABLE_LIBXC"      , "libxc"),
             self.define_from_variant("ENABLE_GOOGLEBENCH", "benchmarks"),
             self.define_from_variant("BUILD_TESTING"     , "tests"),
+            self.define_from_variant("ENABLE_PAW"        , "paw"),
+            self.define_from_variant("USE_ROCM"          , "rocm"),
+            self.define_from_variant("USE_CUDA"          , "cuda"),
         ]
 
         blas = spec["blas"]
