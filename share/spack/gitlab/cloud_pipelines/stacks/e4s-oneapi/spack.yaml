@@ -95,7 +95,7 @@ spack:
   - gasnet
   - ginkgo
   - globalarrays
-  - glvis
+  - glvis ^llvm
   - gmp
   - gotcha
   - gptune ~mpispawn
