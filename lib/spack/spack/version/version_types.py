@@ -740,7 +740,7 @@ class VersionList:
     """Sorted, non-redundant list of Version and ClosedOpenRange elements."""
 
     def __init__(self, vlist=None):
-        self.versions: List[Union[StandardVersion, GitVersion, ClosedOpenRange]] = []
+        self.versions: List[StandardVersion, GitVersion, ClosedOpenRange] = []
         if vlist is None:
             pass
         elif isinstance(vlist, str):
