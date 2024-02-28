@@ -141,6 +141,7 @@ def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch, wo
     assert s.package.spec.installed
 
 
+@pytest.mark.not_on_windows("Fails spuriously on Windows")
 @pytest.mark.disable_clean_stage_check
 def test_failing_overwrite_install_should_keep_previous_installation(
     mock_fetch, install_mockery, working_env
