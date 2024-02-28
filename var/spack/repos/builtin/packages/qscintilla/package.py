@@ -104,6 +104,8 @@ class Qscintilla(QMakePackage):
 
             with open("pyproject.toml", "a") as tomlfile:
                 tomlfile.write(f'\n[tool.sip.project]\nsip-include-dirs = ["{sip_inc_dir}"]\n')
+                tomlfile.write(f'\n[tool.sip.builder]\nqmake-settings = ["QT += widgets", "QT += printsupport"]\n')
+
             mkdirp(os.path.join(self.prefix.share.sip, pyqtx))
 
             if "^py-pyqt5" in self.spec:
@@ -111,9 +113,9 @@ class Qscintilla(QMakePackage):
                 # to be generated via project.py
                 qsciproj = FileFilter(join_path("project.py"))
                 ptrn = "super().__init__(project, 'Qsci', qmake_CONFIG=qmake_CONFIG"
-                qsciproj.filter(
-                    ptrn + ")", ptrn + ",qmake_QT=['widgets','printsupport'])", string=True
-                )
+#                qsciproj.filter(
+#                    ptrn + ")", ptrn + ",qmake_QT=['widgets','printsupport'])", string=True
+#                )
             sip_build = Executable(self.spec["py-sip"].prefix.bin.join("sip-build"))
             sip_build(
                 "--target-dir=" + python_platlib,
