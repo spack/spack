@@ -19,6 +19,54 @@ class RiscvGnuToolchain(AutotoolsPackage):
 
     version("develop", branch="master", submodules=True)
     version(
+        "2024.02.02",
+        tag="2024.02.02",
+        commit="59ab58e8a4aed4ed8f711ebab307757a5ebaa1f5",
+        submodules=True,
+    )
+    version(
+        "2023.12.20",
+        tag="2023.12.20",
+        commit="8c969a9efe68a811cf524174d25255632029f3d3",
+        submodules=True,
+    )
+    version(
+        "2023.12.14",
+        tag="2023.12.14",
+        commit="99e2d2bac5144f5152ba6d3fbf04bdd9b9ba4381",
+        submodules=True,
+    )
+    version(
+        "2023.12.12",
+        tag="2023.12.12",
+        commit="ae9efcc33c4968f97ab89b4b13c7f6520b145f94",
+        submodules=True,
+    )
+    version(
+        "2023.11.22",
+        tag="2023.11.22",
+        commit="8e9fb09a0c4b1e566492ee6f42e8c1fa5ef7e0c2",
+        submodules=True,
+    )
+    version(
+        "2023.11.20",
+        tag="2023.11.20",
+        commit="82c3d6550a26f03c3b4acb6cbefe5c5e98855ddb",
+        submodules=True,
+    )
+    version(
+        "2023.11.17",
+        tag="2023.11.17",
+        commit="9b2ad263050085543a1ad57c13039e49a79a7def",
+        submodules=True,
+    )
+    version(
+        "2023.11.08",
+        tag="2023.11.08",
+        commit="b86b2b37d0acc607156ff56ff17ee105a9b48897",
+        submodules=True,
+    )
+    version(
         "2023.10.18",
         tag="2023.10.18",
         commit="b86b2b37d0acc607156ff56ff17ee105a9b48897",
@@ -94,7 +142,8 @@ class RiscvGnuToolchain(AutotoolsPackage):
     )
 
     variant('multilib', default=False, description="Enable multilib support")
-    variant('cmodel', default='medlow', values=('medlow', 'medany'), description="The name of the cmodel")
+    variant('cmodel', default='medlow', values=('medlow', 'medany'), description="The name of the 
+    cmodel")
 
     def configure_args(self):
         args = super(RiscvGnuToolchain, self).configure_args()
