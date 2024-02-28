@@ -54,6 +54,7 @@ class Dakota(CMakePackage):
 
     variant("shared", default=True, description="Enables the build of shared libraries")
     variant("mpi", default=True, description="Activates MPI support")
+    variant("python", default=True, description="Add Python dependency for dakota.interfacing API")
 
     # Generic 'lapack' provider won't work, dakota searches for
     # 'LAPACKConfig.cmake' or 'lapack-config.cmake' on the path
@@ -62,7 +63,7 @@ class Dakota(CMakePackage):
     depends_on("blas")
     depends_on("mpi", when="+mpi")
 
-    depends_on("python")
+    depends_on("python", when="+python")
     depends_on("perl-data-dumper", type="build", when="@6.12:")
     depends_on("boost@:1.68.0", when="@:6.12")
     depends_on("boost@1.69.0:", when="@6.18:")
@@ -79,6 +80,9 @@ class Dakota(CMakePackage):
         spec = self.spec
 
         args = [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
+
+        if self.spec.satisfies("~python"):
+            args.append(self.define("DAKOTA_PYTHON", False))
 
         if "+mpi" in spec:
             args.extend(
