@@ -101,6 +101,7 @@ spack:
   - julia ^llvm ~clang ~gold ~polly targets=amdgpu,bpf,nvptx,webassembly
   - kokkos +openmp
   - kokkos-kernels +openmp
+  - laghos
   - lammps
   - lbann
   - legion
@@ -183,6 +184,7 @@ spack:
   - zfp
   # --
   # - geopm                           # geopm: https://github.com/spack/spack/issues/38795
+  # - glvis                           # glvis: https://github.com/spack/spack/issues/42839
 
   # PYTHON PACKAGES
   - opencv +python3
