@@ -904,6 +904,7 @@ def test_version_list_normalization():
     assert ver("=1.0,ref=1.0,1.0:2.0") == ver(["1.0:2.0"])
     assert ver("=1.0,1.0:2.0,ref=1.0") == ver(["1.0:2.0"])
     assert ver("1.0:2.0,=1.0,ref=1.0") == ver(["1.0:2.0"])
+    assert ver("1.0:2.0,2.1,2.2:3,4:6") == ver(["1.0:6"])
 
 
 @pytest.mark.parametrize("version", ["=1.2", "git.ref=1.2", "1.2"])
