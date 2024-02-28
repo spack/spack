@@ -34,6 +34,11 @@ class Aocc(Package):
     maintainers("amd-toolchain-support")
 
     version(
+        ver="4.2.0",
+        sha256="ed5a560ec745b24dc0685ccdcbde914843fb2f2dfbfce1ba592de4ffbce1ccab",
+        url="https://download.amd.com/developer/eula/aocc/aocc-4-2/aocc-compiler-4.2.0.tar",
+    )
+    version(
         ver="4.1.0",
         sha256="5b04bfdb751c68dfb9470b34235d76efa80a6b662a123c3375b255982cb52acd",
         url="https://download.amd.com/developer/eula/aocc/aocc-4-1/aocc-compiler-4.1.0.tar",
@@ -56,7 +61,6 @@ class Aocc(Package):
     depends_on("zlib-api")
     depends_on("ncurses")
     depends_on("libtool")
-    depends_on("texinfo")
 
     variant(
         "license-agreed",
