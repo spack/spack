@@ -92,6 +92,15 @@ class Dakota(CMakePackage):
     depends_on("cmake@2.8.9:", type="build")
     depends_on("cmake@3.17:", type="build", when="@6.18:")
 
+    # dakota@:6.12 don't compile with gcc@12:
+    conflicts("%gcc@12:", when="@:6.12")
+
+    def flag_handler(self, name, flags):
+        # from gcc@10, dakota@:6.12 need an extra flag
+        if self.spec.satisfies("@:6.12 %gcc@10:") and name == "fflags":
+            flags.append("-fallow-argument-mismatch")
+        return (flags, None, None)
+
     def cmake_args(self):
         spec = self.spec
 
