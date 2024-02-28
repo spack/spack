@@ -141,18 +141,22 @@ class RiscvGnuToolchain(AutotoolsPackage):
         description="Compiler back-end to build",
     )
 
-    variant('multilib', default=False, description="Enable multilib support")
-    variant('cmodel', default='medlow', values=('medlow', 'medany'),
-            description="The name of the cmodel")
+    variant("multilib", default=False, description="Enable multilib support")
+    variant(
+        "cmodel",
+        default="medlow",
+        values=("medlow", "medany"),
+        description="The name of the cmodel",
+    )
 
     def configure_args(self):
         args = super(RiscvGnuToolchain, self).configure_args()
-        if '+multilib' in self.spec:
-            args.append('--enable-multilib')
+        if "+multilib" in self.spec:
+            args.append("--enable-multilib")
 
-        cmodel_value = self.spec.variants['cmodel'].value
+        cmodel_value = self.spec.variants["cmodel"].value
         if cmodel_value:
-            args.append('--with-cmodel={}'.format(cmodel_value))
+            args.append("--with-cmodel={}".format(cmodel_value))
         return args
 
     def build(self, spec, prefix):
