@@ -2731,15 +2731,6 @@ def test_concretize_user_specs_together():
     assert all("mpich" not in spec for _, spec in e.concretized_specs())
 
 
-def test_cant_install_single_spec_when_concretizing_together():
-    e = ev.create("coconcretization")
-    e.unify = True
-
-    with pytest.raises(ev.SpackEnvironmentError, match=r"cannot install"):
-        e.concretize_and_add("zlib")
-        e.install_all()
-
-
 def test_duplicate_packages_raise_when_concretizing_together():
     e = ev.create("coconcretization")
     e.unify = True

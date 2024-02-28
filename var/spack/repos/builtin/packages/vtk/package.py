@@ -120,9 +120,11 @@ class Vtk(CMakePackage):
     depends_on("gl@1.2:", when="~opengl2")
 
     depends_on("xz")
-    patch("vtk_find_liblzma.patch", when="@:9.0")
-    patch("vtk_movie_link_ogg.patch")
-    patch("vtk_use_sqlite_name_vtk_expects.patch")
+    patch("vtk_find_liblzma.patch", when="@8.2")
+    patch("vtk_movie_link_ogg.patch", when="@8.2")
+    patch("vtk_use_sqlite_name_vtk_expects.patch", when="@8.2")
+    patch("vtk_proj_include_no_strict.patch", when="@9: platform=windows")
+    patch("vtk_alias_hdf5.patch", when="@9: platform=windows")
     with when("~osmesa"):
         depends_on("glx", when="platform=linux")
         depends_on("glx", when="platform=cray")
