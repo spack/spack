@@ -6,6 +6,7 @@ import collections
 import collections.abc
 import copy
 import enum
+import functools
 import itertools
 import os
 import pathlib
@@ -3564,6 +3565,68 @@ def _has_runtime_dependencies(spec: spack.spec.Spec) -> bool:
     return True
 
 
+class SpecFilter:
+    def __init__(
+        self,
+        factory: Callable[[], List[spack.spec.Spec]],
+        is_reusable: Callable[[spack.spec.Spec], bool],
+        include: List[str],
+        exclude: List[str],
+    ) -> None:
+        self.factory = factory
+        self.is_reusable = is_reusable
+        self.include = include
+        self.exclude = exclude
+
+    def is_selected(self, s: spack.spec.Spec) -> bool:
+        if not self.is_reusable(s):
+            return False
+
+        if self.include:
+            return any(s.satisfies(c) for c in self.include)
+
+        if self.exclude:
+            return all(not s.satisfies(c) for c in self.exclude)
+
+        return True
+
+    def selected_specs(self) -> List[spack.spec.Spec]:
+        return [s for s in self.factory() if self.is_selected(s)]
+
+    @staticmethod
+    def from_store(configuration, include, exclude) -> "SpecFilter":
+        packages = configuration.get("packages")
+        is_reusable = functools.partial(_is_reusable, packages=packages, local=True)
+        factory = functools.partial(_specs_from_store, configuration=configuration)
+        return SpecFilter(
+            factory=factory, is_reusable=is_reusable, include=include, exclude=exclude
+        )
+
+    @staticmethod
+    def from_mirror(configuration, include, exclude) -> "SpecFilter":
+        packages = configuration.get("packages")
+        is_reusable = functools.partial(_is_reusable, packages=packages, local=False)
+        return SpecFilter(
+            factory=_specs_from_mirror, is_reusable=is_reusable, include=include, exclude=exclude
+        )
+
+
+def _specs_from_store(configuration):
+    store = spack.store.create(configuration)
+    with store.db.read_transaction():
+        return store.db.query(installed=True)
+
+
+def _specs_from_mirror():
+    try:
+        return spack.binary_distribution.update_cache_and_get_specs()
+    except (spack.binary_distribution.FetchCacheError, IndexError):
+        # this is raised when no mirrors had indices.
+        # TODO: update mirror configuration so it can indicate that the
+        # TODO: source cache (or any mirror really) doesn't have binaries.
+        return []
+
+
 class ReusableSpecsSelector:
     """Selects specs that can be reused during concretization."""
 
@@ -3571,64 +3634,49 @@ class ReusableSpecsSelector:
         self.configuration = configuration
         self.store = spack.store.create(configuration)
 
-        self.reuse = self.configuration.get("concretizer:reuse", False)
-        self.reuse_filters = []
-        self.local_store_enabled = True
-        self.mirrors_enabled = True
-        if isinstance(self.reuse, typing.Mapping):
-            reuse_yaml = self.reuse
-            self.reuse = reuse_yaml.get("strategy", True)
-            self.reuse_filters = reuse_yaml.get("include", [])
-            self.local_store_enabled = any(
-                x["type"] == "local" for x in reuse_yaml.get("from", [{"type": "local"}])
+        self.reuse_strategy = self.configuration.get("concretizer:reuse", False)
+        self.reuse_sources = []
+        if not isinstance(self.reuse_strategy, typing.Mapping):
+            self.reuse_sources.extend(
+                [
+                    SpecFilter.from_store(
+                        configuration=self.configuration, include=[], exclude=[]
+                    ),
+                    SpecFilter.from_mirror(
+                        configuration=self.configuration, include=[], exclude=[]
+                    ),
+                ]
             )
-            self.mirrors_enabled = any(
-                x["type"] == "mirror" for x in reuse_yaml.get("from", [{"type": "mirror"}])
-            )
-
-    def is_selected(self, spec: spack.spec.Spec) -> bool:
-        if not self.reuse_filters:
-            return True
-
-        return any(spec.satisfies(c) for c in self.reuse_filters)
-
-    def selected_from_local_store(self) -> List[spack.spec.Spec]:
-        if not self.local_store_enabled:
-            return []
-
-        packages = self.configuration.get("packages")
-        with self.store.db.read_transaction():
-            return [
-                s
-                for s in self.store.db.query(installed=True)
-                if _is_reusable(s, packages, local=True) and self.is_selected(s)
-            ]
-
-    def selected_from_mirrors(self) -> List[spack.spec.Spec]:
-        if not self.mirrors_enabled:
-            return []
-
-        packages = self.configuration.get("packages")
-        try:
-            return [
-                s
-                for s in spack.binary_distribution.update_cache_and_get_specs()
-                if _is_reusable(s, packages, local=False) and self.is_selected(s)
-            ]
-        except (spack.binary_distribution.FetchCacheError, IndexError):
-            # this is raised when no mirrors had indices.
-            # TODO: update mirror configuration so it can indicate that the
-            # TODO: source cache (or any mirror really) doesn't have binaries.
-            return []
+        else:
+            reuse_yaml = self.reuse_strategy
+            self.reuse_strategy = reuse_yaml.get("strategy", True)
+            default_include = reuse_yaml.get("include", [])
+            default_exclude = reuse_yaml.get("exclude", [])
+            default_sources = [{"type": "local"}, {"type": "mirror"}]
+            for source in reuse_yaml.get("from", default_sources):
+                include = source.get("include", default_include)
+                exclude = source.get("exclude", default_exclude)
+                if source["type"] == "local":
+                    self.reuse_sources.append(
+                        SpecFilter.from_store(self.configuration, include=include, exclude=exclude)
+                    )
+                elif source["type"] == "mirror":
+                    self.reuse_sources.append(
+                        SpecFilter.from_mirror(
+                            self.configuration, include=include, exclude=exclude
+                        )
+                    )
 
     def reusable_specs(self, specs: List[spack.spec.Spec]) -> List[spack.spec.Spec]:
-        if self.reuse is False:
+        if self.reuse_strategy is False:
             return []
 
-        result = self.selected_from_local_store() + self.selected_from_mirrors()
+        result = []
+        for reuse_source in self.reuse_sources:
+            result.extend(reuse_source.selected_specs())
 
         # If we only want to reuse dependencies, remove the root specs
-        if self.reuse == "dependencies":
+        if self.reuse_strategy == "dependencies":
             result = [spec for spec in result if not any(root in spec for root in specs)]
 
         return result

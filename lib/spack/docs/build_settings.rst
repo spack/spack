@@ -34,8 +34,22 @@ In case a finer control over which specs are reused is needed, then the value of
 an object, with the following keys:
 
 1. ``strategy``: takes the same values as above (``true``, ``false``, and ``dependencies``)
-2. ``include``: list of specs. If present, reusable specs must match at least one of the constraint in the list
-3. ``from``: selects the sources from which reused specs are taken
+2. ``from``: list of sources from which reused specs are taken
+
+Each source in ``from`` is itself an object:
+
+.. list-table:: Attributes for a source or reusable specs
+   :header-rows: 1
+
+   * - Attribute name
+     - Description
+   * - type (mandatory, string)
+     - Can be ``local`` or ``mirror``
+   * - include (optional, list of specs)
+     - If present, reusable specs must match at least one of the constraint in the list
+   * - exclude (optional, list of specs)
+     - If present, reusable specs must not match any of the constraint in the list. It's
+       disregarded if ``include`` is present.
 
 For instance, the following configuration:
 
@@ -44,14 +58,35 @@ For instance, the following configuration:
    concretizer:
      reuse:
        strategy: true
-       include:
-       - "%gcc"
-       - "%clang"
        from:
        - type: local
+         include:
+         - "%gcc"
+         - "%clang"
 
 tells the concretizer to reuse all specs compiled with either ``gcc`` or ``clang``, that are installed
 in the local store. Any spec from remote buildcaches is disregarded.
+
+To reduce the boilerplate in configuration files, default values for the ``include`` and
+``exclude`` options can be pushed up one level:
+
+.. code-block:: yaml
+
+   concretizer:
+     reuse:
+       strategy: true
+       include:
+       - "%gcc"
+       from:
+       - type: local
+       - type: mirror
+       - type: local
+         include:
+         - "foo %oneapi"
+
+In the example above we reuse all specs compiled with ``gcc`` from the local store
+and remote mirrors, and we also reuse ``foo %oneapi``. Note that the last source of
+specs override the default ``include`` attribute.
 
 For one-off concretizations, the are command line arguments for each of the simple "single value"
 configurations. This means a user can:
