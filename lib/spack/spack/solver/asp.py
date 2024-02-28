@@ -1636,7 +1636,7 @@ class SpackSolverSetup:
                 spec_filters.append(
                     SpecFilter(
                         factory=lambda: [],
-                        is_reusable=lambda x: True,
+                        is_usable=lambda x: True,
                         include=include,
                         exclude=exclude,
                     )
@@ -3603,27 +3603,39 @@ def _has_runtime_dependencies(spec: spack.spec.Spec) -> bool:
 
 
 class SpecFilter:
+    """Given a method to produce a list of specs, this class can filter them according to
+    different criteria.
+    """
+
     def __init__(
         self,
         factory: Callable[[], List[spack.spec.Spec]],
-        is_reusable: Callable[[spack.spec.Spec], bool],
+        is_usable: Callable[[spack.spec.Spec], bool],
         include: List[str],
         exclude: List[str],
     ) -> None:
+        """
+        Args:
+            factory: factory to produce a list of specs
+            is_usable: predicate that takes a spec in input and returns False if the spec
+                should not be considered for this filter, True otherwise.
+            include: if present, a "good" spec must match at least one entry in the list
+            exclude: if present, a "good" spec must not match any entry in the list
+        """
         self.factory = factory
-        self.is_reusable = is_reusable
+        self.is_usable = is_usable
         self.include = include
         self.exclude = exclude
 
     def is_selected(self, s: spack.spec.Spec) -> bool:
-        if not self.is_reusable(s):
+        if not self.is_usable(s):
             return False
 
-        if self.include:
-            return any(s.satisfies(c) for c in self.include)
+        if self.include and not any(s.satisfies(c) for c in self.include):
+            return False
 
-        if self.exclude:
-            return all(not s.satisfies(c) for c in self.exclude)
+        if self.exclude and any(s.satisfies(c) for c in self.exclude):
+            return False
 
         return True
 
@@ -3632,19 +3644,19 @@ class SpecFilter:
 
     @staticmethod
     def from_store(configuration, include, exclude) -> "SpecFilter":
+        """Constructs a filter that takes the specs from the current store."""
         packages = configuration.get("packages")
         is_reusable = functools.partial(_is_reusable, packages=packages, local=True)
         factory = functools.partial(_specs_from_store, configuration=configuration)
-        return SpecFilter(
-            factory=factory, is_reusable=is_reusable, include=include, exclude=exclude
-        )
+        return SpecFilter(factory=factory, is_usable=is_reusable, include=include, exclude=exclude)
 
     @staticmethod
     def from_mirror(configuration, include, exclude) -> "SpecFilter":
+        """Constructs a filter that takes the specs from the configured buildcaches."""
         packages = configuration.get("packages")
         is_reusable = functools.partial(_is_reusable, packages=packages, local=False)
         return SpecFilter(
-            factory=_specs_from_mirror, is_reusable=is_reusable, include=include, exclude=exclude
+            factory=_specs_from_mirror, is_usable=is_reusable, include=include, exclude=exclude
         )
 
 

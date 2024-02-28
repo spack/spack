@@ -44,12 +44,11 @@ Each source in ``from`` is itself an object:
    * - Attribute name
      - Description
    * - type (mandatory, string)
-     - Can be ``local`` or ``mirror``
+     - Can be ``local``, ``mirror``, or ``external``
    * - include (optional, list of specs)
      - If present, reusable specs must match at least one of the constraint in the list
    * - exclude (optional, list of specs)
-     - If present, reusable specs must not match any of the constraint in the list. It's
-       disregarded if ``include`` is present.
+     - If present, reusable specs must not match any of the constraint in the list.
 
 For instance, the following configuration:
 

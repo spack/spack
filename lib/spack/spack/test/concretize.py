@@ -2876,3 +2876,21 @@ def test_selecting_reused_sources(reuse_yaml, expected_length, mutable_config):
     selector = spack.solver.asp.ReusableSpecsSelector(mutable_config)
     specs = selector.reusable_specs(["mpileaks"])
     assert len(specs) == expected_length
+
+
+@pytest.mark.parametrize(
+    "specs,include,exclude,expected",
+    [
+        # "foo" discarded by include rules (everything compiled with GCC)
+        (["cmake@3.27.9 %gcc", "foo %clang"], ["%gcc"], [], ["cmake@3.27.9 %gcc"]),
+        # "cmake" discarded by exclude rules (everything compiled with GCC but cmake)
+        (["cmake@3.27.9 %gcc", "foo %gcc"], ["%gcc"], ["cmake"], ["foo %gcc"]),
+    ],
+)
+def test_spec_filters(specs, include, exclude, expected):
+    specs = [Spec(x) for x in specs]
+    expected = [Spec(x) for x in expected]
+    f = spack.solver.asp.SpecFilter(
+        factory=lambda: specs, is_usable=lambda x: True, include=include, exclude=exclude
+    )
+    assert f.selected_specs() == expected
