@@ -127,11 +127,9 @@ class Patch:
 
         Returns:
             True if both patches have the same checksum, else False
-
-        Raises:
-            AssertionError: If *other* is not of type Patch.
         """
-        assert hasattr(other, "sha256"), "*other* must be of type Patch"
+        if not isinstance(other, Patch):
+            return NotImplemented
         return self.sha256 == other.sha256
 
     def __hash__(self) -> int:
