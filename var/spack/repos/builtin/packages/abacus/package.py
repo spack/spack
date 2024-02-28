@@ -99,18 +99,14 @@ class Abacus(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         description="Enable ABACUS's builtin benchmark tests",
         when="+tests"
     )
-    variant(
-        "paw", 
-        default=False, 
-        description="(Experimental)Enable plane augumented wave module"
-    )
     variant("rocm", default=False, description="(Experimental)Enable rocm support")
     # TODO: Add support for
     # LibRI(https://github.com/abacusmodeling/LibRI), 
     # LibComm(https://github.com/abacusmodeling/LibComm), 
     # Libnpy(https://github.com/llohse/libnpy/), 
     # DeePKS(https://github.com/deepmodeling/deepks-kit), 
-    # DeePMD(https://github.com/deepmodeling/deepmd-kit).
+    # DeePMD(https://github.com/deepmodeling/deepmd-kit),
+    # LibPAW-interface(https://github.com/wenfei-li/libpaw_interface),
     # At 2024-1-30, none of above have a spack package.
 
     depends_on("fftw-api@3")
@@ -209,7 +205,6 @@ class CMakeBuilder(cmake.CMakeBuilder):
             self.define_from_variant("ENABLE_LIBXC"      , "libxc"),
             self.define_from_variant("ENABLE_GOOGLEBENCH", "benchmarks"),
             self.define_from_variant("BUILD_TESTING"     , "tests"),
-            self.define_from_variant("ENABLE_PAW"        , "paw"),
             self.define_from_variant("USE_ROCM"          , "rocm"),
             self.define_from_variant("USE_CUDA"          , "cuda"),
         ]
@@ -232,6 +227,8 @@ class CMakeBuilder(cmake.CMakeBuilder):
         if spec.satisfies("+elpa"):
             elpa=spec["elpa"]
             elpa_include = elpa.headers.directories[0]
-            args += [self.define("ELPA_INCLUDE_DIRS", elpa_include),]
+            args += [ self.define("ELPA_INCLUDE_DIRS", elpa_include), ]
 
+        if spec.satisfies("+rocm"):
+            args += [ self.define("COMMIT_INFO", False), ]
         return args
