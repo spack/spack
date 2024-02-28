@@ -19,6 +19,7 @@ class RocprofilerDev(CMakePackage):
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["librocprofiler64"]
     license("MIT")
+    version("6.0.2", sha256="d3f24e639a5e151fa418a92ae6fe150bdf14120b8982a5baa52844ce2fba0b82")
     version("6.0.0", sha256="6aca327a6ba302b5957002e55ac640dd185d51a354da3859e957448a5fc36b14")
     version("5.7.1", sha256="2fb7158592d89312ba419a272d907d8849373c0a676a83dd03c32b9942dfd27a")
     version("5.7.0", sha256="003af33db5585e71823b2b58618d795df926f6bd25943f2add388db23f2bf377")
@@ -55,17 +56,18 @@ class RocprofilerDev(CMakePackage):
         "5.7.0",
         "5.7.1",
         "6.0.0",
+        "6.0.2",
     ]:
         depends_on(f"hsakmt-roct@{ver}", when=f"@{ver}")
         depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
         depends_on(f"rocminfo@{ver}", when=f"@{ver}")
         depends_on(f"roctracer-dev-api@{ver}", when=f"@{ver}")
 
-    for ver in ["5.7.0", "5.7.1", "6.0.0"]:
+    for ver in ["5.7.0", "5.7.1", "6.0.0", "6.0.2"]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"rocm-smi-lib@{ver}", when=f"@{ver}")
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2"]:
         depends_on(f"aqlprofile@{ver}", when=f"@{ver}")
         depends_on(f"comgr@{ver}", when=f"@{ver}")
 
