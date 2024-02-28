@@ -859,8 +859,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     # Copy nvptx-tools into the GCC install prefix
     def copy_nvptx_tools(self):
-        nvptx_tools_bin_path = join_path(self.spec["nvptx-tools"].prefix, "bin")
-        gcc_bin_path = join_path(self.prefix, "bin")
+        nvptx_tools_bin_path = self.spec["nvptx-tools"].prefix.bin
+        gcc_bin_path = self.prefix.bin
         mkdirp(gcc_bin_path)
         copy_list = ["as", "ld", "nm", "run", "run-single"]
         for file in copy_list:
