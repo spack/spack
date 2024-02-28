@@ -1222,6 +1222,9 @@ class SpackSolverSetup:
 
     def trigger_rules(self):
         """Flushes all the trigger rules collected so far, and clears the cache."""
+        if not self._trigger_cache:
+            return
+
         self.gen.h2("Trigger conditions")
         for name in self._trigger_cache:
             cache = self._trigger_cache[name]
@@ -1235,6 +1238,9 @@ class SpackSolverSetup:
 
     def effect_rules(self):
         """Flushes all the effect rules collected so far, and clears the cache."""
+        if not self._effect_cache:
+            return
+
         self.gen.h2("Imposed requirements")
         for name in self._effect_cache:
             cache = self._effect_cache[name]
@@ -1615,6 +1621,27 @@ class SpackSolverSetup:
         packages_yaml = _external_config_with_implicit_externals(spack.config.CONFIG)
 
         self.gen.h1("External packages")
+        spec_filters = []
+        concretizer_yaml = spack.config.get("concretizer")
+        reuse_yaml = concretizer_yaml.get("reuse")
+        if isinstance(reuse_yaml, typing.Mapping):
+            default_include = reuse_yaml.get("include", [])
+            default_exclude = reuse_yaml.get("exclude", [])
+            for source in reuse_yaml.get("from", []):
+                if source["type"] != "external":
+                    continue
+
+                include = source.get("include", default_include)
+                exclude = source.get("exclude", default_exclude)
+                spec_filters.append(
+                    SpecFilter(
+                        factory=lambda: [],
+                        is_reusable=lambda x: True,
+                        include=include,
+                        exclude=exclude,
+                    )
+                )
+
         for pkg_name, data in packages_yaml.items():
             if pkg_name == "all":
                 continue
@@ -1623,7 +1650,7 @@ class SpackSolverSetup:
             if pkg_name not in spack.repo.PATH:
                 continue
 
-            self.gen.h2("External package: {0}".format(pkg_name))
+            # self.gen.h2("External package: {0}".format(pkg_name))
             # Check if the external package is buildable. If it is
             # not then "external(<pkg>)" is a fact, unless we can
             # reuse an already installed spec.
@@ -1633,7 +1660,17 @@ class SpackSolverSetup:
 
             # Read a list of all the specs for this package
             externals = data.get("externals", [])
-            external_specs = [spack.spec.parse_with_version_concrete(x["spec"]) for x in externals]
+            candidate_specs = [
+                spack.spec.parse_with_version_concrete(x["spec"]) for x in externals
+            ]
+
+            external_specs = []
+            if spec_filters:
+                for current_filter in spec_filters:
+                    current_filter.factory = lambda: candidate_specs
+                    external_specs.extend(current_filter.selected_specs())
+            else:
+                external_specs.extend(candidate_specs)
 
             # Order the external versions to prefer more recent versions
             # even if specs in packages.yaml are not ordered that way
