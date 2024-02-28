@@ -72,7 +72,9 @@ class PyNeurodamus(PythonPackage):
             copy(script, self.prefix.share)
         install_tree("core/hoc", self.prefix.lib.hoc)
         install_tree("core/mod", self.prefix.lib.mod)
-        install_tree("core/python", self.prefix.lib.python)
+        # Conditionally install the Python tree for versions less than or equal to 3.0.0
+        if self.spec.satisfies("@:3.0.0"):
+            install_tree("core/python", self.prefix.lib.python)
 
     def setup_run_environment(self, env):
         PythonPackage.setup_run_environment(self, env)

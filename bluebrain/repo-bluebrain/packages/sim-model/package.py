@@ -186,10 +186,11 @@ class SimModel(Package):
     def _install_src(self, prefix):
         """Copy original and translated c mods"""
         arch = os.path.basename(self.spec["neuron"].package.archdir)
-        mkdirp(prefix.lib.mod, prefix.lib.hoc, prefix.lib.python)
+        mkdirp(prefix.lib.mod, prefix.lib.hoc)
         copy_all("mod", prefix.lib.mod)
         copy_all("hoc", prefix.lib.hoc)
         if os.path.isdir("python"):  # Recent neurodamus
+            mkdirp(prefix.lib.python)
             copy_all("python", prefix.lib.python)
 
         full_neuron_cpp_generated_files = find(arch, "*.cpp", recursive=False)

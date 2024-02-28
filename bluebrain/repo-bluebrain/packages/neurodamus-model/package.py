@@ -119,12 +119,12 @@ class NeurodamusModel(SimModel):
             with open(join_path("mod", "neuron_only_mods.txt"), "w") as blackl:
                 blackl.write("\n".join(all_mods - core_nrn_mods) + "\n")
 
-        # Neurodamus model may not have python scripts
-        mkdirp("python")
-
         copy_all(core_prefix.lib.hoc, "hoc", make_link)
         copy_all(core_prefix.lib.mod, "mod", make_link)
-        copy_all(core_prefix.lib.python, "python", make_link)
+        if core.satisfies("@:3.0.0"):
+            # Neurodamus model may not have python scripts
+            mkdirp("python")
+            copy_all(core_prefix.lib.python, "python", make_link)
 
     def build(self, spec, prefix):
         """Build mod files from with nrnivmodl / nrnivmodl-core.
