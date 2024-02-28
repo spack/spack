@@ -105,6 +105,7 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+rocm", when="+sycl", msg=backend_msg)
     conflicts("+cuda", when="+sycl", msg=backend_msg)
     conflicts("+sycl", when="@:2022.07.00", msg="SYCL support requires SLATE version 2023.08.25")
+    conflicts("^hip@5.6.0:", when="@:2023.08.25", msg="Incompatible version of HIP/ROCm")
 
     def cmake_args(self):
         spec = self.spec
