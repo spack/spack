@@ -219,7 +219,7 @@ def view(parser, args):
         env = ev.active_environment()
         if len(specs) == 0:
             if not env:
-                tty.die("Created views require specs unless you are in an environment")
+                tty.die("View creation requires specs unless you are in an environment")
             specs = env.concrete_roots()
         else:
             specs = [spack.cmd.disambiguate_spec(s, env) for s in specs]
