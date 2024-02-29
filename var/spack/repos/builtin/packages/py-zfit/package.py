@@ -49,12 +49,12 @@ class PyZfit(PythonPackage):
 
     variant("nlopt", default=False, description="Enable nlopt support")
 
-    with when("+nlopt"):
-        depends_on("nlopt@2.7.1: +python", type=runtype, default=False)
+    with when("+nlopt", default=False):
+        depends_on("nlopt@2.7.1: +python", type=runtype)
 
-    variant("hs3")
+    variant("hs3", default=True)
     with when("+hs3"):
-        depends_on("py-asdf", type=runtype, default=True)
+        depends_on("py-asdf", type=runtype)
 
     depends_on("py-boost-histogram", type=runtype)
     depends_on("py-colorama", type=runtype)
