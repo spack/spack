@@ -76,7 +76,7 @@ def test_spack_entry_points(monkeypatch, tmpdir):
             return
         monkeypatch.setattr(pkg_resources, "iter_entry_points", entry_points)
     config_paths = spack.config.config_paths_from_entry_points()
-    for (name, path) in config_paths:
+    for name, path in config_paths:
         if name == "plugin-mypackage_config":
             assert path == os.path.join(tmpdir, "spack/etc")
             break
