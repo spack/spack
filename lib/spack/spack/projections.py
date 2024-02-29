@@ -5,6 +5,7 @@
 
 import spack.util.path
 
+
 def get_projection(projections, spec):
     """
     Get the projection for a spec from a projections dict.
