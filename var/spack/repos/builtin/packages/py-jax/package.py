@@ -77,7 +77,6 @@ class PyJax(PythonPackage):
     depends_on("py-importlib-metadata@4.6:", when="@0.4.11: ^python@:3.9", type=("build", "run"))
 
     # See _minimum_jaxlib_version in jax/version.py
-    "0.4.25": "0.4.20",
     depends_on("py-jaxlib@0.4.20:", when="@0.4.25:", type=("build", "run"))
     depends_on("py-jaxlib@0.4.19:", when="@0.4.21:", type=("build", "run"))
     depends_on("py-jaxlib@0.4.14:", when="@0.4.15:", type=("build", "run"))
