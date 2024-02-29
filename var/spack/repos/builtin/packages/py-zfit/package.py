@@ -49,10 +49,10 @@ class PyZfit(PythonPackage):
 
     variant("nlopt", default=False, description="Enable nlopt support")
 
-    with when("+nlopt", default=False):
+    with when("+nlopt"):
         depends_on("nlopt@2.7.1: +python", type=runtype)
 
-    variant("hs3", default=True)
+    variant("hs3", default=True, description="Enable serialization support")
     with when("+hs3"):
         depends_on("py-asdf", type=runtype)
 
