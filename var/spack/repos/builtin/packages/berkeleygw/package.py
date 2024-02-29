@@ -234,7 +234,7 @@ class Berkeleygw(MakefilePackage):
             buildopts.append("MOD_OPT=-J ")
             # std c11 prevents problems with linebreaks and fortran comments
             # containing // (which is interpreted as C++ style comment)
-            buildopts.append("FCPP=cpp -C -nostdinc -std=c11")
+            buildopts.append("FCPP=%s -C -nostdinc -std=c11" % join_path(self.compiler.prefix, "bin", "cpp"))
             if "+mpi" in spec:
                 buildopts.append("F90free=%s %s" % (spec["mpi"].mpifc, f90_flags))
                 buildopts.append("C_COMP=%s %s" % (spec["mpi"].mpicc, c_flags))
