@@ -1,0 +1,12 @@
+diff --git a/src/targets/gpu/CMakeLists.txt b/src/targets/gpu/CMakeLists.txt
+index c538605..8f89b5d 100644
+--- a/src/targets/gpu/CMakeLists.txt
++++ b/src/targets/gpu/CMakeLists.txt
+@@ -82,6 +82,7 @@ rocm_clang_tidy_check(migraphx_device)
+ target_link_libraries(migraphx_device PUBLIC migraphx)
+ target_link_libraries(migraphx_device PRIVATE compile_for_gpu)
+ target_include_directories(migraphx_device PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
++target_include_directories(migraphx_device PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../../composable_kernel/library/src/jit_library/include>)
+ target_include_directories(migraphx_device PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_BINAR_DIR}/include>)
+ target_include_directories(migraphx_device PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/device/include>)
+ target_compile_options(migraphx_device PRIVATE -Wno-ignored-attributes)
