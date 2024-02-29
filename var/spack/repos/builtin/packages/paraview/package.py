@@ -323,7 +323,6 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("generator=ninja", when="%xl")
     conflicts("generator=ninja", when="%xl_r")
 
-
     def url_for_version(self, version):
         _urlfmt = "http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.{3}"
         """Handle ParaView version-based custom URLs."""
