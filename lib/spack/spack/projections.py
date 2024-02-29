@@ -13,7 +13,7 @@ def get_projection(projections, spec):
     all_projection = None
     for spec_like, projection in projections.items():
         if spec.satisfies(spec_like):
-            return spack.util.path.substitute_config_variables(projection)
+            return spack.util.path.canonicalize_path(projection)
         elif spec_like == "all":
-            all_projection = spack.util.path.substitute_config_variables(projection)
+            all_projection = spack.util.path.canonicalize_path(projection)
     return all_projection
