@@ -43,7 +43,6 @@ class PyJaxlib(PythonPackage, CudaPackage):
     )
 
     variant("cuda", default=True, description="Build with CUDA")
-    variant("cuda12", default=False, description="Build with CUDA 12")
 
     # build/build.py
     depends_on("py-build", when="@0.4.14:", type="build")
@@ -73,14 +72,12 @@ class PyJaxlib(PythonPackage, CudaPackage):
     depends_on("bazel@4.1.0", when="@0.1.70:0.1.74", type="build")
 
     # README.md
-    depends_on("cuda@12:", when="@0.4.11:+cuda12")
     depends_on("cuda@11.8:", when="@0.4.11:+cuda")
     depends_on("cuda@11.4:", when="@0.4.0:0.4.7+cuda")
     depends_on("cuda@11.1:", when="@0.3+cuda")
     # https://github.com/google/jax/issues/12614
     depends_on("cuda@11.1:11.7.0", when="@0.1+cuda")
 
-    depends_on("cudnn@8.9:", when="@0.4.11:+cuda12")
     depends_on("cudnn@8.8:", when="@0.4.11:+cuda")
     depends_on("cudnn@8.2:", when="@0.4:0.4.7+cuda")
     depends_on("cudnn@8.2:", when="@0.4:0.4.7+cuda")
