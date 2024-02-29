@@ -169,7 +169,7 @@ def test_view_extension_conflict_ignored(
     install("extension1@2.0")
     viewpath = str(tmpdir.mkdir("view"))
     view("symlink", viewpath, "extension1@1.0")
-    view("symlink", viewpath, "-i", "extension1@2.0")
+    view("symlink", "-i", viewpath, "extension1@2.0")
     with open(os.path.join(viewpath, "bin", "extension1"), "r") as fin:
         assert fin.read() == "1.0"
 
