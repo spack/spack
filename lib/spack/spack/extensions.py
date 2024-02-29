@@ -186,8 +186,10 @@ def path_for_extension(target_name: str, *, paths: List[str]) -> str:
     Returns:
         Root directory where tests should reside or None
     """
+    print(paths)
     for path in paths:
         name = extension_name(path)
+        print(name)
         if name == target_name:
             return path
     else:

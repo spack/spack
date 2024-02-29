@@ -35,8 +35,8 @@ class MockExtensionsEntryPoint:
         self.name = "mypackage_extensions"
 
     def load(self):
-        self.dir.ensure("spack/spack-ext/ext/cmd", dir=True)
-        f = os.path.join(self.dir, "spack", "spack-ext", "ext", "cmd", "spam.py")
+        self.dir.ensure("spack/spack-myext/myext/cmd", dir=True)
+        f = os.path.join(self.dir, "spack", "spack-myext", "myext", "cmd", "spam.py")
         with open(f, "w") as fh:
             fh.write("description = 'hello world extension command'\n")
             fh.write("section = 'test command'\n")
@@ -45,7 +45,7 @@ class MockExtensionsEntryPoint:
             fh.write("def spam(parser, args):\n    print('spam for all!')\n")
 
         def ep():
-            return os.path.join(self.dir, "spack", "spack-ext")
+            return os.path.join(self.dir, "spack", "spack-myext")
 
         return ep
 
@@ -96,7 +96,7 @@ def test_spack_entry_point_config(monkeypatch, tmpdir):
 def test_spack_entry_point_extension(monkeypatch, tmpdir):
     """Test config scope entry point"""
     patch_entry_points(tmpdir, monkeypatch)
-    my_ext = os.path.join(tmpdir, "spack", "spack-ext")
+    my_ext = os.path.join(tmpdir, "spack", "spack-myext")
     extensions = spack.extensions.get_extension_paths()
     found = bool([ext for ext in extensions if os.path.samefile(ext, my_ext)])
     if not found:
@@ -105,3 +105,7 @@ def test_spack_entry_point_extension(monkeypatch, tmpdir):
     found = bool([ext for ext in extensions if os.path.samefile(ext, my_ext)])
     if not found:
         raise ValueError("Did not find extension in %s" % ", ".join(extensions))
+    root = spack.extensions.load_extension("myext")
+    assert os.path.samefile(root, my_ext)
+    module = spack.extensions.get_module("spam")
+    assert module is not None
