@@ -50,7 +50,6 @@ class MockExtensionsEntryPoint:
 
 def entry_points_factory(tmpdir):
     def entry_points(group=None):
-        print(f"{group=}")
         if group == "spack.config":
             return (MockConfigEntryPoint(tmpdir),)
         elif group == "spack.extensions":
