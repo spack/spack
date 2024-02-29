@@ -1,3 +1,22 @@
+# v0.21.2 (2024-03-01)
+
+## Bugfixes
+
+- Containerize: accommodate nested or pre-existing spack-env paths (#41558)
+- Fix setup-env script, when going back and forth between instances (#40924)
+- Fix using fully-qualified namespaces from root specs (#41957)
+- Fix a bug when a required provider is requested for multiple virtuals (#42088)
+- OCI buildcaches:
+  - only push in parallel when forking (#42143)
+  - use pickleable errors (#42160)
+- Fix using sticky variants in externals (#42253)
+- Fix a rare issue with conditional requirements and multi-valued variants (#42566)
+
+## Package updates
+- rust: add v1.75, rework a few variants (#41161,#41903)
+- py-transformers: add v4.35.2 (#41266)
+- mgard: fix OpenMP on AppleClang (#42933)
+
 # v0.21.1 (2024-01-11)
 
 ## New features
