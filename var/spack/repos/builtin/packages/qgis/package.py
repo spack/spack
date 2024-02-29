@@ -19,10 +19,11 @@ class Qgis(CMakePackage):
 
     license("GPL-2.0-or-later")
 
-    version("3.34.4",  sha256="7d1c5fafff13f508a9bcf6244c9666f891351deb1ace2aedcc63504f070c5ce4")
+    version("3.36.0", sha256="1b64bc92660bf07edc6b6478fc6a13656149e87d92eabe5c3db9493072506e2c")
+    # Prefer latest LTR
+    version("3.34.4", sha256="7d1c5fafff13f508a9bcf6244c9666f891351deb1ace2aedcc63504f070c5ce4", preferred=True)
     version("3.34.0", sha256="348a2df4c4520813a319b7f72546b3823e044cacd28646ba189b56a49c7d1b5f")
-    # Prefer latest version that builds without issues
-    version("3.28.15", sha256="217342ba2232cc8fe5bf8f3671c2b3d6daf5504c33006b67424373e70d568dfa", preferred=True)
+    version("3.28.15", sha256="217342ba2232cc8fe5bf8f3671c2b3d6daf5504c33006b67424373e70d568dfa")
     version("3.28.12", sha256="d6d0ea39ed3433d553f8b83324dc14cfa90f8caaf766fa484791df9169800f25")
     version("3.28.11", sha256="c5eb703893c7f98de051c45d677c4a34b40f986db51782a4930ddefad4e193b4")
     version("3.28.10", sha256="cff867e97909bbc2facce6343770dcb1b61fc6e4855f57783e30bf63d51c5218")
@@ -133,6 +134,7 @@ class Qgis(CMakePackage):
     depends_on("qt+dbus+location")
     depends_on("qt+dbus+location@5.12.0:", when="@3.20:")
     depends_on("qt+dbus+location@5.14.0:", when="@3.28:")
+    depends_on("qt+dbus+location@5.15.2:", when="@3.36:")
     depends_on("qtkeychain@0.5:", when="@3:")
     depends_on("qwt@5:")
     depends_on("qwtpolar")
