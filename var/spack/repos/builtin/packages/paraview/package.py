@@ -139,6 +139,9 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("build_edition=core", when="@:5.7")
     # before 5.3.0, ParaView didn't have VTK-m
     conflicts("use_vtkm=on", when="@:5.3")
+    # From gcc@11:, the <limits> headers have to be explicitly included.
+    # This means paraview@:5.8 cannot compile with it
+    conflicts("%gcc@11:", when="@:5.8")
     # paraview@5.9.0 is recommended when using the xl compiler
     # See https://gitlab.kitware.com/paraview/paraview/-/merge_requests/4433
     conflicts(
@@ -313,12 +316,13 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/10113
     patch("adios2-remove-deprecated-functions.patch", when="@5.10:5.11 ^adios2@2.9:")
 
-    patch("exodusII-netcdf4.9.0.patch", when="@:5.10.2")
+    patch("exodusII-netcdf4.9.0.patch", when="@5.10.0:5.10.2")
 
     generator("ninja", "make", default="ninja")
     # https://gitlab.kitware.com/paraview/paraview/-/issues/21223
     conflicts("generator=ninja", when="%xl")
     conflicts("generator=ninja", when="%xl_r")
+
 
     def url_for_version(self, version):
         _urlfmt = "http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.{3}"
@@ -368,6 +372,11 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
             elif self.spec.satisfies("@5.10: +hdf5"):
                 if self.spec["hdf5"].satisfies("@1.12:"):
                     flags.append("-DH5_USE_110_API")
+
+        if name == "cxxflags" and self.spec.satisfies("@5.10: %gcc@12:"):
+            # Issue with gcc@12: requiring c++14
+            flags.append("-std=c++14")
+
         return (flags, None, None)
 
     def setup_run_environment(self, env):
