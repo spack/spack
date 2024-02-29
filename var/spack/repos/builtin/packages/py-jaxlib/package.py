@@ -12,7 +12,7 @@ class PyJaxlib(PythonPackage, CudaPackage):
     """XLA library for Jax"""
 
     homepage = "https://github.com/google/jax"
-    url = "https://github.com/google/jax/archive/refs/tags/jaxlib-v0.4.19.tar.gz"
+    url = "https://github.com/google/jax/archive/refs/tags/jaxlib-v0.1.74.tar.gz"
 
     tmp_path = ""
     buildtmp = ""
