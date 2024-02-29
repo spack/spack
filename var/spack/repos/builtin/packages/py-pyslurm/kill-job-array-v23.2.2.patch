@@ -1,0 +1,24 @@
+diff --git a/pyslurm/pydefines/slurm_defines.pxi b/pyslurm/pydefines/slurm_defines.pxi
+index f700a83..b741d38 100644
+--- a/pyslurm/pydefines/slurm_defines.pxi
++++ b/pyslurm/pydefines/slurm_defines.pxi
+@@ -409,7 +409,6 @@ TRIGGER_TYPE_PRI_DB_RES_OP = slurm.TRIGGER_TYPE_PRI_DB_RES_OP
+ TRIGGER_TYPE_BURST_BUFFER = slurm.TRIGGER_TYPE_BURST_BUFFER
+ 
+ KILL_JOB_BATCH = slurm.KILL_JOB_BATCH
+-KILL_JOB_ARRAY = slurm.KILL_JOB_ARRAY
+ KILL_STEPS_ONLY = slurm.KILL_STEPS_ONLY
+ KILL_FULL_JOB = slurm.KILL_FULL_JOB
+ KILL_FED_REQUEUE = slurm.KILL_FED_REQUEUE
+diff --git a/pyslurm/slurm/slurm.h.pxi b/pyslurm/slurm/slurm.h.pxi
+index 3605e5a..e7d89ad 100644
+--- a/pyslurm/slurm/slurm.h.pxi
++++ b/pyslurm/slurm/slurm.h.pxi
+@@ -464,7 +464,6 @@ cdef extern from "slurm/slurm.h":
+     uint8_t ASSOC_MGR_INFO_FLAG_USERS
+     uint8_t ASSOC_MGR_INFO_FLAG_QOS
+     uint8_t KILL_JOB_BATCH
+-    uint8_t KILL_JOB_ARRAY
+     uint8_t KILL_STEPS_ONLY
+     uint8_t KILL_FULL_JOB
+     uint8_t KILL_FED_REQUEUE
