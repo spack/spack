@@ -131,7 +131,7 @@ class Qscintilla(QMakePackage):
             makefile.filter("$(INSTALL_ROOT)", "", string=True)
             make("install", "-C", "build/")
 
-     @run_after("install")
-     def build_test(self):
-         python = self.spec["python"].command
-         python("-c","import PyQt5.Qsci")
+    @run_after("install")
+    def build_test(self):
+        python = self.spec["python"].command
+        python("-c","import PyQt5.Qsci")
