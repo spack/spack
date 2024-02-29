@@ -133,6 +133,7 @@ class RiscvGnuToolchain(AutotoolsPackage):
     depends_on("gmake@4.3:", type="build")
 
     conflicts("platform=windows", msg="Windows is not supported.")
+    conflicts('arch=aarch64', msg='aarch64 is not supported.')
 
     variant(
         "compiler_type",
