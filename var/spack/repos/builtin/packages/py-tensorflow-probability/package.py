@@ -83,7 +83,8 @@ class PyTensorflowProbability(Package):
     )  # keep here for backwards compatibility
     depends_on("py-tensorflow@2.4:", when="@0.12:0.17", type=("build", "run"))
 
-    depends_on("bazel@3.2:", type="build")
+    # TODO: Directories have changed in Bazel 7, need to update manual install logic
+    depends_on("bazel@3.2:6", type="build")
 
     def install(self, spec, prefix):
         self.tmp_path = tempfile.mkdtemp(prefix="spack")
