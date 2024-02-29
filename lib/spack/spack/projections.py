@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import spack.util.path
 
 def get_projection(projections, spec):
     """
@@ -11,7 +12,7 @@ def get_projection(projections, spec):
     all_projection = None
     for spec_like, projection in projections.items():
         if spec.satisfies(spec_like):
-            return projection
+            return spack.util.path.substitute_config_variables(projection)
         elif spec_like == "all":
-            all_projection = projection
+            all_projection = spack.util.path.substitute_config_variables(projection)
     return all_projection
