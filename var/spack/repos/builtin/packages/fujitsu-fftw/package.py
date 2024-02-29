@@ -56,6 +56,9 @@ class FujitsuFftw(FftwBase):
     )
     requires("%fj")
 
+    # In spack, an absolute path to the compiler is specified in CC.
+    patch("fujitsu-fftw111.patch", when="@1.1.1 %fj")
+
     def autoreconf(self, spec, prefix):
         if spec.target != "a64fx":
             target_check(spec)
