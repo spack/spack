@@ -75,7 +75,16 @@ def test_spack_entry_points(monkeypatch, tmpdir):
         except ImportError:
             return
         monkeypatch.setattr(pkg_resources, "iter_entry_points", entry_points)
+    config_paths = spack.config.config_paths_from_entry_points()
+    for (name, path) in config_paths:
+        if name == "plugin-mypackage_config":
+            assert path == os.path.join(tmpdir, "spack/etc")
+            break
+    else:
+        assert 0, "mypackage_config entry_point not loaded"
     config = spack.config.create()
     assert config.get("config:install_tree:root") == "/spam/opt"
     extensions = spack.extensions.get_extension_paths()
+    assert os.path.join(tmpdir, "spack/spack-ext") in extensions
+    extensions = spack.extensions.extension_paths_from_entry_points()
     assert os.path.join(tmpdir, "spack/spack-ext") in extensions
