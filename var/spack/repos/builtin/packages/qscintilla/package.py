@@ -88,12 +88,12 @@ class Qscintilla(QMakePackage):
     @run_after("install", when="+python")
     def make_qsci_python(self):
         if "^py-pyqt5" in self.spec:
-            qtx='qt5'
+            qtx = "qt5"
             py_pyqtx = "py-pyqt5"
             pyqtx = "PyQt5"
             ftoml = "pyproject-qt5.toml"
         elif "^py-pyqt6" in self.spec:
-            qtx='qt6'
+            qtx = "qt6"
             py_pyqtx = "py-pyqt6"
             pyqtx = "PyQt6"
             ftoml = "pyproject-qt6.toml"
@@ -110,7 +110,9 @@ class Qscintilla(QMakePackage):
                 # add widgets and printsupport to Qsci.pro
                 # also add link statement to fix "undefined symbol _Z...Qsciprinter...
                 link_qscilibs = "LIBS += -L" + self.prefix.lib + " -lqscintilla2_" + qtx
-                tomlfile.write(f'\n[tool.sip.builder]\nqmake-settings = ["QT += widgets", "QT += printsupport", "{link_qscilibs}"]\n')
+                tomlfile.write(
+                    f'\n[tool.sip.builder]\nqmake-settings = ["QT += widgets", "QT += printsupport", "{link_qscilibs}"]\n'
+                )
 
             mkdirp(os.path.join(self.prefix.share.sip, pyqtx))
 
@@ -134,4 +136,4 @@ class Qscintilla(QMakePackage):
     @run_after("install")
     def build_test(self):
         python = self.spec["python"].command
-        python("-c","import PyQt5.Qsci")
+        python("-c", "import PyQt5.Qsci")
