@@ -176,7 +176,7 @@ class Vtk(CMakePackage):
     depends_on("gl2ps", when="@8.1:")
     depends_on("gl2ps@1.4.1:", when="@9:")
     depends_on("proj@4", when="@8.2.0")
-    depends_on("proj@4:7", when="@9:")
+    depends_on("proj@4:", when="@9:")
     depends_on("cgns@4.1.1:+mpi", when="@9.1: +mpi")
     depends_on("cgns@4.1.1:~mpi", when="@9.1: ~mpi")
     with when("@9.1:"):
