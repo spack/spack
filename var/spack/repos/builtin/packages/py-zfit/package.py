@@ -29,7 +29,10 @@ class PyZfit(PythonPackage):
     depends_on("python@3.9:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
-    runtype = ("run", "build")  # TODO: remove "build" once fixed in spack that tests need "run", not "build"
+    runtype = (
+        "run",
+        "build",
+    )  # TODO: remove "build" once fixed in spack that tests need "run", not "build"
 
     # TODO: reactivate once TF 2.15 is ready https://github.com/spack/spack/pull/41069
     # depends_on("py-tensorflow@2.15", type=("run"), when="@0.18")
@@ -47,11 +50,11 @@ class PyZfit(PythonPackage):
     variant("nlopt", default=False, description="Enable nlopt support")
 
     with when("+nlopt"):
-        depends_on("nlopt@2.7.1: +python", type=runtype)
+        depends_on("nlopt@2.7.1: +python", type=runtype, default=False)
 
     variant("hs3")
     with when("+hs3"):
-        depends_on("py-asdf", type=runtype)
+        depends_on("py-asdf", type=runtype, default=True)
 
     depends_on("py-boost-histogram", type=runtype)
     depends_on("py-colorama", type=runtype)
