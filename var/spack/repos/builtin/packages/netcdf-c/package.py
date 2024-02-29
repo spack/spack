@@ -65,9 +65,6 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
         # the changes not incorporated into that PR
         patch("netcdfc_correct_and_export_link_interface.patch", when="platform=windows")
 
-        # Incorrect hdf5 libraries names are put in the package config and config.cmake files
-        patch("4.9.2-fix-hdf5-pkgconfigcmake.patch", when="@4.9.2")
-
     # Some of the patches touch configure.ac and, therefore, require forcing the autoreconf stage:
     _force_autoreconf_when = []
     with when("build_system=autotools"):
@@ -353,6 +350,22 @@ class CMakeBuilder(BaseBuilder, cmake.CMakeBuilder):
         else:
             base_cmake_args.append(self.define("NC_FIND_SHARED_LIBS", False))
         return base_cmake_args
+
+    @run_after("install")
+    def patch_hdf5_pkgconfigcmake(self):
+        """
+        Incorrect hdf5 library names are put in the package config and config.cmake files
+        due to incorrectly using hdf5 target names
+        https://github.com/spack/spack/pull/42878
+        """
+
+        pkgconfig_file = join_path(self.prefix.lib64.pkgconfig, "netcdf.pc")
+        filter_file("hdf5-shared", "hdf5", pkgconfig_file)
+        filter_file("hdf5_hl-shared", "hdf5_hl", pkgconfig_file)
+
+        cmakeconfig_file = join_path(self.prefix.lib64.cmake.netCDF, "netCDFTargets.cmake")
+        filter_file("hdf5-shared", "hdf5", cmakeconfig_file)
+        filter_file("hdf5_hl-shared", "hdf5_hl", cmakeconfig_file)
 
 
 class AutotoolsBuilder(BaseBuilder, autotools.AutotoolsBuilder):
