@@ -184,6 +184,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     variant("strumpack", default=False, description="Enable support for STRUMPACK")
     variant("suite-sparse", default=False, description="Enable serial, sparse direct solvers")
     variant("petsc", default=False, description="Enable PETSc solvers, preconditioners, etc.")
+    variant("mumps", default=False, description="Enable MUMPS solver.")
     variant("slepc", default=False, description="Enable SLEPc integration")
     variant("sundials", default=False, description="Enable Sundials time integrators")
     variant("pumi", default=False, description="Enable functionality based on PUMI")
@@ -254,6 +255,10 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     conflicts("+slepc", when="~petsc")
     conflicts("+pumi", when="~mpi")
     conflicts("timer=mpi", when="~mpi")
+    conflicts("~lapack", when="+mumps")
+    conflicts("~metis", when="+mumps")
+    conflicts("~mpi", when="+mumps")
+    conflicts("mfem~openmp ^mumps+openmp")
 
     # See https://github.com/mfem/mfem/issues/2957
     conflicts("^mpich@4:", when="@:4.3+mpi")
@@ -349,6 +354,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         depends_on(
             f"slepc+rocm amdgpu_target={gfx}", when=f"+rocm+slepc amdgpu_target={gfx} ^petsc+rocm"
         )
+    depends_on("mumps@5.1.1:+metis", when="+mumps")
     depends_on("mpfr", when="+mpfr")
     depends_on("netcdf-c@4.1.3:", when="+netcdf")
     depends_on("unwind", when="+libunwind")
@@ -614,6 +620,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             "MFEM_MPIEXEC=%s" % mfem_mpiexec,
             "MFEM_MPIEXEC_NP=%s" % mfem_mpiexec_np,
             "MFEM_USE_EXCEPTIONS=%s" % yes_no("+exceptions"),
+            "MFEM_USE_MUMPS=%s" % yes_no("+mumps"),
         ]
 
         # Determine C++ standard to use:
