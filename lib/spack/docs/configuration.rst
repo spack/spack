@@ -205,6 +205,9 @@ with MPICH. You can create different configuration scopes for use with
 Plugin scopes
 ^^^^^^^^^^^^^
 
+.. note::
+   Python version >= 3.8 is required to enable plugin configuration.
+
 Spack can be made aware of configuration scopes that are installed as part of a python package.  To do so, register a function that returns the scope's path to the ``"spack.config"`` entry point.  Consider the Python package ``my_package`` that includes Spack configurations:
 
 .. code-block:: console

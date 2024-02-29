@@ -116,6 +116,9 @@ The corresponding unit tests can be run giving the appropriate options to ``spac
 Registering Extensions via Entry Points
 ---------------------------------------
 
+.. note::
+   Python version >= 3.8 is required to register extensions via entry points.
+
 Spack can be made aware of extensions that are installed as part of a python package.  To do so, register a function that returns the extension path, or paths, to the ``"spack.extensions"`` entry point.  Consider the Python package ``my_package`` that includes a Spack extension:
 
 .. code-block:: console
