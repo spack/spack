@@ -154,17 +154,17 @@ ignore_missing_imports = true
       'boto3',
       'botocore',
       'distro',
+      'importlib.metadata',
       'jinja2',
       'jsonschema',
       'macholib',
       'markupsafe',
       'numpy',
+      'pkg_resources',
       'pyristent',
       'pytest',
       'ruamel.yaml',
       'six',
-      'pkg_resources',
-      'importlib.metadata',
   ]
   follow_imports = 'skip'
   follow_imports_for_stubs = true

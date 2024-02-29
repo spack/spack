@@ -859,7 +859,7 @@ def get_entry_points(*, group: str):
 
     try:
         try:
-            from importlib import metadata as importlib_metadata
+            from importlib import metadata as importlib_metadata  # type: ignore  # novermin
         except ImportError:
             import importlib_metadata  # type: ignore  # mypy thinks this is a redefinition
         try:
@@ -874,7 +874,7 @@ def get_entry_points(*, group: str):
         # But if we're not on Python >= 3.8 and the importlib_metadata backport
         # is not installed, we fall back to pkg_resources anyway.
         try:
-            import pkg_resources
+            import pkg_resources  # type: ignore
         except ImportError:
             warnings.warn(
                 "Under Python <= 3.7, Spack requires either the importlib_metadata "

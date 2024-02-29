@@ -65,13 +65,13 @@ def test_spack_entry_points(monkeypatch, tmpdir):
     entry_points = entry_points_factory(tmpdir)
     try:
         try:
-            import importlib.metadata as importlib_metadata
+            import importlib.metadata as importlib_metadata  # type: ignore # novermin
         except ImportError:
             import importlib_metadata
         monkeypatch.setattr(importlib_metadata, "entry_points", entry_points)
     except ImportError:
         try:
-            import pkg_resources
+            import pkg_resources  # type: ignore
         except ImportError:
             return
         monkeypatch.setattr(pkg_resources, "iter_entry_points", entry_points)
