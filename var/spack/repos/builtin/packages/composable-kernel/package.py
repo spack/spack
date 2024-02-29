@@ -75,15 +75,14 @@ class ComposableKernel(CMakePackage):
                 "CMAKE_CXX_COMPILER", "{0}/bin/clang++".format(spec["llvm-amdgpu"].prefix)
             ),
             self.define("CMAKE_C_COMPILER", "{0}/bin/clang".format(spec["llvm-amdgpu"].prefix)),
-            self.define("HIP_PATH", spec["hip"].prefix),
-            self.define("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)),
-            self.define("CMAKE_CXX_FLAGS", "-O3"),
             self.define("CMAKE_BUILD_TYPE", "Release"),
         ]
         if "auto" not in self.spec.variants["amdgpu_target"]:
-            args.append(self.define_from_variant("AMDGPU_TARGETS", "amdgpu_target"))
+            args.append(self.define_from_variant("GPU_TARGETS", "amdgpu_target"))
         if self.spec.satisfies("@5.6.0:"):
             args.append(self.define("INSTANCES_ONLY", "ON"))
+        if self.spec.satisfies("@:5.7"):
+            args.append(self.define("CMAKE_CXX_FLAGS", "-O3"))
         return args
 
     def build(self, spec, prefix):
