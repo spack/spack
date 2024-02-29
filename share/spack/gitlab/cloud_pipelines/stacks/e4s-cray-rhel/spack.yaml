@@ -19,7 +19,6 @@ spack:
         mpi: [cray-mpich]
         tbb: [intel-tbb]
         scalapack: [netlib-scalapack]
-      target: [zen4]
       variants: +mpi
 
     tbb:
@@ -67,87 +66,99 @@ spack:
     unzip:
       require: "%gcc"
 
+  definitions:
+    - specs:
+      - adios
+      - aml
+      - arborx
+      - argobots
+      - bolt
+      - butterflypack
+      - boost +python +filesystem +iostreams +system
+      - cabana
+      - caliper
+      - chai ~benchmarks ~tests
+      - charliecloud
+      - conduit
+      - datatransferkit
+      - flecsi
+      - flit
+      - flux-core
+      - fortrilinos
+      - ginkgo
+      - globalarrays
+      - gmp
+      - gotcha
+      - h5bench
+      - hdf5-vol-async
+      - hdf5-vol-cache
+      - hdf5-vol-log
+      - heffte +fftw
+      - hpx max_cpu_count=512 networking=mpi
+      - hypre
+      - kokkos +openmp
+      - kokkos-kernels +openmp
+      - lammps
+      - legion
+      - libnrm
+      - libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed
+        +lua +openmp +python +sz +sz3 +unix +zfp +json +remote +netcdf +mgard
+      - libquo
+      - libunwind
+      - mercury
+      - metall
+      - mfem
+      - mgard +serial +openmp +timing +unstructured ~cuda
+      - mpark-variant
+      - mpifileutils ~xattr
+      - nccmp
+      - nco
+      - netlib-scalapack
+      - omega-h
+      - openmpi
+      - openpmd-api
+      - papi
+      - papyrus
+      - pdt
+      - petsc
+      - plumed
+      - precice
+      - pumi
+      - py-h5py +mpi
+      - py-h5py ~mpi
+      - py-libensemble +mpi +nlopt
+      - py-petsc4py
+      - qthreads scheduler=distrib
+      - raja
+      - slate ~cuda
+      - slepc
+      - stc
+      - sundials
+      - superlu
+      - superlu-dist
+      - swig
+      - swig@4.0.2-fortran
+      - sz3
+      - tasmanian
+      - tau +mpi +python
+      - trilinos@13.0.1 +belos +ifpack2 +stokhos
+      - trilinos +belos +ifpack2 +stokhos
+      - turbine
+      - umap
+      - umpire
+      - veloc
+      - wannier90
+
   specs:
-  # CPU
-  - adios
-  - aml
-  - arborx
-  - argobots
-  - bolt
-  - butterflypack
-  - boost +python +filesystem +iostreams +system
-  - cabana
-  - caliper
-  - chai ~benchmarks ~tests
-  - charliecloud
-  - conduit
-  - datatransferkit
-  - flecsi
-  - flit
-  - flux-core
-  - fortrilinos
-  - ginkgo
-  - globalarrays
-  - gmp
-  - gotcha
-  - h5bench
-  - hdf5-vol-async
-  - hdf5-vol-cache
-  - hdf5-vol-log
-  - heffte +fftw
-  - hpx max_cpu_count=512 networking=mpi
-  - hypre
-  - kokkos +openmp
-  - kokkos-kernels +openmp
-  - lammps
-  - legion
-  - libnrm
-  - libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed
-    +lua +openmp +python +sz +sz3 +unix +zfp +json +remote +netcdf +mgard
-  - libquo
-  - libunwind
-  - mercury
-  - metall
-  - mfem
-  - mgard +serial +openmp +timing +unstructured ~cuda
-  - mpark-variant
-  - mpifileutils ~xattr
-  - nccmp
-  - nco
-  - netlib-scalapack
-  - omega-h
-  - openmpi
-  - openpmd-api
-  - papi
-  - papyrus
-  - pdt
-  - petsc
-  - plumed
-  - precice
-  - pumi
-  - py-h5py +mpi
-  - py-h5py ~mpi
-  - py-libensemble +mpi +nlopt
-  - py-petsc4py
-  - qthreads scheduler=distrib
-  - raja
-  - slate ~cuda
-  - slepc
-  - stc
-  - sundials
-  - superlu
-  - superlu-dist
-  - swig
-  - swig@4.0.2-fortran
-  - sz3
-  - tasmanian
-  - tau +mpi +python
-  - trilinos@13.0.1 +belos +ifpack2 +stokhos
-  - turbine
-  - umap
-  - umpire
-  - veloc
-  - wannier90
+  - matrix:
+    - [$specs]
+    - ["%cce"]
+  - matrix:
+    - [$specs]
+    - ["%gcc"]
+    exclude:
+    - slepc               # slepc: ERROR: Unable to link with PETSc
+    - py-petsc4py         # py-petsc4py: gcc: error: unrecognized command-line option '-Qunused-arguments'
 
   # - alquimia            # pflotran: petsc-3.19.4-c6pmpdtpzarytxo434zf76jqdkhdyn37/lib/petsc/conf/rules:169: material_aux.o] Error 1: fortran errors
   # - amrex               # disabled temporarily pending resolution of unreproducible CI failure
