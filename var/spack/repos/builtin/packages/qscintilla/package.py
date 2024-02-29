@@ -88,10 +88,12 @@ class Qscintilla(QMakePackage):
     @run_after("install", when="+python")
     def make_qsci_python(self):
         if "^py-pyqt5" in self.spec:
+            qtx='qt5'
             py_pyqtx = "py-pyqt5"
             pyqtx = "PyQt5"
             ftoml = "pyproject-qt5.toml"
         elif "^py-pyqt6" in self.spec:
+            qtx='qt6'
             py_pyqtx = "py-pyqt6"
             pyqtx = "PyQt6"
             ftoml = "pyproject-qt6.toml"
@@ -105,18 +107,13 @@ class Qscintilla(QMakePackage):
             with open("pyproject.toml", "a") as tomlfile:
                 # https://pyqt-builder.readthedocs.io/en/latest/pyproject_toml.html
                 tomlfile.write(f'\n[tool.sip.project]\nsip-include-dirs = ["{sip_inc_dir}"]\n')
-                tomlfile.write(f'\n[tool.sip.builder]\nqmake-settings = ["QT += widgets", "QT += printsupport"]\n')
+                # add widgets and printsupport to Qsci.pro
+                # also add link statement to fix "undefined symbol _Z...Qsciprinter...
+                link_qscilibs = "LIBS += -L" + self.prefix.lib + " -lqscintilla2_" + qtx
+                tomlfile.write(f'\n[tool.sip.builder]\nqmake-settings = ["QT += widgets", "QT += printsupport", "{link_qscilibs}"]\n')
 
             mkdirp(os.path.join(self.prefix.share.sip, pyqtx))
 
-            if "^py-pyqt5" in self.spec:
-                # QT += widgets and QT += printsupport need to be added to Qsci.pro file
-                # to be generated via project.py
-                qsciproj = FileFilter(join_path("project.py"))
-                ptrn = "super().__init__(project, 'Qsci', qmake_CONFIG=qmake_CONFIG"
-#                qsciproj.filter(
-#                    ptrn + ")", ptrn + ",qmake_QT=['widgets','printsupport'])", string=True
-#                )
             sip_build = Executable(self.spec["py-sip"].prefix.bin.join("sip-build"))
             sip_build(
                 "--target-dir=" + python_platlib,
