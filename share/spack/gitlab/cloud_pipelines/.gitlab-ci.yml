@@ -125,8 +125,8 @@ default:
     - spack env activate --without-view share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
     - spack
       compiler find
-    - spack
-      audit configs || true
+      # - spack
+      #   audit configs
     - python ${SPACK_CI_SCRIPTS_ROOT}/common/expand_vars.py
       "${SPACK_CI_CONFIG_ROOT}/${PIPELINE_MIRROR_TEMPLATE}"
       "${SPACK_CI_CONFIG_ROOT}/mirrors.yaml"
