@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,12 +22,18 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
 
     tags = ["e4s"]
 
+    license("MIT")
+
     version("develop", branch="develop")
     version("master", branch="master")
     version("1.7.0", commit="49242ff89af1e695d7794f6d50ed9933024b66fe")  # v1.7.0
     version("1.6.0", commit="1f1ed46e724334626f016f105213c047e16bc1ae")  # v1.6.0
     version("1.5.0", commit="234594c92b58e2384dfb43c2d08e7f43e2b58e7a")  # v1.5.0
-    version("1.5.0.glu_experimental", branch="glu_experimental")
+    version(
+        "1.5.0.glu_experimental",
+        branch="glu_experimental",
+        commit="e234eab1bd7afe85dd594638e291a2caf464bfb1",
+    )
     version("1.4.0", commit="f811917c1def4d0fcd8db3fe5c948ce13409e28e")  # v1.4.0
     version("1.3.0", commit="4678668c66f634169def81620a85c9a20b7cec78")  # v1.3.0
     version("1.2.0", commit="b4be2be961fd5db45c3d02b5e004d73550722e31")  # v1.2.0
@@ -41,7 +47,8 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     variant("sycl", default=False, description="Enable SYCL backend")
     variant("develtools", default=False, description="Compile with develtools enabled")
     variant("hwloc", default=False, description="Enable HWLOC support")
-    variant("mpi", default=False, description="Enable MPI support")
+    variant("sde", default=False, description="Enable PAPI SDE support", when="@1.7.0:")
+    variant("mpi", default=False, description="Enable MPI support", when="@1.5.0:")
 
     depends_on("cmake@3.9:", type="build", when="@:1.3.0")
     depends_on("cmake@3.13:", type="build", when="@1.4.0:1.6.0")
@@ -62,6 +69,8 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     # setup for rocthrust, this needs to also be added here.
     depends_on("rocprim", when="+rocm")
     depends_on("hwloc@2.1:", when="+hwloc")
+    # TODO: replace with the next PAPI version when available (>7.0.1.0)
+    depends_on("papi@master+sde", when="+sde")
 
     depends_on("googletest", type="test")
     depends_on("numactl", type="test", when="+hwloc")
@@ -72,7 +81,6 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
 
     conflicts("%gcc@:5.2.9")
     conflicts("+rocm", when="@:1.1.1")
-    conflicts("+mpi", when="@:1.4.0")
 
     # ROCm 4.1.0 breaks platform settings which breaks Ginkgo's HIP support.
     conflicts("^hip@4.1.0:", when="@:1.3.0")
@@ -91,6 +99,9 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     conflicts(
         "+sycl", when="@:1.4.0", msg="For SYCL support, please use Ginkgo version 1.4.0 and newer."
     )
+
+    # https://github.com/ginkgo-project/ginkgo/pull/1524
+    patch("ginkgo-sycl-pr1524.patch", when="@1.7.0 +sycl %oneapi@2024:")
 
     # Skip smoke tests if compatible hardware isn't found
     patch("1.4.0_skip_invalid_smoke_tests.patch", when="@1.4.0")
@@ -142,6 +153,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
             from_variant("BUILD_SHARED_LIBS", "shared"),
             from_variant("GINKGO_JACOBI_FULL_OPTIMIZATIONS", "full_optimizations"),
             from_variant("GINKGO_BUILD_HWLOC", "hwloc"),
+            from_variant("GINKGO_WITH_PAPI_SDE", "sde"),
             from_variant("GINKGO_DEVEL_TOOLS", "develtools"),
             # As we are not exposing benchmarks, examples, tests nor doc
             # as part of the installation, disable building them altogether.

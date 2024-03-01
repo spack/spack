@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Gsl(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org/software/gsl"
     gnu_mirror_path = "gsl/gsl-2.3.tar.gz"
+
+    license("GPL-3.0-or-later")
 
     version("2.7.1", sha256="dcb0fbd43048832b757ff9942691a8dd70026d5da0ff85601e52687f6deeb34b")
     version("2.7", sha256="efbbf3785da0e53038be7907500628b466152dbc3c173a87de1b5eba2e23602b")

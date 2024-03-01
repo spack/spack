@@ -1,7 +1,8 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import inspect
 import itertools
 import os
 import re
@@ -9,6 +10,7 @@ import sys
 
 import pytest
 
+import spack.cmd
 import spack.platforms.test
 import spack.spec
 import spack.variant
@@ -203,7 +205,8 @@ def specfile_for(default_mock_concretization):
             "mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1~qt_4 debug=2 ^stackwalker@8.1_1e",
         ),
         (
-            "mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1 cppflags=-O3 +debug~qt_4 ^stackwalker@8.1_1e",  # noqa: E501
+            "mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1 cppflags=-O3 +debug~qt_4 "
+            "^stackwalker@8.1_1e",
             [
                 Token(TokenType.UNQUALIFIED_PACKAGE_NAME, value="mvapich_foo"),
                 Token(TokenType.DEPENDENCY, value="^"),
@@ -217,7 +220,8 @@ def specfile_for(default_mock_concretization):
                 Token(TokenType.UNQUALIFIED_PACKAGE_NAME, value="stackwalker"),
                 Token(TokenType.VERSION, value="@8.1_1e"),
             ],
-            'mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1 cppflags="-O3" +debug~qt_4 ^stackwalker@8.1_1e',  # noqa: E501
+            "mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1 cppflags=-O3 +debug~qt_4 "
+            "^stackwalker@8.1_1e",
         ),
         # Specs containing YAML or JSON in the package name
         (
@@ -424,7 +428,7 @@ def specfile_for(default_mock_concretization):
         compiler_with_version_range("%gcc@10.1.0,12.2.1:"),
         compiler_with_version_range("%gcc@:8.4.3,10.2.1:12.1.0"),
         # Special key value arguments
-        ("dev_path=*", [Token(TokenType.KEY_VALUE_PAIR, value="dev_path=*")], "dev_path=*"),
+        ("dev_path=*", [Token(TokenType.KEY_VALUE_PAIR, value="dev_path=*")], "dev_path='*'"),
         (
             "dev_path=none",
             [Token(TokenType.KEY_VALUE_PAIR, value="dev_path=none")],
@@ -444,33 +448,28 @@ def specfile_for(default_mock_concretization):
         (
             "cflags=a=b=c",
             [Token(TokenType.KEY_VALUE_PAIR, value="cflags=a=b=c")],
-            'cflags="a=b=c"',
+            "cflags='a=b=c'",
         ),
         (
             "cflags=a=b=c",
             [Token(TokenType.KEY_VALUE_PAIR, value="cflags=a=b=c")],
-            'cflags="a=b=c"',
+            "cflags='a=b=c'",
         ),
         (
             "cflags=a=b=c+~",
             [Token(TokenType.KEY_VALUE_PAIR, value="cflags=a=b=c+~")],
-            'cflags="a=b=c+~"',
+            "cflags='a=b=c+~'",
         ),
         (
             "cflags=-Wl,a,b,c",
             [Token(TokenType.KEY_VALUE_PAIR, value="cflags=-Wl,a,b,c")],
-            'cflags="-Wl,a,b,c"',
+            "cflags=-Wl,a,b,c",
         ),
         # Multi quoted
         (
-            "cflags=''-Wl,a,b,c''",
-            [Token(TokenType.KEY_VALUE_PAIR, value="cflags=''-Wl,a,b,c''")],
-            'cflags="-Wl,a,b,c"',
-        ),
-        (
             'cflags=="-O3 -g"',
             [Token(TokenType.PROPAGATED_KEY_VALUE_PAIR, value='cflags=="-O3 -g"')],
-            'cflags=="-O3 -g"',
+            "cflags=='-O3 -g'",
         ),
         # Whitespace is allowed in version lists
         ("@1.2:1.4 , 1.6 ", [Token(TokenType.VERSION, value="@1.2:1.4 , 1.6")], "@1.2:1.4,1.6"),
@@ -483,22 +482,6 @@ def specfile_for(default_mock_concretization):
                 Token(TokenType.UNQUALIFIED_PACKAGE_NAME, value="b"),
             ],
             "a@1:",
-        ),
-        (
-            "@1.2:   develop   = foo",
-            [
-                Token(TokenType.VERSION, value="@1.2:"),
-                Token(TokenType.KEY_VALUE_PAIR, value="develop   = foo"),
-            ],
-            "@1.2: develop=foo",
-        ),
-        (
-            "@1.2:develop   = foo",
-            [
-                Token(TokenType.VERSION, value="@1.2:"),
-                Token(TokenType.KEY_VALUE_PAIR, value="develop   = foo"),
-            ],
-            "@1.2: develop=foo",
         ),
         (
             "% intel @ 12.1:12.6 + debug",
@@ -539,6 +522,23 @@ def specfile_for(default_mock_concretization):
                 Token(TokenType.UNQUALIFIED_PACKAGE_NAME, value="openmpi"),
             ],
             "^[virtuals=mpi] openmpi",
+        ),
+        # Allow merging attributes, if deptypes match
+        (
+            "^[virtuals=mpi] openmpi+foo ^[virtuals=lapack] openmpi+bar",
+            [
+                Token(TokenType.START_EDGE_PROPERTIES, value="^["),
+                Token(TokenType.KEY_VALUE_PAIR, value="virtuals=mpi"),
+                Token(TokenType.END_EDGE_PROPERTIES, value="]"),
+                Token(TokenType.UNQUALIFIED_PACKAGE_NAME, value="openmpi"),
+                Token(TokenType.BOOL_VARIANT, value="+foo"),
+                Token(TokenType.START_EDGE_PROPERTIES, value="^["),
+                Token(TokenType.KEY_VALUE_PAIR, value="virtuals=lapack"),
+                Token(TokenType.END_EDGE_PROPERTIES, value="]"),
+                Token(TokenType.UNQUALIFIED_PACKAGE_NAME, value="openmpi"),
+                Token(TokenType.BOOL_VARIANT, value="+bar"),
+            ],
+            "^[virtuals=lapack,mpi] openmpi+bar+foo",
         ),
         (
             "^[deptypes=link,build] zlib",
@@ -587,8 +587,8 @@ def specfile_for(default_mock_concretization):
 )
 def test_parse_single_spec(spec_str, tokens, expected_roundtrip):
     parser = SpecParser(spec_str)
-    assert parser.tokens() == tokens
-    assert str(parser.next_spec()) == expected_roundtrip
+    assert tokens == parser.tokens()
+    assert expected_roundtrip == str(parser.next_spec())
 
 
 @pytest.mark.parametrize(
@@ -655,19 +655,79 @@ def test_parse_multiple_specs(text, tokens, expected_specs):
 
 
 @pytest.mark.parametrize(
+    "args,expected",
+    [
+        # Test that CLI-quoted flags/variant values are preserved
+        (["zlib", "cflags=-O3 -g", "+bar", "baz"], "zlib cflags='-O3 -g' +bar baz"),
+        # Test that CLI-quoted propagated flags/variant values are preserved
+        (["zlib", "cflags==-O3 -g", "+bar", "baz"], "zlib cflags=='-O3 -g' +bar baz"),
+        # An entire string passed on the CLI with embedded quotes also works
+        (["zlib cflags='-O3 -g' +bar baz"], "zlib cflags='-O3 -g' +bar baz"),
+        # Entire string *without* quoted flags splits -O3/-g (-g interpreted as a variant)
+        (["zlib cflags=-O3 -g +bar baz"], "zlib cflags=-O3 +bar~g baz"),
+        # If the entirety of "-O3 -g +bar baz" is quoted on the CLI, it's all taken as flags
+        (["zlib", "cflags=-O3 -g +bar baz"], "zlib cflags='-O3 -g +bar baz'"),
+        # If the string doesn't start with key=, it needs internal quotes for flags
+        (["zlib", " cflags=-O3 -g +bar baz"], "zlib cflags=-O3 +bar~g baz"),
+        # Internal quotes for quoted CLI args are considered part of *one* arg
+        (["zlib", 'cflags="-O3 -g" +bar baz'], """zlib cflags='"-O3 -g" +bar baz'"""),
+        # Use double quotes if internal single quotes are present
+        (["zlib", "cflags='-O3 -g' +bar baz"], '''zlib cflags="'-O3 -g' +bar baz"'''),
+        # Use single quotes and escape single quotes with internal single and double quotes
+        (["zlib", "cflags='-O3 -g' \"+bar baz\""], 'zlib cflags="\'-O3 -g\' \\"+bar baz\\""'),
+        # Ensure that empty strings are handled correctly on CLI
+        (["zlib", "ldflags=", "+pic"], "zlib+pic"),
+        # These flags are assumed to be quoted by the shell, but the space doesn't matter because
+        # flags are space-separated.
+        (["zlib", "ldflags= +pic"], "zlib ldflags='+pic'"),
+        (["ldflags= +pic"], "ldflags='+pic'"),
+        # If the name is not a flag name, the space is preserved verbatim, because variant values
+        # are comma-separated.
+        (["zlib", "foo= +pic"], "zlib foo=' +pic'"),
+        (["foo= +pic"], "foo=' +pic'"),
+        # You can ensure no quotes are added parse_specs() by starting your string with space,
+        # but you still need to quote empty strings properly.
+        ([" ldflags= +pic"], SpecTokenizationError),
+        ([" ldflags=", "+pic"], SpecTokenizationError),
+        ([" ldflags='' +pic"], "+pic"),
+        ([" ldflags=''", "+pic"], "+pic"),
+        # Ensure that empty strings are handled properly in quoted strings
+        (["zlib ldflags='' +pic"], "zlib+pic"),
+        # Ensure that $ORIGIN is handled correctly
+        (["zlib", "ldflags=-Wl,-rpath=$ORIGIN/_libs"], "zlib ldflags='-Wl,-rpath=$ORIGIN/_libs'"),
+        # Ensure that passing escaped quotes on the CLI raises a tokenization error
+        (["zlib", '"-g', '-O2"'], SpecTokenizationError),
+    ],
+)
+def test_cli_spec_roundtrip(args, expected):
+    if inspect.isclass(expected) and issubclass(expected, BaseException):
+        with pytest.raises(expected):
+            spack.cmd.parse_specs(args)
+        return
+
+    specs = spack.cmd.parse_specs(args)
+    output_string = " ".join(str(spec) for spec in specs)
+    assert expected == output_string
+
+
+@pytest.mark.parametrize(
     "text,expected_in_error",
     [
-        ("x@@1.2", "x@@1.2\n ^^^^^"),
-        ("y ^x@@1.2", "y ^x@@1.2\n   ^^^^^"),
-        ("x@1.2::", "x@1.2::\n      ^"),
-        ("x::", "x::\n ^^"),
+        ("x@@1.2", r"x@@1.2\n ^"),
+        ("y ^x@@1.2", r"y ^x@@1.2\n    ^"),
+        ("x@1.2::", r"x@1.2::\n      ^"),
+        ("x::", r"x::\n ^^"),
+        ("cflags=''-Wl,a,b,c''", r"cflags=''-Wl,a,b,c''\n            ^ ^ ^ ^^"),
+        ("@1.2:   develop   = foo", r"@1.2:   develop   = foo\n                  ^^"),
+        ("@1.2:develop   = foo", r"@1.2:develop   = foo\n               ^^"),
     ],
 )
 def test_error_reporting(text, expected_in_error):
     parser = SpecParser(text)
     with pytest.raises(SpecTokenizationError) as exc:
         parser.tokens()
-        assert expected_in_error in str(exc), parser.tokens()
+
+    assert expected_in_error in str(exc), parser.tokens()
 
 
 @pytest.mark.parametrize(

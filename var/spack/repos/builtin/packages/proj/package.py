@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,8 @@ class Proj(CMakePackage, AutotoolsPackage):
     # Version 6 removes projects.h, while version 7 removes proj_api.h.
     # Many packages that depend on proj do not yet support the newer API.
     # See https://github.com/OSGeo/PROJ/wiki/proj.h-adoption-status
+
+    license("MIT")
 
     version("9.2.1", sha256="15ebf4afa8744b9e6fccb5d571fc9f338dc3adcf99907d9e62d1af815d4971a1")
     version("9.2.0", sha256="dea816f5aa732ae6b2ee3977b9bdb28b1d848cf56a1aad8faf6708b89f0ed50e")
@@ -82,8 +84,11 @@ class Proj(CMakePackage, AutotoolsPackage):
     patch(
         "https://github.com/OSGeo/PROJ/commit/3f38a67a354a3a1e5cca97793b9a43860c380d95.patch?full_index=1",
         sha256="dc620ff1bbcc0ef4130d53a40a8693a1e2e72ebf83bd6289f1139d0f1aad2a40",
-        when="@7:7.2.1",
+        when="@6.2:9.1",
     )
+
+    patch("proj.cmakelists.5.0.patch", when="@5.0")
+    patch("proj.cmakelists.5.1.patch", when="@5.1:5.2")
 
     # https://proj.org/install.html#build-requirements
     with when("build_system=cmake"):
@@ -111,14 +116,8 @@ class Proj(CMakePackage, AutotoolsPackage):
         # * https://rasterio.readthedocs.io/en/latest/faq.html
         env.set("PROJ_LIB", self.prefix.share.proj)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
-
 
 class BaseBuilder(metaclass=spack.builder.PhaseCallbacksMeta):
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        self.pkg.setup_run_environment(env)
-
     def setup_build_environment(self, env):
         env.set("PROJ_LIB", join_path(self.pkg.stage.source_path, "nad"))
 
@@ -137,6 +136,13 @@ class CMakeBuilder(BaseBuilder, cmake.CMakeBuilder):
         ]
         if self.spec.satisfies("@6:") and self.pkg.run_tests:
             args.append(self.define("USE_EXTERNAL_GTEST", True))
+        if self.spec.satisfies("@7:"):
+            test_flag = "BUILD_TESTING"
+        elif self.spec.satisfies("@5.1:"):
+            test_flag = "PROJ_TESTS"
+        else:
+            test_flag = "PROJ4_TESTS"
+        args.append(self.define(test_flag, self.pkg.run_tests))
         return args
 
 

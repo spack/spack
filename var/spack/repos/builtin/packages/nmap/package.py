@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Nmap(AutotoolsPackage):
     homepage = "https://nmap.org"
     url = "https://nmap.org/dist/nmap-7.70.tar.bz2"
     list_url = "https://nmap.org/dist-old/"
+
+    license("custom")
 
     version("7.93", sha256="55bcfe4793e25acc96ba4274d8c4228db550b8e8efd72004b38ec55a2dd16651")
     version("7.92", sha256="a5479f2f8a6b0b2516767d2f7189c386c1dc858d997167d7ec5cfc798c7571a1")

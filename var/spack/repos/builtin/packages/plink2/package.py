@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Plink2(MakefilePackage):
     version("2.00a4.3", tag="v2.00a4.3", commit="59fca48f6f8135886ff68962fbe31ae0c6413228")
 
     depends_on("zlib-api")
-    depends_on("zlib@1.2.12:", when="^zlib")
+    depends_on("zlib@1.2.12:", when="^[virtuals=zlib-api] zlib")
     depends_on("zstd@1.5.2:")
     depends_on("libdeflate@1.10:")
     depends_on("blas")

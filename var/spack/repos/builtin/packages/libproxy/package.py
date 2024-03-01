@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Libproxy(CMakePackage):
 
     homepage = "https://libproxy.github.io/libproxy/"
     url = "https://github.com/libproxy/libproxy/archive/0.4.15.tar.gz"
+
+    license("LGPL-2.0-or-later")
 
     version("0.4.17", sha256="88c624711412665515e2800a7e564aabb5b3ee781b9820eca9168035b0de60a9")
     version("0.4.16", sha256="9e7959d6ae1d6c817f0ac1e253105ce8d99f55d7821c1b6eaef32bf6879c6f0a")

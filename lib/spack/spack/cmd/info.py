@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,13 +11,13 @@ import llnl.util.tty as tty
 import llnl.util.tty.color as color
 from llnl.util.tty.colify import colify
 
-import spack.cmd.common.arguments as arguments
 import spack.deptypes as dt
 import spack.fetch_strategy as fs
 import spack.install_test
 import spack.repo
 import spack.spec
 import spack.version
+from spack.cmd.common import arguments
 from spack.package_base import preferred_version
 
 description = "get detailed information on a particular package"
@@ -327,7 +327,7 @@ def _variants_by_name_when(pkg):
     """Adaptor to get variants keyed by { name: { when: { [Variant...] } }."""
     # TODO: replace with pkg.variants_by_name(when=True) when unified directive dicts are merged.
     variants = {}
-    for name, (variant, whens) in pkg.variants.items():
+    for name, (variant, whens) in sorted(pkg.variants.items()):
         for when in whens:
             variants.setdefault(name, {}).setdefault(when, []).append(variant)
     return variants
@@ -474,13 +474,7 @@ def print_virtuals(pkg, args):
     color.cprint("")
     color.cprint(section_title("Virtual Packages: "))
     if pkg.provided:
-        inverse_map = {}
-        for spec, whens in pkg.provided.items():
-            for when in whens:
-                if when not in inverse_map:
-                    inverse_map[when] = set()
-                inverse_map[when].add(spec)
-        for when, specs in reversed(sorted(inverse_map.items())):
+        for when, specs in reversed(sorted(pkg.provided.items())):
             line = "    %s provides %s" % (
                 when.colorized(),
                 ", ".join(s.colorized() for s in specs),

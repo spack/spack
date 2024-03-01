@@ -54,7 +54,7 @@ jobs:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@65d7f2d534ac1bc67fcd62888c5f4f3d2cb2b236 # @v2
+    - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # @v2
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install System packages
@@ -91,7 +91,7 @@ jobs:
           UNIT_TEST_COVERAGE: ${{ matrix.python-version == '3.11' }}
       run: |
           share/spack/qa/run-unit-tests
-    - uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d
+    - uses: codecov/codecov-action@0cfda1dd0a4ad9efc75517f399d859cd1ea4ced1
       with:
         flags: unittests,linux,${{ matrix.concretizer }}
   # Test shell integration
@@ -101,7 +101,7 @@ jobs:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@65d7f2d534ac1bc67fcd62888c5f4f3d2cb2b236 # @v2
+    - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # @v2
       with:
         python-version: '3.11'
     - name: Install System packages
@@ -122,7 +122,7 @@ jobs:
           COVERAGE: true
       run: |
           share/spack/qa/run-shell-tests
-    - uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d
+    - uses: codecov/codecov-action@0cfda1dd0a4ad9efc75517f399d859cd1ea4ced1
       with:
         flags: shelltests,linux
 
@@ -159,7 +159,7 @@ jobs:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@65d7f2d534ac1bc67fcd62888c5f4f3d2cb2b236 # @v2
+    - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # @v2
       with:
         python-version: '3.11'
     - name: Install System packages
@@ -181,7 +181,7 @@ jobs:
           SPACK_TEST_SOLVER: clingo
       run: |
           share/spack/qa/run-unit-tests
-    - uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d # @v2.1.0
+    - uses: codecov/codecov-action@0cfda1dd0a4ad9efc75517f399d859cd1ea4ced1 # @v2.1.0
       with:
         flags: unittests,linux,clingo
   # Run unit tests on MacOS
@@ -194,7 +194,7 @@ jobs:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@65d7f2d534ac1bc67fcd62888c5f4f3d2cb2b236 # @v2
+    - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # @v2
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install Python packages
@@ -215,7 +215,7 @@ jobs:
         $(which spack) bootstrap disable spack-install
         $(which spack) solve zlib
         common_args=(--dist loadfile --tx '4*popen//python=./bin/spack-tmpconfig python -u ./bin/spack python' -x)
-        $(which spack) unit-test --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml "${common_args[@]}"
-    - uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d
+        $(which spack) unit-test --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml "${common_args[@]}"
+    - uses: codecov/codecov-action@0cfda1dd0a4ad9efc75517f399d859cd1ea4ced1
       with:
         flags: unittests,macos

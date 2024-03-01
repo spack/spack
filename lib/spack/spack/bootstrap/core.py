@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -386,7 +386,7 @@ def ensure_module_importable_or_raise(module: str, abstract_spec: Optional[str] 
     exception_handler = GroupedExceptionHandler()
 
     for current_config in bootstrapping_sources():
-        with exception_handler.forward(current_config["name"]):
+        with exception_handler.forward(current_config["name"], Exception):
             source_is_enabled_or_raise(current_config)
             current_bootstrapper = create_bootstrapper(current_config)
             if current_bootstrapper.try_import(module, abstract_spec):
@@ -441,7 +441,7 @@ def ensure_executables_in_path_or_raise(
     exception_handler = GroupedExceptionHandler()
 
     for current_config in bootstrapping_sources():
-        with exception_handler.forward(current_config["name"]):
+        with exception_handler.forward(current_config["name"], Exception):
             source_is_enabled_or_raise(current_config)
             current_bootstrapper = create_bootstrapper(current_config)
             if current_bootstrapper.try_search_path(executables, abstract_spec):
@@ -542,7 +542,7 @@ def verify_patchelf(patchelf: "spack.util.executable.Executable") -> bool:
     return version >= spack.version.Version("0.13.1")
 
 
-def ensure_patchelf_in_path_or_raise() -> None:
+def ensure_patchelf_in_path_or_raise() -> spack.util.executable.Executable:
     """Ensure patchelf is in the PATH or raise."""
     # The old concretizer is not smart and we're doing its job: if the latest patchelf
     # does not concretize because the compiler doesn't support C++17, we try to

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Flatbuffers(CMakePackage):
 
     homepage = "https://google.github.io/flatbuffers/"
     url = "https://github.com/google/flatbuffers/archive/v1.9.0.tar.gz"
+
+    license("Apache-2.0")
 
     version("2.0.6", sha256="e2dc24985a85b278dd06313481a9ca051d048f9474e0f199e372fea3ea4248c9")
     version("2.0.0", sha256="9ddb9031798f4f8754d00fca2f1a68ecf9d0f83dfac7239af1311e4fd9a565c4")

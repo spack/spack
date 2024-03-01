@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Sfcgal(CMakePackage):
 
     homepage = "http://www.sfcgal.org/"
     url = "https://github.com/Oslandia/SFCGAL/archive/v1.3.8.tar.gz"
+
+    license("LGPL-2.0-or-later")
 
     version("1.3.8", sha256="5154bfc67a5e99d95cb653d70d2b9d9293d3deb3c8f18b938a33d68fec488a6d")
     version("1.3.7", sha256="30ea1af26cb2f572c628aae08dd1953d80a69d15e1cac225390904d91fce031b")

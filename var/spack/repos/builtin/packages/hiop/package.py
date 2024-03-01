@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,15 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/LLNL/hiop.git"
     maintainers("ryandanehy", "cameronrutherford", "pelesh")
 
+    license("BSD-3-Clause")
+
     # Most recent tagged snapshot is the preferred version when profiling.
+    version(
+        "1.0.3", tag="v1.0.3", commit="6161396d9b562c39e7e6fe686ab46a2ec7927482", submodules=True
+    )
+    version(
+        "1.0.2", tag="v1.0.2", commit="2378fde5cc371047227c396ddaaf58b6453f928c", submodules=True
+    )
     version(
         "1.0.1", tag="v1.0.1", commit="c5e156c6f27d046f590dc35114980e3f9c573ca6", submodules=True
     )
@@ -47,10 +55,10 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     version("0.5.0", tag="v0.5.0", commit="a39da8025037c7c8ae2eb31234eb80cc73bec2af")
     version("0.4.6", tag="v0.4.6", commit="b72d163d52c9225c3196ceb2baebdc7cf09a69de")
     version("0.4.5", tag="v0.4.5", commit="c353580456c4776c50811b97cf8ff802dc27b90c")
-    version("0.4.4", tag="v0.4.4", commit="e858eefa6b914f5c87c3717bbce811931ea69386")
+    version("0.4.4", tag="v0.4.4", commit="4e3faa9963e83cd7f2a388bfcc1e402dc86fc81d")
     version("0.4.3", tag="v0.4.3", commit="c0394af4d84ebb84b7d2b95283ad65ffd84e0d45")
     version("0.4.2", tag="v0.4.2", commit="3fcb788d223eec24c0241680070c4a9a5ec71ef3")
-    version("0.4.1", tag="v0.4.1", commit="3f269560f76d5a89bcbd1d3c4f9f0e5acaa6fd64")
+    version("0.4.1", tag="v0.4.1", commit="281adb5fb335642446e0804a2669b97d8ef62998")
     version("0.4", tag="v0.4", commit="91d21085a1149eacdb27cd738d4a74a7e412fcff")
     version("0.3.99.3", tag="v0.3.99.3", commit="bed1dbef260e53a9d139ccfb77d2e83a98aab216")
     version("0.3.99.2", tag="v0.3.99.2", commit="9eb026768bc5e0a2c1293d0487cc39913001ae19")
@@ -138,6 +146,9 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         when="+cuda+raja ^raja@:0.14",
         msg="umpire+cuda exports device code and requires static libs",
     )
+
+    # We rely on RAJA / Umpire utilities when supporting CUDA backend
+    conflicts("~raja", when="+cuda", msg="RAJA is required for CUDA support")
 
     depends_on("hip", when="+rocm")
     depends_on("hipblas", when="+rocm")

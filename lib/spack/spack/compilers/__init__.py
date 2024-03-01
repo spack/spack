@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -154,6 +154,14 @@ def add_compilers_to_config(compilers, scope=None, init_config=True):
     """
     compiler_config = get_compiler_config(scope, init_config)
     for compiler in compilers:
+        if not compiler.cc:
+            tty.debug(f"{compiler.spec} does not have a C compiler")
+        if not compiler.cxx:
+            tty.debug(f"{compiler.spec} does not have a C++ compiler")
+        if not compiler.f77:
+            tty.debug(f"{compiler.spec} does not have a Fortran77 compiler")
+        if not compiler.fc:
+            tty.debug(f"{compiler.spec} does not have a Fortran compiler")
         compiler_config.append(_to_dict(compiler))
     spack.config.set("compilers", compiler_config, scope=scope)
 
@@ -506,9 +514,10 @@ def get_compilers(config, cspec=None, arch_spec=None):
     for items in config:
         items = items["compiler"]
 
-        # NOTE: in principle this should be equality not satisfies, but config can still
-        # be written in old format gcc@10.1.0 instead of gcc@=10.1.0.
-        if cspec and not cspec.satisfies(items["spec"]):
+        # We might use equality here.
+        if cspec and not spack.spec.parse_with_version_concrete(
+            items["spec"], compiler=True
+        ).satisfies(cspec):
             continue
 
         # If an arch spec is given, confirm that this compiler

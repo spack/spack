@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -88,11 +88,9 @@ class Genie(Package):
 
     def setup_build_environment(self, env):
         env.set("GENIE", self.stage.source_path)
-        return super().setup_build_environment(env)
 
     def setup_run_environment(self, env):
         env.set("GENIE", self.prefix)
-        return super().setup_run_environment(env)
 
     def install(self, spec, prefix):
         configure = Executable("./configure")
