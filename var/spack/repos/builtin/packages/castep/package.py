@@ -24,7 +24,9 @@ class Castep(MakefilePackage):
     manual_download = True
 
     version("21.11", sha256="d909936a51dd3dff7a0847c2597175b05c8d0018d5afe416737499408914728f")
-    version("19.1.1.rc2", sha256="1fce21dc604774e11b5194d5f30df8a0510afddc16daf3f8b9bbb3f62748f86a")
+    version(
+        "19.1.1.rc2", sha256="1fce21dc604774e11b5194d5f30df8a0510afddc16daf3f8b9bbb3f62748f86a"
+    )
 
     variant("mpi", default=True, description="Enable MPI build")
     depends_on("rsync", type="build")
@@ -36,7 +38,6 @@ class Castep(MakefilePackage):
     parallel = True
 
     def edit(self, spec, prefix):
-
         if spec.satisfies("%gcc"):
             dlmakefile = FileFilter("LibSource/dl_mg-2.0.3/platforms/castep.inc")
             dlmakefile.filter(r"MPIFLAGS = -DMPI", "MPIFLAGS = -fallow-argument-mismatch -DMPI")
@@ -86,8 +87,6 @@ class Castep(MakefilePackage):
                         targetlist.append("ARCH=linux_x86_64_ifort")
                     else:
                         targetlist.append("ARCH=linux_x86_64_ifort19")
-
-
 
         return targetlist
 
