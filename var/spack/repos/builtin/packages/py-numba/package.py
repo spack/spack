@@ -56,7 +56,7 @@ class PyNumba(PythonPackage):
     depends_on("py-importlib-metadata", when="@0.56:^python@:3.8", type=("build", "run"))
 
     depends_on("tbb", when="+tbb")
-
+    conflicts("~tbb", when="@:0.50")  # No way to disable TBB
     # Version 6.0.0 of llvm had a hidden symbol which breaks numba at runtime.
     # See https://reviews.llvm.org/D44140
     conflicts("^llvm@6.0.0")
