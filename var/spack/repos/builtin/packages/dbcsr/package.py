@@ -52,6 +52,7 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
 
     variant("opencl", default=False, description="Enable OpenCL backend")
     variant("mpi_f08", default=False, when="@2.6:", description="Use mpi F08 module")
+    variant("c_api", default=True, description="Enable C API")
 
     depends_on("blas")
     depends_on("lapack")
@@ -106,6 +107,9 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
 
     conflicts("smm=blas", when="+opencl")
 
+    conflicts("~mpi", when="+c_api", msg="C API needs MPI")
+    conflicts("+c_api", when="%fj", msg="Fujitsu compiler doesn't support C API")
+
     with when("+mpi"):
         # When using mpich 4.1 or higher, mpi_f08 has to be used, otherwise:
         # Error: Type mismatch in argument 'baseptr' at (1); passed TYPE(c_ptr)
@@ -132,6 +136,7 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
             "-DUSE_SMM=%s" % ("libxsmm" if "smm=libxsmm" in spec else "blas"),
             self.define_from_variant("USE_MPI", "mpi"),
             self.define_from_variant("USE_OPENMP", "openmp"),
+            self.define_from_variant("WITH_C_API", "c_api"),
             "-DBLAS_FOUND=true",
             "-DBLAS_LIBRARIES=%s" % (spec["blas"].libs.joined(";")),
             "-DLAPACK_FOUND=true",
@@ -139,14 +144,6 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("WITH_EXAMPLES", "examples"),
         ]
-
-        # C API needs MPI
-        with_c_api = self.define_from_variant("WITH_C_API", "mpi")
-        # skip building C API since fujitsu compiler do not support
-        # calling Fortran subroutines with optional arguments in bind(C)
-        if self.spec.satisfies("%fj"):
-            with_c_api = "-DWITH_C_API=false"
-        args += [with_c_api]
 
         # Switch necessary as a result of a bug.
         if "@2.1:2.2" in spec:
