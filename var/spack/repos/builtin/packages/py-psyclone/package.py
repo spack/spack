@@ -58,7 +58,6 @@ class PyPsyclone(PythonPackage):
     depends_on("py-pep8", type="test")
     depends_on("py-flake8", type="test")
     depends_on("py-pylint@:2", type="test")
-    depends_on("py-pytest-pylint", type="test")
     depends_on("py-pytest-pep8", type="test")
     depends_on("py-pytest-flakes", type="test")
     depends_on("py-pytest-cov", type="test")
