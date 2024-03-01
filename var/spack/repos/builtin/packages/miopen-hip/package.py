@@ -53,11 +53,12 @@ class MiopenHip(CMakePackage):
     depends_on("half")
     depends_on("zlib-api")
 
-    patch("miopen-hip-include-nlohmann-include-directory.patch", when="@5.4.0:")
+    patch("miopen-hip-include-nlohmann-include-directory.patch", when="@5.4.0:5.7")
+    patch("0002-add-include-dir-miopen-hip-6.0.0.patch", when="@6.0")
     patch(
         "https://github.com/ROCm/MIOpen/pull/2276/commits/f60aa1ff89f8fb596b4a6a4c70aa7d557803db87.patch?full_index=1",
         sha256="c777d9f4cd2bbfec632b38620c0f70bb0cce8da1",
-        when="@5.7:",
+        when="@5.7",
     )
 
     for ver in [
@@ -93,6 +94,8 @@ class MiopenHip(CMakePackage):
     for ver in ["5.4.0", "5.4.3", "5.5.0"]:
         depends_on("nlohmann-json", type="link")
         depends_on(f"rocmlir@{ver}", when=f"@{ver}")
+    for ver in ["6.0.0", "6.0.2"]:
+        depends_on("roctracer-dev@" + ver, when="@" + ver)
 
     def setup_build_environment(self, env):
         lib_dir = self.spec["zlib-api"].libs.directories[0]
@@ -147,4 +150,9 @@ class MiopenHip(CMakePackage):
         args.append(
             "-DNLOHMANN_JSON_INCLUDE={0}".format(self.spec["nlohmann-json"].prefix.include)
         )
+        if self.spec.satisfies("@6.0.0:"):
+            args.append(
+                "-DROCTRACER_INCLUDE_DIR={0}".format(self.spec["roctracer-dev"].prefix.include)
+            )
+            args.append("-DROCTRACER_LIB_DIR={0}".format(self.spec["roctracer-dev"].prefix.lib))
         return args
